@@ -1,0 +1,11 @@
+{
+  "worldcombat.work.electric_supply.menu": "Supply machine",
+  "worldcombat.work.electric_supply.hint": "Select an energy input. This Electric companion supplies up to %1$s FE/s, from Special Attack %2$s and level %3$s; the machine applies its input limit. Threats pause work.",
+  "worldcombat.work.electric_supply.stop": "Stop supplying",
+  "worldcombat.work.electric_supply.stop_hint": "End supply and return to following.",
+  "worldcombat.work.electric_supply.supplied": "%1$s FE supplied this job",
+  "worldcombat.work.electric_supply.full": "Machine full · %1$s FE supplied",
+  "worldcombat.work.electric_supply.refused": "No energy accepted · %1$s FE supplied",
+  "worldcombat.work.electric_supply.stopped": "Supply stopped · %1$s FE supplied",
+  "worldcombat.work.electric_supply.jei": "A sent-out Electric companion can select Supply machine from its command menu and target a NeoForge FE input. Individual Special Attack and level determine the rate. Transfers run every four ticks and respect the machine's input rules. Work continues until the input fills or refuses energy, you stop it, or give another order. Threats pause work, which resumes when they pass."
+}

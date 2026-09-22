@@ -26,10 +26,6 @@ namespace PokemonSkills {
     function chargeHeld(detail: any): boolean { return !!(detail && detail.values && detail.values.hold); }
 
     actionParameters.define("charge", {
-        energyBudget: formula(F.base(1200).plus(F.stat("specialAttack").times(32)).plus(F.level().times(40)).round(),
-            "供能总量", { unit: " FE", description: "一次充电可交给机器的总能量；实际接收才扣除，剩余电荷仍可用于下一次电招。" }),
-        energyPulse: formula(F.base(80).plus(F.stat("speed").times(3)).round(),
-            "供能速率", { unit: " FE/0.2秒", description: "每次传输最多交付多少能量；机器自己的输入上限仍然生效。" }),
         chargeDuration: seconds(F.base(300, "充能持续")
             .plus(F.level().times(4).as("等级"))
             .plus(F.stat("specialDefence").minus(50).max(0).times(2).as("特防"))
@@ -56,7 +52,6 @@ namespace PokemonSkills {
     describe("charge", [
         { key: "description.0", values: ["chargeDuration"] },
         { key: "description.1", values: [] },
-        { key: "machine.description", values: ["energyBudget", "energyPulse"] },
         { key: "hold.0", values: [], when: function (context) { return chargeHeld(context.detail); } },
         { key: "hold.1", values: [], when: function (context) { return !chargeHeld(context.detail); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,25 +1,4 @@
-/**
- * 茶会 / Teatime —— 参数与数值来源。
- *
- * 原生事实（Cobblemon 1.8 / Showdown）：Normal、变化、威力 0、命中必中、PP 10、目标 all；
- *   onHitField：场上每个还站着的宝可梦，只要手里携带树果，就吃掉自己那一颗（敌我都算，最后再结算）。
- *
- * 世界化：在选定的地方铺开一席茶——杯盘排开、茶汤冒着热气；茶香一飘，场上每个带着树果的战斗者都忍不住
- *   吃掉自己那一颗（无论敌友）。它是一场**所有人的点心时间**：能让队友的果子立刻生效，也能逼对手把保命或
- *   反击的果子提前吃掉。它和同族的大快朵颐分开：那一口只吃自己的、换来防御；茶会逼所有人吃，收益取决于
- *   各自手里是什么果子。
- *
- * 数值来源（每项读不同的精灵数据，分散到不同参数）：
- *   radius     茶席半径：基础 4.0 + 等级偏移 + 特防偏移，盛宴档 ×1.3、便茶档 ×0.8，夹 3.0..8.0 格。
- *   reach      茶席放多远：基础 5 + 等级偏移，盛宴档略近，夹 4..8 格。
- *   teaTicks   茶席停留：基础 100 刻 + 等级 + 亲密度偏移，盛宴档 ×1.4，夹 80..280 刻。
- *   brew       茶汤浓度（吃的人回复多少）：基础 0.9 + 特攻偏移，盛宴档 ×1.1，夹 0.7..1.25。
- *   motes      茶气数量：特攻 + 身高，夹 18..64 点，直接驱动粒子。
- *   cups       杯盘格数：基础 6 + 等级 + 身高，盛宴档 ×1.3，夹 5..14 格。
- *   tempo / aftercast / wait 分别读速度／身高／等级。
- * 配置 grand（盛宴）：半径 ×1.3、停留 ×1.4、杯盘 ×1.3、茶汤 ×1.1，代价是起手 +3 刻、冷却更久；
- *   关闭（便茶）半径 ×0.8、出手更快更省，适合只想尽快把对手的果子掀掉。两向各有局面。
- */
+/** 茶会：范围内敌友各自吃掉携带的树果；杯盘与热气承载开席反馈。 个体差异、配置和现场事实由以下公式定义。 */
 namespace PokemonSkills {
     export const teatimeId = "teatime";
 
@@ -43,7 +22,7 @@ namespace PokemonSkills {
             F.base(100).plus(F.level().times(2)).plus(F.individual("friendship").minus(70).times(0.6).clamp(-18, 24).as("亲密度"))
                 .times(F.when(F.pref("grand"), F.const(1.4), F.const(1)).as("盛宴"))
                 .clamp(80, 280).round(0),
-            "茶席停留", "茶席与茶气在原地停多久；等级越高、感情越好越久，盛宴档 ×1.4。结算在摆席当刻一次完成，之后只留画面。"),
+            "茶席停留", "茶气在原地停多久；等级越高、感情越好越久，盛宴档 ×1.4。结算在摆席当刻一次完成，之后只留画面。"),
         /** 茶汤浓度：吃的人回复多少。 */
         brew: formula(
             F.base(0.9).plus(F.stat("specialAttack").minus(55).times(0.003).clamp(-0.15, 0.3).as("特攻"))
@@ -54,12 +33,12 @@ namespace PokemonSkills {
         motes: formula(
             F.base(24).plus(F.stat("specialAttack").times(0.25)).plus(F.body("height").times(3)).clamp(18, 64).round(0),
             "茶气数量", { unit: " 点", description: "茶席上蒸腾的茶气粒子总数；特攻与体型越大越多。" }),
-        /** 杯盘格数。 */
+        /** 杯盘数量。 */
         cups: formula(
             F.base(6).plus(F.level().minus(20).max(0).times(0.1).clamp(0, 2)).plus(F.body("height").minus(1.2).times(1.5).clamp(0, 3))
                 .times(F.when(F.pref("grand"), F.const(1.3), F.const(1)).as("盛宴"))
                 .clamp(5, 14).round(0),
-            "杯盘格数", { unit: " 格", description: "在落点真的铺下几格茶席（地毯）；等级越高、身量越大摆得越多，盛宴档 ×1.3。" }),
+            "杯盘数量", { unit: " 个", description: "杯盘粒子数量；等级越高、身量越大越多，盛宴档 ×1.3。" }),
         /** 起手。 */
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(60).times(0.03).clamp(-2, 3))

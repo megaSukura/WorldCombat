@@ -28,6 +28,7 @@ namespace NativeEffects {
         ticks?: number; amplifier?: number; beneficial?: boolean; unique?: boolean;
         ignoreAbility?: boolean; ignoreType?: boolean; effect?: string;
     }
+    /** Incoming/applied world scope belongs to the attacker; compare explicit actors with world.allied(source, target). */
     export interface Hit { world: CombatWorld; source: CombatActor; target: CombatActor; data: any; }
     /** Shared hit policies run for every living domain; native traits remain separate contributions. */
     export var incomingRules = new WorldContributions.Registry<Hit>();

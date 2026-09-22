@@ -6,7 +6,7 @@
  * 什么时候最想出手：站在阳光下（context.facts.sunlight ≥ 0.6）时 priority 抬到 90 抢在共享顺序前——
  *   阳光让双攻各多长一级，值得先占这个窗口；阴影里就退回普通次序。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：双攻抬起（阳光下更高）、脚下留下草皮，伙伴交回共享交战计划。
+ * 放完之后：双攻抬起（阳光下更高），伙伴交回共享交战计划。
  */
 namespace CompanionBehavior {
     function growthThreat(context: WorldBehavior.Context): Entity | null {

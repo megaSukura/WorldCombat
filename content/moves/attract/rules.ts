@@ -10,8 +10,13 @@
  */
 namespace PokemonSkills {
     function attractAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
+    function attractTethers(world: CombatWorld, actor: CombatActor): CombatEffectView[] {
+        return world.effects(actor, attractTether).filter(function (view) {
+            return MobEffects.present(world, JSON.parse(view.data()).carrierLease);
+        });
+    }
     function attractTetherSource(world: CombatWorld, actor: CombatActor): CombatActor | null {
-        const views = world.effects(actor, attractTether);
+        const views = attractTethers(world, actor);
         if (!views.length) return null;
         const source = views[0].source();
         return world.valid(source) ? source : null;
@@ -27,19 +32,24 @@ namespace PokemonSkills {
             throw new Error("Invalid attract leash");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(attractTether, "start", function () { });
+    WorldCombat.effectHandler(attractTether, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        const status = MobEffects.apply(world, target, attractStatus, effect.remaining(), 0);
+        data.carrierLease = MobEffects.bind(world, target, attractStatus, status);
+        if (!data.carrierLease) { effect.end(); return; }
+        effect.state(JSON.stringify(data));
+    });
     WorldCombat.effectHandler(attractTether, "operation:world_combat:dispel", effect => effect.end());
 
     // 心软：提交出招被拒，并被牵向施放者一步；视线断了则只停在原地。
     function attractHesitate(event: CombatWorldEvent): void {
         const world = event.world(), actor = event.actor();
         if (!CombatStatus.has(world, actor, "attract")) return;
-        const views = world.effects(actor, attractTether);
-        let chance = 0.5, pull = 1.1, source: CombatActor | null = null;
-        if (views.length) {
-            const value = JSON.parse(String(views[0].data()));
-            chance = value.chance; pull = value.pull; source = world.valid(views[0].source()) ? views[0].source() : null;
-        }
+        const views = attractTethers(world, actor);
+        if (!views.length) return;
+        const value = JSON.parse(String(views[0].data()));
+        const chance = value.chance, pull = value.pull, source = views[0].source();
+        if (!world.valid(source)) return;
         if (world.random() >= chance) return;
         event.reject("attracted");
         const body = world.observe(actor);
@@ -47,13 +57,11 @@ namespace PokemonSkills {
         const here = body.position();
         WorldFeedback.emit(world, attractScene, 1, here, { moment: "hesitate", target: String(actor.ref()) }, 30);
         WorldFeedback.text(world, attractAbove(here), attractHesitateText, [], 28);
-        if (source === null) return;
         const from = world.observe(source);
         if (from === null) return;
         const delta = from.position().minus(here);
         if (delta.length() <= 0.35) return;
         if (!world.clear(here, from.position())) {
-            MobEffects.consume(world, actor, attractStatus);
             views.forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
             WorldFeedback.emit(world, attractScene, 1, here, { moment: "snap", target: String(actor.ref()) }, 18);
             WorldFeedback.text(world, attractAbove(here), attractSnapText, [], 24);
@@ -82,18 +90,17 @@ namespace PokemonSkills {
         if (String(data.id) !== attractStatus || event.world().tick() % 20 !== 0) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const views = world.effects(actor, attractTether);
+        const views = attractTethers(world, actor);
         if (!views.length) return;
         const value = JSON.parse(String(views[0].data()));
         if (!(value.leash > 0)) return;
         const source = attractTetherSource(world, actor);
-        if (source === null) { MobEffects.consume(world, actor, attractStatus); return; }
+        if (source === null) return;
         const body = world.observe(actor), from = world.observe(source);
         if (body === null || from === null) return;
         const delta = from.position().minus(body.position()), dist = delta.length();
         if (dist <= value.leash) return;
         if (!world.clear(body.position(), from.position())) {
-            MobEffects.consume(world, actor, attractStatus);
             views.forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
             WorldFeedback.emit(world, attractScene, 1, body.position(), { moment: "snap", target: String(actor.ref()) }, 18);
             return;
@@ -111,6 +118,7 @@ namespace PokemonSkills {
         if (String(data.id) !== attractStatus || event.world().tick() % 20 !== 0) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        if (!attractTethers(world, actor).length) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.keep(world, "world_combat:move_attract/linger/" + String(actor.ref()), attractScene, 1, body.position(),

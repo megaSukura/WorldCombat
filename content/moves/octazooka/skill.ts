@@ -1,17 +1,4 @@
-/**
- * 章鱼桶炮 / octazooka 的出手方式。
- *
- * 核心念头：蓄一口墨，朝对手脸上连喷数股墨弹——墨溅开糊住视野，约一半机会让它之后瞄不准；
- * 喷溅的墨落在地上留一小片黑渍，过一会儿自己消失。
- *
- * 三幕：
- *   起：口中积蓄墨汁（提交前 windup 预告）。
- *   喷：提交后按 `interval` 先后射出 `shots` 股墨弹，每股带墨滴尾迹、略散布。
- *   糊：命中处溅开墨花；整次施放第一次打中活体时按概率挂命中下降，并在目标脸上留墨迹；
- *       第一次命中还会在落点地面留一片墨渍（到期原方块回来）。
- *
- * 与同族分开：泥巴炸弹是单发硬弹爆开、留泥坑；章鱼桶炮是连喷数股墨流、颜色漆黑、留墨渍，命中后脸上糊墨。
- */
+/** 章鱼桶炮：连续墨弹造成伤害并降低命中；脸部墨迹与落点墨花由粒子承载。 */
 namespace PokemonSkills {
     const octazookaScene = "world_combat:move_octazooka";
 
@@ -26,26 +13,11 @@ namespace PokemonSkills {
         return base.unit().plus(side.scale(Math.cos(angle) * radius)).plus(WorldCombat.point(0, Math.sin(angle) * radius, 0)).unit();
     }
 
-    /** 在落点下方找第一块实心方块，替换成一小片墨渍；到期原方块回来。 */
-    function octazookaStain(world: CombatWorld, point: CombatPoint, ticks: number): boolean {
-        const x = Math.floor(point.x()), z = Math.floor(point.z()), base = Math.floor(point.y());
-        for (let dy = 0; dy <= 3; dy++) {
-            const y = base - dy;
-            const block = world.block(WorldCombat.point(x, y, z));
-            if (block === null) continue;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            world.terrain(JSON.stringify({ cells: [{ x: x, y: y, z: z, block: "minecraft:black_concrete" }], replace: true, linger: true }), ticks);
-            return true;
-        }
-        return false;
-    }
-
     define({
         id: "octazooka",
         name: "Octazooka",
         description: "The user attacks by spraying ink in the target's face. This may also lower the target's accuracy.",
-        uses: ["中近距离的连续墨流", "用墨汁糊眼，削掉对手命中", "在落点地面留下墨渍"],
+        uses: ["中近距离的连续墨流", "用墨汁糊眼，削掉对手命中"],
         kind: "enemy",
         range: 12,
         maxRange: 17,
@@ -119,8 +91,7 @@ namespace PokemonSkills {
                 }
                 if (!stained) {
                     stained = true;
-                    if (octazookaStain(currentWorld, point, stainTicks))
-                        WorldFeedback.emit(currentWorld, octazookaScene, 1, point, { moment: "stain", drops: drops }, stainTicks);
+                    WorldFeedback.emit(currentWorld, octazookaScene, 1, point, { moment: "stain", drops: drops }, stainTicks);
                 }
                 WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
                     { moment: "splash", target: target === null ? "" : String(target.ref()), drops: drops,

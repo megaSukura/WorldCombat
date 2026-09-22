@@ -214,19 +214,24 @@ namespace WorldEffects {
     export function update(world: CombatWorld, id: number, change: FieldUpdate): boolean {
         return world.operation(id, "world_combat:update", JSON.stringify(change || {}));
     }
-    /** Optional member mark binding: attach one tagged effect while a body is in the field and remove it on leave. */
+    /** One source-owned carrier contribution per field instance; payload aggregation remains a content decision. */
     export interface MembershipOptions { ticks?: number | ((field: Field) => number); amplifier?: number; }
     export function membership(id: string, mark: string, options: MembershipOptions = {}): void {
         if (!id || !mark) throw new Error("Membership requires a field rule id and a mark effect id");
+        StatusContributions.define(mark);
         function duration(field: Field): number {
             if (typeof options.ticks === "function") return options.ticks(field);
             if (typeof options.ticks === "number") return options.ticks;
             return Math.max(1, field.remaining || 1);
         }
         fieldRule(id, {
-            enter: function (world, actor, field) { if (world.valid(actor)) world.marker(actor, mark, Math.max(1, Math.round(duration(field))), options.amplifier || 0); },
-            stay: function (world, actor, field) { if (world.valid(actor)) world.marker(actor, mark, Math.max(1, Math.round(duration(field))), options.amplifier || 0); },
-            leave: function (world, actor) { var current = world.mobEffect(actor, mark); if (current && world.valid(actor)) world.removeMobEffect(actor, mark, current.key()); }
+            enter: function (world, actor, field) { StatusContributions.upsert(world, actor, mark, String(field.id), field.data,
+                Math.max(1, Math.round(duration(field))), { amplifier: options.amplifier || 0,
+                    owner: { id: field.id!, definition: "world_combat:field", target: String(world.source().ref()) } }); },
+            stay: function (world, actor, field) { StatusContributions.upsert(world, actor, mark, String(field.id), field.data,
+                Math.max(1, Math.round(duration(field))), { amplifier: options.amplifier || 0,
+                    owner: { id: field.id!, definition: "world_combat:field", target: String(world.source().ref()) } }); },
+            leave: function (world, actor, field) { StatusContributions.remove(world, actor, mark, String(field.id)); }
         });
     }
     export function apply(world: CombatWorld, target: CombatActor, kind: string, data: any, ticks: number): number {

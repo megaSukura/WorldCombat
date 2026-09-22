@@ -2,10 +2,9 @@
   "worldcombat.skill.octazooka.summary": "Spray several bursts of ink in the target's face; each burst deals damage and about half the time the ink blinds it and cuts its accuracy.",
   "worldcombat.skill.octazooka.use.0": "A chained ink stream at close-to-mid range",
   "worldcombat.skill.octazooka.use.1": "Blind the target and cut its accuracy",
-  "worldcombat.skill.octazooka.use.2": "Leave an ink stain on the ground",
   "worldcombat.skill.octazooka.description.0": "Each bolt deals %1$s special damage and %2$s bolts are sprayed; the whole cast has a %3$s chance to drop accuracy by %4$s stages.",
   "worldcombat.skill.octazooka.description.1": "Bolts fly at %1$s up to %2$s blocks, spaced %3$s apart with a %4$s degree spread.",
-  "worldcombat.skill.octazooka.description.2": "The stream steers up to %1$s degrees per tick toward the target; each bolt throws about %2$s ink drops and an ink stain stays about %3$s. Thick ink is currently %4$s.",
+  "worldcombat.skill.octazooka.description.2": "Ink turns toward its target by up to %1$s degrees per tick and scatters about %2$s drops per shot; the impact ink effect lasts about %3$s. Thick ink is %4$s.",
   "worldcombat.skill.octazooka.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.octazooka.value.jet": "Bolt power",
   "worldcombat.skill.octazooka.value.shots": "Bolts",
@@ -26,5 +25,6 @@
   "worldcombat.skill.octazooka.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values open with ink from further away.",
   "worldcombat.skill.octazooka.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.octazooka.preference.ai.leaveStation.help": "On: it may leave a hold position to find a firing line. Off: it only sprays when already in range.",
-  "world_combat.move.octazooka.text.blind": "Ink in the eyes (accuracy -%1$s)"
+  "world_combat.move.octazooka.text.blind": "Ink in the eyes (accuracy -%1$s)",
+  "worldcombat.skill.octazooka.value.shot": "Ink shot damage"
 }

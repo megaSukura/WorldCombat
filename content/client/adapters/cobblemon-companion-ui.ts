@@ -72,6 +72,7 @@ namespace CobblemonCompanionUi {
         }
         function hasAbilities(): boolean {
             return !!(details && details.skills && details.skills.length) ||
+                !!(details && details.menu && details.menu.some((item: any) => item.capability && !item.disabled)) ||
                 !!(state.skills && state.skills.some((s: any) => String(s.id).indexOf(config.actionPrefix) === 0));
         }
         function canCommand(): boolean { return !!state.pokemon && !state.inspection; }

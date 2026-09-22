@@ -127,6 +127,8 @@ for ((name, script) in mapOf(
     "checkAiDispatch" to "tools/check-ai-dispatch.mjs",
     "checkContentIsolation" to "tools/check-content-isolation.mjs",
     "checkCombatantStatus" to "tools/check-combatant-status.mjs",
+    "checkStatusContributions" to "tests/content/status-contributions.mjs",
+    "checkEffectReactions" to "tests/content/effect-reactions.mjs",
     "checkDefenceProtocols" to "tools/check-defence-protocols.mjs",
     "checkCompanionMenus" to "tools/check-companion-menus.mjs",
     "checkSharedContent" to "tools/check-shared-content.mjs",

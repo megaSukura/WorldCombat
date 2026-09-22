@@ -13,6 +13,12 @@ public final class EffectChecks {
         String authority = "owner-a";
         int errors;
         final List<ActorHandle> changes = new ArrayList<>();
+        final Map<Long, List<Runnable>> resources = new HashMap<>();
+        public void lease(long owner, Runnable cleanup) { resources.computeIfAbsent(owner, key -> new ArrayList<>()).add(cleanup); }
+        public void release(long owner, String reason) {
+            var values = resources.remove(owner);
+            if (values != null) for (var cleanup : values) cleanup.run();
+        }
         public void effectChanged(ActorHandle actor) { changes.add(actor); }
         public boolean valid(ActorHandle actor) { return actors.contains(actor); }
         public boolean mayAct(ActorHandle actor, UUID controller) { return valid(actor); }
@@ -48,6 +54,15 @@ public final class EffectChecks {
     }
     private static void scenario(String name, Runnable body) { body.run(); passed++; System.out.println("PASS effects " + name); }
     public static void main(String[] args) {
+        scenario("source invalidation releases resources without invoking unavailable end handlers", () -> {
+            var f = new Fixture(); final int[] cleanup = {0}, end = {0};
+            f.effect(EFFECT, "actor", effect -> f.host.lease(-effect.id(), () -> cleanup[0]++));
+            f.handler(EFFECT, "end", effect -> end[0]++); f.ready(); long id = f.create(EFFECT);
+            f.host.actors.remove(f.actor); f.runtime.tick();
+            require(!f.runtime.exists(id) && cleanup[0] == 1 && end[0] == 0,
+                "Invalidation needed the script end handler or failed to release resources once");
+            f.runtime.tick(); require(cleanup[0] == 1, "Resource cleanup ran twice");
+        });
         scenario("ending inside start unwinds later scheduling without disabling the effect", () -> {
             var f = new Fixture();
             f.effect(EFFECT, "actor", effect -> { effect.end(); effect.schedule("later", "later", 1, "{}"); });

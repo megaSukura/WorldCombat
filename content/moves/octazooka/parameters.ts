@@ -1,27 +1,4 @@
-/**
- * 章鱼桶炮 / octazooka 的参数与伤害段。
- *
- * 原生事实：Water、特殊、威力 65、命中 85、PP 10、bullet、目标单体，50% 概率降低 1 级命中（Cobblemon 1.8 / Showdown）。
- *
- * 翻译：把「向对手的脸喷出墨汁」翻成一股连续喷出的墨流——分几股墨弹先后射出，各自带墨滴，
- * 打中目标时溅开、糊住视野，约一半机会削掉命中；喷溅的墨落在地上留一小片黑渍，过一会儿自己消失。
- * 它和泥巴炸弹同为直线弹，但墨流是多发连喷、颜色漆黑、命中后地上留墨渍。
- *
- * 数值来源（每项读不同的个体数据）：
- *   jet       每股墨弹的威力，特攻为主、等级为辅；浓墨每股 ×1.5、稀墨 ×0.85。
- *   shots     股数由速度决定（喷得越快分股越多），浓墨少一股（夹 2..5）。
- *   velocity  速度决定每股墨弹的飞行速度。
- *   radius    体型高度决定墨弹判定。
- *   reach     特攻决定喷多远。
- *   blind     特攻每满 110 加一级命中下降。
- *   chance    原生 50% 的致盲概率；浓墨再 +10%。
- *   interval  速度决定股与股之间的间隔，浓墨更慢。
- *   spread    速度决定喷射散布（越快越稳）。
- *   drops     特攻与等级决定墨滴数，同时驱动表现。
- *   stainTicks 特攻、等级与浓墨决定地面墨渍留多久。
- *   tempo     速度决定起手，浓墨多花一点时间。
- * 配置 thick（浓墨）双向取舍：每股更重、致盲概率更高、墨渍更久，但少一股、喷得更慢、起手与冷却更长。
- */
+/** 章鱼桶炮：连续墨弹造成伤害并降低命中；脸部墨迹与落点墨花由粒子承载。 个体差异、配置和现场事实由以下公式定义。 */
 namespace PokemonSkills {
     actionParameters.define("octazooka", {
         jet: formula(
@@ -95,7 +72,7 @@ namespace PokemonSkills {
             F.base(80).plus(F.stat("specialAttack").minus(50).times(0.4).clamp(-10, 24))
                 .plus(F.level().minus(25).times(0.6).clamp(0, 20))
                 .times(F.when(F.pref("thick"), F.const(1.3), F.const(1))).clamp(50, 200).round(),
-            "墨渍时长", "落点地上那片墨渍停留多久，到期原方块回来；浓墨留得更久。"),
+            "墨渍时长", "落点墨花的表现时长；浓墨留得更久。"),
         tempo: seconds(
             F.base(11).minus(F.stat("speed").minus(50).times(0.04))
                 .plus(F.when(F.pref("thick"), F.const(2), F.const(0))).clamp(6, 16).round(),

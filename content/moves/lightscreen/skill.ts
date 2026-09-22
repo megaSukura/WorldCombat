@@ -1,98 +1,67 @@
-/**
- * 光墙 / lightscreen 的执行组织与结算。
- *
- * 核心念头：在身周张起一层柔光穹顶，特殊攻击穿进来时被这层光折暗；附带的效果也被滤淡一些。
- * 出手：短起手（windup 播聚光预告）后提交；只对自己施放，光幕以自身为锚跟随移动。
- * 命中：提交后给自己与半径内友方挂 world_combat:lightscreen_veil（身份 lightscreen），并在每个受护者身上留下
- *       world_combat:lightscreen_mark，写明削减份额、滤淡份额、光尘数与时长；施法者自己的标记每 20 刻补一圈。
- * 持续：存续期由该 MobEffect 承担，每 20 刻 keep 一次头顶与身侧的柔光。
- * 结算：特殊伤害在 NativeEffects.incomingRules 里读到受击者的标记，按 cut 削减，并把附带次要效果的几率按 damp 滤淡。
- * 结束：施法者的光幕走完或被人解除时，标记结束并收回半径内友方的光幕，整圈柔光同时收。
- */
+/** 光墙：领域自己保存时长与参数，受护者按领域实例持有独立贡献；特殊减伤与附带效果滤淡由本招聚合。 */
 namespace PokemonSkills {
+    StatusContributions.define(lightscreenEffect);
     function lightscreenAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
-
     function lightscreenMarkOf(world: CombatWorld, actor: CombatActor): any {
-        const views = world.effects(actor, lightscreenMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+        const contributions = StatusContributions.list(world, actor, lightscreenEffect);
+        return contributions.length ? contributions[0].payload : null;
     }
-    function lightscreenApply(world: CombatWorld, actor: CombatActor, ticks: number, data: any): boolean {
-        if (MobEffects.apply(world, actor, lightscreenEffect, ticks, 0) === null) return false;
-        const views = world.effects(actor, lightscreenMark);
-        for (let i = 0; i < views.length; i++)
-            if (world.operation(views[i].id(), "world_combat:refresh", JSON.stringify({ ticks: ticks }))) return true;
-        world.effect(lightscreenMark, actor, JSON.stringify(data), ticks);
-        return true;
-    }
-    function lightscreenCover(world: CombatWorld, caster: CombatActor, radius: number, ticks: number, data: any, includeSelf: boolean): number {
-        const body = world.observe(caster);
+    function lightscreenCover(effect: CombatEffect): number {
+        const world = effect.world(), caster = effect.source(), data = JSON.parse(effect.state()), body = world.observe(caster);
         if (body === null) return 0;
-        let reached = 0;
-        if (includeSelf) { if (lightscreenApply(world, caster, ticks, data)) reached++; }
-        else MobEffects.apply(world, caster, lightscreenEffect, ticks, 0);
-        const actors = world.query(body.position(), radius, false);
+        const ticks = Math.max(60, Math.min(1180, effect.remaining()));
+        const owner = { id: effect.id(), definition: lightscreenMark, target: String(caster.ref()) };
+        const token = String(effect.id());
+        let reached = StatusContributions.upsert(world, caster, lightscreenEffect, token, data, ticks, { owner: owner }) ? 1 : 0;
+        const actors = world.query(body.position(), Math.max(1, Number(data.radius) || 3), false);
         for (let i = 0; i < actors.length; i++) {
-            const other = actors[i];
-            if (String(other.key()) === String(caster.key())) continue;
-            if (!world.friendly(other)) continue;
-            if (lightscreenApply(world, other, ticks, data)) reached++;
+            if (String(actors[i].key()) === String(caster.key()) || !world.friendly(actors[i])) continue;
+            if (StatusContributions.upsert(world, actors[i], lightscreenEffect, token, data, ticks, { owner: owner })) reached++;
         }
+        data.reached = reached; effect.state(JSON.stringify(data));
         return reached;
     }
-    function lightscreenClear(world: CombatWorld, caster: CombatActor, radius: number): void {
-        const body = world.observe(caster);
-        if (body === null) return;
-        const actors = world.query(body.position(), radius, false);
-        for (let i = 0; i < actors.length; i++) {
-            const other = actors[i];
-            if (String(other.key()) === String(caster.key())) continue;
-            if (!world.friendly(other)) continue;
-            MobEffects.consume(world, other, lightscreenEffect);
-            const views = world.effects(other, lightscreenMark);
-            for (let j = 0; j < views.length; j++) world.operation(views[j].id(), "world_combat:dispel", "{}");
-        }
+    function lightscreenOpen(world: CombatWorld, caster: CombatActor, ticks: number, data: any): number {
+        const roots = world.effects(caster, lightscreenMark).filter(view => String(view.source().key()) === String(caster.key()));
+        let id: number;
+        if (roots.length) {
+            id = roots[0].id();
+            world.operation(id, "world_combat:refresh", JSON.stringify({ ticks: ticks, data: data }));
+        } else id = world.effect(lightscreenMark, caster, JSON.stringify(data), ticks);
+        const root = world.effects(caster, lightscreenMark).filter(view => view.id() === id)[0];
+        return root ? Number(JSON.parse(String(root.data())).reached) || 0 : 0;
     }
-
     WorldCombat.effect(lightscreenMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         ["cut", "damp", "radius", "motes"].forEach(function (key) {
-            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid lightscreen mark: " + key);
+            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid lightscreen field: " + key);
         });
-        if (value.radius <= 0 || value.motes <= 0) throw new Error("Invalid lightscreen mark extent");
+        if (value.radius <= 0 || value.motes <= 0) throw new Error("Invalid lightscreen field extent");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(lightscreenMark, "start", function (effect) {
-        if (String(effect.target().key()) === String(effect.source().key())) effect.schedule("pulse", "pulse", 20, "{}");
+        lightscreenCover(effect); effect.schedule("pulse", "pulse", 20, "{}");
     });
     WorldCombat.effectHandler(lightscreenMark, "pulse", function (effect) {
-        if (String(effect.target().key()) !== String(effect.source().key())) return;
-        const world = effect.world(), caster = effect.source();
-        if (world.observe(caster) === null) { effect.end(); return; }
-        const state = JSON.parse(effect.state());
-        const ticks = Math.max(60, Math.min(1180, effect.remaining()));
-        lightscreenCover(world, caster, Math.max(1, Number(state.radius) || 3), ticks, state, false);
-        effect.schedule("pulse", "pulse", 20, "{}");
+        if (MobEffects.read(effect.world(), effect.source(), lightscreenEffect) === null) { effect.end(); return; }
+        lightscreenCover(effect); effect.schedule("pulse", "pulse", 20, "{}");
     });
     WorldCombat.effectHandler(lightscreenMark, "end", function (effect) {
-        if (String(effect.target().key()) !== String(effect.source().key())) return;
-        const world = effect.world(), caster = effect.source();
-        const state = JSON.parse(effect.state());
+        const world = effect.world(), caster = effect.source(), state = JSON.parse(effect.state());
+        StatusContributions.removeSource(world, lightscreenEffect, String(effect.id()));
         const body = world.observe(caster);
-        if (body !== null) {
-            const scale = Math.max(0.6, Math.min(2, (Number(state.radius) || 3) / 3));
-            WorldFeedback.emit(world, lightscreenScene, 1, body.position(),
-                { moment: "fade", target: String(caster.ref()), field: Number(state.radius) || 3, scale: scale }, 30);
-        }
-        lightscreenClear(world, caster, Math.max(1, Number(state.radius) || 3));
+        if (body !== null) WorldFeedback.emit(world, lightscreenScene, 1, body.position(),
+            { moment: "fade", target: String(caster.ref()), field: state.radius,
+                scale: Math.max(0.6, Math.min(2, state.radius / 3)) }, 30);
     });
     WorldCombat.effectHandler(lightscreenMark, "operation:world_combat:refresh", function (effect) {
-        if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
-        const ticks = JSON.parse(effect.input()).ticks;
-        if (typeof ticks !== "number" || !isFinite(ticks) || ticks < 1 || ticks % 1) { effect.reject("invalid-duration"); return; }
-        effect.remaining(Math.max(1, Math.min(1200, Math.round(ticks))));
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
+        const input = JSON.parse(effect.input());
+        if (typeof input.ticks !== "number" || !isFinite(input.ticks) || input.ticks < 1 || input.ticks % 1) { effect.reject("invalid-duration"); return; }
+        effect.state(JSON.stringify(input.data)); effect.remaining(Math.min(1200, input.ticks)); lightscreenCover(effect);
     });
     WorldCombat.effectHandler(lightscreenMark, "operation:world_combat:dispel", function (effect) {
-        if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
         effect.end();
     });
 
@@ -127,7 +96,7 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== lightscreenEffect) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
+        if (!world.valid(actor) || MobEffects.read(world, actor, lightscreenEffect) !== null) return;
         const views = world.effects(actor, lightscreenMark);
         for (let i = 0; i < views.length; i++) {
             if (String(views[i].source().key()) === String(views[i].target().key()))
@@ -192,7 +161,7 @@ namespace PokemonSkills {
             const cut = Math.max(0.05, Math.min(0.8, p(lightscreenId, "cut", action)));
             const damp = Math.max(0, Math.min(0.95, p(lightscreenId, "damp", action)));
             const data = { cut: cut, damp: damp, radius: radius, motes: motes, ticks: duration, caster: String(actor.ref()) };
-            const reached = lightscreenCover(world, actor, radius, duration, data, true);
+            const reached = lightscreenOpen(world, actor, duration, data);
             sound(action, "cobblemon:move.lightscreen.actor");
             if (body !== null) {
                 const scale = Math.max(0.6, Math.min(2, radius / 3));

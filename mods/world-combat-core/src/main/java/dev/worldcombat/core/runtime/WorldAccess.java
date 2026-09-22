@@ -169,6 +169,17 @@ public final class WorldAccess {
         if (expected == null) throw new IllegalArgumentException("Invalid effect comparison key");
         return runtime.host.removeMobEffect(target, id, expected);
     }
+    public long leaseMobEffect(ActorHandle target, String id, String expected) {
+        requireMutation(target); EffectData.id(id);
+        if (owner == 0 || expected == null) throw new IllegalArgumentException("A lifecycle owner and effect comparison key are required");
+        return runtime.host.leaseMobEffect(owner, target, id, expected);
+    }
+    public boolean mobEffectLeasePresent(long token) { check(); return token > 0 && runtime.host.mobEffectLeasePresent(source, token); }
+    public boolean releaseMobEffectLease(long token) {
+        requireMutation(source);
+        if (owner == 0) throw new IllegalArgumentException("A lifecycle owner is required");
+        return token > 0 && runtime.host.releaseMobEffectLease(owner, token);
+    }
     /** Native environmental facts at a loaded position; interpretation belongs to content. */
     public String environment(Point point) { check(); nearby(point); return runtime.host.environment(source, point); }
     public BlockObservation block(Point point) { check(); nearby(point); return runtime.host.block(source, point); }

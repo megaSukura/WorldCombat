@@ -1,10 +1,9 @@
 {
-  "worldcombat.skill.junglehealing.summary": "把自己交给丛林：一圈藤蔓与嫩芽从脚下的土里炸起、缠上自己和身边的伙伴，被缠住的一刻回复其最大生命的一成多并化掉全部主异常。脚下是自然地面对丛林长得更旺；之后地上会留下几丛短命的嫩芽。深根让圈更大、回复更多、芽更密，代价是起手与冷却更长。",
+  "worldcombat.skill.junglehealing.summary": "藤蔓与嫩芽围住自己和身边伙伴，回复生命并清除主异常。脚下的自然地面提高回复与范围；深根进一步加强这两项，起手与冷却也更长。",
   "worldcombat.skill.junglehealing.use.0": "给身边的一队伙伴回血并一起解状态",
   "worldcombat.skill.junglehealing.use.1": "在自然地面上一次净化整组人",
-  "worldcombat.skill.junglehealing.use.2": "用一地嫩芽标记丛林来过的地方",
   "worldcombat.skill.junglehealing.description.0": "藤蔓缠上时，自己与伙伴各回复其最大生命的 %1$s；亲密度越高丛林越亲近，脚下的自然地面再滋养一层。",
-  "worldcombat.skill.junglehealing.description.1": "藤蔓炸到 %1$s 格，并在身周自然地面上真的种下约 %2$s 格嫩芽。",
+  "worldcombat.skill.junglehealing.description.1": "藤蔓作用到 %1$s 格，爆发时伴随约 %2$s 点嫩芽。",
   "worldcombat.skill.junglehealing.description.2": "约 %1$s 片叶芽；起手 %2$s、收招 %3$s、冷却 %4$s。",
   "worldcombat.skill.junglehealing.stance.deeproot": "深根：藤蔓半径 ×1.2、回复 ×1.1、嫩芽 ×1.4，代价是起手 +3 刻、冷却更久——适合一次救一整队。",
   "worldcombat.skill.junglehealing.stance.shallow": "浅根：起手快、冷却短，圈更小、芽更少——适合快速净身。",

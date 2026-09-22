@@ -157,7 +157,7 @@ namespace PokemonSkills {
         const layers = Math.max(0, Math.round(Number(state.layers) || 0));
         if (layers <= 0) return;
         stockpileSpend(world, target);
-        const remaining = Math.max(1, charge.duration() - world.tick());
+        const remaining = Math.max(1, charge.duration());
         const next = layers - 1;
         state.layers = next;
         stockpileWrite(world, target, state, remaining);

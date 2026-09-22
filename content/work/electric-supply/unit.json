@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "id": "world_combat:work/electric_supply",
+  "version": "0.1",
+  "requires": {
+    "world_combat:companion_runtime": "0.1",
+    "world_combat:native": "0.1",
+    "world_combat:mechanisms": "0.1"
+  },
+  "sources": ["rules.ts"],
+  "clientSources": ["presentation.ts", "information.ts"]
+}

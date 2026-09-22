@@ -1,0 +1,11 @@
+{
+  "worldcombat.work.electric_supply.menu": "给机器供能",
+  "worldcombat.work.electric_supply.hint": "选择可接收能量的机器。这位电属性伙伴每秒最多提供 %1$s FE，来自特攻 %2$s 与等级 %3$s；机器按自身输入能力接收。遇敌暂停。",
+  "worldcombat.work.electric_supply.stop": "停止供能",
+  "worldcombat.work.electric_supply.stop_hint": "结束供能并回到跟随。",
+  "worldcombat.work.electric_supply.supplied": "本次已供能 %1$s FE",
+  "worldcombat.work.electric_supply.full": "机器已充满 · 本次供能 %1$s FE",
+  "worldcombat.work.electric_supply.refused": "机器未接收能量 · 本次供能 %1$s FE",
+  "worldcombat.work.electric_supply.stopped": "供能停止 · 本次供能 %1$s FE",
+  "worldcombat.work.electric_supply.jei": "已放出的电属性伙伴可从指挥菜单选择“给机器供能”，再指定支持 NeoForge FE 输入的机器。供给速率由个体特攻和等级决定，每四刻输送一次，实际接收量遵守机器的输入规则。作业持续到充满、机器拒收、停止或改令；威胁出现时暂停，结束后继续。"
+}

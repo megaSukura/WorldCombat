@@ -38,9 +38,6 @@ namespace PokemonSkills {
     export const gearupReferenceRadius = 2.6;
 
     actionParameters.define(gearupId, {
-        crankTicks: seconds(F.base(60).plus(F.level().times(2)).plus(F.stat("defence").times(0.4)).div(4).floor().times(4),
-            "手摇作业时长", "一次指令可持续操作手摇曲柄的时长；等级与防御决定耐力，曲柄转速与负载能力仍由原生机械决定。"),
-        crankPp: formula(F.const(1), "手摇作业消耗", { unit: " PP", description: "成功开始一段手摇作业时支付；无法操作曲柄时不消耗。" }),
         /** 攻击等级：物攻高或稳啮各 +1。 */
         drive: formula(
             F.base(1)
@@ -107,7 +104,6 @@ namespace PokemonSkills {
     ]);
 
     describe(gearupId, [
-        { key: "machine.description", values: ["crankTicks", "crankPp"] },
         { key: "description.0", values: ["chain", "runTicks"] },
         { key: "description.1", values: ["drive", "spark"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

@@ -1,0 +1,10 @@
+{
+  "worldcombat.work.hand_crank.menu": "Operate hand crank",
+  "worldcombat.work.hand_crank.hint": "Select a Create hand crank. Your companion approaches and keeps operating it; the crank determines speed and stress. Threats pause work. Stop or another order ends it.",
+  "worldcombat.work.hand_crank.forward": "Crank forwards",
+  "worldcombat.work.hand_crank.reverse": "Crank backwards",
+  "worldcombat.work.hand_crank.stop": "Stop cranking",
+  "worldcombat.work.hand_crank.stop_hint": "End work and follow again; the crank coasts and stops under its native rules.",
+  "worldcombat.work.hand_crank.refused": "Crank could not be operated",
+  "worldcombat.work.hand_crank.jei": "A sent-out controlled companion can operate a hand crank in either direction from its command menu. It approaches and keeps using the native empty-hand interaction; Create determines speed and stress. Work continues until stopped, replaced by another order, or the crank becomes unavailable. Threats pause work, which resumes when they pass."
+}

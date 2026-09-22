@@ -18,6 +18,8 @@ def main():
     parser.add_argument("--scenario", action="store_true", help="Run the compiled server scenario checks")
     parser.add_argument("--native-machines", action="store_true", help="Check native FE capabilities and block interactions")
     parser.add_argument("--with-create", type=Path, help="Install the actual Create release jar for native machine checks")
+    parser.add_argument("--functional-work", action="store_true", help="Check independent work commands with an empty native move set")
+    parser.add_argument("--effect-leases", action="store_true", help="Check opt-in native MobEffect ownership and cleanup")
     parser.add_argument("--manual-commands", action="store_true", help="Check player command navigation, waiting and cancellation")
     parser.add_argument("--native-runtime", action="store_true", help="Check native projectile and ecosystem integration in an isolated world")
     parser.add_argument("--composition", action="store_true", help="Check neutral action/effect/projectile composition against private shared content")
@@ -56,11 +58,11 @@ def main():
     parser.add_argument("--p5-player-death", action="store_true", help="Check native player death, respawn and chunk unloading with the formal profile")
     parser.add_argument("--world-copy", type=Path, help="For player-death checks, copy this saved world into a fresh isolated test directory")
     args = parser.parse_args()
-    if args.native_machines or args.manual_commands:
+    if args.native_machines or args.manual_commands or args.functional_work or args.effect_leases:
         args.scenario = True
         if args.restart: parser.error("Machine/command checks use a fresh world")
-    if args.with_create and not args.native_machines: parser.error("--with-create requires --native-machines")
-    if args.manual_commands and args.environment != "full": parser.error("Manual command checks require full")
+    if args.with_create and not (args.native_machines or args.functional_work): parser.error("--with-create requires --native-machines")
+    if (args.manual_commands or args.functional_work) and args.environment != "full": parser.error("Manual command checks require full")
     if args.composition:
         if args.environment != "full" or args.restart: parser.error("Composition checks require a fresh full headless server")
         args.scenario = True
@@ -148,12 +150,14 @@ def main():
     if args.native_runtime: phase = "native-runtime"
     if args.native_machines: phase = "native-machines"
     if args.manual_commands: phase = "manual-commands"
+    if args.functional_work: phase = "functional-work"
+    if args.effect_leases: phase = "effect-leases"
     if args.skills_retired: phase = "skill-retirement"
     if args.composition: phase = "composition"
     marker = "P3CHECK" if args.p3_native or args.p3_moves or args.p3_growth or args.p3_operations else "P2CHECK" if args.p2_input or args.p2_world or args.p2_capture or args.p2_movement else "P1CHECK"
     if args.p4_effects or args.p4_world or args.p4_native or args.p4_combinations or args.p4_script or args.p4_workshop: marker = "P4CHECK"
     if p5: marker = "P5CHECK"
-    if args.composition or args.manual_commands: marker = "P5CHECK"
+    if args.composition or args.manual_commands or args.functional_work: marker = "P5CHECK"
     report_name = args.environment + ("-restart" if args.restart else "")
     if args.world_copy: report_name += "-copied"
     if args.remove_effect_content: report_name += "-removed"
@@ -193,6 +197,8 @@ def main():
     if args.composition: port = "25590"
     if args.native_machines: port = "25591"
     if args.manual_commands: port = "25592"
+    if args.functional_work: port = "25593"
+    if args.effect_leases: port = "25594"
     (work / "server.properties").write_text(
         "server-ip=127.0.0.1\nserver-port=" + port +
         "\nlevel-name=" + world_name + "\nlevel-type=minecraft:flat\ngenerate-structures=false\n" +
@@ -223,6 +229,8 @@ def main():
     if args.composition: content_source = ROOT / "build/p5-composition/content/profiles/authoring"
     if args.native_machines: content_source = ROOT / "build/content/profiles/core"
     if args.manual_commands: content_source = ROOT / "build/content/profiles/base"
+    if args.functional_work: content_source = ROOT / "build/content/profiles/play"
+    if args.effect_leases: content_source = ROOT / "build/content/profiles/core"
     if args.content: content_source = args.content.resolve(strict=True)
     for name in ("p1_demo.js", "p1_demo.js.map", "content-profile.json"):
         (scripts / name).write_bytes((content_source / name).read_bytes())
@@ -306,6 +314,8 @@ def main():
     if args.native_runtime: test_class = "dev.worldcombat.core.checks.NativeProjectileChecks"
     if args.native_machines: test_class = "dev.worldcombat.core.checks.MachineInteropChecks"
     if args.manual_commands: test_class = "dev.worldcombat.cobblemon.checks.ManualCommandChecks"
+    if args.functional_work: test_class = "dev.worldcombat.cobblemon.checks.FunctionalWorkChecks"
+    if args.effect_leases: test_class = "dev.worldcombat.core.checks.MobEffectLeaseChecks"
     scenario = ('ServerEvents.tick(function (event) { Java.loadClass("' + test_class + '").tick(event.server); });\n') if args.scenario and not args.p4_script else ""
     if args.native_runtime:
         scenario += 'WorldCombat.register("checks:native_projectile", "fixture", 100, function (a) { Java.loadClass("dev.worldcombat.core.checks.NativeProjectileChecks").launch(a); });\n'
@@ -384,7 +394,7 @@ def main():
                     unexpected_script_error = True
                 if "This crash report has been saved to:" in line:
                     break
-                if (args.p4_world or args.p4_native or args.p4_combinations or args.p4_script or p5 or args.composition or args.native_machines or args.manual_commands) and any(token in line for token in (" script-error", " disabled:", "host-hook-disabled", "effect-disabled", "tactics disabled", "Error loading KubeJS script", "Error in 'ServerEvents.", "Error in 'PlayerEvents.")):
+                if (args.p4_world or args.p4_native or args.p4_combinations or args.p4_script or p5 or args.composition or args.native_machines or args.manual_commands or args.functional_work or args.effect_leases) and any(token in line for token in (" script-error", " disabled:", "host-hook-disabled", "effect-disabled", "tactics disabled", "Error loading KubeJS script", "Error in 'ServerEvents.", "Error in 'PlayerEvents.")):
                     unexpected_script_error = True
                 should_stop = passed if args.scenario else "WorldCombat core server started." in line
                 if should_stop and not stop_sent:

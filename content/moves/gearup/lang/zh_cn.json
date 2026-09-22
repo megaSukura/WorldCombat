@@ -30,20 +30,5 @@
   "world_combat.move.gearup.text.spin": "辅助齿轮（攻击 +%1$s／特攻 +%2$s／%3$s 人／%4$s 秒）",
   "world_combat.move.gearup.text.drive": "齿轮传动（攻击 +%1$s／特攻 +%2$s）",
   "world_combat.move.gearup.text.fade": "齿轮锁定",
-  "effect.world_combat.gearup_drive": "辅助齿轮",
-  "worldcombat.skill.gearup.value.crankTicks": "手摇作业时长",
-  "worldcombat.skill.gearup.value.crankPp": "手摇作业消耗",
-  "worldcombat.skill.gearup.machine.menu": "操作手摇曲柄",
-  "worldcombat.skill.gearup.machine.hint": "选择 Create 手摇曲柄。伙伴走近后持续原生空手操作；遇敌暂停，停止指令结束作业。",
-  "worldcombat.skill.gearup.machine.forward": "正向操作",
-  "worldcombat.skill.gearup.machine.reverse": "反向操作",
-  "worldcombat.skill.gearup.machine.stop": "停止手摇",
-  "worldcombat.skill.gearup.machine.stop_hint": "停止继续操作；曲柄按原生规则短暂余转后停下。",
-  "worldcombat.skill.gearup.machine.description": "可操作 Create 手摇曲柄，一段作业持续 %1$s，成功开始时消耗 %2$s PP；方向可选，转速和负载能力保持曲柄的原生规则。",
-  "worldcombat.skill.gearup.machine.jei": "会辅助齿轮的伙伴可在指挥菜单选择正向或反向操作手摇曲柄。一次作业有时长和PP代价，伙伴会走近后真正操作曲柄；转速与应力由 Create 结算。遇敌暂停，可主动停止，曲柄随后按原生规则停转。",
-  "world_combat.move.gearup.text.machine_done": "手摇作业完成",
-  "world_combat.move.gearup.text.machine_forward": "正向手摇 · 余 %1$s 秒",
-  "world_combat.move.gearup.text.machine_reverse": "反向手摇 · 余 %1$s 秒",
-  "world_combat.move.gearup.text.machine_refused": "曲柄无法操作",
-  "worldcombat.skill.gearup.use.3": "让伙伴操作手摇曲柄"
+  "effect.world_combat.gearup_drive": "辅助齿轮"
 }

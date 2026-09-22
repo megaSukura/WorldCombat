@@ -1,29 +1,4 @@
-/**
- * 破壳 / shellsmash 的参数与数值来源。
- *
- * 原生事实：Normal、变化、威力 —、命中必中、PP 15、目标 self、
- *   boosts { def: -1, spd: -1, atk: +2, spa: +2, spe: +2 }。
- *
- * 翻译：把「打破外壳」翻成一件真事——包着自己的硬壳整个撑裂，壳片四散飞出、扎进身周的地里；
- *   攻、特攻、速度猛涨，防、特防随壳一起掉了，而且这一掉是永久的：壳不会自己长回来。
- *   它是这一族里唯一**自伤换爆发**的招，也是唯一在场上留下实体壳片的一招。
- * 取原生「攻特攻速度 +2、防特防 −1、PP 15、纯自我强化」；原生的「威力」与本招无关（变化招），
- *   这里的代价是防御等级，不是回合。
- *
- * 数值来源（每一项读不同的精灵数据或现场事实，分散到不同参数）：
- *   surge   基础 +2 级；配置「彻底破壳」+3；夹 2..3：壳撑得越彻底，抬得越高。
- *   toll    基础 1 级；配置「彻底破壳」2 级；夹 1..2：与 surge 同向变动的代价。
- *   spread  基础 1.6 格 + 碰撞箱宽度 ×1.0 + 碰撞箱高度 ×0.3，夹 1.2..3.4：身板越大，壳片散得越开。
- *   shards  基础 18 + 体重 /12 + 防御 ×0.15，夹 14..64：壳越重越硬，碎片越多。
- *   shardSize 基础 0.1 格 + 体重 /3000，夹 0.06..0.22：壳越重，碎片越大。
- *   shatter 基础 0.12 格/刻 + 体重 /4000，夹 0.08..0.28：壳越重，碎片甩得越快。
- *   debrisTicks 基础 80 刻 + 等级 ×2，夹 60..200：等级越高，壳片在原地留得越久。
- *   tempo   基础 8 刻 − 速度偏移；彻底破壳 +2；夹 4..13。
- *   aftercast 基础 6 刻 + 碰撞箱高度 ×1.5，夹 6..10。
- *   wait    基础 90 刻 − 等级 ×0.4；彻底破壳 +14；夹 60..110。PP 15 的代价。
- * 配置 total（彻底破壳）：开启＝攻特攻速度 +3、防特防 −2，壳片更大更远，代价是起式 +2 刻、冷却 +14；
- *   关闭＝+2 / −1 的稳妥版本。两向各有局面：一发定胜负 vs 留有余地。
- */
+/** 破壳：以双防等级换取攻、特攻和速度；壳片飞散由粒子表现。 个体差异、配置和现场事实由以下公式定义。 */
 namespace PokemonSkills {
     actionParameters.define("shellsmash", {
         /** 破壳增益：攻／特攻／速度各 +2（彻底破壳 +3）。 */
@@ -45,14 +20,14 @@ namespace PokemonSkills {
             F.base(1.6).plus(F.body("width").times(1.0)).plus(F.body("height").times(0.3)).clamp(1.2, 3.4).round(2),
             "散落半径", {
                 unit: " 格",
-                description: "壳片扎进身周地面的半径；身板越大散得越开。判定与表现读同一个半径。"
+                description: "壳片粒子散开的半径；身板越大散得越开。"
             }),
         /** 壳片数量：体重与防御共同派生。 */
         shards: formula(
             F.base(18).plus(F.body("weight").div(12)).plus(F.stat("defence").times(0.15)).clamp(14, 64).round(0),
             "壳片数量", {
                 unit: " 片",
-                description: "破壳时甩出的壳片粒子总数；壳越重越硬越多，画面里的数量与机制一致。"
+                description: "破壳时甩出的壳片粒子总数；壳越重越硬越多，粒子按此数量发射。"
             }),
         /** 壳片大小：体重决定。 */
         shardSize: formula(
@@ -68,10 +43,6 @@ namespace PokemonSkills {
                 unit: " 格/刻",
                 description: "壳片离体后向外飞散的速度；壳越重甩得越快。"
             }),
-        /** 壳片留存：等级决定。 */
-        debrisTicks: seconds(
-            F.base(80).plus(F.level().times(2)).clamp(60, 200).round(0),
-            "壳片留存", "壳片扎在地上留多久；等级越高留得越久，到期原方块回来。"),
         /** 起式：速度决定撑裂多快。 */
         tempo: seconds(
             F.base(8).minus(F.stat("speed").minus(60).times(0.03))
@@ -97,7 +68,7 @@ namespace PokemonSkills {
 
     describe("shellsmash", [
         { key: "description.0", values: ["surge", "toll"] },
-        { key: "description.1", values: ["spread", "shards", "debrisTicks"] },
+        { key: "description.1", values: ["spread", "shards"] },
         { key: "total.on", values: ["surge", "toll"], when: function (context) { return read(context.detail.values, ["total"]) === true; } },
         { key: "total.off", values: [], when: function (context) { return read(context.detail.values, ["total"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

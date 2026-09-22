@@ -133,7 +133,7 @@ namespace PokemonSkills {
             const fraction = Math.max(0.012, Math.min(0.05, confusionChipBase + specialAttack * confusionChipPerSpecialAttack));
             const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
             if (loss > 0) {
-                const remaining = Math.max(0, effect.duration() - world.tick());
+                const remaining = Math.max(0, effect.duration());
                 CombatStatus.apply(world, actor, "confusion", confusionEffect, Math.max(confusionRefresh, remaining), effect.amplifier(), { unique: true });
                 WorldFeedback.emit(world, confusionScene, 1, body.position(), { moment: "punish", target: String(actor.ref()) }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), confusionChipText, [Math.round(loss * 10) / 10], 24);

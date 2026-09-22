@@ -44,7 +44,7 @@ namespace WorldCombatAbilityPerishBody {
         var body = world.observe(holder);
         if (!body || data.actual < body.maxHealth() * THRESHOLD) return;
         var attacker = event.actor();
-        if (!world.valid(attacker) || world.friendly(attacker)) return;
+        if (!world.valid(attacker) || world.allied(holder, attacker)) return;
         spent[String(holder.ref())] = true;
         var cursed = MobEffects.apply(world, attacker, DOOM, DOOM_TICKS, 0) !== null;
         // The omen saps a Pokemon attacker's special offence; stage changes only exist for Pokemon.

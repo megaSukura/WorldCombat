@@ -53,6 +53,9 @@ click('▸ '+mock.t('ai_preferences'));assert(widgets(screen).some(widget=>widge
 // Stale CAS feedback refreshes the correct selected subject without dropping the panel.
 click(mock.t('disabled'));respond({error:'settings-changed'});assert(widgets(screen).some(widget=>String(widget.text).includes('偏好已有更新')));assert.equal(JSON.parse(requests.at(-1)[2]).op,'inspect');respond({skills:[changed],menu});
 send('cancel');snapshot={...snapshot,pokemon:'empty',skills:[]};update(JSON.stringify(snapshot));respond({skills:[],menu:[{id:'hold',label:'Wait',command:'hold',target:'none'}]});assert.equal(hud,null);send('command');send('command',false);assert.equal(commands.at(-1)[0],'hold');
+// Independent capabilities keep the command HUD usable without native move slots.
+respond({skills:[],menu:[{id:'checks/work',capability:'checks:work',label:'Independent work',command:'checks-work',target:'none'}]});update(JSON.stringify(snapshot));assert(hud,'An independent capability displays its companion HUD');
+send('command');click('Independent work');send('command',false);assert.equal(commands.at(-1)[0],'checks-work');
 // M and H pass the same authored prose to the same editor; native Summary remains the parent screen.
 snapshot={...snapshot,pokemon:actor,skills:[{id:'world_combat:vinewhip',label:'藤鞭',remaining:9,maximum:10}]};activeSnapshot=snapshot;update(JSON.stringify(snapshot));respond({skills:[skill()],menu,supportedMoves:['vinewhip','solarbeam','tackle']});
 const inspected='another',nativeSummary={native:true};party.set(inspected,{name:'Other'});screen=nativeSummary;

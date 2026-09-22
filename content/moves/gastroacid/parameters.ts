@@ -1,26 +1,4 @@
-/**
- * 胃液 / gastroacid — 参数与机制数值来源。
- *
- * 核心念头：朝对手吐一口酸，酸液沾上身体后把它的特性从身上洗掉一段时间。是对“扮演/描绘”的减法：
- *   同族把对手的本质借过来，胃液把对手的本质蚀掉。
- * 原生：Poison／变化／命中 100／PP 10／单体；`volatileStatus: gastroacid`，`onTryHit` 在目标特性带
- *   cantsuppress 或持有效果护盾时失败；命中后该特性效果被忽略。即时化把“忽略特性”实现成共享的
- *   `NativeModifiers` suppressAbility 层（与木乃伊同一套临时压制机制），并给任何生物挂上共享身份
- *   `world_combat:status/gastroacid` 的“沾酸”状态，供别的作者消费。
- *
- * 每个参数是一棵公式，依赖分散在不同精灵数据上：
- *   reach     射程：体型给出吐得到多远，速度决定酸液还能带走多远。
- *   velocity  弹速：速度与体重共同决定酸弹飞得多快。
- *   radius    碰撞半径：体型决定酸弹的粗细。
- *   tempo     起手：速度决定胃里涌起酸液多快。
- *   aftercast 收势：特防决定吐完站得多稳。
- *   hold      蚀刻时长：等级与特攻决定酸液的效力，浓酸再延长。
- *   recharge  冷却：速度决定多久能再吐一口。
- *   drops     酸滴数：特攻决定命中溅开的酸滴。
- *   bubbles   酸泡数：等级决定起手喉间滚动的气泡。
- *   puddle    地面酸渍：体重决定落地那一滩留多久。
- * 配置项 thick（浓酸 / 稀酸）：浓酸更久、冷却更长；稀酸更短、更便宜。
- */
+/** 胃液：酸弹命中后压制目标特性；酸液飞行、溅射和沾酸由现有表现承载。 个体差异、配置和现场事实由以下公式定义。 */
 
 namespace PokemonSkills {
     actionParameters.define("gastroacid", {
@@ -61,9 +39,6 @@ namespace PokemonSkills {
         bubbles: formula(
             F.base(6, "基础").plus(F.level().div(4).as("等级")).clamp(6, 22).round(),
             "酸泡数", { unit: "个", description: "起手喉间滚动的酸泡数量；等级越高越多。" }),
-        puddle: seconds(
-            F.base(60, "基础").plus(F.body("weight").div(4000).as("体重")).clamp(40, 200).round(),
-            "酸渍维持", "酸液落地后那一小滩酸渍留多久；体重越大留得越久。它是可以被绕开的真方块。")
     });
 
     stages("gastroacid", [{ level: 35, values: { cooldown: 70 } }, { level: 50, values: { cooldown: 60 } }]);
@@ -71,7 +46,7 @@ namespace PokemonSkills {
     describe("gastroacid", [
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
         { key: "description.1", values: ["hold"] },
-        { key: "description.2", values: ["drops", "bubbles", "puddle"] },
+        { key: "description.2", values: ["drops", "bubbles"] },
         { key: "thick.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "thick.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

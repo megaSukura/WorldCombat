@@ -6,7 +6,7 @@ namespace CompanionWorldUi {
     export function intent(id: string, translation: string): void { intents[id] = translation; }
     export function phase(id: string, translation: string): void { phases[id] = translation; }
 
-    const intents: any = { follow: "feedback.world_combat.ui.follow", autonomous: "feedback.world_combat.ui.roam", hold: "feedback.world_combat.ui.hold", stay: "feedback.world_combat.ui.stay", protect: "feedback.world_combat.ui.protect", work: "feedback.world_combat.ui.care", focus: "feedback.world_combat.ui.focus", free: "feedback.world_combat.ui.roam" };
+    const intents: any = { follow: "feedback.world_combat.ui.follow", autonomous: "feedback.world_combat.ui.roam", hold: "feedback.world_combat.ui.hold", stay: "feedback.world_combat.ui.stay", protect: "feedback.world_combat.ui.protect", work: { key: "worldcombat.ui.intents.work" }, focus: "feedback.world_combat.ui.focus", free: "feedback.world_combat.ui.roam" };
     const phases: any = { prepare: "feedback.world_combat.ui.prepare", preparing: "feedback.world_combat.ui.prepare", active: "feedback.world_combat.ui.cast", execute: "feedback.world_combat.ui.cast", running: "feedback.world_combat.ui.cast", recover: "feedback.world_combat.ui.recover", recovering: "feedback.world_combat.ui.recover",
         approaching: "feedback.world_combat.ui.approach", attending: "feedback.world_combat.ui.care", retreating: "feedback.world_combat.ui.retreat", blocked: "feedback.world_combat.ui.blocked", maintaining: "feedback.world_combat.ui.maintain", idle: "feedback.world_combat.ui.ready",
         searching: "feedback.world_combat.ui.search", checking: "feedback.world_combat.ui.check", waiting: "feedback.world_combat.ui.wait", observing: "feedback.world_combat.ui.observe" };
@@ -16,6 +16,8 @@ namespace CompanionWorldUi {
         break: { label: "feedback.world_combat.ui.substitute_broken", color: 0xffffd18d }, "toxin-consumed": { label: "feedback.world_combat.ui.poison_consumed_detonation", color: 0xffe7a0fa },
         failed: { label: "feedback.world_combat.ui.could_not_cast", color: 0xffffc791 } };
     const reasons: any = { "already-carried": "worldcombat.reason.already-carried", "already-swapped": "worldcombat.reason.already-swapped", "needs-sunlight": "feedback.world_combat.ui.needs_natural_sunlight", "sunlight-lost": "feedback.world_combat.ui.sunlight_interrupted", "light-full": "feedback.world_combat.ui.light_reserve_full",
+        "work-unavailable": "worldcombat.ui.reasons.work-unavailable", "work-interrupted": "worldcombat.ui.reasons.work-interrupted",
+        "work-target-changed": "worldcombat.ui.reasons.work-target-changed", "work-unreachable": "worldcombat.ui.reasons.work-unreachable", "work-running": "worldcombat.ui.reasons.work-running",
         "target-left": "feedback.world_combat.ui.target_left", "out-of-range": "feedback.world_combat.ui.out_of_range", "invalid-target": "feedback.world_combat.ui.invalid_target", "target-not-visible": "feedback.world_combat.ui.line_of_sight_blocked",
         "path-blocked": "feedback.world_combat.ui.path_blocked", "capture-in-progress": "feedback.world_combat.ui.waiting_for_capture", "no-usable-skill": "feedback.world_combat.ui.no_usable_move",
         "skill-unavailable": "feedback.world_combat.ui.waiting_for_conditions", "control-preserved": "feedback.world_combat.ui.preserving_control", care: "feedback.world_combat.ui.caring_for_a_companion", prepare: "feedback.world_combat.ui.prepare",

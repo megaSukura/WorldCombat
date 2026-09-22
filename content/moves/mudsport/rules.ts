@@ -7,6 +7,7 @@
  *   `PokemonDamage.metadata` 里改写。泥滩还把地表方块租借成 `minecraft:mud`，到期原方块回来。
  */
 namespace PokemonSkills {
+    StatusContributions.define(mudsportCoat);
     function mudsportPoint(field: WorldEffects.Field): CombatPoint {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
@@ -38,7 +39,8 @@ namespace PokemonSkills {
 
     function mudsportApplyCoat(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
         const ticks = Math.max(40, Math.round(Number(field.data.coat) || 80)) + 20;
-        MobEffects.apply(world, actor, mudsportCoat, ticks, 0);
+        StatusContributions.upsert(world, actor, mudsportCoat, String(field.id), { factor: field.data.factor }, ticks,
+            { owner: { id: field.id!, definition: "world_combat:field", target: String(world.source().ref()) } });
     }
 
     WorldEffects.fieldRule(mudsportField, {
@@ -53,8 +55,8 @@ namespace PokemonSkills {
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             mudsportApplyCoat(world, actor, field);
         },
-        leave: function (world: CombatWorld, actor: CombatActor): void {
-            MobEffects.consume(world, actor, mudsportCoat);
+        leave: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
+            StatusContributions.remove(world, actor, mudsportCoat, String(field.id));
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = mudsportPoint(field);
@@ -67,11 +69,11 @@ namespace PokemonSkills {
     PokemonDamage.metadata.define({ id: "world_combat:move_mudsport/dampen", apply: function (context) {
         if (!context.world || !context.actor || !(context.metadata.power > 0)) return;
         if (String(context.metadata.type).toLowerCase() !== "electric") return;
-        if (!CombatStatus.has(context.world, context.actor, mudsportStatus)) return;
-        let factor = 0.55;
-        const areas = WorldEffects.areas(context.world, mudsportField);
-        for (let i = 0; i < areas.length; i++) {
-            const value = Number(areas[i].data && areas[i].data.factor);
+        const coats = StatusContributions.list(context.world, context.actor, mudsportCoat);
+        if (!coats.length) return;
+        let factor = 1;
+        for (let i = 0; i < coats.length; i++) {
+            const value = Number(coats[i].payload.factor);
             if (isFinite(value) && value > 0 && value < factor) factor = value;
         }
         context.metadata.power *= factor;

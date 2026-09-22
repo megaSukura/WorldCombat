@@ -1,18 +1,4 @@
-/**
- * 森林诅咒 / forestscurse — 出手方式。
- *
- * 核心念头：向对手种下森林的诅咒——根须从它脚下的地面钻出把它缠住，落叶从头顶罩下，苔藓在原处生根，
- *   它从此多长了一层草属性。诅咒是长在地上的东西，因此只对临时属性层还放得下第三条、也不是草属性的对手种得上。
- *
- * 幕：
- *   起（windup，提交前）：在手里画出一道绿纹，只观察与预告，可被打断且不花代价。
- *   生（root，提交后）：根须从目标脚下钻出、落叶从头顶罩下；它的属性被写进共享 NativeModifiers types 层
- *     （现有属性追加一条草，到期自动还原原生属性），并挂共享身份 `world_combat:status/forestscurse` 的标记。
- *   根（grove）：命中处的地面被顶出一小块苔（`world.terrain` 租借，到期原方块回来），深根档更大更久。
- *   解（lift）：诅咒到期时叶片从目标身上落下，告诉玩家这一层已经过去。
- *
- * 反制：草属性目标（已经有了）与双属性目标（装不下第三条）预检直接拒绝，不浪费 20 发 PP；非宝可梦没有属性可追加。
- */
+/** 森林诅咒：给目标追加草属性；根须、树冠与解除时的落叶承载诅咒表现。 */
 
 namespace PokemonSkills {
     export const forestscurseId = "forestscurse";
@@ -41,31 +27,6 @@ namespace PokemonSkills {
         return types.length >= 3 ? "no-room" : "";
     }
 
-    /** 在落点周围把表土顶成一圈苔；只认自然地面，到期原方块回来。 */
-    function forestscurseGrove(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): void {
-        const soil = ["minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:podzol",
-            "minecraft:rooted_dirt", "minecraft:moss_block", "minecraft:sand", "minecraft:red_sand",
-            "minecraft:gravel", "minecraft:farmland"];
-        const reach = Math.max(0, Math.round(radius - 0.5)), cells: any[] = [];
-        const x0 = Math.floor(point.x()), z0 = Math.floor(point.z()), y0 = Math.floor(point.y());
-        for (let dx = -reach; dx <= reach; dx++) for (let dz = -reach; dz <= reach; dz++) {
-            if (dx * dx + dz * dz > reach * reach + reach) continue;
-            const x = x0 + dx, z = z0 + dz;
-            for (let dy = 0; dy <= 3; dy++) {
-                const y = y0 - dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (soil.indexOf(id) >= 0) cells.push({ x: x, y: y, z: z, block: "minecraft:moss_block" });
-                break;
-            }
-        }
-        if (!cells.length) return;
-        try {
-            world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks)));
-        } catch (error) { }
-    }
-
     // 诅咒到期：叶片从目标身上落下。属性层随效果同寿命自动还原。
     WorldCombat.on("world_combat:move_forestscurse/end", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
@@ -83,8 +44,8 @@ namespace PokemonSkills {
     define({
         id: forestscurseId,
         name: "森林诅咒",
-        description: "向对手种下森林诅咒：根须钻出地面把它缠住，给它追加草属性，并在它脚下留下一小块苔；只对临时属性层还放得下第三条、且非草的宝可梦种得上。",
-        uses: ["给对手追加草属性、打开火与冰与虫与飞的弱点", "把水与地面的对手逼出四倍草弱点", "深根档把诅咒与苔痕都留得更久"],
+        description: "向对手种下森林诅咒：根须缠住目标，给它追加草属性；只对还能追加一条属性、且非草的宝可梦生效。",
+        uses: ["给对手追加草属性、打开火与冰与虫与飞的弱点", "把水与地面的对手逼出四倍草弱点", "深根档让草属性诅咒持续更久"],
         kind: "enemy",
         range: 6,
         maxRange: 12,
@@ -146,11 +107,9 @@ namespace PokemonSkills {
             const roots = Math.max(8, Math.round(p(forestscurseId, "roots", action)));
             const leaves = Math.max(10, Math.round(p(forestscurseId, "leaves", action)));
             const grove = Math.max(1.2, p(forestscurseId, "grove", action));
-            const patch = Math.max(40, Math.round(p(forestscurseId, "patch", action)));
             const types = forestscurseTypes(world, target).concat(["grass"]);
             NativeModifiers.apply(world, target, { types: types }, hold);
             MobEffects.apply(world, target, forestscurseEffect, hold, rooted ? 1 : 0);
-            forestscurseGrove(world, point, grove, patch);
             WorldFeedback.emit(world, forestscurseScene, 1, point,
                 { moment: "root", target: String(target.ref()), roots: roots, leaves: leaves, grove: grove,
                     scale: Math.max(0.6, Math.min(2.2, grove / 1.6)), intensity: Math.max(0.7, Math.min(2, hold / 260)) }, 40);

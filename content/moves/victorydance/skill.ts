@@ -145,7 +145,7 @@ namespace PokemonSkills {
         if (target === null || !world.valid(actor) || world.friendly(target)) return;
         const effect = MobEffects.read(world, actor, victorydanceCrown);
         if (effect === null) return;
-        const remaining = effect.duration() - world.tick();
+        const remaining = effect.duration();
         const cap = Math.round(p("victorydance", "rallyCap")), gain = Math.round(p("victorydance", "rallyGain"));
         if (remaining >= cap) return;
         const next = Math.min(cap, remaining + gain);

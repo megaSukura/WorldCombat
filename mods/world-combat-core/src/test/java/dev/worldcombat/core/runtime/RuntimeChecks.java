@@ -600,9 +600,18 @@ public final class RuntimeChecks {
             fixture.start(); fixture.runtime.interruptPreparation(fixture.actor);
             check(balance[0] == 5 && fixture.runtime.cooldown(fixture.actor, ACTION) == 0, "Preparation consumed a resource");
             fixture.empty();
-            var invalid = new Fixture(ctx -> { ctx.cost(cost("energy", balance, 2, () -> {})); ctx.commit(0); });
+            var invalid = new Fixture(ctx -> { ctx.cost(cost("energy", balance, 2, () -> {})); ctx.commit(-1); });
             rejected(invalid::start);
             check(balance[0] == 5 && invalid.runtime.cooldown(invalid.actor, ACTION) == 0, "Invalid cooldown consumed a resource");
+        });
+        scenario("zero cooldown commits costs and permits the next independent action", () -> {
+            int[] balance = {5};
+            var fixture = new Fixture(ctx -> { ctx.cost(cost("energy", balance, 2, () -> {})); ctx.commit(0); ctx.finish(); });
+            fixture.start(); fixture.start();
+            check(balance[0] == 1 && fixture.host.commitments == 2 && fixture.host.errors == 0,
+                "Zero cooldown skipped payment or prevented the next action");
+            check(fixture.runtime.stats().cooldowns() == 0, "Zero cooldown retained a dead cooldown record");
+            fixture.empty();
         });
         scenario("all costs validate before any payment", () -> {
             int[] first = {5}, second = {0};

@@ -36,9 +36,7 @@ namespace PokemonSkills {
         if (!world.valid(source)) return;
         const mark = chargeMarkOf(world, source);
         if (MobEffects.consume(world, source, chargeUp) === null) return;
-        const remaining = mark && typeof mark.energyRemaining === "number" && mark.energyBudget > 0
-            ? Math.max(0, Math.min(1, mark.energyRemaining / mark.energyBudget)) : 1;
-        data.amount *= 1 + remaining;
+        data.amount *= 2;
         chargeReleaseMark(world, source);
         const body = world.observe(source);
         if (body === null) return;

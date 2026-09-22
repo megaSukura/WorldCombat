@@ -1,101 +1,86 @@
-/**
- * 反射壁 / reflect 的执行组织与结算。
- *
- * 核心念头：在身侧立起一圈由硬光板拼成的壁，物理的打击撞在板上被削掉一块；镜面形态还把削下的那份弹回近身者。
- * 出手：短起手（windup 播聚板预告）后提交；只对自己施放，壁以自身为锚跟随移动。
- * 命中：提交后给自己与半径内友方挂 world_combat:reflect_plates（身份 reflect），并在每个受护者身上留下
- *       world_combat:reflect_mark，写明削减份额、反弹份额、板数与时长；施法者自己的标记每 20 刻把同一面壁补一圈。
- * 持续：存续期由该 MobEffect 承担，每 20 刻 keep 一次环绕身体的板影。
- * 结算：物理伤害在 NativeEffects.incomingRules 里读到受击者的标记，按 cut 削减；镜面形态下，近身物理被挡下的
- *       那份按 rebound 弹回敌对攻击者（带 reflected 标记，不会来回弹）。
- * 结束：施法者的壁走完或被人解除时，标记结束并收回半径内友方的壁，整圈硬光同时收。
- */
+/** 反射壁：领域自己保存时长与参数，受护者按领域实例持有独立贡献；物理减伤与镜面反弹由本招聚合。 */
 namespace PokemonSkills {
+    StatusContributions.define(reflectEffect);
+    const reflectCounter = "world_combat:reflect_counter";
     function reflectAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
-
+    function reflectContribution(world: CombatWorld, actor: CombatActor): StatusContributions.Contribution | null {
+        const contributions = StatusContributions.list(world, actor, reflectEffect);
+        return contributions.length ? contributions[0] : null;
+    }
     function reflectMarkOf(world: CombatWorld, actor: CombatActor): any {
-        const views = world.effects(actor, reflectMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+        const contribution = reflectContribution(world, actor);
+        return contribution === null ? null : contribution.payload;
     }
-    function reflectApply(world: CombatWorld, actor: CombatActor, ticks: number, data: any): boolean {
-        if (MobEffects.apply(world, actor, reflectEffect, ticks, 0) === null) return false;
-        const views = world.effects(actor, reflectMark);
-        for (let i = 0; i < views.length; i++)
-            if (world.operation(views[i].id(), "world_combat:refresh", JSON.stringify({ ticks: ticks }))) return true;
-        world.effect(reflectMark, actor, JSON.stringify(data), ticks);
-        return true;
-    }
-    /** 给施法者与半径内友方补壁；includeSelf=false 时只刷新施法者自己的 MobEffect，避免在自己的标记回调里重入。 */
-    function reflectCover(world: CombatWorld, caster: CombatActor, radius: number, ticks: number, data: any, includeSelf: boolean): number {
-        const body = world.observe(caster);
+    function reflectCover(effect: CombatEffect): number {
+        const world = effect.world(), caster = effect.source(), data = JSON.parse(effect.state()), body = world.observe(caster);
         if (body === null) return 0;
-        let reached = 0;
-        if (includeSelf) { if (reflectApply(world, caster, ticks, data)) reached++; }
-        else MobEffects.apply(world, caster, reflectEffect, ticks, 0);
-        const actors = world.query(body.position(), radius, false);
+        const ticks = Math.max(60, Math.min(1180, effect.remaining()));
+        const owner = { id: effect.id(), definition: reflectMark, target: String(caster.ref()) };
+        const token = String(effect.id());
+        let reached = StatusContributions.upsert(world, caster, reflectEffect, token, data, ticks, { owner: owner }) ? 1 : 0;
+        const actors = world.query(body.position(), Math.max(1, Number(data.radius) || 3), false);
         for (let i = 0; i < actors.length; i++) {
-            const other = actors[i];
-            if (String(other.key()) === String(caster.key())) continue;
-            if (!world.friendly(other)) continue;
-            if (reflectApply(world, other, ticks, data)) reached++;
+            if (String(actors[i].key()) === String(caster.key()) || !world.friendly(actors[i])) continue;
+            if (StatusContributions.upsert(world, actors[i], reflectEffect, token, data, ticks, { owner: owner })) reached++;
         }
+        data.reached = reached; effect.state(JSON.stringify(data));
         return reached;
     }
-    function reflectClear(world: CombatWorld, caster: CombatActor, radius: number): void {
-        const body = world.observe(caster);
-        if (body === null) return;
-        const actors = world.query(body.position(), radius, false);
-        for (let i = 0; i < actors.length; i++) {
-            const other = actors[i];
-            if (String(other.key()) === String(caster.key())) continue;
-            if (!world.friendly(other)) continue;
-            MobEffects.consume(world, other, reflectEffect);
-            const views = world.effects(other, reflectMark);
-            for (let j = 0; j < views.length; j++) world.operation(views[j].id(), "world_combat:dispel", "{}");
-        }
+    function reflectOpen(world: CombatWorld, caster: CombatActor, ticks: number, data: any): number {
+        const roots = world.effects(caster, reflectMark).filter(view => String(view.source().key()) === String(caster.key()));
+        let id: number;
+        if (roots.length) {
+            id = roots[0].id();
+            world.operation(id, "world_combat:refresh", JSON.stringify({ ticks: ticks, data: data }));
+        } else id = world.effect(reflectMark, caster, JSON.stringify(data), ticks);
+        const root = world.effects(caster, reflectMark).filter(view => view.id() === id)[0];
+        return root ? Number(JSON.parse(String(root.data())).reached) || 0 : 0;
     }
-
     WorldCombat.effect(reflectMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         ["cut", "rebound", "radius", "plates"].forEach(function (key) {
-            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid reflect mark: " + key);
+            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid reflect field: " + key);
         });
-        if (value.radius <= 0 || value.plates <= 0) throw new Error("Invalid reflect mark extent");
+        if (value.radius <= 0 || value.plates <= 0) throw new Error("Invalid reflect field extent");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(reflectMark, "start", function (effect) {
-        if (String(effect.target().key()) === String(effect.source().key())) effect.schedule("pulse", "pulse", 20, "{}");
+        reflectCover(effect); effect.schedule("pulse", "pulse", 20, "{}");
     });
     WorldCombat.effectHandler(reflectMark, "pulse", function (effect) {
-        if (String(effect.target().key()) !== String(effect.source().key())) return;
-        const world = effect.world(), caster = effect.source();
-        if (world.observe(caster) === null) { effect.end(); return; }
-        const state = JSON.parse(effect.state());
-        const ticks = Math.max(60, Math.min(1180, effect.remaining()));
-        reflectCover(world, caster, Math.max(1, Number(state.radius) || 3), ticks, state, false);
-        effect.schedule("pulse", "pulse", 20, "{}");
+        if (MobEffects.read(effect.world(), effect.source(), reflectEffect) === null) { effect.end(); return; }
+        reflectCover(effect); effect.schedule("pulse", "pulse", 20, "{}");
     });
     WorldCombat.effectHandler(reflectMark, "end", function (effect) {
-        if (String(effect.target().key()) !== String(effect.source().key())) return;
-        const world = effect.world(), caster = effect.source();
-        const state = JSON.parse(effect.state());
+        const world = effect.world(), caster = effect.source(), state = JSON.parse(effect.state());
+        StatusContributions.removeSource(world, reflectEffect, String(effect.id()));
         const body = world.observe(caster);
-        if (body !== null) {
-            const scale = Math.max(0.6, Math.min(2, (Number(state.radius) || 3) / 3));
-            WorldFeedback.emit(world, reflectScene, 1, body.position(),
-                { moment: "fade", target: String(caster.ref()), field: Number(state.radius) || 3, scale: scale }, 30);
-        }
-        reflectClear(world, caster, Math.max(1, Number(state.radius) || 3));
+        if (body !== null) WorldFeedback.emit(world, reflectScene, 1, body.position(),
+            { moment: "fade", target: String(caster.ref()), field: state.radius,
+                scale: Math.max(0.6, Math.min(2, state.radius / 3)) }, 30);
     });
     WorldCombat.effectHandler(reflectMark, "operation:world_combat:refresh", function (effect) {
-        if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
-        const ticks = JSON.parse(effect.input()).ticks;
-        if (typeof ticks !== "number" || !isFinite(ticks) || ticks < 1 || ticks % 1) { effect.reject("invalid-duration"); return; }
-        effect.remaining(Math.max(1, Math.min(1200, Math.round(ticks))));
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
+        const input = JSON.parse(effect.input());
+        if (typeof input.ticks !== "number" || !isFinite(input.ticks) || input.ticks < 1 || input.ticks % 1) { effect.reject("invalid-duration"); return; }
+        effect.state(JSON.stringify(input.data)); effect.remaining(Math.min(1200, input.ticks)); reflectCover(effect);
     });
     WorldCombat.effectHandler(reflectMark, "operation:world_combat:dispel", function (effect) {
-        if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
         effect.end();
+    });
+    EffectReactions.register(reflectMark, reflectCounter, function (effect, facts) {
+        const world = effect.world(), attacker = world.actor(facts.attacker), target = world.actor(facts.target);
+        if (!attacker || !target || String(effect.caller().key()) !== String(attacker.key()) || world.allied(target, attacker)) return;
+        const contribution = reflectContribution(world, target);
+        if (!contribution || contribution.token !== String(effect.id()) || String(contribution.source.key()) !== String(effect.source().key())) return;
+        const back = Number(facts.amount);
+        if (!(back > 0) || !isFinite(back) || !world.hurt(attacker, back, JSON.stringify({ kind: "reflection", reflected: true, type: facts.type || "" }))) return;
+        const body = world.observe(target);
+        if (body !== null) {
+            WorldFeedback.text(world, reflectAbove(body.position()), reflectReboundText, [Math.round(back * 10) / 10], 26);
+            world.sound("minecraft:block.amethyst_block.hit", body.position(), 12, "{}");
+        }
     });
 
     /** 物理结算点：受击者带着反射壁时削减物理伤害；镜面形态把挡下的部分弹回近身者。 */
@@ -105,13 +90,14 @@ namespace PokemonSkills {
         if (data.category !== "physical") return;
         const world = hit.world, target = hit.target;
         if (!world.valid(target)) return;
-        const mark = reflectMarkOf(world, target);
-        if (mark === null) return;
+        const contribution = reflectContribution(world, target);
+        if (contribution === null) return;
+        const mark = contribution.payload;
         const before = data.amount;
         const blocked = before * Math.max(0, Math.min(0.8, Number(mark.cut) || 0));
         data.amount = Math.max(0, before - blocked);
         const body = world.observe(target), source = hit.source;
-        const hostile = !!source && world.valid(source) && String(source.key()) !== String(target.key()) && !world.friendly(source);
+        const hostile = !!source && world.valid(source) && String(source.key()) !== String(target.key()) && !world.allied(target, source);
         const attacker = hostile ? world.observe(source) : null;
         if (body !== null) {
             const data2: any = { moment: "block", target: String(target.ref()), blocked: Math.round(blocked * 10) / 10, plates: mark.plates };
@@ -125,11 +111,8 @@ namespace PokemonSkills {
         if (rebound <= 0 || !data.contact || !hostile || attacker === null || source === null) return;
         const back = blocked * rebound;
         if (!(back > 0)) return;
-        world.hurt(source, back, JSON.stringify({ kind: "reflection", reflected: true, type: data.type || "" }));
-        if (body !== null) {
-            WorldFeedback.text(world, reflectAbove(body.position()), reflectReboundText, [Math.round(back * 10) / 10], 26);
-            world.sound("minecraft:block.amethyst_block.hit", body.position(), 12, "{}");
-        }
+        EffectReactions.invoke(world, Number(contribution.token), reflectCounter,
+            { attacker: String(source.ref()), target: String(target.ref()), amount: back, type: data.type || "" });
     } });
 
     // 壁散：施法者的壁到期或被人解除时，收回半径内友方的壁；整圈硬光同时收。
@@ -137,7 +120,7 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== reflectEffect) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
+        if (!world.valid(actor) || MobEffects.read(world, actor, reflectEffect) !== null) return;
         const views = world.effects(actor, reflectMark);
         for (let i = 0; i < views.length; i++) {
             if (String(views[i].source().key()) === String(views[i].target().key()))
@@ -203,7 +186,7 @@ namespace PokemonSkills {
             const cut = Math.max(0.05, Math.min(0.8, p(reflectId, "cut", action)));
             const rebound = Math.max(0, Math.min(0.8, p(reflectId, "rebound", action)));
             const data = { cut: cut, rebound: rebound, radius: radius, plates: plates, ticks: duration, caster: String(actor.ref()) };
-            const reached = reflectCover(world, actor, radius, duration, data, true);
+            const reached = reflectOpen(world, actor, duration, data);
             sound(action, "minecraft:block.glass.place");
             world.sound("minecraft:item.shield.block", body === null ? action.origin() : body.position(), 14, "{}");
             if (body !== null) {

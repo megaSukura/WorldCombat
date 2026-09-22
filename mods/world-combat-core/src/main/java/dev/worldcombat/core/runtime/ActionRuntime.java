@@ -332,7 +332,7 @@ public final class ActionRuntime {
         if (cooldown(context.actor(), context.definition.id()) > 0) throw new ActionRejectedException("cooldown");
         validateTarget(context.targetKind(), context.range(), context.actor(), context.input());
         if (!context.retargeted) ActionInput.validate(context.controlJson, content.preview(context.definition.id()).input(), context.definition.range(), context.actor(), host, effects);
-        if (cooldown < 1 || cooldown > 12000) throw new IllegalArgumentException("Cooldown must be 1..12000 ticks");
+        if (cooldown < 0 || cooldown > 12000) throw new IllegalArgumentException("Cooldown must be 0..12000 ticks");
         if (!settling.add(context.actor().key())) throw new ActionRejectedException("transaction-busy");
         var attempted = new ArrayList<CommitCost>();
         context.committing = true;
@@ -379,7 +379,9 @@ public final class ActionRuntime {
         context.committed = true;
         context.costs.clear();
         remember(context, "executing", "");
-        cooldowns.put(context.actor().key() + "/" + context.definition.id(), tick + cooldown);
+        var cooldownKey = context.actor().key() + "/" + context.definition.id();
+        if (cooldown == 0) cooldowns.remove(cooldownKey);
+        else cooldowns.put(cooldownKey, tick + cooldown);
         host.report(context.id(), context.definition.id(), "committed", null);
         host.committed(context);
         content.hooks().emit(this, "world_combat:committed", context.actor(), context.target(), "{}", context, true);

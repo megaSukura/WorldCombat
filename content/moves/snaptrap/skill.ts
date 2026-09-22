@@ -52,10 +52,9 @@ namespace PokemonSkills {
         hurt(world, victim, "snaptrap", data.bite, { damage: damageSpec("snaptrap", "bite"), contact: true });
         if (!world.valid(victim)) return false;
         world.effects(victim, snaptrapJaw).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
-        const snared = MobEffects.apply(world, victim, snaptrapSnared, Math.max(20, Math.round(data.hold)), 0);
-        if (snared === null) return false;
-        world.effect(snaptrapJaw, victim, JSON.stringify({ point: [at.x(), at.y(), at.z()], interval: data.interval,
-            chew: data.chew, escape: data.escape, jaws: data.jaws, slipped: false, mobKey: String(snared.key()) }), Math.max(20, Math.round(data.hold)));
+        const id = world.effect(snaptrapJaw, victim, JSON.stringify({ point: [at.x(), at.y(), at.z()], interval: data.interval,
+            chew: data.chew, escape: data.escape, jaws: data.jaws, slipped: false, carrierLease: 0 }), Math.max(20, Math.round(data.hold)));
+        if (!world.effects(victim, snaptrapJaw).some(function (view) { return view.id() === id; })) return false;
         WorldFeedback.emit(world, snaptrapScene, 1, body.position(),
             { moment: "snap", target: String(victim.ref()), jaws: data.jaws, intensity: Math.max(0.6, Math.min(2, data.bite / 30)) }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), snaptrapSnapText,
@@ -102,15 +101,21 @@ namespace PokemonSkills {
     });
 
     WorldCombat.effect(snaptrapJaw, 1, 400, "actor", snaptrapJawData, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(snaptrapJaw, "start", function (effect) { effect.schedule("chew", "chew", 1, "{}"); });
+    WorldCombat.effectHandler(snaptrapJaw, "start", function (effect) {
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        const status = MobEffects.apply(world, victim, snaptrapSnared, effect.remaining(), 0);
+        data.carrierLease = MobEffects.bind(world, victim, snaptrapSnared, status);
+        if (!data.carrierLease) { effect.end(); return; }
+        effect.state(JSON.stringify(data));
+        effect.schedule("chew", "chew", 1, "{}");
+    });
     WorldCombat.effectHandler(snaptrapJaw, "operation:world_combat:dispel", effect => effect.end());
     WorldCombat.effectHandler(snaptrapJaw, "chew", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
-        const status = MobEffects.read(world, victim, snaptrapSnared);
-        if (status === null || String(status.key()) !== data.mobKey) { effect.end(); return; }
+        if (!MobEffects.present(world, data.carrierLease)) { effect.end(); return; }
         const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
         if (feet.minus(snaptrapPoint(data.point)).length() > data.escape) {
             data.slipped = true; effect.state(JSON.stringify(data)); effect.end(); return;
@@ -125,8 +130,6 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(snaptrapJaw, "end", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (world.valid(victim)) {
-            const snared = MobEffects.read(world, victim, snaptrapSnared);
-            if (snared !== null && String(snared.key()) === data.mobKey) world.removeMobEffect(victim, snaptrapSnared, snared.key());
             const body = world.observe(victim);
             if (body !== null) {
                 WorldFeedback.emit(world, snaptrapScene, 1, body.position(),

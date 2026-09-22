@@ -1,0 +1,10 @@
+{
+  "worldcombat.work.hand_crank.menu": "操作手摇曲柄",
+  "worldcombat.work.hand_crank.hint": "选择 Create 手摇曲柄。伙伴会走近并持续操作；转速和应力由曲柄决定。遇敌暂停，停止或改令后结束作业。",
+  "worldcombat.work.hand_crank.forward": "正向手摇",
+  "worldcombat.work.hand_crank.reverse": "反向手摇",
+  "worldcombat.work.hand_crank.stop": "停止手摇",
+  "worldcombat.work.hand_crank.stop_hint": "结束操作并回到跟随；曲柄按原生规则余转后停止。",
+  "worldcombat.work.hand_crank.refused": "曲柄无法操作",
+  "worldcombat.work.hand_crank.jei": "已放出的受控伙伴可从指挥菜单选择正向或反向操作手摇曲柄。伙伴走近后持续使用原生空手交互，转速与应力由 Create 结算。作业持续到停止、改令或曲柄失效；遇敌暂停，威胁结束后继续。"
+}

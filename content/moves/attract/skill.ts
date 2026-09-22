@@ -31,7 +31,6 @@ namespace PokemonSkills {
         const duration = p("attract", "duration", facts);
         // One visible infatuation has one current tether; a new kiss replaces its earlier source.
         world.effects(target, attractTether).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
-        MobEffects.apply(world, target, attractStatus, duration, 0);
         world.effect(attractTether, target, JSON.stringify({
             chance: p("attract", "chance", facts), pull: p("attract", "pull", facts), leash: p("attract", "leash", facts)
         }), duration);

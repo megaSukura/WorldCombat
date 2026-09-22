@@ -1,19 +1,4 @@
-/**
- * 茶会 / Teatime —— 出手方式。
- *
- * 核心念头：在选定的地方铺开一席茶，杯盘排开、茶汤冒着热气；茶香一飘，场上每个带着树果的战斗者都忍不住
- *   吃掉自己那一颗（无论敌友）。这是一场所有人的点心时间：让队友的果子立刻生效，也逼对手把保命或反击的
- *   果子提前吃掉；自己若也带着果子，同样要喝下去。
- *
- * 两幕：
- *   起（windup，提交前）：茶具虚影与茶气在身前聚起（moment pour），只播预告；可被打断，不花代价；
- *     提交前的 `ready` 复核茶席范围内是否至少有一个带树果的人。
- *   摆席（execute，提交后）：在选定的点铺下一小圈茶席（地毯，`world.terrain` 租借、`linger`，到期原方块
- *     回来），茶香扩到 radius；圈内每个带树果的活体当场吃掉自己那颗，效果落到本人身上；之后茶席与茶气
- *     按 teaTicks 停留，只作画面、不再结算。
- *
- * 与同族分开：大快朵颐只吃自己那颗、换来防御；茶会逼**所有人**吃，收益取决于各自手里是什么果子。
- */
+/** 茶会：范围内敌友各自吃掉携带的树果；杯盘与热气承载开席反馈。 */
 namespace PokemonSkills {
     const teatimeScene = "world_combat:move_teatime";
     const teatimeServedText = "world_combat.move.teatime.text.served";
@@ -41,36 +26,6 @@ namespace PokemonSkills {
         const context: NumberContext = { pokemon: CobblemonCombat.pokemon(actor), skill: skills[teatimeId],
             detail: { values: config(world, actor, teatimeId) }, world: world, actor: actor };
         return p(teatimeId, "radius", context);
-    }
-
-    /** 在落点铺一小圈茶席（花与草作杯盘）；只在有地面的格子放，租借、到期原方块回来。返回铺下的格数。 */
-    function teatimeMat(world: CombatWorld, centre: CombatPoint, cups: number, ticks: number): number {
-        if (cups <= 0) return 0;
-        const cells: any[] = [];
-        const pick = ["minecraft:azure_bluet", "minecraft:dandelion", "minecraft:short_grass", "minecraft:pink_petals"];
-        const cx = Math.floor(centre.x()), cz = Math.floor(centre.z()), cy = Math.floor(centre.y());
-        let index = 0;
-        for (let dx = -1; dx <= 1 && cells.length < cups; dx++) for (let dz = -1; dz <= 1 && cells.length < cups; dz++) {
-            if (dx * dx + dz * dz > 2) continue;
-            const x = cx + dx, z = cz + dz;
-            for (let dy = 2; dy >= -4; dy--) {
-                const block = world.block(WorldCombat.point(x, cy + dy, z));
-                if (block === null) continue;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock") break;
-                const above = world.block(WorldCombat.point(x, cy + dy + 1, z));
-                if (above === null) break;
-                const aboveId = String(above.id());
-                if (aboveId !== "minecraft:air" && aboveId !== "minecraft:short_grass" && aboveId !== "minecraft:tall_grass") break;
-                cells.push({ x: x, y: cy + dy + 1, z: z, block: pick[index++ % pick.length] });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(80, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
     }
 
     define({
@@ -126,9 +81,8 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, teatimeScene, 1, action.origin(),
                 { moment: "pour", motes: motes, scale: scale }, 22);
             world.sound("minecraft:block.brewing_stand.brew", centre, 14, "{}");
-            const laid = teatimeMat(world, centre, cups, teaTicks + 40);
             WorldFeedback.emit(world, teatimeScene, 1, centre,
-                { moment: "serve", radius: radius, motes: motes, cups: laid, scale: scale }, 30);
+                { moment: "serve", radius: radius, motes: motes, cups: cups, scale: scale }, 30);
             WorldFeedback.keep(world, "world_combat:move_teatime/steep/" + String(self.ref()), teatimeScene, 1, centre,
                 { moment: "steep", radius: radius, motes: Math.max(12, Math.round(motes * 0.6)), scale: scale }, teaTicks);
 

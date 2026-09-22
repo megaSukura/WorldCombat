@@ -63,6 +63,7 @@ interface CombatAction {
     targetPosition(): CombatPoint;
     /** After commitment, freeze the last target point and allow this action to continue if that target leaves. The original handle still requires world.valid checks. */
     releaseTarget(): void;
+    /** Settle attached costs and enable writes; 0 commits without reserving a cooldown. */
     commit(cooldownTicks: number): void;
     /** Attach a host-backed cost; commit validates and settles all attached costs together. */
     cost(cost: CombatCost): void;
@@ -135,6 +136,7 @@ interface CombatEffect {
     impact(): CombatImpact | null;
     /** Native UUID in named projectile hit/complete handlers; empty in other handlers. input() is the launch's copied JSON. */
     projectileId(): string;
+    /** Writes and opt-in native carrier leases belong to this instance, including cleanup after invalidation. */
     world(): CombatWorld;
     id(): number;
     source(): CombatActor;

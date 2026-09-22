@@ -50,7 +50,7 @@ namespace PokemonSkills {
         if (!world.valid(victim)) return;
         const attacker = event.actor();
         if (attacker === null || String(attacker.ref()) === String(victim.ref())) return;
-        if (world.friendly(attacker)) return;
+        if (world.allied(victim, attacker)) return;
         const body = world.observe(victim), source = world.observe(attacker);
         if (body === null || source === null) return;
         const now = world.tick(), key = String(victim.ref());

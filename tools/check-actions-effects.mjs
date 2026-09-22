@@ -49,7 +49,7 @@ const context = vm.createContext({ WorldCombat: {
 const sources = ['content/behavior/contributions.ts', 'content/protocols/effects.ts', 'content/traits/composition.ts',
   'content/preferences/skill-preferences.ts', 'content/behavior/companion-menus.ts',
   ...['formula', 'status-vocabulary', 'combat-status', 'combatant-stats', 'combat-stages', 'native-abilities', 'native-items', 'native-semantics', 'native-modifiers',
-    'native-effects', 'native-loadout', 'living-actions', 'native-repertoire', 'guard-effects', 'world-environment', 'world-effects', 'world-abilities',
+    'native-effects', 'native-loadout', 'living-actions', 'native-repertoire', 'guard-effects', 'world-environment', 'mob-effects', 'status-contributions', 'world-effects', 'world-abilities',
     'pokemon-damage'].map(id => `content/mechanisms/${id}.ts`)];
 for (const file of sources) vm.runInContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
   compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }

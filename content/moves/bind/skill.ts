@@ -39,14 +39,24 @@ namespace PokemonSkills {
     }
 
     WorldCombat.effect(bindBond, 1, 500, "actor", bindBondData, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(bindBond, "start", function (effect) { effect.schedule("pull", "pull", 1, "{}"); });
+    WorldCombat.effectHandler(bindBond, "start", function (effect) {
+        const world = effect.world(), victim = effect.target(), caster = effect.source(), data = JSON.parse(effect.state());
+        if (!CombatStatus.apply(world, victim, "partiallytrapped", bindCinch, data.duration, 0, { unique: true })) { effect.end(); return; }
+        data.victimLease = MobEffects.bind(world, victim, bindCinch);
+        if (!data.victimLease) { effect.end(); return; }
+        const hold = MobEffects.apply(world, caster, bindHold, data.duration, 0);
+        data.casterLease = MobEffects.bind(world, caster, bindHold, hold);
+        effect.state(JSON.stringify(data));
+        if (!data.casterLease) { effect.end(); return; }
+        effect.schedule("pull", "pull", 1, "{}");
+    });
     WorldCombat.effectHandler(bindBond, "pull", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         // 绳的两端各挂一个状态：任一端被外力清掉，绳就松开（走 end 的收尾表现）。
-        if (world.mobEffect(victim, bindCinch) === null) { data.reason = "released"; effect.state(JSON.stringify(data)); effect.end(); return; }
+        if (!MobEffects.present(world, data.victimLease)) { data.reason = "released"; effect.state(JSON.stringify(data)); effect.end(); return; }
         const caster = world.actor(data.caster);
-        if (caster === null || !world.valid(caster) || world.mobEffect(caster, bindHold) === null) {
+        if (caster === null || !world.valid(caster) || !MobEffects.present(world, data.casterLease)) {
             data.reason = "snapped"; effect.state(JSON.stringify(data)); effect.end(); return;
         }
         const held = world.observe(victim), holder = world.observe(caster);
@@ -84,8 +94,6 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         const caster = world.actor(data.caster);
         if (world.valid(victim)) {
-            const cinch = MobEffects.read(world, victim, bindCinch);
-            if (cinch !== null) world.removeMobEffect(victim, bindCinch, cinch.key());
             const body = world.observe(victim);
             if (body !== null) {
                 WorldFeedback.emit(world, bindScene, 1, body.position(),
@@ -95,8 +103,6 @@ namespace PokemonSkills {
             }
         }
         if (caster !== null && world.valid(caster)) {
-            const hold = MobEffects.read(world, caster, bindHold);
-            if (hold !== null) world.removeMobEffect(caster, bindHold, hold.key());
             const body = world.observe(caster);
             if (body !== null) WorldFeedback.emit(world, bindScene, 1, body.position(), { moment: "slack", target: String(caster.ref()) }, 18);
         }
@@ -162,18 +168,17 @@ namespace PokemonSkills {
             const cinch = p("bind", "cinch", action);
             if (!hurt(action, target, "bind", cinch, { damage: damageSpec("bind", "cinch"), contact: true })) { done(action); return; }
             const duration = Math.max(60, Math.round(p("bind", "duration", action)));
-            if (!CombatStatus.apply(world, target, "partiallytrapped", bindCinch, duration, 0, { unique: true })) { done(action); return; }
-            MobEffects.apply(world, actor, bindHold, duration, 0);
+            const existing = world.effects(target, bindBond);
+            for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
             const body = world.observe(target);
             if (body === null) { done(action); return; }
             const state = { caster: String(actor.ref()), cinch: cinch, leash: Math.max(1.8, p("bind", "leash", action)),
                 drag: Math.max(0, p("bind", "drag", action)), ramp: Math.max(0, p("bind", "ramp", action)),
                 interval: Math.max(6, Math.round(p("bind", "interval", action))), snap: Math.max(3.0, p("bind", "snap", action)),
                 notes: Math.max(8, Math.round(p("bind", "notes", action))), next: world.tick() + Math.round(p("bind", "interval", action)),
-                tight: 0, reason: "" };
-            const existing = world.effects(target, bindBond);
-            for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
-            world.effect(bindBond, target, JSON.stringify(state), duration + 40);
+                duration: duration, victimLease: 0, casterLease: 0, tight: 0, reason: "" };
+            const id = world.effect(bindBond, target, JSON.stringify(state), duration + 40);
+            if (!world.effects(target, bindBond).some(function (view) { return view.id() === id; })) { done(action); return; }
             WorldFeedback.emit(world, bindScene, 1, body.position(),
                 { moment: "grip", target: String(target.ref()), path: [[origin.x(), origin.y(), origin.z()], [body.position().x(), body.position().y(), body.position().z()]],
                     notes: state.notes, tight: 0 }, 24);

@@ -48,8 +48,11 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(meanlookLock, "start", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) { effect.end(); return; }
-        MobEffects.apply(world, victim, meanlookGaze, 600, 0);
         const data = JSON.parse(effect.state());
+        const gaze = MobEffects.apply(world, victim, meanlookGaze, 600, 0);
+        data.carrierLease = MobEffects.bind(world, victim, meanlookGaze, gaze);
+        if (!data.carrierLease) { effect.end(); return; }
+        effect.state(JSON.stringify(data));
         meanlookHeld(world, effect.source(), victim, data, 20);
     });
     WorldCombat.effectHandler(meanlookLock, "operation:world_combat:meanlook/snap", function (effect) {
@@ -68,8 +71,6 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(meanlookLock, "end", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) return;
-        const gaze = MobEffects.read(world, victim, meanlookGaze);
-        if (gaze !== null) world.removeMobEffect(victim, meanlookGaze, gaze.key());
         if (JSON.parse(effect.state()).snapped) return;
         const body = world.observe(victim);
         if (body === null) return;
@@ -157,6 +158,8 @@ namespace PokemonSkills {
                 if (settled) return;
                 const scope = current.world(), me = scope.observe(current.actor());
                 if (!scope.valid(victim) || me === null) { finish(current); return; }
+                const active = scope.effects(victim, meanlookLock).filter(function (view) { return view.id() === lock; });
+                if (!active.length || !MobEffects.present(scope, JSON.parse(active[0].data()).carrierLease)) { finish(current); return; }
                 const held = scope.observe(victim);
                 if (held === null) { finish(current); return; }
                 if (held.position().minus(me.position()).length() > leash || !scope.clear(me.position(), held.position())) {

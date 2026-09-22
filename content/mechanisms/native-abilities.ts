@@ -39,7 +39,7 @@ namespace NativeAbilities {
         var id = NativeEffects.ability(pokemon, state);
         return registry.dispatch(event, { world: world, actor: actor, pokemon: pokemon, state: state, ability: id }, value, id ? [id] : []);
     }
-    /** Content can connect new world protocols to ability rules without adding dispatcher branches. */
+    /** Recipient selects the ability holder; world retains the event actor's scope. Compare two actors with world.allied. */
     export function bind(id: string, topic: string, hook: string, after: string = "",
         recipient: (event: CombatWorldEvent) => CombatActor | null = function (event) { return event.actor(); }): void {
         WorldCombat.on(id, topic, after, function (event) {

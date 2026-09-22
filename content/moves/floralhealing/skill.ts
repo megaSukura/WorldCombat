@@ -1,22 +1,8 @@
-/**
- * 花疗 / Floral Healing —— 执行组织。
- *
- * 核心念头：撒一路花瓣到伤者身上，花在他脚下当场绽开、把生命缝回去；脚下的草越盛，花开得越大。
- *
- * 出手：共享节奏。windup（提交前）只播预告——手心先拢起一捧花瓣；准备可被打断，不花代价。
- * 绽放（提交后，当场结算）：花瓣沿施法者到伙伴的连线撒过去，在伙伴身上绽开一圈花瓣并立刻回复；如果伙伴
- *   脚下是青草场地（它带着共享身份 world_combat:status/grassyterrain），这一口抬到约 2/3、花也更亮。
- * 留花（residue）：在伙伴脚下真的种下几朵花（`world.terrain` 租借、`linger`，到期原方块回来）——战斗在玩家的
- *   家里，这几朵花会自己谢去，不永久占用地面。
- *
- * 反制：花疗当场兑现、无法被打断；它的代价是只救得了别人、救不了自己，且必须够得到那个伙伴。
- * 与同族分开：治愈波动是一圈赶路、会被身体挡下的波；花疗是花瓣当场在伤者身上绽开、并在地面留下花，吃青草场地。
- */
+/** 花疗：立即治疗选定友方；青草场地加成读取目标状态，撒花与绽放承载反馈。 */
 namespace PokemonSkills {
     const floralhealingScene = "world_combat:move_floralhealing";
     const floralhealingTextBloom = "world_combat.move.floralhealing.text.bloom";
     const floralhealingTextGrass = "world_combat.move.floralhealing.text.grass";
-    const floralhealingFlowers = ["minecraft:pink_petals", "minecraft:dandelion", "minecraft:poppy", "minecraft:cornflower", "minecraft:azure_bluet"];
 
     function floralhealingAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
@@ -40,44 +26,10 @@ namespace PokemonSkills {
         return healed;
     }
 
-    function floralhealingSoil(id: string): boolean {
-        return /grass|dirt|podzol|moss|mud|farmland|mycelium|root/.test(id);
-    }
-
-    /** 在伙伴脚下真的有土的地方种几朵花；租借、到期原方块回来。返回种下的朵数。 */
-    function floralhealingBloom(world: CombatWorld, centre: CombatPoint, radius: number, budget: number, ticks: number): number {
-        if (budget <= 0) return 0;
-        var cells: any[] = [];
-        var cx = Math.floor(centre.x()), cz = Math.floor(centre.z()), cy = Math.floor(centre.y());
-        var r = Math.max(1, Math.ceil(radius));
-        for (var dx = -r; dx <= r && cells.length < budget; dx++) for (var dz = -r; dz <= r && cells.length < budget; dz++) {
-            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
-            var x = cx + dx, z = cz + dz;
-            for (var dy = 1; dy >= -3; dy--) {
-                var block = world.block(WorldCombat.point(x, cy + dy, z));
-                if (block === null) continue;
-                var id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock") break;
-                if (!floralhealingSoil(id)) break;
-                var above = world.block(WorldCombat.point(x, cy + dy + 1, z));
-                if (above === null) break;
-                var aboveId = String(above.id());
-                if (aboveId !== "minecraft:air" && aboveId !== "minecraft:short_grass" && aboveId !== "minecraft:tall_grass") break;
-                cells.push({ x: x, y: cy + dy + 1, z: z, block: floralhealingFlowers[cells.length % floralhealingFlowers.length] });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(60, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
     define({
         id: floralhealingId, name: "花疗",
-        description: "撒一路花瓣到选定的友方身上，在他脚下当场绽开并回复其最大生命的一半左右；如果伙伴站在青草场地上，回复提高到约三分之二。之后地上会留下几朵短命的花。只救别人，不救自己。",
-        uses: ["远远地给伙伴补一口，顺手在地上开花", "在青草场地上把回复抬到三分之二", "用可读的花簇标记被救过的位置"],
+        description: "撒一路花瓣到选定友方身上，绽开时回复其最大生命的一半左右；青草场地上提高到约三分之二。只救别人，不救自己。",
+        uses: ["远远地给伙伴补一口", "在青草场地上把回复抬到三分之二"],
         kind: "friend", range: 5, maxRange: 9, prepare: 9, active: 0, recover: 8, cooldown: 130, style: "floral",
         maximumTicks: 220,
         defaults: { bouquet: false },
@@ -131,7 +83,6 @@ namespace PokemonSkills {
             const after = world.observe(target);
             const gained = after ? Math.max(0, after.health() - before) : 0;
             const share = mate.maxHealth() > 0 ? Math.max(0, Math.min(1, gained / mate.maxHealth())) : 0;
-            const laid = floralhealingBloom(world, mate.position().plus(WorldCombat.point(0, -mate.height() / 2, 0)), radius, budget, 120);
             const path: (string | number[])[] = [String(self.ref()), ref];
 
             sound(action, "minecraft:block.flowering_azalea.place");
@@ -141,9 +92,9 @@ namespace PokemonSkills {
                 { moment: "bloom", target: ref, petals: petals, scale: scale, grass: grass ? 1 : 0, radius: radius,
                     gold: grass ? Math.max(8, Math.round(petals * 0.5)) : 0, share: share,
                     healDust: Math.max(10, Math.round(petals * (0.4 + share))), gained: Math.round(gained * 10) / 10 }, 34);
-            if (laid > 0) {
+            if (budget > 0) {
                 WorldFeedback.emit(world, floralhealingScene, 1, mate.position(),
-                    { moment: "residue", target: ref, flowers: laid, scale: scale }, 30);
+                    { moment: "residue", target: ref, flowers: budget, scale: scale }, 30);
                 world.sound("minecraft:block.grass.place", mate.position(), 12, "{}");
             }
             WorldFeedback.text(world, floralhealingAbove(mate.position()), grass ? floralhealingTextGrass : floralhealingTextBloom, [Math.round(gained * 10) / 10], 30);

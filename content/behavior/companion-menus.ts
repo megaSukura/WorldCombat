@@ -3,6 +3,8 @@ namespace CompanionMenus {
     export interface Item {
         id: string; parent?: string; label: any; detail: any; order?: number;
         command?: string; slot?: number; move?: string; target?: string; disabled?: any;
+        /** Independent capability represented by this menu item. */
+        capability?: string;
         continuous?: boolean;
     }
     export interface Contribution { items?: Item[]; remove?: string[]; }

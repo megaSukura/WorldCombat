@@ -30,20 +30,5 @@
   "world_combat.move.gearup.text.spin": "Gear Up (Attack +%1$s / Sp. Atk +%2$s / %3$s linked / %4$s s)",
   "world_combat.move.gearup.text.drive": "Geared (Attack +%1$s / Sp. Atk +%2$s)",
   "world_combat.move.gearup.text.fade": "The gears lock",
-  "effect.world_combat.gearup_drive": "Gear Up",
-  "worldcombat.skill.gearup.value.crankTicks": "Cranking duration",
-  "worldcombat.skill.gearup.value.crankPp": "Cranking cost",
-  "worldcombat.skill.gearup.machine.menu": "Operate hand crank",
-  "worldcombat.skill.gearup.machine.hint": "Select a Create hand crank. Your companion approaches and uses its native interaction. Combat pauses the job; Stop ends it.",
-  "worldcombat.skill.gearup.machine.forward": "Crank forwards",
-  "worldcombat.skill.gearup.machine.reverse": "Crank backwards",
-  "worldcombat.skill.gearup.machine.stop": "Stop cranking",
-  "worldcombat.skill.gearup.machine.stop_hint": "Stop operating the crank; it coasts briefly and stops under its native rules.",
-  "worldcombat.skill.gearup.machine.description": "Operate a Create hand crank for %1$s per job, spending %2$s PP when work successfully starts. Select either direction; the crank retains its native speed and stress capacity.",
-  "worldcombat.skill.gearup.machine.jei": "A companion that knows Gear Up can operate a hand crank in either direction from its command menu. Jobs have a duration and PP cost. The companion approaches and uses the real crank interaction; Create determines speed and stress. Combat pauses work, and Stop ends it. The crank then stops under its native rules.",
-  "world_combat.move.gearup.text.machine_done": "Cranking complete",
-  "world_combat.move.gearup.text.machine_forward": "Cranking forwards · %1$s s left",
-  "world_combat.move.gearup.text.machine_reverse": "Cranking backwards · %1$s s left",
-  "world_combat.move.gearup.text.machine_refused": "Crank could not be operated",
-  "worldcombat.skill.gearup.use.3": "Have a companion operate a hand crank"
+  "effect.world_combat.gearup_drive": "Gear Up"
 }

@@ -1,17 +1,4 @@
-/**
- * 胃液 / gastroacid — 执行组织。
- *
- * 三幕：
- *   涌（windup，提交前）：喉间涌起绿酸、冒着泡（`action.present` 预告，可被打断且不花代价）。
- *   吐（提交后）：一口酸弹沿瞄准方向飞出，弹体带酸滴尾迹（`LivingActions.projectile`，原生物理与碰撞）。
- *   蚀（命中后）：酸液炸开一大片，目标身上挂上共享身份 `world_combat:status/gastroacid` 的“沾酸”状态；
- *     若目标是宝可梦且特性可被压制，再写入 `NativeModifiers` 的 suppressAbility 层，把特性蚀掉同样长的时间。
- *     落点地面留一小滩酸渍（`world.terrain` 租借，到期原方块回来），能被看见、被绕开。
- *
- * 任何生物都会被酸溅到并带上“沾酸”身份；只有宝可梦有特性可被压制，因此对原版生物是纯标记与表现。
- * 目标特性带 cantsuppress 或已被压制时不重复吐（预检），不浪费 PP。
- * 配置项 thick（浓酸 / 稀酸）改变蚀刻时长与冷却。
- */
+/** 胃液：酸弹命中后压制目标特性；酸液飞行、溅射和沾酸由现有表现承载。 */
 namespace PokemonSkills {
     export const gastroacidScene = "world_combat:move_gastroacid";
     export const gastroacidEffect = "world_combat:gastroacid";
@@ -27,29 +14,11 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 在落点下方找第一块实心方块，换成一格酸渍；到期原方块回来。 */
-    function gastroacidPuddle(world: CombatWorld, point: CombatPoint, ticks: number): boolean {
-        const x = Math.floor(point.x()), z = Math.floor(point.z()), base = Math.floor(point.y());
-        for (let dy = 0; dy <= 4; dy++) {
-            const y = base - dy, block = world.block(WorldCombat.point(x, y, z));
-            if (block === null) continue;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock") return false;
-            try {
-                world.terrain(JSON.stringify({ cells: [{ x: x, y: y, z: z, block: "minecraft:lime_concrete" }], replace: true, linger: true }),
-                    Math.max(40, Math.round(ticks)));
-                return true;
-            } catch (error) { return false; }
-        }
-        return false;
-    }
-
     define({
         id: "gastroacid",
         name: "Gastro Acid",
         description: "将胃液吐向对手的身体，沾上的胃液会消除对手的特性效果。",
-        uses: ["定点拆掉对手的强力特性", "压制威吓、飘浮一类持续生效的特性", "在落点地面留下一小滩酸渍"],
+        uses: ["定点拆掉对手的强力特性", "压制威吓、飘浮一类持续生效的特性"],
         kind: "enemy",
         range: 9,
         maxRange: 17,
@@ -101,7 +70,6 @@ namespace PokemonSkills {
             const hold = Math.max(40, Math.round(p("gastroacid", "hold", action)));
             const drops = Math.max(8, Math.round(p("gastroacid", "drops", action)));
             const bubbles = Math.max(6, Math.round(p("gastroacid", "bubbles", action)));
-            const puddle = Math.max(40, Math.round(p("gastroacid", "puddle", action)));
             const targetRef = action.target() === null ? "" : String(action.target()!.ref());
             const body = world.observe(actor);
             const from = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.6, 0));
@@ -133,7 +101,6 @@ namespace PokemonSkills {
                 }
                 WorldFeedback.emit(scope, gastroacidScene, 1, point,
                     { moment: "splash", drops: drops, scale: scale, intensity: intensity }, 26);
-                gastroacidPuddle(scope, point, puddle);
                 sound(current, "minecraft:entity.generic.splash");
                 finish(current);
             }

@@ -29,7 +29,7 @@ namespace PokemonSkills {
         stay: function (world, actor, field) {
             const film = Math.max(6, Math.round(Number(field.data.film) || 12));
             const current = MobEffects.read(world, actor, ionFilm);
-            if (current === null || current.duration() - world.tick() <= 8) MobEffects.apply(world, actor, ionFilm, film + 4, 0);
+            if (current === null || current.duration() <= 8) MobEffects.apply(world, actor, ionFilm, film + 4, 0);
         },
         scan: function (effect, world, field) {
             WorldFeedback.keep(world, "world_combat:move_iondeluge/field/" + effect.id(), ionDelugeScene, 1, ionFieldPoint(field),

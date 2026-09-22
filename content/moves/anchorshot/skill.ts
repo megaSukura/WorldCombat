@@ -88,6 +88,12 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) { effect.end(); return; }
         const data = JSON.parse(effect.state());
+        if (!CombatStatus.apply(world, victim, "trapped", anchorshotCarrier, effect.remaining(), 0, { unique: true })) { effect.end(); return; }
+        data.carrierLease = MobEffects.bind(world, victim, anchorshotCarrier);
+        if (!data.carrierLease) { effect.end(); return; }
+        const placed = anchorshotPlace(world, WorldCombat.point(data.anchor[0], data.anchor[1], data.anchor[2]), effect.remaining());
+        if (placed !== null) { data.anchor = [placed.anchor.x(), placed.anchor.y(), placed.anchor.z()]; data.terrainId = placed.terrainId; }
+        effect.state(JSON.stringify(data));
         anchorshotChainVisual(world, victim, data);
         effect.schedule("hold", "hold", 2, "{}");
     });
@@ -95,8 +101,7 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         const body = world.observe(victim);
-        const carrier = MobEffects.read(world, victim, anchorshotCarrier);
-        if (body === null || carrier === null || (data.carrierKey && String(carrier.key()) !== data.carrierKey)) { effect.end(); return; }
+        if (body === null || !MobEffects.present(world, data.carrierLease)) { effect.end(); return; }
         const anchor = WorldCombat.point(data.anchor[0], data.anchor[1], data.anchor[2]);
         const delta = anchor.minus(body.position()), distance = delta.length();
         if (distance > data.snap) {
@@ -111,8 +116,6 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (typeof data.terrainId === "number" && data.terrainId > 0) { try { world.removeTerrain(data.terrainId); } catch (error) { } }
         if (!world.valid(victim)) return;
-        const carrier = MobEffects.read(world, victim, anchorshotCarrier);
-        if (carrier !== null && (!data.carrierKey || String(carrier.key()) === data.carrierKey)) world.removeMobEffect(victim, anchorshotCarrier, carrier.key());
         const body = world.observe(victim);
         if (body === null) return;
         const snapped = data.reason === "snapped";
@@ -126,6 +129,7 @@ namespace PokemonSkills {
     WorldCombat.on("world_combat:move_anchorshot/clear", "world_combat:mob_effect_removed", "", function (event) {
         if (String(JSON.parse(String(event.data())).id) !== anchorshotCarrier) return;
         const world = event.world();
+        if (MobEffects.read(world, event.actor(), anchorshotCarrier) !== null) return;
         const effects = world.effects(event.actor(), anchorshotEffect);
         for (let i = 0; i < effects.length; i++) world.operation(effects[i].id(), "world_combat:dispel", "{}");
     });
@@ -145,21 +149,17 @@ namespace PokemonSkills {
         const ticks = Math.max(40, Math.round(p(anchorshotId, "chainTicks", action)));
         const existing = world.effects(victim, anchorshotEffect);
         for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
-        if (!CombatStatus.apply(world, victim, "trapped", anchorshotCarrier, ticks, 0, { unique: true })) return false;
-        const placed = anchorshotPlace(world, body.position(), ticks);
-        const anchor = placed === null ? body.position() : placed.anchor;
-        const carrier = MobEffects.read(world, victim, anchorshotCarrier);
-        const data = { anchor: [anchor.x(), anchor.y(), anchor.z()], carrierKey: carrier === null ? "" : String(carrier.key()),
+        const anchor = body.position();
+        const data = { anchor: [anchor.x(), anchor.y(), anchor.z()], carrierLease: 0,
             leash: Math.max(2.2, p(anchorshotId, "leash", action)),
             snap: Math.max(4.5, p(anchorshotId, "snap", action)),
             reel: Math.max(0.15, p(anchorshotId, "reel", action)),
             links: Math.max(5, Math.round(p(anchorshotId, "links", action))),
             scale: Math.max(0.6, Math.min(2.0, p(anchorshotId, "linkRadius", action) / anchorshotReference)),
             intensity: Math.max(0.6, Math.min(2.2, p(anchorshotId, "shot", action) / 80)),
-            terrainId: placed === null ? 0 : placed.terrainId, reason: "" };
-        world.effect(anchorshotEffect, victim, JSON.stringify(data), ticks);
-        anchorshotChainVisual(world, victim, data);
-        return true;
+            terrainId: 0, reason: "" };
+        const id = world.effect(anchorshotEffect, victim, JSON.stringify(data), ticks);
+        return world.effects(victim, anchorshotEffect).some(function (view) { return view.id() === id; });
     }
 
     define({

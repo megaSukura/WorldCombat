@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.charge.summary": "Store charge and raise Special Defence. Spend that charge on the next Electric move or supply a machine; both uses draw from the same reserve.",
+  "worldcombat.skill.charge.summary": "Store charge and raise Special Defence, strengthening the next Electric move.",
   "worldcombat.skill.charge.use.0": "Charge a finisher",
   "worldcombat.skill.charge.use.1": "Tank a spell",
   "worldcombat.skill.charge.use.2": "Set up an Electric burst",
-  "worldcombat.skill.charge.description.0": "Charged for %1$s; Sp. Def rises by one stage. At full charge, the next Electric move has double power. An Electric hit consumes the remaining charge.",
-  "worldcombat.skill.charge.description.1": "Charge expires over time and can be removed. Machine supply spends only energy actually accepted; the next Electric hit consumes whatever remains.",
+  "worldcombat.skill.charge.description.0": "Charged for %1$s; Sp. Def rises by one stage. The next Electric move has double power and consumes the charge on a hit.",
+  "worldcombat.skill.charge.description.1": "Charge expires over time and can be removed.",
   "worldcombat.skill.charge.hold.0": "Hold the charge: duration x1.6, cooldown +18 ticks, made to bank a big Electric hit.",
   "worldcombat.skill.charge.hold.1": "Snap charge: duration x0.75, cooldown -10 ticks, made for close, fast exchanges.",
   "worldcombat.skill.charge.timing": "Self-cast. After %2$s s of preparation it spends %4$s PP to charge, recovers %3$s s, and commits a %5$s s cooldown on cast.",
@@ -28,18 +28,5 @@
   "effect.world_combat.charge_up": "Charged",
   "world_combat.move.charge.text.ready": "Charged",
   "world_combat.move.charge.text.spent": "Discharge",
-  "world_combat.move.charge.text.fade": "Charge faded",
-  "worldcombat.skill.charge.value.energyBudget": "Energy budget",
-  "worldcombat.skill.charge.value.energyPulse": "Transfer rate",
-  "worldcombat.skill.charge.machine.menu": "Supply machine",
-  "worldcombat.skill.charge.machine.hint": "Select the machine block. %1$s FE remains; a full or refusing machine stops the job without spending the remainder.",
-  "worldcombat.skill.charge.machine.stop": "Stop supplying",
-  "worldcombat.skill.charge.machine.stop_hint": "Stop this job and keep the undelivered charge.",
-  "worldcombat.skill.charge.machine.description": "One Charge can deliver up to %1$s FE, with at most %2$s FE every 0.2 seconds, subject to the machine input limits. A full charge doubles the next Electric move; partial supply reduces that bonus in proportion to the charge left.",
-  "worldcombat.skill.charge.machine.jei": "A companion that knows Charge gains a Supply machine command while charged. Select a block accepting NeoForge Energy: the companion approaches and transfers its finite charge. Full or refusing inputs spend nothing. Supply and the next Electric attack share the same remaining charge.",
-  "world_combat.move.charge.text.machine_sent": "Delivered %1$s FE · %2$s FE left",
-  "world_combat.move.charge.text.machine_full": "Machine full · %1$s FE supplied from this charge · %2$s FE left",
-  "world_combat.move.charge.text.machine_refused": "No energy accepted · charge kept",
-  "worldcombat.skill.charge.use.3": "Supply machines from the stored charge",
-  "world_combat.move.charge.text.machine_stopped": "Supply stopped · %1$s FE supplied from this charge · %2$s FE left"
+  "world_combat.move.charge.text.fade": "Charge faded"
 }

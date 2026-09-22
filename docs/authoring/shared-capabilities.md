@@ -14,9 +14,11 @@
 | 物种习惯、独立行为与原生配招之外的能力 | [个体贡献入口](../../content/behavior/individuals.ts)、[行为组合](../../content/behavior/composition.ts)、[独立世界能力](../../content/mechanisms/world-abilities.ts)。向现有主体贡献事实、能力和策略；招式说明自身用途，物种与性格决定怎样组合使用。 |
 | 按数据变化的粒子颜色、运动、范围指示 | [客户端 SDK](../../sdk/client/index.d.ts)、[属性配色](../../content/mechanisms/type-colors.ts)、[指示几何](../../content/client/library/indicator-geometry.ts)。客户端组合支持数据绑定与多层表现；属性语义由脚本提供，通用渲染器读取数据。 |
 
+状态随所属过程回收时使用 [MobEffects 的显式绑定](../../content/mechanisms/mob-effects.ts)；同一载体的多来源由 [StatusContributions](../../content/mechanisms/status-contributions.ts)管理归属，具体聚合由内容决定。受击后的反应可用 [EffectReactions](../../content/mechanisms/effect-reactions.ts)回到既有托管效果的合法来源。独立机器工作使用 [MachineWork](../../content/mechanisms/machine-work.ts)，能力资格与原生招式位分开。
+
 以现场为条件的数值，在没有目标或世界的详情页保留“需要现场”的解释。体重沿 Cobblemon 原生单位（百克）读取；正文中的秒、百分比、距离等由参数的显示单位表达。音效以资源包 `sounds.json` 身份为准，也支持未登记在服务端注册表中的声音。
 
-AI 的 `available/accepts` 决定是否值得执行、对象是否适合；需要通过移动满足的施放条件，在行动过程中确认。当前 `approach` 只处理射程外的接近；射程内选位或连续行为可由方法的 `compose` 与任务节点组织，`after` 承接实际施放结束。感知保留通视和最后观察位置的语义，具体调用契约以 `WorldMethods` 为准。
+AI 的 `available/accepts` 决定是否值得执行、对象是否适合；需要通过移动满足的施放条件，在行动过程中确认。`approach` 可表达射程内外的站位，任务保留选定位置直至到达或目标移动；连续行为可由方法的 `compose` 与任务节点组织，`after` 承接实际施放结束。感知保留通视和最后观察位置的语义，具体调用契约以 `WorldMethods` 为准。
 
 扩展到普通实体或世界交互时，先核对原生事实与操作，再选共享入口。例如声音、振动事件和仇恨分别有自己的消费者。具体设计确实需要新事实或操作时，再补对应的通用契约；内容的玩法仍由该单元定义。
 

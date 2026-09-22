@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.charge.summary": "储存电荷并提高特防。电荷可强化下一次电招，也可交给机器；两种用途共用同一份余量。",
+  "worldcombat.skill.charge.summary": "储存电荷并提高特防，强化下一次电属性招式。",
   "worldcombat.skill.charge.use.0": "决招前蓄力",
   "worldcombat.skill.charge.use.1": "硬吃一发法术",
   "worldcombat.skill.charge.use.2": "接电招爆发",
-  "worldcombat.skill.charge.description.0": "充能持续 %1$s；特防提高1级，满电时下一次电属性招式威力翻倍。电招命中消耗剩余电荷。",
-  "worldcombat.skill.charge.description.1": "电荷会随时间消散，也可被解除。供能只消耗机器实际接收的部分；下一次电招命中会用掉剩余电荷。",
+  "worldcombat.skill.charge.description.0": "充能持续 %1$s；特防提高1级，下一次电属性招式威力翻倍，命中时用掉电荷。",
+  "worldcombat.skill.charge.description.1": "电荷会随时间消散，也可被解除。",
   "worldcombat.skill.charge.hold.0": "蓄满电：充能持续 ×1.6、冷却 +18 刻，适合先手攒好等一发大电招。",
   "worldcombat.skill.charge.hold.1": "即充电：充能持续 ×0.75、冷却 -10 刻，适合贴身快节奏、随时用随时补。",
   "worldcombat.skill.charge.timing": "对自己施放，准备 %2$s 秒后消耗 %4$s PP 充能；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -28,18 +28,5 @@
   "effect.world_combat.charge_up": "充能",
   "world_combat.move.charge.text.ready": "充电完毕",
   "world_combat.move.charge.text.spent": "放电",
-  "world_combat.move.charge.text.fade": "电散了",
-  "worldcombat.skill.charge.value.energyBudget": "供能总量",
-  "worldcombat.skill.charge.value.energyPulse": "供能速率",
-  "worldcombat.skill.charge.machine.menu": "给机器供能",
-  "worldcombat.skill.charge.machine.hint": "选中机器的方块。当前余量 %1$s FE；接满或无法接收时停止，余量保留。",
-  "worldcombat.skill.charge.machine.stop": "停止供能",
-  "worldcombat.skill.charge.machine.stop_hint": "停止当前作业，保留尚未交付的电荷。",
-  "worldcombat.skill.charge.machine.description": "一次充电最多交付 %1$s FE，每0.2秒最多交付 %2$s FE；机器按自己的输入规则接收。满电时下一次电招威力翻倍，供能后按剩余电荷比例保留加成。",
-  "worldcombat.skill.charge.machine.jei": "会充电的伙伴获得充能后，指挥菜单会出现“给机器供能”。选中支持 NeoForge 能量输入的机器，伙伴会走近并输送有限的电荷。满载或拒绝接收不扣电；供能和电招共用同一份余量。",
-  "world_combat.move.charge.text.machine_sent": "供能 %1$s FE · 余 %2$s FE",
-  "world_combat.move.charge.text.machine_full": "机器已充满 · 本次电荷已供能 %1$s FE · 余 %2$s FE",
-  "world_combat.move.charge.text.machine_refused": "机器未接收 · 电荷保留",
-  "worldcombat.skill.charge.use.3": "用储存的电荷给机器供能",
-  "world_combat.move.charge.text.machine_stopped": "停止供能 · 本次电荷已供能 %1$s FE · 余 %2$s FE"
+  "world_combat.move.charge.text.fade": "电散了"
 }

@@ -12,7 +12,7 @@
  */
 namespace CompanionBehavior {
     const forestscurseRooted = PokemonSkills.flag("rooted", "深根");
-    forestscurseRooted.help = "开启＝深根：诅咒时长 ×1.7、苔圈 ×1.35、苔痕 ×1.8，但起手 +3 刻、冷却 +20 刻；关闭＝浅咒：起手快、冷却 −10 刻，只留一小块苔、维持更短。持续与出手频率互相取舍。";
+    forestscurseRooted.help = "开启＝深根：诅咒时长 ×1.7、根须表现范围 ×1.35，起手 +3 刻、冷却 +20 刻；关闭＝浅咒：诅咒更短、起手快、冷却 −10 刻。";
     const forestscurseChase = PokemonSkills.number("ai.maxChase", "考虑距离", 2, 18, 1);
     forestscurseChase.help = "伙伴只在威胁离自己这么远以内时才考虑种诅咒；调小只在贴身时用，调大愿意先追过去。";
     const forestscurseStation = PokemonSkills.flag("ai.leaveStation", "驻守时离位");

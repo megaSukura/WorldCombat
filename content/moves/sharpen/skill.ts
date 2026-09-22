@@ -20,6 +20,7 @@ namespace PokemonSkills {
     const sharpenText = "world_combat.move.sharpen.text.jagged";
     const sharpenCutText = "world_combat.move.sharpen.text.cut";
     const sharpenDullText = "world_combat.move.sharpen.text.dull";
+    const sharpenCounter = "world_combat:sharpen_counter";
     /** 表现里的参考半径：`data.scale = 实际棱角半径 / 这个数`。 */
     const sharpenReferenceRadius = 1.0;
 
@@ -32,6 +33,19 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(sharpenMark, "start", function () { });
+    EffectReactions.register(sharpenMark, sharpenCounter, function (effect, facts) {
+        const world = effect.world(), target = effect.target(), attacker = world.actor(facts.attacker);
+        if (!attacker || String(effect.caller().key()) !== String(attacker.key()) || world.allied(target, attacker)) return;
+        if (!CombatStatus.has(world, target, "sharpened")) return;
+        const state = JSON.parse(effect.state()), power = Math.max(0, Number(state.edge) || 0);
+        if (!(power > 0) || !hurt(world, attacker, "sharpen", power, { damage: damageSpec("sharpen", "edge") })) return;
+        const body = world.observe(attacker);
+        if (body === null) return;
+        WorldFeedback.emit(world, sharpenScene, 1, body.position(),
+            { moment: "cut", target: String(attacker.ref()), edge: Math.round(power), spikes: Math.round(Number(state.spikes) || 0) }, 18);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), sharpenCutText, [], 18);
+        world.sound("minecraft:item.trident.hit", body.position(), 12, "{}");
+    });
 
     function sharpenRead(world: CombatWorld, actor: CombatActor): any | null {
         const marks = world.effects(actor, sharpenMark);
@@ -123,18 +137,9 @@ namespace PokemonSkills {
         if (!touched) return;
         const attacker = event.actor();
         if (attacker === null || String(attacker.ref()) === String(target.ref())) return;
-        if (!world.valid(attacker) || world.friendly(attacker)) return;
-        const state = sharpenRead(world, target);
-        if (state === null) return;
-        const power = Math.max(0, Number(state.edge) || 0);
-        if (power <= 0) return;
-        hurt(world, attacker, "sharpen", power, { damage: damageSpec("sharpen", "edge") });
-        const body = world.observe(attacker);
-        if (body === null) return;
-        WorldFeedback.emit(world, sharpenScene, 1, body.position(),
-            { moment: "cut", target: String(attacker.ref()), edge: Math.round(power), spikes: Math.round(Number(state.spikes) || 0) }, 18);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), sharpenCutText, [], 18);
-        world.sound("minecraft:item.trident.hit", body.position(), 12, "{}");
+        if (!world.valid(attacker) || world.allied(target, attacker)) return;
+        const marks = world.effects(target, sharpenMark);
+        if (marks.length) EffectReactions.invoke(world, marks[0].id(), sharpenCounter, { attacker: String(attacker.ref()) });
     });
 
     // 棱角窗口走完或被清除：棱角钝去，按 amplifier 把这份物攻原样收回（只收到当前实际持有的正等级）。

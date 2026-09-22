@@ -1,16 +1,4 @@
-/**
- * 胃液 / gastroacid 的客户端表现。
- *
- * 一句话：施法者喉间涌起一口滚着泡的绿酸 → 酸弹拖着酸滴飞向对手，命中处炸开一大片黏稠酸花 → 酸液顺着目标
- *         身体往下蚀、往上冒泡，把它的特性洗掉，落点地上留下一小滩酸渍。
- * 色相家族：酸绿 0x9BE049 作主体，亮黄绿 0xE8FF9B 作高光与气泡，暗沉底 0x3A4A22 只做黏稠的阴影。
- * 拍子：起 gather 0–12t ／ 飞 spit 40t ／ 击 splash 26t 与 corrode 32t ／ 收 settle 24t。
- * 范围：splash 的地面扩散环与 corrode 的附着范围按 `data.scale`（酸弹半径比）铺开，画出“溅到多大一块”。
- * 运动：气泡向上涌、酸弹沿瞄准方向直线飞行并拖酸滴、命中向外炸开再向下蚀、地面环向外扩散。
- * 数：酸滴数绑 `data.drops`（特攻派生），起手气泡数绑 `data.bubbles`（等级派生），
- *   蚀刻强弱绑 `data.intensity`（压制时长派生）。
- * 参照节：视觉语言第二、三、四、五、七、九节。
- */
+/** 胃液的酸弹尾迹、目标腐蚀与落点溅射表现。 */
 const GastroacidSceneDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {

@@ -23,6 +23,18 @@ namespace MobEffects {
         if (ticks !== -1 && (!isFinite(ticks) || ticks < 1 || ticks % 1)) throw new Error("Effect duration must be positive ticks or -1");
         world.marker(actor, id, ticks, amplifier); return read(world, actor, id);
     }
+    /** Opt in to this action/effect's resource cleanup after applying a carrier. Tokens are transient JSON-safe numbers.
+     * Rebinding takes ownership from the previous token; native refresh/replacement also makes an old token inactive. */
+    export function bind(world: CombatWorld, actor: CombatActor, id: string, observed?: CombatMobEffect | null): number {
+        const value = observed === undefined ? read(world, actor, id) : observed;
+        return value === null ? 0 : world.leaseMobEffect(actor, id, value.key());
+    }
+    export function present(world: CombatWorld, token: number): boolean {
+        return typeof token === "number" && token > 0 && world.mobEffectLeasePresent(token);
+    }
+    export function release(world: CombatWorld, token: number): boolean {
+        return typeof token === "number" && token > 0 && world.releaseMobEffectLease(token);
+    }
     /** Remove then apply, so a raised amplifier (a counter layer) actually lands instead of only refreshing duration. */
     export function set(world: CombatWorld, actor: CombatActor, id: string, ticks: number, amplifier = 0): CombatMobEffect | null {
         if (!world.valid(actor)) return null;

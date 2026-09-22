@@ -1,10 +1,9 @@
 {
-  "worldcombat.skill.junglehealing.summary": "The user becomes one with the jungle: vines and fresh sprouts erupt from the soil, wrapping the user and nearby allies, restoring over a tenth of their maximum health and curing every major status on impact. Natural ground makes the jungle grow stronger; a few short-lived sprouts are left behind. Deep Roots widens the ring, heals more and grows more, at the cost of a longer wind-up and cooldown.",
+  "worldcombat.skill.junglehealing.summary": "Vines and sprouts surround the user and nearby allies, healing them and clearing major status conditions. Natural ground improves healing and radius; deep roots strengthen both with longer windup and cooldown.",
   "worldcombat.skill.junglehealing.use.0": "Heal a group of allies and cure them together",
   "worldcombat.skill.junglehealing.use.1": "Cleanse a whole party at once on natural ground",
-  "worldcombat.skill.junglehealing.use.2": "Mark where the jungle passed with a patch of sprouts",
   "worldcombat.skill.junglehealing.description.0": "When the vines wrap in, the user and each ally restore %1$s of their maximum health; a closer bond draws the jungle in, and natural ground underfoot feeds it further.",
-  "worldcombat.skill.junglehealing.description.1": "The vines erupt across %1$s blocks and grow about %2$s cells of fresh sprouts on natural ground around the user.",
+  "worldcombat.skill.junglehealing.description.1": "Vines reach %1$s blocks, accompanied by about %2$s sprout particles.",
   "worldcombat.skill.junglehealing.description.2": "About %1$s leaf motes; wind-up %2$s, recovery %3$s and cooldown %4$s.",
   "worldcombat.skill.junglehealing.stance.deeproot": "Deep Roots: x1.2 vine radius, x1.1 healing, x1.4 sprouts, at the cost of +3 ticks of wind-up and a longer cooldown - for rescuing a whole group.",
   "worldcombat.skill.junglehealing.stance.shallow": "Shallow Roots: a faster wind-up and a shorter cooldown with a smaller ring and fewer sprouts - for a quick cleanse.",

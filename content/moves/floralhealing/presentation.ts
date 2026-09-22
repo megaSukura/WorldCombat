@@ -1,14 +1,4 @@
-/**
- * 花疗 / Floral Healing 的粒子语言。
- *
- * 一句话：施法者手心拢起一捧花瓣，一路撒到伤者身上；花瓣聚到他脚下、绽成一朵花，青草场地上还镀着一层暖金。
- * 色相家族：花瓣粉 0xE89AC0 作主体，叶绿 0x7CCB5A 作茎叶，暖金 0xF2C14E 只在青草场地的加成层出现。
- * 拍子：起（windup）／撒（scatter）／绽（bloom）／留（residue）。
- * 范围：scatter 沿 data.path（施法者→伙伴的同一组顶点）撒花瓣；bloom 的环半径绑定 data.radius（绽开半径），
- *   玩家从那圈花瓣读出这一口作用到多大一块。
- * 数：撒出与绽开的花瓣数绑定 data.petals（身高与繁花档换算），bloom 再按 data.share（实际回复比例）加密；
- *   青草场地时额外一层暖金数量绑定 data.gold；留花数量绑定 data.flowers。
- */
+/** 花疗的撒花、治疗绽放与落花表现；青草场地增加暖金强调层。 */
 const FloralHealingDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {

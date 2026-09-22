@@ -19,7 +19,9 @@ interface CombatEnergy { side(): string; stored(): number; capacity(): number; r
 /**
  * One active Minecraft effect instance. `tags()` lists the registry tags of the effect type, space-separated
  * (`world_combat:status/burn ...`); `tagged(tag)` is the membership test consumers use for shared status identity.
- * The comparison key retains vanilla hidden effect and NeoForge cure state; duration fields are absolute world ticks.
+ * `duration()` is the remaining number of ticks, or -1 for an infinite effect.
+ * `key()` is an opaque comparison token retaining native application revision, hidden effects and NeoForge cure state;
+ * only the duration fields serialized inside that token use absolute world ticks.
  */
 interface CombatMobEffect { id(): string; duration(): number; amplifier(): number; key(): string; tags(): string; tagged(tag: string): boolean; }
 interface CombatAttribute { base(): number; value(): number; }
@@ -171,6 +173,18 @@ interface CombatWorld {
     mobEffects(actor: CombatActor): readonly CombatMobEffect[];
     /** Removes only the exact currently observed effect, including its hidden stack. */
     removeMobEffect(actor: CombatActor, id: string, expectedKey: string): boolean;
+    /** Opt-in carrier ownership in an action/managed-effect scope. Binds this exact observation to the current resource owner;
+     * returns 0 if it changed. A new binding supersedes the previous claim, even for an identical same-tick state.
+     * Owner release also runs after source/target invalidation, permission loss or script failure. It removes the carrier only
+     * while this claim and native application still match; native reapplication, replacement or cure retire old ownership.
+     * The claim covers the observed native instance, including its hidden stack; use a dedicated carrier for independent ownership.
+     * Still-owned carriers are omitted from native save copies; third-party refreshed/replaced states retain native persistence.
+     * Ordinary marker/apply lifetimes remain independent. Persistent effects rebind in resume after their transient leases end. */
+    leaseMobEffect(actor: CombatActor, id: string, expectedKey: string): number;
+    /** Read-only check for a known token on a nearby live actor; usable from another event/effect scope. */
+    mobEffectLeasePresent(token: number): boolean;
+    /** Releases only a token owned by this scope; true only if its still-owned native carrier was removed. */
+    releaseMobEffectLease(token: number): boolean;
     /**
      * Leased blocks: `cells` is `{"cells":[{"x","y","z","block"?:string,"state"?:string,"expectedState"?:string}],"replace"?:bool,"ground"?:bool,"linger"?:bool}`.
      * Each cell supplies one of block/state in native command format, including optional properties. Same-type changes preserve unspecified properties;

@@ -61,6 +61,9 @@ public final class MinecraftCombat implements CombatHost {
     }
     private String damageMetadata = "{}";
     private final Map<Long, List<Runnable>> resourceLeases = new HashMap<>();
+    private final WorldMobEffects mobEffectLeases = new WorldMobEffects(this);
+    WorldMobEffects mobEffectLeases() { return mobEffectLeases; }
+    int resourceLeaseCount(long owner) { var values = resourceLeases.get(owner); return values == null ? 0 : values.size(); }
     // Retain the native impact source through deferred script settlement, including after entity removal.
     private final Map<String, CombatProjectile> projectiles = new HashMap<>();
     @Override public String projectile(long lease, ActorHandle source, UUID controller, Point origin, Point velocity, double gravity, double radius,
@@ -697,6 +700,13 @@ public final class MinecraftCombat implements CombatHost {
         var effect = entity.getEffect(holder);
         return effect != null && MinecraftEffectState.capture(entity, effect).key().equals(expected) && entity.removeEffect(holder);
     }
+    @Override public long leaseMobEffect(long owner, ActorHandle target, String id, String expected) {
+        var entity = resolve(target);
+        return entity == null ? 0 : mobEffectLeases.bind(owner, entity, mobEffectHolder(id), expected);
+    }
+    @Override public boolean mobEffectLeasePresent(ActorHandle observer, long token) { return mobEffectLeases.present(observer, token); }
+    @Override public boolean releaseMobEffectLease(long owner, long token) { return mobEffectLeases.release(owner, token); }
+    public void savingMobEffects(LivingEntity entity, net.minecraft.nbt.CompoundTag data) { mobEffectLeases.saving(entity, data); }
     /** Runs on the effect's own application interval; rejection preserves its native duration clock. */
     public boolean mobEffectTick(LivingEntity entity, net.minecraft.world.effect.MobEffect effect, int amplifier) {
         if (!CombatServices.CONTENT.ready() || !CombatServices.domain(entity).available(entity)) return true;
@@ -711,6 +721,7 @@ public final class MinecraftCombat implements CombatHost {
      * clear) or a scripted removal. Content may write the world: what an ailment does when it runs its course starts here.
      */
     public void mobEffectEnded(LivingEntity entity, net.minecraft.world.effect.MobEffectInstance effect, String cause) {
+        endedEffects.add(() -> mobEffectLeases.reconcile(entity, effect.getEffect()));
         if (!CombatServices.CONTENT.ready() || !CombatServices.domain(entity).available(entity)) return;
         var data = new com.google.gson.JsonObject();
         data.addProperty("id", net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getKey(effect.getEffect().value()).toString());
@@ -722,6 +733,7 @@ public final class MinecraftCombat implements CombatHost {
     private final java.util.ArrayDeque<Runnable> endedEffects = new java.util.ArrayDeque<>();
     /** Fires on the next server tick after a Minecraft effect was added to (or upgraded on) the entity. */
     public void mobEffectAdded(LivingEntity entity, net.minecraft.world.effect.MobEffectInstance effect, net.minecraft.world.effect.MobEffectInstance previous) {
+        mobEffectReapplied(entity, effect);
         if (!CombatServices.CONTENT.ready() || !CombatServices.domain(entity).available(entity)) return;
         var data = new com.google.gson.JsonObject();
         data.addProperty("id", net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getKey(effect.getEffect().value()).toString());
@@ -730,6 +742,10 @@ public final class MinecraftCombat implements CombatHost {
         data.addProperty("replaced", previous != null);
         var actor = bind(entity);
         endedEffects.add(() -> { if (resolve(actor) != null) runtime.event("world_combat:mob_effect_added", actor, actor, data.toString(), true); });
+    }
+    public void mobEffectReapplied(LivingEntity entity, net.minecraft.world.effect.MobEffectInstance effect) {
+        MinecraftEffectState.applied(entity, effect);
+        mobEffectLeases.applied(entity, effect.getEffect());
     }
     private final java.util.LinkedHashSet<LivingEntity> changedActors = new java.util.LinkedHashSet<>();
     /**

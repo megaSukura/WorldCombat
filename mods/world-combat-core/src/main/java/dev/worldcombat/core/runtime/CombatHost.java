@@ -88,6 +88,9 @@ public interface CombatHost {
     default MobEffectObservation mobEffect(ActorHandle target, String id) { throw new UnsupportedOperationException(); }
     default MobEffectObservation[] mobEffects(ActorHandle target) { throw new UnsupportedOperationException(); }
     default boolean removeMobEffect(ActorHandle target, String id, String expected) { throw new UnsupportedOperationException(); }
+    default long leaseMobEffect(long owner, ActorHandle target, String id, String expected) { throw new UnsupportedOperationException(); }
+    default boolean mobEffectLeasePresent(ActorHandle observer, long token) { throw new UnsupportedOperationException(); }
+    default boolean releaseMobEffectLease(long owner, long token) { throw new UnsupportedOperationException(); }
     default boolean attribute(long owner, ActorHandle target, String id, double amount, String operation) { throw new UnsupportedOperationException(); }
     default long terrain(long owner, ActorHandle actor, UUID controller, String cells, int ticks) { throw new UnsupportedOperationException(); }
     default String terrainResult(long owner, ActorHandle actor, UUID controller, String cells, int ticks) { throw new UnsupportedOperationException(); }

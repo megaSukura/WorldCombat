@@ -6,6 +6,7 @@
   "mixins": [
     "MobControlMixin",
     "MobEffectTickMixin",
+    "MobEffectLeaseSaveMixin",
     "ProjectileHitRadiusMixin",
     "PublicAttributeMixin",
     "T88NetworkWatcherMixin"

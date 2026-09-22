@@ -68,7 +68,10 @@
         "content/mechanisms/world-actions.ts",
         "content/mechanisms/living-actions.ts",
         "content/mechanisms/world-abilities.ts",
+        "content/mechanisms/machine-work.ts",
         "content/mechanisms/mob-effects.ts",
+        "content/mechanisms/status-contributions.ts",
+        "content/mechanisms/effect-reactions.ts",
         "content/mechanisms/world-feedback.ts",
         "content/mechanisms/world-cultivation.ts",
         "content/mechanisms/guard-effects.ts",
@@ -88,6 +91,7 @@
       "sources": [],
       "collections": [
         "content/collections/p5.json",
+        "content/collections/work.json",
         "content/collections/training-equipment.json"
       ]
     },
@@ -156,8 +160,7 @@
         "content/library/skills/feedback.ts",
         "content/library/skills/effects.ts",
         "content/library/skills/actions.ts",
-        "content/library/skills/party-relay.ts",
-        "content/library/skills/machine-work.ts"
+        "content/library/skills/party-relay.ts"
       ]
     },
     "world_combat:companion_runtime": {

@@ -168,7 +168,7 @@ namespace PokemonSkills {
             const fraction = Math.max(0.012, Math.min(0.05, 0.010 + attack * 0.00011));
             const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
             if (loss > 0) {
-                const remaining = Math.max(0, effect.duration() - world.tick());
+                const remaining = Math.max(0, effect.duration());
                 CombatStatus.apply(world, actor, "confusion", thrashDaze, Math.max(60, remaining), effect.amplifier(), { unique: true });
                 WorldFeedback.emit(world, thrashScene, 1, body.position(), { moment: "punish", target: String(actor.ref()) }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), thrashChipText, [Math.round(loss * 10) / 10], 24);
