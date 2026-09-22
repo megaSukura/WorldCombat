@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.moonlight.summary": "Wraps the clear night's moonlight around itself: catching the moonlight restores about two thirds of its missing health and cools off any burn, while day or rain only restores a little.",
+  "worldcombat.skill.moonlight.use.0": "A strong heal under a clear night",
+  "worldcombat.skill.moonlight.use.1": "Cool off a burn on the side",
+  "worldcombat.skill.moonlight.use.2": "A small top-up by day",
+  "worldcombat.skill.moonlight.description.0": "Restores %1$s of the missing health: close to 2/3 on a clear night, only the floor by day or in rain; higher friendship draws more moonlight.",
+  "worldcombat.skill.moonlight.description.1": "Settles after %1$s of receiving the moon; whatever the strength, it cools off any burn.",
+  "worldcombat.skill.moonlight.timing": "A self move; after %2$s s of receiving the moon it spends %4$s PP, recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.moonlight.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
+  "worldcombat.skill.moonlight.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
+  "worldcombat.skill.moonlight.value.heal": "Restore fraction",
+  "worldcombat.skill.moonlight.value.moonriseTicks": "Receiving duration",
+  "worldcombat.skill.moonlight.value.moon": "Moonlight",
+  "worldcombat.skill.moonlight.value.moon.yes": "clear night",
+  "worldcombat.skill.moonlight.value.moon.no": "day or rain",
+  "worldcombat.skill.moonlight.preference.ai.healBelow": "Heal threshold",
+  "worldcombat.skill.moonlight.preference.ai.healBelow.help": "Below this health ratio the companion schedules Moonlight; lower endures longer, higher receives the moon at the first wound.",
+  "worldcombat.skill.moonlight.preference.ai.waitForSky": "Wait for moonlight",
+  "worldcombat.skill.moonlight.preference.ai.waitForSky.help": "On: only cast in the dark (at night), holding the move by day. Off: cast whenever wounded and accept the floor heal.",
+  "world_combat.move.moonlight.text.veil": "Moonlit",
+  "world_combat.move.moonlight.text.dim": "Faint moonlight",
+  "world_combat.move.moonlight.text.soothe": "Burn cooled"
+}

@@ -1,0 +1,1 @@
+ItemTooltips.addIfMod("world_combat:training_compass","curios","minecraft:compass",{key:"worldcombat.equipment.compass",args:[TrainingCompass.modifiers.explorationRadius,TrainingCompass.modifiers.searchRadius]});

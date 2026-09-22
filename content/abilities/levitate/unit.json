@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "world_combat:ability/levitate",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native": "0.1",
+    "world_combat:mechanisms": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "clientSources": [
+    "presentation.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:levitate_hover": "minecraft:mob_effect/slow_falling"
+  }
+}

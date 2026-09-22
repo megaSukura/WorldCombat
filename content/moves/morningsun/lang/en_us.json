@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.morningsun.summary": "Draws the clear daytime sun down onto itself: catching the morning light restores about two thirds of its missing health and grants a speed boost, while night or rain only restores a little and grants none.",
+  "worldcombat.skill.morningsun.use.0": "A strong heal under clear day",
+  "worldcombat.skill.morningsun.use.1": "Trade the heal for a speed boost",
+  "worldcombat.skill.morningsun.use.2": "A small top-up at night",
+  "worldcombat.skill.morningsun.description.0": "Restores %1$s of the missing health: close to 2/3 under clear day, only the floor at night or in rain; more with higher Special Attack.",
+  "worldcombat.skill.morningsun.description.1": "Settles after %1$s of greeting; catching the morning light also grants %2$s of movement speed, otherwise none.",
+  "worldcombat.skill.morningsun.timing": "A self move; after %2$s s of greeting it spends %4$s PP, recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.morningsun.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
+  "worldcombat.skill.morningsun.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
+  "worldcombat.skill.morningsun.value.heal": "Restore fraction",
+  "worldcombat.skill.morningsun.value.sunriseTicks": "Greeting duration",
+  "worldcombat.skill.morningsun.value.vigorTicks": "Morning vigour",
+  "worldcombat.skill.morningsun.value.dawn": "Morning light",
+  "worldcombat.skill.morningsun.value.dawn.yes": "clear day",
+  "worldcombat.skill.morningsun.value.dawn.no": "night or rain",
+  "worldcombat.skill.morningsun.preference.ai.healBelow": "Heal threshold",
+  "worldcombat.skill.morningsun.preference.ai.healBelow.help": "Below this health ratio the companion schedules Morning Sun; lower endures longer, higher greets the light at the first wound.",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky": "Wait for morning",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "On: only cast in strong sunlight, holding the move at night or in rain (little heal, no boost). Off: cast whenever wounded and accept the floor heal.",
+  "world_combat.move.morningsun.text.dawn": "Morning light",
+  "world_combat.move.morningsun.text.dim": "Faint light"
+}

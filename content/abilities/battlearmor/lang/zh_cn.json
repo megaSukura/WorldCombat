@@ -1,0 +1,5 @@
+{
+  "world_combat.ability.battlearmor.desc": "受到单次超过最大生命 20% 的攻击时减少 25% 伤害，并获得 +3 护甲与 +2 韧性持续 2 秒；宝可梦对手的招式无法对你造成暴击。",
+  "world_combat.ability.battlearmor.text.brace": "卸力 -%1$s",
+  "effect.world_combat.battlearmor_brace": "铁甲护住"
+}

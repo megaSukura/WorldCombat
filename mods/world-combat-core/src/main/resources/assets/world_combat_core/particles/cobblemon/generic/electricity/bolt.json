@@ -1,0 +1,15 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/electricity/bolt/0",
+    "world_combat_core:cobblemon/generic/electricity/bolt/1",
+    "world_combat_core:cobblemon/generic/electricity/bolt/2",
+    "world_combat_core:cobblemon/generic/electricity/bolt/3",
+    "world_combat_core:cobblemon/generic/electricity/bolt/4",
+    "world_combat_core:cobblemon/generic/electricity/bolt/5",
+    "world_combat_core:cobblemon/generic/electricity/bolt/6",
+    "world_combat_core:cobblemon/generic/electricity/bolt/7",
+    "world_combat_core:cobblemon/generic/electricity/bolt/8",
+    "world_combat_core:cobblemon/generic/electricity/bolt/9",
+    "world_combat_core:cobblemon/generic/electricity/bolt/10"
+  ]
+}

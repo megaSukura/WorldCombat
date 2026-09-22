@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.levitate.desc": "从地面浮起：免疫坠落、仙人掌等地面伤害与宝可梦的地面属性招式，近战攻击命中你也减少 15% 伤害，并获得 +10% 移速。",
+  "world_combat.ability.levitate.text.negate": "地面无效",
+  "world_combat.ability.levitate.text.drift": "浮空闪避",
+  "effect.world_combat.levitate_hover": "飘浮"
+}

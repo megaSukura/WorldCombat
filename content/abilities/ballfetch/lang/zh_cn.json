@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.ballfetch.desc": "被远程攻击命中时接住来物并掷回，让攻击者减速 20% 持续 4 秒；若自己没有携带物，每 10 秒回复 1 点 PP。",
+  "world_combat.ability.ballfetch.text.catch": "接住来物",
+  "world_combat.ability.ballfetch.text.trip": "被掷回",
+  "world_combat.ability.ballfetch.text.hold": "收进球中",
+  "effect.world_combat.ballfetch_trip": "被掷回"
+}

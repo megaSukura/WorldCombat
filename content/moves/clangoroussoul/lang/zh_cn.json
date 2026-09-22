@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.clangoroussoul.summary": "踏着一支越唱越烈的战舞，逐拍燃烧自己的生命，把攻击、防御、特攻、特防、速度一起提高。舞可以被打断，已经抬起的等级会留下。",
+  "worldcombat.skill.clangoroussoul.description.0": "每拍支付 %1$s 最大生命，把五项各提高 %3$s 级，共 %2$s 拍。",
+  "worldcombat.skill.clangoroussoul.description.1": "每拍间隔 %1$s，声波半径 %2$s 格；起舞期间站定，起势可被打断。",
+  "worldcombat.skill.clangoroussoul.timing": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
+  "worldcombat.skill.clangoroussoul.use.0": "开战前站定起舞，把全部五项拉起来",
+  "worldcombat.skill.clangoroussoul.use.1": "在对手还在接近的窗口里叠起一张全能底牌",
+  "worldcombat.skill.clangoroussoul.use.2": "生命充裕时用血换一次全面压制",
+  "worldcombat.skill.clangoroussoul.value.beats": "拍数",
+  "worldcombat.skill.clangoroussoul.value.costPerBeat": "每拍生命",
+  "worldcombat.skill.clangoroussoul.value.rise": "每拍提升",
+  "worldcombat.skill.clangoroussoul.value.interval": "拍间隔",
+  "worldcombat.skill.clangoroussoul.value.pulseRadius": "声波半径",
+  "worldcombat.skill.clangoroussoul.preference.extended": "连唱",
+  "worldcombat.skill.clangoroussoul.preference.extended.help": "开启：最多唱两拍，每拍更便宜但总价更高、五项各 +1 两次，起势更长；关闭：一拍唱完，便宜又快。",
+  "worldcombat.skill.clangoroussoul.preference.ai.reserveHealth": "保留生命",
+  "worldcombat.skill.clangoroussoul.preference.ai.reserveHealth.help": "起舞前要求留下的生命比例；越高越不肯卖血，生命不足时改为先攻击或走位。",
+  "worldcombat.skill.clangoroussoul.preference.ai.maxChase": "起舞距离上限",
+  "worldcombat.skill.clangoroussoul.preference.ai.maxChase.help": "威胁超过这个距离就不再考虑先起舞；越大越愿意在远处先叠状态。",
+  "world_combat.move.clangoroussoul.text.beat": "第 %1$s / %2$s 拍",
+  "world_combat.move.clangoroussoul.text.climax": "唱满 · 全部能力提升",
+  "world_combat.move.clangoroussoul.text.weak": "生命不足以继续起舞"
+}

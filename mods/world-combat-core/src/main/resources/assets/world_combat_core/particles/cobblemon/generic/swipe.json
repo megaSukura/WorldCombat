@@ -1,0 +1,10 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/swipe/0",
+    "world_combat_core:cobblemon/generic/swipe/1",
+    "world_combat_core:cobblemon/generic/swipe/2",
+    "world_combat_core:cobblemon/generic/swipe/3",
+    "world_combat_core:cobblemon/generic/swipe/4",
+    "world_combat_core:cobblemon/generic/swipe/5"
+  ]
+}

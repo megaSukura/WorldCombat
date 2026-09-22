@@ -1,0 +1,356 @@
+{
+  "width": 960,
+  "height": 720,
+  "dt": 0.016666666666666666,
+  "warmupFrames": 5,
+  "seed": 1347,
+  "ground": false,
+  "hdr": true,
+  "bloomIntensity": 1,
+  "bloomThreshold": 0.6,
+  "timeoutSeconds": 120,
+  "background": {
+    "r": 0.13,
+    "g": 0.15,
+    "b": 0.18,
+    "a": 1
+  },
+  "groundColor": {
+    "r": 0.25,
+    "g": 0.27,
+    "b": 0.29,
+    "a": 1
+  },
+  "views": [
+    {
+      "id": "close",
+      "position": {
+        "x": 7,
+        "y": 4,
+        "z": -8
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 0.7,
+        "z": 0
+      },
+      "fieldOfView": 50
+    },
+    {
+      "id": "side",
+      "position": {
+        "x": 10,
+        "y": 1.5,
+        "z": 0
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 0.7,
+        "z": 0
+      },
+      "fieldOfView": 50
+    }
+  ],
+  "cases": [
+    {
+      "id": "u00-windcharge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u01-healcharge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Etcs/HealCharge/Prefabs/HealCharge.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u33-par-purpleshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/Shields/Shield_Purple/Prefabs/Par_PurpleShield.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u34-par-greenshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shields/GreenShield/Prefabs/Par_GreenShield.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u35-par-holyshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shields/HolyShield/Prefabs/Par_HolyShield.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u39-par-stunbuff",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Stun/Prefabs/Par_StunBuff.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u40-buff-sleep",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Sleep/Prefabs/Buff_Sleep.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u41-buff-restraint",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Restrained/Prefabs/Buff_Restraint.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition. Capsule is a non-VFX demonstration MeshRenderer and is hidden explicitly.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      },
+      "visibleOnly": [
+        "",
+        "Buff_Restraint",
+        "Smoke",
+        "Par_CurvyTrail",
+        "Par_Sparkle"
+      ]
+    },
+    {
+      "id": "u45-par-blackhole",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Cosmos/BlackHole/Prefabs/Par_BlackHole.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited. Supplement: no ground so below-origin geometry is visible; this is an observation condition.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "wind-isolation-rings",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0.2,
+        0.7,
+        1.5,
+        2.5
+      ],
+      "notes": "Renderer isolation: simulation and source modules remain active; global shader time recorded.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      },
+      "visibleOnly": [
+        "CenterCircle",
+        "CenterCircle (1)"
+      ]
+    },
+    {
+      "id": "wind-isolation-curved-texture",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0.2,
+        0.7,
+        1.5,
+        2.5
+      ],
+      "notes": "Renderer isolation: simulation and source modules remain active; global shader time recorded.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      },
+      "visibleOnly": [
+        "CurvySmoke (1)"
+      ]
+    },
+    {
+      "id": "wind-isolation-flow-trails",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0.2,
+        0.7,
+        1.5,
+        2.5
+      ],
+      "notes": "Renderer isolation: simulation and source modules remain active; global shader time recorded.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      },
+      "visibleOnly": [
+        ""
+      ]
+    },
+    {
+      "id": "wind-isolation-points",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0.2,
+        0.7,
+        1.5,
+        2.5
+      ],
+      "notes": "Renderer isolation: simulation and source modules remain active; global shader time recorded.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      },
+      "visibleOnly": [
+        "Particle System"
+      ]
+    }
+  ]
+}

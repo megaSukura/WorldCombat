@@ -1,0 +1,23 @@
+import groovy.json.JsonOutput
+
+// Prepares data only. The separate launcher requires explicit confirmation for a visible test batch.
+gradle.projectsEvaluated {
+    def modProject = rootProject.project(":cobblemon-world-combat")
+    def launch = modProject.tasks.named("runClient").get()
+    modProject.tasks.register("exportInputClient") {
+        dependsOn(launch.taskDependencies.getDependencies(launch))
+        doLast {
+            def output = new File(rootProject.layout.buildDirectory.get().asFile, "p2-input-launch/client.json")
+            output.parentFile.mkdirs()
+            output.text = JsonOutput.prettyPrint(JsonOutput.toJson([
+                executable: launch.executable,
+                jvmArgs: launch.allJvmArgs + launch.jvmArgumentProviders.collectMany { it.asArguments() as List },
+                classpath: (launch.classpath.files + launch.classpathProvider.files).collect { it.absolutePath }.join(File.pathSeparator),
+                mainClass: launch.mainClass.get(),
+                args: launch.args + launch.argumentProviders.collectMany { it.asArguments() as List },
+                environment: launch.environmentProperty.get()
+            ]))
+            println("Prepared " + output)
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+  "worldcombat.skill.sleeptalk.summary": "只能在睡觉时使用；从自己已学会的招式中随机使出一个。",
+  "worldcombat.skill.sleeptalk.use.0": "睡眠中呓语",
+  "worldcombat.skill.sleeptalk.use.1": "随机借出一个已知招式",
+  "worldcombat.skill.sleeptalk.description.0": "呓语 %1$s 后，从自己已学会的招式中随机借出一个并使出；没有可用招式时不会发动。",
+  "worldcombat.skill.sleeptalk.description.1": "梦话能够到 %1$s 远，借出的招式射程不超过这个距离；再次入梦需要 %2$s。",
+  "worldcombat.skill.sleeptalk.description.2": "画面里的梦泡数量为 %1$s，随等级与特攻增长。",
+  "worldcombat.skill.sleeptalk.value.murmur": "呓语时间",
+  "worldcombat.skill.sleeptalk.value.span": "梦话距离",
+  "worldcombat.skill.sleeptalk.value.recharge": "再次入梦",
+  "worldcombat.skill.sleeptalk.value.echoes": "梦泡数量",
+  "world_combat.move.sleeptalk.text.dream": "梦话使出了 %1$s"
+}

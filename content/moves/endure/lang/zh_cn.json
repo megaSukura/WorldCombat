@@ -1,0 +1,21 @@
+{
+  "worldcombat.skill.endure.summary": "在短窗口内，任何致命攻击都只会把你打到 1 HP；不减免普通伤害，连续使用容易失败。",
+  "worldcombat.skill.endure.description.0": "挺住窗口 %1$s、可保命 %2$s 次；特防与等级越高窗口越久。",
+  "worldcombat.skill.endure.description.1": "咬牙 %1$s，冷却 %2$s，用掉次数后力竭 %3$s。",
+  "worldcombat.skill.endure.description.2": "连用失误率 %1$s；挣扎与屹立的取舍见配置 %2$s。",
+  "worldcombat.skill.endure.use.0": "残血时拖住回合、等待救援",
+  "worldcombat.skill.endure.use.1": "为队友争取一次打断或撤退",
+  "worldcombat.skill.endure.use.2": "主动去吃一记致命招",
+  "worldcombat.skill.endure.value.raise": "咬牙时间",
+  "worldcombat.skill.endure.value.window": "挺住窗口",
+  "worldcombat.skill.endure.value.charges": "保命次数",
+  "worldcombat.skill.endure.value.charge": "冷却",
+  "worldcombat.skill.endure.value.grit": "力竭时长",
+  "worldcombat.skill.endure.value.fizzle": "连用失误率",
+  "worldcombat.skill.endure.preference.scramble": "挣扎／屹立",
+  "worldcombat.skill.endure.preference.scramble.help": "开启挣扎：窗口 ×0.75，但全程可以移动，收招 12 刻、没有力竭。关闭屹立：窗口 ×1.25，整段定身，用掉次数后力竭 30 刻，收招 6 刻。",
+  "worldcombat.skill.endure.preference.ai.threshold": "保命血量",
+  "worldcombat.skill.endure.preference.ai.threshold.help": "生命比例低于这个值才咬牙。越大越保守、越早用掉 PP；越小越省，但可能来不及。",
+  "world_combat.move.endure.text.save": "挺住！",
+  "world_combat.move.endure.text.spent": "力竭"
+}

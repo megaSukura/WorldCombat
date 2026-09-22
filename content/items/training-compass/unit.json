@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "world_combat:training_compass",
+  "sources": [
+    "values.ts",
+    "behavior.ts"
+  ],
+  "clientSources": [
+    "values.ts",
+    "tooltip.ts"
+  ],
+  "version": "0.1",
+  "requires": {
+    "world_combat:companions": "0.1",
+    "world_combat:presentation": "0.1"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "worldcombat.skill.sketch.summary": "Sketch the move the target just used straight into the slot Sketch occupies and learn it permanently. Sketch has one use, and the slot is gone once it is used.",
+  "worldcombat.skill.sketch.use.0": "Permanently learn one of a foe's moves",
+  "worldcombat.skill.sketch.use.1": "Copy a rare set-up or recovery",
+  "worldcombat.skill.sketch.use.2": "Put a heavy attack into your own move set",
+  "worldcombat.skill.sketch.description.0": "Within %1$s blocks, draw the target for %2$s s, then write its last used move permanently into the slot Sketch occupies.",
+  "worldcombat.skill.sketch.description.1": "About %1$s brush strokes. It cannot start when the target has no last move, and Sketch is not consumed then.",
+  "worldcombat.skill.sketch.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
+  "worldcombat.skill.sketch.value.reach": "Sketch range",
+  "worldcombat.skill.sketch.value.study": "Sketch windup",
+  "worldcombat.skill.sketch.value.afterglow": "Recovery",
+  "worldcombat.skill.sketch.value.recharge": "Cooldown",
+  "worldcombat.skill.sketch.value.strokes": "Brush strokes",
+  "worldcombat.skill.sketch.preference.ai.minPower": "Sketch power floor",
+  "worldcombat.skill.sketch.preference.ai.minPower.help": "Damaging moves below this power are not sketched (status moves are exempt). Sketch has one use, so raise it to save it for a real prize.",
+  "worldcombat.skill.sketch.preference.ai.maxChase": "Sketch distance",
+  "worldcombat.skill.sketch.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of drawing. Larger values sketch from further away.",
+  "worldcombat.skill.sketch.preference.ai.leaveStation": "May leave station",
+  "worldcombat.skill.sketch.preference.ai.leaveStation.help": "When on, the user may leave its post to sketch; when off, it only casts at what it can reach from where it stands.",
+  "world_combat.move.sketch.text.ink": "Sketched %1$s",
+  "world_combat.move.sketch.text.empty": "Nothing to sketch"
+}

@@ -1,0 +1,1424 @@
+{
+  "width": 800,
+  "height": 600,
+  "dt": 0.016666666666666666,
+  "warmupFrames": 5,
+  "seed": 1347,
+  "ground": true,
+  "hdr": true,
+  "bloomIntensity": 1,
+  "bloomThreshold": 0.6,
+  "timeoutSeconds": 120,
+  "background": {
+    "r": 0.13,
+    "g": 0.15,
+    "b": 0.18,
+    "a": 1
+  },
+  "groundColor": {
+    "r": 0.25,
+    "g": 0.27,
+    "b": 0.29,
+    "a": 1
+  },
+  "views": [
+    {
+      "id": "perspective",
+      "position": {
+        "x": 12,
+        "y": 8,
+        "z": -14
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "fieldOfView": 48
+    },
+    {
+      "id": "side",
+      "position": {
+        "x": 17,
+        "y": 3,
+        "z": 0
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "fieldOfView": 48
+    }
+  ],
+  "cases": [
+    {
+      "id": "u00-windcharge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u01-healcharge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Etcs/HealCharge/Prefabs/HealCharge.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u02-par-cosmoshoottrails",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Cosmos/CosmoShoot/Prefabs/Par_CosmoShootTrails.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u03-par-watershoot-trails",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Shoots/WaterShoots/Prefabs/Par_WaterShoot_Trails.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u04-par-fireexplosion",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Exp/FireExplosion/Prefabs/Par_FireExplosion.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u05-par-poisonshoot-hit",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Shoots/PoisonShoot/Prefabs/Par_PoisonShoot_Hit.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u06-par-waterexplosion",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Exp/WaterExplosion/Prefabs/Par_WaterExplosion.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u07-par-windswordbeam",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Slashes/WindSlashes/Prefabs/Par_WindSwordBeam.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u08-par-bloodslashes",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Slashes/BloodSlashes/Prefabs/Par_BloodSlashes.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u09-flamethrower",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/FlameThrower/NormalFlameThrower/Prefabs/FlameThrower.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u10-stormflamethrower",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/FlameThrower/StormFlameThrower/Prefabs/StormFlameThrower.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u11-flamethrower",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/FlameThrower/PurpleFlameThrower/Prefabs/FlameThrower.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u12-par-waterlaser",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Liquids/Water/WaterLaser/Prefabs/Par_WaterLaser.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "laser": {
+        "enabled": true,
+        "start": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "end": {
+          "x": 0,
+          "y": 1,
+          "z": 7
+        }
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5
+      }
+    },
+    {
+      "id": "u13-par-waterlaserstart",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Liquids/Water/WaterLaser/Prefabs/Par_WaterLaserStart.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u14-par-waterlaserstop",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Liquids/Water/WaterLaser/Prefabs/Par_WaterLaserStop.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u15-par-laser-firethicklaser",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Lasers/FireLaser/Prefabs/Par_Laser_FireThickLaser.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "laser": {
+        "enabled": true,
+        "start": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "end": {
+          "x": 0,
+          "y": 1,
+          "z": 7
+        }
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5
+      }
+    },
+    {
+      "id": "u16-par-laser-firethicklaserstart",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Lasers/FireLaser/Prefabs/Par_Laser_FireThickLaserStart.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u17-par-laser-firethicklaserstop",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Lasers/FireLaser/Prefabs/Par_Laser_FireThickLaserStop.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u18-par-yellowswordbeam",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/Slashes/Slash_Yellow/Prefabs/Par_YellowSwordBeam.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u19-par-frostshoot-bullet",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shoots/FrostShoot2/Prefabs/Par_FrostShoot_Bullet.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u20-par-frostshoot-trails",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shoots/FrostShoot2/Prefabs/Par_FrostShoot_Trails.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u21-par-yellowdisc-bullet",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shoots/YellowDiscShoot/Prefabs/Par_YellowDisc_Bullet.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u23-par-orangeshoot-bullet",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shoots/OrangeSparkleShoot/Prefabs/Par_OrangeShoot_Bullet.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u24-par-orangeshoot-trails",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shoots/OrangeSparkleShoot/Prefabs/Par_OrangeShoot_Trails.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "motion": {
+        "enabled": true,
+        "kind": "orbit",
+        "orbitAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "radius": 2,
+        "degreesPerSecond": 100,
+        "faceVelocity": true
+      },
+      "stop": {
+        "enabled": true,
+        "at": 2.5,
+        "freezeMotion": true,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u25-par-frostexplosion",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Exp/FrostExplosion/Prefabs/Par_FrostExplosion.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u26-par-poisonexp",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Exps/PoisonExp/Prefabs/Par_PoisonExp.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u27-par-firefield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/Fields/Field_Fire/Prefabs/Par_FireField.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u28-par-holymagiccircle",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/Fields/Field_LargeHoly/Prefabs/Par_HolyMagicCircle.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u29-par-poisonfields",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Fields/PoisonFields/Prefabs/Par_PoisonFields.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u30-par-redaura",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Auras/RedAura/Prefabs/Par_RedAura.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u31-par-largefrostaura",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Auras/LargeFrostAura/Prefabs/Par_LargeFrostAura.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u32-par-holyaura",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Auras/HolyAura/Prefabs/Par_HolyAura.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u33-par-purpleshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/Shields/Shield_Purple/Prefabs/Par_PurpleShield.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u34-par-greenshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shields/GreenShield/Prefabs/Par_GreenShield.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u35-par-holyshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shields/HolyShield/Prefabs/Par_HolyShield.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u36-par-attackup",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/EnhanceBuffs/Buff_AttackUp/Prefabs/Par_AttackUp.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u37-par-holybuff",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/EnhanceBuffs/Buff_Holy/Prefabs/Par_HolyBuff.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u38-par-healbuff",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/EnhanceBuffs/Buff_Heal/Prefabs/Par_HealBuff.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u39-par-stunbuff",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Stun/Prefabs/Par_StunBuff.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u40-buff-sleep",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Sleep/Prefabs/Buff_Sleep.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u41-buff-restraint",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Restrained/Prefabs/Buff_Restraint.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u42-par-tornado",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/Tornado/Prefabs/Par_Tornado.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u43-par-tornadocontinous",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/TornadoContinous/Prefabs/Par_TornadoContinous.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u44-par-tornadooneshotlarge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/TornadoOneShotLarge/Prefabs/Par_TornadoOneShotLarge.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u45-par-blackhole",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Cosmos/BlackHole/Prefabs/Par_BlackHole.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u46-buff-poison",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Liquids/Poison/PoisonBuff/Prefabs/Buff_Poison.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u47-frozesector2",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Sectors/FrozeSector/Prefabs/FrozeSector2.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u48-par-firesector",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Sectors/FireSector/Prefabs/Par_FireSector.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u49-par-purplesector",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Sectors/PurpleSectorAttack/Prefabs/Par_PurpleSector.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u50-par-iceclustersingle",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Etcs/IceWall/Prefabs/Par_IceClusterSingle.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u51-par-blueflashstart",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Teleport/BlueTeleport/Prefabs/Par_BlueFlashStart.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u52-par-blueflashend",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Teleport/BlueTeleport/Prefabs/Par_BlueFlashEnd.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u53-par-healbubble",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shoots/HealBubbleShoot/Prefabs/Par_HealBubble.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u54-par-dizzy",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer1/RestrainBuffs/Buff_Dizzy/Prefabs/Par_Dizzy.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u55-par-purpleexplosion",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Exp/PurpleExplosion/Prefabs/Par_PurpleExplosion.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u56-par-windexplosion",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Exp/WindExplosion/Prefabs/Par_WindExplosion.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited."
+    },
+    {
+      "id": "u57-par-waterpour",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Liquids/Water/WaterPour/Prefabs/Par_WaterPour.prefab",
+      "times": [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        0.4,
+        0.7,
+        1,
+        1.5,
+        2,
+        3,
+        4.5,
+        6
+      ],
+      "notes": "Original prefab in native Play Mode. Camera and explicit study inputs recorded; no source asset edited.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    }
+  ]
+}

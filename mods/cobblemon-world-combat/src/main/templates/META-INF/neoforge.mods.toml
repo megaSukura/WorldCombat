@@ -1,0 +1,46 @@
+modLoader = "kotlinforforge"
+loaderVersion = "[${kotlinforforge_version}]"
+license = "GPL-3.0-or-later; see LICENSE and LICENSE-MINECRAFT-EXCEPTION.txt"
+
+[[mods]]
+modId = "cobblemon_world_combat"
+version = "${mod_version}"
+displayName = "Cobblemon World Combat"
+description = "Cobblemon integration for scripted world combat."
+
+[[dependencies.cobblemon_world_combat]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${minecraft_version}]"
+side = "BOTH"
+
+[[dependencies.cobblemon_world_combat]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neoforge_version}]"
+side = "BOTH"
+
+[[dependencies.cobblemon_world_combat]]
+modId = "world_combat_core"
+type = "required"
+versionRange = "[${mod_version}]"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.cobblemon_world_combat]]
+modId = "cobblemon"
+type = "required"
+versionRange = "[${cobblemon_version}]"
+ordering = "AFTER"
+side = "BOTH"
+
+[[mixins]]
+config = "cobblemon_world_combat.mixins.json"
+
+[[dependencies.cobblemon_world_combat]]
+modId = "ldlib2"
+type = "required"
+versionRange = "[${ldlib2_version}]"
+ordering = "AFTER"
+side = "BOTH"
+

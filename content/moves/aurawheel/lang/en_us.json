@@ -1,0 +1,15 @@
+{
+  "worldcombat.skill.aurawheel.summary": "Rolls the energy stored in the user's cheeks along the ground; using it raises Speed, and its type follows the user's form.",
+  "worldcombat.skill.aurawheel.use.0": "Rolling charge",
+  "worldcombat.skill.aurawheel.description.0": "Rolls along the ground: %1$s physical damage; roll distance %2$s blocks, %3$s blocks per tick, collision radius %4$s blocks; on impact the user's Speed rises by %5$s stages. The type follows the user's form.",
+  "worldcombat.skill.aurawheel.description.1": "PP cost %1$s; cooldown %2$s s.",
+  "worldcombat.skill.aurawheel.timing": "Timing",
+  "worldcombat.skill.aurawheel.value.power": "Aura Wheel power",
+  "worldcombat.skill.aurawheel.value.haste": "Speed stages",
+  "worldcombat.skill.aurawheel.value.distance": "Roll distance",
+  "worldcombat.skill.aurawheel.value.speed": "Roll speed",
+  "worldcombat.skill.aurawheel.value.traceAhead": "Look-ahead",
+  "worldcombat.skill.aurawheel.value.collisionRadius": "Collision radius",
+  "worldcombat.skill.aurawheel.value.minimumMove": "Minimum step",
+  "world_combat.move.aurawheel.text.haste": "Speed +%1$s"
+}

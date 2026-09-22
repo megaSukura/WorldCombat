@@ -1,0 +1,9 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/hit/0",
+    "world_combat_core:cobblemon/generic/hit/1",
+    "world_combat_core:cobblemon/generic/hit/2",
+    "world_combat_core:cobblemon/generic/hit/3",
+    "world_combat_core:cobblemon/generic/hit/4"
+  ]
+}

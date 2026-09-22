@@ -1,0 +1,5 @@
+{
+  "world_combat.ability.intrepidsword.desc": "进入战斗时攻击提升 1 级（持续到脱离战斗），并在最初 10 秒内技能冷却更快。",
+  "world_combat.ability.intrepidsword.text.attack": "攻击提升",
+  "effect.world_combat.intrepidsword_edge": "不挠之剑"
+}

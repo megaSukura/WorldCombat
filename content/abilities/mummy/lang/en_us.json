@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.mummy.desc": "When struck at close range, bandages wrap the attacker for 10 seconds: 20% less attack damage and reduced healing; a Pokemon attacker also has its ability sealed.",
+  "world_combat.ability.mummy.text.wrap": "Bandaged",
+  "world_combat.ability.mummy.text.seal": "Ability Sealed",
+  "effect.world_combat.mummy_wrap": "Mummy Wraps"
+}

@@ -1,0 +1,8 @@
+{
+  "effect.world_combat.burn": "Burn",
+  "effect.world_combat.paralysis": "Paralysis",
+  "effect.world_combat.sleep": "Sleep",
+  "effect.world_combat.frozen": "Frozen",
+  "effect.world_combat.confusion": "Confusion",
+  "effect.world_combat.flinch": "Flinch"
+}

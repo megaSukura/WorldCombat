@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "world_combat:move/roleplay",
+  "version": "0.1",
+  "requires": {
+    "world_combat:skill_runtime": "0.1",
+    "world_combat:companion_runtime": "0.1",
+    "world_combat:mechanisms": "0.1",
+    "world_combat:native": "0.1"
+  },
+  "sources": [
+    "parameters.ts",
+    "skill.ts",
+    "ai.ts"
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "clientSources": [
+    "presentation.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:roleplay_mask": "minecraft:mob_effect/absorption"
+  }
+}

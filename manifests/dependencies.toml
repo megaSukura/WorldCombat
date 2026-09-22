@@ -1,0 +1,31 @@
+# This is the Gradle version catalog consumed by settings.gradle.kts.
+# Release sources and verification results: docs/development/P0-checks.md.
+[versions]
+minecraft = "1.21.1"
+neoforge = "21.1.250"
+moddev = "2.0.146"
+kotlin = "2.4.0"
+kotlinforforge = "5.12.0"
+cobblemon = "1.8.0+1.21.1"
+kubejs = "2101.7.2-build.377"
+rhino = "2101.2.7-build.81"
+ldlib2 = "2.2.40"
+curios = "9.5.1+1.21.1"
+# MadParticle (GPL-3.0, USS_Shenzhou) is the particle simulation/rendering prerequisite; T88 is its library.
+madparticle = "0.8.21"
+t88 = "5745052"
+
+[libraries]
+cobblemon = { module = "com.cobblemon:neoforge", version.ref = "cobblemon" }
+kubejs = { module = "dev.latvian.mods:kubejs-neoforge", version.ref = "kubejs" }
+rhino = { module = "dev.latvian.mods:rhino", version.ref = "rhino" }
+kotlinforforge = { module = "thedarkcolour:kotlinforforge-neoforge", version.ref = "kotlinforforge" }
+ldlib2 = { module = "com.lowdragmc.ldlib2:ldlib2-neoforge-1.21.1", version.ref = "ldlib2" }
+madparticle = { module = "maven.modrinth:mad-particle", version.ref = "madparticle" }
+t88 = { module = "curse.maven:t88-663112", version.ref = "t88" }
+
+curios = { module = "top.theillusivec4.curios:curios-neoforge", version.ref = "curios" }
+
+[plugins]
+moddev = { id = "net.neoforged.moddev", version.ref = "moddev" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "units": [
+    "content/rules/capture-encounter",
+    "content/rules/native-growth"
+  ]
+}

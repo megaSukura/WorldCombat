@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.mummy.desc": "被近身击中时，木乃伊的绷带缠上攻击者 10 秒：攻击力降低 20%、受到的治疗减少；若攻击者是宝可梦，其特性还会被暂时封住。",
+  "world_combat.ability.mummy.text.wrap": "绷带缠身",
+  "world_combat.ability.mummy.text.seal": "特性封印",
+  "effect.world_combat.mummy_wrap": "木乃伊绷带"
+}

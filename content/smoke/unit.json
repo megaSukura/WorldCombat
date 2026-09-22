@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "world_combat:smoke",
+  "version": "0.1",
+  "requires": {
+    "world_combat:default_wild": "0.1",
+    "world_combat:native": "0.1",
+    "world_combat:native_rules": "0.1",
+    "world_combat:world_attributes": "0.1",
+    "world_combat:combat_status": "0.1"
+  },
+  "sources": ["runtime.ts"]
+}

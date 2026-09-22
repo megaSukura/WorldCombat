@@ -1,0 +1,21 @@
+{
+  "worldcombat.skill.protect.summary": "Raises a dome that fully blocks attacks by a total shield pool. The braced stance roots you, and repeated use tends to fail.",
+  "worldcombat.skill.protect.description.0": "The dome lasts %1$s and holds %2$s points; higher defences make it longer, and the pool grows with current health and Defence.",
+  "worldcombat.skill.protect.description.1": "Raise %1$s, radius %2$s blocks, cooldown %3$s.",
+  "worldcombat.skill.protect.description.2": "Repeat-use failure rate %1$s; the brace/instant trade-off is the %2$s setting.",
+  "worldcombat.skill.protect.use.0": "Pre-empt a volley and raise early",
+  "worldcombat.skill.protect.use.1": "Open a lane out when surrounded",
+  "worldcombat.skill.protect.use.2": "Buy time for an ally to heal or withdraw",
+  "worldcombat.skill.protect.value.raise": "Raise time",
+  "worldcombat.skill.protect.value.window": "Dome duration",
+  "worldcombat.skill.protect.value.capacity": "Shield pool",
+  "worldcombat.skill.protect.value.radius": "Dome radius",
+  "worldcombat.skill.protect.value.charge": "Cooldown",
+  "worldcombat.skill.protect.value.fizzle": "Repeat-use failure rate",
+  "worldcombat.skill.protect.preference.braced": "Brace / Instant",
+  "worldcombat.skill.protect.preference.braced.help": "On (brace): duration x1.3, pool x1.15, but recover 10 ticks, cooldown x1.15 and rooted throughout. Off (instant): duration x0.8, pool x0.8, recover only 4 ticks, cooldown x0.85, and you can still move while it holds.",
+  "worldcombat.skill.protect.preference.ai.trigger": "Reaction range",
+  "worldcombat.skill.protect.preference.ai.trigger.help": "Raise the dome when a threat enters this range. Larger reacts earlier but may waste the cast; smaller saves PP but may be too late.",
+  "world_combat.move.protect.text.block": "Blocked %1$s (left %2$s)",
+  "world_combat.move.protect.text.shatter": "The dome shattered"
+}

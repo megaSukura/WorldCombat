@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.earlybird.desc": "减速、盲目、中毒等负面状态以两倍速度消退；睡眠时间减半，醒来后获得 4 秒迅捷。",
+  "world_combat.ability.earlybird.text.shrug": "振作",
+  "world_combat.ability.earlybird.text.stir": "即将醒来",
+  "world_combat.ability.earlybird.text.wake": "神清气爽"
+}

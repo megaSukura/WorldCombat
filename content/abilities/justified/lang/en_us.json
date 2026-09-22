@@ -1,0 +1,5 @@
+{
+  "world_combat.ability.justified.desc": "After a single hit worth 25% of its maximum health, gains Strength for 8 seconds (no more than once every 5 seconds); being hit by a Dark-type move also raises its Attack by one stage.",
+  "world_combat.ability.justified.text.kindle": "Justice kindles",
+  "world_combat.ability.justified.text.temper": "Darkness tempered"
+}

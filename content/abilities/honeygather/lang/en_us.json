@@ -1,0 +1,8 @@
+{
+  "world_combat.ability.honeygather.desc": "While engaged, forages every 10 seconds; allies within 4 blocks gain +10% speed and +25 healing received for 6 seconds, one nearby plant ripens, and you restore 1 PP.",
+  "world_combat.ability.honeygather.text.forage": "Forage",
+  "world_combat.ability.honeygather.text.share": "Shared honey",
+  "world_combat.ability.honeygather.text.growth": "Pollinated",
+  "world_combat.ability.honeygather.text.pp": "PP restored",
+  "effect.world_combat.honeygather_nectar": "Nectar"
+}

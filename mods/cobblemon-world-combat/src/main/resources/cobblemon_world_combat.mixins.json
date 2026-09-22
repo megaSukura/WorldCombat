@@ -1,0 +1,40 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.worldcombat.cobblemon.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BattleRegistryMixin",
+    "WorldChallengePacketMixin",
+    "WorldSpectatePacketMixin",
+    "PrewarmSubscriptionMixin",
+    "PokemonDamageMixin",
+    "PokemonHealthMixin",
+    "PokemonHealthProjectionMixin",
+    "PokemonWorldHealingMixin",
+    "NativeStatusMixin",
+    "PokemonChangeMixin",
+    "PokemonHeldAccess",
+    "PokemonMovementMixin",
+    "PokemonSpawnCountMixin",
+    "PokemonSpawnDefaultsMixin",
+    "MovePpCapacityMixin",
+    "MoveTemplatePpCapacityMixin",
+    "MovePpBufferMixin",
+    "MoveCompanionPpBufferMixin",
+    "PokeBallModifierMixin",
+    "DefeatProgressMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "CombatKeyboardMixin",
+    "WorldChallengeLabelMixin",
+    "WorldPartySendMixin",
+    "WorldPlayerWheelMixin",
+    "SummaryPokemonAccess",
+    "SummaryMovesMixin",
+    "SummaryMoveSwapMixin"
+  ]
+}

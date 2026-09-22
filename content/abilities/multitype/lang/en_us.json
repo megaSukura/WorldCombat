@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.multitype.desc": "Attunes to the block underfoot: your type becomes that element, and allies within 5 blocks gain +2 armor and +10% speed for 4 seconds.",
+  "world_combat.ability.multitype.text.attune": "Attuned",
+  "world_combat.ability.multitype.text.share": "Attunement spread",
+  "effect.world_combat.multitype_attuned": "Attuned"
+}

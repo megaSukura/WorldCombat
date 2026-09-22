@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.forewarn.desc": "On first contact, marks the highest-attack enemy, slowing and revealing it for 10 seconds; if it is a Pokemon, its strongest move is sealed as well.",
+  "world_combat.ability.forewarn.text.read": "Enemy foreseen",
+  "world_combat.ability.forewarn.text.mark": "Forewarned",
+  "world_combat.ability.forewarn.text.seal": "Move sealed",
+  "effect.world_combat.forewarn_mark": "Forewarned"
+}

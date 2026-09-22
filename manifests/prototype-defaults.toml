@@ -1,0 +1,34 @@
+# Reference configuration for P1/P2 implementation; P0 does not load these settings.
+schema_version = 1
+
+[party]
+active_limit = 1
+primary_controlled = 1
+skill_slots = 4
+
+[input]
+quick_cast = ["key.keyboard.z", "key.keyboard.x", "key.keyboard.c", "key.keyboard.v"]
+precision_modifier = "key.keyboard.grave.accent"
+cancel = "key.keyboard.escape"
+confirm_on_modifier_release = true
+cancel_on_screen_open = true
+cancel_on_focus_loss = true
+# Left Alt is reserved by Cobblemon's riding freelook binding.
+
+[requests]
+max_pending = 1
+expire_after_ticks = 10
+replace_pending = true
+
+[intents]
+available = ["follow", "hold_position", "protect", "focus_target"]
+resume_after_action = true
+
+[costs]
+extra_switch_cost = 0
+extra_recall_cost = 0
+# Committed actions retain their own interruption and cleanup rules.
+
+[world]
+friendly_fire = false
+permanent_skill_destruction = false

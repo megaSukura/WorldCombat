@@ -1,0 +1,9 @@
+{
+  "world_combat.ability.dancer.desc": "自己使出跳舞招式、或被跳舞招式命中时，5 格内的同伴获得 +20% 移速与 +10% 攻击持续 5 秒，敌人攻击降低 20%；自己还会提升 1 级速度。",
+  "world_combat.ability.dancer.text.dance": "回舞",
+  "world_combat.ability.dancer.text.rhythm": "节奏扩散",
+  "world_combat.ability.dancer.text.mesmer": "着迷",
+  "world_combat.ability.dancer.text.step": "速度提升",
+  "effect.world_combat.dancer_rhythm": "舞动节奏",
+  "effect.world_combat.dancer_mesmer": "被舞步迷惑"
+}

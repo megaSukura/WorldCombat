@@ -1,0 +1,11 @@
+{
+  "block.world_combat_core.temporary_rock": "Temporary rock",
+  "effect.world_combat_core.ward": "Companion ward",
+  "message.world_combat_core.presentation_failure": "A combat visual failed to render. Some visuals may be missing; details were recorded in the log.",
+  "message.world_combat_core.ui_failure": "An interface action failed to complete; details were recorded in the log.",
+  "worldcombat.attributes.skill_haste": "Ability haste",
+  "worldcombat.attributes.healing_received": "Healing received",
+  "worldcombat.attributes.curiosity": "Exploration tendency modifier",
+  "worldcombat.attributes.risk": "Risk tendency modifier",
+  "worldcombat.attributes.persistence": "Persistence tendency modifier"
+}

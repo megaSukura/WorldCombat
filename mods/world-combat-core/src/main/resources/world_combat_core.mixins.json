@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.worldcombat.core.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MobControlMixin",
+    "MobEffectTickMixin",
+    "ProjectileHitRadiusMixin",
+    "PublicAttributeMixin",
+    "T88NetworkWatcherMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

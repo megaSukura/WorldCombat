@@ -1,0 +1,19 @@
+{
+  "worldcombat.skill.expandingforce.summary": "把精神力量压进目标脚下，留下精神场地；站在场地上再放时，波从自身炸开，命中所有贴身敌人且威力提高。",
+  "worldcombat.skill.expandingforce.use.0": "范围压制",
+  "worldcombat.skill.expandingforce.use.1": "场地经营",
+  "worldcombat.skill.expandingforce.description.0": "造成 %1$s 的特殊伤害。",
+  "worldcombat.skill.expandingforce.description.1": "在落点铺开一片半径 %1$s 格、持续 %2$s 秒的精神场地；场地里的敌对落地单位脚步发沉。",
+  "worldcombat.skill.expandingforce.description.2": "若施法者此刻站在精神场地上，则改为吸收场地、以自身为中心 %1$s 格内引爆，威力 ×1.5。",
+  "worldcombat.skill.expandingforce.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
+  "worldcombat.skill.expandingforce.value.power": "威力",
+  "worldcombat.skill.expandingforce.value.burst": "引爆半径",
+  "worldcombat.skill.expandingforce.value.fieldRadius": "场地半径",
+  "worldcombat.skill.expandingforce.value.fieldTicks": "场地持续",
+  "worldcombat.skill.expandingforce.preference.ai.maxChase": "追击距离",
+  "worldcombat.skill.expandingforce.preference.ai.maxChase.help": "只在这个距离内主动出手；更远的目标交给共享接近逻辑。",
+  "worldcombat.skill.expandingforce.preference.ai.leaveStation": "驻守时离位",
+  "worldcombat.skill.expandingforce.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离开原位去落场；关闭时留在原地。",
+  "worldcombat.skill.expandingforce.preference.ai.crowd": "群体阈值",
+  "worldcombat.skill.expandingforce.preference.ai.crowd.help": "目标附近聚起这么多个敌人时，这一发抬到高优先级抢先放出。"
+}

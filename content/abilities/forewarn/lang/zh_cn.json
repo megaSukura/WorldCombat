@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.forewarn.desc": "首次交战时锁定攻击最高的敌人，使其迟缓并暴露 10 秒；若目标是宝可梦，其威力最高的招式同时被封锁。",
+  "world_combat.ability.forewarn.text.read": "预知敌手",
+  "world_combat.ability.forewarn.text.mark": "已被预知",
+  "world_combat.ability.forewarn.text.seal": "招式封锁",
+  "effect.world_combat.forewarn_mark": "预知"
+}

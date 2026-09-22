@@ -1,0 +1,8 @@
+{
+  "world_combat.ability.flamebody.desc": "When struck at close range, has a 30% chance to sear the attacker for 6 seconds (1 health every 20 ticks); a Pokemon attacker has an extra 15% chance to be burned.",
+  "effect.world_combat.flamebody_sear": "Searing",
+  "world_combat.ability.flamebody.text.contact": "Scorching",
+  "world_combat.ability.flamebody.text.sear": "Searing",
+  "world_combat.ability.flamebody.text.burn": "Burned",
+  "world_combat.ability.flamebody.text.tick": "Searing -%1$s"
+}

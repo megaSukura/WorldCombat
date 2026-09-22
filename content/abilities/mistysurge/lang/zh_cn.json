@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.mistysurge.desc": "首次交战在脚下铺开薄雾场地，持续 30 秒；友方每秒被清除中毒、虚弱等负面效果。站在场地上的战斗者龙属性招式威力减半，且不会陷入新的异常状态。",
+  "world_combat.ability.mistysurge.text.rise": "薄雾场地",
+  "world_combat.ability.mistysurge.text.cleanse": "净化",
+  "world_combat.ability.mistysurge.text.ward": "迷雾庇护",
+  "effect.world_combat.mistysurge_terrain": "薄雾场地"
+}

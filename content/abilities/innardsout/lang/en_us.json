@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.innardsout.desc": "When knocked out by an opponent, leaves a gout of innards that bursts after a short delay, dealing the health it had remaining before the fatal blow back to the killer; a Pokemon killer also loses 1 PP from a move.",
+  "world_combat.ability.innardsout.text.fall": "Innards burst out",
+  "world_combat.ability.innardsout.text.burst": "Returned %1$s damage",
+  "world_combat.ability.innardsout.text.drain": "Lost 1 PP"
+}

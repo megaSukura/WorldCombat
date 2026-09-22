@@ -1,0 +1,11 @@
+{
+  "block.world_combat_core.temporary_rock": "临时岩障",
+  "effect.world_combat_core.ward": "伙伴防护",
+  "message.world_combat_core.presentation_failure": "战斗视觉呈现出现错误，部分画面可能缺失；详情已记录到日志。",
+  "message.world_combat_core.ui_failure": "界面操作出现错误，该操作未完成；详情已记录到日志。",
+  "worldcombat.attributes.skill_haste": "技能急速",
+  "worldcombat.attributes.healing_received": "受治疗加成",
+  "worldcombat.attributes.curiosity": "探索意愿修正",
+  "worldcombat.attributes.risk": "冒险倾向修正",
+  "worldcombat.attributes.persistence": "坚持倾向修正"
+}

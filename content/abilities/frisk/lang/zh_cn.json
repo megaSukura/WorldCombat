@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.frisk.desc": "首次交战时看穿 12 格内的敌人，使其暴露并降低 2 点护甲 6 秒；最近的宝可梦敌人携带的道具会被察觉并暂时失效 5 秒。",
+  "world_combat.ability.frisk.text.scan": "察觉 %1$s 个敌人",
+  "world_combat.ability.frisk.text.mark": "已被察觉",
+  "world_combat.ability.frisk.text.suppress": "看破道具",
+  "effect.world_combat.frisk_exposed": "已被察觉"
+}

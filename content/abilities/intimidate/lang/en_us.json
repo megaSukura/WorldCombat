@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.intimidate.desc": "On first contact, intimidates enemies within 12 blocks, lowering attack by 30% for 10 seconds; Pokemon enemies also suffer longer skill cooldowns.",
+  "world_combat.ability.intimidate.text.release": "Intimidates %1$s enemies",
+  "world_combat.ability.intimidate.text.mark": "Intimidated",
+  "effect.world_combat.intimidate_mark": "Intimidated"
+}

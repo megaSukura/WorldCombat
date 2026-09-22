@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.gooey.desc": "被近身击中时，黏住攻击者，使其移动速度降低 6 秒；若攻击者是宝可梦，还会黏附 8 秒，使它的技能冷却恢复速度大幅变慢。",
+  "effect.world_combat.gooey_cling": "黏附",
+  "world_combat.ability.gooey.text.cling": "被黏住",
+  "world_combat.ability.gooey.text.coat": "技能迟滞"
+}

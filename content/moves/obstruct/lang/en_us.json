@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.obstruct.summary": "Raises a spiked barricade that fully blocks attacks by a total pool; a contact attack sharply lowers the attacker's Defence. Repeated use tends to fail.",
+  "worldcombat.skill.obstruct.description.0": "The barricade lasts %1$s and holds %2$s points, lowering contact attackers by %3$s levels; higher Defence makes it thicker and longer.",
+  "worldcombat.skill.obstruct.description.1": "Raise %1$s, width %2$s blocks, cooldown %3$s.",
+  "worldcombat.skill.obstruct.description.2": "Repeat-use failure rate %1$s; the barbed/reinforced trade-off is the %2$s setting.",
+  "worldcombat.skill.obstruct.use.0": "Bait a melee foe onto the barricade",
+  "worldcombat.skill.obstruct.use.1": "Soften a foe before your follow-up",
+  "worldcombat.skill.obstruct.use.2": "Hold a narrow gap and force a detour",
+  "worldcombat.skill.obstruct.value.raise": "Raise time",
+  "worldcombat.skill.obstruct.value.window": "Barricade duration",
+  "worldcombat.skill.obstruct.value.capacity": "Barricade pool",
+  "worldcombat.skill.obstruct.value.drop": "Contact Defence drop",
+  "worldcombat.skill.obstruct.value.radius": "Barricade width",
+  "worldcombat.skill.obstruct.value.charge": "Cooldown",
+  "worldcombat.skill.obstruct.value.fizzle": "Repeat-use failure rate",
+  "worldcombat.skill.obstruct.preference.barbs": "Barbed / Reinforced",
+  "worldcombat.skill.obstruct.preference.barbs.help": "On (barbed): contact drop +1, but pool x0.75, duration x0.85, recover 6 ticks. Off (reinforced): pool x1.2, duration x1.15, no extra drop, recover 10 ticks.",
+  "worldcombat.skill.obstruct.preference.ai.range": "Barricade range",
+  "worldcombat.skill.obstruct.preference.ai.range.help": "Raise once a threat enters this range. Larger sets up earlier but may waste the cast; smaller saves PP but bets the foe will close in.",
+  "world_combat.move.obstruct.text.block": "Barricade blocked %1$s (left %2$s)",
+  "world_combat.move.obstruct.text.punish": "Defence -%1$s",
+  "world_combat.move.obstruct.text.shatter": "The barricade shattered"
+}

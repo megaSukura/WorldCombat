@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "world_combat:ability/intrepidsword",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native": "0.1",
+    "world_combat:mechanisms": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [
+    "presentation.ts"
+  ],
+  "startupSources": [
+    "startup.ts"
+  ]
+}

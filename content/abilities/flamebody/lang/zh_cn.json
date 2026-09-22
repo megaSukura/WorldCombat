@@ -1,0 +1,8 @@
+{
+  "world_combat.ability.flamebody.desc": "被近身击中时，有 30% 几率让攻击者灼烧 6 秒（每 20 刻损失 1 点生命）；若攻击者是宝可梦，另有 15% 几率让它陷入灼伤状态。",
+  "effect.world_combat.flamebody_sear": "灼烧",
+  "world_combat.ability.flamebody.text.contact": "灼热",
+  "world_combat.ability.flamebody.text.sear": "灼烧",
+  "world_combat.ability.flamebody.text.burn": "灼伤",
+  "world_combat.ability.flamebody.text.tick": "灼烧 -%1$s"
+}

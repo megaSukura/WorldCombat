@@ -1,0 +1,61 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "GPL-3.0-or-later; see LICENSE and LICENSE-MINECRAFT-EXCEPTION.txt"
+
+[[mixins]]
+config = "world_combat_core.mixins.json"
+
+
+[[mods]]
+modId = "world_combat_core"
+version = "${mod_version}"
+displayName = "World Combat Core"
+description = "Scripted world-combat runtime, validated actions and lifecycle management. Particle presentation requires MadParticle (GPL-3.0, USS_Shenzhou) and T88 as prerequisites."
+
+[[dependencies.world_combat_core]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${minecraft_version}]"
+side = "BOTH"
+
+[[dependencies.world_combat_core]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neoforge_version}]"
+side = "BOTH"
+
+[[dependencies.world_combat_core]]
+modId = "kubejs"
+type = "required"
+versionRange = "[${kubejs_version}]"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.world_combat_core]]
+modId = "ldlib2"
+type = "required"
+versionRange = "[${ldlib2_version}]"
+ordering = "AFTER"
+side = "BOTH"
+
+
+[[dependencies.world_combat_core]]
+modId = "madparticle"
+type = "required"
+versionRange = "[${madparticle_version},)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.world_combat_core]]
+modId = "t88"
+type = "required"
+versionRange = "[0.9,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.world_combat_core]]
+modId = "curios"
+type = "optional"
+versionRange = "[${curios_version}]"
+ordering = "AFTER"
+side = "BOTH"

@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.thunder.summary": "先蓄雷云，再从天空朝目标落点劈下一柱暴雷：范围小但极重，雨里必定命中、晴天更容易打偏，屋顶能挡下整记雷。",
+  "worldcombat.skill.thunder.description.0": "落雷命中造成 %1$s 的特殊电击伤害。",
+  "worldcombat.skill.thunder.description.1": "落点半径 %1$s 格，被劈中的目标有 %2$s%% 的概率陷入麻痹。",
+  "worldcombat.skill.thunder.description.2": "最远 %1$s 格落下，前摇 %2$s 秒。",
+  "worldcombat.skill.thunder.use.0": "从远处劈下一个目标",
+  "worldcombat.skill.thunder.use.1": "在雨里召唤必定命中的天雷",
+  "worldcombat.skill.thunder.use.2": "用屋檐关掉这记天雷",
+  "worldcombat.skill.thunder.value.bolt": "落雷威力",
+  "worldcombat.skill.thunder.value.strikeRadius": "落点半径",
+  "worldcombat.skill.thunder.value.thunderChance": "感电概率",
+  "worldcombat.skill.thunder.value.boltRange": "施放距离",
+  "worldcombat.skill.thunder.value.chargeTicks": "落雷前摇",
+  "worldcombat.skill.thunder.preference.charged": "聚云式",
+  "worldcombat.skill.thunder.preference.charged.help": "开启：多蓄 6 刻，落雷威力更高、落点更集中（散布更小），但收招与冷却更长。关闭：雷落得更快，代价是威力略低、散布略大。",
+  "worldcombat.skill.thunder.preference.ai.maxChase": "施放距离",
+  "worldcombat.skill.thunder.preference.ai.maxChase.help": "超过这个距离就不劈，先走近。越大越会在远处先手落雷。",
+  "worldcombat.skill.thunder.preference.ai.preferWet": "优先湿身目标",
+  "worldcombat.skill.thunder.preference.ai.preferWet.help": "开启：优先劈湿身的目标，雷更容易把它感电，但可能放过没湿的真正威胁。关闭：只认威胁本身。",
+  "world_combat.move.thunder.text.hit": "落雷命中 %1$s 个目标",
+  "world_combat.move.thunder.text.miss": "雷劈偏了",
+  "world_combat.move.thunder.text.roof": "天雷被遮蔽物挡下"
+}

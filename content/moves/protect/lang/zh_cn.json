@@ -1,0 +1,21 @@
+{
+  "worldcombat.skill.protect.summary": "撑起一圈穹顶，按护盾总量完整挡下对手的攻击；守据姿态下无法移动，连续使用容易失败。",
+  "worldcombat.skill.protect.description.0": "穹顶持续 %1$s，护盾量 %2$s 点；双防越高撑得越久，护盾量随当前生命与防御增长。",
+  "worldcombat.skill.protect.description.1": "起罩 %1$s，半径 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.protect.description.2": "连用失误率 %1$s；守据与瞬罩的取舍见配置 %2$s。",
+  "worldcombat.skill.protect.use.0": "预判远程齐射，提前撑罩",
+  "worldcombat.skill.protect.use.1": "被围时撑出一条退路",
+  "worldcombat.skill.protect.use.2": "为队友争取回血或撤走的时间",
+  "worldcombat.skill.protect.value.raise": "起罩时间",
+  "worldcombat.skill.protect.value.window": "屏障持续",
+  "worldcombat.skill.protect.value.capacity": "护盾量",
+  "worldcombat.skill.protect.value.radius": "穹顶半径",
+  "worldcombat.skill.protect.value.charge": "冷却",
+  "worldcombat.skill.protect.value.fizzle": "连用失误率",
+  "worldcombat.skill.protect.preference.braced": "守据／瞬罩",
+  "worldcombat.skill.protect.preference.braced.help": "开启守据：屏障 ×1.3、护盾量 ×1.15，但收招 10 刻、冷却 ×1.15，且整段定身。关闭瞬罩：屏障 ×0.8、护盾量 ×0.8，收招只要 4 刻、冷却 ×0.85，撑罩期间还能走动。",
+  "worldcombat.skill.protect.preference.ai.trigger": "反应距离",
+  "worldcombat.skill.protect.preference.ai.trigger.help": "威胁进入这个距离就考虑撑罩。越大越早预判，也越可能白撑；越小越省，但可能来不及。",
+  "world_combat.move.protect.text.block": "挡下 %1$s 点（余 %2$s）",
+  "world_combat.move.protect.text.shatter": "穹顶被击穿"
+}

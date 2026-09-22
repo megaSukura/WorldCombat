@@ -1,0 +1,17 @@
+{
+  "worldcombat.skill.assist.summary": "Calls nearby allies for help and randomly borrows one of the moves they have learned.",
+  "worldcombat.skill.assist.use.0": "Call nearby allies",
+  "worldcombat.skill.assist.use.1": "Borrow one ally move at random",
+  "worldcombat.skill.assist.description.0": "After calling for %1$s it borrows and performs one random move known by an ally inside the call radius; it does not fire when no ally answers.",
+  "worldcombat.skill.assist.description.1": "The call radius is %1$s, and the borrowed move cannot reach farther than %2$s.",
+  "worldcombat.skill.assist.description.2": "Current call radius setting: %1$s. Calling farther covers more allies but takes longer.",
+  "worldcombat.skill.assist.description.3": "Calling again costs %1$s; the call shows %2$s ally marks, growing with Special Attack.",
+  "worldcombat.skill.assist.preference.callRadius": "Call radius",
+  "worldcombat.skill.assist.preference.callRadius.help": "Higher hears farther allies and widens the pool, but the shout takes longer; lower acts faster but may find nothing when alone or spread out.",
+  "worldcombat.skill.assist.value.call": "Call time",
+  "worldcombat.skill.assist.value.radius": "Call radius",
+  "worldcombat.skill.assist.value.span": "Borrow reach",
+  "worldcombat.skill.assist.value.recharge": "Call again",
+  "worldcombat.skill.assist.value.bonds": "Ally marks",
+  "world_combat.move.assist.text.borrow": "Assist used %1$s"
+}

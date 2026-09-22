@@ -1,0 +1,201 @@
+/**
+ * 奇迹之眼 / miracleeye 的出手方式。
+ *
+ * 核心念头：凝起一只心眼穿透恶的屏障——在对手身上留下心眼印记，**超能招式不再被恶属性免疫**；借这一眼，
+ *   自己的准星也更稳。
+ *
+ * 三幕：
+ *   凝神（windup，提交前只观察与预告，可被打断，不花代价）。
+ *   看穿（提交后）：给目标挂世界效果 world_combat:miracleeye_mark（共享身份 world_combat:status/miracleeye
+ *     与伞身份 world_combat:status/identified），一次剥掉它当前的正闪避、把它照亮，同时给施法者抬 insight 级
+ *     命中；记录层 world_combat:miracleeye_record 记下剥掉几级、抬了几级、施法者与窗口。
+ *   兑现（任何超能伤害落在目标身上）：PokemonDamage.metadata 在结算前读这层身份，把目标属性里的 dark 摘掉。
+ *   自散：窗口走完或被牛奶一类效果解掉时，剥掉的闪避与抬起的命中原样还回，心眼褪去。
+ *
+ * 与同族分开：识破／气味侦测破的是幽灵对一般／格斗的免疫，奇迹之眼破的是恶对超能的免疫，还额外抬施法者命中。
+ */
+namespace PokemonSkills {
+    function miracleeyeAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.15, 0)); }
+    /** 施法者 ref → 本单元为它抬起的命中级数；一次只允许一只眼睛亮着，避免叠命中。 */
+    var miracleeyeReads: { [ref: string]: number } = Object.create(null);
+
+    WorldCombat.effect(miracleeyeRecordEffect, 1, 1200, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        ["taken", "added", "motes", "window", "reveal"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid miracleeye record: " + key);
+        });
+        if (typeof value.caster !== "string") throw new Error("Invalid miracleeye record: caster");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(miracleeyeRecordEffect, "start", function () { });
+    WorldCombat.effectHandler(miracleeyeRecordEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    function miracleeyeRecordOf(world: CombatWorld, target: CombatActor): any {
+        const views = world.effects(target, miracleeyeRecordEffect);
+        return views.length ? JSON.parse(String(views[0].data())) : null;
+    }
+    function miracleeyeReleaseRecord(world: CombatWorld, target: CombatActor): void {
+        const views = world.effects(target, miracleeyeRecordEffect);
+        for (let index = 0; index < views.length; index++) world.operation(views[index].id(), "world_combat:dispel", "{}");
+    }
+    function miracleeyeStrip(world: CombatWorld, target: CombatActor, request: number): number {
+        const current = Math.max(0, NativeEffects.stage(NativeEffects.read(world, target), "evasion"));
+        const amount = Math.min(current, Math.max(0, Math.round(request)));
+        if (amount > 0) NativeEffects.boost(world, target, "evasion", -amount);
+        return amount;
+    }
+    /** 命中等级只有宝可梦有；其他战斗者没有这个概念，返回 0。 */
+    function miracleeyeRaise(world: CombatWorld, actor: CombatActor, request: number): number {
+        if (String(actor.domain()) !== "cobblemon") return 0;
+        const before = NativeEffects.stage(NativeEffects.read(world, actor), "accuracy");
+        NativeEffects.boost(world, actor, "accuracy", Math.max(0, Math.round(request)));
+        return Math.max(0, NativeEffects.stage(NativeEffects.read(world, actor), "accuracy") - before);
+    }
+    function miracleeyeRestore(world: CombatWorld, actor: CombatActor, added: number): void {
+        if (added <= 0 || String(actor.domain()) !== "cobblemon") return;
+        NativeEffects.boost(world, actor, "accuracy", -added);
+    }
+
+    // 兑现点：任何超能招式打在带 miracleeye 身份的目标上时，结算前把 targetFacts 里的 dark 摘掉。
+    PokemonDamage.metadata.define({
+        id: "world_combat:move_miracleeye/negate-immunity",
+        applies: function (context) {
+            return !context.preview && !!context.world && !!context.target && !!context.targetFacts
+                && context.metadata.type === "psychic" && context.targetFacts.types.indexOf("dark") >= 0;
+        },
+        apply: function (context) {
+            if (!context.world || !context.target || !context.targetFacts) return;
+            if (!CombatStatus.has(context.world, context.target, miracleeyeStatus)) return;
+            context.targetFacts.types = context.targetFacts.types.filter(function (type) { return type !== "dark"; });
+        }
+    });
+
+    // 窗口走完或被清除：把剥掉的闪避还回目标、把抬起的命中还回施法者、清掉记录；自然到期额外播一次褪去。
+    WorldCombat.on("world_combat:move_miracleeye/end", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== miracleeyeMarkEffect) return;
+        const world = event.world(), target = event.actor();
+        if (!world.valid(target)) return;
+        const record = miracleeyeRecordOf(world, target);
+        if (record !== null) {
+            if (Number(record.taken) > 0) NativeEffects.boost(world, target, "evasion", Math.round(Number(record.taken)));
+            const caster = world.actor(String(record.caster));
+            if (caster !== null && world.valid(caster)) miracleeyeRestore(world, caster, Math.round(Number(record.added) || 0));
+            delete miracleeyeReads[String(record.caster)];
+        }
+        miracleeyeReleaseRecord(world, target);
+        if (String(data.cause) !== "expired") return;
+        const body = world.observe(target);
+        if (body === null) return;
+        WorldFeedback.emit(world, miracleeyeScene, 1, body.position(), { moment: "fade", target: String(target.ref()) }, 22);
+        WorldFeedback.text(world, miracleeyeAbove(body.position()), miracleeyeFadeText, [], 22);
+    });
+
+    // 存续期：每 20 刻续一圈目标身上的心眼环，数量沿用本招算出的心眼量。
+    WorldCombat.on("world_combat:move_miracleeye/hold", "world_combat:mob_effect_tick", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== miracleeyeMarkEffect || event.world().tick() % 20 !== 0) return;
+        const world = event.world(), target = event.actor();
+        if (!world.valid(target) || MobEffects.read(world, target, miracleeyeMarkEffect) === null) return;
+        const record = miracleeyeRecordOf(world, target);
+        if (record === null) return;
+        const body = world.observe(target);
+        if (body === null) return;
+        WorldFeedback.keep(world, "world_combat:move_miracleeye/hold/" + String(target.ref()), miracleeyeScene, 1, body.position(),
+            { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(record.motes) / 2)),
+                added: record.added }, 40);
+    });
+
+    define({
+        id: miracleeyeId,
+        name: "奇迹之眼",
+        description: "凝起一只心眼穿透对手的屏障：留下心眼印记，剥掉它当下的闪避并把它照亮，超能招式不再被恶属性免疫；借这一眼自己的准星也更稳。",
+        uses: ["在打恶属性前先破掉它的免疫", "把躲躲闪闪的目标敲定下来", "顺手给自己的超能招抬一抬命中"],
+        kind: "enemy",
+        range: 8,
+        maxRange: 12,
+        prepare: 8,
+        active: 1,
+        recover: 5,
+        cooldown: 90,
+        style: "insight",
+        defaults: { focus: false },
+        fields: [flag("focus", "专注")],
+        resolve: function (pokemon, config, world, actor, attributes) {
+            const context: NumberContext = { pokemon, skill: skills[miracleeyeId], detail: { values: config },
+                world: world || null, actor: actor || null, attributes };
+            return {
+                prepare: Math.round(p(miracleeyeId, "tempo", context)),
+                recover: Math.round(p(miracleeyeId, "aftercast", context)),
+                cooldown: Math.round(p(miracleeyeId, "recharge", context)),
+                active: 1,
+                range: p(miracleeyeId, "reach", context)
+            };
+        },
+        indicator: function (config, pokemon) {
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[miracleeyeId], detail: { values: config } };
+            return { radius: p(miracleeyeId, "reach", context), geometry: "line", style: "insight", color: 0xB07CE8,
+                label: config && config.focus === true ? "奇迹之眼 · 专注" : "奇迹之眼" };
+        },
+        ready: function (action, config) {
+            const world = action.sense(), actor = action.actor(), target = action.target();
+            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            const body = world.observe(target);
+            if (body === null) return "invalid-target";
+            if (miracleeyeReads[String(actor.ref())] !== undefined) return "already-reading";
+            if (body.position().minus(action.origin()).length() > p(miracleeyeId, "reach", action)) return "out-of-range";
+            if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (CombatStatus.has(world, target, miracleeyeStatus)) return "already-read";
+            if (CombatStatus.has(world, target, "foresight")) return "already-foreseen";
+            return "";
+        },
+        windup: function (action, config, prepare) {
+            const target = action.target();
+            action.present("world_combat:move_miracleeye:windup", miracleeyeScene, 1, action.origin(),
+                JSON.stringify({ moment: "windup", focus: config && config.focus === true ? 1 : 0,
+                    target: target === null ? "" : String(target.ref()) }));
+            return prepare;
+        },
+        execute: function (action, move, config, done) {
+            const world = action.world(), actor = action.actor(), target = action.target();
+            const self = world.observe(actor);
+            const origin = self === null ? action.origin() : self.position();
+            if (target === null || !world.valid(target) || world.friendly(target)) {
+                WorldFeedback.emit(world, miracleeyeScene, 1, action.targetPosition(), { moment: "fizzle" }, 16);
+                WorldFeedback.text(world, miracleeyeAbove(action.targetPosition()), miracleeyeEmptyText, [], 24);
+                done(action);
+                return;
+            }
+            const at = world.observe(target);
+            const point = at === null ? action.targetPosition() : at.position();
+            if (!world.clear(origin, point)) {
+                WorldFeedback.emit(world, miracleeyeScene, 1, point, { moment: "blocked", target: String(target.ref()) }, 20);
+                WorldFeedback.text(world, miracleeyeAbove(point), miracleeyeBlockedText, [], 26);
+                done(action);
+                return;
+            }
+            const window = Math.max(40, Math.round(p(miracleeyeId, "window", action)));
+            const reveal = Math.max(40, Math.round(p(miracleeyeId, "reveal", action)));
+            const motes = Math.max(8, Math.round(p(miracleeyeId, "motes", action)));
+            const strips = Math.max(0, Math.round(p(miracleeyeId, "strips", action)));
+            const added = miracleeyeRaise(world, actor, p(miracleeyeId, "insight", action));
+            const taken = miracleeyeStrip(world, target, strips);
+            miracleeyeReads[String(actor.ref())] = added;
+            MobEffects.apply(world, target, miracleeyeMarkEffect, window, 0);
+            MobEffects.apply(world, target, "minecraft:glowing", reveal, 0);
+            miracleeyeReleaseRecord(world, target);
+            world.effect(miracleeyeRecordEffect, target,
+                JSON.stringify({ taken: taken, added: added, caster: String(actor.ref()), motes: motes, window: window, reveal: reveal }), window);
+            sound(action, "cobblemon:move.psychic.actor");
+            if (at !== null) {
+                WorldFeedback.emit(world, miracleeyeScene, 1, at.position(),
+                    { moment: "read", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
+                        motes: motes, window: window, reveal: reveal, added: added, taken: taken,
+                        scale: Math.max(0.6, Math.min(2, window / 220)), intensity: Math.max(0.7, Math.min(2, 0.7 + added / 3)) }, 30);
+                WorldFeedback.text(world, miracleeyeAbove(at.position()), miracleeyeReadText, [added, Math.round(window / 20)], 30);
+                world.sound("cobblemon:move.psychic.target", at.position(), 12, "{}");
+            }
+            done(action);
+        }
+    });
+}

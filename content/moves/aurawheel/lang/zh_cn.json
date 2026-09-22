@@ -1,0 +1,15 @@
+{
+  "worldcombat.skill.aurawheel.summary": "把颊囊里的能量滚成轮子贴地撞向目标；使用后自身速度提高，属性随样子在电与恶之间变化。",
+  "worldcombat.skill.aurawheel.use.0": "翻滚重击",
+  "worldcombat.skill.aurawheel.description.0": "沿地面滚出：造成 %1$s 点物理伤害；滚动距离 %2$s 格、每刻推进 %3$s 格、碰撞半径 %4$s 格，命中后自身速度提高 %5$s 级。属性随施法者样子变化。",
+  "worldcombat.skill.aurawheel.description.1": "PP 消耗 %1$s；冷却 %2$s 秒。",
+  "worldcombat.skill.aurawheel.timing": "时序",
+  "worldcombat.skill.aurawheel.value.power": "气场轮威力",
+  "worldcombat.skill.aurawheel.value.haste": "提速级数",
+  "worldcombat.skill.aurawheel.value.distance": "滚动距离",
+  "worldcombat.skill.aurawheel.value.speed": "滚动速度",
+  "worldcombat.skill.aurawheel.value.traceAhead": "前探",
+  "worldcombat.skill.aurawheel.value.collisionRadius": "碰撞半径",
+  "worldcombat.skill.aurawheel.value.minimumMove": "最小位移",
+  "world_combat.move.aurawheel.text.haste": "速度提高 %1$s 级"
+}

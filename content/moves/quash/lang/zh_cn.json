@@ -1,0 +1,21 @@
+{
+  "worldcombat.skill.quash.summary": "把一道压制之力砸向目标：打断它正在准备的动作，并在它身上留下压制。压制期间它第一次想出手会被压回去一次（不花资源，只是晚一拍），移动也被拖慢。",
+  "worldcombat.skill.quash.description.0": "对 %1$s 格内的目标打出一道压制之力，判定半径 %2$s 格。",
+  "worldcombat.skill.quash.description.1": "命中打断目标当前动作并留下压制 %1$s 秒：这段时间它前 %2$s 次出手会被压回去（不花资源，只是晚一拍），移动也被拖慢。",
+  "worldcombat.skill.quash.use.0": "打断对手正在蓄的大招",
+  "worldcombat.skill.quash.use.1": "抢先一拍保住自己的位置",
+  "worldcombat.skill.quash.use.2": "把冲上来的目标压慢",
+  "worldcombat.skill.quash.value.reach": "施压距离",
+  "worldcombat.skill.quash.value.traceRadius": "判定半径",
+  "worldcombat.skill.quash.value.lockTicks": "压制时长",
+  "worldcombat.skill.quash.value.deny": "压下次数",
+  "worldcombat.skill.quash.preference.crushing": "重压取向",
+  "worldcombat.skill.quash.preference.crushing.help": "开启：压制窗口更长（时长 ×1.3），能压住更久，但冷却多 20 刻、出手更少；关闭：轻压取向，压制更短（×0.8）但冷却少 8 刻，能更频繁地抢拍。",
+  "worldcombat.skill.quash.preference.ai.maxChase": "施压距离",
+  "worldcombat.skill.quash.preference.ai.maxChase.help": "超过这个距离就不主动压制，先走近。越大越执着追击，也越容易在白地追空。",
+  "worldcombat.skill.quash.preference.ai.leaveStation": "驻守时允许离位",
+  "worldcombat.skill.quash.preference.ai.leaveStation.help": "开启后，驻守命令下也会为压制离开站位；关闭则只在原地够得到时出手。",
+  "effect.world_combat.quash": "压制",
+  "world_combat.move.quash.text.pin": "被压制",
+  "world_combat.move.quash.text.fizzle": "压制落空"
+}

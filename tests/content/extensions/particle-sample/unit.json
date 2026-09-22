@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "checks:particle_sample",
+  "version": "0.1",
+  "requires": {
+    "world_combat:mechanisms": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [
+    "presentation.ts"
+  ]
+}

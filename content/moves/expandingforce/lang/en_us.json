@@ -1,0 +1,19 @@
+{
+  "worldcombat.skill.expandingforce.summary": "Slam psychic force into the target's ground and leave a psychic terrain; cast it while standing on one and the wave detonates around you, hitting every adjacent foe for more.",
+  "worldcombat.skill.expandingforce.use.0": "Area control",
+  "worldcombat.skill.expandingforce.use.1": "Terrain play",
+  "worldcombat.skill.expandingforce.description.0": "Deals %1$s special damage.",
+  "worldcombat.skill.expandingforce.description.1": "Spreads a psychic terrain of radius %1$s blocks at the impact point for %2$s s; grounded foes inside move heavily.",
+  "worldcombat.skill.expandingforce.description.2": "If the user is standing on a psychic terrain, it absorbs the field instead, detonating within %1$s blocks around itself at 1.5x power.",
+  "worldcombat.skill.expandingforce.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
+  "worldcombat.skill.expandingforce.value.power": "Power",
+  "worldcombat.skill.expandingforce.value.burst": "Detonation radius",
+  "worldcombat.skill.expandingforce.value.fieldRadius": "Terrain radius",
+  "worldcombat.skill.expandingforce.value.fieldTicks": "Terrain duration",
+  "worldcombat.skill.expandingforce.preference.ai.maxChase": "Chase distance",
+  "worldcombat.skill.expandingforce.preference.ai.maxChase.help": "Only attack within this distance; farther targets are left to the shared approach logic.",
+  "worldcombat.skill.expandingforce.preference.ai.leaveStation": "Leave station",
+  "worldcombat.skill.expandingforce.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to spread terrain; when off it stays put.",
+  "worldcombat.skill.expandingforce.preference.ai.crowd": "Crowd threshold",
+  "worldcombat.skill.expandingforce.preference.ai.crowd.help": "With this many enemies gathered near the target, the cast is raised to a high-priority opening."
+}

@@ -1,0 +1,22 @@
+{
+  "worldcombat.skill.eeriespell.summary": "一记直取记忆的精神强袭：造成特殊伤害，抽走目标最后使用招式的 3 点 PP，并让任何目标短时间内出手失手。",
+  "worldcombat.skill.eeriespell.use.0": "远程压制",
+  "worldcombat.skill.eeriespell.use.1": "拆招",
+  "worldcombat.skill.eeriespell.description.0": "造成 %1$s 的特殊伤害。",
+  "worldcombat.skill.eeriespell.description.1": "命中时从目标最后使用的招式抽走 %1$s 点 PP（仅宝可梦），并让任何目标在 %2$s 秒内带着「诡异」。",
+  "worldcombat.skill.eeriespell.description.2": "带「诡异」的目标每次尝试出手时，有 %1$s%% 的失手概率。",
+  "worldcombat.skill.eeriespell.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
+  "worldcombat.skill.eeriespell.value.power": "威力",
+  "worldcombat.skill.eeriespell.value.drain": "抽取PP",
+  "worldcombat.skill.eeriespell.value.fuzzyTicks": "记忆雾持续",
+  "worldcombat.skill.eeriespell.value.failChance": "失手概率",
+  "worldcombat.skill.eeriespell.value.boltSpeed": "飞行速度",
+  "worldcombat.skill.eeriespell.value.collisionRadius": "判定半径",
+  "worldcombat.skill.eeriespell.preference.ai.maxChase": "追击距离",
+  "worldcombat.skill.eeriespell.preference.ai.maxChase.help": "只在这个距离内主动出手；更远的目标交给共享接近逻辑。",
+  "worldcombat.skill.eeriespell.preference.ai.leaveStation": "驻守时离位",
+  "worldcombat.skill.eeriespell.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离开原位去放咒语；关闭时留在原地。",
+  "effect.world_combat.eerie": "诡异",
+  "world_combat.move.eeriespell.text.drain": "记忆 -%1$s",
+  "world_combat.move.eeriespell.text.none": "无可抽取"
+}

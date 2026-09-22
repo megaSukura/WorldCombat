@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.innardsout.desc": "被对手击倒时，在原地留下一团内在物，短暂延迟后向击倒自己的对手返还倒下前剩余生命的伤害；若对手是宝可梦，还会被崩掉 1 点招式 PP。",
+  "world_combat.ability.innardsout.text.fall": "内在物迸发",
+  "world_combat.ability.innardsout.text.burst": "返还 %1$s 伤害",
+  "world_combat.ability.innardsout.text.drain": "崩掉 1 点 PP"
+}

@@ -1,0 +1,9 @@
+{
+  "world_combat.ability.dancer.desc": "When you use a dance move, or one lands on you, allies within 5 blocks gain +20% speed and +10% attack for 5 seconds and enemies lose 20% attack; you also gain 1 Speed stage.",
+  "world_combat.ability.dancer.text.dance": "Dance back",
+  "world_combat.ability.dancer.text.rhythm": "Rhythm spreads",
+  "world_combat.ability.dancer.text.mesmer": "Mesmerized",
+  "world_combat.ability.dancer.text.step": "Speed up",
+  "effect.world_combat.dancer_rhythm": "Dancer's Rhythm",
+  "effect.world_combat.dancer_mesmer": "Mesmerized"
+}

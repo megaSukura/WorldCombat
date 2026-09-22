@@ -1,0 +1,101 @@
+{
+  "width": 800,
+  "height": 600,
+  "dt": 0.016666666666666666,
+  "warmupFrames": 5,
+  "seed": 1347,
+  "ground": false,
+  "hdr": true,
+  "bloomIntensity": 0,
+  "bloomThreshold": 0.6,
+  "timeoutSeconds": 120,
+  "background": {
+    "r": 0.13,
+    "g": 0.15,
+    "b": 0.18,
+    "a": 1
+  },
+  "groundColor": {
+    "r": 0.25,
+    "g": 0.27,
+    "b": 0.29,
+    "a": 1
+  },
+  "views": [
+    {
+      "id": "close",
+      "position": {
+        "x": 7,
+        "y": 4,
+        "z": -8
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 0.7,
+        "z": 0
+      },
+      "fieldOfView": 50
+    }
+  ],
+  "cases": [
+    {
+      "id": "u00-windcharge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Winds/WindCharge/Prefabs/WindCharge.prefab",
+      "times": [
+        0.05,
+        0.2,
+        0.7,
+        1.5
+      ],
+      "notes": "Controlled observation condition; original materials/modules, seed and native timing retained. Global shader time recorded; not a pixel-identical replay.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u04-par-fireexplosion",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Exp/FireExplosion/Prefabs/Par_FireExplosion.prefab",
+      "times": [
+        0.05,
+        0.2,
+        0.7,
+        1.5
+      ],
+      "notes": "Controlled observation condition; original materials/modules, seed and native timing retained. Global shader time recorded; not a pixel-identical replay."
+    },
+    {
+      "id": "u29-par-poisonfields",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Fields/PoisonFields/Prefabs/Par_PoisonFields.prefab",
+      "times": [
+        0.05,
+        0.2,
+        0.7,
+        1.5
+      ],
+      "notes": "Controlled observation condition; original materials/modules, seed and native timing retained. Global shader time recorded; not a pixel-identical replay.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    },
+    {
+      "id": "u34-par-greenshield",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Shields/GreenShield/Prefabs/Par_GreenShield.prefab",
+      "times": [
+        0.05,
+        0.2,
+        0.7,
+        1.5
+      ],
+      "notes": "Controlled observation condition; original materials/modules, seed and native timing retained. Global shader time recorded; not a pixel-identical replay.",
+      "stop": {
+        "enabled": true,
+        "at": 3,
+        "stopTrails": true
+      }
+    }
+  ]
+}

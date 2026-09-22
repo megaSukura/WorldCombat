@@ -1,0 +1,516 @@
+{
+  "schema": 1,
+  "artifact": "neoforge-1.8.0+1.21.1.jar",
+  "showdownVersion": 18,
+  "sourceMoveEntries": 952,
+  "nativeMoveIds": 936,
+  "oldSnapshotEntries": 931,
+  "addedSourceIds": [
+    "alluringvoice",
+    "bloodmoon",
+    "burningbulwark",
+    "dragoncheer",
+    "electroshot",
+    "ficklebeam",
+    "hardpress",
+    "hydrosteam",
+    "ivycudgel",
+    "malignantchain",
+    "matchagotcha",
+    "mightycleave",
+    "psyblade",
+    "psychicnoise",
+    "supercellslam",
+    "syrupbomb",
+    "tachyoncutter",
+    "temperflare",
+    "terastarstorm",
+    "thunderclap",
+    "upperhand"
+  ],
+  "sourceAliases": [
+    {
+      "id": "hiddenpowerbug",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerdark",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerdragon",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerelectric",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerfighting",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerfire",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerflying",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerghost",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowergrass",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerground",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerice",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerpoison",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerpsychic",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerrock",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowersteel",
+      "native": "hiddenpower"
+    },
+    {
+      "id": "hiddenpowerwater",
+      "native": "hiddenpower"
+    }
+  ],
+  "nativeAbilities": 314,
+  "nativeItems": 749,
+  "referenceItems": 537,
+  "zMoves": 35,
+  "maxMoves": 52,
+  "specialNativeItems": [],
+  "specialForms": [
+    {
+      "species": "Aerodactyl",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Alakazam",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Beedrill",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Blastoise",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Blastoise",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Butterfree",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Charizard",
+      "form": "Mega-X",
+      "implemented": true
+    },
+    {
+      "species": "Charizard",
+      "form": "Mega-Y",
+      "implemented": true
+    },
+    {
+      "species": "Charizard",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Eevee",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Gengar",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Gengar",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Gyarados",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Kangaskhan",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Kingler",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Lapras",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Machamp",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Meowth",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Mewtwo",
+      "form": "Mega-X",
+      "implemented": true
+    },
+    {
+      "species": "Mewtwo",
+      "form": "Mega-Y",
+      "implemented": true
+    },
+    {
+      "species": "Pidgeot",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Pikachu",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Pinsir",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Slowbro",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Snorlax",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Venusaur",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Venusaur",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Ampharos",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Heracross",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Houndoom",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Scizor",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Steelix",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Tyranitar",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Absol",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Aggron",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Altaria",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Banette",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Blaziken",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Camerupt",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Gardevoir",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Glalie",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Latias",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Latios",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Manectric",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Mawile",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Medicham",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Metagross",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Rayquaza",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Sableye",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Salamence",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Sceptile",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Sharpedo",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Swampert",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Abomasnow",
+      "form": "Mega",
+      "implemented": false
+    },
+    {
+      "species": "Gallade",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Garchomp",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Lopunny",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Lucario",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Audino",
+      "form": "Mega",
+      "implemented": true
+    },
+    {
+      "species": "Garbodor",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Diancie",
+      "form": "Mega",
+      "implemented": false
+    },
+    {
+      "species": "Melmetal",
+      "form": "Gmax",
+      "implemented": false
+    },
+    {
+      "species": "Alcremie",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Appletun",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Centiskorch",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Cinderace",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Coalossal",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Copperajah",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Corviknight",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Drednaw",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Duraludon",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Flapple",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Grimmsnarl",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Hatterene",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Inteleon",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Orbeetle",
+      "form": "Gmax",
+      "implemented": false
+    },
+    {
+      "species": "Rillaboom",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Sandaconda",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Toxtricity",
+      "form": "Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Toxtricity",
+      "form": "Low-Key-Gmax",
+      "implemented": true
+    },
+    {
+      "species": "Urshifu",
+      "form": "Gmax",
+      "implemented": false
+    },
+    {
+      "species": "Urshifu",
+      "form": "Rapid-Strike-Gmax",
+      "implemented": false
+    }
+  ],
+  "interpretation": "Declared data sources and mechanism hints; obtainability and callback semantics require review. Item matches are name candidates."
+}

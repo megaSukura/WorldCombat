@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.naturalgift.summary": "Crush the held Berry and strike with its element; the damage type and power come from that Berry, which is consumed on use.",
+  "worldcombat.skill.naturalgift.use.0": "Close-range Berry strike",
+  "worldcombat.skill.naturalgift.use.1": "Turn a spare Berry into one typed hit",
+  "worldcombat.skill.naturalgift.description.0": "Crushes the held Berry and deals %1$s physical damage of the Berry's type, consuming the Berry.",
+  "worldcombat.skill.naturalgift.description.1": "After %1$s s of chewing, step up to %2$s blocks to strike; savoring is slower but stronger.",
+  "worldcombat.skill.naturalgift.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
+  "worldcombat.skill.naturalgift.value.gift": "Power",
+  "worldcombat.skill.naturalgift.value.charge": "Chew time",
+  "worldcombat.skill.naturalgift.value.reach": "Step distance",
+  "worldcombat.skill.naturalgift.value.step": "Step speed",
+  "worldcombat.skill.naturalgift.value.radius": "Strike radius",
+  "worldcombat.skill.naturalgift.value.push": "Knockback",
+  "worldcombat.skill.naturalgift.value.bursts": "Berry bits",
+  "worldcombat.skill.naturalgift.value.halo": "Element halo",
+  "worldcombat.skill.naturalgift.preference.savor": "Savor",
+  "worldcombat.skill.naturalgift.preference.savor.help": "On: chew 0.4 s longer for x1.3 damage, good against one tough target; Off: strike at once for the Berry's base power, good for a quick hit. Both directions trade speed for power.",
+  "worldcombat.skill.naturalgift.preference.ai.maxChase": "Chase distance",
+  "worldcombat.skill.naturalgift.preference.ai.maxChase.help": "Only attack within this distance; farther targets are left to the shared approach logic.",
+  "worldcombat.skill.naturalgift.preference.ai.leaveStation": "Leave station",
+  "worldcombat.skill.naturalgift.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to take this bite; when off it stays put.",
+  "world_combat.move.naturalgift.text.gift": "Natural Gift: %1$s"
+}

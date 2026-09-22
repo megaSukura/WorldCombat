@@ -1,0 +1,11 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/0",
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/1",
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/2",
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/3",
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/4",
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/5",
+    "world_combat_core:cobblemon/generic/quickattack_dashlines/6"
+  ]
+}

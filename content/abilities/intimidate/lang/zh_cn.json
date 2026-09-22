@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.intimidate.desc": "首次交战时威吓 12 格内的敌人，使其攻击力降低 30% 持续 10 秒；宝可梦敌人的技能冷却同时变长。",
+  "world_combat.ability.intimidate.text.release": "威吓 %1$s 个敌人",
+  "world_combat.ability.intimidate.text.mark": "被威吓",
+  "effect.world_combat.intimidate_mark": "被威吓"
+}

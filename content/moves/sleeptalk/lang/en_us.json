@@ -1,0 +1,13 @@
+{
+  "worldcombat.skill.sleeptalk.summary": "Usable only while asleep; it randomly performs one of the moves the user has learned.",
+  "worldcombat.skill.sleeptalk.use.0": "Mumble in sleep",
+  "worldcombat.skill.sleeptalk.use.1": "Borrow one known move at random",
+  "worldcombat.skill.sleeptalk.description.0": "After mumbling for %1$s it borrows and performs one of its known moves at random; it does not fire when no move is usable.",
+  "worldcombat.skill.sleeptalk.description.1": "Sleep Talk reaches %1$s, and the borrowed move cannot reach farther; returning to the dream costs %2$s.",
+  "worldcombat.skill.sleeptalk.description.2": "The dream shows %1$s bubbles, growing with level and Special Attack.",
+  "worldcombat.skill.sleeptalk.value.murmur": "Murmur time",
+  "worldcombat.skill.sleeptalk.value.span": "Dream reach",
+  "worldcombat.skill.sleeptalk.value.recharge": "Return to sleep",
+  "worldcombat.skill.sleeptalk.value.echoes": "Dream bubbles",
+  "world_combat.move.sleeptalk.text.dream": "Sleep Talk used %1$s"
+}

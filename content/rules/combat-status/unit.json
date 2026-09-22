@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "id": "world_combat:combat_status",
+  "version": "0.1",
+  "requires": {
+    "world_combat:protocols": "0.1"
+  },
+  "sources": [],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:burn": "cobblemon:gui/party/status_brn",
+    "world_combat:paralysis": "cobblemon:gui/party/status_par",
+    "world_combat:sleep": "cobblemon:gui/party/status_slp",
+    "world_combat:frozen": "cobblemon:gui/party/status_frz",
+    "world_combat:confusion": "minecraft:mob_effect/nausea",
+    "world_combat:flinch": "minecraft:mob_effect/weakness"
+  }
+}

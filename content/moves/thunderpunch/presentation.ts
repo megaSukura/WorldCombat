@@ -1,0 +1,101 @@
+/**
+ * 雷电拳 / thunderpunch 的客户端表现。
+ *
+ * 一句话：拳面窜起电流、快拳正中目标炸开一撮电火花，随即一道电弧贴着地面从命中点跳向下一个敌人，
+ * 沿途噼啪闪出分枝。
+ * 色相家族：电弧黄（0xE8D24A）与近白（0xFFFBE0）；饱和黄只出现在电流与火花的细小面积。
+ * 拍子：起 charge（拳面聚电）→ 击 hit（命中电爆）→ 链 arc（电弧跳向下一个目标）与 whiff（空拳）。
+ * 范围：arc 的电弧用 `data.path`（命中点 → 下一个目标）画成折线，玩家看出电流能追到哪。
+ * 运动：拳面沿瞄准方向冲出，电弧沿命中点与目标之间的那条折线走。
+ * 数：火花分枝数绑 `data.bolts`（速度换算），命中强度绑 `data.intensity`。
+ */
+const ThunderpunchDefinition: ParticleDefinition = {
+    interrupt: "drain",
+    moments: {
+        charge: {
+            duration: 12,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "coil", bind: "source", offset: [0, 0.5, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    rate: 10, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.05, 0.16],
+                    lifetime: [4, 8], size: [0.22, 0.05],
+                    color: 0xFFFBE0, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 40
+                },
+                {
+                    name: "feet", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    rate: 8, shape: { kind: "ring", radius: 0.45 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [5, 9], size: [0.1, 0.03],
+                    color: 0xE8D24A, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 30
+                }
+            ]
+        },
+        hit: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "burst", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
+                    burst: { count: 16 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "shape", speed: [0.08, 0.26], spread: 24,
+                    lifetime: [5, 10], size: [0.34, 0.06], sizeMode: "index",
+                    color: 0xFFFBE0, alpha: [1, 0], light: "full", bloom: 0.5
+                },
+                {
+                    name: "branch", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    burst: { count: { data: "bolts", fallback: 5 }, interval: 2 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.06, 0.2], spread: 30,
+                    lifetime: [5, 9], size: [0.12, 0.03], sizeMode: "index",
+                    color: 0xE8D24A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 60
+                }
+            ]
+        },
+        arc: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "bolt", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/bolt",
+                    shape: { kind: "polyline" }, burst: { count: 8, interval: 2, repeats: 2 },
+                    direction: "shape", orient: "direction", speed: [0.02, 0.08],
+                    lifetime: [4, 8], size: [0.3, 0.06], sizeMode: "index",
+                    color: 0xFFFBE0, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 40
+                },
+                {
+                    name: "crackle", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    shape: { kind: "polyline" }, burst: { count: { data: "bolts", fallback: 5 } },
+                    direction: "shape", orient: "direction", speed: [0.05, 0.2], spread: 18,
+                    lifetime: [4, 8], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0xE8D24A, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 50
+                }
+            ]
+        },
+        whiff: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "air", bind: "source", offset: [0, 0.5, 0.3], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 14, interval: 2 },
+                    shape: { kind: "cone", radius: 0.5, angleDegrees: 32 },
+                    direction: "outward", speed: [0.06, 0.2],
+                    lifetime: [5, 9], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0xE8D24A, alpha: [0.55, 0], light: "full", maxParticles: 34
+                }
+            ]
+        }
+    }
+};
+
+WorldCombatParticles.scene("world_combat:move_thunderpunch", 1, ThunderpunchDefinition);

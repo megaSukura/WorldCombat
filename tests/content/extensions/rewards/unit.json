@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "checks:rewards",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native_growth": "0.1",
+    "world_combat_checks:item/quick_ball": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [],
+  "startupSources": []
+}

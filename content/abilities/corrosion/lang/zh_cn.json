@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.corrosion.desc": "命中时腐蚀目标护甲，使其护甲 -4、韧性 -2 并按每秒 2% 最大生命持续 6 秒；钢属性与毒属性的宝可梦也会被你的毒侵蚀。",
+  "world_combat.ability.corrosion.text.acid": "腐蚀",
+  "world_combat.ability.corrosion.text.poison": "侵蚀中毒",
+  "world_combat.ability.corrosion.text.tick": "腐蚀 -%1$s",
+  "effect.world_combat.corrosion_acid": "被腐蚀"
+}

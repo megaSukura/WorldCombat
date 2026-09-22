@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.thunder.summary": "Gather the clouds, then drop a column of thunder onto the target point from the sky: a small but brutal hit. It always lands in rain, scatters more in sun, and a roof blocks it entirely.",
+  "worldcombat.skill.thunder.description.0": "The bolt deals %1$s special Electric damage.",
+  "worldcombat.skill.thunder.description.1": "The strike radius is %1$s blocks; a struck target has a %2$s%% chance to be left paralysed.",
+  "worldcombat.skill.thunder.description.2": "It strikes up to %1$s blocks away after a %2$s second charge.",
+  "worldcombat.skill.thunder.use.0": "Drop a bolt on a target from afar",
+  "worldcombat.skill.thunder.use.1": "Call a sure strike in the rain",
+  "worldcombat.skill.thunder.use.2": "Shut the bolt down with a roof",
+  "worldcombat.skill.thunder.value.bolt": "Bolt power",
+  "worldcombat.skill.thunder.value.strikeRadius": "Strike radius",
+  "worldcombat.skill.thunder.value.thunderChance": "Numb chance",
+  "worldcombat.skill.thunder.value.boltRange": "Cast range",
+  "worldcombat.skill.thunder.value.chargeTicks": "Charge time",
+  "worldcombat.skill.thunder.preference.charged": "Gathered clouds",
+  "worldcombat.skill.thunder.preference.charged.help": "On: charge 6 ticks longer for more power and a tighter strike (less scatter), at the cost of a longer recovery and cooldown. Off: the bolt falls sooner but hits slightly softer and scatters more.",
+  "worldcombat.skill.thunder.preference.ai.maxChase": "Cast distance",
+  "worldcombat.skill.thunder.preference.ai.maxChase.help": "Beyond this distance it closes in instead of calling the bolt. Larger values strike first from further away.",
+  "worldcombat.skill.thunder.preference.ai.preferWet": "Prefer wet targets",
+  "worldcombat.skill.thunder.preference.ai.preferWet.help": "On: favour wet targets, which are easier to numb, at the risk of ignoring a dry real threat. Off: only the threat itself counts.",
+  "world_combat.move.thunder.text.hit": "Thunder struck %1$s",
+  "world_combat.move.thunder.text.miss": "Thunder missed",
+  "world_combat.move.thunder.text.roof": "Thunder blocked overhead"
+}

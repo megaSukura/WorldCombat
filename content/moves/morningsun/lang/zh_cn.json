@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.morningsun.summary": "把白天晴空的日光一次拽到身上：接住晨光时按最大生命的三分之二左右回复并获得一段速度提升，夜里或阴雨只回一点、也没有加速。",
+  "worldcombat.skill.morningsun.use.0": "白天晴空下的强回复",
+  "worldcombat.skill.morningsun.use.1": "借回复接一段加速",
+  "worldcombat.skill.morningsun.use.2": "夜里只作小补",
+  "worldcombat.skill.morningsun.description.0": "按缺失生命回复 %1$s：白天晴空接近 2/3，夜里或阴雨只回下限；特攻越高晨光越暖。",
+  "worldcombat.skill.morningsun.description.1": "迎候 %1$s 后结算；真的接住晨光时再获得 %2$s 的速度提升，否则没有。",
+  "worldcombat.skill.morningsun.timing": "自身招式，迎候 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.morningsun.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
+  "worldcombat.skill.morningsun.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
+  "worldcombat.skill.morningsun.value.heal": "回复比例",
+  "worldcombat.skill.morningsun.value.sunriseTicks": "迎候时长",
+  "worldcombat.skill.morningsun.value.vigorTicks": "晨间振作",
+  "worldcombat.skill.morningsun.value.dawn": "晨光可及",
+  "worldcombat.skill.morningsun.value.dawn.yes": "白天且天晴",
+  "worldcombat.skill.morningsun.value.dawn.no": "夜里或阴雨",
+  "worldcombat.skill.morningsun.preference.ai.healBelow": "回复阈值",
+  "worldcombat.skill.morningsun.preference.ai.healBelow.help": "自身生命低于该比例时才把晨光排进恢复计划；调低更倾向硬撑，调高则一掉血就迎候晨光。",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky": "等晨光",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "开启：只在强日光下出手，夜里与阴雨把这招留着（那时回复少、也没有加速）；关闭：受伤就照用，接受保底回复。",
+  "world_combat.move.morningsun.text.dawn": "晨光普照",
+  "world_combat.move.morningsun.text.dim": "晨光微弱"
+}

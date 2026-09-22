@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+import vm from 'node:vm';
+
+const scope=vm.createContext({});
+vm.runInContext(ts.transpileModule(fs.readFileSync('content/behavior/companion-menus.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES5,module:ts.ModuleKind.None}}).outputText,scope);
+const registry=new scope.CompanionMenus.Registry();
+registry.provide('base',()=>({items:[{id:'work',label:'Work',detail:''},{id:'work/old',parent:'work',label:'Old',detail:''},{id:'battle',label:'Battle',detail:''}]}));
+registry.provide('individual',context=>context.fly?{items:[{id:'travel',label:'Travel',detail:''},{id:'travel/fly',parent:'travel',label:'Fly',detail:'',command:'mod:fly'}],remove:['battle']} : {});
+registry.provide('skill',context=>context.skill?{remove:['work/old'],items:[{id:'work/water',parent:'work',label:'Water',detail:'',command:'other:water'},{id:'work/water/plants',parent:'work/water',label:'Plants',detail:'',target:'point'}]}:{});
+let tree=registry.resolve({fly:true,skill:true});
+assert.deepEqual(Array.from(tree,v=>v.id),['work','travel','travel/fly','work/water','work/water/plants']);
+assert(tree.some(v=>v.command==='other:water'));
+assert.equal(registry.resolve({}).length,3,'A different individual/loadout derives its own tree without cached exclusions');
+const commands=new scope.CompanionMenus.Commands(); let performed=0;
+commands.register('other:water',context=>{performed+=context.amount;});
+assert(commands.dispatch('other:water',{amount:3})); assert.equal(performed,3);
+assert(!commands.dispatch('unknown',{}));
+registry.provide('remove-parent',()=>({remove:['work']}));
+assert(!registry.resolve({skill:true}).some(item=>item.id.startsWith('work/')),'Removed groups do not expose orphan actions');
+const cyclic=new scope.CompanionMenus.Registry();
+cyclic.provide('cycle',()=>({items:[{id:'a',parent:'b',label:'A'},{id:'b',parent:'a',label:'B'}]}));
+assert.throws(()=>cyclic.resolve({}),/cycle/);
+console.log('PASS command providers compose arbitrary nested species/individual/skill contributions, replace/remove groups, and dispatch script-owned commands');

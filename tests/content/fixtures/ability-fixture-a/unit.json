@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "world_combat_checks:ability/fixture_a",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [],
+  "startupSources": []
+}

@@ -1,0 +1,8 @@
+{
+  "effect.world_combat.burn": "灼伤",
+  "effect.world_combat.paralysis": "麻痹",
+  "effect.world_combat.sleep": "睡眠",
+  "effect.world_combat.frozen": "冰冻",
+  "effect.world_combat.confusion": "混乱",
+  "effect.world_combat.flinch": "畏缩"
+}

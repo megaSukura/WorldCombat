@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "world_combat:ability/dancer",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native": "0.1",
+    "world_combat:mechanisms": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "clientSources": [
+    "presentation.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:dancer_rhythm": "minecraft:mob_effect/speed",
+    "world_combat:dancer_mesmer": "minecraft:mob_effect/weakness"
+  }
+}

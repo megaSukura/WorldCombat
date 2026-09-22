@@ -1,0 +1,36 @@
+{
+  "width": 960,
+  "height": 720,
+  "dt": 0.016666667,
+  "warmupFrames": 8,
+  "seed": 1347,
+  "ground": true,
+  "hdr": true,
+  "bloomIntensity": 0,
+  "views": [
+    {"id": "three-quarter", "position": {"x": 9, "y": 6, "z": -10}, "lookAt": {"x": 0, "y": 1, "z": 0}, "fieldOfView": 45},
+    {"id": "side", "position": {"x": 11, "y": 2.5, "z": 0}, "lookAt": {"x": 0, "y": 1, "z": 0}, "fieldOfView": 45}
+  ],
+  "cases": [
+    {
+      "id": "support-heal-charge",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer2/Etcs/HealCharge/Prefabs/HealCharge.prefab",
+      "times": [0, 0.05, 0.1, 0.2, 0.4, 0.7, 1, 1.5, 2, 3, 4, 5],
+      "notes": "Original support/charge prefab; preserve source modules and scripts."
+    },
+    {
+      "id": "field-poison",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Fields/PoisonFields/Prefabs/Par_PoisonFields.prefab",
+      "times": [0, 0.05, 0.1, 0.2, 0.4, 0.7, 1, 1.5, 2, 3, 4, 5, 6],
+      "stop": {"enabled": true, "at": 3},
+      "notes": "Original field, then StopEmitting at 3 s to inspect authored particle drain."
+    },
+    {
+      "id": "water-pour",
+      "prefab": "Assets/MasterMagicFX/ParticlesVer3/Liquids/Water/WaterPour/Prefabs/Par_WaterPour.prefab",
+      "times": [0, 0.05, 0.1, 0.2, 0.4, 0.7, 1, 1.5, 2, 3, 4, 5, 6],
+      "stop": {"enabled": true, "at": 3},
+      "notes": "Original liquid pour/jet source; first confirm native orientation and framing from images."
+    }
+  ]
+}

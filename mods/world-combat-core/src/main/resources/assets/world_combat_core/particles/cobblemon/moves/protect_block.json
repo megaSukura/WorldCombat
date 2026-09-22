@@ -1,0 +1,10 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/moves/protect_block/0",
+    "world_combat_core:cobblemon/moves/protect_block/1",
+    "world_combat_core:cobblemon/moves/protect_block/2",
+    "world_combat_core:cobblemon/moves/protect_block/3",
+    "world_combat_core:cobblemon/moves/protect_block/4",
+    "world_combat_core:cobblemon/moves/protect_block/5"
+  ]
+}

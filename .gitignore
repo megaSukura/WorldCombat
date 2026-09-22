@@ -1,0 +1,46 @@
+# Gradle and generated build output
+.gradle/
+.kotlin/
+**/build/
+**/out/
+**/bin/
+
+# Local game instances, saves, and logs
+run/
+runs/
+run-*/
+**/logs/
+**/crash-reports/
+**/saves/
+*.log
+
+# Published artifacts are generated locally
+/dist/*
+!/dist/.gitkeep
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local settings and credentials
+.env
+.env.*
+!.env.example
+local.properties
+
+# Content tooling dependencies and caches
+node_modules/
+__pycache__/
+*.py[cod]
+
+# Keep the Gradle Wrapper in version control when it is added
+!gradle/wrapper/gradle-wrapper.jar
+.gradle-user/
+
+# Archived compile output and licensed asset packages stay out of version control
+archive/photon-2026-09-16/previous-build/
+archive/photon-2026-09-16/可用资源/

@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.ironbarbs.desc": "When struck at close range, has a 40% chance to gather a barb, pause for 1 second, then fire it at the attacker for one eighth of the attacker's maximum health; a Pokemon attacker also loses one Defence stage.",
+  "world_combat.ability.ironbarbs.text.bristle": "Barbs bristle",
+  "world_combat.ability.ironbarbs.text.launch": "Barbs fired",
+  "world_combat.ability.ironbarbs.text.hit": "Barbs -%1$s",
+  "world_combat.ability.ironbarbs.text.cripple": "Guard broken"
+}

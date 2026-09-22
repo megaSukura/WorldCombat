@@ -1,0 +1,5 @@
+{
+  "world_combat.ability.intrepidsword.desc": "On entering combat, raises Attack by 1 stage for as long as the fight lasts, and speeds up skill cooldowns for the first 10 seconds.",
+  "world_combat.ability.intrepidsword.text.attack": "Attack rose",
+  "effect.world_combat.intrepidsword_edge": "Intrepid Sword"
+}

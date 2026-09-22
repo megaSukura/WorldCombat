@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "id": "world_combat_checks:item/quick_ball",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native": "0.1",
+    "world_combat:capture_encounter": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.lingeringaroma.desc": "被近身击中时，气味沾上攻击者 30 秒：攻击力降低 15%，并持续被发光标记、暴露行踪；若攻击者是宝可梦，还会降低一级闪避。",
+  "world_combat.ability.lingeringaroma.text.cling": "气味沾身",
+  "world_combat.ability.lingeringaroma.text.expose": "闪避下降",
+  "effect.world_combat.lingering_aroma": "甩不掉的气味"
+}

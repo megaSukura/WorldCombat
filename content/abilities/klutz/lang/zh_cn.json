@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.klutz.desc": "无法使用携带的道具，但只要还带着道具就获得轻装：移动速度提高 15%，技能冷却回复更快。",
+  "effect.world_combat.klutz_unburdened": "轻装",
+  "world_combat.ability.klutz.text.unburden": "卸去负重",
+  "world_combat.ability.klutz.text.burdened": "负重归来"
+}

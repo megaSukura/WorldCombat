@@ -1,0 +1,20 @@
+{
+  "worldcombat.skill.synthesis.summary": "Spreads its leaves in place and turns the sunlight falling on it into health: the brighter the spot, the more it restores, close to two thirds at clear noon but only a little in shade or at night; it cannot move while absorbing.",
+  "worldcombat.skill.synthesis.use.0": "A large heal under open sun",
+  "worldcombat.skill.synthesis.use.1": "A small heal in the shade",
+  "worldcombat.skill.synthesis.use.2": "A stand-still self rescue",
+  "worldcombat.skill.synthesis.description.0": "Restores %1$s of the missing health: more with brighter sunlight (close to 2/3 at clear noon), more with higher Special Defence.",
+  "worldcombat.skill.synthesis.description.1": "Spreads its leaves to absorb light and stands still for %1$s; being interrupted spends no PP.",
+  "worldcombat.skill.synthesis.timing": "A self move; it stands still for %2$s s of wind-up, then spends %4$s PP, recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.synthesis.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
+  "worldcombat.skill.synthesis.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
+  "worldcombat.skill.synthesis.value.heal": "Restore fraction",
+  "worldcombat.skill.synthesis.value.soakTicks": "Absorb duration",
+  "worldcombat.skill.synthesis.value.light": "Current sunlight",
+  "worldcombat.skill.synthesis.preference.ai.healBelow": "Heal threshold",
+  "worldcombat.skill.synthesis.preference.ai.healBelow.help": "Below this health ratio the companion schedules Synthesis; lower endures longer, higher spreads its leaves at the first wound.",
+  "worldcombat.skill.synthesis.preference.ai.minimumLight": "Minimum sunlight",
+  "worldcombat.skill.synthesis.preference.ai.minimumLight.help": "Below this sunlight the companion holds the move and waits for a brighter spot; lower also heals in shade, higher only casts in strong noon light.",
+  "world_combat.move.synthesis.text.bloom": "Synthesis",
+  "world_combat.move.synthesis.text.low": "Too little light"
+}

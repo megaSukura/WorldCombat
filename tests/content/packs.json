@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "packages": {
+    "world_combat:prototype": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:native": "0.1",
+        "world_combat:mechanisms": "0.1",
+        "checks:commands": "0.1",
+        "world_combat:native_rules": "0.1"
+      },
+      "sources": [
+        "tests/content/mechanisms/training-bolt.ts",
+        "tests/content/moves/training-demo.ts",
+        "tests/content/mechanisms/managed-effects.ts",
+        "tests/content/mechanisms/prototype.ts",
+        "tests/content/moves/prototype.ts",
+        "tests/content/moves/native-foundation.ts",
+        "tests/content/tactics/prototype.ts"
+      ]
+    },
+    "world_combat:effect_examples": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:protocols": "0.1"
+      },
+      "sources": [
+        "tests/content/examples/effect-protocol.ts"
+      ]
+    },
+    "world_combat:native_mechanism_examples": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:prototype": "0.1",
+        "world_combat:mechanism_examples": "0.1"
+      },
+      "sources": [
+        "tests/content/examples/native-mechanisms.ts",
+        "tests/content/examples/native-combinations.ts"
+      ]
+    },
+    "world_combat:mechanism_examples": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:mechanisms": "0.1"
+      },
+      "sources": [
+        "tests/content/examples/world-mechanisms.ts",
+        "tests/content/examples/core-ai.ts"
+      ]
+    },
+    "p4:workshop": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:mechanisms": "0.1"
+      },
+      "sources": [
+        "tests/content/workshop/conduction.ts",
+        "tests/content/workshop/sound.ts"
+      ],
+      "clientSources": [
+        "tests/content/client/workshop.ts"
+      ]
+    },
+    "p4:companions": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:native": "0.1",
+        "p4:workshop": "0.1",
+        "checks:commands": "0.1",
+        "world_combat:native_rules": "0.1"
+      },
+      "sources": [
+        "tests/content/workshop/companions.ts"
+      ]
+    },
+    "checks:commands": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:native": "0.1",
+        "world_combat:native_rules": "0.1"
+      },
+      "sources": [
+        "tests/content/tactics/commands.ts"
+      ]
+    },
+    "checks:native-reuse": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:companions": "0.1"
+      },
+      "sources": [
+        "tests/content/reuse/native.ts"
+      ]
+    },
+    "checks:open_content": {
+      "version": "0.1",
+      "requires": {},
+      "collections": [
+        "tests/content/extensions/collection.json"
+      ],
+      "sources": []
+    }
+  },
+  "profiles": {
+    "legacy": [
+      "world_combat:protocols",
+      "world_combat:prototype"
+    ],
+    "effects": [
+      "world_combat:effect_examples"
+    ],
+    "native-effects": [
+      "world_combat:effect_examples",
+      "world_combat:native"
+    ],
+    "mechanisms": [
+      "world_combat:mechanism_examples"
+    ],
+    "playtest-mechanisms": [
+      "world_combat:native_mechanism_examples"
+    ],
+    "native-mechanisms": [
+      "world_combat:prototype",
+      "world_combat:mechanism_examples"
+    ],
+    "workshop-core": [
+      "p4:workshop"
+    ],
+    "workshop": [
+      "p4:companions"
+    ],
+    "reuse-native": [
+      "checks:native-reuse"
+    ],
+    "open-content": [
+      "checks:open_content"
+    ],
+    "visual-fixtures": [
+      "checks:visual_sample",
+      "checks:particle_sample"
+    ]
+  },
+  "defaultProfile": "legacy",
+  "unitRoots": [
+    "tests/content"
+  ]
+}

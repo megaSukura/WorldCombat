@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.grassysurge.desc": "首次交战在脚下铺开青草场地，持续 30 秒；友方每 2 秒回复 1/16 生命，场地还会催熟附近的作物。站在场地上的宝可梦草属性招式威力提高 30%，地震与震级威力减半。",
+  "world_combat.ability.grassysurge.text.rise": "青草场地",
+  "world_combat.ability.grassysurge.text.heal": "回复 %1$s",
+  "world_combat.ability.grassysurge.text.growth": "作物催熟",
+  "effect.world_combat.grassysurge_terrain": "青草场地"
+}

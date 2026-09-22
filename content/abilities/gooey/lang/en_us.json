@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.gooey.desc": "When struck at close range, clings to the attacker and slows their movement for 6 seconds; a Pokemon attacker is also coated for 8 seconds, making its skill cooldowns recover much slower.",
+  "effect.world_combat.gooey_cling": "Clinging Goo",
+  "world_combat.ability.gooey.text.cling": "Stuck in goo",
+  "world_combat.ability.gooey.text.coat": "Skills slowed"
+}

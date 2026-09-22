@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.ironbarbs.desc": "被近身击中时，有 40% 几率在身旁聚起一枚铁刺，停顿 1 秒后射向攻击者，命中造成其最大生命八分之一的伤害；若攻击者是宝可梦，还会被削掉一级防御。",
+  "world_combat.ability.ironbarbs.text.bristle": "铁刺竖起",
+  "world_combat.ability.ironbarbs.text.launch": "铁刺射出",
+  "world_combat.ability.ironbarbs.text.hit": "铁刺 -%1$s",
+  "world_combat.ability.ironbarbs.text.cripple": "破防"
+}

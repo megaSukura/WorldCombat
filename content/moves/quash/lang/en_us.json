@@ -1,0 +1,21 @@
+{
+  "worldcombat.skill.quash.summary": "Slam a slab of pressure onto the target: its current action is broken and a Quash is left on it. While quashed, the first action it tries is pushed back once (no resources spent, just a beat late) and its movement is dragged down.",
+  "worldcombat.skill.quash.description.0": "A press of force reaches targets within %1$s blocks with a collision radius of %2$s blocks.",
+  "worldcombat.skill.quash.description.1": "A hit breaks the target's current action and leaves Quash for %1$s seconds: its first %2$s attempted actions are pushed back (no resources spent, just a beat late) and its movement is dragged down.",
+  "worldcombat.skill.quash.use.0": "Break a move the target is charging",
+  "worldcombat.skill.quash.use.1": "Steal a beat and hold your ground",
+  "worldcombat.skill.quash.use.2": "Slow a target that charges you down",
+  "worldcombat.skill.quash.value.reach": "Press range",
+  "worldcombat.skill.quash.value.traceRadius": "Collision radius",
+  "worldcombat.skill.quash.value.lockTicks": "Quash duration",
+  "worldcombat.skill.quash.value.deny": "Deflections",
+  "worldcombat.skill.quash.preference.crushing": "Crushing stance",
+  "worldcombat.skill.quash.preference.crushing.help": "On: a longer suppression window (duration x1.3) that pins longer, at the cost of 20 extra ticks of cooldown. Off: a lighter press, shorter (x0.8) but 8 ticks cheaper, to steal beats more often.",
+  "worldcombat.skill.quash.preference.ai.maxChase": "Press distance",
+  "worldcombat.skill.quash.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of pressing. Larger values chase harder and whiff more in the open.",
+  "worldcombat.skill.quash.preference.ai.leaveStation": "May leave station",
+  "worldcombat.skill.quash.preference.ai.leaveStation.help": "When on, the user may leave its post to press; when off, it only presses what it can reach from where it stands.",
+  "effect.world_combat.quash": "Quashed",
+  "world_combat.move.quash.text.pin": "Quashed",
+  "world_combat.move.quash.text.fizzle": "Quash missed"
+}

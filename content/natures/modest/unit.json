@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "id": "world_combat:nature/modest",
+  "version": "0.1",
+  "requires": {
+    "world_combat:companions": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ]
+}

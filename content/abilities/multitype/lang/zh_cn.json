@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.multitype.desc": "按脚下的方块共鸣：自己获得对应属性，5 格内同伴获得 +2 护甲与 +10% 移速持续 4 秒。",
+  "world_combat.ability.multitype.text.attune": "属性共鸣",
+  "world_combat.ability.multitype.text.share": "共鸣扩散",
+  "effect.world_combat.multitype_attuned": "属性共鸣"
+}

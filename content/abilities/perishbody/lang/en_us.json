@@ -1,0 +1,9 @@
+{
+  "world_combat.ability.perishbody.desc": "When an enemy blow removes more than 25% of its maximum health, that enemy is cursed for 12 seconds and drops when the curse ends (once per engagement); milk or the holder disengaging clears it. A Pokemon enemy also loses one Special Attack stage.",
+  "effect.world_combat.perish_body": "Perish Curse",
+  "world_combat.ability.perishbody.text.blow": "Perish Body",
+  "world_combat.ability.perishbody.text.sentence": "Perish Curse",
+  "world_combat.ability.perishbody.text.weaken": "Sp. Atk Fell",
+  "world_combat.ability.perishbody.text.doom": "Curse Fulfilled",
+  "world_combat.ability.perishbody.text.lift": "Curse Lifted"
+}

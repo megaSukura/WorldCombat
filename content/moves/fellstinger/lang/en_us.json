@@ -1,0 +1,15 @@
+{
+  "worldcombat.skill.fellstinger.summary": "A short, precise sting; felling the target with it sharply raises the user's Attack.",
+  "worldcombat.skill.fellstinger.use.0": "Finishing strike",
+  "worldcombat.skill.fellstinger.description.0": "Lunges in for a short sting: %1$s physical damage; sting range %2$s blocks, %3$s blocks per tick, collision radius %4$s blocks. Knocking the target out with this blow raises the user's Attack by %5$s stages.",
+  "worldcombat.skill.fellstinger.description.1": "PP cost %1$s; cooldown %2$s s.",
+  "worldcombat.skill.fellstinger.timing": "Timing",
+  "worldcombat.skill.fellstinger.value.power": "Sting power",
+  "worldcombat.skill.fellstinger.value.rise": "Stages gained",
+  "worldcombat.skill.fellstinger.value.distance": "Sting distance",
+  "worldcombat.skill.fellstinger.value.speed": "Lunge speed",
+  "worldcombat.skill.fellstinger.value.traceAhead": "Look-ahead",
+  "worldcombat.skill.fellstinger.value.collisionRadius": "Collision radius",
+  "worldcombat.skill.fellstinger.value.minimumMove": "Minimum step",
+  "world_combat.move.fellstinger.text.rise": "Attack +%1$s"
+}

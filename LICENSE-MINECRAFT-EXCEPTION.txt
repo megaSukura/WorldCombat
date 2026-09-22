@@ -1,0 +1,18 @@
+WorldCombat additional permission under GNU GPL version 3, section 7
+
+For the original portions of WorldCombat that its contributors are entitled
+to license, permission is additionally granted to link or combine the covered
+work with Minecraft, Minecraft mod loaders and their APIs, and Minecraft mods,
+and to convey the resulting combination. The requirements of the GNU GPL
+continue to apply to the covered WorldCombat portions, including provision of
+their Corresponding Source.
+
+This permission does not grant rights in Minecraft, in any dependency, or in
+any third-party asset. Their respective copyright notices, license terms and
+distribution requirements continue to apply. Contributors who modify
+WorldCombat may retain this additional permission for their modifications.
+
+The original WorldCombat code and original content are available under the
+GNU General Public License, version 3 or (at your option) any later version.
+See LICENSE for the complete license text and THIRD_PARTY_NOTICES.md for
+third-party components and resources.

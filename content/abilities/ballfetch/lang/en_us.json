@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.ballfetch.desc": "Catches a ranged hit and throws it back, slowing the attacker by 20% for 4 seconds; with no held item, restores 1 PP every 10 seconds.",
+  "world_combat.ability.ballfetch.text.catch": "Caught",
+  "world_combat.ability.ballfetch.text.trip": "Thrown back",
+  "world_combat.ability.ballfetch.text.hold": "Kept",
+  "effect.world_combat.ballfetch_trip": "Thrown Back"
+}

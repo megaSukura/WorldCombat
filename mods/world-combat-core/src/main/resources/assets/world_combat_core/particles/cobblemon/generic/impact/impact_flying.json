@@ -1,0 +1,11 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/impact/impact_flying/0",
+    "world_combat_core:cobblemon/generic/impact/impact_flying/1",
+    "world_combat_core:cobblemon/generic/impact/impact_flying/2",
+    "world_combat_core:cobblemon/generic/impact/impact_flying/3",
+    "world_combat_core:cobblemon/generic/impact/impact_flying/4",
+    "world_combat_core:cobblemon/generic/impact/impact_flying/5",
+    "world_combat_core:cobblemon/generic/impact/impact_flying/6"
+  ]
+}

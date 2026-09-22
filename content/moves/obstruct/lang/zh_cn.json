@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.obstruct.summary": "立起带刺拒马，按总量完整挡下对手的攻击；接触攻击撞上来会大幅降低攻击者防御，连续使用容易失败。",
+  "worldcombat.skill.obstruct.description.0": "拒马持续 %1$s、量 %2$s 点，接触降防 %3$s 级；防御越高越厚越久。",
+  "worldcombat.skill.obstruct.description.1": "立起 %1$s，宽度 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.obstruct.description.2": "连用失误率 %1$s；带刺与加固的取舍见配置 %2$s。",
+  "worldcombat.skill.obstruct.use.0": "引诱近战对手撞上拒马",
+  "worldcombat.skill.obstruct.use.1": "为后续攻击先把对手打软",
+  "worldcombat.skill.obstruct.use.2": "守住一条窄口，逼对手绕路",
+  "worldcombat.skill.obstruct.value.raise": "立起时间",
+  "worldcombat.skill.obstruct.value.window": "拒马持续",
+  "worldcombat.skill.obstruct.value.capacity": "拒马量",
+  "worldcombat.skill.obstruct.value.drop": "接触降防",
+  "worldcombat.skill.obstruct.value.radius": "拒马宽度",
+  "worldcombat.skill.obstruct.value.charge": "冷却",
+  "worldcombat.skill.obstruct.value.fizzle": "连用失误率",
+  "worldcombat.skill.obstruct.preference.barbs": "带刺／加固",
+  "worldcombat.skill.obstruct.preference.barbs.help": "开启带刺：接触降防 +1，但拒马量 ×0.75、持续 ×0.85，收招 6 刻。关闭加固：拒马量 ×1.2、持续 ×1.15，降防不额外加，收招 10 刻。",
+  "worldcombat.skill.obstruct.preference.ai.range": "立拒马距离",
+  "worldcombat.skill.obstruct.preference.ai.range.help": "威胁进入这个距离才立拒马。越大越早摆好，越可能空立；越小越省，但要赌对手会贴上来。",
+  "world_combat.move.obstruct.text.block": "拒马挡下 %1$s 点（余 %2$s）",
+  "world_combat.move.obstruct.text.punish": "防御 −%1$s",
+  "world_combat.move.obstruct.text.shatter": "拒马被击穿"
+}

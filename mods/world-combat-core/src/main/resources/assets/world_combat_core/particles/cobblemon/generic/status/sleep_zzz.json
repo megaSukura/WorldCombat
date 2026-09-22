@@ -1,0 +1,20 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/0",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/1",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/2",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/3",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/4",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/5",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/6",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/7",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/8",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/9",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/10",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/11",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/12",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/13",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/14",
+    "world_combat_core:cobblemon/generic/status/sleep_zzz/15"
+  ]
+}

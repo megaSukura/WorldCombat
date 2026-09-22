@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "checks:curiosity",
+  "version": "0.1",
+  "requires": {
+    "checks:observations": "0.1",
+    "world_combat:native": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [],
+  "startupSources": []
+}

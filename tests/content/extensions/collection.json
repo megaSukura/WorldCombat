@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "units": [
+    "checks:surveyor",
+    "checks:survey_lens",
+    "checks:curiosity",
+    "checks:rewards"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.lingeringaroma.desc": "When struck at close range, the scent sticks to the attacker for 30 seconds: 15% less attack damage and a persistent tracking glow; a Pokemon attacker also loses one Evasion stage.",
+  "world_combat.ability.lingeringaroma.text.cling": "Scent clings",
+  "world_combat.ability.lingeringaroma.text.expose": "Evasion drops",
+  "effect.world_combat.lingering_aroma": "Lingering Aroma"
+}

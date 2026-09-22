@@ -1,0 +1,1 @@
+dev.worldcombat.cobblemon.script.PokemonKubePlugin

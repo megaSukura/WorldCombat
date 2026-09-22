@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.frisk.desc": "On first contact, reveals enemies within 12 blocks and cuts 2 armor for 6 seconds; the nearest Pokemon enemy's held item is inspected and disabled for 5 seconds.",
+  "world_combat.ability.frisk.text.scan": "Sizes up %1$s foes",
+  "world_combat.ability.frisk.text.mark": "Frisked",
+  "world_combat.ability.frisk.text.suppress": "Item revealed",
+  "effect.world_combat.frisk_exposed": "Frisked"
+}

@@ -1,0 +1,9 @@
+{
+  "world_combat.ability.perishbody.desc": "当敌人单次对自己造成的伤害超过自身最大生命的 25% 时，给对方套上 12 秒的灭亡诅咒（每场交战只触发一次）；诅咒结束时目标倒下，喝牛奶或让持有者脱离交战可解除。若对方是宝可梦，还会被压下一级特攻。",
+  "effect.world_combat.perish_body": "灭亡诅咒",
+  "world_combat.ability.perishbody.text.blow": "亡躯反噬",
+  "world_combat.ability.perishbody.text.sentence": "灭亡诅咒",
+  "world_combat.ability.perishbody.text.weaken": "特攻受挫",
+  "world_combat.ability.perishbody.text.doom": "诅咒应验",
+  "world_combat.ability.perishbody.text.lift": "诅咒消散"
+}

@@ -1,0 +1,5 @@
+{
+  "world_combat.ability.battlearmor.desc": "Takes 25% less from any single blow over 20% of max health and gains +3 armor and +2 toughness for 2 seconds; Pokemon moves can never critically hit you.",
+  "world_combat.ability.battlearmor.text.brace": "Blunted -%1$s",
+  "effect.world_combat.battlearmor_brace": "Armored"
+}

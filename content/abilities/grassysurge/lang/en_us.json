@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.grassysurge.desc": "On first contact, grows a grassy field for 30 seconds; allies inside recover 1/16 health every 2 seconds and nearby crops are ripened. Pokemon standing on the field deal 30% more with Grass moves and half with Earthquake and Bulldoze.",
+  "world_combat.ability.grassysurge.text.rise": "Grassy Terrain",
+  "world_combat.ability.grassysurge.text.heal": "Recovered %1$s",
+  "world_combat.ability.grassysurge.text.growth": "Crops ripened",
+  "effect.world_combat.grassysurge_terrain": "Grassy Terrain"
+}

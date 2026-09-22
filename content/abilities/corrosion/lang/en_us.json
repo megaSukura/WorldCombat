@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.corrosion.desc": "Hits corrode the target's armor by 4, toughness by 2, and burn 2% of max health per second for 6 seconds; Steel- and Poison-type Pokemon can also be poisoned by you.",
+  "world_combat.ability.corrosion.text.acid": "Corroded",
+  "world_combat.ability.corrosion.text.poison": "Corroded poison",
+  "world_combat.ability.corrosion.text.tick": "Corroding -%1$s",
+  "effect.world_combat.corrosion_acid": "Corroded"
+}

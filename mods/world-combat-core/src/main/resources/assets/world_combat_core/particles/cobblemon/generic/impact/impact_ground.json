@@ -1,0 +1,11 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/impact/impact_ground/0",
+    "world_combat_core:cobblemon/generic/impact/impact_ground/1",
+    "world_combat_core:cobblemon/generic/impact/impact_ground/2",
+    "world_combat_core:cobblemon/generic/impact/impact_ground/3",
+    "world_combat_core:cobblemon/generic/impact/impact_ground/4",
+    "world_combat_core:cobblemon/generic/impact/impact_ground/5",
+    "world_combat_core:cobblemon/generic/impact/impact_ground/6"
+  ]
+}

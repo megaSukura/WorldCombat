@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "world_combat:ability/corrosion",
+  "version": "0.1",
+  "requires": {
+    "world_combat:native": "0.1",
+    "world_combat:mechanisms": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "clientSources": [
+    "presentation.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:corrosion_acid": "minecraft:mob_effect/poison"
+  }
+}

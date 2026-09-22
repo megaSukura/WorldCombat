@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.klutz.desc": "Cannot use its held item, but while it still carries one it fights unburdened: +15% movement speed and faster skill cooldown recovery.",
+  "effect.world_combat.klutz_unburdened": "Unburdened",
+  "world_combat.ability.klutz.text.unburden": "Unburdened",
+  "world_combat.ability.klutz.text.burdened": "Burdened again"
+}

@@ -1,0 +1,7 @@
+{
+  "world_combat.ability.mistysurge.desc": "On first contact, raises a mist for 30 seconds; allies inside have harmful effects such as poison and weakness removed every second. Combatants standing on it take half damage from Dragon moves and cannot gain new status conditions.",
+  "world_combat.ability.mistysurge.text.rise": "Misty Terrain",
+  "world_combat.ability.mistysurge.text.cleanse": "Purged",
+  "world_combat.ability.mistysurge.text.ward": "Mist Ward",
+  "effect.world_combat.mistysurge_terrain": "Misty Terrain"
+}

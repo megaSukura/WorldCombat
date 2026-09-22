@@ -1,0 +1,9 @@
+{
+  "world_combat.ability.hospitality.desc": "On first contact, sets down a meal beside the holder; up to two allies who walk over restore 25% health and gain well fed for 10 seconds, and Pokemon allies recover 1 PP. Enemies can destroy the meal, and it fades if nobody comes.",
+  "effect.world_combat.hospitality_well_fed": "Well Fed",
+  "world_combat.ability.hospitality.text.offer": "Meal set out",
+  "world_combat.ability.hospitality.text.feed": "Fed, recovered %1$s",
+  "world_combat.ability.hospitality.text.well_fed": "Well fed",
+  "world_combat.ability.hospitality.text.pp": "Restored 1 PP",
+  "world_combat.ability.hospitality.text.spoil": "Meal gone"
+}

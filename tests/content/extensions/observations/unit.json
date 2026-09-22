@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "checks:observations",
+  "version": "0.1",
+  "requires": {
+    "world_combat:protocols": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [],
+  "startupSources": []
+}

@@ -1,0 +1,8 @@
+{
+  "world_combat.ability.honeygather.desc": "交战时每 10 秒采一次蜜，4 格内的同伴获得 +10% 移速与 +25 受治疗加成持续 6 秒，并催熟附近一株作物；自己回复 1 点 PP。",
+  "world_combat.ability.honeygather.text.forage": "采蜜",
+  "world_combat.ability.honeygather.text.share": "分享甜蜜",
+  "world_combat.ability.honeygather.text.growth": "授粉",
+  "world_combat.ability.honeygather.text.pp": "回复 PP",
+  "effect.world_combat.honeygather_nectar": "甜蜜滋养"
+}

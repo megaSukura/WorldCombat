@@ -1,0 +1,216 @@
+{
+  "schema": 1,
+  "defaultProfile": "play",
+  "packages": {
+    "world_combat:protocols": {
+      "version": "0.1",
+      "requires": {},
+      "sources": [
+        "content/behavior/contributions.ts",
+        "content/protocols/effects.ts",
+        "content/tactics/world-ai.ts",
+        "content/behavior/composition.ts",
+        "content/behavior/worksite.ts",
+        "content/behavior/companion-menus.ts",
+        "content/preferences/skill-preferences.ts",
+        "content/traits/composition.ts",
+        "content/behavior/profiles.ts",
+        "content/behavior/equipment.ts",
+        "content/mechanisms/world-environment.ts",
+        "content/behavior/world-methods.ts",
+        "content/mechanisms/formula.ts",
+        "content/mechanisms/combatant-stats.ts",
+        "content/mechanisms/action-parameters.ts",
+        "content/mechanisms/status-vocabulary.ts",
+        "content/mechanisms/combat-status.ts",
+        "content/mechanisms/combat-stages.ts"
+      ]
+    },
+    "world_combat:native": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:protocols": "0.1",
+        "world_combat:mechanisms": "0.1"
+      },
+      "sources": [
+        "content/mechanisms/type-colors.ts",
+        "content/mechanisms/native-abilities.ts",
+        "content/mechanisms/native-ability-flags.ts",
+        "content/mechanisms/native-items.ts",
+        "content/mechanisms/native-rule-values.ts",
+        "content/mechanisms/native-semantics.ts",
+        "content/mechanisms/pokemon-damage.ts",
+        "content/mechanisms/native-loadout.ts",
+        "content/mechanisms/native-growth.ts",
+        "content/mechanisms/native-capture.ts",
+        "content/mechanisms/projectile.ts",
+        "content/mechanisms/native-effects.ts",
+        "content/mechanisms/native-minecraft-status.ts",
+        "content/mechanisms/native-modifiers.ts",
+        "content/mechanisms/native-mobility.ts",
+        "content/mechanisms/native-vitality.ts",
+        "content/traits/ability-recipes.ts"
+      ],
+      "clientSources": [
+        "content/mechanisms/type-colors.ts"
+      ]
+    },
+    "world_combat:mechanisms": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:protocols": "0.1",
+        "world_combat:presentation": "0.1"
+      },
+      "sources": [
+        "content/mechanisms/world-effects.ts",
+        "content/mechanisms/world-geometry.ts",
+        "content/mechanisms/world-bodies.ts",
+        "content/mechanisms/world-actions.ts",
+        "content/mechanisms/living-actions.ts",
+        "content/mechanisms/world-abilities.ts",
+        "content/mechanisms/mob-effects.ts",
+        "content/mechanisms/world-feedback.ts",
+        "content/mechanisms/world-cultivation.ts",
+        "content/mechanisms/guard-effects.ts",
+        "content/behavior/world-host.ts"
+      ]
+    },
+    "world_combat:play": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:native_rules": "0.1",
+        "world_combat:default_companion": "0.1",
+        "world_combat:default_wild": "0.1",
+        "world_combat:companion_presentation": "0.1",
+        "world_combat:world_attributes": "0.1",
+        "world_combat:combat_status": "0.1"
+      },
+      "sources": [],
+      "collections": [
+        "content/collections/p5.json",
+        "content/collections/training-equipment.json"
+      ]
+    },
+    "world_combat:companions": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:native": "0.1",
+        "world_combat:individual_attributes": "0.1",
+        "world_combat:mechanisms": "0.1",
+        "world_combat:companion_ui": "0.1"
+      },
+      "sources": [
+        "content/behavior/individuals.ts",
+        "content/mechanisms/native-repertoire.ts",
+        "content/mechanisms/native-companion-menus.ts",
+        "content/behavior/native-natures.ts",
+        "content/behavior/pokemon-host.ts",
+        "content/behavior/pokemon-wild.ts"
+      ]
+    },
+    "world_combat:individual_attributes": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:native": "0.1"
+      },
+      "sources": [
+        "content/mechanisms/individual-attributes.ts",
+        "content/mechanisms/pokemon-attributes.ts"
+      ]
+    },
+    "world_combat:presentation": {
+      "version": "0.1",
+      "requires": {},
+      "sources": [],
+      "clientSources": [
+        "content/behavior/contributions.ts",
+        "content/client/library/ui-state.ts",
+        "content/client/library/ui-surfaces.ts",
+        "content/client/library/attribute-view.ts",
+        "content/client/library/schema-editor.ts",
+        "content/client/library/radial-menu.ts",
+        "content/client/library/world-surfaces.ts",
+        "content/client/library/item-tooltips.ts",
+        "content/client/library/indicator-geometry.ts"
+      ]
+    },
+    "world_combat:companion_ui": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:presentation": "0.1"
+      },
+      "sources": [],
+      "clientSources": [
+        "content/client/adapters/cobblemon-world-ui.ts",
+        "content/client/adapters/cobblemon-companion-ui.ts"
+      ]
+    },
+    "world_combat:skill_runtime": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:companion_repertoire": "0.1"
+      },
+      "sources": [
+        "content/library/skills/catalogue.ts",
+        "content/library/skills/parameters.ts",
+        "content/library/skills/feedback.ts",
+        "content/library/skills/effects.ts",
+        "content/library/skills/actions.ts",
+        "content/library/skills/party-relay.ts"
+      ]
+    },
+    "world_combat:companion_runtime": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:companion_repertoire": "0.1"
+      },
+      "sources": [
+        "content/library/companions/runtime.ts",
+        "content/library/companions/wild.ts"
+      ]
+    },
+    "world_combat:companion_presentation": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:companion_ui": "0.1"
+      },
+      "sources": [],
+      "clientSources": [
+        "content/client/companion-world-ui.ts",
+        "content/client/companion-interface.ts"
+      ]
+    },
+    "world_combat:native_rules": {
+      "version": "0.1",
+      "requires": {},
+      "sources": [],
+      "collections": [
+        "content/collections/native-rules.json"
+      ]
+    },
+    "world_combat:companion_repertoire": {
+      "version": "0.1",
+      "requires": {
+        "world_combat:companions": "0.1"
+      },
+      "sources": [
+        "content/library/companions/repertoire.ts"
+      ]
+    }
+  },
+  "profiles": {
+    "core": [
+      "world_combat:mechanisms"
+    ],
+    "base": [
+      "world_combat:companions",
+      "world_combat:native_rules"
+    ],
+    "training-compass": [
+      "world_combat:training_compass"
+    ],
+    "play": [
+      "world_combat:play"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "checks:surveyor",
+  "version": "0.1",
+  "requires": {
+    "checks:observations": "0.1",
+    "world_combat:companion_runtime": "0.1"
+  },
+  "sources": [
+    "rules.ts"
+  ],
+  "clientSources": [],
+  "startupSources": []
+}

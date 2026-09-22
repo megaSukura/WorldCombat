@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/resistance",
+      "sprite": "world_combat_core:ward"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/moves/swordsdance_swords/0",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/1",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/2",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/3",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/4",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/5",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/6",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/7",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/8",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/9",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/10",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/11",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/12",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/13",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/14",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/15",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/16",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/17",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/18",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/19",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/20",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/21",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/22",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/23",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/24",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/25",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/26",
+    "world_combat_core:cobblemon/moves/swordsdance_swords/27"
+  ]
+}

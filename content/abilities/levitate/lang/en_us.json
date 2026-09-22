@@ -1,0 +1,6 @@
+{
+  "world_combat.ability.levitate.desc": "Floats off the ground: immune to fall, cactus and similar ground damage and to Pokemon Ground-type moves, melee hits on you deal 15% less, and you gain +10% speed.",
+  "world_combat.ability.levitate.text.negate": "Grounded hit negated",
+  "world_combat.ability.levitate.text.drift": "Drifted clear",
+  "effect.world_combat.levitate_hover": "Levitate"
+}

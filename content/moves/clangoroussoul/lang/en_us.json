@@ -1,0 +1,23 @@
+{
+  "worldcombat.skill.clangoroussoul.summary": "Dance a war chant that burns your own HP beat by beat and raises Attack, Defence, Sp. Atk, Sp. Def and Speed together. The dance can be interrupted; what it already raised stays.",
+  "worldcombat.skill.clangoroussoul.description.0": "Each beat pays %1$s of your max HP and raises all five stats by %3$s, for %2$s beats.",
+  "worldcombat.skill.clangoroussoul.description.1": "Beats are %1$s apart and the sound ring reaches %2$s blocks; you stand still while dancing and the wind-up can be interrupted.",
+  "worldcombat.skill.clangoroussoul.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
+  "worldcombat.skill.clangoroussoul.use.0": "Dance before the fight to raise all five stats",
+  "worldcombat.skill.clangoroussoul.use.1": "Build a full-stat trump card in the window while the enemy closes in",
+  "worldcombat.skill.clangoroussoul.use.2": "Trade HP for all-round pressure while healthy",
+  "worldcombat.skill.clangoroussoul.value.beats": "Beats",
+  "worldcombat.skill.clangoroussoul.value.costPerBeat": "HP per beat",
+  "worldcombat.skill.clangoroussoul.value.rise": "Rise per beat",
+  "worldcombat.skill.clangoroussoul.value.interval": "Beat interval",
+  "worldcombat.skill.clangoroussoul.value.pulseRadius": "Sound radius",
+  "worldcombat.skill.clangoroussoul.preference.extended": "Extended chant",
+  "worldcombat.skill.clangoroussoul.preference.extended.help": "On: up to two beats, each cheaper but the total is higher, +1 to all five twice, and a longer wind-up. Off: one beat, cheaper and faster.",
+  "worldcombat.skill.clangoroussoul.preference.ai.reserveHealth": "Health kept",
+  "worldcombat.skill.clangoroussoul.preference.ai.reserveHealth.help": "The health fraction required before dancing; higher means it refuses to sell HP and attacks or repositions instead.",
+  "worldcombat.skill.clangoroussoul.preference.ai.maxChase": "Dance distance limit",
+  "worldcombat.skill.clangoroussoul.preference.ai.maxChase.help": "Beyond this distance the threat no longer justifies dancing first; larger values stack stats from further away.",
+  "world_combat.move.clangoroussoul.text.beat": "Beat %1$s / %2$s",
+  "world_combat.move.clangoroussoul.text.climax": "Full chant · all stats raised",
+  "world_combat.move.clangoroussoul.text.weak": "Too little HP to keep dancing"
+}

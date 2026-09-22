@@ -1,0 +1,9 @@
+{
+  "world_combat.ability.hospitality.desc": "首次交战时在身旁摆出一份餐点，最多两位走过来的队友回复 25% 生命并获得 10 秒的饱腹状态；宝可梦队友还会回复 1 点 PP。餐点可被敌人破坏，无人享用则自行消失。",
+  "effect.world_combat.hospitality_well_fed": "饱餐一顿",
+  "world_combat.ability.hospitality.text.offer": "摆下餐点",
+  "world_combat.ability.hospitality.text.feed": "饱餐回复 %1$s",
+  "world_combat.ability.hospitality.text.well_fed": "饱餐一顿",
+  "world_combat.ability.hospitality.text.pp": "回复1点PP",
+  "world_combat.ability.hospitality.text.spoil": "餐点消失"
+}

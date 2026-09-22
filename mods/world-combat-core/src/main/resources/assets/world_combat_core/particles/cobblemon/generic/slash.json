@@ -1,0 +1,9 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/slash/0",
+    "world_combat_core:cobblemon/generic/slash/1",
+    "world_combat_core:cobblemon/generic/slash/2",
+    "world_combat_core:cobblemon/generic/slash/3",
+    "world_combat_core:cobblemon/generic/slash/4"
+  ]
+}

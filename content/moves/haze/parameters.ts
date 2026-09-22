@@ -1,0 +1,80 @@
+/**
+ * 黑雾 / haze 的参数与数值来源。
+ *
+ * 原生事实（Cobblemon 1.8 / Showdown）：Ice、变化、威力 0、命中 必中、PP 30、目标 all、
+ *   `onHitField` 清空场上所有活体的能力等级（buff 与 debuff 一起归零）。
+ *
+ * 世界化：一口气从身上漫开一片**黑雾**，雾所过之处每个人的能力等级都回到原点——抬起来的一起抹掉，
+ *   压下去的也一起抹平。它天生是**对等的**：自己攒的增益同样会被这口雾吞掉，所以你放它的时机
+ *   就是「对手攒得比你多」的那一刻。雾以施法者为中心散开，站到半径之外就什么都不受影响。
+ *
+ * 数值来源（每个参数读不同的个体数据）：
+ *   fogRadius  基础 4 格 + 等级×0.03 + 碰撞箱高×0.3，定向 ×0.8，夹 3..7.5；经验与身板决定这口气能铺多广。
+ *   density    基础 20 点 + 特防×0.1，夹 16..52；越沉得住气的个体吐出的雾越浓，粒子量按它发射。
+ *   tempo      基础 14 刻 − 速度×0.05，定向 +4，夹 7..20；速度越快，这口气吐得越快。
+ *   aftercast  基础 7 刻 + 碰撞箱高×1.2，夹 6..12；身板越大收得越慢。
+ *   recharge   基础 96 刻 − 等级×0.4，定向 ×1.2，夹 55..125；等级越高越熟练。PP 30 的代价。
+ * 配置 focused（定向）双向取舍：开启后只抹非友方、自己的增益留住，但半径 ×0.8、起手 +4、冷却 ×1.2，
+ *   而且自己和队友身上的减益也不清；关闭（尽抹）便宜、更广、更快，代价是连自己的增益一起归零。
+ */
+namespace PokemonSkills {
+    export const hazeId = "haze";
+    export const hazeEffect = "world_combat:haze_veil";
+    export const hazeScene = "world_combat:move_haze";
+    export const hazeClearedText = "world_combat.move.haze.text.cleared";
+    export const hazeEmptyText = "world_combat.move.haze.text.empty";
+    /** 黑雾会抹平的能力等级项；宝可梦还含命中与闪避，其他活体只有五项。 */
+    export const hazeStats = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
+    /** 被抹平后的可见标记时长：三秒内物品栏里能看到「刚被抹平」这层共享身份。 */
+    export const hazeMarkTicks = 60;
+
+    /** 一份可读的能力等级快照（宝可梦读原生等级，其他活体读公共阶梯）。 */
+    export function hazeStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
+        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+    }
+
+    actionParameters.define(hazeId, {
+        fogRadius: formula(
+            F.base(4).as("基础").plus(F.level().times(0.03).as("经验")).plus(F.body("height").times(0.3).as("身板"))
+                .times(F.when(F.pref("focused", text("worldcombat.skill.haze.preference.focused")), F.const(0.8), F.const(1)))
+                .clamp(3, 7.5).round(2),
+            "黑雾半径", {
+                unit: " 格",
+                description: "这口气铺开多大一圈；等级与身板越大越广，定向式收窄。它就是指示圈与实际波及范围。"
+            }),
+        density: formula(
+            F.base(20).plus(F.stat("specialDefence").times(0.1).as("特防")).clamp(16, 52).round(0),
+            "黑雾浓度", {
+                unit: " 点",
+                description: "雾里翻涌的烟粒子总量；特防越高的个体吐出的雾越浓，也决定画面的吞吐量。"
+            }),
+        tempo: seconds(
+            F.base(14).minus(F.stat("speed").times(0.05).as("速度"))
+                .plus(F.when(F.pref("focused", text("worldcombat.skill.haze.preference.focused")), F.const(4), F.const(0)))
+                .clamp(7, 20).round(0),
+            "起手", "把这口气憋成黑雾需要多久；速度越快越短，定向式要多花 4 刻。"),
+        aftercast: seconds(
+            F.base(7).plus(F.body("height").times(1.2).as("身板")).clamp(6, 12).round(0),
+            "收招", "吐雾之后的收势；碰撞箱越高大收得越慢。"),
+        recharge: seconds(
+            F.base(96).minus(F.level().times(0.4).as("经验"))
+                .times(F.when(F.pref("focused", text("worldcombat.skill.haze.preference.focused")), F.const(1.2), F.const(1)))
+                .clamp(55, 125).round(0),
+            "冷却", "两次吐雾之间的等待；等级越高越短，定向式更长。PP 30 的代价。")
+    });
+
+    stages(hazeId, [
+        { level: 40, values: { fogRadius: 4.6, recharge: 84 } },
+        { level: 60, values: { fogRadius: 5.4, recharge: 70 } }
+    ]);
+
+    describe(hazeId, [
+        { key: "description.0", values: ["fogRadius"] },
+        { key: "focused.on", values: [], when: function (context) { return read(context.detail.values, ["focused"]) === true; } },
+        { key: "focused.off", values: [], when: function (context) { return read(context.detail.values, ["focused"]) !== true; } },
+        { key: "description.1", values: ["density", "tempo", "aftercast", "recharge"] },
+        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.fogRadius"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.fogRadius"] }
+    ]);
+}

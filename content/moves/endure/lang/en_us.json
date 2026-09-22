@@ -1,0 +1,21 @@
+{
+  "worldcombat.skill.endure.summary": "Inside a short window, any lethal blow only brings you down to 1 HP; it does not reduce ordinary damage, and repeated use tends to fail.",
+  "worldcombat.skill.endure.description.0": "Endure window %1$s, up to %2$s saves; higher Special Defence and level make it longer.",
+  "worldcombat.skill.endure.description.1": "Brace %1$s, cooldown %2$s, and %3$s of exhaustion after the saves are spent.",
+  "worldcombat.skill.endure.description.2": "Repeat-use failure rate %1$s; the scramble/stand-off trade-off is the %2$s setting.",
+  "worldcombat.skill.endure.use.0": "Hang on at low health and wait for rescue",
+  "worldcombat.skill.endure.use.1": "Buy an ally an interrupt or a retreat",
+  "worldcombat.skill.endure.use.2": "Deliberately eat one lethal hit",
+  "worldcombat.skill.endure.value.raise": "Brace time",
+  "worldcombat.skill.endure.value.window": "Endure window",
+  "worldcombat.skill.endure.value.charges": "Saves",
+  "worldcombat.skill.endure.value.charge": "Cooldown",
+  "worldcombat.skill.endure.value.grit": "Exhaustion",
+  "worldcombat.skill.endure.value.fizzle": "Repeat-use failure rate",
+  "worldcombat.skill.endure.preference.scramble": "Scramble / Stand-off",
+  "worldcombat.skill.endure.preference.scramble.help": "On (scramble): window x0.75 but free to move, recover 12 ticks, no exhaustion. Off (stand-off): window x1.25, rooted throughout, 30 ticks of exhaustion after the saves are spent, recover 6 ticks.",
+  "worldcombat.skill.endure.preference.ai.threshold": "Endure health",
+  "worldcombat.skill.endure.preference.ai.threshold.help": "Only brace below this health ratio. Larger is more cautious and spends PP earlier; smaller saves PP but may be too late.",
+  "world_combat.move.endure.text.save": "Endured!",
+  "world_combat.move.endure.text.spent": "Exhausted"
+}

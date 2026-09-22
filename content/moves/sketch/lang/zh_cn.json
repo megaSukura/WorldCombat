@@ -1,0 +1,22 @@
+{
+  "worldcombat.skill.sketch.summary": "把对手刚用过的那一手当场描进写生所占的招式格，永久学会它；写生只有一次，用过即从招式表消失。",
+  "worldcombat.skill.sketch.use.0": "永久学会对手的一手",
+  "worldcombat.skill.sketch.use.1": "复制稀有的强化或回复",
+  "worldcombat.skill.sketch.use.2": "把强攻收进自己的招式表",
+  "worldcombat.skill.sketch.description.0": "在 %1$s 格内看准目标，描摹起手 %2$s 秒，之后把它最后使用的那一手永久写进写生所在的招式格。",
+  "worldcombat.skill.sketch.description.1": "落笔时画出约 %1$s 笔触；目标没有最后招式时无法发动，也不会消耗写生。",
+  "worldcombat.skill.sketch.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
+  "worldcombat.skill.sketch.value.reach": "描摹距离",
+  "worldcombat.skill.sketch.value.study": "描摹起手",
+  "worldcombat.skill.sketch.value.afterglow": "收笔",
+  "worldcombat.skill.sketch.value.recharge": "冷却",
+  "worldcombat.skill.sketch.value.strokes": "笔触数",
+  "worldcombat.skill.sketch.preference.ai.minPower": "描摹威力门槛",
+  "worldcombat.skill.sketch.preference.ai.minPower.help": "伤害类招式威力低于这个值就不落笔（状态类招式不受限制）。写生只有一次机会，调高只在读到真正的好招时才用。",
+  "worldcombat.skill.sketch.preference.ai.maxChase": "描摹距离",
+  "worldcombat.skill.sketch.preference.ai.maxChase.help": "超过这个距离就不主动落笔，先走近；越大越愿意从远处先描一手。",
+  "worldcombat.skill.sketch.preference.ai.leaveStation": "驻守时允许离位",
+  "worldcombat.skill.sketch.preference.ai.leaveStation.help": "开启后，驻守命令下也会为描摹离开站位；关闭则只在原地够得到时出手。",
+  "world_combat.move.sketch.text.ink": "描下 %1$s",
+  "world_combat.move.sketch.text.empty": "没有可描的一手"
+}

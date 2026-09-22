@@ -1,0 +1,33 @@
+import groovy.json.JsonOutput
+
+gradle.projectsEvaluated {
+    rootProject.subprojects.each { modProject ->
+        def launch = modProject.tasks.named("runServer").get()
+        modProject.tasks.register("exportServerCheckLaunch") {
+            dependsOn(launch.taskDependencies.getDependencies(launch))
+            dependsOn(rootProject.subprojects.collect { it.tasks.named("testClasses") })
+            doLast {
+                def jvm = launch.allJvmArgs + launch.jvmArgumentProviders.collectMany { it.asArguments() as List }
+                def checkedProjects = modProject.name == "world-combat-core" ? [modProject] : rootProject.subprojects
+                def extra = checkedProjects.collectMany { candidate ->
+                    def id = candidate.name.replace("-", "_")
+                    candidate.sourceSets.test.output.classesDirs.files.findAll { it.exists() }.collect {
+                        id + "%%" + it.absolutePath
+                    }
+                }.join(";")
+                jvm = jvm.collect { it.startsWith("-Dfml.modFolders=") && !extra.isEmpty() ? it + ";" + extra : it }
+                def exportFile = new File(modProject.layout.buildDirectory.get().asFile, "p1-launch/server.json")
+                exportFile.parentFile.mkdirs()
+                exportFile.text = JsonOutput.prettyPrint(JsonOutput.toJson([
+                    executable: launch.executable,
+                    jvmArgs: jvm,
+                    classpath: (launch.classpath.files + launch.classpathProvider.files).collect { it.absolutePath }.join(File.pathSeparator),
+                    mainClass: launch.mainClass.get(),
+                    args: launch.args + launch.argumentProviders.collectMany { it.asArguments() as List },
+                    environment: launch.environmentProperty.get()
+                ]))
+                println("Prepared " + exportFile)
+            }
+        }
+    }
+}

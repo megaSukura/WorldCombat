@@ -1,0 +1,10 @@
+{
+  "textures": [
+    "world_combat_core:cobblemon/generic/status/sleep_bubble/0",
+    "world_combat_core:cobblemon/generic/status/sleep_bubble/1",
+    "world_combat_core:cobblemon/generic/status/sleep_bubble/2",
+    "world_combat_core:cobblemon/generic/status/sleep_bubble/3",
+    "world_combat_core:cobblemon/generic/status/sleep_bubble/4",
+    "world_combat_core:cobblemon/generic/status/sleep_bubble/5"
+  ]
+}

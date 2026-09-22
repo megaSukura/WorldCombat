@@ -1,0 +1,5 @@
+{
+  "world_combat.ability.justified.desc": "受到单次伤害达到自身最大生命 25% 的重击后，获得 8 秒力量（5 秒内不重复触发）；受到恶属性招式攻击时，还会提升一级攻击。",
+  "world_combat.ability.justified.text.kindle": "正义燃起",
+  "world_combat.ability.justified.text.temper": "恶意淬炼"
+}
