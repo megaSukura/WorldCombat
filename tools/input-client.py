@@ -18,7 +18,7 @@ def project_java():
     if not (home / "bin/java.exe").is_file():
         configured = os.environ.get("JAVA_HOME")
         home = Path(configured) if configured else None
-    return str(home / "bin/java.exe") if home and (home / "bin/java.exe").is_file() else shutil.which("java")
+    return str(home / "bin/java.exe") if home and (home / "bin/java.exe").is_file() else None
 
 # External particle prerequisites. The engine's mods.toml declares them CLIENT-side, so every client
 # instance needs the jars in its mods/ folder; the dedicated server does not install them.
@@ -170,7 +170,8 @@ def launch():
     classpath.write_text('-classpath\n"' + spec["classpath"].replace("\\", "\\\\").replace('"', '\\"') + '"\n', encoding="utf-8")
     environment = os.environ.copy()
     environment.update(spec["environment"])
-    executable = spec.get("executable") or project_java()
+    # Ignore an executable frozen by another machine; this project requires its pinned Java 21.
+    executable = project_java()
     if not executable:
         raise RuntimeError("WorldCombat needs Java 21 at C:/Program Files/Zulu/zulu-21")
     command = [executable] + list(dict.fromkeys(spec["jvmArgs"])) + ["@" + str(classpath), spec["mainClass"]] + spec["args"]

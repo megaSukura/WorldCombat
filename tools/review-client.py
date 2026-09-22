@@ -30,12 +30,8 @@ def java_home():
 
 def java():
     home = java_home()
-    found = str(home / "bin/java.exe") if home else shutil.which("java")
-    if not found:
-        candidate = PINNED_JAVA_HOME / "bin/java.exe"
-        if candidate.is_file(): found = str(candidate)
-    if not found: raise RuntimeError("JDK 21 is required")
-    return found
+    if home is None: raise RuntimeError("WorldCombat needs Java 21 at C:/Program Files/Zulu/zulu-21")
+    return str(home / "bin/java.exe")
 
 def server_command(output, *, review=True):
     spec=json.loads((ROOT / "mods/cobblemon-world-combat/build/p1-launch/server.json").read_text(encoding="utf-8"))
