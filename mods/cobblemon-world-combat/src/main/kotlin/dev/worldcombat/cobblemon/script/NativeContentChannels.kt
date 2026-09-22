@@ -36,6 +36,7 @@ object NativeContentChannels {
 
     internal fun owned(player: ServerPlayer, uuid: java.util.UUID): Pokemon? =
         Cobblemon.storage.getParty(player).firstOrNull { it.uuid == uuid && it.getOwnerUUID() == player.uuid }
+            ?: NativePasture.owned(player).firstOrNull { it.pokemon.uuid == uuid }?.pokemon
 
     fun request(player: ServerPlayer, request: ContentRequest) {
         val reply = process(player, request)
@@ -101,7 +102,7 @@ class ContentRequestContext internal constructor(private val player: ServerPlaye
         if (!open || epoch != CombatServices.CONTENT.epoch() || !CombatServices.CONTENT.ready())
             throw ActionInactiveException("Content request expired")
         if (NativeContentChannels.owned(player, individual.uuid) !== individual)
-            throw ActionInactiveException("Individual left the owner's party")
+            throw ActionInactiveException("Individual left the owner's party or pasture")
     }
     fun pokemon(): PokemonView { checkOpen(); return view }
     fun input(): String { checkOpen(); return inputValue }
@@ -113,6 +114,8 @@ class ContentRequestContext internal constructor(private val player: ServerPlaye
         val actor = observedActor ?: combat.bind(entity).also { observedActor = it }
         return actor.takeIf { combat.valid(it) && combat.inspect(it) === entity }
     }
+    /** Current player's party and loaded pasture residents, for menus that switch the controlled individual. */
+    fun roster(): String = run { checkOpen(); NativePasture.roster(player) }
     fun world(): dev.worldcombat.core.runtime.WorldAccess? {
         checkOpen()
         val subject = actor() ?: return null

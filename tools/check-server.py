@@ -11,6 +11,19 @@ import threading
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+PINNED_JAVA_HOME = Path("C:/Program Files/Zulu/zulu-21")
+
+def project_java():
+    """Use the project's Java 21 runtime for hidden server checks as well as launchers."""
+    configured = os.environ.get("WORLD_COMBAT_JAVA_HOME")
+    candidates = [Path(configured)] if configured else []
+    candidates.append(PINNED_JAVA_HOME)
+    java_home = os.environ.get("JAVA_HOME")
+    if java_home: candidates.append(Path(java_home))
+    for home in candidates:
+        executable = home / "bin" / ("java.exe" if os.name == "nt" else "java")
+        if executable.is_file(): return str(executable)
+    raise RuntimeError("Set WORLD_COMBAT_JAVA_HOME or install the pinned project JDK at C:/Program Files/Zulu/zulu-21")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -346,9 +359,7 @@ def main():
             jvm.append("-Dworldcombat.check.death.owner=" + player_files[0].stem)
             previous = player_files[0].with_suffix(".dat_old")
             if previous.is_file(): shutil.copyfile(previous, player_files[0])
-    executable = spec.get("executable") or (str(Path(os.environ["JAVA_HOME"]) / "bin" / ("java.exe" if os.name == "nt" else "java")) if os.environ.get("JAVA_HOME") else shutil.which("java"))
-    if not executable:
-        raise RuntimeError("Set JAVA_HOME to JDK 21 before running server checks")
+    executable = project_java()
     command = [executable] + jvm + ["@" + str(classpath), spec["mainClass"]] + spec["args"]
     environment = os.environ.copy()
     environment.update(spec["environment"])

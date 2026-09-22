@@ -15,6 +15,8 @@ import dev.worldcombat.core.runtime.Point;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.cobblemon.mod.common.pokemon.Pokemon;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.*;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -41,6 +43,9 @@ public final class CompanionContentClient {
     private static boolean commandHeld;
     private static long commandPressedAt;
     private static UUID inspection;
+    private static UUID pendingResident;
+    private static String pendingPanel = "";
+    private static long pendingUntil;
     private static String indicator = "[]";
     private static final java.util.Map<String, Long> requested = new java.util.HashMap<>();
     private CompanionContentClient() {}
@@ -57,15 +62,25 @@ public final class CompanionContentClient {
         replies = ClientCallbacks.consumer("companion-ui/reply", reply);
     }
     public static String pokemon() {
+        var pokemon = selectedPokemon();
+        var state = CompanionInput.state();
+        return pokemon != null ? pokemon.getUuid().toString() : state != null && state.partySlot() >= 6 ? state.pokemon().toString() : "";
+    }
+    private static Pokemon selectedPokemon() {
         var storage = CobblemonClient.INSTANCE.getStorage();
-        var pokemon = inspection == null ? storage.getParty().get(storage.getSelectedSlot()) : storage.getParty().findByUUID(inspection);
-        return pokemon == null ? "" : pokemon.getUuid().toString();
+        var state = CompanionInput.state();
+        if (inspection != null) return storage.getParty().findByUUID(inspection);
+        if (state != null && state.pokemon() != null && !state.pokemon().equals(ControlCommand.NONE)) {
+            var entity = Minecraft.getInstance().level == null ? null : Minecraft.getInstance().level.getEntity(state.entityId());
+            if (entity instanceof PokemonEntity pokemon && pokemon.getPokemon().getUuid().equals(state.pokemon())) return pokemon.getPokemon();
+            var party = storage.getParty().findByUUID(state.pokemon()); if (party != null) return party;
+        }
+        return state != null && state.partySlot() >= 6 ? null : storage.getParty().get(state == null ? storage.getSelectedSlot() : state.partySlot());
     }
     public static String data() {
         var data = com.google.gson.JsonParser.parseString(CompanionInput.clientData()).getAsJsonObject();
         data.addProperty("pokemon", pokemon());
-        var storage = CobblemonClient.INSTANCE.getStorage();
-        var selected = inspection == null ? storage.getParty().get(storage.getSelectedSlot()) : storage.getParty().findByUUID(inspection);
+        var selected = selectedPokemon();
         data.addProperty("inspection", inspection != null);
         if (inspection != null) {
             data.remove("skills");
@@ -96,6 +111,15 @@ public final class CompanionContentClient {
         PacketDistributor.sendToServer(new ContentRequest(state.session(), next, state.epoch(), state.tick(), channel, UUID.fromString(pokemon), data));
         return next;
     }
+    public static void select(String id) { CompanionInput.select(UUID.fromString(id)); }
+    /** Open only after the server acknowledges the individual, so commands cannot hit the old selection. */
+    public static void openResident(UUID id, String panel) {
+        var state = CompanionInput.state();
+        if (state == null || input == null) return;
+        synchronizeSession(state);
+        pendingResident = id; pendingPanel = panel; pendingUntil = System.nanoTime() + 3_000_000_000L;
+        CompanionInput.select(id);
+    }
     private static void receive(ContentReply reply) {
         var state = CompanionInput.state();
         if (state == null || !state.session().equals(reply.session()) || state.epoch() != reply.epoch()) return;
@@ -118,8 +142,22 @@ public final class CompanionContentClient {
             : CompanionInput.CONFIRM.getKey().equals(key) ? "confirm" : CompanionInput.BACK.getKey().equals(key) ? "back"
             : CompanionInput.CANCEL.getKey().equals(key) ? "cancel" : "";
         if (name.isEmpty() || action == GLFW.GLFW_REPEAT) return false;
-        if (action == GLFW.GLFW_PRESS && !NativeUiHost.active() && Minecraft.getInstance().screen != null)
-            return name.equals("settings") && SummaryContentBridge.activateFocused();
+        if (action == GLFW.GLFW_PRESS && !NativeUiHost.active() && Minecraft.getInstance().screen != null) {
+            if (name.equals("settings") && SummaryContentBridge.activateFocused()) return true;
+            if (!name.equals("command")) return false;
+        }
+        if (action == GLFW.GLFW_PRESS && !NativeUiHost.active() && (name.equals("command") || name.equals("settings"))) {
+            var mc = Minecraft.getInstance();
+            if (mc.hitResult instanceof EntityHitResult hit && hit.getEntity() instanceof PokemonEntity pokemon &&
+                (pokemon.getPokemon().getTetheringId() != null || CompanionInput.state() != null && CompanionInput.state().members().stream()
+                    .anyMatch(m -> m.pasture() && m.pokemon().equals(pokemon.getPokemon().getUuid()))) &&
+                mc.player.getUUID().equals(pokemon.getPokemon().getOwnerUUID())) {
+                openResident(pokemon.getPokemon().getUuid(), name.equals("command") ? "command-click" : "settings");
+                return true;
+            }
+        }
+        if (pendingResident != null && name.equals("cancel")) { pendingResident = null; return true; }
+        if (pendingResident != null && name.equals("command")) return true;
         if (name.equals("command")) {
             commandHeld = action == GLFW.GLFW_PRESS;
             if (commandHeld) commandPressedAt = System.nanoTime();
@@ -130,7 +168,7 @@ public final class CompanionContentClient {
     }
     private static void tick(ClientTickEvent.Post ignored) {
         var state = CompanionInput.state();
-        if (state == null) { inspection = null; return; }
+        if (state == null) { inspection = null; pendingResident = null; return; }
         if (!NativeUiHost.active()) inspection = null;
         synchronizeSession(state);
         if (commandHeld && (!Minecraft.getInstance().isWindowActive() || !CompanionInput.physicallyDown(COMMAND.getKey()))) {
@@ -139,12 +177,21 @@ public final class CompanionContentClient {
                 ? "{\"key\":\"command\",\"pressed\":false}" : "{\"key\":\"cancel\",\"pressed\":true}");
         }
         if (updates != null) updates.accept(data());
+        if (pendingResident != null) {
+            if (pendingResident.equals(state.pokemon())) {
+                String panel = pendingPanel; pendingResident = null;
+                if (Minecraft.getInstance().screen != null) Minecraft.getInstance().setScreen(null);
+                dispatch(panel);
+            } else if (System.nanoTime() > pendingUntil) {
+                pendingResident = null; CompanionInput.notifyReason("pasture-unavailable");
+            }
+        }
     }
     /** Input can dispatch between a new control snapshot and the next client tick. */
     private static void synchronizeSession(ControlState state) {
         if (state.session().equals(session) && state.epoch() == epoch) return;
         session = state.session(); epoch = state.epoch(); sequence = 0;
-        requested.clear(); indicator = "[]"; inspection = null;
+        requested.clear(); indicator = "[]"; inspection = null; pendingResident = null;
     }
     public static String look() { return JSON.toJson(lookAim()); }
     /** A menu's block target is the exact ray-hit cell; point targeting keeps its separate surface semantics. */

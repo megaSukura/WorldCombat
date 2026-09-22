@@ -172,13 +172,16 @@ namespace PokemonBehaviorHost {
         id: string; legacyIds?: string[]; orders: Orders; defaultIntent: string; decisionTicks: number; manualGrace: number;
         settings: { lookRange: number; chaseRange: number };
         command?(operation: string, view: CombatTactics): boolean;
+        /** A native or authored residence supplies a home independently of the owner's moving position. */
+        residence?(world: CombatWorld, pokemon: CombatPokemon): { id: string; anchor: CombatPoint; defaultIntent: string } | null;
     }
     export class Companions {
         private installed = false;
         constructor(private adapter: Adapter, private pool: WorldMethods.Pool, private options: CompanionOptions) { }
         private save(view: CombatTactics): void {
             var existing = JSON.parse(String(view.preferences())), anchor = view.intentPoint();
-            existing[this.options.id] = { intent: String(view.intent()), point: anchor ? WorldBehaviorHost.coordinates(anchor) : null };
+            const residence = this.options.residence && this.options.residence(view.world(), CobblemonCombat.pokemon(view.actor()));
+            existing[this.options.id + (residence ? "/resident" : "")] = { intent: String(view.intent()), point: anchor ? WorldBehaviorHost.coordinates(anchor) : null };
             view.preferences(JSON.stringify(existing));
         }
         update(view: CombatTactics): void {
@@ -187,17 +190,20 @@ namespace PokemonBehaviorHost {
             // Commands run when they arrive; the decision loop itself runs on its own rhythm.
             if (operation === "tick" && access.tick() % options.decisionTicks !== 0) return;
             var pokemon = CobblemonCombat.pokemon(actor);
+            const residence = options.residence ? options.residence(access, pokemon) : null;
+            const residenceId = residence ? residence.id : "", defaultIntent = residence ? residence.defaultIntent : options.defaultIntent;
             var memory = JSON.parse(String(view.memory())), observed = access.observe(actor)!;
-            if (!memory[options.id]) {
+            if (!memory[options.id] || (memory.residence || "") !== residenceId) {
                 var persisted = JSON.parse(String(view.preferences()));
-                var saved = persisted[options.id];
+                var saved = persisted[options.id + (residence ? "/resident" : "")];
                 if (!saved) (options.legacyIds || []).some(function (id) { saved = persisted[id]; return !!saved; });
                 saved = saved || {};
                 var order = options.orders.get(saved.intent || "");
-                var intent = order && order.persistent ? order.id : options.defaultIntent;
+                var intent = order && order.persistent ? order.id : defaultIntent;
                 var savedPoint = Array.isArray(saved.point) && saved.point.length === 3 ? WorldBehaviorHost.point(saved.point) : null;
-                if (order && order.target === "point" && (!savedPoint || savedPoint.minus(observed.position()).length() > (order.range || 32))) { intent = options.defaultIntent; savedPoint = null; }
+                if (order && order.target === "point" && (!savedPoint || savedPoint.minus(observed.position()).length() > (order.range || 32))) { intent = defaultIntent; savedPoint = null; }
                 view.settings(options.id, options.settings.lookRange, options.settings.chaseRange); view.intent(intent, null, savedPoint); memory[options.id] = true;
+                memory.residence = residenceId;
             }
             if (operation.indexOf("native_capture_") === 0) {
                 var capture = JSON.parse(String(view.notice())).pokemon;
@@ -210,7 +216,7 @@ namespace PokemonBehaviorHost {
             var currentIntent = String(view.intent()), current = options.orders.get(currentIntent), owner = view.owner();
             var protectedActor = current && current.defendTarget ? view.intentTarget() || owner : null;
             var focused = current && current.attackTarget ? view.intentTarget() : null;
-            var anchorView = access.observe(protectedActor || owner), anchor = view.intentPoint() || (anchorView ? anchorView.position() : observed.position());
+            var anchorView = access.observe(protectedActor || owner), anchor = view.intentPoint() || (residence ? residence.anchor : anchorView ? anchorView.position() : observed.position());
             var input = this.adapter.frame(access, pokemon, currentIntent, anchor, owner, protectedActor, focused, view.chaseRange(), String(view.captureHold()),
                 function (slot, target, position, direction, json) { return Number(view.submitInput(slot, target, position, direction, json)); },
                 function (stage, reason) { view.report(stage, reason); });

@@ -40,6 +40,12 @@ namespace CompanionBehavior {
     orders.alias("free", "autonomous");
     var companions = new PokemonBehaviorHost.Companions(adapter, pool, {
         id: "companion", legacyIds: ["verdant"], orders: orders, defaultIntent: "follow", decisionTicks: 4, manualGrace: 12,
+        residence: function (access, pokemon) {
+            const pasture = typeof pokemon.pasture === "function" ? pokemon.pasture() : null;
+            if (!pasture) return null;
+            const home = pasture.position(), position = access.observe(access.source())!.position();
+            return { id: String(pasture.id()), anchor: WorldCombat.point(home.x() + .5, position.y(), home.z() + .5), defaultIntent: "autonomous" };
+        },
         settings: { lookRange: 15, chaseRange: 16 }, command: function (operation, view) { return CompanionRepertoire.catalogue.commands.dispatch(operation, view); }
     });
     export var orderRules: { [id: string]: (context: WorldBehavior.Context, order: string[]) => void } = {};

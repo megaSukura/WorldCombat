@@ -126,7 +126,7 @@ namespace CompanionBehavior {
                 if (context.facts.intent === "hold")
                     return tasks.hold("hold");
                 if (context.facts.intent === "autonomous")
-                    return tasks.wander(function (current) { return current.facts.owner ? current.facts.owner.point : current.facts.anchor; }, "autonomous", { maxRadius: current => Math.max(2, BehaviorProfiles.value(current, "explorationRadius", 5)), minPauseTicks: current => Math.max(20, BehaviorProfiles.value(current, "explorationPause", 80)), maxPauseTicks: current => Math.max(40, BehaviorProfiles.value(current, "explorationPause", 160)) });
+                    return tasks.wander(function (current) { return current.facts.anchor; }, "autonomous", { maxRadius: current => Math.max(2, BehaviorProfiles.value(current, "explorationRadius", 5)), minPauseTicks: current => Math.max(20, BehaviorProfiles.value(current, "explorationPause", 80)), maxPauseTicks: current => Math.max(40, BehaviorProfiles.value(current, "explorationPause", 160)) });
                 if (context.facts.intent === "focus")
                     return WorldBehavior.step(function (current) {
                         var target = entity(current, current.facts.focus), reason = current.facts.focusIssue;

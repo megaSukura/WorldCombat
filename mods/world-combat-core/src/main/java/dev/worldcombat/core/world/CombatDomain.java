@@ -14,6 +14,8 @@ public interface CombatDomain {
     default boolean mayControl(LivingEntity entity, ServerPlayer controller) { return true; }
     default boolean friendly(LivingEntity source, LivingEntity target) { return source.isAlliedTo(target); }
     default void movementControl(LivingEntity entity, boolean controlled) {}
+    /** Native home/tether rules can reject a navigation goal before a path starts. */
+    default String navigationReason(LivingEntity entity, dev.worldcombat.core.runtime.Point goal) { return ""; }
     default void joined(LivingEntity entity) {}
     /** Public facts other combatants may read about this entity (status, ownership, species...), added to survey records. */
     default void facts(LivingEntity entity, com.google.gson.JsonObject out) {}

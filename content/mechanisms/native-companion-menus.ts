@@ -17,9 +17,21 @@ namespace NativeCompanionMenus {
                     { id: "cooperate/owner", parent: "cooperate", label: text("menu.owner"), detail: text("menu.owner_hint"), command: "protect", target: "owner", disabled: recalled },
                     { id: "cooperate/focus", parent: "cooperate", label: text("menu.focus"), detail: text("menu.focus_hint"), command: "focus", target: "entity", disabled: recalled },
                     { id: "moves", label: text("menu.moves"), detail: text("menu.moves_hint"), order: 30 },
+                    { id: "switch", label: text("menu.switch"), detail: text("menu.switch_hint"), order: 35 },
                     { id: "attributes", label: {key:"worldcombat.attributes.title"}, detail: {key:"worldcombat.attributes.open_hint"}, command: "attributes", order: 80 },
                     { id: "preferences", label: text("preferences"), detail: text("menu.preferences_hint"), command: "preferences", order: 90 }
                 ] };
+        });
+        menus.provide(id + "/roster", function (context) {
+            var nodes: CompanionMenus.Item[] = [], roster = context.roster || [];
+            roster.forEach(function (entry: any) {
+                if (!entry || typeof entry.slot !== "number" || !entry.name) return;
+                var slot = Math.floor(entry.slot);
+                nodes.push({ id: "switch/" + String(entry.id), parent: "switch",
+                    label: String(entry.name), detail: entry.pasture ? text("menu.switch_pasture_hint") : text("menu.switch_party_hint"),
+                    command: "select-companion", individual: String(entry.id), target: "none", order: 36 + slot });
+            });
+            return { items: nodes };
         });
         menus.provide(id + "/loadout", function (context) {
             var nodes: CompanionMenus.Item[] = [];

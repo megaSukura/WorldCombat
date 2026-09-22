@@ -5,6 +5,7 @@ namespace CompanionMenus {
         command?: string; slot?: number; move?: string; target?: string; disabled?: any;
         /** Independent capability represented by this menu item. */
         capability?: string;
+        individual?: string;
         continuous?: boolean;
     }
     export interface Contribution { items?: Item[]; remove?: string[]; }

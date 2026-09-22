@@ -16,6 +16,7 @@ import java.util.UUID
 object CompanionControl {
     class Body {
         var index = 0
+        var slot = 0
         var memory = "{}"
         var preferences = "{}"
         var actor: ActorHandle? = null
@@ -48,6 +49,9 @@ object CompanionControl {
         val id: UUID = UUID.randomUUID()
         val gate = RequestGate()
         var partySlot = 0
+        var lastPartySlot = 0
+        private val pastureSlots = linkedMapOf<UUID, Int>()
+        fun pastureSlot(id: UUID): Int = pastureSlots.getOrPut(id) { 6 + pastureSlots.size }
         val members = linkedMapOf<ActorHandle, Body>()
         var body = Body()
         var actor: ActorHandle?
@@ -140,12 +144,17 @@ object CompanionControl {
             val actor = combat.bind(entity)
             if (combat.valid(actor) && combat.mayAct(actor, s.player.uuid)) available[slot] = entity to actor
         }
+        dev.worldcombat.cobblemon.script.NativePasture.owned(s.player)
+            .forEach { entity ->
+                val actor = combat.bind(entity)
+                if (combat.valid(actor) && combat.mayAct(actor, s.player.uuid)) available[s.pastureSlot(entity.pokemon.uuid)] = entity to actor
+            }
         val present = available.values.map { it.second }.toSet()
         for ((handle, body) in s.members.toMap()) if (handle !in present || body.epoch != epoch) {
             combat.runtime().interruptPreparation(handle); combat.controlled(handle, false); s.members.remove(handle)
         }
         var index = 0
-        for ((_, pair) in available) {
+        for ((slot, pair) in available) {
             val (entity, handle) = pair
             val body = s.members.getOrPut(handle) {
                 Body().also {
@@ -155,11 +164,13 @@ object CompanionControl {
             }
             body.manualActions.removeIf { combat.runtime().state(handle, it) == null }
             body.index = index++
+            body.slot = slot
         }
+        if (s.partySlot >= 6 && s.partySlot !in available) s.partySlot = s.lastPartySlot
         val selected = available[s.partySlot]?.second?.let(s.members::get)
         s.body = selected ?: if (previous.actor == null && previous.epoch == epoch) previous else Body().also {
             it.epoch = epoch
-            val entity = party.get(s.partySlot)?.entity
+            val entity = s.partySlot.takeIf { it in 0..5 }?.let { party.get(it)?.entity }
             it.reason = if (!CombatServices.CONTENT.ready()) "content-unavailable"
                 else if (entity != null && entity.isAlive && entity.beamMode == 0) "native-control" else "send-out"
         }
@@ -187,8 +198,17 @@ object CompanionControl {
         try {
             if (!player.isAlive || player.isSpectator) throw ActionRejectedException("actor-left")
             if (command.epoch() != s.epoch) throw ActionRejectedException("content-reloaded")
-            if (command.partySlot() !in 0..5) throw ActionRejectedException("invalid-target")
-            if (command.operation() == "select") {
+            if (command.operation() == "select-individual") {
+                val party = Cobblemon.storage.getParty(player)
+                val slot = (0..5).firstOrNull { party.get(it)?.uuid == command.target() }
+                    ?: s.members.values.firstOrNull { it.actor?.identity() == command.target() }?.slot
+                    ?: throw ActionRejectedException("invalid-target")
+                s.partySlot = slot
+                if (slot < 6) s.lastPartySlot = slot
+                refresh(s, combat)
+            } else if (command.operation() == "select") {
+                if (command.partySlot() !in 0..5) throw ActionRejectedException("invalid-target")
+                s.lastPartySlot = command.partySlot()
                 s.partySlot = command.partySlot(); refresh(s, combat)
             } else {
                 val actor = s.actor ?: throw ActionRejectedException("send-out")
@@ -220,6 +240,20 @@ object CompanionControl {
                 if (command.value() !in 0..3) throw ActionRejectedException("invalid-slot")
                 val binding = binding(actor, command)
                 val definition = binding.definition!!
+                // A direct player cast preempts an independent work order. The next
+                // tactics frame observes the intent change and retires its work effect;
+                // leaving the old work intent here lets a machine task resume after
+                // the cast and claim movement again.
+                if (s.body.intent == "work") {
+                    if (s.body.approaching) combat.stopMovement(actor)
+                    s.body.intent = "follow"
+                    s.body.intentTarget = null
+                    s.body.intentPoint = null
+                    s.body.approaching = false
+                    s.body.pending = null
+                    s.body.approachGoal = null
+                    s.body.searchStarted = -1
+                }
                 val destination=target(s,command,combat)
                 combat.runtime().validateInput(definition.id(),actor,destination,player.uuid,true)
                 ActionInput.validate(command.input(), CombatServices.CONTENT.preview(binding.id).input(), Double.POSITIVE_INFINITY, actor, combat, combat.runtime().effects())
@@ -388,11 +422,12 @@ object CompanionControl {
             entity?.displayName?.string?.take(128) ?: "", if (actor != null && combat.runtime().busy(actor)) state?.stage() ?: "preparing" else s.behaviorStage,
             if (requestState?.stage() == "cancelled" && s.reason == "accepted") requestState.reason() else s.reason,
             s.intent, s.tactics, s.permissions, s.chaseRange, if (s.intent == "protect") s.intentTarget?.entity() ?: s.player.uuid else ControlCommand.NONE, skills,
-            (0..5).mapNotNull { slot ->
-                val member = Cobblemon.storage.getParty(s.player).get(slot)?.entity ?: return@mapNotNull null
-                val body = s.members.entries.firstOrNull { it.key.entity() == member.uuid }?.value ?: return@mapNotNull null
-                ControlState.Member(slot, member.displayName?.string?.take(128) ?: "", body.intent, combat.runtime().state(body.actor)?.stage() ?: body.behaviorStage)
-            }, references.toString(), pendingToken(s).takeIf { it>0 } ?: if (actor == null) 0 else combat.runtime().inputToken(actor, s.player.uuid))
+            s.members.values.sortedBy { it.slot }.mapNotNull { body ->
+                val member = body.actor?.let { combat.resolve(it) as? PokemonEntity } ?: return@mapNotNull null
+                ControlState.Member(body.slot, member.pokemon.uuid, member.displayName?.string?.take(128) ?: "", body.intent,
+                    combat.runtime().state(body.actor)?.stage() ?: body.behaviorStage, body.slot >= 6)
+            }, references.toString(), pendingToken(s).takeIf { it>0 } ?: if (actor == null) 0 else combat.runtime().inputToken(actor, s.player.uuid),
+            (entity as? PokemonEntity)?.pokemon?.uuid ?: ControlCommand.NONE)
     }
     private fun pendingToken(s:Session):Long {
         val command=s.pending?:return 0

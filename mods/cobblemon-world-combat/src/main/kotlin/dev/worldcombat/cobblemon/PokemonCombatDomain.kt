@@ -21,9 +21,11 @@ class PokemonCombatDomain : CombatDomain {
         }
     }
     private val ownerNames = java.util.concurrent.ConcurrentHashMap<java.util.UUID, String>()
+    override fun navigationReason(entity: LivingEntity, goal: dev.worldcombat.core.runtime.Point) =
+        dev.worldcombat.cobblemon.script.NativePasture.navigation(entity as PokemonEntity, goal)
     override fun controlIdentity(entity: LivingEntity): String {
         val owner = (entity as PokemonEntity).ownerUUID ?: return "wild"
-        return ownerNames.computeIfAbsent(owner) { it.toString() }
+        return ownerNames.computeIfAbsent(owner) { it.toString() } + ((entity as PokemonEntity).tethering?.let { "/pasture/${it.tetheringId}" } ?: "")
     }
     override fun owner(entity: LivingEntity) = (entity as PokemonEntity).pokemon.getOwnerUUID()
     override fun available(entity: LivingEntity): Boolean {
@@ -32,11 +34,13 @@ class PokemonCombatDomain : CombatDomain {
         // without the level lookup behind `pokemon.entity`.
         return entity.isAlive && !entity.isRemoved && !pokemon.isFainted() && pokemon.state is com.cobblemon.mod.common.pokemon.activestate.SentOutState
             && !entity.isBusy && !entity.isEvolving && entity.beamMode == 0
+            && (entity.tethering == null || dev.worldcombat.cobblemon.script.NativePasture.active(entity))
     }
     /** Controller authorization; per-definition eligibility belongs to loadout and commit policies. */
     override fun mayControl(entity: LivingEntity, controller: ServerPlayer) =
         (entity as PokemonEntity).pokemon.getOwnerUUID() == controller.uuid && entity.beamMode == 0 &&
-            !entity.isPassenger && (!entity.isVehicle || entity.controllingPassenger === controller) && !entity.isEvolving
+            !entity.isPassenger && (!entity.isVehicle || entity.controllingPassenger === controller) && !entity.isEvolving &&
+            (entity.tethering == null || dev.worldcombat.cobblemon.script.NativePasture.mayControl(entity, controller))
 
     override fun friendly(source: LivingEntity, target: LivingEntity): Boolean {
         if (source.isAlliedTo(target)) return true
@@ -61,6 +65,9 @@ class PokemonCombatDomain : CombatDomain {
         out.addProperty("wild", pokemon.isWild())
         out.addProperty("owner", pokemon.getOwnerUUID()?.toString() ?: "")
         out.addProperty("aiEnabled", !entity.isNoAi)
+        dev.worldcombat.cobblemon.script.NativePasture.capture(entity)?.let {
+            out.add("pasture", com.google.gson.JsonParser.parseString(it.json()))
+        }
     }
 
     override fun defeated(source: LivingEntity, target: LivingEntity, controller: ServerPlayer?) {

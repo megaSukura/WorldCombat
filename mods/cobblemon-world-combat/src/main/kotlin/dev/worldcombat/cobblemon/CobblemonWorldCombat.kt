@@ -37,6 +37,7 @@ class CobblemonWorldCombat(modBus: IEventBus, container: net.neoforged.fml.ModCo
         }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.server.ServerStoppedEvent> {
             dev.worldcombat.cobblemon.control.CompanionControl.stop(it.server)
+            dev.worldcombat.cobblemon.script.NativePasture.reset()
             dev.worldcombat.cobblemon.script.NativeContentSubscriptions.reset()
             dev.worldcombat.cobblemon.script.NativePublicAttributes.reset()
             dev.worldcombat.cobblemon.review.ReviewTool.reset()
@@ -69,7 +70,10 @@ class CobblemonWorldCombat(modBus: IEventBus, container: net.neoforged.fml.ModCo
             }
         }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent> {
-            if (!it.level.isClientSide) (it.entity as? com.cobblemon.mod.common.entity.pokemon.PokemonEntity)?.let(dev.worldcombat.cobblemon.script.NativePublicAttributes::save)
+            if (!it.level.isClientSide) (it.entity as? com.cobblemon.mod.common.entity.pokemon.PokemonEntity)?.let { entity ->
+                dev.worldcombat.cobblemon.script.NativePublicAttributes.save(entity)
+                dev.worldcombat.cobblemon.script.NativePasture.remove(entity)
+            }
         }
         CombatServices.registerDomain(PokemonCombatDomain())
         dev.worldcombat.cobblemon.script.NativeMoveMetadata.install()

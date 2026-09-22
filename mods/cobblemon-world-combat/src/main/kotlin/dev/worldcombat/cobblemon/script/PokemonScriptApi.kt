@@ -59,6 +59,9 @@ class PokemonScriptApi {
         NativeHeldItems.swap(world, first, second, firstKey, secondKey)
     /** Ordered read-only party of the actor's owner, `[]` for a wild actor. */
     fun party(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle) = NativeParty.party(world, actor)
+    fun pasture(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle) = NativePasture.view(world, actor)
+    fun pastureAllows(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, point: dev.worldcombat.core.runtime.Point) =
+        NativePasture.canRoam(world, actor, point)
     /** Recalls the sent-out individual behind `actor`; false with no change when it is not the live partner. */
     fun recall(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle) = NativeParty.recall(world, actor)
     /** Sends the owner's party `slot` out at `point` (or the actor's position); JSON {ok,reason,ref}. */

@@ -13,7 +13,7 @@ public final class ControlNetwork {
     public static Consumer<ReviewState> reviewReceiver = ignored -> {};
     public static void register(RegisterPayloadHandlersEvent event) {
         // Current PP uses a wider native packet field; reject clients with the older wire format.
-        var registrar = event.registrar("p5.composition.2");
+        var registrar = event.registrar("p5.pasture.1");
         registrar.playToServer(ControlCommand.TYPE, ControlCommand.CODEC,
             (packet, context) -> CompanionControl.INSTANCE.request((ServerPlayer) context.player(), packet));
         registrar.playToClient(ControlState.TYPE, ControlState.CODEC, (packet, context) -> clientReceiver.accept(packet));

@@ -68,6 +68,12 @@ interface CombatPokemon {
     moveSlots(): number;
     /** Zero-based native slot; empty slots remain null. */
     move(slot: number): CombatPokemonMove | null;
+    /** Native Cobblemon pasture tether facts, or null for a party/wild individual. */
+    pasture(): CombatPasture | null;
+}
+interface CombatPasture {
+    id(): string; dimension(): string; position(): CombatPoint; min(): CombatPoint; max(): CombatPoint;
+    owner(): string; combatAllowed(): boolean; json(): string;
 }
 interface CombatPokemonMove {
     /** Native move identity, stable across PP updates and replaced with the move. Catalogue views use a template key with no live resource balance. */
@@ -134,6 +140,8 @@ declare const CobblemonCombat: {
     swapHeld(world: CombatWorld, first: CombatActor, second: CombatActor, firstKey: string, secondKey: string): boolean;
     /** Ordered read-only party of the actor's owner as JSON [{slot,id,species,level,health,maxHealth,fainted,state,active}]; [] for a wild actor, an absent entity or an owner whose party no longer holds the actor. */
     party(world: CombatWorld, actor: CombatActor): string;
+    pasture(world: CombatWorld, actor: CombatActor): CombatPasture | null;
+    pastureAllows(world: CombatWorld, actor: CombatActor, point: CombatPoint): boolean;
     /** Native recall of the sent-out individual behind the actor; false with no state change when it is not the live partner. */
     recall(world: CombatWorld, actor: CombatActor): boolean;
     /** Native send-out of the owner's party `slot` at `point` (or the actor's position); JSON {ok,reason,ref,restored}. A non-null point must be finite, loaded, in-world and unblocked. */
@@ -156,6 +164,8 @@ interface CombatContentRequest {
     /** Live, read-only scope for this owned party member in the caller's world. */
     world(): CombatWorld | null;
     actor(): CombatActor | null;
+    /** JSON roster of party slots and loaded owned pasture residents; pasture entries use pseudo slots >= 6. */
+    roster(): string;
     input(): string;
     data(key: string): string | null;
     compareData(key: string, expected: string | null, value: string | null): boolean;

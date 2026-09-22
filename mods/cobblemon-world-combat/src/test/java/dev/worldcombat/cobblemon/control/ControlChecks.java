@@ -39,7 +39,7 @@ public final class ControlChecks {
         var skill = new dev.worldcombat.cobblemon.network.ControlState.Skill("checks:a", "1", "point", 16, 10, true, "checks:a", 3, 4, "", dev.worldcombat.core.runtime.ActionPreview.EMPTY);
         var state = new dev.worldcombat.cobblemon.network.ControlState(java.util.UUID.randomUUID(), 2, 1, 100,
             java.util.UUID.randomUUID(), 1, 4, 0, "Actor", "custom_stage", "", "", "", 0, 16, java.util.UUID.randomUUID(),
-            java.util.Collections.nCopies(4, skill), java.util.List.of(), "{}", 91);
+            java.util.Collections.nCopies(4, skill), java.util.List.of(), "{}", 91, java.util.UUID.randomUUID());
         var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), net.minecraft.core.RegistryAccess.EMPTY);
         try {
             dev.worldcombat.cobblemon.network.ControlState.CODEC.encode(buffer, state);

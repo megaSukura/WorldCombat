@@ -327,6 +327,8 @@ public final class MinecraftCombat implements CombatHost {
         checkThread();
         if (!(resolve(actor) instanceof Mob mob)) return "cannot-move";
         if (mob.isPassenger() || mob.isVehicle()) return "mounted-control";
+        String nativeRefusal = CombatServices.domain(mob).navigationReason(mob, goal);
+        if (!nativeRefusal.isEmpty()) { stopMovement(actor); return nativeRefusal; }
         var request = new com.google.gson.JsonObject(); request.addProperty("speed", speed);
         var response = runtime.event("world_combat:navigate", actor, null, request.toString(), false);
         if (!response.rejection().isEmpty()) { stopMovement(actor); return response.rejection(); }

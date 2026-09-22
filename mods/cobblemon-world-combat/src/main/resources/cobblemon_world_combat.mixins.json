@@ -16,6 +16,7 @@
     "PokemonChangeMixin",
     "PokemonHeldAccess",
     "PokemonMovementMixin",
+    "PokemonPastureMixin",
     "PokemonSpawnCountMixin",
     "PokemonSpawnDefaultsMixin",
     "MovePpCapacityMixin",
@@ -35,6 +36,7 @@
     "WorldPlayerWheelMixin",
     "SummaryPokemonAccess",
     "SummaryMovesMixin",
-    "SummaryMoveSwapMixin"
+    "SummaryMoveSwapMixin",
+    "PastureSlotMixin"
   ]
 }

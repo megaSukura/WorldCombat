@@ -14,6 +14,10 @@ namespace CompanionInterface {
         "control-preserved": {key:"worldcombat.ui.reasons.control-preserved"} };
     CobblemonCompanionUi.install({ id: "world_combat", legacyIds: ["verdant"], channel: "world_combat:skills", actionPrefix: "world_combat:", selectionScene: "world_combat:command",
         world: CompanionWorldUi, intents, phases, reasons,
+        executeCommand: (item: any, _aim: any, bridge: any) => {
+            if (item.command !== "select-companion") return false;
+            bridge.select(String(item.individual)); return true;
+        },
         effects: { target: (frame: CombatClientFrame) => IndicatorGeometry.draw(frame, JSON.parse(frame.data()).data || {}), cancelTarget: () => {} },
         hudExtra: (details: any) => {
             const context = summaries.apply({ details, parts: [] }); return context.parts.join(" · ");

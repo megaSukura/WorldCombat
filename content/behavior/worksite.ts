@@ -73,6 +73,14 @@ namespace WorldWork {
                 if (state.job && provider && provider.pause) provider.pause(context, state.job, state.execution);
                 hooks.stop(context);
             }
+            // Suspension keeps the recoverable job for threat pauses. A real task exit
+            // (manual command, replacement, error or actor handoff) must retire the
+            // execution memory as well, otherwise the next task can inherit stale
+            // navigation/work data and fail the plain-data boundary.
+            function exit(context: WorldBehavior.Context): void {
+                pause(context);
+                clear(progress(context));
+            }
             return WorldBehavior.step(function (context) {
                 var state = progress(context);
                 Object.keys(state.avoided).forEach(function (id) { if (state.avoided[id] <= context.tick) delete state.avoided[id]; });
@@ -111,7 +119,7 @@ namespace WorldWork {
                     hooks.report(context, "blocked", result.reason || "work-interrupted");
                 }
                 return result;
-            }, { suspend: pause, exit: pause });
+            }, { suspend: pause, exit: exit });
         }
     }
 }

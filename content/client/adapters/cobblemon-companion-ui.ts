@@ -91,16 +91,19 @@ namespace CobblemonCompanionUi {
             return id ? String(Component.translatable("cobblemon.move." + id).getString()) : tr("empty_slot");
         }
         function buildHud(): void {
-            const r = root(), w = Host.width(), h = Host.height(), cardW = Math.min(84, (w - 24) / 4), left = w - cardW * 4 - 12;
-            title = label(r, "", left, h - 136, cardW * 4, 0xffeeeeee);
+            const r = root(), w = Host.width(), h = Host.height(), gap = 6, safe = Math.max(12, Math.round(w * 0.04));
+            const cardW = Math.max(64, Math.min(92, Math.floor((w - safe * 2 - gap * 3) / 4)));
+            const total = cardW * 4 + gap * 3, left = Math.max(safe, Math.floor((w - total) / 2));
+            const bottom = Math.max(64, Math.round(h * 0.14)), cardY = h - bottom - 32;
+            title = label(r, "", left, cardY - 22, total, 0xffeeeeee);
             cards = []; bars = [];
             for (let i = 0; i < 4; i++) {
-                const x = left + i * cardW, panel = UiSurfaces.panel(place(new Element(), x, h - 117, cardW - 4, 32));
+                const x = left + i * (cardW + gap), panel = UiSurfaces.panel(place(new Element(), x, cardY, cardW, 32));
                 r.addChild(panel);
                 cards.push({ name: label(panel, "", 5, 4, cardW - 14), status: label(panel, "", 5, 17, cardW - 14, 0xff444444), barWidth: cardW - 14 });
                 const bar = surface(place(new Element(), 5, 29, cardW - 14, 2), 0xff78a077, 0); panel.addChild(bar); bars.push(bar);
             }
-            hint = label(r, "", 12, h - 154, w - 24, 0xfff0e5c9);
+            hint = label(r, "", left, cardY + 38, total, 0xfff0e5c9);
             hud = UiSurfaces.hud(config.id + ":companion", r);
         }
         function showSettings(): void {

@@ -12,8 +12,8 @@ import dev.worldcombat.core.runtime.ActionPreview;
 public record ControlState(UUID session, long sequence, long epoch, long tick, UUID actor, long generation,
                            int entityId, int partySlot, String name, String stage, String reason,
                            String intent, String tactics, int permissions, int chaseRange, UUID protectedTarget,
-                            List<Skill> skills, List<Member> members, String references, long inputToken) implements CustomPacketPayload {
-    public record Member(int slot, String name, String intent, String stage) {}
+                           List<Skill> skills, List<Member> members, String references, long inputToken, UUID pokemon) implements CustomPacketPayload {
+    public record Member(int slot, UUID pokemon, String name, String intent, String stage, boolean pasture) {}
     public record Skill(String id, String version, String kind, double range, int cooldown, boolean available,
                         String label, int remaining, int maximum, String reason, ActionPreview preview) {}
     /** Cooldowns advance locally; neither an unchanged HUD nor its countdown needs repeated full packets. */
@@ -25,7 +25,7 @@ public record ControlState(UUID session, long sequence, long epoch, long tick, U
         var projected = skills.stream().map(s -> new Skill(s.id, s.version, s.kind, s.range,
             (int) Math.max(0, s.cooldown - elapsed), s.available, s.label, s.remaining, s.maximum, s.reason, s.preview)).toList();
         return new ControlState(session, acknowledged, epoch, now, actor, generation, entityId, partySlot, name, stage, reason,
-            intent, tactics, permissions, chaseRange, protectedTarget, projected, members, references, inputToken);
+            intent, tactics, permissions, chaseRange, protectedTarget, projected, members, references, inputToken, pokemon);
     }
     public static final Type<ControlState> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("cobblemon_world_combat", "state"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ControlState> CODEC = new StreamCodec<>() {
@@ -38,11 +38,11 @@ public record ControlState(UUID session, long sequence, long epoch, long tick, U
             List<Skill> skills = new ArrayList<>();
             for (int i = 0; i < 4; i++) skills.add(new Skill(b.readUtf(128), b.readUtf(384), b.readUtf(24),
                 b.readDouble(), b.readVarInt(), b.readBoolean(), b.readUtf(128), b.readVarInt(), b.readVarInt(), b.readUtf(64), ActionPreview.parse(dev.worldcombat.core.network.PacketJson.read(b))));
-            int count = b.readVarInt(); if (count < 0 || count > 6) throw new IllegalArgumentException("Invalid roster");
+            int count = b.readVarInt(); if (count < 0 || count > b.readableBytes() / 21) throw new IllegalArgumentException("Invalid roster payload");
             var members = new ArrayList<Member>();
-            for (int i = 0; i < count; i++) members.add(new Member(b.readVarInt(), b.readUtf(128), b.readUtf(24), b.readUtf(32)));
+            for (int i = 0; i < count; i++) members.add(new Member(b.readVarInt(), b.readUUID(), b.readUtf(128), b.readUtf(24), b.readUtf(32), b.readBoolean()));
             return new ControlState(session, sequence, epoch, tick, actor, generation, entity, party, name, stage, reason,
-                intent, tactics, mask, range, protectedTarget, List.copyOf(skills), List.copyOf(members), dev.worldcombat.core.network.PacketJson.read(b), b.readVarLong());
+                intent, tactics, mask, range, protectedTarget, List.copyOf(skills), List.copyOf(members), dev.worldcombat.core.network.PacketJson.read(b), b.readVarLong(), b.readUUID());
         }
         public void encode(RegistryFriendlyByteBuf b, ControlState c) {
             b.writeUUID(c.session); b.writeVarLong(c.sequence); b.writeVarLong(c.epoch); b.writeVarLong(c.tick);
@@ -56,9 +56,10 @@ public record ControlState(UUID session, long sequence, long epoch, long tick, U
                 dev.worldcombat.core.network.PacketJson.write(b, skill.preview.json());
             }
             b.writeVarInt(c.members.size());
-            for (var member : c.members) { b.writeVarInt(member.slot); b.writeUtf(member.name, 128); b.writeUtf(member.intent, 24); b.writeUtf(member.stage, 32); }
+            for (var member : c.members) { b.writeVarInt(member.slot); b.writeUUID(member.pokemon); b.writeUtf(member.name, 128); b.writeUtf(member.intent, 24); b.writeUtf(member.stage, 32); b.writeBoolean(member.pasture); }
             dev.worldcombat.core.network.PacketJson.write(b, c.references);
             b.writeVarLong(c.inputToken);
+            b.writeUUID(c.pokemon);
         }
     };
     @Override public Type<ControlState> type() { return TYPE; }

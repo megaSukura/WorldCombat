@@ -12,6 +12,10 @@
 
 **配招和 PP 共用原生个体数据。** [脚本绑定](../../content/mechanisms/native-loadout.ts)决定每个原生招式对应的动作与资源用量，玩家指令和 AI 使用同一结果；原生换招或排序使技能栏随之更新。[PP 适配](../../mods/cobblemon-world-combat/src/main/kotlin/dev/worldcombat/cobblemon/script/NativeMoveResources.kt)在提交时复核招式身份和余额。学习／遗忘／回忆、恢复道具、PP 提升与保存继续走原生路径，代表操作及真实重启已检查。
 
+**牧场个体沿用原生生命周期并进入伙伴控制。** [牧场适配](../../mods/cobblemon-world-combat/src/main/kotlin/dev/worldcombat/cobblemon/script/NativePasture.kt)以 Cobblemon 的 `Tethering`、PC、权限控制器和牧场方块实体为事实来源；牧场中的已加载个体可加入伙伴会话、G 面板和 HUD，脚本可以读取牧场位置、漫游边界、主人和冲突标记。导航目标先经过牧场边界契约，再交给 Minecraft／Cobblemon 原生寻路；越界仍由 Cobblemon 的拴绳检查负责召回。牧场权限、数量、召回、保存、重载和网络界面继续使用 Cobblemon 原生入口。
+
+玩家在牧场界面点击自己拥有的已加载个体可以直接打开 WorldCombat 指挥；已有的召回和冲突按钮保持原优先级。也可以在 G 面板的“切换伙伴”中选择牧场个体。切换使用个体 UUID 与服务器回执，不把牧场成员伪装成队伍槽位；牧场个体的默认活动中心是牧场边界，独立工作和招式仍按各自内容定义。
+
 **成长收益由脚本选择，经原生入口写入。** [成长策略](../../content/mechanisms/native-growth.ts)转译默认原生经验／EV 规则，读取配置、学习装置、幸运蛋、力量道具及亲密度等事实。当前野生击败收益归击败行动者，学习装置分享给原队伍中的合格个体。[适配事件](../../mods/cobblemon-world-combat/src/main/kotlin/dev/worldcombat/cobblemon/script/GrowthEvent.kt)暂存写入，回调成功后调用原生经验、EV 和进化进度存储；原生事件、上限、升级学招、亲密度与普通进化继续生效。
 
 招式使用在成功提交后计入，受伤按实际个体 HP 减量记录。事件写入限定于当前脚本周期和服务器线程，回调结束后失效。锁定版原生序列化会将 `held_item` 等条件规范化，而击败进度保留逻辑比较原文；[存储兼容修复](../../mods/cobblemon-world-combat/src/main/java/dev/worldcombat/cobblemon/mixin/DefeatProgressMixin.java)在读取时重新关联等价的原生条件，保持既有进化规则及存储格式。
@@ -31,4 +35,4 @@
 | 扩展验证 | 通用核心独立运行，用增量内容包验证状态、交互、AI 与表现组合；覆盖第 8 节与 T03 的原有要求 |
 | 样机替换与 AI 边界 | 移动速度衔接原生能力与效果修正；区分指挥选择和出战管理；将选敌、追击、站位等玩法策略迁入可替换内容，实际验证移除旧技能／AI 样例后基础接入仍可用，并能装入新内容 |
 
-原生钓鱼、图鉴、牧场及其他世界系统保留上游入口；具体效果和场景的覆盖状态见 [P3 检查记录](../development/P3-checks.md)，后续集成按实际交叉范围验证。
+原生钓鱼、图鉴及其他世界系统继续保留上游入口；牧场已经增加结构化适配，具体能力由脚本内容按需扩展。其他系统按实际交叉范围接入。

@@ -49,19 +49,19 @@ namespace WorldAI {
             if (value > rank) { rank = value; best = candidate; }
         }
         if (best !== null) { memory.ref = best.actor().ref(); memory.point = coordinates(best.position()); memory.seen = world.tick(); }
-        else if (world.tick() - (memory.seen || 0) > 60) { memory.ref = ""; memory.point = undefined; }
+        else if (world.tick() - (memory.seen || 0) > 60) { memory.ref = ""; delete memory.point; }
         return best;
     }
     function travel(world: CombatWorld, goal: CombatPoint, within: number, memory: Memory,
                     request: () => string, stop: () => void): string {
         var source = world.observe(world.source())!, distance = source.position().minus(goal).length(), now = world.tick();
-        if (distance <= within) { stop(); memory.navigation = undefined; return "arrived"; }
+        if (distance <= within) { stop(); delete memory.navigation; return "arrived"; }
         var nav = memory.navigation, policy = navigationPolicy;
         if (!nav || point(nav.goal).minus(goal).length() > policy.changed)
             nav = { goal: coordinates(goal), distance: distance, progressed: now, began: now, retry: 0 };
         if (distance < nav.distance - policy.progress) { nav.distance = distance; nav.progressed = now; }
         if (now - nav.progressed > policy.stalledTicks || now - nav.began > policy.attemptTicks) {
-            stop(); memory.navigation = undefined; return "path-blocked";
+            stop(); delete memory.navigation; return "path-blocked";
         }
         memory.navigation = nav;
         if (now < nav.retry) return "moving";
@@ -69,7 +69,7 @@ namespace WorldAI {
         var result = String(request());
         // Walking navigation may have no path while the actor lands after a displacement.
         if (result === "not-grounded") { nav.retry = now + 1; return "moving"; }
-        if (result !== "moving") { stop(); memory.navigation = undefined; }
+        if (result !== "moving") { stop(); delete memory.navigation; }
         return result;
     }
     export function navigate(world: CombatWorld, goal: CombatPoint, within: number, memory: Memory): string {

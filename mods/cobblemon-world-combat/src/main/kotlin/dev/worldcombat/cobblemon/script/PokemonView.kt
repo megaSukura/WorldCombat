@@ -27,7 +27,8 @@ class PokemonView private constructor(
     private val stats: Map<String, Values>,
     private val moves: List<PokemonMoveView?>,
     private val facts: NativeFacts,
-    private val worldAttributes: Map<String, NativeAttributeView>
+    private val worldAttributes: Map<String, NativeAttributeView>,
+    private val pastureValue: PastureView?
 ) {
     private data class Values(val value: Int, val base: Int?, val iv: Int, val effectiveIv: Int, val ev: Int, val yield: Int)
     private data class NativeFacts(val owner: String, val originalTrainer: String, val friendship: Int,
@@ -78,6 +79,7 @@ class PokemonView private constructor(
     fun weight() = facts.weight
     fun canEvolve() = facts.canEvolve
     fun activeState() = facts.activeState
+    fun pasture() = pastureValue
     fun pose() = facts.pose
     fun vehicle() = facts.vehicle
     fun passenger() = facts.passenger
@@ -138,7 +140,7 @@ class PokemonView private constructor(
                     projectedDefence.first, projectedDefence.second, if (held.isEmpty) "" else held.descriptionId,
                     pokemon.aspects.toSet(), statIds.sorted(), dev.worldcombat.core.world.NativeRegistryFacts.stack(access, held),
                     pokemon.shiny, pokemon.scaleModifier.toDouble(), pokemon.teraType.id.toString(), pokemon.dmaxLevel, pokemon.gmaxFactor),
-                NativePublicAttributes.snapshot(pokemon))
+                NativePublicAttributes.snapshot(pokemon), NativePasture.capture(entity))
         }
     }
 }

@@ -151,10 +151,11 @@ public final class CompanionInput {
         consumed.removeIf(key -> !physicallyDown(key));
         if (state != null && mc.player != null) {
             int slot = CobblemonClient.INSTANCE.getStorage().getSelectedSlot();
-            if (slot != observedParty) {
+            if (observedParty >= 0 && slot != observedParty) {
                 observedParty = slot; preview.cancel();
                 send("select", 0, new Aim(ControlCommand.NONE, zero(), forward(), Vec3.ZERO, Vec3.ZERO, ""), "");
             }
+            observedParty = slot;
             if (actor() == null) preview.cancel();
         }
     }
@@ -289,10 +290,14 @@ public final class CompanionInput {
         ++sequence;
         if (!operation.equals("input-update")) awaiting = sequence;
         var packet = new ControlCommand(state.session(), sequence, state.epoch(), state.tick(), state.actor(), state.generation(),
-            observedParty < 0 ? state.partySlot() : observedParty, operation, value, aim.target(), aim.point(), aim.direction(), version, input);
+            operation.equals("select") ? observedParty : state.partySlot(), operation, value, aim.target(), aim.point(), aim.direction(), version, input);
         PacketDistributor.sendToServer(packet);
         if (operation.equals("cast")) notifyReason("requested");
         return sequence;
+    }
+    /** The individual UUID is authoritative even if the live roster changes while a menu is open. */
+    public static void select(UUID pokemon) {
+        submit("select-individual", 0, new Aim(pokemon, zero(), forward(), Vec3.ZERO, Vec3.ZERO, ""), "", "{}");
     }
     public static void notifyReason(String reason) {
         if (reason == null || reason.isEmpty() || Set.of("ready", "accepted", "cancelled", "selected").contains(reason)) return;
