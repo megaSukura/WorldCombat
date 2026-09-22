@@ -14,12 +14,25 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / "runs/review-client"
 WORLD = WORK / "saves/review-world"
+PINNED_JAVA_HOME = Path("C:/Program Files/Zulu/zulu-21")
+
+def java_home():
+    """Resolve the project runtime before the machine-wide Java association."""
+    configured = os.environ.get("WORLD_COMBAT_JAVA_HOME")
+    if configured:
+        candidate = Path(configured)
+        if (candidate / "bin/java.exe").is_file(): return candidate
+        raise RuntimeError("WORLD_COMBAT_JAVA_HOME does not point to Java 21: " + str(candidate))
+    if (PINNED_JAVA_HOME / "bin/java.exe").is_file(): return PINNED_JAVA_HOME
+    configured = os.environ.get("JAVA_HOME")
+    if configured and (Path(configured) / "bin/java.exe").is_file(): return Path(configured)
+    return None
 
 def java():
-    home = os.environ.get("JAVA_HOME")
-    found = str(Path(home) / "bin/java.exe") if home else shutil.which("java")
+    home = java_home()
+    found = str(home / "bin/java.exe") if home else shutil.which("java")
     if not found:
-        candidate = Path("C:/Program Files/Zulu/zulu-21/bin/java.exe")
+        candidate = PINNED_JAVA_HOME / "bin/java.exe"
         if candidate.is_file(): found = str(candidate)
     if not found: raise RuntimeError("JDK 21 is required")
     return found

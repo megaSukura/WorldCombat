@@ -10,6 +10,15 @@ from content_resources import install_content_resources
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "build/p2-input-launch/frozen.json"
+PINNED_JAVA_HOME = Path("C:/Program Files/Zulu/zulu-21")
+
+def project_java():
+    configured = os.environ.get("WORLD_COMBAT_JAVA_HOME")
+    home = Path(configured) if configured else PINNED_JAVA_HOME
+    if not (home / "bin/java.exe").is_file():
+        configured = os.environ.get("JAVA_HOME")
+        home = Path(configured) if configured else None
+    return str(home / "bin/java.exe") if home and (home / "bin/java.exe").is_file() else shutil.which("java")
 
 # External particle prerequisites. The engine's mods.toml declares them CLIENT-side, so every client
 # instance needs the jars in its mods/ folder; the dedicated server does not install them.
@@ -161,9 +170,9 @@ def launch():
     classpath.write_text('-classpath\n"' + spec["classpath"].replace("\\", "\\\\").replace('"', '\\"') + '"\n', encoding="utf-8")
     environment = os.environ.copy()
     environment.update(spec["environment"])
-    executable = spec.get("executable") or (str(Path(os.environ["JAVA_HOME"]) / "bin/java.exe") if os.environ.get("JAVA_HOME") else shutil.which("java"))
+    executable = spec.get("executable") or project_java()
     if not executable:
-        raise RuntimeError("Set JAVA_HOME to JDK 21 before launching")
+        raise RuntimeError("WorldCombat needs Java 21 at C:/Program Files/Zulu/zulu-21")
     command = [executable] + list(dict.fromkeys(spec["jvmArgs"])) + ["@" + str(classpath), spec["mainClass"]] + spec["args"]
     log = ROOT / ("build/" + phase + "-checks/client-console.log")
     log.parent.mkdir(parents=True, exist_ok=True)
