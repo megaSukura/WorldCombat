@@ -79,6 +79,11 @@ namespace PokemonSkills {
     }
 
     WorldCombat.effect(anchorshotEffect, 1, 300, "actor", anchorshotChainData, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(anchorshotEffect, "operation:world_combat:dispel", function (effect) {
+        const caller = String(effect.caller().key());
+        if (caller !== String(effect.source().key()) && caller !== String(effect.target().key())) { effect.reject("effect-not-owned"); return; }
+        effect.end();
+    });
     WorldCombat.effectHandler(anchorshotEffect, "start", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) { effect.end(); return; }
@@ -90,7 +95,8 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         const body = world.observe(victim);
-        if (body === null) { effect.end(); return; }
+        const carrier = MobEffects.read(world, victim, anchorshotCarrier);
+        if (body === null || carrier === null || (data.carrierKey && String(carrier.key()) !== data.carrierKey)) { effect.end(); return; }
         const anchor = WorldCombat.point(data.anchor[0], data.anchor[1], data.anchor[2]);
         const delta = anchor.minus(body.position()), distance = delta.length();
         if (distance > data.snap) {
@@ -106,7 +112,7 @@ namespace PokemonSkills {
         if (typeof data.terrainId === "number" && data.terrainId > 0) { try { world.removeTerrain(data.terrainId); } catch (error) { } }
         if (!world.valid(victim)) return;
         const carrier = MobEffects.read(world, victim, anchorshotCarrier);
-        if (carrier !== null) world.removeMobEffect(victim, anchorshotCarrier, carrier.key());
+        if (carrier !== null && (!data.carrierKey || String(carrier.key()) === data.carrierKey)) world.removeMobEffect(victim, anchorshotCarrier, carrier.key());
         const body = world.observe(victim);
         if (body === null) return;
         const snapped = data.reason === "snapped";
@@ -115,6 +121,13 @@ namespace PokemonSkills {
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)),
             snapped ? anchorshotSnapText : anchorshotReleaseText, [], 24);
         world.sound(snapped ? "minecraft:block.chain.break" : "minecraft:block.chain.place", body.position(), 14, "{}");
+    });
+
+    WorldCombat.on("world_combat:move_anchorshot/clear", "world_combat:mob_effect_removed", "", function (event) {
+        if (String(JSON.parse(String(event.data())).id) !== anchorshotCarrier) return;
+        const world = event.world();
+        const effects = world.effects(event.actor(), anchorshotEffect);
+        for (let i = 0; i < effects.length; i++) world.operation(effects[i].id(), "world_combat:dispel", "{}");
     });
 
     /** 被链拴住的目标走不快：导航速度压到六成，逃出去的部分由链的每步回拽补上。 */
@@ -130,10 +143,13 @@ namespace PokemonSkills {
         const body = world.observe(victim);
         if (body === null) return false;
         const ticks = Math.max(40, Math.round(p(anchorshotId, "chainTicks", action)));
+        const existing = world.effects(victim, anchorshotEffect);
+        for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
         if (!CombatStatus.apply(world, victim, "trapped", anchorshotCarrier, ticks, 0, { unique: true })) return false;
-        const placed = anchorshotPlace(world, body.position(), ticks + 40);
+        const placed = anchorshotPlace(world, body.position(), ticks);
         const anchor = placed === null ? body.position() : placed.anchor;
-        const data = { anchor: [anchor.x(), anchor.y(), anchor.z()],
+        const carrier = MobEffects.read(world, victim, anchorshotCarrier);
+        const data = { anchor: [anchor.x(), anchor.y(), anchor.z()], carrierKey: carrier === null ? "" : String(carrier.key()),
             leash: Math.max(2.2, p(anchorshotId, "leash", action)),
             snap: Math.max(4.5, p(anchorshotId, "snap", action)),
             reel: Math.max(0.15, p(anchorshotId, "reel", action)),
@@ -141,9 +157,7 @@ namespace PokemonSkills {
             scale: Math.max(0.6, Math.min(2.0, p(anchorshotId, "linkRadius", action) / anchorshotReference)),
             intensity: Math.max(0.6, Math.min(2.2, p(anchorshotId, "shot", action) / 80)),
             terrainId: placed === null ? 0 : placed.terrainId, reason: "" };
-        const existing = world.effects(victim, anchorshotEffect);
-        for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
-        world.effect(anchorshotEffect, victim, JSON.stringify(data), ticks + 40);
+        world.effect(anchorshotEffect, victim, JSON.stringify(data), ticks);
         anchorshotChainVisual(world, victim, data);
         return true;
     }

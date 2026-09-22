@@ -191,6 +191,17 @@ public final class WorldAccess {
         if (expected == null || expected.length() > 4096) throw new IllegalArgumentException("Invalid block comparison state");
         return runtime.host.useItem(source, controller, point, item, expected);
     }
+    public String interactBlock(Point point, String face, boolean secondary, String expected) {
+        requireMutation(source); nearby(point);
+        if (expected == null) throw new IllegalArgumentException("Missing block comparison state");
+        return runtime.host.interactBlock(source, controller, point, face, secondary, expected);
+    }
+    public EnergyObservation energy(Point point, String side) { check(); nearby(point); return runtime.host.energy(source, point, side); }
+    public int receiveEnergy(Point point, String side, int amount, boolean simulate) {
+        requireMutation(source); nearby(point);
+        if (amount < 0) throw new IllegalArgumentException("Energy amount must be non-negative");
+        return runtime.host.receiveEnergy(source, controller, point, side, amount, simulate);
+    }
     public void face(Point point, double yawSpeed, double pitchSpeed) {
         requireMutation(source); nearby(point); validateTurn(yawSpeed, pitchSpeed);
         if (!runtime.controlAllowed(owner, source, "aim")) return;

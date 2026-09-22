@@ -37,7 +37,7 @@ namespace PokemonSkills {
             "收招", "平分完成后的收势；速度快的个体收得更利落。"),
         recharge: seconds(
             F.base(95, "基础").minus(F.level().times(0.3).as("等级")).clamp(45, 140).round(0),
-            "冷却", "两次平分之间的等待；等级越高对这条新刻度越谨慎，冷却越长。"),
+            "冷却", "两次平分之间的等待；等级越高，冷却越短。"),
         span: seconds(
             F.base(260, "基础").plus(F.level().times(2.2).as("等级")).plus(F.stat("specialDefence").times(0.4).as("特防"))
                 .clamp(180, 700).round(0),
@@ -45,7 +45,7 @@ namespace PokemonSkills {
         motes: formula(
             F.base(14, "基础").plus(F.stat("specialAttack").div(50).as("特攻")).plus(F.body("height").times(4).as("体型"))
                 .clamp(12, 40).round(0),
-            "汇流粒子数", {
+            "汇流粒子数", { visible: false,
                 unit: " 颗",
                 description: "向中央汇、再平分回两人身上的光点基准数量；特攻越高、身板越高越多，实际发射量再按本次数值差放大。"
             })
@@ -58,7 +58,6 @@ namespace PokemonSkills {
 
     describe("powersplit", [
         { key: "description.0", values: ["reach", "span"] },
-        { key: "description.1", values: ["motes"] },
         { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.span"] },

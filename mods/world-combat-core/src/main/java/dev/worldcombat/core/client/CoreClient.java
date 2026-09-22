@@ -29,6 +29,11 @@ public final class CoreClient {
     }
 
     @SubscribeEvent
+    public static void reloadListeners(net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) resources -> ItemInformation.refresh());
+    }
+
+    @SubscribeEvent
     public static void particleProviders(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) {
         for (var type : dev.worldcombat.core.client.particles.ParticleTypes.registeredTypes()) {
             // A SpriteSet is all MadParticle needs; the returned provider is never used to build one.

@@ -46,14 +46,15 @@ namespace CobblemonCompanionUi {
             change: (tab, field, value) => saveField(tab, field, value), reset: (tab, field) => {
                 if (revisions.begin(() => Bridge.request(config.channel, state.pokemon, JSON.stringify({op:"reset",move:tab.id,path:field.path,expected:tab.revision == null ? null : tab.revision})))) announce(tr("resetting", field.label));
             }, select: id => { requestedMove = id; requestedLoaded = ""; inspect(); showSettings(); }, close: () => close(), renderer: config.fieldRenderer });
-        const radial = new RadialMenu.View({ id:config.id + ":commands", legacyIds:(config.legacyIds||[]).map(id=>id+":commands"), customize:()=>{modal="layout";}, title: () => tr("command_title",state.name || tr("companion")), backLabel: () => state.backKey,
+        const radial = new RadialMenu.View({ id:config.id + ":commands", legacyIds:(config.legacyIds||[]).map(id=>id+":commands"), customize:()=>{modal="layout";}, title: () => tr("command_title",state.name || tr("companion")), backLabel: () => state.backKey, confirmLabel: () => state.confirmKey, commandLabel: () => state.commandKey,
             choose: item => chooseCommand(item), close: () => close(), reject: reason => announce(reason), base: config.menuBase, highlight: config.menuHighlight, accent: config.accent,
             renderItem: config.menuRenderer });
         const picking = new UiState.Selection<any, any>({
-            validate: (item, aim) => config.validateSelection ? config.validateSelection(item, aim) : item.target === "entity" && (!aim || aim.target === "00000000-0000-0000-0000-000000000000") ? tr("choose_target") : "",
+            validate: (item, aim) => item.target === "block" && (!aim || aim.reason) ? tr("choose_block") : config.validateSelection ? config.validateSelection(item, aim) : item.target === "entity" && (!aim || aim.target === "00000000-0000-0000-0000-000000000000") ? tr("choose_target") : "",
             submit: (item, aim) => submit(item, aim), continuous: item => !!item.continuous,
             changed: item => { pending = item; if (!item) clearTarget(); }, reject: reason => announce(reason)
         });
+        function selectionAim(item: any): any { return JSON.parse(item.target === "block" ? Bridge.blockAim() : Bridge.look()); }
         function announce(value: any): void { notice = plain(value); noticeUntil = ticks + 100; if (modal === "settings") editor.notice(value); if (modal === "attributes") attributes.notice(value); }
         function saveField(skill: any, field: any, value: any): void {
             if (revisions.begin(() => Bridge.request(config.channel, state.pokemon, JSON.stringify({ op: "configure", move: skill.id,
@@ -89,16 +90,16 @@ namespace CobblemonCompanionUi {
             return id ? String(Component.translatable("cobblemon.move." + id).getString()) : tr("empty_slot");
         }
         function buildHud(): void {
-            const r = root(), w = Host.width(), h = Host.height(), cardW = Math.min(98, (w - 32) / 4);
-            title = label(r, "", 16, h - 92, w - 32, 0xffd1ecae);
+            const r = root(), w = Host.width(), h = Host.height(), cardW = Math.min(84, (w - 24) / 4), left = w - cardW * 4 - 12;
+            title = label(r, "", left, h - 136, cardW * 4, 0xffeeeeee);
             cards = []; bars = [];
             for (let i = 0; i < 4; i++) {
-                const x = 16 + i * cardW, panel = UiSurfaces.panel(place(new Element(), x, h - 73, cardW - 4, 43));
+                const x = left + i * cardW, panel = UiSurfaces.panel(place(new Element(), x, h - 117, cardW - 4, 32));
                 r.addChild(panel);
-                cards.push({ name: label(panel, "", 7, 6, cardW - 15), status: label(panel, "", 7, 24, cardW - 15, 0xff444444) });
-                const bar = surface(place(new Element(), 7, 39, cardW - 18, 2), 0xffa9d66e, 1); panel.addChild(bar); bars.push(bar);
+                cards.push({ name: label(panel, "", 5, 4, cardW - 14), status: label(panel, "", 5, 17, cardW - 14, 0xff444444), barWidth: cardW - 14 });
+                const bar = surface(place(new Element(), 5, 29, cardW - 14, 2), 0xff78a077, 0); panel.addChild(bar); bars.push(bar);
             }
-            hint = label(r, "", 16, h - 111, w - 32, 0xffdbe8d0);
+            hint = label(r, "", 12, h - 154, w - 24, 0xfff0e5c9);
             hud = UiSurfaces.hud(config.id + ":companion", r);
         }
         function showSettings(): void {
@@ -161,8 +162,8 @@ namespace CobblemonCompanionUi {
             }
             if (event.key === "command-click" && event.pressed) { if (!canCommand()) return false; showRadial(true,true); return true; }
             if (event.key === "command") {
-                if (event.pressed) { if (!canCommand()) return false; showRadial(); return true; }
-                if (modal === "radial") { radial.release(); return true; }
+                if (event.pressed) { if (!canCommand()) return false; if(modal === "radial") close(); else showRadial(); return true; }
+                if (modal === "radial") { radial.release(event.heldMillis === undefined || event.heldMillis >= 180); return true; }
                 return false;
             }
             if (!event.pressed) return false;
@@ -179,7 +180,7 @@ namespace CobblemonCompanionUi {
                 if (returnToMenu) { showRadial(false); }
                 return true;
             }
-            if (pending && event.key === "confirm") return picking.confirm(JSON.parse(Bridge.look()));
+            if (pending && event.key === "confirm") return picking.confirm(selectionAim(pending));
             return false;
         }
         function update(raw: string): void {
@@ -202,7 +203,7 @@ namespace CobblemonCompanionUi {
             const loadoutChanged = loadoutIdentity !== loadout; loadoutIdentity = loadout;
             if (pending && state.screen && !state.uiActive) { picking.cancel(); announce(tr("target_cancelled")); }
             // Summary dispatch supplies its selected move immediately after this identity update.
-            if ((invalidated && (modal || !details && !state.inspection)) || loadoutChanged && !state.inspection) inspect();
+            if ((invalidated && (modal || pending || !details && !state.inspection)) || loadoutChanged && !state.inspection) inspect();
             if (!hasAbilities()) { Host.hud(config.id + ":companion", null); hud = null; }
             else {
                 const size = Host.width() + "/" + Host.height();
@@ -215,29 +216,41 @@ namespace CobblemonCompanionUi {
                     if (!skill.id && details && details.skills) details.skills.forEach((known: any) => {
                         if (known.slot === i) skill = { id: known.id, label: known.name, cooldown: 0, remaining: known.pp, maximum: known.maxPp };
                     });
-                    cards[i].name.setText(text("[" + (state.keys || [])[i] + "] " + localName(skill)));
+                    const binding=(state.castKeys || state.keys || [])[i] || "";
+                    cards[i].name.setText(text("[" + binding + "] " + localName(skill)));
+                    UiSurfaces.tooltip(cards[i].name,[localName(skill)]);
                     cards[i].status.setText(text(skill.cooldown > 0 ? tr("cooldown",Math.ceil(skill.cooldown / 20)) : tr("pp",skill.remaining,skill.maximum)));
-                    bars[i].lss("width", Math.max(0, Math.min(80, (skill.maximum ? skill.remaining / skill.maximum : 0) * 80)));
+                    bars[i].lss("width", Math.max(0, Math.min(cards[i].barWidth, (skill.maximum ? skill.remaining / skill.maximum : 0) * cards[i].barWidth)));
                 });
             }
             const reasonKey = String(state.hint || "").replace(/^worldcombat\.reason\./, "");
             const reason = plain(reasons[reasonKey] || reasons[reasonKey.replace(config.actionPrefix, "")] || config.world.explainReason(reasonKey));
             config.world.select(state, details, reason);
             let message = reason || (noticeUntil > ticks ? notice : config.effects?.status?.(state.actor) || tr("controls",state.commandKey,state.settingsKey,state.precisionKey));
+            if (!pending && state.input && state.input.mode) {
+                const selected=(state.skills||[])[state.input.slot];
+                message=state.input.mode === "sustained" ? tr("channel_hint",selected?localName(selected):"",state.cancelKey,state.backKey)
+                    : tr("selection_step",state.input.step,state.input.total,state.confirmKey,state.backKey);
+            } else if (!pending && state.precisionHeld) {
+                const selected=(state.skills||[])[state.previewSlot];
+                message=selected?tr("precision_preview",localName(selected),state.precisionKey,state.cancelKey):tr("precision_choose",(state.keys||[]).join(" / "),state.precisionKey,state.cancelKey);
+            }
             if (pending) {
-                const aim = JSON.parse(Bridge.look());
+                const aim = selectionAim(pending);
                 message = tr("target_hint",pending.label,state.confirmKey,state.backKey);
-                if (noticeUntil > ticks) message = notice;
-                if (aim) {
+                if (noticeUntil > ticks && notice !== tr("target_hint",pending.detail,state.confirmKey,state.backKey)) message = notice;
+                if (pending.target === "block" && (!aim || aim.reason)) { clearTarget(); message=tr("choose_block"); }
+                else if (aim) {
                     config.world.target({ aim, targetMode: pending.target, label: plain(pending.label), confirm: state.confirmKey, back: state.backKey });
                     const skill = pending.move ? skillDetail(pending.move) : null;
                     const design = skill && skill.indicator || {};
                     const data: any = { style: "target", phase: "active", radius: .35, preview: true, label: plain(pending.label) };
                     Object.keys(design).forEach(key => { data[key] = design[key]; });
+                    if(pending.target === "block") data.geometry = "block";
                     const sourceAim = JSON.parse(Bridge.aim("self"));
                     const from = sourceAim && sourceAim.point;
                     if (!data.direction && from) data.direction = [aim.point.x - from.x, aim.point.y - from.y, aim.point.z - from.z];
-                    const at = from && (skill && skill.kind === "self" || data.geometry === "line" || data.geometry === "cone") ? from : aim.point;
+                    const at = pending.target !== "block" && from && (skill && skill.kind === "self" || data.geometry === "line" || data.geometry === "cone") ? from : aim.point;
                     Bridge.indicator(JSON.stringify({ key: config.id + ":command", type: config.selectionScene, version: 1, position: [at.x, at.y, at.z], data: data }));
                 }
             }
@@ -283,7 +296,12 @@ namespace CobblemonCompanionUi {
             else { inspect(); return; }
             if (modal === "settings") showSettings();
             radial.updateItems(data.menu || []);
-            if (reload && inspectPending === null) { invalidated=true;if(modal)inspect(); }
+            if(pending){
+                const current=(data.menu||[]).filter((item:any)=>item.id===pending.id)[0];
+                if(!current||current.disabled){picking.cancel();announce(current?.disabled||tr("command_changed"));}
+                else picking.begin(current);
+            }
+            if (reload && inspectPending === null) { invalidated=true;if(modal||pending)inspect(); }
         }
         function summaryDraw(region: any): void {
             // Minecraft and NeoForge expose int/float text overloads; select the text representation explicitly for Rhino.
@@ -303,7 +321,7 @@ namespace CobblemonCompanionUi {
             if (known && known.requested && known.requested.id === String(region.move())) skill = known.requested;
             try {
                 if (compact) {
-                    g[drawComponent](font, text(tr("details_hint",state.settingsKey || "H")), 0, 0, 0xff333333 | 0, false);
+                    g[drawComponent](font, text(tr("details_hint",state.settingsKey || "")), 0, 0, 0xff333333 | 0, false);
                 } else {
                     g[drawPlain](font, font.plainSubstrByWidth(skill ? tr("summary_heading",skill.nameKey?{key:skill.nameKey}:skill.name,region.pp(),region.maxPp()) : tr("skill_details"), width), 0, 0, 0xff222222 | 0, false);
                     const lines = font.split(text(skill ? plain(skill.brief || skill.description) : tr("choose_skill_details")), width);

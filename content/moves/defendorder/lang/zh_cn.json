@@ -5,7 +5,7 @@
   "worldcombat.skill.defendorder.use.2": "在近身拉锯里叠一层可被打掉的防护",
   "worldcombat.skill.defendorder.description.0": "召来 %1$s 只手下贴住身体，每只活着时把防御与特防各提升 %2$s 级。",
   "worldcombat.skill.defendorder.description.1": "手下在身上的时间约 %1$s，环列 %2$s 格，每只有 %3$s 点生命。",
-  "worldcombat.skill.defendorder.description.2": "一次召来约 %1$s 点甲壳微粒；起手 %2$s、收招 %3$s、冷却 %4$s。",
+  "worldcombat.skill.defendorder.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.defendorder.swarm.on": "虫海式：手下面数 +2、收益上限更高，但每只生命 3、被一口气清掉的风险大。",
   "worldcombat.skill.defendorder.swarm.off": "精锐式：每只生命 6、甲壳更稳，代价是面数更少、上限更低。",
   "worldcombat.skill.defendorder.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

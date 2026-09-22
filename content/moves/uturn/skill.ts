@@ -21,13 +21,13 @@ namespace PokemonSkills {
     const uturnSwitchText = "world_combat.move.uturn.text.switch";
 
     /** 真实换人：有合法后备时收回自己、让后备在折返落点登场；没有后备就保留已在场内的折返。 */
-    function uturnHandoff(world: CombatWorld, actor: CombatActor, point: CombatPoint): void {
+    function uturnHandoff(world: CombatWorld, actor: CombatActor, point: CombatPoint): boolean {
         const reserve = partyReserve(partyRoster(world, actor), partyActiveId(world, actor));
-        if (reserve === null) return;
+        if (reserve === null) return false;
         const body = world.observe(actor);
         const feet = body === null ? point : partyFeet(body);
         WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), uturnSwitchText, [], 26);
-        partySwitchOut(world, actor, reserve.slot, feet);
+        return partySwitchOut(world, actor, reserve.slot, feet).ok;
     }
 
     /** 接应点：`rally` 内最近的、位于背离目标一侧的伙伴，没有就返回 null。 */
@@ -51,50 +51,45 @@ namespace PokemonSkills {
         return best;
     }
 
-    /** 位移单次上限 4 格，超出时拆成几步走完。 */
-    function uturnShove(world: CombatWorld, actor: CombatActor, delta: CombatPoint): void {
-        let remaining = delta, guard = 0;
-        while (remaining.length() > 0.05 && guard++ < 10) {
-            const direction = remaining.unit(), step = Math.min(3.5, remaining.length());
-            const moved = world.displace(actor, direction.scale(step));
-            if (moved <= 0.01) return;
-            remaining = remaining.minus(direction.scale(moved));
-        }
-    }
-
-    /** 把落点送回脚下：优先瞬移，失败就按位移一步步走。 */
-    function uturnPlace(world: CombatWorld, actor: CombatActor, body: CombatObservation, destination: CombatPoint): CombatPoint {
-        const feet = WorldCombat.point(destination.x(), destination.y() - body.height() / 2, destination.z());
-        if (world.teleport(actor, feet)) return destination;
-        uturnShove(world, actor, WorldCombat.point(feet.x() - body.position().x(), 0, feet.z() - body.position().z()));
-        const after = world.observe(actor);
-        return after === null ? destination : after.position();
-    }
-
-    /** 折返一幕：算出落点、移过去、在来路上画一条回路并抖粉。 */
+    /** 折返沿真实弧线逐刻移动；碰撞截断运动，画面只记录实际走过的路。 */
     function uturnWithdraw(current: CombatAction, actor: CombatActor, heading: CombatPoint, lateral: CombatPoint,
-        retreat: number, arc: number, rally: number, handoff: boolean, motes: number): void {
+        retreat: number, arc: number, rally: number, handoff: boolean, motes: number,
+        speed: number, complete: (action: CombatAction) => void): void {
         const world = current.world(), body = world.observe(actor);
-        if (body === null) return;
+        if (body === null) { complete(current); return; }
+        current.releaseTarget();
         const from = body.position();
-        let relayed = false, destination: CombatPoint | null = null;
+        let destination = from.plus(heading.scale(-retreat)).plus(lateral.scale(arc)), relayed = false;
         if (handoff) {
             const ally = uturnRelay(world, actor, heading, rally);
             if (ally !== null) { destination = ally.plus(heading.scale(-1.3)); relayed = true; }
         }
-        if (destination === null) destination = from.plus(heading.scale(-retreat)).plus(lateral.scale(arc));
-        const landed = uturnPlace(world, actor, body, destination);
-        WorldFeedback.emit(world, uturnScene, 1, from, {
-            moment: "return", motes: motes, arc: arc, scale: Math.max(0.6, Math.min(1.8, arc / 1.4)),
-            path: [[from.x(), from.y() - body.height() / 2, from.z()],
-                [from.x() + lateral.x() * arc, from.y() - body.height() / 2, from.z() + lateral.z() * arc],
-                [landed.x(), landed.y() - body.height() / 2, landed.z()]]
-        }, 26);
-        if (relayed) {
-            WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.1, 0)), uturnReliefText, [], 26);
-            world.sound("minecraft:entity.bee.loop_aggressive", from, 12, "{}");
+        const control = from.plus(lateral.scale(arc * 1.8));
+        const steps = Math.max(2, Math.ceil((control.minus(from).length() + destination.minus(control).length()) / Math.max(0.15, speed)));
+        const path: number[][] = [[from.x(), from.y() - body.height() / 2, from.z()]];
+        function finish(next: CombatAction): void {
+            const scope = next.world(), at = scope.observe(actor);
+            if (at === null) { complete(next); return; }
+            if (relayed) WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), uturnReliefText, [], 26);
+            // A successful native recall ends this action through actor departure.
+            if (!uturnHandoff(scope, actor, at.position())) complete(next);
         }
-        uturnHandoff(world, actor, landed);
+        function follow(next: CombatAction, step: number): void {
+            const scope = next.world(), observed = scope.observe(actor);
+            if (observed === null) { complete(next); return; }
+            const t = step / steps, u = 1 - t;
+            const goal = from.scale(u * u).plus(control.scale(2 * u * t)).plus(destination.scale(t * t));
+            const delta = goal.minus(observed.position());
+            const moved = LivingActions.step(scope, actor, delta);
+            const after = scope.observe(actor);
+            if (after !== null) path.push([after.position().x(), after.position().y() - after.height() / 2, after.position().z()]);
+            WorldFeedback.keep(scope, "uturn:return:" + next.id(), uturnScene, 1, from,
+                { moment: "return", motes, arc, path: path.slice() }, 12);
+            if (step >= steps || delta.length() > 0.1 && moved < delta.length() * 0.8) { finish(next); return; }
+            next.after(1, following => follow(following, step + 1));
+        }
+        current.stage("returning");
+        follow(current, 1);
     }
 
     define({
@@ -153,23 +148,24 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            function trail(): void {
-                const victim = target !== null && world.valid(target) ? world.observe(target) : null;
-                const dest = victim !== null ? victim.position() : action.targetPosition();
-                const start = body !== null ? body.position() : action.origin();
-                WorldFeedback.emit(world, uturnScene, 1, start, {
-                    moment: "sweep", motes: motes, scale: scale, intensity: intensity,
-                    path: [[start.x(), start.y() - 0.6, start.z()], [dest.x(), dest.y() - 0.6, dest.z()]]
-                }, Math.max(20, Math.round(length / Math.max(0.2, step) * 20) + 16));
+            const outward: number[][] = [[body.position().x(), body.position().y() - body.height() / 2, body.position().z()]];
+            function trail(current: CombatAction): void {
+                const scope = current.world(), at = scope.observe(actor);
+                if (at === null) return;
+                outward.push([at.position().x(), at.position().y() - at.height() / 2, at.position().z()]);
+                WorldFeedback.keep(scope, "uturn:sweep:" + current.id(), uturnScene, 1, at.position(),
+                    { moment: "sweep", motes, scale, intensity, path: outward.slice() }, 8);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
-                const victimBody = target !== null && scope.valid(target) ? scope.observe(target) : null;
                 const delta = heading.scale(Math.min(step, length - travelled));
-                const goal = victimBody !== null ? victimBody.position() : here.plus(heading.scale(length + radius + 0.5));
+                const goal = here.plus(delta);
                 const traced = current.trace(here, goal, radius);
                 if (traced.hitEntity()) {
+                    const contactDistance = Math.min(delta.length(), Math.max(0, traced.position().minus(here).length() - 0.02));
+                    if (contactDistance > 0) scope.displace(actor, heading.scale(contactDistance));
+                    trail(current);
                     const victim = traced.target();
                     let landed = false;
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim))
@@ -180,22 +176,22 @@ namespace PokemonSkills {
                         motes: motes, scale: scale, intensity: intensity, landed: landed ? 1 : 0
                     }, 24);
                     sound(current, "cobblemon:impact.bug");
-                    uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes);
-                    finish(current); return;
+                    uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes, step, finish);
+                    return;
                 }
                 const moved = scope.displace(actor, delta);
                 travelled += moved;
+                trail(current);
                 if (traced.blocked() || moved < 0.05 || travelled >= length) {
                     WorldFeedback.emit(scope, uturnScene, 1, here.plus(delta), { moment: "miss", motes: motes, scale: scale }, 18);
                     WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1, 0)), uturnMissText, [], 20);
                     sound(current, "minecraft:entity.player.attack.nodamage");
-                    uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes);
-                    finish(current); return;
+                    uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes, step, finish);
+                    return;
                 }
                 current.after(1, advance);
             }
 
-            trail();
             sound(action, "cobblemon:move.quickattack.actor");
             advance(action);
         }

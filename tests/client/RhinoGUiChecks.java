@@ -102,7 +102,7 @@ public final class RhinoGUiChecks {
         reply.accept("{\"channel\":\"world_combat:skills\",\"pokemon\":\"subject\",\"code\":\"ok\",\"data\":\"{\\\"skills\\\":[],\\\"menu\\\":[{\\\"id\\\":\\\"actions\\\",\\\"label\\\":\\\"行动安排\\\"},{\\\"id\\\":\\\"actions/hold\\\",\\\"parent\\\":\\\"actions\\\",\\\"label\\\":\\\"原地待命\\\",\\\"command\\\":\\\"hold\\\",\\\"target\\\":\\\"none\\\"}]}\"}");
         if(!input.test("{\"key\":\"command\",\"pressed\":true}"))throw new AssertionError("G not handled");
         choose("行动安排 ›");choose("原地待命");
-        if(commands!=0)throw new AssertionError("Leaf click dispatched before G release");
+        if(commands!=1)throw new AssertionError("Leaf click should dispatch directly");
         input.test("{\"key\":\"command\",\"pressed\":false}");
         if(commands!=1||meshCalls<4||colorCalls<4||opens!=2||opened!=null)throw new AssertionError("Incomplete G path "+commands+"/"+meshCalls+"/"+colorCalls+"/"+opens);
         // Verify tooltip replacement through the actual LDLib Tooltips type and Java overload.

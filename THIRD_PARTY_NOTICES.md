@@ -16,6 +16,8 @@ The player archive contains WorldCombat's two jars and content, not copies of th
 | Cobblemon code | Cobblemon Contributors | [MPL-2.0](https://gitlab.com/cable-mc/cobblemon/-/blob/main/LICENSE), [copyright header](https://gitlab.com/cable-mc/cobblemon/-/blob/main/HEADER) |
 | NeoForge | The NeoForged Team and contributors | [LGPL-2.1](https://github.com/neoforged/NeoForge/blob/1.21.1/LICENSE.txt) |
 | Kotlin for Forge | thedarkcolour and contributors | [LGPL-2.1](https://github.com/thedarkcolour/KotlinForForge/blob/5.x/LICENSE) |
+| JEI (optional) | mezz and contributors | [MIT](https://github.com/mezz/JustEnoughItems/blob/1.21.1/LICENSE.txt) |
+| Create (optional) | simibubi and Create contributors | [MIT](https://github.com/Creators-of-Create/Create/blob/mc1.21.1/dev/LICENSE) |
 | Curios (optional) | C4 and contributors | [LGPL-3.0-or-later](https://github.com/TheIllusiveC4/Curios) |
 
 WorldCombat accesses MadParticle and T88 packages beyond their narrowly exempted developer APIs. Their stated exceptions are not treated as a general exemption for this integration. WorldCombat's own additional permission does not grant rights in these dependencies.

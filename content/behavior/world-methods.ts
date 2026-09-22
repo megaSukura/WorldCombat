@@ -42,8 +42,9 @@ namespace WorldMethods {
      * - `selectTarget`: choose a subject before availability and acceptance checks; null declines this proposal.
      * - `accepts(context, item, target)`: is this target right for the move (identity, state, relation) - not distance.
      * - `reach`: how close the body must get before casting, resolved from this individual's current range; `approach(context, item, target, reach)`:
-     *   called only while outside that reach. Return an approach point, "wait" to hold this tick, or nothing for the default.
-     *   In-range positioning belongs to a method's compose/task nodes; after handles movement once the action finishes.
+     *   called before casting both inside and outside that reach. Return a positioning point, "wait" to hold this tick, or nothing
+     *   for direct range-based approach. A returned point is retained until reached or the observed subject moves; reaching it
+     *   permits casting instead of chasing a newly shifted relative offset. after handles movement once the action finishes.
      * - `target`: choose the casting subject/point after acceptance; `approachTarget`: choose a separate subject to
      *   approach, including for a self cast. Null fails the current use. `execute`: cast it yourself.
      * - `after(context, item, target, progress)`: what happens once the cast has been made - return a running result to keep
@@ -338,16 +339,29 @@ namespace WorldMethods {
             if (!approachTarget || approachTarget.health !== undefined && approachTarget.health <= 0) return WorldBehavior.failure("target-left");
             if (context.facts.busy && !this.library.isReady(context, item, subject)) return WorldBehavior.running();
             var reach = this.reach(context, item, purpose); if (reach < 0) return WorldBehavior.failure("invalid-use-reach");
-            if (distance(source(context).point, approachTarget.point) > reach) {
-                if (this.options.mayApproach && !this.options.mayApproach(context, item, purpose, approachTarget)) return WorldBehavior.failure("guard-range");
-                var plan = usage.approach ? usage.approach(context, item, approachTarget, reach) : null;
-                if (plan === "wait") { this.stop(context); this.report(context, "waiting", purpose); return WorldBehavior.running(); }
-                var destination = plan && typeof plan !== "string" ? plan : approachTarget.point, within = plan && typeof plan !== "string" ? 1 : reach;
-                var navigation = this.move(context, destination, within), moving = navigation === "moving" || navigation === "arrived";
-                this.report(context, moving ? "approaching" : "blocked", moving ? purpose : navigation);
-                return moving ? WorldBehavior.running() : WorldBehavior.failure(navigation);
+            var here = source(context).point, outside = distance(here, approachTarget.point) > reach;
+            var plan = usage.approach ? usage.approach(context, item, approachTarget, reach) : null;
+            if (plan === "wait") { this.stop(context); this.report(context, "waiting", purpose); return WorldBehavior.running(); }
+            var placement = progress.placement;
+            if (!plan) { delete progress.placement; placement = null; }
+            else {
+                if (plan.length !== 3 || !plan.every(function (coordinate) { return typeof coordinate === "number" && isFinite(coordinate); }))
+                    return WorldBehavior.failure("invalid-approach-plan");
+                if (!placement || placement.subject !== approachTarget.ref || distance(placement.observed, approachTarget.point) > 1)
+                    placement = progress.placement = { subject: approachTarget.ref, observed: approachTarget.point.slice(), point: plan.slice(), arrived: false };
+                if (distance(here, placement.point) <= 1) placement.arrived = true;
             }
-            if (!this.library.isReady(context, item, subject)) return WorldBehavior.failure("skill-not-ready");
+            var reposition = placement && !placement.arrived;
+            if (outside || reposition) {
+                if (this.options.mayApproach && !this.options.mayApproach(context, item, purpose, approachTarget)) return WorldBehavior.failure("guard-range");
+                var destination = reposition ? placement.point : approachTarget.point, within = reposition ? 1 : reach;
+                var navigation = this.move(context, destination, within), moving = navigation === "moving" || navigation === "arrived";
+                if (navigation === "arrived" && reposition) placement.arrived = true;
+                this.report(context, moving ? "approaching" : "blocked", moving ? purpose : navigation);
+                if (navigation !== "arrived" || outside) return moving ? WorldBehavior.running() : WorldBehavior.failure(navigation);
+            }
+            if (!this.library.isReady(context, item, subject)) { this.report(context, "waiting", "skill-not-ready"); return WorldBehavior.failure("skill-not-ready"); }
+            if (context.memory.navigation || progress.placement) this.stop(context);
             var rule = this.library.forCapability(item)!;
             var result = rule.execute ? rule.execute(context, item, target, progress) : (context.services.behavior as Host).use(item, target);
             if (typeof result !== "boolean" && typeof result !== "number") return result;

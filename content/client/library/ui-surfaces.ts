@@ -59,7 +59,7 @@ namespace UiSurfaces {
     export function surface(element: any, color: number, radius: number): any { element.getStyle().backgroundTexture(native().Rect.of(intColor(color)).setRadius(radius)); return element; }
     export function element(x: number, y: number, width: number, height: number): any { return place(new (native().Element)(), x, y, width, height); }
     export function root(): any { return element(0, 0, Host.width(), Host.height()); }
-    export function panel(element: any): any { element.addClass("panel_bg"); return element; }
+    export function panel(element: any): any { element.addClass("panel_bg").lss("padding-all",0).lss("gap-all",0); return element; }
     export function scroll(parent: any, x: number, y: number, width: number, height: number): any {
         const view=place(new (native().Scroller)(),x,y,width,height);view.getScrollerViewStyle().mode(native().ScrollerMode.VERTICAL);parent.addChild(view);return view;
     }

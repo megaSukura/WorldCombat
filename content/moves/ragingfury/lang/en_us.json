@@ -9,7 +9,7 @@
   "worldcombat.skill.ragingfury.description.3": "Afterwards the user is confused for %1$s, and each attempted action has a %2$s chance to fumble and take spark backlash.",
   "worldcombat.skill.ragingfury.inferno.on": "Inferno form: the smoldering patch is larger and lasts longer and ignites longer, but the charge is shorter with a slower wind-up and cooldown and a longer daze.",
   "worldcombat.skill.ragingfury.inferno.off": "Stampede form: charges further, keeps a faster rhythm and loses control for less time, but the patch left behind is smaller and shorter.",
-  "worldcombat.skill.ragingfury.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.ragingfury.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP; cooldown %5$s s from commitment.",
   "worldcombat.skill.ragingfury.growth.0": "From level %1$s each burst rises to %2$s power.",
   "worldcombat.skill.ragingfury.growth.1": "From level %1$s each burst rises to %2$s and the smoldering radius to %3$s blocks.",
   "worldcombat.skill.ragingfury.value.blaze": "Burst power",

@@ -28,9 +28,10 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(attractTether, "start", function () { });
+    WorldCombat.effectHandler(attractTether, "operation:world_combat:dispel", effect => effect.end());
 
     // 心软：提交出招被拒，并被牵向施放者一步；视线断了则只停在原地。
-    WorldCombat.on("world_combat:move_attract/hesitate", "world_combat:before_commit", "", function (event) {
+    function attractHesitate(event: CombatWorldEvent): void {
         const world = event.world(), actor = event.actor();
         if (!CombatStatus.has(world, actor, "attract")) return;
         const views = world.effects(actor, attractTether);
@@ -52,6 +53,8 @@ namespace PokemonSkills {
         const delta = from.position().minus(here);
         if (delta.length() <= 0.35) return;
         if (!world.clear(here, from.position())) {
+            MobEffects.consume(world, actor, attractStatus);
+            views.forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
             WorldFeedback.emit(world, attractScene, 1, here, { moment: "snap", target: String(actor.ref()) }, 18);
             WorldFeedback.text(world, attractAbove(here), attractSnapText, [], 24);
             return;
@@ -63,6 +66,14 @@ namespace PokemonSkills {
         const action = event.action();
         if (action !== null) action.face(from.position(), 20, 20);
         WorldFeedback.emit(world, attractScene, 1, after.position(), { moment: "pull", target: String(actor.ref()) }, 26);
+    }
+    WorldCombat.on("world_combat:move_attract/hesitate", "world_combat:before_commit", "", attractHesitate);
+    WorldCombat.on("world_combat:move_attract/native-hesitate", "world_combat:damage_incoming", "", function (event) {
+        const target = event.target();
+        if (target === null || String(target.ref()) === String(event.actor().ref()) || event.action() !== null) return;
+        // Scripted moves already rolled when committing; ordinary native attacks meet the same chance at impact.
+        if (JSON.parse(event.data()).move) return;
+        attractHesitate(event);
     });
 
     // 牵引：着迷期间每 20 刻检查一次，离施放者超过 leash 就被拽回，直到拉进牵引距离。
@@ -76,12 +87,14 @@ namespace PokemonSkills {
         const value = JSON.parse(String(views[0].data()));
         if (!(value.leash > 0)) return;
         const source = attractTetherSource(world, actor);
-        if (source === null) return;
+        if (source === null) { MobEffects.consume(world, actor, attractStatus); return; }
         const body = world.observe(actor), from = world.observe(source);
         if (body === null || from === null) return;
         const delta = from.position().minus(body.position()), dist = delta.length();
         if (dist <= value.leash) return;
         if (!world.clear(body.position(), from.position())) {
+            MobEffects.consume(world, actor, attractStatus);
+            views.forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
             WorldFeedback.emit(world, attractScene, 1, body.position(), { moment: "snap", target: String(actor.ref()) }, 18);
             return;
         }
@@ -107,9 +120,12 @@ namespace PokemonSkills {
     // 时间走完：不吵不闹地散掉（被外力清除时不播）。
     WorldCombat.on("world_combat:move_attract/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== attractStatus || String(data.cause) !== "expired") return;
+        if (String(data.id) !== attractStatus) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        if (MobEffects.read(world, actor, attractStatus) !== null) return;
+        world.effects(actor, attractTether).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+        if (String(data.cause) !== "expired") return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, attractScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 20);

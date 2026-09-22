@@ -87,6 +87,9 @@ namespace NativeRepertoire {
     export interface MenuContext {
         pokemon: CombatPokemon;
         skills: any[];
+        /** Live read scope for conditional commands; absent for a recalled/offline individual. */
+        world?: CombatWorld | null;
+        actor?: CombatActor | null;
     }
     export interface Inspection {
         full: boolean;
@@ -331,7 +334,8 @@ namespace NativeRepertoire {
                 var dependencies: string[] = [];
                 result.concat(requested ? [requested] : []).forEach(detail => (detail.dependencies || []).forEach((id: string) => { if (dependencies.indexOf(id) < 0) dependencies.push(id); }));
                 request.reply(JSON.stringify({ pokemon: { id: String(pokemon.id()), species: String(pokemon.species()), level: pokemon.level() },
-                    skills: result, requested: requested, dependencies, menu: menus.resolve({ pokemon: pokemon, skills: result }), supportedMoves: Object.keys(skills) }));
+                    skills: result, requested: requested, dependencies, menu: menus.resolve({ pokemon: pokemon, skills: result,
+                        world: request.world ? request.world() : null, actor: request.actor ? request.actor() : null }), supportedMoves: Object.keys(skills) }));
             });
         }
         return { skills: skills, preferences: preferences, menus: menus, commands: commands, prefKey: prefKey, stateKey: stateKey, field: field, storage: storage, config: config, state: state, setState: setState, define: define, installChannel: installChannel };

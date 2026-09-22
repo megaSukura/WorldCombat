@@ -6,7 +6,6 @@
   "worldcombat.skill.uturn.description.0": "切进去撞上活体，造成 %1$s 点物理伤害。",
   "worldcombat.skill.uturn.description.1": "冲刺距离 %1$s 格、每刻位移 %2$s 格，判定半径 %3$s 格。",
   "worldcombat.skill.uturn.description.2": "撞后折返 %1$s 格、U 形弧宽 %2$s 格；交棒式会退到 %3$s 格内最近的等候伙伴身边。",
-  "worldcombat.skill.uturn.description.3": "折返时抖落约 %1$s 粒虫粉。",
   "worldcombat.skill.uturn.handoff.on": "交棒式：退到接应半径内最近的等候伙伴身边，折返距离 ×0.78。",
   "worldcombat.skill.uturn.handoff.off": "远遁式：沿弧线径直拉回，折返距离 ×1.15，离敌人最远。",
   "worldcombat.skill.uturn.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

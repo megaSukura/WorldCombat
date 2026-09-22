@@ -42,7 +42,7 @@ namespace PokemonSkills {
             "保持窗口", "这次对调维持多久；等级与特防越高越久，长戏 ×1.9、短戏 ×0.5。窗口走完自动翻回；在窗口内再施展一次也会翻回。"),
         spin: formula(
             F.base(6, "基础").plus(F.stat("specialAttack").div(55).as("特攻")).clamp(6, 16).round(0),
-            "画面对数", { unit: " 对", description: "环绕身侧、随后对调位置的两色牌数量；特攻越高越密，画面按它发射。" }),
+            "画面对数", { visible: false, unit: " 对", description: "环绕身侧、随后对调位置的两色牌数量；特攻越高越密，画面按它发射。" }),
         recharge: seconds(
             F.base(70, "基础").minus(F.level().times(0.35).as("等级"))
                 .times(F.when(F.pref("long", text("worldcombat.skill.powertrick.preference.long")), F.const(1.3), F.const(0.85)).as("戏法长短"))
@@ -54,7 +54,6 @@ namespace PokemonSkills {
 
     describe("powertrick", [
         { key: "description.0", values: ["window"] },
-        { key: "description.1", values: ["spin"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "long.on", values: [], when: function (context) { return read(context.detail.values, ["long"]) === true; } },
         { key: "long.off", values: [], when: function (context) { return read(context.detail.values, ["long"]) !== true; } },

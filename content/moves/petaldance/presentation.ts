@@ -41,7 +41,7 @@ const PetalDanceDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "storm_ring", bind: "source", offset: [0, 0.2, 0], height: 0.1, fit: "none",
+                    name: "storm_ring", bind: "point", offset: [0, 0.2, 0], height: 0.1, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
                     burst: { count: { data: "motes", fallback: 18 } }, shape: { kind: "ring", radius: 5.0 },
                     direction: "outward", speed: [0.06, 0.2], drag: 0.9, spin: 20,
@@ -49,7 +49,7 @@ const PetalDanceDefinition: ParticleDefinition = {
                     color: 0x7FB56A, alpha: [0.7, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "bloom_ring", bind: "source", offset: [0, 0.24, 0], height: 0.1, fit: "none",
+                    name: "bloom_ring", bind: "point", offset: [0, 0.24, 0], height: 0.1, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 1 }, shape: { kind: "ring", radius: 5.0 },
                     direction: "outward", speed: [0.08, 0.24], drag: 0.9,

@@ -9,7 +9,7 @@
   "worldcombat.skill.ragingfury.description.3": "冲完自己陷入恍惚 %1$s，期间每次想出手有 %2$s 的概率被打散并被火星反噬。",
   "worldcombat.skill.ragingfury.inferno.on": "烈焰式：落点火场更大更久、点燃更久，但冲锋更短、起手与冷却更久、冲完晕得更久。",
   "worldcombat.skill.ragingfury.inferno.off": "奔袭式：冲得更远、节奏更快、失控更短，但留下的火场更小更短。",
-  "worldcombat.skill.ragingfury.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.ragingfury.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP；提交后冷却 %5$s 秒。",
   "worldcombat.skill.ragingfury.growth.0": "%1$s 级起每段威力抬到 %2$s。",
   "worldcombat.skill.ragingfury.growth.1": "%1$s 级起每段威力抬到 %2$s、余烬半径升到 %3$s 格。",
   "worldcombat.skill.ragingfury.value.blaze": "每段威力",

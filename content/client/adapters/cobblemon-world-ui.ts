@@ -28,6 +28,6 @@ namespace CobblemonWorldUi {
         if (!value) return null;
         const aim = value.aim, id = actor(aim.target), entity = value.targetMode !== "point" && id && id !== "00000000-0000-0000-0000-000000000000";
         return { actor: entity ? id : undefined, point: entity ? undefined : [aim.point.x, aim.point.y, aim.point.z], width: 98, background: 0xed193e30,
-            rows: [{ kind: "text", text: value.label, color: 0xffe4f1c4 }, { kind: "text", text: value.confirm + " 确认 / " + value.back + " 撤回", color: 0xffacd1b3 }] };
+            rows: [{ kind: "text", text: value.label, color: 0xffe4f1c4 }, { kind: "text", text: UiSurfaces.t("worldcombat.ui.target_controls",value.confirm,value.back), color: 0xffacd1b3 }] };
     }
 }

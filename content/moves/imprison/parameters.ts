@@ -56,7 +56,7 @@ namespace PokemonSkills {
             }),
         sealCount: formula(
             F.base(6).plus(F.stat("specialDefence").div(40)).clamp(6, 20).round(0),
-            "封印纹数", {
+            "封印纹数", { visible: false,
                 unit: "道",
                 description: "封印上刻出的纹路数量，也驱动落地与持续画面里的发射量；特防越高纹路越密。"
             }),
@@ -77,7 +77,7 @@ namespace PokemonSkills {
 
     describe(imprisonId, [
         { key: "description.0", values: ["imprisonTicks"] },
-        { key: "description.1", values: ["imprisonRadius", "sealCount"] },
+        { key: "description.1", values: ["imprisonRadius"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "scope.0", values: [], when: function (context) { return read(context.detail.values, ["scope"]) === 1; } },
         { key: "scope.1", values: [], when: function (context) { return read(context.detail.values, ["scope"]) !== 1; } },

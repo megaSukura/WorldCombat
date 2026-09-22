@@ -15,7 +15,10 @@ public final class CombatKubePlugin implements KubeJSPlugin {
     }
 
     @Override public void beforeScriptsLoaded(ScriptManager manager) {
-        if (manager.scriptType.isClient()) dev.worldcombat.core.client.ClientPresentation.reset();
+        if (manager.scriptType.isClient()) {
+            dev.worldcombat.core.client.ItemInformation.beginReload();
+            dev.worldcombat.core.client.ClientPresentation.reset();
+        }
         if (manager.scriptType.isServer()) {
             CombatServices.CONTENT.begin();
             CombatServices.reload();
@@ -23,6 +26,7 @@ public final class CombatKubePlugin implements KubeJSPlugin {
     }
 
     @Override public void afterScriptsLoaded(ScriptManager manager) {
+        if (manager.scriptType.isClient()) dev.worldcombat.core.client.ItemInformation.completeReload(manager.scriptType.console.errors.isEmpty());
         if (manager.scriptType.isServer()) {
             boolean valid = manager.scriptType.console.errors.isEmpty();
             try { CombatServices.CONTENT.complete(valid); }

@@ -52,6 +52,13 @@ public final class MinecraftCombat implements CombatHost {
     @Override public String useItem(ActorHandle actor, UUID controller, Point point, String item, String expected) {
         return NativeBlockUse.use(this, actor, controller, point, item, expected);
     }
+    @Override public String interactBlock(ActorHandle actor, UUID controller, Point point, String face, boolean secondary, String expected) {
+        return NativeBlockUse.interact(this, actor, controller, point, face, secondary, expected);
+    }
+    @Override public EnergyObservation energy(ActorHandle actor, Point point, String side) { return NativeEnergy.read(this, actor, point, side); }
+    @Override public int receiveEnergy(ActorHandle actor, UUID controller, Point point, String side, int amount, boolean simulate) {
+        return NativeEnergy.receive(this, actor, controller, point, side, amount, simulate);
+    }
     private String damageMetadata = "{}";
     private final Map<Long, List<Runnable>> resourceLeases = new HashMap<>();
     // Retain the native impact source through deferred script settlement, including after entity removal.

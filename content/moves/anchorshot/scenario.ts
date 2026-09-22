@@ -32,6 +32,12 @@ Smoke.scenario("anchorshot", function (stage) {
             chainBlocks: chainBlocks(),
             foeAlive: foe.alive()
         });
-        stage.done();
+        stage.setPp(caster, "anchorshot", 0);
+        stage.command("effect clear " + foe.ref.split("/")[0] + " world_combat:anchor_chain_status");
+        stage.after(3, function () {
+            stage.expect(!stage.hasMobEffect(foe, "world_combat:status/trapped"), "clearing the carrier releases the tether state");
+            stage.expect(chainBlocks() === 0, "clearing the carrier restores its anchor block");
+            stage.done();
+        });
     }, "anchor shot binds the foe within 35 s");
 });

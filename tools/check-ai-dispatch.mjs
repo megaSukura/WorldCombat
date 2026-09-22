@@ -818,6 +818,26 @@ check('wild notifications retain the successful pre-cast identity and omit refus
   assert.equal(h.state.skills[0].pp, 2); assert.equal(h.state.payments.length, 2);
 });
 
+check('manual pending cleanup releases autonomous JS state without stopping native manual navigation',()=>{
+  const h=harness();h.state.intent='hold';h.state.tick=20;let lastManual=0,pending=false,stops=0,memory='{"checks":true}';
+  h.state.world.stopMovement=()=>stops++;
+  const orders=new h.sandbox.PokemonBehaviorHost.Orders();orders.register({id:'hold',persistent:true});
+  const manager=new h.sandbox.PokemonBehaviorHost.Companions({frame:()=>h.frame()},new h.M.Pool(h.C.registry),{id:'checks',orders,defaultIntent:'hold',decisionTicks:4,manualGrace:12,settings:{lookRange:15,chaseRange:16}});
+  const view={world:()=>h.state.world,actor:h.state.world.source,operation:()=> 'tick',owner:()=>null,intent:()=> 'hold',intentPoint:()=>null,intentTarget:()=>null,chaseRange:()=>16,captureHold:()=>'',
+    lastManual:()=>lastManual,pending:()=>pending,preferences:()=> '{}',settings(){},report(){},submitInput(){return 0;},memory(value){if(value!==undefined)memory=value;return memory;}};
+  manager.update(view);assert(stops>0,'Autonomous hold established before takeover');const before=stops;
+  pending=true;lastManual=24;h.state.tick=24;manager.update(view);assert.equal(stops,before,'Accepted manual navigation survives old task exit');
+  h.state.tick=28;manager.update(view);assert.equal(stops,before,'Waiting manual order is not replaced by default behavior');
+  pending=false;h.state.tick=40;manager.update(view);assert(stops>before,'Normal command resumes after manual waiting finishes');
+});
+check('focus approaches while cooling down and searches only its last visible observation',()=>{
+  const h=harness();h.add('checks:shot','world_combat:attack',{}, {ready:false,range:3});h.threat.point=[8,0,0];
+  function focused(issue=''){const frame=h.frame();frame.facts.intent='focus';frame.facts.focus=h.threat.ref;frame.facts.focusIssue=issue;const result=h.agent.tick(frame);h.state.tick+=4;return result;}
+  focused();assert.deepEqual(h.state.moves.at(-1).point,[8,0,0]);assert.equal(h.state.casts.length,0);
+  h.threat.visible=false;h.threat.point=[15,0,5];focused('target-not-visible');assert.deepEqual(h.state.moves.at(-1).point,[8,0,0],'Hidden fresh coordinates must not become a navigation goal');
+  h.state.tick=70;const count=h.state.moves.length;focused('target-not-visible');assert.equal(h.state.moves.length,count,'Search stops when the observed memory expires');
+  h.threat.visible=true;h.threat.point=[6,0,2];focused();assert.deepEqual(h.state.moves.at(-1).point,[6,0,2]);
+});
 console.log(`PASS ${cases} neutral AI dispatch regressions; in-memory output only`);
 assert.equal(errors.length, 0, ts.formatDiagnosticsWithColorAndContext(errors, {
   getCurrentDirectory: () => root, getCanonicalFileName: value => value, getNewLine: () => '\n',

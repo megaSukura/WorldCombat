@@ -10,15 +10,25 @@ namespace PokemonSkills {
     function auroraVeilPoint(field: WorldEffects.Field): CombatPoint {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
-    function auroraVeilMarkOf(world: CombatWorld, actor: CombatActor): any {
-        const views = world.effects(actor, auroraveilMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+    function auroraVeilMarkOf(world: CombatWorld, actor: CombatActor, category: string): any {
+        const views = world.effects(actor, auroraveilMark), key = category === "physical" ? "cutPhys" : "cutSpec";
+        let best: any = null;
+        for (let i = 0; i < views.length; i++) {
+            const data = JSON.parse(String(views[i].data()));
+            if (best === null || data[key] > best[key]) best = data;
+        }
+        return best;
     }
-    function auroraVeilApply(world: CombatWorld, actor: CombatActor, ticks: number, data: any): boolean {
+    function auroraVeilApply(world: CombatWorld, actor: CombatActor, ticks: number, field: WorldEffects.Field): boolean {
         if (MobEffects.apply(world, actor, auroraveilEffect, ticks, 0) === null) return false;
+        const data: any = {};
+        Object.keys(field.data).forEach(function (key) { data[key] = field.data[key]; });
+        data.fieldId = field.id;
         const views = world.effects(actor, auroraveilMark);
-        for (let i = 0; i < views.length; i++)
-            if (world.operation(views[i].id(), "world_combat:refresh", JSON.stringify({ ticks: ticks }))) return true;
+        for (let i = 0; i < views.length; i++) {
+            const state = JSON.parse(String(views[i].data()));
+            if (state.fieldId === field.id && world.operation(views[i].id(), "world_combat:refresh", JSON.stringify({ ticks: ticks }))) return true;
+        }
         world.effect(auroraveilMark, actor, JSON.stringify(data), ticks);
         return true;
     }
@@ -33,20 +43,20 @@ namespace PokemonSkills {
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(auroraveilMark, "start", function () { });
     WorldCombat.effectHandler(auroraveilMark, "operation:world_combat:refresh", function (effect) {
-        if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
         const ticks = JSON.parse(effect.input()).ticks;
         if (typeof ticks !== "number" || !isFinite(ticks) || ticks < 1 || ticks % 1) { effect.reject("invalid-duration"); return; }
         effect.remaining(Math.max(1, Math.min(900, Math.round(ticks))));
     });
     WorldCombat.effectHandler(auroraveilMark, "operation:world_combat:dispel", function (effect) {
-        if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
         effect.end();
     });
 
     WorldEffects.fieldRule(auroraveilField, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (!world.friendly(actor)) return;
-            auroraVeilApply(world, actor, Math.max(40, Math.round(Number(field.data.margin) || 60)), field.data);
+            auroraVeilApply(world, actor, Math.max(40, Math.round(Number(field.data.margin) || 60)), field);
             const body = world.observe(actor);
             if (body === null) return;
             WorldFeedback.emit(world, auroraveilScene, 1, body.position(),
@@ -54,13 +64,16 @@ namespace PokemonSkills {
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (!world.friendly(actor)) return;
-            auroraVeilApply(world, actor, Math.max(40, Math.round(Number(field.data.margin) || 60)), field.data);
+            auroraVeilApply(world, actor, Math.max(40, Math.round(Number(field.data.margin) || 60)), field);
         },
         leave: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (!world.friendly(actor)) return;
-            MobEffects.consume(world, actor, auroraveilEffect);
             const views = world.effects(actor, auroraveilMark);
-            for (let i = 0; i < views.length; i++) world.operation(views[i].id(), "world_combat:dispel", "{}");
+            for (let i = 0; i < views.length; i++) {
+                const data = JSON.parse(String(views[i].data()));
+                if (data.fieldId === field.id) world.operation(views[i].id(), "world_combat:dispel", "{}");
+            }
+            if (!world.effects(actor, auroraveilMark).length) MobEffects.consume(world, actor, auroraveilEffect);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = auroraVeilPoint(field);
@@ -74,10 +87,10 @@ namespace PokemonSkills {
         const data = hit.data;
         if (!data || data.bypassesInvulnerability || !(data.amount > 0)) return;
         const world = hit.world, target = hit.target;
-        if (!world.valid(target) || !world.friendly(target)) return;
+        if (!world.valid(target) || MobEffects.read(world, target, auroraveilEffect) === null) return;
         const category = String(data.category);
         if (category !== "physical" && category !== "special") return;
-        const mark = auroraVeilMarkOf(world, target);
+        const mark = auroraVeilMarkOf(world, target, category);
         if (mark === null) return;
         const share = Math.max(0, Math.min(0.8, Number(category === "physical" ? mark.cutPhys : mark.cutSpec) || 0));
         if (share <= 0) return;

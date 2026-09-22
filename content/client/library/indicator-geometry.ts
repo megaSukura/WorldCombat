@@ -5,6 +5,7 @@
  * real consumer instead of being decorative.
  *
  * Accepted `geometry` values and their preview:
+ *  - "block":  the full outline of the selected world cell (point is its centre).
  *  - "point":  a small dot at the aim point.
  *  - "circle": a ground ring of `radius`.
  *  - "area":   a ground disc outline (outer `radius` plus an inner guide ring).
@@ -13,7 +14,7 @@
  * Unknown geometry falls back to "point"; a missing radius/colour uses the fallback.
  */
 namespace IndicatorGeometry {
-    export const geometries = ["point", "line", "circle", "area", "cone"];
+    export const geometries = ["point", "line", "circle", "area", "cone", "block"];
     export type Renderer = (frame: CombatClientFrame, point: number[], data: any) => void;
     var renderers: { [id: string]: Renderer } = Object.create(null);
     export function register(id: string, render: Renderer): void {
@@ -44,6 +45,15 @@ namespace IndicatorGeometry {
         const color = (rawColor >= 0 && rawColor <= 0xFFFFFF ? rawColor | 0xFF000000 : rawColor) | 0;
         const x = point[0], y = point[1], z = point[2];
         const direction = directionOf(data);
+        if (geometry === "block") {
+            const min=[Math.floor(x)-.002,Math.floor(y)-.002,Math.floor(z)-.002],max=min.map(value=>value+1.004);
+            for(let axis=0;axis<3;axis++)for(let a=0;a<2;a++)for(let b=0;b<2;b++){
+                const from=min.slice(),to=min.slice(),other=(axis+1)%3,last=(axis+2)%3;
+                from[other]=to[other]=a?max[other]:min[other];from[last]=to[last]=b?max[last]:min[last];to[axis]=max[axis];
+                frame.line(from[0],from[1],from[2],to[0],to[1],to[2],color);
+            }
+            return;
+        }
         if (geometry === "point") {
             frame.ring(x, y, z, 0.12, color);
             return;

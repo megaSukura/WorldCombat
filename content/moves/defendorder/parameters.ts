@@ -84,7 +84,7 @@ namespace PokemonSkills {
     describe("defendorder", [
         { key: "description.0", values: ["brood", "carapace"] },
         { key: "description.1", values: ["bond", "ring", "chitin"] },
-        { key: "description.2", values: ["guards", "tempo", "aftercast", "wait"] },
+        { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "swarm.on", values: [], when: function (context) { return read(context.detail.values, ["swarm"]) === true; } },
         { key: "swarm.off", values: [], when: function (context) { return read(context.detail.values, ["swarm"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

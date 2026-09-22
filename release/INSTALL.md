@@ -1,4 +1,4 @@
-# WorldCombat 0.1.0-alpha.1 安装
+# WorldCombat 0.1.0-alpha.2 安装
 
 这是首个公开测试版本。使用 Java 21、Minecraft **1.21.1**、NeoForge **21.1.250**。游戏客户端与专用服务器使用同一版 WorldCombat 和内容文件。
 
@@ -17,15 +17,19 @@
 | [LDLib2](https://github.com/Low-Drag-MC/LDLib2) | 2.2.40，NeoForge 1.21.1 完整 all 发行版 | 两端 |
 | [MadParticle](https://modrinth.com/mod/mad-particle) | 0.8.21，NeoForge 版 | 客户端 |
 | [T88](https://www.curseforge.com/minecraft/mc-mods/t88/files/5745052) | 0.12.3，文件 5745052 | 客户端 |
+| [JEI](https://modrinth.com/mod/jei) | 19.57.0.446，NeoForge 版 | 可选；客户端物品用途说明 |
+| [Create](https://modrinth.com/mod/create) | 6.0.10，NeoForge 1.21.1 完整发行包 | 可选；曲柄协作需两端安装 |
 | [Curios](https://modrinth.com/mod/curios) | 9.5.1+1.21.1 | 可选；使用相关装备时两端安装 |
 
 发行包只提供本项目文件，外部依赖独立安装。若启动器自动安装依赖，请核对最终版本。T88 该版本的 1.21 声明由本版 NeoForge 的原生兼容矩阵支持。
 
 ## 开始操作
 
-用 Cobblemon 原生操作取得并放出宝可梦。默认 **Z/X/C/V** 对应四个招式位，**G** 打开指挥交互，**H** 打开偏好设置，原生详情页查看招式说明。按键可在游戏的控制设置中调整；遇到其他 Mod 的快捷键冲突时从这里修改。
+用 Cobblemon 原生操作取得并放出宝可梦。默认 **Z/X/C/V** 对应四个招式位，**G** 短按打开指挥圆盘并点击选择（长按松开可快选），**H** 打开偏好设置，原生详情页查看招式说明。按键可在游戏的控制设置中调整；遇到其他 Mod 的快捷键冲突时从这里修改。
 
 本项目把交战放到世界中，玩家可正常移动、攻击、使用物品和指挥伙伴。安装包不自动创建验收场地；开发用的验收启动器与测试存档不包含在发行包中。
+
+充电后，G 会临时出现供能指挥，选中一台接收 FE 的机器即可安排伙伴走近供能。安装 Create 后，配有辅助齿轮的伙伴会提供曲柄正反转子菜单；选择手摇曲柄开始作业，菜单可停止。JEI 中相应物品的说明页提供用途提示。
 
 ## 整合包配置
 

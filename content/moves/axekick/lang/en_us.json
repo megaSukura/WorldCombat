@@ -3,10 +3,10 @@
   "worldcombat.skill.axekick.description.0": "The falling heel deals %1$s contact damage; the target's defence, type match-up and crits are settled on the hit.",
   "worldcombat.skill.axekick.description.1": "Raise the leg %1$s blocks at %2$s blocks per tick, chopping down at %3$s blocks per tick with %4$s blocks per tick of forward drift.",
   "worldcombat.skill.axekick.description.2": "Up to %1$s blocks of reach with a %2$s block heel radius; a miss costs %3$s of the user's maximum health.",
-  "worldcombat.skill.axekick.description.3": "A hit has a %1$s chance to confuse the target for %2$s ticks and knocks it back %3$s blocks.",
+  "worldcombat.skill.axekick.description.3": "A successful hit has a %1$s chance to confuse the target for %2$s ticks and knocks it back %3$s blocks. While confused, each action has a %4$s chance to fail.",
   "worldcombat.skill.axekick.high.on": "High chop: a higher leg raise, x1.08 chop power and a wider heel radius, at +2 ticks of wind-up, +4 ticks of cooldown, 0.4 blocks less reach and a heavier self-hurt on a miss.",
   "worldcombat.skill.axekick.high.off": "Low quick chop: faster to fire, farther and lighter on a miss, at the cost of a tier less chop power and reach.",
-  "worldcombat.skill.axekick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.axekick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP; cooldown %5$s s from commitment.",
   "worldcombat.skill.axekick.growth.0": "From level %1$s the chop power rises to %2$s.",
   "worldcombat.skill.axekick.growth.1": "From level %1$s the chop power rises to %2$s.",
   "worldcombat.skill.axekick.use.0": "Chop through a hard target with a straight-down strike",
@@ -36,5 +36,6 @@
   "effect.world_combat.axekick_ring": "Dazed",
   "world_combat.move.axekick.text.hit": "Axe Kick",
   "world_combat.move.axekick.text.crash": "Whiffed",
-  "world_combat.move.axekick.text.daze": "Dazed %1$s s"
+  "world_combat.move.axekick.text.daze": "Dazed %1$s s",
+  "worldcombat.skill.axekick.value.fumbleChance": "Confusion fumble chance"
 }

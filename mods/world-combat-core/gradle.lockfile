@@ -47,6 +47,7 @@ io.netty:netty-transport:4.1.97.Final=additionalRuntimeClasspath,clientLegacyCla
 it.unimi.dsi:fastutil:8.3.1=neoFormRuntimeExternalTools
 it.unimi.dsi:fastutil:8.5.12=additionalRuntimeClasspath,clientLegacyClasspath,compileClasspath,neoFormRuntimeDependenciesCompileClasspath,neoFormRuntimeDependenciesRuntimeClasspath,runtimeClasspath,serverLegacyClasspath
 maven.modrinth:mad-particle:0.8.21=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+mezz.jei:jei-1.21.1-common-api:19.57.0.446=compileClasspath
 net.covers1624:Quack:0.4.10.101=neoFormRuntimeExternalTools
 net.fabricmc:sponge-mixin:0.15.2+mixin.0.8.7=additionalRuntimeClasspath,clientLegacyClasspath,compileClasspath,neoFormRuntimeDependenciesCompileClasspath,neoFormRuntimeDependenciesRuntimeClasspath,runtimeClasspath,serverLegacyClasspath
 net.java.dev.jna:jna-platform:5.14.0=additionalRuntimeClasspath,clientLegacyClasspath,compileClasspath,neoFormRuntimeDependenciesCompileClasspath,neoFormRuntimeDependenciesRuntimeClasspath,runtimeClasspath,serverLegacyClasspath

@@ -49,6 +49,11 @@ namespace PokemonSkills {
 
     // 余烬火场：站在里面的非友方每 5 刻被重新点着一次；火由本招的 field 携带，不破坏方块。
     WorldEffects.fieldRule(ragingfuryField, {
+        scan: function (effect, world, field) {
+            WorldFeedback.keep(world, ragingfuryId + ":ember:" + effect.id(), ragingfuryScene, 1,
+                WorldCombat.point(field.position[0], field.position[1], field.position[2]),
+                { moment: "smolder", scale: field.radius / 2.2 }, Math.max(1, Math.min(6, effect.remaining())));
+        },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field) {
             if (world.friendly(actor)) return;
             const data: any = field.data || {};
@@ -57,7 +62,7 @@ namespace PokemonSkills {
         }
     });
 
-    interface FuryState { left: number; strikes: number; index: number; }
+    interface FuryState { complete: (action: CombatAction) => void; left: number; strikes: number; index: number; }
 
     function ragingfurySpent(current: CombatAction, state: FuryState): void {
         const world = current.world(), actor = current.actor(), body = world.observe(actor);
@@ -70,7 +75,7 @@ namespace PokemonSkills {
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), ragingfuryDazeText, [], 30);
             world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
         }
-        current.finish();
+        state.complete(current);
     }
 
     function ragingfuryStrike(current: CombatAction, state: FuryState): void {
@@ -135,8 +140,6 @@ namespace PokemonSkills {
                 { moment: "ember", target: String(actor.ref()), scale: Math.max(0.6, Math.min(2.4, emberRadius / 2.2)),
                     intensity: Math.max(0.6, Math.min(2.0, power / 40)) }, 40);
             WorldFeedback.text(world, emberPoint.plus(WorldCombat.point(0, 0.9, 0)), ragingfuryEmberText, [], 26);
-            WorldFeedback.keep(world, ragingfuryId + ":ember:" + String(actor.ref()), ragingfuryScene, 1, emberPoint,
-                { moment: "smolder", target: String(actor.ref()), scale: Math.max(0.6, Math.min(2.4, emberRadius / 2.2)) }, 20);
         }
 
         state.left = state.left - 1;
@@ -185,11 +188,13 @@ namespace PokemonSkills {
             const prepare = Math.max(3, Math.round(p(ragingfuryId, "tempo", action)));
             action.present(ragingfuryId + ":windup", ragingfuryScene, 1, action.origin(),
                 JSON.stringify({ moment: "tempo", inferno: inferno ? 1 : 0 }));
-            action.after(prepare, function (current: CombatAction) {
-                const cooldown = Math.max(1, Math.round(p(ragingfuryId, "recharge", current)));
-                current.commit(cooldown);
+            LivingActions.run(action, {
+                prepare: prepare, recover: Math.max(0, Math.round(p(ragingfuryId, "recover", action))),
+                cooldown: Math.max(1, Math.round(p(ragingfuryId, "recharge", action))),
+                stationary: true, turn: 15, interruptible: false
+            }, function (current, complete) {
                 const strikes = Math.max(2, Math.min(3, Math.round(p(ragingfuryId, "strikes", current))));
-                const state: FuryState = { left: strikes, strikes: strikes, index: 0 };
+                const state: FuryState = { complete: complete, left: strikes, strikes: strikes, index: 0 };
                 sound(current, "minecraft:entity.blaze.burn");
                 ragingfuryStrike(current, state);
             });
@@ -214,7 +219,7 @@ namespace PokemonSkills {
             const fraction = Math.max(0.012, Math.min(0.05, 0.010 + attack * 0.00012));
             const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
             if (loss > 0) {
-                const remaining = Math.max(0, effect.duration() - world.tick());
+                const remaining = Math.max(0, effect.duration());
                 CombatStatus.apply(world, actor, "confusion", ragingfuryDaze, Math.max(60, remaining), effect.amplifier(), { unique: true });
                 WorldFeedback.emit(world, ragingfuryScene, 1, body.position(), { moment: "punish", target: String(actor.ref()) }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), ragingfuryChipText, [Math.round(loss * 10) / 10], 24);

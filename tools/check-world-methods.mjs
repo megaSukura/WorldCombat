@@ -151,4 +151,21 @@ check('boolean hosts retain optional observation compatibility and explicit subm
     assert.equal(followed, 1);
   }
 });
+check('in-range placement is reachable once, rather than chasing a moving relative offset', () => {
+  const library=new M.Library(),tasks=new M.Tasks(library),progress={},moves=[],body={ref:'checks:worker',point:[0,0,0]},target={ref:'checks:workpiece',point:[3,0,0]};let casts=0;
+  library.register('checks:align',{protocols:['checks:work'],reach:()=>8,approach:()=>[body.point[0]+2,0,body.point[2]],execute:()=>{casts++;return 31;}});
+  const frame={actor:body.ref,tick:1,facts:{self:body,nearby:[target],busy:false},scratch:{},memory:{},active:null,suspended:[],choice:{key:'checks:align'},
+    capabilities:[{id:'tool',protocols:['checks:work'],data:{use:'checks:align',range:8}}],services:{behavior:{move:(point)=>{moves.push(Array.from(point));return 'moving';},stop(){},face(){},random:()=>.5}}};
+  assert.equal(tasks.perform(frame,'tool','work',target,progress).state,'running');assert.deepEqual(moves,[[2,0,0]]);assert.equal(casts,0);
+  body.point=[2,0,0];frame.tick++;tasks.perform(frame,'tool','work',target,progress);assert.equal(casts,1);assert.equal(moves.length,1,'Reached placement must not advance to another relative offset');
+});
+check('in-range placement respects station permission and a wait plan blocks casting', () => {
+  for(const wait of [false,true]) {
+    const library=new M.Library(),tasks=new M.Tasks(library,{mayApproach:()=>false}),body={ref:'checks:station',point:[0,0,0]},target={ref:'checks:target',point:[1,0,0]};let casts=0;
+    library.register('checks:use',{protocols:['checks:work'],reach:()=>4,approach:()=>wait?'wait':[2,0,0],execute:()=>{casts++;return 1;}});
+    const frame={actor:body.ref,tick:1,facts:{self:body,nearby:[target],busy:false},scratch:{},memory:{},active:null,suspended:[],choice:{key:'checks:use'},
+      capabilities:[{id:'tool',protocols:['checks:work'],data:{use:'checks:use',range:4}}],services:{behavior:{stop(){},move(){throw Error('Station left');}}}};
+    const result=tasks.perform(frame,'tool','work',target,{});assert.equal(result.state,wait?'running':'failed');assert.equal(casts,0);
+  }
+});
 console.log(`PASS independent world methods: ${checks} checks, no native SDK or final content loaded`);

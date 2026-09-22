@@ -11,6 +11,7 @@ kubejs = "2101.7.2-build.377"
 rhino = "2101.2.7-build.81"
 ldlib2 = "2.2.40"
 curios = "9.5.1+1.21.1"
+jei = "19.57.0.446"
 # MadParticle (GPL-3.0, USS_Shenzhou) is the particle simulation/rendering prerequisite; T88 is its library.
 madparticle = "0.8.21"
 t88 = "5745052"
@@ -25,6 +26,9 @@ madparticle = { module = "maven.modrinth:mad-particle", version.ref = "madpartic
 t88 = { module = "curse.maven:t88-663112", version.ref = "t88" }
 
 curios = { module = "top.theillusivec4.curios:curios-neoforge", version.ref = "curios" }
+
+jeiApi = { module = "mezz.jei:jei-1.21.1-common-api", version.ref = "jei" }
+jeiRuntime = { module = "mezz.jei:jei-1.21.1-neoforge", version.ref = "jei" }
 
 [plugins]
 moddev = { id = "net.neoforged.moddev", version.ref = "moddev" }

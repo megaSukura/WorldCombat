@@ -109,7 +109,7 @@ namespace PokemonSkills {
         /** 夹齿粒子量：10 + 物攻 ×0.1；夹 8..32。同时驱动画面密度。 */
         jaws: formula(
             F.base(10).plus(F.stat("attack").times(0.1)).clamp(8, 32).round(0),
-            "夹齿数量", {
+            "夹齿数量", { visible: false,
                 base: 10, unit: "个",
                 description: "合上时迸出的夹齿碎屑量；随物攻增长，也决定画面里那一口的密度。"
             }),

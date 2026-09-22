@@ -39,6 +39,7 @@ public final class CompanionContentClient {
     private static UUID session;
     private static long epoch;
     private static boolean commandHeld;
+    private static long commandPressedAt;
     private static UUID inspection;
     private static String indicator = "[]";
     private static final java.util.Map<String, Long> requested = new java.util.HashMap<>();
@@ -119,8 +120,12 @@ public final class CompanionContentClient {
         if (name.isEmpty() || action == GLFW.GLFW_REPEAT) return false;
         if (action == GLFW.GLFW_PRESS && !NativeUiHost.active() && Minecraft.getInstance().screen != null)
             return name.equals("settings") && SummaryContentBridge.activateFocused();
-        if (name.equals("command")) commandHeld = action == GLFW.GLFW_PRESS;
+        if (name.equals("command")) {
+            commandHeld = action == GLFW.GLFW_PRESS;
+            if (commandHeld) commandPressedAt = System.nanoTime();
+        }
         var event = new JsonObject(); event.addProperty("key", name); event.addProperty("pressed", action == GLFW.GLFW_PRESS);
+        if (name.equals("command") && action == GLFW.GLFW_RELEASE) event.addProperty("heldMillis", (System.nanoTime() - commandPressedAt) / 1_000_000);
         return input.test(event.toString());
     }
     private static void tick(ClientTickEvent.Post ignored) {
@@ -142,6 +147,17 @@ public final class CompanionContentClient {
         requested.clear(); indicator = "[]"; inspection = null;
     }
     public static String look() { return JSON.toJson(lookAim()); }
+    /** A menu's block target is the exact ray-hit cell; point targeting keeps its separate surface semantics. */
+    public static String blockAim() {
+        var mc = Minecraft.getInstance();
+        if (mc.player == null || mc.level == null) return "null";
+        Vec3 eye = mc.player.getEyePosition(), direction = mc.player.getLookAngle(), end = eye.add(direction.scale(40));
+        var hit = mc.level.clip(new ClipContext(eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player));
+        boolean surface = hit.getType() == HitResult.Type.BLOCK;
+        Vec3 point = surface ? Vec3.atCenterOf(hit.getBlockPos()) : hit.getLocation();
+        return JSON.toJson(new CompanionInput.Aim(ControlCommand.NONE, new Point(point.x, point.y, point.z),
+            new Point(direction.x, direction.y, direction.z), eye, point, surface ? "" : "no-surface"));
+    }
     public static String aim(String kind) {
         if (!kind.equals("self") && !kind.equals("player")) return look();
         var mc = Minecraft.getInstance();
@@ -160,6 +176,7 @@ public final class CompanionContentClient {
         var aim = aimJson == null || aimJson.isBlank() ? CompanionInput.aim(slot) : JSON.fromJson(aimJson, CompanionInput.Aim.class);
         if (aim == null) return 0;
         if (!aim.reason().isEmpty() && !aim.reason().equals("path-blocked") && !aim.reason().equals("out-of-range")) { CompanionInput.notifyReason(aim.reason()); return 0; }
+        if (ComplexInput.begin(slot, aim, true)) return 0;
         return CompanionInput.submit("cast", slot, aim, state.skills().get(slot).version(), "{}");
     }
     public static boolean dispatch(String key) {

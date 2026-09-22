@@ -38,6 +38,8 @@ val ldlib2EmbeddedCompile by configurations.creating {
 }
 
 dependencies {
+    compileOnly(libs.jeiApi) { isTransitive = false }
+    if (providers.gradleProperty("withJei").orNull == "true") runtimeOnly(libs.jeiRuntime) { isTransitive = false }
     compileOnly(libs.curios) { isTransitive = false }
     if (providers.gradleProperty("withCurios").orNull == "true") runtimeOnly(libs.curios) { isTransitive = false }
     // The release jar embeds its auxiliary libraries; Rhino is an external mod.
@@ -64,6 +66,7 @@ val metadata = mapOf(
     "kubejs_version" to libs.versions.kubejs.get(),
     "ldlib2_version" to libs.versions.ldlib2.get(),
     "curios_version" to libs.versions.curios.get(),
+    "jei_version" to libs.versions.jei.get(),
     "madparticle_version" to libs.versions.madparticle.get()
 )
 tasks.processResources {
@@ -168,3 +171,12 @@ sourceSets.test {
     compileClasspath += sourceSets.main.get().compileClasspath
     runtimeClasspath += sourceSets.main.get().runtimeClasspath
 }
+
+// The declaration registry is also useful when optional viewers are absent.
+tasks.register<JavaExec>("itemInformationChecks") {
+    group = "verification"
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("dev.worldcombat.core.client.ItemInformationChecks")
+}
+tasks.check { dependsOn("itemInformationChecks") }

@@ -46,7 +46,7 @@ public final class NativeScrollerChecks {
         System.out.println("PASS locked LDLib ScrollerView: reproduced ambiguous field/method access; native consumer exposes usable UIElement");
         for(var type:List.of(NativeEditorHost.class,Button.class,com.lowdragmc.lowdraglib2.gui.ui.elements.Label.class,
                 com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode.class,com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap.class,
-                com.lowdragmc.lowdraglib2.gui.ui.data.Tooltips.class,ArrayList.class,
+                com.lowdragmc.lowdraglib2.gui.ui.data.Tooltips.class,com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture.class,ArrayList.class,
                 dev.worldcombat.core.client.ClientCallbacks.class,dev.worldcombat.core.client.UiText.class,
                 dev.worldcombat.core.client.UiPreferences.class,dev.worldcombat.core.client.RichTextLabel.class))context.addToScope(scope,type.getSimpleName(),type);
         context.evaluateString(scope,Files.readString(Path.of(script)),"production-native-editor",1,null);

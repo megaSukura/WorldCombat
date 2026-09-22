@@ -6,7 +6,6 @@
   "worldcombat.skill.uturn.description.0": "Darts in and strikes a living target for %1$s physical damage.",
   "worldcombat.skill.uturn.description.1": "Dash distance %1$s blocks, %2$s blocks per tick, hit radius %3$s blocks.",
   "worldcombat.skill.uturn.description.2": "Folds back %1$s blocks with a U-arc width of %2$s blocks; the relay style withdraws to the nearest waiting partner within %3$s blocks.",
-  "worldcombat.skill.uturn.description.3": "Shakes off about %1$s motes of chitin dust on the way back.",
   "worldcombat.skill.uturn.handoff.on": "Relay style: withdraw to the nearest waiting partner within the rally radius; return distance ×0.78.",
   "worldcombat.skill.uturn.handoff.off": "Stand-off style: pull straight back along the arc; return distance ×1.15, the furthest from the foe.",
   "worldcombat.skill.uturn.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",

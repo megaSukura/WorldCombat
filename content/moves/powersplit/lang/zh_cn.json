@@ -1,10 +1,9 @@
 {
-  "worldcombat.skill.powersplit.summary": "利用超能力把双方攻击与特攻的数值相加再平分一段时间：强的被压下来、弱的被抬上去，两人落在同一刻度上。宝可梦改临时属性，其他生物改原版攻击属性。",
+  "worldcombat.skill.powersplit.summary": "把双方的攻击底子相加再平分，强的一方降低、弱的一方提高；宝可梦同时平分特攻。",
   "worldcombat.skill.powersplit.use.0": "把自己的低攻抬到对手的水平",
   "worldcombat.skill.powersplit.use.1": "把对手的高攻压到自己的水平",
   "worldcombat.skill.powersplit.use.2": "在对手攻击远高于自己时抹平差距",
   "worldcombat.skill.powersplit.description.0": "向 %1$s 格内的目标把攻击与特攻相加再平分，维持 %2$s；需要有通视直线。",
-  "worldcombat.skill.powersplit.description.1": "基准量由特攻与体型派生，实际发射量按本次数值差放大。",
   "worldcombat.skill.powersplit.description.2": "平分改的是底子：两人的攻与特攻各自取平均，已经攒起来的能力等级原样保留。窗口走完或被清除时各自回到原来的数值。",
   "worldcombat.skill.powersplit.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 平分；收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.powersplit.growth.0": "达到 %1$s 级，平分距离延长至 %2$s 格、平分窗口延长至 %3$s 秒。",

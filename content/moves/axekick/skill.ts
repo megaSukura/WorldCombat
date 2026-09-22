@@ -44,6 +44,7 @@ namespace PokemonSkills {
     }
 
     function axekickResetFall(world: CombatWorld, actor: CombatActor): void {
+        world.motion(actor, WorldCombat.point(0, 0, 0), false);
         try { const native = world.nativeEntity(actor); if (native) native.fallDistance = 0; } catch (error) { }
     }
 
@@ -105,7 +106,8 @@ namespace PokemonSkills {
             const crash = Math.max(0.03, Math.min(0.6, p("axekick", "crash", action)));
             const shove = Math.max(0, p("axekick", "shove", action));
             const dust = Math.max(4, Math.round(p("axekick", "dust", action)));
-            const dazeChance = Math.max(0.02, Math.min(0.9, p("axekick", "dazeChance", action)));
+            const dazeChance = p("axekick", "dazeChance", action);
+            const fumbleChance = p("axekick", "fumbleChance", action);
             const dazeTicks = Math.max(20, Math.round(p("axekick", "dazeTicks", action)));
             const settleSpeed = Math.max(0.2, p("axekick", "settleSpeed", action));
             const scale = hitRadius / 0.6;
@@ -143,7 +145,8 @@ namespace PokemonSkills {
             function daze(current: CombatAction, victim: CombatActor, at: CombatPoint): void {
                 const live = current.world();
                 const ticks = dazeTicks;
-                if (!CombatStatus.apply(live, victim, "confusion", axekickRing, ticks, Math.round(dazeChance * 100), { unique: true })) return;
+                if (live.random() >= dazeChance) return;
+                if (!CombatStatus.apply(live, victim, "confusion", axekickRing, ticks, Math.round(fumbleChance * 100), { unique: true })) return;
                 const body = live.observe(victim);
                 const point = body === null ? at : body.position();
                 WorldFeedback.emit(live, axekickScene, 1, point,
@@ -169,7 +172,9 @@ namespace PokemonSkills {
                 const live = current.world();
                 const body = live.observe(victim);
                 const point = body === null ? at : body.position();
-                hurt(current, victim, "axekick", power, { damage: damageSpec("axekick", "chop"), contact: true });
+                if (!hurt(current, victim, "axekick", power, { damage: damageSpec("axekick", "chop"), contact: true })) {
+                    crashLanding(current, at); return;
+                }
                 if (live.valid(victim)) {
                     const away = point.minus(live.observe(actor)!.position());
                     const flat = WorldCombat.point(away.x(), 0, away.z());
@@ -196,9 +201,9 @@ namespace PokemonSkills {
                     const gap = facts.position().minus(at).length();
                     if (gap < best) { best = gap; victim = candidate; }
                 });
-                if (victim === null && target !== null && live.valid(target)) {
+                if (victim === null && target !== null && live.valid(target) && !live.friendly(target)) {
                     const body = live.observe(target);
-                    if (body !== null && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
+                    if (body !== null && body.visible() && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
                 }
                 if (victim !== null) impactOn(current, victim, at, direction);
                 else crashLanding(current, at);
@@ -212,7 +217,7 @@ namespace PokemonSkills {
                 const distance = toward.length();
                 const floor = axekickFloor(live, from, me.height() * 0.5);
                 if (distance <= Math.max(0.5, hitRadius) || from.y() - me.height() * 0.5 <= floor + 0.15) {
-                    resolve(current, locked, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
+                    resolve(current, from, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
                     return;
                 }
                 const dir = toward.unit();

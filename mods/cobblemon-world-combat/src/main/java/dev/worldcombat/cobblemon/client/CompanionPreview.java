@@ -19,14 +19,9 @@ public final class CompanionPreview {
         pose.translate(-camera.x, -camera.y, -camera.z);
         var buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         var lines = buffers.getBuffer(RenderType.lines());
-        float r = aim.reason().isEmpty() ? 0.25f : 1f, g = aim.reason().isEmpty() ? 0.95f : 0.45f;
-        var delta = aim.end().subtract(aim.origin());
-        int steps = Math.max(1, (int) Math.ceil(delta.length() / 0.65));
-        for (int i = 0; i <= steps; i++) {
-            var p = aim.origin().add(delta.scale(i / (double) steps));
-            LevelRenderer.renderLineBox(pose, lines, new AABB(p.x - 0.025, p.y - 0.025, p.z - 0.025,
-                p.x + 0.025, p.y + 0.025, p.z + 0.025), r, g, 1, 0.9f);
-        }
+        boolean approach = aim.reason().equals("out-of-range");
+        float r = aim.reason().isEmpty() ? 0.45f : 1f, g = aim.reason().isEmpty() ? 0.85f : approach ? 0.8f : 0.4f;
+        segment(pose, lines, aim.origin(), aim.end(), r, g, .9f, .75f);
         var shape = CompanionInput.state().skills().get(slot).preview();
         for (var cell : dev.worldcombat.core.world.CombatGeometry.cells(shape, aim.point(), aim.direction()))
             LevelRenderer.renderLineBox(pose, lines, new AABB(cell), r, g, 1, 0.95f);
@@ -34,14 +29,28 @@ public final class CompanionPreview {
             int segments = Math.max(24, (int) Math.ceil(shape.radius() * 16));
             for (int i = 0; i < segments; i++) {
                 double angle = i * Math.PI * 2 / segments;
-                double x = aim.point().x() + Math.cos(angle) * shape.radius(), y = aim.point().y() + 0.04,
-                    z = aim.point().z() + Math.sin(angle) * shape.radius();
-                LevelRenderer.renderLineBox(pose, lines, new AABB(x - .025, y - .025, z - .025, x + .025, y + .025, z + .025), r, g, 1, .95f);
+                double next = (i + 1) * Math.PI * 2 / segments;
+                var from = new net.minecraft.world.phys.Vec3(aim.point().x() + Math.cos(angle) * shape.radius(), aim.point().y() + .04, aim.point().z() + Math.sin(angle) * shape.radius());
+                var to = new net.minecraft.world.phys.Vec3(aim.point().x() + Math.cos(next) * shape.radius(), aim.point().y() + .04, aim.point().z() + Math.sin(next) * shape.radius());
+                segment(pose, lines, from, to, r, g, .9f, .9f);
             }
         }
         var p = aim.end();
-        LevelRenderer.renderLineBox(pose, lines, new AABB(p.x - .3, p.y - .3, p.z - .3, p.x + .3, p.y + .3, p.z + .3), r, g, 1, 1);
+        segment(pose, lines, p.add(-.2, .02, 0), p.add(.2, .02, 0), r, g, .9f, 1);
+        segment(pose, lines, p.add(0, .02, -.2), p.add(0, .02, .2), r, g, .9f, 1);
         pose.popPose();
         buffers.endBatch(RenderType.lines());
+    }
+
+    private static void segment(com.mojang.blaze3d.vertex.PoseStack pose, com.mojang.blaze3d.vertex.VertexConsumer lines,
+                                net.minecraft.world.phys.Vec3 from, net.minecraft.world.phys.Vec3 to,
+                                float red, float green, float blue, float alpha) {
+        var delta = to.subtract(from);
+        if (delta.lengthSqr() < 1.0e-8) return;
+        var normal = delta.normalize();
+        lines.addVertex(pose.last().pose(), (float) from.x, (float) from.y, (float) from.z).setColor(red, green, blue, alpha)
+            .setNormal(pose.last(), (float) normal.x, (float) normal.y, (float) normal.z);
+        lines.addVertex(pose.last().pose(), (float) to.x, (float) to.y, (float) to.z).setColor(red, green, blue, alpha)
+            .setNormal(pose.last(), (float) normal.x, (float) normal.y, (float) normal.z);
     }
 }

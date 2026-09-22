@@ -49,14 +49,13 @@ namespace PokemonSkills {
             "冷却", "两次对调之间的等待；速度快的个体恢复快，久换 ×1.3、速换 ×0.9。PP 10 的代价。"),
         glyphs: formula(
             F.base(6, "基础").plus(F.stat("specialAttack").div(50).as("特攻")).clamp(6, 18).round(0),
-            "画面对数", { unit: " 条", description: "围绕两人升起的特性符数量；特攻越高越密，画面按它发射。" })
+            "画面对数", { visible: false, unit: " 条", description: "围绕两人升起的特性符数量；特攻越高越密，画面按它发射。" })
     });
 
     stages("skillswap", [{ level: 40, values: { window: 800, recharge: 70 } }, { level: 55, values: { window: 1000, recharge: 60 } }]);
 
     describe("skillswap", [
         { key: "description.0", values: ["reach", "window"] },
-        { key: "description.1", values: ["glyphs"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },

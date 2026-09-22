@@ -9,7 +9,7 @@
   "worldcombat.skill.petaldance.description.3": "舞完自己陷入恍惚 %1$s，期间每次想出手有 %2$s 的概率被打散并被花瓣反割。",
   "worldcombat.skill.petaldance.drift.on": "旋舞式：漂得更远、风暴更宽、花瓣留得更久、推得更开，但起手与冷却更久、舞完晕得更久。",
   "worldcombat.skill.petaldance.drift.off": "原地舞：转在原地、收放更快、失控更短，但范围与留痕都收窄。",
-  "worldcombat.skill.petaldance.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.petaldance.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP；提交后冷却 %5$s 秒。",
   "worldcombat.skill.petaldance.growth.0": "%1$s 级起每圈威力抬到 %2$s。",
   "worldcombat.skill.petaldance.growth.1": "%1$s 级起每圈威力抬到 %2$s、每圈花瓣升到 %3$s 块。",
   "worldcombat.skill.petaldance.value.bloom": "每圈威力",

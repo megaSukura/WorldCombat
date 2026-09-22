@@ -48,7 +48,6 @@ namespace CompanionBehavior {
         if (context.facts.mounted) return false;
         const self = CompanionBehavior.source(context), foe = powertrickFoe(context, item);
         if (!foe) return false;
-        if (CompanionBehavior.distance(self.point, foe.point) < CompanionBehavior.ai<number>(item, "minGap", 3)) return false;
         const raw = CompanionBehavior.fact<string>(context, "world_combat:powertrick-values", self);
         if (!raw) return false;
         const value = JSON.parse(raw);
@@ -57,12 +56,14 @@ namespace CompanionBehavior {
         if (edge < CompanionBehavior.ai<number>(item, "minEdge", 1.15)) return false;
         const flipped = CompanionBehavior.status(context, self, "powertrick");
         const health = CompanionBehavior.ratio(self);
+        if (flipped) return value.attack > value.defence && health < 0.45;
+        if (CompanionBehavior.distance(self.point, foe.point) < CompanionBehavior.ai<number>(item, "minGap", 3)) return false;
         if (!flipped) {
             if (value.defence > value.attack && value.physical) return true;
             if (value.attack > value.defence && (context.scratch.cautious || health < 0.5)) return true;
             return false;
         }
-        return value.attack > value.defence && health < 0.45;
+        return false;
     }
 
     registerUse("powertrick", {

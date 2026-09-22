@@ -36,14 +36,27 @@ namespace PokemonSkills {
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(imprisonBrand, "start", function () { });
     WorldCombat.effectHandler(imprisonBrand, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(imprisonBrand, "operation:world_combat:refresh", function (effect) {
+        if (String(effect.caller().ref()) !== String(effect.source().ref())) { effect.reject("not-owned"); return; }
+        effect.state(effect.input()); effect.remaining(imprisonBrandTicks);
+    });
+    WorldCombat.effectHandler(imprisonBrand, "end", function (effect) {
+        const world = effect.world(), victim = effect.target();
+        if (world.effects(victim, imprisonBrand).every(view => view.id() === effect.id())) MobEffects.consume(world, victim, imprisonSealed);
+    });
 
     function imprisonView(world: CombatWorld, actor: CombatActor, id: string): CombatEffectView | null {
         const views = world.effects(actor, id);
         return views.length ? views[0] : null;
     }
     function imprisonData(world: CombatWorld, actor: CombatActor, id: string): any {
-        const view = imprisonView(world, actor, id);
-        return view === null ? null : JSON.parse(String(view.data()));
+        const views = world.effects(actor, id);
+        if (!views.length) return null;
+        if (id !== imprisonBrand) return JSON.parse(String(views[0].data()));
+        const moves: string[] = [];
+        views.forEach(view => JSON.parse(view.data()).moves.forEach((move: string) => { if (moves.indexOf(move) < 0) moves.push(move); }));
+        return { moves };
+
     }
 
     /** 一个战斗者当前有效的招式 id 名单（含临时层）；非宝可梦没有招式表，返回空。 */
@@ -66,11 +79,13 @@ namespace PokemonSkills {
 
     /** 给一个对手落印：挂共享身份，并把两者共有的招式名单写进机读旁挂；首次落下时播画面。 */
     function imprisonSeal(world: CombatWorld, caster: CombatActor, victim: CombatActor, shared: string[]): void {
-        const fresh = imprisonView(world, victim, imprisonBrand) === null;
-        if (!CombatStatus.apply(world, victim, imprisonStatus, imprisonSealed, imprisonBrandTicks, 0, { unique: true })) return;
-        const stale = world.effects(victim, imprisonBrand);
-        for (let i = 0; i < stale.length; i++) world.operation(stale[i].id(), "world_combat:dispel", "{}");
-        world.effect(imprisonBrand, victim, JSON.stringify({ moves: shared, caster: String(caster.ref()) }), imprisonBrandTicks);
+        const casterRef = String(caster.ref());
+        const own = world.effects(victim, imprisonBrand).filter(view => JSON.parse(view.data()).caster === casterRef);
+        const fresh = own.length === 0;
+        if (!CombatStatus.apply(world, victim, imprisonStatus, imprisonSealed, imprisonBrandTicks, 0)) return;
+        const payload = JSON.stringify({ moves: shared, caster: casterRef });
+        if (own.length) world.operation(own[0].id(), "world_combat:refresh", payload);
+        else world.effect(imprisonBrand, victim, payload, imprisonBrandTicks);
         if (!fresh) return;
         const body = world.observe(victim);
         if (body === null) return;
@@ -79,11 +94,11 @@ namespace PokemonSkills {
     }
 
     /** 撤掉一名对手的封印身份与旁挂（不再重合、施法者离开或领域结束时）。 */
-    function imprisonClear(world: CombatWorld, victim: CombatActor): void {
-        const effect = MobEffects.read(world, victim, imprisonSealed);
-        if (effect !== null) world.removeMobEffect(victim, imprisonSealed, effect.key());
-        const views = world.effects(victim, imprisonBrand);
-        for (let i = 0; i < views.length; i++) world.operation(views[i].id(), "world_combat:dispel", "{}");
+    function imprisonClear(world: CombatWorld, victim: CombatActor, caster: CombatActor): void {
+        const casterRef = String(caster.ref());
+        world.effects(victim, imprisonBrand).forEach(view => {
+            if (JSON.parse(view.data()).caster === casterRef) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
     }
 
     /** 领域重扫：领域内每个敌对宝可梦，凡与施法者共有招式就落印，不再共有就撤印。返回落中的数量。 */
@@ -96,7 +111,7 @@ namespace PokemonSkills {
             const other = near[i];
             if (String(other.ref()) === String(caster.ref()) || !world.valid(other) || world.friendly(other)) continue;
             const shared = imprisonOverlap(mine, imprisonKnown(world, other));
-            if (shared.length === 0) { imprisonClear(world, other); continue; }
+            if (shared.length === 0) { imprisonClear(world, other, caster); continue; }
             imprisonSeal(world, caster, other, shared);
             hit++;
         }
@@ -151,8 +166,9 @@ namespace PokemonSkills {
                 help: "固守：领域收拢 ×0.8、时长 ×1.35、冷却 ×1.15，钉住一片久一点。广布：领域铺开 ×1.25、时长 ×0.75、冷却 ×0.9，罩住更多人却撑得更短。"
             })
         ],
-        indicator: function () {
-            return { radius: 6, geometry: "area", style: "seal", color: 0x7C6CFF, label: "封印领域" };
+        indicator: function (config, pokemon) {
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[imprisonId], detail: { values: config } };
+            return { radius: p(imprisonId, "imprisonRadius", context), geometry: "area", style: "seal", color: 0x7C6CFF, label: "封印领域" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[imprisonId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -220,14 +236,14 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== imprisonAura) return;
         const world = event.world(), caster = event.actor();
-        if (!world.valid(caster)) return;
+        if (!world.valid(caster) || MobEffects.read(world, caster, imprisonAura) !== null) return;
         const expired = String(data.cause) === "expired";
         const mark = imprisonData(world, caster, imprisonMark);
         const radius = mark === null ? 8 : mark.radius;
         const body = world.observe(caster);
         if (body !== null) {
             const near = world.query(body.position(), radius + 2, false);
-            for (let i = 0; i < near.length; i++) if (world.valid(near[i])) imprisonClear(world, near[i]);
+            for (let i = 0; i < near.length; i++) if (world.valid(near[i])) imprisonClear(world, near[i], caster);
         }
         const views = world.effects(caster, imprisonMark);
         for (let i = 0; i < views.length; i++) world.operation(views[i].id(), "world_combat:dispel", "{}");

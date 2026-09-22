@@ -103,7 +103,8 @@ namespace PokemonSkills {
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
-            if (CombatStatus.has(world, actor, "powersplit") || CombatStatus.has(world, target, "powersplit")) return "already-split";
+            if (CombatStatus.has(world, actor, "powersplit") || CombatStatus.has(world, target, "powersplit")
+                || world.effects(actor, powersplitMark).length > 0 || world.effects(target, powersplitMark).length > 0) return "already-split";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("powersplit", "reach", action)) return "out-of-range";
@@ -174,7 +175,7 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor) || world.tick() % 20 !== 0) return;
         const marks = world.effects(actor, powersplitMark);
-        if (!marks.length) return;
+        if (!marks.length) { MobEffects.consume(world, actor, powersplitWindow); return; }
         const mark = JSON.parse(String(marks[0].data()));
         const body = world.observe(actor);
         if (body === null) return;
@@ -191,11 +192,12 @@ namespace PokemonSkills {
         if (!world.valid(actor)) return;
         const marks = world.effects(actor, powersplitMark);
         let pair = "";
-        if (marks.length) {
-            const mark: PowersplitMark = JSON.parse(String(marks[0].data()));
+        if (MobEffects.read(world, actor, powersplitWindow) !== null) return;
+        for (const own of marks) {
+            const mark: PowersplitMark = JSON.parse(String(own.data()));
             if (typeof mark.layer === "number" && mark.layer >= 0) world.operation(mark.layer, "world_combat:dispel", "{}");
             pair = String(mark.pair);
-            world.operation(marks[0].id(), "world_combat:dispel", "{}");
+            world.operation(own.id(), "world_combat:dispel", "{}");
         }
         const body = world.observe(actor);
         if (body === null) return;

@@ -28,9 +28,13 @@ namespace CompanionBehavior {
         const self = CompanionBehavior.source(context);
         if (context.facts.mounted) return false;
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false)) return false;
         if (CompanionBehavior.status(context, self, "confusion")) return false;
-        return petalFoes(context, self.point, petalRadius(capability)) >= CompanionBehavior.ai<number>(capability, "minFoes", 1);
+        const radius = petalRadius(capability), minimum = CompanionBehavior.ai<number>(capability, "minFoes", 1);
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false)
+            && CompanionBehavior.distance(self.point, threat.point) > radius) return false;
+        // A visible target outside the ring can be approached. Only sensed, visible neighbours count.
+        const centre = CompanionBehavior.distance(self.point, threat.point) > radius ? threat.point : self.point;
+        return petalFoes(context, centre, radius) >= minimum;
     }
 
     CompanionBehavior.registerUse(PokemonSkills.petaldanceId, {

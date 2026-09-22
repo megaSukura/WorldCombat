@@ -67,6 +67,9 @@ public interface CombatHost {
     default FluidObservation fluid(ActorHandle actor, Point point) { throw new UnsupportedOperationException(); }
     default RegistryObservation entityType(ActorHandle actor) { throw new UnsupportedOperationException(); }
     default String useItem(ActorHandle actor, UUID controller, Point point, String item, String expected) { throw new UnsupportedOperationException(); }
+    default String interactBlock(ActorHandle actor, UUID controller, Point point, String face, boolean secondary, String expected) { throw new UnsupportedOperationException(); }
+    default EnergyObservation energy(ActorHandle actor, Point point, String side) { return null; }
+    default int receiveEnergy(ActorHandle actor, UUID controller, Point point, String side, int amount, boolean simulate) { throw new UnsupportedOperationException(); }
     default void controlled(ActorHandle actor, boolean controlled) {}
     default void controlled(long owner, ActorHandle actor, boolean controlled) { controlled(actor, controlled); }
     default WorldObservation observe(ActorHandle source, ActorHandle target) { throw new UnsupportedOperationException(); }

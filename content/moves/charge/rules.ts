@@ -36,7 +36,9 @@ namespace PokemonSkills {
         if (!world.valid(source)) return;
         const mark = chargeMarkOf(world, source);
         if (MobEffects.consume(world, source, chargeUp) === null) return;
-        data.amount *= 2;
+        const remaining = mark && typeof mark.energyRemaining === "number" && mark.energyBudget > 0
+            ? Math.max(0, Math.min(1, mark.energyRemaining / mark.energyBudget)) : 1;
+        data.amount *= 1 + remaining;
         chargeReleaseMark(world, source);
         const body = world.observe(source);
         if (body === null) return;
@@ -65,10 +67,11 @@ namespace PokemonSkills {
     // 自散：时间走完，电荷安静褪去；被外力解除时不播。
     WorldCombat.on("world_combat:move_charge/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== chargeUp || String(data.cause) !== "expired") return;
+        if (String(data.id) !== chargeUp) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
         chargeReleaseMark(world, actor);
+        if (String(data.cause) !== "expired") return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, chargeScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 22);

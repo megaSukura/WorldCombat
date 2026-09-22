@@ -12,13 +12,15 @@
     "parameters.ts",
     "skill.ts",
     "ai.ts",
-    "rules.ts"
+    "rules.ts",
+    "machine.ts"
   ],
   "startupSources": [
     "startup.ts"
   ],
   "clientSources": [
-    "presentation.ts"
+    "presentation.ts",
+    "machine-info.ts"
   ],
   "mobEffectIcons": {
     "world_combat:charge_up": "cobblemon:particle/generic/electricity/electricity_yellow"

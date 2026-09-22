@@ -40,10 +40,10 @@ assert.equal(widgets(screen).filter(widget=>/^Device /.test(widget.text||'')).le
 let chosen=[];const menu=new RadialMenu.View({id:'irrigation:wheel',title:()=> 'Irrigation',backLabel:()=> 'Mouse 2',choose:item=>{chosen.push(item);host.close();},close:host.close,reject:reason=>errors.push(reason)});
 const items=[{id:'pipes',label:'Pipes'},{id:'pipes/outlets',parent:'pipes',label:'Outlets'},{id:'pipes/outlets/place',parent:'pipes/outlets',label:'Place',command:'place'},
  {id:'pipes/outlets/locked',parent:'pipes/outlets',label:'Locked',disabled:'Requires pump'},{id:'survey',label:'Survey',command:'survey'}];
-menu.updateItems(items);menu.open();click('Pipes ›');assert.equal(chosen.length,0);menu.release();assert.equal(chosen.length,0);assert.equal(screen,null,'Releasing over an intermediate branch cancels');
-menu.open();click('Pipes ›');click('Outlets ›');click('Place');assert.equal(chosen.length,0,'A leaf click never dispatches');menu.release();assert.equal(chosen.length,1);assert.equal(chosen[0].command,'place');menu.release();assert.equal(chosen.length,1);
-menu.open();click('Pipes ›');click('Outlets ›');cursor=[240,230];menu.release();assert.equal(errors.at(-1),'Requires pump');assert.equal(chosen.length,1);
-cursor=[240,150];menu.open();menu.release();assert.equal(chosen.length,1,'Centre is a real cancellation deadzone');cursor=[240,70];
+menu.updateItems(items);menu.open();click('Pipes ›');assert.equal(chosen.length,0);menu.release();assert.equal(chosen.length,0);assert(screen,'A clicked branch stays open after release');menu.back();menu.back();
+menu.open();click('Pipes ›');click('Outlets ›');click('Place');assert.equal(chosen.length,1,'A leaf click dispatches directly');menu.release();assert.equal(chosen.length,1);assert.equal(chosen[0].command,'place');menu.release();assert.equal(chosen.length,1);
+menu.open();click('Pipes ›');click('Outlets ›');click('Locked');assert.equal(errors.at(-1),'Requires pump');assert.equal(chosen.length,1);menu.release();assert(screen,'Rejected leaves keep the menu available');
+cursor=[240,150];menu.open();menu.release();assert.equal(chosen.length,1,'Centre does not issue a command');assert(screen,'A tap leaves a click-through wheel');menu.back();assert.equal(screen,null);cursor=[240,70];
 menu.open();menu.customize();click(native.t('preferences'));click('+');assert.equal(JSON.parse(native.preferences.get('irrigation:wheel')).scale,1.1);
 click('›');click('Survey');click(native.t('enabled'));assert(JSON.parse(native.preferences.get('irrigation:wheel')).hidden.includes('survey'));
 const projected=UiState.arrangeMenu(items,UiState.menuLayout({favorites:['pipes/outlets/place'],hidden:['survey'],order:['pipes']}));assert(!projected.some(item=>item.id==='survey'));assert(projected.some(item=>item.originalId==='pipes/outlets/place'));
@@ -60,6 +60,6 @@ const migrated=new RadialMenu.View({id:'current:wheel',legacyIds:['legacy:wheel'
 migrated.updateItems(items);assert.equal(JSON.parse(native.preferences.get('current:wheel')).scale,1.2);
 native.preferences.set('current:wheel',JSON.stringify({scale:1,hidden:[],favorites:[],order:[]}));migrated.updateItems(items);
 assert.equal(JSON.parse(native.preferences.get('current:wheel')).scale,1,'A new explicit layout takes precedence over the old identifier');
-console.log('PASS reusable UI: native-theme selection; localized named numeric prose/hover; stable scroll and CAS; folded custom schemas; usable tab pages; held nested wheel/disabled leaves/centre; personal layout persistence; repeated grid selection');
+console.log('PASS reusable UI: native-theme selection; localized named numeric prose/hover; stable scroll and CAS; folded custom schemas; usable tab pages; click/held nested wheel/disabled leaves/tap to open; personal layout persistence; repeated grid selection');
 
 await import('./world-library.mjs');

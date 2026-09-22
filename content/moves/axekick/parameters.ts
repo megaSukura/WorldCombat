@@ -106,12 +106,10 @@ namespace PokemonSkills {
                 description: "劈偏、脚踵砸地时按自身最大生命的比例自伤；身体越沉、劈得越快越狠，腿部防御高则收得住。起落幅度最小，所以本族里自伤最轻。"
             }),
         /** 恍惚概率：基础 0.30，特攻每比 60 多 1 加 0.0006（夹 -0.08..0.14）；夹 0.15..0.50。 */
-        dazeChance: formula(
+        dazeChance: percent(
             F.base(0.30).plus(F.stat("specialAttack").minus(60).times(0.0006).clamp(-0.08, 0.14)).clamp(0.15, 0.50).round(3),
-            "恍惚概率", {
-                unit: "比例",
-                description: "命中后把对手劈得恍惚（共享身份 confusion）的概率；精神层面吃特攻，特攻越高越容易晃晕对手。"
-            }),
+            "恍惚概率", "成功命中后使对手混乱的概率；特攻越高越容易晃晕对手。"),
+        fumbleChance: percent(F.const(0.33).clamp(0, 1), "混乱失手率", "陷入混乱后，每次出手失手的概率；与命中后施加混乱的概率分别结算。"),
         /** 恍惚时长：基础 100 刻，特攻每比 60 多 1 加 0.6（夹 -20..40）；夹 60..200。 */
         dazeTicks: formula(
             F.base(100).plus(F.stat("specialAttack").minus(60).times(0.6).clamp(-20, 40)).clamp(60, 200).round(0),
@@ -166,7 +164,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["chop"] },
         { key: "description.1", values: ["hopHeight", "hopSpeed", "chopSpeed", "drift"] },
         { key: "description.2", values: ["reach", "hitRadius", "crash"] },
-        { key: "description.3", values: ["dazeChance", "dazeTicks", "shove", "dust"] },
+        { key: "description.3", values: ["dazeChance", "dazeTicks", "shove", "fumbleChance"] },
         { key: "high.on", values: [], when: function (context) { return read(context.detail.values, ["high"]) === true; } },
         { key: "high.off", values: [], when: function (context) { return read(context.detail.values, ["high"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

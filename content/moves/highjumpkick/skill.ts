@@ -38,6 +38,7 @@ namespace PokemonSkills {
     }
 
     function highjumpkickResetFall(world: CombatWorld, actor: CombatActor): void {
+        world.motion(actor, WorldCombat.point(0, 0, 0), false);
         try { const native = world.nativeEntity(actor); if (native) native.fallDistance = 0; } catch (error) { }
     }
 
@@ -143,7 +144,9 @@ namespace PokemonSkills {
                 const live = current.world();
                 const body = live.observe(victim);
                 const point = body === null ? at : body.position();
-                hurt(current, victim, "highjumpkick", power, { damage: damageSpec("highjumpkick", "knee"), contact: true });
+                if (!hurt(current, victim, "highjumpkick", power, { damage: damageSpec("highjumpkick", "knee"), contact: true })) {
+                    crashLanding(current, at); return;
+                }
                 if (live.valid(victim)) {
                     const away = point.minus(live.observe(actor)!.position());
                     const flat = WorldCombat.point(away.x(), 0, away.z());
@@ -169,9 +172,9 @@ namespace PokemonSkills {
                     const gap = facts.position().minus(at).length();
                     if (gap < best) { best = gap; victim = candidate; }
                 });
-                if (victim === null && target !== null && live.valid(target)) {
+                if (victim === null && target !== null && live.valid(target) && !live.friendly(target)) {
                     const body = live.observe(target);
-                    if (body !== null && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
+                    if (body !== null && body.visible() && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
                 }
                 if (victim !== null) impactOn(current, victim, at, direction);
                 else crashLanding(current, at);
@@ -185,7 +188,7 @@ namespace PokemonSkills {
                 const distance = toward.length();
                 const floor = highjumpkickFloor(live, from, me.height() * 0.5);
                 if (distance <= Math.max(0.5, hitRadius) || from.y() - me.height() * 0.5 <= floor + 0.15) {
-                    resolve(current, locked, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
+                    resolve(current, from, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
                     return;
                 }
                 const dir = toward.unit();

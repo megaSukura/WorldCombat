@@ -73,9 +73,9 @@ namespace PokemonSkills {
             }),
         /** 旋舞步：基础 0.5 格，速度每比 60 快 1 加 0.006（夹 -0.15..0.45）；旋舞 ×1.3；夹 0.2..1.1。 */
         drift: formula(
-            F.base(0.5).plus(F.stat("speed").minus(60).times(0.006).clamp(-0.15, 0.45))
+            F.when(F.pref("drift"), F.base(0.5).plus(F.stat("speed").minus(60).times(0.006).clamp(-0.15, 0.45))
                 .times(F.when(F.pref("drift", text("worldcombat.skill.petaldance.preference.drift")), F.const(1.3), F.const(1)))
-                .clamp(0.2, 1.1).round(2),
+                .clamp(0.2, 1.1).round(2), F.const(0)),
             "旋舞步", {
                 unit: "格",
                 description: "每转一圈自己沿弧线漂开多远；速度快的个体转得更开，旋舞式漂得更远。"

@@ -79,7 +79,7 @@ namespace PokemonSkills {
         motes: formula(
             F.base(16).plus(F.stat("attack").minus(60).times(0.16).clamp(-5, 18))
                 .plus(F.stat("speed").minus(55).times(0.1).clamp(-2, 9)).clamp(10, 46).round(0),
-            "抖落虫粉", { unit: "粒", description: "折返时抖落的虫粉数量，直接驱动表现密度；物攻与速度越大抖得越多。" }),
+            "抖落虫粉", { visible: false, unit: "粒", description: "折返时抖落的虫粉数量，直接驱动表现密度；物攻与速度越大抖得越多。" }),
         tempo: seconds(
             F.base(4).minus(F.stat("speed").minus(55).times(0.015).clamp(-0.6, 1.2)).clamp(3, 6).round(0),
             "起手", "压身蓄势的时间；速度越快起得越短。"),
@@ -102,7 +102,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["strike"] },
         { key: "description.1", values: ["dash", "speed", "collisionRadius"] },
         { key: "description.2", values: ["return", "arc", "rally"] },
-        { key: "description.3", values: ["motes"] },
         { key: "handoff.on", values: [], when: function (context) { return read(context.detail.values, ["handoff"]) === true; } },
         { key: "handoff.off", values: [], when: function (context) { return read(context.detail.values, ["handoff"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -156,7 +156,8 @@
         "content/library/skills/feedback.ts",
         "content/library/skills/effects.ts",
         "content/library/skills/actions.ts",
-        "content/library/skills/party-relay.ts"
+        "content/library/skills/party-relay.ts",
+        "content/library/skills/machine-work.ts"
       ]
     },
     "world_combat:companion_runtime": {

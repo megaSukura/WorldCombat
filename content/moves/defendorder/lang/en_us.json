@@ -5,7 +5,7 @@
   "worldcombat.skill.defendorder.use.2": "Lay down a breakable shield in a close-range trade",
   "worldcombat.skill.defendorder.description.0": "Calls %1$s underlings onto the body; each one alive raises Defense and Sp. Def by %2$s stage.",
   "worldcombat.skill.defendorder.description.1": "The underlings stay about %1$s, cling %2$s blocks out, and each has %3$s health.",
-  "worldcombat.skill.defendorder.description.2": "One cast brings about %1$s shell motes; telegraph %2$s, recovery %3$s, cooldown %4$s.",
+  "worldcombat.skill.defendorder.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.defendorder.swarm.on": "Swarm: +2 underlings and a higher ceiling, but each has 3 health and can be wiped in one sweep.",
   "worldcombat.skill.defendorder.swarm.off": "Elite: each has 6 health and the shell holds longer, at the cost of fewer bodies and a lower ceiling.",
   "worldcombat.skill.defendorder.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",

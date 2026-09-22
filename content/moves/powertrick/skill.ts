@@ -156,7 +156,7 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor) || world.tick() % 20 !== 0) return;
         const views = world.effects(actor, powertrickMark);
-        if (!views.length) return;
+        if (!views.length) { MobEffects.consume(world, actor, powertrickHold); return; }
         const mark = JSON.parse(String(views[0].data()));
         const body = world.observe(actor);
         if (body === null) return;

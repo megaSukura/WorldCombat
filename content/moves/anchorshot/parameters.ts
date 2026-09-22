@@ -145,7 +145,7 @@ namespace PokemonSkills {
     describe(anchorshotId, [
         { key: "description.0", values: ["shot", "reach"] },
         { key: "description.1", values: ["chainTicks", "leash", "snap"] },
-        { key: "description.2", values: ["reel", "links", "linkRadius"] },
+        { key: "description.2", values: ["reel", "linkRadius"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },

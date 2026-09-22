@@ -55,13 +55,16 @@ namespace PokemonSkills {
         world.operation(views[0].id(), "world_combat:dispel", "{}");
         const partner = world.actor(String(mark.pair));
         if (partner !== null && world.valid(partner)) {
-            const others = world.effects(partner, skillswapMark);
+            const others = world.effects(partner, skillswapMark).filter(view => {
+                const other = JSON.parse(String(view.data()));
+                return other.layer === mark.paired && other.paired === mark.layer && other.pair === String(actor.ref());
+            });
             if (others.length) {
                 const other = JSON.parse(String(others[0].data()));
                 if (typeof other.layer === "number") world.operation(other.layer, "world_combat:dispel", "{}");
                 world.operation(others[0].id(), "world_combat:dispel", "{}");
             }
-            MobEffects.consume(world, partner, skillswapShift);
+            if (others.length && world.effects(partner, skillswapMark).length === 0) MobEffects.consume(world, partner, skillswapShift);
         }
         return String(mark.got || "");
     }
@@ -100,6 +103,7 @@ namespace PokemonSkills {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-ability";
+            if (world.effects(actor, skillswapMark).length || world.effects(target, skillswapMark).length) return "already-swapped";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("skillswap", "reach", action)) return "out-of-range";
@@ -169,7 +173,7 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor) || world.tick() % 20 !== 0) return;
         const views = world.effects(actor, skillswapMark);
-        if (!views.length) return;
+        if (!views.length) { MobEffects.consume(world, actor, skillswapShift); return; }
         const mark = JSON.parse(String(views[0].data()));
         const body = world.observe(actor);
         if (body === null) return;
@@ -183,7 +187,7 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== skillswapShift) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
+        if (!world.valid(actor) || MobEffects.read(world, actor, skillswapShift) !== null) return;
         const got = skillswapSettle(world, actor);
         if (!got) return;
         const body = world.observe(actor);

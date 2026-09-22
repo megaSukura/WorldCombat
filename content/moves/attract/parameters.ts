@@ -30,12 +30,12 @@ namespace PokemonSkills {
     actionParameters.define("attract", {
         chance: percent(F.base(0.5, "心软几率")
             .plus(F.when(attractPreference(), F.const(-0.08), F.const(0.08)).as("示好方式"))
-            .plus(F.stat("specialAttack").minus(60).max(0).times(0.0015).as("特攻")),
+            .plus(F.stat("specialAttack").minus(60).max(0).times(0.0015).as("特攻")).clamp(0, 1),
             "心软几率", "着迷期间目标每次试图出招时心软收手的概率；妩媚风情 -8%，甜言蜜语 +8%，并随特攻增长。"),
         duration: seconds(F.base(140, "着迷持续")
             .plus(F.when(attractPreference(), F.const(80), F.const(-30)).as("示好方式"))
             .plus(F.level().minus(30).max(0).times(1.5).as("等级"))
-            .clamp(90, 600),
+                .clamp(90, 600).round(0),
             "着迷持续", "着迷状态持续多久；妩媚风情 +80 刻，甜言蜜语 -30 刻，30 级后随等级延长。"),
         pull: formula(F.base(1.1, "牵拉距离")
             .times(F.when(attractPreference(), F.const(1.35), F.const(1)).as("示好方式"))

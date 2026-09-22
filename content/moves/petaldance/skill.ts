@@ -54,7 +54,7 @@ namespace PokemonSkills {
         return placed.length;
     }
 
-    interface PetalState { left: number; strikes: number; index: number; }
+    interface PetalState { complete: (action: CombatAction) => void; left: number; strikes: number; index: number; }
 
     function petaldanceSpent(current: CombatAction, state: PetalState): void {
         const world = current.world(), actor = current.actor(), body = world.observe(actor);
@@ -67,7 +67,7 @@ namespace PokemonSkills {
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), petaldanceDazeText, [], 30);
             world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
         }
-        current.finish();
+        state.complete(current);
     }
 
     function petaldanceStrike(current: CombatAction, state: PetalState): void {
@@ -162,11 +162,13 @@ namespace PokemonSkills {
             const prepare = Math.max(3, Math.round(p(petaldanceId, "tempo", action)));
             action.present(petaldanceId + ":windup", petaldanceScene, 1, action.origin(),
                 JSON.stringify({ moment: "tempo", drift: driftMode ? 1 : 0 }));
-            action.after(prepare, function (current: CombatAction) {
-                const cooldown = Math.max(1, Math.round(p(petaldanceId, "recharge", current)));
-                current.commit(cooldown);
+            LivingActions.run(action, {
+                prepare: prepare, recover: Math.max(0, Math.round(p(petaldanceId, "recover", action))),
+                cooldown: Math.max(1, Math.round(p(petaldanceId, "recharge", action))),
+                stationary: true, turn: 15, interruptible: false
+            }, function (current, complete) {
                 const strikes = Math.max(2, Math.min(3, Math.round(p(petaldanceId, "strikes", current))));
-                const state: PetalState = { left: strikes, strikes: strikes, index: 0 };
+                const state: PetalState = { complete: complete, left: strikes, strikes: strikes, index: 0 };
                 sound(current, "cobblemon:move.razorleaf.actor_2");
                 petaldanceStrike(current, state);
             });
@@ -191,7 +193,7 @@ namespace PokemonSkills {
             const fraction = Math.max(0.012, Math.min(0.05, 0.010 + specialAttack * 0.00011));
             const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
             if (loss > 0) {
-                const remaining = Math.max(0, effect.duration() - world.tick());
+                const remaining = Math.max(0, effect.duration());
                 CombatStatus.apply(world, actor, "confusion", petaldanceDaze, Math.max(60, remaining), effect.amplifier(), { unique: true });
                 WorldFeedback.emit(world, petaldanceScene, 1, body.position(), { moment: "punish", target: String(actor.ref()) }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), petaldanceChipText, [Math.round(loss * 10) / 10], 24);

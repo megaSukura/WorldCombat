@@ -28,6 +28,16 @@ namespace CompanionBehavior {
                 });
                 return candidates[0] || null;
             } });
+        registry.sense({ id: "world_combat:focus-observation", read: function (context) {
+                var ref = context.facts.intent === "focus" ? context.facts.focus : "", target = ref ? entity(context, ref) : null;
+                var last = context.memory.focusObservation;
+                if (!ref || last && last.ref !== ref || context.facts.focusIssue === "target-left" || context.facts.focusIssue === "invalid-target") {
+                    delete context.memory.focusObservation; last = null;
+                }
+                if (target && target.visible && target.health > 0)
+                    last = context.memory.focusObservation = { ref: ref, point: target.point.slice(), tick: context.tick };
+                return last && context.tick - last.tick <= 60 ? last : null;
+            } });
         registry.sense({ id: "world_combat:movement", read: function (context) { return WorldMethods.motion(context, "observedMotion"); } });
         registry.sense({ id: "world_combat:patient", after: ["world_combat:threat"], read: function (context) {
                 var self = source(context), patients: Entity[] = [self];
@@ -120,6 +130,24 @@ namespace CompanionBehavior {
                 if (context.facts.intent === "focus")
                     return WorldBehavior.step(function (current) {
                         var target = entity(current, current.facts.focus), reason = current.facts.focusIssue;
+                        var last = current.senses["world_combat:focus-observation"];
+                        if (reason === "target-not-visible" && last) {
+                            var search = navigate(current, last.point, .8);
+                            note(current, search === "path-blocked" ? "blocked" : "searching", "world_combat:target-not-visible");
+                            return WorldBehavior.running();
+                        }
+                        if (!reason && target && !protectedControl(target)) {
+                            var waiting = options(current, "world_combat:attack", target).concat(options(current, "world_combat:control", target));
+                            waiting.sort(function (a,b) { return castRange(current,b,"attack")-castRange(current,a,"attack"); });
+                            if (waiting.length) {
+                                var reach = castRange(current,waiting[0],"attack");
+                                if (reach >= 0 && distance(source(current).point,target.point)>reach) {
+                                    var moving=navigate(current,target.point,reach);
+                                    note(current,moving==="moving"?"approaching":"blocked",moving==="moving"?"world_combat:attack":"world_combat:"+moving);
+                                } else { stopMovement(current);note(current,"waiting","world_combat:skill-unavailable"); }
+                                return WorldBehavior.running();
+                            }
+                        }
                         if (!reason && target && protectedControl(target))
                             reason = "control-preserved";
                         if (!reason)

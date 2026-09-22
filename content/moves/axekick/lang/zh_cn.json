@@ -3,10 +3,10 @@
   "worldcombat.skill.axekick.description.0": "脚跟劈中造成 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.axekick.description.1": "抬腿 %1$s 格、起腿速度 %2$s 格每刻、下劈速度 %3$s 格每刻、腾空前移 %4$s 格每刻。",
   "worldcombat.skill.axekick.description.2": "最远起跳 %1$s 格，脚踵判定 %2$s 格；劈偏时按自身最大生命的 %3$s 自伤。",
-  "worldcombat.skill.axekick.description.3": "命中有 %1$s 的概率使目标混乱 %2$s 刻，并击退 %3$s 格。",
+  "worldcombat.skill.axekick.description.3": "命中有 %1$s 的概率使目标混乱 %2$s 刻，并击退 %3$s 格；混乱期间每次出手有 %4$s 的概率失手。",
   "worldcombat.skill.axekick.high.on": "当前为高劈：抬腿更高、劈劲 ×1.08、判定更宽，但起手更久、冷却更长、射程更短、劈偏自伤更重。",
   "worldcombat.skill.axekick.high.off": "当前为低位快劈：出手快、够得远、劈偏自伤轻，代价是劈劲与判定都低一档。",
-  "worldcombat.skill.axekick.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.axekick.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP；提交后冷却 %5$s 秒。",
   "worldcombat.skill.axekick.growth.0": "%1$s 级起劈劲抬到 %2$s。",
   "worldcombat.skill.axekick.growth.1": "%1$s 级起劈劲抬到 %2$s。",
   "worldcombat.skill.axekick.use.0": "用一记直落的下劈砸穿硬目标",
@@ -36,5 +36,6 @@
   "effect.world_combat.axekick_ring": "恍惚",
   "world_combat.move.axekick.text.hit": "下压踢",
   "world_combat.move.axekick.text.crash": "劈偏了",
-  "world_combat.move.axekick.text.daze": "恍惚 %1$s 秒"
+  "world_combat.move.axekick.text.daze": "恍惚 %1$s 秒",
+  "worldcombat.skill.axekick.value.fumbleChance": "混乱失手率"
 }

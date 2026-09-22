@@ -28,8 +28,8 @@
   "worldcombat.reason.too-fast": "指令过于频繁",
   "worldcombat.reason.stale-request": "指令已过期，请重试",
   "worldcombat.reason.old-request": "已处理该指令",
-  "worldcombat.reason.queued": "已排队，等待当前动作结束",
-  "worldcombat.reason.queue-expired": "伙伴仍忙碌，请再次施放",
+  "worldcombat.reason.queued": "指令已保留，等待施放条件",
+  "worldcombat.reason.queue-expired": "暂时无法施放，请重新下令",
   "worldcombat.reason.accepted": "指令已接受",
   "worldcombat.reason.requested": "指令已发送",
   "worldcombat.reason.preview-cancelled": "已取消预览",
@@ -232,5 +232,9 @@
   "worldcombat.review.numbers": "等级、数量请填写整数。",
   "worldcombat.review.quick-mob": "加 MC 靶",
   "worldcombat.review.quick-pokemon": "加宝可梦靶",
-  "worldcombat.reason.approaching": "正在接近施放位置"
+  "worldcombat.reason.approaching": "正在接近施放位置",
+  "worldcombat.reason.waiting-cooldown": "指令已保留，等待招式冷却",
+  "worldcombat.reason.waiting-action": "指令已保留，等待当前动作结束",
+  "worldcombat.reason.already-carried": "目标已被携带",
+  "worldcombat.reason.already-swapped": "交换效果仍在持续"
 }

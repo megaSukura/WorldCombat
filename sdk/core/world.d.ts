@@ -15,6 +15,7 @@ interface CombatEffectView {
     id(): number; definition(): string; source(): CombatActor; target(): CombatActor; remaining(): number; data(): string;
 }
 interface CombatSound { id(): number; sound(): string; position(): CombatPoint; tick(): number; data(): string; }
+interface CombatEnergy { side(): string; stored(): number; capacity(): number; receive(): boolean; extract(): boolean; }
 /**
  * One active Minecraft effect instance. `tags()` lists the registry tags of the effect type, space-separated
  * (`world_combat:status/burn ...`); `tagged(tag)` is the membership test consumers use for shared status identity.
@@ -109,6 +110,12 @@ interface CombatWorld {
     fluid(point: CombatPoint): CombatFluid | null;
     /** Invoke a native item on the compared block under the acting identity and NeoForge hooks. */
     useItem(point: CombatPoint, itemId: string, expectedState: string): string;
+    /** Native bare-hand block use under the actor/owner identity and NeoForge interaction events; face is a cardinal direction. Returns used/pass/refused or a refusal reason. */
+    interactBlock(point: CombatPoint, face: string, secondary: boolean, expectedState: string): string;
+    /** Fresh NeoForge FE capability snapshot. auto chooses an input face, none asks the unsided capability; unavailable/unloaded returns null. */
+    energy(point: CombatPoint, side: string): CombatEnergy | null;
+    /** Sends content-budgeted FE to that native capability, returning only the actually accepted amount. simulate does not add energy; authority and protection still apply. */
+    receiveEnergy(point: CombatPoint, side: string, amount: number, simulate: boolean): number;
     face(point: CombatPoint, yawSpeed: number, pitchSpeed: number): void;
     /** Resolve a loaded entity in this world within 64 blocks; stale or unavailable entities return null. */
     actor(entity: string): CombatActor | null;

@@ -15,13 +15,14 @@ public final class ComplexInput {
         final long token = ++counter;
         final String version;
         final boolean channel;
+        final boolean menu;
         final InputConstants.Key held;
         final List<JsonObject> samples = new ArrayList<>();
         long started, lastInputTick;
         String lastInput = "";
         CompanionInput.Aim aim;
-        Session(int slot, boolean channel) {
-            this.slot = slot; this.channel = channel;
+        Session(int slot, boolean channel, boolean menu) {
+            this.slot = slot; this.channel = channel; this.menu = menu;
             version = CompanionInput.state().skills().get(slot).version();
             held = (ControlConfig.MODIFIER_DIGITS.get() ? CompanionInput.QUICK_SKILLS[slot] : CompanionInput.SKILLS[slot]).getKey();
         }
@@ -41,24 +42,31 @@ public final class ComplexInput {
         var current = focus();
         if (current != null) {
             result.addProperty("mode", current.channel ? "sustained" : "selection");
+            result.addProperty("slot", current.slot);
+            result.addProperty("menu", current.menu);
             result.addProperty("step", current.samples.size() + 1);
             result.addProperty("total", CompanionInput.state().skills().get(current.slot).preview().input().steps().size());
         }
         return result;
     }
-    public static boolean begin(int selection) {
+    public static boolean begin(int selection) { return begin(selection, null, false); }
+    /** Menu picks supply their first sample; channels remain active until explicitly stopped. */
+    public static boolean begin(int selection, CompanionInput.Aim firstAim, boolean menu) {
         var state = CompanionInput.state(); var spec = state.skills().get(selection).preview().input();
         ComplexInput.selection = null;
         if (spec.steps().isEmpty()) return false;
-        var current = new Session(selection, spec.sustained());
+        var current = new Session(selection, spec.sustained(), menu);
         if (spec.sustained()) {
-            if (!CompanionInput.physicallyDown(current.held)) { CompanionInput.notifyReason("hold-skill"); return true; }
+            if (!menu && !CompanionInput.physicallyDown(current.held)) { CompanionInput.notifyReason("hold-skill"); return true; }
             stopSustained(); sustained = current;
-            var sample = sample(current);
+            var sample = sample(current, firstAim);
             if (sample == null) { sustained = null; return true; }
             current.samples.add(sample);
             current.started = CompanionInput.submit("cast", current.slot, current.aim, current.version, payload(current));
-        } else ComplexInput.selection = current;
+        } else {
+            ComplexInput.selection = current;
+            if (menu && firstAim != null) choose(false, firstAim);
+        }
         return true;
     }
     private static void stopSustained() {
@@ -76,10 +84,11 @@ public final class ComplexInput {
         if (sustained != null && (!sustained.version.equals(after.skills().get(sustained.slot).version())
             || after.sequence() >= sustained.started && after.inputToken() != sustained.token)) stopSustained();
     }
-    public static boolean choose(boolean back) {
+    public static boolean choose(boolean back) { return choose(back, null); }
+    private static boolean choose(boolean back, CompanionInput.Aim firstAim) {
         var current = selection; if (current == null) return false;
         if (back) { if (current.samples.isEmpty()) selection = null; else current.samples.removeLast(); return true; }
-        var sample = sample(current); if (sample == null) return true;
+        var sample = sample(current, firstAim); if (sample == null) return true;
         current.samples.add(sample);
         if (current.samples.size() == CompanionInput.state().skills().get(current.slot).preview().input().steps().size()) {
             var aim = current.aim;
@@ -93,7 +102,7 @@ public final class ComplexInput {
         if (!inGame || CompanionInput.actor() == null) { cancel(); return; }
         var current = sustained;
         if (current != null) {
-            if (!CompanionInput.physicallyDown(current.held)) { stopSustained(); return; }
+            if (!current.menu && !CompanionInput.physicallyDown(current.held)) { stopSustained(); return; }
             current.samples.clear(); var sample = sample(current);
             if (sample == null) { stopSustained(); return; }
             current.samples.add(sample);
@@ -104,8 +113,9 @@ public final class ComplexInput {
             }
         }
     }
-    private static JsonObject sample(Session current) {
-        var lastAim = current.aim = CompanionInput.aim(current.slot);
+    private static JsonObject sample(Session current) { return sample(current, null); }
+    private static JsonObject sample(Session current, CompanionInput.Aim suppliedAim) {
+        var lastAim = current.aim = suppliedAim != null ? suppliedAim : CompanionInput.aim(current.slot);
         if (lastAim == null || !lastAim.reason().isEmpty() && !lastAim.reason().equals("out-of-range") && !lastAim.reason().equals("path-blocked") && !(current.channel && lastAim.reason().equals("no-pp"))) { CompanionInput.notifyReason(lastAim == null ? "invalid-target" : lastAim.reason()); return null; }
         var spec = CompanionInput.state().skills().get(current.slot).preview().input(); String kind = spec.steps().get(current.channel ? 0 : current.samples.size());
         var result = new JsonObject(); result.addProperty("kind", kind);

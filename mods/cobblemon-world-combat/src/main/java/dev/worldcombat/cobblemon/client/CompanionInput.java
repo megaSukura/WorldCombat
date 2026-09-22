@@ -109,9 +109,12 @@ public final class CompanionInput {
             rotation = 0; preview.press(); handled = true;
         } else if ((preview.active() || ComplexInput.active()) && CANCEL.getKey().equals(key)) {
             preview.cancel(); ComplexInput.cancel(); notifyReason("preview-cancelled"); handled = true;
-        } else if (CANCEL.getKey().equals(key) && (state.reason().equals("approaching") || state.reason().equals("queued"))) {
+        } else if (CANCEL.getKey().equals(key) && Set.of("approaching", "queued", "waiting-cooldown", "waiting-action").contains(state.reason())) {
             CompanionContentClient.command("cancel-cast", "null");handled=true;
-        } else if (CONFIRM.getKey().equals(key) && ComplexInput.choose(false) || BACK.getKey().equals(key) && ComplexInput.choose(true)) {
+        } else if (CONFIRM.getKey().equals(key) && ComplexInput.choose(false)) {
+            handled = true;
+        } else if (BACK.getKey().equals(key) && ComplexInput.active()) {
+            if (!ComplexInput.choose(true)) { ComplexInput.cancel(); notifyReason("preview-cancelled"); }
             handled = true;
         } else if (previewSlot() >= 0 && state.skills().get(previewSlot()).preview().rotation().equals("cardinal")
             && (ROTATE_LEFT.getKey().equals(key) || ROTATE_RIGHT.getKey().equals(key))) {
@@ -258,6 +261,7 @@ public final class CompanionInput {
     public static String clientData() {
         var json = state == null ? new com.google.gson.JsonObject() : JSON.toJsonTree(state.atTick(state.tick() + clientTick - stateReceived)).getAsJsonObject();
         json.addProperty("previewSlot", previewSlot());
+        json.addProperty("precisionHeld", preview.active());
         json.add("input", ComplexInput.status());
         json.addProperty("hint", messageUntil >= clientTick ? label("reason", localReason).getString() : "");
         json.addProperty("feedbackSequence", feedbackSequence);
@@ -270,8 +274,12 @@ public final class CompanionInput {
         json.addProperty("rotateLeftKey", binding(ROTATE_LEFT)); json.addProperty("rotateRightKey", binding(ROTATE_RIGHT));
         json.addProperty("modifierKey", binding(QUICK_MODIFIER));
         var keys = new com.google.gson.JsonArray();
-        for (int i = 0; i < 4; i++) keys.add(binding(ControlConfig.MODIFIER_DIGITS.get() ? QUICK_SKILLS[i] : SKILLS[i]));
-        json.add("keys", keys); return json.toString();
+        var castKeys = new com.google.gson.JsonArray();
+        for (int i = 0; i < 4; i++) {
+            String key = binding(ControlConfig.MODIFIER_DIGITS.get() ? QUICK_SKILLS[i] : SKILLS[i]);
+            keys.add(key); castKeys.add(ControlConfig.MODIFIER_DIGITS.get() ? binding(QUICK_MODIFIER) + "+" + key : key);
+        }
+        json.add("keys", keys); json.add("castKeys", castKeys); return json.toString();
     }
     private static void send(String operation, int value, Aim aim, String version) {
         submit(operation, value, aim, version, "{}");
@@ -291,7 +299,12 @@ public final class CompanionInput {
         localReason = reason; messageUntil = clientTick + 90; feedbackSequence++;
     }
     public static Component label(String group, String id) {
-        return Component.translatable(net.minecraft.client.resources.language.I18n.exists(id) ? id : "worldcombat." + group + "." + id);
+        String key = net.minecraft.client.resources.language.I18n.exists(id) ? id : "worldcombat." + group + "." + id;
+        if (group.equals("reason") && id.equals("send-out"))
+            return Component.translatable("worldcombat.ui.send_out", binding(com.cobblemon.mod.common.client.keybind.keybinds.PartySendBinding.INSTANCE));
+        if (group.equals("reason") && id.equals("previewing"))
+            return Component.translatable("worldcombat.ui.precision_preview", "", binding(PRECISION), binding(CANCEL));
+        return Component.translatable(key);
     }
     public static String binding(KeyMapping key) { return key.getTranslatedKeyMessage().getString(); }
 }

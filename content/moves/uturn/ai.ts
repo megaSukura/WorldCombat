@@ -50,7 +50,7 @@ namespace PokemonSkills {
             let score = 14;
             if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "fleeBelow", 0.4)) score += 20;
             if (CompanionBehavior.ratio(target) <= 0.35) score += 12;
-            if (CompanionBehavior.ai<boolean>(capability, "handoff", false)) score += Math.min(10, uturnReady(context, target) * 5);
+            if (capability.data.config.handoff === true) score += Math.min(10, uturnReady(context, target) * 5);
             return score;
         }
     });

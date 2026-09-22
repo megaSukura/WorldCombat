@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.BonemealableBlock;
@@ -26,6 +27,39 @@ import java.util.*;
 /** Calls native item/block interfaces under the acting identity; content supplies tool and purpose. */
 public final class NativeBlockUse {
     private NativeBlockUse() {}
+    /** Bare-hand native interaction: uses block behavior and the native interaction/protection event. */
+    public static String interact(MinecraftCombat combat, ActorHandle actor, UUID controller, Point point, String face, boolean secondary, String expected) {
+        var entity = combat.resolve(actor); if (entity == null) return "actor-unavailable";
+        var level = (ServerLevel) entity.level(); var pos = BlockPos.containing(point.x(), point.y(), point.z());
+        var facts = observe(combat, actor, point); if (facts == null) return "unloaded";
+        if (!facts.state().equals(expected)) return "state-changed";
+        var direction = Direction.byName(face); if (direction == null) throw new IllegalArgumentException("Unknown block face");
+        var player = controller == null ? null : combat.server().getPlayerList().getPlayer(controller);
+        if (player == null && !EventHooks.canEntityGrief(level, entity)) return "protected-area";
+        var proxy = FakePlayerFactory.get(level, player == null ? new GameProfile(entity.getUUID(), "WorldCombat") : player.getGameProfile());
+        var position = proxy.position(); var yaw = proxy.getYRot(); var pitch = proxy.getXRot();
+        var hand = proxy.getMainHandItem(); var crouched = proxy.isShiftKeyDown();
+        try {
+            proxy.moveTo(entity.getX(), entity.getY(), entity.getZ(), entity.getYRot(), entity.getXRot());
+            proxy.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY); proxy.setShiftKeyDown(secondary);
+            if (!level.mayInteract(player == null ? proxy : player, pos) || !proxy.mayUseItemAt(pos, direction, ItemStack.EMPTY)) return "protected-area";
+            var hit = new BlockHitResult(Vec3.atCenterOf(pos), direction, pos, false);
+            var event = CommonHooks.onRightClickBlock(proxy, InteractionHand.MAIN_HAND, pos, hit);
+            // A mod can perform the interaction in this event and cancel further vanilla handling.
+            if (event.isCanceled()) return event.getCancellationResult().consumesAction() ? "used" : "protected-area";
+            if (event.getUseBlock() == TriState.FALSE) return "protected-area";
+            var state = level.getBlockState(pos);
+            var itemResult = state.useItemOn(ItemStack.EMPTY, level, proxy, InteractionHand.MAIN_HAND, hit);
+            if (itemResult.consumesAction()) return "used";
+            if (itemResult != ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION)
+                return itemResult == ItemInteractionResult.FAIL ? "refused" : "pass";
+            var result = state.useWithoutItem(level, proxy, hit);
+            return result.consumesAction() ? "used" : result == InteractionResult.FAIL ? "refused" : "pass";
+        } finally {
+            proxy.setItemInHand(InteractionHand.MAIN_HAND, hand); proxy.setShiftKeyDown(crouched);
+            proxy.moveTo(position.x, position.y, position.z, yaw, pitch);
+        }
+    }
     private static <T extends Comparable<T>> String value(BlockState state, Property<T> property) {
         return property.getName(state.getValue(property));
     }

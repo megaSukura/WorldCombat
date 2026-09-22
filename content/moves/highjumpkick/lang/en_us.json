@@ -6,7 +6,7 @@
   "worldcombat.skill.highjumpkick.description.3": "Hang at the apex for %1$s ticks. A hit pushes the target back %2$s blocks.",
   "worldcombat.skill.highjumpkick.vertical.on": "Vertical knee: a higher toss, x1.08 knee power and a faster dive, at +2 ticks of wind-up, +8 ticks of cooldown, 1 block less reach and a longer apex hang (easier to dodge).",
   "worldcombat.skill.highjumpkick.vertical.off": "Diagonal knee: farther, faster and lighter, at the cost of a tier less knee power and falling momentum.",
-  "worldcombat.skill.highjumpkick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.highjumpkick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP; cooldown %5$s s from commitment.",
   "worldcombat.skill.highjumpkick.growth.0": "From level %1$s the knee power rises to %2$s.",
   "worldcombat.skill.highjumpkick.growth.1": "From level %1$s the knee power rises to %2$s and the leap height to %3$s.",
   "worldcombat.skill.highjumpkick.use.0": "Punch through a hard target with the heaviest contact hit of the family",

@@ -9,7 +9,7 @@
   "worldcombat.skill.petaldance.description.3": "Afterwards the user is confused for %1$s, and each attempted action has a %2$s chance to fumble and be cut by petals.",
   "worldcombat.skill.petaldance.drift.on": "Whirling form: drifts further, storms wider, petals last longer and push further, but has a slower wind-up and cooldown and a longer daze.",
   "worldcombat.skill.petaldance.drift.off": "Grounded form: spins in place, recovers faster and loses control for less time, but the radius and the trace left behind are narrower.",
-  "worldcombat.skill.petaldance.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.petaldance.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP; cooldown %5$s s from commitment.",
   "worldcombat.skill.petaldance.growth.0": "From level %1$s each ring rises to %2$s power.",
   "worldcombat.skill.petaldance.growth.1": "From level %1$s each ring rises to %2$s and leaves %3$s petal patches.",
   "worldcombat.skill.petaldance.value.bloom": "Ring power",

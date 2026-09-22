@@ -22,6 +22,35 @@ namespace PokemonSkills {
     const skydropGrabText = "world_combat.move.skydrop.text.grab";
     const skydropSlamText = "world_combat.move.skydrop.text.slam";
 
+    const skydropCarry = "world_combat:skydrop_carry";
+    WorldCombat.effect(skydropCarry, 1, 260, "action", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(skydropCarry, "start", function () { });
+    WorldCombat.effectHandler(skydropCarry, "end", function (effect) {
+        const world = effect.world(), target = effect.target();
+        if (world.valid(target) && world.effects(target, skydropCarry).every(view => view.id() === effect.id())) {
+            skydropResetFall(world, target);
+            MobEffects.consume(world, target, skydropCarried);
+        }
+    });
+    WorldCombat.on("world_combat:move_skydrop/carry-watch", "world_combat:mob_effect_tick", "", function (event) {
+        if (JSON.parse(event.data()).id !== skydropCarried) return;
+        const world = event.world(), target = event.actor();
+        if (!world.effects(target, skydropCarry).length) {
+            skydropResetFall(world, target);
+            MobEffects.consume(world, target, skydropCarried);
+        }
+    });
+    function skydropFinish(action: CombatAction): void {
+        action.releaseTarget();
+        const ticks = Number(JSON.parse(action.data("skydrop:recover") || "{}").ticks || 0);
+        function recover(current: CombatAction, left: number): void {
+            if (left <= 0) { current.finish(); return; }
+            current.stage("recovering"); current.stopMovement();
+            current.after(1, next => recover(next, left - 1));
+        }
+        recover(action, ticks);
+    }
+
     /** 目标体重（千克）；非宝可梦目标按 0（不构成抓取限制）。 */
     function skydropWeight(world: CombatWorld, actor: CombatActor): number {
         if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return 0;
@@ -83,7 +112,7 @@ namespace PokemonSkills {
     function skydropBegin(current: CombatAction, target: CombatActor, slam: number, liftSpeed: number, dropSpeed: number, holdTicks: number, altitude: number): void {
         const world = current.world(), actor = current.actor();
         const self = world.observe(actor), body = world.observe(target);
-        if (self === null || body === null) { current.finish(); return; }
+        if (self === null || body === null) { skydropFinish(current); return; }
         const surface = skydropSurface(world, body), cx = body.position().x(), cz = body.position().z();
         const casterHold = WorldCombat.point(cx, surface + altitude, cz);
         const duration = Math.ceil(altitude / Math.max(0.15, liftSpeed)) + holdTicks + 90;
@@ -92,6 +121,7 @@ namespace PokemonSkills {
             casterHold: [casterHold.x(), casterHold.y(), casterHold.z()], dropped: 0 };
         world.deliver(target, "world_combat:interrupt");
         world.stopMovement(target);
+        current.effect(skydropCarry, target, "{}", 260);
         MobEffects.apply(world, target, skydropCarried, duration, 0);
         WorldFeedback.emit(world, skydropScene, 1, self.position(),
             { moment: "grab", target: String(target.ref()), altitude: altitude, scale: Math.max(0.6, Math.min(2, altitude / 4)) }, 26);
@@ -104,12 +134,12 @@ namespace PokemonSkills {
         const world = current.world(), actor = current.actor();
         const self = world.observe(actor), victim = world.observe(target);
         state.ticks++;
-        if (self === null || state.ticks > 220) { skydropAbort(world, target); current.finish(); return; }
+        if (self === null || state.ticks > 220 || MobEffects.read(world, target, skydropCarried) === null) { skydropAbort(world, target); skydropFinish(current); return; }
         current.stopMovement();
         world.stopMovement(target);
         const casterHold = WorldCombat.point(state.casterHold[0], state.casterHold[1], state.casterHold[2]);
         if (state.phase === "rise" || state.phase === "hold") {
-            if (victim === null) { skydropAbort(world, target); current.finish(); return; }
+            if (victim === null) { skydropAbort(world, target); skydropFinish(current); return; }
             const rate = state.phase === "rise" ? liftSpeed : liftSpeed * 0.4;
             skydropLift(world, actor, casterHold, rate);
             const top = world.observe(actor);
@@ -135,7 +165,7 @@ namespace PokemonSkills {
             return;
         }
         if (state.phase === "drop") {
-            if (victim === null) { skydropAbort(world, target); current.finish(); return; }
+            if (victim === null) { skydropAbort(world, target); skydropFinish(current); return; }
             const feet = victim.position().y() - victim.height() * 0.5;
             if (feet <= state.surface + 0.12 || victim.grounded()) { skydropSlam(current, target, state, slam); return; }
             skydropResetFall(world, target);
@@ -170,7 +200,7 @@ namespace PokemonSkills {
 
     function skydropLand(current: CombatAction, state: SkydropState, guard: number): void {
         const world = current.world(), self = world.observe(current.actor());
-        if (self === null || guard > 40) { current.finish(); return; }
+        if (self === null || guard > 40) { skydropFinish(current); return; }
         const floor = skydropSurface(world, self);
         const feet = self.position().y() - self.height() * 0.5;
         if (feet > floor + 0.15) {
@@ -181,7 +211,7 @@ namespace PokemonSkills {
         }
         skydropResetFall(world, current.actor());
         WorldFeedback.emit(world, skydropScene, 1, self.position(), { moment: "land", target: String(current.actor().ref()) }, 18);
-        current.finish();
+        skydropFinish(current);
     }
 
     define({
@@ -198,7 +228,7 @@ namespace PokemonSkills {
         cooldown: 46,
         style: "aerial",
         maximumTicks: 260,
-        interruptible: false,
+        interruptible: true,
         defaults: { carryHigh: false, ai: { maxChase: 8, maxWeight: 300, preferIsolated: true } },
         fields: [field(pathOf("carryHigh"), "高抛", "boolean", {
             help: "开启：提得更高、滞空更久、摔落约 ×1.15，但起手 +3 刻、冷却 +10 刻。关闭（低位速摔）：提得低、摔得轻（约 ×0.85），但收手更快、冷却更短。"
@@ -221,6 +251,8 @@ namespace PokemonSkills {
         run: function (action, move, config) {
             const high = skydropHigh(config);
             const prepareTicks = Math.max(4, Math.round(p("skydrop", "prepare", action)) + (high ? 3 : -1));
+            action.data("skydrop:recover", JSON.stringify({ ticks: Math.max(4, Math.round(p("skydrop", "recover", action)) + (high ? 2 : -2)) }));
+            LivingActions.lifecycle(action, { interruptible: true });
             action.present("skydrop:windup", skydropScene, 1, action.origin(),
                 JSON.stringify({ moment: "windup", high: high ? 1 : 0 }));
             action.after(prepareTicks, function (current: CombatAction) {
@@ -228,6 +260,7 @@ namespace PokemonSkills {
                 if (target === null || !sense.valid(target)) { current.reject("target-left"); return; }
                 const body = sense.observe(target);
                 if (body === null) { current.reject("target-left"); return; }
+                if (sense.effects(target, skydropCarry).length) { current.reject("already-carried"); return; }
                 if (skydropWeight(sense, target) > p("skydrop", "liftCap", current)) { current.reject("too-heavy"); return; }
                 current.commit(Math.max(20, Math.round(p("skydrop", "cooldown", current)) + (high ? 10 : -6)));
                 skydropBegin(current, target, p("skydrop", "slam", current), Math.max(0.15, p("skydrop", "liftSpeed", current)),
@@ -237,8 +270,8 @@ namespace PokemonSkills {
         }
     });
 
-    // 被抓在空中的目标不能起手；伤害阶段不受影响（仍可被打）。
-    CombatStatus.actions.define({ id: "world_combat:move_skydrop/carry-gate", applies: function (context) { return context.phase !== "damage"; },
+    // 携带目标的招式与原生攻击均被挡住；旁人的救援伤害仍可打中施法者。
+    CombatStatus.actions.define({ id: "world_combat:move_skydrop/carry-gate",
         apply: function (context) { if (CombatStatus.has(context.world, context.actor, "skydrop")) context.blocked.skycarried = true; } });
 
     // 被抓的目标导航速度归零，免得它的 AI 与保持位移互相对抗。

@@ -79,13 +79,17 @@ namespace SchemaEditor {
             if(model.returnLabel)UiSurfaces.button(panel,model.returnLabel,width-116,7,75,23,()=>this.options.close());
             UiSurfaces.button(panel,"×",width-36,7,23,23,()=>this.options.close());
             const tabMargin=pageCount>1?40:12,tabWidth=(width-tabMargin*2)/Math.max(1,Math.min(4,model.tabs.length));
-            model.tabs.slice(tabPage*4,tabPage*4+4).forEach((value,index)=>UiSurfaces.button(panel,value.name,tabMargin+index*tabWidth,36,tabWidth-4,23,()=>this.options.select(value.id)));
+            model.tabs.slice(tabPage*4,tabPage*4+4).forEach((value,index)=>{
+                UiSurfaces.button(panel,value.name,tabMargin+index*tabWidth,36,tabWidth-4,23,()=>this.options.select(value.id));
+                if(value.id===model.selected)panel.addChild(UiSurfaces.surface(UiSurfaces.element(tabMargin+index*tabWidth+3,58,tabWidth-10,2),0xff497b83,0));
+            });
             if(pageCount>1){
                 UiSurfaces.button(panel,"‹",12,36,22,23,()=>{this.tabPages[model.identity]=(tabPage+pageCount-1)%pageCount;this.present(this.model!);});
                 UiSurfaces.button(panel,"›",width-34,36,22,23,()=>{this.tabPages[model.identity]=(tabPage+1)%pageCount;this.present(this.model!);});
             }
             UiSurfaces.button(panel,this.options.readoutLabel||tr("description"),14,66,(width-34)/2,23,()=>{this.modes[subject]="description";this.present(this.model!);});
             UiSurfaces.button(panel,this.options.settingsLabel||tr("preferences"),20+(width-34)/2,66,(width-34)/2,23,()=>{this.modes[subject]="fields";this.present(this.model!);});
+            panel.addChild(UiSurfaces.surface(UiSurfaces.element(mode==="description"?17:23+(width-34)/2,88,(width-34)/2-6,2),0xff497b83,0));
             const scroll=UiSurfaces.scroll(panel,14,96,width-28,height-130),content=UiSurfaces.scrollContent(scroll);
             if(mode==="description"){
                 const prose=UiSurfaces.rich(content,0,0,width-48,14);prose.lss("position","relative");prose.getTextStyle().adaptiveHeight(true);

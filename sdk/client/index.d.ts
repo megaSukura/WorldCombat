@@ -23,6 +23,12 @@ interface CombatClientFrame {
 }
 declare const WorldCombatClient: {
     /**
+     * Describe a real item in an installed optional item-information viewer (JEI).
+     * Keys are localized on the client; repeated contributions for one item merge in order.
+     * Unknown items are ignored. Client-script reload replaces the declaration set and withdraws old pages.
+     */
+    itemInformation(itemId: string, textKeys: string[]): void;
+    /**
      * Once per rendered frame per live entry; JSON.parse(frame.data()).data is the producer's payload.
      * Use ordinary script arithmetic/predicates/loops for exact persistent counts or custom geometry.
      * Draw with line/ring/billboard; anchor(ref) returns a loaded living entity or JSON null.

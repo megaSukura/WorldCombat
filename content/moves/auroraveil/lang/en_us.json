@@ -5,7 +5,7 @@
   "worldcombat.skill.auroraveil.use.2": "Buy a window to switch or heal",
   "worldcombat.skill.auroraveil.description.0": "Only in a cold snowstorm (rain or thunder overhead, with snow or ice within two or three blocks underfoot) can the veil be laid on ground within %1$s blocks.",
   "worldcombat.skill.auroraveil.description.1": "The veil has a radius of %2$s blocks and lasts %1$s, covering allies under it only.",
-  "worldcombat.skill.auroraveil.description.2": "Under it, an ally's physical damage taken is cut by %1$s and special damage by %2$s.",
+  "worldcombat.skill.auroraveil.description.2": "Under it, an ally's physical damage taken is cut by %1$s and special damage by %2$s.Where veils overlap, each damage category uses the strongest veil.",
   "worldcombat.skill.auroraveil.description.4": "Raising it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the form note for the long/bright trade-off.",
   "worldcombat.skill.auroraveil.form.0": "Bright: physical and special cut x1.2 each, at x0.7 duration, +3 ticks wind-up and x1.15 cooldown.",
   "worldcombat.skill.auroraveil.form.1": "Long: base cuts, at x1.3 duration, -2 ticks wind-up and x0.95 cooldown - holds longer and raises faster, with less cover.",

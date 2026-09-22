@@ -28,8 +28,8 @@
   "worldcombat.reason.too-fast": "Commands sent too quickly",
   "worldcombat.reason.stale-request": "Request expired; try again",
   "worldcombat.reason.old-request": "Request already handled",
-  "worldcombat.reason.queued": "Queued until the current action ends",
-  "worldcombat.reason.queue-expired": "Companion still busy; cast again",
+  "worldcombat.reason.queued": "Order retained; waiting until the move can be used",
+  "worldcombat.reason.queue-expired": "Unable to use the move yet; give the order again",
   "worldcombat.reason.accepted": "Command accepted",
   "worldcombat.reason.requested": "Command sent",
   "worldcombat.reason.preview-cancelled": "Preview cancelled",
@@ -232,5 +232,9 @@
   "worldcombat.review.numbers": "Enter whole numbers for levels and target count.",
   "worldcombat.review.quick-mob": "Add MC target",
   "worldcombat.review.quick-pokemon": "Add Pokémon target",
-  "worldcombat.reason.approaching": "Moving into casting range"
+  "worldcombat.reason.approaching": "Moving into casting range",
+  "worldcombat.reason.waiting-cooldown": "Order retained; waiting for this move to cool down",
+  "worldcombat.reason.waiting-action": "Order retained; waiting for the current action to finish",
+  "worldcombat.reason.already-carried": "This target is already being carried",
+  "worldcombat.reason.already-swapped": "The exchange is still active"
 }

@@ -12,6 +12,7 @@ allprojects {
 subprojects {
     repositories {
         mavenCentral()
+        maven("https://maven.blamejared.com/") { content { includeGroup("mezz.jei") } }
         maven("https://maven.theillusivec4.top/") { content { includeGroup("top.theillusivec4.curios") } }
         maven("https://maven.latvian.dev/releases") {
             content { includeGroup("dev.latvian.mods") }
@@ -40,7 +41,11 @@ subprojects {
 
     dependencyLocking {
         lockAllConfigurations()
-        if (providers.gradleProperty("withCurios").orNull == "true") lockFile.set(file("gradle-curios.lockfile"))
+        val optional = listOfNotNull(
+            "curios".takeIf { providers.gradleProperty("withCurios").orNull == "true" },
+            "jei".takeIf { providers.gradleProperty("withJei").orNull == "true" }
+        )
+        if (optional.isNotEmpty()) lockFile.set(file("gradle-" + optional.joinToString("-") + ".lockfile"))
     }
 
     tasks.withType<JavaCompile>().configureEach {

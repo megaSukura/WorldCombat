@@ -1,6 +1,7 @@
 package dev.worldcombat.core.client;
 import java.util.function.Consumer;
 public final class CombatClientApi {
+    public void itemInformation(String item, String[] textKeys) { ItemInformation.register(item, textKeys); }
     public void scene(String id, int version, Consumer<ClientFrame> handler) { ClientPresentation.register("scene", id, version, handler); }
     public void hud(String id, int version, Consumer<ClientFrame> handler) { ClientPresentation.register("hud", id, version, handler); }
     public void world(String id, int version, Consumer<ClientFrame> handler) { ClientPresentation.register("world", id, version, handler); }

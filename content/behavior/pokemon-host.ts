@@ -214,6 +214,12 @@ namespace PokemonBehaviorHost {
             var input = this.adapter.frame(access, pokemon, currentIntent, anchor, owner, protectedActor, focused, view.chaseRange(), String(view.captureHold()),
                 function (slot, target, position, direction, json) { return Number(view.submitInput(slot, target, position, direction, json)); },
                 function (stage, reason) { view.report(stage, reason); });
+            // The host has already accepted the pending manual order. Cleaning up the previous
+            // autonomous task must release its JS state without stopping that order's navigation.
+            if (view.pending()) {
+                input.facts.movementBusy = true;
+                (input.services.behavior as WorldMethods.Host).stop = function () { };
+            }
             var state = this.pool.get(input, memory);
             if (operation !== "tick") { state.agent.stop("command-changed", input); delete state.agent.memory.navigation; }
             access.controlled(true); input.facts.managed = true;

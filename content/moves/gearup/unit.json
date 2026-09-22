@@ -11,13 +11,15 @@
   "sources": [
     "parameters.ts",
     "skill.ts",
-    "ai.ts"
+    "ai.ts",
+    "machine.ts"
   ],
   "startupSources": [
     "startup.ts"
   ],
   "clientSources": [
-    "presentation.ts"
+    "presentation.ts",
+    "machine-info.ts"
   ],
   "mobEffectIcons": {
     "world_combat:gearup_drive": "minecraft:mob_effect/strength"

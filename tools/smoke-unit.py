@@ -3,7 +3,7 @@
 
     python tools/smoke-unit.py content/moves/<id> [content/moves/<id2> ...]
                                  [--with-units <dir>[,<dir>...]] [--keep]
-                                 [--boot-budget <seconds>] [--scenario-budget <seconds>]
+                                 [--boot-budget <seconds>] [--scenario-budget <seconds>] [--extra-mod <release.jar>]
 
 Builds one private assembly (shared packages + the tested units + their scenario.ts files, plus any
 `--with-units` dependencies that are assembled without running their scenario), starts a dedicated
@@ -163,7 +163,7 @@ def build(units, fixtures, output):
 def main():
     argv = sys.argv[1:]
     boolean_options = {"--keep"}
-    value_options = {"--with-units", "--boot-budget", "--scenario-budget"}
+    value_options = {"--with-units", "--boot-budget", "--scenario-budget", "--extra-mod"}
     options = {}; positional = []; index = 0
     while index < len(argv):
         arg = argv[index]
@@ -238,6 +238,10 @@ def main():
     (work / "mods").mkdir(parents=True)
     dependency = ROOT / "build/integrations/FarmersDelight-1.21.1-1.3.4.jar"
     if dependency.is_file(): shutil.copyfile(dependency, work / "mods" / dependency.name)
+    for extra in options.get("--extra-mod", []):
+        dependency = Path(extra).resolve(strict=True)
+        if dependency.suffix != ".jar": raise ValueError("--extra-mod requires a release jar")
+        shutil.copyfile(dependency, work / "mods" / dependency.name)
     port = free_port()
     (work / "server.properties").write_text(
         "server-ip=127.0.0.1\nserver-port=%d\nlevel-name=smoke\nlevel-type=minecraft:flat\nonline-mode=false\n"

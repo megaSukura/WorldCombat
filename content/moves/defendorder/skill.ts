@@ -30,6 +30,10 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(defendorderMark, "start", function () { });
+    WorldCombat.effectHandler(defendorderMark, "operation:world_combat:dispel", function (effect) {
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
+        effect.end();
+    });
 
     export function defendorderRead(world: CombatWorld, owner: CombatActor): any | null {
         const marks = world.effects(owner, defendorderMark);
@@ -44,16 +48,7 @@ namespace PokemonSkills {
         const marks = world.effects(owner, defendorderMark);
         for (let i = 0; i < marks.length; i++) world.operation(marks[i].id(), "world_combat:dispel", "{}");
     }
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function defendorderStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /**
-     * 甲壳的等级 = 还活着的手下数量。数量掉了就扣、涨了就补，只动差额；
-     * 扣的时候不超过当前实际持有的正等级，避免抹掉别处的增益。手下的死亡与召唤都走这里。
-     */
+    /** 每一批手下拥有自己的双防窗口，消散时只撤回本批贡献。 */
     function defendorderReconcile(world: CombatWorld, owner: CombatActor): void {
         if (!world.valid(owner)) return;
         const state = defendorderRead(world, owner);
@@ -66,16 +61,10 @@ namespace PokemonSkills {
         const desired = Math.max(0, Math.min(defendorderCap, live));
         const applied = Math.max(0, Math.round(Number(state.applied) || 0));
         if (desired === applied) return;
-        if (desired > applied) {
-            NativeEffects.boost(world, owner, "def", desired - applied);
-            NativeEffects.boost(world, owner, "spd", desired - applied);
-        } else {
-            const cut = applied - desired;
-            const lostDef = Math.min(cut, Math.max(0, defendorderStage(world, owner, "def")));
-            const lostSpd = Math.min(cut, Math.max(0, defendorderStage(world, owner, "spd")));
-            if (lostDef > 0) NativeEffects.boost(world, owner, "def", -lostDef);
-            if (lostSpd > 0) NativeEffects.boost(world, owner, "spd", -lostSpd);
-        }
+        if (state.window) NativeEffects.windowClose(world, state.window);
+        const guard = MobEffects.read(world, owner, defendorderGuard);
+        state.window = desired > 0 && guard !== null
+            ? NativeEffects.boostWindow(world, owner, { def: desired, spd: desired }, Math.max(1, guard.duration()), "world_combat:move/defendorder") : 0;
         state.applied = desired;
         defendorderWrite(world, owner, state, 1200);
         const body = world.observe(owner);
@@ -186,7 +175,7 @@ namespace PokemonSkills {
                 }, bond + 60);
                 refs.push(String(underling.ref()));
             }
-            defendorderWrite(world, actor, { refs: refs, applied: 0 }, 1200);
+            defendorderWrite(world, actor, { refs: refs, applied: 0, window: 0, scale: scale }, 1200);
             MobEffects.apply(world, actor, defendorderGuard, bond, brood);
             defendorderReconcile(world, actor);
             WorldFeedback.emit(world, defendorderScene, 1, body.position(),

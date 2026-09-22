@@ -28,7 +28,9 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "defendorder")) return false;
             if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
-            return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
+            const distance = CompanionBehavior.distance(self.point, threat.point);
+            return distance >= CompanionBehavior.ai<number>(capability, "minGap", 2)
+                && distance <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

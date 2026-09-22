@@ -5,7 +5,7 @@
   "worldcombat.skill.auroraveil.use.2": "为换人、回复争取一段窗口",
   "worldcombat.skill.auroraveil.description.0": "只有在下着雪的冷天（天在下雨或雷暴、且脚下两三格内有雪或冰）才能在 %1$s 以内的地面铺开极光。",
   "worldcombat.skill.auroraveil.description.1": "极光半径 %2$s 格、持续 %1$s，只罩住幕下的友方。",
-  "worldcombat.skill.auroraveil.description.2": "幕下友方受到的物理伤害被削掉 %1$s、特殊伤害被削掉 %2$s。",
+  "worldcombat.skill.auroraveil.description.2": "幕下友方受到的物理伤害被削掉 %1$s、特殊伤害被削掉 %2$s。 多片极光重叠时，同类减伤取最强的一片。",
   "worldcombat.skill.auroraveil.description.4": "铺幕要 %1$s，收势 %2$s，冷却 %3$s。长幕／明幕的取舍见形态说明。",
   "worldcombat.skill.auroraveil.form.0": "明幕：物理与特殊减伤各 ×1.2，代价是极光时长 ×0.7、起手 +3 刻、冷却 ×1.15。",
   "worldcombat.skill.auroraveil.form.1": "长幕：减伤为基础值，换来时长 ×1.3、起手 −2 刻、冷却 ×0.95——铺得久、起得快，但挡得薄。",

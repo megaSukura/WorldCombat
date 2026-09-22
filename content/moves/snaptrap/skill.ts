@@ -51,9 +51,11 @@ namespace PokemonSkills {
         if (body === null) return false;
         hurt(world, victim, "snaptrap", data.bite, { damage: damageSpec("snaptrap", "bite"), contact: true });
         if (!world.valid(victim)) return false;
-        MobEffects.apply(world, victim, snaptrapSnared, Math.max(20, Math.round(data.hold)), 0);
+        world.effects(victim, snaptrapJaw).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+        const snared = MobEffects.apply(world, victim, snaptrapSnared, Math.max(20, Math.round(data.hold)), 0);
+        if (snared === null) return false;
         world.effect(snaptrapJaw, victim, JSON.stringify({ point: [at.x(), at.y(), at.z()], interval: data.interval,
-            chew: data.chew, escape: data.escape, jaws: data.jaws, slipped: false }), Math.max(40, Math.round(data.hold)) + 40);
+            chew: data.chew, escape: data.escape, jaws: data.jaws, slipped: false, mobKey: String(snared.key()) }), Math.max(20, Math.round(data.hold)));
         WorldFeedback.emit(world, snaptrapScene, 1, body.position(),
             { moment: "snap", target: String(victim.ref()), jaws: data.jaws, intensity: Math.max(0.6, Math.min(2, data.bite / 30)) }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), snaptrapSnapText,
@@ -76,6 +78,8 @@ namespace PokemonSkills {
         const world = effect.world(), data = JSON.parse(effect.state());
         if (data.sprung) { effect.end(); return; }
         const at = snaptrapPoint(data.point);
+        WorldFeedback.keep(world, "snaptrap:armed:" + effect.id(), snaptrapScene, 1, at,
+            { moment: "armed_idle", trigger: data.trigger, jaws: data.jaws, scale: data.trigger / 1.1 }, 4);
         if (world.tick() < data.armAt) { effect.schedule("watch", "watch", 2, "{}"); return; }
         // 夹子贴地：用来访者脚、身体中心与头采样同一个地面圈（判定与画面读同一半径与高度带），踩中第一人即合上。
         let caught = false;
@@ -99,12 +103,16 @@ namespace PokemonSkills {
 
     WorldCombat.effect(snaptrapJaw, 1, 400, "actor", snaptrapJawData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(snaptrapJaw, "start", function (effect) { effect.schedule("chew", "chew", 1, "{}"); });
+    WorldCombat.effectHandler(snaptrapJaw, "operation:world_combat:dispel", effect => effect.end());
     WorldCombat.effectHandler(snaptrapJaw, "chew", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
-        if (body.position().minus(snaptrapPoint(data.point)).length() > data.escape) {
+        const status = MobEffects.read(world, victim, snaptrapSnared);
+        if (status === null || String(status.key()) !== data.mobKey) { effect.end(); return; }
+        const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+        if (feet.minus(snaptrapPoint(data.point)).length() > data.escape) {
             data.slipped = true; effect.state(JSON.stringify(data)); effect.end(); return;
         }
         hurt(world, victim, "snaptrap", data.chew, { damage: damageSpec("snaptrap", "chew"), contact: true });
@@ -118,7 +126,7 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (world.valid(victim)) {
             const snared = MobEffects.read(world, victim, snaptrapSnared);
-            if (snared !== null) world.removeMobEffect(victim, snaptrapSnared, snared.key());
+            if (snared !== null && String(snared.key()) === data.mobKey) world.removeMobEffect(victim, snaptrapSnared, snared.key());
             const body = world.observe(victim);
             if (body !== null) {
                 WorldFeedback.emit(world, snaptrapScene, 1, body.position(),
@@ -126,6 +134,13 @@ namespace PokemonSkills {
                 if (data.slipped) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), snaptrapSlipText, [], 24);
             }
         }
+    });
+
+    WorldCombat.on("world_combat:move_snaptrap/cured", "world_combat:mob_effect_removed", "", function (event) {
+        if (JSON.parse(event.data()).id !== snaptrapSnared) return;
+        const world = event.world(), target = event.actor();
+        if (MobEffects.read(world, target, snaptrapSnared) !== null) return;
+        world.effects(target, snaptrapJaw).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
     });
 
     // 被夹住的目标无法移动：对宝可梦与原生生物一致归零导航速度（效果自带移动属性归零）。
@@ -219,11 +234,9 @@ namespace PokemonSkills {
                 if (laid) return;
                 laid = true;
                 const scope = current.world();
-                scope.effect(snaptrapArmed, current.actor(), JSON.stringify(state(at, scope.tick() + arm)), wait + 40);
+                scope.effect(snaptrapArmed, current.actor(), JSON.stringify(state(at, scope.tick() + arm)), wait);
                 WorldFeedback.emit(scope, snaptrapScene, 1, at,
                     { moment: "armed", trigger: trigger, jaws: jaws, wait: wait, scale: scale }, 26);
-                WorldFeedback.keep(scope, "snaptrap:armed:" + String(current.id()), snaptrapScene, 1, at,
-                    { moment: "armed_idle", trigger: trigger, jaws: jaws, wait: wait, scale: scale }, wait);
                 sound(current, "minecraft:block.iron_trapdoor.open");
                 done(current);
             }

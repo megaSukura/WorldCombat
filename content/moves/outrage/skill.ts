@@ -2,7 +2,7 @@
  * 逆鳞 / outrage 的出手方式。
  *
  * 核心念头：认准一个对手，低头一次一次地撞过去，越撞越凶，最后一撞把怒气全压进去；撞完自己晕头转向。
- *   它的身份是「锁定」——只认最初盯上的那个对手，把它顶飞了也要再追上去撞；撞不到别的目标不是失误，是它根本不看别人。
+ *   它持续追逐锁定的对手，把它顶飞后继续追；其他敌人挡在冲撞走廊中时可截下当前一撞。
  *
  * 三幕（run 自管节奏，提交前只观察与预告）：
  *   起（提交前）：低头蓄势、龙气向内收拢，只播预告；目标不在了就当场作废，不花 PP。
@@ -56,7 +56,7 @@ namespace PokemonSkills {
         return best;
     }
 
-    interface OutrageState { ref: string | null; left: number; strikes: number; index: number; }
+    interface OutrageState { complete: (action: CombatAction) => void; ref: string | null; left: number; strikes: number; index: number; }
 
     function outrageSpent(current: CombatAction, state: OutrageState): void {
         const world = current.world(), actor = current.actor(), body = world.observe(actor);
@@ -69,7 +69,7 @@ namespace PokemonSkills {
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), outrageDazeText, [], 30);
             world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
         }
-        current.finish();
+        state.complete(current);
     }
 
     function outrageStrike(current: CombatAction, state: OutrageState): void {
@@ -115,18 +115,21 @@ namespace PokemonSkills {
 
         let struck = false;
         let hitPoint: CombatPoint = origin;
+        let hitRef = "";
+        let interceptor: CombatActor | null = null, nearest = Infinity;
         WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, direction, laneLength, radius, { below: 1.6, above: 2.4 }),
             function (target, facts) {
-                if (struck) return;
-                if (hurt(current, target, outrageId, power, { damage: damageSpec(outrageId, "claw"), contact: true })) {
-                    struck = true; hitPoint = facts.position();
-                    world.displace(target, direction.scale(push));
-                }
+                const distance = facts.position().minus(origin).length();
+                if (distance < nearest) { nearest = distance; interceptor = target; hitPoint = facts.position(); }
             });
+        if (interceptor !== null && hurt(current, interceptor, outrageId, power, { damage: damageSpec(outrageId, "claw"), contact: true })) {
+            struck = true; hitRef = String((interceptor as CombatActor).ref());
+            world.displace(interceptor, direction.scale(push));
+        }
 
         if (struck) {
             WorldFeedback.emit(world, outrageScene, 1, hitPoint,
-                { moment: "claw", target: state.ref === null ? String(actor.ref()) : state.ref, final: final ? 1 : 0,
+                { moment: "claw", target: hitRef, final: final ? 1 : 0,
                     grains: grains, scale: scale, intensity: intensity }, 26);
             WorldFeedback.text(world, hitPoint.plus(WorldCombat.point(0, 1.4, 0)),
                 final ? outrageFinisherText : outrageHitText, [Math.round(power)], 28);
@@ -184,13 +187,14 @@ namespace PokemonSkills {
             const prepare = Math.max(3, Math.round(p(outrageId, "tempo", action)));
             action.present(outrageId + ":windup", outrageScene, 1, action.origin(),
                 JSON.stringify({ moment: "tempo", relentless: relentless ? 1 : 0 }));
-            action.after(prepare, function (current: CombatAction) {
-                const target = current.target();
-                if (target === null || !current.sense().valid(target)) { current.reject("target-left"); return; }
-                const cooldown = Math.max(1, Math.round(p(outrageId, "recharge", current)));
-                current.commit(cooldown);
+            LivingActions.run(action, {
+                prepare: prepare, recover: Math.max(0, Math.round(p(outrageId, "recover", action))),
+                cooldown: Math.max(1, Math.round(p(outrageId, "recharge", action))),
+                ready: function (current) { const target = current.target(); return target === null || !current.sense().valid(target) ? "target-left" : ""; },
+                stationary: true, turn: 15, interruptible: false
+            }, function (current, complete) {
                 const strikes = Math.max(2, Math.min(3, Math.round(p(outrageId, "strikes", current))));
-                const state: OutrageState = { ref: String(target.ref()), left: strikes, strikes: strikes, index: 0 };
+                const state: OutrageState = { complete: complete, ref: String(current.target()!.ref()), left: strikes, strikes: strikes, index: 0 };
                 sound(current, "minecraft:entity.ender_dragon.growl");
                 outrageStrike(current, state);
             });
@@ -215,7 +219,7 @@ namespace PokemonSkills {
             const fraction = Math.max(0.012, Math.min(0.05, 0.010 + attack * 0.00012));
             const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
             if (loss > 0) {
-                const remaining = Math.max(0, effect.duration() - world.tick());
+                const remaining = Math.max(0, effect.duration());
                 CombatStatus.apply(world, actor, "confusion", outrageDaze, Math.max(60, remaining), effect.amplifier(), { unique: true });
                 WorldFeedback.emit(world, outrageScene, 1, body.position(), { moment: "punish", target: String(actor.ref()) }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), outrageChipText, [Math.round(loss * 10) / 10], 24);

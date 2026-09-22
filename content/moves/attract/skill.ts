@@ -21,10 +21,19 @@ namespace PokemonSkills {
     function attractCharm(action: CombatAction, target: CombatActor): void {
         const world = action.world(), body = world.observe(target);
         if (body === null) return;
-        const duration = p("attract", "duration", action);
+        const self = action.actor();
+        if (String(self.domain()) === "cobblemon" && String(target.domain()) === "cobblemon"
+            && !attractOpposite(String(CobblemonCombat.pokemon(self).gender()), String(CobblemonCombat.pokemon(target).gender()))) {
+            WorldFeedback.emit(world, attractScene, 1, body.position(), { moment: "fizzle" }, 18);
+            return;
+        }
+        const facts = withTarget(factContext(action), target);
+        const duration = p("attract", "duration", facts);
+        // One visible infatuation has one current tether; a new kiss replaces its earlier source.
+        world.effects(target, attractTether).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
         MobEffects.apply(world, target, attractStatus, duration, 0);
         world.effect(attractTether, target, JSON.stringify({
-            chance: p("attract", "chance", action), pull: p("attract", "pull", action), leash: p("attract", "leash", action)
+            chance: p("attract", "chance", facts), pull: p("attract", "pull", facts), leash: p("attract", "leash", facts)
         }), duration);
         WorldFeedback.emit(world, attractScene, 1, body.position(),
             { moment: "charm", target: String(target.ref()), charmBurst: Math.round(duration / 8), intensity: Math.round(Math.min(2, 1 + p("attract", "chance", action))) }, 34);

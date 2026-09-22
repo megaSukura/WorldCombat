@@ -31,6 +31,19 @@ Smoke.scenario("skydrop", function (stage) {
             targetTravel: Math.round(stage.travelled(target) * 10) / 10,
             alive: target.alive()
         });
-        stage.done();
+        stage.setPp(caster, "skydrop", 0);
+        stage.noai(caster, target);
+        const rescueCaster = stage.pokemon({ species: "pidgeot", level: 40, moves: ["skydrop"], at: [7, 0, 0] });
+        const rescueTarget = stage.mob({ type: "minecraft:iron_golem", at: [9, 0, 0] });
+        stage.noai(rescueTarget);
+        stage.provoke(rescueCaster, rescueTarget);
+        stage.until(400, () => stage.hasMobEffect(rescueTarget, "world_combat:skydrop_carried"), function () {
+            stage.command("kill " + rescueCaster.ref.split("/")[0]);
+            stage.after(4, function () {
+                stage.expect(rescueTarget.alive(), "ordinary target survives the interrupted carry");
+                stage.expect(!stage.hasMobEffect(rescueTarget, "world_combat:skydrop_carried"), "caster departure releases its carried target");
+                stage.done();
+            });
+        }, "carry a vanilla target before cancellation");
     }, "skydrop slams a light foe within 70 s");
 });

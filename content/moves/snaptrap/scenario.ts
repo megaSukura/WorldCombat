@@ -34,7 +34,17 @@ Smoke.scenario("snaptrap", function (stage) {
                 snared: stage.hasMobEffect(heavy, "world_combat:snared_jaw"),
                 heavyAlive: heavy.alive()
             });
-            stage.done();
+            stage.setPp(caster, "snaptrap", 0);
+            stage.noai(caster, heavy);
+            stage.command("effect clear " + heavy.ref.split("/")[0] + " world_combat:snared_jaw");
+            stage.after(2, function () {
+                const damage = stage.damageTo(heavy);
+                stage.after(30, function () {
+                    stage.expect(!stage.hasMobEffect(heavy, "world_combat:snared_jaw"), "a cured jaw stays removed");
+                    stage.expect(stage.damageTo(heavy) === damage, "curing the jaw stops later chewing damage");
+                    stage.done();
+                });
+            });
         });
     }, "snap trap bites a target within 40 s");
 });

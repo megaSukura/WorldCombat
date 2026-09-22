@@ -90,13 +90,6 @@ namespace PokemonSkills {
             "抓取距离", {
                 unit: "格",
                 description: "要贴到多近才能抓住对手；速度与等级提高抓取距离。它也是本招的实际射程来源。"
-            }),
-        /** 抓取判定：0.45 + 体型高度偏移[−0.08,0.25]；夹 0.35..0.8 格。 */
-        collisionRadius: formula(
-            F.base(0.45).plus(F.body("height").minus(1.4).times(0.12).clamp(-0.08, 0.25)).clamp(0.35, 0.8).round(2),
-            "抓取判定", {
-                unit: "格",
-                description: "贴身抓取时能抓到的范围；大个子的手臂更长。"
             })
     });
 

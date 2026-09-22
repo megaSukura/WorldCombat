@@ -6,7 +6,7 @@
   "worldcombat.skill.highjumpkick.description.3": "在最高点停留 %1$s 刻，命中击退目标 %2$s 格。",
   "worldcombat.skill.highjumpkick.vertical.on": "当前为垂直落膝：拔得更高、膝劲 ×1.08、下坠更快，但起手更久、冷却更长、射程更短、顶点停滞更久。",
   "worldcombat.skill.highjumpkick.vertical.off": "当前为斜向飞膝：够得更远、更快、更轻，代价是膝劲与下坠冲势都低一档。",
-  "worldcombat.skill.highjumpkick.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.highjumpkick.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP；提交后冷却 %5$s 秒。",
   "worldcombat.skill.highjumpkick.growth.0": "%1$s 级起膝劲抬到 %2$s。",
   "worldcombat.skill.highjumpkick.growth.1": "%1$s 级起膝劲抬到 %2$s、拔高提到 %3$s。",
   "worldcombat.skill.highjumpkick.use.0": "用全族最重的一记接触伤害砸穿硬目标",
