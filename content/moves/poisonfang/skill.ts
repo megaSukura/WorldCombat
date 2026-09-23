@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const poisonfangMissText = "world_combat.move.poisonfang.text.miss";
 
     define({
+        freeMovement: true,
         id: "poisonfang",
         cooldownParameter: "recharge",
         name: "Poison Fang",
-        description: "The user bites with toxic fangs. The lightest bite of the family: the venom seeps in a beat later, and a wound that is already poisoned is deepened into badly poisoned for sure.",
+        description: "咬伤目标并注入毒液，随后有几率使其中剧毒。目标已经中毒时必定加深毒效。浓毒式强化毒效，快毒式强化咬击。",
         uses: ["用最轻最准的一口给目标注毒", "把已经中毒的目标加深成剧毒", "给厚血目标挂上持久的掉血"],
         kind: "enemy",
         range: 2.3,

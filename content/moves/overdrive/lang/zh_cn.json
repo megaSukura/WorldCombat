@@ -4,10 +4,10 @@
   "worldcombat.skill.overdrive.use.1": "用带电声浪赌一次麻痹",
   "worldcombat.skill.overdrive.use.2": "隔着掩体把走廊尽头的对手震退",
   "worldcombat.skill.overdrive.use.3": "开余响啃一个硬目标",
-  "worldcombat.skill.overdrive.description.0": "朝正前方连拨三下：每一下对走廊内每个敌人各结算一次 %1$s 威力，并各掷一次 %2$s%% 的麻痹。对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.overdrive.description.1": "走廊长 %1$s 格、半宽 %2$s 格；不看掩体、不看地面，走廊铺到哪就震到哪。",
-  "worldcombat.skill.overdrive.description.2": "每一下把走廊里的人沿声浪方向推退最多 %1$s 格；被震麻的人麻痹 %2$s 秒。电属性免疫麻痹。",
-  "worldcombat.skill.overdrive.echo.on": "开启余响：三下之后隔 22 刻回来一记 %1$s 倍威力的迟到声浪，再掷一次麻痹；每下威力约 ×0.82、冷却 +8 刻。",
+  "worldcombat.skill.overdrive.description.0": "扎住脚连拨三下：每一下都朝目标方向推出一条走廊，对走廊里的每个敌人各结算一次约 %1$s 点特殊伤害、各掷一次 %2$s 概率的麻痹，每一下最多命中 %3$s 个敌人；对手特防、相性与暴击在命中时另算。",
+  "worldcombat.skill.overdrive.description.1": "走廊长 %1$s 格、半宽 %2$s 格，三下之间每两下相隔 %3$s；走廊不看掩体与地面，铺到哪就震到哪。",
+  "worldcombat.skill.overdrive.description.2": "每一下把走廊里的人沿声浪方向推退最多 %1$s 格；被震麻的目标陷入麻痹 %2$s，期间移动速度减半、每次出手有 25%% 概率失手，电属性不会陷入麻痹。",
+  "worldcombat.skill.overdrive.echo.on": "开启余响：三下之后约 1.1 秒回来一记 %1$s 倍威力的迟到声浪，沿同一条走廊再打一遍、同样推退并再掷一次麻痹；代价是每下威力约 ×0.82、冷却 +8 刻。",
   "worldcombat.skill.overdrive.echo.off": "关闭余响：三下紧凑收束，出手更快、冷却更短，用来快进快出。",
   "worldcombat.skill.overdrive.timing": "作用走廊 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.overdrive.growth.0": "达到 %1$s 级，每下威力提升至 %2$s，走廊长度提升至 %3$s，麻痹概率提升至 %4$s。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.overdrive.preference.ai.minFoes.help": "走廊方向上至少站着这么多可见、敌对的敌人才出手；调大只在人排成列时拨、省 PP，调 1 见一个也拨。",
   "world_combat.move.overdrive.text.hit": "破音命中 %1$s 个",
   "world_combat.move.overdrive.text.miss": "破了音，落空",
-  "world_combat.move.overdrive.text.paralyze": "被电麻了"
+  "world_combat.move.overdrive.text.paralyze": "被电麻了",
+  "worldcombat.skill.overdrive.value.maxTargets": "每下最多命中"
 }

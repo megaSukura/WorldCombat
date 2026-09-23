@@ -1,15 +1,4 @@
-/**
- * 找伙伴 / entrainment — 伙伴 AI 用途与自己的出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、有一条通视直线，双方都是宝可梦、
- *   双方特性读得出来且不同、对方特性接得住（不是 truant、不带 cantsuppress），自己的特性递得出去。
- *   还要求这次递出去不亏：自己的特性是拖累（懒惰、慢启动、软弱…），或对手的特性值得被顶掉。
- * 对谁出手：当前威胁；特性已经被顶成和自己一样、读不出特性、或者递过去会帮到对手的目标跳过。
- * 候选之间怎么排：自己特性是拖累时 priority 64，排在普通控制之前；对手特性值得顶掉时 30。
- * 够不到怎么办：reach 就是本招射程，共享任务先走近到能通视的射程再踩。
- * 放完之后：对手（以及节拍波及到的其他敌人）特性变成施法者的，交回共享交战计划；标记与特性层同时到期。
- * ai.maxChase 决定追多远；ai.leaveStation 决定驻守时是否愿意离位。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace CompanionBehavior {
     registerFact("world_combat:entrainment-ability", function (access, actor, _argument) {
         return PokemonSkills.entrainmentAbility(access, actor);
@@ -22,6 +11,10 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.focus !== target.ref && distance(self.point, target.point) > ai<number>(item, "maxChase", 13)) return false;
         if (!world(context).clear(point(self.point), point(target.point))) return false;
+        if (domain(context, target) !== "cobblemon") {
+            if (status(context, target, "entrainment")) return false;
+            return target.speed > self.speed;
+        }
         if (!pokemonFacts(context, self) || !pokemonFacts(context, target)) return false;
         const mine = fact<string>(context, "world_combat:entrainment-ability", self);
         const theirs = fact<string>(context, "world_combat:entrainment-ability", target);

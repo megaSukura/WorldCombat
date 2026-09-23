@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.poisontail.summary": "Turn low and sweep the tail through a half-circle along the ground: everyone in the low arc is hit, the one in front takes full power, the rest a discount, and the venomous tip may poison each of them (more likely farther out) while shoving them slightly away. Venom form is more toxic but sweeps lighter; Sweep form is wider and heavier but poisons less.",
-  "worldcombat.skill.poisontail.description.0": "The sweep deals %1$s contact damage to the foe in front, with a reach of %2$s blocks and an arc of %3$s degrees.",
-  "worldcombat.skill.poisontail.description.1": "Others caught by the arc take %1$s of the power and are shoved %2$s blocks away.",
-  "worldcombat.skill.poisontail.description.2": "Those swept have a %1$s chance to be poisoned for %2$s.",
+  "worldcombat.skill.poisontail.description.0": "The foe in front takes about %1$s Poison contact damage; the sweep reaches %2$s blocks over a %3$s degree arc, hitting every enemy inside once.",
+  "worldcombat.skill.poisontail.description.1": "Other enemies caught by the arc take %1$s times that damage and are shoved about %2$s blocks away.",
+  "worldcombat.skill.poisontail.description.2": "Each hit has a %1$s base chance to poison its target for %2$s, likelier the farther out along the arc. The poison wears off on its own, dealing damage over time but unable to finish the target off; Poison and Steel types are immune.",
   "worldcombat.skill.poisontail.venom.on": "Venom form: poison chance x1.25, poison duration x1.15; costs sweep power x0.9 and a narrower arc.",
   "worldcombat.skill.poisontail.venom.off": "Sweep form: a wider, heavier sweep; costs a harder time smearing poison.",
   "worldcombat.skill.poisontail.timing": "Range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

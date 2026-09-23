@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.corrosivegas.summary": "以自身为中心炸开一片强酸毒雾：雾里所有其他活体携带的道具被当场溶毁、谁也不得到；没有携带物的活体沾上短暂的沾酸身份。不造成伤害，队友一视同仁。",
-  "worldcombat.skill.corrosivegas.use.0": "一次溶掉围上来一圈对手的道具",
-  "worldcombat.skill.corrosivegas.use.1": "在道具战里清场，让双方都失去携带物",
-  "worldcombat.skill.corrosivegas.use.2": "把对方的树果、宝石、剩饭一起废掉",
-  "worldcombat.skill.corrosivegas.description.0": "以自身为中心罩开约 %1$s 格半径的强酸毒雾，雾里所有非自己的活体各挂上 %2$s 秒的沾酸身份。",
+  "worldcombat.skill.corrosivegas.summary": "喷出覆盖周围的酸雾，溶毁宝可梦携带的一件道具，并腐蚀普通生物或玩家的手持耐久装备。队友也会受到影响。",
+  "worldcombat.skill.corrosivegas.use.0": "溶毁周围宝可梦的道具，磨损普通敌人的手持装备",
+  "worldcombat.skill.corrosivegas.use.1": "削弱持械敌人的装备耐久",
+  "worldcombat.skill.corrosivegas.use.2": "喷酸前先让携带贵重道具的队友离开范围",
+  "worldcombat.skill.corrosivegas.description.0": "酸雾覆盖半径 %1$s 格，留下 %2$s 秒的酸渍。",
   "worldcombat.skill.corrosivegas.spread.on": "开启铺开式：雾半径 ×1.3、冷却 +8 刻，一次罩得更广。",
   "worldcombat.skill.corrosivegas.spread.off": "关闭铺开式：雾半径 ×0.85、冷却 −6 刻，罩得小而出手更频繁。",
-  "worldcombat.skill.corrosivegas.timing": "以自身为中心发动，准备 %2$s 秒后消耗 %4$s PP；结束后收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.corrosivegas.timing": "以自身为中心发动，准备 %1$s 秒后消耗 %3$s PP；结束后收招 %2$s 秒，冷却 %4$s 秒。",
   "worldcombat.skill.corrosivegas.growth.0": "达到 %1$s 级，雾半径提升至 %2$s 格。",
   "worldcombat.skill.corrosivegas.growth.1": "达到 %1$s 级，雾半径提升至 %2$s 格。",
   "worldcombat.skill.corrosivegas.value.radius": "雾半径",
@@ -29,5 +29,8 @@
   "effect.world_combat.corroded": "沾酸",
   "world_combat.move.corrosivegas.text.melt": "溶毁了 %1$s",
   "world_combat.move.corrosivegas.text.fizz": "酸雾舔过，空手无恙",
-  "world_combat.move.corrosivegas.text.taint": "酸雾散开，残雾留 %1$s 秒"
+  "world_combat.move.corrosivegas.text.taint": "酸雾散开，残雾留 %1$s 秒",
+  "worldcombat.skill.corrosivegas.description.1": "宝可梦的一件携带物被溶毁。普通手持耐久装备损失最大耐久的 %1$s%%，至少保留一点耐久；无法损坏和没有耐久的物品保持原样。",
+  "worldcombat.skill.corrosivegas.value.wearPercent": "装备腐蚀",
+  "world_combat.move.corrosivegas.text.wear": "腐蚀了 %1$s"
 }

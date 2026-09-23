@@ -4,7 +4,7 @@
   "worldcombat.skill.wrap.use.1": "把对手按在原地交给队友",
   "worldcombat.skill.wrap.use.2": "用藤茧独自磨掉一个难缠的近战目标",
   "worldcombat.skill.wrap.description.0": "在 %2$s 格内甩出藤蔓裹住一个目标，抓取判定半径 %3$s 格，裹上先结算约 %1$s 的接触伤害。",
-  "worldcombat.skill.wrap.description.1": "藤茧持续 %1$s，每 %2$s 绞一次；期间目标被钉住、攻击下降 %3$s 级。",
+  "worldcombat.skill.wrap.description.1": "藤茧独立缠在目标身上 %1$s，每 %2$s 绞一次，甩完你就能走开；期间目标被钉在原地、无法移动，攻击下降 %3$s 级。这份攻击压制不随藤茧散开而收回，会留到目标脱战。",
   "worldcombat.skill.wrap.description.2": "目标被外力推到超过每刻 %1$s 格就会被撕开。",
   "worldcombat.skill.wrap.cocoon.on": "密缠式：藤茧留得久、每绞更重、再压一级攻击、更难被撕开，但绞得更疏、冷却更久。",
   "worldcombat.skill.wrap.cocoon.off": "速缠式：绞得密、冷却短，快速压一轮，但持续短、压制更轻。",

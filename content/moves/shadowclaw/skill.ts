@@ -38,7 +38,7 @@ namespace PokemonSkills {
         id: shadowclawId,
         cooldownParameter: "recharge",
         name: "Shadow Claw",
-        description: "The user slashes with a sharp claw made from shadows. This move has a heightened chance of landing a critical hit.",
+        description: "影子先贴着地面铺到对手身后，再由那一端反向伸出一只影爪，从对手照不到的一面抓进要害：造成接触伤害，命中处留下一道影痕。对手当前没有在看着你时，这一爪更重；它的暴击率比同族高一档。",
         uses: ["影子绕到对手背后伸爪", "对手没在看自己时这一爪更重", "沿用原生高暴击，命中留影痕"],
         kind: "enemy",
         range: 2.6,

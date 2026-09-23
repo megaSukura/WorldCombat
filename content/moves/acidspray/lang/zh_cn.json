@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.acidspray.summary": "喷出一道短而宽的酸雾：楔形里的每个敌人各承受一次特殊伤害，特防立刻下降 2 级；酸雾在原地停留片刻，走进来的人也会被淋到；聚焦喷口更窄更远、单发更重，宽喷一次罩住一片。",
+  "worldcombat.skill.acidspray.summary": "在身前喷出一道短而宽的酸雾：楔形里的每个敌人各挨一次特殊伤害、特防立刻下降 2 级；残雾会原地停留片刻，走进楔形的敌人再挨一次伤害并继续掉防。聚焦喷口更窄更远、单发更重；宽喷一次罩住一片。",
   "worldcombat.skill.acidspray.use.0": "贴脸一次淋掉身前一群对手的两级特防",
   "worldcombat.skill.acidspray.use.1": "用最便宜的出手反复磨特防",
   "worldcombat.skill.acidspray.use.2": "在窄口把想挤过来的对手连人带路一起喷酸",
-  "worldcombat.skill.acidspray.description.0": "酸雾淋到每个敌人身上造成 %1$s 点特殊伤害，并让它特防下降 %2$s 级。",
+  "worldcombat.skill.acidspray.description.0": "酸雾淋到每个敌人身上，造成约 %1$s 点特殊伤害，并让它特防下降 %2$s 级。",
   "worldcombat.skill.acidspray.description.1": "酸雾覆盖身前 %1$s 格、张开 %2$s 度的楔形。",
-  "worldcombat.skill.acidspray.description.2": "酸雾停留 %1$s；期间走进楔形的人再承受 %2$s 点伤害并同样掉 %3$s 级特防（每人只算一次）。",
+  "worldcombat.skill.acidspray.description.2": "酸雾停留 %1$s；期间走进楔形、尚未被这次喷淋到的敌人会挨一记约 %2$s 点特殊伤害，并同样掉 %3$s 级特防（每个敌人只算一次）。",
   "worldcombat.skill.acidspray.focus.on": "聚焦喷口：单发提到 %1$s、射程拉到 %2$s 格，但张角只剩 %3$s 度，残雾更短、冷却 +5 刻。",
   "worldcombat.skill.acidspray.focus.off": "宽喷：以 %1$s 格、%2$s 度的楔形一次淋到挤在身前的多个目标。",
   "worldcombat.skill.acidspray.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -19,10 +19,10 @@
   "worldcombat.skill.acidspray.value.sunderStages": "碾防级数",
   "worldcombat.skill.acidspray.value.tempo": "起手",
   "worldcombat.skill.acidspray.preference.focus": "聚焦喷口",
-  "worldcombat.skill.acidspray.preference.focus.help": "开启：张角收到 55%、射程拉到 1.3 倍、单发 ×1.15，但残雾更短、冷却 +5 刻，适合对一个目标贴脸磨。关闭（宽喷）：张角最宽，适合一次淋到挤在身前的多个目标。",
+  "worldcombat.skill.acidspray.preference.focus.help": "开启：张角收窄到 55%、射程拉到 1.3 倍、单发 ×1.15，但残雾更短、冷却 +5 刻，适合对一个目标贴脸磨。关闭（宽喷）：张角最宽，适合一次淋到挤在身前的多个目标。",
   "worldcombat.skill.acidspray.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.acidspray.preference.ai.maxChase.help": "超过这个距离就不主动靠近，先在射程外待命；越大越愿意先朝目标接近再喷。",
   "worldcombat.skill.acidspray.preference.ai.crowd": "聚堆时优先",
-  "worldcombat.skill.acidspray.preference.ai.crowd.help": "开启后，自己身边还有别的敌人时优先喷雾，一次淋一片；关闭则只按普通攻击排序。",
+  "worldcombat.skill.acidspray.preference.ai.crowd.help": "开启后，射程内围着至少两个敌人时优先喷雾，一次淋一片；关闭则只按普通攻击排序。",
   "world_combat.move.acidspray.text.sunder": "特防 -%1$s"
 }

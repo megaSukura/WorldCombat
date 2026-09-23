@@ -30,10 +30,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: function (config) { return !!config.rooted; },
         id: bideId,
         cooldownParameter: "recharge",
         name: "Bide",
-        description: "站定忍耐一段时间，期间受到的伤害全部记进账本；时间到把账上的伤害加倍还给最后打你的人，没挨到打就落空。",
+        description: "进入忍耐架势，期间受到的每一次外来伤害都记进账本；时间到把账上伤害按 1.4–2.8 倍还给最后打你的人，够不到就找最近的敌人；没挨到打或被打断就白忍一场。",
         uses: ["在被打的一轮里攒一记大还手", "逼对手在你站定时决定要不要继续打", "把分散的小伤害聚成一记重击"],
         kind: "self",
         range: 0,

@@ -89,7 +89,7 @@ namespace PokemonSkills {
     define({
         id: "toxic",
         name: "Toxic",
-        description: "A move that leaves the target badly poisoned. Its poison damage worsens every turn.",
+        description: "吐出一团毒液扎进目标：命中后目标陷入剧毒，毒素每隔几秒加深一级、掉血越来越密；毒素走完自己的时间时总爆发，按最大生命咬下一大口（可以击杀），被解毒或清除则提前枯萎。",
         uses: ["开局给难缠的目标下毒", "把一场硬仗拖成消耗战", "逼对手先来清状态或后撤"],
         kind: "enemy",
         range: 10,

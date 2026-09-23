@@ -5,7 +5,7 @@
   "worldcombat.skill.scratch.use.2": "用最短冷却的便宜招持续磨血",
   "worldcombat.skill.scratch.description.0": "一爪划出 %2$s 道爪痕，每一道造成 %1$s 点接触斩击伤害；同一目标落在多道痕上就结算多次。",
   "worldcombat.skill.scratch.description.1": "爪痕探出 %1$s 格，铺开 %2$s 度扇面，每道半宽 %3$s 格。",
-  "worldcombat.skill.scratch.sweep.on": "宽搔式：爪痕增到 %1$s 道、扇面放宽到 %2$s 度，一爪扫到并排或大体型；代价是每道威力降到 %3$s。",
+  "worldcombat.skill.scratch.sweep.on": "宽搔式：爪痕增到 %1$s 道、扇面放宽到 %2$s 度，一爪扫到并排或大体型的对手；代价是每道威力降到 %3$s、探距略近、起手与冷却更久。",
   "worldcombat.skill.scratch.sweep.off": "直搔式：痕少而长、每道更重、出手更快，适合点杀单个小目标。",
   "worldcombat.skill.scratch.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.scratch.growth.0": "%1$s 级起每道爪痕加深到 %2$s。",
@@ -25,5 +25,6 @@
   "worldcombat.skill.scratch.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.scratch.preference.ai.huntBig": "优先大体型",
   "world_combat.move.scratch.text.hit": "抓中 %1$s 道",
-  "world_combat.move.scratch.text.miss": "一爪划空"
+  "world_combat.move.scratch.text.miss": "一爪划空",
+  "worldcombat.skill.scratch.approach": "出爪时朝目标垫前最多 %1$s 格，只逼近到爪痕能够到的范围、不会冲过头；每道爪痕只结算它最先扫到的那个目标。"
 }

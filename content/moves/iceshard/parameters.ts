@@ -131,9 +131,9 @@ namespace PokemonSkills {
 
     describe(iceshardId, [
         { key: "description.0", values: ["shard", "radius"] },
-        { key: "description.1", values: ["reach", "velocity", "chillTicks"] },
-        { key: "description.2", values: ["frostRadius", "frostTicks"] },
-        { key: "shatter.on", values: ["splash", "splashRadius"], when: function (context) { return read(context.detail.values, ["shatter"]) === true; } },
+        { key: "description.1", values: ["reach","velocity","chillTicks"] },
+        { key: "description.2", values: ["frostRadius","frostTicks"] },
+        { key: "shatter.on", values: ["splashRadius","splash"], when: function (context) { return read(context.detail.values, ["shatter"]) === true; } },
         { key: "shatter.off", values: [], when: function (context) { return read(context.detail.values, ["shatter"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shard"] },

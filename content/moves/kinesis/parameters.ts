@@ -46,9 +46,10 @@ namespace PokemonSkills {
             "两次折弯之间的等待；等级越高越熟练。")
     });
     describe(kinesisId, [
-        { key: "description.0", values: ["blindStage", "duration"] },
+        { key: "description.0", values: ["blindStage","duration"] },
         { key: "description.1", values: ["gazeRange"] },
         { key: "description.2", values: ["tempo", "recharge"] },
+        { key: "description.bend", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

@@ -46,7 +46,7 @@ namespace PokemonSkills {
         cooldownParameter: "recharge",
         name: "Throat Chop",
         description: "一记直取咽喉的突刺。命中造成物理伤害，并让目标在一段时间内无法使出任何声音类招式。",
-        uses: ["打断对手的吼叫／音波", "惩罚依赖声音类招式的对手", "近身压制远程施法者"],
+        uses: ["封住对手的吼叫与音波", "惩罚依赖声音类招式的对手", "近身压制远程施法者"],
         kind: "enemy",
         range: 2.8,
         maxRange: 3.6,

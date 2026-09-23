@@ -116,9 +116,9 @@ namespace PokemonSkills {
     ]);
 
     describe("poisontail", [
-        { key: "description.0", values: ["lash", "reach", "arc"] },
-        { key: "description.1", values: ["share", "push"] },
-        { key: "description.2", values: ["poisonChance", "venomTicks"] },
+        { key: "description.0", values: ["lash","reach","arc"] },
+        { key: "description.1", values: ["share","push"] },
+        { key: "description.2", values: ["poisonChance","venomTicks"] },
         { key: "venom.on", values: [], when: function (context) { return read(context.detail.values, ["venom"]) === true; } },
         { key: "venom.off", values: [], when: function (context) { return read(context.detail.values, ["venom"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

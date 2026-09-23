@@ -20,10 +20,11 @@ namespace PokemonSkills {
     const lastresortWoundText = "world_combat.move.lastresort.text.wound";
 
     define({
+        freeMovement: true,
         id: lastresortId,
         cooldownParameter: "recharge",
         name: "Last Resort",
-        description: "The saved trump card, usable only after every other move the user knows has been used in battle; it strikes hardest when the user is nearly down.",
+        description: "压箱底的一记直撞：只有把招式表里其他已实装的招都用过一遍之后才解锁；出手极慢、份量全组最重，并且自己伤得越重这一记越狠。打出之后账本清空，要重新攒一轮。",
         uses: ["把所有招走一遍后掏出压箱底的一记", "残血时打出最重的直撞",
                "把攒下的出场机会换成一次决胜"],
         kind: "enemy",

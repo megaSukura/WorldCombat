@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.doodle.summary": "把握并映射出对手的本质，让自己和同伴宝可梦的特性变得和对手相同。",
+  "worldcombat.skill.doodle.summary": "把对手的特性描给自己与附近同伴；描绘普通生物时，复制其最突出的战斗特征。",
   "worldcombat.skill.doodle.use.0": "把对手的强力特性一次复制给全队",
   "worldcombat.skill.doodle.use.1": "开战前统一队伍的特性",
   "worldcombat.skill.doodle.use.2": "围绕一只特性关键的对手组织队伍",
-  "worldcombat.skill.doodle.description.0": "在 %1$s 格内描摹对手的本质，起手 %2$s 秒。",
-  "worldcombat.skill.doodle.description.1": "图样摊开成半径约 %1$s 格的画布，最多盖到 %2$s 只同伴；被盖印的特性维持 %3$s 秒，到期一起恢复。",
+  "worldcombat.skill.doodle.description.0": "在 %1$s 格内选定对手，起手 %2$s。",
+  "worldcombat.skill.doodle.description.1": "描绘宝可梦时，将它可复制的当前特性盖给自己与半径 %1$s 格内的同伴宝可梦，含自己最多 %2$s 个；维持 %3$s，到期恢复。已经相同的特性不重复盖印。",
   "worldcombat.skill.doodle.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.doodle.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
   "worldcombat.skill.doodle.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",
@@ -24,5 +24,6 @@
   "worldcombat.skill.doodle.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离位去描对手的本质；关闭则只在原地够得到时出手。",
   "effect.world_combat.doodle_sketch": "描绘",
   "world_combat.move.doodle.text.ability": "本质·%1$s（盖印 %2$s 只）",
-  "world_combat.move.doodle.text.same": "无可描绘的对象"
+  "world_combat.move.doodle.text.same": "无可描绘的对象",
+  "worldcombat.skill.doodle.world": "描绘普通生物时，将它最突出的攻击、移动或防护特征复制给自己与 %2$s 格画幅内的友方，合计最多 %3$s 个，持续 %1$s。各人的描绘被清除或到期后恢复；后续装备和效果照常生效。"
 }

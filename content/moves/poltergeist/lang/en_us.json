@@ -6,7 +6,7 @@
   "worldcombat.skill.poltergeist.description.0": "The hurl deals about %1$s Ghost damage with a %2$s block hit radius; the move makes no contact, and the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.poltergeist.description.1": "Manipulate from up to %1$s blocks away; the item returns at %2$s blocks per tick after being wrenched about %3$s blocks off the target's hand.",
   "worldcombat.skill.poltergeist.description.2": "A landed hit shoves the target about %1$s blocks along the hurl.",
-  "worldcombat.skill.poltergeist.bind.on": "Item bind on: on a hit the item clings to the target and slows it for %1$s s, at the cost of x0.8 power.",
+  "worldcombat.skill.poltergeist.bind.on": "Item bind on: on a hit the item clings to the target, slowing it (Slowness II, reduced movement speed) for %1$s until it expires, at the cost of x0.8 power.",
   "worldcombat.skill.poltergeist.bind.off": "Item bind off: the item disperses after the blow, making this a pure heavy hurl.",
   "worldcombat.skill.poltergeist.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
   "worldcombat.skill.poltergeist.growth.0": "At level %1$s, Poltergeist power rises to %2$s.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.poltergeist.preference.ai.leaveStation.help": "On: it will leave its station under a hold order to manipulate from range. Off: it only manipulates when the target is already within range.",
   "world_combat.move.poltergeist.text.slam": "Item hurled back",
   "world_combat.move.poltergeist.text.bind": "Bound by its own item",
-  "world_combat.move.poltergeist.text.fizzle": "Nothing in its hands"
+  "world_combat.move.poltergeist.text.fizzle": "Nothing in its hands",
+  "worldcombat.skill.poltergeist.description.item": "The item is only manipulated from afar and is never taken, remaining in the target's hands after the hit. An empty-handed target cannot be cast on at all: the move fails at wind-up without spending PP or starting its cooldown."
 }

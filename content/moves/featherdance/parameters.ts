@@ -80,8 +80,8 @@ namespace PokemonSkills {
             "冷却", "两次羽舞之间的等待；等级越高越熟练。")
     });
     describe(featherdanceId, [
-        { key: "description.0", values: ["atkDrop", "downTicks"] },
-        { key: "description.1", values: ["cloudRadius", "fieldTicks"] },
+        { key: "description.0", values: ["atkDrop","downTicks"] },
+        { key: "description.1", values: ["cloudRadius","fieldTicks"] },
         { key: "description.2", values: ["flightSpeed", "strandRadius", "reach", "range", "tempo"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },

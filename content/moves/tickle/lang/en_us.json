@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.tickle.summary": "Close in and tickle a foe into laughing, lowering its Attack and Defence at once. It must be used at contact range; a rough version drops more and lasts longer, but winds up and cools down much slower.",
+  "worldcombat.skill.tickle.summary": "Close in and tickle a foe to cut its Attack and Defence at once; it deals no damage itself. You must be at contact range, and the rough version drops more and makes the tickle last longer, but winds up and cools down much slower.",
   "worldcombat.skill.tickle.use.0": "Undo a point-blank physical attacker",
   "worldcombat.skill.tickle.use.1": "Cut both Attack and Defence in a grapple",
   "worldcombat.skill.tickle.use.2": "Let an ally win the first exchange",
-  "worldcombat.skill.tickle.description.0": "The tickled target loses %1$s Attack and %2$s Defence stage(s), and laughs for %3$s.",
-  "worldcombat.skill.tickle.description.1": "Tickle reach %1$s over %2$s blocks; out of that you cannot reach them.",
+  "worldcombat.skill.tickle.description.0": "On a hit the target immediately loses %1$s Attack and %2$s Defence stages, written straight onto its stat stages; it is also marked with Tickle for %3$s, during which companions will not tickle it again. Tickle itself deals no damage.",
+  "worldcombat.skill.tickle.description.1": "The reach is about %1$s blocks; from too far away the tickle whiffs and nothing happens.",
   "worldcombat.skill.tickle.description.2": "Reaching in takes %1$s with a %2$s cooldown.",
   "worldcombat.skill.tickle.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.tickle.value.reach": "Tickle reach",

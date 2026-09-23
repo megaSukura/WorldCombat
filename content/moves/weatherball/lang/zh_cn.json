@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.weatherball.summary": "把此刻头顶的天色收进一颗球再甩出去：雷雨是电、下雨是水、晴空是火，无天气则是一颗普通的球；天色可收时威力翻倍。",
+  "worldcombat.skill.weatherball.summary": "把此刻头顶的天色收进一颗球再甩出去：雷雨是电、下雨是水、晴空是火、沙暴是岩、雪天是冰，无天气则是一颗普通的球；天色可收时威力翻倍。",
   "worldcombat.skill.weatherball.use.0": "看天出手的远程攻击",
   "worldcombat.skill.weatherball.use.1": "在雷雨或晴空里放大威力",
-  "worldcombat.skill.weatherball.description.0": "甩出一颗收集了当前天色的球，造成 %1$s 的特殊伤害；属性随天色而变（雷→电、雨→水、晴→火、无天气→普通）。",
-  "worldcombat.skill.weatherball.description.1": "聚气 %1$s 秒后在 %2$s 格内甩出；天色可收时聚气更久但威力 ×2。",
+  "worldcombat.skill.weatherball.description.0": "把此刻头顶的天色收进一颗球再甩出去，命中造成约 %1$s 点特殊伤害；属性随天色而变：雷→电、雨→水、晴→火、沙暴→岩、雪→冰，无天气则为普通。",
+  "worldcombat.skill.weatherball.description.1": "聚气 %1$s 秒后在 %2$s 格内沿直线甩出，命中第一个目标即爆开；天色可收时聚气更久但威力 ×2。",
   "worldcombat.skill.weatherball.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.weatherball.value.orb": "威力",
   "worldcombat.skill.weatherball.value.charged": "天色可收",
@@ -19,5 +19,6 @@
   "worldcombat.skill.weatherball.preference.ai.maxChase.help": "只在这个距离内主动出手；更远的目标交给共享接近逻辑走过去。",
   "worldcombat.skill.weatherball.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.weatherball.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离开原位去甩球；关闭时留在原地。",
-  "world_combat.move.weatherball.text.sky": "气象球·%1$s"
+  "world_combat.move.weatherball.text.sky": "气象球·%1$s",
+  "worldcombat.skill.weatherball.description.flight": "球以约 %1$s 格每刻的初速飞出，判定半径约 %2$s 格；开启贯穿时最多穿透 2 个目标，每击威力 ×0.75。"
 }

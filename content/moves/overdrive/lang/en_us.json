@@ -4,10 +4,10 @@
   "worldcombat.skill.overdrive.use.1": "Gamble on paralysis with charged sound",
   "worldcombat.skill.overdrive.use.2": "Knock a foe at the end of the lane back through cover",
   "worldcombat.skill.overdrive.use.3": "Turn on Echo to crack one tough target",
-  "worldcombat.skill.overdrive.description.0": "Three strums straight ahead: each strum settles %1$s power on every foe in the lane and rolls a %2$s%% paralysis. The target's special defence, type and crit are settled on the hit.",
-  "worldcombat.skill.overdrive.description.1": "The lane runs %1$s blocks long and %2$s blocks to each side; it ignores cover and the ground, and shakes exactly the lane it draws.",
-  "worldcombat.skill.overdrive.description.2": "Each strum shoves those in the lane up to %1$s blocks along it; those stunned stay paralysed for %2$s s. Electric types are immune to the paralysis.",
-  "worldcombat.skill.overdrive.echo.on": "Echo on: after the third strum a late echo returns for %1$s × power 22 ticks later and rolls paralysis again; each strum is about ×0.82 power with cooldown +8 ticks.",
+  "worldcombat.skill.overdrive.description.0": "Planted in place, it strums three times: each pushes a lane toward the target, settling about %1$s special damage on every foe in it and rolling a %2$s paralysis, hitting at most %3$s foes per strum; the target's Sp. Def, type and crit are settled on the hit.",
+  "worldcombat.skill.overdrive.description.1": "The lane runs %1$s blocks long and %2$s blocks to each side, and the strums are %3$s apart; it ignores cover and the ground, shaking exactly the lane it draws.",
+  "worldcombat.skill.overdrive.description.2": "Each strum shoves those in the lane up to %1$s blocks along it; a target that is stunned is paralysed for %2$s, moving at half speed with a 25%% chance to fail each attempt, and Electric types cannot be paralysed.",
+  "worldcombat.skill.overdrive.echo.on": "Echo on: about 1.1 s after the third strum a late echo returns for %1$s × power, sweeping the same lane again with the same shove and another paralysis roll; each strum is about ×0.82 power with +8 ticks of cooldown.",
   "worldcombat.skill.overdrive.echo.off": "Echo off: three tight strums, cast and cooled down faster, to get in and out quickly.",
   "worldcombat.skill.overdrive.timing": "Reaches %1$s blocks down a lane; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
   "worldcombat.skill.overdrive.growth.0": "At level %1$s each strum rises to %2$s, the lane reaches %3$s blocks, and the paralysis chance rises to %4$s.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.overdrive.preference.ai.minFoes.help": "At least this many visible foes must stand in the lane direction before it fires; raise it to strum only into a row and save PP, set it to 1 to strum at a single target.",
   "world_combat.move.overdrive.text.hit": "Strummed %1$s",
   "world_combat.move.overdrive.text.miss": "The riff whiffed",
-  "world_combat.move.overdrive.text.paralyze": "Paralysed by the riff"
+  "world_combat.move.overdrive.text.paralyze": "Paralysed by the riff",
+  "worldcombat.skill.overdrive.value.maxTargets": "Maximum targets per strum"
 }

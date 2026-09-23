@@ -21,10 +21,11 @@ namespace PokemonSkills {
     const wavecrashSpillText = "world_combat.move.wavecrash.text.spill";
 
     define({
+        freeMovement: true,
         id: "wavecrash",
         cooldownParameter: "recharge",
         name: "Wave Crash",
-        description: "The user shrouds itself in water and slams into the target with its whole body to inflict damage. This also damages the user quite a lot.",
+        description: "冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳更注重防护，薄水刃提供更远射程。",
         uses: ["裹水冲开一个目标", "把目标浇透，留给后续的水与电", "在雨里或水里冲出去，水势更盛"],
         kind: "enemy",
         range: 4.2,

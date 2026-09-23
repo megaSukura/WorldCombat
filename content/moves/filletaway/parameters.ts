@@ -54,8 +54,9 @@ namespace PokemonSkills {
     ]);
 
     describe("filletaway", [
-        { key: "description.0", values: ["cost", "levels"] },
-        { key: "description.1", values: ["chunks", "fling", "scatter"] },
-        { key: "timing", values: ["tier.0.prepare", "tier.0.recover", "tier.0.cooldown"] }
+        { key: "description.0", values: ["cost","levels"] },
+        { key: "requirement", values: [] },
+        { key: "description.1", values: ["chunks","fling","scatter"] },
+        { key: "timing", values: ["prepare","recover","cooldown"] }
     ]);
 }

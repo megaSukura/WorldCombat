@@ -36,7 +36,7 @@ namespace PokemonSkills {
     define({
         id: "quash",
         name: "Quash",
-        description: "The user suppresses the target and makes its move go last.",
+        description: "把一道压制之力砸向目标：打断它正在准备的动作，并在它身上留下压制。压制期间它接下来的数次出手会被压回去（不花资源，只是晚一拍），移动也被压慢，被压的次数越多越接近钉住。",
         uses: ["打断对手正在蓄的大招", "抢先一拍保住自己的位置", "把冲上来的目标压慢"],
         kind: "enemy",
         range: 9,

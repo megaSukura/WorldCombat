@@ -54,7 +54,7 @@ namespace PokemonSkills {
     });
 
     describe(tailwhipId, [
-        { key: "description.0", values: ["drop", "dazeTicks"] },
+        { key: "description.0", values: ["drop","dazeTicks"] },
         { key: "description.1", values: ["sweepRadius"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

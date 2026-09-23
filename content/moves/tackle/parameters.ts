@@ -77,7 +77,7 @@ namespace PokemonSkills {
 
     describe("tackle", [
         { key: "description.0", values: ["power", "collisionRadius"] },
-        { key: "description.1", values: ["charge", "runSpeed", "carry"] },
+        { key: "description.1", values: ["charge","runSpeed","carry"] },
         { key: "description.2", values: ["push"] },
         { key: "runUp.on", values: [], when: function (context) { return read(context.detail.values, ["runUp"]) === true; } },
         { key: "runUp.off", values: [], when: function (context) { return read(context.detail.values, ["runUp"]) !== true; } },

@@ -119,8 +119,8 @@ namespace PokemonSkills {
 
     describe("peck", [
         { key: "description.0", values: ["peck"] },
-        { key: "description.1", values: ["reach", "beak"] },
-        { key: "description.2", values: ["airBonus", "plummet"] },
+        { key: "description.1", values: ["reach","beak","lunge"] },
+        { key: "description.2", values: ["airBonus","plummet"] },
         { key: "dive.on", values: ["reach", "peck"], when: function (context) { return read(context.detail.values, ["dive"]) === true; } },
         { key: "dive.off", values: ["reach", "peck"], when: function (context) { return read(context.detail.values, ["dive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

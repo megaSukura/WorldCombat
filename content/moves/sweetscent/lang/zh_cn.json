@@ -25,5 +25,6 @@
   "worldcombat.skill.sweetscent.preference.ai.leaveStation.help": "开启后，驻守命令下也会为喷香离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.sweetscent.text.cloud": "香甜弥漫",
   "world_combat.move.sweetscent.text.scented": "被香气浸透（%1$s 级）",
-  "effect.world_combat.sweet_scent": "香气浸透"
+  "effect.world_combat.sweet_scent": "香气浸透",
+  "worldcombat.skill.sweetscent.description.additional": "甜云只浸透视线可达的敌方目标，自身不造成伤害；被罩住的敌人会被反复续上留香，友方不受影响。"
 }

@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.boneclub.summary": "A bone swung like a club: it reaches farther than the body, sweeping a narrow corridor along the aim; those caught take a non-contact heavy hit and are occasionally staggered. Accuracy is only 85, so it does miss - and a miss knocks the bone into the ground.",
-  "worldcombat.skill.boneclub.description.0": "The club deals about %1$s non-contact damage, reaching up to %2$s blocks with a %3$s block half-width corridor; accuracy 85 bends where the bone points. The target's defence, type and crits are applied on the hit.",
+  "worldcombat.skill.boneclub.description.0": "Sweeps a narrow corridor along the aim, catching up to %4$s enemies, each struck once for about %1$s non-contact damage; the bone reaches up to %2$s blocks with a %3$s block half-width corridor. Accuracy is only 85, so the aim really can bend away; the target's defence, type and crits apply on the hit.",
   "worldcombat.skill.boneclub.description.1": "It steps %1$s blocks toward the target before swinging.",
-  "worldcombat.skill.boneclub.description.2": "A solid hit has a %1$s stagger chance (the lowest in the family) for %2$s s; a whiff knocks the bone into the ground and leaves a small scuff.",
+  "worldcombat.skill.boneclub.description.2": "Each struck target separately has a %1$s chance to be staggered for %2$s: the stagger first tries to interrupt whatever it is doing that can be interrupted, and while staggered it cannot start new moves or make ordinary attacks. If the corridor catches no one, the bone cracks into the ground and leaves a scuff that lingers for %3$s.",
   "worldcombat.skill.boneclub.sweep.on": "Sweep form: a wider corridor that can catch two or three side by side, but lighter per target with a slower recovery.",
   "worldcombat.skill.boneclub.sweep.off": "Thrust form: a narrower corridor, higher per target and faster to cast, but easier to whiff.",
-  "worldcombat.skill.boneclub.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",
+  "worldcombat.skill.boneclub.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.boneclub.growth.0": "From level %1$s the club power rises to %2$s.",
   "worldcombat.skill.boneclub.growth.1": "From level %1$s the club power rises to %2$s, the reach to %3$s blocks and the stagger chance to %4$s.",
   "worldcombat.skill.boneclub.use.0": "Open on a target with a bone that reaches farther than the body",
@@ -30,5 +30,6 @@
   "world_combat.move.boneclub.text.hit": "Bone club %1$s",
   "world_combat.move.boneclub.text.flinch": "Knocked silly",
   "world_combat.move.boneclub.text.scuff": "Hit the ground",
-  "effect.world_combat.boneclub_flinch": "Flinched"
+  "effect.world_combat.boneclub_flinch": "Flinched",
+  "worldcombat.skill.boneclub.value.maxTargets": "Maximum targets"
 }

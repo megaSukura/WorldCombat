@@ -1,15 +1,4 @@
-/**
- * 黑雾 的伙伴 AI 用途：这是这招自己的一套出手计划。
- *
- * 什么局面有意义：有可见、存活、敌对的目标在 `ai.maxChase`（默认 12）以内；尽抹式下还要过一道**对等 veto**——
- *   如果自己攒的正面等级比「对手的增益 + 自己的减益」还多，就不放，别把自己的增益也吞掉（定向式没有这道 veto）。
- * 什么时候最想出手：对手的正面等级合计达到 `ai.minStages`（默认 2）时大幅抬价（+8／级），这是它真正的用途；
- *   达不到就压到 12 分，只在没有更好的选择时随手抹一遍。
- * 对谁出手：最近的威胁；雾以自身为中心，走近到波及半径以内再放。
- * 够不到怎么办：reach 就是本招半径，共享任务把身位收进半径后再吐雾。
- * 放完之后：一圈人的等级归零；交回共享交战计划继续打。
- * 配置 focused（定向）：只抹非友方，自己与队友的增益留住，但范围更小、起手更慢、冷却更长，且不清自己的减益。
- */
+/** haze：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 只读、回调内缓存的能力等级合计：argument "positive" 数正面，"negative" 数负面。 */
     CompanionBehavior.registerFact("world_combat:move_haze/stages", function (access, actor, argument) {
@@ -20,7 +9,7 @@ namespace PokemonSkills {
             const value = Number(stages[hazeStats[index]]) || 0;
             if (negative ? value < 0 : value > 0) total += Math.abs(value);
         }
-        return total;
+        return total + (negative ? 0 : MobEffects.levels(access, actor, "beneficial"));
     });
 
     function hazeStageValue(context: WorldBehavior.Context, target: CompanionBehavior.Entity, negative: boolean): number {

@@ -6,7 +6,7 @@
   "worldcombat.skill.psystrike.description.0": "Within %1$s blocks, the mass forms %3$s blocks above the target and crashes down, settling %2$s special damage against its physical Defence.",
   "worldcombat.skill.psystrike.description.1": "Track the target while descending at %1$s blocks per tick. Hit radius: %2$s blocks.",
   "worldcombat.skill.psystrike.description.2": "The slam cracks the mental guard, lowering the target's Sp. Def by %1$s stage(s).",
-  "worldcombat.skill.psystrike.description.3": "The shock front reaches %2$s blocks, dealing another %1$s special damage to other non-allies inside and shoving them away.",
+  "worldcombat.skill.psystrike.description.3": "Once the mass lands, the shock front reaches %2$s blocks, dealing another %1$s special damage to other non-allies inside and shoving them about 0.6 blocks away.",
   "worldcombat.skill.psystrike.wide.on": "Wide press: the landing spreads a shock front that deals partial damage and knockback to other non-allies inside, at the cost of x0.85 main power, +3 ticks wind-up and +8 ticks cooldown.",
   "worldcombat.skill.psystrike.wide.off": "Point press: only the target is pressed, with x1.12 main power and a faster cast.",
   "worldcombat.skill.psystrike.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

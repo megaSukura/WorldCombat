@@ -49,10 +49,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "superpower",
         cooldownParameter: "recharge",
         name: "Superpower",
-        description: "The user attacks the target with great power. This also lowers the user's Attack and Defense stats.",
+        description: "沉肩扎马，贴地冲进对手怀里砸实一记：单体物理重击，冲击在地面留下短命的坑；命中后自身攻击与防御各下降。震荡式多荡一圈余震、坑更大，代价是单发更轻、防御再降一级、出手更慢。",
         uses: ["贴身用一记最重的单发把对手打残", "把对手从阵地里撞开、在地面留下坑", "震荡式一次震开挤在落点周围的一群人"],
         kind: "enemy",
         range: 3.2,

@@ -1,16 +1,4 @@
-/**
- * 鹦鹉学舌 / mirrormove —— 注册、折返增幅与动作（自管节奏）。
- *
- * 借对手那一手回打必须在提交之前交接（NativeLoadout.call），所以本招自己驱动动作：
- *   起：身前立起一面镜盾（action.present 预告），朝向对手。
- *   折：读对手最近一次真正提交的、带 mirror 旗标的招式；把那一手原样折回它自己身上。
- *       配置 keen 开启时，把折返增幅写进 action.data，提交后由 committed 监听挂到施法者身上，
- *       伤害元数据在结算前乘上 edge——借招的伤害发生在提交之后，所以这一步来得及。
- *   反制：对手没出过手、那一手不带 mirror、超出记忆窗口或未实装时，只退回不结账。
- *
- * 与仿效分开：仿效捡的是“全场最后响起的一手”，对谁都能捡；鹦鹉学舌只还击眼前的对手、只还击它自己的上一手。
- * 与抢先一步分开：抢先一步抢在对手想出手的下一拍、且只抢伤害招并加重；鹦鹉学舌折的是已经落下的那一手。
- */
+/** Return an opponent’s recent copyable move. Against a non-Pokémon, reply with a hit of its recent native damage type and strength. */
 namespace PokemonSkills {
     // 折返增幅的机读载体：记下要被加重的那一手与倍率；伤害元数据按它乘威力。
     WorldCombat.effect(mirrorGlossEffect, 1, 200, "actor", function (json) {
@@ -67,7 +55,7 @@ namespace PokemonSkills {
         id: mirrormoveId,
         cooldownParameter: "recharge",
         name: "鹦鹉学舌",
-        description: "在身前立起一面镜盾，把对手刚刚使出的那一手原样折回它自己身上；对手还没出过可折的招时落空。",
+        description: "向对手回敬其最近的可模仿招式；普通生物则被同类型、按其上次伤害量计算的一击回敬。",
         uses: ["把对手的上一手还给它", "拆刚打完一轮强攻的敌人", "在受击前一拍抢回节奏"],
         kind: "enemy",
         range: 12,
@@ -103,6 +91,15 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "brace", target: target === null ? "" : String(target.ref()), mirrors: mirrors, keen: keen ? 1 : 0 }));
             action.after(Math.max(1, Math.round(p(mirrormoveId, "tempo", action))), function (current) {
                 const world = current.sense();
+                if (target !== null && String(target.domain()) !== "cobblemon") {
+                    const last = DamageSemantics.recentAttack(world, target, p(mirrormoveId, "focus", current));
+                    const at = world.observe(target);
+                    if (!last || !at || at.position().minus(current.origin()).length() > p(mirrormoveId, "reach", current) || !world.clear(current.origin(), at.position())) { current.reject("no-mirror"); return; }
+                    current.commit(p(mirrormoveId, "recharge", current));
+                    current.world().hurt(target, last.amount * p(mirrormoveId, "edge", current), JSON.stringify({ kind: "move", move: mirrormoveId, damageType: last.type, category: last.category, contact: last.contact, action: current.id(), bypassCooldown: true }));
+                    WorldFeedback.emit(current.world(), mirrorScene, 1, at.position(), { moment: "reflect", target: String(target.ref()), path: [String(current.actor().ref()), String(target.ref())], mirrors, edge: p(mirrormoveId, "edge", current) }, 32);
+                    current.after(Math.max(1, Math.round(p(mirrormoveId, "aftercast", current))), handle => handle.finish()); return;
+                }
                 const found = mirrorRead(world, target);
                 const options = found ? mirrorCall(current, found, target) : null;
                 if (found === "" || options === null) {

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.metalclaw.summary": "Slash the target repeatedly and raise Attack on hit.",
+  "worldcombat.skill.metalclaw.summary": "Rake the target at close range - two lighter rakes or one heavier hone; each landed rake may hone the user's Attack.",
   "worldcombat.skill.metalclaw.use.0": "Rake twice left and right at point-blank range",
   "worldcombat.skill.metalclaw.use.1": "Hone a little Attack with every landed rake",
   "worldcombat.skill.metalclaw.use.2": "Feed itself into a heavy striker within the first beats",
   "worldcombat.skill.metalclaw.description.0": "Each rake deals about %1$s contact damage with a %2$s-block claw radius; the foe's Defence, type matchup and crits are settled on hit.",
   "worldcombat.skill.metalclaw.description.1": "It reaches %1$s blocks forward; the two-rake form lands its second rake %2$s ticks later and knocks the target %3$s blocks.",
-  "worldcombat.skill.metalclaw.description.2": "On a landed rake, %1$s chance to hone an edge and raise Attack by up to %2$s level.",
+  "worldcombat.skill.metalclaw.description.2": "On a landed rake, %1$s chance to hone an edge and raise Attack by up to %2$s stage(s), a cap shared by every rake of one cast; the honed Attack stays and makes later physical moves heavier.",
   "worldcombat.skill.metalclaw.hone.on": "Hone form: one single heavier rake with a higher hone chance and more knockback, but a longer windup and cooldown.",
   "worldcombat.skill.metalclaw.hone.off": "Twin form: two rakes that each roll to hone; faster and cheaper, but each rake is lighter.",
   "worldcombat.skill.metalclaw.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

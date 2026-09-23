@@ -142,11 +142,11 @@ namespace PokemonSkills {
     ]);
 
     describe(lastresortId, [
-        { key: "description.0", values: ["trump", "wound"] },
-        { key: "description.1", values: ["dash", "speed", "collisionRadius", "push"] },
+        { key: "description.0", values: ["trump","wound"] },
+        { key: "description.1", values: ["dash","speed","collisionRadius","push"] },
         { key: "desperation.on", values: [], when: function (context) { return read(context.detail.values, ["desperation"]) === true; } },
         { key: "desperation.off", values: [], when: function (context) { return read(context.detail.values, ["desperation"]) !== true; } },
-        { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
+        { key: "timing", values: ["range","tempo","settle","pp","recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.trump"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.trump", "tier.1.dash"] }
     ]);

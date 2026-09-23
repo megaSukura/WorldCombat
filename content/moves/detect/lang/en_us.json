@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.detect.summary": "Read the next attack inside a very short window and fully evade it, earning a burst of opening (Speed by default, Attack if configured). Repeated use tends to fail.",
-  "worldcombat.skill.detect.description.0": "Read window %1$s, opening %2$s (%3$s level); higher Speed widens the window and lengthens the opening.",
+  "worldcombat.skill.detect.description.0": "Opens a %1$s reading window and blocks the next attack during it. Success grants an opening for %2$s, raising Speed or Attack by up to %3$s stages; expiry or removal ends only this boost.",
   "worldcombat.skill.detect.description.1": "Focus %1$s, cooldown %2$s.",
-  "worldcombat.skill.detect.description.2": "Repeat-use failure rate %1$s; the reposition/counter trade-off is the %2$s setting.",
+  "worldcombat.skill.detect.description.2": "Repeat-use failure rate %1$s: reading again within about 9 seconds adds about 25% each time (up to about 85%); a failed read simply does nothing, and the count resets after about 9 seconds without reading.",
   "worldcombat.skill.detect.use.0": "Tear apart the first blow the moment it starts",
   "worldcombat.skill.detect.use.1": "Read while closing, then strike back",
-  "worldcombat.skill.detect.use.2": "Interrupt a lethal follow-through",
+  "worldcombat.skill.detect.use.2": "Blunt one lethal blow",
   "worldcombat.skill.detect.value.raise": "Focus time",
   "worldcombat.skill.detect.value.readWindow": "Read window",
   "worldcombat.skill.detect.value.opening": "Opening duration",
@@ -20,5 +20,6 @@
   "effect.world_combat.opening": "Opening",
   "world_combat.move.detect.text.read": "Seen through!",
   "world_combat.move.detect.text.opening": "Opening +%1$s",
-  "world_combat.move.detect.text.miss": "Nothing read"
+  "world_combat.move.detect.text.miss": "Nothing read",
+  "worldcombat.skill.detect.description.window": "The read window opens once focus ends; it only answers attacks from an enemy, self-inflicted or sourceless environmental damage does not spend it, and a window that ends unread simply misses. A successful read immediately raises one ability stage: Speed by default, Attack when Counter is on."
 }

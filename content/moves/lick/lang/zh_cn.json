@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.lick.summary": "用一条远超普通近战的长舌朝目标snap 出去舔一下：伤害很轻，但出手非常快，目标很可能被这一下麻住；缠绕式还能把它朝身前拽一段。",
-  "worldcombat.skill.lick.description.0": "舔中造成 %1$s 的接触伤害。",
-  "worldcombat.skill.lick.description.1": "舌头够到 %1$s 格远，被舔中的目标有 %2$s%% 的概率陷入麻痹。",
-  "worldcombat.skill.lick.description.2": "从伸舌到舔中有 %1$s 秒的间隙；缠绕式把目标朝身前拽 %2$s 格。",
+  "worldcombat.skill.lick.description.0": "舔中造成约 %1$s 点接触伤害。",
+  "worldcombat.skill.lick.description.1": "舌头从嘴前伸出够到 %1$s 格远，前端判定约 %3$s 格粗；被舔中的目标有 %2$s%% 的概率陷入麻痹。中间隔着墙或掩体会舔空。",
+  "worldcombat.skill.lick.description.2": "从伸舌到舔中有 %1$s 秒的间隙；缠绕式把目标朝身前拽最多 %2$s 格（被地形挡住时更短）。",
   "worldcombat.skill.lick.use.0": "从近战够不到的距离舔一个目标",
   "worldcombat.skill.lick.use.1": "给还没发麻的对手补一下麻痹",
   "worldcombat.skill.lick.use.2": "把舔中的目标朝身前拽一段",
@@ -22,5 +22,6 @@
   "worldcombat.skill.lick.preference.ai.opening.help": "默认只舔还没发麻的目标，把麻痹留给还能被麻的人；选“随时”就用它当普通起手。",
   "world_combat.move.lick.text.hit": "舌舔命中",
   "world_combat.move.lick.text.miss": "舌头舔空",
-  "world_combat.move.lick.text.drag": "被舌头拽近"
+  "world_combat.move.lick.text.drag": "被舌头拽近",
+  "worldcombat.skill.lick.description.additional": "麻痹持续 40 秒：期间移动速度减半，每次想出手有 25% 的概率失败；电属性和免疫麻痹的目标不会被麻住。"
 }

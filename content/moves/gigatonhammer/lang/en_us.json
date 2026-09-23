@@ -3,7 +3,7 @@
   "worldcombat.skill.gigatonhammer.use.0": "Spin up and bring the huge hammer down",
   "worldcombat.skill.gigatonhammer.use.1": "Drive a ground shockwave to shove everything in its path",
   "worldcombat.skill.gigatonhammer.use.2": "Sweep a full circle when surrounded",
-  "worldcombat.skill.gigatonhammer.description.0": "Hammer %1$s power, shockwave %2$s power (attack), slam point %3$s blocks, shockwave length %4$s blocks.",
+  "worldcombat.skill.gigatonhammer.description.0": "The hammer lands %3$s blocks ahead, dealing about %1$s physical damage to the primary target; the impact drives a ground shockwave about %4$s blocks long, and every other foe it catches takes about %2$s physical damage. Both use Attack.",
   "worldcombat.skill.gigatonhammer.description.1": "The shockwave has a %1$s-block half-width and pushes targets back %2$s blocks. Charge time: %3$s.",
   "worldcombat.skill.gigatonhammer.description.2": "After the slam it cannot be used again for %1$s; using any other move lets the hammer recover early.",
   "worldcombat.skill.gigatonhammer.sweep.on": "Sweep style now: the body carries the hammer around a full circle, everything around it takes the hammer and the shockwave is longer; power is x0.75 with +6 tick recovery and +8 tick cooldown.",

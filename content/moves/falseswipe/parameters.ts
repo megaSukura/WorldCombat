@@ -97,7 +97,7 @@ namespace PokemonSkills {
 
     describe("falseswipe", [
         { key: "description.0", values: ["cut"] },
-        { key: "description.1", values: ["reach", "edge", "depth"] },
+        { key: "description.1", values: ["reach","edge","depth"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["full"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["full"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

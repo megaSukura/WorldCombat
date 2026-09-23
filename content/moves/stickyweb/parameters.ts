@@ -94,8 +94,9 @@ namespace PokemonSkills {
     });
 
     describe(stickywebId, [
-        { key: "description.0", values: ["dropStages", "strandTicks"] },
-        { key: "description.1", values: ["webRadius", "webTicks"] },
+        { key: "description.0", values: ["dropStages","strandTicks"] },
+        { key: "description.1", values: ["webRadius","webTicks"] },
+        { key: "description.2", values: [] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["anchored"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["anchored"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

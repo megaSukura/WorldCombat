@@ -54,7 +54,8 @@ namespace PokemonSkills {
     describe(moonlightId, [
         { key: "description.0", values: ["heal"] },
         { key: "description.1", values: ["moonriseTicks"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "description.2", values: [] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

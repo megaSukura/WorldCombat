@@ -60,19 +60,20 @@ namespace PokemonSkills {
             F.base(88, "基础").minus(F.stat("speed").times(0.3).as("速度"))
                 .plus(F.when(F.pref("flood", text("worldcombat.skill.soak.preference.flood")), F.const(18), F.const(-8)).as("漫流代价"))
                 .clamp(40, 130).round(),
-            "再浇冷却", "再浇一次需要多久；速度快的个体更快恢复，漫流更费力。")
+            "再浇冷却", "再浇一次需要多久；速度快的个体更快恢复，漫流更费力。", { base: 88 })
     });
 
-    stages("soak", [{ level: 40, values: { cooldown: 78 } }, { level: 55, values: { cooldown: 66 } }]);
+    stages("soak", [{ level: 40, values: { recharge: 78 } }, { level: 55, values: { recharge: 66 } }]);
 
     describe("soak", [
         { key: "description.0", values: ["hold"] },
-        { key: "description.1", values: ["reach", "tempo", "aftercast"] },
+        { key: "description.3", values: [] },
+        { key: "description.1", values: ["reach","tempo","aftercast"] },
         { key: "description.2", values: ["splash", "puddle"] },
-        { key: "flood.on", values: ["splash", "recharge"], when: function (context) { return read(context.detail.values, ["flood"]) === true; } },
+        { key: "flood.on", values: ["splash","recharge"], when: function (context) { return read(context.detail.values, ["flood"]) === true; } },
         { key: "flood.off", values: ["hold"], when: function (context) { return read(context.detail.values, ["flood"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

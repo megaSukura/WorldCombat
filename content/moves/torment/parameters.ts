@@ -1,25 +1,4 @@
-/**
- * 无理取闹 / torment —— 参数与机制数值来源。
- *
- * 核心念头：一句当面的取笑把对手的节奏钉死，让它不能连着两次使出同一招。它不是伤害，是给对手的
- *   上一手下一道“禁令”：只要烦躁还在，那一手就被顶回去。
- *
- * 原生事实（Showdown torment）：Dark／变化／命中 100／PP 15／单体；给目标挂 volatile torment，
- *   `onDisableMove` 把 `pokemon.lastMove` 禁掉——目标不能连续使用同一招，直到被替换下场。世界化后
- *   烦躁是一段有限时长，落在共享身份 world_combat:status/torment 的真实 MobEffect 上；拒绝的逻辑读
- *   目标最近一次真正提交的招式（NativeEffects.State.used），在提交点顶回同一手。宝可梦、原版生物、
- *   玩家走同一条路：只要带着这枚身份。
- *
- * 每个参数读不同的精灵数据（分散到不同参数）：
- *   reach        取笑得够多远：特攻决定嗓门，体型决定身板；也是本招的实际射程来源。
- *   tormentTicks 烦躁持续多久：等级延长，特攻助燃。
- *   irritation   烦躁值（画面里讥讽符环与碎点的数量）：特攻越高越密。
- *   tempo        起手：速度越快越早出口。
- *   aftercast    收势：速度越快越快收住。
- *   recharge     冷却：速度越快越熟练。
- * 配置 manner（取笑方式）双向取舍：讥讽更久、更远，但更慢、更贵；怒斥更快更省，但烦躁烧得短、喊得近。
- *   它通过 F.pref("manner") 进入公式，配置分支与实际消耗同源。
- */
+/** torment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const tormentId = "torment";
     export const tormentEffect = "world_combat:torment_itch";

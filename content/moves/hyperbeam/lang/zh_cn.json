@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.hyperbeam.summary": "把全部能量压成一条贯穿的直线光柱射出去：走廊里的敌人被一起打穿，排队站得越密越吃亏；放完自己熄火一段时间，无法行动也无法移动。",
-  "worldcombat.skill.hyperbeam.description.0": "光柱贯穿每个目标，造成 %1$s 的贯穿伤害。",
-  "worldcombat.skill.hyperbeam.description.1": "一次最多贯穿 %1$s 个活体，光柱最远射到 %2$s 格，撞墙即被挡下。",
+  "worldcombat.skill.hyperbeam.description.0": "光柱贯穿走廊内每个目标，各造成约 %1$s 点特殊伤害。",
+  "worldcombat.skill.hyperbeam.description.1": "一次最多贯穿 %1$s 个活体（由近到远依次结算），光柱最远射到 %2$s 格；撞墙即被挡下，被墙挡住视线的目标也不会被打穿。",
   "worldcombat.skill.hyperbeam.description.2": "走廊半宽 %1$s 格；起手 %2$s。",
   "worldcombat.skill.hyperbeam.description.3": "放完熄火 %1$s，期间无法行动也无法移动；每多贯穿一个目标额外延长 %2$s。",
   "worldcombat.skill.hyperbeam.use.0": "一条贯穿的直线光柱",

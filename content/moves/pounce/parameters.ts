@@ -112,9 +112,9 @@ namespace PokemonSkills {
     ]);
 
     describe("pounce", [
-        { key: "description.0", values: ["slam", "slowStages"] },
+        { key: "description.0", values: ["slam","slowStages"] },
         { key: "description.1", values: ["leap", "pace", "girth"] },
-        { key: "description.2", values: ["clingTicks", "rootTicks"] },
+        { key: "description.2", values: ["clingTicks","rootTicks"] },
         { key: "cling.on", values: [], when: function (context) { return read(context.detail.values, ["cling"]) === true; } },
         { key: "cling.off", values: [], when: function (context) { return read(context.detail.values, ["cling"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

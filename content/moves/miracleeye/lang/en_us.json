@@ -3,11 +3,11 @@
   "worldcombat.skill.miracleeye.use.0": "break a Dark target's immunity before your Psychic hit",
   "worldcombat.skill.miracleeye.use.1": "pin down an evasive target",
   "worldcombat.skill.miracleeye.use.2": "raise your own accuracy before a Psychic strike",
-  "worldcombat.skill.miracleeye.description.0": "Strip %1$s of the target's positive evasion (capped by what it has) and light it up, making Dark no longer immune to Psychic, for %2$s.",
+  "worldcombat.skill.miracleeye.description.0": "Strip %1$s of the target's positive evasion (capped by what it has), and for %2$s make Dark no longer immune to Psychic moves.",
   "worldcombat.skill.miracleeye.description.1": "The caster gains %1$s accuracy, the target is revealed for %2$s.",
   "worldcombat.skill.miracleeye.focus.on": "Focus: %1$s wind-up and %2$s cooldown buy a longer window, reveal and +1 insight.",
   "worldcombat.skill.miracleeye.focus.off": "Shallow read: shorter window, faster wind-up and cooldown, lower insight, good for breaking immunity often.",
-  "worldcombat.skill.miracleeye.description.2": "Insight range %1$s blocks, wind-up %2$s, recovery %3$s; a blocked line of sight, an eye already open, or a target already foreseen refuses the cast.",
+  "worldcombat.skill.miracleeye.description.2": "One enemy only: insight range %1$s blocks, wind-up %2$s, recovery %3$s; a blocked line of sight, an eye already open, or a target already marked by Miracle Eye or Foresight refuses the cast.",
   "worldcombat.skill.miracleeye.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.miracleeye.value.window": "Insight window",
   "worldcombat.skill.miracleeye.value.reveal": "Reveal duration",
@@ -28,5 +28,6 @@
   "world_combat.move.miracleeye.text.fade": "The inner eye fades",
   "world_combat.move.miracleeye.text.blocked": "Sight blocked, nothing seen through",
   "world_combat.move.miracleeye.text.empty": "No target to see through",
-  "effect.world_combat.miracleeye_mark": "Seen through"
+  "effect.world_combat.miracleeye_mark": "Seen through",
+  "worldcombat.skill.miracleeye.description.3": "When the insight window ends or is cleared, the stripped evasion and the borrowed accuracy are both returned."
 }

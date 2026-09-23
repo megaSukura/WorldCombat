@@ -60,10 +60,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: icespinnerId,
         cooldownParameter: "recharge",
         name: "Ice Spinner",
-        description: "脚上结起薄冰，旋转着撞进目标：沿途把场地整片刮掉，冲过的地面留下一圈会化掉的冰面，命中按接触结算冰系伤害并把目标顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
+        description: "脚上结起薄冰，旋转着撞进目标：沿途把场地整片刮掉，冲过的地面留下一圈会滑、会化掉的冰面，命中按接触结算冰系伤害并把目标顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
         uses: ["压进一个贴地的目标并把它顶开", "把对手依赖的场地一次刮掉", "在冲过的地面留下一圈临时冰面"],
         kind: "enemy",
         range: 3.2,

@@ -66,11 +66,10 @@ namespace PokemonSkills {
             "冷却", "两次立壁之间的等待；镜面 ×0.9、坚壁 ×1.12。")
     });
     describe(reflectId, [
-        { key: "description.0", values: ["plateTicks", "plateRadius"] },
+        { key: "description.0", values: ["plateTicks","plateRadius"] },
         { key: "description.1", values: ["cut", "rebound"] },
-        { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.mirror); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.mirror); } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

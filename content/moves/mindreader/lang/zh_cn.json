@@ -27,5 +27,6 @@
   "world_combat.move.mindreader.text.read": "心之眼·命中",
   "world_combat.move.mindreader.text.fade": "读已散去",
   "world_combat.move.mindreader.text.blocked": "视线被挡",
-  "effect.world_combat.mindreader_eyes": "心之眼"
+  "effect.world_combat.mindreader_eyes": "心之眼",
+  "worldcombat.skill.mindreader.description.3": "命中等级只在读还没用掉时有效：你的下一次物理或特殊伤害命中会用掉这层读并立刻收回命中等级；读到期或被清除时也会原样收回。"
 }

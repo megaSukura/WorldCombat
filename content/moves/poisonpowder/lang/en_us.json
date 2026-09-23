@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.poisonpowder.summary": "Throw a pinch of toxic dust to a chosen point; it bursts at once, poisoning every enemy in the burst, and leaves nothing behind. It is the cheapest and shortest-cooldown of the four status casts, for tagging whatever is on top of you. Grass types pass through powder, Poison and Steel types through poison.",
-  "worldcombat.skill.poisonpowder.description.0": "The puff is thrown to a point within %1$s blocks at %2$s blocks per tick and covers a %3$s block radius on landing.",
-  "worldcombat.skill.poisonpowder.description.1": "Non-friendly bodies caught are poisoned for %1$s, losing health over time.",
+  "worldcombat.skill.poisonpowder.description.0": "The puff is thrown to a point within %1$s blocks at %2$s blocks per tick, and bursts over a %3$s block radius when it hits a target or reaches the landing point.",
+  "worldcombat.skill.poisonpowder.description.1": "The burst poisons each non-ally caught inside once for %1$s, losing health over time; Grass types pass through the powder untouched, and Poison and Steel types are not poisoned.",
   "worldcombat.skill.poisonpowder.cling.on": "Clinging: radius x0.8 and poison x1.3, but cooldown x1.1 - to poison one hard target for longer.",
   "worldcombat.skill.poisonpowder.cling.off": "Wide scatter: radius x1.15 and cooldown x0.9, poison x0.8 - to tag a small knot at once.",
   "worldcombat.skill.poisonpowder.timing": "Thrown to a point: range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

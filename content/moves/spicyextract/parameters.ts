@@ -81,6 +81,7 @@ namespace PokemonSkills {
 
     describe("spicyextract", [
         { key: "description.0", values: ["gift", "shred"] },
+        { key: "description.additional", values: [] },
         { key: "description.1", values: ["blast", "linger"] },
         { key: "description.2", values: ["throwSpeed", "collision", "range"] },
         { key: "description.3", values: ["telegraph", "aftermath", "wait"] }

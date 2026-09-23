@@ -5,11 +5,11 @@
   "worldcombat.skill.flipturn.use.2": "蹬开追兵的同时把身位让给伙伴",
   "worldcombat.skill.flipturn.description.0": "冲撞活体造成 %1$s 点物理伤害。",
   "worldcombat.skill.flipturn.description.1": "冲刺距离 %1$s 格、每刻位移 %2$s 格，判定半径 %3$s 格。",
-  "worldcombat.skill.flipturn.description.2": "越过目标 %1$s 格后继续滑行 %2$s 格，并把目标朝来路推开 %3$s 格。",
-  "worldcombat.skill.flipturn.description.3": "回身式落向 %1$s 格内最近的伙伴。",
+  "worldcombat.skill.flipturn.description.2": "越过目标 %1$s 格，随后按架势滑行 %2$s 格（深潜式继续前冲，回身式折返伙伴），并把目标顺着冲撞方向推开 %3$s 格；泡在水里滑行更远。",
+  "worldcombat.skill.flipturn.description.3": "回身式会在 %1$s 格内寻找最近的伙伴作为落点。",
   "worldcombat.skill.flipturn.turn.on": "回身式：越过目标后回身落向最近的等候伙伴，滑行 ×0.8、冲撞 ×1.12。",
   "worldcombat.skill.flipturn.turn.off": "深潜式：越过目标继续深潜远遁，滑行 ×1.3、冲撞 ×0.9。",
-  "worldcombat.skill.flipturn.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.flipturn.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %5$s 秒，耗 %4$s PP。",
   "worldcombat.skill.flipturn.growth.0": "%1$s 级起冲撞威力抬到 %2$s。",
   "worldcombat.skill.flipturn.growth.1": "%1$s 级起冲撞威力抬到 %2$s。",
   "worldcombat.skill.flipturn.value.ram": "冲撞威力",
@@ -34,5 +34,6 @@
   "worldcombat.skill.flipturn.preference.ai.leaveStation.help": "开启后，驻守命令下也会翻身脱离；关闭则只在原地方便时施放。",
   "world_combat.move.flipturn.text.turn": "翻身 · 归队",
   "world_combat.move.flipturn.text.miss": "扑空 · 滑走",
-  "world_combat.move.flipturn.text.switch": "快速折返 · 换手"
+  "world_combat.move.flipturn.text.switch": "快速折返 · 换手",
+  "worldcombat.skill.flipturn.description.swap": "落点处若有可出场的后备宝可梦，会当场与它换手、由后备接替；没有后备时只保留越位落点。"
 }

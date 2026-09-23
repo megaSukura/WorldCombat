@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.kowtowcleave.summary": "Kowtow first to make the target drop its guard and crack open, then lunge in and slash; it strikes the opening so it never misses, and knocks the target back.",
-  "worldcombat.skill.kowtowcleave.description.0": "The slash deals %1$s damage; a target still carrying the opening takes %2$s more.",
-  "worldcombat.skill.kowtowcleave.description.1": "The kowtow drops the chosen target within %3$s blocks by %1$s stage of Defence for a %2$s s opening.",
-  "worldcombat.skill.kowtowcleave.description.2": "After the bow the user lunges %1$s blocks; the slash knocks the target back %2$s blocks with a %3$s block hit radius.",
+  "worldcombat.skill.kowtowcleave.description.0": "The slash deals about %1$s damage with no accuracy roll; against a target still carrying the opening its power is %2$s higher.",
+  "worldcombat.skill.kowtowcleave.description.1": "The kowtow drops the chosen target within %3$s blocks by %1$s stage of Defence and opens a %2$s s opening; cleaving it during that window gains the bonus above.",
+  "worldcombat.skill.kowtowcleave.description.2": "After the bow the user closes up to %1$s blocks; a hit knocks the target back %2$s blocks with a %3$s block hit radius.",
   "worldcombat.skill.kowtowcleave.description.3": "The bow and the blade are %1$s s apart.",
   "worldcombat.skill.kowtowcleave.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.kowtowcleave.growth.0": "At level %1$s: slash power %2$s.",

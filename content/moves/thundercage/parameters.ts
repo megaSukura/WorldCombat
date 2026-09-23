@@ -124,8 +124,8 @@ namespace PokemonSkills {
 
     describe("thundercage", [
         { key: "description.0", values: ["cage"] },
-        { key: "description.1", values: ["duration", "arc", "interval", "paralyzeChance"] },
-        { key: "description.2", values: ["radius", "push", "reach", "speed"] },
+        { key: "description.1", values: ["duration","interval","arc","paralyzeChance"] },
+        { key: "description.2", values: ["radius","reach","speed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

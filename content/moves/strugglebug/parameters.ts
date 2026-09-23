@@ -111,8 +111,8 @@ namespace PokemonSkills {
 
     describe(strugglebugId, [
         { key: "description.0", values: ["swarm"] },
-        { key: "description.1", values: ["dropStages", "clingTicks"] },
-        { key: "description.2", values: ["radius", "frontSpeed"] },
+        { key: "description.1", values: ["dropStages","clingTicks"] },
+        { key: "description.2", values: ["radius","frontSpeed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["brood"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["brood"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -130,7 +130,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["slam", "collisionRadius"] },
         { key: "description.1", values: ["charge", "pace", "shove"] },
         { key: "description.2", values: ["pierce"] },
-        { key: "description.3", values: ["scar", "rubble"] },
+        { key: "description.3", values: ["scar","rubble"] },
         { key: "breakthrough.on", values: ["pierce"], when: function (context) { return read(context.detail.values, ["breakthrough"]) === true; } },
         { key: "breakthrough.off", values: [], when: function (context) { return read(context.detail.values, ["breakthrough"]) !== true; } },
         { key: "timing", values: ["charge", "tempo", "settle", "pp", "recharge"] },

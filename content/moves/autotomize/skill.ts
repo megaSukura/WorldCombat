@@ -60,7 +60,7 @@ namespace PokemonSkills {
         id: "autotomize",
         cooldownParameter: "wait",
         name: "身体轻量化",
-        description: "削掉身体上没用的部分，大幅提高自己的速度，同时体重也会变轻。",
+        description: "当场把身上没用的部件一块块撬下来甩到地上：身体一下子轻了，速度大幅提高，残件成为场上真实可拾取的物件。轻身窗口里重力变小、身体浮起来——这是「变轻」在世界里的兑现。部件不会长回来。",
         uses: ["开战前卸一轮，把速度拉起来", "用卸下的残件在场上留下痕迹", "轻身窗口里浮起来，借身法绕过地形"],
         kind: "self",
         range: 1,

@@ -57,6 +57,7 @@ namespace PokemonSkills {
     });
     describe(wonderRoomId, [
         { key: "description.0", values: ["swapTicks", "swapRadius"] },
+        { key: "description.swap", values: [] },
         { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "span.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.span === 1); } },

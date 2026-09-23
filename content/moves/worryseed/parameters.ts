@@ -1,5 +1,4 @@
-/** 烦恼种子：投射种子，将目标特性暂时替换为不眠并唤醒睡眠目标。 个体差异、配置和现场事实由以下公式定义。 */
-
+/** worryseed：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     actionParameters.define("worryseed", {
         reach: formula(
@@ -32,7 +31,7 @@ namespace PokemonSkills {
             "烦恼时长", "种子把特性顶成不眠并压制睡着多久；等级与特攻越高、深植越久。"),
         recharge: seconds(
             F.base(70, "基础").minus(F.stat("speed").times(0.26).as("速度")).clamp(34, 110).round(),
-            "再种冷却", "再种一颗种子需要多久；速度快的个体更快恢复。"),
+            "再种冷却", "再种一颗种子需要多久；速度快的个体更快恢复。", { base: 70 }),
         seeds: formula(
             F.base(10, "基础").plus(F.stat("specialAttack").div(7).as("特攻")).clamp(10, 36).round(),
             "种子数", { unit: "颗", description: "起手时绕着施法者转的种子数量；特攻越高越密。" }),
@@ -44,7 +43,7 @@ namespace PokemonSkills {
             "扎根数", { unit: "条", description: "种子破土时顶出的根须数量；特攻与体重越大越多。" }),
     });
 
-    stages("worryseed", [{ level: 35, values: { cooldown: 60 } }, { level: 50, values: { cooldown: 50 } }]);
+    stages("worryseed", [{ level: 35, values: { recharge: 60 } }, { level: 50, values: { recharge: 50 } }]);
 
     describe("worryseed", [
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
@@ -52,7 +51,7 @@ namespace PokemonSkills {
         { key: "deep.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.deep); } },
         { key: "deep.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.deep); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.recharge"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.recharge"] }
     ]);
 }

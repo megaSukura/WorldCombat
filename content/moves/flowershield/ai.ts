@@ -1,14 +1,4 @@
-/**
- * 鲜花防守 的伙伴 AI 用途：这是这招自己的一套出手计划——开打前先把身边一圈草属性护起来。
- *
- * 什么局面有意义：场上有一个可见的威胁、且在 ai.maxChase 内；ai.pack 一圈里至少站着一个还没被花浪扫过的
- *   草属性伙伴（自己也算）。有交战需求才准备。
- * 对谁出手：自己；花浪以自身为心，草属性伙伴在范围内会一起被扫到，不需要选中队友。
- * 够不到怎么办：不需要够——由共用任务直接施放；威胁太远就先不推花浪。
- * 候选之间怎么排：一圈里自己人多于草属性对手时 priority 86（这一推净赚）；否则 66（顺带也护了对手的草属性，
- *   只有当自己人也站在圈里才值得）。
- * 配置：ai.maxChase 是威胁距离，ai.pack 是这招眼里的「一圈」半径。
- */
+/** 花瓣资格与执行共用：草属性宝可梦和手持花的活体都计入人数，伙伴同时考虑敌我受益。 */
 namespace CompanionBehavior {
     const flowershieldChase = PokemonSkills.number("ai.maxChase", "开打距离", 4, 24, 1);
     flowershieldChase.help = "威胁进入这个距离内才考虑推花浪；越大越早开始。";
@@ -17,9 +7,9 @@ namespace CompanionBehavior {
 
     PokemonSkills.addPreferences(PokemonSkills.flowershieldId, {}, [flowershieldChase, flowershieldPack]);
 
+    registerFact("world_combat:flowershield_recipient", function (world, actor) { return PokemonSkills.flowershieldQualifies(world, actor); });
     function flowershieldIsGrass(context: WorldBehavior.Context, target: Entity): boolean {
-        const facts = pokemonFacts(context, target);
-        return !!facts && facts.types.indexOf("grass") >= 0;
+        return !!fact<boolean>(context, "world_combat:flowershield_recipient", target);
     }
     function flowershieldCounts(context: WorldBehavior.Context, item: WorldBehavior.Capability): { friends: number; foes: number } {
         const self = source(context), pack = ai<number>(item, "pack", 6);

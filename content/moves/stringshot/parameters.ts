@@ -56,9 +56,9 @@ namespace PokemonSkills {
             "把丝蓄到口边需要多久；速度越快越早吐出。")
     });
     describe(stringshotId, [
-        { key: "description.0", values: ["speedDrop", "bindTicks", "rootTicks"] },
-        { key: "description.1", values: ["netRadius", "netTicks"] },
-        { key: "description.2", values: ["strandSpeed", "strandRadius", "reach", "range", "tempo"] },
+        { key: "description.0", values: ["speedDrop","bindTicks","rootTicks"] },
+        { key: "description.1", values: ["netRadius","netTicks"] },
+        { key: "description.2", values: ["strandSpeed","strandRadius","reach","range","tempo"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

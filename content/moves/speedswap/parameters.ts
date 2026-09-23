@@ -61,6 +61,7 @@ namespace PokemonSkills {
 
     describe("speedswap", [
         { key: "description.0", values: ["reach", "span"] },
+        { key: "description.additional", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "mode.exchange", values: [], when: function (context) { return read(context.detail.values, ["mode"]) === 1; } },
         { key: "mode.dampen", values: [], when: function (context) { return read(context.detail.values, ["mode"]) !== 1; } },

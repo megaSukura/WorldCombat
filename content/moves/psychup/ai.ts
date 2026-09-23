@@ -1,19 +1,12 @@
-/**
- * 自我暗示 / psychup — 伙伴 AI 用途与自己的出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、自己能读通一条直线，而且对手的能力阶梯里有值得抄
- *   的东西（照单全收：任何差异都值得；只取增益：至少有一项能抬）。自己刚同调过（带着 psychup 标记）时不再
- *   重复，等标记过去再考虑。
- * 对谁出手：当前威胁；读取距离内通视才出手，够不到先由共享任务走近。
- * 候选之间怎么排：对手的增益明显（净提升 ≥ 2 级）时 priority 抬到 70，抢在普通出手之前把它的节奏接过来；
- *   否则 45，仍可由共享顺序兜底选中。
- * 放完之后：自己的阶梯与对手对齐，交回共享交战计划。
- * ai.maxChase 决定追多远才读；ai.leaveStation 决定驻守时是否愿意离位。
- */
+/** psychup：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     /** 只读、决策内缓存：一个战斗者当前的能力阶梯 JSON。 */
     registerFact("world_combat:psychup-stages", function (access, actor, _argument) {
         return JSON.stringify(PokemonSkills.psychupStages(access, actor));
+    });
+
+    registerFact("world_combat:psychup-native", function (access, actor) {
+        return JSON.stringify(MobEffects.native(access, actor, "beneficial").map(effect => ({ id: String(effect.id()), amplifier: effect.amplifier() })));
     });
 
     interface PsychupAssessment { changed: number; gain: number; }
@@ -34,6 +27,11 @@ namespace CompanionBehavior {
             changed++;
             if (delta > 0) gain += delta;
         }
+        const targetEffects: { id: string; amplifier: number }[] = JSON.parse(fact<string>(context, "world_combat:psychup-native", target) || "[]");
+        const ownEffects: { id: string; amplifier: number }[] = JSON.parse(fact<string>(context, "world_combat:psychup-native", self) || "[]");
+        targetEffects.forEach(effect => {
+            if (!ownEffects.some(own => own.id === effect.id && own.amplifier >= effect.amplifier)) { changed++; gain++; }
+        });
         return { changed: changed, gain: gain };
     }
 

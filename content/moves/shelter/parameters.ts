@@ -79,7 +79,7 @@ namespace PokemonSkills {
     ]);
 
     describe("shelter", [
-        { key: "description.0", values: ["gift", "shield", "window"] },
+        { key: "description.0", values: ["gift","shield","window"] },
         { key: "description.1", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "seal.on", values: [], when: function (context) { return read(context.detail.values, ["seal"]) === true; } },

@@ -25,5 +25,6 @@
   "worldcombat.skill.sweetscent.preference.ai.leaveStation.help": "When on, the companion may leave its post to spray under a Hold order.",
   "world_combat.move.sweetscent.text.cloud": "Sweet aroma spreads",
   "world_combat.move.sweetscent.text.scented": "Scented (rank %1$s)",
-  "effect.world_combat.sweet_scent": "Scented"
+  "effect.world_combat.sweet_scent": "Scented",
+  "worldcombat.skill.sweetscent.description.additional": "The cloud only scents enemies it has a clear line to and deals no damage itself; enemies inside keep having the aroma renewed, while allies are unaffected."
 }

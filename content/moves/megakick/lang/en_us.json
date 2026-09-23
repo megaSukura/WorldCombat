@@ -4,7 +4,7 @@
   "worldcombat.skill.megakick.use.1": "Force a foe to give ground with a big wind-up",
   "worldcombat.skill.megakick.use.2": "A finishing kick into a weakened foe",
   "worldcombat.skill.megakick.description.0": "The kicking leg deals about %1$s contact damage with a %2$s block hit radius.",
-  "worldcombat.skill.megakick.description.1": "Drive up to %1$s blocks along your aim at %2$s blocks per tick, kicking the first living body you touch; a whiff slides about %3$s more blocks before stopping.",
+  "worldcombat.skill.megakick.description.1": "Drive up to %1$s blocks along your aim at %2$s blocks per tick, kicking the first foe along the way; a friendly body or a wall stops the charge as a whiff, and running the full distance without a hit slides about %3$s more blocks before stopping.",
   "worldcombat.skill.megakick.description.2": "A hit throws the target about %1$s blocks along the kick and %2$s blocks up; the heavier the target, the shorter the throw.",
   "worldcombat.skill.megakick.launch.on": "Launch form: throws the target farther and higher, at the cost of slightly less power and a longer recovery and cooldown.",
   "worldcombat.skill.megakick.launch.off": "Drive-through form: a heavier, quicker kick with little throw but a more solid impact.",

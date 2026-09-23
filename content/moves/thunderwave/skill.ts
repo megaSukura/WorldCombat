@@ -44,7 +44,7 @@ namespace PokemonSkills {
         id: thunderwaveId,
         cooldownParameter: "recharge",
         name: "Thunder Wave",
-        description: "The user launches a weak jolt of electricity that paralyzes the target.",
+        description: "发出一道瞬发、不飞行的直线电击，把目标麻住。它不造成伤害，靠的是必中与可靠；也正因为走直线，挡在线上的墙或同伴会替目标把电引走。电属性对麻痹免疫。",
         uses: ["点住一个跑得快的目标", "隔开距离先手缴械", "让挡在线上的同伴替目标吃电"],
         kind: "enemy",
         range: 8,

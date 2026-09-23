@@ -30,8 +30,8 @@ namespace PokemonSkills {
         id: triattackId,
         cooldownParameter: "recharge",
         name: "Tri Attack",
-        description: "Fire, frost and spark leave the hand together as three rays. In focused form all three converge on one target; in wide form they seek up to three separate enemies. Each ray that lands may leave its own element's mark: paralysis, burn or freeze.",
-        uses: ["对着一个目标连出三束、各掷一次元素余痕", "在敌群里让三束分头点不同的人", "用三色齐射先手压一片血"],
+        description: "火、冰、电三束光线依次离手、各走各的：每一束命中后各掷一次该元素的余痕，电→麻痹、火→灼伤、冰→冰冻。集束式三束都打同一目标，广域式让三束分头找身边最多三个不同的敌人。",
+        uses: ["对一个目标连出三束、各掷一次元素余痕", "在敌群里让三束分头点不同的人", "用三色齐射先手压一片血"],
         kind: "enemy",
         range: 9,
         maxRange: 13,
@@ -77,6 +77,7 @@ namespace PokemonSkills {
             const rays = Math.max(1, Math.round(p(triattackId, "rays", action)));
             const power = p(triattackId, "ray", action);
             const chance = p(triattackId, "ailmentChance", action);
+            const ailmentTicks = Math.round(p(triattackId, "ailmentTicks", action));
             const speed = Math.max(0.4, p(triattackId, "flightSpeed", action));
             const turn = p(triattackId, "homing", action);
             const fanRadius = Math.max(1.5, p(triattackId, "fanRadius", action));
@@ -149,7 +150,7 @@ namespace PokemonSkills {
                         if (struck !== null && live.valid(struck) && !live.friendly(struck)) {
                             const before = CombatStatus.has(live, struck, element.status);
                             impact(inner, hit, triattackId, power,
-                                { damage: damageSpec(triattackId, "ray"), status: element.status, chance: chance });
+                                { damage: damageSpec(triattackId, "ray"), status: element.status, chance: chance, statusTicks: ailmentTicks });
                             WorldFeedback.emit(live, triattackScene, 1, point,
                                 { moment: element.moment, target: String(struck.ref()), motes: motes,
                                     scale: scale, intensity: intensity }, 22);

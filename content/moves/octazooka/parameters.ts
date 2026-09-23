@@ -79,12 +79,12 @@ namespace PokemonSkills {
             "起手", "蓄好一口墨再喷出去的时间；速度越快越短，浓墨多花一点。")
     });
 
-    defineDamage("octazooka", "shot", {});
+    defineDamage("octazooka", "jet", {});
 
     describe("octazooka", [
-        { key: "description.0", values: ["shot", "shots", "chance", "blind"] },
-        { key: "description.1", values: ["velocity", "reach", "interval", "spread"] },
-        { key: "description.2", values: ["steer", "pref.thick"] },
+        { key: "description.0", values: ["jet","shots","chance","blind"] },
+        { key: "description.1", values: ["velocity","reach","interval","spread","radius"] },
+        { key: "description.2", values: ["steer"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

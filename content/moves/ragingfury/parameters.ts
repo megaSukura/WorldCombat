@@ -172,10 +172,10 @@ namespace PokemonSkills {
     ]);
 
     describe(ragingfuryId, [
-        { key: "description.0", values: ["blaze", "strikes"] },
-        { key: "description.1", values: ["reach", "gap", "radius", "push"] },
-        { key: "description.2", values: ["emberRadius", "emberTicks", "igniteTicks"] },
-        { key: "description.3", values: ["dazeTicks", "fumble"] },
+        { key: "description.0", values: ["blaze","strikes"] },
+        { key: "description.1", values: ["reach","lunge","gap","radius","push"] },
+        { key: "description.2", values: ["emberRadius","emberTicks","igniteTicks"] },
+        { key: "description.3", values: ["dazeTicks","fumble"] },
         { key: "inferno.on", values: [], when: function (context) { return read(context.detail.values, ["inferno"]) === true; } },
         { key: "inferno.off", values: [], when: function (context) { return read(context.detail.values, ["inferno"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

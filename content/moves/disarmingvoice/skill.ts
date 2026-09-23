@@ -20,7 +20,7 @@ namespace PokemonSkills {
     define({
         id: "disarmingvoice",
         name: "Disarming Voice",
-        description: "Letting out a charming cry, the user does emotional damage to opposing Pokémon. This attack never misses.",
+        description: "一声魅惑的鸣叫充满以身周为心的整块空间，站在声场里的对手避无可避，因此必定命中；命中后让对手错拍，安抚形态还卸掉对方出手的劲。",
         uses: ["以自身为心的整圈声场", "同时让一圈对手错拍", "用安抚卸掉一圈对手的劲"],
         kind: "enemy",
         range: 6,

@@ -99,10 +99,10 @@ namespace PokemonSkills {
 
     describe("defog", [
         { key: "description.0", values: ["sweep"] },
-        { key: "description.1", values: ["strip", "expose", "linger"] },
+        { key: "description.1", values: ["strip","expose","linger"] },
         { key: "gale.on", values: [], when: function (context) { return read(context.detail.values, ["gale"]) === true; } },
         { key: "gale.off", values: [], when: function (context) { return read(context.detail.values, ["gale"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.sweep"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.sweep", "tier.1.strip"] }
     ]);

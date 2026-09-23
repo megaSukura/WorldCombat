@@ -161,13 +161,14 @@ namespace PokemonSkills {
 
     describe(temperId, [
         { key: "description.0", values: ["flare"] },
-        { key: "description.1", values: ["scorch", "blast", "push"] },
-        { key: "description.2", values: ["dash", "charge", "igniteTicks", "scorchTicks", "scorchCells"] },
+        { key: "description.1", values: ["scorch","blast","push"] },
+        { key: "description.2", values: ["dash","charge","igniteTicks","scorchTicks","scorchCells"] },
+        { key: "description.additional", values: [] },
         { key: "reckless.on", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.flare"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.flare", "tier.1.blast"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.flare","tier.1.blast"] }
     ]);
 
     // ---- 记账：与跺脚同源，独立身份，两个单元互不干扰 ----

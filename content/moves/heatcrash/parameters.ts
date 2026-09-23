@@ -147,10 +147,10 @@ namespace PokemonSkills {
     defineDamage("heatcrash", "crush", { defenceCoefficient: 0.005 }, { contact: true });
 
     describe("heatcrash", [
-        { key: "description.0", values: ["crush", "landRadius", "collisionRadius"] },
-        { key: "description.1", values: ["burnChance", "burnTicks", "igniteTicks"] },
-        { key: "description.2", values: ["leap", "hop", "airTicks", "shove"] },
-        { key: "description.3", values: ["scorchRadius", "scorchTicks"] },
+        { key: "description.0", values: ["crush","landRadius"] },
+        { key: "description.1", values: ["burnChance","burnTicks","igniteTicks"] },
+        { key: "description.2", values: ["leap","hop","airTicks","shove"] },
+        { key: "description.3", values: ["scorchRadius","scorchTicks"] },
         { key: "scorch.on", values: [], when: function (context) { return read(context.detail.values, ["scorch"]) === true; } },
         { key: "scorch.off", values: [], when: function (context) { return read(context.detail.values, ["scorch"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -60,8 +60,9 @@ namespace PokemonSkills {
     });
 
     describe("endure", [
-        { key: "description.0", values: ["window", "charges"] },
-        { key: "description.1", values: ["raise", "charge", "grit"] },
-        { key: "description.2", values: ["fizzle", "pref.scramble"] }
+        { key: "description.0", values: ["window","charges","minimumHealth"] },
+        { key: "description.1", values: ["raise","charge","grit"] },
+        { key: "description.2", values: ["fizzle"] },
+        { key: "posture", values: [] }
     ]);
 }

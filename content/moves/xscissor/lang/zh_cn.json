@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.xscissor.summary": "两把镰刀像剪刀一样从左右合拢：左刃先扫过一侧半扇面，右刃紧随其后扫过另一侧，站在中轴上的目标被两刃同时剪中、结算两次，落点交叉成一个 X。合剪更集中、第二刃还带加成；开剪覆盖更宽、冷却更短。",
   "worldcombat.skill.xscissor.description.0": "每一片刃对扫过的对手造成 %1$s 的接触斩击伤害。",
-  "worldcombat.skill.xscissor.description.1": "两刃合起来扫过 %1$s 度的扇面；落在中轴上的目标会被两刃先后结算两次。",
+  "worldcombat.skill.xscissor.description.1": "两刃朝面前先左后右合拢，合计扫过约 %1$s 度的扇面，两刃相隔约 %2$s；落在中轴上的目标会被两刃先后各结算一次。",
   "worldcombat.skill.xscissor.description.2": "合剪形态下，第二刃对已被第一刃切中的目标额外增加 %1$s 的伤害。",
   "worldcombat.skill.xscissor.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.xscissor.growth.0": "达到 %1$s 级，每刃威力提升至 %2$s。",
@@ -19,7 +19,7 @@
   "worldcombat.skill.xscissor.value.aftercast": "收招",
   "worldcombat.skill.xscissor.value.recharge": "冷却",
   "worldcombat.skill.xscissor.preference.scissor": "合剪形态",
-  "worldcombat.skill.xscissor.preference.scissor.help": "开启（合剪）：张角收到 86 度、第二刃带额外加成，代价是冷却 +4 刻。关闭（开剪）：张角放宽到 128 度、冷却更短，代价是没有第二刃加成。",
+  "worldcombat.skill.xscissor.preference.scissor.help": "开启（合剪）：张角收到 86 度、第二刃对已被第一刃切中的目标带额外加成，代价是起手 +1 刻、冷却 +4 刻。关闭（开剪）：张角放宽到 128 度、起手与冷却更短，代价是没有第二刃加成。",
   "worldcombat.skill.xscissor.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.xscissor.preference.ai.maxChase.help": "超过这个距离就不合剪，先走近。越大越愿意从稍远处先手交叉。",
   "worldcombat.skill.xscissor.preference.ai.crowd": "裁剪一列",

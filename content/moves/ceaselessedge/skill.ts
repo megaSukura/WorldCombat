@@ -99,7 +99,7 @@ namespace PokemonSkills {
         id: ceaselessedgeId,
         cooldownParameter: "recharge",
         name: "Ceaseless Edge",
-        description: "A shell-blade slash cuts the target and sheds shell splinters that stay planted on the ground where it landed. Grounded foes that step in are cut hard the first time and lightly while they stay, and cutting the same ground again sharpens the splinters; it has a high chance to land a critical hit.",
+        description: "一记贝壳之刃的斩击，把散落的贝壳碎片留在落点地面成为撒菱：踏进来的贴地敌人第一刀被重割、留在圈里被轻割；在同一片地上再斩会把碎片磨得更利（最多三层）。这一刀瞄准要害，暴击率高于普通招。",
         uses: ["近身斩一记，把贝壳碎片留在对手脚下成为撒菱", "在同一片地上反复斩，把碎片养成刀阵", "对着要害打出更高暴击的一刀"],
         kind: "enemy",
         range: 3.2,

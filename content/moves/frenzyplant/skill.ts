@@ -62,10 +62,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "frenzyplant",
         name: "Frenzy Plant",
-        description: "The user slams the target with the roots of an enormous tree. The user can't move on the next turn.",
-        uses: ["从地面窜出的巨木根须", "同时抽打挤在一块地上的对手", "把目标按在原地再交给自己队友"],
+        description: "把生长灌进选定的那块地：巨木根须自地面窜起、抽打站在那里的对手，缠根时还会把他们按在原地；根须褪去后地上短暂留下苔藓与生根土，施法者力竭一段时间。",
+        uses: ["从地面窜出的巨木根须", "同时抽打挤在一块地上的对手", "把目标按在原地再交给队友"],
         kind: "point",
         range: 10,
         maxRange: 18,

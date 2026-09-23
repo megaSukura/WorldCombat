@@ -88,7 +88,8 @@ namespace PokemonSkills {
 
     describe("coaching", [
         { key: "description.0", values: ["giftAtk", "giftDef", "window"] },
-        { key: "description.1", values: ["splash", "reach"] },
+        { key: "description.1", values: ["splash","reach"] },
+        { key: "description.reclaim", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "drill.intense", values: [], when: function (context) { return read(context.detail.values, ["drill"]) === 1; } },
         { key: "drill.quick", values: [], when: function (context) { return read(context.detail.values, ["drill"]) !== 1; } },

@@ -143,7 +143,7 @@ namespace PokemonSkills {
         id: "spikyshield",
         cooldownParameter: "charge",
         name: "Spiky Shield",
-        description: "A thorned shield bursts up around the user, blocking attacks by a total pool; every direct contact pricks the attacker and drains its health.",
+        description: "在自己身上炸开一圈藤刺甲，按总量完整挡下敌人的攻击，并把指向自己的变化招式抖开；每一次被挡下的接触攻击都会反刺攻击者，同一个攻击者一次藤甲只会被扎一次。",
         uses: ["引诱近战对手贴上藤刺", "挡住齐射的同时反刺冲上来的近战", "在变化招式落下来之前连招带人一起封住"],
         kind: "self",
         range: 0,

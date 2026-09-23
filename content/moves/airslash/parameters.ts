@@ -127,9 +127,9 @@ namespace PokemonSkills {
     ]);
 
     describe(airslashId, [
-        { key: "description.0", values: ["blade", "radius"] },
+        { key: "description.0", values: ["blade","radius"] },
         { key: "description.1", values: ["reach", "flight", "pierce"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks"] },
         { key: "description.3", values: ["pref.razor"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blade", "tier.0.reach"] }

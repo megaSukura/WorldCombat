@@ -46,7 +46,7 @@ namespace PokemonSkills {
         id: iceshardId,
         cooldownParameter: "recharge",
         name: "Ice Shard",
-        description: "The user flash-freezes a chunk of ice and hurls it at the target. This move always goes first.",
+        description: "当场结出一枚冰砾、贴直线高速掷出：几乎瞬发，命中造成物理伤害并让目标冻僵、移动变慢，落点地面结出一小片会滑的薄冰。碎冰式命中会崩到周围一圈敌人、薄冰更大更久，但飞得更慢、更近、更费。",
         uses: ["瞬发的远程物理先手", "隔一段距离点掉一个目标并把他冻僵", "把落点地面冻出会滑的薄冰"],
         kind: "enemy",
         range: 11,

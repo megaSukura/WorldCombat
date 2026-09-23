@@ -3,10 +3,10 @@
   "worldcombat.skill.confusion.use.0": "Cheap, fast ranged harassment",
   "worldcombat.skill.confusion.use.1": "Chip health down with repeated light hits",
   "worldcombat.skill.confusion.use.2": "Suppress a target that likes to act often",
-  "worldcombat.skill.confusion.description.0": "The pulse deals %1$s special damage on hit.",
-  "worldcombat.skill.confusion.description.1": "On hit it has a %1$s chance to daze the target for %2$s; while dazed the target's actions are scattered with a %3$s chance, and each fumble is jabbed again.",
-  "worldcombat.skill.confusion.description.2": "The pulse reaches %1$s blocks at %2$s blocks/tick.",
-  "worldcombat.skill.confusion.focus.on": "Focused mind: stronger, longer and more reliable daze and a higher fumble chance, at the cost of shorter reach, a thinner hitbox and slower travel.",
+  "worldcombat.skill.confusion.description.0": "The pulse deals about %1$s special damage on hit.",
+  "worldcombat.skill.confusion.description.1": "On hit it has a %1$s chance to daze the target for %2$s; while dazed, each action it tries has a %3$s chance to be scattered, and each scatter is jabbed again.",
+  "worldcombat.skill.confusion.description.2": "The pulse reaches %1$s blocks at %2$s blocks/tick, with a %3$s-block hit radius.",
+  "worldcombat.skill.confusion.focus.on": "Focused mind: stronger, longer and more reliable daze and a higher fumble chance, at the cost of shorter reach, a thinner hitbox, slower travel, a 0.1-second longer wind-up and a 0.25-second longer cooldown.",
   "worldcombat.skill.confusion.focus.off": "Loose mind: a faster, longer, cheaper shot, at the cost of lighter damage and rarer daze.",
   "worldcombat.skill.confusion.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.confusion.growth.0": "From level %1$s the pulse rises to %2$s power.",
@@ -32,5 +32,6 @@
   "worldcombat.skill.confusion.preference.ai.finish.help": "On: lower-health targets rank higher, using the short cooldown to finish them. Off: ordinary ranged ordering.",
   "effect.world_combat.confusion_pulse": "Dazed",
   "world_combat.move.confusion.text.daze": "Dazed",
-  "world_combat.move.confusion.text.chip": "Mind -%1$s"
+  "world_combat.move.confusion.text.chip": "Mind -%1$s",
+  "worldcombat.skill.confusion.description.chip": "When scattered, the pulse jabs again for about 1.2%–5% of the target's max health scaled by its own Sp. Atk (heavier against higher Sp. Atk) and keeps the daze going for at least 3 more seconds — the more it struggles, the more it is ground down."
 }

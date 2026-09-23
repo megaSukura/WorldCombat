@@ -74,8 +74,8 @@ namespace PokemonSkills {
     ]);
 
     describe(psychicNoiseId, [
-        { key: "description.0", values: ["noise", "sealTicks"] },
-        { key: "description.1", values: ["reach", "waveSpeed", "radius"] },
+        { key: "description.0", values: ["noise","sealTicks"] },
+        { key: "description.1", values: ["reach","waveSpeed","radius"] },
         { key: "description.2", values: ["tempo", "settle", "recharge"] },
         { key: "pierce.on", values: [], when: function (context) { return read(context.detail.values, ["pierce"]) === true; } },
         { key: "pierce.off", values: [], when: function (context) { return read(context.detail.values, ["pierce"]) !== true; } },

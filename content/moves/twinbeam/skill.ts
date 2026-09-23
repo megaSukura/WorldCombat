@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: twinbeamId,
         cooldownParameter: "recharge",
         name: "Twin Beam",
-        description: "The user shoots mystical beams from its eyes to inflict damage. The target is hit twice in a row.",
+        description: "从两只眼睛各射出一道灵光，两道光从两个眼位收拢、在目标身上汇成一点：第一道先把目标点亮，第二道顺着这点共鸣射入，第一道命中则第二道更强。共鸣式出手更慢但后劲更足；并射式两道几乎同时射出、出手快，但没有共鸣加成。",
         uses: ["两只眼睛各射一道光，收拢到同一个目标", "先点亮再共鸣，第二道打得更深", "远距离点名，不接触"],
         kind: "enemy",
         range: 12,

@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.sludge.summary": "The user scoops up a wet clump of sludge and hurls it at the foe on a low arc: cheap, quick and PP-rich; a hit may poison the target while the clump clings and drips. Cling style is stickier and more poisonous at the cost of damage and speed.",
-  "worldcombat.skill.sludge.use.0": "Chip a distant foe and pile on poison",
+  "worldcombat.skill.sludge.use.0": "Chip a distant foe and keep it poisoned",
   "worldcombat.skill.sludge.use.1": "Always have a cheap shot ready",
   "worldcombat.skill.sludge.use.2": "Make the foe step out of the arc",
   "worldcombat.skill.sludge.description.0": "The clump smears for about %1$s damage. The target's Sp. Def, type and crit are settled on the hit.",
   "worldcombat.skill.sludge.description.1": "It is thrown up to %1$s blocks at %2$s blocks/tick, and the arc shows where it will land.",
-  "worldcombat.skill.sludge.description.2": "A foe it smears has a %1$s poison chance; the poison lasts %2$s s.",
+  "worldcombat.skill.sludge.description.2": "After a hit that deals damage, the target has a %1$s poison chance; the poison drains health over time and lasts %2$s s.",
   "worldcombat.skill.sludge.cling.on": "Cling style on: ×1.2 glob size, ×1.3 poison chance and longer poison, at ×0.9 damage, a slower throw and one extra beat of wind-up.",
   "worldcombat.skill.sludge.cling.off": "Cling style off (Quick throw): ×1.1 damage, a faster throw and a quicker recovery, but a smaller chance to stick.",
   "worldcombat.skill.sludge.timing": "Cast on a target within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers %3$s s with a %5$s s cooldown committed on cast.",

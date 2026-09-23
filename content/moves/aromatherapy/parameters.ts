@@ -62,7 +62,7 @@ namespace PokemonSkills {
             F.base(160).minus(F.level().times(0.6))
                 .times(F.when(F.pref("dense", aromatherapyDense), F.const(1.1), F.const(0.95)).as("浓香"))
                 .clamp(90, 200).round(0),
-            "冷却", "两次香云之间的等待；等级越高越熟练，浓香档更长。")
+            "冷却", "两次香云之间的等待；等级越高越熟练，浓香档更长。", { base: 160 })
     });
 
     stages(aromatherapyId, [
@@ -71,12 +71,13 @@ namespace PokemonSkills {
     ]);
 
     describe(aromatherapyId, [
-        { key: "description.0", values: ["scentRadius", "cloudTicks"] },
+        { key: "description.0", values: ["scentRadius","cloudTicks"] },
         { key: "description.1", values: ["reach"] },
+        { key: "description.link", values: [] },
         { key: "stance.dense", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "stance.diffuse", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

@@ -22,7 +22,7 @@ namespace PokemonSkills {
         id: "calmmind",
         cooldownParameter: "wait",
         name: "冥想",
-        description: "静心凝神，从而提高自己的特攻和特防。",
+        description: "收住心神，把自己罩进一层几乎透明的清明：特攻与特防一起提高。它是本组里唯一抬特攻的一招，深冥想更强更久但更慢，浅冥想瞬发随时能补；清明结束或被清除时两项等级一起收回。",
         uses: ["开场先静一息，把特攻与特防一起垫起来", "硬仗前坐深，拉锯里用浅冥想随时补", "把特防抬起来顶对面的特殊火力"],
         kind: "self",
         range: 1,

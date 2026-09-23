@@ -4,7 +4,7 @@
   "worldcombat.skill.quiverdance.use.1": "Raise a scale veil first when pressed by special attacks",
   "worldcombat.skill.quiverdance.use.2": "Spread scales while repositioning to make the ground around you your own",
   "worldcombat.skill.quiverdance.description.0": "After the wind-up Sp. Atk, Sp. Def and Speed each rise by %1$s.",
-  "worldcombat.skill.quiverdance.description.1": "The veil lasts %1$s; when it ends those three stats are taken back.",
+  "worldcombat.skill.quiverdance.description.1": "The veil lasts %1$s; dancing again while it stands raises each stat once more and renews the window, up to 6 levels each; when the window ends, the accumulated levels are taken back.",
   "worldcombat.skill.quiverdance.veil.on": "Thick veil: the veil window by 1.35, at the cost of a 2-tick longer wind-up and 12 ticks more cooldown.",
   "worldcombat.skill.quiverdance.veil.off": "Light dusting: fewer scales and the regular window, but quicker to finish.",
   "worldcombat.skill.quiverdance.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",

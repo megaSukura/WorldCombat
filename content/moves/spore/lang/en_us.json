@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.spore.summary": "Shakes off a bodyful of mushroom spores that erupt all around in an instant — the closer you are, the less you can dodge. Anyone touched drops asleep on the spot and sleeps deeply. It is the closest thing to a sure hit, at the cost of a very short reach and the longest cooldown, and Grass types pass straight through the spores.",
+  "worldcombat.skill.spore.summary": "Shakes off a bodyful of mushroom spores that erupt all around in an instant: every foe inside the radius is checked separately and almost never resists, and anyone touched drops asleep on the spot - unable to act, and waking the moment it is hit. It deals no damage, at the cost of a very short reach and the longest cooldown, and Grass types pass straight through the spores.",
   "worldcombat.skill.spore.use.0": "Put a whole pack of closing melee attackers to sleep at once",
   "worldcombat.skill.spore.use.1": "Pin one tough target at point-blank range",
   "worldcombat.skill.spore.use.2": "Open a sleep window for an ally's Dream Eater or Nightmare",
-  "worldcombat.skill.spore.description.0": "Erupts in an instant around the user with radius %1$s, covering up to %2$s foes. The closer you are, the less you can dodge.",
+  "worldcombat.skill.spore.description.0": "Erupts in an instant around the user with radius %1$s, covering up to %2$s foes. It takes effect instantly - once inside the radius there is no time to dodge.",
   "worldcombat.skill.spore.description.1": "Each adjacent target is touched with %1$s chance (read only from the user — almost certain); once touched it sleeps for %2$s. Grass types pass through the spores.",
   "worldcombat.skill.spore.description.2": "It leaves nothing behind.",
   "worldcombat.skill.spore.dense.on": "Dense spores: radius ×0.8, sleep ×1.2 and a higher touch chance, at the cost of cooldown ×1.15 and fewer foes covered.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.spore.preference.ai.leaveStation.help": "When on, the partner will also leave its post to burst; when off it only bursts where it already reaches.",
   "world_combat.move.spore.text.sleep": "Spore (asleep %1$s s)",
   "world_combat.move.spore.text.grass": "Passes through the spores",
-  "world_combat.move.spore.text.none": "The spores scatter on nothing"
+  "world_combat.move.spore.text.none": "The spores scatter on nothing",
+  "worldcombat.skill.spore.sleep": "While asleep a target cannot use moves, make ordinary attacks or move; any damage at all wakes it immediately, and otherwise it wakes when the %1$s is up."
 }

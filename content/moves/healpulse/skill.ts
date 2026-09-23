@@ -43,7 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: healpulseId, name: "治愈波动",
-        description: "从自己身上推出一圈治愈波动，沿瞄准线赶向选定的友方；飞行时间取决于距离与波动速度，抵达时回复其最大生命的一半左右。距离越远到得越晚，等待期间伙伴被打倒就落空。",
+        description: "从自己身上推出一圈治愈波动，沿瞄准线赶向选定的友方；抵达时回复其最大生命的一半左右。飞行时间取决于距离与波动速度，距离越远到得越晚，等待期间伙伴被打倒就落空。",
         uses: ["远远地给伙伴补一口", "在伙伴被打倒之前把生命送到", "用飞行的波动跨过一段距离的救助"],
         kind: "friend", range: 6, maxRange: 11, prepare: 9, active: 1, recover: 8, cooldown: 120, style: "pulse", maximumTicks: 220,
         defaults: { overcharge: false },

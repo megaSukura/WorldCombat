@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.stockpile.summary": "Stores power into the body one mouthful at a time, hooping an amber shell around it: each use raises Defense and Special Defense by 1, up to 3 layers. The only member of its group that can be spammed and that loses layers — a hit cracks one layer off and takes its stage with it, and the payoff is gone once all layers break. Broken layers can be set to mend or to shove.",
+  "worldcombat.skill.stockpile.summary": "Store power into the body one mouthful at a time, hooping an amber shell: each use raises Defense and Sp. Def by 1, up to 3 layers, and it can be stacked back to back. A real hit cracks one layer and takes the matching stage with it, and once all layers break the payoff is gone; when the shell expires or is removed the remaining layers and stages are reclaimed. Broken layers can be set to mend or to shove.",
   "worldcombat.skill.stockpile.use.0": "Stack a few layers before a fight and cap both defenses",
   "worldcombat.skill.stockpile.use.1": "Stow three layers, then engage and eat the first burst",
   "worldcombat.skill.stockpile.use.2": "Keep the layers as a breakable buffer and make the foe spend hits cracking it",
   "worldcombat.skill.stockpile.description.0": "Each layer raises Defense by %1$s stage and Special Defense by %2$s, up to 3 layers.",
   "worldcombat.skill.stockpile.description.1": "The stored power lasts about %1$s.",
   "worldcombat.skill.stockpile.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
-  "worldcombat.skill.stockpile.break.mend": "Break direction \"mend\": each cracked layer restores a little health, good for a long trade.",
-  "worldcombat.skill.stockpile.break.burst": "Break direction \"shove\": each cracked layer pushes the attacker back, good for opening space and cutting combos.",
+  "worldcombat.skill.stockpile.break.mend": "Break direction \"mend\": each cracked layer restores %1$s of max health, good for a long trade.",
+  "worldcombat.skill.stockpile.break.burst": "Break direction \"shove\": each cracked layer shoves the attacker %1$s blocks away from the user, good for opening space and cutting combos.",
   "worldcombat.skill.stockpile.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.stockpile.growth.0": "At level %1$s the store lasts %2$s and the cooldown drops to %3$s s.",
   "worldcombat.skill.stockpile.growth.1": "At level %1$s the store reaches %2$s and the cooldown drops to %3$s s.",
@@ -34,5 +34,6 @@
   "world_combat.move.stockpile.text.store": "Stockpile (%1$s layers)",
   "world_combat.move.stockpile.text.crack": "Shell cracked (%1$s left)",
   "world_combat.move.stockpile.text.scatter": "Shell spent (%1$s layers)",
-  "effect.world_combat.stockpile_charge": "Stockpile"
+  "effect.world_combat.stockpile_charge": "Stockpile",
+  "worldcombat.skill.stockpile.description.crack": "Each time the user actually takes damage one layer cracks: the matching Defense and Sp. Def stage is lost with it and the chosen break direction fires; once all three layers crack the shell is gone and the payoff is lost. When the shell expires or is removed, the remaining layers and their stages are reclaimed."
 }

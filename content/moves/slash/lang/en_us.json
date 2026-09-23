@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.slash.summary": "Plant your feet, raise the blade overhead and drive one diagonal cleave down a narrow corridor: every foe in the lane takes contact damage and the strike point flashes white. It has the family's raised critical chance - the swift form is faster and wider, the heavy form is slower and heavier.",
-  "worldcombat.skill.slash.description.0": "The cleave deals %1$s contact damage to foes in the corridor and lands critical hits more often.",
+  "worldcombat.skill.slash.description.0": "The cleave deals one hit of about %1$s contact damage to every enemy in the corridor, and lands critical hits more often.",
   "worldcombat.skill.slash.description.1": "The lane is %1$s blocks long and %2$s blocks half-wide, reaching %3$s blocks above the feet.",
   "worldcombat.skill.slash.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.slash.growth.0": "From level %1$s the cleave rises to %2$s.",

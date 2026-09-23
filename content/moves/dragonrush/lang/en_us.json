@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.dragonrush.summary": "Spread your menace into a visible ring of dread, then dive from above and crash onto the locked landing point: nearby bodies are knocked away and those held by the dread are likelier to flinch. The landing point locks at take-off, so a target that walks out of the airtime dodges it.",
+  "worldcombat.skill.dragonrush.summary": "Spread a visible ring of menace, then dive from above onto the locked landing point: enemies around the landing are knocked away together, and the greater your speed edge over a target, the likelier it flinches. The landing point locks at take-off, so a target that walks out of the airtime dodges it.",
   "worldcombat.skill.dragonrush.use.0": "Flash a ring of dread, then dive onto the locked point",
   "worldcombat.skill.dragonrush.use.1": "Knock the bodies around the landing point away together",
   "worldcombat.skill.dragonrush.use.2": "Freeze a target out of acting with a speed edge",
-  "worldcombat.skill.dragonrush.description.0": "The dive deals about %1$s power; accuracy %2$s%%, and the landing point locks at take-off. The target's Defence, type and crits settle on hit.",
-  "worldcombat.skill.dragonrush.description.1": "The wind-up spreads dread %1$s blocks wide, the landing radius is %2$s blocks, and a struck target has a %3$s%% chance to flinch for %4$s.",
+  "worldcombat.skill.dragonrush.description.0": "The dive deals about %1$s contact damage; accuracy %2$s%%, and the landing point locks at take-off. The target's Defence, type and crits settle on hit.",
+  "worldcombat.skill.dragonrush.description.1": "The wind-up spreads dread %1$s blocks wide; once the dive lands, every enemy within the %2$s-block landing radius is struck once, and each has a %3$s%% chance to flinch for %4$s, interrupting interruptible actions and preventing new moves and ordinary attacks during that time.",
   "worldcombat.skill.dragonrush.description.2": "It rises %1$s blocks, hangs %2$s, and knocks the bodies at the landing point back %3$s blocks.",
   "worldcombat.skill.dragonrush.dread.on": "Dread form: dread ring x1.3, flinch chance x1.25 and +4 ticks, but dive power x0.94, accuracy -0.04, +3 ticks wind-up and +8 ticks cooldown — a heavier hold and a blunter crash.",
   "worldcombat.skill.dragonrush.dread.off": "Swift form (native): dive power x1.08, accuracy +0.04 and a faster dive, at the cost of a smaller dread ring and shakier flinch.",

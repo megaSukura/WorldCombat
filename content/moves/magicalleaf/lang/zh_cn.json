@@ -26,5 +26,6 @@
   "worldcombat.skill.magicalleaf.preference.ai.maxChase.help": "超过这个距离就不主动散叶，先走近。越大越会在更远处先手。",
   "worldcombat.skill.magicalleaf.preference.ai.trackMovers": "追动目标",
   "worldcombat.skill.magicalleaf.preference.ai.trackMovers.help": "开启后，正在移动的敌人优先成为散叶目标（叶会拐弯拦在前面）；关闭则只按普通远程攻击排序。",
-  "world_combat.move.magicalleaf.text.fade": "叶散空"
+  "world_combat.move.magicalleaf.text.fade": "叶散空",
+  "worldcombat.skill.magicalleaf.description.chase": "散出的整群叶一齐朝施放时选中的那一个对手拐弯收拢，每片叶各自结算一次伤害，同一目标可以挨到多片；若施放时目标已不在，叶群当场散空。"
 }

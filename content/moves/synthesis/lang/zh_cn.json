@@ -3,9 +3,9 @@
   "worldcombat.skill.synthesis.use.0": "在阳光下补一大口生命",
   "worldcombat.skill.synthesis.use.1": "树荫里的小幅回血",
   "worldcombat.skill.synthesis.use.2": "站定窗口里的自救",
-  "worldcombat.skill.synthesis.description.0": "按缺失生命回复 %1$s：日照越足越高（晴天正午接近 2/3），特防越高叶片越强韧。",
+  "worldcombat.skill.synthesis.description.0": "按缺失生命回复 %1$s：日照越足越高（晴天正午接近 2/3），夜里或遮蔽处只回下限；特防越高叶片越强韧。",
   "worldcombat.skill.synthesis.description.1": "摊开叶片吸收光照，准备期间站定 %1$s 不能移动；被打断不消耗 PP。",
-  "worldcombat.skill.synthesis.timing": "自身招式，站定准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.synthesis.timing": "自身招式，站定准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.synthesis.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.synthesis.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.synthesis.value.heal": "回复比例",
@@ -16,5 +16,6 @@
   "worldcombat.skill.synthesis.preference.ai.minimumLight": "最低日照",
   "worldcombat.skill.synthesis.preference.ai.minimumLight.help": "所在点日照低于该值就不施放，等走到更亮的地方；调低会在树荫里也回一口，调高只在正午的强光下才动用。",
   "world_combat.move.synthesis.text.bloom": "光合作用",
-  "world_combat.move.synthesis.text.low": "光照不足"
+  "world_combat.move.synthesis.text.low": "光照不足",
+  "worldcombat.skill.synthesis.description.additional": "自身生命已满时无法施放。"
 }

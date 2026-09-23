@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.smartstrike.summary": "角尖自己锁定对手，一路修正方向追着刺过去；因为角追着人拐，所以躲不掉。刺的是甲缝，对手防御越高，这一角咬得越深。",
-  "worldcombat.skill.smartstrike.description.0": "角刺造成约 %1$s 的伤害；目标防御越高，公式里咬入的加成越大。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.smartstrike.description.1": "锁定 %1$s 格内的目标，以 %2$s 格/刻追近，每刻最多修正 %3$s 度，角尖半径 %4$s 格。",
+  "worldcombat.skill.smartstrike.description.0": "角刺造成约 %1$s 点伤害；目标防御越高，这一刺咬得越深。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.smartstrike.description.1": "锁定 %1$s 格内的目标，以 %2$s 格/刻追近，每刻最多修正 %3$s 度，角尖半径 %4$s 格；角尖一路朝目标拐、目标横移也甩不掉，碰到哪个敌人就扎哪个，一次施放只扎一次，被地形挡住或追不上时这一刺落空。",
   "worldcombat.skill.smartstrike.description.2": "刺中后把目标顶开 %1$s 格。",
   "worldcombat.skill.smartstrike.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.smartstrike.growth.0": "达到 %1$s 级，突刺威力提升至 %2$s，转向修正提升至 %3$s 度/刻。",

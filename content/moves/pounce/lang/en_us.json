@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.pounce.summary": "Leap high from a distance and arc through the air onto the target: the falling weight presses it down and the legs immediately cling to it, dragging it to a halt. The user stays beside the target and the target carries the clung identity. A clinging pounce lasts longer and cuts deeper Speed for a lighter blow.",
-  "worldcombat.skill.pounce.description.0": "Landing on a living target deals %1$s contact damage and drops a clung target's Speed by %2$s stages (other combatants get it on their movement speed).",
+  "worldcombat.skill.pounce.summary": "Leap high from a distance and arc through the air onto the target: the falling weight presses it down and the legs immediately cling to it, dragging it to a halt, resolving only the first body met. The user stays beside the target. A clinging pounce lasts longer and cuts deeper Speed for a lighter blow.",
+  "worldcombat.skill.pounce.description.0": "A pounce resolves against the first living non-ally it meets in the air: landing on it deals about %1$s physical damage and lowers its Speed stat by %2$s stages (other combatants get it on their movement speed); meeting nothing is a miss.",
   "worldcombat.skill.pounce.description.1": "One pounce reaches %1$s blocks, moving %2$s blocks per tick, with a %3$s block air hit radius.",
-  "worldcombat.skill.pounce.description.2": "The clung identity lasts %1$s; a heavy body or a clinging pounce pins the legs %2$s.",
+  "worldcombat.skill.pounce.description.2": "The grip lasts %1$s s; a heavy body or a clinging pounce also pins the legs for %2$s s, during which the target cannot move.",
   "worldcombat.skill.pounce.cling.on": "Clinging: a longer grip, one more Speed stage and a longer leg pin, at the cost of a lighter blow and longer recovery and cooldown.",
   "worldcombat.skill.pounce.cling.off": "Kick-off: a heavier, crisper pounce with a very short grip and quicker recovery.",
   "worldcombat.skill.pounce.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

@@ -1,26 +1,4 @@
-/**
- * 魅诱之声 / alluringvoice —— 参数与数值来源。
- *
- * 原生事实：Fairy、特殊、威力 80、命中 100、PP 10、声音招式；对「本回合内能力有提高」的目标追加混乱（Cobblemon 1.8）。
- *
- * 世界化：即时战斗里没有回合，本招翻成一首从施法者身前荡出的窄锥歌声，扫过整条声场；普通目标只是被歌声
- * 灼了心神，此刻正带着正面能力等级的目标会被这首歌惑乱——心气正盛时最听不进天使的调子，于是陷入错乱，
- * 出手会打偏、用力会伤到自己。它和「魅惑之声」同族但形状相反：魅惑之声是以自身为心的整圈声场，魅诱之声
- * 是一条朝前的窄锥，专挑变强的目标。
- *
- * 数值来源（每个参数读不同的精灵数据，公式即悬浮说明里展开的那一棵）：
- *   voice        = 声场直接伤害；特攻影响力度，回响式更宽更轻，直诉式更窄更重。
- *   reach        = 基础 7 + (碰撞箱高度 − 1.4) × 0.4 + (特攻 − 60) × 0.02 格；回响式 ×1.1。
- *   angle        = 基础 46 + (等级 − 30) × 0.4 度；回响式 ×1.35、直诉式 ×0.85；夹 30..90 度。
- *   fumble       = 基础 0.22 + (特攻 − 60) × 0.0025：被惑乱者每次出手作废的概率；夹 0.15..0.45。
- *   confuseBase  = 基础 110 + 等级 × 1.2 刻；回响式 ×1.4。
- *   confusePerStage = 基础 20 + 特攻 × 0.08 刻/级：每有一级正面等级，错乱延长多久；夹 10..60。
- *   motes        = 基础 18 + 特攻 × 0.3：声场里的音符数量；夹 12..80。
- *   tempo／settle／recharge：起手随速度缩短，回响式更慢、更久。
- * 错乱走本单元声场自己声明的载体 world_combat:alluring_voice_song（共享身份 world_combat:status/confusion）：
- * 出手作废与反噬行为写在本单元 skill.ts，消费方用 CombatStatus.has(world, actor, "confusion") 按身份读取。
- * 伤害段名 voice，声音标记写在 defineDamage 上。锥形声场的顶点由 alluringVoiceFan 生成，判定与表现共用。
- */
+/** alluringvoice：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const alluringvoiceId = "alluringvoice";
     export const alluringvoiceScene = "world_combat:move_alluringvoice";
@@ -42,6 +20,12 @@ namespace PokemonSkills {
         for (let index = 0; index < names.length; index++) {
             const value = stages[names[index]] || 0;
             if (value > 0) total += value;
+        }
+        total += MobEffects.levels(world, actor, "beneficial");
+        // 普通生物正追击、玩家刚命中过人时也会被歌声扰乱；强化仍按实际层数延长混乱。
+        if (total === 0 && String(actor.domain()) !== "cobblemon") {
+            const body = world.observe(actor);
+            if (body && body.attacking() !== null || DamageSemantics.recentAttack(world, actor, 80) !== null) total = 1;
         }
         return total;
     }
@@ -141,10 +125,11 @@ namespace PokemonSkills {
     ]);
 
     describe(alluringvoiceId, [
-        { key: "description.0", values: ["voice", "reach", "angle"] },
+        { key: "description.0", values: ["voice", "reach", "angle", "maxTargets"] },
         { key: "description.1", values: ["confuseBase", "confusePerStage", "fumble"] },
         { key: "echo.on", values: [], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
         { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
+        { key: "world", values: [] },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.voice"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.voice"] }

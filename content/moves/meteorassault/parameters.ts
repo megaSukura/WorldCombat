@@ -69,7 +69,7 @@ namespace PokemonSkills {
     defineDamage("meteorassault", "smash", { defenceCoefficient: 0.0052, rationale: "格斗重击对防御穿透略强，多段命中让攻击差更明显。" }, {});
 
     describe("meteorassault", [
-        { key: "description.0", values: ["smash", "swings"] },
+        { key: "description.0", values: ["smash","swings"] },
         { key: "description.1", values: ["reach", "arc", "interval"] },
         { key: "description.2", values: ["exhaust"] },
         { key: "description.3", values: ["charge"] }

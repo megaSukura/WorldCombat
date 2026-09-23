@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.fling.summary": "Hurl the held item at the target: power follows its weight, effects follow its kind, and it stays in the world where it lands.",
+  "worldcombat.skill.fling.summary": "Hurl the held item at the target: power follows its weight and effects follow its kind; it is spent from your hand and by default stays where it lands.",
   "worldcombat.skill.fling.use.0": "Ranged item throw",
   "worldcombat.skill.fling.use.1": "Hand a Flame Orb or Poison Barb to the foe",
   "worldcombat.skill.fling.use.2": "Give a Berry back to the opponent",
   "worldcombat.skill.fling.description.0": "Hurls the held item at the target for %1$s Dark physical damage; the item's fling weight sets the power.",
-  "worldcombat.skill.fling.description.1": "Throws within %1$s blocks after %2$s s; the item's effect lands on hit (a Berry is eaten by the target, a Flame Orb burns, a Poison Barb poisons, a King's Rock flinches).",
-  "worldcombat.skill.fling.description.2": "By default the item is left at the landing point and can be picked up after %1$s s; when off it shatters and leaves nothing, for x1.2 power.",
+  "worldcombat.skill.fling.description.1": "Throws within %1$s blocks after %2$s s; the item's effect resolves on hit: a Berry is eaten by the target and heals it about 12.5%% of its maximum health, a Flame Orb burns, a Poison Barb poisons, a Toxic Orb badly poisons, a Light Ball paralyzes (the target may be immune), and a King's Rock or Razor Fang interrupts an interruptible action.",
+  "worldcombat.skill.fling.description.2": "The item is spent from your hand as it leaves. By default it stays, dropping where it lands, and can be picked up by anyone after %1$s s; turned off it shatters on impact, leaves nothing, and hits at x1.2 power.",
   "worldcombat.skill.fling.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.fling.value.throw": "Power",
   "worldcombat.skill.fling.value.item": "Fling power",
@@ -17,7 +17,7 @@
   "worldcombat.skill.fling.value.bursts": "Debris count",
   "worldcombat.skill.fling.value.pickup": "Pickup delay",
   "worldcombat.skill.fling.preference.leave": "Leave the item",
-  "worldcombat.skill.fling.preference.leave.help": "On: the item drops where it lands and can be picked up or used later, at the item's base power; Off: it shatters on impact for x1.2 power and leaves nothing. Both directions trade power for what stays behind.",
+  "worldcombat.skill.fling.preference.leave.help": "On: the item drops where it lands and can be picked up or used later, at normal power; Off: it shatters on impact, leaves nothing, and hits at x1.2 power.",
   "worldcombat.skill.fling.preference.ai.maxChase": "Throw distance",
   "worldcombat.skill.fling.preference.ai.maxChase.help": "Only throw within this distance; farther targets are left to the shared approach logic.",
   "worldcombat.skill.fling.preference.ai.leaveStation": "Leave station",
@@ -27,5 +27,6 @@
   "world_combat.move.fling.text.burn": "Burned",
   "world_combat.move.fling.text.paralysis": "Paralyzed",
   "world_combat.move.fling.text.poison": "Poisoned",
-  "world_combat.move.fling.text.toxic": "Badly poisoned"
+  "world_combat.move.fling.text.toxic": "Badly poisoned",
+  "worldcombat.skill.fling.description.projectile": "The item flies in an arc at %1$s blocks per tick with a %2$s-block hit radius, and knocks the target back %3$s blocks on a hit."
 }

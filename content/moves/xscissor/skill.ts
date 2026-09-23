@@ -45,7 +45,7 @@ namespace PokemonSkills {
         id: xscissorId,
         cooldownParameter: "recharge",
         name: "X-Scissor",
-        description: "The user slashes at the target by crossing its scythes, claws, or the like as if they were a pair of scissors.",
+        description: "两把镰刀像剪刀一样从左右合拢：左刃先扫过一侧半扇面，右刃紧随其后扫过另一侧，站在中轴上的目标被两刃同时剪中、结算两次，落点交叉成一个 X。合剪更集中、第二刃还带加成；开剪覆盖更宽、冷却更短。",
         uses: ["两刃从左右合拢成一把剪刀", "把目标框在中轴上完整剪断", "两拍、两侧、中轴吃两次"],
         kind: "enemy",
         range: 2.5,

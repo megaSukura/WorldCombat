@@ -6,7 +6,7 @@
   "worldcombat.skill.nastyplot.description.0": "Nasty Plot raises Special Attack by %1$s stages.",
   "worldcombat.skill.nastyplot.wary.on": "Targeting a living foe: Sp. Atk +2 and a longer scheme, but the scheme only works with a non-friendly living body in front of you.",
   "worldcombat.skill.nastyplot.wary.off": "Behind closed doors: Sp. Atk +1, usable at any time (even before a fight) with a shorter cooldown; strong-but-restricted against weak-but-always, each has its moment.",
-  "worldcombat.skill.nastyplot.description.1": "The scheme reaches %1$s blocks and lasts about %2$s.",
+  "worldcombat.skill.nastyplot.description.1": "The scheme reaches %1$s blocks and lasts about %2$s; when the window ends or is cleared, the Sp. Atk stages this scheme raised are taken back. You hold position while casting.",
   "worldcombat.skill.nastyplot.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.nastyplot.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.nastyplot.growth.0": "At level %1$s the scheme lasts %2$s and the cooldown drops to %3$s s.",

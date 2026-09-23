@@ -48,10 +48,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: steamrollerId,
         cooldownParameter: "recharge",
         name: "Steamroller",
-        description: "The user crushes its target by rolling over the target with its rolled-up body. This may also make the target flinch.",
+        description: "把自己揉成一团滚出去，从一整排对手身上碾过去：滚到谁身上谁就吃一记压扁式伤害、被推着往前，还可能被压得一愣。滚过之后地面留下一道会自己恢复的平痕，是本组最便宜、冷却最短的一记。",
         uses: ["一次碾过一整排敌人", "低消耗低冷却地连续压场", "滚出一条被人踩出来的平痕"],
         kind: "enemy",
         range: 4.0,

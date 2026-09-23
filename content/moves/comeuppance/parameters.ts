@@ -40,8 +40,7 @@ namespace PokemonSkills {
         if (!world || !actor || !world.valid(actor)) return null;
         var record = comeuppanceLedger[String(actor.ref())];
         if (!record || !(record.amount > 0)) return null;
-        if (String(actor.domain()) !== "cobblemon") return record;
-        var window = p(comeuppanceId, "window", world);
+        var window = p(comeuppanceId, "window", String(actor.domain()) === "cobblemon" ? world : undefined);
         return world.tick() - record.tick <= window ? record : null;
     }
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
@@ -150,8 +149,9 @@ namespace PokemonSkills {
     ]);
 
     describe(comeuppanceId, [
-        { key: "description.0", values: ["refund", "window"] },
-        { key: "description.1", values: ["shadowRange", "shadowSpeed", "stalkDelay", "collisionRadius", "capFraction"] },
+        { key: "description.0", values: ["refund","window"] },
+        { key: "description.1", values: ["shadowRange","shadowSpeed","stalkDelay","collisionRadius","capFraction"] },
+        { key: "description.ledger", values: [] },
         { key: "grudge.on", values: [], when: function (context) { return read(context.detail.values, ["grudge"]) === true; } },
         { key: "grudge.off", values: [], when: function (context) { return read(context.detail.values, ["grudge"]) !== true; } },
         { key: "timing", values: ["range", "brace", "settle", "pp", "recharge"] },

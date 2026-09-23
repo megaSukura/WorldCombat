@@ -101,10 +101,11 @@ namespace PokemonSkills {
     ]);
 
     describe(focusEnergyId, [
-        { key: "description.0", values: ["edge", "grasp"] },
+        { key: "description.0", values: ["edge","grasp"] },
         { key: "deep.on", values: ["tempo", "wait"], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "description.1", values: ["ramp"] },
+        { key: "description.2", values: [] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.grasp"] },

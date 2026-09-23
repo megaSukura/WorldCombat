@@ -3,7 +3,7 @@
   "worldcombat.skill.withdraw.use.0": "Eat a burst: pull in and let the shell block the incoming hits one by one",
   "worldcombat.skill.withdraw.use.1": "When focused, stay rooted and spend shell charges to buy allies time",
   "worldcombat.skill.withdraw.use.2": "Take a short window to raise Defense before poking back out",
-  "worldcombat.skill.withdraw.description.0": "Shelled: Defense +%1$s stages, the shell blocks the next %2$s hostile hits outright, for about %3$s.",
+  "worldcombat.skill.withdraw.description.0": "Shelled: Defense +%1$s stages, and the shell blocks the next %2$s hits from enemies outright, for about %3$s.",
   "worldcombat.skill.withdraw.description.1": "While shut you cannot move.",
   "worldcombat.skill.withdraw.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.withdraw.deep.on": "Deep dive: thicker shell, one more block, lasts longer, at the cost of a slower close, a longer cooldown and being rooted longer.",
@@ -28,5 +28,6 @@
   "world_combat.move.withdraw.text.seal": "Withdraw (Defense +%1$s, %2$s blocks)",
   "world_combat.move.withdraw.text.block": "Shell blocked a hit (%1$s left)",
   "world_combat.move.withdraw.text.open": "Shell opened",
-  "effect.world_combat.withdraw_shell": "Shell"
+  "effect.world_combat.withdraw_shell": "Shell",
+  "worldcombat.skill.withdraw.description.shell": "The shell only stops attacks from enemies, not self-inflicted or environmental damage; when its hits run out or its time ends the shell cracks open and the Defence it raised is taken back."
 }

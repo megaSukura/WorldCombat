@@ -1,25 +1,15 @@
-/**
- * 泄愤 / lashout 的出手方式。
- *
- * 核心念头：被削弱的怒气一直憋着，挑一个目标把这一口全喷出去——身上还带着负等级时威力翻倍。
- *
- * 三幕：
- *   蓄（windup，提交前）：脚下腾起暗红怒气，身上每一条负等级都缠成一缕黑气（present fume）。
- *   喷（execute）：欺身撞上目标，按受挫等级与物攻结算 lashout；自身仍有负等级时翻倍，画面换成暗红爆。
- *   泄（vent）：命中后从最负的一项起消掉负等级；开启宣泄时一次清空，并把怒气转成一段物攻提升。
- *
- * 与同族分开：以牙还牙记的是「自己被打过」，泄愤憋的是「自己被削弱」；泄愤命中后还会把怒气泄出去。
- */
+/** lashout：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     const lashoutVentText = "world_combat.move.lashout.text.vent";
     const lashoutHitText = "world_combat.move.lashout.text.hit";
     const lashoutRageText = "world_combat.move.lashout.text.rage";
 
     define({
+        freeMovement: true,
         id: lashoutId,
         cooldownParameter: "recharge",
         name: "Lash Out",
-        description: "把被削弱的怒气朝目标一次喷出：自身任一项能力等级为负时威力翻倍；命中后消掉负等级，开启宣泄时把怒气化作攻击提升。",
+        description: "受到削弱时发起更重的冲撞。负面能力等级和有害药水都会激起怒气；命中后先消减负面等级，再减轻有害药水。",
         uses: ["被降能力后立刻重击", "把积压的负等级一次泄掉", "用怒气换一段攻击提升"],
         kind: "enemy",
         range: 3.0,

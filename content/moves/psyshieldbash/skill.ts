@@ -15,10 +15,11 @@ namespace PokemonSkills {
     const psyshieldMissText = "world_combat.move.psyshieldbash.text.miss";
 
     define({
+        freeMovement: true,
         id: "psyshieldbash",
         name: "Psyshield Bash",
-        description: "Cloaking itself in psychic energy, the user slams into the target. This also boosts the user's Defense stat.",
-        uses: ["带盾撞人并顺手加固自己", "在被打之前先升一级防御", "用厚壳正面顶开一个目标"],
+        description: "把意念编成一层护盾裹住全身，带盾沿瞄准方向冲撞：护盾成形的瞬间就加固使用者的防御（撞空也照拿），撞实造成接触伤害并把目标顶开；瞄准可能偏开。",
+        uses: ["带盾撞人并顺手加固自己", "在挨打之前先升防御", "用厚壳正面顶开一个目标"],
         kind: "enemy",
         range: 4,
         maxRange: 6,

@@ -17,7 +17,7 @@ namespace PokemonSkills {
         id: electroballId,
         cooldownParameter: "recharge",
         name: "Electro Ball",
-        description: "The user hurls an electric orb at the target. The faster the user is than the target, the greater the move's power.",
+        description: "把「自己比对手快多少」充进一颗电团远投出去：速度比越大，电团越大越亮、撞上炸得越狠。它是陀螺球的反方向——同一台秤，这次称的是自己的速度优势，并把它远远送出去。",
         uses: ["自己比对手快时的远距离重炮", "在对手够不到的距离先手开火", "用速度比把电团越充越大"],
         kind: "enemy",
         range: 8,

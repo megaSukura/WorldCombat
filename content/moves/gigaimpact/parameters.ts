@@ -87,7 +87,7 @@ namespace PokemonSkills {
 
     describe("gigaimpact", [
         { key: "description.0", values: ["crash"] },
-        { key: "description.1", values: ["push", "exhaust"] },
+        { key: "description.1", values: ["push","exhaust"] },
         { key: "description.2", values: ["lunge", "speed", "collisionRadius", "charge"] }
     ]);
 }

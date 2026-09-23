@@ -115,9 +115,10 @@ namespace PokemonSkills {
     ]);
 
     describe(leafbladeId, [
-        { key: "description.0", values: ["edge", "reach"] },
+        { key: "description.0", values: ["edge","reach"] },
         { key: "description.1", values: ["span", "echo"] },
         { key: "description.2", values: ["sever"] },
+        { key: "description.additional", values: [] },
         { key: "twohand.on", values: [], when: function (context) { return read(context.detail.values, ["twohand"]) === true; } },
         { key: "twohand.off", values: [], when: function (context) { return read(context.detail.values, ["twohand"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

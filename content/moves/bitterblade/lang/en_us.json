@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.bitterblade.summary": "Drain life with a fiery slash. Damage increases with the user’s missing health.",
-  "worldcombat.skill.bitterblade.description.0": "The slash deals about %1$s contact damage; the more health the user has lost, the deeper the cut. The target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.bitterblade.description.1": "The arc opens %1$s degrees and reaches %2$s blocks (also the real range), with a %3$s block blade reach.",
+  "worldcombat.skill.bitterblade.summary": "Sweeps a fiery arc of regret through everything in front, hitting every enemy in it and siphoning the wounds back; the more health the user has lost, the heavier the cut.",
+  "worldcombat.skill.bitterblade.description.0": "The slash deals about %1$s contact damage to every enemy caught in the arc; the more health the user has lost, the deeper the cut. The target's defence, type and crits are applied on the hit.",
+  "worldcombat.skill.bitterblade.description.1": "The arc opens %1$s degrees and reaches %2$s blocks (also the real range), with a %3$s block blade height.",
   "worldcombat.skill.bitterblade.description.2": "%1$s of the damage dealt is restored to the user, and more while wounded.",
   "worldcombat.skill.bitterblade.sweep.on": "Sweep: a wider, longer arc that catches everything in front, but each target is hit lighter, siphons less and recovery is slower.",
   "worldcombat.skill.bitterblade.sweep.off": "Straight cut: a narrow, deep arc that hits one target harder, siphons more and comes out faster.",

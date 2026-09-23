@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.obstruct.summary": "Raises a spiked barricade that fully blocks attacks by a total pool; a contact attack sharply lowers the attacker's Defence. Repeated use tends to fail.",
-  "worldcombat.skill.obstruct.description.0": "The barricade lasts %1$s and holds %2$s points, lowering contact attackers by %3$s levels; higher Defence makes it thicker and longer.",
+  "worldcombat.skill.obstruct.summary": "Raise a barricade and root yourself in place: it fully blocks enemy damage up to a pool, and contact attackers lose a lot of Defence. Using it again in quick succession tends to fail.",
+  "worldcombat.skill.obstruct.description.0": "The barricade lasts %1$s and holds %2$s points, fully blocking enemy damage until spent and shattering; anything beyond the remaining pool passes through. A contact attacker loses %3$s Defence stages, once per foe.",
   "worldcombat.skill.obstruct.description.1": "Raise %1$s, cooldown %2$s.",
-  "worldcombat.skill.obstruct.description.2": "Repeat-use failure rate %1$s; the barbed/reinforced trade-off is the %2$s setting.",
+  "worldcombat.skill.obstruct.description.2": "Repeat-use failure rate %1$s; barbed adds +1 to the contact Defence drop with x0.75 pool, x0.85 duration and 6-tick recovery; reinforced gives x1.2 pool, x1.15 duration and 10-tick recovery.",
   "worldcombat.skill.obstruct.use.0": "Bait a melee foe onto the barricade",
   "worldcombat.skill.obstruct.use.1": "Soften a foe before your follow-up",
-  "worldcombat.skill.obstruct.use.2": "Hold a narrow gap and force a detour",
+  "worldcombat.skill.obstruct.use.2": "Plant yourself in a chokepoint and tank a volley",
   "worldcombat.skill.obstruct.value.raise": "Raise time",
   "worldcombat.skill.obstruct.value.window": "Barricade duration",
   "worldcombat.skill.obstruct.value.capacity": "Barricade pool",
@@ -19,5 +19,6 @@
   "worldcombat.skill.obstruct.preference.ai.range.help": "Raise once a threat enters this range. Larger sets up earlier but may waste the cast; smaller saves PP but bets the foe will close in.",
   "world_combat.move.obstruct.text.block": "Barricade blocked %1$s (left %2$s)",
   "world_combat.move.obstruct.text.punish": "Defence -%1$s",
-  "world_combat.move.obstruct.text.shatter": "The barricade shattered"
+  "world_combat.move.obstruct.text.shatter": "The barricade shattered",
+  "worldcombat.skill.obstruct.description.hold": "While the barricade stands the user is rooted in place and cannot move; the user's own damage (falls, burns) does not drain it."
 }

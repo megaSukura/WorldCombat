@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.aquacutter.summary": "把水压成一道笔直、极快、细窄的水线喷出去，像刀刃一样切开沿途的对手：切中的目标各吃一记切斩并被溅湿，一道水线最多贯穿好几个。它是四记里最快、最直、最窄的一击，暴击率比同族高一档。",
-  "worldcombat.skill.aquacutter.description.0": "水线造成 %1$s 的切斩伤害，且更容易击中要害。",
+  "worldcombat.skill.aquacutter.description.0": "被水线切中的每个目标受到一次约 %1$s 点切斩伤害，且更容易击中要害。",
   "worldcombat.skill.aquacutter.description.1": "水线以 %1$s 格每刻喷出，射程 %2$s 格，判定半径 %3$s 格。",
-  "worldcombat.skill.aquacutter.description.2": "一道水线最多切穿 %1$s 个对手，被切中的湿身 %2$s。",
+  "worldcombat.skill.aquacutter.description.2": "一道水线最多切穿 %1$s 个对手；被切中的目标带上湿身标记 %2$s，之后读取湿身的招式会把它当作已湿（已经带着湿身的目标不会刷新时长）。",
   "worldcombat.skill.aquacutter.lance.on": "当前为贯流式：威力更高、多切穿一个目标、水线更细，但喷得更慢、冷却更久。",
   "worldcombat.skill.aquacutter.lance.off": "当前为散射式：喷得更快、判定更宽、冷却更短，但威力略低。",
   "worldcombat.skill.aquacutter.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

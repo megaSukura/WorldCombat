@@ -86,9 +86,9 @@ namespace PokemonSkills {
     ]);
 
     describe(octoId, [
-        { key: "description.0", values: ["reach", "grip", "bindTicks"] },
+        { key: "description.0", values: ["reach","bindTicks","grip"] },
         { key: "description.1", values: ["interval"] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
+        { key: "description.2", values: ["tempo","aftercast","recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["coil"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["coil"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

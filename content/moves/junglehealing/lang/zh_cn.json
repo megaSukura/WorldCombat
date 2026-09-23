@@ -2,12 +2,12 @@
   "worldcombat.skill.junglehealing.summary": "藤蔓与嫩芽围住自己和身边伙伴，回复生命并清除有害状态效果。脚下的自然地面提高回复与范围；深根进一步加强这两项，起手与冷却也更长。",
   "worldcombat.skill.junglehealing.use.0": "给身边的一队伙伴回血并一起解状态",
   "worldcombat.skill.junglehealing.use.1": "在自然地面上一次净化整组人",
-  "worldcombat.skill.junglehealing.description.0": "藤蔓缠上时，自己与伙伴各回复其最大生命的 %1$s；亲密度越高丛林越亲近，脚下的自然地面再滋养一层。",
+  "worldcombat.skill.junglehealing.description.0": "藤蔓缠上时，圈内自己与每个伙伴各自回复其最大生命的 %1$s，并清除身上的有害状态效果（有益与中性效果保留）；亲密度越高丛林越亲近，脚下的自然地面再滋养一层。",
   "worldcombat.skill.junglehealing.description.1": "藤蔓作用到 %1$s 格。",
   "worldcombat.skill.junglehealing.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.junglehealing.stance.deeproot": "深根：藤蔓半径 ×1.2、回复 ×1.1，代价是起手 +3 刻、冷却更久——适合一次救一整队。",
   "worldcombat.skill.junglehealing.stance.shallow": "浅根：起手快、冷却短，圈更小——适合快速净身。",
-  "worldcombat.skill.junglehealing.timing": "以自身为心施放，准备 %2$s 秒后消耗 %4$s PP；收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.junglehealing.timing": "以自身为心施放，准备 %1$s 秒后消耗 %3$s PP；收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.junglehealing.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.junglehealing.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.junglehealing.value.heal": "回复比例",
@@ -24,5 +24,6 @@
   "worldcombat.skill.junglehealing.preference.ai.healBelow.help": "自己或伙伴生命低于该比例才把丛林治疗排进救助计划；调低更倾向继续输出，调高一有人掉血就放。",
   "worldcombat.skill.junglehealing.preference.ai.maxChase": "施救距离",
   "worldcombat.skill.junglehealing.preference.ai.maxChase.help": "目标离自己这个距离以内才考虑唤丛林；调小只在身边时救，调大愿意靠过去。",
-  "world_combat.move.junglehealing.text.embrace": "丛林缠上，回复 %1$s，净化 %2$s 项"
+  "world_combat.move.junglehealing.text.embrace": "丛林缠上，回复 %1$s，净化 %2$s 项",
+  "worldcombat.skill.junglehealing.description.condition": "圈内没有人受伤、也没有人带着有害状态时不会被唤出；脚下是自然地面（草、土、苔、泥一类）时，回复比例再 +5 个百分点、藤蔓半径再 +0.5 格，深根会把这些一并放大。"
 }

@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.slam.summary": "Raise a long tail, body or vine high and bring it down where the target stands. The mark is fixed the moment it is raised - a circle lights up on the ground, so standing still takes the full blow and stepping aside before it lands dodges it. The heaviest single hit of the family, and the slowest and easiest to whiff.",
-  "worldcombat.skill.slam.use.0": "Drop the heaviest single hit on a stationary or pinned target",
+  "worldcombat.skill.slam.use.0": "Drop the family's heaviest hit on a stationary or pinned target",
   "worldcombat.skill.slam.use.1": "Lead the landing to blast a target away from a doorway",
   "worldcombat.skill.slam.use.2": "Finish a target already held in place",
   "worldcombat.skill.slam.description.0": "A landed slam deals about %1$s contact damage with a %2$s block crater; every non-ally inside takes it.",
-  "worldcombat.skill.slam.description.1": "Picks a mark within %1$s blocks and lands %2$s seconds later (that window is your chance to step aside); a struck target is blasted about %3$s blocks away from the mark.",
+  "worldcombat.skill.slam.description.1": "Locks onto a target within %1$s blocks and raises the limb; the mark is fixed where the target stood at that moment and comes down %2$s seconds later, so stepping aside in that window dodges it. A struck target is blasted about %3$s blocks away from the mark.",
   "worldcombat.skill.slam.heavy.on": "Heavy form: a harder slam with a bigger crater that blasts further, but it falls slower and is easier to dodge, with a longer recovery and cooldown.",
   "worldcombat.skill.slam.heavy.off": "Quick form: falls and comes out faster and is easier to land on a moving target, but hits slightly softer with a smaller crater.",
   "worldcombat.skill.slam.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

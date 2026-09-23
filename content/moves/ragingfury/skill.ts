@@ -153,10 +153,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: ragingfuryId,
         cooldownParameter: "recharge",
         name: "Raging Fury",
-        description: "一段一段朝前喷火猛冲：火线里的敌人被烧中、点着并被推开，冲过的落点留下一片会持续点燃的余烬；冲完自己陷入恍惚，出手可能被打散。烈焰式火场更大更久，但冲得更短、更慢。",
+        description: "一段一段朝前喷火猛冲：火线里的敌人被烧中、点着并被推开，冲过的落点留下一片会持续点燃的余烬；冲完自己陷入恍惚，出手可能被打散。",
         uses: ["一路喷火扫过一条线上的敌人并点着它们", "在要道落下一片持续燃烧的火场", "把贴身的对手烧开并迫使其离开原地"],
         kind: "enemy",
         range: 4.4,

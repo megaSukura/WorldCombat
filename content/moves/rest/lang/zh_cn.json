@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.rest.summary": "就地睡下，睡着期间无法行动；睡满后回复全部缺失的生命、治愈所有异常并获得短暂加速，中途被打醒只能按睡到的比例回复、还会迟缓一阵。",
+  "worldcombat.skill.rest.summary": "就地睡下，睡着期间无法行动；睡满后回复全部缺失的生命、治愈身上全部异常并获得移动加速，中途被任何伤害打醒只按睡到的比例回复，但异常仍会治愈、还会迟缓一阵。",
   "worldcombat.skill.rest.use.0": "在安全窗口里回满",
   "worldcombat.skill.rest.use.1": "清掉身上的异常状态",
   "worldcombat.skill.rest.use.2": "睡满后带着加速重新投入战斗",
   "worldcombat.skill.rest.description.0": "睡下 %1$s，睡满后回复缺失生命的 %2$s；中途被任何伤害惊醒会按已睡比例打折。",
-  "worldcombat.skill.rest.description.1": "睡满一觉还会获得 %1$s 的移动加速；被提前惊醒则没有这个奖励、反而会迟缓 %2$s。",
+  "worldcombat.skill.rest.description.1": "睡满一觉还会获得 %1$s 的移动加速（+20%%）；被提前惊醒则没有这个奖励，反而会迟缓 %2$s（移动速度下降）。",
   "worldcombat.skill.rest.stance.deep": "沉睡：睡满整段、回满全部缺失生命，并留下神清气爽，冷却较长。",
   "worldcombat.skill.rest.stance.nap": "小憩：只睡约一半时间、只回约六成，没有神清气爽，换来冷却乘以 0.8 与更短的收招。",
-  "worldcombat.skill.rest.timing": "自身招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.rest.timing": "自身招式，准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.rest.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.rest.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.rest.value.sleepTicks": "睡眠时长",
@@ -24,5 +24,6 @@
   "world_combat.move.rest.text.sleep": "沉沉睡去",
   "world_combat.move.rest.text.wake": "休息完毕",
   "world_combat.move.rest.text.groggy": "被惊醒",
-  "world_combat.move.rest.text.refreshed": "神清气爽"
+  "world_combat.move.rest.text.refreshed": "神清气爽",
+  "worldcombat.skill.rest.description.additional": "只有在有伤或身上带异常时才能入睡；无论睡满还是被惊醒，都会清掉身上的全部异常，回复量则按睡到的比例计算。"
 }

@@ -90,11 +90,11 @@ namespace PokemonSkills {
 
     describe("seismictoss", [
         { key: "description.0", values: ["damage"] },
-        { key: "description.1", values: ["seize", "holdTicks", "collisionRadius"] },
+        { key: "description.1", values: ["seize","holdTicks","collisionRadius"] },
         { key: "description.2", values: ["hurlXZ", "hurlUp", "slamDelay"] },
         { key: "slam.on", values: ["pinTicks"], when: function (context) { return read(context.detail.values, ["slam"]) === true; } },
         { key: "slam.off", values: [], when: function (context) { return read(context.detail.values, ["slam"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.pinTicks"] }
     ]);
 }

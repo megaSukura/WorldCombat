@@ -1,13 +1,13 @@
 {
   "effect.world_combat.futuresight_seal": "Foreseen",
-  "worldcombat.skill.futuresight.summary": "Sends a hunk of its own psychic energy to hover over the target; after a delay it falls for special damage. During the delay the foe can read it and heal or reposition first.",
+  "worldcombat.skill.futuresight.summary": "Sends a mote of its own psychic energy to hover over the target and follow it; after a delay it falls for one special hit. The foe can use the delay to heal or buff, but cannot dodge it by moving, and clearing the mark will not cancel it.",
   "worldcombat.skill.futuresight.use.0": "Lock a distant target before the fight starts",
   "worldcombat.skill.futuresight.use.1": "Force the foe to spend the delay reacting",
   "worldcombat.skill.futuresight.use.2": "Set up an unavoidable strike from a safe distance",
-  "worldcombat.skill.futuresight.description.0": "The psychic mote falls after %2$s and deals special damage at %1$s base power.",
+  "worldcombat.skill.futuresight.description.0": "The psychic mote falls after %2$s and deals about %1$s special damage to the locked target.",
   "worldcombat.skill.futuresight.description.1": "The mote hovers above the target and can lock targets within %1$s blocks.",
   "worldcombat.skill.futuresight.description.2": "Prepare %1$s s, recover %2$s s, cooldown %3$s s.",
-  "worldcombat.skill.futuresight.prolonged.on": "Delay: the landing is x1.4 later and x1.2 stronger, but the foe has more time to heal, buff defence or pull away.",
+  "worldcombat.skill.futuresight.prolonged.on": "Delay: the landing is x1.4 later and x1.2 stronger, but the foe has more time to heal or buff.",
   "worldcombat.skill.futuresight.prolonged.off": "Quick: the landing is x0.75 sooner and x0.85 weaker, harder to react to.",
   "worldcombat.skill.futuresight.timing": "Castable on enemies within %1$s blocks; commits after %2$s s and costs %4$s PP; recovers for %3$s s and starts a %5$s s cooldown.",
   "worldcombat.skill.futuresight.growth.0": "At level %1$s the psychic power rises to %2$s and the landing delay extends to %3$s.",
@@ -20,10 +20,11 @@
   "worldcombat.skill.futuresight.value.settle": "Recover",
   "worldcombat.skill.futuresight.value.recharge": "Cooldown",
   "worldcombat.skill.futuresight.preference.prolonged": "Delay the strike",
-  "worldcombat.skill.futuresight.preference.prolonged.help": "On (Delay): the landing is x1.4 later and x1.2 stronger, but the foe has more time to heal, buff defence or pull away. Off (Quick): x0.75 sooner and x0.85 weaker, harder to react to.",
+  "worldcombat.skill.futuresight.preference.prolonged.help": "On (Delay): the landing is x1.4 later and x1.2 stronger, but the foe has more time to heal or buff. Off (Quick): x0.75 sooner and x0.85 weaker, harder to react to.",
   "worldcombat.skill.futuresight.preference.ai.maxChase": "Lock distance",
-  "worldcombat.skill.futuresight.preference.ai.maxChase.help": "Future Sight is considered only within this distance; a larger value locks onto more distant foes.",
+  "worldcombat.skill.futuresight.preference.ai.maxChase.help": "Future Sight is considered only within this distance, and only for a target not already bearing the foreseen mark; a larger value locks onto more distant foes.",
   "world_combat.move.futuresight.text.send": "Future Sight: lands in %1$s s",
   "world_combat.move.futuresight.text.hit": "The vision strikes %1$s",
-  "world_combat.move.futuresight.text.fizzle": "The vision fizzles"
+  "world_combat.move.futuresight.text.fizzle": "The vision fizzles",
+  "worldcombat.skill.futuresight.description.3": "The target is marked as Foreseen for the delay; the mark only records the lock - it neither slows nor damages, and the companion will not cast Future Sight on a target already bearing it. The mote keeps following the target, so running does not dodge it; when the delay ends it strikes the target's current position, or fizzles if the target is gone. Clearing the mark does not cancel the mote."
 }

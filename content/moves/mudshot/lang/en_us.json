@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.mudshot.summary": "Press a blob of wet mud flat and hurl it skimming the ground: it flies flat and wide, bursts at the target's feet, and the spray coats the legs of every foe in the splash, dropping their Speed; a patch of mud stays where it lands. Wide Spray coats a broader, deeper-slow area for a lighter and shorter cast.",
-  "worldcombat.skill.mudshot.description.0": "A living hit takes %1$s mud damage and bursts within %2$s blocks; coated legs drop %3$s Speed stages (other combatants get it on their movement speed).",
+  "worldcombat.skill.mudshot.description.0": "The clod bursts where it lands: a living hit deals about %1$s special damage to the main target, and every foe caught in the %2$s block spray loses %3$s Speed stage(s) (other combatants take it on their movement speed); those caught only by the spray are mired but take none of that damage.",
   "worldcombat.skill.mudshot.description.1": "The clod flies at %1$s blocks per tick, out to %2$s blocks, with a %3$s block hit radius.",
-  "worldcombat.skill.mudshot.description.2": "The mired identity lasts %1$s and the mud patch on the ground lasts %2$s.",
+  "worldcombat.skill.mudshot.description.2": "The Speed a mired body loses stays through the encounter until the stat change is cleared or the encounter ends; the mired mark on the main target lasts %1$s and the wet patch on the ground lasts %2$s.",
   "worldcombat.skill.mudshot.wide.on": "Wide Spray: a broader splash, one more Speed stage and a longer-lived patch, at the cost of a lighter blow, shorter reach and a longer cooldown.",
   "worldcombat.skill.mudshot.wide.off": "Point cast: a heavier, longer, faster clod that only coats the small circle at its feet.",
   "worldcombat.skill.mudshot.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

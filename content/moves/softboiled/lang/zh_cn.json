@@ -3,11 +3,11 @@
   "worldcombat.skill.softboiled.use.0": "把回复留在身边慢慢取用",
   "worldcombat.skill.softboiled.use.1": "在安全位置产蛋再回来吃",
   "worldcombat.skill.softboiled.use.2": "把蛋让给受伤的伙伴",
-  "worldcombat.skill.softboiled.description.0": "产下一枚蛋，%2$s 后啄开，回复受益者最大生命的 %1$s；蛋在孵化前可以被敌人打碎。",
+  "worldcombat.skill.softboiled.description.0": "在脚边产下一枚蛋，%2$s 后啄开，回复受益者最大生命的 %1$s；蛋留在世界里、有 6 点生命，孵化前可以被敌人打碎。",
   "worldcombat.skill.softboiled.description.2": "起手 %1$s、收招 %2$s，随速度缩短。",
-  "worldcombat.skill.softboiled.stance.share": "分蛋：把蛋递给 %1$s 格内最近的一只受伤伙伴，他按自己最大生命的同一比例回复，代价是施法者拿不到这一口。",
-  "worldcombat.skill.softboiled.stance.self": "自食：蛋留给自己，孵化时回复自己最大生命的一半左右。",
-  "worldcombat.skill.softboiled.timing": "自身招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.softboiled.stance.share": "分蛋：范围内有受伤伙伴时才能发动；把蛋递给 %1$s 格内最近的一只受伤伙伴，他按自己最大生命的 %2$s 回复，代价是施法者拿不到这一口。",
+  "worldcombat.skill.softboiled.stance.self": "自食：自身生命不满时才能发动；蛋留给自己，孵化时按自己最大生命的 %1$s 回复。",
+  "worldcombat.skill.softboiled.timing": "自身招式，准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.softboiled.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.softboiled.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.softboiled.value.heal": "回复比例",
@@ -25,5 +25,6 @@
   "world_combat.move.softboiled.text.hatch": "蛋已啄开（+%1$s）",
   "world_combat.move.softboiled.text.shared": "蛋递给了伙伴（+%1$s）",
   "world_combat.move.softboiled.text.wasted": "蛋白费了",
-  "world_combat.move.softboiled.text.smashed": "蛋被打碎了"
+  "world_combat.move.softboiled.text.smashed": "蛋被打碎了",
+  "worldcombat.skill.softboiled.description.wasted": "孵化时受益者已离场或生命全满，这一口就作废。"
 }

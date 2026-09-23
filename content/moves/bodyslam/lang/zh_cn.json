@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.bodyslam.summary": "猛地跳起，用整个身体的重量砸向目标落点：范围内所有敌人受伤并被顶开，越重越可能把它们压麻；震地式摊大范围但单点更轻，压顶式相反。",
-  "worldcombat.skill.bodyslam.description.0": "座压命中造成 %1$s 的接触伤害。",
-  "worldcombat.skill.bodyslam.description.1": "落点半径 %1$s 格，被压中的目标有 %2$s%% 的概率陷入麻痹。",
-  "worldcombat.skill.bodyslam.description.2": "最多从 %1$s 格外起跳，跃起 %2$s 格高，落地把目标顶开 %3$s 格。",
+  "worldcombat.skill.bodyslam.description.0": "座压命中造成约 %1$s 的接触伤害。",
+  "worldcombat.skill.bodyslam.description.1": "落点半径 %1$s 格，范围内的每个敌人都会被压中；每个被压中的目标各有 %2$s%% 概率陷入麻痹。",
+  "worldcombat.skill.bodyslam.description.2": "最多从 %1$s 格外起跳，跃起 %2$s 格高；落点在起跳时锁定，飞行中走出落点的敌人可以躲过这一砸。落地时范围内的每个敌人各沿背离落点方向被顶开 %3$s 格。",
   "worldcombat.skill.bodyslam.use.0": "从上方压住一个目标",
   "worldcombat.skill.bodyslam.use.1": "把落点周围挤在一起的敌人一起震开",
   "worldcombat.skill.bodyslam.use.2": "用体重压出更高的麻痹机会",
@@ -20,5 +20,7 @@
   "worldcombat.skill.bodyslam.preference.ai.preferCrowd": "优先压人群",
   "worldcombat.skill.bodyslam.preference.ai.preferCrowd.help": "开启：目标周围挤着两个以上敌人时优先压顶（一发罩住多个）；关闭：只按威胁本身选目标。",
   "world_combat.move.bodyslam.text.hit": "压顶命中 %1$s 个目标",
-  "world_combat.move.bodyslam.text.miss": "砸空了"
+  "world_combat.move.bodyslam.text.miss": "砸空了",
+  "worldcombat.skill.bodyslam.description.paralysis": "陷入麻痹约 40 秒：期间移动速度减半，且每次出手有 25% 概率失手；电属性目标不会陷入麻痹。",
+  "worldcombat.skill.bodyslam.description.splash": "开启震地式时：落点更大、把敌人推得更开，但单点威力与压麻概率更低，起手、收招与冷却也更久；关闭时（压顶式）落点更小，单点威力与压麻概率更高。"
 }

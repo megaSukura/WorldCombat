@@ -1,10 +1,13 @@
 package dev.worldcombat.cobblemon.checks
 
 import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.api.moves.Moves
 import com.cobblemon.mod.common.api.pokemon.PokemonProperties
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.google.gson.JsonParser
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
 import dev.worldcombat.cobblemon.control.CompanionControl
 import dev.worldcombat.cobblemon.network.ContentReply
@@ -38,6 +41,12 @@ object NativeContentServerChecks {
     private var ownerLease: AutoCloseable? = null
     private var otherLease: AutoCloseable? = null
     private var retained: ContentRequestContext? = null
+    private var inspectionMoves = emptyList<String>()
+    private var inspectionIndex = 0
+    private var inspecting = false
+    private var inspectionRecalled = false
+    private var inspectedDetails = 0
+    private val inspectionFailures = mutableListOf<String>()
     private const val KEY = "checks:state"
 
     @JvmStatic fun install() {
@@ -73,6 +82,9 @@ object NativeContentServerChecks {
     @JvmStatic fun tick(server: MinecraftServer) {
         if (done || !CombatServices.CONTENT.ready()) return
         try {
+            // One real RPC per tick stays within RequestGate's 20 requests per 20 ticks.
+            // Keep the existing final epoch-reset checks pending until both contexts have completed.
+            if (inspecting) { inspectNextSkill(server); return }
             when (age++) {
                 0 -> {
                     val level = TestWorld.prepare(server)
@@ -149,6 +161,8 @@ object NativeContentServerChecks {
                         val details = com.google.gson.JsonParser.parseString(catalogue.data()).asJsonObject
                         val supported = details.getAsJsonArray("supportedMoves")
                         check(!supported.isEmpty) { "play profile installs no skills" }
+                        inspectionMoves = supported.map { it.asString }.sorted()
+                        check(inspectionMoves.distinct().size == inspectionMoves.size) { "Duplicate installed skill IDs" }
                         check(!catalogue.data().contains("\"light\"") && !catalogue.data().contains("\"maxLight\""))
                         println("P5CHECK play skill catalogue supports ${supported.size()} moves in the real native party UI channel; no light resource leaked")
                     }
@@ -197,6 +211,11 @@ object NativeContentServerChecks {
                     check(entity.getAttributeValue(dev.worldcombat.core.world.PublicAttributes.SKILL_HASTE) == 75.0)
                     println("P5CHECK public attributes: vanilla base/permanent/transient modifiers, recall/save and restored script values passed")
                     println("P5CHECK independent native action and real Minecraft effect consumption passed")
+                    if (inspectionMoves.isNotEmpty()) {
+                        entity.setNoAi(true)
+                        inspectionContext(false)
+                        inspecting = true
+                    }
                 }
                 90 -> {
                     val session = CompanionControl.session(player)
@@ -213,6 +232,85 @@ object NativeContentServerChecks {
             done = true
             ownerLease?.close(); otherLease?.close()
             println("P5CHECK FAIL native content ${error.message}"); error.printStackTrace()
+        }
+    }
+
+    private fun inspectionContext(recalled: Boolean) {
+        val context = ContentRequestContext(player, CombatServices.CONTENT.epoch(), individual, "{}")
+        try {
+            check((context.actor() == null) == recalled && (context.world() == null) == recalled) {
+                "Full skill inspection did not obtain its ${if (recalled) "recalled" else "live"} context"
+            }
+        } finally { context.close() }
+    }
+
+    /** Exercises the production focus handler, its parameter evaluators and the real owned-party response. */
+    private fun inspectNextSkill(server: MinecraftServer) {
+        val id = inspectionMoves[inspectionIndex]
+        val label = "$id/${if (inspectionRecalled) "recalled" else "live"}"
+        try {
+            check((individual.entity == null) == inspectionRecalled) { "$label entity context changed" }
+            individual.moveSet.clear()
+            individual.moveSet.setMove(0, checkNotNull(Moves.getByName(id)) { "$label native move missing" }.create())
+            val input = JsonObject().also { it.addProperty("op", "inspect"); it.addProperty("move", id) }
+            val reply = NativeContentChannels.process(player, ContentRequest(CompanionControl.session(player).id, ++sequence,
+                CombatServices.CONTENT.epoch(), server.tickCount.toLong(), "world_combat:skills", individual.uuid, input.toString()))
+            check(reply.code() == "ok") { "$label inspect returned ${reply.code()}: ${reply.data()}" }
+            val document = JsonParser.parseString(reply.data()).asJsonObject
+            check(!document.has("error")) { "$label inspect error: ${document["error"]}" }
+            val detail = document.getAsJsonArray("skills").map { it.asJsonObject }.single { it["id"].asString == id }
+            check(detail["detailsComplete"].asBoolean) { "$label did not return focused details" }
+            val prose = detail.getAsJsonObject("description")
+            val paragraphs = prose.getAsJsonArray("paragraphs")
+            val bindings = prose.getAsJsonObject("bindings")
+            check(!paragraphs.isEmpty) { "$label has no authored paragraphs" }
+            paragraphs.forEach { paragraph ->
+                check(paragraph.asJsonObject["key"].asString.isNotBlank()) { "$label blank paragraph key" }
+                paragraph.asJsonObject.getAsJsonArray("args").forEach { argument ->
+                    val binding = argument.asJsonObject["binding"].asString
+                    check(bindings.has(binding)) { "$label paragraph references missing binding $binding" }
+                }
+            }
+            bindings.entrySet().forEach { (key, binding) ->
+                check(binding.isJsonObject && binding.asJsonObject.has("value") && binding.asJsonObject.has("label")) {
+                    "$label malformed binding $key: $binding"
+                }
+            }
+            inspectFinite(detail, label)
+            inspectedDetails++
+        } catch (error: Exception) {
+            val failure = "$label: ${error.message}"
+            inspectionFailures += failure
+            println("P5CHECK detail error $failure")
+        }
+        inspectionIndex++
+        if (inspectionIndex % 128 == 0) println("P5CHECK focused details ${if (inspectionRecalled) "recalled" else "live"} $inspectionIndex/${inspectionMoves.size}")
+        if (inspectionIndex < inspectionMoves.size) return
+        if (!inspectionRecalled) {
+            individual.recall()
+            inspectionContext(true)
+            inspectionRecalled = true
+            inspectionIndex = 0
+        } else {
+            inspecting = false
+            check(inspectionFailures.isEmpty()) { "Full skill inspection failures (${inspectionFailures.size}): ${inspectionFailures.joinToString("; ")}" }
+            check(inspectedDetails == inspectionMoves.size * 2)
+            println("P5CHECK all ${inspectionMoves.size} installed moves returned full live/recalled focus documents ($inspectedDetails requests): paragraphs, bindings and finite values passed")
+        }
+    }
+
+    private fun inspectFinite(value: JsonElement, path: String) {
+        when {
+            value.isJsonObject -> value.asJsonObject.entrySet().forEach { (key, child) ->
+                if (key == "value") check(!child.isJsonNull) { "$path.$key is null (unresolved or non-finite binding)" }
+                inspectFinite(child, "$path.$key")
+            }
+            value.isJsonArray -> value.asJsonArray.forEachIndexed { index, child -> inspectFinite(child, "$path[$index]") }
+            value.isJsonPrimitive -> {
+                val primitive = value.asJsonPrimitive
+                if (primitive.isNumber) check(primitive.asDouble.isFinite()) { "$path is non-finite" }
+                if (primitive.isString) check(primitive.asString !in setOf("NaN", "Infinity", "+Infinity", "-Infinity")) { "$path is formatted non-finite" }
+            }
         }
     }
 

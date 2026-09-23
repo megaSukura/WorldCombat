@@ -132,9 +132,9 @@ namespace PokemonSkills {
     defineDamage(cometpunchId, "punch", {}, { contact: true, flags: { punch: true } });
 
     describe(cometpunchId, [
-        { key: "description.0", values: ["punch", "punches"] },
-        { key: "description.1", values: ["gap", "reach", "accuracy"] },
-        { key: "description.2", values: ["cone", "maxTargets", "push"] },
+        { key: "description.0", values: ["punch","punches"] },
+        { key: "description.1", values: ["gap","reach","accuracy"] },
+        { key: "description.2", values: ["cone","maxTargets","push"] },
         { key: "scatter.on", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) === true; } },
         { key: "scatter.off", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

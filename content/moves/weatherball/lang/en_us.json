@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.weatherball.summary": "Gather the sky's current weather into a ball and throw it: thunderstorm is Electric, rain is Water, clear sun is Fire, no weather is a plain ball; a chargeable sky doubles the power.",
+  "worldcombat.skill.weatherball.summary": "Gather the sky's current weather into a ball and throw it: thunderstorm is Electric, rain is Water, clear sun is Fire, sandstorm is Rock, snow is Ice, and no weather is a plain ball; a chargeable sky doubles the power.",
   "worldcombat.skill.weatherball.use.0": "Weather-reading ranged attack",
   "worldcombat.skill.weatherball.use.1": "Amplify power in a thunderstorm or clear sun",
-  "worldcombat.skill.weatherball.description.0": "Throws a ball carrying the current weather for %1$s special damage; the type follows the sky (thunder->Electric, rain->Water, sun->Fire, clear->Normal).",
-  "worldcombat.skill.weatherball.description.1": "After %1$s s of gathering, throw within %2$s blocks; a chargeable sky takes longer but doubles the power.",
+  "worldcombat.skill.weatherball.description.0": "Gather the current sky into a ball and throw it: a hit deals about %1$s special damage; the type follows the sky - thunder->Electric, rain->Water, sun->Fire, sandstorm->Rock, snow->Ice, and no weather->Normal.",
+  "worldcombat.skill.weatherball.description.1": "After %1$s s of gathering it is thrown in a straight line within %2$s blocks, bursting on the first target it hits; a chargeable sky takes longer but doubles the power.",
   "worldcombat.skill.weatherball.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.weatherball.value.orb": "Power",
   "worldcombat.skill.weatherball.value.charged": "Sky chargeable",
@@ -19,5 +19,6 @@
   "worldcombat.skill.weatherball.preference.ai.maxChase.help": "Only attack within this distance; farther targets are left to the shared approach logic.",
   "worldcombat.skill.weatherball.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.weatherball.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to throw; when off it stays put.",
-  "world_combat.move.weatherball.text.sky": "Weather Ball: %1$s"
+  "world_combat.move.weatherball.text.sky": "Weather Ball: %1$s",
+  "worldcombat.skill.weatherball.description.flight": "The ball flies at about %1$s blocks per tick with a hit radius of about %2$s blocks; with Pierce on it passes through up to 2 targets at x0.75 power each."
 }

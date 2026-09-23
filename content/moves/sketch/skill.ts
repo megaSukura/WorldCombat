@@ -1,14 +1,4 @@
-/**
- * 写生 / sketch —— 注册与动作。
- *
- * 两幕：
- *   起（windup，提交前）：施法者俯身观察目标，墨点与纸光在身前铺开；预检要求确实有可描的一手，否则不落笔、不花 PP。
- *   描（execute，提交后）：读目标最近一次放出的招式，把它永久写进「写生自己占的那一格」——原生的
- *       MoveSet.setMove，写进去的是那一手本身的完整 PP；写生随之从招式表里消失（这一格不再有写生）。
- *
- * 与模仿分开：模仿借来一手、到时会自己还回去；写生是刻进去的、只有一次，之后这个格子永远换成对手的招。
- * 因此写生用真实原生招式表的写入（原生对象，Rhino 直接调用公开方法），而不是临时的招层。
- */
+/** Permanently replace Sketch’s slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves. */
 namespace PokemonSkills {
     // KubeJS 服务端脚本暴露的原生类加载入口。声明在命名空间内，避免与共享 smoke 运行时的全局 Java 冲突。
     declare const Java: { loadClass(name: string): any };
@@ -28,7 +18,7 @@ namespace PokemonSkills {
 
     /** 目标最后使用的那一手，可被描摹时返回它的 id；否则返回 ""。 */
     export function sketchRead(world: CombatWorld, target: CombatActor): string {
-        if (String(target.domain()) !== "cobblemon") return "";
+        if (String(target.domain()) !== "cobblemon") return copiedNativeMove(world, target);
         const state = NativeEffects.read(world, target);
         if (!state.used) return "";
         if (!CobblemonCombat.moveTemplate(state.used)) return "";
@@ -63,7 +53,7 @@ namespace PokemonSkills {
         id: "sketch",
         cooldownParameter: "recharge",
         name: "Sketch",
-        description: "把对手刚用过的那一手当场描进写生所占的招式格，永久学会它；写生只有一次，用过即从招式表消失。",
+        description: "把对手最近一招永久写进写生所在的招式格；普通生物的已知攻击会转译为对应招式。",
         uses: ["永久学会对手的一手", "复制稀有的强化或回复", "把强攻收进自己的招式表"],
         kind: "enemy",
         range: 6,

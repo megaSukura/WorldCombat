@@ -3,7 +3,7 @@
   "worldcombat.skill.dig.use.0": "Reposition and strike",
   "worldcombat.skill.dig.use.1": "Area launch",
   "worldcombat.skill.dig.use.2": "Flank attack",
-  "worldcombat.skill.dig.description.0": "The eruption deals %1$s physical damage, falling with distance to about half at the rim.",
+  "worldcombat.skill.dig.description.0": "The eruption deals about %1$s physical damage, falling with distance to about half at the rim.",
   "worldcombat.skill.dig.description.1": "Eruption radius %1$s blocks; heavier casters displace more earth.",
   "worldcombat.skill.dig.description.2": "The caster erupts %1$s ticks after diving; higher Speed shortens the wait.",
   "worldcombat.skill.dig.description.3": "The impact point is locked when the dig begins: a target that keeps moving during the preparation walks out. The ground material decides the eruption: soft soil, sand and gravel give a wider, higher-launching burst; stone gives a smaller but harder hit; water or open air barely erupts at all.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.dig.preference.ai.crowd": "Enemies to dig under",
   "worldcombat.skill.dig.preference.ai.crowd.help": "Only dig when at least this many enemies cluster near the target; 1 digs at a lone target.",
   "worldcombat.skill.dig.preference.ai.maxChase": "Chase distance",
-  "worldcombat.skill.dig.preference.ai.maxChase.help": "Only consider digging when the target is within this distance."
+  "worldcombat.skill.dig.preference.ai.maxChase.help": "Only consider digging when the target is within this distance.",
+  "worldcombat.skill.dig.description.motion": "This move does not pick an enemy: choose a landing point within %1$s blocks, dive underground and move there to erupt. The eruption hits each foe once, at most %2$s of them, and flings hit targets upward (about %3$s blocks before the ground material adjusts it)."
 }

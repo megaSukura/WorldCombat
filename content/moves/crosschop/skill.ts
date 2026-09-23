@@ -34,7 +34,7 @@ namespace PokemonSkills {
         id: crosschopId,
         cooldownParameter: "recharge",
         name: "Cross Chop",
-        description: "The user delivers a double chop with its forearms crossed.",
+        description: "双臂交叉举过头顶，两道劈击从相反斜上方先后落向同一个点：第一劈把对手的架势撞开，第二劈顺着交叉点切下去，破势式下第二劈切得更深；两劈间隔很短，对手在这半步里挪开就只剩第一劈。双劈式两劈等重、出手更快，但没有破势加成。",
         uses: ["用两次先后落下的交叉劈切开一个点", "第一劈撞开架势，第二劈切得更深", "在贴身距离结算两次接触伤害"],
         kind: "enemy",
         range: 2.4,

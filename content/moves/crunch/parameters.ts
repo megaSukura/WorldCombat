@@ -144,7 +144,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["fang"] },
         { key: "description.1", values: ["reach", "lunge", "grip"] },
         { key: "description.2", values: ["grindTicks", "chew"] },
-        { key: "description.3", values: ["crushChance", "crushStages", "crackTicks"] },
+        { key: "description.3", values: ["crushChance","crushStages","crackTicks"] },
         { key: "crush.on", values: [], when: function (context) { return read(context.detail.values, ["crush"]) === true; } },
         { key: "crush.off", values: [], when: function (context) { return read(context.detail.values, ["crush"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

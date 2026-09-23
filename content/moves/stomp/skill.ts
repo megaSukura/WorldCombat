@@ -73,11 +73,12 @@ namespace PokemonSkills {
     }
 
     define({
+        requiresGround: true,
         id: "stomp",
         cooldownParameter: "recharge",
         name: "Stomp",
-        description: "The user attacks by stomping on the target with a big foot. This may also make the target flinch.",
-        uses: ["把靠近的对手一脚踩实并震懵", "顺带震到落点周围站着的其他敌人", "在对手被逼到地面时兑现最重的一击"],
+        description: "把全身重量往下砸的一脚：近身招里单发最重，命中后有机会踩懵目标，脚下的震波还会波及落点周围站着的其他敌人、也有机会震懵——但只砸得到站在地上的目标，空中的人躲得开。",
+        uses: ["把靠近的地面目标一脚踩实，并尝试震懵", "顺带震到落点周围站着的其他敌人", "在对手被逼到地面时兑现最重的一击"],
         kind: "enemy",
         range: 2.4,
         maxRange: 3.2,

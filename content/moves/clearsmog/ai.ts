@@ -1,13 +1,4 @@
-/**
- * 清除之烟 / clearsmog 的伙伴 AI 用途。
- *
- * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 11）格之内；更远交给共享接近逻辑。
- * 什么时候最想出手：对手的正面能力等级合计达到 `ai.minStages`（默认 2）时大幅抬价——把攒起来的能力一波冲掉
- *   才是它真正的用途；达不到就压到较低分，只在没有更好的选择时随手掷一团。
- * 对谁出手：当前威胁；烟会罩住命中点一圈，抱团时顺带把旁边的人一起冲掉。
- * 够不到怎么办：reach 就是本招射程，不够先走近；泥块会小幅修向目标、几乎不落空。
- * 放完之后：目标被冲回原点、还短暂留不住增益；交回共享交战计划继续打。
- */
+/** clearsmog：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 只读、回调内缓存的目标正面等级合计。 */
     CompanionBehavior.registerFact("world_combat:move_clearsmog/stages", function (access, actor) {
@@ -18,7 +9,7 @@ namespace PokemonSkills {
             const value = Number(stages[clearsmogStats[index]]) || 0;
             if (value > 0) total += value;
         }
-        return total;
+        return total + MobEffects.levels(access, actor, "beneficial");
     });
 
     function clearsmogStageValue(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {

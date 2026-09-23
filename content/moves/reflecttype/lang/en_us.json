@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.reflecttype.summary": "Raises a mirror at the target and reflects its type onto itself; whatever type the target currently has, the user becomes.",
+  "worldcombat.skill.reflecttype.summary": "Copy a Pokémon’s current types, or a non-Pokémon’s armour. Mirror All also copies armour toughness and knockback resistance.",
   "worldcombat.skill.reflecttype.use.0": "Copy the opponent's type to flip your matchups",
   "worldcombat.skill.reflecttype.use.1": "Follow an opponent whose type was changed",
   "worldcombat.skill.reflecttype.use.2": "Take only the primary type and dodge a secondary weakness",
-  "worldcombat.skill.reflecttype.description.0": "Raises the mirror on a target within %1$s blocks after a %2$s s wind-up; it reads the target's current type.",
-  "worldcombat.skill.reflecttype.description.1": "The reflected type lasts %1$s s; matchups, same-type bonus and type immunities settle on it.",
+  "worldcombat.skill.reflecttype.description.0": "Range %1$s blocks, preparation %2$s. Copy a Pokémon’s current primary type; Mirror All also copies its secondary type.",
+  "worldcombat.skill.reflecttype.description.1": "Copied Pokémon types last %1$s and determine type matchups, same-type bonuses and type-based immunities.",
   "worldcombat.skill.reflecttype.pair.0": "Mirror both: copies the secondary type too, duration ×1.25, cooldown +14 ticks; the closest match.",
   "worldcombat.skill.reflecttype.pair.1": "Primary only: copies the first type, duration ×0.8, cooldown −8 ticks; avoids extra weaknesses from a secondary type.",
   "worldcombat.skill.reflecttype.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.reflecttype.growth.0": "At level %1$s the committed cooldown shortens to %2$s s.",
-  "worldcombat.skill.reflecttype.growth.1": "At level %1$s the committed cooldown shortens again to %2$s s.",
+  "worldcombat.skill.reflecttype.growth.0": "From level %1$s, cooldown is reduced by an extra 0.6 seconds.",
+  "worldcombat.skill.reflecttype.growth.1": "From level %1$s, the extra cooldown reduction becomes 1.1 seconds, replacing the earlier reduction.",
   "worldcombat.skill.reflecttype.value.reach": "Mirror range",
   "worldcombat.skill.reflecttype.value.tempo": "Raise wind-up",
   "worldcombat.skill.reflecttype.value.aftercast": "Recovery",
@@ -26,5 +26,6 @@
   "effect.world_combat.reflecttype": "Reflect Type",
   "world_combat.move.reflecttype.text.one": "Reflected into %1$s",
   "world_combat.move.reflecttype.text.pair": "Reflected into %1$s and %2$s",
-  "world_combat.move.reflecttype.text.fail": "No type to reflect"
+  "world_combat.move.reflecttype.text.fail": "No type to reflect",
+  "worldcombat.skill.reflecttype.world": "Against a non-Pokémon, copy its current armour; Mirror All also copies armour toughness and knockback resistance. The copy lasts %1$s, ending on expiry or cleansing. Copied defences can be weaker than your own; later equipment and effects still change the result."
 }

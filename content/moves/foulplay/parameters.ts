@@ -106,8 +106,8 @@ namespace PokemonSkills {
 
     describe(foulplayId, [
         { key: "description.0", values: ["trick"] },
-        { key: "description.1", values: ["reach", "crawl", "grasp"] },
-        { key: "cling.on", values: [], when: function (context) { return read(context.detail.values, ["cling"]) === true; } },
+        { key: "description.1", values: ["reach","crawl","grasp"] },
+        { key: "cling.on", values: ["pull","stagger"], when: function (context) { return read(context.detail.values, ["cling"]) === true; } },
         { key: "cling.off", values: [], when: function (context) { return read(context.detail.values, ["cling"]) !== true; } },
         { key: "timing", values: ["range", "coil", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.trick"] },

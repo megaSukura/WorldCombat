@@ -2,12 +2,12 @@
   "worldcombat.skill.junglehealing.summary": "Vines and sprouts surround the user and nearby allies, healing them and clearing harmful status effects. Natural ground improves healing and radius; deep roots strengthen both with longer windup and cooldown.",
   "worldcombat.skill.junglehealing.use.0": "Heal a group of allies and cure them together",
   "worldcombat.skill.junglehealing.use.1": "Cleanse a whole party at once on natural ground",
-  "worldcombat.skill.junglehealing.description.0": "When the vines wrap in, the user and each ally restore %1$s of their maximum health; a closer bond draws the jungle in, and natural ground underfoot feeds it further.",
+  "worldcombat.skill.junglehealing.description.0": "When the vines wrap in, the user and every ally inside the ring each restore %1$s of their maximum health and have their harmful status effects removed (beneficial and neutral effects stay); a closer bond draws the jungle in, and natural ground underfoot feeds it further.",
   "worldcombat.skill.junglehealing.description.1": "Vines reach %1$s blocks.",
   "worldcombat.skill.junglehealing.description.2": "Wind-up %1$s, recovery %2$s and cooldown %3$s.",
   "worldcombat.skill.junglehealing.stance.deeproot": "Deep Roots: x1.2 vine radius and x1.1 healing, at the cost of +3 ticks of wind-up and a longer cooldown - for rescuing a whole group.",
   "worldcombat.skill.junglehealing.stance.shallow": "Shallow Roots: a faster wind-up and a shorter cooldown with a smaller ring - for a quick cleanse.",
-  "worldcombat.skill.junglehealing.timing": "Cast on yourself; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.junglehealing.timing": "Cast on yourself; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.junglehealing.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.junglehealing.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.junglehealing.value.heal": "Restore fraction",
@@ -24,5 +24,6 @@
   "worldcombat.skill.junglehealing.preference.ai.healBelow.help": "The jungle is called when the user or an ally is below this health ratio; lower keeps attacking, higher heals at the first wound.",
   "worldcombat.skill.junglehealing.preference.ai.maxChase": "Rescue distance",
   "worldcombat.skill.junglehealing.preference.ai.maxChase.help": "The jungle is considered only for a subject within this distance; lower keeps it close, higher closes a gap first.",
-  "world_combat.move.junglehealing.text.embrace": "The jungle wraps in, +%1$s, cleansed %2$s"
+  "world_combat.move.junglehealing.text.embrace": "The jungle wraps in, +%1$s, cleansed %2$s",
+  "worldcombat.skill.junglehealing.description.condition": "The jungle is not called when nobody in the ring is wounded or carrying a harmful status; natural ground underfoot (grass, dirt, moss, mud and the like) adds 5 percentage points of healing and 0.5 blocks of radius, which deep roots scale up too."
 }

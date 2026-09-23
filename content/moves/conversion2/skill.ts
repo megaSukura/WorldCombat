@@ -1,15 +1,4 @@
-/**
- * 纹理２ / conversion2 —— 注册与动作。
- *
- * 两幕：
- *   读（windup，提交前）：一道读解的视线落到目标身上，扫过它最后那一手的属性（`action.present` 预告）。
- *   织（settle，提交后）：以那份属性为靶，在全部属性里挑出一种能扛住它的，把自己的属性暂时重织成它；
- *       颜色是那一种属性的色相，名字浮在自己头顶。
- *
- * 重织走共享的 NativeModifiers types 层（与特性 multitype、同族的纹理同一条机制），到期自动恢复，
- * 因此被收回或重载的个体不会留下脏属性。挑哪种由配置 prioritize 决定（最硬 vs 顾全）。
- * 目标不是宝可梦、没有最后招式、或没有可换的抗性属性时，预检直接拒绝，不花 PP。
- */
+/** Adapt to an opponent’s recent attack: change your types against a Pokémon, or resist an observed native damage type against a non-Pokémon. */
 namespace PokemonSkills {
     const conversion2Scene = "world_combat:move_conversion2";
     const conversion2Colors: { [type: string]: number } = {
@@ -66,8 +55,8 @@ namespace PokemonSkills {
         id: "conversion2",
         cooldownParameter: "recharge",
         name: "Conversion 2",
-        description: "读取对手最后使用的那一手的属性，把自己的属性暂时重织成能扛住它的那一种；目标没有最后招式时无法发动。",
-        uses: ["接下一记已知属性的招", "把受击面翻到对手打不痛的那一面", "在出手前临时改抗性"],
+        description: "根据对手最近的攻击调整防护：对宝可梦改变自身属性，对普通生物抵御已观察到的原生伤害类型。",
+        uses: ["接下一记已知属性的招", "把受击面翻到对手打不痛的那一面", "在被压制前临时改抗性"],
         kind: "enemy",
         range: 9,
         maxRange: 14,
@@ -98,6 +87,7 @@ namespace PokemonSkills {
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("conversion2", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") return DamageSemantics.recentAttack(world, target, 1200) ? "" : "no-move";
             const attackType = conversion2Read(world, target);
             if (!attackType) return "no-move";
             const prefer = config && config.wide === true ? "breadth" : "resist";
@@ -113,6 +103,17 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
             const prefer = config && config.wide === true ? "breadth" : "resist";
+            if (target !== null && String(target.domain()) !== "cobblemon") {
+                const last = DamageSemantics.recentAttack(world, target, 1200);
+                if (last) {
+                    const types = config && config.wide === true && last.category === "physical"
+                        ? [last.type, "minecraft:mob_attack", "minecraft:mob_attack_no_aggro", "minecraft:player_attack", "minecraft:arrow", "minecraft:trident", "minecraft:sting", "minecraft:ram", "minecraft:mace_smash"] : [last.type];
+                    CombatCopies.resist(world, actor, types, config && config.wide === true ? 0.75 : 0.5, Math.max(120, Math.round(p("conversion2", "hold", action))), "conversion2");
+                    WorldFeedback.emit(world, conversion2Scene, 1, action.origin(), { moment: "settle", color: 0x8FD8D8, facets: 8, scale: 1 }, 30);
+                    sound(action, "minecraft:block.beacon.power_select");
+                }
+                done(action); return;
+            }
             const attackType = target === null ? "" : conversion2Read(world, target);
             const chosen = attackType ? conversion2Choose(attackType, conversion2OwnTypes(world, actor), prefer) : null;
             const facets = Math.max(6, Math.round(p("conversion2", "facets", action)));

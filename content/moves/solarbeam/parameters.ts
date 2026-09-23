@@ -78,7 +78,8 @@ namespace PokemonSkills {
 
     describe("solarbeam", [
         { key: "description.0", values: ["ray"] },
-        { key: "description.1", values: ["reach", "width", "pierce"] },
+        { key: "description.weather", values: [] },
+        { key: "description.1", values: ["reach","width","pierce"] },
         { key: "description.2", values: ["charge"] },
         { key: "description.3", values: ["push"] },
         { key: "stance.broad", values: [], when: function (context) { return !!read(context.detail.values, ["broad"]); } },

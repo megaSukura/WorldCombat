@@ -1,10 +1,10 @@
 {
   "effect.world_combat.bide_brace": "忍耐架势",
-  "worldcombat.skill.bide.summary": "站定忍耐一段时间，期间受到的伤害全部记进账本；时间到把账上的伤害加倍还给最后打你的人，没挨到打就落空。",
+  "worldcombat.skill.bide.summary": "进入忍耐架势，期间受到的每一次外来伤害都记进账本；时间到把账上伤害按 1.4–2.8 倍还给最后打你的人，够不到就找最近的敌人；没挨到打或被打断就白忍一场。",
   "worldcombat.skill.bide.use.0": "在被打的一轮里攒一记大还手",
   "worldcombat.skill.bide.use.1": "逼对手在你站定时决定要不要继续打",
   "worldcombat.skill.bide.use.2": "把分散的小伤害聚成一记重击",
-  "worldcombat.skill.bide.description.0": "站定忍耐 %1$s，期间每一次外来伤害都记进账本；时间到把账上的伤害按 %2$s 还回去（最少 1.4 倍、最多 2.8 倍）。",
+  "worldcombat.skill.bide.description.0": "进入忍耐架势 %1$s，积累期间受到的外来伤害。结束后按当前生命与姿态放大返还，当前预计返还 %2$s 点；剩余生命越少，还手越重。",
   "worldcombat.skill.bide.description.1": "账本上限为自身最大生命的 %1$s；还手能打到 %2$s 格内的最后攻击者，够不到就打最近的敌人。",
   "worldcombat.skill.bide.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.bide.rooted.on": "扎根硬忍：忍耐时长 ×1.15、还手倍率 ×1.1，代价是整段架势定身不能走动。",
@@ -26,5 +26,6 @@
   "world_combat.move.bide.text.brace": "忍耐 %1$s 秒",
   "world_combat.move.bide.text.release": "加倍奉还 %1$s",
   "world_combat.move.bide.text.whiff": "白忍一场",
-  "world_combat.move.bide.text.broken": "忍耐被打断"
+  "world_combat.move.bide.text.broken": "忍耐被打断",
+  "worldcombat.skill.bide.description.release": "被外力打断时架势崩解、账本作废；账本为空或还手够不到任何敌人则落空。架势未结束前不能发动新招。"
 }

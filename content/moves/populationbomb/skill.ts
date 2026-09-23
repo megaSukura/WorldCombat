@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: "populationbomb",
         cooldownParameter: "recharge",
         name: "鼠数儿",
-        description: "伙伴们会纷纷赶来集合，以群体行动给予对手攻击。连续命中 1～10 次。",
+        description: "伙伴们纷纷赶来集合，然后一只接一只从目标四周扑上去：每只独立结算一小段伤害、独立掷命中，扑空一只这一串就断了。能命中 1～10 次，长度不确定。",
         uses: ["叫来一队伙伴连续扑击", "对残血目标用不确定长度的连段收尾", "在对手来不及还手前堆出一串小伤害"],
         kind: "enemy",
         range: 7,

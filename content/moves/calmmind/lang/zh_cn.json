@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.calmmind.summary": "收住心神，把自己罩进一层几乎透明的清明：特攻与特防一起提高。它是本组里唯一抬特攻的一招，深冥想更强更久但更慢，浅冥想瞬发随时能补。窗口走完时两项等级一起收回。",
+  "worldcombat.skill.calmmind.summary": "收住心神，把自己罩进一层几乎透明的清明：特攻与特防一起提高。它是本组里唯一抬特攻的一招，深冥想更强更久但更慢，浅冥想瞬发随时能补；清明结束或被清除时两项等级一起收回。",
   "worldcombat.skill.calmmind.use.0": "开场先静一息，把特攻与特防一起垫起来",
   "worldcombat.skill.calmmind.use.1": "硬仗前坐深，拉锯里用浅冥想随时补",
   "worldcombat.skill.calmmind.use.2": "把特防抬起来顶对面的特殊火力",
   "worldcombat.skill.calmmind.description.0": "冥想把特攻提升 %1$s 级、特防提升 %2$s 级。",
   "worldcombat.skill.calmmind.deep.on": "深冥想：特攻 +2、特防 +2，清明更久，但起手多 6 刻、冷却更长，容易被打断。",
   "worldcombat.skill.calmmind.deep.off": "浅冥想：特攻 +1、特防 +1，起手极短、冷却更短，随时能补；两向各有局面。",
-  "worldcombat.skill.calmmind.description.1": "清明持续约 %1$s。",
+  "worldcombat.skill.calmmind.description.1": "清明持续约 %1$s：期间抬高的特攻与特防一直生效；窗口走完或被清除时，两项等级一起收回。",
   "worldcombat.skill.calmmind.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.calmmind.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.calmmind.growth.0": "达到 %1$s 级，清明延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.calmmind.preference.ai.minGap.help": "威胁近于这个距离时不再冥想、直接攻击；调大更常在近身时放弃强化。",
   "world_combat.move.calmmind.text.settle": "冥想（特攻 +%1$s／特防 +%2$s／%3$s 秒）",
   "world_combat.move.calmmind.text.fade": "冥想消散",
-  "effect.world_combat.calm_focus": "冥想"
+  "effect.world_combat.calm_focus": "冥想",
+  "worldcombat.skill.calmmind.description.2": "从起手到收招，你会钉在原地凝神，期间不能移动。"
 }

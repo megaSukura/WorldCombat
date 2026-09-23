@@ -127,7 +127,7 @@ namespace PokemonSkills {
 
     describe("megakick", [
         { key: "description.0", values: ["kick", "collisionRadius"] },
-        { key: "description.1", values: ["lunge", "pace", "overshoot"] },
+        { key: "description.1", values: ["lunge","pace","overshoot"] },
         { key: "description.2", values: ["launchBack", "launchUp"] },
         { key: "launch.on", values: [], when: function (context) { return read(context.detail.values, ["launch"]) !== false; } },
         { key: "launch.off", values: [], when: function (context) { return read(context.detail.values, ["launch"]) === false; } },

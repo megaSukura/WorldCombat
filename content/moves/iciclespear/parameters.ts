@@ -157,12 +157,12 @@ namespace PokemonSkills {
     defineDamage("iciclespear", "spear", {});
 
     describe("iciclespear", [
-        { key: "description.0", values: ["spear", "shots"] },
+        { key: "description.0", values: ["spear","shots"] },
         { key: "description.1", values: ["gap", "velocity", "reach", "spread"] },
-        { key: "description.2", values: ["radius", "chill", "frost"] },
+        { key: "description.2", values: ["radius","chill","frost"] },
         { key: "rime.on", values: [], when: function (context) { return read(context.detail.values, ["rime"]) === true; } },
         { key: "rime.off", values: [], when: function (context) { return read(context.detail.values, ["rime"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","tempo","aftercast","pp","recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.spear", "tier.0.shots"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.spear", "tier.1.reach"] }
     ]);

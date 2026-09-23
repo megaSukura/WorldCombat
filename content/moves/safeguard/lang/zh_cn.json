@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.safeguard.summary": "张开一圈守护光罩住自己与身边的队友；罩内任何人异常状态都会被挡下。光罩跟着施法者走，离开范围的人会失去守护。",
+  "worldcombat.skill.safeguard.summary": "张开随自己移动的守护光，为自己和附近队友抵挡新施加的有害异常。离开范围后仍会短暂保留守护。",
   "worldcombat.skill.safeguard.use.0": "挡住成片的灼伤、中毒、麻痹",
   "worldcombat.skill.safeguard.use.1": "在对方铺异常前先一步张罩",
   "worldcombat.skill.safeguard.use.2": "护住正要进场的队友",
-  "worldcombat.skill.safeguard.description.0": "守护光罩住自己与半径 %2$s 格内的队友 %1$s：期间罩内任何人都会被挡下异常状态。",
-  "worldcombat.skill.safeguard.description.1": "随施法者移动而移动；施法者当前射程 %1$s 格。它只挡异常状态，挡不住伤害与控制。",
+  "worldcombat.skill.safeguard.description.0": "光罩持续 %1$s，保护自己与半径 %2$s 格内的队友，可抵挡灼伤、中毒、麻痹、睡眠等有害异常的新施加。范围与时长已计入当前守护方式。",
+  "worldcombat.skill.safeguard.description.1": "守护不会解除已有异常，也不阻挡直接伤害、击退或能力等级下降；有益效果仍可正常获得。",
   "worldcombat.skill.safeguard.description.2": "张罩要 %1$s，收势 %2$s，冷却 %3$s。深守／早守的取舍见守护方式说明。",
   "worldcombat.skill.safeguard.ward.0": "早守：时长 ×0.75、半径 ×0.85，换来起手 −2 刻、冷却 ×0.8——张得快、补得勤。",
   "worldcombat.skill.safeguard.ward.1": "深守：时长 ×1.25、半径 ×1.15，代价是起手 +3 刻、冷却 ×1.15——守得久、罩得广。",
-  "worldcombat.skill.safeguard.timing": "对自己施放，准备 %2$s 秒后消耗 %4$s PP 张罩；结束后收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.safeguard.timing": "对自己施放；起手 %1$s，收招 %2$s，消耗 %3$s PP，冷却 %4$s。",
   "worldcombat.skill.safeguard.value.wardTicks": "守护时长",
   "worldcombat.skill.safeguard.value.wardRadius": "守护半径",
   "worldcombat.skill.safeguard.value.motes": "光点数量",
@@ -30,5 +30,7 @@
   "world_combat.move.safeguard.text.ward": "守护展开 %1$s 秒（护住 %2$s 人）",
   "world_combat.move.safeguard.text.guard": "守护挡下异常",
   "world_combat.move.safeguard.text.fade": "守护收拢",
-  "effect.world_combat.safeguard_veil": "神秘守护"
+  "effect.world_combat.safeguard_veil": "神秘守护",
+  "worldcombat.skill.safeguard.description.3": "光罩每秒为附近队友续上守护。光罩结束时，范围内队友的守护被收回；施法者和提前离开者可能保留余效，最长约 %1$s。清除施法者身上的守护会提前结束光罩。",
+  "worldcombat.skill.safeguard.value.residualDuration": "残余守护上限"
 }

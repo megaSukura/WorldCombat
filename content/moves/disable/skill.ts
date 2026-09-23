@@ -1,17 +1,11 @@
-/**
- * 定身法 / disable —— 执行组织与封锁策略。
- *
- * 核心念头：指出对手刚用过的那一手，把一枚钉别在它的招式表上——那一手在钉拔掉前使不出来。
- *
- * 三幕：起（windup，提交前）指尖聚起一枚定身钉，可打断、不花代价；击（提交后）钉沿直线扑到目标身上，
- *   点名它的上一手；持续（hold）钉一直钉在那手上，目标想再使出来就会被共享动作策略顶回；
- *   收（release 到期松开／break 被清除）。
- *
- * 与同族分开：无理取闹封的是「最近一次用过的同名招」，换个顺序就能绕开；定身法直接点名封住这一手本身，
- *   在钉松掉前无论用什么顺序都使不出。与再来一次分开：再来一次逼对手只重复那一手，定身法是要它换招。
- * 反制：目标没出过手、或上一手太老时这一钉落空；被点名后换一手不在名单里的招照样能打。
- */
+/** disable：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
+    export function disableLast(world: CombatWorld, actor: CombatActor): { id: string; tick: number; native?: boolean } | null {
+        if (String(actor.domain()) === "cobblemon") return NativeEffects.lastMove(world, actor);
+        const last = DamageSemantics.recentAttack(world, actor, 1200);
+        return last ? { id: last.type, tick: last.tick, native: true } : null;
+    }
+
     /** 机读旁挂：记下被点名的招式、时限与画面要用的数。 */
     WorldCombat.effect(disableMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
@@ -46,11 +40,13 @@ namespace PokemonSkills {
     // 封锁：带着定身身份的活体，在提交被点名的那一手时被顶回去。
     // 这条贡献走共享动作策略，原生配招、通用动作与玩家共用同一个提交闸门；对任何带身份的活体成立。
     CombatStatus.actions.define({ id: "world_combat:move_disable/policy", apply: function (context) {
-        if (!context.move || typeof context.move.id !== "function") return;
         if (!CombatStatus.has(context.world, context.actor, disableStatus)) return;
         const data = disableData(context.world, context.actor);
         if (data === null || !data.move) return;
-        if (String(context.move.id()) === String(data.move)) context.blocked.disabled = true;
+        if (context.phase === "damage" && data.native && DamageSemantics.read(context.metadata).attack) {
+            if (String(context.metadata.damageType) === String(data.move)) context.blocked.disabled = true;
+        } else if (context.move && typeof context.move.id === "function" && String(context.move.id()) === String(data.move))
+            context.blocked.disabled = true;
     } });
 
     // 被判回的那一下要看得见：在真正的封锁之前放一段「被钉住」的画面与浮字。
@@ -74,7 +70,7 @@ namespace PokemonSkills {
         id: disableId,
         cooldownParameter: "recharge",
         name: "定身法",
-        description: "向对手送出一枚定身钉，钉住它刚用过的那一手；在钉松开前，那一手无法使用，换别的招照样能打。目标没出过手或上一手太老时落空。",
+        description: "封住目标刚用过的招式。对普通生物和玩家，则封住最近命中过人的攻击方式，例如近战或箭矢；换一种攻击仍能出手。",
         uses: ["封住对手的主力输出招", "拆掉刚露出的强攻手段", "逼对手换招、打乱它的连招"],
         kind: "enemy",
         range: 8,
@@ -106,8 +102,7 @@ namespace PokemonSkills {
         ready: function (action) {
             const world = action.sense(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(target.domain()) !== "cobblemon") return "no-move";
-            const last = NativeEffects.lastMove(world, target);
+            const last = disableLast(world, target);
             if (last === null || String(last.id) === "struggle") return "no-move";
             if (world.tick() - (last.tick || -1000) > p(disableId, "memory", action)) return "no-move";
             const body = world.observe(target);
@@ -134,7 +129,7 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1, 0)), disableMissText, [], 28);
                 done(action);
             }
-            const last = target === null ? null : NativeEffects.lastMove(world, target);
+            const last = target === null ? null : disableLast(world, target);
             if (target === null || !world.valid(target) || world.friendly(target) || last === null || String(last.id) === "struggle") {
                 fizzle("invalid-target", targetPos); return;
             }
@@ -147,8 +142,8 @@ namespace PokemonSkills {
             const landed = CombatStatus.apply(world, target, disableStatus, disableEffect, ticks, 0, { unique: true });
             if (!landed) { fizzle("immune", at); return; }
             disableReleaseMark(world, target);
-            world.effect(disableMark, target, JSON.stringify({ move: String(last.id), max: ticks, nails: nails, caster: String(caster.ref()) }), ticks);
-            const power = CobblemonCombat.moveTemplate(String(last.id)).power();
+            world.effect(disableMark, target, JSON.stringify({ move: String(last.id), native: !!last.native, max: ticks, nails: nails, caster: String(caster.ref()) }), ticks);
+            const power = last.native ? 60 : CobblemonCombat.moveTemplate(String(last.id)).power();
             WorldFeedback.emit(world, disableScene, 1, at,
                 { moment: "lock", target: String(target.ref()), nails: nails, count: nails,
                   intensity: 1 + Math.min(1, power / 120), direction: [direction.x(), direction.y(), direction.z()],
@@ -157,7 +152,7 @@ namespace PokemonSkills {
                 { moment: "fly", target: String(target.ref()), nails: nails, reach: Math.max(0.5, Math.min(action.range(), delta.length() || action.range())),
                   direction: [direction.x(), direction.y(), direction.z()] }, 16);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), disableLockText,
-                [{ key: "cobblemon.move." + String(last.id), fallback: String(last.id) }], 36);
+                [last.native ? { key: "worldcombat.skill.disable.native_attack", fallback: "普通攻击" } : { key: "cobblemon.move." + String(last.id), fallback: String(last.id) }], 36);
             world.sound("minecraft:block.anvil.land", at, 14, "{}");
             done(action);
         }

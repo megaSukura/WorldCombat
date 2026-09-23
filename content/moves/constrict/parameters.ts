@@ -127,11 +127,11 @@ namespace PokemonSkills {
     defineDamage("constrict", "squeeze", {}, { contact: true });
 
     describe("constrict", [
-        { key: "description.0", values: ["squeeze", "reach", "pace"] },
-        { key: "description.1", values: ["speedStages", "bindTicks", "holdTicks", "gripChance"] },
+        { key: "description.0", values: ["squeeze","reach","pace"] },
+        { key: "description.1", values: ["speedStages","bindTicks","holdTicks","gripChance"] },
         { key: "latch.on", values: [], when: function (context) { return read(context.detail.values, ["latch"]) === true; } },
         { key: "latch.off", values: [], when: function (context) { return read(context.detail.values, ["latch"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.squeeze"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.squeeze", "tier.1.speedStages"] }
     ]);

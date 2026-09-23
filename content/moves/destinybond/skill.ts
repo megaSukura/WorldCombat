@@ -37,10 +37,11 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(destinyMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
+        freeMovement: function (config) { return !!config.tight; },
         id: destinyId,
         cooldownParameter: "recharge",
         name: "同命",
-        description: "当众把一条命线系在自己身上：这段时间里，谁亲手把你打倒，谁就一起倒下。它不护住你，只是把代价摆到明面上；已经有线在身时再施放会失败。",
+        description: "当众把一条命线系在自己身上：这段时间里，谁亲手把你打倒，谁就一起倒下。它不护住你，只是把「你来杀我」的代价摆到明面上；已经有命线在身时再施放会失败。",
         uses: ["残血时把「最后一击」变成对手自己的代价", "逼对手收手，争取喘息或撤退", "临死前把对面的主力一起带走"],
         kind: "self",
         range: 0,

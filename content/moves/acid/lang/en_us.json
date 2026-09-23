@@ -3,10 +3,10 @@
   "worldcombat.skill.acid.use.0": "Splash everyone around a landing spot at close range",
   "worldcombat.skill.acid.use.1": "Leave a lingering pool to lock down a patch of ground",
   "worldcombat.skill.acid.use.2": "Wear down Sp. Def with the cheapest cast",
-  "worldcombat.skill.acid.description.0": "The burst deals %1$s special damage to every enemy around the landing spot.",
+  "worldcombat.skill.acid.description.0": "The glob bursts and deals about %1$s special damage to every enemy around the landing spot, once each.",
   "worldcombat.skill.acid.description.1": "The acid covers a radius of %1$s blocks around the landing spot.",
-  "worldcombat.skill.acid.description.2": "The pool left behind deals %1$s damage per tick for %2$s, biting once every %3$s.",
-  "worldcombat.skill.acid.description.3": "On hit there is a %1$s chance to lower the target's Sp. Def by %2$s stage(s); corrode form is currently %3$s.",
+  "worldcombat.skill.acid.description.2": "The pool left on the ground deals %1$s damage to every enemy inside it, lasting %2$s and biting once every %3$s.",
+  "worldcombat.skill.acid.description.3": "Each enemy splashed has a %1$s chance to have its Sp. Def lowered by %2$s stage(s), so it takes more special damage afterwards.",
   "worldcombat.skill.acid.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.acid.growth.0": "From level %1$s the splash rises to %2$s power and the pool to %3$s blocks.",
   "worldcombat.skill.acid.value.core": "Splash power",
@@ -27,5 +27,6 @@
   "worldcombat.skill.acid.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it open with acid from further away.",
   "worldcombat.skill.acid.preference.ai.crowd": "Aim at crowds",
   "worldcombat.skill.acid.preference.ai.crowd.help": "On: when other enemies stand within 3 blocks of the target it prefers acid, so the splash and pool bite more. Off: it sorts like an ordinary close-range attack.",
-  "world_combat.move.acid.text.sunder": "Sp. Def -%1$s"
+  "world_combat.move.acid.text.sunder": "Sp. Def -%1$s",
+  "worldcombat.skill.acid.corrode.note": "With corrode on, the pool spreads wider, lasts longer and bites harder each tick, but the burst is lighter; with it off the burst hits harder and the pool is smaller."
 }

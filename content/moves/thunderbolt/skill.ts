@@ -24,7 +24,7 @@ namespace PokemonSkills {
         id: thunderboltId,
         cooldownParameter: "recharge",
         name: "Thunderbolt",
-        description: "把电压成一团沿直线射出去，命中处炸开一片电网；扩散式下电花再分摊到落点周围的几个敌人。",
+        description: "把电压成一团沿直线射出去，命中处炸开一片电网；扩散式下电花再分摊到落点周围的几个敌人。命中后有小概率把目标麻住。电属性对麻痹免疫。",
         uses: ["中距离的单体点射", "在敌群里点一下顺带电到旁边的人", "隔着一段距离先手压血"],
         kind: "enemy",
         range: 9,
@@ -69,6 +69,7 @@ namespace PokemonSkills {
             const turn = p(thunderboltId, "homing", action);
             const radius = p(thunderboltId, "burstRadius", action);
             const chance = p(thunderboltId, "numbChance", action);
+            const numbTicks = Math.round(p(thunderboltId, "numbTicks", action));
             const arcs = Math.max(5, Math.round(p(thunderboltId, "arcs", action)));
             const share = p(thunderboltId, "splashShare", action);
             const cap = Math.max(1, Math.round(p(thunderboltId, "splashTargets", action)));
@@ -98,7 +99,7 @@ namespace PokemonSkills {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const landed = impact(current, hit, thunderboltId, power,
-                            { damage: damageSpec(thunderboltId, "bolt"), status: "paralysis", chance: chance });
+                            { damage: damageSpec(thunderboltId, "bolt"), status: "paralysis", chance: chance, statusTicks: numbTicks });
                         WorldFeedback.emit(scope, thunderboltScene, 1, point,
                             { moment: "burst", target: String(victim.ref()), sparks: Math.round(16 + power * 0.6),
                                 arcs: arcs, scale: scale, intensity: intensity }, 28);

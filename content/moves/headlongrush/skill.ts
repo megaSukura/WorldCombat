@@ -61,11 +61,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: headlongrushId,
         cooldownParameter: "recharge",
         name: "Headlong Rush",
-        description: "The user smashes into the target in a full-body tackle, lowering its own Defense and Sp. Def.",
-        uses: ["从远处一路冲过去把对手撞出阵地", "用体重换一记最重的单发", "把撞开的沟留在场上、改变走位"],
+        description: "低头灌注全力直线猛冲：助跑后把对手一路撞开，并在地面犁出一道会留一会儿的粗土沟。出招即弃守，自身防御与特防各下降一级。犁地式冲得更远、推得更狠、沟更宽，代价是单发威力更低、出手更慢。",
+        uses: ["从远处一路冲过去把对手撞出阵地", "用体重换一记最重的单发", "把犁出的沟留在场上、改变地形"],
         kind: "enemy",
         range: 3.6,
         maxRange: 7.0,

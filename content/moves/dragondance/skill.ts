@@ -1,17 +1,4 @@
-/**
- * 龙之舞 / dragondance 的出手方式。
- *
- * 核心念头：一道螺旋上升的龙气。舞者原地拧身盘旋，一圈比一圈高，龙气沿身侧盘成上升的螺旋；收势时落回地面，
- * 龙气向外炸成一圈，物攻与速度一起抬起。它是这一族里唯一会离地、也是唯一同时抬两项的舞之一。
- *
- * 三幕：
- *   起式（windup，提交前）：拧身收势、龙气自脚下盘起；可被打断，打断不消耗任何东西。
- *   盘旋（提交后）：物攻与速度各抬起（原生 +1），并把这段「龙势」挂成可见窗口；随后按 turns 圈盘旋，
- *     每圈把身位沿螺旋送出一段，「高飞」时另加一点向上的冲量。
- *   落地（收势）：龙气向外炸成一圈，浮出结果；窗口走完时龙势散去，这段舞抬起的攻速等级一并收回。
- *
- * 与同族分开：剑舞是前压的连斩、蝶舞原地扬鳞、胜利之舞踏步立冠；龙之舞是**螺旋上升**，抬物攻与速度。
- */
+/** 龙之舞：物攻与速度由同一个载体拥有各自的临时贡献，结束时只撤去这一舞。 */
 namespace PokemonSkills {
     const dragondanceScene = "world_combat:move_dragondance";
     const dragondanceAiry = "world_combat:dragondance_airy";
@@ -19,35 +6,14 @@ namespace PokemonSkills {
     const dragondanceFadeText = "world_combat.move.dragondance.text.faded";
     /** 表现里的参考半径：`data.scale = 实际螺旋半径 / 这个数`。 */
     const dragondanceGyre = 0.7;
-    const dragondanceStats = ["atk", "spe"];
 
-    function dragondanceStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 多项一起抬高，返回共同抬到的最小级数（只按真正抬到的量记窗口）。 */
-    function dragondanceGrant(world: CombatWorld, actor: CombatActor, amount: number): number {
-        let least = amount;
-        for (let index = 0; index < dragondanceStats.length; index++) {
-            const stat = dragondanceStats[index], before = dragondanceStage(world, actor, stat);
-            NativeEffects.boost(world, actor, stat, amount);
-            least = Math.min(least, dragondanceStage(world, actor, stat) - before);
-        }
-        return Math.max(0, least);
-    }
-    function dragondanceOpen(world: CombatWorld, actor: CombatActor, ticks: number, levels: number): void {
-        if (levels <= 0) return;
-        const existing = MobEffects.read(world, actor, dragondanceAiry);
-        const total = Math.min(6, Math.max(0, existing === null ? 0 : existing.amplifier()) + levels);
-        MobEffects.apply(world, actor, dragondanceAiry, ticks, total);
-    }
 
     define({
+        freeMovement: true,
         id: "dragondance",
         cooldownParameter: "wait",
         name: "龙之舞",
-        description: "激烈地跳起神秘且强有力的舞蹈，从而提高自己的攻击和速度。",
+        description: "跳起一段螺旋上升的龙之舞：原地拧身、一圈比一圈高，龙气盘成上升的螺旋，提高自己的攻击和速度。龙势只维持一段可见的窗口，窗口走完时抬起的攻速会被收回。",
         uses: ["开战前把攻速一起垫起来", "被追急了先盘旋一圈，用速度脱身", "在对手接近的空档里跃起蓄势"],
         kind: "self",
         range: 1,
@@ -92,8 +58,16 @@ namespace PokemonSkills {
             const soar = config ? config.soar !== false : true;
             const scale = gyre / dragondanceGyre;
             const home = body.position();
-            const levels = dragondanceGrant(world, actor, gift);
-            dragondanceOpen(world, actor, span, levels);
+            const before = NativeEffects.effectiveStages(world, actor);
+            const previous = MobEffects.read(world, actor, dragondanceAiry);
+            const carrier = MobEffects.apply(world, actor, dragondanceAiry, span, 0);
+            if (carrier === null) { done(action); return; }
+            const owned = NativeEffects.boostWindow(world, actor, { atk: gift, spe: gift }, span,
+                "world_combat:move/dragondance", carrier, previous);
+            if (!owned) { world.removeMobEffect(actor, carrier.id(), carrier.key()); done(action); return; }
+            const raised = NativeEffects.effectiveStages(world, actor);
+            const attackGain = Math.max(0, (raised.atk || 0) - (before.atk || 0));
+            const speedGain = Math.max(0, (raised.spe || 0) - (before.spe || 0));
             let index = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
@@ -103,7 +77,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, dragondanceScene, 1, here.position(),
                     { moment: "settle", gyre: gyre, scale: scale, turns: turns, drakes: drakes, gift: gift,
                         intensity: Math.max(0.7, Math.min(2.2, (gift * 2 + turns) / 4)) }, 30);
-                WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), dragondanceText, [gift], 30);
+                WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), dragondanceText, [attackGain, speedGain], 30);
                 scope.sound("cobblemon:impact.dragon", here.position(), 18, "{}");
                 finish(current);
             }
@@ -129,18 +103,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 龙势窗口走完：把这段舞抬起的攻速等级原样收回（只收到各自当前持有的正等级）。
+    // 龙势窗口的贡献由共享层结束；这里负责到期反馈。
     WorldCombat.on("world_combat:move_dragondance/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== dragondanceAiry) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        for (let index = 0; index < dragondanceStats.length; index++) {
-            const stat = dragondanceStats[index];
-            const loss = Math.min(levels, Math.max(0, dragondanceStage(world, actor, stat)));
-            if (loss > 0) NativeEffects.boost(world, actor, stat, -loss);
-        }
+        if (MobEffects.read(world, actor, dragondanceAiry) !== null) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, dragondanceScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 26);

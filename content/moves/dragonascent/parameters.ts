@@ -157,10 +157,12 @@ namespace PokemonSkills {
     defineDamage(dragonascentId, "dive", {}, { contact: true });
 
     describe(dragonascentId, [
-        { key: "description.0", values: ["dive", "ring"] },
+        { key: "description.0", values: ["dive","ring"] },
         { key: "description.1", values: ["reach", "altitude", "pace", "radius"] },
-        { key: "description.2", values: ["guardLoss", "poiseLoss"] },
-        { key: "broad.on", values: ["share", "shock"], when: function (context) { return read(context.detail.values, ["broad"]) === true; } },
+        { key: "description.shock", values: [] },
+        { key: "description.2", values: ["guardLoss","poiseLoss"] },
+        { key: "description.ground", values: [] },
+        { key: "broad.on", values: ["share","shock"], when: function (context) { return read(context.detail.values, ["broad"]) === true; } },
         { key: "broad.off", values: [], when: function (context) { return read(context.detail.values, ["broad"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.dive"] },

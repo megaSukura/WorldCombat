@@ -40,6 +40,7 @@ WorldCombat.on("world_combat:effects_incoming", "world_combat:damage_incoming", 
                 // The transferred amount was calculated against the original defender. The new
                 // recipient's armor has not participated yet and must follow its full native chain.
                 delete data.armorExcluded; delete data.toughnessExcluded;
+                delete data.armorAddedExcluded; delete data.toughnessAddedExcluded; delete data.ignoreDefenceStages;
                 if (data.amount > 0) world.hurt(recipient, data.amount, JSON.stringify(data));
                 data.amount = 0;
             }

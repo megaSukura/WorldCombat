@@ -35,7 +35,7 @@ namespace PokemonSkills {
         id: aquatailId,
         cooldownParameter: "recharge",
         name: "Aqua Tail",
-        description: "The user attacks by swinging its tail as if it were a vicious wave in a raging storm.",
+        description: "借转身把尾巴抡成一道向前压的弧形水墙：浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；命中带着灼伤的目标时，这道水会解除灼伤、熄灭其身上的火。浪是推进的，走出弧面或退到浪头之外就能躲开。",
         uses: ["用一片向前压的弧形水墙拍开身前的人", "把贴身的敌人连同身位一起推走", "一浪浇熄对手身上的火与灼伤"],
         kind: "enemy",
         range: 3.6,

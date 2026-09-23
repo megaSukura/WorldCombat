@@ -115,7 +115,7 @@ namespace PokemonSkills {
     describe("spiritbreak", [
         { key: "description.0", values: ["spirit"] },
         { key: "description.1", values: ["drop"] },
-        { key: "description.2", values: ["momentum", "pace", "push", "cloak"] },
+        { key: "description.2", values: ["momentum","pace","push","cloak"] },
         { key: "shatter.on", values: [], when: function (context) { return read(context.detail.values, ["shatter"]) === true; } },
         { key: "shatter.off", values: [], when: function (context) { return read(context.detail.values, ["shatter"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

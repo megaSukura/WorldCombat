@@ -55,6 +55,7 @@ namespace PokemonSkills {
     describe("willowisp", [
         { key: "description.0", values: ["reach", "wispSpeed"] },
         { key: "description.1", values: ["burnTicks", "wispTurn"] },
+        { key: "description.3", values: [] },
         { key: "description.2", values: ["wispRadius"] }
     ]);
 }

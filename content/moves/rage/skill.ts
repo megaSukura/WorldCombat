@@ -23,10 +23,11 @@ namespace PokemonSkills {
     const rageMissText = "world_combat.move.rage.text.miss";
 
     define({
+        freeMovement: true,
         id: rageId,
         cooldownParameter: "recharge",
         name: "Rage",
-        description: "A light angry swing that lights a rage: every hit the user takes while it burns raises its Attack. The fire goes out when the user next acts.",
+        description: "先抡一记很轻的怒气，同时给自己点起一座红炉：火还烧着的时候，每挨一记外来伤害就把攻击烧旺一档，火越旺攻击越高；自己下一次出手时火焰熄灭，涨起来的攻击留着。适合先开火、再迎着对手对拼。",
         uses: ["先给自己点起怒火、再迎着对手打", "挨打时把攻击一档档烧旺",
                "在近身缠斗里滚出越来越高的物攻"],
         kind: "enemy",

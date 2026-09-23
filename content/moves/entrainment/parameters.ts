@@ -58,7 +58,7 @@ namespace PokemonSkills {
             "模仿时长", "对手跟着这段节奏、特性被顶替多久；等级与特防越高越久，贴身节拍再延长。"),
         recharge: seconds(
             F.base(80, "基础").minus(F.stat("speed").times(0.28).as("速度")).clamp(36, 120).round(),
-            "再踩冷却", "再踩一段节拍需要多久；速度快的个体更快恢复。"),
+            "再踩冷却", "再踩一段节拍需要多久；速度快的个体更快恢复。", { base: 80 }),
         beats: formula(
             F.base(6, "基础").plus(F.stat("speed").div(60).as("速度")).clamp(6, 18).round(),
             "节拍数", { unit: "拍", description: "沿施法者到目标的连线排开的拍子数量；速度越快越密。" }),
@@ -67,15 +67,16 @@ namespace PokemonSkills {
             "摆幅数", { unit: "点", description: "落在目标身上时那一圈摆动的密度；特攻越高越密。" })
     });
 
-    stages("entrainment", [{ level: 35, values: { cooldown: 68 } }, { level: 50, values: { cooldown: 58 } }]);
+    stages("entrainment", [{ level: 35, values: { recharge: 68 } }, { level: 50, values: { recharge: 58 } }]);
 
     describe("entrainment", [
+        { key: "world", values: ["hold"] },
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
         { key: "description.1", values: ["hold", "splash"] },
         { key: "whole.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.whole); } },
         { key: "whole.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.whole); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

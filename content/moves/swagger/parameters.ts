@@ -66,8 +66,9 @@ namespace PokemonSkills {
     });
 
     describe("swagger", [
-        { key: "description.0", values: ["gift", "duration"] },
-        { key: "description.1", values: ["chance", "recoil"] },
+        { key: "description.0", values: ["gift","duration"] },
+        { key: "description.1", values: ["chance","recoil"] },
+        { key: "description.sustain", values: [] },
         { key: "description.2", values: ["telegraph", "aftermath", "wait", "range"] }
     ]);
 }

@@ -41,10 +41,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "zenheadbutt",
         cooldownParameter: "recharge",
         name: "Zen Headbutt",
-        description: "The user focuses its willpower to its head and attacks the target. This may also make the target flinch.",
+        description: "先把念力聚到前额锁定目标，再低头冲出去一路咬着它撞：冲刺每刻朝目标拐弯，但有转向上限——直线跑不掉，急折或绕背能把它带偏。追的能力来自特攻，撞击的狠度来自物攻。",
         uses: ["中距离锁定，追着跑动的对手撞上去", "用会拐弯的冲刺逼迫对手急折", "给队友的先手控制补一记远程接触"],
         kind: "enemy",
         range: 6.1,

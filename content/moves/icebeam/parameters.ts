@@ -122,9 +122,10 @@ namespace PokemonSkills {
     ]);
 
     describe("icebeam", [
-        { key: "description.0", values: ["beam", "linger"] },
-        { key: "description.1", values: ["beamLength", "beamWidth", "pierce"] },
-        { key: "description.2", values: ["freezeChance", "frostTicks", "rimeCells"] },
+        { key: "description.0", values: ["beam","linger"] },
+        { key: "description.1", values: ["beamLength","beamWidth","pierce"] },
+        { key: "description.2", values: ["freezeChance"] },
+        { key: "description.rime", values: ["frostTicks","rimeCells"] },
         { key: "description.3", values: ["tempo", "aftermath", "wait"] },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },

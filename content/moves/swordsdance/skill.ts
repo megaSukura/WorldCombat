@@ -59,10 +59,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "swordsdance",
         cooldownParameter: "wait",
         name: "剑舞",
-        description: "激烈地跳起战舞提高气势。大幅提高自己的攻击。",
+        description: "跳起一段朝对手压上去的战舞：压低身形、连挥刃光，大幅提高自己的物攻；刃光只显威势、不造成伤害，物攻增益只维持一段窗口，走完即被收回。",
         uses: ["开战前把物攻拉满", "一边前压一边起舞，直接切进对手身边", "用可见的磨刃窗口逼对手拖时间"],
         kind: "self",
         range: 1,

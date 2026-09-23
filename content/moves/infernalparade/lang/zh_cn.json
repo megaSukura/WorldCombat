@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.infernalparade.summary": "召出一队幽幽燃烧的鬼火，先散开再各自扭头追向目标扑上去。整队威力按团数均分；只要有一团命中，就有机会让目标灼伤。目标带着任意异常时整队翻倍。",
   "worldcombat.skill.infernalparade.description.0": "一次召出 %1$s 团鬼火，起旋前散开半角 %2$s 度。",
-  "worldcombat.skill.infernalparade.description.1": "整队合计 %1$s 的特殊伤害，按团数均分；鬼火以 %2$s 格每刻飞行、每刻最多转向 %3$s 度。",
-  "worldcombat.skill.infernalparade.description.2": "至少一团命中时有 %1$s 概率使目标灼伤、持续 %2$s；鬼火先直飞 %3$s 刻再开始转向。",
+  "worldcombat.skill.infernalparade.description.1": "整队合计 %1$s 的特殊伤害，按团数均分；鬼火以 %2$s 格每刻飞行、每刻最多转向 %3$s 度。目标带着灼伤、麻痹、中毒、冰冻或睡眠中任意一种时，整队合计翻倍。",
+  "worldcombat.skill.infernalparade.description.2": "至少一团命中时有 %1$s 概率使目标灼伤、持续 %2$s（火属性或特性免疫灼伤的目标不受影响）：灼伤期间目标物理伤害减半，并每隔约 5 秒损失约 6.25%% 最大生命（至少 1 点），到期或被解除后结束。鬼火先直飞 %3$s 刻再开始转向。",
   "worldcombat.skill.infernalparade.use.0": "追踪的鬼火群",
   "worldcombat.skill.infernalparade.use.1": "对带异常者补刀",
   "worldcombat.skill.infernalparade.use.2": "把火点上再交给队友",

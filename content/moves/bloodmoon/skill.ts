@@ -68,7 +68,7 @@ namespace PokemonSkills {
         id: bloodmoonId,
         cooldownParameter: "recharge",
         name: "Blood Moon",
-        description: "The user unleashes the full brunt of its spirit from a full moon that shines as red as blood. This move can't be used twice in a row.",
+        description: "召出一轮赤红如血的满月，把全身气势化作一道垂直落下的光柱砸在对手脚下，落点留下一圈焦痕。放完之后气势耗尽，短时间内不能再次召月——换成别的招式可以提前平息。月蚀式让月光铺开、波及落点周围，代价是主目标威力略降。",
         uses: ["召出满月、让月柱从天上垂直砸落", "点杀远处的厚血目标", "用月蚀式把落点一圈一起砸进去"],
         kind: "enemy",
         range: 11,

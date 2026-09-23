@@ -138,14 +138,14 @@ namespace PokemonSkills {
 
     describe("scald", [
         { key: "description.0", values: ["boil"] },
-        { key: "description.1", values: ["reach", "globSpeed"] },
-        { key: "description.2", values: ["burnChance", "slickRadius"] },
-        { key: "description.3", values: ["slickTicks", "seethe", "seetheInterval", "slickChance"] },
+        { key: "description.1", values: ["reach","globSpeed"] },
+        { key: "description.2", values: ["burnChance","slickRadius"] },
+        { key: "description.3", values: ["slickTicks","seethe","seetheInterval","slickChance"] },
         { key: "rule.thaw", values: [] },
         { key: "rule.wet", values: [] },
         { key: "simmer.on", values: [], when: function (context) { return read(context.detail.values, ["simmer"]) === true; } },
         { key: "simmer.off", values: [], when: function (context) { return read(context.detail.values, ["simmer"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.boil", "tier.0.burnChance"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.boil", "tier.1.slickRadius", "tier.1.slickChance"] }
     ]);

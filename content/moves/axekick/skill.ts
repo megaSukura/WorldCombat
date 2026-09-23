@@ -57,11 +57,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "axekick",
         cooldownParameter: "recharge",
         name: "Axe Kick",
-        description: "将踢起的脚跟往下劈向对手进行攻击。有时会使对手混乱。如果劈偏则自己会受到伤害。",
-        uses: ["用一记直落的下劈砸穿硬目标", "给刚起手/刚增益的对手一记恍惚", "贴脸时用最轻自伤的一记收尾"],
+        description: "抬腿高劈、脚跟直落，命中造成伤害并有几率使目标恍惚；劈偏时脚踵砸地、自己受伤。",
+        uses: ["用一记直落的下劈砸穿硬目标", "给刚起手或刚增益的对手一记恍惚", "贴脸时用最轻自伤的一记收尾"],
         kind: "enemy",
         range: 4.2,
         maxRange: 7.5,

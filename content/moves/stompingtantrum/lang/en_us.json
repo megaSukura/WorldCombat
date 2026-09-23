@@ -33,5 +33,6 @@
   "world_combat.move.stompingtantrum.text.hit": "Stomp hit %1$s",
   "world_combat.move.stompingtantrum.text.rage": "Regret doubled! %1$s",
   "world_combat.move.stompingtantrum.text.miss": "The stomp whiffed",
-  "effect.world_combat.stompingtantrum_frustration": "Stomping Tantrum Grudge"
+  "effect.world_combat.stompingtantrum_frustration": "Stomping Tantrum Grudge",
+  "worldcombat.skill.stompingtantrum.description.rage": "After your previous attack on a foe fully misses, frustration gathers on the user for about 5.5 s; a Stomping Tantrum thrown in that window doubles its power. Any successful hit dispels the frustration at once."
 }

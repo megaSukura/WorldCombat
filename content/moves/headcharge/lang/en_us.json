@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.headcharge.summary": "An unstoppable plowing headbutt: duck, flare the afro and drive in a straight line, hurling everything in the way without stopping. A whiff just carries you past.",
-  "worldcombat.skill.headcharge.description.0": "The head deals %1$s contact damage to each target, charging up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.headcharge.description.1": "For each target hit the user takes %1$s%% of that target's actual damage as recoil; every target after the first takes %2$s%% of the power and is shoved %3$s blocks.",
-  "worldcombat.skill.headcharge.hunt.on": "Homing: the charge steers toward the nearest enemy (with a turn limit), catching targets that sidestep - at the cost of power, knockback and a longer wind-up.",
+  "worldcombat.skill.headcharge.summary": "Charges through multiple enemies, striking each once without stopping on a hit. Every successful hit causes recoil based on the target’s actual damage taken.",
+  "worldcombat.skill.headcharge.description.0": "The head deals about %1$s contact damage to each enemy struck along the charge, travelling up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
+  "worldcombat.skill.headcharge.description.1": "Hits each enemy once and continues until the distance is spent, a wall is struck or movement is blocked. Each hit causes recoil equal to %1$s of the target’s actual damage taken. After the first target, later targets receive %2$s power and are each pushed up to %3$s blocks.",
+  "worldcombat.skill.headcharge.hunt.on": "Homing: the charge steers toward the nearest enemy (up to %1$s degrees per tick), catching targets that sidestep - at the cost of charge power x0.92, knockback x0.85 and wind-up +2 ticks.",
   "worldcombat.skill.headcharge.hunt.off": "Straight line: maximum power and knockback, but one sidestep puts the target clear.",
-  "worldcombat.skill.headcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
-  "worldcombat.skill.headcharge.growth.0": "From level %1$s the charge power rises to %2$s.",
-  "worldcombat.skill.headcharge.growth.1": "From level %1$s the charge power rises to %2$s and the through fraction to %3$s.",
+  "worldcombat.skill.headcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %5$s s, costing %4$s PP.",
+  "worldcombat.skill.headcharge.growth.0": "From level %1$s, base impact power rises to %2$s.",
+  "worldcombat.skill.headcharge.growth.1": "From level %1$s, base impact power rises to %2$s and the power fraction for later targets to %3$s.",
   "worldcombat.skill.headcharge.use.0": "Hurl a line of enemies in one straight charge",
   "worldcombat.skill.headcharge.use.1": "Deliver a powerful charge at the cost of recoil",
   "worldcombat.skill.headcharge.use.2": "Chase a sidestepping target with the homing form",
@@ -28,5 +28,6 @@
   "worldcombat.skill.headcharge.preference.ai.preferLine": "Prefer a line",
   "worldcombat.skill.headcharge.preference.ai.preferLine.help": "On: prefer starting the charge when more enemies are lined up behind the target. Off: choose by threat alone.",
   "world_combat.move.headcharge.text.hit": "Hurled %1$s",
-  "world_combat.move.headcharge.text.miss": "Charged past"
+  "world_combat.move.headcharge.text.miss": "Charged past",
+  "worldcombat.skill.headcharge.value.turnRate": "Turn limit"
 }

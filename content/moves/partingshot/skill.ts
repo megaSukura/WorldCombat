@@ -28,10 +28,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: partingshotId,
         cooldownParameter: "recharge",
         name: "Parting Shot",
-        description: "朝对手甩下一句带刺的狠话：扎中后把它的攻击与特攻各削几级，自己趁机退开。和后备宝可梦的替换仍在接共享入口。",
+        description: "朝对手甩下一句带刺的狠话：话飞过去扎中后，把对手的攻击与特攻各削几级、挂上羞辱身份，自己趁机退开。话没送到就不退。",
         uses: ["把对手的输出削下去再脱身", "在自己要撤时顺手废掉追兵的手", "先射一句狠话再拉开距离"],
         kind: "enemy",
         range: 8,

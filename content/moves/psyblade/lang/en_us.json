@@ -3,9 +3,9 @@
   "worldcombat.skill.psyblade.use.0": "Land a heavy cut while on the electric-terrain charge",
   "worldcombat.skill.psyblade.use.1": "Cut the main target and shove those close by",
   "worldcombat.skill.psyblade.use.2": "Sever a foe's guard with an unseen blade",
-  "worldcombat.skill.psyblade.description.0": "Deals about %1$s physical damage; while the caster stands on the electric-terrain charge that segment is x1.5.",
+  "worldcombat.skill.psyblade.description.0": "Deals about %1$s contact physical damage to the target; while the caster stands on the electric-terrain charge this segment is x1.5.",
   "worldcombat.skill.psyblade.description.1": "Steps up to a target within %1$s blocks (dash speed about %2$s blocks/tick), then sweeps a %3$s degree arc.",
-  "worldcombat.skill.psyblade.description.2": "At most 2 others take %1$s of the cut, and the main target is shoved about %2$s blocks away.",
+  "worldcombat.skill.psyblade.description.2": "Up to %2$s others take %1$s of the cut, and the main target is shoved about %3$s blocks away.",
   "worldcombat.skill.psyblade.extend.on": "Extend mode: arc x1.2 and more graze, but power x0.88, +2 ticks windup and +3 ticks cooldown.",
   "worldcombat.skill.psyblade.extend.off": "Focus mode: narrower, heavier, faster and cheaper, good for singling one target out.",
   "worldcombat.skill.psyblade.timing": "Castable within %1$s blocks; after %2$s s windup it costs %4$s PP, then %3$s s recovery and %5$s s cooldown from commit.",
@@ -34,5 +34,6 @@
   "world_combat.move.psyblade.text.charged": "Charged cut",
   "world_combat.move.psyblade.text.cut": "Cut %1$s",
   "world_combat.move.psyblade.text.echo": "Graze x%1$s",
-  "world_combat.move.psyblade.text.miss": "Swing hits air"
+  "world_combat.move.psyblade.text.miss": "Swing hits air",
+  "worldcombat.skill.psyblade.value.echoCap": "Graze cap"
 }

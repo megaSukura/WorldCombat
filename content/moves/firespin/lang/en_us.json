@@ -4,12 +4,12 @@
   "worldcombat.skill.firespin.use.1": "Pressure a bulky target with ignited damage over time",
   "worldcombat.skill.firespin.use.2": "Force a foe to reposition to put the fire out",
   "worldcombat.skill.firespin.use.3": "Drive a target out of water, then light it up",
-  "worldcombat.skill.firespin.description.0": "The spark deals %1$s special damage and raises a fire column that travels with the target.",
-  "worldcombat.skill.firespin.description.1": "The column lasts %1$s and licks fire every %2$s; each lick has a %3$s chance to ignite the target, and the burn lasts %4$s.",
-  "worldcombat.skill.firespin.description.2": "Range %1$s blocks, spark speed %2$s blocks per tick.",
+  "worldcombat.skill.firespin.description.0": "The spark deals about %1$s special damage and raises a fire column that travels with the target.",
+  "worldcombat.skill.firespin.description.1": "The column lasts %1$s and licks the target every %2$s, each lick dealing about %5$s special damage; while it is not already burning, each lick also has a %3$s chance to set it burning for %4$s, which burns away 1/16 of its maximum health every 5 seconds and halves its physical attacks.",
+  "worldcombat.skill.firespin.description.2": "Range %1$s blocks; the spark homes in on the target at %2$s blocks per tick.",
   "worldcombat.skill.firespin.option.on": "Blaze style on: power x1.1, interval x0.8, ignite chance x1.25, cooldown +6, but duration x0.8 - it hits harder and ends sooner.",
   "worldcombat.skill.firespin.option.off": "Blaze style off (ember): full power, longer interval, lower ignite chance, but it lasts longer, made to wear a target down.",
-  "worldcombat.skill.firespin.timing": "Castable on a target within %1$s blocks; after %2$s of preparation it spends %4$s PP; recover %3$s, cooldown %5$s from commit.",
+  "worldcombat.skill.firespin.timing": "Castable on a target within %1$s blocks; after %2$s of preparation it spends %4$s PP; recover %3$s, cooldown %5$s from the strike.",
   "worldcombat.skill.firespin.growth.0": "At level %1$s the scorch power rises to %2$s and the ignite chance to %3$s.",
   "worldcombat.skill.firespin.value.scorch": "Scorch power",
   "worldcombat.skill.firespin.value.duration": "Column duration",
@@ -30,5 +30,6 @@
   "world_combat.move.firespin.text.wrap": "Caught in the fire %1$s s",
   "world_combat.move.firespin.text.release": "The fire column scatters",
   "world_combat.move.firespin.text.douse": "The fire was doused",
-  "effect.world_combat.firespin_blaze": "Caught in Fire Spin"
+  "effect.world_combat.firespin_blaze": "Caught in Fire Spin",
+  "worldcombat.skill.firespin.description.douse": "If the target becomes soaked (in water, in rain, or hit by a water move) the column is snuffed out at once; if the burning mark is cleared early (milk, a dispel), the column ends early too."
 }

@@ -40,7 +40,7 @@ namespace PokemonSkills {
         id: esperwingId,
         cooldownParameter: "recharge",
         name: "Esper Wing",
-        description: "The user slashes the target with aura-enriched wings. This also boosts the user's Speed stat. This move has a heightened chance of landing a critical hit.",
+        description: "气场上翼，一对气翼扫过前方扇面，对其中每个敌人各造成一记特殊伤害，且更容易击中要害；同一瞬提高自己的速度，并在身上留下气翼余韵。",
         uses: ["气场上翼，一对气翼从两侧向前扫出", "切开正面并给多个目标各一记", "振翅的同时给自己垫一档速度"],
         kind: "enemy",
         range: 3.2,

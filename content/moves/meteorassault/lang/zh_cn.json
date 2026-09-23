@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.meteorassault.summary": "在同一条大弧上连续几下大力重挥，命中扇形里的所有对手；挥完之后自己被晃晕一段最长的力竭时间，无法行动也无法移动。",
-  "worldcombat.skill.meteorassault.description.0": "同一条弧上连续重挥 %2$s 段，每段对扇形内每个敌人造成 %1$s 的接触伤害。",
+  "worldcombat.skill.meteorassault.description.0": "同一条弧上连续重挥 %2$s 段，每段对扇形内每个敌人造成约 %1$s 点接触伤害。",
   "worldcombat.skill.meteorassault.description.1": "每段挥弧半径 %1$s 格、张开 %2$s 度、间隔 %3$s。",
-  "worldcombat.skill.meteorassault.description.2": "挥完后自己被晃晕 %1$s，期间无法行动也无法移动。",
+  "worldcombat.skill.meteorassault.description.2": "挥完后自己被晃晕 %1$s，期间无法发动新招或普通攻击，也无法移动。",
   "worldcombat.skill.meteorassault.description.3": "起手 %1$s。",
   "worldcombat.skill.meteorassault.use.0": "近距离连续重挥",
   "worldcombat.skill.meteorassault.use.1": "一次扫到挤在面前的几个对手",

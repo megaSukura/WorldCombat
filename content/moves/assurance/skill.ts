@@ -13,10 +13,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: assuranceId,
         cooldownParameter: "recharge",
         name: "Assurance",
-        description: "追击刚受过伤的目标：若它在最近一段时间内已经被打过，这一记威力翻倍；物攻与速度越高，追得越狠。",
+        description: "追上去补一记：目标在最近一段时间内已经受过伤时，这一记威力翻倍；物攻与速度越高，追得越狠。",
         uses: ["补掉已经被同伴削过的目标", "在对手刚挨打的窗口里追上一记", "把残血目标从场上追出去"],
         kind: "enemy",
         range: 4.2,

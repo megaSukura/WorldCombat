@@ -114,7 +114,7 @@ namespace PokemonSkills {
     ]);
 
     describe("selfdestruct", [
-        { key: "description.0", values: ["blast"] },
+        { key: "description.0", values: ["blast","maxTargets"] },
         { key: "description.1", values: ["blastRadius"] },
         { key: "description.2", values: ["knock", "lift"] },
         { key: "description.3", values: ["scorchTicks", "scorchCells"] },

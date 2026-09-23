@@ -73,7 +73,7 @@ namespace PokemonSkills {
         id: "mountaingale",
         cooldownParameter: "recharge",
         name: "Mountain Gale",
-        description: "The user hurls giant chunks of ice at the target to inflict damage. This may also make the target flinch.",
+        description: "拔出冰山般的巨冰、抡起来沿低弧线砸向对手：正面命中的吃满一记全场最重的伤害，落点一圈里的其他敌人被碎冰扫到，地面结冰并在中心竖起一簇冰锥。飞行慢、看得见、能侧身躲，起手也最长。",
         uses: ["远距离砸出一记全场最重的单体伤害", "用爆开的碎冰扫到挤在落点的一圈敌人", "在落点竖起一小段冰锥当掩体"],
         kind: "enemy",
         range: 12,

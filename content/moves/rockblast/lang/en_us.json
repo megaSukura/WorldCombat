@@ -3,7 +3,7 @@
   "worldcombat.skill.rockblast.use.0": "A burst of arcing heavy stones at close-mid range",
   "worldcombat.skill.rockblast.use.1": "Crack the ground at the landing point into rubble",
   "worldcombat.skill.rockblast.use.2": "Use the boulder choice to pile single-stone damage on a thick target",
-  "worldcombat.skill.rockblast.description.0": "Each stone deals %1$s physical damage, and the burst tears out %2$s stones (2-5 natively, set by the user's data).",
+  "worldcombat.skill.rockblast.description.0": "Each stone deals about %1$s physical damage, and the burst tears out %2$s stones (2-5 natively, set by the user's data).",
   "worldcombat.skill.rockblast.description.1": "Stones are hurled every %1$s at %2$s blocks/tick, reaching %3$s blocks with up to ±%4$s spread.",
   "worldcombat.skill.rockblast.description.2": "Each stone has a %1$s block hit radius and falls at %2$s blocks/tick^2.",
   "worldcombat.skill.rockblast.boulder.on": "Boulder: per-stone power x1.4, larger stones, spread x0.6 and a steeper arc; costs a burst capped at 3 stones, interval +2 ticks, stone speed x0.92, wind-up +3 ticks and cooldown +5 ticks.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.rockblast.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.rockblast.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger prefers opening from farther away.",
   "worldcombat.skill.rockblast.preference.ai.finish": "Prefer low health",
-  "worldcombat.skill.rockblast.preference.ai.finish.help": "On: low-health targets rank higher so the burst finishes them; off: all targets score the same."
+  "worldcombat.skill.rockblast.preference.ai.finish.help": "On: low-health targets rank higher so the burst finishes them; off: all targets score the same.",
+  "worldcombat.skill.rockblast.description.additional": "Whether it strikes an enemy or the ground, each stone crumbles the top layer of a small patch at the impact point into rubble; the rubble lasts %1$s before the original blocks return, and a stone that misses leaves a shorter one."
 }

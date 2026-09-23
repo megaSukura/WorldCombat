@@ -5,7 +5,7 @@
   "worldcombat.skill.copycat.use.2": "Chain onto the move someone just teed up",
   "worldcombat.skill.copycat.description.0": "The borrowed move reaches up to %1$s blocks; only moves used within %2$s are remembered.",
   "worldcombat.skill.copycat.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
-  "worldcombat.skill.copycat.deep.on": "Deep echo: a longer memory window and denser echoes, but a slower windup and a longer cooldown.",
+  "worldcombat.skill.copycat.deep.on": "Deep echo: a longer memory window that catches older moves, but a slower windup and a longer cooldown.",
   "worldcombat.skill.copycat.deep.off": "Shallow echo: quick and cheap, but it only catches the sound that just rang.",
   "worldcombat.skill.copycat.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.copycat.value.span": "Echo range",
@@ -15,11 +15,12 @@
   "worldcombat.skill.copycat.value.aftercast": "Recovery",
   "worldcombat.skill.copycat.value.recharge": "Cooldown",
   "worldcombat.skill.copycat.preference.deep": "Deep echo",
-  "worldcombat.skill.copycat.preference.deep.help": "On: memory window ×1.6 and denser echoes, catching older moves, but windup +3 ticks and cooldown ×1.35; off: a quick grab at the sound that just rang.",
+  "worldcombat.skill.copycat.preference.deep.help": "On: memory window x1.6 to catch older moves, but windup +3 ticks and cooldown x1.35; off: a quick grab at the sound that just rang.",
   "worldcombat.skill.copycat.preference.ai.maxChase": "Echo distance",
   "worldcombat.skill.copycat.preference.ai.maxChase.help": "When the borrowed move needs an enemy, the AI will not echo beyond this distance; smaller echoes only up close.",
   "worldcombat.skill.copycat.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.copycat.preference.ai.leaveStation.help": "When on, the user may leave its post to echo; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.copycat.text.copy": "Copied %1$s",
-  "world_combat.move.copycat.text.empty": "No sound on the field yet"
+  "world_combat.move.copycat.text.empty": "No sound on the field yet",
+  "worldcombat.skill.copycat.description.1": "Copycat takes the most recent move used by anyone on the field, friend or foe. It fails when nobody has acted, the echo is older than the memory window, its user has left, or the move cannot be copied. Self and ally-targeted moves land on the user; other moves need a nearby enemy and fail without one. Copycat pays only its own PP and cooldown, not the borrowed move's PP."
 }

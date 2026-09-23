@@ -77,7 +77,9 @@ namespace PokemonSkills {
 
     describe("bodyslam", [
         { key: "description.0", values: ["crush"] },
-        { key: "description.1", values: ["landRadius", "slamChance"] },
-        { key: "description.2", values: ["leap", "hop", "push"] }
+        { key: "description.1", values: ["landRadius","slamChance"] },
+        { key: "description.paralysis", values: [] },
+        { key: "description.2", values: ["leap","hop","push"] },
+        { key: "description.splash", values: [] }
     ]);
 }

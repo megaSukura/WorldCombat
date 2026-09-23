@@ -109,6 +109,7 @@ namespace PokemonSkills {
     describe("superfang", [
         { key: "description.0", values: ["damage"] },
         { key: "description.1", values: ["reach", "lunge", "grip"] },
+        { key: "description.path", values: [] },
         { key: "description.2", values: ["holdTicks"] },
         { key: "patient.on", values: [], when: function (context) { return read(context.detail.values, ["patient"]) === true; } },
         { key: "patient.off", values: [], when: function (context) { return read(context.detail.values, ["patient"]) !== true; } },

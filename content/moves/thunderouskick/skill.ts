@@ -26,6 +26,7 @@ namespace PokemonSkills {
     const thunderouskickMissText = "world_combat.move.thunderouskick.text.miss";
 
     define({
+        freeMovement: true,
         id: "thunderouskick",
         name: "Thunderous Kick",
         description: "以电光般的绕步在目标身侧来回闪几次，再从它没在看的一侧踢出一脚：踢中的目标防御下降并被顶开。绕步越多、目标越是分神，护架被踢得越开。戏耍式多绕一步、踢开两级但脚更轻；疾踢式出脚更重更快。",

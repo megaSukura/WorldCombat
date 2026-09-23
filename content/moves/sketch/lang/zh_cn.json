@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.sketch.summary": "把对手刚用过的那一手当场描进写生所占的招式格，永久学会它；写生只有一次，用过即从招式表消失。",
+  "worldcombat.skill.sketch.summary": "把对手最近一招永久写进写生所在的招式格；普通生物的已知攻击会转译为对应招式。",
   "worldcombat.skill.sketch.use.0": "永久学会对手的一手",
   "worldcombat.skill.sketch.use.1": "复制稀有的强化或回复",
   "worldcombat.skill.sketch.use.2": "把强攻收进自己的招式表",
-  "worldcombat.skill.sketch.description.0": "在 %1$s 格内看准目标，描摹起手 %2$s 秒，之后把它最后使用的那一手永久写进写生所在的招式格。",
-  "worldcombat.skill.sketch.description.1": "目标没有最后招式时无法发动，也不会消耗写生。",
+  "worldcombat.skill.sketch.description.0": "在 %1$s 格内看准目标，描摹起手 %2$s；宝可梦最后使用的招式会永久替换写生所在的招式格，并获得完整PP。",
+  "worldcombat.skill.sketch.description.1": "没有可读取的出手时无法发动；宝可梦的写生本身无法被写生，已经会的招式也不会重复学习。",
   "worldcombat.skill.sketch.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.sketch.value.reach": "描摹距离",
   "worldcombat.skill.sketch.value.study": "描摹起手",
@@ -18,5 +18,6 @@
   "worldcombat.skill.sketch.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.sketch.preference.ai.leaveStation.help": "开启后，驻守命令下也会为描摹离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.sketch.text.ink": "描下 %1$s",
-  "world_combat.move.sketch.text.empty": "没有可描的一手"
+  "world_combat.move.sketch.text.empty": "没有可描的一手",
+  "worldcombat.skill.sketch.world": "普通生物最近60秒内成功用过的已知原生攻击，会转译为现有招式并永久替换写生：普通近战→撞击，蜇刺→毒针，冲撞→头锤，重锤→摔打，箭矢→乱击，三叉戟→角撞，火球→火花，音爆→音爆，间接魔法→幻象光线。未列出的攻击无法写生；学到的是对应招式的完整动作。"
 }

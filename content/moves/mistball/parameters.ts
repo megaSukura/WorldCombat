@@ -131,8 +131,8 @@ namespace PokemonSkills {
 
     describe(mistballId, [
         { key: "description.0", values: ["puff"] },
-        { key: "description.1", values: ["downChance", "dropStages", "downTicks"] },
-        { key: "description.2", values: ["cloud", "lob", "fall"] },
+        { key: "description.1", values: ["downChance","dropStages","downTicks"] },
+        { key: "description.2", values: ["cloud","lob","fall"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["suffuse"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["suffuse"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

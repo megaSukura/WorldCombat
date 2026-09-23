@@ -135,8 +135,8 @@ namespace PokemonSkills {
 
     describe("drumbeating", [
         { key: "description.0", values: ["beat", "final", "beats", "interval"] },
-        { key: "description.1", values: ["reach", "wavePace", "beatRadius"] },
-        { key: "description.2", values: ["slowStages", "bindTicks", "rootTicks", "rootCells"] },
+        { key: "description.1", values: ["reach","wavePace","beatRadius"] },
+        { key: "description.2", values: ["slowStages","bindTicks","rootTicks","rootCells"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

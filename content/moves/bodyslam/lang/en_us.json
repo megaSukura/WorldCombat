@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.bodyslam.summary": "Leap up and drop your whole body onto the target point: everyone in the landing zone is hurt and shoved, and the heavier you are the more likely they are left paralysed. The quake form spreads wider but hits softer; the press form is the opposite.",
-  "worldcombat.skill.bodyslam.description.0": "The slam deals %1$s contact damage.",
-  "worldcombat.skill.bodyslam.description.1": "The landing radius is %1$s blocks; a crushed target has a %2$s%% chance to be left paralysed.",
-  "worldcombat.skill.bodyslam.description.2": "You can leap from up to %1$s blocks away, rise %2$s blocks, and shove the target %3$s blocks on landing.",
+  "worldcombat.skill.bodyslam.description.0": "The slam deals about %1$s contact damage.",
+  "worldcombat.skill.bodyslam.description.1": "The landing radius is %1$s blocks; every enemy inside is crushed, and each crushed target has a %2$s%% chance to be left paralysed.",
+  "worldcombat.skill.bodyslam.description.2": "You can leap from up to %1$s blocks away and rise %2$s blocks; the landing point is locked at take-off, so an enemy that walks out of it during the flight dodges the drop. On landing every enemy inside is shoved %3$s blocks away from the landing point.",
   "worldcombat.skill.bodyslam.use.0": "Drop your weight onto one target",
   "worldcombat.skill.bodyslam.use.1": "Squash a cluster caught under the landing",
   "worldcombat.skill.bodyslam.use.2": "Lean on your weight for a higher paralysis chance",
@@ -20,5 +20,7 @@
   "worldcombat.skill.bodyslam.preference.ai.preferCrowd": "Prefer crowds",
   "worldcombat.skill.bodyslam.preference.ai.preferCrowd.help": "On: prefer the press when two or more foes cluster around the target (one landing covers them). Off: only the threat itself counts.",
   "world_combat.move.bodyslam.text.hit": "Body Slam crushed %1$s",
-  "world_combat.move.bodyslam.text.miss": "Body Slam hit the ground"
+  "world_combat.move.bodyslam.text.miss": "Body Slam hit the ground",
+  "worldcombat.skill.bodyslam.description.paralysis": "Paralysis lasts about 40 seconds: movement speed is halved, and every attempt to act has a 25% chance to fail; Electric-type targets cannot be paralysed.",
+  "worldcombat.skill.bodyslam.description.splash": "With Quake form on: a larger landing that shoves enemies further, but lower single-target power and numb chance, and a longer wind-up, recovery and cooldown; off (Press form): a smaller landing with higher single-target power and numb chance."
 }

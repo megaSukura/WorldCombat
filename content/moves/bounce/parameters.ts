@@ -165,11 +165,11 @@ namespace PokemonSkills {
     ]);
 
     describe(bounceId, [
-        { key: "description.0", values: ["leap"] },
+        { key: "description.0", values: ["leap","maxTargets","press","push"] },
         { key: "description.1", values: ["hopHeight", "hopDistance"] },
-        { key: "description.2", values: ["hangTicks", "impactRadius", "paralyzeChance", "paralyzeTicks"] },
+        { key: "description.2", values: ["hangTicks","impactRadius","paralyzeChance","paralyzeTicks"] },
         { key: "description.3", values: [] },
-        { key: "crush.on", values: ["press", "push"], when: function (context) { return read(context.detail.values, ["crush"]) === true; } },
+        { key: "crush.on", values: [], when: function (context) { return read(context.detail.values, ["crush"]) === true; } },
         { key: "crush.off", values: [], when: function (context) { return read(context.detail.values, ["crush"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.leap"] },

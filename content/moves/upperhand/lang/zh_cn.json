@@ -3,9 +3,9 @@
   "worldcombat.skill.upperhand.use.0": "打断对手的先制招",
   "worldcombat.skill.upperhand.use.1": "惩罚靠先制招抢节奏的敌人",
   "worldcombat.skill.upperhand.use.2": "在对手抢先手时把它按回原地",
-  "worldcombat.skill.upperhand.description.0": "打进 %1$s 威力的一记掌根；目标在最近 %2$s 内提交过先制攻击招式才会命中，并把它按停。",
+  "worldcombat.skill.upperhand.description.0": "打进一记约 %1$s 点物理伤害的掌根；只有当目标在最近 %2$s 内提交过先制攻击招式时才会命中并把它按停，否则整招落空、PP 照常消耗。",
   "worldcombat.skill.upperhand.description.1": "掌程 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中后把目标顶开 %4$s 格、按停 %5$s。",
-  "worldcombat.skill.upperhand.wide.on": "开启横扫式：掌风扫出身前一小片扇面，一次按停多个正在出先制招的敌人；单发轻一成二、按停短 6 刻、收招多 3 刻、冷却多 5 刻。",
+  "worldcombat.skill.upperhand.wide.on": "开启横扫式：只要锁定的目标刚出过先制招，掌风扫出身前约 %1$s 格半径、%2$s 度张角的扇面，被扫到的敌人各挨一记并按停（即使它们自己没出先制招）；单发轻一成二、按停短 6 刻、收招多 3 刻、冷却多 5 刻。",
   "worldcombat.skill.upperhand.wide.off": "关闭横扫式：点掌，单发更重、按停更久，但一次只能按停一个。",
   "worldcombat.skill.upperhand.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",
   "worldcombat.skill.upperhand.growth.0": "达到 %1$s 级，掌根威力提升至 %2$s。",
@@ -29,5 +29,6 @@
   "world_combat.move.upperhand.text.alert": "看穿了",
   "world_combat.move.upperhand.text.hit": "快手还击！",
   "world_combat.move.upperhand.text.whiff": "慢了半拍",
-  "effect.world_combat.upperhand_flinch": "畏缩"
+  "effect.world_combat.upperhand_flinch": "畏缩",
+  "worldcombat.skill.upperhand.description.2": "按停即畏缩 %1$s：先尝试打断目标当前可被打断的动作，随后目标在这段时间内无法发动新招或进行普通攻击。"
 }

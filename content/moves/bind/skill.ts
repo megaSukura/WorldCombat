@@ -113,7 +113,7 @@ namespace PokemonSkills {
         id: "bind",
         cooldownParameter: "recharge",
         name: "Bind",
-        description: "A line of long body or vine lashes out and ties the target to the user. It drags the target back whenever it tries to leave and cinches tighter with every squeeze; the user is slowed by the tension. The rope lasts until it runs out or is torn apart by a strong displacement.",
+        description: "甩出一根绷在两者之间的缚索：长身或藤蔓缠住一个目标，另一头系在自己身上。目标想跑就被拽回来，绳每勒一下更紧一点；被拴住的目标走得更慢，拉绳的自己也一样。目标能动、能打，却走不出这根绳——除非把绳一步扯断、等它走完，或任一方身上的束缚被清除。",
         uses: ["把一个想跑的目标拴在身边拖着走", "用持续收紧的伤害压住一个难缠目标", "把对手从掩体或水里拖出来"],
         kind: "enemy",
         range: 3.5,

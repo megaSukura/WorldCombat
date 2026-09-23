@@ -28,11 +28,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: armthrustId,
         cooldownParameter: "recharge",
         name: "Arm Thrust",
-        description: "The user attacks the target with open-palmed arm thrusts. This move hits two to five times in a row.",
-        uses: ["张开双手的一串必中推撞", "把对手一路推向墙、石头或树干，撞上时多挨一记", "推进式跟着对手走，把整串吃满"],
+        description: "张开双手的一串必中推撞：一掌接一掌把对手朝前推出去，被顶到墙、石头或树干上时还会多挨一记撞墙伤害。推进式跟着对手走、把整串吃满；立推式站定不动，一次把人顶很远。",
+        uses: ["张开双手的一串必中推撞", "把对手推向墙、石头或树干，撞上时多挨一记", "推进式跟着对手走，把整串吃满"],
         kind: "enemy",
         range: 2.5,
         maxRange: 3.4,

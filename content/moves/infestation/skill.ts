@@ -73,7 +73,7 @@ namespace PokemonSkills {
     define({
         id: "infestation",
         name: "Infestation",
-        description: "The target is infested and attacked for four to five turns. The target can't flee during this time.",
+        description: "甩出一团虫子缠住目标，持续啃咬，并且只要缠着目标就无法移动；用时间换空间。",
         uses: ["给难缠的目标挂持续啃咬", "把目标定在原地", "逼对手先来清状态或反打"],
         kind: "enemy",
         range: 12,

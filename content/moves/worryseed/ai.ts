@@ -1,15 +1,4 @@
-/**
- * 烦恼种子 / worryseed — 伙伴 AI 用途与自己的出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、有一条通视直线，而且它是宝可梦、
- *   特性读得出来、可以被顶掉（不是不眠、不带 cantsuppress）。它还没有被种过。
- * 对谁出手：当前威胁；已经被种子种过、特性不可压制或已经是不眠的目标跳过，不重复投。
- * 候选之间怎么排：priority 55，排在普通控制之前——先把对手的特性换成不眠，顺手封掉它的睡眠打法。
- * 够不到怎么办：reach 就是本招射程，共享任务先走近到能通视的射程再投。
- * 放完之后：对手的特性变成不眠一段时间，交回共享交战计划；标记与特性层同时到期。
- * 不眠本身由本单元 rules.ts 挂在共享 CombatStatus 门上，对任何来源的不眠生效。
- * ai.maxChase 决定追多远；ai.leaveStation 决定驻守时是否愿意离位。
- */
+/** worryseed：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     registerFact("world_combat:worryseed-ability", function (access, actor, _argument) {
         return PokemonSkills.worryseedAbility(access, actor);

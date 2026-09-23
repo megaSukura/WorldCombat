@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.slam.summary": "把长尾、长身或藤蔓高高扬起，朝对手当时站的地方狠狠摔下去。扬起的瞬间砸点就定死了——圆形落点会在地面亮出来，站住不动就吃满，在落下前挪开就能躲掉。它是全族最高的单发，也是最慢、最容易落空的一记。",
-  "worldcombat.skill.slam.use.0": "对站桩或刚被定住的目标砸一发最重的单体伤害",
+  "worldcombat.skill.slam.use.0": "对站桩或刚被定住的目标砸下全族最重的一记",
   "worldcombat.skill.slam.use.1": "预判落点把堵在门口的目标震开",
   "worldcombat.skill.slam.use.2": "在被缠住的目标身上补一记收割",
   "worldcombat.skill.slam.description.0": "砸中造成约 %1$s 的接触伤害，砸坑半径 %2$s 格，坑内的非友方都吃这一记。",
-  "worldcombat.skill.slam.description.1": "在 %1$s 格内选定砸点，扬起后 %2$s 秒落下（这段时间可以挪开）；被砸中的目标沿背向震开约 %3$s 格。",
+  "worldcombat.skill.slam.description.1": "在 %1$s 格内锁定目标并扬起长肢，砸点定在它当时所站的位置；%2$s 秒后落下，这段时间里目标挪开就能躲掉；被砸中的目标沿背离砸点的方向震开约 %3$s 格。",
   "worldcombat.skill.slam.heavy.on": "沉砸式：砸得更重、砸坑更大、震得更远，但落下更慢、更容易被躲开，收招与冷却也更久。",
   "worldcombat.skill.slam.heavy.off": "疾砸式：落得快、出手快，更容易砸中移动中的目标，但单发略低、砸坑更小。",
   "worldcombat.skill.slam.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

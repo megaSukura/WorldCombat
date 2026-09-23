@@ -1,18 +1,4 @@
-/**
- * 魅诱之声 / alluringvoice —— 世界内的动作。
- *
- * 核心念头：朝身前荡出一条天使般的窄声场，扫过整条锥形；普通目标只是被歌声灼了心神，此刻正带着正面能力
- * 等级的目标会被这首歌惑乱——心气正盛时最听不进调子，于是陷入错乱，出手会打偏、用力会伤到自己。
- *
- * 两幕（提交后由本招自己驱动）：
- *   起（提交前 windup）：吸气起调，音符与心在身前聚拢，可免费打断、不花 PP。
- *   唱（execute）：朝目标方向张开一条锥形声场，罩住范围内所有敌人；每个命中者按「正面等级合计」判定，
- *       带着正面等级的直接挂上本单元声场的错乱载体（共享身份 world_combat:status/confusion）。
- *
- * 与同族分开：魅惑之声是以自身为心的整圈声场；魅诱之声是一条朝前的窄锥，而且混乱只落在变强的目标身上。
- *
- * 对宝可梦、原版生物、其他模组生物和玩家，伤害（hurt → PokemonDamage）与错乱（CombatStatus）都走同一条路。
- */
+/** alluringvoice：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 本招自己的错乱载体：只有当代表载体就是本单元的 id 时，本单元的行为才接管。 */
     function alluringVoiceCarrier(world: CombatWorld, actor: CombatActor): CombatMobEffect | null {
@@ -23,7 +9,7 @@ namespace PokemonSkills {
     define({
         id: alluringvoiceId,
         cooldownParameter: "recharge", name: "魅诱之声",
-        description: "朝身前荡出一条天使般的锥形声场：范围内敌人受到特殊伤害；此刻正带着正面能力等级的目标会被歌声惑乱、陷入混乱，出手可能作废、打中别人还会被自己的力量反噬。它涨高的级数越多，混乱越久。",
+        description: "向前唱出锥形声场，伤害并扰乱敌人。强化中的目标会混乱；普通生物正在追击，或玩家刚命中过敌人时，也会被歌声扰乱。",
         uses: ["惩罚刚强化过的对手，让它自乱阵脚", "一次扫过身前一条线上的敌人", "在对手铺垫强化时抢先唱散它"],
         kind: "enemy", range: 7, maxRange: 11, prepare: 7, active: 1, recover: 8, cooldown: 34,
         style: "sound", stationary: true, maximumTicks: 120,

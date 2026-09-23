@@ -39,10 +39,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: closecombatId,
         cooldownParameter: "recharge",
         name: "Close Combat",
-        description: "The user fights the target up close without guarding itself, lowering its own Defense and Sp. Def.",
+        description: "不设防地抢进对手怀里，一口气打出一串快拳：贴身物理连打，提交那一刻自身防御与特防各下降一级。横扫式同时扫到正面一片扇形，代价是总威力更低。",
         uses: ["贴脸用一串快拳把对手打残", "横扫式一次扫到挤在正面的几个人", "在对手退开之前把一口气打完"],
         kind: "enemy",
         range: 1.9,

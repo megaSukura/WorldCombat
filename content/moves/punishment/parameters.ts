@@ -1,35 +1,4 @@
-/**
- * 惩罚 / punishment —— 参数与伤害段。
- *
- * 原生事实（Cobblemon 1.8）：恶、物理、基础威力 60、命中 100、PP 5、优先度 0、接触、无追加效果
- *   （28 位学习者）。威力 = 60 + 20 × 目标的正向能力等级总数（含命中与闪避），上限 200。
- *   描述「根据能力变化，对手提高的力量越大，招式的威力越大。」——它是本族唯一**读目标涨了多少**的一招。
- *
- * 翻译：把「对手越强、罚得越重」落成**一记从高处落下的处刑**——施法者把目标涨起来的每一层力量在手里称量，
- *   然后一记压顶砸下去；对手攒得越满，这一记越沉。它是本族唯一从对手身上取力的一招：别的三招把目标的
- *   能力变化抹掉，它反过来把那些变化算进威力。
- *
- * 与同族分开：逐步击破、ＤＤ金勾臂、圣剑都无视目标的能力变化；惩罚把目标的七项正向等级加起来当作威力的一
- *   项，攒得越多打得越重。它是本族的「反制涨能力」。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   judge      处刑威力：基础 42 + 目标正向等级 ×18（封顶 +150，重判式再 ×1.35）+ 物攻偏移 + 等级偏移。
- *              本招的核心机制值来自**目标的当前能力等级**，其余来自施法者自身。
- *   reach      臂程：身高给臂长与踏前、速度给前探，也是实际射程。
- *   edge       判定半宽：体宽决定这一砸覆盖多宽。
- *   weights    坠砣量：目标等级给出几枚、物攻给出底数，驱动表现。
- *   tempo／aftercast／recharge：速度定节奏、等级让冷却回得更快；重判式更慢更费。
- *
- * 配置 `heavy`（重判式，默认关）双向取舍：开启＝目标每级正向能力给的威力 ×1.35、射程 +0.2，代价是起手 +3 刻、
- *   收招 +2 刻、冷却 +5 刻——对攒满能力的对手罚得最狠；关闭（速判式）＝出手更快、循环更短，但读能力的系数低。
- *   两向各有局面：对刚叠满能力的坦克用重判，对轻微加速的脆皮用速判。
- *
- * 伤害段 `judge` 与参数同名，走共享换算；对手防御、相性与暴击在命中时由共享结算。目标的能力变化这里**照常参与**，
- * 既不忽略也不清除。
- *
- * `defineFacts` 把「目标七项正向等级之和」接成公式变量 `punishment.boost`：出招时按当前目标求值，
- * 详情页悬浮没有目标时该变量缺省为 0 并标注「命中时结算」。
- */
+/** punishment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const punishmentId = "punishment";
     const punishmentBoostText = "worldcombat.skill.punishment.value.judged";
@@ -47,7 +16,7 @@ namespace PokemonSkills {
         const stages = punishmentStages(world, actor);
         let total = 0;
         punishmentStats.forEach(function (stat) { const value = stages[stat] || 0; if (value > 0) total += value; });
-        return total;
+        return total + MobEffects.levels(world, actor, "beneficial");
     }
 
     /** 公式求值时的目标：动作现场优先，其次当前施放目标；详情页没有现场时返回 null。 */
@@ -136,6 +105,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["judge", "reach"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
+        { key: "world", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.judge"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.judge", "tier.1.reach"] }

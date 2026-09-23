@@ -6,7 +6,7 @@
   "worldcombat.skill.hypervoice.use.3": "Trade one long breath for the widest voice",
   "worldcombat.skill.hypervoice.description.0": "The wall of sound sweeps out: each foe in the fan takes one blast of %1$s power, nearly the same near and far — the rim keeps about %2$s%% of it. The target's special defence, type and crit are settled on the hit.",
   "worldcombat.skill.hypervoice.description.1": "It opens %1$s degrees forward and pushes out %2$s blocks; it ignores cover and the ground, and covers exactly the fan it draws.",
-  "worldcombat.skill.hypervoice.description.2": "Those hit are shoved up to %1$s blocks along the wall's direction; no status, only damage and displacement.",
+  "worldcombat.skill.hypervoice.description.2": "Those hit are shoved up to %1$s blocks away from the caster, lighter toward the rim; no status, only damage and displacement.",
   "worldcombat.skill.hypervoice.focused.on": "Focus on: about ×0.6 fan, ×1.25 reach, ×1.15 shove and ×1.08 power, wind-up +2 and cooldown +4 ticks, folding the roar into one longer, heavier line.",
   "worldcombat.skill.hypervoice.focused.off": "Focus off (spread): about ×1.3 fan, ×0.85 reach, ×0.8 shove and ×0.94 power, to cover a whole direction at once.",
   "worldcombat.skill.hypervoice.timing": "Reaches %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
@@ -26,5 +26,7 @@
   "worldcombat.skill.hypervoice.preference.ai.minFoes": "Foes in the fan",
   "worldcombat.skill.hypervoice.preference.ai.minFoes.help": "At least this many visible foes must stand inside the fan before it fires; raise it to shout only into a crowd and save PP, set it to 1 to shout at a single target.",
   "world_combat.move.hypervoice.text.hit": "Shook %1$s",
-  "world_combat.move.hypervoice.text.miss": "The shout missed"
+  "world_combat.move.hypervoice.text.miss": "The shout missed",
+  "worldcombat.skill.hypervoice.description.limit": "One shout reaches at most %1$s foes in front; anyone beyond that is left out, and each target is hit only once by the wall.",
+  "worldcombat.skill.hypervoice.value.maxTargets": "Max targets"
 }

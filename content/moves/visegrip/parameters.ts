@@ -105,8 +105,8 @@ namespace PokemonSkills {
     ]);
 
     describe("visegrip", [
-        { key: "description.0", values: ["squeeze", "reach"] },
-        { key: "description.1", values: ["drag", "lunge"] },
+        { key: "description.0", values: ["squeeze","reach"] },
+        { key: "description.1", values: ["drag","lunge"] },
         { key: "haul.on", values: [], when: function (context) { return read(context.detail.values, ["haul"]) === true; } },
         { key: "haul.off", values: [], when: function (context) { return read(context.detail.values, ["haul"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

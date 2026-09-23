@@ -59,7 +59,7 @@ namespace PokemonSkills {
             F.base(150).minus(F.level().times(0.6))
                 .times(F.when(F.pref("resonant", healbellResonant), F.const(1.15), F.const(0.95)).as("长鸣"))
                 .clamp(80, 190).round(0),
-            "冷却", "两次铃声之间的等待；等级越高越熟练，长鸣档更长。")
+            "冷却", "两次铃声之间的等待；等级越高越熟练，长鸣档更长。", { base: 150 })
     });
 
     stages(healbellId, [
@@ -68,12 +68,12 @@ namespace PokemonSkills {
     ]);
 
     describe(healbellId, [
-        { key: "description.0", values: ["chimeRadius", "peals"] },
+        { key: "description.0", values: ["chimeRadius","peals"] },
         { key: "description.1", values: ["pealGap"] },
         { key: "stance.resonant", values: [], when: function (context) { return read(context.detail.values, ["resonant"]) === true; } },
         { key: "stance.short", values: [], when: function (context) { return read(context.detail.values, ["resonant"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

@@ -30,7 +30,7 @@ namespace PokemonSkills {
         id: poisonpowderId,
         cooldownParameter: "recharge",
         name: "Poison Powder",
-        description: "The user scatters a cloud of poisonous dust that poisons the target.",
+        description: "把一小撮毒尘抛向选定的落点，落地立刻炸开，把圈里的敌人一次全毒上，然后什么都不留下。它是四式状态里最便宜、冷却最短的出手，用来顺手把贴身的目标们点上毒。草属性穿过粉末，毒属性与钢属性穿过中毒。",
         uses: ["顺手给贴身的目标上毒", "一次点上挤在一起的一小群", "用最短的冷却反复施压"],
         kind: "point",
         range: 6,

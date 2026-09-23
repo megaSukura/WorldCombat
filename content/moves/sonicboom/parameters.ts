@@ -90,8 +90,8 @@ namespace PokemonSkills {
 
     describe("sonicboom", [
         { key: "description.0", values: ["damage"] },
-        { key: "description.1", values: ["reach", "boomRadius"] },
-        { key: "reverb.on", values: ["echoDelay"], when: function (context) { return read(context.detail.values, ["reverb"]) === true; } },
+        { key: "description.1", values: ["reach","boomRadius","shove"] },
+        { key: "reverb.on", values: ["echoDelay","damage"], when: function (context) { return read(context.detail.values, ["reverb"]) === true; } },
         { key: "reverb.off", values: [], when: function (context) { return read(context.detail.values, ["reverb"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach"] },

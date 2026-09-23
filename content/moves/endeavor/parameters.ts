@@ -84,11 +84,11 @@ namespace PokemonSkills {
 
     describe("endeavor", [
         { key: "description.0", values: ["damage"] },
-        { key: "description.1", values: ["brace", "lunge", "lungeSpeed", "collisionRadius"] },
+        { key: "description.1", values: ["brace","lunge","lungeSpeed","collisionRadius"] },
         { key: "description.2", values: ["shove"] },
         { key: "vault.on", values: [], when: function (context) { return read(context.detail.values, ["vault"]) === true; } },
         { key: "vault.off", values: [], when: function (context) { return read(context.detail.values, ["vault"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shove"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.shove"] }
     ]);

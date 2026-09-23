@@ -121,10 +121,10 @@ namespace PokemonSkills {
     ]);
 
     describe("ominouswind", [
-        { key: "description.0", values: ["squall", "travel"] },
-        { key: "description.1", values: ["front", "coilRadius", "pull"] },
-        { key: "description.2", values: ["surgeChance", "surgeStages", "surgeTicks"] },
-        { key: "description.3", values: ["pref.haunt"] },
+        { key: "description.0", values: ["squall","travel"] },
+        { key: "description.1", values: ["front","coilRadius","pull"] },
+        { key: "description.2", values: ["surgeChance","surgeStages","surgeTicks"] },
+        { key: "description.3", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.squall", "tier.0.travel"] }
     ]);

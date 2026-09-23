@@ -1,19 +1,8 @@
-/**
- * 模仿 / mimic —— AI 用途。
- *
- * 出手局面：目标可见、敌对、存活，在 `ai.maxChase`（默认 10）格内，有一条通视念线。挂在共享的 control 位上：
- *   模仿不抢攻击位置，但读到值得的招时主动插进来。
- * 对谁出手：读目标上一手（决策内缓存）。那一手是伤害类且威力不低时 priority 抬到 46；其他可借的招 18；还没有上一手时 12。
- * 注意：是否「有可模仿的上一手」由提交前的 ready 校验，不放进 available——否则对手还没出手时伙伴会以为无招
- *   可用而退开，模仿就等不到可借那一刻。伙伴照常贴近、反复尝试，对手一出过手就牵线。
- * 够不到怎么办：射程交给 reach，共享任务把身位收进通视射程后再牵线。
- * 放完接什么：目标的那一手已经织进自己的招式格，交回共享交战计划继续；下一轮它就能像自己的招一样打出去。
- * 配置 deep（细学）换取更长的记忆窗口与维持时长，代价是更慢的起手与更长的冷却。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace PokemonSkills {
     /** 只读、决策内缓存：目标上一手是否可被模仿；返回招式 id 或 ""。 */
     CompanionBehavior.registerFact("world_combat:mimic-last", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return "";
+        if (String(actor.domain()) !== "cobblemon") return copiedNativeMove(access, actor);
         const state = NativeEffects.read(access, actor);
         if (!state.used || !skills[state.used]) return "";
         if (NativeLoadout.facts(CobblemonCombat.moveTemplate(state.used)).flags.failmimic) return "";

@@ -137,10 +137,10 @@ namespace PokemonSkills {
 
     describe(avalancheId, [
         { key: "description.0", values: ["collapse"] },
-        { key: "description.1", values: ["reach", "step", "radius", "push", "frost"] },
+        { key: "description.1", values: ["reach","step","radius","push","frost"] },
         { key: "deepdrift.on", values: [], when: function (context) { return read(context.detail.values, ["deepdrift"]) === true; } },
         { key: "deepdrift.off", values: [], when: function (context) { return read(context.detail.values, ["deepdrift"]) !== true; } },
-        { key: "timing", values: ["range", "brace", "settle", "pp", "recharge"] },
+        { key: "timing", values: ["range","brace","settle","pp","recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.collapse"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.collapse", "tier.1.radius"] }
     ]);

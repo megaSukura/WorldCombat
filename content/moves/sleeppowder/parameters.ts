@@ -121,11 +121,11 @@ namespace PokemonSkills {
 
     describe(sleeppowderId, [
         { key: "description.0", values: ["throwReach", "puffSpeed", "cloudRadius"] },
-        { key: "description.1", values: ["cloudTicks", "density", "doseInterval"] },
-        { key: "description.2", values: ["sleepTicks", "drowsyTicks"] },
+        { key: "description.1", values: ["cloudTicks","density","doseInterval"] },
+        { key: "description.2", values: ["sleepTicks","drowsyTicks"] },
         { key: "thick.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "thick.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cloudRadius", "tier.1.density"] }
     ]);
 }

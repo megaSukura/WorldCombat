@@ -109,8 +109,9 @@ namespace PokemonSkills {
     ]);
 
     describe(sporeId, [
-        { key: "description.0", values: ["burstRadius", "maxTargets"] },
+        { key: "description.0", values: ["burstRadius","maxTargets"] },
         { key: "description.1", values: ["landChance", "sleepTicks"] },
+        { key: "sleep", values: ["sleepTicks"] },
         { key: "description.2", values: [] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },

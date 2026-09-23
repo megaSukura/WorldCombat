@@ -72,6 +72,6 @@ namespace PokemonSkills {
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

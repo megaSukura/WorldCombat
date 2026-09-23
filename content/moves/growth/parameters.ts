@@ -60,7 +60,7 @@ namespace PokemonSkills {
 
     describe("growth", [
         { key: "description.0", values: ["atkGift", "spaGift"] },
-        { key: "description.2", values: ["grownTicks", "tempo", "aftercast", "wait"] },
+        { key: "description.2", values: ["grownTicks","tempo","aftercast","wait"] },
         { key: "timing", values: [] }
     ]);
 }

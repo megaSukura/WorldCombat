@@ -109,9 +109,9 @@ namespace PokemonSkills {
     ]);
 
     describe("razorshell", [
-        { key: "description.0", values: ["carve"] },
+        { key: "description.0", values: ["carve","maxTargets"] },
         { key: "description.1", values: ["reach", "arc"] },
-        { key: "description.2", values: ["shaveChance", "shaveStages", "soakTicks"] },
+        { key: "description.2", values: ["shaveChance","shaveStages","soakTicks","push"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

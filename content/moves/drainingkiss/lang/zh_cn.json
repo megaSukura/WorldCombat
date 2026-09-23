@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.drainingkiss.summary": "凑到对手脸前送上一吻，把它的HP吸过来；回复给予伤害的四分之三以上，是家族里回血最黏的一口。",
+  "worldcombat.skill.drainingkiss.summary": "凑到对手脸前送上一吻，把它的HP吸过来；按实际造成的伤害回补自身，是家族里回血最黏的一口。",
   "worldcombat.skill.drainingkiss.use.0": "贴身把对手的一口气吸回来",
   "worldcombat.skill.drainingkiss.use.1": "血量偏低时用最短的一吻续航",
   "worldcombat.skill.drainingkiss.use.2": "在缠斗里顺手把血线拉回来",
-  "worldcombat.skill.drainingkiss.description.0": "这一吻造成约 %1$s 的特殊伤害，其中 %2$s 转回自身生命。",
-  "worldcombat.skill.drainingkiss.description.1": "亲吻距离 %1$s 格（也是实际射程）。",
+  "worldcombat.skill.drainingkiss.description.0": "这一吻命中造成约 %1$s 的妖精属性接触伤害，并按实际伤害的 %2$s 回复自身生命。",
+  "worldcombat.skill.drainingkiss.description.1": "亲吻距离 %1$s 格（也是实际射程）；需要目标在视线内，中间被挡住就亲不到。",
   "worldcombat.skill.drainingkiss.swoon.on": "沉醉之吻：回血比例 ×1.22，但威力 ×0.88、起手与冷却更长，用来续航。",
   "worldcombat.skill.drainingkiss.swoon.off": "轻啄：威力 ×1.12、回血 ×0.9、回得快，用来爆发。",
   "worldcombat.skill.drainingkiss.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

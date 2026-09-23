@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.dragonascent.summary": "Climbs high, then drops its whole body straight down onto the target: the landing rings out a shockwave that throws nearby foes back and leaves cracked ground. The moment it commits the user's Defense and Sp. Def each drop one stage. The broad form spreads a wider, harder shove at the cost of lower dive power.",
+  "worldcombat.skill.dragonascent.summary": "Climbs high, then dives straight down at the target: foes struck on the way take contact damage, and the landing shockwave settles the primary target, shoves anyone it catches away from the impact point and cracks the ground. The moment it launches the user's Defense and Sp. Def each drop one stage; the broad form reaches wider, catches nearby foes and shoves harder, at the cost of lower dive power.",
   "worldcombat.skill.dragonascent.use.0": "Ascend and drop straight onto a target",
-  "worldcombat.skill.dragonascent.use.1": "Ring out a landing shockwave that throws nearby foes back",
+  "worldcombat.skill.dragonascent.use.1": "Finish with a landing shockwave that shoves what it catches",
   "worldcombat.skill.dragonascent.use.2": "Fall past the front line onto a target behind it",
-  "worldcombat.skill.dragonascent.description.0": "Drops from the sky for %1$s physical damage and rings out a %2$s-block shockwave on landing.",
+  "worldcombat.skill.dragonascent.description.0": "After climbing it dives straight down at the target; a foe struck on the way takes about %1$s physical contact damage, and landing rings out a %2$s-block shockwave.",
   "worldcombat.skill.dragonascent.description.1": "Engages within %1$s blocks, climbs %2$s blocks at %3$s blocks/tick, with a %4$s-block dive radius.",
-  "worldcombat.skill.dragonascent.description.2": "The guard is spent the moment it commits: the user's Defense drops %1$s stage(s) and Sp. Def drops %2$s, hit or miss.",
-  "worldcombat.skill.dragonascent.broad.on": "Broad form: other foes swept by the shockwave take %1$s power and are thrown %2$s blocks.",
-  "worldcombat.skill.dragonascent.broad.off": "Plunging form: all force on the landing target, with higher single-target power, a faster cast and a tighter shock.",
+  "worldcombat.skill.dragonascent.description.2": "It drops its guard the moment it launches: the user's Defense drops %1$s stage(s) and Sp. Def drops %2$s, hit or miss.",
+  "worldcombat.skill.dragonascent.broad.on": "Broad form: other foes caught by the shockwave take about %1$s of the primary target's damage and are thrown %2$s blocks away from the impact point.",
+  "worldcombat.skill.dragonascent.broad.off": "Plunging form: all force on the landing target, heavier on a single target and a faster cast; the landing shockwave only affects the primary target and catches no one else.",
   "worldcombat.skill.dragonascent.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.dragonascent.growth.0": "From level %1$s the dive power rises to %2$s.",
   "worldcombat.skill.dragonascent.growth.1": "From level %1$s the dive power rises to %2$s and the climb to %3$s blocks.",
@@ -36,5 +36,7 @@
   "worldcombat.skill.dragonascent.preference.ai.minHealth": "Minimum health ratio",
   "worldcombat.skill.dragonascent.preference.ai.minHealth.help": "Below this own health ratio the user holds Dragon Ascent back (0 = no limit). Higher saves it for a worthwhile trade.",
   "world_combat.move.dragonascent.text.slump": "Grounded: Defense -%1$s, Sp. Def -%2$s",
-  "world_combat.move.dragonascent.text.land": "Shockwave caught %1$s"
+  "world_combat.move.dragonascent.text.land": "Shockwave caught %1$s",
+  "worldcombat.skill.dragonascent.description.shock": "The landing shockwave settles the primary target: if the dive did not strike it, the shockwave deals the full damage instead, and anyone it catches is shoved away from the impact point.",
+  "worldcombat.skill.dragonascent.description.ground": "The impact point is left as cracked stone, restoring the ground after about 7 seconds."
 }

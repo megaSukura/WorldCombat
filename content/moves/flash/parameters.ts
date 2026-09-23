@@ -47,7 +47,7 @@ namespace PokemonSkills {
         { level: 65, values: { radius: 6 } }
     ]);
     describe(flashId, [
-        { key: "description.0", values: ["blindStage", "duration"] },
+        { key: "description.0", values: ["blindStage","duration"] },
         { key: "description.1", values: ["radius"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

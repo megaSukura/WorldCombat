@@ -5,7 +5,7 @@
   "worldcombat.skill.drillpeck.use.2": "Bite an airborne target harder",
   "worldcombat.skill.drillpeck.description.0": "Bores %2$s bites, each dealing %1$s contact damage, one bite every %3$s ticks.",
   "worldcombat.skill.drillpeck.description.1": "Beak reach %1$s blocks with a drill radius of %2$s blocks; each bite shoves the target %3$s blocks along the axis.",
-  "worldcombat.skill.drillpeck.description.2": "A grounded target takes no bonus; an airborne one takes %1$s damage per bite.",
+  "worldcombat.skill.drillpeck.description.2": "A grounded target takes no bonus; an airborne one has each bite's damage multiplied by %1$s.",
   "worldcombat.skill.drillpeck.deep.on": "Deep drill: %1$s bites for more total damage, but each bite drops to %2$s.",
   "worldcombat.skill.drillpeck.deep.off": "Fast drill: %1$s heavier bites (%2$s each), a quicker start and a shorter cooldown.",
   "worldcombat.skill.drillpeck.timing": "Range %1$s blocks; spin-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.drillpeck.preference.ai.diveAir": "Prefer airborne targets",
   "worldcombat.skill.drillpeck.preference.ai.finish": "Finish the wounded",
   "world_combat.move.drillpeck.text.hit": "Drilled %1$s bites",
-  "world_combat.move.drillpeck.text.miss": "Spun through empty air"
+  "world_combat.move.drillpeck.text.miss": "Spun through empty air",
+  "worldcombat.skill.drillpeck.description.3": "It first steps %1$s blocks toward the target, stopping at the edge of the hitbox without passing through it; each bite strikes only the first foe on the drill axis in front, and the drill retracts as soon as the target leaves that axis."
 }

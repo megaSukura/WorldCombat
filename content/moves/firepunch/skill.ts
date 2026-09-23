@@ -22,8 +22,8 @@ namespace PokemonSkills {
         id: "firepunch",
         cooldownParameter: "recharge",
         name: "Fire Punch",
-        description: "A fist wreathed in flame strikes the target and may leave it burning; if it catches, the fire licks across to the nearest other foe. Burning targets keep losing health and hit more weakly.",
-        uses: ["贴身点着目标，留下持续掉血", "借灼伤削弱对方物攻", "让火焰蔓延到旁边的第二个敌人"],
+        description: "一记缠满火焰的拳按进目标：命中造成伤害，并有较高概率把目标点着（持续掉血、灼伤减攻）；只要目标真的烧起来，火就会顺势蔓延到旁边最近的另一个敌人身上。",
+        uses: ["贴身点着目标，留下持续掉血", "借灼伤削弱对方的物攻", "让火焰蔓延到旁边的第二个敌人"],
         kind: "enemy",
         range: 2.5,
         maxRange: 3.4,
@@ -114,7 +114,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, firepunchScene, 1, point,
                     { moment: "hit", target: struck !== null ? String(struck.ref()) : "", embers: embers, intensity: intensity }, 22);
                 const landed = impact(current, hit, "firepunch", power,
-                    { damage: damageSpec("firepunch", "blaze"), contact: true, punch: true, status: "burn", chance: chance });
+                    { damage: damageSpec("firepunch", "blaze"), contact: true, punch: true, status: "burn", chance: chance, statusTicks: scorch });
                 if (!landed || struck === null || !scope.valid(struck)) { finish(current); return; }
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), firepunchHitText, [], 22);
                 sound(current, "cobblemon:impact.fire");

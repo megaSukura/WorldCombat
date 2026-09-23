@@ -1,14 +1,4 @@
-/**
- * 无理取闹 的伙伴 AI 用途：这是这招自己的一套出手计划。
- *
- * 什么局面有意义：有可见、存活、敌对的对手，它在 ai.maxChase 以内，且有一条通视直线——取笑喊不进墙后；
- *   已经带着烦躁身份的目标跳过，不重复取笑。
- * 对谁出手：当前威胁；`ai.opening` 默认只在对手正要出手 / 刚打过自己 / 自己刚挨打时才取笑，纯扰动时选“随时”。
- * 候选之间怎么排：对手正在抬手时优先（压住它的下一拍），其余按普通控制排序；priority 0 仍可由共享顺序兜底。
- * 够不到怎么办：reach 就是本招射程（特攻与体型决定），accepts 不按距离硬拒，共享任务先走近到通视射程。
- * 放完之后：交回共享交战计划；烦躁会自己钉住对手的重复。
- * 配置 manner（讥讽／怒斥）改变射程、时长、起手与冷却；ai.maxChase、ai.opening、ai.leaveStation 决定追多远、何时喊、驻守时是否离位。
- */
+/** torment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     function tormentWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;

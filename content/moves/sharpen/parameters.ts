@@ -93,12 +93,12 @@ namespace PokemonSkills {
         rationale: "近身撞上棱角的一记反击，按物理默认系数结算。" }, {});
 
     describe("sharpen", [
-        { key: "description.0", values: ["gift", "edge"] },
+        { key: "description.0", values: ["gift","edge"] },
         { key: "description.1", values: ["sharpTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "quick.on", values: [], when: function (context) { return read(context.detail.values, ["quick"]) === true; } },
         { key: "quick.off", values: [], when: function (context) { return read(context.detail.values, ["quick"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: [] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.sharpTicks", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.sharpTicks", "tier.1.wait"] }
     ]);

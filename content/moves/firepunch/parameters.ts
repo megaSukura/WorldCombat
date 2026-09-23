@@ -118,8 +118,8 @@ namespace PokemonSkills {
 
     describe("firepunch", [
         { key: "description.0", values: ["blaze", "fistReach"] },
-        { key: "description.1", values: ["scorchChance", "scorchTicks"] },
-        { key: "description.2", values: ["spreadRange", "spreadTicks"] },
+        { key: "description.1", values: ["scorchChance","scorchTicks"] },
+        { key: "description.2", values: ["spreadRange","spreadTicks"] },
         { key: "blazeUp.on", values: [], when: function (context) { return read(context.detail.values, ["blazeUp"]) === true; } },
         { key: "blazeUp.off", values: [], when: function (context) { return read(context.detail.values, ["blazeUp"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -105,7 +105,7 @@ namespace PokemonSkills {
 
     describe("incinerate", [
         { key: "description.0", values: ["scorch", "fan"] },
-        { key: "description.1", values: ["reach", "flare"] },
+        { key: "description.1", values: ["reach","flare"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,23 +1,4 @@
-/**
- * 清除之烟 / clearsmog 的出手方式。
- *
- * 核心念头：**掷出一团清浊之泥，砸中后炸开成一片粘稠的烟**——烟裹住目标，把它抬起来与压下去的能力等级
- *   全部冲回原点；烟还在目标身上黏一小会儿，这段时间里它再怎么给自己加等级也会被冲散。它是针对性的、
- *   单边的：只动烟里那几个对手，术者自己的增益一点不受影响。
- *
- * 三幕（提交前只播预告）：
- *   起（windup，提交前）：手里把泥团捏实、浊气从指缝冒出，只播预告，可被打断。
- *   掷（execute → flight → burst / miss）：提交后泥块沿瞄准方向飞出、小幅修向目标（原生必中）；命中活物
- *      结算一次 `mud` 特殊伤害，并在命中点炸开半径 `cloudRadius` 的清浊之烟。
- *   缠（envelop → scour / release）：烟里每个非友方被冲回原点（`clearsmogErase`），挂上共享身份
- *      `world_combat:status/smogged`（本单元 `world_combat:clear_smog`），并起一个 `world_combat:clear_smog_veil`：
- *      每 `interval` 刻再把新加上去的能力等级冲散一次，直到 `linger` 走完烟散。
- *
- * 与同族分开：黑雾从术者身上漫开、把场上所有人（包括术者）一起归零；清除之烟掷向一个点、只冲掉烟里
- *   那几个对手的等级，术者的增益不动——玩家凭「一团泥打在一个人身上、带出一片烟」认出它。
- *
- * 配置 `billow`（漫烟式）由 resolve 改时序、由公式改烟团半径／黏烟时长／威力；提交后才触碰世界。
- */
+/** clearsmog：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 一份可读的能力等级快照（宝可梦读原生等级，其他活体读公共阶梯）。 */
     export function clearsmogStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
@@ -27,7 +8,8 @@ namespace PokemonSkills {
     /** 把 actor 的能力等级全部冲回原点（含它自己拥有的临时窗口）；返回真正冲掉的等级数（绝对值之和）。 */
     export function clearsmogErase(world: CombatWorld, actor: CombatActor): number {
         if (!world.valid(actor)) return 0;
-        return NativeEffects.resetStages(world, actor, true, "clearsmog", "clearsmog");
+        return NativeEffects.resetStages(world, actor, true, "clearsmog", "clearsmog")
+            + MobEffects.clear(world, actor, "beneficial");
     }
 
     function clearsmogVeilData(json: string): string {
@@ -109,7 +91,7 @@ namespace PokemonSkills {
         id: clearsmogId,
         cooldownParameter: "recharge",
         name: "Clear Smog",
-        description: "掷出一团特殊泥块砸向目标，命中后炸开一片清浊之烟：烟里每个对手的能力等级全部被冲回原点，而烟还在身上黏一小会儿——这段时间里新加的等级也会被冲散。它只动烟里的对手，术者自己的增益不受影响。漫烟式罩得更广更久，聚泥式更重更快。",
+        description: "掷出泥块，命中后炸出只影响敌人的清除之烟。烟使能力等级归零并清除药水增益，附着期间会反复清除新获得的强化。",
         uses: ["把对手攒起来的能力一波冲回原点", "让一个刚刚加满级的目标短时间内留不住增益", "同时清掉一小撮抱团对手的等级"],
         kind: "enemy",
         range: 8,

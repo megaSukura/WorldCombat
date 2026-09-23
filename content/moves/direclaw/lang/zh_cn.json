@@ -3,7 +3,7 @@
   "worldcombat.skill.direclaw.use.0": "近身一记深爪，把三选一的余毒按进伤口",
   "worldcombat.skill.direclaw.use.1": "对高危目标指定留下睡眠",
   "worldcombat.skill.direclaw.use.2": "对准要害打出更高暴击的一爪",
-  "worldcombat.skill.direclaw.description.0": "一记深爪造成约 %1$s 威力；命中后约 %2$s 几率从中毒／麻痹／睡眠里挑一种按进伤口，持续约 %3$s。对手防御、相性与本招的暴击在命中时另算，对相应状态的类型或特性免疫仍然生效。",
+  "worldcombat.skill.direclaw.description.0": "一记深爪造成约 %1$s 点伤害；命中后约 %2$s 几率从中毒／麻痹／睡眠里挑一种按进伤口，持续约 %3$s。对手防御、相性与本招的暴击在命中时另算，对相应状态的类型或特性免疫仍然生效。",
   "worldcombat.skill.direclaw.description.1": "爪距约 %1$s 格，打出暴击的几率约 %2$s（高于普通招）。",
   "worldcombat.skill.direclaw.description.2": "起手 %1$s，冷却 %2$s。",
   "worldcombat.skill.direclaw.deep.on": "深创：余毒几率 +0.15、余毒时长 ×1.25、暴击几率 +0.06，代价是爪伤 ×0.88、起手 +1 刻、冷却 ×1.12。",
@@ -45,5 +45,6 @@
   "world_combat.move.direclaw.text.poison": "伤口被毒浸透",
   "world_combat.move.direclaw.text.paralysis": "伤口窜起麻电",
   "world_combat.move.direclaw.text.sleep": "眼神沉了下去",
-  "world_combat.move.direclaw.text.resist": "余毒没有按进去"
+  "world_combat.move.direclaw.text.resist": "余毒没有按进去",
+  "worldcombat.skill.direclaw.description.ailments": "每次命中最多按入一种余毒：中毒期间持续损失生命；麻痹期间移动速度约减半、每次出招有 25% 几率失败；睡眠期间无法行动和移动，受到伤害会立即醒来。"
 }

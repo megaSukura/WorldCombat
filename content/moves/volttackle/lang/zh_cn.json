@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.volttackle.summary": "蓄力后冲撞目标，并以电流攻击落点附近的敌人，有机会使其麻痹。命中后自身承受反伤。",
+  "worldcombat.skill.volttackle.summary": "蓄力后冲撞目标，并以电流攻击落点附近的敌人，有机会使其麻痹；命中后自身承受反伤，冲空时电荷就地泄放、不自伤。",
   "worldcombat.skill.volttackle.description.0": "蓄电后爆冲造成约 %1$s 的接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.volttackle.description.1": "命中后有 %1$s%% 的机会让对方麻痹 %2$s；自己按实际伤害的 %3$s%% 反噬，把目标顶开 %4$s 格。",
-  "worldcombat.skill.volttackle.description.2": "落点 %1$s 格内的其他非友方各吃 %2$s 的威力、有 %3$s%% 的机会被波及麻痹（最多数人，需通视）。",
-  "worldcombat.skill.volttackle.discharge.on": "泄放式：放电半径与波及威力更高、反噬更重、冲程更短，单体略轻——把电荷摊开电一群人。",
-  "worldcombat.skill.volttackle.discharge.off": "聚敛式：单体威力更高、反噬更轻、冲程更长，放电半径与波及威力收小——把电全部灌进一个目标。",
+  "worldcombat.skill.volttackle.description.1": "命中后有 %1$s%% 的概率让目标麻痹 %4$s；麻痹期间移动速度减半，且每次尝试出招有 25%% 概率失败，可被治愈清除。目标已麻痹时不再重复施加。自己按实际伤害的 %2$s 反噬，并把目标沿冲撞方向顶开 %3$s 格。",
+  "worldcombat.skill.volttackle.description.2": "撞实后积压的电荷从落点向四周炸开：半径 %1$s 格内、与落点通视的其他非友方各受到本击威力 %3$s 的伤害，并有 %4$s%% 的概率麻痹 %5$s，最多 %2$s 人。",
+  "worldcombat.skill.volttackle.discharge.on": "泄放式：放电半径与波及威力更高、反噬更重、冲程更短、冷却更久，单体略轻——把电荷摊开电一群人。",
+  "worldcombat.skill.volttackle.discharge.off": "聚敛式：单体威力更高、反噬更轻、冲程更长、冷却更短，放电半径与波及威力收小——把电全部灌进一个目标。",
   "worldcombat.skill.volttackle.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
   "worldcombat.skill.volttackle.growth.0": "%1$s 级起爆冲威力抬到 %2$s。",
   "worldcombat.skill.volttackle.growth.1": "%1$s 级起爆冲威力抬到 %2$s、麻痹概率升到 %3$s%%。",
@@ -27,7 +27,7 @@
   "worldcombat.skill.volttackle.value.aftercast": "收招",
   "worldcombat.skill.volttackle.value.recharge": "冷却",
   "worldcombat.skill.volttackle.preference.discharge": "泄放式",
-  "worldcombat.skill.volttackle.preference.discharge.help": "开启：放电半径与波及威力更高、反噬更重、冲程更短，单体略轻——把电荷摊开电一群人。关闭（聚敛式）：单体威力更高、反噬更轻、冲程更长，放电半径与波及威力收小——把电全部灌进一个目标。",
+  "worldcombat.skill.volttackle.preference.discharge.help": "开启：放电半径与波及威力更高、反噬更重、冲程更短、冷却多 6 刻，单体略轻——把电荷摊开电一群人。关闭（聚敛式）：单体威力更高、反噬更轻、冲程更长，放电半径与波及威力收小——把电全部灌进一个目标。",
   "worldcombat.skill.volttackle.preference.ai.maxChase": "爆冲距离",
   "worldcombat.skill.volttackle.preference.ai.maxChase.help": "超过这个距离就不主动蓄电起冲，先靠近。越大越早蓄势，也越容易在蓄电期被打断或冲空。",
   "worldcombat.skill.volttackle.preference.ai.minHealth": "保留生命",
@@ -37,5 +37,7 @@
   "world_combat.move.volttackle.text.hit": "伏特攻击",
   "world_combat.move.volttackle.text.arc": "电弧波及",
   "world_combat.move.volttackle.text.recoil": "回路反噬",
-  "world_combat.move.volttackle.text.vent": "电荷泄地"
+  "world_combat.move.volttackle.text.vent": "电荷泄地",
+  "worldcombat.skill.volttackle.description.vent": "这一冲只命中沿途第一个活体敌人；冲空或被地形挡下时，积蓄的电荷在原地泄放，不会反噬自己。",
+  "worldcombat.skill.volttackle.value.arcTargets": "电弧波及上限"
 }

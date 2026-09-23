@@ -125,10 +125,10 @@ namespace PokemonSkills {
     describe("ironhead", [
         { key: "description.0", values: ["smash", "collisionRadius"] },
         { key: "description.1", values: ["step", "charge", "shove"] },
-        { key: "description.2", values: ["lift", "flinchChance", "flinchTicks"] },
+        { key: "description.2", values: ["lift","flinchChance","flinchTicks"] },
         { key: "braced.on", values: [], when: function (context) { return read(context.detail.values, ["braced"]) === true; } },
         { key: "braced.off", values: [], when: function (context) { return read(context.detail.values, ["braced"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.smash", "tier.0.shove"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.smash", "tier.1.step", "tier.1.shove", "tier.1.flinchChance"] }
     ]);

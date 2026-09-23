@@ -142,10 +142,10 @@ namespace PokemonSkills {
         rationale: "冷脆的冰壳被咬碎时多结算的一段；防御按默认系数减伤。" }, { contact: true, bite: true });
 
     describe("icefang", [
-        { key: "description.0", values: ["fang", "grip"] },
-        { key: "description.1", values: ["freezeChance", "freezeTicks", "frostDelay"] },
+        { key: "description.0", values: ["fang","grip"] },
+        { key: "description.1", values: ["freezeChance","freezeTicks","frostDelay"] },
         { key: "description.2", values: ["shatter"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "cooldown", "pp"] },

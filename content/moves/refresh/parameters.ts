@@ -61,8 +61,9 @@ namespace PokemonSkills {
     describe(refreshId, [
         { key: "description.0", values: ["clearTicks"] },
         { key: "description.1", values: ["tempo"] },
+        { key: "description.additional", values: [] },
         { key: "stance.deep", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "stance.quick", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

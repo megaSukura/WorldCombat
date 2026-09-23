@@ -22,9 +22,10 @@ namespace PokemonSkills {
     function returnVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
 
     define({
+        freeMovement: true,
         id: "return",
         name: "Return",
-        description: "This full-power attack grows more powerful the more the user likes its Trainer.",
+        description: "为训练家把这一记全力送出去：金色誓约在脚下结起，随后一道金光直冲对手，只结算一次重击。亲密度越高，这一记越重；它和迁怒读同一个数、方向相反，一个单次重击、一个多段快抓。",
         uses: ["亲密度高时的一记全力重击", "贴上去把对手顶开", "受托式冲过对手换位"],
         kind: "enemy",
         range: 3.0,

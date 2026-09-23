@@ -53,7 +53,8 @@ namespace PokemonSkills {
     });
 
     describe(aurawheelId, [
-        { key: "description.0", values: ["power", "distance", "speed", "collisionRadius", "haste"] },
-        { key: "description.1", values: ["pp", "cooldown"] }
+        { key: "description.0", values: ["power","distance","speed","collisionRadius","haste"] },
+        { key: "description.1", values: ["pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover"] }
     ]);
 }

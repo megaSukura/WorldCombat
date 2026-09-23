@@ -129,8 +129,8 @@ namespace PokemonSkills {
     ]);
 
     describe(watershurikenId, [
-        { key: "description.0", values: ["shuriken", "radius"] },
-        { key: "description.1", values: ["stars", "gap"] },
+        { key: "description.0", values: ["shuriken","radius"] },
+        { key: "description.1", values: ["stars","gap"] },
         { key: "description.2", values: ["reach", "velocity", "spread"] },
         { key: "description.3", values: ["drench"] },
         { key: "focused.on", values: [], when: function (context) { return read(context.detail.values, ["focused"]) === true; } },

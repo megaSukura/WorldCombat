@@ -4,7 +4,7 @@
   "worldcombat.skill.mistyterrain.use.1": "削掉对手的龙属性爆发",
   "worldcombat.skill.mistyterrain.use.2": "净化已经中毒、灼伤、麻痹的队友",
   "worldcombat.skill.mistyterrain.description.0": "在选定地面铺出半径 %1$s 格的薄雾，持续 %2$s。",
-  "worldcombat.skill.mistyterrain.description.1": "站在场上的活体不会陷入异常状态，受到的龙属性招式伤害乘上 %1$s。",
+  "worldcombat.skill.mistyterrain.description.1": "雾中贴地的活体不会陷入新的异常状态，受到的龙属性招式伤害乘上 %1$s；离开薄雾后护体随之结束。",
   "worldcombat.skill.mistyterrain.description.2": "离开薄雾后，保护效果保留 %1$s。",
   "worldcombat.skill.mistyterrain.description.4": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.mistyterrain.form.0": "净化雾：雾更小（半径 ×0.85）、更久（×1.2），进入与停在雾里的活体会被洗掉已有的有害状态效果，代价是起手 +3 刻、冷却 ×1.2。",

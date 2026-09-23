@@ -34,6 +34,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: avalancheId,
         cooldownParameter: "recharge",
         name: "Avalanche",

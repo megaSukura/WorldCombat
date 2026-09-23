@@ -4,10 +4,10 @@
   "worldcombat.skill.earthpower.use.1": "Launch a point-blank foe off the ground",
   "worldcombat.skill.earthpower.use.2": "Skip fliers and drifters, punish planted foes",
   "worldcombat.skill.earthpower.use.3": "Leave torn ground beneath the target",
-  "worldcombat.skill.earthpower.description.0": "The surge deals %1$s special damage.",
+  "worldcombat.skill.earthpower.description.0": "The erupting ground deals about %1$s special damage.",
   "worldcombat.skill.earthpower.description.1": "Every grounded foe within %1$s blocks of the target's feet is caught and launched upward at %2$s blocks per tick.",
-  "worldcombat.skill.earthpower.description.2": "It has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
-  "worldcombat.skill.earthpower.description.3": "Wind-up %1$s (the foe's window to step away), range %2$s blocks, tears last %3$s, about %4$s cells torn; fissure is currently %5$s.",
+  "worldcombat.skill.earthpower.description.2": "Each foe caught has a %1$s chance to have its Sp. Def lowered by %2$s stage(s); every stage of lower Sp. Def means it takes more special damage.",
+  "worldcombat.skill.earthpower.description.3": "Wind-up %1$s (the foe's window to step away), range %2$s blocks; the surge turns about %4$s surface blocks under the target's feet into broken soil, and the original blocks return after %3$s.",
   "worldcombat.skill.earthpower.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.earthpower.growth.0": "From level %1$s the surge rises to %2$s power and %3$s blocks of range.",
   "worldcombat.skill.earthpower.value.core": "Surge power",
@@ -27,5 +27,6 @@
   "worldcombat.skill.earthpower.preference.ai.stillFirst": "Prefer still targets",
   "worldcombat.skill.earthpower.preference.ai.stillFirst.help": "On: slow-moving targets rank higher, since the surge rises at their feet and a still target is least likely to step out while the mark shows. Off: every target ranks the same.",
   "world_combat.move.earthpower.text.sunder": "Sp. Def -%1$s",
-  "world_combat.move.earthpower.text.miss": "The surge passes below"
+  "world_combat.move.earthpower.text.miss": "The surge passes below",
+  "worldcombat.skill.earthpower.description.fissure": "With fissure form on, the burst radius and torn area are larger but the column is a little weaker with a longer cooldown, covering a small patch at the target's feet; with it off, the column is narrower and harder, for naming a single target."
 }

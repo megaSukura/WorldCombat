@@ -132,8 +132,8 @@ namespace PokemonSkills {
 
     describe("overheat", [
         { key: "description.0", values: ["heat"] },
-        { key: "description.1", values: ["cone", "reach", "gust", "share"] },
-        { key: "description.2", values: ["burnChance", "scorch", "scorchTicks"] },
+        { key: "description.1", values: ["cone","reach","gust","share"] },
+        { key: "description.2", values: ["burnChance","scorch","scorchTicks"] },
         { key: "description.3", values: ["insightLoss"] },
         { key: "vent.on", values: [], when: function (context) { return read(context.detail.values, ["vent"]) === true; } },
         { key: "vent.off", values: [], when: function (context) { return read(context.detail.values, ["vent"]) !== true; } },

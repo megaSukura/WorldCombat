@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.sketch.summary": "Sketch the move the target just used straight into the slot Sketch occupies and learn it permanently. Sketch has one use, and the slot is gone once it is used.",
+  "worldcombat.skill.sketch.summary": "Permanently replace Sketch’s slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves.",
   "worldcombat.skill.sketch.use.0": "Permanently learn one of a foe's moves",
   "worldcombat.skill.sketch.use.1": "Copy a rare set-up or recovery",
   "worldcombat.skill.sketch.use.2": "Put a heavy attack into your own move set",
-  "worldcombat.skill.sketch.description.0": "Within %1$s blocks, draw the target for %2$s s, then write its last used move permanently into the slot Sketch occupies.",
-  "worldcombat.skill.sketch.description.1": "It cannot start when the target has no last move, and Sketch is not consumed then.",
+  "worldcombat.skill.sketch.description.0": "Observe a target within %1$s blocks for %2$s. A Pokémon’s last move permanently replaces Sketch’s slot with full PP.",
+  "worldcombat.skill.sketch.description.1": "The move requires a readable prior action. Sketch itself cannot be sketched from a Pokémon, and moves you already know are not learned again.",
   "worldcombat.skill.sketch.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.sketch.value.reach": "Sketch range",
   "worldcombat.skill.sketch.value.study": "Sketch windup",
@@ -18,5 +18,6 @@
   "worldcombat.skill.sketch.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.sketch.preference.ai.leaveStation.help": "When on, the user may leave its post to sketch; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.sketch.text.ink": "Sketched %1$s",
-  "world_combat.move.sketch.text.empty": "Nothing to sketch"
+  "world_combat.move.sketch.text.empty": "Nothing to sketch",
+  "worldcombat.skill.sketch.world": "A known native attack successfully used by a non-Pokémon in the last 60 seconds is translated into a move that permanently replaces Sketch: ordinary melee→Tackle, sting→Poison Sting, ram→Headbutt, mace→Slam, arrow→Fury Attack, trident→Horn Attack, fireball→Ember, sonic boom→Sonic Boom, indirect magic→Psybeam. Unlisted attacks cannot be sketched; you learn the corresponding move’s full action."
 }

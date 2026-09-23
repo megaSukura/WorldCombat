@@ -31,7 +31,7 @@ namespace PokemonSkills {
         id: tripleaxelId,
         cooldownParameter: "recharge",
         name: "Triple Axel",
-        description: "A consecutive three-kick attack that becomes more powerful with each successful hit.",
+        description: "原地旋身连踢三脚：每一脚都扫在身前一段扇形里，同时扫到扇形里的所有敌人，每中一脚下一脚更重（以第一脚威力为基准逐脚加档）。每脚独立掷命中，落空这串就停。横扫式能把身旁的第二个人也卷进来。",
         uses: ["原地旋身连踢三脚", "每中一脚，下一脚更重", "宽弧横扫照顾身旁的目标"],
         kind: "enemy",
         range: 2.8,

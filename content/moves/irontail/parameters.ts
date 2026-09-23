@@ -82,9 +82,9 @@ namespace PokemonSkills {
     ]);
 
     describe("irontail", [
-        { key: "description.0", values: ["slam", "push"] },
+        { key: "description.0", values: ["slam","push"] },
         { key: "description.1", values: ["tailReach", "impactRadius"] },
-        { key: "description.2", values: ["dentChance", "dentStages", "dentTicks"] },
+        { key: "description.2", values: ["dentChance","dentStages","dentTicks"] },
         { key: "description.3", values: ["charge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slam"] },

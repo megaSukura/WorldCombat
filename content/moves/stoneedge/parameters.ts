@@ -110,9 +110,9 @@ namespace PokemonSkills {
     ]);
 
     describe(stoneedgeId, [
-        { key: "description.0", values: ["spike", "half"] },
+        { key: "description.0", values: ["spike","half"] },
         { key: "description.1", values: ["reach", "segments"] },
-        { key: "description.2", values: ["pierce", "scarTicks"] },
+        { key: "description.2", values: ["pierce","scarTicks"] },
         { key: "stance.wide", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "stance.sharp", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.facade.summary": "带着身上的异常硬顶过去：处于中毒／剧毒、灼伤、麻痹或冰冻时威力翻倍，越剩不下命也越狠。撞实后把目标顶开；开启“变本加厉”还能打得更重，但会反噬自己。",
-  "worldcombat.skill.facade.description.0": "撞实造成 %1$s 的接触伤害；自己带着异常时按 2 倍结算。",
-  "worldcombat.skill.facade.description.1": "命中后沿冲撞方向把目标顶开 %1$s 格，这一步总共能冲出 %2$s 格。",
+  "worldcombat.skill.facade.description.0": "撞实造成约 %1$s 点接触伤害；自身带有中毒／剧毒、灼伤、麻痹或冰冻时这一记威力翻倍，且自身失去的生命越多越重。只结算撞上的第一个敌人，异常不会因此消失。",
+  "worldcombat.skill.facade.description.1": "命中后沿冲撞方向把目标顶开 %1$s 格，这一步总共能冲出 %2$s 格；途中撞上方块或走不动就提前收势落空。",
   "worldcombat.skill.facade.description.2": "推进速度 %1$s 格每刻，判定半径 %2$s 格。",
   "worldcombat.skill.facade.use.0": "带伤硬顶",
   "worldcombat.skill.facade.use.1": "残血时反打",
@@ -20,5 +20,7 @@
   "worldcombat.skill.facade.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.facade.preference.ai.leaveStation.help": "开启后，驻守命令下也会为硬撑离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.facade.text.grit": "硬撑",
-  "world_combat.move.facade.text.whiff": "撑空了"
+  "world_combat.move.facade.text.whiff": "撑空了",
+  "worldcombat.skill.facade.description.3": "命中后按自身最大生命的 %1$s 反噬自己（变本加厉关闭时为 0）。",
+  "worldcombat.skill.facade.timing": "可向 %1$s 格内出手；起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。"
 }

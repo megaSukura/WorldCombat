@@ -131,10 +131,10 @@ namespace PokemonSkills {
 
     describe("psychoboost", [
         { key: "description.0", values: ["focus"] },
-        { key: "description.1", values: ["converge", "burstRadius"] },
+        { key: "description.1", values: ["converge","burstRadius"] },
         { key: "description.2", values: ["reach"] },
         { key: "description.3", values: ["insightLoss"] },
-        { key: "echo.on", values: ["echoShare", "echoDelay", "echoRadius"], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
+        { key: "echo.on", values: ["echoShare","echoDelay","echoRadius"], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
         { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.focus"] },

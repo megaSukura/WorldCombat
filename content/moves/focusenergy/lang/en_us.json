@@ -3,7 +3,7 @@
   "worldcombat.skill.focusenergy.use.0": "Open a fight with a breath so every later hit finds the weak point",
   "worldcombat.skill.focusenergy.use.1": "Sharpen the aim before the foe eats a combo",
   "worldcombat.skill.focusenergy.use.2": "Make the foe afraid to close in before the breath runs out",
-  "worldcombat.skill.focusenergy.description.0": "At full breath each damaging hit gains about %1$s crit chance; the breath stays for %2$s.",
+  "worldcombat.skill.focusenergy.description.0": "While the breath holds, each of your damaging hits gains extra crit chance, rising from nothing as the breath deepens to about %1$s at full breath. Hits do not spend it, and the breath stays for %2$s before fading.",
   "worldcombat.skill.focusenergy.deep.on": "Deep breath: +15% bonus chance and full focus arrives sooner, at the cost of %1$s telegraph and %2$s cooldown - sit down before a hard fight.",
   "worldcombat.skill.focusenergy.deep.off": "Shallow breath: a little less bonus and slower focus, but lower telegraph and cooldown - keep topping it up in a long trade.",
   "worldcombat.skill.focusenergy.description.1": "Full focus after about %1$s.",
@@ -32,5 +32,6 @@
   "world_combat.move.focusenergy.text.ready": "Focus Energy - %1$s s (crit +%2$s%%)",
   "world_combat.move.focusenergy.text.deep": "Focus Energy (deep) - %1$s s (crit +%2$s%%)",
   "world_combat.move.focusenergy.text.fade": "Focus Energy faded",
-  "effect.world_combat.focus_breath": "Focus Energy"
+  "effect.world_combat.focus_breath": "Focus Energy",
+  "worldcombat.skill.focusenergy.description.2": "Cannot be used while Dragon Cheer is already on you."
 }

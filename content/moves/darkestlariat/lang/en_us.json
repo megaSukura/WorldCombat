@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.darkestlariat.summary": "Strike and push away surrounding enemies, ignoring their stat-stage changes.",
+  "worldcombat.skill.darkestlariat.summary": "Hits and pushes nearby enemies, ignoring their Defense stage changes. Equipped armor still reduces damage.",
   "worldcombat.skill.darkestlariat.use.0": "Spin on the spot and clear everyone around you",
   "worldcombat.skill.darkestlariat.use.1": "Ignore the target's raised Defence stages outright",
   "worldcombat.skill.darkestlariat.use.2": "Break out when surrounded",

@@ -3,7 +3,7 @@
   "worldcombat.skill.psywave.use.0": "Punch through several targets lined up",
   "worldcombat.skill.psywave.use.1": "Chip with a cheap shot and gamble on a high roll",
   "worldcombat.skill.psywave.use.2": "Play as a steady ranged attack in steady mode",
-  "worldcombat.skill.psywave.description.0": "Base wave power %1$s; each cast rolls an intensity between (1 - %2$s) and (1 + %2$s) of it, so how much this one deals changes every time.",
+  "worldcombat.skill.psywave.description.0": "On impact it deals about %1$s special damage; each cast also rolls an intensity between (1 - %2$s) and (1 + %2$s), so how much this one actually deals changes every time.",
   "worldcombat.skill.psywave.description.1": "The front travels %1$s blocks at %2$s blocks/tick with a %3$s block hit width.",
   "worldcombat.skill.psywave.description.2": "The front pierces up to %1$s targets.",
   "worldcombat.skill.psywave.surge.on": "Surge mode: power x1.2 and swing x1.5 for wilder high and low rolls, with 3 ticks faster recovery, at the cost of unchanged reach and no cooldown discount.",

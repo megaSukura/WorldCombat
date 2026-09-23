@@ -1,10 +1,10 @@
 {
   "effect.world_combat.torment_itch": "Torment",
-  "worldcombat.skill.torment.summary": "Jeer at one foe so that for a while it cannot use the same move twice in a row; the repeated move is turned back on it.",
+  "worldcombat.skill.torment.summary": "Torments the target and disrupts repeated attacks. Pokémon cannot use the same move consecutively; ordinary creatures and players must pause between repeated attack methods.",
   "worldcombat.skill.torment.use.0": "Break the rhythm of a one-trick foe",
   "worldcombat.skill.torment.use.1": "Force the target to switch moves",
   "worldcombat.skill.torment.use.2": "Punish an enemy that leans on one combo",
-  "worldcombat.skill.torment.description.0": "The jeer reaches %1$s blocks; on a hit the target cannot repeat a move for %2$s.",
+  "worldcombat.skill.torment.description.0": "Range %1$s blocks; torment lasts %2$s. Pokémon are blocked from repeating their last move. After an ordinary attack lands, repeats of that melee, arrow or other attack type are blocked for 1.5 seconds; changing methods is allowed.",
   "worldcombat.skill.torment.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.torment.manner.0": "Scorn: longer and farther torment, but slower windup and longer cooldown.",
   "worldcombat.skill.torment.manner.1": "Goad: quicker and cheaper, but a shorter torment and a closer jeer.",

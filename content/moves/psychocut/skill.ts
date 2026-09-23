@@ -33,7 +33,7 @@ namespace PokemonSkills {
         id: psychocutId,
         cooldownParameter: "recharge",
         name: "Psycho Cut",
-        description: "The user tears at the target with blades formed by psychic power. This move has a heightened chance of landing a critical hit.",
+        description: "在身前凝出一把实体化的心之刃，掷出去后它自己拐弯追向目标：命中处沿竖直面切出一个十字，把目标钉在交点上，刃风扫到近旁的其他敌人也各挨一记。它是一记会追人的远程斩击，暴击率比同族高一档。",
         uses: ["把实体化的心之刃掷出去", "刃会拐弯追向目标", "命中处切出一个十字，波及近旁的敌人"],
         kind: "enemy",
         range: 9,

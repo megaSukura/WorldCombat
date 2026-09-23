@@ -3,9 +3,9 @@
   "worldcombat.skill.focuspunch.use.0": "Gather a crushing blow while the foe cannot reach you",
   "worldcombat.skill.focuspunch.use.1": "Punish a target already tied up by an ally",
   "worldcombat.skill.focuspunch.use.2": "Force the foe to decide whether to step into your long wind-up",
-  "worldcombat.skill.focuspunch.description.0": "After gathering for %2$s, punch for %1$s power; any external damage taken during the gather scatters the punch.",
-  "worldcombat.skill.focuspunch.description.1": "Fist reach %1$s blocks, lunge %2$s blocks/tick, hit radius %3$s blocks; the target is shoved back %4$s blocks.",
-  "worldcombat.skill.focuspunch.steady.on": "Steady stance on: gather x1.35 and punch x1.12, but the longer wind-up breaks more easily, recovery +3 ticks and cooldown +8 ticks.",
+  "worldcombat.skill.focuspunch.description.0": "After gathering for %2$s, strike for about %1$s damage; any external damage taken during the gather scatters the punch.",
+  "worldcombat.skill.focuspunch.description.1": "Fist reach %1$s blocks, lunge %2$s blocks/tick, hit radius %3$s blocks. It strikes only the first foe on the lunge path, shoving it back %4$s blocks; if nothing is met or the path is blocked, it whiffs and deals no damage.",
+  "worldcombat.skill.focuspunch.steady.on": "Steady stance on: gather x1.35 and punch x1.12, but the longer gather is easier to break, recovery +3 ticks and cooldown +8 ticks.",
   "worldcombat.skill.focuspunch.steady.off": "Steady stance off: a shorter gather and a faster punch, slightly lighter, but harder to catch mid-wind-up.",
   "worldcombat.skill.focuspunch.timing": "Cast on an enemy within %1$s blocks; after gathering for %2$s it spends %4$s PP; recovery %3$s, cooldown %5$s from commit.",
   "worldcombat.skill.focuspunch.growth.0": "At level %1$s the punch rises to %2$s.",
@@ -28,5 +28,6 @@
   "world_combat.move.focuspunch.text.brace": "Gathering",
   "world_combat.move.focuspunch.text.hit": "Focus Punch!",
   "world_combat.move.focuspunch.text.broken": "Focus broken",
-  "world_combat.move.focuspunch.text.whiff": "Whiff"
+  "world_combat.move.focuspunch.text.whiff": "Whiff",
+  "worldcombat.skill.focuspunch.description.gather": "Flinch cannot break the gather - only actual damage can; a broken gather spends no PP and triggers no cooldown."
 }

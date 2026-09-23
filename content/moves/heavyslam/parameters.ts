@@ -135,9 +135,9 @@ namespace PokemonSkills {
     defineDamage("heavyslam", "crush", { defenceCoefficient: 0.005 }, { contact: true });
 
     describe("heavyslam", [
-        { key: "description.0", values: ["crush", "landRadius", "collisionRadius"] },
+        { key: "description.0", values: ["crush","landRadius"] },
         { key: "description.1", values: ["leap", "hop", "airTicks", "shove"] },
-        { key: "description.2", values: ["craterRadius", "craterTicks"] },
+        { key: "description.2", values: ["craterRadius","craterTicks"] },
         { key: "anchor.on", values: [], when: function (context) { return read(context.detail.values, ["anchor"]) === true; } },
         { key: "anchor.off", values: [], when: function (context) { return read(context.detail.values, ["anchor"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

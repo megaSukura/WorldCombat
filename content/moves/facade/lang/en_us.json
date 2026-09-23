@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.facade.summary": "Grit through your own affliction. While poisoned, badly poisoned, burned, paralyzed or frozen the slam deals double damage, and the worse your health the harder it hits. Shoves the target back; Brutal hits harder still but makes you hurt yourself.",
-  "worldcombat.skill.facade.description.0": "The slam deals %1$s contact damage; it is doubled while you carry a major status.",
-  "worldcombat.skill.facade.description.1": "On a hit, the target is shoved %1$s blocks along the charge; the lunge reaches %2$s blocks in total.",
+  "worldcombat.skill.facade.description.0": "The slam deals about %1$s contact damage; it is doubled while you carry poison/badly poisoned, burn, paralysis or frozen, and the more health you have lost the harder it hits. It strikes only the first enemy it meets, and your status is not consumed.",
+  "worldcombat.skill.facade.description.1": "On a hit, the target is shoved %1$s blocks along the charge; the lunge reaches %2$s blocks in total and ends early (a whiff) if it meets a block or cannot keep moving.",
   "worldcombat.skill.facade.description.2": "Advance speed %1$s blocks per tick, collision radius %2$s blocks.",
   "worldcombat.skill.facade.use.0": "Grit through an affliction",
   "worldcombat.skill.facade.use.1": "Counter while low",
@@ -20,5 +20,7 @@
   "worldcombat.skill.facade.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.facade.preference.ai.leaveStation.help": "When on, the user may leave its post to grit through an attack; when off, it only charges what it can reach from where it stands.",
   "world_combat.move.facade.text.grit": "Gritted through",
-  "world_combat.move.facade.text.whiff": "Whiffed"
+  "world_combat.move.facade.text.whiff": "Whiffed",
+  "worldcombat.skill.facade.description.3": "A landed hit costs you %1$s of your maximum health (0 while Brutal is off).",
+  "worldcombat.skill.facade.timing": "Cast within %1$s blocks; %2$s wind-up, %3$s recovery, %4$s PP, %5$s cooldown."
 }

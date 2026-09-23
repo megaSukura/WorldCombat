@@ -59,7 +59,7 @@ namespace PokemonSkills {
     }
 
     define({ id: "expandingforce", name: "广域战力",
-        description: "把精神力量压进目标脚下，留下精神场地；站在场地上再放时，波从自身炸开，命中所有贴身敌人且威力提高。",
+        description: "把精神力量压进目标脚下，在落点留下拖慢落地敌人的精神场地；站在自己铺的场地上再放时，改为吸收场地、以自身为原点炸开，命中周围所有敌人且威力提高。",
         uses: ["范围压制", "场地经营"], kind: "enemy", range: 16, prepare: 10, active: 0, recover: 10, cooldown: 50, style: "psy",
         defaults: {}, fields: [],
         indicator: function () { return { radius: 16, geometry: "area", style: "psy", label: "广域战力" }; },

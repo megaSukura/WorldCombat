@@ -34,7 +34,7 @@ namespace PokemonSkills {
             "覆色维持", "这层颜色维持多久；等级与特防越高越久。"),
         recharge: seconds(
             F.base(60, "基础").minus(F.stat("speed").times(0.24).as("速度")).clamp(28, 100).round(),
-            "重新染色的冷却", "再染一次需要多久；速度快的个体更快恢复。"),
+            "重新染色的冷却", "再染一次需要多久；速度快的个体更快恢复。", { base: 60 }),
         motes: formula(
             F.base(12, "基础").plus(F.stat("specialAttack").div(7).as("特攻")).clamp(12, 36).round(),
             "色尘数", { unit: "点", description: "身上浮起的同色微粒数量；特攻越高越密。" }),
@@ -43,15 +43,17 @@ namespace PokemonSkills {
             "毛边数", { unit: "片", description: "轮廓上翻卷的碎屑数量；体重越大、个头越高越明显。" })
     });
 
-    stages("camouflage", [{ level: 35, values: { cooldown: 50 } }, { level: 50, values: { cooldown: 42 } }]);
+    stages("camouflage", [{ level: 35, values: { recharge: 50 } }, { level: 50, values: { recharge: 42 } }]);
 
     describe("camouflage", [
         { key: "description.0", values: ["tempo"] },
+        { key: "description.materials", values: [] },
         { key: "description.1", values: ["hold"] },
+        { key: "description.nature", values: [] },
         { key: "drift.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.drift); } },
         { key: "drift.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.drift); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

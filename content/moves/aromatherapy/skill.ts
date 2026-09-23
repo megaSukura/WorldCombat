@@ -47,7 +47,7 @@ namespace PokemonSkills {
     define({
         id: aromatherapyId,
         cooldownParameter: "recharge", name: "芳香治疗",
-        description: "在选定点铺下一片会停留的香云；走进云里的自己与伙伴，身上全部有害状态效果当场化掉。云还在的时候，谁再被挂上异常都会被它继续化掉。与治愈铃声不同，它铺在世界上一个位置，绕开即可躲过。",
+        description: "在选定点铺下一片会停留的香云：云里的自己与伙伴身上的全部有害状态效果会被反复化掉，云还在时新挂上的异常也继续被化掉；绕开这片云就能躲过净化。",
         uses: ["在队友据守或缠斗的位置铺一片香云", "提前把香云铺在队友会经过的路上", "队友扎堆时用一片云反复净化整片区域"],
         kind: "point", range: 5, maxRange: 8, prepare: 11, active: 1, recover: 8, cooldown: 160, style: "scent", maximumTicks: 220,
         defaults: { dense: false },

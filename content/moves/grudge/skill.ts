@@ -1,18 +1,4 @@
-/**
- * 怨念 / grudge —— 执行组织。
- *
- * 核心念头：把这一手记在心里——谁亲手把你打倒，那份怨念就扑上去，把它送走你的那一招 PP 全部掏空。
- *
- * 两幕 + 收：
- *   起（windup 只在脚边聚起怨念预告，提交前可打断，不花代价）→
- *   立（提交后：挂共享身份 world_combat:status/grudge 的真实 MobEffect，留下机读标记带走画面用的怨念数与半径；
- *       刻骨取向下同时把自己 rooted 在怨念里）。
- *   收（有人亲手把你打倒时）：致命一击在 damage_incoming 阶段被认出并写下待偿标记；damage_applied 确认这一击
- *       真的把使用者打倒（data.after ≤ 0）后，读凶手刚用过的招式（lastMove），把那一手的 PP 清零。
- *       凶手不是宝可梦、或读不到那一手时，怨念只空扑一场（wasted），不会白扣别的资源。
- * 结束：怨念走完自己的时间或被清除时散去（lift）；使用者没被打倒时不会白白发作。
- * 反制：对手在窗口内收住最后一击、用环境或别的来源了结，怨念就收不到那一手；已被怨念缠上时再立会失败。
- */
+/** grudge：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     function grudgeAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
     const GRUDGE_PENDING = "world_combat_grudge";
@@ -58,11 +44,22 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(grudgeMark, "start", function () { });
     WorldCombat.effectHandler(grudgeMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
+    const grudgeDebt = "world_combat:grudge_debt", grudgeToll = "world_combat:grudge_toll";
+    WorldCombat.effect(grudgeDebt, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(grudgeDebt, "start", () => {});
+    CombatStatus.actions.define({ id: "world_combat:move_grudge/debt", apply: context => {
+        if (context.phase !== "damage" || !DamageSemantics.read(context.metadata).attack
+            || MobEffects.read(context.world, context.actor, grudgeToll) === null) return;
+        const views = context.world.effects(context.actor, grudgeDebt);
+        if (views.some(view => JSON.parse(String(view.data())).type === String(context.metadata.damageType))) context.blocked.grudged = true;
+    } });
+
     define({
+        freeMovement: function (config) { return !!config.deep; },
         id: grudgeId,
         cooldownParameter: "recharge",
         name: "怨念",
-        description: "当场立下一段怨念：这段时间里谁亲手把你打倒，它刚刚送走你的那一招 PP 会被全部掏空。它不护住你，只让「亲手了结我」在事后付代价；已被怨念缠上时再立会失败。",
+        description: "在自己身上立下怨念。期间被敌人打倒时，清空宝可梦凶手致命招式的PP；普通生物或玩家用来击杀的攻击方式则被封住10秒。",
         uses: ["惩罚那个一定要亲手补刀的人", "让对手的关键招式再也用不出来", "临死前把对手赖以为生的招废掉"],
         kind: "self",
         range: 0,
@@ -140,7 +137,12 @@ namespace PokemonSkills {
         const body = world.observe(killer);
         if (body === null || body.health() <= 0) return;
         const at = WorldCombat.point(typeof data.x === "number" ? data.x : 0, typeof data.y === "number" ? data.y : 0, typeof data.z === "number" ? data.z : 0);
-        const drained = grudgeCollect(world, killer);
+        let drained = grudgeCollect(world, killer);
+        if (!drained && String(killer.domain()) !== "cobblemon" && DamageSemantics.read(data).attack) {
+            MobEffects.apply(world, killer, grudgeToll, 200, 0);
+            world.effect(grudgeDebt, killer, JSON.stringify({ type: String(data.damageType) }), 200);
+            drained = String(data.damageType);
+        }
         const path: any[] = [[at.x(), at.y(), at.z()], String(killer.ref())];
         if (drained) {
             world.sound("minecraft:block.sculk_shrieker.shriek", body.position(), 16, "{}");

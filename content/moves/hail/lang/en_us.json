@@ -4,8 +4,8 @@
   "worldcombat.skill.hail.use.1": "Pelt a crowd inside the hailstorm",
   "worldcombat.skill.hail.use.2": "Leave hard frozen shards on the field",
   "worldcombat.skill.hail.description.0": "Press a hailstorm of radius %1$s blocks onto the chosen ground, lasting %2$s.",
-  "worldcombat.skill.hail.description.1": "Each pass pelts %1$s of a non-Ice body's max health; hail clings for %2$s after leaving, one pass every %3$s.",
-  "worldcombat.skill.hail.description.2": "Fallen ice covers up to %1$s ground blocks.",
+  "worldcombat.skill.hail.description.1": "Inside the storm every non-Ice body with a clear line to its centre is pelted once every %3$s for %1$s of its max health (at least 1 point); Ice bodies take no pelting and are merely frost-clad. Every body that enters is marked as pelted, and the mark lingers %2$s after leaving, counting as a harmful status that cleansing effects can remove.",
+  "worldcombat.skill.hail.description.2": "The first pass lays shattered ice on the ground around the landing point, covering up to %1$s blocks; the ice lasts about 60% of the storm's duration, then the ground returns.",
   "worldcombat.skill.hail.description.3": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
   "worldcombat.skill.hail.timing": "Cast at ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to drop the hail, recovers %3$s, and commits a %5$s cooldown on cast.",
   "worldcombat.skill.hail.growth.0": "At level %1$s the committed cooldown drops to %2$s s.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.hail.preference.ai.leaveStation.help": "On, a companion holding its station will step out to drop hail.",
   "world_combat.move.hail.text.pelt": "Pelted",
   "world_combat.move.hail.text.coat": "Frost-clad",
-  "effect.world_combat.hail_struck": "Pelted"
+  "effect.world_combat.hail_struck": "Pelted",
+  "worldcombat.skill.hail.description.weather": "While the storm lasts, the covered ground counts as hail weather and the light dims; moves that read the sky treat the area as hail."
 }

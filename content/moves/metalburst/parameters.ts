@@ -38,8 +38,7 @@ namespace PokemonSkills {
         if (!world || !actor || !world.valid(actor)) return null;
         var record = metalburstLedger[String(actor.ref())];
         if (!record || !(record.amount > 0)) return null;
-        if (String(actor.domain()) !== "cobblemon") return record;
-        var window = p(metalburstId, "window", world);
+        var window = p(metalburstId, "window", String(actor.domain()) === "cobblemon" ? world : undefined);
         return world.tick() - record.tick <= window ? record : null;
     }
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
@@ -141,8 +140,8 @@ namespace PokemonSkills {
     ]);
 
     describe(metalburstId, [
-        { key: "description.0", values: ["refund", "window"] },
-        { key: "description.1", values: ["burstRadius", "maximumTargets", "shareFraction", "capFraction"] },
+        { key: "description.0", values: ["refund","window"] },
+        { key: "description.1", values: ["burstRadius","maximumTargets","shareFraction","capFraction"] },
         { key: "shrapnel.on", values: [], when: function (context) { return read(context.detail.values, ["shrapnel"]) === true; } },
         { key: "shrapnel.off", values: [], when: function (context) { return read(context.detail.values, ["shrapnel"]) !== true; } },
         { key: "timing", values: ["range", "brace", "settle", "pp", "recharge"] },

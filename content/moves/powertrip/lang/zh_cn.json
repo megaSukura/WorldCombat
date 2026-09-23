@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.powertrip.summary": "把攒在身上的能力等级摆成一身气焰，朝选中的对手直冲过去一头撞上：正面能力越多，冲得越远越快、这一撞越重、把人顶得越开。等级一直留在身上，所以它可以反复冲；代价是只看眼前这一个目标（猛进式能撞穿两个）。",
+  "worldcombat.skill.powertrip.summary": "借身上的强化冲撞敌人。强化越多，冲得越远越快、伤害和推力越大；命中后保留强化。",
   "worldcombat.skill.powertrip.use.0": "叠高能力等级后冲上去重击",
   "worldcombat.skill.powertrip.use.1": "把一个人顶出很远",
   "worldcombat.skill.powertrip.use.2": "猛进时一次撞穿两个人",
-  "worldcombat.skill.powertrip.description.0": "这一撞对每个被撞到的人造成 %1$s 的接触伤害；自身五项能力每有 1 级正面能力都算进去，此刻架势 %2$s 级。",
+  "worldcombat.skill.powertrip.description.0": "每个撞到的敌人受到约 %1$s 点接触伤害；当前强化共 %2$s 层，已经计入这一撞的数值。",
   "worldcombat.skill.powertrip.description.1": "冲 %1$s 格、每刻位移 %2$s 格，判定半径 %3$s 格，撞上后把人顶开 %4$s 格。",
   "worldcombat.skill.powertrip.description.2": "最多撞到 %1$s 人。",
   "worldcombat.skill.powertrip.drive.on": "猛进式：冲势穿堂，最多撞到两个人（每人 ×0.88），但顶开更弱、收招 +3、冷却 +5。",
@@ -32,5 +32,6 @@
   "worldcombat.skill.powertrip.preference.ai.boostFirst.help": "开启：身上每有 1 级正面能力就抬高出手优先级，攒了等级才值得冲；关闭：不问架势，一律按普通近身攻击排序。",
   "world_combat.move.powertrip.text.hit": "嚣张冲撞（%1$s）",
   "world_combat.move.powertrip.text.through": "气势穿堂（第 %1$s 人）",
-  "world_combat.move.powertrip.text.miss": "冲势落空"
+  "world_combat.move.powertrip.text.miss": "冲势落空",
+  "worldcombat.skill.powertrip.world": "自身攻、防、特攻、特防、速度的正面等级，以及药水、信标等增益都计入强化；增益I级计1层。"
 }

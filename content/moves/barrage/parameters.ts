@@ -134,9 +134,10 @@ namespace PokemonSkills {
     defineDamage(barrageId, "ball", {}, { flags: { bullet: true } });
 
     describe(barrageId, [
-        { key: "description.0", values: ["ball", "throws"] },
+        { key: "description.0", values: ["ball","throws"] },
         { key: "description.1", values: ["gap", "reach", "velocity", "spread"] },
         { key: "description.2", values: ["arc", "radius"] },
+        { key: "description.out", values: [] },
         { key: "lob.on", values: [], when: function (context) { return read(context.detail.values, ["lob"]) === true; } },
         { key: "lob.off", values: [], when: function (context) { return read(context.detail.values, ["lob"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

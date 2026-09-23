@@ -4,9 +4,9 @@
   "worldcombat.skill.grassyglide.use.1": "贴上去滑过去，把目标铲开",
   "worldcombat.skill.grassyglide.use.2": "落点种出一片青草，供自己与队友借力",
   "worldcombat.skill.grassyglide.description.0": "滑撞造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.grassyglide.description.1": "沿瞄准方向最多滑 %1$s 格、每刻 %2$s 格，撞实把目标铲开约 %3$s 格。",
-  "worldcombat.skill.grassyglide.description.2": "在落点建立半径 %1$s 格、持续 %2$s 的青草场地。",
-  "worldcombat.skill.grassyglide.seed.on": "播种式：落点长出一大片更久的青草，可以站在上面打、把下一次滑梯变成瞬发，代价是滑行距离 ×0.85、收招 +2 刻、冷却 +8 刻。",
+  "worldcombat.skill.grassyglide.description.1": "沿瞄准方向最多滑 %1$s 格、每刻 %2$s 格；只撞上路径上第一个非友方，撞实把它铲开约 %3$s 格，一路没人挡下就滑到尽头落空。",
+  "worldcombat.skill.grassyglide.description.2": "撞实后在目标的落脚处长出半径 %1$s 格、持续 %2$s 的青草场地。",
+  "worldcombat.skill.grassyglide.seed.on": "播种式：落点长出一大片更久的青草，站上去时滑梯瞬发；代价是滑行距离 ×0.85、单发 ×0.92、收招 +2 刻、冷却 +8 刻。",
   "worldcombat.skill.grassyglide.seed.off": "疾滑式：滑得更远、回得更快，只压出一小片转瞬即逝的青草。",
   "worldcombat.skill.grassyglide.timing": "可向 %1$s 格内施放；起手 %2$s 秒（在青草场地上归零），收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.grassyglide.growth.0": "达到 %1$s 级，滑撞威力提升至 %2$s。",
@@ -24,7 +24,7 @@
   "worldcombat.skill.grassyglide.value.recharge": "冷却",
   "worldcombat.skill.grassyglide.value.onGrass": "在青草场地上",
   "worldcombat.skill.grassyglide.preference.seed": "播种式",
-  "worldcombat.skill.grassyglide.preference.seed.help": "开启：落点长出一大片更久的青草，站在上面算「在青草场地上」（草属性招式更猛、下一次滑梯瞬发），代价是滑行距离 ×0.85、收招 +2 刻、冷却 +8 刻。关闭：滑得更远、回得更快，只压出一小片青草。",
+  "worldcombat.skill.grassyglide.preference.seed.help": "开启：落点长出一大片更久的青草，站在上面算「在青草场地上」（草属性招式更猛、滑梯瞬发），代价是滑行距离 ×0.85、单发 ×0.92、收招 +2 刻、冷却 +8 刻。关闭：滑得更远、回得更快，只压出一小片青草。",
   "worldcombat.skill.grassyglide.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.grassyglide.preference.ai.maxChase.help": "对手离自己这么远以内才主动滑过去；本招射程短，设大愿意更早起手。",
   "worldcombat.skill.grassyglide.preference.ai.finish": "优先收残血",
@@ -33,5 +33,6 @@
   "worldcombat.skill.grassyglide.preference.ai.onGrass.help": "开启：自己站在青草场地上时优先出这一招（起手归零、射程与速度更高）；关闭则只按普通近战候选排序。",
   "world_combat.move.grassyglide.text.plant": "落点压出一片青草",
   "world_combat.move.grassyglide.text.miss": "滑空了",
-  "effect.world_combat.grassyglide_ground": "青草滑梯·草皮"
+  "effect.world_combat.grassyglide_ground": "青草滑梯·草皮",
+  "worldcombat.skill.grassyglide.description.grass": "这片青草对双方一视同仁：贴地的活体站上去都算「在青草场地上」——草属性招式威力 ×1.3、自己的地震与重踏威力减半，青草滑梯的起手归零、滑得更远更快；离地的不会触发，草到期后枯去。"
 }

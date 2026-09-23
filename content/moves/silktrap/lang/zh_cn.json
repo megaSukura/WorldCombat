@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.silktrap.summary": "铺开一张丝网，按总量挡下伤害招式并黏住接触者：速度被压低、脚被当场缠住；变化招式会穿过丝网。",
-  "worldcombat.skill.silktrap.description.0": "丝网持续 %1$s、量 %2$s 点，接触降速 %3$s 级、缠足 %4$s；速度与防御越高越韧越久。",
-  "worldcombat.skill.silktrap.description.1": "绷网 %1$s，冷却 %2$s。",
-  "worldcombat.skill.silktrap.description.2": "连用失误率 %1$s；缠缚与滑丝的取舍见配置 %2$s。",
+  "worldcombat.skill.silktrap.summary": "铺开一张丝网保护自己，按总量挡下对手的伤害招式（超出的伤害照常命中），并黏住用接触攻击撞上来的敌人——速度被压低、脚被缠住而无法移动；变化招式会穿过丝网。",
+  "worldcombat.skill.silktrap.description.0": "绕自身铺开一张丝网保护自己：最多持续 %1$s 刻（丝网总量耗尽会提前结束），期间替自己挡下对手伤害招式的合计 %2$s 点伤害，超出部分照常落到身上；用接触攻击撞上丝网的敌人会降速 %3$s 级、并被缠足 %4$s 刻（期间无法移动），同一张网对每个攻击者只缠一次。速度与防御越高，丝网越韧越久。",
+  "worldcombat.skill.silktrap.description.1": "绷网 %1$s 刻，冷却 %2$s 刻。",
+  "worldcombat.skill.silktrap.description.2": "短时间内反复铺网会越来越容易失败：从连续第二次起，每多连一次失误率上升约 25%（等级越高增幅越小），停手约 12 秒后重新计数；失败时本次施放作废。当前失误率 %1$s，当前缠缚式为 %2$s。",
   "worldcombat.skill.silktrap.use.0": "黏住冲上来的近战，让它既慢又动不了",
   "worldcombat.skill.silktrap.use.1": "为队友拉开距离争取时间",
   "worldcombat.skill.silktrap.use.2": "用最韧的一张网硬挡远程伤害",
@@ -21,5 +21,6 @@
   "effect.world_combat.silk_guard": "线阱",
   "world_combat.move.silktrap.text.block": "丝网黏下 %1$s 点（余 %2$s）",
   "world_combat.move.silktrap.text.punish": "速度 −%1$s、缠足 %2$s 秒",
-  "world_combat.move.silktrap.text.fall": "丝网松开"
+  "world_combat.move.silktrap.text.fall": "丝网松开",
+  "worldcombat.skill.silktrap.description.pass": "丝网只拦对手的伤害招式；变化招式不受影响、直接生效，同伴的攻击也不会消耗丝网。"
 }

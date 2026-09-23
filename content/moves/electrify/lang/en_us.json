@@ -3,7 +3,7 @@
   "worldcombat.skill.electrify.use.0": "Pre-empt a typing",
   "worldcombat.skill.electrify.use.1": "Break a Normal move",
   "worldcombat.skill.electrify.use.2": "Feed an Electric absorber",
-  "worldcombat.skill.electrify.description.0": "The charge waits up to %1$s s before the target's next move; that move becomes Electric and bursts on landing. It never misses a roll, only range and line of sight apply, and it fades if the target stalls.",
+  "worldcombat.skill.electrify.description.0": "Pour a charge into a single foe that parks for up to %1$s s; the next move it makes, if within the rewrite scope, becomes Electric and bursts the charge on a hit. The cast never rolls to hit — only range and line of sight apply — and a stalled charge fades on its own.",
   "worldcombat.skill.electrify.description.1": "After the rewrite, same-type, effectiveness and Electric-absorbing abilities settle normally, so you can deliberately feed a Normal move to Ground immunity.",
   "worldcombat.skill.electrify.allmoves.0": "Conduct all: any non-Electric move becomes Electric, but duration -25% and cooldown +14 ticks, made to interrupt a key off-type move.",
   "worldcombat.skill.electrify.allmoves.1": "Filter: only Normal-type moves become Electric, but duration +25% and cooldown -14 ticks, cheaper and easier to leave parked on a foe.",

@@ -121,8 +121,8 @@ namespace PokemonSkills {
 
     describe("crosspoison", [
         { key: "description.0", values: ["slit", "reach"] },
-        { key: "description.1", values: ["spread", "share", "seepDelay"] },
-        { key: "description.2", values: ["poisonChance", "seepChance", "venomTicks"] },
+        { key: "description.1", values: ["spread","share","seepDelay"] },
+        { key: "description.2", values: ["poisonChance","seepChance","venomTicks"] },
         { key: "corrode.on", values: [], when: function (context) { return read(context.detail.values, ["corrode"]) === true; } },
         { key: "corrode.off", values: [], when: function (context) { return read(context.detail.values, ["corrode"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

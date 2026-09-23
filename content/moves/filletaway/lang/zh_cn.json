@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.filletaway.summary": "一刀削掉自身大量生命，把血肉甩进世界，换取攻击、特攻与速度的大幅提高。生命不足一半时无法施放。",
-  "worldcombat.skill.filletaway.description.0": "支付 %1$s 最大生命，把攻击、特攻、速度各提高 %2$s。",
-  "worldcombat.skill.filletaway.description.1": "按体重甩出 %1$s 块血肉，以 %2$s 格每刻甩出、散落半径 %3$s 格；它们依原生掉落规则自然消失。",
+  "worldcombat.skill.filletaway.summary": "一刀削掉自身大量生命，把血肉甩进世界，换取攻击、特攻与速度的大幅提高；生命不足以支付代价并留下保留生命时无法施放。",
+  "worldcombat.skill.filletaway.description.0": "支付 %1$s 最大生命，把攻击、特攻、速度各提高 %2$s 级；提升不会自行消退，直到被清除或这场交战结束（能力等级最多 +6）。",
+  "worldcombat.skill.filletaway.description.1": "按体重甩出 %1$s 块血肉，以每刻 %2$s 格甩出、散落半径 %3$s 格；它们按原生掉落规则自然消失。",
   "worldcombat.skill.filletaway.timing": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.filletaway.use.0": "开战前把进攻三项拉满再冲",
   "worldcombat.skill.filletaway.use.1": "生命富余时用血换一轮爆发",
@@ -19,5 +19,6 @@
   "worldcombat.skill.filletaway.preference.ai.maxChase": "削肉距离上限",
   "worldcombat.skill.filletaway.preference.ai.maxChase.help": "威胁超过这个距离就不再先削肉；越大越愿意在远处先叠进攻。",
   "world_combat.move.filletaway.text.carve": "甩肉 · 以 %1$s 生命换 %2$s 级",
-  "world_combat.move.filletaway.text.weak": "生命不足一半，无法甩肉"
+  "world_combat.move.filletaway.text.weak": "生命不足一半，无法甩肉",
+  "worldcombat.skill.filletaway.requirement": "生命必须高于「代价 + 保留生命」才能施放，否则无法削肉；选择「全力」会削得更深、提升更多，但冷却更长。"
 }

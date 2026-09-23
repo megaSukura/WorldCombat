@@ -64,8 +64,9 @@ namespace PokemonSkills {
     describe(destinyId, [
         { key: "description.0", values: ["bondTicks"] },
         { key: "description.1", values: ["tempo", "recharge"] },
+        { key: "description.2", values: [] },
         { key: "tight.0", values: [], when: function (context) { return read(context.detail.values, ["tight"]) === true; } },
         { key: "tight.1", values: [], when: function (context) { return read(context.detail.values, ["tight"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

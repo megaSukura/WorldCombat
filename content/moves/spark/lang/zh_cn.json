@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.spark.summary": "迅速撞击目标，有机会使其麻痹。对残血目标的伤害更高。",
-  "worldcombat.skill.spark.description.0": "带电撞上去造成约 %1$s 的接触伤害，最远贴 %2$s 格、突进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.spark.description.1": "命中后有 %1$s%% 的机会让对方麻痹 %2$s，把目标顶开 %3$s 格。",
+  "worldcombat.skill.spark.description.0": "带电撞上去，一次只对一个目标结算约 %1$s 的接触伤害；最远贴 %2$s 格、突进速度 %3$s 格每刻、判定半径 %4$s 格。",
+  "worldcombat.skill.spark.description.1": "命中后有 %1$s%% 的机会让对方麻痹 %2$s（已经麻痹的目标不会重复施加；电属性免疫麻痹），并把目标顶开 %3$s 格。麻痹期间目标移动速度减半，且每次行动有 25%% 的概率失败。",
   "worldcombat.skill.spark.overcharge.on": "蓄电式：威力与麻痹概率更高、麻得更久，但起手更慢、冷却更长——一次把目标钉住。",
   "worldcombat.skill.spark.overcharge.off": "点射式：出手与循环更快、射程略长，但威力与麻痹略低——用频率压制。",
-  "worldcombat.skill.spark.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.spark.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.spark.growth.0": "%1$s 级起电击威力抬到 %2$s。",
   "worldcombat.skill.spark.growth.1": "%1$s 级起电击威力抬到 %2$s、麻痹概率升到 %3$s%%。",
   "worldcombat.skill.spark.use.0": "贴身把还没麻痹的对手挂上麻痹",

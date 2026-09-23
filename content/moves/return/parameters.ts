@@ -79,8 +79,8 @@ namespace PokemonSkills {
 
     describe("return", [
         { key: "description.0", values: ["power"] },
-        { key: "description.1", values: ["charge", "runSpeed", "collisionRadius"] },
-        { key: "description.2", values: ["carry", "push"] },
+        { key: "description.1", values: ["charge","runSpeed","collisionRadius"] },
+        { key: "description.2", values: ["push","carry"] },
         { key: "devoted.on", values: [], when: function (context) { return read(context.detail.values, ["devoted"]) === true; } },
         { key: "devoted.off", values: [], when: function (context) { return read(context.detail.values, ["devoted"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

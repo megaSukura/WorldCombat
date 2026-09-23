@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.twineedle.summary": "Raise two needles and fire them one after the other: the first opens the wound and the second drives into that same wound, so it carries poison more easily. Cross mode sends them in from both sides for a bigger second-hit bonus, but each needle is lighter and they are spaced further apart.",
-  "worldcombat.skill.twineedle.description.0": "Power per needle %1$s (physical), range %2$s, flight speed %3$s, hit radius %4$s; one cast settles twice.",
-  "worldcombat.skill.twineedle.description.1": "Gap between needles %1$s; each needle rolls poison at %2$s, and once the first lands the second gains +%3$s; poison lasts %4$s.",
+  "worldcombat.skill.twineedle.description.0": "Each needle deals about %1$s physical damage, range %2$s, flight speed %3$s, hit radius %4$s; one cast settles twice.",
+  "worldcombat.skill.twineedle.description.1": "The needles are %1$s apart; each needle has a %2$s chance to poison, and once the first lands the second's poison chance gains +%3$s (up to 95%); poison lasts %4$s and deals damage over time.",
   "worldcombat.skill.twineedle.description.2": "In the crossing variant, the needles are %1$s blocks apart. Wind-up: %2$s. Recovery: %3$s. Cooldown: %4$s.",
   "worldcombat.skill.twineedle.cross.on": "Cross needles: the second gains a x1.6 wound bonus and the two close in from both sides, but each needle is x0.9 and the gap grows by 2.",
   "worldcombat.skill.twineedle.cross.off": "Straight needles: both fly along one line with a shorter gap and x1.1 power each, but the second gets no flanking bonus.",
@@ -32,5 +32,6 @@
   "worldcombat.skill.twineedle.preference.ai.finishLow.help": "When on, low-health targets rank higher so the reliable two hits finish them; when off, all targets rank the same.",
   "worldcombat.skill.twineedle.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.twineedle.preference.ai.leaveStation.help": "When on, the companion may leave its post to fire its needles; when off, it only casts at what it can reach from where it stands.",
-  "world_combat.move.twineedle.text.venom": "Second needle in, poisoned"
+  "world_combat.move.twineedle.text.venom": "Second needle in, poisoned",
+  "worldcombat.skill.twineedle.description.homing": "After launch each needle steers toward the target it locked onto inside its range, so a moving foe cannot easily shake it off."
 }

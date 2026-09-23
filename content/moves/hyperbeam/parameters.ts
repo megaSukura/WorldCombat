@@ -81,7 +81,7 @@ namespace PokemonSkills {
 
     describe("hyperbeam", [
         { key: "description.0", values: ["beam"] },
-        { key: "description.1", values: ["pierce", "reach"] },
+        { key: "description.1", values: ["pierce","reach"] },
         { key: "description.2", values: ["width", "charge"] },
         { key: "description.3", values: ["exhaust", "pierceCost"] }
     ]);

@@ -133,7 +133,7 @@ namespace PokemonSkills {
     ]);
 
     describe(gyroballId, [
-        { key: "description.0", values: ["roll", "load"] },
+        { key: "description.0", values: ["roll","load"] },
         { key: "description.1", values: ["lunge", "rush", "collisionRadius", "push"] },
         { key: "brace.on", values: [], when: function (context) { return read(context.detail.values, ["brace"]) === true; } },
         { key: "brace.off", values: [], when: function (context) { return read(context.detail.values, ["brace"]) !== true; } },

@@ -4,11 +4,11 @@
   "worldcombat.skill.helpinghand.use.1": "Set up before an ally's combo",
   "worldcombat.skill.helpinghand.use.2": "Turn one chance to hit into a knock-out",
   "worldcombat.skill.helpinghand.description.0": "The ally's next hit deals %1$s%% more damage; the light lasts %2$s s.",
-  "worldcombat.skill.helpinghand.description.1": "Cast reach is about %1$s blocks.",
+  "worldcombat.skill.helpinghand.description.1": "Cast on an ally within about %1$s blocks; it cannot be used on yourself.",
   "worldcombat.skill.helpinghand.description.2": "Preparation %1$s s, recovery %2$s s, cooldown %3$s s from cast.",
-  "worldcombat.skill.helpinghand.stance.rally": "Rally: bonus x1.15, but the light lasts only 65%% as long and cooldown is +8 ticks - pour everything into one hit.",
+  "worldcombat.skill.helpinghand.stance.rally": "Rally: bonus x1.15, but the light lasts only 65% as long and cooldown is +8 ticks — pour everything into one hit.",
   "worldcombat.skill.helpinghand.stance.calm": "Wait for the moment: the light lasts 1.5x as long and cooldown is -6 ticks, but the bonus is x0.9 - give the ally time to pick their opening.",
-  "worldcombat.skill.helpinghand.timing": "Cast on an ally. After %2$s s of preparation it spends %4$s PP to lend the light, recovers %3$s s, and commits a %5$s s cooldown.",
+  "worldcombat.skill.helpinghand.timing": "Cast on an ally. After %1$s s of preparation it spends %3$s PP to lend the light, recovers %2$s s, and commits a %4$s s cooldown.",
   "worldcombat.skill.helpinghand.value.reach": "Lend reach",
   "worldcombat.skill.helpinghand.value.assist": "Assist strength",
   "worldcombat.skill.helpinghand.value.assistTicks": "Assist duration",
@@ -25,5 +25,6 @@
   "world_combat.move.helpinghand.text.ready": "Borrowed strength",
   "world_combat.move.helpinghand.text.strike": "Boosted hit!",
   "world_combat.move.helpinghand.text.fade": "The strength faded",
-  "effect.world_combat.helping_hand": "Helped"
+  "effect.world_combat.helping_hand": "Helped",
+  "worldcombat.skill.helpinghand.description.effect": "The light is spent on the ally's next hit that deals damage; if the ally never lands one, it simply fades when it expires. Lending again only refreshes it, never stacks."
 }

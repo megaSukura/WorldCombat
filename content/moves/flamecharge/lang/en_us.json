@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.flamecharge.summary": "Cloaking itself in flame, the user attacks the target. Then, building up momentum, the user boosts its Speed stat.",
-  "worldcombat.skill.flamecharge.use.0": "Charge straight through a lone target",
+  "worldcombat.skill.flamecharge.summary": "Charges in a straight line cloaked in flame: the first target struck takes the full hit and is knocked aside, then the user's Speed rises; with pierce it ploughs on, each later foe along the line taking a lighter hit.",
+  "worldcombat.skill.flamecharge.use.0": "Charge straight into a lone target",
   "worldcombat.skill.flamecharge.use.1": "Set a whole line of clustered foes alight",
   "worldcombat.skill.flamecharge.use.2": "Boost Speed, then run the new speed down",
-  "worldcombat.skill.flamecharge.description.0": "The charge deals %1$s damage, rushing %2$s blocks at %3$s blocks/tick.",
-  "worldcombat.skill.flamecharge.description.1": "When piercing, later targets take %1$s damage. A hit raises Speed by %2$s stages and knocks the target back %3$s blocks.",
+  "worldcombat.skill.flamecharge.description.0": "The charge deals about %1$s damage, rushing %2$s blocks at %3$s blocks/tick; when the user is soaked the hit is ×0.85.",
+  "worldcombat.skill.flamecharge.description.1": "With pierce the first target takes full damage and each later foe struck along the line takes %1$s of it; a hit raises the user's Speed by %2$s stage(s) (at most once per cast, fading once combat ends) and knocks the struck target about %3$s blocks along the charge. The charge's lateral hit radius is about %4$s blocks.",
   "worldcombat.skill.flamecharge.pierce.on": "Pierce: charge through the first target and set the rest of the line alight (later targets take the pierce share); each hit is lighter and the cooldown longer.",
   "worldcombat.skill.flamecharge.pierce.off": "Focused: stop on the first target, heavier and quicker to recover.",
   "worldcombat.skill.flamecharge.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",
@@ -23,12 +23,13 @@
   "worldcombat.skill.flamecharge.value.trail": "Cooldown",
   "worldcombat.skill.flamecharge.value.soaked": "Soaked penalty",
   "worldcombat.skill.flamecharge.preference.pierce": "Pierce",
-  "worldcombat.skill.flamecharge.preference.pierce.help": "On: charge through the first target and set the line behind it alight. Off: stop on the first target.",
+  "worldcombat.skill.flamecharge.preference.pierce.help": "On: charge through the first target and scorch the line behind it (later targets take only the pierce share), at the cost of a lighter single hit and a longer cooldown. Off: stop on the first target, heavier and quicker.",
   "worldcombat.skill.flamecharge.preference.ai.maxChase": "Charge distance",
   "worldcombat.skill.flamecharge.preference.ai.maxChase.help": "Only charge when the foe is within this range; smaller stays on top of it, larger takes a longer run-up.",
   "worldcombat.skill.flamecharge.preference.ai.preferClusters": "Prefer lines",
   "worldcombat.skill.flamecharge.preference.ai.preferClusters.help": "On: with pierce on, prefer charging when others line up behind the target. Off: only the threat itself matters.",
   "world_combat.move.flamecharge.text.hit": "Scorched %1$s",
   "world_combat.move.flamecharge.text.haste": "Momentum +%1$s",
-  "world_combat.move.flamecharge.text.fizzle": "Flames die out"
+  "world_combat.move.flamecharge.text.fizzle": "Flames die out",
+  "worldcombat.skill.flamecharge.description.stop": "The charge runs in a straight line and stops on an obstacle or when the distance is spent; reaching no one wastes the cast."
 }

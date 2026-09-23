@@ -4,13 +4,13 @@
   "worldcombat.skill.thief.use.1": "空手时的一次快速近身打击",
   "worldcombat.skill.thief.use.2": "得手后退开拉开距离",
   "worldcombat.skill.thief.description.0": "探手造成约 %1$s 的恶属性接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.thief.description.1": "沿瞄准方向突进最多 %1$s 格、每刻 %2$s 格；得手后向后拉开约 %3$s 格。",
+  "worldcombat.skill.thief.description.1": "沿瞄准方向突进最多 %1$s 格、每刻 %2$s 格；偷到手后向后退开约 %3$s 格。",
   "worldcombat.skill.thief.description.2": "命中把目标沿掠行方向顶开约 %1$s 格。",
   "worldcombat.skill.thief.flee.on": "开启得手即退：得手后多退一段、收招更久，换取脱离。",
   "worldcombat.skill.thief.flee.off": "关闭得手即退：得手后留在对方身边继续压，收招更快。",
   "worldcombat.skill.thief.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.thief.growth.0": "达到 %1$s 级，探手威力提升至 %2$s。",
-  "worldcombat.skill.thief.growth.1": "达到 %1$s 级，探手威力提升至 %2$s，突进距离提升至 %3$s。",
+  "worldcombat.skill.thief.growth.1": "达到 %1$s 级，探手威力提升至 %2$s，突进距离提升至 %3$s 格。",
   "worldcombat.skill.thief.value.swipe": "探手威力",
   "worldcombat.skill.thief.value.charge": "蓄势时间",
   "worldcombat.skill.thief.value.reach": "突进距离",
@@ -27,9 +27,10 @@
   "worldcombat.skill.thief.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.thief.preference.ai.leaveStation.help": "开启后，驻守命令下也会为探手离开站位；关闭则只在原地够得到时出手。",
   "worldcombat.skill.thief.preference.ai.stealOnly": "只对有物者出手",
-  "worldcombat.skill.thief.preference.ai.stealOnly.help": "开启：只在目标携带持有物时才出手，作为专门的夺取手段；关闭：空手时也照常把它当普通近身打击补刀。",
+  "worldcombat.skill.thief.preference.ai.stealOnly.help": "开启：只在目标携带持有物时才出手，作为专门的夺取手段；关闭：目标没有持有物、或自己已有持有物时，也照常出手当普通近身打击补刀。",
   "world_combat.move.thief.text.steal": "顺手牵羊",
   "world_combat.move.thief.text.strike": "探了个空手",
   "world_combat.move.thief.text.full": "手上有物，探不开",
-  "world_combat.move.thief.text.miss": "扑了个空"
+  "world_combat.move.thief.text.miss": "扑了个空",
+  "worldcombat.skill.thief.description.additional": "命中并造成伤害后，若目标仍存活、自己空手且目标持有物品，就把目标的一件持有物转进自己手里（宝可梦是携带物，其他生物是主手或副手物品）；自己已有持有物、目标空手、或任一方被封禁道具转移时，就只是一记普通打击。伤害无论是否得手都会结算。"
 }

@@ -29,11 +29,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "trailblaze",
         cooldownParameter: "regroup",
         name: "起草",
-        description: "跳出草丛进行攻击。通过轻快的步伐会提高自己的速度。",
-        uses: ["从草木里窜出打一记措手不及", "借草丛起跳，一次换到更远的对手", "命中后提速，用新速度追下去"],
+        description: "借草木的助力贴地窜出的一记袭击：撞上路径上第一个敌人造成伤害并把它带开，命中后自身速度提高一段；从草丛起跳时这一跳更重、提速更多。",
+        uses: ["从草木里窜出打一记措手不及", "窜到较远的对手身前打一记措手不及", "命中后提速，用新速度追下去"],
         kind: "enemy",
         range: 5,
         maxRange: 7,

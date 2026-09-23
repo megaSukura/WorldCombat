@@ -4,7 +4,7 @@
   "worldcombat.skill.block.use.1": "Bar a doorway or a lane",
   "worldcombat.skill.block.use.2": "Press a charging thick target back into melee",
   "worldcombat.skill.block.description.0": "Raises a barricade about %1$s blocks wide and %2$s blocks tall on the target's far side, about %3$s blocks away.",
-  "worldcombat.skill.block.description.1": "The barricade and the press last about %1$s; the slam pins the target for %2$s and shoves it %3$s blocks toward the user.",
+  "worldcombat.skill.block.description.1": "The barricade and the press last about %1$s; the slam roots the target in place for %2$s (it cannot move but can still act) and shoves it %3$s blocks toward the user.",
   "worldcombat.skill.block.description.2": "The wall is built from about %1$s columns across %2$s degrees.",
   "worldcombat.skill.block.description.3": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.block.option.on": "Braced: wall height +1 block and press duration about x1.35, at the cost of a narrower arc (about x0.75), wind-up +3 ticks and cooldown +12 ticks - taller and longer, but slower and narrower.",
@@ -32,5 +32,6 @@
   "worldcombat.skill.block.preference.ai.leaveStation": "Leave post when stationed",
   "worldcombat.skill.block.preference.ai.leaveStation.help": "When on, the companion may leave its post to wall off a threat even under a hold order.",
   "world_combat.move.block.text.seal": "Retreat sealed for %1$s s",
-  "effect.world_combat.block_penned": "Penned behind the barricade"
+  "effect.world_combat.block_penned": "Penned behind the barricade",
+  "worldcombat.skill.block.description.press": "While pressed, the target moves about 45%% slower; getting past the iron bars means going around, over them or mining through, and the barricade folds away when the press ends."
 }

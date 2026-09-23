@@ -107,6 +107,7 @@ object PokemonViews {
     fun of(entity: PokemonEntity, now: Int): PokemonView {
         val revision = NativeMoveMetadata.revision
         if (now != tick || metadataRevision != revision) { views.clear(); tick = now; metadataRevision = revision }
+        views[entity.pokemon.uuid]?.let { if (!it.matchesMovement(entity)) views.remove(entity.pokemon.uuid) }
         return views.getOrPut(entity.pokemon.uuid) { PokemonView.capture(entity) }
     }
     @JvmStatic fun invalidate(pokemon: com.cobblemon.mod.common.pokemon.Pokemon) { views.remove(pokemon.uuid) }

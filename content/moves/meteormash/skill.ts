@@ -46,6 +46,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "meteormash",
         cooldownParameter: "recharge",
         name: "Meteor Mash",

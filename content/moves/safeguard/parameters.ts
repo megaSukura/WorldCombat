@@ -47,12 +47,31 @@ namespace PokemonSkills {
         recharge: seconds(F.base(165).minus(F.stat("speed").times(0.1)).clamp(95, 205).round(0), "冷却",
             "两次张罩之间的等待。")
     });
+    function safeguardShownDuration(context: NumberContext): number {
+        return Math.max(90, Math.round(p(safeguardId, "wardTicks", context)
+            * (read(context.detail.values, ["ward"]) === "early" ? 0.75 : 1.25)));
+    }
+    function safeguardShown(context: NumberContext, key: string, value: number, duration = false): any {
+        const original = parameterBinding(context, key);
+        const result = valueBinding(rounded(duration ? value / 20 : value), original.label, [original],
+            text("worldcombat.skill.safeguard.preference.ward.help"));
+        if (duration) { result.unitKind = "seconds"; result.unit = text("worldcombat.value.unit.seconds"); }
+        return result;
+    }
     describe(safeguardId, [
-        { key: "description.0", values: ["wardTicks", "wardRadius"] },
-        { key: "description.1", values: ["range"] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
+        { key: "description.0", values: ["wardTicks","wardRadius"] },
+        { key: "description.1", values: [] },
+        { key: "description.3", values: ["residualDuration"] },
         { key: "ward.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.ward === "early"); } },
         { key: "ward.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.ward !== "early"; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
-    ]);
+        { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] }
+    ], {
+        wardTicks: context => safeguardShown(context, "wardTicks", safeguardShownDuration(context), true),
+        wardRadius: context => safeguardShown(context, "wardRadius", Math.max(1.5, p(safeguardId, "wardRadius", context)
+            * (read(context.detail.values, ["ward"]) === "early" ? 0.85 : 1.15))),
+        residualDuration: context => {
+            const result = safeguardShown(context, "wardTicks", Math.max(60, Math.round(safeguardShownDuration(context) * 0.6)), true);
+            result.label = text("worldcombat.skill.safeguard.value.residualDuration"); return result;
+        }
+    });
 }

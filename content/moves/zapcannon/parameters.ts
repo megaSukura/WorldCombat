@@ -118,8 +118,8 @@ namespace PokemonSkills {
     ]);
 
     describe(zapcannonId, [
-        { key: "description.0", values: ["shell", "shellSpeed", "reach"] },
-        { key: "description.1", values: ["chargeTicks", "numbTicks"] },
+        { key: "description.0", values: ["shell","shellSpeed","reach"] },
+        { key: "description.1", values: ["chargeTicks","numbTicks"] },
         { key: "description.2", values: ["shellTurn", "recoil", "recharge"] },
         { key: "quickload.on", values: [], when: function (context) { return read(context.detail.values, ["quickload"]) === true; } },
         { key: "quickload.off", values: [], when: function (context) { return read(context.detail.values, ["quickload"]) !== true; } },

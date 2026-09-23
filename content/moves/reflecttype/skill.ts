@@ -1,17 +1,4 @@
-/**
- * 镜面属性 / reflecttype — 执行组织。
- *
- * 三幕：
- *   举（windup，提交前）：一面镜子在施法者面前拼起、把对手的形状框进去（`action.present` 预告，可被打断且不花代价）。
- *   照（提交后）：镜面沿两人连线滑到对手身上、把它的属性「取」下来（表现沿 `data.path`）。
- *   映（settle）：取下的属性贴回施法者，身上浮出对应的属性色，属性由共享 NativeModifiers types 层承担
- *     （与纹理、保护色同一套机制，到期自动还原原生属性）；同时挂共享身份
- *     `world_combat:status/reflecttype` 的标记。
- *
- * 照的是对手**当前**的属性：它若被纹理、保护色、燃尽改过，镜子也照那一份。
- * 目标不是宝可梦就没有属性可照，预检直接拒绝，不浪费 PP；镜像结果与自身已经一样时也拒绝。
- * 配置项 pair（镜像全部／只取主属）在 resolve 里改变冷却、在公式里改变维持时长，并把副属性一起抄或只抄主属。
- */
+/** Copy a Pokémon’s current types, or a non-Pokémon’s armour. Mirror All also copies armour toughness and knockback resistance. */
 namespace PokemonSkills {
     export const reflecttypeScene = "world_combat:move_reflecttype";
     export const reflecttypeMark = "world_combat:reflecttype";
@@ -49,7 +36,7 @@ namespace PokemonSkills {
         id: "reflecttype",
         cooldownParameter: "recharge",
         name: "Reflect Type",
-        description: "举镜照住对手，把它的属性原样反射到自己身上；对手当前是什么属性，自己就变成什么属性。",
+        description: "照抄宝可梦对手当前的属性；普通生物则提供护甲，镜像全部还能复制韧性与抗击退。",
         uses: ["照抄对手的属性来翻受击面", "跟着对手被改过的属性一起变", "只取主属、避开副属性带来的弱点"],
         kind: "enemy",
         range: 8,
@@ -80,11 +67,12 @@ namespace PokemonSkills {
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-type";
+            if (String(actor.domain()) !== "cobblemon") return "no-type";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("reflecttype", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") return CombatCopies.differs(world, actor, CombatCopies.read(world, target, config && config.pair ? CombatCopies.defence : [CombatCopies.defence[0]])) ? "" : "same-defence";
             if (NativeModifiers.typeLocked(world, actor)) return "type-locked";
             const theirs = reflecttypeRead(world, target);
             if (theirs.length === 0) return "no-type";
@@ -104,6 +92,13 @@ namespace PokemonSkills {
             const body = world.observe(actor);
             if (target === null || !world.valid(target) || body === null) { done(action); return; }
             const pair = !!(config && config.pair);
+            if (String(target.domain()) !== "cobblemon") {
+                const hold = Math.max(90, Math.round(p("reflecttype", "hold", action)));
+                const carrier = MobEffects.apply(world, actor, reflecttypeMark, hold, pair ? 1 : 0);
+                if (carrier) CombatCopies.apply(world, actor, CombatCopies.read(world, target, pair ? CombatCopies.defence : [CombatCopies.defence[0]]), hold, "reflecttype", MobEffects.anchor(carrier));
+                WorldFeedback.emit(world, reflecttypeScene, 1, body.position(), { moment: "settle", target: String(actor.ref()), path: [String(target.ref()), String(actor.ref())], facets: 8, glints: 12, color: 0xB7B7CE, scale: 1 }, 36);
+                sound(action, "minecraft:block.amethyst_block.chime"); done(action); return;
+            }
             const theirs = reflecttypeRead(world, target);
             const chosen = reflecttypeChoose(theirs, pair);
             const hold = Math.max(90, Math.round(p("reflecttype", "hold", action)));

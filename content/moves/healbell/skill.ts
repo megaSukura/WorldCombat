@@ -28,8 +28,8 @@ namespace PokemonSkills {
     define({
         id: healbellId,
         cooldownParameter: "recharge", name: "治愈铃声",
-        description: "以自己为心敲响一圈铃声，一次施放连响数声；每一声都洗掉半径内自己与所有伙伴身上的全部有害状态效果（包括原版与其他模组的效果）。它不回复生命，也不留下任何持续状态。",
-        uses: ["在对方一次挂上多个异常后一震全清", "把睡着的伙伴震醒、把麻痹的伙伴松开", "队友都围在身边时一次洗掉整队的异常"],
+        description: "以自己为心敲响一圈铃声，一次施放连响数声；每一声都洗掉半径内自己与所有伙伴身上的全部有害状态效果（包括原版与其他模组的效果）。不回复生命，也不留下持续状态。",
+        uses: ["对方一次挂上多个异常时一震全清", "把睡着的伙伴震醒、把麻痹的伙伴松开", "队友都围在身边时一次洗掉整队的异常"],
         kind: "self", range: 0, prepare: 11, active: 0, recover: 8, cooldown: 150, style: "bell", maximumTicks: 200,
         defaults: { resonant: false },
         fields: [flag("resonant", "长鸣")],

@@ -8,8 +8,8 @@ namespace PokemonSkills {
     define({
         id: hiddenpowerId,
         name: "Hidden Power",
-        description: "Draw out the type hidden in the user's own body and fire it as a beam.",
-        uses: ["ranged strike"],
+        description: "把体内隐藏的属性收拢成一颗光球射向目标；属性由使用者的个体值决定。",
+        uses: ["远程点射"],
         kind: "enemy",
         range: 14,
         maxRange: 22,

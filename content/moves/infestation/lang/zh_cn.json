@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.infestation.summary": "甩出一团虫子缠住目标，持续啃咬，并且只要缠着目标就无法移动；用时间换空间。",
-  "worldcombat.skill.infestation.description.0": "命中造成 %1$s 的特殊伤害，并把虫群挂到目标身上。",
-  "worldcombat.skill.infestation.description.1": "虫群缠住目标 %1$s，期间目标无法移动；每隔一段时间按目标最大生命的 %2$s 咬掉一口（啃咬间隔 %3$s）。",
-  "worldcombat.skill.infestation.description.2": "射程 %1$s 格、虫群弹速 %2$s 格每刻；起手 %3$s。",
+  "worldcombat.skill.infestation.description.0": "命中造成约 %1$s 点特殊伤害，并把虫群挂到目标身上。",
+  "worldcombat.skill.infestation.description.1": "虫群缠住目标 %1$s，期间目标无法移动；缠住期间每隔 %3$s 按目标最大生命的 %2$s 咬掉一口（每次至少 1 点）。虫群走完时长或被清除（牛奶、/effect clear 等）时散去。",
+  "worldcombat.skill.infestation.description.2": "射程 %1$s 格、虫群弹速 %2$s 格每刻；飞行途中撞上目标即附着（判定半径 %4$s 格），若先撞上方块则散开。起手 %3$s。",
   "worldcombat.skill.infestation.use.0": "给难缠的目标挂持续啃咬",
   "worldcombat.skill.infestation.use.1": "把目标定在原地",
   "worldcombat.skill.infestation.use.2": "逼对手先来清状态或反打",

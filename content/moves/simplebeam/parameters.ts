@@ -57,19 +57,20 @@ namespace PokemonSkills {
             F.base(78, "基础").minus(F.stat("speed").times(0.26).as("速度"))
                 .plus(F.when(F.pref("wave", text("worldcombat.skill.simplebeam.preference.wave")), F.const(18), F.const(-8)).as("扩散代价"))
                 .clamp(38, 130).round(),
-            "再发冷却", "再发一道需要多久；速度快的个体更快恢复，扩散波更费力。")
+            "再发冷却", "再发一道需要多久；速度快的个体更快恢复，扩散波更费力。", { base: 78 })
     });
 
-    stages("simplebeam", [{ level: 40, values: { cooldown: 68 } }, { level: 55, values: { cooldown: 56 } }]);
+    stages("simplebeam", [{ level: 40, values: { recharge: 68 } }, { level: 55, values: { recharge: 56 } }]);
 
     describe("simplebeam", [
+        { key: "world", values: ["hold"] },
         { key: "description.0", values: ["hold"] },
         { key: "description.1", values: ["reach", "tempo", "aftercast"] },
         { key: "description.2", values: ["fan"] },
         { key: "wave.on", values: ["fan", "recharge"], when: function (context) { return read(context.detail.values, ["wave"]) === true; } },
         { key: "wave.off", values: ["hold"], when: function (context) { return read(context.detail.values, ["wave"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

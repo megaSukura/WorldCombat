@@ -58,8 +58,8 @@ namespace PokemonSkills {
     define({
         id: purifyId,
         cooldownParameter: "recharge", name: "净化",
-        description: "朝瞄准点最近的一个带异常的战斗者探出手，把它身上的全部有害状态效果整项抽走；病痛化作暗雾飞回施法者，落地按其最大生命的比例回复。伙伴与对手都能净，但落点附近没有带异常的目标时整招落空。",
-        uses: ["顺手洗掉伙伴中毒并给自己回一口", "把对手身上的灼伤拿走、换自己的生机", "打断一个正靠异常持续掉血的目标节奏"],
+        description: "朝瞄准点最近的一个带异常的战斗者探出手，把它身上的全部有害状态效果一次抽走；病痛化作暗雾飞回施法者，施法者按目标最大生命的比例回复。伙伴与对手都能净，但落点附近没有带异常的战斗者时整招落空。",
+        uses: ["顺手洗掉伙伴中毒并给自己回一口", "把对手身上的灼伤拿走、换自己的生机", "挑一个高生命的目标抽取，换回更多生机"],
         kind: "point", range: 4, maxRange: 7, prepare: 10, active: 0, recover: 7, cooldown: 130, style: "purify", maximumTicks: 200,
         defaults: { deep: false },
         fields: [flag("deep", "深引")],

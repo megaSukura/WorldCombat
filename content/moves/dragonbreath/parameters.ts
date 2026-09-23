@@ -60,7 +60,7 @@ namespace PokemonSkills {
 
     describe("dragonbreath", [
         { key: "description.0", values: ["breath"] },
-        { key: "description.1", values: ["reach", "arc"] },
-        { key: "description.2", values: ["numbChance", "breathTicks"] }
+        { key: "description.1", values: ["reach","arc","maxTargets"] },
+        { key: "description.2", values: ["numbChance","breathTicks"] }
     ]);
 }

@@ -71,7 +71,9 @@ function actor(id, native = false, friendly = false, x = 0) {
     id: () => id, moveSlots: () => 1, move: () => value.move, status: () => value.status,
     ability: () => value.ability, heldItem: () => '', heldTag: () => false, species: () => 'fixture:body',
     health: () => value.health, maxHealth: () => value.maximum, healthScale: () => 1, typeCount: () => 0,
-    level: () => 1, stat: () => 10, projectedArmor: () => 0, projectedToughness: () => 0
+    level: () => 1, stat: () => 10, projectedArmor: () => 0, projectedToughness: () => 0,
+    vehicle: () => !!value.mounted, passenger: () => !!value.passenger, grounded: () => value.grounded !== false,
+    activeState: () => new String('sent-out'), ridingStyle: () => value.mounted ? value.grounded === false ? 'air' : 'land' : ''
   };
   actors.push(value); return value;
 }
@@ -176,7 +178,8 @@ function action(target = enemy, range = 8, inputArguments = {}) {
 let count = 0;
 function check(name, run) {
   for (const a of actors) { a.alive = true; a.health = 100; a.markers.clear(); a.modifiers = []; a.status = ''; a.ability = ''; a.state = N.empty(); }
-  source.pp = 6; rolls = 0; worldHits.length = 0; fieldRequests.length = 0; run(); count++; console.log(`PASS ${name}`);
+  source.pp = 6; source.mounted = false; source.passenger = false; source.grounded = true;
+  rolls = 0; worldHits.length = 0; fieldRequests.length = 0; run(); count++; console.log(`PASS ${name}`);
 }
 source.move = register('entry');
 register('recipient_route', 'enemy', current => {
@@ -343,6 +346,54 @@ check('catalogue wiring preserves caller cooldown and recovery with callee execu
   registrations.get('fixture:catalogue_entry').recipe(current);
   assert.equal(current.cooldown, 11); assert.equal(source.pp, 5); assert(current.open);
   current.advance(); assert(current.open); current.advance(); assert(!current.open);
+});
+check('riding catalogue permits aerial casts and rejects independent motion or missing ground before payment', () => {
+  const catalogue = context.NativeRepertoire.create({ namespace: 'fixture' });
+  const base = { name: 'Synthetic', description: '', uses: [], kind: 'enemy', range: 8, defaults: {}, fields: [], style: '',
+    prepare: 2, execute: (current, _move, _settings, done) => done(current) };
+  for (const [id, extra] of [['aerial_payload', {}], ['independent_motion', { freeMovement: true }], ['ground_payload', { requiresGround: true }]]) {
+    template(id); catalogue.define({ ...base, id, ...extra });
+  }
+  function available(id) {
+    source.move = templates.get(id); let reason = '';
+    L.slot({ world: () => world, pokemon: () => source.pokemon, slot: () => 0, bind: noop, resource: noop, argument: noop, range: noop,
+      unavailable: value => { reason = value; } });
+    return reason;
+  }
+  source.mounted = true; source.grounded = false;
+  assert.equal(available('aerial_payload'), '');
+  let current = action(); registrations.get('fixture:aerial_payload').recipe(current);
+  current.advance(); current.advance(); assert.equal(source.pp, 5);
+  assert.equal(available('independent_motion'), 'mounted-control');
+  assert.throws(() => registrations.get('fixture:independent_motion').recipe(action()), /mounted-control/);
+  assert.equal(available('ground_payload'), 'not-grounded');
+  assert.throws(() => registrations.get('fixture:ground_payload').recipe(action()), /not-grounded/);
+  assert.equal(source.pp, 5);
+  source.grounded = true; assert.equal(available('ground_payload'), '');
+  current = action(); registrations.get('fixture:ground_payload').recipe(current);
+  source.grounded = false; current.advance(); assert.throws(() => current.advance(), /not-grounded/);
+  assert.equal(source.pp, 5, 'Taking off during preparation preserves PP');
+  source.mounted = false; assert.equal(available('independent_motion'), '');
+  current = action(); registrations.get('fixture:independent_motion').recipe(current);
+  source.mounted = true; current.advance(); assert.throws(() => current.advance(), /mounted-control/);
+  assert.equal(source.pp, 5, 'Mounting during preparation preserves PP');
+});
+check('riding policy follows the configured variant for both submission and self-managed commit', () => {
+  const catalogue = context.NativeRepertoire.create({ namespace: 'fixture' });
+  template('conditional_anchor');
+  catalogue.define({ id: 'conditional_anchor', name: 'Synthetic', description: '', uses: [], kind: 'enemy', range: 8,
+    defaults: { anchored: false }, fields: [], style: '', freeMovement: config => !!config.anchored,
+    run: current => current.after(2, later => later.commit(1)) });
+  const key = catalogue.prefKey('conditional_anchor');
+  source.move = templates.get('conditional_anchor'); source.mounted = true; source.grounded = false;
+  const current = action(); registrations.get('fixture:conditional_anchor').recipe(current);
+  source.data.set(key, JSON.stringify({ version: 1, patch: { anchored: true } }));
+  current.advance(); assert.throws(() => current.advance(), /mounted-control/);
+  assert.equal(source.pp, 6);
+  assert.throws(() => registrations.get('fixture:conditional_anchor').recipe(action()), /mounted-control/);
+  source.data.delete(key);
+  const safe = action(); registrations.get('fixture:conditional_anchor').recipe(safe);
+  safe.advance(); safe.advance(); assert.equal(source.pp, 5);
 });
 check('skill damage helpers retain action and paying identity across raw callbacks and world damage', () => {
   register('payload_route'); source.move = templates.get('exception_route'); source.status = 'cobblemon:sleep';

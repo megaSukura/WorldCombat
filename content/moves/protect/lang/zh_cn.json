@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.protect.summary": "撑起一圈穹顶，按护盾总量完整挡下对手的攻击；守据姿态下无法移动，连续使用容易失败。",
-  "worldcombat.skill.protect.description.0": "穹顶持续 %1$s，护盾量 %2$s 点；双防越高撑得越久，护盾量随当前生命与防御增长。",
-  "worldcombat.skill.protect.description.1": "起罩 %1$s，半径 %2$s 格，冷却 %3$s。",
-  "worldcombat.skill.protect.description.2": "连用失误率 %1$s；守据与瞬罩的取舍见配置 %2$s。",
+  "worldcombat.skill.protect.summary": "在自己身上撑起穹顶，按护盾总量挡下敌人的攻击；盾量耗尽就碎裂，超出的伤害仍会打中你。守据姿态下撑罩期间无法移动，连续使用容易失败。",
+  "worldcombat.skill.protect.description.0": "对自己撑起穹顶：持续 %1$s，可挡下总计 %2$s 点来自敌人的伤害；双防越高撑得越久，护盾量随当前生命与防御增长。",
+  "worldcombat.skill.protect.description.1": "起罩 %1$s，冷却 %2$s。",
+  "worldcombat.skill.protect.description.2": "短时间内连续使用更容易失败，本次失败概率为 %1$s。守据姿态持续期间无法移动，瞬罩姿态允许移动。",
   "worldcombat.skill.protect.use.0": "预判远程齐射，提前撑罩",
   "worldcombat.skill.protect.use.1": "被围时撑出一条退路",
   "worldcombat.skill.protect.use.2": "为队友争取回血或撤走的时间",
@@ -17,5 +17,6 @@
   "worldcombat.skill.protect.preference.ai.trigger": "反应距离",
   "worldcombat.skill.protect.preference.ai.trigger.help": "威胁进入这个距离就考虑撑罩。越大越早预判，也越可能白撑；越小越省，但可能来不及。",
   "world_combat.move.protect.text.block": "挡下 %1$s 点（余 %2$s）",
-  "world_combat.move.protect.text.shatter": "穹顶被击穿"
+  "world_combat.move.protect.text.shatter": "穹顶被击穿",
+  "worldcombat.skill.protect.description.pool": "护盾耗尽时结束，超过剩余护盾量的伤害仍会命中自己。无攻击者的环境伤害与自身伤害不受保护。"
 }

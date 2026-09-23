@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.bitterblade.summary": "以火焰斩击汲取目标生命。自身失去的生命越多，伤害越高。",
-  "worldcombat.skill.bitterblade.description.0": "这一剑造成约 %1$s 的接触斩击伤害；施法者失去的生命越多、悔意越深，斩击越重。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.bitterblade.summary": "扫出一道悔恨的火弧，弧内敌人各挨一记并汲取其生命；自身失去的生命越多，这一剑越重。",
+  "worldcombat.skill.bitterblade.description.0": "这一剑对剑弧扫到的每个敌人各造成约 %1$s 的接触斩击伤害；施法者失去的生命越多、悔意越深，斩击越重。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.bitterblade.description.1": "剑弧张开 %1$s 度、最远 %2$s 格（也是实际射程），剑锋判定 %3$s 格。",
   "worldcombat.skill.bitterblade.description.2": "造成的伤害有 %1$s 转回自身生命；残血时这个比例还会上升。",
   "worldcombat.skill.bitterblade.sweep.on": "横扫式：剑弧更宽更远、一次扫到身前一片，但每个目标更轻、抽得更少、收招更慢。",

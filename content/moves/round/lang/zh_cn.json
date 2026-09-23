@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.round.summary": "唱出一句能传下去的短歌：点名一个目标造成声音伤害，同时把余韵落在身边的同伴身上——带着余韵接唱，威力翻倍、张口即出。独唱只有基础威力，接得上伙伴才唱得响；声音不被掩体阻挡。",
+  "worldcombat.skill.round.summary": "唱歌攻击一个敌人，同时把余韵传给身边的同伴。同伴在余韵消失前使用轮唱，威力翻倍、起手缩短；声音可以穿过掩体。",
   "worldcombat.skill.round.use.0": "把一句短歌的余韵传给身边的同伴",
   "worldcombat.skill.round.use.1": "接住同伴的余韵唱出翻倍的一句",
   "worldcombat.skill.round.use.2": "用声音无视掩体点名一个目标",
-  "worldcombat.skill.round.description.0": "这一句在目标身上造成 %1$s 点特殊伤害（声音）。",
-  "worldcombat.skill.round.description.1": "余韵落在 %1$s 格内的同伴身上，持续 %2$s；带着余韵接唱时这一句威力翻倍、几乎立刻唱出。",
+  "worldcombat.skill.round.description.0": "对一个敌人造成约 %1$s 点声音类特殊伤害；有余韵时，翻倍威力已计入当前伤害。",
+  "worldcombat.skill.round.description.1": "把余韵传给 %1$s 格内的其他友方，保留 %2$s。余韵期间使用轮唱，威力乘2，起手缩短为4刻；接唱不会消耗余韵。",
   "worldcombat.skill.round.description.2": "歌程 %1$s 格；声音不被掩体阻挡。",
   "worldcombat.skill.round.description.4": "当前领唱形态：%1$s。",
   "worldcombat.skill.round.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -31,5 +31,7 @@
   "world_combat.move.round.text.join": "轮唱·接上",
   "world_combat.move.round.text.verse": "接唱！%1$s",
   "world_combat.move.round.text.miss": "轮唱唱空了",
-  "effect.world_combat.round_carol": "轮唱·余韵"
+  "effect.world_combat.round_carol": "轮唱·余韵",
+  "worldcombat.skill.round.lead.on": "领唱：传唱半径×1.35、余韵时长×1.3；自己的歌句威力×0.94，普通起手多2刻、冷却多3刻。",
+  "worldcombat.skill.round.lead.off": "独唱：保持通常威力、起手与冷却，传唱范围和余韵时长较短。"
 }

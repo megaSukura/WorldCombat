@@ -98,14 +98,14 @@ namespace PokemonSkills {
     ]);
 
     describe("iciclecrash", [
-        { key: "description.0", values: ["shatter", "crackRadius"] },
-        { key: "description.1", values: ["dropHeight", "fallSpeed", "icicleRadius"] },
+        { key: "description.0", values: ["shatter","crackRadius"] },
+        { key: "description.1", values: ["dropHeight","fallSpeed","icicleRadius"] },
         { key: "description.2", values: ["reach"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "description.4", values: ["iceTicks"] },
         { key: "tall.on", values: [], when: function (context) { return read(context.detail.values, ["tall"]) === true; } },
         { key: "tall.off", values: [], when: function (context) { return read(context.detail.values, ["tall"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shatter"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.shatter", "tier.1.crackRadius", "tier.1.flinchChance"] }
     ]);

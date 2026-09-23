@@ -4,7 +4,7 @@
   "worldcombat.skill.tackle.use.1": "Shove a foe off its cover for a step",
   "worldcombat.skill.tackle.use.2": "Slide past the target to reposition",
   "worldcombat.skill.tackle.description.0": "The slam deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
-  "worldcombat.skill.tackle.description.1": "Charge up to %1$s blocks along your aim at %2$s blocks per tick; a landed hit slides you a further %3$s blocks past the target, a miss runs to the end of the charge.",
+  "worldcombat.skill.tackle.description.1": "Charge up to %1$s blocks along your aim at up to %2$s blocks per tick; a landed hit slides you a further %3$s blocks past the target, a miss runs to the end of the charge; a wall or obstacle stops either early.",
   "worldcombat.skill.tackle.description.2": "A landed hit shoves the target about %1$s blocks along the charge.",
   "worldcombat.skill.tackle.runUp.on": "Run-up form: a longer charge and pass-through with slightly more power, at the cost of a longer preparation, recovery and cooldown.",
   "worldcombat.skill.tackle.runUp.off": "Close form: quicker to come out and steadier on your feet, with a shorter charge and pass-through and slightly less power.",

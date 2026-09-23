@@ -5,7 +5,7 @@
   "worldcombat.skill.forestscurse.use.2": "Use deep roots to keep the Grass-type curse active longer",
   "worldcombat.skill.forestscurse.description.0": "Add the Grass type to the target for %1$s.",
   "worldcombat.skill.forestscurse.description.1": "Curse range %1$s blocks, wind-up %2$s, recovery %3$s, following speed and size.",
-  "worldcombat.skill.forestscurse.rooted.on": "Deep roots: the curse lasts %1$s with a %2$s cooldown.",
+  "worldcombat.skill.forestscurse.rooted.on": "Deep roots: the curse lasts %1$s with a %2$s cooldown, and it winds up slower.",
   "worldcombat.skill.forestscurse.rooted.off": "Shallow curse: a shorter curse with faster windup and cooldown.",
   "worldcombat.skill.forestscurse.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.forestscurse.value.reach": "Curse range",
@@ -22,11 +22,12 @@
   "worldcombat.skill.forestscurse.preference.ai.maxChase.help": "The companion only considers cursing a threat within this distance; lower stays close, higher chases further.",
   "worldcombat.skill.forestscurse.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.forestscurse.preference.ai.leaveStation.help": "When on, it will leave its post to lay the curse.",
-  "worldcombat.skill.forestscurse.growth.0": "From level 40: cooldown drops to %1$s.",
-  "worldcombat.skill.forestscurse.growth.1": "From level 55: cooldown drops to %1$s.",
+  "worldcombat.skill.forestscurse.growth.0": "From level %1$s, base cooldown is shortened by 0.5 s.",
+  "worldcombat.skill.forestscurse.growth.1": "From level %1$s, base cooldown is shortened by 1.1 s, replacing the previous growth reduction.",
   "world_combat.move.forestscurse.text.curse": "Cursed by the forest, Grass type added",
   "world_combat.move.forestscurse.text.lift": "The forest curse lifts; the Grass type fades",
   "world_combat.move.forestscurse.text.noroom": "Already Grass or type layer full, no room for the curse",
   "world_combat.move.forestscurse.text.fizzle": "No type to add to, the curse falls flat",
-  "effect.world_combat.forest_curse": "Cursed by the forest (Grass added)"
+  "effect.world_combat.forest_curse": "Cursed by the forest (Grass added)",
+  "worldcombat.skill.forestscurse.description.restrictions": "It only works on a non-Grass Pokemon that currently has fewer than three types (so there is room to add one more): a target already Grass, whose type layer is full, or whose types are locked by an ability is not cursed."
 }

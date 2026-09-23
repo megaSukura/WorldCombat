@@ -126,8 +126,8 @@ namespace PokemonSkills {
     ]);
 
     describe(revengeId, [
-        { key: "description.0", values: ["retort", "window"] },
-        { key: "description.1", values: ["reach", "step", "radius", "push"] },
+        { key: "description.0", values: ["retort","window"] },
+        { key: "description.1", values: ["reach","step","radius","push"] },
         { key: "endure.on", values: [], when: function (context) { return read(context.detail.values, ["endure"]) === true; } },
         { key: "endure.off", values: [], when: function (context) { return read(context.detail.values, ["endure"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

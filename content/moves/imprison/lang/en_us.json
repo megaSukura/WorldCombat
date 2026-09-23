@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.imprison.summary": "Locks every move you know into a seal and spreads it into a domain; any foe inside that shares a move with you is turned back from using it. Switch to a move outside the list, leave the domain, or break the caster's seal to be freed.",
+  "worldcombat.skill.imprison.summary": "Creates a moving seal that blocks enemy moves shared with the user. Ordinary enemies have melee or ranged attacks sealed when the user knows that attack category.",
   "worldcombat.skill.imprison.use.0": "Shut down a whole band of moves you and the foe share",
   "worldcombat.skill.imprison.use.1": "Pin a mirror or same-species foe that knows your moves",
   "worldcombat.skill.imprison.use.2": "Force a foe off the few moves it relies on",
   "worldcombat.skill.imprison.description.0": "The seal stays on the caster for %1$s: every move you know is locked into the domain for that time.",
-  "worldcombat.skill.imprison.description.1": "The seal follows you within a %1$s-block radius and blocks moves shared with enemies inside.",
+  "worldcombat.skill.imprison.description.1": "The field radius is %1$s blocks. Pokémon moves shared with the user are sealed. After an ordinary creature or player has attacked, the user’s contact moves seal its melee, and non-contact moves seal its ranged attacks. Leaving the field clears the seal after about 1.3 seconds.",
   "worldcombat.skill.imprison.description.2": "Raising the seal takes %1$s, the recovery is %2$s and the cooldown %3$s. The domain moves with you; foes who leave it or stop sharing a move are released.",
   "worldcombat.skill.imprison.scope.0": "Deep: domain x0.8, duration x1.35, cooldown x1.15 — hold one patch longer.",
   "worldcombat.skill.imprison.scope.1": "Wide: domain x1.25, duration x0.75, cooldown x0.9 — cover more ground for less time.",

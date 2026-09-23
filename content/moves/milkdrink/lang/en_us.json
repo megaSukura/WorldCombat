@@ -7,7 +7,7 @@
   "worldcombat.skill.milkdrink.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed; the user can keep moving while drinking.",
   "worldcombat.skill.milkdrink.stance.warm": "Warm milk: +0.05 healing and a 1.3x gulp interval (drunk slowly), at the cost of a longer cooldown.",
   "worldcombat.skill.milkdrink.stance.cold": "Chilled milk: -0.03 healing, a 0.8x gulp interval and a shorter cooldown - quick sips for a gap between blows.",
-  "worldcombat.skill.milkdrink.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.milkdrink.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.milkdrink.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.milkdrink.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.milkdrink.value.heal": "Restore fraction",
@@ -23,5 +23,6 @@
   "worldcombat.skill.milkdrink.preference.ai.healBelow.help": "The companion drinks below this health ratio; lower endures longer, higher drinks at the first wound. Poison overrides this threshold.",
   "world_combat.move.milkdrink.text.drink": "Drinks deeply",
   "world_combat.move.milkdrink.text.clean": "The poison is washed away",
-  "world_combat.move.milkdrink.text.quenched": "Quenched and refreshed"
+  "world_combat.move.milkdrink.text.quenched": "Quenched and refreshed",
+  "worldcombat.skill.milkdrink.description.1": "Each gulp only restores what is missing at that moment, so starting near full health yields less than the listed total; it can only be used while you are missing health or poisoned."
 }

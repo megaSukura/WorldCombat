@@ -3,7 +3,7 @@
   "worldcombat.skill.boltbeak.use.0": "Peck before the foe can act",
   "worldcombat.skill.boltbeak.use.1": "Hit once and disengage",
   "worldcombat.skill.boltbeak.use.2": "Double up on a target that has not reacted",
-  "worldcombat.skill.boltbeak.description.0": "Deals %1$s physical damage; the power doubles when the target has not struck the user in the last %2$s seconds and is not swinging at the user right now.",
+  "worldcombat.skill.boltbeak.description.0": "Deals about %1$s contact physical damage; the power doubles when the target has not struck the user in the last %2$s seconds and is not swinging at the user right now.",
   "worldcombat.skill.boltbeak.description.1": "Stabs up to %1$s blocks, %2$s blocks per tick, collision radius %3$s blocks; backsteps %4$s blocks after the peck.",
   "worldcombat.skill.boltbeak.skirmish.on": "Skirmish on: the backstep is 0.9 blocks longer for repeated first strikes, but each peck is about 10%% lighter and cooldown 4 ticks longer.",
   "worldcombat.skill.boltbeak.skirmish.off": "Skirmish off: hold ground for a heavier peck (about 11%% more) with a shorter backstep.",

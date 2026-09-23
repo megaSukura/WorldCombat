@@ -66,8 +66,13 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, detectScene, 1, body.position(), { moment: "read", target: String(target.ref()),
                 scale: scale, power: power, intensity: custom.boost / 2 }, 26);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), detectReadText, [], 30);
-            NativeEffects.boost(world, target, custom.stat, custom.boost);
-            MobEffects.apply(world, target, DetectOpening, custom.opening, 0);
+            const previous = MobEffects.read(world, target, DetectOpening);
+            const carrier = MobEffects.apply(world, target, DetectOpening, custom.opening, 0);
+            if (carrier !== null) {
+                const changes: { [stat: string]: number } = {}; changes[custom.stat] = custom.boost;
+                NativeEffects.boostWindow(world, target, changes, custom.opening,
+                    "world_combat:move/detect", carrier, previous);
+            }
             WorldFeedback.keep(world, detectFocusKey, detectScene, 1, body.position(), { moment: "opening", target: String(target.ref()),
                 scale: scale, intensity: custom.boost / 2 }, Math.max(24, custom.opening));
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), detectOpeningText, [custom.boost], 26);
@@ -80,8 +85,8 @@ namespace PokemonSkills {
         id: "detect",
         cooldownParameter: "charge",
         name: "Detect",
-        description: "Enables the user to evade all attacks. Its chance of failing rises if it is used in succession.",
-        uses: ["对手起手瞬间拆掉它的第一击", "边靠近边读招，读中后立刻反击", "打断一次致命的收招"],
+        description: "在极短窗口内读穿下一次攻击并完整免除，成功后可获得一段先机（默认抬速度，可配置为抬攻击）；连续使用容易失败。",
+        uses: ["对手起手瞬间拆掉它的第一击", "边靠近边读招，读中后立刻反击", "挡下一次致命的攻击"],
         kind: "self",
         range: 0,
         prepare: 6,

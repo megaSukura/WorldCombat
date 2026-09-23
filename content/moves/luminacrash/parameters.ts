@@ -151,8 +151,8 @@ namespace PokemonSkills {
 
     describe("luminacrash", [
         { key: "description.0", values: ["core", "sunderStages"] },
-        { key: "description.1", values: ["fallTicks", "leash"] },
-        { key: "description.2", values: ["burstRadius", "splash"] },
+        { key: "description.1", values: ["fallTicks","leash"] },
+        { key: "description.2", values: ["burstRadius","splash"] },
         { key: "disperse.on", values: ["core", "burstRadius", "splash"],
             when: function (context) { return read(context.detail.values, ["disperse"]) === true; } },
         { key: "disperse.off", values: ["core", "burstRadius"],

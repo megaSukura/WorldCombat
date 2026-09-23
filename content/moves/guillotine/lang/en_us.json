@@ -5,7 +5,7 @@
   "worldcombat.skill.guillotine.description.2": "Recovery takes %1$s seconds, including after a miss.",
   "worldcombat.skill.guillotine.wide.on": "Wide form: jaw angle x1.25 and longer jaws, at the cost of a slower clamp and longer recovery - easier to catch a target that stepped aside.",
   "worldcombat.skill.guillotine.wide.off": "Narrow form: clamps sooner and recovers faster, but only catches the small patch straight ahead.",
-  "worldcombat.skill.guillotine.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",
+  "worldcombat.skill.guillotine.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.guillotine.growth.0": "From level %1$s the jaws reach %2$s blocks.",
   "worldcombat.skill.guillotine.growth.1": "From level %1$s the jaws reach %2$s blocks and open %3$s degrees, with the clamp delayed only %4$s s.",
   "worldcombat.skill.guillotine.use.0": "Finish a target with the shortest wind-up at contact range",

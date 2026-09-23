@@ -24,10 +24,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: furyswipesId,
         cooldownParameter: "recharge",
         name: "Fury Swipes",
-        description: "The user attacks by raking the target with claws, scythes, or the like. This move hits two to five times in a row.",
+        description: "贴身绕目标左右换位，一道道抓下去：每一道从新角度落下，抓空一道这趟就散。游走式罩得更宽、绕得更远、命中率更高；扑抓式改成前压，收窄成一道、单点更狠。",
         uses: ["贴身绕目标左右换位，一道道抓下去", "抓侧后，逼目标不停转身", "扑抓式改成前压，把目标按在一面猛抓"],
         kind: "enemy",
         range: 2.6,

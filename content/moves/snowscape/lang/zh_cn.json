@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.snowscape.summary": "在选定的地面上落下一场安静的雪：雪覆盖地表、露天的水面被冻成冰，雪区里的冰属性身体把防御绷高一级；不造成伤害。",
+  "worldcombat.skill.snowscape.summary": "在选定地面制造雪区，临时覆雪并冻结水面；冰属性宝可梦站在雪区内时获得防御提升。",
   "worldcombat.skill.snowscape.use.0": "在交战区铺开雪地并以冻水改变走动",
   "worldcombat.skill.snowscape.use.1": "增强冰之躯的防御",
   "worldcombat.skill.snowscape.use.2": "为随后的冰招与走位准备地形",
   "worldcombat.skill.snowscape.description.0": "在选定地面落下半径 %1$s 格的雪，持续 %2$s。",
-  "worldcombat.skill.snowscape.description.1": "最多盖住 %1$s 格地表、冻住 %2$s 格水面；离开雪区后仍带雪 %3$s。",
+  "worldcombat.skill.snowscape.description.1": "最多覆盖 %1$s 格地表、冻结 %2$s 格水面，实际数量取决于附近合适的地形。新铺的雪与冰约 %3$s 后恢复原地形。",
   "worldcombat.skill.snowscape.description.2": "准备 %1$s，收招 %2$s。",
   "worldcombat.skill.snowscape.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 落下雪，收招 %3$s，提交起冷却 %5$s。",
   "worldcombat.skill.snowscape.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
@@ -29,5 +29,8 @@
   "world_combat.move.snowscape.text.crisp": "绷紧",
   "world_combat.move.snowscape.text.cover": "覆雪 %1$s 格",
   "world_combat.move.snowscape.text.lock": "冻水 %1$s 格",
-  "effect.world_combat.snowscape_powder": "覆雪"
+  "effect.world_combat.snowscape_powder": "覆雪",
+  "worldcombat.skill.snowscape.description.3": "每片雪区使其中的冰属性宝可梦最多提升1级防御，敌我都受益；重叠雪区可叠加，仍受能力上限限制。走出某片雪区或雪停时，只撤去那片雪的提升。",
+  "worldcombat.skill.snowscape.description.4": "厚覆：雪区更广、覆雪与冻水更多，但雪停得更快、冷却更长；薄雪覆盖较小，持续更久、冷却更短。",
+  "worldcombat.skill.snowscape.value.groundDuration": "地表恢复时间"
 }

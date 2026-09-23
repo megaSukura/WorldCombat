@@ -30,5 +30,6 @@
   "worldcombat.skill.defendorder.preference.ai.panic.help": "Below this health ratio the companion calls underlings before the shared order; larger enters the defensive stance sooner, smaller only when nearly down.",
   "world_combat.move.defendorder.text.call": "Defend Order (%1$s underlings)",
   "world_combat.move.defendorder.text.scatter": "The shell dispersed",
-  "effect.world_combat.defendorder_guard": "Defend Order"
+  "effect.world_combat.defendorder_guard": "Defend Order",
+  "worldcombat.skill.defendorder.description.additional": "The underlings are attackable targets: each one killed withdraws its stage at once, and once all are cleared the shell grants nothing more. Only one shell is kept at a time and it cannot be recast until it disperses; when its time runs out or it is cleared, the underlings scatter together and every stage is withdrawn."
 }

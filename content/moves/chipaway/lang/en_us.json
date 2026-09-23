@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.chipaway.summary": "Strike repeatedly at close range, ignoring the target’s stat-stage changes.",
+  "worldcombat.skill.chipaway.summary": "Strikes repeatedly at close range, ignoring the target’s Defense stage changes. Equipped armor still reduces damage.",
   "worldcombat.skill.chipaway.use.0": "A point-blank combo whose beats land at different heights",
   "worldcombat.skill.chipaway.use.1": "Ignore the target's raised Defence stages outright",
   "worldcombat.skill.chipaway.use.2": "Grind health down with a fast, cheap combo",

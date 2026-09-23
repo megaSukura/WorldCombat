@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.obstruct.summary": "立起带刺拒马，按总量完整挡下对手的攻击；接触攻击撞上来会大幅降低攻击者防御，连续使用容易失败。",
-  "worldcombat.skill.obstruct.description.0": "拒马持续 %1$s、量 %2$s 点，接触降防 %3$s 级；防御越高越厚越久。",
+  "worldcombat.skill.obstruct.summary": "立起一道拒马并钉在原地，用总量完整挡下来自敌人的伤害；接触它的攻击者防御会大幅下降，连续使用容易失败。",
+  "worldcombat.skill.obstruct.description.0": "拒马持续 %1$s、总量 %2$s 点，完整挡下来自敌人的伤害直到耗尽后崩解，超出剩余量的部分会穿过；接触它的攻击者防御下降 %3$s 级，每个敌人只被扎一次。",
   "worldcombat.skill.obstruct.description.1": "立起 %1$s，冷却 %2$s。",
-  "worldcombat.skill.obstruct.description.2": "连用失误率 %1$s；带刺与加固的取舍见配置 %2$s。",
+  "worldcombat.skill.obstruct.description.2": "连用失误率 %1$s；开启带刺时接触降防 +1 级、拒马量 ×0.75、持续 ×0.85、收招 6 刻，关闭（加固）时拒马量 ×1.2、持续 ×1.15、收招 10 刻。",
   "worldcombat.skill.obstruct.use.0": "引诱近战对手撞上拒马",
   "worldcombat.skill.obstruct.use.1": "为后续攻击先把对手打软",
-  "worldcombat.skill.obstruct.use.2": "守住一条窄口，逼对手绕路",
+  "worldcombat.skill.obstruct.use.2": "站在要道上，用拒马替自己扛下一轮集火",
   "worldcombat.skill.obstruct.value.raise": "立起时间",
   "worldcombat.skill.obstruct.value.window": "拒马持续",
   "worldcombat.skill.obstruct.value.capacity": "拒马量",
@@ -19,5 +19,6 @@
   "worldcombat.skill.obstruct.preference.ai.range.help": "威胁进入这个距离才立拒马。越大越早摆好，越可能空立；越小越省，但要赌对手会贴上来。",
   "world_combat.move.obstruct.text.block": "拒马挡下 %1$s 点（余 %2$s）",
   "world_combat.move.obstruct.text.punish": "防御 −%1$s",
-  "world_combat.move.obstruct.text.shatter": "拒马被击穿"
+  "world_combat.move.obstruct.text.shatter": "拒马被击穿",
+  "worldcombat.skill.obstruct.description.hold": "撑起拒马期间施放者定在原地、无法移动；施放者自身来源的伤害（摔落、灼烧）不消耗拒马。"
 }

@@ -81,10 +81,11 @@ namespace PokemonSkills {
     describe(junglehealingId, [
         { key: "description.0", values: ["heal"] },
         { key: "description.1", values: ["radius"] },
+        { key: "description.condition", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "stance.deeproot", values: [], when: function (context) { return read(context.detail.values, ["deeproot"]) === true; } },
         { key: "stance.shallow", values: [], when: function (context) { return read(context.detail.values, ["deeproot"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.wait"] }
     ]);

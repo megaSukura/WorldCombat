@@ -27,7 +27,7 @@ namespace PokemonSkills {
         id: spitupId,
         cooldownParameter: "recharge",
         name: "Spit Up",
-        description: "The power stored using the move Stockpile is released at once in an attack. The more power is stored, the greater the move's power.",
+        description: "把蓄力攒下的压缩力一口吐出去：蓄了几层就有多重，弹体更大更快；没有蓄力层时这一招根本使不出。出手会一次放空全部层数，那几层防御与特防加成也跟着交出去。喷散式把这一口摊成身前一整片锥形，一次罩住多个敌人，但每个目标更轻。",
         uses: ["先蓄力攒层，再一口把攒下的力全吐出去", "喷散式一次罩住站成一排的敌人", "把层数留着当保险，等对手露出破绽再全放"],
         kind: "enemy",
         range: 10,

@@ -5,7 +5,7 @@
   "worldcombat.skill.bodypress.use.2": "在守势里反推一波",
   "worldcombat.skill.bodypress.description.0": "顶实造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.bodypress.description.1": "站定 %1$s 秒后可用；沿瞄准方向推进最多 %2$s 格、每刻 %3$s 格。",
-  "worldcombat.skill.bodypress.description.2": "顶住后把目标沿推进方向推走约 %1$s 格，顶推用时 %2$s 秒；目标撞上障碍就提前停下。",
+  "worldcombat.skill.bodypress.description.2": "顶住后沿推进方向把目标推走约 %1$s 格；碾推式会顶着对方一路跟进、约用 %2$s 秒推完，硬停式则几乎一下推完。目标撞上障碍就提前停下。",
   "worldcombat.skill.bodypress.grind.on": "开启碾推式：撞击摊成更长的持续顶推、把目标推得更远，但单发更轻、收招与冷却更久。",
   "worldcombat.skill.bodypress.grind.off": "关闭碾推式（硬停式）：单发更重、几乎一下推完，但推得近、控场更弱。",
   "worldcombat.skill.bodypress.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

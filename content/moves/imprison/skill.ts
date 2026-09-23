@@ -1,17 +1,4 @@
-/**
- * 封印 / imprison —— 执行组织与家族行为。
- *
- * 核心念头：把自己会的每一手锁进一枚悬浮的封印，封印落地展开成领域；领域内的对手，凡是用施法者也会的
- *   招式，都被顶回去。它不是点名封一手，而是拿自己的招式表当封印——双方重合的那几手一起失效。
- *
- * 一幕半：起（windup，提交前）封印在施法者头顶聚起；落（提交后）封印砸进地面、铺开领域，
- *   领域内每个与施法者共有招式的对手都被落印；持续期每 10 刻重扫一次，离开领域或不再重合自然撤印。
- *
- * 世界化：领域源是施法者身上共享身份 world_combat:status/imprison 的真实 MobEffect；
- *   被锁的对手挂带同一身份的「封印印记」，印记旁挂写清共有招式名单，共享动作策略在提交点把它们顶回去。
- *   领域随施法者移动；到期自行散去，被牛奶／清除时一并撤印。
- * 反制：印章只落在共有招式上，换一手不在名单里的招就能打；离开领域或解除施法者的封印即可脱身。
- */
+/** imprison：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 领域重扫间隔与印记时长：印记比间隔长一点，目标短暂走位也能撑住，真正离开后自然过期。 */
     const imprisonBrandInterval = 10;
@@ -61,13 +48,22 @@ namespace PokemonSkills {
 
     /** 一个战斗者当前有效的招式 id 名单（含临时层）；非宝可梦没有招式表，返回空。 */
     export function imprisonKnown(world: CombatWorld, actor: CombatActor): string[] {
-        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return [];
+        if (!world.valid(actor)) return [];
+        if (String(actor.domain()) !== "cobblemon") {
+            const last = DamageSemantics.recentAttack(world, actor, 1200);
+            return last ? [last.contact ? "native:contact" : "native:ranged"] : [];
+        }
         const pokemon = CobblemonCombat.pokemon(actor), layers = NativeModifiers.read(world, actor), ids: string[] = [];
         for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
             const move = pokemon.move(slot);
             if (move === null) continue;
             const id = layers.moves && layers.moves[String(slot)] || String(move.id());
             if (ids.indexOf(id) < 0) ids.push(id);
+            const template = CobblemonCombat.moveTemplate(id);
+            if (String(template.category()) !== "status") {
+                const kind = NativeLoadout.facts(template).flags.contact ? "native:contact" : "native:ranged";
+                if (ids.indexOf(kind) < 0) ids.push(kind);
+            }
         }
         return ids;
     }
@@ -110,7 +106,7 @@ namespace PokemonSkills {
         for (let i = 0; i < near.length; i++) {
             const other = near[i];
             if (String(other.ref()) === String(caster.ref()) || !world.valid(other) || world.friendly(other)) continue;
-            const shared = imprisonOverlap(mine, imprisonKnown(world, other));
+            const shared = imprisonOverlap(mine, imprisonKnown(world, other)).filter(id => String(other.domain()) !== "cobblemon" || id.indexOf("native:") !== 0);
             if (shared.length === 0) { imprisonClear(world, other, caster); continue; }
             imprisonSeal(world, caster, other, shared);
             hit++;
@@ -121,11 +117,14 @@ namespace PokemonSkills {
     // 封锁：带着封印身份的活体，在提交与施法者共有的招式时被顶回去。
     // 这条贡献走共享动作策略，原生配招、通用动作与玩家共用同一个提交闸门；对任何带身份的活体成立。
     CombatStatus.actions.define({ id: "world_combat:move_imprison/policy", apply: function (context) {
-        if (!context.move || typeof context.move.id !== "function") return;
         if (!CombatStatus.has(context.world, context.actor, imprisonStatus)) return;
         const data = imprisonData(context.world, context.actor, imprisonBrand);
         if (data === null || !data.moves) return;
-        if (data.moves.indexOf(String(context.move.id())) >= 0) context.blocked.imprisoned = true;
+        if (context.phase === "damage" && DamageSemantics.read(context.metadata).attack) {
+            const kind = DamageSemantics.read(context.metadata).contact ? "native:contact" : "native:ranged";
+            if (data.moves.indexOf(kind) >= 0) context.blocked.imprisoned = true;
+        } else if (context.move && typeof context.move.id === "function" && data.moves.indexOf(String(context.move.id())) >= 0)
+            context.blocked.imprisoned = true;
     } });
 
     // 被判回的那一下要看得见：在真正的封锁之前放一段「顶回去」的画面与浮字。
@@ -149,7 +148,7 @@ namespace PokemonSkills {
         id: imprisonId,
         cooldownParameter: "recharge",
         name: "封印",
-        description: "把自己会的每一手锁进一枚封印并铺成领域；领域内的对手，凡是用你也会的招式，都被顶回去。换一手不在名单里的招就能打，离开领域或解除施法者的封印即可脱身。",
+        description: "展开随自己移动的封印领域，封住敌人与你共有的招式。对普通敌人，近战和远程攻击会按自己会的攻击类型被封住。",
         uses: ["把与对手重合的招式整片锁死", "压住会同样招式的镜像 / 同类对手", "逼对手离开它熟练的那几手"],
         kind: "self",
         range: 1,

@@ -73,11 +73,12 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: "obstruct",
         cooldownParameter: "charge",
         name: "Obstruct",
-        description: "This move enables the user to protect itself from all attacks. Its chance of failing rises if it is used in succession. Contact with it lowers the attacker's Defence sharply.",
-        uses: ["引诱近战对手撞上拒马", "为后续攻击先把对手打软", "守住一条窄口，逼对手绕路"],
+        description: "立起一道拒马并钉在原地，用总量完整挡下来自敌人的伤害；接触它的攻击者防御会大幅下降，连续使用容易失败。",
+        uses: ["引诱近战对手撞上拒马", "为后续攻击先把对手打软", "站在要道上，用拒马替自己扛下一轮集火"],
         kind: "self",
         range: 0,
         prepare: 8,

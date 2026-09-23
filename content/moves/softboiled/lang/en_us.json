@@ -3,11 +3,11 @@
   "worldcombat.skill.softboiled.use.0": "Leave a heal nearby and take it in your own time",
   "worldcombat.skill.softboiled.use.1": "Lay the egg somewhere safe, then come back for it",
   "worldcombat.skill.softboiled.use.2": "Give the egg to a wounded companion",
-  "worldcombat.skill.softboiled.description.0": "Lays an egg that hatches after %2$s to restore %1$s of the beneficiary's maximum health; the egg can be smashed before it hatches.",
+  "worldcombat.skill.softboiled.description.0": "Lays an egg at your feet that hatches after %2$s to restore %1$s of the beneficiary's maximum health; the egg stays in the world with 6 HP and can be smashed before it hatches.",
   "worldcombat.skill.softboiled.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed.",
-  "worldcombat.skill.softboiled.stance.share": "Share: hands the egg to the nearest wounded ally within %1$s blocks; they restore the same fraction of their own maximum health, at the cost of the caster's own heal.",
-  "worldcombat.skill.softboiled.stance.self": "Self: the egg is kept, hatching for about half of the caster's maximum health.",
-  "worldcombat.skill.softboiled.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.softboiled.stance.share": "Share: only castable while a wounded ally is in range; hands the egg to the nearest wounded ally within %1$s blocks, who restores %2$s of their own maximum health, at the cost of the caster's own heal.",
+  "worldcombat.skill.softboiled.stance.self": "Self: only castable while below full health; the egg is kept and hatches to restore %1$s of your own maximum health.",
+  "worldcombat.skill.softboiled.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.softboiled.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.softboiled.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.softboiled.value.heal": "Restore fraction",
@@ -25,5 +25,6 @@
   "world_combat.move.softboiled.text.hatch": "The egg hatches (+%1$s)",
   "world_combat.move.softboiled.text.shared": "The egg goes to a companion (+%1$s)",
   "world_combat.move.softboiled.text.wasted": "The egg is wasted",
-  "world_combat.move.softboiled.text.smashed": "The egg is smashed"
+  "world_combat.move.softboiled.text.smashed": "The egg is smashed",
+  "worldcombat.skill.softboiled.description.wasted": "If the beneficiary has left or is at full health when the egg hatches, the heal is wasted."
 }

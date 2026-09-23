@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.slash.summary": "站定、举刃过头，沿身前一条窄走廊压下一记斜劈：走廊里的对手各吃一记接触斩击，落点闪出亮白的劈痕。它的暴击率比同族高一档——疾刃更快更宽、重刃更慢更重。",
-  "worldcombat.skill.slash.description.0": "斜劈对走廊里的对手造成 %1$s 的接触斩击伤害，且更容易击中要害。",
+  "worldcombat.skill.slash.description.0": "斜劈对走廊里的每个敌人各造成一次约 %1$s 的接触斩击伤害，且更容易击中要害。",
   "worldcombat.skill.slash.description.1": "走廊长 %1$s 格、半宽 %2$s 格，从脚上压到 %3$s 格高。",
   "worldcombat.skill.slash.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.slash.growth.0": "达到 %1$s 级，劈开威力提升至 %2$s。",

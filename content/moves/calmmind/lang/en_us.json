@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.calmmind.summary": "Stills the mind under a nearly transparent clarity: Special Attack and Special Defense both rise. The only member of its group that raises offense; a deep trance is stronger and longer, a shallow one is instant and always available. Both stages are taken back when the window ends.",
+  "worldcombat.skill.calmmind.summary": "Stills the mind under a nearly transparent clarity: Special Attack and Special Defense both rise. The only member of its group that raises offense; a deep trance is stronger and longer, a shallow one is instant and always available. Both stages are taken back when the clarity ends or is cleared.",
   "worldcombat.skill.calmmind.use.0": "Open a fight by settling to pad Special Attack and Special Defense together",
   "worldcombat.skill.calmmind.use.1": "Sit deep before a hard fight, touch up with a shallow trance in a long trade",
   "worldcombat.skill.calmmind.use.2": "Raise Special Defense to take a special attacker's fire",
   "worldcombat.skill.calmmind.description.0": "Calm Mind raises Special Attack by %1$s stages and Special Defense by %2$s stages.",
   "worldcombat.skill.calmmind.deep.on": "Deep trance: Sp. Atk +2, Sp. Def +2 and a longer clarity, but 6 ticks more telegraph, a longer cooldown and easy to interrupt.",
   "worldcombat.skill.calmmind.deep.off": "Shallow trance: Sp. Atk +1, Sp. Def +1, near-instant with a shorter cooldown, always available; both sides have their moment.",
-  "worldcombat.skill.calmmind.description.1": "The clarity lasts about %1$s.",
+  "worldcombat.skill.calmmind.description.1": "The clarity lasts about %1$s: the raised Sp. Atk and Sp. Def stay active throughout, and both stages are taken back when the window ends or is cleared.",
   "worldcombat.skill.calmmind.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.calmmind.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.calmmind.growth.0": "At level %1$s the clarity lasts %2$s and the cooldown drops to %3$s s.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.calmmind.preference.ai.minGap.help": "A threat closer than this makes the companion fight instead of meditating; larger gives up setup more often up close.",
   "world_combat.move.calmmind.text.settle": "Calm Mind (Sp. Atk +%1$s / Sp. Def +%2$s / %3$s s)",
   "world_combat.move.calmmind.text.fade": "Calm Mind faded",
-  "effect.world_combat.calm_focus": "Calm Mind"
+  "effect.world_combat.calm_focus": "Calm Mind",
+  "worldcombat.skill.calmmind.description.2": "From wind-up through recovery you stay rooted while focusing and cannot move."
 }

@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.infestation.summary": "The user flings a swarm of bugs onto the target to cling and gnaw at it, and the target cannot move while infested; trade time for space.",
-  "worldcombat.skill.infestation.description.0": "The hit deals %1$s special damage and leaves the swarm on the target.",
-  "worldcombat.skill.infestation.description.1": "The swarm clings for %1$s, during which the target cannot move; every interval it gnaws off %2$s of the target's maximum health (bite interval %3$s).",
-  "worldcombat.skill.infestation.description.2": "Range %1$s blocks, swarm speed %2$s blocks per tick; the wind-up is %3$s.",
+  "worldcombat.skill.infestation.description.0": "The hit deals about %1$s special damage and leaves the swarm on the target.",
+  "worldcombat.skill.infestation.description.1": "The swarm clings for %1$s, during which the target cannot move; every %3$s it gnaws off %2$s of the target's maximum health (at least 1 point each bite). The swarm disperses when its duration runs out or it is cleared (milk, /effect clear, and the like).",
+  "worldcombat.skill.infestation.description.2": "Range %1$s blocks, swarm speed %2$s blocks per tick; it attaches to the first target it touches in flight (collision radius %4$s blocks) and scatters if it hits a block first. Wind-up %3$s.",
   "worldcombat.skill.infestation.use.0": "Stick a lasting gnaw on a stubborn target",
   "worldcombat.skill.infestation.use.1": "Pin the target in place",
   "worldcombat.skill.infestation.use.2": "Force the target to clear the status or fight back first",

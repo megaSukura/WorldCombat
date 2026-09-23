@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.fling.summary": "把携带的道具整个甩向目标：威力随道具重量、效果随道具种类，落地后道具留在世界里可以被捡起。",
+  "worldcombat.skill.fling.summary": "把携带的道具整个甩向目标：威力随道具重量、效果随道具种类；道具脱手即从手中消耗，默认留在落点可被捡起。",
   "worldcombat.skill.fling.use.0": "远距离道具投掷",
   "worldcombat.skill.fling.use.1": "把火珠、毒针一类道具丢给对手",
   "worldcombat.skill.fling.use.2": "把树果当作给对手的回礼",
   "worldcombat.skill.fling.description.0": "把携带的道具甩向目标，造成 %1$s 的恶属性物理伤害；威力由道具的投掷重量决定。",
-  "worldcombat.skill.fling.description.1": "在 %1$s 格内投掷，蓄力 %2$s 秒；道具的效果在命中时结算（树果被对方吃掉、火珠烫伤、毒针中毒、王冠让对手一窒）。",
-  "worldcombat.skill.fling.description.2": "默认把道具留在落点，落地 %1$s 秒后可被捡起；关闭后道具摔碎、不再留下，威力 ×1.2。",
+  "worldcombat.skill.fling.description.1": "在 %1$s 格内投掷，蓄力 %2$s 秒；命中时结算道具效果：树果被对方吃掉、回复其约 12.5%% 最大生命，火珠烫伤、毒针中毒、毒珠剧毒、光球麻痹（状态可能被目标免疫），王冠或锐牙打断对方可被中断的动作。",
+  "worldcombat.skill.fling.description.2": "道具脱手即从手中消耗。默认会留下道具，落在命中点，落地 %1$s 秒后可被任何人捡起；关闭后道具当场摔碎、不再留下，威力 ×1.2。",
   "worldcombat.skill.fling.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.fling.value.throw": "威力",
   "worldcombat.skill.fling.value.item": "投掷威力",
@@ -17,7 +17,7 @@
   "worldcombat.skill.fling.value.bursts": "碎屑数量",
   "worldcombat.skill.fling.value.pickup": "落地可拾取延迟",
   "worldcombat.skill.fling.preference.leave": "留下道具",
-  "worldcombat.skill.fling.preference.leave.help": "开启：道具落在命中点，过一会儿就能被捡回或利用，但威力是道具基础值；关闭：道具当场摔碎，威力 ×1.2，却什么都不留下。两个方向各有取舍。",
+  "worldcombat.skill.fling.preference.leave.help": "开启：道具落在命中点，过一会儿就能被捡回或利用，威力不额外加成；关闭：道具当场摔碎、什么都不留下，威力 ×1.2。",
   "worldcombat.skill.fling.preference.ai.maxChase": "投掷距离",
   "worldcombat.skill.fling.preference.ai.maxChase.help": "只在这个距离内主动投掷；更远的目标交给共享接近逻辑走过去。",
   "worldcombat.skill.fling.preference.ai.leaveStation": "驻守时离位",
@@ -27,5 +27,6 @@
   "world_combat.move.fling.text.burn": "灼伤",
   "world_combat.move.fling.text.paralysis": "麻痹",
   "world_combat.move.fling.text.poison": "中毒",
-  "world_combat.move.fling.text.toxic": "剧毒"
+  "world_combat.move.fling.text.toxic": "剧毒",
+  "worldcombat.skill.fling.description.projectile": "道具沿弧线飞出，飞行速度 %1$s 格/刻、判定半径 %2$s 格；命中后把目标顶开 %3$s 格。"
 }

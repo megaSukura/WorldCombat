@@ -72,9 +72,10 @@ namespace PokemonSkills {
     ]);
 
     describe("acidarmor", [
-        { key: "description.0", values: ["gift", "window"] },
+        { key: "description.0", values: ["gift","window"] },
+        { key: "description.stack", values: [] },
         { key: "description.1", values: [] },
-        { key: "acid.on", values: ["poolRadius", "poolTicks"], when: function (context) { return read(context.detail.values, ["slick"]) !== true; } },
+        { key: "acid.on", values: ["poolRadius","poolTicks"], when: function (context) { return read(context.detail.values, ["slick"]) !== true; } },
         { key: "acid.off", values: [], when: function (context) { return read(context.detail.values, ["slick"]) === true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

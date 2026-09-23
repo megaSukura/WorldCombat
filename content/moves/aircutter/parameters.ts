@@ -117,7 +117,7 @@ namespace PokemonSkills {
     ]);
 
     describe(aircutterId, [
-        { key: "description.0", values: ["blade"] },
+        { key: "description.0", values: ["blade","maxTargets"] },
         { key: "description.1", values: ["reach", "span"] },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },

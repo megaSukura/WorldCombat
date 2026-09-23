@@ -3,7 +3,7 @@
   "worldcombat.skill.makeitrain.use.0": "Unload a wide area when surrounded",
   "worldcombat.skill.makeitrain.use.1": "Land the biggest hit on a packed group",
   "worldcombat.skill.makeitrain.use.2": "Scatter a lot of reclaimable coins on the field",
-  "worldcombat.skill.makeitrain.description.0": "Covers %2$s blocks around the user; the coins fall in %3$s rings every %4$s, each dealing %1$s special damage to every enemy in range.",
+  "worldcombat.skill.makeitrain.description.0": "Covers %2$s blocks around the user; the rain sweeps outward in %3$s rings, advancing one ring every %4$s. Each enemy in the area is struck only once, for about %1$s special damage.",
   "worldcombat.skill.makeitrain.description.1": "After the rain stops, about %1$s pickable real coins are left on the ground.",
   "worldcombat.skill.makeitrain.description.2": "After the cast the user's Sp. Atk falls by %1$s stage(s).",
   "worldcombat.skill.makeitrain.hoard.on": "Currently the hoard form: more power and range, but 2 stages of self Sp. Atk loss and a longer wind-up and cooldown.",

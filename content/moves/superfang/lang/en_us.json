@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.superfang.summary": "Measure the target's vitals with the front fangs, then bite off half of its current HP: no attack-versus-defence, a fixed share of what is left. Best against a full-health, high-HP target and weaker as it gets low, so it opens or breaks a shield rather than finishes.",
-  "worldcombat.skill.superfang.description.0": "The bite severs %1$s fixed damage: half of the target's current HP plus a little flesh the fangs carry off. It skips the attack-versus-defence contest; only type immunity and native reductions stop it.",
+  "worldcombat.skill.superfang.description.0": "The bite severs %1$s fixed damage: half of the target's current HP plus a little flesh the fangs carry off. It skips attack-versus-defence and ignores armour; only type immunity and native reductions stop it.",
   "worldcombat.skill.superfang.description.1": "It pounces up to %1$s blocks at %2$s blocks per tick with a %3$s block fang radius.",
   "worldcombat.skill.superfang.description.2": "After the bite the fangs stay on the target for %1$s while the user holds position; a target low on HP loses less to it.",
   "worldcombat.skill.superfang.patient.on": "Patient style: the carried-off flesh is ×1.6 and the hold is longer, but the wind-up is 3 ticks longer and the cooldown 8 ticks longer.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.superfang.preference.ai.halfAt": "Minimum HP ratio",
   "worldcombat.skill.superfang.preference.ai.halfAt.help": "Below this current-HP ratio the user stops using Super Fang and leaves the cast to other moves. Raise it to only sever a still-thick target; lower it to keep severing even when little is left (small gain).",
   "world_combat.move.superfang.text.sever": "Severed %1$s HP",
-  "world_combat.move.superfang.text.miss": "Bit nothing"
+  "world_combat.move.superfang.text.miss": "Bit nothing",
+  "worldcombat.skill.superfang.description.path": "It pounces in a straight line and latches onto any non-allied living body it catches on the way, not necessarily the one aimed at; being blocked by terrain or finishing the pounce without a bite means it misses and deals nothing."
 }

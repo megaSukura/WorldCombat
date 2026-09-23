@@ -111,7 +111,7 @@ namespace PokemonSkills {
                 function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === String(actor.ref())) return;
-                    if (!hurt(action, enemy, "dragonenergy", power, { damage: damageSpec("dragonenergy", "dragon") })) return;
+                    if (!hurt(action, enemy, "dragonenergy", power, { damage: damageSpec("dragonenergy", "bolt") })) return;
                     hits++;
                     if (world.valid(enemy)) world.displace(enemy, direction.scale(push));
                     WorldFeedback.emit(world, dragonenergyScene, 1, facts.position(),

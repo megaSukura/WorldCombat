@@ -60,7 +60,7 @@ namespace PokemonSkills {
         aftercast: seconds(F.base(6).clamp(4, 10).round(0), "收招", "交出生命之后的收势；自己已倒下，收招很短。"),
         recharge: seconds(
             F.base(320).minus(F.level().times(1.0)).clamp(200, 400).round(0),
-            "冷却", "两次许愿之间的等待；等级越高越熟练。")
+            "冷却", "两次许愿之间的等待；等级越高越熟练。", { base: 320 })
     });
 
     stages(healingwishId, [
@@ -69,12 +69,12 @@ namespace PokemonSkills {
     ]);
 
     describe(healingwishId, [
-        { key: "description.0", values: ["wishHeal", "wishReach"] },
+        { key: "description.0", values: ["wishHeal","wishReach"] },
         { key: "description.1", values: ["wishWait"] },
         { key: "stance.broadcast", values: [], when: function (context) { return read(context.detail.values, ["broadcast"]) === true; } },
         { key: "stance.focus", values: [], when: function (context) { return read(context.detail.values, ["broadcast"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

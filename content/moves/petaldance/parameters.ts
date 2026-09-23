@@ -152,13 +152,14 @@ namespace PokemonSkills {
     ]);
 
     describe(petaldanceId, [
-        { key: "description.0", values: ["bloom", "strikes"] },
+        { key: "description.0", values: ["bloom","strikes"] },
         { key: "description.1", values: ["radius", "gap", "drift", "push"] },
-        { key: "description.2", values: ["petals", "linger"] },
-        { key: "description.3", values: ["dazeTicks", "fumble"] },
+        { key: "description.stance", values: [] },
+        { key: "description.2", values: ["petals","linger"] },
+        { key: "description.3", values: ["dazeTicks","fumble"] },
         { key: "drift.on", values: [], when: function (context) { return read(context.detail.values, ["drift"]) === true; } },
         { key: "drift.off", values: [], when: function (context) { return read(context.detail.values, ["drift"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bloom"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.bloom", "tier.1.petals"] }
     ]);

@@ -35,5 +35,6 @@
   "world_combat.move.covet.text.charm": "Dazzled: Attack -%1$s",
   "world_combat.move.covet.text.strike": "Only got a hug",
   "world_combat.move.covet.text.full": "Hands already full",
-  "world_combat.move.covet.text.miss": "The charm missed"
+  "world_combat.move.covet.text.miss": "The charm missed",
+  "worldcombat.skill.covet.description.additional": "When your own hands are empty, the strike also slips the target's held item into your grasp; if you already hold something, the target holds nothing, or either side is sealed, it only lands as an ordinary strike that still lowers Attack."
 }

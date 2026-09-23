@@ -112,7 +112,7 @@ namespace PokemonSkills {
     ]);
 
     describe("mortalspin", [
-        { key: "description.0", values: ["spin", "radius"] },
+        { key: "description.0", values: ["spin","radius","maxTargets"] },
         { key: "description.1", values: ["push"] },
         { key: "description.2", values: ["toxin"] },
         { key: "virulent.on", values: [], when: function (context) { return read(context.detail.values, ["virulent"]) === true; } },

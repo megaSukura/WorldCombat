@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.twineedle.summary": "端起两根针先后刺出：第一针先扎开伤口，第二针冲着这道伤口去，所以第二针更容易带毒。交叉式让两根针从身体两侧夹击，加成更大，但每针更轻、间隔更长。",
-  "worldcombat.skill.twineedle.description.0": "每针威力 %1$s（走物攻），射程 %2$s，飞行速度 %3$s，判定半径 %4$s；一记出手结算两次。",
-  "worldcombat.skill.twineedle.description.1": "两针间隔 %1$s；每针按 %2$s 各掷一次毒，第一针命中后第二针再 +%3$s，毒持续 %4$s。",
+  "worldcombat.skill.twineedle.description.0": "每针造成约 %1$s 点物理伤害，射程 %2$s，飞行速度 %3$s，判定半径 %4$s；一记出手结算两次。",
+  "worldcombat.skill.twineedle.description.1": "两针间隔 %1$s；每针各自按 %2$s 的概率使目标中毒，第一针命中后第二针的中毒概率再 +%3$s（最高 95%）；中毒持续 %4$s，期间持续掉血。",
   "worldcombat.skill.twineedle.description.2": "交叉式下两针间距 %1$s 格；准备 %2$s，收招 %3$s，冷却 %4$s。",
   "worldcombat.skill.twineedle.cross.on": "交叉双针：第二针伤口加成 ×1.6、两根从身体两侧夹击，但每针威力 ×0.9、两针间隔 +2 刻。",
   "worldcombat.skill.twineedle.cross.off": "直刺双针：同一线连出、间隔更短、每针威力 ×1.1，但第二针没有夹击加成。",
@@ -32,5 +32,6 @@
   "worldcombat.skill.twineedle.preference.ai.finishLow.help": "开启：残血目标排得更前，用这两下稳定收尾；关闭则所有目标同等对待。",
   "worldcombat.skill.twineedle.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.twineedle.preference.ai.leaveStation.help": "开启后，驻守命令下也会为出针离开站位；关闭则只在原地够得到时出手。",
-  "world_combat.move.twineedle.text.venom": "第二针刺入，带毒"
+  "world_combat.move.twineedle.text.venom": "第二针刺入，带毒",
+  "worldcombat.skill.twineedle.description.homing": "两根针离手后会在射程内朝锁定的目标修正飞行，移动中的敌人也不容易甩开。"
 }

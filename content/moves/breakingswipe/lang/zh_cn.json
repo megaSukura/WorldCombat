@@ -3,9 +3,9 @@
   "worldcombat.skill.breakingswipe.use.0": "一次压低围在身边的一群敌人",
   "worldcombat.skill.breakingswipe.use.1": "把贴身的敌人一起掀开、拉开距离",
   "worldcombat.skill.breakingswipe.use.2": "在窄地上用犁痕和掀开逼对手走位",
-  "worldcombat.skill.breakingswipe.description.0": "扇形里每个敌人各挨 %1$s 点接触伤害。",
+  "worldcombat.skill.breakingswipe.description.0": "扇形里每个敌人各挨 %1$s 点接触伤害，一次最多扫中 %2$s 个敌人。",
   "worldcombat.skill.breakingswipe.description.1": "以自身为心、朝目标方向扫出半径 %1$s 格、张角 %2$s 度的扇面。",
-  "worldcombat.skill.breakingswipe.description.2": "将目标向外击退 %1$s 格，降低攻击 %2$s 级。",
+  "worldcombat.skill.breakingswipe.description.2": "每个被扫中的目标沿离中心的方向最多被掀开 %1$s 格，并使其攻击下降 %2$s 级；攻击等级最低降到 -6 级，近战物理输出随之变弱。",
   "worldcombat.skill.breakingswipe.description.3": "扫过的地面犁出短时沟痕，约停留 %1$s。",
   "worldcombat.skill.breakingswipe.wide.on": "广域式：张角拉到 235°、半径 ×1.12，一次罩住一片人；代价是威力 ×0.85、起手 +2 刻、冷却 +8 刻。",
   "worldcombat.skill.breakingswipe.wide.off": "聚扫式：威力 ×1.12，打得更重，但只扫到身前一道。",
@@ -29,5 +29,6 @@
   "worldcombat.skill.breakingswipe.preference.ai.cluster": "瞄准扎堆",
   "worldcombat.skill.breakingswipe.preference.ai.cluster.help": "开启：目标身边 3.2 格内还有别的敌人时排得更前，一次压低多人；关闭则只按普通交战排序。",
   "world_combat.move.breakingswipe.text.drop": "攻击下降 ×%1$s",
-  "world_combat.move.breakingswipe.text.miss": "尾扫落空"
+  "world_combat.move.breakingswipe.text.miss": "尾扫落空",
+  "worldcombat.skill.breakingswipe.value.maxTargets": "扫中上限"
 }

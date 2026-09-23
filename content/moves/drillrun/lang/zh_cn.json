@@ -31,5 +31,6 @@
   "worldcombat.skill.drillrun.preference.ai.line.help": "开启：身前冲刺走廊上排着两个以上敌人时优先起钻，一次贯穿一串；关闭：不数直线，当普通中近程钻击排序。",
   "world_combat.move.drillrun.text.vital": "钻中要害！",
   "world_combat.move.drillrun.text.hit": "钻穿了！",
-  "world_combat.move.drillrun.text.miss": "直冲钻钻了个空"
+  "world_combat.move.drillrun.text.miss": "直冲钻钻了个空",
+  "worldcombat.skill.drillrun.description.3": "施放者贴地直线前冲，同一个对手只被钻尖咬一次；撞上墙或挡不住的实体就停下。"
 }

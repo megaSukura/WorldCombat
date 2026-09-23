@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.woodhammer.summary": "把躯体绷硬成一柄木槌，抬起身体再整副砸下：命中造成重击并把目标砸飞、压下一段速度，落点周围的地表被震裂（稍后恢复），自己承担反震。防御直接参与威力，硬体也减轻反伤。",
-  "worldcombat.skill.woodhammer.description.0": "这一砸造成 %1$s 的接触伤害，能够到 %2$s 格、抬起 %3$s 格再砸下、判定半径 %4$s 格。",
-  "worldcombat.skill.woodhammer.description.1": "命中后自己按实际伤害的 %1$s 反伤、把目标砸飞 %2$s 格并压下 %3$s 级速度；落点周围砸裂 %4$s 块地表。",
+  "worldcombat.skill.woodhammer.description.0": "这一砸造成约 %1$s 点接触伤害，能够到 %2$s 格、抬起 %3$s 格再砸下、判定半径 %4$s 格。",
+  "worldcombat.skill.woodhammer.description.1": "命中后自己按实际伤害的 %1$s 倍反伤、把目标砸飞 %2$s 格并压下 %3$s 级速度。",
   "worldcombat.skill.woodhammer.root.on": "扎根式：威力、击退与地裂都更大，但反伤更重、起手与收招更慢。",
   "worldcombat.skill.woodhammer.root.off": "开山式：更快的挥砸，威力与地裂收一档。",
   "worldcombat.skill.woodhammer.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
@@ -33,5 +33,6 @@
   "worldcombat.skill.woodhammer.preference.ai.preferHeld": "留给走不动的目标",
   "worldcombat.skill.woodhammer.preference.ai.preferHeld.help": "开启：睡着、被定住的目标排得更前——慢挥的一记留给躲不开的人；关闭：只按威胁与距离排序。",
   "world_combat.move.woodhammer.text.hit": "木槌",
-  "world_combat.move.woodhammer.text.whiff": "砸空"
+  "world_combat.move.woodhammer.text.whiff": "砸空",
+  "worldcombat.skill.woodhammer.description.crack": "无论中与不中，每次落地都会把周围最多 %1$s 块地表砸裂（泥土类变成粗土、石头类变成圆石），%2$s 后恢复原样。"
 }

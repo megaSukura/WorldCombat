@@ -3,11 +3,11 @@
   "worldcombat.skill.healbell.use.0": "对方一次挂上多个异常时一震全清",
   "worldcombat.skill.healbell.use.1": "把睡着的伙伴震醒、把麻痹的伙伴松开",
   "worldcombat.skill.healbell.use.2": "队友都围在身边时一次洗掉整队的异常",
-  "worldcombat.skill.healbell.description.0": "铃声扫过 %1$s 格内的自己与伙伴，共响 %2$s 声，每一声都替范围里带着异常的人洗掉。",
-  "worldcombat.skill.healbell.description.1": "每隔 %1$s 清除一次范围内队友的负面状态。",
+  "worldcombat.skill.healbell.description.0": "以自己为心，铃声每次覆盖 %1$s 格内的自己与伙伴，一次施放共响 %2$s 声；每一声都清除范围内所有人身上的全部有害状态效果（含原版与其他模组的效果）。它不回复生命，也不留下持续状态。",
+  "worldcombat.skill.healbell.description.1": "每隔 %1$s 再响一声，重响时重新清洗当时范围内自己与伙伴身上的异常；范围内没有任何有害状态时无法发动。",
   "worldcombat.skill.healbell.stance.resonant": "长鸣：铃声半径 ×1.25、多响一声，代价是起手与冷却更长（一次更透彻的全清）。",
   "worldcombat.skill.healbell.stance.short": "短鸣：起手更快、冷却更短，半径与声数维持基础（一次更频繁的净化）。",
-  "worldcombat.skill.healbell.timing": "自身招式；准备 %2$s 秒后消耗 %4$s PP 发动，之后收招 %3$s 秒，冷却 %5$s 秒。准备期间不能移动，可被打断。",
+  "worldcombat.skill.healbell.timing": "自身招式；准备 %1$s 秒后消耗 %3$s PP 发动，之后收招 %2$s 秒，冷却 %4$s 秒。准备期间不能移动，可被打断。",
   "worldcombat.skill.healbell.value.chimeRadius": "铃声半径",
   "worldcombat.skill.healbell.value.peals": "铃响次数",
   "worldcombat.skill.healbell.value.pealGap": "铃声间隔",
@@ -23,6 +23,6 @@
   "worldcombat.skill.healbell.preference.ai.chimeReach.help": "队友离自己这个距离以内才把他算进铃声；调小只在贴身时响，调大愿意为稍远的伙伴响铃。",
   "world_combat.move.healbell.text.cleanse": "治愈铃声 ×%1$s",
   "world_combat.move.healbell.text.none": "无可净化",
-  "worldcombat.skill.healbell.growth.0": "达到 %1$s 级，冷却调整为 %2$s。",
-  "worldcombat.skill.healbell.growth.1": "达到 %1$s 级，冷却调整为 %2$s。"
+  "worldcombat.skill.healbell.growth.0": "达到 %1$s 级后，冷却额外缩短 1 秒。",
+  "worldcombat.skill.healbell.growth.1": "达到 %1$s 级后，冷却的额外缩短提高到 2.1 秒，替代前一档。"
 }

@@ -129,8 +129,9 @@ namespace PokemonSkills {
         rationale: "水墙拍上去把力摊开，钝撞更容易透过护甲，让体格与等级差更明显。" }, { contact: true });
 
     describe("wavecrash", [
-        { key: "description.0", values: ["surge", "rush", "pace", "collisionRadius"] },
-        { key: "description.1", values: ["recoil", "drench", "push"] },
+        { key: "description.0", values: ["surge","rush","pace","collisionRadius"] },
+        { key: "description.1", values: ["recoil","drench","push"] },
+        { key: "description.wet", values: [] },
         { key: "thick.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "thick.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

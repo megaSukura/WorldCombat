@@ -126,8 +126,9 @@ namespace PokemonSkills {
     defineDamage("hammerarm", "hammer", {}, { contact: true, punch: true });
 
     describe("hammerarm", [
-        { key: "description.0", values: ["hammer", "reach"] },
-        { key: "description.1", values: ["knock", "speedLoss"] },
+        { key: "description.0", values: ["hammer","reach"] },
+        { key: "description.1", values: ["knock","speedLoss"] },
+        { key: "description.ground", values: ["cleft","dents"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "followthrough.on", values: ["cleft", "dents"], when: function (context) { return read(context.detail.values, ["followthrough"]) === true; } },
         { key: "followthrough.off", values: [], when: function (context) { return read(context.detail.values, ["followthrough"]) !== true; } },

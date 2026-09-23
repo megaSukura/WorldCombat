@@ -158,8 +158,8 @@ namespace PokemonSkills {
     describe("bubblebeam", [
         { key: "description.0", values: ["foam"] },
         { key: "description.1", values: ["radius", "velocity", "reach"] },
-        { key: "description.2", values: ["slowChance", "slowStages", "clingTicks"] },
-        { key: "description.3", values: ["splash", "foamRadius"] },
+        { key: "description.2", values: ["slowChance","slowStages","clingTicks"] },
+        { key: "description.3", values: ["splash","foamRadius"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

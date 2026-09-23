@@ -3,7 +3,7 @@
   "worldcombat.skill.tailwhip.use.0": "Break the guard of a whole ring when surrounded",
   "worldcombat.skill.tailwhip.use.1": "Open a gap for an ally's physical attacks",
   "worldcombat.skill.tailwhip.use.2": "Clip the enemies that slipped around behind you",
-  "worldcombat.skill.tailwhip.description.0": "Foes caught by the tail lose %1$s Defense stage(s) and stay dazed for %2$s.",
+  "worldcombat.skill.tailwhip.description.0": "Foes swept by the tail truly lose %1$s Defense stage(s) and are marked guardbroken for %2$s; the mark itself changes no stats, but a target carrying it loses one more Defense stage to moves that rip open an old gap. The sweep itself deals no damage.",
   "worldcombat.skill.tailwhip.description.1": "Tail radius %1$s catches every visible non-friendly inside it. Line of sight is required; cover blocks it.",
   "worldcombat.skill.tailwhip.description.2": "Windup %1$s with a %2$s cooldown. A full ring around you, so enemies behind are swept too.",
   "worldcombat.skill.tailwhip.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

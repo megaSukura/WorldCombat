@@ -1,24 +1,21 @@
-/**
- * 辅助齿轮 / gearup —— 执行组织与结算。
- *
- * 核心念头：体内的齿轮当场啮合、越转越快，转速到顶的一刻，几条齿链把动力甩给紧贴身边的正电／负电伙伴
- *   （含自己），它们身上迸出钢屑，物攻与特攻随转速抬起来。齿轮转一会儿就锁定，动力随即消散。
- *
- * 三幕：
- *   起 `spin`（windup，提交前）：齿轮空转、齿屑贴着体内亮起，只播预告，可被打断、不花代价。
- *   啮 `mesh`（提交后）：一圈齿链沿半径 `chain` 甩出；圈内每个正电／负电**友方**（含施法者本身）
- *     各抬一次物攻与特攻，挂上共享身份 `world_combat:status/geared` 的传动状态。
- *   锁 `fade`：动力走完、被人解除时，本单元抬起的物攻与特攻按记录原样收回。
- *
- * 与同族分开：磁场操控在地上留一片久一点的场、管双防；辅助齿轮只在这一刻把动力传给身边的人、管双攻，传完即散。
- */
+/** 给附近符合传动条件的友方暂时提高攻击和特攻：正电、负电宝可梦，以及铁傀儡或手持金属工具的伙伴。 */
 namespace PokemonSkills {
     function gearupStage(world: CombatWorld, actor: CombatActor, stat: string): number {
         return NativeEffects.stage(NativeEffects.read(world, actor), stat);
     }
-    /** 现行特性（含被层改写或压制的），去掉命名空间后比正电／负电。 */
-    function gearupPolarity(world: CombatWorld, actor: CombatActor): string {
-        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return "";
+    /** 资格来自当前正负电特性，或普通活体的身体/装备材料。 */
+    export function gearupPolarity(world: CombatWorld, actor: CombatActor): string {
+        if (!world.valid(actor)) return "";
+        if (String(actor.domain()) !== "cobblemon") {
+            const type = world.entityType(actor);
+            if (type !== null && String(type.id()) === "minecraft:iron_golem") return "metal";
+            const equipment = world.equipment(actor);
+            for (let i = 0; i < equipment.length; i++) {
+                const slot = String(equipment[i].slot());
+                if ((slot === "mainhand" || slot === "offhand") && NativeItems.magneticEquipment(equipment[i])) return "metal";
+            }
+            return "";
+        }
         const pokemon = CobblemonCombat.pokemon(actor);
         const name = String(NativeEffects.ability(pokemon, NativeEffects.read(world, actor))).replace("cobblemon:", "").toLowerCase();
         return name === "plus" || name === "minus" ? name : "";
@@ -74,9 +71,8 @@ namespace PokemonSkills {
         id: gearupId,
         cooldownParameter: "wait",
         name: "辅助齿轮",
-        description: "启动体内的齿轮，把动力沿齿链甩给紧贴身边的正电／负电己方宝可梦，攻击与特攻一起提高；"
-            + "动力转一会儿就散，这份提升随之收回。",
-        uses: ["给贴身的正负电伙伴一起加双攻", "在近身缠斗前把输出拉起来", "让带正负电特性的队友一起变强"],
+        description: "给附近符合传动条件的友方暂时提高攻击和特攻：正电、负电宝可梦，以及铁傀儡或手持金属工具的伙伴。",
+        uses: ["为正负电伙伴、铁傀儡或持金属工具的队友提高攻击", "在近身缠斗前把输出拉起来", "让带正负电特性的队友一起变强"],
         kind: "self",
         range: 1,
         maxRange: 1,

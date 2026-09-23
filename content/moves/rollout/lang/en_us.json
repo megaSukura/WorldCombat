@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.rollout.summary": "Curl into a stone ball and roll into the target again and again: every landed pass doubles the next one's power (up to 5 passes), and a hit knocks the target away, so you have to close in to keep going. A whiff or any other committed move wipes the chain.",
-  "worldcombat.skill.rollout.description.0": "Each pass deals %1$s contact damage; the chain runs up to %2$s passes and simply spends itself at the end.",
+  "worldcombat.skill.rollout.summary": "Curl into a stone ball and roll into the target again and again: every landed pass makes the next one heavier (up to 5 passes), and a hit knocks the target away, so you have to close in to keep going. A whiff or any other move wipes the chain.",
+  "worldcombat.skill.rollout.description.0": "Each pass rolls along the path ahead and hits the first enemy for about %1$s contact damage; the chain runs up to %2$s passes, then spends itself and the level resets.",
   "worldcombat.skill.rollout.description.1": "Each pass hits for %1$s, reaches %2$s blocks with a %3$s-block hitbox, and knocks the target %4$s blocks away.",
-  "worldcombat.skill.rollout.description.2": "On a hit the ball bounces back %1$s blocks; keep rolling within %2$s to keep the chain and double the next pass.",
+  "worldcombat.skill.rollout.description.2": "On a hit the ball bounces back %1$s blocks; roll the same move again within %2$s to keep the chain and make the next pass heavier. A whiff, or committing to any other move, wipes the chain at once.",
   "worldcombat.skill.rollout.heavy.on": "Heavy ball: each landed pass multiplies the next by 2.35 and the chain window runs 8 ticks longer; costs 5% hit chance per pass, 0.92x rolling reach, 0.9x lunge, +1 tick preparation, +2 ticks recovery and +8 ticks cooldown - a heavier roll, though harder to keep going and dearer.",
   "worldcombat.skill.rollout.heavy.off": "Light ball (the native form): 2x per pass, 2% more hit chance, longer rolling and lunge distance, a shorter recovery and 4 ticks less cooldown; at a lower per-pass power ceiling - a smoother and cheaper roll.",
   "worldcombat.skill.rollout.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

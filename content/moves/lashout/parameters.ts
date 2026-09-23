@@ -1,28 +1,4 @@
-/**
- * 泄愤 / lashout —— 参数与伤害段。
- *
- * 原生事实：Dark／物理／威力 75／命中 100／PP 5／接触；「若在该回合内自身能力遭到降低，威力翻倍」（Cobblemon 1.8）。
- *
- * 翻译：即时战斗里没有回合，本实现把「本回合内能力被降低」翻成可观察的事实——出手时自身任一项能力等级为负
- * （被削弱的状态还在，怒气就还在）。满足时这一记翻倍；命中后把积压的负等级发泄掉：
- * 开启宣泄时一次性清空全部负等级，并把怒气化作一段攻击提升；关闭时只消掉一级、冷却更短。
- *
- * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
- *   lashout    发泄威力 75 + 物攻偏移 + 受挫等级 ×2.5；自身有负等级时 ×2。
- *   down       受挫等级：自身五项能力中负等级的总和（自定义事实，读共享能力等级）。
- *   dash       欺身距离 2.4 格 + 速度偏移 + 受挫等级偏移（越憋越急，欺得更近）。
- *   speed      每刻位移 0.75 格/刻 + 速度偏移。
- *   collisionRadius 判定半径 0.45 格 + 体型高度偏移。
- *   push       击退 0.4 格 + 物攻偏移。
- *   ventLevels 宣泄级数：宣泄开启时 9（清空），关闭时 1（只消一级）。
- *   rageStages 怒攻级数 1 + 受挫等级/4；宣泄开启时命中后加到自己物攻上。
- *   rageTicks  怒攻持续 6 秒 + 等级偏移。
- *   tempo      起手 5 刻 − 速度偏移 + 宣泄 3 刻。
- *   settle     收招 8 刻。
- *   recharge   冷却 28 刻 − 速度偏移 + 宣泄 8 刻。
- *
- * 伤害段 `lashout` 与参数同名，走共享换算（原生类别 Physical，Dark 属性）。
- */
+/** lashout：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const lashoutId = "lashout";
     export const lashoutScene = "world_combat:move_lashout";
@@ -42,7 +18,7 @@ namespace PokemonSkills {
             const value = stages[stat] || 0;
             if (value < 0) total += -value;
         });
-        return total;
+        return total + MobEffects.levels(world, actor, "harmful");
     }
 
     /** 从最负的一项开始，最多消掉 budget 级负等级；返回实际消掉的级数。 */
@@ -60,7 +36,7 @@ namespace PokemonSkills {
             stages[worst] = value + 1;
             removed++;
         }
-        return removed;
+        return removed + MobEffects.reduce(world, actor, "harmful", budget - removed);
     }
 
     defineFacts(lashoutId, function (context: FactContext): Formula.Facts {

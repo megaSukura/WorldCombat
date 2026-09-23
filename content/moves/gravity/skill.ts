@@ -10,6 +10,7 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: gravityId,
         name: "重力",
         description: "在选定的地面压下一口重力井：井里的活体被拽向地面、浮空身份被拔掉，飞向空中的招式再也使不出来。对双方一视同仁。",

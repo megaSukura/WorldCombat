@@ -91,7 +91,7 @@ namespace PokemonSkills {
         id: "wrap",
         cooldownParameter: "recharge",
         name: "Wrap",
-        description: "A ring of long body or vines wraps the target head to foot, pinning it in place and squeezing the strength out of its blows. The coil tightens on its own, so the user can walk away; it lasts until it runs out or is torn open by a strong shove.",
+        description: "甩出一圈长身或藤蔓把目标自下而上裹住、绞紧：命中就把它钉在原地，并把它挥拳的力气一并压住。藤茧自己收紧，不需要你维持——甩完就能走开。目标只能等藤茧走完，或被外力一脚踹到足够快把它撕开。",
         uses: ["钉住一个危险目标并压住它的攻击", "把对手按在原地交给队友", "用藤茧独自磨掉一个难缠的近战目标"],
         kind: "enemy",
         range: 2.7,

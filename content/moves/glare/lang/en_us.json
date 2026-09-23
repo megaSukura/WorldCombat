@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.glare.summary": "Rear up and spread the belly pattern into a frontal fan that freezes every enemy in it who can see the user. It deals no damage; its breadth, reliability and the longest paralysis of the three are its strength. Ducking behind cover, stepping to the side or standing outside the fan leaves a target untouched. Electric types are immune to paralysis.",
   "worldcombat.skill.glare.description.0": "The fan reaches %1$s blocks with a %2$s degree opening; every target in it needs an unobstructed line to the user.",
-  "worldcombat.skill.glare.description.1": "Caught targets are paralysed for %1$s; it lasts longer than Thunder Wave or Stun Spore, at the cost of the shortest reach and longest windup.",
+  "worldcombat.skill.glare.description.1": "Caught targets are paralysed for %1$s: while paralysed they move at half speed and every action has a 25%% chance to fail. It lasts longer than Thunder Wave or Stun Spore, at the cost of the shortest reach and longest windup.",
   "worldcombat.skill.glare.spread.on": "Spread hood: opening x1.35, windup -2, cooldown x0.9, but reach x0.85 and paralysis x0.85 - to freeze a crowd at once.",
   "worldcombat.skill.glare.spread.off": "Rear up: opening x0.7, reach x1.15 and paralysis x1.2 - to pin a single hard target from afar.",
   "worldcombat.skill.glare.timing": "Instant fan: range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

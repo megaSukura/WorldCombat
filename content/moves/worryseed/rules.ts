@@ -11,9 +11,13 @@ namespace PokemonSkills {
         id: "world_combat:move_worryseed/sleep-gate",
         applies: function (context) {
             return context.allowed && context.name === "sleep"
-                && String(context.actor.domain()) === "cobblemon" && context.world.valid(context.actor);
+                && context.world.valid(context.actor);
         },
         apply: function (context) {
+            if (MobEffects.read(context.world, context.actor, worryseedMark) !== null) {
+                context.allowed = false; context.reason = "worryseed-awake"; return;
+            }
+            if (String(context.actor.domain()) !== "cobblemon") return;
             const pokemon = CobblemonCombat.pokemon(context.actor);
             const ability = NativeEffects.ability(pokemon, NativeEffects.read(context.world, context.actor));
             if (ability === "insomnia" || NativeAbilities.flag(ability, "statusImmune")) {

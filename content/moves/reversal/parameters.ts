@@ -89,8 +89,8 @@ namespace PokemonSkills {
 
     describe("reversal", [
         { key: "description.0", values: ["power"] },
-        { key: "description.1", values: ["plant", "lunge", "lungeSpeed"] },
-        { key: "description.2", values: ["burstRadius", "push", "collisionRadius"] },
+        { key: "description.1", values: ["plant","lunge","lungeSpeed"] },
+        { key: "description.2", values: ["burstRadius","push","collisionRadius"] },
         { key: "reckless.on", values: ["recoil"], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },
         { key: "timing", values: ["range", "plant", "recover", "pp", "cooldown"] }

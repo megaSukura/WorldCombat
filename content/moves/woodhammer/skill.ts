@@ -55,10 +55,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "woodhammer",
         cooldownParameter: "recharge",
         name: "Wood Hammer",
-        description: "The user slams its rugged body into the target to attack. This also damages the user quite a lot.",
+        description: "把躯体绷硬成一柄木槌，抬起身体再整副砸下：命中造成重击并把目标砸飞、压下一段速度，落点周围的地表被震裂（稍后恢复），自己承担反震。防御直接参与威力，硬体也减轻反伤。",
         uses: ["砸实一个贴身的厚目标", "把目标砸得踉跄、削掉速度", "在落点砸出一圈地裂，标记这一击的位置"],
         kind: "enemy",
         range: 2.6,

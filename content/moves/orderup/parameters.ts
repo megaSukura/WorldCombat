@@ -119,10 +119,10 @@ namespace PokemonSkills {
     ]);
 
     describe("orderup", [
-        { key: "description.0", values: ["serve", "serveWidth"] },
-        { key: "description.1", values: ["reach", "wardBreak"] },
-        { key: "description.2", values: ["dishRange", "serveStages", "shareRadius"] },
-        { key: "share.on", values: [], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
+        { key: "description.0", values: ["serve","serveWidth"] },
+        { key: "description.1", values: ["reach","wardBreak"] },
+        { key: "description.2", values: ["dishRange","serveStages","shareRadius"] },
+        { key: "share.on", values: ["serveStages"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
         { key: "share.off", values: [], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.serve"] },

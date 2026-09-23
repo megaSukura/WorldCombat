@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.rototiller.summary": "翻耕选定的地面：只要这块翻过的黑土还在，站在上面、脚踩实了的草属性宝可梦物攻与特攻一起提高；离地浮空、走出这块土，或土地复原时，这份提升一并收回。",
+  "worldcombat.skill.rototiller.summary": "翻耕选定区域，并照料其中的作物。草属性宝可梦踩在翻过的土地上时攻击与特攻提高；离地或走出区域后提升消失。",
   "worldcombat.skill.rototiller.use.0": "把草属性伙伴脚下的地翻开，让它们一起变强",
   "worldcombat.skill.rototiller.use.1": "在交战位置先翻一块土，逼对手绕开",
   "worldcombat.skill.rototiller.use.2": "给浮空的草属性留一块踩不到的地",
-  "worldcombat.skill.rototiller.description.0": "翻出一片半径 %1$s 格的黑土，留 %2$s。",
-  "worldcombat.skill.rototiller.description.1": "站在土上的草属性物攻与特攻各提高 %1$s 级。",
+  "worldcombat.skill.rototiller.description.0": "翻耕半径 %1$s 格的土地，持续 %2$s；施放时对其中至多八株可生长植物各进行一次催长。保留已有作物和耕地。",
+  "worldcombat.skill.rototiller.description.1": "草属性宝可梦站稳在区域内时，攻击与特攻各提高 %1$s 级；离场、离地或效果结束时收回。",
   "worldcombat.skill.rototiller.description.2": "射程 %1$s 格；起手 %2$s、收招 %3$s、冷却 %4$s。",
   "worldcombat.skill.rototiller.ridge.on": "垄作：地更大、更久、双攻再 +1，但起手 +3 刻、冷却 ×1.15。",
   "worldcombat.skill.rototiller.ridge.off": "急耕：地更小、时更短、双攻按本体，起手与冷却都更省——打完就走。",

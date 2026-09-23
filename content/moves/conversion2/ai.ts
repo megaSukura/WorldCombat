@@ -1,16 +1,4 @@
-/**
- * 纹理２ / conversion2 —— AI 用途。
- *
- * 出手局面：目标可见、敌对、存活，在 `ai.maxChase`（默认 12）格内，有一条通视直线。挂在共享的 control 位上：
- *   它是一次防御性的应招，不抢攻击的位置。
- * 对谁出手：读目标最后那一手的属性（决策内缓存）。若那一手正好克制自己当前的属性（≥2×），priority 抬到 60，
- *   先把自己的受击面翻过去；否则只当作普通控制，12。
- * 注意：是否「读得到属性、有可换的抗性属性」由提交前的 ready 校验，不放进 available——否则对手还没出手时
- *   伙伴会以为无招可用而退开，读解就等不到可读那一刻。伙伴照常贴近、反复尝试。
- * 够不到怎么办：射程交给 reach，共享任务把身位收进通视射程后再放。
- * 放完接什么：交回共享交战计划；重织的属性能顶住那一类攻击，不需要继续盯着。
- * 配置 prioritize 决定挑哪一种抗性属性：最硬（对那一招乘数最低）或顾全（整体受击面最好）。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace PokemonSkills {
     /** 只读、决策内缓存：目标最后使用的那一手的属性；没有返回 ""。 */
     CompanionBehavior.registerFact("world_combat:conversion2-last", function (access, actor, _argument) {

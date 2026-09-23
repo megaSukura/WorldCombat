@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.stunspore.summary": "Toss a puff of numbing powder to where the target stands; it bursts into a cloud that lingers there. Anyone standing in it is kept paralysed, and stepping out lets the paralysis run down its remaining time. It is the only one of the three paralysis moves that stays in the world, so foes can walk around it or wait it out. Grass types pass through powder, Electric types through paralysis.",
   "worldcombat.skill.stunspore.description.0": "The puff is thrown to a point within %1$s blocks at %2$s blocks per tick and covers a %3$s block radius on landing.",
-  "worldcombat.skill.stunspore.description.1": "The cloud lingers for %1$s; non-friendly bodies inside are kept paralysed for %2$s, and leaving still runs that remainder down.",
+  "worldcombat.skill.stunspore.description.1": "The cloud lingers for %1$s; non-friendly bodies inside are kept paralysed for %2$s - paralysis cuts movement speed by about 50% and gives each attempt a 25% chance to fail. Stepping out lets the remainder run down.",
   "worldcombat.skill.stunspore.thick.on": "Thick cloud: radius x0.8, duration x1.3 and paralysis x1.25, but cooldown x1.15 - to seal one patch of ground.",
   "worldcombat.skill.stunspore.thick.off": "Loose cloud: radius x1.2, easier to catch several moving targets at once, but shorter, fainter and with a shorter cooldown.",
   "worldcombat.skill.stunspore.timing": "Thrown to a point: range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
@@ -26,5 +26,6 @@
   "worldcombat.skill.stunspore.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.stunspore.preference.ai.leaveStation.help": "When on, the companion may leave its post to scatter powder; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.stunspore.text.land": "The numbing cloud settles",
-  "world_combat.move.stunspore.text.caught": "Numbed (paralysed %1$s s)"
+  "world_combat.move.stunspore.text.caught": "Numbed (paralysed %1$s s)",
+  "worldcombat.skill.stunspore.description.2": "Grass types pass through the powder untouched and Electric types are immune to paralysis; the cloud also fades if the caster goes down or leaves."
 }

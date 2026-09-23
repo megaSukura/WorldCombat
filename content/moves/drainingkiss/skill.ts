@@ -22,7 +22,7 @@ namespace PokemonSkills {
         id: drainingkissId,
         cooldownParameter: "recharge",
         name: "Draining Kiss",
-        description: "用一个吻吸取对手的HP。回复给予对手伤害的一半以上的HP。",
+        description: "凑到对手脸前送上一吻，把它的HP吸过来；按实际造成的伤害回补自身，是家族里回血最黏的一口。",
         uses: ["贴身把对手的一口气吸回来", "血量偏低时用最短的一吻续航", "在缠斗里顺手把血线拉回来"],
         kind: "enemy",
         range: 3.0,

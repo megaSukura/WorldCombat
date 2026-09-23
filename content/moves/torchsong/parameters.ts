@@ -94,8 +94,8 @@ namespace PokemonSkills {
     ]);
 
     describe("torchsong", [
-        { key: "description.0", values: ["song", "pulses", "interval"] },
-        { key: "description.1", values: ["reach", "spread", "spaGift", "push"] },
+        { key: "description.0", values: ["song","pulses","interval"] },
+        { key: "description.1", values: ["reach","spread","push","spaGift"] },
         { key: "marcato.on", values: [], when: function (context) { return read(context.detail.values, ["marcato"]) === true; } },
         { key: "marcato.off", values: [], when: function (context) { return read(context.detail.values, ["marcato"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

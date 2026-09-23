@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.assist.summary": "向附近伙伴求助，从它们已学会的招式中随机借一个使出。",
+  "worldcombat.skill.assist.summary": "向附近伙伴求助，借它们已学会的一个招式由自己使出；借来的招式范围有限，也必须够得着目标，没有可借的招式时不会发动。",
   "worldcombat.skill.assist.use.0": "呼唤附近伙伴",
   "worldcombat.skill.assist.use.1": "随机借出一个伙伴招式",
-  "worldcombat.skill.assist.description.0": "呼唤 %1$s 后，从呼唤半径内伙伴已学会的招式中随机借出一个并使出；身边没有伙伴时不会发动。",
+  "worldcombat.skill.assist.description.0": "呼唤 %1$s 后，从呼唤半径内伙伴已学会的招式中随机借一个，由自己当场使出；身边没有伙伴或没有借得动的招式时不会发动。",
   "worldcombat.skill.assist.description.1": "呼唤半径为 %1$s，借出的招式射程不超过 %2$s。",
   "worldcombat.skill.assist.description.2": "当前求助半径设置：%1$s。呼唤得更远能覆盖更多伙伴，但需要喊更久。",
-  "worldcombat.skill.assist.description.3": "再次求助需要 %1$s。",
+  "worldcombat.skill.assist.description.3": "借出的招式不消耗伙伴的招式次数，只扣施放者 %1$s PP；再次求助需要 %2$s。",
   "worldcombat.skill.assist.preference.callRadius": "求助半径",
   "worldcombat.skill.assist.preference.callRadius.help": "调大能听见更远的伙伴、候选更多，但呼唤时间变长；调小出手更快，但独行或伙伴分散时可能借不到招式。",
   "worldcombat.skill.assist.value.call": "呼唤时间",
@@ -13,5 +13,6 @@
   "worldcombat.skill.assist.value.span": "借用距离",
   "worldcombat.skill.assist.value.recharge": "再次求助",
   "worldcombat.skill.assist.value.bonds": "伙伴印记",
-  "world_combat.move.assist.text.borrow": "借助使出了 %1$s"
+  "world_combat.move.assist.text.borrow": "借助使出了 %1$s",
+  "worldcombat.skill.assist.description.filter": "并非所有招式都能借用：一部分招式被排除在外，借出的招式还必须够得着目标；候选里没有这样的招式时，这一声呼唤落空。"
 }

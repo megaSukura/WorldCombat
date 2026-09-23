@@ -4,7 +4,7 @@
   "worldcombat.skill.incinerate.use.1": "烧掉对手的树果或宝石，让它再也用不了",
   "worldcombat.skill.incinerate.use.2": "对持有可燃物者的加重火焰一击",
   "worldcombat.skill.incinerate.description.0": "扇形火焰造成约 %1$s 的火属性特殊伤害，半张角 %2$s 度；扇内每个非友方各结算一次，对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.incinerate.description.1": "扇面朝瞄准方向铺开 %1$s 格；烧到树果或宝石的目标额外吃约 %2$s 威力，那件东西被当场烧毁。",
+  "worldcombat.skill.incinerate.description.1": "扇面朝瞄准方向铺开 %1$s 格；烧到树果或宝石的目标额外吃约 %2$s 威力，那件东西被当场烧毁、谁也拿不到，本场再也用不了。",
   "worldcombat.skill.incinerate.wide.on": "开启广域：扇面张角 ×1.5、本击 ×0.9、射程 ×0.85、冷却 +4 刻，用伤害换更宽的一扫。",
   "worldcombat.skill.incinerate.wide.off": "关闭广域：张角收窄，射程更远、本击更重、冷却更短。",
   "worldcombat.skill.incinerate.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

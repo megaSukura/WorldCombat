@@ -2,7 +2,7 @@
   "worldcombat.skill.falsesurrender.summary": "The user bows low as if conceding to draw the foe's attention away, then lashes its disheveled hair out of that lowest point straight under the guard: the strike starts low and sudden, so it cannot be dodged. The less the foe is watching the user, the harder it lands, at the cost of the user being unable to move while bowed.",
   "worldcombat.skill.falsesurrender.description.0": "The hair lash deals about %1$s damage, plus %2$s when the target is not attacking the user (the feint worked). Defence, type matchup and crit are settled on the hit.",
   "worldcombat.skill.falsesurrender.description.1": "The hair reaches a target within %1$s blocks, lashing out at %2$s blocks/tick with a %3$s block tip radius.",
-  "worldcombat.skill.falsesurrender.description.2": "The bow takes %1$s s (the user cannot move while bowed); the strike drives the target back %3$s blocks and pins it for %2$s s.",
+  "worldcombat.skill.falsesurrender.description.2": "The bow takes %1$s s, during which the user cannot move; a hit drives the target back up to %3$s blocks and pins it in place for %2$s s (unable to move).",
   "worldcombat.skill.falsesurrender.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.falsesurrender.growth.0": "At level %1$s: lash power %2$s and hair reach %3$s blocks.",
   "worldcombat.skill.falsesurrender.growth.1": "At level %1$s: lash power %2$s and ambush bonus %3$s.",

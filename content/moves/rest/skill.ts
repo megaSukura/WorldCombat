@@ -44,8 +44,9 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: restId, name: "睡觉",
-        description: "就地睡下，睡着期间无法行动；睡满后回复全部缺失的生命、治愈所有异常并获得短暂加速，中途被打醒只能按睡到的比例回复、还会迟缓一阵。",
+        description: "就地睡下，睡着期间无法行动；睡满后回复全部缺失的生命、治愈身上全部异常并获得移动加速，中途被任何伤害打醒只按睡到的比例回复，但异常仍会治愈、还会迟缓一阵。",
         uses: ["在安全窗口里回满", "清掉身上的异常状态", "睡满后带着加速重新投入战斗"],
         kind: "self", range: 0, prepare: 12, active: 0, recover: 10, cooldown: 300, style: "rest", maximumTicks: 400,
         defaults: { shortNap: false },

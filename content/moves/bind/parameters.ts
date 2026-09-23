@@ -139,12 +139,13 @@ namespace PokemonSkills {
     defineDamage("bind", "cinch", {}, { contact: true });
 
     describe("bind", [
-        { key: "description.0", values: ["cinch", "reach", "grip"] },
-        { key: "description.1", values: ["leash", "drag", "ramp", "interval"] },
-        { key: "description.2", values: ["duration", "snap"] },
+        { key: "description.0", values: ["cinch","reach","grip"] },
+        { key: "description.1", values: ["leash","drag","ramp","interval"] },
+        { key: "description.2", values: ["duration","snap"] },
+        { key: "description.slow", values: [] },
         { key: "choke.on", values: [], when: function (context) { return read(context.detail.values, ["choke"]) === true; } },
         { key: "choke.off", values: [], when: function (context) { return read(context.detail.values, ["choke"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cinch"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cinch", "tier.1.leash", "tier.1.ramp"] }
     ]);

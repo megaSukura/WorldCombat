@@ -69,8 +69,8 @@ namespace PokemonSkills {
     });
 
     describe(leerId, [
-        { key: "description.0", values: ["drop", "scowlTicks"] },
-        { key: "description.1", values: ["sweepRange", "sweepAngle"] },
+        { key: "description.0", values: ["drop","scowlTicks"] },
+        { key: "description.1", values: ["sweepRange","sweepAngle"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },

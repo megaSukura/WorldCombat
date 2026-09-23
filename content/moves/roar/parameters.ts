@@ -102,6 +102,7 @@ namespace PokemonSkills {
     describe(roarId, [
         { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["flee", "keepOut", "panic"] },
+        { key: "description.additional", values: [] },
         { key: "description.2", values: [] },
         { key: "unleash.on", values: [], when: function (context) { return read(context.detail.values, ["unleash"]) === true; } },
         { key: "unleash.off", values: [], when: function (context) { return read(context.detail.values, ["unleash"]) !== true; } },

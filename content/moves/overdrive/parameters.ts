@@ -113,9 +113,9 @@ namespace PokemonSkills {
     ]);
 
     describe("overdrive", [
-        { key: "description.0", values: ["thrum", "paralyzeChance"] },
-        { key: "description.1", values: ["reach", "width"] },
-        { key: "description.2", values: ["push", "paralyzeTicks"] },
+        { key: "description.0", values: ["thrum","paralyzeChance","maxTargets"] },
+        { key: "description.1", values: ["reach","width","interval"] },
+        { key: "description.2", values: ["push","paralyzeTicks"] },
         { key: "echo.on", values: ["echoRatio"], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
         { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

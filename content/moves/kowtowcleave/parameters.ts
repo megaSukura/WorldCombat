@@ -81,9 +81,9 @@ namespace PokemonSkills {
     ]);
 
     describe("kowtowcleave", [
-        { key: "description.0", values: ["cleave", "guardBonus"] },
-        { key: "description.1", values: ["guardStages", "guardTicks", "baitRange"] },
-        { key: "description.2", values: ["lunge", "push", "collisionRadius"] },
+        { key: "description.0", values: ["cleave","guardBonus"] },
+        { key: "description.1", values: ["guardStages","guardTicks","baitRange"] },
+        { key: "description.2", values: ["lunge","push","collisionRadius"] },
         { key: "description.3", values: ["bowTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cleave"] },

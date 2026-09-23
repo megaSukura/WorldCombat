@@ -85,7 +85,7 @@ namespace PokemonSkills {
     ]);
 
     describe("harden", [
-        { key: "description.0", values: ["gift", "temper", "window"] },
+        { key: "description.0", values: ["gift","temper","window"] },
         { key: "description.1", values: ["crack"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

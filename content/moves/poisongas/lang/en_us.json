@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.poisongas.summary": "Spray a low-lying cloud of poison gas at a chosen spot. Anyone it covers is poisoned, and while they stand inside the poison keeps being renewed; outside it runs its own course. Any fire in the cloud sets the whole thing off, burning everyone inside.",
   "worldcombat.skill.poisongas.description.0": "The gas is sprayed at a chosen spot within %1$s blocks and settles into a cloud of radius %2$s blocks.",
-  "worldcombat.skill.poisongas.description.1": "The cloud lasts %1$s seconds; those it covers are poisoned for %2$s seconds, affecting at most %3$s targets per scan.",
-  "worldcombat.skill.poisongas.description.2": "When fire enters the cloud it detonates, dealing %1$s blast damage and burning those inside for %2$s seconds.",
+  "worldcombat.skill.poisongas.description.1": "The cloud lasts %1$s seconds and only reaches non-allies it can see inside it; it acts every 5 ticks and covers at most %3$s targets each time. Those it covers are poisoned for %2$s, losing health over time; while they stand inside the poison keeps being topped back up, and outside it runs out on its own. Poison and Steel types are not poisoned.",
+  "worldcombat.skill.poisongas.description.2": "When fire or a burning body appears in the cloud, the whole cloud detonates once: every non-ally in it takes about %1$s fire damage and is burned for %2$s (losing health over time; Fire types cannot be burned). After that the cloud becomes a fire cloud: it no longer poisons and instead keeps burning those it can see inside.",
   "worldcombat.skill.poisongas.use.0": "Seal off a corridor or doorway",
   "worldcombat.skill.poisongas.use.1": "Cover several targets bunched together",
   "worldcombat.skill.poisongas.use.2": "Drop a flame into the gas for a detonation",

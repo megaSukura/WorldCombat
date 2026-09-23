@@ -18,10 +18,11 @@ namespace PokemonSkills {
     const firstimpressionMissText = "world_combat.move.firstimpression.text.miss";
 
     define({
+        freeMovement: true,
         id: firstimpressionId,
         cooldownParameter: "recharge",
         name: "First Impression",
-        description: "A powerful first-strike lunge; it works only right after the user enters battle.",
+        description: "刚被放上场时整段身体扑出去的一记虫甲重砸：出手极快、份量全组最重，撞上就把对手狠狠顶开；一旦自己已经出过手，就要等重新算作「刚出场」才能再砸。",
         uses: ["刚上场就砸出一记最重的扑击", "开场一下把对手打残",
                "趁对手还没反应过来把它顶到墙角"],
         kind: "enemy",

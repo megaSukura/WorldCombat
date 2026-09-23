@@ -89,7 +89,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["sap"] },
         { key: "grasp.on", values: [], when: function (context) { return read(context.detail.values, ["grasp"]) === true; } },
         { key: "grasp.off", values: [], when: function (context) { return read(context.detail.values, ["grasp"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["reach","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.sip"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.sip", "tier.1.sap", "tier.1.reach"] }
     ]);

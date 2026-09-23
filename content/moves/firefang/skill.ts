@@ -27,10 +27,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "firefang",
         cooldownParameter: "recharge",
         name: "Fire Fang",
-        description: "The user bites with flame-cloaked fangs. The bite pierces through and burns even a body that would normally shrug fire off, and may leave the target flinching.",
+        description: "咬穿护甲、把火种按进伤口：命中造成咬合伤害，并按几率点火——这一口会先咬穿免疫，连火属性的身体也烧得着；咬得够狠还会把对手咬懵。焦焰式烧得更穿，快咬式咬得更重。",
         uses: ["贴身咬一口并按几率点着目标", "把火种烧进火属性/免疫特性的身体", "咬懵对手，打断它正在做的事"],
         kind: "enemy",
         range: 2.3,

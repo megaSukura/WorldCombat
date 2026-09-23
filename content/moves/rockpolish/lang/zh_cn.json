@@ -29,5 +29,6 @@
   "worldcombat.skill.rockpolish.preference.ai.minGap.help": "威胁近于这个距离时不再打磨、直接应对；调大更常在近身时放弃提速。",
   "world_combat.move.rockpolish.text.shined": "岩石打磨（速度 +%1$s）",
   "world_combat.move.rockpolish.text.dulled": "光面失亮",
-  "effect.world_combat.rock_polish_shine": "光面"
+  "effect.world_combat.rock_polish_shine": "光面",
+  "worldcombat.skill.rockpolish.description.additional": "光面走完或被提前清除（如牛奶、驱散）时，这次打磨抬起的等级都会立即收回；若速度本已接近上限、这次实际只抬到更少，也只收回实际获得的部分。"
 }

@@ -73,9 +73,9 @@ namespace PokemonSkills {
     });
 
     describe(babydolleyesId, [
-        { key: "description.0", values: ["drop", "softenTicks"] },
+        { key: "description.0", values: ["drop","softenTicks"] },
         { key: "description.1", values: ["gazeRange"] },
-        { key: "stare.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["stare"]) === true; } },
+        { key: "stare.on", values: ["tempo","recharge"], when: function (context) { return read(context.detail.values, ["stare"]) === true; } },
         { key: "stare.off", values: [], when: function (context) { return read(context.detail.values, ["stare"]) !== true; } },
         { key: "description.2", values: ["tempo", "recover"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

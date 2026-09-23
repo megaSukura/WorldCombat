@@ -86,9 +86,10 @@ namespace PokemonSkills {
     ]);
 
     describe("sludgewave", [
-        { key: "description.0", values: ["sludge"] },
+        { key: "description.0", values: ["sludge","maxTargets"] },
         { key: "description.1", values: ["waveRadius", "surgeTicks"] },
-        { key: "description.2", values: ["toxinChance", "push"] },
+        { key: "description.2", values: ["toxinChance","push"] },
+        { key: "description.poison", values: [] },
         { key: "description.3", values: ["puddleTicks", "puddles"] },
         { key: "surge.on", values: [], when: function (context) { return read(context.detail.values, ["surge"]) === true; } },
         { key: "surge.off", values: [], when: function (context) { return read(context.detail.values, ["surge"]) !== true; } },

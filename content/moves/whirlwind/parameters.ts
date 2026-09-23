@@ -8,8 +8,8 @@
  *   沿途扫到的敌人被沿风向推出，并被打上共享身份 `world_combat:status/routed`（本单元效果
  *   world_combat:whirlwind_routed），失去目标、被逐出交战圈；有合法后备的对手会被原生队伍操作真正换下。
  *   它是一条走得远、扫得长的风道，不造成伤害；
- *   风墙走得越远，留给对手闪开的余地越大——离开风道宽度就整发躲过。
- * - 参数分散到精灵数据：风道长度取速度（气息），风道宽度取身高（体量），推进速度取速度，吹飞距离取体重，
+ *   风墙走得越远，留给对手闪开的余地越大——离开风道半径就整发躲过。
+ * - 参数分散到精灵数据：风道长度取速度（气息），风道半径取身高（体量），推进速度取速度，吹飞距离取体重，
  *   溃退时长取特攻，驱逐步长取特攻，保持距离取防御，粒子数量取速度，时序取速度与等级。
  * - 配置 wide（宽阔风墙）：开启＝风墙宽度 ×1.35，代价是长度 ×0.85、吹飞距离 ×0.9；关闭＝又窄又长、
  *   吹得更远，适合远距离清场。两个方向各有适用局面。
@@ -34,15 +34,15 @@ namespace PokemonSkills {
                 unit: " 格",
                 description: "风墙从施法者身前一直推到多远；速度越快推得越远，宽阔风墙会短一些。它也是本招的实际射程与瞄准距离。"
             }),
-        /** 风道宽度：基础 1.7 格 +（身高 − 1.4）×0.5（夹 -0.2..+1.0）；wide ×1.35；夹在 1.2..4 格。 */
+        /** 风道半径：基础 1.7 格 +（身高 − 1.4）×0.5（夹 -0.2..+1.0）；wide ×1.35；夹在 1.2..4 格。 */
         band: formula(
-            F.base(1.7, "风道宽度")
+            F.base(1.7, "风道半径")
                 .plus(F.body("height").minus(1.4).times(0.5).clamp(-0.2, 1.0))
                 .times(F.when(F.pref("wide", text("worldcombat.skill.whirlwind.preference.wide")), F.const(1.35), F.const(1)))
                 .clamp(1.2, 4).round(2),
-            "风道宽度", {
+            "风道半径", {
                 unit: " 格",
-                description: "风墙有多宽（左右两侧各半）；体量越大越宽，宽阔风墙再 ×1.35。站在风道外就整发躲过。"
+                description: "风墙从中心向两侧展开的半径；体量越大越宽，宽阔风墙再 ×1.35。站在风道外就整发躲过。"
             }),
         /** 推进速度：基础 0.7 格/刻 +（速度 − 60）×0.004（夹 -0.1..+0.5）；夹在 0.45..1.2 格/刻。 */
         front: formula(
@@ -124,7 +124,7 @@ namespace PokemonSkills {
     ]);
 
     describe(whirlwindId, [
-        { key: "description.0", values: ["reach", "band"] },
+        { key: "description.0", values: ["reach","band"] },
         { key: "description.1", values: ["front", "blow"] },
         { key: "description.2", values: ["flee", "keepOut", "panic"] },
         { key: "description.3", values: [] },

@@ -115,15 +115,15 @@ namespace PokemonSkills {
     ]);
 
     describe("meteorbeam", [
-        { key: "description.0", values: ["meteor", "splash"] },
+        { key: "description.0", values: ["meteor","splash"] },
         { key: "description.1", values: ["charge", "boost"] },
-        { key: "description.2", values: ["velocity", "blast", "stone"] },
-        { key: "description.3", values: ["blowback", "craterTicks"] },
+        { key: "description.2", values: ["velocity","blast","stone"] },
+        { key: "description.3", values: ["blowback","craterTicks"] },
         { key: "stance.deep", values: [], when: function (context) { return !!read(context.detail.values, ["deep"]); } },
         { key: "stance.light", values: [], when: function (context) { return !read(context.detail.values, ["deep"]); } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level"], when: function (context) { return context.pokemon.level() >= 34; } },
         { key: "growth.1", values: ["tier.1.level"], when: function (context) { return context.pokemon.level() >= 54; } },
-        { key: "growth.2", values: ["tier.2.level", "tier.2.cooldown"], when: function (context) { return context.pokemon.level() >= 70; } }
+        { key: "growth.2", values: ["tier.2.level","tier.2.cooldown"], when: function (context) { return context.pokemon.level() >= 70; } }
     ]);
 }

@@ -19,5 +19,6 @@
   "worldcombat.skill.willowisp.preference.ai.leaveStation.help": "When on, the user may leave its post to cast; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.willowisp.text.burn": "Will-O-Wisp clings",
   "world_combat.move.willowisp.text.immune": "Unaffected by the wisp",
-  "world_combat.move.willowisp.text.fizzle": "The wisp snuffed out"
+  "world_combat.move.willowisp.text.fizzle": "The wisp snuffed out",
+  "worldcombat.skill.willowisp.description.3": "While burned, physical attack damage is halved and the target loses about 1/16 of its maximum health every 5 seconds (at least 1 point); Fire-type and otherwise burn-immune targets are not ignited."
 }

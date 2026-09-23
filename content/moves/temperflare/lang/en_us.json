@@ -3,14 +3,14 @@
   "worldcombat.skill.temperflare.use.0": "Answer a whiff by burning yourself into a charge",
   "worldcombat.skill.temperflare.use.1": "Explode at the impact point and sear the crowd",
   "worldcombat.skill.temperflare.use.2": "Set the struck target alight and char the ground",
-  "worldcombat.skill.temperflare.description.0": "Ram the target wreathed in flame for %1$s physical (Fire) power.",
-  "worldcombat.skill.temperflare.description.1": "On impact a %2$s-block blaze splashes %1$s physical power onto other nearby enemies and shoves them %3$s blocks away.",
-  "worldcombat.skill.temperflare.description.2": "The charge covers %1$s blocks at %2$s per tick; carrying the desperation, the struck catch fire for %3$s and the ground char lingers %4$s across %5$s cells.",
+  "worldcombat.skill.temperflare.description.0": "Ram the target wreathed in flame for about %1$s physical (Fire) damage.",
+  "worldcombat.skill.temperflare.description.1": "On impact a %2$s-block blaze splashes about %1$s physical (Fire) damage onto other nearby enemies; the struck target is shoved %3$s blocks along the charge, while those caught in the blaze are pushed out about seven-tenths as far.",
+  "worldcombat.skill.temperflare.description.2": "Charges up to %1$s blocks at %2$s per tick; while desperate, everything struck or caught in the blaze is set alight for %3$s; desperate or not, the impact point leaves char on the ground for %4$s across up to %5$s blocks, reverting when it expires.",
   "worldcombat.skill.temperflare.reckless.on": "Current: Reckless — charge farther and faster with a bigger blaze, but the ram is looser and the recovery and cooldown are longer.",
   "worldcombat.skill.temperflare.reckless.off": "Current: Controlled — a short, tight charge that recovers cleanly and hits harder once.",
   "worldcombat.skill.temperflare.timing": "Range %1$s blocks, prepare %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.temperflare.growth.0": "At level %1$s the ram power rises to %2$s.",
-  "worldcombat.skill.temperflare.growth.1": "At level %1$s the ram power rises to %2$s and the blaze to %3$s.",
+  "worldcombat.skill.temperflare.growth.1": "At level %1$s the ram power rises to %2$s and the blaze radius to %3$s blocks.",
   "worldcombat.skill.temperflare.value.flare": "Ram power",
   "worldcombat.skill.temperflare.value.rage": "Desperation doubling",
   "worldcombat.skill.temperflare.value.scorch": "Blaze power",
@@ -35,5 +35,6 @@
   "world_combat.move.temperflare.text.hit": "Temper Flare hit %1$s",
   "world_combat.move.temperflare.text.rage": "Desperation! %1$s",
   "world_combat.move.temperflare.text.miss": "The ram whiffed",
-  "effect.world_combat.temperflare_frustration": "Temper Flare Desperation"
+  "effect.world_combat.temperflare_frustration": "Temper Flare Desperation",
+  "worldcombat.skill.temperflare.description.additional": "When your last enemy-targeted move dealt no damage and you attack again within about 0.3–7.5 s, you carry a desperation; using Temper Flare while desperate doubles the ram and sets what it hits alight. Any later move that lands damage clears it at once, and it also fades after about 5.5 s."
 }

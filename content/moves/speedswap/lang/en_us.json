@@ -5,7 +5,7 @@
   "worldcombat.skill.speedswap.use.2": "Flip the order when a faster foe opens on you",
   "worldcombat.skill.speedswap.description.0": "Cast on a single enemy: the exchange holds %2$s within %1$s blocks and a clear line. Both revert to their original speed stage when the window ends or is cleared.",
   "worldcombat.skill.speedswap.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
-  "worldcombat.skill.speedswap.mode.exchange": "Swap: the two effective speeds trade places — you gain everything if the foe is faster and lose everything if it is slower, symmetric risk; the window is longer (x1.15).",
+  "worldcombat.skill.speedswap.mode.exchange": "Swap: the two effective speeds trade places — you gain everything if the foe is faster and lose everything if it is slower, symmetric risk; the window is longer (x1.15) and the cooldown is more expensive (x1.15).",
   "worldcombat.skill.speedswap.mode.dampen": "Dampen: both move toward the middle, halving the gap; steady and predictable, with a shorter window (x0.75) and cheaper cooldown (x0.85), but a slower foe drags you down.",
   "worldcombat.skill.speedswap.timing": "Cast on a single enemy: after %2$s of preparation it spends %4$s PP to swap; the recovery is %3$s, the cooldown %5$s from commit, and the current range %1$s blocks.",
   "worldcombat.skill.speedswap.growth.0": "At level %1$s the reach grows to %2$s blocks and the window lasts %3$s.",
@@ -29,5 +29,6 @@
   "world_combat.move.speedswap.text.shift": "Speeds swapped %1$s s",
   "world_combat.move.speedswap.text.revert": "Speeds reverted",
   "world_combat.move.speedswap.text.equal": "Speeds are even",
-  "effect.world_combat.speedswap_shift": "Speed Swap"
+  "effect.world_combat.speedswap_shift": "Speed Swap",
+  "worldcombat.skill.speedswap.description.additional": "This move reallocates both sides' effective speed, which decides both movement and action order; neither side can be swapped again while a window is up, and if no stage changes, no window is left."
 }

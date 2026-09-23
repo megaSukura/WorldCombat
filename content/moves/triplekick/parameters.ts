@@ -131,9 +131,10 @@ namespace PokemonSkills {
     ]);
 
     describe(triplekickId, [
-        { key: "description.0", values: ["kick", "kicks", "ramp"] },
-        { key: "description.1", values: ["reach", "halfWidth", "accuracy", "gap"] },
+        { key: "description.0", values: ["kick","kicks","ramp"] },
+        { key: "description.1", values: ["reach","halfWidth","accuracy","gap"] },
         { key: "description.2", values: ["push"] },
+        { key: "description.additional", values: [] },
         { key: "drive.on", values: [], when: function (context) { return read(context.detail.values, ["drive"]) === true; } },
         { key: "drive.off", values: [], when: function (context) { return read(context.detail.values, ["drive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

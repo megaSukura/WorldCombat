@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.mistyexplosion.summary": "把身体当场放成一片铺开的薄雾：雾环贴地向外炸开，对周围所有非友方造成特殊伤害并夺去他们的视线，施法者随之陷入濒死；炸裂后原地留下一片持续的残雾，站在里面的敌人被拖慢。站在薄雾场地上施放时威力更高。",
-  "worldcombat.skill.mistyexplosion.description.0": "雾环对周围每个非友方造成 %1$s 的特殊伤害。",
+  "worldcombat.skill.mistyexplosion.description.0": "雾环贴着地面向外炸开，对周围每个非友方造成一次约 %1$s 点特殊伤害，最多结算 %2$s 个目标。",
   "worldcombat.skill.mistyexplosion.description.1": "雾环半径 %1$s 格，也是本招的实际射程与指示圈。",
-  "worldcombat.skill.mistyexplosion.description.2": "站在薄雾场地上施放时，这一爆整体 ×%1$s。",
-  "worldcombat.skill.mistyexplosion.description.3": "被罩住的目标被夺去视线 %1$s。",
-  "worldcombat.skill.mistyexplosion.description.4": "炸裂后原地留下一片残雾，半径 %1$s 格、持续 %2$s；站在里面的敌人持续被拖慢。",
-  "worldcombat.skill.mistyexplosion.description.5": "起手 %1$s、冷却 %2$s。无论有没有炸到目标，使用者都会倒下。",
+  "worldcombat.skill.mistyexplosion.description.2": "站在薄雾场地或任何残雾中施放时，这一爆整体 ×%1$s。",
+  "worldcombat.skill.mistyexplosion.description.3": "被罩住的目标失明 %1$s，期间视野受限、无法疾跑。",
+  "worldcombat.skill.mistyexplosion.description.4": "炸裂后原地留下一片残雾，半径 %1$s 格、持续 %2$s；站在里面的敌人移动速度降低 15%，离开后仍会被拖慢一小段时间。",
+  "worldcombat.skill.mistyexplosion.description.5": "起手 %1$s、冷却 %2$s。起手期间可被打断，打断则使用者不会倒下；一旦炸开，无论有没有炸到目标，使用者都会耗尽生命倒下。",
   "worldcombat.skill.mistyexplosion.dense.on": "浓雾式：残雾半径 ×1.3、停留 ×1.3、致盲 +30 刻，威力 ×0.92、起手 +3、冷却 +10。",
   "worldcombat.skill.mistyexplosion.dense.off": "薄爆式：威力 ×1.08、残雾 ×0.8、冷却 −6，炸得更脆更快。",
   "worldcombat.skill.mistyexplosion.timing": "射程 %1$s 格；起手 %2$s，消耗 %3$s PP，冷却 %4$s。",
@@ -31,5 +31,6 @@
   "worldcombat.skill.mistyexplosion.preference.ai.cornered.help": "自己生命低于这个比例时，引爆门槛放宽到 1 个目标；越高越早拼命。",
   "worldcombat.skill.mistyexplosion.growth.0": "%1$s 级起这一爆的威力与范围再抬一档（威力约 %2$s、半径约 %3$s）。",
   "world_combat.move.mistyexplosion.text.hit": "薄雾炸裂 命中 %1$s",
-  "world_combat.move.mistyexplosion.text.miss": "薄雾只铺满地面"
+  "world_combat.move.mistyexplosion.text.miss": "薄雾只铺满地面",
+  "worldcombat.skill.mistyexplosion.value.maxTargets": "目标上限"
 }

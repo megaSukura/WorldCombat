@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.recover.summary": "让身体自行再生：在一段窗口里按刻把生命补回来，总量约最大生命的一半；伤得越重回得越多、而且不锁足、可以边走边修。清除身上的再生身份会掐断剩余的回复。",
+  "worldcombat.skill.recover.summary": "让身体自行再生：在一段窗口里按刻把生命补回来，总量随伤势最多约最大生命的六成；伤得越重回得越多，而且不锁足、可以边走边修。清除身上的再生效果会掐断剩余的回复。",
   "worldcombat.skill.recover.use.0": "在走位中持续补回生命",
   "worldcombat.skill.recover.use.1": "重伤时让细胞干得更猛",
   "worldcombat.skill.recover.use.2": "用不锁足的窗口换一段安全的回复",
   "worldcombat.skill.recover.description.0": "回复最大生命的 %1$s，摊在 %2$s 的再生窗口里按刻交付；生命补满会提前收势。",
-  "worldcombat.skill.recover.description.2": "起手 %1$s、收招 %2$s，随速度缩短；整段窗口都可以继续走位。",
+  "worldcombat.skill.recover.description.2": "起手 %1$s、收招 %2$s，随速度缩短；整段窗口都可以继续走位，起手可被打断。",
   "worldcombat.skill.recover.stance.steady": "稳态再生：回复总量 +0.05、窗口 ×1.35——每刻更慢但总量更足，代价是冷却更久、暴露更久。",
   "worldcombat.skill.recover.stance.quick": "速生：回复总量 −0.04、窗口 ×0.75——补得更快、冷却更短，适合在受击间隙里快速续命。",
-  "worldcombat.skill.recover.timing": "自身招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.recover.timing": "自身招式，准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，发动即进入 %4$s 秒冷却。",
   "worldcombat.skill.recover.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.recover.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.recover.value.heal": "回复比例",
@@ -25,5 +25,6 @@
   "world_combat.move.recover.text.full": "再生完毕，生命已满",
   "world_combat.move.recover.text.end": "再生收势",
   "world_combat.move.recover.text.broken": "再生被掐断",
-  "effect.world_combat.regenerating": "再生（按刻回复）"
+  "effect.world_combat.regenerating": "再生（按刻回复）",
+  "worldcombat.skill.recover.description.1": "再生期间每隔 2 刻回复一小份；清除身上的再生效果（牛奶或 /effect clear）会立刻掐断剩余回复，满血时无法发动。"
 }

@@ -113,12 +113,12 @@ namespace PokemonSkills {
         rationale: "标准钝撞；头锤不挑护甲，防御按默认系数减伤。" }, { contact: true });
 
     describe("headbutt", [
-        { key: "description.0", values: ["smash", "collisionRadius"] },
+        { key: "description.0", values: ["smash","collisionRadius"] },
         { key: "description.1", values: ["lunge", "rush", "shove"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks"] },
         { key: "driving.on", values: [], when: function (context) { return read(context.detail.values, ["driving"]) === true; } },
         { key: "driving.off", values: [], when: function (context) { return read(context.detail.values, ["driving"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.smash"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.smash", "tier.1.lunge", "tier.1.flinchChance"] }
     ]);

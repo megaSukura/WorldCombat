@@ -63,10 +63,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: function (config) { return config.seal !== false; },
         id: "shelter",
         cooldownParameter: "wait",
         name: "闭关",
-        description: "将皮肤变得坚硬如铁盾，从而大幅提高自己的防御。",
+        description: "提高防御，并获得可吸收伤害的保护层。保护层破裂、被清除或到期后，本次防御提升结束。",
         uses: ["在 burst 到来之前把壳合上，硬吃这一轮", "用一层会被打碎的承伤壳逼对手多花几刀", "残血时缩壳等队友或等冷却"],
         kind: "self",
         range: 1,

@@ -34,7 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: bellydrumId, name: "腹鼓",
-        description: "拍响腹鼓，把自己的生命压到一半，换取满级物攻；力量维持一段可见的窗口，窗口结束会收回那些能力等级。生命不足一半时无法起鼓。",
+        description: "拍响腹鼓，把自己的生命压到一条底线，换取满级物攻；力量维持一段可见的窗口，窗口结束或提前被清除时会收回那些能力等级。生命低于那条底线时无法起鼓。",
         uses: ["把生命换成爆发物攻", "在开战前把物攻拉满", "用可见的力量窗口逼对手做取舍"],
         kind: "self", range: 0, prepare: 14, active: 0, recover: 12, cooldown: 300, style: "drum", maximumTicks: 400,
         defaults: { endure: false },

@@ -103,10 +103,11 @@ namespace PokemonSkills {
 
     describe(firstimpressionId, [
         { key: "description.0", values: ["slam"] },
-        { key: "description.1", values: ["leap", "speed", "collisionRadius", "push"] },
+        { key: "description.1", values: ["leap","speed","collisionRadius","push"] },
+        { key: "description.2", values: [] },
         { key: "reckless.on", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },
-        { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
+        { key: "timing", values: ["range","tempo","settle","pp","recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slam"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.slam", "tier.1.leap"] }
     ]);

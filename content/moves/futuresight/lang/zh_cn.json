@@ -1,13 +1,13 @@
 {
   "effect.world_combat.futuresight_seal": "已被预知",
-  "worldcombat.skill.futuresight.summary": "把一团属于自己的念力送到对手头顶，延迟片刻后落下造成一次特殊伤害；延迟期间对手能读出它并抢先治疗或拉开。",
+  "worldcombat.skill.futuresight.summary": "把一团属于自己的念力送到对手头顶，延迟片刻后落下造成一次特殊伤害；延迟里对手可以抢时间治疗或加防，但走位躲不开，清掉标记也不取消。",
   "worldcombat.skill.futuresight.use.0": "在开战前先锁定一个远处目标",
   "worldcombat.skill.futuresight.use.1": "逼对手在延迟里分心应对",
   "worldcombat.skill.futuresight.use.2": "在安全距离上布置一次必至的重击",
-  "worldcombat.skill.futuresight.description.0": "念力在 %2$s 后落下，造成 %1$s 基础威力的特殊伤害。",
+  "worldcombat.skill.futuresight.description.0": "念力在 %2$s 后落下，对锁定目标造成约 %1$s 点特殊伤害。",
   "worldcombat.skill.futuresight.description.1": "念力悬在对手头顶，可锁定 %1$s 格内的目标。",
   "worldcombat.skill.futuresight.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
-  "worldcombat.skill.futuresight.prolonged.on": "久候：兑现延迟 ×1.4、威力 ×1.2，重击更重，但对手有更长时间治疗、加防或拉开。",
+  "worldcombat.skill.futuresight.prolonged.on": "久候：兑现延迟 ×1.4、威力 ×1.2，重击更重，但对手有更长时间治疗或加防。",
   "worldcombat.skill.futuresight.prolonged.off": "速报：延迟 ×0.75、威力 ×0.85，来得更快、更难反应。",
   "worldcombat.skill.futuresight.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.futuresight.growth.0": "达到 %1$s 级，念力威力提升至 %2$s、兑现延迟延长至 %3$s。",
@@ -20,10 +20,11 @@
   "worldcombat.skill.futuresight.value.settle": "收招",
   "worldcombat.skill.futuresight.value.recharge": "冷却",
   "worldcombat.skill.futuresight.preference.prolonged": "久候",
-  "worldcombat.skill.futuresight.preference.prolonged.help": "开启（久候）：兑现延迟 ×1.4、威力 ×1.2，重击更重但对手有更长时间治疗、加防或拉开。关闭（速报）：延迟 ×0.75、威力 ×0.85，来得更快、更难反应。",
+  "worldcombat.skill.futuresight.preference.prolonged.help": "开启（久候）：兑现延迟 ×1.4、威力 ×1.2，重击更重但对手有更长时间治疗或加防。关闭（速报）：延迟 ×0.75、威力 ×0.85，来得更快、更难反应。",
   "worldcombat.skill.futuresight.preference.ai.maxChase": "锁定距离",
-  "worldcombat.skill.futuresight.preference.ai.maxChase.help": "目标在这个距离内才考虑预知未来；调大愿意锁定更远的敌人。",
+  "worldcombat.skill.futuresight.preference.ai.maxChase.help": "目标在这个距离内、且尚未带有预知印记时才考虑预知未来；调大愿意锁定更远的敌人。",
   "world_combat.move.futuresight.text.send": "预知未来：%1$s 秒后落下",
   "world_combat.move.futuresight.text.hit": "预知成真 %1$s",
-  "world_combat.move.futuresight.text.fizzle": "预知落空"
+  "world_combat.move.futuresight.text.fizzle": "预知落空",
+  "worldcombat.skill.futuresight.description.3": "目标会被标上「已被预知」并在延迟期间保留；它只是锁定标记，不减速也不造成伤害，伙伴也不会对同一个已标记的目标再来一次。落点一直跟着目标，靠走位躲不开；延迟到点后若目标仍在场，就照其当前位置兑现伤害，目标已离场则整团落空。清掉标记不会取消已经放出的念力。"
 }

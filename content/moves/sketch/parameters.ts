@@ -41,6 +41,7 @@ namespace PokemonSkills {
     });
 
     describe("sketch", [
+        { key: "world", values: [] },
         { key: "description.0", values: ["reach", "study"] },
         { key: "description.1", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

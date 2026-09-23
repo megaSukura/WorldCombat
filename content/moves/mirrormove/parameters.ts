@@ -67,6 +67,7 @@ namespace PokemonSkills {
     });
 
     describe(mirrormoveId, [
+        { key: "world", values: ["focus", "edge"] },
         { key: "description.0", values: ["reach", "focus"] },
         { key: "description.1", values: ["edge"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },

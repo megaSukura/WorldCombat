@@ -166,13 +166,13 @@ namespace PokemonSkills {
     ]);
 
     describe("appleacid", [
-        { key: "description.0", values: ["core", "sourStages"] },
-        { key: "description.1", values: ["reach", "globSpeed", "splashRadius", "splash"] },
-        { key: "description.2", values: ["secondStages", "sourTicks"] },
-        { key: "description.3", values: ["patchRadius", "patch", "patchTicks", "patchPulse"] },
-        { key: "ferment.on", values: ["core", "sourTicks", "patchTicks"],
+        { key: "description.0", values: ["core","sourStages"] },
+        { key: "description.1", values: ["reach","globSpeed","splashRadius","splash"] },
+        { key: "description.2", values: ["secondStages","sourTicks"] },
+        { key: "description.3", values: ["patchRadius","patch","patchTicks","patchPulse"] },
+        { key: "ferment.on", values: ["core","sourTicks","patchTicks"],
             when: function (context) { return read(context.detail.values, ["ferment"]) === true; } },
-        { key: "ferment.off", values: ["core", "splashRadius", "sourTicks"],
+        { key: "ferment.off", values: ["core","splashRadius","sourTicks"],
             when: function (context) { return read(context.detail.values, ["ferment"]) !== true; } },
         { key: "timing", values: ["reach", "tempo", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.splashRadius"] }

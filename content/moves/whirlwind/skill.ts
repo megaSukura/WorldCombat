@@ -64,7 +64,7 @@ namespace PokemonSkills {
         id: whirlwindId,
         cooldownParameter: "wait",
         name: "吹飞",
-        description: "朝选定的方向推出一道向前推进的风墙，把沿途的敌人沿风向吹开、失去目标、逐出战斗；没有伤害。风道之外就无事。",
+        description: "朝选定方向推出一道向前推进的风墙，把沿途的敌人沿风向吹开、失去目标、逐出战斗；有后备的对手会被真正换下。没有伤害，站在风道外就无事。",
         uses: ["沿一条直线把一排敌人吹开", "把扑上来的敌人推回远处", "在开阔地远距离逐退"],
         kind: "point",
         range: 7,

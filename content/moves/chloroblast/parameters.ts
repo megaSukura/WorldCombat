@@ -117,12 +117,12 @@ namespace PokemonSkills {
         rationale: "一整片叶绿素对特殊防御的压制略强，让特攻与等级的差距在场上更明显。" }, {});
 
     describe(chloroblastId, [
-        { key: "description.0", values: ["bloom", "reach", "angle"] },
-        { key: "description.1", values: ["falloff", "cost"] },
+        { key: "description.0", values: ["bloom","reach","angle"] },
+        { key: "description.1", values: ["falloff","cost"] },
         { key: "burst.on", values: [], when: function (context) { return read(context.detail.values, ["burst"]) === true; } },
         { key: "burst.off", values: [], when: function (context) { return read(context.detail.values, ["burst"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bloom"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.bloom", "tier.1.cost"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.bloom","tier.1.cost"] }
     ]);
 }

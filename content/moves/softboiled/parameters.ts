@@ -47,11 +47,12 @@ namespace PokemonSkills {
     ]);
 
     describe(softboiledId, [
-        { key: "description.0", values: ["heal", "eatTicks"] },
+        { key: "description.0", values: ["heal","eatTicks"] },
+        { key: "description.wasted", values: [] },
         { key: "description.2", values: ["lay", "settleTicks"] },
-        { key: "stance.share", values: ["eggReach"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
-        { key: "stance.self", values: [], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "stance.share", values: ["eggReach","heal"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
+        { key: "stance.self", values: ["heal"], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

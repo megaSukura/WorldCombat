@@ -3,7 +3,7 @@
   "worldcombat.skill.direclaw.use.0": "A close deep claw that presses one of three marks into the wound",
   "worldcombat.skill.direclaw.use.1": "Pick sleep for a high-value target",
   "worldcombat.skill.direclaw.use.2": "Aim at a weak point for a heavier critical",
-  "worldcombat.skill.direclaw.description.0": "One deep claw deals about %1$s power; on a hit it has about a %2$s chance to press one of poison/paralysis/sleep into the wound for about %3$s. The target's Defence, type matchup and this move's own critical settle at impact, and type or ability immunity to that status still applies.",
+  "worldcombat.skill.direclaw.description.0": "One deep claw deals about %1$s damage; on a hit it has about a %2$s chance to press one of poison/paralysis/sleep into the wound for about %3$s. The target's Defence, type matchup and this move's own critical settle at impact, and type or ability immunity to that status still applies.",
   "worldcombat.skill.direclaw.description.1": "Claw reach about %1$s blocks, critical chance about %2$s (higher than ordinary moves).",
   "worldcombat.skill.direclaw.description.2": "Wind-up %1$s, cooldown %2$s.",
   "worldcombat.skill.direclaw.deep.on": "Deep Wound: ailment chance +0.15, ailment duration x1.25, critical chance +0.06, at the cost of claw power x0.88, wind-up +1 tick and cooldown x1.12.",
@@ -45,5 +45,6 @@
   "world_combat.move.direclaw.text.poison": "The wound soaked with poison",
   "world_combat.move.direclaw.text.paralysis": "Numbing sparks run through the wound",
   "world_combat.move.direclaw.text.sleep": "Its eyes grow heavy",
-  "world_combat.move.direclaw.text.resist": "The mark did not take hold"
+  "world_combat.move.direclaw.text.resist": "The mark did not take hold",
+  "worldcombat.skill.direclaw.description.ailments": "Each hit presses in at most one mark: poison drains health over time; paralysis halves movement speed and gives each action a 25% chance to fail; sleep stops both acting and moving until the target takes damage."
 }

@@ -131,8 +131,8 @@ namespace PokemonSkills {
     ]);
 
     describe(tailslapId, [
-        { key: "description.0", values: ["lash", "laps", "accuracy"] },
-        { key: "description.1", values: ["radius", "arc", "push", "lift"] },
+        { key: "description.0", values: ["lash","laps","accuracy"] },
+        { key: "description.1", values: ["radius","arc","push","lift"] },
         { key: "description.2", values: ["gap"] },
         { key: "smash.on", values: [], when: function (context) { return read(context.detail.values, ["smash"]) === true; } },
         { key: "smash.off", values: [], when: function (context) { return read(context.detail.values, ["smash"]) !== true; } },

@@ -93,9 +93,9 @@ namespace PokemonSkills {
     ]);
 
     describe("lowsweep", [
-        { key: "description.0", values: ["cut", "slowStages"] },
-        { key: "description.1", values: ["sweepArc", "reach"] },
-        { key: "description.2", values: ["hobbleTicks", "rootTicks"] },
+        { key: "description.0", values: ["cut","slowStages"] },
+        { key: "description.1", values: ["sweepArc","reach"] },
+        { key: "description.2", values: ["hobbleTicks","rootTicks"] },
         { key: "whirl.on", values: [], when: function (context) { return read(context.detail.values, ["whirl"]) === true; } },
         { key: "whirl.off", values: [], when: function (context) { return read(context.detail.values, ["whirl"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

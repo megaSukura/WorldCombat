@@ -28,11 +28,12 @@ namespace PokemonSkills {
     const submissionLostText = "world_combat.move.submission.text.lost";
 
     define({
+        freeMovement: true,
         id: "submission",
         cooldownParameter: "recharge",
         name: "Submission",
-        description: "The user grabs the target and recklessly dives for the ground. This also damages the user a little.",
-        uses: ["把贴脸的目标抓住按倒，为队友创造输出窗口", "打断一个正要出手的对手", "用压制把对手钉在原地、自己挨一下"],
+        description: "扑上去抓住目标再摔向地面：命中造成接触伤害，把对方按倒、移动大幅变慢，自己也按实际伤害反噬一部分。块头越大的目标摔得越轻、压制越短；扑空则没有伤害与自伤。",
+        uses: ["把贴脸的目标抓住按倒，为队友创造输出窗口", "抓住贴脸的对手，让它一段时间动弹不得", "用压制把对手钉在原地，自己挨一下"],
         kind: "enemy",
         range: 3,
         maxRange: 4.2,

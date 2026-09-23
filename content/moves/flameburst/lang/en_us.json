@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.flameburst.summary": "Fire an overflowing flame ball: the hit point bursts, and the fire spills out of it, arcing down onto every foe beside the target. The main target takes the burst, neighbours each take a separate splash - the original has no burn, so the cost and identity of this move are all in what it gives away.",
-  "worldcombat.skill.flameburst.description.0": "The main target takes %1$s special damage while droplets spill from the burst, dealing %2$s splash damage to every foe beside it.",
-  "worldcombat.skill.flameburst.description.1": "Damage enemies within %1$s blocks of the main target.",
+  "worldcombat.skill.flameburst.summary": "Fires a flame ball on a shallow arc: where it bursts, the main target takes the burst while every other foe around the blast each takes a separate splash. No solid hit means no splash, and the fire only falls on those beside the target.",
+  "worldcombat.skill.flameburst.description.0": "Once the burst hits and deals damage, the main target takes about %1$s special damage and every other foe around the blast each takes a separate splash hit of about %2$s.",
+  "worldcombat.skill.flameburst.description.1": "Splash is measured from the blast point with a radius of %1$s blocks; each other foe inside it is hit once.",
   "worldcombat.skill.flameburst.description.2": "Range %1$s blocks, %2$s blocks per tick, %3$s block body radius.",
   "worldcombat.skill.flameburst.spread.on": "Spreading form: the fire reaches farther and heavier with more droplets, at lower burst power and a shorter throw.",
   "worldcombat.skill.flameburst.spread.off": "Direct form: a heavier burst thrown farther, at a smaller and weaker splash.",

@@ -3,10 +3,10 @@
   "worldcombat.skill.triattack.use.0": "Put three rays into one target and roll three element marks",
   "worldcombat.skill.triattack.use.1": "Split the rays across several enemies in a crowd",
   "worldcombat.skill.triattack.use.2": "Open with a three-colour volley to wear a group down",
-  "worldcombat.skill.triattack.description.0": "Each of the three rays deals about %1$s power (they launch together); a ray that lands has about a %2$s chance to leave the matching element mark (electric paralyses, fire burns, ice freezes) for about %3$s. The target's Sp. Def, type matchup and criticals settle at impact.",
+  "worldcombat.skill.triattack.description.0": "The three rays leave the hand one after another; each ray that hits a target deals about %1$s special damage and has about a %2$s chance to leave the matching element mark (electric paralyses, fire burns, ice freezes). The target's Sp. Def, type matchup and criticals settle at impact.",
   "worldcombat.skill.triattack.description.1": "The rays lock onto targets within %1$s blocks and fly at %2$s blocks per tick, steering %3$s degrees per tick onto the target; that only corrects movement, so a hard sideways dash still escapes.",
   "worldcombat.skill.triattack.description.2": "The rays leave %1$s apart (never inside the hit invulnerability window, so each settles separately); wind-up %2$s, cooldown %3$s.",
-  "worldcombat.skill.triattack.wide.on": "Wide form: the three rays split among up to three different enemies within %1$s blocks of the primary, for much wider coverage - each ray is x0.85, marks are x0.85, wind-up +1 tick and cooldown x1.15.",
+  "worldcombat.skill.triattack.wide.on": "Wide form: the three rays split among up to three different enemies within %1$s blocks of the primary for much wider coverage; when it cannot find enough, the extra rays land on an already-chosen target rather than going to waste. The cost is x0.85 per ray, x0.85 mark chance, wind-up +1 tick and cooldown x1.15.",
   "worldcombat.skill.triattack.wide.off": "Focused form (default): all three rays lock the same target, x1.04 per ray and x1.1 mark chance, and it comes out sooner with a shorter cooldown.",
   "worldcombat.skill.triattack.timing": "Range %1$s, wind-up %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.triattack.growth.0": "From level %1$s each ray's power rises to %2$s.",
@@ -38,5 +38,6 @@
   "world_combat.move.triattack.text.numb": "The electric mark lingers",
   "world_combat.move.triattack.text.burn": "The fire mark lingers",
   "world_combat.move.triattack.text.freeze": "The frost mark lingers",
-  "world_combat.move.triattack.text.fizzle": "All three rays went wide"
+  "world_combat.move.triattack.text.fizzle": "All three rays went wide",
+  "worldcombat.skill.triattack.description.ailments": "Each elemental status lasts %1$s. Paralysis halves movement speed and gives each attempted action a 25%% chance to fail. Burn halves physical damage and drains about 6.25%% of maximum health every 5 seconds (at least 1). Freeze prevents movement and actions until it ends or Fire-type or fire damage thaws the target. Matching type or ability immunities still apply, and the statuses can be cleansed."
 }

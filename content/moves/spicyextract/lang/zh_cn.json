@@ -27,5 +27,6 @@
   "worldcombat.skill.spicyextract.preference.ai.cluster.help": "目标身边至少挤着这么多敌人时优先甩瓶；调 1 表示看得见就扔。",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去甩瓶。",
-  "world_combat.move.spicyextract.text.burn": "被辣到（攻击 +%1$s／防御 −%2$s）"
+  "world_combat.move.spicyextract.text.burn": "被辣到（攻击 +%1$s／防御 −%2$s）",
+  "worldcombat.skill.spicyextract.description.additional": "被辣到的攻击与防御等级变化会一直保留，直到被清除能力等级或目标脱离战斗；辣雾本身不造成伤害。"
 }

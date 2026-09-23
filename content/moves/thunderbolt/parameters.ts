@@ -123,10 +123,10 @@ namespace PokemonSkills {
     ]);
 
     describe(thunderboltId, [
-        { key: "description.0", values: ["bolt", "flightSpeed", "reach"] },
+        { key: "description.0", values: ["reach", "bolt", "flightSpeed"] },
         { key: "description.1", values: ["burstRadius", "numbChance", "numbTicks"] },
         { key: "description.2", values: ["tempo", "recharge"] },
-        { key: "spread.on", values: ["splashShare", "splashTargets"], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
+        { key: "spread.on", values: ["splashShare","splashTargets"], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
         { key: "spread.off", values: [], when: function (context) { return read(context.detail.values, ["spread"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bolt"] },

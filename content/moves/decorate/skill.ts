@@ -22,7 +22,7 @@ namespace PokemonSkills {
         id: "decorate",
         cooldownParameter: "wait",
         name: "Decorate",
-        description: "通过装饰，大幅提高对方的攻击和特攻。",
+        description: "搓出一束奶油与缎带，送给另一个友方：对方的攻击与特攻大幅提高，装饰物在身上亮一阵子。这件作品要有一个佩戴者。",
         uses: ["开战前把身边的队友打扮成主力", "在队友冲上去之前先给他加满双攻", "把自己以外的伙伴变成一把更利的刀"],
         kind: "friend",
         range: 5,

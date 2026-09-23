@@ -74,11 +74,11 @@ namespace PokemonSkills {
 
     describe(stuffcheeksId, [
         { key: "description.0", values: ["guard"] },
-        { key: "description.1", values: ["absorb", "chew"] },
+        { key: "description.1", values: ["absorb","chew"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "stance.savor", values: [], when: function (context) { return read(context.detail.values, ["savor"]) === true; } },
         { key: "stance.gulp", values: [], when: function (context) { return read(context.detail.values, ["savor"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.wait"] }
     ]);

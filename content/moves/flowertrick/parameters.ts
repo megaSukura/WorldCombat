@@ -163,9 +163,9 @@ namespace PokemonSkills {
 
     describe(flowertrickId, [
         { key: "description.0", values: ["bloom"] },
-        { key: "description.1", values: ["reach", "velocity", "turn"] },
+        { key: "description.1", values: ["reach","velocity","turn","lockRange"] },
         { key: "description.2", values: ["bloomRadius", "petalCells", "petalTicks"] },
-        { key: "wreathe.on", values: [], when: function (context) { return read(context.detail.values, ["wreathe"]) === true; } },
+        { key: "wreathe.on", values: ["splash"], when: function (context) { return read(context.detail.values, ["wreathe"]) === true; } },
         { key: "wreathe.off", values: [], when: function (context) { return read(context.detail.values, ["wreathe"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bloom"] },

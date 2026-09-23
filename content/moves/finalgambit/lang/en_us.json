@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.finalgambit.summary": "Self-detonating gambit: spend all of your remaining HP on one blow, dealing fixed damage equal to your current HP, then faint. Strongest at full health and weakest when nearly down; if it cannot hit, you do not fall. The spare form stakes only half your HP, leaves you at 1 HP and halves the damage.",
-  "worldcombat.skill.finalgambit.description.0": "A hit deals %1$s fixed damage: your current HP at the moment of the cast (the spare form stakes only half). The target's defence does not matter; only type immunity stops it.",
+  "worldcombat.skill.finalgambit.summary": "A self-detonating gambit: lunge at the target, dealing fixed damage equal to your current HP on a hit before you fall. Strongest at full health and weakest when nearly down; a miss or type immunity spends nothing and leaves you standing. The spare form cuts the damage to 55%% and leaves you at 1 HP instead of fainting, at the cost of a longer cooldown.",
+  "worldcombat.skill.finalgambit.description.0": "A hit deals %1$s fixed damage: your current HP at the moment of the cast at full commitment, or 55%% of it in the spare form. The target's defence does not matter; only type immunity stops it.",
   "worldcombat.skill.finalgambit.description.1": "Prepare %1$s s (interruptible, and an interrupt does nothing at all), then lunge %2$s blocks along the aim (%3$s blocks/tick) with a %4$s block hit radius.",
   "worldcombat.skill.finalgambit.description.2": "Knocks the target %1$s blocks along the lunge direction.",
-  "worldcombat.skill.finalgambit.spare.on": "Spare form: stake only half your HP, end at 1 HP without fainting, longer cooldown.",
-  "worldcombat.skill.finalgambit.spare.off": "Full form: stake all your HP and faint.",
+  "worldcombat.skill.finalgambit.spare.on": "Spare form: damage drops to 55%% of your current HP; after a landed hit you are cut to 1 HP instead of fainting, with a longer cooldown.",
+  "worldcombat.skill.finalgambit.spare.off": "Full form: damage equals your full current HP; after a landed hit you faint.",
   "worldcombat.skill.finalgambit.timing": "Range %1$s blocks; prepare %2$s s, recover %3$s s, cooldown %4$s s, cost %5$s PP.",
   "worldcombat.skill.finalgambit.use.0": "Trade yourself at full health to empty a high-value target",
   "worldcombat.skill.finalgambit.use.1": "Drag a blocking threat down with you",
@@ -18,7 +18,7 @@
   "worldcombat.skill.finalgambit.value.blastRadius": "Blast radius",
   "worldcombat.skill.finalgambit.value.stagger": "Stagger",
   "worldcombat.skill.finalgambit.preference.spare": "Spare form",
-  "worldcombat.skill.finalgambit.preference.spare.help": "On: stake only half your current HP, end at 1 HP without fainting, at the cost of half the damage and a longer cooldown. Off: stake all your HP for full damage and faint.",
+  "worldcombat.skill.finalgambit.preference.spare.help": "On: damage drops to 55%% of your current HP and a landed hit leaves you at 1 HP without fainting, at the cost of a longer cooldown. Off: damage equals your full current HP and a landed hit faints you.",
   "worldcombat.skill.finalgambit.preference.ai.lethal": "Only go for the kill",
   "worldcombat.skill.finalgambit.preference.ai.lethal.help": "On: only commit when your current HP is not below the target's, guaranteeing the trade empties it. Off: also willing to drag the target down when badly hurt.",
   "worldcombat.skill.finalgambit.preference.ai.cornered": "Cornered threshold",
@@ -32,5 +32,6 @@
   "world_combat.move.finalgambit.text.hit": "Final Gambit %1$s",
   "world_combat.move.finalgambit.text.faint": "Collapsed",
   "world_combat.move.finalgambit.text.spent": "Left at a breath",
-  "world_combat.move.finalgambit.text.miss": "Lunged wide"
+  "world_combat.move.finalgambit.text.miss": "Lunged wide",
+  "worldcombat.skill.finalgambit.outcome": "The lunge detonates on the first foe it reaches; if it touches no one, is stopped by terrain, or is turned away by type immunity, it comes up empty - no HP is spent and you do not fall."
 }

@@ -37,7 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: recoverId, name: "自我再生",
-        description: "让身体自行再生：在约两秒的窗口里按刻把生命补回来，总量约最大生命的一半；伤得越重回得越多、等级越高底子越厚。窗口里可以继续走位，且回复不锁足；清除身上的再生身份（牛奶／/effect clear）会掐断剩余的回复。",
+        description: "让身体自行再生：在一段窗口里按刻把生命补回来，总量随伤势最多约最大生命的六成；伤得越重回得越多，而且不锁足、可以边走边修。清除身上的再生效果会掐断剩余的回复。",
         uses: ["在走位中持续补回生命", "重伤时让细胞干得更猛", "用不锁足的窗口换一段安全的回复"],
         kind: "self", range: 0, prepare: 10, active: 0, recover: 8, cooldown: 230, style: "regenerate", maximumTicks: 340,
         stationary: false,

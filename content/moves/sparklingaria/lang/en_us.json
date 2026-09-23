@@ -5,9 +5,9 @@
   "worldcombat.skill.sparklingaria.use.2": "Bloom a ring of bubbles while surrounded",
   "worldcombat.skill.sparklingaria.description.0": "The centre of the wave deals about %1$s damage, keeping %2$s at the rim; the target's Sp. Def, type matchup and criticals settle at impact.",
   "worldcombat.skill.sparklingaria.description.1": "It reaches %1$s blocks around you.",
-  "worldcombat.skill.sparklingaria.description.2": "Each washed-off burn heals that body for %1$s of its maximum health.",
+  "worldcombat.skill.sparklingaria.description.2": "Every body in the ring other than the singer (allies and enemies alike) has its burn washed off once and recovers %1$s of its maximum health; the singer's own burn is not washed.",
   "worldcombat.skill.sparklingaria.note.on": "High note on: radius about x1.25 and more bubbles, but about x0.85 damage, slower to start and longer cooldown.",
-  "worldcombat.skill.sparklingaria.note.off": "High note off (focused aria): radius about x0.85 and about x1.15 damage, faster to recover.",
+  "worldcombat.skill.sparklingaria.note.off": "High note off (focused aria): radius about x0.85 and about x1.15 damage, a shorter windup and a shorter cooldown.",
   "worldcombat.skill.sparklingaria.timing": "Cast on yourself (close to within %1$s blocks); after a %2$s s prepare it spends %4$s PP; it recovers for %3$s s and its cooldown starts on commit for %5$s s.",
   "worldcombat.skill.sparklingaria.growth.0": "At level %1$s the wave's power rises to %2$s.",
   "worldcombat.skill.sparklingaria.growth.1": "At level %1$s the wave's power rises to %2$s and its radius to %3$s.",
@@ -18,7 +18,7 @@
   "worldcombat.skill.sparklingaria.value.cureHeal": "Wash heal",
   "worldcombat.skill.sparklingaria.value.maxTargets": "Max targets",
   "worldcombat.skill.sparklingaria.preference.highNote": "High note",
-  "worldcombat.skill.sparklingaria.preference.highNote.help": "On: radius about x1.25, more bubbles, about x0.85 damage, +2 ticks to start and +8 cooldown, to wash a larger area. Off (focused aria): radius about x0.85 and about x1.15 damage, faster to recover.",
+  "worldcombat.skill.sparklingaria.preference.highNote.help": "On: radius about x1.25, more bubbles, about x0.85 damage, +2 ticks to start and +8 cooldown, to wash a larger area. Off (focused aria): radius about x0.85 and about x1.15 damage, -2 ticks to start and -6 cooldown.",
   "worldcombat.skill.sparklingaria.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.sparklingaria.preference.ai.maxChase.help": "The companion starts singing only when a target is this close; lower sings only up close, higher walks into the crowd first.",
   "worldcombat.skill.sparklingaria.preference.ai.cureAllies": "Wash allies",
@@ -26,5 +26,6 @@
   "world_combat.move.sparklingaria.text.hit": "Bubbles struck %1$s",
   "world_combat.move.sparklingaria.text.cure": "Washed off %1$s burn(s)",
   "world_combat.move.sparklingaria.text.wash": "Burn washed away",
-  "world_combat.move.sparklingaria.text.miss": "The aria missed"
+  "world_combat.move.sparklingaria.text.miss": "The aria missed",
+  "worldcombat.skill.sparklingaria.description.additional": "The wave only damages enemies, striking up to %1$s of them at once."
 }

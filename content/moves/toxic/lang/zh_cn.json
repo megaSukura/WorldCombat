@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.toxic.summary": "吐出一团毒液扎进目标，毒素在其体内越钻越深：每隔几秒毒性加深一级，毒伤越跳越密；到顶时毒素总爆发，按最大生命咬下一大口。被清掉就提前枯萎。",
-  "worldcombat.skill.toxic.description.0": "毒液射向 %1$s 格内的目标，以 %2$s 格每刻飞行。",
-  "worldcombat.skill.toxic.description.1": "命中后目标陷入剧毒；每隔 %1$s 刻加深一级，最多持续 %2$s 秒、加深到 %3$s 级。",
-  "worldcombat.skill.toxic.description.2": "毒力到顶时总爆发，按目标最大生命扣掉 %1$s%%（这一下可以击杀）；判定半径 %2$s 格。",
+  "worldcombat.skill.toxic.summary": "吐出一团毒液扎进目标：命中后目标陷入剧毒，毒素每隔几秒加深一级、掉血越来越密；毒素走完自己的时间时总爆发，按最大生命咬下一大口（可以击杀），被解毒或清除则提前枯萎。",
+  "worldcombat.skill.toxic.description.0": "毒液射向 %1$s 格内的目标，以 %2$s 格/刻飞行，飞行判定半径 %3$s 格；撞上地形或被躲开就落空。",
+  "worldcombat.skill.toxic.description.1": "命中后目标陷入剧毒；此后每隔 %1$s 刻毒性加深一级、最多到 %3$s 级，每深一级中毒伤害就跳得更频繁；毒素最多持续 %2$s 秒。毒属性、钢属性或免疫中毒的目标不会中毒，本招对它无效。",
+  "worldcombat.skill.toxic.description.2": "毒素走完自己的时间时总爆发，按目标最大生命扣掉 %1$s%%（这一下可以击杀）；期间毒性若被解除，毒素会提前枯萎、不再爆发。",
   "worldcombat.skill.toxic.use.0": "开局给难缠的目标下毒",
   "worldcombat.skill.toxic.use.1": "把一场硬仗拖成消耗战",
   "worldcombat.skill.toxic.use.2": "逼对手先来清状态或后撤",

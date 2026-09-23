@@ -78,7 +78,7 @@ namespace PokemonSkills {
     describe("falsesurrender", [
         { key: "description.0", values: ["lash", "ambush"] },
         { key: "description.1", values: ["hairReach", "lashSpeed", "whipRadius"] },
-        { key: "description.2", values: ["bowTicks", "staggerTicks", "push"] },
+        { key: "description.2", values: ["bowTicks","staggerTicks","push"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.lash", "tier.0.hairReach"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.lash", "tier.1.ambush"] }

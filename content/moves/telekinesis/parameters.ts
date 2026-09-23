@@ -18,10 +18,10 @@
  *   tempo     起手：速度决定抬得多快。
  *   aftercast 收招：速度决定放下后的收势。
  *   window    悬浮时长：等级与特攻支撑念力，体重越大越难久持，夹 160..600；配置「压住」×0.7、「托起」×1.15。
- *   hold      压制程度：特防与体重决定悬空期间移动被压掉多少，夹 30%..90%；配置「压住」至少 92%。
+ *   hold      压制程度：特防与体重决定悬空期间移动被压掉多少，夹 30%..95%；「压住」进一步加强压制。
  *   rings     画面对数：特攻决定围绕目标升起的念力环数，画面按它发射。
  *   recharge  冷却：速度决定多久能再抬一次。
- * 配置 pin（压住／托起）双向取舍：压住＝移动几乎被钉死（≥92%）、但存续 ×0.7、冷却 ×1.25、起手 +3；
+ * 配置 pin（压住／托起）双向取舍：压住＝移动几乎被钉死（最高95%）、但存续 ×0.7、冷却 ×1.25、起手 +3；
  *   托起＝存续更长（×1.15）、出手更省（冷却 ×0.9），但目标还能挪一小步。控死与拖时间各有局面。
  */
 namespace PokemonSkills {
@@ -50,7 +50,7 @@ namespace PokemonSkills {
             F.base(0.4).plus(F.body("weight").times(0.0015).as("体重")).plus(F.stat("specialDefence").times(0.008).as("特防"))
                 .times(F.when(F.pref("pin", text("worldcombat.skill.telekinesis.preference.pin")), F.const(2.4), F.const(1)).as("压制方式"))
                 .clamp(0.3, 0.95),
-            "压制程度", "悬空期间目标被压掉多少移动；特防越高、越重压得越死，压住至少 92%。"),
+            "压制程度", "悬空期间目标被压掉多少移动；特防越高、越重压得越死，压住会加强压制，最高95%。"),
         rings: formula(
             F.base(8, "基础").plus(F.stat("specialAttack").div(45).as("特攻")).clamp(8, 24).round(0),
             "画面对数", { unit: " 条", description: "围绕目标升起的念力环数量；特攻越高越密，画面按它发射。" }),
@@ -64,7 +64,9 @@ namespace PokemonSkills {
     stages("telekinesis", [{ level: 40, values: { reach: 9, window: 360 } }, { level: 55, values: { reach: 10, window: 420 } }]);
 
     describe("telekinesis", [
-        { key: "description.0", values: ["reach", "window", "hold"] },
+        { key: "description.0", values: ["reach","window","hold"] },
+        { key: "description.3", values: [] },
+        { key: "description.4", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "pin.on", values: [], when: function (context) { return read(context.detail.values, ["pin"]) === true; } },
         { key: "pin.off", values: [], when: function (context) { return read(context.detail.values, ["pin"]) !== true; } },

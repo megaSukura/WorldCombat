@@ -69,6 +69,7 @@ namespace PokemonSkills {
     });
 
     describe(transformId, [
+        { key: "world", values: ["hold"] },
         { key: "description.0", values: ["hold"] },
         { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },

@@ -64,9 +64,9 @@ namespace PokemonSkills {
             "冷却", "复活后重新上场的等待；等级越高越熟练。")
     });
     describe(mementoId, [
-        { key: "description.0", values: ["drop", "griefTicks"] },
-        { key: "description.1", values: ["giftRadius", "remnantTicks", "remnantRadius"] },
-        { key: "description.2", values: ["tempo", "recharge"] },
+        { key: "description.0", values: ["griefTicks"] },
+        { key: "description.1", values: ["giftRadius","drop","remnantTicks","remnantRadius"] },
+        { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

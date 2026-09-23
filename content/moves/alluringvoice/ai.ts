@@ -1,14 +1,4 @@
-/**
- * 魅诱之声 / alluringvoice —— 伙伴 AI 用途。
- *
- * 这招的 AI 围绕「趁对手刚变强时唱散它」：
- *   - 何时考虑：目标看得见、活着、非友方，在 `ai.maxChase` 内（或它就是焦点）。
- *   - 对谁出手：优先当前带着正面能力等级、且还没被混乱缠上的目标——这一击会被惑乱；已经混乱的不重复唱，
- *     按普通特殊攻击排序。
- *   - 出手前：由共用任务走到 reach；声场朝目标方向张开，尽量把目标框进张角里。
- *   - 放完之后：被惑乱的目标出手可能作废、打中还会自伤，交回共享交战计划。
- *   - 什么时候紧急：目标正面等级合计达到 `ai.minStages` 时 priority 抬到 78 以上，抢在它把强化用出来之前唱散。
- */
+/** alluringvoice：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     /** 只读探针：目标当前正面能力等级合计，回调内缓存。 */
     CompanionBehavior.registerFact("world_combat:move_alluringvoice/stages", function (access, actor) {

@@ -1,18 +1,11 @@
-/**
- * 诡异咒语 / eeryspell —— 注册与动作。
- *
- * 一幕聚咒（提交前 `windup`），一幕飞行（提交后放出咒念投射物），一幕命中：共享 `impact` 结算特殊
- * 伤害，随后对宝可梦抽走其最后使用招式的 3 点 PP，并给任意活体挂上共享身份 `world_combat:status/eerie`
- * （本单元自己的效果 `world_combat:eerie`，只借身份）。带「诡异」的目标每次尝试提交动作时按效果等级
- * 掷一次失手——记忆被搅乱的那一层对所有对象成立。咒念落空只留下余音。
- */
+/** eeriespell：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     const EERIESPELL_SCENE = "world_combat:move_eeriespell";
     const EERIESPELL_EFFECT = "world_combat:eerie";
 
     // 「诡异」的行为：提交前按效果等级掷一次失手。等级即施法者特攻算出的失手概率 ×100。
     CombatStatus.actions.define({ id: "world_combat:move/eeriespell", apply: function (context: CombatStatus.ActionPolicy) {
-        if (context.phase !== "commit")
+        if (context.phase !== "commit" && !(context.phase === "damage" && DamageSemantics.read(context.metadata).attack))
             return;
         var effect = CombatStatus.representative(context.world, context.actor, "eerie", false);
         if (effect)
@@ -67,7 +60,7 @@ namespace PokemonSkills {
     }
 
     define({ id: "eeriespell", name: "诡异咒语",
-        description: "一记直取记忆的精神强袭：造成特殊伤害，抽走目标最后使用招式的 3 点 PP，并让任何目标短时间内出手失手。",
+        description: "发射咒念伤害目标并扰乱出手。命中宝可梦还会扣除其上一招的PP；普通攻击同样会因记忆混乱而失手。",
         uses: ["远程压制", "拆招"], kind: "enemy", range: 14, prepare: 10, active: 0, recover: 8, cooldown: 40, style: "eerie",
         defaults: {}, fields: [],
         indicator: function () { return { radius: 14, geometry: "line", style: "eerie", label: "诡异咒语" }; },

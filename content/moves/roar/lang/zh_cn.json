@@ -6,7 +6,7 @@
   "worldcombat.skill.roar.description.0": "以自己为中心吼开一圈 %1$s 格；圆环边界就是会被吼到的边界。",
   "worldcombat.skill.roar.description.1": "圈里的敌人被打上「溃退」：持续 %1$s 秒，期间只要离你不足 %2$s 格，就每 10 刻被逐开 %3$s 格。",
   "worldcombat.skill.roar.description.2": "没有伤害；它只是把对手逐出交战圈，逼它们转身走开。宝可梦、原版生物、其他模组生物与玩家走同一条路。",
-  "worldcombat.skill.roar.unleash.on": "开启狂啸：声浪 ×1.25、溃退更久，代价是起手 +3 刻、冷却 +20 刻。",
+  "worldcombat.skill.roar.unleash.on": "开启狂啸：声浪 ×1.25、溃退 ×1.15，代价是起手 +3 刻、冷却 +20 刻。",
   "worldcombat.skill.roar.unleash.off": "关闭狂啸：出手更快、冷却 −10 刻、声浪较窄，适合频繁逼退。",
   "worldcombat.skill.roar.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.roar.growth.0": "达到 %1$s 级，声浪半径提升至 %2$s 格，溃退时长提升至 %3$s 秒。",
@@ -30,5 +30,6 @@
   "effect.world_combat.roar_routed": "溃退",
   "world_combat.move.roar.text.wave": "吼退了 %1$s 个对手",
   "world_combat.move.roar.text.miss": "吼声散在空气里",
-  "world_combat.move.roar.text.switch": "吼叫 · 强制换下"
+  "world_combat.move.roar.text.switch": "吼叫 · 强制换下",
+  "worldcombat.skill.roar.description.additional": "命中的瞬间会打断目标当前可被打断的动作、清掉它的交战目标，并朝背离你的方向猛推一把；溃退期间每一拍也会再清一次目标。带可上场后备的对手会被真正换下，后备在它的落点登场；野生或没有后备的只被逐退。"
 }

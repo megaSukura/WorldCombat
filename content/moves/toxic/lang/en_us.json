@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.toxic.summary": "Spit a glob of venom into the target. It burrows deeper every few seconds: each pulse raises the poison a stage so it bites more often, and at the peak it erupts for a chunk of maximum health. A cure makes it wither early.",
-  "worldcombat.skill.toxic.description.0": "The venom flies at %2$s blocks per tick and reaches targets within %1$s blocks.",
-  "worldcombat.skill.toxic.description.1": "On a hit the target is badly poisoned; every %1$s ticks the poison deepens one stage, lasting up to %2$s seconds and reaching stage %3$s.",
-  "worldcombat.skill.toxic.description.2": "At full strength the venom erupts for %1$s%% of the target's maximum health (this can finish it); collision radius %2$s blocks.",
+  "worldcombat.skill.toxic.summary": "Spit a glob of venom into the target: a hit leaves it badly poisoned, and every few seconds the poison deepens a stage so it bites more often; when the venom runs its full time it erupts for a chunk of maximum health (this can finish it), while a cure makes it wither early.",
+  "worldcombat.skill.toxic.description.0": "The venom flies at %2$s blocks per tick toward a target within %1$s blocks, with a flight hit radius of %3$s blocks; terrain in the way or a dodge makes it fizzle.",
+  "worldcombat.skill.toxic.description.1": "On a hit the target is badly poisoned; every %1$s ticks the poison deepens one stage up to stage %3$s, and each deeper stage makes the poison damage tick more often. The venom lasts at most %2$s. Poison- and Steel-type or otherwise poison-immune targets cannot be poisoned, so the move does nothing to them.",
+  "worldcombat.skill.toxic.description.2": "When the venom has run its full time it erupts for %1$s%% of the target's maximum health (this can finish it); if the poison is cured before then, the venom withers early and never erupts.",
   "worldcombat.skill.toxic.use.0": "Open by poisoning a tough target",
   "worldcombat.skill.toxic.use.1": "Turn a hard fight into a war of attrition",
   "worldcombat.skill.toxic.use.2": "Force the target to spend a cure or retreat",

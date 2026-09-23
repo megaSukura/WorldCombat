@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.belch.summary": "The user crunches and swallows the Berry it holds, then lets out the pressure in one short, wide cloud of toxic gas that drenches everything in front: foes caught in it are hurt and likely poisoned. With no Berry in hand the move cannot be used at all. Acrid poisons more and longer and leaves the haze hanging, at a little less power.",
+  "worldcombat.skill.belch.summary": "The user crunches and swallows the Berry it holds, then lets out the pressure in one short, wide cloud of toxic gas that drenches everything in front: foes caught in it are hurt and likely poisoned. With no Berry in hand the move cannot be used at all. Acrid poisons more and longer, at a little less power and a slower cast and cooldown.",
   "worldcombat.skill.belch.use.0": "Trade the held Berry for one heavy frontal spray",
   "worldcombat.skill.belch.use.1": "Poison a whole line of foes in one breath",
   "worldcombat.skill.belch.use.2": "Shroud a small squad at short range",
   "worldcombat.skill.belch.use.3": "Spend a Berry for a solid chunk of Poison damage",
-  "worldcombat.skill.belch.description.0": "The gas is Poison-type special damage: every foe caught takes one hit of about %1$s power. The foe's Special Defence, type matchups and critical hits are settled on impact.",
-  "worldcombat.skill.belch.description.1": "The gas reaches %1$s blocks in front and spans %2$s degrees; a foe caught has a %3$s%% chance to be poisoned for about %4$s seconds.",
-  "worldcombat.skill.belch.acrid.on": "Acrid on: poison chance +0.18 and poison duration ×1.4, at ×0.88 power.",
-  "worldcombat.skill.belch.acrid.off": "Acrid off (Sharp): ×1.15 power and a faster cast, with a lower poison chance and less lingering.",
-  "worldcombat.skill.belch.timing": "Cast at a target within %1$s blocks; after a %2$s-second prepare it spends %4$s PP, then recovers %3$s seconds; cooldown %5$s seconds from commit. Unusable while no Berry is held.",
+  "worldcombat.skill.belch.description.0": "The gas is Poison-type special damage: every foe caught takes one hit of about %1$s damage, lighter the farther it is from the user. The foe's Special Defence, type matchups and critical hits are settled on impact.",
+  "worldcombat.skill.belch.description.1": "The gas reaches %1$s blocks in front and spans %2$s degrees; a foe caught has a %3$s%% chance to be poisoned for about %4$s seconds, taking damage over time while poisoned.",
+  "worldcombat.skill.belch.acrid.on": "Acrid on: poison chance +0.18 and poison duration ×1.4, at ×0.88 power and a slower cast and cooldown.",
+  "worldcombat.skill.belch.acrid.off": "Acrid off (Sharp): ×1.15 power and a faster cast, with a lower poison chance.",
+  "worldcombat.skill.belch.timing": "Cast at a target within %1$s blocks; after a %2$s-second prepare it consumes one held Berry and %4$s PP, then recovers %3$s seconds; cooldown %5$s seconds. Unusable while no Berry is held.",
   "worldcombat.skill.belch.growth.0": "At level %1$s, gas power rises to %2$s.",
   "worldcombat.skill.belch.value.gas": "Gas power",
   "worldcombat.skill.belch.value.reach": "Gas length",
@@ -19,7 +19,7 @@
   "worldcombat.skill.belch.value.motes": "Gas particles",
   "worldcombat.skill.belch.value.maxTargets": "Target cap",
   "worldcombat.skill.belch.preference.acrid": "Acrid",
-  "worldcombat.skill.belch.preference.acrid.help": "On: poison chance +0.18, poison duration ×1.4 and a longer haze, at ×0.88 power, to poison a whole line. Off (Sharp): ×1.15 power with a lower poison chance and less lingering, to land one heavy blow.",
+  "worldcombat.skill.belch.preference.acrid.help": "On: poison chance +0.18 and poison duration ×1.4, at ×0.88 power and a slower cast and cooldown, to poison a whole line. Off (Sharp): ×1.15 power with a lower poison chance, to land one heavy blow.",
   "worldcombat.skill.belch.preference.ai.maxChase": "Cast range",
   "worldcombat.skill.belch.preference.ai.maxChase.help": "Only belches at targets within this distance; farther targets are left to the shared approach logic.",
   "worldcombat.skill.belch.preference.ai.cluster": "Prefer lines",
@@ -27,5 +27,6 @@
   "world_combat.move.belch.text.eat": "Crunched %1$s",
   "world_combat.move.belch.text.hit": "The gas caught %1$s",
   "world_combat.move.belch.text.miss": "No Berry to belch",
-  "world_combat.move.belch.text.poison": "Poisoned"
+  "world_combat.move.belch.text.poison": "Poisoned",
+  "worldcombat.skill.belch.description.targets": "One cloud catches at most %1$s foes, and each target is struck only once."
 }

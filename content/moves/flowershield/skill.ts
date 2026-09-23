@@ -1,23 +1,19 @@
-/**
- * 鲜花防守 / flowershield —— 执行组织与结算。
- *
- * 核心念头：张臂把一圈花瓣从身上层层推出去，花浪扫过一圈；被扫到的草属性身上落下一层护瓣，
- *   防御抬起来。花瓣停一会儿就凋落，提升随之收回。它护的是**所有**草属性——对手的也算。
- *
- * 两幕：
- *   起 `gather`（windup，提交前）：身侧拢起一层花瓣，只播预告，可被打断、不花代价。
- *   绽 `bloom`（提交后）：以自身为心、`bloom` 为半径推出一圈花浪；圈内每个草属性（不分敌我）
- *     抬防御并挂上共享身份 `world_combat:status/petaled` 的护瓣状态。轮到窗口走完或被清除时按 amplifier 原样收回。
- *
- * 与同族分开：耕地是在世界里留下一块必须站上去的土；鲜花防守是从身上一次推开的护瓣，不看站位、也不管敌我。
- */
+/** 用花瓣提高周围草属性宝可梦，以及手持鲜花的普通生物和玩家的防御，范围内的敌人也会受益。 */
 namespace PokemonSkills {
     function flowershieldStage(world: CombatWorld, actor: CombatActor): number {
         return NativeEffects.stage(NativeEffects.read(world, actor), "def");
     }
     /** 草属性判定跟随共享的现行属性（含后来追加草属性的层）。 */
-    function flowershieldQualifies(world: CombatWorld, actor: CombatActor): boolean {
-        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return false;
+    export function flowershieldQualifies(world: CombatWorld, actor: CombatActor): boolean {
+        if (!world.valid(actor)) return false;
+        if (String(actor.domain()) !== "cobblemon") {
+            const held = world.equipment(actor);
+            for (let i = 0; i < held.length; i++) {
+                const slot = String(held[i].slot());
+                if ((slot === "mainhand" || slot === "offhand") && held[i].tagged("minecraft:flowers")) return true;
+            }
+            return false;
+        }
         const pokemon = CobblemonCombat.pokemon(actor);
         const types = NativeEffects.types(pokemon, NativeEffects.read(world, actor));
         for (let i = 0; i < types.length; i++) if (String(types[i]) === "grass") return true;
@@ -55,9 +51,8 @@ namespace PokemonSkills {
         id: flowershieldId,
         cooldownParameter: "wait",
         name: "鲜花防守",
-        description: "以神奇的力量从身上推开一圈花瓣，提高半径内所有草属性宝可梦的防御；对手的草属性也会被护到。"
-            + "花瓣停一会儿就凋落，这份防御随之收回。",
-        uses: ["给身边一圈草属性伙伴同时上防御", "在对手的草属性也在场时用花浪顺手护住自己人", "接下成片攻击前先把防御垫起来"],
+        description: "用花瓣提高周围草属性宝可梦，以及手持鲜花的普通生物和玩家的防御，范围内的敌人也会受益。",
+        uses: ["给草属性伙伴和手持鲜花的队友提高防御", "在对手的草属性也在场时用花浪顺手护住自己人", "接下成片攻击前先把防御垫起来"],
         kind: "self",
         range: 1,
         maxRange: 1,

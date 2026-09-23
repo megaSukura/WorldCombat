@@ -1,18 +1,8 @@
-/**
- * 传递礼物 / bestow —— AI 用途与自己的出手计划。
- *
- * 什么局面下有意义：自己手里有可送的道具，身边有一个空手、没被查封、还是宝可梦的伙伴，且在
- *   `ai.maxChase`（默认 12）格内、与施法者通视。它是一手开战前的安排，不依赖场上一定已经打起来，
- *   所以有自己的 goal 与方法，而不是等共享的 bolster 伙伴观测（那只在有威胁且队友在挨打时才成立）。
- * 对谁出手：最近的那个空手伙伴，不接受自己、也不接受敌人——礼物要有收件人。
- * 候选之间怎么排：priority 40；送出去后自己空手，`available` 随即不再成立，同一件道具只送一次。
- * 够不到怎么办：reach 就是本招射程，共享任务先走到能通视的射程再递；`ai.leaveStation` 决定驻守时是否愿意离位。
- * `ai.giftBelow`（默认 1.0）可以把礼物留到队友生命掉到某个比例以下再递。
- */
+/** 伙伴主动寻找空手且未被查封的友方收件人，宝可梦、玩家与普通生物共用持物探针。 */
 namespace CompanionBehavior {
     registerFact("world_combat:move_bestow/held", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        return String(CobblemonCombat.pokemon(actor).heldItem()).replace("cobblemon:", "");
+        const held = NativeItems.heldOf(access, actor);
+        return held === null ? "" : held.id;
     });
 
     function bestowHeldOf(context: WorldBehavior.Context, target: Entity): string {
@@ -27,7 +17,6 @@ namespace CompanionBehavior {
         if (!ally || ally.health <= 0 || !ally.visible || !ally.friendly) return false;
         const self = source(context);
         if (ally.ref === self.ref) return false;
-        if (domain(context, ally) !== "cobblemon") return false;
         if (status(context, ally, "embargo")) return false;
         if (bestowHeldOf(context, self) === "") return false;
         if (bestowHeldOf(context, ally) !== "") return false;

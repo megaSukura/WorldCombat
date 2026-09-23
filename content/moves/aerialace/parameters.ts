@@ -64,8 +64,8 @@ namespace PokemonSkills {
     ]);
 
     describe("aerialace", [
-        { key: "description.0", values: ["cuts", "slash"] },
-        { key: "description.1", values: ["pursuit", "dashSpeed", "laneWidth"] },
+        { key: "description.0", values: ["cuts","slash"] },
+        { key: "description.1", values: ["pursuit","dashSpeed","laneWidth"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slash", "tier.0.cuts"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.slash", "tier.1.pursuit"] }

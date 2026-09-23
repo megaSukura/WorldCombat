@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.round.summary": "Sing one phrase that carries on: it hits one target with sound damage and leaves the refrain on nearby allies. Anyone still carrying the refrain sings a doubled Round almost instantly. Solo it is a plain verse; with a partner it swells. Sound is not stopped by cover.",
+  "worldcombat.skill.round.summary": "Attacks one enemy with a song and passes an echo to nearby allies. Allies using Round before the echo fades gain double power and a shorter wind-up. The sound passes through cover.",
   "worldcombat.skill.round.use.0": "Hand the refrain to the allies around you",
   "worldcombat.skill.round.use.1": "Answer a partner's refrain with a doubled verse",
   "worldcombat.skill.round.use.2": "Name a target through cover with sound",
-  "worldcombat.skill.round.description.0": "The verse deals %1$s special damage (sound) to the target.",
-  "worldcombat.skill.round.description.1": "The refrain reaches allies within %1$s blocks for %2$s; singing while carrying it doubles this verse and comes out almost at once.",
+  "worldcombat.skill.round.description.0": "Deals about %1$s sound-based special damage to one enemy. When carrying an echo, its doubled power is already included in the displayed damage.",
+  "worldcombat.skill.round.description.1": "Passes an echo to other allies within %1$s blocks for %2$s. Round used while carrying it has doubled power and a four-tick wind-up. Singing does not consume the echo.",
   "worldcombat.skill.round.description.2": "Song reach %1$s blocks; sound is not blocked by cover.",
   "worldcombat.skill.round.description.4": "Lead form is currently %1$s.",
   "worldcombat.skill.round.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -31,5 +31,7 @@
   "world_combat.move.round.text.join": "Round: joined in",
   "world_combat.move.round.text.verse": "Answering! %1$s",
   "world_combat.move.round.text.miss": "Round missed",
-  "effect.world_combat.round_carol": "Round: Refrain"
+  "effect.world_combat.round_carol": "Round: Refrain",
+  "worldcombat.skill.round.lead.on": "Lead: echo radius ×1.35 and duration ×1.3, with song power ×0.94, two extra normal wind-up ticks and three extra cooldown ticks.",
+  "worldcombat.skill.round.lead.off": "Solo: keeps normal power, wind-up and cooldown, with a smaller echo radius and shorter echo duration."
 }

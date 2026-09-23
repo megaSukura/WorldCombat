@@ -119,10 +119,11 @@ namespace PokemonSkills {
     ]);
 
     describe(aquatailId, [
-        { key: "description.0", values: ["wave", "push"] },
+        { key: "description.0", values: ["wave","push"] },
         { key: "description.1", values: ["arc", "reach", "falloff"] },
         { key: "description.2", values: ["steps"] },
         { key: "description.3", values: ["soakTicks"] },
+        { key: "description.douse", values: [] },
         { key: "description.4", values: ["pref.heavy"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wave", "tier.0.push"] },

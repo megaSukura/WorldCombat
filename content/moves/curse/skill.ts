@@ -84,8 +84,8 @@ namespace PokemonSkills {
     define({
         id: curseId,
         cooldownParameter: "recharge", name: "诅咒",
-        description: "一次交换：幽灵属性当场押上半条命，把逐段扣血的债记在对手身上；其他属性的个体押上敏捷，换来物攻与防御的提升。需要一个对手作为凝视的对象。",
-        uses: ["用半条命给对手记一笔慢债", "把敏捷换成凶悍与硬壳", "逼对手分心去清状态或速战速决"],
+        description: "一次交换：幽灵属性当场押出一截最大生命，把逐段扣血的债记在对手身上；其他属性的个体押上敏捷，换来物攻与防御的提升。需要一个对手作为凝视的对象。",
+        uses: ["押上一截生命，给对手记一笔慢债", "把敏捷换成凶悍与硬壳", "逼对手分心去清状态或速战速决"],
         kind: "enemy", range: 5, maxRange: 8,
         prepare: 9, active: 0, recover: 8, cooldown: 90, style: "curse",
         defaults: { bloodpact: false },

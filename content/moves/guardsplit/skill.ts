@@ -1,15 +1,4 @@
-/**
- * 防守平分 / guardsplit —— 注册与动作。
- *
- * 念头的形状：两幕。
- *   聚（windup，提交前）：两股守势读数向中央对齐，只播预告，可被打断且不花代价。
- *   平（merge，提交后）：读出双方防与特防的原始数值，各取平均后把两人都调到同一个平均值——
- *     宝可梦走共享临时属性层（NativeModifiers），其他生物把原版护甲属性按差值抬/削；挂共享身份
- *     world_combat:status/guardsplit 的平分窗口，并各留一枚记号记下这次改动由哪层效果承载。
- *   归（revert）：窗口走完或被外力（牛奶、清除效果）解除时，按记号撤掉那层改动，数值回到原来的底子。
- *
- * 与「防守互换」分开：互换交换的是已经架起来的能力等级；平分改的是底子，等级原样保留。
- */
+/** 暂时平衡双方的防御：较高的一方降低，较低的一方提高。宝可梦平分防御与特防，普通生物按包含装备的护甲参与。 */
 namespace PokemonSkills {
     export const guardsplitScene = "world_combat:move_guardsplit";
     export const guardsplitWindow = "world_combat:guardsplit_window";
@@ -46,7 +35,7 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(guardsplitMark, "start", function () { });
     WorldCombat.effectHandler(guardsplitMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读原版护甲的基础值。 */
+    /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读含装备的有效护甲并剔除能力等级。 */
     export function guardsplitRawStat(world: CombatWorld, actor: CombatActor, stat: string): number {
         if (!world.valid(actor)) return 0;
         if (String(actor.domain()) === "cobblemon") {
@@ -54,7 +43,7 @@ namespace PokemonSkills {
             return Math.max(0, NativeEffects.stat(CobblemonCombat.pokemon(actor), state, stat));
         }
         const attribute = world.attributeValue(actor, "minecraft:generic.armor");
-        return attribute === null ? 0 : Math.max(0, attribute.base());
+        return attribute === null ? 0 : Math.max(0, attribute.value() - CombatStages.stage(world, actor, "def") * CombatStages.armorPerStage);
     }
     /** 守势底子合计（防 + 特防的原始值），供本招 AI 判断值不值得平。 */
     export function guardsplitGuard(world: CombatWorld, actor: CombatActor): number {
@@ -73,7 +62,7 @@ namespace PokemonSkills {
         id: "guardsplit",
         cooldownParameter: "recharge",
         name: "防守平分",
-        description: "利用超能力把双方防御与特防的数值相加再平分一段时间：厚的被削薄、薄的被加厚，两人扛在同一条线上。",
+        description: "暂时平衡双方的防御：较高的一方降低，较低的一方提高。宝可梦平分防御与特防，普通生物按包含装备的护甲参与。",
         uses: ["把自己的薄防抬到对手的厚度", "把对手的厚壁削到自己的水平", "在对手防御远高于自己时抹平差距"],
         kind: "enemy",
         range: 6,

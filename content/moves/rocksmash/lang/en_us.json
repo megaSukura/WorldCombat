@@ -2,7 +2,7 @@
   "worldcombat.skill.rocksmash.summary": "Throw a quick flurry of point-blank punches at the hardest part of the foe: each jab deals a little contact damage, and if any of them lands the set may crack the target's Defence down a stage. Fast to throw and quick to come back, so it is the cheap way to wear a guard down.",
   "worldcombat.skill.rocksmash.description.0": "The flurry throws %2$s jabs, each dealing %1$s contact damage.",
   "worldcombat.skill.rocksmash.description.1": "Punch reach is about %1$s blocks with a %2$s block hit radius.",
-  "worldcombat.skill.rocksmash.description.2": "If any jab in the set lands, a %1$s chance lowers the target's Defence by %2$s stage; the cracked mark lasts %3$s.",
+  "worldcombat.skill.rocksmash.description.2": "If any jab in the set lands, a %1$s chance lowers the target's Defence by %2$s stage; the drop does not heal when the mark ends. The cracked mark lasts %3$s, and other guard-breaking moves read it.",
   "worldcombat.skill.rocksmash.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.rocksmash.growth.0": "From level %1$s the single jab rises to %2$s.",
   "worldcombat.skill.rocksmash.growth.1": "From level %1$s the crack chance rises to %2$s.",

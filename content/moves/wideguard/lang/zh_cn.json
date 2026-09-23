@@ -4,11 +4,11 @@
   "worldcombat.skill.wideguard.use.1": "在队友被范围招式罩住前抢一拍立墙",
   "worldcombat.skill.wideguard.use.2": "用一次短窗口替全队吃下一轮爆发",
   "worldcombat.skill.wideguard.description.0": "宽墙为每人卸掉约 %1$s 点非接触伤害，只立约 %2$s 秒。",
-  "worldcombat.skill.wideguard.description.1": "墙覆盖周围 %1$s 格。",
+  "worldcombat.skill.wideguard.description.1": "发动瞬间罩住自己与周围 %1$s 格内的队友。",
   "worldcombat.skill.wideguard.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.wideguard.brace.wide": "广墙：半径更大、磨得更快——罩得广。",
   "worldcombat.skill.wideguard.brace.dense": "厚墙：吸收总量更大、半径更小——罩得紧、更耐打。",
-  "worldcombat.skill.wideguard.timing": "自身招式，覆盖半径 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.wideguard.timing": "自身招式：准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，冷却 %4$s 秒。",
   "worldcombat.skill.wideguard.value.capacity": "吸收总量",
   "worldcombat.skill.wideguard.value.window": "立墙时长",
   "worldcombat.skill.wideguard.value.radius": "遮蔽半径",
@@ -28,5 +28,6 @@
   "world_combat.move.wideguard.text.raise": "广域防守（卸力 %1$s／%2$s 人／%3$s 秒）",
   "world_combat.move.wideguard.text.block": "宽墙卸力 %1$s（余 %2$s）",
   "world_combat.move.wideguard.text.fall": "宽墙散去",
-  "effect.world_combat.wide_guard": "广域防守"
+  "effect.world_combat.wide_guard": "广域防守",
+  "worldcombat.skill.wideguard.description.3": "只挡来自敌人的远程与范围攻击，贴身近战穿得过。施法者与每名被罩住的队友各领一份吸收量，用尽或到时即散；单次伤害超过余量时，多出来的部分照常落下。离开施法者太远、或与施法者之间失去视线时，这份宽墙也会消失。"
 }

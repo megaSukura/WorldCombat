@@ -5,8 +5,8 @@
   "worldcombat.skill.waterspout.use.2": "把贴身的追击者从脸上冲开",
   "worldcombat.skill.waterspout.use.3": "在雨里打出最大的一记范围水击",
   "worldcombat.skill.waterspout.description.0": "潮头扫过身周一圈，圈内每个敌人各挨约 %1$s 点伤害；潮墙最远推到约 %2$s 格，空中与地上的目标都会被扫到。对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.waterspout.description.1": "潮墙推完约需 %1$s 秒；被扫中的目标沿背离方向被推约 %2$s 格，并带着湿透身份约 %3$s。",
-  "worldcombat.skill.waterspout.undertow.on": "当前回卷式：浪头 ×0.82、推距更近，但方向反过来把人拉向自己，湿身更久，起手 +2 刻、冷却 +6 刻。",
+  "worldcombat.skill.waterspout.description.1": "潮墙从脚下推到最远约需 %1$s 秒；被扫中的目标沿背离方向被推约 %2$s 格，并带着湿透身份约 %3$s，期间移动速度降低 15%。",
+  "worldcombat.skill.waterspout.undertow.on": "当前回卷式：浪头 ×0.82、潮头更近，但方向反过来把人拉向自己，湿身更久，起手 +2 刻、冷却 +6 刻。",
   "worldcombat.skill.waterspout.undertow.off": "当前推涌式：浪头更足、把人推开，用来把一圈人从脸上冲走。",
   "worldcombat.skill.waterspout.timing": "可对身周 %1$s 格施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.waterspout.growth.0": "达到 %1$s 级，冷却降至 %2$s 秒。",
@@ -18,7 +18,7 @@
   "worldcombat.skill.waterspout.value.frontThickness": "潮头厚度",
   "worldcombat.skill.waterspout.value.volume": "水量",
   "worldcombat.skill.waterspout.preference.undertow": "回卷式",
-  "worldcombat.skill.waterspout.preference.undertow.help": "开启：潮水反过来把人拉向自己、湿身更久，但浪头 ×0.82、推得更近、起手与冷却更长；关闭（推涌式）＝把人推开、威力更足，用来把人从脸上冲走。",
+  "worldcombat.skill.waterspout.preference.undertow.help": "开启：潮水反过来把人拉向自己、湿身更久，但浪头 ×0.82、潮头更近、起手与冷却更长；关闭（推涌式）＝把人推开、威力更足，用来把人从脸上冲走。",
   "worldcombat.skill.waterspout.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.waterspout.preference.ai.maxChase.help": "超过这个距离就不主动靠近，先在潮头外待命。越大越愿意先朝目标接近再掀潮。",
   "worldcombat.skill.waterspout.preference.ai.peel": "贴身时优先",
@@ -27,5 +27,6 @@
   "world_combat.move.waterspout.text.hit": "潮头扫到 %1$s 个",
   "world_combat.move.waterspout.text.miss": "潮水落空",
   "world_combat.move.waterspout.text.douse": "浇熄",
-  "world_combat.move.waterspout.text.soak": "湿透"
+  "world_combat.move.waterspout.text.soak": "湿透",
+  "worldcombat.skill.waterspout.description.douse": "命中时若目标正带着灼伤，会解除其灼伤并浇熄身上的火；无论是否带火，被潮头扫中的目标都会被浇上湿透。"
 }

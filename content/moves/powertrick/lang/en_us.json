@@ -7,7 +7,7 @@
   "worldcombat.skill.powertrick.description.2": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.powertrick.long.on": "Long trick: hold window x1.9, for using the flipped form across a stretch of the fight; costs +2 wind-up and x1.3 cooldown.",
   "worldcombat.skill.powertrick.long.off": "Short trick: cheaper wind-up and cooldown (x0.85), snapping back quickly, only enough for one exchange.",
-  "worldcombat.skill.powertrick.timing": "Cast on yourself; after a %2$s s wind-up it costs %4$s PP, then %3$s s recovery, %5$s s cooldown from commit.",
+  "worldcombat.skill.powertrick.timing": "Cast on yourself; after a %1$s s wind-up it costs %3$s PP, then %2$s s recovery, %4$s s cooldown from commit.",
   "worldcombat.skill.powertrick.growth.0": "At level %1$s the hold window extends to %2$s and the cooldown from commit drops to %3$s.",
   "worldcombat.skill.powertrick.growth.1": "At level %1$s the hold window extends to %2$s and the cooldown drops again to %3$s.",
   "worldcombat.skill.powertrick.value.tempo": "Wind-up",

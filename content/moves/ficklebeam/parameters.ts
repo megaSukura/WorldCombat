@@ -114,11 +114,11 @@ namespace PokemonSkills {
         rationale: "标准特殊防御系数，让齐射的那一发翻倍在场上格外醒目。" }, {});
 
     describe(ficklebeamId, [
-        { key: "description.0", values: ["beam", "reach", "width"] },
+        { key: "description.0", values: ["beam","reach","width"] },
         { key: "description.1", values: ["chance"] },
         { key: "unison.on", values: [], when: function (context) { return read(context.detail.values, ["unison"]) === true; } },
         { key: "unison.off", values: [], when: function (context) { return read(context.detail.values, ["unison"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.beam"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.beam", "tier.1.chance"] }
     ]);

@@ -130,8 +130,8 @@ namespace PokemonSkills {
     ]);
 
     describe(fairywindId, [
-        { key: "description.0", values: ["gale", "pierce"] },
-        { key: "description.1", values: ["reach", "flight", "radius"] },
+        { key: "description.0", values: ["gale","pierce"] },
+        { key: "description.1", values: ["reach","flight","radius"] },
         { key: "description.2", values: ["fling"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },

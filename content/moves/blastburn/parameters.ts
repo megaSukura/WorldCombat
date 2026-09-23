@@ -85,8 +85,9 @@ namespace PokemonSkills {
 
     describe("blastburn", [
         { key: "description.0", values: ["blast"] },
-        { key: "description.1", values: ["radius", "burnChance", "burnTicks"] },
+        { key: "description.1", values: ["radius","burnChance","burnTicks"] },
         { key: "description.2", values: ["exhaust"] },
-        { key: "description.3", values: ["reach", "speed", "charge"] }
+        { key: "description.3", values: ["reach","speed","charge","collisionRadius"] },
+        { key: "timing", values: ["charge","recover","pp","cooldown"] }
     ]);
 }

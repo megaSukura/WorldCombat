@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.stoneedge.summary": "Crouch and press the earth underfoot, then split a seam toward the target: stone spikes drive out of the ground along it in segments. Whoever stands on the ridge band is stabbed from below, the first foe takes full power and later foes on the same ridge take less; the broken ground stays a while and closes again. The scattered form widens the ridge to catch a rank, the sharp form is one narrow seam.",
-  "worldcombat.skill.stoneedge.description.0": "Each spike deals %1$s power to foes on the ridge band, which is %2$s blocks half-wide.",
+  "worldcombat.skill.stoneedge.description.0": "Each foe standing on the ridge band is stabbed only once; the first takes about %1$s Rock physical damage. The band is %2$s blocks half-wide.",
   "worldcombat.skill.stoneedge.description.1": "The seam runs %1$s blocks from the caster and drives out as %2$s spike segments.",
   "worldcombat.skill.stoneedge.description.2": "Later foes on the same ridge keep %1$s of the power, and the broken ground lingers for %2$s.",
   "worldcombat.skill.stoneedge.stance.wide": "Scattered form: the band widens 1.8x with two more segments, so one seam catches a rank; the cost is 0.9x power, a shorter seam and a longer wind-up and cooldown.",

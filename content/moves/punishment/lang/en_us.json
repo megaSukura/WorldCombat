@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.punishment.summary": "The user weighs every layer of power the target has raised and brings down a single overhead judgement: for each positive stat stage the target has, the blow lands heavier. It is the family's only move that draws power from the foe - the others wipe the target's stat changes away, this one counts them in.",
+  "worldcombat.skill.punishment.summary": "Punishes an empowered target with a close-range strike. Positive stat stages and potion/beacon buffs make it hit harder.",
   "worldcombat.skill.punishment.use.0": "Hit hard when the foe has stacked stat stages",
   "worldcombat.skill.punishment.use.1": "Weigh every layer the target has raised into the damage",
   "worldcombat.skill.punishment.use.2": "An overhead judgement that falls from above",
@@ -23,5 +23,6 @@
   "worldcombat.skill.punishment.preference.ai.punishBoost": "Prefer buffed targets",
   "worldcombat.skill.punishment.preference.ai.finish": "Finish weakened foes",
   "world_combat.move.punishment.text.hit": "Judged (target at %1$s raised stages)",
-  "world_combat.move.punishment.text.miss": "Judgement missed"
+  "world_combat.move.punishment.text.miss": "Judgement missed",
+  "worldcombat.skill.punishment.world": "All seven positive stat stages and potion/beacon buffs count, with level I counting once. Each level adds 18 power, capped at 150 extra power. The target keeps its buffs after being hit."
 }

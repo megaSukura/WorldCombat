@@ -96,8 +96,8 @@ namespace PokemonSkills {
     defineDamage("strength", "slam", {}, { contact: false });
 
     describe("strength", [
-        { key: "description.0", values: ["slug", "reach", "punchRadius"] },
-        { key: "description.1", values: ["shove", "slam"] },
+        { key: "description.0", values: ["slug","reach","punchRadius"] },
+        { key: "description.1", values: ["shove","slam"] },
         { key: "plant.on", values: [], when: function (context) { return read(context.detail.values, ["plant"]) === true; } },
         { key: "plant.off", values: [], when: function (context) { return read(context.detail.values, ["plant"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

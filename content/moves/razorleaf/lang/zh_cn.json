@@ -3,7 +3,7 @@
   "worldcombat.skill.razorleaf.use.0": "沿同一条窄带连发一波波叶刃",
   "worldcombat.skill.razorleaf.use.1": "削穿排成一列的对手",
   "worldcombat.skill.razorleaf.use.2": "站桩的敌人被一拍接一拍反复削",
-  "worldcombat.skill.razorleaf.description.0": "每波每片叶造成 %1$s 点物理伤害，一次出叶分 %2$s 波。",
+  "worldcombat.skill.razorleaf.description.0": "一次出叶分 %2$s 波，每波对窄带里的每个敌人各造成一次约 %1$s 点物理伤害；同一目标会被一波接一波反复削，而且更容易击中要害。",
   "worldcombat.skill.razorleaf.description.1": "叶沿着瞄准方向飞 %1$s 格，窄带半宽 %2$s 格，两波之间隔 %3$s。",
   "worldcombat.skill.razorleaf.broad.on": "撒叶式：窄带铺宽到 1.8 倍、每波更重（×1.15）、冷却少 4 刻，但少发一波。",
   "worldcombat.skill.razorleaf.broad.off": "连叶式（默认）：多连发一波、冷却多 5 刻，但窄带收窄到 0.8 倍、每波更轻。",

@@ -47,7 +47,7 @@ namespace PokemonSkills {
         id: "metronome",
         cooldownParameter: "recharge",
         name: "挥指",
-        description: "挥动手指刺激自己，从所有已实装招式中随机使出一个。",
+        description: "挥动手指刺激自己，从所有可被借出的已实装招式中随机借出一个并使出。",
         uses: ["搓指搅动招式池", "随机使出一个招式"],
         kind: "self",
         range: 16,

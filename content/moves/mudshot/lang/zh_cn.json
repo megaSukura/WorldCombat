@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.mudshot.summary": "把一团湿泥压成扁块贴着地面甩出去：泥块平飞、又快又阔，命中时在目标脚下炸开，泥浆顺着泼溅糊上附近所有敌人的腿脚，谁被糊住谁掉速度；落点地上留下一片湿泥。阔泼式泼得更宽、掉速更深，单发更轻更近。",
-  "worldcombat.skill.mudshot.description.0": "命中活物造成 %1$s 的泥浆伤害，并在半径 %2$s 格内炸开；被糊住的腿脚下降 %3$s 级速度（对其他战斗者落到移动速度属性）。",
+  "worldcombat.skill.mudshot.description.0": "泥块在落点炸开：命中活物时对主目标造成约 %1$s 点特殊伤害，半径 %2$s 格内被泥浆溅到的敌人都掉 %3$s 级速度（对其他战斗者落到移动速度属性），只被溅到的其他人只被糊腿、不再吃这一下伤害。",
   "worldcombat.skill.mudshot.description.1": "泥块以 %1$s 格/刻平飞，能在 %2$s 格内投出，判定半径 %3$s 格。",
-  "worldcombat.skill.mudshot.description.2": "糊腿身份挂 %1$s，地上那片湿泥留 %2$s。",
+  "worldcombat.skill.mudshot.description.2": "腿脚被糊住后掉的速度在交战中一直保留，直到能力变化被清除或脱离战斗；主目标身上的糊腿标记维持 %1$s，落点那片湿泥留 %2$s。",
   "worldcombat.skill.mudshot.wide.on": "阔泼式：泼溅更宽、掉速更深、泥洼更久，单发更轻、射程更近、冷却更久。",
   "worldcombat.skill.mudshot.wide.off": "点射式：泥浆更重、更远、更快，泼溅只糊得住脚下这一小圈。",
   "worldcombat.skill.mudshot.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

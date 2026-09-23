@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.disable.summary": "Sends a binding nail into the target, nailing down the move it just used; until the nail is pulled that move cannot be used, though other moves still work. It misses if the target has not acted or its last move is too old.",
+  "worldcombat.skill.disable.summary": "Disables the target’s last move. For ordinary creatures and players, it disables the last successful attack method, such as melee or arrows; a different method remains usable.",
   "worldcombat.skill.disable.use.0": "Shut off a foe's main damage move",
   "worldcombat.skill.disable.use.1": "Break a strong move the foe just revealed",
   "worldcombat.skill.disable.use.2": "Force a foe to switch moves and break its combo",
-  "worldcombat.skill.disable.description.0": "The named move cannot be used for %1$s; committing it in that time is turned back.",
+  "worldcombat.skill.disable.description.0": "The pin lasts %1$s and prevents the named move. For ordinary targets, hits using the recorded melee, arrow or other attack type are blocked. Milk or effect removal clears the pin.",
   "worldcombat.skill.disable.description.1": "Reads back moves used within %1$s (older ones are lost); the nail reaches %2$s blocks.",
   "worldcombat.skill.disable.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s. The target can keep fighting with a move outside the list.",
   "worldcombat.skill.disable.heavy.0": "Heavy nail: duration x1.3, range x0.9, cooldown x1.15 — holds longer but reaches shorter and costs more.",
@@ -26,5 +26,6 @@
   "world_combat.move.disable.text.fade": "The nail loosens",
   "world_combat.move.disable.text.break": "The nail is pulled out",
   "world_combat.move.disable.text.miss": "Nothing to nail",
-  "effect.world_combat.disable_lock": "Binding Nail"
+  "effect.world_combat.disable_lock": "Binding Nail",
+  "worldcombat.skill.disable.native_attack": "normal attack"
 }

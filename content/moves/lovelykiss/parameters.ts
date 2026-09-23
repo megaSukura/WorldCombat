@@ -107,7 +107,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["sleepTicks"] },
         { key: "leap.on", values: [], when: function (context) { return read(context.detail.values, ["leap"]) === true; } },
         { key: "leap.off", values: [], when: function (context) { return read(context.detail.values, ["leap"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pounce"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.pounce", "tier.1.sleepTicks", "tier.1.landChance"] }
     ]);

@@ -3,9 +3,9 @@
   "worldcombat.skill.circlethrow.use.0": "Throw an opponent that rushed you over your shoulder",
   "worldcombat.skill.circlethrow.use.1": "Counter in melee and clear an opponent out of your face",
   "worldcombat.skill.circlethrow.use.2": "Slam a sturdy target out of melee and hit it on the way",
-  "worldcombat.skill.circlethrow.description.0": "Grab one opponent within %2$s blocks and slam it for about %1$s Fighting contact damage.",
-  "worldcombat.skill.circlethrow.description.1": "The opponent is thrown over your head to land about %1$s blocks behind you, peaking around %2$s blocks high over %3$s seconds.",
-  "worldcombat.skill.circlethrow.description.2": "Anyone thrown is marked Routed for %1$s seconds; while it lasts, anything closer than %2$s blocks is thrown another %3$s blocks every 10 ticks.",
+  "worldcombat.skill.circlethrow.description.0": "Grab one opponent within %2$s blocks and, on a hit, slam it for about %1$s Fighting contact damage; if it leaves grab range or the slam misses, nothing is thrown.",
+  "worldcombat.skill.circlethrow.description.1": "On a hit the opponent is thrown over your head to land about %1$s blocks behind you on the far side, peaking around %2$s blocks high over %3$s seconds; terrain can block the flight.",
+  "worldcombat.skill.circlethrow.description.2": "Anyone thrown is marked Routed for %1$s seconds: it is interrupted at once and loses its current target; while it lasts, anything closer than %2$s blocks is pushed up to about %3$s blocks away from you every 10 ticks (terrain can stop the push).",
   "worldcombat.skill.circlethrow.tight.on": "Tight grip on: slam x1.1 and rout x1.3, at the cost of x0.8 throw distance.",
   "worldcombat.skill.circlethrow.tight.off": "Tight grip off: throw distance x1.3, farther, at the cost of slam x0.95 and rout x0.75.",
   "worldcombat.skill.circlethrow.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
@@ -32,5 +32,6 @@
   "effect.world_combat.circlethrow_routed": "Routed",
   "world_combat.move.circlethrow.text.throw": "Threw the opponent over",
   "world_combat.move.circlethrow.text.miss": "Grabbed at nothing",
-  "world_combat.move.circlethrow.text.switch": "Circle Throw · forced switch"
+  "world_combat.move.circlethrow.text.switch": "Circle Throw · forced switch",
+  "worldcombat.skill.circlethrow.description.additional": "After landing, a thrown opponent that has an available reserve is forced out, and the reserve is sent in at the landing spot; a wild or reserve-less target is only left Routed."
 }

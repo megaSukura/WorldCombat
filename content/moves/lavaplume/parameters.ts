@@ -96,7 +96,7 @@ namespace PokemonSkills {
     ]);
 
     describe("lavaplume", [
-        { key: "description.0", values: ["plume"] },
+        { key: "description.0", values: ["plume","maxTargets"] },
         { key: "description.1", values: ["ringRadius", "spreadTicks"] },
         { key: "description.2", values: ["burnChance"] },
         { key: "description.3", values: ["ember", "emberTicks", "emberPulse"] },

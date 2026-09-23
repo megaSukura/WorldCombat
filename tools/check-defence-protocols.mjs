@@ -55,7 +55,8 @@ function incoming(input, result) {
     data: json => json === undefined ? original : original = json });
   return JSON.parse(original);
 }
-const damage = { amount: 4096, armorExcluded: 24, toughnessExcluded: 8, type: 'electric', critical: true };
+const damage = { amount: 4096, armorExcluded: 24, toughnessExcluded: 8, armorAddedExcluded: 6,
+  toughnessAddedExcluded: 2, ignoreDefenceStages: true, type: 'electric', critical: true };
 const result = incoming(damage, { ...damage, redirect: receiver.ref() });
 assert.equal(result.amount, 0);
 assert.equal(transfers.length, 1);
@@ -63,6 +64,9 @@ assert.equal(transfers[0].target, receiver);
 assert.equal(transfers[0].amount, 4096);
 assert.equal(transfers[0].data.armorExcluded, undefined);
 assert.equal(transfers[0].data.toughnessExcluded, undefined);
+assert.equal(transfers[0].data.armorAddedExcluded, undefined);
+assert.equal(transfers[0].data.toughnessAddedExcluded, undefined);
+assert.equal(transfers[0].data.ignoreDefenceStages, undefined);
 assert.equal(transfers[0].data.type, 'electric');
 assert.equal(transfers[0].data.critical, true);
 assert.equal(transfers[0].data.redirected, true);

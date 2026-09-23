@@ -1,14 +1,4 @@
-/**
- * 妒火 / burningjealousy —— 伙伴 AI 用途。
- *
- * 这招的 AI 围绕「惩罚刚变强的对手」：
- *   - 何时考虑：目标看得见、活着、非友方，在 `ai.maxChase` 内（或它就是焦点）。
- *   - 对谁出手：优先此刻带着正面能力等级的目标——这一击对它们更重、还会点燃；已经点燃的不再重复烧，
- *     按普通火招排序。火属性目标不吃灼伤，优先级降到普通水平。
- *   - 出手前：由共用任务走到 reach；扇面朝目标方向张开，尽量把目标框进张角里。
- *   - 放完之后：被点燃的目标持续掉血，交回共享交战计划。
- *   - 什么时候紧急：目标正面等级合计达到 `ai.minStages` 时 priority 抬到 80 以上，抢在它把强化用出来之前先烧。
- */
+/** burningjealousy：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     /** 只读探针：目标当前正面能力等级合计，回调内缓存。 */
     CompanionBehavior.registerFact("world_combat:move_burningjealousy/stages", function (access, actor) {

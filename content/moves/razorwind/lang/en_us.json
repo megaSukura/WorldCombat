@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.razorwind.summary": "Plant your feet and twist the air around you into blades of wind, then release the whole fan forward: every foe the fan covers takes one wind blade, cutting several in one sweep. The charge can be interrupted - the price of the two-turn attack - and it lands critical hits more often.",
-  "worldcombat.skill.razorwind.description.0": "Each wind blade deals %1$s special damage to foes in the fan and lands critical hits more often.",
-  "worldcombat.skill.razorwind.description.1": "The fan reaches %1$s blocks forward and spreads %2$s degrees to each side, cutting up to %3$s targets at once.",
-  "worldcombat.skill.razorwind.description.2": "It takes %1$s of standing still to gather the wind.",
+  "worldcombat.skill.razorwind.summary": "Plant your feet and twist the air into blades of wind, then release the whole fan forward: nearest-first, up to a few foes in the fan each take one wind blade, and it lands critical hits more often. The charge is made standing still and can be interrupted, which costs no PP.",
+  "worldcombat.skill.razorwind.description.0": "Each wind blade deals about %1$s special damage to one target in the fan, and lands critical hits more often.",
+  "worldcombat.skill.razorwind.description.1": "The fan reaches %1$s blocks forward and spreads %2$s degrees to each side, cutting up to %3$s targets nearest-first; targets blocked by terrain are skipped.",
+  "worldcombat.skill.razorwind.description.2": "It takes %1$s of standing still to gather the wind; the charge can be interrupted, and an interrupted charge costs no PP.",
   "worldcombat.skill.razorwind.stance.spread": "Scattershot form: a wider fan and more blades, at slightly lower per-blade power and reach.",
   "worldcombat.skill.razorwind.stance.focus": "Focused form: higher power and longer reach, at a narrower fan.",
   "worldcombat.skill.razorwind.timing": "Range %1$s blocks; %2$s s charge, %3$s s recovery, %4$s PP, %5$s s cooldown.",

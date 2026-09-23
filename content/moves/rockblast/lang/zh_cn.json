@@ -3,7 +3,7 @@
   "worldcombat.skill.rockblast.use.0": "中近距离一梭有弧线的重石",
   "worldcombat.skill.rockblast.use.1": "把落点地面崩成碎石",
   "worldcombat.skill.rockblast.use.2": "对厚目标用巨岩式堆单块伤害",
-  "worldcombat.skill.rockblast.description.0": "每块石头造成 %1$s 点物理伤害，这一梭会掰出 %2$s 块（原生 2～5，随精灵数据变化）。",
+  "worldcombat.skill.rockblast.description.0": "每块石头造成约 %1$s 点物理伤害，这一梭会掰出 %2$s 块（原生 2～5，随精灵数据变化）。",
   "worldcombat.skill.rockblast.description.1": "石块每隔 %1$s 以 %2$s 格/刻抛出，能打到 %3$s 格内，散布 ±%4$s。",
   "worldcombat.skill.rockblast.description.2": "单块石头判定 %1$s 格、按 %2$s 格/刻²弧坠下落。",
   "worldcombat.skill.rockblast.boulder.on": "巨岩式：单石威力 ×1.4、石块更大、散布 ×0.6、弧更陡；代价是投石数收在 3、间隔 +2 刻、石速 ×0.92、起手 +3 刻、冷却 +5 刻。",
@@ -29,5 +29,6 @@
   "worldcombat.skill.rockblast.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.rockblast.preference.ai.maxChase.help": "超过这个距离就不主动抛石，先走近。越大越愿意从更远处先手。",
   "worldcombat.skill.rockblast.preference.ai.finish": "优先收残血",
-  "worldcombat.skill.rockblast.preference.ai.finish.help": "开启：残血目标排得更前，用这一梭石块收尾；关闭则所有目标同价。"
+  "worldcombat.skill.rockblast.preference.ai.finish.help": "开启：残血目标排得更前，用这一梭石块收尾；关闭则所有目标同价。",
+  "worldcombat.skill.rockblast.description.additional": "无论砸中敌人还是砸在地上，每块石头都会把落点一小片最上层地表崩成碎石；碎石存续 %1$s，到期原方块回来，砸空那一下的碎石更短暂。"
 }

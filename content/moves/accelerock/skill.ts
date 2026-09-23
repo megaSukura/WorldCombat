@@ -68,10 +68,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: accelerockId,
         cooldownParameter: "recharge",
         name: "Accelerock",
-        description: "The user smashes into the target at high speed while clad in rock. This move always goes first.",
+        description: "把碎岩披到身上，整个身体贴地撞出去：撞实一下把人顶飞，落点崩出一小片碎石疤。全族最重的一记先制。破阵式改成沿冲刺线一路碾过去。",
         uses: ["贴地一记最重的石身先手，把目标撞飞", "破阵式撞穿一排贴在一起的敌人", "落点崩出碎石疤，改变脚下的地面"],
         kind: "enemy",
         range: 4.2,

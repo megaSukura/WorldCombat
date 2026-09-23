@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.paraboliccharge.summary": "A dish of electricity opens around the user: every enemy inside takes a bolt, and half of each hit is drawn back - the more targets, the more healing.",
+  "worldcombat.skill.paraboliccharge.summary": "A dish of electricity opens around the user: every enemy inside takes one bolt, and a share of each hit is drawn back - the more targets, the more healing.",
   "worldcombat.skill.paraboliccharge.use.0": "Catch a whole ring and drain it back when surrounded",
   "worldcombat.skill.paraboliccharge.use.1": "Sustain that heals more the more foes are in the dish",
   "worldcombat.skill.paraboliccharge.use.2": "Press everyone nearby at once in a scrum",
-  "worldcombat.skill.paraboliccharge.description.0": "Each bolt deals about %1$s power, of which %2$s is restored to the user (settled per target).",
+  "worldcombat.skill.paraboliccharge.description.0": "Opens an electric dish centred on the user; every enemy inside takes one bolt, up to %3$s targets. Each bolt deals about %1$s special damage, of which %2$s is drawn back to the user - one share per target caught.",
   "worldcombat.skill.paraboliccharge.description.1": "Dish radius %1$s blocks (also the real range).",
   "worldcombat.skill.paraboliccharge.wide.on": "Wide dish: dish x1.25, more targets drawn in, but each bolt x0.82.",
   "worldcombat.skill.paraboliccharge.wide.off": "Focused: dish x0.78, each bolt x1.28 and heavier - for few, hard targets.",
@@ -26,5 +26,6 @@
   "worldcombat.skill.paraboliccharge.preference.ai.cluster.help": "When on, the user prioritises the dish if other enemies are packed within 3.5 blocks of the target; when off it only ranks by ordinary attack order.",
   "world_combat.move.paraboliccharge.text.hit": "Shocked %1$s targets",
   "world_combat.move.paraboliccharge.text.reclaim": "Drew back %1$s bolts",
-  "world_combat.move.paraboliccharge.text.miss": "No one in the dish"
+  "world_combat.move.paraboliccharge.text.miss": "No one in the dish",
+  "worldcombat.skill.paraboliccharge.value.maxTargets": "Maximum targets"
 }

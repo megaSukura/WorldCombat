@@ -28,10 +28,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "waterfall",
         cooldownParameter: "recharge",
         name: "Waterfall",
-        description: "The user charges at the target and may make it flinch.",
+        description: "水从身后涌成一道竖直水帘，缩身蓄势后整身扑出：撞实的一刻水帘拍身，把目标冲退并可能震懵；下着雨时水势更盛。",
         uses: ["贴身冲开或留住一个目标", "把它震懵，给队友制造输出窗口", "在雨里扑出去，水势更盛"],
         kind: "enemy",
         range: 3.4,

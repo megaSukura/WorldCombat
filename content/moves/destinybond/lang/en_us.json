@@ -7,7 +7,7 @@
   "worldcombat.skill.destinybond.description.1": "Tying it takes %1$s, with a %2$s cooldown. It neither reduces damage nor shields you; it only puts the cost on the table.",
   "worldcombat.skill.destinybond.tight.0": "Tight knot: a longer bond, but you are rooted on the spot the whole time and the cooldown is longer.",
   "worldcombat.skill.destinybond.tight.1": "Loose knot: a shorter bond, but you keep your footing and the cooldown is shorter - and it loosens sooner.",
-  "worldcombat.skill.destinybond.timing": "Cast on yourself: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s from commit.",
+  "worldcombat.skill.destinybond.timing": "Cast on yourself: after %1$s of preparation it spends %3$s PP; the recovery is %2$s and the cooldown %4$s from commit.",
   "worldcombat.skill.destinybond.value.bondTicks": "Bond duration",
   "worldcombat.skill.destinybond.value.markRadius": "Knot radius",
   "worldcombat.skill.destinybond.value.threads": "Thread count",
@@ -25,5 +25,6 @@
   "world_combat.move.destinybond.text.bind": "Bond armed %1$s s",
   "world_combat.move.destinybond.text.drag": "Destiny Bond: down together",
   "world_combat.move.destinybond.text.lift": "The thread loosens",
-  "effect.world_combat.destiny_bond": "Destiny Bond"
+  "effect.world_combat.destiny_bond": "Destiny Bond",
+  "worldcombat.skill.destinybond.description.2": "Casting it again while a bond is already armed fails; the thread loosens when its time runs out or it is cleared, and as long as you have not been brought down no one is dragged with you."
 }

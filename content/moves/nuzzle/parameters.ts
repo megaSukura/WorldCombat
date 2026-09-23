@@ -94,8 +94,8 @@ namespace PokemonSkills {
     ]);
 
     describe(nuzzleId, [
-        { key: "description.0", values: ["nudge", "touchReach", "reach"] },
-        { key: "description.1", values: ["lunge", "numbTicks"] },
+        { key: "description.0", values: ["nudge","touchReach","reach"] },
+        { key: "description.1", values: ["lunge","numbTicks"] },
         { key: "description.2", values: ["tempo", "settle", "recharge"] },
         { key: "pounce.on", values: [], when: function (context) { return read(context.detail.values, ["pounce"]) === true; } },
         { key: "pounce.off", values: [], when: function (context) { return read(context.detail.values, ["pounce"]) !== true; } },

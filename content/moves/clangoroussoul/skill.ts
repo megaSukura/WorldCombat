@@ -18,7 +18,7 @@ namespace PokemonSkills {
     define({
         id: "clangoroussoul",
         name: "Clangorous Soul",
-        description: "The user boosts all its stats by using some of its own HP.",
+        description: "踏着一支越唱越烈的战舞，逐拍燃烧自己的生命，把攻击、防御、特攻、特防、速度一起提高；血不足时舞会提前收势，被打断时已经抬起的等级会留下。",
         uses: ["开战前站定起舞，把全部五项拉起来", "在对手还在接近的窗口里叠起一张全能底牌", "生命充裕时用血换一次全面压制"],
         kind: "self",
         range: 3,

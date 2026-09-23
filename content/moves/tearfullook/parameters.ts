@@ -71,9 +71,9 @@ namespace PokemonSkills {
             "冷却", "两次示弱之间的等待；等级越高越熟练。")
     });
     describe(tearfullookId, [
-        { key: "description.0", values: ["despair", "lingerTicks"] },
-        { key: "description.1", values: ["tearRange", "sectorAngle", "sobRadius", "range"] },
-        { key: "description.2", values: ["tempo", "recharge"] },
+        { key: "description.0", values: ["despair","lingerTicks"] },
+        { key: "description.1", values: ["tearRange","sectorAngle","sobRadius","range"] },
+        { key: "description.2", values: ["tempo","recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

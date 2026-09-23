@@ -5,7 +5,7 @@
   "worldcombat.skill.speedswap.use.2": "在对手先手压制的开局把次序倒过来",
   "worldcombat.skill.speedswap.description.0": "对单体敌人施放：交换维持 %2$s，射程 %1$s 格，需要有通视直线。窗口走完或被清除时换回原来的速度等级。",
   "worldcombat.skill.speedswap.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
-  "worldcombat.skill.speedswap.mode.exchange": "互换：双方有效速度对调——对方比你快你赚满，比你慢你就亏满，风险对等；窗口更长（×1.15）。",
+  "worldcombat.skill.speedswap.mode.exchange": "互换：双方有效速度对调——对方比你快你赚满，比你慢你就亏满，风险对等；窗口更长（×1.15）、冷却也更贵（×1.15）。",
   "worldcombat.skill.speedswap.mode.dampen": "拉平：双方都朝中间靠、把差距压一半，稳定可预期；窗口更短（×0.75）、冷却更便宜（×0.85），但对方更慢时反而拖累自己。",
   "worldcombat.skill.speedswap.timing": "对单体敌人施放，准备 %2$s 秒后消耗 %4$s PP 换速，结束后收招 %3$s 秒，提交起冷却 %5$s 秒，当前射程 %1$s 格。",
   "worldcombat.skill.speedswap.growth.0": "达到 %1$s 级，换速距离延长至 %2$s 格、交换窗口 %3$s。",
@@ -29,5 +29,6 @@
   "world_combat.move.speedswap.text.shift": "速度对调 %1$s 秒",
   "world_combat.move.speedswap.text.revert": "速度换回原位",
   "world_combat.move.speedswap.text.equal": "速度相当，无需交换",
-  "effect.world_combat.speedswap_shift": "速度互换"
+  "effect.world_combat.speedswap_shift": "速度互换",
+  "worldcombat.skill.speedswap.description.additional": "这招重新分配双方的有效速度，它同时决定移动快慢与出手先后；已经处于换速窗口中的双方不能再次被换速，若换完等级没有变化则不会留下窗口。"
 }

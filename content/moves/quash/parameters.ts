@@ -43,7 +43,9 @@ namespace PokemonSkills {
     });
 
     describe("quash", [
-        { key: "description.0", values: ["reach", "traceRadius"] },
-        { key: "description.1", values: ["lockTicks", "deny"] }
+        { key: "description.0", values: ["reach","traceRadius"] },
+        { key: "description.1", values: ["lockTicks","deny"] },
+        { key: "description.additional", values: [] },
+        { key: "timing", values: ["prepare","recover","cooldown","pp"] }
     ]);
 }

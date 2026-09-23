@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.crosspoison.summary": "Two venomous blades snap shut from either side and scissor an X into the target, catching others on the narrow line between them; those cut get a first poison roll, then the venom in the cut seeps in a moment later at a higher chance. Corrode form is more toxic but cuts lighter; Edge form cuts harder but lands poison less often.",
+  "worldcombat.skill.crosspoison.summary": "Two venomous blades snap shut from either side and scissor an X into the target, catching other enemies on the narrow line between them; those cut get a first poison roll, then the venom in the cut seeps in a moment later at a higher chance. Corrode form is more toxic but cuts lighter; Edge form cuts harder but lands poison less often.",
   "worldcombat.skill.crosspoison.description.0": "The scissor deals %1$s contact damage to the target in front, with a reach of %2$s blocks.",
-  "worldcombat.skill.crosspoison.description.1": "The scissor line is %1$s blocks half-wide; others caught take %2$s of the power, and the venom seeps %3$s after the blades close.",
-  "worldcombat.skill.crosspoison.description.2": "Those cut get a first poison roll at %1$s, then a seep roll at %2$s to poison them for %3$s.",
+  "worldcombat.skill.crosspoison.description.1": "The scissor line is %1$s blocks half-wide; other enemies caught each take one hit at %2$sx the power, and the venom seeps %3$s after the blades close.",
+  "worldcombat.skill.crosspoison.description.2": "Every enemy cut gets a first poison roll at %1$s; the venom in the cut then seeps at %2$s to poison them for %3$s, and a poisoned target keeps losing health over time.",
   "worldcombat.skill.crosspoison.corrode.on": "Corrode form: first poison x1.2, seep chance x1.3, poison duration x1.15; costs scissor power x0.9 and slower windup and cooldown.",
   "worldcombat.skill.crosspoison.corrode.off": "Edge form: cuts harder and faster; costs a harder time pressing poison into the wound.",
   "worldcombat.skill.crosspoison.timing": "Range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const gigaimpactExhaustText = "world_combat.move.gigaimpact.text.exhaust";
 
     define({
+        freeMovement: true,
         id: "gigaimpact",
         name: "Giga Impact",
-        description: "The user charges at the target using every bit of its power. The user can't move on the next turn.",
-        uses: ["直线全力冲撞", "把目标撞飞再承受力竭", "在对手必须还手前先手终结"],
+        description: "把整个身体压低后沿直线全力撞出去；撞实的一刻把目标顶开，但无论撞中还是撞空，冲完自己都会力竭一段时间，无法行动也无法移动。",
+        uses: ["直线全力冲撞", "把目标撞飞，用自己的力竭换这一下", "在对手还手前先手终结"],
         kind: "enemy",
         range: 5,
         maxRange: 9,

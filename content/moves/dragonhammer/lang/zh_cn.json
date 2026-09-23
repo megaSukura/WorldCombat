@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.dragonhammer.summary": "把整个身体抡起来当锤子，自上而下重砸一个目标：砸中后把它沿砸击方向撞飞、并砸得趴伏一阵、移动大幅变慢。重锤式更重、砸趴更久、把人压在原地；疾锤式起手更快、撞得更远。",
+  "worldcombat.skill.dragonhammer.summary": "把整个身体抡起来当锤子，自上而下重砸一个目标：砸中后把它沿砸击方向撞飞、并砸得趴伏一阵、移动大幅变慢。重锤式更重、砸趴更久、击飞更短；疾锤式起手更快、撞得更远。",
   "worldcombat.skill.dragonhammer.use.0": "把冲进来的目标砸趴、断它一段走位",
   "worldcombat.skill.dragonhammer.use.1": "对单个目标打一记重的龙属性接触伤害",
   "worldcombat.skill.dragonhammer.use.2": "打断贴身后的追击节奏",
   "worldcombat.skill.dragonhammer.use.3": "把目标撞开、为队友腾出身位",
-  "worldcombat.skill.dragonhammer.description.0": "抡起整个身体砸下，对目标造成约 %1$s 的龙属性接触伤害，抡击距离约 %2$s 格。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.dragonhammer.description.1": "命中后把目标沿砸击方向撞飞约 %1$s 格，并砸得趴伏约 %2$s 秒、移动大幅变慢。",
-  "worldcombat.skill.dragonhammer.heavy.on": "开启重锤式：威力约 ×1.15、砸趴约 ×1.3、击飞收到约 ×0.8，起手 +3 刻、冷却 +8 刻，把人钉在原地。",
+  "worldcombat.skill.dragonhammer.description.0": "抡起整个身体砸下，对目标造成约 %1$s 点龙属性接触伤害，抡击距离约 %2$s 格。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.dragonhammer.description.1": "命中后把目标沿砸击方向撞飞约 %1$s 格，并把它砸趴约 %2$s 秒：期间地面与飞行移动速度降低 85%%，只能缓慢挪动，但仍可出手攻击。",
+  "worldcombat.skill.dragonhammer.heavy.on": "开启重锤式：威力约 ×1.15、砸趴约 ×1.3、击飞降到约 ×0.8，起手 +3 刻、冷却 +8 刻——砸得更重、把目标按住更久。",
   "worldcombat.skill.dragonhammer.heavy.off": "关闭重锤式（疾锤式）：击飞约 ×1.25、射程约 ×1.1、起手更快，代价是威力约 ×0.9、砸趴更短。",
   "worldcombat.skill.dragonhammer.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.dragonhammer.growth.0": "达到 %1$s 级，锤击威力提升至 %2$s。",
@@ -18,7 +18,7 @@
   "worldcombat.skill.dragonhammer.value.dust": "龙气碎屑数量",
   "worldcombat.skill.dragonhammer.value.maxTargets": "目标上限",
   "worldcombat.skill.dragonhammer.preference.heavy": "重锤式",
-  "worldcombat.skill.dragonhammer.preference.heavy.help": "开启：威力约 ×1.15、砸趴约 ×1.3、击飞收到约 ×0.8、起手 +3 刻、冷却 +8 刻，砸得更重更久、把人钉在原地。关闭（疾锤式）：击飞约 ×1.25、射程约 ×1.1、起手更快，代价是威力约 ×0.9、砸趴更短。",
+  "worldcombat.skill.dragonhammer.preference.heavy.help": "开启：威力约 ×1.15、砸趴约 ×1.3、击飞降到约 ×0.8、起手 +3 刻、冷却 +8 刻，砸得更重、把目标按住更久。关闭（疾锤式）：击飞约 ×1.25、射程约 ×1.1、起手更快，代价是威力约 ×0.9、砸趴更短。",
   "worldcombat.skill.dragonhammer.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.dragonhammer.preference.ai.maxChase.help": "只在这个距离内主动抡砸；更远的目标交给共享接近逻辑走过去。",
   "worldcombat.skill.dragonhammer.preference.ai.opening": "出手时机",
@@ -27,5 +27,8 @@
   "worldcombat.skill.dragonhammer.preference.ai.opening.help": "选「只对未被砸趴的目标」时跳过已经趴着的敌人，把这一锤留给还站着的目标。",
   "world_combat.move.dragonhammer.text.hit": "砸趴在地",
   "world_combat.move.dragonhammer.text.miss": "砸空了",
-  "effect.world_combat.knocked_down": "被砸趴"
+  "effect.world_combat.knocked_down": "被砸趴",
+  "worldcombat.skill.dragonhammer.value.tempo": "起手",
+  "worldcombat.skill.dragonhammer.value.aftercast": "收招",
+  "worldcombat.skill.dragonhammer.value.recharge": "冷却"
 }

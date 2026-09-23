@@ -15,6 +15,7 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: focuspunchId,
         cooldownParameter: "recharge",
         name: "Focus Punch",

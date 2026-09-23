@@ -34,7 +34,7 @@ namespace PokemonSkills {
 
     actionParameters.define(revivalblessingId, {
         /** 复活比例：原生固定为一半最大生命；这是本招自己的独立代价参数。 */
-        reviveRatio: hidden(0.5),
+        reviveRatio: { value: 0.5, label: "复苏生命", presentation: "percent", visible: false },
         /** 祈祷范围：6 +（等级 − 30）×0.06 [−1,3]；守夜 ×1.25／简短 ×0.85；夹 4..14。 */
         prayerRange: formula(
             F.base(6).plus(F.level().minus(30).times(0.06).clamp(-1, 3))
@@ -92,11 +92,11 @@ namespace PokemonSkills {
     ]);
 
     describe(revivalblessingId, [
-        { key: "description.0", values: ["prayerRange"] },
-        { key: "description.1", values: ["blessTicks"] },
+        { key: "description.0", values: ["prayerRange","reviveRatio"] },
+        { key: "description.1", values: [] },
         { key: "vigil.on", values: [], when: function (context) { return read(context.detail.values, ["vigil"]) === true; } },
         { key: "vigil.off", values: [], when: function (context) { return read(context.detail.values, ["vigil"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.prayerRange"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.prayerRange"] }
     ]);

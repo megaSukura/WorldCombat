@@ -115,8 +115,9 @@ namespace PokemonSkills {
     ]);
 
     describe("twineedle", [
-        { key: "description.0", values: ["dart", "reach", "flight", "dartRadius"] },
-        { key: "description.1", values: ["gap", "poisonChance", "woundBonus", "venomTicks"] },
+        { key: "description.0", values: ["dart","reach","flight","dartRadius"] },
+        { key: "description.homing", values: [] },
+        { key: "description.1", values: ["gap","poisonChance","woundBonus","venomTicks"] },
         { key: "description.2", values: ["flank", "tempo", "settle", "recharge"] },
         { key: "cross.on", values: [], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: [], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },

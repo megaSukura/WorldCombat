@@ -48,10 +48,11 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: function (config) { return !config.scramble; },
         id: "endure",
         cooldownParameter: "charge",
         name: "Endure",
-        description: "The user endures any attack with at least 1 HP. Its chance of failing rises if it is used in succession.",
+        description: "在短窗口内，来自敌人的致命一击只会把你打到 1 HP；它不减免普通伤害，且连续使用容易直接失败。",
         uses: ["残血时拖住回合、等待救援", "为队友争取一次打断或撤退", "主动去吃一记致命招"],
         kind: "self",
         range: 0,

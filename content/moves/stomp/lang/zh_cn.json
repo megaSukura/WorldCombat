@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.stomp.summary": "把全身重量往下砸的一脚：单体最重的近身招，命中即让对手一滞，脚下的震波还会把落点周围站着的人一起震懵——但只砸得到站在地上的目标，空中的人躲得开。",
+  "worldcombat.skill.stomp.summary": "把全身重量往下砸的一脚：近身招里单发最重，命中后有机会踩懵目标，脚下的震波还会波及落点周围站着的其他敌人、也有机会震懵——但只砸得到站在地上的目标，空中的人躲得开。",
   "worldcombat.skill.stomp.description.0": "这一脚造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.stomp.description.1": "落点震波半径 %1$s 格，圈内其他站在地上的敌人各吃约 %2$s，越重震得越广。",
-  "worldcombat.skill.stomp.description.2": "主目标畏缩几率 %1$s，只被震波扫到的人 %2$s，畏缩 %3$s 秒；目标在空中时这一脚会踩空。",
+  "worldcombat.skill.stomp.description.1": "落点震波半径 %1$s 格，圈内其他站在地上的敌人各吃约 %2$s，至多再波及 3 名；越重震得越广。",
+  "worldcombat.skill.stomp.description.2": "主目标命中后 %1$s 概率畏缩，只被震波扫到的旁人 %2$s 概率畏缩，畏缩 %3$s；畏缩会打断可被打断的动作，期间无法发动新招或进行普通攻击。目标在空中时这一脚踩不到它，但它下方的震波仍会扩散；施放者本身也要站在地面上。",
   "worldcombat.skill.stomp.heavy.on": "重踏式：抬得更高、砸得更重、塌陷与震波更广、更容易震懵，但起手更慢、冷却更久。",
   "worldcombat.skill.stomp.heavy.off": "快压式：出手快、范围小、单发略轻。",
-  "worldcombat.skill.stomp.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %5$s PP，提交起冷却 %4$s 秒。",
+  "worldcombat.skill.stomp.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。",
   "worldcombat.skill.stomp.growth.0": "%1$s 级起主砸威力抬到 %2$s、震波威力抬到 %3$s。",
   "worldcombat.skill.stomp.growth.1": "%1$s 级起主砸威力抬到 %2$s、震波半径 %3$s 格、主目标畏缩几率升到 %4$s。",
-  "worldcombat.skill.stomp.use.0": "把靠近的对手一脚踩实并震懵",
+  "worldcombat.skill.stomp.use.0": "把靠近的地面目标一脚踩实，并尝试震懵",
   "worldcombat.skill.stomp.use.1": "顺带震到落点周围站着的其他敌人",
   "worldcombat.skill.stomp.use.2": "在对手被逼到地面时兑现最重的一击",
   "worldcombat.skill.stomp.value.slam": "主砸威力",
@@ -33,5 +33,6 @@
   "world_combat.move.stomp.text.flinch": "被踩懵",
   "world_combat.move.stomp.text.shock": "震到 %1$s 人",
   "world_combat.move.stomp.text.miss": "踩空",
-  "effect.world_combat.stomp_flinch": "畏缩"
+  "effect.world_combat.stomp_flinch": "畏缩",
+  "worldcombat.skill.stomp.description.crater": "落点地表会被踩裂：半径 %1$s 格内的泥土、石头、沙地等暂时变成粗土、圆石或砂岩，%2$s 后恢复原样。"
 }

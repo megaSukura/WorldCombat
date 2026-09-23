@@ -161,8 +161,8 @@ namespace PokemonSkills {
     describe("highjumpkick", [
         { key: "description.0", values: ["knee"] },
         { key: "description.1", values: ["leapHeight", "leapSpeed", "diveSpeed", "drift"] },
-        { key: "description.2", values: ["reach", "hitRadius", "crash"] },
-        { key: "description.3", values: ["holdTicks", "shove"] },
+        { key: "description.2", values: ["reach","hitRadius","crash"] },
+        { key: "description.3", values: ["holdTicks","shove"] },
         { key: "vertical.on", values: [], when: function (context) { return read(context.detail.values, ["vertical"]) === true; } },
         { key: "vertical.off", values: [], when: function (context) { return read(context.detail.values, ["vertical"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

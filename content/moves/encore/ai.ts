@@ -1,18 +1,11 @@
-/**
- * 再来一次 的伙伴 AI 用途：这招自己的一套出手计划。
- *
- * 什么局面有意义：有可见的威胁，目标刚用过的最后一手还在 ai.maxAge 之内、还能再用、不带 failencore，
- *   且它身上还没有回声。刚做过变化（布置／强化）的目标最值得点名——那是把它的下一步锁死。
- * 对谁出手：当前威胁；焦点目标直接通过。
- * 够不到怎么办：reach 就是点名距离，够不到由共享任务走近。
- * 放完之后：回声自己撑着；换招前 12 秒内不重复点名同一个目标，把 PP 留着。
- * 候选之间怎么排：锁住变化招给 70（把它的布置锁死），锁住低威力招给 45，其余 30；都插在共享交战次序里当软控。
- * 配置：ai.maxAge 决定多久以前的出手还值得点名；ai.maxChase 决定追多远；ai.leaveStation 决定驻守时是否离位。
- */
+/** encore：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     /** 只读、决策内缓存：目标最近一次出手的身份、距今刻数与性质；没有出手记录返回 null。 */
     registerFact("world_combat:encore-target", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return null;
+        if (String(actor.domain()) !== "cobblemon") {
+            const last = DamageSemantics.recentAttack(access, actor, 400);
+            return last ? { id: last.type, since: access.tick() - last.tick, category: "physical", power: 60, failencore: 0 } : null;
+        }
         const last = NativeEffects.lastMove(access, actor);
         if (last === null) return null;
         const template = CobblemonCombat.moveTemplate(last.id);

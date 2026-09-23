@@ -101,13 +101,13 @@ namespace PokemonSkills {
     ]);
 
     describe("petalblizzard", [
-        { key: "description.0", values: ["petal", "gusts"] },
+        { key: "description.0", values: ["petal","gusts","maxTargets"] },
         { key: "description.1", values: ["stormRadius", "gustTicks"] },
         { key: "description.2", values: ["draw", "lash"] },
-        { key: "description.3", values: ["petals", "settleTicks"] },
+        { key: "description.3", values: ["petals","settleTicks"] },
         { key: "cyclone.on", values: [], when: function (context) { return read(context.detail.values, ["cyclone"]) === true; } },
         { key: "cyclone.off", values: [], when: function (context) { return read(context.detail.values, ["cyclone"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.petal", "tier.0.stormRadius", "tier.0.draw"] }
     ]);
 }

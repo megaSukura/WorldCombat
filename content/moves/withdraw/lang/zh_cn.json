@@ -3,7 +3,7 @@
   "worldcombat.skill.withdraw.use.0": "硬吃一轮爆发：把身体收进壳里，让壳按次挡下来袭",
   "worldcombat.skill.withdraw.use.1": "被集火时钉住不动，用壳的次数换队友的时间",
   "worldcombat.skill.withdraw.use.2": "用一次短窗口把防御抬起来再探出去打",
-  "worldcombat.skill.withdraw.description.0": "缩壳时防御提升 %1$s 级，壳整个挡下前 %2$s 次来袭，持续约 %3$s。",
+  "worldcombat.skill.withdraw.description.0": "缩壳时防御提升 %1$s 级，壳会整个挡下接下来 %2$s 次来自敌人的攻击，持续约 %3$s。",
   "worldcombat.skill.withdraw.description.1": "合壳期间被钉在原地不能移动。",
   "worldcombat.skill.withdraw.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.withdraw.deep.on": "深潜：壳更厚、多挡一次、持续更久，代价是合壳更慢、冷却更长、钉得更久。",
@@ -28,5 +28,6 @@
   "world_combat.move.withdraw.text.seal": "缩入壳中（防御 +%1$s，可挡 %2$s 次）",
   "world_combat.move.withdraw.text.block": "壳挡下一击（还剩 %1$s 次）",
   "world_combat.move.withdraw.text.open": "壳开了",
-  "effect.world_combat.withdraw_shell": "龟壳"
+  "effect.world_combat.withdraw_shell": "龟壳",
+  "worldcombat.skill.withdraw.description.shell": "壳只挡来自敌人的攻击，不挡自己或环境造成的伤害；次数用尽或时间走完时壳会裂开，抬起的防御也一并收回。"
 }

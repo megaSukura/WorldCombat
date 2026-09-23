@@ -77,6 +77,7 @@ namespace PokemonSkills {
 
     describe("sparklingaria", [
         { key: "description.0", values: ["burst", "falloff"] },
+        { key: "description.additional", values: ["maxTargets"] },
         { key: "description.1", values: ["radius"] },
         { key: "description.2", values: ["cureHeal"] },
         { key: "note.on", values: [], when: function (context) { return read(context.detail.values, ["highNote"]) === true; } },

@@ -24,6 +24,7 @@ public final class WorldCombatCore {
         modBus.addListener(dev.worldcombat.core.network.SceneState::register);
         dev.worldcombat.core.world.CombatWorldContent.register(modBus);
         PublicAttributes.register(modBus);
+        NativeItemUse.install(NeoForge.EVENT_BUS);
         dev.worldcombat.core.client.particles.ParticleTypes.register(modBus);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.PlayLevelSoundEvent.AtPosition event) -> {
             if (event.getLevel() instanceof ServerLevel level) {

@@ -70,16 +70,16 @@ namespace PokemonSkills {
     });
 
     describe(curseId, [
-        { key: "description.ghost.0", values: ["hexShare", "hexTicks", "hexInterval"],
+        { key: "description.ghost.0", values: ["hexShare","hexTicks","hexInterval"],
             when: function (context) { return curseGhostType(context.pokemon); } },
-        { key: "description.ghost.1", values: ["bloodCost", "reach"],
+        { key: "description.ghost.1", values: ["bloodCost","reach"],
             when: function (context) { return curseGhostType(context.pokemon); } },
         { key: "description.plain.0", values: ["pactGain", "reach"],
             when: function (context) { return !curseGhostType(context.pokemon); } },
-        { key: "description.plain.1", values: ["tempo"],
+        { key: "description.plain.1", values: ["prepare"],
             when: function (context) { return !curseGhostType(context.pokemon); } },
         { key: "stance.blood", values: [], when: function (context) { return read(context.detail.values, ["bloodpact"]) === true; } },
         { key: "stance.steady", values: [], when: function (context) { return read(context.detail.values, ["bloodpact"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

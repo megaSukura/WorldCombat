@@ -123,8 +123,8 @@ namespace PokemonSkills {
     describe("hyperfang", [
         { key: "description.0", values: ["fang"] },
         { key: "description.1", values: ["reach", "lunge", "grip"] },
-        { key: "description.2", values: ["pinTicks", "shove"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.2", values: ["pinTicks","shove"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "shake.on", values: [], when: function (context) { return read(context.detail.values, ["shake"]) === true; } },
         { key: "shake.off", values: [], when: function (context) { return read(context.detail.values, ["shake"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

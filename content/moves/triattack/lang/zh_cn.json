@@ -3,10 +3,10 @@
   "worldcombat.skill.triattack.use.0": "对一个目标连出三束、各掷一次元素余痕",
   "worldcombat.skill.triattack.use.1": "在敌群里让三束分头点不同的人",
   "worldcombat.skill.triattack.use.2": "用三色齐射先手压一片血",
-  "worldcombat.skill.triattack.description.0": "三束光线每束各造成约 %1$s 威力（三束同时出手）；每束命中后约 %2$s 几率让目标陷入对应元素状态（电→麻痹、火→灼伤、冰→冰冻），持续约 %3$s。对手特防、相性与暴击在命中时另算。",
+  "worldcombat.skill.triattack.description.0": "三束光线依次离手；每束命中一个目标时造成约 %1$s 点特殊伤害，并有约 %2$s 几率给目标留下对应元素状态（电→麻痹、火→灼伤、冰→冰冻）。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.triattack.description.1": "三束能锁到 %1$s 格内的目标，以 %2$s 格每刻飞出、每刻朝目标修正 %3$s 度；只够修正走位，大幅横向甩开仍能躲。",
   "worldcombat.skill.triattack.description.2": "三束之间隔 %1$s（不低于命中无敌帧，各算各的）；起手 %2$s，冷却 %3$s。",
-  "worldcombat.skill.triattack.wide.on": "广域式：三束分头找主目标 %1$s 格内最多三个不同敌人，覆盖更广；代价是每束 ×0.85、余痕几率 ×0.85、起手 +1 刻、冷却 ×1.15。",
+  "worldcombat.skill.triattack.wide.on": "广域式：三束分头找主目标 %1$s 格内最多三个不同敌人，覆盖更广；找不到足够的人时，多出的束仍落在已选中的目标上，不会白白落空。代价是每束 ×0.85、余痕几率 ×0.85、起手 +1 刻、冷却 ×1.15。",
   "worldcombat.skill.triattack.wide.off": "集束式（默认）：三束都锁同一目标、单点 ×1.04、余痕几率 ×1.1，出手更快、冷却更短。",
   "worldcombat.skill.triattack.timing": "射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.triattack.growth.0": "%1$s 级起每束威力增至 %2$s。",
@@ -38,5 +38,6 @@
   "world_combat.move.triattack.text.numb": "电痕留了下来",
   "world_combat.move.triattack.text.burn": "火痕留了下来",
   "world_combat.move.triattack.text.freeze": "冰痕留了下来",
-  "world_combat.move.triattack.text.fizzle": "三束都打空了"
+  "world_combat.move.triattack.text.fizzle": "三束都打空了",
+  "worldcombat.skill.triattack.description.ailments": "三种元素状态均持续 %1$s。麻痹使移动速度减半，且每次出招有 25%% 几率失败；灼伤使物理伤害减半，并每隔约 5 秒损失约 6.25%% 最大生命（至少 1 点）；冰冻使目标无法移动或出招，受到火属性或火焰伤害即解除。对应的属性或特性免疫会挡下这些状态，也可通过治愈清除。"
 }

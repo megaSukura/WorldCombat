@@ -2,12 +2,12 @@
   "worldcombat.skill.flamethrower.summary": "从身前喷出一道会自己变长的火舌，逐刻向远处铺开，沿一条走廊（或一个扇面）燎过；被燎到的人各挨一记并可能被点燃，火舌扫完才收。",
   "worldcombat.skill.flamethrower.use.0": "向前喷出一道持续变长的火舌",
   "worldcombat.skill.flamethrower.use.1": "一次燎过挤在一条走廊里的对手",
-  "worldcombat.skill.flamethrower.use.2": "用扇面封住身前一片，逼对手绕开",
-  "worldcombat.skill.flamethrower.description.0": "火舌逐刻向远处推进 %3$s 格/刻，最长 %2$s 格，每燎到一个敌人结算 %1$s 点特殊伤害。",
-  "worldcombat.skill.flamethrower.description.1": "被燎到的目标有 %1$s 概率陷入灼伤。",
-  "worldcombat.skill.flamethrower.wide.on": "扇面式：火焰在身前张开约 30 度、点燃概率 +5%%、一次罩住更多人，但威力 ×0.82、火舌长度 ×0.78、蓄气 +2 刻与冷却 +6 刻。",
-  "worldcombat.skill.flamethrower.wide.off": "集束式：一条细长火舌，单体更重、射得更远、出手更快，代价是覆盖面窄。",
-  "worldcombat.skill.flamethrower.timing": "射程 %1$s 格；蓄气 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.flamethrower.use.2": "用扇面一次燎过身前一片的多个对手",
+  "worldcombat.skill.flamethrower.description.0": "火舌逐刻向远处推进 %3$s 格/刻，最长 %2$s 格，每燎到一个敌人结算约 %1$s 点特殊伤害；同一目标只结算一次。",
+  "worldcombat.skill.flamethrower.description.1": "被燎到的目标有 %1$s 概率陷入灼伤，持续约 40 秒：期间每 5 秒损失约 1/16 最大生命，物理攻击造成的伤害减半。火属性目标不会被点燃。",
+  "worldcombat.skill.flamethrower.wide.on": "扇面式：火焰在身前张开约 %1$s 度、点燃概率 +5%%、一次罩住更多人，但威力 ×0.82、火舌长度 ×0.78、蓄气 +2 刻与冷却 +6 刻。",
+  "worldcombat.skill.flamethrower.wide.off": "集束式：一条横向半径约 %1$s 格的细长火舌，单体更重、射得更远、出手更快，代价是覆盖面窄。",
+  "worldcombat.skill.flamethrower.timing": "射程 %1$s 格；蓄气 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.flamethrower.growth.0": "%1$s 级起火舌威力抬到 %2$s、长度抬到 %3$s 格。",
   "worldcombat.skill.flamethrower.growth.1": "%1$s 级起火舌威力抬到 %2$s、长度抬到 %3$s 格。",
   "worldcombat.skill.flamethrower.value.jet": "火舌威力",
@@ -27,5 +27,8 @@
   "worldcombat.skill.flamethrower.preference.ai.preferClusters": "成线时优先",
   "worldcombat.skill.flamethrower.preference.ai.preferClusters.help": "开启后，目标身边 3 格内还挤着别的敌人时优先喷火，一条火舌一起烧；关闭则只按普通攻击排序。",
   "world_combat.move.flamethrower.text.burn": "被火舌点燃",
-  "world_combat.move.flamethrower.text.hit": "火舌燎到 %1$s 个目标"
+  "world_combat.move.flamethrower.text.hit": "火舌燎到 %1$s 个目标",
+  "worldcombat.skill.flamethrower.description.limit": "整道火舌最多燎到 %1$s 个不同目标。",
+  "worldcombat.skill.flamethrower.description.stand": "喷火期间施放者站定不动。",
+  "worldcombat.skill.flamethrower.value.maxTargets": "最多目标"
 }

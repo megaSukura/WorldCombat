@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.freezedry.summary": "Freeze the air into a shard of ice and fire it at the target, dealing Ice damage with a chance to freeze it. Water types and soaked bodies take super-effective damage.",
+  "worldcombat.skill.freezedry.summary": "Freeze the air into a shard of ice and fire it at the target, dealing Ice damage with a chance to freeze it; while frozen it cannot move or act. Water types and soaked bodies take super-effective damage.",
   "worldcombat.skill.freezedry.use.0": "Pick off Water types and soaked targets at range",
-  "worldcombat.skill.freezedry.use.1": "Break the enemy's rhythm with a freeze",
+  "worldcombat.skill.freezedry.use.1": "Leave the target unable to act for a while with a freeze",
   "worldcombat.skill.freezedry.use.2": "Suppress a distant high-value target",
-  "worldcombat.skill.freezedry.description.0": "Hit deals %1$s power and has a %2$s chance to leave the target frozen.",
-  "worldcombat.skill.freezedry.description.1": "Range %1$s blocks, shard speed %2$s, hit radius %3$s.",
+  "worldcombat.skill.freezedry.description.0": "Hits a target for about %1$s special Ice damage and has a %2$s chance to freeze it: while frozen it cannot move or use moves, for up to about 8 seconds, and fire damage breaks the freeze.",
+  "worldcombat.skill.freezedry.description.1": "Range %1$s blocks; the shard flies straight at %2$s blocks per tick and can be blocked by cover, with a %3$s block hit radius.",
   "worldcombat.skill.freezedry.description.2": "Windup %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.freezedry.value.shard": "Shard power",
   "worldcombat.skill.freezedry.value.freezeChance": "Freeze chance",
@@ -15,11 +15,12 @@
   "worldcombat.skill.freezedry.value.aftermath": "Recovery",
   "worldcombat.skill.freezedry.value.wait": "Cooldown",
   "worldcombat.skill.freezedry.preference.deep": "Deep freeze",
-  "worldcombat.skill.freezedry.preference.deep.help": "On: power x1.12 and freeze chance from 10%% to 18%%, but 3 ticks more windup, a slower shard and x1.15 cooldown. Off: a faster shard and a smoother rhythm.",
+  "worldcombat.skill.freezedry.preference.deep.help": "On: power x1.12 and freeze chance from 10% to 18%, but 3 ticks more windup, a slower shard and x1.15 cooldown. Off: a faster shard and a smoother rhythm.",
   "worldcombat.skill.freezedry.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.freezedry.preference.ai.maxChase.help": "The companion only considers Freeze-Dry while a target is within this many blocks; smaller keeps it close, larger starts sooner.",
   "worldcombat.skill.freezedry.preference.ai.soaked": "Prefer soaked",
-  "worldcombat.skill.freezedry.preference.ai.soaked.help": "When on, the companion prioritizes Water types and bodies in water (super effective); off treats all targets alike.",
+  "worldcombat.skill.freezedry.preference.ai.soaked.help": "When on, the companion prioritizes Water types and soaked bodies (super effective); off treats all targets alike.",
   "worldcombat.skill.freezedry.preference.ai.leaveStation": "Leave station",
-  "worldcombat.skill.freezedry.preference.ai.leaveStation.help": "When on, the companion may leave its post to find a firing line under a Hold order."
+  "worldcombat.skill.freezedry.preference.ai.leaveStation.help": "When on, the companion may leave its post to find a firing line under a Hold order.",
+  "worldcombat.skill.freezedry.description.soaked": "Water types and soaked bodies take super-effective damage: Ice is normally only half-effective on Water, but this move turns that into a weakness."
 }

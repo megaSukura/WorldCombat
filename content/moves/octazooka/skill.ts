@@ -16,7 +16,7 @@ namespace PokemonSkills {
     define({
         id: "octazooka",
         name: "Octazooka",
-        description: "The user attacks by spraying ink in the target's face. This may also lower the target's accuracy.",
+        description: "朝对手脸上连喷数股墨汁；每股命中都造成伤害，并有约一半机会糊住它的眼睛、削掉命中。",
         uses: ["中近距离的连续墨流", "用墨汁糊眼，削掉对手命中"],
         kind: "enemy",
         range: 12,
@@ -73,7 +73,7 @@ namespace PokemonSkills {
                 const target = hit.target();
                 const point = hit.position();
                 if (target !== null && currentWorld.valid(target) && !currentWorld.friendly(target)) {
-                    impact(current, hit, "octazooka", power, { damage: damageSpec("octazooka", "shot") });
+                    impact(current, hit, "octazooka", power, { damage: damageSpec("octazooka", "jet") });
                     const at = currentWorld.observe(target);
                     if (at !== null) {
                         let blindedNow = false;

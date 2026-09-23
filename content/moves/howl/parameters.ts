@@ -77,7 +77,7 @@ namespace PokemonSkills {
     ]);
 
     describe("howl", [
-        { key: "description.0", values: ["raise", "radius"] },
+        { key: "description.0", values: ["raise","radius"] },
         { key: "description.1", values: ["rallyTicks"] },
         { key: "cry.pack", values: [], when: function (context) { return read(context.detail.values, ["cry"]) === 1; } },
         { key: "cry.solo", values: [], when: function (context) { return read(context.detail.values, ["cry"]) !== 1; } },

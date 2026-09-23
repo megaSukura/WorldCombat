@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.dreameater.summary": "只有对方睡着时才能用：把它的梦从头顶拉成一道烟吸进自己口里，伤害的一半转回自身；梦越沉，这一口越大。",
+  "worldcombat.skill.dreameater.summary": "只有对方睡着时才能用：把它的梦从头顶拉成一道烟吸进自己口里，按造成的伤害回补自身；梦越沉，这一口越大。",
   "worldcombat.skill.dreameater.use.0": "在对方睡着时把生命抽回自己身上",
   "worldcombat.skill.dreameater.use.1": "为队友制造的睡眠窗口收一次续航",
   "worldcombat.skill.dreameater.use.2": "从远处对睡者下手，不必贴身",
-  "worldcombat.skill.dreameater.description.0": "梦之威力约 %1$s；造成的伤害有 %2$s 转回自身生命。",
-  "worldcombat.skill.dreameater.description.1": "能从 %1$s 格外的睡者头上抽取。",
+  "worldcombat.skill.dreameater.description.0": "从睡者身上抽走约 %1$s 点超能力属性特殊伤害，并按实际伤害的 %2$s 回复自身生命；目标睡得越沉（剩余睡眠越久），这一口的伤害与汲取比例越高。",
+  "worldcombat.skill.dreameater.description.1": "能从 %1$s 格外的睡者头上抽取；前提是与它之间视线畅通。",
   "worldcombat.skill.dreameater.deep.on": "深潜梦境：回血比例 ×1.3，但威力 ×0.85、起手与冷却更长，用来续航。",
   "worldcombat.skill.dreameater.deep.off": "浅尝：威力 ×1.12、回血 ×0.9、出手快，用来爆发。",
   "worldcombat.skill.dreameater.timing": "可对 %1$s 格内睡着的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.dreameater.preference.ai.healBelow.help": "自身生命低于这个比例时，把食梦当续航手段优先出手；越高越早靠它回血。",
   "world_combat.move.dreameater.text.feast": "吃掉了它的梦",
   "world_combat.move.dreameater.text.sap": "梦境回血 %1$s%%",
-  "world_combat.move.dreameater.text.wake": "它醒着，没有梦可吃"
+  "world_combat.move.dreameater.text.wake": "它醒着，没有梦可吃",
+  "worldcombat.skill.dreameater.description.additional": "目标必须正在睡觉；命中造成伤害后它会惊醒，所以同一个睡眠窗口通常只能抽取一次。"
 }

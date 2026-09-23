@@ -113,8 +113,8 @@ namespace PokemonSkills {
     defineDamage(doubleslapId, "slap", {}, { contact: true });
 
     describe(doubleslapId, [
-        { key: "description.0", values: ["slap", "slaps"] },
-        { key: "description.1", values: ["gap", "reach", "accuracy"] },
+        { key: "description.0", values: ["slap","slaps"] },
+        { key: "description.1", values: ["gap","reach","accuracy"] },
         { key: "description.2", values: ["sway"] },
         { key: "cross.on", values: [], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: [], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },

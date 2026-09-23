@@ -131,8 +131,8 @@ namespace PokemonSkills {
 
     describe("sandtomb", [
         { key: "description.0", values: ["grind"] },
-        { key: "description.1", values: ["duration", "interval", "pull", "sink"] },
-        { key: "description.2", values: ["escape", "radius", "reach", "speed"] },
+        { key: "description.1", values: ["duration","interval","grind","pull","sink"] },
+        { key: "description.2", values: ["escape","radius","reach","speed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

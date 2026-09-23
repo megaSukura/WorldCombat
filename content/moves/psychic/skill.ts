@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: psychicId,
         cooldownParameter: "recharge",
         name: "Psychic",
-        description: "用念力抓住目标：定住它并把它朝自己拖近一段，抓取时造成一次特殊伤害并可能让特防下降 1 级；片刻后若仍握得住，再挤一记。缠握式握得更久更重，点握式更远更快。",
+        description: "用念力抓住目标：定住它并把它朝自己拖近一段，抓取时造成特殊伤害并可能让特防下降 1 级；片刻后若仍握得住，再挤一记。",
         uses: ["中远距离点名一个高威胁目标", "把冲上来的敌人按在原地", "把目标从队友面前拽开"],
         kind: "enemy",
         range: 12,

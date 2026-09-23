@@ -3,8 +3,8 @@
   "worldcombat.skill.scaryface.use.0": "拦下一个冲得最快、最麻烦的对手",
   "worldcombat.skill.scaryface.use.1": "在被近身前先把对方拖慢",
   "worldcombat.skill.scaryface.use.2": "为队友争取拉开距离的时间",
-  "worldcombat.skill.scaryface.description.0": "被吓住期间降低 %1$s 级速度，持续 %2$s；状态结束或被清除时恢复。",
-  "worldcombat.skill.scaryface.description.1": "可吓住 %1$s 范围内的目标，命中时让它后缩 %2$s 格。",
+  "worldcombat.skill.scaryface.description.0": "被吓住期间最多降低 %1$s 级速度，持续 %2$s；状态结束或被清除时速度恢复。",
+  "worldcombat.skill.scaryface.description.1": "可吓住 %1$s 范围内的目标，命中时把它朝远离你的方向推开 %2$s 格。",
   "worldcombat.skill.scaryface.description.2": "转脸正对目标要 %1$s，冷却 %2$s。",
   "worldcombat.skill.scaryface.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.scaryface.value.drop": "速度下降",
@@ -18,5 +18,6 @@
   "worldcombat.skill.scaryface.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去瞪人。",
   "world_combat.move.scaryface.text.gaze": "被吓住（速度 -%1$s）",
-  "effect.world_combat.scary_face_terror": "被吓住"
+  "effect.world_combat.scary_face_terror": "被吓住",
+  "worldcombat.skill.scaryface.reapply": "已经带着这份减速的目标无法再次被鬼面施放；无法被降低能力等级的目标不会受它影响。"
 }

@@ -5,8 +5,8 @@
   "worldcombat.skill.scaleshot.use.2": "Spray form to share the shards among a group ahead",
   "worldcombat.skill.scaleshot.description.0": "Each shard deals %1$s physical damage and the volley fires %2$s shards (2-5 natively, set by the user's data).",
   "worldcombat.skill.scaleshot.description.1": "A shard leaves every %1$s at %2$s blocks/tick, reaching %3$s blocks with up to ±%4$s spread.",
-  "worldcombat.skill.scaleshot.description.2": "Each shard has a %1$s block hit radius; when the volley ends the user gains Speed +%2$s and loses Defense %3$s stage(s).",
-  "worldcombat.skill.scaleshot.spray.on": "Spray form: shards take turns among up to %1$s foes in a cone ahead; per-shard power x0.82, one more Defense stage lost, range x0.9, wind-up +2 ticks and interval +1 tick.",
+  "worldcombat.skill.scaleshot.description.2": "Each shard has a %1$s block hit radius; once the volley ends (hit or miss) the user gains Speed +%2$s and loses Defense %3$s stage(s).",
+  "worldcombat.skill.scaleshot.spray.on": "Spray form: shards take turns among up to %1$s foes in a cone of about 70° ahead; per-shard power x0.82, one more Defense stage lost, range x0.9, a wider spread (x2.4), wind-up +2 ticks, interval +1 tick, recovery +1 tick and cooldown +4 ticks.",
   "worldcombat.skill.scaleshot.spray.off": "Focused form: the whole burst chases one target at heavier per-shard power, longer range and a faster cast, but reaches no one else.",
   "worldcombat.skill.scaleshot.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.scaleshot.growth.0": "From level %1$s the per-shard power rises to %2$s and the burst grows to %3$s shards.",
@@ -25,7 +25,7 @@
   "worldcombat.skill.scaleshot.value.aftercast": "Recovery",
   "worldcombat.skill.scaleshot.value.recharge": "Cooldown",
   "worldcombat.skill.scaleshot.preference.spray": "Spray form",
-  "worldcombat.skill.scaleshot.preference.spray.help": "On: shards take turns among up to 3 foes in a cone ahead for wide coverage; costs per-shard power x0.82, one more Defense stage, range x0.9, wind-up +2 ticks and interval +1 tick. Off (focused): the whole burst chases one target at heavier per-shard power, longer range and a faster cast.",
+  "worldcombat.skill.scaleshot.preference.spray.help": "On: shards take turns among up to 3 foes in a cone ahead for wide coverage; costs per-shard power x0.82, one more Defense stage, range x0.9, a wider spread, +2 ticks wind-up, +1 tick interval, +1 tick recovery and +4 ticks cooldown. Off (focused): the whole burst chases one target at heavier per-shard power, longer range and a faster cast.",
   "worldcombat.skill.scaleshot.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.scaleshot.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger opens the volley from farther.",
   "worldcombat.skill.scaleshot.preference.ai.spread": "Prefer clustered targets",
@@ -33,5 +33,6 @@
   "worldcombat.skill.scaleshot.preference.ai.finish": "Prefer low health",
   "worldcombat.skill.scaleshot.preference.ai.finish.help": "On: low-health targets rank higher so a burst finishes them; off: all targets score the same.",
   "world_combat.move.scaleshot.text.shed": "Shed scales: Speed +%1$s, Defense -%2$s",
-  "world_combat.move.scaleshot.text.miss": "Scales flew wide"
+  "world_combat.move.scaleshot.text.miss": "Scales flew wide",
+  "worldcombat.skill.scaleshot.homing": "After launch each shard steers toward the target it locked onto, so a moving foe cannot easily shake it off."
 }

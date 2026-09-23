@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.spark.summary": "Quickly strike a target, possibly paralyzing it. Deals more damage to targets with low health.",
-  "worldcombat.skill.spark.description.0": "The charged tackle deals about %1$s contact damage; it closes up to %2$s blocks at %3$s blocks per tick with a %4$s block hit radius.",
-  "worldcombat.skill.spark.description.1": "On a hit there is a %1$s%% chance to paralyze the target for %2$s, and shove it %3$s blocks.",
+  "worldcombat.skill.spark.description.0": "A charged tackle that settles about %1$s contact damage on a single target; it closes up to %2$s blocks at %3$s blocks per tick with a %4$s block hit radius.",
+  "worldcombat.skill.spark.description.1": "On a hit there is a %1$s%% chance to paralyze the target for %2$s (an already-paralyzed target is not re-applied; Electric types are immune) and shove it %3$s blocks; while paralyzed the target's movement speed is halved and each action has a 25%% chance to fail.",
   "worldcombat.skill.spark.overcharge.on": "Overcharge: higher power and paralyze chance and a longer paralysis, but a slower windup and a longer cooldown - pin the target down once.",
   "worldcombat.skill.spark.overcharge.off": "Tap shot: faster windup and cycle and a slightly longer reach, but lower power and paralyze chance - wear the target down with frequency.",
-  "worldcombat.skill.spark.timing": "Range %1$s blocks; windup %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",
+  "worldcombat.skill.spark.timing": "Range %1$s blocks; windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.spark.growth.0": "From level %1$s the electric power rises to %2$s.",
   "worldcombat.skill.spark.growth.1": "From level %1$s the electric power rises to %2$s and the paralyze chance to %3$s%%.",
   "worldcombat.skill.spark.use.0": "Close in and paralyze a target that is not paralyzed yet",

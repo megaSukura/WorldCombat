@@ -1,25 +1,4 @@
-/**
- * 怨念 / grudge —— 参数与机制数值来源。
- *
- * 原生事实：Ghost、变化、威力 —、命中 必中、PP 5、目标自身；挂 volatile `grudge`，
- *   使用者因对手的招式陷入濒死时，把对手最后使用的那一招的 PP 全部清空。
- *
- * 世界化：把这一手记在心里——施法者当场立下一段怨念，接下来的时间里只要有人亲手把它打倒，
- *   这份怨念就扑到凶手身上，把它刚刚用来送走自己的那一招 PP 全部掏空。它不护住使用者，
- *   只是让「亲手了结我」这件事在事后付出代价；对手可以收住最后一击、改用环境或别的来源了结，
- *   或干脆等怨念自己散掉。
- *
- * 数值来源（每个参数读不同的个体数据，分散到不同参数）：
- *   watchTicks   300 + (等级 − 20)×3 + 特防×1.2，刻骨 ×1.5、轻怨 ×0.85，夹 200..900 刻；等级与特防让怨念留更久——
- *                它要能撑到你倒下，所以窗口天生偏长。
- *   eyeRadius    0.4 + (宽度 − 0.9)×0.2，夹 0.35..0.9 格；怨眼圈随体型。
- *   motes        10 + 特攻×0.12，夹 10..28 个；画面里的怨念数量。
- *   tempo        10 − (速度 − 40)×0.02，夹 5..14 刻；出手越快越早立下。
- *   aftercast    7 + (身高 − 1.4)×1.0，夹 5..12 刻。
- *   recharge     200 − (等级 − 20)×0.6，刻骨 ×1.2、轻怨 ×0.85，夹 120..300 刻。
- * 配置 deep（刻骨）双向取舍：开启＝怨念更久，但整段时间被钉在原地、冷却更长；
- *   关闭（轻怨）＝更短，但可以自由走位、冷却更短——更短意味着更容易被对手等过去。
- */
+/** grudge：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const grudgeId = "grudge";
     export const grudgeEffect = "world_combat:grudge_watch";
@@ -69,6 +48,6 @@ namespace PokemonSkills {
         { key: "description.1", values: ["tempo", "recharge"] },
         { key: "deep.0", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.1", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] }
     ]);
 }

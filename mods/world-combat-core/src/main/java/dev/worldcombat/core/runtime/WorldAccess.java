@@ -159,6 +159,8 @@ public final class WorldAccess {
         if (!runtime.host.valid(target) || !runtime.host.sameWorld(source, target)) return null;
         nearby(runtime.host.position(target)); return runtime.host.mobEffect(target, id);
     }
+    /** Registry classification is readable before an effect is applied to any body. */
+    public String mobEffectCategory(String id) { check(); EffectData.id(id); return runtime.host.mobEffectCategory(id); }
     public MobEffectObservation[] mobEffects(ActorHandle target) {
         check();
         if (!runtime.host.valid(target) || !runtime.host.sameWorld(source, target)) return new MobEffectObservation[0];

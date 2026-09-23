@@ -113,7 +113,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "opposite.on", values: [], when: function (context) { return read(context.detail.values, ["opposite"]) === 1; } },
         { key: "opposite.off", values: [], when: function (context) { return read(context.detail.values, ["opposite"]) !== 1; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["field","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.fieldTicks", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.fieldTicks", "tier.1.wait"] }
     ]);

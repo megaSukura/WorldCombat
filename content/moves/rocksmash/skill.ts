@@ -21,7 +21,7 @@ namespace PokemonSkills {
     define({
         id: "rocksmash",
         name: "Rock Smash",
-        description: "The user attacks with a punch. This may also lower the target's Defense stat.",
+        description: "贴脸连出几记快拳，拳骨砸在对手最硬的地方：每记造成少量接触伤害，收拳时若打实，有机会把对手防御砸低一级；出手快、冷却短，适合反复拆防。",
         uses: ["贴脸连打拆防", "用便宜的快拳反复消耗", "先用碎岩砸开缺口，再让重击兑现"],
         kind: "enemy",
         range: 3.0,

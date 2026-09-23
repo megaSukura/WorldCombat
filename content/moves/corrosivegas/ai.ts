@@ -1,17 +1,8 @@
-/**
- * 腐蚀气体 / corrosivegas —— AI 用途。
- *
- * 什么局面下出手：挂在共享的 prepare 位上；有可见威胁、威胁在 `ai.maxChase`（默认 11）格内、
- *   自己不在驻守且不愿离位时跳过。出手的时机看雾里值不值：`ai.onlyHolders`（默认开启）下，
- *   需要雾半径内至少有一个（非自己的）活体携带道具才出手——腐蚀气体正是冲着携带物去的；
- *   关闭后只要雾里裹到一个敌人就喷。
- * 候选之间怎么排：雾里携带道具的人越多优先级越高（2 个及以上 62、1 个 54、只有敌人 30），排在普通交战之前。
- * 放完之后：一圈道具被溶毁、周围活体沾上短暂的沾酸身份，伙伴交回共享顺序继续交战。
- */
+/** 伙伴检查范围内可溶毁的宝可梦道具或可腐蚀的普通耐久装备，再选择喷酸位置。 */
 namespace CompanionBehavior {
     registerFact("world_combat:move_corrosivegas/held", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        return String(CobblemonCombat.pokemon(actor).heldItem()).replace("cobblemon:", "");
+        const held = PokemonSkills.corrosiveHeldOf(access, actor);
+        return held === null ? "" : held.id;
     });
 
     function corrosiveHeldOf(context: WorldBehavior.Context, target: Entity): string {
@@ -35,7 +26,7 @@ namespace CompanionBehavior {
     }
 
     registerUse("corrosivegas", {
-        protocols: ["world_combat:prepare"],
+        protocols: ["world_combat:prepare", "world_combat:control"],
         /** 自身为中心施放，但要走到威胁附近再喷：站位参照设为威胁，reach 取雾半径略内缩，避免站在雾缘刚好罩不住。 */
         reach: function (context) { return Math.max(1.5, corrosiveCloudRadius(context, source(context)) - 0.4); },
         approachTarget: function (context, _item, target) {

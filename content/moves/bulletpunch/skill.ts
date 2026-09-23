@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: bulletpunchId,
         cooldownParameter: "recharge",
         name: "Bullet Punch",
-        description: "The user strikes with tough punches as fast as bullets. This move always goes first.",
+        description: "当场击发、笔直贯穿的一记钢拳：起手为零（提交即打）、施法者不位移，钢铁拳锋沿窄线打穿，把这条线上前后排着的敌人一并贯穿；钢弹按更低的防御系数结算。穿甲弹贯穿数 +1（随速度最多 3 个），但每一下更轻、拳程更短、更费。",
         uses: ["贴身的瞬发钢拳先手", "把排成一条线的前后排一起打穿", "不位移地补一下并把人推开"],
         kind: "enemy",
         range: 2.3,

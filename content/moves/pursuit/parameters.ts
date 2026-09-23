@@ -39,7 +39,7 @@ namespace PokemonSkills {
     defineDamage(pursuitId, "power", {});
 
     describe(pursuitId, [
-        { key: "description.0", values: ["power", "distance", "speed", "collisionRadius"] },
+        { key: "description.0", values: ["power","distance","speed","collisionRadius"] },
         { key: "description.1", values: ["pp", "cooldown"] }
     ]);
 }

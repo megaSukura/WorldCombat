@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.steelroller.summary": "把脚下正在生效的场地压碎，自己卷成钢轮碾出去；脚下没有场地时整招失败，PP 照常消耗。",
-  "worldcombat.skill.steelroller.use.0": "压碎对手依赖的场地并顺势碾过去",
+  "worldcombat.skill.steelroller.use.0": "压碎脚下的场地并顺势碾过去",
   "worldcombat.skill.steelroller.use.1": "把一片场地换成一次重击",
   "worldcombat.skill.steelroller.use.2": "在战场里开出一条能走的钢辙",
-  "worldcombat.skill.steelroller.description.0": "滚出 %1$s 威力的一记，最远 %2$s 格；脚下必须站在一片正在生效的场地上，否则整招失败。",
-  "worldcombat.skill.steelroller.description.1": "每刻 %1$s 格、判定半径 %2$s 格，命中后把目标顶开 %3$s 格；滚过的地面被压出 %4$s 块钢辙，停留 %5$s。",
+  "worldcombat.skill.steelroller.description.0": "钢轮碾出约 %1$s 点物理伤害，最远滚 %2$s 格。发动时必须站在一片正在生效的场地上，并把它整片压碎；脚下没有场地则整招失败，PP 照常消耗。",
+  "worldcombat.skill.steelroller.description.1": "每刻滚 %1$s 格、判定半径 %2$s 格；撞上路径上第一个敌人即结算并把目标顶开 %3$s 格，然后停下。滚过的地面被压出 %4$s 块钢辙，停留 %5$s。",
   "worldcombat.skill.steelroller.grind.on": "开启碾磨式：威力多一成八、钢辙更长更久，代价是滚得近（距离 ×0.8）、速度 ×0.9、收招多 5 刻、冷却多 8 刻。",
   "worldcombat.skill.steelroller.grind.off": "关闭碾磨式：滚掠式，滚得远而快、收得干净，单发略轻。",
   "worldcombat.skill.steelroller.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",

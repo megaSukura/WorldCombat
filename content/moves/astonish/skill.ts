@@ -35,10 +35,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "astonish",
         cooldownParameter: "recharge",
         name: "Astonish",
-        description: "The user attacks the target by crying out in a startling fashion. This may also make the target flinch.",
+        description: "没有预警的一声尖叫：起手为 0 的贴脸瞬发打断，伤害很轻，却几乎必然让目标一滞；环境越暗，威力、畏缩几率与持续都更强。",
         uses: ["瞬发的一声尖叫打断贴身的对手", "在黑暗里把目标吓懵更久", "用极低的代价给连段开一个头"],
         kind: "enemy",
         range: 1.8,

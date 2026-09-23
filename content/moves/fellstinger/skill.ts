@@ -41,10 +41,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: fellstingerId,
         name: "Fell Stinger",
-        description: "A short, precise sting; felling the target with it sharply raises the user's Attack.",
-        uses: ["finishing strike"],
+        description: "一记短促的突刺；若以此招击倒目标，自身攻击大幅提高。",
+        uses: ["残血收尾"],
         kind: "enemy",
         range: 4,
         prepare: 5,

@@ -3,7 +3,7 @@
   "worldcombat.skill.geargrind.use.0": "从两侧交错甩出两枚旋转钢齿轮",
   "worldcombat.skill.geargrind.use.1": "用可弹跳的齿轮绕开掩体",
   "worldcombat.skill.geargrind.use.2": "压住会侧向走位的对手",
-  "worldcombat.skill.geargrind.description.0": "第一枚 %1$s 威力、第二枚 %2$s 威力（各走物攻/速度），投掷距离 %3$s 格，齿轮飞行速度 %4$s 格/刻。",
+  "worldcombat.skill.geargrind.description.0": "先后甩出两枚钢齿轮，每枚命中各造成一次伤害：第一枚约 %1$s 点（偏物攻）、第二枚约 %2$s 点（偏速度）。投掷距离 %3$s 格，齿轮飞行速度 %4$s 格/刻。",
   "worldcombat.skill.geargrind.description.1": "出手偏离角 %1$s 度，追踪转向 %2$s 度/刻，两侧错开 %3$s 格。",
   "worldcombat.skill.geargrind.cross.on": "当前交错式：两枚齿轮从两侧错开、追踪合拢，侧向躲闪会被另一枚兜住；每枚略轻、飞得略慢、间隔更长。",
   "worldcombat.skill.geargrind.cross.off": "当前直射式：两枚齿轮沿同一条线笔直快飞、不追踪，每枚更重、更准更快，但整体向一侧走位就能一起躲开。",
@@ -27,5 +27,6 @@
   "worldcombat.skill.geargrind.preference.cross.help": "开启：两枚齿轮从身体两侧甩出、错开后追踪合拢，侧向躲闪会被另一枚兜住；代价是每枚 ×0.95、飞得略慢、间隔 +2 刻。关闭（直射式）：两枚沿同一条线笔直快飞、不追踪，每枚 ×1.1、更准更快，但整体向一侧走位就能一起躲开。",
   "worldcombat.skill.geargrind.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.geargrind.preference.ai.maxChase.help": "超过这个距离就不主动甩齿轮，先走近。",
-  "world_combat.move.geargrind.text.clatter": "齿轮弹开"
+  "world_combat.move.geargrind.text.clatter": "齿轮弹开",
+  "worldcombat.skill.geargrind.description.ballistic": "齿轮是会飞的实体弹体，撞到方块会弹开，横向命中判定半径 %1$s 格；第二枚比第一枚晚 %2$s 出手。"
 }

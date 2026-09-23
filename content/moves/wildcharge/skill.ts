@@ -23,10 +23,11 @@ namespace PokemonSkills {
     const wildchargeShockText = "world_combat.move.wildcharge.text.shock";
 
     define({
+        freeMovement: true,
         id: "wildcharge",
         cooldownParameter: "recharge",
         name: "Wild Charge",
-        description: "The user shrouds itself in electricity and smashes into the target. This also damages the user a little.",
+        description: "电流裹身的一次放电冲锋：先把电流收拢到全身，笔直撞上去，把电流灌进对方身体（有概率麻痹）；回路也会伤到自己，全身湿透时漏电更狠。猛撞的带电版。",
         uses: ["用带电冲锋把贴脸的对手撞开", "给一个还没麻痹的主力挂上麻痹", "在湿身的环境里把电流灌进对方身体"],
         kind: "enemy",
         range: 3.9,

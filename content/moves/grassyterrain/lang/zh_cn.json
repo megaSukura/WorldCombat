@@ -5,12 +5,12 @@
   "worldcombat.skill.grassyterrain.use.2": "压制地面震招",
   "worldcombat.skill.grassyterrain.use.3": "照料植物",
   "worldcombat.skill.grassyterrain.description.0": "在选定地面种下半径 %1$s 格的青草地，持续 %2$s。",
-  "worldcombat.skill.grassyterrain.description.1": "站在草地上的活体每 %2$s 回复各自最大生命的 %1$s；草地对双方一视同仁。",
-  "worldcombat.skill.grassyterrain.description.2": "开启密植时，这片草地最多照料 %1$s 次植物。",
+  "worldcombat.skill.grassyterrain.description.1": "站在草地上的贴地活体每 %2$s 回复各自最大生命的 %1$s，只在未满血时回复；草地对双方一视同仁。",
+  "worldcombat.skill.grassyterrain.description.2": "开启密植时，这片草地每隔 20 刻照料周围一株可生长的植物，最多照料 %1$s 次。",
   "worldcombat.skill.grassyterrain.description.3": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.grassyterrain.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 种下青草，收招 %3$s，冷却 %5$s。",
-  "worldcombat.skill.grassyterrain.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
-  "worldcombat.skill.grassyterrain.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",
+  "worldcombat.skill.grassyterrain.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
+  "worldcombat.skill.grassyterrain.growth.1": "达到 %1$s 级，冷却再缩短至 %2$s 秒。",
   "worldcombat.skill.grassyterrain.value.gather": "起手",
   "worldcombat.skill.grassyterrain.value.settle": "收招",
   "worldcombat.skill.grassyterrain.value.reach": "施放距离",
@@ -21,7 +21,7 @@
   "worldcombat.skill.grassyterrain.value.bloomDensity": "草叶密度",
   "worldcombat.skill.grassyterrain.value.growth": "照料上限",
   "worldcombat.skill.grassyterrain.preference.blooming": "密植照料",
-  "worldcombat.skill.grassyterrain.preference.blooming.help": "开启＝密植：回血更强（×1.25），并会照料附近幼苗，但草地更小（×0.82）、更短（×0.85）、冷却 +16 刻；关闭＝野草：草地更大更久、冷却 -12 刻，但只回血、不照料植物。",
+  "worldcombat.skill.grassyterrain.preference.blooming.help": "开启＝密植：回血更强（×1.25），并每隔 20 刻照料附近一株幼苗，但草地更小（×0.82）、更短（×0.85）、冷却 +16 刻；关闭＝野草：草地更大更久、冷却 −12 刻，但回血较弱、不照料植物。",
   "worldcombat.skill.grassyterrain.preference.ai.maxChase": "种草距离",
   "worldcombat.skill.grassyterrain.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑青草场地；调小只在贴身时种草，调大愿意提前布置。",
   "worldcombat.skill.grassyterrain.preference.ai.advance": "把草地压向对手",
@@ -30,5 +30,6 @@
   "worldcombat.skill.grassyterrain.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去种草。",
   "world_combat.move.grassyterrain.text.heal": "草根滋养 %1$s",
   "world_combat.move.grassyterrain.text.growth": "幼苗生长",
-  "effect.world_combat.grassyterrain_ground": "青草托举"
+  "effect.world_combat.grassyterrain_ground": "青草托举",
+  "worldcombat.skill.grassyterrain.description.field": "站在草地上的贴地活体获得青草托举：草属性招式威力 ×1.3，自己使用地震或重踏时威力减半；离地的不算，走上草地才有、离开即失去。"
 }

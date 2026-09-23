@@ -14,10 +14,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: quickattackId,
         cooldownParameter: "recharge",
         name: "Quick Attack",
-        description: "The user lunges at the target at blinding speed. This move always goes first.",
+        description: "压低身子，贴地射出一小段直线，在对手还没把动作摆出来之前先撞上——撞上就停，收势极快。距离短、冷却低、没有附带效果，是随时能出的便宜先制。抢拍式更快更远但更轻、更费。",
         uses: ["贴身抢一记先手，趁对手还没出手", "低代价地收掉残血目标", "追不上时用一记短冲把距离补上"],
         kind: "enemy",
         range: 2.7,

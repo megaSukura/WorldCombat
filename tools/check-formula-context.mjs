@@ -580,6 +580,9 @@ check('custom authored cooldowns and detail aliases share final haste while raw 
     assert.equal(sample.resolve(scope.pokemon, {}, world, source).cooldown, 120);
     assert.equal(P.p(sample.id, 'recharge', scope), 120);
     const view = P.describeSkill(scope);
+    assert.equal(view.paragraphs[0].key, 'worldcombat.skill.fixture_cooldown.summary');
+    assert.equal(view.paragraphs[1].key, 'worldcombat.skill.fixture_cooldown.duration');
+    assert.equal(view.paragraphs[1].args[0].binding, 'cooldown');
     assert.equal(Number(view.bindings.cooldown.value), ticks / 20);
     assert.equal(Number(view.bindings.recharge.value), ticks / 20);
     const detail = sample.inspect(scope.pokemon, { values: {}, cooldown: 120 }, { full: true, world, actor: source, state: () => ({}) });
@@ -590,5 +593,15 @@ check('custom authored cooldowns and detail aliases share final haste while raw 
   const offline = { ...scope, world: null, actor: null, pokemon: { ...scope.pokemon, attribute: () => ({value: () => 50}) } };
   assert.equal(Number(P.describeSkill(offline).bindings.cooldown.value), 4);
   assert.equal(sandbox.ActionCooldowns.evaluate(world, source, 'fixture:non_slot', 0).ticks, 0);
+});
+check('explicit duration design bases keep growth independent of absent preference facts', () => {
+  const sample = { ...skill, id: 'fixture_duration_growth' };
+  P.actionParameters.define(sample.id, { wait: P.seconds(F.base(100).plus(F.when(F.pref('heavy'), F.const(20), F.const(-10))), 'Wait', '', { base: 100 }) });
+  P.stages(sample.id, [{ level: 40, values: { wait: 80 } }]); P.define(sample);
+  for (const [level, heavy, expected] of [[39,false,90],[39,true,120],[40,false,70],[40,true,100]]) {
+    const scope = { pokemon: { ...nativeSnapshot(source), level: () => level }, skill: sample, detail: { values: { heavy } } };
+    assert.equal(P.p(sample.id, 'wait', scope), expected);
+    assert.equal(Number(P.parameterBinding(scope, 'wait').value), expected / 20);
+  }
 });
 console.log(`PASS formula/context: ${count} scenarios; no emitted files or game processes`);

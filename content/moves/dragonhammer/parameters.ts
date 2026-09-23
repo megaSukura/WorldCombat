@@ -118,8 +118,8 @@ namespace PokemonSkills {
     ]);
 
     describe("dragonhammer", [
-        { key: "description.0", values: ["hammer", "reach"] },
-        { key: "description.1", values: ["shove", "downTicks"] },
+        { key: "description.0", values: ["hammer","reach"] },
+        { key: "description.1", values: ["shove","downTicks"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

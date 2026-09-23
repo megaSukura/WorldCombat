@@ -13,9 +13,10 @@ namespace PokemonSkills {
     const tackleMissText = "world_combat.move.tackle.text.miss";
 
     define({
+        freeMovement: true,
         id: "tackle",
         name: "Tackle",
-        description: "A physical attack in which the user charges and slams into the target with its whole body.",
+        description: "压低身子跑一小段，用整个身体撞上去，再顺着冲势从对方身侧滑过去。跑得越快、身体越重，这一下越沉；撞空就一路冲到助跑尽头。",
         uses: ["拉开距离时的一记短助跑冲撞", "撞开一步把对手顶离掩体", "顺手从对方身侧穿过去换位"],
         kind: "enemy",
         range: 3,

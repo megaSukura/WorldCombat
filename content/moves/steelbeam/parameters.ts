@@ -73,7 +73,7 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("temper", text("worldcombat.skill.steelbeam.preference.temper")), F.const(0.65), F.const(1)))
                 .clamp(0.15, 0.6).round(3),
             "自损比例", {
-                unit: "比例",
+                presentation: "percent",
                 description: "把身上的钢剥下来要付出的最大生命比例，固定结清、和打没打中无关；防御越硬越扛得住，体重越大失血越多，淬火式只剥外层。"
             }),
         /** 钉退距离：基础 0.9 格，体重每比 60 多 1 加 0.004（夹 -0.3..0.9），特攻每比 60 多 1 加 0.004（夹 -0.2..0.6）；夹在 0.4..2.8。 */
@@ -121,8 +121,8 @@ namespace PokemonSkills {
         rationale: "沉重的钢梁对特殊防御的压制略强，让特攻与体型的差距在场上更明显。" }, {});
 
     describe(steelbeamId, [
-        { key: "description.0", values: ["lance", "reach", "width"] },
-        { key: "description.1", values: ["knock", "cost"] },
+        { key: "description.0", values: ["lance","reach","width"] },
+        { key: "description.1", values: ["knock","cost"] },
         { key: "temper.on", values: [], when: function (context) { return read(context.detail.values, ["temper"]) === true; } },
         { key: "temper.off", values: [], when: function (context) { return read(context.detail.values, ["temper"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

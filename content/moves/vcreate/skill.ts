@@ -19,10 +19,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: vcreateId,
         cooldownParameter: "recharge",
         name: "V-create",
-        description: "The user emits a hot flame from its forehead and hurls itself at the target. This also lowers the user's Defense, Sp. Def and Speed stats.",
+        description: "从前额生出灼热的火焰、把自身当弹丸撞出去：前额的火张成一个 V，整个人拖着这道 V 撞进目标怀里，命中爆成一团火。代价写在明面上——提交那一刻就把防御、特防、速度三段一起压下去，无论中与不中都照付。它是全项目威力最高的一档近身冲撞。",
         uses: ["前额起火、把自身当弹丸撞穿一个目标", "用一次最重的近身交换压血", "赌上机动性换最高一档的爆发"],
         kind: "enemy",
         range: 3.8,

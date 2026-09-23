@@ -1,9 +1,9 @@
 {
   "worldcombat.skill.firepledge.summary": "在选定地面立起一纸火之誓约：火柱拔地而起，烧穿柱内敌人并点燃他们，柱脚留下一圈持续燃烧的誓约印。落点附近已有草或水的誓约印时共鸣——这一击更重，脚下变成火海（火＋草）或挂起彩虹（火＋水）。",
-  "worldcombat.skill.firepledge.description.0": "火柱在选定点拔地而起，对柱内每个敌人造成 %1$s 的特殊伤害。",
-  "worldcombat.skill.firepledge.description.1": "柱体半径 %1$s 格、高 %2$s 格；被烧到的敌人会被点燃 %3$s。",
-  "worldcombat.skill.firepledge.description.2": "柱脚留下一圈燃烧的誓约印，半径 %1$s 格、持续 %2$s；站在上面的敌人会持续燃烧。",
-  "worldcombat.skill.firepledge.description.3": "落点 %1$s 格内若已有草或水的誓约印，两纸誓约共鸣：这一击威力 ×%2$s，脚下变成火海（火＋草）或挂起彩虹（火＋水，持续为友方回复）。",
+  "worldcombat.skill.firepledge.description.0": "火柱在选定点拔地而起，对柱内每个敌人造成一次 %1$s 的特殊伤害，最多命中 %2$s 个敌人。",
+  "worldcombat.skill.firepledge.description.1": "柱体半径 %1$s 格、高 %2$s 格；被柱体烧到的敌人会被点燃 %3$s，灼伤期间每隔 5 秒损失约最大生命 1/16 的血（至少 1 点），并使其造成的物理伤害减半（火属性等免疫灼伤的目标不受影响）。",
+  "worldcombat.skill.firepledge.description.2": "柱脚留下一圈燃烧的誓约印，半径 %1$s 格、持续 %2$s；站在上面的敌人会持续燃烧。柱脚地表也会被烙成焦土（最多 %3$s 块），随誓约印一起失效并还原。",
+  "worldcombat.skill.firepledge.description.3": "落点 %1$s 格内若已有草或水的誓约印，两纸誓约共鸣：这一击威力 ×%2$s，脚下变成火海（火＋草，持续灼烧其中的敌人）或挂起彩虹（火＋水，持续为站入的友方回复）。共鸣场比誓约印更宽（半径 ×%3$s），持续约 1.6 倍时间。",
   "worldcombat.skill.firepledge.description.4": "施放距离 %1$s 格，起手 %2$s。",
   "worldcombat.skill.firepledge.fierce.on": "烈誓：威力 ×1.12、柱更粗、冷却 +12，但誓约印只留七成时间。",
   "worldcombat.skill.firepledge.fierce.off": "缓誓：威力 ×0.96，誓约印 ×1.25、冷却更短。",
@@ -33,5 +33,6 @@
   "worldcombat.skill.firepledge.growth.1": "%1$s 级起再抬一档（约 %2$s）。",
   "world_combat.move.firepledge.text.hit": "火之誓约 命中 %1$s",
   "world_combat.move.firepledge.text.combo": "誓约共鸣 → %1$s",
-  "world_combat.move.firepledge.text.miss": "火柱落空"
+  "world_combat.move.firepledge.text.miss": "火柱落空",
+  "worldcombat.skill.firepledge.value.maxTargets": "目标上限"
 }

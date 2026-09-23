@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.teleport.summary": "折叠空间瞬移到选定的落点，甩掉盯着自己的敌人；野生的个体挪得更远并彻底逃走。不留任何东西，冷却短。",
+  "worldcombat.skill.teleport.summary": "折叠空间瞬移到选定的落点，甩掉盯着自己的敌人；野生的个体挪得更远并松开自己的目标。不留任何东西，冷却短。",
   "worldcombat.skill.teleport.use.0": "被贴住时瞬间拉开距离",
   "worldcombat.skill.teleport.use.1": "甩掉正盯着自己的追兵",
   "worldcombat.skill.teleport.use.2": "越过一小段地形挪到安全处",
-  "worldcombat.skill.teleport.description.0": "可以瞬移最多 %1$s 格到选定的落点。",
-  "worldcombat.skill.teleport.description.1": "落地时 %1$s 格内正盯着你的敌人会失去目标。",
-  "worldcombat.skill.teleport.far.on": "远遁闪：距离 ×1.35、甩仇恨半径 ×1.2，代价是起手 +3、冷却 +26，落地更散。",
+  "worldcombat.skill.teleport.description.0": "瞬移最多 %1$s 格到选定的落点，不能落在原地；这一下不留任何东西。",
+  "worldcombat.skill.teleport.description.1": "闪走的一瞬，原地 %1$s 格内正锁定你的敌人会失去目标。",
+  "worldcombat.skill.teleport.far.on": "远遁闪：距离 ×1.35、甩仇恨半径 ×1.2，代价是起手 +3、冷却 +26。",
   "worldcombat.skill.teleport.far.off": "闪现：距离 ×0.85、甩仇恨半径 ×0.9，起手与冷却都更省，适合反复小挪。",
-  "worldcombat.skill.teleport.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.teleport.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、消耗 %4$s PP、冷却 %5$s 秒。",
   "worldcombat.skill.teleport.growth.0": "%1$s 级起瞬移距离抬到 %2$s 格。",
   "worldcombat.skill.teleport.growth.1": "%1$s 级起瞬移距离抬到 %2$s 格。",
   "worldcombat.skill.teleport.value.blinkRange": "瞬移距离",
@@ -28,5 +28,6 @@
   "worldcombat.skill.teleport.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.teleport.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会瞬移脱离原位。",
   "world_combat.move.teleport.text.blink": "瞬移 · %1$s 格",
-  "world_combat.move.teleport.text.flee": "瞬移远遁 · %1$s 格"
+  "world_combat.move.teleport.text.flee": "瞬移远遁 · %1$s 格",
+  "worldcombat.skill.teleport.description.2": "野生的个体借逃走的劲挪得更远，落地后还会松开自己锁定的目标。"
 }

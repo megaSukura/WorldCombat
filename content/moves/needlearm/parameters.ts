@@ -155,10 +155,10 @@ namespace PokemonSkills {
     ]);
 
     describe(needlearmId, [
-        { key: "description.0", values: ["rake", "grip"] },
-        { key: "description.1", values: ["reach", "swing"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks", "briarRadius", "briarTicks"] },
-        { key: "description.3", values: ["briarPower", "briarInterval", "pref.briar"] },
+        { key: "description.0", values: ["rake","grip"] },
+        { key: "description.1", values: ["reach","swing"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks","briarRadius","briarTicks"] },
+        { key: "description.3", values: ["briarPower","briarInterval"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.rake", "tier.0.briarTicks"] }
     ]);

@@ -105,16 +105,32 @@ namespace PokemonSkills {
         { level: 68, values: { cooldown: 60 } }
     ]);
 
+    function skullBashShown(context: NumberContext, key: string, value: number, kind?: string): any {
+        const original = parameterBinding(context, key);
+        const result = valueBinding(rounded(kind === "seconds" ? value / 20 : kind === "percent" ? value * 100 : value),
+            original.label, [original], text("worldcombat.skill.skullbash.preference.deep.help"));
+        if (kind) { result.unitKind = kind; result.unit = text("worldcombat.value.unit." + kind); }
+        return result;
+    }
     describe("skullbash", [
-        { key: "description.0", values: ["power", "distance"] },
-        { key: "description.1", values: ["charge", "armorGain", "braceBlock", "guardStage"] },
+        { key: "description.0", values: ["distance","power"] },
+        { key: "description.1", values: ["charge","armorGain","braceBlock","guardStage"] },
         { key: "description.2", values: ["speed", "collisionRadius", "push"] },
-        { key: "description.3", values: ["slamBonus", "slamStun", "slamBlocks", "breachTicks"] },
+        { key: "description.3", values: ["slamBonus","slamStun","slamBlocks","breachTicks","slamReach"] },
         { key: "stance.quick", values: [], when: function (context) { return !read(context.detail.values, ["deep"]); } },
         { key: "stance.deep", values: [], when: function (context) { return !!read(context.detail.values, ["deep"]); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.push"], when: function (context) { return context.pokemon.level() >= 32; } },
         { key: "growth.1", values: ["tier.1.level", "tier.1.guardStage"], when: function (context) { return context.pokemon.level() >= 50; } },
         { key: "growth.2", values: ["tier.2.level", "tier.2.cooldown"], when: function (context) { return context.pokemon.level() >= 68; } }
-    ]);
+    ], {
+        charge: context => skullBashShown(context, "charge", Math.max(6, Math.round(p("skullbash", "charge", context)
+            * (skullBashDeep(context.detail.values) ? 1.35 : 0.7))), "seconds"),
+        armorGain: context => skullBashShown(context, "armorGain", p("skullbash", "armorGain", context)
+            * (skullBashDeep(context.detail.values) ? 1.3 : 0.8)),
+        braceBlock: context => skullBashShown(context, "braceBlock", Math.min(1, p("skullbash", "braceBlock", context)
+            * (skullBashDeep(context.detail.values) ? 1.1 : 0.85)), "percent"),
+        guardStage: context => skullBashShown(context, "guardStage", p("skullbash", "guardStage", context)
+            + (skullBashDeep(context.detail.values) ? 1 : 0))
+    });
 }

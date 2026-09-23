@@ -3,9 +3,9 @@
   "worldcombat.skill.playrough.use.0": "Charge in and knock a foe off its feet",
   "worldcombat.skill.playrough.use.1": "Roll back and forth between clustered enemies",
   "worldcombat.skill.playrough.use.2": "Suppress physical attackers",
-  "worldcombat.skill.playrough.description.0": "The pounce deals %1$s physical damage, and the romping form rolls on to another enemy within %3$s blocks for another %2$s.",
+  "worldcombat.skill.playrough.description.0": "The pounce deals about %1$s physical damage; when Romping, if another enemy stands within %3$s blocks of the impact it rolls on to deal about %2$s more.",
   "worldcombat.skill.playrough.description.1": "Each target hit has a %1$s chance to lose %2$s stage(s) of Attack.",
-  "worldcombat.skill.playrough.description.2": "The pounce charges %1$s blocks at %2$s blocks/tick and shoves the target back about %3$s blocks.",
+  "worldcombat.skill.playrough.description.2": "The pounce charges %1$s blocks at %2$s blocks/tick, shoving a hit target back about %3$s blocks.",
   "worldcombat.skill.playrough.romp.on": "Romping: longer charge, faster roll, harder shove, wider reach to a second target, shorter wind-up and cooldown, at the cost of lighter hits and a rarer Attack drop.",
   "worldcombat.skill.playrough.romp.off": "Solid tackle: a shorter charge with heavier hits and a more reliable Attack drop.",
   "worldcombat.skill.playrough.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -35,5 +35,6 @@
   "worldcombat.skill.playrough.preference.ai.finish.help": "On: lower-health targets rank higher. Off: ordinary melee ordering.",
   "world_combat.move.playrough.text.down": "Knocked over",
   "world_combat.move.playrough.text.atk": "Attack -%1$s",
-  "world_combat.move.playrough.text.miss": "Whiffed"
+  "world_combat.move.playrough.text.miss": "Whiffed",
+  "worldcombat.skill.playrough.description.3": "The roll sweeps with a %1$s block hit radius and is stopped by terrain or a body in the way; it whiffs if it strikes no one."
 }

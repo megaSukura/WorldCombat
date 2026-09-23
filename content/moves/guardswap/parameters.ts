@@ -56,7 +56,7 @@ namespace PokemonSkills {
     ]);
 
     describe("guardswap", [
-        { key: "description.0", values: ["reach", "span"] },
+        { key: "description.0", values: ["reach","span"] },
         { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.span"] },

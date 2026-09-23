@@ -3,7 +3,7 @@
   "worldcombat.skill.kinesis.use.0": "Name the nastiest foe from a distance",
   "worldcombat.skill.kinesis.use.1": "Blunt a sniper across cover",
   "worldcombat.skill.kinesis.use.2": "Win a duel or cover a retreat with a single-target edge",
-  "worldcombat.skill.kinesis.description.0": "A beguiled target strikes weaker, and a Pokemon also loses %1$s accuracy stage(s), for %2$s.",
+  "worldcombat.skill.kinesis.description.0": "While beguiled, the target deals 15%% less physical attack damage and a Pokemon also loses %1$s accuracy stage(s); the attack penalty lasts %2$s, while the accuracy drop stays like a normal stat stage (it clears when combat lapses, not when the beguile ends).",
   "worldcombat.skill.kinesis.description.1": "The gaze reaches %1$s blocks; it affects one target only and never spreads.",
   "worldcombat.skill.kinesis.description.2": "Raising the spoon takes %1$s with a %2$s cooldown. Line of sight is required: a wall, pillar or other cover in the way makes the trick fizzle.",
   "worldcombat.skill.kinesis.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.kinesis.preference.ai.leaveStation.help": "When on, the companion may leave its post to bend the spoon under a Hold order.",
   "world_combat.move.kinesis.text.beguile": "Attention drawn (accuracy -%1$s)",
   "world_combat.move.kinesis.text.blocked": "Sight blocked, the trick fizzles",
-  "effect.world_combat.kinesis_beguiled": "Beguiled"
+  "effect.world_combat.kinesis_beguiled": "Beguiled",
+  "worldcombat.skill.kinesis.description.bend": "Bend: Twist (the default) raises the beguile stage by 1 and the beguile duration by x1.4, at +6 ticks of wind-up and x1.2 cooldown; Snap keeps the base stage and duration with a shorter wind-up and cooldown (x0.95)."
 }

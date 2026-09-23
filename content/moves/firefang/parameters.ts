@@ -133,9 +133,9 @@ namespace PokemonSkills {
 
     describe("firefang", [
         { key: "description.0", values: ["fang", "grip"] },
-        { key: "description.1", values: ["scorchChance", "scorchTicks"] },
+        { key: "description.1", values: ["scorchChance","scorchTicks"] },
         { key: "description.2", values: ["pierceTicks"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "sear.on", values: [], when: function (context) { return read(context.detail.values, ["sear"]) === true; } },
         { key: "sear.off", values: [], when: function (context) { return read(context.detail.values, ["sear"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "cooldown", "pp"] },

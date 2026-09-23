@@ -3,8 +3,8 @@
   "worldcombat.skill.dragondance.use.0": "开战前把攻速一起垫起来",
   "worldcombat.skill.dragondance.use.1": "被追急了先盘旋一圈，用速度脱身",
   "worldcombat.skill.dragondance.use.2": "在对手接近的空档里跃起蓄势",
-  "worldcombat.skill.dragondance.description.0": "起式后物攻与速度各提升 %1$s 级，盘旋 %2$s 圈。",
-  "worldcombat.skill.dragondance.description.1": "龙势持续 %1$s，螺旋半径 %2$s 格；窗口走完时这段舞抬起的攻速等级收回。",
+  "worldcombat.skill.dragondance.description.0": "起式后物攻与速度各最多提升 %1$s 级，分别受能力上限影响，随后盘旋 %2$s 圈。",
+  "worldcombat.skill.dragondance.description.1": "龙势持续 %1$s，螺旋半径 %2$s 格；到期或被清除时，只撤去这一舞提供的物攻与速度提升。",
   "worldcombat.skill.dragondance.soar.on": "高飞：每个上升拍真的离地 %1$s 格，龙势窗口再延长两成；代价是起式更久、冷却更长。",
   "worldcombat.skill.dragondance.soar.off": "贴地：只盘旋不起跳，出手更快；龙势窗口按常规长度。",
   "worldcombat.skill.dragondance.description.2": "起式 %1$s、收招 %2$s、冷却 %3$s。",
@@ -27,7 +27,7 @@
   "worldcombat.skill.dragondance.preference.ai.maxChase.help": "威胁进入这个距离内才考虑先盘旋；越大越早开始叠攻速。",
   "worldcombat.skill.dragondance.preference.ai.minGap": "贴身下限",
   "worldcombat.skill.dragondance.preference.ai.minGap.help": "威胁近于这个距离时不再起舞、直接攻击；调大更常在近身时放弃强化。",
-  "world_combat.move.dragondance.text.soared": "龙势 · 物攻与速度 +%1$s",
+  "world_combat.move.dragondance.text.soared": "龙势：物攻 +%1$s，速度 +%2$s",
   "world_combat.move.dragondance.text.faded": "龙势散去",
   "effect.world_combat.dragondance_airy": "龙势"
 }

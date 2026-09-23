@@ -106,7 +106,7 @@ namespace PokemonSkills {
 
     describe("bitterblade", [
         { key: "description.0", values: ["slash"] },
-        { key: "description.1", values: ["arc", "reach", "blade"] },
+        { key: "description.1", values: ["arc","reach","blade"] },
         { key: "description.2", values: ["sap"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },

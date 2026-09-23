@@ -17,7 +17,7 @@
  *   twig       枝身半宽：体宽决定枝子多粗；刺枝式收窄以求戳准。
  *   bend       末梢弹劲：速度让快的个体弯得更狠；它把「越远越疼」的倍率写进公式。
  *   snareTicks 挂枝减速时长：等级决定扎住多久（仅刺枝式）。
- *   snareLevel 挂枝减速级别：固定 1 级（仅刺枝式）。
+ *   snareLevel 挂枝减速：原生振幅固定 1（缓慢 II）（仅刺枝式）。
  *   leaves     芽叶量：物攻换算，驱动表现。
  *   tempo／aftercast／recharge：速度与等级定节奏，刺枝式更费。
  *
@@ -70,12 +70,12 @@ namespace PokemonSkills {
         snareTicks: seconds(
             F.base(26).plus(F.level().minus(18).times(0.4).clamp(0, 14)).clamp(18, 52).round(0),
             "挂枝时长", "刺枝式把削硬的枝尖别在目标身上、使其减速的时间；等级越高扎得越久。"),
-        /** 挂枝减速级别：固定 1 级；夹 1..2（仅刺枝式）。 */
+        /** 挂枝减速：原生振幅固定 1（缓慢 II）；夹 1..2（仅刺枝式）。 */
         snareLevel: formula(
             F.const(1).clamp(1, 2).round(0),
             "挂枝减速", {
-                unit: "级",
-                description: "刺枝式挂住目标时施加的减速能力等级（`minecraft:slowness`）；对宝可梦、原版生物与玩家是同一条路径。"
+                unit: "级", presentation: "amplifier",
+                description: "刺枝式施加缓慢的原生强度；显示等级从 I 起算，原始值 1 对应缓慢 II（移动速度降低30%）。"
             }),
         /** 芽叶量：14 + 物攻偏移[−2,10] ×0.1；夹 10..32。 */
         leaves: formula(
@@ -114,7 +114,7 @@ namespace PokemonSkills {
     describe("branchpoke", [
         { key: "description.0", values: ["poke", "reach", "twig"] },
         { key: "description.1", values: ["bend"] },
-        { key: "thorn.on", values: ["snareTicks", "snareLevel", "poke"], when: function (context) { return read(context.detail.values, ["thorn"]) === true; } },
+        { key: "thorn.on", values: ["snareTicks","snareLevel","poke"], when: function (context) { return read(context.detail.values, ["thorn"]) === true; } },
         { key: "thorn.off", values: ["poke"], when: function (context) { return read(context.detail.values, ["thorn"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.poke"] },

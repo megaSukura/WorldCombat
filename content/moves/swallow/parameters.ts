@@ -99,11 +99,12 @@ namespace PokemonSkills {
 
     describe("swallow", [
         { key: "description.0", values: ["worth"] },
+        { key: "description.layers", values: [] },
         { key: "description.1", values: ["digestTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "sip.on", values: [], when: function (context) { return read(context.detail.values, ["sipping"]) === true; } },
         { key: "sip.off", values: [], when: function (context) { return read(context.detail.values, ["sipping"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: [] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.wait"] }
     ]);

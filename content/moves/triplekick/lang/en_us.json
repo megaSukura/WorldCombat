@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.triplekick.summary": "Plant your feet and drive three straight kicks down the narrow lane in front of the target: each rolls its own accuracy and rises in power with every hit. A miss ends the string. Drive form kicks heavier and pushes further but needs to be closer and chains slower.",
-  "worldcombat.skill.triplekick.description.0": "The first kick deals %1$s fighting contact damage, for %2$s kicks in a row; each landed kick raises the next by %3$s.",
-  "worldcombat.skill.triplekick.description.1": "Each kick tests a lane %1$s blocks long and %2$s blocks in half-width; each hits for %3$s and the kicks are %4$s s apart.",
-  "worldcombat.skill.triplekick.description.2": "Knock the target back %1$s blocks on hit.",
+  "worldcombat.skill.triplekick.description.0": "The first kick deals about %1$s fighting contact damage, for %2$s kicks in a row; each landed kick adds %3$s times the first kick's power to the next one.",
+  "worldcombat.skill.triplekick.description.1": "Each kick tests a lane %1$s blocks long and %2$s blocks in half-width, and every enemy in it takes one hit; each kick hits for %3$s and the kicks are %4$s s apart.",
+  "worldcombat.skill.triplekick.description.2": "Each landed kick knocks the enemies it hits %1$s blocks along the kick direction.",
   "worldcombat.skill.triplekick.drive.on": "Drive form: every kick hits for 1.12x and pushes 1.5x, at 0.85x kicking reach, -2% hit chance, +1 tick between kicks, +1 tick recovery and +2 ticks cooldown.",
   "worldcombat.skill.triplekick.drive.off": "Quick form (native): 1.03x kicking reach, -1 tick between kicks, +2% hit chance and a 4-tick shorter cooldown, at a lighter hit and shorter push per kick.",
   "worldcombat.skill.triplekick.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.triplekick.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.triplekick.preference.ai.maxChase.help": "Beyond this distance it closes in instead of kicking. This is a close-range straight kick, so a large value often still cannot reach.",
   "world_combat.move.triplekick.text.miss": "Kick %1$s whiffed; the flurry stops",
-  "world_combat.move.triplekick.text.rise": "Kick %1$s landed %2$s"
+  "world_combat.move.triplekick.text.rise": "Kick %1$s landed %2$s",
+  "worldcombat.skill.triplekick.description.additional": "Every kick rolls its own hit: a whiff, an empty lane, or the originally chosen target fainting or leaving stops the flurry."
 }

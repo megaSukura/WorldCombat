@@ -105,7 +105,7 @@ namespace PokemonSkills {
     describe("rocktomb", [
         { key: "description.0", values: ["boulder", "collisionRadius"] },
         { key: "description.1", values: ["throwRange", "throwSpeed"] },
-        { key: "description.2", values: ["encaseStages", "cageRadius", "cageHeight", "cageTicks"] },
+        { key: "description.2", values: ["encaseStages","cageRadius","cageHeight","cageTicks"] },
         { key: "trap.on", values: [], when: function (context) { return read(context.detail.values, ["trap"]) === true; } },
         { key: "trap.off", values: [], when: function (context) { return read(context.detail.values, ["trap"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -144,7 +144,7 @@ namespace PokemonSkills {
 
     describe(echoId, [
         { key: "description.0", values: ["verse"] },
-        { key: "description.1", values: ["layer", "audible", "echoTicks"] },
+        { key: "description.1", values: ["layer","audible","echoTicks"] },
         { key: "description.2", values: ["reach"] },
         { key: "crescendo.on", values: [], when: function (context) { return read(context.detail.values, ["crescendo"]) === true; } },
         { key: "crescendo.off", values: [], when: function (context) { return read(context.detail.values, ["crescendo"]) !== true; } },

@@ -144,7 +144,9 @@ namespace PokemonSkills {
     });
     describe("naturalgift", [
         { key: "description.0", values: ["gift"] },
-        { key: "description.1", values: ["charge", "reach"] },
+        { key: "description.consume", values: [] },
+        { key: "description.1", values: ["charge","reach"] },
+        { key: "description.push", values: ["push"] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);
 }

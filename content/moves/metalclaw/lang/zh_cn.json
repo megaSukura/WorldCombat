@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.metalclaw.summary": "连续爪击目标，命中后提高攻击。",
+  "worldcombat.skill.metalclaw.summary": "贴脸连爪目标：连爪式左右两记、磨爪式一记更重；每记命中都有几率磨利、提高自身物攻。",
   "worldcombat.skill.metalclaw.use.0": "贴身左右两爪连劈",
   "worldcombat.skill.metalclaw.use.1": "用命中把物攻一点点磨起来",
   "worldcombat.skill.metalclaw.use.2": "开战几拍里把自己喂成重手",
   "worldcombat.skill.metalclaw.description.0": "每一记钢爪造成约 %1$s 的接触伤害，爪刃判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.metalclaw.description.1": "朝前劈出 %1$s 格；连爪式两记相隔 %2$s 刻，命中把目标带开 %3$s 格。",
-  "worldcombat.skill.metalclaw.description.2": "劈中后 %1$s 概率磨出锋口、物攻最多提升 %2$s 级。",
+  "worldcombat.skill.metalclaw.description.2": "劈中后 %1$s 概率磨出锋口、物攻最多提升 %2$s 级（一次施放的所有爪击共享这个上限）；磨出的物攻会留在身上，之后的物理招更重。",
   "worldcombat.skill.metalclaw.hone.on": "磨爪式：只劈一记，但更重、磨利几率更高、击退更远，起手与冷却更久。",
   "worldcombat.skill.metalclaw.hone.off": "连爪式：左右两记各劈一次、各掷一次磨利；更快更便宜，单记更轻。",
   "worldcombat.skill.metalclaw.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

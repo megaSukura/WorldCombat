@@ -3,12 +3,12 @@
   "worldcombat.skill.lifedew.use.0": "Top up a whole group standing around you at once",
   "worldcombat.skill.lifedew.use.1": "Open with a wave that pulls everyone low back up",
   "worldcombat.skill.lifedew.use.2": "Stand by an ally so the wave covers them too",
-  "worldcombat.skill.lifedew.description.0": "When the wave sweeps past, the user and each ally restore %1$s of their maximum health; a higher Special Attack makes the water stronger, and a deeper wound earns more.",
+  "worldcombat.skill.lifedew.description.0": "When the wave sweeps past, the user and each ally restore %1$s of their maximum health, each target healed only once and never beyond the health it has lost; a higher Special Attack and a deeper wound on the caster raise the fraction.",
   "worldcombat.skill.lifedew.description.1": "The wave reaches %1$s blocks, spreading over %2$s seconds; whoever it reaches later waits longer.",
   "worldcombat.skill.lifedew.description.2": "Wind-up %1$s, recovery %2$s and cooldown %3$s.",
   "worldcombat.skill.lifedew.stance.surge": "Surge: x1.15 healing and x1.15 wave radius at the cost of a 1.3x slower spread and a longer cooldown - for pulling a whole group back up.",
   "worldcombat.skill.lifedew.stance.plain": "Thin: spreads faster and cheaper with a shorter cooldown, but a smaller ring and less healing - for a quick top-up.",
-  "worldcombat.skill.lifedew.timing": "Cast on yourself; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.lifedew.timing": "Cast on yourself; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.lifedew.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.lifedew.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.lifedew.value.heal": "Restore fraction",
@@ -24,5 +24,6 @@
   "worldcombat.skill.lifedew.preference.ai.healBelow.help": "The wave is planned when the user or an ally is below this health ratio; lower keeps attacking, higher heals at the first wound.",
   "worldcombat.skill.lifedew.preference.ai.maxChase": "Rescue distance",
   "worldcombat.skill.lifedew.preference.ai.maxChase.help": "The wave is considered only for a wounded subject within this distance; lower keeps it close, higher closes a gap first.",
-  "world_combat.move.lifedew.text.swept": "The wave sweeps through, +%1$s"
+  "world_combat.move.lifedew.text.swept": "The wave sweeps through, +%1$s",
+  "worldcombat.skill.lifedew.description.additional": "It spreads from you as its centre; if no wounded ally (including you) is inside the ring, it cannot be cast."
 }

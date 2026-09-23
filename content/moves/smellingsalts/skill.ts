@@ -14,6 +14,7 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: smellingsaltsId,
         cooldownParameter: "recharge",
         name: "Smelling Salts",

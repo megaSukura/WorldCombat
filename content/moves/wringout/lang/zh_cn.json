@@ -2,7 +2,7 @@
   "worldcombat.skill.wringout.summary": "一圈螺旋力从脚到头缠上对手并越拧越紧，把它的力气绞出来：特攻决定拧进去多深，对手此刻剩余的生命越满，威力越大。它是三压招里唯一以特攻驱动、也是唯一能绞两段的一记：双绞式在第一次拧过之后再拧一记，第二段按对手当时的血量重算。",
   "worldcombat.skill.wringout.description.0": "绞紧命中造成 %1$s 的一般属性特殊伤害；对手剩余生命越满，这一拧越重。",
   "worldcombat.skill.wringout.description.1": "最多伸手 %1$s 格。",
-  "worldcombat.skill.wringout.twin.on": "双绞式：第一拧之后隔 %1$s 刻再拧一记，第二段按目标当时的血量重算、约再吃 %2$s 倍；单段威力 ×0.89、起手 +2 刻、冷却 +5 刻。",
+  "worldcombat.skill.wringout.twin.on": "双绞式：第一拧之后隔 %1$s 秒再拧一记，第二段按目标当时的血量重算、约再吃 %2$s 倍；单段威力 ×0.89、起手 +2 刻、冷却 +5 刻。",
   "worldcombat.skill.wringout.twin.off": "单绞式（默认）：一记拧完，单段更重、更快，不追加第二拧。",
   "worldcombat.skill.wringout.timing": "起手 %1$s 秒，收招 %2$s 秒，消耗 %3$s PP，冷却 %4$s 秒。",
   "worldcombat.skill.wringout.growth.0": "%1$s 级起：绞紧威力提升到 %2$s。",

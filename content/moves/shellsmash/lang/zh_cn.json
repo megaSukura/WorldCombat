@@ -3,7 +3,7 @@
   "worldcombat.skill.shellsmash.use.0": "开战前用防御换一波爆发",
   "worldcombat.skill.shellsmash.use.1": "在对手够不到的窗口里先破壳",
   "worldcombat.skill.shellsmash.use.2": "被围住时连壳一起炸开、赌一波速战速决",
-  "worldcombat.skill.shellsmash.description.0": "破壳把物攻、特攻、速度各提高 %1$s 级，同时防御与特防各下降 %2$s 级（永久，壳不会长回来）。",
+  "worldcombat.skill.shellsmash.description.0": "破壳把物攻、特攻、速度各提高 %1$s 级，同时防御与特防各下降 %2$s 级；这些等级变化保留到脱战消退，不会自行恢复。",
   "worldcombat.skill.shellsmash.total.on": "彻底破壳：攻／特攻／速度 +%1$s、防／特防 −%2$s，起式与冷却更长。",
   "worldcombat.skill.shellsmash.total.off": "稳妥破壳：攻／特攻／速度 +2、防／特防 −1，起手更快、冷却更短。",
   "worldcombat.skill.shellsmash.description.2": "起式 %1$s，收招 %2$s，冷却 %3$s。",

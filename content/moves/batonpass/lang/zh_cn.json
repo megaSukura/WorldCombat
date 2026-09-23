@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.batonpass.summary": "把自己此刻的能力等级打包成一根接力棒：有后备时交给待命的一只并由它上场接棒，否则递给身边最近的伙伴，自己清空并退开一步。棒里装的是你真实攒下的等级。",
+  "worldcombat.skill.batonpass.summary": "把自己的能力变化和增益递给伙伴。有后备时让后备接棒登场；否则交给身边选定的友方，自己退开。",
   "worldcombat.skill.batonpass.use.0": "把攒起来的能力等级整体交给队友",
   "worldcombat.skill.batonpass.use.1": "被削弱前把自己的成长交给别人带走",
   "worldcombat.skill.batonpass.use.2": "残血时把接力棒递出去，自己脱身",
-  "worldcombat.skill.batonpass.description.0": "最多把 %1$s 级能力变化交到伙伴身上，伙伴获得同样的等级，自己对应清空；接棒余韵留 %2$s。",
+  "worldcombat.skill.batonpass.description.0": "最多交接 %1$s 层：先转移绝对值最大的能力变化，再用剩余额度转移药水、信标等增益。已转交的部分从自己身上移除，保留原有剩余时长；接棒图标显示 %2$s。",
   "worldcombat.skill.batonpass.description.1": "递棒距离 %1$s 格，交棒后自己背离伙伴退开 %2$s 格。",
   "worldcombat.skill.batonpass.relay.on": "接力式：携带上限 ×1.0、退步收紧到 ×0.6、冷却更长——把整根棒交给伙伴。",
   "worldcombat.skill.batonpass.relay.off": "独走式：携带上限 ×0.65、退步 ×1.2、冷却更短——留一部分给自己并撤得更远。",
-  "worldcombat.skill.batonpass.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.batonpass.timing": "射程 %1$s 格；起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.batonpass.growth.0": "%1$s 级起可递等级抬到 %2$s。",
-  "worldcombat.skill.batonpass.growth.1": "%1$s 级起可递等级抬到 %2$s。",
+  "worldcombat.skill.batonpass.growth.1": "%1$s 级起最多交接 %2$s 层，递棒距离增至 %3$s 格。",
   "worldcombat.skill.batonpass.value.carry": "接力级数",
   "worldcombat.skill.batonpass.value.handoffRange": "递棒距离",
   "worldcombat.skill.batonpass.value.withdraw": "退步距离",
@@ -26,5 +26,6 @@
   "worldcombat.skill.batonpass.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去把棒交给队友。",
   "world_combat.move.batonpass.text.handoff": "接棒 · 继承 %1$s 级",
   "world_combat.move.batonpass.text.lone": "接力棒落空",
-  "effect.world_combat.baton_pass": "接棒"
+  "effect.world_combat.baton_pass": "接棒",
+  "worldcombat.skill.batonpass.world": "普通生物和玩家也能接棒。每种药水增益整体转移，I级占1层；剩余层数不足或对方已有更强的同种效果时，该增益留在自己身上。"
 }

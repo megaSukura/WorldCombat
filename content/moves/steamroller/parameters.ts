@@ -147,8 +147,8 @@ namespace PokemonSkills {
     ]);
 
     describe(steamrollerId, [
-        { key: "description.0", values: ["squash", "flinchChance", "flinchTicks"] },
-        { key: "description.1", values: ["lane", "rollSpeed", "radius", "push"] },
+        { key: "description.0", values: ["squash","flinchChance","flinchTicks"] },
+        { key: "description.1", values: ["lane","rollSpeed","radius","push"] },
         { key: "description.2", values: ["treadCells", "treadTicks"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },

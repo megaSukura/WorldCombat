@@ -84,11 +84,11 @@ namespace PokemonSkills {
     });
 
     describe("matblock", [
-        { key: "description.0", values: ["capacity", "window"] },
+        { key: "description.0", values: ["capacity","window"] },
         { key: "description.1", values: ["radius"] },
         { key: "fold.upright", values: [], when: function (context) { return read(context.detail.values, ["fold"]) === 1; } },
         { key: "fold.spread", values: [], when: function (context) { return read(context.detail.values, ["fold"]) !== 1; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

@@ -144,9 +144,9 @@ namespace PokemonSkills {
 
     describe("hyperdrill", [
         { key: "description.0", values: ["drill"] },
-        { key: "description.1", values: ["reach", "rush", "radius"] },
-        { key: "description.2", values: ["shred", "pierce", "push"] },
-        { key: "through.on", values: [], when: function (context) { return read(context.detail.values, ["through"]) === true; } },
+        { key: "description.1", values: ["reach","rush","radius"] },
+        { key: "description.2", values: ["shred","push","pierce"] },
+        { key: "through.on", values: ["pierce"], when: function (context) { return read(context.detail.values, ["through"]) === true; } },
         { key: "through.off", values: [], when: function (context) { return read(context.detail.values, ["through"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.drill", "tier.0.shred"] },

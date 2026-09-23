@@ -21,10 +21,11 @@ namespace PokemonSkills {
     const constrictMissText = "world_combat.move.constrict.text.miss";
 
     define({
+        freeMovement: function (config) { return !!config.latch; },
         id: "constrict",
         cooldownParameter: "recharge",
         name: "Constrict",
-        description: "The target is attacked with long, creeping tentacles, vines, or the like. This may also lower the target's Speed stat.",
+        description: "青藤或触手沿线爬向目标，缠上并收紧。伤害很低，价值全在缠住之后：压速度、短暂按在原地，把目标交给队友或自己的下一招。它还会以一定概率再紧一道，多压一级速度。",
         uses: ["缠住一名跑得快的目标", "把对手按在原地交给队友", "用最低的代价给目标留一个持续减速"],
         kind: "enemy",
         range: 2.9,

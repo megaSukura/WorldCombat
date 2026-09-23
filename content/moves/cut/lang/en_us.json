@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.cut.summary": "Drop low and push out one skimming cut: every foe in the fan in front of you takes contact damage, and the grass, flowers and leaves inside the arc are cut away as you pass. It is the family's fastest, cheapest and widest slash - the wide form reaches further and clears more, the heavy form is narrower but bites harder.",
-  "worldcombat.skill.cut.description.0": "The skimming cut deals %1$s contact damage to every foe inside the arc.",
+  "worldcombat.skill.cut.description.0": "The skimming cut deals one hit of about %1$s contact damage to every foe inside the arc.",
   "worldcombat.skill.cut.description.1": "It reaches %1$s blocks with a %2$s degree opening, covering %3$s blocks above the feet.",
   "worldcombat.skill.cut.description.2": "It cuts up to %1$s low plants inside the arc.",
   "worldcombat.skill.cut.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

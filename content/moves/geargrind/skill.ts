@@ -24,7 +24,7 @@ namespace PokemonSkills {
         id: geargrindId,
         cooldownParameter: "recharge",
         name: "Gear Grind",
-        description: "The user attacks by throwing steel gears at the target twice in a row.",
+        description: "从身体两侧各甩出一枚旋转的钢铁齿轮，一左一右交错飞向对手、在空中合拢；齿轮撞到东西会弹开一下，落地的齿轮还会原地转一会儿再散成钢屑。交错式侧向兜人、直射式更快更准。",
         uses: ["从两侧交错甩出两枚旋转钢齿轮", "用可弹跳的齿轮绕开掩体", "压住会侧向走位的对手"],
         kind: "enemy",
         range: 8,

@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: foulplayId,
         cooldownParameter: "recharge",
         name: "Foul Play",
-        description: "The user turns the target's strength against it. The higher the target's Attack stat, the greater the damage this move inflicts.",
+        description: "伸出一条暗影手臂爬进对手的影子，从它自己脚下竖起一簇暗影棘。这一招不吃施法者自己的攻击，而是读**目标的物攻**：对手越壮，借来的力气越大、这一记越重。",
         uses: ["用它自己的力气打它", "越壮的目标咬得越重", "纠缠式把强敌拖进近身"],
         kind: "enemy",
         range: 5.2,

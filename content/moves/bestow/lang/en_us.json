@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.bestow.summary": "Pass your held item to an empty-handed ally: the gift flies along the line and lands in their item slot, leaving you empty-handed. It fails if the target already holds an item or is embargoed.",
+  "worldcombat.skill.bestow.summary": "Gives one carried item to an empty-handed allied Pokémon, ordinary mob, or player. Targets already holding an item or under Embargo cannot receive it.",
   "worldcombat.skill.bestow.use.0": "Give a Berry or similar item to an ally that needs it",
   "worldcombat.skill.bestow.use.1": "Hand your item to your main attacker before the fight",
   "worldcombat.skill.bestow.use.2": "Transfer your item to an empty-handed partner",
-  "worldcombat.skill.bestow.description.0": "Pass the gift to an empty-handed ally within %1$s blocks; %2$s s wind-up. It only gives, never takes back.",
+  "worldcombat.skill.bestow.description.0": "Passes one item to an empty-handed ally within %1$s blocks after %2$s seconds of preparation. The recipient keeps the gift.",
   "worldcombat.skill.bestow.urgent.on": "Urgent on: reach x0.8, wind-up -3 ticks and cooldown -10 ticks; you must close in, but the gift arrives fast.",
   "worldcombat.skill.bestow.urgent.off": "Urgent off: reach x1.15, wind-up +3 ticks and cooldown +10 ticks; the gift can be handed over from a short distance.",
   "worldcombat.skill.bestow.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

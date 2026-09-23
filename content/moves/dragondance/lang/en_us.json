@@ -3,8 +3,8 @@
   "worldcombat.skill.dragondance.use.0": "Build both Attack and Speed before a fight",
   "worldcombat.skill.dragondance.use.1": "Spiral once when chased and slip away on the new Speed",
   "worldcombat.skill.dragondance.use.2": "Rise and gather power in the window while the foe closes in",
-  "worldcombat.skill.dragondance.description.0": "After the wind-up Attack and Speed each rise by %1$s and the user circles %2$s turns.",
-  "worldcombat.skill.dragondance.description.1": "The dragon surge lasts %1$s and the spiral spans %2$s blocks; when it ends the Attack and Speed it raised are taken back.",
+  "worldcombat.skill.dragondance.description.0": "Raises Attack and Speed by up to %1$s stages each, independently limited by their caps, then circles %2$s times.",
+  "worldcombat.skill.dragondance.description.1": "The boost lasts %1$s with a %2$s-block spiral radius. Expiry or removal ends only this dance’s Attack and Speed contributions.",
   "worldcombat.skill.dragondance.soar.on": "Soaring: every rising beat truly lifts %1$s blocks and the surge window is 20 percent longer, for a longer wind-up and cooldown.",
   "worldcombat.skill.dragondance.soar.off": "Low glide: circling without leaping, quicker to finish, with the regular surge window.",
   "worldcombat.skill.dragondance.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",
@@ -27,7 +27,7 @@
   "worldcombat.skill.dragondance.preference.ai.maxChase.help": "The move is considered only against a threat within this distance; larger means stacking Attack and Speed earlier.",
   "worldcombat.skill.dragondance.preference.ai.minGap": "Close-range floor",
   "worldcombat.skill.dragondance.preference.ai.minGap.help": "A threat closer than this makes the companion attack instead of dancing; larger gives up the buff more often up close.",
-  "world_combat.move.dragondance.text.soared": "Dragon surge · Attack and Speed +%1$s",
+  "world_combat.move.dragondance.text.soared": "Dragon stance: Attack +%1$s, Speed +%2$s",
   "world_combat.move.dragondance.text.faded": "The dragon surge fades",
   "effect.world_combat.dragondance_airy": "Dragon Surge"
 }

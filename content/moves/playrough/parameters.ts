@@ -166,9 +166,10 @@ namespace PokemonSkills {
     ]);
 
     describe(playroughId, [
-        { key: "description.0", values: ["romp", "tumble", "bounceRange"] },
+        { key: "description.0", values: ["romp","tumble","bounceRange"] },
         { key: "description.1", values: ["atkChance", "atkStages"] },
-        { key: "description.2", values: ["lunge", "cruise", "push"] },
+        { key: "description.2", values: ["lunge","cruise","push"] },
+        { key: "description.3", values: ["radius"] },
         { key: "romp.on", values: [], when: function (context) { return read(context.detail.values, ["romp"]) === true; } },
         { key: "romp.off", values: [], when: function (context) { return read(context.detail.values, ["romp"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

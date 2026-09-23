@@ -3,9 +3,9 @@
   "worldcombat.skill.smellingsalts.use.0": "Land a doubled blow while the foe is paralysed",
   "worldcombat.skill.smellingsalts.use.1": "Hit a paralysed target once, hard",
   "worldcombat.skill.smellingsalts.use.2": "Use coarse salt to leave a freshly woken target staggering",
-  "worldcombat.skill.smellingsalts.description.0": "The salt slap deals about %1$s physical damage; if the target is paralysed right now the power is doubled, and the hit then cures its paralysis (it wakes up and is no longer controlled).",
+  "worldcombat.skill.smellingsalts.description.0": "The salt slap deals about %1$s physical damage; if the target is paralysed right now the power is doubled, and a hit cures its paralysis.",
   "worldcombat.skill.smellingsalts.description.1": "Reach: %1$s blocks. Speed: %2$s blocks per tick. Hit radius: %3$s blocks. A hit pushes the target back %4$s blocks.",
-  "worldcombat.skill.smellingsalts.coarse.on": "Coarse salt on: knockback ×1.5 and the cure leaves a short stagger (slowness); in exchange the hit is about ×0.90 and the cooldown is 3 ticks longer.",
+  "worldcombat.skill.smellingsalts.coarse.on": "Coarse salt on: knockback ×1.5 and the cure leaves a short stagger that lowers movement speed by 15%; in exchange the hit is about ×0.90 and the cooldown is 3 ticks longer.",
   "worldcombat.skill.smellingsalts.coarse.off": "Coarse salt off: the hit is about ×1.06, waking the foe cleanly and putting all of it into damage.",
   "worldcombat.skill.smellingsalts.timing": "Cast on an enemy within %1$s blocks; after %2$s seconds it spends %4$s PP to fire, then recovers for %3$s seconds and starts a %5$s second cooldown on commit.",
   "worldcombat.skill.smellingsalts.growth.0": "At level %1$s the salts power rises to %2$s.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.smellingsalts.preference.ai.wake.help": "On: prioritize paralyzed targets for the doubled-power hit. Off: keep the ordinary low priority without weighting paralysis.",
   "world_combat.move.smellingsalts.text.wake": "Wide awake!",
   "world_combat.move.smellingsalts.text.hit": "Salt slap",
-  "world_combat.move.smellingsalts.text.miss": "Slapped air"
+  "world_combat.move.smellingsalts.text.miss": "Slapped air",
+  "worldcombat.skill.smellingsalts.description.paralysis": "Paralysis normally lasts about 40 seconds: the target's movement speed is halved and each move it makes has a 25% chance to fail; Electric-type targets cannot be paralysed. A hit cures the paralysis outright."
 }

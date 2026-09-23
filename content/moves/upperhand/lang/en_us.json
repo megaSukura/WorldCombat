@@ -3,9 +3,9 @@
   "worldcombat.skill.upperhand.use.0": "Interrupt the foe's priority move",
   "worldcombat.skill.upperhand.use.1": "Punish enemies that steal the tempo with priority moves",
   "worldcombat.skill.upperhand.use.2": "Pin the foe back where it stood when it tried to go first",
-  "worldcombat.skill.upperhand.description.0": "Land a %1$s-power palm strike; it only connects when the target committed a priority attack within the last %2$s, and it stops that move.",
+  "worldcombat.skill.upperhand.description.0": "Land a palm strike for about %1$s physical damage; it only connects and pins that move when the target committed a priority attack within the last %2$s — otherwise the whole move whiffs and its PP is still spent.",
   "worldcombat.skill.upperhand.description.1": "Palm reach %1$s blocks, %2$s blocks/tick, hit radius %3$s blocks; the target is shoved back %4$s blocks and left flinching %5$s.",
-  "worldcombat.skill.upperhand.wide.on": "Wide sweep on: the palm carves a small fan that can stop several priority-movers at once, but each hit is -12%, the flinch is 6 ticks shorter, recovery +3 ticks and cooldown +5 ticks.",
+  "worldcombat.skill.upperhand.wide.on": "Wide sweep on: as long as the locked target just used a priority move, the palm carves a fan of about %1$s blocks radius and a %2$s-degree arc, and every foe it catches takes a hit and is pinned (even ones not readying a priority move); each hit is -12%%, the flinch is 6 ticks shorter, recovery +3 ticks and cooldown +5 ticks.",
   "worldcombat.skill.upperhand.wide.off": "Wide sweep off: a focused palm, heavier and with a longer flinch, but it can only stop one.",
   "worldcombat.skill.upperhand.timing": "Cast on an enemy within %1$s blocks; %2$s after starting it spends %4$s PP; recovery %3$s, cooldown %5$s from commit.",
   "worldcombat.skill.upperhand.growth.0": "At level %1$s the palm rises to %2$s.",
@@ -29,5 +29,6 @@
   "world_combat.move.upperhand.text.alert": "Read it",
   "world_combat.move.upperhand.text.hit": "Upper Hand!",
   "world_combat.move.upperhand.text.whiff": "Half a beat late",
-  "effect.world_combat.upperhand_flinch": "Flinch"
+  "effect.world_combat.upperhand_flinch": "Flinch",
+  "worldcombat.skill.upperhand.description.2": "Being pinned means flinching for %1$s: it first interrupts whatever interruptible action the target is performing, after which the target cannot start new moves or make ordinary attacks for that time."
 }

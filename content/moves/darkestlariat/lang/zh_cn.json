@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.darkestlariat.summary": "攻击并推开周围的敌人，忽略目标的能力等级变化。",
+  "worldcombat.skill.darkestlariat.summary": "攻击并推开周围敌人，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。",
   "worldcombat.skill.darkestlariat.use.0": "原地旋身，把身周一圈的敌人一起抡开",
   "worldcombat.skill.darkestlariat.use.1": "把目标涨起来的防御等级直接无视掉",
   "worldcombat.skill.darkestlariat.use.2": "被围住时一次清开贴身的人",

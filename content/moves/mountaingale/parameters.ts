@@ -152,13 +152,13 @@ namespace PokemonSkills {
 
     describe("mountaingale", [
         { key: "description.0", values: ["mass", "collisionRadius"] },
-        { key: "description.1", values: ["throwRange", "flightSpeed", "arcFall"] },
-        { key: "description.2", values: ["shatterRadius", "shove", "splash"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.1", values: ["throwRange","flightSpeed","arcFall"] },
+        { key: "description.2", values: ["shatterRadius","shove","splash"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "description.4", values: ["iceTicks", "spikeHeight"] },
         { key: "glacier.on", values: [], when: function (context) { return read(context.detail.values, ["glacier"]) === true; } },
         { key: "glacier.off", values: [], when: function (context) { return read(context.detail.values, ["glacier"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.mass", "tier.0.splash"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.mass", "tier.1.splash", "tier.1.shatterRadius", "tier.1.spikeHeight"] }
     ]);

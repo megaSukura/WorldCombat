@@ -3,10 +3,10 @@
   "worldcombat.skill.rockclimb.use.0": "贴身的一次重扑",
   "worldcombat.skill.rockclimb.use.1": "越过一小段距离砸进敌群",
   "worldcombat.skill.rockclimb.use.2": "用落地范围一次撞到两三个",
-  "worldcombat.skill.rockclimb.description.0": "落地那一记造成 %1$s 点物理伤害，冲程 %2$s 格、落地范围 %3$s 格（画面里的尘环就是判定范围）。",
-  "worldcombat.skill.rockclimb.description.1": "被打实后有 %1$s 概率陷入混乱 %2$s；混乱期间它每次想出手有 %3$s 概率被打散。",
+  "worldcombat.skill.rockclimb.description.0": "落地那一记造成约 %1$s 点物理伤害，冲程 %2$s 格、落地范围 %3$s 格；落点一圈内最多 %4$s 个敌人各挨一记（画面里的尘环就是判定范围）。",
+  "worldcombat.skill.rockclimb.description.1": "被打实后有 %1$s 概率陷入混乱 %2$s；混乱期间它每次想出手有 %3$s 概率被打散，那一次动作直接作废。",
   "worldcombat.skill.rockclimb.description.2": "命中 85 会真的扑偏（每点缺失偏 %1$s 度），跃高 %2$s 格。",
-  "worldcombat.skill.rockclimb.vault.on": "当前为跃攀：扑得更远更高、落地范围更大、土痕更大，代价是起手与冷却更长、命中偏角更大、更容易扑空。",
+  "worldcombat.skill.rockclimb.vault.on": "当前为跃攀：扑得更远更高、落地范围更大、土痕更大，代价是起落更慢、单发威力略降、起手与冷却更长、命中偏角更大、更容易扑空。",
   "worldcombat.skill.rockclimb.vault.off": "当前为贴地扑：低平快的一扑、偏角小更稳，代价是冲程与落地范围更小。",
   "worldcombat.skill.rockclimb.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.rockclimb.growth.0": "%1$s 级起扑击威力升至 %2$s。",
@@ -39,5 +39,6 @@
   "world_combat.move.rockclimb.text.daze": "撞得发懵",
   "world_combat.move.rockclimb.text.stumble": "踉跄",
   "world_combat.move.rockclimb.text.hit": "攀岩命中 %1$s",
-  "world_combat.move.rockclimb.text.miss": "扑空了"
+  "world_combat.move.rockclimb.text.miss": "扑空了",
+  "worldcombat.skill.rockclimb.description.additional": "落地还会掀翻落点附近约 %1$s 格地表、留下一片粗土土痕，%2$s 后原方块回来。"
 }

@@ -56,11 +56,11 @@ namespace PokemonSkills {
     });
 
     describe(spotlightId, [
-        { key: "description.0", values: ["expose", "spotTicks"] },
-        { key: "description.1", values: ["reach", "sweepRadius"] },
+        { key: "description.0", values: ["expose","spotTicks"] },
+        { key: "description.1", values: ["reach","sweepRadius"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "stance.pierce", values: [], when: function (context) { return read(context.detail.values, ["mode"]) !== 1; } },
         { key: "stance.pin", values: [], when: function (context) { return read(context.detail.values, ["mode"]) === 1; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

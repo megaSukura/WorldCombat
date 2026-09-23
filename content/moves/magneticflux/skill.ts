@@ -1,25 +1,21 @@
-/**
- * 磁场操控 / magneticflux —— 执行组织与结算。
- *
- * 核心念头：施法者把自己压成一个磁极，在原地立起一片磁场；一圈磁力线绞出、咬住站在场里的
- *   正电／负电伙伴，在它们身上缠出极光护层，防御与特防一起抬起来。离开磁场，磁力就散。
- *
- * 三幕：
- *   起 `charge`（windup，提交前）：身体压低、周身的电屑向内绞，只播预告，可被打断、不花代价。
- *   场 `pulse`（提交后）：落点开一片场地规则 `world_combat:magneticflux_aura`，寿命 `fieldTicks`；
- *     磁场每 5 刻扫一遍——站在场里的正电／负电**友方**（含施法者本身）各抬一次防御与特防，
- *     并挂上共享身份 `world_combat:status/magnetized` 的磁场状态。
- *   散 `fade`：离开磁场、磁场到期或被清除时，本单元抬起的防御与特防按记录原样收回。
- *
- * 与同族分开：鲜花防守一次推开、护所有草属性；磁场操控是留在原地的一片磁场，只咬带正负电特性的自己人。
- */
+/** 在脚下展开磁场，暂时提高场内正负电伙伴、铁傀儡和穿金属护甲友方的防御与特防。离开磁场后提升消失。 */
 namespace PokemonSkills {
     function magneticfluxStage(world: CombatWorld, actor: CombatActor, stat: string): number {
         return NativeEffects.stage(NativeEffects.read(world, actor), stat);
     }
-    /** 现行特性（含被层改写或压制的），去掉命名空间后比正电／负电。 */
-    function magneticfluxPolarity(world: CombatWorld, actor: CombatActor): string {
-        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return "";
+    /** 资格来自当前正负电特性，或普通活体的身体/装备材料。 */
+    export function magneticfluxPolarity(world: CombatWorld, actor: CombatActor): string {
+        if (!world.valid(actor)) return "";
+        if (String(actor.domain()) !== "cobblemon") {
+            const type = world.entityType(actor);
+            if (type !== null && String(type.id()) === "minecraft:iron_golem") return "metal";
+            const equipment = world.equipment(actor);
+            for (let i = 0; i < equipment.length; i++) {
+                const slot = String(equipment[i].slot());
+                if ((slot === "head" || slot === "chest" || slot === "legs" || slot === "feet") && NativeItems.magneticEquipment(equipment[i])) return "metal";
+            }
+            return "";
+        }
         const pokemon = CobblemonCombat.pokemon(actor);
         const name = String(NativeEffects.ability(pokemon, NativeEffects.read(world, actor))).replace("cobblemon:", "").toLowerCase();
         return name === "plus" || name === "minus" ? name : "";
@@ -117,9 +113,8 @@ namespace PokemonSkills {
         id: magneticfluxId,
         cooldownParameter: "wait",
         name: "磁场操控",
-        description: "把自己压成一个磁极，在脚下立起一片磁场；站在磁场里的正电／负电己方宝可梦防御与特防一起提高。"
-            + "离开磁场、磁场散尽或被人解除时，这份提升一并收回。",
-        uses: ["给带正负电特性的伙伴一起加防", "在己方电系核心脚下立一片磁场", "接下成片攻击前先把双防垫起来"],
+        description: "在脚下展开磁场，暂时提高场内正负电伙伴、铁傀儡和穿金属护甲友方的防御与特防。离开磁场后提升消失。",
+        uses: ["在交战位置保护正负电伙伴和金属护甲队友", "在己方电系核心脚下立一片磁场", "接下成片攻击前先把双防垫起来"],
         kind: "self",
         range: 1,
         maxRange: 1,

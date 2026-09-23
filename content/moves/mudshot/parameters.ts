@@ -117,9 +117,9 @@ namespace PokemonSkills {
     ]);
 
     describe("mudshot", [
-        { key: "description.0", values: ["spray", "splash", "slowStages"] },
+        { key: "description.0", values: ["spray","splash","slowStages"] },
         { key: "description.1", values: ["velocity", "reach", "legRadius"] },
-        { key: "description.2", values: ["slowTicks", "slickTicks"] },
+        { key: "description.2", values: ["slowTicks","slickTicks"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

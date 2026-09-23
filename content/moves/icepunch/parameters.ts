@@ -107,7 +107,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["freezeTicks"] },
         { key: "deepfreeze.on", values: [], when: function (context) { return read(context.detail.values, ["deepfreeze"]) === true; } },
         { key: "deepfreeze.off", values: [], when: function (context) { return read(context.detail.values, ["deepfreeze"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.frost"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.frost", "tier.1.freezeTicks"] }
     ]);

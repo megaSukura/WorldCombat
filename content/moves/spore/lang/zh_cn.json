@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.spore.summary": "原地抖开一身蘑菇孢子，孢子一瞬间炸满周围一小片地，贴得越近越躲不掉：沾上的人当场睡下，而且睡得很沉。它几乎是必中的一记，代价是只够到很近的地方、冷却也最长，草属性则直接穿过孢子。",
+  "worldcombat.skill.spore.summary": "原地抖开一身蘑菇孢子，孢子一瞬间炸满周围一小片：范围内的敌人分别判定，几乎必中；沾上的人当场睡下，睡眠期间无法行动、挨打即醒。它不造成伤害，代价是只够到很近的地方、冷却也最长，草属性则直接穿过孢子。",
   "worldcombat.skill.spore.use.0": "被一群近战围住时一次全放倒",
   "worldcombat.skill.spore.use.1": "贴身压制一个硬目标",
   "worldcombat.skill.spore.use.2": "为队友的食梦或恶梦制造睡眠窗",
-  "worldcombat.skill.spore.description.0": "以自身为圆心、半径 %1$s 一瞬炸开，最多罩住 %2$s 人。贴得越近越躲不掉。",
+  "worldcombat.skill.spore.description.0": "以自身为圆心、半径 %1$s 一瞬炸开，最多罩住 %2$s 人。它瞬间生效，进了范围就来不及躲。",
   "worldcombat.skill.spore.description.1": "每个贴身目标当前沾上孢子的概率 %1$s（只读施法者自己，几乎必中）；沾上后睡 %2$s。草属性穿过孢子。",
   "worldcombat.skill.spore.description.2": "它不留任何东西。",
   "worldcombat.skill.spore.dense.on": "密孢式：孢子半径 ×0.8、睡眠 ×1.2、沾上概率更高，代价是冷却 ×1.15、罩住的人更少。",
@@ -29,5 +29,6 @@
   "worldcombat.skill.spore.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会为抖孢子离开原位；关闭则只在原地够得到时出手。",
   "world_combat.move.spore.text.sleep": "蘑菇孢子（睡眠 %1$s 秒）",
   "world_combat.move.spore.text.grass": "穿过孢子",
-  "world_combat.move.spore.text.none": "孢子空散"
+  "world_combat.move.spore.text.none": "孢子空散",
+  "worldcombat.skill.spore.sleep": "睡着的目标在睡眠期间无法发动招式、无法普通攻击，也无法移动；受到任何一次伤害会立刻惊醒，否则睡满 %1$s 后自然醒来。"
 }

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.brine.summary": "朝对手压出一束盐卤；当对手的 HP 在一半或以下时，盐钻进伤口，这一击的威力翻倍，命中处还会留下一摊渗人的咸水。",
+  "worldcombat.skill.brine.summary": "朝对手压出一束盐卤：目标血量在一半或以下时这一击威力翻倍，命中处留下一摊会浇湿非友方、拖慢其脚步的盐池。",
   "worldcombat.skill.brine.use.0": "对着已经残血的对手补上翻倍的一记",
   "worldcombat.skill.brine.use.1": "把一块地浇成湿地，让路过的敌人湿透",
   "worldcombat.skill.brine.use.2": "在敌人退到半血以下时追加压力",
-  "worldcombat.skill.brine.description.0": "对目标造成约 %1$s 点特殊伤害；目标血量在一半或以下时，这一段威力翻倍。",
-  "worldcombat.skill.brine.description.1": "盐卤最多射到 %1$s 格，出流速度约 %2$s 格/刻。",
-  "worldcombat.skill.brine.description.2": "落点留下一摊半径 %1$s 格、持续 %2$s 秒的盐池；踏入或停留的非友方被浇上湿透，直击目标也带湿透约 %3$s。",
+  "worldcombat.skill.brine.description.0": "命中目标时造成约 %1$s 点特殊伤害；目标血量在一半或以下时，这一段威力翻倍。",
+  "worldcombat.skill.brine.description.1": "盐卤最多射到 %1$s 格，出流速度约 %2$s 格/刻，判定半径 %3$s 格。",
+  "worldcombat.skill.brine.description.2": "落点留下一摊半径 %1$s 格、持续 %2$s 秒的盐池；踏入或停留的非友方被浇上湿透，停留期间每 3 秒再浇一次，直击造成伤害的目标也带湿透约 %3$s。",
   "worldcombat.skill.brine.press.on": "当前高压式：威力 ×1.15、射程 ×1.15，但盐池更小更短、起手多 2 刻、冷却多 4 刻。",
   "worldcombat.skill.brine.press.off": "当前泼洒式：盐池更大更久、起手与冷却更省，但威力 ×0.92。",
   "worldcombat.skill.brine.timing": "可向 %1$s 格内施放；起手 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",
@@ -22,7 +22,7 @@
   "worldcombat.skill.brine.value.tempo": "起手",
   "worldcombat.skill.brine.value.settle": "收招",
   "worldcombat.skill.brine.value.recharge": "冷却",
-  "worldcombat.skill.brine.value.hpRatio": "目标已损生命",
+  "worldcombat.skill.brine.value.hpRatio": "目标剩余生命",
   "worldcombat.skill.brine.value.wounded": "残血翻倍",
   "worldcombat.skill.brine.preference.press": "高压式",
   "worldcombat.skill.brine.preference.press.help": "开启（高压式）：盐卤威力 ×1.15、射程 ×1.15，但盐池更小更短、起手多 2 刻、冷却多 4 刻，用来点杀残血；关闭（泼洒式，默认）：池子更大更久、更快更省，用来封住一块湿地。",
@@ -33,5 +33,6 @@
   "effect.world_combat.brine_soaked": "盐渍湿透",
   "world_combat.move.brine.text.wounded": "伤口见盐",
   "world_combat.move.brine.text.soak": "湿透",
-  "world_combat.move.brine.text.miss": "盐水落空"
+  "world_combat.move.brine.text.miss": "盐水落空",
+  "worldcombat.skill.brine.description.wet": "湿透期间，目标的移动速度与飞行速度降低 12%。"
 }

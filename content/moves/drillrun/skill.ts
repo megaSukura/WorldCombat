@@ -60,10 +60,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: drillrunId,
         cooldownParameter: "recharge",
         name: "Drill Run",
-        description: "The user crashes into the target while rotating its body like a drill. This move has a heightened chance of landing a critical hit.",
+        description: "蹲身起旋，把身体拧成一支钢钻贴地直线钻出去：沿途每个挡路的对手被钻尖咬一下，最多贯穿多个；钻过之后地表被犁开一道沟，过了一会儿原方块自己回来。它是一记会位移、会留下痕迹的接触招，暴击率比同族高一档。",
         uses: ["旋转着直线钻穿挡路的目标", "钻完在地上留下一条犁沟", "一路能连续咬穿多个对手"],
         kind: "enemy",
         range: 3.0,

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.chipaway.summary": "近身连续攻击，忽略目标的能力等级变化。",
+  "worldcombat.skill.chipaway.summary": "近身连续攻击，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。",
   "worldcombat.skill.chipaway.use.0": "贴脸连续几拍，每拍落在不同高度",
   "worldcombat.skill.chipaway.use.1": "把目标涨起来的防御等级直接无视掉",
   "worldcombat.skill.chipaway.use.2": "用快而省的连击稳定削血",

@@ -108,10 +108,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "voltswitch",
         cooldownParameter: "recharge",
         name: "Volt Switch",
-        description: "射出一道电弧钉在目标身上，随即顺着电流瞬移到落点；余电式留在原地布下电荷区，直放式则与待命的一只换手。",
+        description: "射出一道电弧钉在目标身上，随即顺着电流瞬移到落点；余电式还会在原地留下一片会电击的电荷区，直放式则与待命的一只换手。用换位代替撤退，是三道折返里唯一的远程特殊。",
         uses: ["远程点一下再瞬移，重新找站位", "被打崩前放电脱身", "在原地留一片电荷封住走位"],
         kind: "enemy",
         range: 10,

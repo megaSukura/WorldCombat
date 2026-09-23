@@ -19,11 +19,12 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: highhorsepowerId,
         cooldownParameter: "recharge",
         name: "High Horsepower",
-        description: "The user fiercely attacks the target using its entire body.",
-        uses: ["用全身质量压低冲撞一个目标", "把对手撞离阵地、或压在近身继续打", "把体重与速度换成看得见的马力数"],
+        description: "压低整个身体、把质量当武器的一次贴地正面冲撞：撞上的那一刻，体重与速度换算成的「马力」数浮在撞击点上方，扬起的尘量也按它走。撞完自己站住，不留坑、不自损，全部内容就是这一份份量。",
+        uses: ["用全身质量压低冲撞一个目标", "把对手撞离阵地，或压在近身继续打", "把体重与速度换成看得见的马力数"],
         kind: "enemy",
         range: 3.4,
         maxRange: 5.6,

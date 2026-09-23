@@ -5,7 +5,7 @@
   "worldcombat.skill.falseswipe.use.2": "Whittle a threat without killing it",
   "worldcombat.skill.falseswipe.use.3": "Control a target's remaining HP before the finish",
   "worldcombat.skill.falseswipe.description.0": "The shallow cut deals about %1$s damage; if that would be lethal it is capped so the target keeps at least 1 HP. The target's defence, type and crit are settled on the hit.",
-  "worldcombat.skill.falseswipe.description.1": "The seam is about %1$s blocks long, %2$s blocks half-wide, and runs from the feet up to about %3$s blocks.",
+  "worldcombat.skill.falseswipe.description.1": "The seam is about %1$s blocks long, %2$s blocks half-wide, and runs from the feet up to about %3$s blocks; every non-friendly body along it is cut once.",
   "worldcombat.skill.falseswipe.option.on": "Full draw: power about x1.18 and reach +0.2 blocks, at wind-up +3 and cooldown +6 ticks - heavier but slower.",
   "worldcombat.skill.falseswipe.option.off": "Light: power about x0.82, a faster cast and a shorter cooldown - lighter and more nimble.",
   "worldcombat.skill.falseswipe.timing": "Cut up to %1$s blocks away; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

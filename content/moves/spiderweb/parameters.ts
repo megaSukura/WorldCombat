@@ -117,7 +117,7 @@ namespace PokemonSkills {
     ]);
 
     describe("spiderweb", [
-        { key: "description.0", values: ["wrapTicks", "layerBonus", "layerCap"] },
+        { key: "description.0", values: ["wrapTicks","layerBonus","layerCap"] },
         { key: "description.1", values: ["slow"] },
         { key: "description.2", values: ["globSpeed", "globRadius", "reach"] },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },

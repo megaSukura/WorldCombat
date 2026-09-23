@@ -37,7 +37,8 @@ namespace CombatStatus {
     export var reasons = { asleep: "asleep", frozen: "frozen", paralyzed: "paralyzed", flinched: "flinched",
         confused: "confused", exhausted: "exhausted", rooted: "rooted", locked: "locked" };
 
-    export interface Gate { world: CombatWorld; actor: CombatActor; name: string; ticks: number; amplifier: number; options: any; allowed: boolean; beneficial: boolean; reason: string; }
+    export interface Gate { world: CombatWorld; actor: CombatActor; name: string; ticks: number; amplifier: number; options: any; allowed: boolean;
+        side: Side; beneficial: boolean; harmful: boolean; reason: string; }
     /** Immunity and policy contributions; setting `allowed=false` with a reason blocks `inflict`. */
     export var gate = new WorldContributions.Registry<Gate>();
     export interface Applied { world: CombatWorld; actor: CombatActor; name: string; effect: CombatMobEffect; }
@@ -68,28 +69,28 @@ namespace CombatStatus {
         return majors[name] || defaults[name] || null;
     }
 
-    // --- classification: harmful by default, beneficial declared by carrier or content -------------------------
-    export type Side = "beneficial" | "harmful";
+    // --- classification: native carrier facts, with explicit content and invocation policy --------------------
+    export type Side = "beneficial" | "harmful" | "neutral";
     export interface Classification { world: CombatWorld; actor: CombatActor; name: string; side: Side; }
     /** Extensible classification: a contribution may flip the side for a whole identity vocabulary. */
     export var classification = new WorldContributions.Registry<Classification>();
     var declaredSide: { [name: string]: Side } = Object.create(null);
     /** Declare an identity's side; `define` may also carry `beneficial: true` on its default carrier. */
     export function classify(name: string, side: Side): void { declaredSide[normalize(name)] = side; }
-    /** Harmful unless declared beneficial or overridden per call; a ward blocks only harmful routed statuses. */
+    /** Native carrier category, then identity declarations/contributions, then per-call overrides. Unknown carriers retain the harmful default. */
     export function side(world: CombatWorld, actor: CombatActor, name: string, options?: any): Side {
         name = normalize(name);
-        var chosen: Side = "harmful";
-        if (options && (options.beneficial === true || options.harmful === true)) chosen = options.harmful === true ? "harmful" : "beneficial";
-        else {
-            var definition = majors[name] || defaults[name];
-            if (definition && definition.beneficial === true) chosen = "beneficial";
-            else if (declaredSide[name]) chosen = declaredSide[name];
-        }
+        var definition = majors[name] || defaults[name], id = options && options.effect || definition && definition.effect;
+        var category = id && typeof world.mobEffectCategory === "function" ? String(world.mobEffectCategory(String(id))) : "";
+        var chosen: Side = category === "beneficial" || category === "neutral" ? category : "harmful";
+        if (definition && definition.beneficial !== undefined) chosen = definition.beneficial ? "beneficial" : "harmful";
+        if (declaredSide[name]) chosen = declaredSide[name];
         if (world.valid(actor)) {
             var context: Classification = { world: world, actor: actor, name: name, side: chosen };
             classification.apply(context); chosen = context.side;
         }
+        if (options && (options.beneficial === true || options.harmful === true)) chosen = options.harmful === true ? "harmful" : "beneficial";
+        if (options && (options.side === "beneficial" || options.side === "harmful" || options.side === "neutral")) chosen = options.side;
         return chosen;
     }
     export function beneficial(world: CombatWorld, actor: CombatActor, name: string, options?: any): boolean {
@@ -161,7 +162,7 @@ namespace CombatStatus {
     // --- application ---------------------------------------------------------------------------------------------
     export interface Result { applied: boolean; reason: string; effect: CombatMobEffect | null; }
     export interface Options { unique?: boolean; secondary?: boolean; ignoreAbility?: boolean; ignoreType?: boolean;
-        beneficial?: boolean; harmful?: boolean; amplifier?: number; effect?: string; [key: string]: any; }
+        beneficial?: boolean; harmful?: boolean; side?: Side; amplifier?: number; effect?: string; [key: string]: any; }
 
     export function tag(name: string): string { return StatusVocabulary.tag(name); }
     function carries(effect: CombatMobEffect, name: string): boolean {
@@ -201,8 +202,15 @@ namespace CombatStatus {
         return StatusVocabulary.showdownMajor[value] || value;
     }
     export function allowed(world: CombatWorld, actor: CombatActor, name: string, ticks: number, amplifier: number, options?: any): Gate {
+        var chosen = side(world, actor, name, options);
         return gate.apply({ world: world, actor: actor, name: normalize(name), ticks: ticks, amplifier: amplifier,
-            options: options || {}, allowed: true, beneficial: beneficial(world, actor, normalize(name), options), reason: "" });
+            options: options || {}, allowed: true, side: chosen, beneficial: chosen === "beneficial", harmful: chosen === "harmful", reason: "" });
+    }
+    function carrierOptions(options: Options | undefined, id: string): Options {
+        var result: Options = {};
+        Object.keys(options || {}).forEach(function (key) { result[key] = options![key]; });
+        result.effect = id;
+        return result;
     }
     /**
      * Apply a status to any living combatant through its shared default effect. Returns false when the actor
@@ -225,7 +233,7 @@ namespace CombatStatus {
         if (!world.valid(actor)) return false;
         if (duration !== -1 && (!isFinite(duration) || duration < 1 || duration % 1)) throw new Error("Status duration must be positive ticks or -1");
         if (!isFinite(strength) || strength < 0 || strength % 1) throw new Error("Status amplifier must be a non-negative integer");
-        if (!allowed(world, actor, name, duration, strength, options).allowed) return false;
+        if (!allowed(world, actor, name, duration, strength, carrierOptions(options, id)).allowed) return false;
         return land(world, actor, name, id, duration, strength, options);
     }
     /** Land an already-allowed carrier; shared by `apply` and `impose` so the gate runs exactly once. */
@@ -254,7 +262,7 @@ namespace CombatStatus {
         var strength = options && options.amplifier !== undefined ? options.amplifier : definition ? definition.amplifier : 0;
         if (duration !== -1 && (!isFinite(duration) || duration < 1 || duration % 1)) return { applied: false, reason: "invalid", effect: null };
         if (!isFinite(strength) || strength < 0 || strength % 1) return { applied: false, reason: "invalid", effect: null };
-        var outcome = allowed(world, actor, name, duration, strength, options);
+        var outcome = allowed(world, actor, name, duration, strength, carrierOptions(options, id));
         if (!outcome.allowed) return { applied: false, reason: outcome.reason === "safeguard" ? "immune" : (outcome.reason || "immune"), effect: null };
         if (!land(world, actor, name, id, duration, strength, options)) return { applied: false, reason: "carrier", effect: null };
         return { applied: true, reason: "applied", effect: representative(world, actor, name) };
@@ -327,7 +335,7 @@ namespace CombatStatus {
         var ticks = opts.ticks !== undefined ? Number(opts.ticks) : data.statusTicks !== undefined ? Number(data.statusTicks) : undefined;
         var options: Options = { secondary: true, unique: opts.unique === true,
             ignoreAbility: !!(opts.ignoreAbility || data.ignoreAbility), ignoreType: !!(opts.ignoreType || data.ignoreType),
-            beneficial: opts.beneficial === true, amplifier: opts.amplifier, effect: opts.effect };
+            beneficial: opts.beneficial === true, harmful: opts.harmful === true, side: opts.side, amplifier: opts.amplifier, effect: opts.effect };
         var outcome: string;
         if (!(isFinite(chance) && chance > 0 && world.random() < chance)) outcome = "miss";
         else outcome = impose(world, target, String(data.status), ticks, options).reason;

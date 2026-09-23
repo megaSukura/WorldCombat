@@ -3,7 +3,7 @@
   "worldcombat.skill.growth.use.0": "Open a fight by growing once to pad both offences",
   "worldcombat.skill.growth.use.1": "Grow double under sunlight",
   "worldcombat.skill.growth.description.0": "Currently grants +%1$s Attack and +%2$s Special Attack stages. Sunlight strengthens the growth.",
-  "worldcombat.skill.growth.description.2": "The grown marker lasts about %1$s; Attack and Special Attack boosts fade after leaving combat. Wind-up %2$s s, recovery %3$s s, cooldown %4$s s.",
+  "worldcombat.skill.growth.description.2": "The grown marker is the visible swollen-body state and lasts about %1$s; the Attack and Sp. Atk gains are stat stages that fade after leaving combat. Wind-up %2$s s, recovery %3$s s, cooldown %4$s s.",
   "worldcombat.skill.growth.timing": "The telegraph can be interrupted without paying anything; PP and cooldown settle only after commit.",
   "worldcombat.skill.growth.value.atkGift": "Attack gain",
   "worldcombat.skill.growth.value.spaGift": "Sp. Atk gain",

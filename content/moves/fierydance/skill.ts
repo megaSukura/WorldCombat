@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: "fierydance",
         cooldownParameter: "recharge",
         name: "Fiery Dance",
-        description: "Cloaked in flames, the user attacks the target by dancing and flapping its wings. This may also boost the user's Sp. Atk stat.",
+        description: "分两拍攻击身周的敌人：第一拍点着内圈，第二拍再卷一次内圈之外的一圈；命中后有机会提高自身特攻。",
         uses: ["贴着身体跳一支两拍的火舞", "把身周一圈人分两圈一起点着", "命中后让火焰更旺、特攻提升"],
         kind: "enemy",
         range: 2.8,

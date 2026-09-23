@@ -31,5 +31,6 @@
   "world_combat.move.meanlook.text.snap": "The gaze snaps",
   "world_combat.move.meanlook.text.release": "The gaze releases",
   "world_combat.move.meanlook.text.blocked": "Line of sight blocked",
-  "effect.world_combat.meanlook_gaze": "Held by the dark gaze"
+  "effect.world_combat.meanlook_gaze": "Held by the dark gaze",
+  "worldcombat.skill.meanlook.description.gaze": "A locked target cannot move on its own but can still act from where it stands; the user holds the skill key to keep staring, and the target is freed at once when the key is released or the user is interrupted."
 }

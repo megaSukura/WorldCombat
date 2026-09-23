@@ -29,10 +29,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: furyattackId,
         cooldownParameter: "recharge",
         name: "Fury Attack",
-        description: "The user attacks by jabbing the target with a horn, a beak, or the like. This move hits two to five times in a row.",
+        description: "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方这串就断。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
         uses: ["站定用角喙朝一点连续突刺", "每一刺把对手顶退，一路把它推出射程", "追击式跟住走位，把整串吃满"],
         kind: "enemy",
         range: 2.9,

@@ -128,9 +128,10 @@ namespace PokemonSkills {
     ]);
 
     describe(upperhandId, [
-        { key: "description.0", values: ["snap", "window"] },
+        { key: "description.0", values: ["snap","window"] },
+        { key: "description.2", values: ["flinchTicks"] },
         { key: "description.1", values: ["reach", "speed", "collisionRadius", "push", "flinchTicks"] },
-        { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
+        { key: "wide.on", values: ["swipe","arc"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.snap"] },

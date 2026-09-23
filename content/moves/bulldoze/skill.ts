@@ -57,6 +57,7 @@ namespace PokemonSkills {
     }
 
     define({
+        requiresGround: true,
         id: "bulldoze",
         name: "Bulldoze",
         description: "把重量砸进地面，一圈地裂贴着地表向外推：只命中站在地上的敌人，被扫到的速度下降并被向外震开；推到最后在地表留下裂痕。深踏式窄而重、多降一级速度，广踏式更广更快。",

@@ -140,9 +140,9 @@ namespace PokemonSkills {
     ]);
 
     describe(dualwingbeatId, [
-        { key: "description.0", values: ["wing", "reach", "span"] },
-        { key: "description.1", values: ["gap", "wake", "push", "swoop"] },
-        { key: "description.2", values: ["rise", "maxTargets"] },
+        { key: "description.0", values: ["wing","reach","span"] },
+        { key: "description.1", values: ["gap","wake","push","swoop"] },
+        { key: "description.2", values: ["rise","maxTargets"] },
         { key: "dive.on", values: [], when: function (context) { return read(context.detail.values, ["dive"]) === true; } },
         { key: "dive.off", values: [], when: function (context) { return read(context.detail.values, ["dive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

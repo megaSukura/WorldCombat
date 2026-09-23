@@ -106,11 +106,12 @@ namespace PokemonSkills {
 
     describe("switcheroo", [
         { key: "description.0", values: ["reach"] },
-        { key: "description.1", values: ["charge", "step", "recover", "cooldown"] },
-        { key: "description.2", values: ["overshoot", "push"] },
+        { key: "description.additional", values: [] },
+        { key: "description.1", values: ["charge","step","recover","cooldown"] },
+        { key: "description.2", values: ["overshoot","push"] },
         { key: "through.on", values: [], when: function (context) { return read(context.detail.values, ["through"]) === true; } },
         { key: "through.off", values: [], when: function (context) { return read(context.detail.values, ["through"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.step"] }
     ]);

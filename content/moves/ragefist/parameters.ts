@@ -75,6 +75,9 @@ namespace PokemonSkills {
     });
 
     actionParameters.define(ragefistId, {
+        stored: formula(F.var("ragefist.stored", text("worldcombat.skill.ragefist.value.stored")), "当前拳印", {
+            unit: "记", description: "当前实际保留的拳印数，按当前形态上限计；没有现场时显示需要现场确认。"
+        }),
         /** 每拳威力：20 + 物攻偏移[−6,16] + 等级偏移[−1.5,4]；夹 16..56。 */
         smash: formula(
             F.base(20)
@@ -164,8 +167,8 @@ namespace PokemonSkills {
     ]);
 
     describe(ragefistId, [
-        { key: "description.0", values: ["smash", "stored"] },
-        { key: "description.1", values: ["fists", "gap"] },
+        { key: "description.0", values: ["smash","stored"] },
+        { key: "description.1", values: ["fists","gap"] },
         { key: "description.2", values: ["reach", "radius", "push", "stance"] },
         { key: "description.3", values: ["cap"] },
         { key: "fury.on", values: [], when: function (context) { return read(context.detail.values, ["fury"]) === true; } },

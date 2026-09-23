@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.flamecharge.summary": "让火焰覆盖全身，攻击对手。积蓄力量并提高自己的速度。",
-  "worldcombat.skill.flamecharge.use.0": "直线撞穿一个落单的对手",
+  "worldcombat.skill.flamecharge.summary": "裹着火焰沿直线冲锋：撞中的第一个目标吃一记重击并被带开，随后自身提速；开启贯穿时会继续撞穿，把身后撞到的对手各吃一记较轻的伤害。",
+  "worldcombat.skill.flamecharge.use.0": "直线撞中一个落单的对手",
   "worldcombat.skill.flamecharge.use.1": "沿一条线把挤在一起的对手一起点着",
   "worldcombat.skill.flamecharge.use.2": "命中后提速，趁势追下去",
-  "worldcombat.skill.flamecharge.description.0": "冲锋造成 %1$s 的伤害，一口气冲出 %2$s 格、每刻 %3$s 格。",
-  "worldcombat.skill.flamecharge.description.1": "贯穿时，后续目标承受 %1$s 的伤害；命中提升速度 %2$s 级，并击退目标 %3$s 格。",
+  "worldcombat.skill.flamecharge.description.0": "冲锋造成约 %1$s 点伤害，一口气冲出 %2$s 格、每刻 %3$s 格；全身湿透时这一下威力 ×0.85。",
+  "worldcombat.skill.flamecharge.description.1": "贯穿式里第一个目标吃满额，之后沿直线撞到的每个对手各吃本次威力的 %1$s；命中后自身速度 +%2$s 级（一次施放至多一次，脱战后消退），并把被撞目标沿冲锋方向带开约 %3$s 格。冲锋途中的横向判定半径约 %4$s 格。",
   "worldcombat.skill.flamecharge.pierce.on": "贯穿：撞穿第一个目标，沿直线把后面的人一起点着（后续目标吃贯穿占比）；代价是单体略轻、冷却更长。",
   "worldcombat.skill.flamecharge.pierce.off": "点杀：在第一个目标身上停下，单体更重、出手更利落。",
   "worldcombat.skill.flamecharge.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -23,12 +23,13 @@
   "worldcombat.skill.flamecharge.value.trail": "冷却",
   "worldcombat.skill.flamecharge.value.soaked": "湿身减损",
   "worldcombat.skill.flamecharge.preference.pierce": "贯穿",
-  "worldcombat.skill.flamecharge.preference.pierce.help": "开启：撞穿第一个目标并沿直线把后面的人一起点着；关闭：在第一个目标身上停下。",
+  "worldcombat.skill.flamecharge.preference.pierce.help": "开启：撞穿第一个目标并沿直线把后面的人一起点着（后续目标只吃贯穿占比），代价是单体略轻、冷却更长；关闭：在第一个目标身上停下，单体更重、出手更快。",
   "worldcombat.skill.flamecharge.preference.ai.maxChase": "冲锋距离",
   "worldcombat.skill.flamecharge.preference.ai.maxChase.help": "对手离自己这么远以内才起冲；调小只贴脸冲，调大愿意从更远处助跑。",
   "worldcombat.skill.flamecharge.preference.ai.preferClusters": "优先串人",
   "worldcombat.skill.flamecharge.preference.ai.preferClusters.help": "开启：配置了贯穿且目标身后还串着别人时优先冲锋；关闭：只按威胁本身选目标。",
   "world_combat.move.flamecharge.text.hit": "点着 %1$s 名对手",
   "world_combat.move.flamecharge.text.haste": "蓄能提速 +%1$s",
-  "world_combat.move.flamecharge.text.fizzle": "火焰收熄"
+  "world_combat.move.flamecharge.text.fizzle": "火焰收熄",
+  "worldcombat.skill.flamecharge.description.stop": "冲锋沿直线推进，撞上障碍或跑完全程就停下；一路没撞到任何对手则空手收场。"
 }

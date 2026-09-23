@@ -1,21 +1,4 @@
-/**
- * 特性互换 / skillswap —— 执行组织与可逆对调。
- *
- * 核心念头：用念力把两个人的特性在中间对调——你把手里的身份递过去，换回对方的那一个，之后各自按对方的身份打这一段。
- *
- * 三幕：
- *   描（windup，提交前）：两份特性在两人之间被描出、对齐，只播预告，可被打断且不花代价。
- *   换（trade，提交后）：读出双方当前有效特性（含临时覆盖），确认都可被交换、且不相同；把对方的特性通过共享
- *     NativeModifiers ability 层披到自己身上、把自己的披到对方身上；两人各挂共享身份 world_combat:status/skillswap
- *     的窗口与一枚机读记号（记下自己那层与对方那层的效果 id、对方是谁）。
- *   还（revert）：窗口走完或被外力（牛奶、清除效果）解除时，按记号把两侧的层一起撤掉，各自回到原本的特性。
- *
- * 为什么两侧一起撤：对调是两件事，但对外是一件事。两侧都存着两条层 id，任一侧的窗口先结束，都会顺着记号
- *   把两侧的层与窗口一起收掉，避免出现「一边换了、一边没换」的半截状态；重复触发因为记号已被撤而自然止住。
- *
- * 与同族分开：扮演只单向抄一份对手的特性；特性互换是**双向**的，你也要交出自己的身份，且两边同时改。
- * 非宝可梦没有特性层，`ready` 直接拒绝，不浪费 PP。
- */
+/** Temporarily exchange Abilities, or exchange attack, movement and defensive attributes with a non-Pokémon. */
 namespace PokemonSkills {
     const skillswapScene = "world_combat:move_skillswap";
     const skillswapShift = "world_combat:skillswap_shift";
@@ -43,7 +26,17 @@ namespace PokemonSkills {
         if (typeof value.got !== "string") throw new Error("Invalid skill swap ability");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(skillswapMark, "start", function () { });
+    WorldCombat.effectHandler(skillswapMark, "start", effect => effect.schedule("pair", "pair", 2, "{}"));
+    WorldCombat.effectHandler(skillswapMark, "pair", function (effect) {
+        const world = effect.world(), state = JSON.parse(effect.state()), other = world.actor(state.pair);
+        if (!other || !world.valid(other) || MobEffects.read(world, effect.target(), skillswapShift) === null
+            || MobEffects.read(world, other, skillswapShift) === null) {
+            skillswapSettle(world, effect.target());
+            MobEffects.consume(world, effect.target(), skillswapShift);
+            return;
+        }
+        effect.schedule("pair", "pair", 2, "{}");
+    });
     WorldCombat.effectHandler(skillswapMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     /** 撤掉一次交换：清自己的层与记号，再顺着记号把对方那侧也清掉；返回自己换到的特性。 */
@@ -73,7 +66,7 @@ namespace PokemonSkills {
         id: "skillswap",
         cooldownParameter: "recharge",
         name: "特性互换",
-        description: "用念力把自己与目标的特性对调一段时间：你拿到它的、它拿到你的，窗口走完各自换回。",
+        description: "暂时双向交换特性；与普通生物交手时交换双方的攻击、移动和防护属性。",
         uses: ["把对手的强力特性取过来自己用", "把自己的负面特性甩给对手", "打乱对手依赖特性建立的打法"],
         kind: "enemy",
         range: 6,
@@ -103,12 +96,13 @@ namespace PokemonSkills {
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-ability";
+            if (String(actor.domain()) !== "cobblemon") return "no-ability";
             if (world.effects(actor, skillswapMark).length || world.effects(target, skillswapMark).length) return "already-swapped";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("skillswap", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") return CombatCopies.differs(world, actor, CombatCopies.read(world, target)) ? "" : "already-same";
             const mine = skillswapAbility(world, actor), theirs = skillswapAbility(world, target);
             if (!mine) return "self-suppressed";
             if (!theirs) return "target-suppressed";
@@ -130,7 +124,19 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (target === null || !world.valid(target) || body === null || world.friendly(target)
-                || String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") { done(action); return; }
+                || String(actor.domain()) !== "cobblemon") { done(action); return; }
+            if (String(target.domain()) !== "cobblemon") {
+                const window = Math.max(60, Math.round(p("skillswap", "window", action)));
+                const mine = CombatCopies.read(world, actor), theirs = CombatCopies.read(world, target);
+                const ownCarrier = MobEffects.apply(world, actor, skillswapShift, window, 0), otherCarrier = MobEffects.apply(world, target, skillswapShift, window, 0);
+                if (!ownCarrier || !otherCarrier) { if (ownCarrier) MobEffects.consume(world, actor, skillswapShift); if (otherCarrier) MobEffects.consume(world, target, skillswapShift); done(action); return; }
+                const own = CombatCopies.apply(world, actor, theirs, window, "skillswap", MobEffects.anchor(ownCarrier));
+                const other = CombatCopies.apply(world, target, mine, window, "skillswap", MobEffects.anchor(otherCarrier));
+                world.effect(skillswapMark, actor, JSON.stringify({ layer: own, paired: other, pair: String(target.ref()), got: "native", glyphs: 8 }), window + 60);
+                world.effect(skillswapMark, target, JSON.stringify({ layer: other, paired: own, pair: String(actor.ref()), got: "native", glyphs: 8 }), window + 60);
+                WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "trade", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())], glyphs: 8, intensity: 1 }, 36);
+                sound(action, "minecraft:entity.illusioner.cast_spell"); done(action); return;
+            }
             const mine = skillswapAbility(world, actor), theirs = skillswapAbility(world, target);
             if (!mine || !theirs || !skillswapSwappable(mine) || !skillswapSwappable(theirs) || mine === theirs) {
                 WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()) }, 22);

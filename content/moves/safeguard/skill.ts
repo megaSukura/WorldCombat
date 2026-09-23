@@ -71,7 +71,7 @@ namespace PokemonSkills {
     // 只问「有没有这个身份」，谁施加的、用哪个效果都不影响；带身份的活体一律挡下，并当场播「守护弹开」。
     // 本项目的增益类护罩（白雾、幸运咒语等）走 MobEffects.apply 直接落效果，不经过这条路由，不会被误挡。
     CombatStatus.gate.define({ id: "world_combat:move_safeguard/ward", apply: function (context) {
-        if (!context.allowed || context.beneficial) return;
+        if (!context.allowed || !context.harmful) return;
         if (!CombatStatus.has(context.world, context.actor, safeguardStatus)) return;
         context.allowed = false; context.reason = "safeguard";
         const world = context.world, actor = context.actor, body = world.observe(actor);
@@ -122,7 +122,7 @@ namespace PokemonSkills {
         id: safeguardId,
         cooldownParameter: "recharge",
         name: "神秘守护",
-        description: "张开一圈守护光罩住自己与身边的队友；罩内任何人经共享状态路由落下的异常状态都会被挡下。光罩跟着施法者走，离开范围的人会失去守护。",
+        description: "张开随自己移动的守护光，为自己和附近队友抵挡新施加的有害异常。离开范围后仍会短暂保留守护。",
         uses: ["挡住成片的灼伤、中毒、麻痹", "在对方铺异常前先一步张罩", "护住正要进场的队友"],
         kind: "self",
         range: 1,

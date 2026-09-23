@@ -103,7 +103,7 @@ namespace PokemonSkills {
 
     describe(quickattackId, [
         { key: "description.0", values: ["strike", "collisionRadius"] },
-        { key: "description.1", values: ["dash", "pace", "push"] },
+        { key: "description.1", values: ["dash","pace","push"] },
         { key: "eager.on", values: [], when: function (context) { return read(context.detail.values, ["eager"]) === true; } },
         { key: "eager.off", values: [], when: function (context) { return read(context.detail.values, ["eager"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

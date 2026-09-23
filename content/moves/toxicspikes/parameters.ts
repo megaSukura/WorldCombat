@@ -93,11 +93,12 @@ namespace PokemonSkills {
     ]);
 
     describe(toxicspikesId, [
-        { key: "description.0", values: ["statusTicks", "patchRadius"] },
+        { key: "description.0", values: ["statusTicks","patchRadius"] },
         { key: "description.1", values: ["patchTicks"] },
+        { key: "description.2", values: [] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["virulent"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["virulent"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.statusTicks", "tier.0.patchRadius"] }
+        { key: "growth.0", values: ["tier.0.level","tier.0.statusTicks","tier.0.patchRadius"] }
     ]);
 }

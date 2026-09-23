@@ -39,7 +39,7 @@ namespace PokemonSkills {
         id: "razorshell",
         cooldownParameter: "recharge",
         name: "Razor Shell",
-        description: "The user cuts the target with sharp shells to inflict damage. This may also lower the target's Defense stat.",
+        description: "亮出壳缘，在身前扫开一道宽弧：扇面里每个对手都挨一记切斩，各自按几率被削掉一级防御；壳缘带水，被切开的还会被溅湿一段时间。揽月式扫得更宽、削得更勤，凿刃式收成一条窄刃、单下更狠。",
         uses: ["在身前一记宽弧同时切多个目标", "一次削掉一排对手的防御", "把切中的目标溅湿，为水湿联动的招留窗口"],
         kind: "enemy",
         range: 2.3,

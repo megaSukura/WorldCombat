@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.irontail.summary": "Raise the steel tail and light up a locked line as a warning, then slam it down onto the point: everyone in the ring takes a heavy hit and is shoved, and a solid slam may dent the armour for a Defence drop of one stage or more. The heaviest and slowest of the guard-breakers, and the one a foe can walk out of.",
-  "worldcombat.skill.irontail.description.0": "The tail slam deals %1$s contact damage and shoves the target %2$s blocks away from the impact.",
+  "worldcombat.skill.irontail.description.0": "The slam lands on the locked point; every enemy inside its ring takes %1$s contact damage and is shoved %2$s blocks away from the point.",
   "worldcombat.skill.irontail.description.1": "The tail reaches %1$s blocks with a %2$s block impact radius; a foe that steps out of the ring during the raise dodges the slam.",
-  "worldcombat.skill.irontail.description.2": "A solid slam has a %1$s chance to lower the target's Defence by %2$s stage; the dented mark lasts %3$s.",
+  "worldcombat.skill.irontail.description.2": "A solid hit has a %1$s chance to lower the target's Defence by %2$s stage and leave a dented mark for %3$s; the mark itself changes no stats, but other guard-breaking moves use it to press Defence down further.",
   "worldcombat.skill.irontail.description.3": "The raise to the drop takes %1$s.",
   "worldcombat.skill.irontail.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.irontail.growth.0": "From level %1$s the slam rises to %2$s.",

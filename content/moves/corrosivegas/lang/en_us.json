@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.corrosivegas.summary": "Erupt a ring of caustic gas around yourself: the held items of every other body inside are melted away for good and nobody gets them; bodies without an item are left briefly tainted. It deals no damage and treats allies the same.",
-  "worldcombat.skill.corrosivegas.use.0": "Melt the held items of everything closing in at once",
-  "worldcombat.skill.corrosivegas.use.1": "Clear the field in an item war so both sides lose their held item",
-  "worldcombat.skill.corrosivegas.use.2": "Ruin Berries, Gems and Leftovers together",
-  "worldcombat.skill.corrosivegas.description.0": "Spread caustic gas about %1$s blocks around yourself; every non-self body inside carries the corroded identity for %2$s s.",
+  "worldcombat.skill.corrosivegas.summary": "Releases acid around the user, dissolving one Pokémon held item and wearing down ordinary bodies’ held durable equipment. Allies are affected too.",
+  "worldcombat.skill.corrosivegas.use.0": "Dissolve nearby Pokémon items and wear down held equipment",
+  "worldcombat.skill.corrosivegas.use.1": "Wear down armed enemies’ equipment",
+  "worldcombat.skill.corrosivegas.use.2": "Move allies carrying valuable items outside the acid before casting",
+  "worldcombat.skill.corrosivegas.description.0": "Acid covers a %1$s-block radius and leaves a stain for %2$s seconds.",
   "worldcombat.skill.corrosivegas.spread.on": "Spread on: cloud radius x1.3 and cooldown +8 ticks, covering a wider circle.",
   "worldcombat.skill.corrosivegas.spread.off": "Spread off: cloud radius x0.85 and cooldown -6 ticks, smaller but more frequent.",
-  "worldcombat.skill.corrosivegas.timing": "Cast around yourself; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
+  "worldcombat.skill.corrosivegas.timing": "Cast around yourself; after %1$s seconds of preparation it costs %3$s PP, then %2$s seconds of recovery and a %4$s second cooldown from commit.",
   "worldcombat.skill.corrosivegas.growth.0": "At level %1$s the cloud radius rises to %2$s blocks.",
   "worldcombat.skill.corrosivegas.growth.1": "At level %1$s the cloud radius rises to %2$s blocks.",
   "worldcombat.skill.corrosivegas.value.radius": "Cloud radius",
@@ -29,5 +29,8 @@
   "effect.world_combat.corroded": "Corroded",
   "world_combat.move.corrosivegas.text.melt": "Melted %1$s",
   "world_combat.move.corrosivegas.text.fizz": "The acid licks by, nothing to melt",
-  "world_combat.move.corrosivegas.text.taint": "The gas spreads; mist lingers %1$s s"
+  "world_combat.move.corrosivegas.text.taint": "The gas spreads; mist lingers %1$s s",
+  "worldcombat.skill.corrosivegas.description.1": "One Pokémon held item dissolves. Ordinary held equipment loses %1$s%% of its maximum durability, retaining at least one point. Unbreakable items and items without durability are preserved.",
+  "worldcombat.skill.corrosivegas.value.wearPercent": "Equipment corrosion",
+  "world_combat.move.corrosivegas.text.wear": "Corroded %1$s"
 }

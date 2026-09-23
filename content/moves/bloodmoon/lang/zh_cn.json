@@ -3,7 +3,7 @@
   "worldcombat.skill.bloodmoon.use.0": "召出满月、让月柱从天上垂直砸落",
   "worldcombat.skill.bloodmoon.use.1": "点杀远处的厚血目标",
   "worldcombat.skill.bloodmoon.use.2": "用月蚀式把落点一圈一起砸进去",
-  "worldcombat.skill.bloodmoon.description.0": "主目标 %1$s 威力、落点溅射 %2$s 威力（走特攻），落月距离 %3$s 格，地面半径 %4$s 格。",
+  "worldcombat.skill.bloodmoon.description.0": "月柱对主目标造成约 %1$s 点特殊伤害；月蚀式下落点半径 %4$s 格内的其他非友方各受约 %2$s 点特殊伤害（满月式为 0）。落月距离 %3$s 格。",
   "worldcombat.skill.bloodmoon.description.1": "凝神起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.bloodmoon.description.2": "放完之后禁复 %1$s：这段时间内不能再次召月，换成任何别的招式都会让气势提前平息。",
   "worldcombat.skill.bloodmoon.eclipse.on": "当前月蚀式：月光铺开成一片，落点周围的其他敌人也吃到溅射，起手更短；代价是主目标威力 ×0.85。",
@@ -29,5 +29,6 @@
   "worldcombat.skill.bloodmoon.preference.ai.minHealth.help": "自身生命低于这个比例时不再主动召月（除非目标已残）。越高越珍惜自己，也越少抢收残血。",
   "worldcombat.skill.bloodmoon.preference.ai.crowd": "瞄准扎堆",
   "worldcombat.skill.bloodmoon.preference.ai.crowd.help": "开启（配合月蚀式）：目标近旁还站着别的敌人时更愿意召月，因为月光能一次铺到一圈；关闭则只看单点收益。",
-  "world_combat.move.bloodmoon.text.fall": "血月落下"
+  "world_combat.move.bloodmoon.text.fall": "血月落下",
+  "worldcombat.skill.bloodmoon.description.scorch": "月柱落点的松软地表（草、泥土、沙、雪等）会被砸成焦土，约 %1$s 后恢复原方块；石质地面只留下焦痕。"
 }

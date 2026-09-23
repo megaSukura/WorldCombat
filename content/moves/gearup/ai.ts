@@ -1,14 +1,4 @@
-/**
- * 辅助齿轮 的伙伴 AI 用途：这是这招自己的一套出手计划——贴近正负电伙伴，把齿轮的动力直接传过去。
- *
- * 什么局面有意义：场上有一个可见的威胁、且在 ai.maxChase 内；附近有一个还没被传动的正电／负电己方
- *   （自己也算）。有交战需求才准备。
- * 对谁出手：最近的、还没被传动的正负电伙伴；齿链很短，所以自己就是锚点。
- * 够不到怎么办：`approachTarget` 指向自身，就地啮合；齿链半径会带上已经贴在身边的伙伴，
- *   离得太远的伙伴等它贴近再传动。
- * 候选之间怎么排：身边还有别的正负电伙伴时 82，只有自己时 58（先走近再传）。
- * 配置：ai.maxChase 是威胁与挑选伙伴的距离，ai.pack 是这招眼里的「一圈」半径。
- */
+/** 伙伴先检查正负电特性、铁傀儡身体或手持金属工具的传动资格，再按身边友方与威胁选择时机。 */
 namespace CompanionBehavior {
     const gearupChase = PokemonSkills.number("ai.maxChase", "开打距离", 4, 24, 1);
     gearupChase.help = "威胁与要传动的伙伴进入这个距离内才考虑启动齿轮；越大越早开始、越愿意跑过去。";
@@ -19,10 +9,7 @@ namespace CompanionBehavior {
 
     /** 只读探针：把一只宝可梦的现行特性换算成 plus／minus／空，供 AI 挑选要传动的伙伴。 */
     registerFact("world_combat:gearup_polarity", function (access: CombatWorld, actor: CombatActor, _argument: any): string {
-        if (String(actor.domain()) !== "cobblemon" || !access.valid(actor)) return "";
-        const pokemon = CobblemonCombat.pokemon(actor);
-        const name = String(NativeEffects.ability(pokemon, NativeEffects.read(access, actor))).replace("cobblemon:", "").toLowerCase();
-        return name === "plus" || name === "minus" ? name : "";
+        return PokemonSkills.gearupPolarity(access, actor);
     });
 
     function gearupIsPolar(context: WorldBehavior.Context, target: Entity): boolean {

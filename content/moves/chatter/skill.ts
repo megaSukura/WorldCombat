@@ -38,7 +38,7 @@ namespace PokemonSkills {
         id: chatterId,
         cooldownParameter: "recharge",
         name: "Chatter",
-        description: "The user attacks the target with sound waves of deafening chatter. This also confuses the target.",
+        description: "对着身前一道扇面连叫几串尖锐的颤音：每一声都结算一次声音伤害，被叫到的人立刻陷入混乱——之后每次想出手都可能被打散，打中别人还会被自己的力气反噬。声波不被掩体阻挡，代价是射程短、每一声都轻。",
         uses: ["贴上去用一串尖叫连打几下", "隔着掩体把对手叫懵", "给危险的目标挂上失手与被反噬的窗口"],
         kind: "enemy",
         range: 8.5,

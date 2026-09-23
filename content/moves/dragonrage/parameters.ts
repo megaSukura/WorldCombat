@@ -108,9 +108,9 @@ namespace PokemonSkills {
 
     describe("dragonrage", [
         { key: "description.0", values: ["damage"] },
-        { key: "description.1", values: ["reach", "velocity", "radius"] },
-        { key: "erupt.on", values: ["blastRadius", "push"], when: function (context) { return read(context.detail.values, ["erupt"]) === true; } },
-        { key: "erupt.off", values: ["push", "pinTicks"], when: function (context) { return read(context.detail.values, ["erupt"]) !== true; } },
+        { key: "description.1", values: ["reach","velocity","radius"] },
+        { key: "erupt.on", values: ["damage","blastRadius","push","maximumTargets"], when: function (context) { return read(context.detail.values, ["erupt"]) === true; } },
+        { key: "erupt.off", values: ["push","pinTicks"], when: function (context) { return read(context.detail.values, ["erupt"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.pinTicks"] }

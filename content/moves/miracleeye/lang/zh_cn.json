@@ -3,11 +3,11 @@
   "worldcombat.skill.miracleeye.use.0": "在打恶属性前先破掉它的免疫",
   "worldcombat.skill.miracleeye.use.1": "把躲躲闪闪的目标敲定下来",
   "worldcombat.skill.miracleeye.use.2": "顺手给自己的超能招抬一抬命中",
-  "worldcombat.skill.miracleeye.description.0": "一次剥掉目标 %1$s 级正闪避（实际受它现有闪避封顶），并在 %2$s 内让它被照亮、超能不再被恶免疫。",
+  "worldcombat.skill.miracleeye.description.0": "一次剥掉目标 %1$s 级正闪避（实际受它现有闪避封顶），并在 %2$s 内让超能招式不再被恶属性免疫。",
   "worldcombat.skill.miracleeye.description.1": "施法者借这一眼抬 %1$s 级命中，目标被照亮 %2$s。",
   "worldcombat.skill.miracleeye.focus.on": "专注：起手 %1$s、冷却 %2$s，换更长的窗口、更久的照亮与 +1 级心见。",
   "worldcombat.skill.miracleeye.focus.off": "浅读：窗口短、起手快、冷却短、心见更低，适合频繁地破免疫。",
-  "worldcombat.skill.miracleeye.description.2": "心眼距离 %1$s 格，起手 %2$s，收招 %3$s；视线被挡、自己已有一只眼或目标已有识破时放不出。",
+  "worldcombat.skill.miracleeye.description.2": "只对一名敌人：心眼距离 %1$s 格，起手 %2$s，收招 %3$s；视线被挡、自己已有一只眼，或目标身上已有心眼印记／识破时放不出。",
   "worldcombat.skill.miracleeye.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.miracleeye.value.window": "心眼窗口",
   "worldcombat.skill.miracleeye.value.reveal": "照亮时长",
@@ -28,5 +28,6 @@
   "world_combat.move.miracleeye.text.fade": "心眼褪去",
   "world_combat.move.miracleeye.text.blocked": "视线被挡，看不穿",
   "world_combat.move.miracleeye.text.empty": "没有可看穿的对象",
-  "effect.world_combat.miracleeye_mark": "被心眼照出"
+  "effect.world_combat.miracleeye_mark": "被心眼照出",
+  "worldcombat.skill.miracleeye.description.3": "心眼窗口结束或被清除时，剥掉的闪避与借来的命中都原样还回。"
 }

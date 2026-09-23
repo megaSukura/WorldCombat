@@ -109,6 +109,7 @@ namespace PokemonSkills {
     describe("watergun", [
         { key: "description.0", values: ["spout"] },
         { key: "description.1", values: ["pressure", "radius", "reach"] },
+        { key: "description.mobility", values: [] },
         { key: "charge.on", values: [], when: function (context) { return read(context.detail.values, ["charge"]) === true; } },
         { key: "charge.off", values: [], when: function (context) { return read(context.detail.values, ["charge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

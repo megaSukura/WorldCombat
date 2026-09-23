@@ -73,7 +73,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["shell"] },
         { key: "grand.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["grand"]) === true; } },
         { key: "grand.off", values: [], when: function (context) { return read(context.detail.values, ["grand"]) !== true; } },
-        { key: "description.1", values: ["reach", "tempo", "aftercast"] },
+        { key: "description.1", values: ["reach","tempo","aftercast"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

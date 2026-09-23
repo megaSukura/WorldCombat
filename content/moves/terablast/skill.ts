@@ -56,7 +56,7 @@ namespace PokemonSkills {
     }
 
     define({ id: "terablast", name: "太晶爆发",
-        description: "把自己凝成太晶：物攻更高就化作晶冲顶开对手，特攻更高就放出晶束；属性与分类随这只个体。",
+        description: "把自己凝成太晶：物攻更高就化作晶冲顶开对手，否则放出晶束；伤害属性取自身主属性，物理或特殊由较高的一面决定。",
         uses: ["远程爆发", "看家本领"], kind: "enemy", range: 18, prepare: 8, active: 0, recover: 8, cooldown: 40, style: "tera",
         defaults: {}, fields: [],
         indicator: function () { return { radius: 18, geometry: "line", style: "tera", label: "太晶爆发" }; },

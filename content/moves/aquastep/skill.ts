@@ -29,9 +29,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "aquastep",
         name: "流水旋舞",
-        description: "以盈盈欲滴的轻快步伐戏耍对手并给予其伤害。会提高自己的速度。",
+        description: "绕对手跳一支水舞：几拍碎步点踏，最后旋身扫出一圈水刃，选定目标吃满、圈内其他目标按比例受伤并被推开；命中选定目标后自身提速。",
         uses: ["绕着对手点踏几拍再旋身收势", "在圈子正中把周围的人都扫一下", "命中后提速，趁步子还在时拉开或追击"],
         kind: "enemy",
         range: 4,

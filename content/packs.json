@@ -77,6 +77,7 @@
         "content/mechanisms/world-feedback.ts",
         "content/mechanisms/world-cultivation.ts",
         "content/mechanisms/guard-effects.ts",
+        "content/mechanisms/combat-copies.ts",
         "content/behavior/world-host.ts"
       ]
     },
@@ -162,7 +163,8 @@
         "content/library/skills/feedback.ts",
         "content/library/skills/effects.ts",
         "content/library/skills/actions.ts",
-        "content/library/skills/party-relay.ts"
+        "content/library/skills/party-relay.ts",
+        "content/library/skills/native-attack-copy.ts"
       ]
     },
     "world_combat:companion_runtime": {

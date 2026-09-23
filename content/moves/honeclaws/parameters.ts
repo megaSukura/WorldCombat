@@ -76,6 +76,7 @@ namespace PokemonSkills {
     describe("honeclaws", [
         { key: "description.0", values: ["rise", "focus"] },
         { key: "description.1", values: ["edge"] },
+        { key: "description.additional", values: [] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

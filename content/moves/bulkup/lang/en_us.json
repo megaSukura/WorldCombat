@@ -6,7 +6,7 @@
   "worldcombat.skill.bulkup.description.0": "Bulk Up raises Attack by %1$s stages and Defense by %2$s stages.",
   "worldcombat.skill.bulkup.lean.on": "Power-leaning: Attack +2, Defense +1; better for pressing the attack.",
   "worldcombat.skill.bulkup.lean.off": "Guard-leaning: Defense +2, Attack +1; better for trading blows. Both carry the same total.",
-  "worldcombat.skill.bulkup.description.1": "The swell lasts about %1$s.",
+  "worldcombat.skill.bulkup.description.1": "The swell lasts about %1$s: the Attack and Defense gains stay active while it holds, and are taken back together when the window ends or is cleared.",
   "worldcombat.skill.bulkup.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.bulkup.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.bulkup.growth.0": "At level %1$s the swell lasts %2$s and the cooldown drops to %3$s s.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.bulkup.preference.ai.minGap.help": "A threat closer than this makes the companion fight instead of bulking up; larger gives up setup more often up close.",
   "world_combat.move.bulkup.text.brace": "Bulk Up (Attack +%1$s / Defense +%2$s / %3$s s)",
   "world_combat.move.bulkup.text.relax": "Bulk Up released",
-  "effect.world_combat.bulkup_surge": "Bulk Up"
+  "effect.world_combat.bulkup_surge": "Bulk Up",
+  "worldcombat.skill.bulkup.description.2": "From wind-up through recovery you stay rooted while tensing up and cannot move."
 }

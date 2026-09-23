@@ -65,6 +65,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: rockclimbId,
         cooldownParameter: "recharge",
         name: "Rock Climb",

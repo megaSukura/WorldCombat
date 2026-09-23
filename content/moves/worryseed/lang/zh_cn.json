@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.worryseed.summary": "把一颗烦恼种子投进对手身体，让它从此不能入眠，特性被顶成不眠，直到种子枯掉。",
+  "worldcombat.skill.worryseed.summary": "种下烦恼，使目标从招式造成的睡眠中醒来，并在种子存续期间抵抗再次催眠；宝可梦的特性还会暂时变为不眠。",
   "worldcombat.skill.worryseed.use.0": "顶掉对手的强力特性换成一枚不眠",
   "worldcombat.skill.worryseed.use.1": "让对手睡不下去，封掉催眠类打法",
   "worldcombat.skill.worryseed.description.0": "在 %1$s 格内投出种子，起手 %2$s 秒，种速约 %3$s 格/刻。",
-  "worldcombat.skill.worryseed.description.1": "种子把目标的特性顶成不眠，持续 %1$s 秒；期间它不能入睡，已有的睡眠会被当场唤醒。",
+  "worldcombat.skill.worryseed.description.1": "种子持续 %1$s，唤醒目标并阻止睡眠招式再次使其入睡；普通生物和玩家也会获得这层保护。命中宝可梦时，特性暂时改为不眠。",
   "worldcombat.skill.worryseed.deep.0": "深植：烦恼时长 ×1.7、冷却 +20 刻，适合一口封死对手的睡眠与特性。",
   "worldcombat.skill.worryseed.deep.1": "浅植：烦恼时长 ×0.6、冷却 -12 刻，适合频繁骚扰、随时补种。",
   "worldcombat.skill.worryseed.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
-  "worldcombat.skill.worryseed.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
-  "worldcombat.skill.worryseed.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",
+  "worldcombat.skill.worryseed.growth.0": "达到 %1$s 级，基础冷却降至 %2$s；速度和配置继续调整实际冷却。",
+  "worldcombat.skill.worryseed.growth.1": "达到 %1$s 级，基础冷却降至 %2$s；速度和配置继续调整实际冷却。",
   "worldcombat.skill.worryseed.value.reach": "投种距离",
   "worldcombat.skill.worryseed.value.velocity": "种速",
   "worldcombat.skill.worryseed.value.radius": "种子半径",
@@ -27,5 +27,5 @@
   "worldcombat.skill.worryseed.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离位去种对手；关闭则只在原地够得到时出手。",
   "effect.world_combat.worryseed": "烦恼种子",
   "world_combat.move.worryseed.text.planted": "被种下了烦恼",
-  "world_combat.move.worryseed.text.woken": "惊醒，从此不能入眠"
+  "world_combat.move.worryseed.text.woken": "惊醒，种子仍在时不受催眠"
 }

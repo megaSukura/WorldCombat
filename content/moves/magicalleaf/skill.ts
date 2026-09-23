@@ -29,7 +29,7 @@ namespace PokemonSkills {
         id: "magicalleaf",
         cooldownParameter: "recharge",
         name: "Magical Leaf",
-        description: "The user scatters curious leaves that chase the target. This attack never misses.",
+        description: "散出一群会拐弯追人的叶，从四面八方一起收拢——叶会追，所以打得到。合围时从整圈散开绕到对手四周，直取时从前方小锥面直插。",
         uses: ["散出一群会拐弯的叶追一个对手", "从四面八方合围，逼对手无处可躲", "在对手拉开距离时仍然咬住它"],
         kind: "enemy",
         range: 11,

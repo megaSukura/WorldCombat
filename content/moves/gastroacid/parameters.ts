@@ -1,5 +1,4 @@
-/** 胃液：酸弹命中后压制目标特性；酸液飞行、溅射和沾酸由现有表现承载。 个体差异、配置和现场事实由以下公式定义。 */
-
+/** gastroacid：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     actionParameters.define("gastroacid", {
         reach: formula(
@@ -32,7 +31,7 @@ namespace PokemonSkills {
             "蚀刻时长", "特性被酸液压制多久；等级与特攻越高、浓酸越久。"),
         recharge: seconds(
             F.base(80, "基础").minus(F.stat("speed").times(0.28).as("速度")).clamp(36, 120).round(),
-            "冷却", "再吐一口酸需要多久；速度快的个体更快恢复。"),
+            "冷却", "再吐一口酸需要多久；速度快的个体更快恢复。", { base: 80 }),
         drops: formula(
             F.base(12, "基础").plus(F.stat("specialAttack").div(6).as("特攻")).clamp(12, 40).round(),
             "酸滴数", { unit: "滴", description: "命中处溅开的酸滴数量；特攻越高越密。" }),
@@ -41,7 +40,7 @@ namespace PokemonSkills {
             "酸泡数", { unit: "个", description: "起手喉间滚动的酸泡数量；等级越高越多。" }),
     });
 
-    stages("gastroacid", [{ level: 35, values: { cooldown: 70 } }, { level: 50, values: { cooldown: 60 } }]);
+    stages("gastroacid", [{ level: 35, values: { recharge: 70 } }, { level: 50, values: { recharge: 60 } }]);
 
     describe("gastroacid", [
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
@@ -49,7 +48,7 @@ namespace PokemonSkills {
         { key: "thick.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "thick.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.recharge"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.recharge"] }
     ]);
 }

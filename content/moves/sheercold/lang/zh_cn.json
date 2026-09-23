@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.sheercold.summary": "把目标周围的那一小片空气骤然压到绝对零度：一圈寒霜向四周铺开，圈内每个目标被一次冻毙（一击必杀），地上留下一层短期雪壳。它是这一族里唯一能同时放倒多个的一记，也是唯一「谁用」会影响出手快慢的一记——冰属性使用者结霜快得多。",
   "worldcombat.skill.sheercold.description.0": "锁定目标脚下半径 %1$s 格的一圈；结霜一刻圈内每个非冰属性目标被一次冻毙。对手防御、护甲与韧性都不参与，只有冰属性本身能免疫。",
-  "worldcombat.skill.sheercold.description.1": "从锁定圆点到真正结霜有 %1$s 秒预告；冰属性使用者大幅缩短，等级每压过对手 1 级也再短一点，圈内的目标得在这段时间里走出去。",
+  "worldcombat.skill.sheercold.description.1": "从锁定圆点到真正结霜有 %1$s 秒预告；冰属性使用者大幅缩短，等级每压过对手 1 级再短一点，对手等级更高则拖得更久——圈内的目标得在这段时间里走出去。",
   "worldcombat.skill.sheercold.description.2": "地面覆霜停留 %1$s 秒，涉及约 %2$s 块地表，到期原方块回来。",
   "worldcombat.skill.sheercold.glacial.on": "冰河式：冻结半径 ×1.2、寒霜更久，代价是结霜延迟 +7 刻、冷却 +10——圈更大、霜更持久，预告更慢。",
   "worldcombat.skill.sheercold.glacial.off": "急冻式：结霜更快、冷却更短，但圈更小、霜更短。",
-  "worldcombat.skill.sheercold.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %5$s PP，提交起冷却 %4$s 秒。",
+  "worldcombat.skill.sheercold.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。",
   "worldcombat.skill.sheercold.growth.0": "%1$s 级起冻结半径到 %2$s 格。",
   "worldcombat.skill.sheercold.growth.1": "%1$s 级起冻结半径到 %2$s 格、寒霜停留延长到 %3$s 秒。",
   "worldcombat.skill.sheercold.use.0": "一次冻毙目标周围一圈里的多个对手",

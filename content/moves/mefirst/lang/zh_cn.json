@@ -4,7 +4,7 @@
   "worldcombat.skill.mefirst.use.1": "压住要蓄力一击的敌人",
   "worldcombat.skill.mefirst.use.2": "在对手的连击间隙夺走主动",
   "worldcombat.skill.mefirst.description.0": "能锁住 %1$s 格内的对手，并守候 %2$s。",
-  "worldcombat.skill.mefirst.description.1": "夺来的那一手威力 %1$s；对手刚出手后的 %2$s 内也能追上同一拍。",
+  "worldcombat.skill.mefirst.description.1": "夺来的那一手按 %1$s 倍威力打出；对手刚出手后的 %2$s 内也能追上同一拍。",
   "worldcombat.skill.mefirst.description.2": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.mefirst.patient.on": "耐心：守候窗口 ×1.5，更容易等到对手出手，但起手慢 3 刻、冷却 ×1.25。",
   "worldcombat.skill.mefirst.patient.off": "抢拍：起手几乎瞬发、冷却短，但守候窗口较短。",
@@ -24,5 +24,6 @@
   "worldcombat.skill.mefirst.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.mefirst.preference.ai.leaveStation.help": "开启后，驻守命令下也会为抢先一步离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.mefirst.text.take": "抢下 %1$s",
-  "world_combat.move.mefirst.text.miss": "没等到下一拍"
+  "world_combat.move.mefirst.text.miss": "没等到下一拍",
+  "worldcombat.skill.mefirst.description.steal": "只能夺到伤害招（变化招与少数不可抢占的招式除外），夺来的攻击招会打向同一对手；守候动作本身不会被打断。守候窗口内对手始终没有再出招就落空，落空不消耗 PP 或冷却。"
 }

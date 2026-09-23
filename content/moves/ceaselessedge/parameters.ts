@@ -150,8 +150,8 @@ namespace PokemonSkills {
     ]);
 
     describe(ceaselessedgeId, [
-        { key: "description.0", values: ["cut", "reach", "critChance"] },
-        { key: "description.1", values: ["shard", "shardGain", "patchRadius", "patchTicks", "treadInterval", "standShare"] },
+        { key: "description.0", values: ["cut","reach","critChance"] },
+        { key: "description.1", values: ["shard","shardGain","sharpMax","patchRadius","patchTicks","treadInterval","standShare"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "relentless.on", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) === true; } },
         { key: "relentless.off", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) !== true; } },

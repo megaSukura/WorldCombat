@@ -102,6 +102,7 @@ namespace PokemonSkills {
     describe("psychicfangs", [
         { key: "description.0", values: ["bite", "fangWidth"] },
         { key: "description.1", values: ["lunge", "wardBreak", "devour"] },
+        { key: "description.lane", values: [] },
         { key: "devour.on", values: [], when: function (context) { return read(context.detail.values, ["devour"]) === true; } },
         { key: "devour.off", values: [], when: function (context) { return read(context.detail.values, ["devour"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

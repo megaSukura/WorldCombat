@@ -3,9 +3,9 @@
   "worldcombat.skill.retaliate.use.0": "同伴倒下后立刻替它还手",
   "worldcombat.skill.retaliate.use.1": "带着哀兵之痛打出一记翻倍直撞",
   "worldcombat.skill.retaliate.use.2": "朝刚打完同伴的敌人撞过去",
-  "worldcombat.skill.retaliate.description.0": "直撞造成 %1$s 点物理伤害（一般）；同伴刚倒下时这一记翻倍，等级与亲密度越高倍率越大。",
-  "worldcombat.skill.retaliate.description.1": "冲撞 %1$s 格、每刻 %2$s 格、判定半径 %3$s 格；撞中把人顶开 %4$s 格。",
-  "worldcombat.skill.retaliate.solemn.on": "当前：哀兵式——冲得更远 ×1.12、翻倍系数 ×1.06，追着凶手打，但基础 ×0.92、起手与冷却更久。",
+  "worldcombat.skill.retaliate.description.0": "直撞造成约 %1$s 点物理伤害（一般），命中一个敌人即结算；同伴刚倒下时这一记翻倍，等级与亲密度越高倍率越大。",
+  "worldcombat.skill.retaliate.description.1": "朝目标方向冲最多 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；撞中活体就把对方顶开 %4$s 格，撞空或被地形挡住则停在当地。",
+  "worldcombat.skill.retaliate.solemn.on": "当前：哀兵式——冲得更远 ×1.12、翻倍系数 ×1.06，但基础威力 ×0.92、起手与冷却更久。",
   "worldcombat.skill.retaliate.solemn.off": "当前：直接式——基础 ×1.08、冲得短而干净。",
   "worldcombat.skill.retaliate.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.retaliate.growth.0": "达到 %1$s 级，报仇威力升至 %2$s。",
@@ -22,7 +22,7 @@
   "worldcombat.skill.retaliate.value.settle": "收招",
   "worldcombat.skill.retaliate.value.recharge": "冷却",
   "worldcombat.skill.retaliate.preference.solemn": "哀兵式",
-  "worldcombat.skill.retaliate.preference.solemn.help": "开启：冲得更远 ×1.12、翻倍系数 ×1.06，追着凶手打，但基础威力 ×0.92、起手多 3 刻、冷却多 8 刻。关闭：基础 ×1.08、冲得短而干净。",
+  "worldcombat.skill.retaliate.preference.solemn.help": "开启：冲得更远 ×1.12、翻倍系数 ×1.06，但基础威力 ×0.92、起手多 3 刻、冷却多 8 刻。关闭：基础 ×1.08、冲得短而干净。",
   "worldcombat.skill.retaliate.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.retaliate.preference.ai.maxChase.help": "目标离自己这么远以内才撞过去；调大愿意主动追击更远的目标。",
   "worldcombat.skill.retaliate.preference.ai.avenge": "追打凶手",
@@ -30,5 +30,6 @@
   "world_combat.move.retaliate.text.hit": "报仇直撞",
   "world_combat.move.retaliate.text.rage": "为同伴报仇！",
   "world_combat.move.retaliate.text.miss": "报仇撞空了",
-  "effect.world_combat.retaliate_mourning": "报仇·哀兵"
+  "effect.world_combat.retaliate_mourning": "报仇·哀兵",
+  "worldcombat.skill.retaliate.description.additional": "附近 20 格内有同伴倒下时，你和其他附近活着的同伴都会获得「哀兵」并记下凶手，持续 8 秒；带着哀兵命中时这一记按倍率加重，命中后哀兵立即解除，没撞上则保留到窗口结束。"
 }

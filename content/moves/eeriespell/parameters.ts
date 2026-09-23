@@ -1,12 +1,4 @@
-/**
- * 诡异咒语 / eeryspell —— 参数与伤害段。
- *
- * 核心念头：一记直取记忆的精神强袭。命中造成特殊伤害，并把目标最后用过的招式抽走 3 点 PP；
- * 任何活体还会被这段咒语搅乱，短时间内再想出手时会按特攻决定的概率失手（记忆雾）。
- *
- * 数值来源：原生 Psychic/特殊 80/命中 100/PP 5/声音；追加 100% 让目标最后使用的招式减 3 PP。
- * PP 抽取对宝可梦成立；对原版生物、玩家等没有 PP 的对象，剩下的「记忆雾」失手概率就是全部结果。
- */
+/** eeriespell：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     actionParameters.define("eeriespell", {
         // 精神强袭的强度：特攻越高越强。
@@ -36,9 +28,9 @@ namespace PokemonSkills {
     });
     defineDamage("eeriespell", "power", { defenceCoefficient: 0.0048, rationale: "精神强袭对防御穿透略强，让特攻差更明显。" }, { sound: true });
     describe("eeriespell", [
-        { key: "description.0", values: ["power"] },
+        { key: "description.0", values: ["power", "range"] },
         { key: "description.1", values: ["drain", "fuzzyTicks"] },
         { key: "description.2", values: ["failChance"] },
-        { key: "timing", values: ["prepare", "recover", "cooldown"] }
+        { key: "timing", values: ["prepare", "recover", "cooldown", "pp"] }
     ]);
 }

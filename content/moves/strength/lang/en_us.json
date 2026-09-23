@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.strength.summary": "A straight punch with the whole body behind it: a clean, never-missing line with no side effects that shoves the target; if it cannot give ground, the blow adds a wall slam.",
-  "worldcombat.skill.strength.description.0": "The punch deals %1$s contact damage, reaching %2$s blocks with a %3$s block punch radius.",
-  "worldcombat.skill.strength.description.1": "A hit shoves the target %1$s blocks along the punch; when it can barely move (a wall or obstacle behind it), a further %2$s wall-slam strike lands.",
+  "worldcombat.skill.strength.summary": "A straight punch with the whole body behind it: it strikes along a line and shoves whatever it connects with, with no extra side effects; if the target cannot give ground, the blow adds a wall slam.",
+  "worldcombat.skill.strength.description.0": "The punch deals about %1$s contact damage, reaching %2$s blocks with a %3$s block punch radius.",
+  "worldcombat.skill.strength.description.1": "A hit shoves the target %1$s blocks along the punch; when it can barely move (a wall or obstacle behind it), a further wall-slam strike deals about %2$s damage.",
   "worldcombat.skill.strength.plant.on": "Planted form: a heavier punch (more power, further shove, harder wall slam), but a longer wind-up, recovery and cooldown.",
   "worldcombat.skill.strength.plant.off": "Driving form: faster to throw and quicker to recycle, at the cost of a lighter single blow and a smaller wall-slam bonus.",
   "worldcombat.skill.strength.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",

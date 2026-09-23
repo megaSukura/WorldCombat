@@ -135,7 +135,7 @@ namespace PokemonSkills {
     describe(skittersmackId, [
         { key: "description.0", values: ["strike", "backstab"] },
         { key: "description.1", values: ["dropStages"] },
-        { key: "description.2", values: ["reach", "scuttle", "standoff"] },
+        { key: "description.2", values: ["reach","scuttle","standoff"] },
         { key: "description.3", values: ["smackWidth"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deepflank"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["deepflank"]) !== true; } },

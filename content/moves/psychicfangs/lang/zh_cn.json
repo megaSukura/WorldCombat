@@ -5,7 +5,7 @@
   "worldcombat.skill.psychicfangs.use.2": "在对手刚张幕时一口吃掉它",
   "worldcombat.skill.psychicfangs.description.0": "咬实造成约 %1$s 的接触啮咬伤害，咬合半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.psychicfangs.description.1": "扑出 %1$s 格；咬合点半径 %2$s 格内的反射壁、光墙与极光幕一并咬碎，每碎一层这一口威力额外提高 %3$s（最多计三层）。",
-  "worldcombat.skill.psychicfangs.devour.on": "噬壁式：每碎一层的加成 ×1.7、碎壁范围 ×1.25，代价是基础咬击 ×0.9、冷却 +8 刻。",
+  "worldcombat.skill.psychicfangs.devour.on": "噬壁式：每碎一层的加成 ×1.7、碎壁范围 ×1.25、扑咬距离 ×1.1，代价是基础咬击 ×0.9、起手多 2 刻、冷却多 8 刻。",
   "worldcombat.skill.psychicfangs.devour.off": "穿刺式：基础咬击 ×1.08、收得更快，但吞壁加成 ×0.6、碎壁范围保持基础。",
   "worldcombat.skill.psychicfangs.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.psychicfangs.growth.0": "达到 %1$s 级，咬击威力提升至 %2$s。",
@@ -19,11 +19,12 @@
   "worldcombat.skill.psychicfangs.value.aftercast": "收招",
   "worldcombat.skill.psychicfangs.value.recharge": "冷却",
   "worldcombat.skill.psychicfangs.preference.devour": "噬壁式",
-  "worldcombat.skill.psychicfangs.preference.devour.help": "开启：每碎一层屏障的加成 ×1.7、碎壁范围 ×1.25，但基础咬击 ×0.9、冷却 +8 刻；关闭：穿刺式，基础咬击 ×1.08、吞壁加成 ×0.6。",
+  "worldcombat.skill.psychicfangs.preference.devour.help": "开启：每碎一层屏障的加成 ×1.7、碎壁范围 ×1.25、扑咬距离 ×1.1，但基础咬击 ×0.9、起手多 2 刻、冷却 +8 刻；关闭：穿刺式，基础咬击 ×1.08、吞壁加成 ×0.6。",
   "worldcombat.skill.psychicfangs.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.psychicfangs.preference.ai.maxChase.help": "超过这个距离就不主动扑咬，先走近。越大越愿意从稍远处先手咬壁。",
   "worldcombat.skill.psychicfangs.preference.ai.eatBarrier": "先吃屏障",
   "worldcombat.skill.psychicfangs.preference.ai.eatBarrier.help": "开启：目标带着反射壁、光墙或极光幕时优先咬它，把屏障咬碎吞成额外力道；关闭：只按威胁与距离排序。",
   "world_combat.move.psychicfangs.text.break": "咬碎屏障 %1$s 层",
-  "world_combat.move.psychicfangs.text.miss": "精神之牙咬空"
+  "world_combat.move.psychicfangs.text.miss": "精神之牙咬空",
+  "worldcombat.skill.psychicfangs.description.lane": "扑咬沿一条窄走廊进行，路径上的每个敌人各挨一口；即使扑空，落点处的屏障仍会被咬碎。"
 }

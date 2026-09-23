@@ -32,6 +32,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: upperhandId,
         cooldownParameter: "recharge",
         name: "Upper Hand",

@@ -1,8 +1,8 @@
 {
   "effect.world_combat.beak_heat": "鸟嘴赤热",
   "worldcombat.skill.beakblast.summary": "先把自己烧热、再当炮管射出一发：提交后站定把鸟嘴烧到赤热，这段时间里任何用身体碰到它的敌人都会被烫伤；窗口走完，喙弹直线射出。加热越久炮越重，代价就是站定挨打的暴露窗口。它是 Flying 物理、不接触，且吃防弹特性。",
-  "worldcombat.skill.beakblast.description.0": "喙弹造成 %1$s 的物理伤害；开炮前先把鸟嘴烧热 %2$s。",
-  "worldcombat.skill.beakblast.description.1": "加热期间贴到 %1$s 格内、用身体碰到施法者的敌人会被点着，灼伤停留 %2$s。",
+  "worldcombat.skill.beakblast.description.0": "喙弹命中造成约 %1$s 点物理伤害；开炮前要先把鸟嘴烧热 %2$s。",
+  "worldcombat.skill.beakblast.description.1": "加热期间你站定不动；有敌人贴到 %1$s 格内、用接触攻击打中你，就会被灼伤 %2$s——灼伤期间每 5 秒被烧掉最大生命的十六分之一（宝可梦同步为原生灼伤，火属性免疫）。",
   "worldcombat.skill.beakblast.description.2": "射程 %1$s 格、弹速 %2$s 格每刻、弹体判定 %3$s 格。",
   "worldcombat.skill.beakblast.forge.on": "当前为赤热式：加热更久、喙弹更重、弹体更大，但弹速更慢、射程更短、起手与冷却更久——加热窗口越长越容易被贴上来烫回去。",
   "worldcombat.skill.beakblast.forge.off": "当前为速射式：加热更短、弹速更快、冷却更短，暴露窗口更安全，但喙弹威力略低。",
@@ -35,5 +35,6 @@
   "worldcombat.skill.beakblast.preference.ai.finishLow.help": "开启：残血目标排前，用更重的一炮收尾；关闭则只按普通远程攻击排序。",
   "world_combat.move.beakblast.text.heat": "鸟嘴烧热中，还要 %1$s 秒",
   "world_combat.move.beakblast.text.sear": "被赤热的鸟嘴烫伤！",
-  "world_combat.move.beakblast.text.miss": "鸟嘴加农炮打偏了"
+  "world_combat.move.beakblast.text.miss": "鸟嘴加农炮打偏了",
+  "worldcombat.skill.beakblast.description.aim": "准线在你开始加热时就锁定了：加热期间目标移开，炮口仍指向原处，这一发会打空；加热中被打断则鸟嘴冷却，这一炮不再射出。"
 }

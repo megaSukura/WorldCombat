@@ -118,7 +118,7 @@ namespace PokemonSkills {
         id: magnetbombId,
         cooldownParameter: "recharge",
         name: "Magnet Bomb",
-        description: "The user launches steel bombs that stick to the target. This attack never misses.",
+        description: "发射几枚会被磁力吸向对手的钢弹，碰到就吸在它身上，引信走完起爆；吸住后躲不掉，没吸住的会落空。集火时全部砸向一个目标，分投时分给一圈敌人。",
         uses: ["把钢弹吸在对手身上再起爆", "分散吸住一圈敌人一起炸", "用引信逼对手在起爆前做出反应"],
         kind: "enemy",
         range: 8,

@@ -140,16 +140,16 @@ namespace PokemonSkills {
     ]);
 
     describe("blizzard", [
-        { key: "description.0", values: ["gust", "rakes"] },
-        { key: "description.1", values: ["radius", "rakeInterval", "reach"] },
-        { key: "description.2", values: ["push", "freezeChance"] },
-        { key: "description.3", values: ["snowTicks", "snowCells"] },
+        { key: "description.0", values: ["gust","rakes"] },
+        { key: "description.1", values: ["radius","rakeInterval","reach"] },
+        { key: "description.2", values: ["push","freezeChance"] },
+        { key: "description.3", values: ["snowTicks","snowCells"] },
         { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
         { key: "weather", values: [] },
         { key: "howl.on", values: [], when: function (context) { return read(context.detail.values, ["howl"]) === true; } },
         { key: "howl.off", values: [], when: function (context) { return read(context.detail.values, ["howl"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gust"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.gust", "tier.1.radius"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.gust","tier.1.radius"] }
     ]);
 }

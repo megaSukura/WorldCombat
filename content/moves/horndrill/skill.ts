@@ -13,10 +13,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: horndrillId,
         cooldownParameter: "recharge",
         name: "Horn Drill",
-        description: "The user stabs the target with a horn that rotates like a drill. The target faints instantly if this attack hits.",
+        description: "蹲身把角高速旋转成钻头，沿一条直线钻出去——线路上第一个挡路的活体被钻尖贯穿、一次结清（一击必杀）。它是这一族里唯一会位移的一记：让开这条线，或者躲到墙后，钻头就只能扎进地里。",
         uses: ["在近身对角线路上贯穿一个目标", "逼对手横向让开，撞上墙就自己停住", "对手站桩时用一记钻穿终结它"],
         kind: "enemy",
         range: 6,

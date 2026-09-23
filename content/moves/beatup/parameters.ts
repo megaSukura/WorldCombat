@@ -89,11 +89,12 @@ namespace PokemonSkills {
 
     describe("beatup", [
         { key: "description.0", values: ["mob"] },
-        { key: "description.1", values: ["rally", "crowd", "gap"] },
-        { key: "description.2", values: ["lull", "speed", "radius"] },
+        { key: "description.1", values: ["rally","crowd","gap"] },
+        { key: "description.2", values: ["lull","speed"] },
+        { key: "description.flow", values: [] },
         { key: "widen.on", values: [], when: function (context) { return read(context.detail.values, ["widen"]) === true; } },
         { key: "widen.off", values: [], when: function (context) { return read(context.detail.values, ["widen"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.mob", "tier.0.crowd"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.mob", "tier.1.crowd"] }
     ]);

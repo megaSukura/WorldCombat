@@ -3,10 +3,10 @@
   "worldcombat.skill.acid.use.0": "近距离一次溅到落点周围",
   "worldcombat.skill.acid.use.1": "在地面留下持续腐蚀的酸池封住一片地",
   "worldcombat.skill.acid.use.2": "用最便宜的出手反复磨特防",
-  "worldcombat.skill.acid.description.0": "酸团炸开造成 %1$s 点特殊伤害，溅到落点周围的每个敌人。",
+  "worldcombat.skill.acid.description.0": "酸团炸开，对落点周围的每个敌人各造成一次约 %1$s 点特殊伤害。",
   "worldcombat.skill.acid.description.1": "酸液覆盖落点周围半径 %1$s 格的范围。",
-  "worldcombat.skill.acid.description.2": "留下的酸池每跳造成 %1$s 点伤害，持续 %2$s，每 %3$s 咬一次。",
-  "worldcombat.skill.acid.description.3": "命中时有 %1$s 概率让目标特防下降 %2$s 级；当前腐蚀强化形态为 %3$s。",
+  "worldcombat.skill.acid.description.2": "留下的酸池每跳对圈内每个敌人造成 %1$s 点伤害，持续 %2$s，每 %3$s 咬一次。",
+  "worldcombat.skill.acid.description.3": "每个被溅到的敌人各有 %1$s 概率特防下降 %2$s 级，其之后受到的特殊伤害因此更高。",
   "worldcombat.skill.acid.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.acid.growth.0": "%1$s 级起泼溅威力升至 %2$s、酸池半径 %3$s 格。",
   "worldcombat.skill.acid.value.core": "泼溅威力",
@@ -27,5 +27,6 @@
   "worldcombat.skill.acid.preference.ai.maxChase.help": "超过这个距离就不主动泼酸，先走近；越大越愿意在更远处先手泼。",
   "worldcombat.skill.acid.preference.ai.crowd": "瞄准扎堆",
   "worldcombat.skill.acid.preference.ai.crowd.help": "开启后，目标 3 格内还有别的敌人时优先泼酸，泼溅与酸池能多咬一个；关闭则只按普通近程攻击排序。",
-  "world_combat.move.acid.text.sunder": "特防 -%1$s"
+  "world_combat.move.acid.text.sunder": "特防 -%1$s",
+  "worldcombat.skill.acid.corrode.note": "开启腐蚀强化时，酸池铺得更开、留得更久、每跳更疼，但单发泼溅更轻；关闭则泼溅更疼、酸池较小。"
 }

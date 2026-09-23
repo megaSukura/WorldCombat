@@ -3,7 +3,7 @@
   "worldcombat.skill.bulletseed.use.0": "中近距离一梭子密集的物理小撞击",
   "worldcombat.skill.bulletseed.use.1": "对低防目标靠发数堆伤害",
   "worldcombat.skill.bulletseed.use.2": "起手快、能连发，适合贴着对手持续施压",
-  "worldcombat.skill.bulletseed.description.0": "每发籽造成 %1$s 点物理伤害，这一梭子会连喷 %2$s 发（原生 2～5，随精灵数据变化）。",
+  "worldcombat.skill.bulletseed.description.0": "每发籽对目标造成 %1$s 点物理伤害，每发单独结算；这一梭子会连喷 %2$s 发（原生 2～5，随精灵数据变化），目标在连发中途倒下或消失时，剩下的籽不再喷出。",
   "worldcombat.skill.bulletseed.description.1": "籽每隔 %1$s 以 %2$s 格/刻喷出，能打到 %3$s 格内，散布 ±%4$s。",
   "worldcombat.skill.bulletseed.description.2": "单颗籽判定 %1$s 格。",
   "worldcombat.skill.bulletseed.heavy.on": "重籽：单籽威力 ×1.35、籽更大、散布 ×0.6；代价是连发数收在 3、籽速 ×0.9、起手 +2 刻、冷却 +4 刻、间隔 +1 刻。",

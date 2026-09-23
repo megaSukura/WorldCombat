@@ -82,7 +82,7 @@ namespace PokemonSkills {
         id: "tailwind",
         cooldownParameter: "wait",
         name: "顺风",
-        description: "起一股旋风托住自己与身边的队友，全队的速度一起提高；风以施法者为锚转着，最长的加速窗口。",
+        description: "提高自身和附近队友的速度；效果结束后收回本次提升。",
         uses: ["开打前把整队的速度垫起来", "在被追上之前让全队先动起来", "把队友连成一队一起压上去"],
         kind: "self",
         range: 6,

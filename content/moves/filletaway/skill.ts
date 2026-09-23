@@ -17,8 +17,8 @@ namespace PokemonSkills {
     define({
         id: "filletaway",
         name: "Fillet Away",
-        description: "The user sharply boosts its Attack, Sp. Atk, and Speed stats by using its own HP.",
-        uses: ["开战前连续输出前把进攻三项拉满", "生命富余时用血换爆发", "在对手接近的空档里把自己削得更快更凶"],
+        description: "一刀削掉自身大量生命，把血肉甩进世界，换取攻击、特攻与速度的大幅提高；生命不足以支付代价并留下保留生命时无法施放。",
+        uses: ["开战前把进攻三项拉满再冲", "生命富余时用血换一轮爆发", "在对手接近的空档里把自己削得更快更凶"],
         kind: "self",
         range: 3,
         prepare: 6,

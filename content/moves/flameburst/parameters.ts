@@ -139,7 +139,7 @@ namespace PokemonSkills {
     defineDamage(flameburstId, "splash", {});
 
     describe(flameburstId, [
-        { key: "description.0", values: ["burst", "splash"] },
+        { key: "description.0", values: ["burst","splash"] },
         { key: "description.1", values: ["splashRadius"] },
         { key: "description.2", values: ["reach", "velocity", "radius"] },
         { key: "spread.on", values: [], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },

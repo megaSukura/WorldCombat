@@ -3,8 +3,8 @@
   "worldcombat.skill.hammerarm.use.0": "Trade a heavy overhead blow for one hard target",
   "worldcombat.skill.hammerarm.use.1": "Knock a target out of position and into a teammate's reach",
   "worldcombat.skill.hammerarm.use.2": "Crack the ground where the fist lands and leave a short-lived scar",
-  "worldcombat.skill.hammerarm.description.0": "One overhead blow deals %1$s physical damage; reach %2$s blocks.",
-  "worldcombat.skill.hammerarm.description.1": "A hit knocks the target %1$s blocks along the swing and lowers the user's Speed %2$s stage(s).",
+  "worldcombat.skill.hammerarm.description.0": "One overhead blow on a single foe deals about %1$s physical damage; reach %2$s blocks.",
+  "worldcombat.skill.hammerarm.description.1": "On a hit the target is pushed about %1$s blocks along the swing and the user's Speed drops %2$s stage(s); a miss does neither.",
   "worldcombat.skill.hammerarm.description.2": "Wind-up %1$s s, cooldown %2$s s.",
   "worldcombat.skill.hammerarm.followthrough.on": "Follow-through form: knock-back x1.35, cleft radius %1$s blocks and %2$s cracks, driving the target out of position; costs power x0.9 and a slower wind-up and recovery.",
   "worldcombat.skill.hammerarm.followthrough.off": "Held-breath form: the force is checked before contact, so the single hit is heavier and faster, but throws and cracks less.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.hammerarm.preference.ai.finish": "Prefer low health",
   "worldcombat.skill.hammerarm.preference.ai.finish.help": "On: low-health targets rank higher so one heavy boot finishes them; off: all targets score the same.",
   "world_combat.move.hammerarm.text.stagger": "Staggered: Speed -%1$s",
-  "world_combat.move.hammerarm.text.miss": "Whiff"
+  "world_combat.move.hammerarm.text.miss": "Whiff",
+  "worldcombat.skill.hammerarm.description.ground": "A landed blow cracks the surface dirt, stone or sand near the fist's landing point: within a radius of %1$s blocks, up to %2$s blocks; the cracks return to normal after about 5 seconds."
 }

@@ -3,7 +3,7 @@
   "worldcombat.skill.growl.use.0": "被近身围住时叫软一圈敌人",
   "worldcombat.skill.growl.use.1": "在敌人扎堆时一次压低几人的出手",
   "worldcombat.skill.growl.use.2": "隔着掩体削弱贴身的威胁",
-  "worldcombat.skill.growl.description.0": "听见叫声者损失 %1$s 级攻击，分神持续 %2$s。",
+  "worldcombat.skill.growl.description.0": "听见叫声的敌人攻击下降 %1$s 级，并带上「被叫软」标记 %2$s；分神期间，伙伴不会对已心软的对手重复使用叫声。攻击下降是能力等级，不会随标记到期自动恢复，而会保留到它离开战斗、能力等级被重置为止。",
   "worldcombat.skill.growl.description.1": "叫声半径 %1$s，圈内所有非友方都会听见。声音不看视线。",
   "worldcombat.skill.growl.description.2": "起手 %1$s，冷却 %2$s。以自身为圆心，够不到圈外的人。",
   "worldcombat.skill.growl.howl.off": "短叫：起手快、半径小、持续短。",

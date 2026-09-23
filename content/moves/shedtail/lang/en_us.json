@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.shedtail.summary": "Shed half your HP to leave a tail behind that keeps enemies hooked, then pull out along a chosen direction; with a reserve the move swaps straight to it. Until it is broken or fades, the tail draws nearby enemies back onto itself.",
-  "worldcombat.skill.shedtail.description.0": "Pay %1$s of your max HP and leave a tail behind that has %2$s of your max HP.",
-  "worldcombat.skill.shedtail.description.1": "You withdraw %1$s blocks along the chosen direction; every 20 ticks the tail pulls enemies within %2$s blocks onto itself, and it lasts at most %3$s.",
+  "worldcombat.skill.shedtail.description.0": "Pay %1$s of your max HP to leave a tail behind with %2$s of your max HP in health; enemies can attack it, and it is torn apart when that health runs out.",
+  "worldcombat.skill.shedtail.description.1": "You withdraw %1$s blocks along the chosen direction; every 20 ticks the tail re-targets enemies within %2$s blocks onto itself, and it lasts at most %3$s before being torn apart or expiring.",
   "worldcombat.skill.shedtail.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.shedtail.use.0": "Slip away before being overwhelmed and leave pursuers a tail",
   "worldcombat.skill.shedtail.use.1": "Block a choke point with the tail",
@@ -27,5 +27,6 @@
   "world_combat.move.shedtail.text.shed": "Shed Tail · a tail is left behind",
   "world_combat.move.shedtail.text.break": "The shed tail was torn apart",
   "world_combat.move.shedtail.text.expire": "The shed tail dissolved",
-  "world_combat.move.shedtail.text.switch": "Shed Tail · switch out"
+  "world_combat.move.shedtail.text.switch": "Shed Tail · switch out",
+  "worldcombat.skill.shedtail.description.additional": "If your party has a legal reserve, it is sent out at your landing point; the tail stays behind and does not vanish when you switch out or leave. You cannot shed again while the tail lasts."
 }

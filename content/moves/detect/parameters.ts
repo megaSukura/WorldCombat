@@ -22,7 +22,7 @@ namespace PokemonSkills {
                 .clamp(6, 20).round(0),
             "读招窗口", {
                 unit: "刻",
-                description: "窗口内下一次来袭被完整免除；反应越快窗口越宽裕，反击取向窗口更窄。"
+                description: "窗口内下一次来袭被完整免除；速度越高、反击取向的窗口更短。"
             }),
         /** 先机持续：基础 24 刻 + 速度 ×0.2，夹在 24..80。 */
         opening: formula(
@@ -65,7 +65,8 @@ namespace PokemonSkills {
 
     describe("detect", [
         { key: "description.0", values: ["readWindow", "opening", "openingBoost"] },
+        { key: "description.window", values: [] },
         { key: "description.1", values: ["raise", "charge"] },
-        { key: "description.2", values: ["fizzle", "pref.strike"] }
+        { key: "description.2", values: ["fizzle"] }
     ]);
 }

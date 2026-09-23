@@ -60,11 +60,12 @@ namespace PokemonSkills {
     stages("grassyterrain", [{ level: 40, values: { cooldown: 150 } }, { level: 55, values: { cooldown: 130 } }]);
     describe("grassyterrain", [
         { key: "description.0", values: ["fieldRadius", "fieldTicks"] },
-        { key: "description.1", values: ["healRatio", "healInterval"] },
+        { key: "description.field", values: [] },
+        { key: "description.1", values: ["healRatio","healInterval"] },
         { key: "description.2", values: ["growth"] },
         { key: "description.3", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level","tier.0.cooldown"] },
+        { key: "growth.1", values: ["tier.1.level","tier.1.cooldown"] }
     ]);
 }

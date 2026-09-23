@@ -163,8 +163,8 @@ namespace PokemonSkills {
     describe("axekick", [
         { key: "description.0", values: ["chop"] },
         { key: "description.1", values: ["hopHeight", "hopSpeed", "chopSpeed", "drift"] },
-        { key: "description.2", values: ["reach", "hitRadius", "crash"] },
-        { key: "description.3", values: ["dazeChance", "dazeTicks", "shove", "fumbleChance"] },
+        { key: "description.2", values: ["reach","hitRadius","crash"] },
+        { key: "description.3", values: ["dazeChance","dazeTicks","shove","fumbleChance"] },
         { key: "high.on", values: [], when: function (context) { return read(context.detail.values, ["high"]) === true; } },
         { key: "high.off", values: [], when: function (context) { return read(context.detail.values, ["high"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

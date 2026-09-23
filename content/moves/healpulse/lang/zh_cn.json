@@ -3,12 +3,12 @@
   "worldcombat.skill.healpulse.use.0": "远远地给伙伴补一口",
   "worldcombat.skill.healpulse.use.1": "在伙伴被打倒之前把生命送到",
   "worldcombat.skill.healpulse.use.2": "用飞行的波动跨过一段距离的救助",
-  "worldcombat.skill.healpulse.description.0": "波动抵达伙伴时，回复其最大生命的 %1$s；特攻越高越厚、亲密度越高越贴心。",
-  "worldcombat.skill.healpulse.description.1": "可在 %1$s 格内送出，波动以约 %2$s 格/刻飞行。",
+  "worldcombat.skill.healpulse.description.0": "波动抵达伙伴时，最多回复其最大生命的 %1$s（补满即止）；特攻越高越厚、亲密度越高越贴心。",
+  "worldcombat.skill.healpulse.description.1": "可在 %1$s 格内对另一个友方送出（不能对自己），波动以约 %2$s 格/刻飞行。",
   "worldcombat.skill.healpulse.description.2": "起手 %1$s、收招 %2$s。",
   "worldcombat.skill.healpulse.stance.overcharge": "超载：回复 ×1.12，但波动起飞更慢（×0.78）、冷却略长——伙伴要在路上多等一会儿，适合确定安全时补一口厚的。",
   "worldcombat.skill.healpulse.stance.light": "轻吐：波动跑得更快、冷却更短，回复略低——适合急救，趁伙伴还没倒下赶紧把生命送到。",
-  "worldcombat.skill.healpulse.timing": "对友方施放，准备 %2$s 秒后消耗 %4$s PP；收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.healpulse.timing": "对友方施放，准备 %1$s 秒后消耗 %3$s PP；收招 %2$s 秒，冷却 %4$s 秒。",
   "worldcombat.skill.healpulse.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.healpulse.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.healpulse.value.heal": "回复比例",
@@ -26,5 +26,6 @@
   "worldcombat.skill.healpulse.preference.ai.maxChase.help": "伙伴离自己这个距离以内才考虑递波；调小只在身边时救，调大愿意跨一段距离去送。",
   "world_combat.move.healpulse.text.wash": "波动抵达，回复 %1$s",
   "world_combat.move.healpulse.text.full": "生命已满",
-  "world_combat.move.healpulse.text.fizzle": "波动落空"
+  "world_combat.move.healpulse.text.fizzle": "波动落空",
+  "worldcombat.skill.healpulse.description.travel": "波动沿直线径直赶向伙伴，途中不会被拦下；抵达时伙伴已倒下、离场或已不是友方，这一口就落空。"
 }

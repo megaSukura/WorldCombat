@@ -31,6 +31,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "zingzap",
         cooldownParameter: "recharge",
         name: "Zing Zap",

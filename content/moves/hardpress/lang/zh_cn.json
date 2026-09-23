@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.hardpress.summary": "抬臂／抬钳，从上方一腕把对手压进地面：物攻与体重决定这一压的分量，对手此刻剩余的生命越满，威力越大——对手已经残了，这一下就轻。它是三压招里起手最快、冷却最短的一记，靠一记接一记地压；双腕式可一次罩住挨着站的几个目标，但单点更轻。",
-  "worldcombat.skill.hardpress.description.0": "硬压命中造成 %1$s 的钢属性接触伤害；对手剩余生命越满，这一下压得越重。",
-  "worldcombat.skill.hardpress.description.1": "压顶半径 %1$s 格，命中把目标向地面压沉 %2$s 格、沿背离方向顶开 %3$s 格。",
+  "worldcombat.skill.hardpress.description.0": "每个被压中的目标受到约 %1$s 点钢属性接触伤害；对手剩余生命越满，这一下对它压得越重。",
+  "worldcombat.skill.hardpress.description.1": "以落点为中心、半径 %1$s 格内的每个敌人各命中一次；命中后把它向地面压沉 %2$s 格，并沿背离落点的方向顶开 %3$s 格。",
   "worldcombat.skill.hardpress.description.2": "最多伸手 %1$s 格。",
   "worldcombat.skill.hardpress.brace.on": "双腕式：两腕／双钳一起压下去，掌面半径 ×1.7、顶开 ×1.25，可罩住挨着站的几个目标；代价是单点威力 ×0.86、起手 +2 刻、冷却 +4 刻。",
   "worldcombat.skill.hardpress.brace.off": "单腕式（默认）：一腕集中下压，单点威力更高、出手更快，但只压得住一个目标。",

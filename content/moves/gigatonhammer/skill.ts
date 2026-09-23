@@ -41,7 +41,7 @@ namespace PokemonSkills {
         id: gigatonhammerId,
         cooldownParameter: "recharge",
         name: "Gigaton Hammer",
-        description: "The user swings its whole body around to attack with its huge hammer. This move can't be used twice in a row.",
+        description: "连人带锤旋身蓄力，再把巨锤高高抡下砸在身前地面；锤落处沿地面掀起一道冲击波向前推进，把沿线敌人一起顶开。砸完收招很长，短时间内无法再抡起巨锤——换成别的招式可以提前恢复。横扫式让巨锤扫过一圈，代价是威力与节奏。",
         uses: ["旋身蓄力后把巨锤抡下", "用地面冲击波把沿线敌人一起顶开", "被围时用横扫式扫过一圈"],
         kind: "enemy",
         range: 3.2,

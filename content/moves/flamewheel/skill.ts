@@ -21,10 +21,11 @@ namespace PokemonSkills {
     const flamewheelFizzleText = "world_combat.move.flamewheel.text.fizzle";
 
     define({
+        freeMovement: true,
         id: "flamewheel",
         cooldownParameter: "recharge",
         name: "Flame Wheel",
-        description: "The user attacks by cloaking itself in fire and charging at the target. This may also leave the target with a burn.",
+        description: "向前滚动，攻击沿途敌人并有机会使其灼伤，同时解除自身冰冻。",
         uses: ["滚过挤在一起的一排对手", "用火轮追着贴脸的对手碾过去", "在自己身上的冰需要化掉时借这团火"],
         kind: "enemy",
         range: 4.6,
@@ -121,7 +122,7 @@ namespace PokemonSkills {
                         const already = CombatStatus.has(scope, target, "burn");
                         const landed = impact(current, hit, "flamewheel", amount,
                             { damage: damageSpec("flamewheel", "wheel"), contact: true,
-                                status: already ? "" : "burn", chance: already ? 0 : chance });
+                                status: already ? "" : "burn", chance: already ? 0 : chance, statusTicks: burnTicks });
                         WorldFeedback.emit(scope, flamewheelScene, 1, point,
                             { moment: "impact", target: String(target.ref()), flames: flames, scale: scale,
                                 intensity: Math.max(0.6, Math.min(2.4, amount / 60)), order: hits + 1 }, 28);

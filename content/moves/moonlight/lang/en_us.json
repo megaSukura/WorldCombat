@@ -3,9 +3,9 @@
   "worldcombat.skill.moonlight.use.0": "A strong heal under a clear night",
   "worldcombat.skill.moonlight.use.1": "Cool off a burn on the side",
   "worldcombat.skill.moonlight.use.2": "A small top-up by day",
-  "worldcombat.skill.moonlight.description.0": "Restores %1$s of the missing health: close to 2/3 on a clear night, only the floor by day or in rain; higher friendship draws more moonlight.",
+  "worldcombat.skill.moonlight.description.0": "Restores %1$s of the user's missing health: close to 2/3 on a clear night, only a small base amount by day or in rain; higher friendship draws more moonlight.",
   "worldcombat.skill.moonlight.description.1": "Settles after %1$s of receiving the moon; whatever the strength, it cools off any burn.",
-  "worldcombat.skill.moonlight.timing": "A self move; after %2$s s of receiving the moon it spends %4$s PP, recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.moonlight.timing": "A self move; after %1$s s of receiving the moon it spends %3$s PP, recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.moonlight.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.moonlight.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.moonlight.value.heal": "Restore fraction",
@@ -19,5 +19,6 @@
   "worldcombat.skill.moonlight.preference.ai.waitForSky.help": "On: only cast in the dark (at night), holding the move by day. Off: cast whenever wounded and accept the floor heal.",
   "world_combat.move.moonlight.text.veil": "Moonlit",
   "world_combat.move.moonlight.text.dim": "Faint moonlight",
-  "world_combat.move.moonlight.text.soothe": "Burn cooled"
+  "world_combat.move.moonlight.text.soothe": "Burn cooled",
+  "worldcombat.skill.moonlight.description.2": "It cannot be used at full health unless the user is burned; if the wind-up is interrupted, neither the heal nor the burn cure resolves."
 }

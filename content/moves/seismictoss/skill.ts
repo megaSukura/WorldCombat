@@ -18,7 +18,7 @@ namespace PokemonSkills {
     define({
         id: "seismictoss",
         name: "Seismic Toss",
-        description: "The target is thrown using the power of gravity. It inflicts damage equal to the user's level.",
+        description: "抓取投掷：扣住对手、借重力把它甩出去，造成等于自己等级的固定伤害，再把对手抛上一条弧线砸向地面。伤害不看对手防御，只看属性免疫；砸地式把这一甩压短并让对手落地后被钉住。",
         uses: ["抓住对手把它甩出去", "把敌人抛离掩体或扔下高台", "用等级伤害处理高防目标"],
         kind: "enemy",
         range: 2.8,

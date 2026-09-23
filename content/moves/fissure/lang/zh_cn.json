@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.fissure.summary": "把震荡压进土里，一道裂缝沿地表直窜到对手脚下张口——站在那块地上的人被一次结清（一击必杀）。它隔得远，但只认站在地上、且属性上吃得到地面系的目标；张口前的预告就是对手走开的窗口。",
-  "worldcombat.skill.fissure.description.0": "裂缝沿地表窜出 %1$s 格，在目标脚下张开半径 %2$s 格的坑；落点内的目标被一次结清。对手防御、护甲与韧性都不参与，只有属性免疫能挡。",
+  "worldcombat.skill.fissure.description.0": "裂缝沿地表窜出最多 %1$s 格，在目标脚下张开半径 %2$s 格的坑；被锁定且仍站在坑内的目标被一次结清——无视防御、护甲与韧性，只有属性免疫能挡。",
   "worldcombat.skill.fissure.description.1": "从锁定落点到真正张口有 %1$s 秒预告；等级每压过对手 1 级缩短一点，对手得在这段时间里走开或跳起来。",
-  "worldcombat.skill.fissure.description.2": "地面被撕开的裂缝停留 %1$s 秒，涉及约 %2$s 块地表，到期原方块回来。",
+  "worldcombat.skill.fissure.description.2": "地面被撕开的裂缝停留 %1$s 秒，沿途与落点最多掀开 %2$s 块自然地表，到期原方块回来。",
   "worldcombat.skill.fissure.deep.on": "深裂式：落点更大、裂缝更久，但张口延迟 +8 刻——坑更宽，对手也更容易走开。",
   "worldcombat.skill.fissure.deep.off": "速裂式：张口更快、冷却更短，但落点更小、裂缝更短。",
-  "worldcombat.skill.fissure.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %5$s PP，提交起冷却 %4$s 秒。",
+  "worldcombat.skill.fissure.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，出手后冷却 %5$s 秒。",
   "worldcombat.skill.fissure.growth.0": "%1$s 级起落点半径到 %2$s 格。",
   "worldcombat.skill.fissure.growth.1": "%1$s 级起落点半径到 %2$s 格、射程到 %3$s 格、裂缝停留延长到 %4$s 秒。",
   "worldcombat.skill.fissure.use.0": "从远处点掉一个站在地上的高价值目标",
@@ -29,5 +29,6 @@
   "worldcombat.skill.fissure.preference.ai.executionAbove.help": "目标生命比例低于这个值时，不再把一击必杀浪费在它身上；调大只在目标还很健康时出手。",
   "world_combat.move.fissure.text.break": "坠入地裂",
   "world_combat.move.fissure.text.miss": "裂缝空张",
-  "world_combat.move.fissure.text.air": "离地幸免"
+  "world_combat.move.fissure.text.air": "离地幸免",
+  "worldcombat.skill.fissure.description.ground": "只能对站在地面上的敌人施放，施放者自己也得站在地面上，且两者之间要有畅通的视线；离地的目标打不到。"
 }

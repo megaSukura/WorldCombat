@@ -1,26 +1,33 @@
-/**
- * 同步干扰 / synchronoise 的出手方式。
- *
- * 核心念头：以施法者自身的属性为频率，向身周放出一道同频电波——不同频的东西像被波穿过一样毫发无伤，
- * 同频的会被锁住、在体内共振挨一下，并带上一小段「同频」的记号。它是本组唯一会完全落空的一招：
- * 圈里没有同属性的人时，整片波白扫过去，这一点从画面里读得出来（波从目标身上直接穿过、不留锁光）。
- *
- * 三幕：
- *   起（windup，提交前）：施法者头顶聚起自己属性色的频率光球。
- *   播（wave → lock / pass）：提交后电波以自身为圆心扫开一圈；每个非友方目标按属性比对：
- *       同频 → 挨一次 `pulse`、挂上同频记号（共享身份 `resonance`）、身上亮起锁光；
- *       不同频 → 只留一圈穿过的淡纹，不掉血。打击上限 `maxTargets`。
- *   鸣（echo）：电波扫开后身周留下一圈圈同频余音，只作画面，不再造成伤害。
- *
- * 配置 `tight`（收束同调）由 resolve 改时序、由公式改半径与威力：开启＝窄而重、记号更久。
- */
+/** 用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。宝可梦按属性同频，普通生物按身体种类判定。 */
 namespace PokemonSkills {
     const synchronoiseScene = "world_combat:move_synchronoise";
     const synchronoiseResonance = "world_combat:resonance";
     const synchronoiseHitText = "world_combat.move.synchronoise.text.hit";
     const synchronoisePassText = "world_combat.move.synchronoise.text.pass";
 
-    /** 两组属性是否有交集；空集合（非宝可梦）永远不同频。 */
+    /** Content frequencies for native bodies; these choose recipients and do not assign damage types to Minecraft mobs. */
+    export function synchronoiseFrequencies(world: CombatWorld, actor: CombatActor): string[] {
+        if (String(actor.domain()) === "cobblemon") return PokemonDamage.combatants.read(world, actor).types;
+        const type = world.entityType(actor);
+        if (type === null) return [];
+        const declared = Object.keys(synchronoisePalette).filter(name => type.tagged("world_combat:resonance/" + name));
+        if (declared.length) return declared;
+        const id = String(type.id());
+        if (type.tagged("minecraft:undead") || /minecraft:(?:zombie|zombie_villager|husk|drowned|skeleton|stray|bogged|wither_skeleton|wither|phantom|zoglin|zombified_piglin)$/.test(id)) return ["ghost"];
+        if (type.tagged("minecraft:arthropod") || /minecraft:(?:spider|cave_spider|silverfish|endermite|bee)$/.test(id)) return ["bug"];
+        if (type.tagged("minecraft:aquatic") || /minecraft:(?:cod|salmon|pufferfish|tropical_fish|squid|glow_squid|dolphin|axolotl|guardian|elder_guardian|turtle)$/.test(id)) return ["water"];
+        if (id === "minecraft:blaze" || id === "minecraft:magma_cube") return ["fire"];
+        if (id === "minecraft:iron_golem") return ["steel"];
+        if (id === "minecraft:snow_golem") return ["ice"];
+        if (id === "minecraft:ender_dragon") return ["dragon"];
+        return ["normal"];
+    }
+    MobEffects.react("world_combat:move_synchronoise/reveal", synchronoiseResonance, "world_combat:mob_effect_tick",
+        event => event.actor(), function (event, actor) {
+            if (event.world().tick() % 5 === 0) MobEffects.apply(event.world(), actor, "minecraft:glowing", 6, 0);
+        });
+
+    /** 两组频率是否有交集。 */
     function synchronoiseShares(caster: string[], target: string[]): boolean {
         for (let i = 0; i < caster.length; i++) if (target.indexOf(caster[i]) >= 0) return true;
         return false;
@@ -38,7 +45,7 @@ namespace PokemonSkills {
     define({
         id: "synchronoise",
         name: "Synchronoise",
-        description: "以自己属性的频率向身周放出一道同频电波：只对与自己属性相同的敌人造成伤害并锁上「同频」记号，属性不同的目标被波穿过、毫发无伤。收束式更窄更重、记号更久。",
+        description: "用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。宝可梦按属性同频，普通生物按身体种类判定。",
         uses: ["对同属性的敌人一次扫到一圈", "在混战里专挑与自己同频的人打", "给同频目标留下记号，方便接着追", "在属性对不上的局里确认谁才是同频的那一个"],
         kind: "self",
         range: 5.2,
@@ -91,7 +98,7 @@ namespace PokemonSkills {
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 3 }), function (enemy, facts) {
                 const ref = String(enemy.ref());
                 if (ref === String(actor.ref())) return;
-                if (!synchronoiseShares(casterTypes, PokemonDamage.combatants.read(world, enemy).types)) {
+                if (!synchronoiseShares(casterTypes, synchronoiseFrequencies(world, enemy))) {
                     passed++;
                     WorldFeedback.emit(world, synchronoiseScene, 1, facts.position(),
                         { moment: "pass", target: ref, tint: tint, scale: scale }, 18);

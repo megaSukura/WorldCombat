@@ -128,14 +128,14 @@ namespace PokemonSkills {
     defineDamage(armthrustId, "slam", {});
 
     describe(armthrustId, [
-        { key: "description.0", values: ["thrust", "thrusts"] },
-        { key: "description.1", values: ["reach", "push", "gap"] },
-        { key: "description.2", values: ["slam", "step"] },
+        { key: "description.0", values: ["thrust","thrusts"] },
+        { key: "description.1", values: ["reach","push","gap"] },
+        { key: "description.2", values: ["slam","step"] },
         { key: "drive.on", values: [], when: function (context) { return read(context.detail.values, ["drive"]) === true; } },
         { key: "drive.off", values: [], when: function (context) { return read(context.detail.values, ["drive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.thrust", "tier.0.thrusts"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.thrust", "tier.1.slam"] },
+        { key: "growth.1", values: ["tier.1.level","tier.1.thrust","tier.1.slam"] },
         { key: "growth.2", values: ["tier.2.level", "tier.2.thrust", "tier.2.push"] }
     ]);
 }

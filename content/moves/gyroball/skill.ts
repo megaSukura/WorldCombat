@@ -26,10 +26,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: gyroballId,
         cooldownParameter: "recharge",
         name: "Gyro Ball",
-        description: "The user tackles the target with a high-speed spin. The slower the user is than the target, the greater the move's power.",
+        description: "站定把自己旋成一枚沉重的钢陀螺，把「对手比自己快多少」拧进转速，再短促地撞上去：对手越快，这一撞越沉、画面里的陀螺越大。慢的个体才把它用成重锤。",
         uses: ["对手比自己快时的一记重撞", "贴身在原地转满再短促撞出", "用速度差把画面里的陀螺越转越大"],
         kind: "enemy",
         range: 3.0,

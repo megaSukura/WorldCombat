@@ -103,7 +103,7 @@ namespace PokemonSkills {
 
     describe("shadowball", [
         { key: "description.0", values: ["core"] },
-        { key: "description.1", values: ["sunderChance", "sunderStage"] },
+        { key: "description.1", values: ["sunderChance","sunderStage"] },
         { key: "description.2", values: ["velocity", "reach", "radius"] },
         { key: "description.3", values: ["pref.dense"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

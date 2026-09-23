@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.quash.summary": "把一道压制之力砸向目标：打断它正在准备的动作，并在它身上留下压制。压制期间它第一次想出手会被压回去一次（不花资源，只是晚一拍），移动也被拖慢。",
-  "worldcombat.skill.quash.description.0": "对 %1$s 格内的目标打出一道压制之力，判定半径 %2$s 格。",
-  "worldcombat.skill.quash.description.1": "命中打断目标当前动作并留下压制 %1$s 秒：这段时间它前 %2$s 次出手会被压回去（不花资源，只是晚一拍），移动也被拖慢。",
+  "worldcombat.skill.quash.summary": "把一道压制之力砸向目标：打断它正在准备的动作，并在它身上留下压制。压制期间它接下来的数次出手会被压回去（不花资源，只是晚一拍），移动也被压慢，被压的次数越多越接近钉住。",
+  "worldcombat.skill.quash.description.0": "朝瞄准点打出一道压制之力，最远 %1$s 格、判定半径 %2$s 格；只对命中的第一个非友方目标生效，被地形或友方挡下就落空。",
+  "worldcombat.skill.quash.description.1": "命中打断目标当前的动作，并留下压制 %1$s：期间它接下来的 %2$s 次出手会被压回去（不消耗资源，只是晚一拍）；次数用完后即使压制未消也能正常出手，压制到期或被清除即结束。",
   "worldcombat.skill.quash.use.0": "打断对手正在蓄的大招",
   "worldcombat.skill.quash.use.1": "抢先一拍保住自己的位置",
   "worldcombat.skill.quash.use.2": "把冲上来的目标压慢",
@@ -17,5 +17,7 @@
   "worldcombat.skill.quash.preference.ai.leaveStation.help": "开启后，驻守命令下也会为压制离开站位；关闭则只在原地够得到时出手。",
   "effect.world_combat.quash": "压制",
   "world_combat.move.quash.text.pin": "被压制",
-  "world_combat.move.quash.text.fizzle": "压制落空"
+  "world_combat.move.quash.text.fizzle": "压制落空",
+  "worldcombat.skill.quash.description.additional": "压制期间目标的移动速度降低 30%×（压下次数+1），被压得越多越接近钉住；再次命中会刷新压制并重置可压次数。",
+  "worldcombat.skill.quash.timing": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒，消耗 %4$s PP。"
 }

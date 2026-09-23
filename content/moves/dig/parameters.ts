@@ -83,6 +83,7 @@ namespace PokemonSkills {
     describe(DIG_ID, [
         { key: "description.0", values: ["power"] },
         { key: "description.1", values: ["eruptionRadius"] },
+        { key: "description.motion", values: ["range","maxTargets","launch"] },
         { key: "description.2", values: ["burrowTicks"] },
         { key: "description.3", values: [] },
         { key: "description.4", values: [], when: function (context) { return !!read(context.detail.values, ["ambush"]); } },

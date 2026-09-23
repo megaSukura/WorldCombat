@@ -1,9 +1,9 @@
 {
   "worldcombat.skill.firepledge.summary": "Drive a Fire Pledge into chosen ground: a pillar of fire erupts, burning through everyone inside and setting them alight, and the base leaves a burning pledge scar. If a grass or water pledge scar already lies near the point, the vows answer: the strike is far heavier and the ground becomes a sea of fire (fire + grass) or raises a rainbow (fire + water).",
-  "worldcombat.skill.firepledge.description.0": "The pillar erupts at the chosen point and deals %1$s special damage to every enemy inside.",
-  "worldcombat.skill.firepledge.description.1": "The column is %1$s blocks across and %2$s blocks tall; anyone caught is set burning for %3$s.",
-  "worldcombat.skill.firepledge.description.2": "The base leaves a burning pledge scar, %1$s blocks across, lasting %2$s; enemies standing on it keep burning.",
-  "worldcombat.skill.firepledge.description.3": "If a grass or water pledge scar lies within %1$s blocks, the two vows resonate: this strike deals ×%2$s and the ground becomes a sea of fire (fire + grass) or raises a rainbow (fire + water, healing allies inside).",
+  "worldcombat.skill.firepledge.description.0": "The pillar erupts at the chosen point and deals %1$s special damage once to each enemy inside, up to %2$s enemies.",
+  "worldcombat.skill.firepledge.description.1": "The column has a radius of %1$s blocks and is %2$s blocks tall; enemies caught in it are set burning for %3$s, losing about 1/16 of their max health (at least 1) every 5 seconds and dealing half physical damage while burning (targets immune to burning, such as Fire types, are unaffected).",
+  "worldcombat.skill.firepledge.description.2": "The base leaves a burning pledge scar with a radius of %1$s blocks, lasting %2$s; enemies standing on it keep burning. The ground under the base is scorched as well (up to %3$s blocks), reverting when the scar ends.",
+  "worldcombat.skill.firepledge.description.3": "If a grass or water pledge scar lies within %1$s blocks, the two vows resonate: this strike deals ×%2$s and the ground becomes a sea of fire (fire + grass, burning enemies inside) or raises a rainbow (fire + water, healing allies who stand in it). The resonance field is wider than the scar (radius ×%3$s) and lasts about 1.6 times as long.",
   "worldcombat.skill.firepledge.description.4": "Cast range %1$s blocks; wind-up %2$s.",
   "worldcombat.skill.firepledge.fierce.on": "Fierce vow: power ×1.12, a thicker column, cooldown +12, but the scar lasts only 70% as long.",
   "worldcombat.skill.firepledge.fierce.off": "Slow vow: power ×0.96, scar ×1.25, shorter cooldown.",
@@ -33,5 +33,6 @@
   "worldcombat.skill.firepledge.growth.1": "From level %1$s another step (about %2$s).",
   "world_combat.move.firepledge.text.hit": "Fire Pledge hit %1$s",
   "world_combat.move.firepledge.text.combo": "Pledges resonate → %1$s",
-  "world_combat.move.firepledge.text.miss": "The pillar struck nothing"
+  "world_combat.move.firepledge.text.miss": "The pillar struck nothing",
+  "worldcombat.skill.firepledge.value.maxTargets": "Target limit"
 }

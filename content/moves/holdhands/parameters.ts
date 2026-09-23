@@ -65,8 +65,9 @@ namespace PokemonSkills {
         { key: "description.0", values: ["healShare", "linkTicks"] },
         { key: "description.1", values: ["reach", "linkRange", "healInterval"] },
         { key: "description.2", values: ["tempo", "recharge"] },
+        { key: "description.additional", values: [] },
         { key: "stance.tight", values: [], when: function (context) { return read(context.detail.values, ["tight"]) === true; } },
         { key: "stance.loose", values: [], when: function (context) { return read(context.detail.values, ["tight"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

@@ -131,12 +131,12 @@ namespace PokemonSkills {
     ]);
 
     describe("shelltrap", [
-        { key: "description.0", values: ["blast", "window"] },
-        { key: "description.1", values: ["blastRadius", "shock"] },
-        { key: "description.2", values: ["burnChance", "burnTicks"] },
+        { key: "description.0", values: ["blast","window"] },
+        { key: "description.1", values: ["blastRadius","maxTargets","shock"] },
+        { key: "description.2", values: ["burnChance","burnTicks"] },
         { key: "hairtrigger.on", values: [], when: function (context) { return read(context.detail.values, ["hairtrigger"]) === true; } },
         { key: "hairtrigger.off", values: [], when: function (context) { return read(context.detail.values, ["hairtrigger"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["blastRadius","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.blastRadius", "tier.0.window"] }
     ]);
 }

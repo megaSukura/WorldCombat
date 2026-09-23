@@ -157,10 +157,11 @@ namespace PokemonSkills {
     defineDamage(grasspledgeId, "pillar", { defenceCoefficient: 0.004, rationale: "草柱对防御的穿透略强于默认，让特攻与亲密的差别更可见。" });
 
     describe(grasspledgeId, [
-        { key: "description.0", values: ["pillar"] },
-        { key: "description.1", values: ["pillarRadius", "pillarHeight", "rootTicks"] },
-        { key: "description.2", values: ["markRadius", "markTicks", "slowTicks"] },
-        { key: "description.3", values: ["comboDetect", "comboPower"] },
+        { key: "description.0", values: ["pillar","maxTargets"] },
+        { key: "description.1", values: ["pillarRadius","pillarHeight","rootTicks","slowTicks"] },
+        { key: "description.2", values: ["markRadius","markTicks"] },
+        { key: "description.3", values: ["comboDetect","comboPower","comboScale"] },
+        { key: "description.combo", values: [] },
         { key: "description.4", values: ["reach", "tempo"] },
         { key: "entangle.on", values: [], when: function (context) { return read(context.detail.values, ["entangle"]) === true; } },
         { key: "entangle.off", values: [], when: function (context) { return read(context.detail.values, ["entangle"]) !== true; } },

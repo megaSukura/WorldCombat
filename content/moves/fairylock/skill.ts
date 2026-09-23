@@ -102,6 +102,7 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: fairyId,
         cooldownParameter: "recharge",
         name: "妖精之锁",

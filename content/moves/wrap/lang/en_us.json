@@ -4,7 +4,7 @@
   "worldcombat.skill.wrap.use.1": "Hold a target in place for an ally",
   "worldcombat.skill.wrap.use.2": "Grind down a stubborn melee target with the coil alone",
   "worldcombat.skill.wrap.description.0": "Whips vines out to wrap one target within %2$s blocks with a %3$s block grip radius, dealing about %1$s contact damage as it catches.",
-  "worldcombat.skill.wrap.description.1": "The coil lasts %1$s and squeezes every %2$s; while it holds, the target is pinned and its Attack drops by %3$s stages.",
+  "worldcombat.skill.wrap.description.1": "The coil clings to the target on its own for %1$s and squeezes every %2$s, so you can walk away once it lands; while it holds, the target is pinned in place and cannot move, and its Attack drops by %3$s stages. That Attack drop is not lifted with the coil and lasts until the target leaves combat.",
   "worldcombat.skill.wrap.description.2": "Pushing the target past %1$s blocks per tick tears it open.",
   "worldcombat.skill.wrap.cocoon.on": "Cocoon form: the coil lasts longer, squeezes harder, crushes another Attack stage and is harder to tear, but squeezes less often with a longer cooldown.",
   "worldcombat.skill.wrap.cocoon.off": "Quick form: squeezes often with a short cooldown to press one round fast, but lasts less long and crushes less.",

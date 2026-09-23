@@ -138,9 +138,9 @@ namespace PokemonSkills {
     defineDamage("megahorn", "gore", {}, { contact: true });
 
     describe("megahorn", [
-        { key: "description.0", values: ["gore", "reach", "horn"] },
-        { key: "rip.on", values: ["rip", "fling", "flingUp"], when: function (context) { return read(context.detail.values, ["rip"]) === true; } },
-        { key: "rip.off", values: ["pinTicks", "pinLevel"], when: function (context) { return read(context.detail.values, ["rip"]) !== true; } },
+        { key: "description.0", values: ["gore","reach","horn","rush"] },
+        { key: "rip.on", values: ["rip","fling","flingUp"], when: function (context) { return read(context.detail.values, ["rip"]) === true; } },
+        { key: "rip.off", values: ["pinTicks","pinLevel"], when: function (context) { return read(context.detail.values, ["rip"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gore"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.gore", "tier.1.fling"] }

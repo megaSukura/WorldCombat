@@ -1,26 +1,4 @@
-/**
- * 妒火 / burningjealousy —— 参数与数值来源。
- *
- * 原生事实：Fire、特殊、威力 70、命中 100、PP 5、打所有相邻对手；对「本回合内能力有所提高」的目标
- * 追加灼伤（Cobblemon 1.8）。
- *
- * 世界化：即时战斗里没有回合，本招翻成一团从施法者身前窜出的妒绿火舌，扫过身前的扇形；普通目标只是被
- * 烧痛，而此刻正带着正面能力等级的目标会被妒火死死咬住、当场点燃——谁刚变强，火就专挑谁，而且烧得越久、
- * 咬得越狠（伤害也随它涨高的级数加重）。空间形状用锥形扇面表达「打所有相邻对手」。
- *
- * 数值来源（每个参数读不同的精灵数据，公式即悬浮说明里展开的那一棵）：
- *   flare        = 基础 70 + (特攻 − 65) × 0.22（夹 −14..32）；妒噬式 ×1.2、燎原式 ×0.85；等级台阶抬档。
- *   reach        = 基础 4.5 + (碰撞箱高度 − 1.4) × 0.5 + (特攻 − 60) × 0.02 格；燎原式 ×1.3、妒噬式 ×0.8。
- *   angle        = 基础 100 + (等级 − 30) × 0.8 度；燎原式 ×1.25、妒噬式 ×0.7；夹 55..170 度。
- *   envyStep     = 基础 0.04 + (特攻 − 60) × 0.0004 倍/级：目标每有一级正面等级，这一击加多少；夹 0.02..0.10。
- *   envyCap      = 基础 0.25 + 等级 × 0.002：单个目标最多加多少；夹 0.2..0.5。
- *   burnBase     = 基础 120 + 等级 × 1.3 刻；妒噬式 ×1.3、燎原式 ×0.8。
- *   burnPerStage = 基础 15 + 特攻 × 0.06 刻/级：每有一级正面等级，灼伤延长多久；夹 10..50。
- *   motes        = 基础 20 + 特攻 × 0.3：扇面里的火点数，也决定画面密度；夹 16..90。
- *   tempo／settle／recharge：起手随速度缩短，妒噬式收得更慢、更久。
- * 灼伤走共享默认效果 CombatStatus.inflict(...,"burn")（宝可梦同步为原生灼伤）；伤害段名 flare。
- * 锥形扇面的顶点由 burningJealousyFan 生成，判定（WorldGeometry.sector）与表现（path 多边形）共用同一组方向与尺寸。
- */
+/** burningjealousy：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const burningjealousyId = "burningjealousy";
     export const burningjealousyScene = "world_combat:move_burningjealousy";
@@ -39,7 +17,7 @@ namespace PokemonSkills {
             const value = stages[names[index]] || 0;
             if (value > 0) total += value;
         }
-        return total;
+        return total + MobEffects.levels(world, actor, "beneficial");
     }
 
     /** 扇面顶点：以 origin 为心、朝 direction 张开 angleDegrees、半径 reach；判定与表现共用。 */
@@ -148,7 +126,7 @@ namespace PokemonSkills {
     ]);
 
     describe(burningjealousyId, [
-        { key: "description.0", values: ["flare", "reach", "angle"] },
+        { key: "description.0", values: ["flare", "reach", "angle", "maxTargets"] },
         { key: "description.1", values: ["envyStep", "envyCap"] },
         { key: "description.2", values: ["burnBase", "burnPerStage"] },
         { key: "fixate.on", values: [], when: function (context) { return read(context.detail.values, ["fixate"]) === true; } },

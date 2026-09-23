@@ -15,10 +15,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: extremespeedId,
         cooldownParameter: "recharge",
         name: "Extreme Speed",
-        description: "The user charges the target at blinding speed with the heaviest first-strike charge. This move always goes first.",
+        description: "一道长到看不见中间过程的直线射出去：起手最低瞬发、速度与射程全族最高，撞上活体是这一族最重的一记，并把它狠狠顶开。默认贯穿式还会从对方身上穿过去、再冲一段停在它身后，用来换位。它同时是一招要挑时机的重击——冷却全族最长。",
         uses: ["中远距离一记重撞收尾", "从对手身上穿过去换到它身后", "追上逃跑的对手"],
         kind: "enemy",
         range: 5.2,

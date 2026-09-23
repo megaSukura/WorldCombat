@@ -122,6 +122,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["charm", "radius"] },
         { key: "description.1", values: ["reach", "step", "push"] },
         { key: "description.2", values: ["soften"] },
+        { key: "description.additional", values: [] },
         { key: "polite.on", values: [], when: function (context) { return read(context.detail.values, ["polite"]) === true; } },
         { key: "polite.off", values: [], when: function (context) { return read(context.detail.values, ["polite"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

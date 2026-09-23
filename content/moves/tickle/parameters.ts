@@ -64,8 +64,8 @@ namespace PokemonSkills {
             "冷却", "两次挠痒之间的等待；等级越高越熟练。")
     });
     describe(tickleId, [
-        { key: "description.0", values: ["atkDrop", "defDrop", "giggleTicks"] },
-        { key: "description.1", values: ["reach", "range"] },
+        { key: "description.0", values: ["atkDrop","defDrop","giggleTicks"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

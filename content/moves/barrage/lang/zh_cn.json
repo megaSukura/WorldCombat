@@ -3,7 +3,7 @@
   "worldcombat.skill.barrage.use.0": "远处一发接一发抛圆球",
   "worldcombat.skill.barrage.use.1": "高抛式越过掩体落到目标头上",
   "worldcombat.skill.barrage.use.2": "平投式直而快，圆的球撞墙会弹一下",
-  "worldcombat.skill.barrage.description.0": "每一个球造成 %1$s 点物理伤害，这一串最多投 %2$s 个（原生 2～5，随精灵数据变化）。",
+  "worldcombat.skill.barrage.description.0": "每一个球约造成 %1$s 点物理伤害，这一串最多投 %2$s 个（原生 2～5，随精灵数据变化）。",
   "worldcombat.skill.barrage.description.1": "两球间隔 %1$s，能投到 %2$s 格内；球以 %3$s 格/刻飞出，散布 ±%4$s（散射就会漏）。",
   "worldcombat.skill.barrage.description.2": "球按 %1$s 格/刻² 下坠，判定 %2$s 格。",
   "worldcombat.skill.barrage.lob.on": "高抛式：球沿弧线越过掩体落到目标头上，掩体挡不住；代价是球飞得慢（目标容易走位躲开）、散布 ×1.5、单球威力 ×0.9、冷却 +2 刻。",
@@ -31,5 +31,6 @@
   "worldcombat.skill.barrage.preference.ai.cover": "优先无遮挡的目标",
   "worldcombat.skill.barrage.preference.ai.cover.help": "开启：与目标之间没有掩体遮挡时排得更前——平投的球会被墙挡住；躲在墙后的目标排后。关闭则所有目标同价。",
   "world_combat.move.barrage.text.tally": "投中 %1$s / %2$s 球",
-  "world_combat.move.barrage.text.out": "目标离开了，停止投球（共投中 %1$s 球）"
+  "world_combat.move.barrage.text.out": "目标离开了，停止投球（共投中 %1$s 球）",
+  "worldcombat.skill.barrage.description.out": "球没碰到敌人就只会落地（平投先弹一下），不造成伤害；目标倒下或不再在场后，这一串剩下的球也不再投出。"
 }

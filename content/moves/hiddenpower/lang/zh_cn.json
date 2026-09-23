@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.hiddenpower.summary": "把体内隐藏的属性收拢成一颗光球射向目标；属性由使用者的个体值决定。",
   "worldcombat.skill.hiddenpower.use.0": "远程点射",
-  "worldcombat.skill.hiddenpower.description.0": "把体内与生俱来的属性收拢成一颗光球射向目标：造成 %1$s 点特殊伤害；凝聚 %2$s 秒、光球以 %3$s 格/刻飞行、射程 %4$s 格。",
+  "worldcombat.skill.hiddenpower.description.0": "把体内与生俱来的属性收拢成一颗光球射向目标：造成约 %1$s 点特殊伤害；凝聚 %2$s 秒后射出，光球以 %3$s 格/刻直线飞行，射程 %4$s 格。",
   "worldcombat.skill.hiddenpower.description.1": "PP 消耗 %1$s；冷却 %2$s 秒。",
   "worldcombat.skill.hiddenpower.timing": "时序",
   "worldcombat.skill.hiddenpower.value.power": "觉醒威力",
@@ -10,5 +10,7 @@
   "worldcombat.skill.hiddenpower.value.radius": "光球半径",
   "worldcombat.skill.hiddenpower.value.reach": "射程",
   "worldcombat.skill.hiddenpower.value.focus": "凝聚环数",
-  "world_combat.move.hiddenpower.text.type": "觉醒力量 · %1$s"
+  "world_combat.move.hiddenpower.text.type": "觉醒力量 · %1$s",
+  "worldcombat.skill.hiddenpower.description.type": "光球的属性由使用者六项个体值的奇偶决定，也就是这只精灵自己的觉醒属性；伤害按该属性结算，因此享受本系加成、并受目标属性相性影响，同一招在不同个体手里属性不同。",
+  "worldcombat.skill.hiddenpower.description.ballistic": "光球是直线飞行的实体弹体，横向判定半径约 %1$s 格；撞到实体即爆开，只对非友方目标结算一次伤害，不会贯穿。"
 }

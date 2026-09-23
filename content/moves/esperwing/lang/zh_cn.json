@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.esperwing.summary": "攻击前方敌人并提高自身速度，容易击中要害。",
-  "worldcombat.skill.esperwing.description.0": "两翼对正面扇面里的目标造成 %1$s 的特殊伤害，且更容易击中要害。",
+  "worldcombat.skill.esperwing.summary": "气场上翼，一对气翼扫过前方扇面，对其中每个敌人各造成一记特殊伤害，且更容易击中要害；同一瞬提高自己的速度，并在身上留下气翼余韵。",
+  "worldcombat.skill.esperwing.description.0": "两翼扫过前方扇面，对其中每个敌人各造成约 %1$s 点特殊伤害，且更容易击中要害。",
   "worldcombat.skill.esperwing.description.1": "翼展 %1$s 格、向两侧各张 %2$s 度。",
-  "worldcombat.skill.esperwing.description.2": "振翅的一瞬给自己写入 %1$s 级速度，气翼余韵持续 %2$s。",
+  "worldcombat.skill.esperwing.description.2": "振翅的一瞬提高自己 %1$s 级速度（能力等级），并在身上留下持续 %2$s 的气翼余韵；余韵未散时伙伴不会重复振翅。",
   "worldcombat.skill.esperwing.stance.flap": "当前为振翅式：单发更重，但翼弧收窄、余韵更短。",
   "worldcombat.skill.esperwing.stance.glide": "当前为滑翔式：翼弧更宽、余韵更久，但单发更轻。",
   "worldcombat.skill.esperwing.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

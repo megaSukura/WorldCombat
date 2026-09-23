@@ -30,7 +30,7 @@ namespace PokemonSkills {
         id: tailslapId,
         cooldownParameter: "recharge",
         name: "Tail Slap",
-        description: "The user attacks by striking the target with its hard tail. This move hits two to five times in a row.",
+        description: "原地旋身，坚硬的尾巴一圈圈扫过身体周围：圈内每个敌人每圈各吃一下，并被沿背离方向推开。旋扫式是整圈 360°、一次照顾四周；砸尾式收成前向一段、单圈更重并把人挑起。",
         uses: ["原地旋转，尾巴一圈圈扫过四周所有人", "被围住时一次照顾一整片", "砸尾式只扫前向一面，把伤害集中并挑起来"],
         kind: "enemy",
         range: 3.0,

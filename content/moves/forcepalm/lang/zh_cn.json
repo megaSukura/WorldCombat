@@ -4,8 +4,8 @@
   "worldcombat.skill.forcepalm.use.1": "用震动打麻近身的对手",
   "worldcombat.skill.forcepalm.use.2": "透劲式连打身后一条线上的第二个目标",
   "worldcombat.skill.forcepalm.description.0": "掌心命中造成 %1$s 的接触物理伤害，判定半径 %2$s 格。",
-  "worldcombat.skill.forcepalm.description.1": "贴身距离约 %1$s 格，被按中的目标有 %2$s 的概率陷入麻痹，并被推开 %3$s 格。",
-  "worldcombat.skill.forcepalm.through.on": "透劲式：波从目标背后再走 %2$s 格，直线上的后续目标各吃 %1$s 的物理伤害。",
+  "worldcombat.skill.forcepalm.description.1": "贴身距离约 %1$s 格，够不着时先上步最多 %4$s 格贴近；被按中的目标有 %2$s 的概率陷入麻痹，并被推开 %3$s 格。",
+  "worldcombat.skill.forcepalm.through.on": "透劲式：波从目标背后再走 %2$s 格，直线上的后续目标各吃 %1$s 的物理伤害（最多再命中 %3$s 个）。",
   "worldcombat.skill.forcepalm.through.off": "崩劲式：力道收在主目标身上，单点更重、更容易打麻；开启透劲可以打到身后的人，但主目标那一下会变轻。",
   "worldcombat.skill.forcepalm.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.forcepalm.growth.0": "%1$s 级起掌击威力升至 %2$s。",
@@ -31,5 +31,7 @@
   "world_combat.move.forcepalm.text.hit": "发劲按中造成 %1$s 点",
   "world_combat.move.forcepalm.text.numb": "被震得发麻",
   "world_combat.move.forcepalm.text.through": "透劲再打到 %1$s 个",
-  "world_combat.move.forcepalm.text.miss": "掌按空了"
+  "world_combat.move.forcepalm.text.miss": "掌按空了",
+  "worldcombat.skill.forcepalm.description.paralysis": "麻痹持续约 40 秒：期间移动速度减半，且每次发动招式或普通攻击有 25% 概率失败；电属性目标不会陷入麻痹。",
+  "worldcombat.skill.forcepalm.value.throughTargets": "透劲目标上限"
 }

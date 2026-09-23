@@ -33,6 +33,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: playroughId,
         cooldownParameter: "recharge",
         name: "Play Rough",

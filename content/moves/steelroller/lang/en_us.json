@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.steelroller.summary": "Crush the terrain under you and roll out as a steel wheel; with no active terrain underfoot the whole move fails and its PP is still spent.",
-  "worldcombat.skill.steelroller.use.0": "Crush the terrain the foe depends on and roll through",
+  "worldcombat.skill.steelroller.use.0": "Crush the terrain underfoot and roll through",
   "worldcombat.skill.steelroller.use.1": "Trade a patch of terrain for one heavy hit",
   "worldcombat.skill.steelroller.use.2": "Carve a drivable steel furrow across the battlefield",
-  "worldcombat.skill.steelroller.description.0": "Roll for %1$s power up to %2$s blocks; it fails entirely unless you stand on an active terrain.",
-  "worldcombat.skill.steelroller.description.1": "%1$s blocks/tick, hit radius %2$s blocks, knockback %3$s blocks; the ground is pressed into %4$s furrow blocks that linger %5$s.",
+  "worldcombat.skill.steelroller.description.0": "The wheel deals about %1$s physical damage and rolls up to %2$s blocks. It can only be used while standing on an active terrain, which it crushes entirely; with no terrain underfoot the whole move fails and its PP is still spent.",
+  "worldcombat.skill.steelroller.description.1": "It rolls %1$s blocks per tick with a %2$s-block hit radius; the first enemy in its path is struck and knocked back %3$s blocks, ending the roll. The ground behind is pressed into %4$s furrow blocks that linger %5$s.",
   "worldcombat.skill.steelroller.grind.on": "Grind on: power +18% and a longer, longer-lived furrow, but shorter roll (distance x0.8), speed x0.9, recovery +5 ticks and cooldown +8 ticks.",
   "worldcombat.skill.steelroller.grind.off": "Grind off: a cruise, rolling farther and faster and recovering cleanly, at slightly lower power.",
   "worldcombat.skill.steelroller.timing": "Cast on an enemy within %1$s blocks; %2$s after starting it spends %4$s PP; recovery %3$s, cooldown %5$s from commit.",

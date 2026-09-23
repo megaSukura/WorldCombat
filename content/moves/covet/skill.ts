@@ -99,10 +99,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "covet",
         cooldownParameter: "recharge",
         name: "渴望",
-        description: "一边可爱地撒娇一边贴上去，命中时让对手攻势软一拍；自己空手时，还能把它的持有物卷进自己手里。",
+        description: "一边可爱地撒娇一边贴上去，命中时让对手攻势软一拍；自己空手时，还能把它的持有物卷进自己手里。亲密度越高，这份撒娇越自然。",
         uses: ["贴近并夺取对手的持有物", "用持续的撒娇削弱一个对手的攻势", "空手时的普通近身打击"],
         kind: "enemy",
         range: 3,

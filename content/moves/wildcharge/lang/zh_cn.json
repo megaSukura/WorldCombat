@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.wildcharge.summary": "电流裹身的一次放电冲锋：先把电流收拢到全身，笔直撞上去，把电流灌进对方身体（有概率麻痹）；回路也会伤到自己，全身湿透时漏电更狠。猛撞的带电版。",
-  "worldcombat.skill.wildcharge.description.0": "这一撞造成 %1$s 的带电接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.wildcharge.description.1": "命中后有 %1$s%% 的机会让对方麻痹；自己按实际伤害的 %2$s%% 反伤，把目标顶开 %3$s 格。",
-  "worldcombat.skill.wildcharge.overload.on": "过载：电流全开，威力、麻痹概率、击退与火花都升，但回路反噬更重、起手更长。",
+  "worldcombat.skill.wildcharge.description.0": "这一撞对命中的目标造成约 %1$s 点电属性接触伤害；最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
+  "worldcombat.skill.wildcharge.description.1": "命中后对尚未麻痹的目标有 %1$s 的机会使其麻痹（约 40 秒）：麻痹期间移动速度减半，且每次行动有 25%% 概率失败。无论是否麻痹，自己都按实际伤害的 %2$s 倍反伤，并把目标沿冲撞方向顶开 %3$s 格。",
+  "worldcombat.skill.wildcharge.overload.on": "过载：电流全开，威力、麻痹概率、击退、冲程与火花都升，但回路反噬更重、起手与冷却更长。",
   "worldcombat.skill.wildcharge.overload.off": "控流：压低威力与反噬、起手更短，麻痹概率略降，适合速攻与缠斗。",
-  "worldcombat.skill.wildcharge.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.wildcharge.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP、冷却 %5$s 秒。",
   "worldcombat.skill.wildcharge.growth.0": "%1$s 级起电击威力抬到 %2$s。",
   "worldcombat.skill.wildcharge.growth.1": "%1$s 级起电击威力抬到 %2$s、麻痹概率升到 %3$s。",
   "worldcombat.skill.wildcharge.use.0": "用带电冲锋把贴脸的对手撞开",
@@ -24,7 +24,7 @@
   "worldcombat.skill.wildcharge.value.targetWet": "对方湿透",
   "worldcombat.skill.wildcharge.value.soaked": "自身湿透",
   "worldcombat.skill.wildcharge.preference.overload": "过载",
-  "worldcombat.skill.wildcharge.preference.overload.help": "开启：电流全开，威力、麻痹概率、击退与火花都升，但回路反噬更重、起手更长；关闭：控流式，压低威力与反噬、起手更短。",
+  "worldcombat.skill.wildcharge.preference.overload.help": "开启：电流全开，威力、麻痹概率、击退、冲程与火花都升，但回路反噬更重、起手与冷却更长；关闭：控流式，压低威力与反噬、起手更短。",
   "worldcombat.skill.wildcharge.preference.ai.maxChase": "冲锋距离",
   "worldcombat.skill.wildcharge.preference.ai.maxChase.help": "对手离自己这么远以内才起冲；调小只贴脸冲，调大愿意从更远处助跑。",
   "worldcombat.skill.wildcharge.preference.ai.spareParalyzed": "不重复麻痹",
@@ -32,5 +32,6 @@
   "world_combat.move.wildcharge.text.hit": "疯狂伏特",
   "world_combat.move.wildcharge.text.miss": "电流泄地",
   "world_combat.move.wildcharge.text.recoil": "回路反噬",
-  "world_combat.move.wildcharge.text.shock": "灌入麻痹"
+  "world_combat.move.wildcharge.text.shock": "灌入麻痹",
+  "worldcombat.skill.wildcharge.description.2": "只结算最先撞上的一个目标。冲到底、撞墙或被挡住而没撞到人时，只就地放电、不自伤。目标湿透时这招的威力与麻痹概率更高；施放者自己湿透时威力打折、反噬更重。"
 }

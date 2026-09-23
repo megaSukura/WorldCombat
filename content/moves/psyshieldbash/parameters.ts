@@ -87,9 +87,9 @@ namespace PokemonSkills {
     defineDamage("psyshieldbash", "bash", { defenceCoefficient: 0.005 }, { contact: true });
 
     describe("psyshieldbash", [
-        { key: "description.0", values: ["bash", "shellRadius"] },
-        { key: "description.1", values: ["charge", "dashSpeed", "wobble"] },
-        { key: "description.2", values: ["boostStages", "shellTicks"] },
+        { key: "description.0", values: ["bash","push","shellRadius"] },
+        { key: "description.1", values: ["charge","dashSpeed","wobble"] },
+        { key: "description.2", values: ["boostStages","shellTicks"] },
         { key: "harden.on", values: [], when: function (context) { return read(context.detail.values, ["harden"]) === true; } },
         { key: "harden.off", values: [], when: function (context) { return read(context.detail.values, ["harden"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

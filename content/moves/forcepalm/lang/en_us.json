@@ -4,8 +4,8 @@
   "worldcombat.skill.forcepalm.use.1": "Leave a close foe paralysed with the shock",
   "worldcombat.skill.forcepalm.use.2": "Through form: catch a second foe on the line behind",
   "worldcombat.skill.forcepalm.description.0": "The palm deals %1$s contact physical damage with a %2$s block hit radius.",
-  "worldcombat.skill.forcepalm.description.1": "It presses in at about %1$s blocks; the struck target has a %2$s chance to be paralysed and is shoved %3$s blocks.",
-  "worldcombat.skill.forcepalm.through.on": "Through form: the wave travels %2$s blocks out the far side, dealing %1$s physical damage to each further target on the line.",
+  "worldcombat.skill.forcepalm.description.1": "It presses in within about %1$s blocks, stepping up to %4$s blocks to close the gap; the struck target has a %2$s chance to be paralysed and is shoved %3$s blocks.",
+  "worldcombat.skill.forcepalm.through.on": "Through form: the wave travels %2$s blocks out the far side, dealing %1$s physical damage to each further target on the line (up to %3$s more).",
   "worldcombat.skill.forcepalm.through.off": "Focus form: the force stays on the target, heavier and more likely to numb; turning through on reaches the foe behind at the cost of a lighter main hit.",
   "worldcombat.skill.forcepalm.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",
   "worldcombat.skill.forcepalm.growth.0": "From level %1$s the palm power rises to %2$s.",
@@ -31,5 +31,7 @@
   "world_combat.move.forcepalm.text.hit": "Force Palm pressed for %1$s",
   "world_combat.move.forcepalm.text.numb": "Left numb by the shock",
   "world_combat.move.forcepalm.text.through": "The through wave caught %1$s more",
-  "world_combat.move.forcepalm.text.miss": "Force Palm pressed empty air"
+  "world_combat.move.forcepalm.text.miss": "Force Palm pressed empty air",
+  "worldcombat.skill.forcepalm.description.paralysis": "Paralysis lasts about 40 seconds: movement speed is halved, and every move or ordinary attack has a 25% chance to fail; Electric-type targets cannot be paralysed.",
+  "worldcombat.skill.forcepalm.value.throughTargets": "Through targets"
 }

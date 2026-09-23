@@ -97,7 +97,7 @@ namespace PokemonSkills {
 
     describe(xscissorId, [
         { key: "description.0", values: ["blade"] },
-        { key: "description.1", values: ["span"] },
+        { key: "description.1", values: ["span","gap"] },
         { key: "description.2", values: ["sever"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blade"] },

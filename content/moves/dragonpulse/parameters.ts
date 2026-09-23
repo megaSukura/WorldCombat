@@ -114,9 +114,9 @@ namespace PokemonSkills {
     defineDamage("dragonpulse", "burst", { defenceCoefficient: 0.005 }, { pulse: true });
 
     describe("dragonpulse", [
-        { key: "description.0", values: ["pulse", "thickness"] },
+        { key: "description.0", values: ["pulse","thickness"] },
         { key: "description.1", values: ["reach", "flight"] },
-        { key: "chain.on", values: ["burst", "burstRadius"], when: function (context) { return read(context.detail.values, ["chain"]) === true; } },
+        { key: "chain.on", values: ["pulse","burstRadius","burst","maximumTargets"], when: function (context) { return read(context.detail.values, ["chain"]) === true; } },
         { key: "chain.off", values: ["pierce"], when: function (context) { return read(context.detail.values, ["chain"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pulse", "tier.0.reach"] },

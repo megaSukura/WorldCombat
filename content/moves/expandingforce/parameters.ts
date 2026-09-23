@@ -45,8 +45,8 @@ namespace PokemonSkills {
     defineDamage("expandingforce", "power", { defenceCoefficient: 0.0048, rationale: "精神冲击对防御穿透略强，让特攻差更明显。" }, {});
     describe("expandingforce", [
         { key: "description.0", values: ["power"] },
-        { key: "description.1", values: ["fieldRadius", "fieldTicks"] },
+        { key: "description.1", values: ["fieldRadius","fieldTicks"] },
         { key: "description.2", values: ["burst"] },
-        { key: "timing", values: ["prepare", "recover", "cooldown"] }
+        { key: "timing", values: ["range","prepare","recover","cooldown"] }
     ]);
 }

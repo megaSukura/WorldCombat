@@ -120,11 +120,11 @@ namespace PokemonSkills {
     ]);
 
     describe("spark", [
-        { key: "description.0", values: ["jolt", "reach", "lunge", "radius"] },
-        { key: "description.1", values: ["numbChance", "numbTicks", "push"] },
+        { key: "description.0", values: ["jolt","reach","lunge","radius"] },
+        { key: "description.1", values: ["numbChance","numbTicks","push"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.jolt"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.jolt", "tier.1.numbChance"] }
     ]);

@@ -3,7 +3,7 @@
   "worldcombat.skill.metalsound.use.0": "隔着掩体磨掉一个特防位",
   "worldcombat.skill.metalsound.use.1": "把特防大降挂满一整个交战窗口",
   "worldcombat.skill.metalsound.use.2": "在墙后安全起手，再把声音送到对面",
-  "worldcombat.skill.metalsound.description.0": "目标特防下降 %1$s 级，回响持续约 %2$s。",
+  "worldcombat.skill.metalsound.description.0": "单个目标的特防立即下降 %1$s 级，并带上约 %2$s 的回响；回响期间身上持续荡开金属声纹，同伴也不会对它重复刮擦。特防的下降按常规能力等级保留。",
   "worldcombat.skill.metalsound.description.1": "声音能送到 %1$s 格外的耳朵里；掩体挡不住它。",
   "worldcombat.skill.metalsound.description.2": "站定磨音 %1$s，冷却 %2$s。",
   "worldcombat.skill.metalsound.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

@@ -28,7 +28,7 @@ namespace PokemonSkills {
     define({
         id: "dragonbreath",
         name: "Dragon Breath",
-        description: "The user exhales a mighty gust that inflicts damage. This may also leave the target with paralysis.",
+        description: "深吸一口气，朝身前喷出一道扇形龙息：锥形由近及远铺满，扫中的敌人每个只吃一次伤害、越远力道越弱，并有机会被麻住——麻痹会拖慢移动，还让出招有概率失败。",
         uses: ["喷出一道扇形吐息扫过身前一片", "一次扫到排成一列的多个敌人", "让被扫到的对手陷入麻痹"],
         kind: "enemy",
         range: 5,

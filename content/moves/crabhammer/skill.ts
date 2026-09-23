@@ -16,7 +16,7 @@ namespace PokemonSkills {
         id: crabhammerId,
         cooldownParameter: "recharge",
         name: "Crabhammer",
-        description: "The target is hammered with a large pincer.",
+        description: "把大钳子高举过顶、聚起水光，然后垂直砸下：正面目标吃最重的一记单发，落点同时荡开一圈地面水浪，把附近其他敌人一并掀开。裂甲式下砸中还会敲裂目标的物防，代价是更慢更轻；重锤式只追求砸得更狠。",
         uses: ["用一记高举过顶的重砸打出高额单发", "砸地激起一圈水浪把旁人掀开", "裂甲档位下敲裂目标的物防"],
         kind: "enemy",
         range: 2.6,

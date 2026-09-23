@@ -150,9 +150,9 @@ namespace PokemonSkills {
     ]);
 
     describe("mysticalfire", [
-        { key: "description.0", values: ["core", "siphonStages"] },
+        { key: "description.0", values: ["core","siphonStages"] },
         { key: "description.1", values: ["wispRange", "wispSpeed", "wispTurn"] },
-        { key: "description.2", values: ["coilTicks", "coil", "pulseTicks", "finalStages"] },
+        { key: "description.2", values: ["coilTicks","coil","pulseTicks","finalStages","leash"] },
         { key: "description.3", values: ["burnChance"] },
         { key: "linger.on", values: ["coilTicks", "coil", "burnChance"],
             when: function (context) { return read(context.detail.values, ["linger"]) === true; } },

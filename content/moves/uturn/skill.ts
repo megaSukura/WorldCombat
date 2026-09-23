@@ -93,10 +93,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "uturn",
         cooldownParameter: "recharge",
         name: "U-turn",
-        description: "沿一条 U 形弧线撞进去再折回来；有后备时直接在落点与待命的一只换手，交棒式会退到等候的伙伴身边。",
+        description: "沿一条 U 形弧线切进去撞一下，再顺着弧线滑回来；有后备时出手后直接与待命的一只换手，交棒式退到等候的伙伴身边，远遁式沿弧拉得更远。出手就是脱身，不站定换血。",
         uses: ["贴脸打一下再脱身，把身位让出来", "被打崩前用一记折返拉开距离", "有人接应时把敌人引向自己的伙伴"],
         kind: "enemy",
         range: 2.8,

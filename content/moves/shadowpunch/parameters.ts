@@ -87,10 +87,10 @@ namespace PokemonSkills {
 
     describe("shadowpunch", [
         { key: "description.0", values: ["shadow"] },
-        { key: "description.1", values: ["reach", "seep"] },
+        { key: "description.1", values: ["reach","seep"] },
         { key: "hold.on", values: ["drag"], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shadow", "tier.0.reach"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.shadow", "tier.1.drag"] }
     ]);

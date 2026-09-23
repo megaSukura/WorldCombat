@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.embargo.summary": "Send a seal that follows the target: until it releases, the target cannot use its held item and cannot receive a new one. The item stays in hand, only sealed away.",
+  "worldcombat.skill.embargo.summary": "Temporarily seals item use. Pokémon lose held-item effects; ordinary bodies pause eating, drinking, guarding, charging, and held-item interactions. Items remain in place.",
   "worldcombat.skill.embargo.use.0": "Seal an opponent that relies on its held item",
   "worldcombat.skill.embargo.use.1": "Hold a target's hands before an item exchange",
   "worldcombat.skill.embargo.use.2": "Stop a target from receiving an item from an ally",
-  "worldcombat.skill.embargo.description.0": "Send the seal within %2$s blocks; the target's held item is held down for %1$s s, then releases on its own.",
-  "worldcombat.skill.embargo.description.1": "The seal follows the target and the item stays in hand.",
+  "worldcombat.skill.embargo.description.0": "Seals a target within %2$s blocks for %1$s seconds, ending naturally or when cleared.",
+  "worldcombat.skill.embargo.description.1": "The seal prevents eating, drinking, guarding, charging, held-item interactions, and receiving Bestow gifts. Pokémon held-item effects are also suppressed.",
   "worldcombat.skill.embargo.deep.on": "Deep lock on: seal duration x1.35 and cooldown +14 ticks, holding one target down for longer.",
   "worldcombat.skill.embargo.deep.off": "Deep lock off: seal duration x0.75 and cooldown -8 ticks, shorter but more frequent.",
   "worldcombat.skill.embargo.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

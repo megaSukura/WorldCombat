@@ -3,9 +3,9 @@
   "worldcombat.skill.dragonpulse.use.0": "沿直线穿过排成一列的敌人",
   "worldcombat.skill.dragonpulse.use.1": "中远距离的持续压制",
   "worldcombat.skill.dragonpulse.use.2": "连锁式收束罩住挤在一起的敌人",
-  "worldcombat.skill.dragonpulse.description.0": "波面扫中每个目标造成 %1$s 的特殊伤害，波面厚度 %2$s 格。",
+  "worldcombat.skill.dragonpulse.description.0": "波面沿途扫过敌人，每个被扫中的目标结算一次约 %1$s 点特殊伤害；波面厚度 %2$s 格。",
   "worldcombat.skill.dragonpulse.description.1": "波能推 %1$s 格，每刻前进 %2$s 格。",
-  "worldcombat.skill.dragonpulse.chain.on": "连锁式：波在第一个目标处收束，在 %2$s 格半径内对周围敌人各造成 %1$s 的特殊伤害。",
+  "worldcombat.skill.dragonpulse.chain.on": "连锁式：波碰到第一个敌人即收束，先对它结算一次约 %1$s 点波面伤害，再在 %2$s 格半径内最多额外罩住 %4$s 个敌人、各造成约 %3$s 点特殊伤害（不再前进）。",
   "worldcombat.skill.dragonpulse.chain.off": "贯通式：一条线上最多额外穿过 %1$s 个敌人。",
   "worldcombat.skill.dragonpulse.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.dragonpulse.growth.0": "%1$s 级起波面威力升至 %2$s、射程 %3$s 格。",
@@ -29,5 +29,6 @@
   "worldcombat.skill.dragonpulse.preference.ai.preferLine.help": "开启：目标后方还排着别的敌人、能被同一列波扫到时优先出手（可能为找线偏离站位）；关闭：只当普通远程法术用。",
   "world_combat.move.dragonpulse.text.hit": "龙之波动扫过第 %1$s 个",
   "world_combat.move.dragonpulse.text.chain": "连成龙息爆开 %1$s 个",
-  "world_combat.move.dragonpulse.text.miss": "龙之波动扫空"
+  "world_combat.move.dragonpulse.text.miss": "龙之波动扫空",
+  "worldcombat.skill.dragonpulse.value.maximumTargets": "连锁波及上限"
 }

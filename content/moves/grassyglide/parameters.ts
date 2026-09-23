@@ -130,8 +130,9 @@ namespace PokemonSkills {
 
     describe(grassyglideId, [
         { key: "description.0", values: ["slide", "collisionRadius"] },
-        { key: "description.1", values: ["dash", "pace", "push"] },
-        { key: "description.2", values: ["seedRadius", "seedTicks"] },
+        { key: "description.1", values: ["dash","pace","push"] },
+        { key: "description.2", values: ["seedRadius","seedTicks"] },
+        { key: "description.grass", values: [] },
         { key: "seed.on", values: [], when: function (context) { return read(context.detail.values, ["seed"]) === true; } },
         { key: "seed.off", values: [], when: function (context) { return read(context.detail.values, ["seed"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

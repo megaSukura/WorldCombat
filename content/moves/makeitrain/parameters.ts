@@ -115,7 +115,7 @@ namespace PokemonSkills {
     ]);
 
     describe("makeitrain", [
-        { key: "description.0", values: ["coin", "radius", "waves", "interval"] },
+        { key: "description.0", values: ["coin","radius","waves","interval"] },
         { key: "description.1", values: ["scatter"] },
         { key: "description.2", values: ["selfDrop"] },
         { key: "hoard.on", values: [], when: function (context) { return read(context.detail.values, ["hoard"]) === true; } },

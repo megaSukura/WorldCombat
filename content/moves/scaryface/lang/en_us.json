@@ -3,8 +3,8 @@
   "worldcombat.skill.scaryface.use.0": "Stop the fastest, most troublesome enemy",
   "worldcombat.skill.scaryface.use.1": "Slow a foe down before it closes in",
   "worldcombat.skill.scaryface.use.2": "Buy time for an ally to pull away",
-  "worldcombat.skill.scaryface.description.0": "Lowers Speed by %1$s stages for %2$s. Speed returns when the status expires or is cleared.",
-  "worldcombat.skill.scaryface.description.1": "Startles a target within %1$s and makes it step back %2$s blocks on impact.",
+  "worldcombat.skill.scaryface.description.0": "Lowers Speed by up to %1$s stages for %2$s; Speed returns when the status ends or is cleared.",
+  "worldcombat.skill.scaryface.description.1": "Startles a target within %1$s, pushing it %2$s blocks away from you on impact.",
   "worldcombat.skill.scaryface.description.2": "Turning to face the target takes %1$s, with a %2$s cooldown.",
   "worldcombat.skill.scaryface.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.scaryface.value.drop": "Speed drop",
@@ -18,5 +18,6 @@
   "worldcombat.skill.scaryface.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "When on, the companion may leave its post to glare under a Hold order.",
   "world_combat.move.scaryface.text.gaze": "Terrified (Speed -%1$s)",
-  "effect.world_combat.scary_face_terror": "Terrified"
+  "effect.world_combat.scary_face_terror": "Terrified",
+  "worldcombat.skill.scaryface.reapply": "A target already carrying this slow cannot be targeted by Scary Face again, and a target that cannot lose stat stages is unaffected."
 }

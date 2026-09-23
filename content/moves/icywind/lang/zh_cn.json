@@ -28,5 +28,6 @@
   "worldcombat.skill.icywind.preference.ai.cluster": "成串时优先",
   "worldcombat.skill.icywind.preference.ai.cluster.help": "开启后，目标身边 3 格内还站着别的敌人时优先吐出，一条走廊一次冻住一串；关闭则只按普通攻击排序。",
   "world_combat.move.icywind.text.hit": "冻到 %1$s 人",
-  "world_combat.move.icywind.text.miss": "冷气吹空"
+  "world_combat.move.icywind.text.miss": "冷气吹空",
+  "worldcombat.skill.icywind.description.cap": "锋面最多冻住 %1$s 个目标，同一目标只冻一次；越靠近锋面起点冻得越疼，到射程尽头约只剩七成。"
 }

@@ -143,7 +143,8 @@ namespace PokemonSkills {
     describe(rageId, [
         { key: "description.0", values: ["tantrum"] },
         { key: "description.1", values: ["blink", "speed", "collisionRadius", "push"] },
-        { key: "description.2", values: ["rageTicks", "perHit", "rageCap"] },
+        { key: "description.additional", values: [] },
+        { key: "description.2", values: ["rageTicks","perHit","rageCap"] },
         { key: "fury.on", values: [], when: function (context) { return read(context.detail.values, ["fury"]) === true; } },
         { key: "fury.off", values: [], when: function (context) { return read(context.detail.values, ["fury"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

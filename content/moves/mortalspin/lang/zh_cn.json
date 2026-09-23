@@ -3,9 +3,9 @@
   "worldcombat.skill.mortalspin.use.0": "被绑紧、紧束或寄生种子缠住时脱身",
   "worldcombat.skill.mortalspin.use.1": "被围住时一次给一圈人上毒",
   "worldcombat.skill.mortalspin.use.2": "用毒把一场缠斗慢慢磨赢",
-  "worldcombat.skill.mortalspin.description.0": "原地旋成半径 %2$s 格的毒阵，扫到的每个敌人各挨 %1$s 点毒系接触伤害。",
-  "worldcombat.skill.mortalspin.description.1": "击退目标 %1$s 格，并解除自身的定身、束缚和寄生种子。",
-  "worldcombat.skill.mortalspin.description.2": "被沾到的人中毒 %1$s。",
+  "worldcombat.skill.mortalspin.description.0": "原地旋成半径 %2$s 格的毒阵，范围内的每个敌人各挨一次约 %1$s 点毒系接触伤害，最多命中 %3$s 个。",
+  "worldcombat.skill.mortalspin.description.1": "被扫中的敌人沿远离中心的方向被顶开 %1$s 格；同时解除自身的定身、绑紧、紧束和寄生种子。",
+  "worldcombat.skill.mortalspin.description.2": "被毒晶扫中的敌人命中后中毒 %1$s，期间持续掉血；毒与钢属性的宝可梦免疫。",
   "worldcombat.skill.mortalspin.virulent.on": "剧毒式：命中目标改为剧毒（掉血更快）、毒时长 ×1.4；代价是威力 ×0.85、半径 ×0.9、起手 +2 刻、冷却 +8 刻。",
   "worldcombat.skill.mortalspin.virulent.off": "晶光式：半径 ×1.15、威力 ×1.1，上普通毒，用来一次给一群人上毒。",
   "worldcombat.skill.mortalspin.timing": "可向 %1$s 格内施放；起手 %2$s 后消耗 %4$s PP 发动，收招 %3$s，冷却 %5$s。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.mortalspin.preference.ai.cluster.help": "开启后，目标身边 3.5 格内还挤着别的敌人时优先晶光转转，一次给一圈人上毒；关闭则只按普通攻击节奏出手。",
   "world_combat.move.mortalspin.text.free": "甩脱束缚 ×%1$s",
   "world_combat.move.mortalspin.text.hit": "晶光荡中 ×%1$s",
-  "world_combat.move.mortalspin.text.toxic": "中毒 ×%1$s"
+  "world_combat.move.mortalspin.text.toxic": "中毒 ×%1$s",
+  "worldcombat.skill.mortalspin.value.maxTargets": "命中上限"
 }

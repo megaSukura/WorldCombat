@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.disarmingvoice.summary": "一声魅惑的鸣叫充满以身周为心的整块空间，站在声场里的对手避无可避，因此必定命中；命中后让对手错拍，安抚形态还卸掉对方出手的劲。",
-  "worldcombat.skill.disarmingvoice.description.0": "每个被罩住的目标承受 %1$s 的伤害，声场半径 %2$s 格。",
-  "worldcombat.skill.disarmingvoice.description.1": "被罩住的对手降速 %1$s 级。",
-  "worldcombat.skill.disarmingvoice.description.2": "安抚形态下额外降攻 %1$s 级，魅惑持续 %2$s。",
+  "worldcombat.skill.disarmingvoice.description.0": "以自身为圆心罩住 %2$s 格内的所有敌人，每个目标承受约 %1$s 点伤害且只结算一次；声场不选方向、不要求视线，因此必定命中。",
+  "worldcombat.skill.disarmingvoice.description.1": "被罩住的对手降速 %1$s 级；这是能力等级，脱离战斗后归零。",
+  "worldcombat.skill.disarmingvoice.description.2": "安抚形态下额外降低攻击 %1$s 级（同为能力等级，脱离战斗后归零），并给被罩住的对手留下持续 %2$s 的魅惑标记。",
   "worldcombat.skill.disarmingvoice.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.disarmingvoice.growth.0": "达到 %1$s 级，声波威力提升至 %2$s。",
   "worldcombat.skill.disarmingvoice.growth.1": "达到 %1$s 级，声场半径扩大到 %2$s 格。",

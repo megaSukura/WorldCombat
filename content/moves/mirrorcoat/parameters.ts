@@ -38,8 +38,7 @@ namespace PokemonSkills {
         if (!world || !actor || !world.valid(actor)) return null;
         var record = mirrorcoatLedger[String(actor.ref())];
         if (!record || !(record.amount > 0)) return null;
-        if (String(actor.domain()) !== "cobblemon") return record;
-        var window = p(mirrorcoatId, "window", world);
+        var window = p(mirrorcoatId, "window", String(actor.domain()) === "cobblemon" ? world : undefined);
         return world.tick() - record.tick <= window ? record : null;
     }
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
@@ -150,8 +149,8 @@ namespace PokemonSkills {
     ]);
 
     describe(mirrorcoatId, [
-        { key: "description.0", values: ["refund", "window"] },
-        { key: "description.1", values: ["boltRange", "boltSpeed", "collisionRadius", "capFraction"] },
+        { key: "description.0", values: ["refund","window"] },
+        { key: "description.1", values: ["boltRange","boltSpeed","collisionRadius","capFraction"] },
         { key: "polish.on", values: [], when: function (context) { return read(context.detail.values, ["polish"]) === true; } },
         { key: "polish.off", values: [], when: function (context) { return read(context.detail.values, ["polish"]) !== true; } },
         { key: "timing", values: ["range", "focus", "settle", "pp", "recharge"] },

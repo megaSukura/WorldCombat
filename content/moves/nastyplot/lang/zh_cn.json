@@ -6,7 +6,7 @@
   "worldcombat.skill.nastyplot.description.0": "诡计把特攻提升 %1$s 级。",
   "worldcombat.skill.nastyplot.wary.on": "算计活人：特攻 +2、窗口更久，但只有面前有非友方活体时才走得动这条毒计。",
   "worldcombat.skill.nastyplot.wary.off": "闭门算计：特攻 +1、随时可算（开战前也能先垫），冷却更短；强而受限与弱而随时，两向各有局面。",
-  "worldcombat.skill.nastyplot.description.1": "算计距离 %1$s 格，诡计持续约 %2$s。",
+  "worldcombat.skill.nastyplot.description.1": "算计距离 %1$s 格，诡计持续约 %2$s；窗口走完或被清除时，这段诡计抬起的特攻等级会收回；施放期间自身站定不动。",
   "worldcombat.skill.nastyplot.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.nastyplot.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.nastyplot.growth.0": "达到 %1$s 级，诡计延长至 %2$s、冷却缩短至 %3$s 秒。",

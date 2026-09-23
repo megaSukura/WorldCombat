@@ -20,6 +20,7 @@
     "presentation.ts"
   ],
   "mobEffectIcons": {
-    "world_combat:grudge_watch": "minecraft:mob_effect/darkness"
+    "world_combat:grudge_watch": "minecraft:mob_effect/darkness",
+    "world_combat:grudge_toll": "minecraft:mob_effect/weakness"
   }
 }

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.thundershock.summary": "A short, point-blank electric jab that lands instantly. Its range is tiny but it barely costs a beat; against a target already paralysed it hits harder and tops the paralysis up. Electric types are immune to paralysis.",
-  "worldcombat.skill.thundershock.description.0": "The jab reaches targets within %2$s blocks in a straight line with a power of %1$s and a collision radius of %3$s; the line must be unobstructed.",
-  "worldcombat.skill.thundershock.description.1": "On a hit there is a %1$s chance to paralyse the target for %2$s; if the target is already paralysed, the paralysis is topped up to at least %3$s and the jab hits harder.",
+  "worldcombat.skill.thundershock.description.0": "The jab strikes along a straight line at a target within %2$s blocks, dealing about %1$s special damage with a collision radius of %3$s blocks; the line must be clear. If another creature stands on the line, the first one takes the jab instead: an enemy is struck, an ally draws the current away.",
+  "worldcombat.skill.thundershock.description.1": "On a hit there is a %1$s chance to paralyse the target for %2$s; if the target is already paralysed, the paralysis is topped up to at least %3$s (never shortened) and the jab hits about 1.38x harder.",
   "worldcombat.skill.thundershock.description.2": "Windup %1$s, cooldown %2$s.",
   "worldcombat.skill.thundershock.timing": "Needs line of sight: range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.thundershock.growth.0": "From level %1$s the jab power rises to %2$s.",
@@ -29,5 +29,6 @@
   "world_combat.move.thundershock.text.numb": "Paralysed",
   "world_combat.move.thundershock.text.stim": "The paralysis was jolted longer",
   "world_combat.move.thundershock.text.blocked": "An ally drew the current",
-  "world_combat.move.thundershock.text.whiff": "The jab found nothing"
+  "world_combat.move.thundershock.text.whiff": "The jab found nothing",
+  "worldcombat.skill.thundershock.description.paralysis": "While paralysed, the target moves at half speed and every attempt to act has a 25% chance to fail; Electric-type targets cannot be paralysed."
 }

@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.submission.summary": "Grab and throw a target to knock it down, taking recoil damage. Larger targets are harder to throw.",
-  "worldcombat.skill.submission.description.0": "The slam deals %1$s contact damage, lunging up to %2$s blocks at %3$s blocks per tick with a %4$s block grab radius.",
-  "worldcombat.skill.submission.description.1": "After the grab a %1$s s window passes before the dive; the target is pinned for %2$s s and hurled %3$s blocks. A bulkier target takes less slam damage and is pinned for less time.",
-  "worldcombat.skill.submission.description.2": "On a hit the user takes %1$s%% of the actual damage as recoil.",
+  "worldcombat.skill.submission.summary": "Lunge in, grab a target and slam it down: a hit deals contact damage, knocks the target down and slows it sharply, while the user takes a share of the damage as recoil. A bulkier target takes a lighter slam and a shorter pin; a whiff has neither damage nor recoil.",
+  "worldcombat.skill.submission.description.0": "The user lunges in, grabs the target and slams it down for about %1$s contact damage; it lunges up to %2$s blocks at %3$s blocks per tick with a %4$s block grab radius.",
+  "worldcombat.skill.submission.description.1": "After the grab a %1$s s window passes: the target is held and cannot move, and the user is rooted too; it is then slammed, pinned for %2$s s and hurled %3$s blocks. A bulkier target takes less slam damage and is pinned for less time.",
+  "worldcombat.skill.submission.description.2": "On a hit the user takes %1$s times the actual damage as recoil.",
   "worldcombat.skill.submission.pin.on": "Pinning form: a lighter slam and less recoil, but the target is held down much longer - for control and team play.",
   "worldcombat.skill.submission.pin.off": "Throwing form: a heavier slam, a wider throw and more recoil, but the target is up again quickly.",
   "worldcombat.skill.submission.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
   "worldcombat.skill.submission.growth.0": "From level %1$s the slam power rises to %2$s.",
   "worldcombat.skill.submission.growth.1": "From level %1$s the slam power rises to %2$s and the pin lasts %3$s s.",
   "worldcombat.skill.submission.use.0": "Grab and pin a target in your face to open a window for allies",
-  "worldcombat.skill.submission.use.1": "Interrupt a target that is about to act",
+  "worldcombat.skill.submission.use.1": "Grab an adjacent foe and hold it in place for a while",
   "worldcombat.skill.submission.use.2": "Nail a target down with the pin, taking the recoil yourself",
   "worldcombat.skill.submission.value.slam": "Slam power",
   "worldcombat.skill.submission.value.recoil": "Recoil fraction",
@@ -35,5 +35,6 @@
   "world_combat.move.submission.text.hit": "Submission",
   "world_combat.move.submission.text.miss": "Whiffed",
   "world_combat.move.submission.text.grab": "Grabbed",
-  "world_combat.move.submission.text.lost": "Lost the grip"
+  "world_combat.move.submission.text.lost": "Lost the grip",
+  "worldcombat.skill.submission.description.3": "While knocked down the target cannot get up and moves much slower; as long as it was grabbed, it is pinned even if the slam deals no damage."
 }

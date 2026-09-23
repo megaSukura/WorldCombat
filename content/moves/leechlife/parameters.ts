@@ -134,10 +134,12 @@ namespace PokemonSkills {
     describe("leechlife", [
         { key: "description.0", values: ["bite"] },
         { key: "description.1", values: ["siphon", "draws"] },
-        { key: "description.2", values: ["sap", "leash"] },
+        { key: "description.2", values: ["sap","leash"] },
+        { key: "description.additional", values: ["fang","gap"] },
+        { key: "description.field", values: [] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bite"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.bite", "tier.1.siphon"] }
     ]);

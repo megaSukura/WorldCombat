@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.leechseed.summary": "Plant a seed on the chosen foe: once rooted it sips a share of its health every few seconds and feeds it back to you, until it falls, the root runs out or is cured. Grass types cannot be seeded.",
+  "worldcombat.skill.leechseed.summary": "Throw a seed at one foe: on impact a root burrows in and sips a share of its maximum health every few seconds, feeding the caster. The seed withers when it expires, is cured, the target falls, or the caster leaves; grass types and already-seeded targets cannot take it.",
   "worldcombat.skill.leechseed.use.0": "Turn a hard fight into a war of attrition and grow your health back",
   "worldcombat.skill.leechseed.use.1": "Keep a lasting siphon running on a foe",
   "worldcombat.skill.leechseed.use.2": "Open the gap and let the root bleed the foe for you",
-  "worldcombat.skill.leechseed.description.0": "Once rooted the seed lasts %1$s; the reach is %2$s blocks and a clear line is required. Grass types are immune.",
-  "worldcombat.skill.leechseed.description.1": "The root sips every %1$s, taking %2$s of the target's maximum health each time and feeding the actual amount back to you. It ends when the target falls or the root is cured.",
+  "worldcombat.skill.leechseed.description.0": "Reach %1$s blocks with a clear line of sight; once rooted the seed lasts %2$s. Grass types cannot be seeded, nor can a target that already carries a seed.",
+  "worldcombat.skill.leechseed.description.1": "The root sips every %1$s, taking %2$s of the target's maximum health (at least 1) and healing the caster by the actual amount. It withers when the target falls, the seed expires, it is cured, or the caster leaves.",
   "worldcombat.skill.leechseed.description.2": "Seed speed: %1$s. Hit radius: %2$s blocks.",
   "worldcombat.skill.leechseed.gluttony.on": "Gluttony: each sip x1.35 and the interval x0.75 to work faster; the seed lasts x0.7.",
   "worldcombat.skill.leechseed.gluttony.off": "Slow sip: the seed lasts x1.25 and the interval x1.15, drawing longer and steadier; the sip itself is unchanged.",

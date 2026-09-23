@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.tailslap.summary": "Spin in place and sweep the hard tail around the body lap after lap: everyone in the ring takes a hit and is shoved outward. The spin form is a full 360 degrees that covers every side; the smash form narrows to the front arc, hits each lap harder and lifts the target.",
+  "worldcombat.skill.tailslap.summary": "Spin in place and sweep the hard tail around the body lap after lap: everyone in the ring takes a hit each lap and is shoved outward. The spin form is a full 360 degrees that covers every side; the smash form narrows to the front arc, hits each lap harder and lifts the target.",
   "worldcombat.skill.tailslap.use.0": "Spin in place and sweep the tail around everyone nearby",
   "worldcombat.skill.tailslap.use.1": "Cover a whole ring when surrounded",
   "worldcombat.skill.tailslap.use.2": "Smash form sweeps only the front and lifts what it hits",
-  "worldcombat.skill.tailslap.description.0": "Each lap is %1$s power (Attack and weight), up to %2$s laps per pass, each at %3$s accuracy; a missed lap deals no damage but the spin continues.",
-  "worldcombat.skill.tailslap.description.1": "Sweep radius %1$s blocks, arc %2$s degrees, targets are shoved %3$s blocks and lifted %4$s blocks.",
+  "worldcombat.skill.tailslap.description.0": "Spin in place for up to %2$s laps, striking every enemy in range once each lap for about %1$s contact damage (from Attack and weight); each lap is rolled separately at %3$s accuracy, and a missed lap deals no damage but the spin continues.",
+  "worldcombat.skill.tailslap.description.1": "Each lap sweeps every non-friendly body within %1$s blocks and a %2$s-degree arc; those hit are shoved %3$s blocks away from the caster and lifted %4$s blocks.",
   "worldcombat.skill.tailslap.description.2": "The sweeps are %1$s apart.",
   "worldcombat.skill.tailslap.smash.on": "Smash form: sweeps only the front ~200 degrees, each lap x1.25 power and x1.4 lift, focusing the damage on one side; the cost is x0.8 shove and +1 tick between laps.",
   "worldcombat.skill.tailslap.smash.off": "Spin form: a full 360 degrees with a stronger shove, covering everyone at once; the cost is a slightly lighter lap.",

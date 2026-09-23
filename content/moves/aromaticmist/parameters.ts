@@ -80,8 +80,8 @@ namespace PokemonSkills {
     });
 
     describe("aromaticmist", [
-        { key: "description.0", values: ["gift", "veilTicks"] },
-        { key: "description.1", values: ["cloudRadius", "cloudTicks"] },
+        { key: "description.0", values: ["gift","veilTicks"] },
+        { key: "description.1", values: ["cloudRadius","cloudTicks"] },
         { key: "description.2", values: ["reach", "tempo", "aftercast", "wait"] },
         { key: "bouquet.rich", values: [], when: function (context) { return read(context.detail.values, ["bouquet"]) === 1; } },
         { key: "bouquet.wide", values: [], when: function (context) { return read(context.detail.values, ["bouquet"]) !== 1; } },

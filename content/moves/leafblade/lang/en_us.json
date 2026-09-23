@@ -3,9 +3,9 @@
   "worldcombat.skill.leafblade.use.0": "Wield a leaf like a sword and step in for one heavy cut",
   "worldcombat.skill.leafblade.use.1": "Open the main target and shave one stage of its defence",
   "worldcombat.skill.leafblade.use.2": "Let the blade wind graze foes standing nearby",
-  "worldcombat.skill.leafblade.description.0": "The edge deals %1$s physical damage at a %2$s-block contact range.",
+  "worldcombat.skill.leafblade.description.0": "Swing the edge in at close quarters for about %1$s physical contact damage to the main target; contact range is %2$s blocks, and a target farther out is closed on with a step first.",
   "worldcombat.skill.leafblade.description.1": "The swing spans %1$s degrees; up to 2 other nearby foes each take %2$s of the blade wind.",
-  "worldcombat.skill.leafblade.description.2": "The main target loses %1$s stage(s) of defence.",
+  "worldcombat.skill.leafblade.description.2": "The main target loses %1$s stage(s) of defence; the drop lasts through the fight and fades after combat.",
   "worldcombat.skill.leafblade.twohand.on": "Two-handed form: power ×1.2, swing span ×1.1 and one more defence stage, but +3 ticks wind-up, +2 recovery and +6 cooldown.",
   "worldcombat.skill.leafblade.twohand.off": "One-handed form (default): faster wind-up and 4 ticks less cooldown, but power ×0.95 and a slightly narrower graze.",
   "worldcombat.skill.leafblade.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -28,5 +28,6 @@
   "world_combat.move.leafblade.text.cut": "Leaf Blade opens the foe",
   "world_combat.move.leafblade.text.sever": "Defence shaved by %1$s",
   "world_combat.move.leafblade.text.miss": "The leaf blade swings through air",
-  "world_combat.move.leafblade.text.crit": "Critical!"
+  "world_combat.move.leafblade.text.crit": "Critical!",
+  "worldcombat.skill.leafblade.description.additional": "This move has a heightened critical-hit chance; any target caught by the edge or the blade wind can take a critical hit."
 }

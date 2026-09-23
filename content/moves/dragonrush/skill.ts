@@ -23,10 +23,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: dragonrushId,
         cooldownParameter: "recharge",
         name: "Dragon Rush",
-        description: "The user tackles the target while exhibiting overwhelming menace. This may also make the target flinch.",
+        description: "先在身周铺开一圈可见的杀气，再从高处沿弧线俯冲砸在锁定点上：落点附近的敌人一起被撞开，扑得比对手越快、越容易把它撞得畏缩。落点在起跳时锁定，对手在滞空期走开就能躲过。",
         uses: ["先亮一圈威压、再前扑砸在锁定点上", "把落点周围的敌人一起撞开", "用速度差把对手镇得无法出手"],
         kind: "enemy",
         range: 5.0,

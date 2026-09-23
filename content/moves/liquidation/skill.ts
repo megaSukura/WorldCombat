@@ -16,10 +16,11 @@ namespace PokemonSkills {
     const liquidationMissText = "world_combat.move.liquidation.text.miss";
 
     define({
+        freeMovement: true,
         id: "liquidation",
         name: "Liquidation",
-        description: "The user slams into the target using a full-force blast of water. This may also lower the target's Defense stat.",
-        uses: ["裹水正面撞一个目标", "撕开硬目标的护甲", "给目标挂上湿身，留给后续的水与电"],
+        description: "把水压成一层贴身的刃，正面撞上去：打伤、顶开、留下湿身，并有概率顺着裂口把对手的防御压低；施放者身处雨中时水压更重。",
+        uses: ["裹水正面撞一个目标", "撕开硬目标的护甲", "给目标挂上湿身，留给后续的水属性招式"],
         kind: "enemy",
         range: 4,
         maxRange: 7,

@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.camouflage.summary": "读脚下这块地，把身体暂时染成它的属性：水里是水、草丛是草、洞窟是岩；配置「随景而变」时走动中会再染。",
+  "worldcombat.skill.camouflage.summary": "读脚下这块地，把身体暂时染成它的属性：水里是水、草丛是草、洞窟是岩；配置「随景而变」时覆色期间会不断重读脚下。",
   "worldcombat.skill.camouflage.use.0": "按所在地形临时改成贴合属性的属性",
   "worldcombat.skill.camouflage.use.1": "翻掉当前受击面、换一套相性与状态免疫",
   "worldcombat.skill.camouflage.use.2": "开战前先按地形定属性",
   "worldcombat.skill.camouflage.description.0": "蹲下读地，起手 %1$s 秒；读到什么材质就染成对应的属性。",
   "worldcombat.skill.camouflage.description.1": "这层颜色维持 %1$s 秒，期间属性相性、本系加成与状态免疫按新属性结算。",
-  "worldcombat.skill.camouflage.drift.0": "随景而变：走动中每 20 刻重读脚下，材质变了就换属性；适应性强，但可能被地形带进不利属性，冷却 +10 刻。",
+  "worldcombat.skill.camouflage.drift.0": "随景而变：覆色期间每 20 刻重读一次脚下，材质变了就换成新属性（沿用剩余覆色时间，不延长）；适应性强，但可能被地形带进不利属性，冷却 +10 刻。",
   "worldcombat.skill.camouflage.drift.1": "固色：一次定住，不再随地形改变；冷却 -6 刻，但离开原地后属性不再贴合。",
   "worldcombat.skill.camouflage.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
-  "worldcombat.skill.camouflage.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
-  "worldcombat.skill.camouflage.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",
+  "worldcombat.skill.camouflage.growth.0": "达到 %1$s 级后，冷却额外缩短 0.5 秒。",
+  "worldcombat.skill.camouflage.growth.1": "达到 %1$s 级后，冷却的额外缩短提高到 0.9 秒，替代前一档。",
   "worldcombat.skill.camouflage.value.tempo": "起手",
   "worldcombat.skill.camouflage.value.aftercast": "收势",
   "worldcombat.skill.camouflage.value.hold": "覆色维持",
@@ -20,5 +20,7 @@
   "worldcombat.skill.camouflage.preference.drift.help": "开启：站到不同地面会重读并换属性，适应性强，但可能被地形带进不利属性、冷却 +10 刻；关闭：一次定住、冷却 -6 刻，离开原地后属性不再贴合。",
   "effect.world_combat.camouflage": "保护色",
   "world_combat.move.camouflage.text.coat": "染上了 %1$s 属性",
-  "world_combat.move.camouflage.text.shift": "随地形换成了 %1$s 属性"
+  "world_combat.move.camouflage.text.shift": "随地形换成了 %1$s 属性",
+  "worldcombat.skill.camouflage.description.materials": "读的是脚下的流体与方块：水、冰、草叶、沙土、岩矿与末地石、火与岩浆（含下界岩）分别读成水／冰／草／地面／岩石／火；读不到具体材质时按维度兜底（下界为火、末地为岩），否则读成一般属性。",
+  "worldcombat.skill.camouflage.description.nature": "染上的是一种单一属性，会替换掉原本的全部属性（双属性也被压成这一种）；覆色到期、被清除或施放者离场时立刻还原。已经正好就是该单一属性时无法发动。"
 }

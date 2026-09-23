@@ -28,5 +28,6 @@
   "worldcombat.skill.icywind.preference.ai.cluster": "Prefer lines",
   "worldcombat.skill.icywind.preference.ai.cluster.help": "With this on, the companion raises Icy Wind when another foe stands within 3 blocks of the target, since the corridor can catch a row at once; off keeps the normal attack order.",
   "world_combat.move.icywind.text.hit": "Chilled %1$s",
-  "world_combat.move.icywind.text.miss": "Icy wind missed"
+  "world_combat.move.icywind.text.miss": "Icy wind missed",
+  "worldcombat.skill.icywind.description.cap": "The front chills at most %1$s targets, each only once; it bites hardest near the start and falls to about 70%% by the end of its reach."
 }

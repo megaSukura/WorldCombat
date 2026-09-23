@@ -89,8 +89,8 @@ namespace PokemonSkills {
 
     describe("saltcure", [
         { key: "description.0", values: ["crust"] },
-        { key: "description.1", values: ["brineShare", "saltTicks", "interval"] },
-        { key: "description.2", values: ["reach", "saltSpeed", "collision"] },
+        { key: "description.1", values: ["saltTicks","interval","brineShare"] },
+        { key: "description.2", values: ["reach","saltSpeed","collision"] },
         { key: "description.3", values: ["tempo", "wait"] }
     ]);
 }

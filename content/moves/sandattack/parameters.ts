@@ -26,7 +26,7 @@ namespace PokemonSkills {
     actionParameters.define(sandattackId, {
         blindStage: formula(F.stat("attack").minus(60).max(0).div(75).plus(1).clamp(1, 2).round(0), "糊眼级数", {
             unit: " 级",
-            description: "目标在宝可梦那一层损失的原生命中等级；攻击每 75 点升一级，最多两级。"
+            description: "目标损失的命中等级；等级变化保留到脱战恢复或被清除。"
         }),
         coneAngle: formula(F.body("width").minus(0.9).times(26).plus(48).clamp(40, 82).round(0), "扇面角度", {
             unit: " 度",
@@ -43,14 +43,27 @@ namespace PokemonSkills {
             description: "一次扬起的砂砾数量，画面里数得出来；身形越高越多。"
         }),
         tempo: seconds(F.stat("speed").div(8).plus(3).clamp(4, 10).round(0), "起手",
-            "刨起脚下一把东西需要多久；速度越快越干脆。"),
+            "刨起脚下砂砾的起手时间；粗砂额外增加3刻。"),
         recharge: seconds(F.base(70).plus(F.level().minus(20).max(0).times(0.5)).clamp(60, 110).round(0), "冷却",
-            "两次泼沙之间的等待；等级越高越熟练。")
+            "两次泼沙之间的等待；粗砂更长，细砂更短。")
     });
+    function sandattackShown(context: NumberContext, key: string, value: number, secondsValue = false): any {
+        const original = parameterBinding(context, key);
+        const result = valueBinding(rounded(secondsValue ? value / 20 : value), original.label, [original],
+            text("worldcombat.skill.sandattack.preference.grit.help"));
+        if (secondsValue) { result.unitKind = "seconds"; result.unit = text("worldcombat.value.unit.seconds"); }
+        return result;
+    }
     describe(sandattackId, [
-        { key: "description.0", values: ["blindStage", "duration"] },
+        { key: "description.0", values: ["blindStage","duration"] },
         { key: "description.1", values: ["coneRange", "coneAngle"] },
-        { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
-    ]);
+    ], {
+        duration: context => sandattackShown(context, "duration", Math.max(50, Math.round(p(sandattackId, "duration", context)
+            * (read(context.detail.values, ["grit"]) === "fine" ? 0.8 : 1.3))), true),
+        coneRange: context => sandattackShown(context, "coneRange", Math.max(2.5, p(sandattackId, "coneRange", context)
+            + (read(context.detail.values, ["grit"]) === "fine" ? 0.8 : -0.8))),
+        coneAngle: context => sandattackShown(context, "coneAngle", Math.max(30, Math.min(100, Math.round(p(sandattackId, "coneAngle", context)
+            * (read(context.detail.values, ["grit"]) === "fine" ? 0.85 : 1.35)))))
+    });
 }

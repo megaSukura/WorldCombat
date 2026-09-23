@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const doubleedgeSkidText = "world_combat.move.doubleedge.text.skid";
 
     define({
+        freeMovement: true,
         id: "doubleedge",
         cooldownParameter: "recharge",
         name: "Double-Edge",
-        description: "A reckless life-risking tackle in which the user rushes the target. This also damages the user quite a lot.",
+        description: "最朴素的全身正面猛冲：压低身体直线撞出去，撞实后目标被顶飞、自己也被反震弹开，并承担中等反伤。撞空只是收势，不自伤。",
         uses: ["正面撞开一个挡路的对手", "把目标顶离队友或顶下高台", "在生存无虞时换一记扎实的接触重击"],
         kind: "enemy",
         range: 4.0,

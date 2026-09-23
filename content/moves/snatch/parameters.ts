@@ -57,7 +57,8 @@ namespace PokemonSkills {
     stages("snatch", [{ level: 40, values: { reach: 9.2, window: 240 } }, { level: 55, values: { reach: 10.4, window: 300 } }]);
 
     describe("snatch", [
-        { key: "description.0", values: ["window", "tempo"] },
+        { key: "world", values: ["window"] },
+        { key: "description.0", values: ["tempo","window"] },
         { key: "description.1", values: ["reach", "range"] },
         { key: "description.2", values: ["recharge"] },
         { key: "patient.on", values: [], when: function (context) { return read(context.detail.values, ["patient"]) === true; } },

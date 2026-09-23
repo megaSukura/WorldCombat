@@ -147,8 +147,8 @@ namespace PokemonSkills {
     ]);
 
     describe("ragingbull", [
-        { key: "description.0", values: ["ram", "collisionRadius"] },
-        { key: "description.1", values: ["charge", "gallop", "shove", "wardBreak"] },
+        { key: "description.0", values: ["ram","collisionRadius"] },
+        { key: "description.1", values: ["charge","gallop","shove","wardBreak"] },
         { key: "trample.on", values: [], when: function (context) { return read(context.detail.values, ["trample"]) === true; } },
         { key: "trample.off", values: [], when: function (context) { return read(context.detail.values, ["trample"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

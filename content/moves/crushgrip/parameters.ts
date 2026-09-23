@@ -142,7 +142,7 @@ namespace PokemonSkills {
     describe(crushgripId, [
         { key: "description.0", values: ["grip"] },
         { key: "description.1", values: ["reach"] },
-        { key: "hoist.on", values: ["lift", "hold", "drop", "slam", "holdTicks"], when: function (context) { return read(context.detail.values, ["hoist"]) === true; } },
+        { key: "hoist.on", values: ["lift","hold","drop","slam","holdTicks"], when: function (context) { return read(context.detail.values, ["hoist"]) === true; } },
         { key: "hoist.off", values: [], when: function (context) { return read(context.detail.values, ["hoist"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.grip"] },

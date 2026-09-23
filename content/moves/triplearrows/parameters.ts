@@ -131,9 +131,9 @@ namespace PokemonSkills {
     ]);
 
     describe("triplearrows", [
-        { key: "description.0", values: ["kick", "kickRadius"] },
-        { key: "description.1", values: ["drawTicks", "volley", "spread", "arrowSpeed", "arrowRange", "arrowRadius"] },
-        { key: "description.2", values: ["guardChance", "guardStages", "guardTicks", "flinchChance", "flinchTicks"] },
+        { key: "description.0", values: ["kick","kickRadius"] },
+        { key: "description.1", values: ["drawTicks","volley","spread","arrowSpeed","arrowRange","arrowRadius"] },
+        { key: "description.2", values: ["guardChance","guardStages","guardTicks","flinchChance","flinchTicks"] },
         { key: "fan.on", values: [], when: function (context) { return read(context.detail.values, ["fan"]) === true; } },
         { key: "fan.off", values: [], when: function (context) { return read(context.detail.values, ["fan"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

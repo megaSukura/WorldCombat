@@ -62,7 +62,7 @@ namespace PokemonSkills {
         id: bonerushId,
         cooldownParameter: "recharge",
         name: "Bone Rush",
-        description: "The user attacks by striking the target with a hard bone. This move hits two to five times in a row.",
+        description: "把手里的硬骨一枚枚按弧线抛出，夯在目标脚下的地面上：冲击沿地层钻到落点周围敌人的脚底（地面伤害、不接触），落点那层地表被震出会自己消失的裂痕，最后一击最重。目标走开或骨头偏了就会砸空；重夯式每击更重、可到 5 击，裂地式震波更大、地痕更久。",
         uses: ["隔着距离把骨头一下下夯到目标脚下", "落点震波把一小片地面的人一起掀起", "裂地式用持久地痕占住战场"],
         kind: "enemy",
         range: 7,

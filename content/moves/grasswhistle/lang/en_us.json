@@ -28,5 +28,6 @@
   "worldcombat.skill.grasswhistle.preference.ai.leaveStation.help": "When on, the partner will also leave its post to blow the whistle; when off it only plays where it already reaches.",
   "world_combat.move.grasswhistle.text.sleep": "Grass Whistle (asleep %1$s s)",
   "world_combat.move.grasswhistle.text.crack": "It cracked (%1$s%% to ring)",
-  "world_combat.move.grasswhistle.text.miss": "The note fell flat"
+  "world_combat.move.grasswhistle.text.miss": "The note fell flat",
+  "worldcombat.skill.grasswhistle.description.sleep": "Anyone taken by the note falls asleep: while asleep they can neither act nor move, and taking damage wakes them at once. A target immune to sleep is not taken, and a foe already asleep is never picked again."
 }

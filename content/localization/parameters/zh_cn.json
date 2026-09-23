@@ -19,6 +19,7 @@
   "worldcombat.value.heldItem": "当前携带物",
   "worldcombat.value.additional": "附加贡献",
   "worldcombat.value.atImpact": "命中时确定",
+  "worldcombat.value.estimatedDamage": "预计伤害",
   "worldcombat.value.damageTargetPending": "当前值已计入施法者可用的修正。命中时按目标防御、属性关系、抗性、护甲及暴击结算。",
   "worldcombat.value.damageWorldPending": "按当前培养和携带物估算。放出后计入世界状态，命中时计入目标、防御和暴击。",
   "worldcombat.value.sunlight": "当前日光",

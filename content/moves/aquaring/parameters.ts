@@ -69,12 +69,12 @@ namespace PokemonSkills {
     ]);
 
     describe(aquaRingId, [
-        { key: "description.0", values: ["pulse", "interval"] },
+        { key: "description.0", values: ["pulse","interval"] },
         { key: "description.1", values: ["ringTicks"] },
         { key: "description.2", values: [] },
         { key: "spring.on", values: [], when: function (context) { return read(context.detail.values, ["spring"]) === true; } },
         { key: "spring.off", values: [], when: function (context) { return read(context.detail.values, ["spring"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ringTicks"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.ringTicks"] }
     ]);

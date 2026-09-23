@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.dragonascent.summary": "先窜上高空，再从正上方把整个身体砸下来：落地一圈冲击波把周围的人一起震开、地面留下裂石。提交那一刻自身防御与特防各下降一级。广域式冲击更宽、震得更远，代价是坠落威力更低。",
+  "worldcombat.skill.dragonascent.summary": "先窜上高空，再从正上方俯冲砸向目标：俯冲途中撞到谁就按接触结算，落地冲击波再打到落点主目标、把被波及的人沿远离落点的方向推开，并在地面留下裂石。一发动就付出自身防御与特防各下降一级的代价；广域式冲击更宽、能波及周围敌人并震得更远，代价是坠落威力更低。",
   "worldcombat.skill.dragonascent.use.0": "升空后从正上方砸向一个目标",
-  "worldcombat.skill.dragonascent.use.1": "落地冲击波震开落点周围的人",
+  "worldcombat.skill.dragonascent.use.1": "落地冲击波收尾并推开被波及的敌人",
   "worldcombat.skill.dragonascent.use.2": "越过前排直接砸到后面的目标",
-  "worldcombat.skill.dragonascent.description.0": "从天上砸出 %1$s 点物理伤害，落地荡开 %2$s 格冲击波。",
+  "worldcombat.skill.dragonascent.description.0": "升空后从正上方俯冲砸向目标，俯冲途中撞到的敌人受到约 %1$s 点物理接触伤害；落地时荡开半径 %2$s 格的冲击波。",
   "worldcombat.skill.dragonascent.description.1": "水平接敌 %1$s 格、升空 %2$s 格、每刻 %3$s 格，俯冲碰撞半径 %4$s 格。",
-  "worldcombat.skill.dragonascent.description.2": "提交那一刻即弃守：自身防御下降 %1$s 级、特防下降 %2$s 级，无论是否命中都付。",
-  "worldcombat.skill.dragonascent.broad.on": "广域式：冲击波扫到的其他敌人各吃 %1$s 的威力，并被震开 %2$s 格。",
-  "worldcombat.skill.dragonascent.broad.off": "贯坠式：全部力量集中在落点主目标，单点更重、出手更快，冲击更窄。",
+  "worldcombat.skill.dragonascent.description.2": "一发动就弃守：自身防御下降 %1$s 级、特防下降 %2$s 级，无论是否命中都付。",
+  "worldcombat.skill.dragonascent.broad.on": "广域式：冲击波波及的其他敌人各受到主目标约 %1$s 的伤害，并被沿远离落点方向震开 %2$s 格。",
+  "worldcombat.skill.dragonascent.broad.off": "贯坠式：全部力量集中在落点主目标，单点更重、出手更快；落点冲击波只作用于主目标，扫不到周围的敌人。",
   "worldcombat.skill.dragonascent.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.dragonascent.growth.0": "%1$s 级起坠落威力抬到 %2$s。",
   "worldcombat.skill.dragonascent.growth.1": "%1$s 级起坠落威力抬到 %2$s、升空高度抬到 %3$s 格。",
@@ -36,5 +36,7 @@
   "worldcombat.skill.dragonascent.preference.ai.minHealth": "最低生命比例",
   "worldcombat.skill.dragonascent.preference.ai.minHealth.help": "自身生命比例低于这个值就不主动升空下砸（0＝不限制）。调高能让它把这一记留给值得交换的局面。",
   "world_combat.move.dragonascent.text.slump": "离天落地：防御 −%1$s、特防 −%2$s",
-  "world_combat.move.dragonascent.text.land": "冲击波震开 %1$s 人"
+  "world_combat.move.dragonascent.text.land": "冲击波震开 %1$s 人",
+  "worldcombat.skill.dragonascent.description.shock": "落点冲击波会打到主目标：俯冲没撞到它时由它吃下整记伤害；被冲击波打中的人会被沿远离落点的方向推开。",
+  "worldcombat.skill.dragonascent.description.ground": "落点被砸成裂石，约 7 秒后地面复原。"
 }

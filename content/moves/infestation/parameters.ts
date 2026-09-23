@@ -72,7 +72,7 @@ namespace PokemonSkills {
 
     describe("infestation", [
         { key: "description.0", values: ["bite"] },
-        { key: "description.1", values: ["duration", "swarmShare", "interval"] },
-        { key: "description.2", values: ["reach", "speed", "charge"] }
+        { key: "description.1", values: ["duration","swarmShare","interval"] },
+        { key: "description.2", values: ["reach","speed","charge","collisionRadius"] }
     ]);
 }

@@ -135,6 +135,7 @@ namespace PokemonSkills {
     describe(spitupId, [
         { key: "description.0", values: ["spit"] },
         { key: "description.1", values: ["reach", "speed", "nozzle"] },
+        { key: "spend", values: [] },
         { key: "spray.on", values: ["spread"], when: function (context) { return read(context.detail.values, ["spray"]) === true; } },
         { key: "spray.off", values: [], when: function (context) { return read(context.detail.values, ["spray"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },

@@ -108,7 +108,7 @@ namespace PokemonSkills {
 
     define({
         id: naturepowerId, name: "自然之力",
-        description: "把站立处的地面叫起来，化作一道贴地的地脉冲向目标：草木缠绕麻痹、水流冲推、地火灼伤、大地碎裂降防并顶开，其余地形只是一记普通冲击；换一块地面就等于换一招的结果。",
+        description: "把站立处的地面叫起来，化作一道贴地的地脉沿地冲向目标，扫过沿途的每个敌人各结算一次：草木场地使其麻痹、地火场地使其灼伤并着火、大地场地降其物防；每种场地都会把目标沿地脉方向顶开，水流场地推得最远，踩空时只剩一记普通冲击。换一块地面就等于换一招的结果。",
         uses: ["用脚下的地面决定属性", "在危险地形旁边借力", "催发一记更远更重的涌动"],
         kind: "enemy", range: 11, maxRange: 18, prepare: 0, active: 0, recover: 8, cooldown: 30, style: "naturepower",
         maximumTicks: 300,

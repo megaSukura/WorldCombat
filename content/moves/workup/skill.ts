@@ -22,7 +22,7 @@ namespace PokemonSkills {
         id: "workup",
         cooldownParameter: "wait",
         name: "Work Up",
-        description: "激励自己，从而提高攻击和特攻。",
+        description: "给自己鼓一口气，把攻击与特攻一起抬起来。生命越低，这股火越旺——你更擅长的那一项会多涨一级；起手极短、冷却很短，可以在连打之间随手补上。",
         uses: ["开场先给自己鼓一口气", "被压制时反手把火气拧起来", "在连打之间随手补一层双攻"],
         kind: "self",
         range: 1,

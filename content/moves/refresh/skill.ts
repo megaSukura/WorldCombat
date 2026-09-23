@@ -30,7 +30,7 @@ namespace PokemonSkills {
     define({
         id: refreshId,
         cooldownParameter: "recharge", name: "焕然一新",
-        description: "站定净息，一次清除自己身上的毒／剧毒、灼伤与麻痹，并留下一小段清爽窗口；窗口内这三类异常会被弹开。不解睡眠与冰冻，也不回复生命。",
+        description: "站定净息，一次清除自己身上的中毒／剧毒、灼伤与麻痹，并留下一小段清爽窗口，窗口内新的中毒、灼伤与麻痹会被弹开；不解睡眠与冰冻，也不回复生命。",
         uses: ["烧着或中毒时把状态清掉，止住持续掉血", "在被麻痹锁住前挣脱，恢复正常行动", "在对方下一次异常前预先净息，用清爽窗口挡住"],
         kind: "self", range: 0, prepare: 8, active: 0, recover: 6, cooldown: 110, style: "purify",
         stationary: true, maximumTicks: 400,

@@ -22,9 +22,10 @@ namespace PokemonSkills {
     function endeavorVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
 
     define({
+        freeMovement: true,
         id: "endeavor",
         name: "Endeavor",
-        description: "The user inflicts damage by cutting down the target's HP to roughly equal the user's HP.",
+        description: "扑身拉平：把对手当前生命拽下来到你这条血线上，伤害正好是「对手生命 − 自己生命」。自己越残、对手越健康，这一下越重；自己更健康时它一分伤害也没有。越身式扑得更远、撞后穿过对手换位，代价是几乎不顶开。",
         uses: ["把高血的对手拉低到自己这条血线", "残血时反打一记大的", "越身换位躲开正面"],
         kind: "enemy",
         range: 2.5,

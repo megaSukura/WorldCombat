@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.entrainment.summary": "踩出一段古怪的节拍逼对手跟着动，把对手的特性变成和自己的相同；节拍波及的敌人一起改变。",
+  "worldcombat.skill.entrainment.summary": "用节拍把范围内敌方宝可梦的特性改为自己的；普通生物则跟随自己的移动节奏。",
   "worldcombat.skill.entrainment.use.0": "把自己的负面特性塞给对手",
   "worldcombat.skill.entrainment.use.1": "用普通特性顶掉对手的强力特性",
   "worldcombat.skill.entrainment.use.2": "让围在身边的一圈敌人一起改特性",
   "worldcombat.skill.entrainment.description.0": "在 %1$s 格内踩出节拍，起手 %2$s 秒，节拍速度约 %3$s 格/刻。",
-  "worldcombat.skill.entrainment.description.1": "节拍落定后，被波及的敌人特性被顶成施法者的，持续 %1$s 秒；波及半径 %2$s 格。",
+  "worldcombat.skill.entrainment.description.1": "节拍落定后，半径 %2$s 格内可接受节拍的敌方宝可梦暂时获得施放者的特性，持续 %1$s；普通生物按上述规则同步步速。",
   "worldcombat.skill.entrainment.whole.0": "全场节拍：波及半径 ×1.6、维持 ×0.65、冷却 +16 刻，适合一次改掉围上来的整圈敌人。",
   "worldcombat.skill.entrainment.whole.1": "贴身节拍：波及半径 ×0.7、维持 ×1.4、冷却 -10 刻，适合只盯一个对手、压得更久。",
   "worldcombat.skill.entrainment.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
-  "worldcombat.skill.entrainment.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
-  "worldcombat.skill.entrainment.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",
+  "worldcombat.skill.entrainment.growth.0": "达到 %1$s 级后，冷却额外缩短 0.6 秒。",
+  "worldcombat.skill.entrainment.growth.1": "达到 %1$s 级后，冷却的额外缩短提高到 1.1 秒，替代前一档。",
   "worldcombat.skill.entrainment.value.reach": "节奏射程",
   "worldcombat.skill.entrainment.value.velocity": "节拍速度",
   "worldcombat.skill.entrainment.value.splash": "波及半径",
@@ -27,5 +27,6 @@
   "worldcombat.skill.entrainment.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离位去改对手特性；关闭则只在原地够得到时出手。",
   "effect.world_combat.entrainment": "跟着节拍",
   "world_combat.move.entrainment.text.shared": "%1$s 只被这段节拍改掉了特性",
-  "world_combat.move.entrainment.text.same": "没有可以改的特性"
+  "world_combat.move.entrainment.text.same": "没有可以改的特性",
+  "worldcombat.skill.entrainment.world": "节拍波及普通生物时，将其移动速度暂时调成施放者出招时的水平，持续 %1$s；可使快敌人放慢，也可能让慢敌人加快。效果被清除或到期后恢复，期间其他速度效果照常生效。"
 }

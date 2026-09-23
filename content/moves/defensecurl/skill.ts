@@ -80,7 +80,7 @@ namespace PokemonSkills {
         id: "defensecurl",
         cooldownParameter: "wait",
         name: "变圆",
-        description: "将身体蜷曲变圆，从而提高自己的防御。",
+        description: "提高防御，受击时向设定方向滚开一段距离。",
         uses: ["被近身缠住时卷成球，被打就顺势滚开换身位", "贴着对手时反撞回去，用滚劲切进它的怀里", "用便宜的一段窗口把防御抬起来再打"],
         kind: "self",
         range: 1,

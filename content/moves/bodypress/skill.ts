@@ -13,9 +13,10 @@ namespace PokemonSkills {
     const bodypressMissText = "world_combat.move.bodypress.text.miss";
 
     define({
+        freeMovement: true,
         id: "bodypress",
         name: "Body Press",
-        description: "The user attacks by slamming its body into the target. The higher the user's Defense stat, the greater the damage this move deals.",
+        description: "压低重心架住肩甲，把整副身板连同护甲一起推出去；撞上就顶住不放，把对手一路推走。防御越高，这一下越重、顶得越远。",
         uses: ["用护甲与体重顶开挡路的对手", "把目标一路推出掩体或推下高台", "在守势里反推一波"],
         kind: "enemy",
         range: 3,

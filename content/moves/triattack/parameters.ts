@@ -58,7 +58,7 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("wide"), F.const(0.85), F.const(1.1)))
                 .clamp(0.10, 0.32).round(3),
             "余痕几率", "每一束命中后让目标陷入该元素状态（火→灼伤、冰→冰冻、电→麻痹）的几率；特攻越高越容易留下，集束式略高、广域式略低。"),
-        /** 余痕时长：200 + (特攻−60)×0.4（夹 −20..60）；夹 140..300 秒。 */
+        /** 余痕时长：200 + (特攻−60)×0.4（夹 −20..60）；夹 140..300 刻。 */
         ailmentTicks: seconds(
             F.base(200).plus(F.stat("specialAttack").minus(60).times(0.4).clamp(-20, 60)).clamp(140, 300).round(0),
             "余痕时长", "留下来的元素状态持续多久；特攻决定光线穿透力。"),
@@ -146,7 +146,8 @@ namespace PokemonSkills {
     ]);
 
     describe(triattackId, [
-        { key: "description.0", values: ["ray", "ailmentChance", "ailmentTicks"] },
+        { key: "description.0", values: ["ray","ailmentChance"] },
+        { key: "description.ailments", values: ["ailmentTicks"] },
         { key: "description.1", values: ["reach", "flightSpeed", "homing"] },
         { key: "description.2", values: ["gap", "tempo", "recharge"] },
         { key: "wide.on", values: ["fanRadius"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },

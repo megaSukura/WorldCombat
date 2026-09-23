@@ -102,8 +102,8 @@ namespace PokemonSkills {
     defineDamage("dynamicpunch", "haymaker", {}, { contact: true, punch: true });
 
     describe("dynamicpunch", [
-        { key: "description.0", values: ["haymaker", "swingArc", "swingReach"] },
-        { key: "description.1", values: ["dazeTicks", "fumbleChance"] },
+        { key: "description.0", values: ["haymaker","swingArc","swingReach"] },
+        { key: "description.1", values: ["dazeTicks","fumbleChance"] },
         { key: "description.2", values: ["overextend"] },
         { key: "reckless.on", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },

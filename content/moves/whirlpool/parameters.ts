@@ -120,8 +120,8 @@ namespace PokemonSkills {
 
     describe("whirlpool", [
         { key: "description.0", values: ["drown"] },
-        { key: "description.1", values: ["duration", "drag", "interval"] },
-        { key: "description.2", values: ["escape", "slowStages", "reach", "speed"] },
+        { key: "description.1", values: ["duration","drag","interval"] },
+        { key: "description.2", values: ["escape","slowStages","reach","speed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["mire"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["mire"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

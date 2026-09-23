@@ -96,11 +96,11 @@ namespace PokemonSkills {
     defineDamage("megapunch", "megaton", {}, { contact: true, punch: true });
 
     describe("megapunch", [
-        { key: "description.0", values: ["megaton", "fistReach", "bore"] },
+        { key: "description.0", values: ["megaton","fistReach","bore"] },
         { key: "description.1", values: ["shove"] },
         { key: "planted.on", values: [], when: function (context) { return read(context.detail.values, ["planted"]) === true; } },
         { key: "planted.off", values: [], when: function (context) { return read(context.detail.values, ["planted"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.megaton"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.megaton", "tier.1.shove"] }
     ]);

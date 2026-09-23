@@ -91,10 +91,11 @@ namespace PokemonSkills {
     ]);
 
     describe("bulldoze", [
-        { key: "description.0", values: ["tremor"] },
+        { key: "description.0", values: ["tremor","maxTargets"] },
+        { key: "description.ground", values: [] },
         { key: "description.1", values: ["waveRadius", "waveTicks"] },
-        { key: "description.2", values: ["snareStages", "push"] },
-        { key: "description.3", values: ["crackTicks", "scars"] },
+        { key: "description.2", values: ["snareStages","push"] },
+        { key: "description.3", values: ["crackTicks","scars"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

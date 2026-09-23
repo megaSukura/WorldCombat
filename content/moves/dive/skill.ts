@@ -82,9 +82,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "dive", name: "潜水",
-        description: "沉下去后，一道水痕贴着地面冲向锁定的落点，再从那里窜出：对脚下的目标造成物理伤害、把它向上顶飞并推开。水痕把落点暴露给所有人，目标在它到达前走开就能让这一击落空；站在水里或软地上发动时更强、更远，硬地上只是短促的浅袭。",
-        uses: ["绕后突袭", "贴身接近", "打断远程"],
+        description: "沉下去后，一道水痕贴着地面冲向锁定的落点，再从那里窜出：对目标造成物理伤害、把它向上顶飞并推开，并浇灭它身上的火。水痕会把落点暴露出来，目标在它到达前退到锁定半径外就能让这一击落空；站在水里或软地上发动时更强、更远，硬地上只是短促的浅袭。",
+        uses: ["绕后突袭", "贴身接近", "贴近远程对手"],
         kind: "enemy", range: 12, maxRange: 16, active: 6, recover: 10, cooldown: 46, style: "water-dive",
         maximumTicks: 160,
         defaults: { deep: true },

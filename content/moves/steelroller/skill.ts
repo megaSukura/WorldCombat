@@ -35,11 +35,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: steelrollerId,
         cooldownParameter: "recharge",
         name: "Steel Roller",
         description: "把脚下正在生效的场地压碎，自己卷成钢轮碾出去；脚下没有场地时整招失败，PP 照常消耗。",
-        uses: ["压碎对手依赖的场地并顺势碾过去", "把一片场地换成一次重击", "在场地里开出一条能走的钢辙"],
+        uses: ["压碎脚下的场地并顺势碾过去", "把一片场地换成一次重击", "在战场里开出一条能走的钢辙"],
         kind: "enemy",
         range: 4,
         maxRange: 6.6,

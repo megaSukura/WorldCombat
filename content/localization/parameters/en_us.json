@@ -19,6 +19,7 @@
   "worldcombat.value.heldItem": "Held item",
   "worldcombat.value.additional": "Additional contributions",
   "worldcombat.value.atImpact": "Resolved on impact",
+  "worldcombat.value.estimatedDamage": "Estimated damage",
   "worldcombat.value.damageTargetPending": "Includes available caster modifiers. Impact applies target defense, type matchups, resistance, armor and critical hits.",
   "worldcombat.value.damageWorldPending": "Estimated from current training and held items. World conditions apply after sending out; target defense and critical hits resolve on impact.",
   "worldcombat.value.sunlight": "Current sunlight",

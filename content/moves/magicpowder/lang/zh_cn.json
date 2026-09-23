@@ -4,8 +4,8 @@
   "worldcombat.skill.magicpowder.use.1": "摘掉对手自己的本系与防守面",
   "worldcombat.skill.magicpowder.use.2": "细撒档把改写维持得更久",
   "worldcombat.skill.magicpowder.description.0": "把目标当前的全部属性改写成单一超能力属性，维持 %1$s。",
-  "worldcombat.skill.magicpowder.description.1": "撒粉距离 %1$s 格，起手 %2$s，收招 %3$s，随速度与体型变化。",
-  "worldcombat.skill.magicpowder.description.2": "粉团半径约 %1$s 格、速度约 %2$s 格/刻；体型与体重越大越明显。",
+  "worldcombat.skill.magicpowder.description.1": "撒粉距离 %1$s 格，起手 %2$s，收招 %3$s；个头决定距离，速度决定起手，特防决定收招。",
+  "worldcombat.skill.magicpowder.description.2": "粉团半径约 %1$s 格、飞行速度约 %2$s 格/刻；体型越宽粉团越大，体重越大飘得越快。粉团会轻微追踪目标，趁它飘到之前离开就能避过。",
   "worldcombat.skill.magicpowder.sift.on": "细撒：改写维持 %1$s、射程收短到 %2$s 格，起手更慢、冷却更久。",
   "worldcombat.skill.magicpowder.sift.off": "一把撒出：射得更远、起手更快、冷却 %1$s，但改写更短。",
   "worldcombat.skill.magicpowder.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -24,11 +24,12 @@
   "worldcombat.skill.magicpowder.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑撒粉；调小只在贴身时用，调大愿意先追过去。",
   "worldcombat.skill.magicpowder.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.magicpowder.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去撒粉。",
-  "worldcombat.skill.magicpowder.growth.0": "40 级起：冷却降到 %1$s。",
-  "worldcombat.skill.magicpowder.growth.1": "55 级起：冷却降到 %1$s。",
+  "worldcombat.skill.magicpowder.growth.0": "达到 %1$s 级后，基础冷却额外缩短 0.5 秒。",
+  "worldcombat.skill.magicpowder.growth.1": "达到 %1$s 级后，基础冷却额外缩短 1 秒，替代上一档成长修正。",
   "world_combat.move.magicpowder.text.coat": "被魔法粉撒中，变成了超能力属性",
   "world_combat.move.magicpowder.text.immune": "草属性把粉抖掉了，粉末无效",
   "world_combat.move.magicpowder.text.wipe": "魔法粉飘散，属性还原",
   "world_combat.move.magicpowder.text.fizzle": "已经是纯超能力，撒不上去",
-  "effect.world_combat.magic_powder": "被魔法粉改写（超能力）"
+  "effect.world_combat.magic_powder": "被魔法粉改写（超能力）",
+  "worldcombat.skill.magicpowder.description.additional": "已经是纯超能力属性的目标撒不上去，粉末会直接散去。"
 }

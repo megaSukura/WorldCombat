@@ -28,6 +28,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: psybladeId,
         cooldownParameter: "recharge",
         name: "精神剑",

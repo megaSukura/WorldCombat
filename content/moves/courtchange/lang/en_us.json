@@ -3,7 +3,7 @@
   "worldcombat.skill.courtchange.use.0": "Reclaim a dangerous field the enemy laid down",
   "worldcombat.skill.courtchange.use.1": "Flip a vortex or snare under the foe's feet",
   "worldcombat.skill.courtchange.use.2": "Trade an old field of your own for a more useful enemy one",
-  "worldcombat.skill.courtchange.description.0": "Pick a point within %2$s blocks; every field effect within %1$s blocks flips ownership.",
+  "worldcombat.skill.courtchange.description.0": "Pick a point within %2$s blocks; every field effect within %1$s blocks is reassigned - enemy fields pass to you, and your own fields go to the nearest enemy.",
   "worldcombat.skill.courtchange.swift.on": "Swift swap: %1$s telegraph and %2$s cooldown, at the cost of radius x0.85 - quick and small, made for long trades.",
   "worldcombat.skill.courtchange.swift.off": "Steady swap: radius x1.2, at the cost of a higher telegraph and cooldown - one circle covers a much wider stretch.",
   "worldcombat.skill.courtchange.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
@@ -22,5 +22,6 @@
   "worldcombat.skill.courtchange.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.courtchange.preference.ai.leaveStation.help": "On: a hold order no longer stops it from leaving its post to swap the field.",
   "world_combat.move.courtchange.text.swap": "Court Change (took %1$s, gave %2$s)",
-  "world_combat.move.courtchange.text.empty": "Court Change: no field to swap"
+  "world_combat.move.courtchange.text.empty": "Court Change: no field to swap",
+  "worldcombat.skill.courtchange.description.additional": "A field only changes owner, keeping its rule, radius and remaining duration; a friendly field stays put when no enemy is near enough to take it, and the move comes up empty when no field is in range."
 }

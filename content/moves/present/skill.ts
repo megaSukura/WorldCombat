@@ -37,7 +37,7 @@ namespace PokemonSkills {
         id: presentId,
         cooldownParameter: "recharge",
         name: "Present",
-        description: "递给对手设有圈套的盒子进行攻击。也有可能回复对手HP。",
+        description: "给落点递上一个盒子，当着面打开：多数时候是弹簧拳套炸伤圈内非友方，偶尔真是一颗糖，反而把落点旁那个人治好。",
         uses: ["远程递上一个有时会炸、偶尔会治人的盒子", "在安全距离外赌一次高伤害", "恶作剧式地给对手送上一盒"],
         kind: "point",
         range: 7,

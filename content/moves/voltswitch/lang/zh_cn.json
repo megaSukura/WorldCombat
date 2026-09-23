@@ -3,13 +3,13 @@
   "worldcombat.skill.voltswitch.use.0": "远程点一下再瞬移，重新找站位",
   "worldcombat.skill.voltswitch.use.1": "被打崩前放电脱身",
   "worldcombat.skill.voltswitch.use.2": "在原地留一片电荷封住走位",
-  "worldcombat.skill.voltswitch.description.0": "电弧命中活体造成 %1$s 点特殊伤害。",
+  "worldcombat.skill.voltswitch.description.0": "电弧命中非友方活体，造成约 %1$s 点特殊伤害。",
   "worldcombat.skill.voltswitch.description.1": "射程 %1$s 格、电弧以 %2$s 格/刻飞出，判定半径 %3$s 格。",
   "worldcombat.skill.voltswitch.description.2": "放电后瞬移 %1$s 格、横向偏出 %2$s 格；%3$s 格内有伙伴时落在他身后。",
-  "worldcombat.skill.voltswitch.description.3": "余电式在原地留下半径 %1$s 格的电荷区，存在 %2$s，每 20 刻电击范围内的敌人 %3$s 点。",
+  "worldcombat.skill.voltswitch.description.3": "余电式下，在原地留下半径 %1$s 格的电荷区，存在 %2$s，每 20 刻对范围内每个非友方各造成 %3$s 点电击伤害。",
   "worldcombat.skill.voltswitch.relay.on": "余电式：原地留下会电击的电荷区，电弧威力 ×0.85、冷却 +6 刻、切换距离 ×0.85；留在场上，不换手。",
   "worldcombat.skill.voltswitch.relay.off": "直放式：电弧威力 ×1.2、切换距离 ×1.2，原地不留东西；有后备时直接与待命的一只换手。",
-  "worldcombat.skill.voltswitch.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.voltswitch.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.voltswitch.growth.0": "%1$s 级起电弧威力抬到 %2$s。",
   "worldcombat.skill.voltswitch.growth.1": "%1$s 级起电弧威力抬到 %2$s。",
   "worldcombat.skill.voltswitch.value.volt": "电弧威力",
@@ -36,5 +36,6 @@
   "worldcombat.skill.voltswitch.preference.ai.leaveStation.help": "开启后，驻守命令下也会瞬移脱离；关闭则只在原地方便时施放。",
   "world_combat.move.voltswitch.text.relay": "切换 · 接应",
   "world_combat.move.voltswitch.text.miss": "落空 · 还是切走了",
-  "world_combat.move.voltswitch.text.switch": "伏特替换 · 换手"
+  "world_combat.move.voltswitch.text.switch": "伏特替换 · 换手",
+  "worldcombat.skill.voltswitch.description.blink": "无论电弧是否命中，都会完成这次瞬移；没有伙伴接应时朝背对目标的方向跳开并横向偏出，落点被地形挡住时会尽量沿该方向推开。"
 }

@@ -145,7 +145,8 @@ namespace PokemonSkills {
     describe("scaleshot", [
         { key: "description.0", values: ["shard", "shots"] },
         { key: "description.1", values: ["gap", "shardSpeed", "reach", "spread"] },
-        { key: "description.2", values: ["shardRadius", "speedGain", "guardLoss"] },
+        { key: "homing", values: [] },
+        { key: "description.2", values: ["shardRadius","speedGain","guardLoss"] },
         { key: "spray.on", values: ["maxTargets"], when: function (context) { return read(context.detail.values, ["spray"]) === true; } },
         { key: "spray.off", values: [], when: function (context) { return read(context.detail.values, ["spray"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

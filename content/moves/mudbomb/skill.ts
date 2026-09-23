@@ -33,7 +33,7 @@ namespace PokemonSkills {
     define({
         id: "mudbomb",
         name: "Mud Bomb",
-        description: "The user launches a hard-packed mud ball to attack. This may also lower the target's accuracy.",
+        description: "把泥压实成一颗硬弹直线掷出；命中时炸开泼溅到附近，有时会糊住目标的眼。",
         uses: ["中远距离的直线重击", "用爆开泼溅打到目标身边的敌人", "偶尔糊眼，削掉对手的命中"],
         kind: "enemy",
         range: 14,

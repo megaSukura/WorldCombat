@@ -312,6 +312,10 @@ object CompanionControl {
             if(positioning.isEmpty()) {
                 beginManual(s,combat);finish("ready");execute(s,command,combat);return
             }
+            // The rider owns positioning. Preserve the actual range/sight refusal instead of asking
+            // native navigation to take over and turning it into an unrelated mounted-control error.
+            val entity = combat.resolve(actor)
+            if (entity?.isVehicle == true || entity?.isPassenger == true) { finish(positioning); return }
             if(combat.runtime().claimed(actor,"movement") || combat.runtime().claimed(actor,"aim")) {
                 s.body.pendingReason="waiting-action";s.reason=s.body.pendingReason;return
             }

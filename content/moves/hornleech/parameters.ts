@@ -96,11 +96,12 @@ namespace PokemonSkills {
 
     describe("hornleech", [
         { key: "description.0", values: ["gore"] },
-        { key: "description.1", values: ["reach", "charge", "tusk"] },
+        { key: "description.1", values: ["reach","charge","tusk"] },
+        { key: "description.targeting", values: [] },
         { key: "description.2", values: ["sap"] },
         { key: "gore.on", values: [], when: function (context) { return read(context.detail.values, ["gore"]) === true; } },
         { key: "gore.off", values: [], when: function (context) { return read(context.detail.values, ["gore"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gore"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.gore", "tier.1.sap"] }
     ]);

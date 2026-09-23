@@ -4,7 +4,7 @@
   "worldcombat.skill.psyshock.use.1": "Shove a frail target out of position",
   "worldcombat.skill.psyshock.use.2": "Finish a low-health target with the cheapest shot",
   "worldcombat.skill.psyshock.description.0": "Hurls the materialized shard up to %1$s blocks; on impact it settles %2$s special damage against the target's physical Defence.",
-  "worldcombat.skill.psyshock.description.1": "The shard flies at %1$s blocks/tick with %2$s drop and a %3$s block hit radius; running out of range or hitting terrain counts as a miss.",
+  "worldcombat.skill.psyshock.description.1": "The shard flies at %1$s blocks/tick with %2$s blocks/tick² of drop and a %3$s block hit radius; running out of range or hitting terrain counts as a miss.",
   "worldcombat.skill.psyshock.description.2": "A hit knocks the target back %1$s blocks and shatters the shard.",
   "worldcombat.skill.psyshock.heavy.on": "Heavy shard: power x1.22, knockback x1.6 and a faster drop for a harder blow, at the cost of x0.8 velocity, x0.85 reach, +3 ticks wind-up and +6 ticks cooldown.",
   "worldcombat.skill.psyshock.heavy.off": "Light shard: a longer, faster, near-drifting throw, at the cost of power and knockback.",

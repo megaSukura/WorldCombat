@@ -22,9 +22,10 @@ namespace PokemonSkills {
     function finalgambitVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
 
     define({
+        freeMovement: true,
         id: "finalgambit",
         name: "Final Gambit",
-        description: "The user risks everything to attack the target. The user faints but inflicts damage equal to its own HP.",
+        description: "拼命自爆：扑向对手，命中造成等于自己当前生命的固定伤害，随后自己倒下。满血时最重、残血时最轻；打空或被属性免疫挡下不消耗生命、也不倒。留手式把伤害降到 55%%、结算后保留 1 点生命不倒下，代价是冷却更久。",
         uses: ["满血时一换一打空高价值目标", "把挡路的强敌拖下水", "留手式赌一记重伤但保命"],
         kind: "enemy",
         range: 2.6,

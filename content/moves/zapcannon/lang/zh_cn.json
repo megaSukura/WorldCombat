@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.zapcannon.summary": "长时间蓄电，再射出一颗慢而沉的电弹。它飞得慢、只做有限修正，横向走位能甩开；但只要命中，威力很重而且一定麻住目标。蓄力期间可被打断，不花 PP。电属性对麻痹免疫。",
-  "worldcombat.skill.zapcannon.description.0": "把电灌满炮膛后用 %1$s 的威力打出电弹，弹体以 %2$s 格每刻飞行，射程 %3$s；它比同族的电击慢得多，正是难中的原因。",
-  "worldcombat.skill.zapcannon.description.1": "蓄力 %1$s 后开炮，并无条件麻住目标 %2$s；对电属性无效。",
+  "worldcombat.skill.zapcannon.description.0": "把电灌满炮膛后打出电弹，命中约 %1$s 点伤害；弹体以 %2$s 格每刻飞行，射程 %3$s。它比同族的电击慢得多、只做有限修正，横向走位能把它甩开——这正是它难中的原因。",
+  "worldcombat.skill.zapcannon.description.1": "蓄力 %1$s 后开炮：命中即造成伤害，并必定麻住目标 %2$s（免疫麻痹者除外）。麻痹期间目标移动速度减半，且每次尝试发动招式或攻击有 25% 概率失败；电属性免疫麻痹。蓄力期间可被打断，未开炮不消耗 PP。",
   "worldcombat.skill.zapcannon.description.2": "弹体每刻修正 %1$s 度，开炮把它自己向后推 %2$s 格；冷却 %3$s。",
   "worldcombat.skill.zapcannon.quickload.on": "速装式：蓄力 ×0.6、弹速 ×1.3、转向 ×1.35、冷却 ×0.9，更容易在走位中打中；代价是威力 ×0.78、麻痹时长 ×0.85。",
   "worldcombat.skill.zapcannon.quickload.off": "满装：蓄得久、弹更重更慢、麻得更长，代价是要站定蓄力、冷却也更久。",
@@ -11,7 +11,7 @@
   "worldcombat.skill.zapcannon.use.0": "远距离的必麻重击",
   "worldcombat.skill.zapcannon.use.1": "先手把冲上来的目标钉住",
   "worldcombat.skill.zapcannon.use.2": "用一炮打断对手的节奏",
-  "worldcombat.skill.zapcannon.value.shell": "炮弹威力",
+  "worldcombat.skill.zapcannon.value.shell": "炮弹伤害",
   "worldcombat.skill.zapcannon.value.shellSpeed": "弹体速度",
   "worldcombat.skill.zapcannon.value.shellTurn": "修正转向",
   "worldcombat.skill.zapcannon.value.shockRadius": "爆开半径",

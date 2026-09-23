@@ -24,7 +24,7 @@ namespace PokemonSkills {
         id: "brutalswing",
         cooldownParameter: "recharge",
         name: "Brutal Swing",
-        description: "The user swings its body around violently to inflict damage on everything in its vicinity.",
+        description: "沉身收臂后原地横转一整圈：身边半径内的每个敌人各挨一记物理伤害，并被沿离心方向甩开；转完就站稳，不给自己减速。广抡式伸得更开、甩得更狠，代价是单发更轻、转身更慢。",
         uses: ["被围住时原地扫开一圈", "打断贴身围攻、把近身的人甩开", "不减速的近身覆盖：转一圈就收"],
         kind: "self",
         range: 3.0,

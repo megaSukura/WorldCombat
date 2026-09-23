@@ -80,7 +80,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["reach", "radius", "tempo", "settle", "recharge"] },
         { key: "choke.on", values: [], when: function (context) { return read(context.detail.values, ["choke"]) === true; } },
         { key: "choke.off", values: [], when: function (context) { return read(context.detail.values, ["choke"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.chop", "tier.0.silenceTicks"] }
     ]);
 }

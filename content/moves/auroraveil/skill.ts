@@ -40,7 +40,7 @@ namespace PokemonSkills {
         id: auroraveilId,
         cooldownParameter: "recharge",
         name: "极光幕",
-        description: "在头顶拉开一道极光、罩住幕下的队友；期间受到的物理与特殊伤害都被一起削减。只有雨雪交加的冷天（雷雨 + 脚下有雪或冰）才铺得起来；离开极光区就失去这层幕。",
+        description: "在选定位置铺开极光，减少幕下友方受到的物理与特殊伤害。施放时须正在下雨或雷暴，且自己脚下附近有雪或冰。",
         uses: ["同时挡住物理与特殊两路输出", "在雪地的阵地战里护住队伍", "为换人、回复争取一段窗口"],
         kind: "point",
         range: 12,

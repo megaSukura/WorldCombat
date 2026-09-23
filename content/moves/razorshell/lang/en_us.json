@@ -1,9 +1,9 @@
 {
   "worldcombat.skill.razorshell.summary": "Flash the shell edge and sweep a wide arc in front: every foe in the fan takes a carving cut and each has a chance to lose a Defence stage; the watery edge also soaks whoever it cuts. The Full-Moon style sweeps wider and shaves more often; the Keen-Edge style narrows to one blade and hits harder per target.",
-  "worldcombat.skill.razorshell.description.0": "Every target inside the arc takes a %1$s contact cut.",
+  "worldcombat.skill.razorshell.description.0": "Sweeps an arc in front; every enemy inside takes one cut of about %1$s contact damage, up to %2$s targets.",
   "worldcombat.skill.razorshell.description.1": "Centred on the user it sweeps a %1$s block fan opening %2$s degrees.",
-  "worldcombat.skill.razorshell.description.2": "A landed cut has a %1$s chance to lower the target's Defence by %2$s stage and leaves it wet for %3$s; it also pushes each target outward along the arc.",
-  "worldcombat.skill.razorshell.wide.on": "Full-Moon style: a wider fan, a higher shave chance, a longer soak and a stronger push, at the cost of ×0.88 per hit and +6 cooldown.",
+  "worldcombat.skill.razorshell.description.2": "A landed cut has a %1$s chance to lower the target's Defence by %2$s stage(s); it also leaves a soaked mark on the target for %3$s that Water and Ice moves can read (a target already soaked is not re-timed), and pushes it %4$s blocks outward along the arc.",
+  "worldcombat.skill.razorshell.wide.on": "Full-Moon style: a wider fan, a higher shave chance, a longer soak and a stronger push, at the cost of ×0.88 per hit and +6 ticks cooldown.",
   "worldcombat.skill.razorshell.wide.off": "Keen-Edge style: a narrower fan, but ×1.15 per hit, a shorter cooldown and a slightly lower shave chance - better against a single target.",
   "worldcombat.skill.razorshell.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.razorshell.growth.0": "From level %1$s the carve rises to %2$s.",
@@ -22,12 +22,13 @@
   "worldcombat.skill.razorshell.value.aftercast": "Recovery",
   "worldcombat.skill.razorshell.value.recharge": "Cooldown",
   "worldcombat.skill.razorshell.preference.wide": "Full-Moon style",
-  "worldcombat.skill.razorshell.preference.wide.help": "On: a wider fan, a higher shave chance, a longer soak and a stronger push, at the cost of ×0.88 per hit and +6 cooldown. Off: Keen-Edge - a narrower fan but ×1.15 per hit, a shorter cooldown and a slightly lower shave chance, better at focusing one target.",
+  "worldcombat.skill.razorshell.preference.wide.help": "On: a wider fan, a higher shave chance, a longer soak and a stronger push, at the cost of ×0.88 per hit and +6 ticks cooldown. Off: Keen-Edge - a narrower fan but ×1.15 per hit, a shorter cooldown and a slightly lower shave chance, better at focusing one target.",
   "worldcombat.skill.razorshell.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.razorshell.preference.ai.maxChase.help": "Beyond this distance the user closes in first; larger chases harder.",
   "worldcombat.skill.razorshell.preference.ai.crowd": "Sweep the crowd",
   "worldcombat.skill.razorshell.preference.ai.crowd.help": "On: when two or more foes crowd the front fan, prefer the sweep to shave a whole rank. Off: ignore the count and sort it as an ordinary mid-range slash.",
   "world_combat.move.razorshell.text.shave": "Shaved %1$s target's guard",
   "world_combat.move.razorshell.text.miss": "The sweep caught nothing",
-  "effect.world_combat.razorshell_soaked": "Soaked (Razor Shell)"
+  "effect.world_combat.razorshell_soaked": "Soaked (Razor Shell)",
+  "worldcombat.skill.razorshell.value.maxTargets": "Max targets"
 }

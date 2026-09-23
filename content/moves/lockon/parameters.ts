@@ -74,9 +74,9 @@ namespace PokemonSkills {
     });
 
     describe(lockonId, [
-        { key: "description.0", values: ["lockTicks", "pinTicks"] },
+        { key: "description.0", values: ["lockTicks","pinTicks"] },
         { key: "description.1", values: [] },
-        { key: "hold.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
+        { key: "hold.on", values: ["tempo","recharge"], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "description.2", values: ["reach", "tempo", "aftercast"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

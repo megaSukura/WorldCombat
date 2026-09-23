@@ -18,10 +18,11 @@ namespace PokemonSkills {
     const visegripMissText = "world_combat.move.visegrip.text.miss";
 
     define({
+        freeMovement: true,
         id: "visegrip",
         cooldownParameter: "recharge",
         name: "Vise Grip",
-        description: "扑上一步，两只钳子从两侧同时合上夹住目标碾一下，再顺势把它朝自己拽近。钳口相对目标越大夹得越实；目标越重越大越夹不动、越拽不动。拖拽式把人拉得更近，代价是这一夹更轻；碾夹式相反。",
+        description: "扑上一步，两只钳子从两侧同时合上夹住一个目标碾一下，再顺势把它朝自己拽近。目标体型越大这一夹越轻，越重越拽不动；补步后仍够不到就夹空。拖拽式把人拉得更近、射程略长，代价是这一夹更轻；碾夹式相反。",
         uses: ["把逃跑的目标拽回近身", "对钳口相对更小的目标打一记实在的接触伤害", "把远处的敌人拖进队友的射程", "起手不长的一记贴身物理手段"],
         kind: "enemy",
         range: 2.6,

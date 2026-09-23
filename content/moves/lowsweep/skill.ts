@@ -31,7 +31,7 @@ namespace PokemonSkills {
     define({
         id: "lowsweep",
         name: "Low Sweep",
-        description: "The user makes a swift attack on the target's legs, which lowers the target's Speed stat.",
+        description: "原地压低重心、拧腰扫出一道贴地的低弧：弧线里最多 3 名敌人的小腿被削到，正在快速移动的目标重心最难收回、掉的速度也最多；被削到重心难收的目标小腿还会被别住一瞬。旋身扫弧线更开、别腿更久，但单点更轻。",
         uses: ["贴身削掉高速对手的速度", "一记快而便宜的点切", "拧身扫开脚边一小圈敌人"],
         kind: "enemy",
         range: 2.6,

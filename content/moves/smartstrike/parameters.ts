@@ -70,7 +70,7 @@ namespace PokemonSkills {
 
     describe("smartstrike", [
         { key: "description.0", values: ["thrust"] },
-        { key: "description.1", values: ["lockRange", "chargeSpeed", "steering", "stabRadius"] },
+        { key: "description.1", values: ["lockRange","chargeSpeed","steering","stabRadius"] },
         { key: "description.2", values: ["push"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.thrust", "tier.0.steering"] },

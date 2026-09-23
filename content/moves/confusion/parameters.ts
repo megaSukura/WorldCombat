@@ -138,8 +138,9 @@ namespace PokemonSkills {
 
     describe(confusionId, [
         { key: "description.0", values: ["pulse"] },
-        { key: "description.1", values: ["confuseChance", "dazeTicks", "fumble"] },
-        { key: "description.2", values: ["reach", "velocity"] },
+        { key: "description.1", values: ["confuseChance","dazeTicks","fumble"] },
+        { key: "description.chip", values: [] },
+        { key: "description.2", values: ["reach","velocity","radius"] },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

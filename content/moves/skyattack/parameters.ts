@@ -111,12 +111,12 @@ namespace PokemonSkills {
         rationale: "从上方整身砸下来的动量比平推更透护甲，让速度差在伤害上更明显。" }, { contact: false });
 
     describe("skyattack", [
-        { key: "description.0", values: ["plunge", "altitude", "descend"] },
-        { key: "description.1", values: ["charge", "impactRadius"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.0", values: ["plunge","altitude","descend"] },
+        { key: "description.1", values: ["charge","impactRadius"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks"] },
         { key: "highDive.on", values: [], when: function (context) { return read(context.detail.values, ["highDive"]) === true; } },
         { key: "highDive.off", values: [], when: function (context) { return read(context.detail.values, ["highDive"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.plunge"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.plunge", "tier.1.flinchChance"] }
     ]);

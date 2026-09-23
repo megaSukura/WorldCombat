@@ -35,10 +35,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "sacredfire",
         cooldownParameter: "recharge",
         name: "Sacred Fire",
-        description: "The target is razed with a mystical fire of great intensity. This may also leave the target with a burn.",
+        description: "被一道虹彩圣火裹住，俯冲撞向目标：一记物理重击，命中后有较高概率使其陷入灼伤，施放时还会解去自身的冰封；圣火式在撞击点留下一片反复烫人的虹彩余焰，天罚式只取更重的一击。",
         uses: ["裹着虹彩圣火俯冲撞穿一个目标", "用高概率的灼伤压制对手", "在落点留下一片会烫人的彩火"],
         kind: "enemy",
         range: 6,

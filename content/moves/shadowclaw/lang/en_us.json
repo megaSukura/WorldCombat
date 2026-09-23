@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.shadowclaw.summary": "A shadow slides along the ground to behind the target, and a claw reaches back out of it to rake the weak point from the side it cannot guard: contact damage, a shadow mark left at the hit. When the target is not currently watching you, the claw lands heavier; it has the family's raised critical chance.",
-  "worldcombat.skill.shadowclaw.description.0": "The claw deals %1$s contact damage and lands critical hits more often.",
+  "worldcombat.skill.shadowclaw.description.0": "The claw deals about %1$s contact damage to a single target and lands critical hits more often.",
   "worldcombat.skill.shadowclaw.description.1": "The shadow first reaches a target %1$s blocks away.",
-  "worldcombat.skill.shadowclaw.description.2": "When the target is not watching you the claw is %1$s heavier.",
+  "worldcombat.skill.shadowclaw.description.2": "When the target is not watching you, the claw's damage is increased by %1$s.",
   "worldcombat.skill.shadowclaw.deep.on": "Deep form: the claw is heavier and the ambush bonus is higher, at longer preparation and cooldown.",
   "worldcombat.skill.shadowclaw.deep.off": "Close form: a faster draw and a shorter cooldown, at lower power and ambush bonus.",
   "worldcombat.skill.shadowclaw.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

@@ -4,7 +4,7 @@
   "worldcombat.skill.megakick.use.1": "用大起手逼对手让位，再收势",
   "worldcombat.skill.megakick.use.2": "对残血目标做一记终结式重踢",
   "worldcombat.skill.megakick.description.0": "撞腿造成约 %1$s 的接触伤害，判定半径 %2$s 格。",
-  "worldcombat.skill.megakick.description.1": "沿瞄准方向突进最多 %1$s 格、每刻 %2$s 格，碰到第一个活体即踢；踢空后还会多冲约 %3$s 格才收住。",
+  "worldcombat.skill.megakick.description.1": "沿瞄准方向突进最多 %1$s 格、每刻 %2$s 格，踢中沿途第一个敌人；撞到友方或墙体会立即停住并算落空；走完这段仍没踢到，还会多冲约 %3$s 格才收住。",
   "worldcombat.skill.megakick.description.2": "命中把目标沿踢击方向抛出约 %1$s 格、抬高 %2$s 格；目标越重飞得越近。",
   "worldcombat.skill.megakick.launch.on": "踢飞式：把目标抛得更远更高，但单发威力略低、收招与冷却更久。",
   "worldcombat.skill.megakick.launch.off": "砸穿式：一记更重、更省时、几乎不抛飞但冲击更实的重踢。",

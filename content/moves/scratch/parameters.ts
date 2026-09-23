@@ -113,7 +113,8 @@ namespace PokemonSkills {
     describe("scratch", [
         { key: "description.0", values: ["claw", "lines"] },
         { key: "description.1", values: ["reach", "span", "line"] },
-        { key: "sweep.on", values: ["lines", "span", "claw"], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
+        { key: "approach", values: ["step"] },
+        { key: "sweep.on", values: ["lines","span","claw"], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.claw"] },

@@ -4,12 +4,12 @@
   "worldcombat.skill.firespin.use.1": "用点燃的持续掉血压制厚目标",
   "worldcombat.skill.firespin.use.2": "逼对手为灭火而改变站位",
   "worldcombat.skill.firespin.use.3": "把目标从水里逼出来再点火",
-  "worldcombat.skill.firespin.description.0": "火种命中造成 %1$s 特殊伤害，并在目标身上立起一道跟着它走的火柱。",
-  "worldcombat.skill.firespin.description.1": "火柱持续 %1$s，每 %2$s 舔一次火；每次有 %3$s 概率点燃目标，灼伤持续 %4$s。",
-  "worldcombat.skill.firespin.description.2": "射程 %1$s 格，火种速度 %2$s 格每刻。",
+  "worldcombat.skill.firespin.description.0": "火种命中造成约 %1$s 特殊伤害，并在目标身上立起一道跟着它走的火柱。",
+  "worldcombat.skill.firespin.description.1": "火柱持续 %1$s，每 %2$s 舔一次火，每次都对目标造成约 %5$s 特殊伤害；若目标还没被点着，每次另有 %3$s 概率点燃它，灼伤持续 %4$s，期间每 5 秒烧掉它最大生命的 1/16，它的物理攻击也会减半。",
+  "worldcombat.skill.firespin.description.2": "射程 %1$s 格，火种会追踪目标，速度 %2$s 格每刻。",
   "worldcombat.skill.firespin.option.on": "开启猛火式：威力 ×1.1、间隔 ×0.8、点燃率 ×1.25、冷却 +6，但持续 ×0.8，打得更凶也更快结束。",
   "worldcombat.skill.firespin.option.off": "关闭猛火式（缓燃式）：威力满值、间隔更长、点燃率更低，但持续更久，适合稳稳地磨。",
-  "worldcombat.skill.firespin.timing": "可对 %1$s 格内的目标施放，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",
+  "worldcombat.skill.firespin.timing": "可对 %1$s 格内的目标施放，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，出手后冷却 %5$s。",
   "worldcombat.skill.firespin.growth.0": "达到 %1$s 级，灼烧威力提升至 %2$s，点燃概率提升至 %3$s。",
   "worldcombat.skill.firespin.value.scorch": "灼烧威力",
   "worldcombat.skill.firespin.value.duration": "火柱持续",
@@ -30,5 +30,6 @@
   "world_combat.move.firespin.text.wrap": "卷入火旋 %1$s 秒",
   "world_combat.move.firespin.text.release": "火柱散去",
   "world_combat.move.firespin.text.douse": "火被浇灭",
-  "effect.world_combat.firespin_blaze": "卷入火焰旋涡"
+  "effect.world_combat.firespin_blaze": "卷入火焰旋涡",
+  "worldcombat.skill.firespin.description.douse": "目标一旦湿透（入水、淋雨或被水招式打湿），火柱立刻熄灭；灼焰被提前清掉（如牛奶、驱散）时，火柱也提前结束。"
 }

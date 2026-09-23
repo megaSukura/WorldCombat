@@ -122,8 +122,10 @@ namespace PokemonSkills {
         rationale: "水帘拍上去把力摊开，钝撞更容易透过护甲，让体格与等级差更明显。" }, { contact: true });
 
     describe("waterfall", [
-        { key: "description.0", values: ["crash", "pounce", "pace", "collisionRadius"] },
-        { key: "description.1", values: ["shove", "flinchChance", "flinchTicks"] },
+        { key: "description.0", values: ["crash","pounce","pace","collisionRadius"] },
+        { key: "description.path", values: [] },
+        { key: "description.1", values: ["shove","flinchChance","flinchTicks"] },
+        { key: "description.rain", values: [] },
         { key: "torrent.on", values: [], when: function (context) { return read(context.detail.values, ["torrent"]) === true; } },
         { key: "torrent.off", values: [], when: function (context) { return read(context.detail.values, ["torrent"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

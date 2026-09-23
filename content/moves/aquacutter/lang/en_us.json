@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.aquacutter.summary": "Pressurized water is expelled as a straight, extremely fast, narrow line that cuts like a blade: each foe it crosses takes a slicing hit and is drenched, and one jet pierces up to several. The fastest, straightest and narrowest of the four, with the family's raised critical chance.",
-  "worldcombat.skill.aquacutter.description.0": "The jet deals %1$s slicing damage and lands critical hits more often.",
+  "worldcombat.skill.aquacutter.description.0": "Each foe the jet cuts takes a single hit of about %1$s slicing damage, and it lands critical hits more often.",
   "worldcombat.skill.aquacutter.description.1": "The jet fires at %1$s blocks per tick over %2$s blocks with a %3$s block radius.",
-  "worldcombat.skill.aquacutter.description.2": "One jet pierces up to %1$s foes and drenches those it cuts for %2$s.",
+  "worldcombat.skill.aquacutter.description.2": "One jet pierces up to %1$s foes; those it cuts carry the soaked mark for %2$s, and later moves that read soaked treat them as wet (a target already soaked does not refresh its timer).",
   "worldcombat.skill.aquacutter.lance.on": "Lance form: higher power, one more foe pierced and a narrower jet, at slower fire and a longer cooldown.",
   "worldcombat.skill.aquacutter.lance.off": "Scatter form: faster fire, a wider jet and a shorter cooldown, at lower power.",
   "worldcombat.skill.aquacutter.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

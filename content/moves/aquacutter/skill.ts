@@ -19,7 +19,7 @@ namespace PokemonSkills {
         id: aquacutterId,
         cooldownParameter: "recharge",
         name: "Aqua Cutter",
-        description: "The user expels pressurized water to cut at the target like a blade. This move has a heightened chance of landing a critical hit.",
+        description: "把水压成一道笔直、极快、细窄的水线喷出去，像刀刃一样切开沿途的对手：切中的目标各吃一记切斩并被溅湿，一道水线最多贯穿好几个。它是四记里最快、最直、最窄的一击，暴击率比同族高一档。",
         uses: ["一道笔直极快的水线切穿对手", "一路贯穿成排的目标", "把切中的溅湿，留一段水湿窗口"],
         kind: "enemy",
         range: 10,

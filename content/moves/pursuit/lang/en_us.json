@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.pursuit.summary": "Pounces on a target that is pulling away; the blow doubles when the target is retreating.",
   "worldcombat.skill.pursuit.use.0": "Chasing strike",
-  "worldcombat.skill.pursuit.description.0": "Pounces low along the ground: %1$s physical damage; pounce range %2$s blocks, %3$s blocks per tick, collision radius %4$s blocks. The power doubles when the target is moving away at the moment of impact.",
+  "worldcombat.skill.pursuit.description.0": "Pounces low along the ground: %1$s physical damage; pounce range %2$s blocks, %3$s blocks per tick, collision radius %4$s blocks. It only deals damage to the first enemy it runs into, stopping early at terrain or an ally. The power doubles when the target is moving away at the moment of impact.",
   "worldcombat.skill.pursuit.description.1": "PP cost %1$s; cooldown %2$s s.",
   "worldcombat.skill.pursuit.timing": "Timing",
   "worldcombat.skill.pursuit.value.power": "Pursuit power",

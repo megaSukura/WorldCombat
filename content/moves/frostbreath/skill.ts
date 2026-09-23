@@ -59,7 +59,7 @@ namespace PokemonSkills {
         id: frostbreathId,
         cooldownParameter: "recharge",
         name: "Frost Breath",
-        description: "呼出一片宽而慢的冷雾，罩住的敌人各吃一记必定击中要害的冰属性特殊伤害并被冻僵；冷雾漫到才结算，走出雾外就躲开了，落点还会结出一层霜。",
+        description: "呼出一片宽而慢的冷雾：罩住的敌人各吃一记必定击中要害的冰属性特殊伤害并被冻僵，落点结出一层霜。广呼罩得更宽；细呼更快更远更重。",
         uses: ["罩住挤在一起的一片敌人", "用必定要害的冷雾压低一群目标", "在窄口铺一片冻得发僵的霜"],
         kind: "enemy",
         range: 8,

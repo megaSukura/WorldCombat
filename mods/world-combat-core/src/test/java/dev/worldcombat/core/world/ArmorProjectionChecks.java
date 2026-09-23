@@ -77,6 +77,15 @@ public final class ArmorProjectionChecks {
         close(exercise(naked, 16384, new JsonObject(), 0), 16384, "Large naked damage not capped");
         var projectionOnly = receiver(attribute(150, 30), attribute(6, 20));
         close(exercise(projectionOnly, 20, metadata, 0), 20, "Pure accounted projection is not applied twice");
+        var worn = attribute(0, 30);
+        modifier(worn, "worn_armor", 12, AttributeModifier.Operation.ADD_VALUE);
+        modifier(worn, "positive_ladder", 6, AttributeModifier.Operation.ADD_VALUE);
+        modifier(worn, "external_multiplier", .25, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+        close(ArmorProjection.remaining(worn, 0, 6), 15, "Additive exclusion retains real equipment and its multiplier");
+        close(worn.getValue(), 22.5, "Additive exclusion never changes live armor");
+        worn.removeModifier(ResourceLocation.parse("checks:positive_ladder"));
+        modifier(worn, "negative_ladder", -6, AttributeModifier.Operation.ADD_VALUE);
+        close(ArmorProjection.remaining(worn, 0, -6), 15, "Ignoring a negative ladder restores only that contribution");
         var container = new DamageContainer(source, expected);
         container.setReduction(DamageContainer.Reduction.MOB_EFFECTS, expected * .2f);
         float afterResistance = container.getNewDamage();

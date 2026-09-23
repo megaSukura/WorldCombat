@@ -19,6 +19,8 @@
 namespace PokemonSkills {
     const waterpulseScene = "world_combat:move_waterpulse";
     const waterpulseDazeEffect = "world_combat:waterpulse_daze";
+    MobEffects.fixedAttributes("world_combat:waterpulse_slow", waterpulseDazeEffect,
+        [{ id: "minecraft:generic.movement_speed", amount: -0.12, operation: "add_multiplied_total" }]);
     const waterpulseDazeText = "world_combat.move.waterpulse.text.daze";
 
     /** 只有代表载体就是本单元的 id 时，本单元的门禁才接管。 */
@@ -41,7 +43,7 @@ namespace PokemonSkills {
         id: "waterpulse",
         cooldownParameter: "recharge",
         name: "Water Pulse",
-        description: "The user attacks the target with a pulsing blast of water. This may also confuse the target.",
+        description: "掷出一枚会嗡鸣的水珠：命中后水波从落点一圈圈荡开，圈里的人各吃一记回响，被震到的可能耳中嗡响、陷入混乱。",
         uses: ["中远距离的直线水波点射", "用荡开的水环扫到目标身边的敌人", "把目标震得耳鸣，制造失手窗口"],
         kind: "enemy",
         range: 13,

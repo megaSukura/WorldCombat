@@ -20,8 +20,8 @@ namespace PokemonSkills {
     define({
         id: "barbbarrage",
         name: "Barb Barrage",
-        description: "The user launches countless toxic barbs to inflict damage. This may also poison the target. This move's power is doubled if the target is already poisoned.",
-        uses: ["扇形压制的物理远程", "给一整片目标撒毒", "追击中毒的敌人"],
+        description: "抖身抖出无数毒针，摊成一面扇形齐射出去。针数随等级与速度增长，整轮威力按针数均分；只要有一针命中，就有机会让目标中毒。目标已经中毒时整轮翻倍。",
+        uses: ["扇形压制的物理远程", "用一面扇形压制一群敌人，有机会给其中一个挂毒", "追击中毒的敌人"],
         kind: "enemy",
         range: 12,
         prepare: 5,

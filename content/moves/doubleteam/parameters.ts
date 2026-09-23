@@ -45,8 +45,8 @@ namespace PokemonSkills {
             unit: " 个", description: "残影周围浮动光点的数量；速度越快越密。" })
     });
     describe(doubleteamId, [
-        { key: "description.0", values: ["copies", "mirrorPool"] },
-        { key: "description.1", values: ["mirrorWindow", "motes"] },
+        { key: "description.0", values: ["mirrorPool"] },
+        { key: "description.1", values: ["mirrorWindow"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] }
     ]);
 }

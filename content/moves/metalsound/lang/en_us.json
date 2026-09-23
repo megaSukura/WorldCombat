@@ -3,7 +3,7 @@
   "worldcombat.skill.metalsound.use.0": "Grind away a Sp. Def wall through cover",
   "worldcombat.skill.metalsound.use.1": "Keep a large Sp. Def drop up for a whole exchange",
   "worldcombat.skill.metalsound.use.2": "Start safely behind a wall, then send the sound through",
-  "worldcombat.skill.metalsound.description.0": "The target loses %1$s stages of Sp. Def and the resonance rings for about %2$s.",
+  "worldcombat.skill.metalsound.description.0": "The target's Sp. Def drops %1$s stage(s) at once and it rings for about %2$s; while ringing, metal rings keep rippling on it and companions will not grind it again. The Sp. Def drop is kept like any ordinary stat stage.",
   "worldcombat.skill.metalsound.description.1": "The sound reaches ears %1$s blocks away; cover does not stop it.",
   "worldcombat.skill.metalsound.description.2": "Grind for %1$s, cooldown %2$s.",
   "worldcombat.skill.metalsound.timing": "Range %1$s blocks, telegraph %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

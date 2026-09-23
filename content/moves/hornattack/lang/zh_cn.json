@@ -4,7 +4,7 @@
   "worldcombat.skill.hornattack.use.1": "把对手沿地面一路推离掩体或站位",
   "worldcombat.skill.hornattack.use.2": "低消耗的近身压制",
   "worldcombat.skill.hornattack.description.0": "角尖一记造成约 %1$s 点接触伤害；角程约 %2$s 格、角线半宽约 %3$s 格。",
-  "worldcombat.skill.hornattack.description.1": "命中的一瞬顶退约 %1$s 格，随后贴着地面总共推走约 %2$s 格。",
+  "worldcombat.skill.hornattack.description.1": "命中的一瞬顶退约 %1$s 格，随后角不松，施放者跟着前移、把目标沿地面继续推走，累计约 %2$s 格（含那一记）；撞墙或推不动就松角。",
   "worldcombat.skill.hornattack.drive.on": "推土式：顶走约 %1$s 格、每顶约 %2$s 点，但起手、收招与冷却都更久。",
   "worldcombat.skill.hornattack.drive.off": "快撞式：顶约 %1$s 格就松角、每顶约 %2$s 点，起手与循环最短。",
   "worldcombat.skill.hornattack.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
@@ -22,10 +22,11 @@
   "worldcombat.skill.hornattack.value.aftercast": "收招",
   "worldcombat.skill.hornattack.value.recharge": "冷却",
   "worldcombat.skill.hornattack.preference.drive": "推土式",
-  "worldcombat.skill.hornattack.preference.drive.help": "开启（推土式）：顶走距离 ×1.6、威力 ×1.08、初始顶退更大，代价是起手 +3 刻、收招 +2 刻、冷却 +5 刻。关闭（快撞式）：顶一小段就收，起手快、循环短。",
+  "worldcombat.skill.hornattack.preference.drive.help": "开启（推土式）：顶走距离 ×1.6、顶撞伤害 ×1.08，代价是起手 +3 刻、收招 +2 刻、冷却 +5 刻。关闭（快撞式）：顶一小段就收，起手快、循环短。",
   "worldcombat.skill.hornattack.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.hornattack.preference.ai.finish": "优先收残血",
   "world_combat.move.hornattack.text.hit": "顶中",
   "world_combat.move.hornattack.text.push": "顶退 %1$s 格",
-  "world_combat.move.hornattack.text.miss": "顶了个空"
+  "world_combat.move.hornattack.text.miss": "顶了个空",
+  "worldcombat.skill.hornattack.description.additional": "一次施放至多顶中角线里的一名敌人，不会伤到友方，其余目标也不受牵连；出角前施放者朝目标趟出至多约 %1$s 格，冲到角尖够到目标为止（被挡住则更近）。顶住推走的整段过程不再追加伤害。"
 }

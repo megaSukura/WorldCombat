@@ -63,7 +63,7 @@ namespace PokemonSkills {
         id: "rockthrow",
         cooldownParameter: "recharge",
         name: "Rock Throw",
-        description: "从脚边地上抄起一块小石，平直快速地甩向目标：一块石头、一次伤害，砸中崩出石屑。石头不追踪，对手在它离手后挪一步就能让开；高抛式能越过矮墙但更散更慢。",
+        description: "从脚边地上抄起一块小石，平直、快速地甩向目标：一块石头一次伤害，砸中崩出石屑。石头不追踪，对手在它离手后挪一步就能让开；高抛式能越过矮墙，但更散更慢。",
         uses: ["便宜的远程消耗，一记接一记地扔", "对站着不动的目标稳定点射", "用高抛式越过掩体打后面的目标"],
         kind: "enemy",
         range: 6,

@@ -80,7 +80,7 @@ namespace PokemonSkills {
         id: roarId,
         cooldownParameter: "wait",
         name: "吼叫",
-        description: "吼出一圈声浪，把范围内的敌人震慑得失去目标、掉头离开战斗；没有伤害。它只把对手逐走，逼它们转身走开。",
+        description: "吼出一圈声浪，把范围内的敌人震慑得失去目标、掉头离开战斗；有后备的对手会被真正换下，野生或没有后备时只逐退。没有伤害，只把对手逐走。",
         uses: ["把贴身的敌人一次逐开", "打断围攻、为自己拉开呼吸空间", "在混战里逼退一圈人"],
         kind: "self",
         range: 5,

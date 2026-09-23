@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.shelltrap.summary": "Sets its shell as a hair-trigger trap and holds still waiting for a blow: if it is hit by a hostile physical move during that time the shell detonates, dealing its own Fire damage to every foe around it, knocking them back, and maybe setting them alight. If no physical blow lands, the shell cools and the move does nothing. A hair-trigger shell fires on any hostile hit instead.",
+  "worldcombat.skill.shelltrap.summary": "Sets its shell as a hair-trigger trap and holds still waiting for a blow: if a hostile physical hit lands during that time the shell detonates, dealing its own Fire damage to the foes around it, knocking them back and maybe setting them alight. If no hit lands, the shell cools and the move does nothing. A hair-trigger shell fires on any hostile hit instead.",
   "worldcombat.skill.shelltrap.use.0": "Wait for a physical blow and blow up everyone who closed in",
   "worldcombat.skill.shelltrap.use.1": "Push back a pack of attackers with a ring of fire",
   "worldcombat.skill.shelltrap.use.2": "Punish a physical combo with a pre-planted explosion",
   "worldcombat.skill.shelltrap.use.3": "Stand your ground before a physical attacker for one area burst",
-  "worldcombat.skill.shelltrap.description.0": "Hold the shell for %2$s s; a hostile physical hit during that time lights it. On detonation every foe around takes one burst of %1$s Fire power. The target's special defence, type and crit are settled on the hit.",
-  "worldcombat.skill.shelltrap.description.1": "It bursts to a %1$s block radius; those caught are shoved up to %2$s blocks out from the centre.",
-  "worldcombat.skill.shelltrap.description.2": "Those caught have a %1$s%% chance to be set alight by burning shards, burning for %2$s s.",
-  "worldcombat.skill.shelltrap.hairtrigger.on": "Hair-trigger on: any hostile hit lights the shell, at the cost of about ×0.75 blast, ×0.8 hold time and cooldown +6 ticks.",
+  "worldcombat.skill.shelltrap.description.0": "Hold the shell for %2$s s, standing still; if a hostile physical hit actually deals damage to you during that time (self-inflicted or friendly damage does not count) the shell lights at once, otherwise it cools when the window ends and the move fizzles. When lit, foes around you each take one blow of about %1$s Fire damage centred on you; the target's special defence, type and crit are settled on the hit. It neither blocks nor returns the damage it takes.",
+  "worldcombat.skill.shelltrap.description.1": "It bursts to a %1$s block radius and catches up to %2$s foes; those caught are shoved up to %3$s blocks out from the centre.",
+  "worldcombat.skill.shelltrap.description.2": "Those caught have a %1$s%% chance to be set alight by burning shards, burning for %2$s; while burned they deal half physical damage and lose one-sixteenth of their maximum health every 5 s or so (at least 1), and Fire-types are immune.",
+  "worldcombat.skill.shelltrap.hairtrigger.on": "Hair-trigger on: any hostile hit that actually deals damage lights the shell, at the cost of about ×0.75 blast, ×0.8 hold time and cooldown +6 ticks.",
   "worldcombat.skill.shelltrap.hairtrigger.off": "Hair-trigger off: only a physical hit lights it, with the full blast and a longer hold, for fighting physical attackers.",
-  "worldcombat.skill.shelltrap.timing": "Reaches a %1$s block area; after %2$s s of wind-up it spends %4$s PP to set the shell, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.shelltrap.timing": "Bursts to a %1$s block radius; after %2$s s of wind-up it spends %4$s PP to set the shell, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
   "worldcombat.skill.shelltrap.growth.0": "At level %1$s the blast rises to %2$s, the burst radius to %3$s, and the hold time to %4$s s.",
   "worldcombat.skill.shelltrap.value.blast": "Blast power",
   "worldcombat.skill.shelltrap.value.blastRadius": "Blast radius",
@@ -21,7 +21,7 @@
   "worldcombat.skill.shelltrap.value.settle": "Recovery",
   "worldcombat.skill.shelltrap.value.recharge": "Cooldown",
   "worldcombat.skill.shelltrap.preference.hairtrigger": "Hair-trigger",
-  "worldcombat.skill.shelltrap.preference.hairtrigger.help": "On: any hostile hit lights the shell (no longer only physical), at the cost of about ×0.75 blast, ×0.8 hold time and cooldown +6 ticks, to answer special attackers. Off: only a physical hit lights it, with the full blast and a longer hold.",
+  "worldcombat.skill.shelltrap.preference.hairtrigger.help": "On: any hostile hit that actually deals damage lights the shell (no longer only physical), at the cost of about ×0.75 blast, ×0.8 hold time and cooldown +6 ticks, to answer special attackers. Off: only a physical hit lights it, with the full blast and a longer hold.",
   "worldcombat.skill.shelltrap.preference.ai.range": "Set distance",
   "worldcombat.skill.shelltrap.preference.ai.range.help": "The shell is set once a threat comes this close. Higher sets it earlier and risks wasting it; lower saves it but bets the foe will walk in to hit you.",
   "worldcombat.skill.shelltrap.preference.ai.minHealth": "Set health",
@@ -30,5 +30,6 @@
   "world_combat.move.shelltrap.text.blast": "Detonated! Caught %1$s",
   "world_combat.move.shelltrap.text.fizzle": "The shell cooled",
   "world_combat.move.shelltrap.text.empty": "The blast caught nothing",
-  "effect.world_combat.shelltrap_armed": "Shell trap"
+  "effect.world_combat.shelltrap_armed": "Shell trap",
+  "worldcombat.skill.shelltrap.value.maxTargets": "Max targets"
 }

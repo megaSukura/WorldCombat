@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.poisontail.summary": "低身转身，把尾巴贴地抡过半圈：扫到一个低矮弧面内的所有对手，正对的吃满、旁边的吃折扣，尾梢按（越远越高的）概率抹毒并把被扫到的人扫开一点。毒尾式更毒但扫得更轻；扫尾式更宽更重但毒难抹上。",
-  "worldcombat.skill.poisontail.description.0": "扫击对正对目标造成 %1$s 的接触伤害，扫击半径 %2$s 格，弧面 %3$s 度。",
-  "worldcombat.skill.poisontail.description.1": "被弧线顺带扫到的其他人吃 %1$s 的威力，并被沿背离方向扫开 %2$s 格。",
-  "worldcombat.skill.poisontail.description.2": "扫中者按 %1$s 概率中毒 %2$s。",
+  "worldcombat.skill.poisontail.description.0": "正对的目标受到约 %1$s 点毒属性接触伤害；扫击半径 %2$s 格、弧面 %3$s 度，弧内每个敌人各挨一次。",
+  "worldcombat.skill.poisontail.description.1": "被弧线顺带扫到的其他敌人承受 %1$s 倍的伤害，并被沿背离方向扫开约 %2$s 格。",
+  "worldcombat.skill.poisontail.description.2": "命中后按 %1$s 的基准概率使目标中毒 %2$s，越靠弧线外缘越容易抹上；中毒到时自动消退，期间持续受到毒素伤害但不会因此倒下，毒属性与钢属性免疫。",
   "worldcombat.skill.poisontail.venom.on": "毒尾式：中毒概率 ×1.25、中毒时长 ×1.15；代价是扫击威力 ×0.9、弧面收窄。",
   "worldcombat.skill.poisontail.venom.off": "扫尾式：扫得更宽更重；代价是毒更难抹上。",
   "worldcombat.skill.poisontail.timing": "射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

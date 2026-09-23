@@ -4,14 +4,14 @@
   "worldcombat.skill.scorchingsands.use.1": "Coat the ground in sand to lock down a patch",
   "worldcombat.skill.scorchingsands.use.2": "Scoop more sand and spread wider on sandy ground",
   "worldcombat.skill.scorchingsands.use.3": "Scorch a wet target for extra damage",
-  "worldcombat.skill.scorchingsands.description.0": "The burst deals %1$s special damage to each body inside; their special defence, type matchup and criticals are settled on impact.",
+  "worldcombat.skill.scorchingsands.description.0": "The impact hits each enemy once for about %1$s special damage. A wet target receives a ×1.15 power multiplier.",
   "worldcombat.skill.scorchingsands.description.1": "Range %1$s blocks; the sand flies at %2$s blocks/tick and bursts in a %3$s block radius.",
-  "worldcombat.skill.scorchingsands.description.2": "Bodies inside have a %1$s chance to be set alight; the landing ground is baked into about %2$s blocks of sand crust for %3$s s.",
-  "worldcombat.skill.scorchingsands.description.3": "In smoulder mode, standing on the sand takes %1$s damage every %2$s s, and stepping in has a %3$s burn chance.",
-  "worldcombat.skill.scorchingsands.rule.sand": "The landing ground is baked into a crust of hot sand (a leased coat that returns the original blocks when it expires); a user standing on sand or sandstone scoops more, for a wider crust and denser visuals. A wet target is scorched worse: hit damage x1.15.",
+  "worldcombat.skill.scorchingsands.description.2": "A hit has a %1$s chance to burn. Up to about %2$s suitable ground blocks near the impact become sandstone for %3$s before restoration.",
+  "worldcombat.skill.scorchingsands.description.3": "In Smolder form, the hot area lasts as long as the sandstone. Enemies remaining inside take about %1$s special damage every %2$s; each entry separately has a %3$s chance to burn.",
+  "worldcombat.skill.scorchingsands.rule.sand": "Casting from sand or sandstone multiplies impact power by 1.08 and raises the sandstone coverage limit by about 40%. Smolder damage affects the whole hot area around the impact, including places without a converted sandstone block.",
   "worldcombat.skill.scorchingsands.hearth.on": "Smoulder: x0.88 burst power, but the sand left behind keeps smouldering, burns more readily on entry and lasts longer, with +8 cooldown.",
   "worldcombat.skill.scorchingsands.hearth.off": "Red sand: x1.08 burst power, and the sand just lies there, with -3 cooldown.",
-  "worldcombat.skill.scorchingsands.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.scorchingsands.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.scorchingsands.growth.0": "From level %1$s the burst rises to %2$s power and %3$s burn chance.",
   "worldcombat.skill.scorchingsands.growth.1": "From level %1$s the burst rises to %2$s power and the radius to %3$s blocks.",
   "worldcombat.skill.scorchingsands.value.grit": "Burst power",
@@ -36,5 +36,6 @@
   "worldcombat.skill.scorchingsands.preference.ai.preferClusters": "Prefer clusters",
   "worldcombat.skill.scorchingsands.preference.ai.preferClusters.help": "On: a target with other enemies nearby ranks first so the fistful covers them too; off: order by ordinary ranged attack only.",
   "world_combat.move.scorchingsands.text.hit": "Hot sand buried %1$s",
-  "world_combat.move.scorchingsands.text.burn": "Scalded by hot sand"
+  "world_combat.move.scorchingsands.text.burn": "Scalded by hot sand",
+  "worldcombat.skill.scorchingsands.burn": "Being set alight means burn: it lasts 40 seconds, draining 1/16 of the target's maximum health every 5 seconds (at least 1) and halving the physical damage it deals; Fire-type targets cannot be burned, and the burn can be cleansed early."
 }

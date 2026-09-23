@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.powersplit.summary": "Average both combatants’ base Attack, lowering the stronger and raising the weaker. Pokemon also share Special Attack.",
+  "worldcombat.skill.powersplit.summary": "Temporarily averages both bodies’ attack values. Pokémon also share Special Attack; ordinary bodies contribute their attack attribute, including weapons.",
   "worldcombat.skill.powersplit.use.0": "Raise your low offense to the foe's level",
   "worldcombat.skill.powersplit.use.1": "Drag the foe's high offense down to yours",
   "worldcombat.skill.powersplit.use.2": "Close the gap when the foe hits far harder",
   "worldcombat.skill.powersplit.description.0": "Average Attack and Sp. Atk with a target within %1$s blocks, held for %2$s; a clear line is required.",
-  "worldcombat.skill.powersplit.description.2": "Only the raw stats are averaged: Attack and Sp. Atk each take their mean, and any stages already built are kept. Both return to their old values when the window ends or is cleared.",
+  "worldcombat.skill.powersplit.description.2": "Weapon attack is included for ordinary bodies; ability stages remain separate. This change is removed when the effect ends or is cleared.",
   "worldcombat.skill.powersplit.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to split, then %3$s seconds to recover and a %5$s second cooldown from commit.",
   "worldcombat.skill.powersplit.growth.0": "At level %1$s the split reaches %2$s blocks and the window lasts %3$s seconds.",
   "worldcombat.skill.powersplit.growth.1": "At level %1$s the split reaches %2$s blocks and the window lasts %3$s seconds.",

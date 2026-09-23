@@ -83,11 +83,12 @@ namespace PokemonSkills {
     });
 
     describe(foresightId, [
-        { key: "description.0", values: ["strips", "window"] },
+        { key: "description.0", values: ["strips","window"] },
         { key: "description.1", values: ["reveal"] },
+        { key: "description.release", values: [] },
         { key: "deep.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "description.2", values: ["reach", "tempo", "aftercast"] },
+        { key: "description.2", values: ["reach","tempo","aftercast"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

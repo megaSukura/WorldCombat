@@ -158,9 +158,10 @@ namespace PokemonSkills {
     defineDamage("rockblast", "shard", {}, { flags: { bullet: true } });
 
     describe("rockblast", [
-        { key: "description.0", values: ["shard", "shots"] },
+        { key: "description.0", values: ["shard","shots"] },
         { key: "description.1", values: ["gap", "velocity", "reach", "spread"] },
         { key: "description.2", values: ["radius", "arc"] },
+        { key: "description.additional", values: ["rubble"] },
         { key: "boulder.on", values: [], when: function (context) { return read(context.detail.values, ["boulder"]) === true; } },
         { key: "boulder.off", values: [], when: function (context) { return read(context.detail.values, ["boulder"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

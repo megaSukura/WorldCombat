@@ -45,6 +45,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: stormthrowId,
         cooldownParameter: "recharge",
         name: "Storm Throw",

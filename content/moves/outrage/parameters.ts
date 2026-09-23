@@ -152,9 +152,9 @@ namespace PokemonSkills {
     ]);
 
     describe(outrageId, [
-        { key: "description.0", values: ["claw", "strikes", "finisher"] },
-        { key: "description.1", values: ["reach", "gap", "radius", "push"] },
-        { key: "description.2", values: ["dazeTicks", "fumble"] },
+        { key: "description.0", values: ["claw","strikes","finisher"] },
+        { key: "description.1", values: ["reach","gap","radius","push","lunge"] },
+        { key: "description.2", values: ["dazeTicks","fumble"] },
         { key: "relentless.on", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) === true; } },
         { key: "relentless.off", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

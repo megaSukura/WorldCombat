@@ -35,7 +35,8 @@ namespace PokemonSkills {
     describe("assist", [
         { key: "description.0", values: ["call"] },
         { key: "description.1", values: ["radius", "span"] },
+        { key: "description.filter", values: [] },
         { key: "description.2", values: ["pref.callRadius"] },
-        { key: "description.3", values: ["recharge"] }
+        { key: "description.3", values: ["pp","recharge"] }
     ]);
 }

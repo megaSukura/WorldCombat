@@ -54,8 +54,9 @@ namespace PokemonSkills {
     }
 
     define({
+        requiresGround: true,
         id: roostId, name: "羽栖",
-        description: "收拢双翼落回地面，贴地栖息一段：回复分成几段交付，总量约最大生命的一半；栖息期间失去飞行属性、暴露在地面招式与青草场地之下，身份被清除会打断剩下的回复。",
+        description: "收拢双翼落回地面，贴地栖息一段：回复分成几段交付，总量约最大生命的一半；栖息期间失去飞行属性、暴露在地面招式与青草场地之下，栖落状态被清除会打断剩下的回复。",
         uses: ["在受击间隙里分段补回生命", "用落地窗口换一口更稳的回复", "让飞禽暂时贴地、吃地形影响"],
         kind: "self", range: 0, prepare: 12, active: 0, recover: 10, cooldown: 220, style: "roost", maximumTicks: 260,
         defaults: { deep: false },

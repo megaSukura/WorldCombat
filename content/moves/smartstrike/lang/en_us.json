@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.smartstrike.summary": "The horn locks onto the target and steers itself in as it charges; because the horn turns to follow, it comes in the target's direction so it cannot be dodged. It stabs the seam of the armour: the higher the target's Defence, the deeper it bites.",
-  "worldcombat.skill.smartstrike.description.0": "The horn thrust deals about %1$s damage, and its formula bites deeper the higher the target's Defence. Defence, type matchup and crit are settled on the hit.",
-  "worldcombat.skill.smartstrike.description.1": "Locks a target within %1$s blocks, closes at %2$s blocks/tick, steering up to %3$s degrees per tick, with a %4$s block tip radius.",
+  "worldcombat.skill.smartstrike.description.0": "The horn thrust deals about %1$s damage, biting deeper the higher the target's Defence. Defence, type matchup and crit are settled on the hit.",
+  "worldcombat.skill.smartstrike.description.1": "Locks a target within %1$s blocks, closes at %2$s blocks/tick, steering up to %3$s degrees per tick, with a %4$s block tip radius; the tip keeps turning after the target and cannot be shaken by strafing, strikes whichever foe it reaches, once per cast, and comes up empty if terrain blocks it or it cannot catch up.",
   "worldcombat.skill.smartstrike.description.2": "The stab drives the target back %1$s blocks.",
   "worldcombat.skill.smartstrike.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.smartstrike.growth.0": "At level %1$s: thrust power %2$s and steering %3$s degrees/tick.",

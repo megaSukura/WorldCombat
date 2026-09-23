@@ -135,9 +135,9 @@ namespace PokemonSkills {
     ]);
 
     describe(rollingkickId, [
-        { key: "description.0", values: ["kick", "launchAway"] },
-        { key: "description.1", values: ["reach", "lunge"] },
-        { key: "description.2", values: ["launchUp", "flinchChance", "flinchTicks"] },
+        { key: "description.0", values: ["kick","launchAway"] },
+        { key: "description.1", values: ["reach","lunge"] },
+        { key: "description.2", values: ["launchUp","flinchChance","flinchTicks"] },
         { key: "description.3", values: ["pref.liftoff"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.kick", "tier.0.launchAway"] }

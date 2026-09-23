@@ -10,7 +10,7 @@
  * 结果：施法者把当前生命全部交出去（濒死）；随后在原地放出遗念（WorldBodies 持久实体）。
  *       遗念由它自己承担「礼物」：对范围内每个尚未被哀悼的非友方各降一次攻击与特攻（各 drop 级），
  *       并持续为范围内的人续上哀悼。哀悼的人出手会迟疑（概率失手）。
- *       能力等级随遗念的载体现存续——遗念散去时，靠它撑着的等级下降也随之退去。
+ *       能力等级下降按共享阶梯保留；哀悼身份在身时，招式发动与原生普通攻击各有一次失手判定。
  * 落空：圈内一个非友方都没有时，礼物没送出去，施法者不倒——这是原生 selfdestruct: "ifHit" 的意思。
  * 反制：走出礼物半径、躲到掩体后就不会被罩到；遗念只在一小块地方，把敌人从它旁边引开即可。
  */
@@ -29,11 +29,12 @@ namespace PokemonSkills {
         WorldFeedback.text(world, mementoAbove(body.position()), "world_combat.move.memento.text.grief", [drop], 34);
     }
 
-    // 哀悼的人出手会迟疑——概率失手，只借 tag 身份判定，任何来源的哀悼都算。
+    // 招式在提交时判一次，原生普通攻击在命中时判一次；脚本伤害不重复掷骰。
     CombatStatus.actions.define({
         id: "world_combat:move/memento/grief",
         apply: function (context) {
-            if (context.phase !== "commit" || !context.world.valid(context.actor)) return;
+            const attempt = context.phase === "commit" || context.phase === "damage" && DamageSemantics.read(context.metadata).attack;
+            if (!attempt || !context.world.valid(context.actor)) return;
             if (!CombatStatus.has(context.world, context.actor, "grieving")) return;
             context.failures.grieving = MementoSlowed;
         }
@@ -90,7 +91,7 @@ namespace PokemonSkills {
         id: mementoId,
         cooldownParameter: "recharge",
         name: "临别礼物",
-        description: "把自己的一切当作礼物送出去：当场倒下，原地留下遗念；遗念缠住身边的敌人，把它们的攻击与特攻各夺走数级，直到它散去。圈内空无一人时礼物送不出去，自己也不倒。",
+        description: "牺牲自己，在倒下处留下遗念。遗念压低附近敌人的攻击与特攻，并让它们出手时可能失手；范围内没有敌人时不会牺牲。",
         uses: ["残血时把围上来的强敌一起废掉", "用一条命换取对手主力的输出崩盘", "在自己必死的一刻把遗念留在原地继续施压"],
         kind: "self",
         range: 3.5,

@@ -9,7 +9,7 @@
   "worldcombat.skill.swift.use.0": "A ring of homing stars",
   "worldcombat.skill.swift.use.1": "Pressure several foes at once",
   "worldcombat.skill.swift.use.2": "Finish a moving target",
-  "worldcombat.skill.swift.value.star": "Star power",
+  "worldcombat.skill.swift.value.star": "Star damage",
   "worldcombat.skill.swift.value.stars": "Stars",
   "worldcombat.skill.swift.value.turn": "Turn",
   "worldcombat.skill.swift.value.starSpeed": "Star speed",
@@ -23,5 +23,6 @@
   "worldcombat.skill.swift.preference.ai.spread.help": "On: firing jumps in priority when another foe stands near the target, so the scatter catches both. Off: order it like a plain ranged attack.",
   "worldcombat.skill.swift.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.swift.preference.ai.leaveStation.help": "On: the user may leave its post to find a line of fire; off: it only fires from where it stands.",
-  "world_combat.move.swift.text.fade": "No target to chase"
+  "world_combat.move.swift.text.fade": "No target to chase",
+  "worldcombat.skill.swift.description.additional": "With Scatter off every star chases the chosen target; with Scatter on the chosen target is served first, then the remaining stars are dealt out one by one to other foes within lock range, so the chosen target takes fewer."
 }

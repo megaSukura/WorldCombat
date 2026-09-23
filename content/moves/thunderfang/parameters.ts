@@ -131,9 +131,9 @@ namespace PokemonSkills {
 
     describe("thunderfang", [
         { key: "description.0", values: ["fang", "grip"] },
-        { key: "description.1", values: ["numbChance", "numbTicks"] },
+        { key: "description.1", values: ["numbChance","numbTicks"] },
         { key: "description.2", values: ["lockTicks"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "overload.on", values: [], when: function (context) { return read(context.detail.values, ["overload"]) === true; } },
         { key: "overload.off", values: [], when: function (context) { return read(context.detail.values, ["overload"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "cooldown", "pp"] },

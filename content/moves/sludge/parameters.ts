@@ -107,7 +107,7 @@ namespace PokemonSkills {
     describe("sludge", [
         { key: "description.0", values: ["glob"] },
         { key: "description.1", values: ["reach", "globSpeed"] },
-        { key: "description.2", values: ["poisonChance", "venomTicks"] },
+        { key: "description.2", values: ["poisonChance","venomTicks"] },
         { key: "cling.on", values: [], when: function (context) { return read(context.detail.values, ["cling"]) === true; } },
         { key: "cling.off", values: [], when: function (context) { return read(context.detail.values, ["cling"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

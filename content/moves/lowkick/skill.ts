@@ -35,9 +35,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "lowkick",
         name: "Low Kick",
-        description: "A powerful low kick that makes the target fall over. The heavier the target, the greater the move's power.",
+        description: "一记专扫支撑腿的下段快踢：对手越重，重心越难拉回，摔得越狠。它贴身、快、便宜，没有留在地上的东西；对双脚离地的人扫不到腿，只有半伤。扫堂式会顺手带倒身旁的另一名敌人。",
         uses: ["贴身扫倒笨重的目标", "打断靠腿脚起势的冲锋", "对高攻重型对手做一记便宜的快踢"],
         kind: "enemy",
         range: 2.6,

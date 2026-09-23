@@ -115,7 +115,8 @@ namespace PokemonSkills {
     describe("bugbite", [
         { key: "description.0", values: ["gnaw", "radius"] },
         { key: "description.1", values: ["reach", "step", "push"] },
-        { key: "description.2", values: ["chew", "absorb"] },
+        { key: "description.2", values: ["chew","absorb"] },
+        { key: "description.plain", values: [] },
         { key: "devour.on", values: [], when: function (context) { return read(context.detail.values, ["devour"]) === true; } },
         { key: "devour.off", values: [], when: function (context) { return read(context.detail.values, ["devour"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -63,10 +63,11 @@ namespace PokemonSkills {
     }
 
     define({
+        requiresGround: true,
         id: stompId,
         cooldownParameter: "recharge",
         name: "Stomping Tantrum",
-        description: "Driven by frustration, the user attacks the target. This move's power is doubled if the user's previous move failed.",
+        description: "把上一次出手落空的那口气跺进地里：地面朝目标裂开一条缝，站在缝上的人被掀起、向外震开；上一次打空了的话，这一脚翻倍、尽头再崩一次。",
         uses: ["朝目标跺开一条地裂", "把站在缝上的人掀起来", "上一次打空后打出翻倍的一脚"],
         kind: "enemy",
         range: 6.0,

@@ -27,7 +27,7 @@ namespace PokemonSkills {
         id: doublehitId,
         cooldownParameter: "recharge",
         name: "Double Hit",
-        description: "The user slams the target with a tail or the like. The target is hit twice in a row.",
+        description: "原地甩尾，向身前左右各扫一次：第一扫把目标沿弧线扫开，第二扫顺势回拍，把人推来推去。回扫式罩得更宽、推力更大、能同时照顾多个目标；直扫式两扫同向、更窄更集中、每扫更重。",
         uses: ["原地甩尾，向左右各扫一次", "把身前一小片敌人沿弧线来回推", "用宽弧的势把贴身的对手扫开"],
         kind: "enemy",
         range: 3.4,

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.mimic.summary": "牵出念线搭住一名对手，读走它最后使用的那一手，把它织进模仿所占的招式格，直到这场战斗结束；读不到可借的招时落空。",
+  "worldcombat.skill.mimic.summary": "临时把对手最近一招借进模仿所在的招式格；普通生物的已知攻击会转译为对应招式。",
   "worldcombat.skill.mimic.use.0": "借来对手的招式",
   "worldcombat.skill.mimic.use.1": "把对手的强化还回去",
   "worldcombat.skill.mimic.use.2": "惩罚刚出手的强攻",
@@ -23,5 +23,6 @@
   "worldcombat.skill.mimic.preference.ai.leaveStation.help": "开启后，驻守命令下也会为模仿离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.mimic.text.copy": "学会 %1$s",
   "world_combat.move.mimic.text.empty": "读不到可借的招",
-  "world_combat.move.mimic.text.snap": "念线被切断"
+  "world_combat.move.mimic.text.snap": "念线被切断",
+  "worldcombat.skill.mimic.world": "普通生物在 %1$s 内成功用过的已知原生攻击，会转译为对应的现有招式，借用 %2$s：普通近战→撞击，蜇刺→毒针，冲撞→头锤，重锤→摔打，箭矢→乱击，三叉戟→角撞，火球→火花，音爆→音爆，间接魔法→幻象光线。未列出的攻击无法模仿。"
 }

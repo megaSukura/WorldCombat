@@ -113,11 +113,11 @@ namespace PokemonSkills {
     defineDamage("dizzypunch", "flurry", {}, { contact: true, punch: true });
 
     describe("dizzypunch", [
-        { key: "description.0", values: ["flurry", "beats", "interval", "arc", "reach"] },
-        { key: "description.1", values: ["chance", "dazeTicks", "fumble"] },
+        { key: "description.0", values: ["flurry","beats","interval","arc","reach"] },
+        { key: "description.1", values: ["chance","dazeTicks","fumble"] },
         { key: "rapid.on", values: [], when: function (context) { return read(context.detail.values, ["rapid"]) === true; } },
         { key: "rapid.off", values: [], when: function (context) { return read(context.detail.values, ["rapid"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.flurry", "tier.0.beats"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.flurry", "tier.1.dazeTicks"] }
     ]);

@@ -141,13 +141,13 @@ namespace PokemonSkills {
     defineDamage("hurricane", "gale", {}, { flags: { wind: true } });
 
     describe("hurricane", [
-        { key: "description.0", values: ["gale", "travel"] },
-        { key: "description.1", values: ["vortexRadius", "advance", "toss", "lift"] },
-        { key: "description.2", values: ["confuseChance", "confuseTicks"] },
+        { key: "description.0", values: ["gale","travel"] },
+        { key: "description.1", values: ["vortexRadius","advance","toss","lift"] },
+        { key: "description.2", values: ["confuseChance","confuseTicks"] },
         { key: "weather", values: [] },
         { key: "tight.on", values: [], when: function (context) { return read(context.detail.values, ["tight"]) === true; } },
         { key: "tight.off", values: [], when: function (context) { return read(context.detail.values, ["tight"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gale"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.gale", "tier.1.vortexRadius"] }
     ]);

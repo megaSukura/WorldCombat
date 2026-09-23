@@ -130,6 +130,7 @@ namespace PokemonSkills {
 
     describe(smellingsaltsId, [
         { key: "description.0", values: ["salts"] },
+        { key: "description.paralysis", values: [] },
         { key: "description.1", values: ["reach", "step", "radius", "push"] },
         { key: "coarse.on", values: [], when: function (context) { return read(context.detail.values, ["coarse"]) === true; } },
         { key: "coarse.off", values: [], when: function (context) { return read(context.detail.values, ["coarse"]) !== true; } },

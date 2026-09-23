@@ -148,9 +148,9 @@ namespace PokemonSkills {
     ]);
 
     describe(frostbreathId, [
-        { key: "description.0", values: ["breath", "spread"] },
+        { key: "description.0", values: ["breath","spread"] },
         { key: "description.1", values: ["reach", "cloudSpeed"] },
-        { key: "description.2", values: ["chillTicks", "frost", "frostTicks"] },
+        { key: "description.2", values: ["chillTicks","frost","frostTicks"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

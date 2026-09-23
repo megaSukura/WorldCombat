@@ -6,7 +6,7 @@
   "worldcombat.skill.psystrike.description.0": "在 %1$s 格内、目标头顶 %3$s 格处堆出重物砸下，按它的物理防御结算 %2$s 点特殊伤害。",
   "worldcombat.skill.psystrike.description.1": "以 %1$s 格/刻追踪目标下落，判定半径 %2$s 格。",
   "worldcombat.skill.psystrike.description.2": "落地震裂精神防线，使目标特防下降 %1$s 级。",
-  "worldcombat.skill.psystrike.description.3": "冲击面半径 %2$s 格，对范围内其他非友方再结算 %1$s 点特殊伤害并把它们顶开。",
+  "worldcombat.skill.psystrike.description.3": "重物命中后，冲击面波及半径 %2$s 格，对范围内其他非友方再结算 %1$s 点特殊伤害并把它们顶开约 0.6 格。",
   "worldcombat.skill.psystrike.wide.on": "当前为压场：落地铺开冲击面，对范围内其他非友方造成部分伤害并顶开；代价是主击 ×0.85、起手 +3 刻、冷却 +8 刻。",
   "worldcombat.skill.psystrike.wide.off": "当前为点压：只压目标一个，主击 ×1.12、更快。",
   "worldcombat.skill.psystrike.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

@@ -76,10 +76,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "naturalgift",
         name: "自然之恩",
-        description: "咬碎携带的树果，用它的元素打出一记物理重击；伤害属性与威力随树果。",
-        uses: ["近身树果打击", "把没用的树果换成一次属性攻击"],
+        description: "咬碎携带的树果，用它的元素踏前打出一记物理重击；伤害属性与威力都随那颗树果，施放后树果即被消耗（打空也算），空手或没有可用树果时无法发动。",
+        uses: ["近身树果打击", "把用不上的树果换成一次属性攻击"],
         kind: "enemy",
         range: 4,
         maxRange: 5,

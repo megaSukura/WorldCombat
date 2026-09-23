@@ -109,12 +109,12 @@ namespace PokemonSkills {
         rationale: "骨头抡击不接触；防御按默认系数减伤，命中偏角由共享命中能力等级与 85 的基础命中决定。" });
 
     describe("boneclub", [
-        { key: "description.0", values: ["club", "reach", "gauge"] },
+        { key: "description.0", values: ["club","reach","gauge","maxTargets"] },
         { key: "description.1", values: ["step"] },
-        { key: "description.2", values: ["staggerChance", "staggerTicks"] },
+        { key: "description.2", values: ["staggerChance","staggerTicks","scuffTicks"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.club"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.club", "tier.1.reach", "tier.1.staggerChance"] }
     ]);

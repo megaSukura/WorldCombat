@@ -101,6 +101,7 @@ namespace PokemonSkills {
 
     describe("hypervoice", [
         { key: "description.0", values: ["blast", "falloff"] },
+        { key: "description.limit", values: ["maxTargets"] },
         { key: "description.1", values: ["arc", "reach"] },
         { key: "description.2", values: ["push"] },
         { key: "focused.on", values: [], when: function (context) { return read(context.detail.values, ["focused"]) === true; } },

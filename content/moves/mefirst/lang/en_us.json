@@ -4,7 +4,7 @@
   "worldcombat.skill.mefirst.use.1": "Beat an enemy winding up a heavy blow",
   "worldcombat.skill.mefirst.use.2": "Take the initiative in a combo gap",
   "worldcombat.skill.mefirst.description.0": "Locks onto a foe within %1$s blocks and waits for %2$s.",
-  "worldcombat.skill.mefirst.description.1": "The stolen move hits at %1$s power; within %2$s after the foe acts you can still catch that same beat.",
+  "worldcombat.skill.mefirst.description.1": "The stolen move is delivered at %1$s times its power; it can also catch that same beat within %2$s after the foe acts.",
   "worldcombat.skill.mefirst.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.mefirst.patient.on": "Patient: vigil ×1.5, far more likely to catch the foe acting, but windup +3 ticks and cooldown ×1.25.",
   "worldcombat.skill.mefirst.patient.off": "Snap: an almost instant windup and a short cooldown, but a shorter vigil.",
@@ -24,5 +24,6 @@
   "worldcombat.skill.mefirst.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.mefirst.preference.ai.leaveStation.help": "When on, the user may leave its post to cut in; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.mefirst.text.take": "Stole %1$s",
-  "world_combat.move.mefirst.text.miss": "No next beat came"
+  "world_combat.move.mefirst.text.miss": "No next beat came",
+  "worldcombat.skill.mefirst.description.steal": "Only damaging moves can be stolen (status moves and the few uncopyable moves are excluded), and the stolen attack is aimed at the same foe; the wait itself cannot be interrupted. If the foe never acts within the vigil it fails, costing no PP or cooldown."
 }

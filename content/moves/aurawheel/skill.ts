@@ -47,10 +47,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: aurawheelId,
         name: "Aura Wheel",
-        description: "Rolls a wheel of stored cheek energy along the ground; its type follows the user's form and using it raises Speed.",
-        uses: ["rolling charge"],
+        description: "把颊囊里的能量滚成轮子贴地撞向目标；使用后自身速度提高，属性随样子在电与恶之间变化。",
+        uses: ["翻滚重击"],
         kind: "enemy",
         range: 9,
         prepare: 8,

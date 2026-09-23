@@ -105,7 +105,7 @@ namespace PokemonSkills {
     ]);
 
     describe(doublehitId, [
-        { key: "description.0", values: ["swing", "reach", "span", "maxTargets"] },
+        { key: "description.0", values: ["swing","reach","span","maxTargets"] },
         { key: "description.1", values: ["gap", "push"] },
         { key: "arc.on", values: [], when: function (context) { return read(context.detail.values, ["arc"]) === true; } },
         { key: "arc.off", values: [], when: function (context) { return read(context.detail.values, ["arc"]) !== true; } },

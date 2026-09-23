@@ -3,9 +3,9 @@
   "worldcombat.skill.aeroblast.use.0": "把空气拧成一支涡流锥笔直射出去",
   "worldcombat.skill.aeroblast.use.1": "命中处炸成气环、把主目标冲开",
   "worldcombat.skill.aeroblast.use.2": "远距离打击单个目标",
-  "worldcombat.skill.aeroblast.description.0": "涡流造成 %1$s 点特殊伤害，判定半径 %2$s 格。",
-  "worldcombat.skill.aeroblast.description.1": "能飞 %1$s 格（每刻 %2$s 格），命中把目标推开 %3$s 格。",
-  "worldcombat.skill.aeroblast.description.2": "命中炸出半径 %1$s 格的气环，环内最多 3 个其他敌人各吃 %2$s 倍伤害。",
+  "worldcombat.skill.aeroblast.description.0": "涡流命中单体敌人，造成约 %1$s 点特殊伤害，判定半径 %2$s 格；这一发容易击中要害。",
+  "worldcombat.skill.aeroblast.description.1": "笔直飞出 %1$s 格（每刻 %2$s 格），只结算最先命中的一名敌人；命中把它沿弹道推开 %3$s 格。",
+  "worldcombat.skill.aeroblast.description.2": "命中处炸出半径 %1$s 格的气环，环内最多 %3$s 个其他敌人各吃 %2$s 倍伤害。",
   "worldcombat.skill.aeroblast.charge.on": "蓄力式：威力 ×1.18、射程 +2.5 格、涡流判定 ×1.15、气环 ×1.1，但起手 +6 刻、收招 +2 刻、冷却 +14 刻、飞行 ×0.9。",
   "worldcombat.skill.aeroblast.charge.off": "速射式（默认）：飞行 ×1.12、冷却少 8 刻，但威力 ×0.94、射程略短。",
   "worldcombat.skill.aeroblast.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -29,5 +29,6 @@
   "worldcombat.skill.aeroblast.preference.ai.finishLow.help": "开启：对手血量低于四成时优先打这一发重炮，尝试收掉；关闭：不看血量，按普通远程排序。",
   "world_combat.move.aeroblast.text.burst": "气旋攻击炸开气环",
   "world_combat.move.aeroblast.text.miss": "涡流溃散",
-  "world_combat.move.aeroblast.text.crit": "要害！"
+  "world_combat.move.aeroblast.text.crit": "要害！",
+  "worldcombat.skill.aeroblast.value.ringCap": "气环波及上限"
 }

@@ -20,10 +20,11 @@ namespace PokemonSkills {
     const forcepalmMissText = "world_combat.move.forcepalm.text.miss";
 
     define({
+        freeMovement: true,
         id: "forcepalm",
         cooldownParameter: "recharge",
         name: "Force Palm",
-        description: "The target is attacked with a shock wave. This may also leave the target with paralysis.",
+        description: "上步贴上去，掌心按在对手身上，把一记冲击波灌进身体：物攻决定这一掌的狠度，震动有概率让它麻痹；透劲式让波从身体另一侧透出，打到背后直线上的第二个人。",
         uses: ["贴身一掌并按力量结算", "用震动打麻近身的对手", "透劲式连打身后一条线上的第二个目标"],
         kind: "enemy",
         range: 2.4,

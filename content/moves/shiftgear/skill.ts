@@ -17,7 +17,7 @@ namespace PokemonSkills {
         id: "shiftgear",
         cooldownParameter: "wait",
         name: "换档",
-        description: "转动齿轮，不仅提高自己的攻击，还会大幅提高速度。",
+        description: "转动齿轮提高自己的攻击与速度。扭力档偏重攻击，超速档偏重追击，两档提升总量相同。",
         uses: ["开场把自己变成另一台机器", "在追人前先提速", "被迫近身前抢先换挡"],
         kind: "self",
         range: 0,

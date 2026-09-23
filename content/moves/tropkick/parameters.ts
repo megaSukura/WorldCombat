@@ -128,8 +128,8 @@ namespace PokemonSkills {
 
     describe("tropkick", [
         { key: "description.0", values: ["kick"] },
-        { key: "description.1", values: ["lunge", "cruise", "radius"] },
-        { key: "description.2", values: ["push", "stages", "launch"] },
+        { key: "description.1", values: ["lunge","cruise","radius"] },
+        { key: "description.2", values: ["push","stages","launch"] },
         { key: "launch.on", values: [], when: function (context) { return read(context.detail.values, ["launch"]) === true; } },
         { key: "launch.off", values: [], when: function (context) { return read(context.detail.values, ["launch"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },

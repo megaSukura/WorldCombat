@@ -103,9 +103,9 @@ namespace PokemonSkills {
     ]);
 
     describe("silverwind", [
-        { key: "description.0", values: ["gale", "reach"] },
+        { key: "description.0", values: ["gale","reach"] },
         { key: "description.1", values: ["span"] },
-        { key: "description.2", values: ["surgeChance", "surgeStages", "surgeTicks"] },
+        { key: "description.2", values: ["surgeChance","surgeStages","surgeTicks"] },
         { key: "description.3", values: ["pref.dense"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gale", "tier.0.reach"] }

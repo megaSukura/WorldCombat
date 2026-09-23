@@ -1,20 +1,4 @@
-/**
- * 腐蚀气体 / corrosivegas —— 第 159 组「资源线的封锁与转手」。
- *
- * 机制与数值来源：
- * - 原生（Cobblemon 1.8 / Showdown）：毒、变化、威力 —、命中 100、PP 40、目标 allAdjacent（相邻的所有宝可梦）：
- *   用强酸气体包裹住自己周围所有的宝可梦，融化它们所携带的道具。
- * - 即时战斗翻译：以施法者为中心炸开一片强酸毒雾，三百六十度罩住周围——雾里每个活体（队友与对手一视同仁，
- *   施法者自己除外）携带的道具被当场溶毁、谁也不得到；没有道具的活体也沾上一层短暂可见的「沾酸」身份。
- *   毒雾本身不造成伤害，落地后还会留一小段时间的残雾。
- * - 与同组分开：查封（embargo）只封住一个目标、道具仍在手里；回复封锁（healblock）封的是回血；
- *   传递礼物（bestow）是把道具送出去。腐蚀气体是一次无差别的范围溶毁，道具真的没了（不是被封、不是掉落）。
- * - 与烧尽（incinerate）分开：烧尽是朝前的扇形、只烧树果与宝石、还带伤害；腐蚀气体是绕身的整圈、什么道具都溶，
- *   且不造成伤害——代价是它连队友的道具一起溶掉。
- *
- * 参数分散到精灵数据：雾半径取特攻与体型高度，沾酸时长取等级与特攻，残雾维持取体重，起手取速度，
- * 收招取速度，冷却取速度，溶蚀粒子取特攻，酸泡取等级，雾团取体重。配置 spread 双向取舍。本招不造成伤害。
- */
+/** 腐蚀气体：原生持有物溶毁与普通耐久装备腐蚀共享范围，磨损比例独立列入说明参数。 */
 namespace PokemonSkills {
     export const corrosiveGasScene = "world_combat:move_corrosivegas";
     export const corrosiveGasEffect = "world_combat:corroded";
@@ -24,6 +8,7 @@ namespace PokemonSkills {
     export const corrosiveGasTaintText = "world_combat.move.corrosivegas.text.taint";
 
     actionParameters.define("corrosivegas", {
+        wearPercent: formula(F.const(6), "装备腐蚀", { unit: "%", description: "普通手持耐久装备损失的最大耐久比例，保留最后一点耐久。" }),
         /** 雾半径：基础 3.2 格；特攻每比 60 多 1 加 0.02（夹 -0.4..+1.6），体型高度每比 1.4 高 1 格加 0.6（夹 -0.3..+1.8）；
          *  spread 开 ×1.3、关 ×0.85；夹在 2.0..6.4 格。 */
         radius: formula(
@@ -79,9 +64,10 @@ namespace PokemonSkills {
 
     describe("corrosivegas", [
         { key: "description.0", values: ["radius", "duration"] },
+        { key: "description.1", values: ["wearPercent"] },
         { key: "spread.on", values: [], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
         { key: "spread.off", values: [], when: function (context) { return read(context.detail.values, ["spread"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.radius"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.radius"] }
     ]);

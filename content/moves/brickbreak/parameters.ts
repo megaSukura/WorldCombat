@@ -93,8 +93,8 @@ namespace PokemonSkills {
     ]);
 
     describe("brickbreak", [
-        { key: "description.0", values: ["chop", "chopWidth"] },
-        { key: "description.1", values: ["reach", "wardBreak"] },
+        { key: "description.0", values: ["chop","chopWidth"] },
+        { key: "description.1", values: ["reach","wardBreak"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

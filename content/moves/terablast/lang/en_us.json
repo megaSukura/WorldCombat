@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.terablast.summary": "Crystallize yourself into a Tera shard: the stronger offense decides the form, and your own type decides the damage.",
+  "worldcombat.skill.terablast.summary": "Crystallize yourself into a Tera shard: the higher offense decides the form — a ram that knocks the target back or a beam — and the damage takes your primary type.",
   "worldcombat.skill.terablast.use.0": "Ranged burst",
   "worldcombat.skill.terablast.use.1": "Signature move",
-  "worldcombat.skill.terablast.description.0": "Deals %1$s Tera energy damage.",
-  "worldcombat.skill.terablast.description.1": "Attack minus Sp. Atk is %1$s: above 0 it crystallizes into a ram (physical, knocks the target back), below 0 it fires a beam (special).",
+  "worldcombat.skill.terablast.description.0": "Deals about %1$s Tera energy damage; the type is your own primary type.",
+  "worldcombat.skill.terablast.description.1": "Attack minus Sp. Atk is %1$s: when Attack is higher it crystallizes into a ram (physical, knocks the target back); otherwise it fires a beam (special).",
   "worldcombat.skill.terablast.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.terablast.value.power": "Power",
   "worldcombat.skill.terablast.value.edge": "Attack minus Sp. Atk",
@@ -16,5 +16,6 @@
   "worldcombat.skill.terablast.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.terablast.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to cast Tera Blast; when off it stays put.",
   "world_combat.move.terablast.text.ram": "Ram",
-  "world_combat.move.terablast.text.beam": "Beam"
+  "world_combat.move.terablast.text.beam": "Beam",
+  "worldcombat.skill.terablast.description.additional": "Fires the ram or beam within %1$s blocks; it shatters on the first enemy it meets for a single hit, and fizzles without damage if it strikes terrain."
 }

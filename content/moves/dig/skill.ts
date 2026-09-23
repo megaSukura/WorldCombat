@@ -149,8 +149,9 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "dig", name: "挖洞",
-        description: "钻入地下、绕开地表障碍，在选定落点破土：范围内敌人受到地面伤害并被掀飞，地表留下一圈冲击痕。落点材料决定破土范围、击飞高度与附加伤害。",
+        description: "钻入地下、绕开地表障碍，在选定落点破土：范围内敌人受到地面伤害并被掀飞，落点那一层地表被换成粗土或碎石、留下冲击痕，之后自行恢复。落点材料决定破土范围、击飞高度与附加伤害。",
         uses: ["位移突袭", "范围击飞", "绕后攻击"],
         kind: "motion", range: 12, active: 10, style: "ground-burrow", maximumTicks: 180,
         defaults: { ambush: false },

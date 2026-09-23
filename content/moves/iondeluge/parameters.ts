@@ -44,12 +44,12 @@ namespace PokemonSkills {
 
     stages("iondeluge", [{ level: 30, values: { cooldown: 104 } }, { level: 50, values: { cooldown: 92 } }]);
     describe("iondeluge", [
-        { key: "description.0", values: ["fieldRadius", "fieldDuration"] },
+        { key: "description.0", values: ["range","fieldRadius","fieldDuration"] },
         { key: "description.1", values: ["filmTicks"] },
         { key: "wide.0", values: [], when: function (context) { return ionWide(context.detail); } },
         { key: "wide.1", values: [], when: function (context) { return !ionWide(context.detail); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level","tier.0.cooldown"] },
+        { key: "growth.1", values: ["tier.1.level","tier.1.cooldown"] }
     ]);
 }

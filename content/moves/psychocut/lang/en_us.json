@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.psychocut.summary": "A blade of solidified psychic power is formed in front of the user and thrown; it steers itself toward the target and cuts a cross in the vertical plane at the hit, pinning the target on the crossing while the edge wind catches nearby foes. A homing ranged slash with the family's raised critical chance.",
-  "worldcombat.skill.psychocut.description.0": "The blade deals %1$s slicing damage and lands critical hits more often.",
+  "worldcombat.skill.psychocut.description.0": "The blade deals about %1$s slicing damage and lands critical hits more often.",
   "worldcombat.skill.psychocut.description.1": "The blade flies at %1$s blocks per tick over %2$s blocks, steering up to %3$s degrees per tick toward the target.",
-  "worldcombat.skill.psychocut.description.2": "The cross at the hit is %1$s blocks in radius, and nearby foes take %2$s of the edge wind.",
+  "worldcombat.skill.psychocut.description.2": "The cross at the hit is %1$s blocks in radius; nearby foes each take edge wind worth %2$s of the blade, and the move hits at most %3$s enemies in total, the main target included.",
   "worldcombat.skill.psychocut.keen.on": "Keen form: a heavier blade, a bigger cross and a stronger wind, at slower flight and a longer cooldown.",
   "worldcombat.skill.psychocut.keen.off": "Swift form: faster flight and a shorter cooldown, at lower power and a smaller cross.",
   "worldcombat.skill.psychocut.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.psychocut.preference.ai.finishLow.help": "On: below 45% health a target is thrown at first to finish it. Off: it ranks the blade as an ordinary ranged slash whatever the health.",
   "world_combat.move.psychocut.text.vital": "A vital point!",
   "world_combat.move.psychocut.text.cut": "Cross cut! %1$s caught",
-  "world_combat.move.psychocut.text.miss": "The blade came apart"
+  "world_combat.move.psychocut.text.miss": "The blade came apart",
+  "worldcombat.skill.psychocut.value.maxTargets": "Max targets"
 }

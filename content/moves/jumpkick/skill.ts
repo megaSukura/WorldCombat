@@ -48,11 +48,12 @@ namespace PokemonSkills {
     function jumpkickAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.1, 0)); }
 
     define({
+        freeMovement: true,
         id: "jumpkick",
         cooldownParameter: "recharge",
         name: "Jump Kick",
-        description: "使出高高的腾空踢攻击对手。如果踢偏则自己会受到伤害。",
-        uses: ["用一记便宜的腾空踢打出接触伤害", "把贴脸的对手踹开拉出身位", "给残血对手补上最后一脚"],
+        description: "一记低平的腾空飞踢：缩身蹬地，沿浅弧冲上去，腿横着扫出。踢实就把对手踹开，踢偏脚踝硬磕地面、自伤一截。跳击家族里最干净、最快的一记。",
+        uses: ["用一记便宜的腾空踢打出接触伤害", "把贴脸的对手踹开、拉出身位", "给残血对手补上最后一脚"],
         kind: "enemy",
         range: 5.5,
         maxRange: 9,

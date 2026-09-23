@@ -119,8 +119,9 @@ namespace PokemonSkills {
 
     describe("gravapple", [
         { key: "description.0", values: ["impact", "collisionRadius"] },
-        { key: "description.1", values: ["dropHeight", "fallSpeed", "pull"] },
-        { key: "description.2", values: ["reach", "crushStages", "crushTicks", "slam"] },
+        { key: "description.1", values: ["dropHeight","fallSpeed","pull"] },
+        { key: "description.2", values: ["reach","crushStages","crushTicks","slam"] },
+        { key: "description.miss", values: [] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

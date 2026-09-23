@@ -602,7 +602,7 @@ namespace PokemonSkills {
         const label = text("worldcombat.skill." + id + ".value." + key);
         const power: PokemonDamage.PowerInput = { value: parameter ? parameter.value : p(id, key, context), explanation: parameter ? RuleValues.explanation(parameter, label) : undefined };
         const result = PokemonDamage.explain(context.world || null, context.actor || null, sourceSnapshot(context), move, features, power, context.action || undefined);
-        const value = explanationBinding(result.explanation, undefined, label,
+        const value = explanationBinding(result.explanation, undefined, text("worldcombat.value.estimatedDamage"),
             text(context.world && context.actor ? "worldcombat.value.damageTargetPending" : "worldcombat.value.damageWorldPending"));
         value.available = result.available; value.category = result.category; value.type = result.type; value.deferred = result.deferred;
         return value;
@@ -631,7 +631,11 @@ namespace PokemonSkills {
             return parameterBinding(context, key);
         }
         used.forEach(paragraph => paragraph.values.forEach(key => { if (!bindings[key]) bindings[key] = bind(key); }));
-        return { paragraphs: used.map(paragraph => ({ key: "worldcombat.skill." + id + "." + paragraph.key, args: paragraph.values.map(key => ({ binding: key })) })), bindings };
+        const document = used.map(paragraph => ({ key: "worldcombat.skill." + id + "." + paragraph.key, args: paragraph.values.map(key => ({ binding: key })) }));
+        // The overview and authored details form one document in every full-detail entry point.
+        if (!used.some(paragraph => paragraph.key === "summary"))
+            document.unshift({ key: "worldcombat.skill." + id + ".summary", args: [] });
+        return { paragraphs: document, bindings };
     }
     export function n(value: number, label: string, unit = "", description = ""): ActionParameters.Entry<NumberContext> { return { value, label, unit, description }; }
     /**
@@ -650,8 +654,9 @@ namespace PokemonSkills {
         if (options.visible !== undefined) entry.visible = options.visible;
         return entry;
     }
-    export function seconds(node: Formula.Node, label: string, description = ""): ActionParameters.Entry<NumberContext> {
-        return formula(node, label, { description, presentation: "seconds", format: v => String(v / 20) + " 秒" });
+    /** An explicit design base makes growth shifts independent of missing preview facts and default preference branches. */
+    export function seconds(node: Formula.Node, label: string, description = "", options: { base?: number } = {}): ActionParameters.Entry<NumberContext> {
+        return formula(node, label, { base: options.base, description, presentation: "seconds", format: v => String(v / 20) + " 秒" });
     }
     export function percent(node: Formula.Node, label: string, description = ""): ActionParameters.Entry<NumberContext> {
         return formula(node, label, { description, presentation: "percent", format: v => String(Math.round(v * 10000) / 100) + "%" });

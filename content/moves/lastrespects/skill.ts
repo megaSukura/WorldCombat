@@ -25,6 +25,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: lastrespectsId,
         cooldownParameter: "recharge",
         name: "Last Respects",

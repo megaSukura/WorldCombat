@@ -39,21 +39,22 @@ namespace PokemonSkills {
             "扮演时长", "这层临时特性维持多久；等级与特防越高越久，深扮再延长，浅饰大幅缩短。"),
         recharge: seconds(
             F.base(90, "基础").minus(F.stat("speed").times(0.3).as("速度")).clamp(40, 130).round(),
-            "冷却", "改扮成下一个特性需要多久；速度快的个体更快恢复。"),
+            "冷却", "改扮成下一个特性需要多久；速度快的个体更快恢复。", { base: 90 }),
         traits: formula(
             F.base(6, "基础").plus(F.stat("specialAttack").div(55).as("特攻")).clamp(6, 18).round(),
             "描摹线条", { unit: "条", description: "画面里绕对手描出的线条数量；特攻越高越密。" })
     });
 
-    stages("roleplay", [{ level: 35, values: { cooldown: 70 } }, { level: 50, values: { cooldown: 60 } }]);
+    stages("roleplay", [{ level: 35, values: { recharge: 70 } }, { level: 50, values: { recharge: 60 } }]);
 
     describe("roleplay", [
+        { key: "world", values: ["hold"] },
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["hold"] },
         { key: "dwell.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.dwell); } },
         { key: "dwell.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.dwell); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

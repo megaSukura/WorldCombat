@@ -4,7 +4,7 @@
   "worldcombat.skill.smog.use.1": "封住一条走廊的入口",
   "worldcombat.skill.smog.use.2": "PP 多、反复刷毒",
   "worldcombat.skill.smog.description.0": "雾锥张角 %2$s 度，被扫到的人各挨约 %1$s 的伤害；对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.smog.description.1": "雾能滚到 %1$s 格远，被熏到的人有 %2$s 的几率中毒，毒持续 %3$s 秒。",
+  "worldcombat.skill.smog.description.1": "雾能滚到 %1$s 格远，被熏到的人有 %2$s 的几率中毒。",
   "worldcombat.skill.smog.description.2": "雾先扫近处，隔 %1$s 秒后远段再涌到；每段各结算一次。",
   "worldcombat.skill.smog.billow.on": "开启滚涌取向：雾锥张角 ×1.2、喷吐距离 ×1.15、中毒概率 ×1.15，但单段威力 ×0.85、滚得更慢。",
   "worldcombat.skill.smog.billow.off": "关闭滚涌取向（尖吹）：雾锥更窄更浓、威力 ×1.15、来得更快。",
@@ -34,5 +34,7 @@
   "worldcombat.skill.smog.preference.ai.leaveStation.help": "开启后，驻守命令下也会为喷到目标离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.smog.text.hit": "熏到 %1$s 个",
   "world_combat.move.smog.text.poison": "中毒了",
-  "world_combat.move.smog.text.miss": "雾散了"
+  "world_combat.move.smog.text.miss": "雾散了",
+  "worldcombat.skill.smog.description.poison": "中毒持续 %1$s，期间持续流失生命、但不会因此被击倒，可被解毒清除；毒属性、钢属性以及具相应免疫的目标不会中毒。",
+  "worldcombat.skill.smog.description.targets": "一次喷吐最多扫到 %1$s 个敌人，每个被扫到的人只结算一次。"
 }

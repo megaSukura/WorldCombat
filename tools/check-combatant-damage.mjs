@@ -223,4 +223,22 @@ check('explicit fixed HP damage preserves authored values and type policy across
   const size=applied.length;assert.equal(D.fixed(world,ordinary,move,0),false);assert.equal(applied.length,size);
   target.native.types=previous;
 });
+check('ignored defense stages become per-hit additive exclusions for ordinary equipment wearers', () => {
+  const effectsBefore = world.effects;
+  let stages = { def: 2, spd: 3 };
+  world.effects = (actor, definition) => actor === ordinary && definition === context.CombatStages.definition
+    ? [{ id: () => 71, remaining: () => 100, data: () => JSON.stringify({ stages }) }] : [];
+  context.PokemonDamage.metadata.define({ id: 'fixture:ignore-defence',
+    applies: value => value.metadata.move === 'leaf', apply: context.PokemonDamage.ignoreDefenceStages });
+  let hit = JSON.parse(resolve(ordinary).metadata);
+  assert.equal(hit.armorAddedExcluded, 2 * context.CombatStages.armorPerStage);
+  assert.equal(hit.armorExcluded, 0, 'Equipment base is not excluded');
+  assert.equal(hit.ignoreDefenceStages, true);
+  stages = { def: -2, spd: -1 };
+  hit = JSON.parse(resolve(ordinary).metadata);
+  assert.equal(hit.armorAddedExcluded, -2 * context.CombatStages.armorPerStage);
+  assert.equal(stages.def, -2, 'Ignoring a hit does not rewrite persistent stages');
+  context.PokemonDamage.metadata.remove('fixture:ignore-defence');
+  world.effects = effectsBefore;
+});
 console.log(`PASS combatant damage: ${count} scenarios; independent designs, live source previews, contributions and uncapped execution`);

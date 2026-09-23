@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.alluringvoice.summary": "The user casts an angelic, cone-shaped voice field in front of it: enemies inside take special damage, and any target currently carrying positive stat stages is dazed by the song and left confused, so its actions may be wasted and its own force turns on it when it lands a hit. The more it raised, the longer the confusion.",
+  "worldcombat.skill.alluringvoice.summary": "Sings into a forward cone, damaging and confusing enemies. Empowered targets qualify, as do pursuing ordinary creatures and players who recently landed an attack.",
   "worldcombat.skill.alluringvoice.use.0": "Punish an opponent that just powered up and throw off its tempo",
   "worldcombat.skill.alluringvoice.use.1": "Sweep a line of enemies standing in front of the user",
   "worldcombat.skill.alluringvoice.use.2": "Sing a set-up sweeper apart before it can commit",
-  "worldcombat.skill.alluringvoice.description.0": "It opens a voice field %1$s blocks long with a %2$s degree spread, and every enemy caught in it takes %3$s special damage.",
-  "worldcombat.skill.alluringvoice.description.1": "A target carrying positive stages is confused at once, for a base of %1$s plus %2$s for each positive stage; while confused each action it attempts has a %3$s chance to be wasted, and a landed hit turns its own force back on it.",
+  "worldcombat.skill.alluringvoice.description.0": "The cone reaches %2$s blocks with a %3$s-degree spread, hitting up to %4$s enemies once each for about %1$s special damage.",
+  "worldcombat.skill.alluringvoice.description.1": "Eligible targets are confused for %1$s plus %2$s per empowerment level. Each move or ordinary attack has a %3$s chance to fail; hitting an enemy also causes self-damage.",
   "worldcombat.skill.alluringvoice.echo.on": "Echo form: a wider, longer field and a longer confusion, but a lighter hit with a slower wind-up and a longer cooldown.",
   "worldcombat.skill.alluringvoice.echo.off": "Direct form: a narrower field that hits harder and faster, but the confusion is shorter.",
   "worldcombat.skill.alluringvoice.timing": "Castable within %1$s blocks; after a %2$s wind-up it spends %4$s PP, recovers for %3$s, and goes on cooldown for %5$s from commit.",
@@ -26,11 +26,12 @@
   "worldcombat.skill.alluringvoice.preference.ai.maxChase": "Singing distance",
   "worldcombat.skill.alluringvoice.preference.ai.maxChase.help": "The partner only considers the song while a threat is this close; larger lets it strike first from farther out.",
   "worldcombat.skill.alluringvoice.preference.ai.minStages": "Punish threshold",
-  "worldcombat.skill.alluringvoice.preference.ai.minStages.help": "Once a target's positive stages add up to this much, the song rises above ordinary combat priority; set 1 to sing at any hint of a boost, higher to wait until it has piled up.",
+  "worldcombat.skill.alluringvoice.preference.ai.minStages.help": "Prioritize the move at this many empowerment levels. Pursuing or recently attacking ordinary targets count as one.",
   "worldcombat.skill.alluringvoice.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.alluringvoice.preference.ai.leaveStation.help": "When on, the partner will also leave its post to cast this voice field.",
   "world_combat.move.alluringvoice.text.strike": "Song hit x%1$s",
   "world_combat.move.alluringvoice.text.daze": "Dazed +%1$s",
   "world_combat.move.alluringvoice.text.recoil": "Backlash -%1$s",
-  "effect.world_combat.alluring_voice_song": "Bewitched"
+  "effect.world_combat.alluring_voice_song": "Bewitched",
+  "worldcombat.skill.alluringvoice.world": "Positive stages in the five combat stats and potion/beacon buffs count as empowerment; level I counts once. An unboosted ordinary creature in pursuit, or a creature/player that hit someone in the last four seconds, counts as one level. Recoil costs 2%–12.5% of maximum health, scaled by the confused target’s Sp. Atk."
 }

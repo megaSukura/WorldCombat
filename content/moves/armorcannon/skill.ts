@@ -52,7 +52,7 @@ namespace PokemonSkills {
         id: armorcannonId,
         cooldownParameter: "recharge",
         name: "Armor Cannon",
-        description: "The user burns its own armor into a blazing shell and fires it, lowering its own Defense and Sp. Def.",
+        description: "把熊熊燃烧的铠甲做成一副火壳射出去：远距特殊炮击，命中或落地会在落点烧出焦地。开炮时自身防御与特防各下降一级，命中与否都要付。散爆式命中炸开一团火、波及落点周围的人，代价是单发威力更低。",
         uses: ["远距离用一发烧甲炮弹点掉一个目标", "散爆式炸开落点周围挤在一起的敌人", "在远处打一发再退开、把焦地留在场上"],
         kind: "enemy",
         range: 11,

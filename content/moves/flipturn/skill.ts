@@ -68,10 +68,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "flipturn",
         cooldownParameter: "recharge",
         name: "Flip Turn",
-        description: "撞上目标后翻个身蹬开、越过它落在另一侧；有后备时直接在落点与待命的一只换手，回身式会转身落向等候的伙伴。",
+        description: "撞上目标后翻个身从它身上蹬开、越过它落在另一侧；有后备时直接在落点与待命的一只换手，水里的个体滑得更远。回身式会转身落向等候的伙伴，深潜式继续远遁。",
         uses: ["打一下就翻到目标另一侧，换一条攻击线", "在水里边打边拉开距离", "蹬开追兵的同时把身位让给伙伴"],
         kind: "enemy",
         range: 2.6,

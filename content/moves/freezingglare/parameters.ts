@@ -115,9 +115,9 @@ namespace PokemonSkills {
     ]);
 
     describe("freezingglare", [
-        { key: "description.0", values: ["glare", "chains", "falloff"] },
-        { key: "description.1", values: ["reach", "chainRange"] },
-        { key: "description.2", values: ["freezeChance", "immunityWindow"] },
+        { key: "description.0", values: ["glare","chains","falloff"] },
+        { key: "description.1", values: ["reach","chainRange"] },
+        { key: "description.2", values: ["freezeChance","immunityWindow"] },
         { key: "description.3", values: ["tempo", "aftermath", "wait"] },
         { key: "unblinking.on", values: [], when: function (context) { return read(context.detail.values, ["unblinking"]) === true; } },
         { key: "unblinking.off", values: [], when: function (context) { return read(context.detail.values, ["unblinking"]) !== true; } },

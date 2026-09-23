@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.highhorsepower.summary": "Lower the whole body and slam with raw mass in a flat charge: on contact, the horsepower figure read from weight and speed floats above the impact, and the dust thrown up follows that same number. The user plants and stops afterwards, leaving no crater and paying no self-cost - the mass is the whole move.",
-  "worldcombat.skill.highhorsepower.description.0": "The whole body deals %1$s contact damage and shoves the target %2$s blocks along the charge.",
-  "worldcombat.skill.highhorsepower.description.1": "Charge %1$s blocks at %2$s blocks per tick, with a %3$s block trample radius.",
+  "worldcombat.skill.highhorsepower.description.0": "The whole body slams in for about %1$s contact damage and shoves the target up to %2$s blocks along the charge.",
+  "worldcombat.skill.highhorsepower.description.1": "Charge %1$s blocks at %2$s blocks per tick: a flat, straight rush whose front sweeps with a %3$s-block hit radius; it stops on the first non-ally it meets and strikes only that one, and also pulls up early against a block or once the charge is spent.",
   "worldcombat.skill.highhorsepower.press.on": "Body-press form: higher power and a heavy down-pressed dust ring that keeps the target close; at the cost of a shorter shove, a shorter charge and a longer cooldown.",
   "worldcombat.skill.highhorsepower.press.off": "Head-on form: a longer shove, a longer charge and a shorter cooldown; at slightly lower power.",
   "worldcombat.skill.highhorsepower.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

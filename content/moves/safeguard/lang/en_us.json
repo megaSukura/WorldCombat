@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.safeguard.summary": "Raises a ring of warding light over the caster and nearby allies; inside it, any status condition that arrives through the shared status route is turned away. The ward follows the caster, and anyone who leaves its reach loses the cover.",
+  "worldcombat.skill.safeguard.summary": "Raises a moving ward that protects the user and nearby allies from newly applied harmful conditions. Protection can linger briefly after leaving its range.",
   "worldcombat.skill.safeguard.use.0": "Block blanket burns, poison and paralysis",
   "worldcombat.skill.safeguard.use.1": "Raise the ward before the foe starts spreading conditions",
   "worldcombat.skill.safeguard.use.2": "Cover an ally about to step in",
-  "worldcombat.skill.safeguard.description.0": "The ward covers the caster and allies within %2$s blocks for %1$s: while it holds, any status condition arriving through the shared status route is turned away.",
-  "worldcombat.skill.safeguard.description.1": "the current cast range is %1$s blocks. It only stops status conditions, not damage or control.",
+  "worldcombat.skill.safeguard.description.0": "The ward lasts %1$s and protects the user and allies within %2$s blocks from new harmful conditions such as burn, poison, paralysis and sleep. Displayed range and duration include the selected ward mode.",
+  "worldcombat.skill.safeguard.description.1": "The ward does not cure existing conditions or block direct damage, knockback or lowered stat stages. Beneficial effects can still be received.",
   "worldcombat.skill.safeguard.description.2": "Raising it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the ward note for the deep/early trade-off.",
   "worldcombat.skill.safeguard.ward.0": "Early: duration x0.75, radius x0.85, in exchange for -2 ticks wind-up and x0.8 cooldown — quick to raise and refresh.",
   "worldcombat.skill.safeguard.ward.1": "Deep: duration x1.25, radius x1.15, at +3 ticks wind-up and x1.15 cooldown — held long and spread wide.",
-  "worldcombat.skill.safeguard.timing": "Cast on yourself: after %2$s of preparation it spends %4$s PP to raise the ward; the recovery is %3$s and the cooldown %5$s from commit.",
+  "worldcombat.skill.safeguard.timing": "Self-targeted; wind-up %1$s, recovery %2$s, cost %3$s PP, cooldown %4$s.",
   "worldcombat.skill.safeguard.value.wardTicks": "Ward duration",
   "worldcombat.skill.safeguard.value.wardRadius": "Ward radius",
   "worldcombat.skill.safeguard.value.motes": "Motes",
@@ -30,5 +30,7 @@
   "world_combat.move.safeguard.text.ward": "Ward up %1$s s (covers %2$s)",
   "world_combat.move.safeguard.text.guard": "The ward turns the status away",
   "world_combat.move.safeguard.text.fade": "The ward closes",
-  "effect.world_combat.safeguard_veil": "Safeguard"
+  "effect.world_combat.safeguard_veil": "Safeguard",
+  "worldcombat.skill.safeguard.description.3": "The ward refreshes nearby allies once per second. When the field ends, allies still inside lose its protection; the user and allies who left early may retain up to about %1$s of residual protection. Clearing the user’s ward ends the field early.",
+  "worldcombat.skill.safeguard.value.residualDuration": "Maximum lingering protection"
 }

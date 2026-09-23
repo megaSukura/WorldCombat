@@ -3,7 +3,7 @@
   "worldcombat.skill.bloodmoon.use.0": "Call a full moon and drop its column straight down",
   "worldcombat.skill.bloodmoon.use.1": "Pick off a far, bulky target",
   "worldcombat.skill.bloodmoon.use.2": "Use eclipse style to catch a whole patch at the impact",
-  "worldcombat.skill.bloodmoon.description.0": "Primary %1$s power, impact splash %2$s power (special), moon reach %3$s blocks, ground radius %4$s blocks.",
+  "worldcombat.skill.bloodmoon.description.0": "The moon column deals about %1$s special damage to the primary target; under Eclipse style, other non-allies within %4$s blocks of the impact each take about %2$s special damage (0 under Full moon). Moon reach %3$s blocks.",
   "worldcombat.skill.bloodmoon.description.1": "Charge-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.bloodmoon.description.2": "Afterwards it cannot be called again for %1$s; using any other move lets the spirit settle early.",
   "worldcombat.skill.bloodmoon.eclipse.on": "Eclipse style now: the moonlight spreads out and other foes at the impact also take splash, with a shorter charge; the primary hit is x0.85.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.bloodmoon.preference.ai.minHealth.help": "Below this health fraction it will not call the moon unless the target is nearly down. Higher values make it more protective and less likely to finish a weakened foe.",
   "worldcombat.skill.bloodmoon.preference.ai.crowd": "Aim at clusters",
   "worldcombat.skill.bloodmoon.preference.ai.crowd.help": "On (with eclipse style): it calls the moon more readily when other enemies stand near the target, since the moonlight can pour over a whole patch; off ranks by the single-target payoff only.",
-  "world_combat.move.bloodmoon.text.fall": "Blood moon falls"
+  "world_combat.move.bloodmoon.text.fall": "Blood moon falls",
+  "worldcombat.skill.bloodmoon.description.scorch": "Soft ground at the impact (grass, dirt, sand, snow and the like) is scorched to coarse dirt, reverting after about %1$s; stone ground keeps only a scorch mark."
 }

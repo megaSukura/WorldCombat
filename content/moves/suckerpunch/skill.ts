@@ -13,11 +13,12 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: suckerpunchId,
         cooldownParameter: "recharge",
         name: "Sucker Punch",
         description: "抢在对手出手的瞬间闪身刺出；对手此刻不在出手时这一记落空，PP 照常消耗。",
-        uses: ["惩罚正在抬手的近身对手", "抢在对手重击之前先打一下", "对任何一直贴着打的敌人稳定输出"],
+        uses: ["惩罚正在抬手的近身对手", "抢在对手重击之前先打一下", "对一直贴着打的敌人稳定输出"],
         kind: "enemy",
         range: 2.8,
         maxRange: 5.4,

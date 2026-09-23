@@ -119,7 +119,9 @@ namespace PokemonSkills {
 
     describe("poisonfang", [
         { key: "description.0", values: ["fang", "grip"] },
-        { key: "description.1", values: ["pump", "toxicChance", "venomTicks"] },
+        { key: "description.pounce", values: ["lunge","reach"] },
+        { key: "description.1", values: ["pump","toxicChance","venomTicks"] },
+        { key: "description.poison", values: [] },
         { key: "venom.on", values: [], when: function (context) { return read(context.detail.values, ["venom"]) === true; } },
         { key: "venom.off", values: [], when: function (context) { return read(context.detail.values, ["venom"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "cooldown", "pp"] },

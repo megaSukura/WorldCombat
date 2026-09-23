@@ -20,7 +20,7 @@ namespace PokemonSkills {
         id: "ember",
         cooldownParameter: "recharge",
         name: "Ember",
-        description: "The target is attacked with small flames. This may also leave the target with a burn.",
+        description: "弹指射出一粒小而急的火种，沿浅弧飞到目标身上；命中碎成几粒火星，并可能把目标点燃。出手快、冷却短，是缺手段时最稳的一口小火力。",
         uses: ["快速弹出一粒火种补刀", "连发压血并偶尔引燃", "在没有条件铺开火势时的一口小火力"],
         kind: "enemy",
         range: 12,

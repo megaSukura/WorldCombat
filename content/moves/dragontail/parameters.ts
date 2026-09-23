@@ -137,9 +137,10 @@ namespace PokemonSkills {
     defineDamage(dragontailId, "lash", { defenceCoefficient: 0.005, rationale: "尾扫对防御的穿透接近默认，突出物攻与体重的差别。" }, { contact: true });
 
     describe(dragontailId, [
-        { key: "description.0", values: ["lash", "reach", "sweep"] },
-        { key: "description.1", values: ["hurl", "lift"] },
-        { key: "description.2", values: ["flee", "keepOut", "panic"] },
+        { key: "description.0", values: ["lash","reach","sweep","share"] },
+        { key: "description.1", values: ["hurl","lift"] },
+        { key: "description.2", values: ["flee","keepOut","panic"] },
+        { key: "description.additional", values: [] },
         { key: "high.on", values: [], when: function (context) { return read(context.detail.values, ["high"]) === true; } },
         { key: "high.off", values: [], when: function (context) { return read(context.detail.values, ["high"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

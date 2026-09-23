@@ -118,10 +118,12 @@ namespace PokemonSkills {
     describe("heatwave", [
         { key: "description.0", values: ["gust"] },
         { key: "description.1", values: ["reach", "angle", "sweepTicks"] },
-        { key: "description.2", values: ["igniteChance", "push"] },
+        { key: "description.cap", values: [] },
+        { key: "description.2", values: ["igniteChance","push"] },
+        { key: "description.weather", values: [] },
         { key: "gale.on", values: [], when: function (context) { return read(context.detail.values, ["gale"]) === true; } },
         { key: "gale.off", values: [], when: function (context) { return read(context.detail.values, ["gale"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gust", "tier.0.igniteChance"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.gust", "tier.1.reach"] }
     ]);

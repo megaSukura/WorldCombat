@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.meteorassault.summary": "The user makes several heavy swings along one wide arc, hitting every foe in the fan; afterwards it is left dazed for the longest exhaustion window, unable to act or move.",
-  "worldcombat.skill.meteorassault.description.0": "The user swings %2$s times along one arc, each sweep dealing %1$s contact damage to every enemy in the fan.",
+  "worldcombat.skill.meteorassault.description.0": "The user swings %2$s times along one arc, each sweep dealing about %1$s contact damage to every enemy in the fan.",
   "worldcombat.skill.meteorassault.description.1": "Each sweep reaches %1$s blocks, opens %2$s degrees and is spaced %3$s apart.",
-  "worldcombat.skill.meteorassault.description.2": "Afterwards the user is dazed for %1$s, unable to act or move.",
+  "worldcombat.skill.meteorassault.description.2": "Afterwards the user is dazed for %1$s: unable to start new moves or ordinary attacks, and unable to move.",
   "worldcombat.skill.meteorassault.description.3": "The wind-up is %1$s.",
   "worldcombat.skill.meteorassault.use.0": "A rapid flurry of heavy close swings",
   "worldcombat.skill.meteorassault.use.1": "Sweep several foes packed in front at once",

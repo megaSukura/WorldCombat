@@ -3,11 +3,11 @@
   "worldcombat.skill.trick.use.0": "远距离把对手的好东西换过来",
   "worldcombat.skill.trick.use.1": "把自己带着的累赘塞给对手",
   "worldcombat.skill.trick.use.2": "空手时从远处的对手身上换一件持有物",
-  "worldcombat.skill.trick.description.0": "与 %1$s 格内的目标交换持有物。",
-  "worldcombat.skill.trick.description.1": "故布疑阵 %1$s，交换后收手 %2$s，提交起冷却 %3$s。",
+  "worldcombat.skill.trick.description.0": "与 %1$s 格内、视线畅通的敌人对调手里的持有物：自己原地不动，交换后双方各自拿到原本在对方手里的东西（一方空手时就是单方面的取走或交出）。",
+  "worldcombat.skill.trick.description.1": "故布疑阵 %1$s，交换后收手 %2$s，冷却 %3$s。",
   "worldcombat.skill.trick.snap.on": "瞬时抓取：起手 ×0.55、冷却 −6 刻，代价是心线缩到近身（射程 ×0.62）——更快，但必须贴近。",
   "worldcombat.skill.trick.snap.off": "从容拉线：心线更长（最远约 9 格）、冷却更足，起手也更长——够得远，但给对手更多反应时间。",
-  "worldcombat.skill.trick.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 拉线；收手 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.trick.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 拉线；收手 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.trick.growth.0": "达到 %1$s 级，心线延长至 %2$s 格，冷却调整为 %3$s 秒。",
   "worldcombat.skill.trick.growth.1": "达到 %1$s 级，心线延长至 %2$s 格、故布疑阵缩至 %3$s 秒。",
   "worldcombat.skill.trick.value.feint": "故布疑阵",
@@ -27,5 +27,6 @@
   "world_combat.move.trick.text.swap": "换了手",
   "world_combat.move.trick.text.empty": "两边都是空手",
   "world_combat.move.trick.text.guard": "它的手抓得死",
-  "world_combat.move.trick.text.miss": "心线断了"
+  "world_combat.move.trick.text.miss": "心线断了",
+  "worldcombat.skill.trick.description.conditions": "目标或自己至少一方持有物、且双方都没有被封住持有物通道时才会交换；有拒绝持有物交换特性的目标也换不走。两边都空手时无法施放。"
 }

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.aquajet.summary": "Wrap yourself in a jet of water and shoot along the ground: further and longer than Quick Attack, soaking and shoving the first body it strikes and putting out any fire on it. A user already in water jets harder. The deluge form pierces the whole path and soaks everyone it touches, at a lighter hit each.",
+  "worldcombat.skill.aquajet.summary": "Wrap yourself in a jet of water and shoot along the ground: further and longer than Quick Attack, soaking and shoving the first foe it strikes and dousing its burn if it carries one. A user in water jets harder. The deluge form pierces the whole path and soaks everyone it touches, at a lighter hit each.",
   "worldcombat.skill.aquajet.use.0": "Open from range and drench the target",
   "worldcombat.skill.aquajet.use.1": "Close the distance with a water-powered rush",
   "worldcombat.skill.aquajet.use.2": "Jet out of the water for a harder column",
-  "worldcombat.skill.aquajet.description.0": "The jet deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
+  "worldcombat.skill.aquajet.description.0": "The column deals about %1$s contact damage on a landed hit, with a %2$s block hit radius; a user in water hits heavier; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.aquajet.description.1": "Shoot up to %1$s blocks along your aim at %2$s blocks per tick; a landed hit shoves the target about %3$s blocks.",
-  "worldcombat.skill.aquajet.description.2": "Soak the target for %1$s on hit.",
+  "worldcombat.skill.aquajet.description.2": "A landed hit soaks the target for %1$s, slowing its movement speed by 8%% for that time.",
   "worldcombat.skill.aquajet.deluge.on": "Deluge: the column pierces the whole path, soaking and striking everyone it touches, with a wider hit and a longer soak, at 0.82 damage per hit and 6 ticks more cooldown.",
   "worldcombat.skill.aquajet.deluge.off": "Single torpedo: it stops on the first body, hits hardest and cools down sooner, for punching through one target.",
   "worldcombat.skill.aquajet.timing": "Cast within %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -32,5 +32,6 @@
   "world_combat.move.aquajet.text.miss": "The jet found nothing",
   "effect.world_combat.aquajet_soaked": "Aqua Jet: Soaked",
   "worldcombat.skill.aquajet.preference.ai.preserveBurn": "Preserve burn",
-  "worldcombat.skill.aquajet.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value."
+  "worldcombat.skill.aquajet.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value.",
+  "worldcombat.skill.aquajet.description.douse": "If the target is carrying a burn, the jet clears the burn and puts out the fire on it."
 }

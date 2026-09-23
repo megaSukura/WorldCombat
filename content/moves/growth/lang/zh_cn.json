@@ -3,7 +3,7 @@
   "worldcombat.skill.growth.use.0": "开场先长一轮，把双攻垫起来",
   "worldcombat.skill.growth.use.1": "在阳光下翻倍长一次",
   "worldcombat.skill.growth.description.0": "当前获得物攻 +%1$s 级、特攻 +%2$s 级；阳光会增强这次生长。",
-  "worldcombat.skill.growth.description.2": "长大标记持续约 %1$s；双攻强化在脱战后消退。起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒。",
+  "worldcombat.skill.growth.description.2": "长大标记是身体抽长的可见状态，持续约 %1$s；双攻提升是能力等级，在脱战后消退。起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒。",
   "worldcombat.skill.growth.timing": "起手可以被打断，打断不消耗任何东西；提交后才结清 PP 与冷却。",
   "worldcombat.skill.growth.value.atkGift": "攻击提升",
   "worldcombat.skill.growth.value.spaGift": "特攻提升",

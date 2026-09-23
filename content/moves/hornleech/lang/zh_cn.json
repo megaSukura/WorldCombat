@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.hornleech.summary": "用角攻击目标，将造成的部分伤害转化为自身治疗。",
   "worldcombat.skill.hornleech.description.0": "木角扎中造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.hornleech.description.1": "最远冲出 %1$s 格（也是实际射程），冲撞速度 %2$s 格每刻，角尖判定半径 %3$s 格。",
-  "worldcombat.skill.hornleech.description.2": "扎中造成的伤害有 %1$s 转回自身生命。",
-  "worldcombat.skill.hornleech.gore.on": "贯穿式：冲得更远、可穿过一个目标继续扎第二个，但每个目标吸得更少、收招更慢。",
+  "worldcombat.skill.hornleech.description.1": "最远冲出 %1$s 格，冲撞速度 %2$s 格每刻，角尖判定半径 %3$s 格。",
+  "worldcombat.skill.hornleech.description.2": "每扎中一个目标，按这次实际造成的伤害把 %1$s 转回自身生命；自身已满血时不回复。",
+  "worldcombat.skill.hornleech.gore.on": "贯穿式：冲得更远、可穿过一个目标继续扎第二个（最多两个），但单下威力略降、每个目标吸得更少，起手、收招与冷却都更长。",
   "worldcombat.skill.hornleech.gore.off": "只扎一个：吸得足、收得快，适合续航。",
-  "worldcombat.skill.hornleech.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %5$s PP，冷却 %4$s 秒。",
+  "worldcombat.skill.hornleech.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.hornleech.growth.0": "%1$s 级起贯穿威力抬到 %2$s。",
   "worldcombat.skill.hornleech.growth.1": "%1$s 级起贯穿威力抬到 %2$s、汲取比例升到 %3$s。",
   "worldcombat.skill.hornleech.use.0": "低头撞进去，用身体把一段距离变成命中",
@@ -20,12 +20,13 @@
   "worldcombat.skill.hornleech.value.aftercast": "收招",
   "worldcombat.skill.hornleech.value.recharge": "冷却",
   "worldcombat.skill.hornleech.preference.gore": "贯穿式",
-  "worldcombat.skill.hornleech.preference.gore.help": "开启：冲得更远、可穿过一个目标继续扎第二个，但每个目标吸得更少、收招更慢，适合穿阵。关闭：只扎一个、吸得足、收得快，适合续航。",
+  "worldcombat.skill.hornleech.preference.gore.help": "开启：冲得更远、可穿过一个目标继续扎第二个（最多两个），但单下威力略降、每个目标吸得更少，起手、收招与冷却都更长，适合穿阵。关闭：只扎一个、吸得足、收得快，适合续航。",
   "worldcombat.skill.hornleech.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.hornleech.preference.ai.maxChase.help": "超过这个距离就不主动冲撞，先走近。越大追得越执着，也越容易冲过头。",
   "worldcombat.skill.hornleech.preference.ai.healBelow": "回血优先阈值",
   "worldcombat.skill.hornleech.preference.ai.healBelow.help": "自身生命低于这个比例时，把木角当续航手段优先出手；越高越早开始靠它回血。",
   "world_combat.move.hornleech.text.gore": "扎中",
   "world_combat.move.hornleech.text.sap": "养分回流 %1$s%%",
-  "world_combat.move.hornleech.text.miss": "冲空"
+  "world_combat.move.hornleech.text.miss": "冲空",
+  "worldcombat.skill.hornleech.description.targeting": "冲撞沿瞄准方向笔直推进，只扎非友方目标，每个目标只结算一次；开启贯穿式时最多扎中两个，否则只扎一个。被地形挡住或冲完距离就停，一个都没扎中就是冲空。"
 }

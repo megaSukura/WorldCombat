@@ -107,6 +107,9 @@ namespace PokemonSkills {
     });
 
     actionParameters.define(lastrespectsId, {
+        fallen: formula(F.var("lastrespects.fallen", text("worldcombat.skill.lastrespects.value.fallen")), "倒下伙伴数", {
+            unit: "位", description: "当前仍在记忆窗口内的同阵营倒下记录；没有现场时显示需要现场确认。"
+        }),
         /** 扫墓威力：48 + 倒下伙伴 ×50（封顶 +250）+ 物攻偏移[−8,24] + 等级偏移[−2,6]；随行 ×0.85 / 送行 ×1.1；夹 46..320。 */
         mourn: formula(
             F.base(48)
@@ -190,8 +193,8 @@ namespace PokemonSkills {
     ]);
 
     describe(lastrespectsId, [
-        { key: "description.0", values: ["mourn", "fallen"] },
-        { key: "description.1", values: ["reach", "speed", "width", "push"] },
+        { key: "description.0", values: ["mourn","fallen"] },
+        { key: "description.1", values: ["reach","speed","width","push"] },
         { key: "trail.on", values: [], when: function (context) { return read(context.detail.values, ["trail"]) === true; } },
         { key: "trail.off", values: [], when: function (context) { return read(context.detail.values, ["trail"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

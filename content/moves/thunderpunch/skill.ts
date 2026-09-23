@@ -23,7 +23,7 @@ namespace PokemonSkills {
         id: "thunderpunch",
         cooldownParameter: "recharge",
         name: "Thunder Punch",
-        description: "An electrified fist jabs the target; the current then runs along the ground to the nearest other foe, shocking both. Each struck target may be left paralyzed.",
+        description: "一记带着电流的快拳命中目标，随后电流从命中点贴着地面追向旁边的其他敌人：主拳与跃电各结算一次伤害，被电中的目标都可能陷入麻痹。",
         uses: ["贴身快拳起手", "让电流再链到旁边的第二个敌人", "快速给多个目标挂上麻痹"],
         kind: "enemy",
         range: 2.6,

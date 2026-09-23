@@ -1,8 +1,8 @@
 {
   "effect.world_combat.beak_heat": "Heated Beak",
   "worldcombat.skill.beakblast.summary": "Heat yourself up first, then fire a shot from the beak like a cannon: after committing, plant and roast the beak; anything that touches the user with its body during that window is burned, and when the window ends the beak shot flies straight out. A longer roast means a heavier shot, paid for by standing exposed. Flying physical, no contact, and stopped by Bulletproof.",
-  "worldcombat.skill.beakblast.description.0": "The beak shot deals %1$s physical damage; the beak is first heated for %2$s.",
-  "worldcombat.skill.beakblast.description.1": "During the heat, a foe that touches the user with its body within %1$s blocks is set alight for %2$s.",
+  "worldcombat.skill.beakblast.description.0": "The beak shot deals about %1$s physical damage on hit; the beak must first be heated for %2$s.",
+  "worldcombat.skill.beakblast.description.1": "During the heat you stand still; a foe that comes within %1$s blocks and lands a contact attack on you is burned for %2$s - while burning it loses a sixteenth of its maximum health every 5 seconds (a Pokemon mirrors it as its native burn, which Fire types are immune to).",
   "worldcombat.skill.beakblast.description.2": "Range %1$s blocks, %2$s blocks per tick, %3$s block body radius.",
   "worldcombat.skill.beakblast.forge.on": "Red-hot form: a longer roast, a heavier and larger shot, at slower projectile speed, -1 block range, +2 preparation and +8 cooldown - the longer the window, the easier it is to be punished by a body pressed in.",
   "worldcombat.skill.beakblast.forge.off": "Rapid form: a shorter roast, a faster shot and a shorter cooldown for a safer window, at slightly lower shot power.",
@@ -35,5 +35,6 @@
   "worldcombat.skill.beakblast.preference.ai.finishLow.help": "On: low-health targets rank first, finished by a heavier shot. Off: rank it as an ordinary ranged attack.",
   "world_combat.move.beakblast.text.heat": "Beak heating, %1$s s to go",
   "world_combat.move.beakblast.text.sear": "Seared by the red-hot beak!",
-  "world_combat.move.beakblast.text.miss": "Beak Blast went wide"
+  "world_combat.move.beakblast.text.miss": "Beak Blast went wide",
+  "worldcombat.skill.beakblast.description.aim": "The aim locks when the heat begins: if the target moves away while the beak heats, the shot still flies along the old line and misses; if the heat is interrupted the beak cools and the shot is never fired."
 }

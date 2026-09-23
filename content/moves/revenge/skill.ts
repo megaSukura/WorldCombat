@@ -13,10 +13,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: revengeId,
         cooldownParameter: "recharge",
         name: "Revenge",
-        description: "站定还手：若最近被当前目标本人打过，这一拳威力翻倍，并把贴脸的对手一拳送开。短而直、击退强。",
+        description: "被打之后立刻还手：短而直的一记回拳，若最近一次挨打就来自当前目标本人，这一拳的伤害翻倍，并把贴脸的对手沿拳势送开；击退强，撞墙或够不到就落空。",
         uses: ["被对手贴上打过之后立刻还一拳", "把冲上来的对手从身上打退", "惩罚先手近身攻击自己的敌人"],
         kind: "enemy",
         range: 2.6,

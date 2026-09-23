@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.axekick.summary": "Deliver a heavy kick that may confuse the target. Missing the attack hurts the user.",
-  "worldcombat.skill.axekick.description.0": "The falling heel deals %1$s contact damage; the target's defence, type match-up and crits are settled on the hit.",
+  "worldcombat.skill.axekick.summary": "A raised-leg chop that drives the heel straight down, dealing damage and possibly dazing the target; a whiff drives the heel into the ground and hurts the user.",
+  "worldcombat.skill.axekick.description.0": "The falling heel deals about %1$s contact damage; the target's defence, type match-up and crits are settled on the hit.",
   "worldcombat.skill.axekick.description.1": "Raise the leg %1$s blocks at %2$s blocks per tick, chopping down at %3$s blocks per tick with %4$s blocks per tick of forward drift.",
-  "worldcombat.skill.axekick.description.2": "Up to %1$s blocks of reach with a %2$s block heel radius; a miss costs %3$s of the user's maximum health.",
-  "worldcombat.skill.axekick.description.3": "A successful hit has a %1$s chance to confuse the target for %2$s ticks and knocks it back %3$s blocks. While confused, each action has a %4$s chance to fail.",
-  "worldcombat.skill.axekick.high.on": "High chop: a higher leg raise, x1.08 chop power and a wider heel radius, at +2 ticks of wind-up, +4 ticks of cooldown, 0.4 blocks less reach and a heavier self-hurt on a miss.",
-  "worldcombat.skill.axekick.high.off": "Low quick chop: faster to fire, farther and lighter on a miss, at the cost of a tier less chop power and reach.",
+  "worldcombat.skill.axekick.description.2": "Up to %1$s blocks of reach with a %2$s block heel radius; a miss costs %3$s times the user's maximum health.",
+  "worldcombat.skill.axekick.description.3": "On a successful hit there is a %1$s chance to daze the target for %2$s ticks and shove it %3$s blocks outward; while dazed each action has a %4$s chance to fumble, and whenever it damages a non-ally it takes recoil of about 2%%–12.5%% of its own maximum health, heavier with its Attack.",
+  "worldcombat.skill.axekick.high.on": "High chop: a higher leg raise, a faster chop, x1.08 chop power, a wider heel radius and a tighter forward drift, at a longer wind-up, a longer cooldown, 0.4 blocks less reach and a heavier self-hurt on a miss.",
+  "worldcombat.skill.axekick.high.off": "Low quick chop: faster to fire, farther, with more forward drift and a lighter self-hurt on a miss, at the cost of lower chop power and a narrower heel radius.",
   "worldcombat.skill.axekick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP; cooldown %5$s s from commitment.",
   "worldcombat.skill.axekick.growth.0": "From level %1$s the chop power rises to %2$s.",
   "worldcombat.skill.axekick.growth.1": "From level %1$s the chop power rises to %2$s.",
@@ -32,10 +32,10 @@
   "worldcombat.skill.axekick.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.axekick.preference.ai.maxChase.help": "Only chop a target within this distance; closer in otherwise. Larger starts sooner, and whiffs more often.",
   "worldcombat.skill.axekick.preference.ai.spareConfused": "Spare the dazed",
-  "worldcombat.skill.axekick.preference.ai.spareConfused.help": "On: do not Axe Kick a target already carrying the shared confusion identity. Off: chop anyway, treating it as plain damage.",
+  "worldcombat.skill.axekick.preference.ai.spareConfused.help": "On: do not Axe Kick a target that is already dazed; off: chop anyway as plain damage.",
   "effect.world_combat.axekick_ring": "Dazed",
   "world_combat.move.axekick.text.hit": "Axe Kick",
   "world_combat.move.axekick.text.crash": "Whiffed",
   "world_combat.move.axekick.text.daze": "Dazed %1$s s",
-  "worldcombat.skill.axekick.value.fumbleChance": "Confusion fumble chance"
+  "worldcombat.skill.axekick.value.fumbleChance": "Daze fumble chance"
 }

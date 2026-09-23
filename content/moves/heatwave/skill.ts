@@ -34,7 +34,7 @@ namespace PokemonSkills {
         id: "heatwave",
         cooldownParameter: "recharge",
         name: "Heat Wave",
-        description: "The user attacks by exhaling hot breath on opposing Pokemon. This may also leave them with a burn.",
+        description: "把一口气在胸腹间焐热、朝前整片吹出去：一道扇形热浪贴着地面向前推，掠过的敌人一起挨烧、被风沿离身方向推离原位，并可能被点着。烈日下更烈、雨天更淡，热风吹完不留残迹。",
         uses: ["一次灼到身前扇形里的几个敌人", "把冲上来的人整片推离原位", "在烈日下把热风推到最烈", "制造一道能读出范围的扇形压制"],
         kind: "enemy",
         range: 9.5,

@@ -4,7 +4,7 @@
   "worldcombat.skill.poisonfang.use.1": "Deepen an already poisoned target into badly poisoned",
   "worldcombat.skill.poisonfang.use.2": "Hang lasting damage on a high-health target",
   "worldcombat.skill.poisonfang.description.0": "The bite deals about %1$s contact and bite damage over a fang radius of %2$s blocks; the target's defence, type matchup and crits are settled on impact.",
-  "worldcombat.skill.poisonfang.description.1": "A beat after the bite (%1$s) the venom seeps in: a %2$s chance to deepen into badly poisoned (plain poison otherwise), lasting %3$s; if the target was already poisoned when bitten, the deepening is guaranteed.",
+  "worldcombat.skill.poisonfang.description.1": "A beat after the bite (%1$s) the venom seeps in: a %2$s chance to deepen into badly poisoned (plain poison otherwise), lasting %3$s; if the target is already poisoned when the venom seeps in, the deepening is guaranteed.",
   "worldcombat.skill.poisonfang.venom.on": "Venom style: a higher toxic chance and a longer venom, but a lighter bite, a slower seep and a longer cooldown.",
   "worldcombat.skill.poisonfang.venom.off": "Quick style: a heavier bite and a faster seep, but harder to deepen into toxic.",
   "worldcombat.skill.poisonfang.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
@@ -31,5 +31,7 @@
   "world_combat.move.poisonfang.text.toxic": "Badly poisoned",
   "world_combat.move.poisonfang.text.venom": "Venom in the wound",
   "world_combat.move.poisonfang.text.immune": "Venom did not take",
-  "world_combat.move.poisonfang.text.miss": "Whiffed"
+  "world_combat.move.poisonfang.text.miss": "Whiffed",
+  "worldcombat.skill.poisonfang.description.pounce": "It lunges along your aim at %1$s blocks/tick for up to about %2$s blocks; the first non-friendly body it meets is bitten, while a blocked or completed lunge that meets none whiffs.",
+  "worldcombat.skill.poisonfang.description.poison": "Poison drains health over time, badly poisoned faster; targets immune to poison are not envenomed."
 }

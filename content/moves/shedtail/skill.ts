@@ -76,9 +76,10 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: "shedtail",
         name: "Shed Tail",
-        description: "The user creates a substitute for itself using its own HP before switching places with a party Pokemon in waiting.",
+        description: "削掉自己一半生命，在原地留下一条会拖住敌人的尾巴，自己沿选定方向抽身离场；有后备时直接与待命的一只换手。尾巴在被打碎或自行消散前，会把附近的敌人重新引向尾巴。",
         uses: ["被打崩前脱身，把追兵留给一条尾巴", "在狭窄地形用尾巴堵住追路", "把敌人的目标从自己身上引开"],
         kind: "motion",
         range: 5,

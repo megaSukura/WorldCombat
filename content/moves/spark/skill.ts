@@ -21,10 +21,11 @@ namespace PokemonSkills {
     const sparkMissText = "world_combat.move.spark.text.miss";
 
     define({
+        freeMovement: true,
         id: "spark",
         cooldownParameter: "recharge",
         name: "Spark",
-        description: "The user attacks the target with an electrically charged tackle. This may also leave the target with paralysis.",
+        description: "迅速撞击目标，有机会使其麻痹。对残血目标的伤害更高。",
         uses: ["贴身把还没麻痹的对手挂上麻痹", "用最短的一手收掉一个残血的目标", "在缠斗里高频骚扰、逼对手换位"],
         kind: "enemy",
         range: 3.0,

@@ -45,8 +45,8 @@ namespace PokemonSkills {
         id: tauntId,
         cooldownParameter: "recharge",
         name: "挑衅",
-        description: "当面挑衅对手，使它的怒火上头；在怒火消失前，它只能使出会造成伤害的招式。",
-        uses: ["逼治疗、增益、换场型的敌人只能打人", "打断对手的蓄力与布置", "给队友创造正面交战窗口"],
+        description: "当面挑衅对手，使其怒火上头；在怒火消失前，它只能使出会造成伤害的招式。喊话要有一条通视直线，墙后与射程外都会落空。",
+        uses: ["逼治疗、增益、换场型的敌人只能打人", "让依赖变化招式的敌人只能转为硬拼", "给队友创造正面交战窗口"],
         kind: "enemy",
         range: 12,
         maxRange: 26,
@@ -86,7 +86,7 @@ namespace PokemonSkills {
             const direction = delta.length() < 0.01 ? action.direction() : delta.unit();
             const reach = Math.max(0.5, Math.min(action.range(), delta.length() || action.range()));
             const rage = Math.max(1, Math.round(p(tauntId, "rage", action)));
-            const ticks = Math.max(40, Math.round(p(tauntId, "tauntTicks", action) * (goad ? 0.8 : 1.3)));
+            const ticks = p(tauntId, "tauntTicks", action);
             // 出口的一下：声浪沿指向冲出，先让玩家看见这句挑衅往哪去。
             WorldFeedback.emit(world, tauntScene, 1, origin,
                 { moment: "shout", reach: reach, rage: rage, direction: [direction.x(), direction.y(), direction.z()],

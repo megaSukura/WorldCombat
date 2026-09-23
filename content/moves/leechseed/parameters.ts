@@ -81,8 +81,8 @@ namespace PokemonSkills {
     stages("leechseed", [{ level: 40, values: { reach: 10.6, seedTicks: 440 } }, { level: 55, values: { reach: 11.6, seedTicks: 520 } }]);
 
     describe("leechseed", [
-        { key: "description.0", values: ["reach", "seedTicks"] },
-        { key: "description.1", values: ["interval", "drain"] },
+        { key: "description.0", values: ["reach","seedTicks"] },
+        { key: "description.1", values: ["interval","drain"] },
         { key: "description.2", values: ["seedSpeed", "seedRadius"] },
         { key: "gluttony.on", values: [], when: function (context) { return read(context.detail.values, ["gluttony"]) === true; } },
         { key: "gluttony.off", values: [], when: function (context) { return read(context.detail.values, ["gluttony"]) !== true; } },

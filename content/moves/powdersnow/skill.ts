@@ -36,7 +36,7 @@ namespace PokemonSkills {
         id: "powdersnow",
         cooldownParameter: "wait",
         name: "Powder Snow",
-        description: "朝身前吹出一片又宽又短的扇形雪霰：扇面里的每个敌人各挨一次轻冻伤、被吹退半步，并各自有概率被冻住。出手快、冷却短，可以反复吹。乱雪式更宽更远点更多人。",
+        description: "朝身前吹出一片又宽又短的扇形雪霰：扇面里的每个敌人各挨一次轻冻伤、被吹退半步，并各自有概率被冻住。出手快、冷却短，可以反复吹，靠次数堆冰冻。",
         uses: ["近身一口罩住挤在身前的几个敌人", "反复吹，一次次掷冰冻", "把贴上来的人吹退半步"],
         kind: "enemy",
         range: 5.5,

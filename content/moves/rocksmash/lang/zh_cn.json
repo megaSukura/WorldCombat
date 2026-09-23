@@ -2,7 +2,7 @@
   "worldcombat.skill.rocksmash.summary": "贴脸连出几记快拳，拳骨砸在对手最硬的地方：每记造成少量接触伤害，收拳时若打实，有机会把对手防御砸低一级；出手快、冷却短，适合反复拆防。",
   "worldcombat.skill.rocksmash.description.0": "连打 %2$s 记快拳，每记造成 %1$s 的接触伤害。",
   "worldcombat.skill.rocksmash.description.1": "拳程约 %1$s 格，判定半径 %2$s 格。",
-  "worldcombat.skill.rocksmash.description.2": "整套打完若有一记打实，有 %1$s 的概率让目标防御下降 %2$s 级，破防标记持续 %3$s。",
+  "worldcombat.skill.rocksmash.description.2": "整套打完只要有一记打实，就有 %1$s 的概率让目标防御下降 %2$s 级；防御下降不会随标记结束而恢复。破防标记持续 %3$s，其他破防招式会读取这枚标记。",
   "worldcombat.skill.rocksmash.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.rocksmash.growth.0": "达到 %1$s 级，单拳威力提升至 %2$s。",
   "worldcombat.skill.rocksmash.growth.1": "达到 %1$s 级，破防几率提升至 %2$s。",

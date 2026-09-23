@@ -106,12 +106,12 @@ namespace PokemonSkills {
 
     describe("megadrain", [
         { key: "description.0", values: ["pod"] },
-        { key: "description.1", values: ["pulses", "interval"] },
-        { key: "description.2", values: ["reach", "seed"] },
+        { key: "description.1", values: ["pulses","interval"] },
+        { key: "description.2", values: ["reach","seed"] },
         { key: "description.3", values: ["sap"] },
         { key: "burst.on", values: [], when: function (context) { return read(context.detail.values, ["burst"]) === true; } },
         { key: "burst.off", values: [], when: function (context) { return read(context.detail.values, ["burst"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pod"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.pod", "tier.1.sap", "tier.1.pulses"] }
     ]);

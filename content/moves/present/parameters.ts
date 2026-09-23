@@ -112,9 +112,9 @@ namespace PokemonSkills {
     ]);
 
     describe(presentId, [
-        { key: "description.0", values: ["surprise", "heavyChance"] },
-        { key: "description.1", values: ["sweetChance", "mend"] },
-        { key: "description.2", values: ["reach", "burstRadius"] },
+        { key: "description.0", values: ["surprise","heavyChance"] },
+        { key: "description.1", values: ["sweetChance","mend"] },
+        { key: "description.2", values: ["reach","burstRadius","throwSpeed"] },
         { key: "trick.on", values: [], when: function (context) { return read(context.detail.values, ["trick"]) === true; } },
         { key: "trick.off", values: [], when: function (context) { return read(context.detail.values, ["trick"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

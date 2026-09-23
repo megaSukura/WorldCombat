@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const BOUNCE_LOW_POWER = 0.62;
 
     define({
+        freeMovement: true,
         id: bounceId,
         cooldownParameter: "recharge", name: "弹跳",
         description: "蹲身压地后笔直弹起、短暂悬停在最高点，再沿落点斜坠砸下：落点范围内的敌人受到接触伤害并被向下压、向后推，有机会被落地那一下麻住。起跳时头顶的净空决定能弹多高——开阔处弹满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。",
-        uses: ["跳过近战火力、从上方砸下来", "落地带麻痹，打断对手的节奏", "在有掩体前抢一个高空落点"],
+        uses: ["跳过近战火力，从上方砸下来", "落地带麻痹，打断对手的节奏", "在有掩体前抢一个高空落点"],
         kind: "enemy", range: 5, maxRange: 7, prepare: 6, active: 60, recover: 7, cooldown: 30,
         style: "leap", stationary: true, maximumTicks: 200,
         defaults: { crush: false, ai: { maxChase: 9, escapeBelow: 0.55, leaveStation: false } },

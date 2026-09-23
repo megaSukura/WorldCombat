@@ -111,12 +111,13 @@ namespace PokemonSkills {
     ]);
 
     describe(spikesId, [
-        { key: "description.0", values: ["pierce", "layerGain"] },
-        { key: "description.1", values: ["patchRadius", "patchTicks", "treadInterval"] },
+        { key: "description.0", values: ["pierce","layerGain"] },
+        { key: "description.1", values: ["patchRadius","patchTicks","treadInterval"] },
+        { key: "description.stacks", values: ["maxLayers"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.pierce", "tier.0.patchRadius"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
+        { key: "growth.0", values: ["tier.0.level","tier.0.pierce","tier.0.patchRadius"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.pierce", "tier.1.layerGain"] }
     ]);
 }

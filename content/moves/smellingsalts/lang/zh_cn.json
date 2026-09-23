@@ -3,9 +3,9 @@
   "worldcombat.skill.smellingsalts.use.0": "趁对手麻痹时打出翻倍的一记",
   "worldcombat.skill.smellingsalts.use.1": "把麻痹中的目标一次性打重",
   "worldcombat.skill.smellingsalts.use.2": "用粗盐让刚清醒的目标再踉跄一阵",
-  "worldcombat.skill.smellingsalts.description.0": "盐击造成约 %1$s 的物理伤害；若目标此刻正麻痹，威力翻倍，并在命中后解除它的麻痹（醒来之后不再被控）。",
+  "worldcombat.skill.smellingsalts.description.0": "盐击造成约 %1$s 点物理伤害；若目标此刻正麻痹，这一记威力翻倍，命中后解除它的麻痹。",
   "worldcombat.skill.smellingsalts.description.1": "攻击距离 %1$s 格，速度 %2$s 格/刻，判定半径 %3$s 格；命中击退 %4$s 格。",
-  "worldcombat.skill.smellingsalts.coarse.on": "开启粗盐：拍开 ×1.5，且解除麻痹后额外留下一段踉跄（减速）；代价是本击约 ×0.90、冷却多 3 刻。",
+  "worldcombat.skill.smellingsalts.coarse.on": "开启粗盐：拍开 ×1.5，且解除麻痹后额外留下一段踉跄，移动速度降低 15%；代价是本击约 ×0.90、冷却多 3 刻。",
   "worldcombat.skill.smellingsalts.coarse.off": "关闭粗盐：本击约 ×1.06，拍醒就干净，把伤害打足。",
   "worldcombat.skill.smellingsalts.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.smellingsalts.growth.0": "达到 %1$s 级，清醒威力提升至 %2$s。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.smellingsalts.preference.ai.wake.help": "开启：麻痹目标获得额外优先级，抓住威力翻倍的机会；关闭：保持普通低优先级，不按麻痹加权。",
   "world_combat.move.smellingsalts.text.wake": "清醒！",
   "world_combat.move.smellingsalts.text.hit": "盐拍",
-  "world_combat.move.smellingsalts.text.miss": "拍了个空"
+  "world_combat.move.smellingsalts.text.miss": "拍了个空",
+  "worldcombat.skill.smellingsalts.description.paralysis": "麻痹一般持续约 40 秒：期间目标移动速度减半，每次出手有 25% 的概率失败；电属性目标不会陷入麻痹。命中后这一记会把麻痹整个解除。"
 }

@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.teatime.summary": "Spreads out a tea party at the chosen spot: every combatant holding a Berry inside the aroma (allies, foes and the user alike) eats its own Berry, and the effect lands on the eater. It can set allies' Berries off at once, or force a foe to spend a healing or reactive Berry early. A grand tea is wider, lasts longer and brews stronger, at the cost of a longer wind-up and cooldown.",
+  "worldcombat.skill.teatime.summary": "Spreads out a tea party at the chosen spot: every combatant holding a Berry inside the aroma, allies and foes alike, eats its own Berry, and the effect lands on the eater. It can set allies' Berries off at once, or force a foe to spend a healing or reactive Berry early. A grand tea is wider and brews stronger, at the cost of a longer wind-up and cooldown.",
   "worldcombat.skill.teatime.use.0": "Pitch a tea among a cluster of foes and strip a whole group of its Berries",
   "worldcombat.skill.teatime.use.1": "Set allies' healing or stat Berries off right away",
   "worldcombat.skill.teatime.use.2": "Force a foe's reactive Berry out early",
-  "worldcombat.skill.teatime.description.0": "The aroma reaches %1$s blocks; every Berry holder inside eats its own Berry (the user included).",
+  "worldcombat.skill.teatime.description.0": "The aroma reaches %1$s blocks; every Berry holder inside eats its own Berry, the user included when standing inside.",
   "worldcombat.skill.teatime.description.1": "Serve within %1$s blocks.",
-  "worldcombat.skill.teatime.description.2": "The brew scales Berry healing by %1$s; wind-up %2$s, recovery %3$s and cooldown %4$s.",
+  "worldcombat.skill.teatime.description.2": "The brew scales the healing of Berries by %1$s; their status cures and stat boosts still apply unchanged. Wind-up %2$s, recovery %3$s, cooldown %4$s.",
   "worldcombat.skill.teatime.stance.grand": "Grand: x1.3 radius and x1.1 brew, at the cost of +3 ticks of wind-up and a longer cooldown - for a big spread.",
   "worldcombat.skill.teatime.stance.quick": "Quick: x0.8 radius, a faster and cheaper cast - for simply stripping a foe's Berry as soon as possible.",
-  "worldcombat.skill.teatime.timing": "Cast at a chosen point; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.teatime.timing": "Cast at a chosen point; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.teatime.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.teatime.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.teatime.value.radius": "Tea radius",
@@ -30,5 +30,6 @@
   "worldcombat.skill.teatime.preference.ai.stripFoes.help": "On: the tea is served only when at least one foe inside holds a Berry, purely to strip them. Off: also served when enough Berry holders are around, to set allies' Berries off.",
   "world_combat.move.teatime.text.served": "Tea is served; %1$s eat their held Berry",
   "world_combat.move.teatime.text.sip": "Drinks down the %1$s",
-  "world_combat.move.teatime.text.empty": "No one held a Berry; the tea is wasted"
+  "world_combat.move.teatime.text.empty": "No one held a Berry; the tea is wasted",
+  "worldcombat.skill.teatime.description.3": "The tea can only be served when the user holds a Berry, or at least one combatant inside the landing radius does; with no Berry holder at all the move cannot be cast."
 }

@@ -55,7 +55,7 @@ namespace PokemonSkills {
 
     addPreferences(steelbeamId, {}, [
         field(pathOf("temper"), "淬火式", "boolean", {
-            help: "开启：只剥下外层钢，自损降到 65%，但钢梁威力 ×0.9、长度 ×0.82、粗细 ×0.8——留得住自己，打不穿硬目标。关闭（全抛式）：把整层钢压进这一束，威力 ×1.1、更长更粗，代价是全额自损。"
+            help: "开启后自损比例乘0.65，钢梁威力×0.9、长度×0.82、粗细×0.8，起手多2刻；关闭时威力×1.1，长度与粗细×1.12，承担通常自损。"
         }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 3, max: 16, step: 1,

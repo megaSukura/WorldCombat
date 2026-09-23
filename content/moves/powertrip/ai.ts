@@ -1,13 +1,4 @@
-/**
- * 嚣张 / powertrip 的伙伴 AI 用途。
- *
- * 什么局面下出手：挂在共享 attack 位上；这是一记接触冲撞，够不到时交给共享接近逻辑把身位收进射程，
- *   `ai.maxChase` 只决定「多远之内值得先手」，超过时压低排序但仍会走近。
- * 对谁出手：`accepts` 只排除友方、已死、看不见的；`approachTarget` 就是目标本人。
- * 什么时候抬价：`ai.boostFirst`（默认开）打开时，身上每有 1 级正面能力就 +4 分——攒了等级才值得冲这一下；
- *   一点没攒时压到 14 分，只在没有更好的选择时用它。关闭则不问架势，一律按普通近身攻击排序。
- * 放完接什么：交回共享交战计划；等级一直留在身上，接着用别的招也不亏。
- */
+/** powertrip：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 只读、回调内缓存的正面能力等级总数（宝可梦读原生等级，其他生物读 CombatStages）。 */
     CompanionBehavior.registerFact("world_combat:move_powertrip/boost", function (access, actor, _argument) {

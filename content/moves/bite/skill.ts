@@ -33,10 +33,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "bite",
         cooldownParameter: "recharge",
         name: "Bite",
-        description: "The target is bitten with viciously sharp fangs. This may also make the target flinch.",
+        description: "短促扑出、一口钩住：冷却最短的近身咬合，咬实后有几率把目标咬懵，并把它朝自己拽近一步——它的价值在抢节奏与留人。",
         uses: ["用最短冷却的近身咬击抢节奏", "把想拉开距离的对手拽回身前", "为下一次贴身出手留住目标"],
         kind: "enemy",
         range: 2.4,

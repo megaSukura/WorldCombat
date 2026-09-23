@@ -93,9 +93,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "knockoff",
         name: "拍落",
-        description: "举臂重拍，把对手的持有物整个拍飞、落地成可拾取的掉落物；对手携带道具时本击伤害更高。",
+        description: "举臂重拍，把对手的持有物整个拍飞、落地成谁都能再捡的掉落物；对手携带道具时这一拍更重。拍得越狠，道具飞得越远、落地越久才能捡起。",
         uses: ["拍掉对手的持有物", "对持物目标的一次沉重近身打击", "把强力道具打成地上的东西"],
         kind: "enemy",
         range: 3,

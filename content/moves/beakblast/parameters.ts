@@ -193,9 +193,10 @@ namespace PokemonSkills {
     defineDamage("beakblast", "shot", {});
 
     describe("beakblast", [
-        { key: "description.0", values: ["shot", "heat"] },
-        { key: "description.1", values: ["guard", "burnTicks"] },
+        { key: "description.0", values: ["shot","heat"] },
+        { key: "description.1", values: ["guard","burnTicks"] },
         { key: "description.2", values: ["reach", "velocity", "radius"] },
+        { key: "description.aim", values: [] },
         { key: "forge.on", values: [], when: function (context) { return read(context.detail.values, ["forge"]) === true; } },
         { key: "forge.off", values: [], when: function (context) { return read(context.detail.values, ["forge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

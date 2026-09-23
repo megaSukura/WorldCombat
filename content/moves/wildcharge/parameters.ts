@@ -120,11 +120,12 @@ namespace PokemonSkills {
     ]);
 
     describe("wildcharge", [
-        { key: "description.0", values: ["surge", "dash", "pace", "radius"] },
-        { key: "description.1", values: ["paralyze", "recoil", "shove"] },
+        { key: "description.0", values: ["surge","dash","pace","radius"] },
+        { key: "description.1", values: ["paralyze","recoil","shove"] },
+        { key: "description.2", values: [] },
         { key: "overload.on", values: [], when: function (context) { return read(context.detail.values, ["overload"]) === true; } },
         { key: "overload.off", values: [], when: function (context) { return read(context.detail.values, ["overload"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.surge"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.surge", "tier.1.paralyze"] }
     ]);

@@ -16,10 +16,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: ragefistId,
         cooldownParameter: "recharge",
         name: "Rage Fist",
-        description: "把挨过的每一记都记成拳印，出手时一并打回去：每挨一记外来伤害就多一记拳印，每记拳印都变作一记鬼拳。缠斗里拳印一直留着，随时可以甩出这一串。",
+        description: "把挨过的每一记都记成拳印，出手时一并打回去：每挨一记外来伤害就多一记拳印，每记拳印都变作一记鬼拳。缠斗里拳印一直留着，随时可以甩出这一串——先挨打，再还拳。",
         uses: ["先挨几记攒拳印，再找机会甩出一串鬼拳", "在近身缠斗里越打越多的拳数", "狂暴式用更短的冷却反复抢拳"],
         kind: "enemy",
         range: 2.6,

@@ -4,7 +4,7 @@
   "worldcombat.skill.mistyterrain.use.1": "Blunt the foe's Dragon burst",
   "worldcombat.skill.mistyterrain.use.2": "Cleanse a poisoned, burned or paralysed ally",
   "worldcombat.skill.mistyterrain.description.0": "Lays mist of radius %1$s blocks, lasting %2$s.",
-  "worldcombat.skill.mistyterrain.description.1": "A body on the field cannot be given status conditions and takes Dragon move damage multiplied by %1$s.",
+  "worldcombat.skill.mistyterrain.description.1": "A grounded body in the mist cannot be given new status conditions and takes Dragon move damage multiplied by %1$s; the protection ends as soon as it leaves the mist.",
   "worldcombat.skill.mistyterrain.description.2": "Protection lingers for %1$s after leaving the mist.",
   "worldcombat.skill.mistyterrain.description.4": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
   "worldcombat.skill.mistyterrain.form.0": "Purifying mist: smaller (radius x0.85) and longer (x1.2), washing existing harmful status effects off any body that enters or stays, at the cost of +3 ticks start-up and x1.2 cooldown.",

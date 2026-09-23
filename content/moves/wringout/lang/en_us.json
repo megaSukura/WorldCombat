@@ -2,7 +2,7 @@
   "worldcombat.skill.wringout.summary": "A spiral of force wraps the target head to foot and twists tighter, wringing the strength out of it: special attack sets how deep the twist bites, and the more HP the target still has, the greater the power. It is the only one of the three pressing moves driven by special attack and the only one that can twist twice: the twin form adds a second wring after the first, recomputed against the target's HP at that moment.",
   "worldcombat.skill.wringout.description.0": "Wring Out deals %1$s Normal special damage; the more HP the target still has, the heavier the twist.",
   "worldcombat.skill.wringout.description.1": "You can reach %1$s blocks.",
-  "worldcombat.skill.wringout.twin.on": "Twin form: a second wring lands %1$s ticks after the first, recomputed against the target's HP then and taking about %2$s more; single-hit power is x0.89, wind-up +2 ticks and cooldown +5 ticks.",
+  "worldcombat.skill.wringout.twin.on": "Twin form: a second wring lands %1$s s after the first, recomputed against the target's HP then and taking about %2$s more; single-hit power is x0.89, wind-up +2 ticks and cooldown +5 ticks.",
   "worldcombat.skill.wringout.twin.off": "Single form (default): one twist, heavier and quicker, with no follow-up.",
   "worldcombat.skill.wringout.timing": "Wind-up %1$s s, recovery %2$s s, cost %3$s PP, cooldown %4$s s.",
   "worldcombat.skill.wringout.growth.0": "From level %1$s: wring power rises to %2$s.",

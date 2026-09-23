@@ -3,10 +3,10 @@
   "worldcombat.skill.solarblade.use.0": "Close in and sweep a whole row",
   "worldcombat.skill.solarblade.use.1": "An unannounced close burst in clear weather",
   "worldcombat.skill.solarblade.use.2": "Shove everything in front away",
-  "worldcombat.skill.solarblade.description.0": "The blade deals %1$s physical damage to each target it sweeps.",
-  "worldcombat.skill.solarblade.description.1": "After gathering you step %3$s blocks forward, then sweep an arc of radius %1$s blocks and %2$s degrees from the landing point.",
+  "worldcombat.skill.solarblade.description.0": "The blade deals about %1$s physical damage to each target it sweeps.",
+  "worldcombat.skill.solarblade.description.1": "After gathering you step up to %3$s blocks forward (stopping early against blocks), then sweep an arc of radius %1$s blocks and %2$s degrees from the landing point; each enemy in the arc is struck once, and blocks stop the cut.",
   "worldcombat.skill.solarblade.description.2": "Gathering takes %1$s of standing still; in strong sunlight it is skipped and the cut lands at once. A struck target is shoved %2$s blocks along the swing.",
-  "worldcombat.skill.solarblade.stance.thrust": "Thrust: a longer step, a heavier single cut and a slightly longer blade, but the arc narrows to a thin line that mostly hits what is straight ahead.",
+  "worldcombat.skill.solarblade.stance.thrust": "Thrust: a longer step, a heavier single cut and a slightly longer blade, but the arc narrows to a thin line that mostly hits what is straight ahead, and the recovery and cooldown run longer.",
   "worldcombat.skill.solarblade.stance.sweep": "Sweep: a wider blade that catches a whole row in front, at the cost of a lighter cut and a shorter step.",
   "worldcombat.skill.solarblade.timing": "Cast within %1$s blocks; after %2$s it consumes %4$s PP, recovers for %3$s, and cools down for %5$s from commit.",
   "worldcombat.skill.solarblade.growth.0": "From level %1$s the cut power steps up with level.",
@@ -22,7 +22,7 @@
   "worldcombat.skill.solarblade.value.sunlight": "Current sunlight",
   "worldcombat.skill.solarblade.value.rain": "Current rain",
   "worldcombat.skill.solarblade.preference.thrust": "Thrust form",
-  "worldcombat.skill.solarblade.preference.thrust.help": "On (thrust): step further (x1.5), a heavier cut (x1.25) and a slightly longer blade, but the arc narrows to a thin line (x0.42) that mostly hits what is straight ahead, with 1 tick more recovery. Off (sweep): a wider blade (x1.25 degrees) that catches a whole row, at the cost of a lighter cut and a shorter step.",
+  "worldcombat.skill.solarblade.preference.thrust.help": "On (thrust): step further (x1.5), a heavier cut (x1.25) and a slightly longer blade, but the arc narrows to a thin line (x0.42) that mostly hits what is straight ahead, with 1 tick more recovery and 2 ticks more cooldown. Off (sweep): a wider blade (x1.25 degrees) that catches a whole row, at the cost of a lighter cut and a shorter step.",
   "worldcombat.skill.solarblade.preference.ai.maxChase": "Engagement range",
   "worldcombat.skill.solarblade.preference.ai.maxChase.help": "Beyond this distance the companion closes in first instead of stepping out; higher means it chases further to cut.",
   "worldcombat.skill.solarblade.preference.ai.multiFirst": "Aim where the row is",
@@ -32,5 +32,6 @@
   "world_combat.move.solarblade.text.sun": "Sunlight in hand!",
   "world_combat.move.solarblade.text.hit": "Solar Blade",
   "world_combat.move.solarblade.text.sweep": "Swept %1$s",
-  "world_combat.move.solarblade.text.miss": "The blade hits air"
+  "world_combat.move.solarblade.text.miss": "The blade hits air",
+  "worldcombat.skill.solarblade.description.weather": "From 35% rain the cut's power is halved."
 }

@@ -72,8 +72,8 @@ namespace PokemonSkills {
     defineDamage("barbbarrage", "volley", {});
 
     describe("barbbarrage", [
-        { key: "description.0", values: ["barbs", "spread"] },
-        { key: "description.1", values: ["volley", "barbSpeed"] },
-        { key: "description.2", values: ["poisonChance", "venomTicks", "push"] }
+        { key: "description.0", values: ["barbs","spread"] },
+        { key: "description.1", values: ["volley","barbSpeed"] },
+        { key: "description.2", values: ["poisonChance","venomTicks","push"] }
     ]);
 }

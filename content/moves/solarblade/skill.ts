@@ -19,6 +19,7 @@ namespace PokemonSkills {
     const solarbladeMissText = "world_combat.move.solarblade.text.miss";
 
     define({
+        freeMovement: true,
         id: "solarblade",
         name: "日光刃",
         description: "站定把日光在身侧凝成一把刀，然后向前踏出一步整刀横斩，扇形内的敌人一起挨打并被刀势推开。强日光下当场斩出；阴雨天刀钝一半、凝刃更慢。",

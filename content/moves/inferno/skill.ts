@@ -23,7 +23,7 @@ namespace PokemonSkills {
         id: "inferno",
         cooldownParameter: "recharge",
         name: "Inferno",
-        description: "The user attacks by engulfing the target in an intense fire. This leaves the target with a burn.",
+        description: "在落点的地面埋下一枚火印：先是一圈焦黑的热痕闷响预热，随后烈焰从地里涌起、向上卷成一根把里面整个包住的火柱，被卷到的一刻必定灼伤。预热够长、范围不宽，走出火印的人真的躲开了——它是本组最慢、最重、也最稳必灼的一招。",
         uses: ["用一段长预热换一发必定灼伤的重击", "在预判对手落脚点时点火印", "把走得慢的重目标整个包住烧透", "追身式下跟着目标连烧几道"],
         kind: "point",
         range: 11,

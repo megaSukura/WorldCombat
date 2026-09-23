@@ -21,7 +21,7 @@ namespace PokemonSkills {
     define({
         id: "shadowbone",
         name: "Shadow Bone",
-        description: "The user attacks by beating the target with a bone that contains a spirit. This may also lower the target's Defense stat.",
+        description: "从身侧唤出一根缠着灵魂的骨棒，掷向远处的对手：骨棒自己追向目标，命中时造成不接触伤害，有机会把目标慑得防御下降一级；是全族唯一的远程一记，攻击距离最远但单发最贵。",
         uses: ["在远处掷出带灵魂的骨棒", "用最远的攻击先手压低防御", "把落空的骨头留在战场上给谁都能捡"],
         kind: "enemy",
         range: 5.0,

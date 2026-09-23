@@ -1,19 +1,4 @@
-/**
- * 查封 / embargo —— 注册与动作。
- *
- * 念头：一枚会跟着目标走的查封印记。命中后扣在对方的道具位上——道具的轮廓还在，力量却传不出来；
- *   这段时间它既用不了自己的道具，也收不到新的道具。
- * 三幕：
- *   起（windup，提交前）：指尖拢起一团暗色封条，锁环在掌心预转（只观察、只预告，可被打断且不花代价）。
- *   封（execute，提交后）：一条由封条顶点连成的线从施法者射向目标；命中后给目标挂上共享身份
- *     `world_combat:status/embargo` 的印记，若是宝可梦再叠加共享的 `NativeModifiers` suppressItems 层，
- *     于是所有读取持有物的结算都读到「道具被按住」。
- *   续／松（mob_effect_tick 续表现／mob_effect_removed 到期或被人清除）：印记跟着目标走，
- *     到期自己松开，被牛奶或 `/effect clear` 清除时提前解封、画面不同。
- *
- * 只封一个目标；道具仍在手里（不是拍掉、不是熔化、不是交换）。别的单元的交付招式要消费这条身份，
- * 用 `CombatStatus.has(world, actor, "embargo")` 即可；本组的传递礼物（bestow）就此拒绝向被查封者送出道具。
- */
+/** 暂时封住目标的道具使用。宝可梦的携带物能力停止生效，普通生物与玩家暂停饮食、格挡、蓄力和手持物交互；道具留在原位。 */
 namespace PokemonSkills {
     const embargoScene = "world_combat:move_embargo";
     const embargoEffect = "world_combat:embargo";
@@ -27,14 +12,17 @@ namespace PokemonSkills {
     /** 目标身上的道具压制层实例 id 与画面用的锁环数；随印记一起出现、一起收回。 */
     var embargoSeals: { [ref: string]: { mod: number; shackles: number } } = Object.create(null);
 
-    /** 目标手里的东西（宝可梦取原生持有物；其他生物没有可供查封的道具）。 */
+    /** 目标当前的原生携带物或主副手。 */
     function embargoHeld(world: CombatWorld, actor: CombatActor): string {
-        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return "";
-        return String(CobblemonCombat.pokemon(actor).heldItem());
+        const held = NativeItems.heldOf(world, actor);
+        return held === null ? "" : held.id;
     }
+    WorldCombat.on("world_combat:move_embargo/item-use", "world_combat:item_use", "", function (event) {
+        if (NativeItems.sealed(event.world(), event.actor())) event.reject("item-sealed");
+    });
     function embargoItemKey(id: string): string { return "item." + String(id).replace(":", "."); }
 
-    /** 给宝可梦叠加共享的道具压制层；其他生物只带印记身份。 */
+    /** 宝可梦另有携带物能力压制；所有活体的原生物品使用门禁读取同一查封身份。 */
     function embargoApplySeal(world: CombatWorld, target: CombatActor, ticks: number, shackles: number): void {
         var ref = String(target.ref());
         var mod = 0;
@@ -81,7 +69,7 @@ namespace PokemonSkills {
         id: "embargo",
         cooldownParameter: "recharge",
         name: "查封",
-        description: "向对手送去一枚跟着它走的查封印记：在印记松开前，它用不了自己的持有物，也收不到新的道具。道具仍在手里，只是暂时被封住。",
+        description: "暂时封住目标的道具使用。宝可梦的携带物能力停止生效，普通生物与玩家暂停饮食、格挡、蓄力和手持物交互；道具留在原位。",
         uses: ["封住依赖持有物的对手", "在道具交换发生前先按住对方的手", "让对手再也接不到队友递来的道具"],
         kind: "enemy",
         range: 9,

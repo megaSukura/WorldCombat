@@ -3,9 +3,9 @@
   "worldcombat.skill.dragontail.use.0": "当面横扫、把一排敌人一起抽开",
   "worldcombat.skill.dragontail.use.1": "在敌人贴身时把它们扫出近身圈",
   "worldcombat.skill.dragontail.use.2": "对单个厚实目标打一击并送走",
-  "worldcombat.skill.dragontail.description.0": "以自己为原点扫出 %2$s 格半径、%3$s 度的扇形，正对的目标吃约 %1$s 的龙属性接触伤害，扇形里的其他人吃折扣。",
-  "worldcombat.skill.dragontail.description.1": "被扫中者沿背离你的方向被弹开约 %1$s 格、抛起 %2$s 格。",
-  "worldcombat.skill.dragontail.description.2": "被弹飞者带上「溃退」：持续 %1$s 秒，期间只要离你不足 %2$s 格，就每 10 刻再被扫开 %3$s 格。",
+  "worldcombat.skill.dragontail.description.0": "以自己为原点扫出 %2$s 格半径、%3$s 度的扇形，罩住里面的所有敌人：正对的那个目标吃约 %1$s 的龙属性接触伤害，其余每个只承受约 %4$s 倍。",
+  "worldcombat.skill.dragontail.description.1": "被命中的目标沿背离你的方向被弹开约 %1$s 格、抛起 %2$s 格；位移撞上地形会被挡住。",
+  "worldcombat.skill.dragontail.description.2": "被弹飞者带上「溃退」约 %1$s 秒：开始即尝试打断其当前动作并清除其目标；期间只要离你不足 %2$s 格，就每 10 刻再被扫开约 %3$s 格并再次失去目标，位移撞上地形会被挡住。",
   "worldcombat.skill.dragontail.high.on": "开启高抛：弹起高度 ×1.5，代价是弹飞距离 ×0.85。",
   "worldcombat.skill.dragontail.high.off": "关闭高抛：弹飞距离 ×1.25、弹起 ×0.8，送得更远更平。",
   "worldcombat.skill.dragontail.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -35,5 +35,6 @@
   "effect.world_combat.dragontail_routed": "溃退",
   "world_combat.move.dragontail.text.hit": "尾扫抽飞了 %1$s 个对手",
   "world_combat.move.dragontail.text.miss": "尾扫扫了个空",
-  "world_combat.move.dragontail.text.switch": "龙尾 · 强制换下"
+  "world_combat.move.dragontail.text.switch": "龙尾 · 强制换下",
+  "worldcombat.skill.dragontail.description.additional": "被命中的目标若拥有可上场的后备，会被强制换下、后备在其落点登场；野生或没有后备的目标只会留在原地溃退。"
 }

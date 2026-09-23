@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.crushclaw.summary": "Step in and cross both claws in front of you, tearing everyone in the corridor: a tear has the family's best chance to lower a target's Defence by a stage, and a target already carrying the guardbroken identity loses one more. Heavier than Rock Smash, quicker than Iron Tail.",
   "worldcombat.skill.crushclaw.description.0": "The cross slash deals %1$s contact damage.",
-  "worldcombat.skill.crushclaw.description.1": "You step in %1$s blocks with a %2$s block corridor half-width.",
-  "worldcombat.skill.crushclaw.description.2": "A landed tear has a %1$s chance to lower the target's Defence by %2$s stage; a target already carrying the guardbroken identity loses %3$s more stage, and the rent mark lasts %4$s.",
+  "worldcombat.skill.crushclaw.description.1": "You step in %1$s blocks and tear a corridor %2$s blocks half-wide in front of you; every enemy caught takes one slash.",
+  "worldcombat.skill.crushclaw.description.2": "Each enemy struck rolls separately: a %1$s chance to lower its Defence by %2$s stage, plus %3$s more stage if it already carries the guardbroken identity; a tear leaves that identity for %4$s. The identity itself changes no stats, but moves that rip open an old gap use it to press Defence down another stage.",
   "worldcombat.skill.crushclaw.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.crushclaw.growth.0": "From level %1$s the slash rises to %2$s.",
   "worldcombat.skill.crushclaw.growth.1": "From level %1$s the tear chance rises to %2$s.",

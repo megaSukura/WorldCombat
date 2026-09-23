@@ -24,11 +24,12 @@ namespace PokemonSkills {
     const triplediveMissText = "world_combat.move.tripledive.text.miss";
 
     define({
+        freeMovement: true,
         id: "tripledive",
         cooldownParameter: "recharge",
         name: "三连钻",
-        description: "以默契的跳跃溅起水花击向对手。连续 3 次给予伤害。",
-        uses: ["连续三次钻击同一个目标，越钻越重", "先手把目标打湿，给后续水属性招式铺垫", "在近身短暂窗口里堆出三下小伤害"],
+        description: "连跳三次、每次沿目标方向扎下去，落点溅起一片水花；每钻命中都把目标打湿，已经湿透的目标被下一钻打得更重。三下都落在同一个目标上时，第三下最狠。",
+        uses: ["连续三次钻击同一个目标，越钻越重", "先手把目标打上湿透，让随后两钻吃满加成", "在近身短暂窗口里堆出三下小伤害"],
         kind: "enemy",
         range: 3.0,
         maxRange: 3.8,

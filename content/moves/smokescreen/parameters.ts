@@ -56,9 +56,9 @@ namespace PokemonSkills {
             "两次喷烟之间的等待；等级越高越熟练。")
     });
     describe(smokescreenId, [
-        { key: "description.0", values: ["blindStage", "lingerTicks"] },
-        { key: "description.1", values: ["cloudRadius", "cloudTicks"] },
-        { key: "description.2", values: ["reach", "smokeSpeed", "tempo", "recharge"] },
+        { key: "description.0", values: ["blindStage","lingerTicks"] },
+        { key: "description.1", values: ["cloudRadius","cloudTicks"] },
+        { key: "description.2", values: ["reach","smokeSpeed","tempo","recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

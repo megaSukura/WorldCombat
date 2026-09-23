@@ -106,12 +106,12 @@ namespace PokemonSkills {
     defineDamage("dragonclaw", "rend", {}, { contact: true, slice: true });
 
     describe("dragonclaw", [
-        { key: "description.0", values: ["rend", "reach", "spread"] },
-        { key: "description.1", values: ["depth", "rendStages"] },
-        { key: "cross.on", values: ["spread", "rendStages", "rend"], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
-        { key: "cross.off", values: ["spread", "rendStages", "rend"], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },
+        { key: "description.0", values: ["rend","reach","spread"] },
+        { key: "description.1", values: ["depth","rendStages"] },
+        { key: "cross.on", values: ["spread","rendStages","rend"], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
+        { key: "cross.off", values: ["spread","rendStages","rend"], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.rend"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.rend", "tier.1.reach"] }
+        { key: "growth.0", values: ["tier.0.level","tier.0.rend"] },
+        { key: "growth.1", values: ["tier.1.level","tier.1.rend","tier.1.reach"] }
     ]);
 }

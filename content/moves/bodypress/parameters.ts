@@ -83,7 +83,7 @@ namespace PokemonSkills {
     describe("bodypress", [
         { key: "description.0", values: ["drive", "collisionRadius"] },
         { key: "description.1", values: ["brace", "lunge", "advanceSpeed"] },
-        { key: "description.2", values: ["shove", "grindTicks"] },
+        { key: "description.2", values: ["shove","grindTicks"] },
         { key: "grind.on", values: [], when: function (context) { return read(context.detail.values, ["grind"]) === true; } },
         { key: "grind.off", values: [], when: function (context) { return read(context.detail.values, ["grind"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -65,7 +65,7 @@ namespace PokemonSkills {
     ]);
 
     describe("irondefense", [
-        { key: "description.0", values: ["gift", "shell"] },
+        { key: "description.0", values: ["gift","shell"] },
         { key: "description.1", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

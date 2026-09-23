@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.batonpass.summary": "Bundle your current stat changes into a glowing baton: with a reserve it goes to a waiting party member that steps in to carry it, otherwise to the nearest ally, while you clear out and step away. The baton carries the levels you really built up.",
+  "worldcombat.skill.batonpass.summary": "Passes stat changes and buffs to an ally. A reserve takes the baton when available; otherwise it passes to the selected nearby ally and steps away.",
   "worldcombat.skill.batonpass.use.0": "Hand the whole stack of stat changes to a teammate",
   "worldcombat.skill.batonpass.use.1": "Pass your growth on before it can be stripped away",
   "worldcombat.skill.batonpass.use.2": "Pass the baton and disengage when badly hurt",
-  "worldcombat.skill.batonpass.description.0": "Passes up to %1$s stat levels to the ally, who gains the same stages while you clear them; the baton mark lingers %2$s.",
+  "worldcombat.skill.batonpass.description.0": "Passes up to %1$s levels: the largest absolute stat changes first, then native buffs within the remaining allowance. Transferred effects leave the user and retain their remaining time; the baton icon lasts %2$s.",
   "worldcombat.skill.batonpass.description.1": "Hand-off range %1$s blocks; after the pass you step %2$s blocks away from the ally.",
   "worldcombat.skill.batonpass.relay.on": "Relay style: carry cap ×1.0, step ×0.6, longer cooldown — give the whole baton to your ally.",
   "worldcombat.skill.batonpass.relay.off": "Solo style: carry cap ×0.65, step ×1.2, shorter cooldown — keep part for yourself and pull farther away.",
-  "worldcombat.skill.batonpass.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",
+  "worldcombat.skill.batonpass.timing": "Range %1$s blocks; wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",
   "worldcombat.skill.batonpass.growth.0": "From level %1$s the baton carries %2$s levels.",
-  "worldcombat.skill.batonpass.growth.1": "From level %1$s the baton carries %2$s levels.",
+  "worldcombat.skill.batonpass.growth.1": "From level %1$s, passes up to %2$s levels over %3$s blocks.",
   "worldcombat.skill.batonpass.value.carry": "Baton levels",
   "worldcombat.skill.batonpass.value.handoffRange": "Hand-off range",
   "worldcombat.skill.batonpass.value.withdraw": "Step distance",
@@ -26,5 +26,6 @@
   "worldcombat.skill.batonpass.preference.ai.leaveStation.help": "When on, the user leaves its post under a hold order to hand the baton to a teammate.",
   "world_combat.move.batonpass.text.handoff": "Baton pass · inherits %1$s",
   "world_combat.move.batonpass.text.lone": "Baton pass · no taker",
-  "effect.world_combat.baton_pass": "Baton Pass"
+  "effect.world_combat.baton_pass": "Baton Pass",
+  "worldcombat.skill.batonpass.world": "Ordinary creatures and players can receive the baton. Each native buff transfers whole, with level I costing one level. It stays with the user if the remaining allowance is too small or the recipient already has a stronger instance."
 }

@@ -42,7 +42,7 @@ namespace PokemonSkills {
     define({
         id: "shockwave",
         name: "Shock Wave",
-        description: "The user strikes the target with a quick jolt of electricity. This attack never misses.",
+        description: "一记比反应更快的电击：电流贴地窜到对手脚下，来不及躲，因此必定命中；目标湿身或在雨里时电传导得更狠，地导形态还能扫过身前的整条走廊。",
         uses: ["比反应更快的电击", "沿地面扫过一条走廊", "打湿身的目标"],
         kind: "enemy",
         range: 10,

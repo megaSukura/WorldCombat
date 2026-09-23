@@ -99,7 +99,7 @@ namespace PokemonSkills {
     describe(afteryouId, [
         { key: "description.0", values: ["readyTicks", "haste"] },
         { key: "description.1", values: ["reach"] },
-        { key: "description.2", values: ["yieldTicks", "drag", "tempo", "aftercast", "recharge"] },
+        { key: "description.2", values: ["yieldTicks","drag","tempo","aftercast","recharge"] },
         { key: "lead.0", values: [], when: function (context) { return read(context.detail.values, ["lead"]) === 1; } },
         { key: "lead.1", values: [], when: function (context) { return read(context.detail.values, ["lead"]) !== 1; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

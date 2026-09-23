@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.jumpkick.summary": "A low, flat flying kick after a short run: crouch, spring, and sweep the leg out along a shallow arc. Land it and the target is kicked away; miss and the ankle cracks on the ground, hurting the user. The cleanest, fastest strike in the crash-kick family.",
+  "worldcombat.skill.jumpkick.summary": "A low, flat flying kick: crouch, spring, and sweep the leg out along a shallow arc. Land it and the target is kicked away; miss and the ankle cracks on the ground, hurting the user. The cleanest, fastest strike in the crash-kick family.",
   "worldcombat.skill.jumpkick.description.0": "The flying kick deals %1$s contact damage; the target's defence, type match-up and crits are settled on the hit.",
   "worldcombat.skill.jumpkick.description.1": "Leap %1$s blocks, rising at %2$s blocks per tick, diving at %3$s blocks per tick with %4$s blocks per tick of forward drift.",
-  "worldcombat.skill.jumpkick.description.2": "Up to %1$s blocks of reach with a %2$s block hit radius; a miss costs %3$s of the user's maximum health.",
+  "worldcombat.skill.jumpkick.description.2": "Up to %1$s blocks of reach with a %2$s block hit radius; a miss costs %3$s times the user's maximum health.",
   "worldcombat.skill.jumpkick.description.3": "Knock the target back %1$s blocks on hit.",
-  "worldcombat.skill.jumpkick.running.on": "Running start: more kick power and a longer forward arc, but a longer wind-up and a heavier self-hurt on a miss.",
-  "worldcombat.skill.jumpkick.running.off": "Standing start: quicker to fire and lighter on a miss, but less power and a shorter arc.",
-  "worldcombat.skill.jumpkick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.jumpkick.running.on": "Running start: more kick power and a longer forward arc (harder to dodge), but a longer wind-up, a heavier self-hurt on a miss and a slightly lower leap.",
+  "worldcombat.skill.jumpkick.running.off": "Standing start: quicker to fire, lighter on a miss and a slightly higher leap, but a shorter forward arc and less power.",
+  "worldcombat.skill.jumpkick.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.jumpkick.growth.0": "From level %1$s the kick power rises to %2$s.",
   "worldcombat.skill.jumpkick.growth.1": "From level %1$s the kick power rises to %2$s and knockback to %3$s.",
   "worldcombat.skill.jumpkick.use.0": "Deal contact damage with a cheap airborne kick",
@@ -32,5 +32,6 @@
   "worldcombat.skill.jumpkick.preference.ai.preferWeak": "Finish the weak",
   "worldcombat.skill.jumpkick.preference.ai.preferWeak.help": "On: prefer Jump Kick against targets below a third health to finish them. Off: compete by the shared order only.",
   "world_combat.move.jumpkick.text.hit": "Jump Kick",
-  "world_combat.move.jumpkick.text.crash": "Whiffed"
+  "world_combat.move.jumpkick.text.crash": "Whiffed",
+  "worldcombat.skill.jumpkick.description.aim": "While rising, the kick keeps its landing point on the target's live position; once the dive begins the landing point locks, so a target that moves aside can slip it. Touching any living body on the way down counts as a hit; at the landing point it still picks the nearest enemy within the hit radius, settling only one target; only when all of that fails (including hitting a wall on the way down) is it a miss, costing the user health."
 }

@@ -33,7 +33,7 @@ namespace PokemonSkills {
         id: "darkpulse",
         cooldownParameter: "recharge",
         name: "Dark Pulse",
-        description: "从胸口逼出一团恶意气场，朝选定的一片地推过去；到点炸开成领域，罩住的敌人各挨一记并可能畏缩，落点会残留一小阵不散的恶意。弥漫式罩得更开更久但更轻，凝聚式更快更重。",
+        description: "从胸口逼出一团恶意气场，朝选定的一片地推过去；到点炸开，罩住的敌人各挨一记并可能畏缩。弥漫式罩得更开但更轻，凝聚式更快更重。",
         uses: ["罩住挤在一片的一群敌人", "隔一段距离先手压血", "用恶意领域把近身的人震懵"],
         kind: "point",
         range: 11,

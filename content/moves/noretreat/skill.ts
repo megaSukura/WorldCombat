@@ -81,6 +81,7 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: noRetreatId,
         cooldownParameter: "recharge",
         name: "背水一战",

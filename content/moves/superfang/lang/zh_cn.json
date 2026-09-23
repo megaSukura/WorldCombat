@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.superfang.summary": "门牙先量住猎物的命脉，再一口咬掉它现有生命的一半：不看攻防，按目标当前生命直接结算。对满血厚目标最狠，越残血越无力，是开场与破盾的招而不是收尾的招。",
-  "worldcombat.skill.superfang.description.0": "咬中直接削去 %1$s 的固定伤害：目标当前生命的一半，再加门牙捎带的碎肉。它不走攻防比拼，只有属性免疫与原生减伤会拦住它。",
+  "worldcombat.skill.superfang.description.0": "咬中直接削去 %1$s 点固定伤害：目标当前生命的一半，再加门牙捎带的碎肉。它不做攻防比拼、也无视护甲，只有属性免疫与原生减伤会拦住它。",
   "worldcombat.skill.superfang.description.1": "朝目标扑出 %1$s 格、每刻 %2$s 格，咬合判定半径 %3$s 格。",
   "worldcombat.skill.superfang.description.2": "咬中后门牙停留 %1$s，这段时间施法者留在原地；目标残血时这一口自然更轻。",
   "worldcombat.skill.superfang.patient.on": "潜咬式：捎带的碎肉 ×1.6、咬住更久，但起手多 3 刻、冷却多 8 刻。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.superfang.preference.ai.halfAt": "最低削血比例",
   "worldcombat.skill.superfang.preference.ai.halfAt.help": "目标当前生命比例低于这个数时就不再用愤怒门牙，把出手让给别的招。调高＝只在目标还厚时削；调低＝残血也照样削（收益很小）。",
   "world_combat.move.superfang.text.sever": "生命被削去 %1$s",
-  "world_combat.move.superfang.text.miss": "咬空"
+  "world_combat.move.superfang.text.miss": "咬空",
+  "worldcombat.skill.superfang.description.path": "沿直线扑出，途中咬中任何非友方活体就咬住它，不一定是原定目标；中途被地形挡住、或走完扑咬距离仍没咬到，则咬空、不造成伤害。"
 }

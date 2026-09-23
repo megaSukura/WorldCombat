@@ -102,9 +102,10 @@ namespace PokemonSkills {
         { key: "description.0", values: ["surge", "pulses", "cadence"] },
         { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["sap"] },
+        { key: "description.lock", values: [] },
         { key: "deepPour.on", values: [], when: function (context) { return read(context.detail.values, ["deepPour"]) === true; } },
         { key: "deepPour.off", values: [], when: function (context) { return read(context.detail.values, ["deepPour"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.surge"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.surge", "tier.1.sap", "tier.1.pulses"] }
     ]);

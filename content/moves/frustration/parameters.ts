@@ -91,8 +91,8 @@ namespace PokemonSkills {
     defineDamage("frustration", "rake", { defenceCoefficient: 0.005 }, { contact: true });
 
     describe("frustration", [
-        { key: "description.0", values: ["rake", "rakes", "deficit"] },
-        { key: "description.1", values: ["lunge", "pressSpeed", "pace", "collisionRadius"] },
+        { key: "description.0", values: ["rake","rakes","deficit"] },
+        { key: "description.1", values: ["lunge","pressSpeed","pace","collisionRadius"] },
         { key: "description.2", values: ["push"] },
         { key: "vent.on", values: [], when: function (context) { return read(context.detail.values, ["vent"]) === true; } },
         { key: "vent.off", values: [], when: function (context) { return read(context.detail.values, ["vent"]) !== true; } },

@@ -3,11 +3,11 @@
   "worldcombat.skill.trick.use.0": "Trade for a foe's good item from a distance",
   "worldcombat.skill.trick.use.1": "Hand a burden you carry to the foe",
   "worldcombat.skill.trick.use.2": "Take an item from a distant foe while empty-handed",
-  "worldcombat.skill.trick.description.0": "Swap held items with a target within %1$s blocks.",
-  "worldcombat.skill.trick.description.1": "A %1$s feint, %2$s to recover after the swap, and a %3$s cooldown from commit.",
+  "worldcombat.skill.trick.description.0": "Swap held items with an enemy within %1$s blocks and in clear sight: you stay put, and after the swap each side holds what the other had (when one side is empty this is a one-way take or give).",
+  "worldcombat.skill.trick.description.1": "A %1$s feint, %2$s to recover after the swap, and a %3$s cooldown.",
   "worldcombat.skill.trick.snap.on": "Snap grab: wind-up x0.55 and 6 ticks less cooldown, at the cost of the thread closing to arm's reach (range x0.62) - faster, but you must be close.",
   "worldcombat.skill.trick.snap.off": "Measured thread: a longer thread (up to about 9 blocks) and a fuller cooldown, with a longer wind-up - more reach, but more time for the foe to react.",
-  "worldcombat.skill.trick.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to stretch the thread, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
+  "worldcombat.skill.trick.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it spends %4$s PP to stretch the thread, then %3$s seconds of recovery and a %5$s second cooldown.",
   "worldcombat.skill.trick.growth.0": "At level %1$s the thread stretches to %2$s blocks and the cooldown becomes %3$s seconds.",
   "worldcombat.skill.trick.growth.1": "At level %1$s the thread stretches to %2$s blocks and the feint shortens to %3$s seconds.",
   "worldcombat.skill.trick.value.feint": "Feint",
@@ -27,5 +27,6 @@
   "world_combat.move.trick.text.swap": "Changed hands",
   "world_combat.move.trick.text.empty": "Both hands empty",
   "world_combat.move.trick.text.guard": "Its grip held fast",
-  "world_combat.move.trick.text.miss": "The thread snapped"
+  "world_combat.move.trick.text.miss": "The thread snapped",
+  "worldcombat.skill.trick.description.conditions": "The swap only happens when at least one side holds something and neither side's item channel is sealed; a target whose ability refuses held-item exchange cannot be traded with. It cannot be cast when both sides are empty-handed."
 }

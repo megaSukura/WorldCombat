@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.snatch.summary": "Put out a hand and take the move the chosen foe is about to use on itself, applying it to yourself; if it never commits a stealable move the hand closes on nothing.",
+  "worldcombat.skill.snatch.summary": "Wait for a selected opponent’s next benefit, then steal a snatchable self-targeted move or one newly gained beneficial potion effect.",
   "worldcombat.skill.snatch.use.0": "Take the boost a foe is about to give itself",
   "worldcombat.skill.snatch.use.1": "Cut off a foe's recovery or setup",
   "worldcombat.skill.snatch.use.2": "Steal a foe's preparation before the fight starts",
-  "worldcombat.skill.snatch.description.0": "After %1$s of wind-up the hand waits in front of the target for %2$s; any self-buff or recovery move it commits in that time is turned back and used by you instead.",
+  "worldcombat.skill.snatch.description.0": "After %1$s of preparation, wait on the selected opponent for %2$s. A snatchable self-buff or healing move is cancelled and used by you instead.",
   "worldcombat.skill.snatch.description.1": "Reach: %1$s blocks. The current cast range is %2$s blocks and requires a clear line of sight.",
-  "worldcombat.skill.snatch.description.2": "The cooldown between grabs is %1$s. An empty window costs nothing; a stolen move is settled with your own stats.",
+  "worldcombat.skill.snatch.description.2": "Cooldown %1$s. No PP is spent if no eligible move or benefit is caught. Stolen moves use your stats; potion effects retain their strength and remaining duration.",
   "worldcombat.skill.snatch.patient.on": "Bide: the open hand lasts x1.5, to wait out a slower setup; it costs +3 ticks wind-up and x1.2 cooldown.",
   "worldcombat.skill.snatch.patient.off": "Snap: -2 ticks wind-up and x0.85 cooldown to grab a beat sooner; the open hand lasts x0.9.",
   "worldcombat.skill.snatch.timing": "Cast on a single enemy: after %2$s of preparation it spends %4$s PP to open the hand; the recovery is %3$s, the cooldown %5$s from commit, and the current range %1$s blocks.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.snatch.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.snatch.preference.ai.leaveStation.help": "When on, the partner will also leave its post to reach out.",
   "world_combat.move.snatch.text.taken": "Snatched %1$s",
-  "world_combat.move.snatch.text.empty": "Nothing to snatch"
+  "world_combat.move.snatch.text.empty": "Nothing to snatch",
+  "worldcombat.skill.snatch.world": "During the %1$s window, you can also steal one newly gained beneficial potion effect from the selected target, keeping its strength and remaining duration. Range and clear sight are still required at transfer. If you already have a stronger or equally strong longer effect, the target keeps theirs."
 }

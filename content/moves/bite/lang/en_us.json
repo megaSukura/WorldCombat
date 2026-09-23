@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.bite.summary": "A quick pounce and a hooked bite: the cheapest melee move in the family, with a chance to flinch and to reel the target back toward the user - its value is in tempo and holding a target close.",
   "worldcombat.skill.bite.description.0": "The bite deals about %1$s contact damage with a %2$s block fang radius; the target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.bite.description.1": "It pounces up to %1$s blocks at %2$s blocks per tick and drags the target %3$s blocks back toward the user on a hit.",
-  "worldcombat.skill.bite.description.2": "A solid bite has a %1$s flinch chance for %2$s s.",
+  "worldcombat.skill.bite.description.1": "It pounces up to %1$s blocks at %2$s blocks per tick; the first enemy it meets is bitten and dragged %3$s blocks back toward the user.",
+  "worldcombat.skill.bite.description.2": "A solid bite has a %1$s chance to make the target flinch for %2$s: it first tries to interrupt its current interruptible action, and while flinching the target cannot start new moves or make ordinary attacks.",
   "worldcombat.skill.bite.deep.on": "Deep bite: bites harder, drags the target closer and flinches longer and more often, but winds up slower, hits slightly lighter and has a longer cooldown.",
   "worldcombat.skill.bite.deep.off": "Quick bite: faster to cast and hits a little harder, but barely pulls the target.",
   "worldcombat.skill.bite.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",

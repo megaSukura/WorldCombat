@@ -3,10 +3,10 @@
   "worldcombat.skill.rockclimb.use.0": "A heavy close-range pounce",
   "worldcombat.skill.rockclimb.use.1": "Leap a short distance into a group",
   "worldcombat.skill.rockclimb.use.2": "Catch two or three with the landing ring",
-  "worldcombat.skill.rockclimb.description.0": "The landing deals %1$s physical damage; the leap reaches %2$s blocks and the landing ring is %3$s blocks (the drawn dust ring is the hit area).",
-  "worldcombat.skill.rockclimb.description.1": "On a solid hit, %1$s chance to leave the target confused for %2$s; each action it starts then has %3$s chance to be broken.",
+  "worldcombat.skill.rockclimb.description.0": "The landing deals about %1$s physical damage; the leap reaches %2$s blocks and the landing ring has a %3$s block radius. It strikes every enemy in that ring once, up to %4$s targets (the drawn dust ring is the hit area).",
+  "worldcombat.skill.rockclimb.description.1": "On a solid hit, %1$s chance to leave the target confused for %2$s; while confused, each action it starts has %3$s chance to be broken, and that action is wasted.",
   "worldcombat.skill.rockclimb.description.2": "Accuracy 85 really does veer (%1$s degrees per missing point); leap height %2$s blocks.",
-  "worldcombat.skill.rockclimb.vault.on": "Vault: leaps farther and higher with a wider landing ring and a bigger scuff, at the cost of longer windup/cooldown and a wider aim spread (easier to miss).",
+  "worldcombat.skill.rockclimb.vault.on": "Vault: leaps farther and higher with a wider landing ring and a bigger scuff, at the cost of a slower leap, slightly lower per-hit power, longer windup/cooldown and a wider aim spread (easier to miss).",
   "worldcombat.skill.rockclimb.vault.off": "Ground Pounce: a low, fast pounce with a tighter aim spread and more consistency, at the cost of a shorter leap and a smaller landing ring.",
   "worldcombat.skill.rockclimb.timing": "Range %1$s blocks, windup %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.rockclimb.growth.0": "From level %1$s the pounce power rises to %2$s.",
@@ -39,5 +39,6 @@
   "world_combat.move.rockclimb.text.daze": "Rattled",
   "world_combat.move.rockclimb.text.stumble": "Stumbles",
   "world_combat.move.rockclimb.text.hit": "Rock Climb hit %1$s",
-  "world_combat.move.rockclimb.text.miss": "Pounced into nothing"
+  "world_combat.move.rockclimb.text.miss": "Pounced into nothing",
+  "worldcombat.skill.rockclimb.description.additional": "The landing also claws up roughly %1$s blocks of ground around the impact into coarse dirt, a scuff that lasts %2$s before the original blocks return."
 }

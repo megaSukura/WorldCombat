@@ -4,10 +4,10 @@
   "worldcombat.skill.bulldoze.use.1": "Clip the Speed of anyone charging in",
   "worldcombat.skill.bulldoze.use.2": "Ignore airborne foes and hit the ones standing",
   "worldcombat.skill.bulldoze.use.3": "Shove a ring of foes away when surrounded",
-  "worldcombat.skill.bulldoze.description.0": "Each grounded foe the wave sweeps takes about %1$s damage; airborne targets are safe. The target's defence, type and crit are settled on the hit.",
+  "worldcombat.skill.bulldoze.description.0": "The fissure sweeps up to %2$s grounded foes, each taking about %1$s physical damage; airborne targets are safe. The target's defence, type and crit are settled on the hit.",
   "worldcombat.skill.bulldoze.description.1": "The fissure runs outward to %1$s blocks, sweeping the whole ring within %2$s s.",
-  "worldcombat.skill.bulldoze.description.2": "Those swept lose %1$s Speed stage(s) and are shoved %2$s blocks outward.",
-  "worldcombat.skill.bulldoze.description.3": "It leaves %2$s cracked blocks on the surface for %1$s s, then the original blocks return.",
+  "worldcombat.skill.bulldoze.description.2": "Those swept lose %1$s Speed stage(s) and are shoved about %2$s blocks outward.",
+  "worldcombat.skill.bulldoze.description.3": "It leaves up to %2$s cracked blocks on the surface for %1$s s, then the original blocks return.",
   "worldcombat.skill.bulldoze.deep.on": "Deep Stomp on: the fissure is about ×0.68 wide, each hit about 24%% stronger and drops one more Speed stage, shoving further, but wind-up +3 ticks and cooldown +8 ticks.",
   "worldcombat.skill.bulldoze.deep.off": "Deep Stomp off (Wide Stomp): the fissure is about ×1.12 wide and each hit about 10%% weaker, but it casts faster and cools down sooner, for sweeping an area or chasing fast foes.",
   "worldcombat.skill.bulldoze.timing": "Cast on the space within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.bulldoze.preference.ai.cluster": "Prefer clusters",
   "worldcombat.skill.bulldoze.preference.ai.cluster.help": "With this on, the companion raises Bulldoze when another foe stands within 3.5 blocks of the target, so one stomp catches the group; off keeps the normal attack order.",
   "world_combat.move.bulldoze.text.hit": "Stomped %1$s",
-  "world_combat.move.bulldoze.text.miss": "Fissure missed"
+  "world_combat.move.bulldoze.text.miss": "Fissure missed",
+  "worldcombat.skill.bulldoze.description.ground": "You must be standing on the ground to drive the stomp in; it cannot be cast while airborne, and you stay rooted through the wind-up and recovery."
 }

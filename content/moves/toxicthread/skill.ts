@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: toxicthreadId,
         cooldownParameter: "recharge",
         name: "毒丝",
-        description: "吐出一缕带毒的丝缠住对手，使其中毒并降低速度；命中后可以沿丝线把对手拽近，或就地把它钉住。",
+        description: "吐出一缕带毒的丝缠住对手，使其中毒并降低速度；命中后可以沿丝线把对手拽近，或就地把它钉住。丝会飞，掩体与走位能躲开。",
         uses: ["先下手削弱高速目标", "把扑上来的近战拽乱站位", "给难缠的对手叠一层持续掉血的中毒"],
         kind: "enemy",
         range: 5,

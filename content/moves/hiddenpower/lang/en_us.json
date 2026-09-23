@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.hiddenpower.summary": "Gathers the type hidden in the user's body into a sphere and fires it; the type is decided by the user's individual values.",
   "worldcombat.skill.hiddenpower.use.0": "Ranged strike",
-  "worldcombat.skill.hiddenpower.description.0": "Gathers the user's inherent type into a sphere fired at the target: %1$s special damage; %2$s s to gather, sphere travels at %3$s blocks/tick, range %4$s blocks.",
+  "worldcombat.skill.hiddenpower.description.0": "Gather the user's inherent type into a sphere and fire it at the target: about %1$s special damage; after %2$s s of gathering it flies straight at %3$s blocks per tick, with a range of %4$s blocks.",
   "worldcombat.skill.hiddenpower.description.1": "PP cost %1$s; cooldown %2$s s.",
   "worldcombat.skill.hiddenpower.timing": "Timing",
   "worldcombat.skill.hiddenpower.value.power": "Hidden Power",
@@ -10,5 +10,7 @@
   "worldcombat.skill.hiddenpower.value.radius": "Sphere radius",
   "worldcombat.skill.hiddenpower.value.reach": "Range",
   "worldcombat.skill.hiddenpower.value.focus": "Gathering rings",
-  "world_combat.move.hiddenpower.text.type": "Hidden Power · %1$s"
+  "world_combat.move.hiddenpower.text.type": "Hidden Power · %1$s",
+  "worldcombat.skill.hiddenpower.description.type": "The sphere's type is fixed by the parity of the user's six individual values - that individual's own Hidden Power type. Damage is dealt as that type, so it gains same-type bonus and follows type match-ups; the same move has a different type in different individuals.",
+  "worldcombat.skill.hiddenpower.description.ballistic": "The sphere is a real projectile that flies straight, with a %1$s-block hit radius; it bursts on the first body it meets and deals one hit only to a non-ally, without piercing."
 }

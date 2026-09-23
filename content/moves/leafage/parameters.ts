@@ -121,7 +121,7 @@ namespace PokemonSkills {
     ]);
 
     describe(leafageId, [
-        { key: "description.0", values: ["toss", "count"] },
+        { key: "description.0", values: ["toss","count"] },
         { key: "description.1", values: ["reach", "spread", "velocity"] },
         { key: "description.2", values: ["leafRadius"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },

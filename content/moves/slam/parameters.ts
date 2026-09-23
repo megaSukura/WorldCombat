@@ -112,7 +112,7 @@ namespace PokemonSkills {
 
     describe("slam", [
         { key: "description.0", values: ["impact", "crater"] },
-        { key: "description.1", values: ["reach", "fallTicks", "shockPush"] },
+        { key: "description.1", values: ["reach","fallTicks","shockPush"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

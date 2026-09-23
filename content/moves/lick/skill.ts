@@ -15,7 +15,7 @@ namespace PokemonSkills {
     define({
         id: "lick",
         name: "Lick",
-        description: "The user licks the target with a long tongue to inflict damage. This may also leave the target with paralysis.",
+        description: "用一条远超普通近战的长舌朝目标snap 出去舔一下：伤害很轻，但出手非常快，目标很可能被这一下麻住；缠绕式还能把它朝身前拽一段。",
         uses: ["从近战够不到的距离舔一个目标", "给还没发麻的对手补一下麻痹", "把舔中的目标朝身前拽一段"],
         kind: "enemy",
         range: 4,

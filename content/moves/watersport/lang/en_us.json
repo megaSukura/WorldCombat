@@ -5,12 +5,12 @@
   "worldcombat.skill.watersport.use.2": "Soak the ground before a Fire volley",
   "worldcombat.skill.watersport.description.0": "Lay the puddle on ground within %1$s blocks.",
   "worldcombat.skill.watersport.description.1": "The puddle has a radius of %1$s blocks and lasts %2$s, soaking every body inside regardless of side.",
-  "worldcombat.skill.watersport.description.2": "A soaked body's Fire moves deal %1$s of their power, and stay wet for %2$s after leaving.",
+  "worldcombat.skill.watersport.description.2": "A soaked body's Fire moves are at most half power (deeper water suppresses more; the puddle's suppression coefficient is about %1$s), and the soak lasts %2$s after leaving.",
   "worldcombat.skill.watersport.description.3": "Extinguish fire on up to %1$s ground blocks per pulse.",
   "worldcombat.skill.watersport.description.4": "Laying it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the form note for the wide/deep trade-off.",
   "worldcombat.skill.watersport.form.0": "Deep: puddle radius x0.75, duration x1.35, Fire factor x0.85 (stronger suppression), at +3 ticks wind-up and x1.15 cooldown.",
   "worldcombat.skill.watersport.form.1": "Wide: puddle radius x1.3, -2 ticks wind-up, x0.9 cooldown, at x0.72 duration and the base Fire factor.",
-  "worldcombat.skill.watersport.timing": "Cast on ground within %1$s blocks: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s from commit.",
+  "worldcombat.skill.watersport.timing": "Cast on ground within %1$s blocks: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s.",
   "worldcombat.skill.watersport.value.reach": "Cast distance",
   "worldcombat.skill.watersport.value.puddleRadius": "Puddle radius",
   "worldcombat.skill.watersport.value.puddleTicks": "Puddle duration",
@@ -34,5 +34,6 @@
   "world_combat.move.watersport.text.splash": "Water Sport %1$s s (Fire x%2$s%%)",
   "world_combat.move.watersport.text.drench": "Soaked",
   "world_combat.move.watersport.text.douse": "Fire quenched",
-  "effect.world_combat.watersport_soaked": "Soaked"
+  "effect.world_combat.watersport_soaked": "Soaked",
+  "worldcombat.skill.watersport.description.soak": "Bodies standing in the puddle are continually re-soaked; that soak also removes any burn and puts out the flames on them."
 }

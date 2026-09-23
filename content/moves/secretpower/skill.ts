@@ -100,7 +100,8 @@ namespace PokemonSkills {
         advance(action);
     }
 
-    define({ id: "secretpower", name: "秘密之力",
+    define({
+        freeMovement: true, id: "secretpower", name: "秘密之力",
         description: "借脚下场所之力的一记短击：火焰引燃、草木催眠、水与雨导电麻痹，其余则概率麻痹；直击形态无视场所换取更高威力。",
         uses: ["近身借力", "环境利用"], kind: "enemy", range: 5, prepare: 6, active: 0, recover: 8, cooldown: 26, style: "site",
         defaults: { plain: false }, fields: [flag("plain", "直击形态")],

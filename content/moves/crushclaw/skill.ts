@@ -42,9 +42,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "crushclaw",
         name: "Crush Claw",
-        description: "The user slashes the target with hard and sharp claws. This may also lower the target's Defense stat.",
+        description: "踏前一步，双爪在身前划出交叉，把走廊里的对手撕开：撕中时最有可能让目标防御下降一级，目标已经带着破防身份时还会多降一级；比碎岩重、比铁尾快。",
         uses: ["踏前交叉撕甲", "对已经被砸开的目标掀得更深", "在中近距离一记换取防御下降"],
         kind: "enemy",
         range: 3.0,

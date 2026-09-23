@@ -3,12 +3,12 @@
   "worldcombat.skill.quickguard.use.0": "挡住贴速度打来的先制连击",
   "worldcombat.skill.quickguard.use.1": "在对手的急袭起手前抢一拍架板",
   "worldcombat.skill.quickguard.use.2": "用一次最短的窗口替全队吃下一串快打",
-  "worldcombat.skill.quickguard.description.0": "快板为每人磕掉约 %1$s 点先制伤害，只架约 %2$s 秒。",
-  "worldcombat.skill.quickguard.description.1": "快板罩住 %1$s 格。",
+  "worldcombat.skill.quickguard.description.0": "快板为每个被罩住的人磕掉约 %1$s 点先制伤害，只架约 %2$s 秒，用量耗尽或时限到就散。",
+  "worldcombat.skill.quickguard.description.1": "撑起时罩住施放者与 %1$s 格内的友方。",
   "worldcombat.skill.quickguard.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.quickguard.brace.snap": "抢拍：吸收总量 ×0.75、时长 ×0.8、半径 ×0.85，换起手 −1 刻、冷却 ×0.85——出手最快。",
   "worldcombat.skill.quickguard.brace.steady": "稳架：吸收总量 ×1.25、时长 ×1.25、半径 ×1.05，代价是起手 +2 刻、冷却 ×1.15——架得更稳更久。",
-  "worldcombat.skill.quickguard.timing": "自身招式，覆盖半径 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.quickguard.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.quickguard.value.capacity": "格挡总量",
   "worldcombat.skill.quickguard.value.window": "架挡时长",
   "worldcombat.skill.quickguard.value.radius": "遮蔽半径",
@@ -29,5 +29,6 @@
   "world_combat.move.quickguard.text.block": "快板磕开 %1$s（余 %2$s）",
   "world_combat.move.quickguard.text.fall": "快板散去",
   "world_combat.move.quickguard.text.ward": "快板顶上先制",
-  "effect.world_combat.quick_guard": "快速防守"
+  "effect.world_combat.quick_guard": "快速防守",
+  "worldcombat.skill.quickguard.description.additional": "快板只磕敌方的先制招式（优先度大于 0）：先制伤害从每人自己的余量里扣，扣到见底快板就散，当场超出的部分照常命中；带优先度的变化招式会被整手顶回。非先制的攻击和友方的招式都不受影响。被罩住的队友离施放者太远或与施放者之间视线被挡时，保护会提前失效。"
 }

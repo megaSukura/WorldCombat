@@ -52,6 +52,7 @@ namespace PokemonSkills {
     describe("terablast", [
         { key: "description.0", values: ["power"] },
         { key: "description.1", values: ["edge"] },
+        { key: "description.additional", values: ["range"] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);
 }

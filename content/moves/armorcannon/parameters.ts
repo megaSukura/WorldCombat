@@ -151,8 +151,9 @@ namespace PokemonSkills {
     describe(armorcannonId, [
         { key: "description.0", values: ["shell"] },
         { key: "description.1", values: ["reach", "velocity", "radius"] },
-        { key: "description.2", values: ["guardLoss", "poiseLoss"] },
-        { key: "burst.on", values: ["blast", "share"], when: function (context) { return read(context.detail.values, ["burst"]) === true; } },
+        { key: "description.2", values: ["guardLoss","poiseLoss"] },
+        { key: "description.3", values: ["scorch","scorchTicks"] },
+        { key: "burst.on", values: ["blast","share"], when: function (context) { return read(context.detail.values, ["burst"]) === true; } },
         { key: "burst.off", values: [], when: function (context) { return read(context.detail.values, ["burst"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shell"] },

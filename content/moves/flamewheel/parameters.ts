@@ -127,7 +127,9 @@ namespace PokemonSkills {
 
     describe("flamewheel", [
         { key: "description.0", values: ["wheel", "roll", "spin", "radius"] },
-        { key: "description.1", values: ["through", "burnChance", "burnTicks", "shove"] },
+        { key: "description.1", values: ["through", "burnChance", "shove", "burnTicks"] },
+        { key: "description.targets", values: ["pierceCount"] },
+        { key: "description.thaw", values: [] },
         { key: "fierce.on", values: [], when: function (context) { return read(context.detail.values, ["fierce"]) === true; } },
         { key: "fierce.off", values: [], when: function (context) { return read(context.detail.values, ["fierce"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

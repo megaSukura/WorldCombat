@@ -4,11 +4,11 @@
   "worldcombat.skill.helpinghand.use.1": "在队友连招前先托一把",
   "worldcombat.skill.helpinghand.use.2": "把一次命中机会放大成一次击倒",
   "worldcombat.skill.helpinghand.description.0": "伙伴的下一次命中额外造成 %1$s%% 的伤害；这份光能留 %2$s 秒。",
-  "worldcombat.skill.helpinghand.description.1": "施放距离约 %1$s 格。",
+  "worldcombat.skill.helpinghand.description.1": "对伙伴施放，施放距离约 %1$s 格；不能对自己使用。",
   "worldcombat.skill.helpinghand.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
-  "worldcombat.skill.helpinghand.stance.rally": "同心协力：加成 ×1.15，但光只留 65%% 的时长、冷却 +8 刻——把一次命中堆到最重。",
+  "worldcombat.skill.helpinghand.stance.rally": "同心协力：加成 ×1.15，但光只留 65% 的时长、冷却 +8 刻——把一次命中堆到最重。",
   "worldcombat.skill.helpinghand.stance.calm": "静待时机：光留 1.5 倍时长、冷却 −6 刻，但加成 ×0.9——让伙伴有更久的时间挑出手时机。",
-  "worldcombat.skill.helpinghand.timing": "对伙伴施放，准备 %2$s 秒后消耗 %4$s PP 送出这份力；收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.helpinghand.timing": "对伙伴施放，准备 %1$s 秒后消耗 %3$s PP 送出这份力；收招 %2$s 秒，冷却 %4$s 秒。",
   "worldcombat.skill.helpinghand.value.reach": "托举距离",
   "worldcombat.skill.helpinghand.value.assist": "助力强度",
   "worldcombat.skill.helpinghand.value.assistTicks": "助力时长",
@@ -25,5 +25,6 @@
   "world_combat.move.helpinghand.text.ready": "借你一把力",
   "world_combat.move.helpinghand.text.strike": "借力命中！",
   "world_combat.move.helpinghand.text.fade": "这股力散了",
-  "effect.world_combat.helping_hand": "被帮助"
+  "effect.world_combat.helping_hand": "被帮助",
+  "worldcombat.skill.helpinghand.description.effect": "这份光只兑现在伙伴接下来造成伤害的下一次命中上，用完即散；如果一直没造成伤害，会在到期时自行褪去。重复托举只刷新，不会叠加。"
 }

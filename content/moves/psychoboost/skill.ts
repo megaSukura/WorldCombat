@@ -38,7 +38,7 @@ namespace PokemonSkills {
         id: "psychoboost",
         cooldownParameter: "recharge",
         name: "Psycho Boost",
-        description: "Crushes all of the user's psychic power into one remote implosion; the recoil harshly lowers the user's Sp. Atk.",
+        description: "把全部精神力压成一点，让几圈念力环隔空收拢到目标身上内爆，是全族威力最高的一记；施法后自身特攻大幅下降。回响式会在片刻后于原爆点补上第二响，代价是主爆略低、出手更慢。",
         uses: ["远距离用全族最重的一记特殊点杀", "用收拢的念力环预告一次隔空内爆", "回响式在原爆点补上第二响"],
         kind: "enemy",
         range: 12,

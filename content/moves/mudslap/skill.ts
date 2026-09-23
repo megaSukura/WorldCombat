@@ -18,7 +18,7 @@ namespace PokemonSkills {
     define({
         id: "mudslap",
         name: "Mud-Slap",
-        description: "The user hurls mud in the target's face to inflict damage and lower its accuracy.",
+        description: "抓起一把湿泥甩到对手脸上；伤害很轻，但必定降低它的命中率。",
         uses: ["近中距离先手糊脸，必定削命中", "给接下来要放的大招铺路", "低消耗的稳定小伤害"],
         kind: "enemy",
         range: 10,

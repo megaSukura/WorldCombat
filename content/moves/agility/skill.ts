@@ -20,7 +20,7 @@ namespace PokemonSkills {
         id: "agility",
         cooldownParameter: "wait",
         name: "高速移动",
-        description: "让身体放松变得轻盈，从而大幅提高自己的速度。",
+        description: "大幅提高速度等级，并留下一段「轻身」余韵。",
         uses: ["开场先松劲，把速度垫起来", "在被追上之前抢先拉开", "在连打之间随手补一档速度"],
         kind: "self",
         range: 1,

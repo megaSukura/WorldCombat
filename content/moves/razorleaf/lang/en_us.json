@@ -3,7 +3,7 @@
   "worldcombat.skill.razorleaf.use.0": "Fire wave after wave of leaves down a single narrow lane",
   "worldcombat.skill.razorleaf.use.1": "Shred foes lined up in a row",
   "worldcombat.skill.razorleaf.use.2": "Chew on a stationary foe beat after beat",
-  "worldcombat.skill.razorleaf.description.0": "Each leaf per wave deals %1$s physical damage and the volley splits into %2$s waves.",
+  "worldcombat.skill.razorleaf.description.0": "The volley splits into %2$s waves; each wave strikes every enemy in the lane once for about %1$s physical damage, so the same target can be cut wave after wave. It also lands critical hits more often.",
   "worldcombat.skill.razorleaf.description.1": "The leaves fly %1$s blocks with a %2$s-block lane half-width and %3$s between waves.",
   "worldcombat.skill.razorleaf.broad.on": "Broad form: the lane widens to 1.8x, each wave is heavier (×1.15) and cooldown is 4 ticks lower, but there is one wave fewer.",
   "worldcombat.skill.razorleaf.broad.off": "Dense form (default): one extra wave and 5 ticks more cooldown, but the lane narrows to 0.8x and each wave is lighter.",

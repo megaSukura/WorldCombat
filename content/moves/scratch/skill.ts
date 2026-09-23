@@ -39,10 +39,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "scratch",
         cooldownParameter: "recharge",
         name: "Scratch",
-        description: "Hard, pointed, sharp claws rake the target to inflict damage.",
+        description: "一次掠过的爪击撕出一排平行爪痕：抬手就挠，每道痕扫过身前一小段，命中的对手各挨一道浅割；对手体型越宽、站得越近，同时被抓中的痕越多。它是全族最快、最便宜的一记。",
         uses: ["贴脸一爪划出一排爪痕", "对大体型或并排的对手一次抓多道", "用最短冷却的便宜招持续磨血"],
         kind: "enemy",
         range: 2.1,

@@ -4,7 +4,7 @@
   "worldcombat.skill.block.use.1": "在路口或门口横拦一条退路",
   "worldcombat.skill.block.use.2": "把冲上来的厚目标按进近战范围",
   "worldcombat.skill.block.description.0": "在目标背影一侧立起弧长约 %1$s 格、高 %2$s 格的栅栏，离它约 %3$s 格。",
-  "worldcombat.skill.block.description.1": "栅栏与压制持续约 %1$s；落栅瞬间把目标短暂钉住 %2$s，并向术者方向推挤 %3$s 格。",
+  "worldcombat.skill.block.description.1": "栅栏与压制持续约 %1$s；落栅瞬间把目标定在原地 %2$s（期间无法移动，但仍能出手），并向术者方向推挤 %3$s 格。",
   "worldcombat.skill.block.description.2": "墙由约 %1$s 根立柱拼成，张开约 %2$s 度。",
   "worldcombat.skill.block.description.3": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.block.option.on": "撑臂：墙高 +1 格、压制时长约 ×1.35，代价是弧更窄（约 ×0.75）、起手 +3 刻、冷却 +12 刻——更高更久但更慢更窄。",
@@ -32,5 +32,6 @@
   "worldcombat.skill.block.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.block.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去封路。",
   "world_combat.move.block.text.seal": "退路被封住 %1$s 秒",
-  "effect.world_combat.block_penned": "被拦网围住"
+  "effect.world_combat.block_penned": "被拦网围住",
+  "worldcombat.skill.block.description.press": "被压制的目标整段时间移动速度降低约 45%%；要绕过这道铁栏杆只能绕路、翻越或挖开，栅栏在压制结束后自行收回。"
 }

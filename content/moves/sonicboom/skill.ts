@@ -44,7 +44,7 @@ namespace PokemonSkills {
         id: "sonicboom",
         cooldownParameter: "recharge",
         name: "Sonic Boom",
-        description: "The target is hit with a destructive shock wave that always inflicts 20 HP damage.",
+        description: "一声音爆，空气被瞬间撕开：一条笔直的裂痕当刻连到对手身上，仿佛没有飞行时间，扫到的目标固定削掉 20 点生命（只有属性免疫能挡住）并被推开；回响式隔一小段再补一声。",
         uses: ["最便宜、最快的一记固定伤害", "用固定 20 点补刀或磨高防目标", "回响式封住一条直线"],
         kind: "enemy",
         range: 8,

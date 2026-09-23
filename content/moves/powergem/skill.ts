@@ -17,7 +17,7 @@ namespace PokemonSkills {
         id: powergemId,
         cooldownParameter: "recharge",
         name: "Power Gem",
-        description: "The user attacks with a ray of light that sparkles as if it were made of gemstones.",
+        description: "把光收进一枚宝石般的焦点，射出一条又细又长、会贯穿的宝石光线：线路上每个敌人都被依次射穿，越远分到的光越少，击点崩出碎晶。光走直线、被方块挡住，所以掩体是它唯一的空门。",
         uses: ["在长距离点名一个远处的目标", "把光贯穿一条线上的敌人", "逼对手躲到掩体后才敢露头"],
         kind: "enemy",
         range: 12,

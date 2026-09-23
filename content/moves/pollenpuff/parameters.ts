@@ -99,12 +99,12 @@ namespace PokemonSkills {
     ]);
 
     describe("pollenpuff", [
-        { key: "description.0", values: ["blast", "mend"] },
-        { key: "description.1", values: ["burstRadius", "reach"] },
-        { key: "description.2", values: ["throwSpeed", "tempo"] },
+        { key: "description.0", values: ["blast","mend"] },
+        { key: "description.1", values: ["burstRadius","reach","maxTargets"] },
+        { key: "description.2", values: ["throwSpeed","tempo"] },
         { key: "nurture.on", values: [], when: function (context) { return read(context.detail.values, ["nurture"]) === true; } },
         { key: "nurture.off", values: [], when: function (context) { return read(context.detail.values, ["nurture"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.mend", "tier.0.reach"] }
     ]);
 }

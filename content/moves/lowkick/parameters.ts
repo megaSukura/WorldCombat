@@ -111,7 +111,7 @@ namespace PokemonSkills {
     describe("lowkick", [
         { key: "description.0", values: ["sweep", "collisionRadius"] },
         { key: "description.1", values: ["lunge", "speed"] },
-        { key: "description.2", values: ["tripStages", "rootTicks", "tripTicks"] },
+        { key: "description.2", values: ["tripStages","rootTicks","tripTicks"] },
         { key: "reap.on", values: [], when: function (context) { return read(context.detail.values, ["reap"]) === true; } },
         { key: "reap.off", values: [], when: function (context) { return read(context.detail.values, ["reap"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -96,11 +96,11 @@ namespace PokemonSkills {
     ]);
 
     describe("twister", [
-        { key: "description.0", values: ["gust", "pulseTicks"] },
-        { key: "description.1", values: ["vortexRadius", "vortexTicks"] },
-        { key: "description.2", values: ["pull", "lift"] },
+        { key: "description.0", values: ["gust","pulseTicks"] },
+        { key: "description.1", values: ["vortexRadius","vortexTicks"] },
+        { key: "description.2", values: ["pull","lift"] },
         { key: "description.3", values: ["reach"] },
-        { key: "description.4", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.4", values: ["flinchChance","flinchTicks"] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

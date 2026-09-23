@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const takedownRecoilText = "world_combat.move.takedown.text.recoil";
 
     define({
+        freeMovement: true,
         id: "takedown",
         cooldownParameter: "recharge",
         name: "Take Down",
-        description: "A reckless full-body charge attack for slamming into the target. This also damages the user a little.",
+        description: "最朴素的一次全力肩撞：缩肩低头冲出一小段，用整个身体把目标顶开；撞实的一下反作用力会伤到自己，冲空只是滑停站定。谁都用得起的一记硬撞。",
         uses: ["用一次便宜的肩撞顶开贴脸的对手", "在挨打前先手打断并拉出身位", "给残血目标补上最后一撞"],
         kind: "enemy",
         range: 3.7,

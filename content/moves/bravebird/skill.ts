@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const bravebirdWhiffText = "world_combat.move.bravebird.text.whiff";
 
     define({
+        freeMovement: true,
         id: "bravebird",
         cooldownParameter: "recharge",
         name: "Brave Bird",
-        description: "The user tucks in its wings and charges at a low altitude. This also damages the user quite a lot.",
+        description: "收翅弹起到低空，沿一条斜线俯冲穿过目标、落在它身后；线上遇到的敌人依次受击，每穿中一人各按比例反震自己。高掠式更重更远，低掠式更快更安全。",
         uses: ["从空中俯冲穿过一个目标", "沿一条线串起挤在一起的敌人", "越过前排直接打到后排"],
         kind: "enemy",
         range: 5.4,

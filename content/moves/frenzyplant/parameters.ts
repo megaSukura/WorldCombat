@@ -86,6 +86,9 @@ namespace PokemonSkills {
         { key: "description.0", values: ["bloom"] },
         { key: "description.1", values: ["radius", "reach"] },
         { key: "description.2", values: ["leaves"] },
-        { key: "description.3", values: ["exhaust", "snareTicks"] }
+        { key: "description.3", values: ["exhaust","snareTicks"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
+        { key: "growth.0", values: ["tier.0.level","tier.0.bloom"] },
+        { key: "growth.1", values: ["tier.1.level","tier.1.bloom"] }
     ]);
 }

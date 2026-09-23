@@ -4,7 +4,7 @@
   "worldcombat.skill.smog.use.1": "Plug the mouth of a corridor",
   "worldcombat.skill.smog.use.2": "Spam poison with its deep PP",
   "worldcombat.skill.smog.description.0": "The cone opens %2$s degrees wide and each foe it touches takes about %1$s damage; the target's Sp. Def, type and crit are settled on the hit.",
-  "worldcombat.skill.smog.description.1": "The smog rolls up to %1$s blocks; those it touches have a %2$s poison chance, the poison lasting %3$s s.",
+  "worldcombat.skill.smog.description.1": "The smog rolls up to %1$s blocks; those it touches have a %2$s poison chance.",
   "worldcombat.skill.smog.description.2": "It sweeps the near band first, then the far band %1$s s later; each band settles once.",
   "worldcombat.skill.smog.billow.on": "Billow style on: ×1.2 cone angle, ×1.15 range and ×1.15 poison chance, at ×0.85 damage per band and a slower roll.",
   "worldcombat.skill.smog.billow.off": "Billow style off (Sharp breath): a tighter, denser cone with ×1.15 damage that comes out faster.",
@@ -34,5 +34,7 @@
   "worldcombat.skill.smog.preference.ai.leaveStation.help": "On, the companion may leave its post to breathe at a target; off restricts it to breaths it can make from where it stands.",
   "world_combat.move.smog.text.hit": "Coated %1$s",
   "world_combat.move.smog.text.poison": "Poisoned",
-  "world_combat.move.smog.text.miss": "Smog clears"
+  "world_combat.move.smog.text.miss": "Smog clears",
+  "worldcombat.skill.smog.description.poison": "The poison lasts %1$s, draining health over time without defeating the target, and can be cured; Poison-type, Steel-type and suitably immune targets are not poisoned.",
+  "worldcombat.skill.smog.description.targets": "One breath coats at most %1$s enemies, and each is settled only once."
 }

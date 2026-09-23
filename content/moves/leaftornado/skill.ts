@@ -19,7 +19,7 @@ namespace PokemonSkills {
     define({
         id: "leaftornado",
         name: "Leaf Tornado",
-        description: "The user attacks its target by encircling it in sharp leaves. This attack may also lower the target's accuracy.",
+        description: "召起一圈锋利叶片，把对手围在旋转切割的旋风里；每一拍都割伤它，并可能把叶屑扑进眼睛、削掉命中。",
         uses: ["把目标围在一块持续切割的区域里", "同时割伤扎堆的敌人", "用叶屑不断掷概率致盲"],
         kind: "enemy",
         range: 11,

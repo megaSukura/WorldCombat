@@ -43,10 +43,11 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: phantomforceId,
         cooldownParameter: "recharge", name: "潜灵奇袭",
-        description: "撕开一道影子裂隙滑进灵界、短暂消失，再从目标身后的裂隙里现身劈下：现身那一刻把目标身上所有守护一并震碎，再结算这一记接触伤害。消失期间看不出也打不着，但目标可以走位躲开落点。",
-        uses: ["穿过守住／光墙／广域防守这类守护", "消失一拍躲开点名，再贴身反击", "从防守者身后开刀"],
+        description: "撕开一道影子裂隙滑进灵界、短暂消失，再从目标身后的裂隙里现身劈下：现身那一刻把目标身上的守护震碎，再劈出这一记接触伤害。消失期间看不出也打不着。",
+        uses: ["穿过守住／看破／广域防守／硬化这类守护", "消失一拍躲开点名，再贴身反击", "从防守者身后开刀"],
         kind: "enemy", range: 7, maxRange: 9, prepare: 8, active: 1, recover: 8, cooldown: 34,
         style: "ghost", stationary: true, maximumTicks: 200,
         defaults: { deep: false, ai: { maxChase: 12, breakGuard: true, leaveStation: false } },

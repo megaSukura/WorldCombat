@@ -44,7 +44,7 @@ namespace PokemonSkills {
                 .clamp(4, 12).round(2),
             "甩仇恨半径", {
                 unit: " 格",
-                description: "落地那一刻，这个范围内正盯着你的敌人会失去目标；等级越高、开启远遁闪时甩得越开。"
+                description: "离开原位置时，该位置周围这个范围内正盯着你的敌人会失去目标；等级越高、开启远遁闪时甩得越开。"
             }),
         /** 裂缝碎点数：20 + 速度 ÷ 6 + 特攻 ÷ 10；夹 14..52。 */
         motes: formula(
@@ -79,9 +79,10 @@ namespace PokemonSkills {
     describe(teleportId, [
         { key: "description.0", values: ["blinkRange"] },
         { key: "description.1", values: ["shedRadius"] },
+        { key: "description.2", values: [] },
         { key: "far.on", values: [], when: function (context) { return read(context.detail.values, ["far"]) === true; } },
         { key: "far.off", values: [], when: function (context) { return read(context.detail.values, ["far"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blinkRange"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.blinkRange"] }
     ]);

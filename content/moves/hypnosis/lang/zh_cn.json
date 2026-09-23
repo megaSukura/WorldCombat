@@ -4,7 +4,7 @@
   "worldcombat.skill.hypnosis.use.1": "为队友的食梦或恶梦制造睡眠窗口",
   "worldcombat.skill.hypnosis.use.2": "逼对手绕开视线或拉开距离",
   "worldcombat.skill.hypnosis.description.0": "沿一条没有被挡住的直线凝视对方，凝视距离 %1$s；是否成立是一次意志对抗，当前成功率 %2$s。",
-  "worldcombat.skill.hypnosis.description.1": "目标陷入睡眠 %1$s，期间无法行动，受到攻击后醒来。",
+  "worldcombat.skill.hypnosis.description.1": "目标陷入睡眠 %1$s：期间无法行动、也无法移动，任何伤害都会立刻把它惊醒。",
   "worldcombat.skill.hypnosis.focus.on": "凝神式：成功率 ×1.25、睡眠 ×1.2，换来射程 ×0.85、起手 +3 刻、冷却 ×1.15。",
   "worldcombat.skill.hypnosis.focus.off": "随惑式：射程 ×1.2、出手快、冷却短，换来成功率 ×0.8、睡眠 ×0.8。",
   "worldcombat.skill.hypnosis.timing": "起手 %1$s，收招 %2$s，消耗 %3$s PP，冷却 %4$s。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.hypnosis.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去凝视。",
   "world_combat.move.hypnosis.text.sleep": "催眠术（睡眠 %1$s 秒）",
   "world_combat.move.hypnosis.text.resist": "暗示散开了（成功率 %1$s%%）",
-  "world_combat.move.hypnosis.text.immune": "睡意被挡下"
+  "world_combat.move.hypnosis.text.immune": "睡意被挡下",
+  "worldcombat.skill.hypnosis.description.immune": "已经睡着的目标不会再被催眠；对睡眠免疫的目标会把暗示整个挡下。"
 }

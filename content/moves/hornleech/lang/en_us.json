@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.hornleech.summary": "Strike with a horn and recover health based on the damage dealt.",
   "worldcombat.skill.hornleech.description.0": "The horns deal about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.hornleech.description.1": "It charges up to %1$s blocks (also the real range) at %2$s blocks per tick with a %3$s block tip radius.",
-  "worldcombat.skill.hornleech.description.2": "%1$s of the damage dealt is restored to the user.",
-  "worldcombat.skill.hornleech.gore.on": "Goring charge: further and able to punch through one target into a second, but each target siphons less and recovery is slower.",
+  "worldcombat.skill.hornleech.description.1": "It charges up to %1$s blocks at %2$s blocks per tick with a %3$s block tip radius.",
+  "worldcombat.skill.hornleech.description.2": "For each target gored, %1$s of the damage actually dealt is restored to the user; no healing is gained while the user is already at full health.",
+  "worldcombat.skill.hornleech.gore.on": "Goring charge: charges further and punches through one target into a second (up to two), but each blow is slightly weaker and each target siphons less, with a longer wind-up, recovery and cooldown.",
   "worldcombat.skill.hornleech.gore.off": "Single gore: siphons more and recovers quickly, good for sustain.",
-  "worldcombat.skill.hornleech.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",
+  "worldcombat.skill.hornleech.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.hornleech.growth.0": "From level %1$s the gore power rises to %2$s.",
   "worldcombat.skill.hornleech.growth.1": "From level %1$s the gore power rises to %2$s and the drain share to %3$s.",
   "worldcombat.skill.hornleech.use.0": "Lower the head and turn a stretch of ground into a hit",
@@ -20,12 +20,13 @@
   "worldcombat.skill.hornleech.value.aftercast": "Recovery",
   "worldcombat.skill.hornleech.value.recharge": "Cooldown",
   "worldcombat.skill.hornleech.preference.gore": "Goring charge",
-  "worldcombat.skill.hornleech.preference.gore.help": "On: charge further and punch through one target into a second, but each target siphons less and recovery is slower - good for breaking a line. Off: one gore that siphons more and recovers quickly.",
+  "worldcombat.skill.hornleech.preference.gore.help": "On: charge further and punch through one target into a second (up to two), but each blow is slightly weaker and each target siphons less, with a longer wind-up, recovery and cooldown - good for breaking a line. Off: one gore that siphons more and recovers quickly.",
   "worldcombat.skill.hornleech.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.hornleech.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger chases harder and overshoots more easily.",
   "worldcombat.skill.hornleech.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.hornleech.preference.ai.healBelow.help": "Below this health ratio the user prefers horn leech as sustain; higher starts leaning on it for healing sooner.",
   "world_combat.move.hornleech.text.gore": "Gored",
   "world_combat.move.hornleech.text.sap": "Sap drawn back %1$s%%",
-  "world_combat.move.hornleech.text.miss": "Charged through air"
+  "world_combat.move.hornleech.text.miss": "Charged through air",
+  "worldcombat.skill.hornleech.description.targeting": "The charge runs straight along the aim, goring only non-allies and settling each target once; with the goring form it catches up to two targets, otherwise only one. It stops when terrain blocks it or the distance runs out, and catching no one is a whiff."
 }

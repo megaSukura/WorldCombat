@@ -18,10 +18,11 @@ namespace PokemonSkills {
     const feintattackStrikeText = "world_combat.move.feintattack.text.strike";
 
     define({
+        freeMovement: true,
         id: "feintattack",
         cooldownParameter: "recharge",
         name: "Feint Attack",
-        description: "The user approaches the target disarmingly, then throws a sucker punch. This attack never misses.",
+        description: "悄悄贴近，闪到对手背后打一记不会被闪避的接触重拳；开启佯攻时先在正面留一个暗影替身，把敌人的攻击目标引到替身上。",
         uses: ["悄悄绕到对手背后打一记重拳", "用暗影替身把对手的注意力钉在正面", "收拾正在盯着别人的目标"],
         kind: "enemy",
         range: 6.5,

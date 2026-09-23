@@ -50,9 +50,9 @@ namespace PokemonSkills {
             "两次诱惑之间的等待；等级越高越熟练。")
     });
     describe(captivateId, [
-        { key: "description.0", values: ["drop", "duration"] },
-        { key: "description.1", values: ["gazeRange", "ringRadius", "maxOnlookers", "range"] },
-        { key: "description.2", values: ["tempo", "recharge"] },
+        { key: "description.0", values: ["drop","duration"] },
+        { key: "description.1", values: ["gazeRange","ringRadius","maxOnlookers"] },
+        { key: "description.2", values: ["tempo","recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

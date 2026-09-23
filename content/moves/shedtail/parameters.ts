@@ -54,8 +54,9 @@ namespace PokemonSkills {
     ]);
 
     describe("shedtail", [
-        { key: "description.0", values: ["cost", "tail"] },
-        { key: "description.1", values: ["retreat", "lureRange", "tailTicks"] },
-        { key: "timing", values: ["tier.0.prepare", "tier.0.recover", "tier.0.cooldown"] }
+        { key: "description.0", values: ["cost","tail"] },
+        { key: "description.1", values: ["retreat","lureRange","tailTicks"] },
+        { key: "description.additional", values: [] },
+        { key: "timing", values: ["prepare","recover","cooldown"] }
     ]);
 }

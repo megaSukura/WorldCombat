@@ -101,8 +101,9 @@ namespace PokemonSkills {
     ]);
 
     describe("flamecharge", [
-        { key: "description.0", values: ["rush", "sprint", "pace"] },
-        { key: "description.1", values: ["through", "haste", "push", "cloak"] },
+        { key: "description.0", values: ["rush","sprint","pace"] },
+        { key: "description.1", values: ["through","haste","push","cloak"] },
+        { key: "description.stop", values: [] },
         { key: "pierce.on", values: [], when: function (context) { return read(context.detail.values, ["pierce"]) === true; } },
         { key: "pierce.off", values: [], when: function (context) { return read(context.detail.values, ["pierce"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

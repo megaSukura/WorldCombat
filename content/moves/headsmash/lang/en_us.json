@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.headsmash.summary": "An all-or-nothing headlong headbutt: charge in a straight line and hurl the target with your whole head. A hit reflects a fraction of the damage onto you; a miss plants you face-first into the ground. You trade your own life for theirs.",
   "worldcombat.skill.headsmash.description.0": "The headbutt deals %1$s contact damage, charging up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.headsmash.description.1": "On a hit the user takes %1$s of the actual damage as recoil and hurls the target %3$s blocks; a miss costs %2$s of the user's maximum health.",
+  "worldcombat.skill.headsmash.description.1": "On a hit the user takes %1$s of the actual damage as recoil and hurls the target up to %3$s blocks along the charge; a miss costs %2$s of the user's maximum health.",
   "worldcombat.skill.headsmash.hold.on": "Steady form: power, recoil, crash damage and knockback all step down, and the wind-up, recovery and cooldown are shorter - safer for a long fight.",
   "worldcombat.skill.headsmash.hold.off": "All-in form: power and recoil are maxed out and a whiff hurts more - for the finishing blow.",
-  "worldcombat.skill.headsmash.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.headsmash.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %5$s s, costing %4$s PP.",
   "worldcombat.skill.headsmash.growth.0": "From level %1$s the headbutt power rises to %2$s.",
   "worldcombat.skill.headsmash.growth.1": "From level %1$s the headbutt power rises to %2$s and the recoil fraction to %3$s.",
   "worldcombat.skill.headsmash.use.0": "Finish a low-health target with one absurdly heavy headbutt",
@@ -27,5 +27,6 @@
   "worldcombat.skill.headsmash.preference.ai.minHealth": "Health reserve",
   "worldcombat.skill.headsmash.preference.ai.minHealth.help": "Below this health fraction the user stops starting headbutts (unless the target is nearly down). Higher is more protective, and grabs fewer kills.",
   "world_combat.move.headsmash.text.hit": "Head Smash",
-  "world_combat.move.headsmash.text.crash": "Crash self-damage %1$s"
+  "world_combat.move.headsmash.text.crash": "Crash self-damage %1$s",
+  "worldcombat.skill.headsmash.description.charge": "This is a straight-line charge along the aim direction that resolves only the first enemy it touches; running out of distance, being blocked, or being unable to advance all count as a miss."
 }

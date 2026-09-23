@@ -227,7 +227,10 @@ public final class CompanionInput {
         else if (!playerTarget && block.getType() == HitResult.Type.MISS && !entityPoint) picked = origin.add(look.scale(Math.max(1, skill.range() - 0.25)));
         else if (!playerTarget && kind.equals("point")) picked = picked.add(((BlockHitResult) block).getDirection().getNormal().getX() * 0.02,
             ((BlockHitResult) block).getDirection().getNormal().getY() * 0.02, ((BlockHitResult) block).getDirection().getNormal().getZ() * 0.02);
-        Vec3 direction = new Vec3(look.x, 0, look.z).normalize();
+        // Directional casts keep camera pitch; horizontal motion and cardinal placement explicitly
+        // request a ground heading. Native riding continues to own the mount's body rotation.
+        boolean groundHeading = skill.preview().motion().equals("horizontal") || skill.preview().rotation().equals("cardinal");
+        Vec3 direction = groundHeading ? new Vec3(look.x, 0, look.z).normalize() : look.normalize();
         if (direction.lengthSqr() < 0.001) direction = new Vec3(0, 0, 1);
         direction = direction.yRot((float) rotation);
         Vec3 end = picked;

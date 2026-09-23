@@ -203,4 +203,30 @@ check('full cleansing uses native effect category, preserves useful effects and 
   assert.equal(context.CombatStatus.cureHarmful(world, native), 1);
   assert(world.mobEffect(native, 'fixture:beneficial'));
 });
+check('pre-application native carrier classification preserves beneficial and neutral statuses under harmful-only wards', () => {
+  const S = context.CombatStatus, categories = { 'fixture:incoming_buff': 'beneficial', 'fixture:incoming_neutral': 'neutral', 'fixture:incoming_harm': 'harmful' };
+  world.mobEffectCategory = id => categories[id] || '';
+  for (const [id, identity] of [['fixture:incoming_buff', 'fresh_buff'], ['fixture:incoming_neutral', 'fresh_neutral'], ['fixture:incoming_harm', 'fresh_harm']])
+    tags[id] = ['world_combat:status/' + identity];
+  let last;
+  S.gate.define({ id: 'checks:harmful-only-ward', apply: value => {
+    last = value;
+    if (value.harmful) { value.allowed = false; value.reason = 'safeguard'; }
+  } });
+  assert(S.apply(world, ordinary, 'fresh_buff', 'fixture:incoming_buff', 40));
+  assert.equal(last.side, 'beneficial'); assert.equal(last.beneficial, true); assert.equal(last.harmful, false);
+  assert(S.impose(world, ordinary, 'fresh_neutral', 40, {effect:'fixture:incoming_neutral'}).applied);
+  assert.equal(last.side, 'neutral'); assert.equal(last.beneficial, false); assert.equal(last.harmful, false);
+  assert.equal(S.apply(world, ordinary, 'fresh_harm', 'fixture:incoming_harm', 40), false);
+  assert.equal(S.side(world, ordinary, 'unregistered', {effect:'fixture:unknown'}), 'harmful');
+  assert.equal(S.apply(world, ordinary, 'fresh_buff', 'fixture:incoming_buff', 40, 0, {harmful:true}), false);
+  S.classify('fresh_buff', 'harmful');
+  assert.equal(S.apply(world, ordinary, 'fresh_buff', 'fixture:incoming_buff', 40), false);
+  assert(S.apply(world, ordinary, 'fresh_buff', 'fixture:incoming_buff', 40, 0, {beneficial:true}));
+  assert(S.apply(world, ordinary, 'fresh_harm', 'fixture:incoming_harm', 40, 0, {side:'neutral'}));
+  S.classification.define({id:'checks:authored-side', applies:value=>value.name==='fresh_neutral', apply:value=>{value.side='harmful';}});
+  assert.equal(S.impose(world, ordinary, 'fresh_neutral', 40, {effect:'fixture:incoming_neutral'}).applied, false);
+  assert(S.impose(world, ordinary, 'fresh_neutral', 40, {effect:'fixture:incoming_neutral',side:'neutral'}).applied);
+  S.gate.remove('checks:harmful-only-ward');
+});
 console.log(`PASS combatant status: ${count} scenarios; shared identity, default behaviors, secondary route, variants and the native mirror`);

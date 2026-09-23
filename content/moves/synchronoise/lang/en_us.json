@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.synchronoise.summary": "Broadcasts an odd shock wave tuned to the user's own type: only foes sharing that type take damage and are locked with the resonance identity, while different-type targets are passed through untouched. Tight tuning is narrower and heavier with a longer lock.",
+  "worldcombat.skill.synchronoise.summary": "Hits nearby enemies that share the user’s frequency and briefly outlines them. Pokémon match by type; ordinary bodies match by kind.",
   "worldcombat.skill.synchronoise.use.0": "Sweep a whole ring of same-type foes at once",
   "worldcombat.skill.synchronoise.use.1": "Pick out only the ones tuned to you in a melee",
   "worldcombat.skill.synchronoise.use.2": "Leave a resonance mark to follow up on",
   "worldcombat.skill.synchronoise.use.3": "Find out who is actually on your type in a mismatched fight",
-  "worldcombat.skill.synchronoise.description.0": "Each target sharing the caster's type takes about %1$s damage; different-type targets are passed through untouched. The target's special defence, type and crit are settled on the hit.",
+  "worldcombat.skill.synchronoise.description.0": "Each matching enemy takes about %1$s damage, with target defenses, type matchups, and critical hits resolved on impact.",
   "worldcombat.skill.synchronoise.description.1": "The wave sweeps %1$s blocks around the caster all at once.",
-  "worldcombat.skill.synchronoise.description.2": "Locked targets carry the resonance identity for %1$s s.",
+  "worldcombat.skill.synchronoise.description.2": "Resonance lasts %1$s seconds and outlines the target for tracking. The outline stops shortly after resonance ends or is cleared.",
   "worldcombat.skill.synchronoise.tight.on": "Tight tuning on: the wave is about ×0.62 wide and about ×1.42 stronger with a longer resonance, but wind-up +2 and cooldown +6 ticks.",
   "worldcombat.skill.synchronoise.tight.off": "Tight tuning off (wide broadcast): the wave is ×1.0 wide and ×1.0 power with a shorter wind-up and cooldown, for sweeping as many same-type foes as possible in a melee.",
   "worldcombat.skill.synchronoise.timing": "Cast on the space within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
@@ -25,5 +25,6 @@
   "worldcombat.skill.synchronoise.preference.ai.minMatches.help": "At least this many visible, hostile, same-type targets must stand within range before it broadcasts; raise it for clustered same-type use, set it to 1 to fire at a single match.",
   "world_combat.move.synchronoise.text.hit": "Resonated %1$s",
   "world_combat.move.synchronoise.text.pass": "No one on your frequency",
-  "effect.world_combat.resonance": "Resonance lock"
+  "effect.world_combat.resonance": "Resonance lock",
+  "worldcombat.skill.synchronoise.description.3": "Ordinary frequencies: undead—Ghost; arthropods—Bug; aquatic bodies—Water; blazes and magma cubes—Fire; iron golems—Steel; snow golems—Ice; the ender dragon—Dragon. Others normally match Normal."
 }

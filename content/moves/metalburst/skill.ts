@@ -16,7 +16,7 @@ namespace PokemonSkills {
         id: metalburstId,
         cooldownParameter: "recharge",
         name: "Metal Burst",
-        description: "把最近受到的伤害以 1.5 倍从体内炸出，账主吃满额，周围敌人按分摊比例各吃一份；没有账可讨时空响一声。",
+        description: "把最近一次挨到的伤害以 1.5 倍炸出：被瞄准的目标吃满额，周围敌人按分摊比例各吃一份，返还额不超过自身最大生命；没有账可讨时空响一声。",
         uses: ["挨打后立刻炸开惩罚贴身的一群", "用撞击把围攻的敌人一起削到", "把承伤转成范围输出"],
         kind: "enemy",
         range: 2.8,

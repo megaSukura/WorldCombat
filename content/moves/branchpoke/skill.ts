@@ -37,7 +37,7 @@ namespace PokemonSkills {
         id: "branchpoke",
         cooldownParameter: "recharge",
         name: "Branch Poke",
-        description: "The user attacks the target by poking it with a sharply pointed branch.",
+        description: "从最远处把一根细枝绷直、用末梢的弹劲戳一下：全组射程最长、线条最细的一记，只戳中线上一个敌人。打在最远端最疼——枝条伸到尽头时末梢弯到极限、回弹最猛，贴脸时反而只有枝根的一小段。刺枝式再把尖头削硬，命中时挂住目标、短暂压低其移动速度。",
         uses: ["从最远处一记最细、最长的直戳", "站在枝条末端打满，越远越疼", "刺枝式扎住目标使其减速"],
         kind: "enemy",
         range: 2.9,
@@ -126,7 +126,7 @@ namespace PokemonSkills {
                 world.marker(victim, "minecraft:slowness", snareTicks, snareLevel);
                 WorldFeedback.emit(world, branchpokeScene, 1, foe.position(),
                     { moment: "snare", target: String(victim.ref()), snareTicks: snareTicks, snareLevel: snareLevel, scale: tipScale }, 22);
-                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.35, 0)), branchpokeSnareText, [snareLevel], 22);
+                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.35, 0)), branchpokeSnareText, [snareLevel + 1], 22);
             }
             done(action);
         }

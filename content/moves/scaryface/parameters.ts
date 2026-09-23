@@ -35,8 +35,9 @@ namespace PokemonSkills {
             "冷却", "两次鬼面之间的等待；等级越高越熟练。")
     });
     describe(scaryfaceId, [
-        { key: "description.0", values: ["drop", "fearTicks"] },
-        { key: "description.1", values: ["gazeRange", "recoil"] },
+        { key: "description.0", values: ["drop","fearTicks"] },
+        { key: "description.1", values: ["gazeRange","recoil"] },
+        { key: "reapply", values: [] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

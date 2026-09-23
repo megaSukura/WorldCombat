@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: sheercoldId,
         cooldownParameter: "recharge",
         name: "Sheer Cold",
-        description: "The target faints instantly. This move is less likely to hit the target if used by Pokemon other than Ice types.",
+        description: "把目标周围的那一小片空气骤然压到绝对零度：一圈寒霜向四周铺开，圈内每个目标被一次冻毙（一击必杀），地上留下一层短期雪壳。它是这一族里唯一能同时放倒多个的一记，也是唯一「谁用」会影响出手快慢的一记——冰属性使用者结霜快得多。",
         uses: ["一次冻毙目标周围一圈里的多个对手", "冰属性使用者用它抢出更短的出手窗口", "在地面留下一片短期寒霜标出冻区"],
         kind: "enemy",
         range: 2.6,

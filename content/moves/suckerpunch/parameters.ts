@@ -117,11 +117,12 @@ namespace PokemonSkills {
     ]);
 
     describe(suckerpunchId, [
-        { key: "description.0", values: ["sneak", "window"] },
+        { key: "description.0", values: ["sneak","window"] },
         { key: "description.1", values: ["blink", "speed", "collisionRadius", "push"] },
+        { key: "description.path", values: [] },
         { key: "read.on", values: [], when: function (context) { return read(context.detail.values, ["read"]) === true; } },
         { key: "read.off", values: [], when: function (context) { return read(context.detail.values, ["read"]) !== true; } },
-        { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
+        { key: "timing", values: ["range","tempo","settle","pp","recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.sneak"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.sneak", "tier.1.blink"] }
     ]);

@@ -142,7 +142,7 @@ namespace PokemonSkills {
         id: "banefulbunker",
         cooldownParameter: "charge",
         name: "Baneful Bunker",
-        description: "A venomous wall closes into a bunker, blocking attacks and status moves by a total pool; every direct contact poisons the attacker, and an already poisoned one is worsened to toxic.",
+        description: "合拢一座毒壁碉堡，按总量挡下敌人打来的伤害，并封住瞄准你的变化招式；量尽或到时塌下。每一次直接接触都会让攻击者中毒，已中毒者改为剧毒。",
         uses: ["引诱近战对手撞上毒壁", "用一次接触把对手拖进持续掉血", "封住变化招式的同时反灌毒液"],
         kind: "self",
         range: 0,

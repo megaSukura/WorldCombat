@@ -88,8 +88,8 @@ namespace PokemonSkills {
     });
 
     describe("kingsshield", [
-        { key: "description.0", values: ["window", "capacity", "drop"] },
+        { key: "description.0", values: ["window","capacity","drop"] },
         { key: "description.1", values: ["raise", "charge"] },
-        { key: "description.2", values: ["fizzle", "pref.majesty"] }
+        { key: "description.2", values: ["fizzle"] }
     ]);
 }

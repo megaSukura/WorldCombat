@@ -1,15 +1,4 @@
-/**
- * 力量平分 / powersplit —— 注册与动作。
- *
- * 念头的形状：两幕。
- *   聚（windup，提交前）：两股攻势读数沿一条平线向中央靠拢，只播预告，可被打断且不花代价。
- *   平（merge，提交后）：读出双方攻与特攻的原始数值，各取平均后把两人都调到同一个平均值——
- *     宝可梦走共享临时属性层（NativeModifiers），其他生物把原版攻击属性按差值抬/压；挂共享身份
- *     world_combat:status/powersplit 的平分窗口，并各留一枚记号记下这次改动由哪层效果承载。
- *   归（revert）：窗口走完或被外力（牛奶、清除效果）解除时，按记号撤掉那层改动，数值回到原来的底子。
- *
- * 与「力量互换」分开：互换交换的是已经攒起来的能力等级；平分改的是底子，等级原样保留。
- */
+/** 暂时平衡双方的攻击：较高的一方降低，较低的一方提高。宝可梦同时平分特攻，普通生物按包含武器的攻击属性参与。 */
 namespace PokemonSkills {
     export const powersplitScene = "world_combat:move_powersplit";
     export const powersplitWindow = "world_combat:powersplit_window";
@@ -46,7 +35,7 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(powersplitMark, "start", function () { });
     WorldCombat.effectHandler(powersplitMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读原版属性的基础值。 */
+    /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读含装备的有效攻击并剔除能力等级。 */
     export function powersplitRawStat(world: CombatWorld, actor: CombatActor, stat: string): number {
         if (!world.valid(actor)) return 0;
         if (String(actor.domain()) === "cobblemon") {
@@ -54,7 +43,7 @@ namespace PokemonSkills {
             return Math.max(0, NativeEffects.stat(CobblemonCombat.pokemon(actor), state, stat));
         }
         const attribute = world.attributeValue(actor, "minecraft:generic.attack_damage");
-        return attribute === null ? 0 : Math.max(0, attribute.base());
+        return attribute === null ? 0 : Math.max(0, attribute.value() / CombatStages.multiplier(CombatStages.stage(world, actor, "atk")));
     }
     /** 攻势底子合计（攻 + 特攻的原始值），供本招 AI 判断值不值得平。 */
     export function powersplitPower(world: CombatWorld, actor: CombatActor): number {
@@ -73,7 +62,7 @@ namespace PokemonSkills {
         id: "powersplit",
         cooldownParameter: "recharge",
         name: "力量平分",
-        description: "利用超能力把双方攻击与特攻的数值相加再平分一段时间：强的被压下来、弱的被抬上去，两人落在同一刻度上。",
+        description: "暂时平衡双方的攻击：较高的一方降低，较低的一方提高。宝可梦同时平分特攻，普通生物按包含武器的攻击属性参与。",
         uses: ["把自己的低攻抬到对手的水平", "把对手的高攻压到自己的水平", "在对手攻击远高于自己时抹平差距"],
         kind: "enemy",
         range: 6,

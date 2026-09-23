@@ -4,7 +4,7 @@
   "worldcombat.skill.coaching.use.1": "让缠斗中的伙伴顶得更稳、打得更重",
   "worldcombat.skill.coaching.use.2": "在开门前把守门的伙伴教成一面墙",
   "worldcombat.skill.coaching.description.0": "指导把受教者的物攻提高 %1$s 级、防御提高 %2$s 级，持续约 %3$s 秒。",
-  "worldcombat.skill.coaching.description.1": "以伙伴为中心 %1$s 格内的友方一起领会；必须靠近到 %2$s 格内才能选中他。",
+  "worldcombat.skill.coaching.description.1": "以受教伙伴为中心 %1$s 格内的友方一起领会；必须靠近到 %2$s 格内才能选中同伴，而且只能选友方、不能选自己。",
   "worldcombat.skill.coaching.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.coaching.drill.intense": "精讲：领会更久、冷却更长，但传授范围更小。",
   "worldcombat.skill.coaching.drill.quick": "速令：传得更广、出手更快，但领会更短。",
@@ -33,5 +33,6 @@
   "world_combat.move.coaching.text.drill": "指导（物攻 +%1$s／防御 +%2$s／%3$s 人／%4$s 秒）",
   "world_combat.move.coaching.text.fade": "指导淡去",
   "effect.world_combat.coaching_drill": "指导·攻",
-  "effect.world_combat.coaching_stance": "指导·守"
+  "effect.world_combat.coaching_stance": "指导·守",
+  "worldcombat.skill.coaching.description.reclaim": "领会期间物攻与防御始终保持抬高；窗口走完或被提前清除时，按这次实际抬高的级数原样收回。已经带着指导的人不会被再教一次。"
 }

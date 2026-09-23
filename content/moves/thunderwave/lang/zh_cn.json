@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.thunderwave.summary": "发出一道瞬发、不飞行的直线电击，把目标麻住。它不造成伤害，靠的是必中与可靠；也正因为走直线，挡在线上的墙或同伴会替目标把电引走。电属性对麻痹免疫。",
-  "worldcombat.skill.thunderwave.description.0": "电流沿直线打到 %1$s 格内的目标，判定半径 %2$s 格；中间必须有一条没有被挡住的视线。",
-  "worldcombat.skill.thunderwave.description.1": "命中后目标麻痹 %1$s。",
+  "worldcombat.skill.thunderwave.description.0": "电流沿直线打到 %1$s 格内的目标，判定半径 %2$s 格；中间必须通视。线上若还有别的生物，先挡住的那个会先吃下电流：敌人被麻住，同伴则替它把电流引走。",
+  "worldcombat.skill.thunderwave.description.1": "命中后目标麻痹 %1$s（本招不造成伤害）。",
   "worldcombat.skill.thunderwave.surge.on": "蓄长：射程 ×1.3、麻痹 ×1.2，但起手多 3 刻、冷却 ×1.25——隔远了点住跑得快的目标。",
   "worldcombat.skill.thunderwave.surge.off": "快放：射程 ×0.9、麻痹 ×0.9，换来更短的起手与冷却——贴身乱战里更跟得上。",
   "worldcombat.skill.thunderwave.timing": "需要通视：射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -27,5 +27,6 @@
   "world_combat.move.thunderwave.text.jolt": "麻痹",
   "world_combat.move.thunderwave.text.blocked": "电击被掩体挡下",
   "world_combat.move.thunderwave.text.shielded": "电流被同伴引走",
-  "world_combat.move.thunderwave.text.immune": "电流被吸收"
+  "world_combat.move.thunderwave.text.immune": "电流被吸收",
+  "worldcombat.skill.thunderwave.description.paralysis": "麻痹期间目标移动速度减半，且每次出手有 25% 概率失手；电属性目标不会陷入麻痹。"
 }

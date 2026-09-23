@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.roleplay.summary": "扮演对手，让自己的特性暂时变得和对手相同。",
+  "worldcombat.skill.roleplay.summary": "临时借用对手的特性；对普通生物则模仿其最突出的攻击、移动或防护特征。",
   "worldcombat.skill.roleplay.use.0": "借对手的特性打这一段",
   "worldcombat.skill.roleplay.use.1": "把对手的强力特性复制到自己身上",
   "worldcombat.skill.roleplay.use.2": "开战前先换成更合适的特性",
-  "worldcombat.skill.roleplay.description.0": "在 %1$s 格内描摹对手的特性，起手 %2$s 秒。",
-  "worldcombat.skill.roleplay.description.1": "披上的临时特性维持 %1$s 秒，到期自动还原自己原本的特性。",
+  "worldcombat.skill.roleplay.description.0": "作用距离 %1$s 格，起手 %2$s。对宝可梦描摹其当前特性。",
+  "worldcombat.skill.roleplay.description.1": "借来的宝可梦特性维持 %1$s，到期恢复原特性；受压制或禁止复制的特性无法借用。",
   "worldcombat.skill.roleplay.dwell.0": "深扮：扮演时长 ×1.7、冷却 +18 刻，适合把一份好特性用满一段战斗。",
   "worldcombat.skill.roleplay.dwell.1": "浅饰：扮演时长 ×0.6、冷却 -10 刻，适合频繁改扮、跟着对手换。",
   "worldcombat.skill.roleplay.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
-  "worldcombat.skill.roleplay.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
-  "worldcombat.skill.roleplay.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",
+  "worldcombat.skill.roleplay.growth.0": "达到 %1$s 级后，冷却额外缩短 1 秒。",
+  "worldcombat.skill.roleplay.growth.1": "达到 %1$s 级后，冷却的额外缩短提高到 1.5 秒，替代前一档。",
   "worldcombat.skill.roleplay.value.reach": "识别距离",
   "worldcombat.skill.roleplay.value.tempo": "入戏起手",
   "worldcombat.skill.roleplay.value.aftercast": "收势",
@@ -24,5 +24,6 @@
   "worldcombat.skill.roleplay.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离位去抄对手的特性；关闭则只在原地够得到时出手。",
   "effect.world_combat.roleplay_mask": "扮演",
   "world_combat.move.roleplay.text.ability": "特性：%1$s",
-  "world_combat.move.roleplay.text.same": "抄不到新特性"
+  "world_combat.move.roleplay.text.same": "抄不到新特性",
+  "worldcombat.skill.roleplay.world": "对普通生物，借用其最突出的攻击、移动或防护特征，持续 %1$s；取该项施放时的数值，到期或扮演效果被清除后恢复。后续装备和效果仍会改变实际属性。"
 }

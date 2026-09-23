@@ -105,7 +105,7 @@ namespace PokemonSkills {
     ]);
 
     describe(vacuumwaveId, [
-        { key: "description.0", values: ["wave", "halfWidth"] },
+        { key: "description.0", values: ["wave","halfWidth"] },
         { key: "description.1", values: ["reach", "pace", "pull"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },

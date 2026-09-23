@@ -83,11 +83,12 @@ namespace PokemonSkills {
     });
 
     describe("quickguard", [
-        { key: "description.0", values: ["capacity", "window"] },
+        { key: "description.0", values: ["capacity","window"] },
         { key: "description.1", values: ["radius"] },
+        { key: "description.additional", values: [] },
         { key: "brace.snap", values: [], when: function (context) { return read(context.detail.values, ["brace"]) === 1; } },
         { key: "brace.steady", values: [], when: function (context) { return read(context.detail.values, ["brace"]) !== 1; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] }
     ]);
 }

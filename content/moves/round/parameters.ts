@@ -85,7 +85,7 @@ namespace PokemonSkills {
             F.base(1.0).plus(F.body("height").minus(1.4).times(0.35)).clamp(0.7, 1.8).round(2),
             "落点半径", {
                 unit: "格",
-                description: "这一句在目标身上收束、炸开的判定半径；大个子的歌句落点更宽。"
+                description: "歌声在目标处的视觉波纹大小；本招只伤害选定的一个目标。"
             }),
         /** 音数：基础 6，特攻每比 60 多 1 加 0.08，等级每比 30 高 1 加 0.1，夹在 4..16 并向下取整。 */
         notes: formula(
@@ -123,7 +123,8 @@ namespace PokemonSkills {
         { key: "description.0", values: ["verse"] },
         { key: "description.1", values: ["chorusRadius", "echoTicks"] },
         { key: "description.2", values: ["reach"] },
-        { key: "description.4", values: ["pref.lead"] },
+        { key: "lead.on", values: [], when: context => read(context.detail.values, ["lead"]) === true },
+        { key: "lead.off", values: [], when: context => read(context.detail.values, ["lead"]) !== true },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.verse"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.verse", "tier.1.echoTicks"] },

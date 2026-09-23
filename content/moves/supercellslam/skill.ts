@@ -45,10 +45,11 @@ namespace PokemonSkills {
     function supercellslamAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.1, 0)); }
 
     define({
+        freeMovement: true,
         id: "supercellslam",
         cooldownParameter: "recharge",
         name: "Supercell Slam",
-        description: "让身体带电后压向对手。如果没有命中则自己会受到伤害。",
+        description: "蓄电后跃起，向目标猛冲并释放电击，将其击退。落空会使自身受到反伤。",
         uses: ["用带电压坠打出电属性的远程强袭", "把蓄好的电荷一次放掉、顶开贴脸的对手", "在安全距离用电击消耗硬目标"],
         kind: "enemy",
         range: 5.5,

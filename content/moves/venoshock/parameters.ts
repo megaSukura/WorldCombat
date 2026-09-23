@@ -67,6 +67,7 @@ namespace PokemonSkills {
     describe("venoshock", [
         { key: "description.0", values: ["glob"] },
         { key: "description.1", values: ["toxinTicks"] },
-        { key: "description.2", values: ["globSpeed", "arcGravity", "push"] }
+        { key: "description.2", values: ["globSpeed","arcGravity","globRadius","push"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] }
     ]);
 }

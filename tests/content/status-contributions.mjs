@@ -18,12 +18,15 @@ const recordDefinition = 'world_combat:status_contribution', managerDefinition =
 function harness() {
   const definitions = new Map(), handlers = new Map(), hooks = new Map(), actors = new Map();
   const effects = new Map(), leases = new Map(), nativeEvents = [], endCalls = [];
-  const recipes = new Map(); let parameters = {};
+  const recipes = new Map(), guards = new Map(), fields = new Map(); let parameters = {};
   let now = 0, nextEffect = 0, nextNative = 0, nextLease = 0;
-  const context = vm.createContext({ CobblemonCombat: { pokemon: actor => ({ ability: () => actor.ability || '' }) },
+  const context = vm.createContext({ CobblemonCombat: { pokemon: actor => ({ ability: () => actor.ability || '',
+      typeCount: () => (actor.types || []).length, type: index => actor.types[index] }) },
     NativeAbilities: { flag: () => false, apply: (_world, _actor, _hook, value) => value },
-    PokemonSkills: { define: value => recipes.set(value.id, value), flag: () => ({}), p: (_id, key) => parameters[key] ?? 12 },
-    WorldFeedback: { emit() {}, keep() {}, text() {} }, WorldEffects: { fieldRule() {}, field() {} }, WorldCombat: {
+    GuardEffects: { register: (id, policy) => guards.set(id, policy) },
+    PokemonSkills: { define: value => recipes.set(value.id, value), flag: () => ({}), field: () => ({}), pathOf: key => [key], p: (_id, key) => parameters[key] ?? 12 },
+    WorldBodies: { define() {} }, WorldEnvironment: { weatherTag: name => 'checks:weather/' + name },
+    WorldFeedback: { emit() {}, keep() {}, text() {} }, WorldEffects: { fieldRule: (id, rule) => fields.set(id, rule), field() {}, categories: { weather: 'checks:weather' } }, WorldCombat: {
     point: (x, y, z) => point(x, y, z),
     event() {}, phase() {},
     effect(id, _schema, maximum, lifetime, normalize) {
@@ -66,13 +69,14 @@ function harness() {
     const value = target.markers.get(id);
     if (!target.live || !value || value.expires <= now) return null;
     return { id: () => id, duration: () => value.expires - now, amplifier: () => value.amplifier,
-      key: () => `${value.revision}:${value.expires}:${value.amplifier}`, tags: () => '', tagged: () => false };
+      key: () => `${value.revision}:${value.expires}:${value.amplifier}`, tags: () => value.tags || '', tagged: tag => (value.tags || '').split(' ').includes(tag) };
   }
   function clear(target, id) {
     if (!target.markers.delete(id)) return false;
     nativeEvents.push({ target, id, topic: 'world_combat:mob_effect_removed' }); return true;
   }
   function marker(target, id, ticks, amplifier) {
+    if (target.rejectMarkers) return;
     if (ticks === 0) { clear(target, id); return; }
     const old = target.markers.get(id);
     // Vanilla keeps a weaker, longer application hidden until the current stronger effect ends.
@@ -124,9 +128,9 @@ function harness() {
     });
   }
   function world(source, owner = 0) {
-    return { source: () => source, tick: () => now, valid: actor => actor.live,
+    return { source: () => source, tick: () => now, valid: actor => actor.live, random: () => source.random ?? 0.5,
       actor: ref => actors.get(String(ref))?.live ? actors.get(String(ref)) : null,
-      observe: actor => actor.live ? { position: () => point(actor.x), height: () => 1.6 } : null,
+      observe: actor => actor.live ? { position: () => point(actor.x), height: () => 1.6, maxHealth: () => 100 } : null,
       effects: (target, definition) => target.native && definition === 'cobblemon_world_combat:individual'
         ? [{ id: () => target.nativeId, data: () => JSON.stringify(target.state) }]
         : [...effects.values()].filter(effect => effect.target === target &&
@@ -151,7 +155,7 @@ function harness() {
         assert(Math.abs(source.x - effect.target.x) <= 64, 'Operations require a nearby target');
         invoke(effect, `operation:${operation}`, json, source); return true;
       },
-      marker, mobEffect: nativeView, mobEffects: target => [...target.markers.keys()].map(id => nativeView(target, id)).filter(Boolean), sound() {},
+      marker, mobEffect: nativeView, mobEffects: target => [...target.markers.keys()].map(id => nativeView(target, id)).filter(Boolean), sound() {}, motion() {}, displace() { return 0; },
       removeMobEffect(target, id, key) { return nativeView(target, id)?.key() === key && clear(target, id); },
       leaseMobEffect(target, id, key) {
         assert(owner !== 0, 'Native ownership requires a managed effect or action');
@@ -200,16 +204,42 @@ function harness() {
   const count = definition => [...effects.values()].filter(effect => effect.definition === definition).length;
   const insert = (source = a, recipient = target, token = 'checks:first', ticks = 30, payload = { value: 1 }, options) =>
     api.upsert(world(source), recipient, carrier, token, payload, ticks, options);
-  function executeSkill(id, target, values, config = {}) {
-    if (!recipes.has(id)) vm.runInContext(ts.transpileModule('namespace PokemonSkills { export var define: any, flag: any, p: any; }\n'
+  function loadSkill(id) {
+    if (!recipes.has(id)) vm.runInContext(ts.transpileModule('namespace PokemonSkills { export var define: any, flag: any, field: any, pathOf: any, p: any; }\n'
       + fs.readFileSync(`content/moves/${id}/skill.ts`, 'utf8'), {
       compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None },
     }).outputText, context, { filename: `content/moves/${id}/skill.ts` });
+  }
+  function executeSkill(id, target, values, config = {}) {
+    loadSkill(id);
     parameters = values;
-    recipes.get(id).execute({ world: () => world(target), actor: () => target }, {}, config, () => {});
+    const action = { world: () => world(target), actor: () => target, after: (_ticks, run) => run(action) };
+    recipes.get(id).execute(action, {}, config, () => {});
+  }
+  function guardedSkill(id, target, custom) {
+    loadSkill(id);
+    guards.get(`world_combat:${id}`).guarded({ id: () => 700, world: () => world(target), target: () => target, end() {} }, custom, 20, {});
+  }
+  function loadSnow() {
+    if (!fields.has('checks:snow')) {
+      const declarations = 'namespace PokemonSkills { export const snowscapeField="checks:snow", snowscapeMark="checks:powder", snowscapeScene="checks:snow_scene", snowscapeCrispText="checks:crisp", snowscapeCoverText="checks:cover", snowscapeLockText="checks:lock"; }\n';
+      vm.runInContext(ts.transpileModule(declarations + fs.readFileSync('content/moves/snowscape/rules.ts', 'utf8'), {
+        compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }
+      }).outputText, context);
+      context.WorldCombat.effect('world_combat:field', 1, 1200, 'actor', json => json);
+      context.WorldCombat.effectHandler('world_combat:field', 'start', () => {});
+    }
+    return fields.get('checks:snow');
+  }
+  function loadMemento() {
+    const declarations = 'namespace PokemonSkills { export var define: any, p: any; export const mementoId="memento", mementoRemnant="checks:remnant", mementoEffect="checks:grief", mementoScene="checks:grief_scene"; }\n';
+    vm.runInContext(ts.transpileModule(declarations + fs.readFileSync('content/moves/memento/skill.ts', 'utf8'), {
+      compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }
+    }).outputText, context);
+    return context.CombatStatus;
   }
   return { api, stages: context.NativeEffects, changes: context.CombatStages.change, actor, a, b, target, other, world, insert, listed, flush, clear, marker, advance, effects, leases, endCalls,
-    nativeView, executeSkill, count, end: id => end(effects.get(id)), definitions };
+    nativeView, executeSkill, guardedSkill, loadSnow, loadMemento, count, end: id => end(effects.get(id)), definitions };
 }
 
 test('registration validates carriers; the first native event creates a target-owned manager and lease', () => {
@@ -403,6 +433,39 @@ for (const [id, effectId, parameters, config, stat, gain] of [
 }
 
 for (const native of [false, true]) {
+  test(`${native ? 'native' : 'ordinary'} cotton guard at the cap never deducts an ungranted stage`, () => {
+    const h = harness(), subject = h.actor('checks:cotton', 0, native), world = h.world(subject);
+    h.stages.boost(world, subject, 'def', 6, true);
+    h.executeSkill('cottonguard', subject, { gift: 3, coatTicks: 120 }, { cocoon: 1 });
+    h.advance(130);
+    assert.equal(h.stages.effectiveStage(world, subject, 'def'), 6);
+    assert.equal(h.nativeView(subject, 'world_combat:cotton_slow'), null);
+  });
+  test(`${native ? 'native' : 'ordinary'} dragon dance tracks Attack and Speed separately and ends only its own gains`, () => {
+    const h = harness(), subject = h.actor('checks:dance', 0, native), world = h.world(subject);
+    h.stages.boost(world, subject, 'atk', 6, true);
+    h.executeSkill('dragondance', subject, { gift: 1, span: 80, turns: 2, beat: 4, gyre: .7, lift: 0 }, { soar: false });
+    assert.equal(h.stages.effectiveStage(world, subject, 'atk'), 6);
+    assert.equal(h.stages.effectiveStage(world, subject, 'spe'), 1);
+    h.stages.boost(world, subject, 'spe', 1, true);
+    h.clear(subject, 'world_combat:dragondance_airy'); h.advance();
+    assert.equal(h.stages.effectiveStage(world, subject, 'atk'), 6);
+    assert.equal(h.stages.effectiveStage(world, subject, 'spe'), 1);
+  });
+  test(`${native ? 'native' : 'ordinary'} rejected coat or dance carriers never write persistent gains`, () => {
+    const h = harness(), subject = h.actor('checks:rejected', 0, native), world = h.world(subject);
+    subject.rejectMarkers = true;
+    h.executeSkill('cottonguard', subject, { gift: 3, coatTicks: 120 }, { cocoon: 1 });
+    h.executeSkill('dragondance', subject, { gift: 1, span: 80 }, { soar: false });
+    for (const stat of ['atk', 'def', 'spe']) assert.equal(h.stages.effectiveStage(world, subject, stat), 0);
+  });
+  test(`${native ? 'native' : 'ordinary'} detect opening expires independently of later stage gains`, () => {
+    const h = harness(), subject = h.actor('checks:opening', 0, native), world = h.world(subject);
+    h.guardedSkill('detect', subject, { stat: 'spe', boost: 2, opening: 24, radius: 1.2 });
+    assert.equal(h.stages.effectiveStage(world, subject, 'spe'), 2);
+    h.stages.boost(world, subject, 'spe', 1, true);
+    h.advance(24); assert.equal(h.stages.effectiveStage(world, subject, 'spe'), 1);
+  });
   test(`${native ? 'native' : 'ordinary'} inversion edits all layers in place and expiry restores only the inverted base`, () => {
     const h = harness(), target = h.actor('checks:inverted', 2, native), world = h.world(h.a);
     h.stages.boost(world, target, 'atk', 1, true);
@@ -462,3 +525,61 @@ for (const native of [false, true]) {
     h.advance(8); assert.equal(h.stages.effectiveStage(h.world(to), to, 'atk'), 0);
   });
 }
+
+test('snow field windows leave a capped persistent Defence unchanged even under a stage-loss ward', () => {
+  const h = harness(), rule = h.loadSnow(), subject = h.actor('checks:ice', 1, true), world = h.world(h.a);
+  subject.types = ['ice'];
+  h.stages.boost(world, subject, 'def', 6, true);
+  h.changes.define({ id: 'checks:loss-ward', apply: change => { if (change.amount < 0) change.allowed = false; } });
+  const owner = world.effect('world_combat:field', h.a, '{}', 40), field = { id: owner, remaining: 40, data: {}, position: [0, 0, 0], radius: 4 };
+  rule.enter(world, subject, field); rule.stay(world, subject, field);
+  assert.equal(h.stages.effectiveStage(world, subject, 'def'), 6);
+  rule.leave(world, subject, field);
+  assert.equal(h.stages.effectiveStage(world, subject, 'def'), 6);
+  assert.equal(subject.state.stages.def, 6, 'No ungranted stage was deducted from the persistent ladder');
+});
+
+test('overlapping snow fields own independent windows and field end removes only its contribution', () => {
+  const h = harness(), rule = h.loadSnow(), subject = h.actor('checks:ice', 1, true);
+  subject.types = ['ice'];
+  const a = h.world(h.a), b = h.world(h.b), make = (world, owner) => ({
+    id: world.effect('world_combat:field', owner, '{}', 40), remaining: 40, data: {}, position: [0, 0, 0], radius: 4
+  });
+  const first = make(a, h.a), second = make(b, h.b);
+  rule.enter(a, subject, first); rule.stay(a, subject, first); rule.enter(b, subject, second);
+  assert.equal(h.stages.effectiveStage(a, subject, 'def'), 2, 'Each field adds once despite enter/stay in the same scan');
+  h.stages.boost(a, subject, 'def', 1, true);
+  rule.leave(a, subject, first);
+  assert.equal(h.stages.effectiveStage(a, subject, 'def'), 2);
+  h.end(second.id);
+  assert.equal(h.stages.effectiveStage(a, subject, 'def'), 1, 'The ending field cannot hold a stage window alive');
+  h.advance(); assert.equal(h.stages.effectiveStage(a, subject, 'def'), 1);
+});
+
+test('snow re-entry and changing away from Ice rebuild only the current field window', () => {
+  const h = harness(), rule = h.loadSnow(), subject = h.actor('checks:ice', 1, true), world = h.world(h.a);
+  subject.types = ['ice'];
+  const field = { id: world.effect('world_combat:field', h.a, '{}', 12), remaining: 12, data: {}, position: [0, 0, 0], radius: 4 };
+  rule.enter(world, subject, field); rule.leave(world, subject, field); rule.enter(world, subject, field);
+  assert.equal(h.stages.effectiveStage(world, subject, 'def'), 1);
+  subject.types = ['normal']; rule.stay(world, subject, field);
+  assert.equal(h.stages.effectiveStage(world, subject, 'def'), 0);
+  subject.types = ['ice']; rule.stay(world, subject, field);
+  assert.equal(h.stages.effectiveStage(world, subject, 'def'), 1);
+  h.advance(12); assert.equal(h.stages.effectiveStage(world, subject, 'def'), 0);
+});
+
+test('Memento grief rolls on native melee/projectile attacks and commit, but never twice on scripted damage', () => {
+  const h = harness(), status = h.loadMemento(), actor = h.actor('checks:grieving'), world = h.world(actor);
+  actor.random = 0.1;
+  h.marker(actor, 'checks:grief', 20, 0); actor.markers.get('checks:grief').tags = 'world_combat:status/grieving';
+  const policy = (phase, metadata = {}) => status.actionPolicy(world, actor, null, null, phase, metadata);
+  const melee = { damageType: 'minecraft:mob_attack', sourceActor: actor.ref(), sourceLiving: true, direct: true, damageTags: [] };
+  const arrow = { ...melee, direct: false, damageType: 'minecraft:arrow', damageTags: ['minecraft:is_projectile'] };
+  assert.equal(status.attemptReason(policy('commit')), 'grieving');
+  assert.equal(status.attemptReason(policy('damage', melee)), 'grieving');
+  assert.equal(status.attemptReason(policy('damage', arrow)), 'grieving');
+  assert.equal(status.attemptReason(policy('damage', { ...melee, scripted: true, kind: 'move' })), '');
+  assert.equal(status.attemptReason(policy('damage', { damageType: 'minecraft:lava' })), '');
+  assert.equal(status.attemptReason(policy('available')), '');
+});

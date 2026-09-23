@@ -128,11 +128,11 @@ namespace PokemonSkills {
     describe(psybladeId, [
         { key: "description.0", values: ["blade"] },
         { key: "description.1", values: ["reach", "dashSpeed", "span"] },
-        { key: "description.2", values: ["echo", "push"] },
+        { key: "description.2", values: ["echo","echoCap","push"] },
         { key: "extend.on", values: [], when: function (context) { return read(context.detail.values, ["extend"]) === true; } },
         { key: "extend.off", values: [], when: function (context) { return read(context.detail.values, ["extend"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blade"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.blade", "tier.1.span"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.blade"] }
     ]);
 }

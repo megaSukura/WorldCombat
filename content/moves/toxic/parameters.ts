@@ -70,8 +70,8 @@ namespace PokemonSkills {
     ]);
 
     describe("toxic", [
-        { key: "description.0", values: ["reach", "venomSpeed"] },
-        { key: "description.1", values: ["escalateInterval", "venomTicks", "ampCap"] },
-        { key: "description.2", values: ["burstShare", "venomRadius"] }
+        { key: "description.0", values: ["reach","venomSpeed","venomRadius"] },
+        { key: "description.1", values: ["escalateInterval","venomTicks","ampCap"] },
+        { key: "description.2", values: ["burstShare"] }
     ]);
 }

@@ -33,7 +33,7 @@ namespace PokemonSkills {
         id: chloroblastId,
         cooldownParameter: "recharge",
         name: "Chloroblast",
-        description: "The user launches its amassed chlorophyll to inflict damage on the target. This also damages the user.",
+        description: "把全身积蓄的叶绿素一次放尽，朝身前喷成一整片扇形爆震：罩住的敌人各挨一下、越远越轻，自己按放出的力量损失生命。",
         uses: ["把全身叶绿素朝身前喷成一整片扇形", "一次罩住挤在正前方的一队敌人", "用随力量增长的自损换一发范围压制"],
         kind: "enemy",
         range: 7,

@@ -160,8 +160,8 @@ namespace PokemonSkills {
     describe("hydropump", [
         { key: "description.0", values: ["torrent"] },
         { key: "description.1", values: ["radius", "velocity", "reach", "spread"] },
-        { key: "description.2", values: ["blow"] },
-        { key: "description.3", values: ["splash", "backwash", "soakTicks"] },
+        { key: "description.2", values: ["blow","soakTicks"] },
+        { key: "description.3", values: ["splash","backwash"] },
         { key: "deluge.on", values: [], when: function (context) { return read(context.detail.values, ["deluge"]) === true; } },
         { key: "deluge.off", values: [], when: function (context) { return read(context.detail.values, ["deluge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

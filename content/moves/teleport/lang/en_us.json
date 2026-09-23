@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.teleport.summary": "Fold space to blink to a chosen spot and shake the foes locked onto you; a wild user jumps farther and breaks away entirely. It leaves nothing behind and recharges quickly.",
+  "worldcombat.skill.teleport.summary": "Fold space to blink to a chosen spot and shake the foes locked onto you; a wild user jumps farther and releases its own target. It leaves nothing behind and recharges quickly.",
   "worldcombat.skill.teleport.use.0": "Open distance the instant you are pinned",
   "worldcombat.skill.teleport.use.1": "Shake the pursuers locked onto you",
   "worldcombat.skill.teleport.use.2": "Skip a short stretch of terrain to safety",
-  "worldcombat.skill.teleport.description.0": "Blinks up to %1$s blocks to the chosen spot.",
-  "worldcombat.skill.teleport.description.1": "On landing, foes within %1$s blocks that were locked onto you lose their target.",
-  "worldcombat.skill.teleport.far.on": "Far blink: distance ×1.35, shed radius ×1.2 — at the cost of wind-up +3 and cooldown +26, landing more scattered.",
+  "worldcombat.skill.teleport.description.0": "Blink up to %1$s blocks to the chosen spot, which cannot be where you already stand; it leaves nothing behind.",
+  "worldcombat.skill.teleport.description.1": "The moment you blink away, foes within %1$s blocks of where you stood that were locked onto you lose their target.",
+  "worldcombat.skill.teleport.far.on": "Far blink: distance ×1.35 and shed radius ×1.2, at the cost of wind-up +3 and cooldown +26.",
   "worldcombat.skill.teleport.far.off": "Flash step: distance ×0.85, shed radius ×0.9 — cheaper wind-up and cooldown, good for repeated short hops.",
-  "worldcombat.skill.teleport.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",
+  "worldcombat.skill.teleport.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.teleport.growth.0": "From level %1$s the blink reaches %2$s blocks.",
   "worldcombat.skill.teleport.growth.1": "From level %1$s the blink reaches %2$s blocks.",
   "worldcombat.skill.teleport.value.blinkRange": "Blink distance",
@@ -28,5 +28,6 @@
   "worldcombat.skill.teleport.preference.ai.leaveStation": "Leave post while holding",
   "worldcombat.skill.teleport.preference.ai.leaveStation.help": "When on, the user blinks away from its post even under a hold order.",
   "world_combat.move.teleport.text.blink": "Teleport · %1$s blocks",
-  "world_combat.move.teleport.text.flee": "Teleport escape · %1$s blocks"
+  "world_combat.move.teleport.text.flee": "Teleport escape · %1$s blocks",
+  "worldcombat.skill.teleport.description.2": "A wild user rides the momentum of escape to blink farther, and releases its own target on arrival."
 }

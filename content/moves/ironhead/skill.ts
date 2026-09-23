@@ -31,10 +31,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "ironhead",
         cooldownParameter: "recharge",
         name: "Iron Head",
-        description: "The user slams the target with its steel-hard head. This may also make the target flinch.",
+        description: "把头像铁块一样沉下去、短促一步砸实的一记重击：射程最短、起手最慢，但砸中就把目标整个掀飞，并震懵最久。它靠防御与体重吃饭，是贴身解围用的那一款。",
         uses: ["贴身被围时把人整个轰开", "把对手砸下高台或砸出据点", "用最久的震懵锁住一个目标"],
         kind: "enemy",
         range: 3.1,

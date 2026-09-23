@@ -118,8 +118,8 @@ namespace PokemonSkills {
 
     describe("spiritshackle", [
         { key: "description.0", values: ["pierce"] },
-        { key: "description.1", values: ["reach", "arrowSpeed"] },
-        { key: "description.2", values: ["pinTicks", "escape"] },
+        { key: "description.1", values: ["reach","arrowSpeed"] },
+        { key: "description.2", values: ["pinTicks","escape"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["anchor"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["anchor"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

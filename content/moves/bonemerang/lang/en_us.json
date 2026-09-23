@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.bonemerang.summary": "Throw the bone in hand: it sweeps past the target, loops behind it and flies back, striking once on the way out and once on the way back. A target that walks away before it arrives leaves the return pass empty.",
+  "worldcombat.skill.bonemerang.summary": "Throw the bone in hand: it sweeps past the target, loops behind it and flies back, striking once on the way out and once on the way back. It flies to the turn point locked at the throw and homes in on the target's current spot on the return, so stepping aside dodges the first pass.",
   "worldcombat.skill.bonemerang.use.0": "Throw from mid range, hitting on the way out and back",
   "worldcombat.skill.bonemerang.use.1": "Let the looping second pass cover the first one's gap",
   "worldcombat.skill.bonemerang.use.2": "Throw before the target repositions and force it off its spot",
@@ -32,5 +32,6 @@
   "worldcombat.skill.bonemerang.preference.ai.minGap.help": "Closer than this it stops throwing and hands over to shared melee. A larger value leaves close-range turns to other moves more often.",
   "world_combat.move.bonemerang.text.catch": "The bone returns (%1$s hits)",
   "world_combat.move.bonemerang.text.miss": "The bone flies through empty air",
-  "world_combat.move.bonemerang.text.break": "The bone shattered"
+  "world_combat.move.bonemerang.text.break": "The bone shattered",
+  "worldcombat.skill.bonemerang.description.return": "The bone flies toward the turn point locked at the throw; on the way back it first homes in on wherever the target now stands, then returns to the caster's hand. Each target can be hit at most once on each pass, so stepping aside dodges the outbound strike."
 }

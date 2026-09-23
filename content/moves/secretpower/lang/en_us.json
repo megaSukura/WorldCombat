@@ -2,8 +2,8 @@
   "worldcombat.skill.secretpower.summary": "A short borrowed strike: fire ignites, plants lull to sleep, water and rain conduct paralysis; otherwise a plain hit. The direct form trades the site's effect for higher power.",
   "worldcombat.skill.secretpower.use.0": "Close borrow",
   "worldcombat.skill.secretpower.use.1": "Terrain use",
-  "worldcombat.skill.secretpower.description.0": "Deals %1$s contact damage.",
-  "worldcombat.skill.secretpower.description.1": "On hit the material under the target becomes a secondary effect (fire to burn, plants to sleep, water or rain to paralysis, otherwise paralysis); chance %1$s, doubled in water or rain.",
+  "worldcombat.skill.secretpower.description.0": "Lunges up to %2$s blocks along the aim (about %3$s blocks/tick); the first enemy caught by the about %4$s-block sweep takes about %1$s contact damage and is shoved about %5$s blocks further along the lunge, while a wall or the end of the distance stops it.",
+  "worldcombat.skill.secretpower.description.1": "On a hit the site under the target decides the secondary status: fire to burn, plants to sleep, water or rain to paralysis, otherwise paralysis; chance %1$s, doubled in water or rain. The direct form ignores the site, always rolls paralysis and gets no doubling.",
   "worldcombat.skill.secretpower.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.secretpower.value.power": "Power",
   "worldcombat.skill.secretpower.value.chance": "Secondary chance",
@@ -22,5 +22,6 @@
   "world_combat.move.secretpower.text.plain": "Borrow",
   "world_combat.move.secretpower.text.fire": "Ignite",
   "world_combat.move.secretpower.text.thicket": "Lull",
-  "world_combat.move.secretpower.text.water": "Conduct"
+  "world_combat.move.secretpower.text.water": "Conduct",
+  "worldcombat.skill.secretpower.description.2": "Burn halves the target's physical attack and costs it one-sixteenth of its maximum health about every 5 seconds for about 40 seconds, with Fire types immune; sleep leaves it unable to move or act and wakes it when damaged, for about 3 to 6 seconds; paralysis halves its movement speed and fails about one attempt in four for about 40 seconds, with Electric types immune."
 }

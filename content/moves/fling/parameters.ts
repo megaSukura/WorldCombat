@@ -145,7 +145,8 @@ namespace PokemonSkills {
     defineDamage("fling", "throw", { defenceCoefficient: 0.0046, rationale: "重物投掷穿透略强，让道具与物攻的差别更可见。" }, { contact: false });
     describe("fling", [
         { key: "description.0", values: ["throw"] },
-        { key: "description.1", values: ["reach", "charge"] },
+        { key: "description.1", values: ["reach","charge"] },
+        { key: "description.projectile", values: ["speed","radius","push"] },
         { key: "description.2", values: ["pickup"] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);

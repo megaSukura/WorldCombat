@@ -92,7 +92,7 @@ namespace PokemonSkills {
 
     describe("infernalparade", [
         { key: "description.0", values: ["wisps", "spread"] },
-        { key: "description.1", values: ["parade", "wispSpeed", "turn"] },
-        { key: "description.2", values: ["burnChance", "burnTicks", "orbitDelay"] }
+        { key: "description.1", values: ["parade","wispSpeed","turn"] },
+        { key: "description.2", values: ["burnChance","burnTicks","orbitDelay"] }
     ]);
 }

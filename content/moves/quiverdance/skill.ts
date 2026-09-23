@@ -47,7 +47,7 @@ namespace PokemonSkills {
         id: "quiverdance",
         cooldownParameter: "wait",
         name: "蝶舞",
-        description: "轻巧地跳起神秘而又美丽的舞蹈，提高自己的特攻、特防和速度。",
+        description: "轻巧地跳起一段蝶舞：只抖几拍，鳞粉从身上落下，在身周悬停成一圈薄幕，提高自己的特攻、特防和速度。鳞幕只维持一段可见的窗口，窗口走完时抬起的这三项会被收回。",
         uses: ["开战前把特攻特防速度一起垫起来", "被法术压着打时先扬一层鳞幕", "边走位边铺开鳞粉，把身周变成自己的场地"],
         kind: "self",
         range: 1,

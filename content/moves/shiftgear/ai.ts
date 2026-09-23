@@ -51,7 +51,7 @@ namespace PokemonSkills {
                 { value: 0, label: "扭力档：攻击 +2、速度 +1" },
                 { value: 1, label: "超速档：攻击 +1、速度 +2" }
             ],
-            help: "两档总量都是 +3 级，只在攻速之间分配：想要打得重选扭力，想要追人抢位选超速。"
+            help: "两档在攻击与速度之间分配相同的总提升；扭力偏攻击，超速偏速度。50级起两档都额外提升1级攻击。"
         }),
         field(pathOf("ai.maxChase"), "换挡距离", "number", {
             min: 4, max: 24, step: 1,

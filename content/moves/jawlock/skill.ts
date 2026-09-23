@@ -85,6 +85,7 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: "jawlock",
         cooldownParameter: "recharge",
         name: "Jaw Lock",

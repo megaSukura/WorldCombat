@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.aromatherapy.summary": "Lays a lingering scent cloud at a chosen point; the user and allies standing in it have every harmful status effect cleared on the spot, and any status applied while the cloud remains is cleared too. Unlike Heal Bell it occupies a place in the world, so walking around it avoids it.",
+  "worldcombat.skill.aromatherapy.summary": "Lays a lingering scent cloud at a chosen point: the user and allies standing in it have every harmful status effect repeatedly cleansed, and any status applied while it lasts is cleansed too; walking around the cloud avoids it.",
   "worldcombat.skill.aromatherapy.use.0": "Lay a cloud where allies hold or brawl",
   "worldcombat.skill.aromatherapy.use.1": "Pre-place the cloud on a path allies will take",
   "worldcombat.skill.aromatherapy.use.2": "Purge a whole clustered group with one cloud",
-  "worldcombat.skill.aromatherapy.description.0": "Lays a %1$s-block scent cloud at the chosen point for %2$s; the user and allies inside have every harmful status effect cleared.",
+  "worldcombat.skill.aromatherapy.description.0": "Lays a %1$s-block scent cloud at the chosen point for %2$s; about every 0.25 s the cloud cleanses the user and allies inside of every harmful status effect (they need a clear line to the cloud's centre), and any status applied while it lasts is cleansed too.",
   "worldcombat.skill.aromatherapy.description.1": "The cloud reaches %1$s blocks away.",
   "worldcombat.skill.aromatherapy.stance.dense": "Dense: x0.75 radius, but x1.3 duration and a slightly slower wind-up (a tight, long-lasting cloud).",
   "worldcombat.skill.aromatherapy.stance.diffuse": "Diffuse: x1.2 radius, faster wind-up and cooldown, but x0.85 duration (wide and short-lived).",
-  "worldcombat.skill.aromatherapy.timing": "A point move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast. It cannot move while preparing and can be interrupted.",
+  "worldcombat.skill.aromatherapy.timing": "A point move: after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s, entering a %4$s s cooldown on cast; it cannot move while preparing or recovering, and can be interrupted.",
   "worldcombat.skill.aromatherapy.value.scentRadius": "Scent radius",
   "worldcombat.skill.aromatherapy.value.cloudTicks": "Cloud duration",
   "worldcombat.skill.aromatherapy.value.reach": "Cast distance",
@@ -23,6 +23,7 @@
   "worldcombat.skill.aromatherapy.preference.ai.scentReach.help": "Allies within this distance count as being in the cloud; lower lays only when adjacent, higher for allies further out.",
   "world_combat.move.aromatherapy.text.cleanse": "Scent cleanse x%1$s",
   "world_combat.move.aromatherapy.text.settle": "Scent cloud opens (~%1$s s)",
-  "worldcombat.skill.aromatherapy.growth.0": "At level %1$s, cooldown becomes %2$s.",
-  "worldcombat.skill.aromatherapy.growth.1": "At level %1$s, cooldown becomes %2$s."
+  "worldcombat.skill.aromatherapy.growth.0": "From level %1$s, cooldown is reduced by an extra 1 seconds.",
+  "worldcombat.skill.aromatherapy.growth.1": "From level %1$s, the extra cooldown reduction becomes 2.1 seconds, replacing the earlier reduction.",
+  "worldcombat.skill.aromatherapy.description.link": "The cloud stays only while its caster does: if the caster falls or moves too far away, the cloud dissipates early."
 }

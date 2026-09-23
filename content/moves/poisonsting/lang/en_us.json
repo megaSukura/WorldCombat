@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.poisonsting.summary": "Fling a cheap ranged needle: tiny damage, but a long reach, a fast windup and a short cooldown. The needle sticks in the wound and the venom seeps in a beat later, with a chance to poison. Barbed needles keep poison better but fly slower and hit lighter.",
-  "worldcombat.skill.poisonsting.description.0": "Needle power %1$s, affected by Attack; range %2$s blocks, flight speed %3$s blocks per tick and hit radius %4$s blocks.",
-  "worldcombat.skill.poisonsting.description.1": "After sticking, it seeps into the wound %3$s later with %1$s chance for %2$s; Poison and Steel types ignore it.",
+  "worldcombat.skill.poisonsting.description.0": "Fling a needle that deals about %1$s physical damage on hit (scales with Attack); range %2$s blocks, flight speed %3$s blocks per tick and hit radius %4$s blocks, and in flight it corrects its path toward the target.",
+  "worldcombat.skill.poisonsting.description.1": "After sticking, %3$s later, if the target is still there, the venom seeps in with %1$s chance for %2$s (losing health over time); Poison and Steel types are not poisoned.",
   "worldcombat.skill.poisonsting.description.2": "Windup %1$s, recovery %2$s, cooldown %3$s, and it can be spammed.",
   "worldcombat.skill.poisonsting.barbed.on": "Barbed needle: poison chance x1.3 and duration x1.25, but needle power x0.85 and flight speed x0.85.",
   "worldcombat.skill.poisonsting.barbed.off": "Smooth needle: flight speed x1.1 and needle power x1.1, but less and shorter-lasting poison.",

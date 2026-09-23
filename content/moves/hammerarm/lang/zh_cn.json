@@ -3,8 +3,8 @@
   "worldcombat.skill.hammerarm.use.0": "用一记过顶重砸换掉一个硬目标",
   "worldcombat.skill.hammerarm.use.1": "把目标砸出阵地、砸退到队友够得到的地方",
   "worldcombat.skill.hammerarm.use.2": "砸裂落点地面，留下短命的痕",
-  "worldcombat.skill.hammerarm.description.0": "一记过顶重砸造成 %1$s 点物理伤害；出手距离 %2$s 格。",
-  "worldcombat.skill.hammerarm.description.1": "命中把目标沿挥击方向砸退 %1$s 格，自身速度下降 %2$s 级。",
+  "worldcombat.skill.hammerarm.description.0": "对单个敌人一记过顶重砸，造成约 %1$s 点物理伤害；出手距离 %2$s 格。",
+  "worldcombat.skill.hammerarm.description.1": "命中后沿挥击方向把目标推开约 %1$s 格，并令自身速度下降 %2$s 级；未命中则两者都不发生。",
   "worldcombat.skill.hammerarm.description.2": "起手 %1$s 秒，冷却 %2$s 秒。",
   "worldcombat.skill.hammerarm.followthrough.on": "顺势式：砸退 ×1.35、裂痕半径 %1$s 格、裂地 %2$s 块，把目标砸出阵地；代价是威力 ×0.9、起手与收招更慢。",
   "worldcombat.skill.hammerarm.followthrough.off": "屏息式：接触前收住力，单发更重、出手更快，但砸退与裂地都小。",
@@ -27,5 +27,6 @@
   "worldcombat.skill.hammerarm.preference.ai.finish": "优先收残血",
   "worldcombat.skill.hammerarm.preference.ai.finish.help": "开启：残血目标排得更前，用一记最重的原地打击收掉；关闭则所有目标同价。",
   "world_combat.move.hammerarm.text.stagger": "惯性踉跄：速度 −%1$s",
-  "world_combat.move.hammerarm.text.miss": "挥空"
+  "world_combat.move.hammerarm.text.miss": "挥空",
+  "worldcombat.skill.hammerarm.description.ground": "砸中后拳面落点把附近的表层泥土、石面或沙地砸裂：半径 %1$s 格内最多 %2$s 块，裂痕约 5 秒后恢复原状。"
 }

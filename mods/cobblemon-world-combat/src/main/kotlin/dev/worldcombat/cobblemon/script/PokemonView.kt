@@ -35,7 +35,8 @@ class PokemonView private constructor(
         val experience: Int, val baseExperience: Int, val heldTags: Set<String>,
         val form: String, val status: String, val wild: Boolean, val gender: String,
         val heldKey: String, val statusKey: String, val statusSeconds: Int, val weight: Double, val canEvolve: Boolean,
-        val activeState: String, val pose: String, val vehicle: Boolean, val passenger: Boolean, val driver: String,
+        val activeState: String, val pose: String, val grounded: Boolean, val ridingStyle: String,
+        val vehicle: Boolean, val passenger: Boolean, val driver: String,
         val aiEnabled: Boolean, val accessibleMoves: Set<String>, val projectedArmor: Double, val projectedToughness: Double, val heldDescriptionId: String,
         val aspects: Set<String>, val statIds: List<String>, val heldStack: dev.worldcombat.core.runtime.ItemObservation,
         val shiny: Boolean, val scale: Double, val teraType: String, val dynamaxLevel: Int, val gigantamaxFactor: Boolean)
@@ -81,6 +82,13 @@ class PokemonView private constructor(
     fun activeState() = facts.activeState
     fun pasture() = pastureValue
     fun pose() = facts.pose
+    fun grounded() = facts.grounded
+    fun ridingStyle() = facts.ridingStyle
+    /** Riding and physical state can change within the same tick without a Pokemon data mutation. */
+    internal fun matchesMovement(entity: PokemonEntity): Boolean = facts.vehicle == entity.isVehicle &&
+        facts.passenger == entity.isPassenger && facts.grounded == entity.onGround() &&
+        facts.driver == (entity.controllingPassenger?.uuid?.toString() ?: "") &&
+        facts.ridingStyle == (entity.takeIf { it.isVehicle }?.ridingController?.context?.style?.name?.lowercase(Locale.ROOT) ?: "")
     fun vehicle() = facts.vehicle
     fun passenger() = facts.passenger
     fun driver() = facts.driver
@@ -134,6 +142,8 @@ class PokemonView private constructor(
                     NativeMechanics.heldKey(pokemon), NativeMechanics.statusKey(pokemon), pokemon.status?.secondsLeft ?: 0,
                     pokemon.form.weight.toDouble(), pokemon.form.evolutions.isNotEmpty(), pokemon.state.name,
                     entity?.getCurrentPoseType()?.name?.lowercase(Locale.ROOT) ?: "",
+                    entity?.onGround() ?: false,
+                    entity?.takeIf { it.isVehicle }?.ridingController?.context?.style?.name?.lowercase(Locale.ROOT) ?: "",
                     entity?.isVehicle ?: false, entity?.isPassenger ?: false, entity?.controllingPassenger?.uuid?.toString() ?: "",
                     entity != null && !entity.isNoAi,
                     (pokemon.allAccessibleMoves.map { it.name } + pokemon.moveSet.map { it.name }).toSet(),

@@ -6,7 +6,7 @@
   "worldcombat.skill.minimize.description.0": "变小把闪避提升 %1$s 级，打向你的攻击有 %2$s 的机会落空。",
   "worldcombat.skill.minimize.bold.on": "大胆缩小：闪避 3 级、更难被打中，但被大体型踩中 ×1.75、缩着的时间更短。",
   "worldcombat.skill.minimize.bold.off": "谨慎缩小：闪避 2 级、踩踏加成更低（×1.5）、缩得更久；更高的回避 vs 更低的破绽，两向各有局面。",
-  "worldcombat.skill.minimize.description.1": "缩小持续约 %1$s；体积 ≥ 1.3 倍的身体打中你时伤害 ×%2$s。",
+  "worldcombat.skill.minimize.description.1": "缩小持续约 %1$s；来袭攻击按上面的概率可能整段落空，但体积达到你 1.3 倍以上的攻击不会触发这道闪避，而是直接踩实、伤害 ×%2$s。",
   "worldcombat.skill.minimize.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.minimize.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.minimize.growth.0": "达到 %1$s 级，缩小延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -31,5 +31,6 @@
   "world_combat.move.minimize.text.dodge": "闪开了",
   "world_combat.move.minimize.text.trample": "被踩实了！",
   "world_combat.move.minimize.text.fade": "变大回来",
-  "effect.world_combat.minimize_small": "变小"
+  "effect.world_combat.minimize_small": "变小",
+  "worldcombat.skill.minimize.description.2": "缩小窗口走完或被清除时，抬高的闪避等级原样收回。"
 }

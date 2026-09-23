@@ -16,10 +16,11 @@ namespace PokemonSkills {
     const boltbeakMissText = "world_combat.move.boltbeak.text.miss";
 
     define({
+        freeMovement: true,
         id: boltbeakId,
         cooldownParameter: "recharge",
         name: "Bolt Beak",
-        description: "抢先用带电的喙直线啄向目标：目标尚未打过施法者时威力翻倍；啄完退步拉开。",
+        description: "抢在对手反应之前，用带电的喙直线啄上去：目标尚未打过施法者时威力翻倍；啄完退步拉开。",
         uses: ["抢在对手出手前先啄一口", "打一下立刻退开脱离", "对还没反应过来的目标打出翻倍"],
         kind: "enemy",
         range: 4.4,

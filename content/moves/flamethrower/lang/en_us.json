@@ -2,12 +2,12 @@
   "worldcombat.skill.flamethrower.summary": "Pours a flame that grows longer each tick, sweeping a lane (or a fan) out in front; everyone caught takes a hit and may be set alight, and the jet only stops once it is spent.",
   "worldcombat.skill.flamethrower.use.0": "Pour a flame that grows longer",
   "worldcombat.skill.flamethrower.use.1": "Sweep everyone stacked in one lane",
-  "worldcombat.skill.flamethrower.use.2": "Wall off the ground in front with a fan",
-  "worldcombat.skill.flamethrower.description.0": "The flame advances %3$s blocks/tick out to %2$s blocks, dealing %1$s special damage to each enemy it reaches.",
-  "worldcombat.skill.flamethrower.description.1": "A scorched target has a %1$s chance to burn.",
-  "worldcombat.skill.flamethrower.wide.on": "Fan: opens about 30 degrees, ignition +5%%, catching more targets, but power x0.82, length x0.78, +2 wind-up and +6 cooldown.",
-  "worldcombat.skill.flamethrower.wide.off": "Focused: a narrow lance of flame, heavier on one target, farther and faster, at the cost of coverage.",
-  "worldcombat.skill.flamethrower.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.flamethrower.use.2": "Sweep a whole fan of foes in front at once",
+  "worldcombat.skill.flamethrower.description.0": "The flame advances %3$s blocks/tick out to %2$s blocks, dealing about %1$s special damage to each enemy it reaches; each target is hit once.",
+  "worldcombat.skill.flamethrower.description.1": "A scorched target has a %1$s chance to burn for about 40 s: it loses about 1/16 of its maximum health every 5 s and its physical attacks deal half damage. Fire-type targets cannot be ignited.",
+  "worldcombat.skill.flamethrower.wide.on": "Fan: opens about %1$s degrees, ignition +5%%, catching more targets, but power ×0.82, length ×0.78, +2 wind-up and +6 cooldown.",
+  "worldcombat.skill.flamethrower.wide.off": "Focused: a narrow lance with a lateral radius of about %1$s blocks, heavier on one target, farther and faster, at the cost of coverage.",
+  "worldcombat.skill.flamethrower.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.flamethrower.growth.0": "From level %1$s the flame rises to %2$s power and %3$s blocks long.",
   "worldcombat.skill.flamethrower.growth.1": "From level %1$s the flame rises to %2$s power and %3$s blocks long.",
   "worldcombat.skill.flamethrower.value.jet": "Flame power",
@@ -27,5 +27,8 @@
   "worldcombat.skill.flamethrower.preference.ai.preferClusters": "Prefer a line of foes",
   "worldcombat.skill.flamethrower.preference.ai.preferClusters.help": "On: prefers the jet when another enemy is within 3 blocks of the target, burning a line at once; off: order by ordinary attack only.",
   "world_combat.move.flamethrower.text.burn": "Scorched",
-  "world_combat.move.flamethrower.text.hit": "The flame caught %1$s"
+  "world_combat.move.flamethrower.text.hit": "The flame caught %1$s",
+  "worldcombat.skill.flamethrower.description.limit": "The whole jet can scorch at most %1$s different targets.",
+  "worldcombat.skill.flamethrower.description.stand": "The user stands still while pouring the flame.",
+  "worldcombat.skill.flamethrower.value.maxTargets": "Max targets"
 }

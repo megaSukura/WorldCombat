@@ -3,8 +3,8 @@
   "worldcombat.skill.stickyweb.use.0": "Turn a patch of ground into a slow zone ahead of time",
   "worldcombat.skill.stickyweb.use.1": "Snare a foe that charges or flees",
   "worldcombat.skill.stickyweb.use.2": "Cut the mobility of a fast target",
-  "worldcombat.skill.stickyweb.description.0": "A grounded foe that steps in loses %1$s of Speed and is stuck for %2$s; for Pokemon this is the native Speed stage, for vanilla and modded bodies the movement-speed attribute. Airborne bodies are not caught.",
-  "worldcombat.skill.stickyweb.description.1": "The web is about %1$s blocks wide and stays for %2$s; a foe that stays inside keeps the drag, and one that leaves walks it off over the remaining time.",
+  "worldcombat.skill.stickyweb.description.0": "Each time an enemy grounded foe steps in, it loses %1$s of Speed and is stuck for %2$s; for Pokemon this is the native Speed stage, for vanilla and modded bodies the movement-speed attribute. Airborne bodies are not caught.",
+  "worldcombat.skill.stickyweb.description.1": "The web has a radius of about %1$s blocks and stays for %2$s; a foe that stays inside keeps the drag and walks it off over the remaining time once it leaves; laying again on the same ground replaces the user's earlier web.",
   "worldcombat.skill.stickyweb.option.on": "Anchored on: one more Speed stage and a longer stick and web life, but the web narrows to about 0.8x, +2 ticks wind-up and a longer cooldown - for sealing one narrow path.",
   "worldcombat.skill.stickyweb.option.off": "Anchored off (wide): the web lays about 1.25x wider, is faster to lay with a shorter cooldown, at one stage and a shorter stick - for covering a wide patch.",
   "worldcombat.skill.stickyweb.timing": "Throw the web at a point within %1$s: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s from commit.",
@@ -25,5 +25,6 @@
   "worldcombat.skill.stickyweb.preference.ai.lead.help": "Lead a moving target by this many ticks; 0 lays on its current spot, larger suits stopping a charging foe.",
   "world_combat.move.stickyweb.text.lay": "Sticky web spreads",
   "world_combat.move.stickyweb.text.snare": "Caught in sticky web (Speed -%1$s)",
-  "effect.world_combat.stickywebbed": "Caught in sticky web"
+  "effect.world_combat.stickywebbed": "Caught in sticky web",
+  "worldcombat.skill.stickyweb.description.2": "While stuck, footspeed is kept down by the status itself: movement speed is reduced by 30%."
 }

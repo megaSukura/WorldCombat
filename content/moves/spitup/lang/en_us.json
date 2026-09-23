@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.spitup.summary": "Spit out the compressed force you stored with Stockpile: the more layers stored, the heavier the shot - bigger, faster and bursting wider - and with no layers the move cannot be used at all. It is the only move of the group that reads its own reserve, and firing it empties every layer: the stored Defence and Sp. Def go with it. The spray form fans the shot into a cone in front of you, covering several foes at once but hitting each one lighter.",
-  "worldcombat.skill.spitup.description.0": "Spit Up deals %1$s Normal special damage; power is multiplied by the current stockpile layers (1-3).",
+  "worldcombat.skill.spitup.summary": "Spit out the compressed force stored with Stockpile: the more layers stored, the heavier, bigger and faster the shot, and with no layers the move cannot be used. Firing empties every layer at once and gives up the Defence and Sp. Def they were granting. The spray form fans the shot into a broad cone in front of you, covering several foes at once but hitting each one lighter.",
+  "worldcombat.skill.spitup.description.0": "On hit, Spit Up deals about %1$s Normal special damage to each target; the more stockpile layers stored (1-3), the heavier the shot.",
   "worldcombat.skill.spitup.description.1": "You can spit up to %1$s blocks, the shot travels %2$s blocks/tick and its hit radius is %3$s blocks.",
-  "worldcombat.skill.spitup.spray.on": "Spray form: a %1$s degree cone in front of you covers several foes at once, with shorter range but a cheaper, faster shot; each target takes x0.68 power.",
+  "worldcombat.skill.spitup.spray.on": "Spray form: a %1$s degree cone in front of you covers several foes at once; its reach is about 72% of the direct shot, but it is cheaper and faster and each target takes x0.68 power.",
   "worldcombat.skill.spitup.spray.off": "Direct form (default): one heavy shot flying straight, the highest single-target power and the longest range.",
   "worldcombat.skill.spitup.timing": "Wind-up %1$s s, recovery %2$s s, cost %3$s PP, cooldown %4$s s.",
   "worldcombat.skill.spitup.growth.0": "From level %1$s: the per-layer base power rises to %2$s.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.spitup.preference.ai.minLayers": "Layers required",
   "worldcombat.skill.spitup.preference.ai.minLayers.help": "Below this layer count the user keeps hoarding instead of firing. Higher values wait for a heavier shot; lower values spit as soon as a layer or two are up.",
   "world_combat.move.spitup.text.spit": "Spit Up - %1$s layers - hit %2$s",
-  "world_combat.move.spitup.text.miss": "Spit Up missed"
+  "world_combat.move.spitup.text.miss": "Spit Up missed",
+  "worldcombat.skill.spitup.spend": "Firing spends every stockpile layer at once: the Defence and Sp. Def each layer granted go with them, and even a shot that hits nothing still spends them. With no layer stored, the move cannot be used."
 }

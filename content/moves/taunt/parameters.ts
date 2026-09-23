@@ -30,7 +30,8 @@ namespace PokemonSkills {
 
     actionParameters.define(tauntId, {
         tauntTicks: seconds(
-            F.base(200).plus(F.level().times(1.5)).plus(F.stat("specialAttack").times(0.4)).clamp(140, 400).round(0),
+            F.base(200).plus(F.level().times(1.5)).plus(F.stat("specialAttack").times(0.4)).clamp(140, 400).round(0)
+                .times(F.when(F.choice("manner", "goad"), F.const(0.8), F.const(1.3))).max(40).round(0),
             "怒火时长", "被挑衅者只能出伤害招式的时长；等级与施法者的特攻让怒火烧得更久。"),
         provokeReach: formula(
             F.base(10).plus(F.stat("specialAttack").times(0.03)).plus(F.body("height").times(1.5)).clamp(7, 22),
@@ -48,7 +49,7 @@ namespace PokemonSkills {
     describe(tauntId, [
         { key: "description.0", values: ["tauntTicks"] },
         { key: "description.1", values: ["provokeReach", "range"] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
+        { key: "description.2", values: [] },
         { key: "manner.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.manner === "scorn"); } },
         { key: "manner.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.manner !== "scorn"; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

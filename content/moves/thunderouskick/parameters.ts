@@ -113,9 +113,9 @@ namespace PokemonSkills {
     ]);
 
     describe("thunderouskick", [
-        { key: "description.0", values: ["kick", "collisionRadius"] },
+        { key: "description.0", values: ["kick","collisionRadius"] },
         { key: "description.1", values: ["feints", "blinkRange", "standoff"] },
-        { key: "description.2", values: ["kickSpeed", "guardStages", "feintBonus", "guardTicks", "push"] },
+        { key: "description.2", values: ["kickSpeed","guardStages","feintBonus","guardTicks","push"] },
         { key: "patient.on", values: [], when: function (context) { return read(context.detail.values, ["patient"]) === true; } },
         { key: "patient.off", values: [], when: function (context) { return read(context.detail.values, ["patient"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

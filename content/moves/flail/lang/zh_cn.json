@@ -6,9 +6,9 @@
   "worldcombat.skill.flail.use.3": "在血线低到危险的局面里做最后一搏",
   "worldcombat.skill.flail.description.0": "朝身前扇形乱打：每下造成约 %1$s 点伤害，血量越低挥出的下数越多（当前约 %2$s 下）。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.flail.description.1": "扇面覆盖身前 %1$s 格、张开 %2$s 度，相邻两下间隔约 %3$s 秒。",
-  "worldcombat.skill.flail.reckless.on": "当前拼命式：每下伤害 ×1.25、下数 ×1.35，但每一下要自损最大生命约 %1$s。",
+  "worldcombat.skill.flail.reckless.on": "当前拼命式：每下伤害 ×1.25、下数 ×1.35，但每一下（即使没命中）也要自损最大生命约 %1$s。",
   "worldcombat.skill.flail.reckless.off": "当前稳住式：不自损，下数与单发威力都较低。",
-  "worldcombat.skill.flail.timing": "可对 %1$s 格内的目标施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.flail.timing": "可对 %1$s 格内的目标施放；发动需准备 %2$s 秒并消耗 %4$s PP，随后收招 %3$s 秒，冷却 %5$s 秒（发动即开始计时）。",
   "worldcombat.skill.flail.growth.0": "达到 %1$s 级，冷却降至 %2$s 秒。",
   "worldcombat.skill.flail.value.swipe": "乱打威力",
   "worldcombat.skill.flail.value.swings": "乱打次数",
@@ -23,10 +23,11 @@
   "worldcombat.skill.flail.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.flail.preference.ai.maxChase.help": "超过这个距离就不主动乱打，先朝目标走近。抓狂是近身招，越大越会在更远处就起手（多半会落空）。",
   "worldcombat.skill.flail.preference.ai.finishLow": "收残优先",
-  "worldcombat.skill.flail.preference.ai.finishLow.help": "开启：目标血量低于三成时抬高抓狂的排序，用它做最后一段；关闭则只看自己有多残。",
+  "worldcombat.skill.flail.preference.ai.finishLow.help": "开启：目标血量低于 35%% 时抬高抓狂的排序，用它收尾；关闭则只看自己有多残。",
   "worldcombat.skill.flail.preference.ai.recklessFloor": "拼命血线",
   "worldcombat.skill.flail.preference.ai.recklessFloor.help": "开启拼命式后，自己血量低于这个比例时不再乱打，免得自损把自己打空。越高越保守。",
   "world_combat.move.flail.text.hit": "乱打命中 %1$s 下 / 共 %2$s 下",
   "world_combat.move.flail.text.miss": "乱打落空",
-  "world_combat.move.flail.text.reckless": "拼命 -生命"
+  "world_combat.move.flail.text.reckless": "拼命 -生命",
+  "worldcombat.skill.flail.description.push": "扇面里每个对手在每一下只结算一次；命中后被往背离方向顶开约 %1$s 格。"
 }

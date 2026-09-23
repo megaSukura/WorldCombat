@@ -67,9 +67,10 @@ namespace PokemonSkills {
     ]);
 
     describe(futureSightId, [
-        { key: "description.0", values: ["sight", "delay"] },
+        { key: "description.0", values: ["sight","delay"] },
         { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "settle", "recharge"] },
+        { key: "description.3", values: [] },
         { key: "prolonged.on", values: [], when: function (context) { return read(context.detail.values, ["prolonged"]) === true; } },
         { key: "prolonged.off", values: [], when: function (context) { return read(context.detail.values, ["prolonged"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,25 +1,4 @@
-/**
- * 接棒 / batonpass —— 参数、数值来源与共享身份。
- *
- * 原生事实（Cobblemon 1.8 / Showdown）：Normal／变化／威力 —／命中 —／PP 40／优先度 0／self: copyvolatile／
- *   target self；说明是「和后备宝可梦进行替换。换上的宝可梦能直接继承其能力的变化」。
- *
- * 世界化翻译：即时世界没有后备席，把「换上的人继承能力变化」落成**把此刻身上的能力等级打包递给身边最近的伙伴**：
- *   一根发光的接力棒从施法者飞到接棒者身上，接棒者获得同样的等级，施法者清空。有合法后备时由原生队伍操作
- *   先让后备登场、把等级交接给它，再收回自己；没有后备时退回到把棒递给身边最近的伙伴并退开一步。
- *
- * 数据分散（每项读不同的个体数据，同一招在两只精灵手里也不一样）：
- *   carry        可递出的等级总数 = 亲密度（越亲近越肯把家底全交出去）＋ 配置；
- *   handoffRange 递棒距离 = 等级；
- *   withdraw     退步距离 = 速度 ＋ 配置（接力式退得少、独走式退得远）；
- *   motes        接力光点数 = 物攻 ＋ 特攻；
- *   markTicks    伙伴身上的接棒余韵 = 亲密度；
- *   tempo／aftercast／recharge = 速度／等级／配置。
- *
- * 配置 relay（接力式）：开启＝携带上限 ×1.0、退步收紧到 ×0.6、冷却 +10；关闭（独走式）＝携带上限 ×0.65、
- *   退步 ×1.2、冷却 −6。两向各有局面：把整根棒交给伙伴 vs 留一部分给自己并撤得更远。
- * 无伤害段：这是加等级＋退场的 Status 招。
- */
+/** batonpass：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const batonpassId = "batonpass";
     export const batonpassScene = "world_combat:move_batonpass";
@@ -92,6 +71,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["handoffRange", "withdraw"] },
         { key: "relay.on", values: [], when: function (context) { return read(context.detail.values, ["relay"]) === true; } },
         { key: "relay.off", values: [], when: function (context) { return read(context.detail.values, ["relay"]) !== true; } },
+        { key: "world", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.carry"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.carry", "tier.1.handoffRange"] }

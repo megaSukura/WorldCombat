@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.trailblaze.summary": "The user attacks suddenly as if leaping out from tall grass. Its nimble footwork boosts its Speed stat.",
+  "worldcombat.skill.trailblaze.summary": "A low dash that borrows the force of nearby brush: it strikes the first enemy in its path, carries it along, and raises the user's Speed on a landed hit; launching from brush makes the dash heavier and the Speed gain bigger.",
   "worldcombat.skill.trailblaze.use.0": "Burst out of the brush for a surprise strike",
-  "worldcombat.skill.trailblaze.use.1": "Launch from cover to reach a farther foe",
+  "worldcombat.skill.trailblaze.use.1": "Close the gap to a farther foe with a sudden strike",
   "worldcombat.skill.trailblaze.use.2": "Boost Speed, then run the new speed down",
-  "worldcombat.skill.trailblaze.description.0": "The dash deals %1$s damage, bounding %2$s blocks at %3$s blocks/tick.",
-  "worldcombat.skill.trailblaze.description.1": "On hit, Speed +%1$s stage (one extra launched from brush), knocking the target %2$s blocks, with a %3$s-block hit radius.",
+  "worldcombat.skill.trailblaze.description.0": "Bound low along the aim; the first enemy struck takes about %1$s physical damage. One bound covers up to %2$s blocks at %3$s blocks per tick, landing early if terrain blocks it.",
+  "worldcombat.skill.trailblaze.description.1": "A hit carries the target %2$s blocks along the bound; when the hit lands, the user's Speed rises %1$s stage(s) (one more when launched from brush), lasting until combat ends. Hit radius %3$s blocks.",
   "worldcombat.skill.trailblaze.overshoot.on": "Through the brush: after the hit, keep skidding past to land behind the target; the landing is deeper in.",
   "worldcombat.skill.trailblaze.overshoot.off": "Pull up: stop right in front of the target on a hit, steadier footing to keep pressing.",
   "worldcombat.skill.trailblaze.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",
@@ -26,8 +26,9 @@
   "worldcombat.skill.trailblaze.preference.ai.maxChase": "Bound distance",
   "worldcombat.skill.trailblaze.preference.ai.maxChase.help": "Only bound out when the foe is within this range; smaller stays on top of it, larger leaps from farther.",
   "worldcombat.skill.trailblaze.preference.ai.preferCover": "Prefer brushing out",
-  "worldcombat.skill.trailblaze.preference.ai.preferCover.help": "On: bound when standing in brush for a farther, heavier launch and an extra Speed stage. Off: only distance and threat matter.",
+  "worldcombat.skill.trailblaze.preference.ai.preferCover.help": "On: prefer to bound when there is brush underfoot for a heavier dash and an extra Speed stage. Off: only distance and threat matter, with no detours to reach brush.",
   "world_combat.move.trailblaze.text.grass": "Launched from brush",
   "world_combat.move.trailblaze.text.haste": "Nimble feet +%1$s",
-  "world_combat.move.trailblaze.text.miss": "Bounded clear"
+  "world_combat.move.trailblaze.text.miss": "Bounded clear",
+  "worldcombat.skill.trailblaze.description.cover": "Launching with plants, flowers or leaves in the brush around the take-off spot adds force: a heavier dash and one more Speed stage. Open ground works too, just without that extra push."
 }

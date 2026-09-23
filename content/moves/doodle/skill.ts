@@ -1,16 +1,4 @@
-/**
- * 描绘 / doodle — 执行组织。
- *
- * 两幕（一次对多个目标）：
- *   描（windup，提交前）：一道画布般的图样在对手身上展开、把它的本质描下来（`action.present` 预告）。
- *   盖（提交后）：图样从施法者脚下摊开成一张画布，覆盖半径 `canvas` 内的自己与同伴；对每一只特性不同的宝可梦
- *     写入共享 `NativeModifiers` 的 ability 层，并挂上共享身份 `world_combat:status/doodle` 的“已描绘”标记。
- *     从施法者到自己/每只同伴各有一条图样连线，落到身上时炸开一枚印章。
- *
- * 一次覆盖多只：`squad` 限制同行上限，`canvas` 决定覆盖半径（画幅越大冷却越长）；已经在目标特性上的同伴跳过。
- * 双方都必须是宝可梦才描得动（非宝可梦没有特性），目标特性带 failroleplay 时预检失败，不花 PP。
- * 与同族的扮演分开：扮演只往自己脸上披一张，描绘把图样摊开、同时盖到自己和整队同伴身上。
- */
+/** Copy a Pokémon’s Ability to yourself and nearby allies, or depict a non-Pokémon’s strongest combat characteristic. */
 namespace PokemonSkills {
     export const doodleScene = "world_combat:move_doodle";
     export const doodleInk = "world_combat:doodle_sketch";
@@ -31,12 +19,12 @@ namespace PokemonSkills {
     }
 
     /** 画幅内可被盖印的宝可梦：施法者自己、以及半径内的友好宝可梦，按与施法者的距离由近到远。 */
-    export function doodleRecipients(world: CombatWorld, actor: CombatActor, centre: CombatPoint, canvas: number, squad: number): CombatActor[] {
+    export function doodleRecipients(world: CombatWorld, actor: CombatActor, centre: CombatPoint, canvas: number, squad: number, includeNative = false): CombatActor[] {
         const result: CombatActor[] = [actor];
         WorldGeometry.select(world, WorldGeometry.ring(centre, 0, canvas, { below: 2, above: 3 }), function (other, facts) {
             if (result.length >= squad) return;
             if (String(other.ref()) === String(actor.ref())) return;
-            if (!facts.friendly() || String(other.domain()) !== "cobblemon") return;
+            if (!facts.friendly() || !includeNative && String(other.domain()) !== "cobblemon") return;
             result.push(other);
         });
         return result;
@@ -46,8 +34,8 @@ namespace PokemonSkills {
         id: "doodle",
         cooldownParameter: "recharge",
         name: "Doodle",
-        description: "把握并映射出对手的本质，让自己和同伴宝可梦的特性变得和对手相同。",
-        uses: ["把对手的强力特性一次复制给全队", "开战前统一队伍的特性", "配合一只特性关键的对手打配合"],
+        description: "把对手的特性描给自己与附近同伴；描绘普通生物时，复制其最突出的战斗特征。",
+        uses: ["把对手的强力特性一次复制给全队", "开战前统一队伍的特性", "围绕一只特性关键的对手组织队伍"],
         kind: "enemy",
         range: 8,
         maxRange: 15,
@@ -75,11 +63,16 @@ namespace PokemonSkills {
         ready: function (action) {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-ability";
+            if (String(actor.domain()) !== "cobblemon") return "no-ability";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("doodle", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") {
+                const self = world.observe(actor), values = PokemonSkills.copiedNativeTrait(world, target);
+                return self && doodleRecipients(world, actor, self.position(), p("doodle", "canvas", action), Math.max(1, Math.round(p("doodle", "squad", action))), true)
+                    .some(recipient => CombatCopies.differs(world, recipient, values)) ? "" : "nothing-to-copy";
+            }
             const theirs = doodleAbility(world, target);
             if (!theirs) return "target-suppressed";
             if (!NativeModifiers.abilityCopyable(world, target)) return "uncopyable";
@@ -104,6 +97,17 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (target === null || !world.valid(target) || body === null) { done(action); return; }
+            if (String(target.domain()) !== "cobblemon") {
+                const hold = Math.max(40, Math.round(p("doodle", "hold", action)));
+                const values = PokemonSkills.copiedNativeTrait(world, target);
+                doodleRecipients(world, actor, body.position(), p("doodle", "canvas", action), Math.max(1, Math.round(p("doodle", "squad", action))), true).forEach(recipient => {
+                    if (!CombatCopies.differs(world, recipient, values)) return;
+                    const carrier = MobEffects.apply(world, recipient, doodleInk, hold, 0);
+                    if (carrier) CombatCopies.apply(world, recipient, values, hold, "doodle", MobEffects.anchor(carrier));
+                });
+                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "canvas", target: String(actor.ref()), path: [String(target.ref()), String(actor.ref())], traits: 8, marks: 8, scale: 1 }, 30);
+                sound(action, "minecraft:entity.illusioner.cast_spell"); done(action); return;
+            }
             const ability = doodleAbility(world, target);
             if (!ability || !doodleAbilityPattern.test(ability) || !NativeModifiers.abilityCopyable(world, target)) {
                 WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()) }, 22);

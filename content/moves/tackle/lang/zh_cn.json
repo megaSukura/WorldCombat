@@ -4,7 +4,7 @@
   "worldcombat.skill.tackle.use.1": "撞开一步把对手顶离掩体",
   "worldcombat.skill.tackle.use.2": "顺手从对方身侧穿过去换位",
   "worldcombat.skill.tackle.description.0": "撞实造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.tackle.description.1": "沿瞄准方向助跑最多 %1$s 格、每刻 %2$s 格；撞实后从对方身侧再滑过约 %3$s 格，撞空则跑到助跑尽头。",
+  "worldcombat.skill.tackle.description.1": "沿瞄准方向助跑最多 %1$s 格、每刻最多 %2$s 格；撞实后从对方身侧再滑过约 %3$s 格，撞空则一路跑到助跑尽头；途中撞上墙或障碍会提前停下。",
   "worldcombat.skill.tackle.description.2": "撞实把目标沿冲撞方向顶开约 %1$s 格。",
   "worldcombat.skill.tackle.runUp.on": "开启助跑式：助跑与穿过距离更长、威力略高，但准备、收招与冷却各更久。",
   "worldcombat.skill.tackle.runUp.off": "关闭助跑式（贴身式）：出手更快、位置更稳，助跑与穿过距离更短、威力略低。",

@@ -152,10 +152,10 @@ namespace PokemonSkills {
     defineDamage(firepledgeId, "pillar", { defenceCoefficient: 0.0042, rationale: "火焰柱对防御的穿透略强于默认，让特攻与等级的差别更可见。" });
 
     describe(firepledgeId, [
-        { key: "description.0", values: ["pillar"] },
-        { key: "description.1", values: ["pillarRadius", "pillarHeight", "burnTicks"] },
-        { key: "description.2", values: ["markRadius", "markTicks"] },
-        { key: "description.3", values: ["comboDetect", "comboPower"] },
+        { key: "description.0", values: ["pillar","maxTargets"] },
+        { key: "description.1", values: ["pillarRadius","pillarHeight","burnTicks"] },
+        { key: "description.2", values: ["markRadius","markTicks","scarCells"] },
+        { key: "description.3", values: ["comboDetect","comboPower","comboScale"] },
         { key: "description.4", values: ["reach", "tempo"] },
         { key: "fierce.on", values: [], when: function (context) { return read(context.detail.values, ["fierce"]) === true; } },
         { key: "fierce.off", values: [], when: function (context) { return read(context.detail.values, ["fierce"]) !== true; } },

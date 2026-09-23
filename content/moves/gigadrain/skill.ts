@@ -24,7 +24,7 @@ namespace PokemonSkills {
         id: "gigadrain",
         cooldownParameter: "recharge",
         name: "Giga Drain",
-        description: "A nutrient-draining attack. The user's HP is restored by up to half the damage taken by the target.",
+        description: "在目标脚下立起一圈吸根并锁定，分多拍持续抽取其生命，把每拍造成的伤害按比例转回自身。锁定后目标走远也脱不开，抽满拍数或目标倒下才结束。",
         uses: ["从远处把对手整片生命抽走", "在血量吃紧时靠它把血线拉回来", "用连续几拍压住一个高价值目标"],
         kind: "enemy",
         range: 12.0,

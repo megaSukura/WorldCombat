@@ -121,12 +121,12 @@ namespace PokemonSkills {
     defineDamage("thunderpunch", "spark", {});
 
     describe("thunderpunch", [
-        { key: "description.0", values: ["volt"] },
+        { key: "description.0", values: ["volt","collisionRadius"] },
         { key: "description.1", values: ["numbChance"] },
-        { key: "description.2", values: ["chainRange", "arcs", "spark", "arcChance"] },
+        { key: "description.2", values: ["chainRange","arcs","spark","arcChance"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.volt"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.volt", "tier.1.chainRange"] }
     ]);

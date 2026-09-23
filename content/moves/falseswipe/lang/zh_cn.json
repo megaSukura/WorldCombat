@@ -5,7 +5,7 @@
   "worldcombat.skill.falseswipe.use.2": "在不杀死目标的前提下磨掉威胁",
   "worldcombat.skill.falseswipe.use.3": "收尾前先精确控制目标的剩余血量",
   "worldcombat.skill.falseswipe.description.0": "这一记浅切约 %1$s 的伤害；若数值足以致命，会被截停在目标至少留下 1 HP。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.falseswipe.description.1": "细缝长约 %1$s 格、半宽约 %2$s 格、从脚上划到约 %3$s 格高。",
+  "worldcombat.skill.falseswipe.description.1": "细缝长约 %1$s 格、半宽约 %2$s 格、从脚上划到约 %3$s 格高；沿缝的每个非友方各被切中一次。",
   "worldcombat.skill.falseswipe.option.on": "全力收手：威力约 ×1.18、切距 +0.2 格，代价是起手 +3 刻、冷却 +6 刻——更沉但更慢。",
   "worldcombat.skill.falseswipe.option.off": "点到为止：威力约 ×0.82、出手更快、冷却更短——更轻更利落。",
   "worldcombat.skill.falseswipe.timing": "可划到 %1$s 格内，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",

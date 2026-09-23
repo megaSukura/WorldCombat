@@ -24,10 +24,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: dualwingbeatId,
         cooldownParameter: "recharge",
         name: "Dual Wingbeat",
-        description: "The user slams the target with its wings to inflict damage. The target is hit twice in a row.",
+        description: "张开双翼俯冲而下：一只翅膀先拍下去、把目标拍开，另一只翅膀在上掀时顺着空当反拍，第一拍命中则第二拍更重。俯冲式贴脸更重、把身位交出去；悬停式隔空拍出风压、射程更远。",
         uses: ["一次俯冲、两只翅膀各拍一下", "先拍开再上掀，把同一个目标连吃两拍", "把身前一小片扇区里的对手扫开"],
         kind: "enemy",
         range: 5.6,

@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: shadowsneakId,
         cooldownParameter: "recharge",
         name: "Shadow Sneak",
-        description: "The user extends its shadow and strikes the target from behind at blinding speed. This move always goes first.",
+        description: "本人不动，脚下的影子钻出去，从对手的背后立起一刀——不需要视线，绕过墙角也能刺到；命中把人朝施法者拽近一步。全族最便宜、最快的先制起手。裹足式改成缠住对手的脚、减速并把目标拉得更狠。",
         uses: ["开局最便宜的一记先手，把对手拽近", "隔着墙角从对手背后刺一刀", "裹足式减速，为下一次出手开团"],
         kind: "enemy",
         range: 6.2,

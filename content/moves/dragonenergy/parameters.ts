@@ -21,7 +21,7 @@
  * 配置 `sacrifice`（献祭式）双向取舍：开启＝龙息 ×1.3，但施放瞬间抽走最大生命的 `lifeDraw`——
  *   血低时会把后续几发一起打薄，甚至自毙；关闭（守成式）＝不出血、威力较低。两向各有适用局面。
  *
- * 伤害段 `dragon` 走共享换算（原始类别 Special）。
+ * 伤害段 `bolt` 走共享换算（原始类别 Special）。
  */
 namespace PokemonSkills {
     actionParameters.define("dragonenergy", {
@@ -75,7 +75,7 @@ namespace PokemonSkills {
             })
     });
 
-    defineDamage("dragonenergy", "dragon", {});
+    defineDamage("dragonenergy", "bolt", {});
 
     stages("dragonenergy", [
         { level: 50, values: { cooldown: 46 } },
@@ -83,8 +83,8 @@ namespace PokemonSkills {
     ]);
 
     describe("dragonenergy", [
-        { key: "description.0", values: ["bolt", "coneLength", "coneAngle"] },
-        { key: "description.1", values: ["push", "chargeTicks"] },
+        { key: "description.0", values: ["bolt","coneLength","coneAngle"] },
+        { key: "description.1", values: ["push","chargeTicks"] },
         { key: "sacrifice.on", values: ["lifeDraw"], when: function (context) { return read(context.detail.values, ["sacrifice"]) === true; } },
         { key: "sacrifice.off", values: [], when: function (context) { return read(context.detail.values, ["sacrifice"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

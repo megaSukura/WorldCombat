@@ -134,9 +134,9 @@ namespace PokemonSkills {
     ]);
 
     describe("feint", [
-        { key: "description.0", values: ["jab", "expose"] },
-        { key: "description.1", values: ["wardBreak", "reach"] },
-        { key: "description.2", values: ["radius", "push"] },
+        { key: "description.0", values: ["jab","expose"] },
+        { key: "description.1", values: ["wardBreak","reach"] },
+        { key: "description.2", values: ["radius","push"] },
         { key: "commit.on", values: [], when: function (context) { return read(context.detail.values, ["commit"]) === true; } },
         { key: "commit.off", values: [], when: function (context) { return read(context.detail.values, ["commit"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },

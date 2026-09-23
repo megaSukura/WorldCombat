@@ -126,8 +126,8 @@ namespace PokemonSkills {
     ]);
 
     describe(furyswipesId, [
-        { key: "description.0", values: ["rake", "cuts", "accuracy"] },
-        { key: "description.1", values: ["reach", "span", "step", "gap"] },
+        { key: "description.0", values: ["rake","cuts","accuracy"] },
+        { key: "description.1", values: ["reach","span","step","gap"] },
         { key: "pounce.on", values: [], when: function (context) { return read(context.detail.values, ["pounce"]) === true; } },
         { key: "pounce.off", values: [], when: function (context) { return read(context.detail.values, ["pounce"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -113,9 +113,9 @@ namespace PokemonSkills {
     ]);
 
     describe("snore", [
-        { key: "description.0", values: ["blast", "echoes"] },
+        { key: "description.0", values: ["blast","echoes"] },
         { key: "description.1", values: ["span", "width"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks"] },
         { key: "echo.on", values: [], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
         { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
         { key: "timing", values: ["range", "stir", "settle", "pp", "recharge"] },

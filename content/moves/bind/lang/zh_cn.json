@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.bind.summary": "甩出一根绷在两者之间的缚索：长身或藤蔓缠住目标，另一头系在自己身上。目标想跑就被拽回来，绳每勒一下更紧一点；自己也被张力拖慢。目标能动、能打，却走不出这根绳——除非把绳一步扯断，或等它走完。",
+  "worldcombat.skill.bind.summary": "甩出一根绷在两者之间的缚索：长身或藤蔓缠住一个目标，另一头系在自己身上。目标想跑就被拽回来，绳每勒一下更紧一点；被拴住的目标走得更慢，拉绳的自己也一样。目标能动、能打，却走不出这根绳——除非把绳一步扯断、等它走完，或任一方身上的束缚被清除。",
   "worldcombat.skill.bind.use.0": "把一个想跑的目标拴在身边拖着走",
   "worldcombat.skill.bind.use.1": "用持续收紧的伤害压住一个难缠目标",
   "worldcombat.skill.bind.use.2": "把对手从掩体或水里拖出来",
-  "worldcombat.skill.bind.description.0": "甩出绳在 %2$s 格内缠住一个目标，抓取判定半径 %3$s 格，缠上先结算约 %1$s 的接触伤害。",
-  "worldcombat.skill.bind.description.1": "绳长 %1$s 格，目标超出就被以每刻 %2$s 格拉回；每 %4$s 勒一次，每勒一下后续威力与绳长各收紧 %3$s。",
-  "worldcombat.skill.bind.description.2": "绳最多留 %1$s，任一方被位移到 %2$s 格之外就绷断。",
-  "worldcombat.skill.bind.choke.on": "勒紧式：绳更短、每勒加紧更快、回拽更狠、留得更久，但基础威力更低、冷却更久。",
-  "worldcombat.skill.bind.choke.off": "牵引式：绳更长、加紧更缓、威力满值，宽容地牵着走，自己也松快些。",
-  "worldcombat.skill.bind.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.bind.description.0": "甩出绳在 %2$s 格内缠住一个目标，抓取判定半径 %3$s 格，缠上先结算约 %1$s 点接触伤害。",
+  "worldcombat.skill.bind.description.1": "绳长 %1$s 格，目标超出绳长就被拉回（每次最多 %2$s 格）；每 %4$s 勒一次，每勒一下威力倍率提高 %3$s，绳也随之收短。",
+  "worldcombat.skill.bind.description.2": "绳最多留 %1$s，任一方被位移到 %2$s 格之外就绷断；任一方身上的束缚被清除或任一方倒下，绳也会松开。",
+  "worldcombat.skill.bind.choke.on": "勒紧式：绳更短、每勒加紧更快、回拽更狠、留得更久、单次威力更高，代价是冷却更久。",
+  "worldcombat.skill.bind.choke.off": "牵引式：绳更长、加紧更缓、回拽较轻、时长较短，单次威力为基础值，宽容地牵着走。",
+  "worldcombat.skill.bind.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.bind.growth.0": "达到 %1$s 级，缚索威力提升至 %2$s。",
   "worldcombat.skill.bind.growth.1": "达到 %1$s 级，缚索威力提升至 %2$s，绳长提升至 %3$s 格，加紧提升至 %4$s。",
   "worldcombat.skill.bind.value.cinch": "缚索威力",
@@ -26,7 +26,7 @@
   "worldcombat.skill.bind.value.recharge": "冷却",
   "worldcombat.skill.bind.value.targetWeight": "目标体重",
   "worldcombat.skill.bind.preference.choke": "勒紧式",
-  "worldcombat.skill.bind.preference.choke.help": "开启：绳更短、每勒加紧更快、回拽更狠、留得更久，但基础威力更低、冷却更久，目标被死死拖在脚边；关闭（牵引式）：绳更长、加紧更缓、威力满值，宽容地牵着走，自己也松快些。",
+  "worldcombat.skill.bind.preference.choke.help": "开启：绳更短、每勒加紧更快、回拽更狠、留得更久、单次威力更高，但冷却更久，目标被死死拖在脚边；关闭（牵引式）：绳更长、加紧更缓、回拽较轻、时长较短、单次威力为基础值，宽容地牵着走。",
   "worldcombat.skill.bind.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.bind.preference.ai.maxChase.help": "超过这个距离就不主动甩绳，先走近。绳够不到就会甩空，调大只在追击时更容易落空。",
   "worldcombat.skill.bind.preference.ai.preferRunners": "先拴跑得快的",
@@ -35,5 +35,6 @@
   "effect.world_combat.bind_hold": "拉绳牵引",
   "world_combat.move.bind.text.grip": "拴住 · 勒紧 %1$s 档",
   "world_combat.move.bind.text.release": "绳松开了",
-  "world_combat.move.bind.text.snap": "绳子绷断"
+  "world_combat.move.bind.text.snap": "绳子绷断",
+  "worldcombat.skill.bind.description.slow": "被拴住的目标移动速度降低 25%，拉绳的施放者自己也降低 22%；绳松开后减速随之消失。"
 }

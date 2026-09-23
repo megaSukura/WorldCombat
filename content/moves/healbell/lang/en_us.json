@@ -3,11 +3,11 @@
   "worldcombat.skill.healbell.use.0": "Wipe a whole team's statuses after the foe lands several",
   "worldcombat.skill.healbell.use.1": "Wake a sleeping ally and free a paralysed one",
   "worldcombat.skill.healbell.use.2": "Clear the team at once when everyone stands close",
-  "worldcombat.skill.healbell.description.0": "The bell reaches %1$s blocks around the user and peals %2$s times; each peal clears every afflicted body in range.",
-  "worldcombat.skill.healbell.description.1": "Cleanse nearby allies once every %1$s.",
+  "worldcombat.skill.healbell.description.0": "Centred on the user, each peal covers the user and allies within %1$s blocks, and one cast rings %2$s times; every peal clears all harmful status effects (including vanilla and mod effects) from everyone in range. It does not heal and leaves no lasting effect.",
+  "worldcombat.skill.healbell.description.1": "Another peal follows every %1$s, re-cleansing whoever in range carries a status at that moment; it cannot be used when no one in range has anything to cleanse.",
   "worldcombat.skill.healbell.stance.resonant": "Long peal: x1.25 radius and one extra ring, at the cost of a longer wind-up and cooldown (one thorough cleanse).",
   "worldcombat.skill.healbell.stance.short": "Short peal: faster wind-up and cooldown with the base radius and ring count (a more frequent purge).",
-  "worldcombat.skill.healbell.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast. It cannot move while preparing and can be interrupted.",
+  "worldcombat.skill.healbell.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast. It cannot move while preparing and can be interrupted.",
   "worldcombat.skill.healbell.value.chimeRadius": "Chime radius",
   "worldcombat.skill.healbell.value.peals": "Peals",
   "worldcombat.skill.healbell.value.pealGap": "Peal gap",
@@ -23,6 +23,6 @@
   "worldcombat.skill.healbell.preference.ai.chimeReach.help": "Allies within this distance count as being in the bell; lower rings only when they are adjacent, higher rings for allies further out.",
   "world_combat.move.healbell.text.cleanse": "Heal bell x%1$s",
   "world_combat.move.healbell.text.none": "Nothing to cleanse",
-  "worldcombat.skill.healbell.growth.0": "At level %1$s, cooldown becomes %2$s.",
-  "worldcombat.skill.healbell.growth.1": "At level %1$s, cooldown becomes %2$s."
+  "worldcombat.skill.healbell.growth.0": "From level %1$s, cooldown is reduced by an extra 1 seconds.",
+  "worldcombat.skill.healbell.growth.1": "From level %1$s, the extra cooldown reduction becomes 2.1 seconds, replacing the earlier reduction."
 }

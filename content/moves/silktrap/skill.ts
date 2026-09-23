@@ -106,7 +106,7 @@ namespace PokemonSkills {
         id: "silktrap",
         cooldownParameter: "charge",
         name: "Silk Trap",
-        description: "The user spins a silken trap that blocks damaging attacks by a total pool; contact lowers the attacker's Speed and pins it briefly. Status moves pass through.",
+        description: "铺开一张丝网保护自己，按总量挡下对手的伤害招式（超出的伤害照常命中），并黏住用接触攻击撞上来的敌人——速度被压低、脚被缠住而无法移动；变化招式会穿过丝网。",
         uses: ["黏住冲上来的近战，让它既慢又动不了", "为队友拉开距离争取时间", "用最韧的一张网硬挡远程伤害"],
         kind: "self",
         range: 0,

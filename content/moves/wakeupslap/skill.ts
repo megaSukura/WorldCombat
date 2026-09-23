@@ -15,10 +15,11 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: wakeupslapId,
         cooldownParameter: "recharge",
         name: "Wake-Up Slap",
-        description: "This attack inflicts big damage on a sleeping target. This also wakes the target up, however.",
+        description: "一记带整段扑步的重掌：目标正睡眠时威力翻倍，命中后也会把目标拍醒（并让它踉跄片刻）。余震式还能震出一圈余波，把附近的敌人一起拍中、一起惊醒。",
         uses: ["把睡着的对手一掌拍重", "趁睡眠窗口打出翻倍的一记", "余震式一次震醒一圈人"],
         kind: "enemy",
         range: 3.6,

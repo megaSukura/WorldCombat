@@ -85,9 +85,10 @@ namespace PokemonSkills {
     describe("happyhour", [
         { key: "description.0", values: ["banner", "radius"] },
         { key: "description.1", values: ["purse"] },
+        { key: "description.stay", values: [] },
         { key: "lavish.on", values: [], when: function (context) { return read(context.detail.values, ["lavish"]) === true; } },
         { key: "lavish.off", values: [], when: function (context) { return read(context.detail.values, ["lavish"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.banner"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.purse", "tier.1.radius", "tier.1.banner"] }
     ]);

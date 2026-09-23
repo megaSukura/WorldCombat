@@ -107,6 +107,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "acrobatics",
         name: "杂技",
         description: "腾身翻滚着撞向目标；命中后身侧有空位时，从一侧绕过目标。自身没有携带道具时，这一翻威力翻倍。",

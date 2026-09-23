@@ -27,5 +27,6 @@
   "worldcombat.skill.spicyextract.preference.ai.cluster.help": "Prefer throwing when at least this many enemies stand near the target; 1 means throw whenever one is visible.",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation": "Leave post to throw",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation.help": "When on, the companion leaves its post to throw.",
-  "world_combat.move.spicyextract.text.burn": "Scorched (Attack +%1$s / Defence -%2$s)"
+  "world_combat.move.spicyextract.text.burn": "Scorched (Attack +%1$s / Defence -%2$s)",
+  "worldcombat.skill.spicyextract.description.additional": "The Attack and Defence stage changes stay until stages are cleared or the target leaves combat; the haze itself deals no damage."
 }

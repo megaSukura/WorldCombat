@@ -118,8 +118,9 @@ namespace PokemonSkills {
     ]);
 
     describe("trailblaze", [
-        { key: "description.0", values: ["strike", "leap", "pace"] },
-        { key: "description.1", values: ["haste", "push", "girth"] },
+        { key: "description.0", values: ["strike","leap","pace"] },
+        { key: "description.1", values: ["haste","push","girth"] },
+        { key: "description.cover", values: [] },
         { key: "overshoot.on", values: [], when: function (context) { return read(context.detail.values, ["overshoot"]) === true; } },
         { key: "overshoot.off", values: [], when: function (context) { return read(context.detail.values, ["overshoot"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

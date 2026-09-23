@@ -3,7 +3,7 @@
   "worldcombat.skill.gigatonhammer.use.0": "旋身蓄力后把巨锤抡下",
   "worldcombat.skill.gigatonhammer.use.1": "用地面冲击波把沿线敌人一起顶开",
   "worldcombat.skill.gigatonhammer.use.2": "被围时用横扫式扫过一圈",
-  "worldcombat.skill.gigatonhammer.description.0": "锤击 %1$s 威力、冲击波 %2$s 威力（走物攻），落锤点 %3$s 格，冲击波长度 %4$s 格。",
+  "worldcombat.skill.gigatonhammer.description.0": "巨锤落在身前 %3$s 格处，正中的主目标受到约 %1$s 点物理伤害；锤落沿地面掀起一道长约 %4$s 格的地面冲击波，被波及的其他敌人各受到约 %2$s 点物理伤害（都按物攻结算）。",
   "worldcombat.skill.gigatonhammer.description.1": "冲击波半宽 %1$s 格，击退目标 %2$s 格；蓄力需要 %3$s。",
   "worldcombat.skill.gigatonhammer.description.2": "抡完这一锤后禁复 %1$s：这段时间内不能再次抡锤，换成任何别的招式都会让它提前恢复。",
   "worldcombat.skill.gigatonhammer.sweep.on": "当前横扫式：旋身把巨锤扫过一圈，身边一圈敌人都吃到锤击、冲击波更长；代价是威力 ×0.75、收招 +6 刻、冷却 +8 刻。",

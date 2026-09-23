@@ -28,5 +28,6 @@
   "worldcombat.skill.wonderroom.preference.ai.leaveStation.help": "On, a companion holding its station will step out to raise the space.",
   "world_combat.move.wonderroom.text.open": "Wonder room up %1$s s",
   "world_combat.move.wonderroom.text.swap": "Defence and Sp. Def trade places",
-  "effect.world_combat.wonderroom_swap": "Defences swapped"
+  "effect.world_combat.wonderroom_swap": "Defences swapped",
+  "worldcombat.skill.wonderroom.description.swap": "A body standing inside has its Defence and Sp. Def swapped, snapping back the moment it steps out or the space ends; only bodies that carry both stats are affected."
 }

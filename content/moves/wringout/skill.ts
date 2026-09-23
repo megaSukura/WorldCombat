@@ -16,7 +16,7 @@ namespace PokemonSkills {
         id: wringoutId,
         cooldownParameter: "recharge",
         name: "Wring Out",
-        description: "The user powerfully wrings the target. The more HP the target has, the greater the move's power.",
+        description: "一圈螺旋力从脚到头缠上对手并越拧越紧，把它的力气绞出来：特攻决定拧进去多深，对手此刻剩余的生命越满，威力越大。它是三压招里唯一以特攻驱动、也是唯一能绞两段的一记：双绞式在第一次拧过之后再拧一记，第二段按对手当时的血量重算。",
         uses: ["开局对满血的目标绞出最重的一记", "双绞式用第二拧补掉剩下的血量", "用特攻高的个体把整条血拧成伤害"],
         kind: "enemy",
         range: 2.5,

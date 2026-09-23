@@ -177,12 +177,13 @@ namespace PokemonSkills {
     ]);
 
     describe(fissureId, [
-        { key: "description.0", values: ["reach", "sink"] },
+        { key: "description.0", values: ["reach","sink"] },
+        { key: "description.ground", values: [] },
         { key: "description.1", values: ["mark"] },
-        { key: "description.2", values: ["rentTicks", "rentCells"] },
+        { key: "description.2", values: ["rentTicks","rentCells"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.sink"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.sink", "tier.1.reach", "tier.1.rentTicks"] }
     ]);

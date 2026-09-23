@@ -152,9 +152,10 @@ namespace PokemonSkills {
     ]);
 
     describe(iceballId, [
-        { key: "description.0", values: ["ball", "passes"] },
+        { key: "description.0", values: ["ball","passes"] },
         { key: "description.1", values: ["ramp", "cap", "speed", "radius"] },
-        { key: "description.2", values: ["flight", "gap", "frostCells", "frostTicks"] },
+        { key: "description.2", values: ["flight","gap","frostCells","frostTicks"] },
+        { key: "description.stance", values: [] },
         { key: "thick.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "thick.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

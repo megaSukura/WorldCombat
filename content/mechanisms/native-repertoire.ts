@@ -57,7 +57,10 @@ namespace NativeRepertoire {
         ready?: (action: CombatAction, config: any) => string;
         /** Telegraph the preparation and return its duration in ticks; `prepare` is the value `resolve` produced for this cast, return it to keep it. */
         windup?: (action: CombatAction, config: any, prepare: number) => number;
-        freeMovement?: boolean;
+        /** Requires exclusive control of the user's movement (self displacement, anchoring or a movement lock); unavailable while carrying a rider or riding. */
+        freeMovement?: boolean | ((config: any) => boolean);
+        /** The user must physically stand on the ground, checked both before preparation and before payment. */
+        requiresGround?: boolean;
         flags?: NativeLoadout.Policy["flags"];
         eligibility?: NativeLoadout.Policy["eligibility"];
         interruptible?: LivingActions.Lifecycle["interruptible"];
@@ -249,10 +252,16 @@ namespace NativeRepertoire {
                 var runtime=skill.resolve?skill.resolve(pokemon,config(world,world.source(),skill.id),world,world.source()):skill;
                 return Math.min(maximum,runtime.range===undefined?skill.range:runtime.range);
             });
-            if (skill.freeMovement)
+            if (skill.freeMovement || skill.requiresGround)
                 NativeLoadout.availableWhen(skill.id, function (world, pokemon) {
-                    return pokemon.vehicle() || pokemon.passenger() ? "mounted-control" : "";
+                    return movementReason(skill, pokemon, typeof skill.freeMovement === "function" ? config(world, world.source(), skill.id) : skill.defaults);
                 });
+        }
+        function movementReason(skill: Skill, pokemon: CombatPokemon, settings: any): string {
+            var independent = typeof skill.freeMovement === "function" ? skill.freeMovement(settings) : skill.freeMovement;
+            if (independent && (pokemon.vehicle() || pokemon.passenger())) return "mounted-control";
+            if (skill.requiresGround && String(pokemon.activeState()) === "sent-out" && !pokemon.grounded()) return "not-grounded";
+            return "";
         }
         function installChannel(): void {
             CobblemonCombat.channel(options.channel || options.namespace + ":skills", function (request) {
@@ -317,7 +326,7 @@ namespace NativeRepertoire {
                         pp: move ? move.pp() : null, maxPp: move ? move.maxPp() : CobblemonCombat.moveTemplate(skill.id).maxPp(), fields: skill.id === focus ? skill.fields : [],
                         values: values, overrides: preferences.overrides(skill.id, String(pokemon.id()), store), indicator: skill.indicator ? skill.indicator(values, pokemon) : null,
                         revision: store.read(skill.id, String(pokemon.id())), state: prepared ? JSON.parse(String(prepared)) : {},
-                        unavailableReason: skill.freeMovement && (pokemon.vehicle() || pokemon.passenger()) ? "mounted-control" : "" };
+                        unavailableReason: movementReason(skill, pokemon, values) };
                     return skill.inspect ? skill.inspect(pokemon, detail, { full: skill.id === focus, attributes: attributes,
                         world: skill.id === focus && request.world ? request.world() : null, actor: skill.id === focus && request.actor ? request.actor() : null, state: function (id) {
                         var data = stored(key => request.data(key), "state", id).value; return data ? JSON.parse(String(data)) : {};

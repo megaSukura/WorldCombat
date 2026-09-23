@@ -36,7 +36,7 @@ namespace PokemonSkills {
         id: glareId,
         cooldownParameter: "recharge",
         name: "Glare",
-        description: "The user intimidates the target with the pattern on its belly to cause paralysis.",
+        description: "昂起身体、把腹部花纹撑开成一片扇形怒目，把面前扇形里所有看得见它的敌人一起镇住。它不造成伤害，靠的是宽、必中与三式里最长的麻痹；躲到墙后、绕到侧背或站到扇形之外就完全不受影响。电属性对麻痹免疫。",
         uses: ["一次镇住围上来的一群", "把最硬的近战钉在原地", "逼对手绕开或退到扇形之外"],
         kind: "enemy",
         range: 6,

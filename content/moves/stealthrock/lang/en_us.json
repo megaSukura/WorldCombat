@@ -3,8 +3,8 @@
   "worldcombat.skill.stealthrock.use.0": "Seed a stone field on the ground the foe must cross",
   "worldcombat.skill.stealthrock.use.1": "Punish targets that are weak to Rock",
   "worldcombat.skill.stealthrock.use.2": "Reach foes that try to fly over",
-  "worldcombat.skill.stealthrock.description.0": "Each stone blow is about %1$s power; it is Rock and mostly ignores the target's Defence, so the Rock matchup decides it - a 4x-weak target takes far more than a resistant one. Criticals settle at impact.",
-  "worldcombat.skill.stealthrock.description.1": "The field is about %1$s blocks wide and hovers for %2$s; a foe that stays inside is struck again every %3$s. The floating form does not require the target to be grounded - airborne foes are struck as well.",
+  "worldcombat.skill.stealthrock.description.0": "Each stone blow deals about %1$s Rock special damage; it mostly ignores the target's Defence, so the Rock matchup decides it - a 4x-weak target takes far more than a resistant one. Criticals settle at impact.",
+  "worldcombat.skill.stealthrock.description.1": "The field is placed where you choose and stays there no matter how the target moves; its radius is about %1$s blocks and it hovers for %2$s. Only enemies trigger it: a foe that steps in is struck at once, and one that stays is struck again every %3$s. The floating form does not require the target to be grounded and catches airborne foes too; the heavy form reaches only grounded targets.",
   "worldcombat.skill.stealthrock.option.on": "Heavy on: each blow is about x1.3 and the field lasts longer, but it narrows to about 0.85x, the wind-up is +3 ticks, the cooldown is longer, and the stones sink to the ground so only grounded targets are struck.",
   "worldcombat.skill.stealthrock.option.off": "Heavy off (floating): the field lays about 1.2x wider, the wind-up is faster and airborne foes are caught too - each blow is about x0.8 and the field lasts less long.",
   "worldcombat.skill.stealthrock.timing": "Raise the field at a point within %1$s: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s from commit.",
@@ -25,5 +25,6 @@
   "worldcombat.skill.stealthrock.preference.ai.minFoes": "Prefer clusters",
   "worldcombat.skill.stealthrock.preference.ai.minFoes.help": "Raising the field is prioritised only when at least this many foes crowd together; set to 1 to raise on sight.",
   "world_combat.move.stealthrock.text.raise": "Stealth Rock rises",
-  "world_combat.move.stealthrock.text.hit": "Struck by stealth rock"
+  "world_combat.move.stealthrock.text.hit": "Struck by stealth rock",
+  "worldcombat.skill.stealthrock.description.2": "Your fields do not stack: raising a new one that overlaps an existing field first clears the old one."
 }

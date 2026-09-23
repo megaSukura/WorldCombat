@@ -2,10 +2,10 @@
   "worldcombat.skill.leechlife.summary": "咬住目标后持续汲取生命。期间停留原地，目标拉开距离便会挣脱。",
   "worldcombat.skill.leechlife.description.0": "撕咬入手造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.leechlife.description.1": "咬住后每拍抽走约 %1$s 的伤害，共抽 %2$s 拍。",
-  "worldcombat.skill.leechlife.description.2": "每拍造成的伤害有 %1$s 转回自身生命；目标拉出 %2$s 格则钩子脱开、抽吸提前结束。",
-  "worldcombat.skill.leechlife.deep.on": "深咬式：三拍重吸，每拍更狠、回血比例更高、钩子挂得更远，但起手收招更慢、每拍间隔更长，目标更容易跑掉。",
+  "worldcombat.skill.leechlife.description.2": "这一咬和每一拍的伤害都有 %1$s 转回自身生命；目标拉出 %2$s 格则钩子脱开、抽吸提前结束。",
+  "worldcombat.skill.leechlife.deep.on": "深咬式：三拍重吸，每拍更狠、回血比例更高，但起手收招更慢、每拍间隔更长，目标更容易跑掉。",
   "worldcombat.skill.leechlife.deep.off": "快吸式：五拍快吸，节奏紧、回得快，但每口更轻、总抽量分得更散。",
-  "worldcombat.skill.leechlife.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %5$s PP，冷却 %4$s 秒。",
+  "worldcombat.skill.leechlife.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.leechlife.growth.0": "%1$s 级起咬口威力抬到 %2$s。",
   "worldcombat.skill.leechlife.growth.1": "%1$s 级起咬口威力抬到 %2$s、每拍抽量升到 %3$s。",
   "worldcombat.skill.leechlife.use.0": "咬住一个目标持续抽血续航",
@@ -23,7 +23,7 @@
   "worldcombat.skill.leechlife.value.aftercast": "收招",
   "worldcombat.skill.leechlife.value.recharge": "冷却",
   "worldcombat.skill.leechlife.preference.deep": "深咬式",
-  "worldcombat.skill.leechlife.preference.deep.help": "开启：三拍重吸、每拍更狠、回血比例更高、钩子挂得更远，但起手收招更慢、每拍间隔更长，目标更容易在这段里跑掉。关闭：五拍快吸，节奏紧、回得快，但每口更轻、总抽量分得更散。",
+  "worldcombat.skill.leechlife.preference.deep.help": "开启：三拍重吸、每拍更狠、回血比例更高，但起手收招更慢、每拍间隔更长，目标更容易在这段里跑掉。关闭：五拍快吸，节奏紧、回得快，但每口更轻、总抽量分得更散。",
   "worldcombat.skill.leechlife.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.leechlife.preference.ai.maxChase.help": "超过这个距离就不主动咬上去，先走近。越大追得越执着。",
   "worldcombat.skill.leechlife.preference.ai.healBelow": "回血优先阈值",
@@ -31,5 +31,7 @@
   "world_combat.move.leechlife.text.bite": "咬中",
   "world_combat.move.leechlife.text.draw": "第 %1$s/%2$s 口",
   "world_combat.move.leechlife.text.snap": "钩子脱开",
-  "world_combat.move.leechlife.text.miss": "扑空"
+  "world_combat.move.leechlife.text.miss": "扑空",
+  "worldcombat.skill.leechlife.description.additional": "口器扫过的判定半径 %1$s 格；只有第一口咬中才会开始抽吸，之后每 %2$s 抽一拍。",
+  "worldcombat.skill.leechlife.description.field": "整段抽吸期间自身原地不动，直到抽完、钩子脱开或目标倒下。"
 }

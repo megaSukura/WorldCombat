@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.pounce.summary": "从远处高高跃起，沿一条抛物线甩过空中、落在目标身上：体重下坠把它压住，腿脚随即缠住它的动作，让它沉下来、慢下来。命中后施法者留在目标身边，目标挂着 clung 身份。缠身式缠得更久、掉速更深，单发更轻。",
-  "worldcombat.skill.pounce.description.0": "落在活物身上造成 %1$s 的接触伤害，并让被缠住的目标下降 %2$s 级速度（对其他战斗者落到移动速度属性）。",
+  "worldcombat.skill.pounce.summary": "从远处高高跃起，沿一条抛物线甩过空中、落在目标身上：体重下坠把它压住，腿脚随即缠住它的动作，让它沉下来、慢下来，并只结算最先碰上的那一个。命中后施法者留在目标身边。缠身式缠得更久、掉速更深，单发更轻。",
+  "worldcombat.skill.pounce.description.0": "扑击只结算空中最先碰上的那个非友方活物：落在它身上造成约 %1$s 点物理伤害，并让它速度能力等级下降 %2$s 级（对其他战斗者落到移动速度属性）；一路没碰到人就落空。",
   "worldcombat.skill.pounce.description.1": "一次扑跃够出 %1$s 格、每刻推进 %2$s 格，空中碰撞半径 %3$s 格。",
-  "worldcombat.skill.pounce.description.2": "clung 身份挂 %1$s；身体够沉或缠身时，目标腿脚被压住 %2$s。",
+  "worldcombat.skill.pounce.description.2": "缠身持续 %1$s 秒；身体够沉或缠身式扑击时，目标的腿脚被别住 %2$s 秒，期间无法移动。",
   "worldcombat.skill.pounce.cling.on": "缠身式：缠得更久、掉速更深、把腿别住更久，单发更轻、收招与冷却更久。",
   "worldcombat.skill.pounce.cling.off": "蹬扑式：一记更重更干脆的扑击，缠身很短、回复更快。",
   "worldcombat.skill.pounce.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

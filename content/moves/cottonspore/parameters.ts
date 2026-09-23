@@ -60,9 +60,9 @@ namespace PokemonSkills {
             "两次炸开之间的等待；等级越高越熟练。")
     });
     describe(cottonsporeId, [
-        { key: "description.0", values: ["speedDrop", "clingTicks"] },
+        { key: "description.0", values: ["speedDrop","clingTicks"] },
         { key: "description.1", values: ["burstRadius", "maxTargets"] },
         { key: "description.2", values: ["tempo", "recharge"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

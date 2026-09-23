@@ -26,5 +26,6 @@
   "worldcombat.skill.honeclaws.preference.ai.minGap.help": "威胁近于这个距离时不再磨爪、直接攻击；调大更常在近身时放弃磨砺。",
   "world_combat.move.honeclaws.text.honed": "磨爪 · 物攻 +%1$s 命中 +%2$s",
   "world_combat.move.honeclaws.text.faded": "锋口钝去",
-  "effect.world_combat.honeclaws_edge": "锋口"
+  "effect.world_combat.honeclaws_edge": "锋口",
+  "worldcombat.skill.honeclaws.description.additional": "锋口走完或被提前清除时，都会按本次实际磨出的级数把攻击与命中收回；若某项已到能力上限，本次只会抬高更少，结束时也只收回实际获得的部分。"
 }

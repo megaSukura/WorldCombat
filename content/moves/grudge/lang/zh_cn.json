@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.grudge.summary": "当场立下一段怨念：这段时间里谁亲手把你打倒，它刚刚送走你的那一招 PP 会被全部掏空。它不护住你，只让「亲手了结我」在事后付代价；已被怨念缠上时再立会失败。",
+  "worldcombat.skill.grudge.summary": "在自己身上立下怨念。期间被敌人打倒时，清空宝可梦凶手致命招式的PP；普通生物或玩家用来击杀的攻击方式则被封住10秒。",
   "worldcombat.skill.grudge.use.0": "惩罚那个一定要亲手补刀的人",
   "worldcombat.skill.grudge.use.1": "让对手的关键招式再也用不出来",
   "worldcombat.skill.grudge.use.2": "临死前把对手赖以为生的招废掉",
-  "worldcombat.skill.grudge.description.0": "立起的怨念在身上留 %1$s；这段时间里，谁亲手把你打倒，它刚用过的那一招 PP 会被清零。",
-  "worldcombat.skill.grudge.description.1": "立怨要 %1$s，冷却 %2$s。凶手不是宝可梦、或读不到它刚用过的招时，怨念只空扑一场。",
+  "worldcombat.skill.grudge.description.0": "怨念保留 %1$s；期间被敌人亲手打倒，宝可梦凶手刚使用的招式PP归零。普通凶手随后10秒内不能用同一种近战、箭矢等攻击造成伤害，牛奶可解除偿债状态。",
+  "worldcombat.skill.grudge.description.1": "起手 %1$s，冷却 %2$s。只有实际把自己打倒的敌人承担怨念。",
   "worldcombat.skill.grudge.deep.0": "刻骨：怨念更久，但整段时间被钉在原地、冷却更长。",
   "worldcombat.skill.grudge.deep.1": "轻怨：怨念更短，但可以自由走位、冷却更短——也更早散去。",
-  "worldcombat.skill.grudge.timing": "对自己施放，准备 %2$s 秒后消耗 %4$s PP；收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.grudge.timing": "对自己施放，起手 %1$s，收招 %2$s，消耗 %3$s PP，冷却 %4$s。",
   "worldcombat.skill.grudge.value.watchTicks": "怨念时长",
   "worldcombat.skill.grudge.value.eyeRadius": "怨眼半径",
   "worldcombat.skill.grudge.value.motes": "怨念数量",
@@ -23,8 +23,9 @@
   "worldcombat.skill.grudge.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.grudge.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去立怨。",
   "world_combat.move.grudge.text.mark": "怨念立下 %1$s 秒",
-  "world_combat.move.grudge.text.drain": "怨念：那一手的 PP 被掏空",
+  "world_combat.move.grudge.text.drain": "怨念索偿：致命一手已封住",
   "world_combat.move.grudge.text.wasted": "怨念空扑一场",
   "world_combat.move.grudge.text.lift": "怨念散去",
-  "effect.world_combat.grudge_watch": "怨念"
+  "effect.world_combat.grudge_watch": "怨念",
+  "effect.world_combat.grudge_toll": "怨念索偿"
 }

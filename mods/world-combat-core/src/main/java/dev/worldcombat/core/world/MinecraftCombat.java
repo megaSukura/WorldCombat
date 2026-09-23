@@ -706,6 +706,12 @@ public final class MinecraftCombat implements CombatHost {
         var effect = entity.getEffect(holder);
         return effect == null ? null : MinecraftEffectState.capture(entity, effect);
     }
+    @Override public String mobEffectCategory(String id) {
+        var key = net.minecraft.resources.ResourceLocation.tryParse(id);
+        if (key == null) return "";
+        var holder = net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getHolder(key).orElse(null);
+        return holder == null ? "" : holder.value().getCategory().name().toLowerCase(java.util.Locale.ROOT);
+    }
     @Override public MobEffectObservation[] mobEffects(ActorHandle target) {
         var entity = resolve(target); if (entity == null) return new MobEffectObservation[0];
         return entity.getActiveEffects().stream().map(effect -> MinecraftEffectState.capture(entity, effect)).toArray(MobEffectObservation[]::new);

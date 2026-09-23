@@ -1,16 +1,8 @@
-/**
- * 同步干扰 / synchronoise 的伙伴 AI 用途。
- *
- * 什么局面下出手：一个以自身为中心、**只打与自己属性相同的目标**的扫场。整招的开关就是属性比对：
- * `selectTarget`／`accepts`／`available` 都要求目标是与施法者同属性的宝可梦（原版生物没有属性、
- * 永不同频，也不会被选中）；`ready` 要求身周 `ai.maxChase`（默认 9）格内至少站着 `ai.minMatches`
- * （默认 1）个可见、敌对、同属性的目标，否则整招不参与选择——圈里没有同频的人时它只会白扫。
- * 同频的人越多 priority 越高。够不到交给共享接近逻辑。
- */
+/** 伙伴使用本招的频率读取器挑选同频敌人，执行与AI使用相同的资格。 */
 namespace PokemonSkills {
+    CompanionBehavior.registerFact("world_combat:synchronoise_frequency", function (world, actor) { return synchronoiseFrequencies(world, actor); });
     function synchronoiseTypes(context: WorldBehavior.Context, target: CompanionBehavior.Entity): string[] | null {
-        const facts = CompanionBehavior.pokemonFacts(context, target);
-        return facts ? facts.types : null;
+        return CompanionBehavior.fact<string[]>(context, "world_combat:synchronoise_frequency", target) || null;
     }
 
     /** 两组属性是否有交集。 */

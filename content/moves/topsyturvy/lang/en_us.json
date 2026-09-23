@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.topsyturvy.summary": "Hurl a dark mirror shard; whoever it strikes has every stat change on them turned upside down — raised levels become lowered and lowered become raised. The higher a foe has built itself up, the harder it falls; if it is already dragging debuffs, the flip helps it instead, so read its ladder first.",
+  "worldcombat.skill.topsyturvy.summary": "The shard reverses stat stages and swaps paired native effects such as Speed/Slowness and Strength/Weakness. Gains-only form reverses beneficial effects only.",
   "worldcombat.skill.topsyturvy.use.0": "Turn a foe's stacked buffs into an equal pile of debuffs",
   "worldcombat.skill.topsyturvy.use.1": "Yank away the advantage right after a foe maxes its offense",
   "worldcombat.skill.topsyturvy.use.2": "Harass a bulky target that keeps buffing itself",
-  "worldcombat.skill.topsyturvy.description.0": "The shard reaches %1$s blocks and flies at %2$s blocks/tick; everyone it strikes has every non-zero stat change inverted.",
-  "worldcombat.skill.topsyturvy.description.1": "It resolves at a radius of %1$s blocks; a flipped target keeps the inverted mark for about %2$s (recording how many entries turned).",
+  "worldcombat.skill.topsyturvy.description.0": "Reaches %1$s blocks at %2$s blocks per tick and reverses nonzero stat stages. Native effects swap Speed↔Slowness, Strength↔Weakness, Haste↔Mining Fatigue and Luck↔Unluck, retaining strength and remaining time.",
+  "worldcombat.skill.topsyturvy.description.1": "The shard’s collision radius is %1$s blocks. The Topsy-Turvy icon remains for about %2$s as a reminder; transformed effects retain their own clocks.",
   "worldcombat.skill.topsyturvy.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.topsyturvy.option.on": "Selective: only raised entries on the target are flipped, debuffs are left alone — it never accidentally helps a foe; the cost is wind-up +4 ticks, cooldown +20 ticks and reach -1 block.",
   "worldcombat.skill.topsyturvy.option.off": "Total: raised and lowered both flip — longer, faster and cheaper; the cost is that a foe already carrying debuffs gets a boost from the flip.",

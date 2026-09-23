@@ -1,12 +1,4 @@
-/**
- * 怨念 的伙伴 AI 用途：这招自己的一套出手计划——把「亲手了结我」标上价码。
- *
- * 什么局面有意义：有可见的威胁，自己的生命比例掉到 ai.threshold 以下，身上还没有这份怨念，威胁在 ai.maxChase 之内。
- * 对谁出手：自己；不需要接近，由共用任务直接施放（fortify 位）。
- * 候选之间怎么排：生命更低时抬到 70，抢在普通自增益前先立；否则 40 交回普通次序。
- * 放完之后：怨念自己撑着；使用者倒下会把凶手那一手的 PP 掏空。
- * 配置：ai.threshold 决定多残才立；ai.maxChase 决定威胁多近才算数；ai.leaveStation 决定驻守时是否离位靠近。
- */
+/** grudge：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     registerUse("grudge", {
         protocols: ["world_combat:fortify"],

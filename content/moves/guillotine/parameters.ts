@@ -120,7 +120,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["recover"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.span"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.span", "tier.1.arc", "tier.1.mark"] }
     ]);

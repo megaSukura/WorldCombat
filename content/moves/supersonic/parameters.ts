@@ -45,8 +45,9 @@ namespace PokemonSkills {
             unit: " 个", description: "波面上的细响数量；随特攻增长，也决定画面的密度。" })
     });
     describe(supersonicId, [
-        { key: "description.0", values: ["waveReach", "waveSpeed"] },
+        { key: "description.0", values: ["waveReach","waveSpeed"] },
         { key: "description.1", values: ["mistTicks"] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] }
+        { key: "description.settle", values: [] },
+        { key: "description.2", values: ["tempo","aftercast","recharge"] }
     ]);
 }

@@ -1,5 +1,5 @@
 // 龙势：一段可见的窗口状态，只承载共享身份 world_combat:status/dragondance。
-// 攻速等级本身由 NativeEffects.boost 写入公共能力阶梯；窗口走完时由本单元 skill.ts 从移除事件里原样收回。
+// 龙势持有独立的物攻与速度窗口；等级贡献随载体移除自动结束。
 // 启动脚本不引用服务端共享库，标签用字符串字面量。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:dragondance_airy")
     .beneficial()

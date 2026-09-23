@@ -12,9 +12,10 @@ namespace PokemonSkills {
     const bodyslamMissText = "world_combat.move.bodyslam.text.miss";
 
     define({
+        freeMovement: true,
         id: "bodyslam",
         name: "Body Slam",
-        description: "The user attacks by dropping onto the target with its full body weight. This may also leave the target with paralysis.",
+        description: "猛地跳起，用整个身体的重量砸向目标落点：范围内所有敌人受伤并被顶开，越重越可能把它们压麻；震地式摊大范围但单点更轻，压顶式相反。",
         uses: ["从上方压住一个目标", "把落点周围挤在一起的敌人一起震开", "用体重压出更高的麻痹机会"],
         kind: "enemy",
         range: 4,

@@ -121,11 +121,11 @@ namespace PokemonSkills {
     describe("fly", [
         { key: "description.0", values: ["power"] },
         { key: "description.1", values: ["altitude", "climbSpeed"] },
-        { key: "description.2", values: ["hoverTicks", "impactRadius", "press"] },
+        { key: "description.2", values: ["hoverTicks","impactRadius","press"] },
         { key: "description.3", values: [] },
         { key: "description.4", values: [] },
         { key: "stance.track", values: [], when: function (context) { return flyTrack(context.detail.values); } },
-        { key: "stance.pin", values: [], when: function (context) { return !flyTrack(context.detail.values); } },
+        { key: "stance.pin", values: ["maxTargets"], when: function (context) { return !flyTrack(context.detail.values); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: [], when: function (context) { return context.pokemon.level() >= 32; } },
         { key: "growth.1", values: [], when: function (context) { return context.pokemon.level() >= 48; } }

@@ -72,8 +72,9 @@ namespace PokemonSkills {
     });
 
     describe("obstruct", [
-        { key: "description.0", values: ["window", "capacity", "drop"] },
+        { key: "description.0", values: ["window","capacity","drop"] },
+        { key: "description.hold", values: [] },
         { key: "description.1", values: ["raise", "charge"] },
-        { key: "description.2", values: ["fizzle", "pref.barbs"] }
+        { key: "description.2", values: ["fizzle"] }
     ]);
 }

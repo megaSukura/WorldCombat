@@ -45,7 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: slackoffId, name: "偷懒",
-        description: "就地一摊偷懒休息：立刻回复最大生命的一半左右，是同族里起手最快的一口；代价是随后一段「倦怠」，移动速度下降，直到缓过来为止。",
+        description: "就地一摊偷懒休息：立刻回复最大生命的一半左右，是同族里起手最快的一口；代价是随后一段「倦怠」，期间移动速度降低 22%，直到缓过来为止。",
         uses: ["用最短的起手补一大口", "在对手够不到的间隙里偷懒", "拿接下来的机动力换当下的生命"],
         kind: "self", range: 0, prepare: 6, active: 0, recover: 12, cooldown: 200, style: "slack", maximumTicks: 260,
         defaults: { deep: false },

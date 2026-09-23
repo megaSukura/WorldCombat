@@ -55,6 +55,7 @@ namespace PokemonSkills {
     stages("skillswap", [{ level: 40, values: { window: 800, recharge: 70 } }, { level: 55, values: { window: 1000, recharge: 60 } }]);
 
     describe("skillswap", [
+        { key: "world", values: ["window"] },
         { key: "description.0", values: ["reach", "window"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },

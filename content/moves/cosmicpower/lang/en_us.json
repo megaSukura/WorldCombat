@@ -4,7 +4,7 @@
   "worldcombat.skill.cosmicpower.use.1": "At night the stars are stronger and raise one extra stage",
   "worldcombat.skill.cosmicpower.use.2": "Thicken the shell before a beating, then turn back into the fight",
   "worldcombat.skill.cosmicpower.description.0": "Cosmic Power raises Defense by %1$s stages and Special Defense by %2$s; at night (sunlight below a quarter) each rises one more.",
-  "worldcombat.skill.cosmicpower.description.1": "The starlight lasts about %1$s.",
+  "worldcombat.skill.cosmicpower.description.1": "The starlight lasts about %1$s; when it fades or is removed, both of those Defense and Special Defense stages are taken back.",
   "worldcombat.skill.cosmicpower.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.cosmicpower.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.cosmicpower.growth.0": "At level %1$s the starlight lasts %2$s and the cooldown drops to %3$s s.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.cosmicpower.preference.ai.panic.help": "Below this health ratio the companion gathers before the shared order; larger enters the defensive stance sooner, smaller only when nearly down.",
   "world_combat.move.cosmicpower.text.settle": "Cosmic Power (Def +%1$s / Sp. Def +%2$s / %3$s s)",
   "world_combat.move.cosmicpower.text.wane": "Starlight faded",
-  "effect.world_combat.cosmic_surge": "Cosmic Power"
+  "effect.world_combat.cosmic_surge": "Cosmic Power",
+  "worldcombat.skill.cosmicpower.description.2": "The user stands still while casting and the telegraph is long; being interrupted before the starlight lands grants nothing."
 }

@@ -74,8 +74,8 @@ namespace PokemonSkills {
     });
 
     describe(allySwitchId, [
-        { key: "description.0", values: ["swapRange", "sweep"] },
-        { key: "tandem.on", values: ["tempo", "wait"], when: function (context) { return read(context.detail.values, ["tandem"]) === true; } },
+        { key: "description.0", values: ["swapRange","sweep"] },
+        { key: "tandem.on", values: [], when: function (context) { return read(context.detail.values, ["tandem"]) === true; } },
         { key: "tandem.off", values: [], when: function (context) { return read(context.detail.values, ["tandem"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

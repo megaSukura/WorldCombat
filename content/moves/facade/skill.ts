@@ -28,9 +28,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "facade",
         name: "Facade",
-        description: "This move's power is doubled if the user is poisoned, burned, or paralyzed.",
+        description: "带着身上的异常硬顶过去：处于中毒／剧毒、灼伤、麻痹或冰冻时威力翻倍，越剩不下命也越狠。撞实后把目标顶开；开启“变本加厉”还能打得更重，但会反噬自己。",
         uses: ["带伤硬顶", "残血时反打", "把贴身之敌顶开"],
         kind: "enemy",
         range: 4,

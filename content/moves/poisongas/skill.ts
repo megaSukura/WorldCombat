@@ -104,7 +104,7 @@ namespace PokemonSkills {
     define({
         id: "poisongas",
         name: "Poison Gas",
-        description: "A cloud of poison gas is sprayed in the faces of opposing Pokemon, poisoning those it hits.",
+        description: "朝选定处喷出一片贴地的毒瓦斯云。云罩住谁谁就中毒，站在里面毒素一直被维持，走出云外按自己的时间走完；云里一旦出现火源就整片爆燃，把里面的人烧伤。",
         uses: ["封住一条通道或门口", "一次罩住几个挤在一起的目标", "把火种丢进毒云做成爆燃"],
         kind: "point",
         range: 8,

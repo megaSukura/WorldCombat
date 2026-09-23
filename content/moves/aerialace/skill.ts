@@ -18,9 +18,10 @@ namespace PokemonSkills {
     const aerialaceMissText = "world_combat.move.aerialace.text.miss";
 
     define({
+        freeMovement: true,
         id: "aerialace",
         name: "Aerial Ace",
-        description: "The user confounds the target with speed, then slashes. This attack never misses.",
+        description: "一步掠身而过，借速度晃开对手视线再切斩；因为人是朝对手冲过去的，刀必中。掠过的那条线本身就是刀路，扫到路上的敌人各挨数刀，没被挡住时最后落在对手身后。",
         uses: ["一步掠身而过的交叉快斩", "扫过一条线上的所有敌人", "掠过目标落到它身后"],
         kind: "enemy",
         range: 6,

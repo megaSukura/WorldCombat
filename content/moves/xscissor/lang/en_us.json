@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.xscissor.summary": "Cross both scythes like a pair of scissors: the left blade sweeps one half of the arc and the right blade follows on the other half, so a target on the axis is settled twice and the strike point crosses into an X. The closed form focuses the axis and carries a second-blade bonus; the open form covers wider for a shorter cooldown.",
   "worldcombat.skill.xscissor.description.0": "Each blade deals %1$s contact damage to the foes it sweeps.",
-  "worldcombat.skill.xscissor.description.1": "Together the blades sweep a %1$s degree arc; a target on the axis is settled twice, once per blade.",
+  "worldcombat.skill.xscissor.description.1": "The two blades close in front of you, left then right: together they sweep an arc of about %1$s degrees, with about %2$s between the blades; a target on the axis is settled once by each blade.",
   "worldcombat.skill.xscissor.description.2": "In the closed form the second blade deals %1$s extra damage to a target the first blade already cut.",
   "worldcombat.skill.xscissor.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.xscissor.growth.0": "From level %1$s each blade rises to %2$s.",
@@ -19,7 +19,7 @@
   "worldcombat.skill.xscissor.value.aftercast": "Recovery",
   "worldcombat.skill.xscissor.value.recharge": "Cooldown",
   "worldcombat.skill.xscissor.preference.scissor": "Closed form",
-  "worldcombat.skill.xscissor.preference.scissor.help": "On (closed): the opening tightens to 86 degrees and the second blade carries a bonus, at +4 cooldown ticks. Off (open): the opening widens to 128 degrees with a shorter cooldown, at the cost of the second-blade bonus.",
+  "worldcombat.skill.xscissor.preference.scissor.help": "On (closed): the opening tightens to 86 degrees and the second blade carries a bonus against a target the first already cut, at +1 wind-up tick and +4 cooldown ticks. Off (open): the opening widens to 128 degrees with a shorter wind-up and cooldown, at the cost of the second-blade bonus.",
   "worldcombat.skill.xscissor.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.xscissor.preference.ai.maxChase.help": "Beyond this distance it closes in instead of cutting. Larger values open with the cross from further out.",
   "worldcombat.skill.xscissor.preference.ai.crowd": "Cut a line",

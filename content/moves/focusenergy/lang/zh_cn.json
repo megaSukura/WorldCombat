@@ -3,7 +3,7 @@
   "worldcombat.skill.focusenergy.use.0": "开场先吸一口气，让后面每一击都更容易命中要害",
   "worldcombat.skill.focusenergy.use.1": "在对手硬吃连击前把破绽看准",
   "worldcombat.skill.focusenergy.use.2": "逼对手在吐纳走完前不敢贴身",
-  "worldcombat.skill.focusenergy.description.0": "满气后每次伤害命中多约 %1$s 的要害机会；这口气留在身上 %2$s。",
+  "worldcombat.skill.focusenergy.description.0": "聚气期间，你的每次伤害命中都会多出要害机会：它随这口气越沉越深、从零逐渐涨到满气约 %1$s；命中不会消耗它，这口气留在身上 %2$s，走完才散。",
   "worldcombat.skill.focusenergy.deep.on": "深呼吸：附加比例 ×1.15、满气来得更快，代价是起手 %1$s、冷却 %2$s——硬仗前坐稳。",
   "worldcombat.skill.focusenergy.deep.off": "浅呼吸：附加比例略低、满气更慢，换来起手与冷却都更低，适合拉锯里反复补。",
   "worldcombat.skill.focusenergy.description.1": "约 %1$s 后满气。",
@@ -32,5 +32,6 @@
   "world_combat.move.focusenergy.text.ready": "聚气 · %1$s 秒（要害 +%2$s%%）",
   "world_combat.move.focusenergy.text.deep": "聚气·深呼吸 · %1$s 秒（要害 +%2$s%%）",
   "world_combat.move.focusenergy.text.fade": "聚气散去",
-  "effect.world_combat.focus_breath": "聚气"
+  "effect.world_combat.focus_breath": "聚气",
+  "worldcombat.skill.focusenergy.description.2": "身上已有龙声鼓舞时无法聚气。"
 }

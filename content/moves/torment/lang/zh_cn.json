@@ -1,10 +1,10 @@
 {
   "effect.world_combat.torment_itch": "烦躁",
-  "worldcombat.skill.torment.summary": "当面取笑一名对手，让它在一段时间里不能连续使用同一招；重复那一手会被顶回去。",
+  "worldcombat.skill.torment.summary": "让目标烦躁，打乱重复出手的节奏。宝可梦不能连续使用同一招；普通生物和玩家连续使用同一种攻击时，需要多等一拍。",
   "worldcombat.skill.torment.use.0": "拆掉只会一招的对手的节奏",
   "worldcombat.skill.torment.use.1": "逼对手换招",
   "worldcombat.skill.torment.use.2": "惩罚仰赖同一次连击的敌人",
-  "worldcombat.skill.torment.description.0": "取笑能送到 %1$s 格内；命中后目标有 %2$s 不能连续使用同一招。",
+  "worldcombat.skill.torment.description.0": "作用距离 %1$s 格，烦躁持续 %2$s。宝可梦重复上一招会被阻止；普通攻击命中后，1.5秒内同一种近战、箭矢等攻击伤害会被挡下，换一种方式可以继续打。",
   "worldcombat.skill.torment.description.2": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.torment.manner.0": "讥讽：烦躁更长更远，但起手较慢、冷却较长。",
   "worldcombat.skill.torment.manner.1": "怒斥：出手更快、冷却更短，但烦躁更短、取笑距离更近。",

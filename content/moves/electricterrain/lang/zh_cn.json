@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.electricterrain.summary": "把电流按进选定的地面：站在电场上的活体电属性招式威力提高，脚下的电荷让它无法入眠，已经睡着的会被电醒。对双方一视同仁。",
+  "worldcombat.skill.electricterrain.summary": "把电流按进选定的地面：电场内贴地的活体电属性招式威力 ×1.3，脚下的电荷让它无法入眠，已经睡着的会被电醒；对敌我双方同样生效。",
   "worldcombat.skill.electricterrain.use.0": "给电属性招式加成",
   "worldcombat.skill.electricterrain.use.1": "防止队伍被催眠",
   "worldcombat.skill.electricterrain.use.2": "电醒已经睡着的目标",
   "worldcombat.skill.electricterrain.description.0": "在选定地面按进半径 %1$s 格的电场，持续 %2$s。",
-  "worldcombat.skill.electricterrain.description.1": "范围内的活体无法入眠，离开后仍保持清醒 %1$s。",
-  "worldcombat.skill.electricterrain.description.2": "电属性招式威力提高、对双方同样生效。",
+  "worldcombat.skill.electricterrain.description.1": "电场内贴地的活体无法入眠，睡着的会被电醒；每次受到电场补充后可保持清醒最多 %1$s，离开后按剩余时间消退。",
+  "worldcombat.skill.electricterrain.description.2": "带电者使用电属性招式时威力 ×1.3，对敌我双方同样生效。",
   "worldcombat.skill.electricterrain.description.3": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.electricterrain.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 按进电流，收招 %3$s，提交起冷却 %5$s。",
   "worldcombat.skill.electricterrain.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.electricterrain.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去铺电场。",
   "world_combat.move.electricterrain.text.charge": "踩上电场",
   "world_combat.move.electricterrain.text.awake": "被电醒",
-  "effect.world_combat.electricterrain_ground": "带电"
+  "effect.world_combat.electricterrain_ground": "带电",
+  "worldcombat.skill.electricterrain.value.wakeDuration": "清醒存续上限"
 }

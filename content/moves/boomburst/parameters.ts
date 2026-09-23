@@ -87,8 +87,8 @@ namespace PokemonSkills {
     ]);
 
     describe("boomburst", [
-        { key: "description.0", values: ["blast", "falloff"] },
-        { key: "description.1", values: ["blastRadius", "shock"] },
+        { key: "description.0", values: ["blast","falloff","maxTargets"] },
+        { key: "description.1", values: ["blastRadius","shock"] },
         { key: "description.2", values: ["deafenTicks"] },
         { key: "concussive.on", values: [], when: function (context) { return read(context.detail.values, ["concussive"]) === true; } },
         { key: "concussive.off", values: [], when: function (context) { return read(context.detail.values, ["concussive"]) !== true; } },

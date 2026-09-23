@@ -88,9 +88,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "switcheroo",
         name: "掉包",
-        description: "以一闪而过的速度贴身掠过，撞上的一瞬把彼此手里的持有物对调；可以选择触到即停或穿身而过。",
+        description: "以一闪而过的速度贴身掠过，撞上的一瞬把彼此手里的持有物对调；几乎不用蓄势，冷却也短，代价是必须贴上去。手越快掠得越远、换得更利落。",
         uses: ["贴上去把对手的道具换走", "把累赘在近身缠斗中塞给对手", "穿过对手完成换手后抢到它身后"],
         kind: "enemy",
         range: 3.2,

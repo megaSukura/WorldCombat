@@ -1,12 +1,4 @@
-/**
- * 惩罚 / punishment 的伙伴 AI 用途。
- *
- * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 6）格内；臂程中等，够不到先让共享接近逻辑送进来。
- * 对谁出手：`ai.punishBoost`（默认开）在目标身上有正向能力等级时显著抬分——本招威力随目标的涨能力上升，
- *   越涨越值得罚；`ai.finish` 收残血。目标没有涨能力时它威力平平，只在没有更好的选择时用。
- * 出手位置：约 1.5 格内，踏进射程再砸。
- * 放完之后：交回共享交战计划；目标的能力没有变化，本招可以再罚。
- */
+/** punishment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     function punishmentValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;

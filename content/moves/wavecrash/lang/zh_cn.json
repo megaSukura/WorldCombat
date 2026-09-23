@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.wavecrash.summary": "冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳更注重防护，薄水刃提供更远射程。",
-  "worldcombat.skill.wavecrash.description.0": "水墙造成 %1$s 的接触伤害，最远涌 %2$s 格、涌进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.wavecrash.description.1": "命中后自己按实际伤害的 %1$s 反伤、把目标冲开 %3$s 格，并让目标带着湿身 %2$s。",
+  "worldcombat.skill.wavecrash.description.0": "裹着水墙沿直线涌出，最远约 %2$s 格、涌进速度约 %3$s 格每刻、判定半径约 %4$s 格；撞上第一个目标即造成约 %1$s 点接触伤害并停下，一路无人或被地形挡住才会提前散开，最多命中一个目标。",
+  "worldcombat.skill.wavecrash.description.1": "命中后自己承受相当于实际伤害 %1$s 倍的反伤；目标沿涌进方向被冲开 %3$s 格，并带上湿透身份 %2$s（已湿透的目标不重新计时），供后续依赖湿透的水、电类效果识别。",
   "worldcombat.skill.wavecrash.thick.on": "厚水壳：威力更高、反伤更轻、浇得更久，但涌进更短、起手与冷却更慢。",
   "worldcombat.skill.wavecrash.thick.off": "薄水刃：水壳更薄，涌得更远更快，反伤更重。",
   "worldcombat.skill.wavecrash.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
@@ -31,5 +31,6 @@
   "effect.world_combat.wavecrash_soaked": "湿身",
   "world_combat.move.wavecrash.text.hit": "波动冲",
   "world_combat.move.wavecrash.text.drench": "湿身",
-  "world_combat.move.wavecrash.text.spill": "水壳散开"
+  "world_combat.move.wavecrash.text.spill": "水壳散开",
+  "worldcombat.skill.wavecrash.description.wet": "施放者自身湿透时（淋雨、泡水等），这次浪冲威力更高、涌得更远、反伤也更轻。"
 }

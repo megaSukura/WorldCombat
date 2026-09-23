@@ -135,8 +135,8 @@ namespace PokemonSkills {
     defineDamage("spinout", "spin", {}, { contact: true });
 
     describe("spinout", [
-        { key: "description.0", values: ["spin", "reach"] },
-        { key: "description.1", values: ["knock", "speedLoss"] },
+        { key: "description.0", values: ["spin","reach"] },
+        { key: "description.1", values: ["knock","speedLoss"] },
         { key: "description.2", values: ["rush"] },
         { key: "preload.on", values: [], when: function (context) { return read(context.detail.values, ["preload"]) === true; } },
         { key: "preload.off", values: [], when: function (context) { return read(context.detail.values, ["preload"]) !== true; } },

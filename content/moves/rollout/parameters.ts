@@ -179,9 +179,9 @@ namespace PokemonSkills {
     ]);
 
     describe(rolloutId, [
-        { key: "description.0", values: ["roll", "chain"] },
+        { key: "description.0", values: ["roll","chain"] },
         { key: "description.1", values: ["accuracy", "reach", "radius", "push"] },
-        { key: "description.2", values: ["recoil", "window"] },
+        { key: "description.2", values: ["recoil","window"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,21 +1,4 @@
-/**
- * 圣剑 / sacredsword 的出手方式。
- *
- * 核心念头：**把长角从身侧拉满，朝前送出一记最长的干净切斩**——角刃压着一条极长的直线划过，对手用涨起来的
- *   防御去迎，也只会被这一刀顺着刃口削开。本族射程最长、单发最重的一记。
- *
- * 两幕：
- *   起（draw，提交前）：身侧拉出角刃、刃口亮起一线；只播预告，可被打断（打断不花 PP）。
- *   斩（slash → cut / miss，提交后）：提交后先朝目标压上 `lunge` 格凑到刃程，再沿身前 `reach` 格长、
- *       `edge` 半宽的切斩线把选中的目标切开，结算一次 `cut` 接触斩击；落空只留一道空挥。
- *
- * 「无视能力变化」：本文件末尾的 `PokemonDamage.metadata` 贡献点在结算前，把目标本段对应的防御能力等级归零；
- *   攻击方自身等级、相性、暴击、护甲与特性道具仍照常结算。对宝可梦与对原版生物同一条路径。
- *
- * 与同族分开：逐步击破是贴脸连击、ＤＤ金勾臂是原地一整圈、惩罚从对手取力；圣剑凭「最长的一记正前切斩」。
- *
- * 配置 `iaido` 由公式改刃程、压上步与威力、由 resolve 改时序；提交后才触碰世界。
- */
+/** 斩击选中目标，忽略其防御能力等级变化。普通生物的装备护甲仍参与减伤。 */
 namespace PokemonSkills {
     const sacredswordScene = "world_combat:move_sacredsword";
     const sacredswordHitText = "world_combat.move.sacredsword.text.hit";
@@ -36,10 +19,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: sacredswordId,
         cooldownParameter: "recharge",
         name: "Sacred Sword",
-        description: "The user attacks by slicing with a sword. The target's stat changes don't affect the damage inflicted by this move.",
+        description: "斩击选中目标，忽略其防御能力等级变化。普通生物的装备护甲仍参与减伤。",
         uses: ["把长角拉满，朝前送出一记最长的切斩", "把目标涨起来的防御等级直接无视掉", "在射程外缘一刀切开单个目标"],
         kind: "enemy",
         range: 3.2,
@@ -132,11 +116,7 @@ namespace PokemonSkills {
             return context.metadata.move === sacredswordId && !!context.targetFacts;
         },
         apply: function (context: PokemonDamage.MetadataContext) {
-            const native = context.targetFacts!.data.native;
-            if (!native || !native.state) return;
-            const stat = context.metadata.category === "special" ? "spd" : "def";
-            if (native.state.stages) native.state.stages[stat] = 0;
-            if (native.state.layers && native.state.layers.stages) native.state.layers.stages[stat] = 0;
+            PokemonDamage.ignoreDefenceStages(context);
         }
     });
 }

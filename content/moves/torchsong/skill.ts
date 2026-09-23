@@ -19,7 +19,7 @@ namespace PokemonSkills {
     define({
         id: "torchsong",
         name: "闪焰高歌",
-        description: "如唱歌一样喷出熊熊燃烧的火焰烧焦对手。会提高自己的特攻。",
+        description: "站定引吭，朝面前喷出一道持续的火锥：整支歌分多段扫过，锥内的敌人被逐段烧灼；第一次烧到目标时，自己的特攻也提高一档。",
         uses: ["隔着一段距离用火锥压住对手", "把并排站着的对手一起罩进锥面", "开场先唱一支，把自己的特攻烧起来"],
         kind: "enemy",
         range: 6,

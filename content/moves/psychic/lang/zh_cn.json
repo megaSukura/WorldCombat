@@ -3,9 +3,9 @@
   "worldcombat.skill.psychic.use.0": "中远距离点名一个高威胁目标",
   "worldcombat.skill.psychic.use.1": "把冲上来的敌人按在原地",
   "worldcombat.skill.psychic.use.2": "把目标从队友面前拽开",
-  "worldcombat.skill.psychic.description.0": "抓取时造成 %1$s 点特殊伤害，若目标仍被困住，随后再造成 %2$s 点。",
-  "worldcombat.skill.psychic.description.1": "念力把目标定住 %1$s、朝自己拖拽 %2$s 格（大个子抵抗更强）；隔 %3$s 后落第二记挤压。",
-  "worldcombat.skill.psychic.description.2": "抓取时有 %1$s 概率让目标特防下降 %2$s 级。",
+  "worldcombat.skill.psychic.description.0": "抓取命中造成约 %1$s 点特殊伤害；若目标仍被这只握按住，稍后再造成约 %2$s 点。",
+  "worldcombat.skill.psychic.description.1": "念力把目标按在原地、无法移动 %1$s，并朝自己拖拽最多 %2$s 格（大个子抵抗更强，拉到身前就停）；隔 %3$s 后，若它仍被这只握按住，再落第二记挤压。",
+  "worldcombat.skill.psychic.description.2": "抓取命中时有 %1$s 概率让目标特防下降 %2$s 级。",
   "worldcombat.skill.psychic.hold.on": "当前为缠握：定身更久、挤压更重、拖拽更远、特防下降更易触发，代价是擒压略轻、射程更近、起手与冷却更久。",
   "worldcombat.skill.psychic.hold.off": "当前为点握：更远更快更重的一抓，代价是按得短、挤得轻、压特防更少见。",
   "worldcombat.skill.psychic.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -33,5 +33,6 @@
   "worldcombat.skill.psychic.preference.ai.focusThreat.help": "开启：正在攻击自己或主人的目标优先，把最凶的那个按住、拖开；关闭则只按普通远程攻击排序。",
   "world_combat.move.psychic.text.grip": "被念力擒住",
   "world_combat.move.psychic.text.sunder": "特防 -%1$s",
-  "world_combat.move.psychic.text.squeeze": "念力挤压"
+  "world_combat.move.psychic.text.squeeze": "念力挤压",
+  "worldcombat.skill.psychic.description.failure": "抓取没打中或没有生效时，不会定身、拖拽，也不会有第二记挤压；定身被提前解除或目标离场，挤压同样不落。"
 }

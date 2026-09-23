@@ -21,9 +21,10 @@ namespace PokemonSkills {
     const blastburnExhaustText = "world_combat.move.blastburn.text.exhaust";
 
     define({
+        freeMovement: true,
         id: "blastburn",
         name: "Blast Burn",
-        description: "The target is razed by a fiery explosion. The user can't move on the next turn.",
+        description: "把火焰压成一颗热球投向落点，整片炸开把范围内的对手一起烧尽；爆发之后自己会过热力竭一段时间，无法行动也无法移动。",
         uses: ["远距离大爆炸", "同时烧到挤在一起的对手", "用一次过热换一片清场"],
         kind: "point",
         range: 12,

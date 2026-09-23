@@ -151,12 +151,12 @@ namespace PokemonSkills {
     ]);
 
     describe(thrashId, [
-        { key: "description.0", values: ["bash", "strikes", "finisher"] },
-        { key: "description.1", values: ["radius", "gap", "push", "step"] },
-        { key: "description.2", values: ["dazeTicks", "fumble"] },
-        { key: "wild.on", values: [], when: function (context) { return read(context.detail.values, ["wild"]) === true; } },
+        { key: "description.0", values: ["bash","strikes","finisher"] },
+        { key: "description.1", values: ["radius","gap","push","step"] },
+        { key: "description.2", values: ["dazeTicks","fumble"] },
+        { key: "wild.on", values: ["recoil"], when: function (context) { return read(context.detail.values, ["wild"]) === true; } },
         { key: "wild.off", values: [], when: function (context) { return read(context.detail.values, ["wild"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bash"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.bash", "tier.1.finisher"] }
     ]);

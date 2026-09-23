@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: parabolicchargeId,
         cooldownParameter: "recharge",
         name: "Parabolic Charge",
-        description: "给周围全体宝可梦造成伤害。可以回复给予伤害的一半HP。",
+        description: "以自身为圆心张开的范围电击：圈内每个敌人各挨一记，每记伤害都按比例抽回自身——目标越多、回血越足。",
         uses: ["被围住时一次电到一圈并把伤害吸回来", "目标越多回血越足的续航手段", "在贴身混战里同时压低周围所有人"],
         kind: "self",
         range: 3.4,

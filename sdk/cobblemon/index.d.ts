@@ -43,6 +43,10 @@ interface CombatPokemon {
     activeState(): string;
     /** Native PoseType name in lowercase; empty while no world entity exists. */
     pose(): string;
+    /** Physical contact with the ground; independent of Flying type, pose and the riding controller's selected style. */
+    grounded(): boolean;
+    /** Native active riding style (land, liquid, air), or empty when this entity has no rider. */
+    ridingStyle(): string;
     vehicle(): boolean;
     passenger(): boolean;
     /** UUID selected by native riding driver rules; empty if there is no driver. */

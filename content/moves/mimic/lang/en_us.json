@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.mimic.summary": "Send a mind-line to a foe, read its last used move, and weave it into the slot Mimic occupies until the battle ends. It fizzles when there is nothing borrowable to read.",
+  "worldcombat.skill.mimic.summary": "Temporarily replace Mimic’s move slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves.",
   "worldcombat.skill.mimic.use.0": "Borrow a foe's move",
   "worldcombat.skill.mimic.use.1": "Throw a foe's set-up back at it",
   "worldcombat.skill.mimic.use.2": "Punish a heavy attack just used",
@@ -23,5 +23,6 @@
   "worldcombat.skill.mimic.preference.ai.leaveStation.help": "When on, the user may leave its post to mimic; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.mimic.text.copy": "Learned %1$s",
   "world_combat.move.mimic.text.empty": "Nothing to borrow",
-  "world_combat.move.mimic.text.snap": "The line was cut"
+  "world_combat.move.mimic.text.snap": "The line was cut",
+  "worldcombat.skill.mimic.world": "A known native attack successfully used by a non-Pokémon within %1$s is translated into an existing move, borrowed for %2$s: ordinary melee→Tackle, sting→Poison Sting, ram→Headbutt, mace→Slam, arrow→Fury Attack, trident→Horn Attack, fireball→Ember, sonic boom→Sonic Boom, indirect magic→Psybeam. Unlisted attacks cannot be copied."
 }

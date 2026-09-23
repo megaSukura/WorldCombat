@@ -3,12 +3,12 @@
   "worldcombat.skill.uturn.use.0": "Hit and disengage, giving up your ground",
   "worldcombat.skill.uturn.use.1": "Fold back to open distance before being broken",
   "worldcombat.skill.uturn.use.2": "With someone to relay to, drag the foe toward your pack",
-  "worldcombat.skill.uturn.description.0": "Darts in and strikes a living target for %1$s physical damage.",
+  "worldcombat.skill.uturn.description.0": "Darts in and strikes the first living target along the way for %1$s physical damage.",
   "worldcombat.skill.uturn.description.1": "Dash distance %1$s blocks, %2$s blocks per tick, hit radius %3$s blocks.",
-  "worldcombat.skill.uturn.description.2": "Folds back %1$s blocks with a U-arc width of %2$s blocks; the relay style withdraws to the nearest waiting partner within %3$s blocks.",
+  "worldcombat.skill.uturn.description.2": "After the dash it folds back %1$s blocks with a U-arc width of %2$s blocks (a whiff folds back all the same); the relay style withdraws to the nearest waiting partner within %3$s blocks.",
   "worldcombat.skill.uturn.handoff.on": "Relay style: withdraw to the nearest waiting partner within the rally radius; return distance ×0.78.",
   "worldcombat.skill.uturn.handoff.off": "Stand-off style: pull straight back along the arc; return distance ×1.15, the furthest from the foe.",
-  "worldcombat.skill.uturn.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",
+  "worldcombat.skill.uturn.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %5$s s, costs %4$s PP.",
   "worldcombat.skill.uturn.growth.0": "From level %1$s the flyby strike rises to %2$s.",
   "worldcombat.skill.uturn.growth.1": "From level %1$s the flyby strike rises to %2$s.",
   "worldcombat.skill.uturn.value.strike": "Flyby strike",
@@ -32,5 +32,6 @@
   "worldcombat.skill.uturn.preference.ai.leaveStation.help": "When on, the user folds away even under a hold order; off keeps it only when convenient in place.",
   "world_combat.move.uturn.text.relief": "Fold back · relay",
   "world_combat.move.uturn.text.miss": "Whiffed · folded back",
-  "world_combat.move.uturn.text.switch": "U-turn · switch out"
+  "world_combat.move.uturn.text.switch": "U-turn · switch out",
+  "worldcombat.skill.uturn.description.3": "Whenever your party still has a reserve that can be sent out, the fold ends by switching out: that reserve takes the field at the landing point. With no reserve (a wild or solo user) it is only an in-field fold and disengage."
 }

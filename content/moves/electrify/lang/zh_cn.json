@@ -3,7 +3,7 @@
   "worldcombat.skill.electrify.use.0": "预判改属性",
   "worldcombat.skill.electrify.use.1": "破除普通招",
   "worldcombat.skill.electrify.use.2": "帮电吸收队友",
-  "worldcombat.skill.electrify.description.0": "目标下一次出招前，电荷最多挂 %1$s 秒；那一招变成电属性，落地后电荷爆开用掉。命中不掷骰，只受射程与视线限制；能被拖过时间自然散去。",
+  "worldcombat.skill.electrify.description.0": "向单个敌人灌入电荷，最多悬挂 %1$s 秒；目标下一次出招若在改写范围内，就整招变成电属性，命中后电荷爆开用掉。施放不掷命中，只受射程与视线限制；被拖过时间会自然散去。",
   "worldcombat.skill.electrify.description.1": "改属性后照常计算本系、相性与电吸收特性，所以可以主动把对手的普通招送到地面免疫上。",
   "worldcombat.skill.electrify.allmoves.0": "全导：任何非电招式都会变成电，但持续 -25%、冷却 +14 刻，适合打断关键的多属性招式。",
   "worldcombat.skill.electrify.allmoves.1": "滤波：只把一般属性招式变成电，持续 +25%、冷却 -14 刻，更便宜也更容易挂在对手身上干等。",

@@ -51,6 +51,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: function (config) { return !!config.heavy; },
         id: holdbackId,
         cooldownParameter: "recharge",
         name: "Hold Back",

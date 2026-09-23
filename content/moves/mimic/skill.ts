@@ -1,14 +1,4 @@
-/**
- * 模仿 / mimic —— 注册与动作。
- *
- * 两幕：
- *   起（windup，提交前）：从施法者牵出一条思感念线搭上目标；念线要被看得见、挡得住，读的是搭上那一刻。
- *   织（execute，提交后）：读目标最近一次真正放出的招式，把 borrow 到的那一手织进「模仿自己占的那一格」，
- *       维持 hold 时长，直到这场战斗结束或个体被收回。招式带 failmimic 标记、未实装、或自己已经会时读空。
- *
- * 与写生分开：模仿是借，用 NativeModifiers moves 层挂着，到时会自己还回去；下一场还能再模仿。
- * 与纹理分开：纹理只改属性；模仿搬的是一整个动作。
- */
+/** Temporarily replace Mimic’s move slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves. */
 namespace PokemonSkills {
     const mimicScene = "world_combat:move_mimic";
     const mimicCopyText = "world_combat.move.mimic.text.copy";
@@ -28,10 +18,14 @@ namespace PokemonSkills {
 
     /**
      * 只读的一次“看清对手上一手”。返回空字符串表示读不到：
-     * 目标不是宝可梦、最近没出过手、超出记忆窗口、那一手未实装、带 failmimic、或自己已经会。
+     * 最近没出过手、超出记忆窗口、没有已定义的原生攻击转译、招式未实装、带 failmimic、或自己已经会。
      */
     function mimicRead(current: CombatAction, target: CombatActor): MimicBorrow | null {
-        if (target === null || !current.sense().valid(target) || String(target.domain()) !== "cobblemon") return null;
+        if (target === null || !current.sense().valid(target)) return null;
+        if (String(target.domain()) !== "cobblemon") {
+            const id = copiedNativeMove(current.sense(), target, p("mimic", "window", current));
+            return id && !mimicKnows(current.sense(), CobblemonCombat.pokemon(current.actor()), id) ? { id, slot: -1, key: "native" } : null;
+        }
         const world = current.sense(), state = NativeEffects.read(world, target);
         if (!state.used || world.tick() - (state.usedTick || -1000) > p("mimic", "window", current)) return null;
         const last = NativeEffects.lastMove(world, target);
@@ -47,7 +41,7 @@ namespace PokemonSkills {
         id: "mimic",
         cooldownParameter: "recharge",
         name: "Mimic",
-        description: "牵出念线搭住一名对手，读走它最后使用的那一手，把它织进模仿所占的招式格，直到这场战斗结束。",
+        description: "临时把对手最近一招借进模仿所在的招式格；普通生物的已知攻击会转译为对应招式。",
         uses: ["借来对手的招式", "把对手的强化还回去", "惩罚刚出手的强攻"],
         kind: "enemy",
         range: 8,

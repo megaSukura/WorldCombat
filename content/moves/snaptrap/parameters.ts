@@ -131,9 +131,9 @@ namespace PokemonSkills {
 
     describe("snaptrap", [
         { key: "description.0", values: ["bite"] },
-        { key: "description.1", values: ["trigger", "waitTicks", "armTicks"] },
-        { key: "description.2", values: ["holdTicks", "chew", "interval"] },
-        { key: "description.3", values: ["escape", "reach"] },
+        { key: "description.1", values: ["trigger","waitTicks","armTicks"] },
+        { key: "description.2", values: ["holdTicks","chew","interval"] },
+        { key: "description.3", values: ["escape","reach","throwSpeed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

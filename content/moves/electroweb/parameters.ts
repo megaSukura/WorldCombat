@@ -121,12 +121,12 @@ namespace PokemonSkills {
 
     describe("electroweb", [
         { key: "description.0", values: ["strike"] },
-        { key: "description.1", values: ["netRadius", "netTicks"] },
-        { key: "description.2", values: ["slowStages", "pinTicks"] },
-        { key: "description.3", values: ["tickle", "pulseTicks", "holdTicks"] },
+        { key: "description.1", values: ["netRadius","netTicks"] },
+        { key: "description.2", values: ["slowStages","pinTicks"] },
+        { key: "description.3", values: ["tickle","pulseTicks","holdTicks"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.strike", "tier.0.netRadius"] }
+        { key: "growth.0", values: ["tier.0.level","tier.0.strike","tier.0.netRadius"] }
     ]);
 }

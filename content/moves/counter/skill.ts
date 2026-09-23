@@ -12,11 +12,12 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: counterId,
         cooldownParameter: "recharge",
         name: "Counter",
         description: "把最近受到的物理伤害以两倍返还给对手；没有账可讨时这一记落空。",
-        uses: ["挨了一记物理重击后立刻还回去", "惩罚贴身高攻的对手", "把自己承受的伤害转成输出"],
+        uses: ["挨了一记物理重击后立刻还回去", "惩罚贴身的高攻对手", "把自己承受的伤害转成输出"],
         kind: "enemy",
         range: 3.2,
         maxRange: 6,

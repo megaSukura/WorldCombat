@@ -2,8 +2,8 @@
   "worldcombat.skill.secretpower.summary": "借脚下场所之力的一记短击：火焰引燃、草木催眠、水与雨导电麻痹，其余则概率麻痹；直击形态无视场所换取更高威力。",
   "worldcombat.skill.secretpower.use.0": "近身借力",
   "worldcombat.skill.secretpower.use.1": "环境利用",
-  "worldcombat.skill.secretpower.description.0": "造成 %1$s 的接触伤害。",
-  "worldcombat.skill.secretpower.description.1": "命中时按目标脚下的场所把材料变成追加效果（火→灼伤、草木→睡眠、水或雨→麻痹，其余→麻痹）；追加概率 %1$s，水与雨中翻倍。",
+  "worldcombat.skill.secretpower.description.0": "沿瞄准方向突进最多 %2$s 格（速度约 %3$s 格/刻），途中第一个被约 %4$s 格判定扫到的敌人受到约 %1$s 点接触伤害，并被沿突进方向顶开约 %5$s 格；撞墙或走完距离就收势。",
+  "worldcombat.skill.secretpower.description.1": "命中时按目标脚下的场所决定追加状态：火→灼伤、草木→睡眠、水或雨→麻痹，其余→麻痹；追加概率 %1$s，水与雨中翻倍。开启直击形态则无视场所、固定抽麻痹，水雨也不再翻倍。",
   "worldcombat.skill.secretpower.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.secretpower.value.power": "威力",
   "worldcombat.skill.secretpower.value.chance": "追加概率",
@@ -22,5 +22,6 @@
   "world_combat.move.secretpower.text.plain": "借力",
   "world_combat.move.secretpower.text.fire": "引燃",
   "world_combat.move.secretpower.text.thicket": "催眠",
-  "world_combat.move.secretpower.text.water": "导电"
+  "world_combat.move.secretpower.text.water": "导电",
+  "worldcombat.skill.secretpower.description.2": "灼伤使目标物理攻击减半、每约 5 秒失去最大生命的十六分之一，约 40 秒后消退，火属性免疫；睡眠期间目标无法移动和出招、受击即醒，持续约 3 到 6 秒；麻痹使目标移动速度减半、每次出手约四分之一概率失败，约 40 秒后消退，电属性免疫。"
 }

@@ -14,7 +14,7 @@ namespace PokemonSkills {
         wishHeal: percent(F.base(0.45).plus(F.stat("specialAttack").times(0.0006)).clamp(0.35, 0.65).as("特攻转化"), "回复比例",
             "愿星落下时，每个受益者按其最大生命回复的比例。"),
         shareScale: percent(F.when(F.pref("share"), F.const(0.6), F.const(1)).as("分享折算"), "分享比例",
-            "开启分享时所有人都按该比例回复；关闭时只有施法者按满额比例回复。"),
+            "基础治疗量的折算比例；开启分享时自己与圈内伙伴分别获得折算后的治疗，关闭时自己获得完整基础治疗量。"),
         wishRadius: formula(F.base(2.6).plus(F.body("height").times(0.35)).clamp(2, 4).as("体型修正"), "祝福半径",
             { unit: " 格", description: "愿星落下时治疗圈的作用半径。" }),
         delayTicks: seconds(F.base(70).minus(F.stat("speed").times(0.15)).clamp(40, 80).as("速度修正"), "落下延迟",
@@ -28,10 +28,11 @@ namespace PokemonSkills {
     ]);
     describe(wishId, [
         { key: "description.0", values: ["delayTicks", "wishHeal"] },
-        { key: "description.1", values: ["wishRadius", "shareScale"] },
+        { key: "description.1", values: ["wishRadius","shareScale"] },
+        { key: "description.payout", values: [] },
         { key: "stance.share", values: ["shareScale"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
         { key: "stance.self", values: [], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

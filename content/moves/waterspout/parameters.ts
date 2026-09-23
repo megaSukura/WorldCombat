@@ -89,7 +89,8 @@ namespace PokemonSkills {
 
     describe("waterspout", [
         { key: "description.0", values: ["surge", "waveDistance"] },
-        { key: "description.1", values: ["waveTicks", "carry", "soakTicks"] },
+        { key: "description.1", values: ["waveTicks","carry","soakTicks"] },
+        { key: "description.douse", values: [] },
         { key: "undertow.on", values: [], when: function (context) { return read(context.detail.values, ["undertow"]) === true; } },
         { key: "undertow.off", values: [], when: function (context) { return read(context.detail.values, ["undertow"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

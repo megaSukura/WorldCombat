@@ -83,9 +83,9 @@ namespace PokemonSkills {
     ]);
 
     describe("spite", [
-        { key: "description.0", values: ["reach", "boltSpeed"] },
-        { key: "description.1", values: ["ppCut", "memory"] },
-        { key: "description.2", values: ["grudgeTicks", "wispTurn"] },
+        { key: "description.0", values: ["reach","boltSpeed","collisionRadius"] },
+        { key: "description.1", values: ["ppCut","memory"] },
+        { key: "description.2", values: ["grudgeTicks","wispTurn"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.memory", "tier.0.grudgeTicks"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.memory", "tier.1.reach"] }

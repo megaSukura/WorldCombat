@@ -1,21 +1,4 @@
-/**
- * 逐步击破 / chipaway 的出手方式。
- *
- * 核心念头：**贴脸一段有节奏的三拍连击，每一拍落在不同的高度**——对手的防御架势只能扎在某条线上，
- *   另外两条线照样进得去，所以它涨起来的防御等级挡不住这几拍。本族最稳、最省、最贴脸的一招。
- *
- * 两幕：
- *   起（read，提交前）：压步、把攻势提起来，拳前亮起三点微光；只播预告，可被打断（打断不花 PP）。
- *   击（beat → hit / miss，提交后）：提交后沿身前 `reach` 格长、`half` 半宽的击打线连出 `beats` 拍，
- *       每拍落在不同高度、各结算一次 `strike` 接触伤害；全落空只留一道空挥。
- *
- * 「无视能力变化」：本文件末尾的 `PokemonDamage.metadata` 贡献点在本招每拍结算前，把目标本段对应的防御
- *   能力等级归零；攻击方自身等级、相性、暴击、护甲与特性道具仍照常结算。对宝可梦与对原版生物同一条路径。
- *
- * 与同族分开：ＤＤ金勾臂扫一整圈、圣剑一记最长的切斩、惩罚越读越重；逐步击破凭「贴脸、分高度、接连几拍」。
- *
- * 配置 `rush` 由公式改每拍威力、拍数与时序；提交后才触碰世界。
- */
+/** 近身连续攻击，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。 */
 namespace PokemonSkills {
     const chipawayScene = "world_combat:move_chipaway";
     const chipawayHitText = "world_combat.move.chipaway.text.hit";
@@ -41,7 +24,7 @@ namespace PokemonSkills {
         id: chipawayId,
         cooldownParameter: "recharge",
         name: "Chip Away",
-        description: "Looking for an opening, the user strikes consistently. This also ignores the target's stat changes.",
+        description: "近身连续攻击，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。",
         uses: ["贴脸连续几拍，每拍落在不同高度", "把目标涨起来的防御等级直接无视掉", "用快而省的连击稳定削血"],
         kind: "enemy",
         range: 1.9,
@@ -144,11 +127,7 @@ namespace PokemonSkills {
             return context.metadata.move === chipawayId && !!context.targetFacts;
         },
         apply: function (context: PokemonDamage.MetadataContext) {
-            const native = context.targetFacts!.data.native;
-            if (!native || !native.state) return;
-            const stat = context.metadata.category === "special" ? "spd" : "def";
-            if (native.state.stages) native.state.stages[stat] = 0;
-            if (native.state.layers && native.state.layers.stages) native.state.layers.stages[stat] = 0;
+            PokemonDamage.ignoreDefenceStages(context);
         }
     });
 }

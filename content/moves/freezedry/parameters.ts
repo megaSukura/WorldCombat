@@ -77,8 +77,9 @@ namespace PokemonSkills {
     defineDamage("freezedry", "shard", {});
 
     describe("freezedry", [
-        { key: "description.0", values: ["shard", "freezeChance"] },
-        { key: "description.1", values: ["reach", "shardSpeed", "collision"] },
+        { key: "description.0", values: ["shard","freezeChance"] },
+        { key: "description.soaked", values: [] },
+        { key: "description.1", values: ["reach","shardSpeed","collision"] },
         { key: "description.2", values: ["tempo", "aftermath", "wait"] }
     ]);
 }

@@ -47,10 +47,10 @@ namespace PokemonSkills {
     });
     describe(luckychantId, [
         { key: "description.0", values: ["chantTicks", "chantRadius"] },
-        { key: "description.1", values: ["range"] },
+        { key: "description.1", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "wish.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.wish === "early"); } },
         { key: "wish.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.wish !== "early"; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

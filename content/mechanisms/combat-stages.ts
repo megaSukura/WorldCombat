@@ -258,7 +258,7 @@ namespace CombatStages {
     WorldCombat.on("world_combat:stages/special", "world_combat:damage_incoming", "world_combat:effects_incoming", function(event) {
         var world=event.world(), target=event.target(), data=JSON.parse(String(event.data()));
         if(!target||!special(data)||data.bypassesInvulnerability)return;
-        if(String(target.domain())!=="cobblemon")data.amount/=multiplier(stage(world,target,"spd"));
+        if(String(target.domain())!=="cobblemon"&&!data.ignoreDefenceStages)data.amount/=multiplier(stage(world,target,"spd"));
         if(!data.calculation&&String(event.actor().domain())!=="cobblemon")data.amount*=multiplier(stage(world,event.actor(),"spa"));
         event.data(JSON.stringify(data));
     });

@@ -86,6 +86,7 @@ public interface CombatHost {
     default double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause) { throw new UnsupportedOperationException(); }
     default void marker(ActorHandle target, String id, int ticks, int amplifier) { throw new UnsupportedOperationException(); }
     default MobEffectObservation mobEffect(ActorHandle target, String id) { throw new UnsupportedOperationException(); }
+    default String mobEffectCategory(String id) { return ""; }
     default MobEffectObservation[] mobEffects(ActorHandle target) { throw new UnsupportedOperationException(); }
     default boolean removeMobEffect(ActorHandle target, String id, String expected) { throw new UnsupportedOperationException(); }
     default long leaseMobEffect(long owner, ActorHandle target, String id, String expected) { throw new UnsupportedOperationException(); }

@@ -87,8 +87,8 @@ namespace PokemonSkills {
 
     describe("liquidation", [
         { key: "description.0", values: ["crash", "collisionRadius"] },
-        { key: "description.1", values: ["shredChance", "shredStages", "soakTicks"] },
-        { key: "description.2", values: ["charge", "dashSpeed", "push"] },
+        { key: "description.1", values: ["shredChance","shredStages","soakTicks"] },
+        { key: "description.2", values: ["charge","dashSpeed","push"] },
         { key: "shred.on", values: [], when: function (context) { return read(context.detail.values, ["shred"]) === true; } },
         { key: "shred.off", values: [], when: function (context) { return read(context.detail.values, ["shred"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

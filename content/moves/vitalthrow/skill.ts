@@ -21,7 +21,7 @@ namespace PokemonSkills {
     define({
         id: "vitalthrow",
         name: "Vital Throw",
-        description: "The user attacks last. In return, this throw move never misses.",
+        description: "沉住气等对手先出手，在它扑进来的一刻借力把它顺势摔出去：架势很长，所以出手靠后；抓的是近身一瞬，抓住后这一摔不会被闪避，近处没人则扑空。分量在施法者身上：对手越重被甩得越远，正在出手的对手会被摔得更重。",
         uses: ["后发制人的反手摔", "把扑上来的对手借势甩开", "对高防目标用分量硬摔"],
         kind: "enemy",
         range: 3,

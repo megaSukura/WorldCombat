@@ -95,9 +95,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "thief",
         name: "小偷",
-        description: "贴身掠过并顺手牵羊：命中时若自己空手，就把对手的持有物卷进自己手里；自己持物时只当普通一击。",
+        description: "压低身子探手掠过：命中时若自己空手，就把对手的持有物卷进自己手里；自己持物时只当普通一击。手越快的个体探得更远、退得更利落。",
         uses: ["把对手的持有物偷过来", "空手时的一次快速近身打击", "得手后退开拉开距离"],
         kind: "enemy",
         range: 3,

@@ -38,9 +38,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "hydrocannon",
         name: "Hydro Cannon",
-        description: "The target is hit with a watery blast. The user can't move on the next turn.",
+        description: "把水压到极限喷出一道笔直的高压水柱：命中把目标顶开并泼得湿透，湿透的目标再吃一发更重；放完自己力竭一段时间，无法行动也无法移动。",
         uses: ["一道笔直的高压水柱", "把目标顶开并泼得湿透", "对已经湿透的目标补一发更重的水炮"],
         kind: "enemy",
         range: 11,

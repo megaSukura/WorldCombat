@@ -106,8 +106,8 @@ namespace PokemonSkills {
     ]);
 
     describe("powdersnow", [
-        { key: "description.0", values: ["puff", "maxTargets"] },
-        { key: "description.1", values: ["range", "angle", "push"] },
+        { key: "description.0", values: ["puff","maxTargets"] },
+        { key: "description.1", values: ["range","angle","push"] },
         { key: "description.2", values: ["freezeChance"] },
         { key: "description.3", values: ["tempo", "aftermath", "wait"] },
         { key: "flurry.on", values: [], when: function (context) { return read(context.detail.values, ["flurry"]) === true; } },

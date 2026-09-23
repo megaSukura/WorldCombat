@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.guardswap.summary": "利用超能力把双方防御与特防的能力变化对调一段窗口：换完你拿走对方架起来的守势，窗口走完自动换回。宝可梦走原生阶梯，其他生物走公共阶梯，同一条路。",
+  "worldcombat.skill.guardswap.summary": "利用超能力把双方防御与特防的能力变化对调一段窗口：换完你拿走对方架起来的守势，窗口走完自动换回。只对敌人使用，对宝可梦与其他生物一视同仁。",
   "worldcombat.skill.guardswap.use.0": "把对手涨起来的防/特防夺过来",
   "worldcombat.skill.guardswap.use.1": "在自己防御被破后把漏洞甩给对手",
   "worldcombat.skill.guardswap.use.2": "把对手的铜墙铁壁借来硬扛一轮",
-  "worldcombat.skill.guardswap.description.0": "向 %1$s 格内的目标交换防御与特防的能力变化，维持 %2$s；需要有通视直线。",
-  "worldcombat.skill.guardswap.description.2": "换的是双方已经架起来的那几级：对方守得越厚你赚得越多，你原来那几级落到他身上。窗口走完或被清除时各自换回原来的等级。",
+  "worldcombat.skill.guardswap.description.0": "向 %1$s 格内的敌方目标交换防御与特防的能力变化，维持 %2$s；需要有通视直线，且不能对自己或友方施放。",
+  "worldcombat.skill.guardswap.description.2": "换的是双方已经架起来的那几级：对方守得越厚你赚得越多，你原来那几级落到他身上。窗口期间双方无法再次被换守；窗口走完或被清除时各自换回原来的等级。",
   "worldcombat.skill.guardswap.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 换守；收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.guardswap.growth.0": "达到 %1$s 级，换守距离延长至 %2$s 格、交换窗口延长至 %3$s 秒。",
   "worldcombat.skill.guardswap.growth.1": "达到 %1$s 级，换守距离进一步延长至 %2$s 格、交换窗口 %3$s 秒。",

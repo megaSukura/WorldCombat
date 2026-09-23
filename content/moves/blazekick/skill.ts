@@ -40,8 +40,8 @@ namespace PokemonSkills {
         id: "blazekick",
         cooldownParameter: "recharge",
         name: "Blaze Kick",
-        description: "The user spins and swings a flame-wreathed leg in a rising arc, launching the target off the ground and possibly leaving it burned.",
-        uses: ["一记把目标挑离地面的上挑火焰踢", "打断贴身的对手并点燃它", "把目标挑起来，落地前它动不了手"],
+        description: "拧身而起，把裹火的腿沿一道上扬的弧线挑出去：命中造成接触伤害、按概率使目标灼伤（灼伤使其物理伤害减半并持续掉血），并把它挑离地面。烈焰式更容易点着、挑得更高；重踢式踢得更重但火难留。",
+        uses: ["一记把目标挑离地面的上挑火焰踢", "贴身点着对手，靠灼伤压低它的攻击", "把目标挑到空中，打乱它的站位"],
         kind: "enemy",
         range: 2.4,
         maxRange: 3.4,
@@ -108,7 +108,7 @@ namespace PokemonSkills {
 
             const at = targetBody.position();
             const landed = hurt(action, target, "blazekick", power,
-                { damage: damageSpec("blazekick", "kick"), contact: true, status: "burn", chance: chance });
+                { damage: damageSpec("blazekick", "kick"), contact: true, status: "burn", chance: chance, statusTicks: burnTicks });
             WorldFeedback.emit(world, blazekickScene, 1, at,
                 { moment: "kick", target: String(target.ref()), path: path, embers: embers, scale: scale,
                     intensity: Math.max(0.6, Math.min(2.4, power / 80)) }, 24);

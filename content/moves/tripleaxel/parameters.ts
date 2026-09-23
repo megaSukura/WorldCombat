@@ -121,8 +121,9 @@ namespace PokemonSkills {
     ]);
 
     describe(tripleaxelId, [
-        { key: "description.0", values: ["kick", "kicks", "ramp"] },
-        { key: "description.1", values: ["arc", "reach", "accuracy", "gap"] },
+        { key: "description.0", values: ["kick","kicks","ramp"] },
+        { key: "description.1", values: ["arc","reach","accuracy","gap"] },
+        { key: "description.additional", values: [] },
         { key: "widen.on", values: [], when: function (context) { return read(context.detail.values, ["widen"]) === true; } },
         { key: "widen.off", values: [], when: function (context) { return read(context.detail.values, ["widen"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -66,10 +66,11 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: function (config) { return !!config.braced; },
         id: "protect",
         cooldownParameter: "charge",
         name: "Protect",
-        description: "Enables the user to evade all attacks. Its chance of failing rises if it is used in succession.",
+        description: "在自己身上撑起穹顶，按护盾总量挡下敌人的攻击；盾量耗尽就碎裂，超出的伤害仍会打中你。守据姿态下撑罩期间无法移动，连续使用容易失败。",
         uses: ["预判远程齐射，提前撑罩", "被围时撑出一条退路", "为队友争取回血或撤走的时间"],
         kind: "self",
         range: 0,

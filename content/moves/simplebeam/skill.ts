@@ -1,20 +1,4 @@
-/**
- * 单纯光束 / simplebeam — 出手方式。
- *
- * 核心念头：向对手发一道谜之念波——一束来不及躲的念头光沿视线打到它脑子里，把它的特性整个改写成「单纯」。
- *   念波是光，所以它在视线畅通、够得着的瞬间就落到目标身上；扩散档让它在目标处炸开、把附近一圈脑子一起扫简单。
- *
- * 幕：
- *   聚（windup，提交前）：念头在施法者面前聚成一束，只观察与预告，可被打断且不花代价。
- *   发（beam，提交后）：光束沿视线打到目标身上（表现沿 data.path 的 polyline，光环一道道推过去），
- *     目标的特性被写进共享 NativeModifiers ability 层（改成 simple，到期自动还原原生特性），
- *     并挂共享身份 `world_combat:status/simplebeam` 的标记；扩散档把周围一圈可改写的宝可梦一起改。
- *   落（settle）：命中处光环收拢，目标头顶浮出结果。
- *   清（clear）：改写到期时念头从目标身上散去，告诉玩家这一层已经过去。
- *
- * 反制：非宝可梦没有特性可改；已经是 simple、特性是 truant、或带 cantsuppress 的目标改不动（预检直接拒绝，
- *   不浪费 15 发 PP）；视线被挡或超出射程也放不出。
- */
+/** Temporarily make the target Simple, doubling subsequent stat-stage gains and losses. Wave mode also affects nearby enemies. */
 
 namespace PokemonSkills {
     export const simplebeamId = "simplebeam";
@@ -24,6 +8,10 @@ namespace PokemonSkills {
     export const simplebeamSpreadText = "world_combat.move.simplebeam.text.spread";
     export const simplebeamClearText = "world_combat.move.simplebeam.text.clear";
     export const simplebeamFizzleText = "world_combat.move.simplebeam.text.fizzle";
+
+    CombatStages.change.define({ id: "world_combat:move_simplebeam/native_stages", apply: function (context) {
+        if (String(context.actor.domain()) !== "cobblemon" && MobEffects.read(context.world, context.actor, simplebeamEffect) !== null) context.amount *= 2;
+    } });
 
     function simplebeamAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.3, 0)); }
 
@@ -55,7 +43,7 @@ namespace PokemonSkills {
         id: simplebeamId,
         cooldownParameter: "recharge",
         name: "单纯光束",
-        description: "向对手发一道谜之念波，把它的特性整个改写成「单纯」；念波扩散档还能把附近一圈宝可梦一起改简单。",
+        description: "使目标暂时变得单纯，之后的能力等级提升和降低都会翻倍；扩散模式还能波及附近敌人。",
         uses: ["把对手的强力特性顶成一枚单纯", "封掉靠自身特性运转的打法", "扩散档一次扫掉围上来的一圈特性"],
         kind: "enemy",
         range: 9,
@@ -86,11 +74,12 @@ namespace PokemonSkills {
         ready: function (action, config) {
             const world = action.sense(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(target.domain()) !== "cobblemon") return "no-ability";
+
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p(simplebeamId, "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") return MobEffects.read(world, target, simplebeamEffect) ? "already-simple" : "";
             const ability = simplebeamAbility(world, target);
             if (!ability) return "no-ability";
             return simplebeamReceivable(ability) && NativeModifiers.abilitySuppressible(world, target) ? "" : "uncopyable";
@@ -122,10 +111,12 @@ namespace PokemonSkills {
             const path: (string | number[])[] = [String(actor.ref()), String(target.ref())];
 
             function rewrite(other: CombatActor, primaryHit: boolean): boolean {
-                if (!world.valid(other) || String(other.domain()) !== "cobblemon") return false;
+                if (!world.valid(other)) return false;
                 const ability = simplebeamAbility(world, other);
-                if (!simplebeamReceivable(ability) || !NativeModifiers.abilitySuppressible(world, other)) return false;
-                NativeModifiers.apply(world, other, { ability: "simple" }, hold);
+                if (String(other.domain()) === "cobblemon") {
+                    if (!simplebeamReceivable(ability) || !NativeModifiers.abilitySuppressible(world, other)) return false;
+                    NativeModifiers.apply(world, other, { ability: "simple" }, hold);
+                }
                 MobEffects.apply(world, other, simplebeamEffect, hold, wave ? 1 : 0);
                 const body = world.observe(other);
                 if (body === null) return false;
@@ -141,7 +132,7 @@ namespace PokemonSkills {
                 return true;
             }
 
-            if (!simplebeamReceivable(primary)) {
+            if (String(target.domain()) === "cobblemon" && !simplebeamReceivable(primary)) {
                 WorldFeedback.emit(world, simplebeamScene, 1, point, { moment: "fizzle", target: String(target.ref()) }, 20);
                 WorldFeedback.text(world, simplebeamAbove(point), simplebeamFizzleText, [], 28);
                 sound(action, "minecraft:block.amethyst_block.break");

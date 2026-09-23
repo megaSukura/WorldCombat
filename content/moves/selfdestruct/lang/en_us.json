@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.selfdestruct.summary": "Attacks everything around it by causing an explosion, and the user faints upon using it. Foes in the ring are thrown outward and lifted, and the ground is left scorched; even a blast that hits no one takes the user down. Focused blast is harder and narrower, spread blast is wider and faster.",
+  "worldcombat.skill.selfdestruct.summary": "Attacks every enemy around it with an explosion, and the user faints upon using it. Foes in the ring are thrown outward and lifted, and the ground is left scorched; even a blast that hits no one takes the user down. Focused blast is harder and narrower, spread blast is wider and faster.",
   "worldcombat.skill.selfdestruct.use.0": "Trade one life to blow open a surround",
   "worldcombat.skill.selfdestruct.use.1": "Blast a close foe away, body and all",
   "worldcombat.skill.selfdestruct.use.2": "Detonate on a very short wind-up before foes step away",
   "worldcombat.skill.selfdestruct.use.3": "Deal one last heavy blow before going down",
-  "worldcombat.skill.selfdestruct.description.0": "Each target in the ring takes about %1$s explosion damage; the target's defence, type and crit are settled on the hit (a Ghost is immune to the blow, but the user still faints).",
+  "worldcombat.skill.selfdestruct.description.0": "Up to %2$s targets in the ring each take about %1$s explosion damage; the target's defence, type and crit are settled on the hit (a Ghost is immune to the blow, but the user still faints).",
   "worldcombat.skill.selfdestruct.description.1": "The blast reaches %1$s blocks; that ring is the ground it covers.",
   "worldcombat.skill.selfdestruct.description.2": "Those caught are thrown %1$s blocks outward and lifted at %2$s blocks/tick.",
   "worldcombat.skill.selfdestruct.description.3": "Change up to %2$s ground blocks and restore them after %1$s seconds.",

@@ -28,10 +28,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "lunge",
         cooldownParameter: "recharge",
         name: "Lunge",
-        description: "后腿蓄力、把整个身体朝目标抛出去，用全部体重压在一撞上：撞实后造成接触伤害并把目标顶开，同时让它的攻击下降 1 级。全力式更重、顶得更开、扑得更远，但更慢。",
+        description: "后腿蓄力、把整个身体朝目标抛出去，用全部体重压在一撞上：撞实后造成接触伤害并把目标顶开，同时让它的攻击下降一级。全力式更重、顶得更开、扑得更远，但更慢。",
         uses: ["冲上去压低对手的物理输出", "把单个硬目标撞开、撞得它挥不动手", "抢在对手贴身之前先扑进去"],
         kind: "enemy",
         range: 2.8,

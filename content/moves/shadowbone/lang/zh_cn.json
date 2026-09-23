@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.shadowbone.summary": "从身侧唤出一根缠着灵魂的骨棒，掷向远处的对手：骨棒自己追向目标，命中时造成不接触伤害，有机会把目标慑得防御下降一级；是全族唯一的远程一记，攻击距离最远但单发最贵。",
-  "worldcombat.skill.shadowbone.description.0": "骨棒掷中造成 %1$s 的不接触伤害。",
+  "worldcombat.skill.shadowbone.description.0": "骨棒掷中造成约 %1$s 的不接触伤害。",
   "worldcombat.skill.shadowbone.description.1": "射程 %1$s 格，初速 %2$s 格/刻，判定半径 %3$s 格；骨棒会自己追向目标。",
-  "worldcombat.skill.shadowbone.description.2": "命中时有 %1$s 的概率让目标防御下降 %2$s 级，慑防标记持续 %3$s。",
+  "worldcombat.skill.shadowbone.description.2": "命中时有 %1$s 的概率让目标防御下降 %2$s 级（按能力等级计，不会自行恢复），并留下持续 %3$s 的慑防标记；这道标记本身不改变属性，带着它的目标会被能撕开缺口的招式多压低一级防御。",
   "worldcombat.skill.shadowbone.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.shadowbone.growth.0": "达到 %1$s 级，骨棒威力提升至 %2$s。",
   "worldcombat.skill.shadowbone.growth.1": "达到 %1$s 级，慑防几率提升至 %2$s。",
@@ -21,5 +21,6 @@
   "worldcombat.skill.shadowbone.preference.ai.spookFirst": "先手慑防",
   "worldcombat.skill.shadowbone.preference.ai.spookFirst.help": "开启：优先对还没带破防身份的目标掷骨，先挂上慑防；关闭：当普通远程攻击排序。",
   "world_combat.move.shadowbone.text.rattle": "被阴气慑住，防御 -%1$s 级",
-  "effect.world_combat.shadowbone_spooked": "暗影之骨·慑防"
+  "effect.world_combat.shadowbone_spooked": "暗影之骨·慑防",
+  "worldcombat.skill.shadowbone.description.additional": "骨棒砸到地面而没命中活物时，会落在地上变成一根谁都能拾起的骨头。"
 }

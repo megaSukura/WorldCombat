@@ -1,10 +1,10 @@
 {
   "effect.world_combat.bide_brace": "Endurance stance",
-  "worldcombat.skill.bide.summary": "Holds a stance and endures for a while; every hit taken is recorded on a ledger, and when the stance ends the ledger is paid back at double to whoever hit last. With no ledger, the release whiffs.",
+  "worldcombat.skill.bide.summary": "Holds an endurance stance, recording every incoming hit on a ledger; when it ends the damage is paid back at 1.4x-2.8x to whoever hit last, or to the nearest enemy if out of reach; an empty ledger or an interruption returns nothing.",
   "worldcombat.skill.bide.use.0": "Bank one big payback during a beating",
   "worldcombat.skill.bide.use.1": "Make the foe decide whether to keep hitting a rooted target",
   "worldcombat.skill.bide.use.2": "Gather scattered chip damage into one heavy blow",
-  "worldcombat.skill.bide.description.0": "Endures in place for %1$s, recording every incoming hit; at the end the ledger is returned at %2$s (at least 1.4x, at most 2.8x).",
+  "worldcombat.skill.bide.description.0": "Enter an endurance stance for %1$s, storing incoming damage. At the end, return it amplified by current health and stance; the current estimate is %2$s damage. Lower remaining health increases the return.",
   "worldcombat.skill.bide.description.1": "The ledger caps at %1$s of the user's maximum health; the payback reaches the last attacker within %2$s blocks, or the nearest enemy if that one is out of reach.",
   "worldcombat.skill.bide.description.2": "Prepare %1$s s, recover %2$s s, cooldown %3$s s.",
   "worldcombat.skill.bide.rooted.on": "Rooted endurance: the stance lasts x1.15 and the payback multiplier is x1.1, but the user cannot move for the whole stance.",
@@ -26,5 +26,6 @@
   "world_combat.move.bide.text.brace": "Enduring %1$s s",
   "world_combat.move.bide.text.release": "Paid back %1$s",
   "world_combat.move.bide.text.whiff": "Endured for nothing",
-  "world_combat.move.bide.text.broken": "Endurance broken"
+  "world_combat.move.bide.text.broken": "Endurance broken",
+  "worldcombat.skill.bide.description.release": "An interruption collapses the stance and voids the ledger; an empty ledger, or a payback that reaches no enemy, whiffs. No new move can be started before the stance ends."
 }

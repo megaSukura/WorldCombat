@@ -56,7 +56,12 @@ namespace PokemonSkills {
 
     describe("substitute", [
         { key: "description.0", values: ["cost", "ward"] },
-        { key: "description.1", values: ["place", "linkRange", "wardTicks"] },
-        { key: "timing", values: ["tier.0.prepare", "tier.0.recover", "tier.0.cooldown"] }
-    ]);
+        { key: "description.1", values: ["place","linkRange","wardTicks"] },
+        { key: "description.2", values: ["reserve"] },
+        { key: "timing", values: ["prepare","recover","cooldown"] }
+    ], { reserve: function (context) {
+        const raw = read(context.detail.values, ["ai", "reserveHealth"]), reserve = raw === undefined ? 0.35 : Number(raw);
+        const binding = valueBinding(Math.round(reserve * 10000) / 100, text("worldcombat.skill.substitute.preference.ai.reserveHealth"));
+        binding.unitKind = "percent"; binding.unit = text("worldcombat.value.unit.percent"); return binding;
+    } });
 }

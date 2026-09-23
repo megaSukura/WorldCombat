@@ -110,9 +110,9 @@ namespace PokemonSkills {
     defineDamage("firelash", "lash", {}, { contact: true });
 
     describe("firelash", [
-        { key: "description.0", values: ["lash", "melt"] },
+        { key: "description.0", values: ["lash","melt"] },
         { key: "description.1", values: ["reach", "tempo"] },
-        { key: "entangle.on", values: ["drag", "slowTicks"], when: function (context) { return read(context.detail.values, ["entangle"]) === true; } },
+        { key: "entangle.on", values: ["drag","slowTicks"], when: function (context) { return read(context.detail.values, ["entangle"]) === true; } },
         { key: "entangle.off", values: [], when: function (context) { return read(context.detail.values, ["entangle"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.lash"] },

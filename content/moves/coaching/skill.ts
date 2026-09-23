@@ -52,7 +52,7 @@ namespace PokemonSkills {
         id: "coaching",
         cooldownParameter: "wait",
         name: "指导",
-        description: "对一个选定的伙伴进行指导，让他的攻击与防御一起提高，并从那个伙伴向四周教给身边听清的友方；必须选一个朋友。",
+        description: "对一个选定的伙伴进行指导，让他的攻击与防御一起提高，并从那个伙伴向四周教给身边听清的友方；必须选一个朋友。窗口走完时等级一起收回。",
         uses: ["把上前的队友攻防一起垫高", "让缠斗中的伙伴顶得更稳、打得更重", "在开门前把守门的伙伴教成一面墙"],
         kind: "friend",
         range: 5,

@@ -33,10 +33,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "drillpeck",
         cooldownParameter: "recharge",
         name: "Drill Peck",
-        description: "A corkscrewing attack that strikes the target with a sharp beak acting as a drill.",
+        description: "原地旋起来，把身体拧成一支钻，贴着身前一条短轴一下一下地把尖喙钻进去：不是一记，而是连续几口，每一口都把对手往后顶一点。对手离地时每一口更狠——尖喙专钻空中的破绽。它是全族唯一的持续接触钻孔。",
         uses: ["原地旋成一支钻，连续几口钻同一个目标", "把贴脸的目标一口口往后顶开", "对离地的目标钻得更狠"],
         kind: "enemy",
         range: 2.5,

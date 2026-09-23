@@ -3,14 +3,14 @@
   "worldcombat.skill.temperflare.use.0": "上一次打空后烧着自己撞出去",
   "worldcombat.skill.temperflare.use.1": "在落点炸开一片火、燎到围观的人",
   "worldcombat.skill.temperflare.use.2": "把撞到的人点着并在地上留下焦痕",
-  "worldcombat.skill.temperflare.description.0": "裹着火撞上目标，造成 %1$s 点物理伤害（火）。",
-  "worldcombat.skill.temperflare.description.1": "撞上后炸开 %2$s 格的火，对身边其他敌人溅射 %1$s 点物理伤害、并把他们顶开 %3$s 格。",
-  "worldcombat.skill.temperflare.description.2": "冲锋 %1$s 格、每刻 %2$s 格；带豁出去时命中者被点着 %3$s、落点焦痕停留 %4$s、铺 %5$s 块。",
+  "worldcombat.skill.temperflare.description.0": "裹着火撞上目标，造成约 %1$s 点物理（火）伤害。",
+  "worldcombat.skill.temperflare.description.1": "撞上后炸开 %2$s 格的火，对身边其他敌人溅射约 %1$s 点物理（火）伤害；被撞中的目标沿冲锋方向退 %3$s 格，被火燎到的敌人则向外退开约七成。",
+  "worldcombat.skill.temperflare.description.2": "朝目标冲锋最多 %1$s 格、每刻 %2$s 格；带着豁出去时，撞到或燎到的敌人都会被点着 %3$s；无论是否带豁出去，落点地面都会留下焦痕 %4$s、最多铺 %5$s 块，到期复原。",
   "worldcombat.skill.temperflare.reckless.on": "当前：豁出去式——冲得更远更快、火炸得更大，但这一撞略散、收招与冷却更久。",
   "worldcombat.skill.temperflare.reckless.off": "当前：控制式——冲得短而集中、收得干净、单次更烈。",
   "worldcombat.skill.temperflare.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.temperflare.growth.0": "达到 %1$s 级，撞上威力升至 %2$s。",
-  "worldcombat.skill.temperflare.growth.1": "达到 %1$s 级，撞上威力升至 %2$s，爆开半径 %3$s。",
+  "worldcombat.skill.temperflare.growth.1": "达到 %1$s 级，撞上威力升至 %2$s，爆开半径 %3$s 格。",
   "worldcombat.skill.temperflare.value.flare": "撞上威力",
   "worldcombat.skill.temperflare.value.rage": "自暴自弃翻倍",
   "worldcombat.skill.temperflare.value.scorch": "崩开威力",
@@ -35,5 +35,6 @@
   "world_combat.move.temperflare.text.hit": "豁出去命中 %1$s 人",
   "world_combat.move.temperflare.text.rage": "自暴自弃！%1$s 人",
   "world_combat.move.temperflare.text.miss": "撞空了",
-  "effect.world_combat.temperflare_frustration": "豁出去·憋劲"
+  "effect.world_combat.temperflare_frustration": "豁出去·憋劲",
+  "worldcombat.skill.temperflare.description.additional": "上一记针对敌人的招式没有造成伤害、且约 0.3–7.5 秒内再次出手时，会带上一股豁出去；带着它使出本招，撞上威力翻倍、命中把敌人点着。此后任何命中并造成伤害的招式都会立刻消掉这股劲，约 5.5 秒后也会自行消退。"
 }

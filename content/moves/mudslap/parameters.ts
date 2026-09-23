@@ -86,9 +86,9 @@ namespace PokemonSkills {
     defineDamage("mudslap", "splat", {});
 
     describe("mudslap", [
-        { key: "description.0", values: ["splat", "blind"] },
+        { key: "description.0", values: ["splat","blind"] },
         { key: "description.1", values: ["arcSpeed", "reach", "radius", "steer"] },
-        { key: "description.2", values: ["pref.thick"] },
+        { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

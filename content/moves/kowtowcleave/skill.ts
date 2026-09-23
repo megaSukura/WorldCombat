@@ -16,9 +16,10 @@ namespace PokemonSkills {
     const kowtowcleaveGuard = "world_combat:kowtow_guard";
 
     define({
+        freeMovement: true,
         id: "kowtowcleave",
         name: "Kowtow Cleave",
-        description: "The user slashes at the target after kowtowing to make the target let down its guard. This attack never misses.",
+        description: "先下跪引对手放下防备，让它裂开一瞬空门，再欺身一刀劈下；劈的是空门，所以必定命中，命中后把目标击退。",
         uses: ["下跪骗防再劈", "给目标开一瞬空门", "对高防目标补一刀加重"],
         kind: "enemy",
         range: 5,

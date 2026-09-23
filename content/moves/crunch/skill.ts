@@ -20,10 +20,11 @@ namespace PokemonSkills {
     const crunchMissText = "world_combat.move.crunch.text.miss";
 
     define({
+        freeMovement: true,
         id: "crunch",
         cooldownParameter: "recharge",
         name: "Crunch",
-        description: "The user crunches up the target with sharp fangs. This may also lower the target's Defense stat.",
+        description: "扑上去一口咬住，牙关研磨把护甲压塌：咬实后隔一小会儿再嚼一记，磨完有机会让目标防御下降并留下一道破防缺口。獠牙的防御系数低于惯例，专啃硬壳；比咬住重、慢，却是可靠的破防开端。",
         uses: ["咬住研磨，把护甲压塌", "留下一道破防缺口给后续招吃", "用低防御系数的獠牙啃高防目标"],
         kind: "enemy",
         range: 2.1,

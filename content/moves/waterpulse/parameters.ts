@@ -127,9 +127,9 @@ namespace PokemonSkills {
     defineDamage("waterpulse", "echo", {}, { pulse: true });
 
     describe("waterpulse", [
-        { key: "description.0", values: ["resonance", "blast", "pulses", "interval"] },
+        { key: "description.0", values: ["resonance","blast","pulses","interval"] },
         { key: "description.1", values: ["echo"] },
-        { key: "description.2", values: ["chance", "dazeTicks", "fumble"] },
+        { key: "description.2", values: ["chance","dazeTicks","fumble"] },
         { key: "resonant.on", values: [], when: function (context) { return read(context.detail.values, ["resonant"]) === true; } },
         { key: "resonant.off", values: [], when: function (context) { return read(context.detail.values, ["resonant"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

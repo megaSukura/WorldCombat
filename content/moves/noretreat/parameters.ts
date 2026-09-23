@@ -70,7 +70,7 @@ namespace PokemonSkills {
     describe(noRetreatId, [
         { key: "description.0", values: ["standTicks"] },
         { key: "description.1", values: [] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
+        { key: "description.2", values: ["tempo","aftercast","recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["rush"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["rush"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

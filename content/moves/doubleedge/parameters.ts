@@ -129,12 +129,12 @@ namespace PokemonSkills {
         rationale: "最朴素的正面猛撞，按标准防御系数结算，靠体型与等级拉开差距。" }, { contact: true });
 
     describe("doubleedge", [
-        { key: "description.0", values: ["tackle", "rush", "speed", "collisionRadius"] },
-        { key: "description.1", values: ["recoil", "shove", "rebound"] },
+        { key: "description.0", values: ["tackle","rush","speed","collisionRadius"] },
+        { key: "description.1", values: ["recoil","shove","rebound"] },
         { key: "brace.on", values: [], when: function (context) { return read(context.detail.values, ["brace"]) === true; } },
         { key: "brace.off", values: [], when: function (context) { return read(context.detail.values, ["brace"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.tackle"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.tackle", "tier.1.recoil"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.tackle","tier.1.recoil"] }
     ]);
 }

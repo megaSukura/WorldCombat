@@ -3,7 +3,7 @@
   "worldcombat.skill.boltbeak.use.0": "抢在对手出手前先啄一口",
   "worldcombat.skill.boltbeak.use.1": "打一下立刻退开脱离",
   "worldcombat.skill.boltbeak.use.2": "对还没反应过来的目标打出翻倍",
-  "worldcombat.skill.boltbeak.description.0": "啄出 %1$s 的物理伤害；命中时若目标在最近 %2$s 秒内没有打过施法者、此刻也没朝施法者出手，威力翻倍。",
+  "worldcombat.skill.boltbeak.description.0": "啄出约 %1$s 的接触物理伤害；命中时若目标在最近 %2$s 秒内没有打过施法者、此刻也没朝施法者出手，威力翻倍。",
   "worldcombat.skill.boltbeak.description.1": "突刺距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；啄完退开 %4$s 格。",
   "worldcombat.skill.boltbeak.skirmish.on": "开启游斗：退步多 0.9 格、更适合反复抢先进攻，但每啄约轻 10%%、冷却多 4 刻。",
   "worldcombat.skill.boltbeak.skirmish.off": "关闭游斗：站定啄出更重的一口（约重 11%%），退步短。",

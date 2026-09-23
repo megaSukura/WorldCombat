@@ -40,7 +40,7 @@ namespace PokemonSkills {
 
     define({
         id: moonlightId, name: "月光",
-        description: "把夜里晴空的月色披到身上：接住月色时按最大生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点。",
+        description: "把夜里晴空的月色披到身上：接住月色时按缺失生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点。",
         uses: ["夜里晴空下的强回复", "顺手冷却灼伤", "白天只作小补"],
         kind: "self", range: 0, prepare: 0, active: 0, recover: 10, cooldown: 220, style: "moon",
         maximumTicks: 300,

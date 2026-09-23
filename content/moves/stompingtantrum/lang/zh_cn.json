@@ -33,5 +33,6 @@
   "world_combat.move.stompingtantrum.text.hit": "跺脚命中 %1$s 人",
   "world_combat.move.stompingtantrum.text.rage": "悔恨翻倍！%1$s 人",
   "world_combat.move.stompingtantrum.text.miss": "跺空了",
-  "effect.world_combat.stompingtantrum_frustration": "跺脚·憋愤"
+  "effect.world_combat.stompingtantrum_frustration": "跺脚·憋愤",
+  "worldcombat.skill.stompingtantrum.description.rage": "上一次朝敌人的出手完全落空后，施放者身上会积起憋愤，约 5.5 秒；在这段时间内使出跺脚，跺地威力翻倍。任意一次成功命中都会立刻消去憋愤。"
 }

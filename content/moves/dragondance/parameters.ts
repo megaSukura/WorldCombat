@@ -92,7 +92,7 @@ namespace PokemonSkills {
 
     describe("dragondance", [
         { key: "description.0", values: ["gift", "turns"] },
-        { key: "description.1", values: ["span", "gyre"] },
+        { key: "description.1", values: ["span","gyre"] },
         { key: "soar.on", values: ["lift"], when: function (context) { return read(context.detail.values, ["soar"]) === true; } },
         { key: "soar.off", values: [], when: function (context) { return read(context.detail.values, ["soar"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

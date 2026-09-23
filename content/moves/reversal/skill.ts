@@ -21,9 +21,10 @@ namespace PokemonSkills {
     function reversalVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
 
     define({
+        freeMovement: true,
         id: "reversal",
         name: "Reversal",
-        description: "An all-out attack that becomes more powerful the less HP the user has.",
+        description: "背水一喷：站住把余力提到脚下，扑向对手后从落点掀开一圈格斗光柱，把圈内的敌人一起向外掀开。自己越接近倒下，威力与喷发圈越大。",
         uses: ["残血时反打一记大的", "把围上来的敌人一起掀开", "拼命式赌一记重伤"],
         kind: "enemy",
         range: 3.0,

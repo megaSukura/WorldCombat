@@ -3,7 +3,7 @@
   "worldcombat.skill.makeitrain.use.0": "被围住时一次倾泻整片大范围",
   "worldcombat.skill.makeitrain.use.1": "用最高的一发打在扎堆的敌人身上",
   "worldcombat.skill.makeitrain.use.2": "在场上撒下大量可回收的真币",
-  "worldcombat.skill.makeitrain.description.0": "以自身为中心覆盖 %2$s 格，金币分 %3$s 圈、每 %4$s 落下，每枚对圈内每个敌人造成 %1$s 点特殊伤害。",
+  "worldcombat.skill.makeitrain.description.0": "以自身为中心覆盖 %2$s 格，金雨从中心向外分 %3$s 圈依次扫过，每隔 %4$s 向外推进一圈；圈内每个敌人只会被扫中一次，受到约 %1$s 点特殊伤害。",
   "worldcombat.skill.makeitrain.description.1": "雨停后留下约 %1$s 枚能捡起的真币。",
   "worldcombat.skill.makeitrain.description.2": "释放后自己的特攻下降 %1$s 级。",
   "worldcombat.skill.makeitrain.hoard.on": "当前是倾库式：单发与范围都更高，但自损 2 级特攻、起手与冷却更长。",

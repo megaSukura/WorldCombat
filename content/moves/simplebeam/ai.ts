@@ -1,15 +1,4 @@
-/**
- * 单纯光束 / simplebeam 的伙伴 AI 用途：这招自己的一套出手计划。
- *
- * 什么局面有意义：有一个看得见、够得着（ai.maxChase 内）、视线畅通的宝可梦威胁，它的特性读得出来、
- *   也不是单纯／懒惰／不可压制——只有这种目标才改得动。
- * 什么时候最想出手：目标特性是那些「靠它吃饭」的硬特性时 priority 抬到 76——把免疫、减伤、再生一类的
- *   强力特性顶成一枚单纯，等于拆掉它的底牌；其余可改写目标 60。
- * 对谁出手：当前威胁；已经是单纯、特性读不出或不可压制的目标跳过，避免浪费 15 发 PP。
- * 够不到怎么办：reach 就是念波射程，由共享接近逻辑把身体带进范围；视线被挡或距离不够时不急。
- * 放完之后：单纯挂在目标身上、特性层随即生效；还在时不重复发。
- * 配置：ai.maxChase 限制考虑距离；ai.leaveStation 决定驻守时是否离位。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace CompanionBehavior {
     registerFact("world_combat:simplebeam-ability", function (access, actor, _argument) {
         return PokemonSkills.simplebeamAbility(access, actor);
@@ -36,7 +25,7 @@ namespace CompanionBehavior {
         if (status(context, threat, "simplebeam")) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 13)) return false;
-        if (domain(context, threat) !== "cobblemon") return false;
+        if (domain(context, threat) !== "cobblemon") return world(context).clear(point(self.point), point(threat.point));
         if (!world(context).clear(point(self.point), point(threat.point))) return false;
         const ability = fact<string>(context, "world_combat:simplebeam-ability", threat);
         return ability !== null && PokemonSkills.simplebeamReceivable(ability);

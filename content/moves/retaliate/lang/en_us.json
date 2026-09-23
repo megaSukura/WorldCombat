@@ -3,9 +3,9 @@
   "worldcombat.skill.retaliate.use.0": "Hit back the moment an ally falls",
   "worldcombat.skill.retaliate.use.1": "Deliver a doubled charge carrying the grief",
   "worldcombat.skill.retaliate.use.2": "Charge the enemy that just struck your ally",
-  "worldcombat.skill.retaliate.description.0": "The charge deals %1$s physical (Normal) power; if an ally just fell it doubles, scaling with level and friendship.",
-  "worldcombat.skill.retaliate.description.1": "Charges %1$s blocks at %2$s per tick with a hit radius of %3$s blocks; on contact it shoves the target %4$s blocks.",
-  "worldcombat.skill.retaliate.solemn.on": "Current: Solemn — charge farther x1.12 and a x1.06 multiplier to run down the killer, but base x0.92 and longer prepare and cooldown.",
+  "worldcombat.skill.retaliate.description.0": "The charge deals about %1$s physical (Normal) damage to one enemy on contact; if an ally just fell this blow doubles, scaling with level and friendship.",
+  "worldcombat.skill.retaliate.description.1": "Charges up to %1$s blocks toward the target at %2$s blocks per tick with a %3$s block hit radius; a living target is shoved %4$s blocks, while a miss or a blocked path stops you there.",
+  "worldcombat.skill.retaliate.solemn.on": "Current: Solemn — charge farther x1.12 and a x1.06 grief multiplier, but base power x0.92 with longer prepare and cooldown.",
   "worldcombat.skill.retaliate.solemn.off": "Current: Direct — base x1.08 with a short, clean charge.",
   "worldcombat.skill.retaliate.timing": "Range %1$s blocks, prepare %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.retaliate.growth.0": "At level %1$s the retribution power rises to %2$s.",
@@ -22,7 +22,7 @@
   "worldcombat.skill.retaliate.value.settle": "Recover",
   "worldcombat.skill.retaliate.value.recharge": "Cooldown",
   "worldcombat.skill.retaliate.preference.solemn": "Solemn",
-  "worldcombat.skill.retaliate.preference.solemn.help": "On: charge farther x1.12 and a x1.06 multiplier to run down the killer, but base power x0.92, +3 prepare and +8 cooldown. Off: base x1.08 with a short, clean charge.",
+  "worldcombat.skill.retaliate.preference.solemn.help": "On: charge farther x1.12 and a x1.06 grief multiplier, but base power x0.92, +3 prepare and +8 cooldown. Off: base x1.08 with a short, clean charge.",
   "worldcombat.skill.retaliate.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.retaliate.preference.ai.maxChase.help": "Only charge when the target is within this distance; raise it to chase farther targets.",
   "worldcombat.skill.retaliate.preference.ai.avenge": "Hunt the killer",
@@ -30,5 +30,6 @@
   "world_combat.move.retaliate.text.hit": "Retaliation strike",
   "world_combat.move.retaliate.text.rage": "For my ally!",
   "world_combat.move.retaliate.text.miss": "The retaliation whiffed",
-  "effect.world_combat.retaliate_mourning": "Retaliate Grief"
+  "effect.world_combat.retaliate_mourning": "Retaliate Grief",
+  "worldcombat.skill.retaliate.description.additional": "When an ally falls within 20 blocks you and other nearby living allies gain Grief and remember the killer for 8 seconds; while you carry it the blow is multiplied, a landed hit consumes it at once, and a miss keeps it until the window ends."
 }

@@ -27,10 +27,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: rolloutId,
         cooldownParameter: "recharge",
         name: "Rollout",
-        description: "The user continually rolls into the target over five turns. This attack becomes more powerful each time it hits.",
+        description: "一趟接一趟地缩成石球滚进目标：每命中一趟，下一趟就更重（最多 5 趟），命中还会把人顶开，所以想接着滚就得重新贴上。落空或换用任何别的招式都会把层数清空。",
         uses: ["一趟一趟地滚进目标身上", "每命中一趟，下一趟翻倍变重", "落空或换招就把层数清空"],
         kind: "enemy",
         range: 3.4,

@@ -14,7 +14,7 @@ namespace PokemonSkills {
         heal: percent(F.base(0.45).plus(F.stat("specialAttack").times(0.0006)).clamp(0.35, 0.65).as("特攻转化"), "回复比例",
             "全部手下都交付时，施法者按其最大生命回复的比例；被击杀的手下少交一份。"),
         attendants: formula(F.base(3).plus(F.level().times(0.06)).floor().clamp(3, 6), "手下面数",
-            { unit: " 只", description: "召唤的手下数量，随等级增多；精锐档位减半但每只更耐打。" }),
+            { unit: " 只", description: "召唤的手下数量，随等级增多；精锐档位约为六成，但每只更耐打。" }),
         channelTicks: seconds(F.base(50).minus(F.stat("speed").times(0.15)).clamp(28, 50).as("速度修正"), "引导时间",
             "手下环绕引导多久才交付治疗；这段时间它们可以被攻击。"),
         orbitRadius: formula(F.base(1.6).plus(F.body("height").times(0.3)).clamp(1.2, 2.4).as("体型修正"), "环绕半径",
@@ -27,11 +27,11 @@ namespace PokemonSkills {
         { level: 60, values: { cooldown: 140 } }
     ]);
     describe(healorderId, [
-        { key: "description.0", values: ["heal", "attendants"] },
-        { key: "description.1", values: ["channelTicks", "orbitRadius", "attendantHealth"] },
+        { key: "description.0", values: ["heal","attendants"] },
+        { key: "description.1", values: ["channelTicks","orbitRadius","attendantHealth"] },
         { key: "stance.elite", values: [], when: function (context) { return read(context.detail.values, ["elite"]) === true; } },
         { key: "stance.swarm", values: [], when: function (context) { return read(context.detail.values, ["elite"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

@@ -22,10 +22,11 @@ namespace PokemonSkills {
     const hornLeechMissText = "world_combat.move.hornleech.text.miss";
 
     define({
+        freeMovement: true,
         id: "hornleech",
         cooldownParameter: "recharge",
         name: "Horn Leech",
-        description: "The user drains the target's energy with its horns. The user's HP is restored by up to half the damage taken by the target.",
+        description: "用角攻击目标，将造成的部分伤害转化为自身治疗。",
         uses: ["低头撞进去，用身体把一段距离变成命中", "扎中时把伤害换成回血，边打边续航", "贯穿式一次冲过两个目标"],
         kind: "enemy",
         range: 3.0,

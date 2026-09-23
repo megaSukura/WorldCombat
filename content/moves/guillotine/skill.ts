@@ -16,7 +16,7 @@ namespace PokemonSkills {
         id: guillotineId,
         cooldownParameter: "recharge",
         name: "Guillotine",
-        description: "A vicious tearing attack with big pincers. The target faints instantly if this attack hits.",
+        description: "大钳从两侧张开、罩住身前那一段扇形，合拢一刻还在钳口里的目标被一次夹断（一击必杀）。",
         uses: ["贴身用最短的起手夹断一个目标", "夹住正前方扇形里最近的一个对手", "夹空后要承担最久的收招，用时机换爆发"],
         kind: "enemy",
         range: 2.4,

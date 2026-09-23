@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.encore.summary": "Names the move the target just used and compels it to repeat that move until the echo fades. \"Last used move\" has a time window; the move fails if the target has not acted, if that move carries failencore, or if its PP is already gone.",
+  "worldcombat.skill.encore.summary": "Calls for a repeat of the target’s last move, temporarily allowing only that move. For ordinary creatures and players, it locks the last successful attack method, such as melee or arrows.",
   "worldcombat.skill.encore.use.0": "Lock down a setup or boost the target just used",
   "worldcombat.skill.encore.use.1": "Break a combo rhythm so it can only do the same thing",
   "worldcombat.skill.encore.use.2": "Pin a foe that just exposed an opening",
-  "worldcombat.skill.encore.description.0": "The target can only repeat the move it last used, for %1$s. That last move only counts within %2$s; older actions cannot be named.",
-  "worldcombat.skill.encore.description.1": "The call reaches %1$s blocks; until it fades the target repeats that one move.",
+  "worldcombat.skill.encore.description.0": "The lock lasts %1$s and can name an attack from the last %2$s. Pokémon may use only the named move; ordinary creatures and players have damage from other attack methods blocked.",
+  "worldcombat.skill.encore.description.1": "Calling range is %1$s blocks. The target still acts on its own; the echo restricts which attack methods it may use.",
   "worldcombat.skill.encore.description.2": "The call takes %1$s, the recovery is %2$s and the cooldown %3$s. The echo is a visible window; it fades when cured or when that move runs dry.",
   "worldcombat.skill.encore.strict.0": "Stern: a longer echo, but a shorter call and a slower, costlier cast.",
   "worldcombat.skill.encore.strict.1": "Light: a shorter echo, but a longer reach, a faster wind-up and a cheaper cooldown.",

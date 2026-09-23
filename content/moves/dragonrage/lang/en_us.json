@@ -4,9 +4,9 @@
   "worldcombat.skill.dragonrage.use.1": "Shove a charging foe back and pin it",
   "worldcombat.skill.dragonrage.use.2": "Eruption form: strip a whole cluster at once",
   "worldcombat.skill.dragonrage.description.0": "Whatever the target's defence and typing, a hit always removes %1$s HP; only a type immunity stops it.",
-  "worldcombat.skill.dragonrage.description.1": "The rage reaches %1$s blocks, flies at %2$s blocks per tick, with a %3$s block hit radius.",
-  "worldcombat.skill.dragonrage.erupt.on": "Eruption form: it detonates over %1$s blocks on arrival; everyone caught takes the fixed damage and is shoved %2$s blocks.",
-  "worldcombat.skill.dragonrage.erupt.off": "Ram form: the target is shoved %1$s blocks and pinned for %2$s seconds.",
+  "worldcombat.skill.dragonrage.description.1": "The rage reaches %1$s blocks and flies at %2$s blocks per tick with a %3$s-block hit radius; it settles on the first enemy it strikes.",
+  "worldcombat.skill.dragonrage.erupt.on": "Eruption form: it detonates over %2$s blocks on arrival; up to %4$s foes each take %1$s fixed damage and are shoved %3$s blocks.",
+  "worldcombat.skill.dragonrage.erupt.off": "Ram form: the target is shoved %1$s blocks and rooted for %2$s seconds — it cannot move, but can still attack.",
   "worldcombat.skill.dragonrage.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",
   "worldcombat.skill.dragonrage.growth.0": "From level %1$s the range rises to %2$s blocks.",
   "worldcombat.skill.dragonrage.growth.1": "From level %1$s the range rises to %2$s blocks and the pin lasts %3$s seconds.",
@@ -22,12 +22,13 @@
   "worldcombat.skill.dragonrage.value.settle": "Recovery",
   "worldcombat.skill.dragonrage.value.recharge": "Cooldown",
   "worldcombat.skill.dragonrage.preference.erupt": "Eruption form",
-  "worldcombat.skill.dragonrage.preference.erupt.help": "On: the shell detonates at the target point; everyone within takes the fixed 40 and is shoved outward, but the range is shorter, the cooldown longer and nobody is pinned. Off (ram form, default): single target, a straighter shove, and the target is pinned briefly.",
+  "worldcombat.skill.dragonrage.preference.erupt.help": "On: the shell detonates at the target point; up to 5 foes within take the fixed 40 and are shoved outward, but the range is shorter, the cooldown longer and nobody is rooted. Off (ram form, default): single target, a straighter shove, and the target is briefly rooted, unable to move.",
   "worldcombat.skill.dragonrage.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.dragonrage.preference.ai.maxChase.help": "Beyond this distance it closes in instead of firing. Larger values open from further away.",
   "worldcombat.skill.dragonrage.preference.ai.finish": "Finish low health",
   "worldcombat.skill.dragonrage.preference.ai.finish.help": "On: prefer it to finish a target already below half health (fixed damage ignores defence). Off: only the threat itself counts.",
   "world_combat.move.dragonrage.text.hit": "Dragon Rage tore away %1$s",
   "world_combat.move.dragonrage.text.erupt": "Rage eruption caught %1$s",
-  "world_combat.move.dragonrage.text.miss": "Dragon Rage hit nothing"
+  "world_combat.move.dragonrage.text.miss": "Dragon Rage hit nothing",
+  "worldcombat.skill.dragonrage.value.maximumTargets": "Blast targets"
 }

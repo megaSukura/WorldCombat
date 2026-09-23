@@ -16,7 +16,7 @@ namespace PokemonSkills {
         id: crushgripId,
         cooldownParameter: "recharge",
         name: "Crush Grip",
-        description: "The target is crushed with great force. The more HP the target has left, the greater the move's power.",
+        description: "一只巨力手从两侧合拢捏住对手：物攻与体重决定握力，对手此刻剩余的生命越满，这一握越重。它是三压招里最重、最慢、最贵，也是唯一会改变目标位置的一记——高举式把它整个人提起、按住，再砸回地面补一记固定伤害并短暂定身；原地式则一记捏完。",
         uses: ["用最重的一握捏掉满血目标的血条", "高举式把关键目标提起、按住再摔下", "用会改变目标位置的一握拆掉对手的站位"],
         kind: "enemy",
         range: 2.6,

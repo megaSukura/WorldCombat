@@ -50,7 +50,7 @@ namespace PokemonSkills {
         id: "dragonclaw",
         cooldownParameter: "recharge",
         name: "Dragon Claw",
-        description: "The user slashes the target with huge, sharp claws to inflict damage.",
+        description: "站定、举双爪，朝身前一整片扇形同时划下两道交叉的巨爪痕：正面的敌人一起被抓，被抓中的目标护甲被爪尖撕开、防御下降。它是全组唯一会削弱护甲、也是唯一一次扫一整片的正招。",
         uses: ["朝身前一整片扇形同时划下巨爪", "一次扫多个正面目标", "把目标的护甲撕开、防御下降"],
         kind: "enemy",
         range: 2.5,

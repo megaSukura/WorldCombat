@@ -119,9 +119,9 @@ namespace PokemonSkills {
     defineDamage("clangingscales", "clang", {}, { sound: true });
 
     describe("clangingscales", [
-        { key: "description.0", values: ["clang", "ringRadius"] },
-        { key: "description.1", values: ["shock", "guardLoss"] },
-        { key: "echo.on", values: ["echoDelay", "echoScale", "echoShare"], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
+        { key: "description.0", values: ["clang","ringRadius"] },
+        { key: "description.1", values: ["shock","guardLoss"] },
+        { key: "echo.on", values: ["echoDelay","echoScale","echoShare"], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
         { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.clang"] },

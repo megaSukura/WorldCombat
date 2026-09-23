@@ -9,7 +9,7 @@
   "worldcombat.skill.swift.use.0": "一圈追人的星光",
   "worldcombat.skill.swift.use.1": "同时压住多个对手",
   "worldcombat.skill.swift.use.2": "在移动的目标身上收束",
-  "worldcombat.skill.swift.value.star": "单星威力",
+  "worldcombat.skill.swift.value.star": "单星伤害",
   "worldcombat.skill.swift.value.stars": "星数",
   "worldcombat.skill.swift.value.turn": "转向",
   "worldcombat.skill.swift.value.starSpeed": "星速",
@@ -23,5 +23,6 @@
   "worldcombat.skill.swift.preference.ai.spread.help": "开启后，目标身边还有别的敌人时优先发射，让散星同时咬住两个；关闭则只按普通远程攻击排序。",
   "worldcombat.skill.swift.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.swift.preference.ai.leaveStation.help": "开启后，驻守命令下也会为找射界离开站位；关闭则只在原地够得到时发射。",
-  "world_combat.move.swift.text.fade": "没有可追的目标"
+  "world_combat.move.swift.text.fade": "没有可追的目标",
+  "worldcombat.skill.swift.description.additional": "未开启散星时，全部星都追向选定目标；开启散星时，先分出星给选定目标，再把其余的依次分给锁定距离内的其他敌人，因此选定目标吃到的星会变少。"
 }

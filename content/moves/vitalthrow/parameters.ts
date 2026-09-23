@@ -64,9 +64,9 @@ namespace PokemonSkills {
     ]);
 
     describe("vitalthrow", [
-        { key: "description.0", values: ["throwPower", "momentum"] },
-        { key: "description.1", values: ["braceTicks", "catchRange"] },
-        { key: "description.2", values: ["fling", "pinTicks"] },
+        { key: "description.0", values: ["throwPower","momentum"] },
+        { key: "description.1", values: ["braceTicks","catchRange"] },
+        { key: "description.2", values: ["fling","pinTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.throwPower", "tier.0.pinTicks"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.throwPower", "tier.1.fling"] }

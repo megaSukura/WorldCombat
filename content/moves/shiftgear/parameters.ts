@@ -38,7 +38,7 @@ namespace PokemonSkills {
             F.base(1.1).plus(F.body("height").times(0.35)).clamp(0.9, 2.2).round(2),
             "齿轮环半径", {
                 unit: " 格",
-                description: "绕身齿轮环的半径；身板越大转得越开。判定与表现读同一个半径。"
+                description: "绕身齿轮环的视觉半径；身板越大转得越开。"
             }),
         /** 运转窗口：基础 30 刻，速度每比 60 快 1 加 0.4，夹 24..72。 */
         overrun: seconds(
@@ -60,6 +60,7 @@ namespace PokemonSkills {
 
     describe("shiftgear", [
         { key: "description.0", values: ["attackGift", "speedGift"] },
-        { key: "description.2", values: ["telegraph", "aftermath", "wait"] }
+        { key: "description.2", values: [] },
+        { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] }
     ]);
 }

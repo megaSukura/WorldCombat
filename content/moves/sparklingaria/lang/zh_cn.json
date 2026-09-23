@@ -5,9 +5,9 @@
   "worldcombat.skill.sparklingaria.use.2": "被围住时原地炸开一圈气泡",
   "worldcombat.skill.sparklingaria.description.0": "气泡浪中心造成约 %1$s 的伤害，推到边缘时保留 %2$s 的威力；对手的特防、相性与暴击在命中时另算。",
   "worldcombat.skill.sparklingaria.description.1": "波及身周 %1$s 格。",
-  "worldcombat.skill.sparklingaria.description.2": "每洗掉一处灼伤，那只宝可梦回复 %1$s 的最大生命。",
+  "worldcombat.skill.sparklingaria.description.2": "圈内除施放者以外的每个身体（同伴和敌人都算）身上的灼伤都会被洗掉一次，该身体回复其最大生命的 %1$s；施放者自己的灼伤不会被洗。",
   "worldcombat.skill.sparklingaria.note.on": "开启高音：范围约 ×1.25、气泡更多，但单点威力约 ×0.85，起手更慢、冷却更长，用来一次洗更大一片。",
-  "worldcombat.skill.sparklingaria.note.off": "关闭高音（收束咏叹调）：范围约 ×0.85、单点威力约 ×1.15，收手更快、冷却更短。",
+  "worldcombat.skill.sparklingaria.note.off": "关闭高音（收束咏叹调）：范围约 ×0.85、单点威力约 ×1.15，起手与冷却更短。",
   "worldcombat.skill.sparklingaria.timing": "以自身为中心施放（需站到目标 %1$s 格内），准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.sparklingaria.growth.0": "达到 %1$s 级，气泡浪威力提升至 %2$s。",
   "worldcombat.skill.sparklingaria.growth.1": "达到 %1$s 级，气泡浪威力提升至 %2$s，波及半径提升至 %3$s。",
@@ -18,7 +18,7 @@
   "worldcombat.skill.sparklingaria.value.cureHeal": "洗净回血",
   "worldcombat.skill.sparklingaria.value.maxTargets": "最多命中数",
   "worldcombat.skill.sparklingaria.preference.highNote": "高音",
-  "worldcombat.skill.sparklingaria.preference.highNote.help": "开启：范围约 ×1.25、气泡更多、单点约 ×0.85，起手 +2 刻、冷却 +8 刻，用来一次洗更大一片。关闭（收束咏叹调）：范围约 ×0.85、单点约 ×1.15，收手更快。",
+  "worldcombat.skill.sparklingaria.preference.highNote.help": "开启：范围约 ×1.25、气泡更多、单点约 ×0.85，起手 +2 刻、冷却 +8 刻，用来一次洗更大一片。关闭（收束咏叹调）：范围约 ×0.85、单点约 ×1.15，起手 −2 刻、冷却 −6 刻。",
   "worldcombat.skill.sparklingaria.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.sparklingaria.preference.ai.maxChase.help": "伙伴只在目标离自己这么远以内时才考虑起唱；调小只在贴身时唱，调大愿意先往人堆里走。",
   "worldcombat.skill.sparklingaria.preference.ai.cureAllies": "替同伴洗灼伤",
@@ -26,5 +26,6 @@
   "world_combat.move.sparklingaria.text.hit": "气泡轰中 %1$s 个",
   "world_combat.move.sparklingaria.text.cure": "洗净 %1$s 处灼伤",
   "world_combat.move.sparklingaria.text.wash": "灼伤被洗去",
-  "world_combat.move.sparklingaria.text.miss": "咏叹调落空"
+  "world_combat.move.sparklingaria.text.miss": "咏叹调落空",
+  "worldcombat.skill.sparklingaria.description.additional": "气泡浪只伤害敌人，每次最多同时命中 %1$s 个。"
 }

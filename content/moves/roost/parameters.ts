@@ -54,12 +54,12 @@ namespace PokemonSkills {
     ]);
 
     describe(roostId, [
-        { key: "description.0", values: ["heal", "restTicks"] },
+        { key: "description.0", values: ["heal","restTicks"] },
         { key: "description.1", values: ["chunks"] },
         { key: "description.2", values: ["gather", "settle"] },
         { key: "stance.deep", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "stance.shallow", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

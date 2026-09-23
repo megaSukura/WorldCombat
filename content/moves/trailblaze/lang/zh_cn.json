@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.trailblaze.summary": "跳出草丛进行攻击。通过轻快的步伐会提高自己的速度。",
+  "worldcombat.skill.trailblaze.summary": "借草木的助力贴地窜出的一记袭击：撞上路径上第一个敌人造成伤害并把它带开，命中后自身速度提高一段；从草丛起跳时这一跳更重、提速更多。",
   "worldcombat.skill.trailblaze.use.0": "从草木里窜出打一记措手不及",
-  "worldcombat.skill.trailblaze.use.1": "借草丛起跳，一次换到更远的对手",
+  "worldcombat.skill.trailblaze.use.1": "窜到较远的对手身前打一记措手不及",
   "worldcombat.skill.trailblaze.use.2": "命中后提速，用新速度追下去",
-  "worldcombat.skill.trailblaze.description.0": "窜袭造成 %1$s 的伤害，一次窜出 %2$s 格、每刻 %3$s 格。",
-  "worldcombat.skill.trailblaze.description.1": "命中后速度 +%1$s 级（从草丛起跳多带一档），把目标带开 %2$s 格，判定半径 %3$s 格。",
+  "worldcombat.skill.trailblaze.description.0": "朝瞄准方向贴地窜出，撞上路径上第一个敌人时造成约 %1$s 点物理伤害；一次最多窜跃 %2$s 格、每刻移动 %3$s 格，撞上地形或被挡住会提前落地。",
+  "worldcombat.skill.trailblaze.description.1": "命中后把目标沿窜跃方向带开 %2$s 格；真的造成伤害时，自身速度 +%1$s 级（从草木起跳再多一档），提速持续到脱战。命中判定半径 %3$s 格。",
   "worldcombat.skill.trailblaze.overshoot.on": "穿草而过：命中后顺势多掠一段落在对手身后，把它甩在背后；代价是落点更靠里。",
   "worldcombat.skill.trailblaze.overshoot.off": "就地收步：命中即停在对手身前，站位更稳、便于继续跟打。",
   "worldcombat.skill.trailblaze.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -26,8 +26,9 @@
   "worldcombat.skill.trailblaze.preference.ai.maxChase": "窜跃距离",
   "worldcombat.skill.trailblaze.preference.ai.maxChase.help": "对手离自己这么远以内才考虑窜出去；调小只贴脸出手，调大愿意从更远处起跳。",
   "worldcombat.skill.trailblaze.preference.ai.preferCover": "优先草丛起跳",
-  "worldcombat.skill.trailblaze.preference.ai.preferCover.help": "开启：脚边有草木时优先窜跃，跳得更远更重还多带一档速度；关闭：只看距离与威胁。",
+  "worldcombat.skill.trailblaze.preference.ai.preferCover.help": "开启：脚边有草木时优先窜跃，这一跳更重、提速多一档；关闭：只看距离与威胁，不为踩草绕路。",
   "world_combat.move.trailblaze.text.grass": "借草起势",
   "world_combat.move.trailblaze.text.haste": "轻步提速 +%1$s",
-  "world_combat.move.trailblaze.text.miss": "窜空"
+  "world_combat.move.trailblaze.text.miss": "窜空",
+  "worldcombat.skill.trailblaze.description.cover": "起跳点脚边附近有草木（草、花、树叶等）时借势：窜袭更重，提速再多一档；空地上也能窜，只是没有这份助力。"
 }

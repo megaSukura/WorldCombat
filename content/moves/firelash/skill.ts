@@ -40,7 +40,7 @@ namespace PokemonSkills {
         id: "firelash",
         cooldownParameter: "recharge",
         name: "Fire Lash",
-        description: "The user strikes the target with a burning lash. This also lowers the target's Defense stat.",
+        description: "点起一条燃烧的长鞭甩向目标：单体物理火焰伤害，命中必然把目标防御烧降 1 级，为后续攻击开路。缠卷式把目标朝自己拖近并短暂减速、剥甲两级，代价是威力、鞭长与出手速度。",
         uses: ["中距离用一条火鞭剥掉对手防御，给后续攻击开路", "缠卷式把目标拖到身边再接一记近战", "对高防目标持续削甲"],
         kind: "enemy",
         range: 4.2,

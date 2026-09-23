@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.esperwing.summary": "Strike enemies ahead and raise Speed. Has a high critical-hit chance.",
-  "worldcombat.skill.esperwing.description.0": "The wings deal %1$s special damage to foes in the front fan and land critical hits more often.",
+  "worldcombat.skill.esperwing.summary": "Gather aura into a pair of wings and sweep the front fan, dealing special damage to every foe caught with a higher critical chance, while raising the user's Speed and leaving a lingering aura.",
+  "worldcombat.skill.esperwing.description.0": "The wings sweep the front fan, dealing about %1$s special damage to each foe caught, and land critical hits more often.",
   "worldcombat.skill.esperwing.description.1": "The wings span %1$s blocks and spread %2$s degrees to each side.",
-  "worldcombat.skill.esperwing.description.2": "The beat writes %1$s Speed level(s) onto the user and the aura lingers for %2$s.",
+  "worldcombat.skill.esperwing.description.2": "The beat raises the user's Speed by %1$s stage(s) and leaves a %2$s aura on the user; while the aura lingers a companion will not beat its wings again.",
   "worldcombat.skill.esperwing.stance.flap": "Beat form: a heavier single hit, at a narrower arc and a shorter aura.",
   "worldcombat.skill.esperwing.stance.glide": "Glide form: a wider arc and a longer aura, at a lighter single hit.",
   "worldcombat.skill.esperwing.timing": "Range %1$s blocks; %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

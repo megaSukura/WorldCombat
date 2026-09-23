@@ -62,9 +62,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "rockwrecker",
         name: "Rock Wrecker",
-        description: "The user launches a huge boulder at the target to attack. The user can't move on the next turn.",
+        description: "扛起一块巨石沿抛物线砸向目标：落地碎裂，把落点一圈的敌人一起砸伤并顶开，在地面留下碎石；放完自己扛石过力、力竭一段时间，无法行动也无法移动。",
         uses: ["一发走抛物线的大石", "越过掩体砸在目标脚下", "把落点一圈砸开并留下碎石地"],
         kind: "enemy",
         range: 10,

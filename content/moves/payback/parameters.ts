@@ -134,8 +134,8 @@ namespace PokemonSkills {
     ]);
 
     describe(paybackId, [
-        { key: "description.0", values: ["payback", "window"] },
-        { key: "description.1", values: ["dash", "speed", "collisionRadius", "push", "grievance"] },
+        { key: "description.0", values: ["payback","window"] },
+        { key: "description.1", values: ["dash","speed","collisionRadius","push","grievance"] },
         { key: "patient.on", values: [], when: function (context) { return read(context.detail.values, ["patient"]) === true; } },
         { key: "patient.off", values: [], when: function (context) { return read(context.detail.values, ["patient"]) !== true; } },
         { key: "timing", values: ["range", "grit", "settle", "pp", "recharge"] },

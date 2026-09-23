@@ -25,10 +25,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "superfang",
         cooldownParameter: "recharge",
         name: "Super Fang",
-        description: "The user chomps hard on the target with its sharp front fangs. This cuts the target's HP in half.",
+        description: "门牙先量住猎物的命脉，再一口咬掉它现有生命的一半：不看攻防，按目标当前生命直接结算。对满血厚目标最狠，越残血越无力，是开场与破盾的招而不是收尾的招。",
         uses: ["一口削掉目标当前生命的一半", "开场就压掉厚血目标的血线", "用不看攻防的比例伤害破盾"],
         kind: "enemy",
         range: 1.9,

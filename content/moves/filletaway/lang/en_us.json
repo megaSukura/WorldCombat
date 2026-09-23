@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.filletaway.summary": "Carve away a large part of your own HP, flinging the flesh into the world to sharply raise Attack, Sp. Atk and Speed. It cannot be used below half health.",
-  "worldcombat.skill.filletaway.description.0": "Pay %1$s of your max HP and raise Attack, Sp. Atk and Speed by %2$s.",
-  "worldcombat.skill.filletaway.description.1": "Fling %1$s chunks of flesh by body weight at %2$s blocks per tick across a %3$s block spread; they despawn by the normal drop rules.",
+  "worldcombat.skill.filletaway.summary": "Carve away a large part of your own HP, flinging the flesh into the world to sharply raise Attack, Sp. Atk and Speed; it cannot be cast when HP is too low to pay the cost and keep the health margin.",
+  "worldcombat.skill.filletaway.description.0": "Pay %1$s of your max HP to raise Attack, Sp. Atk and Speed by %2$s stages; the gain does not wear off on its own and lasts until it is cleared or the fight ends (stat stages cap at +6).",
+  "worldcombat.skill.filletaway.description.1": "Fling %1$s chunks of flesh by body weight at %2$s blocks per tick within a %3$s-block radius; they despawn by the normal drop rules.",
   "worldcombat.skill.filletaway.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.filletaway.use.0": "Max out the offensive stats before charging in",
   "worldcombat.skill.filletaway.use.1": "Trade HP for a burst while healthy",
@@ -19,5 +19,6 @@
   "worldcombat.skill.filletaway.preference.ai.maxChase": "Carve distance limit",
   "worldcombat.skill.filletaway.preference.ai.maxChase.help": "Beyond this distance the threat no longer justifies carving first; larger values stack offence from further away.",
   "world_combat.move.filletaway.text.carve": "Fillet Away · %1$s HP for %2$s stages",
-  "world_combat.move.filletaway.text.weak": "Below half health; cannot carve"
+  "world_combat.move.filletaway.text.weak": "Below half health; cannot carve",
+  "worldcombat.skill.filletaway.requirement": "It can only be cast when HP is above the cost plus the kept-health margin, or you cannot carve; 'All out' cuts deeper for a bigger gain but has a longer cooldown."
 }

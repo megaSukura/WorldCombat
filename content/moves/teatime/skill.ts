@@ -31,8 +31,8 @@ namespace PokemonSkills {
     define({
         id: teatimeId,
         cooldownParameter: "wait", name: "茶会",
-        description: "在选定的地方铺开一席茶；茶香范围内每个带着树果的战斗者（敌友和自己都算）都会吃掉自己那颗，果子效果落到本人身上。它能给队友的果子立刻生效，也能逼对手把保命或反击的果子提前吃掉。盛宴让茶席更广、更久、沏得更浓，代价是起手与冷却更长。",
-        uses: ["在对手扎堆处摆茶，一次掀掉一圈人手里的树果", "让队友手里的回复／能力树果立刻生效", "把对手的反击树果（如刺栗果）提前逼出来"],
+        description: "在选定的地方铺开一席茶；茶香范围内每个带着树果的战斗者（不分敌我）都会吃掉自己那颗，果子效果落到本人身上。它能给队友的果子立刻生效，也能逼对手把保命或反击的果子提前吃掉。盛宴让茶席更广、沏得更浓，代价是起手与冷却更长。",
+        uses: ["在对手扎堆处摆茶，一次掀掉一圈人手里的树果", "让队友手里的回复／能力树果立刻生效", "把对手的反击树果提前逼出来"],
         kind: "point", range: 5, maxRange: 9, prepare: 10, active: 1, recover: 6, cooldown: 150, style: "tea",
         maximumTicks: 260,
         defaults: { grand: false, ai: { minHolders: 1, maxChase: 12, stripFoes: true } },

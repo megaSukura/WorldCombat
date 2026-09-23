@@ -43,7 +43,7 @@ namespace PokemonSkills {
         id: "pyroball",
         cooldownParameter: "recharge",
         name: "Pyro Ball",
-        description: "The user attacks by igniting a small stone and launching it as a fiery ball at the target. This may also leave the target with a burn.",
+        description: "点燃脚边的小石，再像抽射一样把火球踢出去：火球带焰尾沿低弧飞出，命中炸开成一团火与碎石，并可能把目标引燃；落点留下一圈慢慢淡去的焦土。",
         uses: ["中远距离的高威力火球点射", "用一脚抽射压血并可能引燃", "在落点留下焦土标记这一脚"],
         kind: "enemy",
         range: 14,

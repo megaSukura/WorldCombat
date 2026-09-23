@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.bestow.summary": "把自己携带的道具交给一个空手的伙伴：礼物沿连线飞过去、落进它的道具位，自己就此空手。对方已有道具、或被查封时递不出去。",
+  "worldcombat.skill.bestow.summary": "把自己携带的一件道具交给空手的友方宝可梦、普通生物或玩家。对方已有持物或被查封时无法递送。",
   "worldcombat.skill.bestow.use.0": "把树果一类道具让给需要的队友",
   "worldcombat.skill.bestow.use.1": "在开战前把道具交到主力手上",
   "worldcombat.skill.bestow.use.2": "把自己的道具转交给空手的伙伴",
-  "worldcombat.skill.bestow.description.0": "在 %1$s 格内把礼物递给空手的伙伴，起手 %2$s 秒；只送出去、不换回来。",
+  "worldcombat.skill.bestow.description.0": "向 %1$s 格内的空手友方递送一件道具，准备 %2$s 秒后完成交接；礼物留在对方手里。",
   "worldcombat.skill.bestow.urgent.on": "开启急递：递送距离 ×0.8、起手 −3 刻、冷却 −10 刻，要贴近才递得到，但递得快。",
   "worldcombat.skill.bestow.urgent.off": "关闭急递：递送距离 ×1.15、起手 +3 刻、冷却 +10 刻，可以隔一段距离郑重递过去。",
   "worldcombat.skill.bestow.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

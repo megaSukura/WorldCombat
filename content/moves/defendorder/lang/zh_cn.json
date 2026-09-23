@@ -30,5 +30,6 @@
   "worldcombat.skill.defendorder.preference.ai.panic.help": "血量比例低于这个值时抢在共享次序前召手下；调高更早进入防守姿态，调低只在濒危时才召。",
   "world_combat.move.defendorder.text.call": "手下护身（%1$s 只）",
   "world_combat.move.defendorder.text.scatter": "甲壳散去",
-  "effect.world_combat.defendorder_guard": "防御指令"
+  "effect.world_combat.defendorder_guard": "防御指令",
+  "worldcombat.skill.defendorder.description.additional": "手下是可被攻击的目标：被清掉一只，它提供的那一级当刻收回，全部清光后甲壳不再提供加成。同一时间只维持一层甲壳，未散去前无法再召；时间走完或被清除时，手下一起散去、等级一并收回。"
 }

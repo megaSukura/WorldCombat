@@ -40,7 +40,7 @@ namespace PokemonSkills {
 
     define({
         id: morningsunId, name: "晨光",
-        description: "把白天晴空的日光一次拽到身上：接住晨光时按最大生命的三分之二左右回复并获得一段速度提升，夜里或阴雨只回一点、也没有加速。",
+        description: "把白天晴空的日光一次拽到身上：接住晨光时按已损失生命的三分之二左右回复并获得一段速度提升，夜里或阴雨只回一点、也没有加速。",
         uses: ["白天晴空下的强回复", "借回复接一段加速", "夜里只作小补"],
         kind: "self", range: 0, prepare: 0, active: 0, recover: 10, cooldown: 210, style: "dawn",
         maximumTicks: 300,

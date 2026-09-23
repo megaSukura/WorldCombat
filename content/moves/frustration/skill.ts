@@ -18,9 +18,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "frustration",
         name: "Frustration",
-        description: "This full-power attack grows more powerful the less the user likes its Trainer.",
+        description: "把憋着的不满一次全抓出来：扑近对手后连续抓出几爪，每爪都是一段独立伤害并把对手抓退一点。亲密度越低，抓得越重、越多、越密；它和报恩读同一个数、方向相反，一个连抓、一个单次重击。",
         uses: ["亲密度低时的一串连抓", "贴身把不满一次撒出去", "把贴脸的对手一路抓退"],
         kind: "enemy",
         range: 2.8,

@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.bind.summary": "A line of long body or vine lashes out and ties the target to you. Sprint away and it drags you back; every squeeze cinches tighter, and the tension slows the user too. The target can still move and fight, but it cannot leave the rope - unless it tears it apart in one step, or the rope runs out.",
+  "worldcombat.skill.bind.summary": "A line of long body or vine lashes out and ties the target to you. Sprint away and it drags you back; every squeeze cinches tighter, and both the tethered target and the user pulling the rope are slowed. The target can still move and fight, but it cannot leave the rope - unless it tears it apart in one step, the rope runs out, or the binding on either end is cleansed.",
   "worldcombat.skill.bind.use.0": "Tether a fleeing target and drag it along beside you",
   "worldcombat.skill.bind.use.1": "Suppress a stubborn target with ever-tightening damage",
   "worldcombat.skill.bind.use.2": "Pull a target out of cover or out of the water",
   "worldcombat.skill.bind.description.0": "Lashes out to tie one target within %2$s blocks with a %3$s block grip radius, dealing about %1$s contact damage as it catches.",
-  "worldcombat.skill.bind.description.1": "The rope is %1$s blocks long and drags a straying target back at %2$s blocks per tick; it cinches every %4$s ticks, tightening both the later power and the rope by %3$s each time.",
-  "worldcombat.skill.bind.description.2": "The rope lasts up to %1$s, and snaps if either end is displaced more than %2$s blocks apart.",
-  "worldcombat.skill.bind.choke.on": "Choke form: a shorter rope that cinches faster and drags harder and lasts longer, at the cost of lower base power and a longer cooldown.",
-  "worldcombat.skill.bind.choke.off": "Tow form: a longer rope with a gentler cinch and full power that leads the target around leniently and leaves the user freer.",
-  "worldcombat.skill.bind.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
+  "worldcombat.skill.bind.description.1": "The rope is %1$s blocks long; a target past it gets pulled back (up to %2$s blocks at a time). It cinches every %4$s, raising the power multiplier by %3$s each squeeze and drawing the rope shorter.",
+  "worldcombat.skill.bind.description.2": "The rope lasts up to %1$s, and snaps if either end is displaced more than %2$s blocks apart; it also comes free if the binding on either end is cleansed or either one goes down.",
+  "worldcombat.skill.bind.choke.on": "Choke form: a shorter rope that cinches faster, drags harder, lasts longer and hits harder per squeeze, at the cost of a longer cooldown.",
+  "worldcombat.skill.bind.choke.off": "Tow form: a longer rope with a gentler cinch, lighter drag and shorter duration at base per-squeeze power, leading the target around leniently.",
+  "worldcombat.skill.bind.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown.",
   "worldcombat.skill.bind.growth.0": "At level %1$s, Bind power rises to %2$s.",
   "worldcombat.skill.bind.growth.1": "At level %1$s, Bind power rises to %2$s, the rope to %3$s blocks and the cinch to %4$s.",
   "worldcombat.skill.bind.value.cinch": "Bind power",
@@ -26,7 +26,7 @@
   "worldcombat.skill.bind.value.recharge": "Cooldown",
   "worldcombat.skill.bind.value.targetWeight": "Target weight",
   "worldcombat.skill.bind.preference.choke": "Choke form",
-  "worldcombat.skill.bind.preference.choke.help": "On: a shorter rope that cinches faster, drags harder and lasts longer, but with lower base power and a longer cooldown, holding the target right at your feet. Off (tow form): a longer, gentler rope at full power that leads the target around leniently and leaves you freer.",
+  "worldcombat.skill.bind.preference.choke.help": "On: a shorter rope that cinches faster, drags harder, lasts longer and hits harder per squeeze, but with a longer cooldown, holding the target right at your feet. Off (tow form): a longer, gentler rope with lighter drag and shorter duration at base per-squeeze power that leads the target around leniently.",
   "worldcombat.skill.bind.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.bind.preference.ai.maxChase.help": "Beyond this distance it closes in instead of lashing out. The rope cannot reach further, so larger values mostly invite whiffs while chasing.",
   "worldcombat.skill.bind.preference.ai.preferRunners": "Tether the runners first",
@@ -35,5 +35,6 @@
   "effect.world_combat.bind_hold": "Holding the Line",
   "world_combat.move.bind.text.grip": "Tethered - cinch %1$s",
   "world_combat.move.bind.text.release": "Rope slackened",
-  "world_combat.move.bind.text.snap": "Rope snapped"
+  "world_combat.move.bind.text.snap": "Rope snapped",
+  "worldcombat.skill.bind.description.slow": "The tethered target's movement speed is reduced by 25%, and the user pulling the rope is slowed by 22% as well; both return to normal once the rope is gone."
 }

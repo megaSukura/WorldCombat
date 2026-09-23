@@ -27,5 +27,6 @@
   "worldcombat.skill.tailwind.preference.ai.minGap.help": "威胁近于这个距离时不再起风、直接应对；调大更常在近身时放弃提速。",
   "world_combat.move.tailwind.text.ride": "顺风（速度 +%1$s／%2$s 人受风／%3$s 秒）",
   "world_combat.move.tailwind.text.fade": "顺风停息",
-  "effect.world_combat.tailwind_gale": "顺风"
+  "effect.world_combat.tailwind_gale": "顺风",
+  "worldcombat.skill.tailwind.description.release": "风停或效果被清除时，按每个受风者实际抬到的等级收回提速；已经带着同一阵风的战斗者不会被再次抬高。"
 }

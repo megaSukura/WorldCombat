@@ -14,11 +14,12 @@
  */
 namespace PokemonSkills {
     define({
+        requiresGround: true,
         id: fissureId,
         cooldownParameter: "recharge",
         name: "Fissure",
-        description: "The user opens up a fissure in the ground and drops the target in. The target faints instantly if this attack hits.",
-        uses: ["从远处点掉一个站在地上的高价值目标", "逼对手离开脚下的位置或跳起来", "在战场地面留下裂缝，标出这块地不再安全"],
+        description: "把震荡压进土里，一道裂缝沿地表直窜到对手脚下张口——站在那块地上的人被一次结清（一击必杀）。它隔得远，但只认站在地上、且属性上吃得到地面系的目标；张口前的预告就是对手走开的窗口。",
+        uses: ["从远处点掉一个站在地上的高价值目标", "逼对手离开脚下的位置或跳起来", "在地面留下裂缝，标出这块地不再安全"],
         kind: "enemy",
         range: 7,
         maxRange: 11,

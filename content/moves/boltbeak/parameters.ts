@@ -69,7 +69,7 @@ namespace PokemonSkills {
             }),
         /** 先手窗口：1.1 秒 − 速度偏移[−0.2,0.4]；夹 0.6..1.8 秒。 */
         window: seconds(
-            F.base(1.1).minus(F.stat("speed").minus(55).times(0.004).clamp(-0.2, 0.4)).clamp(0.6, 1.8).round(2),
+            F.base(22).minus(F.stat("speed").minus(55).times(0.08).clamp(-4, 8)).clamp(12, 36).round(0),
             "先手窗口", "目标在这段时间内打过施法者，就被算作抢先、不再翻倍；快手只把眼前的回击算数。"),
         /** 突刺距离：3.8 格 + 速度偏移[−0.6,1.6] + 等级偏移[0,1.4]；夹 3..7。 */
         dart: formula(
@@ -124,7 +124,7 @@ namespace PokemonSkills {
     ]);
 
     describe(boltbeakId, [
-        { key: "description.0", values: ["peck", "window"] },
+        { key: "description.0", values: ["peck","window"] },
         { key: "description.1", values: ["dart", "speed", "collisionRadius", "backstep"] },
         { key: "skirmish.on", values: [], when: function (context) { return read(context.detail.values, ["skirmish"]) === true; } },
         { key: "skirmish.off", values: [], when: function (context) { return read(context.detail.values, ["skirmish"]) !== true; } },

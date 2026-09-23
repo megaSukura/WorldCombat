@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.powerswap.summary": "利用超能力把双方攻击与特攻的能力变化对调一段窗口：换完你拿走对方攒起来的攻势，窗口走完自动换回。宝可梦走原生阶梯，其他生物走公共阶梯，同一条路。",
+  "worldcombat.skill.powerswap.summary": "利用超能力把双方攻击与特攻的能力变化对调一段窗口：换完你拿走对方攒起来的攻势，窗口走完或被清除时各自换回原来的等级。",
   "worldcombat.skill.powerswap.use.0": "把对手涨起来的攻/特攻夺过来",
   "worldcombat.skill.powerswap.use.1": "在自己被降攻后把负数甩给对手",
   "worldcombat.skill.powerswap.use.2": "在对手强化成型时把气势整个接走",
@@ -24,5 +24,6 @@
   "world_combat.move.powerswap.text.even": "攻势相当，换了也没变化",
   "world_combat.move.powerswap.text.reverted": "攻势换回原位",
   "world_combat.move.powerswap.text.miss": "没找到要换的人",
-  "effect.world_combat.powerswap_window": "力量互换"
+  "effect.world_combat.powerswap_window": "力量互换",
+  "worldcombat.skill.powerswap.description.1": "目标须是另一个非友方角色；任意一方身上已有换势窗口时无法再次施放。双方这两项等级完全相同时，交换不会发生，也不会产生窗口。"
 }

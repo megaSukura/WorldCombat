@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.raindance.summary": "Call a rainstorm onto a chosen patch of sky: bodies inside the rain are drenched, Water moves hit harder, Fire moves are suppressed, flames and burns are put out, and open ground fires are quenched by the downpour.",
+  "worldcombat.skill.raindance.summary": "Call a rainstorm onto a chosen patch of sky: bodies inside the rain are drenched, and while drenched their own Water moves hit harder and their own Fire moves are suppressed; flames and burns are put out, and open ground fires are quenched by the downpour.",
   "worldcombat.skill.raindance.use.0": "Boost Water moves",
   "worldcombat.skill.raindance.use.1": "Suppress Fire attackers",
   "worldcombat.skill.raindance.use.2": "Put out fire and burns",
   "worldcombat.skill.raindance.description.0": "Lay a rainstorm of radius %1$s blocks on the chosen ground, lasting %2$s.",
-  "worldcombat.skill.raindance.description.1": "Drench living targets in the rain. They remain wet for %1$s after leaving.",
+  "worldcombat.skill.raindance.description.1": "Living bodies entering the rain are drenched and stay wet for %1$s after leaving: while wet their own Water moves deal x1.5 and their own Fire moves x0.5, and other Water and Ice moves can read the wet mark; as long as they stay in the rain, their flames are doused and their burns cured.",
   "worldcombat.skill.raindance.description.2": "Each scan quenches up to %1$s blocks of open ground fire; fire put out by this rain does not burn back on its own.",
   "worldcombat.skill.raindance.description.3": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
   "worldcombat.skill.raindance.timing": "Cast at ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to call the rain, recovers %3$s, and commits a %5$s cooldown on cast.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.raindance.preference.ai.leaveStation.help": "On, a companion holding its station will step out to call rain.",
   "world_combat.move.raindance.text.drench": "Drenched",
   "world_combat.move.raindance.text.douse": "Put out",
-  "effect.world_combat.raindance_soaked": "Drenched"
+  "effect.world_combat.raindance_soaked": "Drenched",
+  "worldcombat.skill.raindance.description.weather": "The rain also rewrites the local weather: inside it the sky darkens and sunlight is cut, weakening moves that rely on harsh sunlight. The storm lives with its caster and ends early if the caster falls or moves more than 48 blocks away."
 }

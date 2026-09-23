@@ -113,4 +113,25 @@ check('an ability uses the same value protocol and responds to effective replace
   nativeState.flags.suppressed=0;nativeState.ability='addon:other';assert.equal(registry.evaluate('test:duration',{pokemon,world,actor}).value,10);
   nativeState.ability='';assert.equal(registry.evaluate('test:duration',{pokemon,world,actor}).value,14);ability='';
 });
+check('authored wear preserves components, rejects stale snapshots and never destroys a durable held item',()=>{
+  const stack = { id: 'minecraft:iron_sword', count: 1, components: { 'minecraft:custom_name': 'Fixture', 'minecraft:damage': 10 } };
+  let live = JSON.stringify(stack), writes = 0;
+  const wearer = { domain: () => 'minecraft' };
+  const access = { equipmentGiveResult(_actor, provider, slot, index, expected, next) {
+    assert.equal(provider, 'minecraft'); assert.equal(slot, 'mainhand'); assert.equal(index, 0);
+    if (live !== expected) return JSON.stringify({ok:false,reason:'stale'});
+    live = next; writes++; return JSON.stringify({ok:true});
+  } };
+  const held = { slot: {provider:'minecraft',slot:'mainhand',index:0}, expected:live, stack:live,
+    durability:{damage:10,maximum:250,unbreakable:false} };
+  assert(I.wearHeld(access,wearer,held,15).ok);
+  assert.equal(JSON.parse(live).components['minecraft:damage'],25);
+  assert.equal(JSON.parse(live).components['minecraft:custom_name'],'Fixture');
+  assert.equal(I.wearHeld(access,wearer,held,15).reason,'stale');
+  const nearlyBroken={...held,expected:live,stack:live,durability:{damage:25,maximum:250,unbreakable:false}};
+  assert(I.wearHeld(access,wearer,nearlyBroken,1000).ok);
+  assert.equal(JSON.parse(live).components['minecraft:damage'],249);assert.equal(JSON.parse(live).count,1);
+  assert.equal(I.wearHeld(access,wearer,{...nearlyBroken,durability:{damage:25,maximum:250,unbreakable:true}},15).reason,'not-damageable');
+  assert.equal(writes,2);
+});
 console.log(`PASS ${cases} native item/RuleValues checks with inline fixture definitions`);

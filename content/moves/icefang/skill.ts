@@ -30,10 +30,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "icefang",
         cooldownParameter: "recharge",
         name: "Ice Fang",
-        description: "The user bites with cold-infused fangs. The cold seeps in a beat later and may leave the target frozen; a bite against an already frozen body cracks it for extra damage, and may leave the target flinching.",
+        description: "一口咬住、把冷气渗进关节：命中造成咬合伤害，隔一拍后寒气在伤口里发作，按几率把目标冻住；对已经冻住的目标，冰壳发脆、会多咬碎一段，命中还可能把对手咬懵并打断它正在做的事。深寒式冻得更久，急寒式咬得更重。",
         uses: ["贴身咬一口并按几率冻住目标", "咬碎已经被冻住的目标", "咬懵对手，打断它正在做的事"],
         kind: "enemy",
         range: 2.4,

@@ -143,8 +143,9 @@ namespace PokemonSkills {
     describe("scorchingsands", [
         { key: "description.0", values: ["grit"] },
         { key: "description.1", values: ["reach", "flingSpeed", "spread"] },
-        { key: "description.2", values: ["burnChance", "sandCells", "coatTicks"] },
-        { key: "description.3", values: ["hearthPower", "hearthInterval", "hearthChance"],
+        { key: "description.2", values: ["burnChance","sandCells","coatTicks"] },
+        { key: "burn", values: [] },
+        { key: "description.3", values: ["hearthDamage","hearthInterval","hearthChance"],
             when: function (context) { return read(context.detail.values, ["hearth"]) === true; } },
         { key: "rule.sand", values: [] },
         { key: "hearth.on", values: [], when: function (context) { return read(context.detail.values, ["hearth"]) === true; } },
@@ -152,5 +153,16 @@ namespace PokemonSkills {
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.grit", "tier.0.burnChance"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.grit", "tier.1.spread"] }
-    ]);
+    ], {
+        hearthDamage: context => {
+            const label = text("worldcombat.skill.scorchingsands.value.hearthPower");
+            const power = actionParameters.evaluate("scorchingsands", "hearthPower", context);
+            const damage = PokemonDamage.explain(context.world || null, context.actor || null, sourceSnapshot(context),
+                CobblemonCombat.moveTemplate("scorchingsands"), damageFeatures("scorchingsands", "hearth", context),
+                { value: power.value, explanation: RuleValues.explanation(power, label) }, context.action || undefined);
+            const result = explanationBinding(damage.explanation, undefined, label, text("worldcombat.value.damageTargetPending"));
+            result.available = damage.available; result.category = damage.category; result.type = damage.type;
+            result.deferred = damage.deferred; return result;
+        }
+    });
 }

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.fellstinger.summary": "一记短促的突刺；若以此招击倒目标，自身攻击大幅提高。",
   "worldcombat.skill.fellstinger.use.0": "残血收尾",
-  "worldcombat.skill.fellstinger.description.0": "向前短距突刺：造成 %1$s 点物理伤害；突刺距离 %2$s 格、每刻推进 %3$s 格、碰撞半径 %4$s 格。若这一击击倒目标，自身攻击提高 %5$s 级。",
+  "worldcombat.skill.fellstinger.description.0": "向前短距突刺：对路径上撞到的第一个敌人造成约 %1$s 点物理伤害。突刺最多推进 %2$s 格、每刻推进 %3$s 格、碰撞半径 %4$s 格，撞到实体或障碍就停下（友方挡路只止步、不受伤害）。若这一击击倒目标，自身攻击提高 %5$s 级（能力等级，最高 +6 级）。",
   "worldcombat.skill.fellstinger.description.1": "PP 消耗 %1$s；冷却 %2$s 秒。",
   "worldcombat.skill.fellstinger.timing": "时序",
   "worldcombat.skill.fellstinger.value.power": "针刺威力",

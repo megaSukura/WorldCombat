@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: machpunchId,
         cooldownParameter: "recharge",
         name: "Mach Punch",
-        description: "The user throws a punch at blinding speed, faster than sound. This move always goes first.",
+        description: "脚不动，拳头过隙——一记快到声音都追不上的直拳。起手可以短到瞬发、施法者不位移，只在已经贴近到一臂之内时打得中；拳锋先到，音爆后到。重拳式先蓄一拍换更重的一拳。",
         uses: ["贴身时最快的先手一拳", "不位移地收掉残血目标", "接在别的招之后立刻补一下"],
         kind: "enemy",
         range: 2.2,

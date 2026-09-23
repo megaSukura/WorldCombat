@@ -23,7 +23,7 @@ namespace PokemonSkills {
         cooldownParameter: "recharge",
         name: "Seed Bomb",
         description: "把一荚硬种高抛过顶，让它们从上方落在目标身上：落点周围一小圈内的非友方各挨一次硬种伤害。重荚少而重、覆盖窄；散荚多而轻、覆盖宽。",
-        uses: ["隔着一小块地形把硬种砸到目标头顶", "罩住一小片落点逼对手走位", "中距离单体点射的重击"],
+        uses: ["隔着一小块地形把硬种砸到目标头顶", "罩住一小片落点逼对手走位", "中距离单体点射的一记重击"],
         kind: "enemy",
         range: 10,
         maxRange: 15,

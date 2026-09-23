@@ -94,7 +94,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["blast"] },
         { key: "volatile.on", values: [], when: function (context) { return read(context.detail.values, ["volatile"]) === true; } },
         { key: "volatile.off", values: [], when: function (context) { return read(context.detail.values, ["volatile"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.dustTicks"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.blast", "tier.1.reach"] }
     ]);

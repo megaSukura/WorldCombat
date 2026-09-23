@@ -21,7 +21,7 @@ namespace PokemonSkills {
         id: "beakblast",
         cooldownParameter: "recharge",
         name: "Beak Blast",
-        description: "The user first heats up its beak, and then it attacks the target. Making direct contact with the user while it is heating up its beak results in a burn.",
+        description: "先把自己烧热、再当炮管射出一发：提交后站定把鸟嘴烧到赤热，这段时间里任何用身体碰到它的敌人都会被烫伤；窗口走完，喙弹直线射出。加热越久炮越重，代价就是站定挨打的暴露窗口。它是 Flying 物理、不接触，且吃防弹特性。",
         uses: ["站定烧热鸟嘴，再用一发喙弹打穿目标", "用加热窗口惩罚贴上来的人", "用更长的加热换更重的一炮"],
         kind: "enemy",
         range: 14,

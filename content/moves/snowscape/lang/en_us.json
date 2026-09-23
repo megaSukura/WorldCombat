@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.snowscape.summary": "Drop a quiet snow onto the chosen ground: it covers the surface, locks open water into ice, and Ice bodies inside brace their Defense a stage higher. It deals no damage.",
+  "worldcombat.skill.snowscape.summary": "Creates a snowy area that temporarily covers ground and freezes water. Ice-type Pokémon gain Defence while inside.",
   "worldcombat.skill.snowscape.use.0": "Lay snow and lock water to change the footing",
   "worldcombat.skill.snowscape.use.1": "Brace Ice bodies",
   "worldcombat.skill.snowscape.use.2": "Prepare ground for later Ice moves and movement",
   "worldcombat.skill.snowscape.description.0": "Drop snow of radius %1$s blocks onto the chosen ground, lasting %2$s.",
-  "worldcombat.skill.snowscape.description.1": "Covers up to %1$s ground cells and freezes %2$s water cells; snow clings for %3$s after leaving.",
+  "worldcombat.skill.snowscape.description.1": "Covers up to %1$s ground blocks and freezes up to %2$s water blocks, depending on suitable nearby terrain. The placed snow and ice restore the original terrain after about %3$s.",
   "worldcombat.skill.snowscape.description.2": "Wind-up: %1$s. Recovery: %2$s.",
   "worldcombat.skill.snowscape.timing": "Cast at ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to drop the snow, recovers %3$s, and commits a %5$s cooldown on cast.",
   "worldcombat.skill.snowscape.growth.0": "At level %1$s the committed cooldown drops to %2$s s.",
@@ -29,5 +29,8 @@
   "world_combat.move.snowscape.text.crisp": "Braced",
   "world_combat.move.snowscape.text.cover": "Covered %1$s",
   "world_combat.move.snowscape.text.lock": "Frozen %1$s",
-  "effect.world_combat.snowscape_powder": "Snow-clad"
+  "effect.world_combat.snowscape_powder": "Snow-clad",
+  "worldcombat.skill.snowscape.description.3": "Each snowy area grants up to one Defence stage to Ice-type Pokémon, allied or hostile. Overlapping areas can add together up to the stage cap. Leaving an area or that snow ending removes only its contribution.",
+  "worldcombat.skill.snowscape.description.4": "Deep Snow: a wider area with more covered ground and frozen water, but a shorter snowfall and longer cooldown. Thin Snow covers less, lasts longer and cools down faster.",
+  "worldcombat.skill.snowscape.value.groundDuration": "Terrain restoration time"
 }

@@ -7,7 +7,7 @@
   "worldcombat.skill.powertrick.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.powertrick.long.on": "长戏：保持窗口 ×1.9，能把翻面的形态用满一段战斗；代价是起手 +2、冷却 ×1.3。",
   "worldcombat.skill.powertrick.long.off": "短戏：起手与冷却都更省（冷却 ×0.85），很快自动翻回，只够应付一下。",
-  "worldcombat.skill.powertrick.timing": "对自己施放，准备 %2$s 秒后消耗 %4$s PP 翻面，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.powertrick.timing": "对自己施放，准备 %1$s 秒后消耗 %3$s PP 翻面，结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.powertrick.growth.0": "达到 %1$s 级，保持窗口延长至 %2$s、提交起冷却缩短至 %3$s。",
   "worldcombat.skill.powertrick.growth.1": "达到 %1$s 级，保持窗口进一步延长至 %2$s、提交起冷却再缩短至 %3$s。",
   "worldcombat.skill.powertrick.value.tempo": "起手",

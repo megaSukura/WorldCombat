@@ -6,7 +6,7 @@
   "worldcombat.skill.minimize.description.0": "Minimize raises Evasion by %1$s stages, giving incoming attacks a %2$s chance to miss.",
   "worldcombat.skill.minimize.bold.on": "Bold shrink: Evasion 3, harder to hit, but a much larger body hits for ×1.75 and the shrink is shorter.",
   "worldcombat.skill.minimize.bold.off": "Careful shrink: Evasion 2, a lower trample multiplier (×1.5) and a longer shrink; more avoidance against a smaller opening, each has its moment.",
-  "worldcombat.skill.minimize.description.1": "The shrink lasts about %1$s; a body at least 1.3x your volume hits for ×%2$s.",
+  "worldcombat.skill.minimize.description.1": "The shrink lasts about %1$s; incoming attacks can miss entirely at the chance above, but a body at least 1.3x your size never triggers that dodge - it lands as a stomp for ×%2$s damage.",
   "worldcombat.skill.minimize.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.minimize.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.minimize.growth.0": "At level %1$s the shrink lasts %2$s and the cooldown drops to %3$s s.",
@@ -31,5 +31,6 @@
   "world_combat.move.minimize.text.dodge": "Slipped away",
   "world_combat.move.minimize.text.trample": "Stomped flat!",
   "world_combat.move.minimize.text.fade": "Grown back",
-  "effect.world_combat.minimize_small": "Minimize"
+  "effect.world_combat.minimize_small": "Minimize",
+  "worldcombat.skill.minimize.description.2": "When the shrink window ends or is cleared, the raised evasion stages are given back."
 }

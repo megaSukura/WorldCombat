@@ -1,15 +1,4 @@
-/**
- * 写生 / sketch —— AI 用途。
- *
- * 出手局面：目标可见、敌对、存活，在 `ai.maxChase`（默认 8）格内，有一条通视描摹线。挂在共享的 control 位上：
- *   写生只有一次机会，AI 只在读到值得的招时才落笔。
- * 对谁出手：读目标上一手（决策内缓存）。伤害类招式威力 ≥ `ai.minPower`（默认 50）才考虑；状态类招式一律考虑。
- *   priority：威力 ≥ 80 抬到 70，≥ 50 是 45，其余 25；还没有上一手时 12。
- * 注意：目标「还没有可描的上一手」时不收紧 available，只当它暂时不值得落笔——否则伙伴会以为无招可用而退开，
- *   写生就等不到可描那一刻。伙伴照常贴近、反复尝试；真读到不该描的一手（已有或太弱）再让位。
- * 够不到怎么办：射程交给 reach，共享任务把身位收进通视射程后再落笔。
- * 放完接什么：那一手已经永久写进自己的招式表，之后像自己的招一样打出去；写生这一格消失。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace PokemonSkills {
     /** 只读、决策内缓存：目标上一手是否可被描摹；返回招式 id 或 ""。 */
     CompanionBehavior.registerFact("world_combat:sketch-last", function (access, actor, _argument) {

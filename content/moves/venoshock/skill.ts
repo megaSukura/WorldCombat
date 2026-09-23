@@ -15,7 +15,7 @@ namespace PokemonSkills {
     define({
         id: "venoshock",
         name: "Venoshock",
-        description: "The user drenches the target in a special poisonous liquid. This move's power is doubled if the target is poisoned.",
+        description: "泼出一团腐蚀性毒液，沿弧线砸向目标。命中已中毒／剧毒的目标时威力翻倍，并把那份毒升格为剧毒、延长持续时间；打空只落下一摊毒水。",
         uses: ["远程消耗", "对中毒者补刀", "把中毒升格为剧毒"],
         kind: "enemy",
         range: 14,

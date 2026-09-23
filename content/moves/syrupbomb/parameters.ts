@@ -117,8 +117,8 @@ namespace PokemonSkills {
         { key: "description.0", values: ["burst"] },
         { key: "description.1", values: ["blast", "coatTicks", "interval"] },
         { key: "description.2", values: ["pulses"] },
-        { key: "description.3", values: ["poolRadius", "poolTicks", "stick"] },
-        { key: "description.4", values: ["reach", "speed", "collision"] },
+        { key: "description.3", values: ["poolRadius","poolTicks","stick"] },
+        { key: "description.4", values: ["reach","speed","collision"] },
         { key: "description.5", values: ["tempo", "wait"] }
     ]);
 }

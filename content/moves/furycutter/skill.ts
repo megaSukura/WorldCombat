@@ -26,10 +26,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: furycutterId,
         cooldownParameter: "recharge",
         name: "Fury Cutter",
-        description: "The user attacks by slashing the target with scythes, claws, or the like. This attack becomes more powerful if it hits in succession.",
+        description: "连续命中时攻击次数增加；落空或使用其他招式会清空累积。",
         uses: ["一趟挥出翻倍的刀数", "连续命中攒层，越接越深", "换招或落空就把层数清空"],
         kind: "enemy",
         range: 2.3,

@@ -51,9 +51,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "heatcrash",
         name: "Heat Crash",
-        description: "The user slams into the target with its flame-covered body. The more the user outweighs the target, the greater the move's power.",
+        description: "把燃着火的整副身躯从上方砸下去：自己比对手越重，这一下越狠，也越容易把对手点着。落点一圈冲击把周围一起震开，地面被烤成一片会烫脚的焦土。焦土式铺得更开、更易点燃，重压式更重更快。",
         uses: ["用分量压垮比自己轻的目标并把火压上去", "落地烧出一片会烫脚的焦土", "对可燃的目标点起持续的灼烧"],
         kind: "enemy",
         range: 4,

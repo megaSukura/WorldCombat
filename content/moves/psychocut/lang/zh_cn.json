@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.psychocut.summary": "在身前凝出一把实体化的心之刃，掷出去后它自己拐弯追向目标：命中处沿竖直面切出一个十字，把目标钉在交点上，刃风扫到近旁的其他敌人也各挨一记。它是一记会追人的远程斩击，暴击率比同族高一档。",
-  "worldcombat.skill.psychocut.description.0": "心之刃造成 %1$s 的切斩伤害，且更容易击中要害。",
+  "worldcombat.skill.psychocut.description.0": "心之刃造成约 %1$s 点切斩伤害，且更容易击中要害。",
   "worldcombat.skill.psychocut.description.1": "刃以 %1$s 格每刻飞出，射程 %2$s 格，每刻最多朝目标校正 %3$s 度。",
-  "worldcombat.skill.psychocut.description.2": "命中处切出半径 %1$s 格的十字，近旁的其他敌人各吃 %2$s 的刃风。",
+  "worldcombat.skill.psychocut.description.2": "命中处切出半径 %1$s 格的十字，近旁的其他敌人各受相当于刃威力 %2$s 的刃风，整记招式最多命中 %3$s 个敌人（含主目标）。",
   "worldcombat.skill.psychocut.keen.on": "当前为凝刃式：刃更重、十字更大、波及更实，但飞得更慢、冷却更久。",
   "worldcombat.skill.psychocut.keen.off": "当前为疾刃式：飞得更快、冷却更短，但威力与十字略收。",
   "worldcombat.skill.psychocut.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.psychocut.preference.ai.finishLow.help": "开启：目标生命低于 45% 时优先掷出这一刃收尾；关闭：无论血量都按普通远程斩击排序。",
   "world_combat.move.psychocut.text.vital": "切中要害！",
   "world_combat.move.psychocut.text.cut": "十字切开！波及 %1$s 个",
-  "world_combat.move.psychocut.text.miss": "心之刃散了"
+  "world_combat.move.psychocut.text.miss": "心之刃散了",
+  "worldcombat.skill.psychocut.value.maxTargets": "命中上限"
 }

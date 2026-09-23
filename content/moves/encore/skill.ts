@@ -1,16 +1,4 @@
-/**
- * 再来一次 / encore —— 执行组织。
- *
- * 核心念头：把对手刚才那一手「点名」出来，逼它在回声散去前再演一遍——它只能一遍遍重复同一个动作。
- *
- * 一幕半：起（windup 只在施法者头顶聚起一圈亮色音符，提交前可打断，不花代价）→
- *          令（提交后：一道回声扣在目标头上，挂共享身份 world_combat:status/encore 的真实 MobEffect；
- *             宝可梦再用共享原生锁定 `only` 把那招钉成唯一可用的一手，并留下机读回声标记供持续画面与回落读取）。
- * 持续：回声期间每 20 刻续一次音符画面，密度由剩余比例派生；目标最后那一手 PP 耗尽或不再记得时，
- *      回声当场散开（spent），并把原生锁定一并收回。
- * 结束：时间走完安静褪去（release）；被牛奶或清除效果解掉时不播退场。
- * 反制：需要目标刚出过手且那一手还能再用；带 failencore 的招（如挣扎）点不动；回声可被清除，也能靠耗光那一手的 PP 甩掉。
- */
+/** encore：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     function encoreAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
@@ -53,12 +41,19 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(encoreLoop, "start", function () { });
     WorldCombat.effectHandler(encoreLoop, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
+    CombatStatus.actions.define({ id: "world_combat:move_encore/native", apply: context => {
+        if (context.phase !== "damage" || !DamageSemantics.read(context.metadata).attack
+            || MobEffects.read(context.world, context.actor, encoreEffect) === null) return;
+        const loop = encoreLoopOf(context.world, context.actor);
+        if (loop && loop.native && String(context.metadata.damageType) !== loop.id) context.blocked.encored = true;
+    } });
+
     define({
         id: encoreId,
         cooldownParameter: "recharge",
         name: "再来一次",
-        description: "把对手刚才那一手点名出来，逼它在回声散去前连续重复同一招；需要目标刚出过手、那一手还能再用，带 failencore 的招点不动。",
-        uses: ["把刚做过的布置／强化锁死，逼它一直重复", "打断对手的连招节奏，让它只能做同一件事", "拖住一个刚露出破绽的对手"],
+        description: "点名目标刚用过的一手，让它暂时只能使用这一招。对普通生物和玩家，锁定的是刚命中过人的攻击方式，例如近战或箭矢。",
+        uses: ["把刚做过的布置或强化锁死，逼它一直重复", "打断对手的连招节奏，让它只能做同一件事", "拖住一个刚露出破绽的对手"],
         kind: "enemy",
         range: 4,
         maxRange: 9,
@@ -92,9 +87,11 @@ namespace PokemonSkills {
             if (target === null || !world.valid(target)) { done(action); return; }
             sound(action, "minecraft:block.note_block.chime");
             const at = world.observe(target) === null ? action.targetPosition() : world.observe(target)!.position();
-            const last = NativeEffects.lastMove(world, target);
-            let usable = last !== null;
-            if (usable) {
+            const memory = p(encoreId, "memory", action);
+            const native = String(target.domain()) === "cobblemon" ? null : DamageSemantics.recentAttack(world, target, memory);
+            const last = native ? { id: native.type, tick: native.tick, slot: -1, key: "" } : NativeEffects.lastMove(world, target);
+            let usable = last !== null && world.tick() - last.tick <= memory;
+            if (usable && !native) {
                 const template = CobblemonCombat.moveTemplate(last!.id);
                 usable = !NativeLoadout.facts(template).flags.failencore;
                 if (usable && String(target.domain()) === "cobblemon") {
@@ -115,7 +112,7 @@ namespace PokemonSkills {
             MobEffects.apply(world, target, encoreEffect, ticks, 0);
             encoreDropMark(world, target);
             world.effect(encoreLoop, target, JSON.stringify({ id: last!.id, key: last!.key, slot: last!.slot,
-                ticks: ticks, max: ticks, motes: motes, radius: radius }), ticks);
+                ticks: ticks, max: ticks, motes: motes, radius: radius, native: !!native, target: native ? native.target : "" }), ticks);
             if (String(target.domain()) === "cobblemon") NativeModifiers.apply(world, target, { only: last!.id }, ticks);
             WorldFeedback.emit(world, encoreScene, 1, at,
                 { moment: "loop", target: String(target.ref()), motes: motes, scale: radius / 0.35 }, 34);

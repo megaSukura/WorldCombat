@@ -23,10 +23,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: rollingkickId,
         cooldownParameter: "recharge",
         name: "Rolling Kick",
-        description: "The user lashes out with a quick, spinning kick. This may also make the target flinch.",
+        description: "原地急旋聚起惯性，再扑出半步抡起回旋腿正中目标，把它沿踢击方向抛到半空飞出去，并有几率使其畏缩、短暂无法出招。抛飞式扔得更高更远；盘踢式踢得更重、出手更快。",
         uses: ["把贴身的目标一腿踢飞到半空", "把对手从队友或掩体边踢开", "用旋转的冲劲顺势追上去"],
         kind: "enemy",
         range: 2.8,

@@ -94,9 +94,15 @@ namespace Smoke {
         }
         return null;
     }
+    function heldStack(entry: Entry): any {
+        var pokemon = pokemonOf(entry);
+        var stack = pokemon ? pokemon.heldItem() : entry.entity.getMainHandItem();
+        if (!pokemon && stack.isEmpty()) stack = entry.entity.getOffhandItem();
+        return stack;
+    }
     function heldOf(entry: Entry): string {
-        var pokemon = pokemonOf(entry); if (!pokemon) return "";
-        var stack = pokemon.heldItem(); if (!stack || stack.isEmpty()) return "";
+        var stack = heldStack(entry);
+        if (!stack || stack.isEmpty()) return "";
         var Registries = Java.loadClass("net.minecraft.core.registries.BuiltInRegistries");
         return String(Registries.ITEM.getKey(stack.getItem()));
     }
@@ -225,6 +231,7 @@ namespace Smoke {
         },
         pp: function (actor, moveId) { return ppOf(entryOf(actor), moveId); },
         heldItem: function (actor) { return heldOf(entryOf(actor)); },
+        heldDamage: function (actor) { var stack = heldStack(entryOf(actor)); return stack && stack.isDamageableItem() ? Number(stack.getDamageValue()) : null; },
         hits: function (actor, incoming) { return (incoming ? hitsIn[actor.ref] : hitsOut[actor.ref]) || 0; },
         criticals: function (actor) { return criticalsOut[actor.ref] || 0; },
         damageEvents: function (cause) {

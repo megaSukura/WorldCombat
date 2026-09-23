@@ -1,21 +1,4 @@
-/**
- * 变身 / transform —— 执行组织。
- *
- * 核心念头：照着一名对手的样子重塑自己——招式、六维、类型、特性整套搬过来一段时间；它变成谁的形状，
- *   就只能用谁的手。
- *
- * 三幕：起（windup，提交前）镜面在掌心展开，把对手照进来；描（read 提交后）一道镜光线搭上目标，
- *   把它的形状映回来；披（shift）镜面外壳裹住施法者，整套战斗形态换成对手的；持续（hold）低密度镜光；
- *   收（revert 形态自己走完／snap 被人硬拆，临时层精确收回，施法者回到原来的形态）。
- *
- * 形态层：走共享的 NativeModifiers，把目标的六维、类型、特性与全部招式写进施法者；旁挂记下层的 id，
- *   到期或被清除时按 id 精确收回。目标是宝可梦时才有可复制的形态；不能复制一个正在变身的对手。
- * 反制：变身只是换成对手的手，招式威力与命中照常结算；形态有时限，也会被清除效果提前收回。
- *
- * 交付说明：本招完整交付「招式、六维、类型、特性」四类战斗形态的复制与收回。把外观模型也一起换成对手
- *   的样式需要宿主提供「临时改写渲染形态而不改动个体存档形态」的接口，当前共享层没有该入口，已在报告中
- *   列为可选共享能力缺口；画面用镜面外壳与虹彩光点读出「照对手重塑」这件事。
- */
+/** Temporarily copy an opponent’s combat profile: a Pokémon’s moves, stats, types and Ability, or a non-Pokémon’s attack, movement and defences. */
 namespace PokemonSkills {
     /** 机读旁挂：记下这次临时层的 id 与复制来的形态信息，供收回与画面读取。 */
     WorldCombat.effect(transformMark, 1, 1200, "actor", function (json) {
@@ -55,7 +38,7 @@ namespace PokemonSkills {
         id: transformId,
         cooldownParameter: "recharge",
         name: "变身",
-        description: "照着一名对手的样子重塑自己：招式、六维、类型与特性整套换成它的，维持一段时间，到期或被清除时精确收回。它变成谁的形状，就只能用谁的手。",
+        description: "暂时复制对手的战斗形态；宝可梦提供招式、能力值、类型和特性，普通生物提供攻击、移动与防护属性。",
         uses: ["借对手的整套招式与六维打这一段", "把对手的高攻或高防形态搬过来", "在了解对手后换一种完全不同的打法"],
         kind: "enemy",
         range: 6,
@@ -87,7 +70,7 @@ namespace PokemonSkills {
             const world = action.sense(), self = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
             if (String(target.ref()) === String(self.ref())) return "invalid-target";
-            if (String(self.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-form";
+            if (String(self.domain()) !== "cobblemon") return "no-form";
             if (!world.valid(self)) return "invalid-target";
             if (CombatStatus.has(world, target, transformStatus)) return "already-copy";
             const body = world.observe(self), other = world.observe(target);
@@ -107,11 +90,22 @@ namespace PokemonSkills {
             const body = world.observe(self);
             if (body === null || target === null || !world.valid(target) || world.friendly(target)
                 || String(target.ref()) === String(self.ref()) || CombatStatus.has(world, target, transformStatus)
-                || String(target.domain()) !== "cobblemon") { done(action); return; }
+                ) { done(action); return; }
             const other = world.observe(target);
             if (other === null) { done(action); return; }
             const hold = Math.max(80, Math.round(p(transformId, "hold", action)));
             const motes = Math.max(6, Math.round(p(transformId, "motes", action)));
+            if (String(target.domain()) !== "cobblemon") {
+                transformRevert(world, self);
+                MobEffects.consume(world, self, transformEffect);
+                const carrier = MobEffects.apply(world, self, transformEffect, hold, 0);
+                if (!carrier) { done(action); return; }
+                const layer = CombatCopies.apply(world, self, CombatCopies.read(world, target), hold, "transform", MobEffects.anchor(carrier));
+                const species = world.entityType(target), name = species ? String(species.id()) : "native";
+                world.effect(transformMark, self, JSON.stringify({ layer, species: name, form: "", moves: [], max: hold, motes }), hold);
+                WorldFeedback.emit(world, transformScene, 1, body.position(), { moment: "shift", target: String(self.ref()), motes, scale: 1, intensity: 1 }, 40);
+                sound(action, "minecraft:entity.illusioner.mirror_move"); done(action); return;
+            }
             const enemy = CobblemonCombat.pokemon(target);
             const species = String(enemy.species()), shape = String(enemy.form());
             // 刷新而不是叠加：先收掉旧的临时层与身份，再披上新的。

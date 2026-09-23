@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.electricterrain.summary": "Press current into a chosen patch of ground: bodies standing on the field hit harder with Electric moves, the charge underfoot keeps them awake, and sleeping bodies are jolted awake. It treats both sides alike.",
+  "worldcombat.skill.electricterrain.summary": "Press current into a chosen patch of ground: grounded bodies on the field hit 1.3x harder with Electric moves, the charge underfoot keeps them awake, and sleeping bodies are jolted awake; it treats both sides alike.",
   "worldcombat.skill.electricterrain.use.0": "Boost Electric moves",
   "worldcombat.skill.electricterrain.use.1": "Keep the team from being put to sleep",
   "worldcombat.skill.electricterrain.use.2": "Jolt a sleeping target awake",
   "worldcombat.skill.electricterrain.description.0": "Press a field of radius %1$s blocks into the chosen ground, lasting %2$s.",
-  "worldcombat.skill.electricterrain.description.1": "Living targets in the field cannot fall asleep and stay awake for %1$s after leaving.",
-  "worldcombat.skill.electricterrain.description.2": "Electric moves hit harder, for both sides alike.",
+  "worldcombat.skill.electricterrain.description.1": "Grounded living beings in the field cannot fall asleep, and sleeping ones are awakened. Each refresh keeps them awake for up to %1$s; after leaving, the remaining duration counts down.",
+  "worldcombat.skill.electricterrain.description.2": "A charged body's Electric moves are 1.3x as strong, applying to both sides alike.",
   "worldcombat.skill.electricterrain.description.3": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
   "worldcombat.skill.electricterrain.timing": "Cast at ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to press the current in, recovers %3$s, and commits a %5$s cooldown on cast.",
   "worldcombat.skill.electricterrain.growth.0": "At level %1$s the committed cooldown drops to %2$s s.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.electricterrain.preference.ai.leaveStation.help": "On, a companion holding its station will step out to lay the field.",
   "world_combat.move.electricterrain.text.charge": "Charged ground",
   "world_combat.move.electricterrain.text.awake": "Jolted awake",
-  "effect.world_combat.electricterrain_ground": "Charged"
+  "effect.world_combat.electricterrain_ground": "Charged",
+  "worldcombat.skill.electricterrain.value.wakeDuration": "Maximum wakefulness duration"
 }

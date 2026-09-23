@@ -33,6 +33,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "heartstamp",
         cooldownParameter: "recharge",
         name: "Heart Stamp",

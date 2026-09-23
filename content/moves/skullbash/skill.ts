@@ -63,7 +63,8 @@ namespace PokemonSkills {
     });
 
     define({
-        id: "skullbash", name: "火箭头锤", description: "缩头蹲桩提升护甲、防御并架住伤害，站定蓄力后沿直线猛撞第一个敌人，把它连同自己一起甩出去；若把它顶到墙上会更重、撞乱它的节奏，并在墙上凿出一个能走过去的临时缺口，缺口几秒后自行合拢。蓄力期间不能移动，方向也不会拐弯。",
+        freeMovement: true,
+        id: "skullbash", name: "火箭头锤", description: "先缩头蓄力，临时增加护甲、防御与减伤，再沿直线撞击第一个敌人。敌人背后紧贴墙壁时，这一撞更重，并会将其定住、尝试撞开一处临时缺口。",
         uses: ["正面破阵", "以防御换重击", "把对手顶到墙上"], kind: "enemy", range: 8, prepare: 0, active: 60, recover: 14, cooldown: 70, style: "charge",
         defaults: { deep: true },
         fields: [field(pathOf("deep"), "深蓄", "boolean", { help: "开启（深蓄）：蓄力更长、护甲与减伤更强、防御再 +1 级、冲得更远，但收招更长；关闭（速收）：蓄力更短、护甲略低、收招更快，但撞得更弱更短。" })],

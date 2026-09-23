@@ -63,6 +63,8 @@ interface CombatNativeDamageFacts {
     actual?: number; before?: number; after?: number;
 }
 interface CombatWorld {
+    /** Registered native MobEffect category before application: beneficial, harmful or neutral; empty for an unknown id. */
+    mobEffectCategory(id: string): string;
     /** Detached active equipment facts from native inventories; absent optional integrations contribute no entries. Pokemon carried items appear as provider "cobblemon", slot "held", index 0. */
     equipment(actor: CombatActor): readonly CombatEquipment[];
     /**

@@ -88,11 +88,11 @@ namespace PokemonSkills {
     });
 
     describe(odorsleuthId, [
-        { key: "description.0", values: ["window", "drag"] },
+        { key: "description.0", values: ["window","drag"] },
         { key: "description.1", values: ["reveal"] },
         { key: "keen.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["keen"]) === true; } },
         { key: "keen.off", values: [], when: function (context) { return read(context.detail.values, ["keen"]) !== true; } },
-        { key: "description.2", values: ["strips", "reach", "tempo", "aftercast"] },
+        { key: "description.2", values: ["strips","reach","tempo","aftercast"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

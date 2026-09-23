@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.camouflage.summary": "Reads the ground underfoot and temporarily dyes the body into its type: water in water, grass in grass, rock in a cave. With Drift on, it re-reads as you walk.",
+  "worldcombat.skill.camouflage.summary": "Reads the ground underfoot and temporarily dyes the body into its type: water in water, grass in grass, rock in a cave. With Drift on, it keeps re-reading the ground while the coat holds.",
   "worldcombat.skill.camouflage.use.0": "Become a type that fits the terrain underfoot",
   "worldcombat.skill.camouflage.use.1": "Flip your incoming matchups and type immunities",
   "worldcombat.skill.camouflage.use.2": "Set a type from the terrain before a fight",
   "worldcombat.skill.camouflage.description.0": "Crouches to read the ground after a %1$s s wind-up; whatever material it reads becomes the new type.",
   "worldcombat.skill.camouflage.description.1": "The coat lasts %1$s s; matchups, same-type bonus and type immunities settle on the new type while it holds.",
-  "worldcombat.skill.camouflage.drift.0": "Drift: re-reads the ground every 20 ticks while moving and changes type with the material; adaptable, but the terrain can hand you a bad type, and cooldown +10 ticks.",
+  "worldcombat.skill.camouflage.drift.0": "Drift: while the coat holds it re-reads the ground every 20 ticks and switches type when the material changed (keeping the remaining coat time, not extending it); adaptable, but the terrain can hand you a bad type, and cooldown is +10 ticks.",
   "worldcombat.skill.camouflage.drift.1": "Fixed coat: set once and ignore the terrain; cooldown −6 ticks, but the type no longer fits once you leave the spot.",
   "worldcombat.skill.camouflage.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.camouflage.growth.0": "At level %1$s the committed cooldown shortens to %2$s s.",
-  "worldcombat.skill.camouflage.growth.1": "At level %1$s the committed cooldown shortens again to %2$s s.",
+  "worldcombat.skill.camouflage.growth.0": "From level %1$s, cooldown is reduced by an extra 0.5 seconds.",
+  "worldcombat.skill.camouflage.growth.1": "From level %1$s, the extra cooldown reduction becomes 0.9 seconds, replacing the earlier reduction.",
   "worldcombat.skill.camouflage.value.tempo": "Wind-up",
   "worldcombat.skill.camouflage.value.aftercast": "Recovery",
   "worldcombat.skill.camouflage.value.hold": "Coat duration",
@@ -20,5 +20,7 @@
   "worldcombat.skill.camouflage.preference.drift.help": "On: re-reads and changes type as you stand on different ground, adaptable but the terrain can hand you a bad type and cooldown is +10 ticks. Off: set once, cooldown −6 ticks, but the type no longer fits after you leave the spot.",
   "effect.world_combat.camouflage": "Camouflage",
   "world_combat.move.camouflage.text.coat": "Dyes into %1$s",
-  "world_combat.move.camouflage.text.shift": "Terrain shifts it to %1$s"
+  "world_combat.move.camouflage.text.shift": "Terrain shifts it to %1$s",
+  "worldcombat.skill.camouflage.description.materials": "It reads the fluid and block underfoot: water, ice, grass, sandy soil, stone and ores (end stone included), and fire or lava (netherrack included) read as Water / Ice / Grass / Ground / Rock / Fire; with no matching material it falls back by dimension (the Nether to Fire, the End to Rock), otherwise Normal.",
+  "worldcombat.skill.camouflage.description.nature": "The coat is a single type that replaces your whole typing (even a dual type collapses into it); the original type returns the moment the coat expires, is cleansed, or the caster leaves. It cannot be used when you are already exactly that single type."
 }

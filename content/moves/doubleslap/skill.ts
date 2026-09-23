@@ -27,7 +27,7 @@ namespace PokemonSkills {
         id: doubleslapId,
         cooldownParameter: "recharge",
         name: "Double Slap",
-        description: "The target is slapped repeatedly, back and forth, two to five times in a row.",
+        description: "贴身左右开弓：一只手掌接一只手掌地来回抽打，每一掌把对手朝对侧拨一点。交叉式多而轻、把人拨得更晃；直抽式少而重、抽得更狠。",
         uses: ["贴身一串快速的小掌击", "对低防目标靠掌数堆伤害", "交叉式把对手拨得左右晃，打断它的站位"],
         kind: "enemy",
         range: 2.4,

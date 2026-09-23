@@ -100,9 +100,9 @@ namespace PokemonSkills {
         { key: "description.0", values: ["jab"] },
         { key: "description.1", values: ["reach", "fist"] },
         { key: "description.2", values: ["sap"] },
-        { key: "combo.on", values: [], when: function (context) { return read(context.detail.values, ["combo"]) === true; } },
+        { key: "combo.on", values: ["gaps"], when: function (context) { return read(context.detail.values, ["combo"]) === true; } },
         { key: "combo.off", values: [], when: function (context) { return read(context.detail.values, ["combo"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.jab"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.jab", "tier.1.sap"] }
     ]);

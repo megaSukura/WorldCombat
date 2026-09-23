@@ -26,5 +26,6 @@
   "worldcombat.skill.magicalleaf.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of scattering. Larger values open from further.",
   "worldcombat.skill.magicalleaf.preference.ai.trackMovers": "Chase movers",
   "worldcombat.skill.magicalleaf.preference.ai.trackMovers.help": "On: a moving enemy is preferred, because the leaves bend across its path; off: order it like a plain ranged attack.",
-  "world_combat.move.magicalleaf.text.fade": "Leaves scatter empty"
+  "world_combat.move.magicalleaf.text.fade": "Leaves scatter empty",
+  "worldcombat.skill.magicalleaf.description.chase": "The whole swarm bends toward the single foe chosen at cast, each leaf resolving its own hit so the same target can take several; if that foe is already gone when the move fires, the leaves scatter empty."
 }

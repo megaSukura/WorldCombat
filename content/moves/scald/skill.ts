@@ -68,7 +68,7 @@ namespace PokemonSkills {
         id: "scald",
         cooldownParameter: "recharge",
         name: "Scald",
-        description: "The user attacks by shooting boiling hot water at the target. This may also leave the target with a burn.",
+        description: "把一壶水在掌中烧滚、兜手抛出：沸水沿浅弧飞到目标身上炸开，命中造成特殊伤害并可能灼伤，落点在原地留下一摊还在翻滚的水洼，踏入的人被烫、站着不走会反复挨烫。沸水会把目标与自己身上的冰冻化开，浇在泡水或淋雨的目标身上更狠。",
         uses: ["抛一壶沸水直接点着目标", "在落点留下一摊烫人的水洼封住一块地", "化开目标与自己身上的冰冻", "浇湿身的目标赚一份额外伤害"],
         kind: "enemy",
         range: 12,

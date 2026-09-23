@@ -3,7 +3,7 @@
   "worldcombat.skill.painsplit.use.0": "在自己生命远低于对手时把差距拉平",
   "worldcombat.skill.painsplit.use.1": "抽走一个高血量目标的一截生命",
   "worldcombat.skill.painsplit.use.2": "用自损换取把对手拉到同一水平",
-  "worldcombat.skill.painsplit.description.0": "向 %1$s 格内的目标牵起痛线，把双方生命相加后均分。",
+  "worldcombat.skill.painsplit.description.0": "向 %1$s 格内、与自身之间没有方块遮挡的敌方目标牵起痛线，把双方生命相加后均分。",
   "worldcombat.skill.painsplit.description.1": "牵线 %1$s，落定后收线 %2$s，冷却 %3$s。",
   "worldcombat.skill.painsplit.description.2": "无论对谁都是同一个平均值：对手可能被治好，自己也可能被抽走一截；一分不能致死，两边都夹在至少 1 点生命。",
   "worldcombat.skill.painsplit.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 牵线；收线 %3$s 秒，冷却 %5$s 秒。",

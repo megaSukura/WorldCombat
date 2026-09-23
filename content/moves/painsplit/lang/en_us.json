@@ -3,7 +3,7 @@
   "worldcombat.skill.painsplit.use.0": "Level the gap when your life is far below the foe's",
   "worldcombat.skill.painsplit.use.1": "Drain a slice from a high-health target",
   "worldcombat.skill.painsplit.use.2": "Trade your own life to drag the foe down to your level",
-  "worldcombat.skill.painsplit.description.0": "Tie a thread of pain to a target within %1$s blocks and split the combined life evenly.",
+  "worldcombat.skill.painsplit.description.0": "Tie a thread of pain to an enemy target within %1$s blocks with a clear line to you, and split the combined life evenly.",
   "worldcombat.skill.painsplit.description.1": "Tie the thread in %1$s, gather it in %2$s after the split, and a %3$s cooldown from commit.",
   "worldcombat.skill.painsplit.description.2": "Both sides meet the same average: the foe may be healed and you may be drained. It can never be fatal - both are held to at least 1 point of life.",
   "worldcombat.skill.painsplit.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to tie the thread, then %3$s seconds to gather it in and a %5$s second cooldown from commit.",

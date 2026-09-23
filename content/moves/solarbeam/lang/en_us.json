@@ -2,9 +2,9 @@
   "worldcombat.skill.solarbeam.summary": "Gather sunlight while standing still, then release a piercing beam along a straight corridor. Strong sunlight allows immediate release; rain reduces power and slows the gather.",
   "worldcombat.skill.solarbeam.use.0": "Pierce a line across open ground",
   "worldcombat.skill.solarbeam.use.1": "An unannounced heavy hit in clear weather",
-  "worldcombat.skill.solarbeam.description.0": "The beam deals %1$s special damage to each target it strikes.",
-  "worldcombat.skill.solarbeam.description.1": "The beam reaches %1$s blocks, is %2$s blocks wide (half-width) and pierces up to %3$s bodies; blocks stop it.",
-  "worldcombat.skill.solarbeam.description.2": "Gathering takes %1$s of standing still.",
+  "worldcombat.skill.solarbeam.description.0": "The beam deals about %1$s special damage to each target it strikes.",
+  "worldcombat.skill.solarbeam.description.1": "The beam reaches %1$s blocks with a half-width of %2$s blocks, and pierces up to %3$s bodies from near to far along the corridor, resolving each target once; blocks stop it.",
+  "worldcombat.skill.solarbeam.description.2": "Gathering takes %1$s of standing still; in strong sunlight it is skipped and the beam fires at once.",
   "worldcombat.skill.solarbeam.description.3": "Hit targets are pushed %1$s blocks along the beam.",
   "worldcombat.skill.solarbeam.stance.broad": "Diffuse: a wider band that sweeps several enemies in a row, but each hit is weaker.",
   "worldcombat.skill.solarbeam.stance.focus": "Focused: a narrower band with a stronger single hit, at the cost of missing enemies standing side by side.",
@@ -34,5 +34,6 @@
   "world_combat.move.solarbeam.text.sun": "Sunlight is plentiful!",
   "world_combat.move.solarbeam.text.hit": "Solar Beam hits",
   "world_combat.move.solarbeam.text.pierce": "Pierced %1$s",
-  "world_combat.move.solarbeam.text.fizzle": "The light scatters"
+  "world_combat.move.solarbeam.text.fizzle": "The light scatters",
+  "worldcombat.skill.solarbeam.description.weather": "From 35% rain the downpour scatters the light and halves its power."
 }

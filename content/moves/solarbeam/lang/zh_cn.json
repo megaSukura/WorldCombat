@@ -2,8 +2,8 @@
   "worldcombat.skill.solarbeam.summary": "站定聚光，再沿直线放出贯穿的光柱，依次攻击走廊内的敌人。强日光下直接发射；阴雨天威力降低、聚光更慢。",
   "worldcombat.skill.solarbeam.use.0": "在开阔地上贯穿一条线",
   "worldcombat.skill.solarbeam.use.1": "晴天里的无预警重击",
-  "worldcombat.skill.solarbeam.description.0": "光柱命中每个目标造成 %1$s 点特殊伤害。",
-  "worldcombat.skill.solarbeam.description.1": "光柱向 %1$s 格内延伸、半宽 %2$s 格，最多贯穿 %3$s 个活体，被方块挡住的打不到。",
+  "worldcombat.skill.solarbeam.description.0": "光柱命中每个目标造成约 %1$s 点特殊伤害。",
+  "worldcombat.skill.solarbeam.description.1": "光柱向 %1$s 格内延伸、半宽 %2$s 格，沿走廊由近及远最多贯穿 %3$s 个活体，每个目标只结算一次；被方块挡住的打不到。",
   "worldcombat.skill.solarbeam.description.2": "需要站定聚光 %1$s；站在强日光下跳过聚光当场发射。",
   "worldcombat.skill.solarbeam.description.3": "命中目标沿光束方向推开 %1$s 格。",
   "worldcombat.skill.solarbeam.stance.broad": "散光：光带更宽、更容易一次扫到成排的敌人，但单发威力更低。",
@@ -34,5 +34,6 @@
   "world_combat.move.solarbeam.text.sun": "日光充足！",
   "world_combat.move.solarbeam.text.hit": "日光束命中",
   "world_combat.move.solarbeam.text.pierce": "贯穿 %1$s 个",
-  "world_combat.move.solarbeam.text.fizzle": "光散在空处"
+  "world_combat.move.solarbeam.text.fizzle": "光散在空处",
+  "worldcombat.skill.solarbeam.description.weather": "雨量达到 35% 时光被雨幕打散，威力减半。"
 }

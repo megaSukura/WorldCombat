@@ -1,4 +1,4 @@
-/** 胃液：酸弹命中后压制目标特性；酸液飞行、溅射和沾酸由现有表现承载。 */
+/** gastroacid：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const gastroacidScene = "world_combat:move_gastroacid";
     export const gastroacidEffect = "world_combat:gastroacid";
@@ -14,11 +14,19 @@ namespace PokemonSkills {
         return true;
     }
 
+    // 普通活体的皮甲与装备会被酸液蚀薄，残酸每两秒造成一次真实酸蚀。
+    MobEffects.react("world_combat:move_gastroacid/corrode", gastroacidEffect, "world_combat:mob_effect_tick",
+        event => event.actor(), (event, actor) => {
+            const world = event.world(), data = JSON.parse(String(event.data()));
+            if (String(data.id) !== gastroacidEffect || String(actor.domain()) === "cobblemon" || world.tick() % 40 !== 0) return;
+            world.health(actor, -1, "world_combat:acid");
+        });
+
     define({
         id: "gastroacid",
         cooldownParameter: "recharge",
         name: "Gastro Acid",
-        description: "将胃液吐向对手的身体，沾上的胃液会消除对手的特性效果。",
+        description: "酸弹命中后留下胃酸，暂时压制宝可梦特性。普通生物和玩家的护甲会被蚀薄，并持续受到少量酸蚀伤害。",
         uses: ["定点拆掉对手的强力特性", "压制威吓、飘浮一类持续生效的特性"],
         kind: "enemy",
         range: 9,

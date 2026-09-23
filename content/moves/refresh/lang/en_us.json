@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.refresh.summary": "Stands still and breathes out to clear poison, bad poison, burn and paralysis from itself at once, leaving a brief clear window that repels those same three statuses. It does not heal, and does not touch sleep or freeze.",
+  "worldcombat.skill.refresh.summary": "Stands still and breathes out to clear poison, bad poison, burn and paralysis from itself at once, leaving a brief clear window that repels fresh poison, burns and paralysis. It does not heal, and does not touch sleep or freeze.",
   "worldcombat.skill.refresh.use.0": "Clear a burn or poison before it drains you",
   "worldcombat.skill.refresh.use.1": "Break out of paralysis and act normally again",
   "worldcombat.skill.refresh.use.2": "Pre-cleanse and use the clear window to block the next status",
-  "worldcombat.skill.refresh.description.0": "Cleansing grants a %1$s clear window.",
-  "worldcombat.skill.refresh.description.1": "Standing still for %1$s sheds the afflictions; you cannot move while preparing.",
+  "worldcombat.skill.refresh.description.0": "Cleansing grants a %1$s clear window during which fresh poison, burns and paralysis are repelled.",
+  "worldcombat.skill.refresh.description.1": "You must stand still for %1$s to shed poison, bad poison, burn and paralysis in one breath; you cannot move while preparing.",
   "worldcombat.skill.refresh.stance.deep": "Deep breath: x1.3 wind-up and x1.25 cooldown for a x1.5 clear window (a longer protection).",
   "worldcombat.skill.refresh.stance.quick": "Quick cleanse: x0.85 wind-up and x0.8 cooldown, but the clear window is only x0.65 (a brief purge).",
-  "worldcombat.skill.refresh.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.refresh.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.refresh.value.tempo": "Cleansing wind-up",
   "worldcombat.skill.refresh.value.aftercast": "Recovery",
   "worldcombat.skill.refresh.value.recharge": "Cooldown",
@@ -20,5 +20,6 @@
   "worldcombat.skill.refresh.preference.ai.cleanseBelow.help": "When poison or burn has worn the companion below this ratio, it treats Refresh as an emergency self-rescue; lower endures longer, higher cleanses at the first wound.",
   "effect.world_combat.clearheaded": "Clear",
   "world_combat.move.refresh.text.purge": "Cleansed x%1$s",
-  "world_combat.move.refresh.text.ward": "Clear ward"
+  "world_combat.move.refresh.text.ward": "Clear ward",
+  "worldcombat.skill.refresh.description.additional": "It cannot be used while carrying none of poison, bad poison, burn or paralysis; it restores no health and leaves sleep and freeze untouched."
 }

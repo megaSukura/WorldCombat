@@ -6,7 +6,7 @@
   "worldcombat.skill.bulkup.description.0": "健美把物攻提升 %1$s 级、防御提升 %2$s 级。",
   "worldcombat.skill.bulkup.lean.on": "偏攻：物攻 +2 级、防御 +1 级，适合压着打。",
   "worldcombat.skill.bulkup.lean.off": "偏守：防御 +2 级、物攻 +1 级，适合顶着换；两向总量相同。",
-  "worldcombat.skill.bulkup.description.1": "涨身持续约 %1$s。",
+  "worldcombat.skill.bulkup.description.1": "涨身持续约 %1$s：期间物攻与防御的提升一直生效，窗口走完或被清除时这些等级一起收回。",
   "worldcombat.skill.bulkup.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.bulkup.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.bulkup.growth.0": "达到 %1$s 级，涨身延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.bulkup.preference.ai.minGap.help": "威胁近于这个距离时不再健美、直接攻击；调大更常在近身时放弃强化。",
   "world_combat.move.bulkup.text.brace": "健美（物攻 +%1$s／防御 +%2$s／%3$s 秒）",
   "world_combat.move.bulkup.text.relax": "健美松劲",
-  "effect.world_combat.bulkup_surge": "健美"
+  "effect.world_combat.bulkup_surge": "健美",
+  "worldcombat.skill.bulkup.description.2": "从起手到收招，你会钉在原地专心绷紧，期间不能移动。"
 }

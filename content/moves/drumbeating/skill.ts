@@ -71,8 +71,8 @@ namespace PokemonSkills {
     define({
         id: "drumbeating",
         name: "Drum Beating",
-        description: "The user plays its drum, controlling the drum's roots to attack the target. This also lowers the target's Speed stat.",
-        uses: ["隔着地面钉住一个对手", "连奏数拍，逐拍把伤害与速度压上去", "在目标脚下留下一圈根须"],
+        description: "敲响鼓，让根须跟着鼓点沿地面冲向目标：每一拍都是一道破土的波峰，前几拍隔着地面造成伤害，最后一拍根须缠住它的腿脚，把目标钉住一瞬并压低速度；破土而出的根留在原地，过一阵才缩回土里。深根式根留得更久、多压一级速度、破土更宽，每拍更轻。",
+        uses: ["隔着地面钉住一个对手", "连奏数拍逐拍造成伤害，末拍再压低速度、钉住腿脚", "在目标脚下留下一圈根须"],
         kind: "enemy",
         range: 11,
         maxRange: 11,

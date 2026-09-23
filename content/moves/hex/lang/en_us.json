@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.hex.summary": "Send a curse skittering along the ground to the target's feet, draw a ring of sigils, and erupt wave after wave of spectral spikes from within it. Every enemy caught on the sigil is struck; any that carries a status condition (burn, paralysis, poison, frozen, sleep) takes double on that hit.",
-  "worldcombat.skill.hex.description.0": "The damage %1$s of each wave: doubled for a target carrying any status condition, settled separately for every target on the sigil.",
-  "worldcombat.skill.hex.description.1": "The curse crawls %1$s blocks to draw a %2$s block radius sigil at %3$s blocks per tick; then %4$s waves erupt, %5$s apart.",
-  "worldcombat.skill.hex.description.2": "Every wave of spikes re-checks who is still standing inside the sigil.",
+  "worldcombat.skill.hex.description.0": "Each wave of spikes deals about %1$s special damage to every enemy standing on the sigil; a target carrying any status condition (burn, paralysis, poison/toxic, frozen or sleep) takes double on that wave.",
+  "worldcombat.skill.hex.description.1": "The curse crawls up to %1$s blocks and, on reaching the target's feet, draws a %2$s block radius sigil at %3$s; then %4$s waves erupt, %5$s apart.",
+  "worldcombat.skill.hex.description.2": "Each wave settles once on every enemy still on the sigil and re-checks that target's status for the doubling; stepping out of the ring stops further hits, while stepping in later still catches one.",
   "worldcombat.skill.hex.use.0": "Lay a curse sigil under the foe",
   "worldcombat.skill.hex.use.1": "Finish a target carrying a status",
   "worldcombat.skill.hex.use.2": "Pin a clustered group at once",
@@ -30,5 +30,6 @@
   "worldcombat.skill.hex.chain.off": "Focused: the sigil is tighter, each hit hits harder.",
   "world_combat.move.hex.text.blight": "Misfortune piles on!",
   "world_combat.move.hex.text.strike": "Struck by the curse",
-  "world_combat.move.hex.text.miss": "The curse fizzles"
+  "world_combat.move.hex.text.miss": "The curse fizzles",
+  "worldcombat.skill.hex.description.miss": "The curse is tied to the target chosen at cast; if that target falls or is gone before the curse arrives, the sigil fizzles."
 }

@@ -70,6 +70,7 @@ namespace PokemonSkills {
     describe(sweetscentId, [
         { key: "description.0", values: ["exposure", "scentTicks"] },
         { key: "description.1", values: ["cloudRadius", "cloudTicks", "maxTargets"] },
+        { key: "description.additional", values: [] },
         { key: "description.2", values: ["reach", "tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

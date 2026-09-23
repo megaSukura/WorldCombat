@@ -1,17 +1,4 @@
-/**
- * 抢夺 / snatch —— 执行组织、窗口与借招交接。
- *
- * 核心念头：探出一只手，抓住对手正打算给自己加的那一手——它要给自己用的，被你原样收进自己身上。
- *
- * 一幕分三段：
- *   探（brace，提交前）：身侧凝出一只暗紫的手，指痕指向选定的对手；只播预告，不花任何东西。
- *   张（reach，提交前）：手张在对手面前，`window` 刻里一直等着。期间每 8 刻重播一次，让玩家读出还剩多久。
- *   收（take / empty）：对手提交了带 snatch 旗标的招式时，它的提交被共享闸门顶回去，同一刻施法者用
- *     `NativeLoadout.call` 把那一手接在自己身上——被夺来的招式自己提交、自己结算；窗口没等到东西就空手而回。
- *
- * 与魔法反射分开：魔法反射把朝着自己来的招**弹回去**；抢夺把对手给**自己**的招**拿过来**。
- * 反制：限定了要抢的那一个对手；手够不到、被墙挡住、它不出变化招（或你把它打跑）都会空手而回，不结账。
- */
+/** Wait for a selected opponent’s next benefit, then steal a snatchable self-targeted move or one newly gained beneficial potion effect. */
 namespace PokemonSkills {
     export const snatchId = "snatch";
     export const snatchScene = "world_combat:move_snatch";
@@ -19,7 +6,7 @@ namespace PokemonSkills {
     export const snatchEmptyText = "world_combat.move.snatch.text.empty";
 
     interface SnatchWindow { snatcher: string; until: number; token: number; reach: number; }
-    interface SnatchCaught { move: string; from: string; at: number; }
+    interface SnatchCaught { move: string; from: string; at: number; effect?: MobEffects.Anchor; }
 
     /** 谁正把手张在谁面前：目标 ref → 窗口。窗口由施法者的动作驱动，过期或目标失效即作废。 */
     var snatchWindows: { [target: string]: SnatchWindow } = Object.create(null);
@@ -83,11 +70,21 @@ namespace PokemonSkills {
         snatchCaught[window.snatcher] = { move: id, from: targetRef, at: now };
     });
 
+    WorldCombat.on("world_combat:move_snatch/native_effect", "world_combat:mob_effect_added", "", function (event) {
+        const world = event.world(), target = event.actor(), ref = String(target.ref()), window = snatchWindows[ref];
+        if (!window || world.tick() > window.until || snatchCaught[window.snatcher]) return;
+        const data = JSON.parse(String(event.data())), effect = MobEffects.read(world, target, String(data.id));
+        if (!effect || String(effect.category()) !== "beneficial" || effect.tagged("world_combat:status/identity_only")) return;
+        const actor = world.actor(window.snatcher), a = actor ? world.observe(actor) : null, b = world.observe(target);
+        if (!actor || !a || !b || world.allied(actor, target) || a.position().minus(b.position()).length() > window.reach || !world.clear(a.position(), b.position())) return;
+        snatchCaught[window.snatcher] = { move: "", from: ref, at: world.tick(), effect: MobEffects.anchor(effect) };
+    });
+
     define({
         id: snatchId,
         cooldownParameter: "recharge",
         name: "Snatch",
-        description: "探出一只手，抓住选定对手接下来要给自己加的那一手，原样收进自己身上；它没出可夺的招式就空手而回。",
+        description: "等待选定对手的下一次增益，夺走可抢的自用招式或它刚获得的一项有益药水效果。",
         uses: ["把对手马上要上的增益抢过来", "截走对手的回复与布置", "在对手开打前先夺走它的准备"],
         kind: "enemy",
         range: 6,
@@ -144,6 +141,18 @@ namespace PokemonSkills {
                     if (caught !== undefined) {
                         delete snatchCaught[actorRef];
                         delete snatchWindows[targetRef];
+                        if (caught.effect) {
+                            const victim = live.actor(caught.from), observed = victim ? MobEffects.read(live, victim, caught.effect.id) : null;
+                            const a = live.observe(handle.actor()), b = victim ? live.observe(victim) : null;
+                            if (!victim || !observed || String(observed.key()) !== caught.effect.key || !a || !b || a.position().minus(b.position()).length() > reach || !live.clear(a.position(), b.position())) { empty(handle); return; }
+                            const own = MobEffects.read(live, handle.actor(), observed.id());
+                            if (own && (own.amplifier() > observed.amplifier() || own.amplifier() === observed.amplifier()
+                                && (own.duration() < 0 || observed.duration() >= 0 && own.duration() >= observed.duration()))) { empty(handle); return; }
+                            handle.commit(p(snatchId, "recharge", handle));
+                            const success = MobEffects.transferOne(handle.world(), victim, handle.actor(), observed);
+                            WorldFeedback.emit(handle.world(), snatchScene, 1, a.position(), { moment: success ? "take" : "empty", target: targetRef, grip, path: [targetRef, actorRef], span: window }, 30);
+                            handle.finish(); return;
+                        }
                         const options = snatchCall(handle, caught.move);
                         if (options === null) { empty(handle); return; }
                         handle.data("world_combat:snatch/taken", JSON.stringify({ move: caught.move, from: caught.from }));

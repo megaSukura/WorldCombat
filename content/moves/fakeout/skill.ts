@@ -28,10 +28,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: fakeoutId,
         cooldownParameter: "recharge",
         name: "Fake Out",
-        description: "A quick opening slap that strikes first and leaves the target flinched; it only works right after the user enters battle.",
+        description: "刚被放上场时闪身抢出的一记掌掴：优先度最高、几乎瞬发，未必有多疼，却能把对手拍懵并打断它正在展开的一手；一旦自己已经出过任何一手，这一记就再拍不出来了。",
         uses: ["刚上场就抢一记把对手拍懵", "打断对手正在展开的起手", "开场先手把对手顶开一步"],
         kind: "enemy",
         range: 2.6,

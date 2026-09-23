@@ -94,12 +94,12 @@ namespace PokemonSkills {
     ]);
 
     describe("earthquake", [
-        { key: "description.0", values: ["tremor"] },
+        { key: "description.0", values: ["tremor","maxTargets"] },
         { key: "description.1", values: ["fissureRadius", "launch", "shove"] },
-        { key: "description.2", values: ["rentTicks", "rentCells"] },
+        { key: "description.2", values: ["rentTicks","rentCells"] },
         { key: "aftershock.on", values: ["aftershockDelay"], when: function (context) { return read(context.detail.values, ["aftershock"]) === true; } },
         { key: "aftershock.off", values: [], when: function (context) { return read(context.detail.values, ["aftershock"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.tremor", "tier.0.fissureRadius", "tier.0.launch"] }
     ]);
 }

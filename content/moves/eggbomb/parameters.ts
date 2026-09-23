@@ -135,9 +135,9 @@ namespace PokemonSkills {
     ]);
 
     describe("eggbomb", [
-        { key: "description.0", values: ["egg", "radius"] },
-        { key: "description.1", values: ["heave", "reach", "scatter"] },
-        { key: "description.2", values: ["arc", "splash", "slickTicks"] },
+        { key: "description.0", values: ["egg","radius"] },
+        { key: "description.1", values: ["heave","reach","scatter"] },
+        { key: "description.2", values: ["arc","splash","slickTicks"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

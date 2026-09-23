@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.naturepower.summary": "把站立处的地面叫起来，化作一道贴地的地脉冲向目标：草木缠绕麻痹、水流冲推、地火灼伤、大地碎裂降防并顶开，其余地形只是一记普通冲击；换一块地面就等于换一招的结果。",
+  "worldcombat.skill.naturepower.summary": "把站立处的地面叫起来，化作一道贴地的地脉沿地冲向目标，扫过沿途的每个敌人各结算一次：草木场地使其麻痹、地火场地使其灼伤并着火、大地场地降其物防；每种场地都会把目标沿地脉方向顶开，水流场地推得最远，踩空时只剩一记普通冲击。换一块地面就等于换一招的结果。",
   "worldcombat.skill.naturepower.use.0": "用脚下的地面决定属性",
   "worldcombat.skill.naturepower.use.1": "在危险地形旁边借力",
   "worldcombat.skill.naturepower.use.2": "催发一记更远更重的涌动",
-  "worldcombat.skill.naturepower.description.0": "化作一道贴地的地脉冲击，造成 %1$s 的伤害；属性随施法者脚下的场地变化（草→草、水→水、火→火、石→岩、其余→普通）。",
-  "worldcombat.skill.naturepower.description.1": "地脉最远涌出 %1$s；草木缠绕与地火灼伤按 %2$s 的概率附加，水流冲推最远、大地碎裂额外降低对方物防一级。",
+  "worldcombat.skill.naturepower.description.0": "化作一道贴地的地脉冲击，沿地面涌向目标并造成约 %1$s 点特殊伤害；属性随施法者脚下的场地变化：草木→草、水／冰／雪→水、火／岩浆→火，其他实体方块→岩，踩在空气或虚空上→普通。",
+  "worldcombat.skill.naturepower.description.1": "地脉最多涌出 %1$s 格、半宽 %2$s 格，沿途扫过每个敌人各结算一次（同一敌人只中一次）。命中并造成伤害后：草木场地按 %3$s 概率使其麻痹——持续 40 秒，期间移动速度减半、每次出手有 25%% 概率失败，电属性免疫；地火场地让目标身上着火 3 秒，并按 %3$s 概率使其灼伤——持续 40 秒，期间每 5 秒损失自身最大生命的 1/16（至少 1 点）、物理伤害减半，火属性免疫。",
   "worldcombat.skill.naturepower.stance.charged": "催发地脉：准备拉长到 %1$s，换取威力 ×1.25 与 +2 格涌动距离，适合远处重击。",
-  "worldcombat.skill.naturepower.stance.quick": "顺势催动：准备很短、冷却更短，适合贴身快打，威力与射程保持基础值。",
-  "worldcombat.skill.naturepower.timing": "指向目标的涌动招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.naturepower.stance.quick": "顺势催动：准备很短，威力与射程保持基础值，适合贴身快打。",
+  "worldcombat.skill.naturepower.timing": "指向目标的涌动招式，准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.naturepower.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.naturepower.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.naturepower.value.power": "威力",
@@ -19,7 +19,7 @@
   "worldcombat.skill.naturepower.value.bursts": "爆发数量",
   "worldcombat.skill.naturepower.value.windupTicks": "催动时长",
   "worldcombat.skill.naturepower.preference.charged": "催发地脉",
-  "worldcombat.skill.naturepower.preference.charged.help": "开启：准备拉长约 6 刻、冷却多 4 刻，换取威力 ×1.25 与 +2 格涌动距离；关闭：准备很短、冷却更短，威力与射程保持基础值。两侧各有适用局面。",
+  "worldcombat.skill.naturepower.preference.charged.help": "开启：准备拉长约 6 刻（再受速度钳制），换取威力 ×1.25 与 +2 格涌动距离；关闭：准备很短，威力与射程保持基础值。两侧各有适用局面。",
   "worldcombat.skill.naturepower.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.naturepower.preference.ai.maxChase.help": "只在这个距离内主动出手；更远的目标交给共享接近逻辑。",
   "worldcombat.skill.naturepower.preference.ai.leaveStation": "驻守时离位",
@@ -28,5 +28,6 @@
   "world_combat.move.naturepower.text.water": "水脉之力",
   "world_combat.move.naturepower.text.ember": "地火之力",
   "world_combat.move.naturepower.text.earth": "大地之力",
-  "world_combat.move.naturepower.text.plain": "自然之力"
+  "world_combat.move.naturepower.text.plain": "自然之力",
+  "worldcombat.skill.naturepower.description.push": "命中并造成伤害后，目标会被沿地脉方向顶开：基础顶推 %1$s 格，水流场地 ×1.6、大地 ×1.0、普通 ×0.7、草木 ×0.55、地火 ×0.5。大地场地还会额外降低目标物防一级。"
 }

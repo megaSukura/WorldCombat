@@ -40,8 +40,9 @@ namespace PokemonSkills {
     });
     defineDamage("secretpower", "power", { defenceCoefficient: 0.004, rationale: "借力一击基础低、穿透略强，让场所与速度的差别更可见。" }, { contact: true });
     describe("secretpower", [
-        { key: "description.0", values: ["power"] },
+        { key: "description.0", values: ["power","distance","speed","collisionRadius","push"] },
         { key: "description.1", values: ["chance"] },
+        { key: "description.2", values: [] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);
 }

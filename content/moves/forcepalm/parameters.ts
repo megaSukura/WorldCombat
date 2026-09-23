@@ -120,8 +120,9 @@ namespace PokemonSkills {
 
     describe("forcepalm", [
         { key: "description.0", values: ["palm", "collisionRadius"] },
-        { key: "description.1", values: ["reach", "numbChance", "push"] },
-        { key: "through.on", values: ["through", "throughReach"], when: function (context) { return read(context.detail.values, ["through"]) === true; } },
+        { key: "description.1", values: ["reach","numbChance","push","step"] },
+        { key: "description.paralysis", values: [] },
+        { key: "through.on", values: ["through","throughReach","throughTargets"], when: function (context) { return read(context.detail.values, ["through"]) === true; } },
         { key: "through.off", values: [], when: function (context) { return read(context.detail.values, ["through"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.palm"] },

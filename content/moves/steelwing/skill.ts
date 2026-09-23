@@ -33,10 +33,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "steelwing",
         cooldownParameter: "recharge",
         name: "Steel Wing",
-        description: "The target is hit with wings of steel. This may also boost the user's Defense stat.",
+        description: "横扫身前一片并推开命中的人，命中后有机会磨硬翼面、提高自身防御。",
         uses: ["侧身一记横扫，把面前一片人一起掀开", "贴着敌阵边缘扫出一整扇", "用命中把防御一点点磨硬"],
         kind: "enemy",
         range: 3.2,

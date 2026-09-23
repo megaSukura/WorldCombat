@@ -38,7 +38,7 @@ namespace PokemonSkills {
         id: "bulkup",
         cooldownParameter: "wait",
         name: "健美",
-        description: "使出全身力气绷紧肌肉，从而提高自己的攻击和防御。",
+        description: "提高攻击与防御，可选择偏重进攻或防守。效果结束后收回本次提升。",
         uses: ["开场先涨一轮，把物攻与防御一起垫起来", "压着打时选偏攻，顶着换时选偏守", "在近身拉锯前把两项一起抬起来"],
         kind: "self",
         range: 1,

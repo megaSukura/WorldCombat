@@ -149,8 +149,9 @@ namespace PokemonSkills {
         rationale: "钝重的木槌把力量压过护甲，防御减伤更弱，让体型与等级差更明显。" }, { contact: true });
 
     describe("woodhammer", [
-        { key: "description.0", values: ["timber", "reach", "rise", "collisionRadius"] },
-        { key: "description.1", values: ["recoil", "shove", "stagger", "cracks"] },
+        { key: "description.0", values: ["timber","reach","rise","collisionRadius"] },
+        { key: "description.1", values: ["recoil","shove","stagger"] },
+        { key: "description.crack", values: ["cracks","crackTicks"] },
         { key: "root.on", values: [], when: function (context) { return read(context.detail.values, ["root"]) === true; } },
         { key: "root.off", values: [], when: function (context) { return read(context.detail.values, ["root"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

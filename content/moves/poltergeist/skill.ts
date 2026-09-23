@@ -70,7 +70,7 @@ namespace PokemonSkills {
     define({
         id: "poltergeist",
         name: "灵骚",
-        description: "隔空攥住对手的持有物，把它扯离手边再甩回主人身上；目标没有携带道具时起手即失败。",
+        description: "隔空攥住对手的持有物，把它扯离手边、绕出一条弧线再甩回主人身上；目标没有携带道具时这一招生效不了。念力越强够得越远。",
         uses: ["远程操纵对手的道具打它自己", "对付携带强力道具的目标", "bind 开启时缠住并减速目标"],
         kind: "enemy",
         range: 7,

@@ -28,7 +28,7 @@ namespace PokemonSkills {
         id: "chargebeam",
         cooldownParameter: "recharge",
         name: "Charge Beam",
-        description: "The user attacks the target with an electric charge. The residual electricity may also boost the user's Sp. Atk stat.",
+        description: "发射电束，命中后提高自身特攻，并追加一次伤害；过充时威力与射程更高。",
         uses: ["中远距离的一发蓄电细束", "命中后回灌特攻，为下一发法术蓄势", "隔着一段距离先手压血"],
         kind: "enemy",
         range: 9,

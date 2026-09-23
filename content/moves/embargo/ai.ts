@@ -1,19 +1,8 @@
-/**
- * 查封 / embargo —— AI 用途。
- *
- * 什么局面下出手：挂在共享的 control 位上；带查封的伙伴在没有攻击可用时用它（`world_combat:control-only`），
- *   或者作为一次出手前的前置控制。目标是可见、敌对、还活着、不在查封中、在 `ai.maxChase`（默认 12）格内、
- *   与施法者通视的活体。
- * 对谁出手：当前威胁。`ai.denyItems`（默认开启）只对身上带着道具的目标出手——查封正是冲着它们去的；
- *   关闭后对空手目标也照封（封住它「收到道具」这条路）。
- * 候选之间怎么排：目标持物时 priority 58，空手时 24；已经查封中的目标直接跳过，不重复下手。
- * 够不到怎么办：reach 就是本招射程，共享任务先走到能通视的射程再封；`ai.leaveStation` 决定驻守时是否愿意离位。
- * 放完之后：目标的道具通道被按住一段时间，伙伴交回共享交战顺序；印记到期或被人清除后才会再考虑。
- */
+/** 伙伴根据真实主副手与原生携带物判断查封价值，避开已有查封的目标。 */
 namespace CompanionBehavior {
     registerFact("world_combat:move_embargo/held", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        return String(CobblemonCombat.pokemon(actor).heldItem()).replace("cobblemon:", "");
+        const held = NativeItems.heldOf(access, actor);
+        return held === null ? "" : held.id;
     });
 
     function embargoHeldOf(context: WorldBehavior.Context, target: Entity): string {

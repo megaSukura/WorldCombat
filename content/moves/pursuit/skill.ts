@@ -36,10 +36,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: pursuitId,
         name: "Pursuit",
-        description: "Pounce on a target that is pulling away; the blow doubles against a retreating foe.",
-        uses: ["chasing strike"],
+        description: "扑向正在拉开距离的目标；命中时若目标背身远离，威力翻倍。",
+        uses: ["追击近战"],
         kind: "enemy",
         range: 6,
         prepare: 4,

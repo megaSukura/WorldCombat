@@ -65,8 +65,8 @@ namespace PokemonSkills {
     defineDamage("uproar", "shout", {});
 
     describe("uproar", [
-        { key: "description.0", values: ["shout", "pulses"] },
-        { key: "description.1", values: ["radius", "interval"] },
+        { key: "description.0", values: ["shout","pulses"] },
+        { key: "description.1", values: ["radius","interval"] },
         { key: "description.2", values: ["guardRadius"] },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] }
     ]);

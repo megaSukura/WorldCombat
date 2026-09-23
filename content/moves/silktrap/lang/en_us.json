@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.silktrap.summary": "Spins a silken web that blocks damaging attacks by a total pool and snares contact: Speed cut and the foe pinned briefly; status moves pass through.",
-  "worldcombat.skill.silktrap.description.0": "The web lasts %1$s and holds %2$s points, cutting contact Speed by %3$s levels and pinning for %4$s; higher Speed and Defence make it tougher and longer.",
-  "worldcombat.skill.silktrap.description.1": "Weave %1$s, cooldown %2$s.",
-  "worldcombat.skill.silktrap.description.2": "Repeat-use failure rate %1$s; the snare/slide trade-off is the %2$s setting.",
+  "worldcombat.skill.silktrap.summary": "Spins a silk web to protect the user, blocking foes' damaging moves up to a total pool (excess still lands) and snaring enemies whose contact attacks hit it — cutting their Speed and pinning them in place; status moves pass through.",
+  "worldcombat.skill.silktrap.description.0": "Spins a web around the user to protect itself: it lasts up to %1$s ticks (ending early once its pool is spent) and blocks up to a total of %2$s damage from foes' damaging moves, with any excess still landing; a foe whose contact attack strikes the web loses %3$s Speed levels and is pinned for %4$s ticks (unable to move), once per attacker per web. Higher Speed and Defence make the web tougher and longer-lasting.",
+  "worldcombat.skill.silktrap.description.1": "Weave %1$s ticks, cooldown %2$s ticks.",
+  "worldcombat.skill.silktrap.description.2": "Weaving the web again in quick succession gets riskier: from the second consecutive cast each repeat adds about 25% to the failure chance (less at higher levels), resetting after about 12 seconds without use, and a failed cast is wasted. Current failure chance %1$s; current Snare setting %2$s.",
   "worldcombat.skill.silktrap.use.0": "Snare a charging melee so it is slow and stuck",
   "worldcombat.skill.silktrap.use.1": "Buy time to open distance for allies",
   "worldcombat.skill.silktrap.use.2": "Soak ranged damage with the toughest web",
@@ -21,5 +21,6 @@
   "effect.world_combat.silk_guard": "Silk Trap",
   "world_combat.move.silktrap.text.block": "The web held %1$s (left %2$s)",
   "world_combat.move.silktrap.text.punish": "Speed -%1$s, pinned %2$s s",
-  "world_combat.move.silktrap.text.fall": "The web slackened"
+  "world_combat.move.silktrap.text.fall": "The web slackened",
+  "worldcombat.skill.silktrap.description.pass": "The web only stops foes' damaging moves: status moves pass straight through, and attacks from allies do not spend it."
 }

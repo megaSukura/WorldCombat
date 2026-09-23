@@ -1,15 +1,4 @@
-/**
- * 棉花防守 / cottonguard — 执行组织。
- *
- * 核心念头：一层层白绒从身上鼓出来，把自己裹成一团。越裹越厚，硬得像撞进一堵棉花墙；
- *   可裹厚了也迈不开步——绒毛护住你，也拖住你。
- *
- * 两幕：
- *   鼓（windup 播「鼓绒」，提交前只观察与预告，打断不花代价）。
- *   裹（提交后）：NativeEffects.boost(def, gift) 写入公共能力阶梯，挂上共享身份
- *     world_combat:status/cottonguard 的「绒衣」窗口；厚裹时另挂一层独立的移速减益（裹厚了迈不开步）。
- * 结束：绒衣被撕光、到期或被清除时，这段防护抬起的等级原样收回——对手有一次磨掉它的反制。
- */
+/** 棉花防守：绒衣绑定独立防御窗口；到期或被清除只结束自己这份贡献。 */
 namespace PokemonSkills {
     const cottonGuardScene = "world_combat:move_cottonguard";
     const cottonGuardCoat = "world_combat:cotton_coat";
@@ -19,25 +8,13 @@ namespace PokemonSkills {
     /** 表现里的参考半径：`data.scale = 实际鼓开半径 / 这个数`，让绒环与判定同半径。 */
     const cottonGuardReferenceRadius = 1.5;
 
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function cottonGuardStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function cottonGuardRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = cottonGuardStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, cottonGuardStage(world, actor, stat) - before);
-    }
 
     define({
         id: "cottonguard",
         cooldownParameter: "wait",
         name: "棉花防守",
-        description: "用软绵绵的绒毛裹住自己的身体进行守护，巨幅提高自己的防御。",
-        uses: ["硬吃一轮爆发前先裹上绒衣", "在近身肉搏里把防御堆起来", "用可见的绒衣窗口逼对手先花时间磨它"],
+        description: "裹上绒衣大幅提高防御；选择厚裹时移动速度降低 25%。绒衣被清除或到期后，这次提升收回。",
+        uses: ["硬吃一轮爆发前先裹上绒衣", "在近身肉搏里把防御堆起来", "用绒衣窗口硬撑一段持续消耗"],
         kind: "self",
         range: 1,
         maxRange: 1,
@@ -86,8 +63,14 @@ namespace PokemonSkills {
             const fluff = Math.max(16, Math.round(p("cottonguard", "fluff", action)));
             const layers = Math.max(3, Math.min(6, Math.round(p("cottonguard", "layers", action))));
             const scale = bloom / cottonGuardReferenceRadius;
-            const levels = cottonGuardRaise(world, actor, "def", gift);
-            MobEffects.apply(world, actor, cottonGuardCoat, window, levels);
+            const before = NativeEffects.effectiveStage(world, actor, "def");
+            const previous = MobEffects.read(world, actor, cottonGuardCoat);
+            const carrier = MobEffects.apply(world, actor, cottonGuardCoat, window, 0);
+            if (carrier === null) { done(action); return; }
+            const owned = NativeEffects.boostWindow(world, actor, { def: gift }, window,
+                "world_combat:move/cottonguard", carrier, previous);
+            const levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
+            if (!owned) { world.removeMobEffect(actor, carrier.id(), carrier.key()); done(action); return; }
             if (heavy) MobEffects.apply(world, actor, cottonGuardSlow, window, 0);
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             WorldFeedback.emit(world, cottonGuardScene, 1, feet,
@@ -101,15 +84,14 @@ namespace PokemonSkills {
         }
     });
 
-    // 绒衣被撕光、到期或被清除：把这段防护抬起的等级原样收回，只收到当前实际持有的正等级，避免抹掉别处的增益。
+    // 共享窗口随绒衣解除；本单元同步撤去厚裹减速并播放结束反馈。
     WorldCombat.on("world_combat:move_cottonguard/bare", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== cottonGuardCoat) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        const loss = Math.min(levels, Math.max(0, cottonGuardStage(world, actor, "def")));
-        if (loss > 0) NativeEffects.boost(world, actor, "def", -loss);
+        if (MobEffects.read(world, actor, cottonGuardCoat) !== null) return;
+        MobEffects.consume(world, actor, cottonGuardSlow);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, cottonGuardScene, 1, body.position(), { moment: "bare", actor: String(actor.ref()) }, 24);

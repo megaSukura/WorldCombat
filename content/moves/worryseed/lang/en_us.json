@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.worryseed.summary": "Plants a worry seed on the target, leaving it unable to sleep and overriding its Ability with Insomnia until the seed withers.",
+  "worldcombat.skill.worryseed.summary": "Plants worry that wakes the target from move-induced sleep and protects it from being put to sleep again while the seed lasts. Pokémon also temporarily gain Insomnia.",
   "worldcombat.skill.worryseed.use.0": "Replace the target's dangerous Ability with Insomnia",
   "worldcombat.skill.worryseed.use.1": "Shut down sleep tactics by keeping the target awake",
   "worldcombat.skill.worryseed.description.0": "Tosses the seed within %1$s blocks after a %2$s s wind-up, at about %3$s blocks/tick.",
-  "worldcombat.skill.worryseed.description.1": "The seed overrides the target's Ability with Insomnia for %1$s s; it cannot fall asleep and any current sleep is cured on the spot.",
+  "worldcombat.skill.worryseed.description.1": "The seed lasts %1$s, waking the target and preventing sleep moves from putting it to sleep again. Ordinary creatures and players receive this protection too. Pokémon temporarily gain Insomnia.",
   "worldcombat.skill.worryseed.deep.0": "Deep planting: worry lasts ×1.7 and cooldown +20 ticks; one cast locks the target down.",
   "worldcombat.skill.worryseed.deep.1": "Shallow planting: worry lasts ×0.6 and cooldown −12 ticks; cheap enough to re-seed often.",
   "worldcombat.skill.worryseed.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.worryseed.growth.0": "At level %1$s the committed cooldown shortens to %2$s s.",
-  "worldcombat.skill.worryseed.growth.1": "At level %1$s the committed cooldown shortens again to %2$s s.",
+  "worldcombat.skill.worryseed.growth.0": "At level %1$s, base cooldown drops to %2$s; Speed and configuration still adjust the actual cooldown.",
+  "worldcombat.skill.worryseed.growth.1": "At level %1$s, base cooldown drops to %2$s; Speed and configuration still adjust the actual cooldown.",
   "worldcombat.skill.worryseed.value.reach": "Seed toss range",
   "worldcombat.skill.worryseed.value.velocity": "Seed speed",
   "worldcombat.skill.worryseed.value.radius": "Seed radius",
@@ -27,5 +27,5 @@
   "worldcombat.skill.worryseed.preference.ai.leaveStation.help": "On, a holding companion will leave its post to seed a foe; off, it only casts when already in reach.",
   "effect.world_combat.worryseed": "Worry Seed",
   "world_combat.move.worryseed.text.planted": "A worry is planted",
-  "world_combat.move.worryseed.text.woken": "Woken, and can no longer sleep"
+  "world_combat.move.worryseed.text.woken": "Awake: sleep protection while the seed lasts"
 }

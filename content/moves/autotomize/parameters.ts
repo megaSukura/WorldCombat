@@ -72,10 +72,10 @@ namespace PokemonSkills {
     ]);
 
     describe("autotomize", [
-        { key: "description.0", values: ["gift", "parts", "fling"] },
-        { key: "description.1", values: ["lightTicks", "buoyancy"] },
+        { key: "description.0", values: ["gift","parts","fling"] },
+        { key: "description.1", values: ["lightTicks","buoyancy"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.lightTicks", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.lightTicks", "tier.1.wait"] }
     ]);

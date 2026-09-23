@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.comeuppance.summary": "Writes the most recent damage into a grudge, then sends a shadow to hunt the debtor after a beat, returning 1.5x; with an empty ledger the mark disperses.",
+  "worldcombat.skill.comeuppance.summary": "Turns the most recent damage taken into a grudge, then after a beat sends a homing shadow at the chosen foe for 1.5x; with an empty ledger the mark disperses.",
   "worldcombat.skill.comeuppance.use.0": "Hunt a distant foe after taking a hit",
   "worldcombat.skill.comeuppance.use.1": "Punish a ranged attacker that struck first",
   "worldcombat.skill.comeuppance.use.2": "Turn damage taken into a delayed heavy blow",
-  "worldcombat.skill.comeuppance.description.0": "Sends the %1$s point refund recorded on the user out with the shadow; only damage taken within the last %2$s becomes that grudge, physical or special alike.",
-  "worldcombat.skill.comeuppance.description.1": "Hunt range %1$s blocks, shadow at %2$s blocks per tick, released %3$s s after the mark, collision radius %4$s blocks. The refund never exceeds %5$s of the user's maximum health.",
+  "worldcombat.skill.comeuppance.description.0": "Records the most recent damage taken from someone else as a grudge, and a newer hit replaces the old debt; on cast the shadow pursues it for 1.5x, currently %1$s points. Only damage taken within the last %2$s still counts, physical or special alike.",
+  "worldcombat.skill.comeuppance.description.1": "Hunt range %1$s blocks; the shadow flies %2$s blocks per tick with a %4$s-block collision radius, released %3$s s after the mark and homing on the target. The refund never exceeds %5$s of the user's maximum health, settles as a fixed value, and is reduced only by the target's armour.",
   "worldcombat.skill.comeuppance.grudge.on": "Grudge mode on: the ledger window is 2 s longer and the stalk delay 0.5 s longer, so a much older debt can be pursued, but prepare takes 2 ticks and cooldown 8 ticks more.",
   "worldcombat.skill.comeuppance.grudge.off": "Grudge mode off: hunts sooner and only the freshest debt counts.",
   "worldcombat.skill.comeuppance.timing": "Castable on enemies within %1$s blocks; commits after %2$s s and costs %4$s PP; recovers for %3$s s and starts a %5$s s cooldown.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.comeuppance.preference.ai.maxChase": "Hunt distance",
   "worldcombat.skill.comeuppance.preference.ai.maxChase.help": "Only send the shadow at the debtor within this distance; a larger value commits the hunt from farther away.",
   "world_combat.move.comeuppance.text.hit": "Comeuppance!",
-  "world_combat.move.comeuppance.text.whiff": "No grudge held"
+  "world_combat.move.comeuppance.text.whiff": "No grudge held",
+  "worldcombat.skill.comeuppance.description.ledger": "The debt is taken when you cast it, spent whether or not the shadow lands, so a fresh grudge must be earned before another attempt; with an empty ledger the mark disperses and the move does nothing."
 }

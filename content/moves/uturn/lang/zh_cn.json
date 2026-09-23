@@ -3,12 +3,12 @@
   "worldcombat.skill.uturn.use.0": "贴脸打一下再脱身，把身位让出来",
   "worldcombat.skill.uturn.use.1": "被打崩前用一记折返拉开距离",
   "worldcombat.skill.uturn.use.2": "有人接应时把敌人引向自己的伙伴",
-  "worldcombat.skill.uturn.description.0": "切进去撞上活体，造成 %1$s 点物理伤害。",
+  "worldcombat.skill.uturn.description.0": "切进去撞上沿途第一个活体，造成 %1$s 点物理伤害。",
   "worldcombat.skill.uturn.description.1": "冲刺距离 %1$s 格、每刻位移 %2$s 格，判定半径 %3$s 格。",
-  "worldcombat.skill.uturn.description.2": "撞后折返 %1$s 格、U 形弧宽 %2$s 格；交棒式会退到 %3$s 格内最近的等候伙伴身边。",
+  "worldcombat.skill.uturn.description.2": "冲刺结束后折返 %1$s 格、U 形弧宽 %2$s 格（没撞到也照样折返）；交棒式会退到 %3$s 格内最近的等候伙伴身边。",
   "worldcombat.skill.uturn.handoff.on": "交棒式：退到接应半径内最近的等候伙伴身边，折返距离 ×0.78。",
   "worldcombat.skill.uturn.handoff.off": "远遁式：沿弧线径直拉回，折返距离 ×1.15，离敌人最远。",
-  "worldcombat.skill.uturn.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.uturn.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %5$s 秒，耗 %4$s PP。",
   "worldcombat.skill.uturn.growth.0": "%1$s 级起折返撞威力抬到 %2$s。",
   "worldcombat.skill.uturn.growth.1": "%1$s 级起折返撞威力抬到 %2$s。",
   "worldcombat.skill.uturn.value.strike": "折返撞威力",
@@ -32,5 +32,6 @@
   "worldcombat.skill.uturn.preference.ai.leaveStation.help": "开启后，驻守命令下也会折返脱离；关闭则只在原地方便时施放。",
   "world_combat.move.uturn.text.relief": "折返 · 交棒",
   "world_combat.move.uturn.text.miss": "扑空 · 折回",
-  "world_combat.move.uturn.text.switch": "急速折返 · 换手"
+  "world_combat.move.uturn.text.switch": "急速折返 · 换手",
+  "worldcombat.skill.uturn.description.3": "只要队伍里还有能上场的后备，折返落点会立刻与你换手：由那只后备在那个位置登场；没有后备（野生或独行）时，只做场内的折返脱身。"
 }

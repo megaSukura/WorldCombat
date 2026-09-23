@@ -116,7 +116,7 @@ namespace PokemonSkills {
     ]);
 
     describe(razorleafId, [
-        { key: "description.0", values: ["leaf", "waves"] },
+        { key: "description.0", values: ["leaf","waves"] },
         { key: "description.1", values: ["reach", "spread", "gap"] },
         { key: "broad.on", values: [], when: function (context) { return read(context.detail.values, ["broad"]) === true; } },
         { key: "broad.off", values: [], when: function (context) { return read(context.detail.values, ["broad"]) !== true; } },

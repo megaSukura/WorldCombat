@@ -150,8 +150,8 @@ namespace PokemonSkills {
     ]);
 
     describe(dragonrushId, [
-        { key: "description.0", values: ["dive", "accuracy"] },
-        { key: "description.1", values: ["menace", "landRadius", "flinchChance", "flinchTicks"] },
+        { key: "description.0", values: ["dive","accuracy"] },
+        { key: "description.1", values: ["menace","landRadius","flinchChance","flinchTicks"] },
         { key: "description.2", values: ["hop", "airTicks", "push"] },
         { key: "dread.on", values: [], when: function (context) { return read(context.detail.values, ["dread"]) === true; } },
         { key: "dread.off", values: [], when: function (context) { return read(context.detail.values, ["dread"]) !== true; } },

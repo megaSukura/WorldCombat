@@ -48,7 +48,7 @@ namespace PokemonSkills {
         cooldownParameter: "wait",
         name: "Chilling Water",
         description: "兜起一团接近冰点的水迎头泼在对手身上：浇灭它的力气（攻击下降）、把它浇得湿透，落点留下湿冷水渍；冰面形态下还会在落点结起一圈会打滑的冰，但单发更轻、出手更慢。",
-        uses: ["压低对手的物理输出", "把目标浇湿，给别的招留出可消费的湿身身份", "在狭窄地面上结一圈冰，逼对手走位"],
+        uses: ["压低对手的物理输出", "把目标浇湿，让后续水冰招能利用这层湿身", "在狭窄地面上结一圈冰，逼对手走位"],
         kind: "enemy",
         range: 11,
         maxRange: 16,

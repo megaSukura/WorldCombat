@@ -137,8 +137,8 @@ namespace PokemonSkills {
             .as(text("worldcombat.skill.assurance.value.wounded")));
 
     describe(assuranceId, [
-        { key: "description.0", values: ["ambush", "window"] },
-        { key: "description.1", values: ["dash", "speed", "radius", "push"] },
+        { key: "description.0", values: ["ambush","window"] },
+        { key: "description.1", values: ["dash","speed","radius","push"] },
         { key: "relentless.on", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) === true; } },
         { key: "relentless.off", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) !== true; } },
         { key: "timing", values: ["range", "grit", "settle", "pp", "recharge"] },

@@ -4,11 +4,11 @@
   "worldcombat.skill.wideguard.use.1": "Raise the wall a beat before allies are caught by an area move",
   "worldcombat.skill.wideguard.use.2": "Eat one burst for the team in a short window",
   "worldcombat.skill.wideguard.description.0": "The wide wall absorbs about %1$s non-contact damage per ally and stands for about %2$s s.",
-  "worldcombat.skill.wideguard.description.1": "The wall covers %1$s blocks.",
+  "worldcombat.skill.wideguard.description.1": "At the moment it is raised, it covers the user and allies within %1$s blocks.",
   "worldcombat.skill.wideguard.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.wideguard.brace.wide": "Wide wall: larger radius but wears faster; it covers more.",
   "worldcombat.skill.wideguard.brace.dense": "Dense wall: more absorption and a smaller radius; it holds tighter.",
-  "worldcombat.skill.wideguard.timing": "Self move, covering a %1$s block radius; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
+  "worldcombat.skill.wideguard.timing": "Self move: after %1$s s of preparation it costs %3$s PP, then %2$s s of recovery and a %4$s s cooldown.",
   "worldcombat.skill.wideguard.value.capacity": "Absorption",
   "worldcombat.skill.wideguard.value.window": "Wall duration",
   "worldcombat.skill.wideguard.value.radius": "Cover radius",
@@ -28,5 +28,6 @@
   "world_combat.move.wideguard.text.raise": "Wide Guard (absorb %1$s / %2$s covered / %3$s s)",
   "world_combat.move.wideguard.text.block": "Wide Guard absorbed %1$s (left %2$s)",
   "world_combat.move.wideguard.text.fall": "Wide Guard fell",
-  "effect.world_combat.wide_guard": "Wide Guard"
+  "effect.world_combat.wide_guard": "Wide Guard",
+  "worldcombat.skill.wideguard.description.3": "It turns aside only ranged and area attacks from enemies; point-blank melee passes through. The caster and each covered ally carry a separate pool that ends when spent or when the window expires, and damage beyond the remaining pool lands as usual. The wall also drops for an ally that moves too far from the caster or loses line of sight."
 }

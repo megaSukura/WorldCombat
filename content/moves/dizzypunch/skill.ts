@@ -55,7 +55,7 @@ namespace PokemonSkills {
         id: "dizzypunch",
         cooldownParameter: "recharge",
         name: "Dizzy Punch",
-        description: "The target is hit with rhythmically launched punches. This may also leave the target confused.",
+        description: "双拳按节拍交替连打一串：每一拍扫过身前的小扇面，快的人打更多拳；整串打完再按概率把被打中的人打得天旋地转，此后出手会打偏、还会自伤。",
         uses: ["贴身按节拍连打一串", "把小扇面里的几个敌人一起打懵", "用混乱制造失手窗口"],
         kind: "enemy",
         range: 2.5,

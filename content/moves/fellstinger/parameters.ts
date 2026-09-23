@@ -38,7 +38,7 @@ namespace PokemonSkills {
     defineDamage(fellstingerId, "power", {});
 
     describe(fellstingerId, [
-        { key: "description.0", values: ["power", "distance", "speed", "collisionRadius", "rise"] },
+        { key: "description.0", values: ["power","distance","speed","collisionRadius","rise"] },
         { key: "description.1", values: ["pp", "cooldown"] }
     ]);
 }

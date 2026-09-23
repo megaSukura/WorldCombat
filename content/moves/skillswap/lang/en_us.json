@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.skillswap.summary": "Exchanges Abilities with the target for a while: you take theirs, they take yours, and both return when the window ends.",
+  "worldcombat.skill.skillswap.summary": "Temporarily exchange Abilities, or exchange attack, movement and defensive attributes with a non-Pokémon.",
   "worldcombat.skill.skillswap.use.0": "Take the target's strong Ability for yourself",
   "worldcombat.skill.skillswap.use.1": "Hand your harmful Ability to the opponent",
   "worldcombat.skill.skillswap.use.2": "Break a foe that leans on its Ability",
-  "worldcombat.skill.skillswap.description.0": "Exchange Abilities with a foe within %1$s blocks for %2$s s. Both must be Pokemon and neither can already be in another exchange.",
+  "worldcombat.skill.skillswap.description.0": "Select an opponent within %1$s blocks; the exchange lasts %2$s. Pokémon exchange their current eligible Abilities. Neither participant may already be in an exchange.",
   "worldcombat.skill.skillswap.description.2": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.skillswap.hold.on": "Deep exchange: duration x1.9 and cooldown x1.3, for using one good Ability across a stretch of the fight, but you cannot swap back meanwhile.",
   "worldcombat.skill.skillswap.hold.off": "Quick exchange: duration x0.7 and cooldown x0.9, cheap to cast and quick to undo, for trying out the opponent's Ability first.",
@@ -27,5 +27,6 @@
   "effect.world_combat.skillswap_shift": "Skill Swap",
   "world_combat.move.skillswap.text.gain": "Ability: %1$s",
   "world_combat.move.skillswap.text.same": "Same Ability, nothing to swap",
-  "world_combat.move.skillswap.text.returned": "Ability swapped back"
+  "world_combat.move.skillswap.text.returned": "Exchange ended",
+  "worldcombat.skill.skillswap.world": "Against a non-Pokémon, temporarily exchange both participants’ current native attack damage, movement speed, armour, armour toughness and knockback resistance for %1$s. Cleansing either side restores both. Equipment stays with its owner, and later attribute changes still apply."
 }

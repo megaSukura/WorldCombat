@@ -3,7 +3,7 @@
   "worldcombat.skill.geargrind.use.0": "Throw two spinning steel gears from opposite sides",
   "worldcombat.skill.geargrind.use.1": "Use ricocheting gears to reach around cover",
   "worldcombat.skill.geargrind.use.2": "Pin down a foe that keeps stepping sideways",
-  "worldcombat.skill.geargrind.description.0": "First gear %1$s power, second gear %2$s power (attack/speed), throw reach %3$s blocks, gear speed %4$s blocks/tick.",
+  "worldcombat.skill.geargrind.description.0": "Hurl two steel gears in turn; each deals one hit on contact: the first for about %1$s (Attack-driven), the second for about %2$s (Speed-driven). Throw reach %3$s blocks, gear speed %4$s blocks per tick.",
   "worldcombat.skill.geargrind.description.1": "Throw deviation %1$s degrees, homing turn %2$s deg/tick, side offset %3$s blocks.",
   "worldcombat.skill.geargrind.cross.on": "Cross style now: the gears swing out to both sides and home back together, so a sideways dodge is caught by the other gear; each is lighter, slightly slower and the gap is longer.",
   "worldcombat.skill.geargrind.cross.off": "Straight style now: both gears fly flat and fast along one line with no homing, each heavier, truer and quicker, but stepping to one side avoids them together.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.geargrind.preference.cross.help": "On: the gears swing out to both sides and home back together, so a sideways dodge is caught by the other gear; each is x0.95, slightly slower with +2 tick gap. Off (straight): both fly flat and fast along one line with no homing, x1.1 each, truer and quicker, but stepping to one side avoids them together.",
   "worldcombat.skill.geargrind.preference.ai.maxChase": "Engage range",
   "worldcombat.skill.geargrind.preference.ai.maxChase.help": "Beyond this distance it will not throw gears and closes in first.",
-  "world_combat.move.geargrind.text.clatter": "Gear ricochet"
+  "world_combat.move.geargrind.text.clatter": "Gear ricochet",
+  "worldcombat.skill.geargrind.description.ballistic": "The gears are real flying projectiles that ricochet off blocks, with a %1$s-block hit radius; the second gear is thrown %2$s after the first."
 }

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.raindance.summary": "把一场雨叫到选定的那片天：雨区里的活体被淋湿，水属性招式威力提高、火属性招式被压低，身上的火与灼伤被浇灭，地面正在烧的野火也被这场雨扑灭。",
+  "worldcombat.skill.raindance.summary": "把一场雨叫到选定的那片天：雨区里的活体被淋湿，淋湿者的水属性招式威力提高、火属性招式被压低，身上的火与灼伤被浇灭，地面正在烧的野火也被这场雨扑灭。",
   "worldcombat.skill.raindance.use.0": "给水属性招式加成",
   "worldcombat.skill.raindance.use.1": "压制火属性对手",
   "worldcombat.skill.raindance.use.2": "灭火与治愈灼伤",
   "worldcombat.skill.raindance.description.0": "在选定地面张开半径 %1$s 格的雨区，持续 %2$s。",
-  "worldcombat.skill.raindance.description.1": "进入雨区的活体被淋湿，离开后仍持续 %1$s。",
+  "worldcombat.skill.raindance.description.1": "进入雨区的活体被淋湿，离开后湿身仍持续 %1$s：湿身期间它自己的水属性招式威力 ×1.5、火属性招式威力 ×0.5，这道湿身也能被其他水／冰招式读取；只要还站在雨里，身上的火焰会被浇灭、灼伤会被治愈。",
   "worldcombat.skill.raindance.description.2": "雨区每轮最多检查并扑灭 %1$s 格地面野火；火被这场雨灭掉后不会自己烧回来。",
   "worldcombat.skill.raindance.description.3": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.raindance.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 叫来这场雨，收招 %3$s，提交起冷却 %5$s。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.raindance.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去叫雨。",
   "world_combat.move.raindance.text.drench": "被淋湿",
   "world_combat.move.raindance.text.douse": "被浇灭",
-  "effect.world_combat.raindance_soaked": "淋湿"
+  "effect.world_combat.raindance_soaked": "淋湿",
+  "worldcombat.skill.raindance.description.weather": "这场雨同时改写当地天气：雨区内天色转阴、日照被压暗，依赖强日照的招式在雨中会减弱。雨区随施放者存续，施放者远离超过 48 格或倒下时提前结束。"
 }

@@ -79,9 +79,9 @@ namespace PokemonSkills {
     describe("wideguard", [
         { key: "description.0", values: ["capacity", "window"] },
         { key: "description.1", values: ["radius"] },
-        { key: "description.2", values: ["tempo", "aftercast", "wait"] },
+        { key: "description.3", values: [] },
         { key: "brace.wide", values: [], when: function (context) { return read(context.detail.values, ["brace"]) === 1; } },
         { key: "brace.dense", values: [], when: function (context) { return read(context.detail.values, ["brace"]) !== 1; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

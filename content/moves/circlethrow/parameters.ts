@@ -132,9 +132,10 @@ namespace PokemonSkills {
     defineDamage(circlethrowId, "slam", { defenceCoefficient: 0.005, rationale: "摔击对防御的穿透接近默认，突出物攻与体重的差别。" }, { contact: true });
 
     describe(circlethrowId, [
-        { key: "description.0", values: ["slam", "grip"] },
-        { key: "description.1", values: ["fling", "arc", "air"] },
-        { key: "description.2", values: ["flee", "keepOut", "panic"] },
+        { key: "description.0", values: ["slam","grip"] },
+        { key: "description.1", values: ["fling","arc","air"] },
+        { key: "description.2", values: ["flee","keepOut","panic"] },
+        { key: "description.additional", values: [] },
         { key: "tight.on", values: [], when: function (context) { return read(context.detail.values, ["tight"]) === true; } },
         { key: "tight.off", values: [], when: function (context) { return read(context.detail.values, ["tight"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

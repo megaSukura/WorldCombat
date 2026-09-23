@@ -45,6 +45,6 @@ namespace PokemonSkills {
     describe(sweetkissId, [
         { key: "description.0", values: ["kissReach", "range"] },
         { key: "description.1", values: ["mistTicks"] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] }
+        { key: "description.2", values: ["tempo","aftercast","recharge"] }
     ]);
 }

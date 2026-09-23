@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.submission.summary": "抓住目标摔向地面，使其倒地，同时自身受伤。体型过大的目标更难摔倒。",
-  "worldcombat.skill.submission.description.0": "抓起后砸落造成 %1$s 的接触伤害，最远扑抓 %2$s 格、扑身速度 %3$s 格每刻、抓取半径 %4$s 格。",
-  "worldcombat.skill.submission.description.1": "抓住目标后有 %1$s 秒的窗口再摔下；摔后对方被压制 %2$s 秒、甩开 %3$s 格。目标块头越大，摔击越轻、压制越短。",
-  "worldcombat.skill.submission.description.2": "命中后自己按实际伤害的 %1$s%% 反噬。",
+  "worldcombat.skill.submission.summary": "扑上去抓住目标再摔向地面：命中造成接触伤害，把对方按倒、移动大幅变慢，自己也按实际伤害反噬一部分。块头越大的目标摔得越轻、压制越短；扑空则没有伤害与自伤。",
+  "worldcombat.skill.submission.description.0": "扑上去抓住目标再砸落，造成约 %1$s 点接触伤害；最远扑抓 %2$s 格、扑身速度 %3$s 格每刻、抓取半径 %4$s 格。",
+  "worldcombat.skill.submission.description.1": "抓住目标后有 %1$s 秒的窗口：这期间目标被抓住、无法移动，你也被钉在原地；窗口结束把它摔下，按倒 %2$s 秒、甩开 %3$s 格。目标块头越大，摔击越轻、压制越短。",
+  "worldcombat.skill.submission.description.2": "命中后自己按实际伤害的 %1$s 倍反噬。",
   "worldcombat.skill.submission.pin.on": "压制式：摔得更轻、反噬更小，但把对方按住更久，适合控场与配合队友。",
   "worldcombat.skill.submission.pin.off": "抛摔式：摔得更重、甩得更开、反噬更大，但对方很快能爬起来。",
   "worldcombat.skill.submission.timing": "射程 %1$s 格；起手 %2$s 秒、起身 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
   "worldcombat.skill.submission.growth.0": "%1$s 级起摔击威力抬到 %2$s。",
   "worldcombat.skill.submission.growth.1": "%1$s 级起摔击威力抬到 %2$s、压制时长升到 %3$s 秒。",
   "worldcombat.skill.submission.use.0": "把贴脸的目标抓住按倒，为队友创造输出窗口",
-  "worldcombat.skill.submission.use.1": "打断一个正要出手的对手",
+  "worldcombat.skill.submission.use.1": "抓住贴脸的对手，让它一段时间动弹不得",
   "worldcombat.skill.submission.use.2": "用压制把对手钉在原地，自己挨一下",
   "worldcombat.skill.submission.value.slam": "摔击威力",
   "worldcombat.skill.submission.value.recoil": "反噬比例",
@@ -35,5 +35,6 @@
   "world_combat.move.submission.text.hit": "地狱翻滚",
   "world_combat.move.submission.text.miss": "扑空了",
   "world_combat.move.submission.text.grab": "抓住了",
-  "world_combat.move.submission.text.lost": "目标脱手"
+  "world_combat.move.submission.text.lost": "目标脱手",
+  "worldcombat.skill.submission.description.3": "倒地期间目标爬不起来、移动大幅变慢；只要还抓在手里，即使这一摔没造成伤害，目标也会被按倒。"
 }

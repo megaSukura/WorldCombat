@@ -65,6 +65,7 @@ namespace PokemonSkills {
 
     describe("swift", [
         { key: "description.0", values: ["star", "stars"] },
+        { key: "description.additional", values: [] },
         { key: "description.1", values: ["turn", "starSpeed", "lockRange"] },
         { key: "description.2", values: ["collisionRadius"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

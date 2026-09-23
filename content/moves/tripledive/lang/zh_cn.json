@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.tripledive.summary": "连跳三次、每次沿目标方向扎下去，落点溅起一片水花；每钻命中都把目标打湿，已经湿透的目标被下一钻打得更重。三下都落在同一个目标上时，第三下最狠。",
   "worldcombat.skill.tripledive.use.0": "连续三次钻击同一个目标，越钻越重",
-  "worldcombat.skill.tripledive.use.1": "先手把目标打湿，给后续水属性招式铺垫",
+  "worldcombat.skill.tripledive.use.1": "先手把目标打上湿透，让随后两钻吃满加成",
   "worldcombat.skill.tripledive.use.2": "在近身短暂窗口里堆出三下小伤害",
   "worldcombat.skill.tripledive.description.0": "三钻各造成约 %1$s 的水属性接触伤害，每钻够到 %2$s 格、水花判定半径 %3$s 格；对手防御、相性与暴击在每钻命中时另算。",
-  "worldcombat.skill.tripledive.description.1": "每次命中使目标湿透 %2$s；攻击已湿透的目标时威力变为 %1$s 倍。",
+  "worldcombat.skill.tripledive.description.1": "每一钻命中都会把目标打上湿透并刷新到 %2$s；目标已经湿透时，这一钻的威力提高到 %1$s。三钻都打在同一目标上时，第二、三钻自动吃到这份加成。",
   "worldcombat.skill.tripledive.description.2": "两钻间隔 %1$s。",
   "worldcombat.skill.tripledive.plunge.on": "深潜：跳得更高、每钻重 20%、水花判定 ×1.2、湿身 ×1.25，但节拍 +2 刻、冷却 +6 刻——更痛但给对手更长窗口。",
   "worldcombat.skill.tripledive.plunge.off": "连跳：三钻更快、每钻轻 10%、循环更短，但水花更小、湿身更短——更稳更密，单下更轻。",
@@ -31,5 +31,6 @@
   "effect.world_combat.tripledive_drenched": "三连钻·湿透",
   "world_combat.move.tripledive.text.splash": "第 %1$s 钻命中（已 %2$s 下）",
   "world_combat.move.tripledive.text.full": "三连钻全中（%1$s 钻，共 %2$s 下）",
-  "world_combat.move.tripledive.text.miss": "第 %1$s 钻走空"
+  "world_combat.move.tripledive.text.miss": "第 %1$s 钻走空",
+  "worldcombat.skill.tripledive.description.additional": "每一钻命中与否只看目标当时的位置：在钻击距离 %1$s 格加上水花判定半径 %2$s 格以内就命中，跑出这个范围这一钻就落空；起跳前会朝目标贴进一步（最多 0.7 倍钻击距离），把走开的目标追回范围。"
 }

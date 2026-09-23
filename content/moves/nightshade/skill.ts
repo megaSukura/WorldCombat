@@ -15,7 +15,7 @@ namespace PokemonSkills {
     define({
         id: "nightshade",
         name: "Night Shade",
-        description: "The user makes the target see a frightening mirage. It inflicts damage equal to the user's level.",
+        description: "远程掷出一段自己等级凝成的恐怖幻影：幻影会自动追向目标，命中造成等于自身等级的固定伤害（特攻极高时更高），目标不会被打退。炸影式把这一记摊成范围爆发、同时波及周围几个敌人，但每一发变轻、收招与冷却更久。",
         uses: ["在远处用等级伤害消耗对手", "让幻影自己追上会跑的敌人", "炸影式清理聚集的一群"],
         kind: "enemy",
         range: 7,

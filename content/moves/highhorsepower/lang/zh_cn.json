@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.highhorsepower.summary": "压低整个身体、把质量当武器的一次贴地正面冲撞：撞上的那一刻，体重与速度换算成的「马力」数浮在撞击点上方，扬起的尘量也按它走。撞完自己站住，不留坑、不自损，全部内容就是这一份份量。",
-  "worldcombat.skill.highhorsepower.description.0": "整个身体压上去造成 %1$s 的接触伤害，并把目标沿冲撞方向顶开 %2$s 格。",
-  "worldcombat.skill.highhorsepower.description.1": "冲程 %1$s 格、冲速 %2$s 格每刻，踏地判定半径 %3$s 格。",
+  "worldcombat.skill.highhorsepower.description.0": "整个身体压上去，造成约 %1$s 点接触伤害，并把目标沿冲撞方向顶开最多 %2$s 格。",
+  "worldcombat.skill.highhorsepower.description.1": "冲程 %1$s 格、冲速 %2$s 格每刻：贴地直线冲出，正面以 %3$s 格判定半径扫过，撞上第一名非友方目标即停下并只对它结算；撞到方块或冲满冲程也会收住。",
   "worldcombat.skill.highhorsepower.press.on": "当前为压身式：威力更高、撞击点向下压出一圈更重的尘环，把目标留在近身继续打；但顶开更近、冲程更短、冷却更久。",
   "worldcombat.skill.highhorsepower.press.off": "当前为顶头式：顶开更远、冲程更长、冷却更短；代价是威力略低。",
   "worldcombat.skill.highhorsepower.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

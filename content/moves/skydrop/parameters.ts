@@ -103,12 +103,12 @@ namespace PokemonSkills {
     describe("skydrop", [
         { key: "description.0", values: ["slam"] },
         { key: "description.1", values: ["liftCap"] },
-        { key: "description.2", values: ["altitude", "holdTicks"] },
+        { key: "description.2", values: ["altitude","holdTicks"] },
         { key: "description.3", values: ["reach", "liftSpeed", "dropSpeed"] },
         { key: "high.on", values: [], when: function (context) { return skydropHigh(context.detail.values); } },
         { key: "high.off", values: [], when: function (context) { return !skydropHigh(context.detail.values); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slam"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.slam", "tier.1.altitude"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.slam","tier.1.altitude"] }
     ]);
 }

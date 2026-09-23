@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: brineId,
         cooldownParameter: "recharge",
         name: "盐水",
-        description: "朝对手压出一束盐卤；当对手的 HP 在一半或以下时，盐钻进伤口，这一击的威力翻倍，命中处还会留下一摊渗人的咸水。",
+        description: "朝对手压出一束盐卤：目标血量在一半或以下时这一击威力翻倍，命中处留下一摊会浇湿非友方、拖慢其脚步的盐池。",
         uses: ["对着已经残血的对手补上翻倍的一记", "把一块地浇成湿地，让路过的敌人湿透", "在敌人退到半血以下时追加压力"],
         kind: "enemy",
         range: 10,

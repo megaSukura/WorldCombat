@@ -16,8 +16,8 @@ namespace PokemonSkills {
     define({
         id: "willowisp",
         name: "Will-O-Wisp",
-        description: "向射程内目标发射追踪鬼火，命中造成灼伤。",
-        uses: ["隔开距离点着对手", "削弱靠物攻压上来的目标", "逼目标躲火而放弃站位"],
+        description: "向目标发射一团追踪鬼火，命中后使其灼伤，持续掉血并降低物理攻击伤害。鬼火转向有限，拉开距离或绕行可以避开。",
+        uses: ["从远处使对手灼伤", "削弱靠物攻压上来的目标", "逼目标躲火而放弃站位"],
         kind: "enemy",
         range: 12,
         maxRange: 16,

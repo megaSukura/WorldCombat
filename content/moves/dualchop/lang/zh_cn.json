@@ -3,7 +3,7 @@
   "worldcombat.skill.dualchop.use.0": "站定抡起前肢，朝同一处连劈两下",
   "worldcombat.skill.dualchop.use.1": "第一劈砸地留裂痕，第二劈追着裂痕撕深",
   "worldcombat.skill.dualchop.use.2": "分劈式把身前一小片敌人一起劈到",
-  "worldcombat.skill.dualchop.description.0": "每劈 %1$s 威力（走物攻），出手距离 %2$s 格，劈面张角 %3$s 度，一记最多劈到 %4$s 个目标。",
+  "worldcombat.skill.dualchop.description.0": "每劈造成约 %1$s 点物理伤害，出手距离 %2$s 格，劈面张角 %3$s 度，一记最多劈到 %4$s 个目标。",
   "worldcombat.skill.dualchop.description.1": "两劈间隔 %1$s；第一劈命中后第二劈威力最多再抬 %2$s，第一劈把目标顶开 %3$s 格。",
   "worldcombat.skill.dualchop.description.2": "第一劈在身前砸出 %1$s 格长的裂痕、留存 %2$s 后原方块回来。",
   "worldcombat.skill.dualchop.breach.on": "当前裂痕追击式：两劈打在同一块窄面，第二劈按裂痕加成撕深；裂面窄、只能劈同一个目标，间隔与起手略长。",
@@ -33,5 +33,6 @@
   "worldcombat.skill.dualchop.preference.ai.finishLow.help": "开启：残血目标排得更前，用这两劈收尾；关闭则所有目标同等对待。",
   "worldcombat.skill.dualchop.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.dualchop.preference.ai.leaveStation.help": "开启后，驻守命令下也会为劈击离开站位；关闭则只在原地够得到时出手。",
-  "world_combat.move.dualchop.text.breach": "第二劈沿裂痕撕入"
+  "world_combat.move.dualchop.text.breach": "第二劈沿裂痕撕入",
+  "worldcombat.skill.dualchop.description.3": "两劈各自扫过身前扇形，每个目标每劈各结算一次；趁两劈间隔走出扇面就能躲开第二劈。"
 }

@@ -3,7 +3,7 @@
   "worldcombat.skill.shellsmash.use.0": "Trade defense for a burst before a fight",
   "worldcombat.skill.shellsmash.use.1": "Break the shell while the foe is out of reach",
   "worldcombat.skill.shellsmash.use.2": "When surrounded, blow the shell apart and gamble on a quick fight",
-  "worldcombat.skill.shellsmash.description.0": "The smash raises Attack, Sp. Atk and Speed by %1$s and lowers Defense and Sp. Def by %2$s (permanent; the shell does not grow back).",
+  "worldcombat.skill.shellsmash.description.0": "The smash raises Attack, Sp. Atk and Speed by %1$s and lowers Defense and Sp. Def by %2$s; the changes persist until the encounter fades and never wear off on their own.",
   "worldcombat.skill.shellsmash.total.on": "Total smash: Attack, Special Attack and Speed +%1$s; Defence and Special Defence −%2$s, with longer windup and cooldown.",
   "worldcombat.skill.shellsmash.total.off": "Steady smash: Attack/Sp. Atk/Speed +2, Defense/Sp. Def -1, quicker to start with a shorter cooldown.",
   "worldcombat.skill.shellsmash.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",

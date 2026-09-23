@@ -2,7 +2,7 @@
   "worldcombat.skill.falsesurrender.summary": "先伏低装作认输，把对手的注意骗走，再让凌乱的黑发从最低处窜出去扎进护架下方：出刺点最低最突然，所以躲不掉。对手的注意越不在你身上，这一刺越狠；代价是伏低时你自己不能动。",
   "worldcombat.skill.falsesurrender.description.0": "凌乱发刺造成约 %1$s 的伤害；对手没有正在攻击你时再增 %2$s（伏低骗到注意）。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.falsesurrender.description.1": "发梢能够到 %1$s 格内的目标，以 %2$s 格/刻窜出，发梢半径 %3$s 格。",
-  "worldcombat.skill.falsesurrender.description.2": "伏低需要 %1$s 秒（期间不能移动），撞中后把目标顶开 %3$s 格并压制 %2$s 秒。",
+  "worldcombat.skill.falsesurrender.description.2": "伏低需要 %1$s 秒，期间施放者不能移动；撞中后最多把目标顶开 %3$s 格，并把它钉住 %2$s 秒（期间无法移动）。",
   "worldcombat.skill.falsesurrender.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.falsesurrender.growth.0": "达到 %1$s 级，突刺威力提升至 %2$s，发梢距离延长至 %3$s 格。",
   "worldcombat.skill.falsesurrender.growth.1": "达到 %1$s 级，突刺威力提升至 %2$s，伏低加成提升至 %3$s。",

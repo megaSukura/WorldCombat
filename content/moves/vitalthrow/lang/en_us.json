@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.vitalthrow.summary": "The user holds its stance and waits for the foe to move; when the foe rushes in, it borrows that momentum and throws it. The long windup is why it attacks last and why a foe that never closes is missed, but a throw caught at grappling range cannot be dodged. The user's own mass carries the throw, and a heavier, faster foe is flung further.",
-  "worldcombat.skill.vitalthrow.description.0": "The throw deals about %1$s damage, plus %2$s when the target is mid-action (borrowed momentum). Defence, type matchup and crit are settled on the hit.",
-  "worldcombat.skill.vitalthrow.description.1": "The user holds its stance for %1$s s before striking, catching a target within %2$s blocks.",
-  "worldcombat.skill.vitalthrow.description.2": "The throw flings the target %1$s blocks (heavier targets fly further) and pins it for %2$s s.",
+  "worldcombat.skill.vitalthrow.summary": "Hold your stance and wait for the foe to move, then borrow its momentum and throw it as it rushes in: the long brace is why you act late, the grab is made at point-blank range and once caught the throw is not evaded, and an empty space simply whiffs. The throw is carried by your own mass: a heavier foe is flung further, and one caught mid-action is struck harder.",
+  "worldcombat.skill.vitalthrow.description.0": "The throw deals about %1$s damage; when the target is mid-action (borrowed momentum) its power rises by %2$s. Defence, type matchups and crit are settled on the hit.",
+  "worldcombat.skill.vitalthrow.description.1": "The user braces for %1$s s before striking, grabbing a target within %2$s blocks; with nothing to grab nearby the move whiffs.",
+  "worldcombat.skill.vitalthrow.description.2": "The throw hurls the target about %1$s blocks along its current momentum (or away from the user if it was standing still), and heavier targets fly further. On landing it is pinned for %2$s, unable to move.",
   "worldcombat.skill.vitalthrow.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.vitalthrow.growth.0": "At level %1$s: throw power %2$s and pin %3$s s.",
   "worldcombat.skill.vitalthrow.growth.1": "At level %1$s: throw power %2$s and fling distance %3$s blocks.",

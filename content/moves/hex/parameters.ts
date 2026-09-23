@@ -132,7 +132,8 @@ namespace PokemonSkills {
 
     describe(hexId, [
         { key: "description.0", values: ["curse"] },
-        { key: "description.1", values: ["reach", "sigil", "crawl", "waves", "interval"] },
+        { key: "description.1", values: ["reach","sigil","crawl","waves","interval"] },
+        { key: "description.miss", values: [] },
         { key: "description.2", values: [] },
         { key: "chain.on", values: [], when: function (context) { return read(context.detail.values, ["chain"]) === true; } },
         { key: "chain.off", values: [], when: function (context) { return read(context.detail.values, ["chain"]) !== true; } },

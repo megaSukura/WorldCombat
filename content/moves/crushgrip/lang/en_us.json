@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.crushgrip.summary": "A huge force-hand closes from both sides around the target: attack and weight set the grip, and the more HP the target still has, the heavier the crush. It is the heaviest, slowest and most expensive of the three pressing moves and the only one that moves the target - the hoist form lifts the foe, holds it, then slams it back down for a fixed extra hit and a short root, while the stay form simply crushes once.",
-  "worldcombat.skill.crushgrip.description.0": "Crush Grip deals %1$s Normal contact damage; the more HP the target still has, the heavier the crush.",
+  "worldcombat.skill.crushgrip.description.0": "It grips one target in front for %1$s Normal contact damage; the more HP the target still has, the heavier the crush.",
   "worldcombat.skill.crushgrip.description.1": "You can reach %1$s blocks.",
-  "worldcombat.skill.crushgrip.hoist.on": "Hoist form: after the grip, the target is lifted at %1$s blocks/tick and held %2$s ticks, then slammed down at %3$s blocks/tick for a %4$s-power hit and rooted for %5$s ticks; the first grip is x0.9, wind-up +4 ticks, recovery +4 ticks and cooldown +8 ticks.",
+  "worldcombat.skill.crushgrip.hoist.on": "Hoist form: after the grip the target is lifted at %1$s blocks/tick and held %2$s, then slammed down at %3$s blocks/tick for a fixed slam dealing %4$s damage that does not scale with the target's remaining HP, rooting it for %5$s and stopping it from moving during that time; the first grip is x0.9, wind-up +4 ticks, recovery +4 ticks and cooldown +8 ticks.",
   "worldcombat.skill.crushgrip.hoist.off": "Stay form (default): one grip, heavier and quicker, without moving the target.",
   "worldcombat.skill.crushgrip.timing": "Wind-up %1$s s, recovery %2$s s, cost %3$s PP, cooldown %4$s s.",
   "worldcombat.skill.crushgrip.growth.0": "From level %1$s: grip power rises to %2$s.",

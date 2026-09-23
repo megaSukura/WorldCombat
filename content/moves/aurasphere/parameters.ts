@@ -130,7 +130,7 @@ namespace PokemonSkills {
 
     describe(aurasphereId, [
         { key: "description.0", values: ["pulse"] },
-        { key: "description.1", values: ["reach", "velocity", "turn"] },
+        { key: "description.1", values: ["reach","velocity","turn","radius"] },
         { key: "description.2", values: ["lockRange"] },
         { key: "seek.on", values: [], when: function (context) { return read(context.detail.values, ["seek"]) === true; } },
         { key: "seek.off", values: [], when: function (context) { return read(context.detail.values, ["seek"]) !== true; } },

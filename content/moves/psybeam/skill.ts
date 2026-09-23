@@ -36,7 +36,7 @@ namespace PokemonSkills {
         id: psybeamId,
         cooldownParameter: "recharge",
         name: "Psybeam",
-        description: "射出一道会追人的幻影射线：紫光带转向追向目标，命中造成特殊伤害，并可能把目标搅得恍惚；恍惚期间目标出手会失手。回响状态下紫光会穿透第一个目标继续追下一个。",
+        description: "射出一道会追人的幻影射线：紫光带转向追向目标，命中造成特殊伤害，并可能把目标搅得恍惚；恍惚期间目标每次想出手都有几率被打散。回响状态下紫光会继续穿行，最多打到两个目标。",
         uses: ["中距离点名，绕开掩体追人", "压制喜欢横移躲弹的对手", "用回响一次穿到两个目标"],
         kind: "enemy",
         range: 12,

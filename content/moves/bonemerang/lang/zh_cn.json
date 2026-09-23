@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.bonemerang.summary": "掷出手里的骨头，骨头掠过对手、绕到身后再飞回来，去与回各打一次；目标在骨头到达前走开，回程就会空掉。",
+  "worldcombat.skill.bonemerang.summary": "掷出手里的骨头，骨头掠过对手、绕到身后再飞回来，去与回各打一次；它朝掷出时锁定的折返点飞出，回程会追向目标当前所在处，目标挪开原位能躲开第一下。",
   "worldcombat.skill.bonemerang.use.0": "中距离投出骨头，去与回各打一下",
   "worldcombat.skill.bonemerang.use.1": "让回旋的第二下补上第一下的空档",
   "worldcombat.skill.bonemerang.use.2": "在对手走位前先手掷出、逼它离开原位",
@@ -32,5 +32,6 @@
   "worldcombat.skill.bonemerang.preference.ai.minGap.help": "近于这个距离就不再投掷、交给共享近战。调大更常把贴身机会让给别的招。",
   "world_combat.move.bonemerang.text.catch": "骨头回来了（%1$s 下）",
   "world_combat.move.bonemerang.text.miss": "骨头飞空了",
-  "world_combat.move.bonemerang.text.break": "骨头被打碎了"
+  "world_combat.move.bonemerang.text.break": "骨头被打碎了",
+  "worldcombat.skill.bonemerang.description.return": "骨头朝掷出瞬间锁定的折返点飞出，回程会先追向目标当前所在的方位，再飞回施法者手中；每个目标在去程与回程各最多命中一次。目标挪开原位能躲开去程那一下。"
 }

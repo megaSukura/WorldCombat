@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.foulplay.summary": "伸出一条暗影手臂爬进对手的影子，从它自己脚下竖起一簇暗影棘。这一招不吃施法者自己的攻击，而是读**目标的物攻**：对手越壮，借来的力气越大、这一记越重。",
-  "worldcombat.skill.foulplay.description.0": "这一记的伤害 %1$s 由目标当下的物攻决定：对手越强，威力越高；施法者自己的攻击几乎不参与。",
-  "worldcombat.skill.foulplay.description.1": "暗影能伸到 %1$s 格，以 %2$s 格每刻爬过去；抓握判定半径 %3$s 格。",
+  "worldcombat.skill.foulplay.description.0": "这一记造成约 %1$s 点物理伤害，数值由目标当下的物攻决定：对手越壮，借来的力气越大；施法者自己的攻击几乎不参与。",
+  "worldcombat.skill.foulplay.description.1": "暗影能伸到 %1$s 格，以 %2$s 格每刻沿地面爬过去，爬到目标身上才结算这一击；抓握判定半径 %3$s 格。",
   "worldcombat.skill.foulplay.use.0": "用它自己的力气打它",
   "worldcombat.skill.foulplay.use.1": "越壮的目标咬得越重",
   "worldcombat.skill.foulplay.use.2": "纠缠式把强敌拖进近身",
@@ -25,7 +25,7 @@
   "worldcombat.skill.foulplay.timing": "射程 %1$s 格；起手 %2$s、收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.foulplay.growth.0": "%1$s 级起：反手威力提升到 %2$s。",
   "worldcombat.skill.foulplay.growth.1": "%1$s 级起：反手威力 %2$s、暗影伸距 %3$s。",
-  "worldcombat.skill.foulplay.cling.on": "纠缠式：命中后把目标拖近一段并让它踉跄，本击收着打。",
+  "worldcombat.skill.foulplay.cling.on": "纠缠式：命中后把目标朝自己拖近最多约 %1$s 格（受碰撞阻挡），并让它踉跄约 %2$s，期间移动速度降低 30%%；作为代价这一击收着打，冷却也更长。",
   "worldcombat.skill.foulplay.cling.off": "反手式：暗影只向上一刺，把伤害打足。",
   "world_combat.move.foulplay.text.seize": "力气被反用",
   "world_combat.move.foulplay.text.drag": "被拖近（%1$s 格）",

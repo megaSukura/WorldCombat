@@ -58,7 +58,7 @@ namespace PokemonSkills {
         id: stoneedgeId,
         cooldownParameter: "recharge",
         name: "Stone Edge",
-        description: "The user stabs the target with sharpened stones.",
+        description: "蹲身把地气压进脚下，裂缝朝目标裂开，石刺在缝上一段段顶出：站在脊带里的人被从下方刺中，第一名吃满威力，同一条脊上越靠后的目标越轻；被顶裂的地面会留在原地再合上。散刺式把脊铺宽罩住并排的人，尖刺式是窄而长的一条缝。",
         uses: ["在一条裂缝上把目标刺穿", "隔一段距离先手，把站位逼开", "在地面上留下会合上的裂痕"],
         kind: "enemy",
         range: 5.4,

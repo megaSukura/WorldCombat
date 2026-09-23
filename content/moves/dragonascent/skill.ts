@@ -50,11 +50,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: dragonascentId,
         cooldownParameter: "recharge",
         name: "Dragon Ascent",
-        description: "The user drops out of the sky at high speed onto the target, lowering its own Defense and Sp. Def.",
-        uses: ["升空后从正上方砸向一个目标", "落地冲击波震开落点周围的人", "越过前排直接砸到后面的目标"],
+        description: "先窜上高空，再从正上方俯冲砸向目标：俯冲途中撞到谁就按接触结算，落地冲击波再打到落点主目标、把被波及的人沿远离落点的方向推开，并在地面留下裂石。一发动就付出自身防御与特防各下降一级的代价；广域式冲击更宽、能波及周围敌人并震得更远，代价是坠落威力更低。",
+        uses: ["升空后从正上方砸向一个目标", "落地冲击波收尾并推开被波及的敌人", "越过前排直接砸到后面的目标"],
         kind: "enemy",
         range: 4.0,
         maxRange: 7.0,

@@ -54,8 +54,8 @@ namespace PokemonSkills {
 
     stages("attract", [{ level: 30, values: { cooldown: 66 } }, { level: 50, values: { cooldown: 54 } }]);
     describe("attract", [
-        { key: "description.0", values: ["chance", "duration", "pull"] },
-        { key: "description.1", values: ["kissRadius", "speed", "leash"] },
+        { key: "description.0", values: ["chance","duration","pull"] },
+        { key: "description.1", values: ["kissRadius","speed","leash"] },
         { key: "allure.0", values: [], when: function (context) { return attractAlluring(context.detail); } },
         { key: "allure.1", values: [], when: function (context) { return !attractAlluring(context.detail); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

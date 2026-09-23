@@ -35,5 +35,6 @@
   "world_combat.move.covet.text.charm": "被可爱分神，攻势 -%1$s",
   "world_combat.move.covet.text.strike": "只是讨了个抱",
   "world_combat.move.covet.text.full": "手上有物，拿不开",
-  "world_combat.move.covet.text.miss": "撒娇没贴上"
+  "world_combat.move.covet.text.miss": "撒娇没贴上",
+  "worldcombat.skill.covet.description.additional": "自己空手时，这一记还会把目标的持有物卷进自己手里；自己手上有物、目标空手，或任一方处于查封状态时，就只作一记会降攻的普通打击。"
 }

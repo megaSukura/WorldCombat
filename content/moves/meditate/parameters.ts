@@ -83,11 +83,11 @@ namespace PokemonSkills {
 
     describe("meditate", [
         { key: "description.0", values: ["gift"] },
-        { key: "description.1", values: ["stillness", "motes", "spread"] },
+        { key: "description.1", values: ["stillness"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deepBreath"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deepBreath"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.stillness", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.stillness", "tier.1.wait"] }
     ]);

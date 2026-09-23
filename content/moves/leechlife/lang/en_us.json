@@ -2,10 +2,10 @@
   "worldcombat.skill.leechlife.summary": "Latch onto the target and repeatedly drain health while remaining stationary. The target escapes by moving out of range.",
   "worldcombat.skill.leechlife.description.0": "The bite lands for about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.leechlife.description.1": "While latched each sip draws about %1$s damage, over %2$s sips.",
-  "worldcombat.skill.leechlife.description.2": "%1$s of each sip's damage is restored to the user; once the target pulls %2$s blocks away the hold snaps and the draw ends early.",
-  "worldcombat.skill.leechlife.deep.on": "Deep bite: three heavy sips, each harder and siphoning more, with a longer hold, but slower wind-up and recovery and longer gaps so the target can escape.",
+  "worldcombat.skill.leechlife.description.2": "%1$s of both the bite and each sip's damage is restored to the user; once the target pulls %2$s blocks away the hold snaps and the draw ends early.",
+  "worldcombat.skill.leechlife.deep.on": "Deep bite: three heavy sips, each harder and siphoning more, but slower wind-up and recovery and longer gaps, so the target can escape.",
   "worldcombat.skill.leechlife.deep.off": "Quick sips: five fast draws, tight and quick to recover, but each sip is lighter and the total is spread thinner.",
-  "worldcombat.skill.leechlife.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",
+  "worldcombat.skill.leechlife.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.leechlife.growth.0": "From level %1$s the bite power rises to %2$s.",
   "worldcombat.skill.leechlife.growth.1": "From level %1$s the bite power rises to %2$s and each sip to %3$s.",
   "worldcombat.skill.leechlife.use.0": "Latch onto one foe and bleed it for sustain",
@@ -23,7 +23,7 @@
   "worldcombat.skill.leechlife.value.aftercast": "Recovery",
   "worldcombat.skill.leechlife.value.recharge": "Cooldown",
   "worldcombat.skill.leechlife.preference.deep": "Deep bite",
-  "worldcombat.skill.leechlife.preference.deep.help": "On: three heavy sips, each harder and siphoning more, with a longer hold, but slower wind-up and recovery and longer gaps so the target can escape. Off: five fast draws, tight and quick to recover, but each sip is lighter.",
+  "worldcombat.skill.leechlife.preference.deep.help": "On: three heavy sips, each harder and siphoning more, but slower wind-up and recovery and longer gaps, so the target can escape. Off: five fast draws, tight and quick to recover, but each sip is lighter.",
   "worldcombat.skill.leechlife.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.leechlife.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger chases harder.",
   "worldcombat.skill.leechlife.preference.ai.healBelow": "Heal priority threshold",
@@ -31,5 +31,7 @@
   "world_combat.move.leechlife.text.bite": "Latched",
   "world_combat.move.leechlife.text.draw": "Sip %1$s/%2$s",
   "world_combat.move.leechlife.text.snap": "Hold snapped",
-  "world_combat.move.leechlife.text.miss": "Snapped at air"
+  "world_combat.move.leechlife.text.miss": "Snapped at air",
+  "worldcombat.skill.leechlife.description.additional": "The fangs sweep a %1$s-block collision radius; only a connected first bite starts the drain, which then sips once every %2$s.",
+  "worldcombat.skill.leechlife.description.field": "The user stays rooted for the whole drain, until the sips finish, the hold snaps, or the target falls."
 }

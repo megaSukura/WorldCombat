@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.substitute.summary": "Spend part of your own max HP to raise a body double nearby. It absorbs every hit aimed at you within a short link range; when it breaks or the link drops, the protection ends.",
+  "worldcombat.skill.substitute.summary": "Spend part of your own max HP to raise a body double nearby; its durability is a multiple of the HP actually paid. It absorbs attacks aimed at you only within link range and with a clear line — stepping out only pauses the protection until you return — until it is shattered or its time runs out.",
   "worldcombat.skill.substitute.description.0": "Pay %1$s of your max HP to form a substitute; its durability is %2$s times the HP actually paid.",
-  "worldcombat.skill.substitute.description.1": "The substitute only takes hits for you within %1$s blocks; leaving that range or breaking it ends the protection. It lasts at most %2$s.",
+  "worldcombat.skill.substitute.description.1": "The double is placed within %1$s blocks of you; it takes hits for you while it stays within %2$s blocks and has a clear line to you, so stepping out of link range only pauses that until you return. It lasts at most %3$s.",
   "worldcombat.skill.substitute.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.substitute.use.0": "Raise a blood shield before the fight starts",
   "worldcombat.skill.substitute.use.1": "Pull a lethal volley onto the double",
@@ -29,5 +29,6 @@
   "world_combat.move.substitute.text.form": "Substitute formed · %1$s HP paid",
   "world_combat.move.substitute.text.weak": "Too little HP; the substitute failed",
   "world_combat.move.substitute.text.break": "Substitute shattered",
-  "world_combat.move.substitute.text.expire": "Substitute dissolved"
+  "world_combat.move.substitute.text.expire": "Substitute dissolved",
+  "worldcombat.skill.substitute.description.2": "Cannot be used while a double exists. HP after payment must exceed %1$s of maximum HP, following the reserve-health preference. If placement fails, the HP paid is refunded."
 }

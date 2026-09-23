@@ -3,7 +3,7 @@
   "worldcombat.skill.bulletseed.use.0": "A burst of dense little physical hits at close-mid range",
   "worldcombat.skill.bulletseed.use.1": "Pile damage on a low-defence target through sheer shot count",
   "worldcombat.skill.bulletseed.use.2": "Fast wind-up and repeating shots for constant pressure up close",
-  "worldcombat.skill.bulletseed.description.0": "Each seed deals %1$s physical damage, and the burst fires %2$s seeds (2-5 natively, set by the user's data).",
+  "worldcombat.skill.bulletseed.description.0": "Each seed deals %1$s physical damage to the target, settled per seed; the burst fires %2$s seeds (2-5 natively, set by the user's data), and if the target falls or vanishes mid-burst the remaining seeds are not fired.",
   "worldcombat.skill.bulletseed.description.1": "Seeds fire every %1$s at %2$s blocks/tick, reaching %3$s blocks with up to ±%4$s spread.",
   "worldcombat.skill.bulletseed.description.2": "Each seed has a %1$s block hit radius.",
   "worldcombat.skill.bulletseed.heavy.on": "Heavy seeds: per-seed power x1.35, larger seeds and spread x0.6; costs a burst capped at 3, seed speed x0.9, wind-up +2 ticks, cooldown +4 ticks and interval +1 tick.",

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.moonlight.summary": "把夜里晴空的月色披到身上：接住月色时按最大生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点。",
+  "worldcombat.skill.moonlight.summary": "把夜里晴空的月色披到身上：接住月色时按缺失生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点。",
   "worldcombat.skill.moonlight.use.0": "夜里晴空下的强回复",
   "worldcombat.skill.moonlight.use.1": "顺手冷却灼伤",
   "worldcombat.skill.moonlight.use.2": "白天只作小补",
-  "worldcombat.skill.moonlight.description.0": "按缺失生命回复 %1$s：夜里晴空接近 2/3，白天或阴雨只回下限；亲密度越高月色越眷顾。",
+  "worldcombat.skill.moonlight.description.0": "对自己按缺失生命回复 %1$s：夜里晴空接近 2/3，白天或阴雨只回基础的一小截；亲密度越高，月色越眷顾。",
   "worldcombat.skill.moonlight.description.1": "承月 %1$s 后结算；无论月色强弱，都会冷却掉身上的灼伤。",
-  "worldcombat.skill.moonlight.timing": "自身招式，承月 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.moonlight.timing": "自身招式，承月 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.moonlight.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",
   "worldcombat.skill.moonlight.growth.1": "达到 %1$s 级，冷却进一步缩短至 %2$s 秒。",
   "worldcombat.skill.moonlight.value.heal": "回复比例",
@@ -19,5 +19,6 @@
   "worldcombat.skill.moonlight.preference.ai.waitForSky.help": "开启：只在暗处（夜里）出手，白天把这招留着；关闭：受伤就照用，接受保底回复。",
   "world_combat.move.moonlight.text.veil": "月色披身",
   "world_combat.move.moonlight.text.dim": "月色微弱",
-  "world_combat.move.moonlight.text.soothe": "灼伤冷却"
+  "world_combat.move.moonlight.text.soothe": "灼伤冷却",
+  "worldcombat.skill.moonlight.description.2": "生命已满且身上没有灼伤时无法施放；承月期间若被打断，则不结算回复与灼伤解除。"
 }

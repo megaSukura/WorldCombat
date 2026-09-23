@@ -45,7 +45,7 @@ namespace PokemonSkills {
         id: "acidarmor",
         cooldownParameter: "wait",
         name: "溶化",
-        description: "通过细胞的变化进行液化，从而大幅提高自己的防御。",
+        description: "提高防御并解除束缚。可选择留下使敌人中毒的酸池，或保持流动形态；液态结束后收回本次防御提升。",
         uses: ["被缠住或钉住时化开脱身", "在对手脚下摊出一滩腐蚀的酸", "用更滑的液态撑过一轮贴身攻击"],
         kind: "self",
         range: 1,

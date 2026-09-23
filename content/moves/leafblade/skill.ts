@@ -29,10 +29,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: leafbladeId,
         cooldownParameter: "recharge",
         name: "Leaf Blade",
-        description: "The user handles a sharp leaf like a sword and cuts the target to inflict damage. This move has a heightened chance of landing a critical hit.",
+        description: "把一片叶当作剑，贴身一步横挥一记重斩：切开主目标并削掉它一档防御，刃风还扫到近旁的旁人；接触、单体、四记里最重的一击，容易击中要害。双手式更重并多削一档防，单手式更快更利落。",
         uses: ["把一片叶当作剑，贴身横挥一记重斩", "切开主目标并削掉它一档防御", "刃风顺带扫到近旁的旁人"],
         kind: "enemy",
         range: 3.0,

@@ -19,5 +19,6 @@
   "worldcombat.skill.willowisp.preference.ai.leaveStation.help": "开启后，驻守命令下也会为放鬼火离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.willowisp.text.burn": "鬼火缠身",
   "world_combat.move.willowisp.text.immune": "不受鬼火影响",
-  "world_combat.move.willowisp.text.fizzle": "鬼火熄灭"
+  "world_combat.move.willowisp.text.fizzle": "鬼火熄灭",
+  "worldcombat.skill.willowisp.description.3": "灼伤持续期间物理攻击伤害减半，并每 5 秒损失约最大生命的 1/16（至少 1 点）；火属性等天生免疫灼伤的目标不会被点燃。"
 }

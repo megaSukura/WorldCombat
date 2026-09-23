@@ -110,8 +110,10 @@ namespace PokemonSkills {
 
     describe("smog", [
         { key: "description.0", values: ["fumes", "cone"] },
-        { key: "description.1", values: ["reach", "toxinChance", "venomTicks"] },
+        { key: "description.1", values: ["reach","toxinChance"] },
+        { key: "description.poison", values: ["venomTicks"] },
         { key: "description.2", values: ["waveTicks"] },
+        { key: "description.targets", values: ["maxTargets"] },
         { key: "billow.on", values: [], when: function (context) { return read(context.detail.values, ["billow"]) === true; } },
         { key: "billow.off", values: [], when: function (context) { return read(context.detail.values, ["billow"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

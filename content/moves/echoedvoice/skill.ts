@@ -20,7 +20,7 @@ namespace PokemonSkills {
         id: echoId,
         cooldownParameter: "recharge",
         name: "Echoed Voice",
-        description: "The user attacks the target with an echoing voice. If this move is used consecutively by any Pokemon, its power is boosted.",
+        description: "唱出一声会留在场上的回响：点名一个目标造成声音伤害，同时把这一层回声留在自己身上；附近的回声还没散时，谁接唱都能从那一层往上叠，威力 = 基础 × 层数（1~5）。声音不被掩体阻挡，接得越密越重。",
         uses: ["唱出一声会留在场上的回响", "接住附近的回声继续叠高", "用声音无视掩体点名一个目标"],
         kind: "enemy",
         range: 6.5,

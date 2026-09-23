@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.spikyshield.summary": "炸开一圈藤刺甲，按总量完整挡下攻击，并连变化招式一起封住；每一次直接接触都会刺伤攻击者。",
-  "worldcombat.skill.spikyshield.description.0": "藤甲持续 %1$s、量 %2$s 点；每根刺造成 %3$s。防御越高越厚越久、刺越深。",
-  "worldcombat.skill.spikyshield.description.1": "立起 %1$s，冷却 %2$s。",
-  "worldcombat.skill.spikyshield.description.2": "连用失误率 %1$s；锐刺与厚藤的取舍见配置 %2$s。",
+  "worldcombat.skill.spikyshield.summary": "在自己身上炸开一圈藤刺甲，按总量完整挡下敌人的攻击，并把指向自己的变化招式抖开；每一次被挡下的接触攻击都会反刺攻击者，同一个攻击者一次藤甲只会被扎一次。",
+  "worldcombat.skill.spikyshield.description.0": "在自己身上炸开一圈藤刺甲：持续 %1$s 刻，最多完整挡下 %2$s 点来自敌人的伤害；量耗尽藤甲就倒下，超过剩余量的伤害仍会打在你身上。",
+  "worldcombat.skill.spikyshield.description.1": "架起 %1$s 刻，冷却 %2$s。",
+  "worldcombat.skill.spikyshield.description.2": "短时间内连续架甲会越来越容易失败，本次失败概率为 %1$s。",
   "worldcombat.skill.spikyshield.use.0": "引诱近战对手贴上藤刺",
   "worldcombat.skill.spikyshield.use.1": "挡住齐射的同时反刺冲上来的近战",
   "worldcombat.skill.spikyshield.use.2": "在变化招式落下来之前连招带人一起封住",
@@ -21,5 +21,8 @@
   "world_combat.move.spikyshield.text.block": "藤甲挡下 %1$s 点（余 %2$s）",
   "world_combat.move.spikyshield.text.punish": "藤刺扎入",
   "world_combat.move.spikyshield.text.ward": "变化招式被刺甲抖开",
-  "world_combat.move.spikyshield.text.fall": "藤甲倒下"
+  "world_combat.move.spikyshield.text.fall": "藤甲倒下",
+  "worldcombat.skill.spikyshield.description.pool": "自己造成的伤害、以及没有敌人的环境伤害都不消耗藤甲。",
+  "worldcombat.skill.spikyshield.description.thorn": "每一次被藤甲挡下的接触攻击都会反刺攻击者，造成约 %1$s 点物理伤害（对手防御、相性与暴击在命中时另算）；同一个攻击者在一次藤甲里只会被扎一次。",
+  "worldcombat.skill.spikyshield.description.ward": "藤甲存续期间，敌人指向你的变化招式在出手前被抖开、无法生效。"
 }

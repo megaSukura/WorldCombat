@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.punishment.summary": "把对手涨起来的每一层力量在手里称一称，然后一记压顶砸下去：目标身上每有 1 级正向能力，这一记就重一分，攒得越满罚得越狠。",
+  "worldcombat.skill.punishment.summary": "用近身重击惩罚强化中的对手；正面能力等级、药水和信标增益越多，打得越重。",
   "worldcombat.skill.punishment.use.0": "对手叠了能力等级时打它一记重的",
   "worldcombat.skill.punishment.use.1": "把目标涨起来的每一层力量称进威力里",
   "worldcombat.skill.punishment.use.2": "一记从高处落下的压顶处刑",
@@ -23,5 +23,6 @@
   "worldcombat.skill.punishment.preference.ai.punishBoost": "优先涨能力目标",
   "worldcombat.skill.punishment.preference.ai.finish": "优先收残血",
   "world_combat.move.punishment.text.hit": "处刑命中（目标 %1$s 级提升）",
-  "world_combat.move.punishment.text.miss": "处刑落空"
+  "world_combat.move.punishment.text.miss": "处刑落空",
+  "worldcombat.skill.punishment.world": "目标七项正面能力等级，以及药水、信标等增益都计入强化；增益I级计1层。每层额外增加18威力，额外威力最多150；命中后目标保留这些增益。"
 }

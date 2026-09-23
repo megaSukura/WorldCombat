@@ -1,18 +1,4 @@
-/**
- * 惩罚 / punishment 的出手方式。
- *
- * 核心念头：**把对手涨起来的每一层力量在手里称一称，然后一记压顶砸下去**——对手攒得越满，这一记越沉。
- *   本族唯一从对手身上取力的招：别招把目标的能力变化抹掉，它把那些变化算进威力。
- *
- * 两幕：
- *   起（weigh，提交前）：施法者抬手、朝目标方向浮起一串重量标记，目标每有 1 级正向能力就多一枚；只播预告。
- *   判（fall → hit / miss，提交后）：朝目标踏进半步凑到射程，一记 `judge` 接触伤害从高处砸下；
- *       实际威力由出手时 `punishment.boost`（目标七项正向等级之和）决定；落空只留一道空砸。
- *
- * 与同族分开：逐步击破、ＤＤ金勾臂、圣剑无视目标的能力变化；惩罚反过来读它，攒得越多打得越重。
- *
- * 配置 `heavy` 由公式改读能力的系数与射程、由 resolve 改时序；提交后才触碰世界。
- */
+/** punishment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     const punishmentScene = "world_combat:move_punishment";
     const punishmentHitText = "world_combat.move.punishment.text.hit";
@@ -25,10 +11,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: punishmentId,
         cooldownParameter: "recharge",
         name: "Punishment",
-        description: "The more the target has powered up with stat changes, the greater this move's power.",
+        description: "用近身重击惩罚强化中的对手；正面能力等级、药水和信标增益越多，打得越重。",
         uses: ["对手叠了能力等级时打它一记重的", "把目标涨起来的每一层力量称进威力里", "一记从高处落下的压顶处刑"],
         kind: "enemy",
         range: 2.0,

@@ -1,4 +1,4 @@
-/** 烦恼种子：投射种子，将目标特性暂时替换为不眠并唤醒睡眠目标。 */
+/** worryseed：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const worryseedScene = "world_combat:move_worryseed";
     export const worryseedMark = "world_combat:worryseed";
@@ -21,7 +21,7 @@ namespace PokemonSkills {
         id: "worryseed",
         cooldownParameter: "recharge",
         name: "Worry Seed",
-        description: "把一颗烦恼种子投进对手身体，让它从此不能入眠，特性被顶成不眠，直到种子枯掉。",
+        description: "种下烦恼，使目标从招式造成的睡眠中醒来，并在种子存续期间抵抗再次催眠；宝可梦的特性还会暂时变为不眠。",
         uses: ["顶掉对手的强力特性换成一枚不眠", "让对手睡不下去，封掉催眠类打法"],
         kind: "enemy",
         range: 7,

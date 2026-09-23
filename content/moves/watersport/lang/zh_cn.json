@@ -5,12 +5,12 @@
   "worldcombat.skill.watersport.use.2": "在火招齐射前先铺湿地面",
   "worldcombat.skill.watersport.description.0": "能在 %1$s 以内的地面泼出水洼。",
   "worldcombat.skill.watersport.description.1": "水洼半径 %1$s 格、持续 %2$s，不分敌我地泡湿站在里面的活体。",
-  "worldcombat.skill.watersport.description.2": "被泡湿者使出的火属性招式威力为原来的 %1$s，离开水洼后还湿着 %2$s。",
+  "worldcombat.skill.watersport.description.2": "泡湿者使出的火属性招式威力最高只能剩五成（水洼越深压得越低；水洼的压制系数约 %1$s），离开水洼后还湿着 %2$s。",
   "worldcombat.skill.watersport.description.3": "每轮最多熄灭 %1$s 格地面的明火。",
   "worldcombat.skill.watersport.description.4": "铺水要 %1$s，收势 %2$s，冷却 %3$s。漫开／沤湿的取舍见形态说明。",
   "worldcombat.skill.watersport.form.0": "沤湿：水洼半径 ×0.75、时长 ×1.35、火招系数 ×0.85（压得更低），代价是起手 +3 刻、冷却 ×1.15。",
   "worldcombat.skill.watersport.form.1": "漫开：水洼半径 ×1.3、起手 −2 刻、冷却 ×0.9，代价是时长 ×0.72、火招系数不变。",
-  "worldcombat.skill.watersport.timing": "在 %1$s 格内的地面施放，准备 %2$s 秒后消耗 %4$s PP 铺水；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.watersport.timing": "在 %1$s 格内的地面施放，准备 %2$s 秒后消耗 %4$s PP 铺水；收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.watersport.value.reach": "施放距离",
   "worldcombat.skill.watersport.value.puddleRadius": "水洼半径",
   "worldcombat.skill.watersport.value.puddleTicks": "水洼时长",
@@ -34,5 +34,6 @@
   "world_combat.move.watersport.text.splash": "玩水 %1$s 秒（火招 ×%2$s%%）",
   "world_combat.move.watersport.text.drench": "被水泡湿",
   "world_combat.move.watersport.text.douse": "火被沤熄",
-  "effect.world_combat.watersport_soaked": "泡湿"
+  "effect.world_combat.watersport_soaked": "泡湿",
+  "worldcombat.skill.watersport.description.soak": "站在水洼里的活体会被不断重新泡湿；被泡湿时若带着灼伤，灼伤会被解除、身上的火也会被浇灭。"
 }

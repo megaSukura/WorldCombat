@@ -54,10 +54,11 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: needlearmId,
         cooldownParameter: "recharge",
         name: "Needle Arm",
-        description: "The user attacks by wildly swinging its thorny arms. This may also make the target flinch.",
+        description: "压低身子扑上一步，用带刺的手臂横扫最先撞到的敌人：挥中造成物理伤害，并有几率把它打得畏缩（短暂无法出招），同时把尖刺甩进它脚下的地面，留下一片会反复扎人、让移速变慢的荆棘地。荆棘式范围更大、留得更久、扎得更疼；挥击式挥得更重、出手更快。",
         uses: ["贴身挥扫并在地上留下一片会扎人的荆棘", "把一块地面封住、逼对手绕路", "拖住想从身边跑开的目标"],
         kind: "enemy",
         range: 2.6,

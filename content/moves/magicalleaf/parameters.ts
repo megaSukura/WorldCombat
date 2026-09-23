@@ -94,6 +94,7 @@ namespace PokemonSkills {
     describe("magicalleaf", [
         { key: "description.0", values: ["leaf", "leaves"] },
         { key: "description.1", values: ["turn", "leafSpeed", "lockRange"] },
+        { key: "description.chase", values: [] },
         { key: "description.2", values: ["leafRadius"] },
         { key: "envelop.on", values: [], when: function (context) { return read(context.detail.values, ["envelop"]) === true; } },
         { key: "envelop.off", values: [], when: function (context) { return read(context.detail.values, ["envelop"]) !== true; } },

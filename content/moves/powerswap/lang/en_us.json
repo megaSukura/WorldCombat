@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.powerswap.summary": "Use psychic power to switch the Attack and Sp. Atk stat changes of both sides for a window: you take the momentum the foe has built, and both return when the window ends. Pokemon use the native ladder, other bodies the shared one.",
+  "worldcombat.skill.powerswap.summary": "Use psychic power to switch the Attack and Sp. Atk stat changes of both sides for a window: you take the momentum the foe has built, and each side returns to its old stages when the window ends or is cleared.",
   "worldcombat.skill.powerswap.use.0": "Take the Attack and Sp. Atk the foe has built up",
   "worldcombat.skill.powerswap.use.1": "Dump your own lowered Attack onto the foe",
   "worldcombat.skill.powerswap.use.2": "Steal the momentum once the foe has set up",
@@ -24,5 +24,6 @@
   "world_combat.move.powerswap.text.even": "Even momentum, nothing changed",
   "world_combat.move.powerswap.text.reverted": "Momentum switched back",
   "world_combat.move.powerswap.text.miss": "No one to switch with",
-  "effect.world_combat.powerswap_window": "Power Swap"
+  "effect.world_combat.powerswap_window": "Power Swap",
+  "worldcombat.skill.powerswap.description.1": "The target must be another non-ally, and while either side already carries a swap window the move cannot be cast. If both sides have identical Attack and Sp. Atk stages, nothing is exchanged and no window forms."
 }

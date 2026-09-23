@@ -92,8 +92,9 @@ namespace PokemonSkills {
     ]);
 
     describe(thundershockId, [
-        { key: "description.0", values: ["jab", "reach", "radius"] },
-        { key: "description.1", values: ["numbChance", "numbTicks", "linger"] },
+        { key: "description.0", values: ["jab","reach","radius"] },
+        { key: "description.1", values: ["numbChance","numbTicks","linger"] },
+        { key: "description.paralysis", values: [] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.jab"] },

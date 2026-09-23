@@ -5,8 +5,8 @@
   "worldcombat.skill.holdback.use.2": "替队友留活口、控制场面",
   "worldcombat.skill.holdback.use.3": "把挤在一起的一群目标一起留住性命",
   "worldcombat.skill.holdback.description.0": "这一记横扫约 %1$s 的伤害；若数值足以致命，会被截停在目标至少留下 1 HP。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.holdback.description.1": "横扫半径约 %1$s 格、扇形半角约 %2$s 度、从脚上扫到约 %3$s 格高。",
-  "worldcombat.skill.holdback.description.2": "沉腰式扫完后会被自己的收势钉住约 %1$s。",
+  "worldcombat.skill.holdback.description.1": "横扫半径约 %1$s 格、命中扇面张开约 %2$s 度、从脚上扫到约 %3$s 格高。",
+  "worldcombat.skill.holdback.description.2": "沉腰式扫完后会被自己的收势钉住约 %1$s，期间无法移动；快扫式没有这段收势，扫完可立即移动。",
   "worldcombat.skill.holdback.option.on": "沉腰：威力约 ×1.2、扫距 +0.3 格、扇形 +8 度，代价是起手 +4 刻、冷却 +6 刻，且扫完后沉腰站定——用来一次罩住几个厚目标。",
   "worldcombat.skill.holdback.option.off": "快扫：威力约 ×0.85、出手更快、扫完可立刻移动——用来在贴身战里保持机动。",
   "worldcombat.skill.holdback.timing": "可扫到 %1$s 格内，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",
@@ -27,5 +27,6 @@
   "worldcombat.skill.holdback.preference.ai.preferCrowd": "优先扎堆目标",
   "worldcombat.skill.holdback.preference.ai.preferCrowd.help": "开启：身前挤着两个以上敌人时多一档分，一次把一片都削到低血；关闭：只按普通近战排序。",
   "world_combat.move.holdback.text.spare": "收住力道，至少剩 1 HP",
-  "world_combat.move.holdback.text.miss": "扫过空气"
+  "world_combat.move.holdback.text.miss": "扫过空气",
+  "worldcombat.skill.holdback.description.area": "扇面里的每一名非友方目标都会被扫中一次，没有数量上限，且每个都至少留下 1 HP——这一记同时留手多个目标。"
 }

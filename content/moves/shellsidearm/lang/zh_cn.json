@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.shellsidearm.summary": "把带毒的壳压进发射腔射出去，发射前先看清对方哪一面软：硬壳目标吃钝击（物理），软肉目标吃毒液喷射（特殊）。命中后按概率让目标中毒。可以固定用钝击（更狠但必须贴脸）或喷射（更远更稳）。",
-  "worldcombat.skill.shellsidearm.description.0": "重炮威力 %1$s（取物攻与特攻较高的一项成长）；物特差 %2$s——命中时按对方软肋在钝击与喷射之间自动挑伤害更高的一面。",
-  "worldcombat.skill.shellsidearm.description.1": "射程 %1$s，弹速 %2$s，判定半径 %3$s。",
-  "worldcombat.skill.shellsidearm.description.2": "炸开后按 %1$s 让目标中毒，持续 %2$s。",
+  "worldcombat.skill.shellsidearm.description.0": "命中后对目标造成一次约 %1$s 点伤害，物理还是特殊由命中时按目标软肋自动决定（自动形态）；这一发的成长取物攻与特攻里较高的一项。物特差 %2$s 说明个体更偏钝击还是喷射。",
+  "worldcombat.skill.shellsidearm.description.1": "射程 %1$s，弹速 %2$s，判定半径 %3$s；毒壳会追向锁定的目标。",
+  "worldcombat.skill.shellsidearm.description.2": "命中后按 %1$s 概率让目标中毒 %2$s；中毒期间持续掉血，毒属性与钢属性免疫。",
   "worldcombat.skill.shellsidearm.description.3": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.shellsidearm.form.auto": "自动：射程照公式，命中时在钝击与喷射之间挑伤害更高的一面。",
   "worldcombat.skill.shellsidearm.form.ram": "钝击：强制物理、接触，威力 ×1.05，但射程 ×0.5、弹速 ×0.85、起手 +2 刻、冷却 +4——更狠，必须贴脸。",

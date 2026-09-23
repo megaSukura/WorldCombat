@@ -1,19 +1,4 @@
-/**
- * 耕地 / rototiller —— 执行组织与结算。
- *
- * 核心念头：把铁耙按进选定的地面，把表土翻成松软的黑土；只要这块地还在，站在上面、脚踩实了的
- *   草属性宝可梦就当场抽枝，物攻与特攻一起抬起来。它管的是一块地：可以站上去、可以被绕开、
- *   会自己复原；离地浮空的草属性踩不到土。
- *
- * 三幕：
- *   起 `rake`（windup，提交前）：耙齿在身前拢起，只播预告，可被打断、不花代价。
- *   翻 `till`（提交后）：选定地面被 `world.terrain` 租借成一层 `minecraft:coarse_dirt`（`linger`，到期原方块回来），
- *     同时在落点开一片场地规则 `world_combat:rototiller_soil`，寿命与土地一致。
- *   长 `fed`：场地每 5 刻扫一遍——站在土上、踩实地面的草属性各抬一次双攻并挂上共享身份
- *     `world_combat:status/plowed` 的黑土状态；离开这块土、跳起浮空，或土地复原时，状态与本单元抬起的等级一起收回。
- *
- * 与同族分开：花之防守是从身上一次推开的护瓣；耕地是在世界里留下的一块土，受它照顾的人必须站在上面。
- */
+/** 翻耕选定区域，并照料其中的作物。草属性宝可梦踩在翻过的土地上时攻击与特攻提高；离地或走出区域后提升消失。 */
 namespace PokemonSkills {
     /** 公共能力阶梯：只对宝可梦生效（草属性判定本身要求原生个体）。 */
     function rototillerStage(world: CombatWorld, actor: CombatActor, stat: string): number {
@@ -135,6 +120,8 @@ namespace PokemonSkills {
                 const id = String(block.id());
                 if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
                 if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
+                const above = world.block(WorldCombat.point(x, cy + dy + 1, z));
+                if (id === "minecraft:farmland" || block.growable() || above !== null && above.growable()) break;
                 if (id !== "minecraft:coarse_dirt") cells.push({ x: x, y: cy + dy, z: z, block: "minecraft:coarse_dirt" });
                 break;
             }
@@ -148,8 +135,7 @@ namespace PokemonSkills {
         id: rototillerId,
         cooldownParameter: "wait",
         name: "耕地",
-        description: "把选定的地面翻成松软的黑土：只要这块地还在，站在上面、脚踩实了的草属性宝可梦物攻与特攻一起提高；"
-            + "离地浮空、走出这块土，或土地复原时，这份提升一并收回。",
+        description: "翻耕选定区域，并照料其中的作物。草属性宝可梦踩在翻过的土地上时攻击与特攻提高；离地或走出区域后提升消失。",
         uses: ["把草属性伙伴脚下的地翻开，让它们一起变强", "在交战位置先翻一块土，逼对手绕开", "给浮空的草属性留一块踩不到的地"],
         kind: "point",
         range: 6,
@@ -200,6 +186,9 @@ namespace PokemonSkills {
             const ticks = Math.max(120, Math.round(p(rototillerId, "soilTicks", action)));
             const clods = Math.max(10, Math.round(p(rototillerId, "clods", action)));
             const scale = radius / rototillerReferenceRadius;
+            // Turning the soil gives each real growing plant one bounded native care attempt.
+            const plants = WorldCultivation.sites(world, point, Math.min(4, radius));
+            for (let i = 0; i < Math.min(8, plants.length); i++) WorldCultivation.use(world, plants[i]);
             const tilled = rototillerTill(world, point, radius, ticks);
             WorldEffects.field(world, rototillerRule, point, radius,
                 { gift: gift, ticks: ticks, motes: clods, radius: radius }, ticks);

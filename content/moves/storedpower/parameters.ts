@@ -1,32 +1,4 @@
-/**
- * 辅助力量 / storedpower —— 参数与伤害段。
- *
- * 原生事实：Psychic／特殊／基础威力 20／命中 100／PP 10，威力 = 20 + 20 × 自身正面能力等级总数
- *   （`positiveBoosts()`，含命中率与闪避率），无接触（Cobblemon 1.8，132 位学习者）。
- *
- * 翻译：把「蓄积的力量」落成**从身体里放出去的一次灵能新星**——施法者一直把提升的等级攒在身上，
- *   出手时那些等级化作一圈圈灵光环向内收拢、再连同身体一起向外炸开：**离得越近的人越先被卷进去**。
- *   等级攒得越多，环越多、范围越大、每一下越深；这正是「辅助力量」的读法，也是它和嚣张分开的地方：
- *   嚣张是追着一个人冲出去的物理扑击，辅助力量是**以自己为圆心**放出去、逼对手先贴近的爆发。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   boost       蓄积等级：自身七项（攻／防／特攻／特防／速度／命中／闪避）正面等级的总和——本招的核心机制值。
- *   raised      提升项数：有正面等级的能力项数，决定起手时亮起几道灵光环。
- *   reservoir   释放威力：基础 18 + 蓄积等级 ×20（封顶 +120）+ 特攻偏移 + 等级偏移；倾囊时 ×1.35；夹 18..200。
- *   radius      释放半径：基础 3.2 格 + 蓄积等级偏移 + 身高偏移；倾囊时 ×1.2；夹 2.8..7.2。
- *   surge       灵能推力：基础 0.35 格 + 蓄积等级偏移 + 特攻偏移；夹 0.25..1.4。
- *   motes       灵光数：起手与新星的表现数量，随提升项数与蓄积等级走（表现消费者）。
- *   charge      起手：蓄得越多越快出手（等级替它省下聚气），速度也缩短它。
- *   settle      收招：速度决定；倾囊后多一拍。
- *   recharge    冷却：蓄积等级与速度缩短它，倾囊多花 6 刻。
- *
- * 配置 `spend`（倾囊）双向取舍：开启＝命中后把全部正面等级一并打出去，威力 ×1.35、范围 ×1.2，
- *   但等级清零、冷却 +6——换来一记最大的爆发；关闭＝等级保留、威力与范围按标准、冷却更短。
- *   攒等级与花等级，各有局面。
- *
- * 伤害段 `reservoir` 与参数同名：这一爆随精灵数据变化的那部分；对手防御、相性与暴击在命中时统一结算。
- * 属性与分类沿用原生 Psychic／特殊，不做覆写。
- */
+/** storedpower：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const storedpowerId = "storedpower";
     export const storedpowerScene = "world_combat:move_storedpower";
@@ -50,7 +22,7 @@ namespace PokemonSkills {
             const value = stages[stat] || 0;
             if (value > 0) total += value;
         });
-        return total;
+        return total + MobEffects.levels(world, actor, "beneficial");
     }
 
     /** 有正面等级的能力项数；决定起手时亮起几道灵光环。 */
@@ -58,7 +30,7 @@ namespace PokemonSkills {
         const stages = storedpowerStages(world, actor);
         let count = 0;
         storedpowerStats.forEach(function (stat) { if ((stages[stat] || 0) > 0) count++; });
-        return count;
+        return count + MobEffects.native(world, actor, "beneficial").length;
     }
 
     /** 倾囊：把全部正面等级一次打出去，返回实际释放的级数。 */
@@ -69,7 +41,7 @@ namespace PokemonSkills {
             const value = stages[stat] || 0;
             if (value > 0) { NativeEffects.boost(world, actor, stat, -value); spent += value; }
         });
-        return spent;
+        return spent + MobEffects.clear(world, actor, "beneficial");
     }
 
     defineFacts(storedpowerId, function (context: FactContext): Formula.Facts {
@@ -82,6 +54,9 @@ namespace PokemonSkills {
     });
 
     actionParameters.define(storedpowerId, {
+        boost: formula(F.var("storedpower.boost", text("worldcombat.skill.storedpower.value.boost")), "蓄积层数", {
+            unit: "层", description: "当前七项正面能力等级与药水、信标增益的等级总和。"
+        }),
         /** 释放威力：18 + 蓄积等级 ×20（封顶 +120）+ 特攻偏移[−8,24] + 等级偏移[−2,6]；倾囊 ×1.35；夹 18..200。 */
         reservoir: formula(
             F.base(18)

@@ -64,7 +64,7 @@ namespace PokemonSkills {
     define({
         id: "grassknot",
         name: "Grass Knot",
-        description: "The user snares the target with grass and trips it. The heavier the target, the greater the move's power.",
+        description: "把脚下的草与根须叫起来，让对手被自己的分量带倒：对手越重摔得越狠。它在目标脚下铺开一圈草皮，稍等片刻后收拢，把还站在里面的人绊住；走出这圈就躲开了。缠绞式缠得更久更广但收得更慢。",
         uses: ["让笨重的目标自己被分量带倒", "在对手脚下留一块草皮、封住一片落脚地", "远程削弱高速或高攻的重型对手"],
         kind: "enemy",
         range: 6,

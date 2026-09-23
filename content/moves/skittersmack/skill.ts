@@ -30,10 +30,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: skittersmackId,
         cooldownParameter: "recharge",
         name: "Skitter Smack",
-        description: "贴地绕到目标的身后，再从背后用带甲壳的前肢拍一记：接触伤害，并降低目标特攻。绕到背后的一击更重；贴掠式掠过身侧、出手更快，但拿不到背击加成。",
+        description: "贴地绕到目标身后，再从背后横扫一记：扇面内每个敌人各挨一次接触伤害并降低特攻，被指定的目标从背后挨打时还会额外吃一记背击加成。贴掠式掠过身侧、出手更快，但没有背击加成。",
         uses: ["从侧后绕过对手的正面防线", "在对手攻击别人时从背后补一记", "削弱法系威胁的特攻"],
         kind: "enemy",
         range: 2.6,

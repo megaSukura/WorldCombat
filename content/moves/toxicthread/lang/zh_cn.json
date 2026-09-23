@@ -3,9 +3,9 @@
   "worldcombat.skill.toxicthread.use.0": "先下手削弱高速目标",
   "worldcombat.skill.toxicthread.use.1": "把扑上来的近战拽乱站位",
   "worldcombat.skill.toxicthread.use.2": "给难缠的对手叠一层持续掉血的中毒",
-  "worldcombat.skill.toxicthread.description.0": "被毒丝缠住的目标损失 %1$s 级速度并中毒，中毒持续 %2$s。",
-  "worldcombat.skill.toxicthread.description.1": "收丝距离或强度 %1$s 格，钉住时长 %2$s。",
-  "worldcombat.skill.toxicthread.description.2": "毒丝以 %1$s 格/刻飞出，判定半径 %2$s 格，吐丝距离 %3$s 格（射程 %4$s 格）；起手 %5$s。",
+  "worldcombat.skill.toxicthread.description.0": "被毒丝命中的目标速度下降 %1$s 级并中毒 %2$s；掉速会一直保留到脱战，中毒期间持续掉血。对毒免疫的目标不会中毒，但照样掉速、照样被丝缠住。",
+  "worldcombat.skill.toxicthread.description.1": "收丝取向命中后把目标沿丝线朝你拽近最多 %1$s 格；钉住取向改为把目标就地定住 %2$s。",
+  "worldcombat.skill.toxicthread.description.2": "毒丝以 %1$s 格/刻飞出，判定半径 %2$s 格，最多飞 %3$s 格；起手 %4$s。",
   "worldcombat.skill.toxicthread.reel.on": "收丝：命中后把目标沿丝线朝自己拽近一段，用来打乱它的站位或把它拖进近身圈。",
   "worldcombat.skill.toxicthread.reel.off": "钉住：命中后把目标就地定住片刻，用来把它留在原地、争取拉开距离。",
   "worldcombat.skill.toxicthread.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -27,5 +27,7 @@
   "worldcombat.skill.toxicthread.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去吐丝。",
   "world_combat.move.toxicthread.text.latch": "中了毒丝（速度 -%1$s）",
   "world_combat.move.toxicthread.text.immune": "毒对它无效，但丝仍缠住了它",
-  "effect.world_combat.toxic_thread_laced": "被毒丝缠住"
+  "effect.world_combat.toxic_thread_laced": "被毒丝缠住",
+  "worldcombat.skill.toxicthread.description.blocked": "毒丝是飞行物：途中撞上地形会被挡下，落空时只在落点洒下一小撮毒渍，不产生任何效果。",
+  "worldcombat.skill.toxicthread.description.laced": "被缠住的目标会带上「被毒丝缠住」标记，持续与中毒一样久；标记本身不额外掉血或减速，同伴也不会对已缠住的目标重复吐丝。"
 }

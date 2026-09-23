@@ -35,6 +35,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "hyperdrill",
         cooldownParameter: "recharge",
         name: "Hyper Drill",

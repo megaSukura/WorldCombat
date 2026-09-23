@@ -2,10 +2,10 @@
   "effect.world_combat.happyhour_banner": "Happy Hour (celebration banner)",
   "worldcombat.skill.happyhour.summary": "Throw a small celebration and lay a ring of golden hours under yourself; for its duration every non-ally that falls inside drops a burst of Relic Coins that would otherwise settle after the battle.",
   "worldcombat.skill.happyhour.description.0": "The banner lasts %1$s s with a %2$s block radius; the ring you see is the area it senses.",
-  "worldcombat.skill.happyhour.description.1": "Each non-ally that falls inside drops %1$s relic coins on the spot (Cobblemon relic coins when available).",
+  "worldcombat.skill.happyhour.description.1": "While the banner is up, every non-ally that falls inside drops %1$s relic coins on the spot (Cobblemon relic coins when available, gold nuggets otherwise).",
   "worldcombat.skill.happyhour.lavish.on": "Lavish: x1.4 per payout and x1.15 radius, at x0.8 banner and x1.15 cooldown, for making a hard fight pay big.",
   "worldcombat.skill.happyhour.lavish.off": "Long show: the banner at its base value and x0.95 cooldown, with slightly smaller payouts and radius, for steady business.",
-  "worldcombat.skill.happyhour.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",
+  "worldcombat.skill.happyhour.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.happyhour.growth.0": "From level %1$s the banner rises to %2$s s.",
   "worldcombat.skill.happyhour.growth.1": "From level %1$s each payout rises to %2$s, the radius to %3$s blocks and the banner to %4$s s.",
   "worldcombat.skill.happyhour.use.0": "Lay it down before a hard fight and turn the kills into a harvest",
@@ -27,5 +27,6 @@
   "worldcombat.skill.happyhour.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.happyhour.preference.ai.leaveStation.help": "On: also leave a hold position to lay the celebration.",
   "world_combat.move.happyhour.text.raise": "Happy Hour: foes falling in %1$s s each leave %2$s relic coins",
-  "world_combat.move.happyhour.text.earn": "Harvested %1$s coins"
+  "world_combat.move.happyhour.text.earn": "Harvested %1$s coins",
+  "worldcombat.skill.happyhour.description.stay": "The celebration stays where it was laid and the caster may walk away and keep fighting (it ends if the caster goes down or strays too far); it cannot be recast while the banner is still on you."
 }

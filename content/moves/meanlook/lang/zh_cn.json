@@ -31,5 +31,6 @@
   "world_combat.move.meanlook.text.snap": "目光绷断",
   "world_combat.move.meanlook.text.release": "目光松开",
   "world_combat.move.meanlook.text.blocked": "视线被掩体挡住",
-  "effect.world_combat.meanlook_gaze": "被黑色目光定住"
+  "effect.world_combat.meanlook_gaze": "被黑色目光定住",
+  "worldcombat.skill.meanlook.description.gaze": "被盯住的目标无法自主移动，但仍能在原地出手；术者按住技能键维持凝视，松手或被畏缩等打断时，目标立刻恢复自由。"
 }

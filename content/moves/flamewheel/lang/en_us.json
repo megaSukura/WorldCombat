@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.flamewheel.summary": "Roll forward, damaging enemies along the path and possibly burning them. Thaws the user.",
   "worldcombat.skill.flamewheel.description.0": "The rolling wheel deals about %1$s contact damage; it rolls up to %2$s blocks at %3$s blocks per tick with a %4$s block wheel radius.",
-  "worldcombat.skill.flamewheel.description.1": "Targets after the first take %1$s of the power. Each hit has a %2$s chance to burn for %3$s and knocks the target back %4$s blocks. Hits do not stop the roll.",
-  "worldcombat.skill.flamewheel.fierce.on": "Blaze Wheel: much higher burn chance and longer burn, slower and shorter roll - trade the roll for lasting ignition.",
+  "worldcombat.skill.flamewheel.description.1": "Targets after the first take %1$s of the power; a hit on a target that is not burning yet has a %2$s chance to burn it and shoves it %3$s blocks along the roll. The burn lasts %4$s, halving physical attacks and costing about 1/16 of maximum health every 5 s; Fire-types and other naturally immune targets cannot be lit. Hits do not stop the roll.",
+  "worldcombat.skill.flamewheel.fierce.on": "Blaze Wheel: much higher burn chance, slower and shorter roll - trade the roll for lasting ignition.",
   "worldcombat.skill.flamewheel.fierce.off": "Gale Wheel: higher power, roll distance and roll speed and a faster rhythm, but it barely ignites anything - better for rolling through a line.",
-  "worldcombat.skill.flamewheel.timing": "Range %1$s blocks; windup %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",
+  "worldcombat.skill.flamewheel.timing": "Range %1$s blocks; wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",
   "worldcombat.skill.flamewheel.growth.0": "From level %1$s the wheel power rises to %2$s.",
   "worldcombat.skill.flamewheel.growth.1": "From level %1$s the wheel power rises to %2$s and the burn chance to %3$s%%.",
   "worldcombat.skill.flamewheel.use.0": "Roll over a group of foes packed together",
@@ -23,7 +23,7 @@
   "worldcombat.skill.flamewheel.value.aftercast": "Recover",
   "worldcombat.skill.flamewheel.value.recharge": "Cooldown",
   "worldcombat.skill.flamewheel.preference.fierce": "Blaze Wheel",
-  "worldcombat.skill.flamewheel.preference.fierce.help": "On: much higher burn chance and longer burn, slower and shorter roll - trade the roll for lasting ignition. Off (Gale Wheel): higher power, roll distance and roll speed and a faster rhythm, but it barely ignites anything.",
+  "worldcombat.skill.flamewheel.preference.fierce.help": "On: much higher burn chance, slower and shorter roll - trade the roll for lasting ignition. Off (Gale Wheel): higher power, roll distance and roll speed and a faster rhythm, but it barely ignites anything.",
   "worldcombat.skill.flamewheel.preference.ai.maxChase": "Roll distance",
   "worldcombat.skill.flamewheel.preference.ai.maxChase.help": "It only starts a roll within this distance; it closes in first. The range is short, so a large value rarely matters.",
   "worldcombat.skill.flamewheel.preference.ai.preferIgnite": "Prefer unlit targets",
@@ -33,5 +33,8 @@
   "world_combat.move.flamewheel.text.hit": "Wheel grind #%1$s",
   "world_combat.move.flamewheel.text.roll": "The wheel rolls",
   "world_combat.move.flamewheel.text.thaw": "The wheel melts ice",
-  "world_combat.move.flamewheel.text.fizzle": "Rolled through nothing"
+  "world_combat.move.flamewheel.text.fizzle": "Rolled through nothing",
+  "worldcombat.skill.flamewheel.description.targets": "It grinds through at most %1$s enemies on the way, settling each target only once; it stops early when the roll distance is spent, when it hits a wall or when it is blocked.",
+  "worldcombat.skill.flamewheel.description.thaw": "Starting the roll cures the user's own freeze.",
+  "worldcombat.skill.flamewheel.value.pierceCount": "Max grind-throughs"
 }

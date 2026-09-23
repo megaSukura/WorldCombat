@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.gigadrain.summary": "束缚目标并持续汲取生命，为自己恢复生命。",
+  "worldcombat.skill.gigadrain.summary": "在目标脚下立起一圈吸根并锁定，分多拍持续抽取其生命，把每拍造成的伤害按比例转回自身。锁定后目标走远也脱不开，抽满拍数或目标倒下才结束。",
   "worldcombat.skill.gigadrain.description.0": "吸根每一拍造成约 %1$s 的特殊伤害，一共抽 %2$s 拍，每拍间隔 %3$s 秒。",
   "worldcombat.skill.gigadrain.description.1": "吸根射程 %1$s 格（也是实际射程）。",
   "worldcombat.skill.gigadrain.description.2": "每拍造成的伤害有 %1$s 转回自身生命。",
   "worldcombat.skill.gigadrain.deepPour.on": "深灌式：两拍重抽、根更宽、抽得更凶，但更慢、冷却更长、更容易中途被打断。",
   "worldcombat.skill.gigadrain.deepPour.off": "三拍轻抽：总回血更高、节奏更快，适合持续站场。",
-  "worldcombat.skill.gigadrain.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %5$s PP，冷却 %4$s 秒。",
+  "worldcombat.skill.gigadrain.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.gigadrain.growth.0": "%1$s 级起每拍威力抬到 %2$s。",
   "worldcombat.skill.gigadrain.growth.1": "%1$s 级起每拍威力抬到 %2$s、汲取比例升到 %3$s、拍数抬到 %4$s 拍。",
   "worldcombat.skill.gigadrain.use.0": "从远处把对手整片生命抽走",
@@ -32,5 +32,6 @@
   "worldcombat.skill.gigadrain.preference.ai.onlyWhenHurt.help": "开启：只有自身生命低于回血阈值才动用这一招，长冷却留给续航。关闭：把它当普通远程重招，血满时也会用来压人。",
   "world_combat.move.gigadrain.text.gore": "吸根锁定",
   "world_combat.move.gigadrain.text.wave": "第 %1$s/%2$s 拍",
-  "world_combat.move.gigadrain.text.miss": "没有可抽的目标"
+  "world_combat.move.gigadrain.text.miss": "没有可抽的目标",
+  "worldcombat.skill.gigadrain.description.lock": "吸根从目标脚下立起后即锁定：后续每一拍都会追着这个目标结算，目标走远也不会脱开；只有目标倒下或离场才会提前收势，剩下的拍数不再生效。"
 }

@@ -19,7 +19,7 @@ namespace PokemonSkills {
         id: vacuumwaveId,
         cooldownParameter: "recharge",
         name: "Vacuum Wave",
-        description: "Whirl your fists to send a wave of pure vacuum at the target. This move always goes first.",
+        description: "抡拳掀起一道贴地的真空波：不接触、按特攻结算，沿走廊扫过每个敌人的同时把他们朝自己抽回来。身位不动，是这一族里唯一的远程与特殊招。扩散式波面更宽、覆盖更多人，但每一下更轻、射得更短、吸力被摊薄。",
         uses: ["远程先手扫过一条走廊", "把逃开的敌人抽回近身", "把散开的敌人扫成一堆再打"],
         kind: "enemy",
         range: 7.5,

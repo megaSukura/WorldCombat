@@ -88,6 +88,7 @@ namespace PokemonSkills {
 
     describe("meanlook", [
         { key: "description.0", values: ["hold", "leash"] },
+        { key: "description.gaze", values: [] },
         { key: "description.1", values: ["gazeRange"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },

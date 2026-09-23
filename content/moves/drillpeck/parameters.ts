@@ -138,6 +138,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["bite", "bites", "gap"] },
         { key: "description.1", values: ["reach", "bore", "push"] },
         { key: "description.2", values: ["airBonus"] },
+        { key: "description.3", values: ["lunge"] },
         { key: "deep.on", values: ["bites", "bite"], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: ["bites", "bite"], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

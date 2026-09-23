@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.naturalgift.summary": "咬碎携带的树果，用它的元素踏前打出一记物理重击；伤害属性与威力随那颗树果，命中后树果被消耗。",
+  "worldcombat.skill.naturalgift.summary": "咬碎携带的树果，用它的元素踏前打出一记物理重击；伤害属性与威力都随那颗树果，施放后树果即被消耗（打空也算），空手或没有可用树果时无法发动。",
   "worldcombat.skill.naturalgift.use.0": "近身树果打击",
   "worldcombat.skill.naturalgift.use.1": "把用不上的树果换成一次属性攻击",
-  "worldcombat.skill.naturalgift.description.0": "咬碎携带的树果，对目标造成 %1$s 的树果属性物理伤害，并消耗这颗树果。",
-  "worldcombat.skill.naturalgift.description.1": "咀嚼 %1$s 秒后一步踏出最多 %2$s 格发动这次攻击；细嚼时更慢但威力更高。",
+  "worldcombat.skill.naturalgift.description.0": "咬碎携带的树果，打出一记约 %1$s 点的树果属性物理伤害；伤害属性与威力都取自所携带的那颗树果。",
+  "worldcombat.skill.naturalgift.description.1": "咀嚼 %1$s 秒后向前踏出，最多前进 %2$s 格；撞上第一个敌人即结算这一击，被地形挡下则落空。细嚼时咀嚼更久，但威力 ×1.3。",
   "worldcombat.skill.naturalgift.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.naturalgift.value.gift": "威力",
   "worldcombat.skill.naturalgift.value.charge": "咀嚼时间",
@@ -14,10 +14,12 @@
   "worldcombat.skill.naturalgift.value.bursts": "果屑数量",
   "worldcombat.skill.naturalgift.value.halo": "元素光晕",
   "worldcombat.skill.naturalgift.preference.savor": "细嚼",
-  "worldcombat.skill.naturalgift.preference.savor.help": "开启：咀嚼多花 0.4 秒，伤害威力 ×1.3，适合咬住一个硬目标；关闭：立刻出手，威力回到树果基础值，适合抢先。两个方向各有取舍。",
+  "worldcombat.skill.naturalgift.preference.savor.help": "开启：咀嚼多花 0.4 秒，伤害威力 ×1.3，适合咬住一个硬目标；关闭：咀嚼更快、威力较低，适合抢先。",
   "worldcombat.skill.naturalgift.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.naturalgift.preference.ai.maxChase.help": "只在这个距离内主动出手；更远的目标交给共享接近逻辑走过去。",
   "worldcombat.skill.naturalgift.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.naturalgift.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离开原位去咬这一口；关闭时留在原地。",
-  "world_combat.move.naturalgift.text.gift": "自然之恩·%1$s"
+  "world_combat.move.naturalgift.text.gift": "自然之恩·%1$s",
+  "worldcombat.skill.naturalgift.description.consume": "无论是否命中，施放后都会吃掉这颗树果；没有携带可用树果时无法发动。",
+  "worldcombat.skill.naturalgift.description.push": "命中并造成伤害后，把目标沿冲来的方向顶开约 %1$s 格。"
 }

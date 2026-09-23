@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.sacredsword.summary": "斩击选中的目标，忽略其能力等级变化。",
+  "worldcombat.skill.sacredsword.summary": "斩击选中目标，忽略其防御能力等级变化。普通生物的装备护甲仍参与减伤。",
   "worldcombat.skill.sacredsword.use.0": "把长角拉满，朝前送出一记最长的切斩",
   "worldcombat.skill.sacredsword.use.1": "把目标涨起来的防御等级直接无视掉",
   "worldcombat.skill.sacredsword.use.2": "在射程外缘一刀切开单个目标",

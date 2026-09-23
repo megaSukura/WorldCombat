@@ -72,7 +72,8 @@ namespace PokemonSkills {
 
     describe(mefirstId, [
         { key: "description.0", values: ["reach", "vigil"] },
-        { key: "description.1", values: ["surge", "snap"] },
+        { key: "description.1", values: ["surge","snap"] },
+        { key: "description.steal", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "patient.on", values: [], when: function (context) { return read(context.detail.values, ["patient"]) === true; } },
         { key: "patient.off", values: [], when: function (context) { return read(context.detail.values, ["patient"]) !== true; } },

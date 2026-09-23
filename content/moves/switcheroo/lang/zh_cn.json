@@ -3,12 +3,12 @@
   "worldcombat.skill.switcheroo.use.0": "贴上去把对手的道具换走",
   "worldcombat.skill.switcheroo.use.1": "把累赘在近身缠斗中塞给对手",
   "worldcombat.skill.switcheroo.use.2": "穿过对手完成换手后抢到它身后",
-  "worldcombat.skill.switcheroo.description.0": "沿瞄准方向移动最多 %1$s 格，在接触目标时交换持有物。",
-  "worldcombat.skill.switcheroo.description.1": "蓄势 %1$s、每刻掠行 %2$s 格，换手后收势 %3$s，提交起冷却 %4$s。",
-  "worldcombat.skill.switcheroo.description.2": "穿身而过时从目标身边再多冲出 %1$s 格，并把目标沿掠行方向带开约 %2$s 格。",
+  "worldcombat.skill.switcheroo.description.0": "沿瞄准方向移动最多 %1$s 格：撞到敌人时与它交换持有物，撞到友方或被挡住就停下，扑空则只沿直线掠过。",
+  "worldcombat.skill.switcheroo.description.1": "蓄势 %1$s、每刻掠行 %2$s 格，掠完收势 %3$s，冷却 %4$s。",
+  "worldcombat.skill.switcheroo.description.2": "撞到敌人时把它沿掠行方向带开约 %2$s 格；开启穿身而过时，自己再从目标身边多冲出 %1$s 格。",
   "worldcombat.skill.switcheroo.through.on": "穿身而过：交换后继续冲到目标身后（余量见上），代价是把自己送进对面阵型深处。",
   "worldcombat.skill.switcheroo.through.off": "触到即停：交换后在目标身边收住，落位更稳，但不脱离它的攻击范围。",
-  "worldcombat.skill.switcheroo.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 掠出；收势 %3$s 秒，提交起冷却 %5$s 秒。",
+  "worldcombat.skill.switcheroo.timing": "可向 %1$s 格内施放；准备 %2$s 秒后消耗 %4$s PP 掠出，收势 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.switcheroo.growth.0": "达到 %1$s 级，突进距离提升至 %2$s 格，冷却调整为 %3$s 秒。",
   "worldcombat.skill.switcheroo.growth.1": "达到 %1$s 级，突进距离提升至 %2$s 格、每刻掠行提升至 %3$s 格。",
   "worldcombat.skill.switcheroo.value.charge": "蓄势",
@@ -31,5 +31,6 @@
   "world_combat.move.switcheroo.text.swap": "换到了手",
   "world_combat.move.switcheroo.text.empty": "两手空空地掠过",
   "world_combat.move.switcheroo.text.guard": "它的手抓得死",
-  "world_combat.move.switcheroo.text.miss": "擦身而过"
+  "world_combat.move.switcheroo.text.miss": "擦身而过",
+  "worldcombat.skill.switcheroo.description.additional": "目标带黏着之类拒绝交换持有物的能力时，这招无法对其出手；自己被查封时交换会失败，只当一次擦身。"
 }

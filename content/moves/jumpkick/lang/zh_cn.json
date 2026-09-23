@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.jumpkick.summary": "一记助跑后的低平腾空飞踢：缩身蹬地，沿浅弧冲上去，腿横着扫出。踢实就把对手踹开，踢偏脚踝硬磕地面、自伤一截。跳击家族里最干净、最快的一记。",
+  "worldcombat.skill.jumpkick.summary": "一记低平的腾空飞踢：缩身蹬地，沿浅弧冲上去，腿横着扫出。踢实就把对手踹开，踢偏脚踝硬磕地面、自伤一截。跳击家族里最干净、最快的一记。",
   "worldcombat.skill.jumpkick.description.0": "腾空飞踢造成 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.jumpkick.description.1": "跃起 %1$s 格、上升速度 %2$s 格每刻、俯冲速度 %3$s 格每刻、腾空前移 %4$s 格每刻。",
-  "worldcombat.skill.jumpkick.description.2": "最远起跳 %1$s 格，命中半径 %2$s 格；踢偏时按自身最大生命的 %3$s 自伤。",
+  "worldcombat.skill.jumpkick.description.2": "最远起跳 %1$s 格，命中半径 %2$s 格；踢偏时按自身最大生命的 %3$s 倍自伤。",
   "worldcombat.skill.jumpkick.description.3": "命中击退目标 %1$s 格。",
-  "worldcombat.skill.jumpkick.running.on": "当前为助跑起跳：踢劲更高、腾空前移更远，但起手更久、踢偏时自伤更重。",
-  "worldcombat.skill.jumpkick.running.off": "当前为原地起跳：出手更快、踢偏更轻，但够不远也不够狠。",
-  "worldcombat.skill.jumpkick.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
+  "worldcombat.skill.jumpkick.running.on": "当前为助跑起跳：踢劲更高、腾空前移更远（弧线更长、更难被让开），但起手更久、踢偏时自伤更重、跃起略低。",
+  "worldcombat.skill.jumpkick.running.off": "当前为原地起跳：出手更快、踢偏更轻、跃起略高，但腾空前移更短、踢劲更低。",
+  "worldcombat.skill.jumpkick.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.jumpkick.growth.0": "%1$s 级起踢劲抬到 %2$s。",
   "worldcombat.skill.jumpkick.growth.1": "%1$s 级起踢劲抬到 %2$s、击退提到 %3$s。",
   "worldcombat.skill.jumpkick.use.0": "用一记便宜的腾空踢打出接触伤害",
@@ -32,5 +32,6 @@
   "worldcombat.skill.jumpkick.preference.ai.preferWeak": "优先残血",
   "worldcombat.skill.jumpkick.preference.ai.preferWeak.help": "开启：对手生命低于三成时优先用飞踢补刀；关闭：只按共享顺序与其它候选竞价。",
   "world_combat.move.jumpkick.text.hit": "飞踢",
-  "world_combat.move.jumpkick.text.crash": "踢偏了"
+  "world_combat.move.jumpkick.text.crash": "踢偏了",
+  "worldcombat.skill.jumpkick.description.aim": "上升阶段飞踢会不断把落点对准目标的实时位置；转入俯冲后落点锁定，目标横移就能让开。俯冲途中撞到任何活体即命中；到达落点时在命中半径内再挑最近的敌人，只结算一个目标；全程一无所获（包括半途撞上墙体）才算踢偏，按最大生命自伤。"
 }

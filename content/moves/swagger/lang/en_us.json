@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.swagger.summary": "Enrages the target and confuses it; in its rage, the target's Attack rises sharply.",
+  "worldcombat.skill.swagger.summary": "Enrage one foe: gift it several Attack stages, leave it confused, and pull a non-player target's hostility onto the caster. The enraged foe's attempts may be wasted, and its landed hits recoil on itself using the very Attack it was given; the Attack stages outlast the rage.",
   "worldcombat.skill.swagger.use.0": "Pull a heavy hitter's fire onto yourself",
   "worldcombat.skill.swagger.use.1": "Open a fumble window on a difficult target",
   "worldcombat.skill.swagger.use.2": "Light the target up before your team focuses it",
-  "worldcombat.skill.swagger.description.0": "Ignite the target's rage: it gains %1$s Attack stages and is confused for about %2$s seconds.",
-  "worldcombat.skill.swagger.description.1": "While enraged, each attempt has a %1$s%% chance to be lost to fury; when it lands a hit on an enemy it also takes recoil for about %2$s%% of its maximum health (further scaled by its current Attack).",
+  "worldcombat.skill.swagger.description.0": "Ignite the target's rage: it gains %1$s Attack stages and is confused for about %2$s seconds; it now hits harder, and its rage recoil is amplified by that same raised Attack.",
+  "worldcombat.skill.swagger.description.1": "While enraged, each attempt has a %1$s%% chance to be lost to fury; each time it lands a hit on a non-ally it suffers rage recoil for about %2$s%% of its maximum health, multiplied by 0.4-2.5 by its current Attack.",
   "worldcombat.skill.swagger.description.2": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s, range %4$s blocks. A biting taunt adds to the gift and the recoil but shortens the rage; a sneering one does the opposite.",
   "worldcombat.skill.swagger.timing": "Short windup and recovery; single target, paced by its cooldown.",
   "worldcombat.skill.swagger.value.chance": "Fumble chance",
@@ -23,5 +23,6 @@
   "world_combat.move.swagger.text.rage": "Enraged (Attack +%1$s)",
   "world_combat.move.swagger.text.resist": "Unmoved (Attack +%1$s)",
   "world_combat.move.swagger.text.recoil": "Rage recoil -%1$s",
-  "effect.world_combat.swagger_confusion": "Swagger confusion"
+  "effect.world_combat.swagger_confusion": "Swagger confusion",
+  "worldcombat.skill.swagger.description.sustain": "Against non-player targets the taunt also pulls their hostility onto the caster. The Attack stages do not fall away when the rage ends, and recasting keeps stacking Attack while refreshing the confusion; if protection wards off the confusion, the Attack gift still lands."
 }

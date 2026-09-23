@@ -115,12 +115,12 @@ namespace PokemonSkills {
         rationale: "破灭光柱对特殊防御的压制略强，让借来的力量在场上更醒目。" }, {});
 
     describe(lightofruinId, [
-        { key: "description.0", values: ["ray", "reach", "width", "pierce"] },
+        { key: "description.0", values: ["ray","reach","width","pierce"] },
         { key: "description.1", values: ["recoil"] },
         { key: "overdraw.on", values: [], when: function (context) { return read(context.detail.values, ["overdraw"]) === true; } },
         { key: "overdraw.off", values: [], when: function (context) { return read(context.detail.values, ["overdraw"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ray"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.ray", "tier.1.recoil"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.ray","tier.1.recoil"] }
     ]);
 }

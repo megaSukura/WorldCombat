@@ -72,10 +72,18 @@ namespace PokemonSkills {
     stages("snowscape", [{ level: 40, values: { cooldown: 126 } }, { level: 55, values: { cooldown: 108 } }]);
     describe("snowscape", [
         { key: "description.0", values: ["snowRadius", "snowTicks"] },
-        { key: "description.1", values: ["coverCells", "freezeCells", "powderTicks"] },
-        { key: "description.2", values: ["gather", "settle"] },
+        { key: "description.3", values: [] },
+        { key: "description.1", values: ["coverCells", "freezeCells", "groundDuration"] },
+        { key: "description.4", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
-    ]);
+    ], {
+        groundDuration: context => {
+            const snow = Math.max(120, Math.round(p("snowscape", "snowTicks", context)));
+            const result = valueBinding(rounded(Math.max(80, Math.round(snow * 0.7)) / 20),
+                text("worldcombat.skill.snowscape.value.groundDuration"), [parameterBinding(context, "snowTicks")]);
+            result.unitKind = "seconds"; result.unit = text("worldcombat.value.unit.seconds"); return result;
+        }
+    });
 }

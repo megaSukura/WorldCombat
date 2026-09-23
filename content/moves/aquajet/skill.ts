@@ -15,11 +15,12 @@
  */
 namespace PokemonSkills {
     define({
+        freeMovement: true,
         id: aquajetId,
         cooldownParameter: "recharge",
         name: "Aqua Jet",
-        description: "The user lunges at the target at blinding speed, wrapped in a jet of water. This move always goes first.",
-        uses: ["远处先手扑上去，把对手浇透", "一冲浇熄对手身上的火与灼伤", "从水里冲出来打一记更猛的水柱"],
+        description: "把自己裹进一枚水柱里贴地射出：比电光一闪更远更久，撞上第一个敌人就把它浇透、顶开，若它带着灼伤就一并浇熄其火。施放者身在水里时水柱更猛。激流式会贯穿整条路径、浇透碰到的每个人，但每一下更轻。",
+        uses: ["远处先手扑上去，把对手浇透", "借水柱位移缩短与对手的距离", "从水里冲出来打一记更猛的水柱"],
         kind: "enemy",
         range: 3.1,
         maxRange: 5.6,

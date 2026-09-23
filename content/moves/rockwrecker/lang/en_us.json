@@ -1,9 +1,9 @@
 {
   "worldcombat.skill.rockwrecker.summary": "Hoist a huge boulder and lob it at the target: it shatters on landing, bruising and shoving everyone around the point and leaving rubble on the ground; the user strains under the load and is spent, unable to act or move.",
-  "worldcombat.skill.rockwrecker.description.0": "The shatter deals %1$s physical damage to every target in range.",
+  "worldcombat.skill.rockwrecker.description.0": "When the boulder shatters, it deals about %1$s physical damage to every enemy around the landing point.",
   "worldcombat.skill.rockwrecker.description.1": "The shatter radius is %1$s blocks and the boulder can be thrown up to %2$s blocks; it arcs, so cover does not always save the target.",
-  "worldcombat.skill.rockwrecker.description.2": "On shattering it shoves nearby bodies %1$s blocks outward; the ground keeps rubble for %2$s, then the original blocks return.",
-  "worldcombat.skill.rockwrecker.description.3": "The boulder leaves at %1$s blocks per tick; wind-up %2$s, and the user is spent %3$s afterwards.",
+  "worldcombat.skill.rockwrecker.description.2": "The shatter shoves each struck enemy around the landing point %1$s blocks outward; the ground keeps rubble for %2$s, then the original blocks return.",
+  "worldcombat.skill.rockwrecker.description.3": "The boulder leaves at %1$s blocks per tick; wind-up %2$s, and once it settles the user is spent for %3$s whether it hit or not - unable to act or move during that time.",
   "worldcombat.skill.rockwrecker.use.0": "One arcing boulder",
   "worldcombat.skill.rockwrecker.use.1": "Land a boulder over cover",
   "worldcombat.skill.rockwrecker.use.2": "Crack an area open and leave rubble",
@@ -28,5 +28,6 @@
   "effect.world_combat.rockwrecker_spent": "Spent",
   "world_combat.move.rockwrecker.text.shatter": "Shatter hit %1$s",
   "world_combat.move.rockwrecker.text.miss": "The boulder missed",
-  "world_combat.move.rockwrecker.text.spent": "Spent %1$s s"
+  "world_combat.move.rockwrecker.text.spent": "Spent %1$s s",
+  "worldcombat.skill.rockwrecker.description.flight": "The boulder shatters on contact with a living body or the ground; its mid-flight hit radius is %1$s blocks, and it bursts wherever it strikes."
 }

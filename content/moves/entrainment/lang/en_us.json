@@ -1,15 +1,15 @@
 {
-  "worldcombat.skill.entrainment.summary": "Dances an odd rhythm that compels the target to mimic it, making the target's Ability the same as the user's; enemies caught by the beat change with it.",
+  "worldcombat.skill.entrainment.summary": "Share your Ability with enemy Pokémon caught in the rhythm; non-Pokémon instead match your movement pace.",
   "worldcombat.skill.entrainment.use.0": "Hand your own detrimental Ability to a foe",
   "worldcombat.skill.entrainment.use.1": "Overwrite a dangerous foe Ability with an ordinary one",
   "worldcombat.skill.entrainment.use.2": "Change the Abilities of the whole ring of enemies around you",
   "worldcombat.skill.entrainment.description.0": "Dances a beat within %1$s blocks after a %2$s s wind-up, travelling at about %3$s blocks/tick.",
-  "worldcombat.skill.entrainment.description.1": "When the beat lands, each caught enemy's Ability becomes the caster's for %1$s s; the splash radius is %2$s blocks.",
+  "worldcombat.skill.entrainment.description.1": "When the beat arrives, eligible enemy Pokémon within %2$s blocks receive the caster’s Ability for %1$s; non-Pokémon match movement speed as described above.",
   "worldcombat.skill.entrainment.whole.0": "Whole-field beat: splash ×1.6, duration ×0.65, cooldown +16 ticks; change the whole ring that closed in on you at once.",
   "worldcombat.skill.entrainment.whole.1": "Close beat: splash ×0.7, duration ×1.4, cooldown −10 ticks; hold one opponent to your rhythm for much longer.",
   "worldcombat.skill.entrainment.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.entrainment.growth.0": "At level %1$s the committed cooldown shortens to %2$s s.",
-  "worldcombat.skill.entrainment.growth.1": "At level %1$s the committed cooldown shortens again to %2$s s.",
+  "worldcombat.skill.entrainment.growth.0": "From level %1$s, cooldown is reduced by an extra 0.6 seconds.",
+  "worldcombat.skill.entrainment.growth.1": "From level %1$s, the extra cooldown reduction becomes 1.1 seconds, replacing the earlier reduction.",
   "worldcombat.skill.entrainment.value.reach": "Rhythm range",
   "worldcombat.skill.entrainment.value.velocity": "Beat speed",
   "worldcombat.skill.entrainment.value.splash": "Splash radius",
@@ -27,5 +27,6 @@
   "worldcombat.skill.entrainment.preference.ai.leaveStation.help": "On, a holding companion will leave its post to change a foe's Ability; off, it only casts when already in reach.",
   "effect.world_combat.entrainment": "In Rhythm",
   "world_combat.move.entrainment.text.shared": "%1$s were caught by the rhythm and changed",
-  "world_combat.move.entrainment.text.same": "No Ability to change"
+  "world_combat.move.entrainment.text.same": "No Ability to change",
+  "worldcombat.skill.entrainment.world": "Non-Pokémon caught in the rhythm match the caster’s movement speed at casting for %1$s. This can slow a faster enemy or speed up a slower one. Cleansing or expiry restores their speed; other speed effects still apply."
 }

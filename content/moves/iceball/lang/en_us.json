@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.iceball.summary": "Curl into a ball of ice and hurl it: every landed pass freezes on another layer and the next pass hits harder (up to 5), and a pass that sails past loops back for another try. The caster stays rooted the whole time; the last impact shatters and freezes a small patch of ground.",
-  "worldcombat.skill.iceball.description.0": "Each pass deals %1$s ice damage; one cast lands up to %2$s passes.",
+  "worldcombat.skill.iceball.description.0": "Each pass deals Ice damage: about %1$s on the first pass; one cast lands up to %2$s passes.",
   "worldcombat.skill.iceball.description.1": "Every landed pass multiplies the next by %1$s (capped at %2$s); the ball flies at %3$s blocks/tick with a %4$s-block hitbox.",
-  "worldcombat.skill.iceball.description.2": "The ball reaches %1$s blocks with %2$s s between passes; it shatters into %3$s blocks of ice that last %4$s s.",
+  "worldcombat.skill.iceball.description.2": "The ball reaches %1$s blocks with %2$s s between passes; it shatters at the last impact into up to %3$s slippery ice blocks that last %4$s s.",
   "worldcombat.skill.iceball.thick.on": "Thick shell: each landed pass multiplies the next by 2.3, the power cap rises 15% and the ice patch left behind is larger and longer; costs 0.9x base power per pass, 0.85x ball speed, +2 ticks between passes, +2 ticks recovery and +6 ticks cooldown - a thicker shell, but slower and dearer.",
   "worldcombat.skill.iceball.thick.off": "Thin shell (the native form): 2x per pass, 1.06x ball speed, -1 tick between passes and -4 ticks cooldown; at a lower power cap and a smaller, shorter ice patch - a faster ball thrown more often.",
   "worldcombat.skill.iceball.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.iceball.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.iceball.preference.ai.maxChase.help": "Beyond this distance it closes in instead of throwing. Larger values open from further out.",
   "world_combat.move.iceball.text.cap": "Ice Ball landed %1$s passes and shattered",
-  "world_combat.move.iceball.text.hit": "Ice Ball impact %1$s"
+  "world_combat.move.iceball.text.hit": "Ice Ball impact %1$s",
+  "worldcombat.skill.iceball.description.stance": "While the ball is in flight the caster is held in place, unable to move or act otherwise; if the target falls or leaves, the ball shatters at once, and it also ends once it has landed its full number of passes."
 }

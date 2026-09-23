@@ -61,7 +61,7 @@ namespace PokemonSkills {
         id: "powerswap",
         cooldownParameter: "recharge",
         name: "力量互换",
-        description: "利用超能力把双方攻击与特攻的能力变化对调一段窗口：换完你拿走对方攒起来的攻势，窗口走完自动换回。",
+        description: "利用超能力把双方攻击与特攻的能力变化对调一段窗口：换完你拿走对方攒起来的攻势，窗口走完或被清除时各自换回原来的等级。",
         uses: ["把对手涨起来的攻/特攻夺过来", "在自己被降攻后把负数甩给对手", "在对手强化成型时把气势整个接走"],
         kind: "enemy",
         range: 6,

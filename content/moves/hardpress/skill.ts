@@ -15,7 +15,7 @@ namespace PokemonSkills {
         id: hardpressId,
         cooldownParameter: "recharge",
         name: "Hard Press",
-        description: "The user presses down on the target with an arm or a claw. The more HP the target has left, the greater the move's power.",
+        description: "抬臂／抬钳，从上方一腕把对手压进地面：物攻与体重决定这一压的分量，对手此刻剩余的生命越满，威力越大——对手已经残了，这一下就轻。它是三压招里起手最快、冷却最短的一记，靠一记接一记地压；双腕式可一次罩住挨着站的几个目标，但单点更轻。",
         uses: ["开局对满血的目标压出最重的一记", "双腕式一次按住挨着站的几个敌人", "用最快的循环一记接一记地压住对手"],
         kind: "enemy",
         range: 2.4,

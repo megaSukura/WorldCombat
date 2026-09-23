@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: "matchagotcha",
         cooldownParameter: "recharge",
         name: "Matcha Gotcha",
-        description: "The user fires a blast of whisked tea that scalds everything around where it lands, siphoning the damage back. May leave targets burned, and thaws anything frozen.",
+        description: "抛出一颗茶泡砸向远处的敌人，落点炸开一圈，圈内每个敌人各挨一记并汲取生命，有机会使目标灼伤，并解冻被泼到的冰冻目标。",
         uses: ["从一段距离外把茶汤泼到一小片人身上", "顺手挂灼伤并解冻被冻住的目标", "目标挤在一起时一次烫到几个并回血"],
         kind: "enemy",
         range: 8.0,
@@ -85,7 +85,7 @@ namespace PokemonSkills {
                         if (CombatStatus.has(scope, enemy, "frozen")) CombatStatus.cure(scope, enemy, "frozen");
                         const at = facts.position();
                         const landed = hurt(current, enemy, "matchagotcha", power,
-                            { damage: damageSpec("matchagotcha", "brew"), status: "burn", chance: scald, drain: share });
+                            { damage: damageSpec("matchagotcha", "brew"), status: "burn", chance: scald, statusTicks: burnTicks, drain: share });
                         if (!landed) return;
                         hits++;
                         const flow = from.minus(at), span = flow.length();

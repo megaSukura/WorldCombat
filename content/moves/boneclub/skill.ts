@@ -75,10 +75,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "boneclub",
         cooldownParameter: "recharge",
         name: "Bone Club",
-        description: "The user clubs the target with a bone. This may also make the target flinch.",
+        description: "抡起手里的骨头当棍子：骨头比身体够得远，沿瞄准方向扫出一条窄长走廊，扫中的人吃一记不接触重击、偶尔被敲懵。命中只有 85，抡偏是常事，抡空还会把骨头磕在地上。",
         uses: ["用比身体更长的骨头先手够到一个目标", "一次横扫兜住并肩的两三个人", "在对手还没贴上来时敲懵它"],
         kind: "enemy",
         range: 3.2,

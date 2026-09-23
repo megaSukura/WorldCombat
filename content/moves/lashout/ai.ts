@@ -1,11 +1,4 @@
-/**
- * 泄愤 / lashout 的 AI 用途。
- *
- * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
- * 自身带负等级时（用本单元注册的只读探针读共享能力等级）`ai.enraged`（默认开）把 priority 抬到 50——
- *   这正是翻倍窗口，值得插在普通攻击前；没被削弱时按普通近战 12 排序。
- * 放完接什么：交回共享交战计划；发泄完怒气，回到常规交战。
- */
+/** lashout：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     CompanionBehavior.registerFact("world_combat:lashout/stages", function (access, actor, argument) {
         return lashoutDown(access, actor);

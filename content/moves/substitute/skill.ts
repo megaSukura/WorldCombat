@@ -112,8 +112,8 @@ namespace PokemonSkills {
     define({
         id: "substitute",
         name: "Substitute",
-        description: "The user creates a substitute for itself using some of its own HP. The substitute serves as the user's decoy.",
-        uses: ["在开战前先立起一面会替自己挨打的血盾", "把致命的一轮集火引到分身上", "受伤时用一部分生命换取重整的时间"],
+        description: "支付一部分自己的最大生命，在近处造出一个承伤的分身；它的耐久是实际投入生命的若干倍。替身只在联系距离内、视线畅通时替你挡下指向你的攻击，走出距离只是暂时停止，回到范围内会恢复；被打碎或存在到时限才结束。",
+        uses: ["开战前先立起一面替自己挨打的血盾", "把致命的一轮攻击引到分身上", "受伤时用一部分生命换取重整空间"],
         kind: "point",
         range: 3,
         maxRange: 5,

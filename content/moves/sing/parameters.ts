@@ -99,8 +99,8 @@ namespace PokemonSkills {
     ]);
 
     describe(singId, [
-        { key: "description.0", values: ["reach", "beat"] },
-        { key: "description.1", values: ["notes", "sleepTicks"] },
+        { key: "description.0", values: ["reach","beat"] },
+        { key: "description.1", values: ["notes","sleepTicks"] },
         { key: "description.2", values: ["dozeTicks"] },
         { key: "soothing.on", values: [], when: function (context) { return read(context.detail.values, ["soothing"]) === true; } },
         { key: "soothing.off", values: [], when: function (context) { return read(context.detail.values, ["soothing"]) !== true; } },

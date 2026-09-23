@@ -65,10 +65,11 @@ namespace PokemonSkills {
 
     describe(copycatId, [
         { key: "description.0", values: ["span", "window"] },
+        { key: "description.1", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["span","prepare","recover","pp","cooldown"] }
     ]);
 
     // 记账：任何生物提交一次已实装的招式动作就记下这一刻；仿效读取它捡起“最后响起的那一手”。

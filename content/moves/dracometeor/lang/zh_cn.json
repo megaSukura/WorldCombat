@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.dracometeor.summary": "从高空召下一群陨石，垂直砸向目标，每颗在落点炸开一圈龙属性能量并把地面砸出焦黑的坑；召唤后自身特攻大幅下降。流星式把落点散布成一片，坠星式只一颗大陨石直落。",
+  "worldcombat.skill.dracometeor.summary": "从高空召下陨石垂直砸向落点：每颗对落点半径内的每个敌人各造成一次特殊伤害、并把那圈地表烧焦一段时间，目标走出落点就会躲过；流星式散布多颗，同一敌人可能被多颗砸中。召唤当即付出自身特攻大幅下降的代价。",
   "worldcombat.skill.dracometeor.use.0": "远距离召下陨石点杀",
   "worldcombat.skill.dracometeor.use.1": "流星式把落点铺成一片、罩住聚在一起的敌人",
-  "worldcombat.skill.dracometeor.use.2": "在落点砸出焦黑的坑、占住那片地",
-  "worldcombat.skill.dracometeor.description.0": "召下陨石，每颗在落点造成 %1$s 点特殊伤害。",
+  "worldcombat.skill.dracometeor.use.2": "把落点一圈地表烧成焦黑",
+  "worldcombat.skill.dracometeor.description.0": "召下陨石；每颗垂直落向落点，对落点半径内的每个敌人各造成约 %1$s 点特殊伤害。",
   "worldcombat.skill.dracometeor.description.1": "射程 %1$s 格；陨石以 %2$s 格/刻从 %4$s 格高处垂直砸下，落点半径 %3$s 格。",
-  "worldcombat.skill.dracometeor.description.2": "每颗落点砸出半径 %1$s 格的坑、约 %2$s 后散去。",
+  "worldcombat.skill.dracometeor.description.2": "每颗落点把半径 %1$s 格内的地表烧成焦黑，约 %2$s 后复原。",
   "worldcombat.skill.dracometeor.description.3": "召唤后自身特攻下降 %1$s 级，中与不中都一样。",
-  "worldcombat.skill.dracometeor.barrage.on": "流星式：召 %1$s 颗陨石散布在半径 %2$s 格内逐个砸下，每颗之间隔 %3$s 秒；每颗单发威力 ×0.8。",
+  "worldcombat.skill.dracometeor.barrage.on": "流星式：召 %1$s 颗陨石散布在半径 %2$s 格内逐个砸下，每颗之间隔 %3$s 秒；每颗单发威力 ×0.8，落点圈可以重叠，同一敌人可能被多颗砸中。",
   "worldcombat.skill.dracometeor.barrage.off": "坠星式：一颗大陨石直落目标，单点更重、出手更快，但只打一个点。",
   "worldcombat.skill.dracometeor.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.dracometeor.growth.0": "%1$s 级起陨石威力抬到 %2$s。",
@@ -35,5 +35,6 @@
   "worldcombat.skill.dracometeor.preference.ai.spread.help": "开启：身边挤着更多敌人的目标排前，用流星式把落点铺成一片；关闭则只按普通远程攻击排序。",
   "worldcombat.skill.dracometeor.preference.ai.minRange": "近身保留距离",
   "worldcombat.skill.dracometeor.preference.ai.minRange.help": "目标比这个距离更近时把流星群排后（0＝不限制）。调高让它把这一记留在拉开距离的时候用。",
-  "world_combat.move.dracometeor.text.miss": "陨石落偏了"
+  "world_combat.move.dracometeor.text.miss": "陨石落偏了",
+  "worldcombat.skill.dracometeor.description.land": "第一颗瞄向目标当时的位置；陨石下落途中蹭到敌人就在它身上炸开，否则砸到地面炸开，走出落点半径就躲过那一颗。"
 }

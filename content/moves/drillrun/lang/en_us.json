@@ -31,5 +31,6 @@
   "worldcombat.skill.drillrun.preference.ai.line.help": "On: with two or more foes lined up in the run corridor, it drills first to pierce the line. Off: it ranks the drill as an ordinary mid-range contact strike.",
   "world_combat.move.drillrun.text.vital": "A vital point!",
   "world_combat.move.drillrun.text.hit": "Drilled through!",
-  "world_combat.move.drillrun.text.miss": "Drill Run found nothing"
+  "world_combat.move.drillrun.text.miss": "Drill Run found nothing",
+  "worldcombat.skill.drillrun.description.3": "The user races straight along the ground; each foe is bitten only once, and the run stops at a wall or an immovable body."
 }

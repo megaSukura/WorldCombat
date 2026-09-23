@@ -34,7 +34,7 @@ namespace PokemonSkills {
         id: slashId,
         cooldownParameter: "recharge",
         name: "Slash",
-        description: "The target is attacked with a slash of claws, scythes, or the like. This move has a heightened chance of landing a critical hit.",
+        description: "站定、举刃过头，沿身前一条窄走廊压下一记斜劈：走廊里的对手各吃一记接触斩击，落点闪出亮白的劈痕。它的暴击率比同族高一档——疾刃更快更宽、重刃更慢更重。",
         uses: ["站定一记压下去的重劈", "比同族更容易劈中要害", "慢、窄、准"],
         kind: "enemy",
         range: 2.4,

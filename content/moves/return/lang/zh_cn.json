@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.return.summary": "为训练家把这一记全力送出去：金色誓约在脚下结起，随后一道金光直冲对手，只结算一次重击。亲密度越高，这一记越重、冲得越远；它和迁怒读同一个数、方向相反，一个单次重击、一个多段快抓。",
+  "worldcombat.skill.return.summary": "为训练家把这一记全力送出去：金色誓约在脚下结起，随后一道金光直冲对手，只结算一次重击。亲密度越高，这一记越重；它和迁怒读同一个数、方向相反，一个单次重击、一个多段快抓。",
   "worldcombat.skill.return.use.0": "亲密度高时的一记全力重击",
   "worldcombat.skill.return.use.1": "贴上去把对手顶开",
   "worldcombat.skill.return.use.2": "受托式冲过对手换位",
-  "worldcombat.skill.return.description.0": "撞实造成约 %1$s 的接触伤害；羁绊越深这一记越重。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.return.description.1": "沿瞄准方向冲锋最多 %1$s 格（每刻 %2$s 格），判定半径 %3$s 格；撞空则一路冲到冲程尽头。",
+  "worldcombat.skill.return.description.0": "撞实造成约 %1$s 的接触伤害，只结算一次；羁绊越深这一记越重。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.return.description.1": "沿瞄准方向冲锋最多 %1$s 格（每刻 %2$s 格），判定半径 %3$s 格；撞空则一路冲到冲程尽头，途中被地形挡住会提前停下。",
   "worldcombat.skill.return.description.2": "撞实把目标沿冲锋方向顶开约 %1$s 格；受托式还会顺势从对手身侧越过约 %2$s 格换位。",
   "worldcombat.skill.return.devoted.on": "开启受托式：誓约更重、冲得更远，撞实后越过对手换位，代价是起手、收招与冷却更久。",
   "worldcombat.skill.return.devoted.off": "关闭受托式（直击式）：一记更短更快的重击，撞实即停，起手与冷却更短。",

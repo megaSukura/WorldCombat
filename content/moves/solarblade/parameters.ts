@@ -100,7 +100,8 @@ namespace PokemonSkills {
 
     describe("solarblade", [
         { key: "description.0", values: ["slash"] },
-        { key: "description.1", values: ["reach", "arc", "dash"] },
+        { key: "description.weather", values: [] },
+        { key: "description.1", values: ["reach","arc","dash"] },
         { key: "description.2", values: ["charge", "push"] },
         { key: "stance.thrust", values: [], when: function (context) { return !!read(context.detail.values, ["thrust"]); } },
         { key: "stance.sweep", values: [], when: function (context) { return !read(context.detail.values, ["thrust"]); } },

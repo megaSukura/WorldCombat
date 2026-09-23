@@ -1,14 +1,4 @@
-/**
- * 扮演 / roleplay — 伙伴 AI 用途与自己的出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、有一条通视直线，而且对手的特性读得出来、可以被抄、
- *   又和自己当前的不一样。自己刚扮演过（带着 roleplay 标记）时由标记自然节流。
- * 对谁出手：当前威胁；特性已被压制、和自己相同的目标跳过。
- * 候选之间怎么排：只在自己完全没有这份特性时才考虑，priority 60，排在普通出手之前先把扮相披上。
- * 够不到怎么办：reach 就是本招射程，共享任务先走近到能通视的射程再描。
- * 放完之后：自己临时获得对手的特性，交回共享交战计划。
- * ai.maxChase 决定追多远；ai.leaveStation 决定驻守时是否愿意离位。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace CompanionBehavior {
     registerFact("world_combat:roleplay-ability", function (access, actor, _argument) {
         return PokemonSkills.roleplayAbility(access, actor);
@@ -22,6 +12,13 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.focus !== target.ref && distance(self.point, target.point) > ai<number>(item, "maxChase", 15)) return false;
         if (!world(context).clear(point(self.point), point(target.point))) return false;
+        if (domain(context, target) !== "cobblemon") {
+            if (status(context, self, "roleplay")) return false;
+            const access = world(context), a = access.actor(self.ref), b = access.actor(target.ref);
+            if (!a || !b) return false;
+            const values = PokemonSkills.copiedNativeTrait(access, b);
+            return Object.keys(values).some(id => { const own = access.attributeValue(a, id); return own !== null && values[id] > own.value() + 0.0001; });
+        }
         const theirs = fact<string>(context, "world_combat:roleplay-ability", target);
         if (theirs === null || !PokemonSkills.roleplayCopyable(theirs)) return false;
         const mine = fact<string>(context, "world_combat:roleplay-ability", self);

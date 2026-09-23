@@ -1,21 +1,4 @@
-/**
- * ＤＤ金勾臂 / darkestlariat 的出手方式。
- *
- * 核心念头：**原地旋身一整圈，双臂横抡把身周清开**——旋转的势头从侧面切入，对手正面对防的架势护不到侧后，
- *   所以它涨起来的防御等级挡不住这一圈。本族唯一扫一整圈的招。
- *
- * 两幕：
- *   起（wind，提交前）：沉重心、双臂微微张开，脚边起旋；只播预告，可被打断（打断不花 PP）。
- *   旋（spin → hit / miss，提交后）：提交后以自身为中心抡开半径 `radius` 的一整圈，圈内每个非友方各挨一记
- *       `sweep` 接触伤害并被向外顶开 `push`；没人被扫到只留一圈空风。
- *
- * 「无视能力变化」：本文件末尾的 `PokemonDamage.metadata` 贡献点在每个目标结算前，把目标本段对应的防御
- *   能力等级归零；攻击方自身等级、相性、暴击、护甲与特性道具仍照常结算。
- *
- * 与同族分开：逐步击破是贴脸连击、圣剑是最长的正前切斩、惩罚从对手取力；ＤＤ金勾臂凭「原地一整圈」。
- *
- * 配置 `wide` 由公式改威力／半径／顶开与时序；提交后才触碰世界。
- */
+/** 攻击并推开周围敌人，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。 */
 namespace PokemonSkills {
     const darkestlariatScene = "world_combat:move_darkestlariat";
     const darkestlariatHitText = "world_combat.move.darkestlariat.text.hit";
@@ -35,7 +18,7 @@ namespace PokemonSkills {
         id: darkestlariatId,
         cooldownParameter: "recharge",
         name: "Darkest Lariat",
-        description: "The user swings both arms and hits the target. The target's stat changes don't affect the damage inflicted by this move.",
+        description: "攻击并推开周围敌人，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。",
         uses: ["原地旋身，把身周一圈的敌人一起抡开", "把目标涨起来的防御等级直接无视掉", "被围住时一次清开贴身的人"],
         kind: "self",
         range: 2.6,
@@ -120,11 +103,7 @@ namespace PokemonSkills {
             return context.metadata.move === darkestlariatId && !!context.targetFacts;
         },
         apply: function (context: PokemonDamage.MetadataContext) {
-            const native = context.targetFacts!.data.native;
-            if (!native || !native.state) return;
-            const stat = context.metadata.category === "special" ? "spd" : "def";
-            if (native.state.stages) native.state.stages[stat] = 0;
-            if (native.state.layers && native.state.layers.stages) native.state.layers.stages[stat] = 0;
+            PokemonDamage.ignoreDefenceStages(context);
         }
     });
 }

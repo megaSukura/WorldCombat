@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.furycutter.summary": "连续命中时攻击次数增加；落空或使用其他招式会清空累积。",
-  "worldcombat.skill.furycutter.description.0": "连斩中每一刀造成 %1$s 的接触斩击伤害，刀数越多，累计越深。",
+  "worldcombat.skill.furycutter.description.0": "连斩中每一刀造成约 %1$s 点接触斩击伤害，刀数越多，累计越深。",
   "worldcombat.skill.furycutter.description.1": "连续命中会把段数翻倍：1 刀 → 2 刀 → %1$s 刀，段数就是真正结算的次数。",
-  "worldcombat.skill.furycutter.description.2": "只要在 %1$s 内继续连斩，层数就保留；落空或任何别的招式提交都会立刻清零。",
+  "worldcombat.skill.furycutter.description.2": "只要在 %1$s 内继续用连斩命中，层数就保留，每命中一趟都会把窗口重新计满；落空、改用别的招式或窗口自行走完，层数立刻清零。",
   "worldcombat.skill.furycutter.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.furycutter.growth.0": "达到 %1$s 级，每刀威力提升至 %2$s。",
   "worldcombat.skill.furycutter.growth.1": "达到 %1$s 级，挥刀距离延长至 %2$s 格。",

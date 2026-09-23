@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: "poisontail",
         cooldownParameter: "recharge",
         name: "Poison Tail",
-        description: "The user swings its tail low in a wide arc, sweeping everyone close and smearing poison from the venomous tip.",
+        description: "低身转身，把尾巴贴地抡过半圈：扫到一个低矮弧面内的所有对手，正对的吃满、旁边的吃折扣，尾梢按（越远越高的）概率抹毒并把被扫到的人扫开一点。毒尾式更毒但扫得更轻；扫尾式更宽更重但毒难抹上。",
         uses: ["低位横扫一圈、把围上来的敌人一起扫到", "给靠近的多个目标抹毒", "被贴身围攻时把身位扫开一点"],
         kind: "enemy",
         range: 2.6,

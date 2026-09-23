@@ -3,7 +3,7 @@
   "worldcombat.skill.kinesis.use.0": "远距离点名一个最难缠的对手",
   "worldcombat.skill.kinesis.use.1": "在掩体对峙时削弱对方的远程",
   "worldcombat.skill.kinesis.use.2": "给决斗或撤退创造单点优势",
-  "worldcombat.skill.kinesis.description.0": "被引开注意的目标攻击变弱，宝可梦还额外损失 %1$s 级命中，持续 %2$s。",
+  "worldcombat.skill.kinesis.description.0": "被引开注意期间，目标的物理攻击降低 15%%、宝可梦还会额外失去 %1$s 级命中；攻击削弱持续 %2$s，命中等级则按普通能力等级保留（要等脱战才消退，不随失神结束恢复）。",
   "worldcombat.skill.kinesis.description.1": "凝注距离 %1$s 格；只作用于单个目标，不会波及旁人。",
   "worldcombat.skill.kinesis.description.2": "举起汤匙要 %1$s，冷却 %2$s。必须与目标通视：墙、柱子或其他掩体挡住视线时，这场戏法落空。",
   "worldcombat.skill.kinesis.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.kinesis.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去举匙。",
   "world_combat.move.kinesis.text.beguile": "被引开注意（命中 -%1$s）",
   "world_combat.move.kinesis.text.blocked": "视线被挡住，戏法落空",
-  "effect.world_combat.kinesis_beguiled": "被引开注意"
+  "effect.world_combat.kinesis_beguiled": "被引开注意",
+  "worldcombat.skill.kinesis.description.bend": "手法：慢掰（默认）让失神级数 +1、失神时长 ×1.4，代价是起手 +6 刻、冷却 ×1.2；快掰只按基础级数与时长，起手与冷却更短（冷却 ×0.95）。"
 }

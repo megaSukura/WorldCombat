@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.dreameater.summary": "Only usable while the target sleeps: pull its dream out of its head as a thread of smoke and drink it, restoring half the damage dealt. The deeper the dream, the bigger the mouthful.",
+  "worldcombat.skill.dreameater.summary": "Only usable while the target sleeps: pull its dream out of its head as a thread of smoke and drink it, healing yourself for a share of the damage dealt. The deeper the dream, the bigger the mouthful.",
   "worldcombat.skill.dreameater.use.0": "Draw life back into yourself while the foe sleeps",
   "worldcombat.skill.dreameater.use.1": "Cash a sleep window opened by a team mate",
   "worldcombat.skill.dreameater.use.2": "Reach a sleeper from a distance instead of closing in",
-  "worldcombat.skill.dreameater.description.0": "Dream power is about %1$s; %2$s of the damage dealt is restored to the user.",
-  "worldcombat.skill.dreameater.description.1": "Draws from sleepers up to %1$s blocks away.",
+  "worldcombat.skill.dreameater.description.0": "Draws about %1$s Psychic special damage from the sleeper and heals the user for %2$s of the damage actually dealt; the deeper the remaining sleep, the heavier the draw and the higher the share.",
+  "worldcombat.skill.dreameater.description.1": "Draws from sleepers up to %1$s blocks away, as long as the line to them is clear.",
   "worldcombat.skill.dreameater.deep.on": "Deep dive: healing share x1.3, but power x0.85 and a longer wind-up and cooldown - the sustain choice.",
   "worldcombat.skill.dreameater.deep.off": "Shallow taste: power x1.12, healing x0.9 and a faster cast - the burst choice.",
   "worldcombat.skill.dreameater.timing": "Cast on a sleeping enemy within %1$s blocks; after a %2$s s wind-up it costs %4$s PP; recovery %3$s s, cooldown %5$s s from commit.",
@@ -28,5 +28,6 @@
   "worldcombat.skill.dreameater.preference.ai.healBelow.help": "Below this health ratio the user prefers dream eater as sustain; higher leans on it for healing sooner.",
   "world_combat.move.dreameater.text.feast": "Devoured the dream",
   "world_combat.move.dreameater.text.sap": "Dream restored %1$s%%",
-  "world_combat.move.dreameater.text.wake": "Awake - no dream to eat"
+  "world_combat.move.dreameater.text.wake": "Awake - no dream to eat",
+  "worldcombat.skill.dreameater.description.additional": "The target must be asleep; dealing damage wakes it, so a single sleep window usually feeds only one draw."
 }

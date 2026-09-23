@@ -115,8 +115,9 @@ namespace PokemonSkills {
 
     describe("tripledive", [
         { key: "description.0", values: ["splash", "diveSpan", "diveRadius"] },
-        { key: "description.1", values: ["soakBonus", "drenchTicks"] },
+        { key: "description.1", values: ["soakBonus","drenchTicks"] },
         { key: "description.2", values: ["interval"] },
+        { key: "description.additional", values: ["diveSpan","diveRadius"] },
         { key: "plunge.on", values: [], when: function (context) { return read(context.detail.values, ["plunge"]) === true; } },
         { key: "plunge.off", values: [], when: function (context) { return read(context.detail.values, ["plunge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

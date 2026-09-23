@@ -62,7 +62,7 @@ namespace PokemonSkills {
     });
 
     describe(growlId, [
-        { key: "description.0", values: ["drop", "hushTicks"] },
+        { key: "description.0", values: ["drop","hushTicks"] },
         { key: "description.1", values: ["soundRadius"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "howl.off", values: [], when: function (context) { return read(context.detail.values, ["howl"]) !== true; } },

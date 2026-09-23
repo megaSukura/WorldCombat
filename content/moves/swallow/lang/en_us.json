@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.swallow.summary": "Swallow the power you stored to restore your own HP. The more stored, the bigger the heal, and a full three layers heals you completely; swallowing consumes all of it.",
-  "worldcombat.skill.swallow.use.0": "Bank three layers of Stockpile, then gulp it all back in one full heal",
+  "worldcombat.skill.swallow.summary": "Swallow the stored power as healing: more layers restore more, three layers can heal you fully, and swallowing consumes all of it — including the Defence and Special Defence the charge had granted.",
+  "worldcombat.skill.swallow.use.0": "Bank three layers of Stockpile and cash them in for the biggest heal",
   "worldcombat.skill.swallow.use.1": "Cash your layers into healing while being chased",
   "worldcombat.skill.swallow.use.2": "Sip it in small mouthfuls to waste less on overheal",
-  "worldcombat.skill.swallow.description.0": "Swallow the stored power: restore %1$s of max HP (more layers heal more, and a full three jump a step), consuming all of it.",
-  "worldcombat.skill.swallow.description.1": "The swallowed power lasts %1$s.",
+  "worldcombat.skill.swallow.description.0": "Swallow the stored power: restore %1$s of max HP based on the layers held, consuming all of it; with nothing stored it cannot be used.",
+  "worldcombat.skill.swallow.description.1": "The digest window is a base %1$s: Sipping lands the three mouthfuls across it so each can cover damage taken meanwhile, while a single gulp leaves only a brief mark.",
   "worldcombat.skill.swallow.description.2": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.swallow.sip.on": "Sipping: the heal comes in three mouthfuls at x0.9 total, but cooldown is 15 shorter and small mouthfuls cover damage taken meanwhile.",
   "worldcombat.skill.swallow.sip.off": "One gulp: the whole heal lands at once with the written cooldown; at full HP the excess spills over.",
@@ -31,5 +31,6 @@
   "worldcombat.skill.swallow.preference.ai.emergency.help": "On: below the cash-out ratio, swallow even a single layer to survive. Off: do not swallow under the minimum layers and keep banking.",
   "world_combat.move.swallow.text.gulp": "Swallow (%1$s layers -> restore %2$s%%)",
   "world_combat.move.swallow.text.sip": "Sipping (%1$s layers -> restore %2$s%% total)",
-  "effect.world_combat.swallowed": "Swallowed"
+  "effect.world_combat.swallowed": "Swallowed",
+  "worldcombat.skill.swallow.description.layers": "The heal depends on the layers actually held when swallowed: each layer restores 18%%-32%% of max HP based on Special Defence and weight, and a full three layers adds another step, up to a full heal; it never exceeds the health you are missing. Swallowing also takes back the Defence and Special Defence the charge granted."
 }

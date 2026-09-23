@@ -116,6 +116,8 @@ declare const WorldCombat: {
      * Parsing: mods/world-combat-core/src/main/java/dev/worldcombat/core/runtime/{ActionPreview,ActionInput}.java.
      */
     preview(action: string, json: string): void;
+    /** world_combat:item_use is a native pre-use gate: {operation: start|continue|release|use|block|entity, hand, item, count}.
+     * Rejecting prevents that use of the held stack; inventory and equipment remain in native ownership. */
     on(id: string, topic: string, after: string, handler: (event: CombatWorldEvent) => void): void;
     contentPack(id: string, version: string, dependencies: string): void;
     effect(id: string, schema: number, maxTicks: number, lifetime: "action" | "actor" | "persistent",

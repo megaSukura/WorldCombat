@@ -61,10 +61,9 @@ namespace PokemonSkills {
     stages("doodle", [{ level: 35, values: { cooldown: 80 } }, { level: 50, values: { cooldown: 68 } }]);
 
     describe("doodle", [
+        { key: "world", values: ["hold", "canvas", "squad"] },
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["canvas", "squad", "hold"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

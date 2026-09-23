@@ -138,13 +138,13 @@ namespace PokemonSkills {
     ]);
 
     describe("sludgebomb", [
-        { key: "description.0", values: ["blast", "burstRadius"] },
+        { key: "description.0", values: ["blast","burstRadius","maxTargets"] },
         { key: "description.1", values: ["fuseTicks", "push"] },
-        { key: "description.2", values: ["toxinChance", "venomTicks"] },
+        { key: "description.2", values: ["toxinChance","venomTicks"] },
         { key: "sealed.on", values: [], when: function (context) { return read(context.detail.values, ["sealed"]) === true; } },
         { key: "sealed.off", values: [], when: function (context) { return read(context.detail.values, ["sealed"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.burstRadius"] },
+        { key: "growth.0", values: ["tier.0.level","tier.0.blast","tier.0.burstRadius"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.blast", "tier.1.toxinChance"] }
     ]);
 }

@@ -65,7 +65,7 @@ namespace PokemonSkills {
     });
 
     describe(celebrateId, [
-        { key: "description.0", values: ["partyRadius", "spiritTicks"] },
+        { key: "description.0", values: ["partyRadius","spiritTicks"] },
         { key: "vigor.on", values: ["mend"], when: function (context) { return read(context.detail.values, ["vigor"]) === true; } },
         { key: "vigor.off", values: [], when: function (context) { return read(context.detail.values, ["vigor"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },

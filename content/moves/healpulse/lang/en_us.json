@@ -3,12 +3,12 @@
   "worldcombat.skill.healpulse.use.0": "Top an ally up from a distance",
   "worldcombat.skill.healpulse.use.1": "Send health before an ally goes down",
   "worldcombat.skill.healpulse.use.2": "A travelling rescue across open ground",
-  "worldcombat.skill.healpulse.description.0": "When the wave reaches the ally it restores %1$s of their maximum health; a higher Special Attack thickens it and a stronger bond makes it warmer.",
-  "worldcombat.skill.healpulse.description.1": "Castable within %1$s blocks; the wave flies at about %2$s blocks/tick.",
+  "worldcombat.skill.healpulse.description.0": "When the wave reaches the ally it restores up to %1$s of their maximum health (never past full); a higher Special Attack thickens it and a stronger bond makes it warmer.",
+  "worldcombat.skill.healpulse.description.1": "Castable within %1$s blocks on another ally (not on yourself); the wave flies at about %2$s blocks/tick.",
   "worldcombat.skill.healpulse.description.2": "wind-up %1$s and recovery %2$s.",
   "worldcombat.skill.healpulse.stance.overcharge": "Overcharge: x1.12 healing, but the wave leaves more slowly (x0.78) and the cooldown is slightly longer - the ally waits longer, for a thick top-up when it is safe.",
   "worldcombat.skill.healpulse.stance.light": "Light pulse: the wave travels faster with a shorter cooldown and slightly less healing - for first aid before the ally goes down.",
-  "worldcombat.skill.healpulse.timing": "Cast on an ally; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.healpulse.timing": "Cast on an ally; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.healpulse.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.healpulse.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.healpulse.value.heal": "Restore fraction",
@@ -26,5 +26,6 @@
   "worldcombat.skill.healpulse.preference.ai.maxChase.help": "The companion only sends a wave to an ally within this distance; lower keeps it close, higher reaches across a gap.",
   "world_combat.move.healpulse.text.wash": "The wave lands, +%1$s",
   "world_combat.move.healpulse.text.full": "Already at full health",
-  "world_combat.move.healpulse.text.fizzle": "The wave fizzles"
+  "world_combat.move.healpulse.text.fizzle": "The wave fizzles",
+  "worldcombat.skill.healpulse.description.travel": "The wave travels straight to the ally and cannot be intercepted; if the ally is down, gone or no longer friendly when it arrives, the heal is lost."
 }

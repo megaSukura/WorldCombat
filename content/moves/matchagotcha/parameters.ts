@@ -114,7 +114,7 @@ namespace PokemonSkills {
 
     describe("matchagotcha", [
         { key: "description.0", values: ["brew"] },
-        { key: "description.1", values: ["jet", "burst"] },
+        { key: "description.1", values: ["jet","burst"] },
         { key: "description.2", values: ["sap"] },
         { key: "description.3", values: ["scald", "brewtime"] },
         { key: "whisk.on", values: [], when: function (context) { return read(context.detail.values, ["whisk"]) === true; } },

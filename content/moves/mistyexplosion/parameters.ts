@@ -113,12 +113,12 @@ namespace PokemonSkills {
     defineDamage(mistyexplosionId, "bloom", { defenceCoefficient: 0.0045, rationale: "妖精薄雾的爆发对防御的穿透略强于默认，让特攻与体型的差别更可见。" });
 
     describe(mistyexplosionId, [
-        { key: "description.0", values: ["bloom"] },
+        { key: "description.0", values: ["bloom","maxTargets"] },
         { key: "description.1", values: ["blastRadius"] },
         { key: "description.2", values: ["terrainBoost"] },
         { key: "description.3", values: ["blindTicks"] },
-        { key: "description.4", values: ["mistRadius", "mistTicks"] },
-        { key: "description.5", values: ["tempo", "recharge"] },
+        { key: "description.4", values: ["mistRadius","mistTicks"] },
+        { key: "description.5", values: ["tempo","recharge"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["denseMist"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["denseMist"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "pp", "cooldown"] },

@@ -11,7 +11,7 @@
  * 数值来源（每一项读不同的精灵数据或现场事实，分散到不同参数）：
  *   rise       固定 2 级：原生「大幅提高攻击」的对位，是这招的身份而不是成长点。
  *   cuts       基础 2 + 速度偏移，夹 2..5：腿快的个体连斩更密（画面里的刃光数）。
- *   step       每斩步幅，速度与碰撞箱高度共同决定：越高快，一斩跨得越远。
+ *   step       合计进逼距离，由速度与碰撞箱高度共同决定，各斩均分。
  *   beat       斩与斩的间隔，速度越快越急；配置「进逼」每斩多花 2 刻。
  *   arc        刃风半径：碰撞箱高度决定，也是判定与表现共用的范围。
  *   hone       磨刃窗口：基础 240 刻 + 等级 ×4 + 物攻 ×0.6，夹 200..600；等级 30／50 阶梯再抬。
@@ -36,12 +36,12 @@ namespace PokemonSkills {
                 unit: " 斩",
                 description: "起势之后一气斩出几刀；速度越高斩得越密，画面里的刃光也越多。"
             }),
-        /** 每斩步幅：一斩跨出多远。 */
+        /** 合计进逼距离：各斩均分这段位移。 */
         step: formula(
             F.base(0.45).plus(F.stat("speed").minus(60).times(0.004)).plus(F.body("height").times(0.12)).clamp(0.3, 1.1).round(2),
-            "每斩步幅", {
+            "合计进逼距离", {
                 unit: " 格",
-                description: "「进逼」下每一斩向前压出的距离；速度与身板越大跨得越远。"
+                description: "「进逼」下一整支剑舞的合计位移，各斩均分；速度与身板越大跨得越远。"
             }),
         /** 斩击间隔：越快越急。 */
         beat: seconds(
@@ -89,9 +89,11 @@ namespace PokemonSkills {
     ]);
 
     describe("swordsdance", [
-        { key: "description.0", values: ["rise", "cuts"] },
+        { key: "description.0", values: ["rise","cuts"] },
         { key: "description.1", values: ["hone"] },
-        { key: "press.on", values: ["step", "beat"], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
+        { key: "description.stack", values: [] },
+        { key: "description.hold", values: [] },
+        { key: "press.on", values: ["step","beat"], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

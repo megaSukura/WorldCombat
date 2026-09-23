@@ -68,8 +68,8 @@ namespace PokemonSkills {
     });
 
     describe(screechId, [
-        { key: "description.0", values: ["drop", "ringing"] },
-        { key: "description.1", values: ["reach", "lane"] },
+        { key: "description.0", values: ["drop","ringing"] },
+        { key: "description.1", values: ["reach","lane"] },
         { key: "description.2", values: ["tempo", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

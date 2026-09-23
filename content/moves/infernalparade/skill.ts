@@ -21,7 +21,7 @@ namespace PokemonSkills {
     define({
         id: "infernalparade",
         name: "Infernal Parade",
-        description: "The user attacks with myriad fireballs. This may also leave the target with a burn. This move's power is doubled if the target has a status condition.",
+        description: "召出一队幽幽燃烧的鬼火，先散开再各自扭头追向目标扑上去。整队威力按团数均分；只要有一团命中，就有机会让目标灼伤。目标带着任意异常时整队翻倍。",
         uses: ["追踪的鬼火群", "对带异常者补刀", "把火点上再交给队友"],
         kind: "enemy",
         range: 13,

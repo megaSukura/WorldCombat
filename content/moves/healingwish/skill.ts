@@ -146,8 +146,8 @@ namespace PokemonSkills {
     define({
         id: healingwishId,
         cooldownParameter: "recharge", name: "治愈之愿",
-        description: "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，第一个来到它身边、又伤又病的伙伴（受伤或带有害状态效果）按其最大生命的比例回复并洗掉全部有害状态效果；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
-        uses: ["残血时把命换成伙伴的一次满血重生", "在必死前为缠斗中的伙伴留一颗愿望", "把倒下的地方变成一处救援点"],
+        description: "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，第一个来到它身边、受伤或带有害状态效果的伙伴按其最大生命的比例回复并清除全部有害状态效果；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
+        uses: ["残血时把命换成伙伴的一次大幅回复", "在必死前为缠斗中的伙伴留一颗愿望", "把倒下的地方变成一处救援点"],
         kind: "self", range: 0, prepare: 14, active: 1, recover: 0, cooldown: 320, style: "wish", maximumTicks: 300,
         defaults: { broadcast: false },
         fields: [flag("broadcast", "广愿")],

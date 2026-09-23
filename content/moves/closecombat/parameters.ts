@@ -148,10 +148,10 @@ namespace PokemonSkills {
     defineDamage(closecombatId, "flurry", {}, { contact: true });
 
     describe(closecombatId, [
-        { key: "description.0", values: ["flurry", "hits"] },
-        { key: "description.1", values: ["reach", "gap", "push"] },
+        { key: "description.0", values: ["flurry","hits"] },
+        { key: "description.1", values: ["reach","gap","push","advance"] },
         { key: "description.2", values: ["guardLoss", "poiseLoss"] },
-        { key: "wide.on", values: ["arc", "share"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
+        { key: "wide.on", values: ["arc","share"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.flurry", "tier.0.hits"] },

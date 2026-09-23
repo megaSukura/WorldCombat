@@ -23,7 +23,7 @@ namespace PokemonSkills {
         id: "strength",
         cooldownParameter: "recharge",
         name: "Strength",
-        description: "The target is slugged with a punch thrown at maximum power.",
+        description: "把全身力气压进一记正面直拳：沿一条直线出拳，命中线内的敌人就把它顶退，没有额外副作用；敌人退无可退时再补一记撞墙冲击。",
         uses: ["贴脸稳定输出的一记重拳", "把目标打向墙或障碍，多赚一次撞墙伤害", "没有副作用，随时可以用"],
         kind: "enemy",
         range: 2.2,

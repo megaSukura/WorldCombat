@@ -101,10 +101,10 @@ namespace PokemonSkills {
                 .times(F.when(F.var("ground.charged", { key: "worldcombat.skill.terrainpulse.value.charged" }), F.const(1.5), F.const(1)))
                 .clamp(12, 48).round(0),
             "爆发数量", { unit: " 个", description: "命中处炸起的粒子数量；特攻越高、场地加持时越密。粒子按它发射。" }),
-        // 地环半径：命中处那道贴地环的直径，也用于共鸣第二波的作用半径。
+        // 地环半径：命中处那道贴地环的半径，也用于共鸣第二波的作用半径。
         ring: formula(
             F.base(1.2).plus(F.level().minus(20).max(0).times(0.02)).clamp(1.2, 2.4).round(2),
-            "地环半径", { unit: " 格", description: "命中处贴地环的直径；共鸣时也用作第二波的作用半径。" }),
+            "地环半径", { unit: " 格", description: "命中处贴地环的半径；共鸣时也用作第二波的作用半径。" }),
         repeatDelay: hidden(8)
     });
 
@@ -119,7 +119,7 @@ namespace PokemonSkills {
     });
     describe("terrainpulse", [
         { key: "description.0", values: ["pulse"] },
-        { key: "description.1", values: ["charge", "reach"] },
+        { key: "description.1", values: ["charge","reach"] },
         { key: "description.2", values: ["ring"] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);

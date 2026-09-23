@@ -119,9 +119,9 @@ namespace PokemonSkills {
 
     describe("chillingwater", [
         { key: "description.0", values: ["drench"] },
-        { key: "description.1", values: ["atkDrop", "chillTicks"] },
+        { key: "description.1", values: ["atkDrop","chillTicks"] },
         { key: "description.2", values: ["reach", "velocity", "radius"] },
-        { key: "glaze.on", values: ["puddleRadius", "puddleTicks"], when: function (context) { return read(context.detail.values, ["glaze"]) === true; } },
+        { key: "glaze.on", values: ["puddleRadius","puddleTicks"], when: function (context) { return read(context.detail.values, ["glaze"]) === true; } },
         { key: "glaze.off", values: [], when: function (context) { return read(context.detail.values, ["glaze"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.drench"] },

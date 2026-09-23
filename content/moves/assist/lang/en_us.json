@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.assist.summary": "Calls nearby allies for help and randomly borrows one of the moves they have learned.",
+  "worldcombat.skill.assist.summary": "Call on nearby allies and borrow one of their learned moves to perform yourself; the borrowed move has limited reach and must be able to find a target, and it does not fire when nothing can be borrowed.",
   "worldcombat.skill.assist.use.0": "Call nearby allies",
   "worldcombat.skill.assist.use.1": "Borrow one ally move at random",
-  "worldcombat.skill.assist.description.0": "After calling for %1$s it borrows and performs one random move known by an ally inside the call radius; it does not fire when no ally answers.",
+  "worldcombat.skill.assist.description.0": "After calling for %1$s it randomly borrows one move an ally inside the call radius has learned and performs it itself; it does not fire when no ally or no borrowable move answers.",
   "worldcombat.skill.assist.description.1": "The call radius is %1$s, and the borrowed move cannot reach farther than %2$s.",
   "worldcombat.skill.assist.description.2": "Current call radius setting: %1$s. Calling farther covers more allies but takes longer.",
-  "worldcombat.skill.assist.description.3": "Calling again costs %1$s.",
+  "worldcombat.skill.assist.description.3": "The borrowed move spends none of the ally's PP, only %1$s PP of the user's; calling again takes %2$s.",
   "worldcombat.skill.assist.preference.callRadius": "Call radius",
   "worldcombat.skill.assist.preference.callRadius.help": "Higher hears farther allies and widens the pool, but the shout takes longer; lower acts faster but may find nothing when alone or spread out.",
   "worldcombat.skill.assist.value.call": "Call time",
@@ -13,5 +13,6 @@
   "worldcombat.skill.assist.value.span": "Borrow reach",
   "worldcombat.skill.assist.value.recharge": "Call again",
   "worldcombat.skill.assist.value.bonds": "Ally marks",
-  "world_combat.move.assist.text.borrow": "Assist used %1$s"
+  "world_combat.move.assist.text.borrow": "Assist used %1$s",
+  "worldcombat.skill.assist.description.filter": "Not every move can be borrowed: some are excluded, and a borrowed move must also be able to reach a target; if no such move remains, the shout comes to nothing."
 }

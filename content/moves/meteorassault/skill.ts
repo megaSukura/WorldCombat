@@ -20,9 +20,10 @@ namespace PokemonSkills {
     const meteorassaultSwingText = "world_combat.move.meteorassault.text.swing";
 
     define({
+        freeMovement: true,
         id: "meteorassault",
         name: "Meteor Assault",
-        description: "The user attacks wildly with its thick leek. The user can't move on the next turn, because the force of this move makes it stagger.",
+        description: "在同一条大弧上连续几下大力重挥，命中扇形里的所有对手；挥完之后自己被晃晕一段最长的力竭时间，无法行动也无法移动。",
         uses: ["近距离连续重挥", "一次扫到挤在面前的几个对手", "用最长的力竭换最高的爆发"],
         kind: "enemy",
         range: 3.6,

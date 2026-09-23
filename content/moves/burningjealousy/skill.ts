@@ -1,24 +1,9 @@
-/**
- * 妒火 / burningjealousy —— 世界内的动作。
- *
- * 核心念头：从身前窜出一团妒绿的火舌，扫过整片扇形；普通目标只是被烧痛，此刻正带着正面能力等级的目标
- * 会被妒火死死咬住、当场点燃——谁刚变强，火就专挑谁，而且它涨得越高，这一击越重、烧得越久。
- *
- * 两幕（提交后由本招自己驱动）：
- *   聚（提交前 windup）：身前的空气开始发绿、火点向张角边缘收拢，可免费打断、不花 PP。
- *   喷（execute）：朝目标方向张开一片扇形火舌，罩住范围内所有敌人；每个命中者按「正面等级合计」加重这一击，
- *       带着正面等级的直接挂上共享默认灼伤（CombatStatus.inflict，宝可梦同步为原生灼伤）。
- *
- * 与同族分开：热风是范围风、喷火是直线、熔岩风暴以自身为心；妒火是**朝身前的扇形惩罚**，只有变强的目标被点燃。
- *
- * 对宝可梦、原版生物、其他模组生物和玩家，伤害（hurt → PokemonDamage）与灼伤（CombatStatus）都走同一条路；
- * 只有属性相性/本系是宝可梦层。
- */
+/** burningjealousy：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     define({
         id: burningjealousyId,
         cooldownParameter: "recharge", name: "妒火",
-        description: "从身前窜出一团妒绿火舌扫过扇形：范围内的敌人受到特殊伤害；此刻正带着正面能力等级的目标会被妒火咬住、当场灼伤，而且它涨高的级数越多，这一击越重、烧得越久。",
+        description: "朝前喷出扇形火焰。目标的能力强化和药水、信标增益越多，这一击越重，并会留下灼伤。",
         uses: ["惩罚刚强化过的对手", "一次扫过身前挤成一排的敌人", "用灼伤压制正在铺垫的强化手"],
         kind: "enemy", range: 5, maxRange: 8, prepare: 7, active: 1, recover: 8, cooldown: 32,
         style: "fire", stationary: true, maximumTicks: 120,

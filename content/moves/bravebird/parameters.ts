@@ -134,11 +134,11 @@ namespace PokemonSkills {
         rationale: "俯冲的动量从上方灌下来，比平推更容易透进护甲，让速度差在伤害上更明显。" }, { contact: true });
 
     describe("bravebird", [
-        { key: "description.0", values: ["dive", "swoop", "pace", "collisionRadius"] },
-        { key: "description.1", values: ["altitude", "recoil", "pierceCount", "push"] },
+        { key: "description.0", values: ["dive","swoop","pace","collisionRadius"] },
+        { key: "description.1", values: ["altitude","recoil","pierceCount","push"] },
         { key: "high.on", values: [], when: function (context) { return read(context.detail.values, ["high"]) === true; } },
         { key: "high.off", values: [], when: function (context) { return read(context.detail.values, ["high"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.dive"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.dive", "tier.1.pierceCount"] }
     ]);

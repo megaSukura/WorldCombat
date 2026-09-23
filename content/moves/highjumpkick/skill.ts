@@ -45,10 +45,11 @@ namespace PokemonSkills {
     function highjumpkickAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.1, 0)); }
 
     define({
+        freeMovement: true,
         id: "highjumpkick",
         cooldownParameter: "recharge",
         name: "High Jump Kick",
-        description: "跳起后用膝盖撞对手进行攻击。如果撞偏则自己会受到伤害。",
+        description: "先垂直拔高、再直坠落膝的重击：顶点短暂滞空时把落点画给对手看，随后膝头朝下砸进落点。命中是全族最重的一记接触伤害；砸偏，整条腿硬磕地面，自伤最狠。",
         uses: ["用全族最重的一记接触伤害砸穿硬目标", "从上方压制一只贴脸的对手", "以一次高空跃击换取击退与身位"],
         kind: "enemy",
         range: 5.0,

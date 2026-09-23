@@ -4,10 +4,10 @@
   "worldcombat.skill.earthpower.use.1": "把贴身的对手顶离地面",
   "worldcombat.skill.earthpower.use.2": "跳过飞行或漂浮的目标，专打站桩的对手",
   "worldcombat.skill.earthpower.use.3": "在目标脚下留下裂地",
-  "worldcombat.skill.earthpower.description.0": "地脉顶起造成 %1$s 点特殊伤害。",
+  "worldcombat.skill.earthpower.description.0": "地脉顶起那一下造成约 %1$s 点特殊伤害。",
   "worldcombat.skill.earthpower.description.1": "目标脚下 %1$s 格范围内站在地上的敌人都被掀中，并被向上顶起 %2$s 格每刻的初速。",
-  "worldcombat.skill.earthpower.description.2": "有 %1$s 概率把目标特防压低 %2$s 级。",
-  "worldcombat.skill.earthpower.description.3": "起手 %1$s（对手走位窗口），射程 %2$s 格，裂痕停留 %3$s，掀起约 %4$s 块；当前裂隙式为 %5$s。",
+  "worldcombat.skill.earthpower.description.2": "每个被掀中的目标各有 %1$s 概率被压掉 %2$s 级特防；特防等级每低 1 级，其受到的特殊伤害更高。",
+  "worldcombat.skill.earthpower.description.3": "起手 %1$s（对手走位窗口），射程 %2$s 格；地脉把目标脚下约 %4$s 块地表翻成土石，%3$s 后原方块回来。",
   "worldcombat.skill.earthpower.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.earthpower.growth.0": "%1$s 级起地脉威力升至 %2$s、射程 %3$s 格。",
   "worldcombat.skill.earthpower.value.core": "地脉威力",
@@ -27,5 +27,6 @@
   "worldcombat.skill.earthpower.preference.ai.stillFirst": "先打站定的",
   "worldcombat.skill.earthpower.preference.ai.stillFirst.help": "开启后，移动慢的目标优先——地脉在目标脚下发动，站着不动的最不容易在亮记号时走开；关闭则所有目标同价。",
   "world_combat.move.earthpower.text.sunder": "特防 -%1$s",
-  "world_combat.move.earthpower.text.miss": "地脉从脚下过去"
+  "world_combat.move.earthpower.text.miss": "地脉从脚下过去",
+  "worldcombat.skill.earthpower.description.fissure": "开启裂隙式时，爆发半径与掀开的块数更大，但地脉威力略低、冷却略长，适合罩住目标脚边一小片；关闭时是一柱更窄更痛的地脉，适合点名单体。"
 }

@@ -24,10 +24,11 @@ namespace PokemonSkills {
     const flareblitzRecoilText = "world_combat.move.flareblitz.text.recoil";
 
     define({
+        freeMovement: true,
         id: "flareblitz",
         cooldownParameter: "recharge",
         name: "Flare Blitz",
-        description: "The user cloaks itself in fire and charges the target to inflict damage. This also damages the user quite a lot and may leave the target with a burn.",
+        description: "向目标冲撞，造成伤害、击退并有机会使其灼伤。命中后自身承受反伤。",
         uses: ["用一记燃烧的冲锋把贴脸的对手撞开", "给一个还没被烧的主力点上灼伤", "在开阔地把目标一路顶到队友或高台边上"],
         kind: "enemy",
         range: 5.4,
@@ -112,7 +113,7 @@ namespace PokemonSkills {
                     const already = target !== null && scope.valid(target) && CombatStatus.has(scope, target, "burn");
                     const landed = impact(current, hit, "flareblitz", power,
                         { damage: damageSpec("flareblitz", "blaze"), contact: true, recoil: recoil,
-                            status: already ? "" : "burn", chance: already ? 0 : chance });
+                            status: already ? "" : "burn", chance: already ? 0 : chance, statusTicks: burnTicks });
                     WorldFeedback.emit(scope, flareblitzScene, 1, point,
                         { moment: "impact", target: target ? String(target.ref()) : "", embers: embers, scale: scale,
                             intensity: Math.max(0.6, Math.min(2.4, power / 115)), burn: already ? 0 : 1 }, 32);

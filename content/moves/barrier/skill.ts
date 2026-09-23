@@ -112,7 +112,7 @@ namespace PokemonSkills {
         id: "barrier",
         cooldownParameter: "wait",
         name: "屏障",
-        description: "制造坚固的壁障，从而大幅提高自己的防御。",
+        description: "建立阻挡通行和视线的墙，同时提高自身防御。墙消失后，本次防御提升结束。",
         uses: ["在对手冲上来之前挡住正面的通道", "用高墙遮住视线，断掉远程的射界", "把身后的队友护在墙后，逼对手换路"],
         kind: "self",
         range: 1,

@@ -1,14 +1,4 @@
-/**
- * 描绘 / doodle — 伙伴 AI 用途与自己的出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、有一条通视直线，对手的特性读得出来且可以被抄，
- *   并且自己或身边至少一只同伴的特性与它不同（否则一次全是空操作）。
- * 对谁出手：当前威胁；特性已被压制、或整队都已经是这份特性的目标跳过。
- * 候选之间怎么排：身边有同伴需要换特性时 priority 62（描绘的价值在整队），只有自己需要时 45。
- * 够不到怎么办：reach 就是本招射程，共享任务先走近到能通视的射程再描。
- * 放完之后：自己和画幅内特性不同的同伴一起获得对手的特性，交回共享交战计划。
- * ai.maxChase 决定追多远；ai.leaveStation 决定驻守时是否愿意离位。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace CompanionBehavior {
     registerFact("world_combat:doodle-ability", function (access, actor, _argument) {
         return PokemonSkills.doodleAbility(access, actor);
@@ -21,6 +11,13 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.focus !== target.ref && distance(self.point, target.point) > ai<number>(item, "maxChase", 15)) return false;
         if (!world(context).clear(point(self.point), point(target.point))) return false;
+        if (domain(context, target) !== "cobblemon") {
+            if (status(context, self, "doodle")) return false;
+            const access = world(context), a = access.actor(self.ref), b = access.actor(target.ref);
+            if (!a || !b) return false;
+            const values = PokemonSkills.copiedNativeTrait(access, b);
+            return Object.keys(values).some(id => { const own = access.attributeValue(a, id); return own !== null && values[id] > own.value() + 0.0001; });
+        }
         const theirs = fact<string>(context, "world_combat:doodle-ability", target);
         if (theirs === null || !PokemonSkills.doodleCopyable(theirs)) return false;
         if (fact<string>(context, "world_combat:doodle-ability", self) !== theirs) return true;

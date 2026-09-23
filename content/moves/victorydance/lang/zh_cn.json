@@ -5,7 +5,7 @@
   "worldcombat.skill.victorydance.use.2": "用最隆重的舞把身位钉住、把气势摆出来",
   "worldcombat.skill.victorydance.description.0": "起式后攻击、防御、速度各提升 %1$s 级。",
   "worldcombat.skill.victorydance.description.1": "凯旋持续 %1$s；窗口走完时这三项等级收回。",
-  "worldcombat.skill.victorydance.rally": "凯旋存续期间，舞者每命中一个敌人，窗口就向上延续 %1$s，最多延续到 %2$s；到顶后不再延长。",
+  "worldcombat.skill.victorydance.rally": "凯旋存续期间，舞者每对一个敌人造成伤害，窗口就向上延续 %1$s，最多延续到 %2$s；到顶后不再延长。",
   "worldcombat.skill.victorydance.grand.on": "隆重：凯旋窗口 ×1.4；代价是起式 +4 刻、冷却 +20。",
   "worldcombat.skill.victorydance.grand.off": "简办：窗口按常规，出手更快。",
   "worldcombat.skill.victorydance.description.2": "起式 %1$s、收招 %2$s、冷却 %3$s。",

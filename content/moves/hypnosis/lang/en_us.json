@@ -4,7 +4,7 @@
   "worldcombat.skill.hypnosis.use.1": "Open a sleep window for an ally's Dream Eater or Nightmare",
   "worldcombat.skill.hypnosis.use.2": "Force an opponent to break line of sight or back off",
   "worldcombat.skill.hypnosis.description.0": "Gaze down an unobstructed line; the gaze reach is %1$s. Whether it takes hold is a contest of will, currently %2$s.",
-  "worldcombat.skill.hypnosis.description.1": "The target sleeps for %1$s and cannot act until awakened by a hit.",
+  "worldcombat.skill.hypnosis.description.1": "The target sleeps for %1$s: it cannot act or move, and any damage wakes it at once.",
   "worldcombat.skill.hypnosis.focus.on": "Steady gaze: success ×1.25 and sleep ×1.2, at the cost of reach ×0.85, +3 ticks wind-up and cooldown ×1.15.",
   "worldcombat.skill.hypnosis.focus.off": "Loose gaze: reach ×1.2, quick wind-up and short cooldown, at the cost of success ×0.8 and sleep ×0.8.",
   "worldcombat.skill.hypnosis.timing": "Wind-up %1$s, recovery %2$s, cost %3$s PP, cooldown %4$s.",
@@ -30,5 +30,6 @@
   "worldcombat.skill.hypnosis.preference.ai.leaveStation.help": "When on, the partner will also leave its post to gaze.",
   "world_combat.move.hypnosis.text.sleep": "Hypnosis (asleep %1$s s)",
   "world_combat.move.hypnosis.text.resist": "Suggestion scattered (%1$s%%)",
-  "world_combat.move.hypnosis.text.immune": "Sleep shrugged off"
+  "world_combat.move.hypnosis.text.immune": "Sleep shrugged off",
+  "worldcombat.skill.hypnosis.description.immune": "A target that is already asleep cannot be hypnotised again, and one immune to sleep shrugs the suggestion off entirely."
 }

@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: extrasensoryId,
         cooldownParameter: "recharge",
         name: "Extrasensory",
-        description: "The user attacks with an odd, unseeable power. This may also make the target flinch.",
+        description: "在选定地点留下看不见的力：先浮起一道极淡的幻影，片刻后力量从四面合拢，把那一小块地上的敌人一齐攥住并造成特殊伤害，有几率使其一滞。伏击式留得更久、合拢圈更大更重；即时式合拢更快、冷却更短。",
         uses: ["预判对手会跑到哪里，把看不见的力留在那个点上", "把沉睡或被困住的目标按在原地攥住", "把一小片挤在一起的敌人一起攥住"],
         kind: "point",
         range: 10,

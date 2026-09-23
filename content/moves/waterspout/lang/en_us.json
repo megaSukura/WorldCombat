@@ -5,8 +5,8 @@
   "worldcombat.skill.waterspout.use.2": "Wash a pursuer off your face",
   "worldcombat.skill.waterspout.use.3": "Deliver the biggest area water hit in the rain",
   "worldcombat.skill.waterspout.description.0": "The front sweeps the ring around the user: each foe inside takes about %1$s damage; the wall reaches about %2$s blocks and airborne and grounded targets are both swept. The target's Sp. Def, type and crit are settled on the hit.",
-  "worldcombat.skill.waterspout.description.1": "The wall takes about %1$s s to travel; a swept target is pushed about %2$s blocks along the wave and carries the soaked identity for about %3$s.",
-  "worldcombat.skill.waterspout.undertow.on": "Undertow style on: the wave deals ×0.82 and travels less far, but drags foes toward the user and soaks longer, with wind-up +2 ticks and cooldown +6 ticks.",
+  "worldcombat.skill.waterspout.description.1": "The wall takes about %1$s s to travel from the user's feet to its full reach; a swept target is pushed about %2$s blocks along the wave and carries the soaked identity for about %3$s, moving 15% slower while it lasts.",
+  "worldcombat.skill.waterspout.undertow.on": "Undertow style on: the wave deals x0.82 and reaches less far, but drags foes toward the user and soaks longer, with wind-up +2 ticks and cooldown +6 ticks.",
   "worldcombat.skill.waterspout.undertow.off": "Pushing style: a stronger wave that shoves foes away, to wash a ring off your face.",
   "worldcombat.skill.waterspout.timing": "Cast on the space within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
   "worldcombat.skill.waterspout.growth.0": "At level %1$s the cooldown drops to %2$s s.",
@@ -27,5 +27,6 @@
   "world_combat.move.waterspout.text.hit": "The tide swept %1$s",
   "world_combat.move.waterspout.text.miss": "The tide missed",
   "world_combat.move.waterspout.text.douse": "Doused",
-  "world_combat.move.waterspout.text.soak": "Soaked"
+  "world_combat.move.waterspout.text.soak": "Soaked",
+  "worldcombat.skill.waterspout.description.douse": "On a hit, a target that is burning has its burn removed and its fire put out; either way every foe the front sweeps is left soaked."
 }

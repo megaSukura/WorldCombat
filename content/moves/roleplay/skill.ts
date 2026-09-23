@@ -1,18 +1,4 @@
-/**
- * 扮演 / roleplay — 执行组织。
- *
- * 两幕：
- *   描（windup，提交前）：一道光绕着对手描出它的形状（`action.present` 预告，可被打断且不花代价）。
- *   披（提交后）：那张“扮相”沿两人连线飞回施法者脸上，披上后挂一层与对手相同的临时特性；施法者身上浮出
- *     该特性的名字，扮相期间绕身低密度发光。
- *
- * 特性层：走共享的 `NativeModifiers` ability 层（`{ ability }`，与腹鼓、纹理同一套临时覆盖机制），
- *   到期自动还原原生特性；因此被收回或重载的个体会回到自己的特性。宝可梦之外没有特性可言，
- *   `ready` 对非宝可梦直接拒绝（双方都必须是宝可梦），不浪费 PP。
- * 反制：目标特性正被胃液一类效果压掉时读不出特性；目标特性若带 failroleplay、自己若带 cantsuppress
- *   （`NativeAbilities` 的共享标记，当前没有特性声明）也会失败，保留原作的可复制/可压制规则。
- * 配置项 dwell（深扮 / 浅饰）改变维持时长与冷却。
- */
+/** Temporarily borrow a Pokémon’s Ability, or a non-Pokémon’s strongest attack, movement or defensive characteristic. */
 namespace PokemonSkills {
     export const roleplayScene = "world_combat:move_roleplay";
     export const roleplayMask = "world_combat:roleplay_mask";
@@ -36,8 +22,8 @@ namespace PokemonSkills {
         id: "roleplay",
         cooldownParameter: "recharge",
         name: "Role Play",
-        description: "扮演对手，让自己的特性暂时变得和对手相同。",
-        uses: ["借对手的特性打这一段", "把对手的强力特性复制到自己身上", "在开战前换成更合适的特性"],
+        description: "临时借用对手的特性；对普通生物则模仿其最突出的攻击、移动或防护特征。",
+        uses: ["借对手的特性打这一段", "把对手的强力特性复制到自己身上", "开战前先换成更合适的特性"],
         kind: "enemy",
         range: 8,
         maxRange: 15,
@@ -66,11 +52,12 @@ namespace PokemonSkills {
         ready: function (action) {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-ability";
+            if (String(actor.domain()) !== "cobblemon") return "no-ability";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("roleplay", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") return CombatCopies.differs(world, actor, PokemonSkills.copiedNativeTrait(world, target)) ? "" : "nothing-to-copy";
             const mine = roleplayAbility(world, actor), theirs = roleplayAbility(world, target);
             if (!theirs) return "target-suppressed";
             if (!NativeModifiers.abilityCopyable(world, target)) return "uncopyable";
@@ -91,6 +78,16 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (target === null || !world.valid(target) || body === null) { done(action); return; }
+            if (String(target.domain()) !== "cobblemon") {
+                const hold = Math.max(40, Math.round(p("roleplay", "hold", action)));
+                const values = PokemonSkills.copiedNativeTrait(world, target);
+                [actor].forEach(recipient => {
+                    const carrier = MobEffects.apply(world, recipient, roleplayMask, hold, 0);
+                    if (carrier) CombatCopies.apply(world, recipient, values, hold, "roleplay", MobEffects.anchor(carrier));
+                });
+                WorldFeedback.emit(world, roleplayScene, 1, body.position(), { moment: "don", target: String(actor.ref()), path: [String(target.ref()), String(actor.ref())], traits: 8, marks: 8, scale: 1 }, 30);
+                sound(action, "minecraft:entity.illusioner.cast_spell"); done(action); return;
+            }
             const ability = roleplayAbility(world, target);
             if (!ability || !roleplayAbilityPattern.test(ability) || !NativeModifiers.abilitySuppressible(world, actor)
                 || !NativeModifiers.abilityCopyable(world, target)) {

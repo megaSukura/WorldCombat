@@ -162,9 +162,9 @@ namespace PokemonSkills {
     defineDamage("pinmissile", "quill", {});
 
     describe("pinmissile", [
-        { key: "description.0", values: ["quill", "shots"] },
+        { key: "description.0", values: ["quill","shots"] },
         { key: "description.1", values: ["gap", "velocity", "reach", "turn"] },
-        { key: "description.2", values: ["radius", "pins", "stick"] },
+        { key: "description.2", values: ["radius","pins","stick"] },
         { key: "barbed.on", values: [], when: function (context) { return read(context.detail.values, ["barbed"]) === true; } },
         { key: "barbed.off", values: [], when: function (context) { return read(context.detail.values, ["barbed"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

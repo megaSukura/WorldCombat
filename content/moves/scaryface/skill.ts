@@ -6,7 +6,7 @@ namespace PokemonSkills {
         id: scaryfaceId,
         cooldownParameter: "recharge",
         name: "鬼面",
-        description: "吓退范围内的一个对手，让它短时间步伐迟滞；被吓住的状态结束时速度恢复。",
+        description: "吓退范围内的一个对手，让它短时间步伐迟滞。被吓住的状态结束时，速度一起恢复。",
         uses: ["拦下一个冲得最快、最麻烦的对手", "在被近身前先把对方拖慢", "为队友争取拉开距离的时间"],
         kind: "enemy",
         range: 6,

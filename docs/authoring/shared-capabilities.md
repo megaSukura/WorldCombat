@@ -7,6 +7,7 @@
 | 逐个目标计算、条件公式、配置分支与详情悬浮 | [参数上下文](../../content/library/skills/parameters.ts)和 [Formula](../../content/mechanisms/formula.ts)。同一公式服务执行与说明；`withTarget` 提供该次命中的目标，`defineFacts` 扩展原生之外的事实。`F.known` 区分未知与已知零值，`F.choice` 读取具名选项。 |
 | 独立伤害公式、按另一能力结算、固定生命伤害 | [PokemonDamage](../../content/mechanisms/pokemon-damage.ts)。每段声明自己的公式；固定生命值用 `fixed` 并显式选择属性相性政策。实际损血看 `onDamageApplied`，可按动作、招式、伤害段过滤。 |
 | 共享状态、临时能力等级与失败反应 | [CombatStatus](../../content/mechanisms/combat-status.ts)、[NativeEffects](../../content/mechanisms/native-effects.ts)。MC 效果标签表达身份；默认载体、变体、自定义行为均可组合。临时等级用 `boostWindow`，清零/复制走对应共享入口。拒绝后的反应接 `CombatStatus.rejected`，使用事件给出的具体原因和载体。 |
+| 临时借用原生属性、针对已观察伤害提供防护 | [CombatCopies](../../content/mechanisms/combat-copies.ts)。属性快照以所属效果的临时修饰表达，到期或载体失效时回收，装备与其他效果继续参与计算；内容选择复制哪些属性、受益对象、时限和伤害类型。 |
 | 天气、地面场景、陷阱、屏障和环境采样 | [WorldEffects](../../content/mechanisms/world-effects.ts)、[WorldEnvironment](../../content/mechanisms/world-environment.ts)。生产者声明身份与类别；消费者按标签和实际位置查询。需要施法者退场后继续存在的场景，明确选择 `detachedField`。 |
 | 地形写入与原生实体交付 | [世界 SDK](../../sdk/core/world.d.ts)、[LivingActions](../../content/mechanisms/living-actions.ts)。地形回执列出成功格与跳过原因；是否允许跳过由调用者决定。友方投射交付可设置 `hitAllies`，命中后的用途仍由回调决定。 |
 | 装备转手、消耗、树果、原生队伍 | [NativeItems](../../content/mechanisms/native-items.ts)、[队伍接棒库](../../content/library/skills/party-relay.ts)。以当前槽位快照进行条件写入，按颗操作保留余量与组件；先检查原生操作回执再结算收益。树果基本摄食效果可注册，各招保留自己的摄取规则。 |

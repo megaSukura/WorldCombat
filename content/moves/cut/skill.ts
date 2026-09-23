@@ -63,7 +63,7 @@ namespace PokemonSkills {
         id: cutId,
         cooldownParameter: "recharge",
         name: "Cut",
-        description: "The target is cut with a scythe, a claw, or the like to inflict damage.",
+        description: "压低身子推出一趟贴地的宽横斩：身前扇形里的对手各吃一记接触斩击，弧内的矮草、花叶也会被顺手割掉。它是全族最快、最便宜、覆盖面最广的斩击——横扫形态扫得更开、割得更多，狠劈形态收得更窄但每一下更重。",
         uses: ["贴地横斩，扫倒身前一片", "顺手割掉弧内的草叶", "最便宜最快的一记斩击"],
         kind: "enemy",
         range: 2.4,

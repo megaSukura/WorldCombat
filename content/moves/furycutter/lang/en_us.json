@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.furycutter.summary": "Successive hits increase the number of strikes. Missing or using another move resets the buildup.",
-  "worldcombat.skill.furycutter.description.0": "Each cut deals %1$s contact damage, so more cuts bite deeper.",
+  "worldcombat.skill.furycutter.description.0": "Each cut deals about %1$s contact slashing damage; the more cuts, the deeper the total.",
   "worldcombat.skill.furycutter.description.1": "Consecutive hits double the segment count: 1 cut, 2 cuts, then %1$s cuts - the segment count is the number of times damage is really settled.",
-  "worldcombat.skill.furycutter.description.2": "The chain survives as long as you keep cutting within %1$s; a whiff or any other committed move clears it at once.",
+  "worldcombat.skill.furycutter.description.2": "The chain lasts while you keep landing cuts within %1$s, and each landing pass resets the clock; a whiff, any other move, or the window running out clears it at once.",
   "worldcombat.skill.furycutter.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.furycutter.growth.0": "From level %1$s each cut rises to %2$s.",
   "worldcombat.skill.furycutter.growth.1": "From level %1$s the cutting reach extends to %2$s blocks.",

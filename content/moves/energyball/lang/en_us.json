@@ -3,7 +3,7 @@
   "worldcombat.skill.energyball.use.0": "A heavy hit while standing in greenery",
   "worldcombat.skill.energyball.use.1": "Mid-range single-target fire that wears down Sp. Def",
   "worldcombat.skill.energyball.use.2": "Leave a fleeting patch of growth where it lands",
-  "worldcombat.skill.energyball.description.0": "The ball deals %1$s special damage.",
+  "worldcombat.skill.energyball.description.0": "Hits a single target for about %1$s special damage.",
   "worldcombat.skill.energyball.description.1": "At cast it draws from nature within %2$s blocks: each source adds %1$s power, up to 90 sources.",
   "worldcombat.skill.energyball.description.2": "It has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
   "worldcombat.skill.energyball.description.3": "The ball flies at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius; the bloom lasts %4$s; deeproot is currently %5$s.",

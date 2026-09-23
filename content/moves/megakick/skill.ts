@@ -20,10 +20,11 @@ namespace PokemonSkills {
     const megakickMissText = "world_combat.move.megakick.text.miss";
 
     define({
+        freeMovement: true,
         id: "megakick",
         cooldownParameter: "recharge",
         name: "Mega Kick",
-        description: "The target is attacked by a kick launched with muscle-packed power.",
+        description: "把一条腿整条拉满、身体后仰，再连人带腿撞穿对手，力量大到把目标直接踢飞出去。起手长、冷却久、PP 只有 5；踢空后收不住要多冲一段——对手有真实的余地让开，让开就是这一招的代价。",
         uses: ["一脚把单体目标踢出阵型", "用大起手逼对手让位，再收势", "对残血目标做一记终结式重踢"],
         kind: "enemy",
         range: 2.7,

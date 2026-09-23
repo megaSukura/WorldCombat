@@ -123,8 +123,9 @@ namespace PokemonSkills {
     ]);
 
     describe(dreameaterId, [
-        { key: "description.0", values: ["dream", "sap"] },
+        { key: "description.0", values: ["dream","sap"] },
         { key: "description.1", values: ["reach"] },
+        { key: "description.additional", values: [] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

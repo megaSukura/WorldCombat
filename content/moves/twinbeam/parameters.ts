@@ -109,8 +109,8 @@ namespace PokemonSkills {
     ]);
 
     describe(twinbeamId, [
-        { key: "description.0", values: ["ray", "reach"] },
-        { key: "description.1", values: ["gap", "resonance"] },
+        { key: "description.0", values: ["ray","reach"] },
+        { key: "description.1", values: ["gap","resonance"] },
         { key: "resonance.on", values: [], when: function (context) { return read(context.detail.values, ["resonance"]) === true; } },
         { key: "resonance.off", values: [], when: function (context) { return read(context.detail.values, ["resonance"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

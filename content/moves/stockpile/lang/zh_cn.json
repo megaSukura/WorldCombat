@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.stockpile.summary": "一口口把力压进身体，身上箍起一层琥珀色的光壳：每蓄一次防御与特防各 +1，最多 3 层。它在本组里唯一可以连放、层数会掉——被击中时崩掉一层、那份等级跟着掉，壳全崩完收益归零。破层去向可选回气或震开。",
+  "worldcombat.skill.stockpile.summary": "一口口把力压进身体，箍起一层琥珀色的光壳：每蓄一次防御与特防各 +1，最多 3 层，可连续蓄力。壳每次被真实伤害崩掉一层、对应等级跟着掉，全崩完收益归零；到期或被清除时剩余层数与等级一并收回。破层去向可选回气或震开。",
   "worldcombat.skill.stockpile.use.0": "开打前连蓄几层，把两项防护堆到顶",
   "worldcombat.skill.stockpile.use.1": "连放三层后再接战，扛住第一轮爆发",
   "worldcombat.skill.stockpile.use.2": "把层数留着当会掉的保险，让对手先花几下打碎它",
   "worldcombat.skill.stockpile.description.0": "每蓄一层把防御提升 %1$s 级、特防提升 %2$s 级，最多 3 层。",
   "worldcombat.skill.stockpile.description.1": "压住的力持续约 %1$s。",
   "worldcombat.skill.stockpile.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
-  "worldcombat.skill.stockpile.break.mend": "破层去向「回气」：每崩掉一层按最大生命少量回复，适合拉锯续命。",
-  "worldcombat.skill.stockpile.break.burst": "破层去向「震开」：每崩掉一层把出手者推开一段，适合拉开距离、断开连击。",
+  "worldcombat.skill.stockpile.break.mend": "破层去向「回气」：每崩掉一层按最大生命回复 %1$s，适合拉锯续命。",
+  "worldcombat.skill.stockpile.break.burst": "破层去向「震开」：每崩掉一层把出手者沿背离方向推开 %1$s 格，适合拉开距离、断开连击。",
   "worldcombat.skill.stockpile.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.stockpile.growth.0": "达到 %1$s 级，蓄力延长至 %2$s、冷却缩短至 %3$s 秒。",
   "worldcombat.skill.stockpile.growth.1": "达到 %1$s 级，蓄力进一步延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -34,5 +34,6 @@
   "world_combat.move.stockpile.text.store": "蓄力（%1$s 层）",
   "world_combat.move.stockpile.text.crack": "光壳崩层（剩 %1$s 层）",
   "world_combat.move.stockpile.text.scatter": "光壳散尽（%1$s 层）",
-  "effect.world_combat.stockpile_charge": "蓄力"
+  "effect.world_combat.stockpile_charge": "蓄力",
+  "worldcombat.skill.stockpile.description.crack": "每次实际受到伤害会崩掉一层：对应的一级防御与特防随之失去，并按破层去向生效；三层全崩后光壳消失、收益归零。壳存续到期或被清除时，剩余的层数与等级也一并收回。"
 }

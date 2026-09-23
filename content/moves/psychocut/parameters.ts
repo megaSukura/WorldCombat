@@ -120,7 +120,7 @@ namespace PokemonSkills {
     describe(psychocutId, [
         { key: "description.0", values: ["blade"] },
         { key: "description.1", values: ["flight", "reach", "guide"] },
-        { key: "description.2", values: ["arc", "echo"] },
+        { key: "description.2", values: ["arc","echo","maxTargets"] },
         { key: "keen.on", values: [], when: function (context) { return read(context.detail.values, ["keen"]) === true; } },
         { key: "keen.off", values: [], when: function (context) { return read(context.detail.values, ["keen"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

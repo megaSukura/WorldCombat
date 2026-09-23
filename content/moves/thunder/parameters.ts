@@ -63,7 +63,8 @@ namespace PokemonSkills {
 
     describe("thunder", [
         { key: "description.0", values: ["bolt"] },
-        { key: "description.1", values: ["strikeRadius", "thunderChance"] },
-        { key: "description.2", values: ["boltRange", "chargeTicks"] }
+        { key: "description.1", values: ["strikeRadius","thunderChance"] },
+        { key: "description.2", values: ["boltRange","chargeTicks"] },
+        { key: "timing", values: ["recover","pp","cooldown"] }
     ]);
 }

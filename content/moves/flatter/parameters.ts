@@ -70,8 +70,8 @@ namespace PokemonSkills {
     });
 
     describe("flatter", [
-        { key: "description.0", values: ["gift", "pin", "duration"] },
-        { key: "description.1", values: ["chance", "recoil"] },
-        { key: "description.2", values: ["telegraph", "aftermath", "wait", "range"] }
+        { key: "description.0", values: ["gift","pin","duration"] },
+        { key: "description.1", values: ["chance","recoil"] },
+        { key: "description.2", values: ["telegraph","aftermath","wait","range"] }
     ]);
 }

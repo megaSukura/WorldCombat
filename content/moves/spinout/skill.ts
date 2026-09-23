@@ -21,10 +21,11 @@ namespace PokemonSkills {
     const spinoutMissText = "world_combat.move.spinout.text.miss";
 
     define({
+        freeMovement: true,
         id: "spinout",
         cooldownParameter: "recharge",
         name: "Spin Out",
-        description: "The user spins furiously by straining its legs, inflicting damage on the target. This also harshly lowers the user's Speed stat.",
+        description: "压低重心、双脚磨地冒火星，然后像陀螺一样贴地高速旋进目标：撞中打出高额单发并把目标撞开，撞击点地面磨出一圈痕；转势收不住，自身速度大幅下降 2 级。预旋式先原地打转蓄势，冲得更远更重，代价是起手与冷却更长。",
         uses: ["贴地旋转冲进一个目标，打出高额单发", "把目标撞开、自己转向下一处", "用一次最贵的自我减速换掉关键目标"],
         kind: "enemy",
         range: 3.0,

@@ -70,6 +70,7 @@ namespace PokemonSkills {
     }
 
     define({
+        requiresGround: true,
         id: "earthquake",
         name: "Earthquake",
         description: "把重量砸进大地，脚下整片地面同时掀起：只命中站在地上的敌人，被掀中的人向上抛起并被向外推开；掀完在地面留下放射状深缝。余震式主震更轻，但过一会儿再掀一次。",

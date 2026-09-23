@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: triplekickId,
         cooldownParameter: "recharge",
         name: "Triple Kick",
-        description: "A consecutive three-kick attack that becomes more powerful with each successful hit.",
+        description: "正面站定，朝对手身前的窄走廊一脚接一脚地直踢：每一脚独立掷命中，每中一脚下一脚更重（第 n 脚递增）。落空这串就停。抽射式踢得更重、顶得更远，但够得近、连得慢。",
         uses: ["朝前的窄走廊连踢三脚", "每中一脚，下一脚更重", "贴地快踢，冷却短"],
         kind: "enemy",
         range: 2.3,

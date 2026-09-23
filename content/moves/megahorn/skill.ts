@@ -39,10 +39,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "megahorn",
         cooldownParameter: "recharge",
         name: "Megahorn",
-        description: "Using its tough and impressive horn, the user rams into the target with no letup.",
+        description: "低头刨地蓄足势，再沿身前一条又长又窄的直线把角狠狠送进去：正面只有一条很窄的角线，侧身或走开就能让这一记落空；扎中后可以把目标挑上空中，也可以把角留在伤口里持续减速它。",
         uses: ["长蓄势换一记最重的单点直刺", "把正面的目标挑到空中、脱离阵地", "深植式钉住目标给队友创造机会"],
         kind: "enemy",
         range: 3.4,

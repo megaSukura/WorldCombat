@@ -40,10 +40,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "ragingbull",
         cooldownParameter: "recharge",
         name: "怒牛",
-        description: "低头压角沿直线冲出去：撞开路上的一切，角尖把沿途的反射壁、光墙与极光幕整片震碎。属性随形态在普通、格斗、火与水之间变化。",
+        description: "低头压角沿直线冲出去：撞开路上的一切，角尖把沿途的反射壁、光墙与极光幕整片震碎。属性随形态在普通、格斗、火与水之间变化。全族唯一「人也在动」的一招。",
         uses: ["沿直线撞穿一排敌人", "一路把屏障撞碎", "属性随形态变化的重型起手"],
         kind: "enemy",
         range: 5.0,

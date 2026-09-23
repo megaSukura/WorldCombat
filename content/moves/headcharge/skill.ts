@@ -43,11 +43,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "headcharge",
         cooldownParameter: "recharge",
         name: "Head Charge",
-        description: "The user charges its head into the target, using its powerful guard hair. This also damages the user a little.",
-        uses: ["沿直线一次撞飞挡路的一串人", "用最厚的头毛换取本族最轻的单次反噬", "锁定式追击一个会侧移的对手"],
+        description: "沿冲锋路线撞击多个敌人，每人只撞一次，命中不会停止冲锋。每撞中一个目标，都会按它实际受到的伤害结算反伤。",
+        uses: ["沿直线一次撞飞挡路的一串人", "以反伤为代价发起强力冲撞", "锁定式追击一个会侧移的对手"],
         kind: "enemy",
         range: 6.1,
         maxRange: 9.5,

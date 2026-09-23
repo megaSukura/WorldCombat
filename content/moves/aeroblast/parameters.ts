@@ -135,9 +135,9 @@ namespace PokemonSkills {
     ]);
 
     describe(aeroblastId, [
-        { key: "description.0", values: ["blast", "radius"] },
-        { key: "description.1", values: ["reach", "flight", "push"] },
-        { key: "description.2", values: ["ring", "echo"] },
+        { key: "description.0", values: ["blast","radius"] },
+        { key: "description.1", values: ["reach","flight","push"] },
+        { key: "description.2", values: ["ring","echo","ringCap"] },
         { key: "charge.on", values: [], when: function (context) { return read(context.detail.values, ["charge"]) === true; } },
         { key: "charge.off", values: [], when: function (context) { return read(context.detail.values, ["charge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

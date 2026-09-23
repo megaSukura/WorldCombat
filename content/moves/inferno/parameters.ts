@@ -112,10 +112,10 @@ namespace PokemonSkills {
         { key: "description.0", values: ["pyre"] },
         { key: "description.1", values: ["reach", "bloomRadius", "fuse"] },
         { key: "rule.guaranteed", values: [] },
-        { key: "pin.on", values: ["pinTicks", "pinInterval", "pinEcho"],
+        { key: "pin.on", values: ["pinTicks","pinInterval","pinEcho"],
             when: function (context) { return read(context.detail.values, ["pin"]) === true; } },
         { key: "pin.off", values: [], when: function (context) { return read(context.detail.values, ["pin"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pyre", "tier.0.fuse"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.pyre", "tier.1.bloomRadius"] }
     ]);

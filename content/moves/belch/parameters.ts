@@ -121,10 +121,11 @@ namespace PokemonSkills {
 
     describe("belch", [
         { key: "description.0", values: ["gas"] },
-        { key: "description.1", values: ["reach", "arc", "poisonChance", "poisonTicks"] },
+        { key: "description.1", values: ["reach","arc","poisonChance","poisonTicks"] },
+        { key: "description.targets", values: ["maxTargets"] },
         { key: "acrid.on", values: [], when: function (context) { return read(context.detail.values, ["acrid"]) === true; } },
         { key: "acrid.off", values: [], when: function (context) { return read(context.detail.values, ["acrid"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gas"] }
     ]);
 }

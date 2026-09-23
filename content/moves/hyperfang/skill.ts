@@ -27,10 +27,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "hyperfang",
         cooldownParameter: "recharge",
         name: "Hyper Fang",
-        description: "The user bites hard on the target with its sharp front fangs. This may also make the target flinch.",
+        description: "扑上去一口咬死，牙齿不松、左右猛甩：这一口是全族最重的直接伤害，甩出的侧向位移把目标从站位里晃开，并按体重把它钉住一小会儿；甩得够狠就把它甩懵，打断它正在做的事。代价是没有持久削弱。",
         uses: ["用全族最重的单口直接伤害咬实", "咬住猛甩，把目标钉住一会儿", "甩懵对手，打断它正在做的事"],
         kind: "enemy",
         range: 2.0,

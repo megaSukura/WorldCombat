@@ -77,9 +77,11 @@ namespace PokemonSkills {
             "冷却", "两次吐丝之间的等待；等级越高越熟练。")
     });
     describe(toxicthreadId, [
-        { key: "description.0", values: ["speedDrop", "venomTicks"] },
-        { key: "description.1", values: ["reel", "anchorTicks"] },
-        { key: "description.2", values: ["strandSpeed", "strandRadius", "reach", "range", "tempo"] },
+        { key: "description.0", values: ["speedDrop","venomTicks"] },
+        { key: "description.1", values: ["reel","anchorTicks"] },
+        { key: "description.2", values: ["strandSpeed","strandRadius","reach","tempo"] },
+        { key: "description.blocked", values: [] },
+        { key: "description.laced", values: [] },
         { key: "reel.on", values: [], when: function (context) { return read(context.detail.values, ["reel"]) === true; } },
         { key: "reel.off", values: [], when: function (context) { return read(context.detail.values, ["reel"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

@@ -117,9 +117,9 @@ namespace PokemonSkills {
     defineDamage("grassknot", "snare", {});
 
     describe("grassknot", [
-        { key: "description.0", values: ["snare", "snareRadius"] },
+        { key: "description.0", values: ["snare","snareRadius"] },
         { key: "description.1", values: ["snareDelay", "patchTicks"] },
-        { key: "description.2", values: ["rootTicks", "tripTicks", "tripStages"] },
+        { key: "description.2", values: ["rootTicks","tripTicks","tripStages"] },
         { key: "knot.on", values: [], when: function (context) { return read(context.detail.values, ["knot"]) === true; } },
         { key: "knot.off", values: [], when: function (context) { return read(context.detail.values, ["knot"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

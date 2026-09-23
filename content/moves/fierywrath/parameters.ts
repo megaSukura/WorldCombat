@@ -92,8 +92,8 @@ namespace PokemonSkills {
     describe("fierywrath", [
         { key: "description.0", values: ["wrath", "auraRadius"] },
         { key: "description.1", values: ["edgeKeep", "push"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks"] },
-        { key: "description.3", values: ["afterglow", "lingerTicks", "pulseTicks"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks"] },
+        { key: "description.3", values: ["afterglow","lingerTicks","pulseTicks"] },
         { key: "linger.on", values: [], when: function (context) { return read(context.detail.values, ["linger"]) === true; } },
         { key: "linger.off", values: [], when: function (context) { return read(context.detail.values, ["linger"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

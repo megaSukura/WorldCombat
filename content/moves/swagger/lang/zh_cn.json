@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.swagger.summary": "激怒对手，使其混乱；因为愤怒，对手的攻击会大幅提高。",
+  "worldcombat.skill.swagger.summary": "激怒单个对手：送给它数级攻击、让它陷入混乱，并把非玩家目标的仇恨拉向自己。被点着的目标每次出手可能作废，打中敌人时还会被自己抬高的攻击反噬；攻击提升不会随混乱结束而回退。",
   "worldcombat.skill.swagger.use.0": "把重击手的火力引向自己",
   "worldcombat.skill.swagger.use.1": "给难缠的目标制造失手窗口",
   "worldcombat.skill.swagger.use.2": "在队友集火前先把对手点着",
-  "worldcombat.skill.swagger.description.0": "点燃目标的怒火：送给它 %1$s 级攻击，并让它陷入混乱约 %2$s 秒。",
-  "worldcombat.skill.swagger.description.1": "被点着的目标每次出手有 %1$s%% 的几率被怒火冲昏、这次出手作废；它打中敌人时还会被怒火反噬，自伤约为自身最大生命的 %2$s%%（再按当前攻击放大）。",
+  "worldcombat.skill.swagger.description.0": "点燃目标的怒火：送给它 %1$s 级攻击，并让它陷入混乱约 %2$s 秒；它接下来打人更疼，被怒火反噬时也按这份被抬高的攻击放大。",
+  "worldcombat.skill.swagger.description.1": "怒火期间，目标每次出手有 %1$s%% 的几率被怒火冲昏、本次出手作废；它每次打中非友方时都会被怒火反噬，自伤约为自身最大生命的 %2$s%%，再按其当前攻击放大 0.4–2.5 倍。",
   "worldcombat.skill.swagger.description.2": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒；射程 %4$s 格。尖刻挑衅会加重礼物与反噬、缩短怒火；冷嘲热讽相反。",
   "worldcombat.skill.swagger.timing": "短起手、短收招；一次只对单体生效，之后靠冷却限制节奏。",
   "worldcombat.skill.swagger.value.chance": "失手几率",
@@ -23,5 +23,6 @@
   "world_combat.move.swagger.text.rage": "怒火中烧（攻击 +%1$s）",
   "world_combat.move.swagger.text.resist": "不为所动（攻击 +%1$s）",
   "world_combat.move.swagger.text.recoil": "怒火反噬 -%1$s",
-  "effect.world_combat.swagger_confusion": "虚张声势·混乱"
+  "effect.world_combat.swagger_confusion": "虚张声势·混乱",
+  "worldcombat.skill.swagger.description.sustain": "对非玩家目标，挑衅还会把它的仇恨拉向施放者。攻击等级不会随混乱结束而回退，重复施放会继续叠加攻击并刷新混乱；混乱若被守护效果挡下，攻击提升仍然生效。"
 }

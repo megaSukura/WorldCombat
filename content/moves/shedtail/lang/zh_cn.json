@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.shedtail.summary": "削掉自己一半生命，在原地留下一条会拖住敌人的尾巴，自己沿选定方向抽身离场；有后备时直接与待命的一只换手。尾巴在被打碎或自行消散前，会把附近的敌人重新引向自己。",
-  "worldcombat.skill.shedtail.description.0": "支付 %1$s 最大生命，在脚下留下一条拥有你最大生命 %2$s 的尾巴。",
-  "worldcombat.skill.shedtail.description.1": "自己沿选定方向抽身 %1$s 格；尾巴每 20 刻把 %2$s 格内的敌人引向自己，最多存在 %3$s。",
+  "worldcombat.skill.shedtail.summary": "削掉自己一半生命，在原地留下一条会拖住敌人的尾巴，自己沿选定方向抽身离场；有后备时直接与待命的一只换手。尾巴在被打碎或自行消散前，会把附近的敌人重新引向尾巴。",
+  "worldcombat.skill.shedtail.description.0": "支付 %1$s 最大生命，在原地脚下留下一条拥有你最大生命 %2$s 生命值的尾巴；尾巴会被敌人攻击，生命耗尽即被打碎。",
+  "worldcombat.skill.shedtail.description.1": "自己沿选定方向抽身 %1$s 格；尾巴每 20 刻把 %2$s 格内的敌人重新引向尾巴，最多存在 %3$s，被打碎或时间走完即结束。",
   "worldcombat.skill.shedtail.timing": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.shedtail.use.0": "被打崩前脱身，把追兵留给一条尾巴",
   "worldcombat.skill.shedtail.use.1": "在狭窄地形用尾巴堵住追路",
@@ -27,5 +27,6 @@
   "world_combat.move.shedtail.text.shed": "断尾 · 留下一条尾巴",
   "world_combat.move.shedtail.text.break": "断尾被咬碎",
   "world_combat.move.shedtail.text.expire": "断尾消散",
-  "world_combat.move.shedtail.text.switch": "断尾 · 换手"
+  "world_combat.move.shedtail.text.switch": "断尾 · 换手",
+  "worldcombat.skill.shedtail.description.additional": "队伍里还有可上场的后备时，由后备在你撤离的落点登场；尾巴留在原地，不随你换下或离场消失。尾巴存在期间无法再次断尾。"
 }

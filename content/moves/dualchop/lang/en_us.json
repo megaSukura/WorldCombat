@@ -3,7 +3,7 @@
   "worldcombat.skill.dualchop.use.0": "Plant and chop the same spot twice",
   "worldcombat.skill.dualchop.use.1": "Crack the ground first, then chase the crack on the second chop",
   "worldcombat.skill.dualchop.use.2": "Split style chops a small forward patch at once",
-  "worldcombat.skill.dualchop.description.0": "Power per chop %1$s (physical), engage range %2$s blocks, chop angle %3$s degrees, up to %4$s targets per cast.",
+  "worldcombat.skill.dualchop.description.0": "Each chop deals about %1$s physical damage; engage range %2$s blocks, chop angle %3$s degrees, up to %4$s targets per cast.",
   "worldcombat.skill.dualchop.description.1": "Gap between chops %1$s; once the first lands the second gains up to +%2$s power, and the first shoves the target %3$s blocks.",
   "worldcombat.skill.dualchop.description.2": "The first chop leaves a %1$s-block ground crack that lasts %2$s before the original blocks return.",
   "worldcombat.skill.dualchop.breach.on": "Breach style now: both chops strike one narrow face and the second tears deeper on the crack; narrow, single-target, with a slightly longer gap and windup.",
@@ -33,5 +33,6 @@
   "worldcombat.skill.dualchop.preference.ai.finishLow.help": "When on, low-health targets rank higher so the two chops finish them; when off, all targets rank the same.",
   "worldcombat.skill.dualchop.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.dualchop.preference.ai.leaveStation.help": "When on, the companion may leave its post to chop; when off, it only casts at what it can reach from where it stands.",
-  "world_combat.move.dualchop.text.breach": "Second chop tears along the crack"
+  "world_combat.move.dualchop.text.breach": "Second chop tears along the crack",
+  "worldcombat.skill.dualchop.description.3": "Each chop sweeps the forward cone and every target is struck once per chop; leaving the cone during the gap dodges the second blow."
 }

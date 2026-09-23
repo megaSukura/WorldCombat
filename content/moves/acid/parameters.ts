@@ -123,9 +123,10 @@ namespace PokemonSkills {
     describe("acid", [
         { key: "description.0", values: ["core"] },
         { key: "description.1", values: ["poolRadius"] },
-        { key: "description.2", values: ["pool", "poolTicks", "poolPulse"] },
-        { key: "description.3", values: ["sunderChance", "sunderStage", "pref.corrode"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "description.2", values: ["pool","poolTicks","poolPulse"] },
+        { key: "description.3", values: ["sunderChance","sunderStage"] },
+        { key: "corrode.note", values: [] },
+        { key: "timing", values: ["reach","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.poolRadius"] }
     ]);
 }

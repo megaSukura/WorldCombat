@@ -105,12 +105,13 @@ namespace PokemonSkills {
 
     describe("thief", [
         { key: "description.0", values: ["swipe", "collisionRadius"] },
-        { key: "description.1", values: ["reach", "step", "slip"] },
+        { key: "description.1", values: ["reach","step","slip"] },
         { key: "description.2", values: ["push"] },
+        { key: "description.additional", values: [] },
         { key: "flee.on", values: [], when: function (context) { return read(context.detail.values, ["flee"]) === true; } },
         { key: "flee.off", values: [], when: function (context) { return read(context.detail.values, ["flee"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.swipe"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.swipe", "tier.1.reach"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.swipe","tier.1.reach"] }
     ]);
 }

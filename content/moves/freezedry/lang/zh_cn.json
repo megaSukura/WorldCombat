@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.freezedry.summary": "把水汽冻成一根冰晶射向目标，命中造成冰属性伤害并有概率把它冻住；对水属性或湿透的目标效果绝佳。",
+  "worldcombat.skill.freezedry.summary": "把水汽冻成一根冰晶射向目标，命中造成冰属性伤害并有概率把它冻住，冻住期间无法移动与出招；对水属性或湿透的目标效果绝佳。",
   "worldcombat.skill.freezedry.use.0": "隔空点掉水系与湿身的目标",
-  "worldcombat.skill.freezedry.use.1": "用冰冻概率打断对方的节奏",
+  "worldcombat.skill.freezedry.use.1": "用冰冻概率让对方一段时间无法行动",
   "worldcombat.skill.freezedry.use.2": "对远处的高威胁目标先手压制",
-  "worldcombat.skill.freezedry.description.0": "命中造成 %1$s 威力，并有 %2$s 概率使目标陷入冰冻。",
-  "worldcombat.skill.freezedry.description.1": "射程 %1$s 格，冰晶速度 %2$s，判定半径 %3$s。",
+  "worldcombat.skill.freezedry.description.0": "命中一个目标，造成约 %1$s 点冰属性特殊伤害，并有 %2$s 概率使它冰冻：冰冻期间无法移动、也无法出招，最多持续约 8 秒，受到火属性伤害即解除。",
+  "worldcombat.skill.freezedry.description.1": "射程 %1$s 格，冰晶以 %2$s 格/刻直线飞出、会被掩体挡下，判定半径 %3$s 格。",
   "worldcombat.skill.freezedry.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.freezedry.value.shard": "冰晶威力",
   "worldcombat.skill.freezedry.value.freezeChance": "冰冻概率",
@@ -15,11 +15,12 @@
   "worldcombat.skill.freezedry.value.aftermath": "收招",
   "worldcombat.skill.freezedry.value.wait": "冷却",
   "worldcombat.skill.freezedry.preference.deep": "深冻",
-  "worldcombat.skill.freezedry.preference.deep.help": "开启：威力 ×1.12、冰冻概率从 10%% 提到 18%%，但起手多 3 刻、冰晶更慢、冷却 ×1.15；关闭：冰晶更快，节奏更顺。",
+  "worldcombat.skill.freezedry.preference.deep.help": "开启：威力 ×1.12、冰冻概率从 10% 提到 18%，但起手多 3 刻、冰晶更慢、冷却 ×1.15；关闭：冰晶更快，节奏更顺。",
   "worldcombat.skill.freezedry.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.freezedry.preference.ai.maxChase.help": "目标离自己这么远以内才考虑冷冻干燥；调小只在近处开火，调大愿意从更远处先手。",
   "worldcombat.skill.freezedry.preference.ai.soaked": "优先水湿目标",
-  "worldcombat.skill.freezedry.preference.ai.soaked.help": "开启后优先扑水属性或身在水里的目标（对他们相性翻倍）；关闭则对所有目标一视同仁。",
+  "worldcombat.skill.freezedry.preference.ai.soaked.help": "开启后优先扑水属性或身体湿透的目标（打它们效果绝佳）；关闭则对所有目标一视同仁。",
   "worldcombat.skill.freezedry.preference.ai.leaveStation": "驻守时离位",
-  "worldcombat.skill.freezedry.preference.ai.leaveStation.help": "开启后，驻守命令下也会为找射界离开站位；关闭则只在原地够得到时开火。"
+  "worldcombat.skill.freezedry.preference.ai.leaveStation.help": "开启后，驻守命令下也会为找射界离开站位；关闭则只在原地够得到时开火。",
+  "worldcombat.skill.freezedry.description.soaked": "水属性或身体湿透的目标吃这一招效果绝佳：冰对水本是半效，这里翻成克制。"
 }

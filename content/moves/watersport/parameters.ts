@@ -76,11 +76,12 @@ namespace PokemonSkills {
     describe(watersportId, [
         { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["puddleRadius", "puddleTicks"] },
-        { key: "description.2", values: ["fireFactor", "wetTicks"] },
+        { key: "description.2", values: ["fireFactor","wetTicks"] },
+        { key: "description.soak", values: [] },
         { key: "description.3", values: ["quench"] },
         { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.deep); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.deep); } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] }
     ]);
 }

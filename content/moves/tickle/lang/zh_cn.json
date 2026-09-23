@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.tickle.summary": "贴上去挠对手的痒，把它逗到发笑，同时降低它的攻击和防御。必须近身，射程很短；猛挠降得更多、笑得更久，但起手与冷却都更长。",
+  "worldcombat.skill.tickle.summary": "贴上去挠对手的痒，近身削掉它的攻击与防御；本身不造成伤害。必须贴到身上才够得到；猛挠降得更多、痒意更久，但起手与冷却都更长。",
   "worldcombat.skill.tickle.use.0": "瓦解贴身的物理输出",
   "worldcombat.skill.tickle.use.1": "在缠斗里同时削掉对方的攻击与防御",
   "worldcombat.skill.tickle.use.2": "配合队友抢先手压制近战",
-  "worldcombat.skill.tickle.description.0": "被挠痒的目标损失 %1$s 级攻击与 %2$s 级防御，笑不停持续 %3$s。",
-  "worldcombat.skill.tickle.description.1": "挠痒距离 %1$s，射程 %2$s 格，超出就够不到。",
+  "worldcombat.skill.tickle.description.0": "命中后目标立刻损失 %1$s 级攻击与 %2$s 级防御，这两项直接记在它的能力等级上；同时带上持续 %3$s 的「痒意」标记，期间伙伴不会对它重复使用挠痒。挠痒本身不造成伤害。",
+  "worldcombat.skill.tickle.description.1": "伸手够到的距离约 %1$s 格，离得太远就会挠空，什么也不会发生。",
   "worldcombat.skill.tickle.description.2": "伸手要 %1$s，冷却 %2$s。",
   "worldcombat.skill.tickle.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.tickle.value.reach": "挠痒距离",

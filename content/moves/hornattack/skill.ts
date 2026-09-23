@@ -40,10 +40,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "hornattack",
         cooldownParameter: "recharge",
         name: "Horn Attack",
-        description: "The target is jabbed with a sharply pointed horn to inflict damage.",
+        description: "低头扎进对手、把角锁在伤口上，用整个身体把对方沿地面一路顶出去：不是一记击退，而是一段持续的地面推移。它是全组唯一「顶住推走」的一记，体重越重顶得越远。",
         uses: ["低头一记角撞并顶开贴身目标", "把对手沿地面一路推离掩体或站位", "低消耗的近身压制"],
         kind: "enemy",
         range: 1.9,

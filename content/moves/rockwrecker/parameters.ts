@@ -99,7 +99,8 @@ namespace PokemonSkills {
     describe("rockwrecker", [
         { key: "description.0", values: ["boulder"] },
         { key: "description.1", values: ["radius", "reach"] },
-        { key: "description.2", values: ["shove", "rubbleTicks"] },
-        { key: "description.3", values: ["speed", "charge", "exhaust"] }
+        { key: "description.flight", values: ["collisionRadius"] },
+        { key: "description.2", values: ["shove","rubbleTicks"] },
+        { key: "description.3", values: ["speed","charge","exhaust"] }
     ]);
 }

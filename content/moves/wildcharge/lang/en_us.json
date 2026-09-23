@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.wildcharge.summary": "An electrified charge: gather the current over your body, smash straight in and drive it into the target (a chance to paralyze). The circuit hurts you too, and being soaked leaks harder. Take Down, live-wired.",
-  "worldcombat.skill.wildcharge.description.0": "The charge deals %1$s contact Electric damage, dashing up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.wildcharge.description.1": "A hit has a %1$s%% chance to paralyze; the user takes %2$s%% of the actual damage as recoil and shoves the target %3$s blocks.",
-  "worldcombat.skill.wildcharge.overload.on": "Overload: the current runs wide open - power, paralysis chance, knockback and sparks all rise, but the recoil is heavier and the wind-up longer.",
+  "worldcombat.skill.wildcharge.description.0": "The charge deals about %1$s Electric contact damage to the target it hits; it dashes up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
+  "worldcombat.skill.wildcharge.description.1": "On a hit, a target that is not already paralyzed has a %1$s chance to be paralyzed for about 40 seconds: while paralyzed it moves at half speed and each action has a 25%% chance to fail. Whether or not paralysis lands, the user takes %2$s times the actual damage as recoil and shoves the target %3$s blocks along the charge.",
+  "worldcombat.skill.wildcharge.overload.on": "Overload: the current runs wide open - power, paralysis chance, knockback, charge distance and sparks all rise, but the recoil is heavier and the wind-up and cooldown are longer.",
   "worldcombat.skill.wildcharge.overload.off": "Governed: lower power and recoil, a shorter wind-up and a slightly smaller paralysis chance - for fast, grinding play.",
-  "worldcombat.skill.wildcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
+  "worldcombat.skill.wildcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP with a %5$s s cooldown.",
   "worldcombat.skill.wildcharge.growth.0": "From level %1$s the Electric power rises to %2$s.",
   "worldcombat.skill.wildcharge.growth.1": "From level %1$s the Electric power rises to %2$s and the paralysis chance to %3$s.",
   "worldcombat.skill.wildcharge.use.0": "Shove a target in your face with an electrified charge",
@@ -24,7 +24,7 @@
   "worldcombat.skill.wildcharge.value.targetWet": "Target soaked",
   "worldcombat.skill.wildcharge.value.soaked": "User soaked",
   "worldcombat.skill.wildcharge.preference.overload": "Overload",
-  "worldcombat.skill.wildcharge.preference.overload.help": "On: the current runs wide open - power, paralysis chance, knockback and sparks all rise, but the recoil is heavier and the wind-up longer. Off: governed, lower power and recoil, shorter wind-up.",
+  "worldcombat.skill.wildcharge.preference.overload.help": "On: the current runs wide open - power, paralysis chance, knockback, charge distance and sparks all rise, but the recoil is heavier and the wind-up and cooldown are longer. Off: governed, lower power and recoil with a shorter wind-up.",
   "worldcombat.skill.wildcharge.preference.ai.maxChase": "Charge distance",
   "worldcombat.skill.wildcharge.preference.ai.maxChase.help": "Within this distance the user starts the charge; smaller stays in your face, larger charges from further out.",
   "worldcombat.skill.wildcharge.preference.ai.spareParalyzed": "Spare paralyzed",
@@ -32,5 +32,6 @@
   "world_combat.move.wildcharge.text.hit": "Wild Charge",
   "world_combat.move.wildcharge.text.miss": "Discharged",
   "world_combat.move.wildcharge.text.recoil": "Circuit recoil",
-  "world_combat.move.wildcharge.text.shock": "Paralyzed"
+  "world_combat.move.wildcharge.text.shock": "Paralyzed",
+  "worldcombat.skill.wildcharge.description.2": "Only the first target struck is resolved. If the charge runs its full distance or is stopped by a wall or an obstacle without connecting, the current discharges harmlessly and the user takes no recoil. A soaked target takes more power and a higher paralysis chance; a soaked user loses power and takes heavier recoil."
 }

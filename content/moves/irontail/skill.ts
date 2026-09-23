@@ -21,7 +21,7 @@ namespace PokemonSkills {
     define({
         id: "irontail",
         name: "Iron Tail",
-        description: "The target is slammed with a steel-hard tail. This may also lower the target's Defense stat.",
+        description: "先把钢尾抡起、沿一条锁定的线亮出预告，再重砸到落点：圈内目标挨一记重击并被顶开，砸实了可能把护甲砸陷、防御下降一级或更深；最重也最慢，对手可以走出落点躲开。",
         uses: ["把抬尾的预告做成压力", "一记重砸把目标连同落点一起砸开", "对硬目标砸出更深的凹陷"],
         kind: "enemy",
         range: 3.8,

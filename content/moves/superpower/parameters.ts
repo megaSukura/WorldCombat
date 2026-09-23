@@ -137,10 +137,11 @@ namespace PokemonSkills {
     defineDamage("superpower", "ram", {}, { contact: true });
 
     describe("superpower", [
-        { key: "description.0", values: ["ram", "jolt"] },
+        { key: "description.0", values: ["ram","jolt"] },
+        { key: "description.ground", values: [] },
         { key: "description.1", values: ["reach", "attackLoss", "guardLoss"] },
-        { key: "description.2", values: ["tempo", "rush"] },
-        { key: "aftershock.on", values: ["crush", "share"], when: function (context) { return read(context.detail.values, ["aftershock"]) === true; } },
+        { key: "description.2", values: ["tempo","rush"] },
+        { key: "aftershock.on", values: ["crush","share"], when: function (context) { return read(context.detail.values, ["aftershock"]) === true; } },
         { key: "aftershock.off", values: [], when: function (context) { return read(context.detail.values, ["aftershock"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ram", "tier.0.jolt"] },

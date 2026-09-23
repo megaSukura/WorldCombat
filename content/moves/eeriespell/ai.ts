@@ -1,10 +1,4 @@
-/**
- * 诡异咒语 / eeryspell —— AI 用途。
- *
- * 出手局面：目标是可见、敌对、存活的活体，且在 `ai.maxChase`（默认 14）格内时出手；焦点目标不受
- * 距离限制。对宝可梦抬到 40 优先级，因为只有它们才有最后招式的 PP 可抽；其他对象仍会在只剩本招或
- * 没有更好攻击时按普通远程招打出。够不到交给共享接近逻辑。
- */
+/** eeriespell：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     registerUse("eeriespell", {
         protocols: ["world_combat:attack", "world_combat:ranged"],

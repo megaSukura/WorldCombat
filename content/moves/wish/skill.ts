@@ -111,8 +111,8 @@ namespace PokemonSkills {
 
     define({
         id: wishId, name: "祈愿",
-        description: "把一颗愿星送上高空，延迟片刻后落回原处，为自己回复最大生命的一半；开启分享时，圈内的友善伙伴也各按摊薄后的比例回复。愿星独立存在，施法者离开也在原地等待兑现。",
-        uses: ["提前布下一个延迟治疗", "在措手不及时续命", "与伙伴分享愿力（分摊比例）"],
+        description: "把一颗愿星送上高空，延迟片刻后落回原处，按回复比例为自己回复最大生命；开启分享时，圈内的友善伙伴也各按基础治疗量的六成回复。愿星独立存在，施放者走远也在原地等待兑现。",
+        uses: ["提前布下一个延迟治疗", "在措手不及时续命", "与伙伴分享愿力：圈内每人各得基础治疗量的六成（不是按人数均分）"],
         kind: "self", range: 0, prepare: 16, active: 0, recover: 12, cooldown: 240, style: "wish", maximumTicks: 400,
         defaults: { share: false },
         fields: [flag("share", "与伙伴分享")],

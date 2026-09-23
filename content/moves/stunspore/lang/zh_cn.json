@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.stunspore.summary": "把一团麻痹花粉抛向目标所在的位置，粉团落地炸开成一片持续存在的云；谁站在云里谁一直被麻住，走出去之后麻痹按残余时间慢慢走完。它是三式麻痹里唯一留在世界上的那个，对手可以走位绕开或等它散去。草属性穿过粉末、电属性穿过麻痹。",
   "worldcombat.skill.stunspore.description.0": "粉团抛向 %1$s 格内的落点，以 %2$s 格每刻飞行，落地罩住半径 %3$s 格。",
-  "worldcombat.skill.stunspore.description.1": "云在世界上停留 %1$s；站在云里的非友方被持续刷新 %2$s 的麻痹，走出云外还会走完这一段。",
+  "worldcombat.skill.stunspore.description.1": "云在世界上停留 %1$s；站在云里的非友方被持续刷新 %2$s 的麻痹——麻痹期间移动速度降低约 50%，每次试图出手有 25% 概率失败；走出云外，麻痹按剩余时间走完再解。",
   "worldcombat.skill.stunspore.thick.on": "厚云：半径 ×0.8、存在时长 ×1.3、麻痹 ×1.25，但冷却 ×1.15——把一小片地彻底封住。",
   "worldcombat.skill.stunspore.thick.off": "散云：半径 ×1.2，更容易一次罩住走位中的几个人，但云更短、麻痹更淡、冷却更短。",
   "worldcombat.skill.stunspore.timing": "抛向落点：射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -26,5 +26,6 @@
   "worldcombat.skill.stunspore.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.stunspore.preference.ai.leaveStation.help": "开启后，驻守命令下也会为撒粉离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.stunspore.text.land": "麻痹粉云落下",
-  "world_combat.move.stunspore.text.caught": "被麻住（%1$s 秒）"
+  "world_combat.move.stunspore.text.caught": "被麻住（%1$s 秒）",
+  "worldcombat.skill.stunspore.description.2": "草属性直接穿过粉末、不受这片云影响，电属性免疫麻痹；施法者倒下或离场时，云也随之散去。"
 }

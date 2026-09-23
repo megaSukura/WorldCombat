@@ -63,6 +63,7 @@ namespace PokemonSkills {
     ]);
 
     describe("mimic", [
+        { key: "world", values: ["window", "hold"] },
         { key: "description.0", values: ["reach", "watch"] },
         { key: "description.1", values: ["window", "hold"] },
         { key: "description.2", values: ["pref.deep"] },

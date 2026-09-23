@@ -65,7 +65,8 @@ namespace PokemonSkills {
 
     describe("lick", [
         { key: "description.0", values: ["lick"] },
-        { key: "description.1", values: ["reach", "numbChance"] },
-        { key: "description.2", values: ["lashTicks", "pull"] }
+        { key: "description.1", values: ["reach","numbChance","radius"] },
+        { key: "description.additional", values: [] },
+        { key: "description.2", values: ["lashTicks","pull"] }
     ]);
 }

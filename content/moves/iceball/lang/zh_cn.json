@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.iceball.summary": "蜷身抱成一颗冰球抛出去：每撞中一趟就冻厚一层，下一趟更重（最多 5 趟）；飞空它会自己绕回来再撞。施法者在整段里定住不动，最后一下碎开，落点冻出一小片冰面。",
-  "worldcombat.skill.iceball.description.0": "每一趟撞击造成 %1$s 威力的冰属性伤害；一次出手最多撞 %2$s 趟。",
+  "worldcombat.skill.iceball.description.0": "每一趟撞击造成冰属性伤害：首趟约 %1$s 点；一次出手最多撞 %2$s 趟。",
   "worldcombat.skill.iceball.description.1": "每命中一趟，下一趟威力乘 %1$s（封顶 %2$s）；球速 %3$s 格/刻，判定 %4$s 格。",
-  "worldcombat.skill.iceball.description.2": "冰球能飞 %1$s 格，两趟之间隔 %2$s 秒；碎开时留下 %3$s 块冰面，持续 %4$s 秒。",
+  "worldcombat.skill.iceball.description.2": "冰球能飞 %1$s 格，两趟之间隔 %2$s 秒；最后一次撞击处会碎开，最多冻出 %3$s 块会打滑的冰面，持续 %4$s 秒。",
   "worldcombat.skill.iceball.thick.on": "厚壳式：每中一趟下一趟威力乘 2.3、威力上限提升 15%、落点冰面更大更久；代价是每趟基础威力 ×0.9、球速 ×0.85、趟间隔 +2 刻、收招 +2 刻、冷却 +6 刻——冻得更厚，但更慢更费。",
   "worldcombat.skill.iceball.thick.off": "薄壳式（原生形态）：每中一趟威力乘 2.0、球速 ×1.06、趟间隔 −1 刻、冷却 −4 刻；代价是威力上限较低、落点冰面更小更短——球飞得更快、出球更勤。",
   "worldcombat.skill.iceball.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.iceball.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.iceball.preference.ai.maxChase.help": "超过这个距离就不抛球，先走近。越大越愿意从远处先手。",
   "world_combat.move.iceball.text.cap": "冰球撞满 %1$s 趟，碎开",
-  "world_combat.move.iceball.text.hit": "冰球撞击 %1$s"
+  "world_combat.move.iceball.text.hit": "冰球撞击 %1$s",
+  "worldcombat.skill.iceball.description.stance": "冰球在飞的整段里，施放者定在原地、无法移动或做其他动作；目标倒下或离开后冰球随即碎开，撞满趟数也同样收尾。"
 }

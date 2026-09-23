@@ -99,9 +99,10 @@ namespace PokemonSkills {
     describe("flail", [
         { key: "description.0", values: ["swipe", "swings"] },
         { key: "description.1", values: ["reach", "arc", "gap"] },
+        { key: "description.push", values: ["push"] },
         { key: "reckless.on", values: ["recoil"], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] }
     ]);
 }

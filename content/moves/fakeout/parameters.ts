@@ -108,7 +108,7 @@ namespace PokemonSkills {
 
     describe(fakeoutId, [
         { key: "description.0", values: ["swat"] },
-        { key: "description.1", values: ["blink", "speed", "collisionRadius", "push"] },
+        { key: "description.1", values: ["blink","speed","collisionRadius","push"] },
         { key: "description.2", values: ["dazeTicks"] },
         { key: "feint.on", values: [], when: function (context) { return read(context.detail.values, ["feint"]) === true; } },
         { key: "feint.off", values: [], when: function (context) { return read(context.detail.values, ["feint"]) !== true; } },

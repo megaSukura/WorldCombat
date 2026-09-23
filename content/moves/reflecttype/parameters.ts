@@ -5,7 +5,7 @@
  *   照的是「现在」，所以对手被改过属性（纹理、保护色、燃尽之类）时自己也跟着变。
  * 原生：Normal／变化／必中／PP 15／单体；source 是阿尔宙斯／银伴战兽时不发动，读目标当前类型并置为自己。
  * 即时化把结果落成共享 NativeModifiers types 层（与纹理、保护色同一套机制），到期还原原生属性，
- *   并挂共享身份 `world_combat:status/reflecttype` 的标记。目标不是宝可梦就没有属性可照，预检直接拒绝。
+ *   并挂共享身份 `world_combat:status/reflecttype` 的标记。普通生物分支复制可观察的防护属性。
  *
  * 每个参数是一棵公式，依赖分散在不同精灵数据上：
  *   reach     照映距离：体型与等级决定镜子能照到多远。它也是本招实际射程的来源。
@@ -42,7 +42,7 @@ namespace PokemonSkills {
             "映照维持", "照到的属性维持多久；等级与特防越高越久，镜像全部再延长。"),
         recharge: seconds(
             F.base(80, "基础").minus(F.stat("speed").times(0.28).as("速度")).clamp(36, 120).round(),
-            "再照冷却", "再照一次需要多久；速度快的个体更快恢复。"),
+            "再照冷却", "再照一次需要多久；速度快的个体更快恢复。", { base: 80 }),
         facets: formula(
             F.base(6, "基础").plus(F.stat("specialDefence").div(7).as("特防")).clamp(6, 18).round(),
             "镜面数", { unit: "块", description: "镜子拼出的块数；特防越高越完整。" }),
@@ -51,15 +51,16 @@ namespace PokemonSkills {
             "反光数", { unit: "点", description: "反射出去的光点数量；特攻越高越亮。" })
     });
 
-    stages("reflecttype", [{ level: 35, values: { cooldown: 68 } }, { level: 50, values: { cooldown: 58 } }]);
+    stages("reflecttype", [{ level: 35, values: { recharge: 68 } }, { level: 50, values: { recharge: 58 } }]);
 
     describe("reflecttype", [
+        { key: "world", values: ["hold"] },
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["hold"] },
         { key: "pair.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.pair); } },
         { key: "pair.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.pair); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

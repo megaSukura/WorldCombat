@@ -117,8 +117,8 @@ namespace PokemonSkills {
     defineDamage("skyuppercut", "uppercut", {}, { contact: true, punch: true });
 
     describe("skyuppercut", [
-        { key: "description.0", values: ["uppercut", "reach", "arc"] },
-        { key: "description.1", values: ["lift", "push", "airReach"] },
+        { key: "description.0", values: ["uppercut","reach","arc"] },
+        { key: "description.1", values: ["lift","push","airReach"] },
         { key: "description.2", values: ["airBonus"] },
         { key: "rising.on", values: ["lift", "uppercut"], when: function (context) { return read(context.detail.values, ["rising"]) === true; } },
         { key: "rising.off", values: ["lift", "uppercut"], when: function (context) { return read(context.detail.values, ["rising"]) !== true; } },

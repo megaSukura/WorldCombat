@@ -70,7 +70,7 @@ namespace PokemonSkills {
     });
     describe(playniceId, [
         { key: "description.0", values: ["atkDrop", "calmTicks"] },
-        { key: "description.1", values: ["offerRadius", "maxTargets", "range"] },
+        { key: "description.1", values: ["offerRadius","maxTargets","range"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

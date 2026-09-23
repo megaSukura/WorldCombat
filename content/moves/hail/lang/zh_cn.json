@@ -4,8 +4,8 @@
   "worldcombat.skill.hail.use.1": "把成群的敌人砸在雹区里",
   "worldcombat.skill.hail.use.2": "在交战区留下冻硬的碎冰",
   "worldcombat.skill.hail.description.0": "在选定地面压下半径 %1$s 格的雹区，持续 %2$s。",
-  "worldcombat.skill.hail.description.1": "非冰之躯每趟被砸掉 %1$s 最大生命；离开雹区后仍带雹 %2$s，每趟间隔 %3$s。",
-  "worldcombat.skill.hail.description.2": "碎冰最多覆盖 %1$s 格地面。",
+  "worldcombat.skill.hail.description.1": "非冰之躯在雹区里每 %3$s 被砸掉 %1$s 最大生命（至少 1 点，且要与雹区中心之间没有遮挡）；冰之躯不受砸击，只被冷气裹上白霜。所有进入雹区的活体会被记上雹击印记，离开后仍留存 %2$s，算作可被净化类效果清除的负面状态。",
+  "worldcombat.skill.hail.description.2": "首趟砸击会在落点周围的地表铺下碎冰，最多覆盖 %1$s 格；碎冰约留存到雹区时长的六成，随后原样退去。",
   "worldcombat.skill.hail.description.3": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.hail.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 落下冰雹，收招 %3$s，提交起冷却 %5$s。",
   "worldcombat.skill.hail.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
@@ -30,5 +30,6 @@
   "worldcombat.skill.hail.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去落雹。",
   "world_combat.move.hail.text.pelt": "被雹砸",
   "world_combat.move.hail.text.coat": "裹上霜",
-  "effect.world_combat.hail_struck": "雹击"
+  "effect.world_combat.hail_struck": "雹击",
+  "worldcombat.skill.hail.description.weather": "雹区存续期间，罩住的地方算作冰雹天气，天光转暗；依赖天色的招式会把这里当作下雹。"
 }

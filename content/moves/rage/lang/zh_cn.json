@@ -5,7 +5,7 @@
   "worldcombat.skill.rage.use.2": "在近身缠斗里滚出越来越高的物攻",
   "worldcombat.skill.rage.description.0": "这一记怒气挥击造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。它本身很轻，价值在随后点起的怒火。",
   "worldcombat.skill.rage.description.1": "欺身距离 %1$s 格、每刻位移 %2$s 格，判定半径 %3$s 格，命中后把人顶开 %4$s 格。",
-  "worldcombat.skill.rage.description.2": "点起的怒火持续 %1$s；期间每挨一记外来伤害涨 %2$s 档物攻，最多涨 %3$s 档；自己下一次出手时火焰熄灭。",
+  "worldcombat.skill.rage.description.2": "点起的怒火持续 %1$s；期间每挨一记外来实际伤害（变化招式不算）就涨 %2$s 档物攻、最多累计 %3$s 档，并把火续满时长；涨到顶后不再续。自己下一次出手时火焰熄灭，涨起来的物攻保留。",
   "worldcombat.skill.rage.fury.on": "暴怒式：每挨一记涨 2 档、两记烧满，但封顶更低、火更短、起手更慢、冷却更久。",
   "worldcombat.skill.rage.fury.off": "蓄怒式：每记涨 1 档、封顶更高、火更长、出手更快，靠时间慢慢烧旺。",
   "worldcombat.skill.rage.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。",
@@ -32,5 +32,6 @@
   "world_combat.move.rage.text.hit": "愤怒一击",
   "world_combat.move.rage.text.stoke": "怒火 +%1$s（共 %2$s）",
   "world_combat.move.rage.text.miss": "挥空",
-  "effect.world_combat.rage_stance": "怒火"
+  "effect.world_combat.rage_stance": "怒火",
+  "worldcombat.skill.rage.description.additional": "怒火在挥击之前就已点起：这一记只结算最先挡路的一个非友方活体、不贯穿；就算落空，火也照点。"
 }

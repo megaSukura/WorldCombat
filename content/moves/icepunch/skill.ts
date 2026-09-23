@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: "icepunch",
         cooldownParameter: "recharge",
         name: "Ice Punch",
-        description: "A frost-covered fist strikes the target and leaves it chilled. If the target is already chilled, or standing in water, the frost is pulled away and the target is frozen solid instead.",
+        description: "一记覆满寒霜的拳命中目标，给它留下一层拖慢行动的寒霜；若目标已经带霜、或正浸在水里，则收走那层霜、改为把它冻在原地（浸水时冻得更久）。冻住期间无法行动和移动。",
         uses: ["贴身给目标结一层拖慢它的寒霜", "对已经结霜或浸水的目标补一拳冻住", "把关键目标按停"],
         kind: "enemy",
         range: 2.5,

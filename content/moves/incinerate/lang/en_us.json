@@ -4,7 +4,7 @@
   "worldcombat.skill.incinerate.use.1": "Burn the target's Berry or Gem so it can never be used",
   "worldcombat.skill.incinerate.use.2": "A heavier flame against a holder of something flammable",
   "worldcombat.skill.incinerate.description.0": "The fan deals about %1$s Fire special damage with a %2$s degree half-angle; every non-friendly inside settles once, and the target's Defence, type match-up and criticals settle on impact.",
-  "worldcombat.skill.incinerate.description.1": "The fan reaches %1$s blocks along your aim; a target burned of a Berry or Gem takes about %2$s extra power and loses the item for good.",
+  "worldcombat.skill.incinerate.description.1": "The fan reaches %1$s blocks along your aim; a target burned of a Berry or Gem takes about %2$s extra power and loses the item for good - no one gets it and it cannot be used again this battle.",
   "worldcombat.skill.incinerate.wide.on": "Wide on: the half-angle is x1.5, the hit x0.9, the reach x0.85 and the cooldown +4 ticks, trading damage for a broader sweep.",
   "worldcombat.skill.incinerate.wide.off": "Wide off: a narrower fan with longer reach, a heavier hit and a shorter cooldown.",
   "worldcombat.skill.incinerate.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

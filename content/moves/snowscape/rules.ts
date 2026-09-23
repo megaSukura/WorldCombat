@@ -2,8 +2,8 @@
  * 雪景 / snowscape 的雪区规则与结算，对所有战斗者一致。
  *
  * 雪区是一条区域规则：每 5 刻扫描半径内的活体，给他们补 `world_combat:snowscape_powder`
- * （共享身份 `world_combat:status/snow`，只借身份、不带共享行为）。冰之躯进场时防御 +1 级、离场时收回
- * （NativeEffects.boost）。首趟扫描把地表盖上一层雪、把露天的水面冻成能站人的冰（world.terrain，linger
+ * （共享身份 `world_combat:status/snow`，只借身份、不带共享行为）。每片雪区为冰之躯拥有一个防御 +1 的临时窗口，
+ * 离场或该雪区结束时只撤销本窗口。首趟扫描把地表盖上一层雪、把露天的水面冻成能站人的冰（world.terrain，linger
  * 让它们活过雪区本身）。雪景不造成伤害，只改地面与冰之躯的防御。
  */
 namespace PokemonSkills {
@@ -72,13 +72,32 @@ namespace PokemonSkills {
         MobEffects.apply(world, actor, snowscapeMark, ticks, 0);
     }
 
+    /** One window per field and recipient; removal never writes an inverse stage change into the persistent ladder. */
+    function snowscapeClose(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
+        const windows = field.data.defenceWindows || {}, ref = String(actor.ref()), id = Number(windows[ref] || 0);
+        if (id) NativeEffects.windowClose(world, id);
+        delete windows[ref];
+    }
+    function snowscapeDefence(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): boolean {
+        if (!snowscapeIce(world, actor)) { snowscapeClose(world, actor, field); return false; }
+        const windows = field.data.defenceWindows || (field.data.defenceWindows = {}), ref = String(actor.ref());
+        const existing = Number(windows[ref] || 0);
+        if (existing && world.effects(actor, "cobblemon_world_combat:modifier").some(view => view.id() === existing)) return false;
+        if (!field.id || !field.remaining) return false;
+        const id = NativeEffects.boostWindow(world, actor, { def: 1 }, Math.max(1, Math.round(field.remaining)), "snowscape:" + field.id);
+        if (!id) return false;
+        const owner: CombatStages.WindowOwner = { actor: String(world.source().ref()), definition: "world_combat:field", id: field.id };
+        if (!world.operation(id, "world_combat:stage_owner", JSON.stringify(owner))) { NativeEffects.windowClose(world, id); return false; }
+        windows[ref] = id;
+        return true;
+    }
+
     WorldEffects.fieldRule(snowscapeField, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             snowscapeLay(world, actor, field);
             const body = world.observe(actor);
             if (body === null) return;
-            if (snowscapeIce(world, actor)) {
-                NativeEffects.boost(world, actor, "def", 1);
+            if (snowscapeDefence(world, actor, field)) {
                 WorldFeedback.emit(world, snowscapeScene, 1, body.position(), { moment: "crisp", target: String(actor.ref()) }, 24);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), snowscapeCrispText, [], 24);
                 return;
@@ -88,9 +107,10 @@ namespace PokemonSkills {
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             snowscapeLay(world, actor, field);
+            snowscapeDefence(world, actor, field);
         },
         leave: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (snowscapeIce(world, actor)) NativeEffects.boost(world, actor, "def", -1);
+            snowscapeClose(world, actor, field);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = snowscapePoint(field);

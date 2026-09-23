@@ -71,7 +71,7 @@ namespace PokemonSkills {
         id: risingvoltageId,
         cooldownParameter: "recharge",
         name: "电力上升",
-        description: "先顿足把电按进地面，电流窜到对手脚下再向上竖起一根电柱；目标脚下带着电场的电荷时，这一柱的威力翻倍、也更粗更高，站在近旁的人会被一起贯穿。",
+        description: "先顿足把电按进地面，电流窜到对手脚下再向上竖起一根电柱；目标脚下带着电场的电荷时，这一柱的威力翻倍、也更粗更高，柱内的非友方会被一起贯穿。",
         uses: ["惩罚站在电气场地上的对手", "隔空从对手脚下升起一柱电击", "一次贯穿挤在落点附近的一圈人"],
         kind: "enemy",
         range: 12,

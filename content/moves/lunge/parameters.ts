@@ -125,8 +125,8 @@ namespace PokemonSkills {
 
     describe("lunge", [
         { key: "description.0", values: ["pounce"] },
-        { key: "description.1", values: ["reach", "leap", "radius"] },
-        { key: "description.2", values: ["push", "stages"] },
+        { key: "description.1", values: ["reach","leap","radius"] },
+        { key: "description.2", values: ["push","stages"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },

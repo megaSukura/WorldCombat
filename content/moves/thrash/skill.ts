@@ -104,10 +104,11 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: thrashId,
         cooldownParameter: "recharge",
         name: "Thrash",
-        description: "站在原地转着圈乱挥：每一挥罩住周围一圈敌人、造成接触伤害并把它们朝外震开，最后一记重跺另乘倍率；闹完自己陷入恍惚，出手可能被打散。狂乱式罩得更宽、推得更狠，但每一挥都会磕伤自己。",
+        description: "站在原地转着圈乱挥：每一挥罩住周围一圈敌人、造成接触伤害并把它们朝外震开，最后一记重跺另乘倍率；闹完自己陷入恍惚，出手可能被打散。",
         uses: ["被围住时一次罩住身边所有人", "把贴身的敌人一起震开", "用连续的范围接触伤害清掉身边的小目标"],
         kind: "enemy",
         range: 3.4,

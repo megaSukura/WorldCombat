@@ -30,9 +30,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "smartstrike",
         name: "Smart Strike",
-        description: "The user stabs the target with a sharp horn. This attack never misses.",
+        description: "角尖自己锁定对手，一路修正方向追着刺过去；因为角追着人拐，所以躲不掉。刺的是甲缝，对手防御越高，这一角咬得越深。",
         uses: ["锁定后一记追人的角刺", "专挑高防目标的甲缝", "从较远处拐着角扎上去"],
         kind: "enemy",
         range: 8,

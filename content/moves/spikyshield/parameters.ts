@@ -92,8 +92,11 @@ namespace PokemonSkills {
     defineCategory("spikyshield", "physical");
 
     describe("spikyshield", [
-        { key: "description.0", values: ["window", "capacity", "spike"] },
-        { key: "description.1", values: ["raise", "charge"] },
-        { key: "description.2", values: ["fizzle", "pref.thorn"] }
+        { key: "description.0", values: ["window","capacity"] },
+        { key: "description.ward", values: [] },
+        { key: "description.thorn", values: ["spike"] },
+        { key: "description.pool", values: [] },
+        { key: "description.1", values: ["raise","charge"] },
+        { key: "description.2", values: ["fizzle"] }
     ]);
 }

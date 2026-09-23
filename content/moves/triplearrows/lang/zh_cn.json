@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.triplearrows.summary": "先一记低扫腿踢开对手的护架，再同时射出 3 支箭：三箭可以打同一个目标，也可以扇形散开照顾几个；被踢开护架的目标会被钉在要害上，箭势重时把目标压得开不了手。",
-  "worldcombat.skill.triplearrows.description.0": "低扫腿造成 %1$s 的接触伤害，腿技判定半径 %2$s 格。",
-  "worldcombat.skill.triplearrows.description.1": "腿技后 %1$s 秒同时射出 3 支箭，每支 %2$s 威力、偏离中心 %3$s 度、箭速 %4$s 格/刻、箭程 %5$s 格，箭判定半径 %6$s 格。",
-  "worldcombat.skill.triplearrows.description.2": "腿技命中时有 %1$s 的几率令目标防御下降 %2$s 级、缺口持续 %3$s；三箭第一次命中时有 %4$s 的几率让目标畏缩 %5$s。被踢开护架的目标会被三箭直接命中要害。",
+  "worldcombat.skill.triplearrows.description.0": "低扫腿造成约 %1$s 点接触伤害，腿技判定半径 %2$s 格。",
+  "worldcombat.skill.triplearrows.description.1": "腿技后 %1$s 秒同时射出 3 支箭，每支造成约 %2$s 点伤害、偏离中心 %3$s 度、箭速 %4$s 格/刻、箭程 %5$s 格，箭判定半径 %6$s 格；三支可以打同一个目标，扇形齐射时会散向不同目标。",
+  "worldcombat.skill.triplearrows.description.2": "腿技命中时有 %1$s 的几率踢开护架：目标防御下降 %2$s 级（这道下降会一直留到被重置或换下），并留下持续 %3$s 的护架缺口；缺口本身不加成，但其他破防招可以接着吃它。踢开护架后，本轮三箭命中时都会击中要害。三箭中第一支命中时有 %4$s 的几率让目标畏缩 %5$s，打断其可被中断的动作；畏缩期间目标无法发动新招，也无法进行普通攻击。",
   "worldcombat.skill.triplearrows.fan.on": "扇形齐射：三箭散开 14°，每支轻 15%，用来同时打挤在一起的目标，冷却更久。",
   "worldcombat.skill.triplearrows.fan.off": "集中齐射：三箭几乎叠在同一点、每支重 5%，单体更狠。",
   "worldcombat.skill.triplearrows.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

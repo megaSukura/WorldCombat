@@ -144,7 +144,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["storm"] },
         { key: "description.1", values: ["reach", "gust", "girth"] },
         { key: "description.2", values: ["insightLoss"] },
-        { key: "maelstrom.on", values: ["whirlRadius", "whirlShare", "whirlTicks", "whirlPulse"], when: function (context) { return read(context.detail.values, ["maelstrom"]) === true; } },
+        { key: "maelstrom.on", values: ["whirlRadius","whirlShare","whirlTicks","whirlPulse"], when: function (context) { return read(context.detail.values, ["maelstrom"]) === true; } },
         { key: "maelstrom.off", values: [], when: function (context) { return read(context.detail.values, ["maelstrom"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.storm"] },

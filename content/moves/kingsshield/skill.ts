@@ -104,7 +104,7 @@ namespace PokemonSkills {
         id: "kingsshield",
         cooldownParameter: "charge",
         name: "King's Shield",
-        description: "The user takes a regal steel stance and blocks damaging attacks by a total pool; contact sharply lowers the attacker's Attack. Status moves pass through.",
+        description: "摆出王者钢盾，为自身按总量挡下敌人打来的伤害招式，并削去接触者的攻击；变化招式照常落到身上，护盾耗尽或到时即散。",
         uses: ["挡住近战的连续伤害并削其攻击", "为下一记交手先把对手打软", "用最厚的一面钢盾硬吃齐射"],
         kind: "self",
         range: 0,

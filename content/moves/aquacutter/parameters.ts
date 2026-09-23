@@ -115,7 +115,7 @@ namespace PokemonSkills {
     describe(aquacutterId, [
         { key: "description.0", values: ["jet"] },
         { key: "description.1", values: ["pressure", "reach", "radius"] },
-        { key: "description.2", values: ["bore", "soakTicks"] },
+        { key: "description.2", values: ["bore","soakTicks"] },
         { key: "lance.on", values: [], when: function (context) { return read(context.detail.values, ["lance"]) === true; } },
         { key: "lance.off", values: [], when: function (context) { return read(context.detail.values, ["lance"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.encore.summary": "把对手刚才做过的那一手点名出来，逼它在回声散去前连续重复同一招。「最后使用的招式」有时间窗口，目标没有出过手、那一手带 failencore、或已经耗光 PP 时会落空。",
+  "worldcombat.skill.encore.summary": "点名目标刚用过的一手，让它暂时只能使用这一招。对普通生物和玩家，锁定的是刚命中过人的攻击方式，例如近战或箭矢。",
   "worldcombat.skill.encore.use.0": "把刚做过的布置或强化锁死，逼它一直重复",
   "worldcombat.skill.encore.use.1": "打断对手的连招节奏，让它只能做同一件事",
   "worldcombat.skill.encore.use.2": "拖住一个刚露出破绽的对手",
-  "worldcombat.skill.encore.description.0": "被点名者只能重复它最后使用的那一招，持续 %1$s；「最后那一手」只在 %2$s 内还算数，更久以前的出手点不动。",
-  "worldcombat.skill.encore.description.1": "点名距离 %1$s 格；回声散开前它只能一遍遍重复那一手。",
+  "worldcombat.skill.encore.description.0": "锁定持续 %1$s，只能点名过去 %2$s 内的出手。宝可梦只能使用被点名的招式；普通生物和玩家改用其他攻击方式时，伤害会被挡下。",
+  "worldcombat.skill.encore.description.1": "点名距离 %1$s 格；目标仍会自行行动，回声只限制它可以使用的攻击方式。",
   "worldcombat.skill.encore.description.2": "点名要 %1$s，收势 %2$s，冷却 %3$s。回声是一段可见窗口，被清除或那一手用尽时散开。",
   "worldcombat.skill.encore.strict.0": "严令：回声更久，但点得更近、起手更慢、冷却更长。",
   "worldcombat.skill.encore.strict.1": "轻唤：回声更短，但够得更远、起手更快、冷却更短。",

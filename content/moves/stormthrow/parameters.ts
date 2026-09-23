@@ -119,8 +119,8 @@ namespace PokemonSkills {
     ]);
 
     describe(stormthrowId, [
-        { key: "description.0", values: ["slam", "reach"] },
-        { key: "description.1", values: ["staggerTicks", "crush"] },
+        { key: "description.0", values: ["slam","reach"] },
+        { key: "description.1", values: ["staggerTicks","crush"] },
         { key: "description.2", values: ["scar", "scarTicks"] },
         { key: "pin.on", values: [], when: function (context) { return read(context.detail.values, ["pin"]) === true; } },
         { key: "pin.off", values: [], when: function (context) { return read(context.detail.values, ["pin"]) !== true; } },

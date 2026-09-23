@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: roundId,
         cooldownParameter: "recharge",
         name: "Round",
-        description: "The user attacks the target with a song. If others use this move, they will act immediately after the initial user, and the power of their Rounds will be boosted.",
+        description: "唱歌攻击一个敌人，同时把余韵传给身边的同伴。同伴在余韵消失前使用轮唱，威力翻倍、起手缩短；声音可以穿过掩体。",
         uses: ["把一句短歌的余韵传给身边的同伴", "接住同伴的余韵唱出翻倍的一句", "用声音无视掩体点名一个目标"],
         kind: "enemy",
         range: 6.5,

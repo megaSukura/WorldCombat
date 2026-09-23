@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: "scaleshot",
         cooldownParameter: "recharge",
         name: "Scale Shot",
-        description: "The user attacks by shooting scales two to five times in a row. This move boosts the user's Speed stat but lowers its Defense stat.",
+        description: "抖开背鳞，鳞片一片接一片射向目标，连续削 2～5 次；这一梭打完自身速度 +1 级、防御 −1 级。散鳞式把鳞片分给身前一群敌人，单发更轻、露底更多。",
         uses: ["中远距离一梭鳞片连续削目标", "用一梭小撞击把速度拉起来接下一手", "散鳞式把鳞片分给身前一群敌人"],
         kind: "enemy",
         range: 8,

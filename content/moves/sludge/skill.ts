@@ -25,7 +25,7 @@ namespace PokemonSkills {
         cooldownParameter: "recharge",
         name: "Sludge",
         description: "从脚边抓一团湿泥低弧甩向对手：便宜、出手快、PP 多；糊中后按概率让对手中毒，泥团在身上摊开往下淌。黏附形态更黏更毒，代价是威力更低、出手更慢。",
-        uses: ["远距离反复消耗、把毒累上去", "PP 多、随时补一发", "逼对手走位躲这条泥弧"],
+        uses: ["远距离反复消耗、让对手一直挂着中毒", "PP 多、随时补一发", "逼对手走位躲这条泥弧"],
         kind: "enemy",
         range: 9,
         maxRange: 13,

@@ -114,8 +114,8 @@ namespace PokemonSkills {
 
     describe("bite", [
         { key: "description.0", values: ["fang", "grip"] },
-        { key: "description.1", values: ["reach", "lunge", "drag"] },
-        { key: "description.2", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.1", values: ["reach","lunge","drag"] },
+        { key: "description.2", values: ["flinchChance","flinchTicks"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

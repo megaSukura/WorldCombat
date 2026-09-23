@@ -77,7 +77,7 @@ namespace PokemonSkills {
         /** 两段间隔：9 − (速度−55)×0.02[−1.5,2]；夹 6..12。 */
         gap: seconds(
             F.base(9).minus(F.stat("speed").minus(55).times(0.02).clamp(-1.5, 2)).clamp(6, 12).round(0),
-            "两段间隔", "双绞式两拧之间隔几刻；速度快的个体接得更紧，留给对手挣脱的空档更短。"),
+            "两段间隔", "双绞式两拧之间的等待时间；速度快的个体接得更紧，留给对手挣脱的空档更短。"),
         /** 流光数：16 + 特攻偏移[−4,18] + 等级偏移[−2,5]；夹 12..44。 */
         motes: formula(
             F.base(16).plus(F.stat("specialAttack").minus(60).times(0.24).clamp(-4, 18))
@@ -123,7 +123,7 @@ namespace PokemonSkills {
     describe(wringoutId, [
         { key: "description.0", values: ["wring"] },
         { key: "description.1", values: ["reach"] },
-        { key: "twin.on", values: ["gap", "secondFactor"], when: function (context) { return read(context.detail.values, ["twin"]) === true; } },
+        { key: "twin.on", values: ["gap","secondFactor"], when: function (context) { return read(context.detail.values, ["twin"]) === true; } },
         { key: "twin.off", values: [], when: function (context) { return read(context.detail.values, ["twin"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wring"] },

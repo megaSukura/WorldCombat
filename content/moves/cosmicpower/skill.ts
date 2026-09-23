@@ -44,7 +44,7 @@ namespace PokemonSkills {
         id: "cosmicpower",
         cooldownParameter: "wait",
         name: "宇宙力量",
-        description: "汲取宇宙中神秘的力量，从而提高自己的防御和特防。",
+        description: "站定，一道星光柱从头顶垂直落进身体：防御与特防一起提高。它是本组起手最长、最容易被中途打断的一招，代价换来的是夜里星光更盛——同样的招在夜里多抬 1 级。窗口走完时两项等级一起收回。",
         uses: ["拉开距离站定，把两项防护一次拉高", "夜里星光更盛，多抬 1 级", "在挨打之前把壳垫厚，再回头交战"],
         kind: "self",
         range: 1,

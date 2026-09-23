@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.protect.summary": "Raises a dome that fully blocks attacks by a total shield pool. The braced stance roots you, and repeated use tends to fail.",
-  "worldcombat.skill.protect.description.0": "The dome lasts %1$s and holds %2$s points; higher defences make it longer, and the pool grows with current health and Defence.",
-  "worldcombat.skill.protect.description.1": "Raise %1$s, radius %2$s blocks, cooldown %3$s.",
-  "worldcombat.skill.protect.description.2": "Repeat-use failure rate %1$s; the brace/instant trade-off is the %2$s setting.",
+  "worldcombat.skill.protect.summary": "Raises a dome on yourself that blocks enemy attacks with a total shield pool; when the pool is spent the dome shatters and the excess still lands. The braced stance roots you while it holds, and repeated use tends to fail.",
+  "worldcombat.skill.protect.description.0": "Raises a dome on yourself: it lasts %1$s and can block a total of %2$s points of enemy damage; higher defences make it longer, and the pool grows with current health and Defence.",
+  "worldcombat.skill.protect.description.1": "Raise %1$s, cooldown %2$s.",
+  "worldcombat.skill.protect.description.2": "Repeated use in quick succession is more likely to fail; the current failure chance is %1$s. Braced stance prevents movement while active; instant stance allows it.",
   "worldcombat.skill.protect.use.0": "Pre-empt a volley and raise early",
   "worldcombat.skill.protect.use.1": "Open a lane out when surrounded",
   "worldcombat.skill.protect.use.2": "Buy time for an ally to heal or withdraw",
@@ -17,5 +17,6 @@
   "worldcombat.skill.protect.preference.ai.trigger": "Reaction range",
   "worldcombat.skill.protect.preference.ai.trigger.help": "Raise the dome when a threat enters this range. Larger reacts earlier but may waste the cast; smaller saves PP but may be too late.",
   "world_combat.move.protect.text.block": "Blocked %1$s (left %2$s)",
-  "world_combat.move.protect.text.shatter": "The dome shattered"
+  "world_combat.move.protect.text.shatter": "The dome shattered",
+  "worldcombat.skill.protect.description.pool": "The shield ends when depleted; damage exceeding its remaining capacity still hits you. It does not protect against self-inflicted damage or environmental damage without an attacker."
 }

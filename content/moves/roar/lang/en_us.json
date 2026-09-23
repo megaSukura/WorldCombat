@@ -30,5 +30,6 @@
   "effect.world_combat.roar_routed": "Routed",
   "world_combat.move.roar.text.wave": "Roared %1$s opponent(s) off",
   "world_combat.move.roar.text.miss": "The roar fades into the air",
-  "world_combat.move.roar.text.switch": "Roar · forced switch"
+  "world_combat.move.roar.text.switch": "Roar · forced switch",
+  "worldcombat.skill.roar.description.additional": "On impact it interrupts the target's current interruptible action, clears its combat target and shoves it hard away from you; each beat of the rout also clears its target again. An opponent with an available reserve is truly switched out and the reserve takes its place; wild or reserve-less ones are only driven off."
 }

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.snatch.summary": "探出一只手，抓住指定对手接下来要给自己加的那一手，原样收进自己身上；它没出可夺的招式就空手而回。",
+  "worldcombat.skill.snatch.summary": "等待选定对手的下一次增益，夺走可抢的自用招式或它刚获得的一项有益药水效果。",
   "worldcombat.skill.snatch.use.0": "把对手马上要上的增益抢过来",
   "worldcombat.skill.snatch.use.1": "截走对手的回复与布置",
   "worldcombat.skill.snatch.use.2": "在对手开打前先夺走它的准备",
-  "worldcombat.skill.snatch.description.0": "起手 %1$s 后，手在目标面前张开 %2$s；这段时间里它提交的自我强化／回复招式会被顶回去，改由你使出。",
+  "worldcombat.skill.snatch.description.0": "起手 %1$s 后，等待选定目标 %2$s；它使出可抢夺的自我强化或回复招式时，该招被取消并改由你使出。",
   "worldcombat.skill.snatch.description.1": "作用距离 %1$s 格；当前配置下射程 %2$s 格，需要视线畅通。",
-  "worldcombat.skill.snatch.description.2": "两次探手之间冷却 %1$s。窗口没等到可夺的招式就空手而回，不消耗 PP；夺到的那一手按你的能力结算。",
+  "worldcombat.skill.snatch.description.2": "冷却 %1$s。未等到可夺的招式或增益则不消耗PP；夺来的招式按你的能力结算，药水效果按原等级与剩余时间转移。",
   "worldcombat.skill.snatch.patient.on": "屏息：张手时长 ×1.5，能等更慢的布置；代价是起手 +3 刻、冷却 ×1.2。",
   "worldcombat.skill.snatch.patient.off": "急取：起手 −2 刻、冷却 ×0.85，抢一拍更快；代价是张手时长 ×0.9。",
   "worldcombat.skill.snatch.timing": "对单体敌人施放，准备 %2$s 秒后消耗 %4$s PP 张手；结束后收招 %3$s 秒，冷却 %5$s 秒，当前射程 %1$s 格。",
@@ -27,5 +27,6 @@
   "worldcombat.skill.snatch.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.snatch.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去探手。",
   "world_combat.move.snatch.text.taken": "夺来了 %1$s",
-  "world_combat.move.snatch.text.empty": "空手而回"
+  "world_combat.move.snatch.text.empty": "空手而回",
+  "worldcombat.skill.snatch.world": "张手的 %1$s 内，还可夺走选定目标刚获得的一项有益药水效果，保留其等级和剩余时间；取走时仍须在射程内且视线畅通。自己已有更强或同级更久的同种效果时接不住，目标保留该效果。"
 }

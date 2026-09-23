@@ -58,10 +58,10 @@ namespace PokemonSkills {
 
     stages("sunnyday", [{ level: 40, values: { cooldown: 126 } }, { level: 55, values: { cooldown: 108 } }]);
     describe("sunnyday", [
-        { key: "description.0", values: ["sunRadius", "sunTicks"] },
+        { key: "description.0", values: ["sunRadius","sunTicks"] },
         { key: "description.1", values: ["sunlitTicks"] },
         { key: "description.2", values: ["gather", "settle"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

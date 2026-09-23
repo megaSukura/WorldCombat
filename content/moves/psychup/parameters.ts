@@ -1,21 +1,4 @@
-/**
- * 自我暗示 / psychup — 参数与机制数值来源。
- *
- * 核心念头：把对手已经摆好的架势读进自己身体，让自己的能力阶梯和它对齐。对手是镜子，自己是介质。
- * 原生：Psychic／变化／命中必中／PP 10／单体；`onHit` 把 `target.boosts` 逐项写进 `source.boosts`，
- *       并把集气、超能蓄力等挥发状态一并抄走。即时化保留“逐项对齐能力阶梯”这一件事，去掉挥发表，
- *       因为本项目的即时战斗把能力变化统一放在共享阶梯里（宝可梦走原生等级，其他生物走 CombatStages）。
- *
- * 每个参数是一棵公式，出招时求值、悬浮时展开；依赖分散在不同精灵数据上：
- *   reach     读取距离：体型给出能看清的范围，特攻决定心灵还能推出多远。
- *   tempo     起手：速度决定入定多快。
- *   aftercast 收势：特防决定对齐后压得多稳。
- *   recharge  冷却：速度决定多久能再同步一次。
- *   span      “已同调”标记：等级与特防延长时间；只取增益时标记减半。
- *   echoes    回响条数：特攻决定画面里抽回的光带数量。
- * 配置项 selective（只取增益 / 照单全收）：照单全收更便宜、标记更长；只取增益省去负面，但要更长冷却。
- */
-
+/** psychup：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     actionParameters.define("psychup", {
         reach: formula(
@@ -35,7 +18,7 @@ namespace PokemonSkills {
             "收势", "阶梯对齐后的收势；特防越高压得越稳。"),
         recharge: seconds(
             F.base(70, "基础").minus(F.stat("speed").times(0.3).as("速度")).clamp(30, 110).round(),
-            "冷却", "再次自我暗示需要多久；速度快的个体更快恢复。"),
+            "冷却", "再次自我暗示需要多久；速度快的个体更快恢复。", { base: 70 }),
         span: seconds(
             F.base(120, "基础")
                 .plus(F.level().times(2.4).as("等级"))
@@ -48,7 +31,7 @@ namespace PokemonSkills {
             "回响条数", { unit: "条", description: "画面里从对手抽回自己身上的回响光带数量；特攻越高越密。" })
     });
 
-    stages("psychup", [{ level: 35, values: { cooldown: 60 } }, { level: 50, values: { cooldown: 50 } }]);
+    stages("psychup", [{ level: 35, values: { recharge: 60 } }, { level: 50, values: { recharge: 50 } }]);
 
     describe("psychup", [
         { key: "description.0", values: ["reach", "tempo"] },
@@ -56,7 +39,7 @@ namespace PokemonSkills {
         { key: "select.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.selective); } },
         { key: "select.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.selective); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.recharge"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.recharge"] }
     ]);
 }

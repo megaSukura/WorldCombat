@@ -3,10 +3,10 @@
   "worldcombat.skill.confusion.use.0": "便宜快速的远程骚扰",
   "worldcombat.skill.confusion.use.1": "用低伤害反复磨血",
   "worldcombat.skill.confusion.use.2": "压制喜欢连续出手的对手",
-  "worldcombat.skill.confusion.description.0": "念弹命中造成 %1$s 点特殊伤害。",
-  "worldcombat.skill.confusion.description.1": "命中后有 %1$s 概率让目标恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散，被打散时念力再敲一下。",
-  "worldcombat.skill.confusion.description.2": "念弹射程 %1$s 格、弹速 %2$s 格/刻。",
-  "worldcombat.skill.confusion.focus.on": "当前为凝念：威力更高、恍惚更久更易触发、失手率更高，代价是射程更近、判定更细、弹速更慢。",
+  "worldcombat.skill.confusion.description.0": "念弹命中造成约 %1$s 点特殊伤害。",
+  "worldcombat.skill.confusion.description.1": "命中后有 %1$s 概率让目标恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散，被打散时念力会再敲一下。",
+  "worldcombat.skill.confusion.description.2": "念弹射程 %1$s 格、弹速 %2$s 格/刻，判定半径 %3$s 格。",
+  "worldcombat.skill.confusion.focus.on": "当前为凝念：威力更高、恍惚更久更易触发、失手率更高，代价是射程更近、判定更细、弹速更慢、起手多 0.1 秒、冷却多 0.25 秒。",
   "worldcombat.skill.confusion.focus.off": "当前为散念：更快更远更便宜的一发，代价是单发更轻、恍惚更少见。",
   "worldcombat.skill.confusion.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.confusion.growth.0": "%1$s 级起念弹威力升至 %2$s。",
@@ -32,5 +32,6 @@
   "worldcombat.skill.confusion.preference.ai.finish.help": "开启：目标生命比例越低排得越前，用短冷却去补最后一下；关闭则只按普通远程攻击排序。",
   "effect.world_combat.confusion_pulse": "恍惚",
   "world_combat.move.confusion.text.daze": "恍惚",
-  "world_combat.move.confusion.text.chip": "念力 -%1$s"
+  "world_combat.move.confusion.text.chip": "念力 -%1$s",
+  "worldcombat.skill.confusion.description.chip": "被打散时，念力按目标自身特攻再敲一击，扣掉它最大生命的约 1.2%~5%（特攻越高越重），并把恍惚至少再续 3 秒——越挣扎越被磨。"
 }

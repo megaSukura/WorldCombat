@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.imprison.summary": "把自己会的每一手锁进一枚封印并铺成领域；领域内的对手，凡是用你也会的招式，都被顶回去。换一手不在名单里的招就能打，离开领域或解除施法者的封印即可脱身。",
+  "worldcombat.skill.imprison.summary": "展开随自己移动的封印领域，封住敌人与你共有的招式。对普通敌人，近战和远程攻击会按自己会的攻击类型被封住。",
   "worldcombat.skill.imprison.use.0": "把与对手重合的招式整片锁死",
   "worldcombat.skill.imprison.use.1": "压住会同样招式的镜像 / 同类对手",
   "worldcombat.skill.imprison.use.2": "逼对手离开它熟练的那几手",
   "worldcombat.skill.imprison.description.0": "封印在施法者身上维持 %1$s：期间你会的每一手都被锁进领域。",
-  "worldcombat.skill.imprison.description.1": "封印覆盖身边半径 %1$s 格；领域随你移动，圈内与自己重合的招式会被封住。",
+  "worldcombat.skill.imprison.description.1": "领域半径 %1$s 格。宝可梦与你同名的招式被封住；普通生物或玩家出过手后，你若会接触攻击就封其近战，会非接触攻击就封其远程。离开领域约1.3秒后解除。",
   "worldcombat.skill.imprison.description.2": "立印起手 %1$s，收势 %2$s，冷却 %3$s。领域随你移动，离开领域或不再与你重合就自然撤印。",
   "worldcombat.skill.imprison.scope.0": "固守：领域 ×0.8、时长 ×1.35、冷却 ×1.15——钉住一片久一点。",
   "worldcombat.skill.imprison.scope.1": "广布：领域 ×1.25、时长 ×0.75、冷却 ×0.9——罩住更多人却撑得更短。",

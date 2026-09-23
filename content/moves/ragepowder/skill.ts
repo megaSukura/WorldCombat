@@ -81,8 +81,8 @@ namespace PokemonSkills {
     define({
         id: ragePowderId,
         cooldownParameter: "recharge", name: "愤怒粉",
-        description: "把一团刺鼻的粉尘撒在自己身上，粉尘范围里的敌人会被不断拉向自己；因为是粉末，草属性免疫。",
-        uses: ["用一团粉把敌人的火力从同伴身上吸到自己这里", "把贴住同伴的敌人黏住，给同伴脱身的机会", "在开阔地罩住一小片区域，把交战点攥在手里"],
+        description: "把一团刺鼻的粉尘撒在自己身上，粉尘范围里的敌人会被不断引向自己；因为是粉末，草属性免疫。",
+        uses: ["用一团粉把敌人的火力从同伴身上吸到自己这里", "把追着同伴的敌人引到自己身上，给同伴脱身的机会", "在开阔地罩住一小片区域，把交战点攥在手里"],
         kind: "self", range: 0, prepare: 6, active: 0, recover: 5, cooldown: 110, style: "powder",
         stationary: true, maximumTicks: 400,
         defaults: { thick: false },

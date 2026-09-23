@@ -1,17 +1,7 @@
-/**
- * 胃液 / gastroacid — 伙伴 AI 用途与自己的出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、有一条通视直线、目标身上还没有“沾酸”标记，
- *   而且它是宝可梦、特性读得出来且没被标成不可压制（`native-abilities` 的 cantsuppress）。
- * 对谁出手：当前威胁；已经被胃液蚀过、或特性为空的目标跳过，不重复吐。
- * 候选之间怎么排：priority 65，排在普通出手之前，先把对手的持续特性拆掉。
- * 够不到怎么办：reach 就是本招射程，共享任务先走近到能通视的射程再吐。
- * 放完之后：对手的特性被压制一段时间，交回共享交战计划；标记与压制层同时到期。
- * ai.maxChase 决定追多远；ai.leaveStation 决定驻守时是否愿意离位。
- */
+/** gastroacid：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     registerFact("world_combat:gastroacid-open", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return false;
+        if (String(actor.domain()) !== "cobblemon") return access.valid(actor);
         const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(access, actor);
         const ability = NativeEffects.ability(pokemon, state);
         return !!ability && !NativeAbilities.flag(ability, "cantsuppress");

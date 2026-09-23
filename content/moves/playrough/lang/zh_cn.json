@@ -3,9 +3,9 @@
   "worldcombat.skill.playrough.use.0": "冲上去把对手撞翻、顶离原位",
   "worldcombat.skill.playrough.use.1": "在扎堆的敌人之间来回翻滚",
   "worldcombat.skill.playrough.use.2": "压制物理攻击手",
-  "worldcombat.skill.playrough.description.0": "扑撞造成 %1$s 点物理伤害，撒欢式若在 %3$s 格内还有别的敌人，再翻过去造成 %2$s 点。",
+  "worldcombat.skill.playrough.description.0": "扑撞造成约 %1$s 点物理伤害；撒欢式下，若撞中处 %3$s 格内还站着别的敌人，会翻过去再造成约 %2$s 点。",
   "worldcombat.skill.playrough.description.1": "每撞到一个目标，有 %1$s 概率让它的攻击下降 %2$s 级。",
-  "worldcombat.skill.playrough.description.2": "扑撞冲出去 %1$s 格、速度 %2$s 格/刻，把目标顶开约 %3$s 格。",
+  "worldcombat.skill.playrough.description.2": "扑撞冲出去 %1$s 格、速度 %2$s 格/刻，命中后把目标顶开约 %3$s 格。",
   "worldcombat.skill.playrough.romp.on": "当前为撒欢：扑得更远、滚得更快、顶得更开、翻身范围更大、起手与冷却更短，但两下都更轻、降攻更少见。",
   "worldcombat.skill.playrough.romp.off": "当前为实撞：更短的一撞、两下都更重、更容易把对手撞得攻击下降。",
   "worldcombat.skill.playrough.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -35,5 +35,6 @@
   "worldcombat.skill.playrough.preference.ai.finish.help": "开启：目标生命比例越低排得越前；关闭则只按普通近战排序。",
   "world_combat.move.playrough.text.down": "被撞翻",
   "world_combat.move.playrough.text.atk": "攻击 -%1$s",
-  "world_combat.move.playrough.text.miss": "扑空了"
+  "world_combat.move.playrough.text.miss": "扑空了",
+  "worldcombat.skill.playrough.description.3": "扑撞以 %1$s 格的判定半径扫过沿途，会被地形或挡路的身体截停；一路没有撞到人则扑空收势。"
 }

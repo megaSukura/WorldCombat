@@ -25,7 +25,7 @@ namespace PokemonSkills {
         id: karatechopId,
         cooldownParameter: "recharge",
         name: "Karate Chop",
-        description: "The target is attacked with a sharp chop. Critical hits land more easily.",
+        description: "抬手一记手刀，几乎没有起手：一道竖直的白线瞬间落在贴身的一个目标身上，把它劈开并崩出碎屑。它够得极近、只打一个、冷却极短，刀口专找护甲的缝，对高防御目标衰减更慢；暴击率比同族高一档。",
         uses: ["抬手就是一记手刀，没有起手", "只打贴身的一个目标，冷却极短", "刀口专找护甲的缝，暴击率高一档"],
         kind: "enemy",
         range: 1.9,

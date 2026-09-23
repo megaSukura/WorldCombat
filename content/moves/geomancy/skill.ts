@@ -67,6 +67,8 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
+        requiresGround: true,
         id: "geomancy",
         cooldownParameter: "wait",
         name: "大地掌控",

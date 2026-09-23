@@ -3,7 +3,7 @@
   "worldcombat.skill.growl.use.0": "Call a ring of close enemies soft when surrounded",
   "worldcombat.skill.growl.use.1": "Drop several attackers' output at once while they cluster",
   "worldcombat.skill.growl.use.2": "Weaken a threat through cover when it hugs you",
-  "worldcombat.skill.growl.description.0": "Every listener loses %1$s Attack stage(s) and stays distracted for %2$s.",
+  "worldcombat.skill.growl.description.0": "Every enemy who hears loses %1$s Attack stage(s) and carries the 'softened' mark for %2$s; while distracted, companions will not use Growl on an already softened foe again. The Attack drop is a stat stage and does not recover when the mark expires; it lasts until the target leaves combat and its stages reset.",
   "worldcombat.skill.growl.description.1": "Cry radius %1$s; every non-friendly inside hears it. Sound ignores line of sight.",
   "worldcombat.skill.growl.description.2": "Windup %1$s with a %2$s cooldown. Centred on you, so anyone outside the ring is untouched.",
   "worldcombat.skill.growl.howl.off": "Short cry: quick, small radius, short duration.",

@@ -23,10 +23,11 @@ namespace PokemonSkills {
     const volttackleVentText = "world_combat.move.volttackle.text.vent";
 
     define({
+        freeMovement: true,
         id: "volttackle",
         cooldownParameter: "recharge",
         name: "Volt Tackle",
-        description: "The user electrifies itself and charges the target to inflict damage. This also damages the user quite a lot and may leave the target with paralysis.",
+        description: "蓄力后冲撞目标，并以电流攻击落点附近的敌人，有机会使其麻痹；命中后自身承受反伤，冲空时电荷就地泄放、不自伤。",
         uses: ["蓄好电再一记爆冲撞开挡路的对手", "在人堆里撞一个、用电弧把旁边的人也电到", "给主力目标挂上麻痹并趁机拉开身位"],
         kind: "enemy",
         range: 5.0,
@@ -118,7 +119,7 @@ namespace PokemonSkills {
                     const body = scope.observe(other);
                     if (body === null || !scope.clear(point, body.position())) continue;
                     hurt(current, other, "volttackle", power * arcPower,
-                        { damage: damageSpec("volttackle", "surge"), status: "paralysis", chance: arcChance });
+                        { damage: damageSpec("volttackle", "surge"), status: "paralysis", chance: arcChance, statusTicks: numbTicks });
                     WorldFeedback.emit(scope, volttackleScene, 1, body.position(),
                         { moment: "discharge", target: String(other.ref()), sparks: Math.round(sparks * 0.7), scale: scale,
                             intensity: Math.max(0.6, Math.min(2.2, power * arcPower / 55)) }, 24);
@@ -138,7 +139,7 @@ namespace PokemonSkills {
                     const already = target !== null && scope.valid(target) && CombatStatus.has(scope, target, "paralysis");
                     const landed = impact(current, hit, "volttackle", power,
                         { damage: damageSpec("volttackle", "surge"), contact: true, recoil: recoil,
-                            status: already ? "" : "paralysis", chance: already ? 0 : chance });
+                            status: already ? "" : "paralysis", chance: already ? 0 : chance, statusTicks: numbTicks });
                     WorldFeedback.emit(scope, volttackleScene, 1, point,
                         { moment: "burst", target: target ? String(target.ref()) : "", sparks: sparks, scale: scale,
                             intensity: intensity, charged: already ? 0 : 1 }, 30);

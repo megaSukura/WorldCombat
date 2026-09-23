@@ -80,7 +80,8 @@ namespace PokemonSkills {
     describe("shadowbone", [
         { key: "description.0", values: ["bone"] },
         { key: "description.1", values: ["throwRange", "throwSpeed", "collisionRadius"] },
-        { key: "description.2", values: ["rattleChance", "rattleStages", "rattleTicks"] },
+        { key: "description.additional", values: [] },
+        { key: "description.2", values: ["rattleChance","rattleStages","rattleTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bone"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.rattleChance"] }

@@ -13,7 +13,7 @@
  */
 namespace PokemonSkills {
     define({
-        id: "charge", name: "充电", description: "把电能压进自己身体：特防提高 1 级，下一次电属性招式威力翻倍；那一击落下时电荷炸开用掉，不用则会随时间自行褪去。",
+        id: "charge", name: "充电", description: "储存电荷并提高特防，强化下一次电属性招式。",
         uses: ["决招前蓄力", "硬吃一发法术", "接电招爆发"], kind: "self", range: 1, prepare: 6, active: 0, recover: 6, cooldown: 70, style: "charge",
         defaults: { hold: false },
         fields: [flag("hold", "蓄满电")],

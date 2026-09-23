@@ -32,11 +32,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "skyattack",
         cooldownParameter: "recharge",
         name: "Sky Attack",
-        description: "The user charges in place, then plunges straight down onto the target from high above; a heavy blow that can make the target flinch.",
-        uses: ["先蓄一拍再从上空砸下一记重击", "越过地面阻挡打到远处的目标", "把飞在空中的对手也压下来"],
+        description: "先停在原地蓄一整拍（可被打断），再腾到落点上方笔直坠下砸成一记重击；落点在起跳那刻定住、不会追踪，坠下途中目标走开就会落空。命中按概率使目标畏缩、打断其动作。高空式蓄得更久、砸得更狠。",
+        uses: ["先蓄一拍再从上空砸下一记重击", "越过地面阻挡打到远处的目标", "从上方砸中飞在空中的对手"],
         kind: "enemy",
         range: 6,
         maxRange: 12,

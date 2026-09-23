@@ -3,12 +3,12 @@
   "worldcombat.skill.quickguard.use.0": "Block a chain of fast priority strikes",
   "worldcombat.skill.quickguard.use.1": "Raise the brace a beat before a foe's dash opens",
   "worldcombat.skill.quickguard.use.2": "Eat one string of quick hits for the team in the shortest window",
-  "worldcombat.skill.quickguard.description.0": "The brace knocks about %1$s priority damage off each ally and stands for about %2$s s.",
-  "worldcombat.skill.quickguard.description.1": "The brace covers %1$s blocks.",
+  "worldcombat.skill.quickguard.description.0": "The brace knocks about %1$s priority damage off each covered person and stands for about %2$s, falling when its supply runs out or its time is up.",
+  "worldcombat.skill.quickguard.description.1": "When raised it covers the user and allies within %1$s blocks.",
   "worldcombat.skill.quickguard.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.quickguard.brace.snap": "Snap: absorption x0.75, duration x0.8, radius x0.85, in exchange for -1 tick wind-up and x0.85 cooldown — the fastest raise.",
   "worldcombat.skill.quickguard.brace.steady": "Steady: absorption x1.25, duration x1.25, radius x1.05, at +2 ticks wind-up and x1.15 cooldown — holds tighter and longer.",
-  "worldcombat.skill.quickguard.timing": "Self move, covering a %1$s block radius; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
+  "worldcombat.skill.quickguard.timing": "A self move with %1$s blocks of range; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.quickguard.value.capacity": "Brace absorption",
   "worldcombat.skill.quickguard.value.window": "Brace duration",
   "worldcombat.skill.quickguard.value.radius": "Cover radius",
@@ -29,5 +29,6 @@
   "world_combat.move.quickguard.text.block": "Quick Guard knocked off %1$s (left %2$s)",
   "world_combat.move.quickguard.text.fall": "Quick Guard fell",
   "world_combat.move.quickguard.text.ward": "Quick Guard turned the priority move",
-  "effect.world_combat.quick_guard": "Quick Guard"
+  "effect.world_combat.quick_guard": "Quick Guard",
+  "worldcombat.skill.quickguard.description.additional": "The brace only turns away enemy priority moves (priority above 0): priority damage comes out of each person's own supply, the brace falls when that runs out so any excess on that hit still lands, and priority status moves are turned aside whole. Non-priority attacks and allies' moves are unaffected. A covered ally that moves too far from the user, or loses line of sight to the user, loses the protection early."
 }

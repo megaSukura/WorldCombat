@@ -107,7 +107,7 @@ namespace PokemonSkills {
     describe("knockoff", [
         { key: "description.0", values: ["smash", "collisionRadius"] },
         { key: "description.1", values: ["reach", "step", "push"] },
-        { key: "description.2", values: ["scatter", "pickup"] },
+        { key: "description.2", values: ["scatter","pickup"] },
         { key: "far.on", values: [], when: function (context) { return read(context.detail.values, ["far"]) === true; } },
         { key: "far.off", values: [], when: function (context) { return read(context.detail.values, ["far"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

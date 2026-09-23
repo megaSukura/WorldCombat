@@ -118,8 +118,8 @@ namespace PokemonSkills {
     ]);
 
     describe(steelrollerId, [
-        { key: "description.0", values: ["roll", "distance"] },
-        { key: "description.1", values: ["speed", "collisionRadius", "push", "scarCells", "scarTicks"] },
+        { key: "description.0", values: ["roll","distance"] },
+        { key: "description.1", values: ["speed","collisionRadius","push","scarCells","scarTicks"] },
         { key: "grind.on", values: [], when: function (context) { return read(context.detail.values, ["grind"]) === true; } },
         { key: "grind.off", values: [], when: function (context) { return read(context.detail.values, ["grind"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

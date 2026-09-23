@@ -104,8 +104,8 @@ namespace PokemonSkills {
     defineDamage("brutalswing", "sweep", {}, { contact: true });
 
     describe("brutalswing", [
-        { key: "description.0", values: ["sweep", "reach"] },
-        { key: "description.1", values: ["jolt", "lap"] },
+        { key: "description.0", values: ["sweep","reach"] },
+        { key: "description.1", values: ["jolt","lap"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,10 +1,10 @@
 {
   "worldcombat.skill.tripledive.summary": "Three timed leaps, each diving at the target and bursting into water on landing; every landed dive drenches the target, and an already soaked target takes the next dive harder. When all three land on one target, the third is heaviest.",
   "worldcombat.skill.tripledive.use.0": "Dive three times into one target, heavier each time",
-  "worldcombat.skill.tripledive.use.1": "Open by drenching the target to set up later Water moves",
+  "worldcombat.skill.tripledive.use.1": "Open by drenching the target so the later dives take the full bonus",
   "worldcombat.skill.tripledive.use.2": "Stack three small hits in a short close-range window",
   "worldcombat.skill.tripledive.description.0": "Each of the three dives deals about %1$s Water contact damage, reaching %2$s blocks with a %3$s block splash radius; the target's Defence, type matchup and crits are settled per dive.",
-  "worldcombat.skill.tripledive.description.1": "Each hit drenches the target for %2$s. Hits against drenched targets have %1$s times the power.",
+  "worldcombat.skill.tripledive.description.1": "Every landed dive drenches the target and refreshes it to %2$s; against a target that is already drenched, that dive's power rises to %1$s. When all three dives land on one target, the second and third take this bonus automatically.",
   "worldcombat.skill.tripledive.description.2": "The dives are %1$s apart.",
   "worldcombat.skill.tripledive.plunge.on": "Deep Plunge: higher leaps, each dive 20 percent heavier, splash radius x1.2 and drench duration x1.25, but the rhythm is +2 ticks and the cooldown +6 ticks: harder hits on a longer window for the target.",
   "worldcombat.skill.tripledive.plunge.off": "Quick Hop: faster dives, each 10 percent lighter and a shorter cycle, but smaller splashes and a shorter drench: steadier and denser, lighter per hit.",
@@ -31,5 +31,6 @@
   "effect.world_combat.tripledive_drenched": "Triple Dive: Drenched",
   "world_combat.move.tripledive.text.splash": "Dive %1$s lands (%2$s hits)",
   "world_combat.move.tripledive.text.full": "All three dives land (%1$s dives, %2$s hits)",
-  "world_combat.move.tripledive.text.miss": "Dive %1$s misses"
+  "world_combat.move.tripledive.text.miss": "Dive %1$s misses",
+  "worldcombat.skill.tripledive.description.additional": "Whether a dive lands depends only on where the target is at that moment: it hits while the target is within %1$s blocks of dive reach plus the %2$s block splash radius, and misses once the target is outside; before each leap the user slides up to 0.7 times the dive reach toward the target to pull a fleeing target back into range."
 }

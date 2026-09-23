@@ -23,7 +23,7 @@ namespace PokemonSkills {
     define({
         id: "falsesurrender",
         name: "False Surrender",
-        description: "The user pretends to bow its head, but then it stabs the target with its disheveled hair. This attack never misses.",
+        description: "先伏低装作认输，把对手的注意骗走，再让凌乱的黑发从最低处窜出去扎进护架下方：出刺点最低最突然，所以躲不掉。对手的注意越不在你身上，这一刺越狠；代价是伏低时你自己不能动。",
         uses: ["伏低装认输，再贴地一记发刺", "对没在盯着自己的目标打出更重的一击", "用较低的出手角度绕开正面护架"],
         kind: "enemy",
         range: 4.5,

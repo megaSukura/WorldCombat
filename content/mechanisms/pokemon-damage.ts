@@ -6,6 +6,9 @@ namespace PokemonDamage {
         damage?: CombatantStats.DamageSpec; deferred?: string[]; action?: number; eligibilityMove?: string; damageType?: string; segment?: string;
         /** fixed() only: exclude the target's actual native armour; other native protection still settles normally. */
         ignoreArmor?: boolean;
+        /** Signed additive armour contribution accounted by this hit; native equipment and multipliers remain active. */
+        armorAddedExcluded?: number; toughnessAddedExcluded?: number;
+        ignoreDefenceStages?: boolean;
         knockback?: boolean; bypassCooldown?: boolean;
     };
     export type ResolvedMetadata = NativeEffects.Move & Metadata & { move: string; action: number; flags: { [name: string]: boolean } };
@@ -27,6 +30,19 @@ namespace PokemonDamage {
         actionContext?: CombatAction;
     };
     export interface MetadataContext extends FeatureContext { readonly metadata: ResolvedMetadata; }
+    /** Ignore the defender's ladder for this hit only; never mutate its persistent stages or equipment. */
+    export function ignoreDefenceStages(context: MetadataContext): void {
+        if (!context.targetFacts) return;
+        var native = context.targetFacts.data.native, stat = context.metadata.category === "special" ? "spd" : "def";
+        context.metadata.ignoreDefenceStages = true;
+        if (native && native.state) {
+            if (native.state.stages) native.state.stages[stat] = 0;
+            if (native.state.layers && native.state.layers.stages) native.state.layers.stages[stat] = 0;
+        } else if (context.world && context.target) {
+            context.metadata.armorAddedExcluded = (context.metadata.armorAddedExcluded || 0)
+                + CombatStages.stage(context.world, context.target, "def") * CombatStages.armorPerStage;
+        }
+    }
     /** Pure, ordered source modifiers for every actor domain, after segment resolution and before native source modifiers. */
     export var metadata = new WorldContributions.Registry<MetadataContext>();
     // Legacy feature names are views of the canonical native flag names, so either consumer sees the same value.

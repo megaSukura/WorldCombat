@@ -125,11 +125,12 @@ namespace PokemonSkills {
 
     describe("stomp", [
         { key: "description.0", values: ["slam"] },
-        { key: "description.1", values: ["aftershock", "shock"] },
-        { key: "description.2", values: ["flinchChance", "staggerChance", "flinchTicks"] },
+        { key: "description.1", values: ["shock","aftershock"] },
+        { key: "description.2", values: ["flinchChance","staggerChance","flinchTicks"] },
+        { key: "description.crater", values: ["crater","craterTicks"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slam", "tier.0.aftershock"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.slam", "tier.1.shock", "tier.1.flinchChance"] }
     ]);

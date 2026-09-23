@@ -15,14 +15,14 @@
  *   recharge    70 - 速度 × 0.12 秒，夹 30..120；再次放出前的等待。
  *   mistTicks   180 刻基础，40／55 级台阶延长到 240／300；共享混乱的持续时间。
  *   motes       10 + 特攻 × 0.12，夹 8..48；命中时炸开的幽光数量，也驱动粒子。
- * 配置 beam 双向取舍：广照更远、判定更粗，但混乱更短；凝神更近、起手更慢，但混乱更久更重。
+ * 配置 beam 双向取舍：广照更远；凝神射程更近、起手更慢、冷却更长，混乱持续时间 ×1.35。
  */
 namespace PokemonSkills {
     export const confuserayId = "confuseray";
     export const confuserayEffect = "world_combat:confuseray_mist";
     export const confuserayScene = "world_combat:move_confuseray";
     export const confuseraySpot = "world_combat:status/confusion";
-    /** 命中后每次落手被打散的基础概率；载体振幅每 +1 提升 10%。skill.ts 与说明同源。 */
+    /** 命中后每次出手失败的基础概率；载体振幅按百分数写入，30 对应30%。 */
     export const confuserayBaseChance = 0.3;
     /** 反噬基数（最大生命比例）；被光晃晕的目标打中别人时按攻击放大。 */
     export const confuserayRecoilFraction = 0.055;
@@ -53,9 +53,12 @@ namespace PokemonSkills {
         { level: 40, values: { mistTicks: 240 } },
         { level: 55, values: { mistTicks: 300 } }
     ]);
+    // Apply the stance after level growth so Focus lengthens the complete duration at every level.
+    actionParameters.rules.modify(confuserayId + "/mistTicks", "confuseray:focus-duration", "×",
+        F.when(F.choice("beam", "focus"), F.const(1.35), F.const(1)).as(text("worldcombat.skill.confuseray.preference.beam")));
     describe(confuserayId, [
         { key: "description.0", values: ["mistTicks"] },
-        { key: "description.1", values: ["beamReach", "beamRadius", "range"] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] }
+        { key: "description.1", values: ["beamReach","beamRadius","range"] },
+        { key: "description.2", values: ["prepare","recover","cooldown"] }
     ]);
 }

@@ -1,31 +1,4 @@
-/**
- * 嚣张 / powertrip —— 参数与伤害段。
- *
- * 原生事实：Dark／物理／基础威力 20／命中 100／PP 10／接触，威力 = 20 + 20 × 自身正面能力等级总数
- *   （`positiveBoosts()`），无次要效果（Cobblemon 1.8，21 位学习者）。
- *
- * 翻译：把「耀武扬威」落成一记**带着架势的冲撞**——施法者把攒下的每一层提升都摆成一身气焰，朝选中的
- *   对手直冲过去，一头撞上；气势越盛，冲得越远越快、撞得越重、把人顶得越开。这正是它和辅助力量分开的地方：
- *   辅助力量以自己为圆心把力量放出去、还要倾囊花掉等级；嚣张把等级留在身上，只挑一个人撞。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   boost      架势层数：自身五项能力（攻／防／特攻／特防／速度）正面等级的总和——本招的核心机制值。
- *   raised     气焰道数：有正面等级的能力项数，决定起手时喷出几道气焰。
- *   swagger    冲撞威力：基础 18 + 架势层数 ×20（封顶 +120）+ 物攻偏移 + 等级偏移；收敛 ×1.1 / 猛进 ×0.88；夹 18..190。
- *   dash       冲撞距离：基础 2.6 格 + 速度偏移 + 架势层数偏移；夹 2.4..5.4；也是实际射程来源。
- *   speed      冲撞速度：基础 0.8 格/刻 + 速度偏移 + 架势层数偏移；气势越盛冲得越快。
- *   collisionRadius 判定半径：基础 0.45 格 + 身高偏移；夹 0.38..0.8。
- *   push       顶开距离：基础 0.5 格 + 物攻偏移 + 架势层数偏移；猛进时收窄；夹 0.25..1.3。
- *   targets    穿刺目标数：收敛 1、猛进 2；决定这一冲最多撞到几个人。
- *   plumes     气焰数：起手与冲撞的表现数量，随气焰道数与架势层数走（表现消费者）。
- *   tempo／settle／recharge：速度定节奏，架势层数让起手更急，猛进更费。
- *
- * 配置 `drive`（猛进）双向取舍：开启＝冲势穿堂，最多撞到两个人（每人 ×0.88），但顶开更弱、收招 +3、冷却 +5；
- *   关闭（收敛）＝停在第一个目标上，单发 ×1.1、顶得更开、节奏更快。横扫 vs 单点，各有局面。
- *
- * 伤害段 `swagger` 与参数同名：这一撞随精灵数据变化的那部分；对手防御、相性与暴击在命中时统一结算。
- * 属性与分类沿用原生 Dark／物理，接触标记写在 defineDamage 上。
- */
+/** powertrip：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const powertripId = "powertrip";
     export const powertripScene = "world_combat:move_powertrip";
@@ -45,7 +18,7 @@ namespace PokemonSkills {
         const stages = powertripStages(world, actor);
         let total = 0;
         powertripStats.forEach(function (stat) { const value = stages[stat] || 0; if (value > 0) total += value; });
-        return total;
+        return total + MobEffects.levels(world, actor, "beneficial");
     }
 
     /** 有正面等级的能力项数；决定起手时喷出几道气焰。 */
@@ -53,7 +26,7 @@ namespace PokemonSkills {
         const stages = powertripStages(world, actor);
         let count = 0;
         powertripStats.forEach(function (stat) { if ((stages[stat] || 0) > 0) count++; });
-        return count;
+        return count + MobEffects.native(world, actor, "beneficial").length;
     }
 
     defineFacts(powertripId, function (context: FactContext): Formula.Facts {
@@ -66,6 +39,9 @@ namespace PokemonSkills {
     });
 
     actionParameters.define(powertripId, {
+        boost: formula(F.var("powertrip.boost", text("worldcombat.skill.powertrip.value.boost")), "强化层数", {
+            unit: "层", description: "当前五项正面能力等级与药水、信标增益的等级总和。"
+        }),
         /** 冲撞威力：18 + 架势层数 ×20（封顶 +120）+ 物攻偏移[−8,26] + 等级偏移[−2,6]；收敛 ×1.1 / 猛进 ×0.88；夹 18..190。 */
         swagger: formula(
             F.base(18)
@@ -160,6 +136,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["targets"] },
         { key: "drive.on", values: [], when: function (context) { return read(context.detail.values, ["drive"]) === true; } },
         { key: "drive.off", values: [], when: function (context) { return read(context.detail.values, ["drive"]) !== true; } },
+        { key: "world", values: [] },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.swagger", "tier.0.dash"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.swagger", "tier.1.dash"] }

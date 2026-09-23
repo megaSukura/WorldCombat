@@ -3,7 +3,7 @@
   "worldcombat.skill.gyroball.use.0": "对手比自己快时的一记重撞",
   "worldcombat.skill.gyroball.use.1": "贴身在原地转满再短促撞出",
   "worldcombat.skill.gyroball.use.2": "用速度差把画面里的陀螺越转越大",
-  "worldcombat.skill.gyroball.description.0": "陀螺球造成约 %1$s 威力的一撞；当前速度差载荷 %2$s 倍（目标速度 ÷ 自己速度），载荷越高这一撞越沉。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.gyroball.description.0": "陀螺球造成约 %1$s 点伤害的一撞；当前速度差载荷 %2$s 倍（目标速度 ÷ 自己速度），载荷越高这一撞越沉。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.gyroball.description.1": "最远垫前 %1$s 格、每刻前进 %2$s 格，轮缘判定半径 %3$s 格，撞实后把目标顶开 %4$s 格。",
   "worldcombat.skill.gyroball.brace.on": "定桩式：转得更重（威力 ×1.14、击退 ×1.18），但垫前更近（×0.86）、滚动更慢（×0.92）、起手多 2 刻、冷却多 6 刻，适合已经贴到脸上的慢速个体。",
   "worldcombat.skill.gyroball.brace.off": "轻旋式（原生形态）：垫得更远、转得更快、收得干净，单发略低。",

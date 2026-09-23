@@ -38,7 +38,7 @@ namespace PokemonSkills {
         id: "hurricane",
         cooldownParameter: "recharge",
         name: "Hurricane",
-        description: "The user attacks by wrapping the target in a fierce wind. This may also confuse the target.",
+        description: "召起一道会走的大风旋，从施法者出发沿瞄准方向席卷而过，把途径上的敌人卷起抛出，并可能让对方晕头转向。雨天更宽更狠，晴天会左右飘移。",
         uses: ["从远处放出一道横扫的风墙，卷过一条线上的敌人", "把扎堆的目标一起卷起抛出、打散阵形", "雨天里起风，让风旋更稳、更容易卷晕对手"],
         kind: "enemy",
         range: 11,

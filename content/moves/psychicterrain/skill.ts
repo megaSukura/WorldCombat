@@ -11,7 +11,7 @@ namespace PokemonSkills {
     define({
         id: psychicterrainId,
         name: "精神场地",
-        description: "在选定的地面铺开精神域：站在场上的活体不会被先制招式打到，超能力招式威力提高。对双方一视同仁。",
+        description: "在选定地面铺开精神域：只有贴地站在场上的活体不会被其他来源的先制招式打到，超能力属性招式威力提高；对双方一视同仁。",
         uses: ["封住对手的先制招式", "给超能力招式加成", "用先制招式反打前先护住队伍"],
         kind: "point",
         range: 15,

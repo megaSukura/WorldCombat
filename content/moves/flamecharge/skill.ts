@@ -29,11 +29,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "flamecharge",
         cooldownParameter: "trail",
         name: "蓄能焰袭",
-        description: "让火焰覆盖全身，攻击对手。积蓄力量并提高自己的速度。",
-        uses: ["直线撞穿一个落单的对手", "沿一条线把挤在一起的对手一起点着", "命中后提速，趁势追下去"],
+        description: "裹着火焰沿直线冲锋：撞中的第一个目标吃一记重击并被带开，随后自身提速；开启贯穿时会继续撞穿，把身后撞到的对手各吃一记较轻的伤害。",
+        uses: ["直线撞中一个落单的对手", "沿一条线把挤在一起的对手一起点着", "命中后提速，趁势追下去"],
         kind: "enemy",
         range: 5,
         maxRange: 7,

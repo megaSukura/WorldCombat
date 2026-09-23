@@ -6,8 +6,8 @@
   "worldcombat.skill.barrier.description.0": "壁立着时防御抬高 %1$s 级，持续约 %2$s。",
   "worldcombat.skill.barrier.description.1": "墙宽 %1$s 格、高 %2$s 格，立在身前 %3$s 格处；立起的格子会真实挡住通道。",
   "worldcombat.skill.barrier.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
-  "worldcombat.skill.barrier.tall.on": "高屏：墙更高更窄、立得更远，挡得住视线与远程，起手更快；代价是窄得能被绕过、护得更短。",
-  "worldcombat.skill.barrier.tall.off": "壁垒：墙更宽更低、贴近身体，拦得住从正面冲来的对手、护得更久；代价是挡不住视线与远程，起手更慢。",
+  "worldcombat.skill.barrier.tall.on": "高屏：墙更高更窄、立得更远，比壁垒高出一截，能挡下更多从高处或越过墙顶打来的火力，起手更快；代价是窄得能被绕过、护得更短。",
+  "worldcombat.skill.barrier.tall.off": "壁垒：墙更宽更低、贴近身体，拦得住从正面冲来的对手、护得更久；代价是墙矮一截，从高处或越过墙顶打来的火力更容易绕过，起手更慢。",
   "worldcombat.skill.barrier.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.barrier.growth.0": "达到 %1$s 级，屏障延长至 %2$s、冷却缩短至 %3$s 秒。",
   "worldcombat.skill.barrier.growth.1": "达到 %1$s 级，屏障进一步延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -21,12 +21,13 @@
   "worldcombat.skill.barrier.value.aftercast": "收招",
   "worldcombat.skill.barrier.value.wait": "冷却",
   "worldcombat.skill.barrier.preference.tall": "高屏",
-  "worldcombat.skill.barrier.preference.tall.help": "高屏：墙更高更窄、立得更远，挡视线与远程、起手更快，但窄得能被绕过、护得更短；关闭则立低而宽的壁垒，拦住正面冲来的对手、护得更久，但不挡视线与远程、起手更慢。",
+  "worldcombat.skill.barrier.preference.tall.help": "高屏：墙更高更窄、立得更远，比壁垒高出一截、能挡下更多从高处或越过墙顶打来的火力，起手更快，但窄得能被绕过、护得更短；关闭则立低而宽的壁垒，拦住正面冲来的对手、护得更久，但墙矮一截、起手更慢。",
   "world_combat.move.barrier.text.raise": "屏障（防御 +%1$s，%2$s 列）",
   "world_combat.move.barrier.text.shatter": "屏障崩解",
   "effect.world_combat.barrier_veil": "屏障",
   "worldcombat.skill.barrier.preference.ai.maxChase": "立墙距离",
   "worldcombat.skill.barrier.preference.ai.maxChase.help": "威胁进入这个距离内才考虑立墙；越大越早准备。",
   "worldcombat.skill.barrier.preference.ai.minGap": "贴身下限",
-  "worldcombat.skill.barrier.preference.ai.minGap.help": "威胁近于这个距离时不再立墙，直接应对近身攻击。"
+  "worldcombat.skill.barrier.preference.ai.minGap.help": "威胁近于这个距离时不再立墙，直接应对近身攻击。",
+  "worldcombat.skill.barrier.description.place": "墙会自动朝最近的敌人方向立起（近处没有敌人时朝施法方向），且只在空位生成、跳过会困住生物的位置——地形受限或被身体挡住时，墙可能只立起一部分。"
 }

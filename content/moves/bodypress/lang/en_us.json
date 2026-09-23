@@ -5,7 +5,7 @@
   "worldcombat.skill.bodypress.use.2": "Answer from a defensive stance",
   "worldcombat.skill.bodypress.description.0": "The shove deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.bodypress.description.1": "Available after %1$s seconds of bracing; it drives up to %2$s blocks along your aim at %3$s blocks per tick.",
-  "worldcombat.skill.bodypress.description.2": "On contact it pushes the target about %1$s blocks over %2$s seconds; the push stops early if the target hits an obstacle.",
+  "worldcombat.skill.bodypress.description.2": "On contact it drives the target about %1$s blocks along the push; grinding keeps pace and follows through over about %2$s, while the hard-stop form shoves almost at once. The drive stops early if the target hits an obstacle.",
   "worldcombat.skill.bodypress.grind.on": "Grinding form: the impact becomes a longer sustained push that shoves much further, but each hit is lighter and the recovery and cooldown are longer.",
   "worldcombat.skill.bodypress.grind.off": "Hard-stop form: a heavier single hit that shoves almost at once, but the push is short and it controls less ground.",
   "worldcombat.skill.bodypress.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

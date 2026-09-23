@@ -130,10 +130,10 @@ namespace PokemonSkills {
     ]);
 
     describe("ancientpower", [
-        { key: "description.0", values: ["primal", "reach"] },
-        { key: "description.1", values: ["push", "lift"] },
-        { key: "description.2", values: ["surgeChance", "surgeStages", "surgeTicks"] },
-        { key: "description.3", values: ["band", "pref.deep"] },
+        { key: "description.0", values: ["primal","reach"] },
+        { key: "description.1", values: ["push","lift"] },
+        { key: "description.2", values: ["surgeChance","surgeStages","surgeTicks"] },
+        { key: "description.3", values: ["band"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.primal", "tier.0.reach"] }
     ]);

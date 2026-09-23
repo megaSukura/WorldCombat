@@ -152,10 +152,10 @@ namespace PokemonSkills {
     defineDamage(headlongrushId, "charge", {}, { contact: true });
 
     describe(headlongrushId, [
-        { key: "description.0", values: ["charge", "shove"] },
-        { key: "description.1", values: ["reach", "rush", "furrow"] },
-        { key: "description.2", values: ["guardLoss", "poiseLoss"] },
-        { key: "plow.on", values: ["furrowTicks"], when: function (context) { return read(context.detail.values, ["plow"]) === true; } },
+        { key: "description.0", values: ["charge","shove"] },
+        { key: "description.1", values: ["reach","rush","furrow","furrowTicks"] },
+        { key: "description.2", values: ["guardLoss","poiseLoss"] },
+        { key: "plow.on", values: [], when: function (context) { return read(context.detail.values, ["plow"]) === true; } },
         { key: "plow.off", values: [], when: function (context) { return read(context.detail.values, ["plow"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.charge"] },

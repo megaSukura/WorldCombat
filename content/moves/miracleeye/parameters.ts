@@ -91,11 +91,12 @@ namespace PokemonSkills {
     });
 
     describe(miracleeyeId, [
-        { key: "description.0", values: ["strips", "window"] },
+        { key: "description.0", values: ["strips","window"] },
         { key: "description.1", values: ["insight", "reveal"] },
+        { key: "description.3", values: [] },
         { key: "focus.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },
-        { key: "description.2", values: ["reach", "tempo", "aftercast"] },
+        { key: "description.2", values: ["reach","tempo","aftercast"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

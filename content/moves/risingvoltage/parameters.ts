@@ -123,12 +123,12 @@ namespace PokemonSkills {
 
     describe(risingvoltageId, [
         { key: "description.0", values: ["bolt"] },
-        { key: "description.1", values: ["reach", "crawl"] },
-        { key: "description.2", values: ["columnRadius", "columnHeight"] },
+        { key: "description.1", values: ["reach","crawl"] },
+        { key: "description.2", values: ["columnRadius","columnHeight"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "timing", values: ["range", "coil", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.bolt"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.bolt", "tier.1.columnRadius"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.bolt"] }
     ]);
 }

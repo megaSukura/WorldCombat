@@ -23,7 +23,7 @@ namespace PokemonSkills {
         id: "powerwhip",
         cooldownParameter: "recharge",
         name: "Power Whip",
-        description: "The user violently whirls its vines, tentacles, or the like to lash the target.",
+        description: "把青藤或触手盘起探高，再激烈地甩出一道横扫：弧面填出的那块扇形就是被打到的范围，站在里面的敌人一起挨这一记并被推开。",
         uses: ["一道横扫清空身前一片", "隔着中距离先手扫开成群的对手", "被围住时原地整圈甩开"],
         kind: "enemy",
         range: 4.7,

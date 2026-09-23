@@ -27,5 +27,6 @@
   "world_combat.move.mindreader.text.read": "Mind Reader hit",
   "world_combat.move.mindreader.text.fade": "Read faded",
   "world_combat.move.mindreader.text.blocked": "Sight blocked",
-  "effect.world_combat.mindreader_eyes": "Mind Reader"
+  "effect.world_combat.mindreader_eyes": "Mind Reader",
+  "worldcombat.skill.mindreader.description.3": "The accuracy lasts only until the read is spent: your next successful physical or special hit uses up the read and immediately returns the accuracy, and it is also returned when the read expires or is cleared."
 }

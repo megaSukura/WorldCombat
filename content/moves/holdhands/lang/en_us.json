@@ -6,9 +6,9 @@
   "worldcombat.skill.holdhands.description.0": "The ribbon lasts %2$s s; while it holds, you and the ally each regain %1$s%% of your own maximum health at intervals.",
   "worldcombat.skill.holdhands.description.1": "Cast reach is about %1$s blocks and the ribbon reaches about %2$s blocks; health is shared every %3$s s, and leaving the ribbon snaps it.",
   "worldcombat.skill.holdhands.description.2": "preparation %1$s s, cooldown %2$s s from cast.",
-  "worldcombat.skill.holdhands.stance.tight": "Tight grip: x1.4 healing per beat, but the link lasts only 70%% as long and the ribbon is x0.85 - stand close for a short, deep heal.",
-  "worldcombat.skill.holdhands.stance.loose": "Loose grip: x0.85 healing per beat, but the link lasts 1.3x as long and the ribbon is x1.15 - step apart and take it slow.",
-  "worldcombat.skill.holdhands.timing": "Cast on an ally. After %2$s s of preparation it spends %4$s PP, recovers %3$s s, and commits a %5$s s cooldown.",
+  "worldcombat.skill.holdhands.stance.tight": "Tight grip: x1.4 healing per beat, but the link lasts only 70%% as long - a short, deep heal up close.",
+  "worldcombat.skill.holdhands.stance.loose": "Loose grip: x0.85 healing per beat, but the link lasts 1.3x as long - step apart and take it slow.",
+  "worldcombat.skill.holdhands.timing": "Cast on an ally. After %1$s s of preparation it spends %3$s PP, recovers %2$s s, and commits a %4$s s cooldown.",
   "worldcombat.skill.holdhands.value.reach": "Cast reach",
   "worldcombat.skill.holdhands.value.linkRange": "Ribbon length",
   "worldcombat.skill.holdhands.value.linkTicks": "Link duration",
@@ -19,11 +19,12 @@
   "worldcombat.skill.holdhands.value.aftercast": "Recovery",
   "worldcombat.skill.holdhands.value.recharge": "Cooldown",
   "worldcombat.skill.holdhands.preference.tight": "Tight grip",
-  "worldcombat.skill.holdhands.preference.tight.help": "On: x1.4 healing per beat, but the link lasts only 70% as long and the ribbon is x0.85, made for a short close-range heal. Off: x0.85 healing, but the link lasts 1.3x as long and the ribbon is x1.15, made for stepping apart and taking it slow. Healing depth and duration trade off.",
+  "worldcombat.skill.holdhands.preference.tight.help": "On: x1.4 healing per beat, but the link lasts only 70% as long, made for a short close-range heal. Off: x0.85 healing, but the link lasts 1.3x as long, made for stepping apart and taking it slow. Healing depth and duration trade off.",
   "worldcombat.skill.holdhands.preference.ai.healBelow": "Hold threshold",
   "worldcombat.skill.holdhands.preference.ai.healBelow.help": "Consider holding hands once anyone in the party (including yourself) drops below this health ratio; lower tends to tough it out, higher holds hands at the first scratch.",
   "effect.world_combat.hand_in_hand": "Hand in hand",
   "world_combat.move.holdhands.text.clasp": "Hand in hand (%1$s s)",
   "world_combat.move.holdhands.text.snap": "The hands slipped",
-  "world_combat.move.holdhands.text.fade": "The happiness faded"
+  "world_combat.move.holdhands.text.fade": "The happiness faded",
+  "worldcombat.skill.holdhands.description.additional": "Hold Hands works on one other living ally; before each beat it checks that both are still within the ribbon. If either falls, is moved out of range, or has the link cleared, it breaks and both stop healing."
 }

@@ -129,8 +129,8 @@ namespace PokemonSkills {
 
     describe("gunkshot", [
         { key: "description.0", values: ["wad", "spread"] },
-        { key: "description.1", values: ["shove", "poisonChance", "venomTicks"] },
-        { key: "description.2", values: ["muzzle", "reach"] },
+        { key: "description.1", values: ["shove","poisonChance","venomTicks"] },
+        { key: "description.2", values: ["muzzle","reach","wadRadius"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

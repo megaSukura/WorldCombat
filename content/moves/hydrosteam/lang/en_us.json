@@ -5,8 +5,8 @@
   "worldcombat.skill.hydrosteam.use.2": "Thaw the freeze on a target",
   "worldcombat.skill.hydrosteam.use.3": "Leave scalding wetness on your enemies",
   "worldcombat.skill.hydrosteam.description.0": "Deals about %1$s special damage to each enemy in the fan; under harsh sunlight that segment is x1.5.",
-  "worldcombat.skill.hydrosteam.description.1": "The steam reaches %1$s blocks over a %2$s degree fan, covers at most 4 enemies, and shoves anyone hit away from the caster.",
-  "worldcombat.skill.hydrosteam.description.2": "A target hit is soaked for about %1$s and pushed about %2$s blocks.",
+  "worldcombat.skill.hydrosteam.description.1": "The steam reaches %1$s blocks over a %2$s degree fan, covers at most %3$s enemies, and shoves anyone hit away from the caster.",
+  "worldcombat.skill.hydrosteam.description.2": "A target hit keeps the drenched identity for about %1$s, moves 12% slower while drenched, and is shoved about %2$s blocks away from the caster.",
   "worldcombat.skill.hydrosteam.rule.thaw": "The hit thaws the target's freeze, and the caster's own freeze is thawed as the water boils.",
   "worldcombat.skill.hydrosteam.bellow.on": "Bellow mode: fan x1.35 and soak x1.3, but power x0.9, range x0.9, +2 ticks windup and +6 ticks cooldown.",
   "worldcombat.skill.hydrosteam.bellow.off": "Jet mode: narrower, hotter and faster, good for singling one target out.",
@@ -33,5 +33,6 @@
   "effect.world_combat.hydrosteam_soaked": "Steam-soaked",
   "world_combat.move.hydrosteam.text.thaw": "Thawed",
   "world_combat.move.hydrosteam.text.sun": "Harsh sunlight",
-  "world_combat.move.hydrosteam.text.hit": "Steam covered x%1$s"
+  "world_combat.move.hydrosteam.text.hit": "Steam covered x%1$s",
+  "worldcombat.skill.hydrosteam.value.maxTargets": "Max targets"
 }

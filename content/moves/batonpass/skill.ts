@@ -1,17 +1,4 @@
-/**
- * 接棒 / batonpass 的出手方式。
- *
- * 核心念头：把此刻身上积累的能力变化打包成一根发光的接力棒，递到身边最近的伙伴手里，自己退开一步——「我这一程跑完了，
- *   接下来交给你」。这是这一族里唯一一招**把好处从自己身上搬给别人**：棒里装的是施法者此刻真实的等级阶梯。
- *
- * 两幕：
- *   起（gather，提交前）：压身把散在身上的劲收拢，脚边与手边聚起细光，只播预告。
- *   递（stream → lend／lone，提交后）：一根接力棒沿施法者到伙伴的连线飞过去；伙伴接手同样的等级（按 `carry` 上限，
- *     取绝对值最大的几项），施法者对应清空；随后自己背离伙伴退开 `withdraw`。伙伴不在时棒落在原地（lone）。
- *
- * 与同族分开：急速折返撞一下再走、断尾留物引敌、瞬间移动只挪自己；只有接棒**把自己的能力等级交到别人身上**。
- * 提交前只观察、只 present；连级、退步与粒子都在提交后写。
- */
+/** batonpass：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 当前能力等级：宝可梦读原生阶梯，其他生物读共享 CombatStages 的同一把梯子。 */
     function batonpassStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
@@ -32,11 +19,12 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: batonpassId,
         cooldownParameter: "recharge",
         name: "Baton Pass",
-        description: "把自己此刻的能力等级打包递给待命的一只或身边最近的伙伴，自己清空；有后备时由接棒者上场，否则退开一步。",
-        uses: ["把攒起来的能力等级整体交给队友", "被削弱前把自己的成长交给别人带走", "残血时把接力棒递出去再脱身"],
+        description: "把自己的能力变化和增益递给伙伴。有后备时让后备接棒登场；否则交给身边选定的友方，自己退开。",
+        uses: ["把攒起来的能力等级整体交给队友", "被削弱前把自己的成长交给别人带走", "残血时把接力棒递出去，自己脱身"],
         kind: "friend",
         range: 5,
         maxRange: 9,
@@ -128,6 +116,8 @@ namespace PokemonSkills {
                 const carried = NativeEffects.transferStage(world, self, recipient, entries[index].stat, take, switched);
                 left -= carried; moved += carried;
             }
+
+            moved += MobEffects.transfer(world, self, recipient, left);
 
             const path: (string | number[])[] = [String(self.ref()), String(recipient.ref())];
             WorldFeedback.emit(world, batonpassScene, 1, origin,

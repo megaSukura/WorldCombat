@@ -112,7 +112,8 @@ namespace PokemonSkills {
     ]);
 
     describe(bloodmoonId, [
-        { key: "description.0", values: ["moonlight", "spill", "reach", "radius"] },
+        { key: "description.0", values: ["moonlight","spill","reach","radius"] },
+        { key: "description.scorch", values: ["scorch"] },
         { key: "description.1", values: ["charge", "recover", "recharge"] },
         { key: "description.2", values: ["spent"] },
         { key: "eclipse.on", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) === true; } },

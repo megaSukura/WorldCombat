@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.selfdestruct.summary": "引发爆炸，攻击自己周围所有的宝可梦，使用后自己陷入濒死。圈内的敌人被向外掀开、抛起一点，地面留下炸焦的痕迹；即使一个人都没炸到，使用者也会倒下。聚爆式更狠更窄，扩散式更广更快。",
+  "worldcombat.skill.selfdestruct.summary": "引发爆炸，攻击自己周围的所有敌人，使用后自己陷入濒死。圈内的敌人被向外掀开、抛起一点，地面留下炸焦的痕迹；即使一个人都没炸到，使用者也会倒下。聚爆式更狠更窄，扩散式更广更快。",
   "worldcombat.skill.selfdestruct.use.0": "被围住时用一条命炸开一圈人",
   "worldcombat.skill.selfdestruct.use.1": "把贴身的对手连同身位一起掀飞",
   "worldcombat.skill.selfdestruct.use.2": "在极短起手里抢在对手走开前炸响",
   "worldcombat.skill.selfdestruct.use.3": "在倒下前最后一次重创对手",
-  "worldcombat.skill.selfdestruct.description.0": "圈内每个目标各挨约 %1$s 的爆炸伤害；对手防御、相性与暴击在命中时另算（幽灵属性免疫这一击，但使用者仍会倒下）。",
+  "worldcombat.skill.selfdestruct.description.0": "圈内最多 %2$s 个目标各挨约 %1$s 的爆炸伤害；对手防御、相性与暴击在命中时另算（幽灵属性免疫这一击，但使用者仍会倒下）。",
   "worldcombat.skill.selfdestruct.description.1": "爆心半径 %1$s 格；圈就是会被炸到的地。",
   "worldcombat.skill.selfdestruct.description.2": "被爆风沿离中心方向掀开 %1$s 格，并向上抛起 %2$s 格/刻。",
   "worldcombat.skill.selfdestruct.description.3": "最多改变 %2$s 格地面，%1$s 秒后恢复原状。",

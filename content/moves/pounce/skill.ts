@@ -20,9 +20,10 @@ namespace PokemonSkills {
     const pounceMissText = "world_combat.move.pounce.text.miss";
 
     define({
+        freeMovement: true,
         id: "pounce",
         name: "Pounce",
-        description: "The user attacks by pouncing on the target. This also lowers the target's Speed stat.",
+        description: "从远处高高跃起，沿一条抛物线甩过空中、落在目标身上：体重下坠把它压住，腿脚随即缠住它的动作，让它沉下来、慢下来，并只结算最先碰上的那一个。命中后施法者留在目标身边。缠身式缠得更久、掉速更深，单发更轻。",
         uses: ["从中距离扑上去贴住对手", "先缠住，再用重招收掉", "压住想跑的对手的速度"],
         kind: "enemy",
         range: 4.4,

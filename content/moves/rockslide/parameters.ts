@@ -113,7 +113,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["rockfall", "rockRadius"] },
         { key: "description.1", values: ["boulders", "spread"] },
         { key: "description.2", values: ["reach", "throwSpeed"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
+        { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "description.4", values: ["rubbleTicks"] },
         { key: "scatter.on", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) === true; } },
         { key: "scatter.off", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) !== true; } },

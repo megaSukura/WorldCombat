@@ -24,7 +24,7 @@ namespace PokemonSkills {
     define({
         id: "thunder",
         name: "Thunder",
-        description: "A wicked thunderbolt is dropped on the target to inflict damage. This may also leave the target with paralysis.",
+        description: "先蓄雷云，再从天空朝目标落点劈下一柱暴雷：范围小但极重，雨里必定命中、晴天更容易打偏，屋顶能挡下整记雷。",
         uses: ["从远处劈下一个目标", "在雨里召唤必定命中的天雷", "用屋檐关掉这记天雷"],
         kind: "enemy",
         range: 13,

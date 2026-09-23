@@ -3,9 +3,9 @@
   "worldcombat.skill.aeroblast.use.0": "Twist the air into a vortex bolt and fire it straight",
   "worldcombat.skill.aeroblast.use.1": "Detonate an air ring on impact and shove the main target",
   "worldcombat.skill.aeroblast.use.2": "Strike a target at long range",
-  "worldcombat.skill.aeroblast.description.0": "The vortex deals %1$s special damage with a %2$s-block body.",
-  "worldcombat.skill.aeroblast.description.1": "It travels %1$s blocks (%2$s blocks per tick) and shoves the target %3$s blocks.",
-  "worldcombat.skill.aeroblast.description.2": "The hit bursts into a %1$s-block ring; up to 3 other foes inside take %2$s of the damage.",
+  "worldcombat.skill.aeroblast.description.0": "The vortex strikes a single foe for about %1$s special damage with a %2$s-block hit radius, and has a heightened chance of landing a critical hit.",
+  "worldcombat.skill.aeroblast.description.1": "It flies straight for %1$s blocks (%2$s blocks per tick) and settles on the first foe it hits, shoving it %3$s blocks along the path.",
+  "worldcombat.skill.aeroblast.description.2": "The hit bursts into a %1$s-block ring; up to %3$s other foes inside take %2$s of the damage.",
   "worldcombat.skill.aeroblast.charge.on": "Charge form: power ×1.18, range +2.5 blocks, vortex body ×1.15 and ring ×1.1, but +6 ticks wind-up, +2 recovery, +14 cooldown and flight ×0.9.",
   "worldcombat.skill.aeroblast.charge.off": "Rapid form (default): flight ×1.12 and 8 ticks less cooldown, but power ×0.94 and slightly shorter range.",
   "worldcombat.skill.aeroblast.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.aeroblast.preference.ai.finishLow.help": "On: when a foe drops below four tenths of its health this heavy shot is preferred, to finish it. Off: health is ignored and it ranks as an ordinary ranged move.",
   "world_combat.move.aeroblast.text.burst": "Aeroblast bursts into a ring",
   "world_combat.move.aeroblast.text.miss": "The vortex dissipates",
-  "world_combat.move.aeroblast.text.crit": "Critical!"
+  "world_combat.move.aeroblast.text.crit": "Critical!",
+  "worldcombat.skill.aeroblast.value.ringCap": "Ring target cap"
 }

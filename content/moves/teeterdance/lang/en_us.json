@@ -3,7 +3,7 @@
   "worldcombat.skill.teeterdance.use.0": "Daze a whole circle when surrounded",
   "worldcombat.skill.teeterdance.use.1": "Break up the footwork and actions of close-range fighters",
   "worldcombat.skill.teeterdance.use.2": "Throw a crowd off balance",
-  "worldcombat.skill.teeterdance.description.0": "The dance pushes its rhythm to a radius of %1$s blocks; every living thing inside except the user is dazed for %2$s, staggered a step every 12 ticks and likely to fumble an action.",
+  "worldcombat.skill.teeterdance.description.0": "Centred on the user, the rhythm reaches a radius of %1$s blocks; every living thing inside except the user is dazed for %2$s, staggered a step every 12 ticks and likely to fumble an action.",
   "worldcombat.skill.teeterdance.careful.on": "Considerate: friendlies inside are spared, at the cost of radius x0.8, duration x0.8, wind-up +2 ticks and cooldown x1.1.",
   "worldcombat.skill.teeterdance.careful.off": "All-out: everyone inside except the user sways, allies included; wider, longer and cheaper.",
   "worldcombat.skill.teeterdance.description.1": "Each stagger is about %1$s blocks and each action attempted has about %1$s x0.9 chance to be wasted.",
@@ -25,5 +25,6 @@
   "worldcombat.skill.teeterdance.preference.ai.minFoes.help": "At least this many enemies must stand inside the dance radius; 1 dances on a single foe, larger waits until surrounded.",
   "world_combat.move.teeterdance.text.daze": "Dazed %1$s (fumble about %2$s%%)",
   "world_combat.move.teeterdance.text.steady": "No one caught the rhythm (%1$s blocks)",
-  "effect.world_combat.teeterdance_spin": "Staggering"
+  "effect.world_combat.teeterdance_spin": "Staggering",
+  "worldcombat.skill.teeterdance.description.3": "The daze wears off over time or can be removed early by cleansing effects; it stays on whoever was caught, so it keeps going even after they leave the circle."
 }

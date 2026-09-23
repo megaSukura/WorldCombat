@@ -3,9 +3,9 @@
   "worldcombat.skill.breakingswipe.use.0": "Lower a whole crowd pressing in at once",
   "worldcombat.skill.breakingswipe.use.1": "Shove everyone adjacent away and open space",
   "worldcombat.skill.breakingswipe.use.2": "Use the furrow and shove to steer opponents on tight ground",
-  "worldcombat.skill.breakingswipe.description.0": "Every enemy in the fan takes %1$s contact damage.",
+  "worldcombat.skill.breakingswipe.description.0": "Every enemy in the fan takes %1$s contact damage, up to %2$s enemies per sweep.",
   "worldcombat.skill.breakingswipe.description.1": "Sweeps a %1$s block, %2$s degree fan from itself toward the target.",
-  "worldcombat.skill.breakingswipe.description.2": "Push targets outward %1$s blocks and lower Attack by %2$s stages.",
+  "worldcombat.skill.breakingswipe.description.2": "Each swept target is shoved up to %1$s blocks away from the centre and has its Attack lowered by %2$s stage, down to a floor of -6 stages, weakening its physical damage.",
   "worldcombat.skill.breakingswipe.description.3": "The swept ground keeps a furrow for about %1$s.",
   "worldcombat.skill.breakingswipe.wide.on": "Wide: the fan opens to 235 degrees and the radius x1.12 to cover a whole crowd, at the cost of x0.85 power, +2 wind-up and +8 cooldown ticks.",
   "worldcombat.skill.breakingswipe.wide.off": "Focused: power x1.12 hits harder, but only sweeps the strip in front.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.breakingswipe.preference.ai.cluster": "Aim at crowds",
   "worldcombat.skill.breakingswipe.preference.ai.cluster.help": "On: a target with other enemies within 3.2 blocks ranks higher, so one sweep lowers several at once. Off: ordinary combat ordering.",
   "world_combat.move.breakingswipe.text.drop": "Attack down x%1$s",
-  "world_combat.move.breakingswipe.text.miss": "Tail sweep misses"
+  "world_combat.move.breakingswipe.text.miss": "Tail sweep misses",
+  "worldcombat.skill.breakingswipe.value.maxTargets": "Sweep limit"
 }

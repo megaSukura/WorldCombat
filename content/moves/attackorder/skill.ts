@@ -80,7 +80,7 @@ namespace PokemonSkills {
         id: attackorderId,
         cooldownParameter: "recharge",
         name: "Attack Order",
-        description: "The user calls out its underlings to pummel the target.",
+        description: "振翅召出一队手下，从身边依次扑向目标，每只扑到身上各自刺一下。每只独立结算、各自掷一次会心，所以手下越多越容易撞上要害；被中途打掉的手下不再落这一刺。虫海式手下更多更脆，精锐式更少更重。",
         uses: ["召一队手下扑向目标各自刺一下", "用多次小刺多撞几次会心", "让手下成为能被清场的输出"],
         kind: "enemy",
         range: 5.5,

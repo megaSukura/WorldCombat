@@ -51,9 +51,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "heavyslam",
         name: "Heavy Slam",
-        description: "The user slams into the target with its heavy body. The more the user outweighs the target, the greater the move's power.",
+        description: "把自己整副身躯从上方砸下去：自己比对手越重，这一下越狠。落点一圈冲击把周围敌人一起震开、按各自的体重结算伤害，地面被砸出一个短命的坑。沉坠式更集中更重，冲跳式跃得更远、顶得更开。",
         uses: ["用分量压垮比自己轻的目标", "落地震开挤在一起的一群敌人", "在地面砸出一个短命的坑"],
         kind: "enemy",
         range: 4,

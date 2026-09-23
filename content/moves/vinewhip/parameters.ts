@@ -98,8 +98,8 @@ namespace PokemonSkills {
     defineDamage("vinewhip", "lash", {}, { contact: true });
 
     describe("vinewhip", [
-        { key: "description.0", values: ["lash", "reach", "width"] },
-        { key: "description.1", values: ["strokes", "interval"] },
+        { key: "description.0", values: ["lash","reach","width"] },
+        { key: "description.1", values: ["strokes","interval"] },
         { key: "double.on", values: [], when: function (context) { return read(context.detail.values, ["double"]) === true; } },
         { key: "double.off", values: [], when: function (context) { return read(context.detail.values, ["double"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

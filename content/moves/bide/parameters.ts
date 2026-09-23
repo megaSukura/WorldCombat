@@ -113,7 +113,7 @@ namespace PokemonSkills {
                     .clamp(1.4, 2.8).as(text("worldcombat.skill.bide.value.ratio"))).round(0),
             "返还伤害", {
                 unit: "点",
-                description: "把账本上的伤害按这个倍率还给最后打你的人；越接近倒下还手越重，最多不超过自身最大生命的账本上限。空忍则落空。"
+                description: "按已积累的伤害、当前生命与姿态算出的返还伤害总量；剩余生命越少还手越重，没有积累伤害时落空。"
             }),
         releaseReach: formula(
             F.base(6).plus(F.body("height").minus(1.4).times(1.2).clamp(-0.4, 1.8))
@@ -129,8 +129,9 @@ namespace PokemonSkills {
     });
 
     describe(bideId, [
-        { key: "description.0", values: ["window", "payback"] },
+        { key: "description.0", values: ["window","payback"] },
         { key: "description.1", values: ["capFraction", "releaseReach"] },
+        { key: "description.release", values: [] },
         { key: "description.2", values: ["tempo", "settle", "recharge"] },
         { key: "rooted.on", values: [], when: function (context) { return read(context.detail.values, ["rooted"]) === true; } },
         { key: "rooted.off", values: [], when: function (context) { return read(context.detail.values, ["rooted"]) !== true; } },

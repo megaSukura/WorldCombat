@@ -17,7 +17,7 @@ namespace PokemonSkills {
     define({
         id: "swift",
         name: "Swift",
-        description: "Star-shaped rays are shot at opposing Pokémon. This attack never misses.",
+        description: "从身周迸出一圈星形光弹，每颗星自己拐弯追向一个对手，因此必定命中；散星时可同时咬住多个敌人，聚星时全部砸向选定目标。",
         uses: ["一圈追人的星光", "同时压住多个对手", "在移动的目标身上收束"],
         kind: "enemy",
         range: 13,

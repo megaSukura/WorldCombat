@@ -153,9 +153,10 @@ namespace PokemonSkills {
     describe("dracometeor", [
         { key: "description.0", values: ["meteor"] },
         { key: "description.1", values: ["reach", "velocity", "impactRadius", "fall"] },
-        { key: "description.2", values: ["crater", "craterTicks"] },
+        { key: "description.land", values: [] },
+        { key: "description.2", values: ["crater","craterTicks"] },
         { key: "description.3", values: ["insightLoss"] },
-        { key: "barrage.on", values: ["count", "spread", "interval"], when: function (context) { return read(context.detail.values, ["barrage"]) === true; } },
+        { key: "barrage.on", values: ["count","spread","interval"], when: function (context) { return read(context.detail.values, ["barrage"]) === true; } },
         { key: "barrage.off", values: [], when: function (context) { return read(context.detail.values, ["barrage"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.meteor"] },

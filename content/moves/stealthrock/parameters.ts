@@ -106,7 +106,8 @@ namespace PokemonSkills {
 
     describe(stealthrockId, [
         { key: "description.0", values: ["fall"] },
-        { key: "description.1", values: ["fieldRadius", "stoneTicks", "stoneInterval"] },
+        { key: "description.1", values: ["fieldRadius","stoneTicks","stoneInterval"] },
+        { key: "description.2", values: [] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

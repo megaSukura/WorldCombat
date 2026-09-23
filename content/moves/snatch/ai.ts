@@ -1,15 +1,4 @@
-/**
- * 抢夺 的伙伴 AI 用途：这是这招自己的一套出手计划。
- *
- * 什么局面有意义：有可见威胁、它在 ai.maxChase 以内、中间有一条通视线，而且它手上有可夺的下一手。
- *   ai.opening=准备时（默认）只在对手最近一次出手本身就是可夺的自我变化招、或它此刻没有在攻击时探手——
- *   这两种情况最像「它正要给自己加东西」；=随时时见威胁就探，当纯投机手段。
- * 对谁出手：当前威胁（本招需要指定一名对手张手）。
- * 候选之间怎么排：读出对手最近一次出手可夺时抬到 70，正闲着酝酿时 55，其余 40；priority 0 仍可由共享顺序兜底。
- * 够不到怎么办：reach 就是本招射程（由特攻与体型决定）；共享任务先走近，approach 在无通视时侧移找角度。
- * 放完之后：夺到的招式由它自己结算；本招不追加动作，交回共享顺序。
- * 配置 patient（屏息／急取）改变窗口与出手节奏；ai.maxChase、ai.opening 决定追多远、什么时候探手。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace PokemonSkills {
     interface SnatchRead { id: string; tick: number; }
 

@@ -50,7 +50,7 @@ namespace PokemonSkills {
         id: dualchopId,
         cooldownParameter: "recharge",
         name: "Dual Chop",
-        description: "The user attacks its target by hitting it with brutal strikes. The target is hit twice in a row.",
+        description: "抡起坚硬的前肢站定连劈两下：第一劈砸开对方架势、并在地面留下一道裂痕，第二劈顺着这道裂痕劈进同一处，第一劈命中则撕得更深。裂痕追击式集中一块窄面，分劈式把身前一小片敌人一起劈到。",
         uses: ["站定抡起前肢，朝同一处连劈两下", "第一劈砸地留裂痕，第二劈追着裂痕撕深", "分劈式把身前一小片敌人一起劈到"],
         kind: "enemy",
         range: 2.9,

@@ -63,7 +63,6 @@ namespace PokemonSkills {
     describe(mistyterrainId, [
         { key: "description.0", values: ["fieldRadius", "fieldTicks"] },
         { key: "description.1", values: ["dragonFactor"] },
-        { key: "description.2", values: ["markTicks"] },
         { key: "description.4", values: ["gather", "settle"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.purify); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.purify); } },

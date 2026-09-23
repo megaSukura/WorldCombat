@@ -119,10 +119,11 @@ namespace PokemonSkills {
 
     describe("headsmash", [
         { key: "description.0", values: ["smash", "chargeLength", "speed", "collisionRadius"] },
-        { key: "description.1", values: ["recoil", "selfCrash", "shove"] },
+        { key: "description.charge", values: [] },
+        { key: "description.1", values: ["recoil","selfCrash","shove"] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.smash"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.smash", "tier.1.recoil"] }
     ]);

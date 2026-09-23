@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.finalgambit.summary": "拼命自爆：把此刻剩下的全部生命一次性砸向对手，造成等于自己当前生命的固定伤害，然后自己陷入濒死。满血时最重、残血时最轻；打不动或打空则不倒。留手式只押上一半生命、打完留下一口气，代价是伤害也随之减半。",
-  "worldcombat.skill.finalgambit.description.0": "命中造成 %1$s 点固定伤害：等于出手瞬间自己的当前生命（留手式只押上一半）。对手防御不参与，只有属性免疫会挡住它。",
+  "worldcombat.skill.finalgambit.summary": "拼命自爆：扑向对手，命中造成等于自己当前生命的固定伤害，随后自己倒下。满血时最重、残血时最轻；打空或被属性免疫挡下不消耗生命、也不倒。留手式把伤害降到 55%%、结算后保留 1 点生命不倒下，代价是冷却更久。",
+  "worldcombat.skill.finalgambit.description.0": "命中造成 %1$s 点固定伤害：全力式等于出手瞬间自己的当前生命，留手式为它的 55%%。对手防御不参与，只有属性免疫会挡住它。",
   "worldcombat.skill.finalgambit.description.1": "起手 %1$s 秒（可被打断，打断则什么也不发生），沿瞄准方向扑出 %2$s 格（每刻 %3$s 格），判定半径 %4$s 格。",
   "worldcombat.skill.finalgambit.description.2": "把对手沿扑身方向震开 %1$s 格。",
-  "worldcombat.skill.finalgambit.spare.on": "留手式：只押上一半生命，打完留下 1 点生命、不倒下，冷却更久。",
-  "worldcombat.skill.finalgambit.spare.off": "全力式：押上全部生命，打完自己陷入濒死。",
+  "worldcombat.skill.finalgambit.spare.on": "留手式：伤害降到当前生命的 55%%；命中结算后把生命削到 1 点、不倒下，冷却更久。",
+  "worldcombat.skill.finalgambit.spare.off": "全力式：伤害等于当前生命全额；命中结算后自己陷入濒死。",
   "worldcombat.skill.finalgambit.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，消耗 %5$s PP。",
   "worldcombat.skill.finalgambit.use.0": "满血时一换一打空高价值目标",
   "worldcombat.skill.finalgambit.use.1": "把挡路的强敌拖下水",
@@ -18,7 +18,7 @@
   "worldcombat.skill.finalgambit.value.blastRadius": "爆裂半径",
   "worldcombat.skill.finalgambit.value.stagger": "震开距离",
   "worldcombat.skill.finalgambit.preference.spare": "留手式",
-  "worldcombat.skill.finalgambit.preference.spare.help": "开启：只押上当前生命的一半，打完留下 1 点生命、不倒下，代价是伤害也随之减半、冷却更久；关闭：押上全部生命，伤害足额，打完自己陷入濒死。",
+  "worldcombat.skill.finalgambit.preference.spare.help": "开启：伤害降到当前生命的 55%%，命中结算后留下 1 点生命、不倒下，代价是冷却更久；关闭：伤害等于当前生命全额，命中结算后自己陷入濒死。",
   "worldcombat.skill.finalgambit.preference.ai.lethal": "只打必杀",
   "worldcombat.skill.finalgambit.preference.ai.lethal.help": "开启：只有自己当前生命不低于对手时才出手，保证这一换能把对手打空；关闭：放宽为残血时也愿意拖对手下水。",
   "worldcombat.skill.finalgambit.preference.ai.cornered": "残血阈值",
@@ -32,5 +32,6 @@
   "world_combat.move.finalgambit.text.hit": "搏命 %1$s",
   "world_combat.move.finalgambit.text.faint": "力竭倒下",
   "world_combat.move.finalgambit.text.spent": "留下一口气",
-  "world_combat.move.finalgambit.text.miss": "扑空了"
+  "world_combat.move.finalgambit.text.miss": "扑空了",
+  "worldcombat.skill.finalgambit.outcome": "扑出去后撞到第一个敌人即自爆；没撞到人、被地形挡住或被属性免疫挡下都算扑空，此时不消耗生命、也不会倒下。"
 }

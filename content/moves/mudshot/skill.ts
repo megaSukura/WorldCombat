@@ -49,7 +49,7 @@ namespace PokemonSkills {
     define({
         id: "mudshot",
         name: "Mud Shot",
-        description: "The user attacks by hurling a blob of mud at the target. This also lowers the target's Speed stat.",
+        description: "把一团湿泥压成扁块贴着地面甩出去：泥块平飞、又快又阔，命中时在目标脚下炸开，泥浆顺着泼溅糊上附近所有敌人的腿脚，谁被糊住谁掉速度；落点地上留下一片湿泥。阔泼式泼得更宽、掉速更深，单发更轻更近。",
         uses: ["中距离点掉跑得快的对手", "先糊腿，再用更重的招收掉", "顺手把目标身边一群人的速度压下去"],
         kind: "enemy",
         range: 11,

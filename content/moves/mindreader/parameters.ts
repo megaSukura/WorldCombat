@@ -42,7 +42,7 @@ namespace PokemonSkills {
             F.const(6).round(0),
             "命中等级", {
                 unit: " 级",
-                description: "读窗口内施法者的命中等级被拉到的值；拉满 6 级让引导类招式的偏差归零，这是「下一次必中」的落点。"
+                description: "读心窗口内施放者达到的命中等级，提高攻击命中率。"
             }),
         reveal: seconds(
             F.base(90).plus(F.level().times(2))
@@ -81,6 +81,7 @@ namespace PokemonSkills {
     describe(mindreaderId, [
         { key: "description.0", values: ["focus", "readTicks"] },
         { key: "description.1", values: ["reveal"] },
+        { key: "description.3", values: [] },
         { key: "predict.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["predict"]) === true; } },
         { key: "predict.off", values: [], when: function (context) { return read(context.detail.values, ["predict"]) !== true; } },
         { key: "description.2", values: ["reach", "tempo", "aftercast"] },

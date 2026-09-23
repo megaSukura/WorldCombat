@@ -3,7 +3,7 @@
   "worldcombat.skill.acupressure.use.0": "交战前为自己随机强化一项能力",
   "worldcombat.skill.acupressure.use.1": "给近处伙伴一段短时强化",
   "worldcombat.skill.acupressure.use.2": "安全时用稳按取得两级强化",
-  "worldcombat.skill.acupressure.description.0": "从未满 +6 的能力中随机选一项，暂时提升 %1$s 级。每个目标同时保留一轮点穴。",
+  "worldcombat.skill.acupressure.description.0": "给自己或射程内的友方伙伴点穴：从未满 +6 的能力中随机选一项，暂时提升 %1$s 级（最高到 +6）。每个目标同时只保留一轮点穴。",
   "worldcombat.skill.acupressure.steady.on": "稳按：+2 级，起手多 5 刻、冷却 ×1.25。",
   "worldcombat.skill.acupressure.steady.off": "快按：+1 级，起手和冷却较短。",
   "worldcombat.skill.acupressure.description.1": "点穴距离 %1$s 格，通畅持续约 %2$s；状态结束或被清除时收回本轮强化。",

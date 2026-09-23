@@ -51,6 +51,7 @@ namespace NativeItems {
     export interface Held extends HeldRef {
         id: string; path: string; name: string; count: number; stack: string | null;
         berry: boolean; pokemon: CombatPokemon | null;
+        durability?: { damage: number; maximum: number; unbreakable: boolean; };
     }
     /** The item path without its namespace: `cobblemon:cheri_berry` -> `cheri_berry`. */
     export function pathOf(id: string): string {
@@ -83,7 +84,9 @@ namespace NativeItems {
             var stack = entry.stack(), serialized = stack.serialized(), id = String(entry.item());
             found.push({ slot: { provider: provider, slot: slot, index: entry.index() }, expected: serialized || "",
                 id: id, path: pathOf(id), name: "item." + id.replace(":", "."), count: entry.count(), stack: serialized,
-                berry: !!entry.tagged("cobblemon:berries"), pokemon: provider === "cobblemon" ? pokemon : null });
+                berry: !!entry.tagged("cobblemon:berries"), pokemon: provider === "cobblemon" ? pokemon : null,
+                durability: { damage: stack.damage(), maximum: stack.maxDamage(),
+                    unbreakable: stack.hasComponent("minecraft:unbreakable") || !stack.hasComponent("minecraft:damage") } });
         }
         found.sort(function (a, b) { return slotRank(a.slot.provider, a.slot.slot) - slotRank(b.slot.provider, b.slot.slot); });
         return found;
@@ -92,6 +95,11 @@ namespace NativeItems {
     export function heldOf(world: CombatWorld, actor: CombatActor): Held | null {
         var list = helds(world, actor);
         return list.length ? list[0] : null;
+    }
+    /** Material eligibility owned by content. Modded equipment can opt in with world_combat:magnetic_equipment. */
+    export function magneticEquipment(entry: CombatEquipment): boolean {
+        if (entry.tagged("world_combat:magnetic_equipment")) return true;
+        return /^minecraft:(?:iron|golden|chainmail|netherite)_(?:sword|axe|pickaxe|shovel|hoe|helmet|chestplate|leggings|boots)$/.test(String(entry.item()));
     }
 
     /** A readable equipment receipt; `item`/`count` describe the stack that moved, `drop` a spawned entity id. */
@@ -110,6 +118,16 @@ namespace NativeItems {
     /** CAS-remove consumption: one item by default, so a stack keeps its remainder and components. */
     export function takeHeld(world: CombatWorld, actor: CombatActor, held: HeldRef, count: number = 1): Receipt {
         return receipt(world.equipmentTakeResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, count));
+    }
+    /** Apply exact authored wear to the observed stack, retaining components and at least one durability point. */
+    export function wearHeld(world: CombatWorld, actor: CombatActor, held: Held, amount: number): Receipt {
+        var durability = held.durability;
+        if (!durability || durability.unbreakable || durability.maximum <= 0 || !held.stack)
+            return { ok: false, reason: "not-damageable", item: "", count: 0, drop: "" };
+        var next = Math.min(durability.maximum - 1, durability.damage + Math.max(0, Math.floor(amount)));
+        if (next <= durability.damage) return { ok: false, reason: "no-wear", item: "", count: 0, drop: "" };
+        var stack = JSON.parse(held.stack); stack.components = stack.components || {}; stack.components["minecraft:damage"] = next;
+        return receipt(world.equipmentGiveResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, JSON.stringify(stack)));
     }
     /** CAS-remove the exact observed stack as a native item entity; `data` is {pickupDelay,velocity,glow}. */
     export function dropHeld(world: CombatWorld, actor: CombatActor, held: HeldRef, data: string): Receipt {

@@ -3,8 +3,8 @@
   "worldcombat.skill.fireblast.use.0": "Write a giant glyph in the air and burst it on the target",
   "worldcombat.skill.fireblast.use.1": "Leave a scorching mark on the ground with the inscribe form",
   "worldcombat.skill.fireblast.use.2": "A heavy special finisher at range",
-  "worldcombat.skill.fireblast.description.0": "The glyph bursts to cover a %2$s block radius, dealing %1$s special damage to each inside.",
-  "worldcombat.skill.fireblast.description.1": "The glyph centre can drift up to %1$s blocks off the aim; strokes are %2$s s apart; a scorched target has a %3$s chance to burn.",
+  "worldcombat.skill.fireblast.description.0": "The glyph bursts to cover a %2$s block radius, dealing %1$s special damage to up to %3$s foes inside.",
+  "worldcombat.skill.fireblast.description.1": "The glyph centre can drift up to %1$s blocks off the aim; strokes are %2$s s apart; a target struck by the burst has a %3$s chance to burn: about 40 s of losing 1/16 of its max HP (at least 1) every 5 s.",
   "worldcombat.skill.fireblast.description.2": "The inscribe form leaves a %2$s block mark; standing on it takes %1$s every %4$s s for about %3$s.",
   "worldcombat.skill.fireblast.inscribe.on": "Inscribe: burst power x0.85, but the embers leave a scorching mark that keeps burning anyone standing on it, +10 cooldown.",
   "worldcombat.skill.fireblast.inscribe.off": "Detonate: burst power x1.15, a heavier single hit and a shorter cooldown, but the glyph leaves no mark.",
@@ -33,5 +33,6 @@
   "worldcombat.skill.fireblast.preference.ai.finishLow.help": "On: low-health targets rank first, finished with this heavy glyph; off: order by ordinary ranged attack only.",
   "world_combat.move.fireblast.text.burn": "Seared",
   "world_combat.move.fireblast.text.hit": "The glyph burst on %1$s",
-  "world_combat.move.fireblast.text.miss": "The glyph drifted off"
+  "world_combat.move.fireblast.text.miss": "The glyph drifted off",
+  "worldcombat.skill.fireblast.value.maxTargets": "Target cap"
 }

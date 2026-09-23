@@ -1,30 +1,4 @@
-/**
- * 颠倒 / topsyturvy —— 参数与数值来源。
- *
- * 原生事实（Cobblemon 1.8 / Showdown）：恶、变化、威力 0、命中 必中、PP 20、优先度 0、目标 单体；
- *   `onHit` 把目标身上每一项非零的能力变化取反（+x → −x，−x → +x），一项都翻不动时整招落空。
- *   原生介绍「颠倒对手身上的所有能力变化，变成和原来相反的状态。」
- *
- * 世界化：把「翻账本」落成**一枚暗色镜片甩出去**——镜片命中谁，就把谁身上攒起来的能力等级整张翻个面：
- *   对方顶得越高，摔得越重；反过来，如果对方身上本来就是负面变化，翻过来反而是在帮它。所以这招的
- *   使用时机是**读对方的等级**：趁它攻速顶满时把增益变成等量的减益。它不做抹除（那是黑雾），只做取反。
- *
- * 与同族分开：黑雾把等级清零、对正负一视同仁；颠倒只把符号翻过来，对方越是靠增益吃饭越怕它。
- *
- * 数值来源（每项读不同的个体数据，落到不同参数）：
- *   reach       镜片射程：速度决定甩得多远；择映式收近 1 格。
- *   shards      镜片数量：特攻决定一次崩出多少枚，画面密度按它发射。
- *   shardSpeed  镜片飞行速度：速度决定目标更难避开。
- *   shardRadius 镜片判定半径：身宽决定判定多宽。
- *   markTicks   被颠倒印记的时长：等级越高，印记留得越久（记 flipped 数）。
- *   shatter     落空崩开的半径：体型越宽崩得越大，也是画面的参考尺寸。
- *   tempo／aftercast／recharge：速度、身形与等级定节奏。
- *
- * 配置 `gain`（择映）双向取舍（默认关）：
- *   开（择映）：只翻目标身上的正面变化，负面变化原样留着——绝不反过来帮对手；代价是起手 +4 刻、
- *     冷却 +20 刻、射程 −1 格。
- *   关（全翻）：正向变负、负向变正全翻，便宜、更远、更快；代价是目标身上若尽是减益，翻完等于给它加成。
- */
+/** topsyturvy：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const topsyId = "topsyturvy";
     export const topsyScene = "world_combat:move_topsyturvy";
@@ -44,7 +18,7 @@ namespace PokemonSkills {
      * 持久等级与临时窗口分别原位取反；临时窗口沿用原来源、归属和剩余时长。
      */
     export function topsyFlip(world: CombatWorld, actor: CombatActor, onlyGains: boolean): number {
-        return NativeEffects.invertStages(world, actor, onlyGains);
+        return NativeEffects.invertStages(world, actor, onlyGains) + MobEffects.invert(world, actor, onlyGains);
     }
 
     actionParameters.define(topsyId, {

@@ -1,15 +1,4 @@
-/**
- * 自我暗示 / psychup — 执行组织。
- *
- * 两幕：
- *   读（windup，提交前）：一道读解视线落到对手身上，把它的能力阶梯扫进来（`action.present` 预告）。
- *   抄（提交后）：以对手当前每一项能力等级为目标，把自己调整到同一位置；一条回响光带沿两人连线抽回自己，
- *     身上逐项亮起。只取增益时跳过所有会让自己的项。
- *
- * 阶梯路径：宝可梦读/写原生能力等级（`NativeEffects.stage` / `NativeEffects.boost`），任何其他生物走共享
- *   `CombatStages`；`NativeEffects.boost` 已按域分派，因此一条路径覆盖所有战斗者。目标没有任何能力变化时
- *   预检失败，不花 PP（照原作的失败条件）。对齐后的等级按各自规则自然消退，标记只负责读数与 AI 节流。
- */
+/** psychup：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     export const psychupScene = "world_combat:move_psychup";
     export const psychupLink = "world_combat:psychup_link";
@@ -27,8 +16,8 @@ namespace PokemonSkills {
         id: "psychup",
         cooldownParameter: "recharge",
         name: "Psych Up",
-        description: "向自己施以自我暗示，把对手的能力变化状态抄到自己身上。",
-        uses: ["对手刚给自己加完状态时立刻对齐", "把对手的增益变成自己的增益", "在对手被削弱的瞬间把负面一并接过来（照单全收时）"],
+        description: "将自己的能力等级调整成目标的样子，并复制目标现有的药水、信标等增益。只取增益模式保留自己更高的能力等级。",
+        uses: ["对手刚给自己加完状态时立刻对齐", "把对手的增益变成自己的增益", "照单全收时把对手的负面也一并接过来"],
         kind: "enemy",
         range: 7,
         maxRange: 14,
@@ -62,7 +51,8 @@ namespace PokemonSkills {
             if (body.position().minus(action.origin()).length() > p("psychup", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
             const stages = psychupStages(world, target);
-            return psychupStats.some(function (stat) { return (stages[stat] || 0) !== 0; }) ? "" : "no-changes";
+            return psychupStats.some(function (stat) { return (stages[stat] || 0) !== 0; })
+                || MobEffects.native(world, target, "beneficial").length > 0 ? "" : "no-changes";
         },
         windup: function (action, config, prepare) {
             const actor = action.actor(), target = action.target();
@@ -83,7 +73,8 @@ namespace PokemonSkills {
             // The shared copy entry reads both effective ladders, so a Pokemon's native stages and every other
             // body's CombatStages land on the same route; `selective` keeps the per-move "gains only" rule.
             const copied = NativeEffects.copyStages(world, actor, target, false, selective);
-            const changed = copied.changed, link = copied.total;
+            const native = MobEffects.copy(world, target, actor, "beneficial", span);
+            const changed = copied.changed + native, link = copied.total + native;
             if (changed > 0) MobEffects.apply(world, actor, psychupLink, span, 0);
             const path: (string | number[])[] = [String(actor.ref()), String(target.ref())];
             WorldFeedback.emit(world, psychupScene, 1, body.position(),

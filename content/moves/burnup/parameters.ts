@@ -128,7 +128,7 @@ namespace PokemonSkills {
 
     describe(burnupId, [
         { key: "description.0", values: ["outburst"] },
-        { key: "description.1", values: ["reach", "cone", "share", "speed"] },
+        { key: "description.1", values: ["reach","cone","share","speed"] },
         { key: "description.2", values: ["hold"] },
         { key: "banked.on", values: [], when: function (context) { return read(context.detail.values, ["banked"]) === true; } },
         { key: "banked.off", values: [], when: function (context) { return read(context.detail.values, ["banked"]) !== true; } },

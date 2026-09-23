@@ -121,10 +121,10 @@ namespace PokemonSkills {
     ]);
 
     describe("dive", [
-        { key: "description.0", values: ["power", "launch", "push"] },
-        { key: "description.1", values: ["submergeTicks", "lockRadius", "waterBonus"] },
+        { key: "description.0", values: ["power","launch","push"] },
+        { key: "description.1", values: ["submergeTicks","lockRadius","waterBonus"] },
         { key: "description.2", values: [] },
-        { key: "description.3", values: ["springRadius", "springTicks"] },
+        { key: "description.3", values: ["springRadius","springTicks"] },
         { key: "stance.deep", values: [], when: function (context) { return !!read(context.detail.values, ["deep"]); } },
         { key: "stance.rush", values: [], when: function (context) { return !read(context.detail.values, ["deep"]); } },
         { key: "timing", values: ["recover", "pp", "cooldown"] },

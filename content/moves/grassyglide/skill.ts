@@ -48,11 +48,12 @@ namespace PokemonSkills {
     });
 
     define({
+        freeMovement: true,
         id: grassyglideId,
         cooldownParameter: "recharge",
         name: "Grassy Glide",
-        description: "Gliding on the ground, the user slams the target. On Grassy Terrain it always acts first.",
-        uses: ["脚下有草时打一记瞬发的先手铲击", "贴上对面滑过去，把目标铲开", "落点种出一片青草，供自己与队友借力"],
+        description: "贴地滑出去用身体铲对手：撞实造成接触伤害并把目标铲开，落点压出一小片青草。脚下有青草场地时草把人托起来，起手归零、滑得更远更快——这就是「必定先制」。播种式把落点的草种得更大更久，但滑得更短。",
+        uses: ["脚下有草时打一记瞬发的先手铲击", "贴上去滑过去，把目标铲开", "落点种出一片青草，供自己与队友借力"],
         kind: "enemy",
         range: 4.0,
         maxRange: 6.8,

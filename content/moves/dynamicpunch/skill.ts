@@ -45,7 +45,7 @@ namespace PokemonSkills {
         id: "dynamicpunch",
         cooldownParameter: "recharge",
         name: "Dynamic Punch",
-        description: "The user attacks by punching the target with full concentrated power. This also confuses the target.",
+        description: "抡圆了全身力气的一记横扫重拳：身前扫出一道扇面，站在里面的人各挨一记并必定被震得混乱，走出扇面就落空，挥空还要多失衡一会儿。",
         uses: ["贴身用一道扇面横扫，逼对手走位躲开", "打中就把目标震懵，给队友制造失手窗口", "在对手残血、退无可退时赌一记重拳"],
         kind: "enemy",
         range: 2.6,

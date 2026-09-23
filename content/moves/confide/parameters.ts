@@ -63,8 +63,8 @@ namespace PokemonSkills {
             "冷却", "两次密语之间的等待；等级越高越熟练。")
     });
     describe(confideId, [
-        { key: "description.0", values: ["drop", "focusTicks"] },
-        { key: "description.1", values: ["whisperRange", "rumorRadius", "maxListeners", "range"] },
+        { key: "description.0", values: ["drop","focusTicks"] },
+        { key: "description.1", values: ["whisperRange","rumorRadius","maxListeners"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

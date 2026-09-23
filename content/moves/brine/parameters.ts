@@ -164,12 +164,13 @@ namespace PokemonSkills {
 
     describe(brineId, [
         { key: "description.0", values: ["jet"] },
-        { key: "description.1", values: ["reach", "globSpeed"] },
-        { key: "description.2", values: ["slickRadius", "slickTicks", "soakTicks"] },
+        { key: "description.1", values: ["reach","globSpeed","nozzle"] },
+        { key: "description.2", values: ["slickRadius","slickTicks","soakTicks"] },
+        { key: "description.wet", values: [] },
         { key: "press.on", values: [], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.jet"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.jet", "tier.1.slickRadius"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.jet"] }
     ]);
 }

@@ -66,7 +66,9 @@ namespace PokemonSkills {
 
     describe("facade", [
         { key: "description.0", values: ["power"] },
-        { key: "description.1", values: ["push", "slam"] },
-        { key: "description.2", values: ["chargeSpeed", "collisionRadius"] }
+        { key: "description.1", values: ["push","slam"] },
+        { key: "description.2", values: ["chargeSpeed", "collisionRadius"] },
+        { key: "description.3", values: ["strain"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] }
     ]);
 }

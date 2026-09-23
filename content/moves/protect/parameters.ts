@@ -44,7 +44,7 @@ namespace PokemonSkills {
             F.base(1.7).plus(F.body("height").minus(1.4).times(0.6)).clamp(1.6, 3.4).round(2),
             "穹顶半径", {
                 unit: "格",
-                description: "以自己为心的半球半径；身板越大罩得越宽，画面与判定同半径。"
+                description: "穹顶画面的半径；身板越大，画面展开越宽。"
             }),
         /** 冷却：基础 70 刻 + 等级 ×0.4；守据 ×1.15、瞬罩 ×0.85，夹在 55..110。 */
         charge: formula(
@@ -66,8 +66,9 @@ namespace PokemonSkills {
     });
 
     describe("protect", [
-        { key: "description.0", values: ["window", "capacity"] },
-        { key: "description.1", values: ["raise", "radius", "charge"] },
-        { key: "description.2", values: ["fizzle", "pref.braced"] }
+        { key: "description.0", values: ["window","capacity"] },
+        { key: "description.pool", values: [] },
+        { key: "description.1", values: ["raise","charge"] },
+        { key: "description.2", values: ["fizzle"] }
     ]);
 }

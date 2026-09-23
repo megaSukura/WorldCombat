@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.quash.summary": "Slam a slab of pressure onto the target: its current action is broken and a Quash is left on it. While quashed, the first action it tries is pushed back once (no resources spent, just a beat late) and its movement is dragged down.",
-  "worldcombat.skill.quash.description.0": "A press of force reaches targets within %1$s blocks with a collision radius of %2$s blocks.",
-  "worldcombat.skill.quash.description.1": "A hit breaks the target's current action and leaves Quash for %1$s seconds: its first %2$s attempted actions are pushed back (no resources spent, just a beat late) and its movement is dragged down.",
+  "worldcombat.skill.quash.summary": "Slam a slab of pressure onto the target: its current action is broken and Quash is left on it. While quashed, its next few attempted actions are pushed back (no resources spent, just a beat late), and its movement is dragged down, the more so the more it is pressed.",
+  "worldcombat.skill.quash.description.0": "Sends a press of force at the aim point up to %1$s blocks away with a %2$s block collision radius; it affects only the first non-ally it strikes, and fizzles if terrain or an ally blocks the way.",
+  "worldcombat.skill.quash.description.1": "A hit breaks the target's current action and leaves Quash for %1$s: its next %2$s attempted actions are pushed back (no resources spent, just a beat late); once those are used up it acts normally even while quashed, and Quash ends when it expires or is cleared.",
   "worldcombat.skill.quash.use.0": "Break a move the target is charging",
   "worldcombat.skill.quash.use.1": "Steal a beat and hold your ground",
   "worldcombat.skill.quash.use.2": "Slow a target that charges you down",
@@ -17,5 +17,7 @@
   "worldcombat.skill.quash.preference.ai.leaveStation.help": "When on, the user may leave its post to press; when off, it only presses what it can reach from where it stands.",
   "effect.world_combat.quash": "Quashed",
   "world_combat.move.quash.text.pin": "Quashed",
-  "world_combat.move.quash.text.fizzle": "Quash missed"
+  "world_combat.move.quash.text.fizzle": "Quash missed",
+  "worldcombat.skill.quash.description.additional": "While quashed, the target's movement speed drops by 30% x (deflections + 1), so the more it is pressed the closer it comes to a standstill; hitting it again refreshes Quash and resets its deflection count.",
+  "worldcombat.skill.quash.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown, costing %4$s PP."
 }

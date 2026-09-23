@@ -121,12 +121,12 @@ namespace PokemonSkills {
     ]);
 
     describe(electroballId, [
-        { key: "description.0", values: ["charge", "load"] },
-        { key: "description.1", values: ["reach", "flight", "collisionRadius"] },
+        { key: "description.0", values: ["charge","load"] },
+        { key: "description.1", values: ["reach","flight","collisionRadius"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.charge"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.charge", "tier.1.reach"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.charge","tier.1.reach"] }
     ]);
 }

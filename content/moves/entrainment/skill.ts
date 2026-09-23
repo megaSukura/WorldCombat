@@ -1,17 +1,4 @@
-/**
- * 找伙伴 / entrainment — 执行组织。
- *
- * 三幕：
- *   起（windup，提交前）：施法者踩出一段古怪的节拍，身体两侧荡开低密度音纹（`action.present` 预告，可被打断且不花代价）。
- *   行（提交后）：节拍沿施法者到目标的连线一节节亮起、推到目标身上（表现沿 `data.path` 的 polyline）。
- *   落（arrive）：节拍在目标处炸开；目标与波及半径内的敌人，只要特性读得出、能被顶替、又与自己不同，
- *     就被写入共享 NativeModifiers ability 层——变成施法者的特性（到期各自还原），并挂共享身份
- *     `world_combat:status/entrainment` 的标记。
- *
- * 目标可以是任何生物，但只有宝可梦有特性可被顶替；非宝可梦只会被节拍扫过并带上标记。
- * 双方都必须是宝可梦才读得出彼此的特性，`ready` 对非宝可梦直接拒绝，不浪费 PP。
- * 配置项 whole（全场节拍／贴身节拍）在 resolve 里改变冷却，公式里改变波及半径与维持时长。
- */
+/** Share your Ability with enemy Pokémon caught in the rhythm; non-Pokémon instead match your movement pace. */
 namespace PokemonSkills {
     export const entrainmentScene = "world_combat:move_entrainment";
     export const entrainmentMark = "world_combat:entrainment";
@@ -45,7 +32,7 @@ namespace PokemonSkills {
         id: "entrainment",
         cooldownParameter: "recharge",
         name: "Entrainment",
-        description: "踩出一段古怪的节拍逼对手跟着动，把对手的特性变成和自己的相同；节拍波及的敌人一起改变。",
+        description: "用节拍把范围内敌方宝可梦的特性改为自己的；普通生物则跟随自己的移动节奏。",
         uses: ["把自己的负面特性塞给对手", "用普通特性顶掉对手的强力特性", "让围在身边的一圈敌人一起改特性"],
         kind: "enemy",
         range: 8,
@@ -76,11 +63,12 @@ namespace PokemonSkills {
         ready: function (action) {
             const world = action.sense(), actor = action.actor(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return "no-ability";
+            if (String(actor.domain()) !== "cobblemon") return "no-ability";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("entrainment", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (String(target.domain()) !== "cobblemon") return world.attributeValue(target, CombatCopies.speed) ? "" : "no-rhythm";
             const mine = entrainmentAbility(world, actor), theirs = entrainmentAbility(world, target);
             if (!mine) return "self-suppressed";
             if (!entrainmentShareable(mine)) return "self-locked";
@@ -129,12 +117,16 @@ namespace PokemonSkills {
                     if (foeBody !== null) centre = foeBody.position();
                 }
                 let shared = 0;
-                if (mine && entrainmentShareable(mine)) {
+                if (String(target.domain()) !== "cobblemon" || mine && entrainmentShareable(mine)) {
                     WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, splash, { below: 2, above: 3 }),
                         function (other, facts) {
-                            if (String(other.domain()) !== "cobblemon") return;
+                            if (String(other.domain()) !== "cobblemon") {
+                                const carrier = MobEffects.apply(scope, other, entrainmentMark, hold, 0);
+                                if (carrier) { CombatCopies.apply(scope, other, CombatCopies.read(scope, current.actor(), [CombatCopies.speed]), hold, "entrainment", MobEffects.anchor(carrier)); shared++; }
+                                return;
+                            }
                             const theirs = entrainmentAbility(scope, other);
-                            if (!theirs || theirs === mine || !entrainmentReceivable(theirs)) return;
+                            if (!mine || !entrainmentShareable(mine) || !theirs || theirs === mine || !entrainmentReceivable(theirs)) return;
                             NativeModifiers.apply(scope, other, { ability: mine }, hold);
                             MobEffects.apply(scope, other, entrainmentMark, hold, whole ? 1 : 0);
                             shared++;

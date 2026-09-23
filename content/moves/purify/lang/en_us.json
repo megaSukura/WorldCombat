@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.purify.summary": "Reaches for the nearest afflicted combatant at the aim point and draws every harmful status effect out of it; the affliction flies back as dark mist and lands as life for the user, scaled to the target's maximum health. It can purify allies and foes alike, but fails outright when nothing afflicted is near the point.",
+  "worldcombat.skill.purify.summary": "Reach for the nearest afflicted combatant at the aim point and draw every harmful status effect off it at once; the affliction flies back to the user as dark mist and heals the user for a fraction of the target's maximum health. It can purify allies and foes alike, but fails outright when nothing afflicted is near the point.",
   "worldcombat.skill.purify.use.0": "Cleanse a poisoned ally and heal yourself in one reach",
   "worldcombat.skill.purify.use.1": "Take a foe's burn away and turn it into your own life",
-  "worldcombat.skill.purify.use.2": "Break a target that is grinding you down with a status",
-  "worldcombat.skill.purify.description.0": "After drawing the target's statuses out, the user restores %1$s of the target's maximum health; the reach is %2$s blocks.",
-  "worldcombat.skill.purify.description.1": "Picks the nearest afflicted combatant within %1$s blocks of the point.",
+  "worldcombat.skill.purify.use.2": "Draw from a high-health target to restore more health",
+  "worldcombat.skill.purify.description.0": "Reach out and draw every harmful status effect off the target (beneficial and neutral effects stay), then the user restores health equal to %1$s of the target's maximum health; the reach is %2$s blocks. The healing depends only on that maximum health, not on how many statuses were drawn.",
+  "worldcombat.skill.purify.description.1": "Picks the nearest afflicted combatant within %1$s blocks of the point (ally or foe alike, never the caster); with nothing afflicted nearby the whole move fizzles.",
   "worldcombat.skill.purify.stance.deep": "Deep draw: x1.25 healing, but x1.25 wind-up, x1.15 cooldown, x0.85 capture radius and x0.9 reach (a forceful draw).",
   "worldcombat.skill.purify.stance.light": "Light draw: x0.9 wind-up, x0.92 cooldown, x1.15 capture radius and x1.05 reach, but only x0.85 healing (an offhand cleanse).",
-  "worldcombat.skill.purify.timing": "A point move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast. It cannot move while preparing and can be interrupted.",
+  "worldcombat.skill.purify.timing": "A point move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast. It cannot move while preparing and can be interrupted.",
   "worldcombat.skill.purify.value.heal": "Healing fraction",
   "worldcombat.skill.purify.value.reach": "Cast distance",
   "worldcombat.skill.purify.value.captureRadius": "Capture radius",
@@ -22,6 +22,6 @@
   "world_combat.move.purify.text.draw": "Purify draw x%1$s",
   "world_combat.move.purify.text.absorb": "Life +%1$s",
   "world_combat.move.purify.text.none": "Nothing afflicted nearby",
-  "worldcombat.skill.purify.growth.0": "At level %1$s, cooldown becomes %2$s.",
-  "worldcombat.skill.purify.growth.1": "At level %1$s, cooldown becomes %2$s."
+  "worldcombat.skill.purify.growth.0": "From level %1$s, cooldown is reduced by an extra 0.75 seconds.",
+  "worldcombat.skill.purify.growth.1": "From level %1$s, the extra cooldown reduction becomes 1.7 seconds, replacing the earlier reduction."
 }

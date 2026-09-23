@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.visegrip.summary": "扑上一步，两只钳子从两侧同时合上夹住目标碾一下，再顺势把它朝自己拽近。钳口相对目标越大夹得越实；目标越重越大越夹不动、越拽不动。拖拽式把人拉得更近，代价是这一夹更轻；碾夹式相反。",
+  "worldcombat.skill.visegrip.summary": "扑上一步，两只钳子从两侧同时合上夹住一个目标碾一下，再顺势把它朝自己拽近。目标体型越大这一夹越轻，越重越拽不动；补步后仍够不到就夹空。拖拽式把人拉得更近、射程略长，代价是这一夹更轻；碾夹式相反。",
   "worldcombat.skill.visegrip.use.0": "把逃跑的目标拽回近身",
   "worldcombat.skill.visegrip.use.1": "对钳口相对更小的目标打一记实在的接触伤害",
   "worldcombat.skill.visegrip.use.2": "把远处的敌人拖进队友的射程",
   "worldcombat.skill.visegrip.use.3": "起手不长的一记贴身物理手段",
-  "worldcombat.skill.visegrip.description.0": "两钳合上对目标造成约 %1$s 的接触伤害，判定距离约 %2$s 格。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.visegrip.description.1": "命中后把目标朝自己拽近约 %1$s 格（越重越拽不动）；出手时朝目标补上约 %2$s 格。",
+  "worldcombat.skill.visegrip.description.0": "两钳合上夹住一个目标，造成约 %1$s 点接触伤害；目标体型越大，这一夹越轻。判定距离约 %2$s 格，对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.visegrip.description.1": "出手时朝目标补上约 %2$s 格；补步后目标若仍远在钳距之外，这一夹落空。命中后把目标朝自己拽近约 %1$s 格（越重越拽不动）。",
   "worldcombat.skill.visegrip.haul.on": "开启拖拽式：命中后把目标朝自己拽近约 ×1.35、射程略长，代价是这一夹约 ×0.9，用来把人拖进队友射程。",
   "worldcombat.skill.visegrip.haul.off": "关闭拖拽式（碾夹式）：这一夹约 ×1.18，只把目标轻轻带近一点（拽近约 ×0.65）。",
   "worldcombat.skill.visegrip.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -25,5 +25,8 @@
   "worldcombat.skill.visegrip.preference.ai.opening.wounded": "只对受伤目标",
   "worldcombat.skill.visegrip.preference.ai.opening.help": "选「只对受伤目标」时跳过血还多的敌人，把它留到目标掉到六成生命以下再拽过来收尾。",
   "world_combat.move.visegrip.text.hit": "夹住拽近 %1$s 格",
-  "world_combat.move.visegrip.text.miss": "钳口夹空"
+  "world_combat.move.visegrip.text.miss": "钳口夹空",
+  "worldcombat.skill.visegrip.value.tempo": "起手",
+  "worldcombat.skill.visegrip.value.aftercast": "收招",
+  "worldcombat.skill.visegrip.value.recharge": "冷却"
 }

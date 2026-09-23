@@ -1,11 +1,11 @@
 {
   "worldcombat.skill.sludge.summary": "从脚边抓一团湿泥低弧甩向对手：便宜、出手快、PP 多；糊中后按概率让对手中毒，泥团在身上摊开往下淌。黏附形态更黏更毒，代价是威力更低、出手更慢。",
-  "worldcombat.skill.sludge.use.0": "远距离反复消耗、把毒累上去",
+  "worldcombat.skill.sludge.use.0": "远距离反复消耗、让对手一直挂着中毒",
   "worldcombat.skill.sludge.use.1": "PP 多、随时补一发",
   "worldcombat.skill.sludge.use.2": "逼对手走位躲这条泥弧",
   "worldcombat.skill.sludge.description.0": "泥团在目标身上摊开时，造成约 %1$s 的伤害。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.sludge.description.1": "能把泥团甩到 %1$s 格远，脱手初速 %2$s 格/刻，弧线让对手读得出落点。",
-  "worldcombat.skill.sludge.description.2": "糊中的目标有 %1$s 的几率中毒，毒持续 %2$s 秒。",
+  "worldcombat.skill.sludge.description.2": "命中并造成伤害后，目标有 %1$s 的几率中毒；中毒期间会持续掉血，毒持续 %2$s 秒。",
   "worldcombat.skill.sludge.cling.on": "开启黏附形态：泥团判定 ×1.2、中毒概率 ×1.3、挂毒更久，但威力 ×0.9、飞得更慢、起手多一拍。",
   "worldcombat.skill.sludge.cling.off": "关闭黏附形态（快掷）：威力 ×1.1、飞得更快、收招更快，但糊上去的机会小。",
   "worldcombat.skill.sludge.timing": "可对 %1$s 格内的目标施放；准备 %2$s 秒后消耗 %4$s PP 发动，收招 %3$s 秒，提交起冷却 %5$s 秒。",

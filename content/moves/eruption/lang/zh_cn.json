@@ -2,11 +2,11 @@
   "worldcombat.skill.eruption.summary": "把积压的火从脚下整圈掀出来：身周所有敌人（空中地上一起）被喷中并向外推开、向上抛起，越靠近中心挨得越重，还可能被点着。威力随自身剩余血量下降，满血时最盛。",
   "worldcombat.skill.eruption.use.0": "被围住时一次把一圈人喷开",
   "worldcombat.skill.eruption.use.1": "在满血时打出最高的一记范围爆发",
-  "worldcombat.skill.eruption.use.2": "把贴身的追击者推开并点着",
+  "worldcombat.skill.eruption.use.2": "把贴身的追击者推开并可能点着",
   "worldcombat.skill.eruption.use.3": "逼开成片的敌人，给自己争取空间",
-  "worldcombat.skill.eruption.description.0": "从脚下整圈喷发，圈内每个敌人各挨约 %1$s 点伤害；波及半径约 %2$s 格，空中与地上的目标都会被喷到。对手特防、相性与暴击在命中时另算。",
+  "worldcombat.skill.eruption.description.0": "从脚下整圈喷发，波及半径约 %2$s 格，空中与地上的目标都会被喷到；越靠近中心伤害越高，最内圈约 %1$s 点。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.eruption.description.1": "圈边还能吃到中心威力的 %1$s；被喷中的目标沿背离方向被推开约 %2$s 格，并被向上抛起约 %3$s 格。",
-  "worldcombat.skill.eruption.description.2": "被喷中的目标有 %1$s 的几率陷入灼伤，起手约 %2$s。",
+  "worldcombat.skill.eruption.description.2": "被喷中的目标有 %1$s 的几率陷入灼伤，离中心越远几率越低：灼伤持续 40 秒，期间每 5 秒流失约最大生命 1/16 的体力，物理攻击伤害也会降低；火属性目标免疫。",
   "worldcombat.skill.eruption.timing": "可对身周 %1$s 格施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.eruption.growth.0": "达到 %1$s 级，冷却降至 %2$s 秒。",
   "worldcombat.skill.eruption.value.burst": "爆发威力",
@@ -27,5 +27,6 @@
   "worldcombat.skill.eruption.preference.ai.healthy.help": "开启后，伙伴在自己血量越满时越倾向喷火（威力随剩余血量走）；关闭则不看血线，什么时候都可能用。",
   "world_combat.move.eruption.text.hit": "喷到 %1$s 个",
   "world_combat.move.eruption.text.miss": "喷火落空",
-  "world_combat.move.eruption.text.burn": "灼伤"
+  "world_combat.move.eruption.text.burn": "灼伤",
+  "worldcombat.skill.eruption.growth.1": "达到 %1$s 级，冷却进一步降至 %2$s 秒。"
 }

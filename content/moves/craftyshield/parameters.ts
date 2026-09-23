@@ -76,11 +76,11 @@ namespace PokemonSkills {
     });
 
     describe("craftyshield", [
-        { key: "description.0", values: ["charges", "window"] },
+        { key: "description.0", values: ["charges","window"] },
         { key: "description.1", values: ["radius"] },
         { key: "weave.fine", values: [], when: function (context) { return read(context.detail.values, ["weave"]) === 1; } },
         { key: "weave.broad", values: [], when: function (context) { return read(context.detail.values, ["weave"]) !== 1; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] }
     ]);
 }

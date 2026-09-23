@@ -132,12 +132,12 @@ namespace PokemonSkills {
     ]);
 
     describe(fishiousrendId, [
-        { key: "description.0", values: ["rend", "window"] },
-        { key: "description.1", values: ["lunge", "speed", "collisionRadius"] },
-        { key: "description.2", values: ["drag", "slowStages"] },
+        { key: "description.0", values: ["rend","window"] },
+        { key: "description.1", values: ["lunge","speed","collisionRadius"] },
+        { key: "description.2", values: ["drag","slowStages"] },
         { key: "deepbite.on", values: [], when: function (context) { return read(context.detail.values, ["deepbite"]) === true; } },
         { key: "deepbite.off", values: [], when: function (context) { return read(context.detail.values, ["deepbite"]) !== true; } },
-        { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
+        { key: "timing", values: ["range","tempo","settle","pp","recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.rend"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.rend", "tier.1.lunge"] }
     ]);

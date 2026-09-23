@@ -43,7 +43,7 @@ namespace PokemonSkills {
         id: "pound",
         cooldownParameter: "recharge",
         name: "Pound",
-        description: "A quick, wide swat with a foreleg or tail. No wind-up: whatever stands in the short fan in front takes the hit and is nudged aside.",
+        description: "抬手在身前扫出一记短扇面：快拍式没有蓄势，重拍式多一拍起手；拍到扇面里的目标就各挨一下、各被拍到一边。它是全族最便宜的一招——冷却最短，一次能拍到贴身并排的几个目标；代价是单发最低、扇面很浅。",
         uses: ["瞬发的一记便宜近身拍击", "一次拍到贴身并排的几个目标", "在别的招之间随手补一下"],
         kind: "enemy",
         range: 1.9,

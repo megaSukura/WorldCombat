@@ -87,6 +87,8 @@ declare namespace Smoke {
         pp(actor: Actor, moveId: string): number | null;
         /** Native held item id on `actor` (empty string when none). */
         heldItem(actor: Actor): string;
+        /** Current damage of the first held durable stack; null for an empty hand or an item without durability. */
+        heldDamage(actor: Actor): number | null;
         /** Damage receipts in order, with the settled `amount` (actual HP lost, not the pre-mitigation request); `cause` filters by substring. */
         damageEvents(cause?: string): { at: number[]; amount: number; critical: boolean; from: string; to: string; cause: string }[];
         /** How many damage receipts `actor` caused (received when `incoming` is true). */

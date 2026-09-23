@@ -1,4 +1,4 @@
-# WorldCombat 0.1.0-alpha.5 安装
+# WorldCombat 0.1.0-alpha.6 安装
 
 这是公开测试版本。使用 Java 21、Minecraft **1.21.1**、NeoForge **21.1.250**。游戏客户端与专用服务器使用同一版 WorldCombat 和内容文件。
 

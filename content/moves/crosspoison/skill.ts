@@ -33,7 +33,7 @@ namespace PokemonSkills {
         id: "crosspoison",
         cooldownParameter: "recharge",
         name: "Cross Poison",
-        description: "Two venomous blades snap shut from either side and scissor an X into the target; the venom in the cut seeps in a moment later.",
+        description: "两片毒刃从左右同时合拢，在正对目标身上剪出一个 X，两刃之间那条窄线里的其他敌人也被顺带划到；被剪到的敌人先按概率抹一次毒，过一瞬切口里的毒再渗一次、按更高的概率真正令其中毒。腐蚀式更毒但剪得更轻；快刃式剪得更重但毒难按进去。",
         uses: ["同时合拢的一剪、终结一个目标", "顺手划到挤在目标两侧的敌人", "在切口里留下会渗的毒"],
         kind: "enemy",
         range: 2.5,

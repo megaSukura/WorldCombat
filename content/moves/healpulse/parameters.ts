@@ -59,11 +59,12 @@ namespace PokemonSkills {
 
     describe(healpulseId, [
         { key: "description.0", values: ["heal"] },
-        { key: "description.1", values: ["reach", "pulseSpeed"] },
+        { key: "description.1", values: ["reach","pulseSpeed"] },
         { key: "description.2", values: ["charge", "settle"] },
+        { key: "description.travel", values: [] },
         { key: "stance.overcharge", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "stance.light", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
     ]);

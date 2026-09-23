@@ -61,7 +61,7 @@ namespace PokemonSkills {
                 .minus(F.body("height").minus(1.4).times(0.02).clamp(0, 0.06))
                 .clamp(0.08, 0.28).round(3),
             "单次反噬", {
-                unit: "比例",
+                presentation: "percent",
                 description: "每撞实一个目标，按它实际受到的伤害反噬自己的比例；防御越高、体型越大（头毛越厚）越轻。撞的人越多，累加得越多，这是本招唯一的代价。"
             }),
         /** 贯通占比：基础 0.75，物攻每比 60 多 1 加 0.001（夹 -0.1..0.12）；夹 0.6..0.9。 */
@@ -114,11 +114,11 @@ namespace PokemonSkills {
     ]);
 
     describe("headcharge", [
-        { key: "description.0", values: ["ram", "charge", "pace", "radius"] },
-        { key: "description.1", values: ["recoil", "through", "shove"] },
-        { key: "hunt.on", values: [], when: function (context) { return read(context.detail.values, ["hunt"]) === true; } },
+        { key: "description.0", values: ["ram","charge","pace","radius"] },
+        { key: "description.1", values: ["recoil","through","shove"] },
+        { key: "hunt.on", values: ["turnRate"], when: function (context) { return read(context.detail.values, ["hunt"]) === true; } },
         { key: "hunt.off", values: [], when: function (context) { return read(context.detail.values, ["hunt"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ram"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.ram", "tier.1.through"] }
     ]);

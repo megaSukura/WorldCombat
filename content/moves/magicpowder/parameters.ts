@@ -63,19 +63,20 @@ namespace PokemonSkills {
             F.base(74, "基础").minus(F.stat("speed").times(0.26).as("速度"))
                 .plus(F.when(F.pref("sift", text("worldcombat.skill.magicpowder.preference.sift")), F.const(14), F.const(-8)).as("细撒代价"))
                 .clamp(36, 120).round(),
-            "再撒冷却", "再撒一把需要多久；速度快的个体更快恢复，细撒更费力。")
+            "再撒冷却", "再撒一把需要多久；速度快的个体更快恢复，细撒更费力。", { base: 74 })
     });
 
-    stages("magicpowder", [{ level: 40, values: { cooldown: 64 } }, { level: 55, values: { cooldown: 54 } }]);
+    stages("magicpowder", [{ level: 40, values: { recharge: 64 } }, { level: 55, values: { recharge: 54 } }]);
 
     describe("magicpowder", [
         { key: "description.0", values: ["hold"] },
-        { key: "description.1", values: ["reach", "tempo", "aftercast"] },
-        { key: "description.2", values: ["cloud", "velocity"] },
+        { key: "description.additional", values: [] },
+        { key: "description.1", values: ["reach","tempo","aftercast"] },
+        { key: "description.2", values: ["cloud","velocity"] },
         { key: "sift.on", values: ["hold", "reach"], when: function (context) { return read(context.detail.values, ["sift"]) === true; } },
         { key: "sift.off", values: ["recharge"], when: function (context) { return read(context.detail.values, ["sift"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

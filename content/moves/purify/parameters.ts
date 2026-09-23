@@ -60,7 +60,7 @@ namespace PokemonSkills {
             F.base(130).minus(F.level().times(0.5))
                 .times(F.when(F.pref("deep", purifyDeep), F.const(1.15), F.const(0.92)).as("深引"))
                 .clamp(70, 170).round(0),
-            "冷却", "两次抽引之间的等待；等级越高越熟练，深引档更长。")
+            "冷却", "两次抽引之间的等待；等级越高越熟练，深引档更长。", { base: 130 })
     });
 
     stages(purifyId, [
@@ -69,12 +69,12 @@ namespace PokemonSkills {
     ]);
 
     describe(purifyId, [
-        { key: "description.0", values: ["heal", "reach"] },
+        { key: "description.0", values: ["heal","reach"] },
         { key: "description.1", values: ["captureRadius"] },
         { key: "stance.deep", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "stance.light", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
+        { key: "timing", values: ["prepare","recover","pp","cooldown"] },
+        { key: "growth.0", values: ["tier.0.level"] },
+        { key: "growth.1", values: ["tier.1.level"] }
     ]);
 }

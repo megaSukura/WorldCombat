@@ -1,14 +1,4 @@
-/**
- * 无理取闹 / torment —— 注册、封锁策略与动作。
- *
- * 一幕完整：起（windup，提交前）嘴角一挑，讥讽的符环转到指尖；击（execute，提交后）符环沿直线扑到目标身上，
- *   把它钉进一段烦躁；之后的时间里，目标想再出上一手就会被顶回去（共享动作策略，reason "tormented"）。
- *
- * 与挑衅分开：挑衅封的是所有变化招式（让对手只能打人）；无理取闹不封类别，只封“你刚才用的那一手”本身，
- *   对手换一招照样能打。与怨恨分开：怨恨抽的是 PP 存量，无理取闹不碰存量，只封当下的重复。
- *
- * 反制：射程与通视之外落空；已带烦躁的目标只被刷新不叠加；可被牛奶／`/effect clear` 解除。
- */
+/** torment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     // 烦躁的机读旁挂：记下烦躁值、时限与来源，供持续画面读取（不是判定依据，判定只看共享身份）。
     WorldCombat.effect(tormentMark, 1, 1200, "actor", function (json) {
@@ -30,6 +20,11 @@ namespace PokemonSkills {
     // 这条贡献走共享动作策略，原生配招、通用动作与玩家共用同一个提交闸门；对任何带身份的活体成立。
     CombatStatus.actions.define({ id: "world_combat:move_torment/policy", apply: function (context) {
         if (!CombatStatus.has(context.world, context.actor, tormentStatus)) return;
+        if (context.phase === "damage" && DamageSemantics.read(context.metadata).attack) {
+            const last = DamageSemantics.recentAttack(context.world, context.actor, 30);
+            if (last && last.type === String(context.metadata.damageType)) context.blocked.tormented = true;
+            return;
+        }
         if (String(context.actor.domain()) !== "cobblemon") return;
         const move = context.move;
         if (!move || typeof move.id !== "function") return;
@@ -60,7 +55,7 @@ namespace PokemonSkills {
         id: tormentId,
         cooldownParameter: "recharge",
         name: "无理取闹",
-        description: "当面取笑一名对手，让它在一段时间里不能连续使用同一招；烦躁还在时，重复那一手会被顶回去。",
+        description: "让目标烦躁，打乱重复出手的节奏。宝可梦不能连续使用同一招；普通生物和玩家连续使用同一种攻击时，需要多等一拍。",
         uses: ["拆掉只会一招的对手的节奏", "逼对手换招", "惩罚仰赖同一次连击的敌人"],
         kind: "enemy",
         range: 12,

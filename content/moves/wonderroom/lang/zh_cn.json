@@ -28,5 +28,6 @@
   "worldcombat.skill.wonderroom.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去撑空间。",
   "world_combat.move.wonderroom.text.open": "奇妙空间展开 %1$s 秒",
   "world_combat.move.wonderroom.text.swap": "防御与特防换了位",
-  "effect.world_combat.wonderroom_swap": "攻防交换"
+  "effect.world_combat.wonderroom_swap": "攻防交换",
+  "worldcombat.skill.wonderroom.description.swap": "站在空间里的活体防御与特防互换，走出空间或空间结束时立刻换回；只有同时具有这两项属性的活体才会被换。"
 }

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.poisonpowder.summary": "把一小撮毒尘抛向选定的落点，落地立刻炸开，把圈里的敌人一次全毒上，然后什么都不留下。它是四式状态里最便宜、冷却最短的出手，用来顺手把贴身的目标们点上毒。草属性穿过粉末，毒属性与钢属性穿过中毒。",
-  "worldcombat.skill.poisonpowder.description.0": "粉团抛向 %1$s 格内的落点，以 %2$s 格每刻飞行，落地覆盖半径 %3$s 格。",
-  "worldcombat.skill.poisonpowder.description.1": "被炸到的非友方中毒 %1$s，持续掉血。",
+  "worldcombat.skill.poisonpowder.description.0": "粉团抛向 %1$s 格内的落点，以 %2$s 格每刻飞行，撞到目标或飞到落点时就地炸开，覆盖半径 %3$s 格。",
+  "worldcombat.skill.poisonpowder.description.1": "炸开时圈内的非友方各中毒一次，持续 %1$s 并持续掉血；草属性会直接穿过粉末不受影响，毒属性与钢属性也不会中毒。",
   "worldcombat.skill.poisonpowder.cling.on": "黏附：落点半径 ×0.8、中毒 ×1.3，但冷却 ×1.1——把单个硬目标毒得久。",
   "worldcombat.skill.poisonpowder.cling.off": "散撒：落点半径 ×1.15、冷却 ×0.9，中毒 ×0.8——一次点上挤在一起的一小群。",
   "worldcombat.skill.poisonpowder.timing": "抛向落点：射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

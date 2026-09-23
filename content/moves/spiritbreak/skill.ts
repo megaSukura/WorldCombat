@@ -19,6 +19,7 @@ namespace PokemonSkills {
     const spiritbreakText = "world_combat.move.spiritbreak.text.smash";
 
     define({
+        freeMovement: true,
         id: "spiritbreak",
         cooldownParameter: "wait",
         name: "Spirit Break",

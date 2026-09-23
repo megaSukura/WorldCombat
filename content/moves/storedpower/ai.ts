@@ -1,13 +1,4 @@
-/**
- * 辅助力量 / storedpower 的伙伴 AI 用途。
- *
- * 什么局面下出手：挂在共享 attack 位上；这是**以自己为圆心**的范围释放，够不到时交给共享接近逻辑，
- *   把身位收进圈子后再放；`ai.maxChase` 只决定「多远之内值得先手」，超过时压低排序但仍会走近。
- * 对谁出手：`accepts` 只排除友方、已死、看不见的；`approachTarget` 就是目标本人（贴上去再放）。
- * 什么时候抬价：`ai.boostFirst`（默认开）打开时，自己身上每有 1 级正面能力就 +5 分——蓄积越深越值得放；
- *   一点没蓄时压到 12 分，只在没有更好的选择时用它。关闭则不问蓄积，一律按普通近距范围攻击排序。
- * 放完接什么：交回共享交战计划；倾囊会清空等级，接下来按没有蓄积的状态重新打算。
- */
+/** storedpower：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 只读、回调内缓存的正面能力等级总数（宝可梦读原生等级，其他生物读 CombatStages）。 */
     CompanionBehavior.registerFact("world_combat:move_storedpower/boost", function (access, actor, _argument) {

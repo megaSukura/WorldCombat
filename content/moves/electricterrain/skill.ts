@@ -11,7 +11,7 @@ namespace PokemonSkills {
     define({
         id: "electricterrain",
         name: "电气场地",
-        description: "把电流按进选定的地面：站在电场上的活体电属性招式威力提高，脚下的电荷让它无法入眠，已经睡着的会被电醒。对双方一视同仁。",
+        description: "把电流按进选定的地面：电场内贴地的活体电属性招式威力 ×1.3，脚下的电荷让它无法入眠，已经睡着的会被电醒；对敌我双方同样生效。",
         uses: ["给电属性招式加成", "防止队伍被催眠", "电醒已经睡着的目标"],
         kind: "point",
         range: 15,

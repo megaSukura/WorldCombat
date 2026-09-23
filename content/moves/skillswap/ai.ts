@@ -1,15 +1,4 @@
-/**
- * 特性互换 / skillswap 的伙伴 AI 用途：这是这招自己的一套出手计划。
- *
- * 什么局面有意义：附近有可见威胁、它在 ai.maxChase 以内、有一条通视直线，双方都是宝可梦，双方特性不同、
- *   都可被交换、且（默认）对手的特性在本项目里有实际实现——换一个什么都不做的特性没有意义。
- * 对谁出手：当前威胁；已经有对调窗口、特性相同、或特性被压制的一方跳过。
- * 候选之间怎么排：把「双方特性的有效程度」拿来比——对手的特性有实现而自己没有时最值（priority 65），
- *   自己更好时压低（25），相当则当普通节奏手段（45）。priority 0 或负值仍可由共享顺序兜底选中。
- * 够不到怎么办：reach 就是本招射程（由特攻与体型决定）；共享任务先走近，approach 在无通视时侧移找角度。
- * 放完之后：双方换到新特性并维持一段窗口，窗口走完自动换回；伙伴交回共享交战计划。
- * 配置 ai.requireActive 决定「只换有实现的特性」还是「不同就换」；ai.maxChase、ai.leaveStation 决定追多远、驻守是否离位。
- */
+/** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace CompanionBehavior {
     /** 只读事实：一个战斗者当前生效的特性 id（含临时覆盖层）。 */
     CompanionBehavior.registerFact("world_combat:skillswap-ability", function (access: CombatWorld, actor: CombatActor): string {
@@ -31,10 +20,14 @@ namespace CompanionBehavior {
         if (target.health <= 0 || target.friendly || !target.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
-        if (CompanionBehavior.domain(context, self) !== "cobblemon" || CompanionBehavior.domain(context, target) !== "cobblemon") return false;
+        if (CompanionBehavior.domain(context, self) !== "cobblemon") return false;
         if (CompanionBehavior.status(context, self, "skillswap") || CompanionBehavior.status(context, target, "skillswap")) return false;
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 14)) return false;
         if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
+        if (CompanionBehavior.domain(context, target) !== "cobblemon") {
+            const access = CompanionBehavior.world(context), own = access.actor(self.ref), foe = access.actor(target.ref);
+            return !!own && !!foe && CombatCopies.differs(access, own, CombatCopies.read(access, foe));
+        }
         const mine = skillswapAbilityOf(context, self), theirs = skillswapAbilityOf(context, target);
         if (!mine || !theirs || mine === theirs) return false;
         const worth = CompanionBehavior.fact<number>(context, "world_combat:skillswap-worth", target);
@@ -51,7 +44,7 @@ namespace CompanionBehavior {
             return skillswapWants(context, item, target);
         },
         accepts: function (context, _item, target) {
-            return !target.friendly && target.health > 0 && target.visible && CompanionBehavior.domain(context, target) === "cobblemon";
+            return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, item, target) {
             if (target === null || !skillswapWants(context, item, target)) return 0;

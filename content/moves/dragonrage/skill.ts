@@ -44,7 +44,7 @@ namespace PokemonSkills {
         id: "dragonrage",
         cooldownParameter: "recharge",
         name: "Dragon Rage",
-        description: "This attack hits the target with a shock wave of pure rage. This attack always inflicts 40 HP damage.",
+        description: "把满腔怒火压成一颗赤红的龙息弹正面砸出去：这一击不与攻防比较，无论对手多硬都固定削掉 40 点生命（只有属性免疫能挡住），把人撞退并短暂按住；怒爆式改为在落点炸开、罩住一片。",
         uses: ["用固定伤害处理高防目标", "把冲上来的敌人撞退并按住", "怒爆式一口气削掉挤在一起的一片"],
         kind: "enemy",
         range: 7,

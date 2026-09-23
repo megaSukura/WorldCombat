@@ -93,7 +93,8 @@ namespace PokemonSkills {
     describe("hydrocannon", [
         { key: "description.0", values: ["jet"] },
         { key: "description.1", values: ["shove", "collisionRadius"] },
-        { key: "description.2", values: ["soakTicks", "drenchBonus"] },
-        { key: "description.3", values: ["reach", "speed", "charge", "exhaust"] }
+        { key: "description.2", values: ["soakTicks","drenchBonus"] },
+        { key: "description.3", values: ["reach","speed","charge","exhaust"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] }
     ]);
 }

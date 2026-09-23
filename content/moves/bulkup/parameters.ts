@@ -86,6 +86,7 @@ namespace PokemonSkills {
         { key: "lean.on", values: [], when: function (context) { return read(context.detail.values, ["lean"]) === 1; } },
         { key: "lean.off", values: [], when: function (context) { return read(context.detail.values, ["lean"]) !== 1; } },
         { key: "description.1", values: ["window"] },
+        { key: "description.2", values: [] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.window", "tier.0.wait"] },

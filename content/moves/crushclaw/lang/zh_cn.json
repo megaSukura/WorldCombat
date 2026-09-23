@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.crushclaw.summary": "踏前一步，双爪在身前划出交叉，把走廊里的对手撕开：撕中时最有可能让目标防御下降一级，目标已经带着破防身份时还会多降一级；比碎岩重、比铁尾快。",
   "worldcombat.skill.crushclaw.description.0": "交叉撕抓造成 %1$s 的接触伤害。",
-  "worldcombat.skill.crushclaw.description.1": "踏前 %1$s 格，走廊判定半宽 %2$s 格。",
-  "worldcombat.skill.crushclaw.description.2": "撕中时有 %1$s 的概率让目标防御下降 %2$s 级；目标已带破防身份时额外多降 %3$s 级，撕开标记持续 %4$s。",
+  "worldcombat.skill.crushclaw.description.1": "踏前 %1$s 格，在身前撕过一条半宽 %2$s 格的走廊，走廊里的敌人各挨一记撕抓。",
+  "worldcombat.skill.crushclaw.description.2": "每个被撕到的敌人各自掷一次：有 %1$s 的概率让目标防御下降 %2$s 级，已带破防身份的目标额外多降 %3$s 级；撕中会挂上持续 %4$s 的破防身份。这道身份本身不改变属性，但能撕旧缺口的招会借它把防御再压一级。",
   "worldcombat.skill.crushclaw.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.crushclaw.growth.0": "达到 %1$s 级，撕抓威力提升至 %2$s。",
   "worldcombat.skill.crushclaw.growth.1": "达到 %1$s 级，撕甲几率提升至 %2$s。",

@@ -106,9 +106,9 @@ namespace PokemonSkills {
     ]);
 
     describe(attackorderId, [
-        { key: "description.0", values: ["underlings", "sting"] },
+        { key: "description.0", values: ["underlings","sting"] },
         { key: "description.1", values: ["reach", "flight", "stagger"] },
-        { key: "description.2", values: ["underlingHealth", "ttl"] },
+        { key: "description.2", values: ["underlingHealth","ttl"] },
         { key: "stance.swarm", values: [], when: function (context) { return read(context.detail.values, ["swarm"]) === true; } },
         { key: "stance.elite", values: [], when: function (context) { return read(context.detail.values, ["swarm"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

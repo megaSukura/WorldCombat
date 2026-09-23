@@ -13,7 +13,7 @@ namespace PokemonSkills {
     define({
         id: "snowscape",
         name: "雪景",
-        description: "在选定的地面上落下一场安静的雪：雪覆盖地表、露天的水面被冻成冰，雪区里的冰属性身体把防御绷高一级；不造成伤害。",
+        description: "在选定地面制造雪区，临时覆雪并冻结水面；冰属性宝可梦站在雪区内时获得防御提升。",
         uses: ["在交战区铺开雪地并以冻水改变走动", "增强冰之躯的防御", "为随后的冰招与走位准备地形"],
         kind: "point",
         range: 14,

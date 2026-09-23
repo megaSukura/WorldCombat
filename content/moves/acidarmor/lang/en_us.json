@@ -3,9 +3,9 @@
   "worldcombat.skill.acidarmor.use.0": "Liquefy to slip out of a bind or a pin",
   "worldcombat.skill.acidarmor.use.1": "Spread a corrosive puddle under the opponent",
   "worldcombat.skill.acidarmor.use.2": "Ride out a round of close-range hits as a slicker liquid",
-  "worldcombat.skill.acidarmor.description.0": "While liquid, Defense is raised by %1$s level(s) for about %2$s.",
-  "worldcombat.skill.acidarmor.description.1": "The liquid form moves faster and immediately breaks free of existing restraints.",
-  "worldcombat.skill.acidarmor.acid.on": "Acid pool: leaves a puddle %1$s blocks across for about %2$s; opponents who stand in it are poisoned.",
+  "worldcombat.skill.acidarmor.description.0": "While liquid, Defense is raised by %1$s level(s) for about %2$s; the boost is taken back when the liquid ends and you re-form.",
+  "worldcombat.skill.acidarmor.description.1": "The liquid form immediately breaks free of entangling and pinning effects and moves faster while it lasts.",
+  "worldcombat.skill.acidarmor.acid.on": "Acid pool: leaves a puddle %1$s blocks in radius at your feet for about %2$s; opponents who step in are poisoned and are poisoned again while they stay, losing health over time.",
   "worldcombat.skill.acidarmor.acid.off": "Slick body: no puddle, in exchange for a longer liquid window and a faster glide - trading field control for stronger self-preservation.",
   "worldcombat.skill.acidarmor.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.acidarmor.timing": "Self move, range %1$s blocks; after %2$s s of wind-up it spends %4$s PP, recovers for %3$s s and starts a %5$s s cooldown.",
@@ -20,7 +20,7 @@
   "worldcombat.skill.acidarmor.value.aftercast": "Recovery",
   "worldcombat.skill.acidarmor.value.wait": "Cooldown",
   "worldcombat.skill.acidarmor.preference.slick": "Slick body",
-  "worldcombat.skill.acidarmor.preference.slick.help": "On: no acid pool, in exchange for a longer liquid window and a faster glide. Off: leave a corrosive pool that poisons opponents, at the cost of a liquid window multiplied by 0.8.",
+  "worldcombat.skill.acidarmor.preference.slick.help": "On: no acid pool, in exchange for a longer liquid window and a faster glide. Off: leave a pool that poisons opponents who step in, at the cost of a liquid window multiplied by 0.8.",
   "worldcombat.skill.acidarmor.preference.ai.maxChase": "Melt distance",
   "worldcombat.skill.acidarmor.preference.ai.maxChase.help": "The companion considers melting only when a threat is within this distance; larger means earlier preparation.",
   "worldcombat.skill.acidarmor.preference.ai.panic": "Panic health",
@@ -28,5 +28,6 @@
   "world_combat.move.acidarmor.text.flow": "Acid Armor (Defense +%1$s / %2$s s)",
   "world_combat.move.acidarmor.text.reform": "Re-forms",
   "effect.world_combat.acidarmor_pool": "Acid Armor - Pool",
-  "effect.world_combat.acidarmor_slick": "Acid Armor - Slick"
+  "effect.world_combat.acidarmor_slick": "Acid Armor - Slick",
+  "worldcombat.skill.acidarmor.description.stack": "Casting it again while still liquid stacks more Defense and refreshes the liquid's duration, up to the stat-stage cap, all taken back when you re-form."
 }

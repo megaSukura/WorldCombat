@@ -50,9 +50,10 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "hyperbeam",
         name: "Hyper Beam",
-        description: "The target is attacked with a powerful beam. The user can't move on the next turn.",
+        description: "把全部能量压成一条贯穿的直线光柱射出去：走廊里的敌人被一起打穿，排队站得越密越吃亏；放完自己熄火一段时间，无法行动也无法移动。",
         uses: ["一条贯穿的直线光柱", "把排成一条线的敌人一起打穿", "用较久的熄火换一次穿透"],
         kind: "enemy",
         range: 11,

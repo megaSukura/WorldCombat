@@ -108,8 +108,8 @@ namespace PokemonSkills {
     defineDamage("poweruppunch", "jab", {}, { contact: true, punch: true });
 
     describe("poweruppunch", [
-        { key: "description.0", values: ["jab", "reach", "radius"] },
-        { key: "description.1", values: ["gain", "window", "knock"] },
+        { key: "description.0", values: ["jab","reach","radius"] },
+        { key: "description.1", values: ["gain","window","knock"] },
         { key: "charge.on", values: [], when: function (context) { return read(context.detail.values, ["charge"]) === true; } },
         { key: "charge.off", values: [], when: function (context) { return read(context.detail.values, ["charge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

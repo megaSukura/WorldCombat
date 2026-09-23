@@ -101,6 +101,7 @@ namespace PokemonSkills {
     describe("icywind", [
         { key: "description.0", values: ["frost"] },
         { key: "description.1", values: ["reach", "halfWidth", "travelTicks"] },
+        { key: "description.cap", values: ["maxTargets"] },
         { key: "description.2", values: ["slowStages"] },
         { key: "description.3", values: ["frostTicks", "frostCells"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deepfreeze"]) === true; } },

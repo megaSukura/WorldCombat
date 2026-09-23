@@ -40,7 +40,7 @@ namespace PokemonSkills {
         id: "amnesia",
         cooldownParameter: "wait",
         name: "瞬间失忆",
-        description: "短时提高特防，并按顺序清除混乱、着迷、挑衅、无理取闹、再来一次和定身法；空明结束时收回本招的特防强化。",
+        description: "短时提高特防，并清除混乱、着迷、挑衅、无理取闹、再来一次和定身法。空明结束时收回本招的特防强化。",
         uses: ["被混乱、着迷一类状态缠住时当场忘掉它们", "顶特殊火力前把特防垫到最高", "拉锯里用一时失神随手补一档特防"],
         kind: "self",
         range: 1,

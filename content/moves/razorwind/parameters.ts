@@ -113,7 +113,7 @@ namespace PokemonSkills {
 
     describe(razorwindId, [
         { key: "description.0", values: ["blade"] },
-        { key: "description.1", values: ["reach", "fan", "blades"] },
+        { key: "description.1", values: ["reach","fan","blades"] },
         { key: "description.2", values: ["chargeTicks"] },
         { key: "stance.spread", values: [], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
         { key: "stance.focus", values: [], when: function (context) { return read(context.detail.values, ["spread"]) !== true; } },

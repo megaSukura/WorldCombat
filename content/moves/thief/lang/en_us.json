@@ -4,13 +4,13 @@
   "worldcombat.skill.thief.use.1": "A quick close strike while empty-handed",
   "worldcombat.skill.thief.use.2": "Back off after a successful snatch",
   "worldcombat.skill.thief.description.0": "The dip deals about %1$s Dark contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
-  "worldcombat.skill.thief.description.1": "Lunge up to %1$s blocks along your aim at %2$s blocks per tick; on a successful snatch you back away about %3$s blocks.",
+  "worldcombat.skill.thief.description.1": "Lunge up to %1$s blocks along your aim at %2$s blocks per tick; after a successful steal you back away about %3$s blocks.",
   "worldcombat.skill.thief.description.2": "A landed hit shoves the target about %1$s blocks along the lunge.",
   "worldcombat.skill.thief.flee.on": "Snatch and retreat on: after a successful steal you back away further and recover more slowly, trading pressure for distance.",
   "worldcombat.skill.thief.flee.off": "Snatch and retreat off: after a steal you stay in the target's face, recovering faster but under more risk.",
   "worldcombat.skill.thief.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
   "worldcombat.skill.thief.growth.0": "At level %1$s, Thief power rises to %2$s.",
-  "worldcombat.skill.thief.growth.1": "At level %1$s, Thief power rises to %2$s and the lunge to %3$s.",
+  "worldcombat.skill.thief.growth.1": "At level %1$s, Thief power rises to %2$s and the lunge to %3$s blocks.",
   "worldcombat.skill.thief.value.swipe": "Thief power",
   "worldcombat.skill.thief.value.charge": "Preparation",
   "worldcombat.skill.thief.value.reach": "Lunge distance",
@@ -27,9 +27,10 @@
   "worldcombat.skill.thief.preference.ai.leaveStation": "Leave station to dip",
   "worldcombat.skill.thief.preference.ai.leaveStation.help": "On: it will leave its station under a hold order to dip in. Off: it only dips when the target is already in reach.",
   "worldcombat.skill.thief.preference.ai.stealOnly": "Only against item holders",
-  "worldcombat.skill.thief.preference.ai.stealOnly.help": "On: only used when the target carries a held item, as a dedicated steal. Off: it also fills in as an ordinary close strike while your hands are empty.",
+  "worldcombat.skill.thief.preference.ai.stealOnly.help": "On: only used when the target carries a held item, as a dedicated steal. Off: it also strikes as an ordinary close hit when the target holds nothing or your own hands are already full.",
   "world_combat.move.thief.text.steal": "Stole it clean",
   "world_combat.move.thief.text.strike": "Grasped at nothing",
   "world_combat.move.thief.text.full": "Hands already full",
-  "world_combat.move.thief.text.miss": "Closed on nothing"
+  "world_combat.move.thief.text.miss": "Closed on nothing",
+  "worldcombat.skill.thief.description.additional": "After a hit that deals damage, if the target survives, your hands are empty and it holds an item, one of its held items moves into your grasp (a carried item for Pokemon, a main- or off-hand item for other creatures); if you already hold something, the target holds nothing, or either side is barred from item transfer, it is an ordinary strike. The damage lands either way."
 }

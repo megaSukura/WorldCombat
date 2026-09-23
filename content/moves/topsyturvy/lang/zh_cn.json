@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.topsyturvy.summary": "甩出一枚暗色镜片，命中谁就把谁身上所有能力变化整张翻个面：正的变负、负的变正。对方顶得越高摔得越重；若它身上尽是减益，翻过来反而帮了它——出手前先读它的等级。",
+  "worldcombat.skill.topsyturvy.summary": "镜片命中后反转能力等级，还会将速度与缓慢、力量与虚弱等成对药水效果互换。择映式只把增益变成减益。",
   "worldcombat.skill.topsyturvy.use.0": "对手靠增益吃满输出时，把它的增益变成等量的减益",
   "worldcombat.skill.topsyturvy.use.1": "在对方刚加满攻速时一次抹掉它的优势",
   "worldcombat.skill.topsyturvy.use.2": "干扰一个反复给自己上增益的厚目标",
-  "worldcombat.skill.topsyturvy.description.0": "镜片射程 %1$s 格，飞行速度 %2$s 格/刻；命中谁就把谁身上每一项非零能力变化取反。",
-  "worldcombat.skill.topsyturvy.description.1": "镜片判定半径 %1$s 格；被翻过面的目标留下约 %2$s 的「颠倒」印记（记翻了几项）。",
+  "worldcombat.skill.topsyturvy.description.0": "射程 %1$s 格，镜片速度 %2$s 格/刻；命中后反转非零能力等级。药水效果按速度↔缓慢、力量↔虚弱、急迫↔挖掘疲劳、幸运↔霉运互换，保留等级与剩余时长。",
+  "worldcombat.skill.topsyturvy.description.1": "镜片判定半径 %1$s 格；「颠倒」图标保留约 %2$s，用于提示此次翻转，转换后的效果按原剩余时间消退。",
   "worldcombat.skill.topsyturvy.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.topsyturvy.option.on": "择映：只翻目标身上的正面变化，负面变化原样留着——绝不反过来帮对手；代价是起手 +4 刻、冷却 +20 刻、射程 −1 格。",
   "worldcombat.skill.topsyturvy.option.off": "全翻：正负全翻，更远、更快、更便宜；代价是目标身上若尽是减益，翻完等于给它加成。",

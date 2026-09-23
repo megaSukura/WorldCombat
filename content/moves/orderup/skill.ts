@@ -81,6 +81,7 @@ namespace PokemonSkills {
     }
 
     define({
+        freeMovement: true,
         id: "orderup",
         cooldownParameter: "recharge",
         name: "上菜",

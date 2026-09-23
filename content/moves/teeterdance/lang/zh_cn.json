@@ -3,7 +3,7 @@
   "worldcombat.skill.teeterdance.use.0": "被围住时把一圈人一起晃晕",
   "worldcombat.skill.teeterdance.use.1": "打断贴身近战的走位与出手",
   "worldcombat.skill.teeterdance.use.2": "在人多的地方制造一片失衡",
-  "worldcombat.skill.teeterdance.description.0": "这一舞把节奏推到半径 %1$s 格，圈内除自己外的每个活体恍惚 %2$s：每 12 刻被带偏一步，出手也容易散。",
+  "worldcombat.skill.teeterdance.description.0": "以自己为中心，把节奏推到半径 %1$s 格；圈内除自己外的每个活体恍惚 %2$s：每 12 刻被带偏一步，出手也容易散。",
   "worldcombat.skill.teeterdance.careful.on": "顾友：不会把圈内的友方带进节奏，代价是半径 ×0.8、时长 ×0.8、起手 +2 刻、冷却 ×1.1。",
   "worldcombat.skill.teeterdance.careful.off": "尽兴：圈内所有人（除自己）一起摇晃，包括盟友；范围更大、更久、更便宜。",
   "worldcombat.skill.teeterdance.description.1": "每次带偏约 %1$s 格、约 %1$s×0.9 的概率让一次出手作废。",
@@ -25,5 +25,6 @@
   "worldcombat.skill.teeterdance.preference.ai.minFoes.help": "舞圈内至少站着这么多敌人才起舞；调 1 见一个就晃，调大只被围住时才放。",
   "world_combat.move.teeterdance.text.daze": "摇晃 %1$s 人（失手约 %2$s%%）",
   "world_combat.move.teeterdance.text.steady": "无人被带进节奏（%1$s 格内）",
-  "effect.world_combat.teeterdance_spin": "摇晃"
+  "effect.world_combat.teeterdance_spin": "摇晃",
+  "worldcombat.skill.teeterdance.description.3": "恍惚随时间自行消退，也能被清除类效果提前解除；它跟着被带进节奏的人走，命中后再离开舞圈也不会停。"
 }

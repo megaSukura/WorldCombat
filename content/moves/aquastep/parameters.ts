@@ -96,8 +96,8 @@ namespace PokemonSkills {
     ]);
 
     describe("aquastep", [
-        { key: "description.0", values: ["spin", "steps", "stride", "beat"] },
-        { key: "description.1", values: ["reach", "spread", "haste", "push"] },
+        { key: "description.0", values: ["spin","steps","stride","beat"] },
+        { key: "description.1", values: ["reach","spread","haste","push"] },
         { key: "twirl.on", values: [], when: function (context) { return read(context.detail.values, ["twirl"]) === true; } },
         { key: "twirl.off", values: [], when: function (context) { return read(context.detail.values, ["twirl"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

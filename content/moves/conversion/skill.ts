@@ -31,7 +31,7 @@ namespace PokemonSkills {
         id: "conversion",
         cooldownParameter: "recharge",
         name: "纹理",
-        description: "读入招式表中第一个招式的属性，把自己的属性暂时重织成它。",
+        description: "读取招式表中第一个招式的属性，把身体暂时重织成那个属性。",
         uses: ["读取首个招式的属性", "把自己重织成那个属性"],
         kind: "self",
         range: 1,

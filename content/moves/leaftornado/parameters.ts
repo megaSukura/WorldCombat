@@ -77,9 +77,11 @@ namespace PokemonSkills {
     defineDamage("leaftornado", "shred", {});
 
     describe("leaftornado", [
-        { key: "description.0", values: ["shred", "blindChance", "blind"] },
-        { key: "description.1", values: ["radius", "duration", "interval"] },
-        { key: "description.2", values: ["reach", "pref.tight"] },
+        { key: "description.0", values: ["shred","blindChance","blind"] },
+        { key: "description.1", values: ["radius","duration","interval"] },
+        { key: "description.2", values: ["reach"] },
+        { key: "description.additional", values: [] },
+        { key: "description.tight", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

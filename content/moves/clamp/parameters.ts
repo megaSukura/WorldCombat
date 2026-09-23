@@ -88,8 +88,8 @@ namespace PokemonSkills {
 
     describe("clamp", [
         { key: "description.0", values: ["crush"] },
-        { key: "description.1", values: ["holdTicks", "interval"] },
-        { key: "description.2", values: ["holdRange", "lunge"] },
+        { key: "description.1", values: ["holdTicks","interval"] },
+        { key: "description.2", values: ["holdRange","lunge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["grind"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["grind"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

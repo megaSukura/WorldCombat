@@ -4,8 +4,8 @@
   "worldcombat.skill.magicpowder.use.1": "strip a foe of its own STAB and defensive profile",
   "worldcombat.skill.magicpowder.use.2": "hold the rewrite longer with the sift option",
   "worldcombat.skill.magicpowder.description.0": "Rewrite all of the target's current types into pure Psychic for %1$s.",
-  "worldcombat.skill.magicpowder.description.1": "Scatter range %1$s blocks, wind-up %2$s, recovery %3$s, following speed and size.",
-  "worldcombat.skill.magicpowder.description.2": "Powder cloud radius about %1$s blocks, powder speed about %2$s blocks/tick; larger and heavier bodies show more.",
+  "worldcombat.skill.magicpowder.description.1": "Scatter range %1$s blocks, wind-up %2$s, recovery %3$s; size sets the range, speed the wind-up and Special Defence the recovery.",
+  "worldcombat.skill.magicpowder.description.2": "Powder cloud radius about %1$s blocks and flight speed about %2$s blocks/tick; a wider body makes a bigger cloud and more weight makes it faster. The cloud homes lightly, so leaving before it lands lets you avoid it.",
   "worldcombat.skill.magicpowder.sift.on": "Sift: rewrite lasts %1$s and range shortens to %2$s blocks, with a slower wind-up and longer cooldown.",
   "worldcombat.skill.magicpowder.sift.off": "Single flick: longer range, faster wind-up, %1$s cooldown, but a shorter rewrite.",
   "worldcombat.skill.magicpowder.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -24,11 +24,12 @@
   "worldcombat.skill.magicpowder.preference.ai.maxChase.help": "The companion only considers powdering a threat within this distance; lower stays close, higher chases further.",
   "worldcombat.skill.magicpowder.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.magicpowder.preference.ai.leaveStation.help": "When on, it will leave its post to scatter powder.",
-  "worldcombat.skill.magicpowder.growth.0": "From level 40: cooldown drops to %1$s.",
-  "worldcombat.skill.magicpowder.growth.1": "From level 55: cooldown drops to %1$s.",
+  "worldcombat.skill.magicpowder.growth.0": "From level %1$s, base cooldown is shortened by 0.5 s.",
+  "worldcombat.skill.magicpowder.growth.1": "From level %1$s, base cooldown is shortened by 1 s, replacing the previous growth reduction.",
   "world_combat.move.magicpowder.text.coat": "Powdered, turned Psychic-type",
   "world_combat.move.magicpowder.text.immune": "Grass-type shook the powder off; it has no effect",
   "world_combat.move.magicpowder.text.wipe": "The magic powder drifts away; its type returns",
   "world_combat.move.magicpowder.text.fizzle": "Already pure Psychic, nothing to rewrite",
-  "effect.world_combat.magic_powder": "Rewritten by magic powder (Psychic)"
+  "effect.world_combat.magic_powder": "Rewritten by magic powder (Psychic)",
+  "worldcombat.skill.magicpowder.description.additional": "A target that is already pure Psychic cannot be powdered; the powder just fizzles away."
 }

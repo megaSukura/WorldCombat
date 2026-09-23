@@ -72,11 +72,10 @@ namespace PokemonSkills {
     });
     describe(auroraveilId, [
         { key: "description.0", values: ["reach"] },
-        { key: "description.1", values: ["veilTicks", "veilRadius"] },
-        { key: "description.2", values: ["cutPhys", "cutSpec"] },
-        { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
+        { key: "description.1", values: ["veilTicks","veilRadius"] },
+        { key: "description.2", values: ["cutPhys","cutSpec"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.bright); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.bright); } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] }
     ]);
 }

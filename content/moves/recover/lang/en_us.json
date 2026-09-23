@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.recover.summary": "The user regenerates its cells: health is paid back tick by tick over a window for about half of maximum health, more of it the worse the wounds - and it never locks the user in place, so it can keep moving while it heals. Clearing the regenerating identity cuts the remaining healing.",
+  "worldcombat.skill.recover.summary": "The user regenerates its cells: health is paid back tick by tick over a window for up to about 60% of maximum health, more of it the worse the wounds - and it never locks the user in place, so it can keep moving while it heals. Clearing the regenerating effect cuts the remaining healing.",
   "worldcombat.skill.recover.use.0": "Keep healing while repositioning",
   "worldcombat.skill.recover.use.1": "Let the cells work harder when badly hurt",
   "worldcombat.skill.recover.use.2": "Trade an unlocked window for a steady restore",
   "worldcombat.skill.recover.description.0": "Restores %1$s of maximum health, paid tick by tick across a %2$s window; reaching full health settles early.",
-  "worldcombat.skill.recover.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed; the whole window can be walked through.",
+  "worldcombat.skill.recover.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed; the whole window can be walked through, and the wind-up can be interrupted.",
   "worldcombat.skill.recover.stance.steady": "Steady regeneration: +0.05 healing and a 1.35x window - slower each tick but a larger total, at the cost of a longer cooldown and a longer exposed window.",
   "worldcombat.skill.recover.stance.quick": "Swift regeneration: -0.04 healing and a 0.75x window - faster to pay out with a shorter cooldown, for a gap between blows.",
-  "worldcombat.skill.recover.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
+  "worldcombat.skill.recover.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s and enters a %4$s s cooldown on cast.",
   "worldcombat.skill.recover.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.recover.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.recover.value.heal": "Restore fraction",
@@ -25,5 +25,6 @@
   "world_combat.move.recover.text.full": "Regeneration done, health full",
   "world_combat.move.recover.text.end": "Regeneration settles",
   "world_combat.move.recover.text.broken": "The regeneration is cut",
-  "effect.world_combat.regenerating": "Regenerating (tick heal)"
+  "effect.world_combat.regenerating": "Regenerating (tick heal)",
+  "worldcombat.skill.recover.description.1": "While regenerating it restores a small portion every 2 ticks; clearing the regenerating effect (milk or /effect clear) cuts off the remaining healing, and it cannot be used at full health."
 }

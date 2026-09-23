@@ -121,7 +121,8 @@ namespace PokemonSkills {
 
     describe("block", [
         { key: "description.0", values: ["span", "height", "gap"] },
-        { key: "description.1", values: ["hold", "pin", "shove"] },
+        { key: "description.1", values: ["hold","pin","shove"] },
+        { key: "description.press", values: [] },
         { key: "description.2", values: ["columns", "arc"] },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["brace"]) === true; } },

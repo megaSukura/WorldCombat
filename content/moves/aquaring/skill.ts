@@ -84,7 +84,7 @@ namespace PokemonSkills {
     define({
         id: aquaRingId,
         cooldownParameter: "recharge", name: "水流环",
-        description: "把一层水幕拢在自己身上，它每隔一会儿涌一次、回复一小部分已损失生命；水幕挂着自己走完时间或被清除，期间不用站定、可以边走边回。",
+        description: "给自己覆上一层水幕，持续回复一小部分已损失生命；可以边走边回，水幕到期或被清除时结束。",
         uses: ["在拉锯战里给自己接一条稳定的续航线", "边后退边回血，把消耗战拖长", "在雨里把水幕开得更旺"],
         kind: "self", range: 0, prepare: 8, active: 0, recover: 6, cooldown: 120, style: "aqua",
         stationary: false, maximumTicks: 400,

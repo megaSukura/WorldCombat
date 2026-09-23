@@ -83,7 +83,7 @@ namespace PokemonSkills {
     ]);
 
     describe(poisonpowderId, [
-        { key: "description.0", values: ["reach", "dustRadius", "puffSpeed"] },
+        { key: "description.0", values: ["reach","puffSpeed","dustRadius"] },
         { key: "description.1", values: ["poisonTicks"] },
         { key: "cling.on", values: [], when: function (context) { return read(context.detail.values, ["cling"]) === true; } },
         { key: "cling.off", values: [], when: function (context) { return read(context.detail.values, ["cling"]) !== true; } },

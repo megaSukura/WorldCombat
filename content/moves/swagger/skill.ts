@@ -30,7 +30,7 @@ namespace PokemonSkills {
         id: "swagger",
         cooldownParameter: "wait",
         name: "虚张声势",
-        description: "激怒对手，使其混乱；因为愤怒，对手的攻击会大幅提高。",
+        description: "激怒单个对手：送给它数级攻击、让它陷入混乱，并把非玩家目标的仇恨拉向自己。被点着的目标每次出手可能作废，打中敌人时还会被自己抬高的攻击反噬；攻击提升不会随混乱结束而回退。",
         uses: ["把重击手的火力引向自己", "给难缠的目标制造失手窗口", "在队友集火前先把对手点着"],
         kind: "enemy",
         range: 10,

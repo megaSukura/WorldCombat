@@ -3,9 +3,9 @@
   "worldcombat.skill.psychic.use.0": "Pick out one high-threat target at mid range",
   "worldcombat.skill.psychic.use.1": "Pin a charging enemy in place",
   "worldcombat.skill.psychic.use.2": "Drag a target away from an ally",
-  "worldcombat.skill.psychic.description.0": "The grab deals %1$s special damage, and if the target is still held it takes another %2$s a moment later.",
-  "worldcombat.skill.psychic.description.1": "The grip roots the target for %1$s and drags it %2$s blocks toward you (bigger bodies resist); the second crush lands after %3$s.",
-  "worldcombat.skill.psychic.description.2": "On the grab it has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
+  "worldcombat.skill.psychic.description.0": "A landed grab deals about %1$s special damage; if the target is still held by this grip, it takes about %2$s more a moment later.",
+  "worldcombat.skill.psychic.description.1": "The telekinesis pins the target in place, unable to move, for %1$s, and drags it up to %2$s blocks toward the caster (bigger bodies resist; the pull stops just in front of the caster); after %3$s the second crush lands if it is still held.",
+  "worldcombat.skill.psychic.description.2": "A landed grab has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
   "worldcombat.skill.psychic.hold.on": "Coiling grip: longer root, heavier crush, longer drag and a more reliable Sp. Def drop, at the cost of slightly lighter grab, shorter reach and longer wind-up and cooldown.",
   "worldcombat.skill.psychic.hold.off": "Point grip: a longer, faster, heavier grab, at the cost of a shorter root, a lighter crush and a rarer Sp. Def drop.",
   "worldcombat.skill.psychic.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -33,5 +33,6 @@
   "worldcombat.skill.psychic.preference.ai.focusThreat.help": "On: targets attacking the companion or its owner rank higher — pin and drag the most dangerous one. Off: ordinary ranged ordering.",
   "world_combat.move.psychic.text.grip": "Seized",
   "world_combat.move.psychic.text.sunder": "Sp. Def -%1$s",
-  "world_combat.move.psychic.text.squeeze": "Crushed"
+  "world_combat.move.psychic.text.squeeze": "Crushed",
+  "worldcombat.skill.psychic.description.failure": "If the grab does not land, it neither pins nor drags the target and no second crush follows; if the pin is removed early or the target leaves, the crush does not land either."
 }

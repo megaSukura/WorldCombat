@@ -15,7 +15,7 @@ namespace PokemonSkills {
     define({
         id: "trumpcard",
         name: "Trump Card",
-        description: "The fewer PP this move has, the greater its power.",
+        description: "最后一张牌最重：把一张牌掷向对手，牌在它身上炸开。这招自己的剩余 PP 越少，这一掷越重，最后一张是全场最重的一击；它是本组唯一的远程招，只有它把「自己的资源余量」当威力表。",
         uses: ["把用剩的牌当重击掷出去", "最后一张牌做决胜一击", "从远处点名一个目标"],
         kind: "enemy",
         range: 12,

@@ -115,10 +115,10 @@ namespace PokemonSkills {
     ]);
 
     describe("heartstamp", [
-        { key: "description.0", values: ["stamp", "seize"] },
-        { key: "description.1", values: ["flinchChance", "flinchTicks", "startle"] },
-        { key: "description.2", values: ["charmTicks", "feint"] },
-        { key: "description.3", values: ["lunge", "pace", "radius"] },
+        { key: "description.0", values: ["stamp","seize"] },
+        { key: "description.1", values: ["flinchChance","flinchTicks","startle"] },
+        { key: "description.2", values: ["charmTicks","feint"] },
+        { key: "description.3", values: ["lunge","pace","radius"] },
         { key: "guile.on", values: [], when: function (context) { return read(context.detail.values, ["guile"]) === true; } },
         { key: "guile.off", values: [], when: function (context) { return read(context.detail.values, ["guile"]) !== true; } },
         { key: "timing", values: ["range", "wink", "settle", "pp", "recharge"] },

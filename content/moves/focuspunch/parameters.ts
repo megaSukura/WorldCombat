@@ -104,8 +104,9 @@ namespace PokemonSkills {
     ]);
 
     describe(focuspunchId, [
-        { key: "description.0", values: ["punch", "gather"] },
-        { key: "description.1", values: ["reach", "lunge", "collisionRadius", "push"] },
+        { key: "description.0", values: ["punch","gather"] },
+        { key: "description.gather", values: [] },
+        { key: "description.1", values: ["reach","lunge","collisionRadius","push"] },
         { key: "steady.on", values: [], when: function (context) { return read(context.detail.values, ["steady"]) === true; } },
         { key: "steady.off", values: [], when: function (context) { return read(context.detail.values, ["steady"]) !== true; } },
         { key: "timing", values: ["range", "gather", "settle", "pp", "recharge"] },

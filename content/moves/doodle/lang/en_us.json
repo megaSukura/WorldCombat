@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.doodle.summary": "Captures the target's essence and changes the user's and its allies' Abilities to match.",
+  "worldcombat.skill.doodle.summary": "Copy a Pokémon’s Ability to yourself and nearby allies, or depict a non-Pokémon’s strongest combat characteristic.",
   "worldcombat.skill.doodle.use.0": "Copy one strong Ability onto the whole team",
   "worldcombat.skill.doodle.use.1": "Unify the team's Abilities before a fight",
   "worldcombat.skill.doodle.use.2": "Build the team around a target with a key Ability",
-  "worldcombat.skill.doodle.description.0": "Sketches the target's essence within %1$s blocks; %2$s s wind-up.",
-  "worldcombat.skill.doodle.description.1": "The sketch spreads into a canvas of about %1$s blocks, stamping up to %2$s allies; the borrowed Ability lasts %3$s s, then all return together.",
+  "worldcombat.skill.doodle.description.0": "Select an opponent within %1$s blocks; preparation takes %2$s.",
+  "worldcombat.skill.doodle.description.1": "When depicting a Pokémon, copy its current eligible Ability to yourself and allied Pokémon within %1$s blocks, up to %2$s recipients including yourself, for %3$s. Identical Abilities are skipped.",
   "worldcombat.skill.doodle.timing": "Range %1$s blocks, %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.doodle.growth.0": "At level %1$s the cooldown from commit drops to %2$s s.",
   "worldcombat.skill.doodle.growth.1": "At level %1$s the cooldown drops again to %2$s s.",
@@ -24,5 +24,6 @@
   "worldcombat.skill.doodle.preference.ai.leaveStation.help": "On: a holding companion will leave its post to sketch the target. Off: it casts only where it already stands.",
   "effect.world_combat.doodle_sketch": "Doodle",
   "world_combat.move.doodle.text.ability": "Essence: %1$s (stamped %2$s)",
-  "world_combat.move.doodle.text.same": "Nothing to sketch"
+  "world_combat.move.doodle.text.same": "Nothing to sketch",
+  "worldcombat.skill.doodle.world": "When depicting a non-Pokémon, copy its strongest attack, movement or defensive characteristic to yourself and allies within %2$s blocks, up to %3$s recipients total, for %1$s. Each copy ends on expiry or cleansing; later equipment and effects still apply."
 }

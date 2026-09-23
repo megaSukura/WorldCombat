@@ -151,9 +151,9 @@ namespace PokemonSkills {
     defineDamage("spikecannon", "spike", {});
 
     describe("spikecannon", [
-        { key: "description.0", values: ["spike", "shots"] },
-        { key: "description.1", values: ["gap", "velocity", "reach", "spread"] },
-        { key: "description.2", values: ["radius", "pierce", "knock"] },
+        { key: "description.0", values: ["spike","shots"] },
+        { key: "description.1", values: ["gap","velocity","reach","spread"] },
+        { key: "description.2", values: ["radius","pierce","knock"] },
         { key: "lance.on", values: [], when: function (context) { return read(context.detail.values, ["lance"]) === true; } },
         { key: "lance.off", values: [], when: function (context) { return read(context.detail.values, ["lance"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -29,5 +29,6 @@
   "worldcombat.skill.rockpolish.preference.ai.minGap.help": "Below this distance the companion stops polishing and deals with the threat; larger gives up the boost more often up close.",
   "world_combat.move.rockpolish.text.shined": "Rock Polish (Speed +%1$s)",
   "world_combat.move.rockpolish.text.dulled": "The shine dulls",
-  "effect.world_combat.rock_polish_shine": "Polished"
+  "effect.world_combat.rock_polish_shine": "Polished",
+  "worldcombat.skill.rockpolish.description.additional": "When the shine runs out or is cleared early (milk or a dispel), the Speed stages it raised are taken back at once; if Speed was near its cap so less was actually gained, only that much is removed."
 }

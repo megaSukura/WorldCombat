@@ -3,9 +3,9 @@
   "worldcombat.skill.acidarmor.use.0": "被缠住或钉住时化开脱身",
   "worldcombat.skill.acidarmor.use.1": "在对手脚下摊出一滩腐蚀的酸",
   "worldcombat.skill.acidarmor.use.2": "用更滑的液态撑过一轮贴身攻击",
-  "worldcombat.skill.acidarmor.description.0": "液态期间防御抬高 %1$s 级，持续约 %2$s。",
-  "worldcombat.skill.acidarmor.description.1": "化为液态后移动更快，并立即解除身上的束缚。",
-  "worldcombat.skill.acidarmor.acid.on": "酸池：在原地看着一滩半径 %1$s 格的酸，持续约 %2$s；站进去的对手会中毒。",
+  "worldcombat.skill.acidarmor.description.0": "液态期间防御抬高 %1$s 级，持续约 %2$s；液态结束、凝回原形时收回这份提升。",
+  "worldcombat.skill.acidarmor.description.1": "化为液态会立刻挣脱缠住与钉住，并在液态期间移动更快。",
+  "worldcombat.skill.acidarmor.acid.on": "酸池：在脚下留下一滩半径 %1$s 格的酸，持续约 %2$s；踏进去的对手会中毒，待在池中会不断被重新施毒，中毒期间持续掉血。",
   "worldcombat.skill.acidarmor.acid.off": "流身：不留酸池，换成更长的液态窗口与更快的滑行——牺牲场面控制换更强的自保。",
   "worldcombat.skill.acidarmor.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.acidarmor.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
@@ -20,7 +20,7 @@
   "worldcombat.skill.acidarmor.value.aftercast": "收招",
   "worldcombat.skill.acidarmor.value.wait": "冷却",
   "worldcombat.skill.acidarmor.preference.slick": "流身",
-  "worldcombat.skill.acidarmor.preference.slick.help": "开启流身：不留酸池，换成更长的液态窗口与更快的滑行；关闭则留下会腐蚀对手的酸池，代价是自身液态窗口 ×0.8。",
+  "worldcombat.skill.acidarmor.preference.slick.help": "开启流身：不留酸池，换成更长的液态窗口与更快的滑行；关闭则留下使踏进的对手中毒掉血的酸池，代价是自身液态窗口 ×0.8。",
   "worldcombat.skill.acidarmor.preference.ai.maxChase": "化开距离",
   "worldcombat.skill.acidarmor.preference.ai.maxChase.help": "威胁进入这个距离内才考虑先化开；越大越早准备。",
   "worldcombat.skill.acidarmor.preference.ai.panic": "紧急血量",
@@ -28,5 +28,6 @@
   "world_combat.move.acidarmor.text.flow": "溶化（防御 +%1$s，%2$s 秒）",
   "world_combat.move.acidarmor.text.reform": "凝回原形",
   "effect.world_combat.acidarmor_pool": "溶化·酸池",
-  "effect.world_combat.acidarmor_slick": "溶化·流身"
+  "effect.world_combat.acidarmor_slick": "溶化·流身",
+  "worldcombat.skill.acidarmor.description.stack": "液态还在时再次施放会继续叠加防御并刷新液态时长，最多叠到能力等级上限，凝回时一并收回。"
 }

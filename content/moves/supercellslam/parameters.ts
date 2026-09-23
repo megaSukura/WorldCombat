@@ -152,10 +152,11 @@ namespace PokemonSkills {
     describe("supercellslam", [
         { key: "description.0", values: ["slam"] },
         { key: "description.1", values: ["leapHeight", "leapSpeed", "diveSpeed", "drift"] },
-        { key: "description.2", values: ["reach", "hitRadius", "crash"] },
+        { key: "description.2", values: ["reach","hitRadius","crash"] },
+        { key: "description.aim", values: [] },
         { key: "description.3", values: ["shove"] },
         { key: "description.4", values: ["pref.charge"] },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slam"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.slam", "tier.1.shove"] }
     ]);

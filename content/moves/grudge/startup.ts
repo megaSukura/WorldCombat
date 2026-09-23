@@ -7,3 +7,8 @@ StartupEvents.registry("mob_effect", event => event.create("world_combat:grudge_
     .tag("world_combat:status/grudge")
     .tag("world_combat:status/identity_only")
     .effectTick((entity: any, amplifier: number) => { }));
+
+// 偿债印记：致命一击的普通攻击方式在十秒内被封住，可用牛奶解除。
+StartupEvents.registry("mob_effect", event => event.create("world_combat:grudge_toll")
+    .harmful().color(0x4B2E83).tag("world_combat:status/grudge")
+    .tag("world_combat:status/identity_only").effectTick((entity: any, amplifier: number) => { }));

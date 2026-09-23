@@ -5,7 +5,7 @@
   "worldcombat.skill.rage.use.2": "Roll up a growing Attack in a close brawl",
   "worldcombat.skill.rage.description.0": "The angry swing deals about %1$s contact damage; the target's defence, type and crits are applied on the hit. It is light on purpose - the value is the rage that follows.",
   "worldcombat.skill.rage.description.1": "It steps up to %1$s blocks at %2$s blocks per tick with a %3$s block radius, and shoves the target %4$s blocks on a hit.",
-  "worldcombat.skill.rage.description.2": "The rage lasts %1$s; each hit taken during it raises Attack by %2$s step(s), up to %3$s; the fire goes out when the user next acts.",
+  "worldcombat.skill.rage.description.2": "The rage lasts %1$s; each real hit taken from outside while it burns (status moves do not count) raises Attack by %2$s step(s) up to %3$s and resets the fire to its full duration; once capped it stops being renewed. The fire goes out when the user next acts, and the Attack it gained stays.",
   "worldcombat.skill.rage.fury.on": "Fury form: 2 steps per hit and full after two, but a lower cap, a shorter fire, a slower wind-up and a longer cooldown.",
   "worldcombat.skill.rage.fury.off": "Banked form: 1 step per hit, a higher cap, a longer fire and a faster wind-up - it grows slowly over time.",
   "worldcombat.skill.rage.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
@@ -32,5 +32,6 @@
   "world_combat.move.rage.text.hit": "Angry blow",
   "world_combat.move.rage.text.stoke": "Rage +%1$s (now %2$s)",
   "world_combat.move.rage.text.miss": "Whiffed",
-  "effect.world_combat.rage_stance": "Rage"
+  "effect.world_combat.rage_stance": "Rage",
+  "worldcombat.skill.rage.description.additional": "The rage is lit before the swing: this blow settles only on the first non-friendly creature in its path and never pierces; even if it misses, the fire catches."
 }

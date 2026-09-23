@@ -3,9 +3,9 @@
   "worldcombat.skill.dragontail.use.0": "Sweep a line of enemies away in front of you",
   "worldcombat.skill.dragontail.use.1": "Clear the enemies crowding you out of melee",
   "worldcombat.skill.dragontail.use.2": "Hit one sturdy target and send it away",
-  "worldcombat.skill.dragontail.description.0": "Sweep a %3$s degree fan at %2$s blocks around yourself; the opponent right in front takes about %1$s Dragon contact damage and the others take a discount.",
-  "worldcombat.skill.dragontail.description.1": "Anyone swept is knocked about %1$s blocks away from you and lifted %2$s blocks.",
-  "worldcombat.skill.dragontail.description.2": "Anyone knocked away is marked Routed for %1$s seconds; while it lasts, anything closer than %2$s blocks is swept another %3$s blocks every 10 ticks.",
+  "worldcombat.skill.dragontail.description.0": "Sweep a %3$s-degree fan %2$s blocks around yourself, catching every enemy inside: the opponent right in front takes about %1$s Dragon contact damage, and each of the others takes only about %4$s of it.",
+  "worldcombat.skill.dragontail.description.1": "Targets that are hit are knocked about %1$s blocks away from you and lifted %2$s blocks; terrain can block the movement.",
+  "worldcombat.skill.dragontail.description.2": "Anyone knocked away is Routed for about %1$s seconds: it tries to interrupt its current action and clears its target at once; while it lasts, anything closer than %2$s blocks is swept about %3$s blocks further and loses its target again every 10 ticks, and terrain can block the push.",
   "worldcombat.skill.dragontail.high.on": "High toss on: launch height x1.5, at the cost of x0.85 knock-away distance.",
   "worldcombat.skill.dragontail.high.off": "High toss off: knock-away x1.25 and lift x0.8, farther and flatter.",
   "worldcombat.skill.dragontail.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
@@ -35,5 +35,6 @@
   "effect.world_combat.dragontail_routed": "Routed",
   "world_combat.move.dragontail.text.hit": "The tail sweep flung %1$s opponent(s) away",
   "world_combat.move.dragontail.text.miss": "The tail sweep caught nothing",
-  "world_combat.move.dragontail.text.switch": "Dragon Tail · forced switch"
+  "world_combat.move.dragontail.text.switch": "Dragon Tail · forced switch",
+  "worldcombat.skill.dragontail.description.additional": "A hit target that has an available reserve is forced out, and the reserve is sent in at its landing spot; a wild target or one with no reserve is only left Routed."
 }

@@ -102,9 +102,9 @@ namespace PokemonSkills {
     defineDamage("mudbomb", "splash", {});
 
     describe("mudbomb", [
-        { key: "description.0", values: ["boom", "chance", "blind"] },
-        { key: "description.1", values: ["splash", "blastRadius"] },
-        { key: "description.2", values: ["velocity", "reach", "patchTicks", "pref.shell"] },
+        { key: "description.0", values: ["boom","chance","blind"] },
+        { key: "description.1", values: ["splash","blastRadius"] },
+        { key: "description.2", values: ["velocity","reach","patchTicks","pref.shell"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

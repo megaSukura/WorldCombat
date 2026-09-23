@@ -142,9 +142,10 @@ namespace PokemonSkills {
     ]);
 
     describe(psychicId, [
-        { key: "description.0", values: ["grip", "squeeze"] },
-        { key: "description.1", values: ["gripTicks", "drag", "squeezeDelay"] },
-        { key: "description.2", values: ["sunderChance", "sunderStages"] },
+        { key: "description.0", values: ["grip","squeeze"] },
+        { key: "description.1", values: ["gripTicks","drag","squeezeDelay"] },
+        { key: "description.2", values: ["sunderChance","sunderStages"] },
+        { key: "description.failure", values: [] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

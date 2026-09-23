@@ -35,7 +35,7 @@ namespace PokemonSkills {
         id: "acupressure",
         cooldownParameter: "wait",
         name: "点穴",
-        description: "给自己或近处伙伴随机强化一项能力，通畅状态结束时恢复；这一轮结束后才能再次点穴。",
+        description: "给自己或近处伙伴随机强化一项能力，通畅状态结束时恢复。这一轮结束后才能再次点穴；快按出手快，稳按多加一级。",
         uses: ["交战前为自己随机强化一项能力", "给近处伙伴一段短时强化", "安全时用稳按取得两级强化"],
         kind: "friend",
         range: 2,

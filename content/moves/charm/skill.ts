@@ -18,7 +18,7 @@ namespace PokemonSkills {
         id: charmId,
         cooldownParameter: "recharge",
         name: "撒娇",
-        description: "凑近一个看得见的对手撒娇，把它的战意拖软，大幅降低它的攻击；需要通视，被掩体挡住就落空。也可以改送飞吻，够得更远，但卸掉的劲更少、留得更短。",
+        description: "凑近一个看得见的对手撒娇，把它的战意拖软，大幅降低它的攻击；被掩体挡住就落空。也可以改送飞吻，够得更远，但卸掉的劲更少。",
         uses: ["让追上来的物攻威胁出手变软", "在它冲上来前先把它的攻击压下去", "用飞吻在稍远处补一记削弱"],
         kind: "enemy",
         range: 3,

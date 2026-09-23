@@ -56,12 +56,12 @@ namespace PokemonSkills {
     stages("magiccoat", [{ level: 40, values: { coatReach: 9.6, window: 220 } }, { level: 55, values: { coatReach: 10.8, window: 270 } }]);
 
     describe("magiccoat", [
-        { key: "description.0", values: ["window", "tempo"] },
-        { key: "description.1", values: ["coatReach", "range"] },
+        { key: "description.0", values: ["tempo","window"] },
+        { key: "description.1", values: ["coatReach"] },
         { key: "description.2", values: ["recharge"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.coatReach", "tier.0.window"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.coatReach", "tier.1.window"] }
     ]);

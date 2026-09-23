@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.stomp.summary": "A whole-body downward slam: the heaviest melee move in the family, with a chance to flinch and a ground shock that also staggers grounded foes around the landing - but it only lands on a grounded target, so anything airborne dodges it.",
+  "worldcombat.skill.stomp.summary": "A whole-body downward slam: the heaviest single hit among the melee moves, with a chance to flinch the target and a ground shock that also reaches other grounded foes around the landing and may stagger them too - but it only lands on a grounded target, so anything airborne dodges it.",
   "worldcombat.skill.stomp.description.0": "The stomp deals about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.stomp.description.1": "The landing shakes a %1$s block radius for about %2$s to each other grounded foe; heavier bodies shake wider.",
-  "worldcombat.skill.stomp.description.2": "A %1$s flinch chance for the main target and %2$s for those only caught by the shock, for %3$s s; an airborne target is missed.",
+  "worldcombat.skill.stomp.description.1": "The landing shakes a %1$s block radius; each other grounded foe inside takes about %2$s, at most 3 of them, and heavier bodies shake wider.",
+  "worldcombat.skill.stomp.description.2": "On a landed main hit there is a %1$s flinch chance and a %2$s chance for those only caught by the shock, for %3$s; flinching interrupts interruptible actions and prevents new moves and ordinary attacks. An airborne target is missed, though the shock still spreads below it; the user must also be standing on the ground.",
   "worldcombat.skill.stomp.heavy.on": "Heavy form: raises higher, slams harder, cracks and shakes wider and staggers more often, but winds up slower and has a longer cooldown.",
   "worldcombat.skill.stomp.heavy.off": "Quick press: faster, smaller and slightly lighter.",
-  "worldcombat.skill.stomp.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",
+  "worldcombat.skill.stomp.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.stomp.growth.0": "From level %1$s the slam power rises to %2$s and the aftershock to %3$s.",
   "worldcombat.skill.stomp.growth.1": "From level %1$s the slam power rises to %2$s, the shock radius to %3$s blocks and the main flinch chance to %4$s.",
-  "worldcombat.skill.stomp.use.0": "Crush and flinch an approaching foe underfoot",
+  "worldcombat.skill.stomp.use.0": "Crush an approaching grounded foe underfoot and try to flinch it",
   "worldcombat.skill.stomp.use.1": "Catch other grounded foes around the landing with the shock",
   "worldcombat.skill.stomp.use.2": "Cash in the heaviest hit once a foe is forced to the ground",
   "worldcombat.skill.stomp.value.slam": "Slam power",
@@ -33,5 +33,6 @@
   "world_combat.move.stomp.text.flinch": "Stomped silly",
   "world_combat.move.stomp.text.shock": "Shook %1$s more",
   "world_combat.move.stomp.text.miss": "Missed the landing",
-  "effect.world_combat.stomp_flinch": "Flinched"
+  "effect.world_combat.stomp_flinch": "Flinched",
+  "worldcombat.skill.stomp.description.crater": "The landing cracks the surface: within a %1$s block radius, dirt, stone, sand and the like briefly turn into coarse dirt, cobblestone or sandstone, reverting after %2$s."
 }

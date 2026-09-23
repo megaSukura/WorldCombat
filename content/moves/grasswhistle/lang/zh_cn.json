@@ -28,5 +28,6 @@
   "worldcombat.skill.grasswhistle.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会为吹笛离开原位；关闭则只在原地够得到时出手。",
   "world_combat.move.grasswhistle.text.sleep": "草笛（睡眠 %1$s 秒）",
   "world_combat.move.grasswhistle.text.crack": "走音了（响的概率 %1$s%%）",
-  "world_combat.move.grasswhistle.text.miss": "一声吹空"
+  "world_combat.move.grasswhistle.text.miss": "一声吹空",
+  "worldcombat.skill.grasswhistle.description.sleep": "被这一声带走的人进入睡眠：睡眠期间无法发动招式、也无法移动，受到伤害会立即醒来；免疫睡眠的目标不会被带走，已经在睡的目标也不会再被点名。"
 }

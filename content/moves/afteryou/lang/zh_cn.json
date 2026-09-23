@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.afteryou.summary": "向一名离得够近、看得见的伙伴让出手先：它获得一段出招更利落的加速窗口，你自己则背上同样长的一段迟滞。伙伴在窗口内出手时会浮出「紧接着行动」。",
+  "worldcombat.skill.afteryou.summary": "向一名离得够近、看得见的伙伴让出手先：它在一段窗口内获得技能急速、出招冷却更短，你自己则背上负急速、冷却变长。伙伴在窗口内第一次出手时会浮出「紧接着行动」。",
   "worldcombat.skill.afteryou.use.0": "让伙伴抢在自己的拍子前先手出手",
   "worldcombat.skill.afteryou.use.1": "在队友的大招前把节奏让过去",
   "worldcombat.skill.afteryou.use.2": "把一次连招的出手顺序调过来",
   "worldcombat.skill.afteryou.description.0": "伙伴在 %1$s 内获得 %2$s 点技能急速（冷却按 100/(100+急速) 缩短）；窗口内第一次出手会浮出「紧接着行动」。",
   "worldcombat.skill.afteryou.description.1": "可指定 %1$s 格内的伙伴，需要视线畅通。",
-  "worldcombat.skill.afteryou.description.2": "施法者自己让出的那一拍维持 %1$s、背上 %2$s 点减速；搭线起手 %3$s、收势 %4$s、冷却 %5$s。加速与减速都随效果结束自动收回。",
+  "worldcombat.skill.afteryou.description.2": "施法者自己让出的那一拍维持 %1$s，期间背上 %2$s 点负急速——自己的技能冷却按 100/(100−让手点数) 拉长；搭线起手 %3$s、收势 %4$s、冷却 %5$s。加速与让手分别随各自效果结束自动收回；对同一伙伴重施只会刷新，不会叠加。",
   "worldcombat.skill.afteryou.lead.0": "催促：加速 ×1.2、窗口 ×0.7——一拍抢得狠，但很短。",
   "worldcombat.skill.afteryou.lead.1": "托付：加速 ×0.85、窗口 ×1.4——细水长流，让伙伴多打几拍。",
   "worldcombat.skill.afteryou.timing": "对伙伴施放，准备 %2$s 秒后消耗 %4$s PP 搭线；结束后收招 %3$s 秒，冷却 %5$s 秒，当前射程 %1$s 格。",

@@ -35,7 +35,7 @@ namespace PokemonSkills {
         id: "irondefense",
         cooldownParameter: "wait",
         name: "铁壁",
-        description: "将皮肤变得坚硬如铁，从而大幅提高自己的防御。",
+        description: "大幅提高防御和抗击退能力，但移动变慢。效果结束后收回本次防御提升。",
         uses: ["在被近身围攻前先把身体淬成铁", "顶着击退站住位置，不让对手把你推开", "用可见的铁壳窗口逼对手先花时间磨它"],
         kind: "self",
         range: 1,
