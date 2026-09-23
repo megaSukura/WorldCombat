@@ -60,6 +60,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(rollingkickScene);
             const world = action.world();
             const actor = action.actor();
             const aimed = aim(action);
@@ -78,7 +79,7 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.2, power / 72));
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -88,12 +89,10 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            WorldFeedback.emit(world, rollingkickScene, 1, action.origin(),
-                { moment: "whirl", radius: length, sparks: sparks, scale: scale, intensity: intensity }, 30);
+            movementScenes.show(action, "whirl", action.origin(), { moment: "whirl", radius: length, sparks: sparks, scale: scale, intensity: intensity });
             sound(action, "cobblemon:move.quickattack.actor");
             // 扑（drive）：身子带着惯性冲出；emitter 绑 source 并留 trail，随扑出的轨迹拖出一线火星。
-            WorldFeedback.keep(world, "rollingkick:drive:" + action.id(), rollingkickScene, 1, action.origin(),
-                { moment: "drive", sparks: sparks, scale: scale, intensity: intensity }, 30);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", sparks: sparks, scale: scale, intensity: intensity });
 
             function advance(current: CombatAction): void {
                 const scope = current.world();
@@ -101,7 +100,8 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { whiff(current, origin); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p(rollingkickId, "traceAhead", current))), foot);
+                const swept = sweepStep(current, delta, foot);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target(), at = hit.position();
                     const landed = victim !== null && impact(current, hit, rollingkickId, power,
@@ -128,7 +128,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p(rollingkickId, "minimumMove", current) || travelled >= length) {
                     whiff(current, origin);

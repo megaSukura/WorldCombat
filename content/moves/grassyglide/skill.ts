@@ -87,6 +87,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(grassyglideScene);
             const world = action.world();
             const direction = aim(action);
             const length = p(grassyglideId, "dash", action);
@@ -102,8 +103,7 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "cobblemon:move.razorleaf.actor_1");
-            WorldFeedback.emit(world, grassyglideScene, 1, action.origin(),
-                { moment: "slide", scale: scale, tufts: tufts, intensity: intensity }, 40);
+            movementScenes.show(action, "slide", action.origin(), { moment: "slide", scale: scale, tufts: tufts, intensity: intensity });
 
             function finish(current: CombatAction, at: CombatPoint, moment: string): void {
                 const scope = current.world();
@@ -112,13 +112,13 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), grassyglideMissText, [], 22);
                     scope.sound("minecraft:entity.player.attack.sweep", at, 12, "{}");
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(origin, origin.plus(delta.scale(p(grassyglideId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -141,14 +141,14 @@ namespace PokemonSkills {
                         }
                         finish(current, hit.position(), "hit");
                     } else {
-                        finish(current, origin.plus(delta), "whiff");
+                        finish(current, current.origin(), "whiff");
                     }
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(grassyglideId, "minimumMove", current) || travelled >= length) {
-                    finish(current, origin.plus(delta), "whiff");
+                    finish(current, current.origin(), "whiff");
                     return;
                 }
                 current.after(1, advance);

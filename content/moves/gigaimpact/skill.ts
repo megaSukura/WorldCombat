@@ -55,6 +55,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(gigaimpactScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("gigaimpact", "lunge", action);
@@ -68,8 +69,7 @@ namespace PokemonSkills {
             const scale = radius / 0.55;
             let travelled = 0;
 
-            WorldFeedback.emit(world, gigaimpactScene, 1, action.origin(),
-                { moment: "drive", scale: scale, intensity: Math.max(0.6, Math.min(2.2, crash / 150)) }, 52);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: Math.max(0.6, Math.min(2.2, crash / 150)) });
             sound(action, "cobblemon:move.bodyslam.actor_1");
 
             function exhale(current: CombatAction): void {
@@ -94,7 +94,7 @@ namespace PokemonSkills {
                 }
                 sound(current, "minecraft:block.anvil.land");
                 exhale(current);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -103,7 +103,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { land(current, gigaimpactMissText, "miss"); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const landed = impact(current, hit, "gigaimpact", crash,
@@ -123,10 +123,10 @@ namespace PokemonSkills {
                     }
                     sound(current, "minecraft:entity.iron_golem.attack");
                     exhale(current);
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("gigaimpact", "minimumMove", current) || travelled >= length) {
                     land(current, gigaimpactMissText, "miss");

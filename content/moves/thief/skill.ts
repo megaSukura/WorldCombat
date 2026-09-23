@@ -30,6 +30,7 @@ namespace PokemonSkills {
     }
 
     function thiefStrike(action: CombatAction, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(thiefScene);
         var world = action.world(), actor = action.actor();
         var direction = aim(action), length = p("thief", "reach", action), speed = p("thief", "step", action);
         var radius = p("thief", "collisionRadius", action), push = p("thief", "push", action);
@@ -37,16 +38,16 @@ namespace PokemonSkills {
         var body = world.observe(actor), scale = body ? (body.width() + body.height()) / 2.3 : 1;
         var own = thiefHeldOf(world, actor), emptyHanded = own === null;
         sound(action, "cobblemon:move.quickattack.actor");
-        WorldFeedback.emit(world, thiefScene, 1, action.origin(),
-            { moment: "reach", scale: scale, motes: Math.round(motes), armed: emptyHanded ? 0 : 1 }, 26);
+        movementScenes.show(action, "reach", action.origin(), { moment: "reach", scale: scale, motes: Math.round(motes), armed: emptyHanded ? 0 : 1 });
         var travelled = 0;
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("thief", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius);
+            var hit = swept.hit;
             if (hit.hitEntity()) {
                 var target = hit.target();
-                if (target === null || scope.friendly(target)) { done(current); return; }
+                if (target === null || scope.friendly(target)) { movementScenes.finish(current, done); return; }
                 var point = hit.position();
                 var before = scope.observe(target), dealt = 0, maximum = 1;
                 maximum = before ? Math.max(1, before.maxHealth()) : 1;
@@ -77,16 +78,16 @@ namespace PokemonSkills {
                     scope.displace(target, direction.scale(push));
                     if (stolen && slip > 0.05) scope.displace(actor, direction.scale(-slip));
                 }
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
-            var moved = scope.displace(actor, delta);
+            var moved = swept.moved;
             travelled += moved;
             if (hit.blocked() || moved < p("thief", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(scope, thiefScene, 1, hit.position(), { moment: "miss", scale: scale }, 20);
                 var self = scope.observe(actor);
                 if (self !== null) WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.1, 0)), thiefMissText, [], 22);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

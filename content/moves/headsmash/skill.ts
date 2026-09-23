@@ -55,6 +55,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(headsmashScene);
             const world = action.world();
             const length = p("headsmash", "chargeLength", action);
             const speed = p("headsmash", "speed", action);
@@ -67,7 +68,7 @@ namespace PokemonSkills {
             const direction = aim(action);
             const scale = radius / 0.55;
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
-            WorldFeedback.emit(world, headsmashScene, 1, action.origin(), { moment: "charge", scale: scale, intensity: intensity }, 60);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", scale: scale, intensity: intensity });
             sound(action, "minecraft:entity.goat.long_jump");
             let travelled = 0;
 
@@ -84,7 +85,7 @@ namespace PokemonSkills {
                 }
                 sound(current, "minecraft:item.mace.smash_ground_heavy");
                 sound(current, "minecraft:entity.generic.big_fall");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -93,7 +94,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { crash(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
@@ -111,10 +112,10 @@ namespace PokemonSkills {
                     const self = scope.observe(current.actor());
                     if (self !== null) WorldFeedback.emit(scope, headsmashScene, 1, self.position(),
                         { moment: "recoil", scale: scale, intensity: Math.max(0.5, Math.min(2.4, power * recoil / 60)) }, 26);
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("headsmash", "minimumMove", current) || travelled >= length) {
                     crash(current);

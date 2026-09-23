@@ -55,6 +55,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(spiritbreakScene);
             const world = action.world();
             const actor = action.actor();
             const power = p("spiritbreak", "spirit", action);
@@ -70,7 +71,7 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.4, power / 75));
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function smash(current: CombatAction, hit: CombatImpact): void {
                 const scope = current.world(), victim = hit.target(), point = hit.position();
@@ -95,19 +96,18 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, momentum - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(1.6)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) { smash(current, hit); return; }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= momentum) { finish(current); return; }
-                WorldFeedback.keep(scope, "spiritbreak:wake:" + String(actor.ref()), spiritbreakScene, 1, here,
-                    { moment: "rush", sparks: sparks, scale: scale, intensity: intensity }, 8);
+                movementScenes.show(current, "rush", here, { moment: "rush", sparks: sparks, scale: scale, intensity: intensity });
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 
             sound(action, "minecraft:entity.iron_golem.attack");
-            WorldFeedback.emit(world, spiritbreakScene, 1, action.origin(),
-                { moment: "rush", sparks: sparks, scale: scale, intensity: intensity }, 20);
+            movementScenes.show(action, "rush", action.origin(), { moment: "rush", sparks: sparks, scale: scale, intensity: intensity });
             advance(action);
         }
     });

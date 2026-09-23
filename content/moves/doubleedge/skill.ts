@@ -58,6 +58,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(doubleedgeScene);
             const world = action.world();
             const length = p("doubleedge", "rush", action);
             const speed = p("doubleedge", "speed", action);
@@ -75,12 +76,11 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.4, power / 115));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, doubleedgeScene, 1, action.origin(),
-                { moment: "charge", dust: dust, scale: scale, intensity: intensity }, 56);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", dust: dust, scale: scale, intensity: intensity });
             sound(action, "cobblemon:move.bodyslam.actor_1");
             sound(action, "minecraft:entity.player.attack.strong");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             /** 冲空：没有额外自伤，只是收势；留下一道尘土与文字。 */
             function skid(current: CombatAction): void {
@@ -99,7 +99,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { skid(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     const landed = impact(current, hit, "doubleedge", power,
@@ -125,11 +125,10 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { skid(current); return; }
-                WorldFeedback.keep(scope, "doubleedge:wake:" + String(current.actor().ref()), doubleedgeScene, 1, origin,
-                    { moment: "charge", dust: dust, scale: scale, intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 8);
+                movementScenes.show(current, "charge", origin, { moment: "charge", dust: dust, scale: scale, intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

@@ -30,6 +30,7 @@ namespace PokemonSkills {
     }
 
     function switcherooPass(action: CombatAction, config: any, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(switcherooScene);
         var world = action.world(), actor = action.actor();
         var direction = aim(action), length = p("switcheroo", "reach", action), speed = p("switcheroo", "step", action);
         var radius = p("switcheroo", "collisionRadius", action), push = p("switcheroo", "push", action);
@@ -38,16 +39,16 @@ namespace PokemonSkills {
         var through = !!(config && config.through);
         var mine = switcherooHeldOf(world, actor);
         sound(action, "cobblemon:move.quickattack.actor");
-        WorldFeedback.emit(world, switcherooScene, 1, action.origin(),
-            { moment: "blur", direction: [direction.x(), direction.y(), direction.z()], scale: scale, motes: motes }, 22);
+        movementScenes.show(action, "blur", action.origin(), { moment: "blur", direction: [direction.x(), direction.y(), direction.z()], scale: scale, motes: motes });
         var travelled = 0;
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("switcheroo", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius);
+            var hit = swept.hit;
             if (hit.hitEntity()) {
                 var target = hit.target();
-                if (target === null || scope.friendly(target)) { done(current); return; }
+                if (target === null || scope.friendly(target)) { movementScenes.finish(current, done); return; }
                 var point = hit.position();
                 var mineNow = switcherooHeldOf(scope, actor), theirsNow = switcherooHeldOf(scope, target);
                 var swapped = switcherooExchange(scope, actor, target);
@@ -69,17 +70,17 @@ namespace PokemonSkills {
                     var overshoot = p("switcheroo", "overshoot", current);
                     if (scope.valid(actor)) scope.displace(actor, direction.scale(overshoot));
                 }
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
-            var moved = scope.displace(actor, delta);
+            var moved = swept.moved;
             travelled += moved;
             if (hit.blocked() || moved < p("switcheroo", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(scope, switcherooScene, 1, hit.position(), { moment: "miss", scale: scale,
                     direction: [direction.x(), direction.y(), direction.z()] }, 18);
                 var self = scope.observe(actor);
                 if (self !== null) WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.1, 0)), switcherooMissText, [], 22);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

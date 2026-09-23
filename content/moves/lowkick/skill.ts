@@ -69,6 +69,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(lowkickScene);
             const world = action.world();
             const length = p("lowkick", "lunge", action);
             const speed = p("lowkick", "speed", action);
@@ -82,8 +83,7 @@ namespace PokemonSkills {
             const scale = radius / 0.4;
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, lowkickScene, 1, action.origin(),
-                { moment: "dash", scale: scale, stride: Math.max(3, Math.round(length / 0.7)) }, 30);
+            movementScenes.show(action, "dash", action.origin(), { moment: "dash", scale: scale, stride: Math.max(3, Math.round(length / 0.7)) });
             sound(action, "minecraft:entity.player.attack.sweep");
 
             function settle(current: CombatAction, moment: string, textKey: string): void {
@@ -97,7 +97,7 @@ namespace PokemonSkills {
                     if (textKey) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), textKey, [], 22);
                 }
                 sound(current, moment === "miss" ? "minecraft:entity.player.attack.weak" : "cobblemon:impact.fighting");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             /** 结算对一名目标的扫踢；腾空者只被擦到。返回是否命中。 */
@@ -138,7 +138,8 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { settle(current, "miss", lowkickMissText); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(1.1)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
@@ -151,7 +152,7 @@ namespace PokemonSkills {
                     settle(current, "miss", lowkickMissText);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= length) { settle(current, "miss", lowkickMissText); return; }
                 current.after(1, advance);

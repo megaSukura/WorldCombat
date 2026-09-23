@@ -6,6 +6,7 @@ import dev.worldcombat.core.runtime.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -73,6 +74,17 @@ public final class NativeBlockUse {
         boolean growable = state.getBlock() instanceof BonemealableBlock plant && plant.isValidBonemealTarget(level, pos, state);
         return new BlockObservation(new Point(pos.getX(), pos.getY(), pos.getZ()),
             BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString(), state.toString(), properties, tags.toString(), growable);
+    }
+    /** Native block survival rules at the requested position, including mod overrides and data-pack tags. */
+    public static boolean canSurvive(MinecraftCombat combat, ActorHandle actor, Point point, String input) {
+        var entity = combat.resolve(actor); if (entity == null) return false;
+        var level = (ServerLevel) entity.level(); var pos = BlockPos.containing(point.x(), point.y(), point.z());
+        if (level.isOutsideBuildHeight(pos) || !level.getWorldBorder().isWithinBounds(pos)
+            || !level.hasChunksAt(pos.offset(-1, -1, -1), pos.offset(1, 1, 1))) return false;
+        BlockState state;
+        try { state = NativeBlockStates.parse(level.holderLookup(Registries.BLOCK), input, level.getBlockState(pos)); }
+        catch (com.mojang.brigadier.exceptions.CommandSyntaxException | IllegalArgumentException malformed) { return false; }
+        return state.canSurvive(level, pos);
     }
     public static String use(MinecraftCombat combat, ActorHandle actor, UUID controller, Point point, String itemId, String expected) {
         var entity = combat.resolve(actor); if (entity == null) return "actor-unavailable";

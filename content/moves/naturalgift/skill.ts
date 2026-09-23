@@ -45,29 +45,31 @@ namespace PokemonSkills {
     }
 
     function naturalgiftStrike(action: CombatAction, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(naturalgiftScene);
         var world = action.world(), actor = action.actor(), carried = naturalgiftHeld(world, actor);
         var direction = aim(action), speed = p("naturalgift", "step", action), length = p("naturalgift", "reach", action),
             radius = p("naturalgift", "radius", action);
         var fallback: NaturalgiftGift = carried ? carried.gift : { power: 60, type: "normal", colour: 0x9ED47A };
         sound(action, "cobblemon:item.berry.eat");
-        WorldFeedback.emit(world, naturalgiftScene, 1, action.origin(), { moment: "step", tint: fallback.colour, scale: 1 }, 22);
+        movementScenes.show(action, "step", action.origin(), { moment: "step", tint: fallback.colour, scale: 1 });
         var travelled = 0;
         function advance(current: CombatAction): void {
             var currentWorld = current.world(), origin = current.origin(),
                 delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("naturalgift", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius);
+            var hit = swept.hit;
             if (hit.hitEntity()) {
                 naturalgiftHit(current, hit, fallback, direction);
                 naturalgiftSpend(current, carried);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
-            var moved = currentWorld.displace(current.actor(), delta);
+            var moved = swept.moved;
             travelled += moved;
             if (hit.blocked() || moved < p("naturalgift", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(currentWorld, naturalgiftScene, 1, hit.position(), { moment: "fizzle", tint: fallback.colour, scale: 1 }, 20);
                 naturalgiftSpend(current, carried);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

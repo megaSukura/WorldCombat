@@ -26,6 +26,9 @@ public final class RuntimeChecks {
         public Impact trace(ActorHandle actor, UUID controller, Point from, Point to, double radius) {
             return new Impact(to, target, false);
         }
+        public Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius) {
+            return new Impact(position(actor).plus(delta), target, false);
+        }
         public boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount) { damage++; lastDamage = amount; return true; }
         public double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause) { return lastHealth = delta; }
         public ActorHandle helper(long owner, ActorHandle source, Point point, double health, String data, int ticks) { lastHelperHealth = health; return target; }
@@ -504,6 +507,24 @@ public final class RuntimeChecks {
             check(fixture.runtime.stats().instances() == 1, "Actor could not cast after cooldown elapsed");
             fixture.runtime.stop(); fixture.empty();
             check(fixture.runtime.stats().cooldowns() == 0, "Server stop retained cooldowns");
+        });
+        scenario("body sweep bounds, commitment and action-owned contact receipts", () -> {
+            var fixture = new Fixture(ctx -> {
+                rejected(() -> ctx.moveSweep(new Point(1, 0, 0), .2));
+                ctx.commit(5);
+                rejected(() -> ctx.moveSweep(new Point(4.1, 0, 0), .2));
+                rejected(() -> ctx.moveSweep(new Point(Double.NaN, 0, 0), .2));
+                rejected(() -> ctx.moveSweep(new Point(1, 0, 0), Double.POSITIVE_INFINITY));
+                rejected(() -> ctx.moveSweep(new Point(1, 0, 0), -.1));
+                var issued = ctx.moveSweep(new Point(1, 0, 0), .2);
+                check(!ctx.damage(new Impact(issued.position(), issued.target(), false), 3), "Forged sweep contact settled");
+                check(ctx.damage(issued, 3), "Issued sweep contact did not settle");
+                check(!ctx.damage(issued, 3), "Sweep contact settled twice");
+                ctx.finish();
+                rejected(() -> ctx.moveSweep(new Point(1, 0, 0), .2));
+            });
+            fixture.start(); fixture.empty();
+            check(fixture.host.damage == 1 && fixture.host.errors == 0, "Body sweep receipt lifecycle failed");
         });
         scenario("trace ownership and repeated settlement", () -> {
             var fixture = new Fixture(ctx -> {

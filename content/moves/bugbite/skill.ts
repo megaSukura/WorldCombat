@@ -51,7 +51,7 @@ namespace PokemonSkills {
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("bugbite", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius), hit = swept.hit;
             if (hit.hitEntity()) {
                 var target = hit.target();
                 if (target === null || scope.friendly(target)) { done(current); return; }
@@ -79,7 +79,7 @@ namespace PokemonSkills {
                 done(current);
                 return;
             }
-            var moved = scope.displace(actor, delta);
+            var moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
             travelled += moved;
             if (hit.blocked() || moved < p("bugbite", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(scope, bugbiteScene, 1, hit.position(), { moment: "miss", scale: scale }, 20);

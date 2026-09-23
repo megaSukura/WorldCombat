@@ -77,6 +77,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(headchargeScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("headcharge", "charge", action);
@@ -98,14 +99,12 @@ namespace PokemonSkills {
             let travelled = 0, firstHit = false, hits = 0;
 
             sound(action, "minecraft:entity.ravager.roar");
-            WorldFeedback.emit(world, headchargeScene, 1, action.origin(),
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
-                    afro: afro, scale: scale, intensity: intensity, hunt: hunt ? 1 : 0 }, 60);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
+                    afro: afro, scale: scale, intensity: intensity, hunt: hunt ? 1 : 0 });
 
             function track(current: CombatAction): void {
                 const scope = current.world();
-                WorldFeedback.keep(scope, "headcharge:track:" + String(actor.ref()), headchargeScene, 1, current.origin(),
-                    { moment: "track", direction: [direction.x(), direction.y(), direction.z()], afro: afro, scale: scale }, 10);
+                movementScenes.show(current, "track", current.origin(), { moment: "track", direction: [direction.x(), direction.y(), direction.z()], afro: afro, scale: scale });
             }
 
             function finish(current: CombatAction): void {
@@ -121,7 +120,7 @@ namespace PokemonSkills {
                     }
                 }
                 sound(current, "minecraft:entity.generic.big_fall");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -131,7 +130,7 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && !struck[String(victim.ref())]) {
@@ -156,7 +155,7 @@ namespace PokemonSkills {
                         }
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { finish(current); return; }
                 track(current);

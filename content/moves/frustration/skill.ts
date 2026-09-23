@@ -53,6 +53,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(frustrationScene);
             const world = action.world();
             const self = action.actor();
             const foe = action.target();
@@ -70,12 +71,11 @@ namespace PokemonSkills {
             const sparks = Math.max(6, Math.round(intensity * 12));
             const embers = Math.max(8, Math.round(intensity * 14));
             const start = world.observe(self);
-            if (start === null) { done(action); return; }
+            if (start === null) { movementScenes.finish(action, done); return; }
             let travelled = 0, settled = false, anyLanded = false;
             let heading = frustrationAim(action);
 
-            WorldFeedback.emit(world, frustrationScene, 1, action.origin(),
-                { moment: "rush", scale: scale, rakes: rakes, intensity: intensity, vent: vent }, 40);
+            movementScenes.show(action, "rush", action.origin(), { moment: "rush", scale: scale, rakes: rakes, intensity: intensity, vent: vent });
             sound(action, "minecraft:entity.player.attack.weak");
 
             /** 收势：有爪落空也照常结束；miss 时补一行浮字。 */
@@ -91,7 +91,7 @@ namespace PokemonSkills {
                         anyLanded ? frustrationSpiteText : frustrationMissText, [], 22);
                 }
                 sound(current, anyLanded ? "minecraft:entity.player.attack.sweep" : "minecraft:entity.player.attack.nodamage");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             /** 连抓：每一爪都朝当前可及的目标重取方向，抓中则独立结算一次伤害并顶开。 */
@@ -132,13 +132,13 @@ namespace PokemonSkills {
                 const gap = goal.minus(origin).length();
                 if (gap > 0.01) heading = goal.minus(origin).unit();
                 const step = Math.min(pressSpeed, Math.max(0, lunge - travelled), Math.max(0, gap - radius));
-                const hit = current.trace(origin, origin.plus(heading.scale(Math.max(step, radius) + 0.4)), radius);
+                const swept = sweepStep(current, heading.scale(step), radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target)) { strike(current, rakes); return; }
                 }
                 if (step <= 0.01) { strike(current, rakes); return; }
-                const moved = scope.displace(current.actor(), heading.scale(step));
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("frustration", "minimumMove", current)) { finish(current); return; }
                 current.after(1, advance);

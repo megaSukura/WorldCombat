@@ -97,6 +97,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(drillrunScene);
             const world = action.world();
             const actor = action.actor();
             const direction = aim(action);
@@ -130,7 +131,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), drillrunMissText, [], 20);
                     sound(current, "minecraft:block.gravel.break");
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             sound(action, "minecraft:item.trident.riptide_1");
@@ -140,7 +141,7 @@ namespace PokemonSkills {
                 const remaining = length - travelled;
                 if (remaining <= 0.001) { finish(current); return; }
                 const delta = direction.scale(Math.min(speed, remaining));
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 let drilled = false;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
@@ -164,12 +165,11 @@ namespace PokemonSkills {
                         }
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (samples.length === 0 || samples[samples.length - 1].minus(origin).length() >= 0.5) samples.push(origin);
-                WorldFeedback.keep(scope, "drillrun:spin:" + current.id(), drillrunScene, 1, origin,
-                    { moment: "spin", scale: scale, intensity: intensity, sparks: Math.round(sparks * Math.min(1, travelled / Math.max(0.001, length))),
-                        progress: Math.min(1, travelled / Math.max(0.001, length)) }, 8);
+                movementScenes.show(current, "spin", origin, { moment: "spin", scale: scale, intensity: intensity, sparks: Math.round(sparks * Math.min(1, travelled / Math.max(0.001, length))),
+                        progress: Math.min(1, travelled / Math.max(0.001, length)) });
                 // 撞墙或撞到没被顶开的实体就停下；被钻到的目标已被顶开，钻头得以继续前进。
                 if (hit.blocked() || moved < minimum && !drilled) { finish(current); return; }
                 if (travelled >= length) { finish(current); return; }

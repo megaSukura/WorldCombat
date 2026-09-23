@@ -34,6 +34,7 @@ namespace PokemonSkills {
     }
 
     function covetGlide(action: CombatAction, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(covetScene);
         var world = action.world(), actor = action.actor();
         var direction = aim(action), length = p("covet", "reach", action), speed = p("covet", "step", action);
         var radius = p("covet", "radius", action), push = p("covet", "push", action);
@@ -42,16 +43,15 @@ namespace PokemonSkills {
         var body = world.observe(actor), scale = body ? (body.width() + body.height()) / 2.3 : 1;
         var own = covetHeldOf(world, actor), emptyHanded = own === null;
         sound(action, "cobblemon:move.quickattack.actor");
-        WorldFeedback.emit(world, covetScene, 1, action.origin(),
-            { moment: "approach", scale: scale, hearts: Math.round(hearts), armed: emptyHanded ? 0 : 1 }, 26);
+        movementScenes.show(action, "approach", action.origin(), { moment: "approach", scale: scale, hearts: Math.round(hearts), armed: emptyHanded ? 0 : 1 });
         var travelled = 0;
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("covet", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius), hit = swept.hit;
             if (hit.hitEntity()) {
                 var target = hit.target();
-                if (target === null || scope.friendly(target)) { done(current); return; }
+                if (target === null || scope.friendly(target)) { movementScenes.finish(current, done); return; }
                 var point = hit.position();
                 var before = scope.observe(target), maximum = before ? Math.max(1, before.maxHealth()) : 1;
                 var landed = impact(current, hit, "covet", p("covet", "charm", current), { damage: damageSpec("covet", "charm"), contact: true });
@@ -81,16 +81,16 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)),
                         emptyHanded ? covetStrikeText : covetFullText, [], 26);
                 }
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
-            var moved = scope.displace(actor, delta);
+            var moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
             travelled += moved;
             if (hit.blocked() || moved < p("covet", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(scope, covetScene, 1, hit.position(), { moment: "flop", scale: scale }, 20);
                 var self = scope.observe(actor);
                 if (self !== null) WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.1, 0)), covetMissText, [], 22);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

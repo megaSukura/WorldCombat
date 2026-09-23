@@ -58,6 +58,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(hornLeechScene);
             const world = action.world();
             const length = p("hornleech", "reach", action);
             const speed = p("hornleech", "charge", action);
@@ -71,7 +72,7 @@ namespace PokemonSkills {
             const hitRefs: string[] = [];
             let travelled = 0, hits = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
                 WorldFeedback.emit(scope, hornLeechScene, 1, at, { moment: "miss", scale: scale, motes: motes }, 18);
@@ -80,8 +81,7 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            WorldFeedback.emit(world, hornLeechScene, 1, action.origin(),
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], motes: motes }, 24);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], motes: motes });
             sound(action, "cobblemon:move.leechseed.actor");
 
             function advance(current: CombatAction): void {
@@ -90,7 +90,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { if (hits === 0) whiff(current, origin); else finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(0.9)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const ref = target === null ? "" : String(target.ref());
@@ -118,7 +118,7 @@ namespace PokemonSkills {
                         if (hits >= maxHits) { finish(current); return; }
                     }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("hornleech", "minimumMove", current) || travelled >= length) {
                     if (hits === 0) whiff(current, origin); else finish(current);

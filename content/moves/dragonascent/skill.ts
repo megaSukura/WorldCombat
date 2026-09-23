@@ -90,10 +90,11 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(dragonascentScene);
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null || !world.valid(target)) { done(action); return; }
+            if (target === null || !world.valid(target)) { movementScenes.finish(action, done); return; }
             const targetRef = String(target.ref());
             const dive = p(dragonascentId, "dive", action);
             const altitude = p(dragonascentId, "altitude", action);
@@ -119,6 +120,7 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.gust.actor");
 
             function land(current: CombatAction, at: CombatPoint): void {
+                movementScenes.stop(current);
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
@@ -148,16 +150,16 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, self.position().plus(up), dragonascentSlumpText, [guardLoss, poiseLoss], 28);
                     if (extra > 0) WorldFeedback.text(scope, at.plus(up), dragonascentLandText, [extra], 24);
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function diveStep(current: CombatAction, travelled: number): void {
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { done(current); return; }
+                if (self === null) { movementScenes.finish(current, done); return; }
                 const step = Math.min(pace, Math.max(0, swoop - travelled));
                 if (step <= 0.001) { land(current, self.position()); return; }
                 const origin = self.position(), delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 let contact: CombatPoint | null = null;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
@@ -171,18 +173,18 @@ namespace PokemonSkills {
                     contact = hit.position();
                 }
                 if (contact !== null) { land(current, contact); return; }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < 0.05 || travelled >= swoop) { land(current, origin.plus(delta)); return; }
-                WorldFeedback.keep(scope, "dragonascent:dive:" + current.id(), dragonascentScene, 1, origin,
-                    { moment: "dive", direction: [direction.x(), direction.y(), direction.z()], motes: motes, scale: scale,
-                        intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, swoop)) }, 8);
+                if (hit.blocked() || moved < 0.05 || travelled >= swoop) { land(current, current.origin()); return; }
+                movementScenes.show(current, "dive", origin, { moment: "dive", direction: [direction.x(), direction.y(), direction.z()], motes: motes, scale: scale,
+                        intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, swoop)) });
                 current.after(1, function (next: CombatAction) { diveStep(next, travelled); });
             }
 
             function beginDive(current: CombatAction): void {
+                movementScenes.stop(current, "climb");
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { done(current); return; }
+                if (self === null) { movementScenes.finish(current, done); return; }
                 const victim = scope.actor(targetRef);
                 const aim = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                 const aimPoint = aim !== null ? aim.position() : current.targetPosition();
@@ -195,12 +197,11 @@ namespace PokemonSkills {
 
             function climb(current: CombatAction, climbed: number): void {
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { done(current); return; }
+                if (self === null) { movementScenes.finish(current, done); return; }
                 if (climbed >= altitude - 0.05) { beginDive(current); return; }
                 const rise = Math.min(pace, altitude - climbed);
                 const moved = scope.displace(actor, WorldCombat.point(0, rise, 0));
-                WorldFeedback.keep(scope, "dragonascent:climb:" + current.id(), dragonascentScene, 1, self.position(),
-                    { moment: "climb", motes: motes, scale: scale, intensity: intensity, ratio: Math.min(1, climbed / Math.max(0.001, altitude)) }, 8);
+                movementScenes.show(current, "climb", self.position(), { moment: "climb", motes: motes, scale: scale, intensity: intensity, ratio: Math.min(1, climbed / Math.max(0.001, altitude)) });
                 if (moved < rise * 0.5) { beginDive(current); return; }
                 current.after(1, function (next: CombatAction) { climb(next, climbed + moved); });
             }

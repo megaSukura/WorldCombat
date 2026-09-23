@@ -162,11 +162,9 @@ namespace PokemonSkills {
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = heading.scale(Math.min(step, length - travelled));
-                const goal = here.plus(delta);
-                const traced = current.trace(here, goal, radius);
+                const swept = sweepStep(current, delta, radius);
+                const traced = swept.hit;
                 if (traced.hitEntity()) {
-                    const contactDistance = Math.min(delta.length(), Math.max(0, traced.position().minus(here).length() - 0.02));
-                    if (contactDistance > 0) scope.displace(actor, heading.scale(contactDistance));
                     trail(current);
                     const victim = traced.target();
                     let landed = false;
@@ -181,12 +179,12 @@ namespace PokemonSkills {
                     uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes, step, finish);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 trail(current);
                 if (traced.blocked() || moved < 0.05 || travelled >= length) {
-                    WorldFeedback.emit(scope, uturnScene, 1, here.plus(delta), { moment: "miss", motes: motes, scale: scale }, 18);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1, 0)), uturnMissText, [], 20);
+                    WorldFeedback.emit(scope, uturnScene, 1, current.origin(), { moment: "miss", motes: motes, scale: scale }, 18);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1, 0)), uturnMissText, [], 20);
                     sound(current, "minecraft:entity.player.attack.nodamage");
                     uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes, step, finish);
                     return;

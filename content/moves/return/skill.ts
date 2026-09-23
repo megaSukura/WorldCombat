@@ -57,6 +57,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(returnScene);
             const world = action.world();
             const self = action.actor();
             const devoted = !!(config && config.devoted);
@@ -69,15 +70,14 @@ namespace PokemonSkills {
             const bond = p("return", "bond", action);
             const direction = returnAim(action);
             const start = world.observe(self);
-            if (start === null) { done(action); return; }
+            if (start === null) { movementScenes.finish(action, done); return; }
             const scale = radius / 0.42;
             const intensity = Math.max(0.5, Math.min(2, 0.5 + bond * 1.5));
             const trail = Math.max(16, Math.round(power * 1.4));
             const sparks = Math.max(10, Math.round(power * 0.5));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, returnScene, 1, action.origin(),
-                { moment: "dash", direction: returnVector(direction), scale: scale, intensity: intensity, trail: trail }, 42);
+            movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: returnVector(direction), scale: scale, intensity: intensity, trail: trail });
             sound(action, "minecraft:entity.player.attack.strong");
 
             /** 收势：撞空补一行浮字；撞实的浮字已在 impact 里写出。 */
@@ -91,7 +91,7 @@ namespace PokemonSkills {
                     if (missed) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.25, 0)), returnMissText, [], 22);
                 }
                 sound(current, missed ? "minecraft:entity.player.attack.sweep" : "cobblemon:impact.normal");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function through(current: CombatAction, remaining: number, left: number): void {
@@ -109,7 +109,8 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { land(current, "miss", true); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p("return", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
@@ -126,7 +127,7 @@ namespace PokemonSkills {
                     land(current, "impact", false);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p("return", "minimumMove", current) || travelled >= length) {
                     land(current, "miss", true);

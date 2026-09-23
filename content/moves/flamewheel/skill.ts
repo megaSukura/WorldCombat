@@ -57,6 +57,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(flamewheelScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("flamewheel", "roll", action);
@@ -90,10 +91,9 @@ namespace PokemonSkills {
                     WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.2, 0)), flamewheelThawText, [], 24);
                 }
             }
-            WorldFeedback.emit(world, flamewheelScene, 1, start,
-                { moment: "roll", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "roll", start, { moment: "roll", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    flames: flames, scale: scale, intensity: intensity, fierce: fierce ? 1 : 0, thawed: wasFrozen ? 1 : 0 }, 44);
+                    flames: flames, scale: scale, intensity: intensity, fierce: fierce ? 1 : 0, thawed: wasFrozen ? 1 : 0 });
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -105,7 +105,7 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.1, 0)), flamewheelFizzleText, [], 22);
                     }
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -113,7 +113,7 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001 || hits >= pierceCount) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     if (target !== null && !struck[String(target.ref())]) {
@@ -136,12 +136,11 @@ namespace PokemonSkills {
                         hits++;
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { finish(current); return; }
-                WorldFeedback.keep(scope, "flamewheel:wake:" + String(actor.ref()), flamewheelScene, 1, origin,
-                    { moment: "wake", flames: flames, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 10);
+                movementScenes.show(current, "wake", origin, { moment: "wake", flames: flames, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

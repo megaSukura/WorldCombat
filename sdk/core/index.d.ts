@@ -72,6 +72,8 @@ interface CombatAction {
     off(token: number): void;
     emit(event: string): void;
     trace(from: CombatPoint, to: CombatPoint, radius: number): CombatImpact;
+    /** Committed movement owner only. Move the native body on one straight segment (finite delta, at most 4 blocks), stopping at the first reached enemy or obstruction. Native half-width/height and radius (capped at 1) combine by maximum, not addition. Nonzero sweeps include endpoint and initial body contacts; zero delta is a no-op. Walls do not cause a lateral slide. Returned hits have the same action-owned, once-only settlement contract as trace. */
+    moveSweep(delta: CombatPoint, radius: number): CombatImpact;
     /** Vanilla throwable entity with NeoForge impacts, native tracking and action-owned cleanup. Returns its entity UUID. Impact receipts are scoped to the hit callback. Options may include item/sprite, scale, tint and glow. */
     /** `appearance` JSON also carries flight options: `homing` {target, turn (deg/tick), delay, range}, `pierce` (entities passed through), `bounce` (block rebounds) with `restitution`. */
     projectile(origin: CombatPoint, velocity: CombatPoint, gravity: number, radius: number, range: number, lifetime: number,

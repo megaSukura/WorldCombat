@@ -12,6 +12,7 @@ namespace PokemonSkills {
     const acrobaticsMissText = "world_combat.move.acrobatics.text.miss";
 
     function acrobaticsStrike(action: CombatAction, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(acrobaticsScene);
         var world = action.world(), actor = action.actor();
         var direction = aim(action), length = p("acrobatics", "reach", action), speed = p("acrobatics", "step", action);
         var radius = p("acrobatics", "collisionRadius", action), push = p("acrobatics", "push", action);
@@ -20,12 +21,11 @@ namespace PokemonSkills {
         var bare = acrobaticsHeldOf(world, actor) === null;
         action.releaseTarget();
         sound(action, "cobblemon:move.aerialace.actor_1");
-        WorldFeedback.emit(world, acrobaticsScene, 1, action.origin(),
-            { moment: "launch", scale: scale, motes: Math.round(motes), bare: bare ? 1 : 0, intensity: bare ? 1.6 : 1 }, 40);
+        movementScenes.show(action, "launch", action.origin(), { moment: "launch", scale: scale, motes: Math.round(motes), bare: bare ? 1 : 0, intensity: bare ? 1.6 : 1 });
         var travelled = 0;
         function slip(current: CombatAction, targetPoint: CombatPoint, targetWidth: number, extra: number): void {
             var scope = current.world(), self = scope.observe(current.actor());
-            if (self === null) { done(current); return; }
+            if (self === null) { movementScenes.finish(current, done); return; }
             var forward = WorldCombat.point(direction.x(), 0, direction.z());
             if (forward.length() < 0.01) forward = WorldCombat.point(1, 0, 0);
             else forward = forward.unit();
@@ -50,30 +50,30 @@ namespace PokemonSkills {
                 }
                 if (clear) path = candidate;
             }
-            if (path === null) { done(current); return; }
+            if (path === null) { movementScenes.finish(current, done); return; }
             followSlip(current, path, 0, 0);
         }
         function followSlip(current: CombatAction, path: CombatPoint[], index: number, elapsed: number): void {
             var scope = current.world(), self = scope.observe(current.actor());
-            if (self === null || elapsed >= 48) { done(current); return; }
+            if (self === null || elapsed >= 48) { movementScenes.finish(current, done); return; }
             var delta = path[index].minus(self.position()), distance = delta.length();
             if (distance <= 0.05) {
-                if (++index >= path.length) { done(current); return; }
+                if (++index >= path.length) { movementScenes.finish(current, done); return; }
                 delta = path[index].minus(self.position()); distance = delta.length();
             }
             var moved = scope.displace(current.actor(), delta.unit().scale(Math.min(speed * 0.6, distance)));
             var after = scope.observe(current.actor());
             if (moved < p("acrobatics", "minimumMove", current) || after === null
-                || distance - path[index].minus(after.position()).length() < 0.01) { done(current); return; }
+                || distance - path[index].minus(after.position()).length() < 0.01) { movementScenes.finish(current, done); return; }
             current.after(1, function (next: CombatAction) { followSlip(next, path, index, elapsed + 1); });
         }
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("acrobatics", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius), hit = swept.hit;
             if (hit.hitEntity()) {
                 var target = hit.target();
-                if (target === null || scope.friendly(target)) { done(current); return; }
+                if (target === null || scope.friendly(target)) { movementScenes.finish(current, done); return; }
                 var point = hit.position();
                 var before = scope.observe(target), maximum = before ? Math.max(1, before.maxHealth()) : 1;
                 var power = p("acrobatics", "roll", current);
@@ -92,13 +92,13 @@ namespace PokemonSkills {
                 slip(current, obstacle ? obstacle.position() : point, obstacle ? obstacle.width() : 0, landed ? carry : carry * 0.5);
                 return;
             }
-            var moved = scope.displace(actor, delta);
+            var moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
             travelled += moved;
             if (hit.blocked() || moved < p("acrobatics", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(scope, acrobaticsScene, 1, hit.position(), { moment: "miss", scale: scale, motes: Math.round(motes) }, 20);
                 var self = scope.observe(actor);
                 if (self !== null) WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.1, 0)), acrobaticsMissText, [], 22);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

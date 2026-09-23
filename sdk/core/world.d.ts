@@ -112,6 +112,8 @@ interface CombatWorld {
     attributeValue(actor: CombatActor, id: string): CombatAttribute | null;
     environment(point: CombatPoint): string;
     block(point: CombatPoint): CombatBlock | null;
+    /** Read-only native BlockState.canSurvive probe, including mod overrides and registry tags. Uses the same state syntax as placeBlock. Requires the position and adjacent chunks loaded; invalid state/unavailable position returns false. Actual placement still checks occupancy, expectedState and protection hooks. */
+    canSurvive(point: CombatPoint, state: string): boolean;
     /** Live registry lookup; null for unknown registries or entries. Tags are vanilla data-pack registry tags; NeoForge common tags use c:. Re-read after reload to obtain current membership. */
     registry(registry: string, id: string): CombatRegistryEntry | null;
     /** Item id creates a default-stack snapshot; native ItemStack codec JSON preserves component data. Unknown ids return null; malformed serialized stacks throw. */

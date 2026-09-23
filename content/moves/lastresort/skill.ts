@@ -65,6 +65,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(lastresortScene);
             const world = action.world(), actor = action.actor();
             const direction = aim(action);
             const length = p(lastresortId, "dash", action);
@@ -79,22 +80,22 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:entity.iron_golem.attack");
-            WorldFeedback.emit(world, lastresortScene, 1, action.origin(),
-                { moment: "charge", scale: scale, count: count, wound: wound,
-                    direction: [direction.x(), direction.y(), direction.z()] }, 40);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", scale: scale, count: count, wound: wound,
+                    direction: [direction.x(), direction.y(), direction.z()] });
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
                 WorldFeedback.emit(scope, lastresortScene, 1, at, { moment: "miss", scale: scale }, 22);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), lastresortMissText, [], 24);
                 scope.sound("minecraft:entity.player.attack.sweep", at, 14, "{}");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(p(lastresortId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -111,13 +112,13 @@ namespace PokemonSkills {
                         if (landed) WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.2, 0)),
                             wound > 0.5 ? lastresortWoundText : lastresortHitText, [Math.round(power)], 28);
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p(lastresortId, "minimumMove", current) || travelled >= length) {
-                    whiff(current, here.plus(delta));
+                    whiff(current, current.origin());
                     return;
                 }
                 current.after(1, advance);

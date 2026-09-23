@@ -97,6 +97,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(icespinnerScene);
             const world = action.world();
             const actor = action.actor();
             const direction = aim(action);
@@ -135,7 +136,7 @@ namespace PokemonSkills {
                     { moment: landed ? "skid" : "miss", target: landed ? "hit" : "", shards: shards,
                         scale: scale, intensity: intensity, cleared: cleared }, 24);
                 if (!landed) WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.0, 0)), icespinnerMissText, [], 20);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -143,7 +144,7 @@ namespace PokemonSkills {
                 const move = Math.min(step, Math.max(0, length - travelled));
                 if (move <= 0.001) { finish(current, false, here); return; }
                 const delta = direction.scale(move);
-                const hit = current.trace(here, here.plus(delta.scale(1.2)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target(), point = hit.position();
                     const landed = victim !== null && scope.valid(victim) && !scope.friendly(victim)
@@ -161,11 +162,10 @@ namespace PokemonSkills {
                     }
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "icespinner:spin:" + String(current.actor().ref()), icespinnerScene, 1, here,
-                    { moment: "spin", direction: [direction.x(), 0, direction.z()], shards: shards, scale: scale, intensity: intensity }, 8);
-                if (hit.blocked() || moved < 0.05 || travelled >= length) { finish(current, false, here.plus(delta)); return; }
+                movementScenes.show(current, "spin", here, { moment: "spin", direction: [direction.x(), 0, direction.z()], shards: shards, scale: scale, intensity: intensity });
+                if (hit.blocked() || moved < 0.05 || travelled >= length) { finish(current, false, current.origin()); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 

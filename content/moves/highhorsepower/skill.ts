@@ -59,6 +59,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(highhorsepowerScene);
             const world = action.world();
             const actor = action.actor();
             const direction = aim(action);
@@ -89,7 +90,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), highhorsepowerMissText, [], 20);
                     sound(current, "minecraft:block.gravel.break");
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -97,7 +98,7 @@ namespace PokemonSkills {
                 const remaining = charge - travelled;
                 if (remaining <= 0.001) { finish(current); return; }
                 const delta = direction.scale(Math.min(rush, remaining));
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), hoof);
+                const swept = sweepStep(current, delta, hoof), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -123,12 +124,11 @@ namespace PokemonSkills {
                         return;
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "highhorsepower:drive:" + current.id(), highhorsepowerScene, 1, origin,
-                    { moment: "drive", might: might,
+                movementScenes.show(current, "drive", origin, { moment: "drive", might: might,
                         dust: Math.round(dust * Math.min(1, travelled / Math.max(0.001, charge))),
-                        scale: scale, intensity: intensity, progress: Math.min(1, travelled / Math.max(0.001, charge)) }, 8);
+                        scale: scale, intensity: intensity, progress: Math.min(1, travelled / Math.max(0.001, charge)) });
                 if (hit.blocked() || moved < minimumMove || travelled >= charge) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }

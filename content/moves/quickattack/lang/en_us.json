@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.quickattack.summary": "Drop low and shoot a short straight line along the ground to land before the target can answer; it stops the moment it hits and recovers almost at once. Short, cheap, no side effect: an always-available first strike. The eager form is faster and longer but lighter and more costly.",
+  "worldcombat.skill.quickattack.summary": "Burst a short distance along your aim, strike as your body reaches the target, and stop sharply. Eager form starts sooner and travels slightly farther, with less power and a longer cooldown.",
   "worldcombat.skill.quickattack.use.0": "Win the first exchange while the foe has not moved yet",
   "worldcombat.skill.quickattack.use.1": "Finish a weakened target at almost no cost",
   "worldcombat.skill.quickattack.use.2": "Close a short gap when you cannot catch up",

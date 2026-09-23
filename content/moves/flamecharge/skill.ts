@@ -65,6 +65,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(flamechargeScene);
             const world = action.world();
             const actor = action.actor();
             const sprint = p("flamecharge", "sprint", action);
@@ -83,11 +84,10 @@ namespace PokemonSkills {
             const scale = radius / 0.6;
             const struck: { [ref: string]: boolean } = {};
             let travelled = 0, firstHit = false, boosted = false, settled = false;
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             sound(action, "cobblemon:move.flamecharge.actor");
-            WorldFeedback.emit(world, flamechargeScene, 1, action.origin(),
-                { moment: "rush", heat: heat, scale: scale, intensity: intensity }, Math.max(30, Math.round(sprint / pace) + 20));
+            movementScenes.show(action, "rush", action.origin(), { moment: "rush", heat: heat, scale: scale, intensity: intensity });
 
             function strikeAt(current: CombatAction, hit: CombatImpact): void {
                 const scope = current.world(), target = hit.target(), point = hit.position();
@@ -110,12 +110,12 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, sprint - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     strikeAt(current, hit);
                     if (!pierce) { finish(current); return; }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= sprint) {
                     if (!firstHit) {
@@ -130,8 +130,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                WorldFeedback.keep(scope, "flamecharge:wake:" + String(actor.ref()), flamechargeScene, 1, here,
-                    { moment: "wake", heat: heat, scale: scale }, 8);
+                movementScenes.show(current, "wake", here, { moment: "wake", heat: heat, scale: scale });
                 current.after(1, advance);
             }
             advance(action);

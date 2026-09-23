@@ -56,8 +56,9 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(bounceScene);
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
-            if (body === null) { done(action); return; }
+            if (body === null) { movementScenes.finish(action, done); return; }
             const target = action.target();
             const lockedBody = target !== null && world.observe(target) !== null ? world.observe(target) : null;
             const start = body.position();
@@ -86,9 +87,10 @@ namespace PokemonSkills {
                 if (finished) return;
                 finished = true;
                 MobEffects.consume(current.world(), actor, bounceAirborne);
-                done(current);
+                movementScenes.finish(current, done);
             }
             function land(current: CombatAction, at: CombatPoint, blocked: boolean): void {
+                movementScenes.stop(current);
                 const live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
                 const from = self.position(), heading = at.minus(from);
@@ -122,31 +124,33 @@ namespace PokemonSkills {
                 finish(current);
             }
             function fall(current: CombatAction): void {
+                movementScenes.stop(current, "rise");
+                movementScenes.stop(current, "hang");
                 const live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
                 const from = self.position(), toward = lock.minus(from), remaining = toward.length();
                 if (remaining <= 0.35) { land(current, from, false); return; }
                 const direction = toward.unit(), step = Math.min(fallSpeed, remaining), delta = direction.scale(step);
-                const hit = current.trace(from, from.plus(delta.scale(p(bounceId, "traceAhead", current))), Math.max(0.4, radius * 0.6));
+                const swept = sweepStep(current, delta, Math.max(0.4, radius * 0.6)), hit = swept.hit;
                 const victim = hit.target();
                 if (hit.hitEntity() && victim !== null && !current.sense().friendly(victim)) { land(current, hit.position(), false); return; }
-                if (hit.blocked()) { land(current, from.plus(delta), true); return; }
-                const moved = live.displace(actor, delta);
-                if (moved < Math.min(p(bounceId, "minimumMove", current), step * 0.4)) { land(current, from, true); return; }
+                if (hit.blocked()) { land(current, current.origin(), true); return; }
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
+                if (moved < Math.min(p(bounceId, "minimumMove", current), step * 0.4)) { land(current, current.origin(), true); return; }
                 current.after(1, function (next) { fall(next); });
             }
             function hang(current: CombatAction, elapsed: number): void {
+                movementScenes.stop(current, "rise");
                 const live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
                 if (elapsed >= hangTicks) {
-                    WorldFeedback.emit(live, bounceScene, 1, self.position(), { moment: "fall", climb: height, scale: scale }, 30);
+                    movementScenes.show(current, "fall", self.position(), { moment: "fall", climb: height, scale: scale });
                     fall(current);
                     return;
                 }
                 const position = self.position();
                 live.displace(actor, WorldCombat.point(0, Math.max(-0.4, Math.min(0.4, apexY - position.y())), 0));
-                WorldFeedback.keep(live, "bounce:hang", bounceScene, 1, position,
-                    { moment: "hang", climb: height, scale: scale }, 8);
+                movementScenes.show(current, "hang", position, { moment: "hang", climb: height, scale: scale });
                 WorldFeedback.keep(live, "bounce:mark", bounceScene, 1, lockGround,
                     { moment: "mark", climb: height, scale: scale }, 8);
                 current.after(1, function (next) { hang(next, elapsed + 1); });
@@ -161,7 +165,7 @@ namespace PokemonSkills {
             }
 
             sound(action, "minecraft:entity.goat.long_jump");
-            WorldFeedback.emit(world, bounceScene, 1, start, { moment: "rise", climb: height }, 30);
+            movementScenes.show(action, "rise", start, { moment: "rise", climb: height });
             MobEffects.apply(world, actor, bounceAirborne, riseTicks + hangTicks + 50, 0);
             rise(action, 0);
         }

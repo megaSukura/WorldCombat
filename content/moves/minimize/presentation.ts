@@ -87,7 +87,7 @@ const MinimizeDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "dodge_line", bind: "source", fit: "none", height: 0.45,
+                    name: "dodge_line", bind: "target", fit: "none", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: 8 }, shape: { kind: "sphere", radius: 0.2 },
                     direction: "outward", speed: [0.14, 0.34], drag: 0.85,
@@ -95,7 +95,7 @@ const MinimizeDefinition: ParticleDefinition = {
                     color: 0xE8F2FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 20
                 },
                 {
-                    name: "dodge_puff", bind: "source", fit: "none", height: 0.3,
+                    name: "dodge_puff", bind: "target", fit: "none", height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: 6 }, shape: { kind: "sphere", radius: 0.25 },
                     direction: "outward", speed: [0.03, 0.1], drag: 0.9,

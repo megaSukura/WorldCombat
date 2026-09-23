@@ -74,6 +74,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(steelrollerScene);
             const world = action.world(), self = action.actor();
             const body = world.observe(self);
             const origin = body === null ? action.origin() : body.position();
@@ -86,7 +87,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, steelrollerScene, 1, origin, { moment: "falter", scale: p(steelrollerId, "collisionRadius", action) / 0.5 }, 22);
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), steelrollerFalterText, [], 24);
                 sound(action, "minecraft:block.anvil.step");
-                done(action);
+                movementScenes.finish(action, done);
                 return;
             }
 
@@ -104,8 +105,7 @@ namespace PokemonSkills {
             const radius = p(steelrollerId, "collisionRadius", action);
             const travel = Math.ceil(length / Math.max(0.05, step)) + 8;
             steelrollerFurrow(world, origin, direction, length, p(steelrollerId, "scarCells", action), Math.round(p(steelrollerId, "scarTicks", action)));
-            WorldFeedback.emit(world, steelrollerScene, 1, origin,
-                { moment: "roll", scale: radius / 0.5, scraper: count, travel: travel, direction: [direction.x(), direction.y(), direction.z()] }, travel);
+            movementScenes.show(action, "roll", origin, { moment: "roll", scale: radius / 0.5, scraper: count, travel: travel, direction: [direction.x(), direction.y(), direction.z()] });
             sound(action, "minecraft:entity.ravager.attack");
             let travelled = 0;
 
@@ -114,13 +114,14 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, steelrollerScene, 1, at, { moment: "skid", scale: radius / 0.5 }, 22);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), steelrollerFalterText, [], 22);
                 scope.sound("minecraft:block.anvil.land", at, 14, "{}");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(p(steelrollerId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -137,13 +138,13 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), steelrollerHitText,
                             [Math.round(power)], 26);
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p(steelrollerId, "minimumMove", current) || travelled >= length) {
-                    whiff(current, here.plus(delta));
+                    whiff(current, current.origin());
                     return;
                 }
                 current.after(1, advance);

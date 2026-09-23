@@ -86,6 +86,7 @@ namespace PokemonSkills {
             return p("skullbash", "prepare", action);
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(skullBashScene);
             const world = action.world(), self = action.actor();
             const deep = skullBashDeep(config);
             const charge = Math.max(6, Math.round(p("skullbash", "charge", action) * (deep ? 1.35 : 0.7)));
@@ -112,16 +113,17 @@ namespace PokemonSkills {
                 const length = p("skullbash", "distance", charging);
                 const power = p("skullbash", "power", charging), push = p("skullbash", "push", charging);
                 const travel = Math.ceil(length / Math.max(0.05, p("skullbash", "speed", charging))) + 8;
-                WorldFeedback.emit(cworld, skullBashScene, 1, charging.origin(), { moment: "launch", target: casterRef }, travel);
+                movementScenes.show(charging, "launch", charging.origin(), { moment: "launch", target: casterRef });
                 sound(charging, "minecraft:entity.ravager.attack");
                 let travelled = 0;
                 function advance(current: CombatAction): void {
                     const w = current.world(), self = w.observe(caster);
-                    if (self === null) { done(current); return; }
+                    if (self === null) { movementScenes.finish(current, done); return; }
                     const origin = self.position();
                     const step = Math.min(p("skullbash", "speed", current), Math.max(0, length - travelled));
                     const delta = direction.scale(step);
-                    const hit = current.trace(origin, origin.plus(delta.scale(p("skullbash", "traceAhead", current))), p("skullbash", "collisionRadius", current));
+                    const swept = sweepStep(current, delta, p("skullbash", "collisionRadius", current));
+                    const hit = swept.hit;
                     if (hit.hitEntity()) {
                         const target = hit.target();
                         if (target !== null && !current.sense().friendly(target)) {
@@ -149,14 +151,14 @@ namespace PokemonSkills {
                                 }
                             }
                         }
-                        done(current); return;
+                        movementScenes.finish(current, done); return;
                     }
-                    const moved = w.displace(caster, delta);
+                    const moved = swept.moved;
                     travelled += moved;
                     if (moved < p("skullbash", "minimumMove", current) || travelled >= length) {
-                        WorldFeedback.emit(w, skullBashScene, 1, origin.plus(delta), { moment: "skid", target: casterRef }, 20);
-                        WorldFeedback.text(w, skullBashAbove(origin), skullBashWhiffText, [], 26);
-                        done(current); return;
+                        WorldFeedback.emit(w, skullBashScene, 1, current.origin(), { moment: "skid", target: casterRef }, 20);
+                        WorldFeedback.text(w, skullBashAbove(current.origin()), skullBashWhiffText, [], 26);
+                        movementScenes.finish(current, done); return;
                     }
                     current.after(1, advance);
                 }

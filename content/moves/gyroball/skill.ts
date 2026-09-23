@@ -64,6 +64,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(gyroballScene);
             const world = action.world();
             const actor = action.actor();
             const self = world.observe(actor);
@@ -87,13 +88,12 @@ namespace PokemonSkills {
             direction = direction.unit();
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, gyroballScene, 1, origin,
-                { moment: "roll", load: Math.round(load * 100) / 100, scale: scale, grains: grains, intensity: intensity,
+            movementScenes.show(action, "roll", origin, { moment: "roll", load: Math.round(load * 100) / 100, scale: scale, grains: grains, intensity: intensity,
                     direction: [direction.x(), direction.y(), direction.z()],
-                    path: gyroballLane(origin, direction, length + radius, radius) }, 46);
+                    path: gyroballLane(origin, direction, length + radius, radius) });
             sound(action, "minecraft:block.grindstone.use");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -109,7 +109,7 @@ namespace PokemonSkills {
                 const remaining = length - travelled;
                 if (remaining <= 0.02) { whiff(current, here); return; }
                 const delta = direction.scale(Math.min(step, remaining));
-                const hit = current.trace(here, here.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const struck = hit.target(), at = hit.position();
                     const landed = struck !== null && impact(current, hit, gyroballId, power,
@@ -126,10 +126,10 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(gyroballId, "minimumMove", current) || travelled >= length) {
-                    whiff(current, here.plus(delta));
+                    whiff(current, current.origin());
                     return;
                 }
                 current.after(1, advance);

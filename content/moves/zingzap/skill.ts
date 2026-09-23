@@ -67,6 +67,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(zingzapScene);
             const world = action.world();
             const crash = p("zingzap", "crash", action);
             const chargeMax = p("zingzap", "chargeMax", action);
@@ -82,7 +83,7 @@ namespace PokemonSkills {
             const scale = radius / 0.6;
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function miss(current: CombatAction): void {
                 const scope = current.world();
@@ -164,14 +165,14 @@ namespace PokemonSkills {
                 if (remaining <= 0.001) { miss(current); return; }
                 const step = Math.min(pace, remaining);
                 const delta = direction.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(1.15)), radius);
-                const charge = Math.min(chargeMax, (travelled + step) * chargeRate);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
+                const charge = Math.min(chargeMax, (travelled + swept.moved) * chargeRate);
                 if (hit.hitEntity()) { discharge(current, hit, direction, charge); return; }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
-                WorldFeedback.keep(scope, "zingzap:charge:" + current.id(), zingzapScene, 1, here,
-                    { moment: "charge", scale: scale, charge: Math.min(1, travelled / Math.max(0.001, rush)),
-                        sparks: Math.round(10 + Math.min(chargeMax, travelled * chargeRate) * 90) }, 8);
+                movementScenes.show(current, "charge", here, { moment: "charge", scale: scale, charge: Math.min(1, travelled / Math.max(0.001, rush)),
+                        sparks: Math.round(10 + Math.min(chargeMax, travelled * chargeRate) * 90) });
                 if (hit.blocked() || moved < 0.05) { miss(current); return; }
                 current.after(1, advance);
             }

@@ -69,6 +69,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(playroughScene);
             const world = action.world();
             const actor = action.actor();
             const romp = !!(config && config.romp);
@@ -76,7 +77,6 @@ namespace PokemonSkills {
             const tumblePower = p(playroughId, "tumble", action);
             const cruise = p(playroughId, "cruise", action);
             const radius = p(playroughId, "radius", action);
-            const traceAhead = p(playroughId, "traceAhead", action);
             const push = p(playroughId, "push", action);
             const chance = Math.max(0.02, Math.min(0.9, p(playroughId, "atkChance", action)));
             const stages = Math.max(1, Math.round(p(playroughId, "atkStages", action)));
@@ -100,7 +100,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), playroughScene, 1, at, { moment: "miss", scale: scale, intensity: intensity }, 20);
                     WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.2, 0)), playroughMissText, [], 20);
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function strike(current: CombatAction, hit: CombatImpact): void {
@@ -153,16 +153,16 @@ namespace PokemonSkills {
                 const step = Math.min(cruise, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) { strike(current, hit); return; }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < playroughMinimumMove || travelled >= length) { finish(current); return; }
                 current.after(1, advance);
             }
 
-            WorldFeedback.emit(world, playroughScene, 1, action.origin(),
-                { moment: "run", scale: scale, intensity: intensity, sparkles: sparkles }, 44);
+            movementScenes.show(action, "run", action.origin(), { moment: "run", scale: scale, intensity: intensity, sparkles: sparkles });
             sound(action, "minecraft:entity.player.attack.strong");
             advance(action);
         }

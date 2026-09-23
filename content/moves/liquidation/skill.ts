@@ -47,6 +47,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(liquidationScene);
             const world = action.world();
             const length = p("liquidation", "charge", action);
             const speed = p("liquidation", "dashSpeed", action);
@@ -61,8 +62,7 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.2, power / 85));
             let travelled = 0, settled = false;
 
-            WorldFeedback.keep(world, "liquidation:wake:" + String(action.actor().ref()), liquidationScene, 1, action.origin(),
-                { moment: "shroud", scale: scale, intensity: intensity, ratio: 0 }, 12);
+            movementScenes.show(action, "shroud", action.origin(), { moment: "shroud", scale: scale, intensity: intensity, ratio: 0 });
             sound(action, "cobblemon:move.waterpulse.actor");
 
             function land(current: CombatAction, moment: string): void {
@@ -75,7 +75,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), liquidationMissText, [], 22);
                 }
                 sound(current, "minecraft:entity.generic.splash");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -84,7 +84,8 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { land(current, "miss"); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p("liquidation", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
@@ -108,15 +109,14 @@ namespace PokemonSkills {
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), liquidationHitText, [], 22);
                         }
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p("liquidation", "minimumMove", current) || travelled >= length) { land(current, "miss"); return; }
                 // 水壳沿途拖出湿痕，让“裹着水冲”这件事在整段位移上都看得见。
-                WorldFeedback.keep(scope, "liquidation:wake:" + String(current.actor().ref()), liquidationScene, 1, origin,
-                    { moment: "shroud", scale: scale, intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 8);
+                movementScenes.show(current, "shroud", origin, { moment: "shroud", scale: scale, intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

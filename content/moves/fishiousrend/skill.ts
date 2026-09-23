@@ -116,12 +116,12 @@ namespace PokemonSkills {
                 if (travelled >= length) { miss(current); return; }
                 const move = Math.min(step, length - travelled);
                 const direction = delta.unit();
-                const hit = current.trace(here, here.plus(direction.scale(move + p(fishiousrendId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, direction.scale(move), radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const caught = hit.target();
                     if (caught !== null && scope.valid(caught) && !scope.friendly(caught)) { bite(current, caught, hit.position(), hit); return; }
                 }
-                const moved = scope.displace(current.actor(), direction.scale(move));
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(fishiousrendId, "minimumMove", current)) { miss(current); return; }
                 current.after(1, advance);

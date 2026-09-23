@@ -69,6 +69,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(biteScene);
             const world = action.world();
             const length = p("bite", "reach", action);
             const speed = p("bite", "lunge", action);
@@ -82,11 +83,10 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.0, power / 62));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, biteScene, 1, action.origin(),
-                { moment: "pounce", scale: scale, intensity: intensity, drag: Math.round(drag * 100) / 100 }, 24);
+            movementScenes.show(action, "pounce", action.origin(), { moment: "pounce", scale: scale, intensity: intensity, drag: Math.round(drag * 100) / 100 });
             sound(action, "minecraft:entity.fox.bite");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -102,7 +102,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { whiff(current, origin); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p("bite", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const at = hit.position();
@@ -132,7 +132,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("bite", "minimumMove", current) || travelled >= length) {
                     whiff(current, origin);

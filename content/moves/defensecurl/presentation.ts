@@ -89,7 +89,7 @@ const DefenseCurlDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "roll_dust", bind: "source", fit: "none", height: 0.25,
+                    name: "roll_dust", bind: "target", fit: "none", height: 0.25,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "spin", fallback: 18 } },
                     shape: { kind: "sphere", radius: 0.4 },
@@ -98,7 +98,7 @@ const DefenseCurlDefinition: ParticleDefinition = {
                     color: 0xC79B68, alpha: [0.85, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "roll_wheel", bind: "source", fit: "none", height: 0.4,
+                    name: "roll_wheel", bind: "target", fit: "none", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     orient: "direction",
                     burst: { count: 2, interval: 2 },

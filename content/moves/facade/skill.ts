@@ -75,7 +75,7 @@ namespace PokemonSkills {
                 const step = Math.min(p("facade", "chargeSpeed", current), Math.max(0, length - travelled));
                 if (step <= 0) { done(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const power = p("facade", "power", current);
                     const landed = impact(current, hit, "facade", power, { contact: true });
@@ -99,7 +99,7 @@ namespace PokemonSkills {
                     done(current);
                     return;
                 }
-                const moved = body.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? body.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("facade", "minimumMove", current) || travelled >= length) {
                     WorldFeedback.emit(body, facadeScene, 1, body.observe(current.actor()) ? body.observe(current.actor())!.position() : origin, { moment: "whiff" }, 18);

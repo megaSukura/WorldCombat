@@ -46,6 +46,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(psyshieldbashScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("psyshieldbash", "charge", action);
@@ -78,7 +79,7 @@ namespace PokemonSkills {
                     { moment: "shell", scale: scale, stages: stages, ticks: shellTicks, intensity: intensity }, 44);
                 WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.4, 0)), psyshieldShellText, [stages], 26);
             }
-            WorldFeedback.emit(world, psyshieldbashScene, 1, action.origin(), { moment: "drive", scale: scale, intensity: intensity }, 42);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity });
             sound(action, "minecraft:block.beacon.power_select");
 
             function finish(current: CombatAction, landed: boolean): void {
@@ -95,7 +96,7 @@ namespace PokemonSkills {
                         { moment: "reform", scale: scale, stages: stages, shards: stages * 14, intensity: intensity }, 30);
                 }
                 sound(current, landed ? "cobblemon:impact.psychic" : "minecraft:block.beacon.deactivate");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -104,7 +105,8 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current, false); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p("psyshieldbash", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
@@ -119,7 +121,7 @@ namespace PokemonSkills {
                     finish(current, landed);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p("psyshieldbash", "minimumMove", current) || travelled >= length) { finish(current, false); return; }
                 current.after(1, advance);

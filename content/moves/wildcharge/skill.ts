@@ -57,12 +57,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(wildchargeScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("wildcharge", "dash", action);
             const pace = p("wildcharge", "pace", action);
             const radius = p("wildcharge", "radius", action);
-            const traceAhead = p("wildcharge", "traceAhead", action);
             const power = p("wildcharge", "surge", action);
             const recoil = p("wildcharge", "recoil", action);
             const chance = p("wildcharge", "paralyze", action);
@@ -77,10 +77,9 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:block.beacon.activate");
-            WorldFeedback.emit(world, wildchargeScene, 1, start,
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "charge", start, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    length: length, spark: spark, scale: scale, intensity: intensity }, 60);
+                    length: length, spark: spark, scale: scale, intensity: intensity });
 
             function discharge(current: CombatAction): void {
                 const scope = current.world();
@@ -91,7 +90,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), wildchargeMissText, [], 26);
                 }
                 sound(current, "minecraft:entity.lightning_bolt.impact");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -100,7 +99,8 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { discharge(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
@@ -123,14 +123,13 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.3, 0)), wildchargeRecoilText, [], 24);
                     }
                     if (!already && !landed) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), wildchargeShockText, [], 22);
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { discharge(current); return; }
-                WorldFeedback.keep(scope, "wildcharge:wake:" + String(actor.ref()), wildchargeScene, 1, origin,
-                    { moment: "wake", spark: spark, scale: scale }, 8);
+                movementScenes.show(current, "wake", origin, { moment: "wake", spark: spark, scale: scale });
                 current.after(1, advance);
             }
 

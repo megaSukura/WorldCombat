@@ -71,6 +71,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(sacredfireScene);
             const world = action.world();
             const actor = action.actor();
             const smite = !!(config && config.smite);
@@ -85,7 +86,6 @@ namespace PokemonSkills {
             const flameTicks = Math.max(30, Math.round(p("sacredfire", "flameTicks", action)));
             const flamePulse = Math.max(4, Math.round(p("sacredfire", "flamePulse", action)));
             const sparks = Math.max(12, Math.round(p("sacredfire", "sparks", action)));
-            const traceAhead = p("sacredfire", "traceAhead", action);
             const minimumMove = p("sacredfire", "minimumMove", action);
             const cap = Math.max(1, Math.round(p("sacredfire", "maxTargets", action)));
             const direction = aim(action);
@@ -103,10 +103,11 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, sacredfireScene, 1, body !== null ? body.position() : current.origin(),
                     { moment: "fade", sparks: sparks, intensity: intensity }, 24);
                 if (total > 0) WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.3, 0)), sacredfireHitText, [total], 26);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function leaveFlame(current: CombatAction, at: CombatPoint): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 const ground = sacredfireGround(scope, at);
                 let elapsed = 0;
@@ -133,6 +134,7 @@ namespace PokemonSkills {
             }
 
             function strikeAt(current: CombatAction, hit: CombatImpact): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 const target = hit.target();
                 const point = hit.position();
@@ -158,9 +160,10 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, sprint - travelled));
                 if (step <= 0.001) { if (!smite) leaveFlame(current, here); else finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) { strikeAt(current, hit); return; }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= sprint) {
                     const body = scope.observe(actor);
@@ -171,16 +174,14 @@ namespace PokemonSkills {
                     if (!smite) leaveFlame(current, here); else finish(current);
                     return;
                 }
-                WorldFeedback.keep(scope, "sacredfire:trail:" + String(actor.ref()), sacredfireScene, 1, here,
-                    { moment: "dive", sparks: sparks, scale: scale, intensity: intensity }, 8);
+                movementScenes.show(current, "dive", here, { moment: "dive", sparks: sparks, scale: scale, intensity: intensity });
                 current.face(here.plus(direction), 22, 22);
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 
             sound(action, "minecraft:item.firecharge.use");
             const body = world.observe(actor);
-            WorldFeedback.emit(world, sacredfireScene, 1, body !== null ? body.position() : action.origin(),
-                { moment: "risen", smite: smite, sparks: sparks, intensity: intensity }, 18);
+            movementScenes.show(action, "risen", body !== null ? body.position() : action.origin(), { moment: "risen", smite: smite, sparks: sparks, intensity: intensity });
             advance(action);
         }
     });

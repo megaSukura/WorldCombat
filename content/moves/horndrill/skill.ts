@@ -60,6 +60,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(horndrillScene);
             const world = action.world(), actor = action.actor(), target = action.target();
             const origin = action.origin(), direction = aim(action);
             const span = Math.max(4, p(horndrillId, "span", action));
@@ -92,7 +93,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), horndrillMissText, [], 22);
                     scope.sound("minecraft:block.stone.break", at, 12, "{}");
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -100,7 +101,7 @@ namespace PokemonSkills {
                 const remaining = span - travelled;
                 if (remaining <= 0.001) { finish(current, "miss", from); return; }
                 const delta = direction.scale(Math.min(thrust, remaining));
-                const hit = current.trace(from, from.plus(delta.scale(1.3)), girth);
+                const swept = sweepStep(current, delta, girth), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -108,11 +109,10 @@ namespace PokemonSkills {
                         if (result !== "miss") { finish(current, result, hit.position()); return; }
                     }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "horndrill:spin:" + current.id(), horndrillScene, 1, from,
-                    { moment: "bore", target: targetRef, bore: bore, scale: scale,
-                        progress: Math.min(1, travelled / Math.max(0.001, span)) }, 6);
+                movementScenes.show(current, "bore", from, { moment: "bore", target: targetRef, bore: bore, scale: scale,
+                        progress: Math.min(1, travelled / Math.max(0.001, span)) });
                 if (hit.blocked() || moved < 0.03 || travelled >= span) { finish(current, "miss", scope.observe(actor) === null ? from : scope.observe(actor)!.position()); return; }
                 current.after(1, advance);
             }

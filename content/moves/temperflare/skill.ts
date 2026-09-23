@@ -91,22 +91,21 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(temperScene);
             const world = action.world();
             const actor = action.actor();
             const start = world.observe(actor);
-            if (start === null) { done(action); return; }
+            if (start === null) { movementScenes.finish(action, done); return; }
             const direction = aim(action);
             const length = p(temperId, "dash", action);
             const step = p(temperId, "charge", action);
             const radius = p(temperId, "collisionRadius", action);
-            const traceAhead = 1.2;
             const doubled = CombatStatus.has(world, actor, temperStatus);
             let travelled = 0, settled = false;
 
             sound(action, "minecraft:entity.blaze.shoot");
-            WorldFeedback.emit(world, temperScene, 1, start.position(),
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], scale: radius / 0.45,
-                    doubled: doubled ? 1 : 0, intensity: Math.max(0.6, Math.min(2.4, p(temperId, "flare", action) / 75)) }, 30);
+            movementScenes.show(action, "charge", start.position(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], scale: radius / 0.45,
+                    doubled: doubled ? 1 : 0, intensity: Math.max(0.6, Math.min(2.4, p(temperId, "flare", action) / 75)) });
 
             /** 撞上或冲到尽头：结算主目标、爆开溅射、铺焦痕，然后收招。 */
             function detonate(current: CombatAction, point: CombatPoint, primary: CombatImpact | null): void {
@@ -162,21 +161,22 @@ namespace PokemonSkills {
                     { moment: "char", radius: blast, cells: cells, intensity: intensity }, 26);
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)),
                     doubled ? temperRageText : struck > 0 ? temperHitText : temperMissText, doubled || struck > 0 ? [struck] : [], 26);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 if (settled) return;
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && scope.valid(target) && !scope.friendly(target)) { detonate(current, hit.position(), hit); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < 0.05 || travelled >= length) { detonate(current, here.plus(delta), null); return; }
+                if (hit.blocked() || moved < 0.05 || travelled >= length) { detonate(current, current.origin(), null); return; }
                 current.after(1, advance);
             }
             advance(action);

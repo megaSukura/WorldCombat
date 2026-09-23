@@ -37,6 +37,7 @@ public final class MinecraftCombat implements CombatHost {
     }
     private String healthCause = "";
     @Override public BlockObservation block(ActorHandle actor, Point point) { return NativeBlockUse.observe(this, actor, point); }
+    @Override public boolean canSurvive(ActorHandle actor, Point point, String state) { return NativeBlockUse.canSurvive(this, actor, point, state); }
     @Override public RegistryObservation registry(ActorHandle actor, String registry, String id) {
         var entity = resolve(actor); return entity == null ? null : NativeRegistryFacts.entry(entity.registryAccess(), registry, id);
     }
@@ -430,8 +431,15 @@ public final class MinecraftCombat implements CombatHost {
         var hit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(level, source, start, block.getLocation(),
             new AABB(start, block.getLocation()).inflate(radius + 0.5),
             entity -> entity instanceof LivingEntity living && mayHit(source, living, controller), (float) radius);
-        return new Impact(point(hit == null ? block.getLocation() : hit.getLocation()), hit == null ? null : bind((LivingEntity) hit.getEntity()),
+        // The Level overload selects by clipped distance but constructs EntityHitResult(entity), whose location is feet.
+        var contact = hit == null ? block.getLocation() : hit.getEntity().getBoundingBox().inflate((float) radius)
+            .clip(start, block.getLocation()).orElse(start);
+        return new Impact(point(contact), hit == null ? null : bind((LivingEntity) hit.getEntity()),
             hit == null && block.getType() != HitResult.Type.MISS);
+    }
+
+    @Override public Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius) {
+        checkThread(); return NativeBodySweep.move(this, actor, controller, delta, radius);
     }
 
     @Override public boolean damage(ActorHandle actor, ActorHandle target, UUID controllerId, double amount) {

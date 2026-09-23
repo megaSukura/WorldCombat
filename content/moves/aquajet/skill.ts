@@ -53,6 +53,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(aquajetScene);
             const world = action.world();
             const direction = aim(action);
             const length = p(aquajetId, "surge", action);
@@ -69,8 +70,7 @@ namespace PokemonSkills {
             let travelled = 0, hits = 0;
 
             sound(action, "minecraft:item.trident.riptide_1");
-            WorldFeedback.emit(world, aquajetScene, 1, action.origin(),
-                { moment: "jet", scale: scale, spray: spray, intensity: intensity, deluge: deluge ? 1 : 0 }, 40);
+            movementScenes.show(action, "jet", action.origin(), { moment: "jet", scale: scale, spray: spray, intensity: intensity, deluge: deluge ? 1 : 0 });
 
             function strike(current: CombatAction, hit: CombatImpact, victim: CombatActor): void {
                 const scope = current.world();
@@ -109,13 +109,13 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.1, 0)), aquajetMissText, [], 22);
                     scope.sound("minecraft:entity.generic.splash", here, 12, "{}");
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(origin, origin.plus(delta.scale(p(aquajetId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -127,7 +127,7 @@ namespace PokemonSkills {
                         }
                     }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(aquajetId, "minimumMove", current) || travelled >= length) {
                     finish(current);

@@ -60,6 +60,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(flareblitzScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("flareblitz", "charge", action);
@@ -83,12 +84,11 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.flamecharge.actor");
             CombatStatus.cure(world, actor, "frozen");
-            WorldFeedback.emit(world, flareblitzScene, 1, start,
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "charge", start, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    embers: embers, scale: scale, intensity: intensity, afterburn: afterburn ? 1 : 0 }, 64);
+                    embers: embers, scale: scale, intensity: intensity, afterburn: afterburn ? 1 : 0 });
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             /** 冲空：火在脚下熄灭，不自伤；留一道散去的火星与文字。 */
             function skid(current: CombatAction): void {
@@ -107,7 +107,7 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { skid(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     const already = target !== null && scope.valid(target) && CombatStatus.has(scope, target, "burn");
@@ -136,12 +136,11 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { skid(current); return; }
-                WorldFeedback.keep(scope, "flareblitz:wake:" + String(actor.ref()), flareblitzScene, 1, origin,
-                    { moment: "wake", embers: embers, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 14);
+                movementScenes.show(current, "wake", origin, { moment: "wake", embers: embers, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

@@ -64,6 +64,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(endeavorScene);
             const world = action.world(), self = action.actor();
             const vault = !!(config && config.vault);
             const length = p("endeavor", "lunge", action);
@@ -73,11 +74,10 @@ namespace PokemonSkills {
             const stride = p("endeavor", "maximumStride", action);
             const direction = endeavorAim(action);
             const start = world.observe(self);
-            if (start === null) { done(action); return; }
+            if (start === null) { movementScenes.finish(action, done); return; }
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, endeavorScene, 1, action.origin(),
-                { moment: "dash", direction: endeavorVector(direction), scale: radius / 0.45 }, 40);
+            movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: endeavorVector(direction), scale: radius / 0.45 });
             sound(action, "minecraft:entity.player.attack.weak");
 
             /** 收势：落点播 settle，miss 时补一行浮字。命中/空响的浮字已在各自幕里写出。 */
@@ -90,7 +90,7 @@ namespace PokemonSkills {
                     if (body !== null) WorldFeedback.text(current.world(), body.position().plus(WorldCombat.point(0, 1.2, 0)), endeavorMissText, [], 22);
                 }
                 sound(current, missed ? "minecraft:entity.player.attack.sweep" : "minecraft:entity.iron_golem.attack");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function slide(current: CombatAction, remaining: number, left: number): void {
@@ -132,12 +132,12 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { settle(current, true, origin); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(1.3)), radius + stride);
+                const swept = sweepStep(current, delta, radius + stride), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target)) { strike(current, target, hit.position()); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("endeavor", "maximumStride", current) || travelled >= length) {
                     settle(current, true, origin);

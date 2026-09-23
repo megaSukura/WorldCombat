@@ -72,8 +72,9 @@ namespace PokemonSkills {
             return p("flyingpress", "prepare", action);
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(flyingpressScene);
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
-            if (body === null) { done(action); return; }
+            if (body === null) { movementScenes.finish(action, done); return; }
             const target = action.target();
             const leapHeight = Math.max(1.5, p("flyingpress", "leapHeight", action));
             const leapSpeed = Math.max(0.2, p("flyingpress", "leapSpeed", action));
@@ -91,7 +92,7 @@ namespace PokemonSkills {
             const scale = radius / 0.9;
             let finished = false;
 
-            function finish(current: CombatAction): void { if (!finished) { finished = true; done(current); } }
+            function finish(current: CombatAction): void { if (!finished) { finished = true; movementScenes.finish(current, done); } }
             function aimAt(live: CombatWorld): CombatPoint {
                 if (target !== null) { const live2 = live.observe(target); if (live2 !== null && live2.health() > 0) return live2.position(); }
                 return locked;
@@ -122,6 +123,7 @@ namespace PokemonSkills {
                 complete();
             }
             function press(current: CombatAction, at: CombatPoint, hit: CombatImpact | null): void {
+                movementScenes.stop(current);
                 const live = current.world();
                 let landed = false;
                 if (target !== null && live.valid(target)) landed = hit !== null && hit.target() !== null
@@ -142,17 +144,18 @@ namespace PokemonSkills {
                 ground(current, 0, function () { finish(current); });
             }
             function dive(current: CombatAction): void {
+                movementScenes.stop(current, "leap");
                 const live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
                 const at = aimAt(live), from = self.position(), toward = at.minus(from), remaining = toward.length();
                 if (remaining <= Math.max(0.4, radius)) { press(current, at, null); return; }
                 const direction = toward.unit(), step = Math.min(diveSpeed, remaining), delta = direction.scale(step);
-                const trace = current.trace(from, from.plus(delta.scale(traceAhead)), Math.max(0.35, radius * 0.7));
+                const swept = sweepStep(current, delta, Math.max(0.35, radius * 0.7)), trace = swept.hit;
                 const victim = trace.target();
                 if (trace.hitEntity() && victim !== null && !current.sense().friendly(victim)) { press(current, trace.position(), trace); return; }
-                if (trace.blocked()) { press(current, from.plus(delta), null); return; }
-                const moved = live.displace(actor, delta);
-                if (moved < Math.min(0.05, step * 0.4)) { press(current, from, null); return; }
+                if (trace.blocked()) { press(current, current.origin(), null); return; }
+                const moved = swept.moved + (trace.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
+                if (moved < Math.min(0.05, step * 0.4)) { press(current, current.origin(), null); return; }
                 current.after(1, function (next: CombatAction) { dive(next); });
             }
             function rise(current: CombatAction, step: number): void {
@@ -166,8 +169,7 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.aerialace.actor_1");
-            WorldFeedback.emit(world, flyingpressScene, 1, start,
-                { moment: "leap", height: leapHeight, scale: scale, intensity: Math.max(0.7, Math.min(2, power / 100)) }, 26);
+            movementScenes.show(action, "leap", start, { moment: "leap", height: leapHeight, scale: scale, intensity: Math.max(0.7, Math.min(2, power / 100)) });
             rise(action, 0);
         }
     });

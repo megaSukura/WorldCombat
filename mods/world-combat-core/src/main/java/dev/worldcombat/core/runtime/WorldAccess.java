@@ -185,6 +185,10 @@ public final class WorldAccess {
     /** Native environmental facts at a loaded position; interpretation belongs to content. */
     public String environment(Point point) { check(); nearby(point); return runtime.host.environment(source, point); }
     public BlockObservation block(Point point) { check(); nearby(point); return runtime.host.block(source, point); }
+    public boolean canSurvive(Point point, String state) {
+        check(); nearby(point); json(state, 512);
+        return runtime.host.canSurvive(source, point, state);
+    }
     public RegistryObservation registry(String registry, String id) {
         check(); EffectData.id(registry); EffectData.id(id); return runtime.host.registry(source, registry, id);
     }

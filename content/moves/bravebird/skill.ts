@@ -59,6 +59,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(bravebirdScene);
             const world = action.world();
             const actor = action.actor();
             const altitude = p("bravebird", "altitude", action);
@@ -80,8 +81,7 @@ namespace PokemonSkills {
             let struck = 0, settled = false, travelled = 0;
             let direction = action.direction();
 
-            WorldFeedback.emit(world, bravebirdScene, 1, action.origin(),
-                { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0 }, 30);
+            movementScenes.show(action, "climb", action.origin(), { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0 });
             sound(action, "cobblemon:move.aerialace.actor_1");
             sound(action, "cobblemon:animation.plumage.wing_flap.medium");
 
@@ -96,7 +96,7 @@ namespace PokemonSkills {
                         struck > 0 ? bravebirdLandText : bravebirdWhiffText, struck > 0 ? [struck] : [], 26);
                 }
                 sound(current, "minecraft:entity.generic.big_fall");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function dive(current: CombatAction): void {
@@ -105,7 +105,7 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, swoop - travelled));
                 if (step <= 0.001 || struck >= pierceCount) { finish(current); return; }
                 const origin = self.position(), delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target(), point = hit.position();
                     if (victim !== null && !scope.friendly(victim) && !stuck[String(victim.ref())]) {
@@ -123,16 +123,16 @@ namespace PokemonSkills {
                         struck++;
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= swoop) { finish(current); return; }
-                WorldFeedback.keep(scope, "bravebird:trail:" + String(actor.ref()), bravebirdScene, 1, origin,
-                    { moment: "dive", feathers: feathers, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, swoop)) }, 8);
+                movementScenes.show(current, "dive", origin, { moment: "dive", feathers: feathers, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, travelled / Math.max(0.001, swoop)) });
                 current.after(1, function (next) { dive(next); });
             }
 
             function beginDive(current: CombatAction): void {
+                movementScenes.stop(current, "climb");
                 const scope = current.world(), self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
                 const from = self.position();

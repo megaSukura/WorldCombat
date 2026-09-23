@@ -45,6 +45,7 @@ public interface CombatHost {
     boolean mayAct(ActorHandle actor, UUID controller);
     Point position(ActorHandle handle);
     Impact trace(ActorHandle actor, UUID controller, Point from, Point to, double radius);
+    default Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius) { throw new UnsupportedOperationException(); }
     boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount);
     default boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata) { return damage(actor, target, controller, amount); }
     void particle(ActorHandle actor, Point point);
@@ -62,6 +63,7 @@ public interface CombatHost {
     default void face(ActorHandle actor, Point point, double yawSpeed, double pitchSpeed) { throw new UnsupportedOperationException(); }
     default String environment(ActorHandle actor, Point point) { throw new UnsupportedOperationException(); }
     default BlockObservation block(ActorHandle actor, Point point) { throw new UnsupportedOperationException(); }
+    default boolean canSurvive(ActorHandle actor, Point point, String state) { throw new UnsupportedOperationException(); }
     default RegistryObservation registry(ActorHandle actor, String registry, String id) { throw new UnsupportedOperationException(); }
     default ItemObservation item(ActorHandle actor, String id) { throw new UnsupportedOperationException(); }
     default FluidObservation fluid(ActorHandle actor, Point point) { throw new UnsupportedOperationException(); }

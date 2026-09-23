@@ -11,8 +11,8 @@ namespace PokemonSkills {
         function advance(current: CombatAction): void {
             const scope = current.world(), origin = current.origin();
             const delta = direction.scale(Math.min(p(pursuitId, "speed", current), length - travelled));
-            const hit = current.trace(origin, origin.plus(delta.scale(p(pursuitId, "traceAhead", current))),
-                p(pursuitId, "collisionRadius", current));
+            const swept = sweepStep(current, delta, p(pursuitId, "collisionRadius", current));
+            const hit = swept.hit;
             if (hit.hitEntity()) {
                 const target = hit.target();
                 let power = p(pursuitId, "power", current), doubled = false;
@@ -27,7 +27,7 @@ namespace PokemonSkills {
                     doubled ? "world_combat.move.pursuit.text.catch" : "world_combat.move.pursuit.text.hit", [], 30);
                 done(current); return;
             }
-            const moved = scope.displace(current.actor(), delta);
+            const moved = swept.moved;
             travelled += moved;
             if (hit.blocked() || moved < p(pursuitId, "minimumMove", current) || travelled >= length) { done(current); return; }
             current.after(1, advance);

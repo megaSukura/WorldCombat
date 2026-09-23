@@ -13,7 +13,7 @@
  * 与同族分开：魔法叶、高速星星是散成一群、各追各的；千变万花只有一束，命中即绽、必中且必暴。
  */
 namespace PokemonSkills {
-    /** 在落点铺一小片粉色花瓣（租借，linger，到期原方块回来）；返回实际铺出的格数。 */
+    /** 在原生花瓣可生长的地表上方空格铺瓣，租约到期清去花瓣；返回实际铺出的格数。 */
     function flowertrickPetals(world: CombatWorld, point: CombatPoint, cells: number, ticks: number): number {
         const list: any[] = [];
         const limit = Math.max(3, Math.round(cells));
@@ -28,19 +28,21 @@ namespace PokemonSkills {
                     if (block === null) break;
                     const id = String(block.id());
                     if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                    const above = world.block(WorldCombat.point(x, y + 1, z));
+                    const at = WorldCombat.point(x, y + 1, z), above = world.block(at);
                     const over = above === null ? "" : String(above.id());
-                    if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
-                        list.push({ x: x, y: y, z: z, block: "minecraft:pink_petals" });
+                    if ((over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
+                        && world.canSurvive(at, "minecraft:pink_petals"))
+                        list.push({ x: x, y: y + 1, z: z, block: "minecraft:pink_petals", expectedState: above!.state() });
                     break;
                 }
             }
         }
         if (!list.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: list, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
+        try {
+            return JSON.parse(world.terrainResult(JSON.stringify({ cells: list, linger: true, bestEffort: true }),
+                Math.max(40, Math.round(ticks)))).placed.length;
+        }
         catch (error) { return 0; }
-        return list.length;
     }
 
     define({

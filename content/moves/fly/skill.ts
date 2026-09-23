@@ -67,8 +67,9 @@ namespace PokemonSkills {
             return p("fly", "prepare", action);
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(FLY_SCENE);
             var world = action.world(), actor = action.actor(), body = world.observe(actor);
-            if (body === null) { done(action); return; }
+            if (body === null) { movementScenes.finish(action, done); return; }
             var target = action.target();
             var track = flyTrack(config);
             var pin = !track;
@@ -100,7 +101,7 @@ namespace PokemonSkills {
                 if (finished) return;
                 finished = true;
                 MobEffects.consume(current.world(), actor, FLY_AIRBORNE);
-                done(current);
+                movementScenes.finish(current, done);
             }
             function land(current: CombatAction, at: CombatPoint, primary: CombatImpact | null, blocked: boolean): void {
                 var live = current.world(), self = live.observe(actor);
@@ -143,15 +144,16 @@ namespace PokemonSkills {
                 var at = aimAt(live), from = self.position(), toward = at.minus(from), remaining = toward.length();
                 if (remaining <= 0.3) { land(current, at, null, false); return; }
                 var direction = toward.unit(), step = Math.min(diveSpeed, remaining), delta = direction.scale(step);
-                var hit = current.trace(from, from.plus(delta.scale(p("fly", "traceAhead", current))), Math.max(0.4, radius * 0.6));
+                var swept = sweepStep(current, delta, Math.max(0.4, radius * 0.6)), hit = swept.hit;
                 var victim = hit.target();
                 if (hit.hitEntity() && victim !== null && !current.sense().friendly(victim)) { land(current, hit.position(), hit, false); return; }
-                if (hit.blocked()) { land(current, from.plus(delta), null, true); return; }
-                var moved = live.displace(actor, delta);
-                if (moved < Math.min(0.05, step * 0.4)) { land(current, from, null, true); return; }
+                if (hit.blocked()) { land(current, current.origin(), null, true); return; }
+                var moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
+                if (moved < Math.min(0.05, step * 0.4)) { land(current, current.origin(), null, true); return; }
                 current.after(1, function (next) { dive(next); });
             }
             function hover(current: CombatAction, elapsed: number): void {
+                movementScenes.stop(current, "rise");
                 var live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
                 if (elapsed >= hoverTicks) { dive(current); return; }
@@ -175,7 +177,7 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.aerialace.actor_1");
             // The rise column uses fit "none" and reads data.climb directly, so no data.scale here.
-            WorldFeedback.emit(world, FLY_SCENE, 1, ground, { moment: "rise", climb: altitude }, 30);
+            movementScenes.show(action, "rise", ground, { moment: "rise", climb: altitude });
             MobEffects.apply(world, actor, FLY_AIRBORNE, ascendTicks + hoverTicks + 40, 0);
             ascend(action, 0);
         }

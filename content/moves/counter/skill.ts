@@ -75,7 +75,7 @@ namespace PokemonSkills {
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(p(counterId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -95,7 +95,7 @@ namespace PokemonSkills {
                     done(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(counterId, "minimumMove", current) || travelled >= length) { done(current); return; }
                 current.after(1, advance);

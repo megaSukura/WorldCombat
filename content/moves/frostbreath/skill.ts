@@ -15,7 +15,7 @@
  *   表现用同一组扇形顶点画出（path + polygon）。
  */
 namespace PokemonSkills {
-    /** 在落点脚下结出一层霜（租借，linger，到期原方块回来）；返回实际铺出的格数。 */
+    /** 在落点地表上方空格结出一层霜，租约到期清去薄雪；返回实际铺出的格数。 */
     function frostbreathRime(world: CombatWorld, point: CombatPoint, cells: number, ticks: number): number {
         const list: any[] = [];
         const limit = Math.max(4, Math.round(cells));
@@ -30,19 +30,21 @@ namespace PokemonSkills {
                     if (block === null) break;
                     const id = String(block.id());
                     if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                    const above = world.block(WorldCombat.point(x, y + 1, z));
+                    const at = WorldCombat.point(x, y + 1, z), above = world.block(at);
                     const over = above === null ? "" : String(above.id());
-                    if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
-                        list.push({ x: x, y: y, z: z, block: "minecraft:snow" });
+                    if ((over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
+                        && world.canSurvive(at, "minecraft:snow"))
+                        list.push({ x: x, y: y + 1, z: z, block: "minecraft:snow", expectedState: above!.state() });
                     break;
                 }
             }
         }
         if (!list.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: list, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
+        try {
+            return JSON.parse(world.terrainResult(JSON.stringify({ cells: list, linger: true, bestEffort: true }),
+                Math.max(40, Math.round(ticks)))).placed.length;
+        }
         catch (error) { return 0; }
-        return list.length;
     }
 
     /** 水平朝向：瞄准目标，没有目标就朝面前。 */

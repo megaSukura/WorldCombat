@@ -57,12 +57,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(wavecrashScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("wavecrash", "rush", action);
             const pace = p("wavecrash", "pace", action);
             const radius = p("wavecrash", "collisionRadius", action);
-            const traceAhead = p("wavecrash", "traceAhead", action);
             const minimumMove = p("wavecrash", "minimumMove", action);
             const power = p("wavecrash", "surge", action);
             const recoil = p("wavecrash", "recoil", action);
@@ -78,8 +78,7 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.6, power / 115 * boost));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, wavecrashScene, 1, action.origin(),
-                { moment: "surge", spray: spray, scale: scale, intensity: intensity, wet: wet ? 1 : 0, thick: thick ? 1 : 0 }, 60);
+            movementScenes.show(action, "surge", action.origin(), { moment: "surge", spray: spray, scale: scale, intensity: intensity, wet: wet ? 1 : 0, thick: thick ? 1 : 0 });
             sound(action, "cobblemon:move.waterpulse.actor");
             sound(action, "minecraft:item.trident.riptide_1");
 
@@ -93,7 +92,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), wavecrashSpillText, [], 24);
                 }
                 sound(current, "minecraft:entity.generic.splash");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -101,7 +100,8 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { spill(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     const landed = impact(current, hit, "wavecrash", power,
@@ -122,15 +122,14 @@ namespace PokemonSkills {
                         }
                     }
                     settled = true;
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { spill(current); return; }
-                WorldFeedback.keep(scope, "wavecrash:wake:" + String(actor.ref()), wavecrashScene, 1, origin,
-                    { moment: "surge", spray: spray, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 8);
+                movementScenes.show(current, "surge", origin, { moment: "surge", spray: spray, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

@@ -44,6 +44,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(bodypressScene);
             const world = action.world();
             const grind = !(config && config.grind === false);
             const length = p("bodypress", "lunge", action);
@@ -58,8 +59,7 @@ namespace PokemonSkills {
             const clods = Math.max(6, Math.round(shove * 8));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, bodypressScene, 1, action.origin(),
-                { moment: "drive", scale: scale, intensity: intensity, clods: clods }, 60);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity, clods: clods });
             sound(action, "minecraft:entity.ravager.step");
 
             function settle(current: CombatAction, landed: boolean): void {
@@ -74,7 +74,7 @@ namespace PokemonSkills {
                         landed ? bodypressHitText : bodypressMissText, [], 24);
                 }
                 sound(current, landed ? "cobblemon:impact.fighting" : "minecraft:entity.ravager.attack");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             /** 碾推幕：目标与施法者一起沿推进方向移动，把对方一路顶走。 */
@@ -101,7 +101,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { settle(current, false); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p("bodypress", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
@@ -121,7 +121,7 @@ namespace PokemonSkills {
                     settle(current, false);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("bodypress", "minimumMove", current) || travelled >= length) { settle(current, false); return; }
                 current.after(1, advance);

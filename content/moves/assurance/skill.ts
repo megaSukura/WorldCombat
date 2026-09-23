@@ -57,6 +57,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(assuranceScene);
             const direction = aim(action);
             const length = p(assuranceId, "dash", action);
             const step = p(assuranceId, "speed", action);
@@ -66,14 +67,13 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:entity.vex.charge");
-            WorldFeedback.emit(action.world(), assuranceScene, 1, action.origin(),
-                { moment: "lunge", direction: [direction.x(), direction.y(), direction.z()],
-                    quills: Math.round(p(assuranceId, "quills", action)), scale: scale }, 30);
+            movementScenes.show(action, "lunge", action.origin(), { moment: "lunge", direction: [direction.x(), direction.y(), direction.z()],
+                    quills: Math.round(p(assuranceId, "quills", action)), scale: scale });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(p(assuranceId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -94,16 +94,16 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)),
                             wounded ? assuranceAmbushText : assuranceHitText, [], 26);
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(assuranceId, "minimumMove", current) || travelled >= length) {
-                    WorldFeedback.emit(scope, assuranceScene, 1, here.plus(delta), { moment: "miss", scale: scale }, 18);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1.0, 0)), assuranceMissText, [], 24);
+                    WorldFeedback.emit(scope, assuranceScene, 1, current.origin(), { moment: "miss", scale: scale }, 18);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.0, 0)), assuranceMissText, [], 24);
                     sound(current, "minecraft:entity.player.attack.nodamage");
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
                 current.after(1, advance);

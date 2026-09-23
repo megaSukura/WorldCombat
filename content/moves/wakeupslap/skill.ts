@@ -91,7 +91,8 @@ namespace PokemonSkills {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, Math.max(0, length - travelled)));
                 if (delta.length() <= 0.001) { done(current); return; }
-                const hit = current.trace(here, here.plus(delta.scale(p(wakeupslapId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
@@ -124,11 +125,11 @@ namespace PokemonSkills {
                     done(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p(wakeupslapId, "minimumMove", current) || travelled >= length) {
-                    WorldFeedback.emit(scope, wakeupslapScene, 1, here.plus(delta), { moment: "miss", scale: scale }, 30);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1.0, 0)), wakeupslapMissText, [], 22);
+                    WorldFeedback.emit(scope, wakeupslapScene, 1, current.origin(), { moment: "miss", scale: scale }, 30);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.0, 0)), wakeupslapMissText, [], 22);
                     sound(current, "minecraft:entity.player.attack.nodamage");
                     done(current);
                     return;

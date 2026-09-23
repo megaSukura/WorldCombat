@@ -81,13 +81,13 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(zenheadbuttScene);
             const world = action.world();
             const length = p("zenheadbutt", "drive", action);
             const speed = p("zenheadbutt", "cruise", action);
             const turn = p("zenheadbutt", "turnRate", action);
             const tether = p("zenheadbutt", "lockRange", action);
             const radius = p("zenheadbutt", "collisionRadius", action);
-            const traceAhead = p("zenheadbutt", "traceAhead", action);
             const power = p("zenheadbutt", "smash", action);
             const chance = p("zenheadbutt", "flinchChance", action);
             const flinchTicks = Math.round(p("zenheadbutt", "flinchTicks", action));
@@ -104,11 +104,10 @@ namespace PokemonSkills {
 
             WorldFeedback.keep(world, "zenheadbutt:lock", zenheadbuttScene, 1, action.targetPosition(),
                 { moment: "lock", target: target ? String(target.ref()) : "", lock: lockTicks, intensity: intensity }, Math.max(6, lockTicks));
-            WorldFeedback.emit(world, zenheadbuttScene, 1, action.origin(),
-                { moment: "drive", scale: scale, intensity: intensity, turn: Math.round(turn) }, 50);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity, turn: Math.round(turn) });
             sound(action, "minecraft:block.amethyst_block.resonate");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -134,7 +133,8 @@ namespace PokemonSkills {
                     }
                 }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const at = hit.position();
@@ -155,7 +155,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p("zenheadbutt", "minimumMove", current) || travelled >= length) {
                     whiff(current, origin);

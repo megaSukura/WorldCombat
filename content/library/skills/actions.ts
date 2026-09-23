@@ -11,6 +11,13 @@ namespace PokemonSkills {
         var delta = action.targetPosition().minus(action.origin());
         return delta.length() < 0.01 ? action.direction() : delta.unit();
     }
+    /** Native body sweep stops at real contact. Content may spend the untravelled part after resolving that contact. */
+    export function sweepStep(action: CombatAction, delta: CombatPoint, radius: number): { hit: CombatImpact; moved: number; remaining: CombatPoint } {
+        const origin = action.origin(), distance = delta.length();
+        const hit = action.moveSweep(delta, radius);
+        const moved = action.origin().minus(origin).length();
+        return { hit: hit, moved: moved, remaining: distance > 0 ? delta.unit().scale(Math.max(0, distance - moved)) : delta };
+    }
     export function enemies(world: CombatWorld, move: string, point: CombatPoint, radius: number, visit: (target: CombatActor) => void): void {
         var values = world.query(point, radius, false);
         for (var i = 0; i < Math.min(p(move, "maxTargets", world), values.length); i++) {
@@ -34,7 +41,7 @@ namespace PokemonSkills {
         var direction = aim(action), travelled = 0;
         function advance(current: CombatAction): void {
             var world = current.world(), origin = current.origin(), delta = direction.scale(Math.min(p(move, "speed", current), length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p(move, "traceAhead", current))), p(move, "collisionRadius", current));
+            var swept = sweepStep(current, delta, p(move, "collisionRadius", current)), hit = swept.hit;
             if (hit.hitEntity()) {
 
                 var landed = impact(current, hit, move, power);
@@ -50,7 +57,7 @@ namespace PokemonSkills {
                 done(current);
                 return;
             }
-            var moved = world.displace(current.actor(), delta);
+            var moved = swept.moved;
 
             travelled += moved;
             if (hit.blocked() || moved < p(move, "minimumMove", current) || travelled >= length) {

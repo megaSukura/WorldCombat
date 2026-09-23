@@ -56,12 +56,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(takedownScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("takedown", "dash", action);
             const pace = p("takedown", "pace", action);
             const radius = p("takedown", "radius", action);
-            const traceAhead = p("takedown", "traceAhead", action);
             const power = p("takedown", "ram", action);
             const recoil = p("takedown", "recoil", action);
             const shove = p("takedown", "shove", action);
@@ -76,10 +76,9 @@ namespace PokemonSkills {
             const start = action.origin();
             const end = start.plus(direction.scale(length));
             sound(action, "minecraft:entity.player.attack.strong");
-            WorldFeedback.emit(world, takedownScene, 1, start,
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "charge", start, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    length: length, dust: dust, scale: scale, intensity: intensity }, 60);
+                    length: length, dust: dust, scale: scale, intensity: intensity });
 
             function miss(current: CombatAction): void {
                 const scope = current.world();
@@ -89,7 +88,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), takedownMissText, [], 26);
                 }
                 sound(current, "minecraft:block.sand.break");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -98,7 +97,8 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { miss(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
@@ -120,14 +120,13 @@ namespace PokemonSkills {
                             { moment: "recoil", bounce: bounce, scale: scale, intensity: Math.max(0.5, Math.min(2.2, power * recoil / 45)) }, 24);
                         WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.3, 0)), takedownRecoilText, [], 24);
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { miss(current); return; }
-                WorldFeedback.keep(scope, "takedown:wake:" + String(actor.ref()), takedownScene, 1, origin,
-                    { moment: "wake", dust: dust, scale: scale }, 8);
+                movementScenes.show(current, "wake", origin, { moment: "wake", dust: dust, scale: scale });
                 current.after(1, advance);
             }
 

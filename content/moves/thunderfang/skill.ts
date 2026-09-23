@@ -64,6 +64,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(thunderfangScene);
             const world = action.world();
             const direction = aim(action);
             const length = p("thunderfang", "reach", action);
@@ -80,11 +81,10 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.3, power / 65));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, thunderfangScene, 1, action.origin(),
-                { moment: "pounce", direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity }, 22);
+            movementScenes.show(action, "pounce", action.origin(), { moment: "pounce", direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity });
             sound(action, "minecraft:entity.fox.bite");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -95,6 +95,7 @@ namespace PokemonSkills {
             }
 
             function latch(current: CombatAction, victim: CombatActor, at: CombatPoint, contact: CombatImpact): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 const victimRef = String(victim.ref());
                 const wasParalyzed = CombatStatus.has(scope, victim, "paralysis");
@@ -134,12 +135,13 @@ namespace PokemonSkills {
                 const remaining = length - travelled;
                 const delta = direction.scale(Math.min(step, Math.max(0, remaining)));
                 if (remaining <= 0.001) { whiff(current, origin); return; }
-                const hit = current.trace(origin, origin.plus(delta.scale(p("thunderfang", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && scope.valid(target) && !scope.friendly(target)) { latch(current, target, hit.position(), hit); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("thunderfang", "minimumMove", current) || travelled >= length) { whiff(current, origin); return; }
                 current.after(1, advance);

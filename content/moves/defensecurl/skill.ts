@@ -36,9 +36,11 @@ namespace PokemonSkills {
             ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
             : CombatStages.stage(world, actor, stat);
     }
-    /** 事件处理器里没有动作，用本招身份构造一份求值上下文；非宝可梦退回设计默认值。 */
-    function defenseCurlContext(world: CombatWorld, actor: CombatActor): any {
-        return { skill: skills["defensecurl"], world: world, actor: actor, detail: { values: skills["defensecurl"].defaults } };
+    /** 受击时按持有者的现场与偏好求值；其他生物使用参数的设计默认值。 */
+    function defenseCurlValue(world: CombatWorld, actor: CombatActor, key: string): number {
+        return String(actor.domain()) === "cobblemon"
+            ? p("defensecurl", key, { world, actor })
+            : actionParameters.entries("defensecurl")[key].value;
     }
     function defenseCurlConfig(world: CombatWorld, actor: CombatActor): any {
         try { return config(world, actor, "defensecurl"); } catch (error) { return skills["defensecurl"].defaults; }
@@ -54,20 +56,19 @@ namespace PokemonSkills {
         const body = world.observe(victim), source = world.observe(attacker);
         if (body === null || source === null) return;
         const now = world.tick(), key = String(victim.ref());
-        const context = defenseCurlContext(world, victim);
         if (now < (defenseCurlLast[key] || 0)) return;
-        const gap = Math.max(6, Math.round(p("defensecurl", "rollGap", context)));
+        const gap = Math.max(6, Math.round(defenseCurlValue(world, victim, "rollGap")));
         defenseCurlLast[key] = now + gap;
-        const distance = Math.max(0.4, p("defensecurl", "roll", context));
+        const distance = Math.max(0.4, defenseCurlValue(world, victim, "roll"));
         const toward = source.position().minus(body.position());
         if (toward.length() < 0.05) return;
         const settings = defenseCurlConfig(world, victim);
         const counter = Number(settings && settings.counter) === 1;
         const direction = counter ? toward.unit() : toward.unit().scale(-1);
         const moved = world.displace(victim, direction.scale(distance));
-        const spin = Math.max(8, Math.round(p("defensecurl", "spin", context)));
+        const spin = Math.max(8, Math.round(defenseCurlValue(world, victim, "spin")));
         WorldFeedback.emit(world, defenseCurlScene, 1, body.position(),
-            { moment: "roll", actor: key, roll: Math.round(moved * 100) / 100, spin: spin, counter: counter ? 1 : 0,
+            { moment: "roll", target: key, roll: Math.round(moved * 100) / 100, spin: spin, counter: counter ? 1 : 0,
                 direction: [direction.x(), direction.y(), direction.z()],
                 intensity: Math.max(0.7, Math.min(2, moved / 1.4 + spin / 48)) }, 22);
         world.sound("minecraft:entity.armadillo.roll", body.position(), 12, "{}");

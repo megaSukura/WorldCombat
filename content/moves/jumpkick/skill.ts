@@ -85,10 +85,11 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(jumpkickScene);
             const world = action.world();
             const actor = action.actor();
             const self = world.observe(actor);
-            if (self === null) { done(action); return; }
+            if (self === null) { movementScenes.finish(action, done); return; }
 
             const leapHeight = Math.max(1.2, p("jumpkick", "leapHeight", action));
             const leapSpeed = Math.max(0.2, p("jumpkick", "leapSpeed", action));
@@ -112,14 +113,14 @@ namespace PokemonSkills {
                 : jumpkickGround(world, action.targetPosition(), 0.7);
             let finished = false;
 
-            function finish(current: CombatAction): void { if (!finished) { finished = true; done(current); } }
+            function finish(current: CombatAction): void { if (!finished) { finished = true; movementScenes.finish(current, done); } }
 
             sound(action, "minecraft:entity.player.attack.strong");
-            WorldFeedback.emit(world, jumpkickScene, 1, start,
-                { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust,
-                    path: [[start.x(), start.y(), start.z()], [locked.x(), apexY, locked.z()]] }, 30);
+            movementScenes.show(action, "leap", start, { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust,
+                    path: [[start.x(), start.y(), start.z()], [locked.x(), apexY, locked.z()]] });
 
             function settle(current: CombatAction): void {
+                movementScenes.stop(current);
                 const live = current.world(), me = live.observe(actor);
                 if (me === null) { finish(current); return; }
                 jumpkickResetFall(live, actor);
@@ -184,6 +185,7 @@ namespace PokemonSkills {
             }
 
             function dive(current: CombatAction): void {
+                movementScenes.stop(current, "leap");
                 const live = current.world(), me = live.observe(actor);
                 if (me === null) { finish(current); return; }
                 const from = me.position();
@@ -197,7 +199,8 @@ namespace PokemonSkills {
                 const dir = toward.unit();
                 const stepLen = Math.min(diveSpeed, distance);
                 const delta = dir.scale(stepLen);
-                const trace = current.trace(from, from.plus(dir.scale(Math.max(stepLen, hitRadius))), hitRadius);
+                jumpkickResetFall(live, actor);
+                const swept = sweepStep(current, delta, hitRadius), trace = swept.hit;
                 if (trace.hitEntity()) {
                     const victim = trace.target();
                     if (victim !== null && String(victim.ref()) !== String(actor.ref()) && !live.friendly(victim)) {
@@ -205,14 +208,12 @@ namespace PokemonSkills {
                         return;
                     }
                 }
-                if (trace.blocked()) { resolve(current, from.plus(delta.scale(0.5)), dir); return; }
-                jumpkickResetFall(live, actor);
-                const moved = live.displace(actor, delta);
-                if (moved < Math.min(0.06, stepLen * 0.4)) { resolve(current, from, dir); return; }
-                WorldFeedback.keep(live, "jumpkick:dive:" + String(actor.ref()), jumpkickScene, 1, from,
-                    { moment: "dive", scale: scale, intensity: intensity, hitRadius: hitRadius,
+                if (trace.blocked()) { resolve(current, current.origin(), dir); return; }
+                const moved = swept.moved + (trace.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
+                if (moved < Math.min(0.06, stepLen * 0.4)) { resolve(current, current.origin(), dir); return; }
+                movementScenes.show(current, "dive", from, { moment: "dive", scale: scale, intensity: intensity, hitRadius: hitRadius,
                         direction: [dir.x(), dir.y(), dir.z()],
-                        path: [[from.x(), from.y(), from.z()], [locked.x(), locked.y(), locked.z()]] }, 5);
+                        path: [[from.x(), from.y(), from.z()], [locked.x(), locked.y(), locked.z()]] });
                 current.after(1, function (next) { dive(next); });
             }
 
@@ -231,8 +232,7 @@ namespace PokemonSkills {
                 const delta = WorldCombat.point(flat < 0.01 ? 0 : flatX / flat * horiz, up, flat < 0.01 ? 0 : flatZ / flat * horiz);
                 jumpkickResetFall(live, actor);
                 live.displace(actor, delta);
-                WorldFeedback.keep(live, "jumpkick:rise:" + String(actor.ref()), jumpkickScene, 1, me.position(),
-                    { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust }, 6);
+                movementScenes.show(current, "leap", me.position(), { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust });
                 current.after(1, function (next) { rise(next, step + 1); });
             }
 

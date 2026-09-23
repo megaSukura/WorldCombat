@@ -76,23 +76,25 @@ namespace PokemonSkills {
     }
 
     function secretpowerStrike(action: CombatAction, plain: boolean, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(SECRETPOWER_SCENE);
         var direction = aim(action), power = p("secretpower", "power", action);
-        WorldFeedback.emit(action.world(), SECRETPOWER_SCENE, 1, action.origin(), { moment: "travel", intensity: 1, scale: 1 }, 20);
+        movementScenes.show(action, "travel", action.origin(), { moment: "travel", intensity: 1, scale: 1 });
         var travelled = 0, length = p("secretpower", "distance", action);
         function advance(current: CombatAction): void {
             var world = current.world(), origin = current.origin(),
                 delta = direction.scale(Math.min(p("secretpower", "speed", current), length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("secretpower", "traceAhead", current))), p("secretpower", "collisionRadius", current));
+            var swept = sweepStep(current, delta, p("secretpower", "collisionRadius", current));
+            var hit = swept.hit;
             if (hit.hitEntity()) {
                 secretpowerHit(current, hit, plain, direction, power);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
-            var moved = world.displace(current.actor(), delta);
+            var moved = swept.moved;
             travelled += moved;
             if (hit.blocked() || moved < p("secretpower", "minimumMove", current) || travelled >= length) {
-                WorldFeedback.emit(world, SECRETPOWER_SCENE, 1, hit.position(), { moment: "travel", intensity: 1, scale: 1 }, 12);
-                done(current);
+                movementScenes.show(current, "travel", hit.position(), { moment: "travel", intensity: 1, scale: 1 });
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

@@ -66,12 +66,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(trailblazeScene);
             const world = action.world();
             const actor = action.actor();
             const stride = p("trailblaze", "leap", action);
             const pace = p("trailblaze", "pace", action);
             const radius = p("trailblaze", "girth", action);
-            const traceAhead = p("trailblaze", "traceAhead", action);
             const minimumMove = p("trailblaze", "minimumMove", action);
             const power = p("trailblaze", "strike", action);
             const haste = Math.max(1, Math.round(p("trailblaze", "haste", action)));
@@ -86,15 +86,15 @@ namespace PokemonSkills {
             const landing = origin.plus(direction.scale(stride));
             const arc = origin.plus(direction.scale(stride / 2)).plus(WorldCombat.point(0, 1.1 + stride * 0.16, 0));
             // 起跳的整体预告：一条抬起的草绿弧线，玩家一眼看出这一跳会画到哪里。
-            WorldFeedback.emit(world, trailblazeScene, 1, origin, {
+            movementScenes.show(action, "launch", origin, {
                 moment: "launch", cover: cover, veil: veil, scale: scale, intensity: intensity,
                 bloom: cover ? veil : 0,
                 path: [[origin.x(), origin.y(), origin.z()], [arc.x(), arc.y(), arc.z()], [landing.x(), landing.y(), landing.z()]]
-            }, 26);
+            });
             sound(action, "minecraft:block.grass.break");
             if (cover) WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), trailblazeGrassText, [], 24);
             let travelled = 0, struck = false, settled = false;
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function strikeNow(current: CombatAction, hit: CombatImpact): void {
                 const scope = current.world(), target = hit.target(), point = hit.position();
@@ -110,13 +110,14 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, stride - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity() && !struck) {
                     struck = true;
                     strikeNow(current, hit);
                     if (!overshoot) { finish(current); return; }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= stride) {
                     if (!struck) {
@@ -129,8 +130,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                WorldFeedback.keep(scope, "trailblaze:wake:" + String(actor.ref()), trailblazeScene, 1, here,
-                    { moment: "wake", cover: cover, veil: veil, scale: scale }, 8);
+                movementScenes.show(current, "wake", here, { moment: "wake", cover: cover, veil: veil, scale: scale });
                 current.after(1, advance);
             }
             advance(action);

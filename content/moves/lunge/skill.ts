@@ -64,10 +64,11 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(lungeScene);
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null) { done(action); return; }
+            if (target === null) { movementScenes.finish(action, done); return; }
             const power = p("lunge", "pounce", action);
             const length = Math.max(1.4, p("lunge", "reach", action));
             const cruise = Math.max(0.4, p("lunge", "leap", action));
@@ -75,7 +76,6 @@ namespace PokemonSkills {
             const push = Math.max(0.2, p("lunge", "push", action));
             const stages = Math.max(1, Math.round(p("lunge", "stages", action)));
             const chitin = Math.max(10, Math.round(p("lunge", "chitin", action)));
-            const traceAhead = 1.15;
             const scale = Math.max(0.6, Math.min(2.2, radius / 0.5));
             const intensity = Math.max(0.6, Math.min(2.4, power / 70));
             const direction = lungeHeading(aim(action));
@@ -90,7 +90,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), lungeScene, 1, at, { moment: "miss", chitin: chitin, scale: scale, intensity: intensity }, 22);
                     WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.0, 0)), lungeMissText, [], 20);
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function strike(current: CombatAction, hit: CombatImpact): void {
@@ -121,12 +121,12 @@ namespace PokemonSkills {
                 const step = Math.min(cruise, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) { strike(current, hit); return; }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
-                WorldFeedback.keep(scope, "lunge:leap:" + action.id(), lungeScene, 1, origin,
-                    { moment: "leap", direction: [direction.x(), direction.y(), direction.z()], chitin: chitin, scale: scale, intensity: intensity }, 12);
+                movementScenes.show(current, "leap", origin, { moment: "leap", direction: [direction.x(), direction.y(), direction.z()], chitin: chitin, scale: scale, intensity: intensity });
                 if (hit.blocked() || moved < lungeMinimumMove || travelled >= length) { finish(current); return; }
                 current.after(1, advance);
             }

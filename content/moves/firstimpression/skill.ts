@@ -59,6 +59,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(firstimpressionScene);
             const world = action.world();
             const direction = aim(action);
             const length = p(firstimpressionId, "leap", action);
@@ -71,21 +72,20 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "cobblemon:move.quickattack.actor");
-            WorldFeedback.emit(world, firstimpressionScene, 1, action.origin(),
-                { moment: "dive", scale: scale, count: count, stride: Math.max(3, Math.round(length / 0.7)) }, 40);
+            movementScenes.show(action, "dive", action.origin(), { moment: "dive", scale: scale, count: count, stride: Math.max(3, Math.round(length / 0.7)) });
 
             function land(current: CombatAction, moment: string, textKey: string): void {
                 const scope = current.world(), here = current.origin();
                 WorldFeedback.emit(scope, firstimpressionScene, 1, here, { moment: moment, scale: scale }, moment === "miss" ? 22 : 26);
                 WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.1, 0)), textKey, [], 24);
                 scope.sound(moment === "miss" ? "minecraft:entity.player.attack.sweep" : "cobblemon:impact.bug", here, 16, "{}");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(p(firstimpressionId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -101,10 +101,10 @@ namespace PokemonSkills {
                         if (landed) WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), firstimpressionHitText,
                             [Math.round(power)], 26);
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(firstimpressionId, "minimumMove", current) || travelled >= length) {
                     land(current, "miss", firstimpressionMissText);

@@ -158,10 +158,8 @@ namespace PokemonSkills {
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
-                const victimBody = target !== null && scope.valid(target) ? scope.observe(target) : null;
                 const delta = heading.scale(Math.min(step, length - travelled));
-                const goal = victimBody !== null ? victimBody.position() : here.plus(heading.scale(length + radius + 0.5));
-                const traced = current.trace(here, goal, radius);
+                const swept = sweepStep(current, delta, radius), traced = swept.hit;
                 if (traced.hitEntity()) {
                     const victim = traced.target();
                     let landed = false, at: CombatPoint | null = null;
@@ -182,11 +180,11 @@ namespace PokemonSkills {
                     crossOver(current, at !== null ? at : traced.position());
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (traced.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (traced.blocked() || moved < 0.05 || travelled >= length) {
-                    WorldFeedback.emit(scope, flipturnScene, 1, here.plus(delta), { moment: "miss", motes: motes, wet: wet ? 1 : 0, scale: scale }, 18);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1, 0)), flipturnMissText, [], 20);
+                    WorldFeedback.emit(scope, flipturnScene, 1, current.origin(), { moment: "miss", motes: motes, wet: wet ? 1 : 0, scale: scale }, 18);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1, 0)), flipturnMissText, [], 20);
                     sound(current, "minecraft:entity.player.attack.nodamage");
                     crossOver(current, null);
                     return;

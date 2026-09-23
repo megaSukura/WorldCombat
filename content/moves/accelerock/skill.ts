@@ -149,7 +149,7 @@ namespace PokemonSkills {
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const delta = direction.scale(Math.min(pace, length - travelled));
-                const hit = current.trace(origin, origin.plus(delta.scale(p(accelerockId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 let stop = false;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
@@ -170,10 +170,10 @@ namespace PokemonSkills {
                     } else stop = true;
                 }
                 if (stop) { finish(current, hit.position(), "smash"); return; }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(accelerockId, "minimumMove", current) || travelled >= length) {
-                    finish(current, origin.plus(delta), "miss");
+                    finish(current, current.origin(), "miss");
                     return;
                 }
                 current.after(1, advance);

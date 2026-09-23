@@ -67,6 +67,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(smartstrikeScene);
             const world = action.world();
             const actor = action.actor();
             const focus = !!(config && config.focus);
@@ -82,13 +83,12 @@ namespace PokemonSkills {
             let settled = false;
 
             sound(action, "minecraft:entity.wind_charge.throw");
-            WorldFeedback.emit(world, smartstrikeScene, 1, action.origin(),
-                { moment: "charge", scale: scale, focus: focus }, 20);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", scale: scale, focus: focus });
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function miss(current: CombatAction): void {
@@ -97,7 +97,7 @@ namespace PokemonSkills {
                 const scope = current.world();
                 WorldFeedback.emit(scope, smartstrikeScene, 1, current.origin(), { moment: "miss", scale: scale }, 18);
                 WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.2, 0)), smartstrikeMissText, [], 20);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             /** 角刺结算；目标防御越高，公式里的加成越大。 */
@@ -128,7 +128,7 @@ namespace PokemonSkills {
                     scope.sound("minecraft:item.trident.hit", at, 12, "{}");
                 }
                 settled = true;
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -145,12 +145,13 @@ namespace PokemonSkills {
                 heading = smartstrikeSteer(heading, desired, steering);
                 const step = Math.min(speed, Math.max(0.05, distance - radius));
                 const delta = heading.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(1.4)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const other = hit.target();
                     if (other !== null && !scope.friendly(other)) { stab(current, other, hit.position()); return; }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= lockRange + 3) { miss(current); return; }
                 current.after(1, advance);

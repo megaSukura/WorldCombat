@@ -20,8 +20,7 @@ namespace PokemonSkills {
         function advance(current: CombatAction): void {
             const scope = current.world(), origin = current.origin();
             const delta = direction.scale(Math.min(p(fellstingerId, "speed", current), length - travelled));
-            const hit = current.trace(origin, origin.plus(delta.scale(p(fellstingerId, "traceAhead", current))),
-                p(fellstingerId, "collisionRadius", current));
+            const swept = sweepStep(current, delta, p(fellstingerId, "collisionRadius", current)), hit = swept.hit;
             if (hit.hitEntity()) {
                 const target = hit.target(), power = p(fellstingerId, "power", current);
                 const landed = target && !scope.friendly(target) ? impact(current, hit, fellstingerId, power) : false;
@@ -32,7 +31,7 @@ namespace PokemonSkills {
                 if (landed && target && fellstingerDefeated(scope, target)) fellstingerRise(current, target);
                 done(current); return;
             }
-            const moved = scope.displace(current.actor(), delta);
+            const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
             travelled += moved;
             if (hit.blocked() || moved < p(fellstingerId, "minimumMove", current) || travelled >= length) { done(current); return; }
             current.after(1, advance);

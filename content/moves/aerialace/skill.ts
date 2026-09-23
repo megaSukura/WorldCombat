@@ -52,6 +52,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(aerialaceScene);
             const world = action.world();
             const actor = action.actor();
             const skim = !!(config && config.skim);
@@ -80,7 +81,7 @@ namespace PokemonSkills {
                 if (body !== null)
                     WorldFeedback.emit(scope, aerialaceScene, 1, body.position(),
                         { moment: "past", cuts: cuts, scale: scale, skim: skim }, 20);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function miss(current: CombatAction): void {
@@ -89,7 +90,7 @@ namespace PokemonSkills {
                 const scope = current.world();
                 WorldFeedback.emit(scope, aerialaceScene, 1, current.origin(), { moment: "miss", scale: scale }, 18);
                 WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.2, 0)), aerialaceMissText, [], 20);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             /** 一刀路扫到某人：按刀数重复结算，全部挥空则不算命中。 */
@@ -129,7 +130,7 @@ namespace PokemonSkills {
                 const step = Math.min(speed, pursuit - travelled);
                 if (step <= 0.001) { finish(current); return; }
                 const delta = heading.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(1.5)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && !scope.friendly(victim) && !struck[String(victim.ref())]) {
@@ -137,14 +138,13 @@ namespace PokemonSkills {
                         strike(current, victim, hit.position(), selected !== null && String(victim.ref()) === String(selected.ref()));
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= pursuit - 0.001) { finish(current); return; }
                 current.after(1, advance);
             }
 
-            WorldFeedback.emit(world, aerialaceScene, 1, start,
-                { moment: "dash", cuts: cuts, scale: scale, intensity: intensity, skim: skim }, 16);
+            movementScenes.show(action, "dash", start, { moment: "dash", cuts: cuts, scale: scale, intensity: intensity, skim: skim });
 
             if (selected === null || !world.valid(selected)) { miss(action); return; }
             advance(action);

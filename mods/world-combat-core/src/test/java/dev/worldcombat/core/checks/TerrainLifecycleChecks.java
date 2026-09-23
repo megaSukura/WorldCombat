@@ -47,6 +47,7 @@ public final class TerrainLifecycleChecks {
                 TestWorld.prepare(server);
                 Cow source = TestWorld.mob(EntityType.COW, level, 2);
                 actor = combat.bind(source);
+                survivalFacts(combat, level);
                 var player = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), "TerrainChecker"));
                 player.moveTo(8, 100, 4, 0, 0);
                 player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
@@ -186,6 +187,21 @@ public final class TerrainLifecycleChecks {
     private static void reset(ServerLevel level) {
         level.setBlockAndUpdate(CELL, Blocks.STONE.defaultBlockState());
         level.setBlockAndUpdate(CELL.above(), Blocks.AIR.defaultBlockState());
+    }
+    private static void survivalFacts(MinecraftCombat combat, ServerLevel level) {
+        var surface = CELL.above(); var at = point(surface);
+        level.setBlockAndUpdate(surface, Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(CELL, Blocks.DIRT.defaultBlockState());
+        TestWorld.require(combat.canSurvive(actor, at, "minecraft:pink_petals"), "Native plant substrate was rejected");
+        TestWorld.require(level.getBlockState(surface).isAir() && level.getBlockState(CELL).is(Blocks.DIRT), "Survival probe changed terrain");
+        level.setBlockAndUpdate(CELL, Blocks.STONE.defaultBlockState());
+        TestWorld.require(!combat.canSurvive(actor, at, "minecraft:pink_petals"), "Plant probe accepted an unsupported substrate");
+        TestWorld.require(combat.canSurvive(actor, at, "minecraft:snow[layers=2]"), "Native snow support/state syntax was rejected");
+        level.setBlockAndUpdate(CELL, Blocks.ICE.defaultBlockState());
+        TestWorld.require(!combat.canSurvive(actor, at, "minecraft:snow"), "Native snow substrate exclusion was ignored");
+        TestWorld.require(!combat.canSurvive(actor, at, "minecraft:snow[layers=99]"), "Invalid native state was accepted");
+        TestWorld.require(!combat.canSurvive(actor, new Point(10, level.getMaxBuildHeight(), 4), "minecraft:snow"), "Outside-build-height probe was accepted");
+        reset(level);
     }
     private static Point point(BlockPos pos) { return new Point(pos.getX(), pos.getY(), pos.getZ()); }
     private static void stone(ServerLevel level, String reason) { TestWorld.require(level.getBlockState(CELL).is(Blocks.STONE), reason); }

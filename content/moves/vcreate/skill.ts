@@ -58,6 +58,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(vcreateScene);
             const world = action.world();
             const actor = action.actor();
             const direction = aim(action);
@@ -70,7 +71,6 @@ namespace PokemonSkills {
             const guardLoss = Math.max(0, Math.round(p(vcreateId, "guardLoss", action)));
             const poiseLoss = Math.max(0, Math.round(p(vcreateId, "poiseLoss", action)));
             const speedLoss = Math.max(0, Math.round(p(vcreateId, "speedLoss", action)));
-            const traceAhead = p(vcreateId, "traceAhead", action);
             const minimumMove = p(vcreateId, "minimumMove", action);
             const nova = !!(config && config.nova);
             const scale = Math.max(0.6, Math.min(2.0, radius / 0.5));
@@ -101,7 +101,7 @@ namespace PokemonSkills {
                     { moment: "slump", flames: flames, scale: scale, intensity: intensity, landed: struck ? 1 : 0,
                         guardLoss: guardLoss, poiseLoss: poiseLoss, speedLoss: speedLoss }, 26);
                 WorldFeedback.text(scope, at.plus(up), vcreateSlumpText, [guardLoss, poiseLoss, speedLoss], 30);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -109,7 +109,8 @@ namespace PokemonSkills {
                 const remaining = charge - travelled;
                 if (remaining <= 0.001) { finish(current); return; }
                 const delta = direction.scale(Math.min(rush, remaining));
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -127,11 +128,10 @@ namespace PokemonSkills {
                         return;
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "vcreate:hurl:" + current.id(), vcreateScene, 1, origin,
-                    { moment: "hurl", nova: nova ? 1 : 0, flames: flames, scale: scale, intensity: intensity,
-                        progress: Math.min(1, travelled / Math.max(0.001, charge)) }, 8);
+                movementScenes.show(current, "hurl", origin, { moment: "hurl", nova: nova ? 1 : 0, flames: flames, scale: scale, intensity: intensity,
+                        progress: Math.min(1, travelled / Math.max(0.001, charge)) });
                 if (hit.blocked() || moved < minimumMove || travelled >= charge) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }

@@ -52,6 +52,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(smellingsaltsScene);
             const direction = aim(action);
             const length = p(smellingsaltsId, "reach", action);
             const step = p(smellingsaltsId, "step", action);
@@ -63,14 +64,14 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:block.snow.break");
-            WorldFeedback.emit(action.world(), smellingsaltsScene, 1, action.origin(),
-                { moment: "slap", direction: [direction.x(), direction.y(), direction.z()],
-                    puff: Math.round(p(smellingsaltsId, "puff", action)), scale: scale }, 24);
+            movementScenes.show(action, "slap", action.origin(), { moment: "slap", direction: [direction.x(), direction.y(), direction.z()],
+                    puff: Math.round(p(smellingsaltsId, "puff", action)), scale: scale });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(1.2)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -97,16 +98,16 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)),
                             numb ? smellingsaltsWakeText : smellingsaltsHitText, [], 26);
                     }
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= length) {
-                    WorldFeedback.emit(scope, smellingsaltsScene, 1, here.plus(delta), { moment: "miss", scale: scale }, 18);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1.0, 0)), smellingsaltsMissText, [], 24);
+                    WorldFeedback.emit(scope, smellingsaltsScene, 1, current.origin(), { moment: "miss", scale: scale }, 18);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.0, 0)), smellingsaltsMissText, [], 24);
                     sound(current, "minecraft:entity.player.attack.nodamage");
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
                 current.after(1, advance);

@@ -57,12 +57,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(sparkScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("spark", "reach", action);
             const pace = p("spark", "lunge", action);
             const radius = p("spark", "radius", action);
-            const traceAhead = p("spark", "traceAhead", action);
             const minimumMove = p("spark", "minimumMove", action);
             const power = p("spark", "jolt", action);
             const chance = p("spark", "numbChance", action);
@@ -78,12 +78,11 @@ namespace PokemonSkills {
             let travelled = 0, settled = false;
 
             sound(action, "cobblemon:move.thundershock.actor");
-            WorldFeedback.emit(world, sparkScene, 1, start,
-                { moment: "dash", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "dash", start, { moment: "dash", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    arcs: arcs, scale: scale, intensity: intensity, overcharge: overcharge ? 1 : 0 }, 36);
+                    arcs: arcs, scale: scale, intensity: intensity, overcharge: overcharge ? 1 : 0 });
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function fizzle(current: CombatAction): void {
                 const scope = current.world(), body = scope.observe(current.actor());
@@ -101,7 +100,8 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { fizzle(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     let finisher = false;
@@ -128,11 +128,10 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { fizzle(current); return; }
-                WorldFeedback.keep(scope, "spark:wake:" + String(actor.ref()), sparkScene, 1, origin,
-                    { moment: "wake", arcs: arcs, scale: scale, intensity: intensity }, 7);
+                movementScenes.show(current, "wake", origin, { moment: "wake", arcs: arcs, scale: scale, intensity: intensity });
                 current.after(1, advance);
             }
 

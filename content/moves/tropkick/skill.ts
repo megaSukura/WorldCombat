@@ -64,10 +64,11 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(tropkickScene);
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null) { done(action); return; }
+            if (target === null) { movementScenes.finish(action, done); return; }
             const launchMode = !!(config && config.launch === true);
             const power = p("tropkick", "kick", action);
             const length = Math.max(1.2, p("tropkick", "lunge", action));
@@ -78,7 +79,6 @@ namespace PokemonSkills {
             const launchHeight = Math.max(0.4, p("tropkick", "launch", action));
             const embers = Math.max(10, Math.round(p("tropkick", "embers", action)));
             const scorch = Math.max(0.8, p("tropkick", "scorch", action));
-            const traceAhead = 1.15;
             const scale = Math.max(0.6, Math.min(2.2, radius / 0.48));
             const intensity = Math.max(0.6, Math.min(2.4, power / 62));
             const direction = tropkickHeading(aim(action));
@@ -94,7 +94,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), tropkickScene, 1, at, { moment: "miss", embers: embers, scale: scale, intensity: intensity }, 22);
                     WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.0, 0)), tropkickMissText, [], 20);
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function strike(current: CombatAction, hit: CombatImpact): void {
@@ -130,12 +130,12 @@ namespace PokemonSkills {
                 const step = Math.min(cruise, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) { strike(current, hit); return; }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
-                WorldFeedback.keep(scope, "tropkick:step:" + action.id(), tropkickScene, 1, origin,
-                    { moment: "kick", direction: [direction.x(), direction.y(), direction.z()], embers: embers, scale: scale, intensity: intensity }, 12);
+                movementScenes.show(current, "kick", origin, { moment: "kick", direction: [direction.x(), direction.y(), direction.z()], embers: embers, scale: scale, intensity: intensity });
                 if (hit.blocked() || moved < tropkickMinimumMove || travelled >= length) { finish(current); return; }
                 current.after(1, advance);
             }

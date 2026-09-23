@@ -38,6 +38,8 @@ function checkPublicFormulaInputs(world: CombatWorld, action: CombatAction, effe
     });
     const native: PokemonSkills.NumberContext = PokemonSkills.parameterContext("fixture", pokemon);
     PokemonSkills.p("fixture", "amount", native);
+    const partial: PokemonSkills.FactContext = { world, actor: world.source(), skill: native.skill };
+    PokemonSkills.p("fixture", "amount", partial);
     // @ts-expect-error Native catalogue contributors require an individual.
     const requiredIndividual: PokemonSkills.NumberContext = PokemonSkills.factContext(world);
 }
@@ -249,6 +251,33 @@ check('value, scope.read, inspection, growth and runtime modifiers share one res
   source.storage.delete('world_combat:preferences/sample_a');
   assert.throws(() => { const registry = new sandbox.ActionParameters.Registry(); registry.factsOf = () => ({ read: () => undefined });
     registry.define('fixture', { value: { value: 0, label: '', formula: F.const(1).div(0) } }); registry.value('fixture', 'value', {}); }, /Invalid value/);
+});
+check('partial native scopes fill missing inputs while preserving authored configuration and facts', () => {
+  const partial = Object.freeze({ world, actor: source, skill });
+  const normalized = P.parameterContext(skill.id, partial);
+  assert.equal(normalized.skill, skill);
+  assert.equal(normalized.pokemon.id(), source.key());
+  assert.equal(normalized.attributes.actor, source);
+  assert.equal(P.p(skill.id, 'power', partial), 71, 'Native contributors receive the resolved individual');
+  P.preferences.update(skill.id, source.key(), { factor: 3 }, P.storage(world, source));
+  assert.equal(P.p(skill.id, 'power', normalized), 98, 'Omitted configuration follows current preferences');
+  const detail = Object.freeze({ values: Object.freeze({ factor: 4 }) });
+  const attributes = normalized.attributes, snapshot = D.sourceFacts(nativeSnapshot(source), world, source);
+  const variables = { 'custom.factor': 9 }, suppliedFacts = { read: () => undefined };
+  const authored = Object.freeze({ ...partial, detail, attributes, sourceFacts: snapshot, variables, facts: suppliedFacts });
+  const explicit = P.parameterContext(skill.id, authored);
+  assert.equal(explicit.detail, detail); assert.equal(explicit.attributes, attributes);
+  assert.equal(explicit.sourceFacts, snapshot); assert.equal(explicit.variables, variables); assert.equal(explicit.facts, suppliedFacts);
+  assert.equal(P.p(skill.id, 'power', explicit), 125, 'Explicit configuration keeps its value');
+  assert.equal(P.p(skill.id, 'provided', explicit), 36, 'Explicit facts remain available');
+  assert.equal(Object.hasOwn(partial, 'pokemon'), false, 'Caller context remains unchanged');
+  let detailReads = 0, attributeReads = 0;
+  const lazy = { ...partial, get detail() { detailReads++; return detail; }, get attributes() { attributeReads++; return attributes; } };
+  const lazyScope = P.parameterContext(skill.id, lazy);
+  assert.equal(detailReads, 0); assert.equal(attributeReads, 0);
+  assert.equal(lazyScope.detail, detail); assert.equal(lazyScope.attributes, attributes);
+  assert.equal(detailReads, 1); assert.equal(attributeReads, 1);
+  source.storage.delete('world_combat:preferences/sample_a');
 });
 check('damage metadata resolvers share source facts, defaults and source-side settlement', () => {
   const metadata = { category: 'special', type: 'water', power: 45 }, calls = [];

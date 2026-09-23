@@ -32,6 +32,7 @@ namespace PokemonSkills {
     }
 
     function knockoffStrike(action: CombatAction, done: (current: CombatAction) => void): void {
+        const movementScenes = WorldFeedback.actionScenes(knockoffScene);
         var world = action.world(), actor = action.actor();
         var direction = aim(action), length = p("knockoff", "reach", action), speed = p("knockoff", "step", action);
         var radius = p("knockoff", "collisionRadius", action), push = p("knockoff", "push", action);
@@ -39,15 +40,15 @@ namespace PokemonSkills {
         var pickup = p("knockoff", "pickup", action), motes = p("knockoff", "motes", action);
         var body = world.observe(actor), scale = body ? (body.width() + body.height()) / 2.3 : 1;
         sound(action, "minecraft:entity.player.attack.weak");
-        WorldFeedback.emit(world, knockoffScene, 1, action.origin(), { moment: "raise", scale: scale, motes: Math.round(motes) }, 28);
+        movementScenes.show(action, "raise", action.origin(), { moment: "raise", scale: scale, motes: Math.round(motes) });
         var travelled = 0;
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
-            var hit = current.trace(origin, origin.plus(delta.scale(p("knockoff", "traceAhead", current))), radius);
+            var swept = sweepStep(current, delta, radius), hit = swept.hit;
             if (hit.hitEntity()) {
                 var target = hit.target();
-                if (target === null || scope.friendly(target)) { done(current); return; }
+                if (target === null || scope.friendly(target)) { movementScenes.finish(current, done); return; }
                 var point = hit.position();
                 var before = scope.observe(target), maximum = before ? Math.max(1, before.maxHealth()) : 1;
                 var held = NativeItems.heldOf(scope, target);
@@ -75,16 +76,16 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffBareText, [], 28);
                 }
                 if (landed && scope.valid(target)) scope.displace(target, direction.scale(push));
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
-            var moved = scope.displace(actor, delta);
+            var moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
             travelled += moved;
             if (hit.blocked() || moved < p("knockoff", "minimumMove", current) || travelled >= length) {
                 WorldFeedback.emit(scope, knockoffScene, 1, hit.position(), { moment: "miss", scale: scale }, 20);
                 var self = scope.observe(actor);
                 if (self !== null) WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.1, 0)), knockoffMissText, [], 22);
-                done(current);
+                movementScenes.finish(current, done);
                 return;
             }
             current.after(1, advance);

@@ -63,12 +63,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(submissionScene);
             const world = action.world();
             const actor = action.actor();
             const reach = p("submission", "reach", action);
             const pace = p("submission", "pace", action);
             const radius = p("submission", "gripRadius", action);
-            const traceAhead = p("submission", "traceAhead", action);
             const grip = Math.max(1, Math.round(p("submission", "gripTicks", action)));
             const power = p("submission", "slam", action);
             const recoil = p("submission", "recoil", action);
@@ -85,10 +85,9 @@ namespace PokemonSkills {
             const start = action.origin();
             const end = start.plus(direction.scale(reach));
             sound(action, "minecraft:entity.player.attack.strong");
-            WorldFeedback.emit(world, submissionScene, 1, start,
-                { moment: "lunge", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "lunge", start, { moment: "lunge", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    dust: dust, scale: scale, intensity: intensity }, 60);
+                    dust: dust, scale: scale, intensity: intensity });
 
             function whiff(current: CombatAction, key: string): void {
                 const scope = current.world();
@@ -98,7 +97,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), key, [], 28);
                 }
                 sound(current, "minecraft:block.sand.break");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function slam(current: CombatAction, victim: CombatActor | null): void {
@@ -134,10 +133,11 @@ namespace PokemonSkills {
                     whiff(current, submissionLostText);
                     return;
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function grab(current: CombatAction, victim: CombatActor, point: CombatPoint): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 // 抓住：目标与自己都被固定住，给对手一个看得见的挣脱/被打断窗口。
                 WorldEffects.apply(scope, victim, "rooted", {}, grip);
@@ -157,16 +157,16 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, reach - travelled));
                 if (step <= 0.001) { whiff(current, submissionMissText); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity() && hit.target() !== null) {
                     grab(current, hit.target()!, hit.position());
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= reach) { whiff(current, submissionMissText); return; }
-                WorldFeedback.keep(scope, "submission:wake:" + String(actor.ref()), submissionScene, 1, origin,
-                    { moment: "wake", dust: dust, scale: scale }, 8);
+                movementScenes.show(current, "wake", origin, { moment: "wake", dust: dust, scale: scale });
                 current.after(1, lunge);
             }
 

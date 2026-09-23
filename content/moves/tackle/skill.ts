@@ -1,11 +1,4 @@
-/**
- * 撞击 / tackle 的出手方式。
- *
- * 念头的形状：压低身子起一段短助跑（windup，提交前只播预告）→ 沿瞄准方向逐刻推进（run）→
- * 撞上活体的一刻用整个身体结算接触伤害、把目标轻轻顶开（impact）→ 顺着冲势从对方身侧滑过去（slip）。
- * 撞空则一路跑到助跑尽头（miss），位置留在更前面——它是一招可以拿来做走位的冲撞。
- * 命中 100 落成“不瞄偏”；两幕：run → impact + slip。提交后才触碰世界。
- */
+/** 逐刻加速助跑，在原生身体接触后结算伤害，再分四拍向身侧减速滑开。 */
 namespace PokemonSkills {
     const tackleScene = "world_combat:move_tackle";
     const tackleHitText = "world_combat.move.tackle.text.hit";
@@ -16,8 +9,8 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "tackle",
         name: "Tackle",
-        description: "压低身子跑一小段，用整个身体撞上去，再顺着冲势从对方身侧滑过去。跑得越快、身体越重，这一下越沉；撞空就一路冲到助跑尽头。",
-        uses: ["拉开距离时的一记短助跑冲撞", "撞开一步把对手顶离掩体", "顺手从对方身侧穿过去换位"],
+        description: "迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开。跑得越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
+        uses: ["拉开距离时的一记短助跑冲撞", "撞开一步把对手顶离掩体", "撞后向身侧滑开，调整站位"],
         kind: "enemy",
         range: 3,
         maxRange: 6,
@@ -39,7 +32,7 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:move_tackle:windup", tackleScene, 1, action.origin(), JSON.stringify({ moment: "windup" }));
+            action.present("tackle:motion", tackleScene, 1, action.origin(), JSON.stringify({ moment: "windup", duration: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -50,13 +43,16 @@ namespace PokemonSkills {
             const power = p("tackle", "power", action);
             const push = p("tackle", "push", action);
             const carry = p("tackle", "carry", action);
-            const direction = aim(action);
+            const aimed = aim(action), horizontal = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const direction = horizontal.length() > 0.001 ? horizontal.unit() : WorldCombat.point(0, 0, 1);
+            const heading = [direction.x(), direction.y(), direction.z()];
             const scale = radius / 0.42;
             const intensity = Math.max(0.5, Math.min(1.9, power / 62));
-            let travelled = 0, settled = false;
+            let travelled = 0, beats = 0, settled = false, motionMoment = "run";
 
-            WorldFeedback.emit(world, tackleScene, 1, action.origin(),
-                { moment: "run", scale: scale, stride: Math.max(3, Math.round(length / 0.8)), intensity: intensity }, 46);
+            action.releaseTarget();
+            action.present("tackle:motion", tackleScene, 1, action.origin(),
+                JSON.stringify({ moment: "run", direction: heading, scale: scale }));
             sound(action, "minecraft:entity.player.attack.weak");
 
             function land(current: CombatAction, moment: string, textKey: string): void {
@@ -64,52 +60,70 @@ namespace PokemonSkills {
                 settled = true;
                 const scope = current.world();
                 const body = scope.observe(current.actor());
+                current.present("tackle:motion", tackleScene, 1, current.origin(),
+                    JSON.stringify({ moment: motionMoment, lifecycle: { reason: "settled", tick: scope.tick() } }));
                 if (body !== null) {
+                    scope.motion(current.actor(), WorldCombat.point(0, body.velocity().y(), 0), false);
                     WorldFeedback.emit(scope, tackleScene, 1, body.position(),
-                        { moment: moment, scale: scale, brake: Math.max(4, Math.round(carry * 6)) }, 24);
+                        { moment: moment === "miss" ? "miss" : "stop", scale: scale, direction: heading }, 10);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), textKey, [], 22);
                 }
-                sound(current, moment === "miss" ? "minecraft:entity.player.attack.sweep" : "cobblemon:impact.normal");
+                sound(current, moment === "miss" ? "minecraft:entity.player.attack.sweep" : "minecraft:block.gravel.step");
                 done(current);
             }
 
-            /** 穿过幕：撞实后顺势从对方身侧滑过去，撞到墙或滑完就收势。 */
-            function slip(current: CombatAction, remaining: number, elapsed: number): void {
-                if (remaining <= 0.02 || elapsed >= 8) { land(current, "slip", tackleThroughText); return; }
+            /** 接触后向身侧滑开；四拍逐渐减速，原生碰撞决定实际余程。 */
+            function slip(current: CombatAction, remaining: number, elapsed: number, side: CombatPoint): void {
+                if (remaining <= 0.001 || elapsed >= 4) { land(current, "slip", tackleThroughText); return; }
                 const scope = current.world();
                 const body = scope.observe(current.actor());
                 if (body === null) { land(current, "slip", tackleThroughText); return; }
-                const moved = scope.displace(current.actor(), direction.scale(Math.min(speed * 0.55, remaining)));
-                if (moved < p("tackle", "minimumMove", current)) { land(current, "slip", tackleThroughText); return; }
-                current.after(1, function (next: CombatAction) { slip(next, remaining - moved, elapsed + 1); });
+                const weight = [0.4, 0.3, 0.2, 0.1][elapsed];
+                const requested = Math.min(remaining, carry * weight);
+                const glide = side.scale(elapsed < 2 ? 0.94 : 0.66).plus(direction.scale(elapsed < 2 ? 0.35 : 0.75)).unit();
+                const moved = scope.displace(current.actor(), glide.scale(requested));
+                if (moved < Math.min(p("tackle", "minimumMove", current), requested * 0.5)) { land(current, "slip", tackleThroughText); return; }
+                current.after(1, function (next: CombatAction) { slip(next, remaining - moved, elapsed + 1, side); });
+            }
+
+            function startSlip(current: CombatAction, distance: number): void {
+                const scope = current.world(), body = scope.observe(current.actor());
+                let side = WorldCombat.point(-direction.z(), 0, direction.x());
+                if (body) {
+                    const end = body.position().plus(side.scale(distance * 0.8)).plus(direction.scale(distance * 0.4));
+                    if (!scope.freeSpace(end.minus(WorldCombat.point(0, body.height() * 0.5, 0)), body.width(), body.height())) side = side.scale(-1);
+                }
+                motionMoment = "slip";
+                current.present("tackle:motion", tackleScene, 1, current.origin(),
+                    JSON.stringify({ moment: "slip", direction: heading, scale: scale }));
+                // Keep contact and the ensuing side-step on distinct server beats.
+                current.after(1, next => slip(next, distance, 0, side));
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world();
-                const origin = current.origin();
-                const step = Math.min(speed, Math.max(0, length - travelled));
+                const step = Math.min(speed * Math.min(1, 0.55 + beats++ * 0.25), Math.max(0, length - travelled));
                 if (step <= 0.001) { land(current, "miss", tackleMissText); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p("tackle", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
+                travelled += swept.moved;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
                     const landed = impact(current, hit, "tackle", power, { damage: damageSpec("tackle", "power"), contact: true });
                     WorldFeedback.emit(scope, tackleScene, 1, point,
-                        { moment: "impact", target: target !== null ? String(target.ref()) : "", scale: scale, intensity: intensity }, 26);
+                        { moment: "impact", direction: heading, scale: scale, intensity: intensity }, 10);
                     if (landed && target !== null && scope.valid(target)) {
                         scope.displace(target, direction.scale(push));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), tackleHitText, [], 22);
                         sound(current, "cobblemon:impact.normal");
-                        slip(current, carry, 0);
+                        startSlip(current, carry);
                         return;
                     }
-                    slip(current, carry * 0.5, 0);
+                    startSlip(current, carry * 0.5);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
-                travelled += moved;
-                if (hit.blocked() || moved < p("tackle", "minimumMove", current) || travelled >= length) {
+                if (hit.blocked() || swept.moved < p("tackle", "minimumMove", current) || travelled >= length) {
                     land(current, "miss", tackleMissText);
                     return;
                 }

@@ -53,7 +53,6 @@ namespace PokemonSkills {
             const plumes = Math.max(8, Math.round(p(powertripId, "plumes", action)));
             const scale = Math.max(0.7, Math.min(1.9, radius / 0.45));
             const intensity = Math.max(0.6, Math.min(2.6, power / 60));
-            const traceAhead = 1.15;
             const seens: { [ref: string]: boolean } = Object.create(null);
             let travelled = 0, hits = 0;
 
@@ -73,7 +72,8 @@ namespace PokemonSkills {
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim === null || !scope.valid(victim) || scope.friendly(victim)) { finish(current, hits > 0, hit.position()); return; }
@@ -96,9 +96,9 @@ namespace PokemonSkills {
                     }
                     // 穿过已撞过的目标继续冲，去找下一个。
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < 0.05 || travelled >= length) { finish(current, hits > 0, here.plus(delta)); return; }
+                if (hit.blocked() || moved < 0.05 || travelled >= length) { finish(current, hits > 0, current.origin()); return; }
                 current.after(1, advance);
             }
             advance(action);

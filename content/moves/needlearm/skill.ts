@@ -91,6 +91,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(needlearmScene);
             const world = action.world();
             const actor = action.actor();
             const direction = aim(action);
@@ -109,7 +110,7 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.2, power / 70));
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -121,8 +122,7 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.razorleaf.actor_1");
             // 扑（drive）：带刺手臂拢着叶与刺向前压上；emitter 绑 source，随扑出的身形铺开。
-            WorldFeedback.keep(world, "needlearm:drive:" + action.id(), needlearmScene, 1, action.origin(),
-                { moment: "drive", thorns: thorns, scale: scale, intensity: intensity }, 30);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", thorns: thorns, scale: scale, intensity: intensity });
 
             function advance(current: CombatAction): void {
                 const scope = current.world();
@@ -130,7 +130,8 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { whiff(current, origin); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(p(needlearmId, "traceAhead", current))), grip);
+                const swept = sweepStep(current, delta, grip);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target(), at = hit.position();
                     const landed = victim !== null && impact(current, hit, needlearmId, power,
@@ -160,7 +161,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p(needlearmId, "minimumMove", current) || travelled >= length) {
                     whiff(current, origin);

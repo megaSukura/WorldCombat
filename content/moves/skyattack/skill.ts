@@ -70,13 +70,13 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(skyattackScene);
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
             const altitude = p("skyattack", "altitude", action);
             const descend = p("skyattack", "descend", action);
             const radius = p("skyattack", "impactRadius", action);
-            const traceAhead = p("skyattack", "traceAhead", action);
             const minimumMove = p("skyattack", "minimumMove", action);
             const power = p("skyattack", "plunge", action);
             const chance = p("skyattack", "flinchChance", action);
@@ -93,10 +93,11 @@ namespace PokemonSkills {
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function land(current: CombatAction, at: CombatPoint, struck: boolean): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 WorldFeedback.emit(scope, skyattackScene, 1, at,
                     { moment: "land", shock: shock, scale: scale, intensity: intensity, struck: struck ? 1 : 0, highDive: highDive ? 1 : 0 }, 26);
@@ -109,12 +110,14 @@ namespace PokemonSkills {
             }
 
             function plunge(current: CombatAction): void {
+                movementScenes.stop(current, "rise");
                 const scope = current.world(), self = scope.observe(actor);
                 if (self === null) { land(current, dropPoint, false); return; }
                 const here = self.position(), delta = dropPoint.minus(here), gap = delta.length();
                 if (gap <= 0.4) { land(current, dropPoint, false); return; }
                 const step = Math.min(descend, gap), direction = delta.unit();
-                const hit = current.trace(here, here.plus(direction.scale(step + traceAhead)), radius);
+                const swept = sweepStep(current, direction.scale(step), radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && String(victim.ref()) !== String(actor.ref()) && !scope.friendly(victim)) {
@@ -136,11 +139,10 @@ namespace PokemonSkills {
                         return;
                     }
                 }
-                const moved = scope.displace(actor, direction.scale(step));
-                if (hit.blocked() || moved < minimumMove) { land(current, self.position(), false); return; }
-                WorldFeedback.keep(scope, "skyattack:fall:" + action.id(), skyattackScene, 1, self.position(),
-                    { moment: "fall", shock: shock, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, 1 - gap / Math.max(0.001, altitude)) }, 8);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
+                if (hit.blocked() || moved < minimumMove) { land(current, current.origin(), false); return; }
+                movementScenes.show(current, "fall", self.position(), { moment: "fall", shock: shock, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, 1 - gap / Math.max(0.001, altitude)) });
                 current.after(1, function (next: CombatAction) { plunge(next); });
             }
 
@@ -153,16 +155,14 @@ namespace PokemonSkills {
                 const step = Math.min(descend, remaining);
                 const moved = scope.displace(actor, WorldCombat.point(0, step, 0));
                 if (moved < step * 0.5) { plunge(current); return; }
-                WorldFeedback.keep(scope, "skyattack:rise:" + action.id(), skyattackScene, 1, self.position(),
-                    { moment: "rise", shock: shock, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, (climbed + moved) / Math.max(0.001, altitude)) }, 8);
+                movementScenes.show(current, "rise", self.position(), { moment: "rise", shock: shock, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, (climbed + moved) / Math.max(0.001, altitude)) });
                 current.after(1, function (next: CombatAction) { rise(next, climbed + moved); });
             }
 
             sound(action, "minecraft:entity.breeze.charge");
             sound(action, "minecraft:entity.phantom.flap");
-            WorldFeedback.emit(world, skyattackScene, 1, action.origin(),
-                { moment: "rise", shock: shock, scale: scale, intensity: intensity, ratio: 0 }, 24);
+            movementScenes.show(action, "rise", action.origin(), { moment: "rise", shock: shock, scale: scale, intensity: intensity, ratio: 0 });
             rise(action, 0);
         }
     });

@@ -51,6 +51,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(extremespeedScene);
             const world = action.world();
             const direction = aim(action);
             const length = p(extremespeedId, "burst", action);
@@ -67,8 +68,7 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "cobblemon:move.quickattack.actor");
-            WorldFeedback.emit(world, extremespeedScene, 1, action.origin(),
-                { moment: "leap", scale: scale, wake: wake, intensity: intensity, overrun: overrun ? 1 : 0 }, 44);
+            movementScenes.show(action, "leap", action.origin(), { moment: "leap", scale: scale, wake: wake, intensity: intensity, overrun: overrun ? 1 : 0 });
 
             function conclude(current: CombatAction, moment: string, textKey: string, at: CombatPoint): void {
                 const scope = current.world();
@@ -76,7 +76,7 @@ namespace PokemonSkills {
                     { moment: "miss", scale: scale, wake: wake }, 22);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), textKey, [], 24);
                 scope.sound(moment === "miss" ? "minecraft:entity.player.attack.sweep" : "cobblemon:impact.normal", at, 16, "{}");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function carryOn(current: CombatAction, remaining: number, elapsed: number, at: CombatPoint): void {
@@ -99,8 +99,8 @@ namespace PokemonSkills {
                     if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                 }
                 if (!overrun || carry <= 0.02) { conclude(current, "ram", extremespeedHitText, hit.position()); return; }
-                WorldFeedback.emit(scope, extremespeedScene, 1, hit.position(),
-                    { moment: "through", target: String(victim.ref()), carry: carry, wake: wake, scale: scale }, 26);
+                movementScenes.stop(current, "leap");
+                movementScenes.show(current, "through", hit.position(), { moment: "through", target: String(victim.ref()), carry: carry, wake: wake, scale: scale });
                 WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)), extremespeedThroughText, [], 22);
                 carryOn(current, carry, 0, hit.position());
             }
@@ -108,15 +108,15 @@ namespace PokemonSkills {
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(origin, origin.plus(delta.scale(p(extremespeedId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) { ram(current, hit, victim); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(extremespeedId, "minimumMove", current) || travelled >= length) {
-                    conclude(current, "miss", extremespeedMissText, origin.plus(delta));
+                    conclude(current, "miss", extremespeedMissText, current.origin());
                     return;
                 }
                 current.after(1, advance);

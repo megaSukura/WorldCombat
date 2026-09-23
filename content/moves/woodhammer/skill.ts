@@ -92,6 +92,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(woodhammerScene);
             const world = action.world();
             const actor = action.actor();
             const rise = p("woodhammer", "rise", action);
@@ -121,7 +122,7 @@ namespace PokemonSkills {
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                if (!pending.length) { done(current); return; }
+                if (!pending.length) { movementScenes.finish(current, done); return; }
                 const refs = pending.slice();
                 // 等这一发的伤害结算完的下一刻再压速度（与伤害同一刻会互相顶掉）。
                 current.after(1, function (next: CombatAction) {
@@ -130,12 +131,13 @@ namespace PokemonSkills {
                         const victim = scope.actor(refs[i]);
                         if (victim !== null && scope.valid(victim)) NativeEffects.boost(scope, victim, "spe", -stagger);
                     }
-                    done(next);
+                    movementScenes.finish(next, done);
                 });
             }
 
             /** 落地：无论是砸中人还是砸空，落点周围的地表都裂开。 */
             function crash(current: CombatAction, at: CombatPoint, hit: CombatImpact | null): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 const placed = woodhammerScar(scope, at, crackRadius, crackTicks, cracks);
                 const body = scope.observe(actor);
@@ -160,7 +162,8 @@ namespace PokemonSkills {
                 if (guard > 50 || heading.length() < 0.05) { crash(current, here, null); return; }
                 const step = Math.min(pace, heading.length());
                 const delta = heading.unit().scale(step);
-                const impactHit = current.trace(here, here.plus(delta.scale(1.4)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const impactHit = swept.hit;
                 if (impactHit.hitEntity() && impactHit.target() !== null && !scope.friendly(impactHit.target()!)) {
                     const victim = impactHit.target()!, point = impactHit.position();
                     const landed = impact(current, impactHit, "woodhammer", power,
@@ -173,10 +176,9 @@ namespace PokemonSkills {
                     crash(current, point, impactHit);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (impactHit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 if (moved < minimumMove) { crash(current, here, null); return; }
-                WorldFeedback.keep(scope, "woodhammer:fall:" + String(actor.ref()), woodhammerScene, 1, here,
-                    { moment: "fall", splinters: splinters, scale: scale, intensity: intensity }, 8);
+                movementScenes.show(current, "fall", here, { moment: "fall", splinters: splinters, scale: scale, intensity: intensity });
                 current.after(1, function (next) { slam(next, guard + 1); });
             }
 

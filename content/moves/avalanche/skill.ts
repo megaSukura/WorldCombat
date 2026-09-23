@@ -74,6 +74,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(avalancheScene);
             const direction = aim(action);
             const length = p(avalancheId, "reach", action);
             const step = p(avalancheId, "step", action);
@@ -87,14 +88,13 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:block.powder_snow.place");
-            WorldFeedback.emit(action.world(), avalancheScene, 1, action.origin(),
-                { moment: "roll", direction: [direction.x(), direction.y(), direction.z()],
-                    shards: shards, battered: battered ? 1 : 0, scale: scale }, 30);
+            movementScenes.show(action, "roll", action.origin(), { moment: "roll", direction: [direction.x(), direction.y(), direction.z()],
+                    shards: shards, battered: battered ? 1 : 0, scale: scale });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(p(avalancheId, "traceAhead", current))), radius * 0.6);
+                const swept = sweepStep(current, delta, radius * 0.6), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
@@ -133,16 +133,16 @@ namespace PokemonSkills {
                     scope.sound(landed ? "cobblemon:impact.ice" : "minecraft:block.glass.break", point, 16, "{}");
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.15, 0)),
                         landed ? (battered ? avalancheCrashText : avalancheHitText) : avalancheMissText, [], 26);
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p(avalancheId, "minimumMove", current) || travelled >= length) {
-                    WorldFeedback.emit(scope, avalancheScene, 1, here.plus(delta), { moment: "miss", scale: scale }, 20);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1.0, 0)), avalancheMissText, [], 24);
+                    WorldFeedback.emit(scope, avalancheScene, 1, current.origin(), { moment: "miss", scale: scale }, 20);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.0, 0)), avalancheMissText, [], 24);
                     sound(current, "minecraft:entity.player.attack.nodamage");
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
                 current.after(1, advance);

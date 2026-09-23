@@ -60,12 +60,12 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(volttackleScene);
             const world = action.world();
             const actor = action.actor();
             const length = p("volttackle", "charge", action);
             const pace = p("volttackle", "pace", action);
             const radius = p("volttackle", "radius", action);
-            const traceAhead = p("volttackle", "traceAhead", action);
             const minimumMove = p("volttackle", "minimumMove", action);
             const power = p("volttackle", "surge", action);
             const recoil = p("volttackle", "recoil", action);
@@ -86,12 +86,11 @@ namespace PokemonSkills {
             let travelled = 0, settled = false;
 
             sound(action, "minecraft:block.beacon.activate");
-            WorldFeedback.emit(world, volttackleScene, 1, start,
-                { moment: "rush", direction: [direction.x(), direction.y(), direction.z()],
+            movementScenes.show(action, "rush", start, { moment: "rush", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    sparks: sparks, scale: scale, intensity: intensity, discharge: discharge ? 1 : 0 }, 58);
+                    sparks: sparks, scale: scale, intensity: intensity, discharge: discharge ? 1 : 0 });
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             /** 冲空：积蓄的电就地在脚下泄放，不自伤。 */
             function vent(current: CombatAction): void {
@@ -133,7 +132,8 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { vent(current); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     const already = target !== null && scope.valid(target) && CombatStatus.has(scope, target, "paralysis");
@@ -160,12 +160,11 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { vent(current); return; }
-                WorldFeedback.keep(scope, "volttackle:wake:" + String(actor.ref()), volttackleScene, 1, origin,
-                    { moment: "wake", sparks: sparks, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 8);
+                movementScenes.show(current, "wake", origin, { moment: "wake", sparks: sparks, scale: scale, intensity: intensity,
+                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

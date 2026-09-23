@@ -78,26 +78,30 @@ namespace PokemonSkills {
     /**
      * 原生招式目录的上下文：现场 actor 属于 Cobblemon；通用行为体公式使用 factsOf(source)。
      * 动作／世界／效果提供现场与当前偏好；只传 CombatPokemon 时使用该招默认偏好，现场事实缺省。
+     * 部分 FactContext 按现场补齐原生个体、偏好与属性；显式提供的招式、配置与事实继续沿用。
      * resolve／indicator 已拿到配置时，可显式传 NumberContext（detail.values 放这份配置）；
      * world、actor 只在有现场时提供。配置与世界输入在每次求值时读取，公式只缓存结构。
      */
     export function parameterContext(id: string, source: ParameterSource): NumberContext {
         const scope = factContext(source);
         requirePokemon(scope);
-        if (scope.skill) return <NumberContext>scope;
         const world = scope.world || null, actor = scope.actor || null;
         // Casting reads a handful of numbers per tick; the individual storage and the preference config are
         // only materialised when a rule actually asks for them.
-        const context: any = { skill: skills[id], world, actor, action: scope.action || null };
-        if (scope.target) context.target = scope.target;
-        Object.defineProperty(context, "pokemon", { enumerable: true, get: () => requirePokemon(scope) });
+        const context: FactContext = Object.create(scope);
+        if (!scope.skill) Object.defineProperty(context, "skill", { enumerable: true, value: skills[id] });
+        Object.defineProperty(context, "pokemon", { enumerable: true, get: () => scope.pokemon || requirePokemon(scope) });
         Object.defineProperty(context, "attributes", { enumerable: true, get: () => {
+            const supplied = scope.attributes;
+            if (supplied !== undefined) return supplied;
             return world && actor && world.valid(actor) && String(actor.domain()) === "cobblemon" ? IndividualAttributes.live(world, actor) : undefined;
         } });
         Object.defineProperty(context, "detail", { enumerable: true, get: () => {
-            return { values: world && actor && world.valid(actor) && String(actor.domain()) === "cobblemon" ? config(world, actor, id) : skills[id].defaults };
+            const supplied = scope.detail;
+            if (supplied !== undefined) return supplied;
+            return { values: world && actor && world.valid(actor) && String(actor.domain()) === "cobblemon" ? config(world, actor, id) : context.skill!.defaults };
         } });
-        return context;
+        return <NumberContext>context;
     }
     /** The same public input and explanation are used in the action and the recalled party detail page. */
     export function attribute<T>(scope: RuleValues.Scope<NumberContext>, id: string): T {

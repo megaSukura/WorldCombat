@@ -125,6 +125,7 @@ for ((name, script) in mapOf(
     "checkFormulaContext" to "tools/check-formula-context.mjs",
     "checkMoveDescriptions" to "tools/check-move-descriptions.mjs",
     "checkActionsEffects" to "tools/check-actions-effects.mjs",
+    "checkBodySweep" to "tools/check-body-sweep.mjs",
     "checkImpactLifecycle" to "tools/check-impact-lifecycle.mjs",
     "checkAiDispatch" to "tools/check-ai-dispatch.mjs",
     "checkContentIsolation" to "tools/check-content-isolation.mjs",

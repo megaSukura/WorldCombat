@@ -52,6 +52,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(boltbeakScene);
             const direction = aim(action);
             const length = p(boltbeakId, "dart", action);
             const step = p(boltbeakId, "speed", action);
@@ -60,7 +61,7 @@ namespace PokemonSkills {
             const scale = radius / 0.4;
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function retreat(current: CombatAction, backward: CombatPoint): void {
                 const scope = current.world();
@@ -83,7 +84,7 @@ namespace PokemonSkills {
                     return;
                 }
                 const delta = direction.scale(Math.min(step, remaining));
-                const hit = current.trace(here, here.plus(delta.scale(p(boltbeakId, "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -105,11 +106,10 @@ namespace PokemonSkills {
                     current.after(2, function (later: CombatAction) { retreat(later, direction.scale(-1)); });
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "boltbeak:dart:" + current.id(), boltbeakScene, 1, here,
-                    { moment: "dart", scale: scale, charge: Math.min(1, travelled / Math.max(0.001, length)),
-                        sparks: Math.round(10 + Math.min(1, travelled / Math.max(0.001, length)) * 40) }, 8);
+                movementScenes.show(current, "dart", here, { moment: "dart", scale: scale, charge: Math.min(1, travelled / Math.max(0.001, length)),
+                        sparks: Math.round(10 + Math.min(1, travelled / Math.max(0.001, length)) * 40) });
                 if (hit.blocked() || moved < p(boltbeakId, "minimumMove", current)) {
                     const body = scope.observe(current.actor());
                     if (body !== null) WorldFeedback.emit(scope, boltbeakScene, 1, body.position(), { moment: "miss", scale: scale }, 18);

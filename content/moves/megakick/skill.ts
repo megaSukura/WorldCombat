@@ -57,6 +57,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(megakickScene);
             const world = action.world();
             const length = p("megakick", "lunge", action);
             const pace = Math.max(0.2, p("megakick", "pace", action));
@@ -68,9 +69,8 @@ namespace PokemonSkills {
             const scale = self === null ? 1 : (self.width() + self.height()) / 2.3;
             let travelled = 0, overrun = false, settled = false;
 
-            WorldFeedback.emit(world, megakickScene, 1, action.origin(),
-                { moment: "drive", direction: [direction.x(), direction.y(), direction.z()],
-                    stride: Math.max(3, Math.round(length / 0.55)), scale: scale, launch: launch ? 1 : 0 }, 30);
+            movementScenes.show(action, "drive", action.origin(), { moment: "drive", direction: [direction.x(), direction.y(), direction.z()],
+                    stride: Math.max(3, Math.round(length / 0.55)), scale: scale, launch: launch ? 1 : 0 });
             sound(action, "minecraft:entity.player.attack.strong");
 
             function settle(current: CombatAction, moment: string, textKey: string): void {
@@ -83,7 +83,7 @@ namespace PokemonSkills {
                     if (textKey) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), textKey, [], 22);
                 }
                 sound(current, moment === "whiff" ? "minecraft:entity.player.attack.weak" : "cobblemon:impact.fighting");
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             /** 结算对一名目标的踢击：伤害 + 抛飞。目标体重只有在这里才读得到。 */
@@ -117,7 +117,8 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, budget - travelled));
                 if (step <= 0.001) { settle(current, "whiff", megakickMissText); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(1.1)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target) && scope.valid(target)) {
@@ -128,7 +129,7 @@ namespace PokemonSkills {
                     settle(current, "whiff", megakickMissText);
                     return;
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05) { settle(current, "whiff", megakickMissText); return; }
                 if (travelled >= length && !overrun) overrun = true;

@@ -90,7 +90,6 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("eager", text("worldcombat.skill.quickattack.preference.eager")), F.const(4), F.const(0)))
                 .clamp(10, 28).round(0),
             "冷却", "这一下之后多久能再抢一次；全族最短。速度快的个体回得更快，抢拍式更费。"),
-        traceAhead: hidden(1.2),
         minimumMove: hidden(0.05)
     });
 

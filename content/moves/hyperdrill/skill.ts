@@ -73,6 +73,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(hyperdrillScene);
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
@@ -106,14 +107,14 @@ namespace PokemonSkills {
                         strikes: strikes, grains: grains, scale: scale, intensity: Math.max(0.6, Math.min(2.3, drill / 90)) }, 22);
                 if (strikes === 0)
                     WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.0, 0)), hyperdrillMissText, [], 20);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 if (travelled >= reach) { finish(current); return; }
                 const delta = direction.scale(Math.min(rush, reach - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(1.3)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target(), at = hit.position();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)
@@ -137,19 +138,17 @@ namespace PokemonSkills {
                         if (strikes >= pierce) { finish(current); return; }
                     }
                 }
-                const moved = scope.displace(actor, delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "hyperdrill:drill:" + String(current.actor().ref()), hyperdrillScene, 1, here,
-                    { moment: "spin", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale,
-                        intensity: Math.max(0.6, Math.min(2.3, drill / 90)) }, 8);
+                movementScenes.show(current, "spin", here, { moment: "spin", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale,
+                        intensity: Math.max(0.6, Math.min(2.3, drill / 90)) });
                 if (hit.blocked() || moved < minimumMove || travelled >= reach) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 
             sound(action, "minecraft:block.grindstone.use");
-            WorldFeedback.emit(world, hyperdrillScene, 1, origin,
-                { moment: "charge", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale,
-                    intensity: Math.max(0.6, Math.min(2.3, drill / 90)) }, 18);
+            movementScenes.show(action, "charge", origin, { moment: "charge", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale,
+                    intensity: Math.max(0.6, Math.min(2.3, drill / 90)) });
             advance(action);
         }
     });

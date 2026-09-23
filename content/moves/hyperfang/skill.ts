@@ -63,6 +63,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(hyperfangScene);
             const world = action.world();
             const direction = aim(action);
             const length = p("hyperfang", "reach", action);
@@ -78,11 +79,10 @@ namespace PokemonSkills {
             const morsels = Math.max(10, Math.round(power * 0.22));
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, hyperfangScene, 1, action.origin(),
-                { moment: "pounce", direction: [direction.x(), direction.y(), direction.z()], scale: scale }, 26);
+            movementScenes.show(action, "pounce", action.origin(), { moment: "pounce", direction: [direction.x(), direction.y(), direction.z()], scale: scale });
             sound(action, "minecraft:entity.fox.bite");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -93,6 +93,7 @@ namespace PokemonSkills {
             }
 
             function latch(current: CombatAction, victim: CombatActor, at: CombatPoint, contact: CombatImpact): void {
+                movementScenes.stop(current);
                 const scope = current.world();
                 const victimRef = String(victim.ref());
                 const landed = impact(current, contact, "hyperfang", power,
@@ -126,12 +127,12 @@ namespace PokemonSkills {
                 const remaining = length - travelled;
                 const delta = direction.scale(Math.min(step, Math.max(0, remaining)));
                 if (remaining <= 0.001) { whiff(current, origin); return; }
-                const hit = current.trace(origin, origin.plus(delta.scale(p("hyperfang", "traceAhead", current))), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && scope.valid(target) && !scope.friendly(target)) { latch(current, target, hit.position(), hit); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("hyperfang", "minimumMove", current) || travelled >= length) { whiff(current, origin); return; }
                 current.after(1, advance);

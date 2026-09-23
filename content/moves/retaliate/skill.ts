@@ -53,9 +53,10 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(retaliateScene);
             const world = action.world(), actor = action.actor();
             const start = world.observe(actor);
-            if (start === null) { done(action); return; }
+            if (start === null) { movementScenes.finish(action, done); return; }
             const direction = aim(action);
             const length = p(retaliateId, "dash", action);
             const step = p(retaliateId, "charge", action);
@@ -67,13 +68,13 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:entity.iron_golem.attack");
-            WorldFeedback.emit(world, retaliateScene, 1, start.position(),
-                { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], streaks: streaks, avenge: avenging ? 1 : 0, scale: scale }, 30);
+            movementScenes.show(action, "charge", start.position(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], streaks: streaks, avenge: avenging ? 1 : 0, scale: scale });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
                 const delta = direction.scale(Math.min(step, length - travelled));
-                const hit = current.trace(here, here.plus(delta.scale(1.2)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -90,18 +91,18 @@ namespace PokemonSkills {
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)),
                                 avenging ? retaliateRageText : retaliateHitText, [], 26);
                         }
-                        done(current);
+                        movementScenes.finish(current, done);
                         return;
                     }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= length) {
-                    WorldFeedback.emit(scope, retaliateScene, 1, here.plus(delta),
+                    WorldFeedback.emit(scope, retaliateScene, 1, current.origin(),
                         { moment: "miss", avenge: avenging ? 1 : 0, scale: scale }, 20);
-                    WorldFeedback.text(scope, here.plus(delta).plus(WorldCombat.point(0, 1.0, 0)), retaliateMissText, [], 26);
+                    WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.0, 0)), retaliateMissText, [], 26);
                     sound(current, "minecraft:entity.player.attack.nodamage");
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
                 current.after(1, advance);

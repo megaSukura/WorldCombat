@@ -16,6 +16,38 @@
  */
 namespace WorldFeedback {
     interface Message { key: string; scene: string; version: number; position: number[]; data: any; }
+    export interface ActionScenes {
+        show(action: CombatAction, key: string, point: CombatPoint, data: any): void;
+        /** Stop one phase or every active phase; already emitted particles follow the scene's authored drain. */
+        stop(action: CombatAction, key?: string): void;
+        finish(action: CombatAction, done: (current: CombatAction) => void): void;
+    }
+    /** Presentations owned by one invocation. Content stops movement phases when it changes phase or completes. */
+    export function actionScenes(scene: string, version = 1): ActionScenes {
+        const active: { [key: string]: { id: number; data: string; point: number[] } } = Object.create(null);
+        let next = 0;
+        function stop(action: CombatAction, key?: string): void {
+            (key === undefined ? Object.keys(active) : [key]).forEach(name => {
+                const entry = active[name];
+                if (!entry) return;
+                const data = JSON.parse(entry.data);
+                data.lifecycle = { reason: "settled", tick: action.sense().tick() };
+                action.present(scene + "/action/" + name + "/" + entry.id, scene, version,
+                    WorldCombat.point(entry.point[0], entry.point[1], entry.point[2]), JSON.stringify(data));
+                delete active[name];
+            });
+        }
+        return {
+            show: (action, key, point, data) => {
+                const entry = active[key] || (active[key] = { id: ++next, data: "{}", point: [] });
+                entry.data = JSON.stringify(data);
+                entry.point = [point.x(), point.y(), point.z()];
+                action.present(scene + "/action/" + key + "/" + entry.id, scene, version, point, entry.data);
+            },
+            stop: stop,
+            finish: (action, done) => { stop(action); done(action); }
+        };
+    }
     /** Longest a single feedback message stays alive; longer requests are held for this span and can be renewed with keep(). */
     export const maxTicks = 6000;
     function bounded(ticks: number): number { return Math.max(1, Math.min(maxTicks, Math.round(ticks))); }

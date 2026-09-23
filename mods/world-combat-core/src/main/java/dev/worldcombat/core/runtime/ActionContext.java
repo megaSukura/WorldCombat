@@ -188,6 +188,19 @@ public final class ActionContext {
         return result;
     }
 
+    /** Move the native body along one straight segment and issue only the contact actually reached. */
+    public Impact moveSweep(Point delta, double radius) {
+        worldEffect();
+        if (delta == null || !Double.isFinite(delta.length()) || delta.length() > 4)
+            throw new IllegalArgumentException("Displacement exceeds step budget");
+        if (!Double.isFinite(radius) || radius < 0) throw new IllegalArgumentException("Sweep radius must be a non-negative number");
+        world().requireMutation(actor);
+        if (!runtime.controlAllowed(id, actor, "movement")) return new Impact(origin(), null, true);
+        var result = runtime.host.moveSweep(actor, controller, delta, Math.min(1, radius));
+        if (result.hitEntity()) traces.add(result);
+        return result;
+    }
+
     /** Native physics and tracking; script callbacks resume at the runtime's safe tick boundary. */
     public String projectile(Point origin, Point velocity, double gravity, double radius, double range, int lifetime,
                              java.util.function.BiConsumer<ActionContext, Impact> hit, Consumer<ActionContext> complete) {

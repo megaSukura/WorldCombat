@@ -60,6 +60,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(finalgambitScene);
             const world = action.world(), self = action.actor();
             const spare = !!(config && config.spare);
             const damage = p("finalgambit", "damage", action);
@@ -71,12 +72,11 @@ namespace PokemonSkills {
             const stride = p("finalgambit", "maximumStride", action);
             const direction = finalgambitAim(action);
             const start = world.observe(self);
-            if (start === null) { done(action); return; }
+            if (start === null) { movementScenes.finish(action, done); return; }
             const share = start.maxHealth() <= 0 ? 1 : Math.min(1, damage / start.maxHealth());
             let travelled = 0, settled = false;
 
-            WorldFeedback.emit(world, finalgambitScene, 1, action.origin(),
-                { moment: "dash", direction: finalgambitVector(direction), scale: radius / 0.5 }, 40);
+            movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: finalgambitVector(direction), scale: radius / 0.5 });
             sound(action, "minecraft:entity.ravager.attack");
 
             /** 结清自我牺牲：全力把当前生命全部花掉（陷入濒死），留手只花到剩一口气。 */
@@ -94,14 +94,14 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), finalgambitScene, 1, at, { moment: "miss", scale: radius / 0.5 }, 20);
                     WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.2, 0)), finalgambitMissText, [], 20);
                     sound(current, "minecraft:entity.player.attack.sweep");
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
                 spend(current);
                 const scope = current.world(), body = scope.observe(self);
                 if (body !== null)
                     WorldFeedback.emit(scope, finalgambitScene, 1, body.position(), { moment: "fall", scale: blast / 1.2 }, 22);
-                done(current);
+                movementScenes.finish(current, done);
             }
 
             function detonate(current: CombatAction, target: CombatActor, at: CombatPoint): void {
@@ -114,7 +114,7 @@ namespace PokemonSkills {
                     // 打不动（属性免疫）：原生只有「打中」才自我牺牲，这里同样不倒。
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), finalgambitMissText, [], 22);
                     settled = true;
-                    done(current);
+                    movementScenes.finish(current, done);
                     return;
                 }
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), finalgambitHitText, [Math.round(damage)], 26);
@@ -134,12 +134,12 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current, true, origin); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(1.4)), radius + stride);
+                const swept = sweepStep(current, delta, radius + stride), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target)) { detonate(current, target, hit.position()); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("finalgambit", "maximumStride", current) || travelled >= length) {
                     finish(current, true, origin);

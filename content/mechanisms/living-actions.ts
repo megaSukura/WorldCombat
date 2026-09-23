@@ -107,6 +107,7 @@ namespace LivingActions {
         off(token: number) { this.native.off(token); }
         emit(event: string) { this.native.emit(event); }
         trace(from: CombatPoint, to: CombatPoint, radius: number) { return this.native.trace(from, to, radius); }
+        moveSweep(delta: CombatPoint, radius: number) { return this.native.moveSweep(delta, radius); }
         projectile(origin: CombatPoint, velocity: CombatPoint, gravity: number, radius: number, range: number, lifetime: number,
             hit: (action: CombatAction, impact: CombatImpact) => void, complete: (action: CombatAction) => void, appearance?: string) {
             this.releaseTarget();

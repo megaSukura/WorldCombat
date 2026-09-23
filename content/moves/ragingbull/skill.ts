@@ -76,6 +76,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(ragingbullScene);
             const world = action.world();
             const actor = action.actor();
             const direction = aim(action);
@@ -85,7 +86,6 @@ namespace PokemonSkills {
             const power = p("ragingbull", "ram", action);
             const shove = p("ragingbull", "shove", action);
             const wardBreak = p("ragingbull", "wardBreak", action);
-            const traceAhead = p("ragingbull", "traceAhead", action);
             const minimum = p("ragingbull", "minimumMove", action);
             const trample = !!(config && config.trample);
             const maxTargets = trample ? 4 : 1;
@@ -104,14 +104,15 @@ namespace PokemonSkills {
                     if (hits === 0)
                         WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), ragingbullMissText, [], 24);
                 }
-                done(current);
+                movementScenes.finish(current, done);
             }
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { finish(current, "miss"); return; }
                 const delta = direction.scale(step);
-                const hit = current.trace(origin, origin.plus(delta.scale(traceAhead)), radius);
+                const swept = sweepStep(current, delta, radius);
+                const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
@@ -138,15 +139,13 @@ namespace PokemonSkills {
                     }
                     if (hits >= maxTargets) { finish(current, "stop"); return; }
                 }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimum || travelled >= length) { finish(current, "miss"); return; }
-                WorldFeedback.keep(scope, "ragingbull:trail:" + String(current.actor().ref()), ragingbullScene, 1, origin,
-                    { moment: "charge", tint: tint, scale: scale, ratio: Math.min(1, travelled / Math.max(0.001, length)) }, 8);
+                movementScenes.show(current, "charge", origin, { moment: "charge", tint: tint, scale: scale, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
-            WorldFeedback.keep(world, "ragingbull:trail:" + String(actor.ref()), ragingbullScene, 1, action.origin(),
-                { moment: "charge", tint: tint, scale: scale, ratio: 0 }, 10);
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", tint: tint, scale: scale, ratio: 0 });
             sound(action, "minecraft:entity.goat.prepare_ram");
             advance(action);
         }

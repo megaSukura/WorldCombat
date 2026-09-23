@@ -44,7 +44,8 @@ public final class NativeProjectileChecks {
         try {
             switch (age++) {
                 case 0 -> {
-                    prepare(server); actor = mob(EntityType.COW, level, 2); target = mob(EntityType.COW, level, 8);
+                    prepare(server); NativeSweepChecks.run(combat, level);
+                    actor = mob(EntityType.COW, level, 2); target = mob(EntityType.COW, level, 8);
                     NeoForge.EVENT_BUS.addListener((ProjectileImpactEvent event) -> {
                         if (event.getProjectile() instanceof CombatProjectile) { nativeEvents++; if (cancel) event.setCanceled(true); }
                     });

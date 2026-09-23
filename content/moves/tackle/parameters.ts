@@ -46,9 +46,9 @@ namespace PokemonSkills {
                 .plus(F.body("weight").minus(50).times(0.002).clamp(-0.1, 0.4))
                 .times(F.when(F.pref("runUp", text("worldcombat.skill.tackle.preference.runUp")), F.const(1.2), F.const(0.8)))
                 .clamp(0.2, 1.8).round(2),
-            "穿过距离", {
+            "侧滑余程", {
                 unit: "格",
-                description: "撞实后顺着冲势从对方身侧滑过的距离；撞空则一路跑到助跑尽头，位置留得更靠前。"
+                description: "撞实后分四拍向对方身侧减速滑开的距离；撞空则一路跑到助跑尽头。"
             }),
         /** 顶开距离：基础 0.3 格，体重每比 50 多 1 加 0.002（上限 +0.6）；夹在 0.12..0.9。 */
         push: formula(
@@ -64,7 +64,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "撞上活体的横向判定半径；身板越大判定越宽。"
             }),
-        traceAhead: hidden(1.2),
         minimumMove: hidden(0.05)
     });
 

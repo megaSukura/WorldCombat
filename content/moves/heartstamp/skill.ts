@@ -69,6 +69,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const movementScenes = WorldFeedback.actionScenes(heartstampScene);
             const world = action.world();
             const stamp = p("heartstamp", "stamp", action);
             const seize = p("heartstamp", "seize", action);
@@ -83,7 +84,7 @@ namespace PokemonSkills {
             const scale = radius / 0.55;
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function miss(current: CombatAction): void {
                 const scope = current.world();
@@ -139,13 +140,12 @@ namespace PokemonSkills {
                 if (remaining <= 0.001) { miss(current); return; }
                 const step = Math.min(pace, remaining);
                 const delta = direction.scale(step);
-                const hit = current.trace(here, here.plus(delta.scale(1.15)), radius);
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) { land(current, hit, direction); return; }
-                const moved = scope.displace(current.actor(), delta);
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05) { miss(current); return; }
-                WorldFeedback.keep(scope, "heartstamp:dash:" + current.id(), heartstampScene, 1, here,
-                    { moment: "dash", scale: scale, travelled: Math.min(1, travelled / Math.max(0.001, lunge)) }, 6);
+                movementScenes.show(current, "dash", here, { moment: "dash", scale: scale, travelled: Math.min(1, travelled / Math.max(0.001, lunge)) });
                 current.after(1, advance);
             }
 

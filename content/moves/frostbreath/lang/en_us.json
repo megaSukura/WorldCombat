@@ -5,7 +5,7 @@
   "worldcombat.skill.frostbreath.use.2": "Lay a numbing frost across a chokepoint",
   "worldcombat.skill.frostbreath.description.0": "Every enemy the cloud covers takes about %1$s Ice special damage across a %2$s-degree fan, and the hit always lands as a critical.",
   "worldcombat.skill.frostbreath.description.1": "The cloud reaches %1$s blocks, drifting out at %2$s blocks/tick; it settles only when it arrives, so stepping out of it dodges the attack.",
-  "worldcombat.skill.frostbreath.description.2": "Covered enemies are chilled for %1$s and move 28% slower, and each leaves about %2$s blocks of frost underfoot that lingers %3$s.",
+  "worldcombat.skill.frostbreath.description.2": "Enemies covered by the mist are chilled for %1$s, reducing movement speed by 28%. Up to %2$s empty spaces above ground that supports snow receive a thin layer for %3$s.",
   "worldcombat.skill.frostbreath.wide.on": "Wide breath: a broader fan, a thicker cloud, more frost and a longer chill, at the cost of reach, cloud speed, some power, and longer wind-up and cooldown.",
   "worldcombat.skill.frostbreath.wide.off": "Narrow breath: a narrow, long, fast, heavy stream of cold, at the cost of coverage.",
   "worldcombat.skill.frostbreath.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

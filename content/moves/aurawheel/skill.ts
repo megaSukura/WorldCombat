@@ -27,8 +27,7 @@ namespace PokemonSkills {
         function advance(current: CombatAction): void {
             const scope = current.world(), origin = current.origin();
             const delta = direction.scale(Math.min(p(aurawheelId, "speed", current), length - travelled));
-            const hit = current.trace(origin, origin.plus(delta.scale(p(aurawheelId, "traceAhead", current))),
-                p(aurawheelId, "collisionRadius", current));
+            const swept = sweepStep(current, delta, p(aurawheelId, "collisionRadius", current)), hit = swept.hit;
             if (hit.hitEntity()) {
                 const target = hit.target(), power = p(aurawheelId, "power", current);
                 if (target && !scope.friendly(target)) impact(current, hit, aurawheelId, power);
@@ -38,7 +37,7 @@ namespace PokemonSkills {
                 scope.sound("minecraft:entity.ravager.attack", point, 13, "{}");
                 finish(current); return;
             }
-            const moved = scope.displace(current.actor(), delta);
+            const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
             travelled += moved;
             if (hit.blocked() || moved < p(aurawheelId, "minimumMove", current) || travelled >= length) { finish(current); return; }
             current.after(1, advance);

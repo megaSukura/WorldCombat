@@ -5,7 +5,7 @@
   "worldcombat.skill.flowertrick.use.2": "Leave a patch of petals that fades on its own",
   "worldcombat.skill.flowertrick.description.0": "The bouquet deals %1$s Grass physical damage and both never misses and always lands a critical hit.",
   "worldcombat.skill.flowertrick.description.1": "Throw range %1$s blocks, bouquet speed %2$s blocks/tick, turning up to %3$s degrees per tick toward the target; after release it keeps homing on the target within a %4$s block lock range, so it cannot be shaken off inside that range.",
-  "worldcombat.skill.flowertrick.description.2": "The bloom spreads %1$s blocks around the target and leaves about %2$s blocks of pink petals that linger %3$s.",
+  "worldcombat.skill.flowertrick.description.2": "The bloom spreads %1$s blocks around the target. Up to %2$s empty spaces above suitable soil receive pink petals for %3$s.",
   "worldcombat.skill.flowertrick.wreathe.on": "Wreathe: on a hit the bloom rings outward, and every other enemy caught in the ring takes a petal hit for about %1$s of the bloom power that is also a guaranteed critical; more petals fall, at the cost of a little bloom power, bouquet speed and cooldown.",
   "worldcombat.skill.flowertrick.wreathe.off": "Focused: every petal drives into one target, with more power, faster and cheaper.",
   "worldcombat.skill.flowertrick.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
