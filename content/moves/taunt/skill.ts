@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: tauntId,
+        cooldownParameter: "recharge",
         name: "挑衅",
         description: "当面挑衅对手，使它的怒火上头；在怒火消失前，它只能使出会造成伤害的招式。",
         uses: ["逼治疗、增益、换场型的敌人只能打人", "打断对手的蓄力与布置", "给队友创造正面交战窗口"],

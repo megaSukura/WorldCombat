@@ -135,7 +135,7 @@ namespace PokemonSkills {
         { key: "smite.on", values: [], when: function (context) { return read(context.detail.values, ["smite"]) === true; } },
         { key: "smite.off", values: [], when: function (context) { return read(context.detail.values, ["smite"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.strike", "tier.0.sparks"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.strike", "tier.1.burnChance", "tier.1.sparks"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.strike"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.strike", "tier.1.burnChance"] }
     ]);
 }

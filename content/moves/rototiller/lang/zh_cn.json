@@ -4,7 +4,7 @@
   "worldcombat.skill.rototiller.use.1": "在交战位置先翻一块土，逼对手绕开",
   "worldcombat.skill.rototiller.use.2": "给浮空的草属性留一块踩不到的地",
   "worldcombat.skill.rototiller.description.0": "翻出一片半径 %1$s 格的黑土，留 %2$s。",
-  "worldcombat.skill.rototiller.description.1": "站在土上的草属性物攻与特攻各提高 %1$s 级，一次掀起约 %2$s 块土。",
+  "worldcombat.skill.rototiller.description.1": "站在土上的草属性物攻与特攻各提高 %1$s 级。",
   "worldcombat.skill.rototiller.description.2": "射程 %1$s 格；起手 %2$s、收招 %3$s、冷却 %4$s。",
   "worldcombat.skill.rototiller.ridge.on": "垄作：地更大、更久、双攻再 +1，但起手 +3 刻、冷却 ×1.15。",
   "worldcombat.skill.rototiller.ridge.off": "急耕：地更小、时更短、双攻按本体，起手与冷却都更省——打完就走。",

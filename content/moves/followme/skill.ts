@@ -74,7 +74,8 @@ namespace PokemonSkills {
     });
 
     define({
-        id: followMeId, name: "看我嘛",
+        id: followMeId,
+        cooldownParameter: "recharge", name: "看我嘛",
         description: "原地抬手招呼，把喊话半径内敌人的攻击目标不断拉到自己身上；喊住时长之内注意都在你身上，不限属性、也不给谁加成。",
         uses: ["替身边的同伴把火力引到自己身上", "把贴住同伴的敌人拉过来，给同伴脱身的机会", "在开阔地挡住追兵，把交战点聚到自己这里"],
         kind: "self", range: 0, prepare: 5, active: 0, recover: 5, cooldown: 100, style: "call",

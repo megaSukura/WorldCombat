@@ -21,11 +21,43 @@ namespace PokemonSkills {
     const magnetbombScene = "world_combat:move_magnetbomb";
     const magnetbombStatus = "world_combat:magnet_bomb";
     const magnetbombMark = "world_combat:magnet_bomb_mark";
+    const magnetbombDetonation = "world_combat:magnet_bomb_detonation";
     const magnetbombStickText = "world_combat.move.magnetbomb.text.stick";
     const magnetbombBlastText = "world_combat.move.magnetbomb.text.blast";
     const magnetbombFadeText = "world_combat.move.magnetbomb.text.fade";
     /** 溅射给附近其他人吃到的份额。 */
     const magnetbombSplash = 0.45;
+
+    // The blast owns a captured world point; its primary victim can die before the nearby victims settle.
+    WorldCombat.effect(magnetbombDetonation, 1, 2, "actor", function (json) {
+        const data = JSON.parse(json);
+        if (typeof data.target !== "string" || !Array.isArray(data.point) || data.point.length !== 3 ||
+            !data.point.every(function (value: number) { return typeof value === "number" && isFinite(value); }) ||
+            typeof data.mark !== "number" || !(data.mark > 0) || !isFinite(data.radius) || !(data.radius > 0) ||
+            !isFinite(data.power) || !(data.power > 0)) throw new Error("Invalid magnet bomb detonation");
+        return JSON.stringify(data);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(magnetbombDetonation, "start", function (effect: CombatEffect) {
+        const world = effect.world(), data = JSON.parse(effect.state());
+        const at = WorldCombat.point(data.point[0], data.point[1], data.point[2]), radius = data.radius, power = data.power;
+        world.operation(data.mark, "world_combat:dispel", "{}");
+        const victim = world.actor(data.target);
+        if (victim !== null) hurt(world, victim, magnetbombId, power, { damage: damageSpec(magnetbombId, "blast") });
+        WorldGeometry.selectEnemies(world, WorldGeometry.ring(at, 0, radius, { below: 1.2, above: 2.4 }),
+            function (other: CombatActor, facts: CombatObservation) {
+                if (String(other.ref()) === data.target) return;
+                hurt(world, other, magnetbombId, power * magnetbombSplash, { damage: damageSpec(magnetbombId, "blast") });
+                WorldFeedback.emit(world, magnetbombScene, 1, facts.position(),
+                    { moment: "splash", target: String(other.ref()), scale: radius / 1.2 }, 18);
+            });
+        WorldFeedback.emit(world, magnetbombScene, 1, at,
+            { moment: "blast", target: data.target, radius: radius, scale: radius / 1.2,
+                power: Math.round(power * 10) / 10, notes: Math.max(10, Math.round(power * 0.6)) }, 28);
+        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), magnetbombBlastText, [Math.round(power)], 24);
+        world.sound("cobblemon:impact.steel", at, 16, "{}");
+        world.sound("minecraft:entity.generic.explode", at, 12, "{}");
+        effect.end();
+    });
 
     WorldCombat.effect(magnetbombMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
@@ -72,21 +104,8 @@ namespace PokemonSkills {
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
         const at = body.position(), radius = Math.max(0.5, state.radius), power = Math.max(1, state.power);
-        hurt(world, victim, magnetbombId, power, { damage: damageSpec(magnetbombId, "blast") });
-        WorldGeometry.selectEnemies(world, WorldGeometry.ring(at, 0, radius, { below: 1.2, above: 2.4 }),
-            function (other: CombatActor, facts: CombatObservation) {
-                if (String(other.ref()) === String(victim.ref())) return;
-                hurt(world, other, magnetbombId, power * magnetbombSplash, { damage: damageSpec(magnetbombId, "blast") });
-                WorldFeedback.emit(world, magnetbombScene, 1, facts.position(),
-                    { moment: "splash", target: String(other.ref()), scale: radius / 1.2 }, 18);
-            });
-        WorldFeedback.emit(world, magnetbombScene, 1, at,
-            { moment: "blast", target: String(victim.ref()), radius: radius, scale: radius / 1.2,
-                power: Math.round(power * 10) / 10, notes: Math.max(10, Math.round(power * 0.6)) }, 28);
-        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), magnetbombBlastText, [Math.round(power)], 24);
-        world.sound("cobblemon:impact.steel", at, 16, "{}");
-        world.sound("minecraft:entity.generic.explode", at, 12, "{}");
-        effect.end();
+        world.effect(magnetbombDetonation, world.source(), JSON.stringify({ mark: effect.id(), target: String(victim.ref()),
+            point: [at.x(), at.y(), at.z()], radius: radius, power: power }), 1);
     });
     WorldCombat.effectHandler(magnetbombMark, "end", function (effect: CombatEffect) {
         const world = effect.world(), state = JSON.parse(effect.state());
@@ -97,6 +116,7 @@ namespace PokemonSkills {
 
     define({
         id: magnetbombId,
+        cooldownParameter: "recharge",
         name: "Magnet Bomb",
         description: "The user launches steel bombs that stick to the target. This attack never misses.",
         uses: ["把钢弹吸在对手身上再起爆", "分散吸住一圈敌人一起炸", "用引信逼对手在起爆前做出反应"],

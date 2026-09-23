@@ -6,7 +6,6 @@
   "worldcombat.skill.inferno.use.3": "Chase a target with follow-up columns in pin mode",
   "worldcombat.skill.inferno.description.0": "The column deals %1$s special damage to each body inside; their special defence, type matchup and criticals are settled on impact.",
   "worldcombat.skill.inferno.description.1": "Range %1$s blocks with a %2$s block column; the seal heats up for %3$s s first, and anyone stepping out of that window is not burned.",
-  "worldcombat.skill.inferno.description.2": "which also drive the on-screen density.",
   "worldcombat.skill.inferno.rule.guaranteed": "A body wrapped by the column is always burned (100%% native); the target's type matchup and immunities are still settled through the shared status route.",
   "worldcombat.skill.inferno.pin.on": "Pin: the column chases the target for %1$s s, one every %2$s s, each follow-up at %3$s of the first.",
   "worldcombat.skill.inferno.pin.off": "Nova: a single column at the landing point; a target that walks away escapes.",

@@ -69,7 +69,7 @@ namespace PokemonSkills {
                 if (!hurt(current, target, thrashId, power, { damage: damageSpec(thrashId, "bash"), contact: true })) return;
                 hits++;
                 const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
-                if (away.length() > 0.05) world.displace(target, away.unit().scale(push));
+                if (world.valid(target) && away.length() > 0.05) world.displace(target, away.unit().scale(push));
                 WorldFeedback.emit(world, thrashScene, 1, facts.position(),
                     { moment: "knock", target: String(target.ref()), dust: dust, scale: scale, intensity: intensity }, 20);
             });
@@ -105,6 +105,7 @@ namespace PokemonSkills {
 
     define({
         id: thrashId,
+        cooldownParameter: "recharge",
         name: "Thrash",
         description: "站在原地转着圈乱挥：每一挥罩住周围一圈敌人、造成接触伤害并把它们朝外震开，最后一记重跺另乘倍率；闹完自己陷入恍惚，出手可能被打散。狂乱式罩得更宽、推得更狠，但每一挥都会磕伤自己。",
         uses: ["被围住时一次罩住身边所有人", "把贴身的敌人一起震开", "用连续的范围接触伤害清掉身边的小目标"],

@@ -4,7 +4,6 @@
   "worldcombat.skill.slackoff.use.1": "在对手够不到的间隙里偷懒",
   "worldcombat.skill.slackoff.use.2": "拿接下来的机动力换当下的生命",
   "worldcombat.skill.slackoff.description.0": "就地一摊，立刻回复最大生命的 %1$s；随后进入 %2$s 的倦怠，移动速度下降。",
-  "worldcombat.skill.slackoff.description.1": "瘫坐扬起约 %1$s 点尘土，倦怠期间飘起约 %2$s 点睡意气泡，身板越沉越明显。",
   "worldcombat.skill.slackoff.description.2": "起手 %1$s、起身收招 %2$s，随速度缩短；这是同族里最快的起手。",
   "worldcombat.skill.slackoff.stance.deep": "酣睡：回复总量 +0.06、倦怠时长 ×1.4——补得更足，但拖着步子的时间更久。",
   "worldcombat.skill.slackoff.stance.doze": "打盹：回复标准、倦怠更短——几息就缓过来，适合只是路过补一口。",

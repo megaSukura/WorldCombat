@@ -192,11 +192,10 @@ namespace PokemonSkills {
     describe(lastrespectsId, [
         { key: "description.0", values: ["mourn", "fallen"] },
         { key: "description.1", values: ["reach", "speed", "width", "push"] },
-        { key: "description.2", values: ["ghosts"] },
         { key: "trail.on", values: [], when: function (context) { return read(context.detail.values, ["trail"]) === true; } },
         { key: "trail.off", values: [], when: function (context) { return read(context.detail.values, ["trail"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.mourn", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.mourn", "tier.1.reach", "tier.1.ghosts"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.mourn", "tier.1.reach"] }
     ]);
 }

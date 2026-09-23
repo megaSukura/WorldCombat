@@ -19,7 +19,7 @@
   "worldcombat.skill.raindance.value.rainDensity": "Raindrop density",
   "worldcombat.skill.raindance.value.quench": "Quench per scan",
   "worldcombat.skill.raindance.preference.downpour": "Downpour",
-  "worldcombat.skill.raindance.preference.downpour.help": "On = downpour: wider rain (x1.2), longer drench (x1.35), denser drops (x1.4), but shorter life (x0.78) and cooldown +18 ticks. Off = drizzle: smaller and shorter drench, but lasts longer and cools down 12 ticks sooner.",
+  "worldcombat.skill.raindance.preference.downpour.help": "On = downpour: wider rain (x1.2) and longer drench (x1.35), but shorter life (x0.78) and cooldown +18 ticks. Off = drizzle: smaller and shorter drench, but lasts longer and cools down 12 ticks sooner.",
   "worldcombat.skill.raindance.preference.ai.maxChase": "Call distance",
   "worldcombat.skill.raindance.preference.ai.maxChase.help": "The companion only calls rain while a threat is within this distance; lower calls it up close, higher sets it up in advance.",
   "worldcombat.skill.raindance.preference.ai.advance": "Push the rain at the foe",

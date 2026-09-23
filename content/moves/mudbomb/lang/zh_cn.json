@@ -4,7 +4,7 @@
   "worldcombat.skill.mudbomb.use.1": "用爆开泼溅打到目标身边的敌人",
   "worldcombat.skill.mudbomb.use.2": "偶尔糊眼，削掉对手的命中",
   "worldcombat.skill.mudbomb.description.0": "泥弹正中目标：造成 %1$s 点特殊伤害；有 %2$s 概率降低 %3$s 级命中。",
-  "worldcombat.skill.mudbomb.description.1": "炸开泼溅到周围 %2$s 格内的其他敌人，每个承受 %1$s 点特殊伤害，并迸出约 %3$s 块泥。",
+  "worldcombat.skill.mudbomb.description.1": "炸开泼溅到周围 %2$s 格内的其他敌人，每个承受 %1$s 点特殊伤害。",
   "worldcombat.skill.mudbomb.description.2": "泥弹以 %1$s 的速度直线飞出，射程 %2$s 格；落点地上留一片湿泥约 %3$s。碎壳配置当前为 %4$s。",
   "worldcombat.skill.mudbomb.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.mudbomb.value.boom": "泥弹威力",

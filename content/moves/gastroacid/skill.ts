@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: "gastroacid",
+        cooldownParameter: "recharge",
         name: "Gastro Acid",
         description: "将胃液吐向对手的身体，沾上的胃液会消除对手的特性效果。",
         uses: ["定点拆掉对手的强力特性", "压制威吓、飘浮一类持续生效的特性"],

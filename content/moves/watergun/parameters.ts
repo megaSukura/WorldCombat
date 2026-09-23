@@ -108,11 +108,11 @@ namespace PokemonSkills {
 
     describe("watergun", [
         { key: "description.0", values: ["spout"] },
-        { key: "description.1", values: ["pressure", "radius", "reach", "drops"] },
+        { key: "description.1", values: ["pressure", "radius", "reach"] },
         { key: "charge.on", values: [], when: function (context) { return read(context.detail.values, ["charge"]) === true; } },
         { key: "charge.off", values: [], when: function (context) { return read(context.detail.values, ["charge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.spout", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.spout", "tier.1.drops"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.spout"] }
     ]);
 }

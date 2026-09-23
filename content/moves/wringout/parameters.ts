@@ -122,11 +122,11 @@ namespace PokemonSkills {
 
     describe(wringoutId, [
         { key: "description.0", values: ["wring"] },
-        { key: "description.1", values: ["reach", "coilRadius", "motes"] },
+        { key: "description.1", values: ["reach"] },
         { key: "twin.on", values: ["gap", "secondFactor"], when: function (context) { return read(context.detail.values, ["twin"]) === true; } },
         { key: "twin.off", values: [], when: function (context) { return read(context.detail.values, ["twin"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wring"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.wring", "tier.1.coilRadius"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.wring"] }
     ]);
 }

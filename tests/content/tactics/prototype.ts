@@ -15,7 +15,8 @@ namespace CompanionPolicy {
         if (world.busy()) { memory.busy = true; view.blockedUntil(0); view.memory(JSON.stringify(memory)); return; }
         if (memory.busy) { view.blockedUntil(0); memory.next = 0; memory.busy = false; memory.navigation = undefined; }
         if (view.pending()) return;
-        var actor = view.actor(), source = world.observe(actor)!, owner = world.observe(view.owner())!, target = view.intentTarget();
+        var actor = view.actor(), source = world.observe(actor)!, ownerRef = view.owner(), target = view.intentTarget();
+        var owner = ownerRef === null ? source : world.observe(ownerRef) || source;
         if ((view.intent() === "focus" || view.intent() === "protect") &&
             (target === null || world.friendly(target) !== (view.intent() === "protect"))) {
             view.intent("follow", null, null); memory.ref = ""; memory.point = undefined; view.report("idle", "target-left");

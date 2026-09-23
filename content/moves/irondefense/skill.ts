@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: "irondefense",
+        cooldownParameter: "wait",
         name: "铁壁",
         description: "将皮肤变得坚硬如铁，从而大幅提高自己的防御。",
         uses: ["在被近身围攻前先把身体淬成铁", "顶着击退站住位置，不让对手把你推开", "用可见的铁壳窗口逼对手先花时间磨它"],

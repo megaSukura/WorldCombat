@@ -115,7 +115,7 @@ namespace PokemonSkills {
 
     describe(ficklebeamId, [
         { key: "description.0", values: ["beam", "reach", "width"] },
-        { key: "description.1", values: ["chance", "heads"] },
+        { key: "description.1", values: ["chance"] },
         { key: "unison.on", values: [], when: function (context) { return read(context.detail.values, ["unison"]) === true; } },
         { key: "unison.off", values: [], when: function (context) { return read(context.detail.values, ["unison"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

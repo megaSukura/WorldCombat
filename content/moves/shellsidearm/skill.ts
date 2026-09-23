@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "shellsidearm",
+        cooldownParameter: "recharge",
         name: "Shell Side Arm",
         description: "把带毒的壳压进发射腔射出去，发射前先看清对方哪一面软：硬壳目标吃钝击（物理），软肉目标吃毒液喷射（特殊）。命中后按概率让目标中毒。可以固定用钝击（更狠但必须贴脸）或喷射（更远更稳）。",
         uses: ["对软肋不明的目标打最高伤害", "远距离的一记毒壳重炮", "切进钝击模式贴脸爆发"],

@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: "psychoshift",
+        cooldownParameter: "recharge",
         name: "精神转移",
         description: "用念力把自身承受的异常状态原样推给对手：种上了自己才痊愈，对方免疫或已有异常则作废。",
         uses: ["把自己身上的灼伤／中毒／麻痹转手给对手", "打完异常招后清掉自己身上的负担", "在消耗战里把 DoT 反手甩回去"],

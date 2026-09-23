@@ -12,6 +12,7 @@
 namespace PokemonSkills {
     define({
         id: mirrorcoatId,
+        cooldownParameter: "recharge",
         name: "Mirror Coat",
         description: "把最近受到的特殊伤害以两倍射回给对手；没有账可讨时镜面只闪一下。",
         uses: ["挨了一记特殊重击后隔空还回去", "惩罚远程特攻手", "在安全距离上把承伤转成输出"],

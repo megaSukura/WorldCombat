@@ -138,7 +138,7 @@ namespace PokemonSkills {
 
     describe("flareblitz", [
         { key: "description.0", values: ["blaze", "charge", "pace", "radius"] },
-        { key: "description.1", values: ["burnChance", "burnTicks", "recoil", "shove", "embers"] },
+        { key: "description.1", values: ["burnChance", "burnTicks", "recoil", "shove"] },
         { key: "afterburn.on", values: [], when: function (context) { return read(context.detail.values, ["afterburn"]) === true; } },
         { key: "afterburn.off", values: [], when: function (context) { return read(context.detail.values, ["afterburn"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

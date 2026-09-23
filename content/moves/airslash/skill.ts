@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: airslashId,
+        cooldownParameter: "recharge",
         name: "Air Slash",
         description: "The user attacks with a blade of air that slices even the sky. This may also make the target flinch.",
         uses: ["沿一条直线切开成排的敌人", "远距离先手，起手窗口里逼对手走位", "把空中的目标也用风刃切下来"],

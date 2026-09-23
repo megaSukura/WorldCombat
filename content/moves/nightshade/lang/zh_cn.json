@@ -2,7 +2,6 @@
   "worldcombat.skill.nightshade.summary": "远程恐怖幻影：把一段自己的等级凝成幽影脱手掷出，幻影自己追向目标、钻进它的心里，造成等于自己等级的固定伤害，并盘踞一小会儿。目标全程不位移；炸影式把单体一记摊成范围爆发，每一发变轻。",
   "worldcombat.skill.nightshade.description.0": "钻心的一刻造成 %1$s 点固定伤害：等于使用者等级乘上一点特攻系数。对手防御不参与，只有属性免疫会挡住它。",
   "worldcombat.skill.nightshade.description.1": "起手 %1$s 秒，幻影射程 %2$s 格、速度 %3$s 格/刻（自动追向目标），判定半径 %4$s 格。",
-  "worldcombat.skill.nightshade.description.2": "命中后幻影在目标身上盘踞 %1$s 秒。",
   "worldcombat.skill.nightshade.splash.on": "炸影式：命中后在半径 %1$s 格内波及最多 %2$s 个敌人，每一发伤害降到五成五，冷却更久。",
   "worldcombat.skill.nightshade.splash.off": "单体式：只打命中的那一个，伤害足额。",
   "worldcombat.skill.nightshade.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，消耗 %5$s PP。",
@@ -25,7 +24,6 @@
   "worldcombat.skill.nightshade.preference.ai.crowd.help": "目标身边聚着这么多敌人时优先放这一记（配合炸影式一次摊到一群）；越大越只在密集处出手。",
   "worldcombat.skill.nightshade.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.nightshade.preference.ai.leaveStation.help": "开启后，驻守命令下也会为寻找射击位置离开站位；关闭则只在原地够得到时出手。",
-  "worldcombat.skill.nightshade.growth.0": "%1$s 级起盘踞时长延长到 %2$s 秒。",
   "worldcombat.skill.nightshade.growth.1": "%1$s 级起炸影半径扩大到 %2$s 格。",
   "world_combat.move.nightshade.text.haunt": "黑夜魔影 %1$s",
   "world_combat.move.nightshade.text.fizzle": "幻影消散"

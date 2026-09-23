@@ -21,7 +21,7 @@
   "worldcombat.skill.sandstorm.value.grainInterval": "磨蚀间隔",
   "worldcombat.skill.sandstorm.value.grainDensity": "沙粒密度",
   "worldcombat.skill.sandstorm.preference.abrasive": "磨蚀狂沙",
-  "worldcombat.skill.sandstorm.preference.abrasive.help": "开启＝磨蚀狂沙：沙幕更广（×1.15）、磨得更狠（×1.3）、推得更动（×1.35）、沙粒更密（×1.4）、磨得也更勤（×0.82），但持续更短（×0.78）、冷却 +16 刻；关闭＝缓沙覆盖：范围更小、磨得更轻，但持续更久（×1.22）、冷却 -10 刻。",
+  "worldcombat.skill.sandstorm.preference.abrasive.help": "开启＝磨蚀狂沙：沙幕更广（×1.15）、磨得更狠（×1.3）、推得更动（×1.35）、磨得也更勤（×0.82），但持续更短（×0.78）、冷却 +16 刻；关闭＝缓沙覆盖：范围更小、磨得更轻，但持续更久（×1.22）、冷却 -10 刻。",
   "worldcombat.skill.sandstorm.preference.ai.maxChase": "扬沙距离",
   "worldcombat.skill.sandstorm.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑沙暴；调小只在贴身时扬沙，调大愿意提前布置。",
   "worldcombat.skill.sandstorm.preference.ai.advance": "把沙幕压向对手",

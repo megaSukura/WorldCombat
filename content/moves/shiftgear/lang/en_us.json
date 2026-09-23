@@ -4,7 +4,6 @@
   "worldcombat.skill.shiftgear.use.1": "Gain speed before running someone down",
   "worldcombat.skill.shiftgear.use.2": "Shift before a closing enemy arrives",
   "worldcombat.skill.shiftgear.description.0": "Shift into another gear: Attack +%1$s stages and Speed +%2$s stages, both kept until the encounter fades.",
-  "worldcombat.skill.shiftgear.description.1": "The gear ring has a %1$s-block radius and keeps turning for about %2$s s after the shift; judgement and presentation share that radius, so the picture is the area.",
   "worldcombat.skill.shiftgear.description.2": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s. Gear options: torque favours Attack, overdrive favours Speed; both total +3 stages.",
   "worldcombat.skill.shiftgear.timing": "Telegraph scales with Speed and recovery with body size; shifting stops the user and can be interrupted.",
   "worldcombat.skill.shiftgear.value.attackGift": "Attack gear",

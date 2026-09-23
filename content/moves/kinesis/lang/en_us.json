@@ -4,7 +4,7 @@
   "worldcombat.skill.kinesis.use.1": "Blunt a sniper across cover",
   "worldcombat.skill.kinesis.use.2": "Win a duel or cover a retreat with a single-target edge",
   "worldcombat.skill.kinesis.description.0": "A beguiled target strikes weaker, and a Pokemon also loses %1$s accuracy stage(s), for %2$s.",
-  "worldcombat.skill.kinesis.description.1": "The gaze reaches %1$s blocks, the spoon spins for %2$s and about %3$s psychic motes circle the head; it affects one target only and never spreads.",
+  "worldcombat.skill.kinesis.description.1": "The gaze reaches %1$s blocks; it affects one target only and never spreads.",
   "worldcombat.skill.kinesis.description.2": "Raising the spoon takes %1$s with a %2$s cooldown. Line of sight is required: a wall, pillar or other cover in the way makes the trick fizzle.",
   "worldcombat.skill.kinesis.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.kinesis.value.blindStage": "Beguile stages",

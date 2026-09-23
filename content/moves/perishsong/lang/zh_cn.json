@@ -4,7 +4,7 @@
   "worldcombat.skill.perishsong.use.1": "对着成群的敌人一次点名",
   "worldcombat.skill.perishsong.use.2": "在必输的交换里把对手主力一起带走",
   "worldcombat.skill.perishsong.description.0": "半径 %1$s 格内听见歌声的活物都被写进名单，每拍 %2$s，三拍后一同倒下——唱的人也在名单里。",
-  "worldcombat.skill.perishsong.description.1": "起唱要 %1$s，聚起 %2$s 个音符，冷却 %3$s。走出交战或被牛奶清除可以甩掉歌声，不会结清。",
+  "worldcombat.skill.perishsong.description.1": "起唱要 %1$s，冷却 %2$s。走出交战或被牛奶清除可以甩掉歌声，不会结清。",
   "worldcombat.skill.perishsong.dirge.0": "挽歌：歌声传得更远、每一拍更长，但冷却更久。",
   "worldcombat.skill.perishsong.dirge.1": "摇篮曲：歌声更近、每一拍更短、冷却更短——名单更小，但结清得更快。",
   "worldcombat.skill.perishsong.timing": "以自身为圆心施放，准备 %2$s 秒后消耗 %4$s PP；收势 %3$s 秒，提交起冷却 %5$s 秒。",

@@ -94,10 +94,9 @@ namespace PokemonSkills {
     describe(powergemId, [
         { key: "description.0", values: ["ray"] },
         { key: "description.1", values: ["beamLength", "beamWidth", "falloff"] },
-        { key: "description.2", values: ["shards"] },
         { key: "description.3", values: ["pref.focus"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ray", "tier.0.beamLength"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.ray", "tier.1.shards"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.ray"] }
     ]);
 }

@@ -58,6 +58,7 @@ namespace PokemonSkills {
 
     define({
         id: "powershift",
+        cooldownParameter: "wait",
         name: "力量转换",
         description: "将自己的攻击与防御互相交换一段时间，窗口走完自动换回。",
         uses: ["攻高防低时换过来硬扛一轮", "防高攻低时换过去打一轮输出", "在对手的类型与打法已知后选一种形态"],

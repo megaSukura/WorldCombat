@@ -51,6 +51,7 @@ namespace PokemonSkills {
 
     define({
         id: smokescreenId,
+        cooldownParameter: "recharge",
         name: "烟幕",
         description: "朝一个地点吐出一片会停留的烟云；站在云里的敌人命中下降、攻击变弱，走出云后还带着一段余味。",
         uses: ["把对手罩进一片打不准的云里", "铺在身前挡住视线，换一口气或撤退", "封住门口与走廊"],

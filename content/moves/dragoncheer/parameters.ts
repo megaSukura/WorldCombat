@@ -104,7 +104,6 @@ namespace PokemonSkills {
         { key: "roar.on", values: ["tempo", "wait"], when: function (context) { return read(context.detail.values, ["roar"]) === true; } },
         { key: "roar.off", values: [], when: function (context) { return read(context.detail.values, ["roar"]) !== true; } },
         { key: "description.1", values: ["cheerTicks", "cheerRadius"] },
-        { key: "description.2", values: ["motes", "waves"] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cheerTicks"] },

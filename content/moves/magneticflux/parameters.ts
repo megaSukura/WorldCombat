@@ -110,7 +110,7 @@ namespace PokemonSkills {
     describe(magneticfluxId, [
         { key: "description.0", values: ["field", "fieldTicks"] },
         { key: "description.1", values: ["guard", "ward"] },
-        { key: "description.2", values: ["arcs", "tempo", "aftercast", "wait"] },
+        { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "opposite.on", values: [], when: function (context) { return read(context.detail.values, ["opposite"]) === 1; } },
         { key: "opposite.off", values: [], when: function (context) { return read(context.detail.values, ["opposite"]) !== 1; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

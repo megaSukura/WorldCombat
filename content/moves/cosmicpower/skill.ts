@@ -42,6 +42,7 @@ namespace PokemonSkills {
 
     define({
         id: "cosmicpower",
+        cooldownParameter: "wait",
         name: "宇宙力量",
         description: "汲取宇宙中神秘的力量，从而提高自己的防御和特防。",
         uses: ["拉开距离站定，把两项防护一次拉高", "夜里星光更盛，多抬 1 级", "在挨打之前把壳垫厚，再回头交战"],

@@ -113,7 +113,7 @@ namespace PokemonSkills {
 
     describe("branchpoke", [
         { key: "description.0", values: ["poke", "reach", "twig"] },
-        { key: "description.1", values: ["bend", "leaves"] },
+        { key: "description.1", values: ["bend"] },
         { key: "thorn.on", values: ["snareTicks", "snareLevel", "poke"], when: function (context) { return read(context.detail.values, ["thorn"]) === true; } },
         { key: "thorn.off", values: ["poke"], when: function (context) { return read(context.detail.values, ["thorn"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

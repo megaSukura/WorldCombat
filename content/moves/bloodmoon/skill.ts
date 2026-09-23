@@ -66,6 +66,7 @@ namespace PokemonSkills {
 
     define({
         id: bloodmoonId,
+        cooldownParameter: "recharge",
         name: "Blood Moon",
         description: "The user unleashes the full brunt of its spirit from a full moon that shines as red as blood. This move can't be used twice in a row.",
         uses: ["召出满月、让月柱从天上垂直砸落", "点杀远处的厚血目标", "用月蚀式把落点一圈一起砸进去"],

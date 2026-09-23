@@ -41,15 +41,14 @@ namespace PokemonSkills {
     export const airslashReference = 0.36;
 
     actionParameters.define(airslashId, {
-        /** 刃锋威力：特攻每比 60 多 1 加 0.30（夹 −12..40），速度每比 60 快 1 加 0.12（夹 −4..14）；
-         *  利刃 ×0.94 / 阔风 ×1.10；夹在 52..140。 */
+        /** 直伤按本招的覆盖与附加收益调校；成长以显式设计基值计算。 */
         blade: formula(
-            F.base(75).plus(F.stat("specialAttack").minus(60).times(0.30).clamp(-12, 40))
-                .plus(F.stat("speed").minus(60).times(0.12).clamp(-4, 14))
+            F.base(56).plus(F.stat("specialAttack").minus(60).times(0.18).clamp(-10, 24))
+                .plus(F.stat("speed").minus(60).times(0.06).clamp(-3, 8))
                 .times(F.when(F.pref("razor", text("worldcombat.skill.airslash.preference.razor")), F.const(0.94), F.const(1.10)))
-                .clamp(52, 140).round(1),
+                .clamp(40, 98).round(1),
             "刃锋威力", {
-                unit: "威力",
+                base: 56, unit: "威力",
                 description: "空气之刃切中那一下的基础威力；特攻决定空气压得多实，速度让它更锋利。对手特防、相性与暴击在命中时另算。"
             }),
         /** 飞行距离：基础 11 格，特攻每比 60 多 1 加 0.05（夹 −2..4），等级每 1 级加 0.06（夹 0..3）；
@@ -124,14 +123,14 @@ namespace PokemonSkills {
     defineDamage(airslashId, "blade", { rationale: "风刃的切斩；与原生一致走特殊类别，不改变减伤规则。" }, { slice: true });
 
     stages(airslashId, [
-        { level: 40, values: { blade: 88, reach: 12 } }
+        { level: 40, values: { blade: 64, reach: 12 } }
     ]);
 
     describe(airslashId, [
         { key: "description.0", values: ["blade", "radius"] },
         { key: "description.1", values: ["reach", "flight", "pierce"] },
         { key: "description.2", values: ["flinchChance", "flinchTicks"] },
-        { key: "description.3", values: ["shards", "pref.razor"] },
+        { key: "description.3", values: ["pref.razor"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blade", "tier.0.reach"] }
     ]);

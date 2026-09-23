@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: avalancheId,
+        cooldownParameter: "recharge",
         name: "Avalanche",
         description: "把一路挨打积起来的重量拢成雪堆碾过去：自己带着「被打懵」积伤时威力翻倍，积得越厚范围与击退越大，落点留下一片短暂积雪。",
         uses: ["挨了一轮打之后用翻倍的一记压制", "把围在身边的对手一起崩开", "在落点留一片积雪改变脚下"],
@@ -114,7 +115,7 @@ namespace PokemonSkills {
                             if (body === null) continue;
                             if (hurt(current, other, avalancheId, power * 0.7, { damage: damageSpec(avalancheId, "collapse"), contact: false })) {
                                 const away = body.position().minus(point);
-                                if (away.length() > 0.05) scope.displace(other, away.unit().scale(push * 0.7));
+                                if (scope.valid(other) && away.length() > 0.05) scope.displace(other, away.unit().scale(push * 0.7));
                             }
                         }
                     }

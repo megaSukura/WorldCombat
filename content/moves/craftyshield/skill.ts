@@ -144,6 +144,7 @@ namespace PokemonSkills {
 
     define({
         id: "craftyshield",
+        cooldownParameter: "wait",
         name: "戏法防守",
         description: "织起一片戏法符阵，替自己与身边的队友把变化招式整条拨开；符阵由有限的法印撑起，拨掉几条就散，伤害招式直接穿阵而过。",
         uses: ["挡下成片铺来的异常与弱化招式", "在对手的挑衅、封锁落下前先织阵", "护住正要进场的队友不被变化招式拿捏"],

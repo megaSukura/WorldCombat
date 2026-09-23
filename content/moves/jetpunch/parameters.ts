@@ -111,7 +111,7 @@ namespace PokemonSkills {
     describe(jetpunchId, [
         { key: "description.0", values: ["torrent", "burst"] },
         { key: "description.1", values: ["reach", "drive"] },
-        { key: "description.2", values: ["drench", "spray"] },
+        { key: "description.2", values: ["drench"] },
         { key: "hammer.on", values: [], when: function (context) { return read(context.detail.values, ["hammer"]) === true; } },
         { key: "hammer.off", values: [], when: function (context) { return read(context.detail.values, ["hammer"]) !== true; } },
         { key: "timing", values: ["reach", "tempo", "settle", "pp", "recharge"] },

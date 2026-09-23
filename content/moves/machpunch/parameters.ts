@@ -107,8 +107,7 @@ namespace PokemonSkills {
 
     describe(machpunchId, [
         { key: "description.0", values: ["jab", "reach", "collisionRadius"] },
-        { key: "description.1", values: ["push", "boom"] },
-        { key: "description.2", values: ["ring"] },
+        { key: "description.1", values: ["push"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

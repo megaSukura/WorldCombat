@@ -5,7 +5,7 @@
   "worldcombat.skill.clearsmog.use.2": "Clear the stat changes of a small clustered group at once",
   "worldcombat.skill.clearsmog.description.0": "The clump hits for about %1$s power (never misses); thrown distance %2$s blocks. Defence, type matchup and crits are settled on impact.",
   "worldcombat.skill.clearsmog.description.1": "The smog blooms at a %1$s block radius: every non-ally caught has its stat stages wiped to neutral and is clung to for %2$s s; while clung, new stages are scoured off again every %3$s s.",
-  "worldcombat.skill.clearsmog.description.2": "The clump flies at %1$s blocks/tick and lightly steers to the target, with a %2$s block cross-section; the smoke carries %3$s puffs of murk.",
+  "worldcombat.skill.clearsmog.description.2": "The clump flies at %1$s blocks/tick and lightly steers to the target, with a %2$s block cross-section.",
   "worldcombat.skill.clearsmog.billow.on": "Billow: cloud radius x1.5 and cling x1.4, but power x0.85, wind-up +1 tick, cooldown +8 ticks - covers wider and longer.",
   "worldcombat.skill.clearsmog.billow.off": "Packed: power x1.15, faster throw and shorter cooldown, but a smaller cloud and a shorter cling - one precise heavy clump.",
   "worldcombat.skill.clearsmog.description.3": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s; the PP 15 price.",

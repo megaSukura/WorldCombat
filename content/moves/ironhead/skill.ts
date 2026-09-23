@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: "ironhead",
+        cooldownParameter: "recharge",
         name: "Iron Head",
         description: "The user slams the target with its steel-hard head. This may also make the target flinch.",
         uses: ["贴身被围时把人整个轰开", "把对手砸下高台或砸出据点", "用最久的震懵锁住一个目标"],

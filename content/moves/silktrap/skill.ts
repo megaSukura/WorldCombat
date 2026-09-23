@@ -30,7 +30,7 @@ namespace PokemonSkills {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
     }
     function silkTrapContact(data: any): boolean {
-        return data && (data.direct === true || data.kind === "move" && data.contact === true);
+        return DamageSemantics.read(data).contact;
     }
     function silkTrapClear(effect: CombatEffect): void {
         const prefix = String(effect.id()) + ":";
@@ -104,6 +104,7 @@ namespace PokemonSkills {
 
     define({
         id: "silktrap",
+        cooldownParameter: "charge",
         name: "Silk Trap",
         description: "The user spins a silken trap that blocks damaging attacks by a total pool; contact lowers the attacker's Speed and pins it briefly. Status moves pass through.",
         uses: ["黏住冲上来的近战，让它既慢又动不了", "为队友拉开距离争取时间", "用最韧的一张网硬挡远程伤害"],

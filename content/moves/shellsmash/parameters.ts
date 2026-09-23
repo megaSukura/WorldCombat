@@ -68,7 +68,6 @@ namespace PokemonSkills {
 
     describe("shellsmash", [
         { key: "description.0", values: ["surge", "toll"] },
-        { key: "description.1", values: ["spread", "shards"] },
         { key: "total.on", values: ["surge", "toll"], when: function (context) { return read(context.detail.values, ["total"]) === true; } },
         { key: "total.off", values: [], when: function (context) { return read(context.detail.values, ["total"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

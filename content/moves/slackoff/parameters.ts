@@ -49,7 +49,6 @@ namespace PokemonSkills {
 
     describe(slackoffId, [
         { key: "description.0", values: ["heal", "loafTicks"] },
-        { key: "description.1", values: ["dust", "snoreRate"] },
         { key: "description.2", values: ["slouch", "stretch"] },
         { key: "stance.deep", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "stance.doze", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

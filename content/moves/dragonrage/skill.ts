@@ -42,6 +42,7 @@ namespace PokemonSkills {
 
     define({
         id: "dragonrage",
+        cooldownParameter: "recharge",
         name: "Dragon Rage",
         description: "This attack hits the target with a shock wave of pure rage. This attack always inflicts 40 HP damage.",
         uses: ["用固定伤害处理高防目标", "把冲上来的敌人撞退并按住", "怒爆式一口气削掉挤在一起的一片"],

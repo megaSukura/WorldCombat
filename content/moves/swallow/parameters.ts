@@ -99,7 +99,7 @@ namespace PokemonSkills {
 
     describe("swallow", [
         { key: "description.0", values: ["worth"] },
-        { key: "description.1", values: ["digestTicks", "spread", "motes"] },
+        { key: "description.1", values: ["digestTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "sip.on", values: [], when: function (context) { return read(context.detail.values, ["sipping"]) === true; } },
         { key: "sip.off", values: [], when: function (context) { return read(context.detail.values, ["sipping"]) !== true; } },

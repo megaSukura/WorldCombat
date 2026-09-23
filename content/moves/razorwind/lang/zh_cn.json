@@ -3,7 +3,6 @@
   "worldcombat.skill.razorwind.description.0": "每一把风刃对扇面里的目标造成 %1$s 的特殊伤害，且更容易击中要害。",
   "worldcombat.skill.razorwind.description.1": "扇面向前铺 %1$s 格、向两侧各张 %2$s 度，一次最多切到 %3$s 个目标。",
   "worldcombat.skill.razorwind.description.2": "需要站定蓄风 %1$s。",
-  "worldcombat.skill.razorwind.description.3": "甩出与蓄风时卷起约 %1$s 个风屑。",
   "worldcombat.skill.razorwind.stance.spread": "当前为散流式：扇面更宽、风刃更多，但单发威力与射程略收。",
   "worldcombat.skill.razorwind.stance.focus": "当前为集刃式：威力更高、射程更远，但扇面收窄。",
   "worldcombat.skill.razorwind.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

@@ -26,6 +26,7 @@ namespace PokemonSkills {
 
     define({
         id: lastrespectsId,
+        cooldownParameter: "recharge",
         name: "Last Respects",
         description: "为倒下的伙伴送行：从地里升起随行的鬼影，一路走向对手落下这一扫。同阵营倒下的伙伴越多，鬼影越多、这一扫越重；随行式扫过一条走廊，送行式聚到一点重打一个。",
         uses: ["伙伴倒下后替他们扫出这一记", "随行时沿路清掉一条走廊", "送行时把一个人重捶出很远"],
@@ -119,7 +120,7 @@ namespace PokemonSkills {
                         if (hurt(current, victim, lastrespectsId, power, { damage: damageSpec(lastrespectsId, "mourn") })) {
                             landed++;
                             const away = here.minus(start);
-                            if (away.length() > 0.2) scope.displace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.2) scope.displace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                             WorldFeedback.emit(scope, lastrespectsScene, 1, here,
                                 { moment: "strike", target: String(victim.ref()), ghosts: ghosts, fallen: fallen, scale: scale, intensity: intensity }, 24);
                         }

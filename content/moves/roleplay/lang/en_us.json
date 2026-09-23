@@ -5,7 +5,6 @@
   "worldcombat.skill.roleplay.use.2": "Switch to a better Ability before the fight",
   "worldcombat.skill.roleplay.description.0": "Traces the target's Ability within %1$s blocks; %2$s s wind-up.",
   "worldcombat.skill.roleplay.description.1": "The borrowed Ability lasts %1$s s, then your own Ability returns.",
-  "worldcombat.skill.roleplay.description.2": "About %1$s tracer lines are drawn around the target.",
   "worldcombat.skill.roleplay.dwell.0": "Deep role: duration x1.7, cooldown +18 ticks, for using one good Ability across a stretch of the fight.",
   "worldcombat.skill.roleplay.dwell.1": "Light role: duration x0.6, cooldown -10 ticks, for switching often to follow the opponent.",
   "worldcombat.skill.roleplay.timing": "Range %1$s blocks, %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

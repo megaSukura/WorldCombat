@@ -30,7 +30,7 @@ namespace PokemonSkills {
 
     /** 一份可读的能力等级快照（宝可梦读原生等级，其他活体读公共阶梯）。 */
     export function hazeStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     actionParameters.define(hazeId, {
@@ -72,7 +72,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["fogRadius"] },
         { key: "focused.on", values: [], when: function (context) { return read(context.detail.values, ["focused"]) === true; } },
         { key: "focused.off", values: [], when: function (context) { return read(context.detail.values, ["focused"]) !== true; } },
-        { key: "description.1", values: ["density", "tempo", "aftercast", "recharge"] },
+        { key: "description.1", values: ["tempo", "aftercast", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.fogRadius"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.fogRadius"] }

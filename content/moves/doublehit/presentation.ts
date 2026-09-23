@@ -5,7 +5,7 @@
  *   扫中的目标被推着走，回头那一下多一圈强调。
  * 色相家族：尾迹浅褐（0xD8C9A6、0xB8A67E）做尘与尾影，白（0xF2ECDD）只给命中那一抹；第二扫略偏暖（0xE6D3A6）。
  * 拍子：起 raise（甩尾起势）→ 一 sweep1（向一侧扫）→ 二 sweep2（反向回扫）→ 中 hit1/hit2（命中扬尘）→ 收 settle。
- * 范围：sweep1/sweep2 的锥面用 `data.reach` 当长度、`data.span` 当张角，画面里的弧就是尾巴扫过的判定范围；
+ * 范围：sweep1/sweep2 的水平扇面用 `data.reach` 当半径、`data.span` 当张角，画面里的弧就是尾巴扫过的判定范围；
  *   `data.side` 让第二扫转向另一侧。
  * 运动：两扫都从施法者身前贴着地面铺开，第一扫朝 `data.side` 一侧、第二扫 `data.arc` 开启时朝反侧回。
  * 数：`data.dust`（物攻派生）绑定扬尘量，`data.intensity`（每扫威力派生）抬高亮度，`data.arc` 区分回扫/直扫。
@@ -34,17 +34,17 @@ const DoublehitDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 44, shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
+                    rate: 44, shape: { kind: "sector", radius: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
                     direction: "shape", speed: [0.08, 0.3], spread: 12, spin: 8,
                     lifetime: [7, 13], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xF2ECDD, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 90
                 },
-                {
-                    name: "dust", bind: "point", fit: "none",
+                { orient: "heading",
+                    name: "dust", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 34, shape: { kind: "cone_volume", radius: 0.6, length: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
+                    rate: 34, shape: { kind: "sector", radius: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
                     direction: "shape", speed: [0.05, 0.22], spread: 26, gravity: 0.06, drag: 0.9,
                     lifetime: [9, 16], size: [0.11, 0.02],
                     color: 0xB8A67E, alpha: [0.45, 0], light: "world", maxParticles: 80
@@ -56,17 +56,17 @@ const DoublehitDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 46, shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
+                    rate: 46, shape: { kind: "sector", radius: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
                     direction: "shape", speed: [0.1, 0.34], spread: 11, spin: -8,
                     lifetime: [7, 13], size: [0.32, 0.05], sizeMode: "index",
                     color: 0xE6D3A6, alpha: [0.75, 0], light: "full", bloom: 0.25, maxParticles: 90
                 },
-                {
-                    name: "dust", bind: "point", fit: "none",
+                { orient: "heading",
+                    name: "dust", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 36, shape: { kind: "cone_volume", radius: 0.6, length: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
+                    rate: 36, shape: { kind: "sector", radius: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
                     direction: "shape", speed: [0.06, 0.24], spread: 26, gravity: 0.06, drag: 0.9,
                     lifetime: [9, 16], size: [0.11, 0.02],
                     color: 0xB8A67E, alpha: [0.5, 0], light: "world", maxParticles: 80
@@ -113,11 +113,11 @@ const DoublehitDefinition: ParticleDefinition = {
             duration: 16,
             exit: { stop: 6, drain: 10 },
             emitters: [
-                {
+                { orient: "heading",
                     name: "empty", bind: "point", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dust", fallback: 10 } },
-                    shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 3.4 }, angleDegrees: { data: "span", fallback: 150 } },
                     direction: "shape", speed: [0.04, 0.16], spread: 20, gravity: 0.05, drag: 0.9,
                     lifetime: [9, 16], size: [0.1, 0.02],
                     color: 0xB8A67E, alpha: [0.35, 0], light: "world", maxParticles: 24

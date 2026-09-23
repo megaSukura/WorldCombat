@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.astonish.summary": "A startled scream with no warning: an instant, point-blank interrupt with a 0-tick wind-up. The damage is light, but the target almost always flinches - and the darker it is, the harder it hits, flinches and lasts.",
   "worldcombat.skill.astonish.description.0": "The scream deals about %1$s contact damage with a %2$s block startle radius; it is stronger in the dark. The target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.astonish.description.1": "It reaches out to %1$s blocks; the quick form creeps %2$s blocks per tick toward the target.",
+  "worldcombat.skill.astonish.description.1": "It reaches out to %1$s blocks.",
   "worldcombat.skill.astonish.description.2": "A point-blank scream has a %1$s flinch chance for %2$s s; both are higher in the dark.",
   "worldcombat.skill.astonish.lurk.on": "Lurking form: stays put and barely closes in, but flinches longer and more often at lighter damage, with a slower recovery and cooldown.",
   "worldcombat.skill.astonish.lurk.off": "Quick call: creeps in a little, snappy to cast and hits slightly harder.",

@@ -122,7 +122,7 @@ namespace PokemonSkills {
 
     describe("hornattack", [
         { key: "description.0", values: ["gore", "reach", "horn"] },
-        { key: "description.1", values: ["shove", "carry", "dust"] },
+        { key: "description.1", values: ["shove", "carry"] },
         { key: "drive.on", values: ["carry", "gore"], when: function (context) { return read(context.detail.values, ["drive"]) === true; } },
         { key: "drive.off", values: ["carry", "gore"], when: function (context) { return read(context.detail.values, ["drive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

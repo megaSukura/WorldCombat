@@ -62,6 +62,7 @@ namespace PokemonSkills {
 
     define({
         id: headlongrushId,
+        cooldownParameter: "recharge",
         name: "Headlong Rush",
         description: "The user smashes into the target in a full-body tackle, lowering its own Defense and Sp. Def.",
         uses: ["从远处一路冲过去把对手撞出阵地", "用体重换一记最重的单发", "把撞开的沟留在场上、改变走位"],

@@ -5,7 +5,7 @@
   "worldcombat.skill.steelwing.use.2": "Hone Defence a little with every landed sweep",
   "worldcombat.skill.steelwing.description.0": "The sweep deals about %1$s contact damage over a %2$s-degree fan in front; the foe's Defence, type matchup and crits are settled on hit.",
   "worldcombat.skill.steelwing.description.1": "The fan reaches %1$s blocks and shoves each hit target %2$s blocks away from the user.",
-  "worldcombat.skill.steelwing.description.2": "After any landed sweep, %1$s chance to harden the wing and raise Defence by %2$s level, throwing %3$s steel feathers.",
+  "worldcombat.skill.steelwing.description.2": "After any landed sweep, %1$s chance to harden the wing and raise Defence by %2$s level.",
   "worldcombat.skill.steelwing.glide.on": "Gliding sweep: slide forward before sweeping, with a wider fan, more knockback and a steadier Defence raise, but a longer windup and cooldown and a risk of sliding into the enemy line.",
   "worldcombat.skill.steelwing.glide.off": "Grounded sweep: hold the ground and sweep in front; faster and cheaper, with a slightly narrower fan.",
   "worldcombat.skill.steelwing.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

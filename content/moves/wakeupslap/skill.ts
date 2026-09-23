@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: wakeupslapId,
+        cooldownParameter: "recharge",
         name: "Wake-Up Slap",
         description: "This attack inflicts big damage on a sleeping target. This also wakes the target up, however.",
         uses: ["把睡着的对手一掌拍重", "趁睡眠窗口打出翻倍的一记", "余震式一次震醒一圈人"],

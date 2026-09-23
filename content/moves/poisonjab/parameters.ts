@@ -103,7 +103,7 @@ namespace PokemonSkills {
     describe("poisonjab", [
         { key: "description.0", values: ["jab", "reach", "touchReach"] },
         { key: "description.1", values: ["poisonChance", "venomTicks", "push"] },
-        { key: "description.2", values: ["drops", "tempo", "settle", "recharge"] },
+        { key: "description.2", values: ["tempo", "settle", "recharge"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

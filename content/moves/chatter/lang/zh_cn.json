@@ -6,7 +6,7 @@
   "worldcombat.skill.chatter.description.0": "每一声在扇面内的每个敌人身上各造成 %1$s 点特殊伤害（声音），一共叫 %2$s 声、每隔 %3$s。",
   "worldcombat.skill.chatter.description.1": "扇面张角 %1$s 度、声程 %2$s 格；声音不被掩体阻挡。",
   "worldcombat.skill.chatter.description.2": "被叫到的人陷入混乱 %1$s；期间每次想出手有 %2$s 的概率被打散，打中非友方时按自身攻击反噬。",
-  "worldcombat.skill.chatter.description.3": "一串约 %1$s 个音符；当前尖啸形态：%2$s。",
+  "worldcombat.skill.chatter.description.3": "当前尖啸形态：%1$s。",
   "worldcombat.skill.chatter.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.chatter.growth.0": "达到 %1$s 级，单声威力升至 %2$s。",
   "worldcombat.skill.chatter.growth.1": "达到 %1$s 级，连叫 %2$s 声、单声威力 %3$s。",

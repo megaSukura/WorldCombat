@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: "meditate",
+        cooldownParameter: "wait",
         name: "Meditate",
         description: "静下心来，唤醒身体深处沉睡的力量，从而提高攻击。站定越久、越没被打扰，唤醒得越深。",
         uses: ["开战前趁没人打扰，一口气把物攻叫到两层", "被追打时快速叫醒一层，抢回出手的底气", "在安全换位里补一口静心，把物攻垫住"],

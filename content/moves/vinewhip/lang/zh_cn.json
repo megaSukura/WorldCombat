@@ -4,7 +4,7 @@
   "worldcombat.skill.vinewhip.use.1": "在对手让位前连着抽两下",
   "worldcombat.skill.vinewhip.use.2": "打断沿一条线冲过来的目标",
   "worldcombat.skill.vinewhip.description.0": "窄线造成约 %1$s 的接触伤害，触及 %2$s 格、线宽 %3$s 格。",
-  "worldcombat.skill.vinewhip.description.1": "一次动作抽 %1$s 记，双抽时两记间隔 %2$s 秒；每记甩出约 %3$s 片叶。",
+  "worldcombat.skill.vinewhip.description.1": "一次动作抽 %1$s 记，双抽时两记间隔 %2$s 秒。",
   "worldcombat.skill.vinewhip.double.on": "双抽式：一次动作里快抽两记，总伤略高、更容易补上第二记，但收招与冷却更久、单记更轻。",
   "worldcombat.skill.vinewhip.double.off": "单抽式：一记更快更重、回气更短的干脆抽击。",
   "worldcombat.skill.vinewhip.timing": "可向 %1$s 格内抽鞭，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

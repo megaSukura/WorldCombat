@@ -77,6 +77,7 @@ namespace PokemonSkills {
 
     define({
         id: speedswapId,
+        cooldownParameter: "recharge",
         name: "Speed Swap",
         description: "把自己的有效速度与目标对调一段时间：换完你快我慢的次序倒过来，窗口走完自动换回。",
         uses: ["从比自己快的对手身上借速度", "把比自己慢的对手拖到自己的节奏", "在对手先手压制的开局把次序倒过来"],

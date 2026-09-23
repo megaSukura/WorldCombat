@@ -31,6 +31,7 @@ namespace PokemonSkills {
 
     define({
         id: bideId,
+        cooldownParameter: "recharge",
         name: "Bide",
         description: "站定忍耐一段时间，期间受到的伤害全部记进账本；时间到把账上的伤害加倍还给最后打你的人，没挨到打就落空。",
         uses: ["在被打的一轮里攒一记大还手", "逼对手在你站定时决定要不要继续打", "把分散的小伤害聚成一记重击"],

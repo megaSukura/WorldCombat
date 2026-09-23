@@ -142,12 +142,12 @@ namespace PokemonSkills {
 
     describe("leafstorm", [
         { key: "description.0", values: ["storm"] },
-        { key: "description.1", values: ["reach", "gust", "girth", "blades"] },
+        { key: "description.1", values: ["reach", "gust", "girth"] },
         { key: "description.2", values: ["insightLoss"] },
         { key: "maelstrom.on", values: ["whirlRadius", "whirlShare", "whirlTicks", "whirlPulse"], when: function (context) { return read(context.detail.values, ["maelstrom"]) === true; } },
         { key: "maelstrom.off", values: [], when: function (context) { return read(context.detail.values, ["maelstrom"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.storm", "tier.0.blades"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.storm"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.storm", "tier.1.reach"] }
     ]);
 }

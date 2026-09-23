@@ -95,7 +95,8 @@ namespace PokemonSkills {
     });
 
     define({
-        id: spotlightId, name: "聚光灯",
+        id: spotlightId,
+        cooldownParameter: "recharge", name: "聚光灯",
         description: "把一束光钉在对手身上：它在照明期间受到的所有伤害更重，并成为全场焦点——施法者一侧的生物会被指向它。照明有时限。",
         uses: ["给全队标出优先集火目标", "在集火前先把它照得更脆", "把靠近的敌群牵向同一个目标"],
         kind: "enemy", range: 12, maxRange: 14,

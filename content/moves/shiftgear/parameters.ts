@@ -60,7 +60,6 @@ namespace PokemonSkills {
 
     describe("shiftgear", [
         { key: "description.0", values: ["attackGift", "speedGift"] },
-        { key: "description.1", values: ["orbit", "overrun"] },
         { key: "description.2", values: ["telegraph", "aftermath", "wait"] }
     ]);
 }

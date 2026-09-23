@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: powergemId,
+        cooldownParameter: "recharge",
         name: "Power Gem",
         description: "The user attacks with a ray of light that sparkles as if it were made of gemstones.",
         uses: ["在长距离点名一个远处的目标", "把光贯穿一条线上的敌人", "逼对手躲到掩体后才敢露头"],

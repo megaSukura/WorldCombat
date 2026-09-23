@@ -120,13 +120,12 @@ namespace PokemonSkills {
 
     describe(shadowclawId, [
         { key: "description.0", values: ["rend"] },
-        { key: "description.1", values: ["reach", "shade"] },
-        { key: "description.2", values: ["ambush", "claw"] },
-        { key: "description.3", values: ["gouge"] },
+        { key: "description.1", values: ["reach"] },
+        { key: "description.2", values: ["ambush"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.rend"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.shade", "tier.1.ambush"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.ambush"] }
     ]);
 }

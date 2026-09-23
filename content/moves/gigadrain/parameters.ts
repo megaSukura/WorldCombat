@@ -100,7 +100,7 @@ namespace PokemonSkills {
 
     describe("gigadrain", [
         { key: "description.0", values: ["surge", "pulses", "cadence"] },
-        { key: "description.1", values: ["reach", "root"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["sap"] },
         { key: "deepPour.on", values: [], when: function (context) { return read(context.detail.values, ["deepPour"]) === true; } },
         { key: "deepPour.off", values: [], when: function (context) { return read(context.detail.values, ["deepPour"]) !== true; } },

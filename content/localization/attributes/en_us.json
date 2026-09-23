@@ -39,7 +39,7 @@
   "worldcombat.attributes.critical_multiplier": "Critical damage multiplier",
   "worldcombat.attributes.critical_multiplier.help": "Critical versus normal damage in the shared damage calculation, including the current ability.",
   "worldcombat.attributes.skill_haste": "Ability haste",
-  "worldcombat.attributes.skill_haste.help": "Shared move cooldown uses original cooldown × 100 / (100 + haste). At 100 haste, cooldown is halved. Windup and recovery remain move-specific; custom formulas are explained in move details.",
+  "worldcombat.attributes.skill_haste.help": "At cast time, cooldown is original cooldown × 100 / (100 + haste). At 100 haste it is halved. Cooldowns already running keep their end time; windup and recovery depend on the move.",
   "worldcombat.attributes.healing_received": "Healing received",
   "worldcombat.attributes.healing_received.help": "Percentage adjustment to move and held-item healing through the shared healing interface. +25%% turns 20 healing into 25; maximum HP still applies.",
   "worldcombat.attributes.curiosity": "Exploration tendency modifier",

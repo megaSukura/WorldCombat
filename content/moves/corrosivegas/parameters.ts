@@ -79,11 +79,10 @@ namespace PokemonSkills {
 
     describe("corrosivegas", [
         { key: "description.0", values: ["radius", "duration"] },
-        { key: "description.1", values: ["linger", "meltMotes"] },
         { key: "spread.on", values: [], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
         { key: "spread.off", values: [], when: function (context) { return read(context.detail.values, ["spread"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.radius"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.radius", "tier.1.meltMotes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.radius"] }
     ]);
 }

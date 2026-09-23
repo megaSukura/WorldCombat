@@ -51,6 +51,7 @@ namespace PokemonSkills {
 
     define({
         id: dragonascentId,
+        cooldownParameter: "recharge",
         name: "Dragon Ascent",
         description: "The user drops out of the sky at high speed onto the target, lowering its own Defense and Sp. Def.",
         uses: ["升空后从正上方砸向一个目标", "落地冲击波震开落点周围的人", "越过前排直接砸到后面的目标"],
@@ -136,7 +137,7 @@ namespace PokemonSkills {
                         if (hurt(current, other, dragonascentId, power, { damage: damageSpec(dragonascentId, "dive"), contact: true })) {
                             extra++;
                             const away = WorldCombat.point(facts.position().x() - at.x(), 0, facts.position().z() - at.z());
-                            if (away.length() > 0.05) scope.displace(other, away.unit().scale(shock));
+                            if (scope.valid(other) && away.length() > 0.05) scope.displace(other, away.unit().scale(shock));
                         }
                     });
                 const self = scope.observe(actor);

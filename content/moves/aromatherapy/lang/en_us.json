@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.aromatherapy.summary": "Lays a lingering scent cloud at a chosen point; the user and allies standing in it have every major status cleared on the spot, and any status applied while the cloud remains is cleared too. Unlike Heal Bell it occupies a place in the world, so walking around it avoids it.",
+  "worldcombat.skill.aromatherapy.summary": "Lays a lingering scent cloud at a chosen point; the user and allies standing in it have every harmful status effect cleared on the spot, and any status applied while the cloud remains is cleared too. Unlike Heal Bell it occupies a place in the world, so walking around it avoids it.",
   "worldcombat.skill.aromatherapy.use.0": "Lay a cloud where allies hold or brawl",
   "worldcombat.skill.aromatherapy.use.1": "Pre-place the cloud on a path allies will take",
   "worldcombat.skill.aromatherapy.use.2": "Purge a whole clustered group with one cloud",
-  "worldcombat.skill.aromatherapy.description.0": "Lays a %1$s-block scent cloud at the chosen point for %2$s; the user and allies inside have every major status cleared.",
+  "worldcombat.skill.aromatherapy.description.0": "Lays a %1$s-block scent cloud at the chosen point for %2$s; the user and allies inside have every harmful status effect cleared.",
   "worldcombat.skill.aromatherapy.description.1": "The cloud reaches %1$s blocks away.",
   "worldcombat.skill.aromatherapy.stance.dense": "Dense: x0.75 radius, but x1.3 duration and a slightly slower wind-up (a tight, long-lasting cloud).",
   "worldcombat.skill.aromatherapy.stance.diffuse": "Diffuse: x1.2 radius, faster wind-up and cooldown, but x0.85 duration (wide and short-lived).",
@@ -22,5 +22,7 @@
   "worldcombat.skill.aromatherapy.preference.ai.scentReach": "Cloud reach",
   "worldcombat.skill.aromatherapy.preference.ai.scentReach.help": "Allies within this distance count as being in the cloud; lower lays only when adjacent, higher for allies further out.",
   "world_combat.move.aromatherapy.text.cleanse": "Scent cleanse x%1$s",
-  "world_combat.move.aromatherapy.text.settle": "Scent cloud opens (~%1$s s)"
+  "world_combat.move.aromatherapy.text.settle": "Scent cloud opens (~%1$s s)",
+  "worldcombat.skill.aromatherapy.growth.0": "At level %1$s, cooldown becomes %2$s.",
+  "worldcombat.skill.aromatherapy.growth.1": "At level %1$s, cooldown becomes %2$s."
 }

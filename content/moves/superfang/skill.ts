@@ -26,6 +26,7 @@ namespace PokemonSkills {
 
     define({
         id: "superfang",
+        cooldownParameter: "recharge",
         name: "Super Fang",
         description: "The user chomps hard on the target with its sharp front fangs. This cuts the target's HP in half.",
         uses: ["一口削掉目标当前生命的一半", "开场就压掉厚血目标的血线", "用不看攻防的比例伤害破盾"],

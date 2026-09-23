@@ -15,6 +15,8 @@ namespace CompanionBehavior {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            var hurt = CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(capability, "healBelow", 0.75);
+            if (CompanionBehavior.ai<boolean>(capability, "onlyWhenHurt", false) && !hurt) return false;
             if (!target) return true;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 16);

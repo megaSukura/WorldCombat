@@ -5,7 +5,7 @@
   "worldcombat.skill.rockpolish.use.2": "Polish the stone underfoot and mark the ground",
   "worldcombat.skill.rockpolish.description.0": "Speed +%1$s level(s) after polishing; standing still to grind takes %2$s.",
   "worldcombat.skill.rockpolish.description.1": "The shine lasts about %1$s and polishes %2$s blocks of stone ground; the levels are taken back when it dulls.",
-  "worldcombat.skill.rockpolish.description.2": "One pass throws about %1$s sparks and %2$s dust, then recovers for %3$s and starts a %4$s cooldown.",
+  "worldcombat.skill.rockpolish.description.2": "After a pass, it recovers for %1$s and starts a %2$s cooldown.",
   "worldcombat.skill.rockpolish.grit.on": "Fine grit: longer wind-up and cooldown, a larger floor circle and a longer shine; even light bodies reach the maximum.",
   "worldcombat.skill.rockpolish.grit.off": "Coarse grit: shorter wind-up and cooldown, a smaller floor circle and a shorter shine; bodies over 100kg still reach the maximum.",
   "worldcombat.skill.rockpolish.timing": "Self move, range %1$s blocks; after %2$s s of wind-up it spends %4$s PP, recovers for %3$s s and starts a %5$s s cooldown.",

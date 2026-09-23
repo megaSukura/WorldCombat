@@ -148,7 +148,7 @@ namespace PokemonSkills {
     describe(strangesteamId, [
         { key: "description.0", values: ["scald", "radius", "reach"] },
         { key: "description.1", values: ["sear", "cloudTicks"] },
-        { key: "description.2", values: ["confuseChance", "dazeTicks", "fumble", "motes"] },
+        { key: "description.2", values: ["confuseChance", "dazeTicks", "fumble"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

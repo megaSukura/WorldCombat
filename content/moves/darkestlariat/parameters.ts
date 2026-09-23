@@ -37,7 +37,7 @@ namespace PokemonSkills {
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯。 */
     function darkestlariatStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
         if (!world.valid(actor)) return {};
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 目标身上防御向能力里正面等级的总和（防与特防）；0 表示此刻没有可被本招无视的涨防。 */
@@ -128,7 +128,7 @@ namespace PokemonSkills {
 
     describe(darkestlariatId, [
         { key: "description.0", values: ["sweep", "radius"] },
-        { key: "description.1", values: ["depth", "push", "spin", "gales"] },
+        { key: "description.1", values: ["depth", "push"] },
         { key: "wide.on", values: ["radius", "push", "sweep"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: ["radius", "push", "sweep"], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

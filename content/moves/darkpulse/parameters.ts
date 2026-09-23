@@ -122,7 +122,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["aura", "bloom"] },
         { key: "description.1", values: ["reach", "velocity", "radius"] },
         { key: "description.2", values: ["flinchChance", "flinchTicks"] },
-        { key: "description.3", values: ["lingerTicks", "motes"] },
+        { key: "description.3", values: ["lingerTicks"] },
         { key: "creep.on", values: [], when: function (context) { return read(context.detail.values, ["creep"]) === true; } },
         { key: "creep.off", values: [], when: function (context) { return read(context.detail.values, ["creep"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

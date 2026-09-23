@@ -37,7 +37,7 @@ namespace CompanionBehavior {
             const radius = capability.data.range;
             if (!tailwindCompany(context, radius)) return false;
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
         },
         accepts: function (context, _capability, target) {

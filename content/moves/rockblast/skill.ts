@@ -85,6 +85,7 @@ namespace PokemonSkills {
 
     define({
         id: "rockblast",
+        cooldownParameter: "recharge",
         name: "Rock Blast",
         description: "从脚下的地里掰出石块，一块接一块按弧线抛向目标：每块落地砸一次，并把落点崩成碎石。石块抛得散、贴脸才吃得满；巨岩式少而重、抛得更紧更陡。",
         uses: ["中近距离一梭有弧线的重石", "把落点地面崩成碎石", "对厚目标用巨岩式堆单块伤害"],

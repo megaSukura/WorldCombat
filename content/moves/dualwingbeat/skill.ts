@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: dualwingbeatId,
+        cooldownParameter: "recharge",
         name: "Dual Wingbeat",
         description: "The user slams the target with its wings to inflict damage. The target is hit twice in a row.",
         uses: ["一次俯冲、两只翅膀各拍一下", "先拍开再上掀，把同一个目标连吃两拍", "把身前一小片扇区里的对手扫开"],
@@ -122,8 +123,8 @@ namespace PokemonSkills {
                     scope.sound("cobblemon:impact.flying", point, 14, "{}");
                 });
                 if (index === 0) {
-                    if (hits === 0) WorldFeedback.emit(scope, dualwingbeatScene, 1, origin.plus(direction.scale(reach * 0.6)),
-                        { moment: "miss1", reach: reach, span: span, feathers: feathers }, 18);
+                    if (hits === 0) WorldFeedback.emit(scope, dualwingbeatScene, 1, origin,
+                        { moment: "miss1", direction: heading, reach: reach, span: span, feathers: feathers }, 18);
                     current.after(gap, function (next: CombatAction) { beat(next, 1); });
                     return;
                 }

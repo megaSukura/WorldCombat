@@ -5,7 +5,7 @@
   "worldcombat.skill.confusion.use.2": "压制喜欢连续出手的对手",
   "worldcombat.skill.confusion.description.0": "念弹命中造成 %1$s 点特殊伤害。",
   "worldcombat.skill.confusion.description.1": "命中后有 %1$s 概率让目标恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散，被打散时念力再敲一下。",
-  "worldcombat.skill.confusion.description.2": "念弹射程 %1$s 格、弹速 %2$s 格/刻，命中时炸开约 %3$s 点紫光。",
+  "worldcombat.skill.confusion.description.2": "念弹射程 %1$s 格、弹速 %2$s 格/刻。",
   "worldcombat.skill.confusion.focus.on": "当前为凝念：威力更高、恍惚更久更易触发、失手率更高，代价是射程更近、判定更细、弹速更慢。",
   "worldcombat.skill.confusion.focus.off": "当前为散念：更快更远更便宜的一发，代价是单发更轻、恍惚更少见。",
   "worldcombat.skill.confusion.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

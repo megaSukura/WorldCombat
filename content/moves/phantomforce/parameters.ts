@@ -100,7 +100,7 @@ namespace PokemonSkills {
 
     describe(phantomforceId, [
         { key: "description.0", values: ["rift"] },
-        { key: "description.1", values: ["vanishTicks", "strikeRadius", "behindOffset"] },
+        { key: "description.1", values: ["vanishTicks", "behindOffset"] },
         { key: "description.2", values: ["wardBreak"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: mirrorshotId,
+        cooldownParameter: "recharge",
         name: "Mirror Shot",
         description: "磨亮身体射出一道高速细长的镜面闪光：主目标挨一记钢属性特殊伤害，有概率被晃到眼睛、掉命中；散射式下光在目标身上反射开，顺射击方向溅到身后的旁人。聚光式单点更远更重，散射式打一簇人。",
         uses: ["远距离点掉一个对手的命中", "在开阔地用一道快光先手", "按配置把光反射开，顺手晃到目标身后的一排人"],

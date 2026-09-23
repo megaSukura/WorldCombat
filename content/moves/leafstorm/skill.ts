@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "leafstorm",
+        cooldownParameter: "recharge",
         name: "Leaf Storm",
         description: "Whips a spinning storm of sharp leaves into the target; the recoil harshly lowers the user's Sp. Atk.",
         uses: ["中距离一记高威力特殊草点杀", "卷叶式在落点铺一片持续复割的叶场", "用风柱把目标与身边的敌人一起卷进叶刃里"],

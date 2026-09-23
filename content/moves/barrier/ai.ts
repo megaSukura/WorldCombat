@@ -23,7 +23,7 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "barrier")) return false;
             const gap = barrierThreatGap(context);
-            if (gap < 0) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (gap < 0 || gap < CompanionBehavior.ai<number>(capability, "minGap", 3)) return false;
             return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

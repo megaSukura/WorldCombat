@@ -48,7 +48,8 @@ namespace PokemonSkills {
             extra.actionContext = action;
             NativeLoadout.hitMetadata(action, extra);
         }
-        return PokemonDamage.apply(world, target, CobblemonCombat.moveTemplate(move), extra);
+        var settle = function () { return PokemonDamage.apply(world, target, CobblemonCombat.moveTemplate(move), extra); };
+        return action ? LivingActions.settleHit(action, settle) : settle();
     }
     export function impact(action: CombatAction, hit: CombatImpact, move: string, power: number, features?: HitFeatures, strike?: string): boolean {
         var target = hit.target();
@@ -59,7 +60,9 @@ namespace PokemonSkills {
         mergeFeatures(extra, power, features);
         if (!extra.damage)
             throw new Error("Missing authored damage segment: " + move);
-        return PokemonDamage.hit(action, hit, CobblemonCombat.moveTemplate(move), NativeLoadout.hitMetadata(action, extra), strike);
+        return LivingActions.settleHit(action, function () {
+            return PokemonDamage.hit(action, hit, CobblemonCombat.moveTemplate(move), NativeLoadout.hitMetadata(action, extra), strike);
+        });
     }
     export function powder(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, options: {
         sleep: boolean;

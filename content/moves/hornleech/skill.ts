@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "hornleech",
+        cooldownParameter: "recharge",
         name: "Horn Leech",
         description: "The user drains the target's energy with its horns. The user's HP is restored by up to half the damage taken by the target.",
         uses: ["低头撞进去，用身体把一段距离变成命中", "扎中时把伤害换成回血，边打边续航", "贯穿式一次冲过两个目标"],

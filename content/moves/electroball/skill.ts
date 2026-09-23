@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: electroballId,
+        cooldownParameter: "recharge",
         name: "Electro Ball",
         description: "The user hurls an electric orb at the target. The faster the user is than the target, the greater the move's power.",
         uses: ["自己比对手快时的远距离重炮", "在对手够不到的距离先手开火", "用速度比把电团越充越大"],

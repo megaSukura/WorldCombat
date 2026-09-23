@@ -2,7 +2,7 @@
   "worldcombat.skill.twineedle.summary": "端起两根针先后刺出：第一针先扎开伤口，第二针冲着这道伤口去，所以第二针更容易带毒。交叉式让两根针从身体两侧夹击，加成更大，但每针更轻、间隔更长。",
   "worldcombat.skill.twineedle.description.0": "每针威力 %1$s（走物攻），射程 %2$s，飞行速度 %3$s，判定半径 %4$s；一记出手结算两次。",
   "worldcombat.skill.twineedle.description.1": "两针间隔 %1$s；每针按 %2$s 各掷一次毒，第一针命中后第二针再 +%3$s，毒持续 %4$s。",
-  "worldcombat.skill.twineedle.description.2": "交叉式下两针间距 %1$s 格；准备 %3$s，收招 %4$s，冷却 %5$s。",
+  "worldcombat.skill.twineedle.description.2": "交叉式下两针间距 %1$s 格；准备 %2$s，收招 %3$s，冷却 %4$s。",
   "worldcombat.skill.twineedle.cross.on": "交叉双针：第二针伤口加成 ×1.6、两根从身体两侧夹击，但每针威力 ×0.9、两针间隔 +2 刻。",
   "worldcombat.skill.twineedle.cross.off": "直刺双针：同一线连出、间隔更短、每针威力 ×1.1，但第二针没有夹击加成。",
   "worldcombat.skill.twineedle.timing": "射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

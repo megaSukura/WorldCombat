@@ -6,7 +6,6 @@
   "worldcombat.skill.strugglebug.description.0": "虫群前缘扫到的每个敌人各挨 %1$s 点特殊伤害。",
   "worldcombat.skill.strugglebug.description.1": "被扫到的目标特攻下降 %1$s 级，并被虫群缠住 %2$s。",
   "worldcombat.skill.strugglebug.description.2": "虫群从脚下铺到 %1$s 格，前缘每刻推进 %2$s 格。",
-  "worldcombat.skill.strugglebug.description.3": "一次涌出约 %1$s 个虫点。",
   "worldcombat.skill.strugglebug.option.on": "当前厚势式：虫群铺得更开、缠身更久，代价是伤害更低、出手更慢。",
   "worldcombat.skill.strugglebug.option.off": "当前疾涌式：伤害更高、扩散更快，代价是半径更小、缠身更短。",
   "worldcombat.skill.strugglebug.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

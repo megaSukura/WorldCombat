@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: "swallow",
+        cooldownParameter: "wait",
         name: "Swallow",
         description: "把积蓄的力量吞下，回复自己的 HP。积蓄得越多，回复越大；吞下会把积蓄全部消耗掉。",
         uses: ["攒满三层蓄力后一口回满，把血线拉回来", "被追击时把攒下的层数兑现成回复", "慢咽分几口回，减少治疗溢出"],

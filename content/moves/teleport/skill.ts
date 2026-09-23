@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: teleportId,
+        cooldownParameter: "recharge",
         name: "Teleport",
         description: "折叠空间瞬移到选定的落点，甩掉盯着自己的敌人；野生的个体挪得更远并彻底逃走。和后备宝可梦的替换仍在接共享入口。",
         uses: ["被贴住时瞬间拉开距离", "甩掉正盯着自己的追兵", "越过一小段地形挪到安全处"],

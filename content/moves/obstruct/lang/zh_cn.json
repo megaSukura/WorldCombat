@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.obstruct.summary": "立起带刺拒马，按总量完整挡下对手的攻击；接触攻击撞上来会大幅降低攻击者防御，连续使用容易失败。",
   "worldcombat.skill.obstruct.description.0": "拒马持续 %1$s、量 %2$s 点，接触降防 %3$s 级；防御越高越厚越久。",
-  "worldcombat.skill.obstruct.description.1": "立起 %1$s，宽度 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.obstruct.description.1": "立起 %1$s，冷却 %2$s。",
   "worldcombat.skill.obstruct.description.2": "连用失误率 %1$s；带刺与加固的取舍见配置 %2$s。",
   "worldcombat.skill.obstruct.use.0": "引诱近战对手撞上拒马",
   "worldcombat.skill.obstruct.use.1": "为后续攻击先把对手打软",

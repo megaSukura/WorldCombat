@@ -9,7 +9,7 @@
   "worldcombat.skill.chillingwater.glaze.on": "Currently glaze: freezes a %1$s-block ring at the landing spot for about %2$s, but hits lighter, casts shorter and slower.",
   "worldcombat.skill.chillingwater.glaze.off": "Currently no ice: a harder hit that reaches further and casts faster.",
   "worldcombat.skill.chillingwater.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
-  "worldcombat.skill.chillingwater.growth.0": "From level %1$s the douse rises to %2$s power and %3$s splashes.",
+  "worldcombat.skill.chillingwater.growth.0": "From level %1$s the douse rises to %2$s power.",
   "worldcombat.skill.chillingwater.growth.1": "From level %1$s the douse rises to %2$s power and the soak lasts %3$s.",
   "worldcombat.skill.chillingwater.value.drench": "Douse power",
   "worldcombat.skill.chillingwater.value.atkDrop": "Attack drop",

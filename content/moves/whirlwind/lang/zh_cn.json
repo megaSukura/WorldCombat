@@ -11,7 +11,7 @@
   "worldcombat.skill.whirlwind.wide.off": "关闭宽阔风墙：风道更窄更长、吹得更远，适合远距离清场。",
   "worldcombat.skill.whirlwind.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.whirlwind.growth.0": "达到 %1$s 级，风道长度提升至 %2$s 格，吹飞距离提升至 %3$s 格。",
-  "worldcombat.skill.whirlwind.growth.1": "达到 %1$s 级，风道长度提升至 %2$s 格，吹飞距离提升至 %3$s 格，风尘提升至 %4$s 个。",
+  "worldcombat.skill.whirlwind.growth.1": "达到 %1$s 级，风道长度提升至 %2$s 格，吹飞距离提升至 %3$s 格。",
   "worldcombat.skill.whirlwind.value.reach": "风道长度",
   "worldcombat.skill.whirlwind.value.band": "风道宽度",
   "worldcombat.skill.whirlwind.value.front": "推进速度",

@@ -2,7 +2,7 @@
   "worldcombat.skill.shellsidearm.summary": "Press a venomous shell into the firing chamber and launch it, after reading which side of the target is soft: a hard-shell target takes a blunt ram (physical), soft flesh takes a venom spray (special). A hit may poison. You can pin it to the ram (harder, but only at point-blank) or the spray (longer and steadier).",
   "worldcombat.skill.shellsidearm.description.0": "Shell power %1$s (grows from the higher of attack and special attack); the attack/special gap is %2$s - on impact it picks whichever of ram or spray deals more against the target's soft side.",
   "worldcombat.skill.shellsidearm.description.1": "Range %1$s, shell speed %2$s, hit radius %3$s.",
-  "worldcombat.skill.shellsidearm.description.2": "The burst poisons the target with %1$s chance for %2$s and sprays %3$s venom cloud points.",
+  "worldcombat.skill.shellsidearm.description.2": "The burst poisons the target with %1$s chance for %2$s.",
   "worldcombat.skill.shellsidearm.description.3": "Windup %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.shellsidearm.form.auto": "Auto: range as written; on impact it picks whichever of ram and spray deals more damage.",
   "worldcombat.skill.shellsidearm.form.ram": "Ram: forced physical and contact, power x1.05, but range x0.5, shell speed x0.85, +2 windup and +4 cooldown - harder, and only at point-blank.",

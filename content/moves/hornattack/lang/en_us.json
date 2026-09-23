@@ -4,7 +4,7 @@
   "worldcombat.skill.hornattack.use.1": "Drive a foe across the ground away from cover or position",
   "worldcombat.skill.hornattack.use.2": "Cheap close-range pressure",
   "worldcombat.skill.hornattack.description.0": "The horn point deals about %1$s contact damage; reach about %2$s blocks with a %3$s block horn half-width.",
-  "worldcombat.skill.hornattack.description.1": "The hit shoves the target about %1$s blocks instantly, then drags it about %2$s blocks along the ground, raising about %3$s clumps of dust.",
+  "worldcombat.skill.hornattack.description.1": "The hit shoves the target about %1$s blocks instantly, then drags it about %2$s blocks along the ground.",
   "worldcombat.skill.hornattack.drive.on": "Bulldoze form: carries the target about %1$s blocks and about %2$s damage per gore, but with a longer wind-up, recovery and cooldown.",
   "worldcombat.skill.hornattack.drive.off": "Quick form: releases after about %1$s blocks and about %2$s damage, with the shortest wind-up and cycle.",
   "worldcombat.skill.hornattack.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

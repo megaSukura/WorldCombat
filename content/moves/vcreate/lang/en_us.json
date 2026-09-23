@@ -2,7 +2,7 @@
   "worldcombat.skill.vcreate.summary": "Grow a scorching flame on the forehead and hurl the whole body as the projectile: the forehead fire spreads into a V and the user carries that V into the target, bursting on impact. The price is stated up front - Defense, Sp. Def and Speed all drop the moment the move is committed, hit or miss. The heaviest close-range collision in the project.",
   "worldcombat.skill.vcreate.description.0": "The blazing body deals %1$s contact damage and knocks the target %2$s blocks away.",
   "worldcombat.skill.vcreate.description.1": "Dive %1$s blocks at %2$s blocks per tick, with a %3$s block forehead-flame radius.",
-  "worldcombat.skill.vcreate.description.2": "Afterwards the user loses %1$s Defense, %2$s Sp. Def and %3$s Speed stages (paid at commit); %4$s V-flames drive the presentation.",
+  "worldcombat.skill.vcreate.description.2": "Afterwards the user loses %1$s Defense, %2$s Sp. Def and %3$s Speed stages (paid at commit).",
   "worldcombat.skill.vcreate.nova.on": "All-burn form: a heavier flame and a fuller V, at one extra Speed stage lost, longer recovery and cooldown and a slower dive - a burst that gambles mobility.",
   "worldcombat.skill.vcreate.nova.off": "Kept-flame form: a faster, longer dive and a shorter cooldown, at slightly lower flame power.",
   "worldcombat.skill.vcreate.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

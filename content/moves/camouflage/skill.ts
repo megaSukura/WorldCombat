@@ -94,6 +94,7 @@ namespace PokemonSkills {
 
     define({
         id: "camouflage",
+        cooldownParameter: "recharge",
         name: "Camouflage",
         description: "读脚下这块地，把身体暂时染成它的属性：水里是水、草丛是草、洞窟是岩；配置「随景而变」时走动中会再染。",
         uses: ["按所在地形临时改成贴合属性的属性", "翻掉当前受击面、换一套相性与状态免疫", "开战前先按地形定属性"],

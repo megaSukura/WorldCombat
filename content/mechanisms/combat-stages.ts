@@ -25,7 +25,45 @@ namespace CombatStages {
     export var stats = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
     var attributes: { [stat: string]: string } = { atk: "minecraft:generic.attack_damage", spe: "minecraft:generic.movement_speed" };
     interface State { stages: { [stat: string]: number }; }
-    interface Window { source: string; stages: { [stat: string]: number }; }
+    interface Window { source: string; stages: { [stat: string]: number }; carrier?: MobEffects.Anchor; owner?: WindowOwner; origin?: string; }
+    export interface WindowOwner { actor: string; definition: string; id: number; }
+    export function validOwner(owner: WindowOwner): boolean {
+        return !!owner && typeof owner.actor === "string" && typeof owner.definition === "string" && typeof owner.id === "number" && owner.id > 0;
+    }
+    /** A moved contribution keeps the lifetime and dispel ownership of its original window. */
+    export function windowAlive(world: CombatWorld, actor: CombatActor, state: { carrier?: MobEffects.Anchor; owner?: WindowOwner }, seen: number[] = []): boolean {
+        if (state.carrier && !MobEffects.matches(world, actor, state.carrier)) return false;
+        if (!state.owner) return true;
+        if (seen.indexOf(state.owner.id) >= 0) return false;
+        var owner = world.actor(state.owner.actor);
+        if (!owner || !world.valid(owner)) return false;
+        var views = world.effects(owner, state.owner.definition).filter(function (view) { return view.id() === state.owner!.id; });
+        return views.length > 0 && windowAlive(world, owner, JSON.parse(String(views[0].data())), seen.concat([state.owner.id]));
+    }
+    /** Exact edit of one contribution; source, duration, carrier and unrelated modifier fields stay intact. */
+    export function editWindow(effect: CombatEffect): void {
+        var input = JSON.parse(effect.input()), state = JSON.parse(effect.state());
+        if (stats.indexOf(input.stat) < 0 || !isFinite(input.value) || input.value % 1 || Math.abs(input.value) > 6
+            || (state.stages && state.stages[input.stat] || 0) !== input.expected) { effect.reject("stage-changed"); return; }
+        if (!state.stages) state.stages = {};
+        if (input.value === 0) delete state.stages[input.stat]; else state.stages[input.stat] = input.value;
+        effect.state(JSON.stringify(state));
+    }
+    export function attachOwner(effect: CombatEffect): void {
+        var input = JSON.parse(effect.input()), state = JSON.parse(effect.state());
+        if (!validOwner(input) || String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("invalid-owner"); return; }
+        state.owner = input; effect.state(JSON.stringify(state)); effect.schedule("carrier", "carrier", 1, "{}");
+    }
+    /** Explicit handoff before the former holder retires; retain the remaining clock and record its source. */
+    export function adoptWindow(effect: CombatEffect): void {
+        var state = JSON.parse(effect.state());
+        if (state.carrier || String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("invalid-handoff"); return; }
+        state.origin = state.origin || String(effect.source().ref()); delete state.owner;
+        effect.copyTo(effect.target(), effect.target(), JSON.stringify(state), effect.remaining()); effect.end();
+    }
+    /** Domains install their stage-window transfer writer when the native mechanics package loads. */
+    export var transferWindow = function (effect: CombatEffect, _definition: string): void { effect.reject("unsupported-transfer"); };
+
     function clean(value: any): { [stat: string]: number } {
         var stages: { [stat: string]: number } = {};
         stats.forEach(function (stat) { var n = Number(value && value[stat] || 0); if (isFinite(n) && n !== 0) stages[stat] = Math.max(-6, Math.min(6, Math.round(n))); });
@@ -38,7 +76,10 @@ namespace CombatStages {
     function normalizeWindow(json: string): string {
         var value: Window = JSON.parse(json);
         if (!value || typeof value.source !== "string" || !value.stages) throw new Error("Invalid stage window");
-        return JSON.stringify({ source: value.source, stages: clean(value.stages) });
+        if (value.carrier && !MobEffects.validAnchor(value.carrier)) throw new Error("Invalid stage carrier");
+        if (value.owner && !validOwner(value.owner)) throw new Error("Invalid stage owner");
+        if (value.origin !== undefined && typeof value.origin !== "string") throw new Error("Invalid stage origin");
+        return JSON.stringify({ source: value.source, stages: clean(value.stages), carrier: value.carrier, owner: value.owner, origin: value.origin });
     }
     function clamp(value: number): number { return Math.max(-6, Math.min(6, value)); }
     export function multiplier(stage: number): number { return stage >= 0 ? (2 + stage) / 2 : 2 / (2 - stage); }
@@ -60,6 +101,7 @@ namespace CombatStages {
         var result: { [stat: string]: number } = {}, views = world.effects(actor, windowDefinition);
         for (var i = 0; i < views.length; i++) {
             var value: Window = JSON.parse(String(views[i].data())), stages = value.stages || {};
+            if (!windowAlive(world, actor, value)) continue;
             stats.forEach(function (stat) { result[stat] = (result[stat] || 0) + (stages[stat] || 0); });
         }
         return result;
@@ -127,11 +169,11 @@ namespace CombatStages {
      * when the effect ends or is dispelled. Windows overlap and cap through the read clamp; none of them can be
      * pushed negative by a later rewrite of the persistent ladder. Returns the window effect id for early removal.
      */
-    export function window(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source?: string): number {
+    export function window(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source?: string, carrier?: MobEffects.Anchor): number {
         if (!world.valid(actor)) return 0;
         var stages = clean(changes);
         if (!Object.keys(stages).length) return 0;
-        return world.effect(windowDefinition, actor, JSON.stringify({ source: source || "", stages: stages }), ticks);
+        return world.effect(windowDefinition, actor, JSON.stringify({ source: source || "", stages: stages, carrier: carrier }), ticks);
     }
     /** Ends one owned window early; a naturally expired window is already gone and this is a no-op. */
     export function closeWindow(world: CombatWorld, windowId: number): boolean {
@@ -183,11 +225,25 @@ namespace CombatStages {
     WorldCombat.effectHandler(definition, "start", function () {});
     WorldCombat.effectHandler(definition, "resume", function () {});
     WorldCombat.effectHandler(definition, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(definition, "operation:world_combat:stage_adopt", adoptWindow);
     WorldCombat.effectHandler(definition, "operation:world_combat:touch", function (effect) { effect.remaining(idleTicks); });
     WorldCombat.effect(windowDefinition, 1, 12000, "actor", normalizeWindow, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(windowDefinition, "start", function () {});
-    WorldCombat.effectHandler(windowDefinition, "resume", function () {});
+    function watchCarrier(effect: CombatEffect, claim: boolean): void {
+        var state: Window = JSON.parse(effect.state());
+        if (!state.carrier && !state.owner) return;
+        var world = effect.world(), actor = effect.target();
+        if (!windowAlive(world, actor, state)) { effect.end(); return; }
+        if (claim && state.carrier) MobEffects.bind(world, actor, state.carrier.id);
+        effect.schedule("carrier", "carrier", 1, "{}");
+    }
+    WorldCombat.effectHandler(windowDefinition, "start", function (effect) { watchCarrier(effect, true); });
+    WorldCombat.effectHandler(windowDefinition, "resume", function (effect) { watchCarrier(effect, true); });
+    WorldCombat.effectHandler(windowDefinition, "carrier", function (effect) { watchCarrier(effect, false); });
     WorldCombat.effectHandler(windowDefinition, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(windowDefinition, "operation:world_combat:stage_edit", editWindow);
+    WorldCombat.effectHandler(windowDefinition, "operation:world_combat:stage_owner", attachOwner);
+    WorldCombat.effectHandler(windowDefinition, "operation:world_combat:stage_adopt", adoptWindow);
+    WorldCombat.effectHandler(windowDefinition, "operation:world_combat:stage_transfer", function (effect) { transferWindow(effect, windowDefinition); });
     WorldCombat.effect(projectionDefinition, 1, 1200000, "actor", normalize, EffectProtocols.unchanged);
     WorldCombat.effectHandler(projectionDefinition, "start", apply);
     WorldCombat.effectHandler(projectionDefinition, "resume", apply);
@@ -197,7 +253,7 @@ namespace CombatStages {
         WorldCombat.on("world_combat:stages/project/" + id.split(":")[1], "world_combat:effect_changed/" + id.replace(":", "/"), "", function (event) { reproject(event.world()); });
     });
     export function special(data:any):boolean {
-        return data.category==="special" || data.damageType==="minecraft:magic" || data.damageType==="minecraft:indirect_magic" || (data.damageTags||[]).indexOf("neoforge:is_magic")>=0;
+        return DamageSemantics.read(data).category === "special";
     }
     WorldCombat.on("world_combat:stages/special", "world_combat:damage_incoming", "world_combat:effects_incoming", function(event) {
         var world=event.world(), target=event.target(), data=JSON.parse(String(event.data()));

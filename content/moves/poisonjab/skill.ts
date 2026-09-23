@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "poisonjab",
+        cooldownParameter: "recharge",
         name: "Poison Jab",
         description: "站定把带毒的肢体沿直线递出去，扎中直线上的第一个对手：物理重击，按概率在伤口里留下毒，并把它顶开一点。深刺式更狠，代价是够得更近、起手更慢。",
         uses: ["近身延长的一记重刺", "把靠近的目标扎毒并顶开", "在对手出手前先手压制"],
@@ -99,7 +100,7 @@ namespace PokemonSkills {
                     { damage: damageSpec("poisonjab", "jab"), contact: true });
                 let poisoned = false;
                 if (dealt) {
-                    world.displace(target, direction.scale(push));
+                    if (world.valid(target)) world.displace(target, direction.scale(push));
                     if (world.valid(target) && world.random() < chance)
                         poisoned = CombatStatus.inflict(world, target, "poison", venomTicks, 0, { secondary: true });
                     const wound = world.valid(target) ? world.observe(target) : null;

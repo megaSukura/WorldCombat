@@ -4,7 +4,6 @@
   "worldcombat.skill.weatherball.use.1": "在雷雨或晴空里放大威力",
   "worldcombat.skill.weatherball.description.0": "甩出一颗收集了当前天色的球，造成 %1$s 的特殊伤害；属性随天色而变（雷→电、雨→水、晴→火、无天气→普通）。",
   "worldcombat.skill.weatherball.description.1": "聚气 %1$s 秒后在 %2$s 格内甩出；天色可收时聚气更久但威力 ×2。",
-  "worldcombat.skill.weatherball.description.2": "范围随光晕半径放大。",
   "worldcombat.skill.weatherball.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.weatherball.value.orb": "威力",
   "worldcombat.skill.weatherball.value.charged": "天色可收",

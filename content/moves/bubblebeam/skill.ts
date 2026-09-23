@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: "bubblebeam",
+        cooldownParameter: "recharge",
         name: "Bubble Beam",
         description: "喷出一团会黏的泡沫：主目标吃泡沫伤害、有概率掉速度并被泡沫黏住，泡沫还沿准线涌开、糊住目标前方的敌人。浓沫更黏更软；急泡泡更快更远、但黏不住。",
         uses: ["把跑得快的对手黏住、压它速度", "糊住目标前方一片，为队友创造先手", "留一段共享身份 foamed 给别的招以后消费"],

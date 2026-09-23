@@ -3,7 +3,7 @@
   "worldcombat.skill.howl.use.0": "Raise the whole team's Attack before a fight",
   "worldcombat.skill.howl.use.1": "Rouse allies who step into the cry later",
   "worldcombat.skill.howl.use.2": "Solo, pour all the spirit into two Attack stages",
-  "worldcombat.skill.howl.description.0": "The howl raises Attack by %1$s stage (pack: every ally within %2$s blocks; solo: only the user), carrying about %3$s sound motes.",
+  "worldcombat.skill.howl.description.0": "The howl raises Attack by %1$s stage (pack: every ally within %2$s blocks; solo: only the user).",
   "worldcombat.skill.howl.description.1": "The rally holds for about %1$s s; the cry echoes outward every 20 ticks, and the boost is taken back when the window ends.",
   "worldcombat.skill.howl.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.howl.cry.pack": "Pack: +1 stage for the user and each ally in radius, wide and long, at +1 tick wind-up and x1.1 cooldown — each one gains less.",

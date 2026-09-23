@@ -30,6 +30,7 @@ namespace PokemonSkills {
 
     define({
         id: "trailblaze",
+        cooldownParameter: "regroup",
         name: "起草",
         description: "跳出草丛进行攻击。通过轻快的步伐会提高自己的速度。",
         uses: ["从草木里窜出打一记措手不及", "借草丛起跳，一次换到更远的对手", "命中后提速，用新速度追下去"],

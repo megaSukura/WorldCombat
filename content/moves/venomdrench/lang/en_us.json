@@ -4,7 +4,7 @@
   "worldcombat.skill.venomdrench.use.1": "Catch several poisoned enemies in one splash",
   "worldcombat.skill.venomdrench.use.2": "Stick to one tough poisoned target and drench it twice as hard",
   "worldcombat.skill.venomdrench.description.0": "A poisoned foe caught in the venom loses %1$s stages of Attack, Sp. Atk and Speed; the venom reaches %2$s blocks around the user.",
-  "worldcombat.skill.venomdrench.description.1": "A ring throws about %2$s venom droplets outward at %1$s. Anyone not poisoned is only soaked and takes no penalty.",
+  "worldcombat.skill.venomdrench.description.1": "Anyone not poisoned is only soaked and takes no penalty.",
   "worldcombat.skill.venomdrench.deep.on": "Deep drench: %1$s stages off each stat, but a smaller radius and a longer wind-up and cooldown.",
   "worldcombat.skill.venomdrench.deep.off": "Shallow drench: 1 stage off each stat, with a wider splash that is quicker and cheaper.",
   "worldcombat.skill.venomdrench.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",

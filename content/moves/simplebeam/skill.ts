@@ -53,6 +53,7 @@ namespace PokemonSkills {
 
     define({
         id: simplebeamId,
+        cooldownParameter: "recharge",
         name: "单纯光束",
         description: "向对手发一道谜之念波，把它的特性整个改写成「单纯」；念波扩散档还能把附近一圈宝可梦一起改简单。",
         uses: ["把对手的强力特性顶成一枚单纯", "封掉靠自身特性运转的打法", "扩散档一次扫掉围上来的一圈特性"],

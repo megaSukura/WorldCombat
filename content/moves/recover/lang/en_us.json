@@ -4,7 +4,6 @@
   "worldcombat.skill.recover.use.1": "Let the cells work harder when badly hurt",
   "worldcombat.skill.recover.use.2": "Trade an unlocked window for a steady restore",
   "worldcombat.skill.recover.description.0": "Restores %1$s of maximum health, paid tick by tick across a %2$s window; reaching full health settles early.",
-  "worldcombat.skill.recover.description.1": "About %1$s motes of light rise during the window with a %2$s-block glow, wider on a larger body.",
   "worldcombat.skill.recover.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed; the whole window can be walked through.",
   "worldcombat.skill.recover.stance.steady": "Steady regeneration: +0.05 healing and a 1.35x window - slower each tick but a larger total, at the cost of a longer cooldown and a longer exposed window.",
   "worldcombat.skill.recover.stance.quick": "Swift regeneration: -0.04 healing and a 0.75x window - faster to pay out with a shorter cooldown, for a gap between blows.",

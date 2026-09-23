@@ -20,6 +20,7 @@ namespace PokemonSkills {
             const wary = config.wary !== false;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return !wary && (context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work");
+            if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 3)) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

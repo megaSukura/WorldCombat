@@ -4,7 +4,7 @@
   "worldcombat.skill.dragonclaw.use.1": "Catch several foes in one sweep",
   "worldcombat.skill.dragonclaw.use.2": "Tear a target's armour open and lower its Defence",
   "worldcombat.skill.dragonclaw.description.0": "A %3$s degree fan reaching about %2$s blocks, each claw dealing about %1$s contact damage.",
-  "worldcombat.skill.dragonclaw.description.1": "The fan is about %1$s blocks tall; a caught target loses %2$s Defence stages and sheds about %3$s claw marks.",
+  "worldcombat.skill.dragonclaw.description.1": "The fan is about %1$s blocks tall; a caught target loses %2$s Defence stages.",
   "worldcombat.skill.dragonclaw.cross.on": "Cross form: the fan widens from 84 to %1$s degrees and tears %2$s armour stages, each claw about %3$s damage, but with a longer wind-up and cooldown.",
   "worldcombat.skill.dragonclaw.cross.off": "Single-claw form: a narrower front (%1$s degrees) and %2$s armour stages, each claw about %3$s damage, with a faster wind-up and shorter cycle.",
   "worldcombat.skill.dragonclaw.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

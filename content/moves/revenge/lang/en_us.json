@@ -4,7 +4,7 @@
   "worldcombat.skill.revenge.use.1": "Knock a charging foe back off your body",
   "worldcombat.skill.revenge.use.2": "Punish an enemy that strikes you first at close range",
   "worldcombat.skill.revenge.description.0": "The punch deals about %1$s physical damage; if this same target has hurt you within the last %2$s seconds, the power is doubled.",
-  "worldcombat.skill.revenge.description.1": "Punch up to %1$s blocks, %2$s blocks per tick, with a %3$s block hit radius; a hit knocks the target back about %4$s blocks and trails about %5$s punch gusts.",
+  "worldcombat.skill.revenge.description.1": "Punch up to %1$s blocks, %2$s blocks per tick, with a %3$s block hit radius; a hit knocks the target back about %4$s blocks.",
   "worldcombat.skill.revenge.endure.on": "Endure on: the grudge window is 0.8s longer and knockback is ×1.20, so you stand and wait for the foe to swing first; in exchange the hit is about ×0.92, the wind-up is 2 ticks longer and the cooldown is 6 ticks longer.",
   "worldcombat.skill.revenge.endure.off": "Endure off: the hit is about ×1.06 and the punch comes faster, answering the moment you are struck.",
   "worldcombat.skill.revenge.timing": "Cast on an enemy within %1$s blocks; after %2$s seconds it spends %4$s PP to fire, then recovers for %3$s seconds and starts a %5$s second cooldown on commit.",

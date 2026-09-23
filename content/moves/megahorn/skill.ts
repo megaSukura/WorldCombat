@@ -40,6 +40,7 @@ namespace PokemonSkills {
 
     define({
         id: "megahorn",
+        cooldownParameter: "recharge",
         name: "Megahorn",
         description: "Using its tough and impressive horn, the user rams into the target with no letup.",
         uses: ["长蓄势换一记最重的单点直刺", "把正面的目标挑到空中、脱离阵地", "深植式钉住目标给队友创造机会"],
@@ -147,8 +148,8 @@ namespace PokemonSkills {
                     const where = body === null ? at : body.position();
                     hurt(next, target, "megahorn", ripPower,
                         { damage: damageSpec("megahorn", "gore"), contact: true });
-                    scope.displace(target, heading.scale(fling));
-                    scope.motion(target, WorldCombat.point(0, flingUp, 0), false);
+                    if (scope.valid(target)) scope.displace(target, heading.scale(fling));
+                    if (scope.valid(target)) scope.motion(target, WorldCombat.point(0, flingUp, 0), false);
                     WorldFeedback.emit(scope, megahornScene, 1, where,
                         { moment: "toss", target: String(target.ref()), fling: fling, flingUp: flingUp,
                             shards: shards, scale: scale, intensity: intensity }, 22);

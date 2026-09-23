@@ -6,7 +6,7 @@
   "worldcombat.skill.hydrosteam.use.3": "把烫人的湿气留在敌人身上",
   "worldcombat.skill.hydrosteam.description.0": "对扇面内每个敌人造成约 %1$s 点特殊伤害；当前处于强日照时，这一段 ×1.5。",
   "worldcombat.skill.hydrosteam.description.1": "蒸汽喷出 %1$s 格远、张角 %2$s 度，最多罩住 4 个敌人，命中者被沿背离方向顶开。",
-  "worldcombat.skill.hydrosteam.description.2": "被喷中的目标带着湿透身份约 %1$s，顶开约 %2$s 格，喷出时翻起约 %3$s 团白汽。",
+  "worldcombat.skill.hydrosteam.description.2": "被喷中的目标带着湿透身份约 %1$s，顶开约 %2$s 格。",
   "worldcombat.skill.hydrosteam.rule.thaw": "命中会化开目标身上的冰冻，自己身上的冰冻也在起手时化开。",
   "worldcombat.skill.hydrosteam.bellow.on": "当前闷蒸式：张角 ×1.35、湿身 ×1.3，但威力 ×0.9、射程 ×0.9、起手多 2 刻、冷却多 6 刻。",
   "worldcombat.skill.hydrosteam.bellow.off": "当前喷射式：更窄更烫更快，适合点名单体。",

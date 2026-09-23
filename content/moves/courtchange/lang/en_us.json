@@ -6,7 +6,6 @@
   "worldcombat.skill.courtchange.description.0": "Pick a point within %2$s blocks; every field effect within %1$s blocks flips ownership.",
   "worldcombat.skill.courtchange.swift.on": "Swift swap: %1$s telegraph and %2$s cooldown, at the cost of radius x0.85 - quick and small, made for long trades.",
   "worldcombat.skill.courtchange.swift.off": "Steady swap: radius x1.2, at the cost of a higher telegraph and cooldown - one circle covers a much wider stretch.",
-  "worldcombat.skill.courtchange.description.1": "",
   "worldcombat.skill.courtchange.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.courtchange.timing": "Field move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.courtchange.value.field": "Swap radius",

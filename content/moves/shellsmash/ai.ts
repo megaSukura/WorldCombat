@@ -14,9 +14,9 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (["atk", "spa", "spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
-            if (!threat)
-                return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "minHealth", 0.45)) return false;
             return CompanionBehavior.distance(self.point, threat.point) >= CompanionBehavior.ai<number>(capability, "minGap", 4);
         },

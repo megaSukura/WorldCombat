@@ -5,7 +5,7 @@
   "worldcombat.skill.fierydance.use.2": "命中后让火焰更旺、特攻提升",
   "worldcombat.skill.fierydance.description.0": "每一拍火焰造成约 %1$s 的特殊伤害，第一拍先覆盖身周 %2$s 格的内圈；对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.fierydance.description.1": "内圈之后 %2$s 刻，第二拍把 %1$s 格的外圈再卷一次，并把命中的人推开 %3$s 格。",
-  "worldcombat.skill.fierydance.description.2": "两拍里命中任意目标后 %1$s 概率让火焰更旺、特攻提升 %2$s 级；整支舞扬起 %3$s 团火。",
+  "worldcombat.skill.fierydance.description.2": "两拍里命中任意目标后 %1$s 概率让火焰更旺、特攻提升 %2$s 级。",
   "worldcombat.skill.fierydance.spiral.on": "旋舞：外圈更大、命中后一次升两级特攻，但每一拍更轻、起手与冷却更久。",
   "worldcombat.skill.fierydance.spiral.off": "聚焰：两拍更重、更快更便宜、外圈略小，命中只升一级特攻。",
   "worldcombat.skill.fierydance.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

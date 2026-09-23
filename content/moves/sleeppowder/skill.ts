@@ -75,6 +75,7 @@ namespace PokemonSkills {
 
     define({
         id: sleeppowderId,
+        cooldownParameter: "recharge",
         name: "催眠粉",
         description: "抛出催眠粉，落地摊成一片久久不散的尘云：站在云里的敌人被一口口喂进睡意，先变慢、够数便睡下；走出去的人睡意还挂着慢慢走完。它可以封住一条路或把敌人赶进去，草属性则直接穿过粉末。",
         uses: ["封住一条通道、门口或退路", "把追兵赶进云里慢慢倒", "为队友的食梦或恶梦制造睡眠区"],

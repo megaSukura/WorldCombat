@@ -44,9 +44,8 @@ namespace PokemonSkills {
     stages("forestscurse", [{ level: 40, values: { cooldown: 86 } }, { level: 55, values: { cooldown: 74 } }]);
 
     describe("forestscurse", [
-        { key: "description.0", values: ["hold", "roots"] },
+        { key: "description.0", values: ["hold"] },
         { key: "description.1", values: ["reach", "tempo", "aftercast"] },
-        { key: "description.2", values: ["grove", "leaves"] },
         { key: "rooted.on", values: ["hold", "recharge"], when: function (context) { return read(context.detail.values, ["rooted"]) === true; } },
         { key: "rooted.off", values: [], when: function (context) { return read(context.detail.values, ["rooted"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

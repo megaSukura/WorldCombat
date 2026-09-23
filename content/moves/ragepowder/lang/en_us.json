@@ -4,7 +4,7 @@
   "worldcombat.skill.ragepowder.use.1": "Stick to nearby enemies so an ally can break away",
   "worldcombat.skill.ragepowder.use.2": "Cover a patch of open ground and hold the fight there",
   "worldcombat.skill.ragepowder.description.0": "Powder radius %1$s blocks, cloud lasts %2$s; enemies inside are repeatedly aimed at you. Grass types are immune.",
-  "worldcombat.skill.ragepowder.description.1": "Re-draws every %1$s; the cloud lifts %2$s powder grains, derived from Special Attack.",
+  "worldcombat.skill.ragepowder.description.1": "Re-draws every %1$s.",
   "worldcombat.skill.ragepowder.thick.on": "Thick powder: radius x0.85, but pull interval x0.6 and duration x1.15 - small area, sticks hard.",
   "worldcombat.skill.ragepowder.thick.off": "Thin powder: radius x1.3 (wider), at the cost of interval x1.3 and duration x0.9 (looser).",
   "worldcombat.skill.ragepowder.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

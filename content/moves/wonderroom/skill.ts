@@ -11,6 +11,7 @@
 namespace PokemonSkills {
     define({
         id: wonderRoomId,
+        cooldownParameter: "recharge",
         name: "奇妙空间",
         description: "在选定的地面撑开一片交换空间：站在里面的活体防御与特防互换。对双方一视同仁，走出去立刻换回。",
         uses: ["把物理坦换给特攻手打", "让特防高的单位扛住物理输出", "搅乱对手对攻防的判断"],

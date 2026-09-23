@@ -50,6 +50,7 @@ namespace PokemonSkills {
 
     define({
         id: "overheat",
+        cooldownParameter: "recharge",
         name: "Overheat",
         description: "Dumps all of the user's heat into one searing fan and burns everything in it; the recoil harshly lowers the user's Sp. Atk.",
         uses: ["中近距离用一张扇形热浪同时烧到几个人", "把目标点着并在地上留下焦痕", "过载式用更重的单发与更大的自身消耗换时间"],

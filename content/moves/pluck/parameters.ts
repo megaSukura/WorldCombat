@@ -117,7 +117,7 @@ namespace PokemonSkills {
     describe("pluck", [
         { key: "description.0", values: ["peck", "radius"] },
         { key: "description.1", values: ["reach", "lift"] },
-        { key: "description.2", values: ["absorb", "motes"] },
+        { key: "description.2", values: ["absorb"] },
         { key: "swoop.on", values: [], when: function (context) { return read(context.detail.values, ["swoop"]) === true; } },
         { key: "swoop.off", values: [], when: function (context) { return read(context.detail.values, ["swoop"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

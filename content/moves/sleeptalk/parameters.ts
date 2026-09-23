@@ -29,7 +29,6 @@ namespace PokemonSkills {
 
     describe("sleeptalk", [
         { key: "description.0", values: ["murmur"] },
-        { key: "description.1", values: ["span", "recharge"] },
-        { key: "description.2", values: ["echoes"] }
+        { key: "description.1", values: ["span", "recharge"] }
     ]);
 }

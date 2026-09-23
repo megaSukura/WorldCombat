@@ -121,12 +121,12 @@ namespace PokemonSkills {
 
     describe("pyroball", [
         { key: "description.0", values: ["blast", "velocity", "radius", "scatter"] },
-        { key: "description.1", values: ["burnChance", "heat", "scorchTicks"] },
-        { key: "description.2", values: ["sparks", "reach"] },
+        { key: "description.1", values: ["burnChance"] },
+        { key: "description.2", values: ["reach"] },
         { key: "savage.on", values: [], when: function (context) { return read(context.detail.values, ["savage"]) === true; } },
         { key: "savage.off", values: [], when: function (context) { return read(context.detail.values, ["savage"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.blast", "tier.1.heat", "tier.1.sparks"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.blast"] }
     ]);
 }

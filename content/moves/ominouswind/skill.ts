@@ -2,7 +2,7 @@
  * 奇异之风 / ominouswind —— 注册与动作。
  *
  * 核心念头：一道贴着地面窜出的幽风追着目标跑，途中不伤人，到了目标脚下才突然炸开、从四面朝中心收拢；
- *   一缕冷气倒卷回自身，有概率把全部能力各抬一级。
+ *   一缕冷气倒卷回自身，有概率把五项战斗能力各抬一级。
  *
  * 三幕：
  *   起（gather，提交前）：施法者脚边卷起一圈冷雾、幽丝朝身前收，只播预告。
@@ -20,9 +20,10 @@ namespace PokemonSkills {
 
     define({
         id: "ominouswind",
+        cooldownParameter: "recharge",
         name: "Ominous Wind",
-        description: "放出一道贴地奔袭的幽风：它一路只聚势、到目标脚下才炸开，把那一圈敌人朝中心收拢并造成特殊伤害；回卷的冷气有概率把自身全部能力各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
-        uses: ["对准一个远处目标，让幽风自己追上去收拢", "把目标从掩体或队友身边朝中心拽近", "用反哺把全部能力一点点拉起来"],
+        description: "放出一道贴地奔袭的幽风：它一路只聚势、到目标脚下才炸开，把那一圈敌人朝中心收拢并造成特殊伤害；回卷的冷气有概率把自身五项战斗能力各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
+        uses: ["对准一个远处目标，让幽风自己追上去收拢", "把目标从掩体或队友身边朝中心拽近", "用反哺把五项战斗能力在短时反哺期间提高"],
         kind: "enemy",
         range: 11,
         maxRange: 16,
@@ -104,18 +105,20 @@ namespace PokemonSkills {
                     return;
                 }
                 WorldFeedback.text(scope, cursor.plus(WorldCombat.point(0, 1.1, 0)), ominouswindHitText, [hits], 26);
-                if (scope.random() < chance) {
-                    NativeEffects.boost(scope, actor, "atk", stages);
-                    NativeEffects.boost(scope, actor, "def", stages);
-                    NativeEffects.boost(scope, actor, "spa", stages);
-                    NativeEffects.boost(scope, actor, "spd", stages);
-                    NativeEffects.boost(scope, actor, "spe", stages);
+                if (scope.random() < chance && scope.valid(actor)) {
+                    const window = Math.max(1, Math.round(p("ominouswind", "surgeTicks", current)));
+                    const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+                    scope.effects(actor, definition).forEach(function (view) {
+                        const data = JSON.parse(String(view.data()));
+                        if (data.source === "world_combat:move/ominouswind") NativeEffects.windowClose(scope, view.id());
+                    });
+                    NativeEffects.boostWindow(scope, actor, { atk: stages, def: stages, spa: stages, spd: stages, spe: stages }, window, "world_combat:move/ominouswind");
                     const self = scope.observe(actor);
                     const at = self === null ? start : self.position();
                     WorldFeedback.emit(scope, ominouswindScene, 1, at,
                         { moment: "surge", target: String(actor.ref()), stages: stages, radius: coilRadius, wisps: wisps, scale: scale }, 28);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),
-                        ominouswindSurgeText, [stages], 30);
+                        ominouswindSurgeText, [stages, Math.round(window / 20)], 30);
                     scope.sound("minecraft:block.beacon.power_select", at, 18, "{}");
                 }
                 done(current);

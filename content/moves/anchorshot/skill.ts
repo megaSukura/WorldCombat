@@ -164,6 +164,7 @@ namespace PokemonSkills {
 
     define({
         id: anchorshotId,
+        cooldownParameter: "recharge",
         name: "Anchor Shot",
         description: "把锚连同铁链甩出去，砸中对手后在它脚下的地面钉住：链子绷直把目标拴在锚点上，它走不出链长、想逃就被拽回来。链拴在地面而不是术者身上，术者可以走开；被拖得太远或链走完时间就松开。重锚式钉得更死更久，但更慢更近。",
         uses: ["把想逃跑的目标钉在原地等队友收", "在开阔地一对一锁住对方的主力", "把高机动目标从掩体边拽回来"],

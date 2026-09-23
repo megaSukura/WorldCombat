@@ -5,7 +5,7 @@
   "worldcombat.skill.dualchop.use.2": "Split style chops a small forward patch at once",
   "worldcombat.skill.dualchop.description.0": "Power per chop %1$s (physical), engage range %2$s blocks, chop angle %3$s degrees, up to %4$s targets per cast.",
   "worldcombat.skill.dualchop.description.1": "Gap between chops %1$s; once the first lands the second gains up to +%2$s power, and the first shoves the target %3$s blocks.",
-  "worldcombat.skill.dualchop.description.2": "The first chop leaves a %1$s-block ground crack that lasts %2$s before the original blocks return; each hit sprays about %3$s rubble chips.",
+  "worldcombat.skill.dualchop.description.2": "The first chop leaves a %1$s-block ground crack that lasts %2$s before the original blocks return.",
   "worldcombat.skill.dualchop.breach.on": "Breach style now: both chops strike one narrow face and the second tears deeper on the crack; narrow, single-target, with a slightly longer gap and windup.",
   "worldcombat.skill.dualchop.breach.off": "Split style now: the two chops spread over a small forward patch with a wider angle, can catch several targets and hit slightly harder, but gain no crack bonus.",
   "worldcombat.skill.dualchop.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

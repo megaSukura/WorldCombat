@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "sacredfire",
+        cooldownParameter: "recharge",
         name: "Sacred Fire",
         description: "The target is razed with a mystical fire of great intensity. This may also leave the target with a burn.",
         uses: ["裹着虹彩圣火俯冲撞穿一个目标", "用高概率的灼伤压制对手", "在落点留下一片会烫人的彩火"],

@@ -43,7 +43,7 @@ namespace PokemonSkills {
     stages("electrify", [{ level: 30, values: { cooldown: 52 } }, { level: 50, values: { cooldown: 44 } }]);
     describe("electrify", [
         { key: "description.0", values: ["surgeDuration"] },
-        { key: "description.1", values: ["arcCount", "dischargeRadius", "sparkSpeed"] },
+        { key: "description.1", values: [] },
         { key: "allmoves.0", values: [], when: function (context) { return electrifyAllMoves(context.detail); } },
         { key: "allmoves.1", values: [], when: function (context) { return !electrifyAllMoves(context.detail); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

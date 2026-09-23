@@ -4,7 +4,7 @@
   "worldcombat.skill.dragonpulse.use.1": "中远距离的持续压制",
   "worldcombat.skill.dragonpulse.use.2": "连锁式收束罩住挤在一起的敌人",
   "worldcombat.skill.dragonpulse.description.0": "波面扫中每个目标造成 %1$s 的特殊伤害，波面厚度 %2$s 格。",
-  "worldcombat.skill.dragonpulse.description.1": "波能推 %1$s 格，每刻前进 %2$s 格，同时推进 %3$s 道波环。",
+  "worldcombat.skill.dragonpulse.description.1": "波能推 %1$s 格，每刻前进 %2$s 格。",
   "worldcombat.skill.dragonpulse.chain.on": "连锁式：波在第一个目标处收束，在 %2$s 格半径内对周围敌人各造成 %1$s 的特殊伤害。",
   "worldcombat.skill.dragonpulse.chain.off": "贯通式：一条线上最多额外穿过 %1$s 个敌人。",
   "worldcombat.skill.dragonpulse.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

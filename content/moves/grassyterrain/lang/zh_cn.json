@@ -6,7 +6,7 @@
   "worldcombat.skill.grassyterrain.use.3": "照料植物",
   "worldcombat.skill.grassyterrain.description.0": "在选定地面种下半径 %1$s 格的青草地，持续 %2$s。",
   "worldcombat.skill.grassyterrain.description.1": "站在草地上的活体每 %2$s 回复各自最大生命的 %1$s；草地对双方一视同仁。",
-  "worldcombat.skill.grassyterrain.description.2": "开启密植时，这片草地最多照料 %2$s 次植物。",
+  "worldcombat.skill.grassyterrain.description.2": "开启密植时，这片草地最多照料 %1$s 次植物。",
   "worldcombat.skill.grassyterrain.description.3": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.grassyterrain.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 种下青草，收招 %3$s，冷却 %5$s。",
   "worldcombat.skill.grassyterrain.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",

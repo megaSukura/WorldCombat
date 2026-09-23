@@ -5,7 +5,7 @@
   "worldcombat.skill.dualchop.use.2": "分劈式把身前一小片敌人一起劈到",
   "worldcombat.skill.dualchop.description.0": "每劈 %1$s 威力（走物攻），出手距离 %2$s 格，劈面张角 %3$s 度，一记最多劈到 %4$s 个目标。",
   "worldcombat.skill.dualchop.description.1": "两劈间隔 %1$s；第一劈命中后第二劈威力最多再抬 %2$s，第一劈把目标顶开 %3$s 格。",
-  "worldcombat.skill.dualchop.description.2": "第一劈在身前砸出 %1$s 格长的裂痕、留存 %2$s 后原方块回来；每劈溅出约 %3$s 块碎石。",
+  "worldcombat.skill.dualchop.description.2": "第一劈在身前砸出 %1$s 格长的裂痕、留存 %2$s 后原方块回来。",
   "worldcombat.skill.dualchop.breach.on": "当前裂痕追击式：两劈打在同一块窄面，第二劈按裂痕加成撕深；裂面窄、只能劈同一个目标，间隔与起手略长。",
   "worldcombat.skill.dualchop.breach.off": "当前分劈式：两劈沿身前一小片摊开，张角更大、能同时劈到多个、每劈略重，但没有裂痕加成。",
   "worldcombat.skill.dualchop.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

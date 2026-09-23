@@ -5,7 +5,7 @@
   "worldcombat.skill.psyshieldbash.use.2": "用厚壳正面顶开一个目标",
   "worldcombat.skill.psyshieldbash.description.0": "撞实造成约 %1$s 的接触伤害，护盾半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.psyshieldbash.description.1": "沿瞄准方向冲撞最多 %1$s 格、每刻 %2$s 格，出招时的偏角最多 %3$s 度。",
-  "worldcombat.skill.psyshieldbash.description.2": "护盾成形时给自己加 %1$s 级防御（提交即生效），并在身上留下 %2$s 秒的护盾身份。",
+  "worldcombat.skill.psyshieldbash.description.2": "护盾成形时获得 %1$s 级防御，持续 %2$s；护盾结束或被清除时收回，重施刷新一层。",
   "worldcombat.skill.psyshieldbash.harden.on": "开启深凝式：护盾更厚，防御 +2、壳更持久，但威力更低、冲得更慢、冷却更久。",
   "worldcombat.skill.psyshieldbash.harden.off": "关闭深凝式（速攻式）：防御 +1、撞得更重、冲得更快，起手更短。",
   "worldcombat.skill.psyshieldbash.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

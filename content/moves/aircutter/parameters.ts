@@ -39,15 +39,14 @@ namespace PokemonSkills {
     export const aircutterReference = 8;
 
     actionParameters.define(aircutterId, {
-        /** 刃锋威力：基础 60，特攻每比 60 多 1 加 0.28（夹 −12..40），速度每比 55 快 1 加 0.1（夹 −4..12）；
-         *  聚刃 ×1.22 / 广扇 ×0.94；夹在 46..130。 */
+        /** 直伤按本招的覆盖与附加收益调校；成长以显式设计基值计算。 */
         blade: formula(
-            F.base(60).plus(F.stat("specialAttack").minus(60).times(0.28).clamp(-12, 40))
-                .plus(F.stat("speed").minus(55).times(0.1).clamp(-4, 12))
+            F.base(40).plus(F.stat("specialAttack").minus(60).times(0.16).clamp(-8, 20))
+                .plus(F.stat("speed").minus(55).times(0.05).clamp(-3, 6))
                 .times(F.when(F.pref("focus", text("worldcombat.skill.aircutter.preference.focus")), F.const(1.22), F.const(0.94)))
-                .clamp(46, 130).round(1),
+                .clamp(30, 82).round(1),
             "刃锋威力", {
-                unit: "威力",
+                base: 40, unit: "威力",
                 description: "一次张开里每道细刃切中那一下的基础威力；特攻决定风压得多锐，速度给出甩开的冲劲。对手特防、相性与暴击在命中时另算。"
             }),
         /** 扇面半径：基础 8 格，特攻每比 60 多 1 加 0.05（夹 −1.5..3），等级 25 起每级 +0.05（夹 0..2.5）；
@@ -114,16 +113,15 @@ namespace PokemonSkills {
     defineDamage(aircutterId, "blade", { rationale: "细刃的切斩；与原生一致走特殊类别，不改变减伤规则。" }, { slice: true });
 
     stages(aircutterId, [
-        { level: 36, values: { blade: 76, reach: 9, edges: 10 } }
+        { level: 36, values: { blade: 46, reach: 9, edges: 10 } }
     ]);
 
     describe(aircutterId, [
         { key: "description.0", values: ["blade"] },
-        { key: "description.1", values: ["reach", "span", "thickness"] },
-        { key: "description.2", values: ["edges", "shards"] },
+        { key: "description.1", values: ["reach", "span"] },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.blade", "tier.0.reach", "tier.0.edges"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.blade", "tier.0.reach"] }
     ]);
 }

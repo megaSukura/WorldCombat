@@ -91,7 +91,7 @@ namespace PokemonSkills {
 
     describe(karatechopId, [
         { key: "description.0", values: ["chop"] },
-        { key: "description.1", values: ["reach", "depth", "shards"] },
+        { key: "description.1", values: ["reach"] },
         { key: "stance.knife", values: [], when: function (context) { return read(context.detail.values, ["knife"]) === true; } },
         { key: "stance.open", values: [], when: function (context) { return read(context.detail.values, ["knife"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

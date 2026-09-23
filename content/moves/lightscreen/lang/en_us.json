@@ -5,7 +5,7 @@
   "worldcombat.skill.lightscreen.use.2": "Raise the screen before the foe's special push",
   "worldcombat.skill.lightscreen.description.0": "The light dome covers the caster and allies within %2$s blocks for %1$s.",
   "worldcombat.skill.lightscreen.description.1": "Special damage taken is cut by %1$s, and the landing chance of a special move's secondary effect is filtered down by %2$s.",
-  "worldcombat.skill.lightscreen.description.2": "The screen holds about %1$s motes of light and moves with the caster.",
+  "worldcombat.skill.lightscreen.description.2": "The screen moves with the caster.",
   "worldcombat.skill.lightscreen.description.3": "Raising it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the form note for the thick/thin trade-off.",
   "worldcombat.skill.lightscreen.form.0": "Thick: special cut x1.18, but only about six tenths of the thin screen's secondary filtering, +3 ticks wind-up, x1.12 cooldown - thicker head-on cover.",
   "worldcombat.skill.lightscreen.form.1": "Thin: special cut x0.8, but stronger secondary filtering (x1.3), -2 ticks wind-up, x0.9 cooldown - less raw cover, better against status and faster.",

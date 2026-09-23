@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.stomp.summary": "A whole-body downward slam: the heaviest melee move in the family, with a chance to flinch and a ground shock that also staggers grounded foes around the landing - but it only lands on a grounded target, so anything airborne dodges it.",
-  "worldcombat.skill.stomp.description.0": "The stomp deals about %1$s contact damage with a %2$s block foot radius; the target's defence, type and crits are applied on the hit.",
+  "worldcombat.skill.stomp.description.0": "The stomp deals about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.stomp.description.1": "The landing shakes a %1$s block radius for about %2$s to each other grounded foe; heavier bodies shake wider.",
   "worldcombat.skill.stomp.description.2": "A %1$s flinch chance for the main target and %2$s for those only caught by the shock, for %3$s s; an airborne target is missed.",
   "worldcombat.skill.stomp.heavy.on": "Heavy form: raises higher, slams harder, cracks and shakes wider and staggers more often, but winds up slower and has a longer cooldown.",

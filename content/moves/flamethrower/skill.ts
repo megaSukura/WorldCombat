@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "flamethrower",
+        cooldownParameter: "recharge",
         name: "Flamethrower",
         description: "The target is scorched with an intense blast of fire. This may also leave the target with a burn.",
         uses: ["向前喷出一道持续变长的火舌", "一次燎过挤在一条走廊里的对手", "用扇面封住身前一片，逼对手绕开"],

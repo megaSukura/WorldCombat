@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.foulplay.summary": "A shadow arm crawls into the target's shadow and raises a cluster of dark spines from under its own feet. This move ignores the user's Attack and reads the target's Attack instead: the stronger the foe, the harder it hits.",
   "worldcombat.skill.foulplay.description.0": "The damage %1$s is driven by the target's current Attack: the stronger the foe, the higher the power; the user's own Attack barely matters.",
-  "worldcombat.skill.foulplay.description.1": "The shadow reaches %1$s blocks and crawls at %2$s blocks per tick; the grasp has a %3$s block radius and raises %4$s spines from the target's shadow.",
+  "worldcombat.skill.foulplay.description.1": "The shadow reaches %1$s blocks and crawls at %2$s blocks per tick; the grasp has a %3$s block radius.",
   "worldcombat.skill.foulplay.use.0": "Turn its strength against it",
   "worldcombat.skill.foulplay.use.1": "Bite the strongest foe hardest",
   "worldcombat.skill.foulplay.use.2": "Drag a strong foe into melee",

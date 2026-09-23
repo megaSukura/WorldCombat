@@ -36,8 +36,8 @@ const WillowispDefinition: ParticleDefinition = {
             ]
         },
         travel: {
-            duration: 80,
-            exit: { stop: 80, drain: 14 },
+            duration: 0,
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "wisp_core", bind: "projectile", height: 0.5,

@@ -46,6 +46,7 @@ namespace PokemonSkills {
 
     define({
         id: stormthrowId,
+        cooldownParameter: "recharge",
         name: "Storm Throw",
         description: "贴身抓住一个对手，借势把它掀翻砸在地上，造成必定击中要害的格斗属性接触伤害，并短暂把它压住（无法开始新动作、移动变慢）；落点砸出翻起的碎土。锁摔压得更久，急摔打得更重。",
         uses: ["点掉贴身的单个目标", "摔翻扑上来的近身威胁并短暂压制", "在窄口砸出一片翻起的碎土"],
@@ -140,7 +141,7 @@ namespace PokemonSkills {
                 const away = at.minus(origin);
                 const push = WorldCombat.point(away.x(), 0, away.z());
                 const shove = push.length() < 0.05 ? heading : push.unit();
-                scope.displace(grabbed, shove.scale(crush * 0.5).plus(WorldCombat.point(0, -crush * 0.4, 0)));
+                if (scope.valid(grabbed)) scope.displace(grabbed, shove.scale(crush * 0.5).plus(WorldCombat.point(0, -crush * 0.4, 0)));
                 if (landed) {
                     CombatStatus.apply(scope, grabbed, "stagger", stormthrowStaggerEffect, staggerTicks, 0, { unique: true });
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), stormthrowStaggerText, [Math.round(staggerTicks / 2) / 10], 24);

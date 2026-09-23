@@ -150,7 +150,7 @@ namespace PokemonSkills {
     describe(vcreateId, [
         { key: "description.0", values: ["flare", "push"] },
         { key: "description.1", values: ["charge", "rush", "radius"] },
-        { key: "description.2", values: ["guardLoss", "poiseLoss", "speedLoss", "flames"] },
+        { key: "description.2", values: ["guardLoss", "poiseLoss", "speedLoss"] },
         { key: "nova.on", values: [], when: function (context) { return read(context.detail.values, ["nova"]) === true; } },
         { key: "nova.off", values: [], when: function (context) { return read(context.detail.values, ["nova"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

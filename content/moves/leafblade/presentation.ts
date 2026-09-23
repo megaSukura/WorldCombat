@@ -6,7 +6,7 @@
  * 色相家族：草绿与白绿（cut／smallleaf／impact_grass），近白刃光（impact_grass_white）只给暴击那一下。
  * 拍子：起（draw 立刃）→ 斩（slash 宽弧横挥）→ 中（cut 命中叶屑+裂口、echo 旁人）→ 强调（crit）。
  * 范围：slash 的弧线用服务端给的顶点（`data.path`，与判定同一张角与半径）画成一条宽弧，`data.reach`／`data.span` 的
- *   锥面同时铺出扇形区域，画出来的就是这一刀真扫到的范围。
+ *   水平扇面同时铺出判定区域，画出来的就是这一刀真扫到的范围。
  * 运动：draw 的叶片向上长成刃；slash 的刃沿弧线扫过、碎叶沿切线甩出；cut 时叶屑向外炸、裂口闪一下。
  * 数：`data.shards`（物攻派生）决定命中与波及的叶屑量，`data.sever`（削防档数）决定裂口强调，`data.intensity` 抬高亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -57,10 +57,9 @@ const LeafbladeDefinition: ParticleDefinition = {
                     color: 0x7FBE4A, alpha: [0.7, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "swing_fill", bind: "point", fit: "none", orient: "direction",
+                    name: "swing_fill", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/vanilla/small_gust",
-                    rate: 30, shape: { kind: "cone_volume", radius: 0.6,
-                        length: { data: "reach", fallback: 3 }, angleDegrees: { data: "span", fallback: 118 } },
+                    rate: 30, shape: { kind: "sector", radius: { data: "reach", fallback: 3 }, angleDegrees: { data: "span", fallback: 118 } },
                     direction: "shape", speed: [0.03, 0.14], spread: 12,
                     lifetime: [8, 15], size: [0.16, 0.03],
                     color: 0xA8D97C, alpha: [0.22, 0], light: "full", maxParticles: 60

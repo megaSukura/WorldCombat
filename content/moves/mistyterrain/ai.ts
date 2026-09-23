@@ -1,11 +1,12 @@
 /**
  * 薄雾场地 / mistyterrain 的伙伴 AI 用途与自己的漫雾计划。
  *
- * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 14）格内，自己还不在薄雾里。队友（含自己）带着主异常时
+ * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 14）格内，自己还不在薄雾里。队友（含自己）带着有害状态效果时
  * priority 抬到 62——净化雾能把异常洗掉；威胁带龙属性时 56——薄雾削掉它的龙招；其余 40，插在
  * `world_combat:defend` 之前当作开打前的布置。`ai.advance` 开启时把薄雾按向威胁。
  */
 namespace PokemonSkills {
+    CompanionBehavior.registerFact("world_combat:move_mistyterrain/harmful", (world, actor) => CombatStatus.hasHarmful(world, actor));
     function mistyCapability(context: WorldBehavior.Context): WorldBehavior.Capability | null {
         const items = CompanionBehavior.ready(context, "world_combat:prepare");
         for (let i = 0; i < items.length; i++) if (items[i].data.move === mistyterrainId) return items[i];
@@ -22,8 +23,7 @@ namespace PokemonSkills {
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (!other.friendly || other.health <= 0) continue;
-            for (let j = 0; j < StatusVocabulary.majorNames.length; j++)
-                if (CompanionBehavior.status(context, other, StatusVocabulary.majorNames[j])) return true;
+            if (CompanionBehavior.fact<boolean>(context, "world_combat:move_mistyterrain/harmful", other)) return true;
         }
         return false;
     }

@@ -2,8 +2,7 @@
  * 甩肉 / filletaway 的 AI 用途。
  *
  * 什么局面下出手（fortify）：附近有威胁、但还没有贴到脸上（距离不小于 4 格）时，先一刀削身把进攻三项拉起来，
- * 再冲上去打。生命不足以支付「削肉深度 + 保底」时不用，避免把自己削进必死区间。
- * 没有威胁时只在整备命令（驻守／自主／工作）下削肉。
+ * 再冲上去打。生命不足以支付「削肉深度 + 保底」时不用，避免把自己削进必死区间；有交战需求才准备。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("filletaway", {
@@ -11,12 +10,12 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (["atk", "spa", "spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             var self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             var reserve = CompanionBehavior.ai<number>(capability, "reserveHealth", 0.15);
             var deep = !!(capability.data.config && Number(capability.data.config.depth) > 0.55);
             if (CompanionBehavior.ratio(self) < (deep ? 0.65 : 0.5) + reserve) return false;
-            if (!threat)
-                return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             var distance = CompanionBehavior.distance(self.point, threat.point);
             return distance >= 4 && distance <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
         },

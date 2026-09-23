@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "pollenpuff",
+        cooldownParameter: "recharge",
         name: "Pollen Puff",
         description: "拢起一团会炸也会养人的花粉，低弧丢向选定的落点：撞到人或落地就散开——圈内的敌人被炸成刺人的花粉，圈内未满血的同伴（包括自己）喝下花粉回血。同一团花粉，两种结果。",
         uses: ["同一团花粉既能远程行凶、又能救助身边的同伴", "给挤在一起的一小群敌人一起下花粉", "在交战的间隙把受伤的自己或同伴拉回一点"],

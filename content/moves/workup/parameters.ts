@@ -71,7 +71,7 @@ namespace PokemonSkills {
 
     describe("workup", [
         { key: "description.0", values: ["atkGift", "spaGift"] },
-        { key: "description.1", values: ["surge", "rousedTicks"] },
+        { key: "description.1", values: ["rousedTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: [] }
     ]);

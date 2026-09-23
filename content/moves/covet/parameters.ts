@@ -121,11 +121,11 @@ namespace PokemonSkills {
     describe("covet", [
         { key: "description.0", values: ["charm", "radius"] },
         { key: "description.1", values: ["reach", "step", "push"] },
-        { key: "description.2", values: ["soften", "hearts"] },
+        { key: "description.2", values: ["soften"] },
         { key: "polite.on", values: [], when: function (context) { return read(context.detail.values, ["polite"]) === true; } },
         { key: "polite.off", values: [], when: function (context) { return read(context.detail.values, ["polite"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.charm"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.charm", "tier.1.hearts"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.charm"] }
     ]);
 }

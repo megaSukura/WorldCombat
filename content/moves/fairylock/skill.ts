@@ -103,6 +103,7 @@ namespace PokemonSkills {
 
     define({
         id: fairyId,
+        cooldownParameter: "recharge",
         name: "妖精之锁",
         description: "召下一圈妖精光栅封住一块场地：半径内每个活体（包括你和队友）都被钉在原地，谁也走不出这块地，直到光栅散开。走进去的也会被扣住，被推出光栅的则脱锁。",
         uses: ["把逃向出口的对手关进一块地对等锁住等队友集火", "在狭窄地形把一场混战钉在原地", "把高机动目标关进一小块地里让它没法拉开"],

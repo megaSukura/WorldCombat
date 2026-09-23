@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "feint",
+        cooldownParameter: "recharge",
         name: "Feint",
         description: "一次假动作把对手撑起的守护掀掉，紧接着的一戳才真正打进去；掀掉的守护层数越多，这一下越重。对没有守护的目标，它仍是一记极快的戳击。实招式收掉假动作、真打出去，威力更高但更慢。",
         uses: ["掀掉对手撑起的守护，为下一记重击开路", "抢在对手起手撑罩时打断它的准备", "对没有守护的目标补一记极快的戳击"],

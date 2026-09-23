@@ -3,6 +3,8 @@
   "worldcombat.skill.triplekick.description.0": "The first kick deals %1$s fighting contact damage, for %2$s kicks in a row; each landed kick raises the next by %3$s.",
   "worldcombat.skill.triplekick.description.1": "Each kick tests a lane %1$s blocks long and %2$s blocks in half-width; each hits for %3$s and the kicks are %4$s s apart.",
   "worldcombat.skill.triplekick.description.2": "Knock the target back %1$s blocks on hit.",
+  "worldcombat.skill.triplekick.drive.on": "Drive form: every kick hits for 1.12x and pushes 1.5x, at 0.85x kicking reach, -2% hit chance, +1 tick between kicks, +1 tick recovery and +2 ticks cooldown.",
+  "worldcombat.skill.triplekick.drive.off": "Quick form (native): 1.03x kicking reach, -1 tick between kicks, +2% hit chance and a 4-tick shorter cooldown, at a lighter hit and shorter push per kick.",
   "worldcombat.skill.triplekick.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.triplekick.growth.0": "From level %1$s the first kick rises to %2$s.",
   "worldcombat.skill.triplekick.growth.1": "From level %1$s the first kick rises to %2$s and the kicking reach extends to %3$s blocks.",

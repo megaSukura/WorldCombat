@@ -99,6 +99,7 @@ namespace PokemonSkills {
 
     define({
         id: futureSightId,
+        cooldownParameter: "recharge",
         name: "Future Sight",
         description: "把一团属于自己的念力送到对手头顶，延迟片刻后落下造成一次特殊伤害；延迟期间对手能读出它并抢先治疗或拉开。",
         uses: ["在开战前先锁定一个远处目标", "逼对手在延迟里分心应对", "在安全距离上布置一次必至的重击"],

@@ -4,7 +4,6 @@
   "worldcombat.skill.punishment.use.1": "Weigh every layer the target has raised into the damage",
   "worldcombat.skill.punishment.use.2": "An overhead judgement that falls from above",
   "worldcombat.skill.punishment.description.0": "One blow dealing about %1$s contact damage at about %2$s blocks; each positive stat stage on the target adds 18 (capped at +150).",
-  "worldcombat.skill.punishment.description.1": "Half-width about %1$s blocks; about %2$s weight marks drop onto the impact, scaling with how much the target has raised and with Attack.",
   "worldcombat.skill.punishment.heavy.on": "Heavy judgement: each positive stat stage is worth x1.35 and reach +0.2, at the cost of +3 ticks of wind-up, +2 of recovery and +5 of cooldown - hardest on a fully buffed foe.",
   "worldcombat.skill.punishment.heavy.off": "Quick judgement: faster wind-up and cycle but a lower per-stage coefficient - good against lightly buffed frail targets.",
   "worldcombat.skill.punishment.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

@@ -31,6 +31,7 @@ namespace PokemonSkills {
 
     define({
         id: "hydropump",
+        cooldownParameter: "recharge",
         name: "Hydro Pump",
         description: "把大量水整柱轰向目标：命中处水花漫开，主目标被顶开并浇透，附近一圈也被回溅到。起手很长、很贵、准线附近会散，但一次能浇透一片。漫灌式更广更慢；冲压式更窄更重。",
         uses: ["远距离把目标顶开并浇透", "一次浇透目标身边挤着的一群人", "把湿身身份交给别的招（如加农水炮）去加成"],

@@ -5,7 +5,6 @@
   "worldcombat.skill.barrier.use.2": "Shelter a partner behind the wall and force the opponent to reroute",
   "worldcombat.skill.barrier.description.0": "While the wall stands, Defense is raised by %1$s level(s) for about %2$s.",
   "worldcombat.skill.barrier.description.1": "The wall is %1$s blocks wide and %2$s blocks tall, standing %3$s blocks ahead; the blocks it adds are real obstacles.",
-  "worldcombat.skill.barrier.description.2": "It assembles about %1$s hard-light panels.",
   "worldcombat.skill.barrier.description.3": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.barrier.tall.on": "Tall screen: a taller, narrower wall set farther out that blocks sight and ranged attacks and goes up faster; it is narrow enough to walk around and shields for less time.",
   "worldcombat.skill.barrier.tall.off": "Bulwark: a wider, lower wall set close that stops a frontal charge and shields longer; it does not block sight or ranged attacks and takes longer to raise.",
@@ -25,5 +24,9 @@
   "worldcombat.skill.barrier.preference.tall.help": "On: a taller, narrower wall set farther out that blocks sight and ranged attacks and goes up faster, but can be walked around and shields for less time. Off: a wide low bulwark that stops a frontal charge and shields longer, but does not block sight or ranged attacks and is slower to raise.",
   "world_combat.move.barrier.text.raise": "Barrier (Defense +%1$s, %2$s columns)",
   "world_combat.move.barrier.text.shatter": "The barrier shatters",
-  "effect.world_combat.barrier_veil": "Barrier"
+  "effect.world_combat.barrier_veil": "Barrier",
+  "worldcombat.skill.barrier.preference.ai.maxChase": "Wall preparation range",
+  "worldcombat.skill.barrier.preference.ai.maxChase.help": "Consider raising a wall when a threat enters this range. Higher values prepare sooner.",
+  "worldcombat.skill.barrier.preference.ai.minGap": "Close threat distance",
+  "worldcombat.skill.barrier.preference.ai.minGap.help": "Do not raise the wall when a threat is closer than this distance; respond to the close attack instead."
 }

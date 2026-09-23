@@ -5,7 +5,6 @@
   "worldcombat.skill.reflecttype.use.2": "Take only the primary type and dodge a secondary weakness",
   "worldcombat.skill.reflecttype.description.0": "Raises the mirror on a target within %1$s blocks after a %2$s s wind-up; it reads the target's current type.",
   "worldcombat.skill.reflecttype.description.1": "The reflected type lasts %1$s s; matchups, same-type bonus and type immunities settle on it.",
-  "worldcombat.skill.reflecttype.description.2": "",
   "worldcombat.skill.reflecttype.pair.0": "Mirror both: copies the secondary type too, duration ×1.25, cooldown +14 ticks; the closest match.",
   "worldcombat.skill.reflecttype.pair.1": "Primary only: copies the first type, duration ×0.8, cooldown −8 ticks; avoids extra weaknesses from a secondary type.",
   "worldcombat.skill.reflecttype.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",

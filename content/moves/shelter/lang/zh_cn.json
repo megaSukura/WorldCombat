@@ -4,7 +4,7 @@
   "worldcombat.skill.shelter.use.1": "用一层会被打碎的承伤壳逼对手多花几刀",
   "worldcombat.skill.shelter.use.2": "残血时缩壳等队友或等冷却",
   "worldcombat.skill.shelter.description.0": "壳合着时防御抬高 %1$s 级，壳最多吃下相当于最大生命 %2$s 的伤害，持续约 %3$s。",
-  "worldcombat.skill.shelter.description.1": "壳约用 %1$s 块铁板拼成，包住 %2$s 格半径；吃满额度即崩。",
+  "worldcombat.skill.shelter.description.1": "吃满额度即崩。",
   "worldcombat.skill.shelter.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.shelter.seal.on": "铁盾：壳更厚更久，但整段被钉住不能移动、起手更慢、冷却更长。",
   "worldcombat.skill.shelter.seal.off": "缩壳：壳较薄较短，但可以带着壳走位，起手与冷却都更短；护住的更少，保住的是身位。",

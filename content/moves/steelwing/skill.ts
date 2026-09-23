@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "steelwing",
+        cooldownParameter: "recharge",
         name: "Steel Wing",
         description: "The target is hit with wings of steel. This may also boost the user's Defense stat.",
         uses: ["侧身一记横扫，把面前一片人一起掀开", "贴着敌阵边缘扫出一整扇", "用命中把防御一点点磨硬"],
@@ -117,7 +118,7 @@ namespace PokemonSkills {
                         if (!landed) return;
                         hits++;
                         const away = WorldCombat.point(facts.position().x() - origin.x(), 0, facts.position().z() - origin.z());
-                        if (away.length() > 0.05) scope.displace(victim, away.unit().scale(knock));
+                        if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(knock));
                         WorldFeedback.emit(scope, steelwingScene, 1, facts.position(),
                             { moment: "hit", target: String(victim.ref()), feathers: feathers, scale: scale, intensity: intensity }, 20);
                         sound(current, "cobblemon:impact.steel");

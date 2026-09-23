@@ -111,7 +111,6 @@ namespace PokemonSkills {
     describe("inferno", [
         { key: "description.0", values: ["pyre"] },
         { key: "description.1", values: ["reach", "bloomRadius", "fuse"] },
-        { key: "description.2", values: ["embers"] },
         { key: "rule.guaranteed", values: [] },
         { key: "pin.on", values: ["pinTicks", "pinInterval", "pinEcho"],
             when: function (context) { return read(context.detail.values, ["pin"]) === true; } },

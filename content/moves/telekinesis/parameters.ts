@@ -65,7 +65,6 @@ namespace PokemonSkills {
 
     describe("telekinesis", [
         { key: "description.0", values: ["reach", "window", "hold"] },
-        { key: "description.1", values: ["rings"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "pin.on", values: [], when: function (context) { return read(context.detail.values, ["pin"]) === true; } },
         { key: "pin.off", values: [], when: function (context) { return read(context.detail.values, ["pin"]) !== true; } },

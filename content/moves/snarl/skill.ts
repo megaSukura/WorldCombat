@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: "snarl",
+        cooldownParameter: "recharge",
         name: "Snarl",
         description: "朝身前推出一道锥形怒吼，锥内每个敌人各挨一声伤害，被第一声喝住的人特攻下降。连斥式会一声接一声地骂，对手可以走出锥外躲开后面几声；断喝式只有一声但更重。",
         uses: ["把扎堆的敌人一次骂软，压低对面的特攻输出", "用连续几声逼对手走出声压锥、打乱站位", "在远处先手削掉法系威胁"],

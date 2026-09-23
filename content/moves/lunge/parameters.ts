@@ -131,6 +131,6 @@ namespace PokemonSkills {
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pounce"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.pounce", "tier.1.chitin"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.pounce"] }
     ]);
 }

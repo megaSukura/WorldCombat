@@ -123,7 +123,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["shriek", "bursts", "interval"] },
         { key: "description.1", values: ["coneAngle", "reach"] },
         { key: "description.2", values: ["scrambleTicks", "fumbleChance"] },
-        { key: "description.3", values: ["screech", "pref.shrill"] },
+        { key: "description.3", values: ["pref.shrill"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shriek"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.bursts", "tier.1.shriek"] },

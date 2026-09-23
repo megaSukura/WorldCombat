@@ -30,6 +30,7 @@ namespace PokemonSkills {
 
     define({
         id: "snore",
+        cooldownParameter: "recharge",
         name: "Snore",
         description: "只能在睡觉时使用：朝目标喷出一声鼾，造成特殊伤害并可能把它震懵；开启回响会连喷两声，每声更轻。睡得越沉，鼾声越响、送得越远。",
         uses: ["睡眠中被打时的还手", "把近身的目标震懵，给自己争取醒来的空档", "用回响连掷两次畏缩"],

@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: "leechlife",
+        cooldownParameter: "recharge",
         name: "Leech Life",
         description: "The user latches on and drinks the target's blood in a run of sips. The user is rooted while feeding and the hold snaps if the target pulls out of reach.",
         uses: ["咬住一个目标持续抽血续航", "对高血量、跑不动的对手一段吃掉更多", "把短枪式的接触伤害拉成一段持续输出"],

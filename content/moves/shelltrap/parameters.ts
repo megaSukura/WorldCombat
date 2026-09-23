@@ -35,10 +35,9 @@ namespace PokemonSkills {
     export const shelltrapFizzleText = "world_combat.move.shelltrap.text.fizzle";
     export const shelltrapEmptyText = "world_combat.move.shelltrap.text.empty";
 
-    /** 一次来袭是否算物理：招式伤害带 category；原版近战没有作者类别，由「造成者就是直接命中者」判定。 */
+    /** 按共享伤害语义读取物理分类，覆盖招式与已识别的原版伤害。 */
     export function shelltrapPhysical(data: any): boolean {
-        var category = typeof data.category === "string" ? String(data.category) : "";
-        return category === "physical" || category === "" && data.direct === true;
+        return DamageSemantics.read(data).category === "physical";
     }
 
     // 内部记号载体：只用来把「壳已被点着」传给动作的看门循环，不显示、不附带行为。

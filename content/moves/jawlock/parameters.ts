@@ -102,7 +102,7 @@ namespace PokemonSkills {
     describe("jawlock", [
         { key: "description.0", values: ["chomp", "reach"] },
         { key: "description.1", values: ["lockTicks", "grip"] },
-        { key: "description.2", values: ["lunge", "maw"] },
+        { key: "description.2", values: ["lunge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["vise"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["vise"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

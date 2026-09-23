@@ -6,7 +6,7 @@
   "worldcombat.skill.eruption.use.3": "逼开成片的敌人，给自己争取空间",
   "worldcombat.skill.eruption.description.0": "从脚下整圈喷发，圈内每个敌人各挨约 %1$s 点伤害；波及半径约 %2$s 格，空中与地上的目标都会被喷到。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.eruption.description.1": "圈边还能吃到中心威力的 %1$s；被喷中的目标沿背离方向被推开约 %2$s 格，并被向上抛起约 %3$s 格。",
-  "worldcombat.skill.eruption.description.2": "被喷中的目标有 %1$s 的几率陷入灼伤；火柱冲起约 %2$s 格高，起手约 %3$s。",
+  "worldcombat.skill.eruption.description.2": "被喷中的目标有 %1$s 的几率陷入灼伤，起手约 %2$s。",
   "worldcombat.skill.eruption.timing": "可对身周 %1$s 格施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.eruption.growth.0": "达到 %1$s 级，冷却降至 %2$s 秒。",
   "worldcombat.skill.eruption.value.burst": "爆发威力",

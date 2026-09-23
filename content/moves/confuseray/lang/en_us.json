@@ -4,7 +4,7 @@
   "worldcombat.skill.confuseray.use.1": "Interrupt ranged pressure from a safe distance",
   "worldcombat.skill.confuseray.use.2": "Open a miss window before an ally's focus fire",
   "worldcombat.skill.confuseray.description.0": "A hit leaves the target confused for %1$s: each action it attempts has about a one-in-three chance to be wasted, and a landed hit turns its own force back on it.",
-  "worldcombat.skill.confuseray.description.1": "Base range: %1$s blocks. Hit radius: %2$s blocks. The current range is %4$s blocks and requires a clear line of sight.",
+  "worldcombat.skill.confuseray.description.1": "Base range: %1$s blocks. Hit radius: %2$s blocks. The current range is %3$s blocks and requires a clear line of sight.",
   "worldcombat.skill.confuseray.description.2": "Gathering the light takes %1$s, the recovery is %2$s and the cooldown %3$s. The form is a choice: Wide reaches farther with a fatter beam but confuses for less time; Focus is shorter-ranged and slower to cast, buying a longer, heavier confusion.",
   "worldcombat.skill.confuseray.value.beamReach": "Reach",
   "worldcombat.skill.confuseray.value.beamRadius": "Hit radius",

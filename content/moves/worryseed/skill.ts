@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: "worryseed",
+        cooldownParameter: "recharge",
         name: "Worry Seed",
         description: "把一颗烦恼种子投进对手身体，让它从此不能入眠，特性被顶成不眠，直到种子枯掉。",
         uses: ["顶掉对手的强力特性换成一枚不眠", "让对手睡不下去，封掉催眠类打法"],

@@ -72,6 +72,7 @@ namespace PokemonSkills {
 
     define({
         id: "powertrick",
+        cooldownParameter: "recharge",
         name: "力量戏法",
         description: "一手假动作把自己的攻击与防御对调：落定后保持不变，再施展一次即翻回，窗口走完也会自动翻回。",
         uses: ["防高攻低的守将翻过来打一轮", "攻高防低的打手翻过去硬扛一轮", "在对手的类型与打法已知后选一种形态"],

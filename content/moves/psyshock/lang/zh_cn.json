@@ -5,7 +5,7 @@
   "worldcombat.skill.psyshock.use.2": "用最便宜的一发补掉残血",
   "worldcombat.skill.psyshock.description.0": "把念波压成实心棱投出 %1$s 格，撞上目标时按它的物理防御结算 %2$s 点特殊伤害。",
   "worldcombat.skill.psyshock.description.1": "棱以 %1$s 格/刻飞出，带 %2$s 的下坠与 %3$s 格的判定半径；飞完全程或撞上地形就算落空。",
-  "worldcombat.skill.psyshock.description.2": "命中把目标推开 %1$s 格，棱碎成约 %2$s 片棱屑。",
+  "worldcombat.skill.psyshock.description.2": "命中把目标推开 %1$s 格，棱碎成屑。",
   "worldcombat.skill.psyshock.heavy.on": "当前为重棱：威力 ×1.22、击退 ×1.6、下坠更快，砸得更重；代价是弹速 ×0.8、射程 ×0.85、起手 +3 刻、冷却 +6 刻。",
   "worldcombat.skill.psyshock.heavy.off": "当前为轻棱：更远、更快、几乎飘着走的一掷，代价是威力与击退都轻。",
   "worldcombat.skill.psyshock.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

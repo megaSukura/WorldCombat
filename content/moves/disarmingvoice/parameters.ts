@@ -68,7 +68,7 @@ namespace PokemonSkills {
 
     describe("disarmingvoice", [
         { key: "description.0", values: ["note", "radius"] },
-        { key: "description.1", values: ["stagger", "waveSpeed"] },
+        { key: "description.1", values: ["stagger"] },
         { key: "description.2", values: ["soften", "charmTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.note"] },

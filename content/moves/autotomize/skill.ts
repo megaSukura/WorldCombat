@@ -58,6 +58,7 @@ namespace PokemonSkills {
 
     define({
         id: "autotomize",
+        cooldownParameter: "wait",
         name: "身体轻量化",
         description: "削掉身体上没用的部分，大幅提高自己的速度，同时体重也会变轻。",
         uses: ["开战前卸一轮，把速度拉起来", "用卸下的残件在场上留下痕迹", "轻身窗口里浮起来，借身法绕过地形"],

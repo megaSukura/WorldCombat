@@ -93,6 +93,7 @@ namespace PokemonSkills {
 
     define({
         id: foresightId,
+        cooldownParameter: "recharge",
         name: "识破",
         description: "用一眼把对手看穿：在它身上留下识破印记，剥掉它当下的闪避并把它照亮，印记里幽灵的虚体被看实，一般与格斗打得上；印记走完即散。",
         uses: ["在打幽灵前先破掉它的免疫", "把躲躲闪闪的目标敲定下来", "替队友的一般或格斗招铺路"],

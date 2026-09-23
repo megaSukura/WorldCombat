@@ -55,7 +55,7 @@ namespace PokemonSkills {
     ]);
     describe(confuserayId, [
         { key: "description.0", values: ["mistTicks"] },
-        { key: "description.1", values: ["beamReach", "beamRadius", "motes", "range"] },
+        { key: "description.1", values: ["beamReach", "beamRadius", "range"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] }
     ]);
 }

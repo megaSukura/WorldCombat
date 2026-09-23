@@ -5,7 +5,7 @@
   "worldcombat.skill.assist.description.0": "After calling for %1$s it borrows and performs one random move known by an ally inside the call radius; it does not fire when no ally answers.",
   "worldcombat.skill.assist.description.1": "The call radius is %1$s, and the borrowed move cannot reach farther than %2$s.",
   "worldcombat.skill.assist.description.2": "Current call radius setting: %1$s. Calling farther covers more allies but takes longer.",
-  "worldcombat.skill.assist.description.3": "Calling again costs %1$s; the call shows %2$s ally marks, growing with Special Attack.",
+  "worldcombat.skill.assist.description.3": "Calling again costs %1$s.",
   "worldcombat.skill.assist.preference.callRadius": "Call radius",
   "worldcombat.skill.assist.preference.callRadius.help": "Higher hears farther allies and widens the pool, but the shout takes longer; lower acts faster but may find nothing when alone or spread out.",
   "worldcombat.skill.assist.value.call": "Call time",

@@ -37,7 +37,7 @@ public final class Shapes {
     /**
      * Builds a shape from the authored {@code kind} and its parameters.
      *
-     * @param kind   one of point/box/sphere/hemisphere/circle/ring/cone/cone_volume/line/arc/torus/cylinder/sphere_surface,
+     * @param kind   one of point/box/sphere/hemisphere/circle/sector/ring/cone/cone_volume/line/arc/torus/cylinder/sphere_surface,
      *               or polyline/polygon which sample the vertices of a {@code path} binding
      * @param params the authored shape object, excluding {@code kind}
      * @return the sampler; throws {@link IllegalArgumentException} with a JSON path on bad input
@@ -57,6 +57,7 @@ public final class Shapes {
             case "hemisphere" -> sphere(p, true);
             case "sphere_surface" -> sphereSurface(p);
             case "circle" -> circle(p);
+            case "sector" -> sector(p);
             case "ring" -> ring(p, false);
             case "arc" -> ring(p, true);
             case "cone" -> cone(p, false);
@@ -169,6 +170,19 @@ public final class Shapes {
                 (float) (planar * Math.cos(theta)), (float) polar, (float) (planar * Math.sin(theta)));
             return new Shape.Spawn(new Vector3f(direction).mul((float) radius), direction);
         }, p, Set.of("radius"), "sphere_surface");
+    }
+
+    /** Horizontal wedge, centred on local +Z. Radius is in blocks; angle is the total opening. */
+    private static Shape sector(JsonObject p) {
+        double radius = nonNegative(p, "radius", "sector");
+        double inner = present(p, "innerRadius") ? nonNegative(p, "innerRadius", "sector") : 0;
+        if (inner > radius) throw new IllegalArgumentException("shape.innerRadius must not exceed shape.radius for kind 'sector'");
+        double angle = bounded(p, "angleDegrees", 360, "sector", 0, 360);
+        return wrap((random, index, count) -> {
+            double theta = Math.toRadians(angle) * (random.nextDouble() - 0.5);
+            Vector3f radial = new Vector3f((float) Math.sin(theta), 0, (float) Math.cos(theta));
+            return new Shape.Spawn(new Vector3f(radial).mul((float) annulusRadius(random, inner, radius)), radial);
+        }, p, Set.of("radius", "innerRadius", "angleDegrees"), "sector");
     }
 
     private static Shape circle(JsonObject p) {

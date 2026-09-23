@@ -109,7 +109,6 @@ namespace PokemonSkills {
         { key: "description.1", values: ["reach", "boltSpeed", "collisionRadius"] },
         { key: "description.2", values: ["blink", "arc", "rally"] },
         { key: "description.3", values: ["fieldRadius", "fieldTicks", "zap"] },
-        { key: "description.4", values: ["motes"] },
         { key: "relay.on", values: [], when: function (context) { return read(context.detail.values, ["relay"]) === true; } },
         { key: "relay.off", values: [], when: function (context) { return read(context.detail.values, ["relay"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

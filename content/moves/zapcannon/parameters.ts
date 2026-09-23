@@ -119,12 +119,12 @@ namespace PokemonSkills {
 
     describe(zapcannonId, [
         { key: "description.0", values: ["shell", "shellSpeed", "reach"] },
-        { key: "description.1", values: ["chargeTicks", "numbTicks", "shockRadius"] },
-        { key: "description.2", values: ["shellTurn", "recoil", "arcs", "recharge"] },
+        { key: "description.1", values: ["chargeTicks", "numbTicks"] },
+        { key: "description.2", values: ["shellTurn", "recoil", "recharge"] },
         { key: "quickload.on", values: [], when: function (context) { return read(context.detail.values, ["quickload"]) === true; } },
         { key: "quickload.off", values: [], when: function (context) { return read(context.detail.values, ["quickload"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shell"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.numbTicks", "tier.1.shockRadius"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.numbTicks"] }
     ]);
 }

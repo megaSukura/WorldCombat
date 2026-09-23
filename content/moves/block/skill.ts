@@ -137,6 +137,7 @@ namespace PokemonSkills {
 
     define({
         id: blockId,
+        cooldownParameter: "recharge",
         name: "挡路",
         description: "张开双手，在对手的背影一侧立起一道弧形栅栏，封住它的退路：墙落下时把它往自己方向推挤、短暂钉住，整段时间里把它压在墙与术者之间走不快。墙短、可翻越、可挖开，时长一到就收回。",
         uses: ["把想逃跑的目标挡回来等队友收", "在路口或门口横拦一条退路", "把冲上来的厚目标按进近战范围"],

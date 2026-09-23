@@ -120,6 +120,7 @@ namespace PokemonSkills {
 
     define({
         id: safeguardId,
+        cooldownParameter: "recharge",
         name: "神秘守护",
         description: "张开一圈守护光罩住自己与身边的队友；罩内任何人经共享状态路由落下的异常状态都会被挡下。光罩跟着施法者走，离开范围的人会失去守护。",
         uses: ["挡住成片的灼伤、中毒、麻痹", "在对方铺异常前先一步张罩", "护住正要进场的队友"],

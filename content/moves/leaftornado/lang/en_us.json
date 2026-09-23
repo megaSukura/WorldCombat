@@ -4,7 +4,7 @@
   "worldcombat.skill.leaftornado.use.1": "Cut clustered enemies at once",
   "worldcombat.skill.leaftornado.use.2": "Keep rolling for accuracy drops with leaf flecks",
   "worldcombat.skill.leaftornado.description.0": "Each beat deals %1$s special damage; every beat has a %2$s chance to drop accuracy by %3$s stages (settled at most once per target).",
-  "worldcombat.skill.leaftornado.description.1": "The vortex is %1$s blocks wide, lasts %2$s and cuts once every %3$s, throwing about %4$s leaves each beat.",
+  "worldcombat.skill.leaftornado.description.1": "The vortex is %1$s blocks wide, lasts %2$s and cuts once every %3$s.",
   "worldcombat.skill.leaftornado.description.2": "It can be raised up to %1$s blocks away; tight wrap is currently %2$s.",
   "worldcombat.skill.leaftornado.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.leaftornado.value.shred": "Cut power",

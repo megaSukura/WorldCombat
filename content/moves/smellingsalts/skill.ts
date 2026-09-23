@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: smellingsaltsId,
+        cooldownParameter: "recharge",
         name: "Smelling Salts",
         description: "把盐拍在对手脸上：目标正麻痹时这一记威力翻倍，但命中后也会解除它的麻痹。粗盐式还会留下一段踉跄。",
         uses: ["趁对手麻痹时打出翻倍的一记", "把麻痹中的目标一次性打重", "用粗盐让刚清醒的目标再踉跄一阵"],

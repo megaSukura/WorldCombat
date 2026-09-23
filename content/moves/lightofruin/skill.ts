@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: lightofruinId,
+        cooldownParameter: "recharge",
         name: "Light of Ruin",
         description: "Drawing power from the Eternal Flower, the user fires a powerful beam of light. This also damages the user terribly.",
         uses: ["一根粗重的贯穿光柱打穿正前方整列敌人", "让反噬只按真正造成的伤害结算", "透支式把所有力量都借出来，赌一发清场"],

@@ -4,7 +4,7 @@
   "worldcombat.skill.roost.use.1": "Trade a grounded window for a steadier restore",
   "worldcombat.skill.roost.use.2": "Bring a flier down to the ground and the terrain",
   "worldcombat.skill.roost.description.0": "Rests on the ground for %2$s and restores %1$s of maximum health in portions; while resting it loses the Flying type and lies open to ground moves and Grassy Terrain.",
-  "worldcombat.skill.roost.description.1": "The healing arrives in %1$s portions; landing kicks up about %2$s points of feather dust across a %3$s-block downdraft, larger with a wider wingspan.",
+  "worldcombat.skill.roost.description.1": "The healing arrives in %1$s portions.",
   "worldcombat.skill.roost.description.2": "Wind-up %1$s and recovery %2$s, driven by Speed and weight.",
   "worldcombat.skill.roost.stance.deep": "Deep roost: a little more healing and a 1.5x resting window, at the cost of a longer cooldown and a longer grounded window - for a safe moment.",
   "worldcombat.skill.roost.stance.shallow": "Shallow roost: quicker to settle and a shorter cooldown, with slightly less healing and less time on the ground - for a gap between blows.",

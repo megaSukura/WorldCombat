@@ -42,6 +42,7 @@ namespace PokemonSkills {
 
     define({
         id: "sonicboom",
+        cooldownParameter: "recharge",
         name: "Sonic Boom",
         description: "The target is hit with a destructive shock wave that always inflicts 20 HP damage.",
         uses: ["最便宜、最快的一记固定伤害", "用固定 20 点补刀或磨高防目标", "回响式封住一条直线"],

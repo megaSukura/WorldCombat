@@ -5,7 +5,7 @@
   "worldcombat.skill.disable.use.2": "Force a foe to switch moves and break its combo",
   "worldcombat.skill.disable.description.0": "The named move cannot be used for %1$s; committing it in that time is turned back.",
   "worldcombat.skill.disable.description.1": "Reads back moves used within %1$s (older ones are lost); the nail reaches %2$s blocks.",
-  "worldcombat.skill.disable.description.2": "Drives in %1$s nails; wind-up %2$s, recovery %3$s, cooldown %4$s. The target can keep fighting with a move outside the list.",
+  "worldcombat.skill.disable.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s. The target can keep fighting with a move outside the list.",
   "worldcombat.skill.disable.heavy.0": "Heavy nail: duration x1.3, range x0.9, cooldown x1.15 — holds longer but reaches shorter and costs more.",
   "worldcombat.skill.disable.heavy.1": "Light nail: duration x0.8, range x1.1, cooldown x0.85 — reaches farther and is cheaper, but loosens quickly.",
   "worldcombat.skill.disable.timing": "Cast on a single enemy: after %2$s of preparation it spends %4$s PP; the recovery is %3$s, the cooldown %5$s from commit, and the current range %1$s blocks.",

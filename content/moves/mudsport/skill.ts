@@ -11,6 +11,7 @@
 namespace PokemonSkills {
     define({
         id: mudsportId,
+        cooldownParameter: "recharge",
         name: "玩泥巴",
         description: "在选定的地面摊开一片泥滩，把地表糊成泥：站在泥里的活体使出的电属性招式被压。对双方一视同仁。",
         uses: ["压制电属性对手", "在电招齐射前先铺泥", "把交战区变成粘脚的泥地"],

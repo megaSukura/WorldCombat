@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: retaliateId,
+        cooldownParameter: "recharge",
         name: "Retaliate",
         description: "The user takes revenge for a fainted ally. This move's power is boosted if an ally fainted recently.",
         uses: ["同伴倒下后立刻替它还手", "带着哀兵之痛打出一记翻倍直撞", "朝刚打完同伴的敌人撞过去"],

@@ -95,6 +95,6 @@ namespace PokemonSkills {
         { key: "reverb.off", values: [], when: function (context) { return read(context.detail.values, ["reverb"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.sparks"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.reach"] }
     ]);
 }

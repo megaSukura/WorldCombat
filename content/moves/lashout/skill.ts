@@ -17,6 +17,7 @@ namespace PokemonSkills {
 
     define({
         id: lashoutId,
+        cooldownParameter: "recharge",
         name: "Lash Out",
         description: "把被削弱的怒气朝目标一次喷出：自身任一项能力等级为负时威力翻倍；命中后消掉负等级，开启宣泄时把怒气化作攻击提升。",
         uses: ["被降能力后立刻重击", "把积压的负等级一次泄掉", "用怒气换一段攻击提升"],
@@ -82,10 +83,10 @@ namespace PokemonSkills {
                         let removed = 0, boosted = 0;
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                             removed = lashoutVent(scope, current.actor(), budget);
                             if (vent && scope.valid(current.actor())) {
-                                NativeEffects.boost(scope, current.actor(), "atk", boostStages);
+                                NativeEffects.boostWindow(scope, current.actor(), { atk: boostStages }, boostTicks, "world_combat:move/lashout");
                                 boosted = boostStages;
                                 const self = scope.observe(current.actor());
                                 if (self !== null) WorldFeedback.emit(scope, lashoutScene, 1, self.position(),

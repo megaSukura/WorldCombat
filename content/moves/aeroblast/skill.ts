@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: aeroblastId,
+        cooldownParameter: "recharge",
         name: "Aeroblast",
         description: "A vortex of air is shot at the target to inflict damage. This move has a heightened chance of landing a critical hit.",
         uses: ["把空气拧成一支涡流锥笔直射出去", "命中处炸成气环、把主目标冲开", "本族最远最重的一记单体远程"],
@@ -84,7 +85,7 @@ namespace PokemonSkills {
                     const body = scope.observe(actor);
                     if (landed) {
                         const away = body === null ? null : point.minus(body.position());
-                        if (away !== null && away.length() > 0.01) scope.displace(victim, away.unit().scale(push));
+                        if (scope.valid(victim) && away !== null && away.length() > 0.01) scope.displace(victim, away.unit().scale(push));
                     }
                     WorldFeedback.emit(scope, aeroblastScene, 1, point,
                         { moment: "burst", target: String(victim.ref()), ring: ring, spiral: spiral,

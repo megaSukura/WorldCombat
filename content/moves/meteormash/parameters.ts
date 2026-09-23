@@ -140,7 +140,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["impact", "reach"] },
         { key: "description.1", values: ["shock", "crashRadius", "shove"] },
         { key: "description.2", values: ["surgeChance", "surgeStages"] },
-        { key: "description.3", values: ["craterRadius", "craterTicks", "flare", "pref.comet"] },
+        { key: "description.3", values: ["craterRadius", "craterTicks", "pref.comet"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.impact", "tier.0.shock"] }
     ]);

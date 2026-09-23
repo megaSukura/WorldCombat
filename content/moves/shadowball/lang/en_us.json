@@ -6,7 +6,7 @@
   "worldcombat.skill.shadowball.description.0": "The ball deals %1$s special damage.",
   "worldcombat.skill.shadowball.description.1": "It has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
   "worldcombat.skill.shadowball.description.2": "The ball flies straight at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius.",
-  "worldcombat.skill.shadowball.description.3": "When sunder lands, the shadow clings to the target for %1$s and sheds about %2$s wisps; dense form is currently %3$s.",
+  "worldcombat.skill.shadowball.description.3": "Dense form is currently %1$s.",
   "worldcombat.skill.shadowball.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.shadowball.growth.0": "From level %1$s the ball rises to %2$s power and %3$s blocks of range.",
   "worldcombat.skill.shadowball.value.core": "Ball power",

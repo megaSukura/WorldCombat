@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: xscissorId,
+        cooldownParameter: "recharge",
         name: "X-Scissor",
         description: "The user slashes at the target by crossing its scythes, claws, or the like as if they were a pair of scissors.",
         uses: ["两刃从左右合拢成一把剪刀", "把目标框在中轴上完整剪断", "两拍、两侧、中轴吃两次"],

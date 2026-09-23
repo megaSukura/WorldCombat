@@ -68,7 +68,7 @@ namespace PokemonSkills {
         prepare: 10,
         active: 0,
         recover: 8,
-        cooldown: 26,
+        cooldown: 48,
         style: "grass",
         defaults: { ferment: false, ai: { maxChase: 13, stackSour: true } },
         fields: [],
@@ -83,7 +83,7 @@ namespace PokemonSkills {
             return {
                 prepare: Math.round(p("appleacid", "tempo", context)),
                 recover: 8,
-                cooldown: 26 + (ferment ? 5 : 0),
+                cooldown: 48 + (ferment ? 10 : 0),
                 active: 0,
                 range: p("appleacid", "reach", context)
             };

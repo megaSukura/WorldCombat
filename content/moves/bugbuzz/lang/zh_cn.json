@@ -6,7 +6,7 @@
   "worldcombat.skill.bugbuzz.description.0": "声波扫到每人身上造成 %1$s 点特殊伤害。",
   "worldcombat.skill.bugbuzz.description.1": "每个被扫到的目标有 %1$s 概率特防下降 %2$s 级。",
   "worldcombat.skill.bugbuzz.description.2": "声波张角 %1$s 度、射程 %2$s 格，威力随距离衰减到边缘的 %3$s；声音不被墙面阻挡。",
-  "worldcombat.skill.bugbuzz.description.3": "扩散约 %1$s 道同心声环；当前沉鸣形态为 %2$s。",
+  "worldcombat.skill.bugbuzz.description.3": "当前沉鸣形态为 %1$s。",
   "worldcombat.skill.bugbuzz.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.bugbuzz.growth.0": "%1$s 级起鸣声威力升至 %2$s、射程 %3$s 格。",
   "worldcombat.skill.bugbuzz.value.core": "鸣声威力",

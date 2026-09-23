@@ -65,6 +65,7 @@ namespace PokemonSkills {
 
     define({
         id: mirrormoveId,
+        cooldownParameter: "recharge",
         name: "鹦鹉学舌",
         description: "在身前立起一面镜盾，把对手刚刚使出的那一手原样折回它自己身上；对手还没出过可折的招时落空。",
         uses: ["把对手的上一手还给它", "拆刚打完一轮强攻的敌人", "在受击前一拍抢回节奏"],

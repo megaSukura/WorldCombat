@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: celebrateId,
+        cooldownParameter: "recharge",
         name: "庆祝",
         description: "为十分开心的你办一场庆祝：原地撒出彩带与礼花，身边所有友方（含自己）都被感染，带上一段「庆祝中」状态。助兴式让人兴奋（速度 +1 级），慰劳式当场分掉一份体力。对敌人完全无效。",
         uses: ["开团前把身边的队友一起抬一手", "险境里给整队分一份体力喘口气", "只花很少的代价把士气铺满一圈"],

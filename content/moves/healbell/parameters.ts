@@ -6,7 +6,7 @@
  *   中毒／剧毒、灼伤、麻痹、睡眠、冰冻。
  *
  * 世界化：把「一次铃响洗掉整队异常」翻成即时战斗里一圈会向外扩开的**声波**——铃声以施法者为心，
- *   每一次铃声都扫过 chimeRadius 内的伙伴，把他们身上的主异常震散；能响几声由速度决定，铃声之间
+ *   每一次铃声都扫过 chimeRadius 内的伙伴，把他们身上的有害状态效果震散；能响几声由速度决定，铃声之间
  *   谁有异常就洗谁。它不回复生命，也不留任何持续状态：铃声是**当场的一下**，讲究在对方挂上异常的
  *   那一刻把整队一次洗掉（与「芳香治疗」那片会停留、反复净化的香云明确分开）。
  *
@@ -26,8 +26,6 @@ namespace PokemonSkills {
     export const healbellScene = "world_combat:move_healbell";
     export const healbellCleanseText = "world_combat.move.healbell.text.cleanse";
     export const healbellNoneText = "world_combat.move.healbell.text.none";
-    /** 与原生 cureStatus 一致：除剧毒由 poison 身份一并带走外，覆盖其余五项主异常。 */
-    export const healbellMalaise = ["poison", "burn", "paralysis", "sleep", "frozen"];
     const healbellResonant = { key: "worldcombat.skill." + healbellId + ".preference.resonant" };
 
     actionParameters.define(healbellId, {
@@ -71,7 +69,7 @@ namespace PokemonSkills {
 
     describe(healbellId, [
         { key: "description.0", values: ["chimeRadius", "peals"] },
-        { key: "description.1", values: ["motes", "pealGap"] },
+        { key: "description.1", values: ["pealGap"] },
         { key: "stance.resonant", values: [], when: function (context) { return read(context.detail.values, ["resonant"]) === true; } },
         { key: "stance.short", values: [], when: function (context) { return read(context.detail.values, ["resonant"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

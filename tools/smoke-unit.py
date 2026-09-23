@@ -39,6 +39,16 @@ SCENARIO_BUDGET = 600
 TAIL_LINES = 200
 
 
+def project_java():
+    """Use the same project JDK as the interactive review and hidden integration checks."""
+    candidates = [os.environ.get("WORLD_COMBAT_JAVA_HOME"), "C:/Program Files/Zulu/zulu-21", os.environ.get("JAVA_HOME")]
+    for home in candidates:
+        if not home: continue
+        executable = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
+        if executable.is_file(): return str(executable)
+    raise RuntimeError("Set WORLD_COMBAT_JAVA_HOME to the project Java 21 runtime")
+
+
 def free_port():
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0)); return s.getsockname()[1]
@@ -233,7 +243,9 @@ def main():
         print(re.sub(r"\x1b\[[0-9;]*m", "", (run.stderr or run.stdout))[-6000:]); return 1
 
     spec = json.loads((ROOT / "mods/cobblemon-world-combat/build/p1-launch/server.json").read_text(encoding="utf-8"))
-    work = ROOT / "runs" / ("smoke-" + output.name)
+    work = (ROOT / "runs" / ("smoke-" + output.name)).resolve()
+    if not work.is_relative_to((ROOT / "runs").resolve()) or not work.name.startswith("smoke-"):
+        raise RuntimeError("Smoke work directory must stay inside the project's runs directory")
     if work.exists(): shutil.rmtree(work, ignore_errors=True)
     (work / "mods").mkdir(parents=True)
     dependency = ROOT / "build/integrations/FarmersDelight-1.21.1-1.3.4.jar"
@@ -246,7 +258,8 @@ def main():
     (work / "server.properties").write_text(
         "server-ip=127.0.0.1\nserver-port=%d\nlevel-name=smoke\nlevel-type=minecraft:flat\nonline-mode=false\n"
         "generate-structures=false\nview-distance=6\nsimulation-distance=6\nspawn-protection=0\nmax-tick-time=60000\n"
-        "spawn-monsters=false\nspawn-animals=false\n" % port, encoding="utf-8")
+        # The stage disables natural spawning with doMobSpawning. These switches must allow authored actors to survive.
+        "spawn-monsters=true\nspawn-animals=true\n" % port, encoding="utf-8")
     (work / "eula.txt").write_text("eula=true\n", encoding="utf-8")
     scripts = work / "kubejs/server_scripts/worldcombat"
     scripts.mkdir(parents=True)
@@ -256,7 +269,7 @@ def main():
 
     classpath = output / "classpath.args"
     classpath.write_text('-classpath\n"' + spec["classpath"].replace("\\", "\\\\").replace('"', '\\"') + '"\n', encoding="utf-8")
-    executable = spec.get("executable") or shutil.which("java")
+    executable = project_java()
     jvm = [a for a in dict.fromkeys(spec["jvmArgs"]) if not a.startswith("-Xmx")] + ["-Xmx2g"]
     command = [executable] + jvm + ["@" + str(classpath), spec["mainClass"]] + spec["args"]
     environment = os.environ.copy(); environment.update(spec["environment"])

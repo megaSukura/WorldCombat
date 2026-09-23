@@ -117,7 +117,7 @@ namespace PokemonSkills {
     describe("rockthrow", [
         { key: "description.0", values: ["stone", "radius"] },
         { key: "description.1", values: ["velocity", "reach", "scatter"] },
-        { key: "description.2", values: ["arc", "shards"] },
+        { key: "description.2", values: ["arc"] },
         { key: "lob.on", values: [], when: function (context) { return read(context.detail.values, ["lob"]) === true; } },
         { key: "lob.off", values: [], when: function (context) { return read(context.detail.values, ["lob"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

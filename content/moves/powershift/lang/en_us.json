@@ -3,7 +3,7 @@
   "worldcombat.skill.powershift.use.0": "Swap to brace a round when Attack is high and Defence low",
   "worldcombat.skill.powershift.use.1": "Swap to strike when Defence is high and Attack low",
   "worldcombat.skill.powershift.use.2": "Pick a form once the opponent's plan is known",
-  "worldcombat.skill.powershift.description.0": "%1$s streams of force cross at the user's sides and the swap holds %2$s; when the window ends Attack and Defence return.",
+  "worldcombat.skill.powershift.description.0": "The swap holds %1$s; when the window ends Attack and Defence return.",
   "worldcombat.skill.powershift.hold.on": "Hold: the swap window is multiplied by 1.8, keeping the shifted form longer, at the cost of a 3-tick longer wind-up and 1.3x cooldown - and you cannot swap back meanwhile.",
   "worldcombat.skill.powershift.hold.off": "Snap: fast to cast, short cooldown and you can swap straight back, but it only covers a moment.",
   "worldcombat.skill.powershift.description.1": "%1$s wind-up, %2$s recovery, %3$s cooldown.",

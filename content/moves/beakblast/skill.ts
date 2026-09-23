@@ -19,6 +19,7 @@
 namespace PokemonSkills {
     define({
         id: "beakblast",
+        cooldownParameter: "recharge",
         name: "Beak Blast",
         description: "The user first heats up its beak, and then it attacks the target. Making direct contact with the user while it is heating up its beak results in a burn.",
         uses: ["站定烧热鸟嘴，再用一发喙弹打穿目标", "用加热窗口惩罚贴上来的人", "用更长的加热换更重的一炮"],

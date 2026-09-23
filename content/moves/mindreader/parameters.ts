@@ -80,7 +80,7 @@ namespace PokemonSkills {
 
     describe(mindreaderId, [
         { key: "description.0", values: ["focus", "readTicks"] },
-        { key: "description.1", values: ["reveal", "motes"] },
+        { key: "description.1", values: ["reveal"] },
         { key: "predict.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["predict"]) === true; } },
         { key: "predict.off", values: [], when: function (context) { return read(context.detail.values, ["predict"]) !== true; } },
         { key: "description.2", values: ["reach", "tempo", "aftercast"] },

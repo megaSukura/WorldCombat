@@ -4,7 +4,7 @@
   "worldcombat.skill.swordsdance.use.1": "Dance while pressing forward to cut straight into the foe",
   "worldcombat.skill.swordsdance.use.2": "Force a decision with a visible hone window",
   "worldcombat.skill.swordsdance.description.0": "After the wind-up Attack rises by %1$s and %2$s slashes are strung out.",
-  "worldcombat.skill.swordsdance.description.1": "The hone lasts %1$s and the blade wind reaches %2$s blocks; when it ends the Attack it raised is taken back.",
+  "worldcombat.skill.swordsdance.description.1": "The hone lasts %1$s; when it ends the Attack it raised is taken back.",
   "worldcombat.skill.swordsdance.press.on": "Pressing: each slash steps %1$s blocks forward with %2$s between slashes; real ground gained for a slower dance and a longer cooldown.",
   "worldcombat.skill.swordsdance.press.off": "Rooted: slash in place, quicker and holding position, but it will not close the distance for you.",
   "worldcombat.skill.swordsdance.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",

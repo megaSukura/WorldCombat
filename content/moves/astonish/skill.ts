@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "astonish",
+        cooldownParameter: "recharge",
         name: "Astonish",
         description: "The user attacks the target by crying out in a startling fashion. This may also make the target flinch.",
         uses: ["瞬发的一声尖叫打断贴身的对手", "在黑暗里把目标吓懵更久", "用极低的代价给连段开一个头"],

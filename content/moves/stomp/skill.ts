@@ -74,6 +74,7 @@ namespace PokemonSkills {
 
     define({
         id: "stomp",
+        cooldownParameter: "recharge",
         name: "Stomp",
         description: "The user attacks by stomping on the target with a big foot. This may also make the target flinch.",
         uses: ["把靠近的对手一脚踩实并震懵", "顺带震到落点周围站着的其他敌人", "在对手被逼到地面时兑现最重的一击"],

@@ -7,6 +7,7 @@
       "requires": {},
       "sources": [
         "content/behavior/contributions.ts",
+        "content/mechanisms/damage-semantics.ts",
         "content/protocols/effects.ts",
         "content/tactics/world-ai.ts",
         "content/behavior/composition.ts",
@@ -23,6 +24,7 @@
         "content/mechanisms/action-parameters.ts",
         "content/mechanisms/status-vocabulary.ts",
         "content/mechanisms/combat-status.ts",
+        "content/mechanisms/mob-effects.ts",
         "content/mechanisms/combat-stages.ts"
       ]
     },
@@ -67,9 +69,9 @@
         "content/mechanisms/world-bodies.ts",
         "content/mechanisms/world-actions.ts",
         "content/mechanisms/living-actions.ts",
+        "content/mechanisms/action-cooldowns.ts",
         "content/mechanisms/world-abilities.ts",
         "content/mechanisms/machine-work.ts",
-        "content/mechanisms/mob-effects.ts",
         "content/mechanisms/status-contributions.ts",
         "content/mechanisms/effect-reactions.ts",
         "content/mechanisms/world-feedback.ts",

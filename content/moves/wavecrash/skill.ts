@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "wavecrash",
+        cooldownParameter: "recharge",
         name: "Wave Crash",
         description: "The user shrouds itself in water and slams into the target with its whole body to inflict damage. This also damages the user quite a lot.",
         uses: ["裹水冲开一个目标", "把目标浇透，留给后续的水与电", "在雨里或水里冲出去，水势更盛"],

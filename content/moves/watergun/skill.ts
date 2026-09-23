@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: "watergun",
+        cooldownParameter: "recharge",
         name: "Water Gun",
         description: "喷出一道又细又快的水线直取目标：出手短、冷却短、可以边走边喷，是缠斗里的随手点射。蓄压式换成一记更重的水弹，代价是更慢、更近、更贵。",
         uses: ["贴身缠斗里边跑边喷，随手补伤害", "起手最快、PP 最省的远程点射", "先用便宜的一发把伤害挂上，再交给重招"],
@@ -56,7 +57,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const origin = action.origin();
             const power = p("watergun", "spout", action);
             const speed = Math.max(0.5, p("watergun", "pressure", action));
@@ -94,9 +94,9 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) { finish(current); });
 
-            WorldFeedback.keep(world, "watergun:jet:" + action.id(), watergunScene, 1, origin,
-                { moment: "jet", projectile: flight, drops: drops, scale: scale, intensity: intensity,
-                    charged: charged ? 1 : 0 }, 80);
+            action.present("watergun:jet", watergunScene, 1, origin,
+                JSON.stringify({ moment: "jet", projectile: flight, drops: drops, scale: scale, intensity: intensity,
+                    charged: charged ? 1 : 0 }));
         }
     });
 }

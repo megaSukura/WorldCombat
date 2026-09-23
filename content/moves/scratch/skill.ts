@@ -40,6 +40,7 @@ namespace PokemonSkills {
 
     define({
         id: "scratch",
+        cooldownParameter: "recharge",
         name: "Scratch",
         description: "Hard, pointed, sharp claws rake the target to inflict damage.",
         uses: ["贴脸一爪划出一排爪痕", "对大体型或并排的对手一次抓多道", "用最短冷却的便宜招持续磨血"],

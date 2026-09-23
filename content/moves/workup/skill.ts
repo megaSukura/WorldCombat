@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: "workup",
+        cooldownParameter: "wait",
         name: "Work Up",
         description: "激励自己，从而提高攻击和特攻。",
         uses: ["开场先给自己鼓一口气", "被压制时反手把火气拧起来", "在连打之间随手补一层双攻"],

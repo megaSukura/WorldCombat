@@ -57,7 +57,7 @@ namespace PokemonSkills {
     });
     describe(magicRoomId, [
         { key: "description.0", values: ["gagTicks", "gagRadius"] },
-        { key: "description.1", values: ["density", "reach"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "hush.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.hush === 1); } },
         { key: "hush.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.hush !== 1; } },

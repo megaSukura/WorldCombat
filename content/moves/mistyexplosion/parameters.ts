@@ -118,10 +118,10 @@ namespace PokemonSkills {
         { key: "description.2", values: ["terrainBoost"] },
         { key: "description.3", values: ["blindTicks"] },
         { key: "description.4", values: ["mistRadius", "mistTicks"] },
-        { key: "description.5", values: ["burst", "tempo", "recharge"] },
+        { key: "description.5", values: ["tempo", "recharge"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["denseMist"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["denseMist"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.bloom", "tier.0.blastRadius", "tier.0.burst"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.bloom", "tier.0.blastRadius"] }
     ]);
 }

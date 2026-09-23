@@ -178,7 +178,7 @@ namespace PokemonSkills {
     describe(rockclimbId, [
         { key: "description.0", values: ["ram", "reach", "impactRadius"] },
         { key: "description.1", values: ["confuseChance", "dazeTicks", "fumble"] },
-        { key: "description.2", values: ["spread", "arc", "motes"] },
+        { key: "description.2", values: ["spread", "arc"] },
         { key: "vault.on", values: [], when: function (context) { return read(context.detail.values, ["vault"]) === true; } },
         { key: "vault.off", values: [], when: function (context) { return read(context.detail.values, ["vault"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

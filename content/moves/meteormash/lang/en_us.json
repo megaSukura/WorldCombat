@@ -6,7 +6,7 @@
   "worldcombat.skill.meteormash.description.0": "The meteor punch deals %1$s physical damage head-on and charges up to %2$s blocks.",
   "worldcombat.skill.meteormash.description.1": "Other foes within %2$s blocks of the landing point each take %1$s physical damage and are shoved %3$s blocks.",
   "worldcombat.skill.meteormash.description.2": "It has a %1$s chance to raise the user's Attack by %2$s stage(s).",
-  "worldcombat.skill.meteormash.description.3": "The ground within %1$s blocks is scorched for %2$s, comet form is currently %4$s.",
+  "worldcombat.skill.meteormash.description.3": "The ground within %1$s blocks is scorched for %2$s; comet form is currently %3$s.",
   "worldcombat.skill.meteormash.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.meteormash.growth.0": "From level %1$s the punch rises to %2$s power and the shock to %3$s.",
   "worldcombat.skill.meteormash.value.impact": "Punch power",

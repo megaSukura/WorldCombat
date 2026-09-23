@@ -14,6 +14,7 @@
 namespace PokemonSkills {
     define({
         id: horndrillId,
+        cooldownParameter: "recharge",
         name: "Horn Drill",
         description: "The user stabs the target with a horn that rotates like a drill. The target faints instantly if this attack hits.",
         uses: ["在近身对角线路上贯穿一个目标", "逼对手横向让开，撞上墙就自己停住", "对手站桩时用一记钻穿终结它"],

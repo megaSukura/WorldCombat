@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: extrasensoryId,
+        cooldownParameter: "recharge",
         name: "Extrasensory",
         description: "The user attacks with an odd, unseeable power. This may also make the target flinch.",
         uses: ["预判对手会跑到哪里，把看不见的力留在那个点上", "把沉睡或被困住的目标按在原地攥住", "把一小片挤在一起的敌人一起攥住"],

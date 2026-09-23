@@ -76,6 +76,7 @@ namespace PokemonSkills {
 
     define({
         id: dragontailId,
+        cooldownParameter: "recharge",
         name: "龙尾",
         description: "抡起尾巴在身前扫开一大片扇形，把里面的敌人一起抽飞、失去目标、逐出战斗；正对的对手吃最重的一记。",
         uses: ["当面横扫、把一排敌人一起抽开", "在敌人贴身时把它们扫出近身圈", "对单个厚实目标打一击并送走"],

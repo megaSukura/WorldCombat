@@ -124,7 +124,7 @@ namespace PokemonSkills {
         rationale: "地面震波；比直接命中轻，防御按略低系数减伤。" });
 
     describe("stomp", [
-        { key: "description.0", values: ["slam", "foot"] },
+        { key: "description.0", values: ["slam"] },
         { key: "description.1", values: ["aftershock", "shock"] },
         { key: "description.2", values: ["flinchChance", "staggerChance", "flinchTicks"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },

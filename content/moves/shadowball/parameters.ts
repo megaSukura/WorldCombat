@@ -105,7 +105,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["core"] },
         { key: "description.1", values: ["sunderChance", "sunderStage"] },
         { key: "description.2", values: ["velocity", "reach", "radius"] },
-        { key: "description.3", values: ["clingTicks", "shards", "pref.dense"] },
+        { key: "description.3", values: ["pref.dense"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.reach"] }
     ]);

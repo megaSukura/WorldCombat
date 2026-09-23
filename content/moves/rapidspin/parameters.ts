@@ -113,12 +113,11 @@ namespace PokemonSkills {
 
     describe("rapidspin", [
         { key: "description.0", values: ["spin", "radius"] },
-        { key: "description.1", values: ["rings", "push", "haste"] },
-        { key: "description.2", values: ["wind"] },
+        { key: "description.1", values: ["push", "haste"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.spin", "tier.0.radius"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.spin", "tier.1.wind"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.spin"] }
     ]);
 }

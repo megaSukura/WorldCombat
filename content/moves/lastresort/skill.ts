@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: lastresortId,
+        cooldownParameter: "recharge",
         name: "Last Resort",
         description: "The saved trump card, usable only after every other move the user knows has been used in battle; it strikes hardest when the user is nearly down.",
         uses: ["把所有招走一遍后掏出压箱底的一记", "残血时打出最重的直撞",
@@ -100,7 +101,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(lastresortId, "trump"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, lastresortScene, 1, hit.position(),
                             { moment: "slam", target: String(victim.ref()), count: count, scale: scale,

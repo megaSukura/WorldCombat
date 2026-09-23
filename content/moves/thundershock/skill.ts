@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: thundershockId,
+        cooldownParameter: "recharge",
         name: "Thunder Shock",
         description: "一道贴身短促的电刺，瞬间扎上去。射程很近、几乎不占节拍；对已经麻痹的目标更狠，并把麻痹续长一截。",
         uses: ["近身压制的一记快刺", "对已被麻住的目标追打", "在近身缠斗里随时补一下"],

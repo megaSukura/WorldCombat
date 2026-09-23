@@ -4,7 +4,7 @@
   "worldcombat.skill.acidarmor.use.1": "在对手脚下摊出一滩腐蚀的酸",
   "worldcombat.skill.acidarmor.use.2": "用更滑的液态撑过一轮贴身攻击",
   "worldcombat.skill.acidarmor.description.0": "液态期间防御抬高 %1$s 级，持续约 %2$s。",
-  "worldcombat.skill.acidarmor.description.1": "化开时溅起约 %1$s 滴酸，身体更滑（移动更快），并当场化掉身上的束缚。",
+  "worldcombat.skill.acidarmor.description.1": "化为液态后移动更快，并立即解除身上的束缚。",
   "worldcombat.skill.acidarmor.acid.on": "酸池：在原地看着一滩半径 %1$s 格的酸，持续约 %2$s；站进去的对手会中毒。",
   "worldcombat.skill.acidarmor.acid.off": "流身：不留酸池，换成更长的液态窗口与更快的滑行——牺牲场面控制换更强的自保。",
   "worldcombat.skill.acidarmor.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",

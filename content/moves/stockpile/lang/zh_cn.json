@@ -4,7 +4,7 @@
   "worldcombat.skill.stockpile.use.1": "连放三层后再接战，扛住第一轮爆发",
   "worldcombat.skill.stockpile.use.2": "把层数留着当会掉的保险，让对手先花几下打碎它",
   "worldcombat.skill.stockpile.description.0": "每蓄一层把防御提升 %1$s 级、特防提升 %2$s 级，最多 3 层。",
-  "worldcombat.skill.stockpile.description.1": "压住的力持续约 %1$s，光壳箍开 %2$s 格；一次压进约 %3$s 点力。",
+  "worldcombat.skill.stockpile.description.1": "压住的力持续约 %1$s。",
   "worldcombat.skill.stockpile.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.stockpile.break.mend": "破层去向「回气」：每崩掉一层按最大生命少量回复，适合拉锯续命。",
   "worldcombat.skill.stockpile.break.burst": "破层去向「震开」：每崩掉一层把出手者推开一段，适合拉开距离、断开连击。",

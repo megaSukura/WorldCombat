@@ -151,6 +151,38 @@ public final class RuntimeChecks {
             rejected(() -> runtime.start("checks:eligible", actor, target, null));
             check(prepared[0] == 2, "Unavailable actor reached definition policy");
         });
+        scenario("cooldown queries finalize custom commit durations once before resource settlement", () -> {
+            var host = new Host(); var actor = handle(UUID.randomUUID(), 1); var target = handle(UUID.randomUUID(), 1);
+            host.actors.addAll(List.of(actor, target)); host.target = target;
+            var content = new ContentRegistry(); content.begin(); int[] balance = {3}, queries = {0};
+            content.register(content.epoch(), ACTION, "1", 20, action -> {
+                action.cost(cost("resource", balance, 1, () -> {})); action.commit(120); action.finish();
+            });
+            content.hooks().register(content.epoch(), "checks:timing", "world_combat:cooldown", "", event -> {
+                queries[0]++; check(balance[0] == 3, "Timing queried after payment");
+                var data = com.google.gson.JsonParser.parseString(event.data()).getAsJsonObject();
+                check(data.get("baseCooldown").getAsInt() == 120 && data.get("action").getAsString().equals(ACTION), "Missing authored duration");
+                data.addProperty("cooldown", 80); event.data(data.toString());
+            });
+            content.complete(true); var runtime = new ActionRuntime(host, content); runtime.start(ACTION, actor, target, null);
+            check(queries[0] == 1 && runtime.cooldown(actor, ACTION) == 80 && balance[0] == 2 && host.errors == 0, "Cooldown finalization lost or doubled");
+        });
+        scenario("invalid cooldown query refuses before paying costs and long finite durations remain valid", () -> {
+            for (String result : List.of("-1", "0.5", "null", "40000")) {
+                var host = new Host(); var actor = handle(UUID.randomUUID(), 1); var target = handle(UUID.randomUUID(), 1);
+                host.actors.addAll(List.of(actor, target)); host.target = target;
+                var content = new ContentRegistry(); content.begin(); int[] balance = {3};
+                content.register(content.epoch(), ACTION, "1", 20, action -> {
+                    action.cost(cost("resource", balance, 1, () -> {})); action.commit(20); action.finish();
+                });
+                content.hooks().register(content.epoch(), "checks:timing", "world_combat:cooldown", "", event -> event.data("{\"cooldown\":" + result + "}"));
+                content.complete(true); var runtime = new ActionRuntime(host, content);
+                boolean valid = result.equals("40000");
+                if (valid) runtime.start(ACTION, actor, target, null);
+                else rejected(() -> runtime.start(ACTION, actor, target, null));
+                check(balance[0] == (valid ? 2 : 3) && runtime.cooldown(actor, ACTION) == (valid ? 40000 : 0), "Invalid duration paid resources or finite duration was capped");
+            }
+        });
         scenario("retargeted input retires original selection liveness but retains its readable data", () -> {
             var fixture = new Fixture(action -> {
                 String original = action.control();

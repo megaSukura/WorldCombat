@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: lovelykissId,
+        cooldownParameter: "recharge",
         name: "恶魔之吻",
         description: "摆出恐怖的脸贴地猛扑过去强吻对手。它必须先把身体送到对方脸上，扑到就几乎必然把它吓睡；只有比施法者更快、更灵活的目标能扭开这一吻。",
         uses: ["惩罚站桩或慢慢转头的目标", "用一次突进把近身的威胁睡下", "在开阔地追上落单的敌人"],

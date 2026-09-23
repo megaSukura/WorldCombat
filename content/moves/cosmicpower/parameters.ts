@@ -90,7 +90,7 @@ namespace PokemonSkills {
 
     describe("cosmicpower", [
         { key: "description.0", values: ["aegis", "ward"] },
-        { key: "description.1", values: ["dwell", "shaft"] },
+        { key: "description.1", values: ["dwell"] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.dwell", "tier.0.wait"] },

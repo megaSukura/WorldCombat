@@ -19,6 +19,7 @@
 namespace PokemonSkills {
     define({
         id: nightdazeId,
+        cooldownParameter: "recharge",
         name: "Night Daze",
         description: "从自身炸开一团漆黑，一圈圈向四周推出去：身周（含空中）的敌人各挨一记暗波、被向外震开，有概率被黑暗罩住、掉命中。蚀夜式铺得更大更久更黏，爆发式更重、把贴身的顶得更开。",
         uses: ["被围住时一次罩住身边一圈敌人", "连飞在天上的目标一起打到", "削掉一整圈对手的命中，留出撤退或反打的空间"],

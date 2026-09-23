@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: psystrikeId,
+        cooldownParameter: "recharge",
         name: "Psystrike",
         description: "把念波在目标头顶堆成一整块重物砸下来：落下时按物理防御结算特殊伤害，压场式还会把冲击面铺向周围；落地震裂目标的精神防线，使其特防下降 1 级。",
         uses: ["对单个重目标打一记按物理防御结算的重压", "砸裂特防，为随后的特殊攻击开路", "在人群里压一块场，顺带扫到旁边的人"],
@@ -116,7 +117,7 @@ namespace PokemonSkills {
                             if (pushed) {
                                 const away = facts.position().minus(point);
                                 const flat = WorldCombat.point(away.x(), 0, away.z());
-                                if (flat.length() > 0.05) scope.displace(other, flat.unit().scale(0.6));
+                                if (scope.valid(other) && flat.length() > 0.05) scope.displace(other, flat.unit().scale(0.6));
                                 WorldFeedback.emit(scope, psystrikeScene, 1, facts.position(),
                                     { moment: "shock", target: String(other.ref()), cracks: Math.round(cracks * 0.6), scale: scale, intensity: intensity }, 24);
                             }

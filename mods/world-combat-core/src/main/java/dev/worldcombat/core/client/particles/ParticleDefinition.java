@@ -37,13 +37,14 @@ public record ParticleDefinition(Map<String, Moment> moments, ExitMode interrupt
 
     /** Which anchor an emitter follows. {@code PATH} follows the vertices listed in {@code data.path}. */
     public enum Bind { SOURCE, TARGET, PROJECTILE, POINT, PATH }
-    /** BODY scales offsets, shapes, sizes, speeds and trail spacing by the bound body; NONE keeps authored blocks. */
-    public enum Fit { BODY, NONE }
+    /** BODY follows body size; NONE follows data.scale for geometry; WORLD keeps geometry in world blocks. */
+    public enum Fit { BODY, NONE, WORLD }
     /**
      * How the shape's local frame is turned each tick. {@code FIXED} keeps the authored rotation; the others
      * turn local +Y toward {@code data.direction}, the target anchor, or the anchor's own motion.
+     * {@code HEADING} turns local +Z toward the horizontal part of {@code data.direction}, keeping +Y up.
      */
-    public enum Orient { FIXED, DIRECTION, TOWARD, VELOCITY }
+    public enum Orient { FIXED, DIRECTION, TOWARD, VELOCITY, HEADING }
 
     /**
      * Initial velocity direction policy. {@code FIXED} uses {@link EmitterSpec#fixedDirection()};

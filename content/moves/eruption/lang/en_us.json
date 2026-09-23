@@ -6,7 +6,7 @@
   "worldcombat.skill.eruption.use.3": "Drive off a crowd and claim breathing room",
   "worldcombat.skill.eruption.description.0": "Erupts in a full ring around the user: each foe inside takes about %1$s damage; the radius is about %2$s blocks and airborne and grounded targets are both hit. The target's Sp. Def, type and crit are settled on the hit.",
   "worldcombat.skill.eruption.description.1": "The ring's edge keeps %1$s of the centre power; a hit target is shoved about %2$s blocks away and tossed about %3$s blocks up.",
-  "worldcombat.skill.eruption.description.2": "A hit target has a %1$s burn chance; the fire column rises about %2$s blocks and the wind-up is about %3$s.",
+  "worldcombat.skill.eruption.description.2": "A hit target has a %1$s burn chance; the wind-up is about %2$s.",
   "worldcombat.skill.eruption.timing": "Cast on the space within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
   "worldcombat.skill.eruption.growth.0": "At level %1$s the cooldown drops to %2$s s.",
   "worldcombat.skill.eruption.value.burst": "Eruption power",

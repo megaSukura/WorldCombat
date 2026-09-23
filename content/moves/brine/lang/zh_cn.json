@@ -4,7 +4,7 @@
   "worldcombat.skill.brine.use.1": "把一块地浇成湿地，让路过的敌人湿透",
   "worldcombat.skill.brine.use.2": "在敌人退到半血以下时追加压力",
   "worldcombat.skill.brine.description.0": "对目标造成约 %1$s 点特殊伤害；目标血量在一半或以下时，这一段威力翻倍。",
-  "worldcombat.skill.brine.description.1": "盐卤最多射到 %1$s 格，出流速度约 %2$s 格/刻，命中处迸出约 %3$s 滴水。",
+  "worldcombat.skill.brine.description.1": "盐卤最多射到 %1$s 格，出流速度约 %2$s 格/刻。",
   "worldcombat.skill.brine.description.2": "落点留下一摊半径 %1$s 格、持续 %2$s 秒的盐池；踏入或停留的非友方被浇上湿透，直击目标也带湿透约 %3$s。",
   "worldcombat.skill.brine.press.on": "当前高压式：威力 ×1.15、射程 ×1.15，但盐池更小更短、起手多 2 刻、冷却多 4 刻。",
   "worldcombat.skill.brine.press.off": "当前泼洒式：盐池更大更久、起手与冷却更省，但威力 ×0.92。",

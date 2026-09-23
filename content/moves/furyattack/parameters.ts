@@ -140,7 +140,7 @@ namespace PokemonSkills {
     describe(furyattackId, [
         { key: "description.0", values: ["jab", "jabs", "accuracy"] },
         { key: "description.1", values: ["reach", "tipWidth", "push", "gap"] },
-        { key: "description.2", values: ["step", "maxTargets", "sparks"] },
+        { key: "description.2", values: ["step", "maxTargets"] },
         { key: "close.on", values: [], when: function (context) { return read(context.detail.values, ["close"]) === true; } },
         { key: "close.off", values: [], when: function (context) { return read(context.detail.values, ["close"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

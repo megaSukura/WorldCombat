@@ -2,7 +2,7 @@
   "worldcombat.skill.jetpunch.summary": "站定不动，把水压缩在拳上压成一条水柱，几乎瞬发地一记直拳打出去：拳程被水柱推出身外，命中把对手浇透、沿水柱方向冲退，带着火的目标被这一拳浇熄。全族唯一的拳水招。水锤式改成接触瞬间炸开、把目标推得更远。",
   "worldcombat.skill.jetpunch.use.0": "贴身瞬发的先手重拳",
   "worldcombat.skill.jetpunch.use.1": "一拳把对手浇透并推离原位",
-  "worldcombat.skill.jetpunch.use.2": "浇熄对手身上的火与灼伤",
+  "worldcombat.skill.jetpunch.use.2": "近身快速补刀或把追兵顶开",
   "worldcombat.skill.jetpunch.description.0": "水柱一拳造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.jetpunch.description.1": "拳程 %1$s 格（水柱把拳推出身外）；命中把目标沿出拳方向顶开约 %2$s 格。",
   "worldcombat.skill.jetpunch.description.2": "命中后使目标浇透 %1$s，降低其移动速度，并熄灭身上的火焰。",
@@ -24,8 +24,6 @@
   "worldcombat.skill.jetpunch.preference.hammer.help": "开启：水柱在接触瞬间炸开，顶开 ×1.7、判定更宽，把目标推得更远；代价是威力 ×0.9、拳程 −0.4 格、浇透更短、冷却多 6 刻。关闭（直拳式）：更长、更重、湿得更久，但顶得近。",
   "worldcombat.skill.jetpunch.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.jetpunch.preference.ai.maxChase.help": "对手离自己这么远以内才主动出拳；本招拳程短，设大也常常要先走近。",
-  "worldcombat.skill.jetpunch.preference.ai.douse": "优先浇火",
-  "worldcombat.skill.jetpunch.preference.ai.douse.help": "开启：优先对正在燃烧或带着灼伤的目标出拳，一拳把火浇熄；关闭：只按普通先制候选排序。",
   "worldcombat.skill.jetpunch.preference.ai.preferDry": "先打干的",
   "worldcombat.skill.jetpunch.preference.ai.preferDry.help": "开启：已经带着 soaked 的目标排后，先换一个干的打；关闭：当普通先制候选排序。",
   "worldcombat.skill.jetpunch.preference.ai.finish": "优先收残",
@@ -34,5 +32,7 @@
   "world_combat.move.jetpunch.text.douse": "水浇灭了火",
   "world_combat.move.jetpunch.text.miss": "一拳打空了",
   "effect.world_combat.jetpunch_drenched": "浇透",
-  "worldcombat.skill.jetpunch.value.drench.help": "被一拳的水浇透后湿身挂多久"
+  "worldcombat.skill.jetpunch.value.drench.help": "被一拳的水浇透后湿身挂多久",
+  "worldcombat.skill.jetpunch.preference.ai.preserveBurn": "保留灼伤",
+  "worldcombat.skill.jetpunch.preference.ai.preserveBurn.help": "开启：对灼伤敌人降低本招优先级，优先保留持续伤害；紧急顶退和残血补刀仍可出手。关闭：按普通进攻收益排序。"
 }

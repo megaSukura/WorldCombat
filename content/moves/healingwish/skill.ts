@@ -2,14 +2,14 @@
  * 治愈之愿 / Healing Wish —— 执行组织。
  *
  * 核心念头：把自己整个交出去，在倒下的地方留下一颗治愈之愿；愿望等着，第一个来到它身边、又伤又病的伙伴
- *   被整口治好——按最大生命回复，并洗掉全部主异常。这是本家族里唯一**以命换命**的一招：不净化别人，
+ *   被整口治好——按最大生命回复，并洗掉全部有害状态效果。这是本家族里唯一**以命换命**的一招：不净化别人，
  *   而是把自己变成一次救援。
  *
  * 两幕（加愿景自身的一段等待）：
  *   起（windup，提交前）：半跪合掌，周身升起愿光；只观察与预告，可被打断（此时不会倒下）。
  *   献（提交后）：把自己当前生命全部交出去（倒下），原地放出一颗独立的愿星（WorldBodies 持久实体，
  *     脑 world_combat:move/healingwish/wish）。愿望不受施法者被收回、区块卸载与重启影响。
- *   兑（愿星期内）：愿星每 4 刻检查半径内是否有「受伤或有主异常」的友善伙伴（不含自己）；有就整口治好、
+ *   兑（愿星期内）：愿星每 4 刻检查半径内是否有「受伤或有有害状态效果」的友善伙伴（不含自己）；有就整口治好、
  *     洗掉异常，随即散去；到点无人需要就自行散去（fade）。
  *
  * 反制：愿望只认「走到它身边的第一个需要救助的人」——把残血伙伴带离愿望、或先让自己人占掉它即可；
@@ -19,12 +19,10 @@
 namespace PokemonSkills {
     function healingwishAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
-    /** 受益者是否「需要」这次愿望：受伤或带主异常。健康且干净的人不会被消耗掉愿望。 */
+    /** 受益者是否「需要」这次愿望：受伤或带有害状态效果。健康且干净的人不会被消耗掉愿望。 */
     function healingwishNeeds(world: CombatWorld, actor: CombatActor, facts: CombatObservation): boolean {
         if (facts.health() < facts.maxHealth() - 0.01) return true;
-        for (var index = 0; index < healingwishMalaise.length; index++)
-            if (CombatStatus.has(world, actor, healingwishMalaise[index])) return true;
-        return false;
+        return CombatStatus.hasHarmful(world, actor);
     }
 
     /** 半径内是否至少有一个「可接收」的友善战斗者（不含自己）；没有就不该交出生命（原生 ifHit）。 */
@@ -57,13 +55,9 @@ namespace PokemonSkills {
         return set;
     }
 
-    /** 洗掉一个战斗者身上的全部主异常，返回实际洗掉的项数。 */
+    /** 洗掉一个战斗者身上的全部有害状态效果，返回实际洗掉的项数。 */
     function healingwishCleanse(world: CombatWorld, actor: CombatActor): number {
-        if (!world.valid(actor)) return 0;
-        var removed = 0;
-        for (var index = 0; index < healingwishMalaise.length; index++)
-            if (CombatStatus.cure(world, actor, healingwishMalaise[index])) removed++;
-        return removed;
+        return CombatStatus.cureHarmful(world, actor);
     }
 
     /** 回复走共享健康写入；宝可梦经过 NativeEffects.heal（含受治疗加成），其他战斗者直接写 MC 生命。 */
@@ -150,8 +144,9 @@ namespace PokemonSkills {
     });
 
     define({
-        id: healingwishId, name: "治愈之愿",
-        description: "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，第一个来到它身边、又伤又病的伙伴（受伤或带主异常）按其最大生命的比例回复并洗掉全部主异常；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
+        id: healingwishId,
+        cooldownParameter: "recharge", name: "治愈之愿",
+        description: "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，第一个来到它身边、又伤又病的伙伴（受伤或带有害状态效果）按其最大生命的比例回复并洗掉全部有害状态效果；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
         uses: ["残血时把命换成伙伴的一次满血重生", "在必死前为缠斗中的伙伴留一颗愿望", "把倒下的地方变成一处救援点"],
         kind: "self", range: 0, prepare: 14, active: 1, recover: 0, cooldown: 320, style: "wish", maximumTicks: 300,
         defaults: { broadcast: false },

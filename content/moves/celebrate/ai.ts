@@ -2,7 +2,7 @@
  * 庆祝 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：身边至少 `ai.minAllies`（默认 2，含自己）个友方，且自己还没有在庆祝中；
- *   有威胁时要求它在 `ai.maxChase`（默认 14）以内；没有威胁时只在整备命令（驻守／自主／工作）下自己开一场。
+ *   有威胁时要求它在 `ai.maxChase`（默认 14）以内；慰劳模式在近旁伙伴确实受伤时也可开场。
  * 对谁出手：自己；庆祝以自身为中心，不需要走近谁，队友是顺手被感染的。
  * 候选之间怎么排：满足条件时 priority 100 起（人越多越高，最多 +30），越过共享交战次序先开一场——
  *   它便宜、只花一点 PP，值得在开团前先铺一圈。
@@ -31,8 +31,16 @@ namespace PokemonSkills {
             if (CompanionBehavior.status(context, self, "celebrate")) return false;
             if (celebrateAllies(context, item) < CompanionBehavior.ai<number>(item, "minAllies", 2)) return false;
             const threat = context.senses["world_combat:threat"] as CompanionBehavior.Entity | null;
-            if (!threat)
-                return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) {
+                if (!item.data.config || item.data.config.vigor !== true) return false;
+                const radius = item.data.range;
+                const friends = [self].concat(context.facts.nearby as CompanionBehavior.Entity[]);
+                return friends.some(function (friend) {
+                    return (friend.ref === self.ref || friend.friendly) && friend.health > 0
+                        && CompanionBehavior.ratio(friend) < 0.9
+                        && CompanionBehavior.distance(self.point, friend.point) <= radius;
+                });
+            }
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(item, "maxChase", 14);
         },
         accepts: function (context, _item, target) {

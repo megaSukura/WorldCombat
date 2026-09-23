@@ -153,7 +153,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["slam"] },
         { key: "description.1", values: ["leapHeight", "leapSpeed", "diveSpeed", "drift"] },
         { key: "description.2", values: ["reach", "hitRadius", "crash"] },
-        { key: "description.3", values: ["sparks", "shove", "dust"] },
+        { key: "description.3", values: ["shove"] },
         { key: "description.4", values: ["pref.charge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.slam"] },

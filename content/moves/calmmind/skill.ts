@@ -6,42 +6,21 @@
  *
  * 两幕：
  *   静（windup 播「凝神」，提交前只观察与预告，打断不花代价）。
- *   明（提交后）：NativeEffects.boost 写入公共能力阶梯（特攻 insight 级、特防 poise 级），挂上共享身份
- *     world_combat:status/calmmind 的清明窗口；同时另存一份「这次加了多少」的记号，供窗口结束时按数收回。
- * 结束：清明到期或被清除时，按记号把两项等级原样收回。
+ *   明（提交后）：临时特攻、特防等级挂在共享身份 world_combat:status/calmmind 的清明窗口上。
+ * 结束：清明到期或被清除时，结束两项贡献。
  */
 namespace PokemonSkills {
     const calmMindScene = "world_combat:move_calmmind";
     const calmMindFocus = "world_combat:calm_focus";
-    const calmMindMark = "world_combat:calmmind_mark";
     const calmMindSettleText = "world_combat.move.calmmind.text.settle";
     const calmMindFadeText = "world_combat.move.calmmind.text.fade";
     /** 表现里的参考半径：`data.scale = 实际涟漪半径 / 这个数`。 */
     const calmMindReferenceRadius = 1.4;
 
-    // 记号：记录这次冥想各自加了多少级，窗口结束时照数收回。加在两个属性上，单靠 amplifier 存不下。
-    WorldCombat.effect(calmMindMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json);
-        if (typeof value.insight !== "number" || typeof value.poise !== "number") throw new Error("Invalid calm mind mark");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(calmMindMark, "start", function () { });
-
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function calmMindStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function calmMindRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = calmMindStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, calmMindStage(world, actor, stat) - before);
-    }
 
     define({
         id: "calmmind",
+        cooldownParameter: "wait",
         name: "冥想",
         description: "静心凝神，从而提高自己的特攻和特防。",
         uses: ["开场先静一息，把特攻与特防一起垫起来", "硬仗前坐深，拉锯里用浅冥想随时补", "把特防抬起来顶对面的特殊火力"],
@@ -86,10 +65,20 @@ namespace PokemonSkills {
             const motes = Math.max(12, Math.round(p("calmmind", "motes", action)));
             const breaths = Math.max(2, Math.min(4, Math.round(p("calmmind", "breaths", action))));
             const scale = ripple / calmMindReferenceRadius;
-            const insightLevels = calmMindRaise(world, actor, "spa", insight);
-            const poiseLevels = calmMindRaise(world, actor, "spd", poise);
-            MobEffects.apply(world, actor, calmMindFocus, window, Math.max(insightLevels, poiseLevels));
-            world.effect(calmMindMark, actor, JSON.stringify({ insight: insightLevels, poise: poiseLevels }), window);
+            const beforeInsight = NativeEffects.effectiveStage(world, actor, "spa"), beforePoise = NativeEffects.effectiveStage(world, actor, "spd");
+            const previous = MobEffects.read(world, actor, calmMindFocus), carrier = MobEffects.apply(world, actor, calmMindFocus, window, previous ? previous.amplifier() : 0);
+            const contribution = "world_combat:move/calmmind";
+            let insightLevels = 0, poiseLevels = 0;
+            if (carrier) {
+                NativeEffects.boostWindow(world, actor, { spa: insight, spd: poise }, carrier.duration(), contribution, carrier, previous);
+                insightLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spa") - beforeInsight);
+                poiseLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - beforePoise);
+                const amplifier = Math.max(insightLevels, poiseLevels);
+                if (carrier.amplifier() !== amplifier) {
+                    const shown = MobEffects.apply(world, actor, calmMindFocus, window, amplifier);
+                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+                }
+            }
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             WorldFeedback.emit(world, calmMindScene, 1, feet,
                 { moment: "settle", actor: String(actor.ref()), insight: insightLevels, poise: poiseLevels, motes: motes,
@@ -104,24 +93,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 清明到期或被清除：按记号把两项等级原样收回（只收到当前实际持有的正等级）。
+    // 两项贡献随清明窗口结束；移除事件只负责收尾表现。
     WorldCombat.on("world_combat:move_calmmind/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== calmMindFocus) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const marks = world.effects(actor, calmMindMark);
-        let insight = 1, poise = 1;
-        if (marks.length) {
-            const mark = JSON.parse(String(marks[0].data()));
-            if (typeof mark.insight === "number") insight = Math.max(0, Math.round(mark.insight));
-            if (typeof mark.poise === "number") poise = Math.max(0, Math.round(mark.poise));
-            world.operation(marks[0].id(), "world_combat:dispel", "{}");
-        }
-        const lostInsight = Math.min(insight, Math.max(0, calmMindStage(world, actor, "spa")));
-        const lostPoise = Math.min(poise, Math.max(0, calmMindStage(world, actor, "spd")));
-        if (lostInsight > 0) NativeEffects.boost(world, actor, "spa", -lostInsight);
-        if (lostPoise > 0) NativeEffects.boost(world, actor, "spd", -lostPoise);
+        if (MobEffects.read(world, actor, calmMindFocus)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, calmMindScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 24);

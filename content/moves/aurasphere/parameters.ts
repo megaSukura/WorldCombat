@@ -129,13 +129,13 @@ namespace PokemonSkills {
     ]);
 
     describe(aurasphereId, [
-        { key: "description.0", values: ["pulse", "motes"] },
+        { key: "description.0", values: ["pulse"] },
         { key: "description.1", values: ["reach", "velocity", "turn"] },
         { key: "description.2", values: ["lockRange"] },
         { key: "seek.on", values: [], when: function (context) { return read(context.detail.values, ["seek"]) === true; } },
         { key: "seek.off", values: [], when: function (context) { return read(context.detail.values, ["seek"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pulse", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.pulse", "tier.1.turn", "tier.1.motes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.pulse", "tier.1.turn"] }
     ]);
 }

@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: "volttackle",
+        cooldownParameter: "recharge",
         name: "Volt Tackle",
         description: "The user electrifies itself and charges the target to inflict damage. This also damages the user quite a lot and may leave the target with paralysis.",
         uses: ["蓄好电再一记爆冲撞开挡路的对手", "在人堆里撞一个、用电弧把旁边的人也电到", "给主力目标挂上麻痹并趁机拉开身位"],

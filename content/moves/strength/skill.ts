@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "strength",
+        cooldownParameter: "recharge",
         name: "Strength",
         description: "The target is slugged with a punch thrown at maximum power.",
         uses: ["贴脸稳定输出的一记重拳", "把目标打向墙或障碍，多赚一次撞墙伤害", "没有副作用，随时可以用"],

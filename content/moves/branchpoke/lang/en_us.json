@@ -4,7 +4,7 @@
   "worldcombat.skill.branchpoke.use.1": "Stand at the twig's end for the full tip bonus — farther hurts more",
   "worldcombat.skill.branchpoke.use.2": "Thorn form snags the target and slows it",
   "worldcombat.skill.branchpoke.description.0": "The base of the branch deals about %1$s contact damage; reach about %2$s blocks with a %3$s block twig half-width.",
-  "worldcombat.skill.branchpoke.description.1": "Damage is multiplied by (1 + %1$s × distance/reach), so farther hurts more; a hit sheds about %2$s leaves.",
+  "worldcombat.skill.branchpoke.description.1": "Damage is multiplied by (1 + %1$s × distance/reach), so farther hurts more.",
   "worldcombat.skill.branchpoke.thorn.on": "Thorn form: a hit snags the target for a %1$s second slow of %2$s stages, with about %3$s damage at the base; a thinner twig with less spring.",
   "worldcombat.skill.branchpoke.thorn.off": "Spring form: about %1$s damage at the base, a wider twig and a larger tip bonus, with a faster wind-up.",
   "worldcombat.skill.branchpoke.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

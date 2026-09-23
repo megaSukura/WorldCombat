@@ -53,7 +53,6 @@ namespace PokemonSkills {
     describe("psychup", [
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["span"] },
-        { key: "description.2", values: ["echoes"] },
         { key: "select.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.selective); } },
         { key: "select.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.selective); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

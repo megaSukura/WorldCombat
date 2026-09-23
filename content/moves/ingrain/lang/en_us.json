@@ -4,7 +4,7 @@
   "worldcombat.skill.ingrain.use.1": "Turn the soil underfoot into root dirt and mark the position",
   "worldcombat.skill.ingrain.use.2": "When chased, root for steady recovery and bet they cannot break through",
   "worldcombat.skill.ingrain.description.0": "Every %2$s s the roots restore %1$s of max HP.",
-  "worldcombat.skill.ingrain.description.1": "The roots hold about %1$s, drawing about %2$s tendrils over a %3$s-block radius; the ground becomes root dirt and returns when the roots pull free.",
+  "worldcombat.skill.ingrain.description.1": "The roots hold about %1$s over a %2$s-block radius; the ground becomes root dirt and returns when the roots pull free.",
   "worldcombat.skill.ingrain.description.2": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s; while rooted your movement is zero and shoves do not move you.",
   "worldcombat.skill.ingrain.deep.on": "Deep roots: healing per pulse x1.1 and root duration x1.3; costs a x1.2 longer interval and 20 longer cooldown.",
   "worldcombat.skill.ingrain.deep.off": "Standard roots: slightly less per pulse but more frequent, with a shorter cooldown so you can root again sooner.",

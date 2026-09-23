@@ -2,7 +2,7 @@
   "worldcombat.skill.jetpunch.summary": "Stand still and squeeze a torrent onto the fist: a nearly instant straight punch whose reach is extended by the water lance. A hit soaks the target, drives it back along the jet and extinguishes fire on a burning target. The hammer form bursts on contact and shoves the target further.",
   "worldcombat.skill.jetpunch.use.0": "An instant heavy first punch at point-blank range",
   "worldcombat.skill.jetpunch.use.1": "Soak a target and shove it off its spot",
-  "worldcombat.skill.jetpunch.use.2": "Douse a target's fire and burn",
+  "worldcombat.skill.jetpunch.use.2": "Finish a nearby foe or push a pursuer away",
   "worldcombat.skill.jetpunch.description.0": "The water-clad punch deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.jetpunch.description.1": "It reaches %1$s blocks (the torrent extends the fist) and shoves the target about %2$s blocks along the punch.",
   "worldcombat.skill.jetpunch.description.2": "Soak and slow the target for %1$s on hit, extinguishing its flames.",
@@ -24,8 +24,6 @@
   "worldcombat.skill.jetpunch.preference.hammer.help": "On: the torrent bursts on contact, shoving 1.7x further with a wider hit, at the cost of 0.9x power, 0.4 blocks less reach, a shorter soak and 6 ticks more cooldown. Off (lance form): longer, heavier and soaking longer, but shoving less.",
   "worldcombat.skill.jetpunch.preference.ai.maxChase": "Open distance",
   "worldcombat.skill.jetpunch.preference.ai.maxChase.help": "It punches only at targets within this distance; the reach is short, so larger values often still mean walking in first.",
-  "worldcombat.skill.jetpunch.preference.ai.douse": "Douse fire",
-  "worldcombat.skill.jetpunch.preference.ai.douse.help": "On: prefer burning or burned targets so the punch extinguishes them; off: rank as an ordinary first-strike candidate.",
   "worldcombat.skill.jetpunch.preference.ai.preferDry": "Hit dry targets",
   "worldcombat.skill.jetpunch.preference.ai.preferDry.help": "On: targets already carrying soaked rank lower, so it wets a dry one first; off: rank as an ordinary first-strike candidate.",
   "worldcombat.skill.jetpunch.preference.ai.finish": "Finish the weak",
@@ -34,5 +32,7 @@
   "world_combat.move.jetpunch.text.douse": "The water put the fire out",
   "world_combat.move.jetpunch.text.miss": "The punch caught only air",
   "effect.world_combat.jetpunch_drenched": "Drenched",
-  "worldcombat.skill.jetpunch.value.drench.help": "How long the wet of the punch's water stays on the target"
+  "worldcombat.skill.jetpunch.value.drench.help": "How long the wet of the punch's water stays on the target",
+  "worldcombat.skill.jetpunch.preference.ai.preserveBurn": "Preserve burn",
+  "worldcombat.skill.jetpunch.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value."
 }

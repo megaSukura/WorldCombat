@@ -4,7 +4,7 @@
   "worldcombat.skill.decorate.use.1": "Load both offences onto a partner before they charge",
   "worldcombat.skill.decorate.use.2": "Sharpen a companion other than yourself",
   "worldcombat.skill.decorate.description.0": "Raises one ally's Attack and Sp. Atk by %1$s stages each; the target must be another combatant.",
-  "worldcombat.skill.decorate.description.1": "The decoration shines on the target for about %1$s, delivered as roughly %2$s pieces of cream and ribbon.",
+  "worldcombat.skill.decorate.description.1": "The decoration shines on the target for about %1$s.",
   "worldcombat.skill.decorate.description.2": "Cast range %1$s blocks; telegraph %2$s s, recovery %3$s s, cooldown %4$s s.",
   "worldcombat.skill.decorate.timing": "The telegraph can be interrupted without paying anything; PP and cooldown settle only after commit.",
   "worldcombat.skill.decorate.value.gift": "Offence gain",

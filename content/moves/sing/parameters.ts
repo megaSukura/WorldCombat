@@ -101,11 +101,10 @@ namespace PokemonSkills {
     describe(singId, [
         { key: "description.0", values: ["reach", "beat"] },
         { key: "description.1", values: ["notes", "sleepTicks"] },
-        { key: "description.2", values: ["dozeTicks", "rings"] },
+        { key: "description.2", values: ["dozeTicks"] },
         { key: "soothing.on", values: [], when: function (context) { return read(context.detail.values, ["soothing"]) === true; } },
         { key: "soothing.off", values: [], when: function (context) { return read(context.detail.values, ["soothing"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.rings"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.rings", "tier.1.sleepTicks", "tier.1.notes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.sleepTicks", "tier.1.notes"] }
     ]);
 }

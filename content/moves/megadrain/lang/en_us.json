@@ -2,7 +2,7 @@
   "worldcombat.skill.megadrain.summary": "Launch a pod that restrains the target and drains its life on impact.",
   "worldcombat.skill.megadrain.description.0": "The bursting pod deals about %1$s special damage; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.megadrain.description.1": "It draws %1$s wave(s) in all, one every %2$s s.",
-  "worldcombat.skill.megadrain.description.2": "It flies %1$s blocks (also the real range) at %2$s blocks per tick with a %3$s block rooting radius.",
+  "worldcombat.skill.megadrain.description.2": "It flies %1$s blocks (also the real range) at %2$s blocks per tick.",
   "worldcombat.skill.megadrain.description.3": "%1$s of each wave's damage is restored to the user.",
   "worldcombat.skill.megadrain.burst.on": "Burst pod: one heavier, wider burst, but only a single wave, less healing and a slower rhythm.",
   "worldcombat.skill.megadrain.burst.off": "Latching pod: several waves that add up to more damage and healing, but each is lighter.",

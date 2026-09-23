@@ -53,7 +53,6 @@ namespace PokemonSkills {
 
     describe(milkdrinkId, [
         { key: "description.0", values: ["heal", "gulps", "gulpTicks"] },
-        { key: "description.1", values: ["drops", "cleanRadius"] },
         { key: "description.2", values: ["open", "wipe"] },
         { key: "stance.warm", values: [], when: function (context) { return read(context.detail.values, ["warm"]) === true; } },
         { key: "stance.cold", values: [], when: function (context) { return read(context.detail.values, ["warm"]) !== true; } },

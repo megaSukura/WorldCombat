@@ -36,25 +36,15 @@ namespace PokemonSkills {
 
     /** 一份可读的能力等级快照（宝可梦读原生阶梯，其他活体读公共阶梯）。 */
     export function topsyStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /**
      * 把 actor 的每一项非零能力变化取反；返回翻过的项数。`onlyGains` 为真时只翻正面变化。
-     * 取反走 NativeEffects.boost(-2×当前值, ignoreAbility=true)：宝可梦写原生等级、其他活体写公共阶梯，
-     * 且跳过「不可降级」一类特性，让这面镜子对谁都是同一件事。
+     * 持久等级与临时窗口分别原位取反；临时窗口沿用原来源、归属和剩余时长。
      */
     export function topsyFlip(world: CombatWorld, actor: CombatActor, onlyGains: boolean): number {
-        if (!world.valid(actor)) return 0;
-        const stages = topsyStages(world, actor);
-        let flipped = 0;
-        for (let index = 0; index < topsyStats.length; index++) {
-            const stat = topsyStats[index], value = Number(stages[stat]) || 0;
-            if (value === 0 || onlyGains && value < 0) continue;
-            NativeEffects.boost(world, actor, stat, -2 * value, true);
-            flipped++;
-        }
-        return flipped;
+        return NativeEffects.invertStages(world, actor, onlyGains);
     }
 
     actionParameters.define(topsyId, {
@@ -113,8 +103,8 @@ namespace PokemonSkills {
     ]);
 
     describe(topsyId, [
-        { key: "description.0", values: ["reach", "shards", "shardSpeed"] },
-        { key: "description.1", values: ["shardRadius", "markTicks", "shatter"] },
+        { key: "description.0", values: ["reach", "shardSpeed"] },
+        { key: "description.1", values: ["shardRadius", "markTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["gain"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["gain"]) !== true; } },

@@ -76,7 +76,7 @@ namespace PokemonSkills {
 
     describe("nobleroar", [
         { key: "description.0", values: ["cow", "reach", "arc"] },
-        { key: "description.1", values: ["falter", "volume"] },
+        { key: "description.1", values: ["falter"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: [] }
     ]);

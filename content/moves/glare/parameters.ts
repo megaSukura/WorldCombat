@@ -90,11 +90,9 @@ namespace PokemonSkills {
     describe(glareId, [
         { key: "description.0", values: ["gazeReach", "gazeAngle"] },
         { key: "description.1", values: ["lockTicks"] },
-        { key: "description.2", values: ["patternRings", "gazeSpeed"] },
         { key: "spread.on", values: [], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
         { key: "spread.off", values: [], when: function (context) { return read(context.detail.values, ["spread"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.patternRings"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.patternRings", "tier.1.lockTicks"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.lockTicks"] }
     ]);
 }

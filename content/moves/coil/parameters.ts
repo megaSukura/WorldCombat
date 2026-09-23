@@ -87,8 +87,8 @@ namespace PokemonSkills {
     ]);
 
     describe("coil", [
-        { key: "description.0", values: ["rise", "guard", "focus", "coils"] },
-        { key: "description.1", values: ["brace", "ring"] },
+        { key: "description.0", values: ["rise", "guard", "focus"] },
+        { key: "description.1", values: ["brace"] },
         { key: "tight.on", values: [], when: function (context) { return read(context.detail.values, ["tight"]) === true; } },
         { key: "tight.off", values: [], when: function (context) { return read(context.detail.values, ["tight"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

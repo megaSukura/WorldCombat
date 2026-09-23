@@ -4,7 +4,7 @@
   "worldcombat.skill.sweetkiss.use.1": "为队友的集火制造失手窗口",
   "worldcombat.skill.sweetkiss.use.2": "在缠斗中打断对手的连招",
   "worldcombat.skill.sweetkiss.description.0": "必须在亲吻距离（%1$s 格，随体型变化）内才能送出；当前配置下距离为 %2$s 格。够不到就亲空，不花 PP。",
-  "worldcombat.skill.sweetkiss.description.1": "被亲到的目标陷入混乱，持续 %1$s：每次出手都可能作废，打中别人时被自己的力量反噬。亲密度越高晕得越久，落在它身上的心也越多（%2$s 个）。",
+  "worldcombat.skill.sweetkiss.description.1": "被亲到的目标陷入混乱，持续 %1$s：每次出手都可能作废，打中别人时被自己的力量反噬。亲密度越高晕得越久。",
   "worldcombat.skill.sweetkiss.description.2": "凑近并送出这一吻要 %1$s，收势 %2$s，冷却 %3$s。吻的方式可选：轻吻起手快、冷却短，但混乱 ×0.8；深吻起手 +6 刻、收招 +4 刻、冷却 ×1.15，换来混乱 ×1.3 与 +1 强度。",
   "worldcombat.skill.sweetkiss.value.kissReach": "亲吻距离",
   "worldcombat.skill.sweetkiss.value.mistTicks": "混乱时长",

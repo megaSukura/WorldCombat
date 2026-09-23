@@ -127,7 +127,7 @@ namespace PokemonSkills {
     describe(dualchopId, [
         { key: "description.0", values: ["chop", "reach", "span", "maxTargets"] },
         { key: "description.1", values: ["gap", "breach", "push"] },
-        { key: "description.2", values: ["quake", "crackTicks", "shards"] },
+        { key: "description.2", values: ["quake", "crackTicks"] },
         { key: "breach.on", values: [], when: function (context) { return read(context.detail.values, ["breach"]) === true; } },
         { key: "breach.off", values: [], when: function (context) { return read(context.detail.values, ["breach"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

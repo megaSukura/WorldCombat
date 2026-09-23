@@ -5,7 +5,6 @@
   "worldcombat.skill.entrainment.use.2": "Change the Abilities of the whole ring of enemies around you",
   "worldcombat.skill.entrainment.description.0": "Dances a beat within %1$s blocks after a %2$s s wind-up, travelling at about %3$s blocks/tick.",
   "worldcombat.skill.entrainment.description.1": "When the beat lands, each caught enemy's Ability becomes the caster's for %1$s s; the splash radius is %2$s blocks.",
-  "worldcombat.skill.entrainment.description.2": "About %1$s beats line up along the path and about %2$s sway points circle the landing spot; every caught enemy lights a link line.",
   "worldcombat.skill.entrainment.whole.0": "Whole-field beat: splash ×1.6, duration ×0.65, cooldown +16 ticks; change the whole ring that closed in on you at once.",
   "worldcombat.skill.entrainment.whole.1": "Close beat: splash ×0.7, duration ×1.4, cooldown −10 ticks; hold one opponent to your rhythm for much longer.",
   "worldcombat.skill.entrainment.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",

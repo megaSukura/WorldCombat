@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: triplekickId,
+        cooldownParameter: "recharge",
         name: "Triple Kick",
         description: "A consecutive three-kick attack that becomes more powerful with each successful hit.",
         uses: ["朝前的窄走廊连踢三脚", "每中一脚，下一脚更重", "贴地快踢，冷却短"],
@@ -108,7 +109,7 @@ namespace PokemonSkills {
                     function (victimActor, facts) {
                         if (hurt(current, victimActor, triplekickId, power, { damage: damageSpec(triplekickId, "kick"), contact: true })) {
                             hits++;
-                            scope.displace(victimActor, WorldCombat.point(heading.x(), 0, heading.z()).scale(push));
+                            if (scope.valid(victimActor)) scope.displace(victimActor, WorldCombat.point(heading.x(), 0, heading.z()).scale(push));
                             WorldFeedback.emit(scope, triplekickScene, 1, facts.position(),
                                 { moment: "hit", target: String(victimActor.ref()), index: index, kicks: kicks,
                                     power: Math.round(power * 10) / 10, sparks: sparks, scale: scale, intensity: intensity }, 20);

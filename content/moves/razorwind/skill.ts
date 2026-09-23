@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: razorwindId,
+        cooldownParameter: "recharge",
         name: "Razor Wind",
         description: "In this two-turn attack, blades of wind hit opposing Pokemon on the second turn. Critical hits land more easily.",
         uses: ["站定把气流拧成一把把风之刃", "蓄够了把正前方铺成一个扇面甩出去", "一次扫到成排的敌人，暴击率高一档"],

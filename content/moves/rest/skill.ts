@@ -5,7 +5,7 @@
  *
  * 出手：共享节奏。windup 播放下沉的睡意；ready 在提交前拒绝「已经睡着」和「没什么可恢复」。
  * 结果：提交后施加共享睡眠（真实 MC 效果 world_combat:sleep，宝可梦层同步为原生异常），随后逐刻守着：
- *   睡满则按 heal 回复缺失生命、治愈六种主异常，并在沉睡档获得「神清气爽」；被任何伤害惊醒则按
+ *   睡满则按 heal 回复缺失生命、治愈全部有害状态效果，并在沉睡档获得「神清气爽」；被任何伤害惊醒则按
  *   elapsed/duration 的比例回复、追加 minecraft:slowness。睡着期间无法行动。
  * 反制：准备期可被打断且不花 PP；睡着后任意一次伤害就能惊醒，砍掉回复并让施法者迟缓；小憩档更快但报酬更低。
  */
@@ -36,8 +36,7 @@ namespace PokemonSkills {
     }
 
     function restCure(world: CombatWorld, self: CombatActor): void {
-        var names = ["poison", "toxic", "burn", "paralysis", "frozen", "sleep"];
-        for (var i = 0; i < names.length; i++) CombatStatus.cure(world, self, names[i]);
+        CombatStatus.cureHarmful(world, self);
     }
 
     function restSleepBody(self: CombatActor, duration: number, shortNap: boolean, ratio: number) {
@@ -66,7 +65,7 @@ namespace PokemonSkills {
             var world = action.sense(), self = action.actor(), body = world.observe(self);
             if (!body) return "invalid-target";
             if (CombatStatus.has(world, self, "sleep")) return "already-asleep";
-            if (body.health() >= body.maxHealth() - 0.01 && !CombatStatus.major(world, self)) return "nothing-to-restore";
+            if (body.health() >= body.maxHealth() - 0.01 && !CombatStatus.hasHarmful(world, self)) return "nothing-to-restore";
             return "";
         },
         windup: function (action, _config, prepare) {

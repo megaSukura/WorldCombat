@@ -36,7 +36,7 @@ namespace PokemonSkills {
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯。 */
     function sacredswordStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
         if (!world.valid(actor)) return {};
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 目标身上防御向能力里正面等级的总和（防与特防）；0 表示此刻没有可被本招无视的涨防。 */
@@ -127,7 +127,7 @@ namespace PokemonSkills {
 
     describe(sacredswordId, [
         { key: "description.0", values: ["cut", "reach"] },
-        { key: "description.1", values: ["edge", "depth", "lunge", "gleam"] },
+        { key: "description.1", values: ["lunge"] },
         { key: "iaido.on", values: ["reach", "lunge", "cut"], when: function (context) { return read(context.detail.values, ["iaido"]) === true; } },
         { key: "iaido.off", values: ["reach", "lunge", "cut"], when: function (context) { return read(context.detail.values, ["iaido"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "bite",
+        cooldownParameter: "recharge",
         name: "Bite",
         description: "The target is bitten with viciously sharp fangs. This may also make the target flinch.",
         uses: ["用最短冷却的近身咬击抢节奏", "把想拉开距离的对手拽回身前", "为下一次贴身出手留住目标"],

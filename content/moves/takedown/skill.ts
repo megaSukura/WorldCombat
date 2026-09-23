@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "takedown",
+        cooldownParameter: "recharge",
         name: "Take Down",
         description: "A reckless full-body charge attack for slamming into the target. This also damages the user a little.",
         uses: ["用一次便宜的肩撞顶开贴脸的对手", "在挨打前先手打断并拉出身位", "给残血目标补上最后一撞"],

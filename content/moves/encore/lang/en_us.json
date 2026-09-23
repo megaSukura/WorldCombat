@@ -4,7 +4,7 @@
   "worldcombat.skill.encore.use.1": "Break a combo rhythm so it can only do the same thing",
   "worldcombat.skill.encore.use.2": "Pin a foe that just exposed an opening",
   "worldcombat.skill.encore.description.0": "The target can only repeat the move it last used, for %1$s. That last move only counts within %2$s; older actions cannot be named.",
-  "worldcombat.skill.encore.description.1": "The call reaches %1$s blocks, the echo ring is %2$s blocks across, and %3$s notes burst on the lock; until it fades the target repeats that one move.",
+  "worldcombat.skill.encore.description.1": "The call reaches %1$s blocks; until it fades the target repeats that one move.",
   "worldcombat.skill.encore.description.2": "The call takes %1$s, the recovery is %2$s and the cooldown %3$s. The echo is a visible window; it fades when cured or when that move runs dry.",
   "worldcombat.skill.encore.strict.0": "Stern: a longer echo, but a shorter call and a slower, costlier cast.",
   "worldcombat.skill.encore.strict.1": "Light: a shorter echo, but a longer reach, a faster wind-up and a cheaper cooldown.",

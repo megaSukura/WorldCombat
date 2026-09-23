@@ -101,7 +101,7 @@ namespace PokemonSkills {
 
     describe("astonish", [
         { key: "description.0", values: ["shriek", "burst"] },
-        { key: "description.1", values: ["reach", "hop"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["flinchChance", "flinchTicks"] },
         { key: "lurk.on", values: [], when: function (context) { return read(context.detail.values, ["lurk"]) === true; } },
         { key: "lurk.off", values: [], when: function (context) { return read(context.detail.values, ["lurk"]) !== true; } },

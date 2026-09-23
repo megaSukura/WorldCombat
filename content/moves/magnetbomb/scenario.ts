@@ -1,33 +1,40 @@
-/**
- * 磁铁炸弹 / magnetbomb —— 可执行设计说明。
- *
- * 一句话：几枚钢弹被磁力吸住对手，引信走完后在它身上起爆。
- *
- * 场面：一只只带磁铁炸弹的自爆磁怪，对一只五格外的卡比兽（厚血、走得慢，便于等引信走完）。场地铺平，白天。
- * 断言只取必然事实：这招被提交过；目标身上出现过共享身份 world_combat:status/magnetbomb；
- *   引信到点后目标受到过伤害（一枚吸住的钢弹必然起爆）。弹数、引信长短、暴击、溅射写进 note 供读轨迹判断。
- */
+/** Engineering regression: a lethal primary hit keeps the independent point and bystander damage. */
 Smoke.scenario("magnetbomb", function (stage) {
-    stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
+    stage.fill([-16, -1, -8], [16, -1, 8], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "magnezone", level: 40, moves: ["magnetbomb"], at: [-2, 0, 0] });
-    var foe = stage.pokemon({ species: "snorlax", level: 55, moves: ["tackle"], at: [4, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1200, function () {
-        return stage.casts("magnetbomb", caster) >= 1 && stage.damageTo(foe) > 0;
-    }, function () {
-        stage.after(120, function () {
-            stage.expect(stage.casts("magnetbomb", caster) >= 1, "caster committed magnet bomb");
-            stage.expect(stage.hadMobEffect(foe, "world_combat:status/magnetbomb"), "the foe carried the magnetic charge");
-            stage.expect(stage.damageTo(foe) > 0, "the stuck bomb detonated and dealt damage");
-            stage.note("bomb count, fuse length, how many bombs stuck, crit and splash are positional/random", {
-                casts: stage.casts("magnetbomb", caster),
-                damage: Math.round(stage.damageTo(foe) * 10) / 10,
-                foeAlive: foe.alive(),
-                tick: stage.tick()
+    var primary = stage.mob({ type: "minecraft:husk", at: [3, 0, 0] });
+    var bystander = stage.mob({ type: "minecraft:silverfish", at: [3, 0, 0.8] });
+    stage.noai(primary, bystander);
+    stage.after(20, function () {
+        stage.command("data merge entity " + primary.ref.split("/")[0] + " {Health:1.0f}");
+        stage.command("attribute " + bystander.ref.split("/")[0] + " minecraft:generic.max_health base set 1000");
+        stage.command("data merge entity " + bystander.ref.split("/")[0] + " {Health:1000.0f}");
+        stage.prefer(caster, "magnetbomb", { cluster: true });
+        stage.setPp(caster, "magnetbomb", 1);
+        stage.expect(caster.alive() && primary.health() === 1 && bystander.health() === 1000, "the lethal primary and surviving bystander are staged");
+        stage.provoke(caster, primary);
+        stage.until(600, function () { return stage.hits(primary, true) > 0; }, function () {
+            stage.after(1, function () {
+                var receipts = stage.damageEvents(), primaryAt = -1, splashAt = -1;
+                for (var i = 0; i < receipts.length; i++) {
+                    if (receipts[i].from !== caster.name) continue;
+                    if (receipts[i].to === primary.name && primaryAt < 0) primaryAt = i;
+                    if (receipts[i].to === bystander.name && splashAt < 0) splashAt = i;
+                }
+                stage.expect(stage.casts("magnetbomb", caster) === 1, "one paid cast owns the primary hit and its aftermath");
+                stage.expect(stage.hadMobEffect(primary, "world_combat:status/magnetbomb"), "the primary carried the fused charge before detonation");
+                stage.expect(!stage.hadMobEffect(bystander, "world_combat:status/magnetbomb"), "the bystander receives splash rather than an attached bomb");
+                stage.expect(!primary.alive() && stage.hits(primary, true) === 1, "the first primary hit is lethal");
+                stage.expect(bystander.alive() && stage.damageTo(bystander) > 0, "the surviving bystander receives splash after the lethal primary hit");
+                stage.expect(primaryAt >= 0 && splashAt > primaryAt, "the splash receipt follows the primary death receipt");
+                stage.note("Technical lethal-hit regression; particle appearance remains a playtest observation.", {
+                    primaryDamage: stage.damageTo(primary), bystanderDamage: stage.damageTo(bystander),
+                    primaryAlive: primary.alive(), bystanderAlive: bystander.alive(), receipts: receipts
+                });
+                stage.done();
             });
-            stage.done();
-        });
-    }, "magnet bomb sticks and detonates within 60 s");
+        }, "magnetbomb reaches and settles the staged primary within 30 seconds");
+    });
 });

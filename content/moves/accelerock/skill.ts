@@ -69,6 +69,7 @@ namespace PokemonSkills {
 
     define({
         id: accelerockId,
+        cooldownParameter: "recharge",
         name: "Accelerock",
         description: "The user smashes into the target at high speed while clad in rock. This move always goes first.",
         uses: ["贴地一记最重的石身先手，把目标撞飞", "破阵式撞穿一排贴在一起的敌人", "落点崩出碎石疤，改变脚下的地面"],

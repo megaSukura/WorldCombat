@@ -5,7 +5,7 @@
   "worldcombat.skill.solarblade.use.2": "Shove everything in front away",
   "worldcombat.skill.solarblade.description.0": "The blade deals %1$s physical damage to each target it sweeps.",
   "worldcombat.skill.solarblade.description.1": "After gathering you step %3$s blocks forward, then sweep an arc of radius %1$s blocks and %2$s degrees from the landing point.",
-  "worldcombat.skill.solarblade.description.2": "Gathering takes %1$s of standing still and gathers about %2$s strands of blade-light; in strong sunlight it is skipped and the cut lands at once. A struck target is shoved %3$s blocks along the swing.",
+  "worldcombat.skill.solarblade.description.2": "Gathering takes %1$s of standing still; in strong sunlight it is skipped and the cut lands at once. A struck target is shoved %2$s blocks along the swing.",
   "worldcombat.skill.solarblade.stance.thrust": "Thrust: a longer step, a heavier single cut and a slightly longer blade, but the arc narrows to a thin line that mostly hits what is straight ahead.",
   "worldcombat.skill.solarblade.stance.sweep": "Sweep: a wider blade that catches a whole row in front, at the cost of a lighter cut and a shorter step.",
   "worldcombat.skill.solarblade.timing": "Cast within %1$s blocks; after %2$s it consumes %4$s PP, recovers for %3$s, and cools down for %5$s from commit.",

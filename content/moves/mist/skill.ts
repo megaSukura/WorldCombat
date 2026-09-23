@@ -2,13 +2,13 @@
  * 白雾 / mist — 执行组织与家族行为。
  *
  * 核心念头：一口白雾从身上漫开，罩住自己与身边的队友；雾里谁的能力都不会被压下去。
- *   它不加防不加血，只是在几条要被压低的状态落下的下一刻，把它们从身上吞掉。
+ *   它不加防不加血，在能力变化写入前拦下要降低的等级。
  *
  * 出手：短起手（windup 播吐雾预告）后提交；只对自己施放，雾以自身为锚跟随移动。
  * 命中：提交后给自己挂 world_combat:mist_veil（身份 mist），并把浓度、半径、时长写进 world_combat:mist_mark；
  *       标记每 20 刻把同一份雾补给半径内的友方（施法者始终在内）。
  * 持续：存续期由该 MobEffect 承担，每 20 刻 keep 一次环绕身体与雾圈的画面。
- * 守护：带 mist 身份的活体每次能力等级下降时被本单元的 tick 守卫在下一拍还原，并播放「雾吞掉这一降」。
+ * 守护：带 mist 身份的活体在能力降低写入前由共享变化规则拦截，并播放「雾吞掉这一降」。
  * 结束：施法者的雾走完或被人解除时，标记一并结束并收回半径内友方身上的雾，整圈雾同时散开。
  * 反制：雾只挡「降低」，挡不住伤害与控制；离开雾圈的人随补给停止而失去；清除类效果能把雾整片解掉。
  */
@@ -19,16 +19,7 @@ namespace PokemonSkills {
         const views = world.effects(actor, mistMark);
         return views.length ? JSON.parse(String(views[0].data())) : null;
     }
-    function mistStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
-        if (String(actor.domain()) === "cobblemon") return NativeEffects.read(world, actor).stages;
-        return CombatStages.read(world, actor);
-    }
-    function mistCopy(stages: { [stat: string]: number }): { [stat: string]: number } {
-        const value: { [stat: string]: number } = {};
-        for (let i = 0; i < mistStats.length; i++) value[mistStats[i]] = Number(stages[mistStats[i]]) || 0;
-        return value;
-    }
-    var mistWatch: { [ref: string]: { [stat: string]: number } } = Object.create(null);
+    var mistBlocked: { [ref: string]: number } = Object.create(null);
     var mistGuardAt: { [ref: string]: number } = Object.create(null);
 
     function mistAura(world: CombatWorld, caster: CombatActor, radius: number, ticks: number): number {
@@ -78,27 +69,22 @@ namespace PokemonSkills {
     });
     WorldCombat.effectHandler(mistMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    // 守护与画面：带雾的活体每 tick 检查一次能力等级；出现下降就还原，并当场播「雾吞掉这一降」。
-    // 只读共享身份雾是否还在，生产方是谁都不影响；宝可梦走原生等级，其他生物走公共能力阶梯。
-    WorldCombat.on("world_combat:move_mist/guard", "world_combat:mob_effect_tick", "", function (event) {
+    // 在能力变化写入前拦下负面变化；窗口自然结束沿用自己的生命周期。
+    CombatStages.change.define({ id: "world_combat:move_mist/guard", apply: function (change) {
+        if (!(change.amount < 0) || change.options.ignoreAbility || !CombatStatus.has(change.world, change.actor, "mist")) return;
+        change.allowed = false;
+        const ref = String(change.actor.ref());
+        mistBlocked[ref] = (mistBlocked[ref] || 0) + Math.abs(change.amount);
+    } });
+    WorldCombat.on("world_combat:move_mist/held", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== mistEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const ref = String(actor.ref()), current = mistStages(world, actor), previous = mistWatch[ref];
-        if (!previous) { mistWatch[ref] = mistCopy(current); return; }
-        let absorbed = 0;
-        for (let i = 0; i < mistStats.length; i++) {
-            const stat = mistStats[i], was = Number(previous[stat]) || 0, now = Number(current[stat]) || 0;
-            if (now >= was) { previous[stat] = now; continue; }
-            if (String(actor.domain()) === "cobblemon") {
-                const state = NativeEffects.read(world, actor); state.stages[stat] = was; NativeEffects.write(world, actor, state);
-            } else CombatStages.boost(world, actor, stat, was - now);
-            previous[stat] = was; absorbed += was - now;
-        }
+        const ref = String(actor.ref()), absorbed = mistBlocked[ref] || 0;
         const now2 = world.tick();
         if (absorbed > 0 && now2 - (mistGuardAt[ref] || -1000) >= 10) {
-            mistGuardAt[ref] = now2;
+            mistGuardAt[ref] = now2; delete mistBlocked[ref];
             const body = world.observe(actor);
             if (body === null) return;
             WorldFeedback.emit(world, mistScene, 1, body.position(),
@@ -122,7 +108,7 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
         const ref = String(actor.ref());
-        delete mistWatch[ref]; delete mistGuardAt[ref];
+        delete mistBlocked[ref]; delete mistGuardAt[ref];
         const expired = String(data.cause) === "expired";
         const mark = mistMarkOf(world, actor);
         if (mark !== null) {
@@ -139,6 +125,7 @@ namespace PokemonSkills {
 
     define({
         id: mistId,
+        cooldownParameter: "recharge",
         name: "白雾",
         description: "用白雾覆盖身体与身边的队友；雾里谁的能力等级都不会被对手压低。雾跟着施法者走，离开范围的人会失去这层保护。",
         uses: ["挡住成片的降防、降攻、降速", "护住正在蓄力或布置的队友", "在对方准备削弱前先一步张雾"],

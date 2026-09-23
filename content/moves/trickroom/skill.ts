@@ -11,6 +11,7 @@
 namespace PokemonSkills {
     define({
         id: trickRoomId,
+        cooldownParameter: "recharge",
         name: "戏法空间",
         description: "在选定的地面按出一片歪斜空间：站在里面的活体速度被倒转，慢于基准的被推快、快于基准的被拖慢。对双方一视同仁，走出去立刻恢复。",
         uses: ["让己方慢速单位抢先进位", "拖慢对手的快速突击", "在自己与对手之间扭一片交战区"],

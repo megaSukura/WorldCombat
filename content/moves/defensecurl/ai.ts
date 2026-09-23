@@ -1,8 +1,7 @@
 /**
  * 变圆 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁且在 ai.maxChase 内时先卷成球，靠滚劲换身位、扛贴身；身边暂时安全时
- *   （驻守／自主／工作）也先缩起来备着。
+ * 什么局面有意义：有威胁且在 ai.maxChase 内时先卷成球，靠滚劲换身位、扛贴身。
  * 什么时候最想出手：威胁贴到 ai.close 以内（马上要挨打）或血量掉到 ai.panic 以下时 priority 100，
  *   抢在共享次序前；只是有威胁时退回 50。它是本族里最便宜的防守起手。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -16,7 +15,7 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "defensecurl")) return false;
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 10);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

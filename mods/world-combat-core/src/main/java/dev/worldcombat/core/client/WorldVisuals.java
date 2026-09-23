@@ -67,42 +67,28 @@ public final class WorldVisuals {
                                EntityRenderDispatcher dispatcher, Level level, int seed) {
         var requested = ResourceLocation.tryParse(appearance.sprite());
         if (requested == null) return;
-        var found = resolve(requested);
+        var found = resolve(requested, level, seed);
         if (found == null) return;
         var sprite = found.sprite();
         int light = appearance.glow() ? LightTexture.FULL_BRIGHT : packedLight;
         int argb = appearance.tint() >= 0 ? 0xFF000000 | appearance.tint() : 0xFFFFFFFF;
         float alpha = (argb >> 24 & 0xFF) / 255f, red = (argb >> 16 & 0xFF) / 255f,
             green = (argb >> 8 & 0xFF) / 255f, blue = (argb & 0xFF) / 255f;
-        // Cobblemon particle textures are flipbooks: frames stacked vertically. Show one frame, advancing over time,
-        // instead of squeezing the whole strip onto the quad.
-        Frame frame = frame(requested, sprite, level, seed);
+        // The generated atlas already applies the source flipbook's grid and crop. Use that frame's
+        // real aspect ratio, including horizontal strips and non-square frames.
+        int width = sprite.contents().width(), height = sprite.contents().height();
+        float aspect = height > 0 ? (float) width / height : 1f;
         pose.pushPose();
         pose.mulPose(dispatcher.cameraOrientation());
-        float halfH = appearance.scale() * 0.5f, halfW = halfH * frame.aspect();
+        float halfH = appearance.scale() * 0.5f, halfW = halfH * aspect;
         Matrix4f matrix = pose.last().pose();
         VertexConsumer consumer = buffers.getBuffer(appearance.glow()
             ? RenderType.entityTranslucentEmissive(found.location()) : RenderType.entityTranslucent(found.location()));
-        vertex(consumer, matrix, -halfW, -halfH, sprite.getU0(), frame.v1(), red, green, blue, alpha, light);
-        vertex(consumer, matrix, halfW, -halfH, sprite.getU1(), frame.v1(), red, green, blue, alpha, light);
-        vertex(consumer, matrix, halfW, halfH, sprite.getU1(), frame.v0(), red, green, blue, alpha, light);
-        vertex(consumer, matrix, -halfW, halfH, sprite.getU0(), frame.v0(), red, green, blue, alpha, light);
+        vertex(consumer, matrix, -halfW, -halfH, sprite.getU0(), sprite.getV1(), red, green, blue, alpha, light);
+        vertex(consumer, matrix, halfW, -halfH, sprite.getU1(), sprite.getV1(), red, green, blue, alpha, light);
+        vertex(consumer, matrix, halfW, halfH, sprite.getU1(), sprite.getV0(), red, green, blue, alpha, light);
+        vertex(consumer, matrix, -halfW, halfH, sprite.getU0(), sprite.getV0(), red, green, blue, alpha, light);
         pose.popPose();
-    }
-    private record Frame(float v0, float v1, float aspect) {}
-    private static Frame frame(ResourceLocation requested, TextureAtlasSprite sprite, Level level, int seed) {
-        int frames = 1, width = sprite.contents().width(), height = sprite.contents().height();
-        var layout = "cobblemon".equals(requested.getNamespace())
-            ? ParticleTypes.layout(requested.getPath().startsWith("particle/") ? requested.getPath().substring("particle/".length()) : requested.getPath()) : null;
-        if (layout != null && layout.frames() > 1 && layout.height() > 0) { frames = layout.frames(); width = layout.width(); height = layout.height(); }
-        else if (height > width && height % width == 0) { frames = height / width; height = width; }
-        float v0 = sprite.getV0(), span = sprite.getV1() - v0;
-        if (frames <= 1) return new Frame(v0, sprite.getV1(), height > 0 ? (float) width / height : 1f);
-        long time = level == null ? 0 : level.getGameTime();
-        int index = (int) (((time / TICKS_PER_FRAME) + seed) % frames);
-        if (index < 0) index += frames;
-        float step = span / frames;
-        return new Frame(v0 + step * index, v0 + step * (index + 1), height > 0 ? (float) width / height : 1f);
     }
     private static void vertex(VertexConsumer consumer, Matrix4f matrix, float x, float y, float u, float v,
                                float red, float green, float blue, float alpha, int light) {
@@ -110,11 +96,22 @@ public final class WorldVisuals {
             .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
     }
     private record Found(TextureAtlasSprite sprite, ResourceLocation location) {}
-    private static Found resolve(ResourceLocation requested) {
+    private static Found resolve(ResourceLocation requested, Level level, int seed) {
         if (requested == null) return null;
         var mc = Minecraft.getInstance();
         String path = requested.getPath();
         if (path.startsWith("item/") || path.startsWith("block/")) return lookup(mc, TextureAtlas.LOCATION_BLOCKS, requested);
+        if ("cobblemon".equals(requested.getNamespace())) {
+            String particlePath = path.startsWith("particle/") ? path.substring("particle/".length()) : path;
+            var layout = ParticleTypes.layout(particlePath);
+            if (layout != null) {
+                long time = level == null ? 0 : level.getGameTime();
+                int index = (int) Math.floorMod(time / TICKS_PER_FRAME + seed, (long) layout.frames());
+                var frameId = ResourceLocation.fromNamespaceAndPath("world_combat_core", layout.path() + "/" + index);
+                var frame = lookup(mc, TextureAtlas.LOCATION_PARTICLES, frameId);
+                if (frame != null) return frame;
+            }
+        }
         if (path.startsWith("particle/"))
             return lookup(mc, TextureAtlas.LOCATION_PARTICLES, requested.withPath(path.substring("particle/".length())));
         var particle = lookup(mc, TextureAtlas.LOCATION_PARTICLES, requested);

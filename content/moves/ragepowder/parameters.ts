@@ -60,7 +60,7 @@ namespace PokemonSkills {
 
     describe(ragePowderId, [
         { key: "description.0", values: ["cloudRadius", "cloudTicks"] },
-        { key: "description.1", values: ["interval", "motes"] },
+        { key: "description.1", values: ["interval"] },
         { key: "thick.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "thick.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

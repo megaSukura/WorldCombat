@@ -121,7 +121,7 @@ namespace PokemonSkills {
 
     describe("wildcharge", [
         { key: "description.0", values: ["surge", "dash", "pace", "radius"] },
-        { key: "description.1", values: ["paralyze", "recoil", "shove", "spark"] },
+        { key: "description.1", values: ["paralyze", "recoil", "shove"] },
         { key: "overload.on", values: [], when: function (context) { return read(context.detail.values, ["overload"]) === true; } },
         { key: "overload.off", values: [], when: function (context) { return read(context.detail.values, ["overload"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -32,7 +32,7 @@ const context = vm.createContext({ WorldCombat: {
     actor.seconds = seconds; if (!seconds) { actor.status = ''; actor.statusKey = ''; } return true;
   },
 } });
-const sources = ['content/protocols/effects.ts', 'content/behavior/contributions.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts',
+const sources = ['content/protocols/effects.ts', 'content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/mechanisms/mob-effects.ts', 'content/mechanisms/combat-stages.ts', 'content/traits/composition.ts',
   ...['combatant-stats', 'native-abilities', 'native-items', 'native-semantics', 'native-modifiers', 'native-effects', 'world-environment', 'pokemon-damage',
     'native-minecraft-status'].map(id => `content/mechanisms/${id}.ts`)];
 vm.runInContext(ts.transpileModule(sources.map(path => fs.readFileSync(path, 'utf8')).join('\n'), {
@@ -54,7 +54,8 @@ const native = body('native', true), ordinary = body('ordinary', false), attacke
 function view(actor, id) {
   const marker = actor.markers.get(id); if (!marker || marker.expires <= now) return null;
   return { id: () => id, duration: () => marker.expires - now, amplifier: () => marker.amplifier, key: () => JSON.stringify({ id, duration: marker.expires, amplifier: marker.amplifier }),
-    tags: () => (tags[id] || []).join(' '), tagged: tag => (tags[id] || []).includes(tag) };
+    tags: () => (tags[id] || []).join(' '), tagged: tag => (tags[id] || []).includes(tag),
+    category: () => id === 'fixture:beneficial' ? 'beneficial' : id === 'fixture:neutral' ? 'neutral' : 'harmful' };
 }
 const world = { source: () => attacker, tick: () => now, random: () => randomRoll, valid: () => true, friendly: () => false,
   attributeValue: () => null, observe: actor => ({ health: () => actor.health, maxHealth: () => 100 }), query: () => [],
@@ -159,5 +160,47 @@ check('the shared confusion carrier has a usable default chance and names its ca
   assert.equal(failed.rejection, 'confused');
   assert.equal(failed.data.status, 'confusion');
   assert.equal(failed.data.effect, 'world_combat:confusion', 'the rejection names the exact carrier that rolled');
+});
+
+
+check('native classification distinguishes contact, projectiles, magic and unknown mod damage', () => {
+  const facts = { sourceLiving: true, sourceActor: 'attacker', direct: true, damageType: 'minecraft:mob_attack' };
+  assert.equal(context.DamageSemantics.read(facts).category, 'physical');
+  assert.equal(context.DamageSemantics.read(facts).contact, true);
+  assert.equal(context.DamageSemantics.read({ ...facts, direct: false, damageType: 'minecraft:arrow', damageTags: ['minecraft:is_projectile'] }).contact, false);
+  assert.equal(context.DamageSemantics.read({ damageType: 'minecraft:magic' }).category, 'special');
+  const unknown = context.DamageSemantics.read({ ...facts, damageType: 'fixture:unknown' });
+  assert.equal(unknown.category, ''); assert.equal(unknown.contact, false); assert.equal(unknown.attack, false);
+  assert.equal(context.DamageSemantics.read({ ...facts, damageType: 'fixture:spell', damageTags: ['neoforge:is_magic'] }).category, 'special');
+  assert.equal(context.DamageSemantics.read({ ...facts, scripted: true, kind: 'move', category: 'special', contact: false }).contact, false);
+  context.DamageSemantics.classification.define({ id: 'checks:custom-damage', apply: value => {
+    if (value.data.damageType === 'fixture:custom') { value.category = 'physical'; value.contact = true; value.attack = true; }
+  } });
+  assert.equal(context.DamageSemantics.read({ damageType: 'fixture:custom' }).attack, true);
+});
+check('native attacks roll confusion and paralysis once while scripted committed damage keeps its existing roll', () => {
+  const hit = { amount: 12, damageType: 'minecraft:player_attack', direct: true, sourceLiving: true, sourceActor: 'ordinary', scripted: false };
+  inflict(ordinary, 'confusion', 80); randomRoll = 0;
+  assert.equal(event('attacks', ordinary, attacker, hit).rejection, 'confused');
+  randomRoll = .99; assert.equal(event('attacks', ordinary, attacker, hit).rejection, '');
+  randomRoll = 0; assert.equal(event('attacks', ordinary, attacker, { ...hit, scripted: true, kind: 'move' }).rejection, '');
+  assert.equal(event('attacks', ordinary, attacker, { ...hit, damageType: 'fixture:environment', sourceLiving: false, sourceActor: '' }).rejection, '');
+  context.CombatStatus.cure(world, ordinary, 'confusion');
+  inflict(ordinary, 'paralysis', 80);
+  assert.equal(event('attacks', ordinary, attacker, hit).rejection, 'paralyzed');
+});
+check('full cleansing uses native effect category, preserves useful effects and reports shared cures', () => {
+  inflict(native, 'poison', 80);
+  for (const id of ['fixture:mod_debuff', 'minecraft:slowness', 'fixture:beneficial', 'fixture:neutral']) world.marker(native, id, 80, 0);
+  assert(context.CombatStatus.hasHarmful(world, native));
+  assert.equal(context.CombatStatus.cureHarmful(world, native), 3);
+  assert(!has(native, 'poison')); assert.equal(native.status, '');
+  assert(world.mobEffect(native, 'fixture:beneficial')); assert(world.mobEffect(native, 'fixture:neutral'));
+  assert(!context.CombatStatus.hasHarmful(world, native));
+  context.CombatStatus.effectClassification.define({ id: 'checks:neutral-debuff', apply: value => {
+    if (String(value.effect.id()) === 'fixture:neutral') value.category = 'harmful';
+  } });
+  assert.equal(context.CombatStatus.cureHarmful(world, native), 1);
+  assert(world.mobEffect(native, 'fixture:beneficial'));
 });
 console.log(`PASS combatant status: ${count} scenarios; shared identity, default behaviors, secondary route, variants and the native mirror`);

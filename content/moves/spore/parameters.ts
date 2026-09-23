@@ -109,13 +109,13 @@ namespace PokemonSkills {
     ]);
 
     describe(sporeId, [
-        { key: "description.0", values: ["burstRadius", "maxTargets", "sporeSpeed"] },
+        { key: "description.0", values: ["burstRadius", "maxTargets"] },
         { key: "description.1", values: ["landChance", "sleepTicks"] },
-        { key: "description.2", values: ["spores", "puffSize"] },
+        { key: "description.2", values: [] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.spores", "tier.0.maxTargets"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.spores", "tier.1.sleepTicks", "tier.1.burstRadius"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.maxTargets"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.sleepTicks", "tier.1.burstRadius"] }
     ]);
 }

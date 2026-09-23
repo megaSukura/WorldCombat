@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: forestscurseId,
+        cooldownParameter: "recharge",
         name: "森林诅咒",
         description: "向对手种下森林诅咒：根须缠住目标，给它追加草属性；只对还能追加一条属性、且非草的宝可梦生效。",
         uses: ["给对手追加草属性、打开火与冰与虫与飞的弱点", "把水与地面的对手逼出四倍草弱点", "深根档让草属性诅咒持续更久"],

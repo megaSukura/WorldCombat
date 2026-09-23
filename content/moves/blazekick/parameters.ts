@@ -112,8 +112,8 @@ namespace PokemonSkills {
 
     describe("blazekick", [
         { key: "description.0", values: ["kick", "reach"] },
-        { key: "description.1", values: ["launch", "arc"] },
-        { key: "description.2", values: ["burnChance", "burnTicks", "embers"] },
+        { key: "description.1", values: ["launch"] },
+        { key: "description.2", values: ["burnChance", "burnTicks"] },
         { key: "ignite.on", values: [], when: function (context) { return read(context.detail.values, ["ignite"]) === true; } },
         { key: "ignite.off", values: [], when: function (context) { return read(context.detail.values, ["ignite"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

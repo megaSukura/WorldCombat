@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "poisontail",
+        cooldownParameter: "recharge",
         name: "Poison Tail",
         description: "The user swings its tail low in a wide arc, sweeping everyone close and smearing poison from the venomous tip.",
         uses: ["低位横扫一圈、把围上来的敌人一起扫到", "给靠近的多个目标抹毒", "被贴身围攻时把身位扫开一点"],

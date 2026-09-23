@@ -5,7 +5,7 @@
   "worldcombat.skill.populationbomb.use.2": "在对手来不及还手前堆出一串小伤害",
   "worldcombat.skill.populationbomb.description.0": "最多叫来 %2$s 只伙伴，每只间隔 %4$s 扑上，各造成约 %1$s 的一般属性接触+切割伤害；每只独立掷 %3$s 的命中率，一只扑空这一串就结束。对手防御、相性与暴击在每下命中时另算。",
   "worldcombat.skill.populationbomb.description.1": "伙伴以 %1$s 格/刻从目标周围 %4$s 格的集结环上、高 %5$s 格处扑来，最远从 %2$s 格外出动；一只伙伴判定半径 %3$s 格。",
-  "worldcombat.skill.populationbomb.description.2": "集合需要 %2$s，扑过与命中带起约 %1$s 点尘土；等级越高叫来的伙伴越多。",
+  "worldcombat.skill.populationbomb.description.2": "集合需要 %1$s；等级越高叫来的伙伴越多。",
   "worldcombat.skill.populationbomb.swarm.on": "鼠海：连段上限抬到十只、间隔更密、更早出手，但每下轻 15%、命中率 −5%——长而不稳。",
   "worldcombat.skill.populationbomb.swarm.off": "精锐合击：上限收到五只、每下重 30%、命中率 +5%，但间隔更慢、冷却更短——短而可靠。",
   "worldcombat.skill.populationbomb.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

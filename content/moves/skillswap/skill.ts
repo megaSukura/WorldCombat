@@ -71,6 +71,7 @@ namespace PokemonSkills {
 
     define({
         id: "skillswap",
+        cooldownParameter: "recharge",
         name: "特性互换",
         description: "用念力把自己与目标的特性对调一段时间：你拿到它的、它拿到你的，窗口走完各自换回。",
         uses: ["把对手的强力特性取过来自己用", "把自己的负面特性甩给对手", "打乱对手依赖特性建立的打法"],

@@ -13,10 +13,10 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (["spa", "spd", "spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "geomancy")) return false;
-            if (!threat)
-                return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             const gap = CompanionBehavior.distance(self.point, threat.point);
             return gap >= CompanionBehavior.ai<number>(capability, "safeGap", 8)
                 && gap <= CompanionBehavior.ai<number>(capability, "maxChase", 22);

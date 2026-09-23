@@ -7,7 +7,6 @@
   "worldcombat.skill.dragoncheer.roar.on": "长啸：半径更大、持续更久、附加比例更高，代价是起手 %1$s、冷却 %2$s——开打前一次罩住全队。",
   "worldcombat.skill.dragoncheer.roar.off": "短吼：半径略小、持续略短、附加比例略低，换来起手与冷却都更低，适合拉锯里随时补士气。",
   "worldcombat.skill.dragoncheer.description.1": "士气留在友方身上 %1$s，声浪罩住半径 %2$s 格内的每个友方。",
-  "worldcombat.skill.dragoncheer.description.2": "",
   "worldcombat.skill.dragoncheer.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.dragoncheer.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.dragoncheer.growth.0": "达到 %1$s 级，士气延长至 %2$s。",

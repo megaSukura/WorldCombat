@@ -4,7 +4,7 @@
   "worldcombat.skill.phantomforce.use.1": "Vanish for a beat to dodge a called-out attack, then hit back up close",
   "worldcombat.skill.phantomforce.use.2": "Strike from behind a defender",
   "worldcombat.skill.phantomforce.description.0": "The reappearing strike deals %1$s contact damage.",
-  "worldcombat.skill.phantomforce.description.1": "It vanishes for %1$s, then reappears with a %2$s block hit radius about %3$s blocks behind the target. It cannot be seen or hit while gone, but the target can still reposition.",
+  "worldcombat.skill.phantomforce.description.1": "It vanishes for %1$s, then reappears about %2$s blocks behind the target. It cannot be seen or hit while gone, but the target can still reposition.",
   "worldcombat.skill.phantomforce.description.2": "At the moment it reappears it shatters up to %1$s guard layers on the target (Protect, Detect, Wide Guard and Harden all use the same guard mechanism), letting the strike land straight through.",
   "worldcombat.skill.phantomforce.deep.on": "Deep form: it stays in the rift much longer and shatters one more guard layer, but the strike is lighter and the cooldown longer — safer, yet it gives the target more time to reposition.",
   "worldcombat.skill.phantomforce.deep.off": "Skim form: it slips in and out faster and the strike is heavier, but the vanish window is shorter.",

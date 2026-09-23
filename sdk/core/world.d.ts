@@ -23,7 +23,11 @@ interface CombatEnergy { side(): string; stored(): number; capacity(): number; r
  * `key()` is an opaque comparison token retaining native application revision, hidden effects and NeoForge cure state;
  * only the duration fields serialized inside that token use absolute world ticks.
  */
-interface CombatMobEffect { id(): string; duration(): number; amplifier(): number; key(): string; tags(): string; tagged(tag: string): boolean; }
+interface CombatMobEffect {
+    id(): string; duration(): number; amplifier(): number; key(): string; tags(): string; tagged(tag: string): boolean;
+    /** Native MobEffectCategory, including mod effects: beneficial, harmful or neutral. */
+    category(): string;
+}
 interface CombatAttribute { base(): number; value(): number; }
 /** Snapshot of a registered entry. tags() is a JSON string array; membership uses exact, namespaced tag ids. */
 interface CombatRegistryEntry { registry(): string; id(): string; tags(): string; tagged(tag: string): boolean; }
@@ -54,6 +58,8 @@ interface CombatNativeDamageFacts {
     sourceEntity: string; directEntity: string; sourceType: string; directType: string;
     /** True when the causing entity itself is the direct entity, distinct from the victim. */
     direct: boolean; bypassesInvulnerability: boolean;
+    /** Native causing entity is living; scripted is true only inside a WorldCombat damage operation. */
+    sourceLiving: boolean; scripted: boolean;
     actual?: number; before?: number; after?: number;
 }
 interface CombatWorld {

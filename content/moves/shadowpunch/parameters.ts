@@ -88,7 +88,6 @@ namespace PokemonSkills {
     describe("shadowpunch", [
         { key: "description.0", values: ["shadow"] },
         { key: "description.1", values: ["reach", "seep"] },
-        { key: "description.2", values: ["fist", "rise"] },
         { key: "hold.on", values: ["drag"], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

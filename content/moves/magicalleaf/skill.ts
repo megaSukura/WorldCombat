@@ -27,6 +27,7 @@ namespace PokemonSkills {
 
     define({
         id: "magicalleaf",
+        cooldownParameter: "recharge",
         name: "Magical Leaf",
         description: "The user scatters curious leaves that chase the target. This attack never misses.",
         uses: ["散出一群会拐弯的叶追一个对手", "从四面八方合围，逼对手无处可躲", "在对手拉开距离时仍然咬住它"],

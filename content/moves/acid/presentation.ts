@@ -5,7 +5,7 @@
  * 地面留下一滩持续冒泡的腐蚀酸池。
  * 色相家族：酸绿（0x5B8C22 / 0x9BD34A）为主，近黄绿（0xD6F08A）只给溅点；气泡收在灰绿。
  * 拍子：起 windup（鼓酸）→ 泼 throw（低弧）→ 击 splash（炸开）→ 留 pool（酸池冒泡）。
- * 范围：splash 与 pool 用服务端算出的 `data.scale`（酸池半径 / 参考 2.2）铺开，玩家一眼看出酸液盖住哪块地。
+ * 范围：酸池发射范围直接读取真实半径；轮廓与持续冒泡由场地效果拥有。
  * 运动：酸glob沿抛物线飞行（服务端重力），落地后酸滴向外抛、贴地摊开。
  * 数：酸滴数绑定 `data.drops`（特攻与等级换算），强度绑定 `data.intensity`（单发威力 / 40）。
  */
@@ -35,8 +35,8 @@ const AcidDefinition: ParticleDefinition = {
             ]
         },
         throw: {
-            duration: 60,
-            exit: { stop: 50, drain: 14 },
+            duration: 0,
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "glob_core", bind: "projectile", fit: "none",
@@ -92,24 +92,24 @@ const AcidDefinition: ParticleDefinition = {
             ]
         },
         pool: {
-            duration: 170,
-            exit: { stop: 30, drain: 30 },
+            duration: 0,
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "pool_bubbles", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: { data: "drops", fallback: 10 }, shape: { kind: "circle", radius: 0.4, thickness: 0.15 },
+                    rate: { data: "drops", fallback: 18 }, shape: { kind: "circle", radius: { data: "pool", fallback: 2.2 } },
                     direction: "up", speed: [0.01, 0.04],
-                    lifetime: [10, 20], size: [0.1, 0.02],
-                    color: 0x9BD34A, alpha: [0.55, 0], light: "world", maxParticles: 40
+                    lifetime: [8, 12], size: [0.14, 0.03],
+                    color: 0x9BD34A, alpha: [0.7, 0], light: "world", maxParticles: 40
                 },
                 {
                     name: "pool_ooze", bind: "point", fit: "none", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
-                    rate: 6, shape: { kind: "circle", radius: 0.5, thickness: 0.82 },
+                    rate: 16, shape: { kind: "circle", radius: { data: "pool", fallback: 2.2 } },
                     direction: "up", speed: [0.0, 0.015],
-                    lifetime: [12, 24], size: [0.14, 0.03],
-                    color: 0x5B8C22, alpha: [0.4, 0], light: "world", maxParticles: 20
+                    lifetime: [8, 12], size: [0.2, 0.08],
+                    color: 0x5B8C22, alpha: [0.55, 0], light: "world", maxParticles: 30
                 }
             ]
         }
@@ -117,3 +117,10 @@ const AcidDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_acid", 1, AcidDefinition);
+
+WorldCombatClient.scene("world_combat:acid_boundary", 1, function (frame) {
+    const entry: CombatSceneEntry<{ radius: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const point = entry.position;
+    frame.ring(point[0], point[1] + 0.04, point[2], entry.data.radius, 0xAA9BD34A);
+});

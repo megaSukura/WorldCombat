@@ -119,7 +119,7 @@ namespace PokemonSkills {
 
     describe(nightslashId, [
         { key: "description.0", values: ["cut"] },
-        { key: "description.1", values: ["reach", "depth", "motes"] },
+        { key: "description.1", values: ["reach"] },
         { key: "stance.ambush", values: [], when: function (context) { return read(context.detail.values, ["ambush"]) === true; } },
         { key: "stance.swift", values: [], when: function (context) { return read(context.detail.values, ["ambush"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

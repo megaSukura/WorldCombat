@@ -136,7 +136,7 @@ namespace PokemonSkills {
     describe(clearsmogId, [
         { key: "description.0", values: ["mud", "reach"] },
         { key: "description.1", values: ["cloudRadius", "linger", "interval"] },
-        { key: "description.2", values: ["flight", "clayRadius", "fumes"] },
+        { key: "description.2", values: ["flight", "clayRadius"] },
         { key: "billow.on", values: [], when: function (context) { return read(context.detail.values, ["billow"]) === true; } },
         { key: "billow.off", values: [], when: function (context) { return read(context.detail.values, ["billow"]) !== true; } },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },

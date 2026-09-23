@@ -86,6 +86,7 @@ namespace PokemonSkills {
 
     define({
         id: "jawlock",
+        cooldownParameter: "recharge",
         name: "Jaw Lock",
         description: "扑上去一口咬住对手，然后双方都被钉在原地：咬合只结算一次，但谁也走不掉，直到任一方倒下或被外力拉开。死咬式锁得更久更牢、咬得稍轻；快咬式咬得更重、锁得短些。",
         uses: ["把关键目标钉住等队友来收", "用自己不动换对手动不了", "拦住想逃跑或突进的对手"],

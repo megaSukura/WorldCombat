@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: hypnosisId,
+        cooldownParameter: "recharge",
         name: "催眠术",
         description: "施以诱导睡意的暗示，沿一条通视的直线把目标带进睡眠。它隔空、瞬发，但成败取决于双方意志——特攻与等级压不过对方的特防与等级就可能散开；睡着的目标会一直闭着眼，直到受伤惊醒。",
         uses: ["在交战开始前先放倒一个远处的威胁", "为队友的食梦或恶梦制造睡眠窗口", "逼对手绕开视线或拉开距离"],

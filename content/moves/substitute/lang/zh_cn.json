@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.substitute.summary": "支付一部分自己的最大生命，在近处造出一个承伤的分身。它只在你身边一段距离内替你挡下所有攻击，被打碎或联系断开后保护结束。",
-  "worldcombat.skill.substitute.description.0": "支付 %1$s 最大生命，在 %2$s 格内选一个落点造出替身；它的耐久为实际投入的 %3$s 倍。",
+  "worldcombat.skill.substitute.description.0": "支付 %1$s 最大生命，造出替身；它的耐久为实际投入生命的 %2$s 倍。",
   "worldcombat.skill.substitute.description.1": "替身只在你 %1$s 格内替你承伤；走出这个距离或替身被打碎，保护结束。它最多存在 %2$s。",
   "worldcombat.skill.substitute.timing": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.substitute.use.0": "开战前先立起一面替自己挨打的血盾",

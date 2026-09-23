@@ -6,7 +6,7 @@
   "worldcombat.skill.zingzap.description.0": "撞上时约 %1$s 威力，再乘上冲程蓄电；蓄电上限 %2$s、每跑一格攒 %3$s。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.zingzap.description.1": "能冲出 %1$s 格、每刻 %2$s 格，接触判定 %3$s 格；跑满冲程蓄电最足。",
   "worldcombat.skill.zingzap.description.2": "命中时的畏缩几率 %1$s，畏缩 %2$s 秒。",
-  "worldcombat.skill.zingzap.description.3": "跳电距离 %1$s 格、电弧按主击的 %2$s 结算；目标身上留 %3$s 秒电花。",
+  "worldcombat.skill.zingzap.description.3": "跳电距离 %1$s 格、电弧按主击的 %2$s 结算。",
   "worldcombat.skill.zingzap.overcharge.on": "开启蓄电：冲刺更远、蓄电上限与攒电速度更高、撞上更重，但起手与冷却更长，扑空冲过头也更亏。",
   "worldcombat.skill.zingzap.overcharge.off": "关闭蓄电：短促冲撞，起手与冷却更短、蓄电增益低，胜在快而稳。",
   "worldcombat.skill.zingzap.arcChain.on": "开启跳电：命中点的电跳向旁边最近的一个敌人（按主击的 50%% 结算、畏缩几率减半），但主击约轻 10%%。",

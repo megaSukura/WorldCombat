@@ -3,19 +3,16 @@
  *
  * 薄雾是一条区域规则：每 5 刻扫描半径内、贴地（grounded）的活体，给他们补 `world_combat:mistyterrain_ground`
  *   （身份 `world_combat:status/mistyterrain`）。带该身份者：共享的异常施加被 `CombatStatus.gate` 拒绝；
- *   龙属性来招的伤害在入场结算时乘 `dragon`（原生 ×0.5）。开启净化时，雾还会把已有的主异常洗掉。
+ *   龙属性来招的伤害在入场结算时乘 `dragon`（原生 ×0.5）。开启净化时，雾还会把已有的有害状态效果洗掉。
  */
 namespace PokemonSkills {
     function mistyPoint(field: WorldEffects.Field): CombatPoint {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
 
-    /** 洗掉身上所有主异常；返回是否洗掉了任何一样。 */
+    /** 洗掉身上所有有害状态效果；返回是否洗掉了任何一样。 */
     function mistyCleanse(world: CombatWorld, actor: CombatActor): boolean {
-        let changed = false;
-        for (let i = 0; i < StatusVocabulary.majorNames.length; i++)
-            if (CombatStatus.cure(world, actor, StatusVocabulary.majorNames[i])) changed = true;
-        return changed;
+        return CombatStatus.cureHarmful(world, actor) > 0;
     }
 
     function mistyTouch(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): boolean {
@@ -50,7 +47,7 @@ namespace PokemonSkills {
         }
     }, { identity: WorldEffects.terrain("mistyterrain"), tags: [WorldEffects.categories.terrain] });
 
-    // 雾里的活体不再陷入主异常：共享施加被拒绝（对宝可梦、原版生物、玩家一致）。
+    // 雾里的活体不再陷入有害状态效果：共享施加被拒绝（对宝可梦、原版生物、玩家一致）。
     CombatStatus.gate.define({ id: "world_combat:move_mistyterrain/gate", apply: function (context) {
         if (!context.allowed) return;
         const world = context.world, actor = context.actor;

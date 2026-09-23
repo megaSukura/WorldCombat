@@ -79,7 +79,7 @@ namespace PokemonSkills {
                     if (!landed) return;
                     hits++;
                     const away = facts.position().minus(point);
-                    if (away.length() >= 0.05) world.displace(victim, away.unit().scale(push));
+                    if (world.valid(victim) && away.length() >= 0.05) world.displace(victim, away.unit().scale(push));
                     if (!world.valid(victim) || world.random() >= chance) return;
                     NativeEffects.boost(world, victim, "def", -stages);
                     if (MobEffects.apply(world, victim, irontailMark, markTicks, 0) === null) return;

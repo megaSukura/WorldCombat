@@ -5,7 +5,7 @@
   "worldcombat.skill.wingattack.use.2": "A cheap, reliable Flying contact you can throw again and again",
   "worldcombat.skill.wingattack.description.0": "Each swept target takes %1$s physical contact damage; one spread sweeps at most %2$s non-allies.",
   "worldcombat.skill.wingattack.description.1": "The fan reaches %1$s blocks and opens %2$s°; swept targets are shoved %3$s blocks away from the user.",
-  "worldcombat.skill.wingattack.description.2": "The wings shake loose %1$s feathers; the fan shape is the hit area.",
+  "worldcombat.skill.wingattack.description.2": "The fan shape is the hit area.",
   "worldcombat.skill.wingattack.wide.on": "Wide: a broader fan, up to 3 targets at once and a longer shove; costs power x0.8, wind-up +1 tick and recovery +2 ticks.",
   "worldcombat.skill.wingattack.wide.off": "Folded: a heavier single hit (x1.15) that comes out faster; costs sweeping only one target and almost no shove.",
   "worldcombat.skill.wingattack.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: fishiousrendId,
+        cooldownParameter: "recharge",
         name: "Fishious Rend",
         description: "抢先扑上去用坚硬的鳃咬住目标：目标尚未打过施法者时威力翻倍；咬住后把目标拖近并压低它的速度。",
         uses: ["抢在对手出手前咬住", "把目标拖回自己身边", "咬住后压低猎物速度"],

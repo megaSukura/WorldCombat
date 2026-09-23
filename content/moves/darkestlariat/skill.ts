@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: darkestlariatId,
+        cooldownParameter: "recharge",
         name: "Darkest Lariat",
         description: "The user swings both arms and hits the target. The target's stat changes don't affect the damage inflicted by this move.",
         uses: ["原地旋身，把身周一圈的敌人一起抡开", "把目标涨起来的防御等级直接无视掉", "被围住时一次清开贴身的人"],

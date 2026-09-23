@@ -119,7 +119,7 @@ namespace PokemonSkills {
     describe("steelwing", [
         { key: "description.0", values: ["wing", "span"] },
         { key: "description.1", values: ["reach", "knock"] },
-        { key: "description.2", values: ["hardenChance", "hardenStages", "feathers"] },
+        { key: "description.2", values: ["hardenChance", "hardenStages"] },
         { key: "glide.on", values: [], when: function (context) { return read(context.detail.values, ["glide"]) === true; } },
         { key: "glide.off", values: [], when: function (context) { return read(context.detail.values, ["glide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

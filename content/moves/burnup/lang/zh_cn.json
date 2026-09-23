@@ -2,7 +2,7 @@
   "worldcombat.skill.burnup.summary": "把全身的火向内收拢，再朝身前喷出一道白焰锥面：正对的目标吃满，锥内其他人吃侧焰。喷完施法者真的燃尽——一段时间里不再是火属性，也点不着第二发。",
   "worldcombat.skill.burnup.description.0": "白焰的核心伤害 %1$s；自己带火属性时再 ×1.12（烧的是自己的本系）。",
   "worldcombat.skill.burnup.description.1": "白焰喷出 %1$s 格、张开 %2$s 度的锥面，前沿以 %3$s 格每刻冲出；锥内非正对目标吃 %4$s。",
-  "worldcombat.skill.burnup.description.2": "喷完自己燃尽 %1$s，这段时间不带火属性、也点不着第二发；喷发时迸出 %2$s 点余烬。",
+  "worldcombat.skill.burnup.description.2": "喷完自己燃尽 %1$s，这段时间不带火属性、也点不着第二发。",
   "worldcombat.skill.burnup.use.0": "一发烧尽面前一条锥面",
   "worldcombat.skill.burnup.use.1": "用失去本系换一次重击",
   "worldcombat.skill.burnup.use.2": "把挤在身前的对手一起点燃",

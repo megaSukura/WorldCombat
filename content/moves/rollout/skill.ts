@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: rolloutId,
+        cooldownParameter: "recharge",
         name: "Rollout",
         description: "The user continually rolls into the target over five turns. This attack becomes more powerful each time it hits.",
         uses: ["一趟一趟地滚进目标身上", "每命中一趟，下一趟翻倍变重", "落空或换招就把层数清空"],
@@ -116,7 +117,7 @@ namespace PokemonSkills {
                         if (hurt(action, victimActor, rolloutId, power, { damage: damageSpec(rolloutId, "roll"), contact: true })) {
                             landed = true;
                             hitPoint = facts.position();
-                            world.displace(victimActor, WorldCombat.point(direction.x(), 0, direction.z()).scale(push));
+                            if (world.valid(victimActor)) world.displace(victimActor, WorldCombat.point(direction.x(), 0, direction.z()).scale(push));
                         }
                     });
             }

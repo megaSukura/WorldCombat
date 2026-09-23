@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: leerId,
+        cooldownParameter: "recharge",
         name: "瞪眼",
         description: "眯起眼，把一道犀利的目光沿身前扫成一个扇面，让扫到的对手缩紧架势、降低防御；目光要被看见，掩体挡下就扫不到。横扫铺得开，瞪住收成一道、降得更深。",
         uses: ["在敌人排成一排冲上来时一次压住正面", "为队友的物攻打开缺口", "隔着掩体死角削不到，适合开阔地"],

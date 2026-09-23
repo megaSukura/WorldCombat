@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 
 /** Native provenance shared by every living damage domain. */
 public final class NativeDamageFacts {
@@ -18,6 +19,7 @@ public final class NativeDamageFacts {
         data.addProperty("sourceEntity", source == null ? "" : source.getStringUUID());
         data.addProperty("directEntity", direct == null ? "" : direct.getStringUUID());
         data.addProperty("sourceType", type(source)); data.addProperty("directType", type(direct));
+        data.addProperty("sourceLiving", source instanceof LivingEntity);
         data.addProperty("direct", source != null && source != victim && direct == source);
         data.addProperty("bypassesInvulnerability", cause.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY));
     }

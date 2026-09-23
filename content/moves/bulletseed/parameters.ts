@@ -132,7 +132,7 @@ namespace PokemonSkills {
     describe("bulletseed", [
         { key: "description.0", values: ["pellet", "shots"] },
         { key: "description.1", values: ["gap", "velocity", "reach", "spread"] },
-        { key: "description.2", values: ["radius", "husk"] },
+        { key: "description.2", values: ["radius"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

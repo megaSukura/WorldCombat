@@ -5,7 +5,7 @@
   "worldcombat.skill.tarshot.use.2": "把一片地面泼成谁踩谁黏的沥青滩",
   "worldcombat.skill.tarshot.description.0": "被糊住者掉 %1$s 级速度，沥青留在身上约 %2$s；湿身或下雨会把它冲掉。",
   "worldcombat.skill.tarshot.description.1": "糊身期间对火焰的弱点翻倍：任何火属性招式打上去伤害约 ×%1$s。",
-  "worldcombat.skill.tarshot.description.2": "沥青以约 %1$s 格每刻飞出，判定半径 %2$s 格，可泼 %3$s 格；大泼覆盖命中点周围约 %4$s 格，飞溅约 %5$s 点。",
+  "worldcombat.skill.tarshot.description.2": "沥青以约 %1$s 格每刻飞出，判定半径 %2$s 格，可泼 %3$s 格；大泼覆盖命中点周围约 %4$s 格。",
   "worldcombat.skill.tarshot.description.3": "命中点留下半径约 %1$s 格的沥青滩，存在约 %2$s；踩进去的非友方同样被糊上。",
   "worldcombat.skill.tarshot.description.4": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.tarshot.option.on": "大泼：命中点周围一片的非友方一起被糊上、沥青滩更大；代价是泼洒距离 −2 格、飞行约 ×0.85、起手 +3 刻、冷却 +10 刻——一次糊一片，但更慢更近更费。",

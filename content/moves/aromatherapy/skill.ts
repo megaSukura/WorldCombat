@@ -2,13 +2,13 @@
  * 芳香治疗 / Aromatherapy —— 执行组织。
  *
  * 核心念头：把一阵沁人的香气送到一个地方，香不散，就地漫成一片会停留的香云；走进云里的伙伴被香气裹住，
- *   身上有任何主异常都被当场化掉。它是**一块地方**——可以提前铺在队友会经过的路上，也可以在缠斗点上反复净化；
+ *   身上有任何有害状态效果都被当场化掉。它是**一块地方**——可以提前铺在队友会经过的路上，也可以在缠斗点上反复净化；
  *   云还在的时候，谁再被挂上异常都会被它继续化掉。与「治愈铃声」那一下当场全清分开：铃声是一瞬，香云是一段。
  *
  * 两幕：
  *   起（windup，提交前）：手心拢起一捧香，只观察与预告，可被打断。
  *   铺（提交后）：香云落在选定点，半径 scentRadius、停留 cloudTicks；云每 5 刻扫一次，
- *     把云里每个友善战斗者身上的全部主异常化掉（有才化，没有就不动），并续播画面。
+ *     把云里每个友善战斗者身上的全部有害状态效果化掉（有才化，没有就不动），并续播画面。
  *
  * 反制：绕开那片云即可躲过净化；云只在落点一小片、有时间限制，把队友带出云外或等它散去都能让净化落空。
  * 宝可梦层：化掉的是共享默认效果，原生队伍面板随之同步；本招不新增状态。
@@ -16,13 +16,9 @@
 namespace PokemonSkills {
     function aromatherapyAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 0.9, 0)); }
 
-    /** 化掉一个战斗者身上的全部主异常，返回实际化掉的项数。 */
+    /** 化掉一个战斗者身上的全部有害状态效果，返回实际化掉的项数。 */
     function aromatherapyCleanse(world: CombatWorld, actor: CombatActor): number {
-        if (!world.valid(actor)) return 0;
-        var removed = 0;
-        for (var index = 0; index < aromatherapyMalaise.length; index++)
-            if (CombatStatus.cure(world, actor, aromatherapyMalaise[index])) removed++;
-        return removed;
+        return CombatStatus.cureHarmful(world, actor);
     }
 
     // 香云行为：stay 每 5 刻对云里的友善战斗者净化一次；scan 只负责续播画面。
@@ -49,8 +45,9 @@ namespace PokemonSkills {
     });
 
     define({
-        id: aromatherapyId, name: "芳香治疗",
-        description: "在选定点铺下一片会停留的香云；走进云里的自己与伙伴，身上全部主异常当场化掉。云还在的时候，谁再被挂上异常都会被它继续化掉。与治愈铃声不同，它铺在世界上一个位置，绕开即可躲过。",
+        id: aromatherapyId,
+        cooldownParameter: "recharge", name: "芳香治疗",
+        description: "在选定点铺下一片会停留的香云；走进云里的自己与伙伴，身上全部有害状态效果当场化掉。云还在的时候，谁再被挂上异常都会被它继续化掉。与治愈铃声不同，它铺在世界上一个位置，绕开即可躲过。",
         uses: ["在队友据守或缠斗的位置铺一片香云", "提前把香云铺在队友会经过的路上", "队友扎堆时用一片云反复净化整片区域"],
         kind: "point", range: 5, maxRange: 8, prepare: 11, active: 1, recover: 8, cooldown: 160, style: "scent", maximumTicks: 220,
         defaults: { dense: false },

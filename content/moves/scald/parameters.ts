@@ -138,7 +138,7 @@ namespace PokemonSkills {
 
     describe("scald", [
         { key: "description.0", values: ["boil"] },
-        { key: "description.1", values: ["reach", "globSpeed", "drops"] },
+        { key: "description.1", values: ["reach", "globSpeed"] },
         { key: "description.2", values: ["burnChance", "slickRadius"] },
         { key: "description.3", values: ["slickTicks", "seethe", "seetheInterval", "slickChance"] },
         { key: "rule.thaw", values: [] },

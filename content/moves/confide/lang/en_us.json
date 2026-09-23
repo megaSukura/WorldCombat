@@ -4,7 +4,7 @@
   "worldcombat.skill.confide.use.1": "Break a charging special threat",
   "worldcombat.skill.confide.use.2": "Catch several enemies with one rumor while they cluster",
   "worldcombat.skill.confide.description.0": "The whispered target loses %1$s Sp. Atk stage(s) and stays distracted for %2$s.",
-  "worldcombat.skill.confide.description.1": "Whisper range %1$s; the rumor radius is %2$s and reaches up to %3$s more bodies over %4$s blocks, giving %5$s whispers at once.",
+  "worldcombat.skill.confide.description.1": "Whisper range %1$s; the rumor radius is %2$s and reaches up to %3$s more bodies over %4$s blocks.",
   "worldcombat.skill.confide.description.2": "Speaking takes %1$s with a %2$s cooldown.",
   "worldcombat.skill.confide.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.confide.value.whisperRange": "Whisper range",

@@ -4,7 +4,7 @@
   "worldcombat.skill.flash.use.1": "Cut the accuracy of a group in the open",
   "worldcombat.skill.flash.use.2": "Buy the team one safe damage window",
   "worldcombat.skill.flash.description.0": "A dazzled target strikes weaker, and a Pokemon also loses %1$s accuracy stage(s), for %2$s.",
-  "worldcombat.skill.flash.description.1": "Centred on the user with a %1$s block radius; those caught keep about %2$s afterimage points. Closer targets are dazzled deeper, distant ones only lose one stage.",
+  "worldcombat.skill.flash.description.1": "Centred on the user with a %1$s block radius; closer targets are dazzled deeper, distant ones only lose one stage.",
   "worldcombat.skill.flash.description.2": "Gathering the light takes %1$s with a %2$s cooldown. Walls, pillars and other cover block the flash, so hiding behind cover avoids it.",
   "worldcombat.skill.flash.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.flash.value.blindStage": "Dazzle stages",

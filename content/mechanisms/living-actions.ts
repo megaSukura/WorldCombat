@@ -34,6 +34,21 @@ namespace LivingActions {
     export function coordinates(value: CombatPoint): number[] { return [value.x(), value.y(), value.z()]; }
     /** Unwrap before handing an action to an opaque native resource adapter. */
     export function host(action: CombatAction): CombatAction { return action instanceof InputView ? action.native : action; }
+    /** Settle one hit, retaining the original target's last point if that hit ends its life.
+     * Target-specific follow-ups still observe the target; independent follow-ups keep the paid action alive.
+     * A different area victim does not release a living original target, and source/action invalidation still propagates.
+     */
+    export function settleHit(action: CombatAction, settle: () => boolean): boolean {
+        var native = host(action), original = native.target(), world = action.sense();
+        if (original !== null && world.valid(original)) {
+            native.targetPosition();
+            if (native !== action) action.targetPosition();
+        }
+        var landed = settle(), current = native.target();
+        if (original !== null && current !== null && String(current.ref()) === String(original.ref()) && !world.valid(original))
+            action.releaseTarget();
+        return landed;
+    }
     export function input(action: CombatAction, selection: Input): CombatAction { return new InputView(host(action), selection); }
     class InputView implements CombatAction {
         constructor(public native: CombatAction, private selection: Input) {}
@@ -63,7 +78,15 @@ namespace LivingActions {
             }
             return point(this.selection.point);
         }
-        releaseTarget() { this.selection.point = coordinates(this.targetPosition()); this.selection.released = true; this.native.releaseTarget(); }
+        releaseTarget() {
+            this.native.releaseTarget();
+            if (this.selection.live) this.selection.point = coordinates(this.native.targetPosition());
+            else if (!this.selection.released && this.selection.target !== null) {
+                var target = this.sense().actor(this.selection.target), body = target && this.sense().observe(target);
+                if (body) this.selection.point = coordinates(body.position());
+            }
+            this.selection.released = true;
+        }
         argument(key: string) { return this.native.argument(key); }
         control() { return this.native.control(); }
         data(key: string): string | null;

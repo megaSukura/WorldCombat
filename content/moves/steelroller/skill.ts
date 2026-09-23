@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: steelrollerId,
+        cooldownParameter: "recharge",
         name: "Steel Roller",
         description: "把脚下正在生效的场地压碎，自己卷成钢轮碾出去；脚下没有场地时整招失败，PP 照常消耗。",
         uses: ["压碎对手依赖的场地并顺势碾过去", "把一片场地换成一次重击", "在场地里开出一条能走的钢辙"],
@@ -126,7 +127,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(steelrollerId, "roll"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, steelrollerScene, 1, hit.position(),
                             { moment: "impact", target: String(victim.ref()), count: count, scale: radius / 0.5,

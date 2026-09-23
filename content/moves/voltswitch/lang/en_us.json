@@ -7,7 +7,6 @@
   "worldcombat.skill.voltswitch.description.1": "Range %1$s blocks, the arc flies at %2$s blocks per tick with a %3$s block hit radius.",
   "worldcombat.skill.voltswitch.description.2": "Blinks %1$s blocks and offsets %2$s blocks to the side; with a partner within %3$s blocks it lands behind them.",
   "worldcombat.skill.voltswitch.description.3": "The relay style leaves a charged patch of radius %1$s blocks for %2$s, zapping enemies inside for %3$s every 20 ticks.",
-  "worldcombat.skill.voltswitch.description.4": "Discharge and blink throw off about %1$s sparks.",
   "worldcombat.skill.voltswitch.relay.on": "Relay style: leaves a zapping charged patch and stays on the field; arc power ×0.85, cooldown +6 ticks, blink ×0.85.",
   "worldcombat.skill.voltswitch.relay.off": "Plain style: arc power ×1.2, blink ×1.2, nothing left behind; with a reserve, swaps straight to it.",
   "worldcombat.skill.voltswitch.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",

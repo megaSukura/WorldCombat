@@ -5,7 +5,6 @@
   "worldcombat.skill.torment.use.1": "Force the target to switch moves",
   "worldcombat.skill.torment.use.2": "Punish an enemy that leans on one combo",
   "worldcombat.skill.torment.description.0": "The jeer reaches %1$s blocks; on a hit the target cannot repeat a move for %2$s.",
-  "worldcombat.skill.torment.description.1": "About %1$s mocking marks coil around the target, growing with Special Attack and driving the lasting visuals.",
   "worldcombat.skill.torment.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.torment.manner.0": "Scorn: longer and farther torment, but slower windup and longer cooldown.",
   "worldcombat.skill.torment.manner.1": "Goad: quicker and cheaper, but a shorter torment and a closer jeer.",

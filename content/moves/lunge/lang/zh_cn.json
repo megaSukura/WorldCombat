@@ -10,7 +10,7 @@
   "worldcombat.skill.lunge.heavy.off": "轻快式：威力 ×0.92、出手与冷却更快，适合追上灵活的目标。",
   "worldcombat.skill.lunge.timing": "可向 %1$s 格内施放；起手 %2$s，收招 %3$s，消耗 %4$s PP，提交起冷却 %5$s。",
   "worldcombat.skill.lunge.growth.0": "%1$s 级起扑撞威力抬到 %2$s。",
-  "worldcombat.skill.lunge.growth.1": "%1$s 级起扑撞威力再抬到 %2$s，甲壳碎屑数升至 %3$s。",
+  "worldcombat.skill.lunge.growth.1": "%1$s 级起扑撞威力再抬到 %2$s。",
   "worldcombat.skill.lunge.value.pounce": "扑撞威力",
   "worldcombat.skill.lunge.value.reach": "扑进距离",
   "worldcombat.skill.lunge.value.leap": "扑进速度",

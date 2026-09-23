@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "psychoboost",
+        cooldownParameter: "recharge",
         name: "Psycho Boost",
         description: "Crushes all of the user's psychic power into one remote implosion; the recoil harshly lowers the user's Sp. Atk.",
         uses: ["远距离用全族最重的一记特殊点杀", "用收拢的念力环预告一次隔空内爆", "回响式在原爆点补上第二响"],

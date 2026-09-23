@@ -5,7 +5,7 @@
   "worldcombat.skill.accelerock.use.2": "Crack a rubble scar into the ground at the impact",
   "worldcombat.skill.accelerock.description.0": "The rock-clad body deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.accelerock.description.1": "It charges up to %1$s blocks, advancing %2$s blocks per tick, and shoves the target about %3$s blocks along the charge.",
-  "worldcombat.skill.accelerock.description.2": "The impact throws about %1$s rock shards and can plow through %2$s target(s) along the line.",
+  "worldcombat.skill.accelerock.description.2": "The charge can plow through up to %1$s target(s) along its path.",
   "worldcombat.skill.accelerock.description.3": "The impact cracks a rubble scar about %1$s blocks across, which lasts about %2$s s before the original blocks return.",
   "worldcombat.skill.accelerock.breakthrough.on": "Breakthrough: plow through up to %1$s targets along the charge, at the cost of lighter hits, less shove, slower preparation and recovery and a longer cooldown.",
   "worldcombat.skill.accelerock.breakthrough.off": "Standard: stop at the first target with the heaviest hit, the longest shove and the fastest recovery.",

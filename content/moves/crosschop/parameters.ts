@@ -94,7 +94,7 @@ namespace PokemonSkills {
     describe(crosschopId, [
         { key: "description.0", values: ["chop"] },
         { key: "description.1", values: ["seam", "gap"] },
-        { key: "description.2", values: ["reach", "spread"] },
+        { key: "description.2", values: ["reach"] },
         { key: "stance.guard", values: [], when: function (context) { return read(context.detail.values, ["guard"]) === true; } },
         { key: "stance.double", values: [], when: function (context) { return read(context.detail.values, ["guard"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

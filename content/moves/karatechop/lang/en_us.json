@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.karatechop.summary": "Throw a knife-hand chop with almost no wind-up: a vertical white line drops onto one target at point-blank, cutting it open in a spray of chips. It is very short, single-target and cheap, and the edge seeks the seam in armour so it loses less to defence; it lands critical hits more often.",
   "worldcombat.skill.karatechop.description.0": "The chop deals %1$s contact damage to one target at point-blank and lands critical hits more often; it loses less to defence reduction than the rest of the family.",
-  "worldcombat.skill.karatechop.description.1": "Reach %1$s blocks, the line is %2$s blocks tall and about %3$s chips fly.",
+  "worldcombat.skill.karatechop.description.1": "Reach %1$s blocks.",
   "worldcombat.skill.karatechop.stance.knife": "Knife-hand form: a heavier single hit, at shorter reach.",
   "worldcombat.skill.karatechop.stance.open": "Open-hand form: longer reach, at a lighter single hit.",
   "worldcombat.skill.karatechop.timing": "Range %1$s blocks; %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

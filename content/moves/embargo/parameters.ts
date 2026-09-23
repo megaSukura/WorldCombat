@@ -72,11 +72,11 @@ namespace PokemonSkills {
 
     describe("embargo", [
         { key: "description.0", values: ["seal", "reach"] },
-        { key: "description.1", values: ["radius", "shackles"] },
+        { key: "description.1", values: [] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.seal"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.seal", "tier.1.shackles"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.seal"] }
     ]);
 }

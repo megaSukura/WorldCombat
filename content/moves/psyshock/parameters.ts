@@ -132,7 +132,7 @@ namespace PokemonSkills {
     describe(psyshockId, [
         { key: "description.0", values: ["shard", "reach"] },
         { key: "description.1", values: ["velocity", "gravity", "radius"] },
-        { key: "description.2", values: ["push", "vanes"] },
+        { key: "description.2", values: ["push"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

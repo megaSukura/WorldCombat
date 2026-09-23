@@ -45,7 +45,7 @@ namespace PokemonSkills {
 
     /** 一次来袭是否算「用身体碰到」：招式伤害带 contact；原版近战没有作者类别，由「造成者就是直接命中者」判定。 */
     function beakblastContact(data: any): boolean {
-        return data.kind === "move" ? !!data.contact : !!data.direct;
+        return DamageSemantics.read(data).contact;
     }
 
     function beakblastMarkOf(world: CombatWorld, actor: CombatActor): any {
@@ -195,7 +195,7 @@ namespace PokemonSkills {
     describe("beakblast", [
         { key: "description.0", values: ["shot", "heat"] },
         { key: "description.1", values: ["guard", "burnTicks"] },
-        { key: "description.2", values: ["reach", "velocity", "radius", "sparks"] },
+        { key: "description.2", values: ["reach", "velocity", "radius"] },
         { key: "forge.on", values: [], when: function (context) { return read(context.detail.values, ["forge"]) === true; } },
         { key: "forge.off", values: [], when: function (context) { return read(context.detail.values, ["forge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

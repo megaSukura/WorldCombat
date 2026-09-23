@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: rageId,
+        cooldownParameter: "recharge",
         name: "Rage",
         description: "A light angry swing that lights a rage: every hit the user takes while it burns raises its Attack. The fire goes out when the user next acts.",
         uses: ["先给自己点起怒火、再迎着对手打", "挨打时把攻击一档档烧旺",
@@ -103,7 +104,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(rageId, "tantrum"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, rageScene, 1, hit.position(),
                             { moment: "strike", target: String(victim.ref()), scale: scale,

@@ -9,11 +9,11 @@
  *   目标带伤时这一记翻倍。它读的是**目标**的伤，不是自己的。
  *
  * 数据分散（每项依赖不同的精灵数据）：
- *   ambush   追击威力 56 + 物攻偏移 + 速度偏移；目标带伤时 ×2，穷追式 ×0.90。
- *   window   追击窗口 1.8 秒 − 速度偏移 + 穷追 0.6 秒（反应快的个体只认眼前的新伤）。
- *   dash     追逐距离 3.2 格 + 速度偏移 + 等级偏移；也是实际射程来源。
+ *   ambush   追击威力由物攻与速度派生；实际命中目标处于受伤窗口时，成长后的整记威力翻倍。
+ *   window   追击窗口覆盖一次接近与换招；速度与穷追式进一步延长。
+ *   dash     追逐距离 4.2 格 + 速度偏移 + 等级偏移；也是实际射程来源。
  *   speed    每刻位移 0.82 格/刻 + 速度偏移。
- *   radius   判定半径 0.40 格 + 体型高度偏移。
+ *   radius   判定半径 0.48 格 + 体型高度偏移。
  *   push     顶开 0.30 格 + 物攻偏移。
  *   quills   暗羽数 12 + 物攻偏移 + 速度偏移，驱动表现。
  *   grit／settle／recharge 速度决定起手、收招、冷却。
@@ -32,7 +32,7 @@ namespace PokemonSkills {
     export function assuranceWounded(context: FactContext): number {
         const world = context.world, actor = context.actor;
         if (!world || !actor || !world.valid(actor)) return 0;
-        const target = context.action ? context.action.target() : context.target ? context.target.actor || null : null;
+        const target = context.target ? context.target.actor || null : context.action ? context.action.target() : null;
         if (!target || !world.valid(target)) return 0;
         const body = world.observe(target);
         if (body === null) return 0;
@@ -48,29 +48,28 @@ namespace PokemonSkills {
     });
 
     actionParameters.define(assuranceId, {
-        /** 追击威力：56 + 物攻偏移[−14,34] + 速度偏移[−4,16]；目标带伤 ×2、穷追式 ×0.90 / 常规 ×1.06；夹 34..150。 */
+        /** 降低无条件爆发；成长后的完整威力在真实受伤窗口内翻倍。 */
         ambush: formula(
-            F.base(56)
-                .plus(F.stat("attack").minus(58).times(0.30).clamp(-14, 34))
-                .plus(F.stat("speed").minus(58).times(0.12).clamp(-4, 16))
-                .times(F.when(F.var("assurance.wounded", text("worldcombat.skill.assurance.value.wounded")).gt(0), F.const(2), F.const(1)))
+            F.base(36)
+                .plus(F.stat("attack").minus(58).times(0.16).clamp(-9, 20))
+                .plus(F.stat("speed").minus(58).times(0.06).clamp(-3, 8))
                 .times(F.when(F.pref("relentless", text("worldcombat.skill.assurance.preference.relentless")), F.const(0.90), F.const(1.06)))
-                .clamp(34, 150).round(1),
+                .clamp(24, 68).round(1),
             "追击威力", {
-                unit: "威力",
+                base: 36, unit: "威力",
                 description: "这一记追击的基准威力；物攻越高越重、出手越快越准。目标在窗口内已被打过时翻倍。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 追击窗口：36 刻（1.8 秒）− 速度偏移[−6,10 刻] + 穷追 12 刻；夹 24..60 刻。 */
+        /** 窗口覆盖一次转身接近与接招，穷追式再延长。 */
         window: seconds(
-            F.base(36).minus(F.stat("speed").minus(58).times(0.12).clamp(-6, 10))
-                .plus(F.when(F.pref("relentless", text("worldcombat.skill.assurance.preference.relentless")), F.const(12), F.const(0))).clamp(24, 60).round(0),
-            "追击窗口", "目标在这段时间内受到过伤害，这一记就翻倍；反应快的个体只认眼前的新伤，穷追式把窗口拉长。"),
-        /** 追逐距离：3.2 格 + 速度偏移[−0.6,1.6] + 等级偏移[0,1.0]；穷追式 ×1.08；夹 2.6..5.4。 */
+            F.base(70).plus(F.stat("speed").minus(58).times(0.06).clamp(-6, 10))
+                .plus(F.when(F.pref("relentless", text("worldcombat.skill.assurance.preference.relentless")), F.const(12), F.const(0))).clamp(60, 100).round(0),
+            "追击窗口", "目标在这段时间内受到过伤害，这一记就翻倍；速度越高越容易抓住伤势，穷追式把窗口再拉长。"),
+        /** 增加实际前冲距离，让追击能够接住刚拉开的身位。 */
         dash: formula(
-            F.base(3.2).plus(F.stat("speed").minus(58).times(0.016).clamp(-0.6, 1.6))
+            F.base(4.2).plus(F.stat("speed").minus(58).times(0.016).clamp(-0.6, 1.6))
                 .plus(F.level().minus(28).times(0.03).clamp(0, 1.0))
                 .times(F.when(F.pref("relentless", text("worldcombat.skill.assurance.preference.relentless")), F.const(1.08), F.const(1.0)))
-                .clamp(2.6, 5.4).round(2),
+                .clamp(3.4, 6.4).round(2),
             "追逐距离", {
                 unit: "格",
                 description: "朝带伤目标追出去的最大距离，也是本招的实际射程来源；腿快的个体追得更远。"
@@ -82,9 +81,9 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "扑上去每刻移动的距离；越快越难在伤口合上之前被躲开。"
             }),
-        /** 判定半径：0.40 格 + 体型高度偏移[−0.08,0.30]；夹 0.32..0.72。 */
+        /** 判定随身高增长，基础半径留出贴近时的容错。 */
         radius: formula(
-            F.base(0.40).plus(F.body("height").minus(1.4).times(0.10).clamp(-0.08, 0.30)).clamp(0.32, 0.72).round(2),
+            F.base(0.48).plus(F.body("height").minus(1.4).times(0.10).clamp(-0.08, 0.30)).clamp(0.40, 0.80).round(2),
             "判定半径", {
                 unit: "格",
                 description: "追击能咬住多大一圈；身板大的个体扑得更宽。"
@@ -120,16 +119,26 @@ namespace PokemonSkills {
         minimumMove: hidden(0.05)
     });
 
-    defineDamage(assuranceId, "ambush", {}, { contact: true });
+    defineDamage(assuranceId, "ambush", {}, {
+        contact: true,
+        resolve: function (damage: PokemonDamage.FeatureContext) {
+            return damage.facts ? { power: actionParameters.rules.formulaValue(assuranceId + "/ambush", damage.facts) } : undefined;
+        }
+    });
 
     stages(assuranceId, [
-        { level: 28, values: { ambush: 70 } },
-        { level: 44, values: { ambush: 82, dash: 3.8 } }
+        { level: 28, values: { ambush: 44 } },
+        { level: 44, values: { ambush: 50, dash: 4.8 } }
     ]);
+
+    // 追击奖励作用于成长后的整记威力，并由实际命中目标的受伤事实决定。
+    actionParameters.rules.modify(assuranceId + "/ambush", "assurance:wounded", "×",
+        F.when(F.var("assurance.wounded", text("worldcombat.skill.assurance.value.wounded")).gt(0), F.const(2), F.const(1))
+            .as(text("worldcombat.skill.assurance.value.wounded")));
 
     describe(assuranceId, [
         { key: "description.0", values: ["ambush", "window"] },
-        { key: "description.1", values: ["dash", "speed", "radius", "push", "quills"] },
+        { key: "description.1", values: ["dash", "speed", "radius", "push"] },
         { key: "relentless.on", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) === true; } },
         { key: "relentless.off", values: [], when: function (context) { return read(context.detail.values, ["relentless"]) !== true; } },
         { key: "timing", values: ["range", "grit", "settle", "pp", "recharge"] },

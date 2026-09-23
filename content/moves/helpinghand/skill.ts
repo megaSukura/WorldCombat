@@ -82,7 +82,8 @@ namespace PokemonSkills {
     });
 
     define({
-        id: helpinghandId, name: "帮助",
+        id: helpinghandId,
+        cooldownParameter: "recharge", name: "帮助",
         description: "伸手托伙伴一把：把一小束光送进他身体，让他下一次命中更重；用掉即散，不用则自行褪去。只能帮助离自己够近的伙伴。",
         uses: ["让伙伴的下一发大招更重", "在队友连招前先托一把", "把一次命中机会放大成一次击倒"],
         kind: "friend", range: 4, maxRange: 6,

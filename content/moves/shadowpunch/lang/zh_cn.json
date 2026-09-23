@@ -5,7 +5,6 @@
   "worldcombat.skill.shadowpunch.use.2": "用影子抓住并拖住对手",
   "worldcombat.skill.shadowpunch.description.0": "一记约 %1$s 的接触拳；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.shadowpunch.description.1": "暗影能从脚下窜到 %1$s 格内的对手影子，蔓延速度 %2$s 格/刻。",
-  "worldcombat.skill.shadowpunch.description.2": "影子拳判定半径 %1$s 格，从对手影子里升起 %2$s 格高。",
   "worldcombat.skill.shadowpunch.hold.on": "地缚：拳抓住对手并把它拖向自己 %1$s 格，制造控制，但拳力约 −15%。",
   "worldcombat.skill.shadowpunch.hold.off": "背刺：不放慢、不加拖拽，一拳约 +18%。",
   "worldcombat.skill.shadowpunch.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动，收招 %3$s 秒，提交起冷却 %5$s 秒。",

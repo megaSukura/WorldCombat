@@ -9,7 +9,7 @@
   "worldcombat.skill.armorcannon.burst.on": "Bursting form: the shell detonates for a %1$s-block fireball, catching other foes around the landing point for %2$s power.",
   "worldcombat.skill.armorcannon.burst.off": "Single form: all power on one target, with a faster cast and a shorter cooldown.",
   "worldcombat.skill.armorcannon.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.armorcannon.growth.0": "From level %1$s the shell power rises to %2$s and the armor plates to %3$s.",
+  "worldcombat.skill.armorcannon.growth.0": "From level %1$s the shell power rises to %2$s.",
   "worldcombat.skill.armorcannon.growth.1": "From level %1$s the shell power rises to %2$s and the range to %3$s blocks.",
   "worldcombat.skill.armorcannon.value.shell": "Shell power",
   "worldcombat.skill.armorcannon.value.velocity": "Shell speed",

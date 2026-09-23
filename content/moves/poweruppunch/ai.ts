@@ -13,8 +13,10 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            const self = CompanionBehavior.source(context);
+            if (CompanionBehavior.status(context, self, "hardened") && !CompanionBehavior.ai<boolean>(capability, "topUp", true)) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+            return CompanionBehavior.distance(self.point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
         },
         accepts: function (context, capability, target) {

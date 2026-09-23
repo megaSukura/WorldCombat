@@ -33,7 +33,8 @@ public final class MinecraftEffectState {
         absoluteDuration(json, entity.level().getGameTime());
         var tags = effect.getEffect().tags().map(tag -> tag.location().toString()).sorted().collect(java.util.stream.Collectors.joining(" "));
         return new MobEffectObservation(BuiltInRegistries.MOB_EFFECT.getKey(effect.getEffect().value()).toString(),
-            effect.getDuration(), effect.getAmplifier(), revision(entity, effect) + ":" + json, tags);
+            effect.getDuration(), effect.getAmplifier(), revision(entity, effect) + ":" + json, tags,
+            effect.getEffect().value().getCategory().name().toLowerCase(java.util.Locale.ROOT));
     }
     private static void absoluteDuration(JsonElement value, long tick) {
         if (value.isJsonObject()) {

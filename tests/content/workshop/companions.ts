@@ -17,7 +17,8 @@ namespace WorkshopCompanions {
         if (CompanionCommands.apply(view, world, memory)) { view.memory(JSON.stringify(memory)); return; }
         if (view.intent() === "roam") { world.controlled(false); return; }
         world.controlled(true); if (world.busy() || view.pending()) return;
-        var actor = world.observe(view.actor())!, owner = world.observe(view.owner())!, selected = view.intentTarget();
+        var actor = world.observe(view.actor())!, ownerRef = view.owner(), selected = view.intentTarget();
+        var owner = ownerRef === null ? actor : world.observe(ownerRef) || actor;
         if ((view.intent() === "focus" || view.intent() === "protect") && selected === null) { view.intent("follow", null, null); view.report("idle", "target-left"); }
         var ally = view.intent() === "protect" && selected !== null ? world.observe(selected)! : owner;
         var anchor = view.intent() === "hold" ? view.intentPoint() || actor.position() : ally.position();

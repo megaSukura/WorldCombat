@@ -4,7 +4,7 @@
   "worldcombat.skill.sketch.use.1": "Copy a rare set-up or recovery",
   "worldcombat.skill.sketch.use.2": "Put a heavy attack into your own move set",
   "worldcombat.skill.sketch.description.0": "Within %1$s blocks, draw the target for %2$s s, then write its last used move permanently into the slot Sketch occupies.",
-  "worldcombat.skill.sketch.description.1": "About %1$s brush strokes. It cannot start when the target has no last move, and Sketch is not consumed then.",
+  "worldcombat.skill.sketch.description.1": "It cannot start when the target has no last move, and Sketch is not consumed then.",
   "worldcombat.skill.sketch.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.sketch.value.reach": "Sketch range",
   "worldcombat.skill.sketch.value.study": "Sketch windup",

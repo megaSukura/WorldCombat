@@ -127,7 +127,7 @@ namespace PokemonSkills {
     describe("chargebeam", [
         { key: "description.0", values: ["beam", "reach", "velocity"] },
         { key: "description.1", values: ["radius", "surgeChance", "surgeStages"] },
-        { key: "description.2", values: ["residualShare", "residualDelay", "arcs"] },
+        { key: "description.2", values: ["residualShare", "residualDelay"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

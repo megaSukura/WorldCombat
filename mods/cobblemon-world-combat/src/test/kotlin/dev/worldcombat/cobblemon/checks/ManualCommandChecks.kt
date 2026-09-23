@@ -69,7 +69,7 @@ object ManualCommandChecks {
 
     private fun next(value: Int) { phase = value; phaseAt = age }
     private fun elapsed() = age - phaseAt
-    private fun waiting(): Boolean = session.pending != null && session.body.approaching
+    private fun waiting(): Boolean = session.pending != null
     private fun cleanup() {
         if (::subject.isInitialized) subject.discard()
         if (::target.isInitialized) target.discard()
@@ -122,6 +122,9 @@ object ManualCommandChecks {
                         check(subject.pokemon.moveSet.get(0)!!.currentPp == ppBefore - 1) { "First command did not spend one native PP" }
                         request("cast")
                         check(waiting() && session.reason == "waiting-cooldown") { "Cooldown order was refused: ${session.reason}" }
+                        check(!session.body.approaching) { "Buffered cooldown stole navigation" }
+                        began = subject.position()
+                        player.moveTo(4.0, 100.0, 4.0, 0f, 0f)
                         queuedSequence = checkNotNull(session.pending).sequence()
                         println("P5CHECK manual: walked into range; task exit preserved the live path")
                         next(3)
@@ -134,9 +137,13 @@ object ManualCommandChecks {
                         }
                         check(combat.runtime().cooldown(session.actor, SLOW) > 0) { "Long-wait fixture no longer has cooldown" }
                         check(subject.pokemon.moveSet.get(0)!!.currentPp == ppBefore - 1) { "Waiting spent native PP" }
+                        check(subject.position().distanceTo(began) > 2.0 && subject.distanceTo(player) < 4.0) {
+                            "Cooldown buffering stopped normal following: at=${subject.position()} owner=${player.position()}"
+                        }
+                        check(!session.body.approaching) { "Cooldown started approach before the action was ready" }
                         verifiedLongWait = true
                     }
-                    check(elapsed() <= 210) { "Queued cooldown action never started: ${session.reason}" }
+                    check(elapsed() <= 280) { "Queued cooldown action never started: ${session.reason}" }
                     if (slowCasts == 2) {
                         check(verifiedLongWait && elapsed() >= 170) { "Cooldown bypassed or long wait was not observed" }
                         check(session.pending == null) { "Cooldown completion left its old command pending" }
@@ -169,7 +176,7 @@ object ManualCommandChecks {
                 6 -> if (elapsed() >= 20) {
                     check(fastCasts == 0 && slowCasts == 2 && session.pending == null) { "Cancelled command executed later" }
                     check(retainedPathExits > 0 && verifiedLongWait)
-                    println("P5CHECK PASS manual commands: range approach, native navigation survives task exit, 180-tick cooldown wait, automatic cast and cancellation while waiting/walking")
+                    println("P5CHECK PASS manual commands: range approach, navigation handoff, normal following during 180-tick buffering, automatic cast and cancellation while waiting/walking")
                     done = true; cleanup(); server.halt(false)
                 }
             }

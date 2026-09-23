@@ -61,7 +61,7 @@ namespace PokemonSkills {
 
     describe(faketearsId, [
         { key: "description.0", values: ["drop", "fluster"] },
-        { key: "description.1", values: ["reach", "hesitate", "tears"] },
+        { key: "description.1", values: ["reach", "hesitate"] },
         { key: "description.2", values: ["tempo", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "poweruppunch",
+        cooldownParameter: "recharge",
         name: "增强拳",
         description: "通过反复击打对手，使自己的拳头慢慢变硬。打中对手攻击就会提高。",
         uses: ["用一记必中的直拳起势，把物攻垫起来", "贴身对同一个目标连打，越打越重", "在开战几拍内把攻击拉满再转重手"],

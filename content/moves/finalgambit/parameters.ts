@@ -96,11 +96,11 @@ namespace PokemonSkills {
     describe("finalgambit", [
         { key: "description.0", values: ["damage"] },
         { key: "description.1", values: ["gamble", "lunge", "lungeSpeed", "collisionRadius"] },
-        { key: "description.2", values: ["blastRadius", "stagger"] },
+        { key: "description.2", values: ["stagger"] },
         { key: "spare.on", values: [], when: function (context) { return read(context.detail.values, ["spare"]) === true; } },
         { key: "spare.off", values: [], when: function (context) { return read(context.detail.values, ["spare"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.stagger"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.stagger", "tier.1.blastRadius"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.stagger"] }
     ]);
 }

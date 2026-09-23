@@ -4,7 +4,6 @@
   "worldcombat.skill.telekinesis.use.1": "让地面招式打不到它（也保护它免受地面招）",
   "worldcombat.skill.telekinesis.use.2": "给队友和自己的攻击创造必中的几秒",
   "worldcombat.skill.telekinesis.description.0": "对 %1$s 格内的一名对手施放，把它抬离地面 %2$s 秒，期间压掉它 %3$s 的移动；被击落或扎根的目标提不起来。",
-  "worldcombat.skill.telekinesis.description.1": "托起时围绕目标升起约 %1$s 道念力环，数量由特攻派生，画面按它发射。",
   "worldcombat.skill.telekinesis.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.telekinesis.pin.on": "压住：压制至少 92%、几乎钉死，但存续 ×0.7、冷却 ×1.25、起手 +3。",
   "worldcombat.skill.telekinesis.pin.off": "托起：存续 ×1.15、冷却 ×0.9，出手更省、吊得更久，但目标还能挪一小步。",

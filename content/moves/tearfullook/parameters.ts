@@ -72,7 +72,7 @@ namespace PokemonSkills {
     });
     describe(tearfullookId, [
         { key: "description.0", values: ["despair", "lingerTicks"] },
-        { key: "description.1", values: ["tearRange", "sectorAngle", "sobRadius", "range", "tears"] },
+        { key: "description.1", values: ["tearRange", "sectorAngle", "sobRadius", "range"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.clangoroussoul.summary": "Dance a war chant that burns your own HP beat by beat and raises Attack, Defence, Sp. Atk, Sp. Def and Speed together. The dance can be interrupted; what it already raised stays.",
   "worldcombat.skill.clangoroussoul.description.0": "Each beat pays %1$s of your max HP and raises all five stats by %3$s, for %2$s beats.",
-  "worldcombat.skill.clangoroussoul.description.1": "Beats are %1$s apart and the sound ring reaches %2$s blocks; you stand still while dancing and the wind-up can be interrupted.",
+  "worldcombat.skill.clangoroussoul.description.1": "Beats are %1$s apart; you stand still while dancing and the wind-up can be interrupted.",
   "worldcombat.skill.clangoroussoul.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.clangoroussoul.use.0": "Dance before the fight to raise all five stats",
   "worldcombat.skill.clangoroussoul.use.1": "Build a full-stat trump card in the window while the enemy closes in",

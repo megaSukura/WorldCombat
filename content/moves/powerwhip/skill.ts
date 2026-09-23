@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "powerwhip",
+        cooldownParameter: "recharge",
         name: "Power Whip",
         description: "The user violently whirls its vines, tentacles, or the like to lash the target.",
         uses: ["一道横扫清空身前一片", "隔着中距离先手扫开成群的对手", "被围住时原地整圈甩开"],

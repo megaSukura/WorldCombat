@@ -5,7 +5,7 @@
   "worldcombat.skill.echoedvoice.use.2": "用声音无视掩体点名一个目标",
   "worldcombat.skill.echoedvoice.description.0": "这一声在目标身上造成 %1$s 点特殊伤害（声音）。",
   "worldcombat.skill.echoedvoice.description.1": "当前回声 %1$s 层；传声半径 %2$s 格，回声持续 %3$s，窗口内谁接上就从这一层继续叠（上限 5 层）。",
-  "worldcombat.skill.echoedvoice.description.2": "歌程 %1$s 格、声速 %2$s 格/刻、约 %3$s 个声点、声环半径 %4$s 格；声音不被掩体阻挡。",
+  "worldcombat.skill.echoedvoice.description.2": "歌程 %1$s 格；声音不被掩体阻挡。",
   "worldcombat.skill.echoedvoice.crescendo.on": "当前：渐强式——传声半径 ×1.2、回声持续 ×1.35，更容易接上，但自己这一嗓 ×0.94。",
   "worldcombat.skill.echoedvoice.crescendo.off": "当前：独唱式——基础 ×1.08、半径 ×0.85、持续 ×0.8，一个人也唱得响。",
   "worldcombat.skill.echoedvoice.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

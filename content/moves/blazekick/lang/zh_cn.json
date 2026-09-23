@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.blazekick.summary": "拧身而起，把裹火的腿沿一道上扬的弧线挑出去：命中造成接触伤害、按概率点燃目标，并把它挑离地面，落地前它动不了手。烈焰式更容易点着、挑得更高；重踢式踢得更重但火难留。",
   "worldcombat.skill.blazekick.description.0": "这一脚对命中目标造成 %1$s 的接触伤害，踢程 %2$s 格。",
-  "worldcombat.skill.blazekick.description.1": "命中后把目标挑离地面 %1$s 格；裹火腿划出的火弧张开 %2$s 格。",
+  "worldcombat.skill.blazekick.description.1": "命中后把目标挑离地面 %1$s 格。",
   "worldcombat.skill.blazekick.description.2": "命中后按 %1$s 概率点燃目标，持续 %2$s。",
   "worldcombat.skill.blazekick.ignite.on": "烈焰式：点燃概率 +12%%、灼伤时长 ×1.2、踢起更高；代价是踢击威力 ×0.88、冷却 +4 刻。",
   "worldcombat.skill.blazekick.ignite.off": "重踢式：踢得更重、循环更快；代价是火更难留、挑得略低。",

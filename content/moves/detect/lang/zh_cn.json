@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.detect.summary": "在极短窗口内读穿下一次攻击并完整免除，成功后可获得一段先机（默认抬速度，可配置为抬攻击）；连续使用容易失败。",
   "worldcombat.skill.detect.description.0": "读招窗口 %1$s，先机 %2$s（%3$s 级）；速度越快窗口越宽、先机越久。",
-  "worldcombat.skill.detect.description.1": "凝神 %1$s，闪光半径 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.detect.description.1": "凝神 %1$s，冷却 %2$s。",
   "worldcombat.skill.detect.description.2": "连用失误率 %1$s；走位与反击的取舍见配置 %2$s。",
   "worldcombat.skill.detect.use.0": "对手起手瞬间拆掉它的第一击",
   "worldcombat.skill.detect.use.1": "边靠近边读招，读中后立刻反击",

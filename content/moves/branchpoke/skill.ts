@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: "branchpoke",
+        cooldownParameter: "recharge",
         name: "Branch Poke",
         description: "The user attacks the target by poking it with a sharply pointed branch.",
         uses: ["从最远处一记最细、最长的直戳", "站在枝条末端打满，越远越疼", "刺枝式扎住目标使其减速"],

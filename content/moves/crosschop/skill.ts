@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: crosschopId,
+        cooldownParameter: "recharge",
         name: "Cross Chop",
         description: "The user delivers a double chop with its forearms crossed.",
         uses: ["用两次先后落下的交叉劈切开一个点", "第一劈撞开架势，第二劈切得更深", "在贴身距离结算两次接触伤害"],

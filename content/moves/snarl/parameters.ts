@@ -108,7 +108,7 @@ namespace PokemonSkills {
     describe("snarl", [
         { key: "description.0", values: ["bark", "pulses", "gap"] },
         { key: "description.1", values: ["spaDrop", "hushTicks"] },
-        { key: "description.2", values: ["reach", "arc", "notes"] },
+        { key: "description.2", values: ["reach", "arc"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["rant"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["rant"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

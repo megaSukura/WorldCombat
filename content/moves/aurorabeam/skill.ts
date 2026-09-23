@@ -46,6 +46,7 @@ namespace PokemonSkills {
 
     define({
         id: aurorabeamId,
+        cooldownParameter: "recharge",
         name: "Aurora Beam",
         description: "射出一条会跑的虹色光束：命中最前面的敌人造成特殊伤害、可能让它的攻击下降 1 级，并在落点地面结出一小片霜。广谱更远更宽更易降攻，聚谱更快更强。",
         uses: ["中远距离的直线点名", "压制物理攻击手", "在通道上留下一小片难走的霜"],

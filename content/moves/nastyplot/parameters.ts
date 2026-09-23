@@ -94,8 +94,7 @@ namespace PokemonSkills {
         { key: "wary.on", values: [], when: function (context) { return read(context.detail.values, ["wary"]) === true; } },
         { key: "wary.off", values: [], when: function (context) { return read(context.detail.values, ["wary"]) !== true; } },
         { key: "description.1", values: ["reach", "window"] },
-        { key: "description.2", values: ["swirl", "motes"] },
-        { key: "description.3", values: ["beats", "tempo", "aftercast", "wait"] },
+        { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.window", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.window", "tier.1.wait"] }

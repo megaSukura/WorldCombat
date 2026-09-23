@@ -2,6 +2,8 @@
   "worldcombat.skill.tripleaxel.summary": "原地旋身连踢三脚：每一脚都扫在身前一段扇形里，每中一脚下一脚更重（第 n 脚威力翻倍递增）。每脚独立掷命中，落空这串就停。横扫式能把身旁的第二个人也卷进来。",
   "worldcombat.skill.tripleaxel.description.0": "第一脚造成 %1$s 威力的冰属性接触伤害，连续 %2$s 脚；每中一脚，下一脚按 %3$s 倍递增。",
   "worldcombat.skill.tripleaxel.description.1": "每脚扫过身前 %1$s 度的扇形、够到 %2$s 格；每脚命中率 %3$s，两脚间隔 %4$s 秒。",
+  "worldcombat.skill.tripleaxel.widen.on": "横扫式：每脚扫过身前 170 度的扇形，能把站在身旁的第二个目标也卷进来；代价是每脚威力 ×0.88、命中率 −4%、两脚间隔 +1 刻、收招 +2 刻、冷却 +4 刻。",
+  "worldcombat.skill.tripleaxel.widen.off": "收势式（原生形态）：每脚只扫身前 70 度，单脚更重；命中率 +2%、两脚间隔 −1 刻、冷却 −4 刻，代价是照顾不到身旁的目标。",
   "worldcombat.skill.tripleaxel.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.tripleaxel.growth.0": "达到 %1$s 级，第一脚威力提升至 %2$s。",
   "worldcombat.skill.tripleaxel.growth.1": "达到 %1$s 级，第一脚威力提升至 %2$s，踢击距离延长至 %3$s 格。",

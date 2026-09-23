@@ -4,7 +4,7 @@
   "worldcombat.skill.irondefense.use.1": "Hold position against knockback and refuse to be pushed off",
   "worldcombat.skill.irondefense.use.2": "Use the visible shell window to make the opponent spend time chipping it",
   "worldcombat.skill.irondefense.description.0": "The shell raises Defense by %1$s level(s) for about %2$s.",
-  "worldcombat.skill.irondefense.description.1": "An iron ring spreads %1$s blocks from the feet and throws about %2$s filings; while it holds, knockback resistance is greatly raised and movement speed drops.",
+  "worldcombat.skill.irondefense.description.1": "While it holds, knockback resistance is greatly raised and movement speed drops.",
   "worldcombat.skill.irondefense.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.irondefense.timing": "Self move, range %1$s blocks; after %2$s s of wind-up it spends %4$s PP, recovers for %3$s s and starts a %5$s s cooldown.",
   "worldcombat.skill.irondefense.growth.0": "At level %1$s the shell extends to %2$s and the cooldown shortens to %3$s s.",

@@ -4,7 +4,7 @@
   "worldcombat.skill.psychoshift.use.1": "Clear your own burden after a status move",
   "worldcombat.skill.psychoshift.use.2": "Throw a damage-over-time status back in a war of attrition",
   "worldcombat.skill.psychoshift.description.0": "Target one opponent within %1$s blocks that has no status and is not immune to yours; your major status is planted on it and you are cured on success.",
-  "worldcombat.skill.psychoshift.description.1": "Transfer strength %1$s: the status lasts this multiple of its remaining time on the target; about %2$s plague motes are drawn, from Special Attack and level.",
+  "worldcombat.skill.psychoshift.description.1": "Transfer strength %1$s: the status lasts this multiple of its remaining time on the target.",
   "worldcombat.skill.psychoshift.description.2": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.psychoshift.deep.on": "Deep seed: the planted status lasts x1.5, and poison deepens to toxic; costs +3 wind-up and x1.35 cooldown.",
   "worldcombat.skill.psychoshift.deep.off": "Light push: cheaper wind-up and cooldown (x0.9), for clearing your own status more often, but it does not take deep root.",

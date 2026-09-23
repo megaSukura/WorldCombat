@@ -55,6 +55,7 @@ namespace PokemonSkills {
 
     define({
         id: encoreId,
+        cooldownParameter: "recharge",
         name: "再来一次",
         description: "把对手刚才那一手点名出来，逼它在回声散去前连续重复同一招；需要目标刚出过手、那一手还能再用，带 failencore 的招点不动。",
         uses: ["把刚做过的布置／强化锁死，逼它一直重复", "打断对手的连招节奏，让它只能做同一件事", "拖住一个刚露出破绽的对手"],

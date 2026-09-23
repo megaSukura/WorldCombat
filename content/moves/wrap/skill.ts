@@ -89,6 +89,7 @@ namespace PokemonSkills {
 
     define({
         id: "wrap",
+        cooldownParameter: "recharge",
         name: "Wrap",
         description: "A ring of long body or vines wraps the target head to foot, pinning it in place and squeezing the strength out of its blows. The coil tightens on its own, so the user can walk away; it lasts until it runs out or is torn open by a strong shove.",
         uses: ["钉住一个危险目标并压住它的攻击", "把对手按在原地交给队友", "用藤茧独自磨掉一个难缠的近战目标"],

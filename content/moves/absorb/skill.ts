@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "absorb",
+        cooldownParameter: "recharge",
         name: "Absorb",
         description: "A nutrient-draining attack. The user's HP is restored by up to half the damage taken by the target.",
         uses: ["贴身时用最短冷却的一口维持血量", "在小口伤害里顺手把血线拉回来", "够得着就点一下，不打断自己的走位"],

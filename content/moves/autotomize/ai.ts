@@ -1,7 +1,7 @@
 /**
  * 身体轻量化 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁且在 ai.maxChase 内时，先卸一轮再交战；身边暂时安全时（驻守／自主／工作）也先卸好。
+ * 什么局面有意义：有威胁且在 ai.maxChase 内时，先卸一轮再交战。
  * 什么时候最想出手：威胁还在 ai.minGap 之外时 priority 100 抢在共享次序前——趁还没贴上脸先把部件卸掉提速；
  *   已经贴身就交回普通次序。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -19,11 +19,13 @@ namespace PokemonSkills {
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
+            if (["spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "lightened")) return false;
             if (CompanionBehavior.recent(context, "move", "autotomize", 600)) return false;
             const gap = autotomizeThreatGap(context);
-            if (gap < 0) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (gap < 0) return false;
+            if (gap < CompanionBehavior.ai<number>(capability, "minGap", 3)) return false;
             return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

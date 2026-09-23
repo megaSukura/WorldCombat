@@ -109,7 +109,7 @@ namespace PokemonSkills {
 
     describe(bulletpunchId, [
         { key: "description.0", values: ["round", "reach", "halfWidth"] },
-        { key: "description.1", values: ["pierce", "push", "sparks"] },
+        { key: "description.1", values: ["pierce", "push"] },
         { key: "description.2", values: [] },
         { key: "ap.on", values: [], when: function (context) { return read(context.detail.values, ["ap"]) === true; } },
         { key: "ap.off", values: [], when: function (context) { return read(context.detail.values, ["ap"]) !== true; } },

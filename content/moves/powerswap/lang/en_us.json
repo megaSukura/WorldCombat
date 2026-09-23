@@ -4,7 +4,6 @@
   "worldcombat.skill.powerswap.use.1": "Dump your own lowered Attack onto the foe",
   "worldcombat.skill.powerswap.use.2": "Steal the momentum once the foe has set up",
   "worldcombat.skill.powerswap.description.0": "Switch Attack and Sp. Atk stat changes with a target within %1$s blocks, held for %2$s; a clear line is required.",
-  "worldcombat.skill.powerswap.description.1": "During the switch %1$s threads flow between the two, derived from Sp. Atk and body size; the scene emits by that number.",
   "worldcombat.skill.powerswap.description.2": "Only the steps each side has already built are switched: the more the foe has raised, the more you gain, and your own steps land on them. Both return to their old stages when the window ends or is cleared.",
   "worldcombat.skill.powerswap.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to switch, then %3$s seconds to recover and a %5$s second cooldown from commit.",
   "worldcombat.skill.powerswap.growth.0": "At level %1$s the switch reaches %2$s blocks and the window lasts %3$s seconds.",

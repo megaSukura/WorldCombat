@@ -93,13 +93,13 @@ function load(paths) {
     compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None, alwaysStrict: true },
   }).outputText, sandbox);
 }
-load(['content/behavior/contributions.ts', 'content/protocols/effects.ts', 'content/traits/composition.ts', 'content/traits/ability-recipes.ts',
+load(['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/protocols/effects.ts', 'content/traits/composition.ts', 'content/traits/ability-recipes.ts',
   'content/behavior/companion-menus.ts', 'content/preferences/skill-preferences.ts',
   ...['formula', 'action-parameters', 'status-vocabulary', 'combat-status', 'combatant-stats', 'combat-stages', 'native-abilities', 'native-items',
     'native-semantics', 'native-modifiers', 'native-effects', 'world-environment', 'native-rule-values', 'individual-attributes',
     'pokemon-damage', 'native-loadout', 'living-actions', 'native-repertoire'].map(id => `content/mechanisms/${id}.ts`)]);
 sandbox.CompanionRepertoire = { catalogue: sandbox.NativeRepertoire.create({ namespace: 'world_combat' }) };
-load(['content/library/skills/catalogue.ts', 'content/library/skills/parameters.ts', 'content/library/skills/effects.ts']);
+load(['content/mechanisms/action-cooldowns.ts', 'content/library/skills/catalogue.ts', 'content/library/skills/parameters.ts', 'content/library/skills/effects.ts']);
 const { Formula, PokemonSkills: P, PokemonDamage: D } = sandbox, F = Formula.F;
 function actor(id, native = false) {
   return { key: () => id, ref: () => id, domain: () => native ? 'cobblemon' : 'minecraft', live: true,
@@ -112,11 +112,12 @@ const world = {
   source: () => source, valid: actor => actor.live, random: () => 1, tick: () => 10, effects: () => [],
   observe: actor => actor.live ? { health: () => actor.hp, maxHealth: () => actor.maximum, width: () => .8, height: () => 1.6,
     movementSpeed: () => .12, wet: () => actor.wet, grounded: () => true, hurtAgo: () => 7 } : null,
-  attributeValue: actor => ({ base: () => 8, value: () => actor.attack }),
+  attributeValue: (actor, id) => ({ base: () => 8, value: () => id === 'world_combat:skill_haste' ? actor.haste || 0 : actor.attack }),
   mobEffects: actor => actor.statuses.map(id => ({ tagged: tag => tag === 'world_combat:status/' + id, amplifier: () => 0 })),
 };
 const args = { 'native-slot': '0', 'native-move': 'key-a' };
 const action = { sense: () => world, actor: () => source, target: () => target, id: () => 42, range: () => 9,
+  targetPosition: () => ({ x: () => 9, y: () => 0, z: () => 0 }), releaseTarget: noop,
   argument: key => args[key] ?? null, data: () => null };
 const skill = { id: 'sample_a', name: 'Sample', description: '', uses: [], kind: 'aim', range: 9,
   style: 'sample', fields: [], defaults: { factor: 2 }, execute: noop };
@@ -567,5 +568,27 @@ check('registered damage executes and previews ordinary public fact contexts wit
     close(result.amount, applied); close(result.explanation.value, applied); assert.equal(result.available, true);
   }
   assert.equal(nativeReads, before);
+});
+check('custom authored cooldowns and detail aliases share final haste while raw numbers stay raw', () => {
+  const sample = { ...skill, id: 'fixture_cooldown', cooldown: 120, cooldownParameter: 'recharge',
+    resolve(pokemon, values, live, body) { return { prepare: 0, recover: 0, cooldown: P.p('fixture_cooldown', 'recharge', { pokemon, skill: sample, detail: { values }, world: live, actor: body }) }; } };
+  P.actionParameters.define(sample.id, { recharge: P.seconds(F.const(120), 'Recovery') });
+  P.describe(sample.id, [{ key: 'duration', values: ['cooldown', 'recharge'] }]); P.define(sample);
+  const scope = { pokemon: nativeSnapshot(source), skill: sample, world, actor: source, detail: { values: {} } };
+  for (const [haste, ticks] of [[0,120],[50,80],[-20,150]]) {
+    source.haste = haste;
+    assert.equal(sample.resolve(scope.pokemon, {}, world, source).cooldown, 120);
+    assert.equal(P.p(sample.id, 'recharge', scope), 120);
+    const view = P.describeSkill(scope);
+    assert.equal(Number(view.bindings.cooldown.value), ticks / 20);
+    assert.equal(Number(view.bindings.recharge.value), ticks / 20);
+    const detail = sample.inspect(scope.pokemon, { values: {}, cooldown: 120 }, { full: true, world, actor: source, state: () => ({}) });
+    assert.equal(detail.cooldown, ticks); assert.equal(detail.authoredCooldown, 120);
+    assert.equal(sandbox.ActionCooldowns.evaluate(world, source, 'world_combat:' + sample.id, 120).ticks, ticks);
+  }
+  source.haste = 0;
+  const offline = { ...scope, world: null, actor: null, pokemon: { ...scope.pokemon, attribute: () => ({value: () => 50}) } };
+  assert.equal(Number(P.describeSkill(offline).bindings.cooldown.value), 4);
+  assert.equal(sandbox.ActionCooldowns.evaluate(world, source, 'fixture:non_slot', 0).ticks, 0);
 });
 console.log(`PASS formula/context: ${count} scenarios; no emitted files or game processes`);

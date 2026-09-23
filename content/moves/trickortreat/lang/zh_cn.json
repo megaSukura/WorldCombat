@@ -15,7 +15,7 @@
   "worldcombat.skill.trickortreat.value.aftercast": "收招",
   "worldcombat.skill.trickortreat.value.recharge": "冷却",
   "worldcombat.skill.trickortreat.preference.grand": "盛大",
-  "worldcombat.skill.trickortreat.preference.grand.help": "盛大：外壳 ×1.6、装饰 ×1.15，但起手多 4 刻、冷却多 20 刻；关闭则外壳短、起手与冷却都更快。PP 只有 20 发。",
+  "worldcombat.skill.trickortreat.preference.grand.help": "盛大：外壳 ×1.6，但起手多 4 刻、冷却多 20 刻；关闭则外壳短、起手与冷却都更快。PP 只有 20 发。",
   "worldcombat.skill.trickortreat.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.trickortreat.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑套壳；调小只在贴身时用，调大愿意先追过去。",
   "worldcombat.skill.trickortreat.preference.ai.leaveStation": "驻守时离位",

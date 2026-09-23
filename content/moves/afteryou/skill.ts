@@ -75,6 +75,7 @@ namespace PokemonSkills {
 
     define({
         id: afteryouId,
+        cooldownParameter: "recharge",
         name: "您先请",
         description: "向一名离得够近、看得见的伙伴让出手先：它获得一段移动与出招都更利落的加速窗口，你自己则背上同样长的一段迟滞；伙伴在窗口内出手时会浮出「紧接着行动」。",
         uses: ["让伙伴抢在自己的拍子前先手出手", "在队友的大招前把节奏让过去", "把一次连招的出手顺序调过来"],

@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "victorydance",
+        cooldownParameter: "wait",
         name: "胜利之舞",
         description: "激烈地跳起唤来胜利的舞蹈，提高自己的攻击、防御和速度。",
         uses: ["决出胜负前把攻防速一起立起来", "在对手残血时开一场仪典，靠命中把胜利延续下去", "用最隆重的舞把身位钉住、把气势摆出来"],

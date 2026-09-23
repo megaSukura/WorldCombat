@@ -6,7 +6,6 @@
   "worldcombat.skill.dazzlinggleam.use.3": "起手极短的整圈收尾手段",
   "worldcombat.skill.dazzlinggleam.description.0": "整圈强光对每个敌人各结算一次闪光伤害：中心的 %1$s 威力到最外圈只剩约 %2$s%%。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.dazzlinggleam.description.1": "光浪半径 %1$s 格（空中地面一起算）；被闪到的人挂上目眩、移动变慢约 %2$s 秒。",
-  "worldcombat.skill.dazzlinggleam.description.2": "",
   "worldcombat.skill.dazzlinggleam.wide.on": "开启散射式：光浪半径约 ×1.22、边缘更均匀、出手更慢，代价是威力约 ×0.88、目眩更短。",
   "worldcombat.skill.dazzlinggleam.wide.off": "关闭散射式（凝聚式）：威力约 ×1.14、目眩更久，半径收到约 ×0.82。",
   "worldcombat.skill.dazzlinggleam.timing": "作用半径 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，收招 %3$s 秒，冷却 %5$s 秒。",

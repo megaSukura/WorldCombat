@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "mortalspin",
+        cooldownParameter: "recharge",
         name: "Mortal Spin",
         description: "旋身甩出一圈带毒的晶光：先把缠在身上的绑紧、紧束、寄生种子这类束缚甩脱，再扫开身周一圈的敌人、把它们顶开并让它们中毒。剧毒式上剧毒、留得更久，晶光式扫得更开。",
         uses: ["被绑紧、紧束或寄生种子缠住时脱身", "被围住时一次给一圈人上毒", "用毒把一场缠斗慢慢磨赢"],

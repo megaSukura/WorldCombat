@@ -20,6 +20,7 @@
 namespace PokemonSkills {
     define({
         id: highhorsepowerId,
+        cooldownParameter: "recharge",
         name: "High Horsepower",
         description: "The user fiercely attacks the target using its entire body.",
         uses: ["用全身质量压低冲撞一个目标", "把对手撞离阵地、或压在近身继续打", "把体重与速度换成看得见的马力数"],

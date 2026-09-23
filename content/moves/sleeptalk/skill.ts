@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: "sleeptalk",
+        cooldownParameter: "recharge",
         name: "梦话",
         description: "只能在睡觉时使用；从自己已学会的招式中随机使出一个。",
         uses: ["睡眠中呓语", "随机借出一个已知招式"],

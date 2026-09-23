@@ -72,6 +72,7 @@ namespace PokemonSkills {
 
     define({
         id: disableId,
+        cooldownParameter: "recharge",
         name: "定身法",
         description: "向对手送出一枚定身钉，钉住它刚用过的那一手；在钉松开前，那一手无法使用，换别的招照样能打。目标没出过手或上一手太老时落空。",
         uses: ["封住对手的主力输出招", "拆掉刚露出的强攻手段", "逼对手换招、打乱它的连招"],

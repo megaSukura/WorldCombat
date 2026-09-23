@@ -35,7 +35,7 @@ const TailslapDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "reach", bind: "point", fit: "none",
+                    name: "reach", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: { data: "index", fallback: 1 }, repeats: { data: "index", fallback: 1 }, interval: 3, at: 0 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 }, rotation: [90, 0, 0] },
@@ -44,7 +44,7 @@ const TailslapDefinition: ParticleDefinition = {
                     color: 0xD8C9A6, alpha: [0.6, 0], light: "world", maxParticles: 260
                 },
                 {
-                    name: "field", bind: "point", fit: "none",
+                    name: "field", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     rate: 34, shape: { kind: "circle", radius: { data: "radius", fallback: 3.0 }, thickness: 0.85, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.06, 0.28], spread: 18, drag: 0.9,
@@ -52,7 +52,7 @@ const TailslapDefinition: ParticleDefinition = {
                     color: 0xD8C9A6, alpha: [0.24, 0], light: "full", maxParticles: 240
                 },
                 {
-                    name: "tailwind", bind: "point", fit: "none",
+                    name: "tailwind", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 28, shape: { kind: "circle", radius: { data: "radius", fallback: 3.0 }, thickness: 1, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.12, 0.4], spread: 10, gravity: 0.03, drag: 0.9,
@@ -66,26 +66,26 @@ const TailslapDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "reach", bind: "point", fit: "none", orient: "direction",
+                    name: "reach", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: { data: "index", fallback: 1 }, repeats: { data: "index", fallback: 1 }, interval: 3, at: 0 },
-                    shape: { kind: "arc", radius: { data: "radius", fallback: 3.0 }, arcDegrees: { data: "arc", fallback: 200 }, rotation: [90, 0, 0] },
+                    shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 200 }, innerRadius: { data: "radius", fallback: 3.0 } },
                     direction: "outward", speed: [0.05, 0.24], spread: 8, drag: 0.9,
                     lifetime: [8, 14], size: [0.22, 0.05],
                     color: 0xD8C9A6, alpha: [0.6, 0], light: "world", maxParticles: 240
                 },
                 {
-                    name: "frontfield", bind: "point", fit: "none", orient: "direction",
+                    name: "frontfield", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 36, shape: { kind: "cone_volume", radius: 0.55, length: { data: "radius", fallback: 3.0 }, angleDegrees: 70, thickness: 0.9 },
+                    rate: 36, shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 200 } },
                     direction: "shape", speed: [0.08, 0.3], spread: 14, drag: 0.9,
                     lifetime: [6, 11], size: [0.26, 0.05], sizeMode: "index",
                     color: 0xD8C9A6, alpha: [0.34, 0], light: "full", maxParticles: 260
                 },
                 {
-                    name: "tailwind", bind: "point", fit: "none", orient: "direction",
+                    name: "tailwind", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 30, shape: { kind: "cone_volume", radius: 0.6, length: { data: "radius", fallback: 3.0 }, angleDegrees: 70, thickness: 1 },
+                    rate: 30, shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 200 } },
                     direction: "shape", speed: [0.12, 0.42], spread: 12, gravity: 0.04, drag: 0.9,
                     lifetime: [8, 14], size: [0.08, 0.02],
                     color: 0xB8A67E, alpha: [0.4, 0], light: "world", maxParticles: 240

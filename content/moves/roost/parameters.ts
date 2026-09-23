@@ -55,7 +55,7 @@ namespace PokemonSkills {
 
     describe(roostId, [
         { key: "description.0", values: ["heal", "restTicks"] },
-        { key: "description.1", values: ["chunks", "feathers", "foldWidth"] },
+        { key: "description.1", values: ["chunks"] },
         { key: "description.2", values: ["gather", "settle"] },
         { key: "stance.deep", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "stance.shallow", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

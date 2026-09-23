@@ -46,6 +46,7 @@ namespace PokemonSkills {
 
     define({
         id: "magnitude",
+        cooldownParameter: "recharge",
         name: "Magnitude",
         description: "沉身压地，地面在原地横颤：圈内站在地上的敌人各挨一记，震级当场掷定（4..10），越大越重；震级够大时正在出手的人会被抖断动作。深源式震级更高、震幅更广、更容易打断，但更慢。",
         uses: ["一次震到身周一圈站在地上的敌人", "抖断正在蓄招/出手的对手", "跳过空中的目标，专打站桩的对手", "在低冷却里反复骚扰"],

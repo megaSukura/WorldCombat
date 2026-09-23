@@ -89,9 +89,9 @@ namespace PokemonSkills {
     ]);
 
     describe("discharge", [
-        { key: "description.0", values: ["surge", "arcs"] },
+        { key: "description.0", values: ["surge"] },
         { key: "description.1", values: ["fieldRadius", "echoDelay", "echo"] },
-        { key: "description.2", values: ["numbChance", "crackleTicks"] },
+        { key: "description.2", values: ["numbChance"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

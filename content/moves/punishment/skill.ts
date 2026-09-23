@@ -26,6 +26,7 @@ namespace PokemonSkills {
 
     define({
         id: punishmentId,
+        cooldownParameter: "recharge",
         name: "Punishment",
         description: "The more the target has powered up with stat changes, the greater this move's power.",
         uses: ["对手叠了能力等级时打它一记重的", "把目标涨起来的每一层力量称进威力里", "一记从高处落下的压顶处刑"],

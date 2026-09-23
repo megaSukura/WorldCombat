@@ -4,7 +4,7 @@
   "worldcombat.skill.playnice.use.1": "Make a pursuer let go, then disengage",
   "worldcombat.skill.playnice.use.2": "Buy an ally time to reposition",
   "worldcombat.skill.playnice.description.0": "A calmed target loses %1$s Attack stage(s) and will not attack on its own for %2$s.",
-  "worldcombat.skill.playnice.description.1": "Peace radius %1$s, up to %2$s bodies at once, cast over %3$s blocks (you are the centre), giving %4$s warm motes at once.",
+  "worldcombat.skill.playnice.description.1": "Peace radius %1$s, up to %2$s bodies at once, cast over %3$s blocks (you are the centre).",
   "worldcombat.skill.playnice.description.2": "Opening your hands takes %1$s with a %2$s cooldown.",
   "worldcombat.skill.playnice.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.playnice.value.offerRadius": "Peace radius",

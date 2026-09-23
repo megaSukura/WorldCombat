@@ -13,6 +13,7 @@ namespace PokemonSkills {
 
     define({
         id: hardpressId,
+        cooldownParameter: "recharge",
         name: "Hard Press",
         description: "The user presses down on the target with an arm or a claw. The more HP the target has left, the greater the move's power.",
         uses: ["开局对满血的目标压出最重的一记", "双腕式一次按住挨着站的几个敌人", "用最快的循环一记接一记地压住对手"],
@@ -64,11 +65,10 @@ namespace PokemonSkills {
                 if (!landed) return;
                 hits++;
                 const body = world.observe(victim);
-                if (body === null) return;
-                if (sink > 0) world.motion(victim, WorldCombat.point(0, -sink, 0), false);
+                if (body !== null && sink > 0) world.motion(victim, WorldCombat.point(0, -sink, 0), false);
                 const away = facts.position().minus(landing);
-                if (away.length() >= 0.05) world.displace(victim, away.unit().scale(shove));
-                WorldFeedback.emit(world, hardpressScene, 1, body.position(),
+                if (body !== null && away.length() >= 0.05) world.displace(victim, away.unit().scale(shove));
+                WorldFeedback.emit(world, hardpressScene, 1, body === null ? facts.position() : body.position(),
                     { moment: "impact", target: String(victim.ref()), motes: motes,
                         pressure: hardpressRatioNow(world, victim), intensity: intensity }, 26);
             });

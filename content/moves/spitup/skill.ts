@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: spitupId,
+        cooldownParameter: "recharge",
         name: "Spit Up",
         description: "The power stored using the move Stockpile is released at once in an attack. The more power is stored, the greater the move's power.",
         uses: ["先蓄力攒层，再一口把攒下的力全吐出去", "喷散式一次罩住站成一排的敌人", "把层数留着当保险，等对手露出破绽再全放"],

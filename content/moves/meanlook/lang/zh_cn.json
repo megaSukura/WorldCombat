@@ -4,7 +4,7 @@
   "worldcombat.skill.meanlook.use.1": "锁住一个高机动目标不让它脱离近战",
   "worldcombat.skill.meanlook.use.2": "在开阔地一对一拖住对方的主力",
   "worldcombat.skill.meanlook.description.0": "凝视最多维持约 %1$s；目标被外力拽离术者超过 %2$s 格、或被掩体挡住视线时，目光绷断、锁定解除。",
-  "worldcombat.skill.meanlook.description.1": "能在 %1$s 格内开始凝视；画面里约 %2$s 道黑光，目标脚下黑圈参考半径约 %3$s 格。",
+  "worldcombat.skill.meanlook.description.1": "能在 %1$s 格内开始凝视目标。",
   "worldcombat.skill.meanlook.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s。凝视期间术者站定不动、不能出手。",
   "worldcombat.skill.meanlook.option.on": "深凝视：凝视时长约 ×1.4、绷断距离 +1 格；代价是起手 +3 刻、冷却 +15 刻、施放距离 −1 格——锁得更久更牢，但更慢更近。",
   "worldcombat.skill.meanlook.option.off": "快锁：起手更快、距离更远、冷却更短；代价是锁得更短、更容易被拽断。",

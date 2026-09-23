@@ -34,7 +34,7 @@ namespace PokemonSkills {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
     }
     function spikyShieldContact(data: any): boolean {
-        return data && (data.direct === true || data.kind === "move" && data.contact === true);
+        return DamageSemantics.read(data).contact;
     }
     /** 一次藤甲窗口结束时清掉它留下的穿刺记录。 */
     function spikyShieldClear(effect: CombatEffect): void {
@@ -141,6 +141,7 @@ namespace PokemonSkills {
 
     define({
         id: "spikyshield",
+        cooldownParameter: "charge",
         name: "Spiky Shield",
         description: "A thorned shield bursts up around the user, blocking attacks by a total pool; every direct contact pricks the attacker and drains its health.",
         uses: ["引诱近战对手贴上藤刺", "挡住齐射的同时反刺冲上来的近战", "在变化招式落下来之前连招带人一起封住"],

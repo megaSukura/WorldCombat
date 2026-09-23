@@ -1,7 +1,7 @@
 /**
  * 棉花防守 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁且在 ai.maxChase 内时，先裹上绒衣再扛；身边暂时安全时（驻守／自主／工作）也先裹好。
+ * 什么局面有意义：有威胁且在 ai.maxChase 内时，先裹上绒衣再扛。
  * 什么时候最想出手：血量掉到 ai.panic 以下（正在挨压）时 priority 110 抢在共享次序前——防招要在被打崩之前裹上；
  *   血量还行就退回普通次序，先输出。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -22,7 +22,7 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "cottonguard")) return false;
             const gap = cottonGuardThreatGap(context);
-            if (gap < 0) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (gap < 0) return false;
             return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

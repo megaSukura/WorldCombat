@@ -10,7 +10,7 @@
   "worldcombat.skill.aurasphere.seek.off": "当前为撞波：球更粗、更快、更重，代价是射程更近。",
   "worldcombat.skill.aurasphere.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.aurasphere.growth.0": "%1$s 级起波导威力升至 %2$s、射程 %3$s 格。",
-  "worldcombat.skill.aurasphere.growth.1": "%1$s 级起波导威力升至 %2$s、转向 %3$s 度/刻、波导光点 %4$s。",
+  "worldcombat.skill.aurasphere.growth.1": "%1$s 级起波导威力升至 %2$s、转向 %3$s 度/刻。",
   "worldcombat.skill.aurasphere.value.pulse": "波导威力",
   "worldcombat.skill.aurasphere.value.reach": "射程",
   "worldcombat.skill.aurasphere.value.velocity": "球速",

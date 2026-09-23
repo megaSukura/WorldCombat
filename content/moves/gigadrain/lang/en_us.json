@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.gigadrain.summary": "Restrain the target and repeatedly drain health from it.",
   "worldcombat.skill.gigadrain.description.0": "Each wave deals about %1$s special damage; it draws %2$s wave(s) in all, one every %3$s s.",
-  "worldcombat.skill.gigadrain.description.1": "The roots reach %1$s blocks (also the real range) with a %2$s block radius.",
+  "worldcombat.skill.gigadrain.description.1": "The roots reach %1$s blocks (also the real range).",
   "worldcombat.skill.gigadrain.description.2": "%1$s of each wave's damage is restored to the user.",
   "worldcombat.skill.gigadrain.deepPour.on": "Deep pour: two heavy waves, wider roots and a fiercer draw, but slower, longer cooldown and easier to interrupt.",
   "worldcombat.skill.gigadrain.deepPour.off": "Three light waves: more total healing and a faster rhythm for staying in the fight.",

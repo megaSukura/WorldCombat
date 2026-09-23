@@ -140,7 +140,7 @@ namespace PokemonSkills {
     describe("populationbomb", [
         { key: "description.0", values: ["swarm", "comrades", "accuracy", "gap"] },
         { key: "description.1", values: ["flight", "reach", "radius", "ring", "lurk"] },
-        { key: "description.2", values: ["motes", "muster"] },
+        { key: "description.2", values: ["muster"] },
         { key: "swarm.on", values: [], when: function (context) { return read(context.detail.values, ["swarm"]) === true; } },
         { key: "swarm.off", values: [], when: function (context) { return read(context.detail.values, ["swarm"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

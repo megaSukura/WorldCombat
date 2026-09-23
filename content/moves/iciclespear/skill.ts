@@ -44,6 +44,7 @@ namespace PokemonSkills {
 
     define({
         id: "iciclespear",
+        cooldownParameter: "recharge",
         name: "Icicle Spear",
         description: "呼出一排冰晶，一根接一根笔直射向目标：每根命中留一次伤害，碎在目标身上散出冰屑，并把落点冻出一小片霜。几乎不偏、命中可靠；霜附式减速更狠、留霜更大。",
         uses: ["远距离最可靠的一梭直飞冰锥", "用霜寒减速目标，同时冻住脚下地面", "纯碎式堆单锥伤害"],

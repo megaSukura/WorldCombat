@@ -95,6 +95,7 @@ namespace PokemonSkills {
 
     define({
         id: "bugbite",
+        cooldownParameter: "recharge",
         name: "虫咬",
         description: "咬住对手进行攻击；若它携带树果，就把果子咬下来当场吃掉，果子的效果落到自己身上。",
         uses: ["咬一口并吃掉对手的树果", "把对手的树果变成自己的回复或强化", "贴身的一次接触咬击"],

@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: mistballId,
+        cooldownParameter: "recharge",
         name: "Mist Ball",
         description: "把一团羽绒与雾揉成轻球抛出去：命中造成超能力特殊伤害，并散开一团羽绒雾；有一半机会把雾糊在目标身上，压低它的特攻、拖慢它的脚步。浓雾式糊得更久更大，代价是球更轻更慢。",
         uses: ["从远处把一个威胁糊住、拖慢", "对上法系目标时高概率压特攻", "抛一道弧线绕过前排够到后排"],

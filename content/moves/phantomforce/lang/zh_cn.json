@@ -4,7 +4,7 @@
   "worldcombat.skill.phantomforce.use.1": "消失一拍躲开点名，再贴身反击",
   "worldcombat.skill.phantomforce.use.2": "从防守者身后开刀",
   "worldcombat.skill.phantomforce.description.0": "现身劈下造成 %1$s 点接触伤害。",
-  "worldcombat.skill.phantomforce.description.1": "消失 %1$s 后现身，判定半径 %2$s 格，落在目标身后约 %3$s 格处。消失期间看不出也打不着，但目标可以走位。",
+  "worldcombat.skill.phantomforce.description.1": "消失 %1$s 后现身，落在目标身后约 %2$s 格处。消失期间看不出也打不着，但目标可以走位。",
   "worldcombat.skill.phantomforce.description.2": "现身那一刻最多震碎目标身上 %1$s 层守护（守住、看破、广域防守、硬化都是同一套守护机制），让这一刀直接落进去。",
   "worldcombat.skill.phantomforce.deep.on": "深潜式：在裂隙里停得更久、多震碎一层守护，但这一刀更轻、冷却更长——更安全，也更给对手走位的时间。",
   "worldcombat.skill.phantomforce.deep.off": "掠影式：出入更快、这一刀更重，但消失的窗口更短。",

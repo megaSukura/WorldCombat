@@ -140,12 +140,12 @@ namespace PokemonSkills {
 
     describe(flameburstId, [
         { key: "description.0", values: ["burst", "splash"] },
-        { key: "description.1", values: ["splashRadius", "drops"] },
-        { key: "description.2", values: ["reach", "velocity", "radius", "embers"] },
+        { key: "description.1", values: ["splashRadius"] },
+        { key: "description.2", values: ["reach", "velocity", "radius"] },
         { key: "spread.on", values: [], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },
         { key: "spread.off", values: [], when: function (context) { return read(context.detail.values, ["spread"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.burst", "tier.0.splash"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.burst", "tier.1.splashRadius", "tier.1.drops"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.burst", "tier.1.splashRadius"] }
     ]);
 }

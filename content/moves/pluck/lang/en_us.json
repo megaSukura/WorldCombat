@@ -5,7 +5,7 @@
   "worldcombat.skill.pluck.use.2": "Turn the target's Berry at once into your own healing or boost",
   "worldcombat.skill.pluck.description.0": "The peck deals about %1$s Flying contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.pluck.description.1": "The beak reaches %1$s blocks along your aim and up to %2$s blocks high; the nearest non-friendly in the corridor is struck.",
-  "worldcombat.skill.pluck.description.2": "A pecked Berry is swallowed at once at %1$s times effect, giving off about %2$s flecks.",
+  "worldcombat.skill.pluck.description.2": "A pecked Berry is swallowed at once at %1$s times effect.",
   "worldcombat.skill.pluck.swoop.on": "Swoop on: reach x1.3, lift x1.4, cooldown +6 ticks; you reach farther and higher at the cost of a x0.88 hit.",
   "worldcombat.skill.pluck.swoop.off": "Swoop off: normal reach and lift, hit x1.08.",
   "worldcombat.skill.pluck.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

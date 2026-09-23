@@ -63,9 +63,9 @@ namespace PokemonSkills {
     stages("simplebeam", [{ level: 40, values: { cooldown: 68 } }, { level: 55, values: { cooldown: 56 } }]);
 
     describe("simplebeam", [
-        { key: "description.0", values: ["hold", "rings"] },
+        { key: "description.0", values: ["hold"] },
         { key: "description.1", values: ["reach", "tempo", "aftercast"] },
-        { key: "description.2", values: ["beam", "fan"] },
+        { key: "description.2", values: ["fan"] },
         { key: "wave.on", values: ["fan", "recharge"], when: function (context) { return read(context.detail.values, ["wave"]) === true; } },
         { key: "wave.off", values: ["hold"], when: function (context) { return read(context.detail.values, ["wave"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

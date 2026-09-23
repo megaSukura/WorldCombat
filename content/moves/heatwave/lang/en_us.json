@@ -7,7 +7,6 @@
   "worldcombat.skill.heatwave.description.0": "The gust deals %1$s special damage to each body it sweeps; their special defence, type matchup and criticals are settled on impact.",
   "worldcombat.skill.heatwave.description.1": "A fan %1$s blocks long with a %2$s degree opening sweeps out over %3$s s, pushing everyone it catches out of position.",
   "worldcombat.skill.heatwave.description.2": "A body it catches has a %1$s chance to be set alight and is pushed about %2$s blocks away from the caster.",
-  "worldcombat.skill.heatwave.description.3": "which also drive the on-screen density.",
   "worldcombat.skill.heatwave.gale.on": "Gale: a wider fan that pushes farther and sweeps faster, at the cost of x0.88 power, x0.85 ignition and -2 cooldown.",
   "worldcombat.skill.heatwave.gale.off": "Scorch: x1.12 power and x1.15 ignition, but a narrower fan, a shorter push and +4 cooldown.",
   "worldcombat.skill.heatwave.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",

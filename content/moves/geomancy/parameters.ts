@@ -77,8 +77,8 @@ namespace PokemonSkills {
 
     describe("geomancy", [
         { key: "description.0", values: ["gift"] },
-        { key: "description.1", values: ["absorb", "circle", "runes"] },
-        { key: "description.2", values: ["rise", "linger"] },
+        { key: "description.1", values: ["absorb", "circle"] },
+        { key: "description.2", values: ["linger"] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wait"] },

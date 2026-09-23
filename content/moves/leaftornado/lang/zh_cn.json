@@ -4,7 +4,7 @@
   "worldcombat.skill.leaftornado.use.1": "同时割伤扎堆的敌人",
   "worldcombat.skill.leaftornado.use.2": "用叶屑不断掷概率致盲",
   "worldcombat.skill.leaftornado.description.0": "每一拍切割造成 %1$s 点特殊伤害；每一拍有 %2$s 概率降低 %3$s 级命中（同一目标整场最多结算一次）。",
-  "worldcombat.skill.leaftornado.description.1": "旋风半径 %1$s 格、持续 %2$s，每 %3$s 切割一拍，每拍卷起约 %4$s 片叶。",
+  "worldcombat.skill.leaftornado.description.1": "旋风半径 %1$s 格、持续 %2$s，每 %3$s 切割一拍。",
   "worldcombat.skill.leaftornado.description.2": "能在 %1$s 格内立起旋风；紧裹配置当前为 %2$s。",
   "worldcombat.skill.leaftornado.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.leaftornado.value.shred": "切割威力",

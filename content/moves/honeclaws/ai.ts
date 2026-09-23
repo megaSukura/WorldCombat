@@ -1,8 +1,8 @@
 /**
  * 磨爪 / honeclaws 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁、且在 ai.maxChase（默认 14）内时先磨一轮再压上去；没有威胁时只在整备命令
- *   （驻守／自主／工作）下随手磨一次。它是本族最便宜的一支，所以允许在拉锯中反复补——锋口一掉就会再磨。
+ * 什么局面有意义：有威胁、且在 ai.maxChase（默认 14）内时先磨一轮再压上去。它是本族最便宜的一支，
+ *   所以允许在拉锯中反复补——锋口一掉就会再磨。
  * 什么时候最想出手：威胁还在 ai.minGap（默认 2）之外时 priority 100——抢在共享交战次序前把攻与命中垫起来；
  *   已经贴身就让位给普通攻击，不为磨爪站着挨打。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -16,8 +16,10 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "honeclaws")) return false;
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
-            return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
+            if (!threat) return false;
+            const gap = CompanionBehavior.distance(self.point, threat.point);
+            if (gap < CompanionBehavior.ai<number>(capability, "minGap", 2)) return false;
+            return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

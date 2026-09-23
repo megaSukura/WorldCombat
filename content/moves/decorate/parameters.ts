@@ -67,7 +67,7 @@ namespace PokemonSkills {
 
     describe("decorate", [
         { key: "description.0", values: ["gift"] },
-        { key: "description.1", values: ["veneer", "trinkets"] },
+        { key: "description.1", values: ["veneer"] },
         { key: "description.2", values: ["reach", "tempo", "aftercast", "wait"] },
         { key: "timing", values: [] }
     ]);

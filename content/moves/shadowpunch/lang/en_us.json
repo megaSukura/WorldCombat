@@ -5,7 +5,6 @@
   "worldcombat.skill.shadowpunch.use.2": "Grab and drag a target with the shadow",
   "worldcombat.skill.shadowpunch.description.0": "A contact punch of about %1$s; defence, type matchup and crit are settled on the hit.",
   "worldcombat.skill.shadowpunch.description.1": "The shadow runs into any target shadow within %1$s blocks at %2$s blocks/tick.",
-  "worldcombat.skill.shadowpunch.description.2": "The fist has a %1$s block collision radius and rises %2$s blocks out of the shadow.",
   "worldcombat.skill.shadowpunch.hold.on": "Grounding: the fist grabs the target and drags it %1$s blocks toward the user as control, at about 15%% less power.",
   "worldcombat.skill.shadowpunch.hold.off": "Ambush: no slow and no drag, about 18%% heavier.",
   "worldcombat.skill.shadowpunch.timing": "Cast on an enemy within %1$s blocks; windup %2$s s then costs %4$s PP, recover %3$s s, cooldown %5$s s.",

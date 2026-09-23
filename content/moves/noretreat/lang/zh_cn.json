@@ -1,9 +1,9 @@
 {
   "worldcombat.skill.noretreat.summary": "一声怒吼顶起全身的力，同时把脚钉进地里：攻击、防御、特攻、特防、速度各 +1，但这段时间里无法移动。已经立过誓时不能再立；低血时把自己钉在别人刀下并不划算。",
-  "worldcombat.skill.noretreat.use.0": "在开打前把全身顶满，逼对手在你的阵里正面接战",
+  "worldcombat.skill.noretreat.use.0": "贴近目标后强化自己，站定迎战",
   "worldcombat.skill.noretreat.use.1": "被追上时用一次全项强化换最后一段输出",
   "worldcombat.skill.noretreat.use.2": "配合队友的控制，把强化窗口放在对方走不掉的时候",
-  "worldcombat.skill.noretreat.description.0": "立誓后把自己钉在原地约 %1$s，脚下阵环半径约 %2$s 格；这段时间里无法移动，直到时长走完或被击倒。",
+  "worldcombat.skill.noretreat.description.0": "施放后约 %1$s 内无法移动。",
   "worldcombat.skill.noretreat.description.1": "背水式提高五项能力等级，疾战式提高攻击、特攻与速度。",
   "worldcombat.skill.noretreat.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s；已经立过誓时不能再立。",
   "worldcombat.skill.noretreat.option.on": "疾战：只顶起攻击、特攻、速度三项，立誓时长减半、冷却 ×0.75——出手快、脱身快，但放弃双防。",

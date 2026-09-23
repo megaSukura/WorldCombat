@@ -147,6 +147,7 @@ namespace PokemonSkills {
 
     define({
         id: imprisonId,
+        cooldownParameter: "recharge",
         name: "封印",
         description: "把自己会的每一手锁进一枚封印并铺成领域；领域内的对手，凡是用你也会的招式，都被顶回去。换一手不在名单里的招就能打，离开领域或解除施法者的封印即可脱身。",
         uses: ["把与对手重合的招式整片锁死", "压住会同样招式的镜像 / 同类对手", "逼对手离开它熟练的那几手"],

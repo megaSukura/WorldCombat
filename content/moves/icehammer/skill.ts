@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "icehammer",
+        cooldownParameter: "recharge",
         name: "Ice Hammer",
         description: "The user swings its strong, heavy fist at the target to inflict damage. This also lowers the user's Speed stat.",
         uses: ["用一记裹冰重砸打硬目标，顺带把它冻慢", "在落点结冰逼对手走位", "对已经冰缓的目标补一记更重的碎冰"],

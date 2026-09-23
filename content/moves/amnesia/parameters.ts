@@ -64,7 +64,7 @@ namespace PokemonSkills {
             F.when(F.pref("deep", text("worldcombat.skill.amnesia.preference.deep")), F.const(6), F.const(1)).clamp(1, 6).round(0),
             "忘记数量", {
                 unit: " 个",
-                description: "这次失忆忘掉几个缠绕心智的状态；彻底失忆全忘，一时失神只忘最重的一个。"
+                description: "按混乱、着迷、挑衅、无理取闹、再来一次和定身法的顺序，清除至多这么多项；彻底失忆清除全部六类，一时失神只清除最先存在的一项。"
             }),
         /** 起手：速度决定失神多快，彻底清空更慢。 */
         tempo: seconds(
@@ -93,8 +93,8 @@ namespace PokemonSkills {
         { key: "description.0", values: ["poise"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
-        { key: "description.1", values: ["blank", "void"] },
-        { key: "description.2", values: ["motes", "rings", "purge"] },
+        { key: "description.1", values: ["blank"] },
+        { key: "description.2", values: ["purge"] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blank", "tier.0.wait"] },

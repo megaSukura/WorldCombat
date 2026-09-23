@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: hydrosteamId,
+        cooldownParameter: "recharge",
         name: "水蒸气",
         description: "把水烧滚，从身前喷出一条向外张开的蒸汽扇面：范围内敌人受到特殊伤害、被顶开、被熏得湿透，身上的冰冻也被化开。强日照下这一喷更烫，也不会像普通水招那样减弱。",
         uses: ["在烈日下打出一记增强的水击", "一次罩住身前一排敌人", "化开目标身上的冰冻", "把烫人的湿气留在敌人身上"],

@@ -159,7 +159,7 @@ namespace PokemonSkills {
     describe("volttackle", [
         { key: "description.0", values: ["surge", "charge", "pace", "radius"] },
         { key: "description.1", values: ["numbChance", "numbTicks", "recoil", "shove"] },
-        { key: "description.2", values: ["arc", "arcPower", "arcChance", "sparks"] },
+        { key: "description.2", values: ["arc", "arcPower", "arcChance"] },
         { key: "discharge.on", values: [], when: function (context) { return read(context.detail.values, ["discharge"]) === true; } },
         { key: "discharge.off", values: [], when: function (context) { return read(context.detail.values, ["discharge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

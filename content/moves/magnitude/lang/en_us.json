@@ -6,7 +6,7 @@
   "worldcombat.skill.magnitude.use.3": "Harass repeatedly on a very short cooldown",
   "worldcombat.skill.magnitude.description.0": "At magnitude 7 each grounded foe in the ring takes about %1$s damage; a cast scales with the rolled magnitude (4/5/6/7/8/9/10 as x0.14/0.43/0.71/1/1.29/1.57/2.14). The target's defence, type and crit are settled on the hit.",
   "worldcombat.skill.magnitude.description.1": "It reaches %1$s blocks; those caught are jolted upward at %2$s blocks/tick and staggered %3$s blocks. Airborne targets are not shaken.",
-  "worldcombat.skill.magnitude.description.2": "A rolled magnitude of %1$s or more interrupts the action of anyone in the ring; the ground shudders in %2$s crests and throws up about %3$s dust.",
+  "worldcombat.skill.magnitude.description.2": "A rolled magnitude of %1$s or more interrupts the action of anyone in the ring.",
   "worldcombat.skill.magnitude.fault.on": "Deep focus: the rolled magnitude is shifted +1 (higher floor, higher average), the reach is x1.15 and the interrupt threshold -1, at wind-up +4 and cooldown +14.",
   "worldcombat.skill.magnitude.fault.off": "Shallow focus: the magnitude may land anywhere in 4..10 (possibly small), the reach is x0.9, and wind-up and cooldown are shorter for faster hands.",
   "worldcombat.skill.magnitude.timing": "Cast within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

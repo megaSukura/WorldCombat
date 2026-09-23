@@ -4,7 +4,7 @@
   "worldcombat.skill.revenge.use.1": "把冲上来的对手从身上打退",
   "worldcombat.skill.revenge.use.2": "惩罚先手近身攻击自己的敌人",
   "worldcombat.skill.revenge.description.0": "回拳造成约 %1$s 的物理伤害；若最近 %2$s 秒内被当前目标本人打过，威力翻倍。",
-  "worldcombat.skill.revenge.description.1": "出拳距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中把目标送开 %4$s 格，带起约 %5$s 道拳风。",
+  "worldcombat.skill.revenge.description.1": "出拳距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中把目标送开 %4$s 格。",
   "worldcombat.skill.revenge.endure.on": "开启硬扛：记仇窗口多 0.8 秒、击退 ×1.20，站住等对手先动手；代价是本击约 ×0.92、起手多 2 刻、冷却多 6 刻。",
   "worldcombat.skill.revenge.endure.off": "关闭硬扛：本击约 ×1.06、出拳更快，接住立刻还手。",
   "worldcombat.skill.revenge.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

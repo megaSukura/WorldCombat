@@ -86,7 +86,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["danceRadius", "dazeTicks"] },
         { key: "careful.on", values: [], when: function (context) { return read(context.detail.values, ["careful"]) === true; } },
         { key: "careful.off", values: [], when: function (context) { return read(context.detail.values, ["careful"]) !== true; } },
-        { key: "description.1", values: ["sway", "beats", "motes"] },
+        { key: "description.1", values: ["sway"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

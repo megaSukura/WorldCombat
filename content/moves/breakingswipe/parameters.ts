@@ -116,7 +116,7 @@ namespace PokemonSkills {
     describe("breakingswipe", [
         { key: "description.0", values: ["sweep"] },
         { key: "description.1", values: ["radius", "arc"] },
-        { key: "description.2", values: ["push", "stages", "scales"] },
+        { key: "description.2", values: ["push", "stages"] },
         { key: "description.3", values: ["furrow"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },

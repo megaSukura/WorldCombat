@@ -10,7 +10,7 @@
   "worldcombat.skill.switcheroo.through.off": "触到即停：交换后在目标身边收住，落位更稳，但不脱离它的攻击范围。",
   "worldcombat.skill.switcheroo.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 掠出；收势 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.switcheroo.growth.0": "达到 %1$s 级，突进距离提升至 %2$s 格，冷却调整为 %3$s 秒。",
-  "worldcombat.skill.switcheroo.growth.1": "达到 %1$s 级，突进距离提升至 %2$s 格、每刻掠行提升至 %3$s 格、火花增至 %4$s 颗。",
+  "worldcombat.skill.switcheroo.growth.1": "达到 %1$s 级，突进距离提升至 %2$s 格、每刻掠行提升至 %3$s 格。",
   "worldcombat.skill.switcheroo.value.charge": "蓄势",
   "worldcombat.skill.switcheroo.value.reach": "突进距离",
   "worldcombat.skill.switcheroo.value.step": "掠行速度",

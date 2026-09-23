@@ -104,6 +104,7 @@ namespace PokemonSkills {
 
     define({
         id: "scorchingsands",
+        cooldownParameter: "recharge",
         name: "Scorching Sands",
         description: "The user throws scorching sand at the target to attack. This may also leave the target with a burn.",
         uses: ["朝一点扬一把热沙一次烫到一圈人", "把地表盖上一层沙封住一片地", "在沙地上铲更多沙、铺得更广", "对湿身的目标多算一份伤害"],

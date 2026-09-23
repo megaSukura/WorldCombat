@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: "zingzap",
+        cooldownParameter: "recharge",
         name: "Zing Zap",
         description: "一边朝目标冲一边攒静电，撞上时把攒下的电一次放出：冲得越远威力越高、越容易把目标电懵；开启跳电时电还会跳向目标旁边的下一个人。",
         uses: ["拉一段冲程撞出一次高蓄电重击", "把冲上来的对手电懵", "借目标把电跳向它身边的第二个人"],
@@ -108,7 +109,7 @@ namespace PokemonSkills {
                         charge: charge, sparks: Math.round(14 + charge * 60) }, 28);
                 sound(current, "cobblemon:impact.electric");
                 if (landed) {
-                    scope.displace(victim, direction.scale(0.7));
+                    if (scope.valid(victim)) scope.displace(victim, direction.scale(0.7));
                     WorldFeedback.keep(scope, "zingzap:static:" + String(victim.ref()), zingzapScene, 1, hit.position(),
                         { moment: "static", target: String(victim.ref()), scale: scale, sparks: Math.round(6 + charge * 24) }, staticTicks);
                     WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.3, 0)), zingzapHitText, [], 26);

@@ -5,7 +5,6 @@
   "worldcombat.skill.quickattack.use.2": "Close a short gap when you cannot catch up",
   "worldcombat.skill.quickattack.description.0": "The lunge deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.quickattack.description.1": "Dash up to %1$s blocks along your aim at %2$s blocks per tick; a landed hit shoves the target about %3$s blocks and stops there.",
-  "worldcombat.skill.quickattack.description.2": "It trails about %1$s speed lines, which also sets the density of the effect.",
   "worldcombat.skill.quickattack.eager.on": "Eager form: 1 tick faster off the mark (instant at best) and 7% further, but a tenth lighter and 4 ticks more cooldown.",
   "worldcombat.skill.quickattack.eager.off": "Grounded form: a solid charge, a heavier hit and a shorter cooldown, with standard preparation and reach.",
   "worldcombat.skill.quickattack.timing": "Cast within %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

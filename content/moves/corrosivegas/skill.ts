@@ -30,6 +30,7 @@ namespace PokemonSkills {
 
     define({
         id: "corrosivegas",
+        cooldownParameter: "recharge",
         name: "腐蚀气体",
         description: "以自身为中心炸开一片强酸毒雾：雾里所有其他活体携带的道具被当场溶毁、谁也不得到，自己也沾上短暂的沾酸身份，落地后留一段残雾。不造成伤害，队友一视同仁。",
         uses: ["一次溶掉围上来一圈对手的道具", "在道具战里清场，让双方都失去携带物", "把对方的树果、宝石、剩饭一起废掉"],

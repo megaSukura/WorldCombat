@@ -5,7 +5,7 @@
   "worldcombat.skill.psywave.use.2": "Play as a steady ranged attack in steady mode",
   "worldcombat.skill.psywave.description.0": "Base wave power %1$s; each cast rolls an intensity between (1 - %2$s) and (1 + %2$s) of it, so how much this one deals changes every time.",
   "worldcombat.skill.psywave.description.1": "The front travels %1$s blocks at %2$s blocks/tick with a %3$s block hit width.",
-  "worldcombat.skill.psywave.description.2": "The front pierces up to %1$s targets; the picture's ring count is based on %2$s and rises or falls with this cast's intensity.",
+  "worldcombat.skill.psywave.description.2": "The front pierces up to %1$s targets.",
   "worldcombat.skill.psywave.surge.on": "Surge mode: power x1.2 and swing x1.5 for wilder high and low rolls, with 3 ticks faster recovery, at the cost of unchanged reach and no cooldown discount.",
   "worldcombat.skill.psywave.surge.off": "Steady flow: power x0.88 and swing x0.5, with x1.1 reach and -3 ticks cooldown - stable and long.",
   "worldcombat.skill.psywave.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

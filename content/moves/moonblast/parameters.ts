@@ -143,11 +143,10 @@ namespace PokemonSkills {
         { key: "description.0", values: ["beam"] },
         { key: "description.1", values: ["arcChance", "dropStages"] },
         { key: "description.2", values: ["moonlight"] },
-        { key: "description.3", values: ["burst", "rays", "focusMotes"] },
+        { key: "description.3", values: ["burst"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["condense"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["condense"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.beam"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.rays"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.beam"] }
     ]);
 }

@@ -3,7 +3,7 @@
   "worldcombat.skill.howl.use.0": "开战前把全队的物攻抬起来",
   "worldcombat.skill.howl.use.1": "把后来走进范围的伙伴也吼起来",
   "worldcombat.skill.howl.use.2": "单打独斗时集中气势，把攻击拉高两级",
-  "worldcombat.skill.howl.description.0": "嗥声把攻击抬高 %1$s 级（群嚎及半径 %2$s 格内的每个伙伴，独啸只及自身），带起约 %3$s 点声点。",
+  "worldcombat.skill.howl.description.0": "嗥声把攻击抬高 %1$s 级（群嚎及半径 %2$s 格内的每个伙伴，独啸只及自身）。",
   "worldcombat.skill.howl.description.1": "斗志在身上撑约 %1$s 秒；嗥声每 20 刻向外回荡一次，窗口走完这段提升一并收回。",
   "worldcombat.skill.howl.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.howl.cry.pack": "群嚎：自己与半径内每个伙伴各 +1 级、范围大、窗口长，代价是起手 +1 刻、冷却 ×1.1——单人所获较少。",

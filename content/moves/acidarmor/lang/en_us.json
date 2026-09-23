@@ -4,7 +4,7 @@
   "worldcombat.skill.acidarmor.use.1": "Spread a corrosive puddle under the opponent",
   "worldcombat.skill.acidarmor.use.2": "Ride out a round of close-range hits as a slicker liquid",
   "worldcombat.skill.acidarmor.description.0": "While liquid, Defense is raised by %1$s level(s) for about %2$s.",
-  "worldcombat.skill.acidarmor.description.1": "Melting splashes about %1$s acid droplets, makes the body slicker (faster movement) and slips off currents binds on the spot.",
+  "worldcombat.skill.acidarmor.description.1": "The liquid form moves faster and immediately breaks free of existing restraints.",
   "worldcombat.skill.acidarmor.acid.on": "Acid pool: leaves a puddle %1$s blocks across for about %2$s; opponents who stand in it are poisoned.",
   "worldcombat.skill.acidarmor.acid.off": "Slick body: no puddle, in exchange for a longer liquid window and a faster glide - trading field control for stronger self-preservation.",
   "worldcombat.skill.acidarmor.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",

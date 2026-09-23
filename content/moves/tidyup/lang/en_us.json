@@ -4,7 +4,7 @@
   "worldcombat.skill.tidyup.use.1": "Sweep the foe's substitute away and force it to pay the health again",
   "worldcombat.skill.tidyup.use.2": "Top Attack and Speed up before the fight starts",
   "worldcombat.skill.tidyup.description.0": "A sweep of %3$s blocks clears this ground of Spikes, Stealth Rock, Sticky Web, Toxic Spikes and substitutes; then Attack rises by %1$s and Speed by %2$s.",
-  "worldcombat.skill.tidyup.description.1": "The kit lasts %1$s over %2$s sweeps and raises about %3$s debris; when the window ends the Attack and Speed it raised are taken back.",
+  "worldcombat.skill.tidyup.description.1": "The kit lasts %1$s; when the window ends the Attack and Speed it raised are taken back.",
   "worldcombat.skill.tidyup.wide.on": "Wide sweep: the sweep radius is multiplied by 1.35, clearing more distant traps, at the cost of a 3-tick longer wind-up, 12 ticks more cooldown and the kit window multiplied by 0.9.",
   "worldcombat.skill.tidyup.wide.off": "In-place sweep: faster, with a longer window and a shorter cooldown, but it only reaches traps at your feet.",
   "worldcombat.skill.tidyup.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",

@@ -5,7 +5,6 @@
   "worldcombat.skill.metronome.description.0": "After wagging for %1$s it borrows and performs one random move from every implemented move.",
   "worldcombat.skill.metronome.description.1": "The stirred move can reach %1$s; wagging again costs %2$s.",
   "worldcombat.skill.metronome.description.2": "Current bias: %1$s. Near or far narrows the candidates in exchange for a draw that fits the distance.",
-  "worldcombat.skill.metronome.description.3": "The wag shows %1$s candidate sparks, growing with Special Attack.",
   "worldcombat.skill.metronome.preference.bias": "Metronome bias",
   "worldcombat.skill.metronome.preference.bias.help": "Full spectrum keeps any move; near draws only from close-range moves; far draws only from long-range moves. A bias narrows the pool, and falls back to the full pool when nothing fits.",
   "worldcombat.skill.metronome.preference.bias.none": "Full spectrum",

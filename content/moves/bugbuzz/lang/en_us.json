@@ -6,7 +6,7 @@
   "worldcombat.skill.bugbuzz.description.0": "The sound wave deals %1$s special damage to each target it sweeps.",
   "worldcombat.skill.bugbuzz.description.1": "Each swept target has a %1$s chance to lose %2$s stage(s) of Sp. Def.",
   "worldcombat.skill.bugbuzz.description.2": "The cone opens %1$s degrees and reaches %2$s blocks, fading to %3$s of its power at the edge; walls do not stop sound.",
-  "worldcombat.skill.bugbuzz.description.3": "It spreads about %1$s concentric rings of sound; deep resonance is currently %2$s.",
+  "worldcombat.skill.bugbuzz.description.3": "Deep resonance is currently %1$s.",
   "worldcombat.skill.bugbuzz.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.bugbuzz.growth.0": "From level %1$s the buzz rises to %2$s power and %3$s blocks of range.",
   "worldcombat.skill.bugbuzz.value.core": "Buzz power",

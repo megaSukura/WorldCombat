@@ -93,7 +93,7 @@ namespace PokemonSkills {
 
     describe(flowershieldId, [
         { key: "description.0", values: ["bloom", "guardTicks"] },
-        { key: "description.1", values: ["guard", "petals"] },
+        { key: "description.1", values: ["guard"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === 1; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== 1; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

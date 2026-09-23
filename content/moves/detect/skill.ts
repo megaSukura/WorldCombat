@@ -78,6 +78,7 @@ namespace PokemonSkills {
 
     define({
         id: "detect",
+        cooldownParameter: "charge",
         name: "Detect",
         description: "Enables the user to evade all attacks. Its chance of failing rises if it is used in succession.",
         uses: ["对手起手瞬间拆掉它的第一击", "边靠近边读招，读中后立刻反击", "打断一次致命的收招"],

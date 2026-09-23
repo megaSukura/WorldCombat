@@ -4,7 +4,7 @@
   "worldcombat.skill.sacredsword.use.1": "把目标涨起来的防御等级直接无视掉",
   "worldcombat.skill.sacredsword.use.2": "在射程外缘一刀切开单个目标",
   "worldcombat.skill.sacredsword.description.0": "一记切斩造成约 %1$s 点接触伤害，刃程约 %2$s 格；目标的防御能力等级被这一招忽略。",
-  "worldcombat.skill.sacredsword.description.1": "判定半宽约 %1$s 格、覆盖高约 %2$s 格；出刀前压上约 %3$s 格，刃口亮起约 %4$s 道光痕。",
+  "worldcombat.skill.sacredsword.description.1": "出刀前压上约 %1$s 格。",
   "worldcombat.skill.sacredsword.iaido.on": "居合式：刃程约 %1$s 格、压上约 %2$s 格、每刀约 %3$s 点，拉得更远更狠，但起手与冷却更久。",
   "worldcombat.skill.sacredsword.iaido.off": "站斩式：原地出刀，刃程约 %1$s 格、压上约 %2$s 格、每刀约 %3$s 点，节奏更快。",
   "worldcombat.skill.sacredsword.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

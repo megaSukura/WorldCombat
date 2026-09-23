@@ -98,8 +98,8 @@ namespace PokemonSkills {
     ]);
 
     describe("tailglow", [
-        { key: "description.0", values: ["gift", "beats", "motes"] },
-        { key: "description.1", values: ["span", "glow", "drift"] },
+        { key: "description.0", values: ["gift"] },
+        { key: "description.1", values: ["span"] },
         { key: "description.2", values: ["poise"] },
         { key: "steady.on", values: [], when: function (context) { return read(context.detail.values, ["steady"]) === true; } },
         { key: "steady.off", values: [], when: function (context) { return read(context.detail.values, ["steady"]) !== true; } },

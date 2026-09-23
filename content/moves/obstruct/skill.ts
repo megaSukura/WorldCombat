@@ -23,7 +23,7 @@ namespace PokemonSkills {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
     }
     function obstructContact(data: any): boolean {
-        return data && (data.direct === true || data.kind === "move" && data.contact === true);
+        return DamageSemantics.read(data).contact;
     }
 
     GuardEffects.register(ObstructRule, {
@@ -74,6 +74,7 @@ namespace PokemonSkills {
 
     define({
         id: "obstruct",
+        cooldownParameter: "charge",
         name: "Obstruct",
         description: "This move enables the user to protect itself from all attacks. Its chance of failing rises if it is used in succession. Contact with it lowers the attacker's Defence sharply.",
         uses: ["引诱近战对手撞上拒马", "为后续攻击先把对手打软", "守住一条窄口，逼对手绕路"],

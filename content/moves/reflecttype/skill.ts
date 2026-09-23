@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "reflecttype",
+        cooldownParameter: "recharge",
         name: "Reflect Type",
         description: "举镜照住对手，把它的属性原样反射到自己身上；对手当前是什么属性，自己就变成什么属性。",
         uses: ["照抄对手的属性来翻受击面", "跟着对手被改过的属性一起变", "只取主属、避开副属性带来的弱点"],

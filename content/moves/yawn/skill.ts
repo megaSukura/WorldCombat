@@ -76,6 +76,7 @@ namespace PokemonSkills {
 
     define({
         id: yawnId,
+        cooldownParameter: "recharge",
         name: "哈欠",
         description: "当面打一个大哈欠，把睡意挂在目标身上。它必中，但要等几秒才睡着——目标能在这段窗口里解掉睡意，或被别的状态占住就压不下去。",
         uses: ["在一个目标身上预埋睡眠，几秒后再动手", "逼对手花资源解状态或抢先中别的异常", "配合队友的食梦或恶梦"],

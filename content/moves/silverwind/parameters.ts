@@ -1,11 +1,11 @@
 /**
  * 银色旋风 / silverwind —— 参数与伤害段。
  *
- * 原生事实：Bug／特殊／威力 60／命中 100／PP 5／目标单体／10% 概率让自身全部能力各升 1 级。
+ * 原生事实：Bug／特殊／威力 60／命中 100／PP 5／目标单体／10% 概率让自身五项战斗能力各升 1 级。
  *
  * 翻译：把「在风中掺入鳞粉攻击对手」落成一记**向前铺开、缓缓飘动的一大扇银鳞**——施法者抖翅，鳞粉被风
  * 推成一片扇形向前铺开，慢慢往前飘；站在扇面里的敌人各被割一下。鳞粉是实物，挡不住、也穿不过墙，
- * 飘完就落下，不留场。原生的「全部能力提升」是回旋的鳞粉落在自己身上的结果：扇面里回卷的一撮鳞粉
+ * 飘完就落下，不留场。原生的「五项战斗能力提升」是回旋的鳞粉落在自己身上的结果：扇面里回卷的一撮鳞粉
  * 有概率把攻击、防御、特攻、特防、速度一起抬 1 级。
  *
  * 与同族分开（同为「命中后反哺出手者」的余波族）：原始之力以自身为心、原地向外轰开；奇异之风奔袭到目标点
@@ -75,12 +75,13 @@ namespace PokemonSkills {
                 .plus(F.level().minus(28).times(0.001).clamp(0, 0.05))
                 .plus(F.when(F.pref("dense"), F.const(0.05), F.const(0)))
                 .clamp(0.06, 0.35).round(3),
-            "反哺概率", "回卷的鳞粉落在自身、把全部能力各抬 1 级的概率；原生 10% 起，特攻与等级越高越容易抓住，浓鳞式更稳。"),
+            "反哺概率", "回卷的鳞粉落在自身、把五项战斗能力各抬 1 级的概率；原生 10% 起，特攻与等级越高越容易抓住，浓鳞式更稳。"),
+        surgeTicks: seconds(F.base(100), "反哺持续", "本招的五项能力强化持续时间；再次触发刷新时间，保持一层。"),
         surgeStages: formula(
             F.base(1),
             "反哺级数", {
                 unit: "级",
-                description: "一次反哺让自身全部能力各提升的能力等级。"
+                description: "一次反哺让自身五项战斗能力各提升的能力等级。"
             }),
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(60).times(0.03).clamp(-3, 4))
@@ -103,9 +104,9 @@ namespace PokemonSkills {
 
     describe("silverwind", [
         { key: "description.0", values: ["gale", "reach"] },
-        { key: "description.1", values: ["span", "drift"] },
-        { key: "description.2", values: ["surgeChance", "surgeStages"] },
-        { key: "description.3", values: ["scales", "pref.dense"] },
+        { key: "description.1", values: ["span"] },
+        { key: "description.2", values: ["surgeChance", "surgeStages", "surgeTicks"] },
+        { key: "description.3", values: ["pref.dense"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.gale", "tier.0.reach"] }
     ]);

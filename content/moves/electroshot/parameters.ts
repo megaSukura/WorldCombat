@@ -108,7 +108,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["lance"] },
         { key: "description.1", values: ["charge", "boost"] },
         { key: "description.2", values: ["velocity", "reach", "radius"] },
-        { key: "description.3", values: ["homing", "arcs"] },
+        { key: "description.3", values: ["homing"] },
         { key: "stance.chase", values: [], when: function (context) { return !!read(context.detail.values, ["chase"]); } },
         { key: "stance.direct", values: [], when: function (context) { return !read(context.detail.values, ["chase"]); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

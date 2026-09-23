@@ -4,8 +4,6 @@ namespace PokemonSkills {
     const junglehealingText = "world_combat.move.junglehealing.text.embrace";
     /** 表现里的参考半径：`data.scale = 实际藤蔓半径 / 这个数`。 */
     export const junglehealingReferenceRadius = 3.0;
-    /** 丛林要化掉的主异常（剧毒由 poison 身份一并带走）。 */
-    export const junglehealingMalaise = ["poison", "burn", "paralysis", "sleep", "frozen"];
 
     /** 回复走共享治疗入口：宝可梦经过 NativeEffects.heal（含受治疗加成），其他战斗者直接写 MC 生命；返回世界单位回复量。 */
     function junglehealingHeal(world: CombatWorld, target: CombatActor, fraction: number, cause: string): number {
@@ -26,8 +24,9 @@ namespace PokemonSkills {
     }
 
     define({
-        id: junglehealingId, name: "丛林治疗",
-        description: "藤蔓与嫩芽围住自己和身边伙伴，回复生命并清除主异常。脚下的自然地面提高回复与范围；深根进一步加强这两项，起手与冷却也更长。",
+        id: junglehealingId,
+        cooldownParameter: "wait", name: "丛林治疗",
+        description: "藤蔓与嫩芽围住自己和身边伙伴，回复生命并清除有害状态效果。脚下的自然地面提高回复与范围；深根进一步加强这两项，起手与冷却也更长。",
         uses: ["给身边的一队伙伴回血并一起解状态", "在自然地面上一次净化整组人"],
         kind: "self", range: 2.6, maxRange: 6, prepare: 9, active: 1, recover: 5, cooldown: 140, style: "verdant",
         maximumTicks: 240,
@@ -49,7 +48,7 @@ namespace PokemonSkills {
                 range: p(junglehealingId, "radius", context)
             };
         },
-        /** 圈里有伤者或带主异常的人（含自己）才值得唤丛林。 */
+        /** 圈里有伤者或带有害状态效果的人（含自己）才值得唤丛林。 */
         ready: function (action) {
             const world = action.sense(), self = action.actor(), body = world.observe(self);
             if (body === null) return "no-body";
@@ -60,8 +59,7 @@ namespace PokemonSkills {
                 if (!world.friendly(other)) continue;
                 const view = world.observe(other);
                 if (view !== null && view.health() < view.maxHealth() - 0.01) return "";
-                for (let j = 0; j < junglehealingMalaise.length; j++)
-                    if (CombatStatus.has(world, other, junglehealingMalaise[j])) return "";
+                if (CombatStatus.hasHarmful(world, other)) return "";
             }
             return "no-wounded";
         },
@@ -93,9 +91,7 @@ namespace PokemonSkills {
                 const before = world.observe(other);
                 if (before === null) continue;
                 const gained = junglehealingHeal(world, other, fraction, "junglehealing");
-                let cleaned = 0;
-                for (let j = 0; j < junglehealingMalaise.length; j++)
-                    if (CombatStatus.cure(world, other, junglehealingMalaise[j])) cleaned++;
+                const cleaned = CombatStatus.cureHarmful(world, other);
                 if (gained <= 0 && cleaned <= 0) continue;
                 const after = world.observe(other);
                 const point = after === null ? before.position() : after.position();

@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "constrict",
+        cooldownParameter: "recharge",
         name: "Constrict",
         description: "The target is attacked with long, creeping tentacles, vines, or the like. This may also lower the target's Speed stat.",
         uses: ["缠住一名跑得快的目标", "把对手按在原地交给队友", "用最低的代价给目标留一个持续减速"],

@@ -6,7 +6,7 @@
   "worldcombat.skill.meteormash.description.0": "流星拳正面砸中造成 %1$s 点物理伤害，冲刺距离 %2$s 格。",
   "worldcombat.skill.meteormash.description.1": "落点 %2$s 格一圈内的其他敌人各吃 %1$s 点物理伤害，并被震开 %3$s 格。",
   "worldcombat.skill.meteormash.description.2": "有 %1$s 概率让自身攻击提升 %2$s 级。",
-  "worldcombat.skill.meteormash.description.3": "落点 %1$s 格的地面被砸成焦黑、停留 %2$s，当前陨星式为 %4$s。",
+  "worldcombat.skill.meteormash.description.3": "落点 %1$s 格的地面被砸成焦黑、停留 %2$s，当前陨星式为 %3$s。",
   "worldcombat.skill.meteormash.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.meteormash.growth.0": "%1$s 级起拳威升至 %2$s、震威 %3$s。",
   "worldcombat.skill.meteormash.value.impact": "拳威",

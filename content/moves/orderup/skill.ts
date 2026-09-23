@@ -82,6 +82,7 @@ namespace PokemonSkills {
 
     define({
         id: "orderup",
+        cooldownParameter: "recharge",
         name: "上菜",
         description: "以潇洒的身手端出一记不接触的精准下手：拍伤目标，震碎下手点周围的反射壁、光墙与极光幕；若身边带着小个子伙伴，还会按它的样子给自身（或分给队友）补上一项能力。",
         uses: ["一记不接触的优雅精准拍击", "带着小个子伙伴时顺手强化自身", "用碎壁与增益同时打开局面"],

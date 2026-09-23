@@ -4,7 +4,7 @@
   "worldcombat.skill.tailwhip.use.1": "为队友的物攻打开缺口",
   "worldcombat.skill.tailwhip.use.2": "把贴身绕后的敌人也一起削到",
   "worldcombat.skill.tailwhip.description.0": "被尾巴晃到者损失 %1$s 级防御，晃神持续 %2$s。",
-  "worldcombat.skill.tailwhip.description.1": "尾巴半径 %1$s，圈内看得见的非友方都会被晃到；一次甩出 %2$s 道尾迹。需要通视，掩体后甩不到。",
+  "worldcombat.skill.tailwhip.description.1": "尾巴半径 %1$s，圈内看得见的非友方都会被晃到。需要通视，掩体后甩不到。",
   "worldcombat.skill.tailwhip.description.2": "起手 %1$s，冷却 %2$s。以自身为圆心绕一整圈，身后的敌人也扫得到。",
   "worldcombat.skill.tailwhip.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.tailwhip.value.drop": "防御下降",

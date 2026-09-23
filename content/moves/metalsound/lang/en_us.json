@@ -4,7 +4,7 @@
   "worldcombat.skill.metalsound.use.1": "Keep a large Sp. Def drop up for a whole exchange",
   "worldcombat.skill.metalsound.use.2": "Start safely behind a wall, then send the sound through",
   "worldcombat.skill.metalsound.description.0": "The target loses %1$s stages of Sp. Def and the resonance rings for about %2$s.",
-  "worldcombat.skill.metalsound.description.1": "The sound reaches ears %1$s blocks away and scrapes out about %2$s sound rings; cover does not stop it.",
+  "worldcombat.skill.metalsound.description.1": "The sound reaches ears %1$s blocks away; cover does not stop it.",
   "worldcombat.skill.metalsound.description.2": "Grind for %1$s, cooldown %2$s.",
   "worldcombat.skill.metalsound.timing": "Range %1$s blocks, telegraph %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.metalsound.value.reach": "Resonance range",

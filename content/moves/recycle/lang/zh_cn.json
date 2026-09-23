@@ -10,7 +10,7 @@
   "worldcombat.skill.recycle.scavenge.off": "凭记忆再生：只按记忆里的那件复原，起手更短（×0.85），不碰世界里的东西。",
   "worldcombat.skill.recycle.timing": "自己施放，准备 %2$s 秒后消耗 %4$s PP 回收；收手 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.recycle.growth.0": "达到 %1$s 级，回收半径提升至 %2$s 格，冷却调整为 %3$s 秒。",
-  "worldcombat.skill.recycle.growth.1": "达到 %1$s 级，回收半径提升至 %2$s 格、回收火花增至 %3$s 颗。",
+  "worldcombat.skill.recycle.growth.1": "达到 %1$s 级，回收半径提升至 %2$s 格。",
   "worldcombat.skill.recycle.value.channel": "起手",
   "worldcombat.skill.recycle.value.drawRadius": "回收半径",
   "worldcombat.skill.recycle.value.motes": "回收火花",

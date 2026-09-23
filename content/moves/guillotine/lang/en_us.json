@@ -2,7 +2,7 @@
   "worldcombat.skill.guillotine.summary": "The pincers open wide across a wedge in front and clamp shut: whatever is still in the jaws is torn in one blow. It is the shortest and fastest member - step in and snap - at the cost of the longest recovery, so a missed clamp leaves it standing in place.",
   "worldcombat.skill.guillotine.description.0": "The jaws reach %1$s blocks and open %2$s degrees; the nearest target inside the wedge is finished in one blow. The target's defence, armour and toughness do not apply - only type immunity can stop it.",
   "worldcombat.skill.guillotine.description.1": "There are %1$s s between the jaws opening and the clamp; every level above the target shortens it, and the target must leave the wedge in that time.",
-  "worldcombat.skill.guillotine.description.2": "Recovery takes %2$s seconds, including after a miss.",
+  "worldcombat.skill.guillotine.description.2": "Recovery takes %1$s seconds, including after a miss.",
   "worldcombat.skill.guillotine.wide.on": "Wide form: jaw angle x1.25 and longer jaws, at the cost of a slower clamp and longer recovery - easier to catch a target that stepped aside.",
   "worldcombat.skill.guillotine.wide.off": "Narrow form: clamps sooner and recovers faster, but only catches the small patch straight ahead.",
   "worldcombat.skill.guillotine.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",

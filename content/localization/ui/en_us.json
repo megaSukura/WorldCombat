@@ -138,6 +138,7 @@
   "worldcombat.ui.reasons.target-left": "Target left or fainted",
   "worldcombat.ui.reasons.out-of-range": "Target is out of range",
   "worldcombat.ui.reasons.invalid-target": "This target is not suitable",
+  "worldcombat.ui.reasons.already-active": "This status is already active; use it again after it ends",
   "worldcombat.ui.reasons.target-not-visible": "Target is not visible",
   "worldcombat.ui.reasons.capture-in-progress": "Capture in progress; attacks paused",
   "worldcombat.ui.reasons.path-blocked": "Path obstructed",

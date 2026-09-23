@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: "submission",
+        cooldownParameter: "recharge",
         name: "Submission",
         description: "The user grabs the target and recklessly dives for the ground. This also damages the user a little.",
         uses: ["把贴脸的目标抓住按倒，为队友创造输出窗口", "打断一个正要出手的对手", "用压制把对手钉在原地、自己挨一下"],

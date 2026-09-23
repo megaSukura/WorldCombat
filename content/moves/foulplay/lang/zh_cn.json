@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.foulplay.summary": "伸出一条暗影手臂爬进对手的影子，从它自己脚下竖起一簇暗影棘。这一招不吃施法者自己的攻击，而是读**目标的物攻**：对手越壮，借来的力气越大、这一记越重。",
   "worldcombat.skill.foulplay.description.0": "这一记的伤害 %1$s 由目标当下的物攻决定：对手越强，威力越高；施法者自己的攻击几乎不参与。",
-  "worldcombat.skill.foulplay.description.1": "暗影能伸到 %1$s 格，以 %2$s 格每刻爬过去；抓握判定半径 %3$s 格，从目标影子里竖起 %4$s 根棘。",
+  "worldcombat.skill.foulplay.description.1": "暗影能伸到 %1$s 格，以 %2$s 格每刻爬过去；抓握判定半径 %3$s 格。",
   "worldcombat.skill.foulplay.use.0": "用它自己的力气打它",
   "worldcombat.skill.foulplay.use.1": "越壮的目标咬得越重",
   "worldcombat.skill.foulplay.use.2": "纠缠式把强敌拖进近身",

@@ -4,7 +4,7 @@
   "worldcombat.skill.craftyshield.use.1": "Weave the lattice before a taunt or lock lands",
   "worldcombat.skill.craftyshield.use.2": "Cover an ally about to step in from status moves",
   "worldcombat.skill.craftyshield.description.0": "The lattice turns %1$s hostile status moves aside and holds for about %2$s s.",
-  "worldcombat.skill.craftyshield.description.1": "The lattice covers %1$s blocks with about %2$s hovering glyphs.",
+  "worldcombat.skill.craftyshield.description.1": "The lattice covers %1$s blocks.",
   "worldcombat.skill.craftyshield.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.craftyshield.weave.fine": "Fine: deflections x1.3, duration x1.15, radius x0.9, at +2 ticks wind-up and x1.1 cooldown — turns more aside and holds tight.",
   "worldcombat.skill.craftyshield.weave.broad": "Broad: radius x1.2, deflections x0.75, duration x0.85, in exchange for -1 tick wind-up and x0.88 cooldown — wide and quick to weave.",

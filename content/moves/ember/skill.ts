@@ -18,6 +18,7 @@ namespace PokemonSkills {
 
     define({
         id: "ember",
+        cooldownParameter: "recharge",
         name: "Ember",
         description: "The target is attacked with small flames. This may also leave the target with a burn.",
         uses: ["快速弹出一粒火种补刀", "连发压血并偶尔引燃", "在没有条件铺开火势时的一口小火力"],

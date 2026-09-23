@@ -5,7 +5,7 @@
   "worldcombat.skill.stompingtantrum.use.2": "Answer a whiff with a doubled stomp",
   "worldcombat.skill.stompingtantrum.description.0": "Stomp the ground and send %1$s physical (Ground) power down the fissure; only grounded targets are caught.",
   "worldcombat.skill.stompingtantrum.description.1": "The fissure reaches %1$s blocks with a half-width of %2$s; anyone on it is thrown up at %3$s blocks/tick and pushed out %4$s blocks.",
-  "worldcombat.skill.stompingtantrum.description.2": "Carrying the grudge, the far end caves in again for %1$s blocks; the ground scar lingers %2$s across %3$s cells.",
+  "worldcombat.skill.stompingtantrum.description.2": "The ground scar lingers %1$s across %2$s cells.",
   "worldcombat.skill.stompingtantrum.deep.on": "Current: Deep stomp — fissure width x1.25, launch x1.15, scar x1.3, but lower power, slower start and longer cooldown.",
   "worldcombat.skill.stompingtantrum.deep.off": "Current: Shallow stomp — a narrow, fast seam that hits harder once.",
   "worldcombat.skill.stompingtantrum.timing": "Range %1$s blocks, prepare %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",

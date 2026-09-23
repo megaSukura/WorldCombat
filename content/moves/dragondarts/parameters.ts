@@ -97,7 +97,7 @@ namespace PokemonSkills {
     describe("dragondarts", [
         { key: "description.0", values: ["dart", "darts"] },
         { key: "description.1", values: ["reach", "flight", "spread"] },
-        { key: "description.2", values: ["gap", "turn", "motes"] },
+        { key: "description.2", values: ["gap", "turn"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["volley"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["volley"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

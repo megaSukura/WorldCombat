@@ -6,7 +6,7 @@
   "worldcombat.skill.nightdaze.description.0": "The wave engulfs a target for %1$s special damage and has a %2$s chance to lower its accuracy by %3$s stage(s).",
   "worldcombat.skill.nightdaze.description.1": "The wave has a %1$s block radius and reaches %2$s blocks up, pushing out from your feet in %3$s steps.",
   "worldcombat.skill.nightdaze.description.2": "A caught foe is shoved %1$s blocks away from the centre; one ring can engulf up to %2$s foes.",
-  "worldcombat.skill.nightdaze.description.3": "A shrouded foe carries the shared shrouded identity for %1$s; the darkness churns up %2$s dark motes.",
+  "worldcombat.skill.nightdaze.description.3": "A shrouded foe carries the shared shrouded identity for %1$s.",
   "worldcombat.skill.nightdaze.eclipse.on": "Eclipse: radius x1.35, +2 foes, shroud chance +8% and shroud duration x1.4; costs power x0.78, wind-up +4 ticks, cooldown +8 ticks and a gentler shove.",
   "worldcombat.skill.nightdaze.eclipse.off": "Burst: power x1.12, radius x0.85 and a stronger shove; costs shroud chance -6%.",
   "worldcombat.skill.nightdaze.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

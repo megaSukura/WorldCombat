@@ -102,12 +102,11 @@ namespace PokemonSkills {
 
     describe(parabolicchargeId, [
         { key: "description.0", values: ["surge", "sap"] },
-        { key: "description.1", values: ["dish", "arcs"] },
-        { key: "description.2", values: ["focus"] },
+        { key: "description.1", values: ["dish"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.surge", "tier.0.dish"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.surge", "tier.1.sap", "tier.1.dish", "tier.1.arcs"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.surge", "tier.1.sap", "tier.1.dish"] }
     ]);
 }

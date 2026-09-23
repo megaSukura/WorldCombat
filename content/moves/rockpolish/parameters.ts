@@ -87,7 +87,7 @@ namespace PokemonSkills {
     describe("rockpolish", [
         { key: "description.0", values: ["gift", "tempo"] },
         { key: "description.1", values: ["shine", "patchRadius"] },
-        { key: "description.2", values: ["sparks", "dust", "aftercast", "wait"] },
+        { key: "description.2", values: ["aftercast", "wait"] },
         { key: "grit.on", values: [], when: function (context) { return read(context.detail.values, ["grit"]) === 1; } },
         { key: "grit.off", values: [], when: function (context) { return read(context.detail.values, ["grit"]) !== 1; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -6,7 +6,7 @@
   "worldcombat.skill.synchronoise.use.3": "Find out who is actually on your type in a mismatched fight",
   "worldcombat.skill.synchronoise.description.0": "Each target sharing the caster's type takes about %1$s damage; different-type targets are passed through untouched. The target's special defence, type and crit are settled on the hit.",
   "worldcombat.skill.synchronoise.description.1": "The wave sweeps %1$s blocks around the caster all at once.",
-  "worldcombat.skill.synchronoise.description.2": "Locked targets carry the resonance identity for %1$s s; the tone lingers around the caster for %2$s s in %3$s rings.",
+  "worldcombat.skill.synchronoise.description.2": "Locked targets carry the resonance identity for %1$s s.",
   "worldcombat.skill.synchronoise.tight.on": "Tight tuning on: the wave is about ×0.62 wide and about ×1.42 stronger with a longer resonance, but wind-up +2 and cooldown +6 ticks.",
   "worldcombat.skill.synchronoise.tight.off": "Tight tuning off (wide broadcast): the wave is ×1.0 wide and ×1.0 power with a shorter wind-up and cooldown, for sweeping as many same-type foes as possible in a melee.",
   "worldcombat.skill.synchronoise.timing": "Cast on the space within %1$s blocks; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

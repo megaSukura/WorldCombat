@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: doubleslapId,
+        cooldownParameter: "recharge",
         name: "Double Slap",
         description: "The target is slapped repeatedly, back and forth, two to five times in a row.",
         uses: ["贴身一串快速的小掌击", "对低防目标靠掌数堆伤害", "交叉式把对手拨得左右晃，打断它的站位"],

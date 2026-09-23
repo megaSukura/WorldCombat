@@ -4,7 +4,7 @@
   "worldcombat.skill.acid.use.1": "Leave a lingering pool to lock down a patch of ground",
   "worldcombat.skill.acid.use.2": "Wear down Sp. Def with the cheapest cast",
   "worldcombat.skill.acid.description.0": "The burst deals %1$s special damage to every enemy around the landing spot.",
-  "worldcombat.skill.acid.description.1": "The acid covers %1$s blocks around the landing spot and throws out about %2$s drops.",
+  "worldcombat.skill.acid.description.1": "The acid covers a radius of %1$s blocks around the landing spot.",
   "worldcombat.skill.acid.description.2": "The pool left behind deals %1$s damage per tick for %2$s, biting once every %3$s.",
   "worldcombat.skill.acid.description.3": "On hit there is a %1$s chance to lower the target's Sp. Def by %2$s stage(s); corrode form is currently %3$s.",
   "worldcombat.skill.acid.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

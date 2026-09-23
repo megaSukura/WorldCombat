@@ -48,6 +48,7 @@ namespace PokemonSkills {
 
     define({
         id: "dragonclaw",
+        cooldownParameter: "recharge",
         name: "Dragon Claw",
         description: "The user slashes the target with huge, sharp claws to inflict damage.",
         uses: ["朝身前一整片扇形同时划下巨爪", "一次扫多个正面目标", "把目标的护甲撕开、防御下降"],

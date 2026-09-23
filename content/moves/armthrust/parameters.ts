@@ -130,7 +130,7 @@ namespace PokemonSkills {
     describe(armthrustId, [
         { key: "description.0", values: ["thrust", "thrusts"] },
         { key: "description.1", values: ["reach", "push", "gap"] },
-        { key: "description.2", values: ["slam", "step", "knuckles"] },
+        { key: "description.2", values: ["slam", "step"] },
         { key: "drive.on", values: [], when: function (context) { return read(context.detail.values, ["drive"]) === true; } },
         { key: "drive.off", values: [], when: function (context) { return read(context.detail.values, ["drive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

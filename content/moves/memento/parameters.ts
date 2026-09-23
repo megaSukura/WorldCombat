@@ -65,7 +65,7 @@ namespace PokemonSkills {
     });
     describe(mementoId, [
         { key: "description.0", values: ["drop", "griefTicks"] },
-        { key: "description.1", values: ["giftRadius", "remnantTicks", "remnantRadius", "darkness"] },
+        { key: "description.1", values: ["giftRadius", "remnantTicks", "remnantRadius"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

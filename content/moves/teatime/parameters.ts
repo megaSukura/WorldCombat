@@ -64,8 +64,8 @@ namespace PokemonSkills {
 
     describe(teatimeId, [
         { key: "description.0", values: ["radius"] },
-        { key: "description.1", values: ["reach", "teaTicks", "cups"] },
-        { key: "description.2", values: ["brew", "motes", "tempo", "aftercast", "wait"] },
+        { key: "description.1", values: ["reach"] },
+        { key: "description.2", values: ["brew", "tempo", "aftercast", "wait"] },
         { key: "stance.grand", values: [], when: function (context) { return read(context.detail.values, ["grand"]) === true; } },
         { key: "stance.quick", values: [], when: function (context) { return read(context.detail.values, ["grand"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

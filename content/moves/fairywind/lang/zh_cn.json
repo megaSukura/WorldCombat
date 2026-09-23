@@ -5,7 +5,7 @@
   "worldcombat.skill.fairywind.use.2": "远距离先手，用风把对手推离掩体",
   "worldcombat.skill.fairywind.description.0": "每个被风扫到的对手约 %1$s 威力，最多再穿过 %2$s 个；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.fairywind.description.1": "射程 %1$s 格，风以 %2$s 格/刻走直线，风团判定 %3$s 格。",
-  "worldcombat.skill.fairywind.description.2": "被扫到的对手沿旋向被甩开 %1$s 格；这一阵卷着 %2$s 团香粉。",
+  "worldcombat.skill.fairywind.description.2": "被扫到的对手沿旋向被甩开 %1$s 格。",
   "worldcombat.skill.fairywind.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒。",
   "worldcombat.skill.fairywind.wide.on": "广旋式：风团判定 ×1.5、贯穿 +1、侧甩 ×1.4，但单次威力 ×0.85、起手 +1 刻、冷却 +5 刻——扫得更宽更散。",
   "worldcombat.skill.fairywind.wide.off": "轻掠式：单次威力 ×1.15、出手快、冷却短，但判定窄、贯穿少、侧甩弱——一条更细更利的线。",

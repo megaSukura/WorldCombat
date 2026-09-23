@@ -5,7 +5,6 @@
   "worldcombat.skill.partingshot.use.2": "Fire a barb, then open the distance",
   "worldcombat.skill.partingshot.description.0": "On a hit, the foe loses %1$s Attack and Sp. Atk stages and carries the humiliation mark for %2$s.",
   "worldcombat.skill.partingshot.description.1": "Word range %1$s blocks, flight speed %2$s blocks/tick; on a hit you step %3$s blocks away from the foe.",
-  "worldcombat.skill.partingshot.description.2": "The sentence sheds about %1$s motes of light.",
   "worldcombat.skill.partingshot.venom.on": "Venom: always drops 2 stages, humiliation ×1.3 — at the cost of range ×0.85, flight ×0.8 (slower, easier to dodge), cooldown +14.",
   "worldcombat.skill.partingshot.venom.off": "Quick tongue: range ×1.1, flight ×1.1, cooldown −6; the bite follows Sp. Atk alone.",
   "worldcombat.skill.partingshot.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",

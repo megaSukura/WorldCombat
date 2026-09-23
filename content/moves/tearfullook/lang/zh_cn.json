@@ -4,7 +4,7 @@
   "worldcombat.skill.tearfullook.use.1": "被围时用哭声同时压住正面的几个敌人",
   "worldcombat.skill.tearfullook.use.2": "给撤退争取一段对方下不去手的时间",
   "worldcombat.skill.tearfullook.description.0": "被说中的目标损失 %1$s 级攻击与特攻，失落持续 %2$s。",
-  "worldcombat.skill.tearfullook.description.1": "泪眼距离 %1$s，超出就看不见；放声大哭的扇面张角 %2$s 度、半径 %3$s，射程 %4$s 格，一次涌出 %5$s 个泪滴。",
+  "worldcombat.skill.tearfullook.description.1": "泪眼距离 %1$s，超出就看不见；放声大哭的扇面张角 %2$s 度、半径 %3$s，射程 %4$s 格。",
   "worldcombat.skill.tearfullook.description.2": "眼圈红起来要 %1$s，冷却 %2$s。眼泪要被看见，掩体后无效。",
   "worldcombat.skill.tearfullook.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.tearfullook.value.despair": "斗志下降",

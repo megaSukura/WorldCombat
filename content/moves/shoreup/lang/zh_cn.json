@@ -4,7 +4,7 @@
   "worldcombat.skill.shoreup.use.1": "借沙暴的风取之不尽的沙回血",
   "worldcombat.skill.shoreup.use.2": "消耗脚下的沙地换取一次强回复",
   "worldcombat.skill.shoreup.description.0": "按最大生命回复 %1$s：身边的散沙越密越高（沙暴中额外加成并回到约 2/3），防御越高砂甲越厚。",
-  "worldcombat.skill.shoreup.description.1": "从探沙范围 %2$s 格内的地面挖起 %1$s 块散沙；扬起约 %3$s 点沙粒，体重越沉铺得越密。",
+  "worldcombat.skill.shoreup.description.1": "从探沙范围 %2$s 格内的地面挖起 %1$s 块散沙。",
   "worldcombat.skill.shoreup.description.2": "起手 %1$s、收招 %2$s，随速度与体型变化。",
   "worldcombat.skill.shoreup.stance.thick": "厚结：集沙量与每口回复更高（×1.12），代价是起手更慢、冷却更久、一次挖走更多沙——适合站在厚沙上补一口大的。",
   "worldcombat.skill.shoreup.stance.loose": "薄敷：起手更快、更省沙、冷却更短，回复略低——适合在原地反复小补。",

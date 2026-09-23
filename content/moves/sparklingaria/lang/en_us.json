@@ -4,7 +4,7 @@
   "worldcombat.skill.sparklingaria.use.1": "Wash a burn off a nearby ally",
   "worldcombat.skill.sparklingaria.use.2": "Bloom a ring of bubbles while surrounded",
   "worldcombat.skill.sparklingaria.description.0": "The centre of the wave deals about %1$s damage, keeping %2$s at the rim; the target's Sp. Def, type matchup and criticals settle at impact.",
-  "worldcombat.skill.sparklingaria.description.1": "It reaches %1$s blocks around you and releases %2$s bubbles.",
+  "worldcombat.skill.sparklingaria.description.1": "It reaches %1$s blocks around you.",
   "worldcombat.skill.sparklingaria.description.2": "Each washed-off burn heals that body for %1$s of its maximum health.",
   "worldcombat.skill.sparklingaria.note.on": "High note on: radius about x1.25 and more bubbles, but about x0.85 damage, slower to start and longer cooldown.",
   "worldcombat.skill.sparklingaria.note.off": "High note off (focused aria): radius about x0.85 and about x1.15 damage, faster to recover.",

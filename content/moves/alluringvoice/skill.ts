@@ -21,7 +21,8 @@ namespace PokemonSkills {
     }
 
     define({
-        id: alluringvoiceId, name: "魅诱之声",
+        id: alluringvoiceId,
+        cooldownParameter: "recharge", name: "魅诱之声",
         description: "朝身前荡出一条天使般的锥形声场：范围内敌人受到特殊伤害；此刻正带着正面能力等级的目标会被歌声惑乱、陷入混乱，出手可能作废、打中别人还会被自己的力量反噬。它涨高的级数越多，混乱越久。",
         uses: ["惩罚刚强化过的对手，让它自乱阵脚", "一次扫过身前一条线上的敌人", "在对手铺垫强化时抢先唱散它"],
         kind: "enemy", range: 7, maxRange: 11, prepare: 7, active: 1, recover: 8, cooldown: 34,

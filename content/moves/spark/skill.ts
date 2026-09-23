@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "spark",
+        cooldownParameter: "recharge",
         name: "Spark",
         description: "The user attacks the target with an electrically charged tackle. This may also leave the target with paralysis.",
         uses: ["贴身把还没麻痹的对手挂上麻痹", "用最短的一手收掉一个残血的目标", "在缠斗里高频骚扰、逼对手换位"],

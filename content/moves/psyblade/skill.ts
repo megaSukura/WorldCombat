@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: psybladeId,
+        cooldownParameter: "recharge",
         name: "精神剑",
         description: "凝出一把几乎看不见的灵刃贴身劈开对手；自己站在电气场地上时，灵刃被电荷镀亮、威力提高，斩痕里窜出电弧。",
         uses: ["贴着电气场地的电荷打出一记重斩", "切开主目标并顶开近旁的旁人", "用看不见的刃切断对手架势"],
@@ -116,7 +117,7 @@ namespace PokemonSkills {
                     hits++;
                     if (push > 0.02) {
                         const away = facts.position().minus(cutOrigin);
-                        if (away.length() > 0.2) world.displace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                        if (world.valid(victim) && away.length() > 0.2) world.displace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                     }
                     WorldFeedback.emit(world, psybladeScene, 1, facts.position(),
                         { moment: "cut", target: String(victim.ref()), shards: shards, scale: scale, charged: charged ? 1 : 0,

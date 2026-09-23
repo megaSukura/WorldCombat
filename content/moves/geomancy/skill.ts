@@ -68,6 +68,7 @@ namespace PokemonSkills {
 
     define({
         id: "geomancy",
+        cooldownParameter: "wait",
         name: "大地掌控",
         description: "把身体扎进大地吸取地脉能量：脚下张开一圈地纹、立定不动吸满能量，下一拍地纹炸开、能量反冲，特攻、特防、速度同时提高。蓄力期间若被睡得或冻住，能量崩散、什么也拿不到。",
         uses: ["开战前在安全距离先扎地蓄力", "用一段立定换取三项永久提升", "把脚下的地变成阵、标记这块战场"],

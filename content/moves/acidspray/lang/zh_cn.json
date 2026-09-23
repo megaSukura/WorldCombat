@@ -4,7 +4,7 @@
   "worldcombat.skill.acidspray.use.1": "用最便宜的出手反复磨特防",
   "worldcombat.skill.acidspray.use.2": "在窄口把想挤过来的对手连人带路一起喷酸",
   "worldcombat.skill.acidspray.description.0": "酸雾淋到每个敌人身上造成 %1$s 点特殊伤害，并让它特防下降 %2$s 级。",
-  "worldcombat.skill.acidspray.description.1": "酸雾覆盖身前 %1$s 格、张开 %2$s 度的楔形，约 %3$s 颗酸滴。",
+  "worldcombat.skill.acidspray.description.1": "酸雾覆盖身前 %1$s 格、张开 %2$s 度的楔形。",
   "worldcombat.skill.acidspray.description.2": "酸雾停留 %1$s；期间走进楔形的人再承受 %2$s 点伤害并同样掉 %3$s 级特防（每人只算一次）。",
   "worldcombat.skill.acidspray.focus.on": "聚焦喷口：单发提到 %1$s、射程拉到 %2$s 格，但张角只剩 %3$s 度，残雾更短、冷却 +5 刻。",
   "worldcombat.skill.acidspray.focus.off": "宽喷：以 %1$s 格、%2$s 度的楔形一次淋到挤在身前的多个目标。",

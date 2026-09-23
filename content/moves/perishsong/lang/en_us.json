@@ -4,7 +4,7 @@
   "worldcombat.skill.perishsong.use.1": "Name a whole crowd at once",
   "worldcombat.skill.perishsong.use.2": "Take the enemy's main threat with you in a lost exchange",
   "worldcombat.skill.perishsong.description.0": "Every living thing that hears the song within %1$s is written onto the list; each beat lasts %2$s and after three beats they all go down - the singer included.",
-  "worldcombat.skill.perishsong.description.1": "Starting the song takes %1$s and gathers %2$s notes, with a %3$s cooldown. Disengaging or being cured with milk shakes the song off without settling.",
+  "worldcombat.skill.perishsong.description.1": "Starting the song takes %1$s, with a %2$s cooldown. Disengaging or being cured with milk shakes the song off without settling.",
   "worldcombat.skill.perishsong.dirge.0": "Dirge: the song carries farther and each beat is longer, but the cooldown is longer.",
   "worldcombat.skill.perishsong.dirge.1": "Lullaby: the song is closer and each beat is shorter with a shorter cooldown - a smaller list, settled faster.",
   "worldcombat.skill.perishsong.timing": "Cast around yourself: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s from commit.",

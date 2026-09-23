@@ -5,7 +5,7 @@
   "worldcombat.skill.feint.use.2": "对没有守护的目标补一记极快的戳击",
   "worldcombat.skill.feint.description.0": "掀掉守护后的这一戳造成 %1$s 点伤害；每多掀掉一层守护，再额外加重 %2$s 倍。",
   "worldcombat.skill.feint.description.1": "一次最多掀掉目标身上 %1$s 层守护（守住、看穿、广域防守、硬化都是同一套守护机制），并向前扑进 %2$s 格。",
-  "worldcombat.skill.feint.description.2": "判定半径 %1$s 格，命中把目标顶开 %2$s 格，带起约 %3$s 点碎光。",
+  "worldcombat.skill.feint.description.2": "判定半径 %1$s 格，命中把目标顶开 %2$s 格。",
   "worldcombat.skill.feint.commit.on": "实招：收掉假动作真打出去，戳击与破绽加成更高、多掀一层守护、突进更远；代价是起手、收招与冷却都更长。",
   "worldcombat.skill.feint.commit.off": "佯攻：出手极快、冷却短，掀掉守护是它唯一的重心，这一戳很轻。",
   "worldcombat.skill.feint.timing": "可向 %1$s 格内施放；起手 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",

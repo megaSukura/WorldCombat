@@ -114,7 +114,7 @@ namespace PokemonSkills {
     describe(aquajetId, [
         { key: "description.0", values: ["jet", "collisionRadius"] },
         { key: "description.1", values: ["surge", "pace", "push"] },
-        { key: "description.2", values: ["soakTicks", "spray"] },
+        { key: "description.2", values: ["soakTicks"] },
         { key: "deluge.on", values: [], when: function (context) { return read(context.detail.values, ["deluge"]) === true; } },
         { key: "deluge.off", values: [], when: function (context) { return read(context.detail.values, ["deluge"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

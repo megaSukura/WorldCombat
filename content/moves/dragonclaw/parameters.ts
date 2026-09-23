@@ -107,7 +107,7 @@ namespace PokemonSkills {
 
     describe("dragonclaw", [
         { key: "description.0", values: ["rend", "reach", "spread"] },
-        { key: "description.1", values: ["depth", "rendStages", "marks"] },
+        { key: "description.1", values: ["depth", "rendStages"] },
         { key: "cross.on", values: ["spread", "rendStages", "rend"], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: ["spread", "rendStages", "rend"], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

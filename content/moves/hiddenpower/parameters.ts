@@ -63,7 +63,7 @@ namespace PokemonSkills {
     });
 
     describe(hiddenpowerId, [
-        { key: "description.0", values: ["power", "charge", "velocity", "reach", "focus"] },
+        { key: "description.0", values: ["power", "charge", "velocity", "reach"] },
         { key: "description.1", values: ["pp", "cooldown"] }
     ]);
 }

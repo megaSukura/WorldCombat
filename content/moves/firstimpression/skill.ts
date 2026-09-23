@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: firstimpressionId,
+        cooldownParameter: "recharge",
         name: "First Impression",
         description: "A powerful first-strike lunge; it works only right after the user enters battle.",
         uses: ["刚上场就砸出一记最重的扑击", "开场一下把对手打残",
@@ -91,7 +92,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(firstimpressionId, "slam"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, firstimpressionScene, 1, hit.position(),
                             { moment: "crash", target: String(victim.ref()), count: count, scale: scale,

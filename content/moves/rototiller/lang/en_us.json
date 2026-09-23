@@ -4,7 +4,7 @@
   "worldcombat.skill.rototiller.use.1": "Till a patch at the fight's position and make foes go around it",
   "worldcombat.skill.rototiller.use.2": "Leave airborne Grass types a patch they cannot touch",
   "worldcombat.skill.rototiller.description.0": "Turns a patch of soil of radius %1$s blocks that lasts %2$s.",
-  "worldcombat.skill.rototiller.description.1": "Grass types on the soil gain %1$s stage of Attack and Sp. Atk; one till throws about %2$s clods.",
+  "worldcombat.skill.rototiller.description.1": "Grass types on the soil gain %1$s stage of Attack and Sp. Atk.",
   "worldcombat.skill.rototiller.description.2": "Range %1$s blocks; telegraph %2$s, recovery %3$s, cooldown %4$s.",
   "worldcombat.skill.rototiller.ridge.on": "Ridge: a wider, longer patch, +1 more stage on both stats, at +3 ticks telegraph and x1.15 cooldown.",
   "worldcombat.skill.rototiller.ridge.off": "Quick till: a smaller, shorter patch with the base boost, cheaper in both telegraph and cooldown - till and move.",

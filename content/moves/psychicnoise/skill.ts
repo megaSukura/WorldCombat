@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: psychicNoiseId,
+        cooldownParameter: "recharge",
         name: "Psychic Noise",
         description: "射出一道令人不适的音波造成特殊伤害，并让目标在一段时间内无法通过招式、特性或携带的道具回复 HP。",
         uses: ["压住对手的治疗与回复", "惩罚靠回复硬撑的对手", "远程压制并封住续战能力"],

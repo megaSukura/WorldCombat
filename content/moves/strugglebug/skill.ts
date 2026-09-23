@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: strugglebugId,
+        cooldownParameter: "recharge",
         name: "Struggle Bug",
         description: "撑住身形，把一团贴地的虫群从脚下向外推出去：虫群前缘扫到的每个敌人各挨一次特殊伤害、特攻下降，并被虫群缠住、移动变慢。厚势式铺得更开更久，代价是伤害更低、出手更慢。",
         uses: ["被贴身围住时一次削到身边所有人", "把围上来的敌人一起拖慢", "对上多个法系威胁时一并压特攻"],

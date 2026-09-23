@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "heartstamp",
+        cooldownParameter: "recharge",
         name: "Heart Stamp",
         description: "先卖一次萌，让对方进入短暂的疏忽窗口，再扑上去补一记重击；补击若落在窗口里就乘机打得更重、更容易把人拍懵。窗口很短，离得远等冲过去就过期了。",
         uses: ["近身骗一下再补重击", "把对手拍懵，抢一次先手", "对已经放松警惕的目标乘机加深一击"],
@@ -110,7 +111,7 @@ namespace PokemonSkills {
                         intensity: Math.max(0.5, Math.min(2, power / 60)), offguard: offguard ? 1 : 0 }, 28);
                 sound(current, "cobblemon:impact.psychic");
                 if (landed) {
-                    scope.displace(victim, direction.scale(0.6));
+                    if (scope.valid(victim)) scope.displace(victim, direction.scale(0.6));
                     WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.3, 0)),
                         offguard ? heartstampSeizeText : heartstampHitText, [], 26);
                     if (scope.random() < roll && heartstampFlinch(scope, victim, flinchTicks)) {

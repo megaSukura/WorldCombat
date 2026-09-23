@@ -137,7 +137,7 @@ namespace PokemonSkills {
     describe(wakeupslapId, [
         { key: "description.0", values: ["slap"] },
         { key: "description.1", values: ["lunge", "step", "collisionRadius", "push"] },
-        { key: "description.2", values: ["startle", "shockRadius", "shockShare", "dust", "sparks"] },
+        { key: "description.2", values: ["startle", "shockRadius", "shockShare"] },
         { key: "shock.on", values: [], when: function (context) { return read(context.detail.values, ["shock"]) === true; } },
         { key: "shock.off", values: [], when: function (context) { return read(context.detail.values, ["shock"]) !== true; } },
         { key: "timing", values: ["range", "grit", "settle", "pp", "recharge"] },

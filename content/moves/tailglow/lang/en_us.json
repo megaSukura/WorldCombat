@@ -4,7 +4,7 @@
   "worldcombat.skill.tailglow.use.1": "Enter the trance while the foe is out of reach and finish before contact",
   "worldcombat.skill.tailglow.use.2": "When cornered, focus and strike back, betting the foe cannot scatter the light in time",
   "worldcombat.skill.tailglow.description.0": "The trance raises Sp. Atk by %1$s.",
-  "worldcombat.skill.tailglow.description.1": "The trance window lasts %1$s, the light ring spans %2$s blocks and the motes drift at %3$s.",
+  "worldcombat.skill.tailglow.description.1": "The trance window lasts %1$s.",
   "worldcombat.skill.tailglow.description.2": "A single hit for more than %1$s of max health scatters the light and takes the Sp. Atk back early.",
   "worldcombat.skill.tailglow.steady.on": "Steady: the trance window is longer and the scatter threshold higher (tougher against grazes), at a 3-tick longer wind-up and 14 ticks more cooldown.",
   "worldcombat.skill.tailglow.steady.off": "Quick: faster to start with a shorter cooldown, but a shorter window and a light easier to scatter.",

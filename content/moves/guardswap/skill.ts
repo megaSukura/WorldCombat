@@ -57,6 +57,7 @@ namespace PokemonSkills {
 
     define({
         id: "guardswap",
+        cooldownParameter: "recharge",
         name: "防守互换",
         description: "利用超能力把双方防御与特防的能力变化对调一段窗口：换完你拿走对方架起来的守势，窗口走完自动换回。",
         uses: ["把对手涨起来的防/特防夺过来", "在自己防御被破后把漏洞甩给对手", "把对手的铜墙铁壁借来硬扛一轮"],

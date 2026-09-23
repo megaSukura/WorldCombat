@@ -4,7 +4,6 @@
   "worldcombat.skill.gastroacid.use.1": "Suppress persistent Abilities like Intimidate or Levitate",
   "worldcombat.skill.gastroacid.description.0": "Spits an acid glob up to %1$s blocks away; %2$s s wind-up, about %3$s blocks/tick.",
   "worldcombat.skill.gastroacid.description.1": "A coated Pokemon's Ability is suppressed for %1$s s, then returns.",
-  "worldcombat.skill.gastroacid.description.2": "The impact splashes about %1$s acid drops; about %2$s bubbles gather during windup.",
   "worldcombat.skill.gastroacid.thick.0": "Thick acid: suppression x1.6 and cooldown +22 ticks, for taking out a key Ability in one spit.",
   "worldcombat.skill.gastroacid.thick.1": "Thin acid: suppression x0.55 and cooldown -12 ticks, for frequent harassment.",
   "worldcombat.skill.gastroacid.timing": "Range %1$s blocks, %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

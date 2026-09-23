@@ -89,8 +89,8 @@ namespace PokemonSkills {
     ]);
 
     describe("swordsdance", [
-        { key: "description.0", values: ["rise", "cuts", "sharpen"] },
-        { key: "description.1", values: ["hone", "arc"] },
+        { key: "description.0", values: ["rise", "cuts"] },
+        { key: "description.1", values: ["hone"] },
         { key: "press.on", values: ["step", "beat"], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: "spikecannon",
+        cooldownParameter: "recharge",
         name: "Spike Cannon",
         description: "扎稳下盘，把一排重型金属钉沿准线一发接一发打出去：每发贯穿一线的敌人、各结算一次伤害，并把命中的对象顶退。最慢最重、射程最长；穿甲式少而狠、能贯穿三人。",
         uses: ["远距离一梭直线重钉", "贯穿一线上的多个敌人", "把贴脸的目标顶退、拉开距离"],

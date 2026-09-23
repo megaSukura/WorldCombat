@@ -4,7 +4,6 @@
   "worldcombat.skill.powerswap.use.1": "在自己被降攻后把负数甩给对手",
   "worldcombat.skill.powerswap.use.2": "在对手强化成型时把气势整个接走",
   "worldcombat.skill.powerswap.description.0": "向 %1$s 格内的目标交换攻击与特攻的能力变化，维持 %2$s；需要有通视直线。",
-  "worldcombat.skill.powerswap.description.1": "交换时两人之间对流 %1$s 条光丝，数量由特攻与体型派生，画面按它发射。",
   "worldcombat.skill.powerswap.description.2": "换的是双方已经攒起来的那几级：对方涨得越多你赚得越多，你原来那几级落到他身上。窗口走完或被清除时各自换回原来的等级。",
   "worldcombat.skill.powerswap.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 换势；收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.powerswap.growth.0": "达到 %1$s 级，换势距离延长至 %2$s 格、交换窗口延长至 %3$s 秒。",

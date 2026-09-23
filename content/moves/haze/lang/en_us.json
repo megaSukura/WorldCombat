@@ -6,7 +6,7 @@
   "worldcombat.skill.haze.description.0": "The haze spreads to a radius of %1$s blocks: every stat change on every living thing inside goes back to zero — raised levels erased, lowered levels levelled alike.",
   "worldcombat.skill.haze.focused.on": "Directed form: only non-friendly stats inside are wiped, so your own and your allies' raised stats survive; the radius is x0.8, wind-up +4 ticks and cooldown x1.2, and lowered stats on you are left alone.",
   "worldcombat.skill.haze.focused.off": "Total form: everyone inside is reset, your own and your allies' raised stats included; what you get for it is a wider, faster, cheaper breath.",
-  "worldcombat.skill.haze.description.1": "Wind-up: %2$s seconds. Recovery: %3$s seconds. Cooldown: %4$s seconds. Targets whose stat stages are cleared receive the Wiped Clean mark.",
+  "worldcombat.skill.haze.description.1": "Wind-up: %1$s seconds. Recovery: %2$s seconds. Cooldown: %3$s seconds. Targets whose stat stages are cleared receive the Wiped Clean mark.",
   "worldcombat.skill.haze.timing": "The haze reaches %1$s blocks from the caster; wind-up %2$s s, recovery %3$s s, %4$s PP and cooldown %5$s s from commit. The wind-up can be interrupted at no cost.",
   "worldcombat.skill.haze.growth.0": "From level %1$s: the haze radius rises to %2$s blocks.",
   "worldcombat.skill.haze.growth.1": "From level %1$s: the haze radius rises to %2$s blocks.",

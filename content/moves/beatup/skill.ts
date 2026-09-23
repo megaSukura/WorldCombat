@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "beatup",
+        cooldownParameter: "recharge",
         name: "Beat Up",
         description: "一声招呼，身边在场的同伴一起扑上去围殴；同伴越多落下的拳头越多，每一位同伴自己的物攻决定那一下的轻重。",
         uses: ["身边有同伴时一起压上，堆出多段暗属伤害", "在伙伴环伺时处决残血目标", "靠人数对单个厚实目标打出一串小伤害"],

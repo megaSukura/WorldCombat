@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: "hypervoice",
+        cooldownParameter: "recharge",
         name: "Hyper Voice",
         description: "扎住脚，把一声咆哮沿正前方的扇形整片压出去：扇面内每个敌人被同一堵声墙轰中，几乎不分远近，并被直直推回去。它不看掩体、不看地面，也没有附加状态——只是最响、最宽的一声。聚声更窄更远更重。",
         uses: ["一次扫到正前方一大片敌人", "把冲上来的对手整片推回去", "隔着矮墙仍能震到对手", "用一次长喘换最宽的一声"],

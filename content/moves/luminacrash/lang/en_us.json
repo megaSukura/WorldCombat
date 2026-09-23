@@ -4,7 +4,7 @@
   "worldcombat.skill.luminacrash.use.1": "Call a light down onto a marked target from range",
   "worldcombat.skill.luminacrash.use.2": "Use dispersed form to crash the landing point and everything around it",
   "worldcombat.skill.luminacrash.description.0": "The light pillar deals %1$s special damage on impact and harshly lowers the target's Sp. Def by %2$s stage(s).",
-  "worldcombat.skill.luminacrash.description.1": "The pillar is called from %1$s blocks above the target and lands %2$s later; a target that moves %3$s blocks away in that time dodges it.",
+  "worldcombat.skill.luminacrash.description.1": "The pillar is called down from above the target and lands %1$s later; a target that moves %2$s blocks away in that time dodges it.",
   "worldcombat.skill.luminacrash.description.2": "On impact everyone within %1$s blocks of the point takes %2$s splash damage.",
   "worldcombat.skill.luminacrash.disperse.on": "Dispersed form: impact %1$s, burst radius %2$s blocks, splash %3$s — crashing the group too.",
   "worldcombat.skill.luminacrash.disperse.off": "Focused form: impact %1$s, burst radius %2$s blocks — one thin pillar, one target.",

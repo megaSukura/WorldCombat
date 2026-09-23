@@ -2,7 +2,7 @@
   "worldcombat.skill.submission.summary": "Grab and throw a target to knock it down, taking recoil damage. Larger targets are harder to throw.",
   "worldcombat.skill.submission.description.0": "The slam deals %1$s contact damage, lunging up to %2$s blocks at %3$s blocks per tick with a %4$s block grab radius.",
   "worldcombat.skill.submission.description.1": "After the grab a %1$s s window passes before the dive; the target is pinned for %2$s s and hurled %3$s blocks. A bulkier target takes less slam damage and is pinned for less time.",
-  "worldcombat.skill.submission.description.2": "On a hit the user takes %1$s%% of the actual damage as recoil; the lunge and landing kick up %2$s dust motes.",
+  "worldcombat.skill.submission.description.2": "On a hit the user takes %1$s%% of the actual damage as recoil.",
   "worldcombat.skill.submission.pin.on": "Pinning form: a lighter slam and less recoil, but the target is held down much longer - for control and team play.",
   "worldcombat.skill.submission.pin.off": "Throwing form: a heavier slam, a wider throw and more recoil, but the target is up again quickly.",
   "worldcombat.skill.submission.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",

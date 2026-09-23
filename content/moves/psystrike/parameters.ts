@@ -148,7 +148,7 @@ namespace PokemonSkills {
 
     describe(psystrikeId, [
         { key: "description.0", values: ["reach", "crush", "height"] },
-        { key: "description.1", values: ["descend", "mass", "cracks"] },
+        { key: "description.1", values: ["descend", "mass"] },
         { key: "description.2", values: ["sunderStages"] },
         { key: "description.3", values: ["shock", "splash"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },

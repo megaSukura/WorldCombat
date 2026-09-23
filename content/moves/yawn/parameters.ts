@@ -93,11 +93,10 @@ namespace PokemonSkills {
 
     describe(yawnId, [
         { key: "description.0", values: ["reach", "drowsyTicks"] },
-        { key: "description.1", values: ["sleepTicks", "puffs", "mouthRadius"] },
+        { key: "description.1", values: ["sleepTicks"] },
         { key: "long.on", values: [], when: function (context) { return read(context.detail.values, ["long"]) === true; } },
         { key: "long.off", values: [], when: function (context) { return read(context.detail.values, ["long"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.puffs"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.puffs", "tier.1.drowsyTicks", "tier.1.sleepTicks"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.drowsyTicks", "tier.1.sleepTicks"] }
     ]);
 }

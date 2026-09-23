@@ -61,7 +61,10 @@ namespace NativeEffects {
     }
     export function write(world: CombatWorld, actor: CombatActor, state: State): void {
         if(String(actor.domain())!=="cobblemon") { CombatStages.replace(world,actor,state.stages);return; }
-        var value = model(world, actor); if (value !== null) world.operation(value.id(), "cobblemon_world_combat:update", JSON.stringify(state));
+        var value = model(world, actor);
+        if (value === null) throw new Error("Native combat state is missing for the bound actor");
+        if (!world.operation(value.id(), "cobblemon_world_combat:update", JSON.stringify(state)))
+            throw new Error("Native combat state update was not accepted");
     }
     /** Last committed native invocation during this bound actor's lifetime; key/slot identify the paying slot. */
     export function lastMove(world: CombatWorld, actor: CombatActor): { id: string; source: string; key: string; slot: number; tick: number } | null {
@@ -89,6 +92,14 @@ namespace NativeEffects {
         if (String(actor.domain()) !== "cobblemon") return CombatStages.stage(world, actor, stat);
         return stage(read(world, actor), stat);
     }
+    /** Detached effective ladder for decisions and presentation, including every live temporary window. */
+    export function effectiveStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
+        var result: { [stat: string]: number } = {};
+        if (!world.valid(actor)) return result;
+        var current = read(world, actor);
+        CombatStages.stats.forEach(function (stat) { var value = stage(current, stat); if (value !== 0) result[stat] = value; });
+        return result;
+    }
     /** Attacker precision and defender evasion feed the hit model; both read the shared accuracy ladder. */
     export function precision(world: CombatWorld, actor: CombatActor): number { return CombatStages.accuracyMultiplier(effectiveStage(world, actor, "accuracy")); }
     export function evasion(world: CombatWorld, actor: CombatActor): number { return CombatStages.accuracyMultiplier(effectiveStage(world, actor, "evasion")); }
@@ -100,7 +111,7 @@ namespace NativeEffects {
         source?: string, reason?: string): number {
         if (!world.valid(actor)) return 0;
         var before = effectiveStage(world, actor, stat);
-        var plan = CombatStages.plan(world, actor, stat, amount, source, reason, undefined, before);
+        var plan = CombatStages.plan(world, actor, stat, amount, source, reason, { ignoreAbility: !!ignoreAbility }, before);
         if (!plan.allowed || !isFinite(plan.amount) || plan.amount === 0) return 0;
         amount = plan.amount;
         // Any other living body carries the same persistent ladder on its Minecraft attributes.
@@ -131,34 +142,141 @@ namespace NativeEffects {
      * window layer. Overlapping windows sum and cap through the read clamp. Clearing, copying or rewriting the
      * persistent ladder never lets an old window deduct anything back, because a window only ever removes itself.
      * A window ends on its own ticks, on an early `windowClose`, when a full `resetStages` runs, or when the carrier
-     * is removed (recall/invalid); leaving combat alone does not clear it. Returns the window id for early cleanup.
+     * is removed (recall/invalid); leaving combat alone does not clear it. An optional MobEffect application owns
+     * the window: native removal/replacement stops its contribution, and window cleanup releases its own icon.
+     * For cumulative refresh, pass the live carrier snapshot captured immediately before reapplication as
+     * `previous` (null on the first grant). Only this source's windows attached to that exact old application
+     * with the same named contribution are renewed. New gains respect the effective stage cap;
+     * persistent stages and other sources stay separate.
+     * Returns the window id for early cleanup.
      */
-    export function boostWindow(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source?: string): number {
+    export function boostWindow(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source?: string,
+        carrier?: CombatMobEffect | null, previous?: CombatMobEffect | null): number {
         if (!world.valid(actor)) return 0;
+        var anchor = carrier ? MobEffects.anchor(carrier) : undefined;
+        if (anchor && !MobEffects.matches(world, actor, anchor)) return 0;
+        var retained: { [stat: string]: number } = {}, renewed: number[] = [], restoreRetained = true;
+        if (previous) {
+            var old = MobEffects.anchor(previous);
+            if (!anchor || anchor.id !== old.id) throw new Error("A refreshed window requires the same carrier type");
+            restoreRetained = anchor.key !== old.key;
+            var definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+            world.effects(actor, definition).forEach(function (view) {
+                var value = JSON.parse(String(view.data()));
+                if (String(view.source().key()) !== String(world.source().key()) || !value.carrier
+                    || (value.source || "") !== (source || "") || value.carrier.id !== old.id || value.carrier.key !== old.key) return;
+                renewed.push(view.id());
+                Object.keys(value.stages || {}).forEach(function (stat) { retained[stat] = (retained[stat] || 0) + value.stages[stat]; });
+            });
+        }
         var clean: { [stat: string]: number } = {}, plans: CombatStages.Change[] = [];
+        Object.keys(retained).forEach(function (stat) { clean[stat] = retained[stat]; });
         Object.keys(changes || {}).forEach(function (stat) {
             var n = Number((<any>changes)[stat]);
             if (CombatStages.stats.indexOf(stat) < 0 || !isFinite(n) || n === 0) return;
-            var before = effectiveStage(world, actor, stat), plan = CombatStages.plan(world, actor, stat, n, source, "window", undefined, before);
+            var state = read(world, actor);
+            var before = Math.max(-6, Math.min(6, (state.stages[stat] || 0)
+                + (state.layers && state.layers.stages && state.layers.stages[stat] || 0) + (restoreRetained ? retained[stat] || 0 : 0)));
+            var plan = CombatStages.plan(world, actor, stat, n, source, "window", undefined, before);
             if (!plan.allowed || !isFinite(plan.amount)) return;
             var value = { stat: stat, amount: plan.amount, source: plan.source, reason: plan.reason };
             if (String(actor.domain()) === "cobblemon") {
-                var state = read(world, actor), name = ability(CobblemonCombat.pokemon(actor), state);
+                var name = ability(CobblemonCombat.pokemon(actor), state);
                 if (value.amount < 0 && NativeAbilities.flag(name, "statLossImmune")) return;
                 NativeAbilities.apply(world, actor, "boost", value, state);
             }
             if (!isFinite(value.amount) || value.amount === 0) return;
-            clean[stat] = Math.max(-6, Math.min(6, Math.round(value.amount))); plans.push(plan);
+            var gain = Math.round(value.amount);
+            if (previous !== undefined) gain = Math.max(-6, Math.min(6, before + gain)) - before;
+            clean[stat] = Math.max(-6, Math.min(6, (retained[stat] || 0) + gain));
+            if (clean[stat] === 0) delete clean[stat];
+            plans.push(plan);
         });
-        if (!Object.keys(clean).length) return 0;
-        var id = String(actor.domain()) === "cobblemon" ? NativeModifiers.apply(world, actor, { stages: clean }, ticks)
-            : CombatStages.window(world, actor, clean, ticks, source || "");
+        if (!Object.keys(clean).length) {
+            renewed.forEach(function (id) { windowClose(world, id); });
+            return 0;
+        }
+        var id = String(actor.domain()) === "cobblemon" ? NativeModifiers.apply(world, actor, { stages: clean, carrier: anchor, source: source || "" }, ticks)
+            : CombatStages.window(world, actor, clean, ticks, source || "", anchor);
+        renewed.forEach(function (oldId) { windowClose(world, oldId); });
         plans.forEach(function (plan) { CombatStages.publish(plan, plan.before, effectiveStage(world, actor, plan.stat)); });
         return id;
     }
     /** Ends one owned boost window early; already expired windows are gone and this is a harmless no-op. */
     export function windowClose(world: CombatWorld, windowId: number): boolean {
         return CombatStages.closeWindow(world, windowId);
+    }
+    function transferWindow(effect: CombatEffect, definition: string): void {
+        var world = effect.world(), input = JSON.parse(effect.input()), state = JSON.parse(effect.state());
+        var target = typeof input.target === "string" ? world.actor(input.target) : null, value = state.stages && state.stages[input.stat] || 0;
+        var take = Number(input.amount);
+        if (!target || !world.valid(target) || String(target.key()) === String(effect.target().key()) || CombatStages.stats.indexOf(input.stat) < 0
+            || !isFinite(take) || take % 1 || !take || value * take <= 0 || Math.abs(take) > Math.abs(value)
+            || !CombatStages.windowAlive(world, effect.target(), state)) { effect.reject("invalid-transfer"); return; }
+        var changes: { [stat: string]: number } = {}; changes[input.stat] = take;
+        var id = NativeEffects.boostWindow(world, target, changes, effect.remaining(), state.source || "stage-transfer");
+        if (!id) { effect.reject("stage-blocked"); return; }
+        var owner: CombatStages.WindowOwner = { actor: String(effect.target().ref()), definition: definition, id: effect.id() };
+        if (!world.operation(id, input.handoff === true ? "world_combat:stage_adopt" : "world_combat:stage_owner", JSON.stringify(owner))) {
+            NativeEffects.windowClose(world, id); effect.reject("invalid-owner"); return;
+        }
+        state.stages[input.stat] = value - take;
+        if (!state.stages[input.stat]) delete state.stages[input.stat];
+        // Empty parents retain their native lease until the moved contribution's original lifetime ends.
+        effect.state(JSON.stringify(state));
+    }
+    CombatStages.transferWindow = transferWindow;
+    function stageWindows(world: CombatWorld, actor: CombatActor): CombatEffectView[] {
+        var definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+        return world.effects(actor, definition).filter(function (view) {
+            var state = JSON.parse(String(view.data())); return state.stages && CombatStages.windowAlive(world, actor, state);
+        });
+    }
+    /** Invert selected effective stats by inverting each contributing layer in place; expiration remains unchanged. */
+    export function invertStages(world: CombatWorld, actor: CombatActor, onlyGains = false): number {
+        if (!world.valid(actor)) return 0;
+        var before = effectiveStages(world, actor), state = read(world, actor), windows = stageWindows(world, actor), count = 0;
+        CombatStages.stats.forEach(function (stat) {
+            var value = before[stat] || 0;
+            if (!value || onlyGains && value < 0) return;
+            var plan = CombatStages.plan(world, actor, stat, -2 * value, "stage-invert", "invert", { ignoreAbility: true }, value);
+            if (!plan.allowed) return;
+            if (state.stages[stat]) state.stages[stat] *= -1;
+            windows.forEach(function (view) {
+                var prior = JSON.parse(String(view.data())).stages[stat] || 0;
+                if (prior) world.operation(view.id(), "world_combat:stage_edit", JSON.stringify({ stat: stat, expected: prior, value: -prior }));
+            });
+            write(world, actor, state);
+            CombatStages.publish(plan, value, effectiveStage(world, actor, stat)); count++;
+        });
+        return count;
+    }
+    /** Transfer a bounded signed amount; temporary contributions retain source, owner and remaining lifetime. */
+    export function transferStage(world: CombatWorld, from: CombatActor, to: CombatActor, stat: string, amount: number, handoff = false): number {
+        if (!world.valid(from) || !world.valid(to) || String(from.key()) === String(to.key()) || CombatStages.stats.indexOf(stat) < 0 || !isFinite(amount) || !amount) return 0;
+        var before = effectiveStage(world, from, stat), other = effectiveStage(world, to, stat), sign = amount > 0 ? 1 : -1;
+        if (before * sign <= 0) return 0;
+        var left = Math.min(Math.abs(Math.round(amount)), Math.abs(before), sign > 0 ? 6 - other : other + 6), moved = 0;
+        var base = read(world, from).stages[stat] || 0;
+        if (base * sign > 0 && left > 0) {
+            var take = sign * Math.min(left, Math.abs(base));
+            if (boost(world, to, stat, take, false, "stage-transfer", "transfer")) {
+                boost(world, from, stat, -take, true, "stage-transfer", "transfer");
+                left -= Math.abs(take); moved += Math.abs(take);
+                if (handoff && String(to.domain()) !== "cobblemon") world.effects(to, CombatStages.definition).forEach(function (view) {
+                    world.operation(view.id(), "world_combat:stage_adopt", "{}");
+                });
+            }
+        }
+        stageWindows(world, from).forEach(function (view) {
+            var value = JSON.parse(String(view.data())).stages[stat] || 0;
+            if (left <= 0 || value * sign <= 0) return;
+            var take = sign * Math.min(left, Math.abs(value));
+            if (world.operation(view.id(), "world_combat:stage_transfer", JSON.stringify({ target: String(to.ref()), stat: stat, amount: take, handoff: handoff }))) {
+                left -= Math.abs(take); moved += Math.abs(take);
+            }
+        });
+        return moved;
     }
     /**
      * Zero the persistent ladder for every stat (windows included for the “to zero” read), publishing the real
@@ -167,12 +285,11 @@ namespace NativeEffects {
      */
     export function resetStages(world: CombatWorld, actor: CombatActor, ignoreAbility?: boolean, source?: string, reason?: string): number {
         if (!world.valid(actor)) return 0;
-        var ladder = read(world, actor).stages, erased = 0;
+        var before = effectiveStages(world, actor), ladder = read(world, actor).stages;
         CombatStages.stats.forEach(function (stat) {
             var value = Number(ladder[stat]) || 0;
             if (value === 0) return;
-            var delta = boost(world, actor, stat, -value, ignoreAbility, source || "stage-reset", reason || "reset");
-            erased += Math.abs(delta);
+            boost(world, actor, stat, -value, ignoreAbility, source || "stage-reset", reason || "reset");
         });
         CombatStages.clearWindows(world, actor);
         // A Pokemon window is a NativeModifiers layer that carries only `stages`; other native layers (types,
@@ -184,6 +301,8 @@ namespace NativeEffects {
                 if (value && value.stages) world.operation(views[i].id(), "world_combat:clear_stages", "{}");
             }
         }
+        var after = effectiveStages(world, actor), erased = 0;
+        CombatStages.stats.forEach(function (stat) { erased += Math.abs((before[stat] || 0) - (after[stat] || 0)); });
         return erased;
     }
     /**
@@ -362,7 +481,7 @@ namespace NativeEffects {
     }
     export function incoming(event: CombatWorldEvent): void {
         var target = event.target(); if (target === null) return;
-        var world = event.world(), data = JSON.parse(String(event.data()));
+        var world = event.world(), data = DamageSemantics.normalize(JSON.parse(String(event.data())));
         if (data.amount <= 0 || data.bypassesInvulnerability) return;
         incomingRules.apply({ world: world, source: event.actor(), target: target, data: data });
         // Shared hit resolution over the accuracy/evasion ladder. A move's own base accuracy is resolved
@@ -440,7 +559,7 @@ namespace NativeEffects {
         var defender = CobblemonCombat.pokemon(target), defending = world.valid(target) ? read(world, target) : empty(), name = ability(defender, defending);
         // Thaw, wake and a move's secondary status run for every combatant in CombatStatus.
         // Contact: a move declares it with its own flag; ordinary damage counts when the attacker struck with its body (melee, claw, bite).
-        var touched = data.kind === "move" ? !!data.contact : !!data.direct;
+        var touched = DamageSemantics.read(data).contact;
         if (hostile && touched && world.valid(actor)) {
             var attackerPokemon = String(actor.domain()) === "cobblemon", own = attackerPokemon ? read(world, actor) : empty();
             if (attackerPokemon && NativeItems.apply(world, actor, "contactProtection", { blocked: false }, own).blocked) return;

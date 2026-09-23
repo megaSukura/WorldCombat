@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "matchagotcha",
+        cooldownParameter: "recharge",
         name: "Matcha Gotcha",
         description: "The user fires a blast of whisked tea that scalds everything around where it lands, siphoning the damage back. May leave targets burned, and thaws anything frozen.",
         uses: ["从一段距离外把茶汤泼到一小片人身上", "顺手挂灼伤并解冻被冻住的目标", "目标挤在一起时一次烫到几个并回血"],

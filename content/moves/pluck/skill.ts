@@ -82,6 +82,7 @@ namespace PokemonSkills {
 
     define({
         id: "pluck",
+        cooldownParameter: "recharge",
         name: "啄食",
         description: "用喙啄击对手，够得远也够得高；若它携带树果，就把果子啄下来当场吃掉，果子的效果立刻落到自己身上。",
         uses: ["远处啄一口并吃掉对手的树果", "啄到浮在空中的对手", "把对手的树果立刻变成自己的回复或强化"],

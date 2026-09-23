@@ -6,7 +6,7 @@
   "worldcombat.skill.energyball.description.0": "The ball deals %1$s special damage.",
   "worldcombat.skill.energyball.description.1": "At cast it draws from nature within %2$s blocks: each source adds %1$s power, up to 90 sources.",
   "worldcombat.skill.energyball.description.2": "It has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
-  "worldcombat.skill.energyball.description.3": "The ball flies at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius; the bloom lasts %4$s and sheds about %5$s seeds; deeproot is currently %6$s.",
+  "worldcombat.skill.energyball.description.3": "The ball flies at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius; the bloom lasts %4$s; deeproot is currently %5$s.",
   "worldcombat.skill.energyball.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.energyball.growth.0": "From level %1$s the core rises to %2$s power and %3$s blocks of range.",
   "worldcombat.skill.energyball.value.core": "Core power",

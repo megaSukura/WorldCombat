@@ -5,7 +5,7 @@
   "worldcombat.skill.mudslap.use.2": "Cheap, reliable chip damage",
   "worldcombat.skill.mudslap.description.0": "Splat the mud in the target's face: %1$s special damage and a guaranteed %2$s stage accuracy drop.",
   "worldcombat.skill.mudslap.description.1": "The clod flies a low arc at %1$s, up to %2$s blocks, with a %3$s block hit radius, steering up to %4$s degrees per tick.",
-  "worldcombat.skill.mudslap.description.2": "The mud stays on the face for %1$s; thick mud is currently %2$s.",
+  "worldcombat.skill.mudslap.description.2": "Thick mud is currently %1$s.",
   "worldcombat.skill.mudslap.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.mudslap.value.splat": "Clod power",
   "worldcombat.skill.mudslap.value.blind": "Accuracy drop",

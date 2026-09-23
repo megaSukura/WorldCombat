@@ -47,7 +47,7 @@ namespace PokemonSkills {
     });
     describe(kinesisId, [
         { key: "description.0", values: ["blindStage", "duration"] },
-        { key: "description.1", values: ["gazeRange", "spoonTicks", "swirl"] },
+        { key: "description.1", values: ["gazeRange"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

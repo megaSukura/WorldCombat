@@ -68,7 +68,7 @@ namespace PokemonSkills {
 
     describe(mirrormoveId, [
         { key: "description.0", values: ["reach", "focus"] },
-        { key: "description.1", values: ["mirrors", "edge"] },
+        { key: "description.1", values: ["edge"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "keen.on", values: [], when: function (context) { return read(context.detail.values, ["keen"]) === true; } },
         { key: "keen.off", values: [], when: function (context) { return read(context.detail.values, ["keen"]) !== true; } },

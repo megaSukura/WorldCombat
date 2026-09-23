@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: "thunderfang",
+        cooldownParameter: "recharge",
         name: "Thunder Fang",
         description: "The user bites with electrified fangs. The quickest of the elemental fangs: it may leave the target paralyzed, and a bite against an already paralyzed body locks its seizing muscles in place for a moment. It may also leave the target flinching.",
         uses: ["用最快的扑咬起手", "按几率把目标麻住", "把已经麻掉的目标电锁在原地"],

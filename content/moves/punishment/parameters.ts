@@ -39,7 +39,7 @@ namespace PokemonSkills {
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯，另有命中／闪避两级。 */
     export function punishmentStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
         if (!world.valid(actor)) return {};
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 目标七项里正面等级的总和；0 表示此刻没有可罚的涨能力。 */
@@ -134,7 +134,6 @@ namespace PokemonSkills {
 
     describe(punishmentId, [
         { key: "description.0", values: ["judge", "reach"] },
-        { key: "description.1", values: ["edge", "weights"] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

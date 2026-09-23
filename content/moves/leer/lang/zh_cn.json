@@ -4,7 +4,7 @@
   "worldcombat.skill.leer.use.1": "为队友的物攻打开缺口",
   "worldcombat.skill.leer.use.2": "在开阔地削弱身前一片对手的防御",
   "worldcombat.skill.leer.description.0": "被扫到者损失 %1$s 级防御，胆怯持续 %2$s。",
-  "worldcombat.skill.leer.description.1": "目光长度 %1$s，扇面 %2$s 度，一次甩出 %3$s 道目光。需要通视，掩体后的人扫不到。",
+  "worldcombat.skill.leer.description.1": "目光长度 %1$s，扇面 %2$s 度。需要通视，掩体后的人扫不到。",
   "worldcombat.skill.leer.description.2": "起手 %1$s，冷却 %2$s。以自身为顶点朝身前张开，不达身后。",
   "worldcombat.skill.leer.focus.off": "横扫：张角大、只降 1 级、起手快。",
   "worldcombat.skill.leer.focus.on": "瞪住：收成一道窄扇面，降 2 级，但起手与冷却更长。",

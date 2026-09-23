@@ -144,7 +144,7 @@ namespace PokemonSkills {
     ]);
 
     describe(aurorabeamId, [
-        { key: "description.0", values: ["beam", "shimmer"] },
+        { key: "description.0", values: ["beam"] },
         { key: "description.1", values: ["chillChance", "chillStages"] },
         { key: "description.2", values: ["reach", "velocity", "band", "bandTicks"] },
         { key: "spectrum.on", values: [], when: function (context) { return read(context.detail.values, ["spectrum"]) === true; } },

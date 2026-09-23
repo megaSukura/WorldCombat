@@ -4,7 +4,7 @@
   "worldcombat.skill.venomdrench.use.1": "在敌人扎堆时一次黏住几个中毒的",
   "worldcombat.skill.venomdrench.use.2": "贴住一个中毒的硬目标深泼两档",
   "worldcombat.skill.venomdrench.description.0": "被毒液黏住的中毒者，攻击、特攻、速度各下降 %1$s 级；毒液泼到身周 %2$s 格。",
-  "worldcombat.skill.venomdrench.description.1": "一圈约泼出 %2$s 滴毒液，向外泼开速度 %1$s。没中毒的人只是被淋湿、不受影响。",
+  "worldcombat.skill.venomdrench.description.1": "没中毒的人只是被淋湿、不受影响。",
   "worldcombat.skill.venomdrench.deep.on": "深泼：三项各 −%1$s 级，但泼洒半径更小、起手与冷却更长。",
   "worldcombat.skill.venomdrench.deep.off": "浅泼：三项各 −1 级，泼洒半径更大、出手更快更省。",
   "worldcombat.skill.venomdrench.description.2": "起式 %1$s，收招 %2$s，冷却 %3$s。",

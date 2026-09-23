@@ -99,7 +99,7 @@ namespace PokemonSkills {
                     MobEffects.apply(scope, victim, gravappleCrush, crushTicks, 0);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), gravappleCrushText, [stages], 28);
                     if (airborne) {
-                        scope.motion(victim, WorldCombat.point(0, -slam, 0), true);
+                        if (scope.valid(victim)) scope.motion(victim, WorldCombat.point(0, -slam, 0), true);
                         WorldFeedback.emit(scope, gravappleScene, 1, point,
                             { moment: "slam", target: String(victim.ref()), crush: stages, slam: slam, intensity: intensity }, 26);
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), gravappleSlamText, [], 26);

@@ -72,6 +72,7 @@ namespace PokemonSkills {
 
     define({
         id: gearupId,
+        cooldownParameter: "wait",
         name: "辅助齿轮",
         description: "启动体内的齿轮，把动力沿齿链甩给紧贴身边的正电／负电己方宝可梦，攻击与特攻一起提高；"
             + "动力转一会儿就散，这份提升随之收回。",

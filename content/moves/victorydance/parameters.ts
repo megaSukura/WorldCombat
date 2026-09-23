@@ -94,8 +94,8 @@ namespace PokemonSkills {
     ]);
 
     describe("victorydance", [
-        { key: "description.0", values: ["gift", "beats", "laurels"] },
-        { key: "description.1", values: ["span", "crown"] },
+        { key: "description.0", values: ["gift"] },
+        { key: "description.1", values: ["span"] },
         { key: "rally", values: ["rallyGain", "rallyCap"] },
         { key: "grand.on", values: [], when: function (context) { return read(context.detail.values, ["grand"]) === true; } },
         { key: "grand.off", values: [], when: function (context) { return read(context.detail.values, ["grand"]) !== true; } },

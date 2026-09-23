@@ -49,6 +49,7 @@ namespace PokemonSkills {
 
     define({
         id: "fireblast",
+        cooldownParameter: "recharge",
         name: "Fire Blast",
         description: "The target is attacked with an intense blast of all-consuming fire. This may also leave the target with a burn.",
         uses: ["在空中写下一个大字后崩开烧穿目标", "用刻印式在地上留下会烫人的字痕", "在远处一记高威力特殊火点杀"],

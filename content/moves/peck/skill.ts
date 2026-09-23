@@ -39,6 +39,7 @@ namespace PokemonSkills {
 
     define({
         id: "peck",
+        cooldownParameter: "recharge",
         name: "Peck",
         description: "The target is jabbed with a sharply pointed beak or horn to inflict damage.",
         uses: ["贴脸一记最快、最省的单发点啄", "把离地的目标一喙压回地面", "在对手起手前抢一记速啄"],

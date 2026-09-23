@@ -49,6 +49,7 @@ namespace PokemonSkills {
 
     define({
         id: steamrollerId,
+        cooldownParameter: "recharge",
         name: "Steamroller",
         description: "The user crushes its target by rolling over the target with its rolled-up body. This may also make the target flinch.",
         uses: ["一次碾过一整排敌人", "低消耗低冷却地连续压场", "滚出一条被人踩出来的平痕"],
@@ -136,7 +137,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(steamrollerId, "squash"), contact: true });
                         if (!landed) return;
                         crushed++;
-                        scope.displace(target, direction.scale(push));
+                        if (scope.valid(target)) scope.displace(target, direction.scale(push));
                         WorldFeedback.emit(scope, steamrollerScene, 1, facts.position(),
                             { moment: "crush", target: ref, dirt: dirty, scale: scale, intensity: intensity }, 24);
                         WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.0, 0)), steamrollerHitText, [Math.round(power)], 22);

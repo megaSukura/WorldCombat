@@ -6,8 +6,8 @@
  *   则回满 HP 并 clearStatus，随即消耗。
  *
  * 世界化：把「自己倒下、把健康留给下一个上场的人」翻成即时战斗里的一次**牺牲**——施法者当场交出全部生命，
- *   在倒下的地方留下一颗治愈之愿；愿望会等一段时间，第一个来到它身边、又伤又病的伙伴（受伤或带主异常）
- *   被整口治好（按其最大生命回复并洗掉全部主异常），愿望随即散去。它是本家族里唯一**以命换命**的一招：
+ *   在倒下的地方留下一颗治愈之愿；愿望会等一段时间，第一个来到它身边、又伤又病的伙伴（受伤或带有害状态效果）
+ *   被整口治好（按其最大生命回复并洗掉全部有害状态效果），愿望随即散去。它是本家族里唯一**以命换命**的一招：
  *   不是净化别人，而是把自己变成一次救援。
  *
  * 数值来源（每个参数读不同的精灵数据，分散到不同参数上）：
@@ -30,8 +30,6 @@ namespace PokemonSkills {
     export const healingwishWasteText = "world_combat.move.healingwish.text.waste";
     /** 表现里的参考半径：`data.scale = 实际愿望半径 / 这个数`。 */
     export const healingwishReferenceRadius = 3.0;
-    /** 与原生 clearStatus 一致的主异常身份（剧毒由 poison 身份一并带走）。 */
-    export const healingwishMalaise = ["poison", "burn", "paralysis", "sleep", "frozen"];
     const healingwishBroadcast = { key: "worldcombat.skill." + healingwishId + ".preference.broadcast" };
 
     actionParameters.define(healingwishId, {
@@ -72,7 +70,7 @@ namespace PokemonSkills {
 
     describe(healingwishId, [
         { key: "description.0", values: ["wishHeal", "wishReach"] },
-        { key: "description.1", values: ["wishWait", "motes"] },
+        { key: "description.1", values: ["wishWait"] },
         { key: "stance.broadcast", values: [], when: function (context) { return read(context.detail.values, ["broadcast"]) === true; } },
         { key: "stance.focus", values: [], when: function (context) { return read(context.detail.values, ["broadcast"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

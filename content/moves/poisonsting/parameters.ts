@@ -105,7 +105,7 @@ namespace PokemonSkills {
     describe("poisonsting", [
         { key: "description.0", values: ["tip", "reach", "needleSpeed", "needleRadius"] },
         { key: "description.1", values: ["poisonChance", "venomTicks", "seep"] },
-        { key: "description.2", values: ["needles", "tempo", "settle", "recharge"] },
+        { key: "description.2", values: ["tempo", "settle", "recharge"] },
         { key: "barbed.on", values: [], when: function (context) { return read(context.detail.values, ["barbed"]) === true; } },
         { key: "barbed.off", values: [], when: function (context) { return read(context.detail.values, ["barbed"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

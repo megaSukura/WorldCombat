@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: "poisonsting",
+        cooldownParameter: "recharge",
         name: "Poison Sting",
         description: "甩出一发廉价的远程细针，伤害极低但射程远、出手快、冷却短。针扎进身体后毒在伤口里慢慢渗开，按概率让目标中毒。倒钩针更容易留住毒，代价是飞得慢、打得更轻。",
         uses: ["远距离反复点射", "给远处目标慢慢挂上毒", "在冷却缝隙里补一发小伤害"],

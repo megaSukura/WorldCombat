@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: dreameaterId,
+        cooldownParameter: "recharge",
         name: "Dream Eater",
         description: "吃掉正在睡觉的对手的梦进行攻击。回复对手所受到伤害的一半HP。",
         uses: ["在对方睡着时把生命抽回自己身上", "为队友制造的睡眠窗口收一次续航", "从远处对睡者下手，不必贴身"],

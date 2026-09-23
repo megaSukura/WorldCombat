@@ -65,7 +65,7 @@ namespace PokemonSkills {
     });
     describe(tickleId, [
         { key: "description.0", values: ["atkDrop", "defDrop", "giggleTicks"] },
-        { key: "description.1", values: ["reach", "range", "sparks"] },
+        { key: "description.1", values: ["reach", "range"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

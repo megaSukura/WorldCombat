@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: armthrustId,
+        cooldownParameter: "recharge",
         name: "Arm Thrust",
         description: "The user attacks the target with open-palmed arm thrusts. This move hits two to five times in a row.",
         uses: ["张开双手的一串必中推撞", "把对手一路推向墙、石头或树干，撞上时多挨一记", "推进式跟着对手走，把整串吃满"],

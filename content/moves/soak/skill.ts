@@ -78,6 +78,7 @@ namespace PokemonSkills {
 
     define({
         id: soakId,
+        cooldownParameter: "recharge",
         name: "浸水",
         description: "把大量水浇在对手身上，把它的属性整个冲成水属性；漫流档还能浇到它身边一圈人，并把地面浸出一块湿泥。",
         uses: ["把对手的属性和本系一起冲成水", "打开雷与草的弱点、封掉火与地的本系", "顺手把围在身边的一圈敌人一起浇透"],

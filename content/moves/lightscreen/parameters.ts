@@ -68,7 +68,7 @@ namespace PokemonSkills {
     describe(lightscreenId, [
         { key: "description.0", values: ["screenTicks", "screenRadius"] },
         { key: "description.1", values: ["cut", "damp"] },
-        { key: "description.2", values: ["motes"] },
+        { key: "description.2", values: [] },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },

@@ -149,12 +149,12 @@ namespace PokemonSkills {
 
     describe(stoneaxeId, [
         { key: "description.0", values: ["cleave", "reach", "critChance"] },
-        { key: "description.1", values: ["rock", "fieldRadius", "fieldTicks", "rockInterval", "lift"] },
-        { key: "description.2", values: ["rocks", "tempo", "recharge"] },
+        { key: "description.1", values: ["rock", "fieldRadius", "fieldTicks", "rockInterval"] },
+        { key: "description.2", values: ["tempo", "recharge"] },
         { key: "shatter.on", values: [], when: function (context) { return read(context.detail.values, ["shatter"]) === true; } },
         { key: "shatter.off", values: [], when: function (context) { return read(context.detail.values, ["shatter"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cleave", "tier.0.rock"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cleave", "tier.1.lift"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.cleave"] }
     ]);
 }

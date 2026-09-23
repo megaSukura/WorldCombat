@@ -57,7 +57,7 @@ namespace PokemonSkills {
 
     describe("magiccoat", [
         { key: "description.0", values: ["window", "tempo"] },
-        { key: "description.1", values: ["coatReach", "facets", "range"] },
+        { key: "description.1", values: ["coatReach", "range"] },
         { key: "description.2", values: ["recharge"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },

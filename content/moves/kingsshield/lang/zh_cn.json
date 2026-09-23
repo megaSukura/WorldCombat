@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.kingsshield.summary": "摆出王者钢盾，按总量挡下伤害招式并削去接触者的攻击；变化招式会穿过盾牌。",
   "worldcombat.skill.kingsshield.description.0": "钢盾持续 %1$s、量 %2$s 点，接触削攻 %3$s 级；防御、速度与特防越高越厚越久。",
-  "worldcombat.skill.kingsshield.description.1": "立起 %1$s，盾影半径 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.kingsshield.description.1": "立起 %1$s，冷却 %2$s。",
   "worldcombat.skill.kingsshield.description.2": "连用失误率 %1$s；威仪与磐固的取舍见配置 %2$s。",
   "worldcombat.skill.kingsshield.use.0": "挡住近战的连续伤害并削其攻击",
   "worldcombat.skill.kingsshield.use.1": "为下一记交手先把对手打软",

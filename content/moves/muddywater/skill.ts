@@ -79,6 +79,7 @@ namespace PokemonSkills {
 
     define({
         id: muddywaterId,
+        cooldownParameter: "recharge",
         name: "Muddy Water",
         description: "从脚下向前推出一道贴地的浑浊泥浪：泥水一层层漫过身前大片，扇形里的敌人各挨一记，有概率被泥水糊住眼睛、掉命中，还会沿准线越过目标继续铺；推完地面淤上一层泥。淤积式铺得更宽更久更黏，急流式更重更快更远。",
         uses: ["一次糊住身前扇形里的一排敌人", "削掉对手的命中，为对手的下一轮攻击留出空门", "在泥地上留下痕迹，标记这招扫过的地方"],

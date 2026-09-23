@@ -49,7 +49,7 @@ namespace PokemonSkills {
     });
     describe(sandattackId, [
         { key: "description.0", values: ["blindStage", "duration"] },
-        { key: "description.1", values: ["coneRange", "coneAngle", "grains"] },
+        { key: "description.1", values: ["coneRange", "coneAngle"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

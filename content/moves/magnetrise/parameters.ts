@@ -62,7 +62,7 @@ namespace PokemonSkills {
     });
     describe(magnetriseId, [
         { key: "description.0", values: ["hoverTicks"] },
-        { key: "description.1", values: ["fieldRadius", "liftHeight", "sparks", "repel"] },
+        { key: "description.1", values: ["repel"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "field.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.field === "glide"); } },
         { key: "field.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.field !== "glide"; } },

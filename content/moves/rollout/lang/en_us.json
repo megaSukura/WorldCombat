@@ -3,6 +3,8 @@
   "worldcombat.skill.rollout.description.0": "Each pass deals %1$s contact damage; the chain runs up to %2$s passes and simply spends itself at the end.",
   "worldcombat.skill.rollout.description.1": "Each pass hits for %1$s, reaches %2$s blocks with a %3$s-block hitbox, and knocks the target %4$s blocks away.",
   "worldcombat.skill.rollout.description.2": "On a hit the ball bounces back %1$s blocks; keep rolling within %2$s to keep the chain and double the next pass.",
+  "worldcombat.skill.rollout.heavy.on": "Heavy ball: each landed pass multiplies the next by 2.35 and the chain window runs 8 ticks longer; costs 5% hit chance per pass, 0.92x rolling reach, 0.9x lunge, +1 tick preparation, +2 ticks recovery and +8 ticks cooldown - a heavier roll, though harder to keep going and dearer.",
+  "worldcombat.skill.rollout.heavy.off": "Light ball (the native form): 2x per pass, 2% more hit chance, longer rolling and lunge distance, a shorter recovery and 4 ticks less cooldown; at a lower per-pass power ceiling - a smoother and cheaper roll.",
   "worldcombat.skill.rollout.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.rollout.growth.0": "From level %1$s each pass rises to %2$s and the chain window extends to %3$s s.",
   "worldcombat.skill.rollout.growth.1": "From level %1$s each pass rises to %2$s and the rolling reach extends to %3$s blocks.",

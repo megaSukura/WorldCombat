@@ -27,6 +27,7 @@ namespace PokemonSkills {
 
     define({
         id: furycutterId,
+        cooldownParameter: "recharge",
         name: "Fury Cutter",
         description: "The user attacks by slashing the target with scythes, claws, or the like. This attack becomes more powerful if it hits in succession.",
         uses: ["一趟挥出翻倍的刀数", "连续命中攒层，越接越深", "换招或落空就把层数清空"],

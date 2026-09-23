@@ -112,7 +112,7 @@ namespace PokemonSkills {
     describe("firespin", [
         { key: "description.0", values: ["scorch"] },
         { key: "description.1", values: ["duration", "interval", "burnChance", "burnTicks"] },
-        { key: "description.2", values: ["radius", "height", "reach", "speed"] },
+        { key: "description.2", values: ["reach", "speed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["blaze"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["blaze"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -50,6 +50,7 @@ namespace PokemonSkills {
 
     define({
         id: "blizzard",
+        cooldownParameter: "recharge",
         name: "Blizzard",
         description: "在一块地方召唤驻留的风雪，一阵阵扑打整片范围：圈里的敌人每阵挨一次冻伤、被风往外推，并有概率被冻住；风雪刮过之处地面被雪覆盖。下雨天更猛，呼啸式更大更急。",
         uses: ["封锁一块场地，逼敌人离开或硬吃", "一次覆盖挤在一起的一队敌人", "在雨天把范围和冰冻概率都推高"],
@@ -133,7 +134,7 @@ namespace PokemonSkills {
                     hit[ref] = ordinal + 1;
                     const away = facts.position().minus(centre);
                     const heading = away.length() < 0.05 ? WorldCombat.point(0, 0, 0) : away.unit();
-                    scope.displace(victim, heading.scale(push).plus(WorldCombat.point(0, 0.12, 0)));
+                    if (scope.valid(victim)) scope.displace(victim, heading.scale(push).plus(WorldCombat.point(0, 0.12, 0)));
                     WorldFeedback.emit(scope, blizzardScene, 1, facts.position(),
                         { moment: "impact", target: ref, intensity: intensity, scale: scale, rake: index + 1, ordinal: ordinal + 1,
                             impactCount: impactCount }, 24);

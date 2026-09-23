@@ -4,7 +4,7 @@
   "worldcombat.skill.refresh.use.1": "Break out of paralysis and act normally again",
   "worldcombat.skill.refresh.use.2": "Pre-cleanse and use the clear window to block the next status",
   "worldcombat.skill.refresh.description.0": "Cleansing grants a %1$s clear window.",
-  "worldcombat.skill.refresh.description.1": "The cleanse rings %1$s blocks around the body; it takes %2$s of standing still to shed the afflictions.",
+  "worldcombat.skill.refresh.description.1": "Standing still for %1$s sheds the afflictions; you cannot move while preparing.",
   "worldcombat.skill.refresh.stance.deep": "Deep breath: x1.3 wind-up and x1.25 cooldown for a x1.5 clear window (a longer protection).",
   "worldcombat.skill.refresh.stance.quick": "Quick cleanse: x0.85 wind-up and x0.8 cooldown, but the clear window is only x0.65 (a brief purge).",
   "worldcombat.skill.refresh.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

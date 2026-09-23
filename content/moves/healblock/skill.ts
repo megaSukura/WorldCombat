@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: "healblock",
+        cooldownParameter: "recharge",
         name: "回复封锁",
         description: "向对手套上一道镇住回复的紫环：在紫环松开前，它无法通过招式、特性或携带的道具回复生命，任何回升都被按回原位。",
         uses: ["锁住靠回复拖时间的对手", "压制剩饭、吸取一类持续续航", "在爆发前先掐断对手的回血"],

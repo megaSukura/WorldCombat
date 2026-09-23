@@ -115,6 +115,7 @@ namespace PokemonSkills {
 
     define({
         id: magneticfluxId,
+        cooldownParameter: "wait",
         name: "磁场操控",
         description: "把自己压成一个磁极，在脚下立起一片磁场；站在磁场里的正电／负电己方宝可梦防御与特防一起提高。"
             + "离开磁场、磁场散尽或被人解除时，这份提升一并收回。",

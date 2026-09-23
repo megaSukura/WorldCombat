@@ -74,6 +74,7 @@ namespace PokemonSkills {
 
     define({
         id: "rockpolish",
+        cooldownParameter: "wait",
         name: "岩石打磨",
         description: "打磨自己的身体，减少空气阻力，从而大幅提高自己的速度。",
         uses: ["开战前站定磨一轮，把速度拉满", "用可见的光面窗口逼对手拖时间", "顺手把脚下的石地磨亮、标下这块场地"],

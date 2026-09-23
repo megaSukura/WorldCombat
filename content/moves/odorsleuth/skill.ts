@@ -103,6 +103,7 @@ namespace PokemonSkills {
 
     define({
         id: odorsleuthId,
+        cooldownParameter: "recharge",
         name: "气味侦测",
         description: "闻着对手的气味把它咬住：留下一段追踪印记，剥掉它当下的闪避并把它照亮，幽灵的虚体再次被闻实；被咬住的期间它的脚步被拖慢。",
         uses: ["追一个想跑的幽灵或快手", "长时间把它照亮、别让它藏起来", "替队友的一般或格斗招铺路"],

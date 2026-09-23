@@ -4,7 +4,7 @@
   "worldcombat.skill.matblock.use.1": "Raise the mat a beat before a heavy hit lands",
   "worldcombat.skill.matblock.use.2": "Keep one burst outside the mat",
   "worldcombat.skill.matblock.description.0": "The mat eats about %1$s move damage per ally and stands for about %2$s s.",
-  "worldcombat.skill.matblock.description.1": "The mat covers %1$s blocks, woven from %2$s slats with about %3$s straw bits.",
+  "worldcombat.skill.matblock.description.1": "The mat covers the user and allies within %1$s blocks.",
   "worldcombat.skill.matblock.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.matblock.fold.upright": "Upright: absorption x1.3, duration x1.15, radius x0.85, at +2 ticks wind-up and x1.15 cooldown — thick and hard to batter through.",
   "worldcombat.skill.matblock.fold.spread": "Spread: radius x1.25, absorption x0.8, duration x0.85, in exchange for -1 tick wind-up and x0.85 cooldown — wide and quick to raise.",

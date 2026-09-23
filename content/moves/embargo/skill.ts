@@ -79,6 +79,7 @@ namespace PokemonSkills {
 
     define({
         id: "embargo",
+        cooldownParameter: "recharge",
         name: "查封",
         description: "向对手送去一枚跟着它走的查封印记：在印记松开前，它用不了自己的持有物，也收不到新的道具。道具仍在手里，只是暂时被封住。",
         uses: ["封住依赖持有物的对手", "在道具交换发生前先按住对方的手", "让对手再也接不到队友递来的道具"],

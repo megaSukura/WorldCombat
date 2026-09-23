@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: doublehitId,
+        cooldownParameter: "recharge",
         name: "Double Hit",
         description: "The user slams the target with a tail or the like. The target is hit twice in a row.",
         uses: ["原地甩尾，向左右各扫一次", "把身前一小片敌人沿弧线来回推", "用宽弧的势把贴身的对手扫开"],
@@ -115,8 +116,8 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), doublehitTurnText, [], 20);
                 });
                 if (index === 0) {
-                    if (hits === 0) WorldFeedback.emit(scope, doublehitScene, 1, origin.plus(direction.scale(reach * 0.6)),
-                        { moment: "miss1", reach: reach, span: span, dust: dust }, 18);
+                    if (hits === 0) WorldFeedback.emit(scope, doublehitScene, 1, origin,
+                        { moment: "miss1", direction: heading, reach: reach, span: span, dust: dust }, 18);
                     current.after(gap, function (next: CombatAction) { sweep(next, 1); });
                     return;
                 }

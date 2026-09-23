@@ -4,7 +4,7 @@
   "worldcombat.skill.meanlook.use.1": "Lock a high-mobility target into the melee",
   "worldcombat.skill.meanlook.use.2": "Hold the enemy's main force in a one-on-one in the open",
   "worldcombat.skill.meanlook.description.0": "The gaze lasts up to about %1$s; dragged more than %2$s blocks from the user, or with the line of sight blocked, it snaps and the lock ends.",
-  "worldcombat.skill.meanlook.description.1": "It starts within %1$s blocks; about %2$s gaze strands are drawn, over a dark mark of about %3$s blocks under the target.",
+  "worldcombat.skill.meanlook.description.1": "It can begin gazing at a target within %1$s blocks.",
   "worldcombat.skill.meanlook.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s. The user stands still and cannot act while gazing.",
   "worldcombat.skill.meanlook.option.on": "Deep gaze: duration about x1.4 and snap distance +1 block, at wind-up +3 ticks, cooldown +15 ticks and cast range -1 block - a longer, firmer lock that is slower and shorter ranged.",
   "worldcombat.skill.meanlook.option.off": "Quick lock: a faster wind-up, longer range and shorter cooldown, at the cost of a shorter lock that is torn more easily.",

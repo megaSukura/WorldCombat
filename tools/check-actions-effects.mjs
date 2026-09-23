@@ -46,7 +46,7 @@ const context = vm.createContext({ WorldCombat: {
     actor.data.set(key, value); return true;
   }
 }, WorldAI: { point: values => point(...values), coordinates: p => [p.x(), p.y(), p.z()] } });
-const sources = ['content/behavior/contributions.ts', 'content/protocols/effects.ts', 'content/traits/composition.ts',
+const sources = ['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/protocols/effects.ts', 'content/traits/composition.ts',
   'content/preferences/skill-preferences.ts', 'content/behavior/companion-menus.ts',
   ...['formula', 'status-vocabulary', 'combat-status', 'combatant-stats', 'combat-stages', 'native-abilities', 'native-items', 'native-semantics', 'native-modifiers',
     'native-effects', 'native-loadout', 'living-actions', 'native-repertoire', 'guard-effects', 'world-environment', 'mob-effects', 'status-contributions', 'world-effects', 'world-abilities',
@@ -246,6 +246,31 @@ check('public slot selection is read-only and identical through binding, prepara
   source.modifiers = [modifier(10, 'replacement_route')];
   assert.throws(() => pending.commit(3), /loadout-changed/); assert.equal(source.pp, 5);
   source.modifiers = []; assert.equal(L.selection(readOnly, 0, source.move).key, 'native');
+});
+check('effective equipped queries belong to the recipient and follow copied-slot lifetimes', () => {
+  const counter = register('counter_route'), recipient = actor('loadout-recipient', true, false, 3);
+  const equipped = [null, templates.get('entry'), null];
+  recipient.pokemon.moveSlots = () => equipped.length;
+  recipient.pokemon.move = slot => equipped[slot];
+  const readOnly = { ...world, operation() { throw Error('read-only'); }, effect() { throw Error('read-only'); } };
+  source.move = counter; source.pp = 0;
+  assert(L.hasEquipped(readOnly, source, 'counter_route'), 'PP does not change equipped identity');
+  assert(!L.hasEquipped(readOnly, recipient, 'counter_route'), 'The attacker loadout is not the recipient loadout');
+  assert(L.hasEquipped(readOnly, recipient, 'entry'), 'Empty slots are skipped');
+  assert(!L.hasEquipped(readOnly, enemy, 'counter_route'), 'Non-native actors require no native access');
+  world.marker(recipient, 'fixture:copy', 20, 0);
+  const carrier = context.MobEffects.anchor(world.mobEffect(recipient, 'fixture:copy'));
+  recipient.modifiers = [{ id: () => 17, data: () => JSON.stringify({ moves: { 1: 'counter_route' }, carrier }) }];
+  assert.equal(L.selection(readOnly, 1, equipped[1], recipient).id, 'counter_route');
+  assert(L.hasEquipped(readOnly, recipient, 'counter_route'));
+  assert(!L.hasEquipped(readOnly, recipient, 'entry'), 'A replaced slot stops exposing its original move');
+  recipient.modifiers.push({ id: () => 18, data: () => '{"moves":{"1":"entry"}}' });
+  assert(!L.hasEquipped(readOnly, recipient, 'counter_route'), 'A newer replacement removes the copied capability');
+  recipient.modifiers.pop(); recipient.markers.delete('fixture:copy');
+  assert(!L.hasEquipped(readOnly, recipient, 'counter_route'), 'An expired copy carrier removes the copied capability');
+  assert(L.hasEquipped(readOnly, recipient, 'entry'));
+  recipient.alive = false;
+  assert(!L.hasEquipped(readOnly, recipient, 'entry'), 'Unavailable actors expose no equipped capability');
 });
 check('inline input crosses entity, point, ally and self categories with bounded reach and recursion', () => {
   source.move = templates.get('entry'); const current = action(null); L.prepare(current, 'entry');

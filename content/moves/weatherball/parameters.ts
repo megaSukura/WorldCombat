@@ -115,7 +115,6 @@ namespace PokemonSkills {
     describe("weatherball", [
         { key: "description.0", values: ["orb"] },
         { key: "description.1", values: ["charge", "reach"] },
-        { key: "description.2", values: ["bursts"] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);
 }

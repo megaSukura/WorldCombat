@@ -4,7 +4,7 @@
   "worldcombat.skill.refresh.use.1": "在被麻痹锁住前挣脱，恢复正常行动",
   "worldcombat.skill.refresh.use.2": "在对方下一次异常前预先净息，用清爽窗口挡住",
   "worldcombat.skill.refresh.description.0": "净息后获得 %1$s 的清爽窗口。",
-  "worldcombat.skill.refresh.description.1": "净息环绕身体 %1$s 格；站定 %2$s 才能抖落，准备期间不能移动。",
+  "worldcombat.skill.refresh.description.1": "站定 %1$s 才能抖落，准备期间不能移动。",
   "worldcombat.skill.refresh.stance.deep": "深息：起手 ×1.3、冷却 ×1.25，换来清爽窗口 ×1.5（一次更久的保护）。",
   "worldcombat.skill.refresh.stance.quick": "速净：起手 ×0.85、冷却 ×0.8，但清爽窗口只有 ×0.65（一次短促的净化）。",
   "worldcombat.skill.refresh.timing": "自身招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",

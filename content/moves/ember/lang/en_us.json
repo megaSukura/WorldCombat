@@ -8,7 +8,7 @@
   "worldcombat.skill.ember.charged.on": "Charged: power x1.4, ignition +5%%, a bigger spark, but +4 ticks wind-up, +8 cooldown and -1 block range.",
   "worldcombat.skill.ember.charged.off": "Rapid: faster to fire, farther and quicker to recover, at the cost of power and ignition.",
   "worldcombat.skill.ember.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
-  "worldcombat.skill.ember.growth.0": "From level %1$s the spark rises to %2$s power and %3$s embers.",
+  "worldcombat.skill.ember.growth.0": "From level %1$s the spark rises to %2$s power.",
   "worldcombat.skill.ember.growth.1": "From level %1$s the spark rises to %2$s power and %3$s ignition chance.",
   "worldcombat.skill.ember.value.spark": "Spark power",
   "worldcombat.skill.ember.value.velocity": "Launch speed",

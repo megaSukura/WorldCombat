@@ -4,7 +4,7 @@
   "worldcombat.skill.confide.use.1": "打断需要蓄力维持的特攻威胁",
   "worldcombat.skill.confide.use.2": "趁敌人扎堆时一句闲话带走几个",
   "worldcombat.skill.confide.description.0": "被密语的目标损失 %1$s 级特攻，失神持续 %2$s。",
-  "worldcombat.skill.confide.description.1": "密语距离 %1$s，超出就听不见；传谣的闲话半径 %2$s，最多再带走 %3$s 人，射程 %4$s 格，一次吐出 %5$s 个低语。",
+  "worldcombat.skill.confide.description.1": "密语距离 %1$s，超出就听不见；传谣的闲话半径 %2$s，最多再带走 %3$s 人，射程 %4$s 格。",
   "worldcombat.skill.confide.description.2": "开口要 %1$s，冷却 %2$s。",
   "worldcombat.skill.confide.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.confide.value.whisperRange": "密语距离",

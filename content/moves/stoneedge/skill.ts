@@ -56,6 +56,7 @@ namespace PokemonSkills {
 
     define({
         id: stoneedgeId,
+        cooldownParameter: "recharge",
         name: "Stone Edge",
         description: "The user stabs the target with sharpened stones.",
         uses: ["在一条裂缝上把目标刺穿", "隔一段距离先手，把站位逼开", "在地面上留下会合上的裂痕"],

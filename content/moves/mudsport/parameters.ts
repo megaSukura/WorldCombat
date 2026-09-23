@@ -69,7 +69,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["mudRadius", "mudTicks"] },
         { key: "description.2", values: ["electricFactor", "coatTicks"] },
-        { key: "description.3", values: ["mudDensity", "mudCells"] },
+        { key: "description.3", values: ["mudCells"] },
         { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },

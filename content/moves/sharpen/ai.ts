@@ -1,7 +1,7 @@
 /**
  * 棱角化 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：附近有威胁、还在 ai.maxChase 以内，或处于整备命令（驻守／自主／工作）时；身上还没有棱角才考虑。
+ * 什么局面有意义：附近有威胁、还在 ai.maxChase 以内，且有交战需求时；身上还没有棱角才考虑。
  * 什么时候最想出手：开启 ai.retaliate（默认）时，威胁已经贴身（距离 < 4）priority 75，正好让对手撞上来吃反击；
  *   还在远处时降到 35，先顶角加攻也行但不抢次序。已经长着棱角就不重复（ready 会拒绝）。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -23,8 +23,10 @@ namespace CompanionBehavior {
             const self = source(context);
             if (status(context, self, "sharpened")) return false;
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
-            return distance(self.point, threat.point) <= ai<number>(capability, "maxChase", 14);
+            if (!threat) return false;
+            const gap = distance(self.point, threat.point);
+            if (gap > ai<number>(capability, "maxChase", 14)) return false;
+            return gap >= ai<number>(capability, "minGap", 1);
         },
         accepts: function (context, _capability, target) { return target.ref === source(context).ref; },
         approachTarget: function (context) { return source(context); },

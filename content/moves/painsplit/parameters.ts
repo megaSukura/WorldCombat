@@ -52,11 +52,11 @@ namespace PokemonSkills {
     ]);
 
     describe("painsplit", [
-        { key: "description.0", values: ["reach", "motes"] },
+        { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["link", "recover", "cooldown"] },
         { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.motes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.reach"] }
     ]);
 }

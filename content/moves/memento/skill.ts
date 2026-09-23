@@ -88,6 +88,7 @@ namespace PokemonSkills {
 
     define({
         id: mementoId,
+        cooldownParameter: "recharge",
         name: "临别礼物",
         description: "把自己的一切当作礼物送出去：当场倒下，原地留下遗念；遗念缠住身边的敌人，把它们的攻击与特攻各夺走数级，直到它散去。圈内空无一人时礼物送不出去，自己也不倒。",
         uses: ["残血时把围上来的强敌一起废掉", "用一条命换取对手主力的输出崩盘", "在自己必死的一刻把遗念留在原地继续施压"],

@@ -5,7 +5,10 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 // Neutral mechanism regression: execute production callbacks, with native events deferred as in MinecraftCombat.
-const scripts = ['content/protocols/effects.ts', 'content/mechanisms/mob-effects.ts', 'content/mechanisms/status-contributions.ts']
+const scripts = ['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/protocols/effects.ts', 'content/mechanisms/mob-effects.ts',
+  'content/mechanisms/status-contributions.ts', 'content/mechanisms/status-vocabulary.ts',
+  'content/mechanisms/combat-status.ts', 'content/mechanisms/combat-stages.ts',
+  'content/mechanisms/native-modifiers.ts', 'content/mechanisms/native-effects.ts']
   .map(file => ({ file, code: ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None },
   }).outputText }));
@@ -15,8 +18,13 @@ const recordDefinition = 'world_combat:status_contribution', managerDefinition =
 function harness() {
   const definitions = new Map(), handlers = new Map(), hooks = new Map(), actors = new Map();
   const effects = new Map(), leases = new Map(), nativeEvents = [], endCalls = [];
+  const recipes = new Map(); let parameters = {};
   let now = 0, nextEffect = 0, nextNative = 0, nextLease = 0;
-  const context = vm.createContext({ WorldCombat: {
+  const context = vm.createContext({ CobblemonCombat: { pokemon: actor => ({ ability: () => actor.ability || '' }) },
+    NativeAbilities: { flag: () => false, apply: (_world, _actor, _hook, value) => value },
+    PokemonSkills: { define: value => recipes.set(value.id, value), flag: () => ({}), p: (_id, key) => parameters[key] ?? 12 },
+    WorldFeedback: { emit() {}, keep() {}, text() {} }, WorldEffects: { fieldRule() {}, field() {} }, WorldCombat: {
+    point: (x, y, z) => point(x, y, z),
     event() {}, phase() {},
     effect(id, _schema, maximum, lifetime, normalize) {
       assert(!definitions.has(id), `Duplicate effect ${id}`);
@@ -36,13 +44,17 @@ function harness() {
   api.define(carrier); api.define(otherCarrier);
   context.WorldCombat.effect('checks:owner', 1, 1000, 'actor', json => json);
   context.WorldCombat.effectHandler('checks:owner', 'start', () => {});
-  function actor(id, x = 0) {
-    const value = { id, x, live: true, markers: new Map(), claims: new Map(), key: () => id, ref: () => id };
+  function actor(id, x = 0, native = false) {
+    const value = { id, x, native, nativeId: -actors.size - 1, state: context.NativeEffects.empty(), live: true,
+      markers: new Map(), claims: new Map(), key: () => id, ref: () => id,
+      domain: () => native ? 'cobblemon' : 'minecraft' };
     actors.set(id, value); return value;
   }
   const a = actor('checks:source_a'), b = actor('checks:source_b', 1);
   const target = actor('checks:target', 2), other = actor('checks:other_target', 3);
-  const point = x => ({ minus: value => point(x - value.x()), length: () => Math.abs(x), x: () => x });
+  const point = (x, y = 0, z = 0) => ({ minus: value => point(x - value.x(), y - value.y(), z - value.z()),
+    plus: value => point(x + value.x(), y + value.y(), z + value.z()),
+    length: () => Math.hypot(x, y, z), x: () => x, y: () => y, z: () => z });
   const live = effect => effects.has(effect.id) && effect.source.live && effect.target.live;
   function view(effect) {
     // Runtime queries return snapshots and filter invalid owners before the next cleanup tick.
@@ -63,9 +75,11 @@ function harness() {
   function marker(target, id, ticks, amplifier) {
     if (ticks === 0) { clear(target, id); return; }
     const old = target.markers.get(id);
-    // Same-strength native application preserves a longer remaining clock. Every application retires its old lease.
-    const expires = old && old.amplifier >= amplifier ? Math.max(old.expires, now + ticks) : now + ticks;
-    target.markers.set(id, { expires, amplifier: Math.max(old?.amplifier ?? 0, amplifier), revision: ++nextNative });
+    // Vanilla keeps a weaker, longer application hidden until the current stronger effect ends.
+    const weaker = old && old.amplifier > amplifier;
+    const expires = weaker ? old.expires : Math.max(old?.expires ?? 0, now + ticks);
+    const hidden = weaker && now + ticks > expires ? { expires: now + ticks, amplifier } : old?.hidden;
+    target.markers.set(id, { expires, amplifier: Math.max(old?.amplifier ?? 0, amplifier), hidden, revision: ++nextNative });
     nativeEvents.push({ target, id, topic: 'world_combat:mob_effect_added' });
   }
   function owns(lease) {
@@ -101,6 +115,7 @@ function harness() {
     callback({ id: () => effect.id, source: () => effect.source, target: () => effect.target, caller: () => caller,
       world: () => world(effect.source, -effect.id), input: () => input,
       state(json) { if (json !== undefined) effect.data = definition.normalize(json); return effect.data; },
+      copyTo: (source, target, json, ticks) => world(source).effect(effect.definition, target, json, ticks),
       remaining(ticks) { if (ticks !== undefined) { duration(definition, ticks); effect.remaining = ticks; } return effect.remaining; },
       schedule(key, name, ticks, input) {
         duration(definition, ticks); effect.timers.set(key, { name, at: now + ticks, input });
@@ -111,8 +126,10 @@ function harness() {
   function world(source, owner = 0) {
     return { source: () => source, tick: () => now, valid: actor => actor.live,
       actor: ref => actors.get(String(ref))?.live ? actors.get(String(ref)) : null,
-      observe: actor => actor.live ? { position: () => point(actor.x) } : null,
-      effects: (target, definition) => [...effects.values()].filter(effect => effect.target === target &&
+      observe: actor => actor.live ? { position: () => point(actor.x), height: () => 1.6 } : null,
+      effects: (target, definition) => target.native && definition === 'cobblemon_world_combat:individual'
+        ? [{ id: () => target.nativeId, data: () => JSON.stringify(target.state) }]
+        : [...effects.values()].filter(effect => effect.target === target &&
         (!definition || effect.definition === definition) && live(effect)).map(view),
       effectsOfType: definition => [...effects.values()].filter(effect => effect.definition === definition && live(effect)).map(view),
       effect(definitionId, target, json, ticks) {
@@ -124,12 +141,17 @@ function harness() {
         effects.set(effect.id, effect); invoke(effect, 'start'); return effect.id;
       },
       operation(id, operation, json) {
+        if (id < 0) {
+          const actor = [...actors.values()].find(value => value.nativeId === id);
+          assert(actor?.native && operation === 'cobblemon_world_combat:update');
+          actor.state = JSON.parse(json); delete actor.state.layers; return true;
+        }
         const effect = effects.get(id); if (!effect) return false;
         assert(source.live && live(effect), 'Operations require a live caller and effect');
         assert(Math.abs(source.x - effect.target.x) <= 64, 'Operations require a nearby target');
         invoke(effect, `operation:${operation}`, json, source); return true;
       },
-      marker, mobEffect: nativeView,
+      marker, mobEffect: nativeView, mobEffects: target => [...target.markers.keys()].map(id => nativeView(target, id)).filter(Boolean), sound() {},
       removeMobEffect(target, id, key) { return nativeView(target, id)?.key() === key && clear(target, id); },
       leaseMobEffect(target, id, key) {
         assert(owner !== 0, 'Native ownership requires a managed effect or action');
@@ -158,7 +180,11 @@ function harness() {
   function advance(ticks = 1) {
     for (let i = 0; i < ticks; i++) {
       now++;
-      for (const actor of actors.values()) for (const [id, native] of actor.markers) if (native.expires <= now) clear(actor, id);
+      for (const actor of actors.values()) for (const [id, native] of actor.markers) if (native.expires <= now) {
+        if (native.hidden && native.hidden.expires > now)
+          actor.markers.set(id, { ...native.hidden, revision: ++nextNative });
+        else clear(actor, id);
+      }
       flush();
       for (const effect of [...effects.values()]) {
         if (!effects.has(effect.id)) continue;
@@ -174,8 +200,16 @@ function harness() {
   const count = definition => [...effects.values()].filter(effect => effect.definition === definition).length;
   const insert = (source = a, recipient = target, token = 'checks:first', ticks = 30, payload = { value: 1 }, options) =>
     api.upsert(world(source), recipient, carrier, token, payload, ticks, options);
-  return { api, a, b, target, other, world, insert, listed, flush, clear, marker, advance, effects, leases, endCalls,
-    nativeView, count, end: id => end(effects.get(id)), definitions };
+  function executeSkill(id, target, values, config = {}) {
+    if (!recipes.has(id)) vm.runInContext(ts.transpileModule('namespace PokemonSkills { export var define: any, flag: any, p: any; }\n'
+      + fs.readFileSync(`content/moves/${id}/skill.ts`, 'utf8'), {
+      compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None },
+    }).outputText, context, { filename: `content/moves/${id}/skill.ts` });
+    parameters = values;
+    recipes.get(id).execute({ world: () => world(target), actor: () => target }, {}, config, () => {});
+  }
+  return { api, stages: context.NativeEffects, changes: context.CombatStages.change, actor, a, b, target, other, world, insert, listed, flush, clear, marker, advance, effects, leases, endCalls,
+    nativeView, executeSkill, count, end: id => end(effects.get(id)), definitions };
 }
 
 test('registration validates carriers; the first native event creates a target-owned manager and lease', () => {
@@ -277,3 +311,154 @@ test('same-tick native reapplication retires the old lease; manager rebind prote
   h.api.remove(h.world(h.a), h.target, carrier, 'checks:first'); assert(h.nativeView(h.target, carrier));
   h.api.remove(h.world(h.b), h.target, carrier, 'checks:first'); assert.equal(h.nativeView(h.target, carrier), null);
 });
+
+for (const native of [false, true]) {
+  const domain = native ? 'native' : 'ordinary';
+  test(`${domain} stage refresh accumulates to the cap and ends once without deducting a later base gain`, () => {
+    const h = harness(), target = native ? h.actor('checks:native', 2, true) : h.target;
+    const world = h.world(h.a), id = 'checks:stage_carrier', source = 'checks:stage_grant';
+    const stage = () => h.stages.effectiveStage(world, target, 'atk');
+    const refresh = (amount, ticks) => {
+      const previous = h.nativeView(target, id);
+      h.marker(target, id, ticks, 0);
+      const current = h.nativeView(target, id);
+      return h.stages.boostWindow(world, target, { atk: amount }, current.duration(), source, current, previous);
+    };
+    h.stages.boost(world, target, 'atk', 1, true);
+    h.stages.boostWindow(h.world(h.b), target, { atk: 1 }, 100, 'checks:independent');
+    const first = refresh(2, 4); assert.equal(stage(), 4);
+    h.advance(2);
+    const second = refresh(2, 10); assert.equal(stage(), 6); assert(!h.effects.has(first));
+    const third = refresh(2, 6); assert.equal(stage(), 6); assert(!h.effects.has(second));
+    assert.equal(JSON.parse(h.effects.get(third).data).stages.atk, 4, 'Capped refresh does not store hidden extra gains');
+    h.stages.boost(world, target, 'atk', 1, true);
+    const expires = h.nativeView(target, id).duration();
+    h.advance(expires - 1); assert.equal(stage(), 6); assert(h.nativeView(target, id));
+    h.advance(); assert.equal(stage(), 3); assert.equal(h.nativeView(target, id), null);
+    assert.equal(h.stages.read(world, target).stages.atk, 2, 'Persistent baseline kept both independent writes');
+    assert(!h.effects.has(third)); h.advance(2); assert.equal(stage(), 3, 'Deferred removal cannot deduct again');
+  });
+
+  test(`${domain} stage refresh matches actor, contribution name and previous native instance`, () => {
+    const h = harness(), target = native ? h.actor('checks:native', 2, true) : h.target;
+    const world = h.world(h.a), id = 'checks:stage_carrier', other = 'checks:independent_carrier';
+    h.stages.boost(world, target, 'atk', 1, true);
+    h.marker(target, other, 50, 0);
+    h.stages.boostWindow(world, target, { atk: 1 }, 50, 'checks:main', h.nativeView(target, other));
+    h.marker(target, id, 20, 0);
+    const previous = h.nativeView(target, id);
+    h.stages.boostWindow(world, target, { atk: 1 }, 20, 'checks:main', previous);
+    h.stages.boostWindow(world, target, { atk: 1 }, 20, 'checks:other_contribution', previous);
+    h.stages.boostWindow(h.world(h.b), target, { atk: 1 }, 20, 'checks:main', previous);
+    assert.equal(h.stages.effectiveStage(world, target, 'atk'), 5);
+    h.marker(target, id, 30, 0);
+    const current = h.nativeView(target, id);
+    h.stages.boostWindow(world, target, { atk: 1 }, 30, 'checks:main', current, previous);
+    assert.equal(h.stages.effectiveStage(world, target, 'atk'), 4, 'Only the matching contribution was renewed');
+    h.advance(); assert.equal(h.stages.effectiveStage(world, target, 'atk'), 4); assert(h.nativeView(target, other));
+    h.clear(target, id); assert.equal(h.stages.effectiveStage(world, target, 'atk'), 2);
+    h.advance(); assert.equal(h.stages.effectiveStage(world, target, 'atk'), 2);
+  });
+
+  test(`${domain} unchanged native application keys support normal cumulative refresh`, () => {
+    const h = harness(), target = native ? h.actor('checks:native', 2, true) : h.target;
+    const world = h.world(h.a), id = 'checks:stable_carrier';
+    h.marker(target, id, 20, 0);
+    const observed = h.nativeView(target, id);
+    h.stages.boostWindow(world, target, { atk: 1 }, 20, 'checks:main', observed, null);
+    h.stages.boostWindow(world, target, { atk: 1 }, 20, 'checks:main', observed, observed);
+    assert.equal(h.stages.effectiveStage(world, target, 'atk'), 2);
+    assert(h.nativeView(target, id), 'Replacing a window must preserve its same-key carrier');
+    h.advance(20); assert.equal(h.stages.effectiveStage(world, target, 'atk'), 0);
+    assert.equal(h.nativeView(target, id), null);
+  });
+}
+
+for (const [id, effectId, parameters, config, stat, gain] of [
+  ['acidarmor', 'world_combat:acidarmor_slick', { gift: 2, window: 80 }, { slick: true }, 'def', 2],
+  ['amnesia', 'world_combat:amnesia_blank', { poise: 2, blank: 120 }, { deep: true }, 'spd', 2],
+  ['calmmind', 'world_combat:calm_focus', { insight: 1, poise: 1, stillness: 120 }, { deep: false }, 'spa', 1],
+]) {
+  test(`${id} preserves native amplifier on refresh instead of hiding a weaker longer effect`, () => {
+    const h = harness(), subject = h.actor('checks:recipient'), control = h.other;
+    h.executeSkill(id, subject, parameters, config);
+    const first = h.nativeView(subject, effectId), duration = first.duration();
+    assert.equal(first.amplifier(), gain);
+    h.marker(control, effectId, duration, first.amplifier()); h.advance(5);
+    h.marker(control, effectId, duration, 0);
+    assert.equal(h.nativeView(control, effectId).duration(), duration - 5, 'A weaker application does not refresh the active stronger clock');
+    assert(control.markers.get(effectId).hidden, 'The longer weaker effect waits in the native hidden slot');
+
+    h.executeSkill(id, subject, parameters, config);
+    const refreshed = h.nativeView(subject, effectId);
+    assert.equal(refreshed.amplifier(), first.amplifier());
+    assert.equal(refreshed.duration(), duration, 'The real move refreshed the active clock for the full authored duration');
+    assert.equal(subject.markers.get(effectId).hidden, undefined);
+    assert.equal(h.stages.effectiveStage(h.world(subject), subject, stat), gain * 2);
+    h.advance(duration - 1);
+    assert.equal(h.stages.effectiveStage(h.world(subject), subject, stat), gain * 2);
+    h.advance(); assert.equal(h.nativeView(subject, effectId), null);
+    assert.equal(h.stages.effectiveStage(h.world(subject), subject, stat), 0);
+  });
+}
+
+for (const native of [false, true]) {
+  test(`${native ? 'native' : 'ordinary'} inversion edits all layers in place and expiry restores only the inverted base`, () => {
+    const h = harness(), target = h.actor('checks:inverted', 2, native), world = h.world(h.a);
+    h.stages.boost(world, target, 'atk', 1, true);
+    const id = h.stages.boostWindow(h.world(h.b), target, { atk: 2, def: 1 }, 10, 'checks:window');
+    const before = h.effects.get(id);
+    assert.equal(h.stages.invertStages(world, target), 2);
+    assert.equal(h.stages.effectiveStage(world, target, 'atk'), -3);
+    assert.equal(h.effects.get(id).source, h.b); assert.equal(h.effects.get(id).remaining, 10);
+    h.advance(10); assert.equal(h.stages.effectiveStage(world, target, 'atk'), -1);
+    assert.equal(h.stages.effectiveStage(world, target, 'def'), 0);
+  });
+  test(`${native ? 'native' : 'ordinary'} transfer preserves a window owner across domains and native removal revokes it`, () => {
+    const h = harness(), from = h.actor('checks:from', 2, native), to = h.actor('checks:to', 3, !native), world = h.world(h.a);
+    h.marker(from, 'checks:boost', 20, 0);
+    const id = h.stages.boostWindow(h.world(h.b), from, { atk: 2 }, 20, 'checks:owned', h.nativeView(from, 'checks:boost'));
+    h.advance(3);
+    assert.equal(h.stages.transferStage(world, from, to, 'atk', 1), 1);
+    assert.equal(h.stages.effectiveStage(world, from, 'atk'), 1); assert.equal(h.stages.effectiveStage(world, to, 'atk'), 1);
+    const moved = [...h.effects.values()].find(effect => effect.target === to && JSON.parse(effect.data).owner);
+    assert.equal(moved.source, h.b); assert.equal(moved.remaining, 17); assert.equal(JSON.parse(moved.data).owner.id, id);
+    h.clear(from, 'checks:boost');
+    assert.equal(h.stages.effectiveStage(world, to, 'atk'), 0, 'Owner removal is observed immediately');
+    h.advance(); assert.equal(h.stages.effectiveStage(world, to, 'atk'), 0);
+  });
+  test(`${native ? 'native' : 'ordinary'} full transfer keeps its empty parent until natural expiry and reset counts windows`, () => {
+    const h = harness(), from = h.actor('checks:from', 2, native), to = h.actor('checks:to', 3, !native), world = h.world(h.a);
+    h.stages.boostWindow(world, from, { atk: 2 }, 5, 'checks:owned');
+    assert.equal(h.stages.transferStage(world, from, to, 'atk', 2), 2);
+    assert.equal(h.stages.effectiveStage(world, from, 'atk'), 0); assert.equal(h.stages.effectiveStage(world, to, 'atk'), 2);
+    h.advance(5); assert.equal(h.stages.effectiveStage(world, to, 'atk'), 0);
+    h.stages.boostWindow(world, from, { def: 3 }, 10, 'checks:reset');
+    assert.equal(h.stages.resetStages(world, from, true), 3);
+    assert.equal(h.stages.effectiveStage(world, from, 'def'), 0);
+  });
+  test(`${native ? 'native' : 'ordinary'} stage-loss policy stops new negative windows while positive-window expiration stays natural`, () => {
+    const h = harness(), target = h.actor('checks:protected', 2, native), world = h.world(h.a);
+    h.changes.define({ id: 'checks:loss-ward', apply: change => { if (change.amount < 0 && !change.options.ignoreAbility) change.allowed = false; } });
+    h.stages.boostWindow(world, target, { atk: 2 }, 5, 'checks:good');
+    assert.equal(h.stages.boostWindow(world, target, { atk: -1 }, 8, 'checks:bad'), 0);
+    assert.equal(h.stages.boost(world, target, 'atk', -1), 0);
+    h.advance(5); assert.equal(h.stages.effectiveStage(world, target, 'atk'), 0);
+  });
+}
+
+for (const native of [false, true]) {
+  test(`${native ? 'native' : 'ordinary'} retiring-owner handoff adopts only the remaining window and retains provenance`, () => {
+    const h = harness(), from = h.actor('checks:retiring', 2, native), to = h.actor('checks:successor', 3, !native), world = h.world(from);
+    h.marker(from, 'checks:boost', 12, 0);
+    h.stages.boostWindow(world, from, { atk: 2 }, 12, 'checks:gift', h.nativeView(from, 'checks:boost'));
+    h.advance(3);
+    assert.equal(h.stages.transferStage(world, from, to, 'atk', 2, true), 2);
+    const adopted = [...h.effects.values()].find(effect => effect.target === to && JSON.parse(effect.data).origin);
+    assert.equal(adopted.source, to); assert.equal(adopted.remaining, 9);
+    assert.equal(JSON.parse(adopted.data).origin, from.ref());
+    from.live = false; h.advance(1);
+    assert.equal(h.stages.effectiveStage(h.world(to), to, 'atk'), 2);
+    h.advance(8); assert.equal(h.stages.effectiveStage(h.world(to), to, 'atk'), 0);
+  });
+}

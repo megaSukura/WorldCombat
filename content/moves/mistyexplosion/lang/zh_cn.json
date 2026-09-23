@@ -5,7 +5,7 @@
   "worldcombat.skill.mistyexplosion.description.2": "站在薄雾场地上施放时，这一爆整体 ×%1$s。",
   "worldcombat.skill.mistyexplosion.description.3": "被罩住的目标被夺去视线 %1$s。",
   "worldcombat.skill.mistyexplosion.description.4": "炸裂后原地留下一片残雾，半径 %1$s 格、持续 %2$s；站在里面的敌人持续被拖慢。",
-  "worldcombat.skill.mistyexplosion.description.5": "雾絮量 %1$s；起手 %2$s、冷却 %3$s。无论有没有炸到目标，使用者都会倒下。",
+  "worldcombat.skill.mistyexplosion.description.5": "起手 %1$s、冷却 %2$s。无论有没有炸到目标，使用者都会倒下。",
   "worldcombat.skill.mistyexplosion.dense.on": "浓雾式：残雾半径 ×1.3、停留 ×1.3、致盲 +30 刻，威力 ×0.92、起手 +3、冷却 +10。",
   "worldcombat.skill.mistyexplosion.dense.off": "薄爆式：威力 ×1.08、残雾 ×0.8、冷却 −6，炸得更脆更快。",
   "worldcombat.skill.mistyexplosion.timing": "射程 %1$s 格；起手 %2$s，消耗 %3$s PP，冷却 %4$s。",
@@ -29,7 +29,7 @@
   "worldcombat.skill.mistyexplosion.preference.ai.minFoes.help": "雾环半径内至少这么多可见、存活的目标才引爆；调大只在被围住时用，调 1 见一个也炸。",
   "worldcombat.skill.mistyexplosion.preference.ai.cornered": "残血阈值",
   "worldcombat.skill.mistyexplosion.preference.ai.cornered.help": "自己生命低于这个比例时，引爆门槛放宽到 1 个目标；越高越早拼命。",
-  "worldcombat.skill.mistyexplosion.growth.0": "%1$s 级起这一爆的威力与范围再抬一档（威力约 %2$s、半径约 %3$s、雾絮约 %4$s）。",
+  "worldcombat.skill.mistyexplosion.growth.0": "%1$s 级起这一爆的威力与范围再抬一档（威力约 %2$s、半径约 %3$s）。",
   "world_combat.move.mistyexplosion.text.hit": "薄雾炸裂 命中 %1$s",
   "world_combat.move.mistyexplosion.text.miss": "薄雾只铺满地面"
 }

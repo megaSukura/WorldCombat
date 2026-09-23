@@ -85,7 +85,7 @@ namespace PokemonSkills {
 
     describe("banefulbunker", [
         { key: "description.0", values: ["window", "capacity", "venom"] },
-        { key: "description.1", values: ["raise", "radius", "charge"] },
+        { key: "description.1", values: ["raise", "charge"] },
         { key: "description.2", values: ["fizzle", "pref.venomous"] }
     ]);
 }

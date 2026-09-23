@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: storedpowerId,
+        cooldownParameter: "recharge",
         name: "Stored Power",
         description: "把攒在身上的能力等级以自己为圆心一次放出去：圈里每个敌人各吃一记灵能新星，蓄积越多范围越大、威力越高；开启倾囊时把全部正面等级一并打出去，换来最大的一爆。",
         uses: ["先叠高能力等级再贴身放一次", "一次卷到围在身边的整圈对手", "倾囊把攒下的等级换成最大的一爆"],

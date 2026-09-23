@@ -4,7 +4,7 @@
   "worldcombat.skill.psychoshift.use.1": "打完异常招后清掉自己身上的负担",
   "worldcombat.skill.psychoshift.use.2": "在消耗战里把持续的异常反手甩回去",
   "worldcombat.skill.psychoshift.description.0": "对 %1$s 格内一名没有异常、且不免疫自身异常的对手施放，把自己身上的主异常原样种过去，成功后自己痊愈。",
-  "worldcombat.skill.psychoshift.description.1": "转移强度 %1$s：这份异常在对手身上维持自己剩余时长的该倍率；抽出约 %2$s 颗病核，数量由特攻与等级派生。",
+  "worldcombat.skill.psychoshift.description.1": "转移强度 %1$s：这份异常在对手身上维持自己剩余时长的该倍率。",
   "worldcombat.skill.psychoshift.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.psychoshift.deep.on": "深种：种下的异常 ×1.5，若推的是中毒会加深为剧毒；代价是起手 +3、冷却 ×1.35。",
   "worldcombat.skill.psychoshift.deep.off": "浅推：起手与冷却都更省（×0.9），能更频繁地清理自己的异常，但种得不深。",

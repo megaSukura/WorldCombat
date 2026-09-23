@@ -4,7 +4,6 @@
   "worldcombat.skill.weatherball.use.1": "Amplify power in a thunderstorm or clear sun",
   "worldcombat.skill.weatherball.description.0": "Throws a ball carrying the current weather for %1$s special damage; the type follows the sky (thunder->Electric, rain->Water, sun->Fire, clear->Normal).",
   "worldcombat.skill.weatherball.description.1": "After %1$s s of gathering, throw within %2$s blocks; a chargeable sky takes longer but doubles the power.",
-  "worldcombat.skill.weatherball.description.2": "scaled by the halo radius.",
   "worldcombat.skill.weatherball.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.weatherball.value.orb": "Power",
   "worldcombat.skill.weatherball.value.charged": "Sky chargeable",

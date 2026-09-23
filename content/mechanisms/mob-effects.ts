@@ -1,12 +1,23 @@
 /** Common access to Minecraft's real MobEffect instances; stacking, cures and saving stay native.
  *
  * Two native facts matter for authors:
- *  - Re-applying the same id only refreshes its duration; the amplifier is not raised. Use `set` when a counter
- *    carried in the amplifier must go up.
+ *  - Applying an existing id follows native strength/duration stacking, including hidden weaker effects.
+ *    Use `set` for an exact replacement, such as lowering a counter or discarding its previous native stack.
  *  - Minecraft multiplies an effect's attribute modifiers by `amplifier + 1`. A status identity used as a counter
  *    therefore carries no attribute modifier; a visible slow/speed buff lives on its own amplifier-0 effect.
  */
 namespace MobEffects {
+    /** One observed native application. A refresh/replacement is a new owner, even when its id stays the same. */
+    export interface Anchor { id: string; key: string; }
+    export function anchor(value: CombatMobEffect): Anchor { return { id: String(value.id()), key: String(value.key()) }; }
+    export function matches(world: CombatWorld, actor: CombatActor, value: Anchor): boolean {
+        const current = read(world, actor, value.id);
+        return current !== null && String(current.key()) === value.key;
+    }
+    export function validAnchor(value: Anchor): boolean {
+        return !!value && typeof value.id === "string" && /^[a-z0-9_.-]+:[a-z0-9_./-]+$/.test(value.id)
+            && typeof value.key === "string" && !!value.key;
+    }
     export function read(world: CombatWorld, actor: CombatActor, id: string): CombatMobEffect | null {
         return world.mobEffect(actor, id);
     }
@@ -35,7 +46,7 @@ namespace MobEffects {
     export function release(world: CombatWorld, token: number): boolean {
         return typeof token === "number" && token > 0 && world.releaseMobEffectLease(token);
     }
-    /** Remove then apply, so a raised amplifier (a counter layer) actually lands instead of only refreshing duration. */
+    /** Replace the native stack with this exact application, including when its amplifier is lower. */
     export function set(world: CombatWorld, actor: CombatActor, id: string, ticks: number, amplifier = 0): CombatMobEffect | null {
         if (!world.valid(actor)) return null;
         consume(world, actor, id);

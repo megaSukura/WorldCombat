@@ -10,7 +10,7 @@
   "worldcombat.skill.aurasphere.seek.off": "Direct blast: a thicker, faster, heavier sphere, at the cost of a shorter range.",
   "worldcombat.skill.aurasphere.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.aurasphere.growth.0": "From level %1$s the sphere rises to %2$s power and %3$s blocks of range.",
-  "worldcombat.skill.aurasphere.growth.1": "From level %1$s the sphere rises to %2$s power, %3$s degrees/tick turning and %4$s aura motes.",
+  "worldcombat.skill.aurasphere.growth.1": "From level %1$s the sphere rises to %2$s power and %3$s degrees/tick turning.",
   "worldcombat.skill.aurasphere.value.pulse": "Sphere power",
   "worldcombat.skill.aurasphere.value.reach": "Range",
   "worldcombat.skill.aurasphere.value.velocity": "Sphere speed",

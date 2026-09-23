@@ -4,7 +4,7 @@
   "worldcombat.skill.harden.use.1": "用便宜的窗口反复补壳，和对手换血",
   "worldcombat.skill.harden.use.2": "在细碎连打里站住——只怕一下够狠的重击",
   "worldcombat.skill.harden.description.0": "晶壳在身时防御提升 %1$s 级，每击削掉 %2$s 的伤害，持续约 %3$s。",
-  "worldcombat.skill.harden.description.1": "单次攻击达到最大生命 %1$s 的比例就把壳一次打裂；壳约用 %2$s 面晶片拼成，包住 %3$s 格半径。",
+  "worldcombat.skill.harden.description.1": "单次攻击达到最大生命 %1$s 的比例就把壳一次打裂。",
   "worldcombat.skill.harden.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.harden.deep.on": "深硬化：壳更厚、削伤更多、更难被打裂、持续更久，代价是起手 +3 刻、冷却更长。",
   "worldcombat.skill.harden.deep.off": "浅硬化：壳薄、削伤较少、容易被一击打裂，但起手与冷却都更短，能频繁补壳。",

@@ -146,6 +146,7 @@ namespace PokemonSkills {
 
     define({
         id: reflectId,
+        cooldownParameter: "recharge",
         name: "反射壁",
         description: "在身侧立起一圈硬光板，罩住自己与身边的队友；期间受到的物理伤害被削掉一块，镜面形态还把近身物理挡下的那份弹回攻击者。壁跟着施法者走，离开范围的人会失去这层保护。",
         uses: ["挡住成片的物理攻击", "把近身猛攻弹回一部分", "在对方物理输出前先一步立壁"],

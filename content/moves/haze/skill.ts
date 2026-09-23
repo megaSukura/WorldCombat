@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: hazeId,
+        cooldownParameter: "recharge",
         name: "黑雾",
         description: "升起一片黑雾，把范围内所有活体的能力等级全部变回原点——抬起来的一起抹掉，压下去的也一起抹平。对等：你自己的增益同样会被吞掉；站到半径之外就不受影响。",
         uses: ["把对手攒起来的能力一波抹平", "在对方刚加满级时把局面拉回原点", "顺手清掉自己和队友身上被压低的等级"],

@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: zapcannonId,
+        cooldownParameter: "recharge",
         name: "Zap Cannon",
         description: "长时间蓄电，再射出一颗慢而沉的电弹。它飞得慢、只做有限修正，走位能甩开；但只要命中，威力很重而且一定麻住目标。",
         uses: ["远距离的必麻重击", "先手把冲上来的目标钉住", "用一炮打断对手的节奏"],

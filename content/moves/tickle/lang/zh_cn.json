@@ -4,7 +4,7 @@
   "worldcombat.skill.tickle.use.1": "在缠斗里同时削掉对方的攻击与防御",
   "worldcombat.skill.tickle.use.2": "配合队友抢先手压制近战",
   "worldcombat.skill.tickle.description.0": "被挠痒的目标损失 %1$s 级攻击与 %2$s 级防御，笑不停持续 %3$s。",
-  "worldcombat.skill.tickle.description.1": "挠痒距离 %1$s，射程 %2$s 格，超出就够不到；一次挠出 %3$s 个碎点。",
+  "worldcombat.skill.tickle.description.1": "挠痒距离 %1$s，射程 %2$s 格，超出就够不到。",
   "worldcombat.skill.tickle.description.2": "伸手要 %1$s，冷却 %2$s。",
   "worldcombat.skill.tickle.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.tickle.value.reach": "挠痒距离",

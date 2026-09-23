@@ -5,7 +5,7 @@
   "worldcombat.skill.armthrust.use.2": "Drive mode follows the target to land the whole string",
   "worldcombat.skill.armthrust.description.0": "Each thrust deals %1$s physical damage, and the string throws up to %2$s thrusts (2-5 natively, set by the user's data); this move never misses.",
   "worldcombat.skill.armthrust.description.1": "It reaches a target within %1$s blocks and each thrust drives it about %2$s blocks along the push, with %3$s between thrusts.",
-  "worldcombat.skill.armthrust.description.2": "When the target is driven into a wall, block or tree trunk it takes an extra %1$s slam; drive mode follows %2$s blocks per thrust and throws off about %3$s points of palm wind.",
+  "worldcombat.skill.armthrust.description.2": "When the target is driven into a wall, block or tree trunk it takes an extra %1$s slam, and drive mode follows %2$s blocks per thrust.",
   "worldcombat.skill.armthrust.drive.on": "Drive: each thrust is followed by a step forward that pulls the distance back into reach so the whole string lands more often; costs per-thrust power x0.9 and push x0.75 (so it drives less far and slams less often).",
   "worldcombat.skill.armthrust.drive.off": "Planted: hold ground with per-thrust power x1.15 and push x1.6, sending the target into a wall in one shove; costs the gap it opens after each thrust, so the string often ends early, and cooldown +3 ticks.",
   "worldcombat.skill.armthrust.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

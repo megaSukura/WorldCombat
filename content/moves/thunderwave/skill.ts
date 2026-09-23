@@ -42,6 +42,7 @@ namespace PokemonSkills {
 
     define({
         id: thunderwaveId,
+        cooldownParameter: "recharge",
         name: "Thunder Wave",
         description: "The user launches a weak jolt of electricity that paralyzes the target.",
         uses: ["点住一个跑得快的目标", "隔开距离先手缴械", "让挡在线上的同伴替目标吃电"],

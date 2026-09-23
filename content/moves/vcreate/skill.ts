@@ -20,6 +20,7 @@
 namespace PokemonSkills {
     define({
         id: vcreateId,
+        cooldownParameter: "recharge",
         name: "V-create",
         description: "The user emits a hot flame from its forehead and hurls itself at the target. This also lowers the user's Defense, Sp. Def and Speed stats.",
         uses: ["前额起火、把自身当弹丸撞穿一个目标", "用一次最重的近身交换压血", "赌上机动性换最高一档的爆发"],

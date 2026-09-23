@@ -4,7 +4,7 @@
   "worldcombat.skill.spotlight.use.1": "Expose it before the team opens up",
   "worldcombat.skill.spotlight.use.2": "Pull a nearby pack onto one target",
   "worldcombat.skill.spotlight.description.0": "The lit foe takes %1$s%% more damage from all sources for %2$s s.",
-  "worldcombat.skill.spotlight.description.1": "Cast reach is about %1$s blocks with a sweep of about %2$s blocks; the beam and lingering glow carry about %3$s motes.",
+  "worldcombat.skill.spotlight.description.1": "Cast reach is about %1$s blocks with a sweep of about %2$s blocks.",
   "worldcombat.skill.spotlight.description.2": "Preparation %1$s s, recovery %2$s s, cooldown %3$s s from cast.",
   "worldcombat.skill.spotlight.stance.pierce": "Pierce: exposure x1.4 but the light lasts only 70%% as long - make an opening and strike while it is bright.",
   "worldcombat.skill.spotlight.stance.pin": "Pin: exposure x0.75 but the light lasts 1.3x as long - hold the foe in the spotlight.",

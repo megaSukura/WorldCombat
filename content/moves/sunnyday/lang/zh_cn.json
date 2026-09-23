@@ -17,7 +17,7 @@
   "worldcombat.skill.sunnyday.value.sunlitTicks": "晴天余温",
   "worldcombat.skill.sunnyday.value.sunDensity": "日光密度",
   "worldcombat.skill.sunnyday.preference.blazing": "烈日当空",
-  "worldcombat.skill.sunnyday.preference.blazing.help": "开启＝烈日：光域更大（×1.2）、余温更久（×1.35）、日光更密（×1.4），但持续更短（×0.78）、冷却 +18 刻；关闭＝温阳：光域更小、余温更短，但晒得更久、冷却 -12 刻。",
+  "worldcombat.skill.sunnyday.preference.blazing.help": "开启＝烈日：光域更大（×1.2）、余温更久（×1.35），但持续更短（×0.78）、冷却 +18 刻；关闭＝温阳：光域更小、余温更短，但晒得更久、冷却 -12 刻。",
   "worldcombat.skill.sunnyday.preference.ai.maxChase": "叫晴距离",
   "worldcombat.skill.sunnyday.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑大晴天；调小只在贴身时叫晴，调大愿意提前布置。",
   "worldcombat.skill.sunnyday.preference.ai.advance": "把烈日压向对手",

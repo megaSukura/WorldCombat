@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.headcharge.summary": "An unstoppable plowing headbutt: duck, flare the afro and drive in a straight line, hurling everything in the way without stopping. A whiff just carries you past.",
   "worldcombat.skill.headcharge.description.0": "The head deals %1$s contact damage to each target, charging up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.headcharge.description.1": "For each target hit the user takes %1$s%% of that target's actual damage as recoil; every target after the first takes %2$s%% of the power and is shoved %3$s blocks, and a full charge kicks up %4$s fur motes.",
+  "worldcombat.skill.headcharge.description.1": "For each target hit the user takes %1$s%% of that target's actual damage as recoil; every target after the first takes %2$s%% of the power and is shoved %3$s blocks.",
   "worldcombat.skill.headcharge.hunt.on": "Homing: the charge steers toward the nearest enemy (with a turn limit), catching targets that sidestep - at the cost of power, knockback and a longer wind-up.",
   "worldcombat.skill.headcharge.hunt.off": "Straight line: maximum power and knockback, but one sidestep puts the target clear.",
   "worldcombat.skill.headcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",

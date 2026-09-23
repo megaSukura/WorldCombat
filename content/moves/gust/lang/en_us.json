@@ -5,7 +5,7 @@
   "worldcombat.skill.gust.use.2": "Blow an airborne target farther away",
   "worldcombat.skill.gust.description.0": "Deals %1$s special damage to a living target, with a %2$s block puff radius.",
   "worldcombat.skill.gust.description.1": "The puff flies at %1$s blocks/tick and lightly homes on the target, reaching %2$s blocks.",
-  "worldcombat.skill.gust.description.2": "A hit shoves the target %1$s blocks away from the user; an airborne target is pushed x1.8 and lifted. The puff carries %2$s gusts of air.",
+  "worldcombat.skill.gust.description.2": "A hit shoves the target %1$s blocks away from the user; an airborne target is pushed x1.8 and lifted.",
   "worldcombat.skill.gust.shove.on": "Shove: push distance x1.4 and a slightly tighter puff, built for moving people; costs power x0.85 and wind-up +1 tick.",
   "worldcombat.skill.gust.shove.off": "Cut: power x1.15 and a faster cast; costs push distance x0.7, making it more of a cheap ranged chip.",
   "worldcombat.skill.gust.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

@@ -19,6 +19,7 @@
 namespace PokemonSkills {
     define({
         id: fairywindId,
+        cooldownParameter: "recharge",
         name: "Fairy Wind",
         description: "抖身卷起一阵打着旋的香风，沿瞄准方向扑出去：风会穿过一个又一个对手而不停下，每个被扫到的都被甩到风的侧面。广旋式扫得更宽、穿得更多、甩得更开，但单次更轻、更慢；轻掠式更细更利、出手更快。",
         uses: ["一条直线扫过并排站着的几个对手", "把冲上来的目标甩离自己的正面", "远距离先手，用风把对手推离掩体"],

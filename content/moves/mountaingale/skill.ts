@@ -71,6 +71,7 @@ namespace PokemonSkills {
 
     define({
         id: "mountaingale",
+        cooldownParameter: "recharge",
         name: "Mountain Gale",
         description: "The user hurls giant chunks of ice at the target to inflict damage. This may also make the target flinch.",
         uses: ["远距离砸出一记全场最重的单体伤害", "用爆开的碎冰扫到挤在落点的一圈敌人", "在落点竖起一小段冰锥当掩体"],
@@ -139,7 +140,7 @@ namespace PokemonSkills {
                         : hurt(current, direct, "mountaingale", mass, { damage: damageSpec("mountaingale", "mass") });
                     if (landed) {
                         struck++;
-                        scope.displace(direct, mountaingaleHeading(origin, at, current.direction()).scale(shove));
+                        if (scope.valid(direct)) scope.displace(direct, mountaingaleHeading(origin, at, current.direction()).scale(shove));
                         WorldFeedback.emit(scope, mountaingaleScene, 1, at,
                             { moment: "hit", target: directRef, scale: scale, intensity: intensity, hits: Math.round(20 + mass * 0.16) }, 28);
                         if (scope.random() < chance && mountaingaleFlinch(scope, direct, flinchTicks)) {

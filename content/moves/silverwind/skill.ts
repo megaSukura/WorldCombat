@@ -2,7 +2,7 @@
  * 银色旋风 / silverwind —— 注册与动作。
  *
  * 核心念头：抖翅把银鳞扇成一大片向前铺开、缓缓往前飘，站在扇面里的敌人各被割一下；回卷的一撮鳞粉有概率
- *   落在自己身上，把全部能力各抬一级。鳞粉是实物：走得慢、会被掩体挡住，飘完就落。
+ *   落在自己身上，把五项战斗能力各抬一级。鳞粉是实物：走得慢、会被掩体挡住，飘完就落。
  *
  * 三幕：
  *   起（gather，提交前）：翅缘亮起银光、鳞粉朝翅上聚，只播预告。
@@ -31,8 +31,9 @@ namespace PokemonSkills {
 
     define({
         id: "silverwind",
+        cooldownParameter: "recharge",
         name: "Silver Wind",
-        description: "抖翅把银鳞扇成一大片向前铺开：扇面里的敌人各被割一下，鳞粉缓缓飘落后散尽；回卷的一撮鳞粉有概率把自身全部能力各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
+        description: "抖翅把银鳞扇成一大片向前铺开：扇面里的敌人各被割一下，鳞粉缓缓飘落后散尽；回卷的一撮鳞粉有概率把自身五项战斗能力各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
         uses: ["一次割到并排站着的几个人", "在远一点的距离先手消耗", "被掩体挡住就割不到，可以据此卡位"],
         kind: "enemy",
         range: 7.5,
@@ -109,18 +110,20 @@ namespace PokemonSkills {
             }
             WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), silverwindHitText, [hits], 26);
 
-            if (world.random() < chance) {
-                NativeEffects.boost(world, actor, "atk", stages);
-                NativeEffects.boost(world, actor, "def", stages);
-                NativeEffects.boost(world, actor, "spa", stages);
-                NativeEffects.boost(world, actor, "spd", stages);
-                NativeEffects.boost(world, actor, "spe", stages);
+            if (world.random() < chance && world.valid(actor)) {
+                const window = Math.max(1, Math.round(p("silverwind", "surgeTicks", action)));
+                const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+                world.effects(actor, definition).forEach(function (view) {
+                    const data = JSON.parse(String(view.data()));
+                    if (data.source === "world_combat:move/silverwind") NativeEffects.windowClose(world, view.id());
+                });
+                NativeEffects.boostWindow(world, actor, { atk: stages, def: stages, spa: stages, spd: stages, spe: stages }, window, "world_combat:move/silverwind");
                 const self = world.observe(actor);
                 const at = self === null ? origin : self.position();
                 WorldFeedback.emit(world, silverwindScene, 1, at,
                     { moment: "surge", target: String(actor.ref()), stages: stages, scales: scales, scale: scale }, 26);
                 WorldFeedback.text(world, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),
-                    silverwindSurgeText, [stages], 30);
+                    silverwindSurgeText, [stages, Math.round(window / 20)], 30);
                 world.sound("minecraft:block.beacon.power_select", at, 18, "{}");
             }
             done(action);

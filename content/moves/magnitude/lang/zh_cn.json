@@ -6,7 +6,7 @@
   "worldcombat.skill.magnitude.use.3": "在很短的冷却里反复骚扰",
   "worldcombat.skill.magnitude.description.0": "震级为 7 时圈内每个站在地上的敌人各挨约 %1$s 的伤害；实际一次按掷出的震级缩放（4/5/6/7/8/9/10 对应 ×0.14/0.43/0.71/1/1.29/1.57/2.14）。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.magnitude.description.1": "震幅半径 %1$s 格；被震到的人向上颠起 %2$s 格/刻，并被踉跄推开 %3$s 格。空中的目标不会被震到。",
-  "worldcombat.skill.magnitude.description.2": "掷出的震级达到 %1$s 级时，圈里正在出手的人动作被中断；地颤 %2$s 道、扬起约 %3$s 点尘。",
+  "worldcombat.skill.magnitude.description.2": "掷出的震级达到 %1$s 级时，圈里正在出手的人动作被中断。",
   "worldcombat.skill.magnitude.fault.on": "当前为深源式：掷出的震级整体 +1（下限抬高、期望更高），震幅 ×1.15、打断阈值 −1，代价是起手 +4 刻、冷却 +14。",
   "worldcombat.skill.magnitude.fault.off": "当前为浅源式：震级 4..10 全范围都可能（可能很小），震幅 ×0.9，起手与冷却更短、出手更快。",
   "worldcombat.skill.magnitude.timing": "作用半径 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，收招 %3$s 秒，提交起冷却 %5$s 秒。",

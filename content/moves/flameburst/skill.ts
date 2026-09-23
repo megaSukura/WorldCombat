@@ -20,6 +20,7 @@
 namespace PokemonSkills {
     define({
         id: flameburstId,
+        cooldownParameter: "recharge",
         name: "Flame Burst",
         description: "The user attacks the target with a bursting flame. The bursting flame damages Pokemon next to the target as well.",
         uses: ["中距离点射并连带烧到目标旁边的人", "把挤在一起的一小群对手一起削血", "主目标之外的火用于补刀"],

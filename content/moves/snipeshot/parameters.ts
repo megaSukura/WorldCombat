@@ -97,7 +97,7 @@ namespace PokemonSkills {
     describe("snipeshot", [
         { key: "description.0", values: ["shot"] },
         { key: "description.1", values: ["reach", "flight", "through"] },
-        { key: "description.2", values: ["turn", "motes"] },
+        { key: "description.2", values: ["turn"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deadeye"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["deadeye"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

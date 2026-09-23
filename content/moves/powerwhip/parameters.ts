@@ -116,7 +116,7 @@ namespace PokemonSkills {
 
     describe("powerwhip", [
         { key: "description.0", values: ["lash", "reach", "arc"] },
-        { key: "description.1", values: ["maxTargets", "shove", "leaves"] },
+        { key: "description.1", values: ["maxTargets", "shove"] },
         { key: "extend.on", values: [], when: function (context) { return read(context.detail.values, ["extend"]) !== false; } },
         { key: "extend.off", values: [], when: function (context) { return read(context.detail.values, ["extend"]) === false; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

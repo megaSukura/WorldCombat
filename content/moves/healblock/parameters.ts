@@ -74,11 +74,11 @@ namespace PokemonSkills {
 
     describe("healblock", [
         { key: "description.0", values: ["lock", "reach"] },
-        { key: "description.1", values: ["radius", "rings"] },
+        { key: "description.1", values: [] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.lock"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.lock", "tier.1.rings"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.lock"] }
     ]);
 }

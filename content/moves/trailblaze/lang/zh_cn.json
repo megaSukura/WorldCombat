@@ -4,7 +4,7 @@
   "worldcombat.skill.trailblaze.use.1": "借草丛起跳，一次换到更远的对手",
   "worldcombat.skill.trailblaze.use.2": "命中后提速，用新速度追下去",
   "worldcombat.skill.trailblaze.description.0": "窜袭造成 %1$s 的伤害，一次窜出 %2$s 格、每刻 %3$s 格。",
-  "worldcombat.skill.trailblaze.description.1": "命中后速度 +%1$s 级（从草丛起跳多带一档），把目标带开 %2$s 格，判定半径 %3$s 格，扬起 %4$s 片草屑。",
+  "worldcombat.skill.trailblaze.description.1": "命中后速度 +%1$s 级（从草丛起跳多带一档），把目标带开 %2$s 格，判定半径 %3$s 格。",
   "worldcombat.skill.trailblaze.overshoot.on": "穿草而过：命中后顺势多掠一段落在对手身后，把它甩在背后；代价是落点更靠里。",
   "worldcombat.skill.trailblaze.overshoot.off": "就地收步：命中即停在对手身前，站位更稳、便于继续跟打。",
   "worldcombat.skill.trailblaze.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

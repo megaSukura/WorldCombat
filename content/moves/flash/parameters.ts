@@ -48,7 +48,7 @@ namespace PokemonSkills {
     ]);
     describe(flashId, [
         { key: "description.0", values: ["blindStage", "duration"] },
-        { key: "description.1", values: ["radius", "afterimage"] },
+        { key: "description.1", values: ["radius"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

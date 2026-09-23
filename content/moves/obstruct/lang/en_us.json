@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.obstruct.summary": "Raises a spiked barricade that fully blocks attacks by a total pool; a contact attack sharply lowers the attacker's Defence. Repeated use tends to fail.",
   "worldcombat.skill.obstruct.description.0": "The barricade lasts %1$s and holds %2$s points, lowering contact attackers by %3$s levels; higher Defence makes it thicker and longer.",
-  "worldcombat.skill.obstruct.description.1": "Raise %1$s, width %2$s blocks, cooldown %3$s.",
+  "worldcombat.skill.obstruct.description.1": "Raise %1$s, cooldown %2$s.",
   "worldcombat.skill.obstruct.description.2": "Repeat-use failure rate %1$s; the barbed/reinforced trade-off is the %2$s setting.",
   "worldcombat.skill.obstruct.use.0": "Bait a melee foe onto the barricade",
   "worldcombat.skill.obstruct.use.1": "Soften a foe before your follow-up",

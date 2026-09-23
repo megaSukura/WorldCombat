@@ -66,9 +66,9 @@ namespace PokemonSkills {
     stages("soak", [{ level: 40, values: { cooldown: 78 } }, { level: 55, values: { cooldown: 66 } }]);
 
     describe("soak", [
-        { key: "description.0", values: ["hold", "streaks"] },
+        { key: "description.0", values: ["hold"] },
         { key: "description.1", values: ["reach", "tempo", "aftercast"] },
-        { key: "description.2", values: ["splash", "ripples", "puddle"] },
+        { key: "description.2", values: ["splash", "puddle"] },
         { key: "flood.on", values: ["splash", "recharge"], when: function (context) { return read(context.detail.values, ["flood"]) === true; } },
         { key: "flood.off", values: ["hold"], when: function (context) { return read(context.detail.values, ["flood"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

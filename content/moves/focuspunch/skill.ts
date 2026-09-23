@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: focuspunchId,
+        cooldownParameter: "recharge",
         name: "Focus Punch",
         description: "站定收势，把气聚进拳里；聚气期间挨到任何外来伤害都会让这一拳散去，聚满后踏进打出极重的一拳。",
         uses: ["在对手够不到时聚一记极重的拳", "惩罚被队友缠住、暂时打不到你的目标", "用长收势逼对手决定要不要贴上来"],
@@ -89,7 +90,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(focuspunchId, "punch"), contact: true, punch: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, focuspunchScene, 1, hit.position(),
                             { moment: "strike", target: String(victim.ref()), count: count, scale: radius / 0.5,

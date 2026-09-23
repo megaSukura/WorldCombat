@@ -4,7 +4,7 @@
   "worldcombat.skill.stockpile.use.1": "Stow three layers, then engage and eat the first burst",
   "worldcombat.skill.stockpile.use.2": "Keep the layers as a breakable buffer and make the foe spend hits cracking it",
   "worldcombat.skill.stockpile.description.0": "Each layer raises Defense by %1$s stage and Special Defense by %2$s, up to 3 layers.",
-  "worldcombat.skill.stockpile.description.1": "The stored power lasts about %1$s, the shell hoops %2$s blocks out, and one use presses in about %3$s force.",
+  "worldcombat.skill.stockpile.description.1": "The stored power lasts about %1$s.",
   "worldcombat.skill.stockpile.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.stockpile.break.mend": "Break direction \"mend\": each cracked layer restores a little health, good for a long trade.",
   "worldcombat.skill.stockpile.break.burst": "Break direction \"shove\": each cracked layer pushes the attacker back, good for opening space and cutting combos.",

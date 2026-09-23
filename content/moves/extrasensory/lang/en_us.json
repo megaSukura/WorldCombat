@@ -6,7 +6,7 @@
   "worldcombat.skill.extrasensory.description.0": "The grip deals %1$s special damage over a %2$s-block patch.",
   "worldcombat.skill.extrasensory.description.1": "The force lands within %1$s blocks; the mirage lingers %2$s before closing.",
   "worldcombat.skill.extrasensory.description.2": "A gripped target has a %1$s chance to flinch for %2$s.",
-  "worldcombat.skill.extrasensory.description.3": "It gathers about %1$s threads of force; ambush form is currently %2$s.",
+  "worldcombat.skill.extrasensory.description.3": "Ambush form is currently %1$s.",
   "worldcombat.skill.extrasensory.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.extrasensory.growth.0": "From level %1$s the grip rises to %2$s and the patch to %3$s blocks.",
   "worldcombat.skill.extrasensory.value.crush": "Grip power",

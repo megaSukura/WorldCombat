@@ -7,7 +7,6 @@
   "worldcombat.skill.spiritshackle.description.0": "暗影箭命中约 %1$s 的穿影伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.spiritshackle.description.1": "可射到 %1$s 格内，箭速约 %2$s 格每刻。",
   "worldcombat.skill.spiritshackle.description.2": "命中后影子被钉住约 %1$s；目标被带离锚点超过 %2$s 格就绷断缝线、解除钉住。",
-  "worldcombat.skill.spiritshackle.description.3": "影子被约 %1$s 道缝线扣住，脚下影池半径约 %2$s 格。",
   "worldcombat.skill.spiritshackle.option.on": "深缝：威力约 ×1.15、缝住时长约 ×1.4、绷断距离 +0.5 格，代价是起手 +4 刻、冷却 +8 刻、射击距离 −1 格——钉得久但更慢更近。",
   "worldcombat.skill.spiritshackle.option.off": "快缝：出手更快、射得更远、冷却更短，代价是缝住更短、更容易被扯开。",
   "worldcombat.skill.spiritshackle.timing": "可射到 %1$s 格内，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",

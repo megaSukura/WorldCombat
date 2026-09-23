@@ -37,7 +37,7 @@ namespace PokemonSkills {
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯。 */
     export function powertripStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
         if (!world.valid(actor)) return {};
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 五项能力里正面等级的总和；0 表示此刻没有架势。 */
@@ -157,11 +157,11 @@ namespace PokemonSkills {
     describe(powertripId, [
         { key: "description.0", values: ["swagger", "boost"] },
         { key: "description.1", values: ["dash", "speed", "collisionRadius", "push"] },
-        { key: "description.2", values: ["targets", "plumes"] },
+        { key: "description.2", values: ["targets"] },
         { key: "drive.on", values: [], when: function (context) { return read(context.detail.values, ["drive"]) === true; } },
         { key: "drive.off", values: [], when: function (context) { return read(context.detail.values, ["drive"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.swagger", "tier.0.dash"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.swagger", "tier.1.dash", "tier.1.plumes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.swagger", "tier.1.dash"] }
     ]);
 }

@@ -125,13 +125,13 @@ namespace PokemonSkills {
     ]);
 
     describe("fireblast", [
-        { key: "description.0", values: ["blast", "radius", "glyph"] },
+        { key: "description.0", values: ["blast", "radius"] },
         { key: "description.1", values: ["scatter", "strokeGap", "burnChance"] },
         { key: "description.2", values: ["mark", "markRadius", "markTicks", "markPulse"] },
         { key: "inscribe.on", values: [], when: function (context) { return read(context.detail.values, ["inscribe"]) === true; } },
         { key: "inscribe.off", values: [], when: function (context) { return read(context.detail.values, ["inscribe"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.glyph"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.blast", "tier.1.glyph", "tier.1.radius"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.blast"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.blast", "tier.1.radius"] }
     ]);
 }

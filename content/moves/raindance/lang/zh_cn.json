@@ -19,7 +19,7 @@
   "worldcombat.skill.raindance.value.rainDensity": "雨点密度",
   "worldcombat.skill.raindance.value.quench": "每趟扑火",
   "worldcombat.skill.raindance.preference.downpour": "倾盆大雨",
-  "worldcombat.skill.raindance.preference.downpour.help": "开启＝倾盆：雨区更大（×1.2）、淋湿更久（×1.35）、雨点更密（×1.4），但持续更短（×0.78）、冷却 +18 刻；关闭＝细雨：雨区更小、淋湿更短，但下得更久、冷却 -12 刻。",
+  "worldcombat.skill.raindance.preference.downpour.help": "开启＝倾盆：雨区更大（×1.2）、淋湿更久（×1.35），但持续更短（×0.78）、冷却 +18 刻；关闭＝细雨：雨区更小、淋湿更短，但下得更久、冷却 −12 刻。",
   "worldcombat.skill.raindance.preference.ai.maxChase": "布雨距离",
   "worldcombat.skill.raindance.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑求雨；调小只在贴身时叫雨，调大愿意提前布置。",
   "worldcombat.skill.raindance.preference.ai.advance": "把雨压向对手",

@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: "megapunch",
+        cooldownParameter: "recharge",
         name: "Mega Punch",
         description: "The user winds up and throws one full-bodied straight punch down a narrow lane. What stands in the lane takes the blow and is shoved straight back by the user's mass; step aside and it misses.",
         uses: ["在窄道内一记定音重拳", "把正面的目标整块推离原位", "对站桩的目标打一发最重的单体伤害"],

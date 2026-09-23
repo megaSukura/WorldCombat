@@ -1,11 +1,4 @@
-/**
- * 点穴 的可执行设计说明。
- *
- * 场面：一只只会「点穴」的腕力（24 级）与一只弱小的小拉达隔开 9 格、石质场地上开战；技能表里只有这一招，
- *   所以 AI 只能先按自己（默认配置允许把自己算作友方；身边有同伴时会优先按同伴）。
- * 必然事实：本招被提交过；施术者身上出现过共享身份 world_combat:status/acupressure 的通畅窗口。
- *   随机命中了哪一项、抬了几级、窗口多长写进 note 供读轨迹判断（私有装配读不到原生能力等级）。
- */
+/** 一轮点穴只强化一项，停止后续施放后，状态与强化一起结束。 */
 Smoke.scenario("acupressure", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
     stage.time("day");
@@ -19,14 +12,23 @@ Smoke.scenario("acupressure", function (stage) {
     }, function () {
         stage.expect(stage.casts("acupressure", caster) > 0, "acupressure was committed");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/acupressure"), "the flow window carried the shared identity");
-        stage.after(80, function () {
-            stage.note("one open stat among the target's not-yet-maxed stats is rolled and raised by the press value; the stat and its stage are native for a Pokemon and unreadable here, and the mark takes it back by name and count when the window ends.", {
+        stage.setPp(caster, "acupressure", 0);
+        const raised = stage.stages(caster), positive = Object.keys(raised).filter(function (stat) { return raised[stat] > 0; });
+        stage.expect(positive.length === 1, "one Acupressure window raised exactly one stat");
+        stage.expect(raised[positive[0]] === 1, "the quick press raised one stage");
+        stage.note("The random stat belongs to this visible flow window; the fast mode grants one stage.", { stages: raised });
+        stage.until(480, function () {
+            return !stage.hasMobEffect(caster, "world_combat:status/acupressure");
+        }, function () {
+            const after = stage.stages(caster);
+            stage.expect(Object.keys(after).every(function (stat) { return after[stat] === 0; }), "the expired flow left no stat gain");
+            stage.note("The status expired and its owned contribution ended.", {
                 casts: stage.casts("acupressure", caster),
                 damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
                 damageByCaster: Math.round(stage.damageBy(caster) * 10) / 10,
                 casterAlive: caster.alive()
             });
             stage.done();
-        });
+        }, "acupressure expires with its stat gain");
     }, "acupressure engages");
 });

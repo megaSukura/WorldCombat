@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "forcepalm",
+        cooldownParameter: "recharge",
         name: "Force Palm",
         description: "The target is attacked with a shock wave. This may also leave the target with paralysis.",
         uses: ["贴身一掌并按力量结算", "用震动打麻近身的对手", "透劲式连打身后一条线上的第二个目标"],
@@ -100,8 +101,8 @@ namespace PokemonSkills {
                 { damage: damageSpec("forcepalm", "palm"), contact: true, status: "paralysis", chance: chance });
             sound(action, "minecraft:entity.player.attack.strong");
             if (!landed) { done(action); return; }
-            const at = world.observe(victim!)!.position();
-            world.displace(victim!, heading.scale(push));
+            const after = world.observe(victim!), at = after === null ? vbody!.position() : after.position();
+            if (world.valid(victim!)) world.displace(victim!, heading.scale(push));
             WorldFeedback.emit(world, forcepalmScene, 1, at,
                 { moment: "strike", target: String(victim!.ref()), scale: radius / 0.45, intensity: intensity, motes: motes }, 26);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), forcepalmHitText, [Math.round(power)], 24);

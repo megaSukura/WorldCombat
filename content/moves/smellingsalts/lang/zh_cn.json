@@ -27,7 +27,7 @@
   "worldcombat.skill.smellingsalts.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.smellingsalts.preference.ai.maxChase.help": "目标离自己这么远以内才拍过去；调大愿意主动追上更远的麻痹目标。",
   "worldcombat.skill.smellingsalts.preference.ai.wake": "趁麻痹拍",
-  "worldcombat.skill.smellingsalts.preference.ai.wake.help": "开启后，正麻痹的目标会被优先拍醒（正是翻倍窗口）；关闭则只在没有别的招时会用这一记普通拍击。",
+  "worldcombat.skill.smellingsalts.preference.ai.wake.help": "开启：麻痹目标获得额外优先级，抓住威力翻倍的机会；关闭：保持普通低优先级，不按麻痹加权。",
   "world_combat.move.smellingsalts.text.wake": "清醒！",
   "world_combat.move.smellingsalts.text.hit": "盐拍",
   "world_combat.move.smellingsalts.text.miss": "拍了个空"

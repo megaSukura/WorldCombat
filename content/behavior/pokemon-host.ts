@@ -178,10 +178,15 @@ namespace PokemonBehaviorHost {
     export class Companions {
         private installed = false;
         constructor(private adapter: Adapter, private pool: WorldMethods.Pool, private options: CompanionOptions) { }
-        private save(view: CombatTactics): void {
+        private save(view: CombatTactics, resume?: { intent: string; point: number[] | null }): void {
             var existing = JSON.parse(String(view.preferences())), anchor = view.intentPoint();
             const residence = this.options.residence && this.options.residence(view.world(), CobblemonCombat.pokemon(view.actor()));
-            existing[this.options.id + (residence ? "/resident" : "")] = { intent: String(view.intent()), point: anchor ? WorldBehaviorHost.coordinates(anchor) : null };
+            const order = this.options.orders.get(String(view.intent()));
+            // A temporary pursuit must not overwrite the command restored after unloading.
+            if (order && order.attackTarget && !resume) return;
+            existing[this.options.id + (residence ? "/resident" : "")] = order && order.attackTarget
+                ? { intent: resume!.intent, point: resume!.point }
+                : { intent: String(view.intent()), point: anchor ? WorldBehaviorHost.coordinates(anchor) : null };
             view.preferences(JSON.stringify(existing));
         }
         update(view: CombatTactics): void {
@@ -210,27 +215,59 @@ namespace PokemonBehaviorHost {
                 if (operation === "native_capture_started") view.capture(capture);
                 else if (operation === "native_capture_complete" && String(view.captureHold()) === capture) view.capture("");
             } else if (operation !== "tick") {
+                const nextOrder = options.orders.get(operation), previousOrder = options.orders.get(String(view.intent()));
+                const previousIntent = String(view.intent()), previousTarget = view.intentTarget(), previousPoint = view.intentPoint();
                 if (!options.orders.execute(operation, view) && (!options.command || !options.command(operation, view))) view.reject("unsupported-command");
-                this.save(view); delete memory.navigation;
+                if (nextOrder && nextOrder.attackTarget) {
+                    if (!previousOrder || !previousOrder.attackTarget) memory.commandReturn = {
+                        intent: previousIntent, target: previousTarget ? String(previousTarget.ref()) : "",
+                        point: previousPoint ? WorldBehaviorHost.coordinates(previousPoint) : null
+                    };
+                } else delete memory.commandReturn;
+                this.save(view, memory.commandReturn); delete memory.navigation;
             }
             var currentIntent = String(view.intent()), current = options.orders.get(currentIntent), owner = view.owner();
+            // Focus is a temporary order. Losing its actor or its hostile relationship
+            // restores the previous command; an unavailable return target falls back home.
+            const focus = current && current.attackTarget ? view.intentTarget() : null;
+            const focusedBody = focus ? access.observe(focus) : null;
+            if (current && current.attackTarget && (!focusedBody || focusedBody.health() <= 0 || focusedBody.friendly())) {
+                const resume = memory.commandReturn, previous = resume && options.orders.get(resume.intent);
+                const canResume = previous && !previous.attackTarget && previous.id !== "work";
+                let next = canResume ? previous.id : defaultIntent;
+                let target = canResume && resume.target ? access.actor(resume.target) : null;
+                let destination = canResume && Array.isArray(resume.point) ? WorldBehaviorHost.point(resume.point) : null;
+                const returnBody = target ? access.observe(target) : null;
+                // The accepted station remains valid after a long pursuit. Only an
+                // unavailable return subject invalidates an actor-targeted command.
+                if (canResume && (previous.target === "point" && !destination ||
+                    previous.target === "friend" && resume.target && (!returnBody || returnBody.health() <= 0 || !returnBody.friendly()))) {
+                    next = defaultIntent; target = null; destination = null;
+                }
+                view.intent(next, target, destination); delete memory.commandReturn; delete memory.focusObservation;
+                this.save(view); operation = "order-complete"; currentIntent = String(view.intent()); current = options.orders.get(currentIntent);
+            }
             var protectedActor = current && current.defendTarget ? view.intentTarget() || owner : null;
             var focused = current && current.attackTarget ? view.intentTarget() : null;
-            var anchorView = access.observe(protectedActor || owner), anchor = view.intentPoint() || (residence ? residence.anchor : anchorView ? anchorView.position() : observed.position());
+            var anchorActor = protectedActor || owner, anchorView = anchorActor ? access.observe(anchorActor) : null;
+            var anchor = view.intentPoint() || (residence ? residence.anchor : anchorView ? anchorView.position() : observed.position());
             var input = this.adapter.frame(access, pokemon, currentIntent, anchor, owner, protectedActor, focused, view.chaseRange(), String(view.captureHold()),
                 function (slot, target, position, direction, json) { return Number(view.submitInput(slot, target, position, direction, json)); },
                 function (stage, reason) { view.report(stage, reason); });
             // The host has already accepted the pending manual order. Cleaning up the previous
             // autonomous task must release its JS state without stopping that order's navigation.
-            if (view.pending()) {
+            if (view.pendingNavigation()) {
                 input.facts.movementBusy = true;
                 (input.services.behavior as WorldMethods.Host).stop = function () { };
             }
             var state = this.pool.get(input, memory);
+            if (memory.commandReturn) state.agent.memory.commandReturn = memory.commandReturn;
+            else delete state.agent.memory.commandReturn;
+            if (operation === "order-complete") delete state.agent.memory.focusObservation;
             if (operation !== "tick") { state.agent.stop("command-changed", input); delete state.agent.memory.navigation; }
             access.controlled(true); input.facts.managed = true;
             if (state.manual !== view.lastManual()) { state.agent.stop("manual-input", input); state.manual = view.lastManual(); }
-            if (!view.pending() && access.tick() - view.lastManual() >= options.manualGrace && access.tick() % options.decisionTicks === 0) state.agent.tick(input);
+            if (!view.pendingNavigation() && access.tick() - view.lastManual() >= options.manualGrace && access.tick() % options.decisionTicks === 0) state.agent.tick(input);
             var events = state.agent.memory.events || {};
             Object.keys(events).forEach(function (key) { if (input.tick - events[key] > 1200) delete events[key]; });
             view.memory(JSON.stringify(state.agent.memory));

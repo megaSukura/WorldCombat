@@ -30,6 +30,7 @@ namespace PokemonSkills {
 
     define({
         id: "flamecharge",
+        cooldownParameter: "trail",
         name: "蓄能焰袭",
         description: "让火焰覆盖全身，攻击对手。积蓄力量并提高自己的速度。",
         uses: ["直线撞穿一个落单的对手", "沿一条线把挤在一起的对手一起点着", "命中后提速，趁势追下去"],

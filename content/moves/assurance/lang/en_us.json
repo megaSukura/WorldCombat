@@ -4,7 +4,7 @@
   "worldcombat.skill.assurance.use.1": "Land a hit in the window right after the foe is damaged",
   "worldcombat.skill.assurance.use.2": "Run a low-health target off the field",
   "worldcombat.skill.assurance.description.0": "The pursuit deals about %1$s physical damage; if the target has taken damage within the last %2$s seconds, the power is doubled.",
-  "worldcombat.skill.assurance.description.1": "Chase up to %1$s blocks, %2$s blocks per tick, with a %3$s block hit radius; a hit knocks the target back about %4$s blocks and trails about %5$s dark quills.",
+  "worldcombat.skill.assurance.description.1": "Chase up to %1$s blocks, %2$s blocks per tick, with a %3$s block hit radius; a hit knocks the target back about %4$s blocks.",
   "worldcombat.skill.assurance.relentless.on": "Relentless on: the pursuit window is 0.6s longer and the chase reaches about 8% farther, staying on a wounded target; in exchange the hit is about ×0.90 and the cooldown is 5 ticks longer.",
   "worldcombat.skill.assurance.relentless.off": "Relentless off: the hit is about ×1.06 and finishes cleanly, reading only fresh wounds.",
   "worldcombat.skill.assurance.timing": "Cast on an enemy within %1$s blocks; after %2$s seconds it spends %4$s PP to fire, then recovers for %3$s seconds and starts a %5$s second cooldown on commit.",

@@ -101,7 +101,7 @@ namespace PokemonSkills {
     describe("wingattack", [
         { key: "description.0", values: ["bash", "targets"] },
         { key: "description.1", values: ["reach", "span", "push"] },
-        { key: "description.2", values: ["chaff"] },
+        { key: "description.2", values: [] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

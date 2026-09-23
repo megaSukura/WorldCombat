@@ -2,7 +2,7 @@
  * 健美 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：有威胁、且在 ai.maxChase 内、但还没贴身（大于 ai.minGap）时先涨一轮再压上去——
- *   健美是抬攻击的，最值得在开打前铺好；没有威胁时只在整备命令（驻守／自主／工作）下练一组。
+ *   健美是抬攻击的，最值得在开打前铺好。
  * 什么时候最想出手：威胁还在 ai.minGap 之外时 priority 105——抢在共享交战次序前先把双攻垫起来；
  *   已经贴身（小于 minGap）就让位给普通攻击，不为强化站着挨打。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -16,8 +16,10 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "bulkup")) return false;
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
-            return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
+            if (!threat) return false;
+            const gap = CompanionBehavior.distance(self.point, threat.point);
+            if (gap < CompanionBehavior.ai<number>(capability, "minGap", 3)) return false;
+            return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

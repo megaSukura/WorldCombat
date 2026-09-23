@@ -69,6 +69,10 @@ namespace WorldAI {
         var result = String(request());
         // Walking navigation may have no path while the actor lands after a displacement.
         if (result === "not-grounded") { nav.retry = now + 1; return "moving"; }
+        // A native search can miss a route while an obstacle/target is moving.
+        // Keep this attempt's progress watchdog across retries, instead of recreating
+        // a failed task every decision tick and losing all progress information.
+        if (result === "path-blocked") return "moving";
         if (result !== "moving") { stop(); delete memory.navigation; }
         return result;
     }

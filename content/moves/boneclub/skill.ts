@@ -76,6 +76,7 @@ namespace PokemonSkills {
 
     define({
         id: "boneclub",
+        cooldownParameter: "recharge",
         name: "Bone Club",
         description: "The user clubs the target with a bone. This may also make the target flinch.",
         uses: ["用比身体更长的骨头先手够到一个目标", "一次横扫兜住并肩的两三个人", "在对手还没贴上来时敲懵它"],

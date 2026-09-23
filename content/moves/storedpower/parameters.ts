@@ -39,7 +39,7 @@ namespace PokemonSkills {
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯，另有命中／闪避两级。 */
     export function storedpowerStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
         if (!world.valid(actor)) return {};
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 自身七项里正面等级的总和；0 表示此刻没有蓄积。 */
@@ -155,11 +155,11 @@ namespace PokemonSkills {
 
     describe(storedpowerId, [
         { key: "description.0", values: ["reservoir", "boost"] },
-        { key: "description.1", values: ["radius", "surge", "motes"] },
+        { key: "description.1", values: ["radius", "surge"] },
         { key: "spend.on", values: [], when: function (context) { return read(context.detail.values, ["spend"]) === true; } },
         { key: "spend.off", values: [], when: function (context) { return read(context.detail.values, ["spend"]) !== true; } },
         { key: "timing", values: ["range", "charge", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reservoir", "tier.0.radius"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.reservoir", "tier.1.radius", "tier.1.motes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.reservoir", "tier.1.radius"] }
     ]);
 }

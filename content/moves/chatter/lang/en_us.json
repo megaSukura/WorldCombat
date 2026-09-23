@@ -6,7 +6,7 @@
   "worldcombat.skill.chatter.description.0": "Each burst deals %1$s special damage (sound) to every enemy in the fan; it cries %2$s bursts, one every %3$s.",
   "worldcombat.skill.chatter.description.1": "The fan opens %1$s degrees and reaches %2$s blocks; sound is not blocked by cover.",
   "worldcombat.skill.chatter.description.2": "Those caught are confused for %1$s; while confused they fumble %2$s of their attempts to act and hurt themselves when they land a hit on a non-ally.",
-  "worldcombat.skill.chatter.description.3": "About %1$s notes per string; shrill form is currently %2$s.",
+  "worldcombat.skill.chatter.description.3": "Shrill form is currently %1$s.",
   "worldcombat.skill.chatter.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.chatter.growth.0": "From level %1$s each burst rises to %2$s.",
   "worldcombat.skill.chatter.growth.1": "From level %1$s it cries %2$s bursts at %3$s each.",

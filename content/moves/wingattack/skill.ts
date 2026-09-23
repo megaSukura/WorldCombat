@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: "wingattack",
+        cooldownParameter: "recharge",
         name: "Wing Attack",
         description: "大大展开双翼，用一整片翅膀横扫身前的扇面：扇面内最近的至多几个非友方各挨一记接触伤害，并被沿身体两侧推开。宽扫式更宽、扫更多人、推得更开，单体更轻；收翼式单发更重、只扫一人。",
         uses: ["一次展翅扫开身前一小片对手", "把贴身的人推开、给自己让出落点", "最便宜、最稳的飞系接触一记，可以反复扇"],

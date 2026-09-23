@@ -4,7 +4,7 @@
   "worldcombat.skill.confuseray.use.1": "在安全距离打断远程压制",
   "worldcombat.skill.confuseray.use.2": "为队友的集火制造失手窗口",
   "worldcombat.skill.confuseray.description.0": "被幽光照到后陷入混乱，持续 %1$s：期间它每次出手有约三成概率作废，打中别人时还会被自己的力量反噬。",
-  "worldcombat.skill.confuseray.description.1": "基础射程 %1$s 格，判定半径 %2$s 格；当前配置下射程 %4$s 格，需要视线畅通。",
+  "worldcombat.skill.confuseray.description.1": "基础射程 %1$s 格，判定半径 %2$s 格；当前配置下射程 %3$s 格，需要视线畅通。",
   "worldcombat.skill.confuseray.description.2": "汇聚这束光要 %1$s，收势 %2$s，冷却 %3$s。光束形态可选：广照更远、判定更粗，但混乱更短；凝神更近、起手更慢，换来更久更重的混乱。",
   "worldcombat.skill.confuseray.value.beamReach": "射程",
   "worldcombat.skill.confuseray.value.beamRadius": "判定半径",

@@ -67,6 +67,7 @@ namespace PokemonSkills {
 
     define({
         id: "harden",
+        cooldownParameter: "wait",
         name: "变硬",
         description: "全身使劲，让身体变硬，从而提高自己的防御。",
         uses: ["预料到一轮爆发前先结晶，把每一击磨钝", "用便宜的窗口反复补壳，和对手换血", "在细碎连打里站住——只怕一下够狠的重击"],

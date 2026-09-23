@@ -84,7 +84,7 @@ namespace PokemonSkills {
     describe("octazooka", [
         { key: "description.0", values: ["shot", "shots", "chance", "blind"] },
         { key: "description.1", values: ["velocity", "reach", "interval", "spread"] },
-        { key: "description.2", values: ["steer", "drops", "stainTicks", "pref.thick"] },
+        { key: "description.2", values: ["steer", "pref.thick"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

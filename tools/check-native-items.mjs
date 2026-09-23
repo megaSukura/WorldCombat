@@ -9,12 +9,12 @@ const pokemon={species:()=> 'cobblemon:bulbasaur',heldItem:()=>held,heldKey:()=>
 const actor={domain:()=> 'cobblemon',ref:()=> 'subject/1',key:()=> 'subject'};
 const world={source:()=>actor,valid:()=>true,tick:()=>100,random:()=>0,
   health:(_actor,amount)=>{hp+=amount;return amount;},
-  effects:()=>[{id:()=>1,data:()=>JSON.stringify(nativeState)}],operation:(_id,_op,json)=>{nativeState=JSON.parse(json);}};
+  effects:()=>[{id:()=>1,data:()=>JSON.stringify(nativeState)}],operation:(_id,_op,json)=>{nativeState=JSON.parse(json);return true;}};
 const sandbox=vm.createContext({WorldCombat:{event(){},phase(){},effect(){},effectHandler:(id,event,callback)=>handlers.set(id+'/'+event,callback),on(){}},
   NativeModifiers:{read:()=>({})}, CobblemonCombat:{pokemon:()=>pokemon,
     consumeHeld:(_world,_actor,expected)=>{if(rejectConsumption||expected!==String(key)||!held)return false;held='';key++;consumed++;return true;},
     status:(_world,_actor,value)=>{status=value;key++;return true;},resetCritical(){},statusLease(){},statusSeconds(){},record(){} }});
-const files=['content/protocols/effects.ts','content/behavior/contributions.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts','content/mechanisms/action-parameters.ts',
+const files=['content/protocols/effects.ts','content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts','content/mechanisms/action-parameters.ts',
   'content/mechanisms/native-abilities.ts','content/mechanisms/native-items.ts','content/mechanisms/native-rule-values.ts',
   'content/mechanisms/native-semantics.ts','content/mechanisms/combat-stages.ts','content/mechanisms/native-effects.ts'];
 vm.runInContext(ts.transpileModule(files.map(file=>fs.readFileSync(file,'utf8')).join('\n'),{compilerOptions:{target:ts.ScriptTarget.ES5,module:ts.ModuleKind.None}}).outputText,sandbox);

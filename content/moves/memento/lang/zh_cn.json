@@ -4,7 +4,7 @@
   "worldcombat.skill.memento.use.1": "用一条命换取对手主力的输出崩盘",
   "worldcombat.skill.memento.use.2": "在自己必死的一刻把遗念留在原地继续施压",
   "worldcombat.skill.memento.description.0": "被礼物笼罩的目标攻击与特攻各被夺走 %1$s 级，哀悼持续 %2$s；遗念会继续为靠近的人续上。",
-  "worldcombat.skill.memento.description.1": "礼物半径 %1$s 格，一次炸出 %4$s 团遗念；遗念在原地留 %2$s，把半径 %3$s 格内的非友方逐个缠住并夺走攻击与特攻——直到它散去。",
+  "worldcombat.skill.memento.description.1": "礼物半径 %1$s 格；遗念在原地留 %2$s，把半径 %3$s 格内的非友方逐个缠住并夺走攻击与特攻——直到它散去。",
   "worldcombat.skill.memento.description.2": "把一切收拢起来要 %1$s；倒下后冷却 %2$s。只有确实罩到至少一个非友方才自我牺牲。",
   "worldcombat.skill.memento.timing": "范围 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.memento.value.drop": "攻特攻下降",

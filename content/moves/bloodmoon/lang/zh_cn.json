@@ -4,7 +4,7 @@
   "worldcombat.skill.bloodmoon.use.1": "点杀远处的厚血目标",
   "worldcombat.skill.bloodmoon.use.2": "用月蚀式把落点一圈一起砸进去",
   "worldcombat.skill.bloodmoon.description.0": "主目标 %1$s 威力、落点溅射 %2$s 威力（走特攻），落月距离 %3$s 格，地面半径 %4$s 格。",
-  "worldcombat.skill.bloodmoon.description.1": "凝神起手 %1$s，月光约 %2$s 点，收招 %3$s，冷却 %4$s。",
+  "worldcombat.skill.bloodmoon.description.1": "凝神起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.bloodmoon.description.2": "放完之后禁复 %1$s：这段时间内不能再次召月，换成任何别的招式都会让气势提前平息。",
   "worldcombat.skill.bloodmoon.eclipse.on": "当前月蚀式：月光铺开成一片，落点周围的其他敌人也吃到溅射，起手更短；代价是主目标威力 ×0.85。",
   "worldcombat.skill.bloodmoon.eclipse.off": "当前满月式：全部气势砸在一点，主目标满威力、没有溅射、起手更长。",

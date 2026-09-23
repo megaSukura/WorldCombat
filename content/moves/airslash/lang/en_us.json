@@ -6,7 +6,7 @@
   "worldcombat.skill.airslash.description.0": "The blade deals %1$s special damage with a %2$s-block body.",
   "worldcombat.skill.airslash.description.1": "It travels up to %1$s blocks (%2$s blocks per tick) and pierces up to %3$s extra target(s) in a line.",
   "worldcombat.skill.airslash.description.2": "A struck target has a %1$s chance to flinch for %2$s.",
-  "worldcombat.skill.airslash.description.3": "It stirs about %1$s shards of cut air; razor form is currently %2$s.",
+  "worldcombat.skill.airslash.description.3": "Razor form is currently %1$s.",
   "worldcombat.skill.airslash.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.airslash.growth.0": "From level %1$s the blade rises to %2$s and the travel to %3$s blocks.",
   "worldcombat.skill.airslash.value.blade": "Blade power",

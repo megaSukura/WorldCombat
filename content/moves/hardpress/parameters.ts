@@ -130,7 +130,7 @@ namespace PokemonSkills {
     describe(hardpressId, [
         { key: "description.0", values: ["press"] },
         { key: "description.1", values: ["pressRadius", "sink", "shove"] },
-        { key: "description.2", values: ["reach", "motes"] },
+        { key: "description.2", values: ["reach"] },
         { key: "brace.on", values: [], when: function (context) { return read(context.detail.values, ["brace"]) === true; } },
         { key: "brace.off", values: [], when: function (context) { return read(context.detail.values, ["brace"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },

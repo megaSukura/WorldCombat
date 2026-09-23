@@ -2,7 +2,7 @@
   "worldcombat.skill.thundershock.summary": "A short, point-blank electric jab that lands instantly. Its range is tiny but it barely costs a beat; against a target already paralysed it hits harder and tops the paralysis up. Electric types are immune to paralysis.",
   "worldcombat.skill.thundershock.description.0": "The jab reaches targets within %2$s blocks in a straight line with a power of %1$s and a collision radius of %3$s; the line must be unobstructed.",
   "worldcombat.skill.thundershock.description.1": "On a hit there is a %1$s chance to paralyse the target for %2$s; if the target is already paralysed, the paralysis is topped up to at least %3$s and the jab hits harder.",
-  "worldcombat.skill.thundershock.description.2": "One jab splits into %1$s arcs; windup %2$s, cooldown %3$s.",
+  "worldcombat.skill.thundershock.description.2": "Windup %1$s, cooldown %2$s.",
   "worldcombat.skill.thundershock.timing": "Needs line of sight: range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.thundershock.growth.0": "From level %1$s the jab power rises to %2$s.",
   "worldcombat.skill.thundershock.growth.1": "From level %1$s the paralysis chance rises to %2$s and the top-up lasts %3$s.",

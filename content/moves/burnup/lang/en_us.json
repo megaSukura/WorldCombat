@@ -2,7 +2,7 @@
   "worldcombat.skill.burnup.summary": "Draw every flame in the body inward, then vent a cone of white fire in front: the target squarely in it takes full damage, others in the cone take the side flame. Afterwards the user is truly burned out — for a while it is no longer Fire type and cannot light another Burn Up.",
   "worldcombat.skill.burnup.description.0": "The white fire's core damage %1$s; ×1.12 more while the user is Fire type (it is burning its own typing).",
   "worldcombat.skill.burnup.description.1": "The white fire reaches %1$s blocks and opens a %2$s degree cone, its front rushing out at %3$s blocks per tick; targets not squarely in it take %4$s.",
-  "worldcombat.skill.burnup.description.2": "Afterwards the user is burned out for %1$s, losing its Fire type and unable to cast again; the burst throws %2$s embers.",
+  "worldcombat.skill.burnup.description.2": "Afterwards the user is burned out for %1$s, losing its Fire type and unable to cast again.",
   "worldcombat.skill.burnup.use.0": "Scorch a cone with one blast",
   "worldcombat.skill.burnup.use.1": "Trade the Fire typing for one heavy hit",
   "worldcombat.skill.burnup.use.2": "Ignite everything clustered ahead",

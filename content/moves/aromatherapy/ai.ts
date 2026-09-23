@@ -1,13 +1,14 @@
 /**
  * 芳香治疗 的伙伴 AI 用途：这是一片整队的净化香云，不是伤害招。
  *
- * 什么局面有意义：自己或附近的伙伴身上带着主异常之一。香云会停留并反复净化，所以它在异常出现的当下铺下即可。
+ * 什么局面有意义：自己或附近的伙伴身上带着有害状态效果之一。香云会停留并反复净化，所以它在异常出现的当下铺下即可。
  * 对谁出手：只有自己（kind self 的落点即自身位置），reach 0；香云以自身为心，伙伴必须站在 ai.scentReach 以内。
  * 什么时候最急：自己也被挂上异常时 priority 100；否则 50，等共享交战次序轮到准备动作再铺。
  * 够不到怎么办：AI 不追人；伙伴在 ai.scentReach 之外就先不铺（铺了也罩不到）。
  * 配置：dense（浓香／弥香）在参数层改变半径与停留；ai.cleanseCount 与 ai.scentReach 是这套出手计划自己的选项。
  */
 namespace CompanionBehavior {
+    registerFact("world_combat:move_aromatherapy/harmful", (world, actor) => CombatStatus.hasHarmful(world, actor));
     const aromatherapyCleanseCount = PokemonSkills.number("ai.cleanseCount", "铺云门限", 1, 4, 1);
     aromatherapyCleanseCount.help = "至少这么多个伙伴（含自己）被异常缠住时才值得铺云；调到 1 一有人中招就铺，调高则等更多人一起中招、一片云罩一队。";
     const aromatherapyScentReach = PokemonSkills.number("ai.scentReach", "香云尺度", 2, 6, 1);
@@ -24,8 +25,7 @@ namespace CompanionBehavior {
         });
         let found = 0;
         candidates.forEach(function (target) {
-            for (let index = 0; index < PokemonSkills.aromatherapyMalaise.length; index++)
-                if (status(context, target, PokemonSkills.aromatherapyMalaise[index])) { found++; return; }
+            if (fact<boolean>(context, "world_combat:move_aromatherapy/harmful", target)) found++;
         });
         return found;
     }
@@ -41,9 +41,7 @@ namespace CompanionBehavior {
         accepts: function (context, _capability, target) { return String(target.ref) === String(source(context).ref); },
         priority: function (context, capability) {
             const self = source(context);
-            let own = false;
-            for (let index = 0; index < PokemonSkills.aromatherapyMalaise.length; index++)
-                if (status(context, self, PokemonSkills.aromatherapyMalaise[index])) { own = true; break; }
+            const own = fact<boolean>(context, "world_combat:move_aromatherapy/harmful", self) === true;
             if (!aromatherapyAfflicted(context, ai<number>(capability, "scentReach", 4))) return 0;
             return own ? 100 : 50;
         }

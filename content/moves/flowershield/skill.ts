@@ -53,6 +53,7 @@ namespace PokemonSkills {
 
     define({
         id: flowershieldId,
+        cooldownParameter: "wait",
         name: "鲜花防守",
         description: "以神奇的力量从身上推开一圈花瓣，提高半径内所有草属性宝可梦的防御；对手的草属性也会被护到。"
             + "花瓣停一会儿就凋落，这份防御随之收回。",

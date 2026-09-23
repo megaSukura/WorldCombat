@@ -5,7 +5,7 @@
   "worldcombat.skill.simplebeam.use.2": "扩散档一次扫掉围上来的一圈特性",
   "worldcombat.skill.simplebeam.description.0": "把目标的特性改写成「单纯」、维持 %1$s。",
   "worldcombat.skill.simplebeam.description.1": "念波射程 %1$s 格，起手 %2$s，收招 %3$s，随速度与体型变化。",
-  "worldcombat.skill.simplebeam.description.2": "光束粗细约 %1$s 格，扩散半径 %2$s 格；特攻与体型越大越明显。",
+  "worldcombat.skill.simplebeam.description.2": "扩散半径 %1$s 格；念波在目标处炸开、扫到这个范围，体型越宽越广。",
   "worldcombat.skill.simplebeam.wave.on": "念波扩散：在目标处炸开、扫到 %1$s 格内的一圈人，但冷却 %2$s、每层维持更短。",
   "worldcombat.skill.simplebeam.wave.off": "单束：只打一个目标，改写维持 %1$s，出手更快。",
   "worldcombat.skill.simplebeam.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

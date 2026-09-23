@@ -5,7 +5,6 @@
   "worldcombat.skill.barrier.use.2": "把身后的队友护在墙后，逼对手换路",
   "worldcombat.skill.barrier.description.0": "壁立着时防御抬高 %1$s 级，持续约 %2$s。",
   "worldcombat.skill.barrier.description.1": "墙宽 %1$s 格、高 %2$s 格，立在身前 %3$s 格处；立起的格子会真实挡住通道。",
-  "worldcombat.skill.barrier.description.2": "一次拼出约 %1$s 块硬光板。",
   "worldcombat.skill.barrier.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.barrier.tall.on": "高屏：墙更高更窄、立得更远，挡得住视线与远程，起手更快；代价是窄得能被绕过、护得更短。",
   "worldcombat.skill.barrier.tall.off": "壁垒：墙更宽更低、贴近身体，拦得住从正面冲来的对手、护得更久；代价是挡不住视线与远程，起手更慢。",
@@ -25,5 +24,9 @@
   "worldcombat.skill.barrier.preference.tall.help": "高屏：墙更高更窄、立得更远，挡视线与远程、起手更快，但窄得能被绕过、护得更短；关闭则立低而宽的壁垒，拦住正面冲来的对手、护得更久，但不挡视线与远程、起手更慢。",
   "world_combat.move.barrier.text.raise": "屏障（防御 +%1$s，%2$s 列）",
   "world_combat.move.barrier.text.shatter": "屏障崩解",
-  "effect.world_combat.barrier_veil": "屏障"
+  "effect.world_combat.barrier_veil": "屏障",
+  "worldcombat.skill.barrier.preference.ai.maxChase": "立墙距离",
+  "worldcombat.skill.barrier.preference.ai.maxChase.help": "威胁进入这个距离内才考虑立墙；越大越早准备。",
+  "worldcombat.skill.barrier.preference.ai.minGap": "贴身下限",
+  "worldcombat.skill.barrier.preference.ai.minGap.help": "威胁近于这个距离时不再立墙，直接应对近身攻击。"
 }

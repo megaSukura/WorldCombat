@@ -5,7 +5,7 @@
   "worldcombat.skill.bonemerang.use.2": "在对手走位前先手掷出、逼它离开原位",
   "worldcombat.skill.bonemerang.description.0": "骨头以 %2$s 格/刻飞出，最远投到 %3$s 格；去程造成约 %1$s 的地面属性伤害，对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.bonemerang.description.1": "骨头越过目标 %4$s 格后折返，途中向侧面摆开 %5$s 格；回程造成约 %1$s 的地面属性伤害。骨头判定半径 %2$s 格、折返擦到半径 %3$s 格，两段都命中时合计接近一次完整回力镖。",
-  "worldcombat.skill.bonemerang.description.2": "骨头有 %1$s 点耐久，被打碎或超时就落在地上；旋转与命中迸出的骨屑约 %2$s 点。",
+  "worldcombat.skill.bonemerang.description.2": "骨头有 %1$s 点耐久，被打碎或超时就落在地上。",
   "worldcombat.skill.bonemerang.arc.on": "回旋弧：越目标更远、侧面摆得更开、飞得更慢，去程轻 15%、回程重 20%、冷却更久——更重但更难命中的大回旋。",
   "worldcombat.skill.bonemerang.arc.off": "直去直回：更快、更平、两段更均匀、冷却更短——更稳，但没有回程加成。",
   "worldcombat.skill.bonemerang.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

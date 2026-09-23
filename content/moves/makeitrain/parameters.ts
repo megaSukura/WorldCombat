@@ -116,12 +116,12 @@ namespace PokemonSkills {
 
     describe("makeitrain", [
         { key: "description.0", values: ["coin", "radius", "waves", "interval"] },
-        { key: "description.1", values: ["wealth", "scatter", "fall"] },
+        { key: "description.1", values: ["scatter"] },
         { key: "description.2", values: ["selfDrop"] },
         { key: "hoard.on", values: [], when: function (context) { return read(context.detail.values, ["hoard"]) === true; } },
         { key: "hoard.off", values: [], when: function (context) { return read(context.detail.values, ["hoard"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.coin", "tier.0.radius"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.coin", "tier.1.wealth"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.coin"] }
     ]);
 }

@@ -80,7 +80,7 @@ namespace PokemonSkills {
 
     describe(fairyId, [
         { key: "description.0", values: ["radius", "sealTicks"] },
-        { key: "description.1", values: ["lattice", "bars"] },
+        { key: "description.1", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

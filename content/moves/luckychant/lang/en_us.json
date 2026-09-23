@@ -4,7 +4,7 @@
   "worldcombat.skill.luckychant.use.1": "Cover the team's soft or low-health members",
   "worldcombat.skill.luckychant.use.2": "Sing it before the foe starts its combo",
   "worldcombat.skill.luckychant.description.0": "The sky-light covers the caster and allies within %2$s blocks for %1$s: critical hits from opposing attacks are smoothed out — damage settles as a normal hit and the critical mark is cleared.",
-  "worldcombat.skill.luckychant.description.1": "the current cast range is %2$s blocks. It only stops criticals, not ordinary damage or control.",
+  "worldcombat.skill.luckychant.description.1": "the current cast range is %1$s blocks. It only stops criticals, not ordinary damage or control.",
   "worldcombat.skill.luckychant.description.2": "Singing it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the wish note for the early/deep trade-off.",
   "worldcombat.skill.luckychant.wish.0": "Early wish: -3 ticks wind-up and x0.85 cooldown, at x0.85 radius and x0.7 duration — quick to sing and refresh, but smaller and shorter.",
   "worldcombat.skill.luckychant.wish.1": "Deep wish: radius x1.2 and duration x1.3, at +3 ticks wind-up and x1.15 cooldown — wide and long, but slower and costlier.",

@@ -3,7 +3,7 @@
  *
  * 什么局面下出手（fortify）：附近有威胁、但还没有贴到脸上（距离不小于 4 格）时，先站定把五项拉起来再交战。
  * 生命不足以支付「拍数×每拍 + 保底」时不用，避免把自己烧到危险区。
- * 没有威胁时只在整备命令（驻守／自主／工作）下起舞，跟随与近战优先。
+ * 有交战需求时才准备，跟随与近战优先。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("clangoroussoul", {
@@ -11,12 +11,12 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (["atk", "def", "spa", "spd", "spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             var self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             var reserve = CompanionBehavior.ai<number>(capability, "reserveHealth", 0.2);
             var extended = !!(capability.data.config && capability.data.config.extended);
             if (CompanionBehavior.ratio(self) < (extended ? 0.204 * 2 : 0.3) + reserve) return false;
-            if (!threat)
-                return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             var distance = CompanionBehavior.distance(self.point, threat.point);
             return distance >= 4 && distance <= CompanionBehavior.ai<number>(capability, "maxChase", 20);
         },

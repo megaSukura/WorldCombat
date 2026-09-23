@@ -151,7 +151,7 @@ namespace PokemonSkills {
     describe(muddywaterId, [
         { key: "description.0", values: ["surge", "murkChance", "murkStages"] },
         { key: "description.1", values: ["span", "reach", "sweep"] },
-        { key: "description.2", values: ["murkTicks", "drops"] },
+        { key: "description.2", values: ["murkTicks"] },
         { key: "description.3", values: ["siltTicks", "maxTargets"] },
         { key: "silted.on", values: [], when: function (context) { return read(context.detail.values, ["silted"]) === true; } },
         { key: "silted.off", values: [], when: function (context) { return read(context.detail.values, ["silted"]) !== true; } },

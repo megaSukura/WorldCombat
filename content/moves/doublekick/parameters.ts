@@ -130,7 +130,7 @@ namespace PokemonSkills {
 
     describe(doublekickId, [
         { key: "description.0", values: ["hook", "finisher", "lift", "push"] },
-        { key: "description.1", values: ["reach", "span", "gap", "dust"] },
+        { key: "description.1", values: ["reach", "span", "gap"] },
         { key: "alternate.on", values: [], when: function (context) { return read(context.detail.values, ["alternate"]) === true; } },
         { key: "alternate.off", values: [], when: function (context) { return read(context.detail.values, ["alternate"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

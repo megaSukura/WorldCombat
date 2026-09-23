@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: doublekickId,
+        cooldownParameter: "recharge",
         name: "Double Kick",
         description: "The user attacks by kicking the target twice in a row using two feet.",
         uses: ["一脚挑起、一脚踹飞的近身两拍", "把贴身的对手踢出站位", "对付会站桩的对手反复打节奏"],
@@ -110,8 +111,8 @@ namespace PokemonSkills {
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), doublekickLaunchText, [], 18);
                     });
                 if (hits === 0)
-                    WorldFeedback.emit(scope, doublekickScene, 1, origin.plus(direction.scale(reach * 0.6)),
-                        { moment: "whiff", index: index + 1, reach: reach, span: span, dust: Math.round(dust * 0.6) }, 16);
+                    WorldFeedback.emit(scope, doublekickScene, 1, origin,
+                        { moment: "whiff", direction: [direction.x(), direction.y(), direction.z()], index: index + 1, reach: reach, span: span, dust: Math.round(dust * 0.6) }, 16);
                 if (index === 0) { current.after(gap, function (next: CombatAction) { kick(next, 1); }); return; }
                 WorldFeedback.emit(scope, doublekickScene, 1, origin, { moment: "settle", reach: reach, span: span, dust: dust }, 16);
                 finish(current);

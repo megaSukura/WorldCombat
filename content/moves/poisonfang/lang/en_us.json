@@ -5,7 +5,6 @@
   "worldcombat.skill.poisonfang.use.2": "Hang lasting damage on a high-health target",
   "worldcombat.skill.poisonfang.description.0": "The bite deals about %1$s contact and bite damage over a fang radius of %2$s blocks; the target's defence, type matchup and crits are settled on impact.",
   "worldcombat.skill.poisonfang.description.1": "A beat after the bite (%1$s) the venom seeps in: a %2$s chance to deepen into badly poisoned (plain poison otherwise), lasting %3$s; if the target was already poisoned when bitten, the deepening is guaranteed.",
-  "worldcombat.skill.poisonfang.description.2": "The wound leaks about %1$s drops of venom; the bubbles in the picture match that count.",
   "worldcombat.skill.poisonfang.venom.on": "Venom style: a higher toxic chance and a longer venom, but a lighter bite, a slower seep and a longer cooldown.",
   "worldcombat.skill.poisonfang.venom.off": "Quick style: a heavier bite and a faster seep, but harder to deepen into toxic.",
   "worldcombat.skill.poisonfang.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",

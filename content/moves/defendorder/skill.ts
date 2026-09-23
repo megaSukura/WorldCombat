@@ -112,6 +112,7 @@ namespace PokemonSkills {
 
     define({
         id: "defendorder",
+        cooldownParameter: "wait",
         name: "防御指令",
         description: "召唤手下，让其附在自己的身体上，从而提高自己的防御和特防。",
         uses: ["召一队手下贴上身，把两项防护堆起来", "用会动的甲壳逼对手先清手下再打你", "在近身拉锯里叠一层可被打掉的防护"],

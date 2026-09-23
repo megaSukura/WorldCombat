@@ -6,7 +6,7 @@
   "worldcombat.skill.synchronoise.use.3": "在属性对不上的局里确认谁才是同频的那一个",
   "worldcombat.skill.synchronoise.description.0": "对每个与施法者属性相同的目标造成约 %1$s 的伤害；属性不同的目标被电波穿过、毫发无伤。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.synchronoise.description.1": "电波扫过身周 %1$s 格，瞬时覆盖整圈。",
-  "worldcombat.skill.synchronoise.description.2": "被锁住的目标带上 %1$s 秒的「同频」记号；余音在身周停留 %2$s 秒，共 %3$s 圈。",
+  "worldcombat.skill.synchronoise.description.2": "被锁住的目标带上 %1$s 秒的「同频」记号。",
   "worldcombat.skill.synchronoise.tight.on": "开启收束同调：电波半径约 ×0.62、共振威力约 ×1.42、同频记号更久，但起手 +2 刻、冷却 +6 刻。",
   "worldcombat.skill.synchronoise.tight.off": "关闭收束同调（宽播同调）：电波半径 ×1.0、共振威力 ×1.0、起手与冷却更短，用来在一片混战里尽量扫到同频的人。",
   "worldcombat.skill.synchronoise.timing": "作用半径 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，收招 %3$s 秒，提交起冷却 %5$s 秒。",

@@ -4,7 +4,7 @@
   "worldcombat.skill.doublehit.use.1": "把身前一小片敌人沿弧线来回推",
   "worldcombat.skill.doublehit.use.2": "用宽弧的势把贴身的对手扫开",
   "worldcombat.skill.doublehit.description.0": "每扫 %1$s 威力（走物攻），尾长 %2$s 格，扫过张角 %3$s 度，一记最多扫到 %4$s 个目标。",
-  "worldcombat.skill.doublehit.description.1": "两扫间隔 %1$s；每扫把目标沿扫动方向推开 %2$s 格，扫中扬起约 %3$s 点尘土。",
+  "worldcombat.skill.doublehit.description.1": "两扫间隔 %1$s；每扫把目标沿扫动方向推开 %2$s 格。",
   "worldcombat.skill.doublehit.arc.on": "当前回扫式：尾巴向一侧扫再反向回扫，张角更宽、能同时扫到更多、横向推力更大，把人推来推去；每扫略轻、间隔略长。",
   "worldcombat.skill.doublehit.arc.off": "当前直扫式：两扫同向、扫面更窄更集中、每扫更重，沿同一个方向一路把人推出去。",
   "worldcombat.skill.doublehit.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

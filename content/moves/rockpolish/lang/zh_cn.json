@@ -5,7 +5,7 @@
   "worldcombat.skill.rockpolish.use.2": "顺手把脚下的石地磨亮、标下这块场地",
   "worldcombat.skill.rockpolish.description.0": "磨光后速度提升 %1$s 级；站定打磨需要 %2$s。",
   "worldcombat.skill.rockpolish.description.1": "光面持续约 %1$s，脚下的石质地面被磨亮 %2$s 格；光面失亮时这段打磨抬起的等级收回。",
-  "worldcombat.skill.rockpolish.description.2": "打磨一次溅出约 %1$s 点火花、%2$s 撮石粉，收招 %3$s、冷却 %4$s。",
+  "worldcombat.skill.rockpolish.description.2": "打磨后收招 %1$s、冷却 %2$s。",
   "worldcombat.skill.rockpolish.grit.on": "精磨：起手与冷却更长、地圈更大，光面更久，对轻身板也能磨到满级。",
   "worldcombat.skill.rockpolish.grit.off": "粗磨：起手与冷却更短、地圈更小、光面更短；体重 100kg 以上的身体同样能磨到满级。",
   "worldcombat.skill.rockpolish.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",

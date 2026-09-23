@@ -2,7 +2,7 @@
   "worldcombat.skill.volttackle.summary": "Charge up and tackle the target, discharging electricity into nearby enemies with a chance to paralyze. A hit causes recoil.",
   "worldcombat.skill.volttackle.description.0": "The charged burst deals about %1$s contact damage; it charges up to %2$s blocks at %3$s blocks per tick with a %4$s block hit radius.",
   "worldcombat.skill.volttackle.description.1": "On a hit there is a %1$s%% chance to paralyze the target for %2$s; you take %3$s%% of the actual damage as recoil and hurl the target %4$s blocks.",
-  "worldcombat.skill.volttackle.description.2": "Every other non-ally within %1$s blocks of the impact takes %2$s of the power with a %3$s%% chance to be paralyzed by the arc (a few at most, line of sight needed); the whole move throws off %4$s electric sparks.",
+  "worldcombat.skill.volttackle.description.2": "Every other non-ally within %1$s blocks of the impact takes %2$s of the power with a %3$s%% chance to be paralyzed by the arc (a few at most, line of sight needed).",
   "worldcombat.skill.volttackle.discharge.on": "Discharge: larger arc radius and arc power, heavier recoil and a shorter charge, with less power on the main target - spread the charge over a crowd.",
   "worldcombat.skill.volttackle.discharge.off": "Focus: more power on the main target, lighter recoil and a longer charge, with a smaller arc radius and arc power - pour it all into one target.",
   "worldcombat.skill.volttackle.timing": "Range %1$s blocks; windup %2$s s, recover %3$s s, cooldown %4$s s, costs %5$s PP.",

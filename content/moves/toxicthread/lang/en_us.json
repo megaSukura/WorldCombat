@@ -4,7 +4,7 @@
   "worldcombat.skill.toxicthread.use.1": "Reel a charging melee threat out of position",
   "worldcombat.skill.toxicthread.use.2": "Add a lasting poison to a stubborn foe",
   "worldcombat.skill.toxicthread.description.0": "A laced target loses %1$s Speed stage(s) and is poisoned for %2$s.",
-  "worldcombat.skill.toxicthread.description.1": "Reel distance or strength %1$s blocks, pin duration %2$s; %3$s thread strands are spat at once.",
+  "worldcombat.skill.toxicthread.description.1": "Reel distance or strength %1$s blocks, pin duration %2$s.",
   "worldcombat.skill.toxicthread.description.2": "The thread flies at %1$s blocks/tick with a %2$s-block hit radius over %3$s blocks (range %4$s); windup %5$s.",
   "worldcombat.skill.toxicthread.reel.on": "Reel: on a hit, drag the target toward you along the thread to break its position or pull it into melee.",
   "worldcombat.skill.toxicthread.reel.off": "Pin: on a hit, freeze the target where it stands to hold it and open distance.",

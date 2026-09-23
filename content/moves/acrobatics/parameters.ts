@@ -76,14 +76,14 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "腾身翻滚时每刻前进的距离；越快越难被反应。"
             }),
-        /** 穿过距离：速度每比 60 多 1 加 0.014 格（夹 -0.2..+0.9）；长掠 ×1.3、贴身 ×0.9；夹在 0.3..2.2 格。 */
+        /** 越过距离：绕开目标的碰撞体后再前进的距离；长掠 ×1.3、贴身 ×0.9；夹在 0.3..2.2 格。 */
         carry: formula(
             F.base(0.7).plus(F.stat("speed").minus(60).times(0.014).clamp(-0.2, 0.9))
                 .times(F.when(F.pref("sweep"), F.const(1.3), F.const(0.9)))
                 .clamp(0.3, 2.2).round(2),
-            "穿过距离", {
+            "越过距离", {
                 unit: "格",
-                description: "撞实后顺着翻滚势头从对方身侧穿过去的距离；长掠开启时穿得更远。"
+                description: "身侧有空位时，绕过目标的身体后再前进的距离；长掠开启时落点更远。"
             }),
         /** 顶开距离：体重每比 50 多 1 加 0.001 格（夹 -0.03..+0.25），夹在 0.05..0.4 格。 */
         push: formula(
@@ -103,7 +103,7 @@ namespace PokemonSkills {
         motes: formula(
             F.base(14).plus(F.stat("speed").minus(60).times(0.3).clamp(-5, 20)).clamp(8, 34).round(0),
             "火花数量", {
-                unit: "个",
+                unit: "个", visible: false,
                 description: "翻滚与命中时迸出的气旋火花数量；越快越多，粒子按它发射。"
             }),
         traceAhead: hidden(1.15),

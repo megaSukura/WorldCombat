@@ -2,7 +2,7 @@
   "worldcombat.skill.seismictoss.summary": "抓取投掷：扣住对手、借重力把它甩出去，造成等于自己等级的固定伤害，再把对手抛上一条弧线砸向地面。伤害不看对手防御，只看属性免疫；砸地式把这一甩压短并让对手落地后被钉住。",
   "worldcombat.skill.seismictoss.description.0": "抓稳的一刻造成 %1$s 点固定伤害：等于使用者等级乘上一点体重系数。对手防御不参与，只有属性免疫会挡住它。",
   "worldcombat.skill.seismictoss.description.1": "起手 %1$s 秒，抓握 %2$s 秒，抓取半径 %3$s 格。",
-  "worldcombat.skill.seismictoss.description.2": "甩出的水平初速 %1$s 格/刻、垂直初速 %2$s 格/刻，飞行 %3$s 秒后落地，落地冲击半径 %4$s 格。",
+  "worldcombat.skill.seismictoss.description.2": "甩出的水平初速 %1$s 格/刻、垂直初速 %2$s 格/刻，飞行 %3$s 秒后落地。",
   "worldcombat.skill.seismictoss.slam.on": "砸地式：落地把对手钉住 %1$s 秒（这一支投得更短更陡）。",
   "worldcombat.skill.seismictoss.slam.off": "抛飞式：投得更远、方向更平，用来把对手扔离掩体，但不钉人。",
   "worldcombat.skill.seismictoss.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，消耗 %5$s PP。",
@@ -28,8 +28,7 @@
   "worldcombat.skill.seismictoss.preference.ai.finish.help": "开启：目标生命偏低时优先用这一记固定伤害收掉；关闭：只按普通近身候选排序。",
   "worldcombat.skill.seismictoss.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.seismictoss.preference.ai.leaveStation.help": "开启后，驻守命令下也会为抓取离开站位；关闭则只在原地够得到时出手。",
-  "worldcombat.skill.seismictoss.growth.0": "%1$s 级起落地冲击半径提高到 %2$s 格。",
-  "worldcombat.skill.seismictoss.growth.1": "%1$s 级起落地冲击半径提高到 %2$s 格，钉地时长延长到 %3$s 秒。",
+  "worldcombat.skill.seismictoss.growth.1": "从 %1$s 级起钉地时长延长到 %2$s 秒。",
   "world_combat.move.seismictoss.text.hold": "抓住了 %1$s",
   "world_combat.move.seismictoss.text.slam": "砸在地上",
   "world_combat.move.seismictoss.text.miss": "没抓住"

@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: shadowclawId,
+        cooldownParameter: "recharge",
         name: "Shadow Claw",
         description: "The user slashes with a sharp claw made from shadows. This move has a heightened chance of landing a critical hit.",
         uses: ["影子绕到对手背后伸爪", "对手没在看自己时这一爪更重", "沿用原生高暴击，命中留影痕"],

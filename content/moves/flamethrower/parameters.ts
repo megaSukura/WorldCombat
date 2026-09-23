@@ -105,11 +105,11 @@ namespace PokemonSkills {
 
     describe("flamethrower", [
         { key: "description.0", values: ["jet", "reach", "front"] },
-        { key: "description.1", values: ["burnChance", "density"] },
+        { key: "description.1", values: ["burnChance"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.jet", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.jet", "tier.1.reach", "tier.1.density"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.jet", "tier.1.reach"] }
     ]);
 }

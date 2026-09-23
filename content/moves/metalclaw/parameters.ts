@@ -117,7 +117,7 @@ namespace PokemonSkills {
     describe("metalclaw", [
         { key: "description.0", values: ["rake", "radius"] },
         { key: "description.1", values: ["reach", "gap", "knock"] },
-        { key: "description.2", values: ["sharpenChance", "sharpenStages", "sparks"] },
+        { key: "description.2", values: ["sharpenChance", "sharpenStages"] },
         { key: "hone.on", values: [], when: function (context) { return read(context.detail.values, ["hone"]) === true; } },
         { key: "hone.off", values: [], when: function (context) { return read(context.detail.values, ["hone"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

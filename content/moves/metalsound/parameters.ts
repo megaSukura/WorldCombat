@@ -67,7 +67,7 @@ namespace PokemonSkills {
 
     describe(metalsoundId, [
         { key: "description.0", values: ["drop", "ring"] },
-        { key: "description.1", values: ["reach", "cycles"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     define({
         id: burnupId,
+        cooldownParameter: "recharge",
         name: "Burn Up",
         description: "To inflict massive damage, the user burns itself out. After using this move, the user will no longer be Fire type.",
         uses: ["一发烧尽面前一条锥面", "用失去本系换一次重击", "把挤在身前的对手一起点燃"],

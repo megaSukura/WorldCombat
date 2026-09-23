@@ -30,6 +30,7 @@ namespace PokemonSkills {
 
     define({
         id: leafbladeId,
+        cooldownParameter: "recharge",
         name: "Leaf Blade",
         description: "The user handles a sharp leaf like a sword and cuts the target to inflict damage. This move has a heightened chance of landing a critical hit.",
         uses: ["把一片叶当作剑，贴身横挥一记重斩", "切开主目标并削掉它一档防御", "刃风顺带扫到近旁的旁人"],
@@ -99,7 +100,7 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.razorleaf.actor_1");
             WorldFeedback.emit(world, leafbladeScene, 1, cutOrigin,
-                { moment: "slash", direction: heading, reach: reach, span: span, shards: shards, scale: scale,
+                { moment: "slash", direction: heading, reach: reach + 0.4, span: span, shards: shards, scale: scale,
                     intensity: intensity, path: leafbladeArc(cutOrigin, direction, reach + 0.4, span),
                     twohand: config && config.twohand === true ? 1 : 0 }, 22);
 

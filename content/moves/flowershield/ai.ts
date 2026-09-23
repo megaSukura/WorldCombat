@@ -2,7 +2,7 @@
  * 鲜花防守 的伙伴 AI 用途：这是这招自己的一套出手计划——开打前先把身边一圈草属性护起来。
  *
  * 什么局面有意义：场上有一个可见的威胁、且在 ai.maxChase 内；ai.pack 一圈里至少站着一个还没被花浪扫过的
- *   草属性伙伴（自己也算）。没有威胁时只在整备命令（驻守／自主／工作）下做一遍。
+ *   草属性伙伴（自己也算）。有交战需求才准备。
  * 对谁出手：自己；花浪以自身为心，草属性伙伴在范围内会一起被扫到，不需要选中队友。
  * 够不到怎么办：不需要够——由共用任务直接施放；威胁太远就先不推花浪。
  * 候选之间怎么排：一圈里自己人多于草属性对手时 priority 86（这一推净赚）；否则 66（顺带也护了对手的草属性，
@@ -44,7 +44,7 @@ namespace CompanionBehavior {
             if (context.facts.mounted) return false;
             const counts = flowershieldCounts(context, item);
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return (context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work") && counts.friends > 0;
+            if (!threat) return false;
             if (distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
             return counts.friends > 0;
         },

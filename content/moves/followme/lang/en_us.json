@@ -4,7 +4,7 @@
   "worldcombat.skill.followme.use.1": "Pull enemies off an ally so it can break away",
   "worldcombat.skill.followme.use.2": "Block pursuers in the open and gather the fight onto yourself",
   "worldcombat.skill.followme.description.0": "Call radius %1$s blocks; attention holds for %2$s. Enemies inside are repeatedly aimed at you.",
-  "worldcombat.skill.followme.description.1": "Re-pulls every %1$s; derived from Special Attack.",
+  "worldcombat.skill.followme.description.1": "Re-pulls every %1$s.",
   "worldcombat.skill.followme.shout.on": "Shout: radius x1.25 and cooldown x1.1 to sweep in farther enemies, at the cost of hold duration x0.7.",
   "worldcombat.skill.followme.shout.off": "Beckon: radius x0.8, but hold duration x1.35 and cooldown x0.9 - hold a few close enemies longer.",
   "worldcombat.skill.followme.timing": "A self move; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

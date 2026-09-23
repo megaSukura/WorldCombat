@@ -73,7 +73,7 @@ namespace PokemonSkills {
             F.base(18).plus(F.stat("speed").minus(55).times(0.30).clamp(-3, 14))
                 .plus(F.body("weight").minus(100).times(0.03).clamp(-2, 8)).clamp(14, 44).round(0),
             "碎石数量", {
-                base: 18, unit: "点",
+                base: 18, unit: "点", visible: false,
                 description: "撞击与推进时迸出的碎石数量，也直接驱动画面的发射量；速度与体重越高越密。"
             }),
         /** 贯穿数：1 + 破阵式（1 +（速度 − 55）÷ 60 [0,1]）；夹 1..3。 */
@@ -129,7 +129,7 @@ namespace PokemonSkills {
     describe(accelerockId, [
         { key: "description.0", values: ["slam", "collisionRadius"] },
         { key: "description.1", values: ["charge", "pace", "shove"] },
-        { key: "description.2", values: ["shards", "pierce"] },
+        { key: "description.2", values: ["pierce"] },
         { key: "description.3", values: ["scar", "rubble"] },
         { key: "breakthrough.on", values: ["pierce"], when: function (context) { return read(context.detail.values, ["breakthrough"]) === true; } },
         { key: "breakthrough.off", values: [], when: function (context) { return read(context.detail.values, ["breakthrough"]) !== true; } },

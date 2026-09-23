@@ -51,6 +51,7 @@ namespace PokemonSkills {
 
     define({
         id: falseSwipeId,
+        cooldownParameter: "recharge",
         name: "False Swipe",
         description: "一记极准的浅切：沿身前一条细缝划过去，命中什么都只会削血，目标至少留下 1 HP。全力收手更沉更慢，轻手更轻更快。",
         uses: ["把目标削到 1 HP 便于捕捉", "对必须留活的对手保持压制", "在不杀死目标的前提下磨掉威胁"],

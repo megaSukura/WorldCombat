@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.purify.summary": "朝瞄准点最近的一个带异常的战斗者探出手，把它身上的全部主异常整项抽走；病痛化作暗雾飞回施法者，落地按其最大生命的比例回复。伙伴与对手都能净，但落点附近没有带异常的目标时整招落空。",
+  "worldcombat.skill.purify.summary": "朝瞄准点最近的一个带异常的战斗者探出手，把它身上的全部有害状态效果整项抽走；病痛化作暗雾飞回施法者，落地按其最大生命的比例回复。伙伴与对手都能净，但落点附近没有带异常的目标时整招落空。",
   "worldcombat.skill.purify.use.0": "顺手洗掉伙伴中毒并给自己回一口",
   "worldcombat.skill.purify.use.1": "把对手身上的灼伤拿走、换自己的生机",
   "worldcombat.skill.purify.use.2": "打断一个正靠异常持续掉血的目标节奏",
-  "worldcombat.skill.purify.description.0": "抽出目标的主异常后，施法者按其最大生命的 %1$s 回复；最远 %2$s 格。",
-  "worldcombat.skill.purify.description.1": "在落点 %1$s 格内挑最近一个带异常的战斗者；抽引迸出 %2$s 点暗雾。",
+  "worldcombat.skill.purify.description.0": "抽出目标的有害状态效果后，施法者按其最大生命的 %1$s 回复；最远 %2$s 格。",
+  "worldcombat.skill.purify.description.1": "在落点 %1$s 格内挑最近一个带异常的战斗者。",
   "worldcombat.skill.purify.stance.deep": "深引：回复 ×1.25，代价是起手 ×1.25、冷却 ×1.15、选中范围 ×0.85、距离 ×0.9（一次用力的抽取）。",
   "worldcombat.skill.purify.stance.light": "轻引：起手 ×0.9、冷却 ×0.92，选中范围 ×1.15、距离 ×1.05，但回复只有 ×0.85（一次顺手的净化）。",
   "worldcombat.skill.purify.timing": "落点招式；准备 %2$s 秒后消耗 %4$s PP 发动，之后收招 %3$s 秒，提交起冷却 %5$s 秒。准备期间不能移动，可被打断。",
@@ -21,5 +21,7 @@
   "worldcombat.skill.purify.preference.ai.healBelow.help": "伙伴生命低于该比例且带着异常时，伙计才把这招排进救助计划；调低更倾向继续输出，调高一有病痛就去抽。",
   "world_combat.move.purify.text.draw": "净化抽引 ×%1$s",
   "world_combat.move.purify.text.absorb": "生机 +%1$s",
-  "world_combat.move.purify.text.none": "附近无异常可抽"
+  "world_combat.move.purify.text.none": "附近无异常可抽",
+  "worldcombat.skill.purify.growth.0": "达到 %1$s 级，冷却调整为 %2$s。",
+  "worldcombat.skill.purify.growth.1": "达到 %1$s 级，冷却调整为 %2$s。"
 }

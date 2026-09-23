@@ -37,7 +37,7 @@ namespace PokemonSkills {
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯。 */
     function chipawayStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
         if (!world.valid(actor)) return {};
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 目标身上五项防御向能力里正面等级的总和（防与特防）；0 表示此刻没有可被本招无视的涨防。 */
@@ -119,7 +119,7 @@ namespace PokemonSkills {
 
     describe(chipawayId, [
         { key: "description.0", values: ["strike", "beats"] },
-        { key: "description.1", values: ["reach", "half", "chips"] },
+        { key: "description.1", values: ["reach", "half"] },
         { key: "rush.on", values: [], when: function (context) { return read(context.detail.values, ["rush"]) === true; } },
         { key: "rush.off", values: [], when: function (context) { return read(context.detail.values, ["rush"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

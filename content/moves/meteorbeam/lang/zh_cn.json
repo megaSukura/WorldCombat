@@ -6,7 +6,7 @@
   "worldcombat.skill.meteorbeam.description.0": "正面命中的目标吃 %1$s 点特殊伤害，落点一圈的其他敌人各吃 %2$s 点。",
   "worldcombat.skill.meteorbeam.description.1": "需要站定聚星 %1$s；聚星完成时提升 %2$s 级特攻，这份提升在抛出后仍然留着。",
   "worldcombat.skill.meteorbeam.description.2": "陨石以 %1$s 格每刻抛出、走抛物线，落点半径 %2$s 格，飞行判定半径 %3$s 格。",
-  "worldcombat.skill.meteorbeam.description.3": "落点半径内被顶开 %1$s 格；聚星与落地约 %2$s 簇星光；砸出的焦黑地面存在 %3$s 后自行放回。",
+  "worldcombat.skill.meteorbeam.description.3": "落点半径内被顶开 %1$s 格；砸出的焦黑地面存在 %2$s 后自行放回。",
   "worldcombat.skill.meteorbeam.stance.deep": "深空：聚星多抬 1 级特攻（共 +2 级）、落点更大，但聚星更久、抛出的直接威力更轻、冷却更久。",
   "worldcombat.skill.meteorbeam.stance.light": "速抛：聚星更快、抛出的直接威力更重，但只 +1 级特攻、落点较小。",
   "worldcombat.skill.meteorbeam.timing": "可向 %1$s 格内施放；准备 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",

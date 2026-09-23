@@ -5,7 +5,6 @@
   "worldcombat.skill.torment.use.1": "逼对手换招",
   "worldcombat.skill.torment.use.2": "惩罚仰赖同一次连击的敌人",
   "worldcombat.skill.torment.description.0": "取笑能送到 %1$s 格内；命中后目标有 %2$s 不能连续使用同一招。",
-  "worldcombat.skill.torment.description.1": "缠在目标身上的讥讽符环约 %1$s 点，随特攻增长，也驱动持续画面。",
   "worldcombat.skill.torment.description.2": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.torment.manner.0": "讥讽：烦躁更长更远，但起手较慢、冷却较长。",
   "worldcombat.skill.torment.manner.1": "怒斥：出手更快、冷却更短，但烦躁更短、取笑距离更近。",

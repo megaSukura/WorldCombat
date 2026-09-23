@@ -4,7 +4,6 @@
   "worldcombat.skill.softboiled.use.1": "Lay the egg somewhere safe, then come back for it",
   "worldcombat.skill.softboiled.use.2": "Give the egg to a wounded companion",
   "worldcombat.skill.softboiled.description.0": "Lays an egg that hatches after %2$s to restore %1$s of the beneficiary's maximum health; the egg can be smashed before it hatches.",
-  "worldcombat.skill.softboiled.description.1": "Laying scatters about %1$s points of shell and about %2$s points of warm light pulse as it waits, stronger on a larger body.",
   "worldcombat.skill.softboiled.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed.",
   "worldcombat.skill.softboiled.stance.share": "Share: hands the egg to the nearest wounded ally within %1$s blocks; they restore the same fraction of their own maximum health, at the cost of the caster's own heal.",
   "worldcombat.skill.softboiled.stance.self": "Self: the egg is kept, hatching for about half of the caster's maximum health.",

@@ -78,6 +78,7 @@ namespace PokemonSkills {
 
     define({
         id: magnetriseId,
+        cooldownParameter: "recharge",
         name: "电磁飘浮",
         description: "把脚下地面磁化，用磁力把自己托离地面；悬浮期间免疫地面招式与脚下的地形危害，贴身的敌人还会被同极弹开。",
         uses: ["躲开地震、重踏一类地面招", "让贴地的近战敌人够不到自己", "越过陷阱与地形危害"],

@@ -6,7 +6,6 @@
   "worldcombat.skill.mistball.description.0": "羽绒雾球命中造成 %1$s 点超能力特殊伤害。",
   "worldcombat.skill.mistball.description.1": "命中后有 %1$s 概率让目标特攻下降 %2$s 级，并把雾糊在它身上 %3$s。",
   "worldcombat.skill.mistball.description.2": "球炸开成半径约 %1$s 格的雾团；初速 %2$s 格/刻、下坠 %3$s 格/刻²，走出来的是一道弧线。",
-  "worldcombat.skill.mistball.description.3": "一次散开约 %1$s 片羽绒。",
   "worldcombat.skill.mistball.option.on": "当前浓雾式：雾团更大、缠身概率更高更久，代价是球更慢、威力更低。",
   "worldcombat.skill.mistball.option.off": "当前轻羽式：威力更高、球更快更平，代价是雾团更小、缠身概率更低。",
   "worldcombat.skill.mistball.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

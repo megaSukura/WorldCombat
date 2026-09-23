@@ -59,7 +59,7 @@ namespace PokemonSkills {
 
     describe(followMeId, [
         { key: "description.0", values: ["callRadius", "callTicks"] },
-        { key: "description.1", values: ["interval", "motes"] },
+        { key: "description.1", values: ["interval"] },
         { key: "shout.on", values: [], when: function (context) { return read(context.detail.values, ["shout"]) === true; } },
         { key: "shout.off", values: [], when: function (context) { return read(context.detail.values, ["shout"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

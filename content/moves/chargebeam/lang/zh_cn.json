@@ -5,7 +5,7 @@
   "worldcombat.skill.chargebeam.use.2": "隔着一段距离先手压血",
   "worldcombat.skill.chargebeam.description.0": "细束打向 %2$s 格内的目标，威力 %1$s，以 %3$s 格每刻飞行；只做有限修正，大幅度横向走位能甩开。",
   "worldcombat.skill.chargebeam.description.1": "光束判定半径 %1$s 格；命中后 %2$s 概率让余流回灌、特攻提升 %3$s 级。",
-  "worldcombat.skill.chargebeam.description.2": "命中 %2$s 刻后，余流在命中点再吃一口直击的 %1$s；起手与命中迸开 %3$s 条电弧。",
+  "worldcombat.skill.chargebeam.description.2": "命中 %2$s 刻后，余流在命中点再吃一口直击的 %1$s。",
   "worldcombat.skill.chargebeam.overcharge.on": "过充：起手多 5 刻、冷却更久，但射程 ×1.2、威力 ×1.2、回灌几率更高、电弧更密。",
   "worldcombat.skill.chargebeam.overcharge.off": "速射：更短更便宜、飞行更快，射程与回灌几率都较低。",
   "worldcombat.skill.chargebeam.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

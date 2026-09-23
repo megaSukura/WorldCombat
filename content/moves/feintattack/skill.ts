@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: "feintattack",
+        cooldownParameter: "recharge",
         name: "Feint Attack",
         description: "The user approaches the target disarmingly, then throws a sucker punch. This attack never misses.",
         uses: ["悄悄绕到对手背后打一记重拳", "用暗影替身把对手的注意力钉在正面", "收拾正在盯着别人的目标"],

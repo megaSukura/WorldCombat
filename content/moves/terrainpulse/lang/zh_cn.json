@@ -4,7 +4,7 @@
   "worldcombat.skill.terrainpulse.use.1": "在场地里放大威力",
   "worldcombat.skill.terrainpulse.description.0": "推出 %1$s 的特殊地波；接地且站在场地上时属性随场地、威力 ×2，悬空则读作普通属性。",
   "worldcombat.skill.terrainpulse.description.1": "顿地 %1$s 秒后在 %2$s 格内推出这道波。",
-  "worldcombat.skill.terrainpulse.description.2": "共鸣时补第二波，两波各 ×0.7，覆盖半径 %2$s 格。",
+  "worldcombat.skill.terrainpulse.description.2": "共鸣时补第二波，两波各 ×0.7，覆盖半径 %1$s 格。",
   "worldcombat.skill.terrainpulse.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.terrainpulse.value.pulse": "威力",
   "worldcombat.skill.terrainpulse.value.charged": "脚下有场地",

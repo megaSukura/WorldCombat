@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: sporeId,
+        cooldownParameter: "recharge",
         name: "蘑菇孢子",
         description: "原地抖开一身蘑菇孢子，孢子一瞬间炸满周围一小片地，贴得越近越躲不掉：沾上的人当场睡下，而且睡得很沉。它几乎是必中的一记，代价是只够到很近的地方、冷却也最长，草属性则直接穿过孢子。",
         uses: ["被一群近战围住时一次全放倒", "贴身压制一个硬目标", "为队友的食梦或恶梦制造睡眠窗"],

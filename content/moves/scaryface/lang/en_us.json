@@ -1,17 +1,16 @@
 {
-  "worldcombat.skill.scaryface.summary": "Turn your face on a foe you can see and frighten it, harshly lowering its Speed; it fails when cover blocks the line of sight.",
+  "worldcombat.skill.scaryface.summary": "Startle one foe in range into stepping back and moving slowly for a short time. Its Speed returns when the frightened status ends.",
   "worldcombat.skill.scaryface.use.0": "Stop the fastest, most troublesome enemy",
   "worldcombat.skill.scaryface.use.1": "Slow a foe down before it closes in",
   "worldcombat.skill.scaryface.use.2": "Buy time for an ally to pull away",
-  "worldcombat.skill.scaryface.description.0": "The frightened target loses %1$s Speed stage(s) and stays terrified for %2$s.",
-  "worldcombat.skill.scaryface.description.1": "Gaze range %1$s; beyond that it cannot reach, and cover blocking the line of sight makes it fail outright. On a hit the target is driven back %2$s blocks and freezes for %3$s.",
+  "worldcombat.skill.scaryface.description.0": "Lowers Speed by %1$s stages for %2$s. Speed returns when the status expires or is cleared.",
+  "worldcombat.skill.scaryface.description.1": "Startles a target within %1$s and makes it step back %2$s blocks on impact.",
   "worldcombat.skill.scaryface.description.2": "Turning to face the target takes %1$s, with a %2$s cooldown.",
   "worldcombat.skill.scaryface.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.scaryface.value.drop": "Speed drop",
-  "worldcombat.skill.scaryface.value.fearTicks": "Terror",
+  "worldcombat.skill.scaryface.value.fearTicks": "Slow duration",
   "worldcombat.skill.scaryface.value.gazeRange": "Gaze range",
   "worldcombat.skill.scaryface.value.recoil": "Recoil",
-  "worldcombat.skill.scaryface.value.freeze": "Freeze",
   "worldcombat.skill.scaryface.value.tempo": "Windup",
   "worldcombat.skill.scaryface.value.recharge": "Cooldown",
   "worldcombat.skill.scaryface.preference.ai.maxChase": "Consider range",
@@ -19,6 +18,5 @@
   "worldcombat.skill.scaryface.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "When on, the companion may leave its post to glare under a Hold order.",
   "world_combat.move.scaryface.text.gaze": "Terrified (Speed -%1$s)",
-  "world_combat.move.scaryface.text.blocked": "Line of sight blocked",
   "effect.world_combat.scary_face_terror": "Terrified"
 }

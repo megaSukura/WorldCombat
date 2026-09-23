@@ -88,7 +88,7 @@ namespace PokemonSkills {
     defineDamage("reversal", "power", { defenceCoefficient: 0.005 }, { contact: true });
 
     describe("reversal", [
-        { key: "description.0", values: ["power", "wound"] },
+        { key: "description.0", values: ["power"] },
         { key: "description.1", values: ["plant", "lunge", "lungeSpeed"] },
         { key: "description.2", values: ["burstRadius", "push", "collisionRadius"] },
         { key: "reckless.on", values: ["recoil"], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },

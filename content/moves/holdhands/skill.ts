@@ -93,7 +93,8 @@ namespace PokemonSkills {
     });
 
     define({
-        id: holdhandsId, name: "牵手",
+        id: holdhandsId,
+        cooldownParameter: "recharge", name: "牵手",
         description: "和伙伴拉起手：一条暖色的链子连着你们，只要链子还在，双方每隔一小段就匀回一点体力；走远了连接会断，两端同时失去这份幸福。",
         uses: ["让两只宝可梦贴着一起回血", "用站位约束换一段持续疗伤", "在喘息间隙把两名成员一起补起来"],
         kind: "friend", range: 3, maxRange: 5,

@@ -27,6 +27,7 @@ namespace PokemonSkills {
 
     define({
         id: tearfullookId,
+        cooldownParameter: "recharge",
         name: "泪眼汪汪",
         description: "眼圈一红，让对手丧失斗志，同时降低它的攻击和特攻。威力来自施法者自己掉的血：越接近见底，夺走的斗志越多。眼泪要被看见才成立。放声大哭能把面前扇形里的人都卷进来，但起手更慢。",
         uses: ["残血时反手削掉对方的物攻与特攻", "在被围时用哭声同时压住正面的几个敌人", "给撤退争取一段对方下不去手的时间"],

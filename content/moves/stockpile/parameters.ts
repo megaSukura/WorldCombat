@@ -84,7 +84,7 @@ namespace PokemonSkills {
 
     describe("stockpile", [
         { key: "description.0", values: ["guard", "ward"] },
-        { key: "description.1", values: ["bond", "rind", "charge"] },
+        { key: "description.1", values: ["bond"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "break.mend", values: [], when: function (context) { return read(context.detail.values, ["break"]) !== "burst"; } },
         { key: "break.burst", values: [], when: function (context) { return read(context.detail.values, ["break"]) === "burst"; } },

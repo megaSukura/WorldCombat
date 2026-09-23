@@ -84,7 +84,7 @@ namespace PokemonSkills {
     ]);
 
     describe(laserfocusId, [
-        { key: "description.0", values: ["spark", "focusTicks"] },
+        { key: "description.0", values: ["focusTicks"] },
         { key: "steady.on", values: ["tempo", "recharge"], when: function (context) { return read(context.detail.values, ["steady"]) === true; } },
         { key: "steady.off", values: [], when: function (context) { return read(context.detail.values, ["steady"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast"] },

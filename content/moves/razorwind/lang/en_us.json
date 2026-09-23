@@ -3,7 +3,6 @@
   "worldcombat.skill.razorwind.description.0": "Each wind blade deals %1$s special damage to foes in the fan and lands critical hits more often.",
   "worldcombat.skill.razorwind.description.1": "The fan reaches %1$s blocks forward and spreads %2$s degrees to each side, cutting up to %3$s targets at once.",
   "worldcombat.skill.razorwind.description.2": "It takes %1$s of standing still to gather the wind.",
-  "worldcombat.skill.razorwind.description.3": "About %1$s wind chips are thrown up while gathering and releasing.",
   "worldcombat.skill.razorwind.stance.spread": "Scattershot form: a wider fan and more blades, at slightly lower per-blade power and reach.",
   "worldcombat.skill.razorwind.stance.focus": "Focused form: higher power and longer reach, at a narrower fan.",
   "worldcombat.skill.razorwind.timing": "Range %1$s blocks; %2$s s charge, %3$s s recovery, %4$s PP, %5$s s cooldown.",

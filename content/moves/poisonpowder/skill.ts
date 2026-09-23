@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: poisonpowderId,
+        cooldownParameter: "recharge",
         name: "Poison Powder",
         description: "The user scatters a cloud of poisonous dust that poisons the target.",
         uses: ["顺手给贴身的目标上毒", "一次点上挤在一起的一小群", "用最短的冷却反复施压"],

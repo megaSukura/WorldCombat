@@ -6,7 +6,7 @@
   "worldcombat.skill.extrasensory.description.0": "合拢造成 %1$s 点特殊伤害，攥住 %2$s 格的一小块地。",
   "worldcombat.skill.extrasensory.description.1": "力量能落在 %1$s 格内；幻影停留 %2$s 后才合拢。",
   "worldcombat.skill.extrasensory.description.2": "被攥住的目标有 %1$s 概率畏缩 %2$s。",
-  "worldcombat.skill.extrasensory.description.3": "合拢时卷起约 %1$s 缕力丝；当前伏击式为 %2$s。",
+  "worldcombat.skill.extrasensory.description.3": "当前伏击式为 %1$s。",
   "worldcombat.skill.extrasensory.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.extrasensory.growth.0": "%1$s 级起攥力升至 %2$s、合拢半径 %3$s 格。",
   "worldcombat.skill.extrasensory.value.crush": "攥力",

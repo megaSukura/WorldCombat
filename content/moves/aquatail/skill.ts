@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: aquatailId,
+        cooldownParameter: "recharge",
         name: "Aqua Tail",
         description: "The user attacks by swinging its tail as if it were a vicious wave in a raging storm.",
         uses: ["用一片向前压的弧形水墙拍开身前的人", "把贴身的敌人连同身位一起推走", "一浪浇熄对手身上的火与灼伤"],

@@ -6,7 +6,6 @@
   "worldcombat.skill.inferno.use.3": "追身式下跟着目标连烧几道",
   "worldcombat.skill.inferno.description.0": "火柱涌起时对圈内每人造成 %1$s 点特殊伤害；对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.inferno.description.1": "射程 %1$s 格，火柱半径 %2$s 格；落点先预热 %3$s 秒，走出这段窗口的人不会被烧到。",
-  "worldcombat.skill.inferno.description.2": "也决定画面里的密度。",
   "worldcombat.skill.inferno.rule.guaranteed": "被火柱包住的人必定陷入灼伤（原生 100%%）；对手的相性与免疫仍按共享状态路结算。",
   "worldcombat.skill.inferno.pin.on": "追身式：火柱跟着目标连烧 %1$s 秒、每 %2$s 秒一道，第二道起每道占首爆的 %3$s。",
   "worldcombat.skill.inferno.pin.off": "定点式：只有落点这一发火柱，人走开就落空。",

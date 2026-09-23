@@ -104,7 +104,7 @@ namespace PokemonSkills {
     describe("gust", [
         { key: "description.0", values: ["blast", "radius"] },
         { key: "description.1", values: ["velocity", "reach"] },
-        { key: "description.2", values: ["push", "motes"] },
+        { key: "description.2", values: ["push"] },
         { key: "shove.on", values: [], when: function (context) { return read(context.detail.values, ["shove"]) === true; } },
         { key: "shove.off", values: [], when: function (context) { return read(context.detail.values, ["shove"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

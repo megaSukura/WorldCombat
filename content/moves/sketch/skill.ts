@@ -61,6 +61,7 @@ namespace PokemonSkills {
 
     define({
         id: "sketch",
+        cooldownParameter: "recharge",
         name: "Sketch",
         description: "把对手刚用过的那一手当场描进写生所占的招式格，永久学会它；写生只有一次，用过即从招式表消失。",
         uses: ["永久学会对手的一手", "复制稀有的强化或回复", "把强攻收进自己的招式表"],

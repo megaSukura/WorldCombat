@@ -131,6 +131,7 @@ namespace PokemonSkills {
 
     define({
         id: "quickguard",
+        cooldownParameter: "wait",
         name: "快速防守",
         description: "抢在对手的先制之前撑起一面快板，替自己与身边的队友把先制攻击（优先度大于 0 的招式）磕开；挡几下就散，非先制的攻击穿得过。",
         uses: ["挡住贴速度打来的先制连击", "在对手的急袭起手前抢一拍架板", "用一次最短的窗口替全队吃下一串快打"],

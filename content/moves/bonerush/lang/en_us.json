@@ -5,7 +5,7 @@
   "worldcombat.skill.bonerush.use.2": "Fissure form claims the field with lingering scars",
   "worldcombat.skill.bonerush.description.0": "Each strike is %1$s power (Ground, non-contact), up to %2$s strikes per string, each at %3$s accuracy; a target that walks away before the bone lands is missed.",
   "worldcombat.skill.bonerush.description.1": "Throw range %1$s blocks, bone speed %2$s blocks/tick, arc drop %3$s, landing shock radius %4$s blocks.",
-  "worldcombat.skill.bonerush.description.2": "Rent ground lasts %1$s, the last strike is x%2$s power; bone collision %3$s blocks, targets lifted %4$s blocks, %5$s between strikes, each strike kicking up about %6$s points of debris.",
+  "worldcombat.skill.bonerush.description.2": "Rent ground lasts %1$s, the last strike is x%2$s power; bone collision %3$s blocks, targets lifted %4$s blocks, %5$s between strikes.",
   "worldcombat.skill.bonerush.fissure.on": "Fissure form: x1.3 shock radius and x1.5 scar duration, so scars last longer and cover wider; the cost is x0.85 per strike, strikes capped at 3 and x0.92 bone speed.",
   "worldcombat.skill.bonerush.fissure.off": "Hammer form: x1.15 per strike with up to 5 strikes, stacking single-target damage; the cost is x0.8 shock radius and shorter scars.",
   "worldcombat.skill.bonerush.timing": "Range %1$s blocks, prepare %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",

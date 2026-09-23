@@ -4,7 +4,7 @@
   "worldcombat.skill.faketears.use.1": "在被贴身缠住时制造一瞬间的僵直",
   "worldcombat.skill.faketears.use.2": "配合队友抢先手，让对方来不及走位",
   "worldcombat.skill.faketears.description.0": "目标特防下降 %1$s 级，心里发软持续约 %2$s。",
-  "worldcombat.skill.faketears.description.1": "假哭在 %1$s 格内才送得到，命中后把对方定住 %2$s；一次挤出 %3$s 个假泪点。",
+  "worldcombat.skill.faketears.description.1": "假哭在 %1$s 格内才送得到，命中后把对方定住 %2$s。",
   "worldcombat.skill.faketears.description.2": "憋红眼圈 %1$s，冷却 %2$s。",
   "worldcombat.skill.faketears.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.faketears.value.reach": "假哭距离",

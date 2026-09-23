@@ -4,7 +4,6 @@
   "worldcombat.skill.milkdrink.use.1": "Wash off poison along the way",
   "worldcombat.skill.milkdrink.use.2": "Worth using even at full health while poisoned",
   "worldcombat.skill.milkdrink.description.0": "Drinks %2$s gulps, one every %3$s, restoring %1$s of maximum health in total; the last gulp washes away poison.",
-  "worldcombat.skill.milkdrink.description.1": "Each gulp splashes about %1$s milk drops with a %2$s-block cleansing ripple, stronger on a heavier, larger body.",
   "worldcombat.skill.milkdrink.description.2": "Wind-up %1$s and recovery %2$s, shortened by Speed; the user can keep moving while drinking.",
   "worldcombat.skill.milkdrink.stance.warm": "Warm milk: +0.05 healing and a 1.3x gulp interval (drunk slowly), at the cost of a longer cooldown.",
   "worldcombat.skill.milkdrink.stance.cold": "Chilled milk: -0.03 healing, a 0.8x gulp interval and a shorter cooldown - quick sips for a gap between blows.",

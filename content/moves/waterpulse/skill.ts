@@ -39,6 +39,7 @@ namespace PokemonSkills {
 
     define({
         id: "waterpulse",
+        cooldownParameter: "recharge",
         name: "Water Pulse",
         description: "The user attacks the target with a pulsing blast of water. This may also confuse the target.",
         uses: ["中远距离的直线水波点射", "用荡开的水环扫到目标身边的敌人", "把目标震得耳鸣，制造失手窗口"],

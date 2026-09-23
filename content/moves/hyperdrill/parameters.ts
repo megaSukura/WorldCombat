@@ -146,7 +146,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["drill"] },
         { key: "description.1", values: ["reach", "rush", "radius"] },
         { key: "description.2", values: ["shred", "pierce", "push"] },
-        { key: "description.3", values: ["grains"] },
         { key: "through.on", values: [], when: function (context) { return read(context.detail.values, ["through"]) === true; } },
         { key: "through.off", values: [], when: function (context) { return read(context.detail.values, ["through"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },

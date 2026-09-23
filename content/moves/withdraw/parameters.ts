@@ -81,7 +81,7 @@ namespace PokemonSkills {
 
     describe("withdraw", [
         { key: "description.0", values: ["gift", "blocks", "window"] },
-        { key: "description.1", values: ["shell", "plates"] },
+        { key: "description.1", values: [] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

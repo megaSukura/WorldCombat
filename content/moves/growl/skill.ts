@@ -15,6 +15,7 @@ namespace PokemonSkills {
 
     define({
         id: growlId,
+        cooldownParameter: "recharge",
         name: "叫声",
         description: "发出一声可爱的叫喊，让身边听得见的一圈对手分神，降低它们的攻击。声音不需要通视，躲在掩体后也会被叫到；代价是降得浅、也够不到远处。",
         uses: ["被近身围住时叫软一圈敌人", "在敌人扎堆时一次压低几人的出手", "隔着掩体削弱贴身的威胁"],

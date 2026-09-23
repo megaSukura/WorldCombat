@@ -74,9 +74,7 @@ namespace PokemonSkills {
         if (!world.valid(victim)) return;
         var data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
-        var category = typeof data.category === "string" ? String(data.category) : "";
-        // A native melee hit carries no authored category; the melee flag (causing entity is the direct entity) reads it as physical.
-        if (category !== "physical" && !(category === "" && data.direct === true)) return;
+        if (DamageSemantics.read(data).category !== "physical") return;
         var source = event.actor();
         if (source !== null && String(source.key()) === String(victim.key())) return;
         counterRemember(world, victim, source, data.actual);

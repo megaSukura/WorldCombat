@@ -14,8 +14,8 @@ const options = { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None, stric
 const program = ts.createProgram(files.map(file => path.join(root, file)), options);
 const errors = ts.getPreEmitDiagnostics(program);
 const sources = [
-  'content/behavior/composition.ts', 'content/behavior/contributions.ts', 'content/behavior/worksite.ts',
-  'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts',
+  'content/behavior/composition.ts', 'content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/behavior/worksite.ts',
+  'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/mechanisms/mob-effects.ts', 'content/mechanisms/combat-stages.ts',
   'content/mechanisms/native-modifiers.ts', 'content/mechanisms/native-loadout.ts', 'content/mechanisms/world-abilities.ts',
   'content/behavior/profiles.ts', 'content/behavior/world-methods.ts', 'content/behavior/world-host.ts',
   'content/behavior/pokemon-host.ts', 'content/behavior/pokemon-wild.ts',
@@ -824,7 +824,7 @@ check('manual pending cleanup releases autonomous JS state without stopping nati
   const orders=new h.sandbox.PokemonBehaviorHost.Orders();orders.register({id:'hold',persistent:true});
   const manager=new h.sandbox.PokemonBehaviorHost.Companions({frame:()=>h.frame()},new h.M.Pool(h.C.registry),{id:'checks',orders,defaultIntent:'hold',decisionTicks:4,manualGrace:12,settings:{lookRange:15,chaseRange:16}});
   const view={world:()=>h.state.world,actor:h.state.world.source,operation:()=> 'tick',owner:()=>null,intent:()=> 'hold',intentPoint:()=>null,intentTarget:()=>null,chaseRange:()=>16,captureHold:()=>'',
-    lastManual:()=>lastManual,pending:()=>pending,preferences:()=> '{}',settings(){},report(){},submitInput(){return 0;},memory(value){if(value!==undefined)memory=value;return memory;}};
+    lastManual:()=>lastManual,pending:()=>pending,pendingNavigation:()=>pending,preferences:()=> '{}',settings(){},report(){},submitInput(){return 0;},memory(value){if(value!==undefined)memory=value;return memory;}};
   manager.update(view);assert(stops>0,'Autonomous hold established before takeover');const before=stops;
   pending=true;lastManual=24;h.state.tick=24;manager.update(view);assert.equal(stops,before,'Accepted manual navigation survives old task exit');
   h.state.tick=28;manager.update(view);assert.equal(stops,before,'Waiting manual order is not replaced by default behavior');
@@ -837,6 +837,40 @@ check('focus approaches while cooling down and searches only its last visible ob
   h.threat.visible=false;h.threat.point=[15,0,5];focused('target-not-visible');assert.deepEqual(h.state.moves.at(-1).point,[8,0,0],'Hidden fresh coordinates must not become a navigation goal');
   h.state.tick=70;const count=h.state.moves.length;focused('target-not-visible');assert.equal(h.state.moves.length,count,'Search stops when the observed memory expires');
   h.threat.visible=true;h.threat.point=[6,0,2];focused();assert.deepEqual(h.state.moves.at(-1).point,[6,0,2]);
+});
+check('focus closes distance before target-dependent availability permits a cast',()=>{
+  const h=harness();h.threat.point=[18,0,0];h.state.intent='focus';
+  h.add('checks:reach','world_combat:attack',{available:(_c,_i,_p,target)=>!target||target.point[0]<=8,accepts:(_c,_i,target)=>!target.friendly},{range:4});
+  const f=h.frame();f.facts.focus=h.threat.ref;f.facts.focusIssue='';h.agent.tick(f);
+  assert.deepEqual(h.state.moves.at(-1).point,[18,0,0]);assert.equal(h.state.casts.length,0,'Approach must not bypass the use gate');
+});
+check('a passive buffered input leaves the current behavior task running',()=>{
+  const h=harness();h.state.tick=20;let ticks=0,exits=0,memory='{"checks":true}';
+  const registry=new h.B.Registry();registry.goal({id:'checks:follow',propose:()=>[{id:'follow',kind:'follow',data:{}}]});
+  registry.method({id:'checks:walk',propose:()=>[{id:'walk',data:{}}],create:()=>h.B.step(()=>{ticks++;return h.B.running();},{exit:()=>exits++})});
+  const orders=new h.sandbox.PokemonBehaviorHost.Orders();orders.register({id:'follow'});
+  const manager=new h.sandbox.PokemonBehaviorHost.Companions({frame:()=>h.frame()},new h.M.Pool(registry),{id:'checks',orders,defaultIntent:'follow',decisionTicks:4,manualGrace:12,settings:{lookRange:15,chaseRange:16}});
+  const view={world:()=>h.state.world,actor:h.state.world.source,operation:()=> 'tick',owner:()=>null,intent:()=> 'follow',intentPoint:()=>null,intentTarget:()=>null,chaseRange:()=>16,captureHold:()=>'',lastManual:()=>0,
+    pending:()=>true,pendingNavigation:()=>false,preferences:()=> '{}',settings(){},report(){},submitInput(){return 0;},memory(value){if(value!==undefined)memory=value;return memory;}};
+  manager.update(view);h.state.tick=24;manager.update(view);assert.equal(ticks,2);assert.equal(exits,0);
+});
+check('focus death, disappearance and changed allegiance restore the previous station command',()=>{
+  for(const ending of ['death','leave','friendly']){
+    const h=harness();h.state.tick=20;let memory='{"checks":true}',prefs='{}',intent='stay',at=point([1,0,2]),target=null,operation='tick';
+    const orders=new h.sandbox.PokemonBehaviorHost.Orders();orders.register({id:'follow'});orders.register({id:'stay',target:'point',range:32,persistent:true});orders.register({id:'focus',target:'enemy',range:64,attackTarget:true});
+    const manager=new h.sandbox.PokemonBehaviorHost.Companions({frame:(...args)=>h.C.frame(...args)},new h.M.Pool(h.C.registry),{id:'checks',orders,defaultIntent:'follow',decisionTicks:4,manualGrace:0,settings:{lookRange:15,chaseRange:16}});
+    const view={world:()=>h.state.world,actor:h.state.world.source,operation:()=>operation,owner:()=>null,commandTarget:()=>h.state.world.actor(h.threat.ref),commandPoint:()=>point([1,0,2]),
+      intent(id,subject,destination){if(id!==undefined){intent=id;target=subject;at=destination;}return intent;},intentPoint:()=>at,intentTarget:()=>target&&h.state.world.valid(target)?target:null,
+      chaseRange:()=>16,captureHold:()=>'',lastManual:()=>0,pending:()=>false,pendingNavigation:()=>false,settings(){},report(){},submitInput(){return 0;},reject:reason=>{throw Error(reason);},
+      preferences(value){if(value!==undefined)prefs=value;return prefs;},memory(value){if(value!==undefined)memory=value;return memory;}};
+    manager.update(view);h.state.tick+=4;operation='focus';manager.update(view);assert.equal(intent,'focus');
+    assert.equal(JSON.parse(prefs).checks.intent,'stay','Pursuit preserves the reload command');
+    assert.deepEqual(JSON.parse(prefs).checks.point,[1,0,2]);
+    operation='tick';h.state.tick+=4;manager.update(view);
+    h.self.point=[50,0,0];
+    if(ending==='death')h.threat.health=0;else if(ending==='friendly')h.threat.friendly=true;else h.state.subjects=h.state.subjects.filter(s=>s!==h.threat);
+    h.state.tick+=4;manager.update(view);assert.equal(intent,'stay',ending);assert.deepEqual(coordinates(at),[1,0,2]);assert.equal(target,null);
+  }
 });
 console.log(`PASS ${cases} neutral AI dispatch regressions; in-memory output only`);
 assert.equal(errors.length, 0, ts.formatDiagnosticsWithColorAndContext(errors, {

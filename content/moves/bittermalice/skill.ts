@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "bittermalice",
+        cooldownParameter: "recharge",
         name: "Bitter Malice",
         description: "把心头的怨念放出去，化作一只手循着目标飞过去攥住它：命中造成特殊伤害并让它的攻击下降。自身生命越少这一记越重；目标带着异常时纠缠式会加倍，怨念式则吞掉那份异常换取更重的一击与更深的掉攻。",
         uses: ["压低一个远程目标的物理输出", "在残血时把怨念化作最重的一击", "对带着异常的对手收尾（怨念式顺手解掉它的异常）"],

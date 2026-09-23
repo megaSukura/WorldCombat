@@ -5,7 +5,7 @@
  *   拍中时在目标身上炸开一簇羽片与风屑。
  * 色相家族：冷蓝白（0xDCE9F0、0x9FC7DA）做风与羽，近白高光（0xFFFFFF）只给命中那一下；俯冲式在低处补一层尘土色。
  * 拍子：起 raise（张翼拢风）→ 下 downstroke → 上 upstroke → 中 strike1/strike2（羽片炸开）→ 收 settle。
- * 范围：downstroke/upstroke 的锥面用 `data.reach` 当长度、`data.span` 当张角，画出来的扇形就是判定罩到的扇区；
+ * 范围：downstroke/upstroke 的水平扇面用 `data.reach` 当半径、`data.span` 当张角，画出来的扇形就是判定罩到的扇区；
  *   翼弧厚度由 `data.radius` 决定。
  * 运动：两拍都沿 `data.direction` 从施法者身前铺出去，第一拍朝下、第二拍朝上（`data.index` 区分），
  *   俯冲式下施法者自己会跟进/退开，`data.dive` 让下拍多一层贴地尘土。
@@ -44,20 +44,18 @@ const DualwingbeatDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/vanilla/small_gust",
-                    rate: 46, shape: { kind: "cone_volume", radius: { data: "radius", fallback: 0.9 },
-                        length: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
+                    rate: 46, shape: { kind: "sector", radius: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
                     direction: "shape", speed: [0.05, 0.22], spread: 10,
                     lifetime: [8, 15], size: [0.16, 0.03],
                     color: 0xDCE9F0, alpha: [0.4, 0], light: "full", maxParticles: 110
                 },
                 {
-                    name: "feathers", bind: "point", fit: "none", orient: "direction",
+                    name: "feathers", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/slash",
                     burst: { count: { data: "feathers", fallback: 16 }, at: 0, interval: 1, repeats: 2 },
-                    shape: { kind: "cone_volume", radius: { data: "radius", fallback: 0.9 },
-                        length: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
                     direction: "shape", speed: [0.25, 0.6], spread: 9, spin: 12,
                     lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 80
@@ -77,19 +75,18 @@ const DualwingbeatDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/vanilla/small_gust",
-                    rate: 50, shape: { kind: "cone_volume", radius: { data: "radius", fallback: 0.9 },
-                        length: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
+                    rate: 50, shape: { kind: "sector", radius: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
                     direction: "shape", speed: [0.06, 0.26], spread: 10,
                     lifetime: [8, 15], size: [0.17, 0.03],
                     color: 0xE6F2FA, alpha: [0.5, 0], light: "full", maxParticles: 120
                 },
-                {
-                    name: "lift", bind: "point", fit: "none", start: 2,
+                { orient: "heading",
+                    name: "lift", bind: "point", fit: "world", start: 2,
                     particle: "world_combat_core:cobblemon/generic/cut",
                     burst: { count: { data: "feathers", fallback: 16 }, at: 0, interval: 2, repeats: 2 },
-                    shape: { kind: "arc", radius: { data: "reach", fallback: 5.6 }, arcDegrees: { data: "span", fallback: 78 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 }, innerRadius: { data: "reach", fallback: 5.6 } },
                     direction: "up", speed: [0.15, 0.45], spread: 12, spin: -10,
                     lifetime: [7, 13], size: [0.34, 0.05], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 90
@@ -145,11 +142,11 @@ const DualwingbeatDefinition: ParticleDefinition = {
             duration: 16,
             exit: { stop: 6, drain: 10 },
             emitters: [
-                {
+                { orient: "heading",
                     name: "empty", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/vanilla/gust",
                     burst: { count: { data: "feathers", fallback: 12 } },
-                    shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 5.6 }, angleDegrees: { data: "span", fallback: 78 } },
                     direction: "shape", speed: [0.05, 0.18], spread: 16, drag: 0.9,
                     lifetime: [9, 16], size: [0.14, 0.02],
                     color: 0x9FC7DA, alpha: [0.35, 0], light: "world", maxParticles: 24

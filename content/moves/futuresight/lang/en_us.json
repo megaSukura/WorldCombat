@@ -5,7 +5,7 @@
   "worldcombat.skill.futuresight.use.1": "Force the foe to spend the delay reacting",
   "worldcombat.skill.futuresight.use.2": "Set up an unavoidable strike from a safe distance",
   "worldcombat.skill.futuresight.description.0": "The psychic mote falls after %2$s and deals special damage at %1$s base power.",
-  "worldcombat.skill.futuresight.description.1": "The mote hovers %1$s blocks above the target, locks targets within %2$s blocks, and covers a %3$s block landing radius.",
+  "worldcombat.skill.futuresight.description.1": "The mote hovers above the target and can lock targets within %1$s blocks.",
   "worldcombat.skill.futuresight.description.2": "Prepare %1$s s, recover %2$s s, cooldown %3$s s.",
   "worldcombat.skill.futuresight.prolonged.on": "Delay: the landing is x1.4 later and x1.2 stronger, but the foe has more time to heal, buff defence or pull away.",
   "worldcombat.skill.futuresight.prolonged.off": "Quick: the landing is x0.75 sooner and x0.85 weaker, harder to react to.",

@@ -9,7 +9,7 @@
   "worldcombat.skill.sonicboom.reverb.off": "Single form: one boom and done, with a shorter wind-up and cooldown; the second boom's coverage costs a longer cooldown and a longer self-hold.",
   "worldcombat.skill.sonicboom.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",
   "worldcombat.skill.sonicboom.growth.0": "From level %1$s the crack reaches %2$s blocks.",
-  "worldcombat.skill.sonicboom.growth.1": "From level %1$s the crack reaches %2$s blocks and bursts %3$s shards.",
+  "worldcombat.skill.sonicboom.growth.1": "From level %1$s the crack reaches %2$s blocks.",
   "worldcombat.skill.sonicboom.value.damage": "Fixed damage",
   "worldcombat.skill.sonicboom.value.reach": "Crack length",
   "worldcombat.skill.sonicboom.value.boomRadius": "Crack width",

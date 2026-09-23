@@ -7,7 +7,7 @@
  *   铺（windup 预告 + 提交后合拢）：脚下升起水环、水幕包住身体，给施法者挂上真实 MobEffect
  *     world_combat:aqua_ring（共享身份 world_combat:status/aquaring），旁边挂一枚机读标记带走间隔、
  *     每次回量、起止时刻与表现数值。
- *   涌（pulse × N）：每 `interval` 刻回 `pulse` 比例的最大生命（不超上限），脚下画一环、身上浮水光；
+ *   涌（pulse × N）：每 `interval` 刻回 `pulse` 比例的已损失生命（不超上限），脚下画一环、身上浮水光；
  *     间隔之外的拍子只续着水幕的持续表现。
  * 结束：时间走完或被人清除（牛奶／/effect clear）都会收掉标记与身份，水幕散去。
  * 与睡觉分开：睡觉是站定长休一次回满；水流环是不用站定的持续小额续航，可以边打边走。
@@ -82,8 +82,9 @@ namespace PokemonSkills {
     });
 
     define({
-        id: aquaRingId, name: "水流环",
-        description: "把一层水幕拢在自己身上，它每隔一会儿涌一次、回一小口最大生命；水幕挂着自己走完时间或被清除，期间不用站定、可以边走边回。",
+        id: aquaRingId,
+        cooldownParameter: "recharge", name: "水流环",
+        description: "把一层水幕拢在自己身上，它每隔一会儿涌一次、回复一小部分已损失生命；水幕挂着自己走完时间或被清除，期间不用站定、可以边走边回。",
         uses: ["在拉锯战里给自己接一条稳定的续航线", "边后退边回血，把消耗战拖长", "在雨里把水幕开得更旺"],
         kind: "self", range: 0, prepare: 8, active: 0, recover: 6, cooldown: 120, style: "aqua",
         stationary: false, maximumTicks: 400,

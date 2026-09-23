@@ -5,7 +5,7 @@
   "worldcombat.skill.rockthrow.use.2": "Use the lob choice to strike over cover at a target behind it",
   "worldcombat.skill.rockthrow.description.0": "Deals %1$s physical damage to a living target, with a %2$s block stone radius.",
   "worldcombat.skill.rockthrow.description.1": "The stone flies at %1$s blocks/tick and reaches %2$s blocks with ±%3$s° spread. It does not home, so the farther it goes the easier it is to slip.",
-  "worldcombat.skill.rockthrow.description.2": "The throw falls at %1$s blocks/tick^2; an impact knocks loose %2$s stone chips.",
+  "worldcombat.skill.rockthrow.description.2": "The throw falls at %1$s blocks/tick^2.",
   "worldcombat.skill.rockthrow.lob.on": "Lob: throws the stone on an arc that clears a low wall or cover to hit a target behind it; costs spread x1.5, stone speed x0.82, power x0.9 and wind-up +2 ticks.",
   "worldcombat.skill.rockthrow.lob.off": "Flat throw: the stone flies straight and fast at body height, more accurate and heavier; costs being blocked by a low wall in front.",
   "worldcombat.skill.rockthrow.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

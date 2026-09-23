@@ -60,7 +60,7 @@ namespace PokemonSkills {
     ]);
 
     describe("powershift", [
-        { key: "description.0", values: ["bands", "window"] },
+        { key: "description.0", values: ["window"] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "description.1", values: ["tempo", "aftercast", "wait"] },

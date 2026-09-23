@@ -136,7 +136,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["smash", "collisionRadius"] },
         { key: "description.1", values: ["drive", "cruise", "lockRange"] },
         { key: "description.2", values: ["turnRate", "shove"] },
-        { key: "description.3", values: ["flinchChance", "flinchTicks", "lockTicks"] },
+        { key: "description.3", values: ["flinchChance", "flinchTicks"] },
         { key: "guided.on", values: [], when: function (context) { return read(context.detail.values, ["guided"]) === true; } },
         { key: "guided.off", values: [], when: function (context) { return read(context.detail.values, ["guided"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

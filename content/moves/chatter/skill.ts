@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: chatterId,
+        cooldownParameter: "recharge",
         name: "Chatter",
         description: "The user attacks the target with sound waves of deafening chatter. This also confuses the target.",
         uses: ["贴上去用一串尖叫连打几下", "隔着掩体把对手叫懵", "给危险的目标挂上失手与被反噬的窗口"],

@@ -118,7 +118,7 @@ namespace PokemonSkills {
     ]);
 
     describe(shadowsneakId, [
-        { key: "description.0", values: ["sneak", "blade"] },
+        { key: "description.0", values: ["sneak"] },
         { key: "description.1", values: ["reach", "seep"] },
         { key: "description.2", values: ["pull", "grip"] },
         { key: "tether.on", values: ["pull"], when: function (context) { return read(context.detail.values, ["tether"]) === true; } },

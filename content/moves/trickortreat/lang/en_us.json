@@ -15,7 +15,7 @@
   "worldcombat.skill.trickortreat.value.aftercast": "Recovery",
   "worldcombat.skill.trickortreat.value.recharge": "Cooldown",
   "worldcombat.skill.trickortreat.preference.grand": "Grand",
-  "worldcombat.skill.trickortreat.preference.grand.help": "Grand: shell x1.6, decorations x1.15, but +4 wind-up and +20 cooldown; off is a shorter, faster, cheaper shell. Only 20 PP.",
+  "worldcombat.skill.trickortreat.preference.grand.help": "Grand: shell x1.6, but +4 wind-up and +20 cooldown; off is a shorter, faster, cheaper shell. Only 20 PP.",
   "worldcombat.skill.trickortreat.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.trickortreat.preference.ai.maxChase.help": "The companion only considers Trick-or-Treat within this distance of a threat; lower stays close, higher chases further.",
   "worldcombat.skill.trickortreat.preference.ai.leaveStation": "Leave station",

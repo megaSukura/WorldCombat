@@ -1,15 +1,4 @@
-/**
- * 鬼面 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：施法者猛地转过脸，一道尖锐的暗紫视线沿直线钉进对手眼里；对手浑身一僵向后一缩，
- *   头顶慢慢冒出被吓出的暗紫余悸。
- *
- * 色相家族：暗紫（0x5B2A86／0x8A4FD0）为主体，惨白（0xE8E4F0）只做受惊的高光小点。没有第二个色相。
- * 层次：聚神（起手）→ 视线＋眼爆（命中）→ 余悸（恐惧还在，慢慢离场）→ 被挡下的散点（反制读法）。
- * 起击收：windup（聚拢）→ gaze（钉住）→ linger（余悸）。
- * 数：眼爆与视线的粒子数量由服务端 data.shards 派生（随速度下降级数加重）；视线的两端是谁由
- *   data.path 决定，画面画的正是判定里那条 world.clear 比对的同一条线。
- */
+/** 暗紫视线连接施术者与目标，命中后以头顶余悸标示减速仍在。 */
 const ScaryfaceDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -60,19 +49,6 @@ const ScaryfaceDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [10, 18], size: [0.14, 0.03],
                     color: 0xE8E4F0, alpha: [0.7, 0], light: "full", maxParticles: 30
-                }
-            ]
-        },
-        blocked: {
-            duration: 18,
-            emitters: [
-                {
-                    name: "blocked_scatter", bind: "point", height: 0.8,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: 18 }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.02, 0.09], drag: 0.9,
-                    lifetime: [8, 14], size: [0.08, 0.01],
-                    color: 0x5B2A86, alpha: [0.5, 0], light: "world", maxParticles: 26
                 }
             ]
         },

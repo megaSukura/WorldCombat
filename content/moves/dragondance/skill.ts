@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "dragondance",
+        cooldownParameter: "wait",
         name: "龙之舞",
         description: "激烈地跳起神秘且强有力的舞蹈，从而提高自己的攻击和速度。",
         uses: ["开战前把攻速一起垫起来", "被追急了先盘旋一圈，用速度脱身", "在对手接近的空档里跃起蓄势"],

@@ -2,7 +2,7 @@
   "worldcombat.skill.hardpress.summary": "Raise an arm or claw and press the foe into the ground from above: attack and weight set the force, and the more HP the target still has, the heavier the press - a wounded target takes far less. It is the fastest and cheapest of the three pressing moves, meant to be laid down again and again; the two-arm form covers several foes standing together but hits each one lighter.",
   "worldcombat.skill.hardpress.description.0": "Hard Press deals %1$s Steel contact damage; the more HP the target still has, the heavier the press.",
   "worldcombat.skill.hardpress.description.1": "The press covers a %1$s block radius, sinks the target %2$s blocks and shoves it %3$s blocks away.",
-  "worldcombat.skill.hardpress.description.2": "You can reach up to %1$s blocks; the press throws about %2$s chips.",
+  "worldcombat.skill.hardpress.description.2": "You can reach up to %1$s blocks.",
   "worldcombat.skill.hardpress.brace.on": "Two-arm form: both arms/pincers press down at once - the press radius is x1.7 and the shove x1.25, covering several foes standing together; in exchange the single-target power is x0.86, the wind-up +2 ticks and the cooldown +4 ticks.",
   "worldcombat.skill.hardpress.brace.off": "One-arm form (default): a focused press, heavier on a single target and quicker to throw, but it only holds one foe.",
   "worldcombat.skill.hardpress.timing": "Wind-up %1$s s, recovery %2$s s, cost %3$s PP, cooldown %4$s s.",

@@ -66,6 +66,7 @@ namespace PokemonSkills {
 
     define({
         id: strangesteamId,
+        cooldownParameter: "recharge",
         name: "Strange Steam",
         description: "朝选定地点喷出一柱迷幻蒸汽，蒸汽在落点摊成一片低垂的云：云里第一次被喷到的人挨一记烫伤并可能迷得恍惚；留在云里会被持续熏着，恍惚被不断续上。",
         uses: ["封住一个落点或门口", "一次罩住几个挤在一起的敌人", "用停留的云持续压制进出的人"],

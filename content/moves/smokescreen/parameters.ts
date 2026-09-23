@@ -57,7 +57,7 @@ namespace PokemonSkills {
     });
     describe(smokescreenId, [
         { key: "description.0", values: ["blindStage", "lingerTicks"] },
-        { key: "description.1", values: ["cloudRadius", "cloudTicks", "density"] },
+        { key: "description.1", values: ["cloudRadius", "cloudTicks"] },
         { key: "description.2", values: ["reach", "smokeSpeed", "tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

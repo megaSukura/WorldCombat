@@ -5,7 +5,6 @@
   "worldcombat.skill.psychup.use.2": "Take the target's drops too when mirroring everything",
   "worldcombat.skill.psychup.description.0": "Reads the target's stat changes within %1$s blocks; %2$s seconds of wind-up.",
   "worldcombat.skill.psychup.description.1": "Leaves a 'linked' marker for %1$s seconds; the stat ladder itself persists and fades on its own.",
-  "worldcombat.skill.psychup.description.2": "About %1$s echo ribbons are drawn back from the target.",
   "worldcombat.skill.psychup.select.0": "Gain only: copies only the favourable steps and ignores ones that would weaken you; costs +20 ticks of cooldown and halves the marker.",
   "worldcombat.skill.psychup.select.1": "Mirror all: copies every stat change the target has, negatives included; shorter cooldown and a longer marker.",
   "worldcombat.skill.psychup.timing": "Range %1$s blocks, %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

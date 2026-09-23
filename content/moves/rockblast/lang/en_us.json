@@ -5,7 +5,7 @@
   "worldcombat.skill.rockblast.use.2": "Use the boulder choice to pile single-stone damage on a thick target",
   "worldcombat.skill.rockblast.description.0": "Each stone deals %1$s physical damage, and the burst tears out %2$s stones (2-5 natively, set by the user's data).",
   "worldcombat.skill.rockblast.description.1": "Stones are hurled every %1$s at %2$s blocks/tick, reaching %3$s blocks with up to ±%4$s spread.",
-  "worldcombat.skill.rockblast.description.2": "Each stone has a %1$s block hit radius and falls at %2$s blocks/tick^2; an impact knocks loose %3$s rock chips.",
+  "worldcombat.skill.rockblast.description.2": "Each stone has a %1$s block hit radius and falls at %2$s blocks/tick^2.",
   "worldcombat.skill.rockblast.boulder.on": "Boulder: per-stone power x1.4, larger stones, spread x0.6 and a steeper arc; costs a burst capped at 3 stones, interval +2 ticks, stone speed x0.92, wind-up +3 ticks and cooldown +5 ticks.",
   "worldcombat.skill.rockblast.boulder.off": "Shatter burst: up to 5 stones, interval -1 tick and a faster throw; costs per-stone power x0.85, smaller stones and spread x1.2.",
   "worldcombat.skill.rockblast.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

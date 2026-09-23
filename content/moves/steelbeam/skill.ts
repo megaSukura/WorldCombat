@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: steelbeamId,
+        cooldownParameter: "recharge",
         name: "Steel Beam",
         description: "The user fires a beam of steel that it collected from its entire body. This also damages the user.",
         uses: ["把全身的钢铸成一记重梁砸出去", "用固定的一笔自损换一次必中的重击", "命中并把挡路的目标撞开"],

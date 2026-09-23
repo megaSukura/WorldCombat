@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: shadowsneakId,
+        cooldownParameter: "recharge",
         name: "Shadow Sneak",
         description: "The user extends its shadow and strikes the target from behind at blinding speed. This move always goes first.",
         uses: ["开局最便宜的一记先手，把对手拽近", "隔着墙角从对手背后刺一刀", "裹足式减速，为下一次出手开团"],

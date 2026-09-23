@@ -22,7 +22,11 @@
     }, create: function () {
         return {
             enter: function (context) { context.memory.entered = (context.memory.entered || 0) + 1; },
-            tick: function () { return WorldBehavior.running(); },
+            tick: function (context) {
+                var owner = context.facts.owner;
+                if (owner && context.facts.intent === "follow") context.services.behavior.move(owner.point, 2, context.memory);
+                return WorldBehavior.running();
+            },
             exit: function (context) {
                 var world = context.services.world, entity = world.nativeEntity(world.source());
                 var before = entity !== null && !entity.getNavigation().isDone();
@@ -45,8 +49,9 @@
     });
     var orders = new PokemonBehaviorHost.Orders();
     orders.register({id: "hold", persistent: true});
+    orders.register({id: "follow"});
     new PokemonBehaviorHost.Companions(adapter, new WorldMethods.Pool(registry), {
-        id: "manual_check", orders: orders, defaultIntent: "hold", decisionTicks: 1, manualGrace: 0,
+        id: "manual_check", orders: orders, defaultIntent: "follow", decisionTicks: 1, manualGrace: 0,
         settings: {lookRange: 15, chaseRange: 16}
     }).install();
 }());

@@ -4,7 +4,7 @@
   "worldcombat.skill.leer.use.1": "Open a gap for an ally's physical attacks",
   "worldcombat.skill.leer.use.2": "Strip Defense from a cluster in the open",
   "worldcombat.skill.leer.description.0": "Swept targets lose %1$s Defense stage(s) and stay cowed for %2$s.",
-  "worldcombat.skill.leer.description.1": "Glare length %1$s with a %2$s degree fan, flicking %3$s glare lines. Line of sight is required; anyone behind cover is missed.",
+  "worldcombat.skill.leer.description.1": "Glare length %1$s with a %2$s degree fan. Line of sight is required; anyone behind cover is missed.",
   "worldcombat.skill.leer.description.2": "Windup %1$s with a %2$s cooldown. Centred on you and thrown forward, never behind.",
   "worldcombat.skill.leer.focus.off": "Sweep: wide angle, only 1 stage, quick windup.",
   "worldcombat.skill.leer.focus.on": "Focus: a narrow beam for 2 stages, but slower windup and cooldown.",

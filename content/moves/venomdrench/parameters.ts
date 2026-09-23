@@ -81,7 +81,7 @@ namespace PokemonSkills {
 
     describe("venomdrench", [
         { key: "description.0", values: ["drop", "spread"] },
-        { key: "description.1", values: ["drops", "spray"] },
+        { key: "description.1", values: [] },
         { key: "deep.on", values: ["drop"], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.gigadrain.summary": "束缚目标并持续汲取生命，为自己恢复生命。",
   "worldcombat.skill.gigadrain.description.0": "吸根每一拍造成约 %1$s 的特殊伤害，一共抽 %2$s 拍，每拍间隔 %3$s 秒。",
-  "worldcombat.skill.gigadrain.description.1": "吸根射程 %1$s 格（也是实际射程），波及半径 %2$s 格。",
+  "worldcombat.skill.gigadrain.description.1": "吸根射程 %1$s 格（也是实际射程）。",
   "worldcombat.skill.gigadrain.description.2": "每拍造成的伤害有 %1$s 转回自身生命。",
   "worldcombat.skill.gigadrain.deepPour.on": "深灌式：两拍重抽、根更宽、抽得更凶，但更慢、冷却更长、更容易中途被打断。",
   "worldcombat.skill.gigadrain.deepPour.off": "三拍轻抽：总回血更高、节奏更快，适合持续站场。",

@@ -5,7 +5,6 @@
   "worldcombat.skill.conversion2.use.2": "Change resistance before being pressed down",
   "worldcombat.skill.conversion2.description.0": "Within %1$s blocks, read the type of the foe's last move; windup %2$s s.",
   "worldcombat.skill.conversion2.description.1": "The reweave lasts %1$s; current stance is %2$s.",
-  "worldcombat.skill.conversion2.description.2": "About %1$s facets turn over while reweaving.",
   "worldcombat.skill.conversion2.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.conversion2.growth.0": "From level %1$s the weave lasts %2$s s and the read range is %3$s blocks.",
   "worldcombat.skill.conversion2.value.reach": "Read range",

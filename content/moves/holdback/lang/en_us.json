@@ -6,7 +6,7 @@
   "worldcombat.skill.holdback.use.3": "Keep a clustered group alive in one sweep",
   "worldcombat.skill.holdback.description.0": "The sweep deals about %1$s damage; if that would be lethal it is capped so the target keeps at least 1 HP. The target's defence, type and crit are settled on the hit.",
   "worldcombat.skill.holdback.description.1": "The sweep reaches about %1$s blocks, spans about %2$s degrees half-angle, and runs from the feet up to about %3$s blocks.",
-  "worldcombat.skill.holdback.description.2": "A hit raises about %1$s puffs of dust; Braced plants the user for about %2$s after the sweep.",
+  "worldcombat.skill.holdback.description.2": "Braced plants the user for about %1$s after the sweep.",
   "worldcombat.skill.holdback.option.on": "Braced: power about x1.2, reach +0.3 blocks and fan +8 degrees, at wind-up +4 and cooldown +6 ticks and a planted brace after the sweep - for covering several thick targets at once.",
   "worldcombat.skill.holdback.option.off": "Quick: power about x0.85, a faster cast and free movement right after - for staying mobile in a melee.",
   "worldcombat.skill.holdback.timing": "Sweep up to %1$s blocks away; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

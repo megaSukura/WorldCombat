@@ -2,7 +2,7 @@
   "worldcombat.skill.megadrain.summary": "发射孢荚，命中后束缚目标并汲取生命。",
   "worldcombat.skill.megadrain.description.0": "孢荚绽开造成约 %1$s 的特殊伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.megadrain.description.1": "命中后一共抽 %1$s 拍，每拍间隔 %2$s 秒。",
-  "worldcombat.skill.megadrain.description.2": "抛程 %1$s 格（也是实际射程），飞行速度 %2$s 格每刻，缠吸判定半径 %3$s 格。",
+  "worldcombat.skill.megadrain.description.2": "抛程 %1$s 格（也是实际射程），飞行速度 %2$s 格每刻。",
   "worldcombat.skill.megadrain.description.3": "每拍造成的伤害有 %1$s 转回自身生命。",
   "worldcombat.skill.megadrain.burst.on": "爆荚式：一发爆得更重、根网更宽，但只抽一拍、回得更少、节奏更慢。",
   "worldcombat.skill.megadrain.burst.off": "缠钩式：多拍连续抽取，总量与回血更高，但单发轻。",

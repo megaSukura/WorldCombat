@@ -4,7 +4,7 @@
   "worldcombat.skill.toxicthread.use.1": "把扑上来的近战拽乱站位",
   "worldcombat.skill.toxicthread.use.2": "给难缠的对手叠一层持续掉血的中毒",
   "worldcombat.skill.toxicthread.description.0": "被毒丝缠住的目标损失 %1$s 级速度并中毒，中毒持续 %2$s。",
-  "worldcombat.skill.toxicthread.description.1": "收丝距离或强度 %1$s 格，钉住时长 %2$s；一次吐出 %3$s 股毒丝。",
+  "worldcombat.skill.toxicthread.description.1": "收丝距离或强度 %1$s 格，钉住时长 %2$s。",
   "worldcombat.skill.toxicthread.description.2": "毒丝以 %1$s 格/刻飞出，判定半径 %2$s 格，吐丝距离 %3$s 格（射程 %4$s 格）；起手 %5$s。",
   "worldcombat.skill.toxicthread.reel.on": "收丝：命中后把目标沿丝线朝自己拽近一段，用来打乱它的站位或把它拖进近身圈。",
   "worldcombat.skill.toxicthread.reel.off": "钉住：命中后把目标就地定住片刻，用来把它留在原地、争取拉开距离。",

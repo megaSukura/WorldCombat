@@ -64,6 +64,7 @@ namespace PokemonSkills {
 
     define({
         id: "sharpen",
+        cooldownParameter: "wait",
         name: "Sharpen",
         description: "把身体的棱角顶出来，提高攻击；棱角还在的这段时间里，近身打你的对手会被棱角划伤。",
         uses: ["近身缠斗前把棱角顶出来，让对手不敢贴脸", "被追击时先加攻、顺手给追兵一记划伤", "在安全的换位空隙刷新棱角，保持窗口"],
@@ -133,7 +134,7 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
         if (!CombatStatus.has(world, target, "sharpened")) return;
-        const touched = data.kind === "move" ? !!data.contact : !!data.direct;
+        const touched = DamageSemantics.read(data).contact;
         if (!touched) return;
         const attacker = event.actor();
         if (attacker === null || String(attacker.ref()) === String(target.ref())) return;

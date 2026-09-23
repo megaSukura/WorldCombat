@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "payday",
+        cooldownParameter: "wait",
         name: "Pay Day",
         description: "把一小把金币掂亮后朝对手甩出去：币串点状打在它身上，打偏和打剩的落在落点周围，是世界里真能捡的硬币。大把撒钱式撒得更多，但单发更轻、更慢。",
         uses: ["用便宜、快的一发换血", "在落点周围留下能捡的零钱", "远距离先手骚扰，不占太多出手节奏"],

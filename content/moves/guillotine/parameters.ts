@@ -117,7 +117,7 @@ namespace PokemonSkills {
     describe(guillotineId, [
         { key: "description.0", values: ["span", "arc"] },
         { key: "description.1", values: ["mark"] },
-        { key: "description.2", values: ["grip", "recover"] },
+        { key: "description.2", values: ["recover"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

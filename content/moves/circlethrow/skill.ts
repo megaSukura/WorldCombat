@@ -66,6 +66,7 @@ namespace PokemonSkills {
 
     define({
         id: circlethrowId,
+        cooldownParameter: "recharge",
         name: "巴投",
         description: "贴身抓住一个对手，借力把它从自己头顶摔到身后，并逐出战斗；摔击造成格斗属性接触伤害。",
         uses: ["把一个扑上来的对手摔到背后", "贴身反击、把对手从自己面前清走", "把厚实目标摔出近身圈并打上一击"],

@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "poisonfang",
+        cooldownParameter: "recharge",
         name: "Poison Fang",
         description: "The user bites with toxic fangs. The lightest bite of the family: the venom seeps in a beat later, and a wound that is already poisoned is deepened into badly poisoned for sure.",
         uses: ["用最轻最准的一口给目标注毒", "把已经中毒的目标加深成剧毒", "给厚血目标挂上持久的掉血"],

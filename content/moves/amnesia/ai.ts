@@ -2,7 +2,7 @@
  * 瞬间失忆 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：自己身上缠着混乱、着迷、挑衅、无理取闹、被点名一类心智异常时，任何时候都值得立刻忘掉；
- *   否则在威胁进入 ai.maxChase 内、还没贴身时用；身边暂时安全时（驻守／自主／工作）也先垫一档特防。
+ *   否则在威胁进入 ai.maxChase 内、还没贴身时用。
  * 什么时候最想出手：带心智异常时 priority 112 越过共享交战次序——先把状态清掉；否则差距还在 ai.minGap
  *   之外时 100；已经贴身就让位给普通攻击。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -27,7 +27,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.status(context, self, "amnesia")) return false;
             if (amnesiaAfflicted(context, self)) return true;
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
+            if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

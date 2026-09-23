@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: playroughId,
+        cooldownParameter: "recharge",
         name: "Play Rough",
         description: "滚翻着扑向目标，用整个身体把它撞得人仰马翻并顶开一段，可能让它的攻击下降 1 级；撒欢式若旁边还有别的敌人，会顺势再翻过去撞第二个。",
         uses: ["冲上去把对手撞翻、顶离原位", "在扎堆的敌人之间来回翻滚", "压制物理攻击手"],

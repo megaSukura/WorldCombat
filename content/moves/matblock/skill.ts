@@ -95,6 +95,7 @@ namespace PokemonSkills {
 
     define({
         id: "matblock",
+        cooldownParameter: "wait",
         name: "掀榻榻米",
         description: "把整张榻榻米掀起来当盾，替自己与身边的队友吃下招式伤害；席子吃满就落，变化招式不受影响。",
         uses: ["替全队硬吃一轮成片的伤害招式", "在对手的重击落下前抢一拍掀席", "把一次爆发整片挡在席面外"],

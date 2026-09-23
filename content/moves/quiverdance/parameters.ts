@@ -93,8 +93,8 @@ namespace PokemonSkills {
     ]);
 
     describe("quiverdance", [
-        { key: "description.0", values: ["gift", "flutters", "scales"] },
-        { key: "description.1", values: ["span", "veil", "drift"] },
+        { key: "description.0", values: ["gift"] },
+        { key: "description.1", values: ["span"] },
         { key: "veil.on", values: [], when: function (context) { return read(context.detail.values, ["veil"]) === true; } },
         { key: "veil.off", values: [], when: function (context) { return read(context.detail.values, ["veil"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

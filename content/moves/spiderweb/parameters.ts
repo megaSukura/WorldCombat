@@ -118,8 +118,8 @@ namespace PokemonSkills {
 
     describe("spiderweb", [
         { key: "description.0", values: ["wrapTicks", "layerBonus", "layerCap"] },
-        { key: "description.1", values: ["slow", "threads"] },
-        { key: "description.2", values: ["globSpeed", "globRadius", "reach", "splat"] },
+        { key: "description.1", values: ["slow"] },
+        { key: "description.2", values: ["globSpeed", "globRadius", "reach"] },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },

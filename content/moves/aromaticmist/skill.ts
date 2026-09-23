@@ -67,6 +67,7 @@ namespace PokemonSkills {
 
     define({
         id: "aromaticmist",
+        cooldownParameter: "wait",
         name: "芳香薄雾",
         description: "在选定点铺下一片会停留的香云，裹住雾里的友方并提高他们的特防；离雾后香还挂在身上一小会儿，绕开那片云即可躲过。",
         uses: ["在队友据守的门口铺一片香云", "替缠斗中的伙伴补上特防", "把治疗位或后排护在香里"],

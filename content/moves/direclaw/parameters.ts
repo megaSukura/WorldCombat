@@ -143,8 +143,8 @@ namespace PokemonSkills {
 
     describe(direclawId, [
         { key: "description.0", values: ["rake", "ailmentChance", "ailmentTicks"] },
-        { key: "description.1", values: ["reach", "critChance", "gashes"] },
-        { key: "description.2", values: ["venom", "wound", "cleave", "tempo", "recharge"] },
+        { key: "description.1", values: ["reach", "critChance"] },
+        { key: "description.2", values: ["tempo", "recharge"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "favor.random", values: [], when: function (context) { return Number(read(context.detail.values, ["favor"]) || 0) === 0; } },

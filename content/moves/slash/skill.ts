@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: slashId,
+        cooldownParameter: "recharge",
         name: "Slash",
         description: "The target is attacked with a slash of claws, scythes, or the like. This move has a heightened chance of landing a critical hit.",
         uses: ["站定一记压下去的重劈", "比同族更容易劈中要害", "慢、窄、准"],

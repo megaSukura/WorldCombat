@@ -5,7 +5,7 @@
  *   onHit 对「自己一侧」的每个成员 cureStatus。它清的是全部主异常：中毒／剧毒、灼伤、麻痹、睡眠、冰冻。
  *
  * 世界化：把「放出一阵香、治好整队」翻成即时战斗里一片会停留的**香云**——云落在选定点，走进云里的伙伴
- *   被香气裹住，身上有任何主异常就当场化掉；云还在的时候，谁再被挂上异常都会被它继续化掉。它是**一块地方**，
+ *   被香气裹住，身上的有害状态效果当场化掉；云还在的时候，谁再被挂上异常都会被它继续化掉。它是**一块地方**，
  *   不是一下：可以提前铺在队友要经过的地方，也可以铺在缠斗点上反复净化（与「治愈铃声」那一下当场全清明确分开）。
  *
  * 数值来源（每个参数读不同的精灵数据，分散到不同参数上）：
@@ -27,8 +27,6 @@ namespace PokemonSkills {
     export const aromatherapySettleText = "world_combat.move.aromatherapy.text.settle";
     /** 表现里的参考半径：`data.scale = 实际香云半径 / 这个数`。 */
     export const aromatherapyReferenceRadius = 3.0;
-    /** 与原生 cureStatus 一致的主异常身份（剧毒由 poison 身份一并带走）。 */
-    export const aromatherapyMalaise = ["poison", "burn", "paralysis", "sleep", "frozen"];
     const aromatherapyDense = { key: "worldcombat.skill." + aromatherapyId + ".preference.dense" };
 
     actionParameters.define(aromatherapyId, {

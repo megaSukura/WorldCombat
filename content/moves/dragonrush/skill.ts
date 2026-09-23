@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: dragonrushId,
+        cooldownParameter: "recharge",
         name: "Dragon Rush",
         description: "The user tackles the target while exhibiting overwhelming menace. This may also make the target flinch.",
         uses: ["先亮一圈威压、再前扑砸在锁定点上", "把落点周围的敌人一起撞开", "用速度差把对手镇得无法出手"],
@@ -103,7 +104,7 @@ namespace PokemonSkills {
                             hits++;
                             if (!landed) return;
                             const away = facts.position().minus(at);
-                            if (away.length() >= 0.05) scope.displace(target, away.unit().scale(push));
+                            if (scope.valid(target) && away.length() >= 0.05) scope.displace(target, away.unit().scale(push));
                             WorldFeedback.emit(scope, dragonrushScene, 1, facts.position(),
                                 { moment: "impact", target: String(target.ref()), dust: dust, intensity: intensity }, 26);
                             if (scope.random() < chance && dragonrushFlinch(scope, target, flinchTicks)) {

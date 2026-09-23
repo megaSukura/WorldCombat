@@ -88,7 +88,7 @@ namespace PokemonSkills {
     describe("mudslap", [
         { key: "description.0", values: ["splat", "blind"] },
         { key: "description.1", values: ["arcSpeed", "reach", "radius", "steer"] },
-        { key: "description.2", values: ["mudTicks", "pref.thick"] },
+        { key: "description.2", values: ["pref.thick"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

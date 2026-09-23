@@ -102,7 +102,7 @@ namespace PokemonSkills {
 
     describe("silktrap", [
         { key: "description.0", values: ["window", "capacity", "drop", "bind"] },
-        { key: "description.1", values: ["raise", "radius", "charge"] },
+        { key: "description.1", values: ["raise", "charge"] },
         { key: "description.2", values: ["fizzle", "pref.snare"] }
     ]);
 }

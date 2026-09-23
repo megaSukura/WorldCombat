@@ -92,12 +92,12 @@ namespace PokemonSkills {
     ]);
 
     describe(revivalblessingId, [
-        { key: "description.0", values: ["prayerRange", "beaconTicks"] },
-        { key: "description.1", values: ["blessTicks", "beams", "motes"] },
+        { key: "description.0", values: ["prayerRange"] },
+        { key: "description.1", values: ["blessTicks"] },
         { key: "vigil.on", values: [], when: function (context) { return read(context.detail.values, ["vigil"]) === true; } },
         { key: "vigil.off", values: [], when: function (context) { return read(context.detail.values, ["vigil"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.prayerRange"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.prayerRange", "tier.1.beaconTicks"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.prayerRange"] }
     ]);
 }

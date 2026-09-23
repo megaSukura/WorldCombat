@@ -42,7 +42,7 @@ namespace PokemonSkills {
 
     describe("sketch", [
         { key: "description.0", values: ["reach", "study"] },
-        { key: "description.1", values: ["strokes"] },
+        { key: "description.1", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

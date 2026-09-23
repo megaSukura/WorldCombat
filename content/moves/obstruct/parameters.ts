@@ -73,7 +73,7 @@ namespace PokemonSkills {
 
     describe("obstruct", [
         { key: "description.0", values: ["window", "capacity", "drop"] },
-        { key: "description.1", values: ["raise", "radius", "charge"] },
+        { key: "description.1", values: ["raise", "charge"] },
         { key: "description.2", values: ["fizzle", "pref.barbs"] }
     ]);
 }

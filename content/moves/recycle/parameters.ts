@@ -126,14 +126,14 @@ namespace PokemonSkills {
     ]);
 
     describe("recycle", [
-        { key: "description.0", values: ["drawRadius", "motes"] },
+        { key: "description.0", values: ["drawRadius"] },
         { key: "description.1", values: ["channel", "recover", "cooldown"] },
         { key: "description.2", values: [] },
         { key: "scavenge.on", values: [], when: function (context) { return read(context.detail.values, ["scavenge"]) === true; } },
         { key: "scavenge.off", values: [], when: function (context) { return read(context.detail.values, ["scavenge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.drawRadius", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.drawRadius", "tier.1.motes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.drawRadius"] }
     ]);
 }
 

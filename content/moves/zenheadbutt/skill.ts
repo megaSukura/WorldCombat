@@ -42,6 +42,7 @@ namespace PokemonSkills {
 
     define({
         id: "zenheadbutt",
+        cooldownParameter: "recharge",
         name: "Zen Headbutt",
         description: "The user focuses its willpower to its head and attacks the target. This may also make the target flinch.",
         uses: ["中距离锁定，追着跑动的对手撞上去", "用会拐弯的冲刺逼迫对手急折", "给队友的先手控制补一记远程接触"],

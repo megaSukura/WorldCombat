@@ -4,7 +4,7 @@
   "worldcombat.skill.taunt.use.1": "Break an opponent's wind-up or setup",
   "worldcombat.skill.taunt.use.2": "Open a window for allies to trade blows",
   "worldcombat.skill.taunt.description.0": "The target burns with rage for %1$s: every non-damaging (status) move it tries is turned back at the moment it would commit, so only damaging moves get through.",
-  "worldcombat.skill.taunt.description.1": "Base reach: %1$s blocks. The current range is %3$s blocks and requires a clear line of sight.",
+  "worldcombat.skill.taunt.description.1": "Base reach: %1$s blocks. The current range is %2$s blocks and requires a clear line of sight.",
   "worldcombat.skill.taunt.description.2": "Saying it takes %1$s, the recovery is %2$s and the cooldown %3$s. The rage sits on the target, can be cleared with milk or by removing effects, and fades on its own; a target already enraged is only refreshed, never stacked.",
   "worldcombat.skill.taunt.manner.0": "Scorn: rage x1.3, +3 ticks wind-up, x1.15 cooldown, x0.85 range — burns longer but is slower to say; good to lock a foe down first.",
   "worldcombat.skill.taunt.manner.1": "Goad: rage x0.8, x1.2 range, -2 ticks wind-up, x0.85 cooldown — fast and far; good to press while trading.",

@@ -55,6 +55,7 @@ namespace PokemonSkills {
 
     define({
         id: magicpowderId,
+        cooldownParameter: "recharge",
         name: "魔法粉",
         description: "朝对手撒一把魔法粉，把它当前的全部属性改写成单一超能力属性；草属性生物会把粉抖掉、完全免疫。",
         uses: ["把对手改写成超能力，打开虫、幽灵、恶的弱点", "摘掉对手自己的本系与防守面", "细撒档把改写维持得更久"],

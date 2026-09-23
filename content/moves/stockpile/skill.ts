@@ -68,6 +68,7 @@ namespace PokemonSkills {
 
     define({
         id: "stockpile",
+        cooldownParameter: "wait",
         name: "蓄力",
         description: "积蓄力量，提高自己的防御和特防。最多积蓄 3 次。",
         uses: ["开打前连蓄几层，把两项防护堆到顶", "连放三层后再接战，扛住第一轮爆发", "把层数留着当会掉的保险，让对手先花几下打碎它"],

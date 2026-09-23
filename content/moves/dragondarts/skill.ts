@@ -26,6 +26,7 @@ namespace PokemonSkills {
 
     define({
         id: "dragondarts",
+        cooldownParameter: "recharge",
         name: "Dragon Darts",
         description: "一次放出两支会追踪的龙箭：场上有两只敌人时各追一只（分头式），只有一只时两箭都扎在同一只身上、每支更重（集火式）。",
         uses: ["同时照顾两只分散的敌人", "用追踪箭咬住走位中的目标", "把两支压在一个目标上打爆发"],

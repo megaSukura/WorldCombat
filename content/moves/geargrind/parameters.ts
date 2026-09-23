@@ -142,7 +142,7 @@ namespace PokemonSkills {
 
     describe(geargrindId, [
         { key: "description.0", values: ["tooth", "sprocket", "reach", "speed"] },
-        { key: "description.1", values: ["spread", "turn", "offset", "shards"] },
+        { key: "description.1", values: ["spread", "turn", "offset"] },
         { key: "cross.on", values: [], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: [], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

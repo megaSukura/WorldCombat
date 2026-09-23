@@ -5,7 +5,6 @@
   "worldcombat.skill.signalbeam.use.2": "用脉冲模式对单个目标打重一点",
   "worldcombat.skill.signalbeam.description.0": "走廊里的每个敌人各吃 %1$s 点特殊伤害；走廊半宽 %2$s 格、长 %3$s 格，画面里的光带就是判定范围。",
   "worldcombat.skill.signalbeam.description.1": "被照到后有 %1$s 概率信号错乱 %2$s；错乱期间它每次想出手有 %3$s 概率被打散。",
-  "worldcombat.skill.signalbeam.description.2": "随特攻与等级增长。",
   "worldcombat.skill.signalbeam.pulse.on": "当前为脉冲：走廊更窄、单发更重、错乱概率更高，代价是射程更短，适合点名一个。",
   "worldcombat.skill.signalbeam.pulse.off": "当前为连续：走廊更宽更长、可一次兜住更多人，代价是单发与错乱概率更基础。",
   "worldcombat.skill.signalbeam.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

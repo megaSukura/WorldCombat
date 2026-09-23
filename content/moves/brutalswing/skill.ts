@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "brutalswing",
+        cooldownParameter: "recharge",
         name: "Brutal Swing",
         description: "The user swings its body around violently to inflict damage on everything in its vicinity.",
         uses: ["被围住时原地扫开一圈", "打断贴身围攻、把近身的人甩开", "不减速的近身覆盖：转一圈就收"],

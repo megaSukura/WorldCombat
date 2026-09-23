@@ -94,7 +94,7 @@ namespace PokemonSkills {
 
     describe("sharpen", [
         { key: "description.0", values: ["gift", "edge"] },
-        { key: "description.1", values: ["sharpTicks", "spikes", "spread"] },
+        { key: "description.1", values: ["sharpTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "quick.on", values: [], when: function (context) { return read(context.detail.values, ["quick"]) === true; } },
         { key: "quick.off", values: [], when: function (context) { return read(context.detail.values, ["quick"]) !== true; } },

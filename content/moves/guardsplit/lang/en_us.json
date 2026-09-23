@@ -4,7 +4,6 @@
   "worldcombat.skill.guardsplit.use.1": "Shave the foe's wall down to yours",
   "worldcombat.skill.guardsplit.use.2": "Close the gap when the foe is far tougher",
   "worldcombat.skill.guardsplit.description.0": "Average Defense and Sp. Def with a target within %1$s blocks, held for %2$s; a clear line is required.",
-  "worldcombat.skill.guardsplit.description.1": "About %1$s arcs of guard light press to the centre and split back to both ends, based on Defense and body size, scaled by this split's real stat gap.",
   "worldcombat.skill.guardsplit.description.2": "Only the raw stats are averaged: Defense and Sp. Def each take their mean, and any stages already built are kept. Both return to their old values when the window ends or is cleared.",
   "worldcombat.skill.guardsplit.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to split, then %3$s seconds to recover and a %5$s second cooldown from commit.",
   "worldcombat.skill.guardsplit.growth.0": "At level %1$s the split reaches %2$s blocks and the window lasts %3$s seconds.",

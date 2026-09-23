@@ -10,7 +10,7 @@
   "worldcombat.skill.spiritbreak.shatter.off": "当前是快速突进：掉特攻 1 级、够得更远、出手更快。",
   "worldcombat.skill.spiritbreak.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.spiritbreak.growth.0": "%1$s 级起冲击威力升至 %2$s。",
-  "worldcombat.skill.spiritbreak.growth.1": "%1$s 级起冲击威力升至 %2$s、光环粒子数 %3$s 点。",
+  "worldcombat.skill.spiritbreak.growth.1": "%1$s 级起冲击威力升至 %2$s。",
   "worldcombat.skill.spiritbreak.value.spirit": "冲击威力",
   "worldcombat.skill.spiritbreak.value.drop": "掉特攻级数",
   "worldcombat.skill.spiritbreak.value.momentum": "冲锋距离",

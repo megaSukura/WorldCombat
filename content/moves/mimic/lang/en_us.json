@@ -5,7 +5,7 @@
   "worldcombat.skill.mimic.use.2": "Punish a heavy attack just used",
   "worldcombat.skill.mimic.description.0": "The line reaches a visible foe within %1$s blocks; reading takes %2$s s.",
   "worldcombat.skill.mimic.description.1": "Only moves used within the last %1$s s are remembered; the borrowed move stays on the user for %2$s s, then returns.",
-  "worldcombat.skill.mimic.description.2": "About %1$s mind-strands; stance is %2$s.",
+  "worldcombat.skill.mimic.description.2": "Stance is %1$s.",
   "worldcombat.skill.mimic.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.mimic.growth.0": "From level %1$s the memory window is %2$s s and the hold %3$s s.",
   "worldcombat.skill.mimic.value.reach": "Mimic range",

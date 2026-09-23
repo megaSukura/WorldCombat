@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: bulletpunchId,
+        cooldownParameter: "recharge",
         name: "Bullet Punch",
         description: "The user strikes with tough punches as fast as bullets. This move always goes first.",
         uses: ["贴身的瞬发钢拳先手", "把排成一条线的前后排一起打穿", "不位移地补一下并把人推开"],
@@ -89,7 +90,7 @@ namespace PokemonSkills {
                 if (!landed) continue;
                 hits++;
                 const away = candidates[index].at.minus(origin);
-                if (away.length() > 0.05) world.displace(victim, away.unit().scale(push));
+                if (world.valid(victim) && away.length() > 0.05) world.displace(victim, away.unit().scale(push));
                 world.sound("cobblemon:move.bulletpunch.target", candidates[index].at, 14, "{}");
                 world.sound("cobblemon:impact.steel", candidates[index].at, 14, "{}");
                 WorldFeedback.emit(world, bulletpunchScene, 1, candidates[index].at,

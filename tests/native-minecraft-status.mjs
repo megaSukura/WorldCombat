@@ -36,7 +36,7 @@ const context = vm.createContext({ WorldCombat: { on: (id, _topic, _after, handl
     }, statusSeconds: (_w, _a, value, expected) => {
       if (nativeKey !== expected) return false; seconds = value; return true;
     } } });
-const sourceFiles = ['content/behavior/contributions.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts', 'content/mechanisms/native-abilities.ts','content/mechanisms/native-items.ts', 'content/mechanisms/native-semantics.ts',
+const sourceFiles = ['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/mechanisms/mob-effects.ts', 'content/mechanisms/combat-stages.ts', 'content/traits/composition.ts', 'content/mechanisms/native-abilities.ts','content/mechanisms/native-items.ts', 'content/mechanisms/native-semantics.ts',
     'content/mechanisms/native-modifiers.ts', 'content/mechanisms/native-effects.ts', 'content/mechanisms/native-minecraft-status.ts'];
   vm.runInContext(ts.transpileModule(sourceFiles.map(file=>fs.readFileSync(file,'utf8')).join('\n'), {
     compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }

@@ -75,6 +75,7 @@ namespace PokemonSkills {
 
     define({
         id: "incinerate",
+        cooldownParameter: "recharge",
         name: "烧尽",
         description: "扫出一片扇形火焰，扇内每个敌人各挨一记火属性特攻；携带树果或宝石者在火里被当场烧毁，火顺势窜高，这一击更重。",
         uses: ["一次烧到身前的多个对手", "烧掉对手的树果或宝石，让它再也用不了", "对持有可燃物者的加重火焰一击"],

@@ -133,7 +133,6 @@ namespace PokemonSkills {
     describe(highhorsepowerId, [
         { key: "description.0", values: ["drive", "shove"] },
         { key: "description.1", values: ["charge", "rush", "hoof"] },
-        { key: "description.2", values: ["might", "dust"] },
         { key: "press.on", values: [], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

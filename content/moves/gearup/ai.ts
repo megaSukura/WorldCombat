@@ -2,7 +2,7 @@
  * 辅助齿轮 的伙伴 AI 用途：这是这招自己的一套出手计划——贴近正负电伙伴，把齿轮的动力直接传过去。
  *
  * 什么局面有意义：场上有一个可见的威胁、且在 ai.maxChase 内；附近有一个还没被传动的正电／负电己方
- *   （自己也算）。没有威胁时只在整备命令（驻守／自主／工作）下空转一次。
+ *   （自己也算）。有交战需求才准备。
  * 对谁出手：最近的、还没被传动的正负电伙伴；齿链很短，所以自己就是锚点。
  * 够不到怎么办：`approachTarget` 指向自身，就地啮合；齿链半径会带上已经贴在身边的伙伴，
  *   离得太远的伙伴等它贴近再传动。
@@ -72,7 +72,7 @@ namespace CompanionBehavior {
             if (context.facts.mounted) return false;
             const pick = gearupPick(context, item);
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return (context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work") && !!pick;
+            if (!threat) return false;
             if (distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
             return !!pick;
         },

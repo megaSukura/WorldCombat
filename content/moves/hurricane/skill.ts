@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "hurricane",
+        cooldownParameter: "recharge",
         name: "Hurricane",
         description: "The user attacks by wrapping the target in a fierce wind. This may also confuse the target.",
         uses: ["从远处放出一道横扫的风墙，卷过一条线上的敌人", "把扎堆的目标一起卷起抛出、打散阵形", "雨天里起风，让风旋更稳、更容易卷晕对手"],
@@ -128,7 +129,7 @@ namespace PokemonSkills {
                         { damage: damageSpec("hurricane", "gale"), flags: { wind: true } })) return;
                     const away = facts.position().minus(centre);
                     const push = away.length() < 0.05 ? heading : away.unit();
-                    scope.displace(victim, push.scale(toss).plus(WorldCombat.point(0, lift, 0)));
+                    if (scope.valid(victim)) scope.displace(victim, push.scale(toss).plus(WorldCombat.point(0, lift, 0)));
                     let confused = false;
                     if (scope.random() < confuseChance) {
                         CombatStatus.apply(scope, victim, "confusion", hurricaneEffect, confuseTicks, Math.round(hurricaneFumble * 100), { unique: true });

@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: flowertrickId,
+        cooldownParameter: "recharge",
         name: "Flower Trick",
         description: "掷出一束做了手脚的花；花束会自己拐弯追上门（必定命中），一碰就整束绽开、花瓣全扑在薄弱处（必定击中要害）。结环时花瓣向外结成一圈、溅到周围敌人；落点留下一片粉色花瓣。",
         uses: ["点掉一个目标并保证命中与要害", "结环时把绽开分给挤在一起的敌人", "在落点留下一片会到期的花瓣"],

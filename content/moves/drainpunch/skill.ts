@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "drainpunch",
+        cooldownParameter: "recharge",
         name: "Drain Punch",
         description: "A standing straight punch that drives into the foe and siphons the force back up the arm. The shortest, quickest physical drain of the family; a three-jab string trades per-hit drain for total damage.",
         uses: ["贴身时用最短的一拳抢输出", "边打边把伤害换成回血", "连打式一次压出三段伤害"],

@@ -103,7 +103,7 @@ namespace PokemonSkills {
 
     describe(rototillerId, [
         { key: "description.0", values: ["patch", "soilTicks"] },
-        { key: "description.1", values: ["gift", "clods"] },
+        { key: "description.1", values: ["gift"] },
         { key: "ridge.on", values: [], when: function (context) { return read(context.detail.values, ["ridge"]) === 1; } },
         { key: "ridge.off", values: [], when: function (context) { return read(context.detail.values, ["ridge"]) !== 1; } },
         { key: "description.2", values: ["reach", "tempo", "aftercast", "wait"] },

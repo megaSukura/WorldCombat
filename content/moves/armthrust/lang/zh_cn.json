@@ -5,7 +5,7 @@
   "worldcombat.skill.armthrust.use.2": "推进式跟着对手走，把整串吃满",
   "worldcombat.skill.armthrust.description.0": "每一推造成 %1$s 点物理伤害，这一串最多推 %2$s 下（原生 2～5，随精灵数据变化）；本招必中。",
   "worldcombat.skill.armthrust.description.1": "能够到 %1$s 格内的对手，每一推把它沿推的方向顶开约 %2$s 格，两推间隔 %3$s。",
-  "worldcombat.skill.armthrust.description.2": "目标被顶得撞上墙、方块或树干时，额外结算 %1$s 的撞墙伤害；推进式每推向前跟 %2$s 格，一路崩出约 %3$s 点掌风。",
+  "worldcombat.skill.armthrust.description.2": "目标被顶得撞上墙、方块或树干时，额外结算 %1$s 的撞墙伤害；推进式每推向前跟 %2$s 格。",
   "worldcombat.skill.armthrust.drive.on": "推进式：每一推后向前跟一段，把距离压回射程内、整串更容易吃满；代价是单推威力 ×0.9、顶开 ×0.75（推得不远，撞墙机会少）。",
   "worldcombat.skill.armthrust.drive.off": "立推式：站定不动，单推威力 ×1.15、顶开 ×1.6，一次把人顶到墙上；代价是推完就拉开距离，这串很可能提前断、冷却 +3 刻。",
   "worldcombat.skill.armthrust.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

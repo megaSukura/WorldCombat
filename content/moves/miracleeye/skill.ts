@@ -108,6 +108,7 @@ namespace PokemonSkills {
 
     define({
         id: miracleeyeId,
+        cooldownParameter: "recharge",
         name: "奇迹之眼",
         description: "凝起一只心眼穿透对手的屏障：留下心眼印记，剥掉它当下的闪避并把它照亮，超能招式不再被恶属性免疫；借这一眼自己的准星也更稳。",
         uses: ["在打恶属性前先破掉它的免疫", "把躲躲闪闪的目标敲定下来", "顺手给自己的超能招抬一抬命中"],

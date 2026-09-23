@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.clangoroussoul.summary": "踏着一支越唱越烈的战舞，逐拍燃烧自己的生命，把攻击、防御、特攻、特防、速度一起提高。舞可以被打断，已经抬起的等级会留下。",
   "worldcombat.skill.clangoroussoul.description.0": "每拍支付 %1$s 最大生命，把五项各提高 %3$s 级，共 %2$s 拍。",
-  "worldcombat.skill.clangoroussoul.description.1": "每拍间隔 %1$s，声波半径 %2$s 格；起舞期间站定，起势可被打断。",
+  "worldcombat.skill.clangoroussoul.description.1": "每拍间隔 %1$s；起舞期间站定，起势可被打断。",
   "worldcombat.skill.clangoroussoul.timing": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.clangoroussoul.use.0": "开战前站定起舞，把全部五项拉起来",
   "worldcombat.skill.clangoroussoul.use.1": "在对手还在接近的窗口里叠起一张全能底牌",

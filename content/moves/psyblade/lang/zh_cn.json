@@ -5,7 +5,7 @@
   "worldcombat.skill.psyblade.use.2": "用看不见的刃切断对手架势",
   "worldcombat.skill.psyblade.description.0": "对目标造成约 %1$s 点物理伤害；自己脚下带着电场电荷时，这一段 ×1.5。",
   "worldcombat.skill.psyblade.description.1": "先压上 %1$s 格内的对手（压上速度约 %2$s 格/刻），随后挥出一道张角 %3$s 度的斩弧。",
-  "worldcombat.skill.psyblade.description.2": "主目标被沿背离方向顶开约 %1$s 格，最多 2 个旁人各吃 %2$s 比例的刃风，斩中迸出约 %3$s 片灵屑。",
+  "worldcombat.skill.psyblade.description.2": "最多 2 个旁人各吃 %1$s 比例的刃风，主目标被沿背离方向顶开约 %2$s 格。",
   "worldcombat.skill.psyblade.extend.on": "当前延展式：挥斩张角 ×1.2、波及更足，但威力 ×0.88、起手多 2 刻、冷却多 3 刻。",
   "worldcombat.skill.psyblade.extend.off": "当前聚锋式：更窄更重、更快更省，用来点名单体。",
   "worldcombat.skill.psyblade.timing": "可向 %1$s 格内施放；起手 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",

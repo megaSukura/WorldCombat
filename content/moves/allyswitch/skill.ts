@@ -14,6 +14,7 @@
 namespace PokemonSkills {
     define({
         id: allySwitchId,
+        cooldownParameter: "wait",
         name: "交换场地",
         description: "用念力瞬间与身边的同伴对调位置，并让原本盯着我或盯着同伴的敌人把目标跟着对调；瞬发、不留东西。只能对射程内的同伴使用。",
         uses: ["被贴住时与同伴对调，把这一下引到别人身上", "把残血的自己换到同伴背后", "打断正盯着我的敌人的节奏"],

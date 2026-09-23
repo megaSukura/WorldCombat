@@ -3,7 +3,7 @@
   "worldcombat.skill.reversal.use.0": "Turn a low HP bar into one big counter-blow",
   "worldcombat.skill.reversal.use.1": "Throw open everything that has surrounded you",
   "worldcombat.skill.reversal.use.2": "Reckless form: gamble on a heavy hit",
-  "worldcombat.skill.reversal.description.0": "The burst deals about %1$s contact damage to every enemy in the ring; the current missing health is %2$s, and the closer you are to fainting the heavier the burst. Defence, type match-up and criticals settle per target.",
+  "worldcombat.skill.reversal.description.0": "The burst deals about %1$s contact damage to every enemy in the ring; the closer you are to fainting the heavier the burst. Defence, type match-up and criticals settle per target.",
   "worldcombat.skill.reversal.description.1": "Plant for %1$s ticks (interruptible — nothing happens if interrupted), then leap up to %2$s blocks along your aim at %3$s blocks per tick to get under the target.",
   "worldcombat.skill.reversal.description.2": "The landing throws open a ring about %1$s blocks wide; every enemy in it is shoved outward about %2$s blocks, and the leap contacts with a %3$s block hit radius.",
   "worldcombat.skill.reversal.reckless.on": "Reckless form: a further boost to power, but every landed hit costs you %1$s of your maximum health in recoil, which may drop you while hurt.",

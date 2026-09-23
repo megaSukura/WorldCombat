@@ -35,6 +35,6 @@ namespace PokemonSkills {
     describe("conversion", [
         { key: "description.0", values: ["charge"] },
         { key: "description.1", values: ["hold"] },
-        { key: "description.2", values: ["recharge", "shades"] }
+        { key: "description.2", values: ["recharge"] }
     ]);
 }

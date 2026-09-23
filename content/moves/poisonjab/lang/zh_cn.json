@@ -2,7 +2,7 @@
   "worldcombat.skill.poisonjab.summary": "站定把带毒的肢体沿直线递出去，扎中直线上的第一个对手：物理重击，按概率在伤口里留下毒，并把它顶开一点。深刺式更狠，代价是够得更近、起手更慢。",
   "worldcombat.skill.poisonjab.description.0": "深刺威力 %1$s（走物攻），出臂距离 %2$s，刺击判定 %3$s；它是一条直线的近身延长重刺。",
   "worldcombat.skill.poisonjab.description.1": "刺中后按 %1$s 在伤口里留下毒，持续 %2$s，并把对手顶开 %3$s。",
-  "worldcombat.skill.poisonjab.description.2": "伤口溅出 %1$s 滴毒；起手 %2$s，收招 %3$s，冷却 %4$s；刺空只走冷却。",
+  "worldcombat.skill.poisonjab.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s；刺空只走冷却。",
   "worldcombat.skill.poisonjab.deep.on": "深刺式：深刺威力 ×1.12、中毒概率 ×1.12、顶开 ×1.15，但出臂距离 ×0.92、起手 +2 刻、收招 ×1.2。",
   "worldcombat.skill.poisonjab.deep.off": "快刺：出手快、够得远、收得快，每一记更轻。",
   "worldcombat.skill.poisonjab.timing": "射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

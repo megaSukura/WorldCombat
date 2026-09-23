@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "doubleedge",
+        cooldownParameter: "recharge",
         name: "Double-Edge",
         description: "A reckless life-risking tackle in which the user rushes the target. This also damages the user quite a lot.",
         uses: ["正面撞开一个挡路的对手", "把目标顶离队友或顶下高台", "在生存无虞时换一记扎实的接触重击"],

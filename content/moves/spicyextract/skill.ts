@@ -59,6 +59,7 @@ namespace PokemonSkills {
 
     define({
         id: "spicyextract",
+        cooldownParameter: "wait",
         name: "辣椒精华",
         description: "放出极为辛辣的精华。对手的攻击会大幅提高，防御会大幅降低。",
         uses: ["给全队开一个「揍它」的窗口", "把一只肉盾烧成玻璃炮", "在狭窄地形一次辣到一小簇敌人"],

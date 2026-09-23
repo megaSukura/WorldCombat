@@ -104,7 +104,6 @@ namespace PokemonSkills {
     describe("dazzlinggleam", [
         { key: "description.0", values: ["flash", "falloff"] },
         { key: "description.1", values: ["radius", "dazzleTicks"] },
-        { key: "description.2", values: ["rays", "motes"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

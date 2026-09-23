@@ -55,6 +55,7 @@ namespace PokemonSkills {
 
     define({
         id: needlearmId,
+        cooldownParameter: "recharge",
         name: "Needle Arm",
         description: "The user attacks by wildly swinging its thorny arms. This may also make the target flinch.",
         uses: ["贴身挥扫并在地上留下一片会扎人的荆棘", "把一块地面封住、逼对手绕路", "拖住想从身边跑开的目标"],

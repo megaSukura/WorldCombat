@@ -27,7 +27,7 @@
   "worldcombat.skill.smellingsalts.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.smellingsalts.preference.ai.maxChase.help": "Slap only at targets within this distance; raise it to chase paralysed targets farther away.",
   "worldcombat.skill.smellingsalts.preference.ai.wake": "Slap the paralysed",
-  "worldcombat.skill.smellingsalts.preference.ai.wake.help": "On: a paralysed target is prioritised (exactly the doubled window); off: only used as a plain slap when nothing else is available.",
+  "worldcombat.skill.smellingsalts.preference.ai.wake.help": "On: prioritize paralyzed targets for the doubled-power hit. Off: keep the ordinary low priority without weighting paralysis.",
   "world_combat.move.smellingsalts.text.wake": "Wide awake!",
   "world_combat.move.smellingsalts.text.hit": "Salt slap",
   "world_combat.move.smellingsalts.text.miss": "Slapped air"

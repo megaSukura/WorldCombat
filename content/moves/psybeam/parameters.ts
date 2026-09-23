@@ -143,7 +143,7 @@ namespace PokemonSkills {
     ]);
 
     describe(psybeamId, [
-        { key: "description.0", values: ["ray", "motes"] },
+        { key: "description.0", values: ["ray"] },
         { key: "description.1", values: ["confuseChance", "dazeTicks", "fumble"] },
         { key: "description.2", values: ["reach", "velocity", "turn"] },
         { key: "echo.on", values: [], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },

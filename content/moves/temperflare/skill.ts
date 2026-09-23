@@ -56,6 +56,7 @@ namespace PokemonSkills {
 
     define({
         id: temperId,
+        cooldownParameter: "recharge",
         name: "Temper Flare",
         description: "Spurred by desperation, the user attacks the target. This move's power is doubled if the user's previous move failed.",
         uses: ["上一次打空后烧着自己撞出去", "在落点炸开一片火、燎到围观的人", "把撞到的人点着并在地上留下焦痕"],

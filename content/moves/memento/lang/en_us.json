@@ -4,7 +4,7 @@
   "worldcombat.skill.memento.use.1": "Trade one life to collapse a key threat's output",
   "worldcombat.skill.memento.use.2": "Leave a remnant to keep the pressure at the moment you are doomed",
   "worldcombat.skill.memento.description.0": "A target caught by the gift loses %1$s Attack and Sp. Atk stage(s) and grieves for %2$s; the remnant keeps renewing it for those who come near.",
-  "worldcombat.skill.memento.description.1": "Gift radius %1$s blocks, bursting %4$s remnant motes; the remnant stays for %2$s and takes Attack and Sp. Atk from each non-friendly within %3$s blocks, one by one, until it fades.",
+  "worldcombat.skill.memento.description.1": "Gift radius %1$s blocks; the remnant stays for %2$s and takes Attack and Sp. Atk from each non-friendly within %3$s blocks, one by one, until it fades.",
   "worldcombat.skill.memento.description.2": "Gathering yourself takes %1$s, with a %2$s cooldown. You only sacrifice yourself when the gift actually reaches at least one foe.",
   "worldcombat.skill.memento.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.memento.value.drop": "Atk/Sp. Atk drop",

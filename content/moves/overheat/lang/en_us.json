@@ -10,7 +10,7 @@
   "worldcombat.skill.overheat.vent.on": "Overload form: power x1.25, all heat packed into one burst; costs one extra Sp. Atk stage, a slower wind-up and a longer cooldown.",
   "worldcombat.skill.overheat.vent.off": "Contained form: power x1.0, only the native two Sp. Atk stages, a faster cast, good for repeated use.",
   "worldcombat.skill.overheat.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.overheat.growth.0": "From level %1$s the heat wave power rises to %2$s and the ember count to %3$s.",
+  "worldcombat.skill.overheat.growth.0": "From level %1$s the heat wave power rises to %2$s.",
   "worldcombat.skill.overheat.growth.1": "From level %1$s the heat wave power rises to %2$s and the range to %3$s blocks.",
   "worldcombat.skill.overheat.value.heat": "Heat wave power",
   "worldcombat.skill.overheat.value.cone": "Fan angle",

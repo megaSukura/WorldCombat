@@ -120,7 +120,7 @@ namespace PokemonSkills {
     describe("magnitude", [
         { key: "description.0", values: ["quake"] },
         { key: "description.1", values: ["shudder", "jolt", "stagger"] },
-        { key: "description.2", values: ["fracture", "crests", "dust"] },
+        { key: "description.2", values: ["fracture"] },
         { key: "fault.on", values: [], when: function (context) { return read(context.detail.values, ["fault"]) === true; } },
         { key: "fault.off", values: [], when: function (context) { return read(context.detail.values, ["fault"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

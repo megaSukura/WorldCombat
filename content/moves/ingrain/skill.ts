@@ -113,6 +113,7 @@ namespace PokemonSkills {
 
     define({
         id: "ingrain",
+        cooldownParameter: "wait",
         name: "Ingrain",
         description: "把根扎进脚下的大地，就地钉住自己；此后每隔一会儿沿根须抽上来一口血。扎根期间无法移动。",
         uses: ["在拉锯里把自己钉在一块地上，换来更耐久的小口回血", "把脚下的土变成根须地，标记这块阵地", "被追击时用扎根换一段稳定续航，赌对手打不穿"],

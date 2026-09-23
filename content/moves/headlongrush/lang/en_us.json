@@ -9,7 +9,7 @@
   "worldcombat.skill.headlongrush.plow.on": "Plowing form: the furrow stays %1$s s, and the charge reaches farther and shoves harder.",
   "worldcombat.skill.headlongrush.plow.off": "Bracing form: stops dead on contact, heavier single hit and faster cast, but a shorter shove and furrow.",
   "worldcombat.skill.headlongrush.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.headlongrush.growth.0": "From level %1$s the impact power rises to %2$s and the churned soil to %3$s.",
+  "worldcombat.skill.headlongrush.growth.0": "From level %1$s the impact power rises to %2$s.",
   "worldcombat.skill.headlongrush.growth.1": "From level %1$s the impact power rises to %2$s and the charge range to %3$s blocks.",
   "worldcombat.skill.headlongrush.value.charge": "Impact power",
   "worldcombat.skill.headlongrush.value.reach": "Charge range",

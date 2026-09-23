@@ -2,7 +2,6 @@
   "worldcombat.skill.nightshade.summary": "A ranged frightening mirage: condense part of your level into a phantom and hurl it; the phantom homes on the target, burrows into its mind for fixed damage equal to your level, then lingers a moment. The target never moves; the splash form spreads one strike into an area burst, each hit lighter.",
   "worldcombat.skill.nightshade.description.0": "The strike deals %1$s fixed damage: your level times a small special-attack factor. The target's defence does not matter; only type immunity stops it.",
   "worldcombat.skill.nightshade.description.1": "Prepare %1$s s; the phantom reaches %2$s blocks at %3$s blocks/tick (it homes on the target) with a %4$s block hit radius.",
-  "worldcombat.skill.nightshade.description.2": "After the hit the phantom lingers on the target for %1$s s.",
   "worldcombat.skill.nightshade.splash.on": "Splash form: on impact it reaches up to %2$s enemies within %1$s blocks, each hit reduced to 55 percent damage and a longer cooldown.",
   "worldcombat.skill.nightshade.splash.off": "Single form: only the target that was hit, at full damage.",
   "worldcombat.skill.nightshade.timing": "Range %1$s blocks; prepare %2$s s, recover %3$s s, cooldown %4$s s, cost %5$s PP.",
@@ -25,7 +24,6 @@
   "worldcombat.skill.nightshade.preference.ai.crowd.help": "Prefer this cast when at least this many enemies stand around the target (pairs with the splash form); larger means it only casts in dense groups.",
   "worldcombat.skill.nightshade.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.nightshade.preference.ai.leaveStation.help": "When on, the user may leave its post to find a firing position; when off, it only casts at what it can reach from where it stands.",
-  "worldcombat.skill.nightshade.growth.0": "From level %1$s the linger rises to %2$s s.",
   "worldcombat.skill.nightshade.growth.1": "From level %1$s the splash radius widens to %2$s blocks.",
   "world_combat.move.nightshade.text.haunt": "Night Shade %1$s",
   "world_combat.move.nightshade.text.fizzle": "Phantom faded"

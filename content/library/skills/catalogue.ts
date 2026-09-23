@@ -60,6 +60,7 @@ namespace PokemonSkills {
         var inspect = skill.inspect;
         skill.inspect = function (pokemon, detail, context) {
             var output = inspect ? inspect(pokemon, detail, context) : detail;
+            if (typeof output.authoredCooldown !== "number") output.authoredCooldown = output.cooldown;
             output.brief = { key: "worldcombat.skill." + skill.id + ".summary" };
             output.description = { paragraphs: [{ key: "worldcombat.skill." + skill.id + ".summary" }], bindings: {} };
             output.uses = skill.uses.map((_, index) => ({ key: "worldcombat.skill." + skill.id + ".use." + index }));
@@ -68,6 +69,8 @@ namespace PokemonSkills {
                 output.description = describeSkill(facts);
                 output.dependencies = ["world.environment"];
             }
+            output.cooldown = cooldownEvaluation({ pokemon, skill, detail: output, world: context.world, actor: context.actor,
+                attributes: context.attributes }, output.authoredCooldown).ticks;
             return output;
         };
         catalogue.define(skill);

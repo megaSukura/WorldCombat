@@ -5,7 +5,7 @@
   "worldcombat.skill.simplebeam.use.2": "sweep a whole ring of Abilities with the wave option",
   "worldcombat.skill.simplebeam.description.0": "Rewrite the target's Ability into Simple for %1$s.",
   "worldcombat.skill.simplebeam.description.1": "Wave range %1$s blocks, wind-up %2$s, recovery %3$s, following speed and size.",
-  "worldcombat.skill.simplebeam.description.2": "Beam thickness about %1$s blocks, wave radius %2$s blocks; more with Special Attack and size.",
+  "worldcombat.skill.simplebeam.description.2": "Wave radius %1$s blocks; the wave bursts at the target and washes over that area, wider on a wider body.",
   "worldcombat.skill.simplebeam.wave.on": "Psychic wave: bursts at the target and washes over a %1$s-block ring, at %2$s cooldown and a shorter rewrite for each.",
   "worldcombat.skill.simplebeam.wave.off": "Single beam: one target only, rewrite lasting %1$s, faster to cast.",
   "worldcombat.skill.simplebeam.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

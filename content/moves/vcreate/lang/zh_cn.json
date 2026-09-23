@@ -2,7 +2,7 @@
   "worldcombat.skill.vcreate.summary": "从前额生出灼热的火焰、把自身当弹丸撞出去：前额的火张成一个 V，整个人拖着这道 V 撞进目标怀里，命中爆成一团火。代价写在明面上——提交那一刻就把防御、特防、速度三段一起压下去，无论中与不中都照付。它是全项目威力最高的一档近身冲撞。",
   "worldcombat.skill.vcreate.description.0": "热焰裹身撞出 %1$s 的接触伤害，并把目标撞开 %2$s 格。",
   "worldcombat.skill.vcreate.description.1": "冲程 %1$s 格、冲速 %2$s 格每刻，前额火焰判定半径 %3$s 格。",
-  "worldcombat.skill.vcreate.description.2": "撞完自身防御 −%1$s、特防 −%2$s、速度 −%3$s 级（提交时即付）；V 焰量 %4$s 驱动表现。",
+  "worldcombat.skill.vcreate.description.2": "撞完自身防御 −%1$s、特防 −%2$s、速度 −%3$s 级（提交时即付）。",
   "worldcombat.skill.vcreate.nova.on": "当前为尽燃式：热焰更重、V 焰更盛，但自身速度额外再降一段、收招与冷却更久、冲得更沉——赌上机动性的一次爆发。",
   "worldcombat.skill.vcreate.nova.off": "当前为收焰式：冲得更快更远、冷却更短，代价是热焰威力略低。",
   "worldcombat.skill.vcreate.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

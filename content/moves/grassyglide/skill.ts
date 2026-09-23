@@ -49,6 +49,7 @@ namespace PokemonSkills {
 
     define({
         id: grassyglideId,
+        cooldownParameter: "recharge",
         name: "Grassy Glide",
         description: "Gliding on the ground, the user slams the target. On Grassy Terrain it always acts first.",
         uses: ["脚下有草时打一记瞬发的先手铲击", "贴上对面滑过去，把目标铲开", "落点种出一片青草，供自己与队友借力"],
@@ -124,7 +125,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(grassyglideId, "slide"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(origin);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                             // 草皮种在被打倒的落脚处：撞到哪里，哪里就长草，站上去的人自然算在青草场地上。
                             const planted = scope.observe(victim);
                             const plantAt = planted === null ? hit.position() : planted.position();

@@ -47,7 +47,7 @@ namespace PokemonSkills {
     });
     describe(tauntId, [
         { key: "description.0", values: ["tauntTicks"] },
-        { key: "description.1", values: ["provokeReach", "rage", "range"] },
+        { key: "description.1", values: ["provokeReach", "range"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "manner.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.manner === "scorn"); } },
         { key: "manner.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.manner !== "scorn"; } },

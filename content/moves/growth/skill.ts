@@ -9,6 +9,7 @@ namespace PokemonSkills {
 
     define({
         id: "growth",
+        cooldownParameter: "wait",
         name: "Growth",
         description: "让身体一下子长大，把攻击与特攻一起抬起来；站在阳光下这一下翻倍，绿环与草叶随身体向外展开。",
         uses: ["开场先长一轮，把双攻垫起来", "在阳光下翻倍长一次"],

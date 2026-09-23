@@ -49,6 +49,7 @@ namespace PokemonSkills {
 
     define({
         id: "endure",
+        cooldownParameter: "charge",
         name: "Endure",
         description: "The user endures any attack with at least 1 HP. Its chance of failing rises if it is used in succession.",
         uses: ["残血时拖住回合、等待救援", "为队友争取一次打断或撤退", "主动去吃一记致命招"],

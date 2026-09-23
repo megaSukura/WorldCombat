@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: powertripId,
+        cooldownParameter: "recharge",
         name: "Power Trip",
         description: "摆开攒下的能力等级、朝对手直冲过去一头撞上：身上正面能力越多，冲得越远越快、这一撞越重、把人顶得越开；开启猛进时可以穿过去再撞一个。",
         uses: ["叠高能力等级后冲上去重击", "把一个人顶出很远", "猛进时一次撞穿两个人"],

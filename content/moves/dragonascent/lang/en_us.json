@@ -9,7 +9,7 @@
   "worldcombat.skill.dragonascent.broad.on": "Broad form: other foes swept by the shockwave take %1$s power and are thrown %2$s blocks.",
   "worldcombat.skill.dragonascent.broad.off": "Plunging form: all force on the landing target, with higher single-target power, a faster cast and a tighter shock.",
   "worldcombat.skill.dragonascent.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
-  "worldcombat.skill.dragonascent.growth.0": "From level %1$s the dive power rises to %2$s and the impact points to %3$s.",
+  "worldcombat.skill.dragonascent.growth.0": "From level %1$s the dive power rises to %2$s.",
   "worldcombat.skill.dragonascent.growth.1": "From level %1$s the dive power rises to %2$s and the climb to %3$s blocks.",
   "worldcombat.skill.dragonascent.value.dive": "Dive power",
   "worldcombat.skill.dragonascent.value.altitude": "Climb height",

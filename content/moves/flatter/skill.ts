@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: "flatter",
+        cooldownParameter: "wait",
         name: "吹捧",
         description: "吹捧对手，使其混乱；同时还会提高对手的特攻。",
         uses: ["削弱法术威胁的自控力", "在对手贴身前一瞬把它钉住", "给已经摇摇欲坠的敌人再添一把火"],

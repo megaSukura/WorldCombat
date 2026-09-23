@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: tailwhipId,
+        cooldownParameter: "recharge",
         name: "摇尾巴",
         description: "转过身，把尾巴绕身左右甩开一圈，让看得见这条尾巴的对手晃神、降低防御。它是绕身一整圈，被围住时连身后的敌人也会被甩到；尾巴要被看见，掩体后甩不到。",
         uses: ["被围住时一圈敌人一起破防", "为队友的物攻打开缺口", "把贴身绕后的敌人也一起削到"],

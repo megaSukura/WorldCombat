@@ -101,11 +101,11 @@ namespace PokemonSkills {
 
     describe("ember", [
         { key: "description.0", values: ["spark", "velocity", "radius"] },
-        { key: "description.1", values: ["reach", "burnChance", "sparks"] },
+        { key: "description.1", values: ["reach", "burnChance"] },
         { key: "charged.on", values: [], when: function (context) { return read(context.detail.values, ["charged"]) === true; } },
         { key: "charged.off", values: [], when: function (context) { return read(context.detail.values, ["charged"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.spark", "tier.0.sparks"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.spark"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.spark", "tier.1.burnChance"] }
     ]);
 }

@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "strengthsap",
+        cooldownParameter: "recharge",
         name: "Strength Sap",
         description: "把根须搭上贴身的对手，吸走它的一股力气：按对手物攻相对自身的强弱回复生命，"
             + "并把对手的物攻下降一级。抽的是力气不是生命，没有伤害；对手越壮，回得越足、被削得越明显。",

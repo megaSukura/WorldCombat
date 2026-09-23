@@ -4,7 +4,7 @@
   "worldcombat.skill.growl.use.1": "Drop several attackers' output at once while they cluster",
   "worldcombat.skill.growl.use.2": "Weaken a threat through cover when it hugs you",
   "worldcombat.skill.growl.description.0": "Every listener loses %1$s Attack stage(s) and stays distracted for %2$s.",
-  "worldcombat.skill.growl.description.1": "Cry radius %1$s; every non-friendly inside hears it, and one cry puts out %2$s notes. Sound ignores line of sight.",
+  "worldcombat.skill.growl.description.1": "Cry radius %1$s; every non-friendly inside hears it. Sound ignores line of sight.",
   "worldcombat.skill.growl.description.2": "Windup %1$s with a %2$s cooldown. Centred on you, so anyone outside the ring is untouched.",
   "worldcombat.skill.growl.howl.off": "Short cry: quick, small radius, short duration.",
   "worldcombat.skill.growl.howl.on": "Long howl: larger radius and longer duration, but slower windup and cooldown.",

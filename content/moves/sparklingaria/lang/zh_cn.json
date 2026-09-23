@@ -4,7 +4,7 @@
   "worldcombat.skill.sparklingaria.use.1": "替身边的同伴洗掉灼伤",
   "worldcombat.skill.sparklingaria.use.2": "被围住时原地炸开一圈气泡",
   "worldcombat.skill.sparklingaria.description.0": "气泡浪中心造成约 %1$s 的伤害，推到边缘时保留 %2$s 的威力；对手的特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.sparklingaria.description.1": "波及身周 %1$s 格，一次放出 %2$s 个气泡。",
+  "worldcombat.skill.sparklingaria.description.1": "波及身周 %1$s 格。",
   "worldcombat.skill.sparklingaria.description.2": "每洗掉一处灼伤，那只宝可梦回复 %1$s 的最大生命。",
   "worldcombat.skill.sparklingaria.note.on": "开启高音：范围约 ×1.25、气泡更多，但单点威力约 ×0.85，起手更慢、冷却更长，用来一次洗更大一片。",
   "worldcombat.skill.sparklingaria.note.off": "关闭高音（收束咏叹调）：范围约 ×0.85、单点威力约 ×1.15，收手更快、冷却更短。",

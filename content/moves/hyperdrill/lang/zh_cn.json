@@ -6,7 +6,6 @@
   "worldcombat.skill.hyperdrill.description.0": "凿进去的一记造成 %1$s 点接触伤害。",
   "worldcombat.skill.hyperdrill.description.1": "朝瞄准方向钻 %1$s 格（每刻 %2$s 格），钻头判定半径 %3$s 格。",
   "worldcombat.skill.hyperdrill.description.2": "一次凿开最多 %1$s 层守护（守住、看穿、广域防守、硬化都是同一套守护机制），把被钻到的目标顶开 %2$s 格；贯穿式下最多一路钻穿 %3$s 个目标，定钻式只钻第一个。",
-  "worldcombat.skill.hyperdrill.description.3": "旋转与凿穿共迸出约 %1$s 点钻屑。",
   "worldcombat.skill.hyperdrill.through.on": "贯穿式：钻头一路贯穿最多数个目标，射程 ×1.15、钻速 ×1.1，但每一记 ×0.9、起手 +2 刻、冷却 +8 刻，用来钻穿排成一列的人。",
   "worldcombat.skill.hyperdrill.through.off": "定钻式：钻到第一个目标就收，这一记 ×1.2、出手快、冷却短，用来集中砸穿一个硬目标。",
   "worldcombat.skill.hyperdrill.timing": "可向 %1$s 格内施放；起手 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",

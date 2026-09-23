@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: sweetkissId,
+        cooldownParameter: "recharge",
         name: "天使之吻",
         description: "像天使般可爱地亲吻对手，从而使对手混乱。",
         uses: ["贴身把对手亲懵", "为队友的集火制造失手窗口", "在缠斗中打断对手的连招"],

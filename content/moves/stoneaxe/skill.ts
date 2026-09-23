@@ -89,6 +89,7 @@ namespace PokemonSkills {
 
     define({
         id: stoneaxeId,
+        cooldownParameter: "recharge",
         name: "Stone Axe",
         description: "An overhead stone axe splits the target and its shards hang floating around the landing point; anything that enters the air there is struck, airborne or not. The first intruder of a Shatter field takes the whole blast at once; a Hover field keeps striking. It has a high chance to land a critical hit.",
         uses: ["近身一记斧劈，把悬浮岩留在对手周围", "惩罚怕岩的目标、连飞在空中的一起砸", "用崩解式在窄口砸出一记重的"],

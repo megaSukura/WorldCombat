@@ -66,7 +66,7 @@ namespace PokemonSkills {
     ]);
 
     describe("agility", [
-        { key: "description.0", values: ["gift", "surge", "motes"] },
+        { key: "description.0", values: ["gift"] },
         { key: "description.1", values: ["rushTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

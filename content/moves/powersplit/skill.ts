@@ -71,6 +71,7 @@ namespace PokemonSkills {
 
     define({
         id: "powersplit",
+        cooldownParameter: "recharge",
         name: "力量平分",
         description: "利用超能力把双方攻击与特攻的数值相加再平分一段时间：强的被压下来、弱的被抬上去，两人落在同一刻度上。",
         uses: ["把自己的低攻抬到对手的水平", "把对手的高攻压到自己的水平", "在对手攻击远高于自己时抹平差距"],

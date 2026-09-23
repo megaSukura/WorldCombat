@@ -65,7 +65,7 @@ namespace PokemonSkills {
 
     describe("detect", [
         { key: "description.0", values: ["readWindow", "opening", "openingBoost"] },
-        { key: "description.1", values: ["raise", "radius", "charge"] },
+        { key: "description.1", values: ["raise", "charge"] },
         { key: "description.2", values: ["fizzle", "pref.strike"] }
     ]);
 }

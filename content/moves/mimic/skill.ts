@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "mimic",
+        cooldownParameter: "recharge",
         name: "Mimic",
         description: "牵出念线搭住一名对手，读走它最后使用的那一手，把它织进模仿所占的招式格，直到这场战斗结束。",
         uses: ["借来对手的招式", "把对手的强化还回去", "惩罚刚出手的强攻"],

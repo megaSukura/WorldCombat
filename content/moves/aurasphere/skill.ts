@@ -13,6 +13,7 @@
 namespace PokemonSkills {
     define({
         id: aurasphereId,
+        cooldownParameter: "recharge",
         name: "Aura Sphere",
         description: "从体内逼出一颗波导球射向对手；球会一路拐弯追去，攻击必定会命中。远追更远也追得更死；撞波更粗更快更重、射程更近。",
         uses: ["远距离点名一个目标", "追打走位、拉距离的对手", "用一颗密度高的球压住中距离"],

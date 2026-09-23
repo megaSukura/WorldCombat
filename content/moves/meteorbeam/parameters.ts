@@ -118,7 +118,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["meteor", "splash"] },
         { key: "description.1", values: ["charge", "boost"] },
         { key: "description.2", values: ["velocity", "blast", "stone"] },
-        { key: "description.3", values: ["blowback", "starlight", "craterTicks"] },
+        { key: "description.3", values: ["blowback", "craterTicks"] },
         { key: "stance.deep", values: [], when: function (context) { return !!read(context.detail.values, ["deep"]); } },
         { key: "stance.light", values: [], when: function (context) { return !read(context.detail.values, ["deep"]); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

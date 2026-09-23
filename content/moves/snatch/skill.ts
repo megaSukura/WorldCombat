@@ -85,6 +85,7 @@ namespace PokemonSkills {
 
     define({
         id: snatchId,
+        cooldownParameter: "recharge",
         name: "Snatch",
         description: "探出一只手，抓住选定对手接下来要给自己加的那一手，原样收进自己身上；它没出可夺的招式就空手而回。",
         uses: ["把对手马上要上的增益抢过来", "截走对手的回复与布置", "在对手开打前先夺走它的准备"],

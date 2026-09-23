@@ -38,7 +38,8 @@ namespace PokemonSkills {
     }
 
     define({
-        id: lifedewId, name: "生命水滴",
+        id: lifedewId,
+        cooldownParameter: "wait", name: "生命水滴",
         description: "脚下喷出一圈神奇的水，水波贴地铺开、扫过自己和身边的伙伴，被扫到的一刻回复其最大生命的一成多；水波越铺越远，走完就退去。丰沛让水更足更宽，代价是铺得更慢、冷却更久。",
         uses: ["给围在身边的一队伙伴同时补一口", "接战前先放一发，把残血的人一起拉回来", "贴着伙伴放，顺路把他罩进水波"],
         kind: "self", range: 3, maxRange: 6, prepare: 8, active: 1, recover: 5, cooldown: 120, style: "water",

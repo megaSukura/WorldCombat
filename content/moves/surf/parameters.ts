@@ -136,7 +136,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["surge"] },
         { key: "description.1", values: ["waveRadius", "crest"] },
         { key: "description.2", values: ["shove", "soakTicks"] },
-        { key: "description.3", values: ["sweepTicks", "spray"] },
+        { key: "description.3", values: ["sweepTicks"] },
         { key: "description.4", values: ["quench"] },
         { key: "tide.on", values: [], when: function (context) { return read(context.detail.values, ["tide"]) === true; } },
         { key: "tide.off", values: [], when: function (context) { return read(context.detail.values, ["tide"]) !== true; } },

@@ -122,8 +122,7 @@ namespace PokemonSkills {
     describe(roundId, [
         { key: "description.0", values: ["verse"] },
         { key: "description.1", values: ["chorusRadius", "echoTicks"] },
-        { key: "description.2", values: ["reach", "splash"] },
-        { key: "description.3", values: ["notes", "noteSpeed"] },
+        { key: "description.2", values: ["reach"] },
         { key: "description.4", values: ["pref.lead"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.verse"] },

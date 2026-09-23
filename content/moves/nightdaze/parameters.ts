@@ -151,7 +151,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["surge", "shroudChance", "shroudStages"] },
         { key: "description.1", values: ["waveRadius", "crest", "waveTicks"] },
         { key: "description.2", values: ["push", "maxTargets"] },
-        { key: "description.3", values: ["shroudTicks", "motes"] },
+        { key: "description.3", values: ["shroudTicks"] },
         { key: "eclipse.on", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) === true; } },
         { key: "eclipse.off", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

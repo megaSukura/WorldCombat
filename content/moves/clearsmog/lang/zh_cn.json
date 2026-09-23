@@ -5,7 +5,7 @@
   "worldcombat.skill.clearsmog.use.2": "同时清掉一小撮抱团对手的等级",
   "worldcombat.skill.clearsmog.description.0": "泥块砸中目标约 %1$s 威力（必中）；掷出距离 %2$s 格。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.clearsmog.description.1": "炸开的清浊之烟半径 %1$s 格：烟里每个非友方的能力等级被冲回原点，并黏住 %2$s 秒；黏住期间每 %3$s 秒把新加的等级再冲散一次。",
-  "worldcombat.skill.clearsmog.description.2": "泥块以 %1$s 格/刻飞出并小幅修向目标，泥块判定 %2$s 格，这一片烟卷着 %3$s 团浊气。",
+  "worldcombat.skill.clearsmog.description.2": "泥块以 %1$s 格/刻飞出并小幅修向目标，泥块判定 %2$s 格。",
   "worldcombat.skill.clearsmog.billow.on": "漫烟式：烟团半径 ×1.5、黏烟时长 ×1.4，但威力 ×0.85、起手 +1 刻、冷却 +8 刻——罩得更广更久。",
   "worldcombat.skill.clearsmog.billow.off": "聚泥式：威力 ×1.15、出手快、冷却短，但烟团小、黏烟短——一次精准的重泥。",
   "worldcombat.skill.clearsmog.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒；PP 15 的代价。",

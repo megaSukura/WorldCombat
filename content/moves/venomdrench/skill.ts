@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: "venomdrench",
+        cooldownParameter: "wait",
         name: "毒液陷阱",
         description: "朝身周泼出一整圈黏稠毒液：圈里已经被毒浸透的对手，攻击、特攻、速度一起下降；没中毒的人只是被淋湿一层、不受影响。深泼削得更狠但范围更小、出手更慢；浅泼范围更大、出手更快。",
         uses: ["先下毒再收割，把中毒的对手一次削软三项", "在敌人扎堆时一次黏住几个中毒的", "贴住一个中毒的硬目标深泼两档"],

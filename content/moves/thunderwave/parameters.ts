@@ -86,11 +86,10 @@ namespace PokemonSkills {
 
     describe(thunderwaveId, [
         { key: "description.0", values: ["reach", "shockRadius"] },
-        { key: "description.1", values: ["lockTicks", "arcs", "joltSpeed"] },
+        { key: "description.1", values: ["lockTicks"] },
         { key: "surge.on", values: [], when: function (context) { return read(context.detail.values, ["surge"]) === true; } },
         { key: "surge.off", values: [], when: function (context) { return read(context.detail.values, ["surge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.arcs"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.arcs", "tier.1.lockTicks"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.lockTicks"] }
     ]);
 }

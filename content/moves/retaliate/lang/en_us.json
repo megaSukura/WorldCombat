@@ -4,7 +4,7 @@
   "worldcombat.skill.retaliate.use.1": "Deliver a doubled charge carrying the grief",
   "worldcombat.skill.retaliate.use.2": "Charge the enemy that just struck your ally",
   "worldcombat.skill.retaliate.description.0": "The charge deals %1$s physical (Normal) power; if an ally just fell it doubles, scaling with level and friendship.",
-  "worldcombat.skill.retaliate.description.1": "Charges %1$s blocks at %2$s per tick with a hit radius of %3$s blocks; on contact it shoves the target %4$s blocks and draws %5$s speed lines.",
+  "worldcombat.skill.retaliate.description.1": "Charges %1$s blocks at %2$s per tick with a hit radius of %3$s blocks; on contact it shoves the target %4$s blocks.",
   "worldcombat.skill.retaliate.solemn.on": "Current: Solemn — charge farther x1.12 and a x1.06 multiplier to run down the killer, but base x0.92 and longer prepare and cooldown.",
   "worldcombat.skill.retaliate.solemn.off": "Current: Direct — base x1.08 with a short, clean charge.",
   "worldcombat.skill.retaliate.timing": "Range %1$s blocks, prepare %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",

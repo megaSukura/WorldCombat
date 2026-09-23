@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.takedown.summary": "The plainest full-power shoulder charge: duck low, dash a short way and slam the target with your whole body. A hit reflects the impact onto you; a miss just skids you to a stop. The hit anyone can afford.",
   "worldcombat.skill.takedown.description.0": "The charge deals %1$s contact damage, dashing up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.takedown.description.1": "On a hit the user takes %1$s%% of the actual damage as recoil, shoves the target %2$s blocks and bounces back %3$s blocks; the rush and hit kick up %4$s dust motes.",
+  "worldcombat.skill.takedown.description.1": "On a hit the user takes %1$s%% of the actual damage as recoil, shoves the target %2$s blocks and bounces back %3$s blocks.",
   "worldcombat.skill.takedown.description.2": "Current run-up %1$s blocks: a longer run-up raises power and reach, and the recoil and wind-up with them.",
   "worldcombat.skill.takedown.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",
   "worldcombat.skill.takedown.growth.0": "From level %1$s the charge power rises to %2$s.",

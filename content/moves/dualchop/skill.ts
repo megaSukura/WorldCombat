@@ -48,6 +48,7 @@ namespace PokemonSkills {
 
     define({
         id: dualchopId,
+        cooldownParameter: "recharge",
         name: "Dual Chop",
         description: "The user attacks its target by hitting it with brutal strikes. The target is hit twice in a row.",
         uses: ["站定抡起前肢，朝同一处连劈两下", "第一劈砸地留裂痕，第二劈追着裂痕撕深", "分劈式把身前一小片敌人一起劈到"],

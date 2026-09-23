@@ -113,12 +113,12 @@ namespace PokemonSkills {
 
     describe("mortalspin", [
         { key: "description.0", values: ["spin", "radius"] },
-        { key: "description.1", values: ["rings", "push"] },
-        { key: "description.2", values: ["toxin", "scatter"] },
+        { key: "description.1", values: ["push"] },
+        { key: "description.2", values: ["toxin"] },
         { key: "virulent.on", values: [], when: function (context) { return read(context.detail.values, ["virulent"]) === true; } },
         { key: "virulent.off", values: [], when: function (context) { return read(context.detail.values, ["virulent"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.spin", "tier.0.toxin"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.spin", "tier.1.scatter"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.spin"] }
     ]);
 }

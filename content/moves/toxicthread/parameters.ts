@@ -78,7 +78,7 @@ namespace PokemonSkills {
     });
     describe(toxicthreadId, [
         { key: "description.0", values: ["speedDrop", "venomTicks"] },
-        { key: "description.1", values: ["reel", "anchorTicks", "threads"] },
+        { key: "description.1", values: ["reel", "anchorTicks"] },
         { key: "description.2", values: ["strandSpeed", "strandRadius", "reach", "range", "tempo"] },
         { key: "reel.on", values: [], when: function (context) { return read(context.detail.values, ["reel"]) === true; } },
         { key: "reel.off", values: [], when: function (context) { return read(context.detail.values, ["reel"]) !== true; } },

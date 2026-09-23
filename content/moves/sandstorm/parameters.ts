@@ -81,7 +81,7 @@ namespace PokemonSkills {
     describe("sandstorm", [
         { key: "description.0", values: ["stormRadius", "stormTicks"] },
         { key: "description.1", values: ["scour", "drift"] },
-        { key: "description.2", values: ["sweptTicks", "grainInterval", "grainDensity"] },
+        { key: "description.2", values: ["sweptTicks", "grainInterval"] },
         { key: "description.3", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },

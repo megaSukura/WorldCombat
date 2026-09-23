@@ -106,7 +106,7 @@ namespace PokemonSkills {
 
     describe(tidyupId, [
         { key: "description.0", values: ["rise", "haste", "sweep"] },
-        { key: "description.1", values: ["kit", "sweeps", "debris"] },
+        { key: "description.1", values: ["kit"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

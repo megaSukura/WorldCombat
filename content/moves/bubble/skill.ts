@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: bubbleId,
+        cooldownParameter: "recharge",
         name: "Bubble",
         description: "一口气吹出无数泡泡，沿瞄准方向张开一个扇形铺出去：身前一大片里的敌人各挨一记轻伤害，有概率被打滑、掉速度；速度快的个体多吹一轮。密泡式泡更多更黏更软，急泡式更快更远。",
         uses: ["起手极短、PP 省，缠斗里反复吹", "一次打到身前扇形里的好几个敌人", "把跑得快的对手打滑，压它速度"],

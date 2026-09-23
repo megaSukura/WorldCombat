@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "inferno",
+        cooldownParameter: "recharge",
         name: "Inferno",
         description: "The user attacks by engulfing the target in an intense fire. This leaves the target with a burn.",
         uses: ["用一段长预热换一发必定灼伤的重击", "在预判对手落脚点时点火印", "把走得慢的重目标整个包住烧透", "追身式下跟着目标连烧几道"],

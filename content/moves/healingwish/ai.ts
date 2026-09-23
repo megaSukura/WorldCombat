@@ -1,7 +1,7 @@
 /**
  * 治愈之愿 的伙伴 AI 用途：这是最后一手——把自己的命换成伙伴的一次重生。
  *
- * 什么局面有意义：自己已经跌破 ai.sacrificeBelow（默认 0.25，反正要死），且 ai.reach 以内有一个「受伤或有主异常」
+ * 什么局面有意义：自己已经跌破 ai.sacrificeBelow（默认 0.25，反正要死），且 ai.reach 以内有一个「受伤或有有害状态效果」
  *   的伙伴。两个条件同时成立才把它当作紧急行动（priority 100），抢在撤退与共享交战次序之前先许愿。
  * 对谁出手：只有自己（kind self，愿望留在自己倒下的地方）；不接受别的目标。
  * 够不到怎么办：伙伴在 ai.reach 之外就先不许愿（愿望等不到人）。伙伴都已健康干净时也不许。
@@ -9,6 +9,7 @@
  * 配置：broadcast（广愿／专愿）在参数层改变愿望半径、停留与回复；ai.sacrificeBelow 与 ai.reach 是这套出手计划自己的选项。
  */
 namespace CompanionBehavior {
+    registerFact("world_combat:move_healingwish/harmful", (world, actor) => CombatStatus.hasHarmful(world, actor));
     const healingwishBelow = PokemonSkills.number("ai.sacrificeBelow", "献身阈值", 0.1, 0.5, 0.05);
     healingwishBelow.help = "自己生命低于该比例且附近有需要救助的伙伴时，伙计才愿意把命交出去；调低更倾向硬撑，调高则一残血就许愿。";
     const healingwishReach = PokemonSkills.number("ai.reach", "许愿尺度", 2, 8, 1);
@@ -19,9 +20,7 @@ namespace CompanionBehavior {
 
     function healingwishAllyNeeds(context: WorldBehavior.Context, target: Entity): boolean {
         if (ratio(target) < 0.85) return true;
-        for (let index = 0; index < PokemonSkills.healingwishMalaise.length; index++)
-            if (status(context, target, PokemonSkills.healingwishMalaise[index])) return true;
-        return false;
+        return fact<boolean>(context, "world_combat:move_healingwish/harmful", target) === true;
     }
 
     function healingwishWorthy(context: WorldBehavior.Context, within: number): boolean {

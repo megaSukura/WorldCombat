@@ -33,7 +33,8 @@ namespace PokemonSkills {
     }
 
     define({
-        id: stuffcheeksId, name: "大快朵颐",
+        id: stuffcheeksId,
+        cooldownParameter: "wait", name: "大快朵颐",
         description: "把手里携带的树果整颗吃掉，防御大幅提高；果子自己的效果（回复／解异常／提升能力）也一并落到自己身上。手里没有树果时使不出来。细嚼把果子吸收得更完整、防御更高，代价是嚼得更久、冷却更长。",
         uses: ["在开战前把携带的树果换成一层防御", "用果子的回复或解异常顺手救自己一命", "把手里的能力树果（如芒芒果）连效果一起吃掉"],
         kind: "self", range: 1, maxRange: 1, prepare: 7, active: 1, recover: 5, cooldown: 90, style: "feast",

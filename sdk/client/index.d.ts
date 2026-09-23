@@ -113,15 +113,17 @@ type ParticleDirection = "shape" | "up" | "down" | "outward" | "inward" | "towar
  * source comes from the message's scope; target/projectile read the corresponding data actor ref;
  * point reads data.point or the message position. The producer contract is in content/mechanisms/world-feedback.ts.
  * Later snapshots update all bindings. Unloaded entity path vertices are omitted; polyline needs two
- * resolved vertices, polygon three. A single-entity emitter holds its last resolved point until release.
+ * resolved vertices, polygon three. A single-entity emitter holds its last resolved point until release;
+ * distance-based trails emit only across consecutive resolved ticks and resume from the new position.
  */
 type ParticleBind = "source" | "target" | "projectile" | "point" | "path";
 /**
  * How the shape's frame turns each tick. "fixed" keeps the authored rotation; "direction" stands local +Y
  * along the payload's `data.direction`; "toward" points it at the target anchor; "velocity" along the
  * anchor's own motion. A ring lies in the plane perpendicular to that axis, a line or cone runs along it.
+ * "heading" turns local +Z toward the horizontal part of data.direction and keeps +Y up; vertical/zero input keeps +Z.
  */
-type ParticleOrient = "fixed" | "direction" | "toward" | "velocity";
+type ParticleOrient = "fixed" | "direction" | "toward" | "velocity" | "heading";
 /** Which sprite of a multi-texture particle type is shown; mapped to MadParticle SpriteFrom. */
 type ParticleSpriteFrom = "random" | "age";
 /** Interpolation over life for a size/alpha segment; mapped to MadParticle ChangeMode. */
@@ -137,7 +139,7 @@ type ParticleChildTrigger = "birth" | "event";
  * Shared shape fields. `rotation` is yaw/pitch/roll in degrees applied as yaw about Y, then pitch
  * about X, then roll about Z, to both sampled points and directions. `randomDirection` blends toward
  * a uniformly random direction. Every field belongs to specific kinds; the parser rejects a field
- * that its kind does not accept and names the accepted keys. circle/ring/arc live in the XZ plane.
+ * that its kind does not accept and names the accepted keys. circle/sector/ring/arc live in the XZ plane.
  */
 interface ParticleShapeCommon {
     /** Degrees yaw/pitch/roll applied to sampled points and directions. */
@@ -157,6 +159,8 @@ interface ParticleShapeHemisphere extends ParticleShapeCommon { kind: "hemispher
 interface ParticleShapeSphereSurface extends ParticleShapeCommon { kind: "sphere_surface"; radius: ParticleNumber; }
 /** Filled disc (thickness 0) or rim band (thickness 0..1, 1 = only the rim) in the XZ plane. */
 interface ParticleShapeCircle extends ParticleShapeCommon { kind: "circle"; radius: ParticleNumber; thickness?: ParticleNumber; }
+/** Filled XZ wedge centred on +Z: radius/innerRadius in blocks, angleDegrees is the total opening (default 360). Use orient:"heading" and fit:"world" for a world-sized horizontal region. */
+interface ParticleShapeSector extends ParticleShapeCommon { kind: "sector"; radius: ParticleNumber; angleDegrees?: ParticleNumber; innerRadius?: ParticleNumber; }
 /**
  * Zero-width circle in the XZ plane unless a band is authored. A band is either
  * `innerRadius`/`outerRadius` in blocks, or an absolute `thickness` band width centred on `radius`.
@@ -196,7 +200,7 @@ interface ParticleShapePolygon extends ParticleShapeCommon { kind: "polygon"; }
 
 type ParticleShape =
     | ParticleShapePoint | ParticleShapeBox | ParticleShapeSphere | ParticleShapeHemisphere
-    | ParticleShapeSphereSurface | ParticleShapeCircle | ParticleShapeRing | ParticleShapeArc
+    | ParticleShapeSphereSurface | ParticleShapeCircle | ParticleShapeSector | ParticleShapeRing | ParticleShapeArc
     | ParticleShapeCone | ParticleShapeConeVolume | ParticleShapeLine | ParticleShapeTorus
     | ParticleShapeCylinder | ParticleShapePolyline | ParticleShapePolygon;
 
@@ -318,10 +322,11 @@ interface ParticleEmitter {
      * so a medium combatant (0.9 x 1.4 blocks) is 1. Author numbers for that medium body. "none" is the
      * default for point/path binds: shape geometry, speed and trail spacing follow the payload's
      * `data.scale` (mechanic radius / authored reference radius), so ground areas match their real radius.
+     * "world" keeps shape geometry, speed and trail spacing in world blocks, independent of body/data.scale.
      * `data.scale` also multiplies particle size for every emitter.
      * Path vertices are absolute world geometry: offset is applied but fit/scale/orient/shape.rotation do not transform them.
      */
-    fit?: "body" | "none";
+    fit?: "body" | "none" | "world";
     /** Per-tick turning of the shape frame; default "fixed". */
     orient?: ParticleOrient;
     /** When set, spawn along the anchor's history instead of at the anchor; minDistance in blocks and > 0. */

@@ -60,6 +60,7 @@ namespace PokemonSkills {
 
     define({
         id: bonerushId,
+        cooldownParameter: "recharge",
         name: "Bone Rush",
         description: "The user attacks by striking the target with a hard bone. This move hits two to five times in a row.",
         uses: ["隔着距离把骨头一下下夯到目标脚下", "落点震波把一小片地面的人一起掀起", "裂地式用持久地痕占住战场"],

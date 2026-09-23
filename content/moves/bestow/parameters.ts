@@ -74,11 +74,10 @@ namespace PokemonSkills {
 
     describe("bestow", [
         { key: "description.0", values: ["reach", "tempo"] },
-        { key: "description.1", values: ["ribbons", "shine"] },
         { key: "urgent.on", values: [], when: function (context) { return read(context.detail.values, ["urgent"]) === true; } },
         { key: "urgent.off", values: [], when: function (context) { return read(context.detail.values, ["urgent"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.ribbons"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.reach"] }
     ]);
 }

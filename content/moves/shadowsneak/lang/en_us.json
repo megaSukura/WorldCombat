@@ -3,7 +3,7 @@
   "worldcombat.skill.shadowsneak.use.0": "The cheapest opener, pulling the target in",
   "worldcombat.skill.shadowsneak.use.1": "Stab a target in the back from around a corner",
   "worldcombat.skill.shadowsneak.use.2": "Slow a target with the binding form to set up the next blow",
-  "worldcombat.skill.shadowsneak.description.0": "The shadow blade strikes from behind for about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
+  "worldcombat.skill.shadowsneak.description.0": "The shadow blade strikes from behind for about %1$s contact damage; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.shadowsneak.description.1": "The shadow reaches a target up to %1$s blocks away, crawling along the ground at %2$s blocks/tick; it travels the floor and needs no line of sight.",
   "worldcombat.skill.shadowsneak.description.2": "A hit drags the target about %1$s blocks toward the caster and lowers its Speed by %2$s stage(s).",
   "worldcombat.skill.shadowsneak.tether.on": "Binding form: the shadow grabs the target's feet, pulling 60% harder and slowing it; in exchange the blade is 12% lighter, the shadow a little shorter and the cooldown longer.",

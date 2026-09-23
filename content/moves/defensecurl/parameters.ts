@@ -80,7 +80,7 @@ namespace PokemonSkills {
 
     describe("defensecurl", [
         { key: "description.0", values: ["gift", "window"] },
-        { key: "description.1", values: ["ball", "roll", "spin"] },
+        { key: "description.1", values: ["roll"] },
         { key: "roll.away", values: [], when: function (context) { return read(context.detail.values, ["counter"]) !== 1; } },
         { key: "roll.into", values: [], when: function (context) { return read(context.detail.values, ["counter"]) === 1; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

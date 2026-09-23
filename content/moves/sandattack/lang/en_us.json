@@ -4,7 +4,7 @@
   "worldcombat.skill.sandattack.use.1": "Set up a melee or a retreat",
   "worldcombat.skill.sandattack.use.2": "Blind a whole corridor on sand or mud",
   "worldcombat.skill.sandattack.description.0": "A sanded target strikes weaker, and a Pokemon also loses %1$s accuracy stage(s), for %2$s.",
-  "worldcombat.skill.sandattack.description.1": "Centred on the user toward the target, the fan runs %1$s blocks long with a %2$s degree opening and throws about %3$s grains; up to 4 foes are blinded at once.",
+  "worldcombat.skill.sandattack.description.1": "Centred on the user toward the target, the fan runs %1$s blocks long with a %2$s degree opening; up to 4 foes are blinded at once.",
   "worldcombat.skill.sandattack.description.2": "Scraping the ground takes %1$s with a %2$s cooldown. The grit takes its colour from the block underfoot: sand yellow, gravel grey, mud brown. The fan points one way only, so stepping aside or behind cover avoids it.",
   "worldcombat.skill.sandattack.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.sandattack.value.blindStage": "Blind stages",

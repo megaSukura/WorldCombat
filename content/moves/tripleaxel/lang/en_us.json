@@ -2,6 +2,8 @@
   "worldcombat.skill.tripleaxel.summary": "Spin in place and kick three times: each kick sweeps a fan in front of the user and rises in power with each hit (the nth kick adds another multiple). Every kick rolls its own accuracy and a miss ends the string. In sweep form the arc also catches a second target beside the first.",
   "worldcombat.skill.tripleaxel.description.0": "The first kick deals %1$s ice contact damage, for %2$s kicks in a row; each landed kick raises the next by %3$s.",
   "worldcombat.skill.tripleaxel.description.1": "Each kick sweeps a %1$s-degree fan reaching %2$s blocks; each hits for %3$s and the kicks are %4$s s apart.",
+  "worldcombat.skill.tripleaxel.widen.on": "Wide sweep: every kick sweeps a 170-degree fan in front and catches a second target standing beside it; costs 0.88x power per kick, -4% hit chance, +1 tick between kicks, +2 ticks recovery and +4 ticks cooldown.",
+  "worldcombat.skill.tripleaxel.widen.off": "Focused (native form): every kick sweeps only 70 degrees in front for a heavier single hit; +2% hit chance, -1 tick between kicks and a 4-tick shorter cooldown, at the cost of the target beside it.",
   "worldcombat.skill.tripleaxel.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.tripleaxel.growth.0": "From level %1$s the first kick rises to %2$s.",
   "worldcombat.skill.tripleaxel.growth.1": "From level %1$s the first kick rises to %2$s and the kicking reach extends to %3$s blocks.",

@@ -53,6 +53,7 @@ namespace PokemonSkills {
 
     define({
         id: "dizzypunch",
+        cooldownParameter: "recharge",
         name: "Dizzy Punch",
         description: "The target is hit with rhythmically launched punches. This may also leave the target confused.",
         uses: ["贴身按节拍连打一串", "把小扇面里的几个敌人一起打懵", "用混乱制造失手窗口"],

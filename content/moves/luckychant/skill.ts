@@ -124,6 +124,7 @@ namespace PokemonSkills {
 
     define({
         id: luckychantId,
+        cooldownParameter: "recharge",
         name: "幸运咒语",
         description: "向天唱咒，让天光罩住自己与身边的队友；期间落在他们身上的攻击不会被命中要害。天光跟着施法者走，离开范围的人会失去祝福。",
         uses: ["挡住依赖要害暴击的高输出", "护住队伍的软肋与残血成员", "在对方连击前先唱好"],

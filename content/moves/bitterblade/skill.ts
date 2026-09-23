@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "bitterblade",
+        cooldownParameter: "recharge",
         name: "Bitter Blade",
         description: "The user gathers its bitter feelings into the blade tip and sweeps a fiery arc through everything in front, siphoning the wounds back. The more health it has lost, the deeper the cut.",
         uses: ["一扫清掉身前挤着的一群", "残血时把悔意变成更重的一剑并回血", "用一趟火弧同时压低多个目标"],

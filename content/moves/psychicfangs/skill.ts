@@ -51,6 +51,7 @@ namespace PokemonSkills {
 
     define({
         id: "psychicfangs",
+        cooldownParameter: "recharge",
         name: "精神之牙",
         description: "用意念把身体送出去，一口咬住：咬伤目标，咬碎咬合点周围的反射壁、光墙与极光幕，每碎一层这一口就更重。",
         uses: ["从稍远处扑咬一个目标", "把屏障咬碎并吞成额外力道", "在对手刚张幕时一口吃掉它"],

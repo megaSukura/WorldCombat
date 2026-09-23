@@ -113,7 +113,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["core"] },
         { key: "description.1", values: ["burstRadius", "launch"] },
         { key: "description.2", values: ["sunderChance", "sunderStage"] },
-        { key: "description.3", values: ["tempo", "reach", "ruptureTicks", "ruptureCells", "shards", "pref.fissure"] },
+        { key: "description.3", values: ["tempo", "reach", "ruptureTicks", "ruptureCells", "pref.fissure"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.reach"] }
     ]);

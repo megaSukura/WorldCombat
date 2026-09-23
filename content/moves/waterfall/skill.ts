@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: "waterfall",
+        cooldownParameter: "recharge",
         name: "Waterfall",
         description: "The user charges at the target and may make it flinch.",
         uses: ["贴身冲开或留住一个目标", "把它震懵，给队友制造输出窗口", "在雨里扑出去，水势更盛"],

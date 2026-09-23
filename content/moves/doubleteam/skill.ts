@@ -48,6 +48,7 @@ namespace PokemonSkills {
 
     define({
         id: doubleteamId,
+        cooldownParameter: "recharge",
         name: "影子分身",
         description: "通过快速移动来制造分身，扰乱对手，从而提高闪避率。",
         uses: ["在被集火前先手留影，把伤害引到影子上", "拉开距离时拖住追击的敌人", "为换位或撤退争取几秒"],

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.aquajet.summary": "把自己裹进一枚水柱里贴地射出：比电光一闪更远更久，撞上第一个活体就把它浇透、顶开，若带着火就顺手浇熄。已经在水里的个体喷得更猛。激流式会贯穿整条路径、浇透碰到的每个人，但每一下更轻。",
   "worldcombat.skill.aquajet.use.0": "远处先手扑上去，把对手浇透",
-  "worldcombat.skill.aquajet.use.1": "一冲浇熄对手身上的火与灼伤",
+  "worldcombat.skill.aquajet.use.1": "借水柱位移缩短与对手的距离",
   "worldcombat.skill.aquajet.use.2": "从水里冲出来打一记更猛的水柱",
   "worldcombat.skill.aquajet.description.0": "水柱撞实造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.aquajet.description.1": "沿瞄准方向射出最多 %1$s 格、每刻 %2$s 格，撞实把目标顶开约 %3$s 格。",
@@ -25,12 +25,12 @@
   "worldcombat.skill.aquajet.preference.deluge.help": "开启：水柱贯穿整条路径、浇透并打伤碰到的每个人、判定更宽、湿得更久，但单点伤害 ×0.82、冷却多 6 刻。关闭：单发鱼雷，命中即停、这一下最重。",
   "worldcombat.skill.aquajet.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.aquajet.preference.ai.maxChase.help": "对手离自己这么远以内才主动喷射；本招射得比电光一闪远，设大愿意更早放。",
-  "worldcombat.skill.aquajet.preference.ai.douse": "优先浇火",
-  "worldcombat.skill.aquajet.preference.ai.douse.help": "开启：优先对正在燃烧或带着灼伤的目标射出水柱，一冲把火浇熄；关闭：只按普通先制候选排序。",
   "worldcombat.skill.aquajet.preference.ai.preferDry": "先浇没湿的",
   "worldcombat.skill.aquajet.preference.ai.preferDry.help": "开启：已经带着 soaked 的目标排后，先换一个干的浇；关闭：当普通先制候选排序。",
   "world_combat.move.aquajet.text.soak": "被水浇透",
   "world_combat.move.aquajet.text.douse": "火被浇熄了",
   "world_combat.move.aquajet.text.miss": "水柱射空了",
-  "effect.world_combat.aquajet_soaked": "水流喷射·浇透"
+  "effect.world_combat.aquajet_soaked": "水流喷射·浇透",
+  "worldcombat.skill.aquajet.preference.ai.preserveBurn": "保留灼伤",
+  "worldcombat.skill.aquajet.preference.ai.preserveBurn.help": "开启：对灼伤敌人降低本招优先级，优先保留持续伤害；紧急顶退和残血补刀仍可出手。关闭：按普通进攻收益排序。"
 }

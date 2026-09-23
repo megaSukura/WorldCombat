@@ -10,7 +10,7 @@
   "worldcombat.skill.lunge.heavy.off": "Nimble: power x0.92 with a faster cast and shorter cooldown, good for chasing agile targets.",
   "worldcombat.skill.lunge.timing": "Castable within %1$s blocks; after a %2$s wind-up it recovers for %3$s, spends %4$s PP, and goes on cooldown for %5$s.",
   "worldcombat.skill.lunge.growth.0": "From level %1$s the pounce rises to %2$s power.",
-  "worldcombat.skill.lunge.growth.1": "From level %1$s the pounce rises again to %2$s power and the chitin shards rise to %3$s.",
+  "worldcombat.skill.lunge.growth.1": "From level %1$s the pounce rises again to %2$s power.",
   "worldcombat.skill.lunge.value.pounce": "Pounce power",
   "worldcombat.skill.lunge.value.reach": "Lunge distance",
   "worldcombat.skill.lunge.value.leap": "Lunge speed",

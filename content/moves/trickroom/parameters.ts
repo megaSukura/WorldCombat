@@ -67,7 +67,7 @@ namespace PokemonSkills {
     describe(trickRoomId, [
         { key: "description.0", values: ["spinTicks", "spinRadius"] },
         { key: "description.1", values: ["reference", "depth"] },
-        { key: "description.2", values: ["density", "reach"] },
+        { key: "description.2", values: ["reach"] },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "turn.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.turn === 1); } },
         { key: "turn.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.turn !== 1; } },

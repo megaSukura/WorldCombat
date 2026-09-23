@@ -5,7 +5,7 @@
   "worldcombat.skill.echoedvoice.use.2": "Name a target with sound that ignores cover",
   "worldcombat.skill.echoedvoice.description.0": "The voice deals %1$s special (Normal, sound) power to the target.",
   "worldcombat.skill.echoedvoice.description.1": "Currently %1$s echo layers; the earshot is %2$s blocks and the echo lasts %3$s, letting anyone within it build on this layer (up to 5).",
-  "worldcombat.skill.echoedvoice.description.2": "Range %1$s blocks, sound speed %2$s blocks/tick, about %3$s sound motes and a ring radius of %4$s blocks; sound ignores cover.",
+  "worldcombat.skill.echoedvoice.description.2": "Range %1$s blocks; sound ignores cover.",
   "worldcombat.skill.echoedvoice.crescendo.on": "Current: Crescendo — earshot x1.2 and echo duration x1.35 to keep the chain alive, but your own voice x0.94.",
   "worldcombat.skill.echoedvoice.crescendo.off": "Current: Solo — base x1.08, earshot x0.85 and duration x0.8, so one voice can still ring loud.",
   "worldcombat.skill.echoedvoice.timing": "Range %1$s blocks, prepare %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",

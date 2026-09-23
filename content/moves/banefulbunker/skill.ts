@@ -34,7 +34,7 @@ namespace PokemonSkills {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
     }
     function banefulContact(data: any): boolean {
-        return data && (data.direct === true || data.kind === "move" && data.contact === true);
+        return DamageSemantics.read(data).contact;
     }
     function banefulClear(effect: CombatEffect): void {
         const prefix = String(effect.id()) + ":";
@@ -140,6 +140,7 @@ namespace PokemonSkills {
 
     define({
         id: "banefulbunker",
+        cooldownParameter: "charge",
         name: "Baneful Bunker",
         description: "A venomous wall closes into a bunker, blocking attacks and status moves by a total pool; every direct contact poisons the attacker, and an already poisoned one is worsened to toxic.",
         uses: ["引诱近战对手撞上毒壁", "用一次接触把对手拖进持续掉血", "封住变化招式的同时反灌毒液"],

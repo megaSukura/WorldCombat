@@ -4,7 +4,7 @@
   "worldcombat.skill.acidspray.use.1": "Grind Sp. Def with the cheapest possible cast",
   "worldcombat.skill.acidspray.use.2": "Spray the chokepoint as foes try to push through",
   "worldcombat.skill.acidspray.description.0": "The spray deals %1$s special damage to each enemy it drenches and lowers its Sp. Def by %2$s stage(s).",
-  "worldcombat.skill.acidspray.description.1": "The mist covers a %1$s-block, %2$s-degree wedge in front and spits about %3$s droplets.",
+  "worldcombat.skill.acidspray.description.1": "The mist covers a %1$s-block, %2$s-degree wedge in front.",
   "worldcombat.skill.acidspray.description.2": "The mist lingers %1$s; anyone entering the wedge takes %2$s more damage and also loses %3$s stage(s) of Sp. Def (once per target).",
   "worldcombat.skill.acidspray.focus.on": "Focused nozzle: damage %1$s, range %2$s blocks, but only a %3$s-degree opening, shorter mist and +5 ticks cooldown.",
   "worldcombat.skill.acidspray.focus.off": "Wide spray: a %1$s-block, %2$s-degree wedge drenches several foes at once.",

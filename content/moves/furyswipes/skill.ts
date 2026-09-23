@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: furyswipesId,
+        cooldownParameter: "recharge",
         name: "Fury Swipes",
         description: "The user attacks by raking the target with claws, scythes, or the like. This move hits two to five times in a row.",
         uses: ["贴身绕目标左右换位，一道道抓下去", "抓侧后，逼目标不停转身", "扑抓式改成前压，把目标按在一面猛抓"],
@@ -122,8 +123,8 @@ namespace PokemonSkills {
                         intensity: Math.max(0.5, Math.min(2, power / 22)),
                         direction: [aimed.x(), aimed.y(), aimed.z()], pounce: pounce ? 1 : 0 }, 18);
                 if (scope.random() > accuracy) {
-                    WorldFeedback.emit(scope, furyswipesScene, 1, origin.plus(aimed.scale(reach)),
-                        { moment: "miss", index: shot, cuts: cuts, reach: reach, span: span, dust: dust }, 18);
+                    WorldFeedback.emit(scope, furyswipesScene, 1, origin,
+                        { moment: "miss", direction: [aimed.x(), aimed.y(), aimed.z()], index: shot, cuts: cuts, reach: reach, span: span, dust: dust }, 18);
                     WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), furyswipesMissText, [shot], 20);
                     settle(current);
                     return;
@@ -142,8 +143,8 @@ namespace PokemonSkills {
                     scope.sound("cobblemon:impact.normal", at, 14, "{}");
                 });
                 if (hits === 0) {
-                    WorldFeedback.emit(scope, furyswipesScene, 1, origin.plus(aimed.scale(reach)),
-                        { moment: "miss", index: shot, cuts: cuts, reach: reach, span: span, dust: dust }, 18);
+                    WorldFeedback.emit(scope, furyswipesScene, 1, origin,
+                        { moment: "miss", direction: [aimed.x(), aimed.y(), aimed.z()], index: shot, cuts: cuts, reach: reach, span: span, dust: dust }, 18);
                     WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), furyswipesMissText, [shot], 20);
                     settle(current);
                     return;

@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: direclawId,
+        cooldownParameter: "recharge",
         name: "Dire Claw",
         description: "A single deep claw rakes three gashes into one wound; the venom on the claw then presses one of poison, paralysis or sleep into the cut. It has a high chance to land a critical hit.",
         uses: ["近身一记深爪，把三选一的余毒按进伤口", "对高危目标指定留下睡眠", "对准要害打出更高暴击的一爪"],

@@ -49,7 +49,7 @@ namespace PokemonSkills {
         residue: formula(
             F.base(24).plus(F.body("weight").div(10).times(0.8)).clamp(20, 80).round(0),
             "酸滴数量", {
-                unit: " 滴",
+                unit: " 滴", visible: false,
                 description: "化开时溅起的酸滴数量；身体越沉越多，粒子按它发射。"
             }),
         /** 起手：速度决定化开多快。 */
@@ -73,7 +73,7 @@ namespace PokemonSkills {
 
     describe("acidarmor", [
         { key: "description.0", values: ["gift", "window"] },
-        { key: "description.1", values: ["residue"] },
+        { key: "description.1", values: [] },
         { key: "acid.on", values: ["poolRadius", "poolTicks"], when: function (context) { return read(context.detail.values, ["slick"]) !== true; } },
         { key: "acid.off", values: [], when: function (context) { return read(context.detail.values, ["slick"]) === true; } },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },

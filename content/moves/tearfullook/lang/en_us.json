@@ -4,7 +4,7 @@
   "worldcombat.skill.tearfullook.use.1": "Suppress the enemies in front while surrounded",
   "worldcombat.skill.tearfullook.use.2": "Buy a window to disengage while they hold back",
   "worldcombat.skill.tearfullook.description.0": "A saddened target loses %1$s Attack and Sp. Atk stage(s) and stays disheartened for %2$s.",
-  "worldcombat.skill.tearfullook.description.1": "Tearful range %1$s; the sob fan is %2$s degrees over a %3$s radius, cast over %4$s blocks, giving %5$s tears at once.",
+  "worldcombat.skill.tearfullook.description.1": "Tearful range %1$s; the sob fan is %2$s degrees over a %3$s radius, cast over %4$s blocks.",
   "worldcombat.skill.tearfullook.description.2": "Tearing up takes %1$s with a %2$s cooldown. The tears must be seen; cover blocks them.",
   "worldcombat.skill.tearfullook.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.tearfullook.value.despair": "Spirit drop",

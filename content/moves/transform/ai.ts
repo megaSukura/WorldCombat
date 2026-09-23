@@ -83,7 +83,7 @@ namespace PokemonSkills {
 
     addPreferences(transformId, { dwell: true, ai: { maxChase: 12, minPower: 30, leaveStation: false } }, [
         number("ai.maxChase", "考虑距离", 3, 20, 1),
-        number("ai.minPower", "最低威力", 20, 120, 5),
+        number("ai.minPower", "优先威力", 20, 120, 5),
         flag("ai.leaveStation", "驻守时允许离位")
     ]);
 }

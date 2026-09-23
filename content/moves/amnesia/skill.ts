@@ -6,10 +6,10 @@
  *
  * 两幕：
  *   排空（windup 播「放空」，提交前只观察与预告，打断不花代价）。
- *   空明（提交后）：NativeEffects.boost 把特防写入公共能力阶梯（poise 级），挂上共享身份
- *     world_combat:status/amnesia 的空明窗口（amplifier 记录真正抬起的级数）；随后按配置数量，
+ *   空明（提交后）：临时特防等级（poise 级）跟随共享身份
+ *     world_combat:status/amnesia 的空明窗口；随后按配置数量，
  *     用 CombatStatus.cure 按共享身份忘掉缠绕心智的状态（混乱／着迷／挑衅／无理取闹／被点名等）。
- * 结束：空明窗口走完或被清除时，按 amplifier 把特防等级原样收回。
+ * 结束：空明窗口走完或被清除时，结束这份特防贡献。
  *
  * 忘却名单是共享身份，不是本单元的效果 id：别的单元以后发明的心智类异常，只要打同一个
  * world_combat:status/<名> 标签，这里就能忘掉。
@@ -25,18 +25,6 @@ namespace PokemonSkills {
     /** 缠绕心智的共享身份，按「最碍事的先忘」排序；与生产方无关，只按 tag 读。 */
     const amnesiaMental = ["confusion", "attract", "taunt", "torment", "encore", "disable"];
 
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function amnesiaStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function amnesiaRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = amnesiaStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, amnesiaStage(world, actor, stat) - before);
-    }
     /** 忘掉至多 `limit` 个缠绕心智的状态，返回实际忘掉的个数。 */
     function amnesiaForget(world: CombatWorld, actor: CombatActor, limit: number): number {
         let forgot = 0;
@@ -50,8 +38,9 @@ namespace PokemonSkills {
 
     define({
         id: "amnesia",
+        cooldownParameter: "wait",
         name: "瞬间失忆",
-        description: "将头脑清空、瞬间忘记某事，从而大幅提高自己的特防；忘掉的还有缠着心智的状态。",
+        description: "短时提高特防，并按顺序清除混乱、着迷、挑衅、无理取闹、再来一次和定身法；空明结束时收回本招的特防强化。",
         uses: ["被混乱、着迷一类状态缠住时当场忘掉它们", "顶特殊火力前把特防垫到最高", "拉锯里用一时失神随手补一档特防"],
         kind: "self",
         range: 1,
@@ -94,8 +83,17 @@ namespace PokemonSkills {
             const rings = Math.max(2, Math.min(4, Math.round(p("amnesia", "rings", action))));
             const purge = Math.max(1, Math.min(6, Math.round(p("amnesia", "purge", action))));
             const scale = radius / amnesiaReferenceRadius;
-            const levels = amnesiaRaise(world, actor, "spd", poise);
-            MobEffects.apply(world, actor, amnesiaBlank, window, levels);
+            const before = NativeEffects.effectiveStage(world, actor, "spd"), previous = MobEffects.read(world, actor, amnesiaBlank);
+            const carrier = MobEffects.apply(world, actor, amnesiaBlank, window, previous ? previous.amplifier() : 0), contribution = "world_combat:move/amnesia";
+            let levels = 0;
+            if (carrier) {
+                NativeEffects.boostWindow(world, actor, { spd: poise }, carrier.duration(), contribution, carrier, previous);
+                levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - before);
+                if (carrier.amplifier() !== levels) {
+                    const shown = MobEffects.apply(world, actor, amnesiaBlank, window, levels);
+                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+                }
+            }
             const forgot = amnesiaForget(world, actor, purge);
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             WorldFeedback.emit(world, amnesiaScene, 1, feet,
@@ -110,15 +108,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 空明窗口走完或被清除：按 amplifier 把这段失忆抬起的特防等级原样收回。
+    // 特防贡献随空明窗口结束；移除事件只负责收尾表现。
     WorldCombat.on("world_combat:move_amnesia/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== amnesiaBlank) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(0, Math.round(Number(data.amplifier) || 0));
-        const loss = Math.min(levels, Math.max(0, amnesiaStage(world, actor, "spd")));
-        if (loss > 0) NativeEffects.boost(world, actor, "spd", -loss);
+        if (MobEffects.read(world, actor, amnesiaBlank)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, amnesiaScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 24);

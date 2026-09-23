@@ -6,7 +6,7 @@
   "worldcombat.skill.zingzap.description.0": "The ram deals about %1$s power times the built charge; the charge cap is %2$s and each block run adds %3$s. The target's defence, type and crit are settled on the hit.",
   "worldcombat.skill.zingzap.description.1": "Rushes up to %1$s blocks at %2$s blocks/tick with a %3$s block contact radius; a full run-up builds the most charge.",
   "worldcombat.skill.zingzap.description.2": "A hit has a %1$s flinch chance for %2$s s.",
-  "worldcombat.skill.zingzap.description.3": "The arc reaches %1$s blocks and settles at %2$s of the main hit; static clings to the target for %3$s s.",
+  "worldcombat.skill.zingzap.description.3": "The arc reaches %1$s blocks and settles at %2$s of the main hit.",
   "worldcombat.skill.zingzap.overcharge.on": "Overcharge on: a longer rush, a higher charge cap and faster build-up and a heavier hit, but a slower wind-up and cooldown and a worse overshoot when it misses.",
   "worldcombat.skill.zingzap.overcharge.off": "Overcharge off: a short, quick ram with a faster wind-up and cooldown and a lower charge payoff, but more reliable.",
   "worldcombat.skill.zingzap.arcChain.on": "Arc chain on: on contact the current jumps to the nearest other foe (settled at 50%% of the main hit, half the flinch chance), but the main hit is about 10%% lighter.",

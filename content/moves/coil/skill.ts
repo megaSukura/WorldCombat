@@ -46,6 +46,7 @@ namespace PokemonSkills {
 
     define({
         id: "coil",
+        cooldownParameter: "wait",
         name: "盘蜷",
         description: "盘蜷着集中精神，从而提高自己的攻击、防御和命中率。",
         uses: ["开打前盘一圈，把攻/防/命中一起垫起来", "硬顶一轮物理爆发前把三项钉住", "把被削掉的命中等级重新盘正"],

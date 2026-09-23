@@ -88,6 +88,7 @@ namespace PokemonSkills {
 
     define({
         id: meanlookId,
+        cooldownParameter: "recharge",
         name: "黑色目光",
         description: "用一道勾人心魂的黑色目光盯住一个看得见的对手，把它完全钉在原地：术者必须站定不动、一直凝视；一被掩体挡住、被拽开或被打断，目光就断、目标立刻恢复自由。按住技能键持续凝视，松手即停。",
         uses: ["把想逃跑的目标钉在原地等队友收", "锁住一个高机动目标不让它脱离近战", "在开阔地一对一拖住对方的主力"],

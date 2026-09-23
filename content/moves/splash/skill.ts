@@ -40,6 +40,7 @@ namespace PokemonSkills {
 
     define({
         id: splashId,
+        cooldownParameter: "recharge",
         name: "跃起",
         description: "沿选定方向一蹦：蹲身、弹起一小段抛物线、落地——什么都不会发生，不伤害也不影响任何人。可以越过一道坎，或把自己挪出攻击的落点；高跃式跳得更高但更近。",
         uses: ["越过一道坎或一小段水面", "把自己挪出直线招式的落点", "低而远地换位拉距离"],

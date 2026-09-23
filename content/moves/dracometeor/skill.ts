@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "dracometeor",
+        cooldownParameter: "recharge",
         name: "Draco Meteor",
         description: "Calls comets down from the sky onto the target; the recoil harshly lowers the user's Sp. Atk.",
         uses: ["远距离召下陨石点杀", "流星式把落点铺成一片、罩住聚在一起的敌人", "在落点砸出焦黑的坑、持续占住那片地"],

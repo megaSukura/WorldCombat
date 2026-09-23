@@ -13,7 +13,7 @@ import net.minecraft.world.phys.*;
 import java.util.*;
 
 public final class MinecraftCombat implements CombatHost {
-    private record Binding(LivingEntity entity, CombatDomain domain, ActorHandle handle, String controlIdentity) {}
+    private record Binding(LivingEntity entity, CombatDomain domain, ActorHandle handle, String controlIdentity, boolean announced) {}
     private final MinecraftServer server;
     private final Map<UUID, Binding> bindings = new HashMap<>();
     private final ArrayDeque<ActorHandle> departures = new ArrayDeque<>();
@@ -154,16 +154,25 @@ public final class MinecraftCombat implements CombatHost {
     public ActorHandle bind(LivingEntity entity) {
         checkThread();
         var old = bindings.get(entity.getUUID());
-        if (old != null && old.entity() == entity && old.controlIdentity().equals(old.domain().controlIdentity(entity)) && old.handle().identity().equals(old.domain().identity(entity))) return old.handle();
+        if (old != null && old.entity() == entity && old.controlIdentity().equals(old.domain().controlIdentity(entity)) && old.handle().identity().equals(old.domain().identity(entity))) return announce(old);
         if (old != null) {
             runtime.cancelActor(old.handle(), "entity-replaced");
             controlled.remove(old.handle()); controlOwners.remove(old.handle());
         }
         var domain = CombatServices.domain(entity);
         var handle = new ActorHandle(domain.id(), domain.identity(entity), entity.getUUID(), ++generation);
-        bindings.put(entity.getUUID(), new Binding(entity, domain, handle, domain.controlIdentity(entity)));
-        if (domain.available(entity)) runtime.event("world_combat:actor_bound", handle, null, "{}", true);
-        return handle;
+        var binding = new Binding(entity, domain, handle, domain.controlIdentity(entity), false);
+        bindings.put(entity.getUUID(), binding);
+        return announce(binding);
+    }
+    private ActorHandle announce(Binding binding) {
+        // A body may be bound during its spawn animation, before it is available or added to the level.
+        // Publish once it becomes usable, retaining this generation and marking it before reentrant hooks run.
+        if (!binding.announced() && CombatServices.CONTENT.ready() && resolve(binding.handle()) != null) {
+            bindings.put(binding.entity().getUUID(), new Binding(binding.entity(), binding.domain(), binding.handle(), binding.controlIdentity(), true));
+            runtime.event("world_combat:actor_bound", binding.handle(), null, "{}", true);
+        }
+        return binding.handle();
     }
     @Override public ActorHandle actorNear(ActorHandle source, UUID id) {
         var entity = resolve(source);
@@ -339,7 +348,12 @@ public final class MinecraftCombat implements CombatHost {
         double distance = position(actor).minus(goal).length();
         if (distance <= within) { stopMovement(actor); return "arrived"; }
         mob.getLookControl().setLookAt(goal.x(), goal.y(), goal.z());
-        if (!mob.getNavigation().moveTo(goal.x(), goal.y(), goal.z(), speed)) {
+        // Combat observations are body centres; native paths steer an entity's feet.
+        // Accept a native route into the requested reach instead of demanding a route
+        // to the occupied centre of the target (especially large/flying entities).
+        double feetY = goal.y() - mob.getBbHeight() * .5;
+        var path = mob.getNavigation().createPath(goal.x(), feetY, goal.z(), Math.max(0, (int) Math.floor(within)));
+        if (!mob.getNavigation().moveTo(path, speed)) {
             if (!mob.onGround() && !mob.isInLiquid() && !mob.isNoGravity()) return "not-grounded";
             return "path-blocked";
         }
@@ -773,6 +787,7 @@ public final class MinecraftCombat implements CombatHost {
             && CombatServices.domain(living).available(living) ? living : victim;
         boolean contextual = damageRecipient == victim && damageContext == cause;
         var data = com.google.gson.JsonParser.parseString(contextual ? damageMetadata : "{}").getAsJsonObject();
+        data.addProperty("scripted", contextual);
         data.addProperty("amount", (double) amount); data.addProperty("cause", healthCause.isEmpty() ? cause.getMsgId() : healthCause);
         NativeDamageFacts.add(data, cause, victim, source == cause.getEntity() ? bind(source).ref() : "");
         var result = runtime.event("world_combat:damage_incoming", bind(source), bind(victim), data.toString(), true);

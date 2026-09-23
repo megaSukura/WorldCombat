@@ -52,6 +52,7 @@ namespace PokemonSkills {
 
     define({
         id: holdbackId,
+        cooldownParameter: "recharge",
         name: "Hold Back",
         description: "朝身前扇形扫出一记收着力气的横扫：扇面里的所有非友方都只会削血，目标至少留下 1 HP。沉腰式更宽更沉、扫完要沉腰；快扫更快更轻。",
         uses: ["一次把几个目标都削到低血便于捕捉", "在混战里同时压制而不打倒任何人", "替队友留活口、控制场面"],

@@ -6,7 +6,7 @@
  * 色相家族：爪痕近白（0xF2F6FF）与极浅的暖红（0xE89090）做刃与命中强调，尘土灰褐（0xB8A67E）只做余韵；
  *   第二色相不进入，画面是同一族白。
  * 拍子：起 raise（亮爪）→ 抓 cut（每道一片扇面）→ 中 hit / 空 miss（命中或落空）→ 收 settle（余尘落定）。
- * 范围：cut 用 `data.reach` 当扇面长度、`data.span` 当张角，`orient: "direction"` 让扇面朝本次出爪方向；
+ * 范围：cut 用 `data.reach` 当扇面半径、`data.span` 当张角，`orient: "heading"` 让扇面朝本次出爪方向；
  *   画面里的扇面就是判定的扇面，玩家能看出站哪会被抓。
  * 运动：每道从施法者身前贴着目标铺开，方向由 `data.direction` 给出；落空那道只在空气里划一道就淡出。
  * 数：`data.dust`（物攻派生）绑定命中与余尘的发射量，`data.intensity`（每道威力派生）抬高亮度与尺寸，
@@ -35,19 +35,19 @@ const FuryswipesDefinition: ParticleDefinition = {
             exit: { drain: 10 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/slash",
                     rate: 38,
                     burst: { count: { data: "index", fallback: 1 }, repeats: 3, interval: 3 },
-                    shape: { kind: "cone_volume", radius: 0.45, length: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
                     direction: "shape", speed: [0.08, 0.3], spread: 14, spin: 10,
                     lifetime: [6, 11], size: [0.26, 0.05], sizeMode: "index",
                     color: 0xF2F6FF, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 260
                 },
                 {
-                    name: "wind", bind: "point", fit: "none", orient: "direction",
+                    name: "wind", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 26, shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
+                    rate: 26, shape: { kind: "sector", radius: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
                     direction: "shape", speed: [0.05, 0.2], spread: 24, gravity: 0.05, drag: 0.9,
                     lifetime: [8, 14], size: [0.08, 0.02],
                     color: 0xB8A67E, alpha: [0.35, 0], light: "world", maxParticles: 220
@@ -89,10 +89,10 @@ const FuryswipesDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 9 },
             emitters: [
                 {
-                    name: "empty", bind: "source", offset: [0, 0.5, -0.1], height: 0.5, orient: "direction",
+                    name: "empty", bind: "source", offset: [0, 0.5, -0.1], height: 0.5, orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     burst: { count: 2, at: 0 },
-                    shape: { kind: "cone_volume", radius: 0.35, length: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
                     direction: "shape", speed: [0.04, 0.16], spread: 20, drag: 0.9,
                     lifetime: [7, 12], size: [0.22, 0.06],
                     color: 0xF2F6FF, alpha: [0.3, 0], light: "full", maxParticles: 60

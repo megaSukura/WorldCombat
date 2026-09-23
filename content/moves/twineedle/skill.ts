@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: "twineedle",
+        cooldownParameter: "recharge",
         name: "Twineedle",
         description: "端起两根针先后刺出：第一针先扎开伤口，第二针冲着这道伤口去，所以第二针更容易带毒。交叉式让两根针从身体两侧夹击，加成更大，但每针更轻、间隔更长。",
         uses: ["一记两下的稳定连刺", "用第二针把毒补上", "对单体连续压出血线"],

@@ -46,7 +46,7 @@ namespace PokemonSkills {
     });
     describe(supersonicId, [
         { key: "description.0", values: ["waveReach", "waveSpeed"] },
-        { key: "description.1", values: ["mistTicks", "waveMotes"] },
+        { key: "description.1", values: ["mistTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] }
     ]);
 }

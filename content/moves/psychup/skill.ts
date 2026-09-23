@@ -15,26 +15,17 @@ namespace PokemonSkills {
     export const psychupLink = "world_combat:psychup_link";
     export const psychupLinkedText = "world_combat.move.psychup.text.linked";
     export const psychupFullText = "world_combat.move.psychup.text.full";
-    /** 宝可梦带命中与闪避；其他生物的共享阶梯只有六维里的五项。 */
+    /** 所有活体使用相同的七项能力阶梯。 */
     export const psychupStats = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
-    const psychupSharedStats = ["atk", "def", "spa", "spd", "spe"];
 
     /** 读取一个战斗者当前的能力阶梯；宝可梦读原生等级，其他生物读 CombatStages。 */
     export function psychupStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
-        const values: { [stat: string]: number } = {};
-        if (!world.valid(actor)) return values;
-        if (String(actor.domain()) === "cobblemon") {
-            const state = NativeEffects.read(world, actor);
-            psychupStats.forEach(function (stat) { values[stat] = NativeEffects.stage(state, stat); });
-            return values;
-        }
-        const shared = CombatStages.read(world, actor);
-        psychupSharedStats.forEach(function (stat) { values[stat] = shared[stat] || 0; });
-        return values;
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     define({
         id: "psychup",
+        cooldownParameter: "recharge",
         name: "Psych Up",
         description: "向自己施以自我暗示，把对手的能力变化状态抄到自己身上。",
         uses: ["对手刚给自己加完状态时立刻对齐", "把对手的增益变成自己的增益", "在对手被削弱的瞬间把负面一并接过来（照单全收时）"],

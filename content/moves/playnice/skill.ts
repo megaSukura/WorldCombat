@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: playniceId,
+        cooldownParameter: "recharge",
         name: "和睦相处",
         description: "当着对手摊开双手表示和睦，让它失去战斗的气力，降低攻击，并当场平息它的敌意、暂时不再动手。手势以自身为圆心摊开，必须站进人堆里、还要让对方看得见。",
         uses: ["被围住时劝停一圈近战", "让追上来的敌人先松口再脱离", "给队友争取重新站位的时间"],

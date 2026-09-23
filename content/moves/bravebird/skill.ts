@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "bravebird",
+        cooldownParameter: "recharge",
         name: "Brave Bird",
         description: "The user tucks in its wings and charges at a low altitude. This also damages the user quite a lot.",
         uses: ["从空中俯冲穿过一个目标", "沿一条线串起挤在一起的敌人", "越过前排直接打到后排"],

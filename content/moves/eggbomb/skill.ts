@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "eggbomb",
+        cooldownParameter: "recharge",
         name: "Egg Bomb",
         description: "用最大力气抡出一枚大大的蛋：砸中活物就是本族最重的单体一记，并在落点摊开一小片滑蛋液；抡偏落到地面也会摊开，踩进去的非友方都会打滑。重蛋式更重更广，直投式更快更准。",
         uses: ["对厚目标抡一记最重的单发物伤", "把落点变成一小片滑地，逼对手绕开", "隔着掩体用高弧线把蛋扔过去"],

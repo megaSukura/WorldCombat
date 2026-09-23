@@ -1,7 +1,7 @@
 /**
  * 长嚎 的伙伴 AI 用途：这是这招自己的一套出手计划——把整群伙伴的气势抢先吼起来。
  *
- * 什么局面有意义：有威胁、且在 ai.maxChase 内、自己身上还没有斗志时先吼一轮；身边暂时安全时（驻守／自主／工作）也吼。
+ * 什么局面有意义：有威胁、且在 ai.maxChase 内、自己身上还没有斗志时先吼一轮。
  * 什么时候最想出手：群嚎且身边有伙伴时 priority 92——先把全队物攻抬起来再进交战；威胁还在 ai.minGap 之外时 88，
  *   正好在接近前把斗志备好；已经贴脸时 40，退到普通次序，不为强化站着挨打。
  * 对谁出手：自己；嗥声会以自身为锚顺手把队友一起吼起来，所以不需要选中队友。
@@ -34,7 +34,7 @@ namespace CompanionBehavior {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "howl")) return false;
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

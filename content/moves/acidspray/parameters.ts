@@ -108,7 +108,7 @@ namespace PokemonSkills {
 
     describe("acidspray", [
         { key: "description.0", values: ["core", "sunderStages"] },
-        { key: "description.1", values: ["sprayRange", "sprayAngle", "droplets"] },
+        { key: "description.1", values: ["sprayRange", "sprayAngle"] },
         { key: "description.2", values: ["cloudTicks", "drift", "sunderStages"] },
         { key: "focus.on", values: ["core", "sprayRange", "sprayAngle"],
             when: function (context) { return read(context.detail.values, ["focus"]) === true; } },

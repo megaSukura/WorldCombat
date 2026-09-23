@@ -58,7 +58,7 @@ namespace PokemonSkills {
 
     describe("snatch", [
         { key: "description.0", values: ["window", "tempo"] },
-        { key: "description.1", values: ["reach", "grip", "range"] },
+        { key: "description.1", values: ["reach", "range"] },
         { key: "description.2", values: ["recharge"] },
         { key: "patient.on", values: [], when: function (context) { return read(context.detail.values, ["patient"]) === true; } },
         { key: "patient.off", values: [], when: function (context) { return read(context.detail.values, ["patient"]) !== true; } },

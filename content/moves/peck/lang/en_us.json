@@ -4,7 +4,7 @@
   "worldcombat.skill.peck.use.1": "Drive an airborne target back down to the ground",
   "worldcombat.skill.peck.use.2": "Snatch a quick jab before the foe starts its move",
   "worldcombat.skill.peck.description.0": "The beak point deals about %1$s contact damage.",
-  "worldcombat.skill.peck.description.1": "Reach is about %1$s blocks with a %2$s block beak radius; a hit sheds about %3$s feathers.",
+  "worldcombat.skill.peck.description.1": "Reach is about %1$s blocks with a %2$s block beak radius.",
   "worldcombat.skill.peck.description.2": "A grounded target ignores this; an airborne one takes %1$s times the damage and is driven down at %2$s blocks/tick.",
   "worldcombat.skill.peck.dive.on": "Dive form: the whole body lunges in — reach about %1$s blocks and about %2$s damage per jab, but a longer wind-up, recovery and cooldown.",
   "worldcombat.skill.peck.dive.off": "Jab form: a quick peck on the spot, reach about %1$s blocks and about %2$s damage, with the shortest wind-up and cycle so it can be thrown repeatedly.",

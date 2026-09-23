@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "slam",
+        cooldownParameter: "recharge",
         name: "Slam",
         description: "The user raises a long tail, vine or limb high and brings it down where the target stands. The mark is set the moment it is raised, so stepping aside before it lands dodges it.",
         uses: ["对站桩或刚被定住的目标砸一发最重的单体伤害", "预判落点把堵在门口的目标震开", "在被缠住的目标身上补一记收割"],
@@ -84,7 +85,7 @@ namespace PokemonSkills {
                         const away = facts.position().minus(mark);
                         const flat = WorldCombat.point(away.x(), 0, away.z());
                         const direction = flat.length() < 0.05 ? WorldCombat.point(0, 0, 1) : flat.unit();
-                        scope.displace(victim, direction.scale(push));
+                        if (scope.valid(victim)) scope.displace(victim, direction.scale(push));
                         WorldFeedback.emit(scope, slamScene, 1, facts.position(),
                             { moment: "hit", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity }, 22);
                     });

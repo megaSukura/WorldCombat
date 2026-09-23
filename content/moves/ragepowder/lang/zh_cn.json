@@ -4,7 +4,7 @@
   "worldcombat.skill.ragepowder.use.1": "把贴住同伴的敌人黏住，给同伴脱身的机会",
   "worldcombat.skill.ragepowder.use.2": "在开阔地罩住一小片区域，把交战点攥在手里",
   "worldcombat.skill.ragepowder.description.0": "粉尘半径 %1$s 格，云挂 %2$s；云里的敌人被不断指向你，草属性免疫。",
-  "worldcombat.skill.ragepowder.description.1": "每 %1$s 重新吸一次；云里飘浮 %2$s 个粉尘颗粒，由特攻派生。",
+  "worldcombat.skill.ragepowder.description.1": "每 %1$s 重新吸一次。",
   "worldcombat.skill.ragepowder.thick.on": "浓粉：半径 ×0.85，但牵引间隔 ×0.6、存续 ×1.15，小范围黏得死。",
   "worldcombat.skill.ragepowder.thick.off": "薄粉：半径 ×1.3，罩得广；代价是牵引间隔 ×1.3、存续 ×0.9，松一些。",
   "worldcombat.skill.ragepowder.timing": "自身招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

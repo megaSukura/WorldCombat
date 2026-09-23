@@ -6,7 +6,7 @@
  *
  * 两幕：
  *   起（windup，提交前）：手心拢起一点净光，只观察与预告，可被打断。
- *   引（提交后）：在落点 captureRadius 内取最近的一个带主异常的战斗者，把它身上的全部主异常抽走；
+ *   引（提交后）：在落点 captureRadius 内取最近的一个带有害状态效果的战斗者，把它身上的全部有害状态效果抽走；
  *     施法者按**目标最大生命**的 heal 比例回复。落点附近没有带异常的目标时整招落空（不消耗这一次的效果）。
  *
  * 反制：必须先有目标带异常才有收益；落空就白费一次出手。给对手回血的风险与抽走病痛的收益同时存在，
@@ -16,7 +16,7 @@
 namespace PokemonSkills {
     function purifyAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
-    /** 落点 `radius` 内最近的、未被排除的、带主异常的战斗者；没有就返回 null。 */
+    /** 落点 `radius` 内最近的、未被排除的、带有害状态效果的战斗者；没有就返回 null。 */
     function purifyFind(world: CombatWorld, point: CombatPoint, radius: number, self: CombatActor | null): CombatActor | null {
         const near = world.query(point, Math.max(0.5, radius), false);
         let best: CombatActor | null = null, bestDistance = 0;
@@ -25,23 +25,16 @@ namespace PokemonSkills {
             if (self !== null && String(candidate.ref()) === String(self.ref())) continue;
             const body = world.observe(candidate);
             if (body === null || body.health() <= 0) continue;
-            let afflicted = false;
-            for (let name = 0; name < purifyMalaise.length && !afflicted; name++)
-                if (CombatStatus.has(world, candidate, purifyMalaise[name])) afflicted = true;
-            if (!afflicted) continue;
+            if (!CombatStatus.hasHarmful(world, candidate)) continue;
             const distance = body.position().minus(point).length();
             if (best === null || distance < bestDistance) { best = candidate; bestDistance = distance; }
         }
         return best;
     }
 
-    /** 抽走一个战斗者身上的全部主异常，返回实际抽走的项数。 */
+    /** 抽走一个战斗者身上的全部有害状态效果，返回实际抽走的项数。 */
     function purifyDrain(world: CombatWorld, actor: CombatActor): number {
-        if (!world.valid(actor)) return 0;
-        let removed = 0;
-        for (let index = 0; index < purifyMalaise.length; index++)
-            if (CombatStatus.cure(world, actor, purifyMalaise[index])) removed++;
-        return removed;
+        return CombatStatus.cureHarmful(world, actor);
     }
 
     /** 回复走共享健康写入；宝可梦经过 NativeEffects.heal（含受治疗加成），其他战斗者直接写 MC 生命。 */
@@ -63,8 +56,9 @@ namespace PokemonSkills {
     }
 
     define({
-        id: purifyId, name: "净化",
-        description: "朝瞄准点最近的一个带异常的战斗者探出手，把它身上的全部主异常整项抽走；病痛化作暗雾飞回施法者，落地按其最大生命的比例回复。伙伴与对手都能净，但落点附近没有带异常的目标时整招落空。",
+        id: purifyId,
+        cooldownParameter: "recharge", name: "净化",
+        description: "朝瞄准点最近的一个带异常的战斗者探出手，把它身上的全部有害状态效果整项抽走；病痛化作暗雾飞回施法者，落地按其最大生命的比例回复。伙伴与对手都能净，但落点附近没有带异常的目标时整招落空。",
         uses: ["顺手洗掉伙伴中毒并给自己回一口", "把对手身上的灼伤拿走、换自己的生机", "打断一个正靠异常持续掉血的目标节奏"],
         kind: "point", range: 4, maxRange: 7, prepare: 10, active: 0, recover: 7, cooldown: 130, style: "purify", maximumTicks: 200,
         defaults: { deep: false },

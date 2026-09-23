@@ -29,7 +29,7 @@ namespace PokemonSkills {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
     }
     function kingShieldContact(data: any): boolean {
-        return data && (data.direct === true || data.kind === "move" && data.contact === true);
+        return DamageSemantics.read(data).contact;
     }
     function kingShieldClear(effect: CombatEffect): void {
         const prefix = String(effect.id()) + ":";
@@ -102,6 +102,7 @@ namespace PokemonSkills {
 
     define({
         id: "kingsshield",
+        cooldownParameter: "charge",
         name: "King's Shield",
         description: "The user takes a regal steel stance and blocks damaging attacks by a total pool; contact sharply lowers the attacker's Attack. Status moves pass through.",
         uses: ["挡住近战的连续伤害并削其攻击", "为下一记交手先把对手打软", "用最厚的一面钢盾硬吃齐射"],

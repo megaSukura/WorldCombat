@@ -138,6 +138,7 @@
   "worldcombat.ui.reasons.target-left": "目标已离开或倒下",
   "worldcombat.ui.reasons.out-of-range": "目标超出技能范围",
   "worldcombat.ui.reasons.invalid-target": "当前目标不适合这项行动",
+  "worldcombat.ui.reasons.already-active": "目标已有这项状态，结束后可再次施放",
   "worldcombat.ui.reasons.target-not-visible": "视线受阻，无法对目标施放",
   "worldcombat.ui.reasons.capture-in-progress": "目标正在被捕捉，暂缓攻击",
   "worldcombat.ui.reasons.path-blocked": "路径受阻",

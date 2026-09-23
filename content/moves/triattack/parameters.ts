@@ -148,8 +148,8 @@ namespace PokemonSkills {
     describe(triattackId, [
         { key: "description.0", values: ["ray", "ailmentChance", "ailmentTicks"] },
         { key: "description.1", values: ["reach", "flightSpeed", "homing"] },
-        { key: "description.2", values: ["motes", "impactRadius", "gap", "tempo", "recharge"] },
-        { key: "wide.on", values: ["fan", "fanRadius"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
+        { key: "description.2", values: ["gap", "tempo", "recharge"] },
+        { key: "wide.on", values: ["fanRadius"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ray"] },

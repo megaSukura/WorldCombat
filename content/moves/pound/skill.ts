@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: "pound",
+        cooldownParameter: "recharge",
         name: "Pound",
         description: "A quick, wide swat with a foreleg or tail. No wind-up: whatever stands in the short fan in front takes the hit and is nudged aside.",
         uses: ["瞬发的一记便宜近身拍击", "一次拍到贴身并排的几个目标", "在别的招之间随手补一下"],
@@ -99,7 +100,7 @@ namespace PokemonSkills {
                     if (!hurt(action, victim, "pound", power,
                         { damage: damageSpec("pound", "swat"), contact: true })) return;
                     struck.push(String(victim.ref()));
-                    if (nudge > 0.01) world.displace(victim, heading.scale(nudge));
+                    if (world.valid(victim) && nudge > 0.01) world.displace(victim, heading.scale(nudge));
                     WorldFeedback.emit(world, poundScene, 1, facts.position(),
                         { moment: "hit", target: String(victim.ref()), count: crumble, scale: scale, intensity: intensity }, 16);
                 });

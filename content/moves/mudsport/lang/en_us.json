@@ -6,7 +6,7 @@
   "worldcombat.skill.mudsport.description.0": "Flings mud at ground within %1$s blocks.",
   "worldcombat.skill.mudsport.description.1": "Spreads a mudflat of radius %1$s blocks, lasting %2$s.",
   "worldcombat.skill.mudsport.description.2": "A muddy body's Electric moves are multiplied by %1$s, and the mud lingers %2$s after leaving.",
-  "worldcombat.skill.mudsport.description.3": "The flat churns about %1$s mud and coats up to %2$s ground cells.",
+  "worldcombat.skill.mudsport.description.3": "The flat coats up to %1$s ground cells.",
   "worldcombat.skill.mudsport.description.4": "Starts up in %1$s, settles in %2$s and cools down in %3$s, all driven by Speed.",
   "worldcombat.skill.mudsport.form.0": "Thick mud: a smaller, deeper flat (radius x0.8) that lingers longer (x1.3) and damps harder (factor x0.85), at the cost of +3 ticks start-up and x1.15 cooldown.",
   "worldcombat.skill.mudsport.form.1": "Thin mud: a wider, shallower flat (radius x1.3) with -2 ticks start-up and x0.9 cooldown, at the cost of x0.72 life and shallower damping.",

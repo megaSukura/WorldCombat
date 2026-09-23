@@ -5,7 +5,7 @@
   "worldcombat.skill.wingattack.use.2": "便宜、稳定、可以反复扇的飞系接触一记",
   "worldcombat.skill.wingattack.description.0": "被扫中的目标各受 %1$s 点物理接触伤害；这一次展翅最多扫到 %2$s 个非友方。",
   "worldcombat.skill.wingattack.description.1": "扇面长 %1$s 格、张开 %2$s°，被扫中的目标沿背离方向被推开 %3$s 格。",
-  "worldcombat.skill.wingattack.description.2": "翅膀扫过抖落 %1$s 根羽毛；扇面的形状就是判定范围。",
+  "worldcombat.skill.wingattack.description.2": "扇面的形状就是判定范围。",
   "worldcombat.skill.wingattack.wide.on": "宽扫式：扇面更宽、可同时扫到至多 3 个、推得更远；代价是单体威力 ×0.8、起手 +1 刻、收招 +2 刻。",
   "worldcombat.skill.wingattack.wide.off": "收翼式：单发更重（×1.15）、出手更利落；代价是只扫一人、几乎不把人推开。",
   "worldcombat.skill.wingattack.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

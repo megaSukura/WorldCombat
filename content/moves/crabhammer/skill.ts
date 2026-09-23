@@ -14,6 +14,7 @@
 namespace PokemonSkills {
     define({
         id: crabhammerId,
+        cooldownParameter: "recharge",
         name: "Crabhammer",
         description: "The target is hammered with a large pincer.",
         uses: ["用一记高举过顶的重砸打出高额单发", "砸地激起一圈水浪把旁人掀开", "裂甲档位下敲裂目标的物防"],
@@ -77,7 +78,7 @@ namespace PokemonSkills {
                         { moment: "slam", target: directRef, splash: splash, scale: scale, intensity: intensity }, 24);
                     world.sound("cobblemon:impact.water", point, 15, "{}");
                     var away = point.minus(centre);
-                    if (away.length() >= 0.05) world.displace(target, away.unit().scale(shove));
+                    if (world.valid(target) && away.length() >= 0.05) world.displace(target, away.unit().scale(shove));
                     if (crack > 0 && world.valid(target)) {
                         NativeEffects.boost(world, target, "def", -crack);
                         WorldFeedback.emit(world, crabhammerScene, 1, point,
@@ -97,7 +98,7 @@ namespace PokemonSkills {
                     { moment: "shock", target: String(enemy.ref()), splash: splash, scale: scale,
                         intensity: Math.max(0.4, Math.min(2.0, shock / 40)) }, 22);
                 var away = point.minus(at);
-                if (away.length() >= 0.05) world.displace(enemy, away.unit().scale(shove));
+                if (world.valid(enemy) && away.length() >= 0.05) world.displace(enemy, away.unit().scale(shove));
             });
 
             WorldFeedback.emit(world, crabhammerScene, 1, at,

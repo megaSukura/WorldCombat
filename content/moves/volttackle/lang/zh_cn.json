@@ -2,7 +2,7 @@
   "worldcombat.skill.volttackle.summary": "蓄力后冲撞目标，并以电流攻击落点附近的敌人，有机会使其麻痹。命中后自身承受反伤。",
   "worldcombat.skill.volttackle.description.0": "蓄电后爆冲造成约 %1$s 的接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
   "worldcombat.skill.volttackle.description.1": "命中后有 %1$s%% 的机会让对方麻痹 %2$s；自己按实际伤害的 %3$s%% 反噬，把目标顶开 %4$s 格。",
-  "worldcombat.skill.volttackle.description.2": "落点 %1$s 格内的其他非友方各吃 %2$s 的威力、有 %3$s%% 的机会被波及麻痹（最多数人，需通视）；全套动作迸开 %4$s 个电火花。",
+  "worldcombat.skill.volttackle.description.2": "落点 %1$s 格内的其他非友方各吃 %2$s 的威力、有 %3$s%% 的机会被波及麻痹（最多数人，需通视）。",
   "worldcombat.skill.volttackle.discharge.on": "泄放式：放电半径与波及威力更高、反噬更重、冲程更短，单体略轻——把电荷摊开电一群人。",
   "worldcombat.skill.volttackle.discharge.off": "聚敛式：单体威力更高、反噬更轻、冲程更长，放电半径与波及威力收小——把电全部灌进一个目标。",
   "worldcombat.skill.volttackle.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

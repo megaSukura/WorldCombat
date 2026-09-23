@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "headsmash",
+        cooldownParameter: "recharge",
         name: "Head Smash",
         description: "The user attacks the target with a hazardous full-power headbutt. This also damages the user terribly.",
         uses: ["用一记重得离谱的头槌砸掉残血目标", "在生存无虞时换一记全场最重的单点伤害", "把目标撞飞、为队友拉开身位"],

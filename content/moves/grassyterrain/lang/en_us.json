@@ -6,7 +6,7 @@
   "worldcombat.skill.grassyterrain.use.3": "Tend plants",
   "worldcombat.skill.grassyterrain.description.0": "Plant a grass field of radius %1$s blocks on the chosen ground, lasting %2$s.",
   "worldcombat.skill.grassyterrain.description.1": "A body standing on the grass recovers %1$s of its maximum health every %2$s; the grass treats both sides alike.",
-  "worldcombat.skill.grassyterrain.description.2": "with dense planting it tends plants up to %2$s times.",
+  "worldcombat.skill.grassyterrain.description.2": "with dense planting it tends plants up to %1$s times.",
   "worldcombat.skill.grassyterrain.description.3": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
   "worldcombat.skill.grassyterrain.timing": "Cast at ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to plant the grass, recovers %3$s, and commits a %5$s cooldown on cast.",
   "worldcombat.skill.grassyterrain.growth.0": "At level %1$s the committed cooldown drops to %2$s s.",

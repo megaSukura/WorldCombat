@@ -119,7 +119,7 @@ namespace PokemonSkills {
     describe(crabhammerId, [
         { key: "description.0", values: ["slam"] },
         { key: "description.1", values: ["reach", "shock", "shockRadius"] },
-        { key: "description.2", values: ["shove", "splash"] },
+        { key: "description.2", values: ["shove"] },
         { key: "stance.crack", values: [], when: function (context) { return read(context.detail.values, ["crack"]) === true; } },
         { key: "stance.heavy", values: [], when: function (context) { return read(context.detail.values, ["crack"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

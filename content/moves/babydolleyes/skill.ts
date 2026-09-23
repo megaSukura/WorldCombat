@@ -31,6 +31,7 @@ namespace PokemonSkills {
 
     define({
         id: babydolleyesId,
+        cooldownParameter: "recharge",
         name: "圆瞳",
         description: "睁大圆眼睛凝视一个看得见的对手，压低它的攻击；起手极短，几乎总能先落下。改变凝视方式可以卸得更深，但会慢一些。",
         uses: ["被追上来的物攻威胁逼住时先压低它", "在它出手前抢一记先手削弱", "配合队友把一只近身威胁的出手压软"],

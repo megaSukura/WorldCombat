@@ -38,6 +38,7 @@ namespace PokemonSkills {
 
     define({
         id: "firelash",
+        cooldownParameter: "recharge",
         name: "Fire Lash",
         description: "The user strikes the target with a burning lash. This also lowers the target's Defense stat.",
         uses: ["中距离用一条火鞭剥掉对手防御，给后续攻击开路", "缠卷式把目标拖到身边再接一记近战", "对高防目标持续削甲"],

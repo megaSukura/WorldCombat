@@ -31,6 +31,7 @@ namespace PokemonSkills {
 
     define({
         id: "icefang",
+        cooldownParameter: "recharge",
         name: "Ice Fang",
         description: "The user bites with cold-infused fangs. The cold seeps in a beat later and may leave the target frozen; a bite against an already frozen body cracks it for extra damage, and may leave the target flinching.",
         uses: ["贴身咬一口并按几率冻住目标", "咬碎已经被冻住的目标", "咬懵对手，打断它正在做的事"],

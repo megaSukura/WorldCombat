@@ -2,7 +2,7 @@
   "worldcombat.skill.crabhammer.summary": "Raise the great pincer overhead, gather water on it, then bring it straight down: the target in front takes the heaviest single blow while the impact opens a ground wave that shoves other foes nearby. The cracking form also breaks the target's defence, at the cost of being slower and lighter; the heavy form simply hits harder.",
   "worldcombat.skill.crabhammer.description.0": "The pincer deals %1$s contact damage to the target in front, the heaviest blow of this move.",
   "worldcombat.skill.crabhammer.description.1": "Reach is %1$s blocks; other foes within the %3$s block ground ring each take %2$s splash.",
-  "worldcombat.skill.crabhammer.description.2": "The wave pushes those it catches %1$s blocks away; the spindrift scales with weight and attack, here %2$s.",
+  "worldcombat.skill.crabhammer.description.2": "The wave pushes those it catches %1$s blocks away.",
   "worldcombat.skill.crabhammer.stance.crack": "Cracking form: the hit drops the target's defence by 1 stage and widens the ring 1.1x; the cost is 0.94x slam power, +2 wind-up ticks and +6 cooldown ticks.",
   "worldcombat.skill.crabhammer.stance.heavy": "Heavy form: 1.06x slam power, a smaller ring and a quicker wind-up; the cost is no armour break at all.",
   "worldcombat.skill.crabhammer.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

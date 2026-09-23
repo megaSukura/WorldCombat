@@ -78,6 +78,7 @@ namespace PokemonSkills {
 
     define({
         id: "powder",
+        cooldownParameter: "recharge",
         name: "Powder",
         description: "朝选定的对手抛出一团极细的粉尘：贴上后，它每用一次火属性招式，粉尘就当场炸开，"
             + "对它造成一段按施法者特攻定级的自伤。它是一记埋在对手身上的陷阱，火招照常放完；草属性穿过粉尘。",

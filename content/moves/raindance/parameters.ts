@@ -62,7 +62,7 @@ namespace PokemonSkills {
     stages("raindance", [{ level: 40, values: { cooldown: 126 } }, { level: 55, values: { cooldown: 108 } }]);
     describe("raindance", [
         { key: "description.0", values: ["stormRadius", "stormTicks"] },
-        { key: "description.1", values: ["soakedTicks", "rainDensity"] },
+        { key: "description.1", values: ["soakedTicks"] },
         { key: "description.2", values: ["quench"] },
         { key: "description.3", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

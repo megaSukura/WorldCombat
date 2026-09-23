@@ -14,6 +14,7 @@
 namespace PokemonSkills {
     define({
         id: suckerpunchId,
+        cooldownParameter: "recharge",
         name: "Sucker Punch",
         description: "抢在对手出手的瞬间闪身刺出；对手此刻不在出手时这一记落空，PP 照常消耗。",
         uses: ["惩罚正在抬手的近身对手", "抢在对手重击之前先打一下", "对任何一直贴着打的敌人稳定输出"],
@@ -91,7 +92,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(suckerpunchId, "sneak"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, suckerpunchScene, 1, hit.position(),
                             { moment: "strike", target: String(victim.ref()), count: count, scale: radius / 0.38,

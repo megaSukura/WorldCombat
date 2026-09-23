@@ -4,7 +4,7 @@
   "worldcombat.skill.shelter.use.1": "Use a shell that breaks to make the opponent spend extra hits",
   "worldcombat.skill.shelter.use.2": "Shell up at low health to wait for a partner or a cooldown",
   "worldcombat.skill.shelter.description.0": "While the shell holds, Defense is raised by %1$s level(s); the shell absorbs up to %2$s of maximum health and lasts about %3$s.",
-  "worldcombat.skill.shelter.description.1": "The shell is about %1$s iron plates forming a %2$s-block radius; it cracks once its budget is spent.",
+  "worldcombat.skill.shelter.description.1": "It cracks once its budget is spent.",
   "worldcombat.skill.shelter.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.shelter.seal.on": "Iron shield: a thicker, longer shell, but rooted in place for the whole window, with a slower wind-up and a longer cooldown.",
   "worldcombat.skill.shelter.seal.off": "Curl: a thinner, shorter shell, but you can walk with it and the wind-up and cooldown are shorter; it shields less and preserves position.",

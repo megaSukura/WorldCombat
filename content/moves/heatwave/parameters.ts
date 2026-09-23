@@ -119,7 +119,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["gust"] },
         { key: "description.1", values: ["reach", "angle", "sweepTicks"] },
         { key: "description.2", values: ["igniteChance", "push"] },
-        { key: "description.3", values: ["embers"] },
         { key: "gale.on", values: [], when: function (context) { return read(context.detail.values, ["gale"]) === true; } },
         { key: "gale.off", values: [], when: function (context) { return read(context.detail.values, ["gale"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

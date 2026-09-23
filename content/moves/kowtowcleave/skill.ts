@@ -96,7 +96,7 @@ namespace PokemonSkills {
                     const self = currentWorld.observe(actor);
                     const from = self === null ? origin : self.position();
                     const away = point.minus(from);
-                    if (away.length() > 0.05) currentWorld.displace(victim, away.unit().scale(push));
+                    if (currentWorld.valid(victim) && away.length() > 0.05) currentWorld.displace(victim, away.unit().scale(push));
                 }
                 const self = currentWorld.observe(actor);
                 const from = self === null ? origin : self.position();

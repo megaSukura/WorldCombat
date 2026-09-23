@@ -4,7 +4,7 @@
   "worldcombat.skill.tidyup.use.1": "把对手的替身扫走，逼它重新用生命立一个",
   "worldcombat.skill.tidyup.use.2": "开打前顺手把攻与速一起垫起来",
   "worldcombat.skill.tidyup.description.0": "横扫半径 %3$s 格：把这片场地里的撒菱、隐形岩、黏黏网、毒菱与替身扫掉；随后物攻提升 %1$s 级、速度提升 %2$s 级。",
-  "worldcombat.skill.tidyup.description.1": "轻快持续 %1$s，共扫 %2$s 下、扬起约 %3$s 点尘屑；窗口走完时这次抬起的攻与速收回。",
+  "worldcombat.skill.tidyup.description.1": "轻快持续 %1$s，窗口走完时这次抬起的攻与速收回。",
   "worldcombat.skill.tidyup.wide.on": "广扫：清扫半径 ×1.35，能一次扫掉更远的陷阱；代价是起手 +3 刻、冷却 +12、轻快窗口 ×0.9。",
   "worldcombat.skill.tidyup.wide.off": "就地扫：出手快、窗口长、冷却短，但只扫得到贴身的陷阱。",
   "worldcombat.skill.tidyup.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",

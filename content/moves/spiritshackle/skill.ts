@@ -106,6 +106,7 @@ namespace PokemonSkills {
 
     define({
         id: spiritshackleId,
+        cooldownParameter: "recharge",
         name: "Spirit Shackle",
         description: "射出一支暗影箭：命中目标即结算穿影伤害，并把它的影子钉在地上——目标被缝住、无法逃走，直到时长走完或被外力扯断缝线。深缝钉得更久但更慢更近；快缝更快更远但钉得更短。",
         uses: ["把想逃跑的目标钉在原地等队友来收", "在中远距离打断对手的走位", "锁住厚目标不让它脱离近战"],

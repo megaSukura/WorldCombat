@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: geargrindId,
+        cooldownParameter: "recharge",
         name: "Gear Grind",
         description: "The user attacks by throwing steel gears at the target twice in a row.",
         uses: ["从两侧交错甩出两枚旋转钢齿轮", "用可弹跳的齿轮绕开掩体", "压住会侧向走位的对手"],

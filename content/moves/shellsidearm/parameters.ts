@@ -112,7 +112,7 @@ namespace PokemonSkills {
     describe("shellsidearm", [
         { key: "description.0", values: ["power", "edge"] },
         { key: "description.1", values: ["reach", "shellSpeed", "shellRadius"] },
-        { key: "description.2", values: ["poisonChance", "venomTicks", "venomCloud"] },
+        { key: "description.2", values: ["poisonChance", "venomTicks"] },
         { key: "description.3", values: ["charge", "settle", "recharge"] },
         { key: "form.auto", values: [], when: function (context) { return read(context.detail.values, ["form"]) === 0; } },
         { key: "form.ram", values: [], when: function (context) { return read(context.detail.values, ["form"]) === 1; } },

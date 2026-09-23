@@ -5,7 +5,7 @@
   "worldcombat.skill.snarl.use.2": "Open from range by stripping a special attacker",
   "worldcombat.skill.snarl.description.0": "Each bark deals about %1$s power, %2$s barks in all, one every %3$s s; the target's Sp. Def, type and crit are settled on each bark.",
   "worldcombat.skill.snarl.description.1": "A target caught by the first bark loses %1$s Sp. Atk stage(s) and carries the scolded identity for about %2$s.",
-  "worldcombat.skill.snarl.description.2": "The cone reaches %1$s blocks and opens %2$s degrees, with about %3$s notes per bark.",
+  "worldcombat.skill.snarl.description.2": "The cone reaches %1$s blocks and opens %2$s degrees.",
   "worldcombat.skill.snarl.option.on": "Rant: three barks in a row, each about x0.62, tighter spacing, a narrower and longer cone and cooldown +6 ticks - grinds a foe in place, but it can step out to dodge the later barks.",
   "worldcombat.skill.snarl.option.off": "Bark: a single shout at x1.4 power with a wider cone and the base cooldown - one heavier burst, good for hit-and-run.",
   "worldcombat.skill.snarl.timing": "The cone reaches %1$s blocks; windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s from commit.",

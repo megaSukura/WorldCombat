@@ -14,6 +14,7 @@ namespace PokemonSkills {
 
     define({
         id: cottonsporeId,
+        cooldownParameter: "recharge",
         name: "棉孢子",
         description: "当场鼓开一团棉絮，孢子扑向四周，黏住附近所有敌人，大幅降低它们的速度。必须贴近才有效，因此要自己走进人群。",
         uses: ["一次拖住围上来的一群近战", "在被围住时开出一条退路", "打断对方的贴身追击"],

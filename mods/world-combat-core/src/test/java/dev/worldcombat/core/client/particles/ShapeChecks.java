@@ -23,6 +23,7 @@ public final class ShapeChecks {
         checkHemisphere();
         checkSphereSurface();
         checkCircle();
+        checkSector();
         checkRing();
         checkArc();
         checkCone();
@@ -36,6 +37,21 @@ public final class ShapeChecks {
         checkReplay();
         checkInvalid();
         System.out.println("ShapeChecks PASS");
+    }
+
+    private static void checkSector() {
+        for (double opening : new double[] { 0, 60, 150, 250, 360 }) {
+            Shape sector = shape("sector", "{\"radius\":4,\"innerRadius\":1,\"angleDegrees\":" + opening + "}");
+            double cosine = Math.cos(Math.toRadians(opening / 2));
+            each(sector, 45L, SAMPLES, (index, position, direction) -> {
+                double radius = position.length();
+                if (Math.abs(position.y) > EPS || radius < 1 - EPS || radius > 4 + EPS || position.z / radius < cosine - EPS)
+                    throw new AssertionError("horizontal sector escaped its radius/opening: " + position);
+                assertRadial(position, direction, "sector");
+            });
+        }
+        expectInvalid("sector", "{\"radius\":1,\"innerRadius\":2}", "shape.innerRadius");
+        expectInvalid("sector", "{\"radius\":1,\"angleDegrees\":361}", "shape.angleDegrees");
     }
 
     private static void checkPoint() {

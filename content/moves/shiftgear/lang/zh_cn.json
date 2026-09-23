@@ -4,7 +4,6 @@
   "worldcombat.skill.shiftgear.use.1": "在追人前先提速",
   "worldcombat.skill.shiftgear.use.2": "被迫近身前抢先换挡",
   "worldcombat.skill.shiftgear.description.0": "转动齿轮把自己换到另一挡：攻击 +%1$s 级、速度 +%2$s 级，两项都保留到脱战消退。",
-  "worldcombat.skill.shiftgear.description.1": "齿轮环半径 %1$s 格，换挡后绕身运转约 %2$s 秒；半径与判定同源，画面就是这块范围。",
   "worldcombat.skill.shiftgear.description.2": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒。挡位可选：扭力档攻多速少，超速档速多攻少，总量都是 +3 级。",
   "worldcombat.skill.shiftgear.timing": "起手吃速度、收招吃体型；换挡期间会停下来，可被打断。",
   "worldcombat.skill.shiftgear.value.attackGift": "攻击档",

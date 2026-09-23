@@ -93,7 +93,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["impact"] },
         { key: "description.1", values: ["pinTicks"] },
         { key: "description.2", values: ["reach", "throwSpeed"] },
-        { key: "description.3", values: ["collisionRadius", "pull"] },
+        { key: "description.3", values: ["collisionRadius"] },
         { key: "flyers.on", values: [], when: function (context) { return read(context.detail.values, ["flyersOnly"]) === true; } },
         { key: "flyers.off", values: [], when: function (context) { return read(context.detail.values, ["flyersOnly"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

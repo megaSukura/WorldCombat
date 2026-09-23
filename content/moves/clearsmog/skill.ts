@@ -21,7 +21,7 @@
 namespace PokemonSkills {
     /** 一份可读的能力等级快照（宝可梦读原生等级，其他活体读公共阶梯）。 */
     export function clearsmogStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
-        return String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 把 actor 的能力等级全部冲回原点（含它自己拥有的临时窗口）；返回真正冲掉的等级数（绝对值之和）。 */
@@ -107,6 +107,7 @@ namespace PokemonSkills {
 
     define({
         id: clearsmogId,
+        cooldownParameter: "recharge",
         name: "Clear Smog",
         description: "掷出一团特殊泥块砸向目标，命中后炸开一片清浊之烟：烟里每个对手的能力等级全部被冲回原点，而烟还在身上黏一小会儿——这段时间里新加的等级也会被冲散。它只动烟里的对手，术者自己的增益不受影响。漫烟式罩得更广更久，聚泥式更重更快。",
         uses: ["把对手攒起来的能力一波冲回原点", "让一个刚刚加满级的目标短时间内留不住增益", "同时清掉一小撮抱团对手的等级"],

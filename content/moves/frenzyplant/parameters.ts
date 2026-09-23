@@ -85,7 +85,7 @@ namespace PokemonSkills {
     describe("frenzyplant", [
         { key: "description.0", values: ["bloom"] },
         { key: "description.1", values: ["radius", "reach"] },
-        { key: "description.2", values: ["rise", "leaves"] },
+        { key: "description.2", values: ["leaves"] },
         { key: "description.3", values: ["exhaust", "snareTicks"] }
     ]);
 }

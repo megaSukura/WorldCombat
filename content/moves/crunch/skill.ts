@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "crunch",
+        cooldownParameter: "recharge",
         name: "Crunch",
         description: "The user crunches up the target with sharp fangs. This may also lower the target's Defense stat.",
         uses: ["咬住研磨，把护甲压塌", "留下一道破防缺口给后续招吃", "用低防御系数的獠牙啃高防目标"],

@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: thunderboltId,
+        cooldownParameter: "recharge",
         name: "Thunderbolt",
         description: "把电压成一团沿直线射出去，命中处炸开一片电网；扩散式下电花再分摊到落点周围的几个敌人。",
         uses: ["中距离的单体点射", "在敌群里点一下顺带电到旁边的人", "隔着一段距离先手压血"],

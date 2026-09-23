@@ -4,7 +4,7 @@
   "worldcombat.skill.trailblaze.use.1": "Launch from cover to reach a farther foe",
   "worldcombat.skill.trailblaze.use.2": "Boost Speed, then run the new speed down",
   "worldcombat.skill.trailblaze.description.0": "The dash deals %1$s damage, bounding %2$s blocks at %3$s blocks/tick.",
-  "worldcombat.skill.trailblaze.description.1": "On hit, Speed +%1$s stage (one extra launched from brush), knocking the target %2$s blocks, with a %3$s-block hit radius and %4$s grass scraps.",
+  "worldcombat.skill.trailblaze.description.1": "On hit, Speed +%1$s stage (one extra launched from brush), knocking the target %2$s blocks, with a %3$s-block hit radius.",
   "worldcombat.skill.trailblaze.overshoot.on": "Through the brush: after the hit, keep skidding past to land behind the target; the landing is deeper in.",
   "worldcombat.skill.trailblaze.overshoot.off": "Pull up: stop right in front of the target on a hit, steadier footing to keep pressing.",
   "worldcombat.skill.trailblaze.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

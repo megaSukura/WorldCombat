@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.takedown.summary": "最朴素的一次全力肩撞：缩肩低头冲出一小段，用整个身体把目标顶开；撞实的一下反作用力会伤到自己，冲空只是滑停站定。谁都用得起的一记硬撞。",
   "worldcombat.skill.takedown.description.0": "这一撞造成 %1$s 的接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.takedown.description.1": "命中后自己按实际伤害的 %1$s%% 反伤，把目标顶开 %2$s 格、自己被后坐弹回 %3$s 格；冲撞与命中扬尘 %4$s 个。",
+  "worldcombat.skill.takedown.description.1": "命中后自己按实际伤害的 %1$s%% 反伤，把目标顶开 %2$s 格、自己被后坐弹回 %3$s 格。",
   "worldcombat.skill.takedown.description.2": "当前助跑 %1$s 格：助跑越长，撞劲与冲程越高，反作用力与起手也一起上去。",
   "worldcombat.skill.takedown.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",
   "worldcombat.skill.takedown.growth.0": "%1$s 级起撞劲抬到 %2$s。",

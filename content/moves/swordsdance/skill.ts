@@ -60,6 +60,7 @@ namespace PokemonSkills {
 
     define({
         id: "swordsdance",
+        cooldownParameter: "wait",
         name: "剑舞",
         description: "激烈地跳起战舞提高气势。大幅提高自己的攻击。",
         uses: ["开战前把物攻拉满", "一边前压一边起舞，直接切进对手身边", "用可见的磨刃窗口逼对手拖时间"],

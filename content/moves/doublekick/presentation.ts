@@ -5,7 +5,7 @@
  *   贴地的暖色扇面，命中处一记亮白冲击，第一脚多一撮向上飞起的尘。
  * 色相家族：暖琥珀（0xE8B87A、0xC9964F）做脚风与尘土，白（0xFFF4E0）只给命中那一抹；第二脚略更亮。
  * 拍子：起 raise（抬脚）→ 一 hook（低扫）→ 中 hit1（挑人）→ 二 finisher（前踹）→ 中 hit2（踹飞）→ 收 settle。
- * 范围：hook/finisher 的扇面用 `data.reach` 当长度、`data.span` 当张角，`orient: "direction"` 让扇面正对踢击方向；
+ * 范围：hook/finisher 的扇面用 `data.reach` 当半径、`data.span` 当张角，`orient: "heading"` 让扇面正对踢击方向；
  *   画面里的扇面就是判定范围。
  * 运动：脚风从脚边沿地面向前铺开；hit1 的尘向上走（挑起），hit2 的碎屑沿踢击方向甩出（踹飞）。
  * 数：`data.dust`（物攻派生）绑定发射量，`data.intensity`（每脚威力派生）抬高亮度，`data.alternate` 区分两种形态。
@@ -33,17 +33,17 @@ const DoublekickDefinition: ParticleDefinition = {
             exit: { drain: 10 },
             emitters: [
                 {
-                    name: "sweep", bind: "point", fit: "none", orient: "direction", offset: [0, 0.12, 0],
+                    name: "sweep", bind: "point", fit: "world", orient: "heading", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 40, shape: { kind: "cone_volume", radius: 0.4, length: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
+                    rate: 40, shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
                     direction: "shape", speed: [0.06, 0.26], spread: 12, spin: 6,
                     lifetime: [6, 12], size: [0.26, 0.05], sizeMode: "index",
                     color: 0xFFF4E0, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 70
                 },
                 {
-                    name: "turf", bind: "point", fit: "none", orient: "direction", offset: [0, 0.06, 0],
+                    name: "turf", bind: "point", fit: "world", orient: "heading", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 30, shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
+                    rate: 30, shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
                     direction: "shape", speed: [0.04, 0.18], spread: 24, gravity: 0.06, drag: 0.9,
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0xC9964F, alpha: [0.45, 0], light: "world", maxParticles: 60
@@ -55,17 +55,17 @@ const DoublekickDefinition: ParticleDefinition = {
             exit: { drain: 10 },
             emitters: [
                 {
-                    name: "sweep", bind: "point", fit: "none", orient: "direction", offset: [0, 0.3, 0],
+                    name: "sweep", bind: "point", fit: "world", orient: "heading", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 44, shape: { kind: "cone_volume", radius: 0.4, length: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
+                    rate: 44, shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
                     direction: "shape", speed: [0.08, 0.32], spread: 11, spin: -6,
                     lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xFFF4E0, alpha: [0.8, 0], light: "full", bloom: 0.28, maxParticles: 76
                 },
                 {
-                    name: "gust", bind: "point", fit: "none", orient: "direction", offset: [0, 0.2, 0],
+                    name: "gust", bind: "point", fit: "world", orient: "heading", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 30, shape: { kind: "cone_volume", radius: 0.45, length: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
+                    rate: 30, shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
                     direction: "shape", speed: [0.06, 0.26], spread: 20, drag: 0.92,
                     lifetime: [8, 14], size: [0.08, 0.02],
                     color: 0xE8B87A, alpha: [0.5, 0], light: "world", maxParticles: 60
@@ -120,11 +120,11 @@ const DoublekickDefinition: ParticleDefinition = {
             duration: 16,
             exit: { stop: 5, drain: 9 },
             emitters: [
-                {
+                { orient: "heading",
                     name: "empty", bind: "point", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dust", fallback: 10 }, at: 0 },
-                    shape: { kind: "cone_volume", radius: 0.4, length: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
                     direction: "shape", speed: [0.04, 0.14], spread: 20, gravity: 0.05, drag: 0.9,
                     lifetime: [8, 14], size: [0.09, 0.02],
                     color: 0xC9964F, alpha: [0.35, 0], light: "world", maxParticles: 22

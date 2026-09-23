@@ -74,7 +74,7 @@ namespace PokemonSkills {
                             const force = Math.max(0.5, Math.min(2, total / 60));
                             const landed = impact(current, hit, "barbbarrage", share, { damage: damageSpec("barbbarrage", "volley"), knockback: false });
                             if (landed) { hitAny = true; venomTarget = target; }
-                            body.displace(target, baseDirection.scale(p("barbbarrage", "push", current)));
+                            if (body.valid(target)) body.displace(target, baseDirection.scale(p("barbbarrage", "push", current)));
                             WorldFeedback.emit(body, barbbarrageScene, 1, hit.position(),
                                 { moment: "barb", target: String(target.ref()), intensity: force, prick: Math.round(6 * force) }, 18);
                         } else {

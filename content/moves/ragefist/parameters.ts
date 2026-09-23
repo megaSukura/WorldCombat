@@ -167,11 +167,11 @@ namespace PokemonSkills {
         { key: "description.0", values: ["smash", "stored"] },
         { key: "description.1", values: ["fists", "gap"] },
         { key: "description.2", values: ["reach", "radius", "push", "stance"] },
-        { key: "description.3", values: ["cap", "plumes"] },
+        { key: "description.3", values: ["cap"] },
         { key: "fury.on", values: [], when: function (context) { return read(context.detail.values, ["fury"]) === true; } },
         { key: "fury.off", values: [], when: function (context) { return read(context.detail.values, ["fury"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.smash", "tier.0.stance"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.smash", "tier.1.stance", "tier.1.plumes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.smash", "tier.1.stance"] }
     ]);
 }

@@ -94,11 +94,9 @@ namespace PokemonSkills {
     describe(stunsporeId, [
         { key: "description.0", values: ["throwReach", "puffSpeed", "cloudRadius"] },
         { key: "description.1", values: ["cloudTicks", "holdTicks"] },
-        { key: "description.2", values: ["spores"] },
         { key: "thick.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "thick.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.spores"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.spores", "tier.1.cloudRadius"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.cloudRadius"] }
     ]);
 }

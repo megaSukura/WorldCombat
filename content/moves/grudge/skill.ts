@@ -60,6 +60,7 @@ namespace PokemonSkills {
 
     define({
         id: grudgeId,
+        cooldownParameter: "recharge",
         name: "怨念",
         description: "当场立下一段怨念：这段时间里谁亲手把你打倒，它刚刚送走你的那一招 PP 会被全部掏空。它不护住你，只让「亲手了结我」在事后付代价；已被怨念缠上时再立会失败。",
         uses: ["惩罚那个一定要亲手补刀的人", "让对手的关键招式再也用不出来", "临死前把对手赖以为生的招废掉"],

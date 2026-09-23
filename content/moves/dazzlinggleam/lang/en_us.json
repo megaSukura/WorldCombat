@@ -6,7 +6,6 @@
   "worldcombat.skill.dazzlinggleam.use.3": "A very fast omnidirectional finisher",
   "worldcombat.skill.dazzlinggleam.description.0": "The ring of light deals one flash hit to each foe: the %1$s power at the centre falls to about %2$s%% at the outer edge. The foe's Special Defence, type matchups and critical hits are settled on impact.",
   "worldcombat.skill.dazzlinggleam.description.1": "Light radius %1$s blocks (air and ground together); a foe caught in it is dazzled and moves about %2$s seconds slower.",
-  "worldcombat.skill.dazzlinggleam.description.2": "",
   "worldcombat.skill.dazzlinggleam.wide.on": "Scatter on: light radius about ×1.22 and a more even edge, but slower to cast, about ×0.88 power and a shorter dazzle.",
   "worldcombat.skill.dazzlinggleam.wide.off": "Scatter off (Focus): about ×1.14 power and a longer dazzle, with the radius down to about ×0.82.",
   "worldcombat.skill.dazzlinggleam.timing": "Radius %1$s blocks; after a %2$s-second prepare it spends %4$s PP, then recovers %3$s seconds; cooldown %5$s seconds from commit.",

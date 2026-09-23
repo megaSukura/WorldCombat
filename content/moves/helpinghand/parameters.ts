@@ -55,7 +55,7 @@ namespace PokemonSkills {
 
     describe(helpinghandId, [
         { key: "description.0", values: ["assist", "assistTicks"] },
-        { key: "description.1", values: ["reach", "motes"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "stance.rally", values: [], when: function (context) { return read(context.detail.values, ["rally"]) === true; } },
         { key: "stance.calm", values: [], when: function (context) { return read(context.detail.values, ["rally"]) !== true; } },

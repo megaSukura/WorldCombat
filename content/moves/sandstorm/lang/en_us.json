@@ -21,7 +21,7 @@
   "worldcombat.skill.sandstorm.value.grainInterval": "Pass interval",
   "worldcombat.skill.sandstorm.value.grainDensity": "Grain density",
   "worldcombat.skill.sandstorm.preference.abrasive": "Abrasive sand",
-  "worldcombat.skill.sandstorm.preference.abrasive.help": "On = abrasive: wider curtain (x1.15), harder scour (x1.3), stronger drift (x1.35), denser grains (x1.4) and faster passes (x0.82), but shorter life (x0.78) and cooldown +16 ticks. Off = mild cover: smaller and lighter, but lasts longer (x1.22) and cools down 10 ticks sooner.",
+  "worldcombat.skill.sandstorm.preference.abrasive.help": "On = abrasive: wider curtain (x1.15), harder scour (x1.3), stronger drift (x1.35) and faster passes (x0.82), but shorter life (x0.78) and cooldown +16 ticks. Off = mild cover: smaller and lighter, but lasts longer (x1.22) and cools down 10 ticks sooner.",
   "worldcombat.skill.sandstorm.preference.ai.maxChase": "Raise distance",
   "worldcombat.skill.sandstorm.preference.ai.maxChase.help": "The companion only raises a sandstorm while a threat is within this distance; lower raises it up close, higher sets it up in advance.",
   "worldcombat.skill.sandstorm.preference.ai.advance": "Push the curtain at the foe",

@@ -119,10 +119,10 @@ namespace PokemonSkills {
         { key: "description.0", values: ["blast"] },
         { key: "description.1", values: ["blastRadius"] },
         { key: "description.2", values: ["knock", "lift"] },
-        { key: "description.3", values: ["debris", "craterTicks", "craterCells"] },
+        { key: "description.3", values: ["craterTicks", "craterCells"] },
         { key: "charged.on", values: [], when: function (context) { return read(context.detail.values, ["charged"]) === true; } },
         { key: "charged.off", values: [], when: function (context) { return read(context.detail.values, ["charged"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.blastRadius", "tier.0.debris"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.blast", "tier.0.blastRadius"] }
     ]);
 }

@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: psyshockId,
+        cooldownParameter: "recharge",
         name: "Psyshock",
         description: "把念波压成一枚实心的念力棱投出去：它走直线、随距离下坠，撞上目标时按物理防御结算特殊伤害并把它顶开，棱碎成屑。重棱式更重更慢，轻棱式更远更快。",
         uses: ["中远距离打一发按物理防御结算的念力冲击", "把脆皮目标顶离原位置", "用最便宜的一发补掉残血"],

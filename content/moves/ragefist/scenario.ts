@@ -23,6 +23,7 @@ Smoke.scenario("ragefist", function (stage) {
             stage.expect(stage.casts("ragefist", caster) > 0, "dusknoir committed rage fist");
             stage.expect(stage.damageTo(foe) > 0, "the ghostly flurry dealt damage");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/rage_fist"), "taking a hit banked a fist mark on the caster");
+            stage.expect(!stage.hadMobEffect(foe, "world_combat:status/rage_fist"), "a target without rage fist does not bank fist marks");
             stage.note("fists = 1 + stored, so marks banked from being hit turn into extra punches; the foe fights back and the marks stay until the fight lapses", {
                 casts: stage.casts("ragefist", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,

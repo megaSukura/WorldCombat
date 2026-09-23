@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: topsyId,
+        cooldownParameter: "recharge",
         name: "颠倒",
         description: "甩出一枚暗色镜片，命中谁就把谁身上所有能力变化整张翻个面：正的变负、负的变正。对方顶得越高摔得越重；若它身上尽是减益，翻过来反而帮了它——出手前先读它的等级。",
         uses: ["对手靠增益吃满输出时，把它的增益变成等量的减益", "在对方刚加满攻速时一次抹掉它的优势", "干扰一个反复给自己上增益的厚目标"],

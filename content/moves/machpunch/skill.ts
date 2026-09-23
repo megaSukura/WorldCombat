@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: machpunchId,
+        cooldownParameter: "recharge",
         name: "Mach Punch",
         description: "The user throws a punch at blinding speed, faster than sound. This move always goes first.",
         uses: ["贴身时最快的先手一拳", "不位移地收掉残血目标", "接在别的招之后立刻补一下"],

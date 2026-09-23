@@ -4,7 +4,7 @@
   "worldcombat.skill.mefirst.use.1": "Beat an enemy winding up a heavy blow",
   "worldcombat.skill.mefirst.use.2": "Take the initiative in a combo gap",
   "worldcombat.skill.mefirst.description.0": "Locks onto a foe within %1$s blocks and waits for %2$s.",
-  "worldcombat.skill.mefirst.description.1": "The stolen move hits at %1$s power; about %2$s speed marks gather, growing with Special Attack; within %3$s after the foe acts you can still catch that same beat.",
+  "worldcombat.skill.mefirst.description.1": "The stolen move hits at %1$s power; within %2$s after the foe acts you can still catch that same beat.",
   "worldcombat.skill.mefirst.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.mefirst.patient.on": "Patient: vigil ×1.5, far more likely to catch the foe acting, but windup +3 ticks and cooldown ×1.25.",
   "worldcombat.skill.mefirst.patient.off": "Snap: an almost instant windup and a short cooldown, but a shorter vigil.",

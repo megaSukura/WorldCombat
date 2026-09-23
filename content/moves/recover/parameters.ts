@@ -77,7 +77,6 @@ namespace PokemonSkills {
 
     describe(recoverId, [
         { key: "description.0", values: ["heal", "restoreTicks"] },
-        { key: "description.1", values: ["motes", "glow"] },
         { key: "description.2", values: ["gather", "settle"] },
         { key: "stance.steady", values: [], when: function (context) { return read(context.detail.values, ["steady"]) === true; } },
         { key: "stance.quick", values: [], when: function (context) { return read(context.detail.values, ["steady"]) !== true; } },

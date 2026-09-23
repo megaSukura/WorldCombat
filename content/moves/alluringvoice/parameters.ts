@@ -9,7 +9,7 @@
  * 是一条朝前的窄锥，专挑变强的目标。
  *
  * 数值来源（每个参数读不同的精灵数据，公式即悬浮说明里展开的那一棵）：
- *   voice        = 基础 80 + (特攻 − 65) × 0.22（夹 −14..32）；回响式 ×0.85、直诉式 ×1.1；等级台阶抬档。
+ *   voice        = 声场直接伤害；特攻影响力度，回响式更宽更轻，直诉式更窄更重。
  *   reach        = 基础 7 + (碰撞箱高度 − 1.4) × 0.4 + (特攻 − 60) × 0.02 格；回响式 ×1.1。
  *   angle        = 基础 46 + (等级 − 30) × 0.4 度；回响式 ×1.35、直诉式 ×0.85；夹 30..90 度。
  *   fumble       = 基础 0.22 + (特攻 − 60) × 0.0025：被惑乱者每次出手作废的概率；夹 0.15..0.45。
@@ -36,7 +36,7 @@ namespace PokemonSkills {
     /** 目标当前正面能力等级合计；0 表示它此刻没有正在生效的强化。 */
     export function alluringVoiceBoost(world: CombatWorld, actor: CombatActor): number {
         if (!world.valid(actor)) return 0;
-        const stages = String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        const stages = NativeEffects.effectiveStages(world, actor);
         const names = ["atk", "def", "spa", "spd", "spe"];
         let total = 0;
         for (let index = 0; index < names.length; index++) {
@@ -65,14 +65,14 @@ namespace PokemonSkills {
     }
 
     actionParameters.define(alluringvoiceId, {
-        /** 歌声威力：80 + (特攻 − 65) × 0.22，夹 50..140；回响式 ×0.85、直诉式 ×1.1。 */
+        /** 窄锥群伤与反强化控制共占收益预算；等级成长从设计基值起算。 */
         voice: formula(
-            F.base(80)
-                .plus(F.stat("specialAttack").minus(65).times(0.22).clamp(-14, 32))
+            F.base(54)
+                .plus(F.stat("specialAttack").minus(65).times(0.15).clamp(-10, 24))
                 .times(F.when(F.pref("echo"), F.const(0.85), F.const(1.1)))
-                .clamp(50, 140).round(1),
+                .clamp(36, 92).round(1),
             "歌声威力", {
-                unit: "威力",
+                base: 54, unit: "威力",
                 description: "扫过声场的基础威力；特攻越高唱得越透。直诉式把力气集中在这一条窄声里，回响式摊薄成更宽的一片。对手防御、相性与暴击在命中时另算。"
             }),
         /** 声场长度：7 + (碰撞箱高度 − 1.4) × 0.4 + (特攻 − 60) × 0.02 格，回响式 ×1.1，夹 4..11。 */
@@ -136,8 +136,8 @@ namespace PokemonSkills {
     defineDamage(alluringvoiceId, "voice", {}, { sound: true });
 
     stages(alluringvoiceId, [
-        { level: 32, values: { voice: 94 } },
-        { level: 48, values: { voice: 110 } }
+        { level: 32, values: { voice: 62 } },
+        { level: 48, values: { voice: 70 } }
     ]);
 
     describe(alluringvoiceId, [

@@ -69,9 +69,7 @@ namespace PokemonSkills {
         if (!world.valid(victim)) return;
         var data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
-        var category = typeof data.category === "string" ? String(data.category) : "";
-        // A native ranged/magic hit carries no authored category; the non-melee flag (causing entity is not the direct entity) reads it as special.
-        if (category !== "special" && !(category === "" && data.direct === false)) return;
+        if (DamageSemantics.read(data).category !== "special") return;
         var source = event.actor();
         if (source !== null && String(source.key()) === String(victim.key())) return;
         mirrorcoatRemember(world, victim, source, data.actual);
@@ -153,7 +151,7 @@ namespace PokemonSkills {
 
     describe(mirrorcoatId, [
         { key: "description.0", values: ["refund", "window"] },
-        { key: "description.1", values: ["boltRange", "boltSpeed", "collisionRadius", "mirrorRadius", "capFraction"] },
+        { key: "description.1", values: ["boltRange", "boltSpeed", "collisionRadius", "capFraction"] },
         { key: "polish.on", values: [], when: function (context) { return read(context.detail.values, ["polish"]) === true; } },
         { key: "polish.off", values: [], when: function (context) { return read(context.detail.values, ["polish"]) !== true; } },
         { key: "timing", values: ["range", "focus", "settle", "pp", "recharge"] },

@@ -3,7 +3,7 @@
  * 把它们一起咬住。
  *
  * 什么局面有意义：场上有一个可见的威胁、且在 ai.maxChase 内；附近有一个还没被磁场咬住的正电／负电己方
- *   （自己也算）。没有威胁时只在整备命令（驻守／自主／工作）下立一次。
+ *   （自己也算）。
  * 对谁出手：最近的、还没被咬住的正负电伙伴；磁场以自身落地为心，所以自己就是锚点。
  * 够不到怎么办：`approachTarget` 指向自身，就地立磁场；磁场半径会罩住已经在身边的伙伴，
  *   离得太远的伙伴等它走进来再被咬住。
@@ -73,7 +73,7 @@ namespace CompanionBehavior {
             if (context.facts.mounted) return false;
             const pick = magneticfluxPick(context, item);
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return (context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work") && !!pick;
+            if (!threat) return false;
             if (distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
             return !!pick;
         },

@@ -5,7 +5,7 @@
   "worldcombat.skill.mimic.use.2": "惩罚刚出手的强攻",
   "worldcombat.skill.mimic.description.0": "念线搭到 %1$s 格内看得见的对手，读取需要 %2$s 秒。",
   "worldcombat.skill.mimic.description.1": "只记住 %1$s 秒以内的出手；借来的那一手在自己身上留 %2$s 秒，之后自动还回去。",
-  "worldcombat.skill.mimic.description.2": "念线约 %1$s 条；当前为 %2$s。",
+  "worldcombat.skill.mimic.description.2": "当前为 %1$s。",
   "worldcombat.skill.mimic.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.mimic.growth.0": "%1$s 级起记忆窗口升至 %2$s 秒、维持 %3$s 秒。",
   "worldcombat.skill.mimic.value.reach": "模仿距离",

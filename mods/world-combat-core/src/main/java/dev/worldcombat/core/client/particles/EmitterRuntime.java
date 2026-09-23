@@ -119,7 +119,11 @@ public final class EmitterRuntime {
         expire(clientTick);
 
         if (spec.trails()) {
-            if (anchored && context.lodFactor() > 0 && (context.instance() == null || context.instance().intensity() > 0)
+            // A trail consumes one newly observed segment. Entity loss keeps the last anchor for
+            // ordinary emitters, but must not replay that last segment or bridge an unloaded gap.
+            boolean continuous = resolved && history.size() >= 2 && history.tick(1) == momentTick - 1;
+            if (!continuous) trailCarry = 0;
+            if (continuous && context.lodFactor() > 0 && (context.instance() == null || context.instance().intensity() > 0)
                 && schedule.emitting(momentTick)) {
                 trailPoints.clear();
                 collectTrailPoints(trailPoints);
@@ -283,7 +287,7 @@ public final class EmitterRuntime {
     private Quaternionf orientation(ParticleInstance.InstanceContext context) {
         Vector3d axis = switch (spec.orient()) {
             case FIXED -> null;
-            case DIRECTION -> context.instance() == null ? null : context.instance().direction();
+            case DIRECTION, HEADING -> context.instance() == null ? null : context.instance().direction();
             case VELOCITY -> anchorDelta.lengthSquared() < 1e-12 ? null : new Vector3d(anchorDelta);
             case TOWARD -> {
                 Vector3d target = targetPosition(context);
@@ -293,6 +297,8 @@ public final class EmitterRuntime {
             }
         };
         if (axis == null) return null;
+        if (spec.orient() == ParticleDefinition.Orient.HEADING)
+            return axis.x * axis.x + axis.z * axis.z < 1e-12 ? null : new Quaternionf().rotationY((float) Math.atan2(axis.x, axis.z));
         Vector3f unit = new Vector3f((float) axis.x, (float) axis.y, (float) axis.z).normalize();
         return new Quaternionf().rotationTo(0f, 1f, 0f, unit.x, unit.y, unit.z);
     }
@@ -328,8 +334,9 @@ public final class EmitterRuntime {
         return spec.fit() == ParticleDefinition.Fit.BODY ? anchor.bodyFactor() : 1;
     }
 
-    /** Geometry multiplier: the body for body-fit emitters, otherwise the instance's data.scale. */
+    /** WORLD keeps authored blocks; BODY fits the body; NONE follows the instance's data.scale. */
     private double geometryFactor() {
+        if (spec.fit() == ParticleDefinition.Fit.WORLD) return 1;
         return spec.fit() == ParticleDefinition.Fit.BODY ? anchor.bodyFactor() : instanceScale;
     }
 

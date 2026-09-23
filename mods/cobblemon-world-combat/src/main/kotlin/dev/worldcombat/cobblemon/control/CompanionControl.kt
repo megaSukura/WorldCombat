@@ -14,7 +14,8 @@ import java.util.IdentityHashMap
 import java.util.UUID
 
 object CompanionControl {
-    class Body {
+    class Body(val worldDriven: Boolean = false) {
+        var lastWorldTick = -1L
         var index = 0
         var slot = 0
         var memory = "{}"
@@ -23,6 +24,7 @@ object CompanionControl {
         var epoch = -1L
         var reason = ""
         var pending: ControlCommand? = null
+        var pendingReason = ""
         var approaching = false
         var approachPosition: Point? = null
         var approachProgress = 0L
@@ -100,6 +102,7 @@ object CompanionControl {
     private val servers = IdentityHashMap<MinecraftServer, MutableMap<UUID, Session>>()
     fun stop(server: MinecraftServer) {
         servers.remove(server)
+        PastureControl.stop(server)
     }
     fun isCurrentPlayer(player: ServerPlayer) = player.server.playerList.getPlayer(player.uuid) === player
     fun session(player: ServerPlayer): Session {
@@ -111,10 +114,11 @@ object CompanionControl {
     fun tick(server: MinecraftServer) {
         val sessions = servers.getOrPut(server) { mutableMapOf() }
         for ((id, old) in sessions.toMap()) if (server.playerList.getPlayer(id) !== old.player) {
-            old.members.keys.forEach { CombatServices.get(server).controlled(it, false) }
+            old.members.values.forEach { detach(old, it, CombatServices.get(server)) }
             sessions.remove(id)
         }
         for (player in server.playerList.players) advance(session(player))
+        PastureControl.tick(server)
     }
     fun advance(s: Session) {
         val server = s.player.server
@@ -128,7 +132,7 @@ object CompanionControl {
                 if (pending != null) {
                     advanceApproach(s, pending, combat)
                 }
-                CompanionTactics.tick(s, combat)
+                if (!body.worldDriven) CompanionTactics.tick(s, combat)
             }
         } finally { s.body = selected }
         sync(s)
@@ -151,13 +155,13 @@ object CompanionControl {
             }
         val present = available.values.map { it.second }.toSet()
         for ((handle, body) in s.members.toMap()) if (handle !in present || body.epoch != epoch) {
-            combat.runtime().interruptPreparation(handle); combat.controlled(handle, false); s.members.remove(handle)
+            detach(s, body, combat); s.members.remove(handle)
         }
         var index = 0
         for ((slot, pair) in available) {
             val (entity, handle) = pair
             val body = s.members.getOrPut(handle) {
-                Body().also {
+                if (entity.tethering != null) PastureControl.body(combat, entity) else Body().also {
                     it.actor = handle; it.epoch = epoch; it.reason = "ready"
                     s.body = it; CompanionTactics.load(s, entity)
                 }
@@ -181,6 +185,19 @@ object CompanionControl {
             previous.actor?.let {
                 for (instance in previous.manualActions.toList()) combat.runtime().interruptPreparation(it, instance)
             }
+        }
+    }
+    private fun detach(s: Session, body: Body, combat: MinecraftCombat) {
+        val actor = body.actor ?: return
+        if (!body.worldDriven) {
+            combat.runtime().interruptPreparation(actor); combat.controlled(actor, false)
+        } else {
+            val selected = s.body
+            try {
+                s.body = body
+                if (body.pending != null) clearPending(s, combat, "cancelled")
+                body.manualActions.forEach { combat.runtime().interruptPreparation(actor, it) }
+            } finally { s.body = selected }
         }
     }
     fun request(player: ServerPlayer, command: ControlCommand) {
@@ -215,12 +232,11 @@ object CompanionControl {
                 if (command.partySlot() != s.partySlot || command.actor() != actor.entity() || command.generation() != actor.generation())
                     throw ActionRejectedException("actor-changed")
                 if (!command.direction().length().isFinite() || command.direction().length() < 0.001) throw ActionRejectedException("invalid-target")
-                s.lastManual = combat.runtime().now()
                 if (command.operation() == "input-update" || command.operation() == "input-stop") {
                     val token = command.version().toLongOrNull() ?: throw ActionRejectedException("invalid-input")
                     val waiting=s.pending
-                    if(s.body.approaching && waiting!=null && pendingToken(s)==token) {
-                        if(command.operation()=="input-stop") { combat.stopMovement(actor);s.pending=null;s.body.approaching=false;s.reason="cancelled";s.behaviorStage="idle" }
+                    if(waiting!=null && pendingToken(s)==token) {
+                        if(command.operation()=="input-stop") { clearPending(s,combat,"cancelled") }
                         else {
                             ActionInput.validate(command.input(),CombatServices.CONTENT.preview(binding(actor,waiting).id).input(),Double.POSITIVE_INFINITY,actor,combat,combat.runtime().effects())
                             s.pending=ControlCommand(waiting.session(),waiting.sequence(),waiting.epoch(),command.observedTick(),waiting.actor(),waiting.generation(),waiting.partySlot(),"cast",waiting.value(),command.target(),command.point(),command.direction(),waiting.version(),command.input())
@@ -231,8 +247,9 @@ object CompanionControl {
                     sync(s, command.operation() == "input-stop"); return
                 }
                 if (command.operation() != "cast") {
-                    if(s.body.approaching) { combat.stopMovement(actor);s.pending=null;s.body.approaching=false }
-                    if(command.operation()=="cancel-cast") { s.pending=null;s.reason="cancelled";s.behaviorStage="idle";sync(s,true);return }
+                    clearPending(s,combat,"cancelled")
+                    if(command.operation()=="cancel-cast") { sync(s,true);return }
+                    s.lastManual = combat.runtime().now()
                     CompanionTactics.command(s, command, combat)
                     sync(s, true)
                     return
@@ -240,41 +257,17 @@ object CompanionControl {
                 if (command.value() !in 0..3) throw ActionRejectedException("invalid-slot")
                 val binding = binding(actor, command)
                 val definition = binding.definition!!
-                // A direct player cast preempts an independent work order. The next
-                // tactics frame observes the intent change and retires its work effect;
-                // leaving the old work intent here lets a machine task resume after
-                // the cast and claim movement again.
-                if (s.body.intent == "work") {
-                    if (s.body.approaching) combat.stopMovement(actor)
-                    s.body.intent = "follow"
-                    s.body.intentTarget = null
-                    s.body.intentPoint = null
-                    s.body.approaching = false
-                    s.body.pending = null
-                    s.body.approachGoal = null
-                    s.body.searchStarted = -1
-                }
                 val destination=target(s,command,combat)
                 combat.runtime().validateInput(definition.id(),actor,destination,player.uuid,true)
                 ActionInput.validate(command.input(), CombatServices.CONTENT.preview(binding.id).input(), Double.POSITIVE_INFINITY, actor, combat, combat.runtime().effects())
-                // A manual order owns its pending navigation/wait until it starts, is replaced, or fails.
-                // Identity/relationship/input were checked above; range and readiness are rechecked at execution.
-                val positioning = runCatching { validateCast(s,command,combat) }.exceptionOrNull()?.let {
-                    if(it is ActionRejectedException && it.reason() in setOf("out-of-range", "path-blocked", "target-not-visible")) it.reason() else throw it
-                } ?: ""
-                if(s.body.approaching)combat.stopMovement(actor)
-                combat.runtime().interruptPreparation(actor, binding.id)
-                if (positioning.isEmpty() && combat.runtime().readiness(actor,binding.id).isEmpty()) {
-                    s.pending=null;s.body.approaching=false;execute(s,command,combat)
-                } else {
-                    val now=player.server.tickCount.toLong()
-                    s.pending=command;s.body.approaching=true
-                    s.body.approachPosition=combat.position(actor);s.body.approachProgress=now;s.body.nextApproach=0
-                    s.body.lastTargetPoint=destination.point();s.body.lastTargetSeen=now
-                    s.body.approachGoal=null;s.body.searchStarted=-1
-                    s.behaviorStage=if(positioning.isEmpty())"waiting" else "approaching"
-                    s.reason=if(positioning.isEmpty())waitingReason(combat.runtime().readiness(actor,binding.id)) else "approaching"
-                }
+                // Reserving input is passive. Movement belongs to the normal order until
+                // this action is ready and actually needs a position from which to cast.
+                clearPending(s,combat,"")
+                val now=player.server.tickCount.toLong()
+                s.pending=command
+                s.body.lastTargetPoint=destination.point();s.body.lastTargetSeen=now
+                s.body.nextApproach=0;s.body.approachGoal=null;s.body.searchStarted=-1
+                advanceApproach(s,command,combat)
             }
         } catch (rejected: ActionRejectedException) { s.reason = rejected.reason() }
         sync(s, true)
@@ -300,9 +293,7 @@ object CompanionControl {
     private fun advanceApproach(s:Session,command:ControlCommand,combat:MinecraftCombat) {
         val actor=s.actor?:return
         fun finish(reason:String) {
-            if(!combat.runtime().claimed(actor,"movement"))combat.stopMovement(actor)
-            s.pending=null;s.body.approaching=false;s.body.approachGoal=null;s.reason=reason;s.behaviorStage="idle"
-            s.lastManual=combat.runtime().now()
+            clearPending(s,combat,reason)
         }
         try {
             if(command.epoch()!=s.epoch)throw ActionRejectedException("content-mismatch")
@@ -311,15 +302,23 @@ object CompanionControl {
                 catch(e:ActionRejectedException) { if(e.reason() in setOf("out-of-range","path-blocked","target-not-visible"))e.reason() else throw e }
             val readiness=combat.runtime().readiness(actor,binding.id)
             if(positioning=="target-not-visible" && now-s.body.lastTargetSeen>60){finish("target-not-visible");return}
-            if(positioning.isEmpty()) {
-                if(readiness.isEmpty()) { finish("ready");execute(s,command,combat);return }
+            if(readiness.isNotEmpty()) {
                 if(readiness !in setOf("cooldown","busy"))throw ActionRejectedException(readiness)
-                if(!combat.runtime().claimed(actor,"movement"))combat.stopMovement(actor)
-                s.body.approachProgress=now;s.body.approachPosition=combat.position(actor)
-                s.behaviorStage="waiting";s.reason=waitingReason(readiness);return
+                if(s.body.approaching && !combat.runtime().claimed(actor,"movement"))combat.stopMovement(actor)
+                s.body.approaching=false;s.body.searchStarted=-1;s.body.approachGoal=null
+                s.body.pendingReason=waitingReason(readiness);s.reason=s.body.pendingReason
+                return
+            }
+            if(positioning.isEmpty()) {
+                beginManual(s,combat);finish("ready");execute(s,command,combat);return
             }
             if(combat.runtime().claimed(actor,"movement") || combat.runtime().claimed(actor,"aim")) {
-                s.body.approachProgress=now;s.body.searchStarted=-1;s.behaviorStage="waiting";s.reason=waitingReason(readiness);return
+                s.body.pendingReason="waiting-action";s.reason=s.body.pendingReason;return
+            }
+            if(!s.body.approaching) {
+                beginManual(s,combat)
+                s.body.approaching=true;s.body.approachPosition=combat.position(actor);s.body.approachProgress=now
+                s.body.nextApproach=0;s.body.searchStarted=-1
             }
             val position=combat.position(actor)
             var goal=target(s,command,combat).point()
@@ -353,6 +352,19 @@ object CompanionControl {
                 finish(moving)
             }
         } catch(e:ActionRejectedException){finish(e.reason())}
+    }
+    private fun clearPending(s:Session,combat:MinecraftCombat,reason:String) {
+        val actor=s.actor
+        if(s.body.approaching && actor!=null && !combat.runtime().claimed(actor,"movement"))combat.stopMovement(actor)
+        if(s.body.approaching)s.behaviorStage="idle"
+        s.pending=null;s.body.approaching=false;s.body.approachGoal=null;s.body.pendingReason=""
+        if(reason.isNotEmpty())s.reason=reason
+    }
+    private fun beginManual(s:Session,combat:MinecraftCombat) {
+        s.lastManual=combat.runtime().now();s.body.pendingReason=""
+        if(s.body.intent=="work") {
+            s.body.intent="follow";s.body.intentTarget=null;s.body.intentPoint=null
+        }
     }
     private fun waitingReason(readiness:String)=if(readiness=="cooldown")"waiting-cooldown" else "waiting-action"
     private fun clearPosition(combat:MinecraftCombat,actor:ActorHandle,origin:Point,target:Point):Point? {
@@ -420,7 +432,8 @@ object CompanionControl {
         return ControlState(s.id, s.gate.lastSequence(), s.epoch, s.player.server.tickCount.toLong(),
             actor?.entity() ?: ControlCommand.NONE, actor?.generation() ?: 0, entity?.id ?: -1, s.partySlot,
             entity?.displayName?.string?.take(128) ?: "", if (actor != null && combat.runtime().busy(actor)) state?.stage() ?: "preparing" else s.behaviorStage,
-            if (requestState?.stage() == "cancelled" && s.reason == "accepted") requestState.reason() else s.reason,
+            if (s.pending!=null && !s.body.approaching) s.body.pendingReason
+                else if (requestState?.stage() == "cancelled" && s.reason == "accepted") requestState.reason() else s.reason,
             s.intent, s.tactics, s.permissions, s.chaseRange, if (s.intent == "protect") s.intentTarget?.entity() ?: s.player.uuid else ControlCommand.NONE, skills,
             s.members.values.sortedBy { it.slot }.mapNotNull { body ->
                 val member = body.actor?.let { combat.resolve(it) as? PokemonEntity } ?: return@mapNotNull null
@@ -431,7 +444,6 @@ object CompanionControl {
     }
     private fun pendingToken(s:Session):Long {
         val command=s.pending?:return 0
-        if(!s.body.approaching)return 0
         val spec=CombatServices.CONTENT.preview(CompanionContent.resolve(s.actor,command.value()).id).input()
         return if(spec.sustained())ActionInput.parse(command.input(),spec).token() else 0
     }

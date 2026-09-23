@@ -65,8 +65,8 @@ namespace PokemonSkills {
 
     describe(floralhealingId, [
         { key: "description.0", values: ["heal"] },
-        { key: "description.1", values: ["reach", "petals", "bloomRadius"] },
-        { key: "description.2", values: ["flowers", "tempo", "settle"] },
+        { key: "description.1", values: ["reach"] },
+        { key: "description.2", values: ["tempo", "settle"] },
         { key: "stance.bouquet", values: [], when: function (context) { return read(context.detail.values, ["bouquet"]) === true; } },
         { key: "stance.plain", values: [], when: function (context) { return read(context.detail.values, ["bouquet"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

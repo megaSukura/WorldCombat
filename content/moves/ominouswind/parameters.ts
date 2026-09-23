@@ -1,12 +1,12 @@
 /**
  * 奇异之风 / ominouswind —— 参数与伤害段。
  *
- * 原生事实：Ghost／特殊／威力 60／命中 100／PP 5／目标单体／10% 概率让自身全部能力各升 1 级。
+ * 原生事实：Ghost／特殊／威力 60／命中 100／PP 5／目标单体／10% 概率让自身五项战斗能力各升 1 级。
  *
  * 翻译：把「突然刮起毛骨悚然的暴风」落成一道**从施法者脚下窜出、贴着地面追着目标跑、在目标脚下从四面
  * 收拢的幽风**。它不在路上伤人——一路只是聚势，到了目标脚下才突然炸开，把那一圈的东西朝中心收拢；
  * 风会跟着目标转向（轻追踪），所以光靠站住不动躲不掉，跑得比风快才能把它甩掉。
- * 原生的「全部能力提升」是幽风回卷的结果：收拢后一缕冷气倒流回施法者身上，有概率把攻击、防御、特攻、
+ * 原生的「五项战斗能力提升」是幽风回卷的结果：收拢后一缕冷气倒流回施法者身上，有概率把攻击、防御、特攻、
  * 特防、速度一起抬 1 级。
  *
  * 与同族分开（同为「命中后反哺出手者」的余波族）：原始之力以自身为心、原地向外轰开；银色旋风向前铺开一扇；
@@ -83,12 +83,13 @@ namespace PokemonSkills {
                 .plus(F.level().minus(28).times(0.001).clamp(0, 0.05))
                 .plus(F.when(F.pref("haunt"), F.const(0.05), F.const(0)))
                 .clamp(0.06, 0.35).round(3),
-            "反哺概率", "幽风回卷、把施法者全部能力各抬 1 级的概率；原生 10% 起，特攻与等级越高越容易抓住，缠魄式更稳。"),
+            "反哺概率", "幽风回卷、把施法者五项战斗能力各抬 1 级的概率；原生 10% 起，特攻与等级越高越容易抓住，缠魄式更稳。"),
+        surgeTicks: seconds(F.base(140), "反哺持续", "本招的五项能力强化持续时间；再次触发刷新时间，保持一层。"),
         surgeStages: formula(
             F.base(1),
             "反哺级数", {
                 unit: "级",
-                description: "一次反哺让自身全部能力各提升的能力等级。"
+                description: "一次反哺让自身五项战斗能力各提升的能力等级。"
             }),
         wisps: formula(
             F.base(20)
@@ -122,8 +123,8 @@ namespace PokemonSkills {
     describe("ominouswind", [
         { key: "description.0", values: ["squall", "travel"] },
         { key: "description.1", values: ["front", "coilRadius", "pull"] },
-        { key: "description.2", values: ["surgeChance", "surgeStages"] },
-        { key: "description.3", values: ["wisps", "pref.haunt"] },
+        { key: "description.2", values: ["surgeChance", "surgeStages", "surgeTicks"] },
+        { key: "description.3", values: ["pref.haunt"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.squall", "tier.0.travel"] }
     ]);

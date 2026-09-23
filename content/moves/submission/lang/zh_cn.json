@@ -2,7 +2,7 @@
   "worldcombat.skill.submission.summary": "抓住目标摔向地面，使其倒地，同时自身受伤。体型过大的目标更难摔倒。",
   "worldcombat.skill.submission.description.0": "抓起后砸落造成 %1$s 的接触伤害，最远扑抓 %2$s 格、扑身速度 %3$s 格每刻、抓取半径 %4$s 格。",
   "worldcombat.skill.submission.description.1": "抓住目标后有 %1$s 秒的窗口再摔下；摔后对方被压制 %2$s 秒、甩开 %3$s 格。目标块头越大，摔击越轻、压制越短。",
-  "worldcombat.skill.submission.description.2": "命中后自己按实际伤害的 %1$s%% 反噬，扑抓与落地扬尘 %2$s 个。",
+  "worldcombat.skill.submission.description.2": "命中后自己按实际伤害的 %1$s%% 反噬。",
   "worldcombat.skill.submission.pin.on": "压制式：摔得更轻、反噬更小，但把对方按住更久，适合控场与配合队友。",
   "worldcombat.skill.submission.pin.off": "抛摔式：摔得更重、甩得更开、反噬更大，但对方很快能爬起来。",
   "worldcombat.skill.submission.timing": "射程 %1$s 格；起手 %2$s 秒、起身 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

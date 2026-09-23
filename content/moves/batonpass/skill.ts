@@ -15,8 +15,7 @@
 namespace PokemonSkills {
     /** 当前能力等级：宝可梦读原生阶梯，其他生物读共享 CombatStages 的同一把梯子。 */
     function batonpassStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
-        if (String(actor.domain()) === "cobblemon") return NativeEffects.read(world, actor).stages || {};
-        return CombatStages.read(world, actor);
+        return NativeEffects.effectiveStages(world, actor);
     }
 
     /** 背离 awayFrom 退开 distance；优先瞬移到落点，失败就一步步位移。返回实际移动量。 */
@@ -34,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: batonpassId,
+        cooldownParameter: "recharge",
         name: "Baton Pass",
         description: "把自己此刻的能力等级打包递给待命的一只或身边最近的伙伴，自己清空；有后备时由接棒者上场，否则退开一步。",
         uses: ["把攒起来的能力等级整体交给队友", "被削弱前把自己的成长交给别人带走", "残血时把接力棒递出去再脱身"],
@@ -125,9 +125,8 @@ namespace PokemonSkills {
                 const magnitude = Math.min(Math.abs(entries[index].stage), left);
                 const take = entries[index].stage < 0 ? -magnitude : magnitude;
                 if (take === 0) continue;
-                NativeEffects.boost(world, recipient, entries[index].stat, take);
-                NativeEffects.boost(world, self, entries[index].stat, -take);
-                left -= magnitude; moved += magnitude;
+                const carried = NativeEffects.transferStage(world, self, recipient, entries[index].stat, take, switched);
+                left -= carried; moved += carried;
             }
 
             const path: (string | number[])[] = [String(self.ref()), String(recipient.ref())];

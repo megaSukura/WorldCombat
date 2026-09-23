@@ -63,7 +63,7 @@ namespace PokemonSkills {
 
     describe(charmId, [
         { key: "description.0", values: ["drop", "heartTicks"] },
-        { key: "description.1", values: ["charmRange", "hearts"] },
+        { key: "description.1", values: ["charmRange"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "kiss.off", values: [], when: function (context) { return read(context.detail.values, ["kiss"]) !== true; } },
         { key: "kiss.on", values: [], when: function (context) { return read(context.detail.values, ["kiss"]) === true; } },

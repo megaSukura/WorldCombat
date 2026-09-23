@@ -69,7 +69,7 @@ namespace PokemonSkills {
 
     describe(eerieimpulseId, [
         { key: "description.0", values: ["drop", "jam"] },
-        { key: "description.1", values: ["reach", "arcs"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

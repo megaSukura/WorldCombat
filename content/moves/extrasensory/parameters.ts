@@ -116,7 +116,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["crush", "radius"] },
         { key: "description.1", values: ["reach", "delay"] },
         { key: "description.2", values: ["flinchChance", "flinchTicks"] },
-        { key: "description.3", values: ["motes", "pref.premonition"] },
+        { key: "description.3", values: ["pref.premonition"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.crush", "tier.0.radius"] }
     ]);

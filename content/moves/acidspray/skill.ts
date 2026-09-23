@@ -22,8 +22,26 @@ namespace PokemonSkills {
     const acidsprayDrift = "world_combat:acidspray_drift";
     const acidspraySunderText = "world_combat.move.acidspray.text.sunder";
 
-    /** 锥形酸雾场地：以 store 里的 origin/direction 为形，只在锥内、且每人只咬一次。 */
+    /** 把判定的水平扇区采样为世界顶点，喷淋、残雾和轮廓共用。 */
+    function acidsprayPath(origin: CombatPoint, direction: CombatPoint, range: number, angle: number): number[][] {
+        const path = [[origin.x(), origin.y(), origin.z()]], steps = Math.max(3, Math.ceil(angle / 5));
+        for (let i = 0; i <= steps; i++) {
+            const turn = (i / steps - 0.5) * angle * Math.PI / 180, cos = Math.cos(turn), sin = Math.sin(turn);
+            path.push([origin.x() + (direction.x() * cos - direction.z() * sin) * range, origin.y(),
+                origin.z() + (direction.x() * sin + direction.z() * cos) * range]);
+        }
+        return path;
+    }
+
+    /** 水平楔形酸雾：首次喷淋与残雾共用每人一次的命中记录。 */
     WorldEffects.fieldRule(acidsprayDrift, {
+        scan: function (effect, world, field) {
+            const point = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
+            world.present("acidspray:drift", acidsprayScene, 1, point,
+                JSON.stringify({ moment: "drift", path: field.data.path }));
+            world.present("acidspray:boundary", "world_combat:acidspray_boundary", 1, point,
+                JSON.stringify({ path: field.data.path }));
+        },
         stay: function (world, actor, field) {
             if (world.friendly(actor)) return;
             const data = field.data as any, body = world.observe(actor);
@@ -86,7 +104,7 @@ namespace PokemonSkills {
             const actor = action.actor();
             const body = world.observe(actor);
             const origin = body === null ? action.origin() : body.position();
-            const aim = PokemonSkills.aim(action);
+            const aim = WorldGeometry.flatUnit(PokemonSkills.aim(action), action.direction());
             const power = p("acidspray", "core", action);
             const driftPower = p("acidspray", "drift", action);
             const range = Math.max(3.0, p("acidspray", "sprayRange", action));
@@ -97,12 +115,16 @@ namespace PokemonSkills {
             const scale = Math.max(0.5, Math.min(2.4, range / 5.0));
             const intensity = Math.max(0.5, Math.min(2.2, power / 38));
             const direction = [aim.x(), aim.y(), aim.z()];
+            const ground = WorldGeometry.ground(world, origin);
+            const path = acidsprayPath(WorldCombat.point(origin.x(), ground.y(), origin.z()), aim, range, angle);
+            const hit: { [ref: string]: boolean } = {};
             let hits = 0;
 
             sound(action, "cobblemon:move.acidspray.actor");
             const region = WorldGeometry.sector(origin, aim, range, angle, { below: 2, above: 3 });
             WorldGeometry.selectEnemies(world, region, function (enemy, facts) {
                 if (!hurt(action, enemy, "acidspray", power, { damage: damageSpec("acidspray", "core") })) return;
+                hit[String(enemy.ref())] = true;
                 hits++;
                 NativeEffects.boost(world, enemy, "spd", -stages);
                 WorldFeedback.emit(world, acidsprayScene, 1, facts.position(),
@@ -110,17 +132,13 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), acidspraySunderText, [stages], 30);
             });
             WorldFeedback.emit(world, acidsprayScene, 1, origin,
-                { moment: "spray", direction: direction, range: range, angle: angle, drops: drops, scale: scale,
+                { moment: "spray", path: path, direction: direction, range: range, angle: angle, drops: drops,
                     intensity: intensity, hits: hits }, 24);
             if (hits > 0) sound(action, "cobblemon:move.acidspray.target");
 
-            const centre = origin.plus(aim.scale(range * 0.5));
-            WorldEffects.field(world, acidsprayDrift, centre, range * 0.5 + 1.5,
+            WorldEffects.field(world, acidsprayDrift, region.centre(), region.radius(),
                 { origin: [origin.x(), origin.y(), origin.z()], direction: direction, range: range, angle: angle,
-                    power: driftPower, stages: stages, drops: drops, scale: scale, hit: {} }, cloud);
-            WorldFeedback.keep(world, "acidspray:drift:" + action.id(), acidsprayScene, 1, centre,
-                { moment: "drift", direction: direction, range: range, angle: angle, drops: drops, scale: scale,
-                    intensity: Math.max(0.4, Math.min(1.6, driftPower / 12)) }, cloud);
+                    path: path, power: driftPower, stages: stages, drops: drops, scale: scale, hit: hit }, cloud);
             done(action);
         }
     });

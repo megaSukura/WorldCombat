@@ -4,7 +4,6 @@
   "worldcombat.skill.softboiled.use.1": "在安全位置产蛋再回来吃",
   "worldcombat.skill.softboiled.use.2": "把蛋让给受伤的伙伴",
   "worldcombat.skill.softboiled.description.0": "产下一枚蛋，%2$s 后啄开，回复受益者最大生命的 %1$s；蛋在孵化前可以被敌人打碎。",
-  "worldcombat.skill.softboiled.description.1": "产蛋迸出约 %1$s 点蛋壳，蛋在地上守候时约 %2$s 点暖光脉动，体型越大越明显。",
   "worldcombat.skill.softboiled.description.2": "起手 %1$s、收招 %2$s，随速度缩短。",
   "worldcombat.skill.softboiled.stance.share": "分蛋：把蛋递给 %1$s 格内最近的一只受伤伙伴，他按自己最大生命的同一比例回复，代价是施法者拿不到这一口。",
   "worldcombat.skill.softboiled.stance.self": "自食：蛋留给自己，孵化时回复自己最大生命的一半左右。",

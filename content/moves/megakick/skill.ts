@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "megakick",
+        cooldownParameter: "recharge",
         name: "Mega Kick",
         description: "The target is attacked by a kick launched with muscle-packed power.",
         uses: ["一脚把单体目标踢出阵型", "用大起手逼对手让位，再收势", "对残血目标做一记终结式重踢"],

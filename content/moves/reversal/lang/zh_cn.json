@@ -3,7 +3,7 @@
   "worldcombat.skill.reversal.use.0": "残血时反打一记大的",
   "worldcombat.skill.reversal.use.1": "把围上来的敌人一起掀开",
   "worldcombat.skill.reversal.use.2": "拼命式赌一记重伤",
-  "worldcombat.skill.reversal.description.0": "喷发对圈内每个敌人造成约 %1$s 的接触伤害；当前已损失生命 %2$s，自己越接近倒下这一喷越重。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.reversal.description.0": "喷发对圈内每个敌人造成约 %1$s 的接触伤害；自己越接近倒下这一喷越重。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.reversal.description.1": "起手站定 %1$s 刻（可被打断，打断则什么也不发生），随后沿瞄准方向扑出最多 %2$s 格（每刻 %3$s 格）贴到对手身下。",
   "worldcombat.skill.reversal.description.2": "落地掀开半径约 %1$s 格的一圈；圈内每个敌人被向外顶开约 %2$s 格，扑身途中撞人的判定半径 %3$s 格。",
   "worldcombat.skill.reversal.reckless.on": "拼命式：威力再抬一截，但每次打中后自己按最大生命扣掉 %1$s 反噬，残血时可能因此倒下。",

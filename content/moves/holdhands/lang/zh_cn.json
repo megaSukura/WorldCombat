@@ -5,7 +5,7 @@
   "worldcombat.skill.holdhands.use.2": "在喘息间隙把两名成员一起补起来",
   "worldcombat.skill.holdhands.description.0": "链子维持 %2$s 秒；期间你与伙伴每隔一小段各按自身最大生命回复 %1$s%%。",
   "worldcombat.skill.holdhands.description.1": "起手距离约 %1$s 格，链子最长约 %2$s 格；每 %3$s 秒匀一次体力，超出链子长度即断。",
-  "worldcombat.skill.holdhands.description.2": "起手 %2$s 秒，冷却 %3$s 秒。",
+  "worldcombat.skill.holdhands.description.2": "起手 %1$s 秒，冷却 %2$s 秒。",
   "worldcombat.skill.holdhands.stance.tight": "紧握：每拍回复 ×1.4，但连接只走 70%% 时长、链子 ×0.85——贴着短促深疗。",
   "worldcombat.skill.holdhands.stance.loose": "松开：每拍回复 ×0.85，但连接走 1.3 倍时长、链子 ×1.15——拉开一点、慢慢来。",
   "worldcombat.skill.holdhands.timing": "对伙伴施放，准备 %2$s 秒后消耗 %4$s PP；收招 %3$s 秒，冷却 %5$s 秒。",

@@ -5,7 +5,6 @@
   "worldcombat.skill.psychup.use.2": "照单全收时把对手的负面也一并接过来",
   "worldcombat.skill.psychup.description.0": "在 %1$s 格内读取对手的能力变化，起手 %2$s 秒。",
   "worldcombat.skill.psychup.description.1": "对齐后挂上“已同调”标记，维持 %1$s 秒；能力等级本身独立保留、按各自规则消退。",
-  "worldcombat.skill.psychup.description.2": "画面上从对手抽回约 %1$s 条回响光带。",
   "worldcombat.skill.psychup.select.0": "只取增益：只抄对自己有利的项，忽略会削弱自己的项；代价是冷却 +20 刻、标记维持减半。",
   "worldcombat.skill.psychup.select.1": "照单全收：对手的每一项能力变化都照抄（包括负面），冷却更短、标记维持更长。",
   "worldcombat.skill.psychup.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

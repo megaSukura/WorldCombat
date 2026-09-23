@@ -64,7 +64,7 @@ public final class ParticleTypes {
         return paths;
     }
 
-    /** Frame layout of one Cobblemon flipbook texture: frames stacked vertically, each {@code width x height}. */
+    /** Frame count and per-frame dimensions from the generated Cobblemon atlas grid. */
     public record Layout(String path, int frames, int width, int height) {}
     private static java.util.Map<String, Layout> layouts;
 

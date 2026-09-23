@@ -149,10 +149,23 @@ namespace NativeLoadout {
         if (composition) WorldCombat.composition(action, JSON.stringify(composition));
     }
     export function defaultCost(_pokemon: CombatPokemon, _move: CombatPokemonMove): number { return 1; }
-    /** Read the effective slot identity; the equipped move remains the resource owner. */
-    export function selection(world: CombatWorld, slot: number, move: CombatPokemonMove): { id: string; key: string } {
-        var layers = NativeModifiers.read(world, world.source()), id = layers.moves![String(slot)];
+    function selected(layers: NativeModifiers.Layers, slot: number, move: CombatPokemonMove): { id: string; key: string } {
+        var id = layers.moves![String(slot)];
         return { id: id || String(move.id()), key: id ? layers.moveKeys![String(slot)] : "native" };
+    }
+    /** Read this actor's effective slot identity; the equipped move remains the resource owner. */
+    export function selection(world: CombatWorld, slot: number, move: CombatPokemonMove, actor: CombatActor = world.source()): { id: string; key: string } {
+        return selected(NativeModifiers.read(world, actor), slot, move);
+    }
+    /** Current effective loadout, including temporary copies/replacements; independent of PP, cooldown and action restrictions. */
+    export function hasEquipped(world: CombatWorld, actor: CombatActor, id: string): boolean {
+        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return false;
+        var pokemon = CobblemonCombat.pokemon(actor), layers = NativeModifiers.read(world, actor);
+        for (var slot = 0; slot < pokemon.moveSlots(); slot++) {
+            var move = pokemon.move(slot);
+            if (move !== null && selected(layers, slot, move).id === id) return true;
+        }
+        return false;
     }
     export function slot(view: CombatLoadout): void {
         var pokemon = view.pokemon();

@@ -4,7 +4,7 @@
   "worldcombat.skill.terrainpulse.use.1": "Amplify power while standing on terrain",
   "worldcombat.skill.terrainpulse.description.0": "Sends a %1$s special ground pulse; grounded on a terrain the type follows the terrain and the power doubles, while airborne it reads as Normal.",
   "worldcombat.skill.terrainpulse.description.1": "After %1$s s of stomping, the wave is sent within %2$s blocks.",
-  "worldcombat.skill.terrainpulse.description.2": "Resonate adds a second wave, each x0.7, covering a %2$s block radius.",
+  "worldcombat.skill.terrainpulse.description.2": "Resonate adds a second wave, each x0.7, covering a %1$s block radius.",
   "worldcombat.skill.terrainpulse.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.terrainpulse.value.pulse": "Power",
   "worldcombat.skill.terrainpulse.value.charged": "Terrain underfoot",

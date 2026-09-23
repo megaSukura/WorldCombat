@@ -158,7 +158,7 @@ namespace PokemonSkills {
         { key: "plow.on", values: ["furrowTicks"], when: function (context) { return read(context.detail.values, ["plow"]) === true; } },
         { key: "plow.off", values: [], when: function (context) { return read(context.detail.values, ["plow"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.charge", "tier.0.dust"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.charge"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.charge", "tier.1.reach"] }
     ]);
 }

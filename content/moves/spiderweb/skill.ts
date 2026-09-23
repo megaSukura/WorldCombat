@@ -132,6 +132,7 @@ namespace PokemonSkills {
 
     define({
         id: spiderwebId,
+        cooldownParameter: "recharge",
         name: "蛛网",
         description: "吐一团黏糊糊的细丝射向一个对手，命中后把它裹成茧；同一目标再中一次就多缠一层，裹得更久、更走不动，三层以上完全钉住。术者可以走开，但任何火焰都会把整圈丝一次烧光。",
         uses: ["把想逃跑的目标一层层裹住等队友收", "缠住一个高机动目标不让它脱离", "接在队友的火招之前，逼对手先解网"],

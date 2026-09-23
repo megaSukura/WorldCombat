@@ -5,7 +5,6 @@
   "worldcombat.skill.doodle.use.2": "Build the team around a target with a key Ability",
   "worldcombat.skill.doodle.description.0": "Sketches the target's essence within %1$s blocks; %2$s s wind-up.",
   "worldcombat.skill.doodle.description.1": "The sketch spreads into a canvas of about %1$s blocks, stamping up to %2$s allies; the borrowed Ability lasts %3$s s, then all return together.",
-  "worldcombat.skill.doodle.description.2": "The canvas and each stamp carry about %1$s marks.",
   "worldcombat.skill.doodle.timing": "Range %1$s blocks, %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.doodle.growth.0": "At level %1$s the cooldown from commit drops to %2$s s.",
   "worldcombat.skill.doodle.growth.1": "At level %1$s the cooldown drops again to %2$s s.",

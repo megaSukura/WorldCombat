@@ -39,7 +39,7 @@
   "worldcombat.attributes.critical_multiplier": "暴击伤害倍率",
   "worldcombat.attributes.critical_multiplier.help": "使用共用伤害计算时，暴击相对普通伤害的倍率；含当前特性的修正。",
   "worldcombat.attributes.skill_haste": "技能急速",
-  "worldcombat.attributes.skill_haste.help": "共用招式冷却按“原冷却 × 100 ÷ (100 + 急速)”计算。100 急速让冷却减半；准备和恢复时间仍由每招设计。特殊公式在招式详情说明。",
+  "worldcombat.attributes.skill_haste.help": "施放时，冷却按“原冷却 × 100 ÷ (100 + 急速)”计算。100 急速让冷却减半；已开始的倒计时保持原定结束时刻，准备和恢复时间由各招决定。",
   "worldcombat.attributes.healing_received": "受治疗加成",
   "worldcombat.attributes.healing_received.help": "通过共用治疗接口获得的技能和携带物治疗按此百分比增减。+25%% 让 20 点治疗变为 25 点；满血上限仍有效。",
   "worldcombat.attributes.curiosity": "探索意愿修正",

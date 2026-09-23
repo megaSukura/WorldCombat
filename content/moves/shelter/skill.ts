@@ -64,6 +64,7 @@ namespace PokemonSkills {
 
     define({
         id: "shelter",
+        cooldownParameter: "wait",
         name: "闭关",
         description: "将皮肤变得坚硬如铁盾，从而大幅提高自己的防御。",
         uses: ["在 burst 到来之前把壳合上，硬吃这一轮", "用一层会被打碎的承伤壳逼对手多花几刀", "残血时缩壳等队友或等冷却"],

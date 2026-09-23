@@ -15,6 +15,7 @@ namespace PokemonSkills {
 
     define({
         id: tickleId,
+        cooldownParameter: "recharge",
         name: "挠痒",
         description: "贴上去挠对手的痒，把它逗到发笑，同时降低它的攻击和防御。必须近身，射程很短；猛挠降得更多、笑得更久，但起手与冷却都更长。",
         uses: ["瓦解贴身的物理输出", "在缠斗里同时削掉对方的攻击与防御", "配合队友抢先手压制近战"],

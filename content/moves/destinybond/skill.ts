@@ -38,6 +38,7 @@ namespace PokemonSkills {
 
     define({
         id: destinyId,
+        cooldownParameter: "recharge",
         name: "同命",
         description: "当众把一条命线系在自己身上：这段时间里，谁亲手把你打倒，谁就一起倒下。它不护住你，只是把代价摆到明面上；已经有线在身时再施放会失败。",
         uses: ["残血时把「最后一击」变成对手自己的代价", "逼对手收手，争取喘息或撤退", "临死前把对面的主力一起带走"],

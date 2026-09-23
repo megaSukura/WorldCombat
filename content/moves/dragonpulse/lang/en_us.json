@@ -4,7 +4,7 @@
   "worldcombat.skill.dragonpulse.use.1": "Sustain pressure from mid to long range",
   "worldcombat.skill.dragonpulse.use.2": "Chain form: bloom over a cluster around the first foe",
   "worldcombat.skill.dragonpulse.description.0": "Each swept target takes %1$s special damage; the wavefront is %2$s blocks thick.",
-  "worldcombat.skill.dragonpulse.description.1": "The wave reaches %1$s blocks, advances %2$s blocks per tick, and carries %3$s wavefronts.",
+  "worldcombat.skill.dragonpulse.description.1": "The wave reaches %1$s blocks and advances %2$s blocks per tick.",
   "worldcombat.skill.dragonpulse.chain.on": "Chain form: the wave gathers at the first target and deals %1$s special damage to foes within %2$s blocks around it.",
   "worldcombat.skill.dragonpulse.chain.off": "Pierce form: it passes through up to %1$s more foes on the line.",
   "worldcombat.skill.dragonpulse.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",

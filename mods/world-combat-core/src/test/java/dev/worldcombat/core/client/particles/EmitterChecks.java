@@ -27,6 +27,7 @@ public final class EmitterChecks {
         checkHide();
         checkSegmentDistribution();
         checkTrailSpacing();
+        checkTrailAnchorLoss();
         checkLifetimeRange();
         checkLifeJitter();
         checkMaxParticles();
@@ -229,6 +230,43 @@ public final class EmitterChecks {
         assertTrue(belowMean && aboveMean, "lifetime range produced values on both sides of the mean");
     }
 
+    private static void checkTrailAnchorLoss() {
+        JsonObject emitter = rate(emitter("lost-anchor"), 20);
+        JsonObject trail = new JsonObject();
+        trail.addProperty("minDistance", 0.5);
+        emitter.add("trail", trail);
+        emitter.addProperty("lifetime", 2);
+        var anchor = new MutableAnchor(0, 0, 0);
+        var rig = new Rig(definition(emitter), anchor, 17L);
+        rig.tick();
+        anchor.set(2, 0, 0);
+        rig.tick();
+        assertEquals(4, rig.sink.spawns.size(), "the observed segment emits once");
+        anchor.available = false;
+        rig.sink.clear();
+        for (int tick = 0; tick < 6; tick++) rig.tick();
+        assertEquals(0, rig.sink.spawns.size(), "missing anchor cannot replay the last segment");
+        assertEquals(0, rig.emitter.particleCount(), "existing trail particles drain after anchor loss");
+        anchor.available = true;
+        anchor.set(10, 0, 0);
+        rig.tick();
+        assertEquals(0, rig.sink.spawns.size(), "reappearing anchor does not bridge an unobserved gap");
+        anchor.set(11, 0, 0);
+        rig.tick();
+        assertEquals(2, rig.sink.spawns.size(), "fresh consecutive observations resume the trail");
+        rig.sink.clear();
+        rig.tick();
+        assertEquals(0, rig.sink.spawns.size(), "stationary anchor emits no distance trail");
+
+        var heldAnchor = new MutableAnchor(3, 4, 5);
+        var held = new Rig(definition(rate(emitter("held-point"), 20)), heldAnchor, 18L);
+        held.tick();
+        heldAnchor.available = false;
+        held.tick();
+        assertEquals(2, held.sink.spawns.size(), "ordinary emitter retains the last point until owner release");
+        assertNear(3, held.sink.spawns.getLast().x(), EPS, "held emission stays at the last observed point");
+    }
+
     private static void checkLifeJitter() {
         JsonObject plain = emitter("jitter0");
         plain.addProperty("lifetime", 10);
@@ -369,6 +407,7 @@ public final class EmitterChecks {
         private double x;
         private double y;
         private double z;
+        private boolean available = true;
 
         MutableAnchor(double x, double y, double z) { set(x, y, z); }
 
@@ -380,6 +419,7 @@ public final class EmitterChecks {
 
         @Override
         public boolean resolve(float partialTick, Vector3d out) {
+            if (!available) return false;
             out.set(x, y, z);
             return true;
         }
@@ -388,7 +428,7 @@ public final class EmitterChecks {
         public double height() { return 0; }
 
         @Override
-        public boolean valid() { return true; }
+        public boolean valid() { return available; }
     }
 
     /** In-memory sink capturing the spawn-time snapshot for later assertions. */

@@ -3,6 +3,8 @@
   "worldcombat.skill.iceball.description.0": "Each pass deals %1$s ice damage; one cast lands up to %2$s passes.",
   "worldcombat.skill.iceball.description.1": "Every landed pass multiplies the next by %1$s (capped at %2$s); the ball flies at %3$s blocks/tick with a %4$s-block hitbox.",
   "worldcombat.skill.iceball.description.2": "The ball reaches %1$s blocks with %2$s s between passes; it shatters into %3$s blocks of ice that last %4$s s.",
+  "worldcombat.skill.iceball.thick.on": "Thick shell: each landed pass multiplies the next by 2.3, the power cap rises 15% and the ice patch left behind is larger and longer; costs 0.9x base power per pass, 0.85x ball speed, +2 ticks between passes, +2 ticks recovery and +6 ticks cooldown - a thicker shell, but slower and dearer.",
+  "worldcombat.skill.iceball.thick.off": "Thin shell (the native form): 2x per pass, 1.06x ball speed, -1 tick between passes and -4 ticks cooldown; at a lower power cap and a smaller, shorter ice patch - a faster ball thrown more often.",
   "worldcombat.skill.iceball.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.iceball.growth.0": "From level %1$s each pass rises to %2$s and the flight extends to %3$s blocks.",
   "worldcombat.skill.iceball.growth.1": "From level %1$s each pass rises to %2$s, the cap to %3$s, and the flight extends to %4$s blocks.",

@@ -93,7 +93,7 @@ namespace PokemonSkills {
 
     describe("spikyshield", [
         { key: "description.0", values: ["window", "capacity", "spike"] },
-        { key: "description.1", values: ["raise", "radius", "charge"] },
+        { key: "description.1", values: ["raise", "charge"] },
         { key: "description.2", values: ["fizzle", "pref.thorn"] }
     ]);
 }

@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: "firepunch",
+        cooldownParameter: "recharge",
         name: "Fire Punch",
         description: "A fist wreathed in flame strikes the target and may leave it burning; if it catches, the fire licks across to the nearest other foe. Burning targets keep losing health and hit more weakly.",
         uses: ["贴身点着目标，留下持续掉血", "借灼伤削弱对方物攻", "让火焰蔓延到旁边的第二个敌人"],

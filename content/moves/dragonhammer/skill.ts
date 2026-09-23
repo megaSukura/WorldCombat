@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "dragonhammer",
+        cooldownParameter: "recharge",
         name: "Dragon Hammer",
         description: "把整个身体抡起来当锤子，自上而下重砸一个目标：砸中后把它沿砸击方向撞飞、并砸得趴伏一阵、移动大幅变慢。重锤式更重、砸趴更久、把人压在原地；疾锤式起手更快、撞得更远。",
         uses: ["把冲进来的目标砸趴、断它一段走位", "对单个目标打一记重的龙属性接触伤害", "打断贴身后的追击节奏", "把目标撞开、为队友腾出身位"],

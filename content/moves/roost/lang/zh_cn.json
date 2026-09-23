@@ -4,7 +4,7 @@
   "worldcombat.skill.roost.use.1": "用落地窗口换一口更稳的回复",
   "worldcombat.skill.roost.use.2": "让飞禽暂时贴地、吃地形影响",
   "worldcombat.skill.roost.description.0": "落地栖息 %2$s，整段回复最大生命的 %1$s；栖息期间失去飞行属性、贴在地面，地面招式与青草场地重新算得到它。",
-  "worldcombat.skill.roost.description.1": "回复分成 %1$s 交付；落地扬起约 %2$s 点羽尘，羽风范围约 %3$s 格，翼展越宽、身量越大越明显。",
+  "worldcombat.skill.roost.description.1": "回复分成 %1$s 交付。",
   "worldcombat.skill.roost.description.2": "起手 %1$s、收招 %2$s，随速度与体重变化。",
   "worldcombat.skill.roost.stance.deep": "深栖：回复总量略增、栖息窗口 ×1.5，代价是冷却更久、落地脆弱期更长——适合在安全窗口里补一大口。",
   "worldcombat.skill.roost.stance.shallow": "浅栖：更快收势、冷却更短，回复略少、落地时间更短——适合在受击间隙里快速补一口。",

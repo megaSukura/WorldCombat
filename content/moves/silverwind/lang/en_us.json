@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.silverwind.summary": "Shake a broad fan of silver scales forward: foes inside the sector are cut once and the scales drift down and fade; a returning pinch of scales may raise all the user's stats by one stage. Dense form is shorter, narrower and heavier; loose form reaches farther and wider and casts faster.",
+  "worldcombat.skill.silverwind.summary": "Shake a broad fan of silver scales forward: foes inside the sector are cut once and the scales drift down and fade; a returning pinch of scales may temporarily raise the user's five combat stats by one stage. Dense form is shorter, narrower and heavier; loose form reaches farther and wider and casts faster.",
   "worldcombat.skill.silverwind.use.0": "Cut several foes standing side by side at once",
   "worldcombat.skill.silverwind.use.1": "Poke from a little farther out as an opener",
-  "worldcombat.skill.silverwind.use.2": "Cover blocks the fan entirely, so position behind it matters",
+  "worldcombat.skill.silverwind.use.2": "Attack during the temporary five-stat surge",
   "worldcombat.skill.silverwind.description.0": "The scale fan deals %1$s special damage and reaches %2$s blocks.",
-  "worldcombat.skill.silverwind.description.1": "The fan spans %1$s degrees, and the scales hang for %2$s seconds before settling — the window to step out of the sector.",
-  "worldcombat.skill.silverwind.description.2": "It has a %1$s chance to raise all the user's stats by %2$s stage(s).",
-  "worldcombat.skill.silverwind.description.3": "About %1$s scales fill the fan; dense form is currently %2$s.",
+  "worldcombat.skill.silverwind.description.1": "The fan spans %1$s degrees.",
+  "worldcombat.skill.silverwind.description.2": "After a hit, has a %1$s chance to raise Attack, Defence, Special Attack, Special Defence and Speed by %2$s for %3$s. Repeated triggers refresh one layer.",
+  "worldcombat.skill.silverwind.description.3": "Dense form is currently %1$s.",
   "worldcombat.skill.silverwind.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.silverwind.growth.0": "From level %1$s the power rises to %2$s and the fan reaches %3$s blocks.",
   "worldcombat.skill.silverwind.value.gale": "Gale power",
@@ -25,7 +25,8 @@
   "worldcombat.skill.silverwind.preference.ai.maxChase.help": "Beyond this distance the companion closes in first; larger values sweep at more distant targets.",
   "worldcombat.skill.silverwind.preference.ai.preferCrowd": "Prefer clusters",
   "worldcombat.skill.silverwind.preference.ai.preferCrowd.help": "On: a target with other foes within 3 blocks ranks higher, since one fan can cut several at once. Off: every target ranks the same.",
-  "world_combat.move.silverwind.text.surge": "All stats +%1$s",
+  "world_combat.move.silverwind.text.surge": "Five stats +%1$s (%2$s s)",
   "world_combat.move.silverwind.text.hit": "Silver scales cut %1$s foe(s)",
-  "world_combat.move.silverwind.text.miss": "The scales scatter on empty air"
+  "world_combat.move.silverwind.text.miss": "The scales scatter on empty air",
+  "worldcombat.skill.silverwind.value.surgeTicks": "Surge duration"
 }

@@ -98,6 +98,7 @@ namespace PokemonSkills {
 
     define({
         id: dragonCheerId,
+        cooldownParameter: "wait",
         name: "龙声鼓舞",
         description: "用一声龙吟般的鼓舞罩住自己和身边的队友：他们在这段时间里更容易击中要害，龙属性的队友被激得最强。已聚气的队友不会被鼓舞。",
         uses: ["开打前一声吼，把整队的要害概率一起抬起来", "给龙属性队友更强的鼓舞", "在队伍连击前先把士气铺好"],

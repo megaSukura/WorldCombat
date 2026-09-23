@@ -4,7 +4,7 @@
   "worldcombat.skill.magiccoat.use.1": "Have the film up before a foe applies a status",
   "worldcombat.skill.magiccoat.use.2": "Make status-only foes suffer their own tricks",
   "worldcombat.skill.magiccoat.description.0": "After %1$s of wind-up the film stays up for %2$s; a reflectable status move committed against you in that time is turned back and used by you against its original user.",
-  "worldcombat.skill.magiccoat.description.1": "Read incoming moves within %1$s blocks. The current cast range is %3$s blocks.",
+  "worldcombat.skill.magiccoat.description.1": "Read incoming moves within %1$s blocks. The current cast range is %2$s blocks.",
   "worldcombat.skill.magiccoat.description.2": "The cooldown between films is %1$s. An empty film costs nothing; a bounced move is settled with your own stats.",
   "worldcombat.skill.magiccoat.sweep.on": "Wide film: reflect reach x1.3 to catch farther moves; the film is thinner (duration x0.8), +2 ticks wind-up, x1.1 cooldown.",
   "worldcombat.skill.magiccoat.sweep.off": "Narrow film: duration x1.2, -1 tick wind-up, x0.9 cooldown to wait longer and cheaper; reflect reach x0.8.",

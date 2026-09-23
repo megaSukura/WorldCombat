@@ -26,6 +26,7 @@ namespace PokemonSkills {
 
     define({
         id: sandattackId,
+        cooldownParameter: "recharge",
         name: "泼沙",
         description: "朝一个方向踢起脚下一片扇形砂砾，糊住扇面里所有敌人的眼睛；砂砾的颜色跟着脚下地面走，射程很短。",
         uses: ["近身一次糊住一排敌人", "替一次近战或撤退做铺垫", "在沙地或泥地上把整条走廊封瞎"],

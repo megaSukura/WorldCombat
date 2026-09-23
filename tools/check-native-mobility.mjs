@@ -16,7 +16,7 @@ const context = vm.createContext({
 });
 // Keep merged namespace references visible to TypeScript; light intensity is the library boundary.
 const sources = ['namespace WorldEnvironment { export function sunlight(world: any, point: any): number { return world.sunlight; } }',
-  ...['content/behavior/contributions.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts', 'content/traits/ability-recipes.ts', 'content/mechanisms/native-abilities.ts', 'content/mechanisms/native-items.ts', 'content/mechanisms/native-semantics.ts',
+  ...['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/mechanisms/mob-effects.ts', 'content/mechanisms/combat-stages.ts', 'content/traits/composition.ts', 'content/traits/ability-recipes.ts', 'content/mechanisms/native-abilities.ts', 'content/mechanisms/native-items.ts', 'content/mechanisms/native-semantics.ts',
     'content/mechanisms/native-effects.ts', 'content/mechanisms/world-environment.ts', 'content/mechanisms/world-effects.ts',
     'content/mechanisms/native-mobility.ts', 'content/mechanisms/native-vitality.ts', 'content/rules/world-attributes/rules.ts'].map(source => fs.readFileSync(source, 'utf8'))];
 vm.runInContext(ts.transpileModule(sources.join('\n'), {

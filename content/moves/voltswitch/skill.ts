@@ -109,6 +109,7 @@ namespace PokemonSkills {
 
     define({
         id: "voltswitch",
+        cooldownParameter: "recharge",
         name: "Volt Switch",
         description: "射出一道电弧钉在目标身上，随即顺着电流瞬移到落点；余电式留在原地布下电荷区，直放式则与待命的一只换手。",
         uses: ["远程点一下再瞬移，重新找站位", "被打崩前放电脱身", "在原地留一片电荷封住走位"],

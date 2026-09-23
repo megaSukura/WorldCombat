@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.wildcharge.summary": "An electrified charge: gather the current over your body, smash straight in and drive it into the target (a chance to paralyze). The circuit hurts you too, and being soaked leaks harder. Take Down, live-wired.",
   "worldcombat.skill.wildcharge.description.0": "The charge deals %1$s contact Electric damage, dashing up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.wildcharge.description.1": "A hit has a %1$s%% chance to paralyze; the user takes %2$s%% of the actual damage as recoil, shoves the target %3$s blocks and bursts %4$s sparks.",
+  "worldcombat.skill.wildcharge.description.1": "A hit has a %1$s%% chance to paralyze; the user takes %2$s%% of the actual damage as recoil and shoves the target %3$s blocks.",
   "worldcombat.skill.wildcharge.overload.on": "Overload: the current runs wide open - power, paralysis chance, knockback and sparks all rise, but the recoil is heavier and the wind-up longer.",
   "worldcombat.skill.wildcharge.overload.off": "Governed: lower power and recoil, a shorter wind-up and a slightly smaller paralysis chance - for fast, grinding play.",
   "worldcombat.skill.wildcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, costing %5$s PP.",

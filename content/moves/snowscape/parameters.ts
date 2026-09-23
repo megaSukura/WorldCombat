@@ -73,7 +73,7 @@ namespace PokemonSkills {
     describe("snowscape", [
         { key: "description.0", values: ["snowRadius", "snowTicks"] },
         { key: "description.1", values: ["coverCells", "freezeCells", "powderTicks"] },
-        { key: "description.2", values: ["flakeDensity", "gather", "settle"] },
+        { key: "description.2", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }

@@ -4,7 +4,7 @@
   "worldcombat.skill.tickle.use.1": "Cut both Attack and Defence in a grapple",
   "worldcombat.skill.tickle.use.2": "Let an ally win the first exchange",
   "worldcombat.skill.tickle.description.0": "The tickled target loses %1$s Attack and %2$s Defence stage(s), and laughs for %3$s.",
-  "worldcombat.skill.tickle.description.1": "Tickle reach %1$s over %2$s blocks; out of that you cannot reach them, and one tickle gives %3$s specks.",
+  "worldcombat.skill.tickle.description.1": "Tickle reach %1$s over %2$s blocks; out of that you cannot reach them.",
   "worldcombat.skill.tickle.description.2": "Reaching in takes %1$s with a %2$s cooldown.",
   "worldcombat.skill.tickle.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.tickle.value.reach": "Tickle reach",

@@ -130,7 +130,7 @@ namespace PokemonSkills {
     describe("tarshot", [
         { key: "description.0", values: ["speedDrop", "coatTicks"] },
         { key: "description.1", values: ["weakness"] },
-        { key: "description.2", values: ["globSpeed", "globRadius", "reach", "splash", "drops"] },
+        { key: "description.2", values: ["globSpeed", "globRadius", "reach", "splash"] },
         { key: "description.3", values: ["puddle", "puddleTicks"] },
         { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },

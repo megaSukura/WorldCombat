@@ -126,7 +126,7 @@ namespace PokemonSkills {
     describe(horndrillId, [
         { key: "description.0", values: ["span", "girth"] },
         { key: "description.1", values: ["mark"] },
-        { key: "description.2", values: ["thrust", "bore"] },
+        { key: "description.2", values: ["thrust"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

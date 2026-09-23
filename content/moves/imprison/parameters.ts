@@ -82,6 +82,6 @@ namespace PokemonSkills {
         { key: "scope.0", values: [], when: function (context) { return read(context.detail.values, ["scope"]) === 1; } },
         { key: "scope.1", values: [], when: function (context) { return read(context.detail.values, ["scope"]) !== 1; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.imprisonRadius", "tier.0.sealCount"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.imprisonRadius"] }
     ]);
 }

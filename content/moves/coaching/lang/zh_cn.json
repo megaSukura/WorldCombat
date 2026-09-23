@@ -5,7 +5,7 @@
   "worldcombat.skill.coaching.use.2": "在开门前把守门的伙伴教成一面墙",
   "worldcombat.skill.coaching.description.0": "指导把受教者的物攻提高 %1$s 级、防御提高 %2$s 级，持续约 %3$s 秒。",
   "worldcombat.skill.coaching.description.1": "以伙伴为中心 %1$s 格内的友方一起领会；必须靠近到 %2$s 格内才能选中他。",
-  "worldcombat.skill.coaching.description.2": "一次浮出约 %1$s 个叮嘱标记；起手 %2$s、收招 %3$s、冷却 %4$s。",
+  "worldcombat.skill.coaching.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.coaching.drill.intense": "精讲：领会更久、冷却更长，但传授范围更小。",
   "worldcombat.skill.coaching.drill.quick": "速令：传得更广、出手更快，但领会更短。",
   "worldcombat.skill.coaching.timing": "目标友方招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

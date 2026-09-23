@@ -81,7 +81,7 @@ namespace PokemonSkills {
     });
     describe(featherdanceId, [
         { key: "description.0", values: ["atkDrop", "downTicks"] },
-        { key: "description.1", values: ["cloudRadius", "fieldTicks", "feathers"] },
+        { key: "description.1", values: ["cloudRadius", "fieldTicks"] },
         { key: "description.2", values: ["flightSpeed", "strandRadius", "reach", "range", "tempo"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },

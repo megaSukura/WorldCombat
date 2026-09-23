@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     define({
         id: ragefistId,
+        cooldownParameter: "recharge",
         name: "Rage Fist",
         description: "把挨过的每一记都记成拳印，出手时一并打回去：每挨一记外来伤害就多一记拳印，每记拳印都变作一记鬼拳。缠斗里拳印一直留着，随时可以甩出这一串。",
         uses: ["先挨几记攒拳印，再找机会甩出一串鬼拳", "在近身缠斗里越打越多的拳数", "狂暴式用更短的冷却反复抢拳"],
@@ -127,7 +128,7 @@ namespace PokemonSkills {
         }
     });
 
-    // 攒拳：带着拳印（或任何战斗者）挨了一记外来伤害，就加一记并续上存续。
+    // 当前有效配招带本招时攒拳；其他域由内容显式授予拳印后启用相同的续积累。
     WorldCombat.on("world_combat:move_ragefist/mark", "world_combat:damage_applied", "", function (event) {
         const victim = event.target(), source = event.actor();
         if (victim === null || source === null) return;
@@ -136,13 +137,14 @@ namespace PokemonSkills {
         if (!world.valid(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0) || String(data.category) === "Status") return;
-        const cap = ragefistCap(ragefistConfig(world, victim));
         const held = MobEffects.read(world, victim, ragefistCharge);
+        if (String(victim.domain()) === "cobblemon" ? !NativeLoadout.hasEquipped(world, victim, ragefistId) : held === null) return;
+        const cap = ragefistCap(ragefistConfig(world, victim));
         const before = held === null ? 0 : held.amplifier();
         const next = Math.min(cap, before + 1);
         MobEffects.apply(world, victim, ragefistCharge, ragefistStance(world, victim), next);
         if (next <= before) return;
-        // 拳印是所有战斗者共有的身份，但只有宝可梦会用它：表现只给宝可梦，避免全场挨打都刷字与光。
+        // 其他域复用计数；宝可梦沿用本招的拳印表现。
         if (String(victim.domain()) !== "cobblemon") return;
         const body = world.observe(victim);
         if (body === null) return;

@@ -5,7 +5,6 @@
   "worldcombat.skill.conversion2.use.2": "在被压制前临时改抗性",
   "worldcombat.skill.conversion2.description.0": "在 %1$s 格内读解对手最后一手的属性，起手 %2$s 秒。",
   "worldcombat.skill.conversion2.description.1": "重织后的属性维持 %1$s；当前取向为 %2$s。",
-  "worldcombat.skill.conversion2.description.2": "重织时翻出约 %1$s 条纹面。",
   "worldcombat.skill.conversion2.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.conversion2.growth.0": "%1$s 级起纹理维持升至 %2$s 秒、读取距离 %3$s 格。",
   "worldcombat.skill.conversion2.value.reach": "读取距离",

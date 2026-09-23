@@ -69,6 +69,7 @@ namespace PokemonSkills {
 
     define({
         id: "assist",
+        cooldownParameter: "recharge",
         name: "借助",
         description: "向附近伙伴求助，从它们已学会的招式中随机借一个使出。",
         uses: ["呼唤附近伙伴", "随机借出一个伙伴招式"],

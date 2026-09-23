@@ -94,7 +94,7 @@ namespace PokemonSkills {
             function (target, facts) {
                 if (!hurt(current, target, petaldanceId, power, { damage: damageSpec(petaldanceId, "bloom") })) return;
                 const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
-                if (away.length() > 0.05) world.displace(target, away.unit().scale(push));
+                if (world.valid(target) && away.length() > 0.05) world.displace(target, away.unit().scale(push));
                 WorldFeedback.emit(world, petaldanceScene, 1, facts.position(),
                     { moment: "lash", target: String(target.ref()), motes: Math.round(motes * 0.6), scale: scale, intensity: intensity }, 20);
             });
@@ -128,6 +128,7 @@ namespace PokemonSkills {
 
     define({
         id: petaldanceId,
+        cooldownParameter: "recharge",
         name: "Petal Dance",
         description: "原地旋舞，一圈圈花瓣从脚下卷成风暴：每一圈对周围一圈敌人造成范围特攻伤害并把它们轻推开；舞步沿弧线漂开，走过的地方落下花瓣。舞完自己陷入恍惚，出手可能被打散。旋舞式漂得更远、范围更宽、花瓣留得更久。",
         uses: ["隔着一段距离削一圈贴过来的敌人", "用特攻处理一堆低特防目标", "把花瓣留在地上标记自己舞过的区域"],

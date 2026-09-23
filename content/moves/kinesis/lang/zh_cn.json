@@ -4,7 +4,7 @@
   "worldcombat.skill.kinesis.use.1": "在掩体对峙时削弱对方的远程",
   "worldcombat.skill.kinesis.use.2": "给决斗或撤退创造单点优势",
   "worldcombat.skill.kinesis.description.0": "被引开注意的目标攻击变弱，宝可梦还额外损失 %1$s 级命中，持续 %2$s。",
-  "worldcombat.skill.kinesis.description.1": "凝注距离 %1$s 格，汤匙在手里转 %2$s，头顶约 %3$s 点念力；只作用于单个目标，不会波及旁人。",
+  "worldcombat.skill.kinesis.description.1": "凝注距离 %1$s 格；只作用于单个目标，不会波及旁人。",
   "worldcombat.skill.kinesis.description.2": "举起汤匙要 %1$s，冷却 %2$s。必须与目标通视：墙、柱子或其他掩体挡住视线时，这场戏法落空。",
   "worldcombat.skill.kinesis.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.kinesis.value.blindStage": "失神级数",

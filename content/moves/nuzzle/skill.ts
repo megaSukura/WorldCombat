@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: nuzzleId,
+        cooldownParameter: "recharge",
         name: "Nuzzle",
         description: "得先贴到对手身上：蹭一下带电的脸颊，伤害极小，但一定把对方麻住。猛扑式能多扑出去一截，代价是落地更慢、蹭的劲更小。",
         uses: ["贴身把对手必麻", "追上逃开的对手再蹭住", "先手控制一个难缠的目标"],

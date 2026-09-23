@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.nuzzle.summary": "You have to get close first: nuzzle an electrified cheek against the target for tiny damage, but it always paralyses. A whiff does nothing at all. Pounce mode reaches further, at the cost of a slower landing and a lighter nuzzle. Electric types are immune to paralysis.",
   "worldcombat.skill.nuzzle.description.0": "Nuzzle power %1$s (physical), needing contact within %2$s blocks; starting distance %3$s, then the caster pounces and must actually reach the target.",
-  "worldcombat.skill.nuzzle.description.1": "The pounce covers up to %1$s blocks; on contact the target is paralysed for %2$s with %3$s arcs clinging to it; electric types are immune.",
+  "worldcombat.skill.nuzzle.description.1": "The pounce covers up to %1$s blocks; on contact the target is paralysed for %2$s; electric types are immune.",
   "worldcombat.skill.nuzzle.description.2": "Windup %1$s, recovery %2$s, cooldown %3$s; a whiff deals nothing but still costs the cooldown.",
   "worldcombat.skill.nuzzle.pounce.on": "Pounce mode: lunge x1.35, starting distance x1.3, +2 windup, recovery x1.35 and nuzzle power x0.9, to catch a target running further away.",
   "worldcombat.skill.nuzzle.pounce.off": "Short nuzzle: a faster windup and recovery and x1.05 nuzzle power, at the cost of having to get closer.",

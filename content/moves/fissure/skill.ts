@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: fissureId,
+        cooldownParameter: "recharge",
         name: "Fissure",
         description: "The user opens up a fissure in the ground and drops the target in. The target faints instantly if this attack hits.",
         uses: ["从远处点掉一个站在地上的高价值目标", "逼对手离开脚下的位置或跳起来", "在战场地面留下裂缝，标出这块地不再安全"],

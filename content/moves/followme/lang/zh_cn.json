@@ -4,7 +4,7 @@
   "worldcombat.skill.followme.use.1": "把贴住同伴的敌人拉过来，给同伴脱身的机会",
   "worldcombat.skill.followme.use.2": "在开阔地挡住追兵，把交战点聚到自己这里",
   "worldcombat.skill.followme.description.0": "喊话半径 %1$s 格，注意被拉住 %2$s；范围内的敌人会被不断指向你。",
-  "worldcombat.skill.followme.description.1": "每 %1$s 重新拉一次；由特攻派生。",
+  "worldcombat.skill.followme.description.1": "每 %1$s 重新拉一次。",
   "worldcombat.skill.followme.shout.on": "喊话：半径 ×1.25、冷却 ×1.1，把更远的敌人一嗓子扫进来；代价是喊住时长 ×0.7。",
   "worldcombat.skill.followme.shout.off": "招手：半径 ×0.8，但喊住时长 ×1.35、冷却 ×0.9，盯住近处一小撮更久。",
   "worldcombat.skill.followme.timing": "自身招式，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",

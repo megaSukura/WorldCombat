@@ -19,6 +19,7 @@ namespace PokemonSkills {
 
     define({
         id: "vinewhip",
+        cooldownParameter: "recharge",
         name: "Vine Whip",
         description: "The target is struck with slender, whiplike vines to inflict damage.",
         uses: ["一记快而便宜的贴身抽击", "在对手让位前连着抽两下", "打断沿一条线冲过来的目标"],

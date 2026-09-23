@@ -14,12 +14,13 @@
 namespace PokemonSkills {
     define({
         id: assuranceId,
+        cooldownParameter: "recharge",
         name: "Assurance",
         description: "追击刚受过伤的目标：若它在最近一段时间内已经被打过，这一记威力翻倍；物攻与速度越高，追得越狠。",
         uses: ["补掉已经被同伴削过的目标", "在对手刚挨打的窗口里追上一记", "把残血目标从场上追出去"],
         kind: "enemy",
-        range: 3.2,
-        maxRange: 6,
+        range: 4.2,
+        maxRange: 7,
         prepare: 4,
         active: 0,
         recover: 6,
@@ -75,8 +76,9 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        const power = p(assuranceId, "ambush", current);
-                        const wounded = assuranceWounded(factContext(current)) > 0;
+                        const hitContext = withTarget(factContext(current), victim);
+                        const power = p(assuranceId, "ambush", hitContext);
+                        const wounded = assuranceWounded(hitContext) > 0;
                         const quills = Math.round(p(assuranceId, "quills", current));
                         const landed = impact(current, hit, assuranceId, power, { damage: damageSpec(assuranceId, "ambush"), contact: true });
                         if (landed) {

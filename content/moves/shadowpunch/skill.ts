@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: "shadowpunch",
+        cooldownParameter: "recharge",
         name: "Shadow Punch",
         description: "The user throws a punch from the shadows. This attack never misses.",
         uses: ["让拳从对手自己的影子里升起", "站着不动打到远处的对手", "用影子抓住并拖住对手"],

@@ -88,6 +88,7 @@ namespace PokemonSkills {
 
     define({
         id: "saltcure",
+        cooldownParameter: "wait",
         name: "盐腌",
         description: "把一身粗盐摔在对手身上：命中造成物理伤害，之后盐壳每隔一段按目标最大生命蛰掉一口；钢或水属性（以及湿透、披着金属甲的）身体更痛。",
         uses: ["磨掉高生命的肉盾", "对钢系与水系加倍惩罚", "逼对手分心去清状态"],

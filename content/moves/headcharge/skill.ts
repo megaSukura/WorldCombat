@@ -44,6 +44,7 @@ namespace PokemonSkills {
 
     define({
         id: "headcharge",
+        cooldownParameter: "recharge",
         name: "Head Charge",
         description: "The user charges its head into the target, using its powerful guard hair. This also damages the user a little.",
         uses: ["沿直线一次撞飞挡路的一串人", "用最厚的头毛换取本族最轻的单次反噬", "锁定式追击一个会侧移的对手"],

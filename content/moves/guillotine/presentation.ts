@@ -6,9 +6,9 @@
  * 色相家族：骨白与铁灰（0xB0A48C / 0xE8E2D2 / 0x8A8272）为主体，近白 0xFFFFFF 只给咬合那一下的核心——
  *   只有一种色相，冷硬、干净，与地裂的土黄、角钻的金属暖调、绝对零度的青蓝分开。
  * 拍子：起（windup 钳口张开）→ 定（mark 扇形预览，持续合拢延迟）→ 击（snap 咬合 / miss 空合）。
- * 范围：mark 的锥面与锥缘读 `data.scale = 实际钳口长度 / 2.4` 放大、张角读 `data.arc`，玩家看到的扇形就是钳口罩住的范围。
+ * 范围：mark 的水平扇面与锥缘读 `data.scale = 实际钳口长度 / 2.4` 放大、张角读 `data.arc`，玩家看到的扇形就是钳口罩住的范围。
  * 运动：两片钳口从两侧向中轴合拢，咬合时碎屑从目标身上向外迸开、钳齿绕轴交错。
- * 数：`data.grip`（物攻派生）决定咬合碎屑密度，`data.scale` 放大钳齿与锥面。
+ * 数：`data.grip`（物攻派生）决定咬合碎屑密度，`data.scale` 放大钳齿。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const GuillotineDefinition: ParticleDefinition = {
@@ -41,17 +41,17 @@ const GuillotineDefinition: ParticleDefinition = {
             exit: { stop: 0, drain: 20 },
             emitters: [
                 {
-                    name: "maw", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none", orient: "direction",
+                    name: "maw", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "grip", fallback: 18 }, shape: { kind: "cone", radius: 2.4, angleDegrees: { data: "arc", fallback: 130 } },
+                    rate: { data: "grip", fallback: 18 }, shape: { kind: "sector", radius: { data: "span", fallback: 2.4 }, angleDegrees: { data: "arc", fallback: 130 } },
                     direction: "outward", speed: [0.01, 0.05], spread: 12,
                     lifetime: [8, 16], size: [0.06, 0.01],
                     color: 0x8A8272, alpha: [0.4, 0], light: "world", maxParticles: 110
                 },
                 {
-                    name: "rim", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none", orient: "direction",
+                    name: "rim", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/scratch",
-                    rate: 22, shape: { kind: "arc", radius: 2.4, arcDegrees: { data: "arc", fallback: 130 } },
+                    rate: 22, shape: { kind: "sector", radius: { data: "span", fallback: 2.4 }, angleDegrees: { data: "arc", fallback: 130 }, innerRadius: { data: "span", fallback: 2.4 } },
                     direction: "up", speed: [0.01, 0.04], spin: 10,
                     lifetime: [8, 14], size: [0.2, 0.05],
                     color: 0xB0A48C, alpha: [0.5, 0], light: "world", maxParticles: 70

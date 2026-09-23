@@ -145,6 +145,7 @@ namespace PokemonSkills {
 
     define({
         id: "bonemerang",
+        cooldownParameter: "recharge",
         name: "骨头回力镖",
         description: "用手中的骨头投掷对手，来回连续 2 次给予伤害。",
         uses: ["中距离投出骨头，去与回各打一下", "让回旋的第二下补上第一下的空档", "在对手走位前先手掷出、逼它离开原位"],

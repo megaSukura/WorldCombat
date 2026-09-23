@@ -38,6 +38,7 @@ namespace PokemonSkills {
 
     define({
         id: "nobleroar",
+        cooldownParameter: "wait",
         name: "Noble Roar",
         description: "发出战吼威吓对手，从而降低对手的攻击和特攻。",
         uses: ["正面吼住一片冲上来的敌人", "在开战前先把对方的输出压下去", "用宽阔的声压同时照顾到一小簇目标"],

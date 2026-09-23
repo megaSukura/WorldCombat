@@ -114,7 +114,7 @@ namespace PokemonSkills {
     describe("fierydance", [
         { key: "description.0", values: ["blaze", "inner"] },
         { key: "description.1", values: ["outer", "beat", "push"] },
-        { key: "description.2", values: ["blazeChance", "blazeStages", "spin"] },
+        { key: "description.2", values: ["blazeChance", "blazeStages"] },
         { key: "spiral.on", values: [], when: function (context) { return read(context.detail.values, ["spiral"]) === true; } },
         { key: "spiral.off", values: [], when: function (context) { return read(context.detail.values, ["spiral"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

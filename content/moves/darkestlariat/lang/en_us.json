@@ -4,7 +4,7 @@
   "worldcombat.skill.darkestlariat.use.1": "Ignore the target's raised Defence stages outright",
   "worldcombat.skill.darkestlariat.use.2": "Break out when surrounded",
   "worldcombat.skill.darkestlariat.description.0": "The full-circle sweep deals about %1$s contact damage within about %2$s blocks; every non-ally inside is settled once, and the target's Defence stages are ignored by this move.",
-  "worldcombat.skill.darkestlariat.description.1": "It covers about %1$s blocks vertically; victims are thrown about %2$s blocks outward, the user spins %3$s turns and flings about %4$s gale marks.",
+  "worldcombat.skill.darkestlariat.description.1": "It covers about %1$s blocks vertically; victims are thrown about %2$s blocks outward.",
   "worldcombat.skill.darkestlariat.wide.on": "Wide spin: radius about %1$s blocks and push about %2$s blocks over a larger circle, but about %3$s damage per target and a longer wind-up and cooldown.",
   "worldcombat.skill.darkestlariat.wide.off": "Tight spin: radius about %1$s blocks and push about %2$s blocks over a smaller circle, but about %3$s damage per hit and a faster cycle.",
   "worldcombat.skill.darkestlariat.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

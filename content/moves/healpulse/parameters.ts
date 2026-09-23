@@ -59,8 +59,8 @@ namespace PokemonSkills {
 
     describe(healpulseId, [
         { key: "description.0", values: ["heal"] },
-        { key: "description.1", values: ["reach", "pulseSpeed", "pulseRadius"] },
-        { key: "description.2", values: ["motes", "charge", "settle"] },
+        { key: "description.1", values: ["reach", "pulseSpeed"] },
+        { key: "description.2", values: ["charge", "settle"] },
         { key: "stance.overcharge", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "stance.light", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -233,7 +233,9 @@ interface CombatTactics {
     submitAt(slot: number, target: CombatActor): number;
     submitPoint(slot: number, point: CombatPoint, direction: CombatPoint): number;
     submitInput(slot: number, target: CombatActor | null, point: CombatPoint, direction: CombatPoint, input: string): number;
-    world(): CombatWorld; actor(): CombatActor; owner(): CombatActor;
+    world(): CombatWorld; actor(): CombatActor;
+    /** Live owner in this world, or null while the owner is offline or elsewhere. */
+    owner(): CombatActor | null;
     operation(): string; notice(): string; value(): number; memberIndex(): number;
     commandTarget(): CombatActor | null; commandPoint(): CombatPoint;
     intent(): string; intentTarget(): CombatActor | null; intentPoint(): CombatPoint | null;
@@ -241,6 +243,8 @@ interface CombatTactics {
     tactics(): string; permissions(): number; chaseRange(): number;
     settings(preset: string, permissions: number, range: number): void;
     captureHold(): string; capture(id: string): void; lastManual(): number; pending(): boolean;
+    /** True only while a ready buffered action owns approach navigation. Cooldown buffering leaves normal AI running. */
+    pendingNavigation(): boolean;
     blockedUntil(): number; blockedUntil(tick: number): void;
     memory(): string; memory(json: string): void; preferences(): string; preferences(json: string): void;
     report(stage: string, reason: string): void; reject(reason: string): never;

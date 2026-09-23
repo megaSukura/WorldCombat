@@ -63,7 +63,7 @@ interface CombatAction {
     targetPosition(): CombatPoint;
     /** After commitment, freeze the last target point and allow this action to continue if that target leaves. The original handle still requires world.valid checks. */
     releaseTarget(): void;
-    /** Settle attached costs and enable writes; 0 commits without reserving a cooldown. */
+    /** Settle attached costs and enable writes. The world_combat:cooldown query finalizes the authored duration once before payment; its data contains action, baseCooldown and mutable cooldown ticks. Zero commits without a reservation unless a content rule supplies one. */
     commit(cooldownTicks: number): void;
     /** Attach a host-backed cost; commit validates and settles all attached costs together. */
     cost(cost: CombatCost): void;

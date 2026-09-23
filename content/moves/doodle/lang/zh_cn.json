@@ -5,7 +5,6 @@
   "worldcombat.skill.doodle.use.2": "围绕一只特性关键的对手组织队伍",
   "worldcombat.skill.doodle.description.0": "在 %1$s 格内描摹对手的本质，起手 %2$s 秒。",
   "worldcombat.skill.doodle.description.1": "图样摊开成半径约 %1$s 格的画布，最多盖到 %2$s 只同伴；被盖印的特性维持 %3$s 秒，到期一起恢复。",
-  "worldcombat.skill.doodle.description.2": "画布与印章各由约 %1$s 枚图样组成。",
   "worldcombat.skill.doodle.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.doodle.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",
   "worldcombat.skill.doodle.growth.1": "达到 %1$s 级，提交起冷却再缩短至 %2$s 秒。",

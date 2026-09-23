@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: cometpunchId,
+        cooldownParameter: "recharge",
         name: "Comet Punch",
         description: "The target is hit with a flurry of punches that strike two to five times in a row.",
         uses: ["站定用双拳朝身前一片密集直击", "对单个厚目标用聚焦式堆单拳份量", "乱打式一记盖到并排的第二个敌人"],

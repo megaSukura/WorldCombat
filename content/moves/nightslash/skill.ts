@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     define({
         id: nightslashId,
+        cooldownParameter: "recharge",
         name: "Night Slash",
         description: "The user slashes the target the instant an opportunity arises. This move has a heightened chance of landing a critical hit.",
         uses: ["脚下牵出一缕影线，在对手身上切一道暗痕", "对手正忙着打别人时这一刀更重", "站定出手，不走位不闪身"],

@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "sludgebomb",
+        cooldownParameter: "recharge",
         name: "Sludge Bomb",
         description: "把毒泥塞进弹壳掷向目标脚边，炸弹落地插着引信嗞嗞冒烟；引信烧完的一刻爆心一圈的敌人一起挨伤、被推开、可能中毒。对手能在引信烧完前走开。密封形态范围更大更毒，代价是爆心略轻、引信更长。",
         uses: ["把一枚延时爆弹丢进人堆，逼人散开", "在目标走位路线上封住一小片地", "一次让爆心一圈的人中毒"],

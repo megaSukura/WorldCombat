@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "drillpeck",
+        cooldownParameter: "recharge",
         name: "Drill Peck",
         description: "A corkscrewing attack that strikes the target with a sharp beak acting as a drill.",
         uses: ["原地旋成一支钻，连续几口钻同一个目标", "把贴脸的目标一口口往后顶开", "对离地的目标钻得更狠"],
@@ -152,7 +153,7 @@ namespace PokemonSkills {
                                     scale: scale, intensity: intensity }, 20);
                         if (landed === 1) sound(current, "cobblemon:impact.flying");
                         else sound(current, "minecraft:entity.player.attack.weak");
-                        scope.displace(victim, heading.scale(push));
+                        if (scope.valid(victim)) scope.displace(victim, heading.scale(push));
                     }
                 }
                 index++;

@@ -70,7 +70,7 @@ namespace PokemonSkills {
 
     describe(transformId, [
         { key: "description.0", values: ["hold"] },
-        { key: "description.1", values: ["reach", "motes"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "dwell.0", values: [], when: function (context) { return read(context.detail.values, ["dwell"]) === true; } },
         { key: "dwell.1", values: [], when: function (context) { return read(context.detail.values, ["dwell"]) !== true; } },

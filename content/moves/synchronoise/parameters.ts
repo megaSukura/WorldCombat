@@ -84,7 +84,7 @@ namespace PokemonSkills {
     describe("synchronoise", [
         { key: "description.0", values: ["pulse"] },
         { key: "description.1", values: ["waveRadius"] },
-        { key: "description.2", values: ["resonanceTicks", "echoTicks", "marks"] },
+        { key: "description.2", values: ["resonanceTicks"] },
         { key: "tight.on", values: [], when: function (context) { return read(context.detail.values, ["tight"]) === true; } },
         { key: "tight.off", values: [], when: function (context) { return read(context.detail.values, ["tight"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

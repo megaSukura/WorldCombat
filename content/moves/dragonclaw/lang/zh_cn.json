@@ -4,7 +4,7 @@
   "worldcombat.skill.dragonclaw.use.1": "一次扫多个正面目标",
   "worldcombat.skill.dragonclaw.use.2": "把目标的护甲撕开、防御下降",
   "worldcombat.skill.dragonclaw.description.0": "扇面 %3$s 度、爪程约 %2$s 格，每一爪造成约 %1$s 点接触伤害。",
-  "worldcombat.skill.dragonclaw.description.1": "扇面高约 %1$s 格；被扫中的目标防御 −%2$s 级，崩出约 %3$s 道爪痕。",
+  "worldcombat.skill.dragonclaw.description.1": "扇面高约 %1$s 格；被扫中的目标防御 −%2$s 级。",
   "worldcombat.skill.dragonclaw.cross.on": "交叉式：扇面张角由 84 度拉到 %1$s 度、撕甲 %2$s 级，每爪约 %3$s 点，但起手与冷却更久。",
   "worldcombat.skill.dragonclaw.cross.off": "单爪式：正面较窄（%1$s 度）、撕甲 %2$s 级，每爪约 %3$s 点，起手更快、循环更短。",
   "worldcombat.skill.dragonclaw.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

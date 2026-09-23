@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: "clangingscales",
+        cooldownParameter: "recharge",
         name: "Clanging Scales",
         description: "The user rubs the scales on its entire body and makes a huge noise to attack opposing Pokémon. The user's Defense stat is lowered after the attack.",
         uses: ["被围住时一记环身巨响震开一圈敌人", "对贴身的追击者造成范围特殊伤害并震退", "回响式在主震后再补一圈，覆盖走出去的人"],

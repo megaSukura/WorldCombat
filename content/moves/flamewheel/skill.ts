@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "flamewheel",
+        cooldownParameter: "recharge",
         name: "Flame Wheel",
         description: "The user attacks by cloaking itself in fire and charging at the target. This may also leave the target with a burn.",
         uses: ["滚过挤在一起的一排对手", "用火轮追着贴脸的对手碾过去", "在自己身上的冰需要化掉时借这团火"],

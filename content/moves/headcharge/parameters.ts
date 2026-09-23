@@ -115,7 +115,7 @@ namespace PokemonSkills {
 
     describe("headcharge", [
         { key: "description.0", values: ["ram", "charge", "pace", "radius"] },
-        { key: "description.1", values: ["recoil", "through", "shove", "afro"] },
+        { key: "description.1", values: ["recoil", "through", "shove"] },
         { key: "hunt.on", values: [], when: function (context) { return read(context.detail.values, ["hunt"]) === true; } },
         { key: "hunt.off", values: [], when: function (context) { return read(context.detail.values, ["hunt"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

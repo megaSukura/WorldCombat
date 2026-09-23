@@ -57,6 +57,7 @@ namespace PokemonSkills {
 
     define({
         id: "brickbreak",
+        cooldownParameter: "recharge",
         name: "劈瓦",
         description: "一步踏进，一记手刀自上而下劈落：劈伤目标，并震碎刀锋落点周围一整片的反射壁、光墙与极光幕。是全族最快、最便宜的一记。",
         uses: ["贴身一记快劈", "在屏障张开的一瞬间把它整片震碎", "最便宜的破壁起手"],

@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.substitute.summary": "Spend part of your own max HP to raise a body double nearby. It absorbs every hit aimed at you within a short link range; when it breaks or the link drops, the protection ends.",
-  "worldcombat.skill.substitute.description.0": "Pay %1$s of your max HP and place the substitute within %2$s blocks; its durability is %3$s times the HP actually paid.",
+  "worldcombat.skill.substitute.description.0": "Pay %1$s of your max HP to form a substitute; its durability is %2$s times the HP actually paid.",
   "worldcombat.skill.substitute.description.1": "The substitute only takes hits for you within %1$s blocks; leaving that range or breaking it ends the protection. It lasts at most %2$s.",
   "worldcombat.skill.substitute.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.substitute.use.0": "Raise a blood shield before the fight starts",

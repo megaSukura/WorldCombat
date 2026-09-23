@@ -161,7 +161,7 @@ namespace PokemonSkills {
                 var dealt = after ? Math.max(0, before - after.health()) : before;
                 var shove = at.position().minus(point);
                 var away = shove.length() < 0.01 ? WorldCombat.point(0, 0, 0) : shove.unit().scale(push);
-                live.displace(target, WorldCombat.point(0, launch, 0).plus(away));
+                if (live.valid(target)) live.displace(target, WorldCombat.point(0, launch, 0).plus(away));
                 // 窜出的水把目标身上的火一起浇灭——水系突袭最实用的一手。
                 if (CombatStatus.cure(live, target, "burn")) {
                     WorldFeedback.emit(live, DIVE_SCENE, 1, at.position(), { moment: "douse", target: String(target.ref()) }, 22);

@@ -1,8 +1,7 @@
 /**
  * 生长 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：附近有威胁、还在 ai.maxChase 以内时，先长一轮再打；没有威胁时只在整备命令
- *   （驻守／自主／工作）下做。
+ * 什么局面有意义：附近有威胁、还在 ai.maxChase 以内时，先长一轮再打；有交战需求才准备。
  * 什么时候最想出手：站在阳光下（context.facts.sunlight ≥ 0.6）时 priority 抬到 90 抢在共享顺序前——
  *   阳光让双攻各多长一级，值得先占这个窗口；阴影里就退回普通次序。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -22,8 +21,10 @@ namespace CompanionBehavior {
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
+            if (["atk", "spa"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
+            if (ai<boolean>(capability, "shadeGrowth", false) && !growthSunlit(context)) return false;
             const threat = growthThreat(context);
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             return distance(source(context).point, threat.point) <= ai<number>(capability, "maxChase", 12);
         },
         accepts: function (context, _capability, target) { return target.ref === source(context).ref; },

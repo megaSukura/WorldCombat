@@ -5,7 +5,7 @@
   "worldcombat.skill.solarblade.use.2": "把面前的敌人一起推离",
   "worldcombat.skill.solarblade.description.0": "刀锋扫过每个目标造成 %1$s 点物理伤害。",
   "worldcombat.skill.solarblade.description.1": "凝刃后向前踏出 %3$s 格，再以终点为心扫出半径 %1$s 格、张开 %2$s 度的扇形。",
-  "worldcombat.skill.solarblade.description.2": "需要站定凝刃 %1$s，聚起约 %2$s 缕刃光；站在强日光下跳过凝刃当场斩出。被扫到的目标沿刀势推开 %3$s 格。",
+  "worldcombat.skill.solarblade.description.2": "需要站定凝刃 %1$s；站在强日光下跳过凝刃当场斩出。被扫到的目标沿刀势推开 %2$s 格。",
   "worldcombat.skill.solarblade.stance.thrust": "突刺：踏得更远、单发更重、刀锋略长，但扇面收成一条窄线，基本只砍到正前方一个。",
   "worldcombat.skill.solarblade.stance.sweep": "横扫：刀锋铺得更开，一次扫到挤在面前的一排，但单发更轻、冲得更短。",
   "worldcombat.skill.solarblade.timing": "可向 %1$s 格内施放；准备 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",

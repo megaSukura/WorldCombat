@@ -4,7 +4,7 @@
   "worldcombat.skill.assurance.use.1": "在对手刚挨打的窗口里追上一记",
   "worldcombat.skill.assurance.use.2": "把残血目标从场上追出去",
   "worldcombat.skill.assurance.description.0": "追击造成约 %1$s 的物理伤害；若目标在最近 %2$s 秒内受到过伤害，威力翻倍。",
-  "worldcombat.skill.assurance.description.1": "追逐距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中把目标顶开 %4$s 格，拖出约 %5$s 枚暗羽。",
+  "worldcombat.skill.assurance.description.1": "追逐距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中把目标顶开 %4$s 格。",
   "worldcombat.skill.assurance.relentless.on": "开启穷追：追击窗口多 0.6 秒、追得更远约 8%，缠住带伤目标；代价是本击约 ×0.90、冷却多 5 刻。",
   "worldcombat.skill.assurance.relentless.off": "关闭穷追：本击约 ×1.06、收得更干净，只认眼前的新伤。",
   "worldcombat.skill.assurance.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

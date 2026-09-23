@@ -19,10 +19,19 @@ namespace PokemonSkills {
 
     /** 腐蚀酸池：圈内非友方每 `pulse` 刻挨一次 `damage` 的酸，按每人各自计时。 */
     WorldEffects.fieldRule("world_combat:acid_pool", {
+        scan: function (effect, world, field) {
+            const point = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
+            world.present("acid:pool", acidScene, 1, point,
+                JSON.stringify({ moment: "pool", pool: field.data.radius, drops: field.data.drops }));
+            world.present("acid:boundary", "world_combat:acid_boundary", 1, point,
+                JSON.stringify({ radius: field.data.radius }));
+        },
         stay: function (world, actor, field) {
             if (world.friendly(actor)) return;
             const body = world.observe(actor);
             if (body === null) return;
+            const point = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
+            if (!WorldGeometry.ring(point, 0, field.data.radius, { below: 2, above: 3 }).contains(body.position())) return;
             const next = field.data.next || (field.data.next = {}), ref = String(actor.ref());
             if (world.tick() < (next[ref] || 0)) return;
             next[ref] = world.tick() + Math.max(4, Math.round(field.data.pulse || 20));
@@ -66,7 +75,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const power = p("acid", "core", action);
             const poolPower = p("acid", "pool", action);
             const speed = p("acid", "globSpeed", action);
@@ -105,24 +113,26 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, acidScene, 1, point,
                     { moment: "splash", target: primary === null ? "" : String(primary.ref()), drops: drops,
                         hitCount: hitCount, scale: scale, intensity: Math.max(0.5, Math.min(2, power / 40)) }, 28);
-                WorldEffects.field(scope, "world_combat:acid_pool", point, poolRadius,
-                    { damage: poolPower, pulse: poolPulse, next: {} }, poolTicks);
-                WorldFeedback.keep(scope, "acid:pool:" + current.id(), acidScene, 1, point,
-                    { moment: "pool", drops: drops, pool: poolRadius, scale: scale }, poolTicks);
+                const ground = WorldGeometry.ground(scope, point);
+                const poolPoint = WorldCombat.point(point.x(), ground.y(), point.z());
+                const pool = WorldGeometry.ring(poolPoint, 0, poolRadius, { below: 2, above: 3 });
+                WorldEffects.field(scope, "world_combat:acid_pool", poolPoint, pool.radius(),
+                    { damage: poolPower, pulse: poolPulse, radius: poolRadius, drops: drops, next: {} }, poolTicks);
                 sound(current, "cobblemon:move.acid.target");
                 finish(current);
             }
 
             sound(action, "cobblemon:move.acid.actor");
-            WorldFeedback.keep(world, "acid:throw:" + action.id(), acidScene, 1, action.origin(),
-                { moment: "throw", drops: drops, scale: scale, intensity: Math.max(0.5, Math.min(2, power / 40)) }, 60);
-            LivingActions.projectile(action, {
+            const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, gravity: gravity, lifetime: 200,
                 appearance: { sprite: "cobblemon:generic/goo/chemicalball", tint: 0x8FCB3A, glow: false, scale: Math.max(0.8, radius / 0.2) },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     splash(current, hit.position(), hit.target());
                 }
             }, function (current: CombatAction) { finish(current); });
+            action.present("acid:throw", acidScene, 1, action.origin(),
+                JSON.stringify({ moment: "throw", projectile: flight, drops: drops, scale: scale,
+                    intensity: Math.max(0.5, Math.min(2, power / 40)) }));
         }
     });
 }

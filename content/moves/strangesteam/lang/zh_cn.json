@@ -5,7 +5,7 @@
   "worldcombat.skill.strangesteam.use.2": "用停留的云持续压制进出的人",
   "worldcombat.skill.strangesteam.description.0": "首喷造成 %1$s 点特殊伤害；云半径 %2$s 格、喷射距离 %3$s 格，画面里的贴地圆盘就是判定范围。",
   "worldcombat.skill.strangesteam.description.1": "云停留 %2$s；留在云里的人每隔一会儿被续熏 %1$s 点，恍惚被不断续上。",
-  "worldcombat.skill.strangesteam.description.2": "被喷到后有 %1$s 概率迷得恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散；云里翻滚约 %4$s 点蒸汽。",
+  "worldcombat.skill.strangesteam.description.2": "被喷到后有 %1$s 概率迷得恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散。",
   "worldcombat.skill.strangesteam.dense.on": "当前为浓雾：云更大更久、迷幻概率更高时长更长，代价是首喷威力更低，适合封路与持续压制。",
   "worldcombat.skill.strangesteam.dense.off": "当前为喷发：云更小更短、首喷更冲，代价是区域与持续更小，适合补一发就走。",
   "worldcombat.skill.strangesteam.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

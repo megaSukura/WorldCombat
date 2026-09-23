@@ -69,9 +69,9 @@ namespace PokemonSkills {
     stages("magicpowder", [{ level: 40, values: { cooldown: 64 } }, { level: 55, values: { cooldown: 54 } }]);
 
     describe("magicpowder", [
-        { key: "description.0", values: ["hold", "motes"] },
+        { key: "description.0", values: ["hold"] },
         { key: "description.1", values: ["reach", "tempo", "aftercast"] },
-        { key: "description.2", values: ["cloud", "glints", "velocity"] },
+        { key: "description.2", values: ["cloud", "velocity"] },
         { key: "sift.on", values: ["hold", "reach"], when: function (context) { return read(context.detail.values, ["sift"]) === true; } },
         { key: "sift.off", values: ["recharge"], when: function (context) { return read(context.detail.values, ["sift"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

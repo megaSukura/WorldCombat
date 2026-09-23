@@ -50,7 +50,6 @@ namespace PokemonSkills {
     describe("roleplay", [
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["hold"] },
-        { key: "description.2", values: ["traits"] },
         { key: "dwell.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.dwell); } },
         { key: "dwell.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.dwell); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

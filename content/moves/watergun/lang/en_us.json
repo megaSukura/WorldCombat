@@ -9,7 +9,7 @@
   "worldcombat.skill.watergun.charge.off": "Rapid form: faster jet, range +2 blocks, shorter wind-up and cooldown, but each shot is only about four fifths of the charge form's power.",
   "worldcombat.skill.watergun.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.watergun.growth.0": "From level %1$s the line power rises to %2$s and the range to %3$s blocks.",
-  "worldcombat.skill.watergun.growth.1": "From level %1$s the line power rises to %2$s and the splash grows to %3$s droplets.",
+  "worldcombat.skill.watergun.growth.1": "From level %1$s the line power rises to %2$s.",
   "worldcombat.skill.watergun.value.spout": "Line power",
   "worldcombat.skill.watergun.value.pressure": "Jet speed",
   "worldcombat.skill.watergun.value.radius": "Line radius",

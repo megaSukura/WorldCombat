@@ -72,7 +72,7 @@ namespace PokemonSkills {
     describe(disableId, [
         { key: "description.0", values: ["disableTicks"] },
         { key: "description.1", values: ["memory", "reach"] },
-        { key: "description.2", values: ["nails", "tempo", "aftercast", "recharge"] },
+        { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "heavy.0", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.1", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

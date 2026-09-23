@@ -38,6 +38,7 @@ namespace PokemonSkills {
 
     define({
         id: "skyuppercut",
+        cooldownParameter: "recharge",
         name: "Sky Uppercut",
         description: "The user attacks the target with an uppercut thrown skyward with force.",
         uses: ["一记上勾把贴脸的对手顶到空中", "打断空中或跳起的对手、把它打得更狠", "把敌人挑离阵地，给下一拍创造机会"],

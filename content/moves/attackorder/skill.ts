@@ -78,6 +78,7 @@ namespace PokemonSkills {
 
     define({
         id: attackorderId,
+        cooldownParameter: "recharge",
         name: "Attack Order",
         description: "The user calls out its underlings to pummel the target.",
         uses: ["召一队手下扑向目标各自刺一下", "用多次小刺多撞几次会心", "让手下成为能被清场的输出"],

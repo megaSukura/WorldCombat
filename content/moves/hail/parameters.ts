@@ -79,7 +79,7 @@ namespace PokemonSkills {
     describe("hail", [
         { key: "description.0", values: ["stormRadius", "stormTicks"] },
         { key: "description.1", values: ["pelt", "struckTicks", "stoneInterval"] },
-        { key: "description.2", values: ["shardCells", "stoneDensity"] },
+        { key: "description.2", values: ["shardCells"] },
         { key: "description.3", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },

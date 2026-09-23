@@ -83,7 +83,7 @@ namespace PokemonSkills {
     describe("leechseed", [
         { key: "description.0", values: ["reach", "seedTicks"] },
         { key: "description.1", values: ["interval", "drain"] },
-        { key: "description.2", values: ["seedSpeed", "seedRadius", "vines"] },
+        { key: "description.2", values: ["seedSpeed", "seedRadius"] },
         { key: "gluttony.on", values: [], when: function (context) { return read(context.detail.values, ["gluttony"]) === true; } },
         { key: "gluttony.off", values: [], when: function (context) { return read(context.detail.values, ["gluttony"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

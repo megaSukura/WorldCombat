@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: supersonicId,
+        cooldownParameter: "recharge",
         name: "超音波",
         description: "从身体发出特殊的音波，从而使对手混乱。",
         uses: ["被围时一口气扰乱一圈敌人", "逼退贴身的多个目标", "在混战中制造集体失手窗口"],

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.detect.summary": "Read the next attack inside a very short window and fully evade it, earning a burst of opening (Speed by default, Attack if configured). Repeated use tends to fail.",
   "worldcombat.skill.detect.description.0": "Read window %1$s, opening %2$s (%3$s level); higher Speed widens the window and lengthens the opening.",
-  "worldcombat.skill.detect.description.1": "Focus %1$s, flash radius %2$s blocks, cooldown %3$s.",
+  "worldcombat.skill.detect.description.1": "Focus %1$s, cooldown %2$s.",
   "worldcombat.skill.detect.description.2": "Repeat-use failure rate %1$s; the reposition/counter trade-off is the %2$s setting.",
   "worldcombat.skill.detect.use.0": "Tear apart the first blow the moment it starts",
   "worldcombat.skill.detect.use.1": "Read while closing, then strike back",

@@ -66,6 +66,7 @@ namespace PokemonSkills {
 
     define({
         id: rockclimbId,
+        cooldownParameter: "recharge",
         name: "Rock Climb",
         description: "蹬地攀上、整个身体越过地面砸向目标：落地那一下很重，可能把目标撞得混乱；落点一圈内的敌人各挨一记，地表被蹬出一小片土痕。命中只有 85，扑偏是常事。",
         uses: ["贴身的一次重扑", "越过一小段距离砸进敌群", "用落地范围一次撞到两三个"],

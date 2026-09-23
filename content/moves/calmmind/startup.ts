@@ -1,6 +1,5 @@
 // 清明：一段可见的专注窗口，承载共享身份 world_combat:status/calmmind。
-// 特攻与特防等级由 NativeEffects.boost 写入公共能力阶梯；各加了几级另存在 world_combat:calmmind_mark 里，
-// 窗口走完或被清除时由本单元 skill.ts 从移除事件里照数收回。
+// 特攻与特防由绑定清明状态的临时窗口持有；连续施放累计并续时，状态结束时一起收回。
 // 启动脚本不引用服务端共享库，标签用字符串字面量。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:calm_focus")
     .beneficial()

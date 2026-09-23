@@ -51,6 +51,7 @@ namespace PokemonSkills {
 
     define({
         id: stunsporeId,
+        cooldownParameter: "recharge",
         name: "Stun Spore",
         description: "The user scatters a cloud of numbing powder that paralyzes the target.",
         uses: ["封住一条通道或门口", "让追兵踩进云里慢下来", "把敌人逼进/逼出某片地"],

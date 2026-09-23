@@ -1,7 +1,7 @@
 /**
  * 岩石打磨 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁且在 ai.maxChase 内时，先站定磨一轮；身边暂时安全时（驻守／自主／工作）也先磨好。
+ * 什么局面有意义：有威胁且在 ai.maxChase 内时，先站定磨一轮。
  * 什么时候最想出手：威胁还在 ai.minGap 之外时 priority 110 抢在共享次序前——趁距离还够，把这段要站着不动的时间花掉；
  *   已经贴身就交回普通次序，不站着挨打。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -22,7 +22,8 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "polished")) return false;
             const gap = rockPolishThreatGap(context);
-            if (gap < 0) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (gap < 0) return false;
+            if (gap < CompanionBehavior.ai<number>(capability, "minGap", 4)) return false;
             return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 15);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

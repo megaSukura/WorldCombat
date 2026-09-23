@@ -95,6 +95,7 @@ namespace PokemonSkills {
 
     define({
         id: leechSeedId,
+        cooldownParameter: "recharge",
         name: "Leech Seed",
         description: "把一粒种子种进对手身上：根扎下后每隔一会儿抽走它一口生命回补自己，直到它倒下或根被清除。",
         uses: ["把硬仗拖成消耗战，一点点把自己养回来", "在对手身上留一根持续的抽血线", "配合拉开距离，让根替自己耗血"],

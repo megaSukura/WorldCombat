@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: "wildcharge",
+        cooldownParameter: "recharge",
         name: "Wild Charge",
         description: "The user shrouds itself in electricity and smashes into the target. This also damages the user a little.",
         uses: ["用带电冲锋把贴脸的对手撞开", "给一个还没麻痹的主力挂上麻痹", "在湿身的环境里把电流灌进对方身体"],

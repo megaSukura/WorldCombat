@@ -10,7 +10,7 @@
   "worldcombat.skill.tropkick.launch.off": "Drive: power x1.12, a low flat kick that hits harder.",
   "worldcombat.skill.tropkick.timing": "Castable within %1$s blocks; after a %2$s wind-up it recovers for %3$s, spends %4$s PP, and goes on cooldown for %5$s.",
   "worldcombat.skill.tropkick.growth.0": "From level %1$s the kick rises to %2$s power.",
-  "worldcombat.skill.tropkick.growth.1": "From level %1$s the kick rises again to %2$s power and the embers rise to %3$s.",
+  "worldcombat.skill.tropkick.growth.1": "From level %1$s the kick rises again to %2$s power.",
   "worldcombat.skill.tropkick.value.kick": "Kick power",
   "worldcombat.skill.tropkick.value.lunge": "Step distance",
   "worldcombat.skill.tropkick.value.cruise": "Step speed",

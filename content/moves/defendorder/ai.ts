@@ -1,8 +1,8 @@
 /**
  * 防御指令 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁、且在 ai.maxChase 内时先召一队手下贴上身，再回头交战；身边暂时安全时
- *   （驻守／自主／工作）也先叠好甲壳。甲壳还在身上时不再重复召唤（本招会拒绝 already-guarded）。
+ * 什么局面有意义：有威胁、且在 ai.maxChase 内时先召一队手下贴上身，再回头交战。
+ *   甲壳还在身上时不再重复召唤（本招会拒绝 already-guarded）。
  * 什么时候最想出手：血量掉到 ai.panic 以下（正在挨压）时 priority 104 抢在共享次序前——防招要在被打崩之前召好；
  *   只是有威胁时退回 88，先按普通次序交战。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -27,7 +27,7 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "defendorder")) return false;
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             const distance = CompanionBehavior.distance(self.point, threat.point);
             return distance >= CompanionBehavior.ai<number>(capability, "minGap", 2)
                 && distance <= CompanionBehavior.ai<number>(capability, "maxChase", 12);

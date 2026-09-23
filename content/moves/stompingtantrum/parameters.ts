@@ -152,7 +152,7 @@ namespace PokemonSkills {
     describe(stompId, [
         { key: "description.0", values: ["tremor"] },
         { key: "description.1", values: ["fissure", "halfWidth", "launch", "shove"] },
-        { key: "description.2", values: ["shock", "rentTicks", "rentCells"] },
+        { key: "description.2", values: ["rentTicks", "rentCells"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

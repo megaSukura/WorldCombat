@@ -4,7 +4,7 @@
   "worldcombat.skill.branchpoke.use.1": "站在枝条末端打满，越远越疼",
   "worldcombat.skill.branchpoke.use.2": "刺枝式扎住目标使其减速",
   "worldcombat.skill.branchpoke.description.0": "枝尖贴脸一段约 %1$s 点接触伤害；枝长约 %2$s 格、枝身半宽约 %3$s 格。",
-  "worldcombat.skill.branchpoke.description.1": "伤害乘 (1 + %1$s × 目标距离/枝长)，愈远愈疼；戳中崩出约 %2$s 片芽叶。",
+  "worldcombat.skill.branchpoke.description.1": "伤害乘 (1 + %1$s × 目标距离/枝长)，愈远愈疼。",
   "worldcombat.skill.branchpoke.thorn.on": "刺枝式：命中挂住目标减速 %2$s 级、约 %1$s 秒，贴脸一段约 %3$s 点；枝身更细、弹劲更小。",
   "worldcombat.skill.branchpoke.thorn.off": "弹枝式：贴脸一段约 %1$s 点，枝身更宽、末梢弹劲更大，出手更快。",
   "worldcombat.skill.branchpoke.timing": "枝长 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

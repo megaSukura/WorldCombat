@@ -4,7 +4,7 @@
   "worldcombat.skill.metalsound.use.1": "把特防大降挂满一整个交战窗口",
   "worldcombat.skill.metalsound.use.2": "在墙后安全起手，再把声音送到对面",
   "worldcombat.skill.metalsound.description.0": "目标特防下降 %1$s 级，回响持续约 %2$s。",
-  "worldcombat.skill.metalsound.description.1": "声音能送到 %1$s 格外的耳朵里，一次刮出 %2$s 圈声纹；掩体挡不住它。",
+  "worldcombat.skill.metalsound.description.1": "声音能送到 %1$s 格外的耳朵里；掩体挡不住它。",
   "worldcombat.skill.metalsound.description.2": "站定磨音 %1$s，冷却 %2$s。",
   "worldcombat.skill.metalsound.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.metalsound.value.reach": "回响距离",

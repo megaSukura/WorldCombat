@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: "smog",
+        cooldownParameter: "recharge",
         name: "Smog",
         description: "吸一口气，朝选定的方向喷出一道低矮的浊雾锥；雾贴着地面向前滚，先扫近处、隔一拍再滚到远处，每扫到的人吃一点伤害并很容易中毒。射程短、伤害低，但中毒概率最高。滚涌形态更宽更远更毒，代价是单段更轻、来得更慢。",
         uses: ["近身一口把正前方的人熏毒", "封住一条走廊的入口", "PP 多、反复刷毒"],

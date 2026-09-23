@@ -13,6 +13,7 @@
 namespace PokemonSkills {
     define({
         id: comeuppanceId,
+        cooldownParameter: "recharge",
         name: "Comeuppance",
         description: "把最近受到的伤害记成一笔仇，隔一拍放出暗影追讨，以 1.5 倍还给账主；没有账可讨时暗记消散。",
         uses: ["挨打后隔空追讨远处的对手", "惩罚先手打中自己的远程敌人", "把承伤转成一记延迟的重击"],

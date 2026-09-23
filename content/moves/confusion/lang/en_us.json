@@ -5,7 +5,7 @@
   "worldcombat.skill.confusion.use.2": "Suppress a target that likes to act often",
   "worldcombat.skill.confusion.description.0": "The pulse deals %1$s special damage on hit.",
   "worldcombat.skill.confusion.description.1": "On hit it has a %1$s chance to daze the target for %2$s; while dazed the target's actions are scattered with a %3$s chance, and each fumble is jabbed again.",
-  "worldcombat.skill.confusion.description.2": "The pulse reaches %1$s blocks at %2$s blocks/tick, bursting about %3$s violet motes on hit.",
+  "worldcombat.skill.confusion.description.2": "The pulse reaches %1$s blocks at %2$s blocks/tick.",
   "worldcombat.skill.confusion.focus.on": "Focused mind: stronger, longer and more reliable daze and a higher fumble chance, at the cost of shorter reach, a thinner hitbox and slower travel.",
   "worldcombat.skill.confusion.focus.off": "Loose mind: a faster, longer, cheaper shot, at the cost of lighter damage and rarer daze.",
   "worldcombat.skill.confusion.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

@@ -41,13 +41,13 @@ namespace PokemonSkills {
         surge: formula(
             F.base(14).plus(F.stat("attack").times(0.15).as("物攻")).clamp(12, 34).round(0),
             "力量迸发", {
-                unit: " 点",
+                unit: " 点", visible: false,
                 description: "怒吼顶起那一下喷出的力场粒子量；物攻越高越多，也是画面的吞吐量。"
             }),
         ring: formula(
             F.base(1.2).plus(F.body("weight").div(70).as("体重")).clamp(1.0, 2.6).round(2),
             "阵环半径", {
-                unit: " 格",
+                unit: " 格", visible: false,
                 description: "脚下那圈地纹铺多大；体重越大铺得越开，是表现里阵环的参考半径。"
             }),
         tempo: seconds(
@@ -68,8 +68,8 @@ namespace PokemonSkills {
     ]);
 
     describe(noRetreatId, [
-        { key: "description.0", values: ["standTicks", "ring"] },
-        { key: "description.1", values: ["surge"] },
+        { key: "description.0", values: ["standTicks"] },
+        { key: "description.1", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["rush"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["rush"]) !== true; } },

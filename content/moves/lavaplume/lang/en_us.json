@@ -5,7 +5,7 @@
   "worldcombat.skill.lavaplume.use.2": "Seal a patch of ground with embers",
   "worldcombat.skill.lavaplume.use.3": "Break up melee pressure around you",
   "worldcombat.skill.lavaplume.description.0": "When the ring collapses, each foe inside takes about %1$s damage. The target's Sp. Def, type and crit are settled on the hit.",
-  "worldcombat.skill.lavaplume.description.1": "It first raises a %3$s-block molten smoke column, then folds a %1$s-block fire ring outward from the feet, sweeping it within %2$s s.",
+  "worldcombat.skill.lavaplume.description.1": "It first raises a molten smoke column, then folds a %1$s-block fire ring outward from the feet, sweeping it within %2$s s.",
   "worldcombat.skill.lavaplume.description.2": "A target scorched by the ring has a %1$s burn chance.",
   "worldcombat.skill.lavaplume.description.3": "Fume style leaves embers for %2$s s, scalding everyone inside for about %1$s damage every %3$s s.",
   "worldcombat.skill.lavaplume.fume.on": "Fume style on: the ring is about ×0.88 power and ×0.85 wide, but leaves smouldering embers that keep scalding, with cooldown +10 ticks.",

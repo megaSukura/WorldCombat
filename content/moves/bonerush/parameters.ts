@@ -166,7 +166,7 @@ namespace PokemonSkills {
     describe(bonerushId, [
         { key: "description.0", values: ["quake", "strikes", "accuracy"] },
         { key: "description.1", values: ["throwRange", "flight", "boomArc", "shock"] },
-        { key: "description.2", values: ["crack", "finish", "boneRadius", "lift", "gap", "dust"] },
+        { key: "description.2", values: ["crack", "finish", "boneRadius", "lift", "gap"] },
         { key: "fissure.on", values: [], when: function (context) { return read(context.detail.values, ["fissure"]) === true; } },
         { key: "fissure.off", values: [], when: function (context) { return read(context.detail.values, ["fissure"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

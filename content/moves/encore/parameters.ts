@@ -77,7 +77,7 @@ namespace PokemonSkills {
 
     describe(encoreId, [
         { key: "description.0", values: ["callTicks", "memory"] },
-        { key: "description.1", values: ["reach", "loopRadius", "motes"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "strict.0", values: [], when: function (context) { return read(context.detail.values, ["strict"]) === true; } },
         { key: "strict.1", values: [], when: function (context) { return read(context.detail.values, ["strict"]) !== true; } },

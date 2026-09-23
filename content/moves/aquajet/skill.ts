@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: aquajetId,
+        cooldownParameter: "recharge",
         name: "Aqua Jet",
         description: "The user lunges at the target at blinding speed, wrapped in a jet of water. This move always goes first.",
         uses: ["远处先手扑上去，把对手浇透", "一冲浇熄对手身上的火与灼伤", "从水里冲出来打一记更猛的水柱"],
@@ -27,7 +28,7 @@ namespace PokemonSkills {
         recover: 7,
         cooldown: 22,
         style: "jet",
-        defaults: { deluge: false, ai: { maxChase: 9, douse: true, preferDry: true } },
+        defaults: { deluge: false, ai: { maxChase: 9, preserveBurn: true, preferDry: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p(aquajetId, "surge", pokemon) : 3.1) + 0.4, geometry: "line", style: "jet", color: 0x4FC3E8,

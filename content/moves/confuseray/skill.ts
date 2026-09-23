@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: confuserayId,
+        cooldownParameter: "recharge",
         name: "奇异之光",
         description: "显示奇怪的光，扰乱对手，使对手混乱。",
         uses: ["远程单体扰乱", "让高输出敌人打空", "在安全距离打断远程压制"],

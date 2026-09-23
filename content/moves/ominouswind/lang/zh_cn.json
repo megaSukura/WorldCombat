@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.ominouswind.summary": "放出一道贴地奔袭的幽风：它一路只聚势、到目标脚下才炸开，把那一圈敌人朝中心收拢并造成特殊伤害；回卷的冷气有概率把自身全部能力各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
+  "worldcombat.skill.ominouswind.summary": "放出一道贴地奔袭的幽风：它一路只聚势、到目标脚下才炸开，把那一圈敌人朝中心收拢并造成特殊伤害；回卷的冷气有概率把自身五项战斗能力短时各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
   "worldcombat.skill.ominouswind.use.0": "对准一个远处目标，让幽风自己追上去收拢",
   "worldcombat.skill.ominouswind.use.1": "把目标从掩体或队友身边朝中心拽近",
-  "worldcombat.skill.ominouswind.use.2": "用反哺把全部能力一点点拉起来",
+  "worldcombat.skill.ominouswind.use.2": "抓住反哺后的短时强化窗口进攻",
   "worldcombat.skill.ominouswind.description.0": "幽风收拢造成 %1$s 点特殊伤害，奔袭距离 %2$s 格。",
   "worldcombat.skill.ominouswind.description.1": "幽风以 %1$s 格每刻逼近，抵达后炸开 %2$s 格的一圈，把圈内目标朝中心收拢 %3$s 格。",
-  "worldcombat.skill.ominouswind.description.2": "有 %1$s 概率让自身全部能力各提升 %2$s 级。",
-  "worldcombat.skill.ominouswind.description.3": "收拢时卷起约 %1$s 缕幽丝；当前缠魄式为 %2$s。",
+  "worldcombat.skill.ominouswind.description.2": "命中后有 %1$s 概率使攻击、防御、特攻、特防和速度各提高 %2$s 级，持续 %3$s；再次触发刷新时间，保持一层。",
+  "worldcombat.skill.ominouswind.description.3": "当前缠魄式为 %1$s。",
   "worldcombat.skill.ominouswind.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.ominouswind.growth.0": "%1$s 级起风威升至 %2$s、奔袭距离 %3$s 格。",
   "worldcombat.skill.ominouswind.value.squall": "风威",
@@ -26,7 +26,8 @@
   "worldcombat.skill.ominouswind.preference.ai.maxChase.help": "超过这个距离就不主动放风，先走近；越大越愿意对更远的目标放。",
   "worldcombat.skill.ominouswind.preference.ai.chaseRunners": "先卷跑得快的",
   "worldcombat.skill.ominouswind.preference.ai.chaseRunners.help": "开启后，移动快的目标优先——幽风会小幅转向，跑得快的最难把它甩掉；关闭则所有目标同价。",
-  "world_combat.move.ominouswind.text.surge": "全部能力 +%1$s",
+  "world_combat.move.ominouswind.text.surge": "五项能力 +%1$s（%2$s 秒）",
   "world_combat.move.ominouswind.text.hit": "奇风收拢 %1$s 个敌人",
-  "world_combat.move.ominouswind.text.miss": "幽风空卷"
+  "world_combat.move.ominouswind.text.miss": "幽风空卷",
+  "worldcombat.skill.ominouswind.value.surgeTicks": "反哺持续"
 }

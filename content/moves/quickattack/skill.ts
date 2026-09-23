@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: quickattackId,
+        cooldownParameter: "recharge",
         name: "Quick Attack",
         description: "The user lunges at the target at blinding speed. This move always goes first.",
         uses: ["贴身抢一记先手，趁对手还没出手", "低代价地收掉残血目标", "追不上时用一记短冲把距离补上"],
@@ -86,7 +87,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(quickattackId, "strike"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(origin);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, quickattackScene, 1, hit.position(),
                             { moment: "strike", target: String(victim.ref()), count: count, scale: scale, intensity: intensity }, 26);

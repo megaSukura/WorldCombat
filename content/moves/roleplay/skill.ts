@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "roleplay",
+        cooldownParameter: "recharge",
         name: "Role Play",
         description: "扮演对手，让自己的特性暂时变得和对手相同。",
         uses: ["借对手的特性打这一段", "把对手的强力特性复制到自己身上", "在开战前换成更合适的特性"],

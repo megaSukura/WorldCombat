@@ -65,8 +65,8 @@ namespace PokemonSkills {
     });
 
     describe(grudgeId, [
-        { key: "description.0", values: ["watchTicks", "eyeRadius"] },
-        { key: "description.1", values: ["motes", "tempo", "recharge"] },
+        { key: "description.0", values: ["watchTicks"] },
+        { key: "description.1", values: ["tempo", "recharge"] },
         { key: "deep.0", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.1", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

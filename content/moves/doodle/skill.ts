@@ -44,6 +44,7 @@ namespace PokemonSkills {
 
     define({
         id: "doodle",
+        cooldownParameter: "recharge",
         name: "Doodle",
         description: "把握并映射出对手的本质，让自己和同伴宝可梦的特性变得和对手相同。",
         uses: ["把对手的强力特性一次复制给全队", "开战前统一队伍的特性", "配合一只特性关键的对手打配合"],

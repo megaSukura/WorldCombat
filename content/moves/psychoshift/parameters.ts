@@ -57,7 +57,7 @@ namespace PokemonSkills {
 
     describe("psychoshift", [
         { key: "description.0", values: ["reach"] },
-        { key: "description.1", values: ["potency", "motes"] },
+        { key: "description.1", values: ["potency"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

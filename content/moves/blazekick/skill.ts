@@ -38,6 +38,7 @@ namespace PokemonSkills {
 
     define({
         id: "blazekick",
+        cooldownParameter: "recharge",
         name: "Blaze Kick",
         description: "The user spins and swings a flame-wreathed leg in a rising arc, launching the target off the ground and possibly leaving it burned.",
         uses: ["一记把目标挑离地面的上挑火焰踢", "打断贴身的对手并点燃它", "把目标挑起来，落地前它动不了手"],

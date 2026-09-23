@@ -4,7 +4,7 @@
   "worldcombat.skill.supersonic.use.1": "逼退贴身的多个目标",
   "worldcombat.skill.supersonic.use.2": "在混战中制造集体失手窗口",
   "worldcombat.skill.supersonic.description.0": "声浪以自身为心向外推开：半径 %1$s 格，波前每刻推进 %2$s 格；站在波前经过的位置上就会被扫到。",
-  "worldcombat.skill.supersonic.description.1": "被扫到的敌人挂上混乱，持续 %2$s：每次出手都可能作废，打中别人时被自己的力量反噬。波面上的细响 %1$s 个，越强的特攻越密。",
+  "worldcombat.skill.supersonic.description.1": "被扫到的敌人挂上混乱，持续 %1$s：每次出手都可能作废，打中别人时被自己的力量反噬。",
   "worldcombat.skill.supersonic.description.2": "推出这一声要 %1$s，收声 %2$s，冷却 %3$s。声浪形态可选：广域半径 ×1.3、每一下更浅（混乱 ×0.8）；集中半径 ×0.7、冷却 ×1.1，换来混乱 ×1.3 与 +1 强度。",
   "worldcombat.skill.supersonic.value.waveReach": "波前半径",
   "worldcombat.skill.supersonic.value.waveSpeed": "波速",

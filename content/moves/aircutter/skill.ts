@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: aircutterId,
+        cooldownParameter: "recharge",
         name: "Air Cutter",
         description: "The user launches razor-like wind to slash opposing Pokémon. This move has a heightened chance of landing a critical hit.",
         uses: ["一次张开扫过面前一整片对手", "同时切伤挤在扇面里的多个目标", "瞬发轻快，起手窗口里逼对手走位"],

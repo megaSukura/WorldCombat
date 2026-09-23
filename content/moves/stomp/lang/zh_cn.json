@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.stomp.summary": "把全身重量往下砸的一脚：单体最重的近身招，命中即让对手一滞，脚下的震波还会把落点周围站着的人一起震懵——但只砸得到站在地上的目标，空中的人躲得开。",
-  "worldcombat.skill.stomp.description.0": "这一脚造成约 %1$s 的接触伤害，落脚判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.stomp.description.0": "这一脚造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.stomp.description.1": "落点震波半径 %1$s 格，圈内其他站在地上的敌人各吃约 %2$s，越重震得越广。",
   "worldcombat.skill.stomp.description.2": "主目标畏缩几率 %1$s，只被震波扫到的人 %2$s，畏缩 %3$s 秒；目标在空中时这一脚会踩空。",
   "worldcombat.skill.stomp.heavy.on": "重踏式：抬得更高、砸得更重、塌陷与震波更广、更容易震懵，但起手更慢、冷却更久。",

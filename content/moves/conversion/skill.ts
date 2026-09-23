@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: "conversion",
+        cooldownParameter: "recharge",
         name: "纹理",
         description: "读入招式表中第一个招式的属性，把自己的属性暂时重织成它。",
         uses: ["读取首个招式的属性", "把自己重织成那个属性"],

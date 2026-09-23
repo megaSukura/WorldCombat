@@ -103,6 +103,7 @@ namespace PokemonSkills {
 
     define({
         id: laserfocusId,
+        cooldownParameter: "recharge",
         name: "磨砺",
         description: "收束精神，让下一次命中必定击中要害；这层锐意留在身上直到出手，不用则随时间散去。",
         uses: ["在对手硬吃一发前先磨好要害", "把一次关键命中放大成致命一击", "逼对手在锐意散去前拉开距离"],

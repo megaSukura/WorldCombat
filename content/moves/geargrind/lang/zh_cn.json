@@ -4,7 +4,7 @@
   "worldcombat.skill.geargrind.use.1": "用可弹跳的齿轮绕开掩体",
   "worldcombat.skill.geargrind.use.2": "压住会侧向走位的对手",
   "worldcombat.skill.geargrind.description.0": "第一枚 %1$s 威力、第二枚 %2$s 威力（各走物攻/速度），投掷距离 %3$s 格，齿轮飞行速度 %4$s 格/刻。",
-  "worldcombat.skill.geargrind.description.1": "出手偏离角 %1$s 度，追踪转向 %2$s 度/刻，两侧错开 %3$s 格，命中迸出约 %4$s 点钢屑。",
+  "worldcombat.skill.geargrind.description.1": "出手偏离角 %1$s 度，追踪转向 %2$s 度/刻，两侧错开 %3$s 格。",
   "worldcombat.skill.geargrind.cross.on": "当前交错式：两枚齿轮从两侧错开、追踪合拢，侧向躲闪会被另一枚兜住；每枚略轻、飞得略慢、间隔更长。",
   "worldcombat.skill.geargrind.cross.off": "当前直射式：两枚齿轮沿同一条线笔直快飞、不追踪，每枚更重、更准更快，但整体向一侧走位就能一起躲开。",
   "worldcombat.skill.geargrind.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

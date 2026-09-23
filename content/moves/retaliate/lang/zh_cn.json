@@ -4,7 +4,7 @@
   "worldcombat.skill.retaliate.use.1": "带着哀兵之痛打出一记翻倍直撞",
   "worldcombat.skill.retaliate.use.2": "朝刚打完同伴的敌人撞过去",
   "worldcombat.skill.retaliate.description.0": "直撞造成 %1$s 点物理伤害（一般）；同伴刚倒下时这一记翻倍，等级与亲密度越高倍率越大。",
-  "worldcombat.skill.retaliate.description.1": "冲撞 %1$s 格、每刻 %2$s 格、判定半径 %3$s 格；撞中把人顶开 %4$s 格，冲势线条 %5$s 条。",
+  "worldcombat.skill.retaliate.description.1": "冲撞 %1$s 格、每刻 %2$s 格、判定半径 %3$s 格；撞中把人顶开 %4$s 格。",
   "worldcombat.skill.retaliate.solemn.on": "当前：哀兵式——冲得更远 ×1.12、翻倍系数 ×1.06，追着凶手打，但基础 ×0.92、起手与冷却更久。",
   "worldcombat.skill.retaliate.solemn.off": "当前：直接式——基础 ×1.08、冲得短而干净。",
   "worldcombat.skill.retaliate.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

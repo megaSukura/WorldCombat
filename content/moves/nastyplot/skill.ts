@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "nastyplot",
+        cooldownParameter: "wait",
         name: "诡计",
         description: "谋划诡计，激活头脑，大幅提高自己的特攻；这条毒计要有个眼前的对手才算得动。",
         uses: ["开打前盯住一个对手，把特攻垫到最高", "对手藏起来前抢着起念，错过就等下一次照面", "关掉算计活人时，赶路途中闭门先算一档"],

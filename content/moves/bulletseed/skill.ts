@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: "bulletseed",
+        cooldownParameter: "recharge",
         name: "Bullet Seed",
         description: "把籽一口气连珠喷出：籽一发接一发沿准线飞向目标，每发各撞一次，直到这一梭子打完。重籽少而重、飞得紧；速射多而轻、散得开。",
         uses: ["中近距离一梭子密集的物理小撞击", "对低防目标靠发数堆伤害", "起手快、能连发，适合贴着对手持续施压"],

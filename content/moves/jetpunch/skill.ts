@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: jetpunchId,
+        cooldownParameter: "recharge",
         name: "Jet Punch",
         description: "The user summons a torrent around its fist and punches at blinding speed. This move always goes first.",
         uses: ["贴身瞬发的先手重拳", "一拳把对手浇透并推离原位", "浇熄对手身上的火与灼伤"],
@@ -26,7 +27,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 16,
         style: "jet",
-        defaults: { hammer: false, ai: { maxChase: 6, douse: true, preferDry: true, finish: true } },
+        defaults: { hammer: false, ai: { maxChase: 6, preserveBurn: true, preferDry: true, finish: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p(jetpunchId, "reach", pokemon) : 2.8) + 0.4, geometry: "line", style: "jet", color: 0x3FA8E0,

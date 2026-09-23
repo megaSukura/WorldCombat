@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.wildcharge.summary": "电流裹身的一次放电冲锋：先把电流收拢到全身，笔直撞上去，把电流灌进对方身体（有概率麻痹）；回路也会伤到自己，全身湿透时漏电更狠。猛撞的带电版。",
   "worldcombat.skill.wildcharge.description.0": "这一撞造成 %1$s 的带电接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.wildcharge.description.1": "命中后有 %1$s%% 的机会让对方麻痹；自己按实际伤害的 %2$s%% 反伤，把目标顶开 %3$s 格，迸开 %4$s 个电火花。",
+  "worldcombat.skill.wildcharge.description.1": "命中后有 %1$s%% 的机会让对方麻痹；自己按实际伤害的 %2$s%% 反伤，把目标顶开 %3$s 格。",
   "worldcombat.skill.wildcharge.overload.on": "过载：电流全开，威力、麻痹概率、击退与火花都升，但回路反噬更重、起手更长。",
   "worldcombat.skill.wildcharge.overload.off": "控流：压低威力与反噬、起手更短，麻痹概率略降，适合速攻与缠斗。",
   "worldcombat.skill.wildcharge.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

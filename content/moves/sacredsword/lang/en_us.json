@@ -4,7 +4,7 @@
   "worldcombat.skill.sacredsword.use.1": "Ignore the target's raised Defence stages outright",
   "worldcombat.skill.sacredsword.use.2": "Open a single target at the edge of reach",
   "worldcombat.skill.sacredsword.description.0": "One cut deals about %1$s contact damage out to about %2$s blocks; the target's Defence stages are ignored by this move.",
-  "worldcombat.skill.sacredsword.description.1": "Half-width about %1$s blocks and vertical cover about %2$s blocks; the lunge is about %3$s blocks and about %4$s blade gleams trail the edge.",
+  "worldcombat.skill.sacredsword.description.1": "The lunge is about %1$s blocks.",
   "worldcombat.skill.sacredsword.iaido.on": "Iai form: reach about %1$s blocks, lunge about %2$s blocks and about %3$s damage per cut - farther and harder, but a longer wind-up and cooldown.",
   "worldcombat.skill.sacredsword.iaido.off": "Standing form: cut on the spot, reach about %1$s blocks, lunge about %2$s blocks and about %3$s damage, with a faster cycle.",
   "worldcombat.skill.sacredsword.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

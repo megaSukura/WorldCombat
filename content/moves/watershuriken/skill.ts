@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: watershurikenId,
+        cooldownParameter: "recharge",
         name: "Water Shuriken",
         description: "The user throws throwing stars made of water. This move hits two to five times in a row. This move always goes first.",
         uses: ["中近距离连发的水星先手", "用多枚水星把目标浇透", "散式多甩几枚、聚式少而重"],

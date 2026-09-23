@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.spikyshield.summary": "A bramble shield bursts up and fully blocks attacks, shutting status moves out too; every direct contact pricks the attacker for damage.",
   "worldcombat.skill.spikyshield.description.0": "The shield lasts %1$s and holds %2$s points; each thorn deals %3$s. Higher Defence makes it thicker, longer and deeper.",
-  "worldcombat.skill.spikyshield.description.1": "Raise %1$s, thorn radius %2$s blocks, cooldown %3$s.",
+  "worldcombat.skill.spikyshield.description.1": "Raise %1$s, cooldown %2$s.",
   "worldcombat.skill.spikyshield.description.2": "Repeat-use failure rate %1$s; the sharp/thick trade-off is the %2$s setting.",
   "worldcombat.skill.spikyshield.use.0": "Bait a melee foe onto the thorns",
   "worldcombat.skill.spikyshield.use.1": "Block a volley while pricking the melee charging in",

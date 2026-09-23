@@ -5,7 +5,7 @@
   "worldcombat.skill.accelerock.use.2": "落点崩出碎石疤，改变脚下的地面",
   "worldcombat.skill.accelerock.description.0": "石身撞实造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.accelerock.description.1": "最远撞出 %1$s 格，每刻推进 %2$s 格，命中把目标沿冲刺方向顶开约 %3$s 格。",
-  "worldcombat.skill.accelerock.description.2": "撞击带起约 %1$s 点碎石，并沿冲刺线能撞穿 %2$s 个目标。",
+  "worldcombat.skill.accelerock.description.2": "沿冲刺线最多撞穿 %1$s 个目标。",
   "worldcombat.skill.accelerock.description.3": "落点崩出半径约 %1$s 格的碎石疤，在地上留约 %2$s 秒后原方块回来。",
   "worldcombat.skill.accelerock.breakthrough.on": "破阵式：沿冲刺线一路碾过去（最多 %1$s 个目标），但每一下更轻、顶得更近、起手与收招更慢、冷却更久。",
   "worldcombat.skill.accelerock.breakthrough.off": "普通式：撞上第一个就停，这一下最重、顶得最远，回得也最快。",

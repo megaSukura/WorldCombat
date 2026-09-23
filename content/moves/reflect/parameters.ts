@@ -68,7 +68,6 @@ namespace PokemonSkills {
     describe(reflectId, [
         { key: "description.0", values: ["plateTicks", "plateRadius"] },
         { key: "description.1", values: ["cut", "rebound"] },
-        { key: "description.2", values: ["plates"] },
         { key: "description.3", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.mirror); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.mirror); } },

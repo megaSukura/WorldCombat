@@ -5,7 +5,7 @@
   "worldcombat.skill.lifedew.use.2": "贴着伙伴放，顺路把他罩进水波",
   "worldcombat.skill.lifedew.description.0": "水波扫到时，自己与伙伴各回复其最大生命的 %1$s；特攻越高水越灵，伤得越深这一口给得越多。",
   "worldcombat.skill.lifedew.description.1": "水波最终铺到 %1$s 格，用时 %2$s 铺满；越晚铺到的人越晚被扫到。",
-  "worldcombat.skill.lifedew.description.2": "水波约 %1$s 滴水；起手 %2$s、收招 %3$s、冷却 %4$s。",
+  "worldcombat.skill.lifedew.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.lifedew.stance.surge": "丰沛：回复 ×1.15、水波半径 ×1.15，代价是铺开更慢（×1.3）、冷却更久——适合把一队一起拉回来。",
   "worldcombat.skill.lifedew.stance.plain": "细流：铺得又快又省、冷却更短，水波半径与回复都更小——适合顺手快速补一口。",
   "worldcombat.skill.lifedew.timing": "以自身为心施放，准备 %2$s 秒后消耗 %4$s PP；收招 %3$s 秒，提交起冷却 %5$s 秒。",

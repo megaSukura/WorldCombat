@@ -53,7 +53,6 @@ namespace PokemonSkills {
     describe("conversion2", [
         { key: "description.0", values: ["reach", "charge"] },
         { key: "description.1", values: ["hold", "pref.wide"] },
-        { key: "description.2", values: ["facets"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.hold", "tier.0.reach"] }
     ]);

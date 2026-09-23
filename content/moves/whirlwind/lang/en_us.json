@@ -11,7 +11,7 @@
   "worldcombat.skill.whirlwind.wide.off": "Wide wall off: a narrower, longer lane with a stronger blow, good for clearing at range.",
   "worldcombat.skill.whirlwind.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
   "worldcombat.skill.whirlwind.growth.0": "At level %1$s the lane lengthens to %2$s blocks and the blow reaches %3$s blocks.",
-  "worldcombat.skill.whirlwind.growth.1": "At level %1$s the lane lengthens to %2$s blocks, the blow reaches %3$s blocks and the grit rises to %4$s.",
+  "worldcombat.skill.whirlwind.growth.1": "At level %1$s the lane lengthens to %2$s blocks and the blow reaches %3$s blocks.",
   "worldcombat.skill.whirlwind.value.reach": "Lane length",
   "worldcombat.skill.whirlwind.value.band": "Lane width",
   "worldcombat.skill.whirlwind.value.front": "Advance speed",

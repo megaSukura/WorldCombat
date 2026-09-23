@@ -78,7 +78,7 @@ namespace PokemonSkills {
     describe("chillyreception", [
         { key: "description.0", values: ["silenceRadius", "pauseTicks", "hushTicks"] },
         { key: "description.1", values: ["snowRadius", "snowTicks"] },
-        { key: "description.2", values: ["withdraw", "snowDensity"] },
+        { key: "description.2", values: ["withdraw"] },
         { key: "description.3", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },

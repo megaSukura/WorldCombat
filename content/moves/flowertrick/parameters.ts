@@ -162,13 +162,13 @@ namespace PokemonSkills {
     ]);
 
     describe(flowertrickId, [
-        { key: "description.0", values: ["bloom", "petals"] },
+        { key: "description.0", values: ["bloom"] },
         { key: "description.1", values: ["reach", "velocity", "turn"] },
         { key: "description.2", values: ["bloomRadius", "petalCells", "petalTicks"] },
         { key: "wreathe.on", values: [], when: function (context) { return read(context.detail.values, ["wreathe"]) === true; } },
         { key: "wreathe.off", values: [], when: function (context) { return read(context.detail.values, ["wreathe"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.bloom", "tier.0.petals"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.bloom", "tier.1.bloomRadius", "tier.1.petals"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.bloom"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.bloom", "tier.1.bloomRadius"] }
     ]);
 }

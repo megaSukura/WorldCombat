@@ -86,14 +86,13 @@ namespace PokemonSkills {
     ]);
 
     describe("trick", [
-        { key: "description.0", values: ["reach", "motes"] },
+        { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["feint", "recover", "cooldown"] },
-        { key: "description.2", values: ["decoys"] },
         { key: "snap.on", values: [], when: function (context) { return read(context.detail.values, ["snap"]) === true; } },
         { key: "snap.off", values: [], when: function (context) { return read(context.detail.values, ["snap"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.cooldown"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.feint", "tier.1.motes"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.reach", "tier.1.feint"] }
     ]);
 }
 

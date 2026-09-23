@@ -126,7 +126,7 @@ namespace PokemonSkills {
     describe(hydrosteamId, [
         { key: "description.0", values: ["steam"] },
         { key: "description.1", values: ["reach", "angle"] },
-        { key: "description.2", values: ["soakTicks", "push", "vapor"] },
+        { key: "description.2", values: ["soakTicks", "push"] },
         { key: "rule.thaw", values: [] },
         { key: "bellow.on", values: [], when: function (context) { return read(context.detail.values, ["bellow"]) === true; } },
         { key: "bellow.off", values: [], when: function (context) { return read(context.detail.values, ["bellow"]) !== true; } },

@@ -53,7 +53,7 @@ namespace PokemonAttributes {
         scope.sources.push({ id, label: IndividualAttributes.rules.label(id), value: result.value, sources: result.sources });
         scope.unknown = scope.unknown.concat(result.unknown); return result.value;
     }
-    /** Default skill cooldown rule; an authored skill can provide a different, explained formula. */
+    /** Preview helper. Commit receives the authored duration; ActionCooldowns applies haste once at final reservation. */
     export function cooldown<C>(scope: RuleValues.Scope<C>, context: IndividualAttributes.Context, ticks: number): number {
         const haste = value<number, C>(scope, context, "world_combat:skill_haste");
         return Math.max(0, Math.round(ticks * 100 / (100 + haste)));

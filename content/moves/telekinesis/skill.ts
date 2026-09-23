@@ -63,6 +63,7 @@ namespace PokemonSkills {
 
     define({
         id: "telekinesis",
+        cooldownParameter: "recharge",
         name: "意念移物",
         description: "用念力把一名对手抬离地面悬在半空：悬空期间它挪不动、躲不开，地面招式与地形危害也够不到它。",
         uses: ["把要跑的对手钉在半空集火", "让地面招式打不到它（也保护它免受地面招）", "给队友和自己的攻击创造必中的几秒"],

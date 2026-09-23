@@ -16,7 +16,7 @@ namespace PokemonSkills {
     define({
         id: "willowisp",
         name: "Will-O-Wisp",
-        description: "The user shoots a sinister flame at the target to inflict a burn.",
+        description: "向射程内目标发射追踪鬼火，命中造成灼伤。",
         uses: ["隔开距离点着对手", "削弱靠物攻压上来的目标", "逼目标躲火而放弃站位"],
         kind: "enemy",
         range: 12,
@@ -42,7 +42,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const speed = p("willowisp", "wispSpeed", action);
             const radius = p("willowisp", "wispRadius", action);
             const turn = p("willowisp", "wispTurn", action);
@@ -78,8 +77,8 @@ namespace PokemonSkills {
                     }
                 }
             }, done);
-            WorldFeedback.emit(world, willowispScene, 1, action.origin(), { moment: "travel", projectile: flight, target: targetRef,
-                flow: Math.round(18 + speed * 16) }, 60);
+            action.present("willowisp:travel", willowispScene, 1, action.origin(), JSON.stringify({ moment: "travel",
+                projectile: flight, target: targetRef, flow: Math.round(18 + speed * 16) }));
         }
     });
 }

@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: "tripledive",
+        cooldownParameter: "recharge",
         name: "三连钻",
         description: "以默契的跳跃溅起水花击向对手。连续 3 次给予伤害。",
         uses: ["连续三次钻击同一个目标，越钻越重", "先手把目标打湿，给后续水属性招式铺垫", "在近身短暂窗口里堆出三下小伤害"],

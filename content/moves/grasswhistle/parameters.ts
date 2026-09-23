@@ -115,11 +115,10 @@ namespace PokemonSkills {
     describe(grasswhistleId, [
         { key: "description.0", values: ["reach", "laneWidth", "voices"] },
         { key: "description.1", values: ["landChance", "sleepTicks"] },
-        { key: "description.2", values: ["shrills", "noteSpeed"] },
         { key: "narrow.on", values: [], when: function (context) { return read(context.detail.values, ["narrow"]) === true; } },
         { key: "narrow.off", values: [], when: function (context) { return read(context.detail.values, ["narrow"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.shrills", "tier.0.voices"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.shrills", "tier.1.sleepTicks", "tier.1.reach"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.voices"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.sleepTicks", "tier.1.reach"] }
     ]);
 }

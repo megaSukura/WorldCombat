@@ -63,7 +63,7 @@ namespace PokemonSkills {
 
     describe(splashId, [
         { key: "description.0", values: ["hopHeight", "hopRange"] },
-        { key: "description.1", values: ["hangTicks", "splashMotes"] },
+        { key: "description.1", values: ["hangTicks"] },
         { key: "leap.on", values: [], when: function (context) { return read(context.detail.values, ["leap"]) === true; } },
         { key: "leap.off", values: [], when: function (context) { return read(context.detail.values, ["leap"]) !== true; } },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },

@@ -111,7 +111,7 @@ namespace PokemonSkills {
 
     describe(esperwingId, [
         { key: "description.0", values: ["blade"] },
-        { key: "description.1", values: ["reach", "arc", "motes"] },
+        { key: "description.1", values: ["reach", "arc"] },
         { key: "description.2", values: ["gift", "auraTicks"] },
         { key: "stance.flap", values: [], when: function (context) { return read(context.detail.values, ["flap"]) === true; } },
         { key: "stance.glide", values: [], when: function (context) { return read(context.detail.values, ["flap"]) !== true; } },

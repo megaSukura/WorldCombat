@@ -99,7 +99,6 @@ namespace PokemonSkills {
     describe(partingshotId, [
         { key: "description.0", values: ["drop", "markTicks"] },
         { key: "description.1", values: ["reach", "flight", "withdraw"] },
-        { key: "description.2", values: ["motes"] },
         { key: "venom.on", values: [], when: function (context) { return read(context.detail.values, ["venom"]) === true; } },
         { key: "venom.off", values: [], when: function (context) { return read(context.detail.values, ["venom"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

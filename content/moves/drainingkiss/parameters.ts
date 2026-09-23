@@ -99,8 +99,7 @@ namespace PokemonSkills {
 
     describe(drainingkissId, [
         { key: "description.0", values: ["peck", "sap"] },
-        { key: "description.1", values: ["reach", "radius"] },
-        { key: "description.2", values: ["hearts"] },
+        { key: "description.1", values: ["reach"] },
         { key: "swoon.on", values: [], when: function (context) { return read(context.detail.values, ["swoon"]) === true; } },
         { key: "swoon.off", values: [], when: function (context) { return read(context.detail.values, ["swoon"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

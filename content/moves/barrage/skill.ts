@@ -26,6 +26,7 @@ namespace PokemonSkills {
 
     define({
         id: barrageId,
+        cooldownParameter: "recharge",
         name: "Barrage",
         description: "Round objects are hurled at the target to strike two to five times in a row.",
         uses: ["远处一发接一发抛圆球", "高抛式越过掩体落到目标头上", "平投式直而快，圆的球撞墙会弹一下"],

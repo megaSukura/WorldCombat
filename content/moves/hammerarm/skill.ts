@@ -57,6 +57,7 @@ namespace PokemonSkills {
 
     define({
         id: "hammerarm",
+        cooldownParameter: "recharge",
         name: "Hammer Arm",
         description: "The user swings its strong, heavy fist at the target to inflict damage. This also lowers the user's Speed stat.",
         uses: ["用一记过顶重砸换掉一个硬目标", "把目标砸出阵地、砸退到队友够得到的地方", "砸裂落点地面，留下短命的痕"],

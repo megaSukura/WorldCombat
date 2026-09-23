@@ -129,7 +129,7 @@ namespace PokemonSkills {
     describe(psywaveId, [
         { key: "description.0", values: ["wave", "swing"] },
         { key: "description.1", values: ["reach", "velocity", "width"] },
-        { key: "description.2", values: ["pierce", "rings"] },
+        { key: "description.2", values: ["pierce"] },
         { key: "surge.on", values: [], when: function (context) { return read(context.detail.values, ["surge"]) === true; } },
         { key: "surge.off", values: [], when: function (context) { return read(context.detail.values, ["surge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

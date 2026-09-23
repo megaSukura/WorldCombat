@@ -5,7 +5,7 @@
   "worldcombat.skill.lavaplume.use.2": "用余烬封住一片地",
   "worldcombat.skill.lavaplume.use.3": "打断贴身的攻击节奏",
   "worldcombat.skill.lavaplume.description.0": "火环塌开时，圈内每个敌人各挨约 %1$s 的伤害。对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.lavaplume.description.1": "先在身上喷起一根 %3$s 格高的熔岩烟柱，再由脚下向外铺出 %1$s 格的火环，%2$s 秒内扫遍。",
+  "worldcombat.skill.lavaplume.description.1": "先在身上喷起一道熔岩烟柱，再由脚下向外铺出 %1$s 格的火环，%2$s 秒内扫遍。",
   "worldcombat.skill.lavaplume.description.2": "被火环烧到的目标有 %1$s 的几率陷入灼伤。",
   "worldcombat.skill.lavaplume.description.3": "浓烟式留下的余烬持续 %2$s 秒，每 %3$s 秒再烫圈内每人约 %1$s 的伤害。",
   "worldcombat.skill.lavaplume.fume.on": "开启浓烟式：火环威力约 ×0.88、半径约 ×0.85，但退去后地上留一层闷烧余烬反复烫人，冷却 +10 刻。",

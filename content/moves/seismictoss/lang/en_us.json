@@ -2,7 +2,7 @@
   "worldcombat.skill.seismictoss.summary": "Grab and hurl: seize the target and throw it with gravity, dealing fixed damage equal to your level, then launch it along an arc into the ground. The damage ignores the target's defence and only type immunity stops it; the slam form shortens the throw and pins the target where it lands.",
   "worldcombat.skill.seismictoss.description.0": "The grip deals %1$s fixed damage: your level times a small weight factor. The target's defence does not matter; only type immunity stops it.",
   "worldcombat.skill.seismictoss.description.1": "Prepare %1$s s, hold for %2$s s, grab radius %3$s blocks.",
-  "worldcombat.skill.seismictoss.description.2": "Launched at %1$s blocks/tick horizontally and %2$s blocks/tick up, lands after %3$s s, with a %4$s block impact radius.",
+  "worldcombat.skill.seismictoss.description.2": "Launched at %1$s blocks/tick horizontally and %2$s blocks/tick up, lands after %3$s s.",
   "worldcombat.skill.seismictoss.slam.on": "Slam form: the landing pins the target for %1$s s (this throw is shorter and steeper).",
   "worldcombat.skill.seismictoss.slam.off": "Sling form: a longer, flatter throw that hurls the target away from cover, but pins nothing.",
   "worldcombat.skill.seismictoss.timing": "Range %1$s blocks; prepare %2$s s, recover %3$s s, cooldown %4$s s, cost %5$s PP.",
@@ -28,8 +28,7 @@
   "worldcombat.skill.seismictoss.preference.ai.finish.help": "On: prefer this fixed damage to finish a low-health target; off: rank it among ordinary melee candidates.",
   "worldcombat.skill.seismictoss.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.seismictoss.preference.ai.leaveStation.help": "When on, the user may leave its post to grab; when off, it only grabs what it can reach from where it stands.",
-  "worldcombat.skill.seismictoss.growth.0": "From level %1$s the impact radius rises to %2$s blocks.",
-  "worldcombat.skill.seismictoss.growth.1": "From level %1$s the impact radius rises to %2$s blocks and the pin lasts %3$s s.",
+  "worldcombat.skill.seismictoss.growth.1": "From level %1$s the pin lasts %2$s s.",
   "world_combat.move.seismictoss.text.hold": "Seized %1$s",
   "world_combat.move.seismictoss.text.slam": "Slammed down",
   "world_combat.move.seismictoss.text.miss": "Missed the grab"

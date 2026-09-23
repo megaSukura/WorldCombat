@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     define({
         id: "pinmissile",
+        cooldownParameter: "recharge",
         name: "Pin Missile",
         description: "抖开一身细针，一根接一根带追踪飞向目标：每根扎进去一次，并钉在身上不拔。钉得越多拖拽越重（减速）。倒钩针少而狠、钉得久；速射针多而轻、出手快。",
         uses: ["中远距离一梭必然追上的细针", "用钉刺减速目标，粘住对手", "单根轻、出手快，适合持续压制"],

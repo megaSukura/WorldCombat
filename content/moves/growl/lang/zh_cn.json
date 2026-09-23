@@ -4,7 +4,7 @@
   "worldcombat.skill.growl.use.1": "在敌人扎堆时一次压低几人的出手",
   "worldcombat.skill.growl.use.2": "隔着掩体削弱贴身的威胁",
   "worldcombat.skill.growl.description.0": "听见叫声者损失 %1$s 级攻击，分神持续 %2$s。",
-  "worldcombat.skill.growl.description.1": "叫声半径 %1$s，圈内所有非友方都会听见；一次吐出 %2$s 个音符。声音不看视线。",
+  "worldcombat.skill.growl.description.1": "叫声半径 %1$s，圈内所有非友方都会听见。声音不看视线。",
   "worldcombat.skill.growl.description.2": "起手 %1$s，冷却 %2$s。以自身为圆心，够不到圈外的人。",
   "worldcombat.skill.growl.howl.off": "短叫：起手快、半径小、持续短。",
   "worldcombat.skill.growl.howl.on": "拖长音：半径更大、持续更久，但起手与冷却都更长。",

@@ -4,7 +4,7 @@
   "worldcombat.skill.mirrormove.use.1": "Break an enemy that just finished a swing",
   "worldcombat.skill.mirrormove.use.2": "Retake the beat a moment before a hit",
   "worldcombat.skill.mirrormove.description.0": "The mirror reaches up to %1$s blocks; only moves used within %2$s can be mirrored.",
-  "worldcombat.skill.mirrormove.description.1": "About %1$s mirror layers stand in front, growing with Special Attack; mirror power %2$s.",
+  "worldcombat.skill.mirrormove.description.1": "Mirror power %1$s.",
   "worldcombat.skill.mirrormove.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.mirrormove.keen.on": "Keen mirror: mirrored power ×1.2 and a longer memory, but windup +3 ticks and cooldown ×1.3.",
   "worldcombat.skill.mirrormove.keen.off": "Plain mirror: quick and cheap, but the reflection is not boosted.",

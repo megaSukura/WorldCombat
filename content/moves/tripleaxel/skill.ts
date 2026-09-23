@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: tripleaxelId,
+        cooldownParameter: "recharge",
         name: "Triple Axel",
         description: "A consecutive three-kick attack that becomes more powerful with each successful hit.",
         uses: ["原地旋身连踢三脚", "每中一脚，下一脚更重", "宽弧横扫照顾身旁的目标"],

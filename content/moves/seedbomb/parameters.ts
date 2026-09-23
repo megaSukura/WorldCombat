@@ -130,9 +130,8 @@ namespace PokemonSkills {
 
     describe("seedbomb", [
         { key: "description.0", values: ["volley"] },
-        { key: "description.1", values: ["seeds", "spread", "seedRadius"] },
-        { key: "description.2", values: ["dropHeight", "reach", "arcSpeed"] },
-        { key: "description.3", values: ["chaff"] },
+        { key: "description.1", values: ["spread", "seedRadius"] },
+        { key: "description.2", values: ["reach", "arcSpeed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

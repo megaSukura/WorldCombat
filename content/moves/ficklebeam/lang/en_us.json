@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.ficklebeam.summary": "A thin, cost-free Dragon beam: it hits the nearest enemy in the corridor, and each shot has a chance that all the light strands fire in unison for double power.",
   "worldcombat.skill.ficklebeam.description.0": "The beam deals %1$s Dragon special damage, reaches %2$s blocks and is %3$s blocks half-wide, striking only the nearest first target.",
-  "worldcombat.skill.ficklebeam.description.1": "Each shot has a %1$s chance that all the heads (%2$s strands) fire in unison, doubling this shot's power.",
+  "worldcombat.skill.ficklebeam.description.1": "Each shot has a %1$s chance that all the heads fire in unison, doubling this shot's power.",
   "worldcombat.skill.ficklebeam.unison.on": "Unison: +0.12 unison chance at the cost of power ×0.88 and +2 wind-up - gamble on the doubled shot.",
   "worldcombat.skill.ficklebeam.unison.off": "Casual: power ×1.12 and the chance follows the individual's own data - a steady hit.",
   "worldcombat.skill.ficklebeam.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, cooldown %4$s s, %5$s PP.",

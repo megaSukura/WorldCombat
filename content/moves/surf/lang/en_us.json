@@ -7,7 +7,7 @@
   "worldcombat.skill.surf.description.0": "Each target in the ring takes about %1$s damage; the target's special defence, type and crit are settled on the hit.",
   "worldcombat.skill.surf.description.1": "The wall reaches %1$s blocks and stands %2$s blocks tall - targets no higher than the crest are caught too.",
   "worldcombat.skill.surf.description.2": "Push the target outward %1$s blocks and soak it for %2$s seconds.",
-  "worldcombat.skill.surf.description.3": "The crest takes %1$s s to travel from underfoot to the rim, throwing up about %2$s droplets on the way.",
+  "worldcombat.skill.surf.description.3": "The crest takes %1$s s to travel from underfoot to the rim.",
   "worldcombat.skill.surf.description.4": "Each cast sweeps the ground and quenches about %1$s open fires.",
   "worldcombat.skill.surf.tide.on": "Rising tide: power about x1.14, a x1.3 taller crest, x1.25 more shove and a longer soak, but the wall narrows to x0.82 with wind-up +3 and cooldown +10.",
   "worldcombat.skill.surf.tide.off": "Sheet tide: the wall spreads x1.15 wider and comes out faster (cooldown -4), at about x0.9 power.",

@@ -104,11 +104,10 @@ namespace PokemonSkills {
 
     describe(hypnosisId, [
         { key: "description.0", values: ["reach", "landChance"] },
-        { key: "description.1", values: ["gazeTicks", "gazeRadius", "rings"] },
+        { key: "description.1", values: ["gazeTicks"] },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.rings"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.rings", "tier.1.gazeTicks", "tier.1.landChance"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.gazeTicks", "tier.1.landChance"] }
     ]);
 }

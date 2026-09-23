@@ -29,6 +29,7 @@ namespace PokemonSkills {
 
     define({
         id: fakeoutId,
+        cooldownParameter: "recharge",
         name: "Fake Out",
         description: "A quick opening slap that strikes first and leaves the target flinched; it only works right after the user enters battle.",
         uses: ["刚上场就抢一记把对手拍懵", "打断对手正在展开的起手", "开场先手把对手顶开一步"],
@@ -99,7 +100,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(fakeoutId, "swat"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                             if (fakeoutDaze(scope, victim, dazeTicks)) {
                                 WorldFeedback.emit(scope, fakeoutScene, 1, hit.position(),
                                     { moment: "daze", target: String(victim.ref()), daze: dazeTicks,

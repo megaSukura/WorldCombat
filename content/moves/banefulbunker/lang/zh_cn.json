@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.banefulbunker.summary": "合拢一座毒壁碉堡，按总量挡下攻击并连变化招式一起封住；每一次直接接触都会让攻击者中毒，已中毒者改为剧毒。",
   "worldcombat.skill.banefulbunker.description.0": "碉堡持续 %1$s、量 %2$s 点；接触灌毒 %3$s。防御越高越厚越久，特攻越高毒得越久。",
-  "worldcombat.skill.banefulbunker.description.1": "立起 %1$s，碉堡半径 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.banefulbunker.description.1": "立起 %1$s，冷却 %2$s。",
   "worldcombat.skill.banefulbunker.description.2": "连用失误率 %1$s；淬毒与厚壁的取舍见配置 %2$s。",
   "worldcombat.skill.banefulbunker.use.0": "引诱近战对手撞上毒壁",
   "worldcombat.skill.banefulbunker.use.1": "用一次接触把对手拖进持续掉血",

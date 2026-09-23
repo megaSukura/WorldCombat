@@ -78,7 +78,7 @@ namespace PokemonSkills {
     defineDamage("return", "power", { defenceCoefficient: 0.005 }, { contact: true });
 
     describe("return", [
-        { key: "description.0", values: ["power", "bond"] },
+        { key: "description.0", values: ["power"] },
         { key: "description.1", values: ["charge", "runSpeed", "collisionRadius"] },
         { key: "description.2", values: ["carry", "push"] },
         { key: "devoted.on", values: [], when: function (context) { return read(context.detail.values, ["devoted"]) === true; } },

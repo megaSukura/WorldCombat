@@ -4,7 +4,7 @@
   "worldcombat.skill.bloodmoon.use.1": "Pick off a far, bulky target",
   "worldcombat.skill.bloodmoon.use.2": "Use eclipse style to catch a whole patch at the impact",
   "worldcombat.skill.bloodmoon.description.0": "Primary %1$s power, impact splash %2$s power (special), moon reach %3$s blocks, ground radius %4$s blocks.",
-  "worldcombat.skill.bloodmoon.description.1": "Charge-up %1$s, about %2$s moonlight motes, recovery %3$s, cooldown %4$s.",
+  "worldcombat.skill.bloodmoon.description.1": "Charge-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.bloodmoon.description.2": "Afterwards it cannot be called again for %1$s; using any other move lets the spirit settle early.",
   "worldcombat.skill.bloodmoon.eclipse.on": "Eclipse style now: the moonlight spreads out and other foes at the impact also take splash, with a shorter charge; the primary hit is x0.85.",
   "worldcombat.skill.bloodmoon.eclipse.off": "Full moon style now: the whole spirit lands on one point, full power on the primary, no splash, longer charge.",

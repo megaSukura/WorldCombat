@@ -93,7 +93,6 @@ namespace PokemonSkills {
     describe("barrier", [
         { key: "description.0", values: ["gift", "fieldTicks"] },
         { key: "description.1", values: ["span", "height", "gap"] },
-        { key: "description.2", values: ["panels"] },
         { key: "description.3", values: ["tempo", "aftercast", "wait"] },
         { key: "tall.on", values: [], when: function (context) { return read(context.detail.values, ["tall"]) === true; } },
         { key: "tall.off", values: [], when: function (context) { return read(context.detail.values, ["tall"]) !== true; } },

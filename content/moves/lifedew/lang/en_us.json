@@ -5,7 +5,7 @@
   "worldcombat.skill.lifedew.use.2": "Stand by an ally so the wave covers them too",
   "worldcombat.skill.lifedew.description.0": "When the wave sweeps past, the user and each ally restore %1$s of their maximum health; a higher Special Attack makes the water stronger, and a deeper wound earns more.",
   "worldcombat.skill.lifedew.description.1": "The wave reaches %1$s blocks, spreading over %2$s seconds; whoever it reaches later waits longer.",
-  "worldcombat.skill.lifedew.description.2": "About %1$s water motes; wind-up %2$s, recovery %3$s and cooldown %4$s.",
+  "worldcombat.skill.lifedew.description.2": "Wind-up %1$s, recovery %2$s and cooldown %3$s.",
   "worldcombat.skill.lifedew.stance.surge": "Surge: x1.15 healing and x1.15 wave radius at the cost of a 1.3x slower spread and a longer cooldown - for pulling a whole group back up.",
   "worldcombat.skill.lifedew.stance.plain": "Thin: spreads faster and cheaper with a shorter cooldown, but a smaller ring and less healing - for a quick top-up.",
   "worldcombat.skill.lifedew.timing": "Cast on yourself; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",

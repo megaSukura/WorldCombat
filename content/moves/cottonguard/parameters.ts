@@ -82,8 +82,8 @@ namespace PokemonSkills {
     ]);
 
     describe("cottonguard", [
-        { key: "description.0", values: ["gift", "bloom", "fluff"] },
-        { key: "description.1", values: ["coatTicks", "layers"] },
+        { key: "description.0", values: ["gift"] },
+        { key: "description.1", values: ["coatTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "cocoon.on", values: [], when: function (context) { return read(context.detail.values, ["cocoon"]) === 1; } },
         { key: "cocoon.off", values: [], when: function (context) { return read(context.detail.values, ["cocoon"]) !== 1; } },

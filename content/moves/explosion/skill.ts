@@ -54,6 +54,7 @@ namespace PokemonSkills {
 
     define({
         id: "explosion",
+        cooldownParameter: "recharge",
         name: "Explosion",
         description: "引发大爆炸，攻击自己周围所有的宝可梦，使用后自己陷入濒死。圈内的敌人被狠狠掀飞、抛起，地面留下焦黑弹坑；即使一个人都没炸到，使用者也会倒下。蓄爆式更大更久但起手更长，瞬爆式更快。",
         uses: ["用一条命把一圈人炸成重伤", "把贴身的整圈对手远远掀飞", "在对手来不及走开的窗口里赌最重的一击", "在倒下前留下一个会留一会儿的弹坑"],

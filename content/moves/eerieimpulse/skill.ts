@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: eerieimpulseId,
+        cooldownParameter: "wait",
         name: "怪异电波",
         description: "从身体放射出看不见的怪异电波，以自己为圆心铺开一圈；圈里的敌人特攻被扰乱。它不对准谁、也不需要看见谁，只要近身；过载能把圈铺得更开更久，但起手与冷却都更长。",
         uses: ["被近身时一次扰乱身周所有的法系输出", "在混战里不用瞄准就削掉一圈人的特攻", "配合队友抢先手，让贴上来的人打不出特攻"],

@@ -2,7 +2,7 @@
   "worldcombat.skill.shockwave.summary": "A jolt faster than reaction: the current runs along the ground to the foe's feet, so it never misses; a wet or rain-soaked target conducts it harder, and the ground form sweeps a whole corridor ahead.",
   "worldcombat.skill.shockwave.description.0": "The direct strike deals %1$s damage; a wet or rain-soaked target takes %2$s more.",
   "worldcombat.skill.shockwave.description.1": "The ground form sweeps a corridor, dealing %1$s damage to each target across a %2$s block half-width.",
-  "worldcombat.skill.shockwave.description.2": "The current advances %1$s blocks per tick, cracking %2$s jags along the way, with a %3$s block hit radius.",
+  "worldcombat.skill.shockwave.description.2": "The current advances %1$s blocks per tick.",
   "worldcombat.skill.shockwave.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.shockwave.growth.0": "At level %1$s: direct power %2$s, ground power %3$s.",
   "worldcombat.skill.shockwave.growth.1": "At level %1$s: wet bonus %2$s.",

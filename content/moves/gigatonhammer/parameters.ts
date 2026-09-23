@@ -130,7 +130,7 @@ namespace PokemonSkills {
 
     describe(gigatonhammerId, [
         { key: "description.0", values: ["hammer", "wave", "reach", "shockLength"] },
-        { key: "description.1", values: ["shockHalfWidth", "push", "spin", "dust"] },
+        { key: "description.1", values: ["shockHalfWidth", "push", "spin"] },
         { key: "description.2", values: ["spent"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },

@@ -27,6 +27,7 @@ namespace PokemonSkills {
 
     define({
         id: gyroballId,
+        cooldownParameter: "recharge",
         name: "Gyro Ball",
         description: "The user tackles the target with a high-speed spin. The slower the user is than the target, the greater the move's power.",
         uses: ["对手比自己快时的一记重撞", "贴身在原地转满再短促撞出", "用速度差把画面里的陀螺越转越大"],

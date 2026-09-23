@@ -5,7 +5,6 @@
   "worldcombat.skill.metronome.description.0": "搓指 %1$s 后，从全部已实装招式中随机借出一个并使出。",
   "worldcombat.skill.metronome.description.1": "搅出的招式最多够到 %1$s；再次挥指需要 %2$s。",
   "worldcombat.skill.metronome.description.2": "当前倾向：%1$s。偏近身或偏远程会收窄候选，换取更贴合距离的结果。",
-  "worldcombat.skill.metronome.description.3": "画面里的候选光点为 %1$s 个，随特攻增长。",
   "worldcombat.skill.metronome.preference.bias": "挥指倾向",
   "worldcombat.skill.metronome.preference.bias.help": "全谱保留任意招式；偏近身只从近身招式里搅取；偏远程只从远程招式里搅取。偏向会收窄可选范围，但没有合适招式时仍回退到全谱。",
   "worldcombat.skill.metronome.preference.bias.none": "全谱",

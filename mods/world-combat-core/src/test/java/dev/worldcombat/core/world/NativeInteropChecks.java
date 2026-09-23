@@ -91,7 +91,8 @@ public final class NativeInteropChecks {
         check(payload.get("damageType").getAsString().equals("checks:damage") && payload.getAsJsonArray("damageTags").get(0).getAsString().equals("checks:category"),
             "Damage provenance lost native registry identity");
         check(payload.getAsJsonObject("extension").get("value").getAsInt() == 7 && !payload.get("direct").getAsBoolean()
-            && payload.get("sourceEntity").getAsString().isEmpty(), "Environmental damage fabricated an attacker or lost extension metadata");
+            && !payload.get("sourceLiving").getAsBoolean() && payload.get("sourceEntity").getAsString().isEmpty(),
+            "Environmental damage fabricated a living attacker or lost extension metadata");
         System.out.println("PASS native interop: property-preserving states, exact/reloaded tags, detached components, native stack round trips and damage provenance");
     }
 }

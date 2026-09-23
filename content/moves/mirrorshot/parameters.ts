@@ -141,7 +141,7 @@ namespace PokemonSkills {
     describe(mirrorshotId, [
         { key: "description.0", values: ["flash", "glareChance", "glareStages"] },
         { key: "description.1", values: ["reach", "velocity", "beamRadius"] },
-        { key: "description.2", values: ["glareTicks", "glints"] },
+        { key: "description.2", values: ["glareTicks"] },
         { key: "description.3", values: ["refract", "refractSpan"] },
         { key: "scatter.on", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) === true; } },
         { key: "scatter.off", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) !== true; } },

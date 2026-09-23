@@ -67,6 +67,7 @@ namespace PokemonSkills {
 
     define({
         id: "protect",
+        cooldownParameter: "charge",
         name: "Protect",
         description: "Enables the user to evade all attacks. Its chance of failing rises if it is used in succession.",
         uses: ["预判远程齐射，提前撑罩", "被围时撑出一条退路", "为队友争取回血或撤走的时间"],

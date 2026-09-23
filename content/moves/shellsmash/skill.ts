@@ -5,6 +5,7 @@ namespace PokemonSkills {
 
     define({
         id: "shellsmash",
+        cooldownParameter: "wait",
         name: "破壳",
         description: "撑裂自己的外壳，壳片向身周飞散：物攻、特攻、速度提高，防御与特防下降。彻底破壳提高增益与防御代价，起手和冷却也更长。",
         uses: ["开战前用防御换一波爆发", "在对手够不到的窗口里先破壳", "被围住时连壳一起炸开、赌一波速战速决"],

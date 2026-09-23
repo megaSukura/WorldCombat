@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: sheercoldId,
+        cooldownParameter: "recharge",
         name: "Sheer Cold",
         description: "The target faints instantly. This move is less likely to hit the target if used by Pokemon other than Ice types.",
         uses: ["一次冻毙目标周围一圈里的多个对手", "冰属性使用者用它抢出更短的出手窗口", "在地面留下一片短期寒霜标出冻区"],

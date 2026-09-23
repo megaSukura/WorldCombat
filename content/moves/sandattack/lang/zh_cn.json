@@ -4,7 +4,7 @@
   "worldcombat.skill.sandattack.use.1": "替一次近战或撤退做铺垫",
   "worldcombat.skill.sandattack.use.2": "在沙地或泥地上把整条走廊封瞎",
   "worldcombat.skill.sandattack.description.0": "被糊到的目标攻击变弱，宝可梦还额外损失 %1$s 级命中，持续 %2$s。",
-  "worldcombat.skill.sandattack.description.1": "以自身为顶点朝目标铺开长 %1$s 格、张角 %2$s 度的扇面，一次扬起约 %3$s 粒；扇面里最多同时糊住 4 人。",
+  "worldcombat.skill.sandattack.description.1": "以自身为顶点朝目标铺开长 %1$s 格、张角 %2$s 度的扇面；扇面里最多同时糊住 4 人。",
   "worldcombat.skill.sandattack.description.2": "刨地要 %1$s，冷却 %2$s。砂粒颜色取自脚下方块：沙地黄、砂砾灰、泥地褐。扇面只朝一个方向，绕到侧面或掩体后就糊不到。",
   "worldcombat.skill.sandattack.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.sandattack.value.blindStage": "糊眼级数",

@@ -14,6 +14,7 @@
 namespace PokemonSkills {
     define({
         id: moonblastId,
+        cooldownParameter: "recharge",
         name: "Moonblast",
         description: "借头顶的月光拢成一颗月华球射向目标：命中造成妖精特殊伤害，偶尔把目标特攻压低。露天夜里的月光最盛，威力、降攻概率与辉光都随之提高；白天或室内就只是一记普通月华球。凝华式更重、降攻更多，流月式更快更散。",
         uses: ["夜里露天打出最重的一记妖精炮", "从远处压制一个法系威胁", "碰运气把对手的特攻压下一级"],

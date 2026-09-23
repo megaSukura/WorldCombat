@@ -122,7 +122,7 @@ namespace PokemonSkills {
 
     describe("takedown", [
         { key: "description.0", values: ["ram", "dash", "pace", "radius"] },
-        { key: "description.1", values: ["recoil", "shove", "bounce", "dust"] },
+        { key: "description.1", values: ["recoil", "shove", "bounce"] },
         { key: "description.2", values: ["pref.runup"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.ram"] },

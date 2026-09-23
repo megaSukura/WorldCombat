@@ -32,7 +32,8 @@ namespace PokemonSkills {
             return ratio >= CompanionBehavior.ai<number>(capability, "minRatio", 0);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return !target.friendly && target.health > 0 && target.visible
+                && (!CompanionBehavior.ai<boolean>(capability, "opening", true) || !CompanionBehavior.status(context, target, "burn"));
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

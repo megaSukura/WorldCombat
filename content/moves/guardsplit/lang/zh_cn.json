@@ -4,7 +4,6 @@
   "worldcombat.skill.guardsplit.use.1": "把对手的厚壁削到自己的水平",
   "worldcombat.skill.guardsplit.use.2": "在对手防御远高于自己时抹平差距",
   "worldcombat.skill.guardsplit.description.0": "向 %1$s 格内的目标把防御与特防相加再平分，维持 %2$s；需要有通视直线。",
-  "worldcombat.skill.guardsplit.description.1": "平分时约 %1$s 道护光向中央压拢再平分回两端，基准量由防御与体型派生，实际发射量按本次数值差放大。",
   "worldcombat.skill.guardsplit.description.2": "平分改的是底子：两人的防与特防各自取平均，已经架起来的能力等级原样保留。窗口走完或被清除时各自回到原来的数值。",
   "worldcombat.skill.guardsplit.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 平分；收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.guardsplit.growth.0": "达到 %1$s 级，平分距离延长至 %2$s 格、平分窗口延长至 %3$s 秒。",

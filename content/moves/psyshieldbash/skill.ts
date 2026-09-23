@@ -64,8 +64,13 @@ namespace PokemonSkills {
             let travelled = 0, settled = false;
 
             // 结壳：护盾成形的这一刻就加固使用者，撞空也照拿——这是本招的底。
-            NativeEffects.boost(world, actor, "def", stages);
-            MobEffects.apply(world, actor, PsyshieldShell, shellTicks, 0);
+            const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+            world.effects(actor, definition).forEach(function (view) {
+                const data = JSON.parse(String(view.data()));
+                if (data.source === "world_combat:move/psyshieldbash") NativeEffects.windowClose(world, view.id());
+            });
+            const shell = MobEffects.apply(world, actor, PsyshieldShell, shellTicks, 0);
+            if (shell) NativeEffects.boostWindow(world, actor, { def: stages }, shellTicks, "world_combat:move/psyshieldbash", shell);
             const self = world.observe(actor);
             if (self !== null) {
                 WorldFeedback.emit(world, psyshieldbashScene, 1, self.position(),

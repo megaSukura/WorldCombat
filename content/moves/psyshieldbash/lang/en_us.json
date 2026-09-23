@@ -5,7 +5,7 @@
   "worldcombat.skill.psyshieldbash.use.2": "Shove a target back with a thick shell",
   "worldcombat.skill.psyshieldbash.description.0": "The slam deals about %1$s contact damage with a %2$s block shield radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.psyshieldbash.description.1": "Charge up to %1$s blocks along your aim at %2$s blocks per tick, with up to %3$s degrees of stray.",
-  "worldcombat.skill.psyshieldbash.description.2": "The shield grants %1$s stage(s) of Defence the moment it forms (settled at commit) and leaves %2$s seconds of shield identity on you.",
+  "worldcombat.skill.psyshieldbash.description.2": "Gain %1$s Defence stages when the shell forms, lasting %2$s. The bonus ends with the shell; recasting refreshes one layer.",
   "worldcombat.skill.psyshieldbash.harden.on": "Deep-weave form: a thicker shield with +2 Defence and a longer lasting shell, but less power, a slower charge and a longer cooldown.",
   "worldcombat.skill.psyshieldbash.harden.off": "Quick form: +1 Defence, a heavier hit and a faster charge with a shorter preparation.",
   "worldcombat.skill.psyshieldbash.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

@@ -4,7 +4,7 @@
   "worldcombat.skill.conversion.use.1": "把自己重织成那个属性",
   "worldcombat.skill.conversion.description.0": "起手扫描自身招式表，%1$s 后完成重织；若身体已拥有该属性，则不会发动。",
   "worldcombat.skill.conversion.description.1": "新属性维持 %1$s，期间属性相性、本系加成与状态免疫按新属性结算。",
-  "worldcombat.skill.conversion.description.2": "重新编织需要 %1$s 冷却；本次纹样由 %2$s 条光带组成，条数随特攻增长。",
+  "worldcombat.skill.conversion.description.2": "重新编织需要 %1$s 冷却。",
   "worldcombat.skill.conversion.value.charge": "纹理读取",
   "worldcombat.skill.conversion.value.afterglow": "纹理稳定",
   "worldcombat.skill.conversion.value.recharge": "重新编织",

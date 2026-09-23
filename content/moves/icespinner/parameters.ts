@@ -158,11 +158,11 @@ namespace PokemonSkills {
     describe(icespinnerId, [
         { key: "description.0", values: ["spin", "reach", "rush"] },
         { key: "description.1", values: ["sweep", "radius", "push"] },
-        { key: "description.2", values: ["shards", "frostCells", "frost"] },
+        { key: "description.2", values: ["frostCells", "frost"] },
         { key: "slick.on", values: [], when: function (context) { return read(context.detail.values, ["slick"]) === true; } },
         { key: "slick.off", values: [], when: function (context) { return read(context.detail.values, ["slick"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.spin", "tier.0.reach"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.spin", "tier.1.shards"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.spin"] }
     ]);
 }

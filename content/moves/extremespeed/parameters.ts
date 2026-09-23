@@ -112,7 +112,7 @@ namespace PokemonSkills {
     describe(extremespeedId, [
         { key: "description.0", values: ["ram", "collisionRadius"] },
         { key: "description.1", values: ["burst", "pace", "push"] },
-        { key: "description.2", values: ["carry", "wake"] },
+        { key: "description.2", values: ["carry"] },
         { key: "overrun.on", values: [], when: function (context) { return read(context.detail.values, ["overrun"]) === true; } },
         { key: "overrun.off", values: [], when: function (context) { return read(context.detail.values, ["overrun"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

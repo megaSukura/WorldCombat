@@ -111,6 +111,7 @@ namespace PokemonSkills {
 
     define({
         id: mindreaderId,
+        cooldownParameter: "recharge",
         name: "心之眼",
         description: "凝神读穿对手的下一个动作：把自己的命中拉满并把对手照亮，让下一次命中不会落偏；读用掉即散。",
         uses: ["在对手要闪开前先把准星拉满", "照亮躲在掩体后的目标", "为一次必须命中的关键攻击做铺垫"],

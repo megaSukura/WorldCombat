@@ -10,7 +10,7 @@
   "worldcombat.skill.spiritbreak.shatter.off": "Currently the quick charge: 1 stage of Sp. Atk loss, further reach and a faster cast.",
   "worldcombat.skill.spiritbreak.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.spiritbreak.growth.0": "From level %1$s the charge rises to %2$s power.",
-  "worldcombat.skill.spiritbreak.growth.1": "From level %1$s the charge rises to %2$s power and %3$s halo sparks.",
+  "worldcombat.skill.spiritbreak.growth.1": "From level %1$s the charge rises to %2$s power.",
   "worldcombat.skill.spiritbreak.value.spirit": "Charge power",
   "worldcombat.skill.spiritbreak.value.drop": "Sp. Atk drop",
   "worldcombat.skill.spiritbreak.value.momentum": "Charge distance",

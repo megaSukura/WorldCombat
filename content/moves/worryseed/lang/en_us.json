@@ -4,7 +4,6 @@
   "worldcombat.skill.worryseed.use.1": "Shut down sleep tactics by keeping the target awake",
   "worldcombat.skill.worryseed.description.0": "Tosses the seed within %1$s blocks after a %2$s s wind-up, at about %3$s blocks/tick.",
   "worldcombat.skill.worryseed.description.1": "The seed overrides the target's Ability with Insomnia for %1$s s; it cannot fall asleep and any current sleep is cured on the spot.",
-  "worldcombat.skill.worryseed.description.2": "About %1$s seeds circle during windup; the impact sprouts roots and about %2$s question marks.",
   "worldcombat.skill.worryseed.deep.0": "Deep planting: worry lasts ×1.7 and cooldown +20 ticks; one cast locks the target down.",
   "worldcombat.skill.worryseed.deep.1": "Shallow planting: worry lasts ×0.6 and cooldown −12 ticks; cheap enough to re-seed often.",
   "worldcombat.skill.worryseed.timing": "Range %1$s blocks, wind-up %2$s s, recovery %3$s s, %4$s PP, cooldown %5$s s.",

@@ -4,7 +4,7 @@
   "worldcombat.skill.encore.use.1": "打断对手的连招节奏，让它只能做同一件事",
   "worldcombat.skill.encore.use.2": "拖住一个刚露出破绽的对手",
   "worldcombat.skill.encore.description.0": "被点名者只能重复它最后使用的那一招，持续 %1$s；「最后那一手」只在 %2$s 内还算数，更久以前的出手点不动。",
-  "worldcombat.skill.encore.description.1": "点名距离 %1$s 格，回声圈半径 %2$s 格，扣上时迸出 %3$s 个音符；回声散开前它只能一遍遍重复那一手。",
+  "worldcombat.skill.encore.description.1": "点名距离 %1$s 格；回声散开前它只能一遍遍重复那一手。",
   "worldcombat.skill.encore.description.2": "点名要 %1$s，收势 %2$s，冷却 %3$s。回声是一段可见窗口，被清除或那一手用尽时散开。",
   "worldcombat.skill.encore.strict.0": "严令：回声更久，但点得更近、起手更慢、冷却更长。",
   "worldcombat.skill.encore.strict.1": "轻唤：回声更短，但够得更远、起手更快、冷却更短。",

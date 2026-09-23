@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: kinesisId,
+        cooldownParameter: "recharge",
         name: "折弯汤匙",
         description: "当场掰弯一把汤匙，只引开一个看得见它的对手的注意：命中下降、攻击变弱。射程很远，但被掩体挡住就落空。",
         uses: ["远距离点名一个最难缠的对手", "在掩体对峙时削弱对方的远程", "给决斗或撤退创造单点优势"],

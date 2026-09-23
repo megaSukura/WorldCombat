@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.nuzzle.summary": "得先贴到对手身上：蹭一下带电的脸颊，伤害极小，但一定把对方麻住。扑空就什么也不发生。猛扑式能扑得更远，代价是落地更慢、蹭的劲更小。电属性对麻痹免疫。",
   "worldcombat.skill.nuzzle.description.0": "蹭击威力 %1$s（走物攻路线），需要贴到 %2$s 格以内；起手距离 %3$s，起手后朝目标扑出去，够得着才蹭得上。",
-  "worldcombat.skill.nuzzle.description.1": "起手后最多扑出 %1$s 格；蹭上后无条件麻住目标 %2$s，并在它身上贴 %3$s 条火花；对电属性无效。",
+  "worldcombat.skill.nuzzle.description.1": "起手后最多扑出 %1$s 格；蹭上后无条件麻住目标 %2$s；对电属性无效。",
   "worldcombat.skill.nuzzle.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s；扑空不造成任何伤害，但冷却照走。",
   "worldcombat.skill.nuzzle.pounce.on": "猛扑式：前扑距离 ×1.35、起手距离 ×1.3、起手多 2 刻、收招 ×1.35、蹭击威力 ×0.9，能追上更远的跑动目标。",
   "worldcombat.skill.nuzzle.pounce.off": "短蹭：起手与收招更快、蹭击威力 ×1.05，代价是必须贴得更近。",

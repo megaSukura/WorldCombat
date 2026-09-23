@@ -79,7 +79,6 @@ namespace PokemonSkills {
     describe(teleportId, [
         { key: "description.0", values: ["blinkRange"] },
         { key: "description.1", values: ["shedRadius"] },
-        { key: "description.2", values: ["motes"] },
         { key: "far.on", values: [], when: function (context) { return read(context.detail.values, ["far"]) === true; } },
         { key: "far.off", values: [], when: function (context) { return read(context.detail.values, ["far"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

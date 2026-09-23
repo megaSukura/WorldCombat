@@ -146,6 +146,7 @@ namespace PokemonSkills {
 
     define({
         id: rototillerId,
+        cooldownParameter: "wait",
         name: "耕地",
         description: "把选定的地面翻成松软的黑土：只要这块地还在，站在上面、脚踩实了的草属性宝可梦物攻与特攻一起提高；"
             + "离地浮空、走出这块土，或土地复原时，这份提升一并收回。",

@@ -15,6 +15,23 @@ import net.minecraft.server.level.ServerPlayer
 object NativePasture {
     private val residents = java.util.IdentityHashMap<Level, MutableMap<UUID, PokemonEntity>>()
 
+    /** PC caches can be replaced while a pasture stays loaded, including with its owner offline. */
+    @JvmStatic fun synchronize(entity: PokemonEntity) {
+        if (entity.level().isClientSide || !entity.isAlive || entity.isRemoved) return
+        val tether = entity.tethering ?: return
+        val current = tether.getPokemon() ?: return
+        // A cleared connection is also authoritative: the native delegate will retire
+        // this representation. A different live connection belongs to another pasture.
+        if (current === entity.pokemon || current.uuid != tether.pokemonId || current.uuid != entity.pokemon.uuid ||
+            current.tetheringId != null && current.tetheringId != tether.tetheringId) return
+        val representation = current.entity
+        if (representation != null && representation !== entity && representation.isAlive && !representation.isRemoved) return
+        val previous = entity.pokemon
+        entity.pokemon = current
+        PokemonViews.invalidate(previous); PokemonViews.invalidate(current)
+        NativeContentSubscriptions.entityChanged(entity)
+    }
+
     @JvmStatic fun track(entity: PokemonEntity) {
         if (entity.level().isClientSide) return
         val map = residents[entity.level()]
@@ -34,11 +51,16 @@ object NativePasture {
     }
     fun reset() = residents.clear()
 
+    fun loaded(server: net.minecraft.server.MinecraftServer): List<PokemonEntity> = residents.entries
+        .filter { (it.key as? ServerLevel)?.server === server }
+        .flatMap { it.value.values.toList() }.filter { active(it) }
+
     /** Identity is rechecked against the current native PC and block, including after reload/recall. */
     fun active(entity: PokemonEntity): Boolean {
         val tether = entity.tethering ?: return false
         val level = entity.level() as? ServerLevel ?: return false
-        if (!entity.isAlive || entity.isRemoved || entity.pokemon.tetheringId != tether.tetheringId ||
+        if (!entity.isAlive || entity.isRemoved || !level.isPositionEntityTicking(entity.blockPosition()) ||
+            entity.pokemon.tetheringId != tether.tetheringId ||
             !level.hasChunkAt(tether.pasturePos)) return false
         val block = level.getBlockEntity(tether.pasturePos) as? PokemonPastureBlockEntity ?: return false
         return block.tetheredPokemon.any { it.tetheringId == tether.tetheringId && it.pokemonId == entity.pokemon.uuid } &&

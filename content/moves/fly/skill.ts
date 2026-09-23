@@ -119,7 +119,7 @@ namespace PokemonSkills {
                         var distance = observed.position().minus(at).length();
                         if (distance > reach || !live.clear(at, observed.position())) continue;
                         if (!hurt(current, other, "fly", power * Math.max(0.55, 1 - distance / reach * 0.45))) continue;
-                        live.displace(other, WorldCombat.point(direction.x() * push, -press * 0.5, direction.z() * push));
+                        if (live.valid(other)) live.displace(other, WorldCombat.point(direction.x() * push, -press * 0.5, direction.z() * push));
                         hits += 1;
                     }
                     WorldFeedback.emit(live, FLY_SCENE, 1, at, { moment: hits > 0 ? "slam" : "whiff", scale: reach / 0.9,
@@ -127,7 +127,7 @@ namespace PokemonSkills {
                 }
                 else {
                     if (primary !== null && primary.target() !== null && impact(current, primary, "fly", power, { contact: true })) {
-                        live.displace(primary.target()!, WorldCombat.point(direction.x() * push, -press, direction.z() * push));
+                        if (live.valid(primary.target()!)) live.displace(primary.target()!, WorldCombat.point(direction.x() * push, -press, direction.z() * push));
                         hits = 1;
                     }
                     WorldFeedback.emit(live, FLY_SCENE, 1, at, { moment: blocked ? "blocked" : hits > 0 ? "impact" : "whiff",

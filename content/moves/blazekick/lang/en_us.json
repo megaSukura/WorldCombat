@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.blazekick.summary": "Spin up and swing a flame-wreathed leg in a rising arc: a hit deals contact damage, may set the target burning, and launches it off the ground so it cannot act until it lands. Ignite form burns more often and launches higher; Heavy form kicks harder but leaves fire less often.",
   "worldcombat.skill.blazekick.description.0": "The kick deals %1$s contact damage to the target, with a reach of %2$s blocks.",
-  "worldcombat.skill.blazekick.description.1": "On a hit the target is launched %1$s blocks off the ground; the flame arc opens %2$s blocks wide.",
+  "worldcombat.skill.blazekick.description.1": "On a hit the target is launched %1$s blocks off the ground.",
   "worldcombat.skill.blazekick.description.2": "On a hit there is a %1$s chance to leave the target burning for %2$s.",
   "worldcombat.skill.blazekick.ignite.on": "Ignite form: burn chance +12%%, burn duration x1.2 and a higher launch; costs kick power x0.88 and +4 cooldown.",
   "worldcombat.skill.blazekick.ignite.off": "Heavy form: a harder kick on a faster loop; costs fire that is harder to leave and a slightly lower launch.",

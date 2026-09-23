@@ -31,6 +31,7 @@ namespace PokemonSkills {
 
     define({
         id: "gunkshot",
+        cooldownParameter: "recharge",
         name: "Gunk Shot",
         description: "把一大团脏垃圾压进身体、当炮弹直线轰出去：这一族唯一的物理重击，命中的话伤得很重、把目标狠狠顶开、可能中毒；但炮弹带偏角，离得越远越容易打偏。重装取向更狠更飘，轻装取向更稳更快。",
         uses: ["远距离一发很重的物理打击", "把冲上来的目标轰开", "用可能打偏的一炮赌一次高收益"],

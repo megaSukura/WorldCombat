@@ -9,7 +9,7 @@ const context = vm.createContext({ WorldCombat: { event() {}, phase() {},
   on: (id, _event, _after, callback) => hooks.set(id, callback),
   effect: (id, _version, _ticks, _owner, normalize) => definitions.set(id, normalize),
   effectHandler: (id, event, callback) => handlers.set(id + '/' + event, callback) } });
-for (const file of ['content/behavior/contributions.ts', 'content/protocols/effects.ts', 'content/mechanisms/guard-effects.ts', 'content/mechanisms/world-environment.ts', 'content/mechanisms/world-effects.ts'])
+for (const file of ['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/protocols/effects.ts', 'content/mechanisms/guard-effects.ts', 'content/mechanisms/world-environment.ts', 'content/mechanisms/world-effects.ts'])
   vm.runInContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }
   }).outputText, context);

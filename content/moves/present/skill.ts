@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: presentId,
+        cooldownParameter: "recharge",
         name: "Present",
         description: "递给对手设有圈套的盒子进行攻击。也有可能回复对手HP。",
         uses: ["远程递上一个有时会炸、偶尔会治人的盒子", "在安全距离外赌一次高伤害", "恶作剧式地给对手送上一盒"],

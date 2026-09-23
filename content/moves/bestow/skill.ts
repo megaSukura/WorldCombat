@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "bestow",
+        cooldownParameter: "recharge",
         name: "传递礼物",
         description: "把自己携带的道具交给一个空手的伙伴：礼物沿连线飞过去、落进它的道具位，自己就此空手。对方已有道具、或被查封时递不出去。",
         uses: ["把树果一类道具让给需要的队友", "在开战前把道具交到主力手上", "把自己的道具转交给空手的伙伴"],

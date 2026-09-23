@@ -9,6 +9,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PokemonEntity.class)
 public abstract class PokemonPastureMixin {
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void worldcombat$pastureStorage(CallbackInfo ci) {
+        // Before the native delegate restores SentOutState and before either AI runs.
+        NativePasture.synchronize((PokemonEntity) (Object) this);
+    }
+
     @Inject(method = "checkPastureTether", at = @At("RETURN"))
     private void worldcombat$pastureLifecycle(CallbackInfo ci) {
         NativePasture.track((PokemonEntity) (Object) this);

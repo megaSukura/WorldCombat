@@ -138,7 +138,7 @@ namespace PokemonSkills {
         { key: "vent.on", values: [], when: function (context) { return read(context.detail.values, ["vent"]) === true; } },
         { key: "vent.off", values: [], when: function (context) { return read(context.detail.values, ["vent"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.heat", "tier.0.embers"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.heat"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.heat", "tier.1.reach"] }
     ]);
 }

@@ -104,7 +104,7 @@ namespace CombatStatus {
         metadata: any;
         /** Remove a named restriction to exempt it; independent restrictions remain in force. */
         blocked: { [reason: string]: boolean };
-        /** Attempt probabilities are rolled only by the commit listener, never by availability queries. */
+        /** Attempt probabilities are rolled at commit or a native attack impact, never by availability queries. */
         failures: { [reason: string]: number };
         /** Rejection details attached to whichever reason stops the action; rides before_commit into action_rejected. */
         detail: { [reason: string]: any };
@@ -117,7 +117,7 @@ namespace CombatStatus {
         if (behaves(world, actor, "sleep")) { context.blocked.asleep = true; context.detail.asleep = { status: "sleep" }; }
         if (behaves(world, actor, "frozen")) { context.blocked.frozen = true; context.detail.frozen = { status: "frozen" }; }
         if (behaves(world, actor, "paralysis")) { context.failures.paralyzed = paralysisFailure; context.detail.paralyzed = { status: "paralysis" }; }
-        if (phase !== "damage") {
+        if (phase !== "damage" || DamageSemantics.read(metadata).attack) {
             if (behaves(world, actor, "flinch")) { context.blocked.flinched = true; context.detail.flinched = { status: "flinch" }; }
             // Confusion is identity-driven: any carrier of the identity rolls its own amplifier, so every producer
             // keeps its own probability while the miss/reaction logic lives here.
@@ -132,6 +132,18 @@ namespace CombatStatus {
     export function actionReason(context: ActionPolicy): string {
         var reasons = Object.keys(context.blocked);
         for (var i = 0; i < reasons.length; i++) if (context.blocked[reasons[i]]) return reasons[i];
+        return "";
+    }
+    /** One probability pass for an actual attempt; callers keep their own rejection lifecycle. */
+    export function attemptReason(context: ActionPolicy): string {
+        var reason = actionReason(context);
+        if (reason) return reason;
+        var failures = Object.keys(context.failures);
+        for (var i = 0; i < failures.length; i++) {
+            var chance = context.failures[failures[i]];
+            if (!isFinite(chance) || chance < 0 || chance > 1) throw new Error("Invalid action failure probability");
+            if (chance > 0 && context.world.random() < chance) return failures[i];
+        }
         return "";
     }
 
@@ -265,16 +277,33 @@ namespace CombatStatus {
     export function cureMajor(world: CombatWorld, actor: CombatActor): boolean {
         var name = major(world, actor); return !!name && cure(world, actor, name);
     }
-    /** Remove observed carriers with an arbitrary shared category/tag, reporting each removed identity once. */
-    export function cureTagged(world: CombatWorld, actor: CombatActor, category: string): number {
-        if (!world.valid(actor)) return 0;
+    export interface EffectClassification { world: CombatWorld; actor: CombatActor; effect: CombatMobEffect; category: string; }
+    /** Native MobEffectCategory is the default; named contributions can classify neutral or custom carriers. */
+    export var effectClassification = new WorldContributions.Registry<EffectClassification>();
+    export function harmfulEffects(world: CombatWorld, actor: CombatActor): CombatMobEffect[] {
+        if (!world.valid(actor)) return [];
+        return world.mobEffects(actor).filter(function (effect) {
+            return effectClassification.apply({ world: world, actor: actor, effect: effect, category: String(effect.category()) }).category === "harmful";
+        });
+    }
+    export function hasHarmful(world: CombatWorld, actor: CombatActor): boolean { return harmfulEffects(world, actor).length > 0; }
+    function removeObserved(world: CombatWorld, actor: CombatActor, effects: readonly CombatMobEffect[]): number {
         var count = 0, removed: { [name: string]: boolean } = {};
-        world.mobEffects(actor).forEach(function (effect) {
-            if (!effect.tagged(category) || !world.removeMobEffect(actor, effect.id(), effect.key())) return;
+        effects.forEach(function (effect) {
+            if (!world.removeMobEffect(actor, effect.id(), effect.key())) return;
             count++; names(effect).forEach(function (name) { removed[name] = true; });
         });
         Object.keys(removed).forEach(function (name) { cured.apply({ world: world, actor: actor, name: name }); });
         return count;
+    }
+    /** Full cleansing includes native/mod harmful effects, preserving beneficial and neutral effects. */
+    export function cureHarmful(world: CombatWorld, actor: CombatActor): number {
+        return removeObserved(world, actor, harmfulEffects(world, actor));
+    }
+    /** Remove observed carriers with an arbitrary shared category/tag, reporting each removed identity once. */
+    export function cureTagged(world: CombatWorld, actor: CombatActor, category: string): number {
+        if (!world.valid(actor)) return 0;
+        return removeObserved(world, actor, world.mobEffects(actor).filter(function (effect) { return effect.tagged(category); }));
     }
 
     // Shared behavior of the major statuses. Applies to every effect carrying the identity unless it opted out.
@@ -309,17 +338,8 @@ namespace CombatStatus {
     export function install(): void {
         WorldCombat.on("world_combat:status/commit", "world_combat:before_commit", "", function (event) {
             var world = event.world(), actor = event.actor(), context = actionPolicy(world, actor, event.action ? event.action() : null, null, "commit");
-            var reason = actionReason(context);
+            var reason = attemptReason(context);
             if (reason) { if (context.detail[reason] !== undefined) event.data(JSON.stringify(context.detail[reason])); event.reject(reason); return; }
-            var failures = Object.keys(context.failures);
-            for (var i = 0; i < failures.length; i++) {
-                var chance = context.failures[failures[i]];
-                if (!isFinite(chance) || chance < 0 || chance > 1) throw new Error("Invalid action failure probability");
-                if (chance > 0 && world.random() < chance) {
-                    if (context.detail[failures[i]] !== undefined) event.data(JSON.stringify(context.detail[failures[i]]));
-                    event.reject(failures[i]); return;
-                }
-            }
         });
         // Failure reactions: the failed action is already released and its costs rolled back, so this is a
         // writable scope. Receipts tell the identity apart so producers can attach per-move self-hit and text.
@@ -340,8 +360,14 @@ namespace CombatStatus {
             var target = event.target(), actor = event.actor();
             if (target === null || String(target.key()) === String(actor.key())) return;
             var data = JSON.parse(String(event.data()));
-            var reason = actionReason(actionPolicy(event.world(), actor, event.action ? event.action() : null, null, "damage", data));
-            if (reason) event.reject(reason);
+            if (data.bypassesInvulnerability || !(data.amount > 0)) return;
+            var context = actionPolicy(event.world(), actor, event.action ? event.action() : null, null, "damage", data);
+            var nativeAttack = DamageSemantics.read(data).attack;
+            var reason = nativeAttack ? attemptReason(context) : actionReason(context);
+            if (!reason) return;
+            event.reject(reason);
+            if (nativeAttack) rejected.apply({ world: event.world(), actor: actor, target: target, content: "",
+                reason: reason, status: statusOfReason(reason), details: context.detail[reason] || {} });
         });
         WorldCombat.on("world_combat:status/applied", "world_combat:damage_applied", "", function (event) {
             var world = event.world(), target = event.target(), data = JSON.parse(String(event.data()));

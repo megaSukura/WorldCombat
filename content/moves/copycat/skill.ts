@@ -63,6 +63,7 @@ namespace PokemonSkills {
 
     define({
         id: copycatId,
+        cooldownParameter: "recharge",
         name: "仿效",
         description: "捡起全场刚刚响起的那一手，原样再演一遍；场上还没人出过手时落空。",
         uses: ["把对手的强攻原样还回去", "复制队友的增益与布置", "在别人刚酝酿过后接上同一手"],

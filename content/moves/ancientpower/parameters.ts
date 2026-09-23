@@ -1,11 +1,11 @@
 /**
  * 原始之力 / ancientpower —— 参数与伤害段。
  *
- * 原生事实：Rock／特殊／威力 60／命中 100／PP 5／目标单体／10% 概率让自身全部能力各升 1 级。
+ * 原生事实：Rock／特殊／威力 60／命中 100／PP 5／目标单体／10% 概率让自身五项战斗能力各升 1 级。
  *
  * 翻译：把「用原始之力进行攻击」落成一记**从自身脚下轰开的原始冲击**——施法者把大地深处的古力
  * 按进地里，一圈琥珀色的古能贴着地面炸开、上顶成一个半球，把方圆之内的敌人（站地的和离地的都算，
- * 古力不是地震，不从地面缝隙里走）一起轰开，并在原地浮起一圈地缘符文。原生的「全部能力提升」
+ * 古力不是地震，不从地面缝隙里走）一起轰开，并在原地浮起一圈地缘符文。原生的「五项战斗能力提升」
  * 是这道力反涌回自身的结果：冲击散开的余波有概率灌回施法者，把攻击、防御、特攻、特防、速度一起抬 1 级。
  *
  * 与同族分开（同是「命中后反哺出手者」的余波族）：
@@ -84,12 +84,13 @@ namespace PokemonSkills {
                 .plus(F.level().minus(28).times(0.001).clamp(0, 0.05))
                 .plus(F.when(F.pref("deep"), F.const(0.05), F.const(0)))
                 .clamp(0.06, 0.35).round(3),
-            "反哺概率", "冲击散开的余波灌回自身、让全部能力各升 1 级的概率；原生 10% 起，特攻与等级越高越容易抓住，深源式更稳。"),
+            "反哺概率", "冲击散开的余波灌回自身、让五项战斗能力各升 1 级的概率；原生 10% 起，特攻与等级越高越容易抓住，深源式更稳。"),
+        surgeTicks: seconds(F.base(120), "反哺持续", "本招的五项能力强化持续时间；再次触发刷新时间，保持一层。"),
         surgeStages: formula(
             F.base(1),
             "反哺级数", {
                 unit: "级",
-                description: "一次反哺让自身全部能力各提升的能力等级。"
+                description: "一次反哺让自身五项战斗能力各提升的能力等级。"
             }),
         shards: formula(
             F.base(18)
@@ -131,8 +132,8 @@ namespace PokemonSkills {
     describe("ancientpower", [
         { key: "description.0", values: ["primal", "reach"] },
         { key: "description.1", values: ["push", "lift"] },
-        { key: "description.2", values: ["surgeChance", "surgeStages"] },
-        { key: "description.3", values: ["band", "shards", "runes", "pref.deep"] },
+        { key: "description.2", values: ["surgeChance", "surgeStages", "surgeTicks"] },
+        { key: "description.3", values: ["band", "pref.deep"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.primal", "tier.0.reach"] }
     ]);

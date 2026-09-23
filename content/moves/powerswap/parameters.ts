@@ -60,7 +60,6 @@ namespace PokemonSkills {
 
     describe("powerswap", [
         { key: "description.0", values: ["reach", "span"] },
-        { key: "description.1", values: ["threads"] },
         { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.span"] },

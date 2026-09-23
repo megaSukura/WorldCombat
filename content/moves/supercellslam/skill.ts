@@ -46,6 +46,7 @@ namespace PokemonSkills {
 
     define({
         id: "supercellslam",
+        cooldownParameter: "recharge",
         name: "Supercell Slam",
         description: "让身体带电后压向对手。如果没有命中则自己会受到伤害。",
         uses: ["用带电压坠打出电属性的远程强袭", "把蓄好的电荷一次放掉、顶开贴脸的对手", "在安全距离用电击消耗硬目标"],

@@ -97,10 +97,10 @@ namespace PokemonSkills {
             F.base(6).minus(F.stat("speed").minus(55).times(0.02).clamp(-2, 2))
                 .plus(F.when(F.pref("lance"), F.const(1), F.const(0))).clamp(3, 11).round(0),
             "收招", "喷完收住水压的时间；快的个体更干脆。"),
-        /** 冷却：基础 26 刻，速度每比 55 快 1 减 0.04（夹 −4..6）；贯流 +7 / 散射 −5；夹 15..42。 */
+        /** 贯穿与湿身保留；两次水线之间留出走位和换招的间隔。 */
         recharge: seconds(
-            F.base(26).minus(F.stat("speed").minus(55).times(0.04).clamp(-4, 6))
-                .plus(F.when(F.pref("lance"), F.const(7), F.const(-5))).clamp(15, 42).round(0),
+            F.base(42).minus(F.stat("speed").minus(55).times(0.04).clamp(-4, 6))
+                .plus(F.when(F.pref("lance"), F.const(7), F.const(-5))).clamp(30, 56).round(0),
             "冷却", "再次喷出水线前等待多久；贯流式更长，散射式更短。"),
         maxTargets: hidden(4)
     });

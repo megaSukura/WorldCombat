@@ -4,7 +4,7 @@
   "worldcombat.skill.smokescreen.use.1": "Lay it in front of you to break sight lines and catch a breath",
   "worldcombat.skill.smokescreen.use.2": "Seal a doorway or corridor",
   "worldcombat.skill.smokescreen.description.0": "A target standing in the cloud strikes weaker, and a Pokemon also loses %1$s accuracy stage(s); the aftertaste lasts %2$s past leaving.",
-  "worldcombat.skill.smokescreen.description.1": "The cloud covers a %1$s block radius, lasts %2$s and puffs out about %3$s strands at once.",
+  "worldcombat.skill.smokescreen.description.1": "The cloud covers a %1$s block radius and lasts %2$s.",
   "worldcombat.skill.smokescreen.description.2": "The puff is sent within %1$s blocks and travels at %2$s; gathering it takes %3$s with a %4$s cooldown. The cloud never moves, so a misplaced cloud wastes the cooldown.",
   "worldcombat.skill.smokescreen.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.smokescreen.value.reach": "Puff range",

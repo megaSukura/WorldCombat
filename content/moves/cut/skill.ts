@@ -61,6 +61,7 @@ namespace PokemonSkills {
 
     define({
         id: cutId,
+        cooldownParameter: "recharge",
         name: "Cut",
         description: "The target is cut with a scythe, a claw, or the like to inflict damage.",
         uses: ["贴地横斩，扫倒身前一片", "顺手割掉弧内的草叶", "最便宜最快的一记斩击"],

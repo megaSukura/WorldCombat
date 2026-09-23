@@ -14,6 +14,7 @@ namespace PokemonSkills {
 
     define({
         id: crushgripId,
+        cooldownParameter: "recharge",
         name: "Crush Grip",
         description: "The target is crushed with great force. The more HP the target has left, the greater the move's power.",
         uses: ["用最重的一握捏掉满血目标的血条", "高举式把关键目标提起、按住再摔下", "用会改变目标位置的一握拆掉对手的站位"],
@@ -94,7 +95,7 @@ namespace PokemonSkills {
                     const now = scope.observe(target);
                     const point = now === null ? current.targetPosition() : now.position();
                     if (landedSlam) {
-                        WorldEffects.apply(scope, target, "rooted", {}, holdTicks);
+                        if (scope.valid(target)) WorldEffects.apply(scope, target, "rooted", {}, holdTicks);
                         WorldFeedback.emit(scope, crushgripScene, 1, point,
                             { moment: "slam", target: String(target.ref()), motes: motes, scale: scale,
                                 intensity: Math.max(0.6, Math.min(2.0, slam / 60)) }, 30);

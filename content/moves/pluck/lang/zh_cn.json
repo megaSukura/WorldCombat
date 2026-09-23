@@ -5,7 +5,7 @@
   "worldcombat.skill.pluck.use.2": "把对手的树果立刻变成自己的回复或强化",
   "worldcombat.skill.pluck.description.0": "啄击造成约 %1$s 的飞行属性接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.pluck.description.1": "长喙沿瞄准方向伸出 %1$s 格、向上够到 %2$s 格；走廊内最近的一个非友方被啄中。",
-  "worldcombat.skill.pluck.description.2": "啄下的树果立刻吞下，效果按 %1$s 倍结算，羽屑约 %2$s 个。",
+  "worldcombat.skill.pluck.description.2": "啄下的树果立刻吞下，效果按 %1$s 倍结算。",
   "worldcombat.skill.pluck.swoop.on": "开启俯冲：射程 ×1.3、抬升 ×1.4、冷却 +6 刻，够得更远更高，代价是本击 ×0.88。",
   "worldcombat.skill.pluck.swoop.off": "关闭俯冲：射程与抬升按常态，本击 ×1.08。",
   "worldcombat.skill.pluck.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

@@ -4,7 +4,7 @@
   "worldcombat.skill.decorate.use.1": "在队友冲上去之前先给他加满双攻",
   "worldcombat.skill.decorate.use.2": "把自己以外的伙伴变成一把更利的刀",
   "worldcombat.skill.decorate.description.0": "给一个友方的物攻与特攻各 +%1$s 级；目标只能选另一个战斗者。",
-  "worldcombat.skill.decorate.description.1": "装饰在对方身上亮约 %1$s，一次送出约 %2$s 件奶油与缎带。",
+  "worldcombat.skill.decorate.description.1": "装饰在对方身上亮约 %1$s。",
   "worldcombat.skill.decorate.description.2": "施放距离 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒。",
   "worldcombat.skill.decorate.timing": "起手可以被打断，打断不消耗任何东西；提交后才结清 PP 与冷却。",
   "worldcombat.skill.decorate.value.gift": "双攻提升",

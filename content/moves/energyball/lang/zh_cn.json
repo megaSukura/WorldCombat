@@ -6,7 +6,7 @@
   "worldcombat.skill.energyball.description.0": "能量球命中造成 %1$s 点特殊伤害。",
   "worldcombat.skill.energyball.description.1": "出手时从 %2$s 格内吸取自然：每份生机额外加 %1$s 威力，最多记 90 处。",
   "worldcombat.skill.energyball.description.2": "有 %1$s 概率把目标特防压低 %2$s 级。",
-  "worldcombat.skill.energyball.description.3": "球以 %1$s 格每刻飞行，射程 %2$s 格，判定半径 %3$s 格；落点花草停留 %4$s，迸出约 %5$s 颗草种；当前深根形态为 %6$s。",
+  "worldcombat.skill.energyball.description.3": "球以 %1$s 格每刻飞行，射程 %2$s 格，判定半径 %3$s 格；落点花草停留 %4$s；当前深根形态为 %5$s。",
   "worldcombat.skill.energyball.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.energyball.growth.0": "%1$s 级起球心威力升至 %2$s、射程 %3$s 格。",
   "worldcombat.skill.energyball.value.core": "球心威力",

@@ -61,7 +61,7 @@ namespace PokemonSkills {
     describe("grassyterrain", [
         { key: "description.0", values: ["fieldRadius", "fieldTicks"] },
         { key: "description.1", values: ["healRatio", "healInterval"] },
-        { key: "description.2", values: ["bloomDensity", "growth"] },
+        { key: "description.2", values: ["growth"] },
         { key: "description.3", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },

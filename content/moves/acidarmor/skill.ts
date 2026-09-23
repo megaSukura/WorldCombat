@@ -5,7 +5,7 @@
  *
  * 两幕：
  *   溶（windup 播「溶化」，提交前只观察与预告，打断不花代价）。
- *   流（提交后）：NativeEffects.boost(def, gift) 写入公共能力阶梯，挂上共享身份 world_combat:status/acidarmor 的
+ *   流（提交后）：临时防御窗口挂在共享身份 world_combat:status/acidarmor 的
  *     液态窗口（两种形态各自的移动加成见 startup.ts）；当场化掉身上的 rooted 与 partiallytrapped／trapped 束缚；
  *     酸池形态在原地留下一滩 world_combat:acid_pool（站进去的非友方中毒），流身形态不留。
  * 结束：液态窗口到期或被清除时，这段防护抬起的等级原样收回；酸池按自己的时长留在世上。
@@ -31,18 +31,6 @@ namespace PokemonSkills {
         }
     });
 
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function acidarmorStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function acidarmorRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = acidarmorStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, acidarmorStage(world, actor, stat) - before);
-    }
     /** 液态让身体从束缚里滑脱：化掉身上的 rooted 与共享身份 partiallytrapped／trapped。 */
     function acidarmorSlip(world: CombatWorld, actor: CombatActor): number {
         let freed = 0;
@@ -55,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: "acidarmor",
+        cooldownParameter: "wait",
         name: "溶化",
         description: "通过细胞的变化进行液化，从而大幅提高自己的防御。",
         uses: ["被缠住或钉住时化开脱身", "在对手脚下摊出一滩腐蚀的酸", "用更滑的液态撑过一轮贴身攻击"],
@@ -96,8 +85,19 @@ namespace PokemonSkills {
             const window = Math.max(80, Math.round(p("acidarmor", "window", action)));
             const residue = Math.max(12, Math.round(p("acidarmor", "residue", action)));
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
-            const levels = acidarmorRaise(world, actor, "def", gift);
-            MobEffects.apply(world, actor, slick ? acidarmorSlickEffect : acidarmorPoolEffect, window, levels);
+            const effectId = slick ? acidarmorSlickEffect : acidarmorPoolEffect, contribution = "world_combat:move/acidarmor";
+            const before = NativeEffects.effectiveStage(world, actor, "def"), previous = MobEffects.read(world, actor, effectId);
+            const carrier = MobEffects.apply(world, actor, effectId, window, previous ? previous.amplifier() : 0);
+            let levels = 0;
+            if (carrier) {
+                NativeEffects.boostWindow(world, actor, { def: gift }, carrier.duration(), contribution, carrier, previous);
+                levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
+                // Preserve the native amplifier used by this form's movement attribute.
+                if (carrier.amplifier() !== levels) {
+                    const shown = MobEffects.apply(world, actor, effectId, window, levels);
+                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+                }
+            }
             const freed = acidarmorSlip(world, actor);
             let poolRadius = 0, poolTicks = 0, scale = 1;
             if (!slick) {
@@ -125,15 +125,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 液态窗口到期或被清除：把这段防护抬起的等级原样收回，只收到当前实际持有的正等级。酸池按自己的时长留在世上。
+    // 属性随液态窗口结束；移除事件只负责凝回表现。酸池按自己的时长留在世上。
     WorldCombat.on("world_combat:move_acidarmor/reform", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data())), id = String(data.id);
         if (id !== acidarmorPoolEffect && id !== acidarmorSlickEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        const loss = Math.min(levels, Math.max(0, acidarmorStage(world, actor, "def")));
-        if (loss > 0) NativeEffects.boost(world, actor, "def", -loss);
+        if (MobEffects.read(world, actor, id)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, acidarmorScene, 1, body.position(), { moment: "reform", actor: String(actor.ref()) }, 26);

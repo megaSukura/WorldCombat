@@ -126,7 +126,7 @@ namespace PokemonSkills {
 
     describe(retaliateId, [
         { key: "description.0", values: ["vengeance"] },
-        { key: "description.1", values: ["dash", "charge", "collisionRadius", "push", "streaks"] },
+        { key: "description.1", values: ["dash", "charge", "collisionRadius", "push"] },
         { key: "solemn.on", values: [], when: function (context) { return read(context.detail.values, ["solemn"]) === true; } },
         { key: "solemn.off", values: [], when: function (context) { return read(context.detail.values, ["solemn"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -108,12 +108,12 @@ namespace PokemonSkills {
 
     describe("payday", [
         { key: "description.0", values: ["coin"] },
-        { key: "description.1", values: ["coins", "reach", "throwSpeed"] },
+        { key: "description.1", values: ["reach", "throwSpeed"] },
         { key: "description.2", values: ["scatter", "fling"] },
         { key: "largesse.on", values: [], when: function (context) { return read(context.detail.values, ["largesse"]) === true; } },
         { key: "largesse.off", values: [], when: function (context) { return read(context.detail.values, ["largesse"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.coin", "tier.0.coins"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.coin"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.coin", "tier.1.scatter"] }
     ]);
 }

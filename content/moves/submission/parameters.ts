@@ -129,7 +129,7 @@ namespace PokemonSkills {
     describe("submission", [
         { key: "description.0", values: ["slam", "reach", "pace", "gripRadius"] },
         { key: "description.1", values: ["gripTicks", "pinTicks", "throw"] },
-        { key: "description.2", values: ["recoil", "dust"] },
+        { key: "description.2", values: ["recoil"] },
         { key: "pin.on", values: [], when: function (context) { return read(context.detail.values, ["pin"]) === true; } },
         { key: "pin.off", values: [], when: function (context) { return read(context.detail.values, ["pin"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

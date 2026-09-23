@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: "rapidspin",
+        cooldownParameter: "recharge",
         name: "Rapid Spin",
         description: "原地旋成一圈风，把缠在身上的绑紧、紧束、寄生种子这类束缚甩脱，同时扫开身周一圈的敌人并把它们顶开，随后自己的速度提高一级。广旋式扫得更开，紧旋式转得更重。",
         uses: ["被绑紧、紧束或寄生种子缠住时脱身", "被围住时把贴身的人一起旋开", "顺手给自己垫一段速度"],

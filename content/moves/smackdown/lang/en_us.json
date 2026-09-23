@@ -6,7 +6,7 @@
   "worldcombat.skill.smackdown.description.0": "The bolt deals about %1$s damage; the target's defence, type matchup and criticals settle at impact.",
   "worldcombat.skill.smackdown.description.1": "If the target is airborne or a flyer, it is dragged to the ground below and pinned for %1$s.",
   "worldcombat.skill.smackdown.description.2": "Castable on a target within %1$s blocks; the bolt flies at %2$s blocks per tick with a little guidance.",
-  "worldcombat.skill.smackdown.description.3": "The bolt's body radius is %1$s blocks and drags an airborne target down at %2$s blocks per tick.",
+  "worldcombat.skill.smackdown.description.3": "The bolt's body radius is %1$s blocks.",
   "worldcombat.skill.smackdown.flyers.on": "Flyers only on: the companion throws only at airborne, flying or levitating foes, saving the bolt for air defence.",
   "worldcombat.skill.smackdown.flyers.off": "Flyers only off: it also uses this as an ordinary ranged stone.",
   "worldcombat.skill.smackdown.timing": "Castable on a target within %1$s blocks; after a %2$s s prepare it spends %4$s PP; it recovers for %3$s s and its cooldown starts on commit for %5$s s.",

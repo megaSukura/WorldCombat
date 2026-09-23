@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: "hornattack",
+        cooldownParameter: "recharge",
         name: "Horn Attack",
         description: "The target is jabbed with a sharply pointed horn to inflict damage.",
         uses: ["低头一记角撞并顶开贴身目标", "把对手沿地面一路推离掩体或站位", "低消耗的近身压制"],

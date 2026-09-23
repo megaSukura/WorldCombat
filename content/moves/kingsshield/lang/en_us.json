@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.kingsshield.summary": "Takes a regal steel stance and blocks damaging attacks by a total pool, sharpening the attacker's Attack down on contact; status moves pass through.",
   "worldcombat.skill.kingsshield.description.0": "The shield lasts %1$s and holds %2$s points, lowering contact attackers by %3$s levels; higher Defence, Speed and Special Defence make it thicker and longer.",
-  "worldcombat.skill.kingsshield.description.1": "Raise %1$s, shield radius %2$s blocks, cooldown %3$s.",
+  "worldcombat.skill.kingsshield.description.1": "Raise %1$s, cooldown %2$s.",
   "worldcombat.skill.kingsshield.description.2": "Repeat-use failure rate %1$s; the majesty/bulwark trade-off is the %2$s setting.",
   "worldcombat.skill.kingsshield.use.0": "Block melee damage and soften the attacker",
   "worldcombat.skill.kingsshield.use.1": "Weaken a foe before the next exchange",

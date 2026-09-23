@@ -29,7 +29,7 @@ namespace PokemonSkills {
             if (!incoming.source || String(incoming.source.ref()) === String(effect.target().ref())) return false;
             if (world.friendly(incoming.source)) return false;
             // 贴身近战带 contact 旗标，穿得过这面墙；远程与范围不带，正是要挡的那类。
-            if (incoming.data && !incoming.data.area && (incoming.data.kind === "move" ? incoming.data.contact : incoming.data.direct)) return false;
+            if (incoming.data && !incoming.data.area && DamageSemantics.read(incoming.data).contact) return false;
             return true;
         },
         pulse: function (effect: CombatEffect, state: GuardEffects.State): void {
@@ -96,6 +96,7 @@ namespace PokemonSkills {
 
     define({
         id: "wideguard",
+        cooldownParameter: "wait",
         name: "广域防守",
         description: "向身周推出一面横贯的宽光墙，替自己与身边的队友把远程、范围的成片攻击整片卸掉；只立极短的一瞬，挡几下就散，贴身近战穿得过。",
         uses: ["挡住对面拍过来的远程齐射", "在队友被范围招式罩住前抢一拍立墙", "用一次短窗口替全队吃下一轮爆发"],

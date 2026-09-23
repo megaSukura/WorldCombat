@@ -1,8 +1,7 @@
 /**
  * 变小 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有一个在 ai.maxChase 内的威胁时最值得缩起来——缩小是纯自保，躲开来袭；
- *   身边暂时安全时（驻守／自主／工作）也先缩一轮，等试探结束再出来。
+ * 什么局面有意义：有一个在 ai.maxChase 内的威胁时最值得缩起来——缩小是纯自保，躲开来袭。
  * 什么时候最想出手：威胁已经进到 ai.minGap 之外、但不很远（≤ ai.maxChase × 0.75）时 priority 104——
  *   越早缩，越可能在对方出手前就变小；威胁还很远时 96；已经贴身时 0，让位给反击。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -18,7 +17,8 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "minimize")) return false;
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
+            if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

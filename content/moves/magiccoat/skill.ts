@@ -86,6 +86,7 @@ namespace PokemonSkills {
 
     define({
         id: magiccoatId,
+        cooldownParameter: "recharge",
         name: "Magic Coat",
         description: "在身前铺开一层会弯光的膜：窗口内朝着自己递来的异常状态招与寄生种子一类会被原路弹回施放者；没接到东西就收膜。",
         uses: ["把铺到自己身上的毒、麻痹、寄生原样还回去", "在对手下状态前先一步撑膜", "让只会用状态招的敌人反受其害"],

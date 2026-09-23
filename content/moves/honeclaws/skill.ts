@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "honeclaws",
+        cooldownParameter: "wait",
         name: "磨爪",
         description: "将爪子磨得更加锋利，从而提高自己的攻击和命中率。",
         uses: ["开打前先蹭两下，把攻与命中一起垫起来", "命中被削、连击失手时随手补一档", "用最短的窗口保持锋口常新"],

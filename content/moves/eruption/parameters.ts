@@ -101,7 +101,7 @@ namespace PokemonSkills {
     describe("eruption", [
         { key: "description.0", values: ["burst", "blastRadius"] },
         { key: "description.1", values: ["falloff", "knock", "lift"] },
-        { key: "description.2", values: ["burnChance", "column", "chargeTicks"] },
+        { key: "description.2", values: ["burnChance", "chargeTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] }
     ]);

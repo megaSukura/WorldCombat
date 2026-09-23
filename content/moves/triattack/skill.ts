@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: triattackId,
+        cooldownParameter: "recharge",
         name: "Tri Attack",
         description: "Fire, frost and spark leave the hand together as three rays. In focused form all three converge on one target; in wide form they seek up to three separate enemies. Each ray that lands may leave its own element's mark: paralysis, burn or freeze.",
         uses: ["对着一个目标连出三束、各掷一次元素余痕", "在敌群里让三束分头点不同的人", "用三色齐射先手压一片血"],

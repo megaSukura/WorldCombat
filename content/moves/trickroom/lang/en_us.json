@@ -5,7 +5,7 @@
   "worldcombat.skill.trickroom.use.2": "Twist the ground between you and the foe",
   "worldcombat.skill.trickroom.description.0": "Raises a space of radius %2$s blocks on the chosen ground, lasting %1$s.",
   "worldcombat.skill.trickroom.description.1": "The space treats %1$s as the reference speed: slower bodies are pushed faster, faster ones dragged slower, by about +/-%2$s%%.",
-  "worldcombat.skill.trickroom.description.2": "the current cast range is %2$s blocks. The space applies to both sides alike.",
+  "worldcombat.skill.trickroom.description.2": "The current cast range is %1$s blocks. The space applies to both sides alike.",
   "worldcombat.skill.trickroom.description.3": "Pressing the space out takes %1$s, the recovery is %2$s and the cooldown %3$s. See the twist note for the strong/gentle trade-off.",
   "worldcombat.skill.trickroom.turn.0": "Strong: inversion depth x1.35 (a wider gap), at duration x0.8 and cooldown x1.15 — short and violent.",
   "worldcombat.skill.trickroom.turn.1": "Gentle: inversion depth x0.7 (mild), in exchange for duration x1.2 and cooldown x0.85 — held long and refreshed often.",

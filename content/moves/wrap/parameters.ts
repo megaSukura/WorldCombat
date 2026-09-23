@@ -129,7 +129,7 @@ namespace PokemonSkills {
     describe("wrap", [
         { key: "description.0", values: ["crush", "reach", "grip"] },
         { key: "description.1", values: ["coilTicks", "interval", "atkStages"] },
-        { key: "description.2", values: ["coilHeight", "tearSpeed"] },
+        { key: "description.2", values: ["tearSpeed"] },
         { key: "cocoon.on", values: [], when: function (context) { return read(context.detail.values, ["cocoon"]) === true; } },
         { key: "cocoon.off", values: [], when: function (context) { return read(context.detail.values, ["cocoon"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

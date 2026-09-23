@@ -5,7 +5,7 @@
   "worldcombat.skill.tarshot.use.2": "Turn a patch of ground into a tar pit that sticks to anyone",
   "worldcombat.skill.tarshot.description.0": "A coated target loses %1$s Speed stage(s) and carries the tar for about %2$s; getting wet or rain washes it off.",
   "worldcombat.skill.tarshot.description.1": "While coated, its weakness to Fire is doubled: any Fire-type move deals about x%1$s damage.",
-  "worldcombat.skill.tarshot.description.2": "The tar flies at about %1$s blocks per tick, with a %2$s block hit radius and up to %3$s blocks of range; a wide splash covers about %4$s blocks and flings about %5$s droplets.",
+  "worldcombat.skill.tarshot.description.2": "The tar flies at about %1$s blocks per tick, with a %2$s block hit radius and up to %3$s blocks of range; a wide splash covers about %4$s blocks.",
   "worldcombat.skill.tarshot.description.3": "The impact leaves a tar patch of about %1$s blocks for about %2$s; non-allies stepping in are coated too.",
   "worldcombat.skill.tarshot.description.4": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.tarshot.option.on": "Wide splash: non-allies around the impact are coated too and the patch is bigger, at reach -2 blocks, flight about x0.85, wind-up +3 ticks and cooldown +10 ticks - coating a whole group, but slower, shorter and costlier.",

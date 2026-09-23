@@ -4,7 +4,7 @@
  * 一句话：施法者抬起前肢、对准身前，第一劈砸下并沿地面犁出一道紫黑色的龙能裂痕，第二劈追着同一处再砸一次。
  * 色相家族：龙紫（0x8E6BD9、0xC79BE8）做劈击与能量，灰白（0xE6E2D8）做碎石，近白只给第二劈的裂痕强调。
  * 拍子：起 raise（抬臂）→ 一 chop1（第一劈砸地）→ 裂 crack（裂痕沿地面铺开）→ 二 chop2（追劈）→ 收 settle。
- * 范围：chop1/chop2 的锥面用 `data.reach` 当长度、`data.span` 当张角；crack 直接消费 `data.path`（与判定同一组
+ * 范围：chop1/chop2 的水平扇面用 `data.reach` 当半径、`data.span` 当张角；crack 直接消费 `data.path`（与判定同一组
  *   地面顶点）画出裂痕，玩家一眼看出第二劈该落在那条线上。
  * 运动：两劈从施法者身前向下砸；裂痕沿 `data.path` 从脚下向前铺开（`data.quake` 决定长度）。
  * 数：`data.shards`（物攻派生）绑定碎石量，`data.intensity`（实际威力派生）抬高亮度，`data.quake` 决定裂痕长度。
@@ -33,10 +33,10 @@ const DualchopDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/bigfist",
                     burst: { count: { data: "shards", fallback: 14 }, at: 0, interval: 1, repeats: 2 },
-                    shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 2.9 }, angleDegrees: { data: "span", fallback: 62 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.9 }, angleDegrees: { data: "span", fallback: 62 } },
                     direction: "shape", speed: [0.2, 0.5], spread: 12, spin: 9,
                     lifetime: [6, 12], size: [0.34, 0.06], sizeMode: "index",
                     color: 0x8E6BD9, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 70
@@ -78,10 +78,10 @@ const DualchopDefinition: ParticleDefinition = {
             exit: { drain: 13 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "none", orient: "direction",
+                    name: "arc", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/bigfist",
                     burst: { count: { data: "shards", fallback: 16 }, at: 0, interval: 1, repeats: 2 },
-                    shape: { kind: "cone_volume", radius: 0.45, length: { data: "reach", fallback: 2.9 }, angleDegrees: { data: "span", fallback: 62 } },
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.9 }, angleDegrees: { data: "span", fallback: 62 } },
                     direction: "shape", speed: [0.24, 0.6], spread: 10, spin: -12,
                     lifetime: [6, 12], size: [0.38, 0.06], sizeMode: "index",
                     color: 0xC79BE8, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 80

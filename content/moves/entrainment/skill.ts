@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: "entrainment",
+        cooldownParameter: "recharge",
         name: "Entrainment",
         description: "踩出一段古怪的节拍逼对手跟着动，把对手的特性变成和自己的相同；节拍波及的敌人一起改变。",
         uses: ["把自己的负面特性塞给对手", "用普通特性顶掉对手的强力特性", "让围在身边的一圈敌人一起改特性"],

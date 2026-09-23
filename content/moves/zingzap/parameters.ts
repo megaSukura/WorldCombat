@@ -126,7 +126,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["crash", "chargeMax", "chargeRate"] },
         { key: "description.1", values: ["rush", "pace", "radius"] },
         { key: "description.2", values: ["flinchChance", "flinchTicks"] },
-        { key: "description.3", values: ["arc", "arcShare", "staticTicks"] },
+        { key: "description.3", values: ["arc", "arcShare"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },
         { key: "overcharge.off", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) !== true; } },
         { key: "arcChain.on", values: [], when: function (context) { return read(context.detail.values, ["arcChain"]) === true; } },

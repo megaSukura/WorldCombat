@@ -48,7 +48,6 @@ namespace PokemonSkills {
 
     describe(softboiledId, [
         { key: "description.0", values: ["heal", "eatTicks"] },
-        { key: "description.1", values: ["shells", "cradle"] },
         { key: "description.2", values: ["lay", "settleTicks"] },
         { key: "stance.share", values: ["eggReach"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
         { key: "stance.self", values: [], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },

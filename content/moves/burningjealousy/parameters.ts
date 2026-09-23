@@ -32,7 +32,7 @@ namespace PokemonSkills {
     /** 目标当前正面能力等级合计（五项，不含命中率/闪避）；0 表示它此刻没有正在生效的强化。 */
     export function burningJealousyBoost(world: CombatWorld, actor: CombatActor): number {
         if (!world.valid(actor)) return 0;
-        const stages = String(actor.domain()) === "cobblemon" ? NativeEffects.read(world, actor).stages : CombatStages.read(world, actor);
+        const stages = NativeEffects.effectiveStages(world, actor);
         const names = ["atk", "def", "spa", "spd", "spe"];
         let total = 0;
         for (let index = 0; index < names.length; index++) {

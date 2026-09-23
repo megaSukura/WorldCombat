@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "scaleshot",
+        cooldownParameter: "recharge",
         name: "Scale Shot",
         description: "The user attacks by shooting scales two to five times in a row. This move boosts the user's Speed stat but lowers its Defense stat.",
         uses: ["中远距离一梭鳞片连续削目标", "用一梭小撞击把速度拉起来接下一手", "散鳞式把鳞片分给身前一群敌人"],

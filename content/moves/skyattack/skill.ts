@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: "skyattack",
+        cooldownParameter: "recharge",
         name: "Sky Attack",
         description: "The user charges in place, then plunges straight down onto the target from high above; a heavy blow that can make the target flinch.",
         uses: ["先蓄一拍再从上空砸下一记重击", "越过地面阻挡打到远处的目标", "把飞在空中的对手也压下来"],

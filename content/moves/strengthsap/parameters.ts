@@ -92,11 +92,9 @@ namespace PokemonSkills {
         { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["drain"] },
         { key: "description.2", values: ["weak", "latch"] },
-        { key: "description.3", values: ["motes"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.motes"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.drain", "tier.1.weak", "tier.1.latch"] }
     ]);
 }

@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     define({
         id: hexId,
+        cooldownParameter: "recharge",
         name: "Hex",
         description: "This relentless attack does massive damage to a target affected by status conditions.",
         uses: ["在对手脚下布一片诅咒结界", "对带异常者补刀", "一次钉住挤在圈里的一群人"],

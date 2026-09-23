@@ -49,7 +49,7 @@ namespace PokemonSkills {
 
     describe("clangoroussoul", [
         { key: "description.0", values: ["costPerBeat", "beats", "rise"] },
-        { key: "description.1", values: ["interval", "pulseRadius"] },
+        { key: "description.1", values: ["interval"] },
         { key: "timing", values: ["tier.0.prepare", "tier.0.recover", "tier.0.cooldown"] }
     ]);
 }

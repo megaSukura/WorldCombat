@@ -21,7 +21,7 @@
   "worldcombat.skill.hail.value.stoneDensity": "Hail density",
   "worldcombat.skill.hail.value.shardCells": "Shard cells",
   "worldcombat.skill.hail.preference.squall": "Squall hail",
-  "worldcombat.skill.hail.preference.squall.help": "On = squall: wider storm (x1.15), harder pelt (x1.3), denser hail (x1.4), faster passes (x0.82) and more shards (x1.3), but shorter life (x0.78) and cooldown +16 ticks. Off = fine hail: smaller and lighter, but lasts longer (x1.22), cools down 10 ticks sooner and leaves fewer shards.",
+  "worldcombat.skill.hail.preference.squall.help": "On = squall: wider storm (x1.15), harder pelt (x1.3), faster passes (x0.82) and more shards (x1.3), but shorter life (x0.78) and cooldown +16 ticks. Off = fine hail: smaller and lighter, but lasts longer (x1.22), cools down 10 ticks sooner and leaves fewer shards.",
   "worldcombat.skill.hail.preference.ai.maxChase": "Drop distance",
   "worldcombat.skill.hail.preference.ai.maxChase.help": "The companion only calls hail while a threat is within this distance; lower drops it up close, higher sets it up in advance.",
   "worldcombat.skill.hail.preference.ai.advance": "Push the storm at the foe",

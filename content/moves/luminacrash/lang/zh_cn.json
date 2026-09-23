@@ -4,7 +4,7 @@
   "worldcombat.skill.luminacrash.use.1": "从远处引光砸一个点名目标",
   "worldcombat.skill.luminacrash.use.2": "用弥散式在落点连周围一起砸",
   "worldcombat.skill.luminacrash.description.0": "怪光柱砸中目标造成 %1$s 点特殊伤害，并狠狠削掉 %2$s 级特防。",
-  "worldcombat.skill.luminacrash.description.1": "光柱从目标头顶 %1$s 格处引下、%2$s 后砸落；目标在这段时间跑出 %3$s 格就能躲开。",
+  "worldcombat.skill.luminacrash.description.1": "光柱从目标头顶引下、%1$s 后砸落；目标在这段时间跑出 %2$s 格就能躲开。",
   "worldcombat.skill.luminacrash.description.2": "砸落时脚下 %1$s 格内的人各挨 %2$s 点溅射。",
   "worldcombat.skill.luminacrash.disperse.on": "弥散式：单发 %1$s、炸落半径 %2$s 格、溅射 %3$s，连周围一起砸。",
   "worldcombat.skill.luminacrash.disperse.off": "聚焦式：单发 %1$s、炸落半径 %2$s 格，一道细光柱点一个。",

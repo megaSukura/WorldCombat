@@ -6,7 +6,7 @@
   "worldcombat.skill.psychicnoise.use.2": "远程压制并封住续战能力",
   "worldcombat.skill.psychicnoise.description.0": "命中造成 %1$s 基础威力的特殊伤害，并让目标在 %2$s 内无法通过招式、特性或携带的道具回复 HP。",
   "worldcombat.skill.psychicnoise.description.1": "音波射程 %1$s 格、速度 %2$s 格/刻、判定半径 %3$s 格。",
-  "worldcombat.skill.psychicnoise.description.2": "起手 %2$s 秒、收招 %3$s 秒，冷却 %4$s 秒。",
+  "worldcombat.skill.psychicnoise.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.psychicnoise.pierce.on": "贯穿啸叫：音波可穿过最多 4 个目标，代价是威力 ×0.8、封回复时长 ×0.85。",
   "worldcombat.skill.psychicnoise.pierce.off": "聚焦：只打一个目标，威力与封回复更足。",
   "worldcombat.skill.psychicnoise.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",

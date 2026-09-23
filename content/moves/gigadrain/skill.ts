@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "gigadrain",
+        cooldownParameter: "recharge",
         name: "Giga Drain",
         description: "A nutrient-draining attack. The user's HP is restored by up to half the damage taken by the target.",
         uses: ["从远处把对手整片生命抽走", "在血量吃紧时靠它把血线拉回来", "用连续几拍压住一个高价值目标"],

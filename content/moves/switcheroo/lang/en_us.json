@@ -10,7 +10,7 @@
   "worldcombat.skill.switcheroo.through.off": "Stop on contact: after the swap you settle at the target's side, a steadier landing that never leaves its reach.",
   "worldcombat.skill.switcheroo.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to slip out, then %3$s seconds to gather yourself and a %5$s second cooldown from commit.",
   "worldcombat.skill.switcheroo.growth.0": "At level %1$s the slip reaches %2$s blocks and the cooldown becomes %3$s seconds.",
-  "worldcombat.skill.switcheroo.growth.1": "At level %1$s the slip reaches %2$s blocks at %3$s blocks per tick, and the sparks rise to %4$s.",
+  "worldcombat.skill.switcheroo.growth.1": "At level %1$s the slip reaches %2$s blocks at %3$s blocks per tick.",
   "worldcombat.skill.switcheroo.value.charge": "Wind-up",
   "worldcombat.skill.switcheroo.value.reach": "Slip distance",
   "worldcombat.skill.switcheroo.value.step": "Slip speed",

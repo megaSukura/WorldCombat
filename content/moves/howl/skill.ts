@@ -108,6 +108,7 @@ namespace PokemonSkills {
 
     define({
         id: "howl",
+        cooldownParameter: "wait",
         name: "长嚎",
         description: "仰头一声长嗥，提高自己与身边队友的攻击；嗥声回荡一阵，斗志消散时这段提升一并收回。",
         uses: ["开战前把全队的物攻抬起来", "把后来走进范围的伙伴也吼起来", "单打独斗时集中气势，把攻击拉高两级"],

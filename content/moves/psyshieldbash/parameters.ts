@@ -53,7 +53,7 @@ namespace PokemonSkills {
             F.when(F.pref("harden", text("worldcombat.skill.psyshieldbash.preference.harden")), F.const(2), F.const(1)).round(0),
             "防御提升", {
                 unit: "级",
-                description: "护盾成形时给自己加几级防御；深凝式编得更厚。这一层在提交时就生效，撞空也照拿。"
+                description: "护盾成形时给自己加几级防御；深凝式编得更厚。这一层在提交时就生效，撞空也照拿；随护盾结束而收回，重施刷新一层。"
             }),
         /** 护盾时长：基础 90 刻，等级每比 30 高 1 加 1.1 刻（上限 +50），防御每比 60 多 1 加 0.4 刻（上限 +20）；夹在 70..220。 */
         shellTicks: seconds(

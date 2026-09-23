@@ -4,7 +4,7 @@
   "worldcombat.skill.darkestlariat.use.1": "把目标涨起来的防御等级直接无视掉",
   "worldcombat.skill.darkestlariat.use.2": "被围住时一次清开贴身的人",
   "worldcombat.skill.darkestlariat.description.0": "一整圈扫击造成约 %1$s 点接触伤害，半径约 %2$s 格；圈内每个非友方各结算一次，目标的防御能力等级被这一招忽略。",
-  "worldcombat.skill.darkestlariat.description.1": "覆盖高约 %1$s 格；被抡中的人向外顶开约 %2$s 格，原地转 %3$s 圈，甩出约 %4$s 道风痕。",
+  "worldcombat.skill.darkestlariat.description.1": "覆盖高约 %1$s 格；被抡中的人向外顶开约 %2$s 格。",
   "worldcombat.skill.darkestlariat.wide.on": "广旋式：半径约 %1$s 格、顶开约 %2$s 格，覆盖更大一圈，但每个目标约 %3$s 点、起手与冷却更长。",
   "worldcombat.skill.darkestlariat.wide.off": "紧旋式：半径约 %1$s 格、顶开约 %2$s 格，圈更小但每下约 %3$s 点、节奏更快。",
   "worldcombat.skill.darkestlariat.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

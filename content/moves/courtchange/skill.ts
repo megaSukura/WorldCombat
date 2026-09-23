@@ -87,6 +87,7 @@ namespace PokemonSkills {
 
     define({
         id: courtChangeId,
+        cooldownParameter: "wait",
         name: "换场",
         description: "用念力扫过一片战场，把已经铺开的场地效果对调归属：敌方的领域过户给我方，我方的领域过户给敌方。你会失去自己的领域，同时接管对方的；领域只换主人，规则、半径与剩余时长都不变。",
         uses: ["把敌人铺下的危险领域一记收过来", "在对方脚下翻转漩涡与禁锢", "用自己的旧领域换掉对方更有用的领域"],

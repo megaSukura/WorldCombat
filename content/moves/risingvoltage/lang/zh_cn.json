@@ -5,7 +5,7 @@
   "worldcombat.skill.risingvoltage.use.2": "一次贯穿挤在落点附近的一圈人",
   "worldcombat.skill.risingvoltage.description.0": "对落点内的每个敌人造成约 %1$s 点特殊伤害；目标脚下带着电场电荷时，这一段翻倍。",
   "worldcombat.skill.risingvoltage.description.1": "电流最多爬到 %1$s 格外的落点，爬行速度约 %2$s 格/刻，到达后电柱才升起。",
-  "worldcombat.skill.risingvoltage.description.2": "电柱半径 %1$s 格、高 %2$s 格，柱内非友方一起挨打，并迸出约 %3$s 道电弧。",
+  "worldcombat.skill.risingvoltage.description.2": "电柱半径 %1$s 格、高 %2$s 格，柱内非友方一起挨打。",
   "worldcombat.skill.risingvoltage.overcharge.on": "当前过载式：威力 ×1.2、电柱更粗更高，但射程 ×0.85、起手多 3 刻、冷却多 8 刻。",
   "worldcombat.skill.risingvoltage.overcharge.off": "当前稳压式：射得更远、起手与冷却更省，柱身更细。",
   "worldcombat.skill.risingvoltage.timing": "可向 %1$s 格内施放；起手 %2$s 后消耗 %4$s PP 发动，收招 %3$s，提交起冷却 %5$s。",

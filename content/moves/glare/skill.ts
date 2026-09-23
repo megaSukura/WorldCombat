@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: glareId,
+        cooldownParameter: "recharge",
         name: "Glare",
         description: "The user intimidates the target with the pattern on its belly to cause paralysis.",
         uses: ["一次镇住围上来的一群", "把最硬的近战钉在原地", "逼对手绕开或退到扇形之外"],

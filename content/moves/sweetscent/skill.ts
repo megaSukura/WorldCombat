@@ -68,6 +68,7 @@ namespace PokemonSkills {
 
     define({
         id: sweetscentId,
+        cooldownParameter: "recharge",
         name: "甜甜香气",
         description: "朝选定地点吐出一片会停留的甜云；云里的人被香气浸透，之后任何来源打在它身上的伤害都被放大——躲不掉也藏不住。",
         uses: ["把一片区域变成易伤区", "配合队友集火一个被香气罩住的目标", "封住门口或通道"],

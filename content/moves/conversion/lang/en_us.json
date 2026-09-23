@@ -4,7 +4,7 @@
   "worldcombat.skill.conversion.use.1": "Reweave the body into that type",
   "worldcombat.skill.conversion.description.0": "Scans its own moveset, then completes the reweave after %1$s; it does not fire when the body already has that type.",
   "worldcombat.skill.conversion.description.1": "The new type lasts %1$s; type matchups, same-type bonus and type immunities settle on it while it holds.",
-  "worldcombat.skill.conversion.description.2": "Reweaving costs %1$s of cooldown; this pattern is %2$s light bands, growing with Special Attack.",
+  "worldcombat.skill.conversion.description.2": "Reweaving costs %1$s of cooldown.",
   "worldcombat.skill.conversion.value.charge": "Read time",
   "worldcombat.skill.conversion.value.afterglow": "Settle time",
   "worldcombat.skill.conversion.value.recharge": "Reweave cooldown",

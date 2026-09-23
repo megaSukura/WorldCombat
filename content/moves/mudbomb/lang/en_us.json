@@ -4,7 +4,7 @@
   "worldcombat.skill.mudbomb.use.1": "Catch enemies standing near the target with the burst",
   "worldcombat.skill.mudbomb.use.2": "Sometimes blind the target and cut its accuracy",
   "worldcombat.skill.mudbomb.description.0": "The ball hits the target: %1$s special damage, with a %2$s chance to drop accuracy by %3$s stages.",
-  "worldcombat.skill.mudbomb.description.1": "The burst splashes every other enemy within %2$s blocks for %1$s special damage, throwing out about %3$s clods.",
+  "worldcombat.skill.mudbomb.description.1": "The burst splashes every other enemy within %2$s blocks for %1$s special damage.",
   "worldcombat.skill.mudbomb.description.2": "The ball flies straight at %1$s up to %2$s blocks; a wet mud patch stays on the ground for about %3$s. Fragmentation shell is currently %4$s.",
   "worldcombat.skill.mudbomb.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.mudbomb.value.boom": "Ball power",

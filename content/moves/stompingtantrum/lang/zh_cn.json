@@ -5,7 +5,7 @@
   "worldcombat.skill.stompingtantrum.use.2": "上一次打空后打出翻倍的一脚",
   "worldcombat.skill.stompingtantrum.description.0": "一脚跺进地面，沿裂缝传开 %1$s 点物理伤害（地面），只打站在地上的目标。",
   "worldcombat.skill.stompingtantrum.description.1": "裂缝从脚下朝目标裂开 %1$s 格、半宽 %2$s 格；站在缝上的人被向上掀 %3$s 格/刻、向外推开 %4$s 格。",
-  "worldcombat.skill.stompingtantrum.description.2": "带憋愤时裂缝尽头再崩开 %1$s 格；地面裂痕停留 %2$s、铺 %3$s 块。",
+  "worldcombat.skill.stompingtantrum.description.2": "地面裂痕停留 %1$s、铺 %2$s 块。",
   "worldcombat.skill.stompingtantrum.deep.on": "当前：深跺——裂缝更宽 ×1.25、上抛更高 ×1.15、裂痕更久 ×1.3，但威力略低、起手与冷却更久。",
   "worldcombat.skill.stompingtantrum.deep.off": "当前：浅跺——裂缝窄而快、单次更疼。",
   "worldcombat.skill.stompingtantrum.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

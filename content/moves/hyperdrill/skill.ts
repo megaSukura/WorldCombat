@@ -36,6 +36,7 @@ namespace PokemonSkills {
 
     define({
         id: "hyperdrill",
+        cooldownParameter: "recharge",
         name: "Hyper Drill",
         description: "把身体最尖的一点高速旋成钻头，沿着瞄准方向一路凿穿：先把挡在前面的守护整层凿开，再按这一记的重力砸进去并把目标顶开。贯穿式会一路钻过多个目标。",
         uses: ["凿穿着了守护的目标强行打进去", "沿一条线一次穿过排在一起的几个敌人", "用高额的接触伤害收掉一个挡在前面的人"],

@@ -72,8 +72,8 @@ const SolarBladeDefinition: ParticleDefinition = {
                 {
                     name: "slash_arc", bind: "point", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/cut",
-                    shape: { kind: "arc", radius: { data: "reach", fallback: 3.2 }, arcDegrees: { data: "arc", fallback: 120 } },
-                    orient: "direction",
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 3.2 }, innerRadius: { data: "reach", fallback: 3.2 }, angleDegrees: { data: "arc", fallback: 120 } },
+                    orient: "heading", fit: "world",
                     burst: { count: { data: "blade", fallback: 16 } },
                     direction: "shape", speed: [0.06, 0.22], spread: 12,
                     lifetime: [5, 11], size: [0.34, 0.06], sizeMode: "index",
@@ -82,8 +82,8 @@ const SolarBladeDefinition: ParticleDefinition = {
                 {
                     name: "slash_glow", bind: "point", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    shape: { kind: "arc", radius: { data: "reach", fallback: 3.2 }, arcDegrees: { data: "arc", fallback: 120 } },
-                    orient: "direction",
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 3.2 }, innerRadius: { data: "reach", fallback: 3.2 }, angleDegrees: { data: "arc", fallback: 120 } },
+                    orient: "heading", fit: "world",
                     burst: { count: 8, interval: 3, repeats: 2 },
                     direction: "shape", speed: [0.02, 0.1],
                     lifetime: [7, 14], size: [0.1, 0.02],

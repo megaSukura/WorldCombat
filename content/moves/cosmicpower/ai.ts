@@ -1,8 +1,8 @@
 /**
  * 宇宙力量 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有威胁、且在 ai.maxChase 内、但还没贴身（大于 ai.minGap）时先站定汲取星光；身边暂时安全时
- *   （驻守／自主／工作）也先垫好两项防护。它是本组起手最长的一招，所以最值得在对手贴近前先摆好。
+ * 什么局面有意义：有威胁、且在 ai.maxChase 内、但还没贴身（大于 ai.minGap）时先站定汲取星光。
+ *   它是本组起手最长的一招，所以最值得在对手贴近前先摆好。
  * 什么时候最想出手：血量掉到 ai.panic 以下、或对手在 minGap 之外且**天色已暗**（星光更盛、多抬 1 级）时
  *   priority 108 越过共享次序；只是有威胁时退回 96，抢在共享交战次序前但不如防守型招紧急。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
@@ -16,8 +16,10 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "cosmicpower")) return false;
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
-            return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
+            if (!threat) return false;
+            const distance = CompanionBehavior.distance(self.point, threat.point);
+            return distance >= CompanionBehavior.ai<number>(capability, "minGap", 3)
+                && distance <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

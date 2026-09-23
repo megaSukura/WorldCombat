@@ -5,7 +5,7 @@
   "worldcombat.skill.leafblade.use.2": "刃风顺带扫到近旁的旁人",
   "worldcombat.skill.leafblade.description.0": "刃锋造成 %1$s 点物理伤害，贴身距离 %2$s 格。",
   "worldcombat.skill.leafblade.description.1": "挥斩张角 %1$s 度；近旁最多 2 个其他敌人各吃 %2$s 倍刃风。",
-  "worldcombat.skill.leafblade.description.2": "主目标被削掉 %1$s 档防御，切中时卷起约 %2$s 片叶屑。",
+  "worldcombat.skill.leafblade.description.2": "主目标被削掉 %1$s 档防御。",
   "worldcombat.skill.leafblade.twohand.on": "双手式：威力 ×1.2、挥斩张角 ×1.1、削防多 1 档，但起手 +3 刻、收招 +2 刻、冷却 +6 刻。",
   "worldcombat.skill.leafblade.twohand.off": "单手式（默认）：起手更快、冷却少 4 刻，但威力 ×0.95、波及略窄。",
   "worldcombat.skill.leafblade.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

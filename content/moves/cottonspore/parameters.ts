@@ -61,7 +61,7 @@ namespace PokemonSkills {
     });
     describe(cottonsporeId, [
         { key: "description.0", values: ["speedDrop", "clingTicks"] },
-        { key: "description.1", values: ["burstRadius", "maxTargets", "spores"] },
+        { key: "description.1", values: ["burstRadius", "maxTargets"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

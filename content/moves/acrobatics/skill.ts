@@ -18,17 +18,54 @@ namespace PokemonSkills {
         var carry = p("acrobatics", "carry", action), motes = p("acrobatics", "motes", action);
         var body = world.observe(actor), scale = body ? (body.width() + body.height()) / 2.3 : 1;
         var bare = acrobaticsHeldOf(world, actor) === null;
+        action.releaseTarget();
         sound(action, "cobblemon:move.aerialace.actor_1");
         WorldFeedback.emit(world, acrobaticsScene, 1, action.origin(),
             { moment: "launch", scale: scale, motes: Math.round(motes), bare: bare ? 1 : 0, intensity: bare ? 1.6 : 1 }, 40);
         var travelled = 0;
-        function slip(current: CombatAction, remaining: number, elapsed: number): void {
-            if (remaining <= 0.02 || elapsed >= 8) { done(current); return; }
+        function slip(current: CombatAction, targetPoint: CombatPoint, targetWidth: number, extra: number): void {
             var scope = current.world(), self = scope.observe(current.actor());
             if (self === null) { done(current); return; }
-            var moved = scope.displace(current.actor(), direction.scale(Math.min(speed * 0.6, remaining)));
-            if (moved < p("acrobatics", "minimumMove", current)) { done(current); return; }
-            current.after(1, function (next: CombatAction) { slip(next, remaining - moved, elapsed + 1); });
+            var forward = WorldCombat.point(direction.x(), 0, direction.z());
+            if (forward.length() < 0.01) forward = WorldCombat.point(1, 0, 0);
+            else forward = forward.unit();
+            var side = WorldCombat.point(-forward.z(), 0, forward.x()), start = self.position();
+            var centre = WorldCombat.point(targetPoint.x(), start.y(), targetPoint.z());
+            var offset = start.minus(centre), lateral = offset.x() * side.x() + offset.z() * side.z();
+            // A circle enclosing both horizontal hitboxes also clears their corners for a diagonal approach.
+            var clearance = (self.width() + targetWidth) * Math.SQRT1_2 + 0.15;
+            var preferred = lateral < 0 ? -1 : 1, path: CombatPoint[] | null = null;
+            for (var attempt = 0; attempt < 2 && path === null; attempt++) {
+                var sign = attempt === 0 ? preferred : -preferred;
+                var flank = start.plus(side.scale(sign * clearance - lateral));
+                var exit = centre.plus(forward.scale(clearance + extra)).plus(side.scale(sign * clearance));
+                var candidate = [flank, exit], from = start, clear = true;
+                for (var segment = 0; segment < candidate.length && clear; segment++) {
+                    var delta = candidate[segment].minus(from), samples = Math.max(1, Math.ceil(delta.length() / 0.3));
+                    for (var sample = 1; sample <= samples; sample++) {
+                        var feet = from.plus(delta.scale(sample / samples)).minus(WorldCombat.point(0, self.height() / 2, 0));
+                        if (!scope.freeSpace(feet, self.width(), self.height())) { clear = false; break; }
+                    }
+                    from = candidate[segment];
+                }
+                if (clear) path = candidate;
+            }
+            if (path === null) { done(current); return; }
+            followSlip(current, path, 0, 0);
+        }
+        function followSlip(current: CombatAction, path: CombatPoint[], index: number, elapsed: number): void {
+            var scope = current.world(), self = scope.observe(current.actor());
+            if (self === null || elapsed >= 48) { done(current); return; }
+            var delta = path[index].minus(self.position()), distance = delta.length();
+            if (distance <= 0.05) {
+                if (++index >= path.length) { done(current); return; }
+                delta = path[index].minus(self.position()); distance = delta.length();
+            }
+            var moved = scope.displace(current.actor(), delta.unit().scale(Math.min(speed * 0.6, distance)));
+            var after = scope.observe(current.actor());
+            if (moved < p("acrobatics", "minimumMove", current) || after === null
+                || distance - path[index].minus(after.position()).length() < 0.01) { done(current); return; }
+            current.after(1, function (next: CombatAction) { followSlip(next, path, index, elapsed + 1); });
         }
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
@@ -50,10 +87,9 @@ namespace PokemonSkills {
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), bare ? acrobaticsBareText : acrobaticsStrikeText, [], 28);
                 if (landed && scope.valid(target)) {
                     scope.displace(target, direction.scale(push));
-                    slip(current, carry, 0);
-                    return;
                 }
-                slip(current, carry * 0.5, 0);
+                var obstacle = scope.valid(target) ? scope.observe(target) : before;
+                slip(current, obstacle ? obstacle.position() : point, obstacle ? obstacle.width() : 0, landed ? carry : carry * 0.5);
                 return;
             }
             var moved = scope.displace(actor, delta);
@@ -73,7 +109,7 @@ namespace PokemonSkills {
     define({
         id: "acrobatics",
         name: "杂技",
-        description: "腾身翻滚着撞向目标并在命中后穿过去；自身没有携带道具时，这一翻威力翻倍。",
+        description: "腾身翻滚着撞向目标；命中后身侧有空位时，从一侧绕过目标。自身没有携带道具时，这一翻威力翻倍。",
         uses: ["空手时的一次轻盈突进", "从对方身侧翻过去换位", "带着沉重道具时当作普通飞行撞击"],
         kind: "enemy",
         range: 3,

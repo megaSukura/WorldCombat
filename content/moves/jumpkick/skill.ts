@@ -49,6 +49,7 @@ namespace PokemonSkills {
 
     define({
         id: "jumpkick",
+        cooldownParameter: "recharge",
         name: "Jump Kick",
         description: "使出高高的腾空踢攻击对手。如果踢偏则自己会受到伤害。",
         uses: ["用一记便宜的腾空踢打出接触伤害", "把贴脸的对手踹开拉出身位", "给残血对手补上最后一脚"],

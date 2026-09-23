@@ -5,7 +5,7 @@
   "worldcombat.skill.mudslap.use.2": "低消耗的稳定小伤害",
   "worldcombat.skill.mudslap.description.0": "把泥团糊到目标脸上：造成 %1$s 点特殊伤害，并必定降低 %2$s 级命中。",
   "worldcombat.skill.mudslap.description.1": "泥团以 %1$s 的速度沿低弧线抛出，射程 %2$s 格、判定半径 %3$s 格，每刻最多朝目标修正 %4$s 度。",
-  "worldcombat.skill.mudslap.description.2": "泥在脸上停留 %1$s；厚泥配置当前为 %2$s。",
+  "worldcombat.skill.mudslap.description.2": "厚泥配置当前为 %1$s。",
   "worldcombat.skill.mudslap.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.mudslap.value.splat": "泥团威力",
   "worldcombat.skill.mudslap.value.blind": "命中下降",

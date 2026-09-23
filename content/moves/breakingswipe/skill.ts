@@ -65,6 +65,7 @@ namespace PokemonSkills {
 
     define({
         id: "breakingswipe",
+        cooldownParameter: "recharge",
         name: "Breaking Swipe",
         description: "身子不动，甩起坚韧的尾巴沿地面扫过一道宽扇：扇里每个敌人都各挨一记接触伤害、被掀开，并让它们的攻击下降 1 级；扫过的地面留下一道短时犁痕。广域式罩得更宽，聚扫式打得更重。",
         uses: ["一次压低围在身边的一群敌人", "把贴身的敌人一起掀开、拉开距离", "在窄地上用犁痕和掀开逼对手走位"],

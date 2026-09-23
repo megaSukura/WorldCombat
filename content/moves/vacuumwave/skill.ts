@@ -17,6 +17,7 @@ namespace PokemonSkills {
 
     define({
         id: vacuumwaveId,
+        cooldownParameter: "recharge",
         name: "Vacuum Wave",
         description: "Whirl your fists to send a wave of pure vacuum at the target. This move always goes first.",
         uses: ["远程先手扫过一条走廊", "把逃开的敌人抽回近身", "把散开的敌人扫成一堆再打"],
@@ -118,7 +119,7 @@ namespace PokemonSkills {
                             const bulk = Math.max(0.6, facts.width() * facts.height());
                             const resist = Math.max(0.35, Math.min(1.6, 1.15 / bulk));
                             drag = pull * resist;
-                            scope.displace(victim, toward.unit().scale(drag));
+                            if (scope.valid(victim)) scope.displace(victim, toward.unit().scale(drag));
                         }
                         WorldFeedback.emit(scope, vacuumwaveScene, 1, facts.position(),
                             { moment: "suck", target: ref, direction: [toward.x(), toward.y(), toward.z()],

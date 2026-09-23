@@ -98,7 +98,7 @@ namespace PokemonSkills {
                 rule: skullBashBraceRule, mode: "pool", capacity: 100000, fraction: Math.min(1, block),
                 minimumHealth: 0, charges: 0, linkRange: 0
             }, charge + 8);
-            if (String(self.domain()) === "cobblemon") NativeEffects.boost(world, self, "def", guard);
+            NativeEffects.boostWindow(world, self, { def: guard }, charge + 8, "world_combat:move/skullbash");
             WorldFeedback.emit(world, skullBashScene, 1, action.origin(), { moment: "brace", target: String(self.ref()), charge: charge }, charge + 12);
             WorldFeedback.text(world, skullBashAbove(action.origin()), skullBashBraceText, [], 24);
             action.after(charge, function (charging: CombatAction) {
@@ -134,10 +134,10 @@ namespace PokemonSkills {
                                 const landed = impact(current, hit, move.id(), blow, { contact: true }, "skullbash");
                                 const after = w.observe(target), dealt = Math.max(0, before - (after ? after.health() : before));
                                 if (landed) {
-                                    w.displace(target, direction.scale(push));
+                                    if (w.valid(target)) w.displace(target, direction.scale(push));
                                     WorldFeedback.emit(w, skullBashScene, 1, body.position(), { moment: pinned ? "slam" : "impact", target: String(target.ref()), intensity: 1 + Math.min(1, dealt / Math.max(1, body.maxHealth())) * 4 }, pinned ? 46 : 40);
                                     if (pinned) {
-                                        WorldEffects.apply(w, target, "rooted", {}, p("skullbash", "slamStun", current));
+                                        if (w.valid(target)) WorldEffects.apply(w, target, "rooted", {}, p("skullbash", "slamStun", current));
                                         const broke = skullBashBreach(w, body.position(), direction, Math.max(1, Math.round(p("skullbash", "slamBlocks", current))), p("skullbash", "breachTicks", current));
                                         WorldFeedback.text(w, skullBashAbove(body.position()), broke > 0 ? skullBashBreachText : skullBashSlamText, [], 32);
                                         sound(current, "minecraft:entity.iron_golem.attack");

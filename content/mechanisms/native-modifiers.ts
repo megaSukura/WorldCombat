@@ -4,6 +4,12 @@ namespace NativeModifiers {
         stages?: { [stat: string]: number }; stats?: { [stat: string]: number };
         types?: string[]; ability?: string; suppressAbility?: boolean; suppressItems?: boolean;
         moves?: { [slot: string]: string }; forbidden?: string[]; only?: string; categories?: string[];
+        /** Optional native application owning this temporary layer and its visible lifetime. */
+        carrier?: MobEffects.Anchor;
+        owner?: CombatStages.WindowOwner;
+        origin?: string;
+        /** Content contribution identity, separate from the effect's source actor. */
+        source?: string;
     }
     export interface Layers extends Options { moveKeys?: { [slot: string]: string }; }
     var stats = ["atk", "def", "spa", "spd", "spe"], stages = stats.concat(["accuracy", "evasion"]);
@@ -13,8 +19,12 @@ namespace NativeModifiers {
         var value: Options = JSON.parse(json);
         if (!value || Array.isArray(value)) throw new Error("Expected modifier object");
         Object.keys(value).forEach(function (key) {
-            if (["stages", "stats", "types", "ability", "suppressAbility", "suppressItems", "moves", "forbidden", "only", "categories"].indexOf(key) < 0) throw new Error("Unknown native modifier: " + key);
+            if (["stages", "stats", "types", "ability", "suppressAbility", "suppressItems", "moves", "forbidden", "only", "categories", "carrier", "source", "owner", "origin"].indexOf(key) < 0) throw new Error("Unknown native modifier: " + key);
         });
+        if (value.carrier && !MobEffects.validAnchor(value.carrier)) throw new Error("Invalid modifier carrier");
+        if (value.owner && !CombatStages.validOwner(value.owner)) throw new Error("Invalid modifier owner");
+        if (value.origin !== undefined && typeof value.origin !== "string") throw new Error("Invalid modifier origin");
+        if (value.source !== undefined && typeof value.source !== "string") throw new Error("Invalid modifier contribution source");
         ["stages", "stats"].forEach(function (field) {
             var values: { [key: string]: number } = (<any>value)[field] || {};
             Object.keys(values).forEach(function (key) {
@@ -46,6 +56,7 @@ namespace NativeModifiers {
         entries.sort(function (a, b) { return a.id() - b.id(); });
         entries.forEach(function (entry) {
             var value: Options = JSON.parse(String(entry.data()));
+            if ((value.carrier || value.owner) && !CombatStages.windowAlive(world, actor, value)) return;
             Object.keys(value.stages || {}).forEach(function (stat) { result.stages![stat] = (result.stages![stat] || 0) + value.stages![stat]; });
             Object.keys(value.stats || {}).forEach(function (stat) { result.stats![stat] = value.stats![stat]; });
             Object.keys(value.moves || {}).forEach(function (slot) { result.moves![slot] = value.moves![slot]; result.moveKeys![slot] = String(entry.id()); });
@@ -114,11 +125,26 @@ namespace NativeModifiers {
     }
     if (typeof CobblemonCombat !== "undefined") {
         WorldCombat.effect("cobblemon_world_combat:modifier", 1, 12000, "actor", normalize, EffectProtocols.unchanged);
-        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "start", function () {});
+        var watchCarrier = function (effect: CombatEffect, claim: boolean): void {
+            var state: Options = JSON.parse(effect.state());
+            if (!state.carrier && !state.owner) return;
+            var world = effect.world(), actor = effect.target();
+            if (!CombatStages.windowAlive(world, actor, state)) { effect.end(); return; }
+            if (claim && state.carrier) MobEffects.bind(world, actor, state.carrier.id);
+            effect.schedule("carrier", "carrier", 1, "{}");
+        };
+        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "start", function (effect) { watchCarrier(effect, true); });
+        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "carrier", function (effect) { watchCarrier(effect, false); });
+        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:stage_edit", CombatStages.editWindow);
+        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:stage_owner", CombatStages.attachOwner);
+        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:stage_adopt", CombatStages.adoptWindow);
+        WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:stage_transfer", function (effect) {
+            CombatStages.transferWindow(effect, "cobblemon_world_combat:modifier");
+        });
         WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:dispel", function (effect) { effect.end(); });
         WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:clear_stages", function (effect) {
             var state = JSON.parse(effect.state()); delete state.stages;
-            if (!Object.keys(state).length) effect.end(); else effect.state(normalize(JSON.stringify(state)));
+            if (!Object.keys(state).some(function (key) { return key !== "carrier" && key !== "source" && key !== "owner" && key !== "origin"; })) effect.end(); else effect.state(normalize(JSON.stringify(state)));
         });
         WorldCombat.effectHandler("cobblemon_world_combat:modifier", "operation:world_combat:extend", function (effect) { effect.remaining(Math.min(12000, effect.remaining() + JSON.parse(String(effect.input())).ticks)); });
     }

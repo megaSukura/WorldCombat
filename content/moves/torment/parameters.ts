@@ -72,7 +72,6 @@ namespace PokemonSkills {
 
     describe(tormentId, [
         { key: "description.0", values: ["reach", "tormentTicks"] },
-        { key: "description.1", values: ["irritation"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "manner.0", values: [], when: function (context) { return read(context.detail.values, ["manner"]) === 1; } },
         { key: "manner.1", values: [], when: function (context) { return read(context.detail.values, ["manner"]) !== 1; } },

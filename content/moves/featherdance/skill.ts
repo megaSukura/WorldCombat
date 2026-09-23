@@ -43,6 +43,7 @@ namespace PokemonSkills {
 
     define({
         id: featherdanceId,
+        cooldownParameter: "recharge",
         name: "羽毛舞",
         description: "撒出一团会飘的羽绒罩住对手，大幅降低它的攻击；落地后那团绒雾还会留一阵，谁走进去谁被覆上一层。",
         uses: ["削弱一个靠物攻输出的对手", "用一小片绒雾封住必经的门口", "在队友被追时替它压住近战威胁"],

@@ -4,7 +4,6 @@
   "worldcombat.skill.slackoff.use.1": "Slack off in a gap the foe cannot reach",
   "worldcombat.skill.slackoff.use.2": "Trade the next stretch of mobility for health now",
   "worldcombat.skill.slackoff.description.0": "Flops down and restores %1$s of maximum health at once; then enters a %2$s Loafing stretch with lowered movement speed.",
-  "worldcombat.skill.slackoff.description.1": "The flop kicks up about %1$s points of dust and about %2$s sleepy bubbles drift up while loafing, heavier on a heavier body.",
   "worldcombat.skill.slackoff.description.2": "Wind-up %1$s and getting-up recovery %2$s, shortened by Speed; the shortest wind-up of the family.",
   "worldcombat.skill.slackoff.stance.deep": "Deep nap: +0.06 healing and a 1.4x Loafing stretch - a fuller restore, but a longer spell of heavy feet.",
   "worldcombat.skill.slackoff.stance.doze": "Doze: standard healing with a shorter Loafing stretch - back on its feet in a few breaths, for topping up in passing.",

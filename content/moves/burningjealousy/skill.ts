@@ -16,7 +16,8 @@
  */
 namespace PokemonSkills {
     define({
-        id: burningjealousyId, name: "妒火",
+        id: burningjealousyId,
+        cooldownParameter: "recharge", name: "妒火",
         description: "从身前窜出一团妒绿火舌扫过扇形：范围内的敌人受到特殊伤害；此刻正带着正面能力等级的目标会被妒火咬住、当场灼伤，而且它涨高的级数越多，这一击越重、烧得越久。",
         uses: ["惩罚刚强化过的对手", "一次扫过身前挤成一排的敌人", "用灼伤压制正在铺垫的强化手"],
         kind: "enemy", range: 5, maxRange: 8, prepare: 7, active: 1, recover: 8, cooldown: 32,

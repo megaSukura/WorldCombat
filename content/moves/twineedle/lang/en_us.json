@@ -2,7 +2,7 @@
   "worldcombat.skill.twineedle.summary": "Raise two needles and fire them one after the other: the first opens the wound and the second drives into that same wound, so it carries poison more easily. Cross mode sends them in from both sides for a bigger second-hit bonus, but each needle is lighter and they are spaced further apart.",
   "worldcombat.skill.twineedle.description.0": "Power per needle %1$s (physical), range %2$s, flight speed %3$s, hit radius %4$s; one cast settles twice.",
   "worldcombat.skill.twineedle.description.1": "Gap between needles %1$s; each needle rolls poison at %2$s, and once the first lands the second gains +%3$s; poison lasts %4$s.",
-  "worldcombat.skill.twineedle.description.2": "In the crossing variant, the needles are %1$s blocks apart. Wind-up: %3$s. Recovery: %4$s. Cooldown: %5$s.",
+  "worldcombat.skill.twineedle.description.2": "In the crossing variant, the needles are %1$s blocks apart. Wind-up: %2$s. Recovery: %3$s. Cooldown: %4$s.",
   "worldcombat.skill.twineedle.cross.on": "Cross needles: the second gains a x1.6 wound bonus and the two close in from both sides, but each needle is x0.9 and the gap grows by 2.",
   "worldcombat.skill.twineedle.cross.off": "Straight needles: both fly along one line with a shorter gap and x1.1 power each, but the second gets no flanking bonus.",
   "worldcombat.skill.twineedle.timing": "Range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

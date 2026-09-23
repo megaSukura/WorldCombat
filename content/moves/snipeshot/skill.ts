@@ -21,6 +21,7 @@ namespace PokemonSkills {
 
     define({
         id: "snipeshot",
+        cooldownParameter: "recharge",
         name: "Snipe Shot",
         description: "锁定一名选定的对手，射出一发会追踪、会穿过中间其他生物的水弹：只有被锁定的那只挨到伤害，别的身影与前排都引不开它。原生高暴击；屏息狙击攻更远更重、出手更慢。",
         uses: ["越过前排直取选定的后排目标", "在人群中只打指定的一只，不被别的身影引偏", "用超远射程先手开火"],

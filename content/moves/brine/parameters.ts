@@ -164,7 +164,7 @@ namespace PokemonSkills {
 
     describe(brineId, [
         { key: "description.0", values: ["jet"] },
-        { key: "description.1", values: ["reach", "globSpeed", "drops"] },
+        { key: "description.1", values: ["reach", "globSpeed"] },
         { key: "description.2", values: ["slickRadius", "slickTicks", "soakTicks"] },
         { key: "press.on", values: [], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },

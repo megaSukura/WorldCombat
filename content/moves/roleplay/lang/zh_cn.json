@@ -5,7 +5,6 @@
   "worldcombat.skill.roleplay.use.2": "开战前先换成更合适的特性",
   "worldcombat.skill.roleplay.description.0": "在 %1$s 格内描摹对手的特性，起手 %2$s 秒。",
   "worldcombat.skill.roleplay.description.1": "披上的临时特性维持 %1$s 秒，到期自动还原自己原本的特性。",
-  "worldcombat.skill.roleplay.description.2": "描摹时绕对手画出约 %1$s 条线条。",
   "worldcombat.skill.roleplay.dwell.0": "深扮：扮演时长 ×1.7、冷却 +18 刻，适合把一份好特性用满一段战斗。",
   "worldcombat.skill.roleplay.dwell.1": "浅饰：扮演时长 ×0.6、冷却 -10 刻，适合频繁改扮、跟着对手换。",
   "worldcombat.skill.roleplay.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

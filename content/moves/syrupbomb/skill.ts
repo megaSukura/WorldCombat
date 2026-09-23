@@ -108,6 +108,7 @@ namespace PokemonSkills {
 
     define({
         id: "syrupbomb",
+        cooldownParameter: "wait",
         name: "糖浆炸弹",
         description: "抛出一颗粘稠的麦芽糖炸弹，落地炸开一大团糖浆；被裹住的敌人连续三阵各掉一级速度，落点留下一片会黏脚的粘糖洼。炸弹走抛物线，可以被走位躲开。",
         uses: ["把一群冲上来的敌人一起拖慢", "封住一条通道", "削弱高速目标"],

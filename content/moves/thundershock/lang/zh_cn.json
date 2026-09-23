@@ -2,7 +2,7 @@
   "worldcombat.skill.thundershock.summary": "一道贴身短促的电刺，瞬间扎上去。射程很近、几乎不占节拍；对已经麻痹的目标更狠，并把麻痹续长一截。电属性对麻痹免疫。",
   "worldcombat.skill.thundershock.description.0": "电刺沿直线打到 %2$s 格内的目标，威力 %1$s，判定半径 %3$s；中间必须有一条没有被挡住的视线。",
   "worldcombat.skill.thundershock.description.1": "命中后 %1$s 概率麻住目标 %2$s；若目标已经麻住，改为把麻痹补到至少 %3$s，并让这一刺更狠。",
-  "worldcombat.skill.thundershock.description.2": "一次迸出 %1$s 条电弧；起手 %2$s，冷却 %3$s。",
+  "worldcombat.skill.thundershock.description.2": "起手 %1$s，冷却 %2$s。",
   "worldcombat.skill.thundershock.timing": "需要通视：射程 %1$s，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.thundershock.growth.0": "%1$s 级起电刺威力增至 %2$s。",
   "worldcombat.skill.thundershock.growth.1": "%1$s 级起麻痹几率升至 %2$s、续麻延长到 %3$s。",

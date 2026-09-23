@@ -102,7 +102,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(25).times(0.3))
                 .clamp(8, 36).round(),
             "酸滴数", {
-                unit: "滴",
+                unit: "滴", visible: false,
                 description: "泼出的酸滴数量，也驱动表现的密度；特攻与等级越高泼得越密。"
             }),
         tempo: seconds(
@@ -122,7 +122,7 @@ namespace PokemonSkills {
 
     describe("acid", [
         { key: "description.0", values: ["core"] },
-        { key: "description.1", values: ["poolRadius", "drops"] },
+        { key: "description.1", values: ["poolRadius"] },
         { key: "description.2", values: ["pool", "poolTicks", "poolPulse"] },
         { key: "description.3", values: ["sunderChance", "sunderStage", "pref.corrode"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

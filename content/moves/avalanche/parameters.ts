@@ -4,7 +4,7 @@
  * 原生事实：Ice／物理／威力 60／命中 100／PP 10／接触／优先度 −4；
  *   「如果受到对手的招式攻击，就能给予该对手 2 倍威力的攻击」（Cobblemon 1.8）。
  *
- * 翻译：即时战斗里没有先后手，本招把「受到对手的招式攻击」落成一条真实的**积伤**：任何战斗者只要被对手
+ * 翻译：即时战斗里没有先后手，本招把「受到对手的招式攻击」落成一条真实的**积伤**：当前配招带雪崩的个体被对手
  *   打到，就挂上共享身份 `world_combat:status/battered`（被打懵），可叠到 5 层；雪崩命中时若自己带着它，
  *   这一记翻倍，并且**层数越厚，崩下来的范围与击退越大**——被压得越久，雪堆得越沉。落点在冰面上留下
  *   一层短暂的积雪（地形租借），是这个念头在世界里留下的东西。
@@ -137,7 +137,7 @@ namespace PokemonSkills {
 
     describe(avalancheId, [
         { key: "description.0", values: ["collapse"] },
-        { key: "description.1", values: ["reach", "step", "radius", "push", "shards", "frost"] },
+        { key: "description.1", values: ["reach", "step", "radius", "push", "frost"] },
         { key: "deepdrift.on", values: [], when: function (context) { return read(context.detail.values, ["deepdrift"]) === true; } },
         { key: "deepdrift.off", values: [], when: function (context) { return read(context.detail.values, ["deepdrift"]) !== true; } },
         { key: "timing", values: ["range", "brace", "settle", "pp", "recharge"] },
@@ -145,7 +145,7 @@ namespace PokemonSkills {
         { key: "growth.1", values: ["tier.1.level", "tier.1.collapse", "tier.1.radius"] }
     ]);
 
-    // 记账：任何战斗者被对手打到，就叠一层「被打懵」；雪崩命中时它决定翻倍与规模。
+    // 当前有效配招带本招时积伤；其他域由内容显式授予本单元载具后启用相同的续积累。
     WorldCombat.on("world_combat:move_avalanche/battered", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
         const world = event.world(), victim = event.target();
         if (victim === null || !world.valid(victim)) return;
@@ -153,6 +153,8 @@ namespace PokemonSkills {
         if (!(data.actual > 0)) return;
         const source = event.actor();
         if (source !== null && String(source.key()) === String(victim.key())) return;
+        if (String(victim.domain()) === "cobblemon" ? !NativeLoadout.hasEquipped(world, victim, avalancheId)
+            : MobEffects.read(world, victim, avalancheEffect) === null) return;
         const stacks = Math.min(avalancheMaxStacks, avalancheStacks(world, victim) + 1);
         CombatStatus.apply(world, victim, avalancheStatus, avalancheEffect, avalancheBruise, stacks - 1, { unique: true });
     });

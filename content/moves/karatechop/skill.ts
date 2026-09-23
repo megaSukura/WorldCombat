@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: karatechopId,
+        cooldownParameter: "recharge",
         name: "Karate Chop",
         description: "The target is attacked with a sharp chop. Critical hits land more easily.",
         uses: ["抬手就是一记手刀，没有起手", "只打贴身的一个目标，冷却极短", "刀口专找护甲的缝，暴击率高一档"],

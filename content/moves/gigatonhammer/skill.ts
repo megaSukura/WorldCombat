@@ -39,6 +39,7 @@ namespace PokemonSkills {
 
     define({
         id: gigatonhammerId,
+        cooldownParameter: "recharge",
         name: "Gigaton Hammer",
         description: "The user swings its whole body around to attack with its huge hammer. This move can't be used twice in a row.",
         uses: ["旋身蓄力后把巨锤抡下", "用地面冲击波把沿线敌人一起顶开", "被围时用横扫式扫过一圈"],
@@ -120,7 +121,7 @@ namespace PokemonSkills {
                         const at = world.observe(victim);
                         const point = at === null ? facts.position() : at.position();
                         const outward = WorldCombat.point(point.x() - origin.x(), 0, point.z() - origin.z());
-                        if (outward.length() > 0.01) world.displace(victim, outward.unit().scale(push));
+                        if (world.valid(victim) && outward.length() > 0.01) world.displace(victim, outward.unit().scale(push));
                         WorldFeedback.emit(world, gigatonhammerScene, 1, point,
                             { moment: "hit", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity }, 26);
                     });

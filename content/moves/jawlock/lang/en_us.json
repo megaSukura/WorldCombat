@@ -5,7 +5,7 @@
   "worldcombat.skill.jawlock.use.2": "Stop a foe trying to flee or charge",
   "worldcombat.skill.jawlock.description.0": "The bite deals about %1$s damage and reaches a target within %2$s blocks; the target's defence, type and crit are settled on the hit.",
   "worldcombat.skill.jawlock.description.1": "Both are pinned for up to %1$s; the lock breaks if the pair separates beyond %2$s blocks or either one falls.",
-  "worldcombat.skill.jawlock.description.2": "You step up to %1$s blocks to bite, throwing about %2$s chips; the caster is pinned too.",
+  "worldcombat.skill.jawlock.description.2": "You step up to %1$s blocks to bite; the caster is pinned too.",
   "worldcombat.skill.jawlock.option.on": "Vise: lock duration x1.25 and grip +0.4 blocks, much harder to tear off, but bite x0.9 and cooldown +8 ticks.",
   "worldcombat.skill.jawlock.option.off": "Snap: bite x1.1 at the base cooldown and a quicker hand, but the lock holds for less time.",
   "worldcombat.skill.jawlock.timing": "Bite reach %1$s blocks; windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s from commit. While locked, neither the caster nor the target can move.",

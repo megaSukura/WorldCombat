@@ -71,7 +71,7 @@ namespace PokemonSkills {
     describe(lifedewId, [
         { key: "description.0", values: ["heal"] },
         { key: "description.1", values: ["radius", "spread"] },
-        { key: "description.2", values: ["motes", "tempo", "aftercast", "wait"] },
+        { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "stance.surge", values: [], when: function (context) { return read(context.detail.values, ["surge"]) === true; } },
         { key: "stance.plain", values: [], when: function (context) { return read(context.detail.values, ["surge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

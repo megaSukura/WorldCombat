@@ -4,7 +4,6 @@
   "worldcombat.skill.copycat.use.1": "Copy an ally's buff or setup",
   "worldcombat.skill.copycat.use.2": "Chain onto the move someone just teed up",
   "worldcombat.skill.copycat.description.0": "The borrowed move reaches up to %1$s blocks; only moves used within %2$s are remembered.",
-  "worldcombat.skill.copycat.description.1": "About %1$s echo rings spread from the feet, growing with Special Attack and driving the layers.",
   "worldcombat.skill.copycat.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.copycat.deep.on": "Deep echo: a longer memory window and denser echoes, but a slower windup and a longer cooldown.",
   "worldcombat.skill.copycat.deep.off": "Shallow echo: quick and cheap, but it only catches the sound that just rang.",

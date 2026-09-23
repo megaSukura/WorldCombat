@@ -32,6 +32,7 @@ namespace PokemonSkills {
 
     define({
         id: "heatwave",
+        cooldownParameter: "recharge",
         name: "Heat Wave",
         description: "The user attacks by exhaling hot breath on opposing Pokemon. This may also leave them with a burn.",
         uses: ["一次灼到身前扇形里的几个敌人", "把冲上来的人整片推离原位", "在烈日下把热风推到最烈", "制造一道能读出范围的扇形压制"],

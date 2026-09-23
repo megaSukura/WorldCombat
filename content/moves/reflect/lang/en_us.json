@@ -5,7 +5,6 @@
   "worldcombat.skill.reflect.use.2": "Raise the wall before the foe's physical push",
   "worldcombat.skill.reflect.description.0": "The plates cover the caster and allies within %2$s blocks for %1$s.",
   "worldcombat.skill.reflect.description.1": "Physical damage taken is cut by %1$s; in the mirror form, part of a blocked melee blow (%2$s) is knocked back at the attacker.",
-  "worldcombat.skill.reflect.description.2": "The wall is built from about %1$s hard-light plates and moves with the caster.",
   "worldcombat.skill.reflect.description.3": "Raising it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the form note for the mirror/bastion trade-off.",
   "worldcombat.skill.reflect.form.0": "Mirror: cut x0.8, melee rebound on (part of the blocked damage returns to the attacker, heavier with higher Attack), -2 ticks wind-up, x0.9 cooldown - a bit less mitigation for a counter and a faster raise.",
   "worldcombat.skill.reflect.form.1": "Bastion: cut x1.18, no rebound, +3 ticks wind-up, x1.12 cooldown - thicker cover at a slower raise and longer cooldown.",

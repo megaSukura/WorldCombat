@@ -92,6 +92,7 @@ namespace PokemonSkills {
 
     define({
         id: "minimize",
+        cooldownParameter: "wait",
         name: "变小",
         description: "蜷缩身体显得很小，大幅提高自己的闪避率；但明显更大的身体踩下来时挨得更重。",
         uses: ["被围住前先缩起来，让来袭的攻击落空", "在大型对手脚下求生，提防被一脚踩实", "拉锯里用缩小窗口换几秒安全"],

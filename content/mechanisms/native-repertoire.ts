@@ -45,6 +45,8 @@ namespace NativeRepertoire {
         active?: number;
         recover?: number;
         cooldown?: number;
+        /** Authored parameter behind cooldown, for a shared final-duration explanation. Execution is finalized by the commit hook. */
+        cooldownParameter?: string;
         style: string;
         defaults: any;
         fields: Field[];

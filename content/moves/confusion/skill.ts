@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: confusionId,
+        cooldownParameter: "recharge",
         name: "Confusion",
         description: "向对手发射一道微弱的念力：念弹贴地直线窜出，命中造成特殊伤害，并可能把目标搅得恍惚。恍惚期间目标出手会失手，每次失手还会被念力再敲一下。",
         uses: ["便宜快速的远程骚扰", "用低伤害反复磨血", "压制喜欢连续出手的对手"],

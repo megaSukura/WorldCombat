@@ -20,6 +20,7 @@ namespace PokemonSkills {
 
     define({
         id: "spiritbreak",
+        cooldownParameter: "wait",
         name: "Spirit Break",
         description: "把一股压人的妖精气势收拢到身上，低头撞向对手：命中时造成接触物理伤害、把对手的特攻打掉，并把人推开；冲击点炸开一圈妖精光环。碎魂式更重、掉特攻更多、推得更远，但冲得更短、回气更久。",
         uses: ["贴身压制一个法系输出", "把对手从阵型里撞开、打散它的特攻", "在狭窄空间里用冲撞抢身位"],

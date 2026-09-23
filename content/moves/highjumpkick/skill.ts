@@ -46,6 +46,7 @@ namespace PokemonSkills {
 
     define({
         id: "highjumpkick",
+        cooldownParameter: "recharge",
         name: "High Jump Kick",
         description: "跳起后用膝盖撞对手进行攻击。如果撞偏则自己会受到伤害。",
         uses: ["用全族最重的一记接触伤害砸穿硬目标", "从上方压制一只贴脸的对手", "以一次高空跃击换取击退与身位"],

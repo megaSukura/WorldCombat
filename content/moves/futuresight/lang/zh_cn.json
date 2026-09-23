@@ -5,7 +5,7 @@
   "worldcombat.skill.futuresight.use.1": "逼对手在延迟里分心应对",
   "worldcombat.skill.futuresight.use.2": "在安全距离上布置一次必至的重击",
   "worldcombat.skill.futuresight.description.0": "念力在 %2$s 后落下，造成 %1$s 基础威力的特殊伤害。",
-  "worldcombat.skill.futuresight.description.1": "念力悬在对手头顶 %1$s 格、可锁定 %2$s 格内的目标；落下罩住半径 %3$s 格。",
+  "worldcombat.skill.futuresight.description.1": "念力悬在对手头顶，可锁定 %1$s 格内的目标。",
   "worldcombat.skill.futuresight.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.futuresight.prolonged.on": "久候：兑现延迟 ×1.4、威力 ×1.2，重击更重，但对手有更长时间治疗、加防或拉开。",
   "worldcombat.skill.futuresight.prolonged.off": "速报：延迟 ×0.75、威力 ×0.85，来得更快、更难反应。",

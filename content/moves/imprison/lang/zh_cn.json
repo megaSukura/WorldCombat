@@ -23,7 +23,7 @@
   "worldcombat.skill.imprison.preference.ai.maxChase.help": "只在威胁离自己这么远以内时考虑立印；调小只在贴身时封锁，调大愿意为更远的对手铺领域。",
   "worldcombat.skill.imprison.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.imprison.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去立印。",
-  "worldcombat.skill.imprison.growth.0": "%1$s 级起：领域 %2$s 格、纹路 %3$s 道。",
+  "worldcombat.skill.imprison.growth.0": "%1$s 级起：领域 %2$s 格。",
   "world_combat.move.imprison.text.seal": "封印展开 %1$s 秒",
   "world_combat.move.imprison.text.block": "%1$s 被封印顶回",
   "world_combat.move.imprison.text.fade": "封印散去",

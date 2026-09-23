@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: "headbutt",
+        cooldownParameter: "recharge",
         name: "Headbutt",
         description: "The user sticks out its head and attacks by charging straight into the target. This may also make the target flinch.",
         uses: ["短冷却的连续近身压制", "趁对手刚被顶懵时补一记更狠的", "低消耗地把对手顶离掩体"],

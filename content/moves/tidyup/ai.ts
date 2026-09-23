@@ -26,7 +26,7 @@ namespace PokemonSkills {
             if (CompanionBehavior.status(context, self, "tidyup")) return false;
             const hazards = CompanionBehavior.fact<number>(context, "world_combat:move_tidyup/hazards", self);
             if (hazards !== null && hazards > 0) return true;
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             if (CompanionBehavior.distance(self.point, threat.point) > CompanionBehavior.ai<number>(capability, "maxChase", 14)) return false;
             return CompanionBehavior.distance(self.point, threat.point) >= CompanionBehavior.ai<number>(capability, "minGap", 2);
         },

@@ -71,6 +71,7 @@ namespace PokemonSkills {
 
     define({
         id: "guardsplit",
+        cooldownParameter: "recharge",
         name: "防守平分",
         description: "利用超能力把双方防御与特防的数值相加再平分一段时间：厚的被削薄、薄的被加厚，两人扛在同一条线上。",
         uses: ["把自己的薄防抬到对手的厚度", "把对手的厚壁削到自己的水平", "在对手防御远高于自己时抹平差距"],

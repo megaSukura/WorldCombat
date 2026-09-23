@@ -6,7 +6,7 @@
   "worldcombat.skill.rollingkick.description.0": "The rolling kick deals %1$s physical damage and hurls the target %2$s blocks along the kick direction.",
   "worldcombat.skill.rollingkick.description.1": "It closes %1$s blocks at %2$s blocks per tick; the direction is locked when the spin starts.",
   "worldcombat.skill.rollingkick.description.2": "The target is lifted %1$s blocks off the ground; a %2$s chance to flinch for %3$s.",
-  "worldcombat.skill.rollingkick.description.3": "lift-off form is currently %2$s.",
+  "worldcombat.skill.rollingkick.description.3": "lift-off form is currently %1$s.",
   "worldcombat.skill.rollingkick.timing": "Range %1$s blocks, spin-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.rollingkick.growth.0": "From level %1$s the kick rises to %2$s and the launch to %3$s blocks.",
   "worldcombat.skill.rollingkick.value.kick": "Kick power",

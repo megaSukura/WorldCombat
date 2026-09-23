@@ -9,7 +9,7 @@
   "worldcombat.skill.sonicboom.reverb.off": "单声式：一声了事，冷却与起手都更短；第二声的覆盖换来的是更长的冷却和更久的定身。",
   "worldcombat.skill.sonicboom.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.sonicboom.growth.0": "%1$s 级起裂痕长度升至 %2$s 格。",
-  "worldcombat.skill.sonicboom.growth.1": "%1$s 级起裂痕长度升至 %2$s 格、碎点 %3$s 点。",
+  "worldcombat.skill.sonicboom.growth.1": "%1$s 级起裂痕长度升至 %2$s 格。",
   "worldcombat.skill.sonicboom.value.damage": "固定伤害",
   "worldcombat.skill.sonicboom.value.reach": "裂痕长度",
   "worldcombat.skill.sonicboom.value.boomRadius": "裂痕宽度",

@@ -4,7 +4,7 @@
   "worldcombat.skill.powerwhip.use.1": "Open at mid range against a cluster of foes",
   "worldcombat.skill.powerwhip.use.2": "Whirl a full circle when surrounded",
   "worldcombat.skill.powerwhip.description.0": "The fan deals about %1$s contact damage, reaching %2$s blocks over a %3$s degree span; the filled fan on screen is the hit area.",
-  "worldcombat.skill.powerwhip.description.1": "One fan settles up to %1$s targets at once, shoving each %2$s blocks and shedding about %3$s leaves; heavier targets are pushed less.",
+  "worldcombat.skill.powerwhip.description.1": "One fan settles up to %1$s targets at once, shoving each %2$s blocks; heavier targets are pushed less.",
   "worldcombat.skill.powerwhip.extend.on": "Long-lash form: reaches farther and shoves the few it catches harder, but the span is narrow and only covers the line ahead.",
   "worldcombat.skill.powerwhip.extend.off": "Whirl form: a full circle around the user that covers every side at once, but shorter reach, slightly less power and a longer recovery and cooldown.",
   "worldcombat.skill.powerwhip.timing": "Reach within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

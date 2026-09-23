@@ -5,7 +5,6 @@
   "worldcombat.skill.reflect.use.2": "在对方物理输出前先一步立壁",
   "worldcombat.skill.reflect.description.0": "硬光板罩住自己与半径 %2$s 格内的队友 %1$s。",
   "worldcombat.skill.reflect.description.1": "期间受到的物理伤害被削掉 %1$s；镜面形态下，近身物理被挡下的那份按 %2$s 弹回攻击者。",
-  "worldcombat.skill.reflect.description.2": "护壁由约 %1$s 块硬光板拼成，随施法者移动而移动。",
   "worldcombat.skill.reflect.description.3": "立壁要 %1$s，收势 %2$s，冷却 %3$s。镜面／坚壁的取舍见形态说明。",
   "worldcombat.skill.reflect.form.0": "镜面：减伤 ×0.8、近身反弹开启（被挡下的部分按比例弹回攻击者，攻击越高弹得越重），起手 −2 刻、冷却 ×0.9——用一点减伤换反击与更快立壁。",
   "worldcombat.skill.reflect.form.1": "坚壁：减伤 ×1.18、不反弹，起手 +3 刻、冷却 ×1.12——护得更厚，代价是起手慢、冷却长。",

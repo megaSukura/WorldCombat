@@ -23,7 +23,7 @@
   "worldcombat.skill.imprison.preference.ai.maxChase.help": "The partner only considers the seal while a threat is this close; smaller keeps it for melee, larger raises it for foes further out.",
   "worldcombat.skill.imprison.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.imprison.preference.ai.leaveStation.help": "When on, the partner will also leave its post to raise the seal.",
-  "worldcombat.skill.imprison.growth.0": "From level %1$s: domain %2$s blocks, %3$s runes.",
+  "worldcombat.skill.imprison.growth.0": "From level %1$s: domain %2$s blocks.",
   "world_combat.move.imprison.text.seal": "Seal spreads %1$s s",
   "world_combat.move.imprison.text.block": "%1$s turned back by the seal",
   "world_combat.move.imprison.text.fade": "The seal fades",

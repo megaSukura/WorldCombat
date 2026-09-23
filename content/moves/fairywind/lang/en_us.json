@@ -5,7 +5,7 @@
   "worldcombat.skill.fairywind.use.2": "Open from range and push a target off cover",
   "worldcombat.skill.fairywind.description.0": "Each swept foe takes about %1$s power; the wind pierces up to %2$s more; defence, type matchup and crits are settled on impact.",
   "worldcombat.skill.fairywind.description.1": "Range %1$s blocks, the wind travels at %2$s blocks/tick, with a %3$s block swirl cross-section.",
-  "worldcombat.skill.fairywind.description.2": "A swept foe is flung %1$s blocks along the spin; the gust carries %2$s puffs of fae dust.",
+  "worldcombat.skill.fairywind.description.2": "A swept foe is flung %1$s blocks along the spin.",
   "worldcombat.skill.fairywind.description.3": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.fairywind.wide.on": "Wide: cross-section x1.5, pierce +1, fling x1.4, but power x0.85, wind-up +1 tick, cooldown +5 ticks - a wider, looser sweep.",
   "worldcombat.skill.fairywind.wide.off": "Skimming: power x1.15, faster throw and shorter cooldown, but a narrow cross-section, less pierce and a weaker fling - a thinner, sharper line.",

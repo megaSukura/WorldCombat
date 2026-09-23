@@ -119,7 +119,7 @@ namespace PokemonSkills {
     describe("bittermalice", [
         { key: "description.0", values: ["curse"] },
         { key: "description.1", values: ["reach", "velocity", "radius"] },
-        { key: "description.2", values: ["stages", "motes"] },
+        { key: "description.2", values: ["stages"] },
         { key: "description.3", values: [] },
         { key: "grudge.on", values: [], when: function (context) { return read(context.detail.values, ["grudge"]) === true; } },
         { key: "grudge.off", values: [], when: function (context) { return read(context.detail.values, ["grudge"]) !== true; } },

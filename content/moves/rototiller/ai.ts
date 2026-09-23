@@ -2,7 +2,7 @@
  * 耕地 的伙伴 AI 用途：这是这招自己的一套出手计划——把土翻在草属性伙伴脚下。
  *
  * 什么局面有意义：场上有一个可见的威胁、且在 ai.maxChase 内；附近至少站着一个还没被这块土喂养过的
- *   草属性（自己也算）。没有威胁时只在整备命令（驻守／自主／工作）下把身下的土翻一遍。
+ *   草属性（自己也算）。有交战需求时才准备翻土。
  * 对谁出手：离自己最近的、还没沾上黑土的草属性；自己也是草属性时优先翻自己脚下的土。
  * 够不到怎么办：`target` 把施放点定在那个草属性身上，共享任务把身体带到 reach 内再下耙。
  * 放完之后：那块土留下来，草属性站上去就变强；身上还带着 `world_combat:status/plowed` 时不重复翻。
@@ -46,7 +46,7 @@ namespace CompanionBehavior {
         available: function (context, item, _purpose, _target) {
             if (context.facts.mounted) return false;
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return context.facts.intent === "hold" || context.facts.intent === "autonomous" || context.facts.intent === "work";
+            if (!threat) return false;
             if (distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
             return !!rototillerPick(context, item);
         },

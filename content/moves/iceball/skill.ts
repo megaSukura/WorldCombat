@@ -41,6 +41,7 @@ namespace PokemonSkills {
 
     define({
         id: iceballId,
+        cooldownParameter: "recharge",
         name: "Ice Ball",
         description: "The user attacks the target for five turns. The move's power increases each time it hits.",
         uses: ["抛出一颗会自己回头的冰球", "每撞中一趟冻厚一层，下一趟更重", "碎开时在落点留下一小片冰面"],

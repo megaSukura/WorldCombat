@@ -6,7 +6,7 @@
   "worldcombat.skill.meteorbeam.description.0": "The body struck head-on takes %1$s special damage, and every other enemy in the landing ring takes %2$s.",
   "worldcombat.skill.meteorbeam.description.1": "Gathering takes %1$s of standing still; when it completes Special Attack rises by %2$s stages, and that gain stays after the throw.",
   "worldcombat.skill.meteorbeam.description.2": "The meteor is thrown at %1$s blocks per tick on a ballistic arc; the landing radius is %2$s blocks and its flight hitbox is %3$s blocks across.",
-  "worldcombat.skill.meteorbeam.description.3": "Enemies in the landing radius are shoved %1$s blocks; gathering and impact throw out about %2$s motes of star; the scorched ground grows back after %3$s.",
+  "worldcombat.skill.meteorbeam.description.3": "Enemies in the landing radius are shoved %1$s blocks; the scorched ground grows back after %2$s.",
   "worldcombat.skill.meteorbeam.stance.deep": "Deep space: the gather grants one more Special Attack stage (+2 total) and a larger landing, at the cost of a longer gather, a lighter direct hit and a longer cooldown.",
   "worldcombat.skill.meteorbeam.stance.light": "Quick throw: a shorter gather and a heavier direct hit, but only +1 Special Attack stage and a smaller landing.",
   "worldcombat.skill.meteorbeam.timing": "Cast within %1$s blocks; after %2$s it consumes %4$s PP, recovers for %3$s, and cools down for %5$s from commit.",

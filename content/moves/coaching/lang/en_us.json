@@ -5,7 +5,7 @@
   "worldcombat.skill.coaching.use.2": "Turn the ally guarding a doorway into a wall",
   "worldcombat.skill.coaching.description.0": "Coaching raises the target's Attack by %1$s stages and Defense by %2$s stages, lasting about %3$s s.",
   "worldcombat.skill.coaching.description.1": "Allies within %1$s blocks of the target learn too; the coach must get within %2$s blocks to pick them.",
-  "worldcombat.skill.coaching.description.2": "About %1$s lesson marks appear; telegraph %2$s, recovery %3$s, cooldown %4$s.",
+  "worldcombat.skill.coaching.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.coaching.drill.intense": "Intense lesson: it lasts longer but the lesson spreads less and the cooldown is longer.",
   "worldcombat.skill.coaching.drill.quick": "Quick order: it spreads wider and fires sooner, but the lesson is shorter.",
   "worldcombat.skill.coaching.timing": "Ally-targeted move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",

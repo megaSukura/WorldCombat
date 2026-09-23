@@ -50,6 +50,7 @@ namespace PokemonSkills {
 
     define({
         id: "superpower",
+        cooldownParameter: "recharge",
         name: "Superpower",
         description: "The user attacks the target with great power. This also lowers the user's Attack and Defense stats.",
         uses: ["贴身用一记最重的单发把对手打残", "把对手从阵地里撞开、在地面留下坑", "震荡式一次震开挤在落点周围的一群人"],
@@ -159,7 +160,7 @@ namespace PokemonSkills {
 
             /** 沿冲击方向把目标撞开：物攻给推力、目标体重抵掉一部分。 */
             function joltAway(scope: CombatWorld, victim: CombatActor, at: CombatPoint, from: CombatPoint, distance: number): void {
-                if (distance <= 0.05) return;
+                if (distance <= 0.05 || !scope.valid(victim)) return;
                 const away = WorldCombat.point(at.x() - from.x(), 0, at.z() - from.z());
                 const dir = away.length() < 0.05 ? WorldCombat.point(at.x() - from.x(), 0, at.z() - from.z()) : away.unit();
                 if (dir.length() < 0.05) return;

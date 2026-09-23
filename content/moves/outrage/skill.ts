@@ -124,7 +124,7 @@ namespace PokemonSkills {
             });
         if (interceptor !== null && hurt(current, interceptor, outrageId, power, { damage: damageSpec(outrageId, "claw"), contact: true })) {
             struck = true; hitRef = String((interceptor as CombatActor).ref());
-            world.displace(interceptor, direction.scale(push));
+            if (world.valid(interceptor)) world.displace(interceptor, direction.scale(push));
         }
 
         if (struck) {
@@ -153,6 +153,7 @@ namespace PokemonSkills {
 
     define({
         id: outrageId,
+        cooldownParameter: "recharge",
         name: "Outrage",
         description: "锁定一个对手，低头一次一次撞过去：每撞造成接触伤害并把目标顶开，最后一撞另乘终结倍率；撞完自己陷入恍惚，出手可能被打散。穷追式冲得更远、终结更重，但更慢、恍惚更久。",
         uses: ["黏住一个关键目标，把它连续顶离阵形", "在目标残血时用终结撞收尾", "用高额连续接触伤害压低一个对手"],

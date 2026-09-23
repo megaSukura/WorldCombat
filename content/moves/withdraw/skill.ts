@@ -76,6 +76,7 @@ namespace PokemonSkills {
 
     define({
         id: "withdraw",
+        cooldownParameter: "wait",
         name: "缩入壳中",
         description: "缩入壳里保护身体，从而提高自己的防御。",
         uses: ["硬吃一轮爆发：把身体收进壳里，让壳按次挡下来袭", "被集火时钉住不动，用壳的次数换队友的时间", "用一次短窗口把防御抬起来再探出去打"],

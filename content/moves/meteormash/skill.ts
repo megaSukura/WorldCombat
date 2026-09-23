@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "meteormash",
+        cooldownParameter: "recharge",
         name: "Meteor Mash",
         description: "冲进拳程再一拳砸下：正面命中的目标吃重拳，落点一圈内的其他敌人被震开并受伤，地面被砸出一小片焦黑的坑；砸实的反震有概率把自身物攻抬一级。陨星式冲得更远、震得更广、留下更大的坑；重拳式拳更重、出手更利落。",
         uses: ["贴身用一记重拳点名一个目标", "顺带震开挤在目标身边的其他人", "在地面留下焦坑标记这一拳的落点"],

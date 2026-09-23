@@ -50,6 +50,7 @@ namespace PokemonSkills {
 
     define({
         id: signalbeamId,
+        cooldownParameter: "recharge",
         name: "Signal Beam",
         description: "沿瞄准方向拉出一条信号走廊：一次照到走廊里的每个敌人，各造成一次特殊伤害，并可能让它们信号错乱。错乱期间目标出手会失手，再挨打还会被错乱的信号反冲。",
         uses: ["一次点名排成一线的多个敌人", "用宽走廊封住通道", "用脉冲模式对单个目标打重一点"],

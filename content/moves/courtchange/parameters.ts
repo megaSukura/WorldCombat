@@ -83,7 +83,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["field", "reach"] },
         { key: "swift.on", values: ["tempo", "wait"], when: function (context) { return read(context.detail.values, ["swift"]) === true; } },
         { key: "swift.off", values: [], when: function (context) { return read(context.detail.values, ["swift"]) !== true; } },
-        { key: "description.1", values: ["motes", "waves"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

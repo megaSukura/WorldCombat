@@ -143,7 +143,7 @@ namespace PokemonSkills {
     describe("bonemerang", [
         { key: "description.0", values: ["out", "flight", "throwRange"] },
         { key: "description.1", values: ["back", "hitRadius", "catchRadius", "overshoot", "bow"] },
-        { key: "description.2", values: ["boneHealth", "spin"] },
+        { key: "description.2", values: ["boneHealth"] },
         { key: "arc.on", values: [], when: function (context) { return read(context.detail.values, ["arc"]) === true; } },
         { key: "arc.off", values: [], when: function (context) { return read(context.detail.values, ["arc"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

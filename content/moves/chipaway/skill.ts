@@ -39,6 +39,7 @@ namespace PokemonSkills {
 
     define({
         id: chipawayId,
+        cooldownParameter: "recharge",
         name: "Chip Away",
         description: "Looking for an opening, the user strikes consistently. This also ignores the target's stat changes.",
         uses: ["贴脸连续几拍，每拍落在不同高度", "把目标涨起来的防御等级直接无视掉", "用快而省的连击稳定削血"],

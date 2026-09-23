@@ -5,7 +5,7 @@
  *   onHit 若目标 cureStatus 成功，则施法者回复自身最大 HP 的 50%（失败则不回复）。它清的是目标身上的主异常。
  *
  * 世界化：把「摸一下目标、把病痛拿走、换来自己的生命」翻成即时战斗里的一次**抽取**——施法者朝瞄准点最近的
- *   一个带异常的战斗者（伙伴或对手都行）探出手，把它身上的主异常整项抽出来，暗雾沿一条线飞回施法者，
+ *   一个带异常的战斗者（伙伴或对手都行）探出手，把它身上的有害状态效果整项抽出来，暗雾沿一条线飞回施法者，
  *   落地化成生命。它是一个**单点**的转化：净化的是别人，回血的是自己（与「治愈铃声」「芳香治疗」那种整队范围净化分开）。
  *
  * 数值来源（每个参数读不同的精灵数据，分散到不同参数上）：
@@ -25,8 +25,6 @@ namespace PokemonSkills {
     export const purifyDrawText = "world_combat.move.purify.text.draw";
     export const purifyAbsorbText = "world_combat.move.purify.text.absorb";
     export const purifyNoneText = "world_combat.move.purify.text.none";
-    /** 与原生 cureStatus 一致的主异常身份（剧毒由 poison 身份一并带走）。 */
-    export const purifyMalaise = ["poison", "burn", "paralysis", "sleep", "frozen"];
     const purifyDeep = { key: "worldcombat.skill." + purifyId + ".preference.deep" };
 
     actionParameters.define(purifyId, {
@@ -72,7 +70,7 @@ namespace PokemonSkills {
 
     describe(purifyId, [
         { key: "description.0", values: ["heal", "reach"] },
-        { key: "description.1", values: ["captureRadius", "motes"] },
+        { key: "description.1", values: ["captureRadius"] },
         { key: "stance.deep", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "stance.light", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

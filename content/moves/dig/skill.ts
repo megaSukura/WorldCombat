@@ -138,7 +138,7 @@ namespace PokemonSkills {
             if (!hit.hitEntity() || hit.target() === null || String(hit.target()!.ref()) !== String(target.ref())) continue;
             var landed = impact(current, hit, id, power * Math.max(0.5, 1 - distance / radius * 0.5));
             if (!landed) continue;
-            if (launch > 0) world.displace(target, WorldCombat.point(0, launch, 0));
+            if (world.valid(target) && launch > 0) world.displace(target, WorldCombat.point(0, launch, 0));
             hits += 1;
         }
         WorldFeedback.emit(world, DIG_SCENE, 1, center, { moment: material.moment, scale: radius / 2.6, intensity: 1 + Math.min(1.5, hits * 0.4) }, 50);

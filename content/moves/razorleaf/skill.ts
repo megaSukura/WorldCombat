@@ -15,6 +15,7 @@
 namespace PokemonSkills {
     define({
         id: razorleafId,
+        cooldownParameter: "recharge",
         name: "Razor Leaf",
         description: "Sharp-edged leaves are launched to slash at opposing Pokémon. This move has a heightened chance of landing a critical hit.",
         uses: ["沿同一条窄带连发一波波叶刃", "削穿排成一列的对手", "站桩的敌人被一拍接一拍反复削"],

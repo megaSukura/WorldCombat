@@ -6,7 +6,6 @@
   "worldcombat.skill.strugglebug.description.0": "Every enemy the swarm front sweeps takes %1$s special damage.",
   "worldcombat.skill.strugglebug.description.1": "A swept target loses %1$s stage(s) of Sp. Atk and is left clinging for %2$s.",
   "worldcombat.skill.strugglebug.description.2": "The swarm reaches %1$s blocks from your feet, its front advancing %2$s blocks per tick.",
-  "worldcombat.skill.strugglebug.description.3": "It pours out about %1$s bug specks at once.",
   "worldcombat.skill.strugglebug.option.on": "Thick form: the swarm spreads wider and clings longer, at the cost of lower damage and a slower cast.",
   "worldcombat.skill.strugglebug.option.off": "Rushing form: more damage and a faster spread, but a smaller radius and shorter cling.",
   "worldcombat.skill.strugglebug.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

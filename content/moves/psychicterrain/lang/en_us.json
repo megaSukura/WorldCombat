@@ -6,7 +6,6 @@
   "worldcombat.skill.psychicterrain.description.0": "Raises a psychic field of radius %1$s blocks, lasting %2$s.",
   "worldcombat.skill.psychicterrain.description.1": "A body on the field has its Psychic moves multiplied by %1$s, and damage from moves carrying priority is wiped out.",
   "worldcombat.skill.psychicterrain.description.2": "The effect lingers for %1$s after leaving the psychic terrain.",
-  "worldcombat.skill.psychicterrain.description.3": "Stepping onto the field throws about %1$s psionic motes.",
   "worldcombat.skill.psychicterrain.description.4": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
   "worldcombat.skill.psychicterrain.form.0": "Focused home field: smaller (radius x0.82) and longer (x1.25) with the boost raised to x1.45, at the cost of +3 ticks start-up and x1.2 cooldown.",
   "worldcombat.skill.psychicterrain.form.1": "Ward: wider (radius x1.25) with -2 ticks start-up and x0.9 cooldown, at the cost of a x1.15 boost and x0.85 life.",

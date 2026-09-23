@@ -3,7 +3,7 @@
   "worldcombat.skill.zenheadbutt.description.0": "The headbutt deals about %1$s contact damage with a %2$s block collision radius; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.zenheadbutt.description.1": "After locking on it drives up to %1$s blocks at %2$s blocks per tick; the psychic tether reaches %3$s blocks, so pulling farther away shakes off the guidance.",
   "worldcombat.skill.zenheadbutt.description.2": "The dash turns at most %1$s degrees per tick toward the target and shoves it %2$s blocks on a hit.",
-  "worldcombat.skill.zenheadbutt.description.3": "A solid hit has a %1$s flinch chance for %2$s s; the lock ring stays on the target for %3$s s.",
+  "worldcombat.skill.zenheadbutt.description.3": "A solid hit has a %1$s flinch chance for %2$s s.",
   "worldcombat.skill.zenheadbutt.guided.on": "Guided form: the willpower grips tighter and drives farther, but starts slower with a longer wind-up and cooldown.",
   "worldcombat.skill.zenheadbutt.guided.off": "Direct form: faster to cast with a shorter cooldown, but it cannot turn well and may fail to catch a straight run.",
   "worldcombat.skill.zenheadbutt.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %5$s PP, cooldown %4$s s from commit.",

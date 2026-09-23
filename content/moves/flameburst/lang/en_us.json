@@ -7,7 +7,7 @@
   "worldcombat.skill.flameburst.spread.off": "Direct form: a heavier burst thrown farther, at a smaller and weaker splash.",
   "worldcombat.skill.flameburst.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.flameburst.growth.0": "From level %1$s the burst rises to %2$s and the splash to %3$s.",
-  "worldcombat.skill.flameburst.growth.1": "From level %1$s the burst rises to %2$s, the splash radius to %3$s blocks and droplets to %4$s.",
+  "worldcombat.skill.flameburst.growth.1": "From level %1$s the burst rises to %2$s and the splash radius to %3$s blocks.",
   "worldcombat.skill.flameburst.use.0": "Mid-range shot that also scorches those beside the target",
   "worldcombat.skill.flameburst.use.1": "Shave down a small cluster of foes at once",
   "worldcombat.skill.flameburst.use.2": "Finish foes beside the main target with the splash",

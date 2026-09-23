@@ -49,7 +49,7 @@ namespace PokemonSkills {
     });
     describe(safeguardId, [
         { key: "description.0", values: ["wardTicks", "wardRadius"] },
-        { key: "description.1", values: ["motes", "range"] },
+        { key: "description.1", values: ["range"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "ward.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.ward === "early"); } },
         { key: "ward.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.ward !== "early"; } },

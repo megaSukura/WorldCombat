@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: tailslapId,
+        cooldownParameter: "recharge",
         name: "Tail Slap",
         description: "The user attacks by striking the target with its hard tail. This move hits two to five times in a row.",
         uses: ["原地旋转，尾巴一圈圈扫过四周所有人", "被围住时一次照顾一整片", "砸尾式只扫前向一面，把伤害集中并挑起来"],

@@ -4,7 +4,7 @@
   "worldcombat.skill.brine.use.1": "Soak a patch of ground so passers-by come out wet",
   "worldcombat.skill.brine.use.2": "Keep the pressure on once a foe drops below half HP",
   "worldcombat.skill.brine.description.0": "Deals about %1$s special damage; while the target is at half HP or less that segment is doubled.",
-  "worldcombat.skill.brine.description.1": "The jet reaches %1$s blocks, travels at about %2$s blocks/tick, and bursts into about %3$s droplets.",
+  "worldcombat.skill.brine.description.1": "The jet reaches %1$s blocks and travels at about %2$s blocks/tick.",
   "worldcombat.skill.brine.description.2": "Leaves a salt pool of radius %1$s blocks for %2$s s; non-allies entering or standing in it are soaked, and a direct hit soaks the target for about %3$s.",
   "worldcombat.skill.brine.press.on": "High-pressure mode: power x1.15 and range x1.15, but a smaller, shorter salt pool, +2 ticks windup and +4 ticks cooldown.",
   "worldcombat.skill.brine.press.off": "Spray mode: a larger, longer salt pool, cheaper windup and cooldown, but power x0.92.",

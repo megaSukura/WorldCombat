@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "spinout",
+        cooldownParameter: "recharge",
         name: "Spin Out",
         description: "The user spins furiously by straining its legs, inflicting damage on the target. This also harshly lowers the user's Speed stat.",
         uses: ["贴地旋转冲进一个目标，打出高额单发", "把目标撞开、自己转向下一处", "用一次最贵的自我减速换掉关键目标"],

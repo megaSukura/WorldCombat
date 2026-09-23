@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "metalclaw",
+        cooldownParameter: "recharge",
         name: "Metal Claw",
         description: "The target is raked with steel claws. This may also boost the user's Attack stat.",
         uses: ["贴脸左右两爪连劈", "用命中把物攻一点点磨起来", "开战几拍里把自己喂成重手"],

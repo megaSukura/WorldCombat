@@ -4,7 +4,7 @@
   "worldcombat.skill.flash.use.1": "在开阔地削弱一整群对手的命中",
   "worldcombat.skill.flash.use.2": "给队友创造一轮安全的输出窗口",
   "worldcombat.skill.flash.description.0": "被晃到的目标攻击变弱，宝可梦还额外损失 %1$s 级命中，持续 %2$s。",
-  "worldcombat.skill.flash.description.1": "以自身为圆心，半径 %1$s 格，被照到的人眼前留下约 %2$s 点余光；近端的目标晃得更深，远端只掉一级。",
+  "worldcombat.skill.flash.description.1": "以自身为圆心，半径 %1$s 格；近端的目标晃得更深，远端只掉一级。",
   "worldcombat.skill.flash.description.2": "聚光要 %1$s，冷却 %2$s。墙、柱子与其他掩体能挡住光，躲到掩体后就照不到。",
   "worldcombat.skill.flash.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.flash.value.blindStage": "晃眼级数",

@@ -163,7 +163,7 @@ namespace PokemonSkills {
         { key: "broad.on", values: ["share", "shock"], when: function (context) { return read(context.detail.values, ["broad"]) === true; } },
         { key: "broad.off", values: [], when: function (context) { return read(context.detail.values, ["broad"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.dive", "tier.0.motes"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.dive"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.dive", "tier.1.altitude"] }
     ]);
 }

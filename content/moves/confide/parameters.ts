@@ -64,7 +64,7 @@ namespace PokemonSkills {
     });
     describe(confideId, [
         { key: "description.0", values: ["drop", "focusTicks"] },
-        { key: "description.1", values: ["whisperRange", "rumorRadius", "maxListeners", "range", "whispers"] },
+        { key: "description.1", values: ["whisperRange", "rumorRadius", "maxListeners", "range"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

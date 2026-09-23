@@ -63,6 +63,7 @@ namespace PokemonSkills {
 
     define({
         id: mefirstId,
+        cooldownParameter: "recharge",
         name: "抢先一步",
         description: "压下身体守候一名对手的下一拍：它一出手，就抢先使出同款伤害招并加重；守候期内它没再出招就落空。",
         uses: ["把对手刚酝酿的强攻抢来先打", "压住要蓄力一击的敌人", "在对手的连击间隙夺走主动"],

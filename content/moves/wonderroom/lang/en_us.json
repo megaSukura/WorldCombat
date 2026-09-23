@@ -4,7 +4,7 @@
   "worldcombat.skill.wonderroom.use.1": "Let a special wall take physical hits",
   "worldcombat.skill.wonderroom.use.2": "Scramble the foe's read on your defences",
   "worldcombat.skill.wonderroom.description.0": "Raises a space of radius %2$s blocks on the chosen ground, lasting %1$s.",
-  "worldcombat.skill.wonderroom.description.1": "the current cast range is %2$s blocks. The space applies to both sides alike.",
+  "worldcombat.skill.wonderroom.description.1": "The current cast range is %1$s blocks; the space applies to both sides alike.",
   "worldcombat.skill.wonderroom.description.2": "Raising the space takes %1$s, the recovery is %2$s and the cooldown %3$s. See the form note for the wide/compact trade-off.",
   "worldcombat.skill.wonderroom.span.0": "Wide: radius x1.2 and duration x1.15 (wider, longer), at +2 ticks wind-up and x1.15 cooldown.",
   "worldcombat.skill.wonderroom.span.1": "Compact: radius x0.85 and duration x0.8 (smaller, shorter), in exchange for x0.85 cooldown and no extra wind-up.",

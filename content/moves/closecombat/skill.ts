@@ -40,6 +40,7 @@ namespace PokemonSkills {
 
     define({
         id: closecombatId,
+        cooldownParameter: "recharge",
         name: "Close Combat",
         description: "The user fights the target up close without guarding itself, lowering its own Defense and Sp. Def.",
         uses: ["贴脸用一串快拳把对手打残", "横扫式一次扫到挤在正面的几个人", "在对手退开之前把一口气打完"],

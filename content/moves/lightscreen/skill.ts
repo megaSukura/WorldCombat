@@ -122,6 +122,7 @@ namespace PokemonSkills {
 
     define({
         id: lightscreenId,
+        cooldownParameter: "recharge",
         name: "光墙",
         description: "在身周张起一层柔光穹顶，罩住自己与身边的队友；期间受到的特殊伤害被削掉一块，特殊招式附带的次要效果也被滤淡。光幕跟着施法者走，离开范围的人会失去这层保护。",
         uses: ["挡住成片的特殊攻击", "削弱特殊招式的附带状态", "在对方特殊输出前先一步张幕"],

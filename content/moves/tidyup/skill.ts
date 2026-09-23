@@ -68,6 +68,7 @@ namespace PokemonSkills {
 
     define({
         id: tidyupId,
+        cooldownParameter: "wait",
         name: "大扫除",
         description: "扫掉撒菱、隐形岩、黏黏网、毒菱与替身，并提高自己的攻击和速度。",
         uses: ["踩进别人布好的陷阱区后一次清干净", "把对手的替身扫走，逼它重新用生命立一个", "开打前顺手把攻与速一起垫起来"],

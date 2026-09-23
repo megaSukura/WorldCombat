@@ -4,7 +4,7 @@
   "worldcombat.skill.playnice.use.1": "让追上来的敌人先松口再脱离",
   "worldcombat.skill.playnice.use.2": "给队友争取重新站位的时间",
   "worldcombat.skill.playnice.description.0": "被劝住的目标损失 %1$s 级攻击，并在 %2$s 内不再主动攻击。",
-  "worldcombat.skill.playnice.description.1": "和睦半径 %1$s，最多一次劝住 %2$s 人，射程 %3$s 格（自身为圆心），一次摊出 %4$s 个暖点。",
+  "worldcombat.skill.playnice.description.1": "和睦半径 %1$s，最多一次劝住 %2$s 人，射程 %3$s 格（自身为圆心）。",
   "worldcombat.skill.playnice.description.2": "摊开手势要 %1$s，冷却 %2$s。",
   "worldcombat.skill.playnice.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.playnice.value.offerRadius": "和睦半径",

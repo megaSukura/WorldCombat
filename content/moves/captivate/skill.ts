@@ -35,6 +35,7 @@ namespace PokemonSkills {
 
     define({
         id: captivateId,
+        cooldownParameter: "recharge",
         name: "诱惑",
         description: "当场抬眸，用目光拉住一个看得见的异性对手，大幅降低它的特攻；同性宝可梦免疫。也可以在原地献舞，把周围看得见这份舞姿的敌人一起迷住。",
         uses: ["削弱法系威胁的特攻输出", "趁敌人聚拢时一次迷住几个", "在不便用弹道的狭窄空间里施压"],

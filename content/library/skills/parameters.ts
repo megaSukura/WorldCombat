@@ -64,11 +64,6 @@ namespace PokemonSkills {
                 const base = (<any>skill)[key], level = scope.fact("source.level", text("worldcombat.value.level"), scope.context.pokemon.level());
                 const value = stageValue(skill.id, key, level, base);
                 if (value !== base) scope.term(skill.id + "/" + key, text("worldcombat.value.growth"), value - base);
-                if (key === "cooldown") {
-                    const context = scope.context;
-                    const attributes = context.attributes || (context.world && context.actor ? IndividualAttributes.live(context.world, context.actor) : null);
-                    if (attributes) return PokemonAttributes.cooldown(scope, attributes, value);
-                }
                 return value;
             }, valid: value => value >= 0
         }));
@@ -530,7 +525,37 @@ namespace PokemonSkills {
         if(kind==="seconds"||kind==="percent") { binding.unitKind=kind;binding.unit=text("worldcombat.value.unit."+kind); }
         return binding;
     }
+    /** Final duration shares the commit policy; a recalled individual supplies its native attributes explicitly. */
+    export function cooldownEvaluation(context: NumberContext, base?: number): ActionCooldowns.Context {
+        if (base === undefined) {
+            if (context.detail && typeof context.detail.authoredCooldown === "number") base = context.detail.authoredCooldown;
+            else {
+                const skill = context.skill, values = context.detail && context.detail.values || skill.defaults;
+                const runtime = skill.resolve ? skill.resolve(context.pokemon, values, context.world || null, context.actor || null, context.attributes) : skill;
+                base = runtime.cooldown || 0;
+            }
+        }
+        const pokemon = context.pokemon;
+        return ActionCooldowns.evaluate(context.world || null, context.actor || null, "world_combat:" + context.skill.id, base === undefined ? 0 : base,
+            id => pokemon && typeof pokemon.attribute === "function" ? pokemon.attribute(id) : null);
+    }
+    function cooldownBinding(context: NumberContext): any {
+        const id = context.skill.id, key = context.skill.cooldownParameter, label = text("worldcombat.value.cooldown");
+        const evaluated = cooldownEvaluation(context);
+        let base: any;
+        if (key && key !== "cooldown") base = parameterBinding(context, key);
+        else base = resultBinding(timingValues.evaluate<number>(id + "/cooldown", context), label, 1 / 20);
+        const shown = Number(base.value), actual = evaluated.base / 20;
+        if (isFinite(shown) && Math.abs(shown - actual) > .0001) {
+            base = valueBinding(rounded(actual), label, [base,
+                valueBinding(rounded(actual - shown), text("worldcombat.value.configuration"))]);
+        }
+        const terms = [base].concat(evaluated.contributions.map(term => valueBinding(rounded(term.value), term.label)));
+        const binding = valueBinding(rounded(evaluated.ticks / 20), label, terms);
+        return parameterUnit(binding, undefined, "cooldown");
+    }
     export function parameterBinding(context: NumberContext, key: string): any {
+        if (key === "cooldown") return cooldownBinding(context);
         const id = context.skill.id, entry = actionParameters.entries(id)[key];
         const label = text(entry ? "worldcombat.skill." + id + ".value." + key : "worldcombat.value." + key);
         if (entry && entry.formula) return explanationBinding(actionParameters.evaluate(id, key, context).explanation!, entry, label);
@@ -588,6 +613,8 @@ namespace PokemonSkills {
         const bindings: any = {}, used = paragraphs.filter(paragraph => !paragraph.when || paragraph.when(context));
         function bind(key: string): any {
             if (derived[id] && derived[id][key]) return derived[id][key](context);
+            if (key === context.skill.cooldownParameter)
+                return cooldownBinding(context);
             if (key === "pp") return valueBinding(context.detail.ppCost, text("worldcombat.value.pp"));
             if (key === "level") return valueBinding(context.pokemon.level(), text("worldcombat.value.level"));
             if (key.indexOf("pref.") === 0) {

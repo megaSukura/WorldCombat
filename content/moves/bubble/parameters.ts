@@ -162,7 +162,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["spray", "puffs", "volleys"] },
         { key: "description.1", values: ["span", "reach", "velocity", "collisionRadius"] },
         { key: "description.2", values: ["sudsChance", "sudsStages", "sudsTicks"] },
-        { key: "description.3", values: ["gap", "bubbles"] },
+        { key: "description.3", values: ["gap"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

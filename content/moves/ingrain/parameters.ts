@@ -78,7 +78,7 @@ namespace PokemonSkills {
 
     describe("ingrain", [
         { key: "description.0", values: ["pulse", "interval"] },
-        { key: "description.1", values: ["rootTicks", "roots", "radius"] },
+        { key: "description.1", values: ["rootTicks", "radius"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

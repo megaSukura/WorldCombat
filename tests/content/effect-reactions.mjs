@@ -8,6 +8,8 @@ const compile = source => ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None },
 }).outputText;
 const reactions = compile(fs.readFileSync('content/mechanisms/effect-reactions.ts', 'utf8'));
+const damageSemantics = compile(['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts']
+  .map(file => fs.readFileSync(file, 'utf8')).join('\n'));
 // Parameter formulas and presentation are outside this regression; retain the production exported identities.
 const identities = fs.readFileSync('content/moves/reflect/parameters.ts', 'utf8').match(/export const \w+ = "[^"\r\n]*";/g).join('\n');
 const moves = compile(`namespace PokemonSkills {
@@ -39,6 +41,7 @@ function harness(loadMoves = false) {
     CobblemonCombat: { moveTemplate: id => ({ id: () => id }) },
     PokemonDamage: { apply: (world, target, move, data) => world.hurt(target, data.power, JSON.stringify({ kind: 'move', move: move.id() })) },
   });
+  vm.runInContext(damageSemantics, context, { filename: 'damage-semantics.ts' });
   vm.runInContext(reactions, context, { filename: 'content/mechanisms/effect-reactions.ts' });
   if (loadMoves) vm.runInContext(moves, context, { filename: 'reaction-consumers.ts' });
   function world(source, controller) {
@@ -122,4 +125,21 @@ test('sharpen applied-damage callback reaches the production hurt helper with it
   assert.equal(h.hits.length, 1); const hit = h.hits[0];
   assert.equal(hit.source, h.defender); assert.equal(hit.target, h.attacker);
   assert.equal(hit.controller, 'checks:defender-controller'); assert.equal(hit.data.move, 'sharpen'); assert.equal(hit.amount, 12);
+});
+
+test('native melee is reduced and reflected while arrows have physical reduction without contact recoil', () => {
+  const h = harness(true), state = { cut: .5, rebound: .4, radius: 3, plates: 6 };
+  h.effect(7, 'world_combat:reflect_mark', h.defender, h.defender, state);
+  h.contributions.set(h.ally, [{ token: '7', source: h.defender, payload: state }]);
+  const incoming = h.rules.get('world_combat:move_reflect/plates'), world = h.world(h.attacker, 'checks:attacker-controller');
+  const native = { amount: 20, scripted: false, sourceLiving: true, sourceActor: h.attacker.ref(), direct: true, damageType: 'minecraft:player_attack' };
+  const melee = h.context.DamageSemantics.normalize(native);
+  incoming({ world, source: h.attacker, target: h.ally, data: melee });
+  assert.equal(melee.amount, 10); assert.equal(h.hits.length, 1); assert.equal(h.hits[0].amount, 4);
+  const arrow = h.context.DamageSemantics.normalize({ amount: 20, scripted: false, sourceLiving: true, sourceActor: h.attacker.ref(), direct: false, damageType: 'minecraft:arrow', damageTags: ['minecraft:is_projectile'] });
+  incoming({ world, source: h.attacker, target: h.ally, data: arrow });
+  assert.equal(arrow.amount, 10); assert.equal(h.hits.length, 1);
+  const unknown = h.context.DamageSemantics.normalize({ amount: 20, direct: true, sourceLiving: true, sourceActor: h.attacker.ref(), damageType: 'checks:unknown' });
+  incoming({ world, source: h.attacker, target: h.ally, data: unknown });
+  assert.equal(unknown.amount, 20); assert.equal(h.hits.length, 1);
 });

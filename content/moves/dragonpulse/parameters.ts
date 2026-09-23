@@ -115,7 +115,7 @@ namespace PokemonSkills {
 
     describe("dragonpulse", [
         { key: "description.0", values: ["pulse", "thickness"] },
-        { key: "description.1", values: ["reach", "flight", "rings"] },
+        { key: "description.1", values: ["reach", "flight"] },
         { key: "chain.on", values: ["burst", "burstRadius"], when: function (context) { return read(context.detail.values, ["chain"]) === true; } },
         { key: "chain.off", values: ["pierce"], when: function (context) { return read(context.detail.values, ["chain"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

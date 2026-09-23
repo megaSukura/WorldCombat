@@ -18,6 +18,7 @@
 namespace PokemonSkills {
     define({
         id: echoId,
+        cooldownParameter: "recharge",
         name: "Echoed Voice",
         description: "The user attacks the target with an echoing voice. If this move is used consecutively by any Pokemon, its power is boosted.",
         uses: ["唱出一声会留在场上的回响", "接住附近的回声继续叠高", "用声音无视掩体点名一个目标"],

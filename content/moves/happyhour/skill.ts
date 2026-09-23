@@ -71,6 +71,7 @@ namespace PokemonSkills {
 
     define({
         id: "happyhour",
+        cooldownParameter: "recharge",
         name: "Happy Hour",
         description: "当场摆开一场小型庆典，在自己脚下铺出一圈金色时光；在这段时光里，任何在圈内倒下的"
             + "非友方都会当场爆出一捧本来到战后才结算的 Relic Coin。它不攻击、不撒钱，只把战果变现。",

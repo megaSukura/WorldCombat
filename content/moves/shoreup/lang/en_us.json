@@ -4,7 +4,7 @@
   "worldcombat.skill.shoreup.use.1": "Drink from a sandstorm's endless sand",
   "worldcombat.skill.shoreup.use.2": "Spend the sand underfoot for one strong restore",
   "worldcombat.skill.shoreup.description.0": "Restores %1$s of maximum health: more with denser loose sand (and about 2/3 inside a sandstorm), and a higher Defence packs a thicker coat.",
-  "worldcombat.skill.shoreup.description.1": "Digs %1$s loose sand blocks out of the ground within %2$s blocks; about %3$s grains are thrown up, denser for heavier bodies.",
+  "worldcombat.skill.shoreup.description.1": "Digs %1$s loose sand blocks out of the ground within %2$s blocks.",
   "worldcombat.skill.shoreup.description.2": "Wind-up %1$s and recovery %2$s, driven by Speed and size.",
   "worldcombat.skill.shoreup.stance.thick": "Thick pack: more sand and more healing per cast (x1.12), at the cost of a slower wind-up, a longer cooldown and more sand dug out - for a big restore on deep sand.",
   "worldcombat.skill.shoreup.stance.loose": "Thin spread: a faster wind-up, less sand dug out and a shorter cooldown, with slightly less healing - for small top-ups in place.",

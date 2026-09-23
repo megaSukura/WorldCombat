@@ -79,7 +79,7 @@ namespace PokemonSkills {
 
     describe("tailwind", [
         { key: "description.0", values: ["gift", "window"] },
-        { key: "description.1", values: ["reach", "motes", "streaks"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "gale.wide", values: [], when: function (context) { return read(context.detail.values, ["gale"]) === 1; } },
         { key: "gale.long", values: [], when: function (context) { return read(context.detail.values, ["gale"]) !== 1; } },

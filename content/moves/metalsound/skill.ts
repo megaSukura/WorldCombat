@@ -15,6 +15,7 @@ namespace PokemonSkills {
 
     define({
         id: metalsoundId,
+        cooldownParameter: "wait",
         name: "金属音",
         description: "摩擦身上的金属，发出让人牙酸的高频声，隔着掩体也能送到对手耳里，大幅降低它的特防。要把音磨出来就得先站定，起手很长；长磨降得更多、回响更久，但更慢。",
         uses: ["隔着掩体磨掉一个特防位", "把特防大降挂满一整个交战窗口", "在安全的掩体后慢慢起手再送到墙上对面"],

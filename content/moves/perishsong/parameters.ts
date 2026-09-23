@@ -64,7 +64,7 @@ namespace PokemonSkills {
 
     describe(perishId, [
         { key: "description.0", values: ["songRadius", "turnTicks"] },
-        { key: "description.1", values: ["motes", "tempo", "recharge"] },
+        { key: "description.1", values: ["tempo", "recharge"] },
         { key: "dirge.0", values: [], when: function (context) { return read(context.detail.values, ["dirge"]) === true; } },
         { key: "dirge.1", values: [], when: function (context) { return read(context.detail.values, ["dirge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

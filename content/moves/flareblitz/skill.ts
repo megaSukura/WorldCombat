@@ -25,6 +25,7 @@ namespace PokemonSkills {
 
     define({
         id: "flareblitz",
+        cooldownParameter: "recharge",
         name: "Flare Blitz",
         description: "The user cloaks itself in fire and charges the target to inflict damage. This also damages the user quite a lot and may leave the target with a burn.",
         uses: ["用一记燃烧的冲锋把贴脸的对手撞开", "给一个还没被烧的主力点上灼伤", "在开阔地把目标一路顶到队友或高台边上"],

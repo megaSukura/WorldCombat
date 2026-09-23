@@ -23,6 +23,7 @@ namespace PokemonSkills {
 
     define({
         id: "megadrain",
+        cooldownParameter: "recharge",
         name: "Mega Drain",
         description: "A nutrient-draining attack. The user's HP is restored by up to half the damage taken by the target.",
         uses: ["从一段距离外抛荚勾住对手", "用连续几拍把伤害和回血一起抽上来", "对拉不开距离的目标持续续航"],

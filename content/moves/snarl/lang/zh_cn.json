@@ -5,7 +5,7 @@
   "worldcombat.skill.snarl.use.2": "在远处先手削掉法系威胁",
   "worldcombat.skill.snarl.description.0": "每声约 %1$s 威力，一共 %2$s 声、每 %3$s 一声；对手特防、相性与暴击在每声命中时另算。",
   "worldcombat.skill.snarl.description.1": "被第一声喝住的目标特攻下降 %1$s 级，并带上「被斥」身份约 %2$s。",
-  "worldcombat.skill.snarl.description.2": "声压锥推出 %1$s 格、张开 %2$s 度，一次约 %3$s 个音符。",
+  "worldcombat.skill.snarl.description.2": "声压锥推出 %1$s 格、张开 %2$s 度。",
   "worldcombat.skill.snarl.option.on": "连斥式：一声接一声喝三遍，每声约 ×0.62、间隔更密、锥更窄更远，冷却 +6 刻——把对方压在原地反复削，但对手能走出锥外躲掉后面几声。",
   "worldcombat.skill.snarl.option.off": "断喝式：只喝一声，威力 ×1.4、锥更宽，冷却按基础——一次出口更重，适合打完就退。",
   "worldcombat.skill.snarl.timing": "声压锥可达 %1$s 格；起手 %2$s、收招 %3$s，消耗 %4$s PP，提交起冷却 %5$s。",

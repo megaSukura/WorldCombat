@@ -38,6 +38,7 @@ namespace PokemonSkills {
 
     define({
         id: "freezedry",
+        cooldownParameter: "wait",
         name: "冷冻干燥",
         description: "把水汽冻成一根冰晶射向目标，命中造成冰属性伤害并有概率把它冻住；对水属性或湿透的目标效果绝佳。",
         uses: ["隔空点掉水系与湿身的目标", "用冰冻概率打断对方的节奏", "对远处的高威胁目标先手压制"],

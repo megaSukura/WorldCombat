@@ -104,6 +104,7 @@ namespace PokemonSkills {
 
     define({
         id: revivalblessingId,
+        cooldownParameter: "recharge",
         name: "Revival Blessing",
         description: "为倒下的伙伴以慈爱之心祈祷：在它倒下的地方立起光柱，把自己队伍里昏厥的伙伴恢复真实生命，并给自己与身边伙伴挂上慈爱祝福。",
         uses: ["在伙伴倒下后为它祈祷、立起光柱", "给身边存活的伙伴挂上慈爱祝福", "用一次祈祷记住倒下的位置"],

@@ -97,7 +97,7 @@ namespace PokemonSkills {
 
     describe("lavaplume", [
         { key: "description.0", values: ["plume"] },
-        { key: "description.1", values: ["ringRadius", "spreadTicks", "plumeHeight"] },
+        { key: "description.1", values: ["ringRadius", "spreadTicks"] },
         { key: "description.2", values: ["burnChance"] },
         { key: "description.3", values: ["ember", "emberTicks", "emberPulse"] },
         { key: "fume.on", values: [], when: function (context) { return read(context.detail.values, ["fume"]) === true; } },

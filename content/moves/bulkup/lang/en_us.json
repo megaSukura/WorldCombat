@@ -6,7 +6,7 @@
   "worldcombat.skill.bulkup.description.0": "Bulk Up raises Attack by %1$s stages and Defense by %2$s stages.",
   "worldcombat.skill.bulkup.lean.on": "Power-leaning: Attack +2, Defense +1; better for pressing the attack.",
   "worldcombat.skill.bulkup.lean.off": "Guard-leaning: Defense +2, Attack +1; better for trading blows. Both carry the same total.",
-  "worldcombat.skill.bulkup.description.1": "The swell lasts about %1$s and the aura reaches %2$s blocks.",
+  "worldcombat.skill.bulkup.description.1": "The swell lasts about %1$s.",
   "worldcombat.skill.bulkup.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.bulkup.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.bulkup.growth.0": "At level %1$s the swell lasts %2$s and the cooldown drops to %3$s s.",

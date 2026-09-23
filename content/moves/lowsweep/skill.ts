@@ -98,7 +98,7 @@ namespace PokemonSkills {
                     if (!landed) return;
                     NativeEffects.boost(world, target, "spe", -rolled.stages);
                     MobEffects.apply(world, target, lowsweepHobble, hobble, 0);
-                    if (rolled.stages >= 2 && rootTicks > 0) WorldEffects.apply(world, target, "rooted", {}, rootTicks);
+                    if (world.valid(target) && rolled.stages >= 2 && rootTicks > 0) WorldEffects.apply(world, target, "rooted", {}, rootTicks);
                     WorldFeedback.emit(world, lowsweepScene, 1, facts.position(),
                         { moment: "hit", target: String(target.ref()), stages: rolled.stages, spark: spark,
                             intensity: Math.max(0.6, Math.min(2.2, rolled.power / 55)), scale: scale }, 24);

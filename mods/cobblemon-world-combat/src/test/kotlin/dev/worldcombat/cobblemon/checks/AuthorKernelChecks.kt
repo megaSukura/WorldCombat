@@ -30,6 +30,7 @@ object AuthorKernelChecks {
     private var age = 0
     private var done = false
     private lateinit var body: LivingEntity
+    private lateinit var recalledCarrier: LivingEntity
     private var ownerLease: AutoCloseable? = null
     private var baseAttack = 0.0
     private var leasedBlock = BlockPos.ZERO
@@ -55,6 +56,13 @@ object AuthorKernelChecks {
                     run(server,body,"""{"op":"base","amount":1}""")
                     close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack*2.5)
                     check(run(server,body,"""{"op":"native"}""").get("unknown").asBoolean)
+                    val haste = body.getAttribute(dev.worldcombat.core.world.PublicAttributes.SKILL_HASTE)!!
+                    val originalHaste = haste.baseValue
+                    try {
+                        haste.baseValue = 50.0
+                        val timing = run(server,body,"""{"op":"cooldown"}""")
+                        check(timing.get("id").asLong > 0 && timing.get("remaining").asInt == 80) { "Native final cooldown: $timing" }
+                    } finally { haste.baseValue = originalHaste }
                     leasedBlock=BlockPos(3,-61,0)
                     check(level.getBlockState(leasedBlock).`is`(Blocks.GRASS_BLOCK))
                     val terrain=run(server,body,"""{"op":"terrain","cells":[{"x":3,"y":-61,"z":0,"block":"minecraft:stone"},{"x":3,"y":-61,"z":0,"block":"minecraft:dirt"},{"x":0,"y":-60,"z":0,"block":"minecraft:stone"}]}""")
@@ -76,6 +84,32 @@ object AuthorKernelChecks {
                     check(run(server,body,"""{"op":"inspect"}""").get("stage").asInt==0)
                     party(server)
                     check(run(server,body,"""{"op":"areas"}""").get("count").asInt==1)
+                    run(server,body,"""{"op":"base","amount":1}""")
+                    run(server,body,"""{"op":"carried","amount":2,"ticks":40}""")
+                    close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack*2.5)
+                    run(server,body,"""{"op":"clear-carrier"}""")
+                    check(run(server,body,"""{"op":"inspect"}""").get("stage").asInt==1) { "Cured carrier still contributed stages" }
+                }
+                14 -> {
+                    close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack*1.5)
+                    run(server,body,"""{"op":"carried","amount":2,"ticks":4}""")
+                    check(run(server,body,"""{"op":"inspect"}""").get("stage").asInt==3)
+                    check(!recalledCarrier.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING)) { "Recall kept the owned native carrier" }
+                }
+                20 -> {
+                    check(!run(server,body,"""{"op":"carrier"}""").get("present").asBoolean)
+                    close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack*1.5)
+                    run(server,body,"""{"op":"carried","amount":2,"ticks":20}""")
+                    run(server,body,"""{"op":"carried","amount":1,"ticks":20}""")
+                    check(run(server,body,"""{"op":"inspect"}""").get("stage").asInt==2) { "Replacement stacked the old contribution" }
+                }
+                23 -> {
+                    check(run(server,body,"""{"op":"carrier"}""").get("present").asBoolean) { "Old window cleanup removed its replacement" }
+                    close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack*2)
+                    run(server,body,"""{"op":"reset"}""")
+                    check(!run(server,body,"""{"op":"carrier"}""").get("present").asBoolean)
+                    close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack)
+                    println("REVIEWCHECK carrier-bound stage windows: cure, expiry, replacement, reset, recall and independent base stages passed")
                 }
                 40 -> {
                     close(body.getAttributeValue(Attributes.ATTACK_DAMAGE),baseAttack)
@@ -117,8 +151,29 @@ object AuthorKernelChecks {
         val first=PokemonProperties.parse("rattata level=20").create();val second=PokemonProperties.parse("rattata level=20").create()
         store.add(first);store.add(second)
         val entity=first.sendOut(server.overworld(),Vec3(16.5,-60.0,0.5),null)!!
-        CombatServices.get(server).bind(entity)
-        val combat=CombatServices.get(server);val a=combat.bind(body);val b=combat.bind(entity)
+        val combat=CombatServices.get(server)
+        combat.left(entity)
+        entity.beamMode=1
+        val waiting=combat.bind(entity)
+        check(!combat.valid(waiting))
+        entity.beamMode=0
+        val b=combat.bind(entity)
+        check(b==waiting && combat.valid(b)) { "Availability transition replaced the actor generation" }
+        repeat(3) { check(combat.bind(entity)==b) }
+        val binding=run(server,entity,"""{"op":"bound"}""")
+        check(binding.get("count").asInt==1 && binding.get("models").asInt==1) { "Late native binding: $binding" }
+        run(server,entity,"""{"op":"base","amount":1}""")
+        check(run(server,entity,"""{"op":"inspect"}""").get("stage").asInt==1) { "Late-bound native model dropped a stage write" }
+        run(server,entity,"""{"op":"reset"}""")
+        println("REVIEWCHECK unavailable-to-available binding keeps its generation, announces once and writes native stages")
+        run(server,entity,"""{"op":"carried","amount":2,"ticks":40}""")
+        check(run(server,entity,"""{"op":"inspect"}""").get("stage").asInt==2)
+        run(server,entity,"""{"op":"clear-carrier"}""")
+        check(run(server,entity,"""{"op":"inspect"}""").get("stage").asInt==0)
+        run(server,entity,"""{"op":"carried","amount":1,"ticks":40}""")
+        check(run(server,entity,"""{"op":"inspect"}""").get("stage").asInt==1)
+        recalledCarrier=entity
+        val a=combat.bind(body)
         val apples=ItemStack(Items.APPLE,32);apples.set(DataComponents.CUSTOM_NAME,Component.literal("One of thirty-two"));body.setItemSlot(EquipmentSlot.MAINHAND,apples)
         val expected=NativeRegistryFacts.stack(server.registryAccess(),apples).serialized()
         check(!NativeEquipment.exchangeOp(combat,a,"minecraft","mainhand",0,expected,b,"cobblemon","held",0,"").ok())

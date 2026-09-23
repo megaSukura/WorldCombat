@@ -143,11 +143,11 @@ namespace PokemonSkills {
     describe("icehammer", [
         { key: "description.0", values: ["hammer", "reach"] },
         { key: "description.1", values: ["knock", "speedLoss"] },
-        { key: "description.2", values: ["chillTicks", "shards"] },
+        { key: "description.2", values: ["chillTicks"] },
         { key: "glaciate.on", values: ["frostRadius", "frostTicks"], when: function (context) { return read(context.detail.values, ["glaciate"]) === true; } },
         { key: "glaciate.off", values: [], when: function (context) { return read(context.detail.values, ["glaciate"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.hammer", "tier.0.shards"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.hammer"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.hammer", "tier.1.frostRadius"] }
     ]);
 }

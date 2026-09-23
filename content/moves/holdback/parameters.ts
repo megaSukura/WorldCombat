@@ -106,7 +106,7 @@ namespace PokemonSkills {
     describe("holdback", [
         { key: "description.0", values: ["sweep"] },
         { key: "description.1", values: ["reach", "angle", "depth"] },
-        { key: "description.2", values: ["dust", "brace"] },
+        { key: "description.2", values: ["brace"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

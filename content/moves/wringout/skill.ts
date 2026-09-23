@@ -14,6 +14,7 @@ namespace PokemonSkills {
 
     define({
         id: wringoutId,
+        cooldownParameter: "recharge",
         name: "Wring Out",
         description: "The user powerfully wrings the target. The more HP the target has, the greater the move's power.",
         uses: ["开局对满血的目标绞出最重的一记", "双绞式用第二拧补掉剩下的血量", "用特攻高的个体把整条血拧成伤害"],

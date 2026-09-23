@@ -4,7 +4,6 @@
   "worldcombat.skill.telekinesis.use.1": "Lift a target out of reach of Ground moves (also protects it from them)",
   "worldcombat.skill.telekinesis.use.2": "Create a few seconds where attacks connect",
   "worldcombat.skill.telekinesis.description.0": "Lift one opponent within %1$s blocks for %2$s s, removing %3$s of its movement; a target that is smacked down or rooted cannot be lifted.",
-  "worldcombat.skill.telekinesis.description.1": "About %1$s psychic rings rise around the target; the count comes from Special Attack.",
   "worldcombat.skill.telekinesis.description.2": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.telekinesis.pin.on": "Pin: at least 92% suppression, nearly rooted, but duration x0.7, cooldown x1.25 and wind-up +3.",
   "worldcombat.skill.telekinesis.pin.off": "Hang: duration x1.15 and cooldown x0.9, cheaper to cast and held longer, but the target can still crawl a step.",

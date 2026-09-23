@@ -7,7 +7,6 @@
   "worldcombat.skill.dragoncheer.roar.on": "Long roar: wider radius, longer duration and a higher bonus, at the cost of %1$s telegraph and %2$s cooldown - cover the whole team once before the fight.",
   "worldcombat.skill.dragoncheer.roar.off": "Short bark: a little narrower, shorter and weaker, but lower telegraph and cooldown - top up morale whenever in a long trade.",
   "worldcombat.skill.dragoncheer.description.1": "The morale stays on allies for %1$s and the wave covers every ally within %2$s blocks.",
-  "worldcombat.skill.dragoncheer.description.2": "",
   "worldcombat.skill.dragoncheer.description.3": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.dragoncheer.timing": "Self move, range %1$s blocks; after %2$s s of telegraph it costs %4$s PP to fire, then %3$s s recovery and %5$s s cooldown from commit.",
   "worldcombat.skill.dragoncheer.growth.0": "At level %1$s the morale lasts %2$s.",

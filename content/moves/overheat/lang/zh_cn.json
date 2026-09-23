@@ -10,7 +10,7 @@
   "worldcombat.skill.overheat.vent.on": "过载式：威力 ×1.25，把全部热量压进一记；起点是自身特攻多掉一级、起手更慢、冷却更长。",
   "worldcombat.skill.overheat.vent.off": "收束式：威力 ×1.0、只掉原生 2 级特攻、出手更快，适合连着用。",
   "worldcombat.skill.overheat.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
-  "worldcombat.skill.overheat.growth.0": "%1$s 级起热浪威力抬到 %2$s、火星增到 %3$s 点。",
+  "worldcombat.skill.overheat.growth.0": "%1$s 级起热浪威力抬到 %2$s。",
   "worldcombat.skill.overheat.growth.1": "%1$s 级起热浪威力抬到 %2$s、射程增到 %3$s 格。",
   "worldcombat.skill.overheat.value.heat": "热浪威力",
   "worldcombat.skill.overheat.value.cone": "扇面张角",

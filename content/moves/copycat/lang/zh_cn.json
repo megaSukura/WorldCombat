@@ -4,7 +4,6 @@
   "worldcombat.skill.copycat.use.1": "复制队友的增益与布置",
   "worldcombat.skill.copycat.use.2": "在别人刚酝酿过后接上同一手",
   "worldcombat.skill.copycat.description.0": "借来的招式最多送到 %1$s 格内；只记得 %2$s 以内的那次出手。",
-  "worldcombat.skill.copycat.description.1": "脚下荡开约 %1$s 圈回声，随特攻增长，也驱动画面层次。",
   "worldcombat.skill.copycat.description.2": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.copycat.deep.on": "深回声：记忆窗口更长、回声更密，但起手更慢、冷却更长。",
   "worldcombat.skill.copycat.deep.off": "浅回声：出手快、冷却短，但只捡得起刚响过的那一声。",

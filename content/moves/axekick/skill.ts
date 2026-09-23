@@ -58,6 +58,7 @@ namespace PokemonSkills {
 
     define({
         id: "axekick",
+        cooldownParameter: "recharge",
         name: "Axe Kick",
         description: "将踢起的脚跟往下劈向对手进行攻击。有时会使对手混乱。如果劈偏则自己会受到伤害。",
         uses: ["用一记直落的下劈砸穿硬目标", "给刚起手/刚增益的对手一记恍惚", "贴脸时用最轻自伤的一记收尾"],

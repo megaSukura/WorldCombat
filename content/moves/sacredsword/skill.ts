@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: sacredswordId,
+        cooldownParameter: "recharge",
         name: "Sacred Sword",
         description: "The user attacks by slicing with a sword. The target's stat changes don't affect the damage inflicted by this move.",
         uses: ["把长角拉满，朝前送出一记最长的切斩", "把目标涨起来的防御等级直接无视掉", "在射程外缘一刀切开单个目标"],

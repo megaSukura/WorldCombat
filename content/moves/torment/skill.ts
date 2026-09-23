@@ -58,6 +58,7 @@ namespace PokemonSkills {
 
     define({
         id: tormentId,
+        cooldownParameter: "recharge",
         name: "无理取闹",
         description: "当面取笑一名对手，让它在一段时间里不能连续使用同一招；烦躁还在时，重复那一手会被顶回去。",
         uses: ["拆掉只会一招的对手的节奏", "逼对手换招", "惩罚仰赖同一次连击的敌人"],

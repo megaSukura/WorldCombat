@@ -14,8 +14,9 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
+            const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+            return gap >= CompanionBehavior.ai<number>(capability, "minGap", 1.5)
+                && gap <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

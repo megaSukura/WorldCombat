@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.disarmingvoice.summary": "A charming cry fills the whole space around the singer, so foes inside it cannot escape and it never misses; it rattles their timing, and the soothing form also takes the edge off their attacks.",
   "worldcombat.skill.disarmingvoice.description.0": "Each caught target takes %1$s damage across a %2$s block sound field.",
-  "worldcombat.skill.disarmingvoice.description.1": "Caught foes lose %1$s stage of Speed; the wave expands at %2$s blocks per tick.",
+  "worldcombat.skill.disarmingvoice.description.1": "Caught foes lose %1$s stage of Speed.",
   "worldcombat.skill.disarmingvoice.description.2": "The soothing form also drops Attack by %1$s stage, and the charm lasts %2$s.",
   "worldcombat.skill.disarmingvoice.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.disarmingvoice.growth.0": "At level %1$s: sound power %2$s.",

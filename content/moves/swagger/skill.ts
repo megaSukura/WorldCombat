@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: "swagger",
+        cooldownParameter: "wait",
         name: "虚张声势",
         description: "激怒对手，使其混乱；因为愤怒，对手的攻击会大幅提高。",
         uses: ["把重击手的火力引向自己", "给难缠的目标制造失手窗口", "在队友集火前先把对手点着"],

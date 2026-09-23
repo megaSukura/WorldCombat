@@ -31,10 +31,12 @@ public final class DefinitionParser {
         Map.of("source", ParticleDefinition.Bind.SOURCE, "target", ParticleDefinition.Bind.TARGET,
             "projectile", ParticleDefinition.Bind.PROJECTILE, "point", ParticleDefinition.Bind.POINT,
             "path", ParticleDefinition.Bind.PATH);
-    private static final Map<String, ParticleDefinition.Fit> FITS = Map.of("body", ParticleDefinition.Fit.BODY, "none", ParticleDefinition.Fit.NONE);
+    private static final Map<String, ParticleDefinition.Fit> FITS = Map.of("body", ParticleDefinition.Fit.BODY, "none", ParticleDefinition.Fit.NONE,
+        "world", ParticleDefinition.Fit.WORLD);
     private static final Map<String, ParticleDefinition.Orient> ORIENTS = Map.of(
         "fixed", ParticleDefinition.Orient.FIXED, "direction", ParticleDefinition.Orient.DIRECTION,
-        "toward", ParticleDefinition.Orient.TOWARD, "velocity", ParticleDefinition.Orient.VELOCITY);
+        "toward", ParticleDefinition.Orient.TOWARD, "velocity", ParticleDefinition.Orient.VELOCITY,
+        "heading", ParticleDefinition.Orient.HEADING);
     private static final Map<String, ParticleDefinition.Direction> DIRECTIONS = Map.ofEntries(
         Map.entry("shape", ParticleDefinition.Direction.SHAPE), Map.entry("up", ParticleDefinition.Direction.UP),
         Map.entry("down", ParticleDefinition.Direction.DOWN), Map.entry("outward", ParticleDefinition.Direction.OUTWARD),

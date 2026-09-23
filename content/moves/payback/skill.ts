@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: paybackId,
+        cooldownParameter: "recharge",
         name: "Payback",
         description: "蓄势后迎上去回击：目标在窗口内先动过手时威力翻倍；自己失去的生命越多，这一记越重。",
         uses: ["被击中后立刻还以重手", "带伤时打出最重的一记", "把冲上来的对手顶开"],
@@ -78,7 +79,7 @@ namespace PokemonSkills {
                         const landed = impact(current, hit, paybackId, power);
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, paybackScene, 1, hit.position(),
                             { moment: doubled ? "counter" : "strike", target: String(victim.ref()), doubled: doubled ? 1 : 0,

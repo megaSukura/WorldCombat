@@ -138,6 +138,11 @@ namespace CompanionBehavior {
                         }
                         if (!reason && target && !protectedControl(target)) {
                             var waiting = options(current, "world_combat:attack", target).concat(options(current, "world_combat:control", target));
+                            // A manual focus order may first close the distance where a
+                            // move's authored availability becomes true. Casting still
+                            // uses the full target-dependent eligibility checks.
+                            if (!waiting.length) waiting = options(current, "world_combat:attack").concat(options(current, "world_combat:control"))
+                                .filter(function (item) { return uses.accepts(current, item, target!); });
                             waiting.sort(function (a,b) { return castRange(current,b,"attack")-castRange(current,a,"attack"); });
                             if (waiting.length) {
                                 var reach = castRange(current,waiting[0],"attack");

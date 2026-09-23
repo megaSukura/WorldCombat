@@ -64,6 +64,7 @@ namespace PokemonSkills {
 
     define({
         id: "conversion2",
+        cooldownParameter: "recharge",
         name: "Conversion 2",
         description: "读取对手最后使用的那一手的属性，把自己的属性暂时重织成能扛住它的那一种；目标没有最后招式时无法发动。",
         uses: ["接下一记已知属性的招", "把受击面翻到对手打不痛的那一面", "在出手前临时改抗性"],

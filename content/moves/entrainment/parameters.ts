@@ -72,7 +72,6 @@ namespace PokemonSkills {
     describe("entrainment", [
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
         { key: "description.1", values: ["hold", "splash"] },
-        { key: "description.2", values: ["beats", "sway"] },
         { key: "whole.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.whole); } },
         { key: "whole.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.whole); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

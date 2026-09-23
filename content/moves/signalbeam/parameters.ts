@@ -130,7 +130,6 @@ namespace PokemonSkills {
     describe(signalbeamId, [
         { key: "description.0", values: ["beam", "gauge", "reach"] },
         { key: "description.1", values: ["confuseChance", "dazeTicks", "fumble"] },
-        { key: "description.2", values: ["motes"] },
         { key: "pulse.on", values: [], when: function (context) { return read(context.detail.values, ["pulse"]) === true; } },
         { key: "pulse.off", values: [], when: function (context) { return read(context.detail.values, ["pulse"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

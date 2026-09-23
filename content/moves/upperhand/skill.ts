@@ -33,6 +33,7 @@ namespace PokemonSkills {
 
     define({
         id: upperhandId,
+        cooldownParameter: "recharge",
         name: "Upper Hand",
         description: "察觉到对手正在使出先制招时迎上去用掌根按停；对手此刻不在出先制招时这一记落空，PP 照常消耗。",
         uses: ["打断对手的先制招", "惩罚靠先制招抢节奏的敌人", "在对手抢先手时把它按回原地"],
@@ -120,7 +121,7 @@ namespace PokemonSkills {
                         const landed = hurt(action, victim, upperhandId, power,
                             { damage: damageSpec(upperhandId, "snap"), contact: true, punch: true });
                         const away = facts.position().minus(origin);
-                        if (landed && away.length() > 0.05) world.displace(victim, away.unit().scale(p(upperhandId, "push", action)));
+                        if (world.valid(victim) && landed && away.length() > 0.05) world.displace(victim, away.unit().scale(p(upperhandId, "push", action)));
                         strike(action, victim, facts.position(), landed);
                     });
                 done(action);
@@ -143,7 +144,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(upperhandId, "snap"), contact: true, punch: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(p(upperhandId, "push", current)));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(p(upperhandId, "push", current)));
                         }
                         strike(current, victim, hit.position(), landed);
                     }

@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: ficklebeamId,
+        cooldownParameter: "recharge",
         name: "Fickle Beam",
         description: "The user shoots a beam of light to inflict damage. Sometimes all the user's heads shoot beams in unison, doubling the move's power.",
         uses: ["一束细长、无代价的远程龙光", "赌一次所有光股齐射、威力翻倍", "远距离稳定消耗对手"],

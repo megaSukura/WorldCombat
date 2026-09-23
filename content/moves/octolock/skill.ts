@@ -93,6 +93,7 @@ namespace PokemonSkills {
 
     define({
         id: octoId,
+        cooldownParameter: "recharge",
         name: "蛸固",
         description: "伸出一条触手咬住一个对手，把它钉在原地无法逃走；此后每过一拍（原生的一回合）都勒紧一次，防御与特防各降一级。缠是术者维持的：术者离开或倒下，触手就松开。",
         uses: ["把一个必须解决的厚目标缠死，交给队友集火", "把逃向出口的目标钉在自己身边", "在长拉锯里一层层削掉对手的双防"],

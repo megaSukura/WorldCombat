@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "makeitrain",
+        cooldownParameter: "wait",
         name: "Make It Rain",
         description: "把整座金库抖上头顶，金币如暴雨般从上方一圈圈砸落，扫过身周所有敌人；金子散尽后自己的特攻下降，地上留下一片能捡的硬币。倾库式更大更重、自损更深、回气更久。",
         uses: ["被围住时一次倾泻整片大范围", "用最高的一发打在扎堆的敌人身上", "在场上撒下大量可回收的真币"],

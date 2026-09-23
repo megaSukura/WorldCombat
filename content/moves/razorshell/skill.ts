@@ -37,6 +37,7 @@ namespace PokemonSkills {
 
     define({
         id: "razorshell",
+        cooldownParameter: "recharge",
         name: "Razor Shell",
         description: "The user cuts the target with sharp shells to inflict damage. This may also lower the target's Defense stat.",
         uses: ["在身前一记宽弧同时切多个目标", "一次削掉一排对手的防御", "把切中的目标溅湿，为水湿联动的招留窗口"],
@@ -97,7 +98,7 @@ namespace PokemonSkills {
                 hits++;
                 const away = WorldCombat.point(facts.position().x() - origin.x(), 0, facts.position().z() - origin.z());
                 const out = away.length() < 0.05 ? direction : away.unit();
-                world.displace(victim, out.scale(push));
+                if (world.valid(victim)) world.displace(victim, out.scale(push));
                 // 壳缘带水：切中的目标被溅湿（共享身份 soaked，与水流尾/波动冲/水流裂破是同一件事）。
                 if (!CombatStatus.has(world, victim, "soaked"))
                     CombatStatus.apply(world, victim, "soaked", razorshellSoaked, soak);

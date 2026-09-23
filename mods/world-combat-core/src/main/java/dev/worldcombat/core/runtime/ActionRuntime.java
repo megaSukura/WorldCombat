@@ -332,7 +332,7 @@ public final class ActionRuntime {
         if (cooldown(context.actor(), context.definition.id()) > 0) throw new ActionRejectedException("cooldown");
         validateTarget(context.targetKind(), context.range(), context.actor(), context.input());
         if (!context.retargeted) ActionInput.validate(context.controlJson, content.preview(context.definition.id()).input(), context.definition.range(), context.actor(), host, effects);
-        if (cooldown < 0 || cooldown > 12000) throw new IllegalArgumentException("Cooldown must be 0..12000 ticks");
+        if (cooldown < 0) throw new IllegalArgumentException("Cooldown must be nonnegative");
         if (!settling.add(context.actor().key())) throw new ActionRejectedException("transaction-busy");
         var attempted = new ArrayList<CommitCost>();
         context.committing = true;
@@ -342,6 +342,21 @@ public final class ActionRuntime {
                 context.rejectionData = gate.data();
                 throw new ActionRejectedException(gate.rejection());
             }
+            requireCurrent(context);
+            // Query before preparing or paying costs. Content supplies timing policy; the host owns one final reservation.
+            var timingData = new com.google.gson.JsonObject();
+            timingData.addProperty("action", context.definition.id());
+            timingData.addProperty("baseCooldown", cooldown);
+            timingData.addProperty("cooldown", cooldown);
+            var timing = content.hooks().emit(this, "world_combat:cooldown", context.actor(), context.target(), timingData.toString(), context, false);
+            if (!timing.rejection().isEmpty()) throw new ActionRejectedException(timing.rejection());
+            var duration = com.google.gson.JsonParser.parseString(timing.data()).getAsJsonObject().get("cooldown");
+            if (duration == null || !duration.isJsonPrimitive() || !duration.getAsJsonPrimitive().isNumber())
+                throw new IllegalArgumentException("Cooldown query must return a number");
+            double finalTicks = duration.getAsDouble();
+            if (!Double.isFinite(finalTicks) || finalTicks < 0 || finalTicks > Integer.MAX_VALUE || finalTicks != Math.rint(finalTicks))
+                throw new IllegalArgumentException("Cooldown must be a nonnegative integer tick count");
+            cooldown = (int) finalTicks;
             requireCurrent(context);
             var costs = List.copyOf(context.costs.values());
             for (var cost : costs) {

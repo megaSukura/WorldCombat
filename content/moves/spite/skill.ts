@@ -49,6 +49,7 @@ namespace PokemonSkills {
 
     define({
         id: "spite",
+        cooldownParameter: "recharge",
         name: "Spite",
         description: "向刚出过手的目标送出一道怨念：命中时从它最后使用的那一招里抠走 4 点 PP，并让怀恨留在它身上，脚步变沉、出招变慢。",
         uses: ["惩罚刚出手的目标", "拆掉对手赖以为生的招", "拖慢追击者"],

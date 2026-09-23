@@ -5,7 +5,7 @@
   "worldcombat.skill.leafblade.use.2": "Let the blade wind graze foes standing nearby",
   "worldcombat.skill.leafblade.description.0": "The edge deals %1$s physical damage at a %2$s-block contact range.",
   "worldcombat.skill.leafblade.description.1": "The swing spans %1$s degrees; up to 2 other nearby foes each take %2$s of the blade wind.",
-  "worldcombat.skill.leafblade.description.2": "The main target loses %1$s stage(s) of defence and the cut stirs about %2$s shards.",
+  "worldcombat.skill.leafblade.description.2": "The main target loses %1$s stage(s) of defence.",
   "worldcombat.skill.leafblade.twohand.on": "Two-handed form: power ×1.2, swing span ×1.1 and one more defence stage, but +3 ticks wind-up, +2 recovery and +6 cooldown.",
   "worldcombat.skill.leafblade.twohand.off": "One-handed form (default): faster wind-up and 4 ticks less cooldown, but power ×0.95 and a slightly narrower graze.",
   "worldcombat.skill.leafblade.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

@@ -22,7 +22,8 @@ namespace PokemonSkills {
     const BOUNCE_LOW_POWER = 0.62;
 
     define({
-        id: bounceId, name: "弹跳",
+        id: bounceId,
+        cooldownParameter: "recharge", name: "弹跳",
         description: "蹲身压地后笔直弹起、短暂悬停在最高点，再沿落点斜坠砸下：落点范围内的敌人受到接触伤害并被向下压、向后推，有机会被落地那一下麻住。起跳时头顶的净空决定能弹多高——开阔处弹满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。",
         uses: ["跳过近战火力、从上方砸下来", "落地带麻痹，打断对手的节奏", "在有掩体前抢一个高空落点"],
         kind: "enemy", range: 5, maxRange: 7, prepare: 6, active: 60, recover: 7, cooldown: 30,
@@ -103,7 +104,7 @@ namespace PokemonSkills {
                     const dealt = hurt(current, other, bounceId, power * Math.max(0.6, 1 - gap / radius * 0.4),
                         { damage: damageSpec(bounceId, "leap"), contact: true });
                     if (!dealt) continue;
-                    live.displace(other, WorldCombat.point(direction.x() * push, -press, direction.z() * push));
+                    if (live.valid(other)) live.displace(other, WorldCombat.point(direction.x() * push, -press, direction.z() * push));
                     if (!wasNumb && chance > 0 && live.random() < chance
                         && CombatStatus.inflict(live, other, "paralysis", paralyzeTicks, 0, { secondary: true })) paralyzed++;
                     hits++;

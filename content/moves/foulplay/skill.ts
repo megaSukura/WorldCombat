@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: foulplayId,
+        cooldownParameter: "recharge",
         name: "Foul Play",
         description: "The user turns the target's strength against it. The higher the target's Attack stat, the greater the damage this move inflicts.",
         uses: ["用它自己的力气打它", "越壮的目标咬得越重", "纠缠式把强敌拖进近身"],

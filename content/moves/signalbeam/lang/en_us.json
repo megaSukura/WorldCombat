@@ -5,7 +5,6 @@
   "worldcombat.skill.signalbeam.use.2": "Switch to Pulse for a heavier hit on one target",
   "worldcombat.skill.signalbeam.description.0": "Each enemy in the corridor takes %1$s special damage; the corridor is %2$s blocks half-wide and %3$s blocks long, and the drawn band is the hit area.",
   "worldcombat.skill.signalbeam.description.1": "On being lit, %1$s chance to jam the target into confusion for %2$s; each action it starts then has %3$s chance to be broken.",
-  "worldcombat.skill.signalbeam.description.2": "growing with special attack and level.",
   "worldcombat.skill.signalbeam.pulse.on": "Pulse: a narrower corridor with a heavier hit and a higher jam chance, at the cost of shorter reach - good for singling one target out.",
   "worldcombat.skill.signalbeam.pulse.off": "Continuous: a wider, longer corridor that can catch several at once, at the cost of a lighter hit and a lower jam chance.",
   "worldcombat.skill.signalbeam.timing": "Range %1$s blocks, windup %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",

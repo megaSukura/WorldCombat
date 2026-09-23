@@ -9,7 +9,7 @@ const context = vm.createContext({ WorldCombat: { on: noop, effect: noop, effect
     loadout: noop,
     typeEffectiveness: (attack, defence) => attack === 'ghost' && defence === 'normal' ? 0 : attack === 'grass' && defence === 'water' ? 2 : 1,
   } });
-const sources = ['content/protocols/effects.ts', 'content/behavior/contributions.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts', 'content/traits/ability-recipes.ts',
+const sources = ['content/protocols/effects.ts', 'content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts', 'content/mechanisms/status-vocabulary.ts', 'content/mechanisms/combat-status.ts', 'content/traits/composition.ts', 'content/traits/ability-recipes.ts',
   ...['formula', 'combatant-stats', 'combat-stages', 'native-abilities', 'native-items', 'native-semantics', 'native-modifiers', 'native-effects', 'world-environment', 'native-loadout', 'pokemon-damage'].map(id => `content/mechanisms/${id}.ts`)];
 vm.runInContext(ts.transpileModule(sources.map(path => fs.readFileSync(path, 'utf8')).join('\n'), {
   compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None },

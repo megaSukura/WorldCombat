@@ -47,6 +47,7 @@ namespace PokemonSkills {
 
     define({
         id: "defog",
+        cooldownParameter: "recharge",
         name: "Defog",
         description: "以自身为轴旋起一圈清扫风：圈里对手的反射壁、光墙、极光幕、白雾与神秘守护被整片抹掉，"
             + "地上的烟幕与撒菱一并掀走，被扫到的对手门户大开（防御与闪避下降）。没有伤害，站到风圈之外就无事。",

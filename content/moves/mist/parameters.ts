@@ -50,7 +50,7 @@ namespace PokemonSkills {
     });
     describe(mistId, [
         { key: "description.0", values: ["mistTicks", "veilRadius"] },
-        { key: "description.1", values: ["density", "range"] },
+        { key: "description.1", values: ["range"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "veil.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.veil === "dense"); } },
         { key: "veil.1", values: [], when: function (context) { return !(context.detail && context.detail.values) || context.detail.values.veil !== "dense"; } },

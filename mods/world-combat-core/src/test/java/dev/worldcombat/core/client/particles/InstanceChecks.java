@@ -39,6 +39,7 @@ public final class InstanceChecks {
         checkBatchReplayPath();
         checkPathPolylineFollowsPayload();
         checkOrientDirection();
+        checkHorizontalSector();
         checkUpdatedPointAndMoment();
         checkBindingRefresh();
         checkClearedPath();
@@ -109,6 +110,36 @@ public final class InstanceChecks {
         for (Spawn spawn : sim.sink.spawns) {
             assertTrue(spawn.x() >= -1e-4 && spawn.x() <= 4 + 1e-4 && Math.abs(spawn.y()) < 1e-4 && Math.abs(spawn.z()) < 1e-4,
                 "line runs along +X, got " + spawn.x() + "," + spawn.y() + "," + spawn.z());
+        }
+    }
+
+    /** Ground geometry shares the server sector's full opening and radius, regardless of pitch or visual scale. */
+    private static void checkHorizontalSector() {
+        String definition = """
+            {"moments":{"main":{"duration":3,"emitters":[
+              {"name":"footprint","particle":"minecraft:flame","bind":"point","fit":"world","orient":"heading",
+               "shape":{"kind":"sector","radius":4,"angleDegrees":150},"burst":{"count":128},
+               "maxParticles":256,"direction":"shape","speed":0.2,"lifetime":8,"size":1}
+            ]}}}
+            """;
+        for (double[] heading : new double[][] { {1, 3, 0}, {-1, -2, 2}, {0, 0, -1}, {0, 1, 0} }) {
+            for (double scale : new double[] {0.5, 1, 3}) {
+                JsonObject data = new JsonObject(); data.addProperty("seed", seed()); data.addProperty("scale", scale);
+                JsonArray direction = new JsonArray(); for (double value : heading) direction.add(value); data.add("direction", direction);
+                var sim = new Sim(make(definition, entry(data, 0))); sim.tick();
+                assertEquals(128, sim.sink.spawns.size(), "sector emits the authored burst");
+                double horizontal = Math.hypot(heading[0], heading[2]);
+                double hx = horizontal < EPS ? 0 : heading[0] / horizontal, hz = horizontal < EPS ? 1 : heading[2] / horizontal;
+                for (Spawn spawn : sim.sink.spawns) {
+                    double radius = Math.hypot(spawn.x(), spawn.z());
+                    assertNear(0, spawn.y(), EPS, "pitch leaves ground footprint horizontal");
+                    assertTrue(radius <= 4 + EPS, "data.scale preserves the authoritative radius");
+                    assertTrue(radius < EPS || (spawn.x() * hx + spawn.z() * hz) / radius >= Math.cos(Math.toRadians(75)) - EPS,
+                        "heading and full opening match the server sector");
+                    assertNear(0.2, Math.sqrt(spawn.vx() * spawn.vx() + spawn.vy() * spawn.vy() + spawn.vz() * spawn.vz()), EPS,
+                        "world fit preserves authored speed");
+                }
+            }
         }
     }
 

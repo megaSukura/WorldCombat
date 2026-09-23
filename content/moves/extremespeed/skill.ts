@@ -16,6 +16,7 @@
 namespace PokemonSkills {
     define({
         id: extremespeedId,
+        cooldownParameter: "recharge",
         name: "Extreme Speed",
         description: "The user charges the target at blinding speed with the heaviest first-strike charge. This move always goes first.",
         uses: ["中远距离一记重撞收尾", "从对手身上穿过去换到它身后", "追上逃跑的对手"],

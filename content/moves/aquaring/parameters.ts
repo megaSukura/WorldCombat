@@ -17,7 +17,7 @@
  *   motes       水光点数：特防决定粒子量。
  *   tempo／aftercast／recharge：起手、收招、冷却，随速度与等级变化。
  * 配置 spring（涌泉／细流）双向取舍：涌泉＝回得更快更多（间隔 ×0.65、回量 ×1.35），但存续 ×0.7（短促的猛回）；
- *   细流＝回得慢而少，却把存续拉到 ×1.25（长线的稳定续航）。两边总回量相近，适用局面不同。
+ *   细流＝回得慢而少，却把存续拉到 ×1.25（长线的稳定续航）。涌泉压缩回血节奏，细流提供更长的续航。
  */
 namespace PokemonSkills {
     export const aquaRingId = "aquaring";
@@ -32,10 +32,10 @@ namespace PokemonSkills {
 
     actionParameters.define(aquaRingId, {
         pulse: percent(
-            F.base(0.055).plus(F.stat("specialDefence").times(0.0006)).plus(F.world("rain", aquaRingRain).times(0.02))
+            F.base(0.025).plus(F.stat("specialDefence").times(0.00015)).plus(F.world("rain", aquaRingRain).times(0.006))
                 .times(F.when(F.pref("spring", aquaRingSpring), F.const(1.35), F.const(1.0)))
-                .clamp(0.03, 0.14),
-            "每次回量", "水幕每涌一次回复的最大生命比例；特防越高、雨越大回得越多，涌泉式再 ×1.35。"),
+                .clamp(0.02, 0.06),
+            "每次回量", "水幕每涌一次回复的已损失生命比例；特防越高、雨越大回得越多，涌泉式再 ×1.35。"),
         interval: seconds(
             F.base(50).minus(F.stat("speed").times(0.08))
                 .times(F.when(F.pref("spring", aquaRingSpring), F.const(0.65), F.const(1.0)))
@@ -70,8 +70,8 @@ namespace PokemonSkills {
 
     describe(aquaRingId, [
         { key: "description.0", values: ["pulse", "interval"] },
-        { key: "description.1", values: ["ringTicks", "motes"] },
-        { key: "description.2", values: ["veilRadius"] },
+        { key: "description.1", values: ["ringTicks"] },
+        { key: "description.2", values: [] },
         { key: "spring.on", values: [], when: function (context) { return read(context.detail.values, ["spring"]) === true; } },
         { key: "spring.off", values: [], when: function (context) { return read(context.detail.values, ["spring"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

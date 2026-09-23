@@ -3,7 +3,7 @@
   "worldcombat.skill.shadowsneak.use.0": "开局最便宜的一记先手，把对手拽近",
   "worldcombat.skill.shadowsneak.use.1": "隔着墙角从对手背后刺一刀",
   "worldcombat.skill.shadowsneak.use.2": "裹足式减速，为下一次出手开团",
-  "worldcombat.skill.shadowsneak.description.0": "影子从对手背后刺出，造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.shadowsneak.description.0": "影子从对手背后刺出，造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.shadowsneak.description.1": "影子能从脚下伸到 %1$s 格外的对手背后，沿地面以 %2$s 格/刻蔓延；它走地面，不需要视线。",
   "worldcombat.skill.shadowsneak.description.2": "命中把对手朝施法者拽近约 %1$s 格，并降低速度 %2$s 级。",
   "worldcombat.skill.shadowsneak.tether.on": "裹足式：命中缠住对手的脚，拖拽强 60% 并减速；这一刺轻一成二、影子略短、冷却更久。",

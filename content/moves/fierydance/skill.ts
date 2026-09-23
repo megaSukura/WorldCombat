@@ -24,6 +24,7 @@ namespace PokemonSkills {
 
     define({
         id: "fierydance",
+        cooldownParameter: "recharge",
         name: "Fiery Dance",
         description: "Cloaked in flames, the user attacks the target by dancing and flapping its wings. This may also boost the user's Sp. Atk stat.",
         uses: ["贴着身体跳一支两拍的火舞", "把身周一圈人分两圈一起点着", "命中后让火焰更旺、特攻提升"],
@@ -88,7 +89,7 @@ namespace PokemonSkills {
                     if (!landed) return;
                     hits++;
                     const away = WorldCombat.point(facts.position().x() - origin.x(), 0, facts.position().z() - origin.z());
-                    if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                    if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
                     WorldFeedback.emit(scope, fierydanceScene, 1, facts.position(),
                         { moment: "hit", target: String(victim.ref()), spin: spin, scale: scale, intensity: intensity }, 20);
                     sound(current, "cobblemon:impact.fire");

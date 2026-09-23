@@ -16,6 +16,7 @@ namespace PokemonSkills {
 
     define({
         id: flashId,
+        cooldownParameter: "recharge",
         name: "闪光",
         description: "自身炸开一团强光，把看得见它的敌人全部晃花；离得近的降更多命中，掩体后照不到。",
         uses: ["被围住时一次晃开一圈敌人", "在开阔地削弱一整群对手的命中", "给队友创造一轮安全窗口"],

@@ -4,7 +4,6 @@
   "worldcombat.skill.milkdrink.use.1": "顺手冲掉中毒",
   "worldcombat.skill.milkdrink.use.2": "满血中毒时也值得动用",
   "worldcombat.skill.milkdrink.description.0": "连饮 %2$s 口、每 %3$s 一口，整段回复最大生命的 %1$s；最后一口冲掉身上的中毒。",
-  "worldcombat.skill.milkdrink.description.1": "每口溅起约 %1$s 点奶滴，冲毒水光半径约 %2$s 格，体重与身量越大越明显。",
   "worldcombat.skill.milkdrink.description.2": "起手 %1$s、收招 %2$s，随速度缩短；饮用期间可以继续走位。",
   "worldcombat.skill.milkdrink.stance.warm": "温奶：回复总量 +0.05、口间隔 ×1.3（喝得慢），代价是冷却更久。",
   "worldcombat.skill.milkdrink.stance.cold": "冷饮：回复 −0.03、口间隔 ×0.8、冷却更短——喝得急、补得少，适合在受击间隙里快速续一口。",

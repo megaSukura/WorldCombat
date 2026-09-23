@@ -4,7 +4,7 @@
   "worldcombat.skill.withdraw.use.1": "When focused, stay rooted and spend shell charges to buy allies time",
   "worldcombat.skill.withdraw.use.2": "Take a short window to raise Defense before poking back out",
   "worldcombat.skill.withdraw.description.0": "Shelled: Defense +%1$s stages, the shell blocks the next %2$s hostile hits outright, for about %3$s.",
-  "worldcombat.skill.withdraw.description.1": "The shell wraps a %1$s-block radius and is built from about %2$s plates; while shut you cannot move.",
+  "worldcombat.skill.withdraw.description.1": "While shut you cannot move.",
   "worldcombat.skill.withdraw.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.withdraw.deep.on": "Deep dive: thicker shell, one more block, lasts longer, at the cost of a slower close, a longer cooldown and being rooted longer.",
   "worldcombat.skill.withdraw.deep.off": "Shallow tuck: a thin shell with one block only, but it closes sooner, cools down faster and lets you come back out quicker.",

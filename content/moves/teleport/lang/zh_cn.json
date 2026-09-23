@@ -5,7 +5,6 @@
   "worldcombat.skill.teleport.use.2": "越过一小段地形挪到安全处",
   "worldcombat.skill.teleport.description.0": "可以瞬移最多 %1$s 格到选定的落点。",
   "worldcombat.skill.teleport.description.1": "落地时 %1$s 格内正盯着你的敌人会失去目标。",
-  "worldcombat.skill.teleport.description.2": "进出空间裂缝时散出约 %1$s 点碎光。",
   "worldcombat.skill.teleport.far.on": "远遁闪：距离 ×1.35、甩仇恨半径 ×1.2，代价是起手 +3、冷却 +26，落地更散。",
   "worldcombat.skill.teleport.far.off": "闪现：距离 ×0.85、甩仇恨半径 ×0.9，起手与冷却都更省，适合反复小挪。",
   "worldcombat.skill.teleport.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

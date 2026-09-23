@@ -4,7 +4,7 @@
   "worldcombat.skill.peck.use.1": "把离地的目标一喙压回地面",
   "worldcombat.skill.peck.use.2": "在对手起手前抢一记速啄",
   "worldcombat.skill.peck.description.0": "喙尖一记造成约 %1$s 点接触伤害。",
-  "worldcombat.skill.peck.description.1": "喙程约 %1$s 格、喙尖判定半径约 %2$s 格；命中崩出约 %3$s 片羽屑。",
+  "worldcombat.skill.peck.description.1": "喙程约 %1$s 格、喙尖判定半径约 %2$s 格。",
   "worldcombat.skill.peck.description.2": "目标不在空中时不吃；离地时伤害乘 %1$s，并以 %2$s 格/刻的初速把它压回地面。",
   "worldcombat.skill.peck.dive.on": "俯冲式：整个人扑出去——射程约 %1$s 格、每啄约 %2$s 点，但起手、收招与冷却都更久。",
   "worldcombat.skill.peck.dive.off": "点啄式：原地速啄，射程约 %1$s 格、每啄约 %2$s 点，起手与循环最短，可以连续甩。",

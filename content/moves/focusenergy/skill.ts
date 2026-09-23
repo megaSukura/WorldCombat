@@ -102,6 +102,7 @@ namespace PokemonSkills {
 
     define({
         id: focusEnergyId,
+        cooldownParameter: "wait",
         name: "聚气",
         description: "深深吸一口气，把心神收成一点：这口气随时间越沉越深，期间自己的每一次命中都更容易击中要害，命中不会消耗它，直到窗口走完才散。身上已有龙声鼓舞时无法再聚气。",
         uses: ["开场先吸一口气，让后面每一击都更容易命中要害", "在对手硬吃连击前把破绽看准", "逼对手在吐纳走完前不敢贴身"],

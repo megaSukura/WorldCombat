@@ -5,7 +5,7 @@
   "worldcombat.skill.chargebeam.use.2": "Chip from a distance before closing",
   "worldcombat.skill.chargebeam.description.0": "The beam strikes a target within %2$s blocks for %1$s power at %3$s blocks/tick; it only makes limited corrections, so a hard sideways move still dodges it.",
   "worldcombat.skill.chargebeam.description.1": "The beam has a %1$s-block radius; on a hit, %2$s chance for the residual current to flood back and raise Sp. Atk by %3$s stage.",
-  "worldcombat.skill.chargebeam.description.2": "%2$s ticks after a hit, the residual current bites the impact point for %1$s of the direct hit; the charge and the hit throw %3$s arcs.",
+  "worldcombat.skill.chargebeam.description.2": "%2$s ticks after a hit, the residual current bites the impact point for %1$s of the direct hit.",
   "worldcombat.skill.chargebeam.overcharge.on": "Overcharge: 5 ticks more windup and a longer cooldown, but range ×1.2, power ×1.2, a higher surge chance and denser arcs.",
   "worldcombat.skill.chargebeam.overcharge.off": "Quick shot: shorter and cheaper and it flies faster, with less range and a lower surge chance.",
   "worldcombat.skill.chargebeam.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

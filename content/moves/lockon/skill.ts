@@ -106,6 +106,7 @@ namespace PokemonSkills {
 
     define({
         id: lockonId,
+        cooldownParameter: "recharge",
         name: "锁定",
         description: "把准星咬住一个对手的位置，把它拖在你的射线上，让下一次命中不会脱靶；命中锁住的目标即散。",
         uses: ["在对手要逃开前先钉住它", "为一次必须命中的关键攻击做铺垫", "把跑得快的目标拖慢下来集火"],

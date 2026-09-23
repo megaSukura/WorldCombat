@@ -53,6 +53,7 @@ namespace PokemonSkills {
 
     define({
         id: transformId,
+        cooldownParameter: "recharge",
         name: "变身",
         description: "照着一名对手的样子重塑自己：招式、六维、类型与特性整套换成它的，维持一段时间，到期或被清除时精确收回。它变成谁的形状，就只能用谁的手。",
         uses: ["借对手的整套招式与六维打这一段", "把对手的高攻或高防形态搬过来", "在了解对手后换一种完全不同的打法"],

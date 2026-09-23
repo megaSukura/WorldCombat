@@ -61,6 +61,7 @@ namespace PokemonSkills {
 
     define({
         id: drillrunId,
+        cooldownParameter: "recharge",
         name: "Drill Run",
         description: "The user crashes into the target while rotating its body like a drill. This move has a heightened chance of landing a critical hit.",
         uses: ["旋转着直线钻穿挡路的目标", "钻完在地上留下一条犁沟", "一路能连续咬穿多个对手"],

@@ -28,6 +28,7 @@ namespace PokemonSkills {
 
     define({
         id: "hyperfang",
+        cooldownParameter: "recharge",
         name: "Hyper Fang",
         description: "The user bites hard on the target with its sharp front fangs. This may also make the target flinch.",
         uses: ["用全族最重的单口直接伤害咬实", "咬住猛甩，把目标钉住一会儿", "甩懵对手，打断它正在做的事"],

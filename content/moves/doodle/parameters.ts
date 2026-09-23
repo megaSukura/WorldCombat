@@ -63,7 +63,6 @@ namespace PokemonSkills {
     describe("doodle", [
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["canvas", "squad", "hold"] },
-        { key: "description.2", values: ["marks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }

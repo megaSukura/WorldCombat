@@ -22,6 +22,7 @@ namespace PokemonSkills {
 
     define({
         id: "gust",
+        cooldownParameter: "recharge",
         name: "Gust",
         description: "振翅扇出一记短促的压缩风弹：命中的对手被沿风的方向推开，正离地的目标被吹得更远、还往上托一点。推风式推得更远、威力更轻；削风式更重、推得更近。",
         uses: ["便宜、快速的远程消耗，一记接一记地扇", "把对手推离掩体、推下平台或推开队友", "对飞在空中的目标吹得更远"],

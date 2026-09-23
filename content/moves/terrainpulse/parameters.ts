@@ -120,7 +120,7 @@ namespace PokemonSkills {
     describe("terrainpulse", [
         { key: "description.0", values: ["pulse"] },
         { key: "description.1", values: ["charge", "reach"] },
-        { key: "description.2", values: ["bursts", "ring"] },
+        { key: "description.2", values: ["ring"] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);
 }

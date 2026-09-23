@@ -46,7 +46,6 @@ namespace PokemonSkills {
     describe("gastroacid", [
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
         { key: "description.1", values: ["hold"] },
-        { key: "description.2", values: ["drops", "bubbles"] },
         { key: "thick.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "thick.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -34,6 +34,7 @@ namespace PokemonSkills {
 
     define({
         id: "cottonguard",
+        cooldownParameter: "wait",
         name: "棉花防守",
         description: "用软绵绵的绒毛裹住自己的身体进行守护，巨幅提高自己的防御。",
         uses: ["硬吃一轮爆发前先裹上绒衣", "在近身肉搏里把防御堆起来", "用可见的绒衣窗口逼对手先花时间磨它"],

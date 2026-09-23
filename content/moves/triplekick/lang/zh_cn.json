@@ -3,6 +3,8 @@
   "worldcombat.skill.triplekick.description.0": "第一脚造成 %1$s 威力的格斗属性接触伤害，连续 %2$s 脚；每中一脚，下一脚按 %3$s 倍递增。",
   "worldcombat.skill.triplekick.description.1": "每脚沿身前 %1$s 格长、%2$s 格半宽的走廊判定；每脚命中率 %3$s，两脚间隔 %4$s 秒。",
   "worldcombat.skill.triplekick.description.2": "命中击退目标 %1$s 格。",
+  "worldcombat.skill.triplekick.drive.on": "抽射式：每脚威力 ×1.12、击退 ×1.5，代价是踢击距离 ×0.85、命中率 −2%、两脚间隔 +1 刻、收招 +1 刻、冷却 +2 刻。",
+  "worldcombat.skill.triplekick.drive.off": "快踢式（原生形态）：踢击距离 ×1.03、两脚间隔 −1 刻、命中率 +2%、冷却 −4 刻，代价是单脚较轻、击退较近。",
   "worldcombat.skill.triplekick.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.triplekick.growth.0": "达到 %1$s 级，第一脚威力提升至 %2$s。",
   "worldcombat.skill.triplekick.growth.1": "达到 %1$s 级，第一脚威力提升至 %2$s，踢击距离延长至 %3$s 格。",

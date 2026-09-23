@@ -104,7 +104,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["ram"] },
         { key: "description.1", values: ["dash", "speed", "collisionRadius"] },
         { key: "description.2", values: ["cross", "glide", "shove"] },
-        { key: "description.3", values: ["rally", "motes"] },
+        { key: "description.3", values: ["rally"] },
         { key: "turn.on", values: [], when: function (context) { return read(context.detail.values, ["turn"]) === true; } },
         { key: "turn.off", values: [], when: function (context) { return read(context.detail.values, ["turn"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

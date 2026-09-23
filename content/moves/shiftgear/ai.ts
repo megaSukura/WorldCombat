@@ -1,7 +1,7 @@
 /**
  * 换档 的伙伴 AI 用途：这是这招自己的一套出手计划，不是共享强化位的随手一放。
  *
- * 什么局面有意义：有威胁但尚未贴身（距离 ≥ ai.minGap），或收到驻守/自主指令身边暂时安全。
+ * 什么局面有意义：有威胁但尚未贴身（距离 ≥ ai.minGap），且有交战需求时才准备换挡。
  * 什么时候最想出手：威胁在 ai.minGap 之外、ai.maxChase 之内时 priority ≥ 100 抢在共享顺序前——趁还能拉开距离时换好挡。
  * 贴身时交回共享顺序，不为提速站着挨打。
  * 放完之后：既然换的是「追得上也打得动」的挡，伙伴会顺势朝最近的威胁压上去一小段，把新速度用掉。
@@ -29,8 +29,10 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability) {
             if (context.facts.mounted) return false;
+            if (["atk", "spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             const gap = shiftgearThreatDistance(context);
-            if (gap < 0) return context.facts.intent === "hold" || context.facts.intent === "autonomous";
+            if (gap < 0) return false;
+            if (gap <= CompanionBehavior.ai<number>(capability, "minGap", 4)) return false;
             return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
         },
         priority: function (context, capability) {

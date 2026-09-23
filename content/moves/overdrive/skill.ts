@@ -45,6 +45,7 @@ namespace PokemonSkills {
 
     define({
         id: "overdrive",
+        cooldownParameter: "recharge",
         name: "Overdrive",
         description: "扎住脚，把乐器提到身前朝正前方连拨三下：每一下都沿同一条走廊推出一道带电的轰响，走廊里的敌人各挨一次重击、被打退，并可能被震到麻痹。开余响时，三下之后还会回来一记更重的迟到声浪。",
         uses: ["沿一条直线连打三下、压住排成一列的敌人", "用带电声浪赌一次麻痹", "隔着掩体把走廊尽头的对手震退", "开余响啃一个硬目标"],

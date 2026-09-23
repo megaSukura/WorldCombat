@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.ancientpower.summary": "Press the world's primal power out from underfoot: a dome of ancient energy blasts everything around (airborne foes included) outward and upward, raising ground runes; the receding wave may raise all the user's stats by one stage. Deep-source form is narrower and heavier; wide form is broader and faster with a stronger shove.",
+  "worldcombat.skill.ancientpower.summary": "Press the world's primal power out from underfoot: a dome of ancient energy blasts everything around (airborne foes included) outward and upward, raising ground runes; the receding wave may temporarily raise the user's five combat stats by one stage. Deep-source form is narrower and heavier; wide form is broader and faster with a stronger shove.",
   "worldcombat.skill.ancientpower.use.0": "Blast a ring of foes off you when surrounded",
   "worldcombat.skill.ancientpower.use.1": "Catch airborne targets too, not just the ground",
-  "worldcombat.skill.ancientpower.use.2": "Build all stats up over time through the surge",
+  "worldcombat.skill.ancientpower.use.2": "Attack during the temporary five-stat surge",
   "worldcombat.skill.ancientpower.description.0": "The primal burst deals %1$s special damage with a %2$s block radius.",
   "worldcombat.skill.ancientpower.description.1": "Caught foes are pushed %1$s blocks outward and lifted %2$s blocks up.",
-  "worldcombat.skill.ancientpower.description.2": "It has a %1$s chance to raise all the user's stats by %2$s stage(s).",
-  "worldcombat.skill.ancientpower.description.3": "It reaches about %1$s blocks vertically, throws about %2$s shards and raises about %3$s ground runes; deep-source is currently %4$s.",
+  "worldcombat.skill.ancientpower.description.2": "After a hit, has a %1$s chance to raise Attack, Defence, Special Attack, Special Defence and Speed by %2$s for %3$s. Repeated triggers refresh one layer.",
+  "worldcombat.skill.ancientpower.description.3": "It reaches about %1$s blocks vertically; deep-source is currently %2$s.",
   "worldcombat.skill.ancientpower.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.ancientpower.growth.0": "From level %1$s the power rises to %2$s and the radius to %3$s blocks.",
   "worldcombat.skill.ancientpower.value.primal": "Primal power",
@@ -27,7 +27,8 @@
   "worldcombat.skill.ancientpower.preference.ai.maxChase.help": "The companion only considers ancient power within this distance; smaller casts it only at point-blank, larger is willing to close in first.",
   "worldcombat.skill.ancientpower.preference.ai.minFoes": "Foes in ring",
   "worldcombat.skill.ancientpower.preference.ai.minFoes.help": "Cast only when at least this many visible, hostile foes stand inside the blast radius; 1 throws it at the first foe (building stats over time), higher keeps it for when surrounded.",
-  "world_combat.move.ancientpower.text.surge": "All stats +%1$s",
+  "world_combat.move.ancientpower.text.surge": "Five stats +%1$s (%2$s s)",
   "world_combat.move.ancientpower.text.hit": "Ancient power blasted %1$s foe(s)",
-  "world_combat.move.ancientpower.text.miss": "The primal power falls flat"
+  "world_combat.move.ancientpower.text.miss": "The primal power falls flat",
+  "worldcombat.skill.ancientpower.value.surgeTicks": "Surge duration"
 }

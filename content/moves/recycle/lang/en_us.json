@@ -10,7 +10,7 @@
   "worldcombat.skill.recycle.scavenge.off": "Recycle from memory: it restores only the remembered item, with a shorter wind-up (x0.85) and without touching anything in the world.",
   "worldcombat.skill.recycle.timing": "Self-cast; after %2$s seconds of preparation it costs %4$s PP to recycle, then %3$s seconds to gather yourself and a %5$s second cooldown from commit.",
   "worldcombat.skill.recycle.growth.0": "At level %1$s the recovery radius rises to %2$s blocks and the cooldown becomes %3$s seconds.",
-  "worldcombat.skill.recycle.growth.1": "At level %1$s the recovery radius rises to %2$s blocks and the sparks rise to %3$s.",
+  "worldcombat.skill.recycle.growth.1": "At level %1$s the recovery radius rises to %2$s blocks.",
   "worldcombat.skill.recycle.value.channel": "Wind-up",
   "worldcombat.skill.recycle.value.drawRadius": "Recovery radius",
   "worldcombat.skill.recycle.value.motes": "Sparks",

@@ -99,7 +99,7 @@ namespace PokemonSkills {
 
     describe(shoreupId, [
         { key: "description.0", values: ["heal"] },
-        { key: "description.1", values: ["grains", "sandReach", "grainDensity"] },
+        { key: "description.1", values: ["grains", "sandReach"] },
         { key: "description.2", values: ["gather", "settle"] },
         { key: "stance.thick", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "stance.loose", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },

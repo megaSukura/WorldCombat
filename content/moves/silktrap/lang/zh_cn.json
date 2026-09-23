@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.silktrap.summary": "铺开一张丝网，按总量挡下伤害招式并黏住接触者：速度被压低、脚被当场缠住；变化招式会穿过丝网。",
   "worldcombat.skill.silktrap.description.0": "丝网持续 %1$s、量 %2$s 点，接触降速 %3$s 级、缠足 %4$s；速度与防御越高越韧越久。",
-  "worldcombat.skill.silktrap.description.1": "绷网 %1$s，丝网半径 %2$s 格，冷却 %3$s。",
+  "worldcombat.skill.silktrap.description.1": "绷网 %1$s，冷却 %2$s。",
   "worldcombat.skill.silktrap.description.2": "连用失误率 %1$s；缠缚与滑丝的取舍见配置 %2$s。",
   "worldcombat.skill.silktrap.use.0": "黏住冲上来的近战，让它既慢又动不了",
   "worldcombat.skill.silktrap.use.1": "为队友拉开距离争取时间",

@@ -11,6 +11,7 @@
 namespace PokemonSkills {
     define({
         id: magicRoomId,
+        cooldownParameter: "recharge",
         name: "魔法空间",
         description: "在选定的地面撑开一片静默空间：站在里面的活体，携带道具的效果全部消失。对双方一视同仁，走出去立刻恢复。",
         uses: ["废掉对手依赖道具的套路", "在道具交换前先让道具失效", "让己方不靠道具的战力占便宜"],
