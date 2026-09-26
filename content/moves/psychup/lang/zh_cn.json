@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.psychup.summary": "将自己的能力等级调整成目标的样子，并复制目标现有的药水、信标等增益。只取增益模式保留自己更高的能力等级。",
+  "worldcombat.skill.psychup.summary": "把自己的能力等级与药水增益调整成目标的样子；目标可以是敌人，也可以是让你借势的同伴。只取增益模式保留自己更高的能力等级。",
   "worldcombat.skill.psychup.use.0": "对手刚给自己加完状态时立刻对齐",
-  "worldcombat.skill.psychup.use.1": "把对手的增益变成自己的增益",
-  "worldcombat.skill.psychup.use.2": "照单全收时把对手的负面也一并接过来",
-  "worldcombat.skill.psychup.description.0": "在 %1$s 格内、视线畅通时读取目标，起手 %2$s；目标须有能力变化或可复制的增益。",
+  "worldcombat.skill.psychup.use.1": "把对手或同伴的增益变成自己的增益",
+  "worldcombat.skill.psychup.use.2": "照单全收时把目标的负面也一并接过来",
+  "worldcombat.skill.psychup.description.0": "在 %1$s 格内、视线畅通时读取目标（敌人或同伴），起手 %2$s；目标须有能力变化或可复制的增益。",
   "worldcombat.skill.psychup.description.1": "复制的药水增益最多保留 %1$s，且不会超过原效果的剩余时间；能力等级按交战规则消退。「已同调」提示本次复制，并使伙伴暂时避免重复施放。",
   "worldcombat.skill.psychup.select.0": "只取增益：只抄对自己有利的项，忽略会削弱自己的项；代价是冷却 +20 刻、标记维持减半。",
   "worldcombat.skill.psychup.select.1": "照单全收：对手的每一项能力变化都照抄（包括负面），冷却更短、标记维持更长。",
@@ -23,6 +23,6 @@
   "worldcombat.skill.psychup.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.psychup.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离位去读对手的架势；关闭则只在原地够得到时出手。",
   "effect.world_combat.psychup_link": "自我暗示",
-  "world_combat.move.psychup.text.linked": "同调：抄得 %1$s 项",
+  "world_combat.move.psychup.text.linked": "同调：能力 %1$s 项、增益 %2$s 项",
   "world_combat.move.psychup.text.full": "已与对手同调"
 }

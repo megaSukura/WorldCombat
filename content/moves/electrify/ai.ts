@@ -26,11 +26,31 @@ namespace CompanionBehavior {
         for (let i = 0; i < items.length; i++) if (items[i].data.move === "electrify") return items[i];
         return null;
     }
+    function electrifyBenefits(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        const scope = world(context), opponent = scope.actor(threat.ref);
+        if (opponent === null) return false;
+        const own = PokemonDamage.combatants.read(scope, scope.source());
+        let type = "";
+        if (String(opponent.domain()) === "cobblemon") {
+            const last = NativeEffects.read(scope, opponent).used;
+            const move = last ? CobblemonCombat.moveTemplate(last) : null;
+            if (move !== null) type = String(move.type()).toLowerCase();
+        } else if (DamageSemantics.recentAttack(scope, opponent, 120) === null) return false;
+        const all = !!(item.data.config && item.data.config.allMoves);
+        if (type === "electric" || !all && type !== "normal") return false;
+        let before = 1, after = 1;
+        own.types.forEach(defence => {
+            if (type) before *= CobblemonCombat.typeEffectiveness(type, defence);
+            after *= CobblemonCombat.typeEffectiveness("electric", defence);
+        });
+        return after < before;
+    }
     function electrifyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (!threat.visible || threat.friendly || threat.health <= 0) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 8)) return false;
         if (status(context, threat, "electrify")) return false;
+        if (!electrifyBenefits(context, item, threat)) return false;
         if (!world(context).clear(point(self.point), point(threat.point))) return false;
         if (ai<string>(item, "opening", "anytime") !== "incoming") return true;
         const owner = context.facts.owner;

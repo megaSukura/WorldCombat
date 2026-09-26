@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.geargrind.summary": "从身体两侧各甩出一枚旋转的钢铁齿轮，一左一右交错飞向对手、在空中合拢；齿轮撞到东西会弹开一下，落地的齿轮还会原地转一会儿再散成钢屑。交错式侧向兜人、直射式更快更准。",
+  "worldcombat.skill.geargrind.summary": "从身体两侧各甩出一枚旋转的钢铁齿轮，一左一右交错飞向对手、在空中合拢；齿轮撞到东西会弹开一下，落地的齿轮只转一小会儿就散成钢屑，不留在场上持续伤人。可指向敌人或空地：没有目标时两枚齿轮沿各自侧线汇聚到选定的点。交错式侧向兜人、直射式更快更准。",
   "worldcombat.skill.geargrind.use.0": "从两侧交错甩出两枚旋转钢齿轮",
   "worldcombat.skill.geargrind.use.1": "用可弹跳的齿轮绕开掩体",
   "worldcombat.skill.geargrind.use.2": "压住会侧向走位的对手",

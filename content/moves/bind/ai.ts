@@ -2,7 +2,8 @@
  * 绑紧 / bind 的 AI 用途。
  *
  * 什么局面下出手：有可见威胁、在 `ai.maxChase`（默认 7）之内；目标还没被拴住
- * （带着 `partiallytrapped` 身份的不再重复放——绳已经拴上了）。
+ * （带着 `partiallytrapped` 身份的不再重复放——绳已经拴上了）。`ai.minHealth`（默认 0.3）是**保留生命**：
+ * 自己生命低于这个比例、目标还没残时不出手——拴绳会把自己也拖慢，低血时共慢很危险。
  * 对谁出手：`ai.preferRunners`（默认开）让正在快速移动或正在逃跑的目标排得更前——绳的价值就在于不让它跑；
  * 正在攻击自己的目标再加一档（拴住它再脱离）。焦点目标另加一档。
  * 够不到怎么办：`reach` 就是本招射程，不够就先走近；绳够到后由每刻回拽把人留在身边。
@@ -13,6 +14,12 @@ namespace PokemonSkills {
         return !CompanionBehavior.status(context, target, "partiallytrapped");
     }
 
+    /** 低血时不再为了拴人而让自己一起变慢，除非目标已经残到值得换。 */
+    function bindCanAfford(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.3);
+        return CompanionBehavior.ratio(CompanionBehavior.source(context)) >= minHealth || CompanionBehavior.ratio(target) <= 0.35;
+    }
+
     CompanionBehavior.registerUse("bind", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -20,12 +27,14 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             if (!target) return true;
             if (!bindValid(context, target)) return false;
+            if (!bindCanAfford(context, capability, target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 7);
         },
         accepts: function (context, capability, target) { return bindValid(context, target); },
         priority: function (context, capability, target) {
             if (!target || !bindValid(context, target)) return 0;
+            if (!bindCanAfford(context, capability, target)) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "preferRunners", true)) {
@@ -51,6 +60,10 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.preferRunners"), "先拴跑得快的", "boolean", {
             help: "开启：正在快速移动或逃跑的目标优先——先用绳拽住它；关闭：只按威胁与距离排序。"
+        }),
+        field(pathOf("ai.minHealth"), "保留生命", "number", {
+            min: 0, max: 0.8, step: 0.05,
+            help: "自身生命低于这个比例时不再主动甩绳（除非目标已残）：拴绳会把自己也拖慢，低血时共慢很危险。调高越珍惜自己，也越少去缠残血目标。"
         })
     ]);
 }

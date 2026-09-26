@@ -1,15 +1,16 @@
 /**
  * 火之誓约 / firepledge 的客户端表现。
  *
- * 一句话：落点先浮出一圈熔红的誓约符文，随后一根火柱从地面拔起把柱内的人烧着，柱脚留一圈缓慢燃烧的炭红余烬；
- *   与草／水共鸣时，整片地铺开翻涌的火海，或升起虹彩的光点与祝福光环。
+ * 一句话：落点先浮出一圈熔红的誓约符文，随后一根火柱从地面拔起把柱内的人烧着，柱脚只留一圈短寿的炭红印记
+ *   （共鸣标记，本身不灼烧）；只有与草／水真正共鸣时，同一圈印才就地铺开翻涌的火海，或升起虹彩的光点与祝福光环。
  * 色相家族：橙红到亮黄（flame／ember／impact_fire／floorscorch）；彩虹时刻才引入虹彩第二色相
  *   （shinesparkle_rainbow／glowingsparkle_pink），与三誓约里草（绿）、水（青蓝）分开。
- * 拍子：起（mark，提交前的地面符文）→ 击（erupt 火柱 + hit 命中点）→ 留（scar 余烬，或 seaoffire／rainbow 组合场）。
+ * 拍子：起（mark，提交前的地面符文）→ 击（erupt 火柱 + hit 命中点）→ 留（scar 短印，或 seaoffire／rainbow 组合场）。
  * 范围：mark／scar／seaoffire 的花环半径 = `data.scale` × 参考 1.7 格（= 实际誓约印半径）；
  *   erupt 的柱体 shape 直接绑定 `data.radius`／`data.height`，玩家看到的那根柱就是实际判定柱。
- * 运动：火柱贴地向上窜、火星带轻微重力回落；余烬缓慢上浮；火海向外翻涌；彩虹的光点上升。
- * 数：`data.count`（由特攻与本次威力派生）决定火星与火海的粒子数量，`data.combo` 在共鸣时切到组合场。
+ * 运动：火柱贴地向上窜、火星带轻微重力回落；烙印余烬低而少；火海向外翻涌；彩虹的光点上升。
+ * 数：`data.count` 驱动 erupt 火星、scar 贴地焦痕与火海粒子的数量；
+ *   `data.moment` 由服务端按同一印记的实际组合态选择 scar／seaoffire／rainbow，`data.scale` 让范围贴合实际半径。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const FirepledgeDefinition: ParticleDefinition = {
@@ -110,7 +111,7 @@ const FirepledgeDefinition: ParticleDefinition = {
                 {
                     name: "ember_floor", bind: "point", height: 0.03,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 26, shape: { kind: "circle", radius: 1.7 },
+                    rate: { data: "count", fallback: 14 }, shape: { kind: "circle", radius: 1.7 },
                     direction: "up", speed: [0.01, 0.06],
                     lifetime: [12, 22], size: [0.08, 0.02],
                     color: 0xE2621E, alpha: [0.7, 0], light: "full", maxParticles: 90

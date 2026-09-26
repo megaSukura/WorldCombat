@@ -1,83 +1,69 @@
-/** Wait for a selected opponent’s next benefit, then steal a snatchable self-targeted move or one newly gained beneficial potion effect. */
+/** Each waiting instance has its own claim; the earliest eligible window takes one actual incoming benefit. */
 namespace PokemonSkills {
     export const snatchId = "snatch";
     export const snatchScene = "world_combat:move_snatch";
     export const snatchTakenText = "world_combat.move.snatch.text.taken";
     export const snatchEmptyText = "world_combat.move.snatch.text.empty";
-
-    interface SnatchWindow { snatcher: string; until: number; token: number; reach: number; }
-    interface SnatchCaught { move: string; from: string; at: number; effect?: MobEffects.Anchor; }
-
-    /** 谁正把手张在谁面前：目标 ref → 窗口。窗口由施法者的动作驱动，过期或目标失效即作废。 */
-    var snatchWindows: { [target: string]: SnatchWindow } = Object.create(null);
-    /** 已经抓住、等施法者接手的下一手：施法者 ref → 战利品。 */
-    var snatchCaught: { [snatcher: string]: SnatchCaught } = Object.create(null);
-    var snatchTokenSeq = 0;
-
-    /** 这一手能不能被夺：已实装、是变化招、带原生 snatch 旗标。 */
+    interface SnatchWindow {
+        instance: number; snatcher: string; target: string; until: number; reach: number;
+        move: (id: string) => boolean; native: (data: CombatNativeMobEffectFacts) => boolean;
+    }
+    const snatchWindows: SnatchWindow[] = [];
+    const snatchBenefits: { [ref: string]: number } = Object.create(null);
+    function snatchRemove(instance: number): void {
+        for (let i = snatchWindows.length - 1; i >= 0; i--) if (snatchWindows[i].instance === instance) snatchWindows.splice(i, 1);
+    }
     export function snatchStealable(id: string): boolean {
         if (!skills[id]) return false;
         try {
             const move = CobblemonCombat.moveTemplate(id);
-            if (String(move.category()) !== "status") return false;
-            return !!NativeLoadout.facts(move).flags.snatch;
-        } catch (error) {
-            return false;
-        }
+            return String(move.category()) === "status" && !!NativeLoadout.facts(move).flags.snatch;
+        } catch (error) { return false; }
     }
-
-    /** 把夺来的一手接在自己身上；自用与自场招落到原地，朝外招的映射留给别的族，这里只接手能自用的。 */
+    export function snatchOpportunity(world: CombatWorld, actor: CombatActor): boolean {
+        if ((snatchBenefits[String(actor.ref())] || -1000) >= world.tick() - 200) return true;
+        if (String(actor.domain()) !== "cobblemon") return false;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const move = pokemon.move(slot);
+            if (move && move.pp() > 0 && snatchStealable(NativeLoadout.selection(world, slot, move, actor).id)) return true;
+        }
+        return false;
+    }
     export function snatchCall(action: CombatAction, id: string): NativeLoadout.CallOptions | null {
-        const skill = skills[id];
-        if (!skill) return null;
-        if (skill.kind === "self") return { eligibility: "caller", input: {} };
-        const world = action.sense(), self = action.actor(), body = world.observe(self);
-        if (body === null) return null;
-        if (skill.kind === "friend") return { eligibility: "caller", input: { target: self, point: body.position() } };
-        if (skill.kind === "point" || skill.kind === "motion")
-            return { eligibility: "caller", input: { point: body.position(), direction: action.direction() } };
-        return null;
+        const skill = skills[id], self = action.actor(), body = action.sense().observe(self); if (!skill || !body) return null;
+        if (skill.kind === "enemy") return null;
+        return { eligibility: "caller", cooldown: p(snatchId, "recharge", action), input: {
+            target: skill.kind === "self" || skill.kind === "friend" || skill.kind === "aim" ? self : null,
+            point: body.position(), direction: action.direction()
+        } };
     }
-
-    // 窗口的判定端：被选定的对手一旦提交可夺的招式，就把这次提交顶回去，并把战利品留给张手的人。
-    // 张手的动作每到一刻会来取一次；取不到就继续等，等到窗口走完。
-    WorldCombat.on("world_combat:move_snatch/hook", "world_combat:before_commit", "", function (event) {
-        const action = event.action();
-        if (action === null) return;
-        // 夺来的一手在这里提交，不要再被自己抢回去。
-        const content = String(action.content());
-        if (content === "world_combat:snatch" || content === "world_combat:magiccoat") return;
-        const world = event.world(), actor = event.actor();
-        if (String(actor.domain()) !== "cobblemon") return;
-        const targetRef = String(actor.ref()), window = snatchWindows[targetRef];
-        if (!window) return;
-        const now = world.tick();
-        if (now > window.until) { delete snatchWindows[targetRef]; return; }
-        const executing = NativeLoadout.executing(action);
-        if (executing === null) return;
-        const id = String(executing.id());
-        if (!snatchStealable(id)) return;
-        const snatcher = world.actor(window.snatcher), here = world.observe(actor);
-        if (snatcher === null || here === null || !world.valid(snatcher)
-            || String(snatcher.key()) === String(actor.key()) || world.friendly(snatcher)) {
-            delete snatchWindows[targetRef]; return;
-        }
-        const hand = world.observe(snatcher);
-        if (hand === null) { delete snatchWindows[targetRef]; return; }
-        if (hand.position().minus(here.position()).length() > window.reach) return;
-        if (!world.clear(here.position(), hand.position())) return;
-        event.reject("snatched");
-        snatchCaught[window.snatcher] = { move: id, from: targetRef, at: now };
+    function snatchEligible(world: CombatWorld, recipient: CombatActor): SnatchWindow[] {
+        return snatchWindows.filter(window => {
+            if (window.target !== String(recipient.ref()) || window.until < world.tick()) return false;
+            const snatcher = world.actor(window.snatcher), from = snatcher && world.observe(snatcher), to = world.observe(recipient);
+            return !!snatcher && !!from && !!to && !world.allied(snatcher, recipient)
+                && from.position().minus(to.position()).length() <= window.reach && world.clear(from.position(), to.position());
+        });
+    }
+    WorldCombat.on("world_combat:move_snatch/ended", "world_combat:action_ended", "", event => snatchRemove(JSON.parse(event.data()).instance));
+    WorldCombat.on("world_combat:move_snatch/hook", "world_combat:before_commit", "", event => {
+        const action = event.action(); if (!action || action.data("world_combat:snatch/taken") !== null || action.data("world_combat:magiccoat/returning") !== null) return;
+        const executing = NativeLoadout.executing(action); if (!executing || !snatchStealable(String(executing.id()))) return;
+        const eligible = snatchEligible(event.world(), event.actor());
+        for (let i = 0; i < eligible.length; i++) if (eligible[i].move(String(executing.id()))) { event.reject("snatched"); return; }
     });
-
-    WorldCombat.on("world_combat:move_snatch/native_effect", "world_combat:mob_effect_added", "", function (event) {
-        const world = event.world(), target = event.actor(), ref = String(target.ref()), window = snatchWindows[ref];
-        if (!window || world.tick() > window.until || snatchCaught[window.snatcher]) return;
-        const data = JSON.parse(String(event.data())), effect = MobEffects.read(world, target, String(data.id));
-        if (!effect || String(effect.category()) !== "beneficial" || effect.tagged("world_combat:status/identity_only")) return;
-        const actor = world.actor(window.snatcher), a = actor ? world.observe(actor) : null, b = world.observe(target);
-        if (!actor || !a || !b || world.allied(actor, target) || a.position().minus(b.position()).length() > window.reach || !world.clear(a.position(), b.position())) return;
-        snatchCaught[window.snatcher] = { move: "", from: ref, at: world.tick(), effect: MobEffects.anchor(effect) };
+    WorldCombat.on("world_combat:move_snatch/native", "world_combat:mob_effect_incoming", "", event => {
+        const data: CombatNativeMobEffectFacts = JSON.parse(event.data()), target = event.target(), world = event.world();
+        if (!target || data.category !== "beneficial" || data.tags.indexOf("world_combat:status/identity_only") >= 0
+            || data.duration !== -1 && (data.duration < 1 || data.duration > 1728000) || data.amplifier < 0 || data.amplifier > 255
+            || world.originData("world_combat:snatch/taken") !== null) return;
+        const previous = MobEffects.read(world, target, data.id);
+        if (previous && previous.amplifier() >= data.amplifier && (previous.duration() < 0 || data.duration >= 0 && previous.duration() >= data.duration)) return;
+        snatchBenefits[String(target.ref())] = world.tick();
+        Object.keys(snatchBenefits).forEach(ref => { if (snatchBenefits[ref] < world.tick() - 200) delete snatchBenefits[ref]; });
+        const eligible = snatchEligible(world, target);
+        for (let i = 0; i < eligible.length; i++) if (eligible[i].native(data)) { event.reject("snatched"); return; }
     });
 
     define({
@@ -110,85 +96,67 @@ namespace PokemonSkills {
             };
         },
         run: function (action, _move, config) {
-            const patient = !!(config && config.patient);
-            const target = action.target();
-            const actorRef = String(action.actor().ref()), targetRef = target === null ? "" : String(target.ref());
-            const grip = Math.max(1, Math.round(p(snatchId, "grip", action)));
-            delete snatchCaught[actorRef];
-            action.present("world_combat:move_snatch:brace", snatchScene, 1, action.origin(),
-                JSON.stringify({ moment: "brace", target: targetRef, grip: grip, patient: patient ? 1 : 0 }));
-            action.after(Math.max(1, Math.round(p(snatchId, "tempo", action))), function (current) {
-                const scope = current.sense();
-                if (target === null || !scope.valid(target) || scope.friendly(target)) { current.reject("invalid-target"); return; }
-                const foe = target;
-                const reach = p(snatchId, "reach", current);
-                const window = Math.max(20, Math.round(p(snatchId, "window", current)));
-                const until = scope.tick() + window;
-                const token = ++snatchTokenSeq;
-                snatchWindows[targetRef] = { snatcher: actorRef, until: until, token: token, reach: reach };
-                function empty(handle: CombatAction): void {
-                    if (snatchWindows[targetRef] && snatchWindows[targetRef].token === token) delete snatchWindows[targetRef];
-                    delete snatchCaught[actorRef];
-                    handle.present("world_combat:move_snatch:empty", snatchScene, 1, handle.origin(),
-                        JSON.stringify({ moment: "empty", target: targetRef, grip: grip }));
-                    handle.reject("no-snatch");
-                }
-                function step(handle: CombatAction, elapsed: number): void {
-                    const live = handle.sense();
-                    const held = snatchWindows[targetRef];
-                    if (!held || held.token !== token) { delete snatchCaught[actorRef]; handle.reject("window-lost"); return; }
-                    const caught = snatchCaught[actorRef];
-                    if (caught !== undefined) {
-                        delete snatchCaught[actorRef];
-                        delete snatchWindows[targetRef];
-                        if (caught.effect) {
-                            const victim = live.actor(caught.from), observed = victim ? MobEffects.read(live, victim, caught.effect.id) : null;
-                            const a = live.observe(handle.actor()), b = victim ? live.observe(victim) : null;
-                            if (!victim || !observed || String(observed.key()) !== caught.effect.key || !a || !b || a.position().minus(b.position()).length() > reach || !live.clear(a.position(), b.position())) { empty(handle); return; }
-                            const own = MobEffects.read(live, handle.actor(), observed.id());
-                            if (own && (own.amplifier() > observed.amplifier() || own.amplifier() === observed.amplifier()
-                                && (own.duration() < 0 || observed.duration() >= 0 && own.duration() >= observed.duration()))) { empty(handle); return; }
-                            handle.commit(p(snatchId, "recharge", handle));
-                            const success = MobEffects.transferOne(handle.world(), victim, handle.actor(), observed);
-                            WorldFeedback.emit(handle.world(), snatchScene, 1, a.position(), { moment: success ? "take" : "empty", target: targetRef, grip, path: [targetRef, actorRef], span: window }, 30);
-                            handle.finish(); return;
-                        }
-                        const options = snatchCall(handle, caught.move);
-                        if (options === null) { empty(handle); return; }
-                        handle.data("world_combat:snatch/taken", JSON.stringify({ move: caught.move, from: caught.from }));
-                        handle.present("world_combat:move_snatch:take", snatchScene, 1, handle.origin(),
-                            JSON.stringify({ moment: "take", target: targetRef, grip: grip,
-                                path: [targetRef, actorRef], span: window }));
-                        NativeLoadout.call(handle, caught.move, { input: options.input, eligibility: "caller",
-                            cooldown: p(snatchId, "recharge", handle) });
-                        return;
+            const target = action.target(), actorRef = String(action.actor().ref());
+            if (!target) { action.reject("invalid-target"); return; }
+            const foe = target;
+            const targetRef = String(target.ref()), grip = Math.max(1, Math.round(p(snatchId, "grip", action)));
+            const scenes = WorldFeedback.actionScenes(snatchScene);
+            scenes.show(action, "brace", action.origin(), { moment: "brace", target: targetRef, grip: grip, patient: config && config.patient ? 1 : 0 });
+            action.after(Math.max(1, Math.round(p(snatchId, "tempo", action))), current => {
+                scenes.stop(current);
+                const scope = current.sense(); if (!scope.valid(target) || scope.friendly(target)) { current.reject("invalid-target"); return; }
+                const span = Math.max(20, Math.round(p(snatchId, "window", current)));
+                const window: SnatchWindow = {
+                    instance: current.id(), snatcher: actorRef, target: targetRef, until: scope.tick() + span, reach: p(snatchId, "reach", current),
+                    move: id => {
+                        const options = snatchCall(current, id), choice = options && NativeLoadout.select(current, [id], options);
+                        if (!choice) return false;
+                        snatchRemove(current.id()); scenes.stop(current);
+                        current.data("world_combat:snatch/taken", JSON.stringify({ move: id, from: targetRef, grip: grip }));
+                        try { NativeLoadout.call(current, id, choice.options); }
+                        catch (error) { try { current.cancel(); } catch (ended) {} return false; }
+                        return true;
+                    },
+                    native: data => {
+                        const before = MobEffects.read(current.sense(), current.actor(), data.id);
+                        if (before && (before.amplifier() > data.amplifier || before.amplifier() === data.amplifier
+                            && (before.duration() < 0 || data.duration >= 0 && before.duration() >= data.duration))) return false;
+                        snatchRemove(current.id()); scenes.stop(current);
+                        try { current.commit(Math.round(p(snatchId, "recharge", current))); }
+                        catch (error) { try { current.cancel(); } catch (ended) {} return false; }
+                        const world = current.world(); world.originData("world_combat:snatch/taken", "{}");
+                        const granted = MobEffects.apply(world, current.actor(), data.id, data.duration, data.amplifier);
+                        const success = granted !== null && (!before || String(granted.key()) !== String(before.key())) && granted.amplifier() >= data.amplifier;
+                        WorldFeedback.emit(world, snatchScene, 1, current.origin(), { moment: success ? "take" : "empty", target: targetRef,
+                            path: [targetRef, actorRef], grip: grip, span: 0 }, 30);
+                        if (success) WorldFeedback.text(world, current.origin().plus(WorldCombat.point(0, 1.2, 0)), snatchTakenText,
+                            [{ key: "effect." + data.id.replace(":", ".") }], 30);
+                        current.finish(); return success;
                     }
-                    if (!live.valid(foe)) { empty(handle); return; }
-                    if (elapsed > window) { empty(handle); return; }
-                    if (elapsed % 8 === 0) handle.present("world_combat:move_snatch:reach", snatchScene, 1, handle.origin(),
-                        JSON.stringify({ moment: "reach", target: targetRef, grip: grip, remaining: Math.max(0, window - elapsed), span: window }));
-                    handle.after(1, function (next) { step(next, elapsed + 1); });
+                };
+                snatchWindows.push(window);
+                function step(handle: CombatAction): void {
+                    if (snatchWindows.indexOf(window) < 0) return;
+                    if (!handle.sense().valid(foe) || handle.sense().tick() > window.until) {
+                        snatchRemove(handle.id()); scenes.stop(handle); handle.reject("no-snatch"); return;
+                    }
+                    scenes.show(handle, "reach", handle.origin(), { moment: "reach", target: targetRef, path: [actorRef, targetRef],
+                        grip: grip, remaining: window.until - handle.sense().tick(), span: span });
+                    handle.after(1, step);
                 }
-                step(current, 0);
+                step(current);
             });
         }
     });
-
-    // 夺到手的那一刻：补上「夺来了 X」的浮字、一道暗紫回抽与音效。被夺来的招式自己的表现随即播出。
-    WorldCombat.on("world_combat:move_snatch/committed", "world_combat:committed", "", function (event) {
-        const action = event.action();
-        if (action === null || String(action.content()) !== "world_combat:snatch") return;
-        const raw = action.data("world_combat:snatch/taken");
-        if (raw === null) return;
-        const taken = JSON.parse(raw), world = event.world(), actor = event.actor();
-        const body = world.observe(actor);
-        if (body === null) return;
-        const executing = NativeLoadout.executing(action), id = executing === null ? "" : String(executing.id());
-        WorldFeedback.emit(world, snatchScene, 1, body.position(),
-            { moment: "take", target: String(actor.ref()), grip: Math.max(1, Math.round(p(snatchId, "grip", action))),
-                path: [String(taken.from), String(actor.ref())], span: 0 }, 30);
+    WorldCombat.on("world_combat:move_snatch/committed", "world_combat:committed", "", event => {
+        const action = event.action(); if (!action) return;
+        const raw = action.data("world_combat:snatch/taken"); if (!raw) return;
+        const taken = JSON.parse(raw), world = event.world(), body = world.observe(event.actor()); if (!body) return;
+        world.originData("world_combat:snatch/taken", "{}");
+        WorldFeedback.emit(world, snatchScene, 1, body.position(), { moment: "take", target: taken.from, grip: taken.grip,
+            path: [taken.from, String(event.actor().ref())], span: 0 }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), snatchTakenText,
-            [id ? { key: "cobblemon.move." + id, fallback: id } : ""], 36);
+            [{ key: "cobblemon.move." + taken.move, fallback: taken.move }], 36);
         world.sound("minecraft:entity.experience_orb.pickup", body.position(), 12, "{}");
     });
 }

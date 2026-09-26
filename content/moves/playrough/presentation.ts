@@ -4,9 +4,11 @@
  * 一句话：施法者压身起滚、身后扬起一串粉色光尘 → 撞上目标的一刻炸开彩色纸屑与冲击帧 → 被撞翻的人身上
  * 冒一颗下坠的心、攻击被压时再亮一圈粉星。
  * 色相家族：妖精粉（0xF0A8C8 主 / 0xFFE4F2 亮 / 0xC86AA0 暗）为主体，彩色纸屑保留原色只做点缀。
- * 拍子：起 windup（压身）→ 滚 run（带尾）→ 击 impact（撞翻）→ 翻 ricochet（第二个）→ 压 disarm（降攻）。
+ * 拍子：起 windup（压身）→ 滚 run（带尾）→ 转 roll（撒欢式真实的掉头，带转向朝向）→ 击 impact（撞翻）
+ *   → 翻 ricochet（第二个）→ 压 disarm（降攻）。
  * 范围：impact/ricochet 的贴地环与纸屑按 `data.scale`（判定半径 / 0.48）铺开，就是这一撞扫过的范围。
- * 运动：run 绑 source 沿滚向拖尾；impact 的纸屑初速外抛、带重力坠落；disarm 的星向上冒。
+ * 运动：run 绑 source 沿滚向拖尾；roll 绑 point 在掉头处按 `data.direction` 甩出一圈转向尘；
+ *   impact 的纸屑初速外抛、带重力坠落；disarm 的星向上冒。
  * 数：`data.sparkles`（物攻与等级派生）决定滚动尾迹与撞翻纸屑的密度，`data.intensity` 抬高亮度。
  */
 const PlayRoughDefinition: ParticleDefinition = {
@@ -54,6 +56,30 @@ const PlayRoughDefinition: ParticleDefinition = {
                     direction: "away", speed: [0.02, 0.1], spread: 30,
                     lifetime: [8, 16], size: [0.1, 0.02],
                     color: 0xF0A8C8, alpha: [0.75, 0], light: "full", maxParticles: 70
+                }
+            ]
+        },
+        roll: {
+            duration: 22,
+            exit: { stop: 10, drain: 14 },
+            emitters: [
+                {
+                    name: "pivot_dust", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "sparkles", fallback: 12 } },
+                    shape: { kind: "ring", radius: 0.28 },
+                    direction: "outward", speed: [0.06, 0.18], spread: 26,
+                    lifetime: [8, 14], size: [0.08, 0.01],
+                    color: 0xD8B8A0, alpha: [0.6, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "turn_glint", bind: "point", fit: "none", offset: [0, 0.28, 0], orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    burst: { count: 10 }, spin: 12,
+                    shape: { kind: "circle", radius: 0.22 },
+                    direction: "away", speed: [0.05, 0.16], spread: 30,
+                    lifetime: [10, 16], size: [0.1, 0.02],
+                    color: 0xF0A8C8, alpha: [0.85, 0], light: "full", maxParticles: 18
                 }
             ]
         },

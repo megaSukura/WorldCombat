@@ -5,13 +5,13 @@
  *   1 位学习者（伽勒尔急冻鸟的签名招）。
  *
  * 世界化：把「从双眼发射精神力量」落成一记**瞬发、不飞行的精神视线**——施法者抬眼锁定，念力线直接从一个
- *   目标跳到下一个最近的目标（每跳一拍），一路在敌人之间传递；因为走的是精神而不是寒气，它**能冻住本该
- *   免疫冰冻的冰属性与相关特性持有者**（在命中前开一段免疫穿透窗口）。它是全家里唯一的一击必中「点名」，
- *   靠视线命中、不靠弹道；反制是切断视线（躲到掩体后或绕背）。
+ *   目标跳到下一个最近的目标（每跳一拍），一路在敌人之间传递；精神主伤与冰冻分别遵守原生类型、特性与
+ *   Boss 控制免疫，没有隐藏的穿透窗口。它是全家里唯一的一击必中「点名」，靠视线命中、不靠弹道；反制是
+ *   切断视线（躲到掩体后或绕背）。
  *
  * 与同族分开：
- *   冰冷视线 —— 瞬发精神视线，会在敌人之间跳跃、并穿透冰冻免疫。
- *   冰冻光束 —— 瞬发但只沿一条直线的窄光束，不跳、不穿免疫（同组）。
+ *   冰冷视线 —— 瞬发精神视线，会在通视的敌人之间跳跃，冰冻照常吃类型/特性免疫。
+ *   冰冻光束 —— 停留片刻但只沿一条固定直线的窄光束，不跳（同组）。
  *   细雪     —— 近身便宜可连放的宽扇（同组）。
  *
  * 数值来源（每项读不同的精灵数据，分散到不同参数上）：
@@ -20,8 +20,7 @@
  *   chains         跳跃数 2 + 特攻偏移 + 等级偏移 + 凝视式 1。
  *   chainRange     跳跃距离 4.5 + 特攻偏移（下一跳能有多远）。
  *   reach          视距射程 11 + 等级偏移 + 特攻偏移（驱动实际射程）。
- *   freezeChance   冰冻概率 14%% + 特攻偏移 + 等级偏移，凝视式 ×1.2（全家最高）。
- *   immunityWindow 免疫穿透窗口 60 + 等级 ×0.3 刻，命中前开启。
+ *   freezeChance   冰冻概率 14%% + 特攻偏移 + 等级偏移，凝视式 ×1.2（全家最高，但仍受类型/特性/Boss 免疫约束）。
  *   tempo/aftermath/wait 速度决定起手、收招与冷却，凝视式更沉。
  *
  * 配置 unblinking（凝视式）双向取舍：开启＝多一跳、射程更远、冰冻概率更高，但起手与冷却更久；
@@ -84,11 +83,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(30).times(0.001).clamp(0, 0.06))
                 .times(F.when(F.pref("unblinking"), F.const(1.2), F.const(1)))
                 .clamp(0.08, 0.38).round(3),
-            "冰冻概率", "每个被视线盯到的目标各自掷一次的这个概率陷入冰冻；这是全家最高的一档。"),
-        /** 免疫穿透窗口：60 + 等级 ×0.3；夹 30..90。 */
-        immunityWindow: seconds(
-            F.base(60).plus(F.level().times(0.3)).clamp(30, 90).round(0),
-            "免疫穿透窗口", "命中前开启的一段窗口：在这段时间里，冰属性与相关特性的冰冻免疫不生效，所以这一记也能冻住它们。"),
+            "冰冻概率", "每个被视线盯到的目标各自掷一次的这个概率陷入冰冻；这是全家最高的一档，但仍受冰属性、免冻特性与 Boss 控制免疫约束。"),
         /** 起手：8 − 速度偏移[−2,3] + 凝视式 2；夹 5..13。 */
         tempo: seconds(
             F.base(8).minus(F.stat("speed").minus(60).times(0.03).clamp(-2, 3))
@@ -117,7 +112,7 @@ namespace PokemonSkills {
     describe("freezingglare", [
         { key: "description.0", values: ["glare","chains","falloff"] },
         { key: "description.1", values: ["reach","chainRange"] },
-        { key: "description.2", values: ["freezeChance","immunityWindow"] },
+        { key: "description.2", values: ["freezeChance"] },
         { key: "description.3", values: ["tempo", "aftermath", "wait"] },
         { key: "unblinking.on", values: [], when: function (context) { return read(context.detail.values, ["unblinking"]) === true; } },
         { key: "unblinking.off", values: [], when: function (context) { return read(context.detail.values, ["unblinking"]) !== true; } },

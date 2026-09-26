@@ -1,12 +1,12 @@
 /**
  * 暗影爪 / shadowclaw 的客户端表现。
  *
- * 一句话：脚下的影子朝对手身后铺成一条暗带，一只近黑的爪从暗带末端反向抓回目标；命中处散出幽暗碎屑、
- * 在目标身上留一道影痕，暴击时影痕亮成要害的白点。
+ * 一句话：脚下的影子朝落点身后沿真实地表铺成一条暗带，一只近黑的爪从暗带末端反向抓回落点；命中处散出
+ * 幽暗碎屑、在目标身上留一道短抓痕，暴击时抓痕亮成要害的白点。
  * 色相家族：近黑紫（impact_ghost／orb／smoke）＋中性暗尘（tinydust）＋白亮要害强调（smallsparkle／critical_hit）。
- * 拍子：起（windup 脚边收影）→ 铺（shade 暗带铺过目标）→ 抓（rend 爪反向抓回、命中）→ 留（gouge 影痕）→ 强调（crit）。
- * 范围：`data.path` 是服务端影子铺出的同一组顶点；shade 用 polygon 填出暗带，rend 用 polyline 画爪反向抓的落点。
- * 运动：暗带从脚下沿 path 铺向目标身后，爪痕由暗带末端反向划到目标；命中碎屑向外爆，影痕原地慢慢变淡。
+ * 拍子：起（windup 脚边收影）→ 铺（shade 暗带沿真实地面铺到落点身后）→ 抓（rend／rake 反向爪痕、命中）→ 留（gouge 短抓痕）→ 强调（crit）。
+ * 范围：`data.path` 是服务端沿真实地表铺出的同一组顶点；shade 用 polyline 画出那条暗带，rend／rake 用 polyline 画反向抓回的爪痕。
+ * 运动：暗带沿 path 从脚下铺到锚点，爪痕由锚点反向划到真实接触点；命中碎屑向外爆，短抓痕原地很快变淡。
  * 数：`data.shred`（物攻换算的崩屑量）绑定命中与暗带边缘的量；`data.scale` 让宽爪比窄爪更大；
  *   要害标记的数量与尺寸读 `data.marks`（实际伤害换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -29,18 +29,18 @@ const ShadowclawDefinition: ParticleDefinition = {
             ]
         },
         shade: {
-            duration: 20,
-            exit: { stop: 6, drain: 12 },
+            duration: { data: "lag", fallback: 6 },
+            exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    name: "band_fill", bind: "path", offset: [0, 0.04, 0],
+                    name: "band_flow", bind: "path", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    shape: { kind: "polygon" }, rate: { data: "shred", fallback: 18 }, direction: "shape", speed: [0.01, 0.05],
+                    shape: { kind: "polyline" }, rate: { data: "shred", fallback: 18 }, direction: "shape", speed: [0.01, 0.05],
                     lifetime: [10, 18], size: [0.34, 0.08],
                     color: 0x2E2340, alpha: [0.42, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "band_edge", bind: "path", offset: [0, 0.07, 0],
+                    name: "band_edge", bind: "path", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
                     shape: { kind: "polyline" }, rate: 22, direction: "shape", speed: [0.03, 0.1], spread: 6,
                     lifetime: [5, 10], size: [0.16, 0.03], sizeMode: "index",
@@ -49,11 +49,11 @@ const ShadowclawDefinition: ParticleDefinition = {
             ]
         },
         rend: {
-            duration: 22,
+            duration: 24,
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "claw_stroke", bind: "path", offset: [0, 0.05, 0],
+                    name: "claw_stroke", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     shape: { kind: "polyline" },
                     rate: 40, direction: "shape", speed: [0.05, 0.18], spread: 6,
@@ -80,16 +80,30 @@ const ShadowclawDefinition: ParticleDefinition = {
                 }
             ]
         },
+        rake: {
+            duration: 20,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "claw_rake", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    shape: { kind: "polyline" },
+                    rate: 36, direction: "shape", speed: [0.05, 0.16], spread: 6,
+                    lifetime: [5, 10], size: [0.34, 0.06], sizeMode: "index",
+                    color: 0xC9B6EC, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 80
+                }
+            ]
+        },
         gouge: {
-            duration: { data: "gouge", fallback: 60 },
-            exit: { stop: 8, drain: 16 },
+            duration: 20,
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
                     name: "mark", bind: "point", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
-                    rate: 6, shape: { kind: "line", length: 0.7, rotation: [0, 0, 38] },
+                    rate: 8, shape: { kind: "line", length: 0.7, rotation: [0, 0, 38] },
                     direction: "shape", speed: [0.01, 0.04],
-                    lifetime: [16, 28], size: [0.16, 0.02],
+                    lifetime: [10, 16], size: [0.16, 0.02],
                     color: 0x5A3E94, alpha: [0.4, 0], light: "world", maxParticles: 30
                 }
             ]
@@ -123,7 +137,7 @@ const ShadowclawDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 9 },
             emitters: [
                 {
-                    name: "whiff", bind: "path", offset: [0, 0.4, 0],
+                    name: "whiff", bind: "path", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     shape: { kind: "polyline" }, rate: 16, direction: "shape", speed: [0.04, 0.14],
                     lifetime: [8, 14], size: [0.16, 0.03],

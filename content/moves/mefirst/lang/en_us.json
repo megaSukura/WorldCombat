@@ -25,5 +25,7 @@
   "worldcombat.skill.mefirst.preference.ai.leaveStation.help": "When on, the user may leave its post to cut in; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.mefirst.text.take": "Stole %1$s",
   "world_combat.move.mefirst.text.miss": "No next beat came",
-  "worldcombat.skill.mefirst.description.steal": "Only damaging moves can be stolen (status moves and the few uncopyable moves are excluded), and the stolen attack is aimed at the same foe; the wait itself cannot be interrupted. If the foe never acts within the vigil it fails, costing no PP or cooldown."
+  "worldcombat.skill.mefirst.description.steal": "Only damaging moves can be stolen (status moves and the few uncopyable moves are excluded), and the stolen attack is aimed at the same foe; the wait itself cannot be interrupted. If the foe never acts within the vigil it fails, costing no PP or cooldown.",
+  "world_combat.move.mefirst.text.native_contact": "Native contact replay",
+  "world_combat.move.mefirst.text.native_projectile": "Native projectile replay"
 }

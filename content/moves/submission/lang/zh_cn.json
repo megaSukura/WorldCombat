@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.submission.summary": "扑上去抓住目标再摔向地面：命中造成接触伤害，把对方按倒、移动大幅变慢，自己也按实际伤害反噬一部分。块头越大的目标摔得越轻、压制越短；扑空则没有伤害与自伤。",
+  "worldcombat.skill.submission.summary": "扑上去抓住目标再摔向地面：命中造成接触伤害，能搬动就把对方按倒、移动大幅变慢，自己也按实际伤害反噬一部分；推不动的大敌改成原地角力重击，伤害照旧但不被按倒。块头越大的目标摔得越轻、压制越短；扑空则没有伤害与自伤。",
   "worldcombat.skill.submission.description.0": "扑上去抓住目标再砸落，造成约 %1$s 点接触伤害；最远扑抓 %2$s 格、扑身速度 %3$s 格每刻、抓取半径 %4$s 格。",
-  "worldcombat.skill.submission.description.1": "抓住目标后有 %1$s 秒的窗口：这期间目标被抓住、无法移动，你也被钉在原地；窗口结束把它摔下，按倒 %2$s 秒、甩开 %3$s 格。目标块头越大，摔击越轻、压制越短。",
+  "worldcombat.skill.submission.description.1": "抓住目标后有 %1$s 秒的窗口：这期间目标被抓住、无法移动，你也被钉在原地；窗口结束把它摔下——搬得动就按倒 %2$s 秒、甩开 %3$s 格，推不动的目标只吃这一摔的伤害、不会被按倒。目标块头越大，摔击越轻、压制越短。",
   "worldcombat.skill.submission.description.2": "命中后自己按实际伤害的 %1$s 倍反噬。",
   "worldcombat.skill.submission.pin.on": "压制式：摔得更轻、反噬更小，但把对方按住更久，适合控场与配合队友。",
   "worldcombat.skill.submission.pin.off": "抛摔式：摔得更重、甩得更开、反噬更大，但对方很快能爬起来。",
@@ -36,5 +36,6 @@
   "world_combat.move.submission.text.miss": "扑空了",
   "world_combat.move.submission.text.grab": "抓住了",
   "world_combat.move.submission.text.lost": "目标脱手",
-  "worldcombat.skill.submission.description.3": "倒地期间目标爬不起来、移动大幅变慢；只要还抓在手里，即使这一摔没造成伤害，目标也会被按倒。"
+  "world_combat.move.submission.text.clash": "角力",
+  "worldcombat.skill.submission.description.3": "倒地期间目标爬不起来、移动大幅变慢；只要还抓在手里、还搬得动，即使这一摔没造成伤害，目标也会被按倒。中途脱手或拉开太远则收空，不隔空摔。"
 }

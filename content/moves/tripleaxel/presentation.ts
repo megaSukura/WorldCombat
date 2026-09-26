@@ -1,11 +1,12 @@
 /**
  * 三旋击 / tripleaxel 的客户端表现。
  *
- * 一句话：身体原地转起来，一圈扫出一道冰蓝弧光，跟着的第二、第三道弧更宽更亮，弧上的碎冰随之变密。
+ * 一句话：身体滑着旋起来，脚下留过一段段浅冰刃弧，每滑过一弧就扫出一道冰蓝扇光；跟着的第二、第三道弧更宽更亮，
+ * 弧上的碎冰随之变密；撞到谁就在谁身上崩开一圈霜屑，滑步被墙挡住就停在真实位置。
  * 色相家族：冰蓝弧光（softswipe／cut）＋旋身风（swirlingwind）＋霜白碎屑（iceshard／impact_ice）＋中性尘（tinydust）。
- * 拍子：起（windup 起旋）→ 击（kick 逐脚弧扫、hit 命中崩屑）→ 收（whiff 落空）。
- * 范围：kick 用 `data.path`（与服务端 WorldGeometry.sector 同一组角度的扇形顶点）铺成扇形，画面里的弧面就是判定区。
- * 运动：弧光沿扇形从一侧扫到另一侧（`data.direction` 定向）；每脚角度更宽（`data.arc`），旋转风贴身打转。
+ * 拍子：起（windup 起旋）→ 滑（slide 脚下冰弧记录真实滑位与转向）→ 击（kick 逐脚按真实切线的扇形弧扫）→ 命中（hit 崩屑）／落空（whiff）。
+ * 范围：kick 用 `data.path`（与服务端 WorldGeometry.sector 同一组角度、同一实际切线的扇形顶点）铺成扇形，画面里的弧面就是判定区；slide 的冰弧跟随身体真实滑位。
+ * 运动：弧光沿扇形从一侧扫到另一侧（`data.direction` 定向）；slide 的冷刃朝当刻切线旋进（orient heading），每脚角度更宽（`data.arc`）。
  * 数：弧面细节量绑定 `data.sparks`（物攻换算），命中碎屑绑定 `data.sparks`、亮度绑定 `data.intensity`，
  *   弧面大小绑定 `data.scale`；第几脚（`data.index`）决定整脚的亮度与弧宽——画面里的数与机制里的数一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -32,6 +33,29 @@ const TripleaxelDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.1],
                     lifetime: [6, 12], size: [0.1, 0.02],
                     color: 0xD6F2FA, alpha: [0.6, 0], light: "world", maxParticles: 26
+                }
+            ]
+        },
+        slide: {
+            duration: 14,
+            exit: { stop: 4, drain: 9 },
+            emitters: [
+                {
+                    name: "blade_arc", bind: "source", offset: [0, 0.06, 0], height: 0, orient: "heading",
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    rate: { data: "sparks", fallback: 16 },
+                    shape: { kind: "arc", radius: 0.5, arcDegrees: 150, thickness: 0.5 },
+                    direction: "outward", speed: [0.02, 0.1], spin: 10,
+                    lifetime: [6, 12], size: [0.12, 0.03], sizeMode: "index",
+                    color: 0xD6F2FA, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 40
+                },
+                {
+                    name: "cold_line", bind: "source", offset: [0, 0.1, 0], height: 0, orient: "heading",
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    rate: 14, shape: { kind: "arc", radius: 0.62, arcDegrees: 120, thickness: 1 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [4, 8], size: [0.3, 0.05],
+                    color: 0xBFE7F2, alpha: [0.6, 0], light: "full", maxParticles: 40
                 }
             ]
         },

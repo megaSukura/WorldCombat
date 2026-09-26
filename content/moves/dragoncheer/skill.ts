@@ -24,6 +24,8 @@ namespace PokemonSkills {
         ["chance", "motes", "dragon"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid dragoncheer mark: " + key);
         });
+        // 载体实例 key：刷新或结束都按这一份实例处理，旧载体的移除不会清掉新标记。
+        if (typeof value.key !== "string" || !value.key) throw new Error("Invalid dragoncheer mark: key");
         if (value.chance < 0 || value.chance > 1) throw new Error("Invalid dragoncheer mark range");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
@@ -53,7 +55,8 @@ namespace PokemonSkills {
             if (data.category !== "physical" && data.category !== "special") return;
             if (data.critical === true) return;
             const base = typeof data.criticalChance === "number" && isFinite(data.criticalChance) ? data.criticalChance : 0;
-            if (!(base >= 0) || base >= 1) return;
+            // base === 0 是目标禁暴击的免疫（防暴击特性），这声鼓舞不绕过它。
+            if (!(base > 0) || base >= 1) return;
             if (!CombatStatus.has(world, actor, dragonCheerStatus)) return;
             const mark = dragoncheerMarkOf(world, actor);
             if (mark === null) return;
@@ -78,7 +81,7 @@ namespace PokemonSkills {
         const motes = mark ? Math.max(8, Math.round(Number(mark.motes) || 24)) : 24;
         const dragon = mark && Number(mark.dragon) >= 1 ? 1 : 0;
         WorldFeedback.keep(world, "world_combat:move_dragoncheer/rally/" + String(actor.ref()), dragonCheerScene, 1, body.position(),
-            { moment: "rally", target: String(actor.ref()), motes: motes, dragon: dragon,
+            { moment: "rally", target: String(actor.ref()), motes: motes, dragon: dragon, runes: dragon ? 2 : 1,
                 scale: dragon ? 1.25 : 1, intensity: dragon ? 1.2 : 1 }, 40);
     });
 
@@ -88,6 +91,8 @@ namespace PokemonSkills {
         if (String(data.id) !== dragonCheerEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        // 刷新后的新实例仍在，旧载体的移除不清新标记。
+        if (MobEffects.read(world, actor, dragonCheerEffect) !== null) return;
         dragoncheerReleaseMark(world, actor);
         if (String(data.cause) !== "expired") return;
         const body = world.observe(actor);
@@ -111,7 +116,7 @@ namespace PokemonSkills {
         cooldown: 130,
         style: "roar",
         stationary: true,
-        defaults: { roar: true, ai: { maxChase: 15, allyRange: 6 } },
+        defaults: { roar: true, ai: { maxChase: 15 } },
         fields: [flag("roar", "长啸")],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p(dragonCheerId, "cheerRadius", pokemon) : 4, geometry: "area", style: "roar",
@@ -159,15 +164,18 @@ namespace PokemonSkills {
                 if (CombatStatus.has(world, other, "focusenergy")) continue;
                 const dragon = dragoncheerIsDragon(world, other);
                 const chance = dragon ? dragonChance : baseChance;
-                MobEffects.apply(world, other, dragonCheerEffect, ticks, dragon ? 1 : 0);
+                // 载体应用成功才计数、建标记、播成功纹；失败者不冒成功纹。
+                const carrier = MobEffects.apply(world, other, dragonCheerEffect, ticks, dragon ? 1 : 0);
+                if (carrier === null) continue;
                 dragoncheerReleaseMark(world, other);
                 world.effect(dragonCheerMark, other,
-                    JSON.stringify({ chance: chance, motes: motes, dragon: dragon ? 1 : 0 }), ticks);
+                    JSON.stringify({ chance: chance, motes: motes, dragon: dragon ? 1 : 0, key: String(carrier.key()) }), ticks);
                 cheered++;
                 if (dragon) dragons++;
                 const ally = world.observe(other);
                 if (ally !== null) WorldFeedback.emit(world, dragonCheerScene, 1, ally.position(),
-                    { moment: "rally", target: String(other.ref()), motes: motes, dragon: dragon ? 1 : 0, scale: scale }, 30);
+                    { moment: "rally", target: String(other.ref()), motes: motes, dragon: dragon ? 1 : 0,
+                        runes: dragon ? 2 : 1, scale: scale }, 30);
             }
 
             WorldFeedback.emit(world, dragonCheerScene, 1, center,

@@ -12,8 +12,10 @@ namespace PokemonSkills {
     function infernoWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-            <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
+        const self = CompanionBehavior.source(context);
+        if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 12)) return false;
+        // 追身只追仍看得见、打得到的敌人，不穿墙点火印。
+        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     function infernoCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {

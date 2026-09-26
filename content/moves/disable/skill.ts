@@ -1,12 +1,29 @@
 /** disable：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
+    /** 普通攻击的伤害类型归成可读类别，拒绝时按真实来源显示，而不是一律「普通攻击」。 */
+    function disableKind(type: string): string {
+        const value = String(type || "");
+        if (value === "minecraft:mob_attack" || value === "minecraft:mob_attack_no_aggro" || value === "minecraft:player_attack"
+            || value === "minecraft:sting" || value === "minecraft:ram" || value === "minecraft:mace_smash") return "melee";
+        if (value === "minecraft:arrow" || value === "minecraft:trident" || value === "minecraft:mob_projectile" || value === "minecraft:thrown") return "ranged";
+        if (value === "minecraft:magic" || value === "minecraft:indirect_magic" || value === "minecraft:wither_skull"
+            || value === "minecraft:dragon_breath" || value === "minecraft:sonic_boom") return "magic";
+        return "other";
+    }
+
     export function disableLast(world: CombatWorld, actor: CombatActor): { id: string; tick: number; native?: boolean } | null {
         if (String(actor.domain()) === "cobblemon") return NativeEffects.lastMove(world, actor);
         const last = DamageSemantics.recentAttack(world, actor, 1200);
         return last ? { id: last.type, tick: last.tick, native: true } : null;
     }
+    /** 明确的时间戳：世界刻 0 也是合法时间，不用 `|| -1000` 把 0 误判成很久以前。 */
+    function disableFresh(world: CombatWorld, last: { id: string; tick: number } | null, memory: number): boolean {
+        if (last === null || String(last.id) === "struggle") return false;
+        const tick = typeof last.tick === "number" && isFinite(last.tick) ? last.tick : -1000;
+        return world.tick() - tick <= memory;
+    }
 
-    /** 机读旁挂：记下被点名的招式、时限与画面要用的数。 */
+    /** 机读旁挂：记下被点名的招式、所属载体、时限与画面要用的数。 */
     WorldCombat.effect(disableMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (typeof value.move !== "string" || !value.move) throw new Error("Invalid disable move");
@@ -14,16 +31,38 @@ namespace PokemonSkills {
         if (typeof value.caster !== "string") throw new Error("Invalid disable source");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(disableMark, "start", function () { });
+    WorldCombat.effectHandler(disableMark, "start", function (effect) { disableHold(effect); });
+    WorldCombat.effectHandler(disableMark, "hold", function (effect) { disableHold(effect); });
     WorldCombat.effectHandler(disableMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    function disableData(world: CombatWorld, actor: CombatActor): any {
-        const views = world.effects(actor, disableMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+    /** 当前定身载体的原生钥匙；旁挂只有仍由这个载体拥有时才生效，旧钉不隔空续封。 */
+    function disableCarrierKey(world: CombatWorld, actor: CombatActor): string {
+        const carrier = MobEffects.read(world, actor, disableEffect);
+        return carrier === null ? "" : String(carrier.key());
     }
-    function disableReleaseMark(world: CombatWorld, actor: CombatActor): void {
+    /** 只取仍由当前载体拥有的那枚钉；被替换的旧钉立即失效。 */
+    function disableData(world: CombatWorld, actor: CombatActor): any {
+        const key = disableCarrierKey(world, actor);
+        if (key === "") return null;
         const views = world.effects(actor, disableMark);
-        for (let i = 0; i < views.length; i++) world.operation(views[i].id(), "world_combat:dispel", "{}");
+        for (let i = 0; i < views.length; i++) {
+            const value = JSON.parse(String(views[i].data()));
+            if (String(value.carrier || "") === key) return value;
+        }
+        return null;
+    }
+    /** 清掉载体已经失效的旁挂；仍被当前载体拥有的钉保持不动。 */
+    function disableReleaseStale(world: CombatWorld, actor: CombatActor): void {
+        const key = disableCarrierKey(world, actor);
+        world.effects(actor, disableMark).forEach(function (view) {
+            if (String(JSON.parse(String(view.data())).carrier || "") !== key) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+    }
+    /** 只撤这名施法者自己的旧钉，别人的钉与身份不动。 */
+    function disableReleaseOwn(world: CombatWorld, actor: CombatActor, casterRef: string): void {
+        world.effects(actor, disableMark).forEach(function (view) {
+            if (JSON.parse(String(view.data())).caster === casterRef) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
     }
     /** 目标当前是否还拥有某一手（含临时层）；不再拥有时这一钉提前松开。 */
     function disableKnows(world: CombatWorld, actor: CombatActor, id: string): boolean {
@@ -37,40 +76,69 @@ namespace PokemonSkills {
         return false;
     }
 
+    /** 钉存续期间把画面绑在旁挂自己的生命周期上；牛奶、/effect clear 或换招提前结束时钉弹开。 */
+    function disableHold(effect: CombatEffect): void {
+        const world = effect.world(), victim = effect.target();
+        if (!world.valid(victim)) { effect.end(); return; }
+        const value = JSON.parse(effect.state());
+        const carrier = MobEffects.read(world, victim, disableEffect);
+        if (carrier === null || String(carrier.key()) !== String(value.carrier || "")) { effect.end(); return; }
+        if (!disableKnows(world, victim, String(value.move))) {
+            world.removeMobEffect(victim, disableEffect, carrier.key());
+            effect.end(); return;
+        }
+        const body = world.observe(victim);
+        if (body === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_disable/pin", disableScene, 1, body.position(),
+            { moment: "hold", target: String(victim.ref()), nails: value.nails || 5, move: String(value.move),
+                native: value.native ? 1 : 0, kind: value.kind || "" });
+        effect.schedule("hold", "hold", 25, "{}");
+    }
+
     // 封锁：带着定身身份的活体，在提交被点名的那一手时被顶回去。
     // 这条贡献走共享动作策略，原生配招、通用动作与玩家共用同一个提交闸门；对任何带身份的活体成立。
+    // 普通攻击按实际最后命中过的 damageType 精确判定，只阻这一种，不偷封所有攻击类别。
     CombatStatus.actions.define({ id: "world_combat:move_disable/policy", apply: function (context) {
         if (!CombatStatus.has(context.world, context.actor, disableStatus)) return;
         const data = disableData(context.world, context.actor);
         if (data === null || !data.move) return;
-        if (context.phase === "damage" && data.native && DamageSemantics.read(context.metadata).attack) {
-            if (String(context.metadata.damageType) === String(data.move)) context.blocked.disabled = true;
-        } else if (context.move && typeof context.move.id === "function" && String(context.move.id()) === String(data.move))
+        if (context.phase === "damage" && DamageSemantics.read(context.metadata).attack) {
+            const type = String(context.metadata.damageType || "");
+            if (type === String(data.move)) {
+                context.blocked.disabled = true;
+                context.detail.disabled = { native: true, type: type, kind: disableKind(type) };
+            }
+        } else if (context.move && typeof context.move.id === "function" && String(context.move.id()) === String(data.move)) {
             context.blocked.disabled = true;
+            context.detail.disabled = { native: false, move: String(context.move.id()) };
+        }
     } });
 
-    // 被判回的那一下要看得见：在真正的封锁之前放一段「被钉住」的画面与浮字。
-    WorldCombat.on("world_combat:move_disable/block", "world_combat:before_commit", "", function (event) {
-        const world = event.world(), actor = event.actor(), action = event.action();
-        if (action === null || String(actor.domain()) !== "cobblemon") return;
-        if (!CombatStatus.has(world, actor, disableStatus)) return;
-        const executing = NativeLoadout.executing(action);
-        if (executing === null) return;
-        const data = disableData(world, actor);
-        if (data === null || String(data.move) !== String(executing.id())) return;
+    // 被判回的那一下要看得见：普通攻击显示真实 damageType 的可读名，宝可梦显示被点名的招式；只闪一次，不加额外惩罚。
+    CombatStatus.rejected.define({ id: "world_combat:move_disable/reject", applies: function (context) {
+        return String(context.reason) === "disabled";
+    }, apply: function (context) {
+        const world = context.world, actor = context.actor;
+        if (!world.valid(actor)) return;
         const body = world.observe(actor);
         if (body === null) return;
+        const details = context.details || {};
+        const native = details.native === true;
+        const kind = typeof details.kind === "string" ? String(details.kind) : "other";
+        const move = typeof details.move === "string" ? String(details.move) : "";
+        const mark = disableData(world, actor);
+        const arg = native ? { key: "world_combat.move.disable.kind." + kind, fallback: kind }
+            : { key: "cobblemon.move." + move, fallback: move };
         WorldFeedback.emit(world, disableScene, 1, body.position(),
-            { moment: "reject", target: String(actor.ref()), nails: data.nails || 5 }, 22);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), disableLockText,
-            [{ key: "cobblemon.move." + String(executing.id()), fallback: String(executing.id()) }], 26);
-    });
+            { moment: "reject", target: String(actor.ref()), nails: mark === null ? 5 : mark.nails || 5, native: native ? 1 : 0, kind: kind }, 22);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), disableBlockText, [arg], 26);
+    } });
 
     define({
         id: disableId,
         cooldownParameter: "recharge",
         name: "定身法",
-        description: "封住目标刚用过的招式。对普通生物和玩家，则封住最近命中过人的攻击方式，例如近战或箭矢；换一种攻击仍能出手。",
+        description: "封住目标刚用过的招式。对普通生物和玩家，则按最近命中过人的真实攻击类型封住，例如近战或箭矢；换一种攻击仍能出手。",
         uses: ["封住对手的主力输出招", "拆掉刚露出的强攻手段", "逼对手换招、打乱它的连招"],
         kind: "enemy",
         range: 8,
@@ -103,8 +171,7 @@ namespace PokemonSkills {
             const world = action.sense(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
             const last = disableLast(world, target);
-            if (last === null || String(last.id) === "struggle") return "no-move";
-            if (world.tick() - (last.tick || -1000) > p(disableId, "memory", action)) return "no-move";
+            if (!disableFresh(world, last, p(disableId, "memory", action))) return "no-move";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p(disableId, "reach", action)) return "out-of-range";
@@ -122,6 +189,8 @@ namespace PokemonSkills {
             const origin = action.origin(), targetPos = action.targetPosition();
             const delta = targetPos.minus(origin);
             const direction = delta.length() < 0.01 ? action.direction() : delta.unit();
+            const reach = p(disableId, "reach", action);
+            const memory = p(disableId, "memory", action);
             const nails = Math.max(3, Math.round(p(disableId, "nails", action)));
             sound(action, "minecraft:entity.evoker.prepare_attack");
             function fizzle(reason: string, point: CombatPoint): void {
@@ -129,69 +198,51 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1, 0)), disableMissText, [], 28);
                 done(action);
             }
+            // 执行时再读一次真实快照：目标换过招就点名现在这一手，不沿用旧名单、不偷封所有攻击类别。
             const last = target === null ? null : disableLast(world, target);
-            if (target === null || !world.valid(target) || world.friendly(target) || last === null || String(last.id) === "struggle") {
-                fizzle("invalid-target", targetPos); return;
-            }
-            const memory = p(disableId, "memory", action);
-            if (world.tick() - (last.tick || -1000) > memory) { fizzle("stale", targetPos); return; }
+            if (target === null || !world.valid(target) || world.friendly(target) || !disableFresh(world, last, memory)) { fizzle("invalid-target", targetPos); return; }
             const body = world.observe(target);
-            if (body === null || !world.clear(origin, body.position())) { fizzle("no-line", targetPos); return; }
+            if (body === null) { fizzle("invalid-target", targetPos); return; }
+            if (body.position().minus(origin).length() > reach) { fizzle("out-of-range", targetPos); return; }
+            if (!world.clear(origin, body.position())) { fizzle("no-line", targetPos); return; }
             const ticks = Math.max(40, Math.round(p(disableId, "disableTicks", action)));
             const at = body.position();
             const landed = CombatStatus.apply(world, target, disableStatus, disableEffect, ticks, 0, { unique: true });
             if (!landed) { fizzle("immune", at); return; }
-            disableReleaseMark(world, target);
-            world.effect(disableMark, target, JSON.stringify({ move: String(last.id), native: !!last.native, max: ticks, nails: nails, caster: String(caster.ref()) }), ticks);
-            const power = last.native ? 60 : CobblemonCombat.moveTemplate(String(last.id)).power();
+            const nativeMove = !!(last && last.native);
+            const moveId = String(last!.id);
+            const kind = nativeMove ? disableKind(moveId) : "";
+            const carrier = MobEffects.read(world, target, disableEffect);
+            const carrierKey = carrier === null ? "" : String(carrier.key());
+            const casterRef = String(caster.ref());
+            disableReleaseOwn(world, target, casterRef);
+            world.effect(disableMark, target, JSON.stringify({ move: moveId, native: nativeMove, kind: kind, max: ticks,
+                nails: nails, caster: casterRef, carrier: carrierKey }), ticks);
+            const power = nativeMove ? 60 : CobblemonCombat.moveTemplate(moveId).power();
             WorldFeedback.emit(world, disableScene, 1, at,
                 { moment: "lock", target: String(target.ref()), nails: nails, count: nails,
                   intensity: 1 + Math.min(1, power / 120), direction: [direction.x(), direction.y(), direction.z()],
-                  reach: Math.max(0.5, Math.min(action.range(), delta.length() || action.range())) }, 34);
+                  reach: Math.max(0.5, Math.min(reach, delta.length() || reach)), native: nativeMove ? 1 : 0, kind: kind }, 34);
+            // 瞬时命中的到达提示：施法者一侧的出手与命中点同帧，不沿路径伪造飞行。
             WorldFeedback.emit(world, disableScene, 1, origin,
-                { moment: "fly", target: String(target.ref()), nails: nails, reach: Math.max(0.5, Math.min(action.range(), delta.length() || action.range())),
-                  direction: [direction.x(), direction.y(), direction.z()] }, 16);
+                { moment: "cast", target: String(target.ref()), nails: nails, native: nativeMove ? 1 : 0, kind: kind,
+                  reach: Math.max(0.5, Math.min(reach, delta.length() || reach)),
+                  direction: [direction.x(), direction.y(), direction.z()] }, 14);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), disableLockText,
-                [last.native ? { key: "worldcombat.skill.disable.native_attack", fallback: "普通攻击" } : { key: "cobblemon.move." + String(last.id), fallback: String(last.id) }], 36);
+                [nativeMove ? { key: "world_combat.move.disable.kind." + kind, fallback: kind } : { key: "cobblemon.move." + moveId, fallback: moveId }], 36);
             world.sound("minecraft:block.anvil.land", at, 14, "{}");
             done(action);
         }
     });
 
-    // 持续：每 25 刻续一次钉的脉动；被点名的那一手不再拥有时提前松开（对方换招／被变招）。
-    WorldCombat.on("world_combat:move_disable/hold", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== disableEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const mark = disableData(world, actor);
-        if (mark === null) return;
-        if (!disableKnows(world, actor, String(mark.move))) {
-            const effect = MobEffects.read(world, actor, disableEffect);
-            if (effect !== null) world.removeMobEffect(actor, disableEffect, effect.key());
-            disableReleaseMark(world, actor);
-            const body = world.observe(actor);
-            if (body !== null) {
-                WorldFeedback.emit(world, disableScene, 1, body.position(), { moment: "break", target: String(actor.ref()) }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), disableBreakText, [], 24);
-            }
-            return;
-        }
-        if (world.tick() % 25 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_disable/pin/" + String(actor.ref()), disableScene, 1, body.position(),
-            { moment: "hold", target: String(actor.ref()), nails: mark.nails || 5, move: String(mark.move) }, 40);
-    });
-
-    // 结束：到期是钉自己松开，被外力清除是被人硬拔下来，画面不同。
+    // 结束：到期是钉自己松开，被外力清除是被人硬拔下来，画面不同；只收掉载体已失效的旧钉。
     WorldCombat.on("world_combat:move_disable/end", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== disableEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
         const expired = String(data.cause) === "expired";
-        disableReleaseMark(world, actor);
+        disableReleaseStale(world, actor);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, disableScene, 1, body.position(),

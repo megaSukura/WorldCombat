@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.mountaingale.summary": "拔出冰山般的巨冰、抡起来沿低弧线砸向对手：正面命中的吃满一记全场最重的伤害，落点一圈里的其他敌人被碎冰扫到，地面结冰并在中心竖起一簇冰锥。飞行慢、看得见、能侧身躲，起手也最长。",
+  "worldcombat.skill.mountaingale.summary": "拔出冰山般的巨冰、抡起来沿低弧线砸向点选的落点：正面命中的吃满一记重击，落点一圈里的其他敌人被碎冰扫到，地面结冰并在中心竖起一簇冰锥。飞行慢、看得见、能侧身躲，起手也最长；没砸到东西巨冰只会消散，不会在旧落点补炸。",
   "worldcombat.skill.mountaingale.description.0": "正面砸实造成约 %1$s 的伤害，飞行中巨冰判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.mountaingale.description.1": "可投到 %1$s 格内，飞行速度 %2$s 格每刻、下落系数 %3$s 格每刻²；越重飞得越慢、越好躲，途中撞上地形或敌人即碎。",
   "worldcombat.skill.mountaingale.description.2": "落地时半径 %1$s 格内的其他敌人各吃一记约 %3$s 点溅射伤害；被正面命中的目标额外被顶开 %2$s 格。",
@@ -10,7 +10,7 @@
   "worldcombat.skill.mountaingale.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。",
   "worldcombat.skill.mountaingale.growth.0": "%1$s 级起巨冰主伤抬到 %2$s、溅射副伤抬到 %3$s。",
   "worldcombat.skill.mountaingale.growth.1": "%1$s 级起巨冰主伤抬到 %2$s、溅射副伤抬到 %3$s、碎裂半径 %4$s 格、中心冰锥高 %5$s 格。",
-  "worldcombat.skill.mountaingale.use.0": "远距离砸出一记全场最重的单体伤害",
+  "worldcombat.skill.mountaingale.use.0": "远距离砸出一记高额的单体伤害",
   "worldcombat.skill.mountaingale.use.1": "用爆开的碎冰扫到挤在落点的一圈敌人",
   "worldcombat.skill.mountaingale.use.2": "在落点竖起一小段冰锥当掩体",
   "worldcombat.skill.mountaingale.value.mass": "巨冰主伤",

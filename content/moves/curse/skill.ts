@@ -1,19 +1,4 @@
-/**
- * 诅咒 / Curse —— 执行组织。
- *
- * 核心念头：诅咒是一次交换，而交换的形态取决于你是什么。
- *   幽灵：当场押上半条命，把债记在对手身上，之后每隔一段从对手身上扣一口——是一条慢慢收的债。
- *   非幽灵：押上敏捷，换来凶悍与硬壳（物攻/防御 +，速度 −），身上烙下一枚短暂的契约印记。
- * 出招仍需一个对手作为凝视的对象（kind enemy）；幽灵把债推给对手，其他个体只能自己吞下。
- *
- * 幽灵形态两幕 + 收：
- *   起：windup 在掌心聚起幽火。
- *   击：提交后押出生命（bloodCost × 最大生命，至少留一线），给目标挂共享身份 world_combat:status/curse
- *      （本单元效果 world_combat:cursed_hex），并以目标为宿主起绑定效果 world_combat:cursed_bind。
- *   收：绑定效果每隔 hexInterval 扣目标最大生命的 hexShare，扣完 left 或被清掉就停；债走完时安静退去。
- * 非幽灵形态一幕：提交后立刻结算能力等级与契约印记，发一声闷响。
- * 反制：幽灵押上半条命，最短的解法是趁它虚弱时强攻；债本身走得慢，也可以先清状态或速战速决。
- */
+/** 幽灵押血留下有限咒债；其他属性可自行交换能力等级。周期伤害沿效果来源交付原生结算。 */
 namespace PokemonSkills {
     function curseAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
@@ -34,59 +19,50 @@ namespace PokemonSkills {
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(cursedBind, "start", function (effect) {
         const data = JSON.parse(effect.state());
+        data.lease = MobEffects.bind(effect.world(), effect.target(), cursedHex); effect.state(JSON.stringify(data));
+        effect.schedule("watch", "watch", 1, "{}");
         effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
+    });
+    WorldCombat.effectHandler(cursedBind, "watch", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target);
+        if (body === null || !MobEffects.present(world, JSON.parse(effect.state()).lease)) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "haunt", curseScene, 1, body.position(), { moment: "haunt", target: String(target.ref()) });
+        effect.schedule("watch", "watch", 1, "{}");
     });
     WorldCombat.effectHandler(cursedBind, "pulse", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(victim) || MobEffects.read(world, victim, cursedHex) === null) { effect.end(); return; }
+        if (!world.valid(victim) || !MobEffects.present(world, data.lease)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
         const amount = Math.max(1, Math.floor(body.maxHealth() * data.share));
-        world.health(victim, -amount, "world_combat:curse");
+        PokemonDamage.residual(world, victim, "curse", amount, { share: data.share, left: data.left - 1 });
         data.left = data.left - 1;
         effect.state(JSON.stringify(data));
-        WorldFeedback.emit(world, curseScene, 1, body.position(),
-            { moment: "toll", target: String(victim.ref()), share: data.share, burst: Math.round(12 + data.share * 90), left: data.left }, 24);
-        WorldFeedback.text(world, curseAbove(body.position()), curseTextToll, [], 22);
-        world.sound("minecraft:particle.soul_escape", body.position(), 12, "{}");
         if (data.left > 0) effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
         else effect.end();
     });
     WorldCombat.effectHandler(cursedBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    // 债挂在身上时，每隔一会儿在目标身上浮起一缕幽影。
-    WorldCombat.on("world_combat:move_curse/haunt", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== cursedHex || event.world().tick() % 20 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || MobEffects.read(world, actor, cursedHex) === null) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_curse/haunt/" + String(actor.ref()), curseScene, 1, body.position(),
-            { moment: "haunt", target: String(actor.ref()) }, 40);
-    });
-
-    // 债被牛奶/清状态/时间走完而终止时，收回绑定；自然走完再播一次退场。
-    WorldCombat.on("world_combat:move_curse/lift", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== cursedHex) return;
-        const world = event.world(), victim = event.actor();
-        if (!world.valid(victim)) return;
-        const binds = world.effects(victim, cursedBind);
-        for (let i = 0; i < binds.length; i++) world.operation(binds[i].id(), "world_combat:dispel", "{}");
-        if (String(data.cause) !== "expired") return;
-        const body = world.observe(victim);
-        if (body === null) return;
-        WorldFeedback.emit(world, curseScene, 1, body.position(), { moment: "lift", target: String(victim.ref()) }, 24);
-        WorldFeedback.text(world, curseAbove(body.position()), curseTextLift, [], 24);
+    PokemonDamage.onDamageApplied("world_combat:curse/residual", receipt => {
+        const fact = WorldFeedback.receipt(receipt.event);
+        if (fact === null || !(fact.actual > 0)) return;
+        const world = receipt.world, at = fact.point;
+        WorldFeedback.emit(world, curseScene, 1, at, { moment: "toll", target: String(receipt.target.ref()),
+            share: receipt.data.share, burst: Math.round(12 + receipt.data.share * 90), left: receipt.data.left }, 24);
+        WorldFeedback.text(world, curseAbove(at), curseTextToll, [], 22);
+        world.sound("minecraft:particle.soul_escape", at, 12, "{}");
+    }, { move: "curse", segment: "residual" });
+    WorldCombat.effectHandler(cursedBind, "end", effect => {
+        const world = effect.world(), body = world.observe(effect.target());
+        if (body !== null) WorldFeedback.emit(world, curseScene, 1, body.position(), { moment: "lift", target: String(effect.target().ref()) }, 24);
     });
 
     define({
         id: curseId,
         cooldownParameter: "recharge", name: "诅咒",
-        description: "一次交换：幽灵属性当场押出一截最大生命，把逐段扣血的债记在对手身上；其他属性的个体押上敏捷，换来物攻与防御的提升。需要一个对手作为凝视的对象。",
+        description: "一次交换：幽灵属性当场押出一截最大生命，把逐段扣血的债记在对手身上；其他属性的个体押上敏捷，换来物攻与防御的提升。非幽灵可对自己使用。",
         uses: ["押上一截生命，给对手记一笔慢债", "把敏捷换成凶悍与硬壳", "逼对手分心去清状态或速战速决"],
-        kind: "enemy", range: 5, maxRange: 8,
+        kind: "aim", range: 5, maxRange: 8,
         prepare: 9, active: 0, recover: 8, cooldown: 90, style: "curse",
         defaults: { bloodpact: false },
         fields: [flag("bloodpact", "血契")],
@@ -102,10 +78,12 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), self = action.actor(), target = action.target();
-            if (target === null || !world.valid(target)) return "invalid-target";
             const body = world.observe(self);
             if (body === null) return "invalid-target";
             if (curseIsGhost(world, self)) {
+                if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+                const victim = world.observe(target);
+                if (victim === null || victim.position().minus(body.position()).length() > action.range() || !world.clear(body.position(), victim.position())) return "target-not-visible";
                 if (CombatStatus.has(world, target, curseStatus)) return "already-cursed";
                 const cost = p(curseId, "bloodCost", action);
                 if (body.health() <= body.maxHealth() * cost + 0.5) return "too-weak";
@@ -130,16 +108,20 @@ namespace PokemonSkills {
             const blood = !!(config && config.bloodpact);
             if (curseIsGhost(world, self)) {
                 const target = action.target();
-                if (target === null || !world.valid(target)) { done(action); return; }
+                if (target === null || !world.valid(target) || world.friendly(target)) { done(action); return; }
+                const targetBody = world.observe(target);
+                if (targetBody === null || targetBody.position().minus(body.position()).length() > action.range() || !world.clear(body.position(), targetBody.position())) { done(action); return; }
                 if (CombatStatus.has(world, target, curseStatus)) { done(action); return; }
                 const cost = Math.max(0.05, Math.min(0.6, p(curseId, "bloodCost", action)));
                 const floor = Math.max(1, body.maxHealth() * 0.05);
                 const paid = Math.max(0, Math.min(body.maxHealth() * cost, body.health() - floor));
-                if (paid > 0) world.health(self, -paid, "world_combat:curse");
                 const share = Math.max(0.05, Math.min(0.35, p(curseId, "hexShare", action)));
                 const ticks = Math.max(60, Math.round(p(curseId, "hexTicks", action)));
                 const interval = Math.max(20, Math.round(p(curseId, "hexInterval", action)));
-                MobEffects.apply(world, target, cursedHex, ticks, 0);
+                const carrier = MobEffects.apply(world, target, cursedHex, ticks, 0);
+                if (carrier === null) { done(action); return; }
+                const payment = paid > 0 ? -world.health(self, -paid, "world_combat:curse") : 0;
+                if (!(payment > 0)) { world.removeMobEffect(target, cursedHex, carrier.key()); done(action); return; }
                 const existing = world.effects(target, cursedBind);
                 for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
                 const left = Math.max(1, Math.floor(ticks / interval));
@@ -149,7 +131,7 @@ namespace PokemonSkills {
                 if (victim !== null) {
                     WorldFeedback.emit(world, curseScene, 1, victim.position(),
                         { moment: "hex", path: [String(self.ref()), String(target.ref())], target: String(target.ref()),
-                            share: share, pulses: left, paid: Math.round(paid) }, 30);
+                            share: share, pulses: left, paid: Math.round(payment) }, 30);
                     WorldFeedback.text(world, curseAbove(victim.position()), curseTextHex, [left], 30);
                 }
             } else {

@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.tackle.summary": "Build into a short run, strike with your whole body, then slide off to the target's side as the momentum fades. Speed and weight make the hit heavier; a miss carries you to the end of the charge.",
-  "worldcombat.skill.tackle.use.0": "A short run-up slam when you have the distance",
+  "worldcombat.skill.tackle.summary": "Build into a short run in a chosen direction, strike with your whole body, then slide off to the side as the momentum fades; you can pick a direction and charge into empty space. Speed and weight make the hit heavier; a miss carries you to the end of the charge.",
+  "worldcombat.skill.tackle.use.0": "A short run-up slam in any direction",
   "worldcombat.skill.tackle.use.1": "Shove a foe off its cover for a step",
   "worldcombat.skill.tackle.use.2": "Slide sideways after contact to adjust your position",
   "worldcombat.skill.tackle.description.0": "The slam deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",

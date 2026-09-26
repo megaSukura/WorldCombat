@@ -1,31 +1,9 @@
-/**
- * 角钻 / horndrill —— 参数与处决结算。
- *
- * 原生事实：Normal／物理／威力 0／命中 30／PP 5／单体／接触；ohko: true——只要命中就一击濒死；
- *   30% 命中由双方等级差修正（Cobblemon 1.8，25 位已实装学习者）。
- *
- * 翻译：把「用旋转的角刺入对手」落成一次**施法者本人的直线冲钻**——蹲身起旋，把身体拧成一支钻头，
- *   沿锁定的一条线高速钻出去；线路上第一个挡路的活体被钻尖贯穿、一次结清。它是四记一击必杀里唯一
- *   会位移的一记，也是唯一撞上墙就停在原地的：对手让开这条线，钻头就只能扎进石头里。
- *
- * 与同族分开（四记都靠「预告形状」被认出）：
- *   地裂     —— 远程、坑在目标脚下的地面，只有站在地上的人中招，事后留裂缝；
- *   角钻     —— 施法者沿一条**直线**钻过去，会位移、会撞墙，留下角钻特有的螺旋钻屑；
- *   断头钳   —— 贴身的**扇形**钳合，最短最快，收招最久；
- *   绝对零度 —— 目标周围一整圈**半径**冻杀，唯一能同时放倒多个。
- *
- * 数值来源（每项读不同的精灵数据，分散到不同参数上）：
- *   span    冲程 6.0 + 等级(≥20)偏移 + 速度偏移；等级高、腿快的人钻得更远，也是实际射程。
- *   girth   钻头判定 0.6 + 身高偏移 + 体重偏移；个高体沉的人钻头更粗，更难被侧身让开。
- *   thrust  冲速 0.85 + 速度偏移；腿快的人钻得更急。
- *   mark    起钻蓄势 22 −（等级差）×0.6 + 扩钻 6；等级压过对手时蓄势更短，对手让开的时间更少。
- *   bore    钻屑量 18 + 物攻偏移；驱动表现密度。
- *   tempo／aftercast／recharge 速度与等级定起手、收招、冷却。
- *
- * 配置 `wide`（扩钻式）双向取舍：开＝钻头判定 ×1.35，代价是冲程 ×0.85、蓄势 +6、收招 +4（更慢更短、更好躲，
- *   但不在正中也会被扫到）；关（细钻式）＝更长更快、收招更短，但在差之毫厘时会擦身而过。两向各有局面。
- */
+/** horndrill: one native execution attempt; native damage events and immunity determine its result. */
 namespace PokemonSkills {
+    export const horndrillResisted = "world_combat:horndrill_resisted";
+    WorldCombat.effect(horndrillResisted, 1, 400, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(horndrillResisted, "start", function () { });
+
     export const horndrillId = "horndrill";
     export const horndrillScene = "world_combat:move_horndrill";
     export const horndrillKillText = "world_combat.move.horndrill.text.kill";
@@ -35,9 +13,9 @@ namespace PokemonSkills {
 
     /**
      * 处决：钻尖贯穿，把目标剩下的生命一次结清。属性免疫（一般系打不到幽灵）返回 "immune"。
-     * 目标防御、护甲与韧性不参与——只有属性关系能挡。
+     * 目标防御、护甲与韧性不参与——原生伤害事件决定本次是否生效。
      */
-    export function horndrillExecute(action: CombatAction, target: CombatActor): "kill" | "immune" | "miss" {
+    export function horndrillExecute(action: CombatAction, target: CombatActor): "kill" | "immune" | "miss" | "resisted" {
         const world = action.world();
         if (!world.valid(target) || world.friendly(target)) return "miss";
         const body = world.observe(target);
@@ -55,10 +33,11 @@ namespace PokemonSkills {
         if (armor !== null) metadata.armorExcluded = armor.value();
         const toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
         if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        world.hurt(target, body.health() + body.maxHealth(), JSON.stringify(metadata));
+        const accepted = world.hurt(target, body.health() + body.maxHealth(), JSON.stringify(metadata));
         const after = world.observe(target);
-        if (after !== null && after.health() > 0) world.health(target, -after.health(), "world_combat:horndrill_execute");
-        return "kill";
+        if (accepted && (after === null || after.health() <= 0)) return "kill";
+        world.effect(horndrillResisted, target, "{}", 400);
+        return "resisted";
     }
 
     actionParameters.define(horndrillId, {

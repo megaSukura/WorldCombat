@@ -7,7 +7,8 @@
  *   （第六世代起的 Hidden Power 公式），因此伤害属性、本系加成与属性相性都随个体走。
  * - 参数分散到不同精灵数据：威力取特攻与等级，凝聚时间取速度，光束速度取速度，光球半径取体型高度，
  *   射程取特攻，凝聚环数取特攻阶梯。两只精灵放同一招，颜色、长度、光斑数量与伤害都不同。
- * - 表现由机制值驱动：个体值算出的属性色进入 data.tint，威力进入光斑数量与强度。
+ * - 表现由机制值驱动：个体值算出的属性色进入 data.type，威力进入光斑数量与强度。
+ * - 选取为 aim：手动可瞄方向/点空放，AI 仍可推荐敌人作为瞄向；实体伤害权限由命中层判定，撞到方块即结束。
  */
 namespace PokemonSkills {
     /** 本单元独有的启动 id，避免与其他作者的命名空间成员重名。 */
@@ -37,6 +38,25 @@ namespace PokemonSkills {
         if (damage.actor && String(damage.actor.domain()) === "cobblemon") return CobblemonCombat.pokemon(damage.actor);
         const native = damage.sourceFacts.data.native;
         return native && native.pokemon ? <CombatPokemon>native.pokemon : null;
+    }
+    /** 方块受击面的外法线；未知接触返回 null（身体阻挡等没有具体方块面的情形）。 */
+    export function hiddenpowerFaceNormal(face: string): CombatPoint | null {
+        switch (face) {
+            case "up": return WorldCombat.point(0, 1, 0);
+            case "down": return WorldCombat.point(0, -1, 0);
+            case "north": return WorldCombat.point(0, 0, -1);
+            case "south": return WorldCombat.point(0, 0, 1);
+            case "west": return WorldCombat.point(-1, 0, 0);
+            case "east": return WorldCombat.point(1, 0, 0);
+            default: return null;
+        }
+    }
+    /** 没有方块面时，碎裂朝来弹方向崩开；从接触点指回施法者。 */
+    export function hiddenpowerBack(action: CombatAction, point: CombatPoint): CombatPoint {
+        const body = action.world().observe(action.actor());
+        if (!body) return WorldCombat.point(0, 1, 0);
+        const back = body.position().minus(point);
+        return back.length() < 0.01 ? WorldCombat.point(0, 1, 0) : back.unit();
     }
 
     actionParameters.define(hiddenpowerId, {

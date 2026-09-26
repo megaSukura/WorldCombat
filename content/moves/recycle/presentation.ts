@@ -53,11 +53,11 @@ const RecycleDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 18 },
             emitters: [
                 {
-                    name: "homebound", bind: "projectile", fit: "none",
+                    name: "homebound", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: { data: "motes", fallback: 10 },
-                    shape: { kind: "sphere", radius: 0.1 },
-                    direction: "away", speed: [0.01, 0.05],
+                    rate: { data: "travelMotes", fallback: 0 },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.01, 0.05],
                     lifetime: [5, 11], size: [0.05, 0.01],
                     color: 0xF0D27A, alpha: [0.8, 0], light: "full", maxParticles: 60
                 },

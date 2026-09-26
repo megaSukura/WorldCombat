@@ -1,13 +1,12 @@
 /**
  * 青草滑梯 / grassyglide 的可执行设计说明。
  *
- * 一句话：贴地滑过去用身体铲一只不会还手的卡比兽，撞实后落点压出一片青草，把站在上面的卡比兽标记为「在青草场地上」。
+ * 一句话：贴地滑过去用身体铲一只不会还手的卡比兽，撞实只造成接触伤害，不在地面留下青草场地。
  *
- * 场面：只会青草滑梯的 Bulbasaur（32 级）对一只只会跃起、不会还手的 Snorlax（30 级）；两者都站在地上，
- *   草皮的「贴地才生效」检查因此成立。AI 只有这一招可用。
- * 必然事实：本招被提交过；目标受到过伤害；落点的草皮给贴地的目标挂上了共享身份 world_combat:status/grassyterrain
- *   （只要撞实就一定会种下草皮，草皮每 5 刻扫一次半径内的贴地活体）。
- *   起手是否因脚下有草而归零、草皮实际覆盖几格、站位偏差导致的射空都写进 note 供读轨迹判断。
+ * 场面：只会青草滑梯的 Bulbasaur（32 级）对一只只会跃起、不会还手的 Snorlax（30 级）；平地、夜晚，AI 只有这一招可用。
+ * 必然事实：本招被提交过；目标受到过伤害；**本招不再自己种草**，所以荒野里没有青草来源时，目标不会被挂上
+ *   共享身份 world_combat:status/grassyterrain。
+ *   起手是否因脚下有草而归零（本场景没有现成青草，因此走普通起手）、实际滑了多远写进 note 供读轨迹判断。
  */
 Smoke.scenario("grassyglide", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -17,14 +16,13 @@ Smoke.scenario("grassyglide", function (stage) {
     var foe = stage.pokemon({ species: "Snorlax", level: 30, moves: ["splash"], at: [0, 0, 0] });
     stage.hostile(caster, foe);
     stage.until(900, function () {
-        return stage.casts("grassyglide", caster) > 0 && stage.damageTo(foe) > 0
-            && stage.hadMobEffect(foe, "world_combat:status/grassyterrain");
+        return stage.casts("grassyglide", caster) > 0 && stage.damageTo(foe) > 0;
     }, function () {
         stage.expect(stage.casts("grassyglide", caster) > 0, "grassyglide was committed");
         stage.expect(stage.damageTo(foe) > 0, "the slide dealt damage");
-        stage.expect(stage.hadMobEffect(foe, "world_combat:status/grassyterrain"),
-            "the landing grew grass that marks the grounded target as being on grassy terrain");
-        stage.note("grass is the shared grassyterrain identity; a landed slam always presses a patch at the struck target, so the grounded Snorlax is marked within a few scans. Whether the caster also stands on grass (and would get a zero-preparation follow-up) is positional.", {
+        stage.expect(!stage.hadMobEffect(foe, "world_combat:status/grassyterrain"),
+            "the slide seeds no grassy terrain of its own");
+        stage.note("borrowing, not seeding: this move produces no Grassy Terrain, so a landed slam grants no grassyterrain identity. The zero-preparation branch only fires when the caster already stands on real grass, which this arena does not provide; read casterOnGrass to check.", {
             casts: stage.casts("grassyglide", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             moved: Math.round(stage.travelled(caster) * 10) / 10,
@@ -32,5 +30,5 @@ Smoke.scenario("grassyglide", function (stage) {
             tick: stage.tick()
         });
         stage.done();
-    }, "grassyglide plants grass where it lands");
+    }, "grassyglide slides, damages, and seeds no terrain");
 });

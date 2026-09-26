@@ -33,5 +33,5 @@
   "worldcombat.skill.jumpkick.preference.ai.preferWeak.help": "开启：对手生命低于三成时优先用飞踢补刀；关闭：只按共享顺序与其它候选竞价。",
   "world_combat.move.jumpkick.text.hit": "飞踢",
   "world_combat.move.jumpkick.text.crash": "踢偏了",
-  "worldcombat.skill.jumpkick.description.aim": "上升阶段飞踢会不断把落点对准目标的实时位置；转入俯冲后落点锁定，目标横移就能让开。俯冲途中撞到任何活体即命中；到达落点时在命中半径内再挑最近的敌人，只结算一个目标；全程一无所获（包括半途撞上墙体）才算踢偏，按最大生命自伤。"
+  "worldcombat.skill.jumpkick.description.aim": "提交时方向与落点即锁死，腾空与俯冲都只走这条线，不再拐向原来那个目标，目标横移就能让开。俯冲途中本体撞到第一个非友方活体即命中、只结算一个目标并落地收势；半途撞墙、或到点都没有接触，就在真实落点按比例自伤。"
 }

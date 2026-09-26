@@ -40,6 +40,7 @@ const view = actor => ({ actor: () => actor, position: () => point(0, 0, 0), hea
   grounded: () => true, attacking: () => null, lastAttacker: () => null, hurtAgo: () => 100 });
 let busy = false, cooldown = 0;
 const world = {
+  closestPoint: actor => view(actor).position(),
   source: () => first, tick: () => 10, valid: () => true, effects: () => [], mobEffect: () => null, mobEffects: () => [], observe: view, actions: () => [],
   busy: () => busy, claimed: () => busy, cooldown: () => cooldown, readiness: () => cooldown ? 'cooldown' : busy ? 'busy' : '', actor: ref => ref === first.ref() ? first : ref === second.ref() ? second : null,
   friendly: () => true, query: () => [], survey: () => '[]', equipment: () => [],

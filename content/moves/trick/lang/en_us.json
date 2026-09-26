@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.trick.summary": "Stretch a psychic thread to swap held items with the target from afar: you never have to move, only to see the target and reach it. Quick individuals wind up faster; high Sp. Atk and level stretch the thread further.",
+  "worldcombat.skill.trick.summary": "Stretch a psychic thread to swap held items with the target from afar: you never have to move, only to see the target and reach it. An ally or an enemy can be chosen explicitly; aiming at empty space, a wall in the way or a target that left reach only snaps the thread without a swap. Quick individuals wind up faster; high Sp. Atk and level stretch the thread further.",
   "worldcombat.skill.trick.use.0": "Trade for a foe's good item from a distance",
   "worldcombat.skill.trick.use.1": "Hand a burden you carry to the foe",
-  "worldcombat.skill.trick.use.2": "Take an item from a distant foe while empty-handed",
-  "worldcombat.skill.trick.description.0": "Swap held items with an enemy within %1$s blocks and in clear sight: you stay put, and after the swap each side holds what the other had (when one side is empty this is a one-way take or give).",
+  "worldcombat.skill.trick.use.2": "Swap gear with an ally, or take an item from a distant foe while empty-handed",
+  "worldcombat.skill.trick.description.0": "Swap held items with a body within %1$s blocks and in clear sight, ally or enemy chosen explicitly: you stay put, and only when the atomic exchange really succeeds does each side hold what the other had (when one side is empty this is a one-way take or give) as the items fly along the thread.",
   "worldcombat.skill.trick.description.1": "A %1$s feint, %2$s to recover after the swap, and a %3$s cooldown.",
   "worldcombat.skill.trick.snap.on": "Snap grab: wind-up x0.55 and 6 ticks less cooldown, at the cost of the thread closing to arm's reach (range x0.62) - faster, but you must be close.",
   "worldcombat.skill.trick.snap.off": "Measured thread: a longer thread (up to about 9 blocks) and a fuller cooldown, with a longer wind-up - more reach, but more time for the foe to react.",
@@ -23,10 +23,10 @@
   "worldcombat.skill.trick.preference.ai.leaveStation": "Leave station to stretch",
   "worldcombat.skill.trick.preference.ai.leaveStation.help": "On: it will leave its station under a hold order to stretch the thread. Off: it only casts when the target is already in reach.",
   "worldcombat.skill.trick.preference.ai.tradeOnly": "Only when there is an item to trade",
-  "worldcombat.skill.trick.preference.ai.tradeOnly.help": "On: only used when the target or the caster holds an item, as a dedicated trade. Off: it also tries when both are empty-handed (usually to no effect).",
+  "worldcombat.skill.trick.preference.ai.tradeOnly.help": "On: only used when the target or the caster holds an item, as a dedicated trade. Off: it still only scores when there is something to trade and never wastes a cast with both sides empty. A known refusing target is never chosen.",
   "world_combat.move.trick.text.swap": "Changed hands",
   "world_combat.move.trick.text.empty": "Both hands empty",
   "world_combat.move.trick.text.guard": "Its grip held fast",
   "world_combat.move.trick.text.miss": "The thread snapped",
-  "worldcombat.skill.trick.description.conditions": "The swap only happens when at least one side holds something and neither side's item channel is sealed; a target whose ability refuses held-item exchange cannot be traded with. It cannot be cast when both sides are empty-handed."
+  "worldcombat.skill.trick.description.conditions": "If the target ducks behind a wall, leaves reach or another body blocks the line after the wind-up, execution only snaps the thread without a swap. The swap happens when at least one side holds something and neither item channel is sealed; a target whose ability refuses held-item exchange cannot be traded with. Pointing at empty space or when both sides are empty-handed also misses and never fabricates an item."
 }

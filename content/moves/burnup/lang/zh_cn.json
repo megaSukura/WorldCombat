@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.burnup.summary": "把全身的火向内收拢，再朝身前喷出一道白焰锥面：被瞄准的目标吃满，锥内其他敌人各吃侧焰。喷完施法者真的燃尽——一段时间里不再是火属性，也点不着第二发；只有自己带火属性时才能发动。",
+  "worldcombat.skill.burnup.summary": "把全身的火向内收拢，再朝身前喷出一道白焰锥面：中心窄芯首触者吃满，锥内其他敌人各吃侧焰。喷出时施法者真的燃尽——一段时间里不再是火属性，也点不着第二发；只有自己带火属性时才能发动。",
   "worldcombat.skill.burnup.description.0": "白焰造成约 %1$s 点特殊伤害，已含自身火属性的 1.12 倍加成；本招只能在自己带火属性时发动。",
-  "worldcombat.skill.burnup.description.1": "白焰喷出 %1$s 格、张开 %2$s 度的锥面，前沿以 %3$s 格每刻冲出；被瞄准的目标吃满伤害，锥内其他敌人各吃 %4$s。",
-  "worldcombat.skill.burnup.description.2": "喷完自己燃尽 %1$s：期间不再有火属性（只带火属性的会退为一般属性），火属性带来的本系加成与相性一并失去，也点不着第二发；燃尽结束或被清除后恢复。",
+  "worldcombat.skill.burnup.description.1": "白焰喷出 %1$s 格、张开 %2$s 度的锥面，前沿以 %3$s 格每刻冲出；中心窄芯首触者吃满伤害，锥内其他敌人各吃 %4$s。",
+  "worldcombat.skill.burnup.description.2": "喷出时自己燃尽 %1$s：暂时仅移除火属性并保留其他属性；纯火会成为无类型。空喷也消耗，窗口结束或清除后恢复。这一发按释放时真实攻击属性保留对应本系预算。",
   "worldcombat.skill.burnup.use.0": "一发烧尽面前一条锥面",
   "worldcombat.skill.burnup.use.1": "用失去本系换一次重击",
   "worldcombat.skill.burnup.use.2": "把挤在身前的对手一起点燃",

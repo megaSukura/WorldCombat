@@ -1,16 +1,18 @@
 {
-  "worldcombat.skill.decorate.summary": "搓出一束奶油与缎带，送给另一个友方：对方的攻击与特攻大幅提高，装饰物在身上亮一阵子。这件作品要有一个佩戴者。",
+  "worldcombat.skill.decorate.summary": "搓出一束奶油与缎带，飞送给另一个友方；缎带真正落到对方身上时，对方的攻击与特攻大幅提高，装饰物在身上亮一阵子。中途被挡下或对方离场就落空。这件作品要有一个佩戴者。",
   "worldcombat.skill.decorate.use.0": "开战前把身边的队友打扮成主力",
   "worldcombat.skill.decorate.use.1": "在队友冲上去之前先给他加满双攻",
   "worldcombat.skill.decorate.use.2": "把自己以外的伙伴变成一把更利的刀",
-  "worldcombat.skill.decorate.description.0": "给一个友方的物攻与特攻各 +%1$s 级；目标只能选另一个战斗者。",
-  "worldcombat.skill.decorate.description.1": "目标身上会亮起装饰约 %1$s；物攻与特攻的提升不会随闪光结束而消失——闪光只是这件作品的标记。",
+  "worldcombat.skill.decorate.description.0": "把一束奶油缎带飞送给另一个友方；缎带真正到达时给对方的物攻与特攻各 +%1$s 级。中途被墙或别的身体挡下、或对方离场，就落空散掉，不会隔空生效。",
+  "worldcombat.skill.decorate.description.1": "送达后目标身上会亮起装饰约 %1$s；物攻与特攻的提升不会随闪光结束而消失——闪光只是这件作品的标记。",
   "worldcombat.skill.decorate.description.2": "施放距离 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒。",
+  "worldcombat.skill.decorate.description.3": "缎带送出速度约 %1$s 格每刻；距离越远到得越晚，这段路就是对手抢先出手的余地。",
   "worldcombat.skill.decorate.timing": "起手可以被打断，打断不消耗任何东西；提交后才结清 PP 与冷却。",
   "worldcombat.skill.decorate.value.gift": "双攻提升",
   "worldcombat.skill.decorate.value.veneer": "装饰时长",
   "worldcombat.skill.decorate.value.trinkets": "装饰物数量",
   "worldcombat.skill.decorate.value.reach": "施放距离",
+  "worldcombat.skill.decorate.value.flight": "送达速度",
   "worldcombat.skill.decorate.value.tempo": "起手",
   "worldcombat.skill.decorate.value.aftercast": "收招",
   "worldcombat.skill.decorate.value.wait": "冷却",
@@ -25,5 +27,6 @@
   "worldcombat.skill.decorate.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.decorate.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去给队友送装饰。",
   "world_combat.move.decorate.text.adorned": "已装扮（物攻 +%1$s／特攻 +%1$s）",
+  "world_combat.move.decorate.text.blocked": "装饰被挡下了",
   "effect.world_combat.decorated": "已装扮"
 }

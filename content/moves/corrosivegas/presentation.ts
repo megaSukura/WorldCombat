@@ -5,10 +5,11 @@
  *   雾里每件携带物被酸液舔过、化成酸花消失；没有携带物的活体只被裹上一层酸沫；散后在原地留一段贴地残雾。
  *
  * 色相家族：酸绿（0x8FD24A）画毒雾与酸花，亮黄绿（0xDFFF9B）做气泡与高光，暗绿（0x39511F）做酸液阴影，
- *   残雾用低饱和灰绿（0x6E8A55），让持续层退到视线之外。
- * 层次：起（windup 鼓泡）／炸（burst 整圈铺开）／溶（melt 道具化酸花）／空（fizz 无物可溶）／残（linger 贴地低密度）。
- * 起击收：windup 16t → burst 30t → melt／fizz 28t → linger 由服务端时长决定。
- * 范围：burst／linger 的环按 data.scale（真实雾半径／定义半径 3.2）铺开，画出的就是判定罩住的那圈。
+ *   残雾用低饱和灰绿（0x6E8A55），让持续层退到视线之外；队友遇险时预告层转警示琥珀（0xE0A63A）。
+ * 层次：起（windup 鼓泡）／圈（reach 预告真实范围与圈内活体，自定义场景）／炸（burst 整圈铺开）／
+ *   溶（melt 道具化酸花）／空（fizz 无物可溶）／残（linger 贴地低密度）。
+ * 起击收：windup 16t → burst 30t → melt／fizz 28t → linger 由服务端时长决定；reach 随起手出现、出手瞬间退场。
+ * 范围：reach／burst／linger 的环按 data.scale（真实雾半径／定义半径 3.2）铺开，画出的就是判定罩住的那圈。
  * 运动：酸泡由下往上翻；burst 的雾由中心向外铺满整圈；melt 的酸花在道具位置短促外爆再下沉；linger 贴地缓慢飘。
  * 数：撑雾的雾团数绑 data.cloudlets（体重派生），酸泡数绑 data.bubbles（等级派生），每件道具的溶蚀粒子绑 data.motes（特攻派生）。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -148,3 +149,36 @@ const CorrosiveGasDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_corrosivegas", 1, CorrosiveGasDefinition);
+
+/**
+ * 起手预告层：服务端用与实际判定相同的中心和半径写出这一帧的真实事实，回调逐帧跟住施法者并核对圈内的人。
+ * 画出真实雾半径的边界圈（雾团还没炸开，人先看得见范围），并在每个此刻仍会被裹住的活体腰部套一个圈：
+ * 队友用警示琥珀，敌方用亮黄绿；走出雾圈的人不再标记。圈里出现携带道具的队友时，整圈转琥珀。
+ * 出手瞬间服务端写 stop 令其退场，雾的 burst 接手。
+ */
+WorldCombatClient.scene("world_combat:move_corrosivegas_reach", 1, function (frame) {
+    const entry: CombatSceneEntry<{ radius?: number; groundY?: number; risk?: string; affected?: { ref: string; ally?: boolean }[]; stop?: boolean }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    if (data.stop) return;
+    const point = entry.position;
+    const radius = typeof data.radius === "number" && data.radius > 0 ? data.radius : 3.2;
+    const warning = data.risk === "ally";
+    // 圈心跟住施法者本体：起手时它可能还在挪步，画的始终是此刻真正会罩住的那圈。
+    const self = JSON.parse(frame.anchor(entry.source));
+    const cx = self ? self.x : point[0], cz = self ? self.z : point[2];
+    const groundY = typeof data.groundY === "number" ? data.groundY : point[1] - 0.3;
+    frame.ring(cx, groundY + 0.05, cz, radius, warning ? 0xCCE0A63A : 0xB08FD24A);
+    const affected = data.affected;
+    if (!Array.isArray(affected)) return;
+    for (let i = 0; i < affected.length; i++) {
+        const mark = affected[i];
+        if (!mark || !mark.ref) continue;
+        const anchor = JSON.parse(frame.anchor(mark.ref));
+        if (!anchor) continue;
+        const dx = anchor.x - cx, dz = anchor.z - cz;
+        if (dx * dx + dz * dz > radius * radius) continue;   // 已经走出雾圈的人不再标记
+        const y = anchor.y + Math.max(0.4, (anchor.height || 1) * 0.5);
+        frame.ring(anchor.x, y, anchor.z, 0.45, mark.ally ? 0xD0E0A63A : 0xC0DFFF9B);
+    }
+});

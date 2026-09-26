@@ -1,37 +1,41 @@
 /**
  * 水之波动 / waterpulse 的出手方式。
  *
- * 核心念头：把水压成一枚会嗡鸣的水珠掷出去。水珠正中目标后，水波从落点一圈圈荡开——
+ * 核心念头：把水压成一枚会嗡鸣的水珠掷出去。水珠在真实碰撞点炸开，水波从那里一圈圈荡开——
  * 每一圈扫过的人各吃一记回响，被震到的人耳中嗡响、脚下发飘，可能陷入混乱。玩家从一圈圈
  * 真实扩散的水环读出「谁会被扫到、还剩几圈」。
  *
+ * 选取：`kind: "aim"`——可点实体、也可点方向或世界点空掷；提交与执行都不要求存在敌人。
+ * 水珠撞到方块时在真实接触点碎开，水波照常从那个点荡开，但没有直接伤害对象。
+ *
  * 三幕：
  *   起（windup，提交前）：水在身前收成一颗低鸣的水珠，表面涟漪向内收紧，只播预告。
- *   飞（flight，提交后）：水珠沿直线飞出，拖着泡沫与细水尾。
- *   鸣（burst → wave → soak / rattle）：命中处炸开一圈水花，随后水波按 `pulses` 圈、每 `interval`
- *       刻向外荡开一圈；每圈扫过尚未被波及的非友方结算一次 echo 回响，并按 chance 让目标耳中嗡响
- *       （本单元的共享身份混乱载体 world_combat:status/confusion）；主目标在命中时先吃下 resonance。
+ *   飞（flight，提交后）：水珠沿瞄准方向飞出，拖着泡沫与细水尾。
+ *   鸣（burst → wave → soak / rattle）：命中点炸开一圈水花，随后水波按 `pulses` 圈、每 `interval`
+ *       刻向外荡开一圈；每圈只扫尚未被波及、且与落点之间视线未断的非友方，回响真的结算成功才溅起
+ *       水花，并按 chance 让目标耳中嗡响（本单元的共享身份混乱载体 world_combat:status/confusion）；
+ *       主目标在命中时先吃下 resonance。水波不穿墙；同一次施放里每个敌人只吃一记。
  *
  * 混乱行为（本单元自己的变体）：目标每次想出手都可能被打散（失手概率存在载体振幅里），
  * 且持续期内移动变慢——这是水之波动「耳鸣发飘」区别于迷昏拳「被打懵」的地方；不造成自伤。
+ * 耳鸣的飞鸟表现挂在托管载体上，随真实混乱效果自然到期或提前驱散一起结束。
  * 配置 `resonant` 由公式改威力／半径／概率／时序，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const waterpulseScene = "world_combat:move_waterpulse";
     const waterpulseDazeEffect = "world_combat:waterpulse_daze";
+    /** 托管载体：把耳鸣的持续表现绑在真实混乱效果的生命周期上，驱散即停。 */
+    const waterpulseDazeMark = "world_combat:move_waterpulse/daze_mark";
     MobEffects.fixedAttributes("world_combat:waterpulse_slow", waterpulseDazeEffect,
         [{ id: "minecraft:generic.movement_speed", amount: -0.12, operation: "add_multiplied_total" }]);
     const waterpulseDazeText = "world_combat.move.waterpulse.text.daze";
 
-    /** 只有代表载体就是本单元的 id 时，本单元的门禁才接管。 */
-    function waterpulseCarrier(world: CombatWorld, actor: CombatActor): CombatMobEffect | null {
-        const effect = CombatStatus.representative(world, actor, "confusion");
-        return effect !== null && String(effect.id()) === waterpulseDazeEffect ? effect : null;
-    }
-
     /** 把嗡鸣挂到目标身上：借共享身份 confusion，振幅存失手概率百分数，独一无二地替换同类载体。 */
     function waterpulseDaze(world: CombatWorld, victim: CombatActor, at: CombatPoint, ticks: number, fumblePct: number): boolean {
         if (!CombatStatus.apply(world, victim, "confusion", waterpulseDazeEffect, ticks, fumblePct, { unique: true })) return false;
+        // 状态真落上才挂托管表现；同一目标已有载体时不重复挂。
+        if (world.effects(victim, waterpulseDazeMark).length === 0)
+            world.effect(waterpulseDazeMark, victim, "{}", Math.max(1, Math.min(2400, ticks)));
         const body = world.observe(victim);
         const point = body !== null ? body.position() : at;
         WorldFeedback.emit(world, waterpulseScene, 1, at, { moment: "rattle", target: String(victim.ref()) }, 22);
@@ -45,7 +49,7 @@ namespace PokemonSkills {
         name: "Water Pulse",
         description: "掷出一枚会嗡鸣的水珠：命中后水波从落点一圈圈荡开，圈里的人各吃一记回响，被震到的可能耳中嗡响、陷入混乱。",
         uses: ["中远距离的直线水波点射", "用荡开的水环扫到目标身边的敌人", "把目标震得耳鸣，制造失手窗口"],
-        kind: "enemy",
+        kind: "aim",
         range: 13,
         maxRange: 20,
         prepare: 12,
@@ -110,12 +114,14 @@ namespace PokemonSkills {
                     const point = hit.position();
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        // 直击受害者记入同一 hitSet：同一次施放里不再被后续水波重复结算。
                         hitSet[String(victim.ref())] = true;
                         const landed = impact(current, hit, "waterpulse", power,
                             { damage: damageSpec("waterpulse", "resonance"), pulse: true });
                         if (landed && scope.valid(victim) && scope.random() < chance)
                             waterpulseDaze(scope, victim, point, daze, fumblePct);
                     }
+                    // 水波与命中闪都从这同一个真实碰撞点长出。
                     WorldFeedback.emit(scope, waterpulseScene, 1, point,
                         { moment: "burst", target: victim !== null ? String(victim.ref()) : "", blast: blast,
                             pulses: pulses, scale: scale, intensity: intensity }, 30);
@@ -133,12 +139,16 @@ namespace PokemonSkills {
                                 const ref = String(other.ref());
                                 if (hitSet[ref]) return;
                                 hitSet[ref] = true;
+                                // 水波不穿墙：落点与目标之间视线被挡就不再扩大命中。
+                                if (!scope.clear(point, facts.position())) return;
                                 const landed = hurt(current, other, "waterpulse", echoPower,
                                     { damage: damageSpec("waterpulse", "echo"), pulse: true });
+                                // 伤害被拒（免疫、不可选中）就不溅水花、也不声称已命中。
+                                if (!landed) return;
                                 WorldFeedback.emit(scope, waterpulseScene, 1, facts.position(),
                                     { moment: "soak", target: ref, scale: scale,
                                         intensity: Math.max(0.4, Math.min(1.6, echoPower / 26)) }, 20);
-                                if (landed && scope.valid(other) && scope.random() < chance)
+                                if (scope.valid(other) && scope.random() < chance)
                                     waterpulseDaze(scope, other, facts.position(), daze, fumblePct);
                             });
                         WorldFeedback.emit(scope, waterpulseScene, 1, point,
@@ -157,15 +167,33 @@ namespace PokemonSkills {
     });
 
 
-    // 耳鸣存续期：低密度的水环与飞鸟每 20 刻续期，让出本体视线。
-    WorldCombat.on("world_combat:move_waterpulse/linger", "world_combat:mob_effect_tick", "", function (event) {
+    // 耳鸣的飞鸟表现绑在托管载体上，随真实混乱效果自然到期或提前驱散一起结束，不靠自己的计时。
+    function waterpulseDazeWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = world.mobEffect(target, waterpulseDazeEffect);
+        if (carrier === null) { effect.end(); return; }
+        // 本载体就是本 source 创建的托管效果，presentOn 随它一起清理。
+        WorldFeedback.onEffect(world, effect.id(), "linger", waterpulseScene, 1, body.position(),
+            { moment: "daze", target: String(target.ref()) });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(waterpulseDazeMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid waterpulse daze mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(waterpulseDazeMark, "start", waterpulseDazeWatch);
+    WorldCombat.effectHandler(waterpulseDazeMark, "watch", waterpulseDazeWatch);
+    WorldCombat.effectHandler(waterpulseDazeMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 混乱被牛奶／/effect clear 提前拿掉时，立即撤掉托管表现，不等它自己的下一次巡检。
+    WorldCombat.on("world_combat:move_waterpulse/daze-release", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== waterpulseDazeEffect) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "waterpulse:daze:" + String(actor.ref()), waterpulseScene, 1, body.position(),
-            { moment: "daze", target: String(actor.ref()), fumble: data.amplifier }, 40);
+        world.effects(actor, waterpulseDazeMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
     });
 }

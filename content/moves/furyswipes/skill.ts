@@ -11,6 +11,9 @@
  *       判定：扇内至多 `maxTargets` 个非友方各吃一记 `rake` 接触伤害；每一道独立掷 `accuracy`，落空即收。
  *   收（settle）：这一趟爪势收住、余尘落定。
  *
+ * 选取 `kind: "aim"`：可以点任意阵营实体，也可以只给一个方向或世界点起手；抓空一道就散，墙后不在
+ *   扇面里的目标不会隔墙吃到后续伤害。AI 仍把敌人推荐为起手目标，手动方向与 AI 筛选各自独立。
+ *
  * 与同族分开：乱击是站定定点突刺、扫尾拍打是原地整圈旋尾、骨棒乱打是掷骨夯地；只有乱抓会绕圈换位，
  *   反制方式是背对墙壁断掉它的侧移空间，或用贴身的范围招逼它站定。
  *
@@ -28,9 +31,9 @@ namespace PokemonSkills {
         id: furyswipesId,
         cooldownParameter: "recharge",
         name: "Fury Swipes",
-        description: "贴身绕目标左右换位，一道道抓下去：每一道从新角度落下，抓空一道这趟就散。游走式罩得更宽、绕得更远、命中率更高；扑抓式改成前压，收窄成一道、单点更狠。",
-        uses: ["贴身绕目标左右换位，一道道抓下去", "抓侧后，逼目标不停转身", "扑抓式改成前压，把目标按在一面猛抓"],
-        kind: "enemy",
+        description: "贴身绕目标左右换位，一道道抓下去：每一道从新角度落下，抓空一道这趟就散。可以点敌人，也可以只给一个方向起手，后续按当前真实接触继续，隔墙的目标不会被追着抓。游走式罩得更宽、绕得更远、命中率更高；扑抓式改成前压，收窄成一道、单点更狠。",
+        uses: ["贴身绕目标左右换位，一道道抓下去", "抓侧后，逼目标不停转身", "扑抓式改成前压，把目标按在一面猛抓", "只朝一个方向起手，沿当前接触一道道抓下去"],
+        kind: "aim",
         range: 2.6,
         maxRange: 3.6,
         prepare: 6,
@@ -69,8 +72,7 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            const targetRef = target !== null && world.valid(target) ? String(target.ref()) : "";
             const power = p(furyswipesId, "rake", action);
             const cuts = Math.max(2, Math.min(5, Math.round(p(furyswipesId, "cuts", action))));
             const gap = Math.max(2, Math.round(p(furyswipesId, "gap", action)));
@@ -82,6 +84,8 @@ namespace PokemonSkills {
             const cap = Math.max(1, Math.round(1 + (p(furyswipesId, "span", action) - 130) / 60));
             const pounce = !!(config && config.pounce === true);
             const band = { below: 1.1, above: 2.3 };
+            // 提交时先记下起手方向；目标离场后不再强绑旧敌，只沿当前真实接触继续。
+            let heading = WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction());
             let index = 0, landed = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
@@ -101,15 +105,17 @@ namespace PokemonSkills {
                 if (settled) return;
                 if (index >= cuts) { settle(current); return; }
                 const scope = current.world();
-                const victim = scope.actor(targetRef);
+                const victim = targetRef === "" ? null : scope.actor(targetRef);
                 const vbody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                 let self = scope.observe(actor);
-                if (self === null || vbody === null) { finish(current); return; }
-                let heading = vbody.position().minus(self.position());
-                if (heading.length() < 0.05) heading = current.direction();
-                heading = heading.unit();
+                if (self === null) { finish(current); return; }
+                // 目标还在就按它当下位置重取朝向；离场或只给方向时沿用上一次的真实朝向。
+                if (vbody !== null) {
+                    const toward = vbody.position().minus(self.position());
+                    if (toward.length() > 0.05) heading = WorldGeometry.flatUnit(toward, heading);
+                }
                 const side = furyswipesSide(heading);
-                // 换位：游走式左右交替侧移，扑抓式改为朝目标前压（把目标按在一面）。
+                // 换位：先走原生可达的侧移，再按实际新身位扫；走不动就原地抓，不瞬移。
                 if (step > 0.05) {
                     const shift = pounce ? heading.scale(step * 0.8) : side.scale(index % 2 === 0 ? step : -step);
                     scope.displace(actor, shift);
@@ -119,8 +125,10 @@ namespace PokemonSkills {
                 // 命中 80：共享偏角让方向真的会歪；歪出扇面就抓空。
                 const aimed = NativeSemantics.aim(current, move, heading, 1.2);
                 const shot = index + 1;
+                // 左右爪交替：tilt 传给客户端让爪痕按左右两侧交替翻转。
+                const tilt = (index % 2 === 0 ? 1 : -1) * 22;
                 WorldFeedback.emit(scope, furyswipesScene, 1, origin,
-                    { moment: "cut", index: shot, cuts: cuts, reach: reach, span: span, dust: dust,
+                    { moment: "cut", index: shot, cuts: cuts, reach: reach, span: span, dust: dust, tilt: tilt,
                         intensity: Math.max(0.5, Math.min(2, power / 22)),
                         direction: [aimed.x(), aimed.y(), aimed.z()], pounce: pounce ? 1 : 0 }, 18);
                 if (scope.random() > accuracy) {
@@ -133,6 +141,8 @@ namespace PokemonSkills {
                 let hits = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, aimed, reach, span, band), function (other, facts) {
                     if (hits >= cap) return;
+                    // 不越墙追伤：扇面里也要真实通视才算接触。
+                    if (!scope.clear(origin, facts.position())) return;
                     if (!hurt(current, other, furyswipesId, power, { damage: damageSpec(furyswipesId, "rake"), contact: true })) return;
                     hits++;
                     landed++;

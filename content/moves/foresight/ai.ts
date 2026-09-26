@@ -2,12 +2,16 @@
  * 识破 的伙伴 AI 用途：这招自己的一套出手计划。
  *
  * 什么局面有意义：有一个看得见、够得着（ai.maxChase 内）且视线畅通的威胁，自己身上还没有同一次识破。
- * 什么时候最想出手：目标的属性里有幽灵时 priority 抬到 88——识破之后一般与格斗才接得上；对手正在拉开
- *   （共享 movement 感官判为 fleeing）时 74；其余 58，仍排在普通攻击之前，把这一手铺好。
- * 对谁出手：当前威胁；已经带着 foresight 身份的目标跳过，避免浪费 40 发 PP。
+ * 什么时候最想出手：目标属性里有幽灵时 priority 抬到 90——识破之后一般与格斗才接得上；目标带着正闪避时 82，
+ *   把这层闪避一次拔掉；队伍里（自己或附近队友）有一般／格斗属性、却没有幽灵要破时 66，先把印记铺好；
+ *   其余 58，仍排在普通攻击之前一点。
+ * 对谁出手：当前威胁；已经带着 foresight 身份的目标跳过，避免浪费 PP。
  * 够不到怎么办：reach 就是识破距离（按体型估算），由共享接近逻辑把身体带进范围；视线被挡或距离不够时不急。
  * 放完之后：印记留在目标身上、一般与格斗接得上；印记还在时不重复。
  * 配置：ai.maxChase 限制考虑距离；ai.leaveStation 决定驻守时是否离位。
+ *
+ * 说明：队友的招式属性不在共享观测里（survey 只发布属性、等级等个体事实），所以「队伍有一般／格斗」用当前可读到的
+ *   属性作近似：自己或附近队友带一般／格斗属性即视为有铺垫价值。真实的招式组合差异留给玩家试玩判断。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("foresight", { ai: { maxChase: 12, leaveStation: false } }, [
@@ -18,6 +22,24 @@ namespace CompanionBehavior {
     function foresightTargetGhost(context: WorldBehavior.Context, target: Entity): boolean {
         const facts = pokemonFacts(context, target);
         return !!facts && Array.isArray(facts.types) && facts.types.indexOf("ghost") >= 0;
+    }
+
+    function foresightHasBody(context: WorldBehavior.Context, target: Entity): boolean {
+        const facts = pokemonFacts(context, target);
+        return !!facts && Array.isArray(facts.types)
+            && (facts.types.indexOf("normal") >= 0 || facts.types.indexOf("fighting") >= 0);
+    }
+
+    /** 队伍里（含自己）有一身一般／格斗，识破后的虚体兑现能直接接上。 */
+    function foresightPartySupport(context: WorldBehavior.Context): boolean {
+        if (foresightHasBody(context, source(context))) return true;
+        const nearby = (context.facts.nearby || []) as Entity[];
+        for (let index = 0; index < nearby.length; index++) {
+            const other = nearby[index];
+            if (!other.friendly || other.ref === source(context).ref) continue;
+            if (foresightHasBody(context, other)) return true;
+        }
+        return false;
     }
 
     function foresightWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
@@ -37,8 +59,9 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !foresightWants(context, item, target)) return 0;
-            if (foresightTargetGhost(context, target)) return 88;
-            if (fleeing(context, target)) return 74;
+            if (foresightTargetGhost(context, target)) return 90;
+            if (stage(context, target, "evasion") > 0) return 82;
+            if (foresightPartySupport(context)) return 66;
             return 58;
         }
     });

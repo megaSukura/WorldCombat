@@ -3,6 +3,7 @@
   "worldcombat.skill.flashcannon.use.0": "Clear a row of foes in one shot",
   "worldcombat.skill.flashcannon.use.1": "Pierce and wear down the Sp. Def of everyone along a line",
   "worldcombat.skill.flashcannon.use.2": "A precise mid-to-long range single-target shot",
+  "worldcombat.skill.flashcannon.use.3": "Fire at open air or a wall and scatter the lance into light",
   "worldcombat.skill.flashcannon.description.0": "The lance deals %1$s special damage.",
   "worldcombat.skill.flashcannon.description.1": "It can pierce %1$s further targets, keeping %2$s of its power after each one.",
   "worldcombat.skill.flashcannon.description.2": "Each target it hits has a %1$s chance to lose %2$s stage(s) of Sp. Def, taking heavier special attacks afterwards.",

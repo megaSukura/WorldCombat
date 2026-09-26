@@ -1,12 +1,4 @@
-/**
- * 紧束 / wrap 的 AI 用途。
- *
- * 什么局面下出手：有可见威胁、在 `ai.maxChase`（默认 5）之内；目标还没被钉住
- * （带着 `partiallytrapped` 身份的不再重复放——藤茧已经裹上了）。
- * 对谁出手：`ai.preferHard`（默认开）让难缠的目标排得更前——生命越满、正在攻击自己的目标越先被钉住；
- * 它是一记把危险目标按在地上交给队友的控制招，所以不急着收残（残血目标降分，留给更便宜的招）。
- * 够不到怎么办：`reach` 就是本招射程，不够就先走近。
- */
+/** Prefer one dangerous nearby target while healthy enough to maintain the hold; skip an existing coil. */
 namespace PokemonSkills {
     function wrapValid(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
@@ -17,7 +9,7 @@ namespace PokemonSkills {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
-            if (context.facts.mounted) return false;
+            if (context.facts.mounted || CompanionBehavior.ratio(CompanionBehavior.source(context)) < .25) return false;
             if (!target) return true;
             if (!wrapValid(context, target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
@@ -44,9 +36,9 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 10, step: 1,
-            help: "超过这个距离就不主动甩藤，先走近。这一招是贴身禁锢，调大只在追击时更容易落空。"
+            help: "超过这个距离就不主动甩藤，先走近。这一招是贴身维持，调大只在追击时更容易落空。"
         }),
-        field(pathOf("ai.preferHard"), "先钉难缠的目标", "boolean", {
+        field(pathOf("ai.preferHard"), "先束难缠的目标", "boolean", {
             help: "开启：生命越满、正在攻击自己的目标越优先——把它按住交给队友；关闭：只按威胁与距离排序。"
         })
     ]);

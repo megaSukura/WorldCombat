@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.megapunch.summary": "The user coils, then drives one full-bodied straight punch down a narrow lane: every target in the lane takes the blow and is shoved straight back along the same line. Step aside and it misses.",
+  "worldcombat.skill.megapunch.summary": "The user coils, then drives one full-bodied straight punch along the aim direction: the punch lane is a three-dimensional corridor that stops at a real wall, and every target left in the lane takes the blow and is shoved straight back along the same line. Step aside or out of the lane and it misses.",
   "worldcombat.skill.megapunch.use.0": "Land a knockout straight punch inside the lane",
   "worldcombat.skill.megapunch.use.1": "Shove a target in front clean out of position",
   "worldcombat.skill.megapunch.use.2": "Hit a planted target with the heaviest single blow",
-  "worldcombat.skill.megapunch.description.0": "Punch down a lane %2$s blocks long and %3$s blocks half-wide for about %1$s contact and punch damage, hitting every foe in the lane once.",
-  "worldcombat.skill.megapunch.description.1": "Every target struck is shoved about %1$s blocks along the lane; standing outside the lane or stepping aside makes it miss.",
+  "worldcombat.skill.megapunch.description.0": "Punch along the aim direction for about %1$s contact and punch damage; the lane is %2$s blocks long and %3$s blocks half-wide and is stopped by a real wall. Every foe left in the lane is hit once.",
+  "worldcombat.skill.megapunch.description.1": "Every target struck is shoved along the lane by both bodies' real size (a base of about %1$s blocks); when it truly cannot move the launch is not repeated, but the punch damage still lands.",
   "worldcombat.skill.megapunch.planted.on": "Planted: a heavier punch (power x1.14) that shoves farther (x1.25), but a longer coil, recovery and cooldown.",
   "worldcombat.skill.megapunch.planted.off": "Mobile: quicker coil, recovery and cooldown, but a lighter punch that shoves less, better for sustained pressure.",
   "worldcombat.skill.megapunch.timing": "Range %1$s blocks; coil %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
@@ -26,5 +26,6 @@
   "worldcombat.skill.megapunch.preference.ai.preferWounded": "Finish the wounded",
   "worldcombat.skill.megapunch.preference.ai.preferWounded.help": "On: low-health targets rank first, finishing them with this decisive blow; off: all targets score the same.",
   "world_combat.move.megapunch.text.hit": "Mega hit on %1$s",
+  "world_combat.move.megapunch.text.wall": "Punch hits the wall",
   "world_combat.move.megapunch.text.miss": "Swing and a miss"
 }

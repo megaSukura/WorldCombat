@@ -2,13 +2,13 @@
  * 流星光束 / meteorbeam 的客户端表现。
  *
  * 一句话：碎星从高空一串串落到施法者身上、在脚边溅开一圈，随后一颗拖着火星的陨石沿抛物线飞出去，
- *         落地炸开一圈星尘与碎岩，地面被砸成焦黑的坑。
+ *         落地炸开一圈星尘与碎岩，再溅起一记短促的碎石与尘。
  * 色相家族：暖星金（0xFFD873 / 0xFFF3D0）＋岩褐（0x9A8A72 / 0x6E6352）；星金只出现在聚星与爆点的核心。
- * 拍子：起 gather（落星）→ boost（特攻提升的一记竖光）→ flight（陨石飞行）→ burst（落点炸开）→ crater（焦坑余尘）。
- * 范围：burst 的半径绑定 `data.blast`（落点半径），crater 的地面环用同一半径——站进这一圈就会被溅射到。
- * 运动：gather 的星点由上往下落；flight 的陨石沿抛物线飞（服务端 ballistic）；burst 向外炸、crater 贴地铺开。
+ * 拍子：起 gather（落星）→ boost（特攻提升的一记竖光）→ flight（陨石飞行）→ burst（落点炸开）→ debris（短促碎石余尘）。
+ * 范围：burst 的半径绑定 `data.blast`（落点半径），debris 的碎石铺在同一半径内——站进这一圈就会被溅射到。
+ * 运动：gather 的星点由上往下落；flight 的陨石沿抛物线飞（服务端 ballistic）；burst 向外炸、debris 贴地短溅后散去。
  * 数：`data.starlight`（特攻与等级换算）决定聚星与爆点密度，`data.intensity`（威力/120）决定亮度，
- *     `data.scale`（落点半径/1.9）决定整体尺度，`data.hits`（命中数）决定爆点强调的强度。
+ *     `data.scale`（落点半径/1.9）决定整体尺度，`data.hits`（命中数）决定碎石余尘的强度。
  */
 const MeteorBeamDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -129,26 +129,27 @@ const MeteorBeamDefinition: ParticleDefinition = {
                 }
             ]
         },
-        crater: {
-            duration: 34,
-            exit: { stop: 14, drain: 22 },
+        debris: {
+            duration: 22,
+            exit: { stop: 9, drain: 16 },
             emitters: [
                 {
-                    name: "crater_dust", bind: "point", offset: [0, 0.05, 0], height: 0,
+                    name: "debris_dust", bind: "point", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: { data: "cells", fallback: 14 } },
+                    burst: { count: { data: "debris", fallback: 8 } },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 0.6 } },
-                    direction: "outward", speed: [0.05, 0.16], gravity: 0.02, drag: 0.9,
-                    lifetime: [16, 30], size: [0.24, 0.42],
-                    color: 0x6E6352, alpha: [0.45, 0], light: "world", maxParticles: 90
+                    direction: "outward", speed: [0.04, 0.14], gravity: 0.03, drag: 0.9,
+                    lifetime: [10, 20], size: [0.2, 0.32],
+                    color: 0x6E6352, alpha: [0.4, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "crater_ember", bind: "point", offset: [0, 0.2, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/burning_rock",
-                    rate: 10, shape: { kind: "ring", radius: { data: "scale", fallback: 0.5 } },
-                    direction: "up", speed: [0.01, 0.05], drag: 0.92,
-                    lifetime: [14, 26], size: [0.14, 0.03],
-                    color: 0xC86A3A, alpha: [0.4, 0], light: "world", maxParticles: 30
+                    name: "debris_grit", bind: "point", offset: [0, 0.25, 0],
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: { data: "stones", fallback: 5 } },
+                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 0.4 } },
+                    direction: "outward", speed: [0.06, 0.22], gravity: 0.12, drag: 0.88,
+                    lifetime: [8, 16], size: [0.18, 0.06],
+                    color: 0x9A8A72, alpha: [0.8, 0], light: "world", maxParticles: 50
                 }
             ]
         },

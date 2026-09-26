@@ -19,7 +19,7 @@ Smoke.scenario("psyshock", function (stage) {
     }, function () {
         stage.expect(stage.casts("psyshock", user) > 0, "alakazam committed psyshock");
         stage.expect(stage.damageTo(foe) > 0, "the materialized shard dealt damage");
-        stage.note("the shard flies straight and unguided: the stationary golem guarantees a hit. Damage settles against the target's physical Defence (native overrideDefensiveStat).", {
+        stage.note("the shard is aimed freely (a direction or point works with no enemy); it flies straight and unguided, so the stationary golem under the aim point guarantees a hit. Damage settles against the target's physical Defence (native overrideDefensiveStat). Terrain would only shatter the shard; this open arena has nothing in the flight path to demonstrate it.", {
             casts: stage.casts("psyshock", user),
             dealt: Math.round(stage.damageBy(user) * 10) / 10,
             targetDamage: Math.round(stage.damageTo(foe) * 10) / 10,

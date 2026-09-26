@@ -74,6 +74,33 @@ namespace PokemonSkills {
         mirrorcoatRemember(world, victim, source, data.actual);
     });
 
+    // 反射命中后由真实伤害回执驱动：浮字与碎片量读这次实际扣的血，不用计划中的 refund。
+    WorldCombat.on("world_combat:move_mirrorcoat/strike", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data()));
+        if (!(data.actual > 0)) return;
+        var action = event.action();
+        var owned = action !== null && String(action.content()) === "world_combat:mirrorcoat";
+        if (String(data.move || "") !== mirrorcoatId && !owned) return;
+        var target = event.target();
+        if (target === null) return;
+        var world = event.world();
+        var body = world.valid(target) ? world.observe(target) : null;
+        var point = typeof data.x === "number" && typeof data.y === "number" && typeof data.z === "number"
+            ? WorldCombat.point(data.x, data.y, data.z) : body === null ? null : body.position();
+        if (point === null) return;
+        var scale = 1;
+        if (action !== null) {
+            var raw = action.data("mirrorcoat/strike");
+            if (raw !== null) {
+                try { var payload = JSON.parse(raw); if (payload.scale > 0 && isFinite(payload.scale)) scale = payload.scale; } catch (error) { /* keep the default */ }
+            }
+        }
+        WorldFeedback.emit(world, mirrorcoatScene, 1, point,
+            { moment: "reflect", target: String(target.ref()), count: Math.round(14 + data.actual / 2), scale: scale,
+                power: Math.round(data.actual * 10) / 10 }, 28);
+        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), mirrorcoatHitText, [Math.round(data.actual)], 26);
+    });
+
     defineFacts(mirrorcoatId, function (context: FactContext): Formula.Facts {
         return { read: function (id: string): Formula.Fact {
             if (id === "mirrorcoat.stored") {

@@ -8,7 +8,8 @@
  * 三幕：
  *   蓄（windup，提交前）：空气被压向身体、身周尘点被吸拢的预告；起手可被打断。
  *   爆（burst → hit）：提交后声压球整圈炸开；圈内每个敌人按到中心的距离衰减后各挨一次 `blast`，
- *       被沿离中心方向击飞 `shock`（中心的人吹得更远）并被抬起一点；命中者与自己都挂上耳鸣。
+ *       被沿离中心方向击飞 `shock`（中心的人吹得更远）并被抬起一点；击飞走原生受击位移入口，
+ *       抗性、权限、骑乘与事件取消由它处理，被拒绝时画面也不画目标飞出。命中者与自己都挂上耳鸣。
  *   鸣（ringing）：余响在身周荡几圈，只作画面，不再造成伤害。
  *
  * 配置 `concussive`（爆压式）由 resolve 改时序、由公式改半径与威力：开启＝窄而重、吹得更远。
@@ -79,14 +80,17 @@ namespace PokemonSkills {
                 if (!hurt(action, enemy, "boomburst", power * strength, { damage: damageSpec("boomburst", "blast"), sound: true })) return;
                 dealt++;
                 const away = facts.position().minus(centre);
+                let flung = false;
                 if (world.valid(enemy) && away.length() > 0.2) {
                     const direction = WorldCombat.point(away.x(), 0, away.z()).unit();
-                    world.displace(enemy, direction.scale(shock * strength));
-                    world.motion(enemy, WorldCombat.point(0, shock * 0.35 * strength, 0), true);
+                    const pushed = world.hitDisplace(enemy, direction.scale(shock * strength));
+                    const lifted = world.hitImpulse(enemy, WorldCombat.point(0, shock * 0.35 * strength, 0));
+                    flung = pushed > 0 || lifted;
                 }
                 if (world.valid(enemy)) MobEffects.apply(world, enemy, boomburstDeafened, deafenTicks, 0);
                 WorldFeedback.emit(world, boomburstScene, 1, facts.position(),
                     { moment: "hit", target: ref, scale: scale, strength: strength, count: Math.round(12 + power * strength * 0.22),
+                        flung: flung ? 1 : 0, fling: flung ? Math.round(10 + power * strength * 0.1) : 0,
                         intensity: Math.max(0.5, Math.min(2.2, power * strength / 110)) }, 26);
             });
 

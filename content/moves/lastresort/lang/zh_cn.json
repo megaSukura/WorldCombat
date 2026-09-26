@@ -7,7 +7,7 @@
   "worldcombat.skill.lastresort.description.1": "冲撞距离 %1$s 格、每刻位移 %2$s 格，判定半径 %3$s 格，撞实后把目标顶开 %4$s 格；一路撞空或撞上地形提前停下则落空、不造成伤害。",
   "worldcombat.skill.lastresort.desperation.on": "背水式：威力 ×1.12、冲得更远，但起手慢 3 刻、收招与冷却更久。",
   "worldcombat.skill.lastresort.desperation.off": "稳健式：份量为基础值、冲撞略短，收势利落、冷却更短。",
-  "worldcombat.skill.lastresort.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。只有招式表里其他已实装的招都用过之后才解锁；打出后账本清空、要重新走一遍，连续约 30 秒不出手也会作废。",
+  "worldcombat.skill.lastresort.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。只有招式表里其他已实装的招都用过之后才解锁；未解锁时使用会列出还差的招名。打出后账本清空、要重新走一遍，连续约 30 秒不出手也会作废。孤招个体（没有其他已实装的招）视为条件满足。",
   "worldcombat.skill.lastresort.growth.0": "%1$s 级起珍藏威力抬到 %2$s。",
   "worldcombat.skill.lastresort.growth.1": "%1$s 级起珍藏威力抬到 %2$s、冲撞距离拉长到 %3$s 格。",
   "worldcombat.skill.lastresort.value.trump": "珍藏威力",
@@ -26,5 +26,6 @@
   "worldcombat.skill.lastresort.preference.ai.maxChase.help": "对手离自己这么远以内才掏珍藏；本招冲撞距离中等，调大愿意更早兑现，调小则只在贴身决胜时掏。",
   "world_combat.move.lastresort.text.hit": "珍藏 %1$s",
   "world_combat.move.lastresort.text.wound": "珍藏·背水 %1$s",
-  "world_combat.move.lastresort.text.miss": "落空"
+  "world_combat.move.lastresort.text.miss": "落空",
+  "world_combat.move.lastresort.text.missing": "还差 %1$s 才能解锁珍藏"
 }

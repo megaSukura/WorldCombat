@@ -5,12 +5,15 @@
  * 撞实的一刻火全部灌进对方（概率灼伤），目标被顶飞、自己按比例反伤，身后的地面上还拖着一条烧着的火线。
  * 它是本族里冲得最远、撞得最重、也最伤自己的一招。
  *
+ * 选取 `kind: "aim"`：自由方向或世界点都能起冲，也能空放；提交后不再要求存在敌人，AI 提交的敌方目标只是
+ * 更可能撞上的输入。首个被原生身体扫到的可命中活体才结算，友方与方块照常只挡路。
+ *
  * 三幕：
  *   燃（windup，提交前）：火焰从脚下收拢到全身，只播预告。
  *   冲（charge → wake）：提交后逐刻沿瞄准方向推进，身周的火随路程越烧越旺，身后留一条余焰。
  *   撞（impact / skid）：trace 撞上活体即按 blaze 结算接触伤害，按 burnChance 灌入灼伤（共享状态），
- *       按 recoil 反伤自己，把目标沿冲撞方向顶飞 shove 格；冲到底、撞墙或推不动就只是收势（skid），
- *       火在脚下熄灭——这一招冲空不自伤。
+ *       只有实际造成伤害才按 recoil 反伤自己、把目标沿冲撞方向顶飞 shove 格，并停在接触点、不穿过目标；
+ *       冲到底、撞墙或推不动就只是收势（skid），火在脚下熄灭——这一招冲空不自伤，也不留地面火场。
  *
  * 与同族分开：电光是贴身短促的一点电、火焰轮是蜷成火轮滚过去、伏特攻击是蓄电后爆冲并放电波及旁人；
  * 闪焰冲锋独有的是一条拖得很长的火线，玩家凭它一眼认出这一招。配置 afterburn（余焰式）由 resolve
@@ -28,9 +31,9 @@ namespace PokemonSkills {
         id: "flareblitz",
         cooldownParameter: "recharge",
         name: "Flare Blitz",
-        description: "向目标冲撞，造成伤害、击退并有机会使其灼伤。命中后自身承受反伤。",
+        description: "朝瞄准方向全身着火冲出去，撞到的第一个敌人受到伤害、被顶飞并有机会灼伤；只有真的撞伤目标才按比例反伤自己。",
         uses: ["用一记燃烧的冲锋把贴脸的对手撞开", "给一个还没被烧的主力点上灼伤", "在开阔地把目标一路顶到队友或高台边上"],
-        kind: "enemy",
+        kind: "aim",
         range: 5.4,
         maxRange: 8.6,
         prepare: 9,
@@ -74,8 +77,13 @@ namespace PokemonSkills {
             const burnTicks = Math.round(p("flareblitz", "burnTicks", action));
             const shove = p("flareblitz", "shove", action);
             const embers = Math.round(p("flareblitz", "embers", action));
-            const afterburn = !!(config && config.afterburn);
-            const direction = aim(action);
+            // 贴地冲锋：把瞄准方向压成水平，避免零点几格的垂直分量让身体扫到脚下的地面而被挡停。
+            const aimed = aim(action);
+            const level = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const flat = level.length() > 0.001 ? level : WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            const direction = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
+            // 方向已冻结：目标此后离场或死亡都不再中断这一冲，空放沿提交朝向继续。
+            action.releaseTarget();
             const scale = radius / 0.56;
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
             const start = action.origin();
@@ -86,7 +94,7 @@ namespace PokemonSkills {
             CombatStatus.cure(world, actor, "frozen");
             movementScenes.show(action, "charge", start, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    embers: embers, scale: scale, intensity: intensity, afterburn: afterburn ? 1 : 0 });
+                    embers: embers, scale: scale, intensity: intensity });
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
@@ -119,28 +127,28 @@ namespace PokemonSkills {
                             intensity: Math.max(0.6, Math.min(2.4, power / 115)), burn: already ? 0 : 1 }, 32);
                     sound(current, "cobblemon:move.flamecharge.target");
                     sound(current, "cobblemon:impact.fire");
+                    // 只有这次接触真的造成了伤害才顶飞、点着、反伤；伤害被拒时接触表现保留，但不声称命中，也不反伤。
                     if (landed && target !== null && scope.valid(target)) {
-                        scope.displace(target, direction.scale(shove));
+                        scope.hitDisplace(target, direction.scale(shove));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), flareblitzHitText, [], 28);
                         if (!already && CombatStatus.has(scope, target, "burn"))
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.9, 0)), flareblitzBurnText, [], 30);
+                        const self = scope.observe(actor);
+                        if (self !== null) {
+                            WorldFeedback.emit(scope, flareblitzScene, 1, self.position(),
+                                { moment: "recoil", embers: Math.round(embers * 0.6), scale: scale,
+                                    intensity: Math.max(0.5, Math.min(2.4, power * recoil / 55)) }, 26);
+                            WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.3, 0)), flareblitzRecoilText, [], 24);
+                        }
+                        sound(current, "minecraft:entity.player.hurt_on_fire");
                     }
-                    const self = scope.observe(actor);
-                    if (self !== null) {
-                        WorldFeedback.emit(scope, flareblitzScene, 1, self.position(),
-                            { moment: "recoil", embers: Math.round(embers * 0.6), scale: scale,
-                                intensity: Math.max(0.5, Math.min(2.4, power * recoil / 55)) }, 26);
-                        WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.3, 0)), flareblitzRecoilText, [], 24);
-                    }
-                    sound(current, "minecraft:entity.player.hurt_on_fire");
                     finish(current);
                     return;
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= length) { skid(current); return; }
-                movementScenes.show(current, "wake", origin, { moment: "wake", embers: embers, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
+                // 没撞到可命中活体：只走原生实际推进的距离，绝不用剩余预算穿过任何接触。
+                travelled += swept.moved;
+                if (hit.blocked() || swept.moved < minimumMove || travelled >= length) { skid(current); return; }
+                movementScenes.show(current, "wake", origin, { moment: "wake", embers: embers, scale: scale, intensity: intensity });
                 current.after(1, advance);
             }
 

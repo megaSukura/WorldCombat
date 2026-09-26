@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.infernalparade.summary": "Summon a parade of spectral fireballs that scatter, then wheel around and home in on the target. The total power is split across the wisps; if even one lands it may burn. Against a target carrying any status condition the whole parade is doubled.",
   "worldcombat.skill.infernalparade.description.0": "One cast summons %1$s wisps that scatter across a %2$s degree half-angle before turning.",
-  "worldcombat.skill.infernalparade.description.1": "The parade deals %1$s special damage in total, split across the wisps; each flies at %2$s blocks per tick and turns at most %3$s degrees per tick. If the target carries a burn, paralysis, poison, frozen or sleep, the whole total is doubled.",
+  "worldcombat.skill.infernalparade.description.1": "The parade deals %1$s special damage in total, split across the wisps; each flies at %2$s blocks per tick and turns at most %3$s degrees per tick. Only an aimed enemy entity is tracked; on a bare direction or ground aim the wisps fly straight along the aim, and when the target leaves they keep their last heading to the end. If the target carries a burn, paralysis, poison, frozen or sleep, the whole total is doubled.",
   "worldcombat.skill.infernalparade.description.2": "If at least one wisp lands, there is a %1$s chance to burn the target for %2$s (fire types and other burn-immune targets are unaffected): while burning it deals half physical damage and loses about 6.25%% of its maximum health every 5 seconds (at least 1 point), until it expires or is cured. Wisps fly straight for %3$s ticks before homing.",
   "worldcombat.skill.infernalparade.use.0": "Homing ghost fire",
   "worldcombat.skill.infernalparade.use.1": "Finish an afflicted target",

@@ -15,13 +15,19 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
     }
 
-    function heatwaveCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 按本个体真实吹程与张角，从自己朝目标方向铺出扇面，数一数实际前扇里挤着几个非友方（含目标）。 */
+    function heatwaveCoverage(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const from = CompanionBehavior.point(self.point), delta = CompanionBehavior.point(target.point).minus(from);
+        if (delta.length() < 0.05) return 1;
+        const reach = typeof capability.data.range === "number" ? capability.data.range : p("heatwave", "reach", world);
+        const region = WorldGeometry.sector(from, delta, reach, p("heatwave", "angle", world));
         const nearby = (context.facts.nearby as CompanionBehavior.Entity[]) || [];
-        let count = 0;
+        let count = 1;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.5) count++;
+            if (region.contains(CompanionBehavior.point(other.point))) count++;
         }
         return count;
     }
@@ -44,7 +50,7 @@ namespace PokemonSkills {
             let score = 16;
             if (!CompanionBehavior.status(context, target, "burn")) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "preferClusters", true))
-                score += Math.min(24, heatwaveCluster(context, target) * 10);
+                score += Math.min(24, (heatwaveCoverage(context, capability, target) - 1) * 10);
             return score;
         }
     });

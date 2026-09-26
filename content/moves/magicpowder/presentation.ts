@@ -1,15 +1,15 @@
 /**
  * 魔法粉 / magicpowder 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者手里抖起一小把泛着粉光的粉，粉团飘向对手、罩住它炸开，粉粒钻进身体泛起超能的粉光；
- *   改写到期时粉末从它身上飘散。
+ * 一句话：施法者手里抖起一小把泛着粉光的粉，粉团慢慢飘向对象、罩住它炸开，粉粒钻进身体泛起超能的粉光；
+ *   改写到期时粉末从它身上飘散，不留一团同质粉云。草属性把粉抖开，点或方向空撒时粉团撞墙自散。
  *
  * 色相家族：超能粉（0xE86CC8 主体／0xF0A8E0 粉雾）与乳白（0xFFF0FA 粉粒高光）撑起全部层次，
  *   超能环只给命中那一下的强调。
  * 层次：聚（起手，粉在手里收拢）→ 撒（粉团带尾迹飘行）→ 改（命中处粉爆、闪点、超能环）→ 散／免／空。
- * 起击收：gather（聚）→ throw（撒）→ coat（改）→ wipe（散）。
+ * 起击收：gather（聚）→ throw（撒）→ coat（改，只在真正改类型时）→ immune（免）→ wipe（散）／empty（空撒）／miss。
  * 范围：coat 的粉爆与超能环半径直接绑 `data.cloud`（实际粉团半径），画出的那圈就是判定尺度。
- * 运动：粉团沿 projectile 拖尾飘行，命中处粉粒向外炸开后受重力下沉、超能环向外荡，散去时粉末向上飘离。
+ * 运动：粉团沿 projectile 拖尾飘行（慢，能躲），命中处粉粒向外炸开后受重力下沉、超能环向外荡，散去时粉末向上飘离。
  * 数：粉粒数读 `data.motes`（特攻派生）、闪点数读 `data.glints`（等级派生），整体尺寸随 `data.scale`、
  *   亮度随 `data.intensity`（改写时长派生）。
  */
@@ -154,6 +154,28 @@ const MagicpowderDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.08], drag: 0.9, gravity: 0.01,
                     lifetime: [10, 18], size: [0.06, 0.01],
                     color: 0xD8A8C8, alpha: [0.4, 0], light: "world", maxParticles: 22
+                }
+            ]
+        },
+        empty: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "scatter", bind: "point", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/powder",
+                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.03, 0.12], drag: 0.9, gravity: 0.008,
+                    lifetime: [10, 18], size: [0.1, 0.02], spin: 14,
+                    color: 0xE86CC8, alpha: [0.5, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "settle_dust", bind: "point", offset: [0, 0.12, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8 }, shape: { kind: "ring", radius: 0.28 },
+                    direction: "outward", speed: [0.02, 0.08], gravity: 0.01, drag: 0.94,
+                    lifetime: [10, 18], size: [0.05, 0.01],
+                    color: 0xFFF0FA, alpha: [0.4, 0], light: "world", maxParticles: 20
                 }
             ]
         },

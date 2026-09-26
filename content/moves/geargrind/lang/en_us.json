@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.geargrind.summary": "Hurl one spinning steel gear from each side; the pair crosses in and closes on the foe. Gears ricochet off whatever they hit, and a spent gear keeps spinning where it lands before breaking into shards. Cross style catches lateral dodges; straight style is faster and truer.",
+  "worldcombat.skill.geargrind.summary": "Hurl one spinning steel gear from each side; the pair crosses in and closes on the foe. Gears ricochet off whatever they hit, and a spent gear only spins briefly where it lands before breaking into shards, never lingering as a hazard. Aim at a foe or empty ground: with no target the two gears converge from each side onto the chosen point. Cross style catches lateral dodges; straight style is faster and truer.",
   "worldcombat.skill.geargrind.use.0": "Throw two spinning steel gears from opposite sides",
   "worldcombat.skill.geargrind.use.1": "Use ricocheting gears to reach around cover",
   "worldcombat.skill.geargrind.use.2": "Pin down a foe that keeps stepping sideways",

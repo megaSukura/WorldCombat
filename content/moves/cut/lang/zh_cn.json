@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.cut.summary": "压低身子推出一趟贴地的宽横斩：身前扇形里的对手各吃一记接触斩击，弧内的矮草、花叶也会被顺手割掉。它是全族最快、最便宜、覆盖面最广的斩击——横扫形态扫得更开、割得更多，狠劈形态收得更窄但每一下更重。",
+  "worldcombat.skill.cut.summary": "压低身子推出一趟贴地的宽横斩：身前扇形里的对手各吃一记接触斩击，弧内的草、蕨、花、作物与树叶也会被顺手割掉。它不追单点——横扫形态扫得更开、割得更多，狠劈形态收得更窄但每一下更重。可以直接对着草地挥刀，不必先锁定敌人。",
   "worldcombat.skill.cut.description.0": "贴地横斩对弧内每个对手各造成一次约 %1$s 点接触斩击伤害。",
   "worldcombat.skill.cut.description.1": "扫距 %1$s 格、张角 %2$s 度，斩带罩住脚上 %3$s 格高。",
   "worldcombat.skill.cut.description.2": "顺手割掉弧内的低矮植被，最多 %1$s 株。",
@@ -7,8 +7,8 @@
   "worldcombat.skill.cut.growth.0": "达到 %1$s 级，扫距延长至 %2$s 格。",
   "worldcombat.skill.cut.growth.1": "达到 %1$s 级，斩击威力提升至 %2$s。",
   "worldcombat.skill.cut.use.0": "贴地横斩，扫倒身前一片",
-  "worldcombat.skill.cut.use.1": "顺手割掉弧内的草叶",
-  "worldcombat.skill.cut.use.2": "最便宜最快的一记斩击",
+  "worldcombat.skill.cut.use.1": "顺手割掉草、蕨、花、作物与树叶",
+  "worldcombat.skill.cut.use.2": "对着草地也能直接挥刀，不必先锁敌人",
   "worldcombat.skill.cut.value.slash": "斩击威力",
   "worldcombat.skill.cut.value.sweep": "扫距",
   "worldcombat.skill.cut.value.arc": "张角",
@@ -23,7 +23,7 @@
   "worldcombat.skill.cut.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.cut.preference.ai.maxChase.help": "超过这个距离就不横斩，先走近。越大越愿意从稍远处先手扫地。",
   "worldcombat.skill.cut.preference.ai.cluster": "围住才挥",
-  "worldcombat.skill.cut.preference.ai.cluster.help": "开启：身前射程内挤着两个以上敌人时优先横扫，把这记当清场；关闭：无论几个敌人都按普通平A排序。",
+  "worldcombat.skill.cut.preference.ai.cluster.help": "开启：目标方向的刀弧里挤着两个以上敌人时优先横扫，把这记当清场；关闭：无论几个敌人都按普通平A排序。手动挥刀割草不受此设置影响。",
   "world_combat.move.cut.text.miss": "横斩扫了个空",
   "world_combat.move.cut.text.shear": "割掉 %1$s 株草木"
 }

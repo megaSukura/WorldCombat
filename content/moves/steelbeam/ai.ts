@@ -5,12 +5,19 @@
  * 一大截，生命低于 `ai.minHealth` 时不出手（除非对手已经残到值得一收）。默认门槛高，是为了不让伙伴把自己
  * 剥成一具空壳。
  * 对谁出手：在所有够得到的敌人里挑最残的那个（这一记往往就是终结），残血相同时挑最近的。
- * 怎么够到：共享接近把身位收进钢梁长度以内，再沿目标方向射出。
+ * 怎么够到：共享接近把身位收进钢梁长度以内，再沿目标方向射出。出手前用只读世界入口
+ *   `CompanionBehavior.world(context).clear` 探自身到目标的通视线；被墙挡住时钢梁会在墙面截断，不再发起。
  * 放完之后：交回共享交战计划；放完自己掉了一截血，通常会轮到更便宜的招。
  */
 namespace PokemonSkills {
     function steelbeamValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
+    }
+
+    /** 自身到目标是否有通视射线；被地形挡住时钢梁会先撞墙，够不到目标。 */
+    function steelbeamReachable(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context);
+        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     CompanionBehavior.registerUse(steelbeamId, {
@@ -38,6 +45,7 @@ namespace PokemonSkills {
             if (!steelbeamValid(target)) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 11)) return false;
+            if (!steelbeamReachable(context, target)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.55);
             return CompanionBehavior.ratio(self) >= minHealth || CompanionBehavior.ratio(target) <= 0.3;
         },
@@ -46,10 +54,13 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
+            if (!steelbeamReachable(context, target)) return 0;
             let score = 22;
             if (CompanionBehavior.ratio(target) <= 0.3) score += 26;
+            // 固定自损纳入评分：自身越虚，这一笔越舍不得付。
+            score -= Math.round((1 - CompanionBehavior.ratio(self)) * 30);
             if (CompanionBehavior.ratio(self) >= 0.8) score += 8;
-            return score;
+            return Math.max(1, score);
         }
     });
 

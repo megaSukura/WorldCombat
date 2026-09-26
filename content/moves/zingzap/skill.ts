@@ -111,7 +111,7 @@ namespace PokemonSkills {
                         charge: charge, sparks: Math.round(14 + charge * 60) }, 28);
                 sound(current, "cobblemon:impact.electric");
                 if (landed) {
-                    if (scope.valid(victim)) scope.displace(victim, direction.scale(0.7));
+                    if (scope.valid(victim)) scope.hitDisplace(victim, direction.scale(0.7));
                     WorldFeedback.keep(scope, "zingzap:static:" + String(victim.ref()), zingzapScene, 1, hit.position(),
                         { moment: "static", target: String(victim.ref()), scale: scale, sparks: Math.round(6 + charge * 24) }, staticTicks);
                     WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.3, 0)), zingzapHitText, [], 26);

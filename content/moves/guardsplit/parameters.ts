@@ -44,9 +44,9 @@ namespace PokemonSkills {
         motes: formula(
             F.base(14, "基础").plus(F.stat("defence").div(40).as("防御")).plus(F.body("height").times(4).as("体型"))
                 .clamp(12, 40).round(0),
-            "汇流粒子数", {
+            "汇流粒子数", { visible: false,
                 unit: " 颗",
-                description: "向中央汇、再平分回两人身上的护光基准数量；防御越高、身板越高越多，实际发射量再按本次数值差放大。"
+                description: "向中央合、再平分回两人身上的护光基准数量；防御越高、身板越高越多，实际发射量再按本次数值差放大。"
             })
     });
 
@@ -57,6 +57,7 @@ namespace PokemonSkills {
 
     describe("guardsplit", [
         { key: "description.0", values: ["reach", "span"] },
+        { key: "description.1", values: [] },
         { key: "description.2", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.reach", "tier.0.span"] },

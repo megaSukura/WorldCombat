@@ -1,20 +1,11 @@
-/**
- * 流星突击 / meteorassault 的客户端表现。
- *
- * 一句话：施法者把粗壮的东西举过头顶，接着在同一条大弧上连续几下重扫，每一下都在身前扇出一片翠绿的挥痕；
- * 挥完头顶开始转圈，标明自己被晃晕。
- * 色相家族：茎叶的翠绿（0x9FCB5A / 0xA8D060）配格斗的浅黄，撞击核心近白；与同族终极冲击的中性白灰、
- * 爆炸烈焰的橙红在色相上分开。
- * 拍子：起（windup 0–8t 举械）→ 击（swing 每段一次，段数由机制 `data.count` 读出）→ 收（daze 起、recharge 维持整段晃晕）。
- * 范围：swing 的锥形扇面半径取 `data.reach`、半张角取 `data.half`，画出来的那片扇面就是实际能扫到的区域。
- * 运动：软挥痕沿扇面朝外的方向铺开，脚下草屑朝外抛；每段朝向由 `data.direction` 决定，段段跟着目标转。
- * 数：`data.count`（挥击段数）、`data.hits`（本段命中数）、`data.intensity`（单段威力 / 52）共同决定挥痕与碎屑密度；
- * `data.seconds`（晃晕秒数）决定头顶晕圈的维持密度。
- * 参照节：视觉语言第二、三、四、七、九节。
- */
+/** The actual extending spear path is followed by a persistent exhaustion cue. */
 const MeteorassaultDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        thrust: { emitters: [{ name: "extended_spear", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+            rate: 36, shape: { kind: "polyline" }, speed: [0, .005], lifetime: [4, 7], size: [.18, .1], color: 0xD6C39B, alpha: [.75, .2], light: "world", maxParticles: 32 }] },
+        contact: { duration: 18, emitters: [{ name: "spear_contact", bind: "target", fit: "body", particle: "world_combat_core:cobblemon/generic/hit_yellow",
+            burst: { count: 12 }, shape: { kind: "sphere_surface", radius: .3 }, speed: [.04, .14], lifetime: [6, 12], size: [.3, .05], alpha: [.9, 0] }] },
         windup: {
             duration: 10,
             exit: { stop: 6, drain: 12 },

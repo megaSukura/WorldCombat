@@ -4,20 +4,66 @@
  * 一句话：站定沉腰，脚下收拢起一圈金白的光，光随伤势越亮；随后整副身板贴地直撞出去，撞实的一刻炸开暖金的
  * 重击与翻卷的尘环，把人沿冲势推远。
  * 色相家族：暖金与近白（FFF0C8 / E8C56A / FFFCF0）为主，伤势重时更白更亮；没有冷色。
- * 拍子：起 gather（收拢金光）→ 撞 charge（贴地直冲）→ 击 slam（命中峰值）→ 收 miss / whiff（落空刹停）。
- * 范围：slam 绑命中点、画出的就是撞实的位置；gather 的地面环绑施法者脚边，随伤势变亮变大。
- * 运动：gather 的光点从四周向内收进脚下，charge 沿冲撞方向拖出土线与金点，slam 的冲击向外炸并翻起尘环。
- * 数：`data.orbs`（已损失生命与威力派生）决定起手光点数，`data.count`（威力派生）决定命中冲击与碎屑数，
- * `data.wound`（已损失生命比例）抬高亮度与冲击规模，`data.scale`（判定半径 / 0.5）放大判定轮廓。
+ * 拍子：集器 ledger（账本就绪珠，全部齐了浮光环）→ 起 gather（就绪珠收拢汇入身体）→ 撞 charge（贴地直冲）→
+ *       击 slam（命中峰值）→ 收 miss / whiff（落空刹停）→ 散 spend（提交珍藏整体熄灭）→ 锁 locked（未解锁的暗珠）。
+ * 范围：slam 绑命中点、画出的就是撞实的位置；ledger / gather / spend 绑施法者自身，就绪珠随账本点亮。
+ * 运动：ledger 的就绪珠在体侧环列，gather 的光点从四周向内收进脚下，charge 沿冲撞方向拖出土线与金点，
+ *       slam 的冲击向外炸并翻起尘环，spend 的珠光向内收尽。
+ * 数：`data.ready`（真实账本已提交的招数）驱动点亮的就绪珠，`data.orbs`（已损失生命与威力派生）决定起手光点数，
+ *    `data.count`（威力派生）决定命中冲击与碎屑数，`data.wound`（已损失生命比例）抬高亮度与冲击规模，
+ *    `data.halo`（全部齐时为 1 派生的持续量）撑起珍藏光环，`data.scale`（判定半径 / 0.5）放大判定轮廓。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const LastresortDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        ledger: {
+            duration: 0,
+            exit: { stop: 4, drain: 10 },
+            emitters: [
+                {
+                    name: "lit", bind: "source", offset: [0, 0.55, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
+                    burst: { count: { data: "ready", fallback: 3 } },
+                    shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
+                    direction: "up", speed: [0.01, 0.03],
+                    lifetime: [14, 22], size: [0.16, 0.06],
+                    color: 0xFFF0C8, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 18
+                },
+                {
+                    name: "empty", bind: "source", offset: [0, 0.55, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: { data: "missing", fallback: 3 } },
+                    shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
+                    direction: "up", speed: [0.01, 0.03],
+                    lifetime: [14, 22], size: [0.1, 0.04],
+                    color: 0x9A8C5A, alpha: [0.5, 0], light: "world", maxParticles: 12
+                },
+                {
+                    name: "halo", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
+                    rate: { data: "halo", fallback: 0 },
+                    shape: { kind: "ring", radius: 0.62 },
+                    direction: "inward", speed: [0.0, 0.02],
+                    lifetime: [10, 16], size: [0.4, 0.8], sizeMode: "sin",
+                    color: 0xE8C56A, alpha: [0.35, 0], light: "world", maxParticles: 16
+                }
+            ]
+        },
         gather: {
             duration: { data: "windup", fallback: 12 },
             exit: { stop: 6, drain: 14 },
             emitters: [
+                {
+                    // 真实账本点亮的就绪珠：全部汇入身体，不借用其他招的攻击动画。
+                    name: "sigils", bind: "source", offset: [0, 0.55, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
+                    burst: { count: { data: "ready", fallback: 3 } },
+                    shape: { kind: "ring", radius: 0.55, rotation: [90, 0, 0] },
+                    direction: "inward", speed: [0.05, 0.16],
+                    lifetime: [8, 14], size: [0.16, 0.04],
+                    color: 0xFFF3C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 24
+                },
                 {
                     name: "hoard", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
@@ -140,6 +186,37 @@ const LastresortDefinition: ParticleDefinition = {
                     gravity: 0.05, drag: 0.93,
                     lifetime: [8, 15], size: [0.1, 0.03], sizeMode: "index",
                     color: 0x9A7B3A, alpha: [0.5, 0], light: "world", maxParticles: 90
+                }
+            ]
+        },
+        spend: {
+            duration: 22,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "out", bind: "source", offset: [0, 0.5, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 16 },
+                    shape: { kind: "ring", radius: 0.55, rotation: [90, 0, 0] },
+                    direction: "inward", speed: [0.05, 0.18],
+                    lifetime: [7, 13], size: [0.08, 0.02],
+                    color: 0xE8C56A, alpha: [0.6, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        locked: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "dim", bind: "source", offset: [0, 0.5, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: { data: "missing", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    gravity: 0.02, drag: 0.94,
+                    lifetime: [8, 14], size: [0.08, 0.02],
+                    color: 0x9A8C5A, alpha: [0.5, 0], light: "world", maxParticles: 24
                 }
             ]
         }

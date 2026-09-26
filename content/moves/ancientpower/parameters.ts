@@ -68,7 +68,7 @@ namespace PokemonSkills {
                 .clamp(0.4, 1.8).round(2),
             "外推距离", {
                 unit: "格",
-                description: "被古力轰到的目标沿背离中心方向被推开多远；特攻越高推得越远，广域式推得更狠。"
+                description: "被古力轰到的目标沿背离中心方向被推开多远；水平外推与向上托起分别构造，正上方的目标只吃到向上分量。特攻越高推得越远，广域式推得更狠。"
             }),
         lift: formula(
             F.base(0.25)

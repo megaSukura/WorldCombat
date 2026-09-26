@@ -1,14 +1,4 @@
-/**
- * 力量互换 / powerswap —— AI 用途。
- *
- * 什么局面下出手：目标是可见、敌对、还活着的活体，在 ai.maxChase（默认 12）格内，且双方身上都没有交换窗口；
- *   值不值得换看攻势等级之和（攻 + 特攻）：对方比自己高出至少 ai.margin（默认 1 级）才出手——
- *   换完你接走他攒起来的那几级，他接过你的；差距越大排序越靠前。
- * 自己反而更高时不参与候选（多半会把好势头送出去），交给其他招；只剩本招时也不硬放。
- * 对谁出手：非友方、活着、可见的目标；不需要贴身，换势在射程内直接生效。
- * 够不到怎么办：reach 就是本招射程（由特攻与体型决定）；共享任务先走近，approach 在无通视时侧移找角度。
- * 放完之后：两人攻势等级换到新位置并维持一段窗口，窗口走完自动换回；伙伴交回共享顺序。
- */
+/** Compare current stage advantages; opt-in support shares the caster's advantage with an ally. */
 namespace PokemonSkills {
     CompanionBehavior.registerFact("world_combat:powerswap-offence", function (access: CombatWorld, actor: CombatActor): number {
         return PokemonSkills.powerswapOffence(access, actor);
@@ -16,7 +6,7 @@ namespace PokemonSkills {
 
     function powerswapWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
-        if (target.health <= 0 || target.friendly || !target.visible) return false;
+        if (target.health <= 0 || !target.visible) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.status(context, self, "powerswap") || CompanionBehavior.status(context, target, "powerswap")) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
@@ -24,7 +14,9 @@ namespace PokemonSkills {
         const mine = CompanionBehavior.fact<number>(context, "world_combat:powerswap-offence", self);
         const theirs = CompanionBehavior.fact<number>(context, "world_combat:powerswap-offence", target);
         if (mine === null || theirs === null) return false;
-        return theirs - mine >= CompanionBehavior.ai<number>(item, "margin", 1);
+        return target.friendly
+            ? CompanionBehavior.ai<boolean>(item, "share", false) && mine - theirs >= CompanionBehavior.ai<number>(item, "margin", 1)
+            : theirs - mine >= CompanionBehavior.ai<number>(item, "margin", 1);
     }
 
     function powerswapApproach(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number[] | null {
@@ -40,17 +32,17 @@ namespace PokemonSkills {
     }
 
     CompanionBehavior.registerUse("powerswap", {
-        protocols: ["world_combat:attack"],
+        protocols: ["world_combat:attack", "world_combat:support"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) { return !target || powerswapWants(context, item, target); },
-        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
+        accepts: function (_context, _item, target) { return target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !powerswapWants(context, item, target)) return 0;
             const self = CompanionBehavior.source(context);
             const mine = CompanionBehavior.fact<number>(context, "world_combat:powerswap-offence", self);
             const theirs = CompanionBehavior.fact<number>(context, "world_combat:powerswap-offence", target);
             if (mine === null || theirs === null) return 45;
-            const gain = theirs - mine;
+            const gain = target.friendly ? mine - theirs : theirs - mine;
             return Math.max(1, Math.min(100, Math.round(45 + gain * 8)));
         },
         approach: function (context, _item, target) { return powerswapApproach(context, target); }
@@ -63,6 +55,6 @@ namespace PokemonSkills {
     const powerswapStation = flag("ai.leaveStation", "驻守时允许离位");
     powerswapStation.help = "开启后，收到「驻守」指令时也会离开原位去换势。";
 
-    addPreferences("powerswap", { ai: { maxChase: 12, margin: 1, leaveStation: false } },
-        [powerswapChase, powerswapMargin, powerswapStation]);
+    addPreferences("powerswap", { ai: { maxChase: 12, margin: 1, leaveStation: false, share: false } },
+        [powerswapChase, powerswapMargin, powerswapStation, flag("ai.share", "向伙伴分享")]);
 }

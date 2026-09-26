@@ -1,9 +1,10 @@
 {
-  "worldcombat.skill.banefulbunker.summary": "A venomous wall closes into a bunker that blocks enemy damage through a total pool and seals status moves aimed at you; it collapses when the pool runs out or the time ends. Every direct contact poisons the attacker, and an already poisoned one is worsened to badly poisoned.",
+  "worldcombat.skill.banefulbunker.summary": "A venomous wall closes at your footing into a bunker that blocks enemy damage through a total pool and seals status moves aimed at you; it collapses when you leave the spot, the pool runs out, or the time ends. Every direct contact poisons the attacker, and an already poisoned one is worsened to badly poisoned.",
   "worldcombat.skill.banefulbunker.description.0": "Once closed, the bunker blocks enemy damage through a total pool of up to %2$s points, with anything beyond the remainder still landing; it lasts %1$s and collapses when the pool runs out or the time ends. Every direct contact poisons the attacker for %3$s, and one already poisoned or badly poisoned is worsened to badly poisoned instead.",
+  "worldcombat.skill.banefulbunker.description.anchor": "The wall guards only the spot where you closed it: step away or get pushed off that spot and the bunker collapses at once, dropping any pool left and no longer turning aside further hits.",
   "worldcombat.skill.banefulbunker.description.1": "Raises for %1$s ticks before closing, then a %2$s cooldown.",
   "worldcombat.skill.banefulbunker.description.2": "Repeat-use failure rate %1$s in quick succession: the first always succeeds, and each repeat is likelier to waste the whole cast; the venomous/thick trade-off is in preferences.",
-  "worldcombat.skill.banefulbunker.use.0": "Bait a melee foe onto the venomous wall",
+  "worldcombat.skill.banefulbunker.use.0": "Hold your ground and bait a melee foe onto the venomous wall",
   "worldcombat.skill.banefulbunker.use.1": "Drag a foe into a lasting damage-over-time with one contact",
   "worldcombat.skill.banefulbunker.use.2": "Seal a status move while venom pours back",
   "worldcombat.skill.banefulbunker.value.raise": "Raise time",

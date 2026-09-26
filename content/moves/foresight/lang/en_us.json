@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.foresight.summary": "See a foe through: leave a foresight mark that strips its current evasion and lights it up; inside the mark a Ghost's form is made solid, so Normal and Fighting attacks connect.",
+  "worldcombat.skill.foresight.summary": "See a foe through: leave a foresight mark that strips its current evasion and lights it up; inside the mark a Ghost's form is made solid, so Normal and Fighting attacks connect, and the moment it turns solid bursts with a real-shadow flash.",
   "worldcombat.skill.foresight.use.0": "break a Ghost's immunity before your normal hit",
   "worldcombat.skill.foresight.use.1": "pin down an evasive target",
   "worldcombat.skill.foresight.use.2": "set up a Normal or Fighting hit for an ally",
@@ -7,7 +7,7 @@
   "worldcombat.skill.foresight.description.1": "Inside the mark the target is lit up for %1$s, visible even through cover.",
   "worldcombat.skill.foresight.deep.on": "Deep sight: %1$s wind-up and %2$s cooldown buy a longer window and reveal.",
   "worldcombat.skill.foresight.deep.off": "Quick sight: shorter window, faster wind-up and cooldown, good for breaking immunity often.",
-  "worldcombat.skill.foresight.description.2": "Sight range %1$s blocks, wind-up %2$s, recovery %3$s; a blocked line of sight, a target already foreseen, or one under Miracle Eye refuses the cast.",
+  "worldcombat.skill.foresight.description.2": "Sight range %1$s blocks, wind-up %2$s, recovery %3$s; a blocked line of sight or a target already foreseen refuses the cast.",
   "worldcombat.skill.foresight.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.foresight.value.window": "Foresight window",
   "worldcombat.skill.foresight.value.reveal": "Reveal duration",
@@ -28,5 +28,5 @@
   "world_combat.move.foresight.text.blocked": "Sight blocked, nothing seen through",
   "world_combat.move.foresight.text.empty": "No target to see through",
   "effect.world_combat.foresight_mark": "Foreseen",
-  "worldcombat.skill.foresight.description.release": "When the window runs out or the mark is removed, the stripped evasion is returned as it was and the mark fades."
+  "worldcombat.skill.foresight.description.release": "When the window runs out or the mark is removed, the stripped evasion is returned as it was and the mark fades; a new casting returns the previous strip first, so the same evasion is never deducted and restored twice over."
 }

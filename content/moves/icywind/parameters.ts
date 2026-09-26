@@ -4,10 +4,10 @@
  * 原生事实：Ice／特殊／威力 55／命中 95／PP 15／target allAdjacentFoes／100% 降速度一级。
  *
  * 翻译：把「吹出结冰的冷气」翻成一堵**会走的冷气锋**——它不从身上炸开，而是从嘴边起、贴着地面
- * 向前推出去，扫过一整条走廊，把沿途的人都冻得发僵（速度下降），并在走过的地方留下一层白霜。
+ * 向前推出去，扫过一整条走廊，把沿途的人都冻得发僵（速度下降）；墙会把风截断在墙前。
  * 它是本组唯一「范围自己在移动」的招，站位读得出来：锋面在哪，哪就挨冻。
  * 与同族分开：
- *   冰冻之风 —— 冷气锋向前推移，命中走廊里所有人，地面留下一路白霜。
+ *   冰冻之风 —— 冷气锋向前推移，命中走廊里所有人，走过处只浮起细霜。
  *   电网     —— 电织成的网抛到一点后展开留驻，踏进去才触电。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
@@ -16,8 +16,8 @@
  *   halfWidth    走廊半宽 1.5 + 碰撞箱宽度偏移 + 特攻偏移（身宽、气足的风扇得更开）。
  *   travelTicks  锋面推出时间 9 刻 − 速度偏移（脚步快的人推得急）。
  *   slowStages   减速等级 1 级；深寒式 +1。
- *   frostTicks   白霜停留 120 刻 + 等级偏移（等级高冻得更久）。
- *   frostCells   白霜块数 24 + 特攻 ×0.25（同时驱动画面密度）。
+ *   frostTicks   细霜表现停留 120 刻 + 等级偏移（内部表现参数，不改地面方块）。
+ *   frostCells   细霜表现密度 24 + 特攻 ×0.25（内部表现参数，同时驱动画面密度）。
  *   tempo        起手 10 刻 − 速度偏移（速度越快越早吐）。
  *
  * 配置 `deepfreeze`（深寒式）：开启＝锋面收短到 0.78 倍、单次 ×1.2、减速多一级、白霜留得更久，
@@ -70,18 +70,21 @@ namespace PokemonSkills {
                 base: 1, unit: "级",
                 description: "被冻到的目标速度下降几级；对宝可梦落到原生速度等级，对其他战斗者落到移动速度属性。"
             }),
-        /** 白霜停留：120 + 等级 ×0.8；深寒 ×1.3；夹 60..260。 */
-        frostTicks: seconds(
+        /** 细霜表现停留（内部表现参数）：120 + 等级 ×0.8；深寒 ×1.3；夹 60..260。不改地面方块。 */
+        frostTicks: formula(
             F.base(120).plus(F.level().times(0.8))
                 .times(F.when(F.pref("deepfreeze"), F.const(1.3), F.const(1)))
                 .clamp(60, 260).round(0),
-            "白霜停留", "冷气锋在走过的地方留下的白霜停留多久；到期原方块回来。"),
-        /** 白霜块数：24 + 特攻 ×0.25；夹 20..70。同时驱动画面密度。 */
+            "细霜停留", {
+                base: 120, presentation: "seconds", format: v => String(v / 20) + " 秒", visible: false,
+                description: "冷气锋走过处浮起的细霜表现在画面上停留多久；不改动地面方块。"
+            }),
+        /** 细霜表现密度（内部表现参数）：24 + 特攻 ×0.25；夹 20..70。同时驱动画面密度。 */
         frostCells: formula(
             F.base(24).plus(F.stat("specialAttack").times(0.25)).clamp(20, 70).round(0),
-            "白霜数量", {
-                base: 24, unit: "块",
-                description: "冷气锋在地面留下的白霜块数；随特攻增长，也决定画面里霜层的密度。"
+            "细霜数量", {
+                base: 24, unit: "块", visible: false,
+                description: "冷气锋走过处浮起的细霜点数量；随特攻增长，也决定画面里霜痕的密度。"
             }),
         /** 起手：10 − 速度偏移[−1.5,2.0] + 深寒 2；夹 6..15。 */
         tempo: seconds(
@@ -103,7 +106,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["reach", "halfWidth", "travelTicks"] },
         { key: "description.cap", values: ["maxTargets"] },
         { key: "description.2", values: ["slowStages"] },
-        { key: "description.3", values: ["frostTicks", "frostCells"] },
+        { key: "description.3", values: [] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["deepfreeze"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["deepfreeze"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

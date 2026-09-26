@@ -1,13 +1,13 @@
 /**
  * 影子偷袭 / shadowsneak 的客户端表现。
  *
- * 一句话：施法者脚下的影子先加深翻涌，随后一道暗影贴着地面从施法者爬向对手，在对手**背面**立起一刀，
- *   一刀斩下时炸开一团鬼影冲击；裹足式还在地面缠出一圈暗环；目标离场则影子塌回空处。
+ * 一句话：施法者脚下的影子先加深翻涌，随后一道低矮的暗影贴着地面朝提交方向爬出去；它踩中第一只敌人的身体时，
+ *   在那只敌人的**背侧**立起一刀、炸开一团鬼影冲击；遇到实墙或探到头则影子塌回空处。
  * 色相家族：鬼紫（0x7B4FD0）与近黑（0x241A3A），近白（0xE0D0FF）只给命中核心；没有第二组饱和色。
- * 拍子：起 pool（影子加深）→ 窜 crawl（贴地暗影）→ 刺 stab（背刺与鬼影）→ 收 fizzle（落空塌回）。
- * 范围：stab 的鬼影 burst 半径由 `data.blade` 给出，玩家看出这一刀咬住多大一圈；crawl 沿 `data.path` 画出影子爬过的地面。
- * 运动：crawl 从施法者指向对手，速度与机制 `data.seep` 一致（`data.travel` 决定这一拍多长）；stab 的刀锋沿 `data.direction`（对手→施法者）转出。
- * 数：stab 的鬼影数量绑定 `data.power`（影刃威力换算），影屑数量绑定 `data.shade`（速度换算），蓝紫暗环数量绑定 `data.grip`（缚足级数）。
+ * 拍子：起 pool（影子加深）→ 探 crawl（贴地暗影推进）→ 刺 stab（背刺与鬼影）→ 收 fizzle（墙边/尽头塌回）。
+ * 范围：stab 的鬼影 burst 半径由 `data.blade` 给出，玩家看出这一刀咬住多大一圈。
+ * 运动：crawl 绑真实前沿投射物，沿地面朝机制 `data.direction` 推进并拖出影屑；stab 的刀锋沿 `data.direction`（背侧→施法者）转出。
+ * 数：stab 的鬼影数量绑定 `data.power`（影刃威力换算），影屑数量绑定 `data.shade`（速度换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ShadowsneakDefinition: ParticleDefinition = {
@@ -36,24 +36,25 @@ const ShadowsneakDefinition: ParticleDefinition = {
             ]
         },
         crawl: {
-            duration: { data: "travel", fallback: 6 },
-            exit: { stop: 3, drain: 8 },
+            duration: 0,
+            exit: { drain: 10 },
             emitters: [
                 {
-                    name: "creep", bind: "path", fit: "none",
+                    name: "creep", bind: "projectile", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    shape: { kind: "polyline" },
-                    rate: 40, direction: "shape", speed: [0.01, 0.05], spread: 6,
-                    lifetime: [6, 11], size: [0.24, 0.04], sizeMode: "index",
-                    color: 0x2A2140, alpha: [0.55, 0], light: "world", maxParticles: 80
+                    trail: { minDistance: 0.28 }, rate: 46,
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "shape", speed: [0.01, 0.05], spread: 6,
+                    lifetime: [6, 11], size: [0.26, 0.04], sizeMode: "index",
+                    color: 0x2A2140, alpha: [0.55, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "head", bind: "path", fit: "none",
+                    name: "head", bind: "projectile", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    shape: { kind: "polyline" },
-                    rate: 26, direction: "shape", speed: [0.04, 0.12],
+                    rate: 28, shape: { kind: "sphere", radius: 0.13 },
+                    direction: "shape", speed: [0.03, 0.11],
                     lifetime: [5, 9], size: [0.09, 0.02],
-                    color: 0x9A6AD8, alpha: [0.7, 0], light: "full", maxParticles: 60
+                    color: 0x9A6AD8, alpha: [0.7, 0], light: "full", maxParticles: 70
                 }
             ]
         },
@@ -87,15 +88,6 @@ const ShadowsneakDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.1, 0.3], spread: 22, drag: 0.9,
                     lifetime: [8, 14], size: [0.09, 0.02],
                     color: 0xE0D0FF, alpha: [0.9, 0], light: "full", maxParticles: 110
-                },
-                {
-                    name: "grip", bind: "target", offset: [0, 0.06, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: { data: "grip", fallback: 0 }, at: 1 },
-                    shape: { kind: "ring", radius: 0.5 },
-                    direction: "inward", speed: [0.03, 0.1],
-                    lifetime: [10, 16], size: [0.3, 0.12],
-                    color: 0x4A3A78, alpha: [0.6, 0], light: "world", maxParticles: 6
                 }
             ]
         },

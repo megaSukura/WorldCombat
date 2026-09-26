@@ -7,8 +7,9 @@
  * 拍子：起 raise（抬脚）→ 一 hook（低扫）→ 中 hit1（挑人）→ 二 finisher（前踹）→ 中 hit2（踹飞）→ 收 settle。
  * 范围：hook/finisher 的扇面用 `data.reach` 当半径、`data.span` 当张角，`orient: "heading"` 让扇面正对踢击方向；
  *   画面里的扇面就是判定范围。
- * 运动：脚风从脚边沿地面向前铺开；hit1 的尘向上走（挑起），hit2 的碎屑沿踢击方向甩出（踹飞）。
- * 数：`data.dust`（物攻派生）绑定发射量，`data.intensity`（每脚威力派生）抬高亮度，`data.alternate` 区分两种形态。
+ * 运动：hook 的脚风贴地低扫并微微上浮（第一脚低向上），hit1 的尘向上走（挑起）；finisher/hit2 沿踢击方向前送（踹飞）。
+ * 数：`data.dust`（物攻派生）绑定发射量，`data.intensity`（每脚威力派生）抬高亮度，`data.alternate` 区分两种形态；
+ *   hit1 的浮空尘土由 `data.liftParticles` 驱动——连踢式 lift = 0 时该值为 0，未抬起就不画浮空。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const DoublekickDefinition: ParticleDefinition = {
@@ -44,7 +45,7 @@ const DoublekickDefinition: ParticleDefinition = {
                     name: "turf", bind: "point", fit: "world", orient: "heading", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     rate: 30, shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, angleDegrees: { data: "span", fallback: 80 } },
-                    direction: "shape", speed: [0.04, 0.18], spread: 24, gravity: 0.06, drag: 0.9,
+                    direction: "shape", speed: [0.04, 0.2], spread: 24, gravity: -0.02, drag: 0.9,
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0xC9964F, alpha: [0.45, 0], light: "world", maxParticles: 60
                 }
@@ -87,7 +88,7 @@ const DoublekickDefinition: ParticleDefinition = {
                 {
                     name: "lift", bind: "target", offset: [0, 0.1, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "dust", fallback: 12 }, at: 1 },
+                    burst: { count: { data: "liftParticles", fallback: 0 }, at: 1 },
                     shape: { kind: "box", size: [0.5, 0.1, 0.5] }, direction: "up", speed: [0.18, 0.42], spread: 18,
                     gravity: 0.02, drag: 0.94, lifetime: [9, 15], size: [0.09, 0.02],
                     color: 0xC9964F, alpha: [0.6, 0], light: "world", maxParticles: 44

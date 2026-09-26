@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.rocktomb.summary": "投一块重石头把目标的腿封在地上：砸中的目标速度下降，落地时它脚下立起一圈石柱把行动围住；只有站在地上的目标才围得住。封场式围得更宽更久、压两级速度，砸击式砸得更重。",
-  "worldcombat.skill.rocktomb.description.0": "砸中活物造成 %1$s 的不接触伤害，石头判定半径 %2$s 格。",
+  "worldcombat.skill.rocktomb.summary": "朝方向点或选中的目标投一块重石头：砸中的目标速度下降，落地时它脚下立起一圈留有可走缺口的石柱把行动围住；石头真正落在可替换地面上也会围一圈，只有站在地上的目标才围得住。封场式围得更宽更久、压两级速度，砸击式砸得更重。",
+  "worldcombat.skill.rocktomb.description.0": "砸中活物造成 %1$s 的不接触伤害，石头判定半径 %2$s 格；方向点或实体都能选，提交时不要求有敌人。",
   "worldcombat.skill.rocktomb.description.1": "能在 %1$s 格内投石，出手速度 %2$s 格/刻。",
-  "worldcombat.skill.rocktomb.description.2": "目标落地时，它脚下立起半径 %2$s 格、高 %3$s 格的石柱围栏把行动围住，速度下降 %1$s 级；围栏停留 %4$s 后原方块回来，速度的下降则不会随围栏消失而恢复。目标离地则围不起来、也不掉速，只挨石头。",
+  "worldcombat.skill.rocktomb.description.2": "目标落地时，它脚边立起基础半径 %2$s 格、高 %4$s 格、出口至少 %3$s 格宽的石柱围栏，并按实际身体留出所需净空；速度下降 %1$s 级。围栏停留 %5$s 后原方块回来，速度的下降则不会随围栏消失而恢复。出口让被围的活物能自己走出来。目标离地则围不起来、也不掉速；地形被保护或放不下石柱时只崩碎石，速度照样下降。",
   "worldcombat.skill.rocktomb.trap.on": "封场式：围栏更宽更高、压两级速度、围栏留得更久，但单发更轻。",
   "worldcombat.skill.rocktomb.trap.off": "砸击式：石头砸得更重、只压一级速度，围栏更窄更短。",
   "worldcombat.skill.rocktomb.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -16,6 +16,7 @@
   "worldcombat.skill.rocktomb.value.throwRange": "施放距离",
   "worldcombat.skill.rocktomb.value.collisionRadius": "石头判定",
   "worldcombat.skill.rocktomb.value.cageRadius": "封锁半径",
+  "worldcombat.skill.rocktomb.value.cageGap": "围栏缺口",
   "worldcombat.skill.rocktomb.value.cageHeight": "石柱高度",
   "worldcombat.skill.rocktomb.value.encaseStages": "封锁等级",
   "worldcombat.skill.rocktomb.value.cageTicks": "封锁时长",
@@ -28,6 +29,8 @@
   "worldcombat.skill.rocktomb.preference.ai.sealRunner.help": "开启：目标正在移动或逃跑时优先投石，离地或已被封的目标降到最后；关闭：当普通中距离攻击排序。",
   "world_combat.move.rocktomb.text.encase": "行动被封住 %1$s 级",
   "world_combat.move.rocktomb.text.shatter": "目标离地，石头碎了",
+  "world_combat.move.rocktomb.text.wall": "石头砸在墙上碎了",
+  "world_combat.move.rocktomb.text.blocked": "地面立不起石栏，行动照旧被拖慢",
   "world_combat.move.rocktomb.text.miss": "石头砸空了",
   "effect.world_combat.rocktomb_tomb": "岩石封锁·封锁"
 }

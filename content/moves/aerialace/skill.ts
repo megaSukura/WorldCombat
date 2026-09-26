@@ -1,16 +1,17 @@
 /**
  * 燕返 / aerialace 的出手方式。
  *
- * 核心念头：一步掠身而过，借速度把对手晃开视线，掠过的那条线本身就是刀路——因为人是朝对手冲过去的，刀必中。
+ * 核心念头：一步掠身而过，掠过的那条线本身就是刀路——扫到谁，谁就挨刀；因为人是从对手身侧穿过去的，
+ * 没被挡住时最后落在对手身后，把对手甩在背后。
  *
  * 两幕：
  *   起（gather，提交前）：压低身子，脚下的风线聚拢（可被打断的预告）。
- *   掠（dash → cut → past）：提交后逐刻朝目标掠去，每刻把路径扫一遍；扫到的人按 `cuts` 挨刀，
- *       掠到目标身上（或撞墙、走完射程）后落在对手身后。
- *   目标若在起手时已离场，收势空挥。
+ *   掠（dash → cut → past / miss / wall）：提交时把方向锁死为指向选定点（实体、世界点或方向），逐刻沿直线掠去，
+ *       每刻把这一段扫一遍；扫到的人按 `cuts` 挨刀。掠到目标身上仍会继续穿过落到另一侧。
+ *       没有命中率判定，但刀路只结算真正扫过的身体：对手横移出这条线，或墙挡在前面，这一掠就落空、停在墙前。
  *
- * 与同族分开：修长之角是锁定后一发直线突刺、刀在角尖；燕返是**一整条掠过的刀路**，扫到路上的人，
- * 人还会落到对手的身后，把对手甩在背后。
+ * 与同族分开：修长之角是锁定后一发直线突刺、角在角尖且会有限转向；燕返是**一整条掠过的直线刀路**，
+ * 扫到路上的人，人落到对手身后，横向完全靠玩家锁定。
  */
 namespace PokemonSkills {
     const aerialaceScene = "world_combat:move_aerialace";
@@ -21,9 +22,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "aerialace",
         name: "Aerial Ace",
-        description: "一步掠身而过，借速度晃开对手视线再切斩；因为人是朝对手冲过去的，刀必中。掠过的那条线本身就是刀路，扫到路上的敌人各挨数刀，没被挡住时最后落在对手身后。",
-        uses: ["一步掠身而过的交叉快斩", "扫过一条线上的所有敌人", "掠过目标落到它身后"],
-        kind: "enemy",
+        description: "一步掠身而过，掠过的那条线本身就是刀路：扫到的敌人各挨数刀，没被挡住时最后落在对手身后。没有命中率判定，但刀路只砍到真正扫过的人——对手横移出刀路、或墙挡在前面，这一掠就会落空。",
+        uses: ["一步掠身而过的交叉快斩", "扫过一条直线上的所有敌人", "掠过目标落到它身后换位"],
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 5,
@@ -66,35 +67,38 @@ namespace PokemonSkills {
             const notes = Math.max(12, Math.round(slash * cuts * 1.2));
             const start = action.origin();
             const selected = action.target();
-            let heading = aim(action);
+            // 方向在提交那一刻锁死：刀路是一条水平的直线，对手移出这条线就会落空。
+            const aimed = aim(action);
+            const horizontal = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const heading = horizontal.length() > 0.001 ? horizontal.unit() : aimed;
             let travelled = 0;
+            let cutLanded = false;
             const struck: { [ref: string]: boolean } = Object.create(null);
             let settled = false;
 
             sound(action, "cobblemon:move.aerialace.actor_1");
 
-            function finish(current: CombatAction): void {
+            /** 结束：真实落点由当前身体位置给出；本想扫某个实体却没扫到、或撞墙停下才算落空。 */
+            function finish(current: CombatAction, whiffed: boolean, contact?: CombatImpact): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
                 const body = scope.observe(actor);
-                if (body !== null)
-                    WorldFeedback.emit(scope, aerialaceScene, 1, body.position(),
+                const at = body === null ? current.origin() : body.position();
+                if (whiffed) {
+                    WorldFeedback.emit(scope, aerialaceScene, 1, at,
+                        { moment: "miss", scale: scale, wall: contact !== undefined && contact.blocked() ? 1 : 0,
+                          face: contact !== undefined && contact.blocked() ? contact.blockFace() : "" }, 18);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), aerialaceMissText, [], 20);
+                } else {
+                    WorldFeedback.emit(scope, aerialaceScene, 1, at,
                         { moment: "past", cuts: cuts, scale: scale, skim: skim }, 20);
+                }
                 movementScenes.finish(current, done);
             }
 
-            function miss(current: CombatAction): void {
-                if (settled) return;
-                settled = true;
-                const scope = current.world();
-                WorldFeedback.emit(scope, aerialaceScene, 1, current.origin(), { moment: "miss", scale: scale }, 18);
-                WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.2, 0)), aerialaceMissText, [], 20);
-                movementScenes.finish(current, done);
-            }
-
-            /** 一刀路扫到某人：按刀数重复结算，全部挥空则不算命中。 */
-            function strike(current: CombatAction, victim: CombatActor, point: CombatPoint, primary: boolean): void {
+            /** 刀路扫到某人：按刀数重复结算；真实掠过的那一段就是刀痕的路径。 */
+            function strike(current: CombatAction, victim: CombatActor, point: CombatPoint, from: CombatPoint, primary: boolean): void {
                 const scope = current.world();
                 let landed = false;
                 for (let cut = 0; cut < cuts; cut++) {
@@ -103,10 +107,11 @@ namespace PokemonSkills {
                         landed = true;
                 }
                 if (!landed) return;
+                cutLanded = true;
                 WorldFeedback.emit(scope, aerialaceScene, 1, point,
                     { moment: "cut", target: String(victim.ref()), cuts: cuts, notes: notes, primary: primary,
                       scale: scale, intensity: intensity,
-                      path: [[start.x(), start.y(), start.z()], [point.x(), point.y(), point.z()]] }, 24);
+                      path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]] }, 24);
                 if (primary) {
                     const body = scope.observe(victim);
                     if (body !== null) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), aerialaceCutText, [cuts], 24);
@@ -117,36 +122,32 @@ namespace PokemonSkills {
             function advance(current: CombatAction): void {
                 const scope = current.world();
                 const self = scope.observe(actor);
-                if (self === null) { finish(current); return; }
+                if (self === null) { finish(current, false); return; }
                 const here = self.position();
-                // 逐刻把朝向对准目标当前位置：人是追着对手掠过去的，所以刀够得到。
-                if (selected !== null && scope.valid(selected)) {
-                    const body = scope.observe(selected);
-                    if (body !== null) {
-                        const desired = body.position().minus(here);
-                        if (desired.length() > 0.05) heading = desired.unit();
-                    }
-                }
                 const step = Math.min(speed, pursuit - travelled);
-                if (step <= 0.001) { finish(current); return; }
+                if (step <= 0.001) { finish(current, false); return; }
                 const delta = heading.scale(step);
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && !scope.friendly(victim) && !struck[String(victim.ref())]) {
                         struck[String(victim.ref())] = true;
-                        strike(current, victim, hit.position(), selected !== null && String(victim.ref()) === String(selected.ref()));
+                        strike(current, victim, hit.position(), here, selected !== null && String(victim.ref()) === String(selected.ref()));
                     }
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < 0.05 || travelled >= pursuit - 0.001) { finish(current); return; }
+                if (hit.blocked() || moved < 0.05 || travelled >= pursuit - 0.001) {
+                    // 空放走完全程只算落地；本来瞄着实体却没扫到、或撞墙停住，才是落空。
+                    const whiffed = !cutLanded && (selected !== null || hit.blocked());
+                    finish(current, whiffed, hit);
+                    return;
+                }
                 current.after(1, advance);
             }
 
-            movementScenes.show(action, "dash", start, { moment: "dash", cuts: cuts, scale: scale, intensity: intensity, skim: skim });
-
-            if (selected === null || !world.valid(selected)) { miss(action); return; }
+            movementScenes.show(action, "dash", start,
+                { moment: "dash", direction: [heading.x(), heading.y(), heading.z()], cuts: cuts, scale: scale, intensity: intensity, skim: skim });
             advance(action);
         }
     });

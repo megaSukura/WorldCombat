@@ -1,12 +1,13 @@
 /**
  * 庆祝 / celebrate 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者原地蹦起来，一圈彩带与星星整圈撒开，被庆祝到的同伴头顶各亮起一串音符。
+ * 一句话：施法者原地蹦起来，一圈彩带与星星在**完成那一刻**整圈撒开；受助的同伴各收一小束彩带，
+ *   助兴的行进劲在脚下拖出一小段风线，挨打散掉时只留一撮碎彩。
  * 色相家族：暖金（0xFFC24D）为骨架，彩带与星星层直接用贴图原色——庆祝的含义需要多色，其余层保持金白。
- * 拍子：起（windup 音符上浮）→ 击（burst 彩带撒开、cheer 逐人点亮）→ 收（mark 存续期头顶小簇彩带）。
+ * 拍子：起（windup 音符上浮）→ 击（burst 完成时爆开、cheer 逐人点亮、march 行进风线）→ 退（break 受击散去）。
  * 范围：burst 绑 `point`，形状半径读 `data.radius`（真实感染半径），玩家看到的圈就是会被庆祝到的人。
- * 运动：彩带整圈向外翻飞再落下，星星向上飘；持续期音符只在头顶小范围起伏。
- * 数：彩带量按 `data.motes`（亲密度与等级派生）派生，拍数按 `data.streamers` 派生。
+ * 运动：彩带整圈向外翻飞再落下，星星向上飘；march 的风线贴着同伴脚下向后拖；break 只向上散一小撮。
+ * 数：彩带量按 `data.motes`（亲密度与等级派生）派生，拍数按 `data.streamers` 派生，风线疏密按 `data.scale`。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const CelebrateDefinition: ParticleDefinition = {
@@ -102,25 +103,43 @@ const CelebrateDefinition: ParticleDefinition = {
                 }
             ]
         },
-        mark: {
-            duration: 40,
-            exit: { drain: 30 },
+        march: {
+            duration: 20,
+            exit: { drain: 14 },
             emitters: [
                 {
-                    name: "mark_note", bind: "target", offset: [0, 0.35, 0], height: 1.05,
-                    particle: "world_combat_core:cobblemon/generic/note",
-                    rate: 3, shape: { kind: "circle", radius: 0.3 },
-                    direction: "up", speed: [0.01, 0.05],
-                    lifetime: [20, 30], size: [0.14, 0.04], sizeMode: "sin",
-                    alpha: [0.35, 0], alphaMode: "sin", light: "full", maxParticles: 12
+                    name: "march_wake", bind: "target", offset: [0, 0.05, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
+                    trail: { minDistance: 0.18 },
+                    burst: { count: { data: "motes", fallback: 10 }, at: 1 },
+                    shape: { kind: "circle", radius: { data: "scale", fallback: 1 } },
+                    direction: "away", speed: [0.03, 0.1], spread: 18,
+                    lifetime: [10, 18], size: [0.14, 0.03],
+                    color: 0xFFE3A6, alpha: [0.5, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "mark_spark", bind: "target", offset: [0, 0.3, 0], height: 1.0,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 4, shape: { kind: "circle", radius: 0.34 },
-                    direction: "up", speed: [0.01, 0.04],
-                    lifetime: [16, 26], size: [0.1, 0.02],
-                    color: 0xFFD98A, alpha: [0.3, 0], light: "full", maxParticles: 14
+                    name: "march_note", bind: "target", offset: [0, 0.2, 0], height: 0.95,
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    burst: { count: 3, interval: 6, repeats: 2 },
+                    shape: { kind: "circle", radius: 0.3 },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [12, 20], size: [0.12, 0.03], sizeMode: "sin",
+                    alpha: [0.4, 0], light: "full", maxParticles: 12
+                }
+            ]
+        },
+        break: {
+            duration: 20,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "break_flake", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 10, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "up", speed: [0.02, 0.09], spread: 24,
+                    lifetime: [8, 16], size: [0.12, 0.02],
+                    color: 0xFFE3A6, alpha: [0.5, 0], light: "world", maxParticles: 20
                 }
             ]
         }

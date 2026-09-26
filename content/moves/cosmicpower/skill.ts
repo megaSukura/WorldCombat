@@ -6,38 +6,29 @@
  *
  * 两幕：
  *   引（windup 播「落星」，提交前只观察与预告，打断不花代价）。
- *   承（提交后）：NativeEffects.boost 写入公共能力阶梯（防御 aegis 级、特防 ward 级），挂上共享身份
- *     world_combat:status/cosmicpower 的星辉窗口；同时另存一份「这次加了多少」的记号，供窗口结束时按数收回。
- * 结束：星辉到期或被清除时，按记号把两项等级原样收回。
+ *   承（提交后）：星柱落下是一段短暂过程；随后把两项防护写成一条**由本次星辉载体（世界效果 carrier）拥有**的
+ *     boostWindow 临时窗口，挂上共享身份 world_combat:status/cosmicpower。窗口的加成只按自己的来源回收：
+ *     刷新时先撤本来源旧窗口再重开、被驱散或自然到期随载体一起结束、实际抬升为 0 时不留任何贡献。
+ * 持续表现：稀疏星座环绑在真实窗口（onEffect）上，随它自然到期或提前清除一起隐去；夜里实际多出的那一级点亮第二层星座。
  */
 namespace PokemonSkills {
     const cosmicPowerScene = "world_combat:move_cosmicpower";
     const cosmicPowerSurge = "world_combat:cosmic_surge";
-    const cosmicPowerMark = "world_combat:cosmicpower_mark";
+    /** 本招窗口的贡献来源标记：只回收由它写下的等级，刷新时也只撤自己的旧窗口。 */
+    const cosmicPowerContribution = "world_combat:move/cosmicpower";
     const cosmicPowerSettleText = "world_combat.move.cosmicpower.text.settle";
     const cosmicPowerWaneText = "world_combat.move.cosmicpower.text.wane";
     /** 表现里的参考半径：`data.scale = 实际星环半径 / 这个数`。 */
     const cosmicPowerReferenceRadius = 1.5;
 
-    // 记号：记录这次汲取各自加了多少级，窗口结束时照数收回。加在两个属性上，单靠 amplifier 存不下。
-    WorldCombat.effect(cosmicPowerMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json);
-        if (typeof value.aegis !== "number" || typeof value.ward !== "number") throw new Error("Invalid cosmic power mark");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(cosmicPowerMark, "start", function () { });
-
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function cosmicPowerStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function cosmicPowerRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = cosmicPowerStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, cosmicPowerStage(world, actor, stat) - before);
+    /** 关掉本来源此前留下的窗口，让刷新替换而不是叠加。 */
+    function cosmicPowerCloseOwnWindows(world: CombatWorld, actor: CombatActor): void {
+        const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+        const views = world.effects(actor, definition);
+        for (let i = 0; i < views.length; i++) {
+            const data = JSON.parse(String(views[i].data()));
+            if (data && data.source === cosmicPowerContribution) NativeEffects.windowClose(world, views[i].id());
+        }
     }
 
     define({
@@ -86,18 +77,28 @@ namespace PokemonSkills {
             const constellation = Math.max(5, Math.min(9, Math.round(p("cosmicpower", "constellation", action))));
             const ring = Math.max(0.6, p("cosmicpower", "ring", action));
             const scale = ring / cosmicPowerReferenceRadius;
-            const aegisLevels = cosmicPowerRaise(world, actor, "def", aegis);
-            const wardLevels = cosmicPowerRaise(world, actor, "spd", ward);
-            MobEffects.apply(world, actor, cosmicPowerSurge, dwell, Math.max(aegisLevels, wardLevels));
-            world.effect(cosmicPowerMark, actor, JSON.stringify({ aegis: aegisLevels, ward: wardLevels }), dwell);
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            // 刷新替换：先撤本来源旧窗口，再挂新的星辉载体与属于自己的窗口。
+            cosmicPowerCloseOwnWindows(world, actor);
+            const beforeDef = NativeEffects.effectiveStage(world, actor, "def");
+            const beforeSpd = NativeEffects.effectiveStage(world, actor, "spd");
+            const previous = MobEffects.read(world, actor, cosmicPowerSurge);
+            const carrier = MobEffects.apply(world, actor, cosmicPowerSurge, dwell, previous ? previous.amplifier() : 0);
+            const window = carrier === null ? 0
+                : NativeEffects.boostWindow(world, actor, { def: aegis, spd: ward }, carrier.duration(), cosmicPowerContribution, carrier);
+            const aegisLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - beforeDef);
+            const wardLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - beforeSpd);
+            // 星星更盛看的是实际多出的那一级，顶到阶梯上限时不会凭空点亮第二层。
+            const night = (aegisLevels > 1 || wardLevels > 1) ? 1 : 0;
             WorldFeedback.emit(world, cosmicPowerScene, 1, feet,
                 { moment: "pour", actor: String(actor.ref()), aegis: aegisLevels, ward: wardLevels, halo: halo,
-                    constellation: constellation, shaft: shaft, shaftHalf: shaft / 2, ring: ring, columnRadius: ring * 0.5, scale: scale,
+                    constellation: constellation, shaft: shaft, shaftHalf: shaft / 2, ring: ring, columnRadius: ring * 0.5,
+                    scale: scale, night: night,
                     intensity: Math.max(0.8, Math.min(2, (aegisLevels + wardLevels) / 2 + halo / 80)) }, 48);
-            WorldFeedback.keep(world, "cosmicpower:column:" + String(actor.ref()), cosmicPowerScene, 1, feet,
-                { moment: "column", actor: String(actor.ref()), halo: halo, shaft: shaft, shaftHalf: shaft / 2,
-                    constellation: constellation, ring: ring, columnRadius: ring * 0.5, scale: scale }, Math.min(dwell, 240));
+            if (window)
+                WorldFeedback.onEffect(world, window, "cosmicpower:halo", cosmicPowerScene, 1, feet,
+                    { moment: "column", actor: String(actor.ref()), halo: halo, constellation: constellation, ring: ring,
+                        scale: scale, night: night, nightRate: night ? 4 : 0, nightRadius: ring * 1.5 });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.35, 0)), cosmicPowerSettleText,
                 [aegisLevels, wardLevels, Math.round(dwell / 20)], 34);
             world.sound("minecraft:block.beacon.activate", body.position(), 16, "{}");
@@ -105,24 +106,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 星辉到期或被清除：按记号把两项等级原样收回（只收到当前实际持有的正等级）。
+    // 星辉到期或被清除：窗口随载体结束，本事件只报尾声，不再手工扣级。
     WorldCombat.on("world_combat:move_cosmicpower/wane", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== cosmicPowerSurge) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const marks = world.effects(actor, cosmicPowerMark);
-        let aegis = 1, ward = 1;
-        if (marks.length) {
-            const mark = JSON.parse(String(marks[0].data()));
-            if (typeof mark.aegis === "number") aegis = Math.max(0, Math.round(mark.aegis));
-            if (typeof mark.ward === "number") ward = Math.max(0, Math.round(mark.ward));
-            world.operation(marks[0].id(), "world_combat:dispel", "{}");
-        }
-        const lostAegis = Math.min(aegis, Math.max(0, cosmicPowerStage(world, actor, "def")));
-        const lostWard = Math.min(ward, Math.max(0, cosmicPowerStage(world, actor, "spd")));
-        if (lostAegis > 0) NativeEffects.boost(world, actor, "def", -lostAegis);
-        if (lostWard > 0) NativeEffects.boost(world, actor, "spd", -lostWard);
+        if (MobEffects.read(world, actor, cosmicPowerSurge) !== null) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, cosmicPowerScene, 1, body.position(), { moment: "wane", actor: String(actor.ref()) }, 28);

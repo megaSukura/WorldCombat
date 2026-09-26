@@ -1,27 +1,9 @@
-/**
- * 岩石打磨 / Rock Polish — 参数与数值来源。
- *
- * 原生事实：Rock、变化、威力 —、命中必中、PP 20、目标 self、boosts { spe: +2 }、flags snatch/metronome。
- *
- * 翻译：把「打磨自己的身体，减少空气阻力」翻成一件**要花时间做的活**——用地面当磨石，在自己身上一圈圈磨，
- *   火花与石粉往外溅，磨掉粗糙的那层；磨过之后身体泛光、空气再也挂不住你。它取原生「+2 速度、20 PP、
- *   纯自我强化」；放弃回合制里永久保留的等级 → 打磨出的光面会随时间失亮，速度等级随之一起收回（对手能拖过去）。
- *   本族里它最慢、最彻底：站着不动磨、地面上真的留下磨亮的一圈，也是唯一会在世上留痕的速度提升。
- *
- * 数值来源（每个参数读不同的精灵数据，分散开）：
- *   gift        提速等级：粗磨 2 级（体重 ≥ 100kg 再 +1）／精磨固定 3 级；夹 2..3。越沉的身体越值得磨。
- *   shine       光面时长：基础 160 刻 + 体重（kg）×0.6，再乘磨料系数；夹 120..420。窗口走完速度等级收回。
- *   patchRadius 磨亮半径：基础 1.0 格 + 体重（kg）×0.004，再乘磨料系数；夹 0.9..2.6。体重决定地上磨开多大一圈。
- *   sparks      火花数量：基础 20 + 物攻×0.5；夹 20..80。压得越狠，磨出的火花越密（也是画面里的数量）。
- *   dust        石粉数量：基础 16 + 体重（kg）×0.12；夹 16..60。粉越重越多，落在地上拖出灰。
- *   tempo       起手：基础 14 刻 + 体重（kg）×0.012，再乘磨料系数；夹 8..26。越沉磨得越久。
- *   aftercast   收招：基础 6 刻 + 碰撞箱高度×1.3；夹 6..12。身板越高大收得越慢。
- *   wait        冷却：基础 90 刻 − 等级×0.4，再乘磨料系数；夹 50..115。PP 20 的代价。
- * 配置 grit（磨料）双向取舍：粗磨快、冷却短、地上留的圈小、光面短；精磨慢、冷却长、地圈更大、光面更久，
- *   且对轻身板也能磨到 3 级。两向各有局面（速战 vs 持久）。
- */
+/** Temporary speed and native body slipperiness; gameplay numbers retain individual formulas. */
 namespace PokemonSkills {
     actionParameters.define("rockpolish", {
+        slipperiness: formula(F.base(0.82).plus(F.stat("speed").times(0.0002))
+            .plus(F.when(F.pref("grit"), F.const(0.03), F.const(0))).clamp(0.82, 0.92),
+            "滑行系数", { description: "身体在地面上的滑行系数；速度越高、精磨时越明显。地面本来更滑时保留地面的原生系数。" }),
         /** 提速等级：粗磨吃体重，精磨固定拉满。 */
         gift: formula(
             F.when(F.pref("grit", text("worldcombat.skill.rockpolish.preference.grit")),
@@ -45,7 +27,7 @@ namespace PokemonSkills {
                 .clamp(0.9, 2.6).round(2),
             "磨亮半径", {
                 unit: " 格",
-                description: "地面上被磨亮的那一圈半径；越沉磨得越开，精磨再 ×1.25。画面里的地环就是这个半径。"
+                description: "打磨时身体周围短暂划痕的表现半径；不改变地面。"
             }),
         /** 火花数量：物攻越高越密。 */
         sparks: formula(
@@ -86,12 +68,12 @@ namespace PokemonSkills {
 
     describe("rockpolish", [
         { key: "description.0", values: ["gift", "tempo"] },
-        { key: "description.1", values: ["shine", "patchRadius"] },
+        { key: "description.1", values: ["shine", "slipperiness"] },
         { key: "description.2", values: ["aftercast", "wait"] },
         { key: "description.additional", values: [] },
         { key: "grit.on", values: [], when: function (context) { return read(context.detail.values, ["grit"]) === 1; } },
         { key: "grit.off", values: [], when: function (context) { return read(context.detail.values, ["grit"]) !== 1; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.shine", "tier.0.wait"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.shine", "tier.1.wait"] }
     ]);

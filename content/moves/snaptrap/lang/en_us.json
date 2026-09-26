@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.snaptrap.summary": "Throws an open iron trap onto a chosen spot, then walks away: the first enemy to step in is bitten and pinned where it stands, the jaws grinding until the duration ends or it is torn free. Wide is easier to trip but lighter and shorter; Tight lies longer and bites harder.",
+  "worldcombat.skill.snaptrap.summary": "Throws an open iron trap onto a chosen spot, then walks away: the first enemy to step in is bitten and pinned where it stands, the jaws grinding until the duration ends, it is torn free, walled off or cleansed. If the first bite fails or the bind is refused, only the contact bite lands and no grind follows. Wide is easier to trip but lighter and shorter; Tight lies longer and bites harder.",
   "worldcombat.skill.snaptrap.use.0": "Pre-set a trap on the path a foe must take",
   "worldcombat.skill.snaptrap.use.1": "Seal one corner of a passage",
   "worldcombat.skill.snaptrap.use.2": "Pin a charging target until allies finish it",
@@ -31,9 +31,10 @@
   "worldcombat.skill.snaptrap.preference.ai.maxChase.help": "The companion only lays a trap on a threat within this distance; lower keeps it close, higher sets the trap further along the foe's path.",
   "worldcombat.skill.snaptrap.preference.ai.lead": "Lead time",
   "worldcombat.skill.snaptrap.preference.ai.lead.help": "Lead a moving target by this many ticks when laying the trap; 0 sets it where the target stands, higher is better against a charging foe.",
-  "worldcombat.skill.snaptrap.preference.ai.preferMovers": "Only trap movers",
-  "worldcombat.skill.snaptrap.preference.ai.preferMovers.help": "On: only lay a trap for a moving or fleeing threat, leaving stationary targets to ordinary attacks; off: trap any threat in range.",
+  "worldcombat.skill.snaptrap.preference.ai.preferMovers": "Prefer movers",
+  "worldcombat.skill.snaptrap.preference.ai.preferMovers.help": "On: prefer laying the trap ahead of a moving or fleeing threat and rank stationary targets lower; off: treat every threat in range the same. It is a ranking tendency, not a hard filter, so a stationary target can still be trapped.",
   "world_combat.move.snaptrap.text.snap": "Trapped for %1$s s",
+  "world_combat.move.snaptrap.text.bite": "Bitten but not held",
   "world_combat.move.snaptrap.text.fade": "The trap packs up",
   "world_combat.move.snaptrap.text.slip": "It slipped the jaws",
   "effect.world_combat.snared_jaw": "Snared"

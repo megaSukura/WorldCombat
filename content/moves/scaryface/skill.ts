@@ -31,6 +31,9 @@ namespace PokemonSkills {
         ready: function (action) {
             const world = action.sense(), target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            const body = world.observe(target);
+            if (body === null) return "invalid-target";
+            if (!world.clear(action.origin(), body.position())) return "no-line";
             return MobEffects.read(world, target, scaryfaceEffect) ? "already-active" : "";
         },
         windup: function (action, config, prepare) {
@@ -46,7 +49,6 @@ namespace PokemonSkills {
             const drop = Math.max(1, Math.min(3, Math.round(p(scaryfaceId, "drop", action))));
             const fear = Math.max(60, Math.round(p(scaryfaceId, "fearTicks", action)));
             const recoil = Math.max(0, p(scaryfaceId, "recoil", action));
-            sound(action, "minecraft:entity.enderman.scream");
             const target = action.target();
             if (target === null || !world.valid(target) || world.friendly(target)) {
                 WorldFeedback.emit(world, scaryfaceScene, 1, action.targetPosition(), { moment: "fizzle" }, 16);
@@ -56,16 +58,28 @@ namespace PokemonSkills {
             const at = world.observe(target);
             if (at === null) { done(action); return; }
             if (at.position().minus(origin).length() > action.range() || MobEffects.read(world, target, scaryfaceEffect)) { done(action); return; }
+            // 真实目视通路：提交后目标若已挪到掩体后，目光停在第一处阻挡上，恐惧不落地。
+            if (!world.clear(origin, at.position())) {
+                const impact = action.trace(origin, at.position(), 0.25, false);
+                const stop = impact.position();
+                WorldFeedback.emit(world, scaryfaceScene, 1, stop,
+                    { moment: "blocked", target: String(target.ref()), path: ["source", [stop.x(), stop.y(), stop.z()]] }, 20);
+                WorldFeedback.text(world, scaryfaceAbove(at.position()), "world_combat.move.scaryface.text.blocked", [], 28);
+                done(action); return;
+            }
             const carrier = MobEffects.apply(world, target, scaryfaceEffect, fear, 0);
             if (!carrier) { done(action); return; }
             const before = NativeEffects.effectiveStage(world, target, "spe");
             const window = NativeEffects.boostWindow(world, target, { spe: -drop }, fear, "world_combat:move/scaryface", carrier);
             const lost = before - NativeEffects.effectiveStage(world, target, "spe");
             if (!window || lost <= 0) {
+                // 减级窗口没有成立：收回状态载体，恐惧不播，也不推动目标。
                 if (window) NativeEffects.windowClose(world, window);
                 else world.removeMobEffect(target, scaryfaceEffect, carrier.key());
                 done(action); return;
             }
+            // 状态与减级窗口都成立，此时才播恐惧。
+            sound(action, "minecraft:entity.enderman.scream");
             const away = at.position().minus(origin);
             if (recoil > 0 && away.length() > 0.01) world.displace(target, away.unit().scale(recoil));
             WorldFeedback.emit(world, scaryfaceScene, 1, at.position(),

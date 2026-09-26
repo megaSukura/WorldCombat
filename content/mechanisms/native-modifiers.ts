@@ -1,6 +1,8 @@
 /** Temporary combat changes compose over current native facts and expire with their effect. */
 namespace NativeModifiers {
     export interface Options {
+        /** Zero-contribution preparation used only until a shared effect-state transaction commits. */
+        pending?: boolean;
         stages?: { [stat: string]: number }; stats?: { [stat: string]: number };
         types?: string[]; ability?: string; suppressAbility?: boolean; suppressItems?: boolean;
         moves?: { [slot: string]: string }; forbidden?: string[]; only?: string; categories?: string[];
@@ -19,8 +21,9 @@ namespace NativeModifiers {
         var value: Options = JSON.parse(json);
         if (!value || Array.isArray(value)) throw new Error("Expected modifier object");
         Object.keys(value).forEach(function (key) {
-            if (["stages", "stats", "types", "ability", "suppressAbility", "suppressItems", "moves", "forbidden", "only", "categories", "carrier", "source", "owner", "origin"].indexOf(key) < 0) throw new Error("Unknown native modifier: " + key);
+            if (["stages", "stats", "types", "ability", "suppressAbility", "suppressItems", "moves", "forbidden", "only", "categories", "carrier", "source", "owner", "origin", "pending"].indexOf(key) < 0) throw new Error("Unknown native modifier: " + key);
         });
+        if (value.pending !== undefined && typeof value.pending !== "boolean") throw new Error("Invalid pending modifier");
         if (value.carrier && !MobEffects.validAnchor(value.carrier)) throw new Error("Invalid modifier carrier");
         if (value.owner && !CombatStages.validOwner(value.owner)) throw new Error("Invalid modifier owner");
         if (value.origin !== undefined && typeof value.origin !== "string") throw new Error("Invalid modifier origin");
@@ -56,6 +59,7 @@ namespace NativeModifiers {
         entries.sort(function (a, b) { return a.id() - b.id(); });
         entries.forEach(function (entry) {
             var value: Options = JSON.parse(String(entry.data()));
+            if (value.pending) return;
             if ((value.carrier || value.owner) && !CombatStages.windowAlive(world, actor, value)) return;
             Object.keys(value.stages || {}).forEach(function (stat) { result.stages![stat] = (result.stages![stat] || 0) + value.stages![stat]; });
             Object.keys(value.stats || {}).forEach(function (stat) { result.stats![stat] = value.stats![stat]; });
@@ -127,6 +131,7 @@ namespace NativeModifiers {
         WorldCombat.effect("cobblemon_world_combat:modifier", 1, 12000, "actor", normalize, EffectProtocols.unchanged);
         var watchCarrier = function (effect: CombatEffect, claim: boolean): void {
             var state: Options = JSON.parse(effect.state());
+            if (state.pending) { if (claim) effect.schedule("carrier", "carrier", 1, "{}"); else effect.end(); return; }
             if (!state.carrier && !state.owner) return;
             var world = effect.world(), actor = effect.target();
             if (!CombatStages.windowAlive(world, actor, state)) { effect.end(); return; }

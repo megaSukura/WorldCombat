@@ -20,28 +20,42 @@ namespace CompanionBehavior {
 
     function telekinesisWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
-        if (target.health <= 0 || target.friendly || !target.visible) return false;
+        if (target.health <= 0 || !target.visible) return false;
+        const access=CompanionBehavior.world(context),actor=access.actor(target.ref);if(!actor)return false;
+        if(access.effects(actor,"world_combat:telekinesis_refused").length)return false;
+        const resistance=access.attributeValue(actor,"minecraft:generic.knockback_resistance");
+        if(!target.friendly&&resistance&&resistance.value()>=1)return false;
+        if(target.friendly){
+            const body=access.observe(actor);if(!body)return false;
+            const floor=access.block(WorldCombat.point(body.position().x(),body.boundsMin().y()-.1,body.position().z()));
+            if(!floor||["minecraft:magma_block","minecraft:campfire","minecraft:soul_campfire"].indexOf(String(floor.id()))<0)return false;
+        }
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.status(context, target, "telekinesis")) return false;
         if (CompanionBehavior.status(context, target, "smackdown") || CompanionBehavior.status(context, target, "ingrain")) return false;
-        if (CompanionBehavior.ai<boolean>(item, "requireGrounded", true) && target.grounded === false) return false;
-        if (CompanionBehavior.ai<boolean>(item, "avoidProtecting", true)
+        if (CompanionBehavior.ai<boolean>(item, "requireGrounded", true) && target.grounded === false) {
+            const body=access.observe(actor);if(!body)return false;
+            const feet=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()),floor=SurfacePaths.support(access,feet,.05,.25);
+            if(!floor||feet.y()-floor.y()>.12)return false;
+        }
+        if (!target.friendly && CompanionBehavior.ai<boolean>(item, "avoidProtecting", true)
             && CompanionBehavior.fact<number>(context, "world_combat:telekinesis-ground-weak", target) === 1) return false;
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 13)) return false;
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     registerUse("telekinesis", {
-        protocols: ["world_combat:control"],
+        protocols: ["world_combat:control", "world_combat:cover"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (target === null) return true;
             return telekinesisWants(context, item, target);
         },
-        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
+        accepts: function (_context, _item, target) { return target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (target === null || !telekinesisWants(context, item, target)) return 0;
+            if(target.friendly)return 90;
             return CompanionBehavior.fact<number>(context, "world_combat:telekinesis-ground-weak", target) === 1 ? 20 : 75;
         },
         approach: function (context, _item, target) {

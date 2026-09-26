@@ -20,7 +20,7 @@ Smoke.scenario("punishment", function (stage) {
         stage.after(40, function () {
             stage.expect(stage.casts("punishment", caster) > 0, "punishment was committed");
             stage.expect(stage.damageTo(foe) > 0, "the judgement dealt damage");
-            stage.note("这一记的威力随目标正向能力等级上升；铁傀儡不会自己叠等级，所以本场景读到的是基础档。要核对读能力那一项，请让目标先涨能力等级（吃一次剑舞之类）再罚。随机暴击留待人工试玩。", {
+            stage.note("这一记的威力在命中那一刻随目标正向能力等级与正面状态层数上升（总数封顶 10 级）；铁傀儡不会自己叠强化，所以本场景读到的是基础档。要核对读强化那一项，请让目标先涨能力等级（吃一次剑舞之类）再罚；空挥不称重。随机暴击留待人工试玩。", {
                 casts: stage.casts("punishment", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 onCaster: Math.round(stage.damageTo(caster) * 10) / 10,

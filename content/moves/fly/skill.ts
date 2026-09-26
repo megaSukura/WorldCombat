@@ -18,6 +18,7 @@
 namespace PokemonSkills {
     const FLY_SCENE = "world_combat:move_fly";
     const FLY_AIRBORNE = "world_combat:fly_airborne";
+    const FLY_HEIGHT_TEXT = "world_combat.move.fly.text.height";
     /** 定点击落的落点范围倍率：范围更大、能一次压住一群，但目标走开就落空。 */
     const FLY_PIN_RADIUS = 1.9;
     /** 高度系数下限：天花板压顶时这一击也有全高的一半多。 */
@@ -39,9 +40,9 @@ namespace PokemonSkills {
     define({
         freeMovement: true,
         id: "fly", name: "飞翔",
-        description: "跃出近战射程飞上开阔天空，悬停一下再从目标头顶落下来：命中造成接触伤害并把它向下压、向后推。头顶净空决定能飞多高——开阔处飞满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。悬停期间贴地近战够不着，但远程打得中。",
+        description: "跃出近战射程飞上开阔天空，悬停一下再落下来：命中造成接触伤害并把它向下压、向后推。可以瞄准敌人（按配置决定是否追踪），也可以选一个空点定点落下，范围更大、能一次压住一群。头顶净空决定实际能飞多高——开阔处飞满、一击最重，屋檐或洞穴压顶时只能低跳，威力与预告一起缩水；空点落击打到空地不会凭空炸开。悬停期间贴地近战够不着，但远程打得中。",
         uses: ["跳过近战火力从上方落击", "越过矮墙、沟壑与人群", "在有掩体前抢一个高处落点"],
-        kind: "enemy", range: 10, maxRange: 14, prepare: 8, active: 60, recover: 12, cooldown: 60,
+        kind: "aim", range: 10, maxRange: 14, prepare: 8, active: 60, recover: 12, cooldown: 60,
         style: "aerial", stationary: true, maximumTicks: 220,
         defaults: { track: true },
         fields: [field(pathOf("track"), "追踪俯冲", "boolean", { help: "开启（追踪俯冲）：悬停期间落点跟在目标实时位置上，判定窄、单点，适合咬住会走位的目标；关闭（定点击落）：起手锁死落点、范围放大近两倍，能一次压住一群，但目标走开就落空，收招与冷却更长。" })],
@@ -60,8 +61,10 @@ namespace PokemonSkills {
             };
         },
         windup: function (action) {
-            var body = action.sense().observe(action.actor());
+            var sense = action.sense(), body = sense.observe(action.actor());
+            // 预告就用起手那一刻头顶净空能取得的高度，屋顶压顶时低飞预告当场收缩，不承诺飞不到的高度。
             var climb = p("fly", "altitude", action);
+            if (body !== null) climb = Math.max(0, Math.min(climb, flyHeadroom(sense, body, climb)));
             action.present("fly-crouch", FLY_SCENE, 1, body ? body.position() : action.origin(),
                 JSON.stringify({ moment: "crouch", climb: climb, source: String(action.actor().ref()) }));
             return p("fly", "prepare", action);
@@ -71,7 +74,9 @@ namespace PokemonSkills {
             var world = action.world(), actor = action.actor(), body = world.observe(actor);
             if (body === null) { movementScenes.finish(action, done); return; }
             var target = action.target();
-            var track = flyTrack(config);
+            var targetBody = target === null ? null : world.observe(target);
+            // 选了实体就按配置决定是否追踪；选了空点走固定落区支路，落点不再漂移。
+            var track = targetBody !== null && flyTrack(config);
             var pin = !track;
             var maxAltitude = p("fly", "altitude", action);
             var climbSpeed = Math.max(0.15, p("fly", "climbSpeed", action));
@@ -83,10 +88,9 @@ namespace PokemonSkills {
             var glide = p("fly", "glideSpeed", action);
             var ground = body.position();
             var altitude = Math.max(0, Math.min(maxAltitude, flyHeadroom(world, body, maxAltitude)));
-            var heightFactor = FLY_LOW_POWER + (1 - FLY_LOW_POWER) * (altitude / Math.max(0.5, maxAltitude));
             var apexY = ground.y() + altitude;
             var scale = radius / 0.9;
-            var locked = target !== null && world.observe(target) !== null ? world.observe(target)!.position() : action.targetPosition();
+            var locked = targetBody !== null ? targetBody.position() : action.targetPosition();
             var ascendTicks = Math.max(1, Math.ceil(altitude / climbSpeed));
             var finished = false;
 
@@ -97,6 +101,12 @@ namespace PokemonSkills {
                 }
                 return locked;
             }
+            /** 真正取得的高度（可能因中途被挡低于计划高度）。 */
+            function climbReached(): number { return Math.max(0, apexY - ground.y()); }
+            /** 高度对应的高度系数：0.55 + 0.45 × 实际 / 计划。 */
+            function heightFactorAt(reached: number): number {
+                return FLY_LOW_POWER + (1 - FLY_LOW_POWER) * Math.min(1, reached / Math.max(0.5, maxAltitude));
+            }
             function finish(current: CombatAction): void {
                 if (finished) return;
                 finished = true;
@@ -106,7 +116,10 @@ namespace PokemonSkills {
             function land(current: CombatAction, at: CombatPoint, primary: CombatImpact | null, blocked: boolean): void {
                 var live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
-                var power = p("fly", "power", current) * heightFactor;
+                // 伤害按真正取得的高度算：中途被挡只飞到更低处时，这一击也随之变轻。
+                var reached = climbReached();
+                var factor = heightFactorAt(reached);
+                var power = p("fly", "power", current) * factor;
                 var from = self.position(), heading = at.minus(from);
                 var direction = heading.length() < 0.01 ? current.direction() : heading.unit();
                 var hits = 0;
@@ -121,11 +134,11 @@ namespace PokemonSkills {
                         var distance = observed.position().minus(at).length();
                         if (distance > reach || !live.clear(at, observed.position())) continue;
                         if (!hurt(current, other, "fly", power * Math.max(0.55, 1 - distance / reach * 0.45))) continue;
-                        if (live.valid(other)) live.displace(other, WorldCombat.point(direction.x() * push, -press * 0.5, direction.z() * push));
+                        if (live.valid(other)) live.hitDisplace(other, WorldCombat.point(direction.x() * push, -press * 0.5, direction.z() * push));
                         hits += 1;
                     }
                     WorldFeedback.emit(live, FLY_SCENE, 1, at, { moment: hits > 0 ? "slam" : "whiff", scale: reach / 0.9,
-                        intensity: 1 + Math.min(1.5, hits * 0.4), climb: altitude, height: Math.round(heightFactor * 100) / 100 }, 44);
+                        intensity: 1 + Math.min(1.5, hits * 0.4), climb: reached, height: Math.round(factor * 100) / 100 }, 44);
                 }
                 else {
                     if (primary !== null && primary.target() !== null && impact(current, primary, "fly", power, { contact: true })) {
@@ -133,8 +146,9 @@ namespace PokemonSkills {
                         hits = 1;
                     }
                     WorldFeedback.emit(live, FLY_SCENE, 1, at, { moment: blocked ? "blocked" : hits > 0 ? "impact" : "whiff",
-                        scale: scale, intensity: 1 + Math.min(1.5, hits * 0.4), climb: altitude, height: Math.round(heightFactor * 100) / 100 }, 34);
+                        scale: scale, intensity: 1 + Math.min(1.5, hits * 0.4), climb: reached, height: Math.round(factor * 100) / 100 }, 34);
                 }
+                WorldFeedback.text(live, flyAbove(at, 1.3), FLY_HEIGHT_TEXT, [Math.round(reached * 10) / 10], 26);
                 sound(current, hits > 0 ? "cobblemon:move.aerialace.target" : "minecraft:block.sand.break");
                 finish(current);
             }
@@ -156,13 +170,19 @@ namespace PokemonSkills {
                 movementScenes.stop(current, "rise");
                 var live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
-                if (elapsed >= hoverTicks) { dive(current); return; }
                 var position = self.position();
+                if (elapsed >= hoverTicks) {
+                    // 俯冲场景从真实身体出发：速度线沿实际下落方向，随身体走完整段下落。
+                    movementScenes.show(current, "dive", position,
+                        { moment: "dive", scale: scale, climb: climbReached(), height: Math.round(heightFactorAt(climbReached()) * 100) / 100 });
+                    dive(current);
+                    return;
+                }
                 // 顶住重力、把自己稳在悬停高度；再朝目标上方水平掠过战场。
                 live.displace(actor, WorldCombat.point(0, Math.max(-0.5, Math.min(0.5, apexY - position.y())), 0));
                 var at = aimAt(live), flat = WorldCombat.point(at.x() - position.x(), 0, at.z() - position.z());
                 if (flat.length() > 0.25) live.displace(actor, flat.unit().scale(Math.min(glide, flat.length())));
-                WorldFeedback.keep(live, "fly:mark", FLY_SCENE, 1, at, { moment: "mark", scale: scale, climb: altitude, track: track ? 1 : 0 }, 8);
+                WorldFeedback.keep(live, "fly:mark", FLY_SCENE, 1, at, { moment: "mark", scale: scale, climb: climbReached(), track: track ? 1 : 0 }, 8);
                 current.after(1, function (next) { hover(next, elapsed + 1); });
             }
             function ascend(current: CombatAction, step: number): void {

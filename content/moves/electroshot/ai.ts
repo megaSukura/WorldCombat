@@ -4,6 +4,7 @@
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 22）格内；电矛走直线，出手前要求视线畅通
  *   （中间被墙挡住就先换位，交给共享接近）。
  * 对谁出手：谁都可以；`ai.rainFirst`（默认开）打开时，下雨天抬价——那时不用聚电、当场就能打出（原生规则）。
+ *   晴天若自己特攻还没满段，也会小幅抬价：站定聚电换来 1 级特攻，有窗口就值得。
  * 优先级：目标贴到 `ai.minRange` 以内时压价，避免站着聚电被打断。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程之后再射。
  * 放完接什么：交回共享交战计划；特攻提升留在身上继续参与后续结算。
@@ -40,6 +41,11 @@ namespace PokemonSkills {
             const distance = CompanionBehavior.distance(self.point, target.point);
             let score = 26;
             if (CompanionBehavior.ai<boolean>(capability, "rainFirst", true) && electroshotRaining(context)) score += 14;
+            else {
+                // 旱地窗口：特攻还没满段时，聚电换来的一级特攻仍有价值。
+                const stage = CompanionBehavior.stage(context, self, "spa");
+                if (typeof stage === "number" && stage < 4) score += 6;
+            }
             if (distance < CompanionBehavior.ai<number>(capability, "minRange", 4)) score -= 8;
             return score;
         },

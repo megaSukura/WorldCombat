@@ -6,11 +6,14 @@
  *     它的耐久 = 实际支付的生命 × 耐久倍率；给施法者挂上 `world_combat:substitute_ward`（拥有这个身体并
  *     每 5 刻看守）与共享 `world_combat:redirect`（把指向施法者的 incoming 伤害转给替身），并让施法者带上
  *     共享身份 `world_combat:status/substitute`。
- *  2) 守护——联系距离内，指向施法者的每一次攻击都落在替身上；替身闪一下（absorb，强度=本次承受/最大生命）。
+ *  2) 守护——联系距离内且视线畅通的每一次攻击都落在替身上；替身闪一下（absorb，强度=本次承受/最大生命）。
+ *     看守每 6 刻用与承伤层同一个谓词读一次联系是否成立，只在接通/断开变化的那一拍播一次，并让表现里
+ *     本体到替身的细线随之接回或断开。
  *  3) 结束——替身被打碎（break）或时间走完（expire）：撤掉 redirect、清掉身份、放出收尾画面。
  *
  * 提交前只观察（sense）并在 `windup` 用 `action.present` 预告；提交后才触碰世界。cost/ward/place/linkRange/
- * wardTicks 全部来自参数公式，执行、AI 与悬浮读同一棵树。
+ * wardTicks 全部来自参数公式，执行、AI 与悬浮读同一棵树。看守的连线判定直接调用 shared redirect 用的
+ * `WorldEffects.redirectConnected`，让画出的线与实际承伤读同一组位置和视线事实。
  */
 namespace PokemonSkills {
     const substituteScene = "world_combat:move_substitute";
@@ -20,6 +23,8 @@ namespace PokemonSkills {
     const substituteWeakText = "world_combat.move.substitute.text.weak";
     const substituteBreakText = "world_combat.move.substitute.text.break";
     const substituteExpireText = "world_combat.move.substitute.text.expire";
+    const substituteLinkOnText = "world_combat.move.substitute.text.link_on";
+    const substituteLinkOffText = "world_combat.move.substitute.text.link_off";
 
     /** 看守：拥有替身这个身体，随它存活；redirect 由它建立，也由它撤销。 */
     WorldCombat.effect(substituteWard, 1, 900, "actor",
@@ -35,7 +40,7 @@ namespace PokemonSkills {
         for (let index = 0; index < units.length && helper === null; index++) {
             try {
                 helper = world.helper(units[index], state.health,
-                    JSON.stringify({ item: "minecraft:armor_stand", scale: state.appearance, substitute: true }), effect.remaining());
+                    JSON.stringify({ item: "minecraft:armor_stand", scale: state.scale, substitute: true }), effect.remaining());
             } catch (error) { helper = null; }
         }
         if (helper === null) {
@@ -49,8 +54,13 @@ namespace PokemonSkills {
         state.point = body === null ? state.point : [body.position().x(), body.position().y(), body.position().z()];
         state.redirect = world.effect("world_combat:redirect", effect.target(),
             JSON.stringify({ recipient: String(helper.ref()), linkRange: state.linkRange }), effect.remaining());
+        // Seed the connection with the same predicate the redirect uses, so the first guard beat never reports a false change.
+        state.connected = WorldEffects.redirectConnected(world, effect.target(), helper, state.linkRange);
+        const carrier = MobEffects.apply(world, effect.target(), substituteStatus, effect.remaining());
+        state.carrier = carrier ? MobEffects.anchor(carrier) : null;
         effect.state(JSON.stringify(state));
-        MobEffects.apply(world, effect.target(), substituteStatus, effect.remaining());
+        if (!carrier) { effect.end(); return; }
+        MobEffects.bind(world, effect.target(), substituteStatus, carrier);
         if (body !== null) {
             WorldFeedback.emit(world, substituteScene, 1, body.position(), { moment: "form", scale: state.scale }, 32);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), substituteFormText, [Math.round(state.spent)], 32);
@@ -62,14 +72,29 @@ namespace PokemonSkills {
         const world = effect.world(), state = JSON.parse(effect.state());
         const helper = state.helper ? world.actor(state.helper) : null;
         const body = helper === null ? null : world.observe(helper);
-        if (helper === null || body === null || !world.valid(effect.target())) {
+        if (helper === null || body === null || !world.valid(effect.target())
+            || !state.carrier || !MobEffects.matches(world, effect.target(), state.carrier)) {
             state.broken = true;
             effect.state(JSON.stringify(state));
             effect.end();
             return;
         }
-        WorldFeedback.keep(world, "world_combat:move_substitute:present", substituteScene, 1, body.position(),
-            { moment: "present", target: state.helper, scale: state.scale, health: body.health(), maximum: body.maxHealth() }, 12);
+        // The exact predicate the shared redirect settles damage with: distance and a clear line.
+        const connected = WorldEffects.redirectConnected(world, effect.target(), helper, state.linkRange);
+        const point = body.position();
+        if (state.connected !== connected) {
+            state.connected = connected;
+            effect.state(JSON.stringify(state));
+            WorldFeedback.emit(world, substituteScene, 1, point,
+                { moment: connected ? "link_restore" : "link_break",
+                  path: [String(effect.target().ref()), state.helper], scale: state.scale }, 22);
+            WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.3, 0)),
+                connected ? substituteLinkOnText : substituteLinkOffText, [], 24);
+            world.sound(connected ? "minecraft:block.beacon.power_select" : "minecraft:block.beacon.deactivate", point, 12, "{}");
+        }
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_substitute:present", substituteScene, 1, point,
+            { moment: "present", target: state.helper, scale: state.scale, health: body.health(), maximum: body.maxHealth(),
+              connected: connected ? 1 : 0, path: connected ? [String(effect.target().ref()), state.helper] : [] });
         effect.schedule("guard", "guard", 6, "{}");
     });
     WorldCombat.effectHandler(substituteWard, "operation:world_combat:dispel", function (effect) { effect.end(); });
@@ -78,7 +103,6 @@ namespace PokemonSkills {
         if (state.redirect) world.operation(state.redirect, "world_combat:dispel", "{}");
         const helper = state.helper ? world.actor(state.helper) : null;
         if (helper !== null && world.valid(helper) && world.helperSource(helper) !== null) world.removeHelper(helper);
-        if (world.valid(actor)) CombatStatus.cure(world, actor, "substitute");
         const body = world.valid(actor) ? world.observe(actor) : null;
         const anchor = WorldCombat.point(state.point[0], state.point[1], state.point[2]);
         if (world.valid(actor)) {

@@ -3,11 +3,32 @@
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 9）之内；更远交给共享接近逻辑。
  * 对谁出手：这是一片贴近身前的弧形水墙。`ai.pointBlank`（默认开）打开时，越贴到脸上的目标优先级越高——
- *   把顶着自己的人连同身位一起推开，正是它最值的用法；关闭则按普通近身攻击排序。
+ *   把顶着自己的人连同身位一起推开，正是它最值的用法；面前弧面里挤着多人时再抬价，一次拍开一排。
+ *   关闭 pointBlank 时仍按身前多敌抬价，只是不再因贴身额外加价。
  * 够不到怎么办：尾长交给 `reach`，共享任务把身位收进弧面之后再抡。
  * 放完接什么：交回共享交战计划；被拍中的人带着湿身身份、也被推离，接下来由共享顺序决定追击还是脱离。
  */
 namespace PokemonSkills {
+    /** 以目标方向为中线，数一数弧面里还挤着几个非友方（含目标），按本个体真实的浪张角。 */
+    function aquatailFront(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2], length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 1e-6) return 1;
+        const ux = dx / length, uz = dz / length, range = capability.data.range;
+        const arc = p(aquatailId, "arc", CompanionBehavior.world(context));
+        const cosHalf = Math.cos(Math.min(180, Math.max(5, arc)) * Math.PI / 360);
+        let count = 0;
+        for (let index = 0; index < nearby.length; index++) {
+            const other = nearby[index];
+            if (other.friendly || other.health <= 0 || other.ref === String(context.actor)) continue;
+            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            const distance = Math.sqrt(ox * ox + oz * oz);
+            if (distance > range || distance < 1e-6) continue;
+            if ((ox / distance) * ux + (oz / distance) * uz >= cosHalf - 1e-12) count++;
+        }
+        return count;
+    }
+
     CompanionBehavior.registerUse(aquatailId, {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -25,9 +46,11 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const gap = CompanionBehavior.distance(self.point, target.point), range = capability.data.range;
             if (gap > range) return 0;
-            const base = 26;
-            if (!CompanionBehavior.ai<boolean>(capability, "pointBlank", true)) return base;
-            return gap <= range * 0.7 ? base + 12 : base;
+            let value = 26;
+            if (CompanionBehavior.ai<boolean>(capability, "pointBlank", true) && gap <= range * 0.7) value += 12;
+            const crowd = aquatailFront(context, capability, target);
+            if (crowd >= 2) value += Math.min(crowd - 1, 3) * 5;
+            return value;
         }
     });
 

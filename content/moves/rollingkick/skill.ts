@@ -6,9 +6,12 @@
  *
  * 三幕：
  *   起（whirl，提交前）：原地急旋、腿根蓄劲，只播预告，可被打断；这是对手走开的窗口。
- *   扑（drive → kick / whiff）：提交后沿瞄准方向逐刻扑出；trace 撞上活体即结算 `kick` 接触伤害，
+ *   扑（drive → kick / whiff）：提交后沿玩家选定的方向逐刻扑出；trace 撞上活体即结算 `kick` 接触伤害，
  *       并把目标沿踢击方向抛飞（`launchAway` 远、`launchUp` 高）；按 `flinchChance` 掷畏缩。扑完距离没碰到人则扫空。
- *   落（hit / miss）：命中浮字与火星，畏缩的挂上本单元效果；落空处火星散开。
+ *   落（hit / launch / miss）：接触那一刻才播 `kick` 命中；只有目标真的被 `displace` 推动了，才播 `launch` 抛飞轨迹。
+ *
+ * 选取：`kind: "aim"`——自由方向或敌人辅助瞄准都行（用 `aim(action)` 定扑与踢向）；墙前止步、扫空收招。
+ * 抛飞只作为可位移目标的附属效果；Boss 照常承受这一脚，不做额外定身延长。
  *
  * 畏缩：施加本单元声明的 MobEffect（共享身份 `world_combat:status/flinch`，只借身份、行为自写）并投递
  * `world_combat:interrupt`；下方门禁在窗口内拒绝新动作，伤害阶段不受影响。
@@ -29,7 +32,7 @@ namespace PokemonSkills {
         name: "Rolling Kick",
         description: "原地急旋聚起惯性，再扑出半步抡起回旋腿正中目标，把它沿踢击方向抛到半空飞出去，并有几率使其畏缩、短暂无法出招。抛飞式扔得更高更远；盘踢式踢得更重、出手更快。",
         uses: ["把贴身的目标一腿踢飞到半空", "把对手从队友或掩体边踢开", "用旋转的冲劲顺势追上去"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.8,
         maxRange: 4.0,
         prepare: 9,
@@ -55,8 +58,10 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const foot = p(rollingkickId, "foot", action), power = p(rollingkickId, "kick", action);
             action.present("rollingkick:whirl", rollingkickScene, 1, action.origin(),
-                JSON.stringify({ moment: "whirl", liftoff: config && config.liftoff === true }));
+                JSON.stringify({ moment: "whirl", sparks: Math.max(12, Math.round(p(rollingkickId, "sparks", action))),
+                    scale: Math.max(0.6, Math.min(2.0, foot / 0.42)), intensity: Math.max(0.6, Math.min(2.2, power / 72)) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -89,9 +94,9 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            movementScenes.show(action, "whirl", action.origin(), { moment: "whirl", radius: length, sparks: sparks, scale: scale, intensity: intensity });
             sound(action, "cobblemon:move.quickattack.actor");
             // 扑（drive）：身子带着惯性冲出；emitter 绑 source 并留 trail，随扑出的轨迹拖出一线火星。
+            // 起旋（whirl）由提交前的 `windup` 预告拥有，随动作清理；这里只驱动扑出的持续运动。
             movementScenes.show(action, "drive", action.origin(), { moment: "drive", sparks: sparks, scale: scale, intensity: intensity });
 
             function advance(current: CombatAction): void {
@@ -106,18 +111,22 @@ namespace PokemonSkills {
                     const victim = hit.target(), at = hit.position();
                     const landed = victim !== null && impact(current, hit, rollingkickId, power,
                         { damage: damageSpec(rollingkickId, "kick"), contact: true });
-                    WorldFeedback.emit(scope, rollingkickScene, 1, at,
-                        { moment: "kick", target: victim ? String(victim.ref()) : "", sparks: sparks, scale: scale, intensity: intensity }, 24);
                     if (landed && victim !== null && scope.valid(victim)) {
-                        // 踢飞：不是单纯击退，而是沿踢击方向把目标抛出去（水平抛远 + 抬离地面）。
-                        const launch = direction.scale(launchAway).plus(WorldCombat.point(0, launchUp, 0));
-                        scope.displace(victim, launch);
+                        // 接触才播 kick：只有真的踢到、结算成功的这一下才有命中冲击。
                         WorldFeedback.emit(scope, rollingkickScene, 1, at,
-                            { moment: "launch", target: String(victim.ref()), direction: [direction.x(), launchUp, direction.z()],
-                                sparkles: Math.round(8 + launchAway * 4) }, 22);
+                            { moment: "kick", target: String(victim.ref()), sparks: sparks, scale: scale, intensity: intensity }, 24);
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), rollingkickHitText, [], 22);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), rollingkickLaunchText, [Math.round(launchAway * 10) / 10], 22);
                         sound(current, "cobblemon:impact.fighting");
+                        // 踢飞：不是单纯击退，而是沿踢击方向把目标抛出去；抛飞只作为可位移目标的附属效果，
+                        // 位移真的发生了才播轨迹，推不动（被卡住）就不显示。
+                        const launch = direction.scale(launchAway).plus(WorldCombat.point(0, launchUp, 0));
+                        const moved = scope.displace(victim, launch);
+                        if (moved > 0.001) {
+                            WorldFeedback.emit(scope, rollingkickScene, 1, at,
+                                { moment: "launch", target: String(victim.ref()), direction: [direction.x(), launchUp, direction.z()],
+                                    sparkles: Math.max(8, Math.round(8 + moved * 4)) }, 22);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), rollingkickLaunchText, [Math.round(moved * 10) / 10], 22);
+                        }
                         if (scope.random() < chance && rollingkickFlinch(scope, victim, flinchTicks)) {
                             WorldFeedback.emit(scope, rollingkickScene, 1, at, { moment: "flinch", target: String(victim.ref()) }, 20);
                             WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), rollingkickFlinchText, [], 20);

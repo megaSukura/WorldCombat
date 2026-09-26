@@ -1,10 +1,11 @@
-/** Copy a Pokémon’s current types, or a non-Pokémon’s armour. Mirror All also copies armour toughness and knockback resistance. */
+/** Copy a selected Pokémon’s current types, or a non-Pokémon’s armour. Mirror All also copies armour toughness and knockback resistance. */
 namespace PokemonSkills {
     export const reflecttypeScene = "world_combat:move_reflecttype";
     export const reflecttypeMark = "world_combat:reflecttype";
     export const reflecttypeOneText = "world_combat.move.reflecttype.text.one";
     export const reflecttypePairText = "world_combat.move.reflecttype.text.pair";
     export const reflecttypeFailText = "world_combat.move.reflecttype.text.fail";
+    export const reflecttypeArmorText = "world_combat.move.reflecttype.text.armor";
     export const reflecttypeTypes = ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground",
         "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"];
     var reflecttypeColors: { [type: string]: number } = {
@@ -31,14 +32,22 @@ namespace PokemonSkills {
     function reflecttypeSame(a: string[], b: string[]): boolean {
         return a.slice().sort().join(",") === b.slice().sort().join(",");
     }
+    /** 普通生物这一支照的可观察防御事实；只读得出来、且有变化才值得出手。 */
+    function reflecttypeDefence(world: CombatWorld, target: CombatActor, pair: boolean): CombatCopies.Values {
+        return CombatCopies.read(world, target, pair ? CombatCopies.defence : [CombatCopies.defence[0]]);
+    }
+    function reflecttypeFail(world: CombatWorld, actor: CombatActor, point: CombatPoint, facets: number): void {
+        WorldFeedback.emit(world, reflecttypeScene, 1, point, { moment: "fizzle", target: String(actor.ref()), facets: facets }, 22);
+        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.3, 0)), reflecttypeFailText, [], 26);
+    }
 
     define({
         id: "reflecttype",
         cooldownParameter: "recharge",
         name: "Reflect Type",
-        description: "照抄宝可梦对手当前的属性；普通生物则提供护甲，镜像全部还能复制韧性与抗击退。",
-        uses: ["照抄对手的属性来翻受击面", "跟着对手被改过的属性一起变", "只取主属、避开副属性带来的弱点"],
-        kind: "enemy",
+        description: "照住一个选中的对象：宝可梦对手提供它当前的属性，普通生物提供它当前的护甲。可指定友方或敌方，不能照自己，点地无效；读不出或照了没有变化的事实会被明确拒绝。",
+        uses: ["照抄对手的属性来翻受击面", "向一个能提升自己防御的伙伴或敌人借属性", "只取主属、避开副属性带来的弱点"],
+        kind: "aim",
         range: 8,
         maxRange: 14,
         prepare: 7,
@@ -66,17 +75,19 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon") return "no-type";
+            if (target === null || !world.valid(target)) return "invalid-target";
+            if (String(target.key()) === String(actor.key())) return "invalid-target";
             const body = world.observe(target);
-            if (body === null) return "invalid-target";
-            if (body.position().minus(action.origin()).length() > p("reflecttype", "reach", action)) return "out-of-range";
-            if (!world.clear(action.origin(), body.position())) return "no-line";
-            if (String(target.domain()) !== "cobblemon") return CombatCopies.differs(world, actor, CombatCopies.read(world, target, config && config.pair ? CombatCopies.defence : [CombatCopies.defence[0]])) ? "" : "same-defence";
+            if (body === null) return "target-left";
+            if (action.targetPosition().minus(action.origin()).length() > action.range()) return "out-of-range";
+            if (!world.clear(action.origin(), action.targetPosition())) return "no-line";
+            const pair = !!(config && config.pair);
+            if (String(target.domain()) !== "cobblemon")
+                return CombatCopies.differs(world, actor, reflecttypeDefence(world, target, pair)) ? "" : "no-gain";
+            if (String(actor.domain()) !== "cobblemon") return "no-type";
             if (NativeModifiers.typeLocked(world, actor)) return "type-locked";
             const theirs = reflecttypeRead(world, target);
             if (theirs.length === 0) return "no-type";
-            const pair = !!(config && config.pair);
             return reflecttypeSame(reflecttypeChoose(theirs, pair), reflecttypeRead(world, actor)) ? "same-type" : "";
         },
         windup: function (action, config, prepare) {
@@ -90,34 +101,66 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null) { done(action); return; }
+            if (target === null || !world.valid(target) || body === null || String(target.key()) === String(actor.key())) { done(action); return; }
             const pair = !!(config && config.pair);
-            if (String(target.domain()) !== "cobblemon") {
-                const hold = Math.max(90, Math.round(p("reflecttype", "hold", action)));
-                const carrier = MobEffects.apply(world, actor, reflecttypeMark, hold, pair ? 1 : 0);
-                if (carrier) CombatCopies.apply(world, actor, CombatCopies.read(world, target, pair ? CombatCopies.defence : [CombatCopies.defence[0]]), hold, "reflecttype", MobEffects.anchor(carrier));
-                WorldFeedback.emit(world, reflecttypeScene, 1, body.position(), { moment: "settle", target: String(actor.ref()), path: [String(target.ref()), String(actor.ref())], facets: 8, glints: 12, color: 0xB7B7CE, scale: 1 }, 36);
-                sound(action, "minecraft:block.amethyst_block.chime"); done(action); return;
-            }
-            const theirs = reflecttypeRead(world, target);
-            const chosen = reflecttypeChoose(theirs, pair);
             const hold = Math.max(90, Math.round(p("reflecttype", "hold", action)));
             const facets = Math.max(6, Math.round(p("reflecttype", "facets", action)));
             const glints = Math.max(10, Math.round(p("reflecttype", "glints", action)));
-            const path: (string | number[])[] = [String(target.ref()), String(actor.ref())];
-            if (chosen.length === 0) {
+            if (action.targetPosition().minus(action.origin()).length() > action.range()
+                || !world.clear(action.origin(), action.targetPosition())) {
+                reflecttypeFail(world, actor, body.position(), facets); done(action); return;
+            }
+            const targetRef = String(target.ref());
+            const path: (string | number[])[] = [targetRef, String(actor.ref())];
+            if (String(target.domain()) !== "cobblemon") {
+                const values = reflecttypeDefence(world, target, pair);
+                if (!CombatCopies.differs(world, actor, values)) {
+                    WorldFeedback.emit(world, reflecttypeScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()), facets: facets }, 22);
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), reflecttypeFailText, [], 26);
+                    sound(action, "minecraft:block.amethyst_block.break");
+                    done(action); return;
+                }
+                const carrier = MobEffects.set(world, actor, reflecttypeMark, hold, pair ? 1 : 0);
+                if (!carrier) { reflecttypeFail(world, actor, body.position(), facets); done(action); return; }
+                const layer = CombatCopies.apply(world, actor, values, hold, "reflecttype", MobEffects.anchor(carrier));
+                if (!(layer > 0)) {
+                    world.removeMobEffect(actor, reflecttypeMark, String(carrier.key()));
+                    reflecttypeFail(world, actor, body.position(), facets); done(action); return;
+                }
+                const targetBody = world.observe(target);
+                if (targetBody !== null)
+                    WorldFeedback.emit(world, reflecttypeScene, 1, targetBody.position(),
+                        { moment: "read", target: targetRef, path: path, facets: facets, scale: pair ? 1.2 : 1 }, 30);
+                // 普通生物这一支落成护甲片，而不是虚构一种属性色。
+                WorldFeedback.emit(world, reflecttypeScene, 1, body.position(),
+                    { moment: "armor", path: path, facets: facets, glints: glints, pair: pair ? 1 : 0,
+                        intensity: Math.max(0.7, Math.min(2, hold / 260)) }, 40);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), reflecttypeArmorText, [], 40);
+                sound(action, "minecraft:block.amethyst_block.chime");
+                done(action); return;
+            }
+            const theirs = reflecttypeRead(world, target);
+            const chosen = reflecttypeChoose(theirs, pair);
+            if (String(actor.domain()) !== "cobblemon" || NativeModifiers.typeLocked(world, actor)
+                || chosen.length === 0 || reflecttypeSame(chosen, reflecttypeRead(world, actor))) {
                 WorldFeedback.emit(world, reflecttypeScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()), facets: facets }, 22);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), reflecttypeFailText, [], 26);
                 sound(action, "minecraft:block.amethyst_block.break");
                 done(action);
                 return;
             }
-            NativeModifiers.apply(world, actor, { types: chosen }, hold);
-            MobEffects.apply(world, actor, reflecttypeMark, hold, pair ? 1 : 0);
+            const carrier = MobEffects.set(world, actor, reflecttypeMark, hold, pair ? 1 : 0);
+            if (!carrier) { reflecttypeFail(world, actor, body.position(), facets); done(action); return; }
+            const layer = NativeModifiers.apply(world, actor,
+                { types: chosen, carrier: MobEffects.anchor(carrier), source: "reflecttype" }, hold);
+            if (!(layer > 0)) {
+                world.removeMobEffect(actor, reflecttypeMark, String(carrier.key()));
+                reflecttypeFail(world, actor, body.position(), facets); done(action); return;
+            }
             const targetBody = world.observe(target);
             if (targetBody !== null)
                 WorldFeedback.emit(world, reflecttypeScene, 1, targetBody.position(),
-                    { moment: "read", target: String(target.ref()), path: path, facets: facets, scale: chosen.length > 1 ? 1.2 : 1 }, 30);
+                    { moment: "read", target: targetRef, path: path, facets: facets, scale: chosen.length > 1 ? 1.2 : 1 }, 30);
             WorldFeedback.emit(world, reflecttypeScene, 1, body.position(),
                 { moment: "settle", target: String(actor.ref()), path: path, type: chosen[0], color: reflecttypeColor(chosen[0]),
                     facets: facets, glints: glints, pair: pair ? 1 : 0,

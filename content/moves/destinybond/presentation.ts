@@ -2,7 +2,8 @@
  * 同命 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者当众把一条红线系在自己身上（线头一圈圈缠上来）；一旦有人亲手把它打倒，
- *   线从它的位置猛地绷向凶手，把凶手也一起拖下去；线若没派上用场，就松开、垂落、散掉。
+ *   线从它的位置猛地绷向凶手：真的拖倒了就一起倒下（drag），只牵走一部分就收成较细的牵伤（graze），
+ *   被抵住就断在半途、不假演对方倒下（resist）；线若没派上用场，就松开、垂落、散掉。
  *
  * 色相家族：深玫红（0xC2354B）为主体，近黑（0x2A0A10）做底与烟，浅粉（0xF2A9B8）只做高光小点；
  *   两端共用的心形贴图（fadeheart_white）是这条命线的记号。
@@ -111,6 +112,58 @@ const DestinyBondDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [20, 34], size: [0.26, 0.42],
                     color: 0x2A0A10, alpha: [0.3, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        graze: {
+            duration: 40,
+            exit: { stop: 18, drain: 30 },
+            emitters: [
+                {
+                    name: "graze_line", bind: "path", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    shape: { kind: "polyline" },
+                    rate: 40, direction: "shape", speed: [0.02, 0.08], trail: { minDistance: 0.12 },
+                    lifetime: [6, 12], size: [0.13, 0.03],
+                    color: 0xC2354B, alpha: [0.7, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "graze_tear", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [9, 16], size: [0.28, 0.04], sizeMode: "index",
+                    color: 0x8A2436, alpha: [0.8, 0], light: "world"
+                }
+            ]
+        },
+        resist: {
+            duration: 32,
+            exit: { stop: 14, drain: 24 },
+            emitters: [
+                {
+                    name: "resist_snap", bind: "path", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    shape: { kind: "polyline" },
+                    rate: 24, direction: "shape", speed: [0.01, 0.05], trail: { minDistance: 0.16 },
+                    lifetime: [6, 12], size: [0.12, 0.03],
+                    color: 0x2A0A10, alpha: [0.5, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "resist_ward", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 14 }, shape: { kind: "ring", radius: 0.4 },
+                    direction: "inward", speed: [0.05, 0.14],
+                    lifetime: [10, 18], size: [0.28, 0.12],
+                    color: 0xF2A9B8, alpha: [0.55, 0], light: "full", maxParticles: 20
+                },
+                {
+                    name: "resist_dust", bind: "target", offset: [0, 0.9, 0], height: 0.22,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.28 },
+                    direction: "down", speed: [0.02, 0.06], gravity: 0.02,
+                    lifetime: [12, 22], size: [0.06, 0.012],
+                    color: 0x8A2436, alpha: [0.5, 0], light: "world", maxParticles: 14
                 }
             ]
         },

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.strangesteam.summary": "Spray a jet of strange steam at a chosen point, where it blooms into a low cloud: the first enemy caught in it is scalded and may be left confused; anyone who stays inside keeps being seared and has the confusion renewed.",
+  "worldcombat.skill.strangesteam.summary": "Spray a jet of strange steam at a chosen point; it travels in a straight line, is stopped by real walls at the point it actually reaches, and blooms into a low cloud there: the first enemy caught is scalded and may be left confused, while anyone who stays inside keeps being seared and has the confusion renewed.",
   "worldcombat.skill.strangesteam.use.0": "Seal a landing point or a doorway",
   "worldcombat.skill.strangesteam.use.1": "Catch several enemies bunched together",
   "worldcombat.skill.strangesteam.use.2": "Keep pressuring whoever enters or leaves with a lingering cloud",
-  "worldcombat.skill.strangesteam.description.0": "When the cloud first catches an enemy it scalds them for about %1$s special damage; the cloud has a radius of %2$s blocks and the jet reaches %3$s blocks, with the ground disc marking the cloud's area.",
+  "worldcombat.skill.strangesteam.description.0": "The jet travels in a straight line and only blooms where a real wall actually stops it (no fog appears behind a doorway). When the cloud first catches an enemy it scalds them for about %1$s special damage; the cloud has a radius of %2$s blocks and the jet reaches %3$s blocks, with the ground disc marking the cloud's area.",
   "worldcombat.skill.strangesteam.description.1": "The cloud lingers %2$s and covers up to %3$s enemies at once; an enemy that stays inside is seared for about %1$s special damage about every 3 seconds, renewing the confusion. The cloud disperses early if the caster falls or moves too far away.",
   "worldcombat.skill.strangesteam.description.2": "On being sprayed, %1$s chance to leave the target confused for %2$s; each action it starts then has %3$s chance to be broken.",
   "worldcombat.skill.strangesteam.dense.on": "Dense: a bigger, longer cloud with a higher chance and longer confusion, at the cost of a lower first-spray hit - good for sealing routes and sustained pressure.",

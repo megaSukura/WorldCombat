@@ -1,13 +1,14 @@
 /**
  * 治愈之愿 / Healing Wish 的粒子语言。
  *
- * 一句话：施法者半跪、周身愿光升起（windup）→ 它把生命交出去，原地留下一颗金色的愿星（offer）→ 愿星静静
- *   悬着，脚下画出它能照顾到的圆（wait）→ 第一个来到它身边、又伤又病的伙伴被整口治好，愿星爆成一片金色祝福
- *   （deliver）→ 若始终无人来到，愿光自行淡去（fade）。
+ * 一句话：施法者半跪、周身愿光升起，同时标出可接者与愿星落点（windup＋ground＋receiver）→ 它把生命交出去，
+ *   原地留下一颗金色的愿星（offer）→ 愿星静静悬着，脚下画出它能照顾到的圆（wait）→ 第一个来到它身边、
+ *   又伤又病的伙伴被整口治好，愿星沿一条金色交接线爆成祝福（deliver）→ 若始终无人来到，愿光自行淡去（fade）。
  * 色相家族：愿力金 0xFFD36A 作主体，暖白 0xFFF2C8 作高光，心愿用白心贴图染暖金点缀（一个色相家族里做深浅）。
- * 拍子：起 windup 0–18t ／ 献 offer 0–34t ／ 等 wait 持续 ／ 兑 deliver 0–40t ／ 收 fade 0–24t；无人接收时用 wasted。
- * 范围：offer/wait 的环绑 point、fit none，几何按 data.scale = 实际愿望半径 / 3.0 缩放，圈边即判定边。
- * 数：deliver 的愿光爆发绑 data.intensity（由回复比例派生）、总点数绑 data.motes（特防与体型派生），洗涤数绑 data.removed。
+ * 拍子：起 windup 0–18t ／ 示 ground·receiver 0–18t ／ 献 offer 0–34t ／ 等 wait 持续 ／ 兑 deliver 0–40t ／ 收 fade 0–24t；无人接收时用 wasted。
+ * 范围：offer/wait 的环绑 point、fit none，几何按 data.scale = 实际愿望半径 / 3.0 缩放，圈边即判定边；ground 用同一 scale 预告落点。
+ * 数：deliver 的愿光爆发绑 data.intensity（由回复比例派生）、总点数绑 data.motes（特防与体型派生），洗涤数绑 data.removed；
+ *   交接线绑 path（愿星 → 接收者两个实体顶点），只在成功领取时由服务端发射。
  */
 const HealingWishDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -31,6 +32,52 @@ const HealingWishDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [12, 20], size: [0.16, 0.03],
                     color: 0xFFE6B0, alpha: [0.85, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        ground: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    // 愿星将落在脚下的位置与照顾范围：提交前就看得见圈画在哪。
+                    name: "ground_reach", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 6, shape: { kind: "circle", radius: 3.0, thickness: 0.9 },
+                    direction: "up", speed: [0.003, 0.012],
+                    lifetime: [14, 24], size: [0.14, 0.04], alphaMode: "sin",
+                    color: 0xFFD36A, alpha: [0.3, 0.03], light: "world", maxParticles: 26
+                },
+                {
+                    name: "ground_seed", bind: "point", offset: [0, 0.85, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/moves/wish_star",
+                    rate: 8, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "up", speed: [0.004, 0.016],
+                    lifetime: [12, 20], size: [0.2, 0.04],
+                    color: 0xFFD36A, alpha: [0.7, 0.05], light: "full", bloom: 0.2, maxParticles: 20
+                }
+            ]
+        },
+        receiver: {
+            duration: 16,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    // 真能接下愿望的伙伴身上亮一圈：准备期指出实际可接者。
+                    name: "receiver_mark", bind: "target", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1, interval: 3, repeats: 3 }, shape: { kind: "ring", radius: 0.7 },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [10, 18], size: [0.22, 0.05], alphaMode: "sin",
+                    color: 0xFFF2C8, alpha: [0.8, 0], light: "full", maxParticles: 14
+                },
+                {
+                    name: "receiver_mote", bind: "target", offset: [0, 0.5, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: 6, interval: 3, repeats: 3 }, shape: { kind: "sphere", radius: 0.36 },
+                    direction: "up", speed: [0.02, 0.07],
+                    lifetime: [10, 18], size: [0.07, 0.01],
+                    color: 0xFFE6B0, alpha: [0.85, 0], light: "full", maxParticles: 22
                 }
             ]
         },
@@ -128,6 +175,15 @@ const HealingWishDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [14, 24], size: [0.07, 0.01],
                     color: 0xFFF2C8, alpha: [0.9, 0], light: "full", maxParticles: 60
+                },
+                {
+                    // 只在真正领取时出现的交接线：从愿星沿着到接收者的路径收拢一段金光。
+                    name: "deliver_thread", bind: "path", offset: [0, 0.6, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/moves/wish_star",
+                    burst: { count: 10, interval: 2, repeats: 4 }, shape: { kind: "polyline" },
+                    speed: [0.01, 0.05],
+                    lifetime: [10, 18], size: [0.2, 0.03],
+                    color: 0xFFD36A, alpha: [0.9, 0], light: "full", maxParticles: 50
                 }
             ]
         },

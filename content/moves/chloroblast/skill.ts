@@ -12,6 +12,9 @@
  *
  * 与同族分开：铁蹄光线重而短、只打第一个；破灭之光粗重贯穿、自损随伤害；随机光没有自损。
  * 叶绿爆震是唯一**覆盖面**、也是唯一自损随放出的力量走的一招。
+ *
+ * 选取 `kind: "aim"`：可朝任意方向或世界点喷扇，也能空放；没有实体时沿选定方向/落点铺开，不强行要求存在敌人。
+ * 墙后的对象仍经共享 `world.clear` 排除。命中权限由命中层按敌我结算。
  */
 namespace PokemonSkills {
     /** 以 origin 为顶点、朝 direction 张开 angleDeg 度、半径 reach 的扇形多边形；判定与表现共用这组顶点。 */
@@ -33,9 +36,9 @@ namespace PokemonSkills {
         id: chloroblastId,
         cooldownParameter: "recharge",
         name: "Chloroblast",
-        description: "把全身积蓄的叶绿素一次放尽，朝身前喷成一整片扇形爆震：罩住的敌人各挨一下、越远越轻，自己按放出的力量损失生命。",
+        description: "朝任意方向或世界点把全身积蓄的叶绿素喷成一整片扇形爆震：罩住的敌人各挨一下、越近越重，也能空放；自己按放出的力量损失生命。",
         uses: ["把全身叶绿素朝身前喷成一整片扇形", "一次罩住挤在正前方的一队敌人", "用随力量增长的自损换一发范围压制"],
-        kind: "enemy",
+        kind: "aim",
         range: 7,
         maxRange: 12,
         prepare: 13,
@@ -98,9 +101,11 @@ namespace PokemonSkills {
                 const strength = power * (1 - falloff * ratio);
                 if (!hurt(action, enemy, chloroblastId, strength, { damage: damageSpec(chloroblastId, "bloom") })) return;
                 hits++;
+                // 近处浓、远处淡：命中处爆开的叶屑量按到中心的距离比例派生，实际接进表现载荷。
+                const count = Math.max(6, Math.round(motes * (1 - falloff * ratio)));
                 WorldFeedback.emit(world, chloroblastScene, 1, facts.position(),
-                    { moment: "hit", target: String(enemy.ref()), motes: motes, count: Math.round(motes * 0.5), scale: scale,
-                        intensity: Math.max(0.5, Math.min(2.4, strength / 150)), ratio: ratio }, 24);
+                    { moment: "hit", target: String(enemy.ref()), motes: motes, count: count, scale: scale,
+                        intensity: Math.max(0.5, Math.min(2.4, strength / 150)), ratio: ratio, near: Math.round((1 - ratio) * 100) / 100 }, 24);
             });
 
             if (hits > 0) {
@@ -114,13 +119,17 @@ namespace PokemonSkills {
 
             const body = world.observe(actor);
             if (body !== null) {
-                world.health(actor, -body.maxHealth() * cost, "world_combat:chloroblast_wither");
-                WorldFeedback.emit(world, chloroblastScene, 1, body.position(),
-                    { moment: "wither", motes: motes, count: Math.max(10, Math.round(motes * (0.6 + cost))),
-                        scale: scale, cost: cost, hits: hits,
-                        intensity: Math.max(0.6, Math.min(2.6, cost * 3 + intensity * 0.4)) }, 30);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), chloroblastWitherText,
-                    [Math.round(cost * 100)], 28);
+                const lost = -world.health(actor, -body.maxHealth() * cost, "world_combat:chloroblast_wither");
+                if (lost > 0) {
+                    // 枯叶量按实际自损：真的被抽走多少叶绿素，画面就落多少枯叶。
+                    const count = Math.max(8, Math.round(motes * (0.4 + Math.min(1.6, lost / Math.max(1, body.maxHealth() * 0.3)))));
+                    WorldFeedback.emit(world, chloroblastScene, 1, body.position(),
+                        { moment: "wither", motes: motes, count: count, loss: Math.round(lost * 10) / 10,
+                            scale: scale, cost: cost, hits: hits,
+                            intensity: Math.max(0.6, Math.min(2.6, cost * 3 + intensity * 0.4)) }, 30);
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), chloroblastWitherText,
+                        [Math.round(cost * 100)], 28);
+                }
             }
             sound(action, "minecraft:block.grass.break");
             done(action);

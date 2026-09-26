@@ -7,10 +7,9 @@
  *   配置 `spread`（扩散式）把这一发从单体点射改成落点分摊：命中处向周围最多几个敌人分电，直击更轻。
  *
  * 参数为什么依赖这些精灵数据、并分散到不同参数（同一招在不同个体手里读起来不同）：
- *   bolt          威力：特攻决定电弹的电压；扩散式把电压分摊出去，单点更轻。
- *   flightSpeed   飞行速度：速度决定出手的干脆程度，画面里也决定拖尾密度。
- *   homing        追踪转向：特攻决定有限修正的强度，只够修正走位、甩不开的直线跑不掉。
- *   burstRadius   爆开半径：碰撞箱高度（大个子炸得更开）＋特攻；它是命中范围与画面尺寸。
+ *   bolt          威力：特攻决定电束的电压；扩散式把电压分摊出去，单点更轻。
+ *   beamSpeed     电束推进速度：速度决定主束多快走完瞄准线（推进段数封顶 4 刻），也决定画面里电束长出的快慢。
+ *   burstRadius   爆开半径：碰撞箱高度（大个子炸得更开）＋特攻；它同时是主爆范围、电链的最大边长与画面尺寸。
  *   splashShare   分摊比例：特攻越高，分到旁边人身上的电花越足。
  *   splashTargets 分摊人数：特攻越高，能电到的旁边人越多。
  *   numbChance    麻痹几率：特攻＋等级；扩散式分摊了电流，麻人的机会略降。
@@ -35,21 +34,14 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "电弹命中时那一下的基础威力；特攻越高越强。扩散式把电压分摊到周围，单点更轻。对手特防、相性与暴击在命中时另算。"
             }),
-        /** 飞行速度：1.5 + 速度偏移[−0.3,0.7]；扩散 ×0.92；夹 1.1..2.4。 */
-        flightSpeed: formula(
-            F.base(1.5).plus(F.stat("speed").minus(60).times(0.012).clamp(-0.3, 0.7))
-                .times(F.when(F.pref("spread"), F.const(0.92), F.const(1)))
-                .clamp(1.1, 2.4).round(2),
-            "电弹速度", {
+        /** 电束推进速度：2.4 + 速度偏移[−0.5,1.0]；扩散 ×0.9；夹 1.4..3.4。 */
+        beamSpeed: formula(
+            F.base(2.4).plus(F.stat("speed").minus(60).times(0.02).clamp(-0.5, 1.0))
+                .times(F.when(F.pref("spread"), F.const(0.9), F.const(1)))
+                .clamp(1.4, 3.4).round(2),
+            "电束推进速度", {
                 unit: "格/刻",
-                description: "电弹沿直线飞出去的速度；速度快的个体出手更干脆，画面里拖尾也更密。"
-            }),
-        /** 追踪转向：3.2 + 特攻偏移[−0.8,2]；夹 1.8..6。 */
-        homing: formula(
-            F.base(3.2).plus(F.stat("specialAttack").minus(60).times(0.02).clamp(-0.8, 2.0)).clamp(1.8, 6.0).round(2),
-            "追踪转向", {
-                unit: "度/刻",
-                description: "电弹每刻朝目标修正的幅度；只够修正走位，大幅度横向甩开仍然能躲。"
+                description: "主束沿瞄准线推进的速度；速度快的个体更快走完这一段（推进最多 4 刻），画面里电束也长得更急。"
             }),
         /** 爆开半径：0.9 + 高度偏移[−0.15,0.6]；扩散 ×1.5；夹 0.6..2.2。 */
         burstRadius: formula(
@@ -123,7 +115,7 @@ namespace PokemonSkills {
     ]);
 
     describe(thunderboltId, [
-        { key: "description.0", values: ["reach", "bolt", "flightSpeed"] },
+        { key: "description.0", values: ["reach", "bolt", "beamSpeed"] },
         { key: "description.1", values: ["burstRadius", "numbChance", "numbTicks"] },
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "spread.on", values: ["splashShare","splashTargets"], when: function (context) { return read(context.detail.values, ["spread"]) === true; } },

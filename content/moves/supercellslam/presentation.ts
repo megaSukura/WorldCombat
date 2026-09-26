@@ -8,8 +8,8 @@
  * 范围：dive 的 `bind:"path"` 从当前位置连到锁定落点，画的就是这一压覆盖到的直线；impact 的电环按
  *   `data.hitRadius`（放电半径）铺开。
  * 运动：leap 是绕身旋转的电花与向上电柱，dive 是沿 `data.direction` 的电光冲刺，impact 是向外崩开的电环。
- * 数：`data.sparks`（物攻与蓄电派生）决定电花数量，`data.count`（强袭威力派生）决定命中迸发量，
- *   `data.dust` 决定扬尘密度，`data.charge`（蓄电等级）抬高电柱密度，`data.intensity` 抬高亮度，
+ * 数：`data.chargeRate`（蓄电等级 + 实际爬升高度派生）决定 leap 电柱密度，`data.count`（强袭威力派生）决定命中迸发量，
+ *   `data.sparks` 决定放电电花数量，`data.dust` 决定扬尘密度，`data.intensity` 抬高亮度，
  *   `data.scale`（放电半径 / 0.7）放大电环。
  */
 const SupercellslamDefinition: ParticleDefinition = {
@@ -44,7 +44,7 @@ const SupercellslamDefinition: ParticleDefinition = {
                 {
                     name: "column", bind: "source", height: 0.1, orient: "velocity",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
-                    rate: { data: "sparks", fallback: 18 }, shape: { kind: "box", size: [0.3, 0.32, 0.3] },
+                    rate: { data: "chargeRate", fallback: 18 }, shape: { kind: "box", size: [0.3, 0.32, 0.3] },
                     direction: "shape", speed: [0.03, 0.14], trail: { minDistance: 0.24 },
                     lifetime: [5, 10], size: [0.18, 0.05],
                     color: 0xFFFFFF, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 140

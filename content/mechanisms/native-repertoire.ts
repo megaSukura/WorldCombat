@@ -31,6 +31,7 @@ namespace NativeRepertoire {
         nameKey?: string;
         description: string;
         uses: string[];
+        /** aim accepts an entity of any relation or a world point; content decides its response. Damage permissions remain separate. */
         kind: "enemy" | "friend" | "aim" | "point" | "motion" | "self";
         /** Design range in blocks. `resolve` may return a different `range` per cast (configuration, level); it drives the real acceptance up to `maxRange`. */
         range: number;

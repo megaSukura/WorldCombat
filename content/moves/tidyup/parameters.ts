@@ -32,6 +32,7 @@ namespace PokemonSkills {
     export const tidyupScene = "world_combat:move_tidyup";
     export const tidyupKit = "world_combat:tidyup_kit";
     export const tidyupMark = "world_combat:tidyup_mark";
+    export const tidyupContribution = "world_combat:move/tidyup";
     export const tidyupText = "world_combat.move.tidyup.text.swept";
     export const tidyupClearText = "world_combat.move.tidyup.text.cleared";
     export const tidyupFadeText = "world_combat.move.tidyup.text.faded";

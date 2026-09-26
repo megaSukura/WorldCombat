@@ -1,19 +1,4 @@
-/**
- * 下盘踢 / lowsweep 的出手方式。
- *
- * 核心念头：一次原地拧腰的低扫——施法者压低重心，一条低平的弧线扫过脚踝，弧线里所有人的小腿都被削到；
- * 正在快速移动的目标重心最难收回，掉的速度也最多（掉速等级读目标当前的移动速度）。它贴身、快、便宜，
- * 没有突进、没有留在地上的东西，只有一次拧腰和一次收腿。
- *
- * 两幕（提交前只播预告）：
- *   起（pivot）：压低重心、把脚放稳，尘点向内收。
- *   扫（sweep → hit / miss）：提交后原地扫出一道低弧；`WorldGeometry.sector` 圈出弧线里的非友方，
- *       每名被扫到的目标各结算一次 `cut` 接触伤害、掉速度等级并挂 hobbled 身份；被削到重心难收的目标
- *       小腿被别住一瞬（rooted）。弧线里一个人都没有就播落空。
- *
- * 与踢倒分开：踢倒会突进、按目标体重决定威力并把目标扫倒；下盘踢不位移、按双方速度决定威力与掉速，不绊倒。
- * 掉速走 `NativeEffects.boost` 的共享速度等级，对宝可梦和其他生物同一条路。
- */
+/** A native body-box low fan catches feet inside its thin volume, regardless of the target centre height. */
 namespace PokemonSkills {
     const lowsweepScene = "world_combat:move_lowsweep";
     const lowsweepHobble = "world_combat:lowsweep_hobble";
@@ -33,7 +18,7 @@ namespace PokemonSkills {
         name: "Low Sweep",
         description: "原地压低重心、拧腰扫出一道贴地的低弧：弧线里最多 3 名敌人的小腿被削到，正在快速移动的目标重心最难收回、掉的速度也最多；被削到重心难收的目标小腿还会被别住一瞬。旋身扫弧线更开、别腿更久，但单点更轻。",
         uses: ["贴身削掉高速对手的速度", "一记快而便宜的点切", "拧身扫开脚边一小圈敌人"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 3.0,
         prepare: 6,
@@ -81,16 +66,19 @@ namespace PokemonSkills {
             for (let i = 0; i <= steps; i++) {
                 const a = (i / steps - 0.5) * arc * Math.PI / 180;
                 const dx = hx * Math.cos(a) - hz * Math.sin(a), dz = hx * Math.sin(a) + hz * Math.cos(a);
-                path.push([origin.x() + dx * reach, feetY, origin.z() + dz * reach]);
+                path.push([origin.x() + dx * reach, feetY + .2, origin.z() + dz * reach]);
             }
             sound(action, "minecraft:entity.player.attack.sweep");
             WorldFeedback.emit(world, lowsweepScene, 1, origin,
                 { moment: "sweep", arc: arc, reach: reach, path: path, whirl: whirl ? 1 : 0, spark: spark, scale: scale }, 24);
 
             let hits = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, direction, reach, arc, { below: 1.8, above: 1.2 }),
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySector(WorldCombat.point(origin.x(), feetY + .2, origin.z()), direction, reach, arc, { below: .2, above: .5 }),
                 function (target, facts) {
-                    if (hits >= 3) return;
+                    if (hits >= 3 || world.friendly(target)) return;
+                    const low = facts.boundsMin(), high = facts.boundsMax();
+                    const contact = WorldCombat.point(Math.max(low.x(), Math.min(high.x(), origin.x())), Math.max(low.y(), feetY + .2), Math.max(low.z(), Math.min(high.z(), origin.z())));
+                    if (!world.clear(WorldCombat.point(origin.x(), feetY + .2, origin.z()), contact)) return;
                     hits++;
                     const rolled = lowsweepCut(action, world, target, config);
                     const landed = hurt(action, target, "lowsweep", rolled.power,
@@ -99,7 +87,7 @@ namespace PokemonSkills {
                     NativeEffects.boost(world, target, "spe", -rolled.stages);
                     MobEffects.apply(world, target, lowsweepHobble, hobble, 0);
                     if (world.valid(target) && rolled.stages >= 2 && rootTicks > 0) WorldEffects.apply(world, target, "rooted", {}, rootTicks);
-                    WorldFeedback.emit(world, lowsweepScene, 1, facts.position(),
+                    WorldFeedback.emit(world, lowsweepScene, 1, contact,
                         { moment: "hit", target: String(target.ref()), stages: rolled.stages, spark: spark,
                             intensity: Math.max(0.6, Math.min(2.2, rolled.power / 55)), scale: scale }, 24);
                     WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)),

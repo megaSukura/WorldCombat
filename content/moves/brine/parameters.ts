@@ -1,41 +1,40 @@
 /**
- * 盐水 / brine —— 参数、伤害段与盐池。
+ * 盐水 / brine —— 参数与伤害段。
  *
  * 原生事实（Cobblemon 1.8 / Showdown）：Water／特殊／威力 65／命中 100／PP 10／单体；「当对手的 HP 负伤到
  *   一半左右时，招式威力会变成 2 倍」。
  *
- * 翻译：把「盐水」落成一束**高压盐卤**——施法者把盐水从口／掌中压成一条细流射向目标，命中处炸开白花，
- *   在地上留下一摊渗进石缝的咸水。打在完好的身上只是冲一记；打在半血或更少的伤口上，盐钻进伤口，
- *   威力翻倍、目标被浇得湿透，那一记的画面也更亮更狠。读完的是**目标此刻的血**，落在谁身上按谁算。
+ * 翻译：把「盐水」落成一束**高压盐卤**——施法者把盐水从口／掌中压成一条细流射向目标，命中处炸开白花。
+ *   打在完好的身上只是冲一记；打在半血或更少的伤口上，盐钻进伤口，威力翻倍、目标被浇得湿透，那一记的
+ *   画面也更亮更狠。读完的是**目标此刻的血**，落在谁身上按谁算。它只有一条直射的细流：不留盐池、不加
+ *   额外减速，唯一用途就是惩罚已经残血的对手，不负责把它打成残血。
  *   与同族分开：热水抛的是会烫伤人的沸水并留下烫池；喷水是一圈推人的潮墙；盐水是一条锁人的细流，
- *   并且只对「已经伤到一半以下」的目标翻倍——它惩罚残血，不制造残血。
+ *   并且只对「已经伤到一半以下」的目标翻倍。
  *
  * 数据分散（每个参数读不同的精灵数据）：
  *   jet         盐卤威力：特攻定压力；目标血量 ≤ 一半时 ×2；高压式再 ×1.15；夹 42..190。
  *   reach       射程：特攻越高射得越远，高压式更远。
  *   globSpeed   出流速度：速度决定盐卤离手多急。
- *   nozzle      判定半径：体型高度决定这条细流多粗。
- *   slickRadius 盐池半径：特攻与体型；高压式把水柱收细，池子更小。
- *   slickTicks  盐池持续：等级与特攻；高压式更短、泼洒式更久。
- *   soakTicks   直击湿身时长：等级越高留得越久（借共享身份 soaked，别的招式也能读到「湿」）。
+ *   nozzle      判定半径：体型高度决定这条细流多粗；高压式收得更细。
+ *   soakTicks   湿身时长：等级越高留得越久（借共享身份 soaked，别的招式也能读到「湿」）；高压式更短。
  *   drops       水滴数：特攻换算，驱动表现密度。
  *   tempo／settle／recharge：速度定节奏；高压式更慢、更费。
  *
- * 配置 `press`（高压式）双向取舍：开＝威力 ×1.15、射程 ×1.15，但盐池半径 ×0.72、持续 ×0.75、起手 +2、冷却 +4；
- *   关（泼洒式，默认）＝池子更大更久、更快更省，但威力 ×0.92。点杀残血 vs 封住一块湿地，各有局面。
+ * 配置 `press`（高压式）双向取舍：开＝威力 ×1.15、射程 ×1.15、判定更细，但湿身更短、起手 +2、冷却 +4，
+ *   用来点杀残血；关（泼洒式，默认）＝判定更粗、湿身更久、更快更省，但威力 ×0.92，用来稳一点地补刀。
  *
  * 伤害段 `jet`：目标血量 ≤ 一半时的 ×2 在命中时按**每个目标自己**的血量重算（见 defineDamage 的 resolve）。
  */
 namespace PokemonSkills {
     export const brineId = "brine";
     export const brineScene = "world_combat:move_brine";
-    export const brineField = "world_combat:field/brine";
     export const brineSoaked = "world_combat:brine_soaked";
     export const brineWoundedText = "world_combat.move.brine.text.wounded";
-    export const brineSoakText = "world_combat.move.brine.text.soak";
     export const brineMissText = "world_combat.move.brine.text.miss";
-    /** 盐池参考半径（格）：服务端传 scale = 实际半径 / 这个值。 */
-    export const brineReference = 1.7;
+    /** 判定半径参考值（格）：服务端传 scale = 实际半径 / 这个值。 */
+    export const brineReference = 0.3;
+    /** 表现尺度：判定越粗，画面里的水柱与飞溅越大。 */
+    export function brineScale(radius: number): number { return Math.max(0.6, Math.min(1.8, radius / brineReference)); }
 
     /** 目标血量是否已知且 ≤ 一半：未知读作假，预览里不会误翻倍。 */
     export function brineWoundedNode(): Formula.Node {
@@ -47,27 +46,6 @@ namespace PokemonSkills {
         const body = world.observe(actor);
         return body !== null && body.maxHealth() > 0 && body.health() <= body.maxHealth() * 0.5 && body.health() > 0;
     }
-
-    /** 一摊渗在地上的盐卤：踏入或停留的非友方被浇上湿透身份（共享身份 soaked，别的招式能读到）。 */
-    WorldEffects.fieldRule(brineField, {
-        enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            const body = world.observe(actor);
-            if (body === null) return;
-            if (CombatStatus.apply(world, actor, "soaked", brineSoaked, Math.max(60, Math.round(Number(field.data.soak) || 140)), 0, { secondary: true, unique: true })) {
-                WorldFeedback.emit(world, brineScene, 1, body.position(),
-                    { moment: "splash", target: String(actor.ref()), scale: field.radius / brineReference }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.05, 0)), brineSoakText, [], 22);
-            }
-        },
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            const ref = String(actor.ref()), next = field.data.next || (field.data.next = {});
-            if (world.tick() < (next[ref] || 0)) return;
-            next[ref] = world.tick() + 60;
-            CombatStatus.apply(world, actor, "soaked", brineSoaked, Math.max(60, Math.round(Number(field.data.soak) || 140)), 0, { secondary: true, unique: true });
-        }
-    });
 
     actionParameters.define(brineId, {
         /** 盐卤威力：65 + 特攻偏移[−14,30]；目标残血 ×2；高压 ×1.15 / 泼洒 ×0.92；夹 42..190。 */
@@ -97,36 +75,21 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "盐卤离手的速度；速度快的个体射得更急，目标越难侧移躲开。"
             }),
-        /** 判定半径：0.3 + (高度−1.4)×0.08；夹 0.24..0.6。 */
+        /** 判定半径：0.3 + (高度−1.4)×0.08；高压 ×0.85 / 泼洒 ×1.15；夹 0.2..0.7。 */
         nozzle: formula(
-            F.base(0.3).plus(F.body("height").minus(1.4).times(0.08).clamp(-0.05, 0.3)).clamp(0.24, 0.6).round(2),
+            F.base(0.3).plus(F.body("height").minus(1.4).times(0.08).clamp(-0.05, 0.3))
+                .times(F.when(F.pref("press", text("worldcombat.skill.brine.preference.press")), F.const(0.85), F.const(1.15)))
+                .clamp(0.2, 0.7).round(2),
             "判定半径", {
                 unit: "格",
-                description: "这条细流的碰撞半径；身板越大水柱越粗。"
+                description: "这条细流的碰撞半径；身板越大水柱越粗，高压式把它收得更细。"
             }),
-        /** 盐池半径：1.7 + 特攻偏移[−0.2,0.6] + 高度偏移[−0.1,0.4]；高压 ×0.72 / 泼洒 ×1.15；夹 1.0..3.2。 */
-        slickRadius: formula(
-            F.base(1.7)
-                .plus(F.stat("specialAttack").minus(60).times(0.008).clamp(-0.2, 0.6))
-                .plus(F.body("height").minus(1.4).times(0.2).clamp(-0.1, 0.4))
-                .times(F.when(F.pref("press", text("worldcombat.skill.brine.preference.press")), F.const(0.72), F.const(1.15)))
-                .clamp(1.0, 3.2).round(2),
-            "盐池半径", {
-                unit: "格",
-                description: "盐水落地渗开多大的一摊；特攻高、体型大的个体摊得更开，高压式把水柱收细、池子更小。"
-            }),
-        /** 盐池持续：110 + 等级(≥25)偏移[0,50] + 特攻偏移[−15,35]；高压 ×0.75 / 泼洒 ×1.1；夹 60..260。 */
-        slickTicks: seconds(
-            F.base(110)
-                .plus(F.level().minus(25).times(1.4).clamp(0, 50))
-                .plus(F.stat("specialAttack").minus(60).times(0.5).clamp(-15, 35))
-                .times(F.when(F.pref("press", text("worldcombat.skill.brine.preference.press")), F.const(0.75), F.const(1.1)))
-                .clamp(60, 260).round(0),
-            "盐池持续", "这摊盐水在地上渗多久；等级与特攻越高留得越久，高压式更短、泼洒式更久。"),
-        /** 直击湿身时长：90 + 等级 ×0.8；夹 60..220。 */
+        /** 直击湿身时长：90 + 等级 ×0.8；高压 ×0.75 / 泼洒 ×1.1；夹 60..220。 */
         soakTicks: seconds(
-            F.base(90).plus(F.level().times(0.8)).clamp(60, 220).round(0),
-            "直击湿身时长", "被盐卤直击的目标带着湿透身份多久；等级越高留得越久。它借共享身份 soaked，别的招式也能读到。"),
+            F.base(90).plus(F.level().times(0.8))
+                .times(F.when(F.pref("press", text("worldcombat.skill.brine.preference.press")), F.const(0.75), F.const(1.1)))
+                .clamp(60, 220).round(0),
+            "直击湿身时长", "被盐卤直击的目标带着湿透身份多久；等级越高留得越久，高压式更短。它借共享身份 soaked，别的招式也能读到。"),
         /** 水滴数：16 + 特攻偏移[−4,24]；夹 10..52。 */
         drops: formula(
             F.base(16).plus(F.stat("specialAttack").minus(60).times(0.2).clamp(-4, 24)).clamp(10, 52).round(0),
@@ -159,13 +122,13 @@ namespace PokemonSkills {
 
     stages(brineId, [
         { level: 30, values: { jet: 78 } },
-        { level: 46, values: { jet: 92, slickRadius: 2.1 } }
+        { level: 46, values: { jet: 92, nozzle: 0.42 } }
     ]);
 
     describe(brineId, [
         { key: "description.0", values: ["jet"] },
         { key: "description.1", values: ["reach","globSpeed","nozzle"] },
-        { key: "description.2", values: ["slickRadius","slickTicks","soakTicks"] },
+        { key: "description.2", values: ["soakTicks"] },
         { key: "description.wet", values: [] },
         { key: "press.on", values: [], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },

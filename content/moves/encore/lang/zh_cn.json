@@ -25,8 +25,13 @@
   "worldcombat.skill.encore.preference.ai.maxChase.help": "威胁进入这个距离内才考虑点名；调小只在贴身时出手，调大愿意追出去。",
   "worldcombat.skill.encore.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.encore.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去点名。",
-  "world_combat.move.encore.text.lock": "再来一次 %1$s 秒",
+  "world_combat.move.encore.text.lock": "再来一次 %1$s 秒：只能 %2$s",
+  "world_combat.move.encore.text.reject": "回声制止：只能 %1$s",
   "world_combat.move.encore.text.fade": "那一手用尽，回声散开",
   "world_combat.move.encore.text.miss": "没抓到可以重来的一手",
+  "world_combat.move.encore.kind.melee": "近战",
+  "world_combat.move.encore.kind.ranged": "远程",
+  "world_combat.move.encore.kind.magic": "魔法",
+  "world_combat.move.encore.kind.other": "攻击",
   "effect.world_combat.encore_call": "回声点名"
 }

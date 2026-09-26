@@ -18,7 +18,7 @@ namespace PokemonSkills {
         name: "Guillotine",
         description: "大钳从两侧张开、罩住身前那一段扇形，合拢一刻还在钳口里的目标被一次夹断（一击必杀）。",
         uses: ["贴身用最短的起手夹断一个目标", "夹住正前方扇形里最近的一个对手", "夹空后要承担最久的收招，用时机换爆发"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.4,
         maxRange: 4.2,
         prepare: 10,
@@ -45,7 +45,8 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            if (target === null) return "";
+            if (!world.valid(target) || world.friendly(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "target-left";
             if (body.position().minus(action.origin()).length() > action.range() + 0.4) return "out-of-range";
@@ -73,15 +74,18 @@ namespace PokemonSkills {
                     span: span, arc: arc, grip: grip, scale: scale }, mark + 20);
             sound(action, "minecraft:entity.player.attack.sweep");
 
+            action.releaseTarget();
             action.after(mark, function (current: CombatAction) {
                 const scope = current.world();
                 const region = WorldGeometry.sector(current.origin(), direction, span, arc, { below: 2, above: 3 });
-                let victim: CombatActor | null = null, at = front;
+                let victim: CombatActor | null = null, at = front, best = Infinity;
                 WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                    if (victim !== null) return;
                     if (String(enemy.ref()) === String(current.actor().ref())) return;
-                    victim = enemy;
-                    at = facts.position();
+                    const delta = facts.position().minus(current.origin()), flat = WorldGeometry.flatUnit(direction, current.direction());
+                    const lateral = Math.abs(delta.x() * flat.z() - delta.z() * flat.x());
+                    const score = lateral * 100 + delta.length();
+                    if (score >= best) return;
+                    best = score; victim = enemy; at = facts.position();
                 });
                 const result = victim === null ? "miss" : guillotineExecute(current, victim);
                 if (result === "kill") {
@@ -93,7 +97,7 @@ namespace PokemonSkills {
                 } else {
                     WorldFeedback.emit(scope, guillotineScene, 1, front,
                         { moment: "miss", direction: [direction.x(), direction.y(), direction.z()], span: span, arc: arc, grip: grip, scale: scale }, 22);
-                    WorldFeedback.text(scope, front.plus(WorldCombat.point(0, 0.9, 0)), guillotineMissText, [], 22);
+                    WorldFeedback.text(scope, front.plus(WorldCombat.point(0, 0.9, 0)), result === "resisted" ? "world_combat.move.guillotine.text.resisted" : guillotineMissText, [], 22);
                     scope.sound("minecraft:item.shield.break", front, 10, "{}");
                 }
                 done(current);

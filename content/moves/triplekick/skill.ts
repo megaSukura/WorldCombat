@@ -1,33 +1,43 @@
 /**
  * 三连踢 / triplekick 的出手方式。
  *
- * 核心念头：正面站定，朝对手一脚接一脚地踢——第一脚轻、第二脚重、第三脚最重，全打在身前同一条窄线上；
- * 任一脚踢空这串就停。它的身份是「直、快、准」：与三旋击的分别在于三连踢不转身、只扫一条贴地的窄走廊。
+ * 核心念头：正面站定，朝释放时锁定的方向一脚接一脚地直踢——每一脚独立掷命中，取一段真实短距离的三维首碰：
+ * 第一个挡在踢线上的敌体吃一记，撞墙或踢空就停。它的身份是「直、快、准」：与三旋击的分别在于三连踢不转身、
+ * 不滑步、只把脚沿同一条释放方向前后弹出。
  *
  * 三拍：
- *   起（windup，提交前）：重心下沉，脚边尘土扬起，正对目标。
- *   踢（kick，提交后）：每脚沿身前 `reach` 长、`halfWidth` 半宽的走廊判定，走廊里的非友方各吃一记 `kick`，
- *       第 n 脚威力 = kick × (1 + ramp × 已踢脚数)；命中把人顶开 `push` 格。每脚结算一次，间隔 `gap`。
- *   收（whiff / done）：任一脚掷空或走廊里没有对手，这串就停；三脚踢满自然收势。
+ *   起（windup，提交前）：重心下沉，脚边尘土扬起，正对释放方向。
+ *   踢（kick，提交后）：每脚从身体中心沿当刻 aim 伸出 `reach` 长、`halfWidth` 粗的一条短三维线，
+ *       取真实首碰：第一个非友方敌体各吃一记 `kick`（第 n 脚威力 = kick × (1 + ramp × 已踢脚数)）；
+ *       命中把人顶开——前两脚只轻推 pad 的四分之一，最后一脚把整串的余下推力一次送出，总推力不变。
+ *       脚落空（掷空、线首碰是墙、或伤害被拒）这串就停，停在真实位置，不隔空追击。
+ *   收（whiff / done）：脚回站姿。
+ *
+ * 与同族分开：三旋击是原地旋身、宽弧横扫、每脚更重够得更远；三连踢是**定身、直线、贴地快而准**的三脚直踢，
+ * 靠推力节奏把最后一脚的分量单独做出来。
  */
 namespace PokemonSkills {
-    /** 一脚走廊的四个角：origin 起、朝 direction 长 reach、半宽 half；判定与表现共用同一组顶点。 */
-    function triplekickLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): number[][] {
-        const forward = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(heading.scale(reach));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))]
-            .map(function (point) { return [point.x(), point.y(), point.z()]; });
+    /** 当刻踢击方向：按住技能键时读控制点（各脚可在释放后微调），否则用释放时锁定的瞄准方向。 */
+    function triplekickDirection(action: CombatAction, locked: CombatPoint): CombatPoint {
+        const origin = action.origin();
+        try {
+            const parsed = JSON.parse(action.control());
+            const samples = parsed && parsed.samples;
+            if (samples && samples.length && samples[0].point && samples[0].point.length === 3) {
+                const delta = WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]).minus(origin);
+                if (delta.length() >= 0.05) return delta.unit();
+            }
+        } catch (error) { }
+        return locked;
     }
 
     define({
         id: triplekickId,
         cooldownParameter: "recharge",
         name: "Triple Kick",
-        description: "正面站定，朝对手身前的窄走廊一脚接一脚地直踢：每一脚独立掷命中，每中一脚下一脚更重（第 n 脚递增）。落空这串就停。抽射式踢得更重、顶得更远，但够得近、连得慢。",
-        uses: ["朝前的窄走廊连踢三脚", "每中一脚，下一脚更重", "贴地快踢，冷却短"],
-        kind: "enemy",
+        description: "正面站定，朝释放时锁定的方向一脚接一脚地直踢：每一脚独立掷命中、取真正的短距离首碰，第 n 脚威力递增，任一脚落空这串就停。前两脚只是轻点把人留住，最后一脚才把整串的推力一次送出。",
+        uses: ["朝前直线连踢三脚", "每中一脚，下一脚更重", "最后一脚把目标一次踢开"],
+        kind: "aim",
         range: 2.3,
         maxRange: 3.6,
         prepare: 5,
@@ -61,10 +71,8 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const body = world.observe(actor);
-            const target = action.target();
-            if (body === null || target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            const self = world.observe(actor);
+            if (self === null) { done(action); return; }
             const kick = p(triplekickId, "kick", action);
             const kicks = Math.max(1, Math.round(p(triplekickId, "kicks", action)));
             const ramp = p(triplekickId, "ramp", action);
@@ -75,59 +83,94 @@ namespace PokemonSkills {
             const push = p(triplekickId, "push", action);
             const sparks = Math.max(6, Math.round(p(triplekickId, "sparks", action)));
             const scale = Math.max(0.6, Math.min(2.4, halfWidth / 0.4));
+            // 总推预算沿用「每脚原 push」的整串总量：前两脚只出四分之一，最后一脚一次补足余量。
+            const lightPush = push * 0.25;
+            const lastPush = push * kicks - lightPush * (kicks - 1);
             const up = WorldCombat.point(0, 1.1, 0);
+            const selfRef = String(actor.ref());
+            const scene = WorldFeedback.actionScenes(triplekickScene);
+            // 释放时锁定的瞄准方向：三脚之间身体原地不滑不跳，只把当刻 aim 微调进踢线。
+            const locked = (function (): CombatPoint {
+                try {
+                    const delta = action.targetPosition().minus(self.position());
+                    if (delta.length() >= 0.05) return delta.unit();
+                } catch (error) { }
+                const direction = action.direction();
+                return direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
+            })();
             let index = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scene.finish(current, done);
+            }
 
             function step(current: CombatAction): void {
                 if (settled) return;
                 const scope = current.world();
-                const selfBody = scope.observe(current.actor());
-                const victim = scope.actor(targetRef);
-                const victimBody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                if (selfBody === null || victimBody === null) { finish(current); return; }
-                if (index >= kicks) { finish(current); return; }
-                const origin = selfBody.position();
-                current.face(victimBody.position(), 20, 20);
-                let heading = victimBody.position().minus(origin);
-                if (heading.length() < 0.05) heading = current.direction();
+                const body = scope.observe(actor);
+                if (body === null || index >= kicks) { finish(current); return; }
+                const origin = body.position();
+                const direction = triplekickDirection(current, locked);
+                if (direction.length() < 0.05) { finish(current); return; }
+                const heading = direction.unit();
+                current.face(origin.plus(heading), 24, 24);
                 const power = kick * (1 + ramp * index);
                 const intensity = Math.max(0.6, Math.min(2.4, power / 12));
-                const lane = triplekickLane(origin, heading, reach, halfWidth);
+                const from = origin;
+                const to = origin.plus(heading.scale(reach));
+                const path = [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]];
+                const foot = Math.max(0.18, Math.min(0.5, 0.24 + index * 0.07));
+                const key = "kick:" + (index + 1);
+                scene.show(current, key, to,
+                    { moment: "kick", path: path, direction: [heading.x(), heading.y(), heading.z()],
+                        index: index, kicks: kicks, reach: Math.round(reach * 10) / 10, power: Math.round(power * 10) / 10,
+                        sparks: sparks, foot: Math.round(foot * 100) / 100, scale: scale, intensity: intensity });
 
+                // 每脚独立掷命中：掷空这串就停，停在真实位置。
                 if (scope.random() >= accuracy) {
-                    WorldFeedback.emit(scope, triplekickScene, 1, origin,
-                        { moment: "whiff", path: lane, index: index, kicks: kicks, scale: scale }, 18);
-                    WorldFeedback.text(scope, origin.plus(up), triplekickMissText, [index + 1], 24);
+                    scene.stop(current, key);
+                    WorldFeedback.emit(scope, triplekickScene, 1, to,
+                        { moment: "whiff", path: path, index: index, kicks: kicks, scale: scale, sparks: Math.round(sparks * 0.5) }, 16);
+                    WorldFeedback.text(scope, from.plus(up), triplekickMissText, [index + 1], 22);
                     finish(current);
                     return;
                 }
 
-                let hits = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.lane(origin, heading, reach, halfWidth, { below: 1.2, above: 2.0 }),
-                    function (victimActor, facts) {
-                        if (hurt(current, victimActor, triplekickId, power, { damage: damageSpec(triplekickId, "kick"), contact: true })) {
-                            hits++;
-                            if (scope.valid(victimActor)) scope.displace(victimActor, WorldCombat.point(heading.x(), 0, heading.z()).scale(push));
-                            WorldFeedback.emit(scope, triplekickScene, 1, facts.position(),
-                                { moment: "hit", target: String(victimActor.ref()), index: index, kicks: kicks,
-                                    power: Math.round(power * 10) / 10, sparks: sparks, scale: scale, intensity: intensity }, 20);
+                // 一段真实短三维线，只取第一个有效首碰：墙截停、友方与非生物穿过，不越墙也不打全体。
+                const contact = current.trace(from, to, Math.max(0.24, halfWidth));
+                const victim = contact.hitEntity() ? contact.target() : null;
+                if (victim !== null && String(victim.ref()) !== selfRef && scope.valid(victim) && !scope.friendly(victim)) {
+                    const landed = hurt(current, victim, triplekickId, power, { damage: damageSpec(triplekickId, "kick") });
+                    if (landed) {
+                        const body2 = scope.observe(victim);
+                        const at = body2 === null ? contact.position() : body2.position();
+                        if (scope.valid(victim)) {
+                            const shove = index >= kicks - 1 ? lastPush : lightPush;
+                            if (shove > 0) scope.hitDisplace(victim, WorldGeometry.flatUnit(heading, WorldCombat.point(0, 0, 1)).scale(shove));
                         }
-                    });
-                WorldFeedback.emit(scope, triplekickScene, 1, origin,
-                    { moment: "kick", path: lane, index: index, kicks: kicks, power: Math.round(power * 10) / 10,
-                        direction: [heading.x(), heading.y(), heading.z()], sparks: sparks, scale: scale, intensity: intensity }, 18);
-                sound(current, "minecraft:entity.player.attack.weak");
-                if (hits === 0) {
-                    WorldFeedback.text(scope, origin.plus(up), triplekickMissText, [index + 1], 24);
-                    finish(current);
-                    return;
+                        scene.stop(current, key);
+                        WorldFeedback.emit(scope, triplekickScene, 1, at,
+                            { moment: "hit", target: String(victim.ref()), path: path, direction: [heading.x(), heading.y(), heading.z()],
+                                index: index, kicks: kicks, power: Math.round(power * 10) / 10, sparks: sparks,
+                                foot: Math.round(foot * 100) / 100, scale: scale, intensity: intensity }, 20);
+                        WorldFeedback.text(scope, from.plus(up), triplekickRiseText, [index + 1, Math.round(power)], 22);
+                        sound(current, "minecraft:entity.player.attack.weak");
+                        index++;
+                        if (index >= kicks) { finish(current); return; }
+                        current.after(gap, step);
+                        return;
+                    }
                 }
-                WorldFeedback.text(scope, origin.plus(up), triplekickRiseText, [index + 1, Math.round(power)], 22);
-                index++;
-                if (index >= kicks) { finish(current); return; }
-                current.after(gap, step);
+
+                // 踢线首碰是墙、什么也没碰到，或伤害被拒：停在真实位置，不隔空追击后方。
+                scene.stop(current, key);
+                WorldFeedback.emit(scope, triplekickScene, 1, contact.position(),
+                    { moment: "whiff", path: path, index: index, kicks: kicks, scale: scale, sparks: Math.round(sparks * 0.5),
+                        blocked: contact.blocked() ? 1 : 0, face: contact.blockFace() }, 16);
+                WorldFeedback.text(scope, from.plus(up), triplekickMissText, [index + 1], 22);
+                finish(current);
             }
 
             sound(action, "cobblemon:impact.fighting");

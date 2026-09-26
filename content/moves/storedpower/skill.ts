@@ -59,14 +59,16 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, storedpowerScene, 1, centre,
                 { moment: "nova", radius: radius, boost: boosts, raised: raised, motes: motes, scale: scale, intensity: intensity }, 30);
 
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: radius * 0.75, above: radius * 0.9 }),
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(centre, radius),
                 function (enemy, facts) {
+                    if (String(enemy.key()) === String(self.key()) || world.friendly(enemy)) return;
+                    if (!world.clear(centre, world.closestPoint(enemy, centre))) return;
                     if (!hurt(action, enemy, storedpowerId, power, { damage: damageSpec(storedpowerId, "reservoir") })) return;
                     hits++;
                     if (world.valid(enemy)) {
                         const away = facts.position().minus(centre);
                         if (away.length() > 0.2)
-                            world.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(surge));
+                            world.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(surge));
                     }
                     WorldFeedback.emit(world, storedpowerScene, 1, facts.position(),
                         { moment: "hit", target: String(enemy.ref()), boost: boosts, raised: raised, scale: scale, intensity: intensity }, 22);

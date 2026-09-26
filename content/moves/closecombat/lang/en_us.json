@@ -3,7 +3,7 @@
   "worldcombat.skill.closecombat.use.0": "Throw a fast combo up close to finish a foe",
   "worldcombat.skill.closecombat.use.1": "Sweeping form to clip several foes bunched in front",
   "worldcombat.skill.closecombat.use.2": "Land the whole string before the target can step away",
-  "worldcombat.skill.closecombat.description.0": "Close in and throw up to %2$s blows for about %1$s physical damage; if the target is shoved out of reach the remaining blows whiff and the string ends early.",
+  "worldcombat.skill.closecombat.description.0": "Close in and throw up to %2$s blows for about %1$s physical damage; every blow sweeps along the body's facing at that moment, and if the target slips out of reach that blow whiffs without chasing before the whole string finishes and recovers.",
   "worldcombat.skill.closecombat.description.1": "Strikes within %1$s blocks; blows are %2$s ticks apart, each blow steps you up to %4$s blocks toward the foe and shoves them %3$s blocks on a hit.",
   "worldcombat.skill.closecombat.description.2": "The guard is spent the moment it commits: the user's Defense drops %1$s stage(s) and Sp. Def drops %2$s, hit or miss.",
   "worldcombat.skill.closecombat.wide.on": "Sweeping form: every blow also clips other foes within a %1$s-degree arc in front for %2$s of that blow's power.",

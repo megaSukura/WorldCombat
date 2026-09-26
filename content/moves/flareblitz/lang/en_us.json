@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.flareblitz.summary": "Charge into a target, dealing damage, knocking it back and possibly burning it. A successful hit causes recoil damage.",
+  "worldcombat.skill.flareblitz.summary": "Charge in the aimed direction wreathed in fire; the first enemy you hit takes damage, is knocked back and may be burned. Only a hit that actually deals damage costs you recoil.",
   "worldcombat.skill.flareblitz.description.0": "The burning hit deals about %1$s contact damage; it charges up to %2$s blocks at %3$s blocks per tick with a %4$s block hit radius.",
   "worldcombat.skill.flareblitz.description.1": "If the target is not burning yet, a hit has a %1$s chance to burn it and knocks it %3$s blocks along the charge; the user then takes %2$s times the damage dealt as recoil. The burn lasts %4$s, halving physical attacks and costing about 1/16 of maximum health every 5 s; Fire-types and other naturally immune targets cannot be lit. It stops on the first target it hits, when the charge distance is spent, or on a wall or block; a whiff only snuffs the fire, with no recoil.",
   "worldcombat.skill.flareblitz.afterburn.on": "Afterburn: much higher burn chance, heavier recoil, slower start, shorter charge and weaker knockback - trade the burst for lasting pressure.",

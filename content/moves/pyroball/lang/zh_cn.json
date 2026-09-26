@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.pyroball.summary": "点燃脚边的小石，再像抽射一样把火球踢出去：火球带焰尾沿低弧飞出，命中炸开成一团火与碎石，并可能把目标引燃；落点留下一圈慢慢淡去的焦土。",
+  "worldcombat.skill.pyroball.summary": "在脚边把小石球滚到踢点、点燃，再像抽射一样把它踢出去：火球带焰尾沿低弧飞出，命中炸开成一团火与碎石，并可能把目标引燃；落点留下一圈很快淡去的焦痕。",
   "worldcombat.skill.pyroball.use.0": "中远距离的高威力火球点射",
   "worldcombat.skill.pyroball.use.1": "用一脚抽射压血并可能引燃",
   "worldcombat.skill.pyroball.use.2": "在落点留下焦土标记这一脚",
@@ -19,8 +19,8 @@
   "worldcombat.skill.pyroball.value.scatter": "出膛散布",
   "worldcombat.skill.pyroball.value.burnChance": "灼伤概率",
   "worldcombat.skill.pyroball.value.sparks": "火星数",
-  "worldcombat.skill.pyroball.value.heat": "焦土半径",
-  "worldcombat.skill.pyroball.value.scorchTicks": "焦土时长",
+  "worldcombat.skill.pyroball.value.heat": "焦痕半径",
+  "worldcombat.skill.pyroball.value.scorchTicks": "焦痕时长",
   "worldcombat.skill.pyroball.value.tempo": "起手",
   "worldcombat.skill.pyroball.value.aftercast": "收招",
   "worldcombat.skill.pyroball.value.recharge": "冷却",

@@ -1,5 +1,5 @@
 /**
- * 大闹一番 的伙伴 AI 用途：一套「挤进人堆再原地乱挥」的出手计划。
+ * 大闹一番 的伙伴 AI 用途：一套「挤进人堆再左右扇扫」的出手计划。
  *
  * 什么局面有意义：威胁可见、敌对、存活，且在 ai.maxChase（默认 8）格以内，并且以自己为圆心、乱挥半径内
  *   至少站着 ai.minFoes（默认 1）个非友方。人不够就先由共享接近逻辑继续往里挤，不空放。
@@ -38,6 +38,7 @@ namespace CompanionBehavior {
         reach: function (context, capability) { return thrashRadius(capability); },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (CompanionBehavior.status(context, CompanionBehavior.source(context), "confusion")) return false;
             if (!target) return true;
             if (!thrashWants(context, capability, target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)

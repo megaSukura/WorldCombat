@@ -1,55 +1,19 @@
-/**
- * 炸蛋 / eggbomb 的出手方式。
- *
- * 核心念头：**用最大力气抡出一枚大大的蛋**——它重、它笨、它不好瞄：砸中就是本族最重的单体一记，抡偏了
- *   蛋就在落点摔碎、摊开一小片滑蛋液，之后踩进去的人都会打滑。所以躲开也有代价，这一记卖的是「一枚抡过头的蛋」。
- *
- * 三幕（提交前只播预告）：
- *   抡（heave，提交前）：把大蛋举过头顶、屈腿蓄力，只播预告。
- *   飞（flight，提交后）：蛋沿一道沉甸甸的抛物线飞向目标（看得见、能躲）；带一点散布（原生 75 命中）。
- *   碎（shatter / splash）：命中活物结算 `egg` 物理伤害，并在落点摊开滑蛋液；抡偏落到地面同样摊开滑蛋液、
- *       但不造成伤害。滑蛋液是 `WorldEffects.field` 的字段规则，踩进去的非友方被刷新 `world_combat:status/slick`
- *       （本单元 MobEffect，自带移动速度修饰），持续 `slickTicks`。
- *
- * 与同族分开：种子炸弹是可控的头顶种雨、只伤落点一圈；泥巴炸弹/污泥炸弹是特殊伤害的水花。炸蛋是一枚巨大的、
- *   抡过头的蛋：命中很重、失手留下一地滑——玩家凭「抡偏了地上还有一滩滑」把它和别的投掷分开。
- *
- * 配置 `heavy`（重蛋式）由公式改威力/散布/覆盖/弧坠、由 resolve 改时序；提交后才触碰世界。
- */
+/** A heavy egg bursts once on living contact, or after a short native ground roll. */
 namespace PokemonSkills {
     const eggbombScene = "world_combat:move_eggbomb";
-    const eggbombSlick = "world_combat:eggbomb_slick";
-    const eggbombSlickField = "world_combat:eggbomb_slick";
-    const eggbombHitText = "world_combat.move.eggbomb.text.hit";
-    const eggbombMissText = "world_combat.move.eggbomb.text.miss";
-
-    // 滑蛋液：落点那圈由字段规则维持，踩进来的非友方被刷新共享身份 world_combat:status/slick 的载体。
-    WorldEffects.fieldRule("world_combat:eggbomb_slick", {
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field) {
-            if (world.friendly(actor)) return;
-            const data: any = field.data || {};
-            const ticks = typeof data.ticks === "number" && isFinite(data.ticks) ? Math.max(20, Math.round(data.ticks)) : 50;
-            MobEffects.apply(world, actor, eggbombSlick, ticks, 0);
-        }
+    const eggbombRoll = "world_combat:eggbomb_roll";
+    WorldBodies.define(eggbombRoll, { maxTicks: 40, start: function () {},
+        blocked: function (brain, input) { if (input.horizontal) { const data = JSON.parse(brain.state()); data.stopped = true; brain.state(JSON.stringify(data)); } },
+        touch: function (brain, other) { const world = brain.world(); if (world.friendly(other)) return;
+            const data = JSON.parse(brain.state()); if (!data.contact) { data.contact = String(other.ref()); brain.state(JSON.stringify(data)); } }
     });
-
-    /** 在落点摊开一圈滑蛋液：字段维持 + 画面在存续期内续期。 */
-    function eggbombSplash(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): void {
-        const duration = Math.max(20, Math.round(ticks));
-        const reach = Math.max(0.6, Math.min(16, radius));
-        WorldEffects.field(world, eggbombSlickField, point, reach, { ticks: duration }, duration);
-        const key = "eggbomb:slick:" + world.tick() + ":" + Math.round(point.x() * 10) + ":" + Math.round(point.z() * 10);
-        WorldFeedback.keep(world, key, eggbombScene, 1, point,
-            { moment: "slick", radius: reach, scale: Math.max(0.6, Math.min(2.4, reach / 1.6)), slick: duration }, duration + 20);
-    }
-
     define({
         id: "eggbomb",
         cooldownParameter: "recharge",
         name: "Egg Bomb",
-        description: "用最大力气抡出一枚大大的蛋：命中活物就是最重的单体一记，并在落点摊开一小片滑蛋液；抡偏落到地面也会摊开，踩进去的非友方移动速度降低 45%。重蛋式更重更广、更慢更散，直投式更快更准、单发更轻。",
-        uses: ["对厚目标抡一记最重的单发物伤", "把落点变成一小片滑地，踩上去减速、逼对手绕开", "隔着掩体用高弧线把蛋扔过去"],
-        kind: "enemy",
+        description: "重蛋沿弧线抛出，撞活体立即裂爆；落地则沿原方向滚一小段，碰墙或滚尽再裂开。每蛋只爆一次，总威力由范围内实际命中的敌人分担。",
+        uses: ["对厚目标抡一记最重的单发物伤", "让落地的裂蛋短滚后爆开，压住敌人的前进路线", "隔着掩体用高弧线把蛋扔过去"],
+        kind: "aim",
         range: 9,
         maxRange: 12,
         prepare: 7,
@@ -83,7 +47,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
+            const world = action.world(), scenes = WorldFeedback.actionScenes(eggbombScene);
             const origin = action.origin();
             const target = action.target();
             const point = action.targetPosition();
@@ -95,50 +59,64 @@ namespace PokemonSkills {
             const spread = Math.max(0.5, p("eggbomb", "scatter", action));
             const splash = Math.max(1.0, p("eggbomb", "splash", action));
             const shards = Math.max(6, Math.round(p("eggbomb", "shards", action)));
-            const slickTicks = Math.max(40, Math.round(p("eggbomb", "slickTicks", action)));
+            const slickTicks = Math.max(4, Math.round(p("eggbomb", "slickTicks", action)));
             const heavy = !!(config && config.heavy);
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.4));
             const intensity = Math.max(0.5, Math.min(2.2, power / 90));
             const distance = point.minus(origin).length();
-            let settled = false;
+            let settled = false, rolling = false, burst = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
-            let direction = target !== null ? LivingActions.ballistic(origin, point, speed, gravity) : null;
+            let direction = LivingActions.ballistic(origin, point, speed, gravity);
             if (direction === null) direction = aim(action);
             const angle = (world.random() * 2 - 1) * spread * Math.PI / 180;
             const cos = Math.cos(angle), sin = Math.sin(angle);
             direction = WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(), direction.x() * sin + direction.z() * cos);
 
+            function crack(current: CombatAction, at: CombatPoint): void {
+                if (burst) return; burst = true;
+                const scope = current.world();
+                const victims = scope.query(at, splash, false).filter(function (actor) { const body = scope.observe(actor); return !scope.friendly(actor) && !!body && scope.clear(at, body.position()); });
+                victims.forEach(function (victim) { hurt(current, victim, "eggbomb", power / Math.max(1, victims.length), { damage: damageSpec("eggbomb", "egg") }); });
+                WorldFeedback.emit(scope, eggbombScene, 1, at, { moment: "shatter", shards: shards, radius: splash, scale: scale, intensity: intensity }, 24);
+                scope.sound("minecraft:entity.turtle.egg_break", at, 14, "{}");
+            }
             sound(action, "minecraft:entity.egg.throw");
             WorldFeedback.emit(world, eggbombScene, 1, origin,
                 { moment: "release", heavy: heavy ? 1 : 0, shards: shards, scale: scale, intensity: intensity }, 16);
 
+            action.releaseTarget();
             const flight = LivingActions.projectile(action, {
                 speed: speed, direction: direction, gravity: gravity, range: Math.max(reach, distance + 3),
                 radius: radius, lifetime: Math.max(30, Math.round((distance + 3) / Math.max(0.3, speed)) + 30),
                 appearance: { item: "minecraft:egg", scale: Math.max(0.9, Math.min(2.1, radius * 3.4)) } as any,
                 impact: function (inner: CombatAction, hit: CombatImpact): void {
-                    const scope = inner.world(), at = hit.position(), struck = hit.target();
-                    if (hit.hitEntity() && struck !== null && scope.valid(struck) && !scope.friendly(struck)) {
-                        if (!impact(inner, hit, "eggbomb", power, { damage: damageSpec("eggbomb", "egg") })) return;
-                        WorldFeedback.emit(scope, eggbombScene, 1, at,
-                            { moment: "shatter", target: String(struck.ref()), shards: shards, radius: splash,
-                                scale: scale, intensity: intensity }, 24);
-                        sound(inner, "cobblemon:impact.normal");
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), eggbombHitText, [], 26);
-                    } else {
-                        WorldFeedback.emit(scope, eggbombScene, 1, at,
-                            { moment: "splash", shards: Math.round(shards * 0.7), radius: splash, scale: scale, intensity: intensity }, 22);
-                        sound(inner, "minecraft:block.sniffer_egg.plop");
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.8, 0)), eggbombMissText, [], 24);
+                    scenes.stop(inner, "flight");
+                    const scope = inner.world(), at = hit.position();
+                    if (hit.hitEntity() || hit.blockFace() !== "up") { crack(inner, at); return; }
+                    rolling = true;
+                    const egg = WorldBodies.spawn(scope, at.plus(WorldCombat.point(0, .05, 0)),
+                        { appearance: { item: "minecraft:egg", spin: true, scale: scale }, size: [radius * 2, radius * 2],
+                            health: 1, gravity: true, pushable: true, invulnerable: true, silent: true }, eggbombRoll, {}, 30);
+                    const velocity = WorldCombat.point(direction!.x(), 0, direction!.z()).scale(speed * .3);
+                    scope.motion(egg, velocity, false);
+                    WorldFeedback.emit(scope, eggbombScene, 1, at, { moment: "splash", shards: 4, scale: scale, radius: radius }, 12);
+                    const began = scope.tick(), rollTicks = Math.max(4, Math.min(12, slickTicks));
+                    function roll(current: CombatAction): void {
+                        const access = current.world(), body = access.valid(egg) ? access.observe(egg) : null;
+                        if (!body) { finish(current); return; }
+                        const state = access.effects(egg, eggbombRoll)[0], facts = state ? JSON.parse(state.data()) : {};
+                        const velocity = body.velocity(), speed = Math.sqrt(velocity.x() * velocity.x() + velocity.z() * velocity.z());
+                        if (facts.contact || facts.stopped || access.tick() - began >= rollTicks || access.tick() - began >= 3 && speed < .03) {
+                            const actual = body.position(); access.dismiss(egg); crack(current, actual); finish(current); return;
+                        }
+                        current.after(1, roll);
                     }
-                    sound(inner, "minecraft:entity.turtle.egg_break");
-                    eggbombSplash(scope, at, splash, slickTicks);
+                    inner.after(1, roll);
                 }
-            }, function (inner: CombatAction) { finish(inner); });
-            WorldFeedback.keep(world, "eggbomb:flight:" + action.id(), eggbombScene, 1, origin,
-                { moment: "flight", projectile: flight, shards: shards, scale: scale, intensity: intensity }, 160);
+            }, function (inner: CombatAction) { if (!rolling) finish(inner); });
+            scenes.show(action, "flight", origin, { moment: "flight", projectile: flight, shards: shards, scale: scale, intensity: intensity });
         }
     });
 }

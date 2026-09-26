@@ -53,7 +53,7 @@ const SonicboomDefinition: ParticleDefinition = {
                     name: "line", bind: "path", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     shape: { kind: "polyline" },
-                    rate: { data: "sparks", fallback: 16 }, direction: "shape", speed: [0.02, 0.1],
+                    burst: { count: { data: "sparks", fallback: 16 }, at: 0 }, direction: "shape", speed: [0.02, 0.1],
                     lifetime: [4, 9], size: [0.28, 0.06], sizeMode: "sin",
                     color: 0xEAF6FF, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 220
                 },
@@ -76,7 +76,7 @@ const SonicboomDefinition: ParticleDefinition = {
                     name: "line", bind: "path", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     shape: { kind: "polyline" },
-                    rate: { data: "sparks", fallback: 16 }, direction: "shape", speed: [0.02, 0.1],
+                    burst: { count: { data: "sparks", fallback: 16 }, at: 0 }, direction: "shape", speed: [0.02, 0.1],
                     lifetime: [4, 9], size: [0.26, 0.05], sizeMode: "sin",
                     color: 0xA9E6FF, alpha: [0.75, 0], light: "full", bloom: 0.4, maxParticles: 200
                 },

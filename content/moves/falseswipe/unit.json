@@ -5,6 +5,7 @@
   "requires": {
     "world_combat:skill_runtime": "0.1",
     "world_combat:companion_runtime": "0.1",
+    "world_combat:companion_presentation": "0.1",
     "world_combat:mechanisms": "0.1",
     "world_combat:native": "0.1"
   },

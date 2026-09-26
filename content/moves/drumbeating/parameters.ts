@@ -1,32 +1,4 @@
-/**
- * 鼓击 / drumbeating 的参数与伤害段。
- *
- * 原生事实：Grass、物理、威力 80、命中 100、PP 10、非接触，命中后必定降低 1 级速度（Cobblemon 1.8 / Showdown，
- * 唯一学习者＝Rillaboom 一家）。
- *
- * 翻译：把「用鼓点来控制鼓的根部进行攻击」落成一次**地面上的多拍连奏**——施法者敲响鼓，每一拍都让一道根须的
- * 波峰从脚下沿地面冲向目标、在它脚下破土：前几拍把它震得站不稳，最后一拍根须缠住它的腿脚（`rootbound`），
- * 拖住它的动作、压住它的速度；破土而出的根留在原地（`terrain` 租借，到期原方块回来）。它是这一族里唯一
- * **不接触、走地面、分多拍**的一招：物理威力却隔着一层土打过去，根须是真正留在世界里的东西。
- *
- * 数据分散（每项读不同的精灵数据，落到不同参数上）：
- *   beat / final 每拍与末拍威力：物攻定根须的劲道，末拍再叠等级；深根形态把力道分给更久的地面控制。
- *   beats      拍数：速度达到 120 的个体多敲一拍。
- *   interval   拍与拍之间：速度决定鼓点的快慢——这是这一招的节奏，也是画面里数得清的拍子。
- *   reach      根须能走多远：物攻与等级。
- *   wavePace   波峰沿地面推进的速度：速度决定。
- *   beatRadius 破土范围：等级决定；深根形态更宽。
- *   slowStages 末拍掉速等级：深根再多一级（1..2）。
- *   bindTicks  rootbound 时长：等级与物攻；深根 ×1.35。
- *   rootTicks  缠腿定身时长：深根更久。
- *   rootCells  留下的根块数：等级决定；也是表现里破土的根须数。
- *   notes      鼓点/音粒数量：物攻与等级驱动，表现按它发射。
- *   tempo      起手：速度决定抬手敲鼓的快慢。
- * 配置 deep（深根）双向取舍：开＝根留得更久、多压一级速度、破土更宽，但每拍更轻、冷却更久；
- * 关＝更重更快的三拍连奏。两向各有局面（钉住一片 / 抢伤害）。
- *
- * 伤害段 `beat`（前几拍）与 `final`（末拍）分别登记；属性与分类沿用原生 Grass／物理，对手防御、相性与暴击在命中时统一结算。
- */
+/** Finite ground roots travel to each beat; the final successful beat briefly binds. */
 namespace PokemonSkills {
     actionParameters.define("drumbeating", {
         /** 每拍威力：22 + 物攻偏移[−3,10]；深根 ×0.85；夹 14..38。 */
@@ -107,9 +79,9 @@ namespace PokemonSkills {
             F.base(6).plus(F.level().minus(30).times(0.2).clamp(0, 6))
                 .times(F.when(F.pref("deep", text("worldcombat.skill.drumbeating.preference.deep")), F.const(1.3), F.const(1)))
                 .clamp(4, 16).round(0),
-            "根块数量", {
+            "短根纹数量", {
                 unit: "块",
-                description: "留在目标脚下的根须方块数量（也是表现里破土的根须数）；等级越高、深根越多，到期原方块回来。"
+                description: "束缚期间可见的短根纹数量；等级和深根选项决定细节密度。"
             }),
         /** 鼓点粒数：10 + 物攻偏移[−1,6] + 等级(≥30)偏移[0,6]；夹 8..28。 */
         notes: formula(

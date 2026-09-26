@@ -66,6 +66,15 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "从目标身后多远的地方撕开裂隙现身；身板越大退得越开，也越不容易扑空。"
             }),
+        /** 空斩位移：2.6 + (速度 − 55) × 0.02 格，夹 1.5..4.0；没有实体目标时朝瞄点短闪多远。 */
+        blink: formula(
+            F.base(2.6)
+                .plus(F.stat("speed").minus(55).times(0.02).clamp(-0.8, 1.2))
+                .clamp(1.5, 4.0).round(2),
+            "空斩位移", {
+                unit: "格",
+                description: "没有选中实体、只朝一个点发动相位时，现身后朝那个方向短闪多远；速度越快闪得越远。这一下只挥空，不破守护、不结算伤害。"
+            }),
         /** 破护层数：1 + 每 20 级一级（向下取整），夹 1..3；深潜式 +1。 */
         wardBreak: formula(
             F.base(1).plus(F.level().div(20).floor())
@@ -102,6 +111,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["rift"] },
         { key: "description.1", values: ["vanishTicks","behindOffset"] },
         { key: "description.2", values: ["wardBreak"] },
+        { key: "description.3", values: ["blink"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range","tempo","settle","pp","recharge"] },

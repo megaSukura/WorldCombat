@@ -32,20 +32,25 @@ namespace PokemonSkills {
         return Math.max(0, coachingStage(world, actor, stat) - before);
     }
 
-    /** 教一个战斗者：攻防各抬一档、挂身份、播一次领会；已经带着同一身份的人不重复教。 */
-    function coachingTeach(world: CombatWorld, actor: CombatActor, atk: number, def: number, ticks: number, motes: number, strong: boolean): boolean {
-        if (MobEffects.read(world, actor, coachingDrill) !== null) return false;
+    /** 教一个战斗者：攻防各抬一档、挂身份；已经带着同一身份的人不重复教，返回这次教到的实际级数。 */
+    function coachingTeach(world: CombatWorld, actor: CombatActor, atk: number, def: number, ticks: number): { atk: number; def: number } | null {
+        if (MobEffects.read(world, actor, coachingDrill) !== null) return null;
         const grantedAtk = coachingGrant(world, actor, "atk", atk);
         const grantedDef = coachingGrant(world, actor, "def", def);
         MobEffects.apply(world, actor, coachingDrill, ticks, grantedAtk);
         MobEffects.apply(world, actor, coachingStance, ticks, grantedDef);
+        return { atk: grantedAtk, def: grantedDef };
+    }
+
+    /** 一次领会的表现：drill 落在受教者身上，learn 用 path 从受教者连到实际同学。 */
+    function coachingEmit(world: CombatWorld, actor: CombatActor, moment: string, atk: number, def: number,
+        motes: number, path: string[] | null): void {
         const body = world.observe(actor);
-        if (body !== null) {
-            WorldFeedback.emit(world, coachingScene, 1, body.position(),
-                { moment: strong ? "drill" : "learn", target: String(actor.ref()), atk: grantedAtk, def: grantedDef,
-                    motes: motes, intensity: Math.max(0.7, Math.min(2, (grantedAtk + grantedDef) / 2 + 0.4)) }, strong ? 30 : 22);
-        }
-        return true;
+        if (body === null) return;
+        const data: any = { moment: moment, target: String(actor.ref()), atk: atk, def: def, motes: motes,
+            intensity: Math.max(0.7, Math.min(2, (atk + def) / 2 + 0.4)) };
+        if (path !== null) data.path = path;
+        WorldFeedback.emit(world, coachingScene, 1, body.position(), data, moment === "drill" ? 30 : 22);
     }
 
     define({
@@ -112,19 +117,31 @@ namespace PokemonSkills {
             const motes = Math.max(6, Math.round(p("coaching", "motes", action)));
             const coach = world.observe(target);
             if (coach === null) { done(action); return; }
-            let reached = coachingTeach(world, target, atk, def, window, motes, true) ? 1 : 0;
+            const main = coachingTeach(world, target, atk, def, window);
+            let reached = main === null ? 0 : 1;
+            // 以受教者为阵心、这一次施放固定下来的一圈；只教没带着指导的伙伴。
+            const students: { actor: CombatActor; atk: number; def: number }[] = [];
             const actors = world.query(coach.position(), splash, false);
             for (let i = 0; i < actors.length; i++) {
                 const other = actors[i];
                 if (String(other.key()) === String(target.key())) continue;
                 if (!world.friendly(other) || world.observe(other) === null) continue;
-                if (coachingTeach(world, other, atk, def, window, motes, false)) reached++;
+                const grants = coachingTeach(world, other, atk, def, window);
+                if (grants !== null) { reached++; students.push({ actor: other, atk: grants.atk, def: grants.def }); }
             }
             const body = world.observe(actor);
             if (body !== null) {
                 WorldFeedback.emit(world, coachingScene, 1, body.position(),
                     { moment: "shout", path: [String(actor.ref()), String(target.ref())], target: String(target.ref()),
                         motes: motes, atk: atk, def: def, scale: Math.max(0.7, Math.min(2, splash / 3)) }, 26);
+            }
+            if (main !== null) coachingEmit(world, target, "drill", main.atk, main.def, motes, null);
+            // learn 从受教者连到每个真正领会的同学，指着这次实际传开的人。
+            const learnMotes = Math.max(6, Math.round(motes * 0.5));
+            for (let i = 0; i < students.length; i++) {
+                const student = students[i];
+                coachingEmit(world, student.actor, "learn", student.atk, student.def, learnMotes,
+                    [String(target.ref()), String(student.actor.ref())]);
             }
             WorldFeedback.text(world, coach.position().plus(WorldCombat.point(0, 1.4, 0)), coachingText,
                 [atk, def, reached, Math.round(window / 20)], 32);

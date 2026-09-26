@@ -7,6 +7,7 @@
  *
  * 两幕（加愿景自身的一段等待）：
  *   起（windup，提交前）：半跪合掌，周身升起愿光；只观察与预告，可被打断（此时不会倒下）。
+ *     同时标出真正可接者与愿星将留下的地面位置，提交前就看得出这次牺牲救不救得到人。
  *   献（提交后）：把自己当前生命全部交出去（倒下），原地放出一颗独立的愿星（WorldBodies 持久实体，
  *     脑 world_combat:move/healingwish/wish）。愿望不受施法者被收回、区块卸载与重启影响。
  *   兑（愿星期内）：愿星每 4 刻检查半径内是否有「受伤或有有害状态效果」的友善伙伴（不含自己）；有就整口治好、
@@ -25,16 +26,21 @@ namespace PokemonSkills {
         return CombatStatus.hasHarmful(world, actor);
     }
 
-    /** 半径内是否至少有一个「可接收」的友善战斗者（不含自己）；没有就不该交出生命（原生 ifHit）。 */
-    function healingwishAnyFriend(world: CombatWorld, point: CombatPoint, radius: number, owner: string): boolean {
-        var near = world.query(point, radius, false);
+    /**
+     * 半径内真正「可接收」的友善战斗者（不含自己）：又伤又病、愿望用得上的人。
+     * 满状态又干净的伙伴不会领取愿望，也就不算合格接收者——没有他们时不该交出生命（原生 ifHit）。
+     */
+    function healingwishReceivers(world: CombatWorld, point: CombatPoint, radius: number, owner: string): CombatActor[] {
+        var near = world.query(point, radius, false), found: CombatActor[] = [];
         for (var index = 0; index < near.length; index++) {
             var other = near[index];
             if (String(other.ref()) === owner || !world.friendly(other)) continue;
             var facts = world.observe(other);
-            if (facts !== null && facts.health() > 0) return true;
+            if (facts === null || facts.health() <= 0) continue;
+            if (!healingwishNeeds(world, other, facts)) continue;
+            found.push(other);
         }
-        return false;
+        return found;
     }
 
     /** 阵营快照：愿星不属于原施法者的阵营，所以在交出生命前先记下「谁是自己人」与阵营名。 */
@@ -83,8 +89,10 @@ namespace PokemonSkills {
         var world = brain.world(), state = JSON.parse(brain.state());
         var centre = WorldCombat.point(state.ground[0], state.ground[1], state.ground[2]);
         var scale = Math.max(0.6, Math.min(2.0, state.radius / healingwishReferenceRadius));
-        WorldFeedback.keep(world, "healingwish:wait:" + String(brain.target().ref()), healingwishScene, 1, centre,
-            { moment: "wait", radius: state.radius, motes: state.motes, scale: scale, owner: state.owner }, 16);
+        var data = { moment: "wait", radius: state.radius, motes: state.motes, scale: scale, owner: state.owner };
+        // 等待画面挂在愿星自己的托管效果上：兑现、被驱散或到点，随效果一起结束，不留残影。
+        if (!WorldFeedback.onEffect(world, brain.id(), "healingwish:wait", healingwishScene, 1, centre, data))
+            WorldFeedback.keep(world, "healingwish:wait:" + String(brain.target().ref()), healingwishScene, 1, centre, data, 16);
     }
 
     /**
@@ -112,8 +120,11 @@ namespace PokemonSkills {
             var healed = healingwishHeal(world, other, facts.maxHealth() * state.fraction, "healingwish");
             var removed = healingwishCleanse(world, other);
             world.sound("minecraft:entity.player.levelup", facts.position(), 16, "{}");
+            // deliver 只在真正领取时连线：愿星 → 接收者的一段金色交接，读得出「谁用掉了它」。
             WorldFeedback.emit(world, healingwishScene, 1, facts.position(),
-                { moment: "deliver", target: String(other.ref()), motes: state.motes, radius: state.radius, scale: scale,
+                { moment: "deliver", target: String(other.ref()),
+                    path: [String(brain.target().ref()), String(other.ref())],
+                    motes: state.motes, radius: state.radius, scale: scale,
                     healed: Math.round(healed * 10) / 10, removed: removed,
                     intensity: Math.max(0.7, Math.min(2.0, 0.6 + state.fraction)) }, 40);
             WorldFeedback.text(world, healingwishAbove(facts.position()), healingwishDeliverText,
@@ -170,12 +181,29 @@ namespace PokemonSkills {
             const world = action.sense(), self = action.actor(), body = world.observe(self);
             if (body === null) return "invalid-target";
             const radius = Math.max(1.5, p(healingwishId, "wishReach", action));
-            return healingwishAnyFriend(world, body.position(), radius, String(self.ref())) ? "" : "no-one-to-receive";
+            return healingwishReceivers(world, body.position(), radius, String(self.ref())).length > 0 ? "" : "no-one-to-receive";
         },
         windup: function (action, config, prepare) {
+            const world = action.sense(), self = action.actor(), body = world.observe(self);
+            const motes = Math.max(12, Math.round(p(healingwishId, "motes", action)));
             action.present("healingwish:windup", healingwishScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", target: String(action.actor().ref()),
-                    motes: p(healingwishId, "motes", action), broadcast: config && config.broadcast === true ? 1 : 0 }));
+                JSON.stringify({ moment: "windup", target: String(self.ref()), motes: motes,
+                    broadcast: config && config.broadcast === true ? 1 : 0 }));
+            if (body !== null) {
+                // 准备期先把「愿星将留在哪里」和「谁真的能接」指示出来：提交前看得出值不值得交出生命。
+                const feet = body.position();
+                const radius = Math.max(1.5, p(healingwishId, "wishReach", action));
+                const scale = Math.max(0.6, Math.min(2.0, radius / healingwishReferenceRadius));
+                action.present("healingwish:ground", healingwishScene, 1, feet,
+                    JSON.stringify({ moment: "ground", radius: radius, motes: motes, scale: scale }));
+                const receivers = healingwishReceivers(world, feet, radius, String(self.ref()));
+                for (let index = 0; index < receivers.length; index++) {
+                    const facts = world.observe(receivers[index]);
+                    if (facts === null) continue;
+                    action.present("healingwish:receiver:" + String(receivers[index].ref()), healingwishScene, 1, facts.position(),
+                        JSON.stringify({ moment: "receiver", target: String(receivers[index].ref()), motes: motes, scale: scale }));
+                }
+            }
             return prepare;
         },
         execute: function (action, _move, _config, done) {
@@ -187,7 +215,7 @@ namespace PokemonSkills {
             const wait = Math.max(60, Math.round(p(healingwishId, "wishWait", action)));
             const motes = Math.max(12, Math.round(p(healingwishId, "motes", action)));
             const scale = Math.max(0.6, Math.min(2.0, radius / healingwishReferenceRadius));
-            if (!healingwishAnyFriend(world, feet, radius, String(self.ref()))) {
+            if (healingwishReceivers(world, feet, radius, String(self.ref())).length === 0) {
                 WorldFeedback.emit(world, healingwishScene, 1, feet, { moment: "wasted", target: String(self.ref()), motes: motes }, 22);
                 WorldFeedback.text(world, healingwishAbove(feet), healingwishWasteText, [], 26);
                 done(action); return;

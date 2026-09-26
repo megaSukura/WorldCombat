@@ -4,7 +4,7 @@
   "worldcombat.skill.megahorn.use.1": "Fling a target in front into the air, off its position",
   "worldcombat.skill.megahorn.use.2": "Pin a target with the planted horn for your team",
   "worldcombat.skill.megahorn.description.0": "Step up to %4$s blocks along your aim, then stab down a horn line %2$s blocks long and %3$s blocks half-wide for about %1$s contact damage, taking only the first target on the line.",
-  "worldcombat.skill.megahorn.rip.on": "Flung horn: the second beat adds a rip hit (power %1$s) and tosses the target about %2$s blocks along the horn and upward (launch speed %3$s blocks/tick).",
+  "worldcombat.skill.megahorn.rip.on": "Flung horn: the second beat adds a rip hit (power %1$s) and tosses a target still on the horn line about %2$s blocks along the horn and upward (launch speed %3$s blocks/tick); a target that stepped away or put a wall between is released, so this beat misses.",
   "worldcombat.skill.megahorn.rip.off": "Planted horn: the horn stays in the wound, slowing the target's movement by %2$s level(s) for %1$s.",
   "worldcombat.skill.megahorn.timing": "Range %1$s blocks; charge %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.megahorn.growth.0": "From level %1$s the pierce power rises to %2$s.",

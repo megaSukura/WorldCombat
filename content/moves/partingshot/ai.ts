@@ -5,10 +5,21 @@
  *   （不重复削）。这招不造成伤害，只有把对手的输出削下去这一件事。
  * 对谁出手：当前的威胁；它正打着自己时更值得先废掉它的手。
  * 候选之间怎么排：自己生命比例低于 0.5 时 priority 68（撤退前先削），否则 46；对手正攻击自己再 +4。
+ *   待命队伍里真有可上场的后备时，低血撤退再 +14：这招换手才是给队友的安全上场窗口。
  * 够不到怎么办：reach 就是话声射程，共享任务会先走近到射程内再甩话。
- * 放完之后：对手物攻与特攻各降数级，施法者已经退开；对手身上有羞辱身份时不再重复。
+ * 放完之后：对手物攻与特攻各降数级；有后备就换手，没后备就逐刻退开；对手身上有羞辱身份时不再重复
+ *   （身份可被清除，但清除身份不会退回已削的能力等级）。
  */
 namespace CompanionBehavior {
+    /** 场内是否有可上场的后备；没有就读作 false，不影响普通甩话。 */
+    function partingshotReserve(context: WorldBehavior.Context): boolean {
+        const world = CompanionBehavior.world(context), self = source(context);
+        if (!world || !world.valid) return false;
+        const actor = world.actor(self.ref);
+        if (!actor || !world.valid(actor)) return false;
+        return PokemonSkills.partyReserve(PokemonSkills.partyRoster(world, actor), PokemonSkills.partyActiveId(world, actor)) !== null;
+    }
+
     registerUse("partingshot", {
         protocols: ["world_combat:control"],
         reach: function (_context, capability) { return capability.data.range; },
@@ -24,8 +35,10 @@ namespace CompanionBehavior {
         priority: function (context, capability, target) {
             if (!target || target.friendly || target.health <= 0) return 0;
             const self = source(context), threat = context.senses["world_combat:threat"] as Entity | null;
-            const base = ratio(self) <= 0.5 ? 68 : 46;
-            return base + (threat && threat.ref === target.ref && threat.attacking === self.ref ? 4 : 0);
+            const low = ratio(self) <= 0.5;
+            const base = low ? 68 : 46;
+            const relief = low && partingshotReserve(context) ? 14 : 0;
+            return base + relief + (threat && threat.ref === target.ref && threat.attacking === self.ref ? 4 : 0);
         }
     });
 

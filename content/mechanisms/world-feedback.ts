@@ -77,6 +77,10 @@ namespace WorldFeedback {
         }
         world.effect("world_combat:feedback", actor, JSON.stringify(value), bounded(ticks));
     }
+    /** A continuous visual owned by an existing effect from this source; its actual lifecycle controls cleanup. */
+    export function onEffect(world: CombatWorld, effect: number, key: string, scene: string, version: number, point: CombatPoint, data: any): boolean {
+        return world.presentOn(effect, key, scene, version, point, JSON.stringify(data));
+    }
     /** Actual damage facts, read once from a world_combat:damage_applied receipt. */
     export interface DamageReceipt {
         target: CombatActor; point: CombatPoint; actual: number; critical: boolean;

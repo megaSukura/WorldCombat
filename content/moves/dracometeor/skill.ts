@@ -1,57 +1,34 @@
 /**
  * 流星群 / dracometeor 的出手方式。
  *
- * 核心念头：**从高空召下一群陨石**——抬手叫来落点、陨石一颗颗垂直砸下，每颗在自己落点炸开一圈龙属性能量、
- *   把地面砸出焦黑的坑。召唤与维系陨石耗的是同一份精神力，所以自身特攻掉 2 级，提交那一刻就付。
+ * 核心念头：**从高空召下一群陨石**——每颗落点在召唤时固定、独立亮起预告，陨石垂直砸下，在自己落点炸开一圈龙属性能量；
+ *   屋顶会原生截住下落的弹体，就在上层撞点炸开。召唤与维系陨石耗的是同一份精神力，所以自身特攻掉 2 级，提交那一刻就付。
  *
  * 三幕（提交前只播预告）：
- *   起（summon）：施法者抬头，天光在目标处聚成落点标记，只播预告，此时代价未结清。
- *   落（fall → impact / burst）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付）；
- *       第一颗瞄向目标当前位置，其余按 `spread` 散布（流星式）逐个推迟 `interval` 刻召下；
- *       每颗垂直落到落点后在 `impactRadius` 内结算一次 `meteor`，砸出 `crater` 半径、`craterTicks` 时长的坑。
- *   散（fade / miss）：全部落完后余烬散去；一颗也没砸到就是空放。
+ *   起（summon）：施法者抬头，天光在落点聚起，只播预告，此时代价未结清。
+ *   落（mark → fall → impact / burst）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付）；
+ *       落点在提交时一次算定（第一颗是点选中心，其余按 `spread` 散布），逐颗按 `interval` 亮起预告并召下；
+ *       每颗垂直落到自己固定落点后，在 `impactRadius` 内结算 `meteor`；撞到屋顶就在真实碰撞位置炸开。
+ *   散（finish / miss）：全部落完后余烬散去；一颗也没砸到就是空放。
  *
- * 与同族分开：飞叶风暴是旋转前进并留场的叶刃、过热是身前一张扇形热浪、精神突进是隔空内爆；
- *   流星群是唯一从正上方垂直砸下、落点散布成一片的那一记，也是唯一把伤害分给多颗陨石的。
+ * 与同族分开：飞叶风暴是旋转前进并沿路旋切的叶刃、过热是身前一张扇形热浪、精神突进是隔空内爆；
+ *   流星群是唯一从正上方垂直砸下、落点在召唤时固定并逐颗预告的那一记，也是唯一把伤害分给多颗陨石的。
  *
- * 配置 `barrage`（流星式）由 `resolve` 改时序、由公式改威力／颗数／散布，由本文件改判定与表现；提交后才触碰世界。
+ * 选取：`kind: "aim"`——点选陨石中心，可落在空地上；辅助目标只作为第一颗落点的推荐，落点提交后不再追着它走。
+ *
+ * 配置 `barrage`（流星式）由公式改威力／颗数／散布，由本文件改判定与表现；提交后才触碰世界。
  */
 namespace PokemonSkills {
     const dracometeorScene = "world_combat:move_dracometeor";
     const dracometeorMissText = "world_combat.move.dracometeor.text.miss";
 
-    /** 陨石坑：内圈黑石、外圈玄武岩，只换地表，到期原方块回来。 */
-    function dracometeorCrater(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [], r = Math.ceil(radius);
-        const px = point.x(), py = point.y(), pz = point.z();
-        for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius) continue;
-            const x = Math.floor(px) + dx, z = Math.floor(pz) + dz;
-            for (let dy = 1; dy >= -3; dy--) {
-                const y = Math.floor(py) + dy;
-                const block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const surface = distance <= radius * 0.5 ? "minecraft:blackstone" : "minecraft:basalt";
-                if (id !== surface) cells.push({ x: x, y: y, z: z, block: surface });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { return world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-    }
-
     define({
         id: "dracometeor",
         cooldownParameter: "recharge",
         name: "Draco Meteor",
-        description: "从高空召下陨石垂直砸向落点：每颗对落点半径内的每个敌人各造成一次特殊伤害、并把那圈地表烧焦一段时间，目标走出落点就会躲过；流星式散布多颗，同一敌人可能被多颗砸中。召唤当即付出自身特攻大幅下降的代价。",
-        uses: ["远距离召下陨石点杀", "流星式把落点铺成一片、罩住聚在一起的敌人", "把落点一圈地表烧成焦黑"],
-        kind: "enemy",
+        description: "从高空召下陨石垂直砸向各自固定的落点：每颗对落点半径内的每个敌人各造成一次特殊伤害，目标走出落点就会躲过；屋顶会截住下落的陨石，就在上层撞点炸开。流星式散布多颗，同一敌人可能被多颗砸中。召唤当即付出自身特攻大幅下降的代价。",
+        uses: ["远距离召下陨石点杀", "流星式把落点铺成一片、罩住聚在一起的敌人", "对停留在原地的敌人或大体型 Boss 最有效"],
+        kind: "aim",
         range: 13,
         maxRange: 17,
         prepare: 14,
@@ -60,7 +37,7 @@ namespace PokemonSkills {
         cooldown: 40,
         maximumTicks: 320,
         style: "meteor",
-        defaults: { barrage: false, ai: { maxChase: 17, spread: true, minRange: 5 } },
+        defaults: { barrage: false, ai: { maxChase: 17, spread: true, minRange: 5, still: true } },
         fields: [],
         indicator: function (config, pokemon) {
             const fallback = config && config.barrage === true ? 2.0 : 1.3;
@@ -88,7 +65,6 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const origin = action.origin();
             const barrage = !!(config && config.barrage);
             const power = p("dracometeor", "meteor", action);
             const count = Math.max(1, Math.round(p("dracometeor", "count", action)));
@@ -97,8 +73,6 @@ namespace PokemonSkills {
             const fall = p("dracometeor", "fall", action);
             const velocity = Math.max(0.4, p("dracometeor", "velocity", action));
             const interval = Math.max(1, Math.round(p("dracometeor", "interval", action)));
-            const crater = p("dracometeor", "crater", action);
-            const craterTicks = Math.max(40, Math.round(p("dracometeor", "craterTicks", action)));
             const shards = Math.max(16, Math.round(p("dracometeor", "shards", action)));
             const insightLoss = Math.max(0, Math.round(p("dracometeor", "insightLoss", action)));
             const base = action.targetPosition();
@@ -106,14 +80,21 @@ namespace PokemonSkills {
             const markRadius = Math.max(impactRadius, spread);
             const trailScale = Math.max(0.7, Math.min(1.8, impactRadius / 1.3));
             const intensity = Math.max(0.5, Math.min(2.4, power / 120));
+            const scenes = WorldFeedback.actionScenes(dracometeorScene);
+            const points: CombatPoint[] = [];
             let launched = 0, resolved = 0, totalHits = 0, settled = false;
+
+            // 落点在提交时一次算定，之后不再追着目标走。
+            for (let i = 0; i < count; i++) {
+                if (i === 0 || spread <= 0) { points.push(base); continue; }
+                const angle = world.random() * Math.PI * 2, radius = Math.sqrt(world.random()) * spread;
+                points.push(base.plus(WorldCombat.point(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)));
+            }
 
             // 召唤耗的是精神力：反作用力在提交那一刻付。
             NativeEffects.boost(world, actor, "spa", -insightLoss);
             WorldFeedback.emit(world, dracometeorScene, 1, base,
                 { moment: "summon", barrage: barrage ? 1 : 0, shards: shards, radius: markRadius, scale: trailScale, intensity: intensity }, 26);
-            WorldFeedback.keep(world, "dracometeor:mark:" + action.id(), dracometeorScene, 1, base,
-                { moment: "mark", radius: markRadius, shards: shards, scale: trailScale, intensity: intensity }, count * interval + fallTicks + 24);
             sound(action, "cobblemon:move.dracometeor.actor_1");
 
             function finish(current: CombatAction): void {
@@ -123,10 +104,10 @@ namespace PokemonSkills {
                     const scope = current.world();
                     WorldFeedback.text(scope, base.plus(WorldCombat.point(0, 1.0, 0)), dracometeorMissText, [], 20);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
-            /** 一颗陨石落定：在落点半径内结算，砸出坑，播一次冲击。 */
+            /** 一颗陨石落定：在真实碰撞位置结算，播一次冲击。 */
             function strike(current: CombatAction, at: CombatPoint, direct: CombatActor | null): void {
                 const scope = current.world();
                 let hits = 0;
@@ -139,9 +120,8 @@ namespace PokemonSkills {
                             impactRadius: impactRadius, scale: trailScale, intensity: isDirect ? intensity : intensity * 0.85 }, 24);
                 });
                 totalHits += hits;
-                const cells = dracometeorCrater(scope, at, crater, craterTicks);
                 WorldFeedback.emit(scope, dracometeorScene, 1, at,
-                    { moment: "burst", cells: cells, shards: shards, impactRadius: impactRadius, crater: crater,
+                    { moment: "burst", shards: shards, impactRadius: impactRadius,
                         scale: trailScale, intensity: intensity, hits: hits }, 28);
                 sound(current, "cobblemon:impact.dragon");
                 sound(current, "minecraft:entity.generic.explode");
@@ -149,38 +129,33 @@ namespace PokemonSkills {
                 if (resolved >= launched && launched >= count) finish(current);
             }
 
-            /** 召下一颗：第一颗瞄向目标当前位置，其余按 spread 散布。 */
+            /** 召下一颗：落点已固定，只按顺序亮起预告并从它正上方垂直砸下。 */
             function summon(current: CombatAction, index: number): void {
-                const scope = current.world();
-                let at = base;
-                if (index === 0) {
-                    const t = current.target();
-                    if (t !== null && scope.valid(t)) {
-                        const body = scope.observe(t);
-                        if (body !== null) at = body.position();
-                    }
-                } else if (spread > 0) {
-                    const angle = scope.random() * Math.PI * 2, radius = Math.sqrt(scope.random()) * spread;
-                    at = base.plus(WorldCombat.point(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
-                }
+                const at = points[index];
                 const from = at.plus(WorldCombat.point(0, fall, 0));
                 let spent = false;
                 launched++;
+                scenes.show(current, "mark:" + index, at,
+                    { moment: "mark", radius: impactRadius, shards: shards, scale: trailScale, intensity: intensity });
                 const flight = current.projectile(from, WorldCombat.point(0, -velocity, 0), 0,
                     Math.max(0.25, impactRadius * 0.5), fall + 8, fallTicks + 40,
                     function (fresh: CombatAction, hit: CombatImpact) {
                         if (spent) return;
                         spent = true;
+                        scenes.stop(fresh, "fall:" + index);
+                        scenes.stop(fresh, "mark:" + index);
                         strike(fresh, hit.position(), hit.target());
                     },
                     function (fresh: CombatAction) {
                         if (spent) return;
                         spent = true;
+                        scenes.stop(fresh, "fall:" + index);
+                        scenes.stop(fresh, "mark:" + index);
                         strike(fresh, at, null);
                     },
                     JSON.stringify({ sprite: "cobblemon:particle/moves/meteor", scale: Math.max(1.0, impactRadius * 1.5), glow: true, spin: true }));
-                WorldFeedback.keep(scope, "dracometeor:fall:" + flight, dracometeorScene, 1, from,
-                    { moment: "fall", projectile: flight, shards: shards, scale: trailScale, intensity: intensity }, fallTicks + 40);
+                scenes.show(current, "fall:" + index, from,
+                    { moment: "fall", projectile: flight, shards: shards, scale: trailScale, intensity: intensity });
                 sound(current, "cobblemon:move.dracometeor.actor_2");
             }
 

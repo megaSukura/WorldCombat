@@ -127,7 +127,7 @@ namespace PokemonSkills {
                         hits++;
                         const away = facts.position().minus(centre);
                         if (scope.valid(enemy)) {
-                            if (away.length() > 0.2) scope.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
+                            if (away.length() > 0.2) scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
                             CombatStatus.apply(scope, enemy, "soaked", surfSoakedEffect, soak, 0);
                             if (CombatStatus.has(scope, enemy, "burn")) {
                                 CombatStatus.cure(scope, enemy, "burn");

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.batonpass.summary": "Passes stat changes and buffs to an ally. A reserve takes the baton when available; otherwise it passes to the selected nearby ally and steps away.",
+  "worldcombat.skill.batonpass.summary": "Pass actual stages and buffs to the selected live ally. With no entity selected, use a legal reserve. Withdraw or recall only after a real handoff.",
   "worldcombat.skill.batonpass.use.0": "Hand the whole stack of stat changes to a teammate",
   "worldcombat.skill.batonpass.use.1": "Pass your growth on before it can be stripped away",
   "worldcombat.skill.batonpass.use.2": "Pass the baton and disengage when badly hurt",

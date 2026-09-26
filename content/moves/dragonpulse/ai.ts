@@ -55,7 +55,7 @@ namespace PokemonSkills {
 
     addPreferences("dragonpulse", {}, [
         field(pathOf("chain"), "连锁式", "boolean", {
-            help: "开启：波在碰到第一个敌人时收束、在它周围炸开一圈（不再前进）；关闭：贯通式，波沿直线继续穿过后面的敌人。连锁式罩一片，贯通式吃一列。"
+            help: "开启：波在碰到第一个敌人时收束，再沿同一条线依次命中后续目标、每级威力递减（不再前进）；关闭：贯通式，波沿直线以完整威力继续穿过后面的敌人。连锁式吃一条衰减的链，贯通式吃一列硬伤。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 16, step: 1,

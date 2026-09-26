@@ -35,6 +35,7 @@ namespace PokemonSkills {
     export const cometpunchScene = "world_combat:move_cometpunch";
     export const cometpunchTallyText = "world_combat.move.cometpunch.text.tally";
     export const cometpunchMissText = "world_combat.move.cometpunch.text.miss";
+    export const cometpunchOutText = "world_combat.move.cometpunch.text.out";
 
     actionParameters.define(cometpunchId, {
         /** 单拳威力：18 + 物攻偏移[−4,16]×0.18 + 等级(≥25)偏移[0,8]×0.32；乱打 ×0.85 / 聚焦 ×1.2；夹 10..40。 */
@@ -96,7 +97,7 @@ namespace PokemonSkills {
         /** 间隔：3 − 速度偏移[−0.7,1.0]×0.02；夹 2..5。 */
         gap: seconds(
             F.base(3).minus(F.stat("speed").minus(55).times(0.02).clamp(-0.7, 1.0)).clamp(2, 5).round(0),
-            "间隔", "两拳之间隔多久；速度越快出拳越密，这也是「怒涛般」的来源。"),
+            "间隔", "这一串第一拳到第二拳的间隔；速度越快出拳越密，之后每一拳再收紧 1 刻，总时长不超过原来的匀速串，这就是「怒涛般」的来源。"),
         /** 每拳命中率：0.85 + 速度偏移[−0.03,0.06]×0.001；夹 0.72..0.95。 */
         accuracy: percent(
             F.base(0.85).plus(F.stat("speed").minus(55).times(0.001).clamp(-0.03, 0.06)).clamp(0.72, 0.95).round(3),

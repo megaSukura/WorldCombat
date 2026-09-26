@@ -7,7 +7,7 @@
  * 翻译：把「喷射浑浊的水」落成一道**贴着地面向前推的浑浊泥浪**——泥水从脚下整片漫出去，从近到远一层层
  *   扫过身前 `span` 度的扇形；扫到的每个非友方各吃一次 `surge`，有 `murkChance` 概率被泥水糊住眼睛、掉
  *   `murkStages` 级命中，并带上共享身份 `world_combat:status/murky`（本单元发明：被泥水糊到）。浪推完，
- *   扫过的地面按 `siltTicks` 淤上一层 `minecraft:mud`（`terrain` 租借、到期原方块回来）。
+ *   扫过的地面只留下一层 `siltTicks` 之内的短泥膜粒子，不改动任何方块。
  *
  * 与同族分开：冲浪是自身脚下 360 度整圈、水漫且浇湿；水枪是细快水线；泡沫光线是一团会黏的泡沫球；
  *   浊流是**单向、贴地、缓慢推进的宽泥浪**，不带湿身、不整圈，卖的是「一片地面被泥水抹过去」。
@@ -22,13 +22,13 @@
  *   murkTicks  糊眼时长：等级与淤积式决定。
  *   maxTargets 覆盖人数：碰撞箱宽度决定一片泥浪能同时污到几个。
  *   drops      泥点数量：特攻与等级驱动，直接驱动表现的密度。
- *   siltTicks  泥淤时长：等级、体重与淤积式决定地上那片泥留多久。
+ *   siltTicks  泥膜时长：等级、体重与淤积式决定地上那层短泥膜留多久（纯表现）。
  *   tempo／aftercast／recharge：速度与等级定节奏，淤积式更慢更贵。
  *
  * 配置 `silted`（淤积式）双向取舍（默认关）：
- *   开＝扇面 ×1.35、糊眼概率 +12%、可掉 2 级、糊眼时长 ×1.6、泥淤时长 ×1.5；代价是威力 ×0.85、
+ *   开＝扇面 ×1.35、糊眼概率 +12%、可掉 2 级、糊眼时长 ×1.6、泥膜时长 ×1.5；代价是威力 ×0.85、
  *     射程 −1.5 格、推进 −1 步、起手 +3 刻、冷却 +6 刻——铺得广、留得久。
- *   关（急流）＝威力 ×1.12、射程 +1.5 格、推进 +1 步、糊眼概率 −6%、泥淤时长 ×0.7——冲得急、打得重。
+ *   关（急流）＝威力 ×1.12、射程 +1.5 格、推进 +1 步、糊眼概率 −6%、糊眼时长 ×0.8、泥膜时长 ×0.75——冲得急、打得重。
  *
  * 伤害段 `surge`（参数同名）走共享换算（原生类别 Special／Water）；对手特防、相性与暴击命中时另算。
  * 命中下降：真实 MobEffect 让任何战斗者「打不准」（攻击变弱），宝可梦那一层再用 NativeEffects.boost
@@ -118,13 +118,13 @@ namespace PokemonSkills {
                 unit: "点",
                 description: "泥浪与命中处用到的泥点数量，也驱动表现的密度；特攻与等级越高越密。"
             }),
-        /** 泥淤时长：90 + 体重 × 0.35 + 等级(≥25)偏移[0,20]；淤积 ×1.5 / 急流 ×0.7；夹 40..220。 */
+        /** 泥膜时长：24 + 体重偏移[0,14] + 等级(≥25)偏移[0,12]；淤积 ×1.5 / 急流 ×0.75；夹 16..64（纯表现，不改方块）。 */
         siltTicks: seconds(
-            F.base(90).plus(F.body("weight").times(0.35))
-                .plus(F.level().minus(25).times(0.8).clamp(0, 20))
-                .times(F.when(F.pref("silted"), F.const(1.5), F.const(0.7)))
-                .clamp(40, 220).round(0),
-            "泥淤时长", "扫过的地面淤上的那层泥留多久，到期原方块回来；越重的个体带得越多，淤积式留得更久。"),
+            F.base(24).plus(F.body("weight").times(0.05).clamp(0, 14))
+                .plus(F.level().minus(25).times(0.4).clamp(0, 12))
+                .times(F.when(F.pref("silted"), F.const(1.5), F.const(0.75)))
+                .clamp(16, 64).round(0),
+            "泥膜时长", "浪推完后扫过的地面留下的短泥膜停留多久，到期自然散去；只影响画面，不替换任何方块。越重的个体带得越多、淤积式留得更久。"),
         /** 起手：12 − 速度偏移[−1.5,3] + 淤积 3；夹 7..18。 */
         tempo: seconds(
             F.base(12).minus(F.stat("speed").minus(55).times(0.04).clamp(-1.5, 3))
@@ -152,7 +152,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["surge","murkChance","murkStages"] },
         { key: "description.1", values: ["span", "reach", "sweep"] },
         { key: "description.2", values: ["murkTicks"] },
-        { key: "description.3", values: ["siltTicks","maxTargets"] },
+        { key: "description.3", values: ["maxTargets"] },
         { key: "silted.on", values: [], when: function (context) { return read(context.detail.values, ["silted"]) === true; } },
         { key: "silted.off", values: [], when: function (context) { return read(context.detail.values, ["silted"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

@@ -1,6 +1,4 @@
-// 光面：一段可见的窗口状态，只承载共享身份 world_combat:status/polished，amplifier 记录这段打磨抬起的级数。
-// 速度等级由 NativeEffects.boost 写入公共能力阶梯；窗口走完时由本单元 skill.ts 从移除事件里原样收回。
-// 启动脚本不引用服务端共享库，标签用字符串字面量。
+// 原生光面载体同时锚定临时速度贡献与身体滑行系数；移除时各自释放。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:rock_polish_shine")
     .beneficial()
     .color(0xE8B87A)

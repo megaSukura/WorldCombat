@@ -1,4 +1,21 @@
-/** 近身连续攻击，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。 */
+/**
+ * 逐步击破 / chipaway 的出手方式。
+ *
+ * 核心念头：朝本次瞄准方向贴脸打出几记短拳，每一拍落在不同高度。判定不靠锁定目标，而靠每一拍一条真实的
+ *   短拳路：`action.trace(from, to, half, true)` 取这拍真正的首个接触（前排的身体、同伴或实墙都会截住它），
+ *   只有第一个接触是非友方活体时才结算一记 `strike` 接触伤害。目标后退到拳距外、或墙当面截住拳路，剩下的
+ *   拍数就落空；不再隔着墙或隔着别人无限群穿。
+ *
+ * 「无视对手的能力变化」：`skill.ts` 末尾的 `PokemonDamage.metadata` 贡献点在结算前把目标本段对应的防御
+ *   能力等级归零（对宝可梦读原生等级、对其他生物同一副阶梯），因而目标的涨防／削防都不参与这一击；
+ *   **它只动能力等级，不绕过装备护甲**：攻击方自身等级、相性、暴击、护甲与特性道具仍照常结算。
+ *
+ * 选取：`kind: "aim"`——朝方向或世界点都能出拳，也能空拳；提交与执行都不要求存在敌人，`target` 为 null 时
+ *   按 `aim(action)` 读到的方向/点出拳。
+ *
+ * 与同族分开：ＤＤ金勾臂是原地一整圈横扫、圣剑是一条最长最直的切斩、惩罚是越读越重的一记处刑；
+ *   逐步击破凭「贴脸、分高度、接连几拍」认出来，也是本族节奏最快的一招。
+ */
 namespace PokemonSkills {
     const chipawayScene = "world_combat:move_chipaway";
     const chipawayHitText = "world_combat.move.chipaway.text.hit";
@@ -10,23 +27,26 @@ namespace PokemonSkills {
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
     }
 
-    /** 第 n 拍的击打线：origin 起、沿 heading 铺 `reach` 格、半宽 `half`，抬到 `lift` 高度；判定与画面共用。 */
-    function chipawayLane(origin: CombatPoint, heading: CombatPoint, reach: number, half: number, lift: number): number[][] {
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const near = origin.plus(WorldCombat.point(0, lift - 0.7, 0));
-        const far = near.plus(heading.scale(reach));
-        const a = near.plus(side.scale(half)), b = near.minus(side.scale(half));
-        const c = far.minus(side.scale(half)), d = far.plus(side.scale(half));
-        return [[a.x(), a.y(), a.z()], [b.x(), b.y(), b.z()], [c.x(), c.y(), c.z()], [d.x(), d.y(), d.z()]];
+    /** 方块表面的法线方向，供表现把碎屑沿墙面弹开。 */
+    function chipawayFace(face: string): number[] {
+        switch (face) {
+            case "down": return [0, -1, 0];
+            case "up": return [0, 1, 0];
+            case "north": return [0, 0, -1];
+            case "south": return [0, 0, 1];
+            case "west": return [-1, 0, 0];
+            case "east": return [1, 0, 0];
+            default: return [0, 1, 0];
+        }
     }
 
     define({
         id: chipawayId,
         cooldownParameter: "recharge",
         name: "Chip Away",
-        description: "近身连续攻击，忽略目标的防御能力等级变化。普通生物的装备护甲仍参与减伤。",
-        uses: ["贴脸连续几拍，每拍落在不同高度", "把目标涨起来的防御等级直接无视掉", "用快而省的连击稳定削血"],
-        kind: "enemy",
+        description: "朝瞄准方向贴脸连打几记短拳，每拍落在不同高度，只打拳路真正碰到的第一个非友方；前排的身体和墙会先截住它，目标退出拳距剩下的拍数落空。这一招忽略目标的防御能力等级变化，但装备护甲仍照常减伤。",
+        uses: ["朝瞄准方向贴脸连打几拍，每拍落在不同高度", "把目标涨起来的防御等级直接无视掉", "用快而省的连击稳定削血"],
+        kind: "aim",
         range: 1.9,
         maxRange: 2.8,
         prepare: 4,
@@ -66,53 +86,74 @@ namespace PokemonSkills {
             const chips = Math.max(6, Math.round(p(chipawayId, "chips", action)));
             const scale = Math.max(0.6, Math.min(1.8, reach / 1.7));
             const intensity = Math.max(0.6, Math.min(2.2, power / 20));
-            let beat = 0, landed = 0, over = false;
+            const direction = [heading.x(), heading.y(), heading.z()];
+            let beat = 0, landed = 0, blockedAny = false, settled = false;
 
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                const world = current.world();
+                if (landed === 0 && !blockedAny) {
+                    const self = world.observe(actor);
+                    const at = (self === null ? current.origin() : self.position()).plus(heading.scale(reach * 0.85));
+                    WorldFeedback.emit(world, chipawayScene, 1, at,
+                        { moment: "miss", chips: Math.round(chips * 0.6), scale: scale }, 16);
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.0, 0)), chipawayMissText, [], 20);
+                }
+                done(current);
+            }
+
+            /** 一拍：一条真实短拳路，首个接触决定这一拍打在哪、打不打得到。 */
             function strike(current: CombatAction): void {
                 const world = current.world();
                 const body = world.observe(actor);
-                const origin = body === null ? current.origin() : body.position();
-                const lift = [0.25, 0.85, 0.45, 1.0][beat % 4];
-                const path = chipawayLane(origin, heading, reach, half, lift);
-                const direction = [heading.x(), heading.y(), heading.z()];
-
+                if (body === null) { finish(current); return; }
+                const origin = body.position();
+                const feet = origin.y() - body.height() / 2;
+                const lift = [0.25, 0.62, 0.4, 0.78][beat % 4];
+                const from = WorldCombat.point(origin.x(), feet + lift * body.height(), origin.z());
+                const to = from.plus(heading.scale(reach));
                 if (beat === 0) sound(current, "minecraft:entity.player.attack.weak");
-                WorldFeedback.emit(world, chipawayScene, 1, origin,
-                    { moment: "beat", beat: beat + 1, path: path, direction: direction, reach: reach,
-                      chips: chips, scale: scale, intensity: intensity }, 14);
 
-                const found: CombatActor[] = [];
-                WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, reach, half, { below: 0.6, above: 1.8 }),
-                    function (candidate) { if (found.length === 0) found.push(candidate); });
-                if (found.length > 0) {
-                    const victim = found[0];
-                    if (hurt(current, victim, chipawayId, power, { damage: damageSpec(chipawayId, "strike"), contact: true })) {
+                const contact = current.trace(from, to, half, true);
+                const at = contact.position();
+                const lander = contact.hitEntity() ? contact.target() : null;
+                const victim = lander !== null && String(lander.ref()) !== String(actor.ref()) && !world.friendly(lander) ? lander : null;
+                const blocked = victim === null && contact.blocked();
+                const blockCell = blocked && contact.blockPosition() !== null ? contact.blockPosition() : null;
+
+                WorldFeedback.emit(world, chipawayScene, 1, at,
+                    { moment: "beat", beat: beat + 1, path: [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]],
+                      direction: direction, chips: chips, scale: scale, intensity: intensity }, 14);
+
+                if (victim !== null) {
+                    const connected = impact(current, contact, chipawayId, power,
+                        { damage: damageSpec(chipawayId, "strike"), contact: true });
+                    if (connected) {
                         landed++;
-                        const foe = world.observe(victim);
-                        if (foe !== null) {
-                            WorldFeedback.emit(world, chipawayScene, 1, foe.position(),
-                                { moment: "hit", target: String(victim.ref()), beat: beat + 1, chips: chips,
-                                  scale: scale, intensity: intensity }, 16);
-                            if (beat === beats - 1) {
-                                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.1, 0)), chipawayHitText, [landed], 20);
-                                sound(current, "cobblemon:impact.normal");
-                            }
-                        }
-                    }
-                }
-                beat++;
-                if (beat < beats && !over) current.after(3, strike);
-                else {
-                    if (landed === 0) {
-                        const after = world.observe(actor);
-                        const at = (after === null ? current.origin() : after.position()).plus(heading.scale(reach * 0.8));
                         WorldFeedback.emit(world, chipawayScene, 1, at,
-                            { moment: "miss", chips: Math.round(chips * 0.6), scale: scale }, 16);
-                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.0, 0)), chipawayMissText, [], 20);
+                            { moment: "hit", target: String(victim.ref()), beat: beat + 1, chips: chips,
+                              guard: chipawayGuard(world, victim), scale: scale, intensity: intensity }, 16);
+                        sound(current, "cobblemon:impact.normal");
+                    } else {
+                        WorldFeedback.emit(world, chipawayScene, 1, at,
+                            { moment: "resist", target: String(victim.ref()), chips: Math.round(chips * 0.5), scale: scale }, 14);
                     }
-                    over = true;
-                    done(current);
+                } else if (blocked) {
+                    blockedAny = true;
+                    WorldFeedback.emit(world, chipawayScene, 1, blockCell === null ? at : blockCell,
+                        { moment: "block", direction: chipawayFace(contact.blockFace()),
+                          chips: Math.round(chips * 0.5), scale: scale }, 14);
                 }
+
+                beat++;
+                if (beat < beats) { current.after(3, strike); return; }
+                if (landed > 0) {
+                    const self = world.observe(actor);
+                    const hitAt = (self === null ? origin : self.position()).plus(heading.scale(reach * 0.6));
+                    WorldFeedback.text(world, hitAt.plus(WorldCombat.point(0, 1.1, 0)), chipawayHitText, [landed], 20);
+                }
+                finish(current);
             }
             strike(action);
         }
@@ -120,7 +161,7 @@ namespace PokemonSkills {
 
     // 「无视对手的能力变化」：本招每一拍结算前，把目标本段对应的防御能力等级归零。
     // 目标能力等级读的是原生个体（宝可梦）或共享阶梯（其他生物），归零只作用于这一次结算的本地快照，
-    // 不修改目标真正的等级；攻击方自身等级、相性、暴击与特性道具仍由共享结算照常处理。
+    // 不修改目标真正的等级；**装备护甲不在归零范围**，攻击方自身等级、相性、暴击与特性道具仍由共享结算照常处理。
     PokemonDamage.metadata.define({
         id: "world_combat:move_chipaway/ignore-stages",
         applies: function (context: PokemonDamage.MetadataContext) {

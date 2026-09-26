@@ -35,10 +35,15 @@ namespace CompanionBehavior {
         },
         priority: function (context, item, target) {
             if (!target) return 0;
+            const self = source(context);
             const stages = alluringVoiceStages(context, target);
-            if (stages < ai<number>(item, "minStages", 1)) return 12;
+            // 正在追击自己／主人的目标会被短音黏住，尾音落下时多半还在锥内，优先开口；高速侧移的目标降权。
+            const pursuing = target.attacking === self.ref;
+            const sidestep = typeof target.speed === "number" && target.speed > 0.32 ? -22 : 0;
+            if (stages >= ai<number>(item, "minStages", 1)) return Math.max(4, Math.min(96, 78 + stages * 4 + (pursuing ? 8 : 0) + sidestep));
+            if (pursuing) return Math.max(4, 70 + sidestep);
             if (status(context, target, "confusion")) return 16;
-            return Math.min(96, 78 + stages * 4);
+            return 12;
         }
     });
 }

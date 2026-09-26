@@ -1,14 +1,14 @@
 /**
  * 催眠粉 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者掌心拢起一撮淡紫催眠粉尘 → 粉团低弧抛出、拖着一缕粉尾落在某处 → 落地摊成一片会停留的
- *   尘云（云里持续飘着粉粒）→ 站在云里的人身上一层层糊上粉、够数的人头顶冒起 Z。
+ * 一句话：施法者掌心拢起一撮淡紫催眠粉尘 → 粉团直抛、拖着一缕粉尾在真实落点炸开 → 摊成一片会停留的
+ *   尘云（云里持续飘着粉粒、边缘一圈清楚的薄雾）→ 站在云里的人身上一层层糊上粉、够数的人头顶冒起 Z。
  *
  * 色相家族：淡紫（0xB08CFF）为粉团与尘云主体，深紫（0x5A3E96）压在云底，近白紫（0xE8D9FF）只给起手与「睡下」的高光。
- * 拍子：起 windup（拢粉）→ 掷 throw（粉团低弧）→ 落 burst（炸开成云）→ 停 field（云留存）＋困 caught／眠 sleep。
- * 范围：burst 与 field 绑在落点上、`fit: "none"`，shape 半径按 `data.scale`（实际云半径 ÷ 参考 2.4 格）缩放——
- *   画出的那片云就是判定圈；field 一直画到云散去，与「留一片地」的机制一致。
- * 运动：粉团沿低弧飞向落点；落点炸开成云，云里的粉粒缓慢上浮、贴地循环；caught 的粉往目标身上收。
+ * 拍子：起 windup（拢粉）→ 掷 throw（粉团直抛）→ 落 burst（炸开成云）→ 停 field（云留存）＋困 caught／眠 sleep。
+ * 范围：burst 与 field 绑在落点上、`fit: "none"`，shape 按参考半径 2.4 格书写，再用 `data.scale`（实际云半径 ÷ 2.4）
+ *   缩放到真实半径——画出的那片云就是判定圈；field 一直画到云散去，与「留一片地」的机制一致。
+ * 运动：粉团沿准线飞向落点；落点炸开成云，云里的粉粒缓慢上浮、贴地循环、边界外扩；caught 的粉往目标身上收。
  * 数：`data.motes`（特攻与等级换算）决定粉云与粉粒的数量，`data.dose`（已吸口数）决定目标身上粘粉的层数。
  * 参照节：视觉语言第二、三、四、五、六、七、九节。
  */
@@ -60,7 +60,7 @@ const SleepPowderDefinition: ParticleDefinition = {
                     name: "bloom", bind: "point", fit: "none", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/powder",
                     burst: { count: { data: "motes", fallback: 18 }, interval: 2, repeats: 2 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 2.4 },
                     direction: "outward", speed: [0.05, 0.2], spread: 55, drag: 0.9, gravity: 0.004,
                     lifetime: [12, 22], size: [0.14, 0.04], spin: 16,
                     color: 0xB08CFF, alpha: [0.85, 0], light: "world", maxParticles: 110
@@ -69,7 +69,7 @@ const SleepPowderDefinition: ParticleDefinition = {
                     name: "bloom_ring", bind: "point", fit: "none", offset: [0, 0.04, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 14 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 2.4, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.04, 0.14],
                     lifetime: [10, 16], size: [0.2, 0.07],
                     color: 0xE8D9FF, alpha: [0.55, 0], light: "world", maxParticles: 28
@@ -83,15 +83,24 @@ const SleepPowderDefinition: ParticleDefinition = {
                     name: "cloud", bind: "point", fit: "none", height: 0.25,
                     particle: "world_combat_core:cobblemon/generic/powder",
                     rate: { data: "motes", fallback: 18 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 2.4 },
                     direction: "up", speed: [0.005, 0.025], spread: 40, drag: 0.94,
                     lifetime: [26, 44], size: [0.12, 0.05], alpha: [0.35, 0],
                     color: 0xB08CFF, light: "world", maxParticles: 120
                 },
                 {
+                    // 薄云边界：一圈低频外扩的环，让玩家看清云实际覆盖到哪。
+                    name: "edge", bind: "point", fit: "none", offset: [0, 0.07, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 3, shape: { kind: "ring", radius: 2.4, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.0, 0.012],
+                    lifetime: [30, 46], size: [0.18, 0.05], alpha: [0.28, 0],
+                    color: 0xE8D9FF, light: "world", maxParticles: 12
+                },
+                {
                     name: "cloud_base", bind: "point", fit: "none", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 8, shape: { kind: "circle", radius: { data: "scale", fallback: 1 } },
+                    rate: 8, shape: { kind: "circle", radius: 2.4 },
                     direction: "up", speed: [0.004, 0.02],
                     lifetime: [30, 50], size: [0.35, 0.6], alpha: [0.14, 0],
                     color: 0x5A3E96, light: "world", maxParticles: 40

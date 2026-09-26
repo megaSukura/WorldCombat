@@ -2,10 +2,10 @@
  * 垃圾射击 / gunkshot 的客户端表现。
  *
  * 一句话：施法者把一大团脏垃圾压进身体、炮口聚起碎屑，轰的一声直线射出去；炮弹拖着垃圾点飞，
- *   撞上就炸开一大蓬碎屑、把目标顶得往后滑，撞空就在地面砸出一摊垃圾。
+ *   撞上就炸开一大蓬碎屑、把目标顶得往后滑；撞墙在墙面糊一次污，空飞则在真实轨迹末端散落一地。
  * 色相家族：污泥绿与深绿灰（ooze / mudsplash / mudbubble）为主体，白亮只在炮口与命中强调的那一下。
- * 拍子：起（load 压弹聚屑）→ 轰（blast 炮口爆屑、flight 拖尾）→ 中（hit 炸开 / whiff 落地）。
- * 范围：hit 的炸开按 `data.scale`（弹体判定派生）画出；whiff 的落点在弹道尽头。
+ * 拍子：起（load 压弹聚屑）→ 轰（blast 炮口爆屑、flight 拖尾）→ 中（hit 炸开 / wall 贴墙 / whiff 空飞散落）。
+ * 范围：hit 的炸开按 `data.scale`（弹体判定派生）画出；wall 的污迹贴在 `data.point`（真实墙点），whiff 的落点是真实轨迹末端。
  * 运动：炮弹沿服务端算好的直线飞（projectile 绑定尾迹），碎屑受重力向外迸、落地弹跳。
  * 数：`data.chunks`（物攻派生）决定炮口、弹道与命中的碎屑数量，`data.intensity`（威力派生）决定命中的亮度与尺寸。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -118,6 +118,32 @@ const GunkshotDefinition: ParticleDefinition = {
                     gravity: 0.08, drag: 0.9,
                     lifetime: [12, 24], size: [0.16, 0.03],
                     color: 0x5E7A30, alpha: [0.7, 0], light: "world", maxParticles: 50
+                }
+            ]
+        },
+        wall: {
+            duration: 26,
+            exit: { stop: 10, drain: 18 },
+            emitters: [
+                {
+                    name: "stain", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/mud/mudsplash",
+                    burst: { count: { data: "chunks", fallback: 18 }, at: 1 },
+                    shape: { kind: "circle", radius: 0.55 },
+                    direction: "outward", speed: [0.04, 0.16], spread: 18,
+                    gravity: 0.1, drag: 0.9,
+                    lifetime: [10, 20], size: [0.16, 0.03],
+                    color: 0x5E7A30, alpha: [0.8, 0.1], light: "world", maxParticles: 40
+                },
+                {
+                    name: "drip", bind: "point", offset: [0, 0.3, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    burst: { count: 6, at: 1 },
+                    shape: { kind: "point" },
+                    direction: "down", speed: [0.01, 0.05],
+                    gravity: 0.08, drag: 0.9,
+                    lifetime: [12, 24], size: [0.12, 0.02],
+                    color: 0x6E8C3A, alpha: [0.7, 0], light: "world", maxParticles: 18
                 }
             ]
         },

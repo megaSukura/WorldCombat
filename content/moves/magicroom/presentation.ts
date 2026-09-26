@@ -1,14 +1,15 @@
 /**
  * 魔法空间 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者脚下荡开一圈银灰的静默波纹，撑起一片把光吸走的空间；谁走进去，
- * 身上的道具微光被一缕向内的银尘抽走、暗淡下来；空间散去，微光落回道具上。
+ * 一句话：施法者脚下荡开一圈银灰的静默波纹，撑起一片把光吸走的空间；地上一层稀疏方格读出静默区的范围，
+ * 谁带着真正被压制的装备走进来，身周浮现一圈熄灭的符纹；装备的效果离开空间后回亮。
  *
  * 色相家族：静默银（0xC8D0E0）为主体，近白（0xF0F4FF）做高光，灰蓝（0x8A93A8）做地面影与余韵。
- * 一个效果一个色相家族。持续层是贴地的边界环，低密度、低高度，让出目标本体视线。
- * 层次：内收（起手）／边界环＋银尘（撑开）／贴地边界（持续）／被静默一下（事件）／回光与收。
- * 起击收：windup（聚拢）→ open（撑开）→ inside（持续）→ gag（道具失声）／chip（微光落回）→ 收。
- * 数：撑开与持续的粒子量绑定服务端算出的 data.density；边界半径绑定 data.scale（机制半径／定义半径）。
+ * 一个效果一个色相家族。持续层是贴地的边界环与稀疏方格，低密度、低高度，让出目标本体视线。
+ * 层次：内收（起手）／边界环＋银尘（撑开）／贴地边界与方格（持续）／熄灭符纹（每件被压制装备）／回光（离圈）。
+ * 起击收：windup（聚拢）→ open（撑开）→ inside（持续边界）→ chip（压制解除回亮）→ 收。
+ * 数：撑开与持续的粒子量绑定服务端算出的 data.density；边界半径绑定 data.scale（机制半径／定义半径）；
+ *   方格由自定义场景按 data.radius 画出；熄灭符纹由自定义场景按 data.count（真正被压制的件数）逐个画出。
  */
 const MagicroomDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -79,28 +80,6 @@ const MagicroomDefinition: ParticleDefinition = {
                 }
             ]
         },
-        gag: {
-            duration: 22,
-            exit: { stop: 8, drain: 18 },
-            emitters: [
-                {
-                    name: "gag_drain", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/sparkle",
-                    burst: { count: 14 }, shape: { kind: "sphere_surface", radius: 0.4 },
-                    direction: "inward", speed: [0.05, 0.18], drag: 0.9,
-                    lifetime: [12, 20], size: [0.18, 0.04], sizeMode: "index",
-                    color: 0xC8D0E0, alpha: [0.75, 0], light: "world", maxParticles: 36
-                },
-                {
-                    name: "gag_dim", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.35 },
-                    direction: "up", speed: [0.01, 0.05], drag: 0.94,
-                    lifetime: [16, 26], size: [0.24, 0.4],
-                    color: 0x8A93A8, alpha: [0.3, 0], light: "world", maxParticles: 20
-                }
-            ]
-        },
         chip: {
             duration: 20,
             exit: { stop: 8, drain: 16 },
@@ -108,10 +87,10 @@ const MagicroomDefinition: ParticleDefinition = {
                 {
                     name: "chip_return", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "outward", speed: [0.03, 0.12], drag: 0.94,
-                    lifetime: [12, 20], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xF0F4FF, alpha: [0.6, 0], light: "full", bloom: 0.15, maxParticles: 24
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.45 },
+                    direction: "outward", speed: [0.03, 0.13], drag: 0.94,
+                    lifetime: [12, 20], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0xF0F4FF, alpha: [0.65, 0], light: "full", bloom: 0.18, maxParticles: 28
                 }
             ]
         }
@@ -119,3 +98,46 @@ const MagicroomDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_magicroom", 1, MagicroomDefinition);
+
+// 稀疏方格：贴地画一层被圆形边界裁掉的方格，读出静默区真正罩住的范围。点绑在场地效果上，随它生灭。
+WorldCombatClient.scene("world_combat:move_magicroom_grid", 1, function (frame) {
+    const entry: CombatSceneEntry<{ radius: number; scale: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {} as any;
+    const radius = Math.max(1, Number(data.radius) || (Number(data.scale) || 1) * 3.4);
+    const x = entry.position[0], y = entry.position[1] + 0.06, z = entry.position[2];
+    const spacing = Math.max(0.8, radius / 2.5), steps = Math.floor(radius / spacing);
+    const color = 0x55C8D0E0;
+    for (let i = -steps; i <= steps; i++) {
+        const offset = i * spacing, chord = Math.sqrt(Math.max(0, radius * radius - offset * offset));
+        if (chord <= 0.05) continue;
+        frame.line(x + offset, y, z - chord, x + offset, y, z + chord, color);
+        frame.line(x - chord, y, z + offset, x + chord, y, z + offset, color);
+    }
+});
+
+// 熄灭符纹：每件真正被压制的装备画一枚暗面冷边的符纹，绕身体一圈；数量随装备变化，离圈时投影结束即消失。
+WorldCombatClient.scene("world_combat:move_magicroom_seal", 1, function (frame) {
+    const entry: CombatSceneEntry<{ count: number; target: string; scale: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {} as any;
+    const count = Math.max(0, Math.round(Number(data.count) || 0));
+    if (count <= 0) return;
+    const scale = Math.max(0.5, Math.min(2, Number(data.scale) || 1));
+    let x = entry.position[0], y = entry.position[1], z = entry.position[2], height = 1.4;
+    const anchor = JSON.parse(frame.anchor(data.target));
+    if (anchor) { x = anchor.x; y = anchor.y; z = anchor.z; height = Math.max(0.6, anchor.height); }
+    const radius = Math.max(0.35, Math.min(1.1, scale * 0.55));
+    const size = Math.max(0.012, Math.min(0.045, 0.022 * scale));
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const px = x + Math.cos(angle) * radius, pz = z + Math.sin(angle) * radius;
+        frame.billboard(px, y + height * 0.5, pz, size, function (surface) {
+            surface.fill(-7, -7, 14, 14, 0xF05E6E80);
+            surface.fill(-8, -8, 16, 2, 0xF0C8D0E0);
+            surface.fill(-8, 6, 16, 2, 0xF0C8D0E0);
+            surface.fill(-8, -8, 2, 16, 0xF0C8D0E0);
+            surface.fill(6, -8, 2, 16, 0xF0C8D0E0);
+        });
+    }
+});

@@ -32,7 +32,16 @@ namespace PokemonSkills {
         if (typeof value.pair !== "string") throw new Error("Invalid power split partner");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(powersplitMark, "start", function () { });
+    // 持续表现在 created managed mark 上：随它自然到期或被 revert 提前 dispel 一起清理，不再另开定时器。
+    WorldCombat.effectHandler(powersplitMark, "start", function (effect) {
+        const world = effect.world(), actor = effect.target();
+        const body = world.valid(actor) ? world.observe(actor) : null;
+        if (body === null) return;
+        const mark: PowersplitMark = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_powersplit/hum", powersplitScene, 1, body.position(),
+            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair),
+                path: [String(actor.ref()), String(mark.pair)], motes: 6, remaining: effect.remaining() });
+    });
     WorldCombat.effectHandler(powersplitMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读含装备的有效攻击并剔除能力等级。 */
@@ -62,9 +71,9 @@ namespace PokemonSkills {
         id: "powersplit",
         cooldownParameter: "recharge",
         name: "力量平分",
-        description: "暂时平衡双方的攻击：较高的一方降低，较低的一方提高。宝可梦同时平分特攻，普通生物按包含武器的攻击属性参与。",
-        uses: ["把自己的低攻抬到对手的水平", "把对手的高攻压到自己的水平", "在对手攻击远高于自己时抹平差距"],
-        kind: "enemy",
+        description: "暂时平衡双方的攻击：较高的一方降低，较低的一方提高。宝可梦同时平分特攻，普通生物按包含武器的攻击属性参与。敌人和伙伴都可选。",
+        uses: ["把自己的低攻抬到对手的水平", "把对手的高攻压到自己的水平", "把自己多出的攻势分给主攻的伙伴"],
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 10,
@@ -73,7 +82,7 @@ namespace PokemonSkills {
         cooldown: 95,
         style: "split",
         stationary: true,
-        defaults: { ai: { maxChase: 12, edge: 1.15, leaveStation: false } },
+        defaults: { ai: { maxChase: 12, edge: 1.15, leaveStation: false, share: false } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["powersplit"], detail: { values: config } };
@@ -92,7 +101,7 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (CombatStatus.has(world, actor, "powersplit") || CombatStatus.has(world, target, "powersplit")
                 || world.effects(actor, powersplitMark).length > 0 || world.effects(target, powersplitMark).length > 0) return "already-split";
             const body = world.observe(target);
@@ -112,7 +121,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) {
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) {
                 WorldFeedback.emit(world, powersplitScene, 1, body.position(), { moment: "fizzle" }, 16);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), powersplitMissText, [], 22);
                 done(action);
@@ -123,6 +132,7 @@ namespace PokemonSkills {
             const window = Math.max(100, Math.round(p("powersplit", "span", action)));
             const motes = Math.max(1, Math.round(p("powersplit", "motes", action)));
             const scale = (body.width() + body.height()) / 2.3;
+            // 双方各读一次快照，之后只写一次平均值；窗口内其他来源的变化各自独立保留。
             const mineAtk = powersplitRawStat(world, actor, "atk"), mineSpa = powersplitRawStat(world, actor, "spa");
             const theirAtk = powersplitRawStat(world, target, "atk"), theirSpa = powersplitRawStat(world, target, "spa");
             const avgAtk = Math.max(1, Math.round((mineAtk + theirAtk) / 2));
@@ -131,6 +141,19 @@ namespace PokemonSkills {
             const reference = Math.max(1, Math.max(mineAtk + mineSpa, theirAtk + theirSpa));
             const gauge = Math.max(0, Math.min(1, gap / reference));
             const flow = Math.max(4, Math.min(96, Math.round(motes * (0.4 + gauge * 1.6))));
+            const mineTotal = mineAtk + mineSpa, theirTotal = theirAtk + theirSpa;
+            const selfShare = mineTotal / Math.max(1, mineTotal + theirTotal);
+            const foeShare = 1 - selfShare;
+            const selfFlow = Math.max(2, Math.round(flow * selfShare * 1.5));
+            const foeFlow = Math.max(2, Math.round(flow * foeShare * 1.5));
+            const selfSize = Math.round((0.1 + 0.24 * selfShare) * 100) / 100;
+            const foeSize = Math.round((0.1 + 0.24 * foeShare) * 100) / 100;
+            const leg = foe.position().minus(body.position());
+            const reach = Math.max(0.001, leg.length());
+            const toward = [leg.x() / reach, leg.y() / reach, leg.z() / reach];
+            const back = [-toward[0], -toward[1], -toward[2]];
+            const approach = Math.max(0.12, Math.min(0.8, reach / 16));
+            const mid = body.position().plus(foe.position()).scale(0.5);
             const changed = mineAtk !== avgAtk || mineSpa !== avgSpa || theirAtk !== avgAtk || theirSpa !== avgSpa;
             if (changed) {
                 const layerSelf = powersplitSettle(world, actor, avgAtk, avgSpa, window + 40);
@@ -142,7 +165,10 @@ namespace PokemonSkills {
             }
             WorldFeedback.emit(world, powersplitScene, 1, body.position(),
                 { moment: "merge", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                    motes: motes, flow: flow, gauge: gauge, average: avgAtk, scale: scale,
+                    point: [mid.x(), mid.y(), mid.z()],
+                    motes: motes, flow: flow, selfFlow: selfFlow, foeFlow: foeFlow,
+                    selfSize: selfSize, foeSize: foeSize, toward: toward, back: back, approach: approach,
+                    gauge: gauge, average: avgAtk, scale: scale,
                     intensity: Math.max(0.7, Math.min(2.2, gauge * 1.6 + 0.6)), even: changed ? 0 : 1 }, 36);
             if (changed) {
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), powersplitLevelText,
@@ -156,22 +182,6 @@ namespace PokemonSkills {
             world.sound("minecraft:block.enchantment_table.use", body.position(), 14, "{}");
             done(action);
         }
-    });
-
-    // 平分存续期：每 20 刻续一次中央的平分光，让玩家读出现在还平着、还剩多久。
-    WorldCombat.on("world_combat:move_powersplit/hum", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== powersplitWindow) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const marks = world.effects(actor, powersplitMark);
-        if (!marks.length) { MobEffects.consume(world, actor, powersplitWindow); return; }
-        const mark = JSON.parse(String(marks[0].data()));
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_powersplit/hum/" + String(actor.ref()), powersplitScene, 1, body.position(),
-            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair), flow: 4,
-                path: [String(actor.ref()), String(mark.pair)], remaining: marks[0].remaining() }, 40);
     });
 
     // 窗口走完或被清除：按记号撤掉那层改动，数值回到原来的底子；其余修饰不受影响。

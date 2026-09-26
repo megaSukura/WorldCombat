@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.meanlook.summary": "用一道勾人心魂的黑色目光盯住一个看得见的对手，把它完全钉在原地：术者必须站定不动、一直凝视；一被掩体挡住、被拽开或被打断，目光就断、目标立刻恢复自由。按住技能键持续凝视，松手即停。",
+  "worldcombat.skill.meanlook.summary": "用一道勾人心魂的黑色目光盯住一个看得见的对手，把它完全钉在原地：术者必须站定不动、一直凝视；一被掩体挡住、被拽开或被打断，目光就断、目标立刻恢复自由。目标免疫控制时本次锁未成，不会留下压制或伤害。按住技能键持续凝视，松手即停。",
   "worldcombat.skill.meanlook.use.0": "把想逃跑的目标钉在原地等队友收",
   "worldcombat.skill.meanlook.use.1": "锁住一个高机动目标不让它脱离近战",
   "worldcombat.skill.meanlook.use.2": "在开阔地一对一拖住对方的主力",
@@ -32,5 +32,5 @@
   "world_combat.move.meanlook.text.release": "目光松开",
   "world_combat.move.meanlook.text.blocked": "视线被掩体挡住",
   "effect.world_combat.meanlook_gaze": "被黑色目光定住",
-  "worldcombat.skill.meanlook.description.gaze": "被盯住的目标无法自主移动，但仍能在原地出手；术者按住技能键维持凝视，松手或被畏缩等打断时，目标立刻恢复自由。"
+  "worldcombat.skill.meanlook.description.gaze": "被盯住的目标无法自主移动，但仍能在原地出手；术者按住技能键维持凝视，松手或被畏缩等打断时，目标立刻恢复自由。目标免疫控制时本次锁不成立，画面给出提示，术者也不会把它转成其他伤害。"
 }

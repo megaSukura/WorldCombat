@@ -1,23 +1,9 @@
-/** Return an opponent’s recent copyable move. Against a non-Pokémon, reply with a hit of its recent native damage type and strength. */
+/** Copy bonuses live on this execution; native replays need their own real contact or flight. */
 namespace PokemonSkills {
-    // 折返增幅的机读载体：记下要被加重的那一手与倍率；伤害元数据按它乘威力。
-    WorldCombat.effect(mirrorGlossEffect, 1, 200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.move !== "string" || !value.move) throw new Error("Invalid mirror gloss move");
-        if (typeof value.factor !== "number" || !isFinite(value.factor) || value.factor < 1) throw new Error("Invalid mirror gloss factor");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(mirrorGlossEffect, "start", function () { });
-    WorldCombat.effectHandler(mirrorGlossEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    PokemonDamage.metadata.define({ id: "world_combat:move_mirrormove/gloss", apply: function (context) {
-        if (!context.world || !context.actor) return;
-        const views = context.world.effects(context.actor, mirrorGlossEffect);
-        if (!views.length) return;
-        const data = JSON.parse(String(views[0].data()));
-        if (String(data.move) !== String(context.metadata.move)) return;
-        const factor = Number(data.factor);
-        if (isFinite(factor) && factor > 0) context.metadata.power *= factor;
+    PokemonDamage.metadata.define({ id: "world_combat:move_mirrormove/gloss", apply: context => {
+        if (!context.world) return;
+        const data = MoveExecutions.read(context.world, "world_combat:mirrormove/gloss");
+        if (data && data.move === String(context.metadata.move)) context.metadata.power *= data.factor;
     } });
 
     /** 目标最近一次可折返的招式 id；空串表示无。 */
@@ -45,17 +31,17 @@ namespace PokemonSkills {
         if (target === null || !world.valid(target)) return null;
         const body = world.observe(target);
         if (body === null) return null;
-        const point = body.position();
+        const point = action.target() && String(action.target()!.ref()) === String(target.ref()) ? action.targetPosition() : body.position();
         let direction = point.minus(action.origin());
         if (direction.length() < 0.01) direction = action.direction();
-        return { eligibility: "caller", input: { target: skill.kind === "enemy" ? target : null, point: point, direction: direction } };
+        return { eligibility: "caller", input: { target: skill.kind === "enemy" || skill.kind === "aim" ? target : null, point: point, direction: direction } };
     }
 
     define({
         id: mirrormoveId,
         cooldownParameter: "recharge",
         name: "鹦鹉学舌",
-        description: "向对手回敬其最近的可模仿招式；普通生物则被同类型、按其上次伤害量计算的一击回敬。",
+        description: "向对手回敬其最近的可模仿招式；普通生物的已识别近战回放为短影击，标准投射回放为真实碰撞的影弹。",
         uses: ["把对手的上一手还给它", "拆刚打完一轮强攻的敌人", "在受击前一拍抢回节奏"],
         kind: "enemy",
         range: 12,
@@ -92,13 +78,14 @@ namespace PokemonSkills {
             action.after(Math.max(1, Math.round(p(mirrormoveId, "tempo", action))), function (current) {
                 const world = current.sense();
                 if (target !== null && String(target.domain()) !== "cobblemon") {
-                    const last = DamageSemantics.recentAttack(world, target, p(mirrormoveId, "focus", current));
+                    const replay = NativeAttackProjection.recent(world, target, p(mirrormoveId, "focus", current));
                     const at = world.observe(target);
-                    if (!last || !at || at.position().minus(current.origin()).length() > p(mirrormoveId, "reach", current) || !world.clear(current.origin(), at.position())) { current.reject("no-mirror"); return; }
+                    if (!replay || !at || !world.clear(current.origin(), world.closestPoint(target, current.origin()))) { current.reject("no-mirror"); return; }
+                    NativeAttackProjection.prepare(current, replay);
                     current.commit(p(mirrormoveId, "recharge", current));
-                    current.world().hurt(target, last.amount * p(mirrormoveId, "edge", current), JSON.stringify({ kind: "move", move: mirrormoveId, damageType: last.type, category: last.category, contact: last.contact, action: current.id(), bypassCooldown: true }));
-                    WorldFeedback.emit(current.world(), mirrorScene, 1, at.position(), { moment: "reflect", target: String(target.ref()), path: [String(current.actor().ref()), String(target.ref())], mirrors, edge: p(mirrormoveId, "edge", current) }, 32);
-                    current.after(Math.max(1, Math.round(p(mirrormoveId, "aftercast", current))), handle => handle.finish()); return;
+                    playNativeCopy(current, replay, mirrormoveId, p(mirrormoveId, "edge", current), mirrorScene,
+                        p(mirrormoveId, "aftercast", current), replay.kind === "contact" ? "world_combat.move.mirrormove.text.native_contact" : "world_combat.move.mirrormove.text.native_projectile");
+                    return;
                 }
                 const found = mirrorRead(world, target);
                 const options = found ? mirrorCall(current, found, target) : null;
@@ -129,9 +116,10 @@ namespace PokemonSkills {
         if (body === null) return;
         const id = String(executing.id());
         const raw = action.data("world_combat:mirrormove/gloss");
+        if (raw === null) return;
         if (raw !== null) {
             const gloss = JSON.parse(raw);
-            if (gloss.move === id && Number(gloss.factor) > 1) world.effect(mirrorGlossEffect, actor, JSON.stringify(gloss), 80);
+            if (gloss.move === id && Number(gloss.factor) > 1) MoveExecutions.write(world, "world_combat:mirrormove/gloss", gloss);
         }
         WorldFeedback.emit(world, mirrorScene, 1, body.position(),
             { moment: "burst", mirrors: Math.max(1, Math.round(p(mirrormoveId, "mirrors", action))), edge: p(mirrormoveId, "edge", action),

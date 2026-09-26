@@ -3,12 +3,13 @@
  *
  * 什么局面下出手：挂在共享的 attack 位上。带投球的伙伴把它当**远程连投**：目标可见、敌对、存活，
  *   在 `ai.maxChase`（默认 11，本族最远）以内就出手；更远交给共享接近逻辑。
- * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.cover`（默认开）打开时，**与目标之间没有
- *   掩体遮挡**的目标排得更前——平投的球会被墙挡住，高抛的球虽然能越过掩体，但慢、容易被走位躲开；
- *   躲在墙后的目标排后。
+ * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。高抛式能越过掩体，所以对躲在墙后的目标也照常
+ *   加分；平投式只有在到目标有射线时才加分，被挡住时不假装能反弹命中，只按普通直投的低分出手。
+ *   目标走位慢时（高抛和反弹都更容易落在它身上）再给一点加分。
  * 够不到怎么办：reach 就是本招射程，不够先走近；不用贴脸，站远一点就能投。
  * 放完之后：这一串投完就收手，交回共享交战计划等冷却。
- * 优先级：基础 14；已在射程内 +5；`ai.cover` 开启且到目标有射线 +6。仅剩本招可选时，它仍在普通顺序里被选中。
+ * 优先级：基础 14；已在射程内 +5；高抛式 +4（越过掩体），平投式`ai.cover` 开启且到目标有射线 +6、被遮挡 −3；目标慢 +3。
+ *   仅剩本招可选时，它仍在普通顺序里被选中。
  */
 namespace CompanionBehavior {
     function barrageWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
@@ -23,6 +24,19 @@ namespace CompanionBehavior {
             const world = CompanionBehavior.world(context);
             return world.clear(CompanionBehavior.point(source(context).point), CompanionBehavior.point(target.point));
         } catch (ignored) { return true; }
+    }
+
+    /** 本个体是否选了高抛式；高抛能越过掩体，平投会被墙挡。 */
+    function barrageLobs(item: WorldBehavior.Capability): boolean {
+        const config = item.data.config;
+        return !!(config && config.lob === true);
+    }
+
+    /** 目标当前的水平速度；没有速度事实时按「站住」处理。 */
+    function barrageSpeed(target: Entity): number {
+        const velocity = target.velocity;
+        if (!velocity || velocity.length < 3) return 0;
+        return Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
     }
 
     registerUse("barrage", {
@@ -40,8 +54,15 @@ namespace CompanionBehavior {
             const gap = CompanionBehavior.distance(source(context).point, target.point);
             let score = 14;
             if (gap <= item.data.range) score += 5;
-            if (ai<boolean>(item, "cover", true) && barrageClear(context, target)) score += 6;
-            return score;
+            if (barrageLobs(item)) {
+                // 高抛越过掩体，躲在墙后也照投。
+                score += 4;
+            } else if (ai<boolean>(item, "cover", true)) {
+                // 平投只在有射线时加分；被挡住时不假装能反弹命中，只低分直投。
+                score += barrageClear(context, target) ? 6 : -3;
+            }
+            if (barrageSpeed(target) < 0.03) score += 3;
+            return Math.max(1, score);
         }
     });
 
@@ -54,7 +75,7 @@ namespace CompanionBehavior {
             help: "超过这个距离就不主动投球，先走近。本招射程较远，默认值也大。"
         }),
         PokemonSkills.field(PokemonSkills.pathOf("ai.cover"), "优先无遮挡的目标", "boolean", {
-            help: "开启：与目标之间没有掩体遮挡时排得更前——平投的球会被墙挡住；躲在墙后的目标排后。关闭则所有目标同价。"
+            help: "仅对平投式生效：与目标之间没有掩体遮挡时排得更前——平投的球会被墙挡住；躲在墙后的目标排后，不会假装能反弹命中。高抛式能越过掩体，忽略这一项。"
         })
     ]);
 }

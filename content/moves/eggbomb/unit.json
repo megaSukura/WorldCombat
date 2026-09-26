@@ -19,7 +19,5 @@
   "startupSources": [
     "startup.ts"
   ],
-  "mobEffectIcons": {
-    "world_combat:eggbomb_slick": "minecraft:mob_effect/slowness"
-  }
+  "mobEffectIcons": {}
 }

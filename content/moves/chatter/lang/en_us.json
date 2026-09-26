@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.chatter.summary": "Scream a string of shrill bursts across a fan in front of you: each burst deals sound damage on its own, and anyone caught is left confused at once — every attempt to act may fizzle, and landing a hit hurts them with their own strength. Sound passes through cover; the price is short range and light individual hits.",
+  "worldcombat.skill.chatter.summary": "Scream a string of shrill bursts across a fan in front of you: each burst deals sound damage on its own, and anyone caught is left confused at once — every attempt to act may fizzle, and landing a hit hurts them back for a share of the damage it just dealt. Sound passes through cover; the price is short range and light individual hits, and you can always cry into open air with no target.",
   "worldcombat.skill.chatter.use.0": "Press in and rattle a target with several bursts",
   "worldcombat.skill.chatter.use.1": "Confuse a target through cover",
   "worldcombat.skill.chatter.use.2": "Open a window of fumbles and recoil on a dangerous foe",
   "worldcombat.skill.chatter.description.0": "Each burst deals %1$s special damage (sound) to every enemy in the fan; it cries %2$s bursts, one every %3$s.",
   "worldcombat.skill.chatter.description.1": "The fan opens %1$s degrees and reaches %2$s blocks; sound is not blocked by cover.",
-  "worldcombat.skill.chatter.description.2": "Those caught are confused for %1$s (each target is confused only once per string); while confused, each attempt to act has a %2$s chance to fumble, and landing a hit on a non-ally hurts them for about 2%–12.5% of their own max health, scaled by their Attack.",
+  "worldcombat.skill.chatter.description.2": "Those caught are confused for %1$s (each target is confused only once per string); while confused, each attempt to act has a %2$s chance to fumble, and landing a hit on a non-ally hurts them back for about 2%–12.5% of the damage that hit just dealt, scaled by their Attack.",
   "worldcombat.skill.chatter.description.3": "Shrill form is currently %1$s.",
   "worldcombat.skill.chatter.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.chatter.growth.0": "From level %1$s each burst rises to %2$s.",

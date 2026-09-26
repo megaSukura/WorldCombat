@@ -28,6 +28,8 @@
   "world_combat.move.imprison.text.block": "%1$s turned back by the seal",
   "world_combat.move.imprison.text.fade": "The seal fades",
   "world_combat.move.imprison.text.snap": "The seal is broken",
+  "world_combat.move.imprison.kind.contact": "melee attack",
+  "world_combat.move.imprison.kind.ranged": "ranged attack",
   "effect.world_combat.imprison_aura": "Seal Domain",
   "effect.world_combat.imprison_sealed": "Seal Brand"
 }

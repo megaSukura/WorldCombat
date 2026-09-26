@@ -33,5 +33,5 @@
   "effect.world_combat.confusion_pulse": "Dazed",
   "world_combat.move.confusion.text.daze": "Dazed",
   "world_combat.move.confusion.text.chip": "Mind -%1$s",
-  "worldcombat.skill.confusion.description.chip": "When scattered, the pulse jabs again for about 1.2%–5% of the target's max health scaled by its own Sp. Atk (heavier against higher Sp. Atk) and keeps the daze going for at least 3 more seconds — the more it struggles, the more it is ground down."
+  "worldcombat.skill.confusion.description.chip": "When scattered, the pulse jabs again for about 1.2%–5% of the target's max health scaled by its own Sp. Atk (heavier against higher Sp. Atk); the daze is not extended and ends after its original duration."
 }

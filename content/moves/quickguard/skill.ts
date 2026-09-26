@@ -26,6 +26,13 @@ namespace PokemonSkills {
     const quickGuardReferenceRadius = 3.2;
     /** 被顶回的先制变化招式：提交点只读，先记在这里，等目标身上的身份下一次 tick（可写作用域）再补画面。 */
     const quickGuardWards: { [ref: string]: { at: number; move: string } } = Object.create(null);
+    /** 观察到的敌方先制出手：攻击者 ref -> 最近一次 priority>0 出手的 tick。AI 的「已有先制行为」判据。 */
+    const quickGuardPriority: { [ref: string]: number } = Object.create(null);
+    /** 攻击者在 maxAge 刻内是否真的出手过先制招式。 */
+    export function quickGuardPrioritySeen(ref: string, tick: number, maxAge: number): boolean {
+        const at = quickGuardPriority[ref];
+        return at !== undefined && tick - at <= maxAge;
+    }
 
     // 快板的结算点：只截敌对来源、priority > 0 的伤害，按 pool 磨穿；磨穿即收掉该人身上的身份。
     GuardEffects.register(quickGuardRule, {
@@ -43,9 +50,10 @@ namespace PokemonSkills {
             const body = world.observe(target);
             if (body === null) return;
             const custom: any = state;
-            WorldFeedback.keep(world, "quickguard:hold:" + String(target.ref()), quickGuardScene, 1, body.position(),
+            // 持续画面绑在这层真实按量吸收池上：池磨穿、身份被清或连接断开时随它一起收，不再多播一段固定时长。
+            WorldFeedback.onEffect(world, effect.id(), "quickguard:hold:" + String(target.ref()), quickGuardScene, 1, body.position(),
                 { moment: "hold", target: String(target.ref()), plates: custom.plates, remaining: state.capacity,
-                    scale: custom.scale, intensity: quickGuardIntensity(state.capacity, custom.initial) }, 20);
+                    scale: custom.scale, intensity: quickGuardIntensity(state.capacity, custom.initial) });
         },
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number, incoming: GuardEffects.Incoming): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -81,6 +89,15 @@ namespace PokemonSkills {
         if (!CombatStatus.has(world, target, quickGuardStatus)) return;
         event.reject("quickguard");
         quickGuardWards[String(target.ref())] = { at: world.tick(), move: String(move.id()) };
+    });
+
+    // 「已有先制行为」的观察点：任何敌人提交优先度大于 0 的招式（伤害或变化）都记一笔，供 AI 判断先制压力。
+    // 提交点是只读作用域，这里只写本单元自己的观察表、不碰世界；没有这条事实时 AI 不把普通敌人当先制。
+    WorldCombat.on("world_combat:move_quickguard/watch", "world_combat:before_commit", "", function (event: CombatWorldEvent) {
+        const action = event.action(); if (action === null) return;
+        const move = NativeLoadout.executing(action); if (move === null) return;
+        if (!(move.priority() > 0)) return;
+        quickGuardPriority[String(event.actor().ref())] = event.world().tick();
     });
 
     // 顶回画面的兑现点：目标身上的身份每 tick 收到一次可写事件，发现有刚被顶回的先制变化招就补播一记。

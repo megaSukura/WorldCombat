@@ -7,9 +7,9 @@
  *
  * 三幕（提交后由共享节奏驱动 execute）：
  *   起（windup，提交前）：带电蓄势，只播预告，可免费打断。
- *   腾（提交后 rise）：逐刻上升，落点钉在目标实时位置，电荷随升空累积（表现层）。
- *   坠（提交后 dive）：沿直线下坠，途中 trace 撞到活体即按 slam 结算接触伤害（共享结算电属性相性/本系）、
- *       在命中点放掉电荷、把对手顶开 shove 格；到达落点在 hitRadius 内再选一次最近的敌人；都空即砸偏，按 crash 自伤。
+ *   腾（提交后 rise）：逐刻上升；提交即锁线，之后只朝冻结的落点爬升，电荷随实际爬升高度累积（表现层）。
+ *   坠（提交后 dive）：沿锁定斜线扑下，真实本体 sweep 撞到第一个非友方活体即命中并落地收势（共享结算电属性相性/本系）、
+ *       在命中点放掉电荷、把对手顶开 shove 格；半途撞墙或到点都为空扑，就在真实落点按 crash 反噬一次，不回头补目标。
  *
  * 与同族分开：其余三招是纯格斗的暖色弧线，本招是电黄近白的蓄电落体，签名是升空期间不断叠加的电荷与落点那一下放电。
  *
@@ -104,21 +104,22 @@ namespace PokemonSkills {
             const settleSpeed = Math.max(0.2, p("supercellslam", "settleSpeed", action));
             const scale = hitRadius / 0.7;
             const intensity = Math.max(0.6, Math.min(2.4, power / 100));
+            // 提交后锁线：冻结最后一次目标点，之后整段下扑只走这条锁定线，不再追实体。
+            action.releaseTarget();
             const start = self.position();
             const apexY = start.y() + leapHeight;
-            const target = action.target();
             const riseLimit = Math.max(1, Math.ceil(leapHeight / leapSpeed)) + 6;
-            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
-            let locked = targetBody !== null ? supercellslamGround(world, targetBody.position(), targetBody.height() * 0.5)
-                : supercellslamGround(world, action.targetPosition(), 0.7);
+            const locked = supercellslamGround(world, action.targetPosition(), 0.7);
             let charged = charge;
             let finished = false;
+
+            /** 蓄电载荷：随实际爬升增长，供 leap 电柱的发射量消费。 */
+            function chargeRate(level: number): number { return 10 + Math.max(0, Math.min(4, level)) * 9; }
 
             function finish(current: CombatAction): void { if (!finished) { finished = true; movementScenes.finish(current, done); } }
 
             sound(action, "cobblemon:move.thunderwave.actor");
-            movementScenes.show(action, "leap", start, { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust, charge: charge, sparks: sparks,
-                    path: [[start.x(), start.y(), start.z()], [start.x(), apexY, start.z()]] });
+            movementScenes.show(action, "leap", start, { moment: "leap", scale: scale, intensity: intensity, chargeRate: chargeRate(charge) });
 
             function settle(current: CombatAction): void {
                 movementScenes.stop(current);
@@ -140,7 +141,7 @@ namespace PokemonSkills {
                 if (body !== null) {
                     live.health(actor, -body.maxHealth() * crash, "world_combat:crash");
                     WorldFeedback.emit(live, supercellslamScene, 1, at,
-                        { moment: "crash", scale: scale, intensity: Math.max(0.6, Math.min(2.4, crash * 4)), dust: dust, sparks: sparks, charge: charge }, 30);
+                        { moment: "crash", scale: scale, intensity: Math.max(0.6, Math.min(2.4, crash * 4)), dust: dust, sparks: sparks }, 30);
                     WorldFeedback.text(live, supercellslamAbove(at), supercellslamCrashText, [], 28);
                 }
                 sound(current, "cobblemon:impact.electric");
@@ -152,38 +153,30 @@ namespace PokemonSkills {
                 const live = current.world();
                 const body = live.observe(victim);
                 const point = body === null ? at : body.position();
-                hurt(current, victim, "supercellslam", power, { damage: damageSpec("supercellslam", "slam"), contact: true });
+                if (!hurt(current, victim, "supercellslam", power, { damage: damageSpec("supercellslam", "slam"), contact: true })) {
+                    crashLanding(current, point); return;
+                }
                 if (live.valid(victim)) {
-                    const away = point.minus(live.observe(actor)!.position());
+                    const me = live.observe(actor);
+                    const away = me === null ? direction : point.minus(me.position());
                     const flat = WorldCombat.point(away.x(), 0, away.z());
                     const push = flat.length() < 0.01 ? direction : flat.unit();
                     live.displace(victim, push.scale(shove));
                 }
                 WorldFeedback.emit(live, supercellslamScene, 1, point,
                     { moment: "impact", target: String(victim.ref()), scale: scale, intensity: intensity, dust: dust,
-                        sparks: sparks, charge: charge,
-                        direction: [direction.x(), direction.y(), direction.z()] }, 32);
+                        sparks: sparks, count: Math.round(18 + power * 0.3), hitRadius: hitRadius }, 32);
                 sound(current, "cobblemon:impact.electric");
                 sound(current, "minecraft:entity.lightning_bolt.thunder");
                 WorldFeedback.text(live, supercellslamAbove(point), supercellslamHitText, [], 28);
                 settle(current);
             }
 
-            function resolve(current: CombatAction, at: CombatPoint, direction: CombatPoint): void {
-                const live = current.world();
-                let victim: CombatActor | null = null, best = 1e9;
-                const region = WorldGeometry.ring(at, 0, hitRadius, { below: 1, above: 2 });
-                WorldGeometry.selectEnemies(live, region, function (candidate, facts) {
-                    if (String(candidate.ref()) === String(actor.ref())) return;
-                    const gap = facts.position().minus(at).length();
-                    if (gap < best) { best = gap; victim = candidate; }
-                });
-                if (victim === null && target !== null && live.valid(target)) {
-                    const body = live.observe(target);
-                    if (body !== null && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
-                }
-                if (victim !== null) impactOn(current, victim, at, direction);
-                else crashLanding(current, at);
+            /** 没有任何真实接触：就在落体当下的真实位置砸一次，按原比例反噬，不回头补目标。 */
+            function land(current: CombatAction): void {
+                const live = current.world(), me = live.observe(actor);
+                const at = me === null ? current.origin() : supercellslamGround(live, me.position(), me.height() * 0.5);
+                crashLanding(current, at);
             }
 
             function dive(current: CombatAction): void {
@@ -195,7 +188,7 @@ namespace PokemonSkills {
                 const distance = toward.length();
                 const floor = supercellslamFloor(live, from, me.height() * 0.5);
                 if (distance <= Math.max(0.5, hitRadius) || from.y() - me.height() * 0.5 <= floor + 0.15) {
-                    resolve(current, locked, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
+                    land(current);
                     return;
                 }
                 const dir = toward.unit();
@@ -211,10 +204,10 @@ namespace PokemonSkills {
                         return;
                     }
                 }
-                if (trace.blocked()) { resolve(current, current.origin(), dir); return; }
+                if (trace.blocked()) { land(current); return; }
                 const moved = swept.moved + (trace.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
-                if (moved < Math.min(0.06, stepLen * 0.4)) { resolve(current, current.origin(), dir); return; }
-                movementScenes.show(current, "dive", from, { moment: "dive", scale: scale, intensity: intensity, hitRadius: hitRadius, sparks: sparks,
+                if (moved < Math.min(0.06, stepLen * 0.4)) { land(current); return; }
+                movementScenes.show(current, "dive", from, { moment: "dive", scale: scale, intensity: intensity,
                         direction: [dir.x(), dir.y(), dir.z()],
                         path: [[from.x(), from.y(), from.z()], [locked.x(), locked.y(), locked.z()]] });
                 current.after(1, function (next) { dive(next); });
@@ -223,10 +216,6 @@ namespace PokemonSkills {
             function rise(current: CombatAction, step: number): void {
                 const live = current.world(), me = live.observe(actor);
                 if (me === null) { finish(current); return; }
-                if (target !== null && live.valid(target)) {
-                    const body = live.observe(target);
-                    if (body !== null) locked = supercellslamGround(live, body.position(), body.height() * 0.5);
-                }
                 if (step >= riseLimit || me.position().y() >= apexY - 0.05) { dive(current); return; }
                 const up = Math.min(leapSpeed, Math.max(0, apexY - me.position().y()));
                 const flatX = locked.x() - me.position().x(), flatZ = locked.z() - me.position().z();
@@ -235,8 +224,10 @@ namespace PokemonSkills {
                 const delta = WorldCombat.point(flat < 0.01 ? 0 : flatX / flat * horiz, up, flat < 0.01 ? 0 : flatZ / flat * horiz);
                 supercellslamResetFall(live, actor);
                 live.displace(actor, delta);
-                charged = charge + Math.round(step / Math.max(1, riseLimit) * 3) / 3;
-                movementScenes.show(current, "leap", me.position(), { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust, sparks: sparks, charge: charged });
+                // 蓄电量绑定实际爬升：爬得越高，身上电花才越聚越密。
+                const climbed = Math.max(0, Math.min(1, (me.position().y() - start.y()) / Math.max(0.001, leapHeight)));
+                charged = charge + climbed;
+                movementScenes.show(current, "leap", me.position(), { moment: "leap", scale: scale, intensity: intensity, chargeRate: chargeRate(charged) });
                 current.after(1, function (next) { rise(next, step + 1); });
             }
 

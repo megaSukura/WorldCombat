@@ -30,5 +30,5 @@
   "worldcombat.skill.drillpeck.preference.ai.finish": "优先收残血",
   "world_combat.move.drillpeck.text.hit": "啄钻 %1$s 口",
   "world_combat.move.drillpeck.text.miss": "转了个空",
-  "worldcombat.skill.drillpeck.description.3": "起手先朝目标垫进 %1$s 格，只垫到判定边缘、不会穿过目标；每一口只结算身前钻轴上的第一名对手，目标滑出钻轴就立刻收钻。"
+  "worldcombat.skill.drillpeck.description.3": "起手先朝目标垫进 %1$s 格，只垫到判定边缘、不会穿过目标；每一口只结算身前固定钻轴上离得最近、通视的一名对手，目标滑出钻轴后那几口落空，但整支钻仍会转完所有口数再收势。"
 }

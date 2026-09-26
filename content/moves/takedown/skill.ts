@@ -109,7 +109,7 @@ namespace PokemonSkills {
                             intensity: intensity, hits: Math.round(10 + dust * 0.6) }, 28);
                     sound(current, "cobblemon:impact.normal");
                     if (landed && victim !== null && scope.valid(victim)) {
-                        scope.displace(victim, direction.scale(shove));
+                        scope.hitDisplace(victim, direction.scale(shove));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), takedownHitText, [], 26);
                     }
                     // 反作用力由共享结算按 recoil 比例落在自己身上；这里只补后坐位移与表现。

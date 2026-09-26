@@ -107,8 +107,9 @@ namespace PokemonSkills {
     }
 
     /** Restore a fainted party member behind `actor` to `ratio` of maximum HP; a separate step from send-out. */
-    export function partyRevive(world: CombatWorld, actor: CombatActor, slot: number, ratio: number): PartyRelayResult {
-        try { return partyReceipt(String(CobblemonCombat.reviveResult(world, actor, slot, ratio))); }
+    export function partyRevive(world: CombatWorld, actor: CombatActor, slot: number, ratio: number, expectedId?: string): PartyRelayResult {
+        try { return partyReceipt(String(expectedId === undefined ? CobblemonCombat.reviveResult(world, actor, slot, ratio)
+            : CobblemonCombat.reviveResult(world, actor, slot, ratio, expectedId))); }
         catch (error) { return { ok: false, reason: "unavailable", ref: "", restored: false }; }
     }
 

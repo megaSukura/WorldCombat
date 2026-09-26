@@ -19,7 +19,7 @@ Smoke.scenario("peck", function (stage) {
         stage.after(40, function () {
             stage.expect(stage.casts("peck", caster) > 0, "peck was committed");
             stage.expect(stage.damageTo(foe) > 0, "the peck dealt damage");
-            stage.note("贴身单发点啄；目标离地时伤害更高并被压回地面", {
+            stage.note("贴身单发点啄；对离地目标伤害更高，并按原生碰撞与击退抗性把它下压（实际下降才播啄落）", {
                 casts: stage.casts("peck", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 onCaster: Math.round(stage.damageTo(caster) * 10) / 10,

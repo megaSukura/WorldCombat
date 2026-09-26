@@ -1,29 +1,4 @@
-/**
- * 妖精之锁 / fairylock —— 参数与数值来源。
- *
- * 原生事实（Cobblemon 1.8 / Showdown）：妖精、变化、威力 0、命中 必中、PP 10、优先度 0、目标 全场；
- *   `pseudoWeather: "fairylock"` 持续 2（一个回合），`onTrapPokemon` 让场上每一只宝可梦都无法逃走。
- *   原生介绍「通过封锁，下一回合所有的宝可梦都无法逃走。」
- *
- * 世界化：把「封住一整块场地一个回合」落成**一圈会收拢的妖精光栅**——落地时把半径内每个活体
- *   （包括术者自己与队友）都钉在原地，谁也走不出这块地，直到封印松开。它天生是**对等的**：你自己也被锁住，
- *   所以使用时机是「先把对手关进来、再由队友集火」；站到半径之外就不受影响。
- *   光栅会在这段时间里持续扫描，走进去的活体同样被扣住；被外力推出去则脱锁。
- *
- * 与同族分开：黑色目光把术者自己钉在原地当锁、蛛网缠在目标身上怕火、挡路立墙封退路；
- *   妖精之锁是一块短时的对等场地，把所有站进来的活体一起锁住，术者也跑不掉。
- *
- * 数值来源（每项读不同的个体数据，落到不同参数）：
- *   radius     封印半径：等级与身板决定光栅铺多大；深锁式收窄。
- *   sealTicks  封印时长：特防决定撑多久；深锁式更长。
- *   lattice    光栅道数：特攻换算，驱动画面里竖向光栅的密度。
- *   bars       光栅立柱数：等级换算，画面里立柱越多。
- *   tempo／aftercast／recharge：速度、身形与等级定节奏。
- *
- * 配置 `deep`（深锁）双向取舍（默认关）：
- *   开（深锁）：封印时长 ×1.4；代价是半径 ×0.8、起手 +4 刻、冷却 +20 刻——锁得更久，但圈更小、更慢更费。
- *   关（广域锁）：圈更大、更快、冷却更短；代价是锁得更短。
- */
+/** Symmetric finite boundary: individual speed and special stats scale its radius, duration and lattice. */
 namespace PokemonSkills {
     export const fairyId = "fairylock";
     export const fairyScene = "world_combat:move_fairylock";

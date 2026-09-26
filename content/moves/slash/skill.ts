@@ -1,15 +1,16 @@
 /**
  * 劈开 / slash 的出手方式。
  *
- * 核心念头：站定、把刃举到头顶，朝身前一条窄走廊压下去——这是全族最慢、最稳、最容易劈中要害的一记。
- * 它的形状是一道从高处落下的直线，落点闪出一记亮白的要害标记；命中真劈中要害时再补一次更亮的强调。
+ * 核心念头：站定、把刃举到头顶，朝身前一条窄而高的竖直面压下去——慢、稳、最容易劈中要害。
+ * 它的形状是一道从高处斜下、落在命中点的长刀痕；普通命中只画这一条，命中真劈中要害时再补一次更亮的强调。
  *
  * 两幕：
  *   起（windup，提交前）：举刃过头，刃尖聚起一道竖直的亮线。
- *   劈（cleave → strike，提交后）：沿身前 `reach` 格长、`edge` 半宽的走廊压下一记 `cleave` 接触斩击，
- *       走廊里的非友方各挨一下；命中处画出一道由高处落下的劈痕。
+ *   劈（cleave → fall → strike，提交后）：沿身前 `reach` 格长、`edge` 半宽的走廊压下一记 `cleave` 接触斩击，
+ *       走廊里的非友方各挨一下；命中处画出一道由高处斜下的长刀痕。
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器在落点补一发亮白标记与浮字。
  *
+ * 选取：`kind: "aim"` 接受任意阵营实体或世界点；横向窄、纵向高，所以旁侧不挨这一刀，高目标仍会被纵劈覆盖。
  * 与同族分开：居合斩是一趟贴地的宽弧并割草，连斩是越接越多刀的攒节奏，十字剪是两刃合拢的交叉；
  * 劈开是唯一「慢、窄、期待要害」的单点重劈。
  */
@@ -24,19 +25,21 @@ namespace PokemonSkills {
             .map(function (point) { return [point.x(), point.y(), point.z()]; });
     }
 
-    /** 命中处由高处落下的一记劈痕：从落点上方沿刃势压到落点。 */
+    /** 命中处一记斜下长刀痕：从落点斜后上方沿刃势压到落点斜前下方，一条线读完整记竖劈。 */
     function slashStroke(point: CombatPoint, direction: CombatPoint, depth: number): number[][] {
-        const top = point.plus(WorldCombat.point(0, depth, 0)).minus(direction.scale(0.5));
-        return [[top.x(), top.y(), top.z()], [point.x(), point.y(), point.z()]];
+        const heading = WorldGeometry.flatUnit(direction);
+        const top = point.plus(WorldCombat.point(0, depth, 0)).minus(heading.scale(depth * 0.55));
+        const bottom = point.plus(WorldCombat.point(0, -0.2, 0)).plus(heading.scale(depth * 0.35));
+        return [[top.x(), top.y(), top.z()], [bottom.x(), bottom.y(), bottom.z()]];
     }
 
     define({
         id: slashId,
         cooldownParameter: "recharge",
         name: "Slash",
-        description: "站定、举刃过头，沿身前一条窄走廊压下一记斜劈：走廊里的对手各吃一记接触斩击，落点闪出亮白的劈痕。它的暴击率比同族高一档——疾刃更快更宽、重刃更慢更重。",
-        uses: ["站定一记压下去的重劈", "比同族更容易劈中要害", "慢、窄、准"],
-        kind: "enemy",
+        description: "站定、举刃过头，沿身前一条窄而高的竖直面压下一记斜劈：走廊里的对手各吃一记接触斩击，命中处划出一道由高处斜下的长刀痕；普通命中只画这一条。它天生更容易劈中要害，只有真正劈中要害时落点才会再闪一记亮白标记——疾刃更快更宽、重刃更慢更重。",
+        uses: ["站定一记压下去的重劈", "更容易劈中要害", "慢、窄、准"],
+        kind: "aim",
         range: 2.4,
         maxRange: 2.9,
         prepare: 9,
@@ -106,9 +109,13 @@ namespace PokemonSkills {
     });
 
     // 要害标记：共享结算判定为暴击后，在落点补一记亮白强调与浮字（暴击率来自原生 critRatio 2）。
+    // 普通命中不触发这里——只有真实 damage_applied 回执里 critical 为真、且实际伤害大于 0 时才有这一闪。
     WorldCombat.on("world_combat:move_slash/weak", "world_combat:damage_applied", "", function (event) {
         const data = JSON.parse(String(event.data()));
-        if (String(data.move) !== slashId || data.critical !== true || !(data.actual > 0)) return;
+        const action = event.action();
+        const fromAction = action !== null && String(action.content()) === "world_combat:" + slashId;
+        if (String(data.move || "") !== slashId && !fromAction) return;
+        if (data.critical !== true || !(data.actual > 0)) return;
         const world = event.world(), target = event.target();
         if (target === null || typeof data.x !== "number") return;
         const at = WorldCombat.point(data.x, data.y, data.z);

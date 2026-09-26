@@ -3,8 +3,8 @@
  *
  * 什么局面有意义：有一个看得见、够得着（ai.maxChase 内）、视线畅通的宝可梦威胁，它不是草属性（草把粉抖掉）、
  *   也不是纯超能力——只有这种目标才改写得动。
- * 什么时候最想出手：目标带格斗或毒属性时 priority 抬到 72——把对手改写成超能力，虫／幽灵／恶都有口子；
- *   其余目标 56。
+ * 什么时候最想出手：目标带格斗或毒属性时 priority 抬到 72——改写后我方超能招更好打；身边若有虫／幽灵／恶的
+ *   队友，超能的弱点有人来吃，再抬 10；其余目标 56。
  * 对谁出手：当前威胁；已经带着 magicpowder 身份、草属性、或没有属性的目标跳过，避免浪费 20 发 PP。
  * 够不到怎么办：reach 就是撒粉距离（细撒档更短），由共享接近逻辑把身体带进范围。
  * 放完之后：超能力挂在目标身上、属性层随即生效；粉还在时不重复撒。
@@ -29,6 +29,19 @@ namespace CompanionBehavior {
         return facts.types.join(",") !== "psychic";
     }
 
+    /** 身边有没有带这些属性的队友：新增的虫／幽灵／恶弱点得有人来吃才值得改写。 */
+    function magicpowderAllyHasType(context: WorldBehavior.Context, wanted: string[]): boolean {
+        const self = source(context);
+        const nearby = (context.facts.nearby || []) as Entity[];
+        for (let index = 0; index < nearby.length; index++) {
+            const other = nearby[index];
+            if (!other.friendly || other.ref === self.ref || other.health <= 0) continue;
+            const facts = pokemonFacts(context, other);
+            if (facts && Array.isArray(facts.types) && facts.types.some(type => wanted.indexOf(type) >= 0)) return true;
+        }
+        return false;
+    }
+
     function magicpowderWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
@@ -49,7 +62,10 @@ namespace CompanionBehavior {
             if (!target || !magicpowderWants(context, item, target)) return 0;
             const facts = pokemonFacts(context, target);
             if (!facts || !Array.isArray(facts.types)) return 0;
-            return facts.types.indexOf("fighting") >= 0 || facts.types.indexOf("poison") >= 0 ? 72 : 56;
+            // 己方有虫／幽灵／恶才能吃到超能的弱点；己方是超能时改写也只多一个同行，按基础意愿。
+            let score = facts.types.indexOf("fighting") >= 0 || facts.types.indexOf("poison") >= 0 ? 72 : 56;
+            if (magicpowderAllyHasType(context, ["bug", "ghost", "dark"])) score += 10;
+            return Math.max(1, score);
         }
     });
 }

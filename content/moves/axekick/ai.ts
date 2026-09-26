@@ -11,8 +11,17 @@ namespace PokemonSkills {
     function axekickWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         if (CompanionBehavior.ai<boolean>(item, "spareConfused", true) && CompanionBehavior.status(context, target, "confusion")) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-            <= CompanionBehavior.ai<number>(item, "maxChase", 8);
+        const self = CompanionBehavior.source(context);
+        if (CompanionBehavior.distance(self.point, target.point)
+            > CompanionBehavior.ai<number>(item, "maxChase", 8)) return false;
+        // 近距慢敌或正在攻击停顿者最适合：高速横移的目标会在抬腿延迟里走出竖带。
+        const velocity = target.velocity;
+        if (velocity && !target.attacking) {
+            const speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
+            if (speed > 0.25) return false;
+        }
+        // 方块遮断脚路：到目标没有直视线就不劈。
+        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     CompanionBehavior.registerUse("axekick", {

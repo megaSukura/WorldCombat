@@ -1,13 +1,13 @@
 /**
  * 火焰牙 / firefang 的客户端表现。
  *
- * 一句话：牙间燃起火种、火星顺牙面乱窜 → 沿一条直线扑出、脚边拖出火线 → 咬实的一刻在接触点炸开火色迸溅与獠牙剪影，
- * 随即火苗从伤口里往外冒（火种被按进肉里）；被咬懵的人头顶晃出火色星子。
+ * 一句话：牙间燃起火种、火星顺牙面乱窜 → 合牙的一刻在接触点炸开火色迸溅与獠牙剪影，随即火苗从伤口里往外冒
+ * （火种被按进肉里）；若对手免疫灼伤，同一点的火只向外炸开、四散熄灭；被咬懵的人头顶晃出火色星子。
  * 色相家族：火橙（0xFF7A2A）与余烬金（0xFFD08A），近白只出现在咬实峰值一点。
- * 拍子：起 charge（牙间聚火）→ 扑 pounce → 咬 bite（命中峰值）／ miss（扑空刹停）→ 灌 sear → 懵 flinch。
- * 范围：bite／sear 绑命中点，画出的就是咬中的位置与伤口；pounce 的尘迹沿施法者实际走过的直线铺开。
- * 运动：速度线沿扑出方向掠过；sear 的火苗从伤口向上冒并向外舔；flinch 的星子从目标头顶向上飘。
- * 数：`data.embers`（特攻派生）决定咬中迸溅与伤口火星的数量；`data.intensity`（威力 / 66）抬高密度与亮度；
+ * 拍子：起 charge（牙间聚火）→ 咬 bite（命中峰值）／ scatter（免疫散火）／ miss（空咬收牙）→ 灌 sear → 懵 flinch。
+ * 范围：bite／scatter／sear 绑命中点，画出的就是咬中的位置与伤口；miss 落在空咬刹停的位置。
+ * 运动：scatter 的火星从表面向外迸出并熄落；sear 的火苗从伤口向上冒并向外舔；flinch 的星子从目标头顶向上飘。
+ * 数：`data.embers`（特攻派生）决定咬中迸溅、散火与伤口火星的数量；`data.intensity`（威力 / 66）抬高密度与亮度；
  * `data.scale`（獠牙判定 / 0.42）放大牙影与判定环。
  */
 const FirefangDefinition: ParticleDefinition = {
@@ -32,29 +32,6 @@ const FirefangDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.14], spread: 20,
                     lifetime: [5, 10], size: [0.09, 0.03],
                     color: 0xFFD08A, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 50
-                }
-            ]
-        },
-        pounce: {
-            duration: 28,
-            exit: { stop: 20, drain: 12 },
-            emitters: [
-                {
-                    name: "fire_trail", bind: "source", offset: [0, 0.08, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 26, trail: { minDistance: 0.28 },
-                    shape: { kind: "point" },
-                    direction: "outward", speed: [0.02, 0.1],
-                    lifetime: [6, 12], size: [0.08, 0.02],
-                    color: 0xFFD08A, alpha: [0.6, 0], light: "full", maxParticles: 150
-                },
-                {
-                    name: "bite_lines", bind: "source", offset: [0, 0.5, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 24, shape: { kind: "box", size: [0.3, 0.28, 0.3] },
-                    direction: "outward", speed: [0.05, 0.17],
-                    lifetime: [3, 7], size: [0.15, 0.04],
-                    color: 0xFFC97A, alpha: [0.4, 0], light: "full", maxParticles: 120
                 }
             ]
         },
@@ -113,6 +90,32 @@ const FirefangDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.12],
                     lifetime: [7, 13], size: [0.15, 0.03], sizeMode: "index",
                     color: 0xFFD08A, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 40
+                }
+            ]
+        },
+        scatter: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "deflect", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "embers", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.1, 0.3],
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [5, 10], size: [0.09, 0.03],
+                    color: 0xFFD08A, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 70
+                },
+                {
+                    name: "bounce", bind: "target", height: 0.42,
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    burst: { count: { data: "embers", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.14, 0.34],
+                    gravity: 0.06, drag: 0.88,
+                    lifetime: [5, 9], size: [0.12, 0.03],
+                    color: 0xFF7A2A, alpha: [0.8, 0], light: "full", bloom: 0.25, maxParticles: 50
                 }
             ]
         },

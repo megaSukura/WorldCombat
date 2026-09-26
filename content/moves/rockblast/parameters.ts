@@ -6,17 +6,18 @@
  *   描述「向对手发射坚硬的岩石进行攻击。连续攻击2～5次」。
  *
  * 翻译：把回合制的「2～5 连击」翻成**掀地碎岩、霰弹齐射**——施法者从脚下的地里掰出石块，
- *   一块接一块按弧线抛向目标；每块落地砸一次 `shard` 物理伤害，并把落点那格地面崩成碎石。
+ *   一块接一块按弧线抛向瞄准的落区；每块真正撞上才结算一次 `shard` 物理伤害，并在真撞点崩起碎石尘。
  *   90 的命中翻成「散布」：石块抛得越散，远处的目标越容易被漏掉，贴脸打才吃得满一梭。
  *   岩石取自施法者脚下的方块（`skill.ts` 的 `rockblastGroundMaterial`），站在沙地抛沙岩、
  *   站在深板岩抛碎深板岩——同一招在不同地面出手长得不一样，这是它把世界当材料的地方。
+ *   落点只留下会消散的碎石尘，不再替换地表方块；墙由原生投射物真实截获。
  *
  * 与同族／同侪分开：
  *   种子机关枪 —— 贴地直飞的小籽，无弧线、无残留；
  *   飞弹针     —— 快而细的追身针，钉在目标身上；
- *   冰锥       —— 直飞的冰晶，碎在目标身上、冻住脚下地面；
+ *   冰锥       —— 齐排平行直飞的冰晶，碎在目标身上；
  *   尖刺加农炮 —— 直线重钉，穿一排、把人顶开；
- *   岩石爆击   —— 唯一走弧线、唯一把落点砸成碎石堆的一发发重石。
+ *   岩石爆击   —— 唯一走弧线、唯一在真撞点崩起碎石尘的一发发重石。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   shard  单石威力：物攻定石头的分量，体重让重精灵掰的石更沉。
@@ -28,7 +29,7 @@
  *   reach  射程：物攻与等级决定能抛多远，也是本招的实际射程来源。
  *   spread 散布：速度与配置决定石块散多开（原生 90 命中的翻译）。
  *   chips  碎岩量：物攻换算的碎屑量，驱动命中表现。
- *   rubble 碎石存续：等级与配置决定落点碎石留多久。
+ *   rubble 落尘停留：等级与配置决定真撞点碎石尘留多久。
  *   tempo／aftercast／recharge：速度定节奏，巨岩更慢更长。
  *
  * 配置 `boulder`（巨岩式）双向取舍（默认关）：
@@ -126,12 +127,12 @@ namespace PokemonSkills {
                 unit: "片",
                 description: "每块石头撞碎时崩出的岩屑数量，由物攻换算；它驱动命中的碎屑表现，不是独立伤害。"
             }),
-        /** 碎石存续：基础 80 刻，等级每比 25 多 1 加 1.2（夹 0..60）；巨岩 ×1.4；夹 60..220。 */
+        /** 落尘停留：基础 40 刻，等级每比 25 多 1 加 0.6（夹 0..30）；巨岩 ×1.4；夹 24..96。 */
         rubble: seconds(
-            F.base(80).plus(F.level().minus(25).times(1.2).clamp(0, 60))
+            F.base(40).plus(F.level().minus(25).times(0.6).clamp(0, 30))
                 .times(F.when(F.pref("boulder", text("worldcombat.skill.rockblast.preference.boulder")), F.const(1.4), F.const(1.0)))
-                .clamp(60, 220).round(0),
-            "碎石存续", "落点崩出的碎石留多久；等级越高、巨岩式留得越久，到期原方块回来。"),
+                .clamp(24, 96).round(0),
+            "落尘停留", "真撞点崩起的碎石尘停留多久；等级越高、巨岩式留得越久。它只影响撞点的可见碎屑，不改动地表方块。"),
         /** 起手：基础 9 刻，速度每比 55 快 1 减 0.04（夹 −1.5..2.5）；巨岩 +3；夹 4..14。 */
         tempo: seconds(
             F.base(9).minus(F.stat("speed").minus(55).times(0.04).clamp(-1.5, 2.5))
@@ -161,7 +162,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["shard","shots"] },
         { key: "description.1", values: ["gap", "velocity", "reach", "spread"] },
         { key: "description.2", values: ["radius", "arc"] },
-        { key: "description.additional", values: ["rubble"] },
+        { key: "description.additional", values: [] },
         { key: "boulder.on", values: [], when: function (context) { return read(context.detail.values, ["boulder"]) === true; } },
         { key: "boulder.off", values: [], when: function (context) { return read(context.detail.values, ["boulder"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

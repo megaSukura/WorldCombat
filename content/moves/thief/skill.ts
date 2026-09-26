@@ -75,7 +75,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), message, [], 28);
                 }
                 if (landed && scope.valid(target)) {
-                    scope.displace(target, direction.scale(push));
+                    scope.hitDisplace(target, direction.scale(push));
                     if (stolen && slip > 0.05) scope.displace(actor, direction.scale(-slip));
                 }
                 movementScenes.finish(current, done);

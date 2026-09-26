@@ -12,17 +12,18 @@ namespace CompanionBehavior {
         const access = world(context), actor = access.actor(self.ref);
         return actor ? PokemonSkills.corrosiveGasRadius(access, actor) : 3.2;
     }
-    function corrosiveCounts(context: WorldBehavior.Context, self: Entity, radius: number): { holders: number; enemies: number } {
+    function corrosiveCounts(context: WorldBehavior.Context, self: Entity, radius: number): { enemyHolders: number; allyHolders: number; enemies: number } {
         const nearby = (context.facts.nearby || []) as Entity[];
-        let holders = 0, enemies = 0;
+        let enemyHolders = 0, allyHolders = 0, enemies = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === self.ref || other.health <= 0 || !other.visible) continue;
             if (distance(other.point, self.point) > radius) continue;
-            if (!other.friendly) enemies++;
-            if (corrosiveHeldOf(context, other) !== "") holders++;
+            const holds = corrosiveHeldOf(context, other) !== "";
+            if (other.friendly) { if (holds) allyHolders++; }
+            else { enemies++; if (holds) enemyHolders++; }
         }
-        return { holders: holders, enemies: enemies };
+        return { enemyHolders: enemyHolders, allyHolders: allyHolders, enemies: enemies };
     }
 
     registerUse("corrosivegas", {
@@ -44,7 +45,9 @@ namespace CompanionBehavior {
             if (distance(self.point, threat.point) > approach) return false;
             // 出手前先看「够得着的范围」里有没有值得裹的目标；真正开喷时再走到雾半径以内（reach）。
             const counts = corrosiveCounts(context, self, approach);
-            if (ai<boolean>(item, "onlyHolders", true)) return counts.holders > 0;
+            // 雾里有携带可腐蚀物的队友时绝不喷：溶毁队友道具的代价远大于沾到一两个敌人。
+            if (counts.allyHolders > 0) return false;
+            if (ai<boolean>(item, "onlyHolders", true)) return counts.enemyHolders > 0;
             return counts.enemies > 0;
         },
         priority: function (context, item) {
@@ -52,16 +55,18 @@ namespace CompanionBehavior {
             if (!threat) return 0;
             const self = source(context);
             const counts = corrosiveCounts(context, self, corrosiveCloudRadius(context, self));
-            if (counts.holders >= 2) return 62;
-            if (counts.holders === 1) return 54;
+            // 有装备的队友在雾里是强负收益，直接放弃这次出手。
+            if (counts.allyHolders > 0) return 0;
+            if (counts.enemyHolders >= 2) return 62;
+            if (counts.enemyHolders === 1) return 54;
             return counts.enemies > 0 ? 30 : 0;
         }
     });
 
     const corrosiveChase = PokemonSkills.number("ai.maxChase", "出手距离", 3, 18, 1);
     corrosiveChase.help = "威胁进入这个距离内才考虑喷酸；调小只在贴身时喷，调大愿意提前把远处围上来的一圈一起罩住。";
-    const corrosiveHolders = PokemonSkills.flag("ai.onlyHolders", "只对雾里有携带物时出手");
-    corrosiveHolders.help = "开启：只有雾半径内至少有一个活体携带道具时才出手，作为专门的溶物手段；关闭：只要雾里裹到一个敌人就喷，顺手沾酸也认。";
+    const corrosiveHolders = PokemonSkills.flag("ai.onlyHolders", "只对雾里有敌方携带物时出手");
+    corrosiveHolders.help = "开启：只有雾半径内至少有一个携带道具的敌人时才出手，专门用来溶毁敌方装备；关闭：雾里裹到敌人就喷，顺手沾酸也认。两种设置下，雾里有携带道具的队友时都不会出手。";
     const corrosiveStation = PokemonSkills.flag("ai.leaveStation", "驻守时允许离位");
     corrosiveStation.help = "开启后，收到「驻守」指令时也会离开原位去喷酸；关闭则只在原地够得到时出手。";
     PokemonSkills.addPreferences("corrosivegas", { ai: { maxChase: 11, onlyHolders: true, leaveStation: false } },

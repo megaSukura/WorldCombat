@@ -8,8 +8,10 @@
  * 一刻锁死的落点，每刻推进一段并留下涟漪与气泡；抵达后施法者贴着目标身侧窜出，走同一条 hurt 路径
  * 结算物理伤害，再把目标向上顶飞、向后推开。
  *
- * 反制：落点在水痕出发前就锁死。水痕行进期间横向走开、或退到锁定半径之外，窜出的这一击就会落空；
- * 下潜预告可被打断且不花 PP。站在水里或软地上发动是深潜（射程、伤害、顶飞都更高），硬地上只是浅袭。
+ * 反制：落点在水痕出发前就锁死——可以锁实体，也可以锁一个空点。水痕行进期间横向走开、或退到锁定半径
+ * 之外，窜出的这一击就会落空；目标躲开时不会追着改点。窜出读的是身体实际到达的位置，出水处的涌泉与
+ * 水花都按那里结算。下潜预告可被打断且不花 PP。站在水里或软地上发动是深潜（射程、伤害、顶飞都更高），
+ * 硬地上只是浅袭。
  *
  * 对象覆盖：伤害走 hurt（宝可梦、原版生物、其他模组生物、玩家同一条路），位移走 world.displace。
  * 非战斗：在水里下潜会浇灭自己身上的灼伤；窜出命中会把目标身上的火一起浇灭；落点留下一汪涌泉
@@ -58,7 +60,9 @@ namespace PokemonSkills {
         },
         scan: function (_effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             var centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
-            WorldFeedback.keep(world, "dive:spring:" + field.position[0] + ":" + field.position[2], DIVE_SCENE, 1, centre, { moment: "spring", scale: field.radius / 1.6 }, 30);
+            // 涌泉表现绑在场效果自己的 id 上：驱散、到期或提前结束时画面随之收走，不会比湿地多活一截。
+            if (typeof field.id === "number" && field.id > 0)
+                WorldFeedback.onEffect(world, field.id, "spring", DIVE_SCENE, 1, centre, { moment: "spring", scale: field.radius / 1.6 });
             diveQuench(world, centre, field.radius);
         }
     });
@@ -70,23 +74,34 @@ namespace PokemonSkills {
             { source: String(world.source().ref()) }, ticks);
     }
 
-    function diveSurface(world: CombatWorld, actor: CombatActor, point: CombatPoint, radius: number, deep: boolean, submerged: boolean): void {
+    /**
+     * 窜出读的是实际到达的位置：teleport 被落点保护或方块裁定拒绝时，位移能走到哪算哪；出水的身体、水柱
+     * 与留下的涌泉都绑在身体真正所在处，返回那个位置供 hit 判定复用，没身体可观察时返回 null。
+     */
+    function diveSurface(world: CombatWorld, actor: CombatActor, point: CombatPoint, radius: number, deep: boolean, submerged: boolean): CombatPoint | null {
         if (!world.teleport(actor, point)) {
-            var body = world.observe(actor);
-            if (body !== null) world.displace(actor, point.minus(body.position()));
+            var moving = world.observe(actor);
+            if (moving !== null) {
+                var foot = moving.position().minus(WorldCombat.point(0, moving.height() * 0.5, 0));
+                world.displace(actor, point.minus(foot));
+            }
         }
-        WorldFeedback.emit(world, DIVE_SCENE, 1, point,
+        var surfaced = world.observe(actor);
+        if (surfaced === null) return null;
+        var at = surfaced.position();
+        WorldFeedback.emit(world, DIVE_SCENE, 1, at,
             { moment: "surface", target: String(actor.ref()), scale: radius / 0.5, deep: deep ? 1 : 0, wet: submerged ? 1 : 0 }, 26);
-        world.sound("minecraft:entity.generic.splash", point, 16, "{}");
-        diveSpring(world, point);
+        world.sound("minecraft:entity.generic.splash", at, 16, "{}");
+        diveSpring(world, at);
+        return at;
     }
 
     define({
         freeMovement: true,
         id: "dive", name: "潜水",
-        description: "沉下去后，一道水痕贴着地面冲向锁定的落点，再从那里窜出：对目标造成物理伤害、把它向上顶飞并推开，并浇灭它身上的火。水痕会把落点暴露出来，目标在它到达前退到锁定半径外就能让这一击落空；站在水里或软地上发动时更强、更远，硬地上只是短促的浅袭。",
+        description: "沉下去后，一道水痕贴着地面冲向锁定的实体或空点，再从那里窜出：命中目标就造成物理伤害、把它向上顶飞并推开，并浇灭它身上的火；锁定空点也能真实换位，并在出水处留下一汪涌泉。水痕会把落点暴露出来，目标在它到达前退到锁定半径外就能让这一击落空；站在水里或软地上发动时更强、更远，硬地上只是短促的浅袭。",
         uses: ["绕后突袭", "贴身接近", "贴近远程对手"],
-        kind: "enemy", range: 12, maxRange: 16, active: 6, recover: 10, cooldown: 46, style: "water-dive",
+        kind: "aim", range: 12, maxRange: 16, active: 6, recover: 10, cooldown: 46, style: "water-dive",
         maximumTicks: 160,
         defaults: { deep: true },
         fields: [field(pathOf("deep"), "深潜", "boolean", { help: "开启：下潜更久、水痕更长、威力与顶飞更高、冷却更长；关闭（急袭）：射程更短、威力更低，但下潜与冷却都快。身在水里或软地上发动时整体再提高一档。" })],
@@ -140,17 +155,26 @@ namespace PokemonSkills {
                 var outward = liveBody.position().minus(start);
                 if (outward.length() < 0.01) outward = current.direction();
                 var direction = outward.unit();
+                // 只有锁定的敌人仍停在锁定接触区里才追着它窜出；目标躲开（或本就锁的是空点）就只在水痕尽头出水。
                 if (target === null || at === null || at.health() <= 0 || at.position().minus(landing).length() > lock) {
-                    diveSurface(live, liveActor, landing, radius, deep, submerged);
-                    WorldFeedback.emit(live, DIVE_SCENE, 1, landing, { moment: "whiff" }, 18);
-                    WorldFeedback.text(live, diveAbove(landing), "world_combat.move.dive.text.whiff", [], 26);
+                    var missed = diveSurface(live, liveActor, landing, radius, deep, submerged);
+                    WorldFeedback.emit(live, DIVE_SCENE, 1, missed || landing, { moment: "whiff", target: target === null ? "" : String(target.ref()) }, 18);
+                    WorldFeedback.text(live, diveAbove(missed || landing), "world_combat.move.dive.text.whiff", [], 26);
                     finish(current);
                     return;
                 }
                 var toward = liveBody.position().minus(at.position());
                 if (toward.length() < 0.01) toward = direction.scale(-1);
                 var point = at.position().minus(toward.unit().scale(1.1 + liveBody.width() * 0.5));
-                diveSurface(live, liveActor, point, radius, deep, submerged);
+                var surfaced = diveSurface(live, liveActor, point, radius, deep, submerged);
+                // 身体必须真的站到窜出点：传送失败、被挡在远处时只能空放，不能隔空伤人。
+                var landedFoot = surfaced === null ? null : surfaced.minus(WorldCombat.point(0, liveBody.height() * 0.5, 0));
+                if (landedFoot === null || landedFoot.minus(point).length() > 1.0) {
+                    WorldFeedback.emit(live, DIVE_SCENE, 1, surfaced || point, { moment: "whiff", target: String(target.ref()) }, 18);
+                    WorldFeedback.text(live, diveAbove(surfaced || point), "world_combat.move.dive.text.whiff", [], 26);
+                    finish(current);
+                    return;
+                }
                 var before = at.health();
                 if (!hurt(current, target, move.id(), power, { contact: true })) {
                     WorldFeedback.emit(live, DIVE_SCENE, 1, at.position(), { moment: "whiff", target: String(target.ref()) }, 18);

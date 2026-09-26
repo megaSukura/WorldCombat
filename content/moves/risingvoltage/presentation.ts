@@ -6,8 +6,9 @@
  * 色相家族：电黄到近白（0xF8D030／0xFFE84D 为主体，0xFFFFFF 只做放电强调，余韵是焦土暗黄）。
  * 拍子：起（coil 蓄电）→ 击（crawl 爬行、pillar 升柱、hit 贯穿）→ 收（暗黄残尘）。
  * 范围：电柱按服务端 `data.radius`／`data.height`（真实粗细与高度）画出，柱身以内就是会被贯穿的地方。
- * 运动：电流沿 `data.path`（施法者与目标的实时顶点）贴着地面爬行，速度由服务端 delay 与机制里的爬地速度决定。
- * 数：`data.arcs`（特攻派生的电弧数）决定电柱与爬线的密度，`data.intensity`（是否带电）决定明暗，
+ * 运动：电流沿 `data.path`（每刻由服务端把前端推进到新的位置）贴着地面生长，前端端点始终等于锁定的柱底；
+ *   柱底不随目标横移。带电目标的那一柱在 pillar 上多出一层更亮更粗的电荷壳。
+ * 数：`data.arcs`（特攻派生的电弧数）决定电柱与爬线的密度，`data.intensity`／`data.charged`（是否带电）决定明暗与粗细，
  *   画面里的数与机制里的数一致。
  */
 const RisingVoltageDefinition: ParticleDefinition = {
@@ -36,7 +37,7 @@ const RisingVoltageDefinition: ParticleDefinition = {
             ]
         },
         crawl: {
-            duration: { data: "delay", fallback: 10 },
+            duration: 40,
             exit: { stop: 4, drain: 12 },
             emitters: [
                 {
@@ -86,6 +87,15 @@ const RisingVoltageDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.05, 0.25], spread: 8,
                     lifetime: [4, 10], size: [0.12, 0.03],
                     color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 140
+                },
+                {
+                    name: "charged_shell", bind: "point", fit: "none", offset: [0, 0, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: { data: "charged", fallback: 0 }, interval: 2, repeats: 3 },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.1 }, length: { data: "height", fallback: 3.6 } },
+                    direction: "up", speed: [0.1, 0.4], spin: 26, spread: 14,
+                    lifetime: [5, 12], size: [0.26, 0.05], sizeMode: "index",
+                    color: 0xFFF6C0, alpha: [0.95, 0], light: "full", bloom: 0.55, maxParticles: 160
                 },
                 {
                     name: "ground_shock", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,

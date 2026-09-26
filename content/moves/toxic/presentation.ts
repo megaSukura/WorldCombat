@@ -1,15 +1,4 @@
-/**
- * 剧毒 / toxic 的客户端表现。
- *
- * 一句话：一团紫绿毒液被吐向目标，扎进去后毒在体内越钻越深，每隔几秒冒一次更浓的泡，最后整具身体炸出一次爆发。
- * 色相家族：低饱和的沼泽绿做主体，饱和的紫绿只出现在细节层与爆发核心（毒的身份色）。
- * 拍子：起（windup 0–8t，喉间聚毒）→ 击（travel 飞行 / root 入体）→ 收（escalate 一轮轮加深，burst 总爆发，wither 枯萎）。
- * 范围：travel 沿投射物画轨迹；root/escalate/burst 都绑目标身体——画出的就是毒真正落在谁身上。
- * 运动：毒液沿抛出的直线走；入体后泡从体内向上冒；爆发时向四周炸开。
- * 数：服务端按机制算出 `count`（这一轮冒多少颗泡）、`size`（泡多大）、`speed`（冒多急）交给下面的发射器；
- * 加深级数越高，这三个值越大，玩家看得见毒在变凶。
- * 参照节：视觉语言第二、三、四、六、七、九节。
- */
+/** 毒液沿真实弹体推进，强度确实提高时收紧毒纹，到期或解除后枯萎。 */
 const ToxicDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -112,39 +101,6 @@ const ToxicDefinition: ParticleDefinition = {
                     direction: "outward", speed: { data: "speed", fallback: 0.1 },
                     lifetime: [10, 18], size: { data: "size", fallback: 0.2 },
                     color: 0x5E7A2E, alpha: [0.55, 0], light: "world", maxParticles: 48
-                }
-            ]
-        },
-        burst: {
-            duration: 34,
-            exit: { stop: 18, drain: 22 },
-            emitters: [
-                {
-                    name: "burst_core", bind: "target", height: 0.45,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_poison",
-                    burst: { count: { data: "count", fallback: 16 }, at: 1 },
-                    shape: { kind: "sphere", radius: 0.4 },
-                    direction: "shape", speed: { data: "speed", fallback: 0.24 },
-                    lifetime: [8, 15], size: { data: "size", fallback: 0.36 }, sizeMode: "index",
-                    alpha: [1, 0], light: "full", bloom: 0.6
-                },
-                {
-                    name: "burst_goo", bind: "target", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
-                    burst: { count: { data: "count", fallback: 40 } },
-                    shape: { kind: "sphere", radius: 0.5 },
-                    direction: "outward", speed: { data: "speed", fallback: 0.3 },
-                    lifetime: [12, 22], size: { data: "size", fallback: 0.12 }, sizeMode: "index",
-                    color: 0xB8E04A, alpha: [0.9, 0], gravity: 0.04, drag: 0.92, light: "full", maxParticles: 140
-                },
-                {
-                    name: "burst_smoke", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: { data: "count", fallback: 24 } },
-                    shape: { kind: "sphere", radius: 0.55 },
-                    direction: "outward", speed: { data: "speed", fallback: 0.16 },
-                    lifetime: [18, 30], size: [0.3, 0.1],
-                    color: 0x546B2A, alpha: [0.35, 0], light: "world", maxParticles: 80
                 }
             ]
         },

@@ -29,7 +29,7 @@
   "worldcombat.skill.victorydance.preference.ai.maxChase.help": "The rite is considered only against a threat within this distance; larger means raising the crown earlier.",
   "worldcombat.skill.victorydance.preference.ai.minGap": "Close-range floor",
   "worldcombat.skill.victorydance.preference.ai.minGap.help": "A threat closer than this makes the companion attack instead of dancing; larger gives up the buff more often up close.",
-  "world_combat.move.victorydance.text.crowned": "Victory · Attack / Defence / Speed +%1$s",
+  "world_combat.move.victorydance.text.crowned": "Victory · Attack +%1$s / Defence +%2$s / Speed +%3$s",
   "world_combat.move.victorydance.text.rallied": "Victory extended · %1$s s left",
   "world_combat.move.victorydance.text.faded": "The victory rite ends",
   "effect.world_combat.victorydance_crown": "Victory Crown"

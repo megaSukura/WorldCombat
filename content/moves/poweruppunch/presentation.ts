@@ -7,9 +7,11 @@
  * 拍子：起 draw（收拳聚光）→ 击 jab（出拳）与 harden（命中硬化）→ 满 peak ／ 空 whiff → 续 linger ／ 散 fade。
  * 范围：jab 的拳风沿 `data.direction` 指向出拳方向、长度取自 `data.reach`；harden 的爆发落在命中点。
  * 运动：拳风沿方向掠出，命中向四周炸开，硬化光从拳面升起并绕拳旋转。
- * 数：`data.sparks`（物攻派生的拳火花数）驱动拳风与爆发的粒子量；`data.total`（本招累计硬化级数，0–6）
- *   决定拳头硬光的层数与亮度，`data.gained` 让本次提升的那一下单独闪一次；`data.intensity`（拳威力与当前
- *   物攻等级派生）放大整幕。画面里的数量和机制一致。
+ * 数：`data.sparks`（物攻派生的拳火花数）驱动拳风与爆发的粒子量；`data.total`（本窗口实际硬化级数，0–6）
+ *   决定拳头硬光的层数与亮度，`data.gained` 让本次提升的那一下单独闪一次（续期未涨级时为 0，不冒环片升级）；
+ *   `data.intensity`（拳威力与当前物攻等级派生）放大整幕。画面里的数量和机制一致。
+ * 生命周期：linger 由服务端 `WorldFeedback.onEffect` 挂在真正的 boostWindow 上，随该窗口自然到期、刷新
+ *   或被清除一起收；整招结束不额外延长这层硬光。
  */
 const PoweruppunchDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -157,6 +159,14 @@ const PoweruppunchDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [10, 16], size: [0.07, 0.02],
                     color: 0xFFE6A8, alpha: [0.5, 0], light: "full", maxParticles: 14
+                },
+                {
+                    name: "fullring", bind: "source", offset: [0, 0.5, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: { data: "full", fallback: 0 }, shape: { kind: "ring", radius: 0.34 },
+                    direction: "outward", speed: [0.02, 0.09],
+                    lifetime: [8, 14], size: [0.13, 0.03],
+                    color: 0xFFF0B0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 }
             ]
         },

@@ -64,19 +64,19 @@ const BonemerangDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "band", bind: "source", fit: "none", height: 0.0,
+                    name: "band", bind: "path", fit: "world", height: 0.0,
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     trail: { minDistance: 0.28 },
-                    rate: 60, shape: { kind: "sphere", radius: 0.12 },
+                    rate: 60, shape: { kind: "polyline" },
                     direction: "outward", speed: [0.0, 0.03],
                     lifetime: [6, 10], size: [0.2, 0.04],
                     color: 0xEAE0C8, alpha: [0.6, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "grit", bind: "source", fit: "none", height: 0.0,
+                    name: "grit", bind: "path", fit: "world", height: 0.0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     trail: { minDistance: 0.24 },
-                    rate: { data: "count", fallback: 18 }, shape: { kind: "sphere", radius: 0.14 },
+                    rate: { data: "count", fallback: 18 }, shape: { kind: "polyline" },
                     direction: "outward", speed: [0.01, 0.05], gravity: 0.04, drag: 0.94,
                     lifetime: [8, 14], size: [0.06, 0.02],
                     color: 0x8A7A62, alpha: [0.45, 0], light: "world", maxParticles: 90
@@ -88,19 +88,19 @@ const BonemerangDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "band", bind: "source", fit: "none", height: 0.0,
+                    name: "band", bind: "path", fit: "world", height: 0.0,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
                     trail: { minDistance: 0.26 },
-                    rate: 66, shape: { kind: "sphere", radius: 0.13 },
+                    rate: 66, shape: { kind: "polyline" },
                     direction: "outward", speed: [0.0, 0.03],
                     lifetime: [6, 10], size: [0.2, 0.04],
-                    color: 0xF4EEDC, alpha: [0.65, 0], light: "full", maxParticles: 90
+                    color: 0xA8CCD8, alpha: [0.65, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "grit", bind: "source", fit: "none", height: 0.0,
+                    name: "grit", bind: "path", fit: "world", height: 0.0,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     trail: { minDistance: 0.3 },
-                    rate: 24, shape: { kind: "sphere", radius: 0.12 },
+                    rate: 24, shape: { kind: "polyline" },
                     direction: "outward", speed: [0.01, 0.05],
                     lifetime: [6, 12], size: [0.07, 0.02],
                     color: 0xEAE0C8, alpha: [0.6, 0], light: "full", maxParticles: 50
@@ -141,7 +141,7 @@ const BonemerangDefinition: ParticleDefinition = {
                     burst: { count: 12, at: 0 }, shape: { kind: "sphere", radius: 0.3 },
                     direction: "inward", speed: [0.05, 0.18],
                     lifetime: [7, 13], size: [0.12, 0.02],
-                    color: 0xF4EEDC, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 30
+                    color: 0xA8CCD8, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 30
                 }
             ]
         },

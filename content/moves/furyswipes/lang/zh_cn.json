@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.furyswipes.summary": "贴身绕目标左右换位，一道道抓下去：每一道从新角度落下，抓空一道这趟就散。游走式罩得更宽、绕得更远、命中率更高；扑抓式改成前压，收窄成一道、单点更狠。",
+  "worldcombat.skill.furyswipes.summary": "贴身绕目标左右换位，一道道抓下去：每一道从新角度落下，抓空一道这趟就散。可以点敌人，也可以只给一个方向起手，后续按当前真实接触继续，隔墙的目标不会被追着抓。游走式罩得更宽、绕得更远、命中率更高；扑抓式改成前压，收窄成一道、单点更狠。",
   "worldcombat.skill.furyswipes.use.0": "贴身绕目标左右换位，一道道抓下去",
   "worldcombat.skill.furyswipes.use.1": "抓侧后，逼目标不停转身",
   "worldcombat.skill.furyswipes.use.2": "扑抓式改成前压，把目标按在一面猛抓",
+  "worldcombat.skill.furyswipes.use.3": "只朝一个方向起手，沿当前接触一道道抓下去",
   "worldcombat.skill.furyswipes.description.0": "每一道造成约 %1$s 点接触伤害（走物攻），这一趟最多 %2$s 道，每道 %3$s 命中；抓空一道这趟就散。",
   "worldcombat.skill.furyswipes.description.1": "爪距 %1$s 格，抓过张角 %2$s 度，每道之前先换位 %3$s 格再落下，两道间隔 %4$s；每道的扇形最多命中 1 至 2 个目标（张角越宽越多）。",
   "worldcombat.skill.furyswipes.pounce.on": "当前扑抓式：朝目标前压、单道更重、爪距更远，把目标按在一面猛抓；代价是扇面收窄成一道、几乎不侧移、命中率略降。",

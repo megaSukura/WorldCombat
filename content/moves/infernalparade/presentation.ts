@@ -3,11 +3,11 @@
  *
  * 一句话：脚下腾起一圈幽蓝鬼火，散开冲成一队，各自扭头追向目标扑上去；被异常缠身的目标更容易被整队扑实、烧起来。
  * 色相家族：幽蓝紫为主（wisp / shadowball_impact），火只作小面积暖点（ember / impact_fire 的亮帧）。
- * 拍子：起（coven 0–6t 聚拢）→ 击（summon 散开、strike 追踪扑击）→ 收（fade 空过、ignite 点燃）。
- * 范围：coven/summon 贴施法者，strike / ignite 绑命中点——画面随着鬼火的实际落点走。
- * 运动：鬼火沿各自直线散开后转向归拢（投射物自带追踪），命中向外炸开，落空处只散一团鬼气。
+ * 拍子：起（coven 0–6t 聚拢）→ 击（summon 散开、flight 每团沿真实投射物飞、strike 追踪扑击）→ 收（fade 空过、ignite 点燃）。
+ * 范围：coven/summon 贴施法者，flight 绑各团真实投射物（`data.projectile`），strike / ignite 绑命中点——画面随鬼火实际落点走。
+ * 运动：鬼火本体由投射物外观渲染，flight 轮廓沿同一位置拖行；到达起旋延迟前保持散开方向、之后才弯转，撞墙只散一团鬼气。
  * 数：`data.count`（本轮实际团数）决定起旋那一burst 的鬼火数，`data.strikeCount`（总威力 / 60 派生）决定扑击爆发的量，
- * `data.intensity` 同时抬高亮度，`data.scale`（单团判定 / 0.24）放大起旋地面环。
+ * `data.intensity` 同时抬高亮度与发射量，`data.scale`（单团判定 / 0.24）放大起旋地面环与飞行轮廓。
  * 参照节：视觉语言第二、三、四、六、九节。
  */
 const InfernalparadeDefinition: ParticleDefinition = {
@@ -32,6 +32,28 @@ const InfernalparadeDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.06],
                     lifetime: [10, 18], size: [0.28, 0.1],
                     color: 0x6FA8FF, alpha: [0.4, 0], light: "full", maxParticles: 26
+                }
+            ]
+        },
+        flight: {
+            duration: 0,
+            exit: { drain: 8 },
+            emitters: [
+                {
+                    name: "wisp_body", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    trail: { minDistance: 0.32 }, rate: 18,
+                    direction: "velocity", speed: [0.0, 0.03],
+                    lifetime: [4, 9], size: [0.13, 0.04],
+                    color: 0x9FC2FF, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 46
+                },
+                {
+                    name: "wisp_wake", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/smoke/glowingsmoke_cyan",
+                    trail: { minDistance: 0.5 }, rate: 10,
+                    direction: "velocity", speed: [0.01, 0.06], drag: 0.94,
+                    lifetime: [6, 11], size: [0.08, 0.02],
+                    color: 0x6A8FE0, alpha: [0.5, 0], light: "world", maxParticles: 34
                 }
             ]
         },

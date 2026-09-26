@@ -7,9 +7,11 @@
  * 两幕 + 收：
  *   起（windup，提交前）：口前气流向内收拢、一圈将成未成的波面在嘴前成形，只播预告、可被打断。
  *   推（execute → pulse / impact）：提交后波面从嘴前脱手（`LivingActions.projectile`），沿直线推进；
- *       每个被扫到的非友方按 `pulse` 结算一次，贯通式按 `pierce` 继续穿过后面的人，连锁式则在第一个目标处
- *       收束、按 `burstRadius` 罩开一圈对周围目标结算 `burst`。
+ *       每个被扫到的非友方按 `pulse` 结算一次。贯通式按 `pierce` 继续穿过后面的人；连锁式在第一个目标处
+ *       收束，再沿同一条线在 `burstRadius` 半宽带内依次命中后续目标，每级威力从 `burst` 起递减。
  *   散（fade）：波推到头自然消散；一名也没扫到就是空放。
+ *
+ * 选取：`kind: "aim"`——方向或世界点都能瞄，提交后可空放；命中权限仍由命中层判断。
  *
  * 与同族分开：龙息是贴地、由近及远铺满的扇形；音爆是瞬时、无飞行时间的裂痕；龙之怒是固定 40 的重击。
  * 龙之波动是唯一**持续前进、按特攻缩放、能穿过成排目标**的那一击。
@@ -25,8 +27,8 @@ namespace PokemonSkills {
         cooldownParameter: "recharge",
         name: "Dragon Pulse",
         description: "张大嘴，把一整段龙息压成一圈圈同心波面，沿瞄准线一路推出去：波前扫过成排的敌人后不停下，继续穿过后面的目标；连锁式则换成在第一个敌人处收束、罩开一圈。",
-        uses: ["沿直线穿过排成一列的敌人", "中远距离的持续压制", "连锁式收束罩住挤在一起的敌人"],
-        kind: "enemy",
+        uses: ["沿直线穿过排成一列的敌人", "中远距离的持续压制", "连锁式沿同一条线逐级穿过后续敌人"],
+        kind: "aim",
         range: 8,
         maxRange: 15,
         prepare: 12,
@@ -73,7 +75,7 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.2, power / 76));
             const flow = Math.round(60 + rings * 26);
             const mouth = origin.plus(WorldCombat.point(0, 0.55, 0));
-            let hits = 0, bloomed = false, settled = false;
+            let hits = 0, chained = false, settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -109,20 +111,37 @@ namespace PokemonSkills {
                     const scope = current.world(), victim = hit.target();
                     if (victim === null || !scope.valid(victim) || scope.friendly(victim)) return;
                     if (chain) {
-                        if (bloomed) return;
-                        bloomed = true;
+                        if (chained) return;
+                        chained = true;
                         strike(current, hit, power, "pulse", 1);
-                        WorldFeedback.emit(scope, dragonpulseScene, 1, hit.position(),
-                            { moment: "bloom", rings: rings, scale: burstRadius / 1.6, intensity: intensity }, 30);
-                        let extra = 0;
-                        const region = WorldGeometry.ring(hit.position(), 0, burstRadius, { below: 1.5, above: 3 });
-                        WorldGeometry.selectEnemies(scope, region, function (other: CombatActor, facts: CombatObservation) {
-                            if (extra >= cap || String(other.ref()) === String(victim.ref())) return;
-                            extra++;
-                            hurt(current, other, "dragonpulse", burstPower, { damage: damageSpec("dragonpulse", "burst"), pulse: true });
-                            WorldFeedback.emit(scope, dragonpulseScene, 1, facts.position(),
-                                { moment: "impact", target: String(other.ref()), rings: rings, scale: scale, intensity: intensity * 0.85 }, 22);
+                        // 同线连锁：从真实命中点沿波的前进方向，在 burstRadius 半宽带内找后续目标，威力逐级递减。
+                        const heading = WorldGeometry.flatUnit(direction);
+                        const travelled = hit.position().minus(mouth).length();
+                        const laneLength = Math.max(0.4, reach - travelled);
+                        const lane = WorldGeometry.lane(hit.position(), heading, laneLength, burstRadius, { below: 1.5, above: 3 });
+                        const found: { actor: CombatActor; at: CombatPoint }[] = [];
+                        WorldGeometry.selectEnemies(scope, lane, function (other: CombatActor, facts: CombatObservation) {
+                            if (String(other.ref()) === String(victim.ref())) return;
+                            found.push({ actor: other, at: facts.position() });
                         });
+                        found.sort(function (a: { actor: CombatActor; at: CombatPoint }, b: { actor: CombatActor; at: CombatPoint }) {
+                            return a.at.minus(hit.position()).length() - b.at.minus(hit.position()).length();
+                        });
+                        let extra = 0;
+                        for (let index = 0; index < found.length && extra < cap; index++) {
+                            const decay = Math.pow(0.72, index);
+                            if (!hurt(current, found[index].actor, "dragonpulse", burstPower * decay,
+                                { damage: damageSpec("dragonpulse", "burst"), pulse: true })) continue;
+                            extra++;
+                            WorldFeedback.emit(scope, dragonpulseScene, 1, found[index].at,
+                                { moment: "impact", target: String(found[index].actor.ref()), rings: rings, scale: scale,
+                                    intensity: intensity * Math.max(0.3, decay), hits: hits + extra }, 22);
+                        }
+                        WorldFeedback.emit(scope, dragonpulseScene, 1, hit.position(),
+                            { moment: "chain", path: [[hit.position().x(), hit.position().y(), hit.position().z()],
+                                [hit.position().x() + heading.x() * laneLength, hit.position().y(),
+                                    hit.position().z() + heading.z() * laneLength]],
+                                rings: rings, scale: burstRadius / 0.6, intensity: intensity }, 26);
                         WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.35, 0)), dragonpulseChainText, [extra + 1], 24);
                         sound(current, "cobblemon:impact.dragon");
                         finish(current);
@@ -133,7 +152,7 @@ namespace PokemonSkills {
                     sound(current, "cobblemon:impact.dragon");
                 }
             }, function (current: CombatAction) {
-                if (bloomed) { finish(current); return; }
+                if (chained) { finish(current); return; }
                 const scope = current.world(), body = scope.observe(current.actor());
                 if (body !== null) {
                     WorldFeedback.emit(scope, dragonpulseScene, 1, body.position().plus(WorldCombat.point(0, 0.55, 0)), { moment: "fade", scale: scale }, 18);

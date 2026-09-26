@@ -107,7 +107,7 @@ namespace PokemonSkills {
                     if (!scope.valid(other)) return;
                     const otherBody = scope.observe(other)!;
                     const away = otherBody.position().minus(centre);
-                    if (away.length() > 0.2 && shock > 0) scope.displace(other, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shock));
+                    if (away.length() > 0.2 && shock > 0) scope.hitDisplace(other, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shock));
                     WorldFeedback.emit(scope, shelltrapScene, 1, otherBody.position(),
                         { moment: "detonate_hit", target: String(other.ref()), scale: scale, sparks: sparks, intensity: intensity }, 26);
                     // 碎片点燃：命中后按概率挂共享的灼伤身份，停留 burnTicks。

@@ -3,7 +3,7 @@
   "worldcombat.skill.silverwind.use.0": "一次割到并排站着的几个人",
   "worldcombat.skill.silverwind.use.1": "在远一点的距离先手消耗",
   "worldcombat.skill.silverwind.use.2": "抓住反哺后的短时强化窗口进攻",
-  "worldcombat.skill.silverwind.description.0": "抖翅向瞄准方向铺开扇面，扇内每个敌人各受约 %1$s 点特殊伤害；扇面长 %2$s 格。",
+  "worldcombat.skill.silverwind.description.0": "抖翅沿准心所在平面铺开一层薄扇，扇内每个敌人各受约 %1$s 点特殊伤害（墙后的打不到）；扇面长 %2$s 格，可仰射或俯扫。",
   "worldcombat.skill.silverwind.description.1": "扇面张角 %1$s 度。",
   "worldcombat.skill.silverwind.description.2": "扇中至少一个敌人后，有 %1$s 概率使自身的攻击、防御、特攻、特防和速度各提高 %2$s 级，持续 %3$s 秒；再次触发刷新时间，保持一层。",
   "worldcombat.skill.silverwind.description.3": "当前浓鳞式为 %1$s。",
@@ -25,7 +25,7 @@
   "worldcombat.skill.silverwind.preference.ai.maxChase.help": "超过这个距离就不主动抖翅，先走近；越大越愿意对更远的目标扫去。",
   "worldcombat.skill.silverwind.preference.ai.preferCrowd": "成片时优先",
   "worldcombat.skill.silverwind.preference.ai.preferCrowd.help": "开启后，目标身边 3 格内还站着别的敌人时优先，一扇能同时割到好几个人；关闭则只按普通攻击排序。",
-  "world_combat.move.silverwind.text.surge": "五项能力 +%1$s（%2$s 秒）",
+  "world_combat.move.silverwind.text.surge": "潜力：%1$s 项 +%2$s 级（%3$s 秒）",
   "world_combat.move.silverwind.text.hit": "银鳞割到 %1$s 个敌人",
   "world_combat.move.silverwind.text.miss": "鳞粉空扇",
   "worldcombat.skill.silverwind.value.surgeTicks": "反哺持续"

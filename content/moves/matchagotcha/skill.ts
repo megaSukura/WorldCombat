@@ -6,12 +6,14 @@
  *
  * 两幕：
  *   起（windup，提交前）：盏里搅起茶泡与绿汽，只播预告。
- *   泼（jet → splash / dud，提交后）：一颗茶泡沿瞄准方向抛出，命中活体或落地即按 `burst` 半径炸开一片；
- *       圈内每个敌人各结算一次 `brew` 特殊伤害，伤害的一部分经共享 `drain` 抽回自身，并按 `scald` 概率挂上共享灼伤
- *       （宝可梦同步为原生灼伤），命中即解冻；打空或落地则只在落点散开一圈茶沫。
+ *   泼（jet → splash，提交后）：一颗茶泡沿瞄准方向抛出，命中活体或碰上方块都在真实碰撞点炸开一片；
+ *       距离耗尽则在末点泼开。圈内每个敌人各结算一次 `brew` 特殊伤害，伤害的一部分经共享 `drain` 抽回自身，
+ *       并按 `scald` 概率挂上共享灼伤（宝可梦同步为原生灼伤），命中即解冻。
  *
  * 与同族分开：超级吸取先抛孢荚再分拍抽、终极吸取原地立根、吸取拳与木角近身；只有刷刷茶炮是**远程溅射炮**，
  *   也是唯一留下灼伤的一招。配置 `whisk` 让它在「点茶聚焦一束」与「刷泡泼开一片」之间取舍。
+ *
+ * 选择是 `aim`：可瞄敌人、也可瞄地面或高处；飞行被取消时茶泡直接消失，不另泼一次。
  *
  * 命中、防御、相性与暴击走共享 `hurt`；回复走共享伤害载荷的 `drain`，对所有战斗者同一条路。
  */
@@ -19,15 +21,26 @@ namespace PokemonSkills {
     const matchaGotchaScene = "world_combat:move_matchagotcha";
     const matchaGotchaHitText = "world_combat.move.matchagotcha.text.hit";
     const matchaGotchaScaldText = "world_combat.move.matchagotcha.text.scald";
-    const matchaGotchaDudText = "world_combat.move.matchagotcha.text.dud";
+
+    /** 方块命中时把溅射中心沿碰撞面法线推开一点，让茶圈落在表面上而不是嵌进方块。 */
+    function matchaGotchaSurface(hit: CombatImpact): CombatPoint {
+        const at = hit.position(), face = hit.blockFace();
+        if (face === "up") return at.plus(WorldCombat.point(0, 0.06, 0));
+        if (face === "down") return at.plus(WorldCombat.point(0, -0.06, 0));
+        if (face === "north") return at.plus(WorldCombat.point(0, 0, -0.06));
+        if (face === "south") return at.plus(WorldCombat.point(0, 0, 0.06));
+        if (face === "west") return at.plus(WorldCombat.point(-0.06, 0, 0));
+        if (face === "east") return at.plus(WorldCombat.point(0.06, 0, 0));
+        return at;
+    }
 
     define({
         id: "matchagotcha",
         cooldownParameter: "recharge",
         name: "Matcha Gotcha",
-        description: "抛出一颗茶泡砸向远处的敌人，落点炸开一圈，圈内每个敌人各挨一记并汲取生命，有机会使目标灼伤，并解冻被泼到的冰冻目标。",
+        description: "抛出一颗茶泡砸向敌人、地面或高处，命中活体或方块即炸开一圈，圈内每个敌人各挨一记并汲取生命，有机会使目标灼伤，并解冻被泼到的冰冻目标。",
         uses: ["从一段距离外把茶汤泼到一小片人身上", "顺手挂灼伤并解冻被冻住的目标", "目标挤在一起时一次烫到几个并回血"],
-        kind: "enemy",
+        kind: "aim",
         range: 8.0,
         maxRange: 12.0,
         prepare: 10,
@@ -106,24 +119,27 @@ namespace PokemonSkills {
             }
 
             sound(action, "minecraft:block.brewing_stand.brew");
+            // 瞄点：敌人、地面或高处。飞行距离收束到瞄点，空放时按当前朝向飞满射程，
+            // 这样「距离耗尽在末点泼开」的末点就是画面里茶泡真正停下的地方。
+            const aimPoint = action.targetPosition();
+            const delta = aimPoint.minus(origin), distance = delta.length();
+            const flightPoint = distance < 0.05 ? origin.plus(action.direction().scale(jet)) : aimPoint;
+            const travel = Math.max(0.5, Math.min(jet, distance < 0.05 ? jet : distance));
             const flight = LivingActions.projectile(action, {
-                speed: castSpeed, range: jet, radius: radius,
-                lifetime: Math.max(24, Math.round(jet / castSpeed + 16)),
+                speed: castSpeed, range: travel, radius: radius,
+                lifetime: Math.max(24, Math.round(travel / castSpeed + 16)),
                 appearance: { sprite: "cobblemon:generic/bubble/smallbubble_broth", tint: 0x9CCB4F, glow: true,
                     scale: Math.max(0.6, Math.min(1.4, burst / 1.4)) },
                 impact: function (current: CombatAction, hit: CombatImpact) {
-                    if (!hit.hitEntity()) return;
+                    if (splashed) return;
                     splashed = true;
-                    sound(current, "minecraft:entity.llama.spit");
-                    splash(current, hit.position());
+                    if (hit.hitEntity()) sound(current, "minecraft:entity.llama.spit");
+                    // 活体与方块都在真实碰撞点炸开一次；方块命中沿表面法线轻轻推开，圈不埋进墙里。
+                    splash(current, hit.blocked() ? matchaGotchaSurface(hit) : hit.position());
                 }
             }, function (current: CombatAction) {
-                if (!splashed) {
-                    const scope = current.world(), point = current.targetPosition();
-                    WorldFeedback.emit(scope, matchaGotchaScene, 1, point,
-                        { moment: "dud", point: [point.x(), point.y(), point.z()], motes: motes, scale: scale }, 18);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), matchaGotchaDudText, [], 18);
-                }
+                // 只有自然飞完全程（未撞任何东西）才在末点泼开；被取消的飞行随动作一起消失，不补泼。
+                if (!splashed) splash(current, flightPoint);
                 finish(current);
             });
             WorldFeedback.keep(world, "world_combat:matchagotcha:" + action.id(), matchaGotchaScene, 1, origin,

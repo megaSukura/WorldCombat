@@ -4,22 +4,23 @@
  * 原生事实：Dragon／物理／威力 80／命中 100／PP 10；出手时不接触（无 contact 标记）；
  *   若口中有米立龙（commanded），按其样子提高自身一项能力——Droopy 提防御、Stretchy 提速度、其余（Curly）提攻击。
  *   Cobblemon 1.8，1 位学习者（吃吼霸）。
- * 核心念头：以潇洒的身手端出一记精准的下手；最特别的一点是它「带着一味菜」——身边跟着一只小个子伙伴时，
- *   这记下手的香味会按那伙伴的样子，给施法者补上一项能力。它不接触，是全族唯一「出手即增益」的一招。
+ * 核心念头：小伙伴给出指令，使用者端出一记短程平抛的龙形菜势；首接触结算一次非接触伤害。它最特别的一点是
+ *   「带着一味菜」——身边跟着一只小个子伙伴时，这记出手还会按那伙伴的样子，给施法者补上一项能力，分餐式下
+ *   再把增益分给队友。防护幕不归它管。
  *
  * 数值分散（每个参数读不同的个体数据）：
  *   serve       下手威力：物攻给手法，速度给身段，等级给火候。
- *   serveWidth  下手半宽：碰撞箱宽度决定这一下的落面。
+ *   serveWidth  下手半宽：碰撞箱宽度决定这一下的落面与菜势大小。
  *   reach       出手距离：速度与亲密度共同决定能端到多远。
- *   wardBreak   碎壁半径：物攻决定这一记震碎多广的屏障（上菜同样能打碎光墙与反射壁）。
+ *   flight      抛出速度：速度决定菜势飞得多快。
  *   dishRange   伙伴距离：身体越宽，能把「菜」端得越远。
  *   shareRadius 分餐半径：身高决定能把增益分给多远的队友。
  *   serveStages 增益级数：亲密度高（≥200）多补一级。
  *   tempo／aftercast／recharge 时序：速度与亲密度决定起手、收势与再端一次的等待。
- * 配置 share（分餐式）：自身与身旁队友各 +1，碎壁范围 ×1.2，代价是单发威力 ×0.94、冷却 +8 刻；
- *   独享式相反，自身 2 级增益、单发威力 ×1.06，但只震碎命中点的屏障、冷却更短。
+ * 配置 share（分餐式）：自身与身旁队友各 +1，代价是单发威力 ×0.94、冷却 +8 刻；
+ *   独享式相反，自身 2 级增益、单发威力 ×1.06，但只加自己、冷却更短。
  *
- * 伤害段 serve：下手拍中的那一下（不接触）。
+ * 伤害段 serve：龙形菜势拍中的那一下（不接触）。
  */
 namespace PokemonSkills {
     actionParameters.define("orderup", {
@@ -33,7 +34,7 @@ namespace PokemonSkills {
                 .clamp(50, 122).round(1),
             "下手威力", {
                 unit: "威力",
-                description: "以潇洒身段端出去的一记下手的基础威力；物攻给手法、速度给身段、等级给火候。对手防御、相性与暴击在命中时另算。"
+                description: "端出去的龙形菜势拍实的基础威力；物攻给手法、速度给身段、等级给火候。对手防御、相性与暴击在命中时另算。"
             }),
         /** 下手半宽：基础 0.45 格，碰撞箱每比 0.9 宽 1 格加 0.3（上限 +0.45）；夹 0.35..0.9。 */
         serveWidth: formula(
@@ -42,7 +43,7 @@ namespace PokemonSkills {
                 .clamp(0.35, 0.9).round(2),
             "下手半宽", {
                 unit: "格",
-                description: "这一下覆盖的横向半宽；身形越宽的个体落面越大。"
+                description: "菜势覆盖的横向半宽；身形越宽的个体落面越大。"
             }),
         /** 出手距离：基础 2.8 格，速度每比 55 快 1 加 0.012（上限 +0.9），亲密度每 200 点加 0.2；夹 2.4..4.2。 */
         reach: formula(
@@ -54,15 +55,14 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "能把这一记端到多远的直距；快、与训练家亲密的个体端得更远。它也是本招的实际射程来源。"
             }),
-        /** 碎壁半径：基础 8 格，物攻每比 60 多 1 加 0.02（上限 +1.6）；分餐 ×1.2；夹 8..11。 */
-        wardBreak: formula(
-            F.base(8)
-                .plus(F.stat("attack").minus(60).times(0.02).clamp(0, 1.6))
-                .times(F.when(F.pref("share", text("worldcombat.skill.orderup.preference.share")), F.const(1.2), F.const(1)))
-                .clamp(8, 11).round(2),
-            "碎壁半径", {
-                unit: "格",
-                description: "下手落点周围被震碎的屏障范围；反射壁、光墙与极光幕一并失效，物攻越高震得越远。"
+        /** 抛出速度：基础 0.72 格/刻，速度每比 55 快 1 加 0.006（上限 +0.35）；夹 0.55..1.15。 */
+        flight: formula(
+            F.base(0.72)
+                .plus(F.stat("speed").minus(55).times(0.006).clamp(-0.12, 0.35))
+                .clamp(0.55, 1.15).round(2),
+            "抛出速度", {
+                unit: "格/刻",
+                description: "龙形菜势平抛出去时每刻前进的距离；快的个体端得越快。"
             }),
         /** 伙伴距离：基础 1.4 格，碰撞箱每比 0.9 宽 1 格加 1.2（上限 +1.8）；夹 2.0..3.2。 */
         dishRange: formula(
@@ -120,7 +120,7 @@ namespace PokemonSkills {
 
     describe("orderup", [
         { key: "description.0", values: ["serve","serveWidth"] },
-        { key: "description.1", values: ["reach","wardBreak"] },
+        { key: "description.1", values: ["reach","flight"] },
         { key: "description.2", values: ["dishRange","serveStages","shareRadius"] },
         { key: "share.on", values: ["serveStages"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
         { key: "share.off", values: [], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },

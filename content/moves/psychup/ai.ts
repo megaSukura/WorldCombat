@@ -9,7 +9,8 @@ namespace CompanionBehavior {
         return JSON.stringify(MobEffects.native(access, actor, "beneficial").map(effect => ({ id: String(effect.id()), amplifier: effect.amplifier() })));
     });
 
-    interface PsychupAssessment { changed: number; gain: number; }
+    /** Actual net gain of aligning to `target`: stages moved and potion effects gained, minus stages lost. */
+    interface PsychupAssessment { changed: number; gain: number; loss: number; net: number; }
 
     function psychupAssess(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): PsychupAssessment | null {
         const self = source(context);
@@ -19,49 +20,48 @@ namespace CompanionBehavior {
         const targetStages: { [stat: string]: number } = JSON.parse(rawTarget);
         const selfStages: { [stat: string]: number } = JSON.parse(rawSelf);
         const selective = !!(item.data.config && item.data.config.selective);
-        let changed = 0, gain = 0;
+        let changed = 0, gain = 0, loss = 0;
         for (let index = 0; index < PokemonSkills.psychupStats.length; index++) {
             const stat = PokemonSkills.psychupStats[index];
             const delta = (targetStages[stat] || 0) - (selfStages[stat] || 0);
             if (delta === 0) continue;
             changed++;
-            if (delta > 0) gain += delta;
+            if (delta > 0) gain += delta; else loss += -delta;
         }
         const targetEffects: { id: string; amplifier: number }[] = JSON.parse(fact<string>(context, "world_combat:psychup-native", target) || "[]");
         const ownEffects: { id: string; amplifier: number }[] = JSON.parse(fact<string>(context, "world_combat:psychup-native", self) || "[]");
         targetEffects.forEach(effect => {
             if (!ownEffects.some(own => own.id === effect.id && own.amplifier >= effect.amplifier)) { changed++; gain++; }
         });
-        return { changed: changed, gain: gain };
+        return { changed: changed, gain: gain, loss: loss, net: selective ? gain : gain - loss };
     }
 
     function psychupWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): PsychupAssessment | null {
         if (context.facts.mounted) return null;
-        if (target.health <= 0 || target.friendly || !target.visible) return null;
+        if (target.health <= 0 || !target.visible) return null;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return null;
         const self = source(context);
         if (status(context, self, "psychup")) return null;
         if (context.facts.focus !== target.ref && distance(self.point, target.point) > ai<number>(item, "maxChase", 14)) return null;
         if (!world(context).clear(point(self.point), point(target.point))) return null;
         const assessment = psychupAssess(context, item, target);
-        if (!assessment || assessment.changed === 0) return null;
-        const selective = !!(item.data.config && item.data.config.selective);
-        if (selective && assessment.gain <= 0) return null;
-        return assessment;
+        // Enemies and companions both qualify; the choice is the real net gain, not merely being different.
+        return assessment && assessment.changed > 0 && assessment.net > 0 ? assessment : null;
     }
 
     registerUse("psychup", {
-        protocols: ["world_combat:control"],
+        // control drives the enemy read; bolster lets a partner demonstrate so the caster can borrow its edge.
+        protocols: ["world_combat:control", "world_combat:bolster"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (target === null) return true;
             return psychupWants(context, item, target) !== null;
         },
-        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
+        accepts: function (_context, _item, target) { return target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (target === null) return 0;
             const assessment = psychupWants(context, item, target);
-            return assessment === null ? 0 : assessment.gain >= 2 ? 70 : 45;
+            return assessment === null ? 0 : assessment.net >= 2 ? 70 : 45;
         }
     });
 

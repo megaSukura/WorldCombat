@@ -2,11 +2,11 @@
  * 火花 / ember 的客户端表现。
  *
  * 一句话：指尖先亮起一点火，随即一粒小而亮的火种被弹出、拖着一条短焰尾沿浅弧飞出，命中碎成一撮火星；
- * 被点着的人在身侧挂一层小火。
+ * **只有真的点着**时才在身侧挂一层持续的小火，没点着只有短火星，不误导读作已烧着。
  * 色相家族：火苗橙（0xFF9A3C）与火心黄（0xFFD06A），烟收在深褐（0x3A2A22）。
- * 拍子：起 kindle（团火）→ 飞 flight（短尾）→ 击 burst（碎火）→ 收 burn（贴火）／fizzle（空爆）。
+ * 拍子：起 kindle（团火）→ 飞 flight（短尾）→ 击 burst（碎火，`data.burned` 标记是否点着）→ burn（贴火）／fizzle（空放末端）。
  * 范围：本招没有区域判定，burst 的碎火半径固定为一点，画面读出的就是「一粒火打在身上」。
- * 运动：火种沿机制给的速度与下坠走浅弧（projectile 绑定），碎火向外散、贴火向上飘。
+ * 运动：flight 尾巴绑定服务端给的**真实弹体 UUID**（`data.projectile`），逐帧贴住弹体走浅弧；碎火向外散、贴火向上飘。
  * 数：burst 的火星数绑定 `data.sparks`（特攻与等级换算），强度绑定 `data.intensity`（威力派生）。
  */
 const EmberDefinition: ParticleDefinition = {

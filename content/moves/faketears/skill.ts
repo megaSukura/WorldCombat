@@ -2,12 +2,11 @@
  * 假哭 / faketears — 执行组织。
  *
  * 核心念头：当着对手的面挤出假眼泪，让它心里一软、松开特防。这是骗术——眼泪要被看见，还要离得够近；
- *   施法者越是娇小、越受珍视，这场戏越像真的。得手的一瞬间，对手还会在原地僵住片刻。
+ *   施法者越是娇小、越受珍视，这场戏越像真的。眼泪糊上脸的一瞬只是防御松了，敌人不会因此被定在原地。
  *
- * 出手：短起手（windup 在眼角憋出泪光）后提交；不放飞行物，眼泪沿视线直接送到对方脸上。
+ * 出手：短起手（windup 在眼角憋出泪光）后提交；不放飞行物，眼泪沿视线直接送到对方脸上，命中就是收回表演。
  * 命中：目标挂共享身份 world_combat:status/flustered（本单元效果 world_combat:fake_tears_fluster，只借身份），
- *       再 NativeEffects.boost 大幅下降特防；宝可梦损失原生特防等级，其他生物落到护甲属性。
- *       同时用共享的 rooted 效果把目标定住 hesitate 刻——「不知所措」就是那一下。
+ *       再 NativeEffects.boost 大幅下降特防；宝可梦损失原生特防等级，其他生物落到护甲属性。身份只用于防重复。
  * 反制：眼泪要被看见，躲进掩体就落空（blocked）；拉开到 reach 之外够不到；它不是声音，隔着墙不管用。
  */
 namespace PokemonSkills {
@@ -17,8 +16,8 @@ namespace PokemonSkills {
         id: faketearsId,
         cooldownParameter: "wait",
         name: "假哭",
-        description: "当着对手的面挤出假眼泪，让它心里一软、松开特防，得手的一瞬间对手还会僵住片刻。必须被看见、还得很近，所以射程很短、需要通视；施法者越受珍视越可信。",
-        uses: ["贴脸削掉一个特攻输出的特防", "在被贴身缠住时制造一瞬间的僵直", "配合队友抢先手，让对方来不及走位"],
+        description: "当着对手的面挤出假眼泪，让它心里一软、松开特防。必须被看见、还得很近，所以射程很短、需要通视；不要求对方正看向施法者；施法者越受珍视越可信。",
+        uses: ["贴脸削掉一个特攻输出的特防", "为队友的特攻集火打开一个缺口", "在对手躲不开视线的距离上装哭"],
         kind: "enemy",
         range: 4,
         maxRange: 6,
@@ -53,7 +52,6 @@ namespace PokemonSkills {
             const origin = selfBody === null ? action.origin() : selfBody.position();
             const drop = Math.max(1, Math.min(3, Math.round(p(faketearsId, "drop", action))));
             const fluster = Math.max(60, Math.round(p(faketearsId, "fluster", action)));
-            const hesitate = Math.max(6, Math.round(p(faketearsId, "hesitate", action)));
             const tears = Math.max(8, Math.round(p(faketearsId, "tears", action)));
             sound(action, "minecraft:entity.wolf.whine");
             const target = action.target();
@@ -73,13 +71,10 @@ namespace PokemonSkills {
             }
             MobEffects.apply(world, target, faketearsEffect, fluster, 0);
             NativeEffects.boost(world, target, "spd", -drop);
-            // 「不知所措」：不只是掉特防，还会在原地愣住一下。
-            WorldEffects.apply(world, target, "rooted", {}, hesitate);
-            world.stopMovement(target);
             WorldFeedback.emit(world, faketearsScene, 1, origin,
-                { moment: "feign", path: ["source", "target"], target: String(target.ref()), tears: tears, drop: drop }, 26);
+                { moment: "feign", path: ["source", "target"], target: String(target.ref()), tears: tears, drop: drop }, 22);
             WorldFeedback.emit(world, faketearsScene, 1, point,
-                { moment: "fluster", target: String(target.ref()), drop: drop, hesitate: hesitate, hearts: 4 + drop * 4 }, 26);
+                { moment: "fluster", target: String(target.ref()), drop: drop, hearts: 4 + drop * 4 }, 24);
             WorldFeedback.text(world, faketearsAbove(point), "world_combat.move.faketears.text.fluster", [drop], 36);
             done(action);
         }

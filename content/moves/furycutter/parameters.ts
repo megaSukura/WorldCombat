@@ -10,6 +10,8 @@
  *
  * 连斩层数是真实 MobEffect `world_combat:furycutter_momentum`（共享身份 world_combat:status/furycutter，
  * 振幅即层数）。落空即清空；任何别的招式提交也会打断它；只要在 `window` 内继续连斩，层数就往上走。
+ * 选取为 `kind: "aim"`：可锁定实体，也可朝方向空挥；每一趟的方向在提交时锁定，整趟刀数沿一个方向走，
+ * 对手绕到身后就能躲开这一趟剩下的刀。
  * `cuts` 参数用 F.state("furycutter") 直接读这份身份——详情页里玩家读到的段数就是场上真正结算的刀数。
  *
  * 数值分散（每个参数读不同的个体数据）：

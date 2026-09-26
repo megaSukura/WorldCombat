@@ -1,17 +1,4 @@
-/**
- * 蓄力 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：施法者把力一口口压进肚子，一层琥珀色的光壳箍住身体；每压一次箍紧一分、光壳涨大一分；
- *   被实打时崩掉一圈，碎光炸开、壳随之变小，全崩完时残光四散。
- *
- * 色相家族：琥珀金（0xF0B23A）作主体，暖白（0xFFF3C4）只做内芯高光，深褐（0x8A5A22）只做余韵；没有第二个色相。
- * 层次：聚力（起）／箍壳与内芯（击）／维持的光壳（收）／崩层与四散（末）。
- * 起击收：gather（聚力）→ store（箍壳）→ guard（维持）→ crack（崩层）／scatter（散尽）。
- * 范围：层环绑脚点、fit none，半径按 `data.scale`（实际层环半径 / 1.2）推出，画出来的圈就是光壳箍到的范围。
- * 运动：聚力时火星由外向内收；箍壳时一圈圈往里勒紧；维持时内芯贴着身体明灭；崩层时碎光向外炸开。
- * 数：层数绑在 `data.layers` 上——光壳尺寸 `data.shellSize`、环点与内芯的量都随层数增长，层数越多壳越厚。
- * 持续状态：维持期低密度、贴身，玩家仍看得清目标。
- */
+/** Amber stored breaths: one visible bead per live layer, a short release flash when spent. */
 const StockpileDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -61,33 +48,20 @@ const StockpileDefinition: ParticleDefinition = {
             ]
         },
         guard: {
-            exit: { drain: 24 },
+            exit: { drain: 12 },
             emitters: [
-                {
-                    name: "guard_shell", bind: "source", fit: "none", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
-                    rate: 3, shape: { kind: "sphere", radius: { data: "rind", fallback: 0.9 } },
-                    direction: "inward", speed: [0.008, 0.025], spin: 10,
-                    lifetime: [14, 24], size: { data: "shellSize", fallback: 0.2 },
-                    color: 0xF0B23A, alpha: [0.3, 0], light: "world", maxParticles: 14
-                },
-                {
-                    name: "guard_ring", bind: "point", fit: "none", offset: [0, 0.12, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: { data: "layers", fallback: 1 }, interval: 10, repeats: 2 },
-                    shape: { kind: "ring", radius: { data: "rind", fallback: 0.9 } },
-                    direction: "inward", speed: [0.01, 0.04],
-                    lifetime: [14, 24], size: [0.34, 0.6], sizeMode: "index",
-                    color: 0xFFF3C4, alpha: [0.35, 0], light: "full", maxParticles: 12
-                },
-                {
-                    name: "guard_mote", bind: "source", fit: "none", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 3, shape: { kind: "sphere", radius: 0.5 },
-                    direction: "up", speed: [0.006, 0.02],
-                    lifetime: [12, 20], size: [0.05, 0.01],
-                    color: 0xF0B23A, alpha: [0.3, 0], light: "world", maxParticles: 14
-                }
+                { name: "stored_left", bind: "target", fit: "none", height: 0.45, offset: [-0.28, 0, 0.25],
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb", rate: 3,
+                    shape: { kind: "sphere", radius: 0.025 }, speed: 0, lifetime: [18, 22], size: 0.16,
+                    color: 0xF0B23A, alpha: [0.65, 0], light: "full", maxParticles: 5 },
+                { name: "stored_middle", bind: "target", fit: "none", height: 0.45, offset: [0, 0, 0.3],
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb", rate: { data: "orb2", fallback: 0 },
+                    shape: { kind: "sphere", radius: 0.025 }, speed: 0, lifetime: [18, 22], size: 0.16,
+                    color: 0xF0B23A, alpha: [0.65, 0], light: "full", maxParticles: 5 },
+                { name: "stored_right", bind: "target", fit: "none", height: 0.45, offset: [0.28, 0, 0.25],
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb", rate: { data: "orb3", fallback: 0 },
+                    shape: { kind: "sphere", radius: 0.025 }, speed: 0, lifetime: [18, 22], size: 0.16,
+                    color: 0xF0B23A, alpha: [0.65, 0], light: "full", maxParticles: 5 }
             ]
         },
         crack: {

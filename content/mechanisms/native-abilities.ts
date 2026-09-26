@@ -28,6 +28,10 @@ namespace NativeAbilities {
     }
     export function flag(id: string, key: string): boolean { return property(id, key, false); }
     export function has(id: string, key: string, value: string): boolean { return property<string[]>(id, key, []).indexOf(value) >= 0; }
+    /** Pure applicability fact for an installed absorption recipe; it never applies the ability's recovery or boost. */
+    export function absorbsType(pokemon: CombatPokemon, state: NativeEffects.State, type: string): boolean {
+        return has(NativeEffects.ability(pokemon, state), "absorbedTypes", type.toLowerCase());
+    }
     export function apply<T>(world: CombatWorld, actor: CombatActor, event: string, value: T,
         state?: NativeEffects.State, selected?: string): T {
         var pokemon = CobblemonCombat.pokemon(actor), current = state || NativeEffects.read(world, actor);

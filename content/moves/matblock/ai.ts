@@ -29,6 +29,11 @@ namespace CompanionBehavior {
 
     CompanionBehavior.registerUse("matblock", {
         protocols: ["world_combat:survive"],
+        target: function (context, _item, target) {
+            const threat = context.senses["world_combat:threat"];
+            if (!threat) return target;
+            const facing = JSON.parse(JSON.stringify(target)); facing.point = threat.point.slice(); return facing;
+        },
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;

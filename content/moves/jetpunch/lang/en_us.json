@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.jetpunch.summary": "Stand still and squeeze a torrent onto the fist: a nearly instant straight punch whose reach is extended by the water lance. A hit soaks the target, drives it back along the jet and puts out a burning target's flames. The hammer form bursts on contact and shoves the target further.",
+  "worldcombat.skill.jetpunch.summary": "Stand still and squeeze a torrent onto the fist: a nearly instant straight punch whose reach is extended by the water lance. A hit soaks the target, drives it back along the jet and puts out a burning target's flames. An explicitly selected burning ally is only doused, taking no damage. The hammer form bursts on contact and shoves the target further.",
   "worldcombat.skill.jetpunch.use.0": "An instant heavy first punch at point-blank range",
   "worldcombat.skill.jetpunch.use.1": "Soak a target and shove it off its spot",
-  "worldcombat.skill.jetpunch.use.2": "Finish a nearby foe or push a pursuer away",
+  "worldcombat.skill.jetpunch.use.2": "Put out a burning ally's flames (select the ally explicitly, no damage)",
   "worldcombat.skill.jetpunch.description.0": "The water-clad punch deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.jetpunch.description.1": "It reaches %1$s blocks (the torrent extends the fist) and shoves the target about %2$s blocks along the punch.",
   "worldcombat.skill.jetpunch.description.2": "A hit soaks the target for %1$s, lowering its movement speed by 6%% while wet; if the target is carrying a burn, the punch cures it and puts out its flames.",
@@ -34,5 +34,7 @@
   "effect.world_combat.jetpunch_drenched": "Drenched",
   "worldcombat.skill.jetpunch.value.drench.help": "How long the wet of the punch's water stays on the target",
   "worldcombat.skill.jetpunch.preference.ai.preserveBurn": "Preserve burn",
-  "worldcombat.skill.jetpunch.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value."
+  "worldcombat.skill.jetpunch.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value.",
+  "worldcombat.skill.jetpunch.preference.ai.cureAllies": "Douse allies",
+  "worldcombat.skill.jetpunch.preference.ai.cureAllies.help": "On: when a burning ally is within reach, the AI walks over and douses the flames with a water punch (extinguish only, no damage); off: the punch is used only in the attack branch."
 }

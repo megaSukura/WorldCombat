@@ -7,7 +7,8 @@
  * 拍子：起 lower（压角亮尖）→ 刺 thrust（走廊与戳出的亮线）→ 中 hit / 空 out（命中或擦空）→ 收 settle。
  * 范围：thrust 用 `data.path`（判定走廊的四个顶点）以 `polygon` 铺出走廊本身——画面里的窄带就是判定的窄带，
  *   玩家能看出站在哪条线上会被刺到。
- * 运动：`pierce` 由施法者出发、`direction: "toward"` 朝目标锚点飞出，读作「角尖一下下戳出去」。
+ * 运动：`pierce` 由施法者出发、`orient: "direction"` + `direction: "shape"` 沿 `data.direction` 的固定准线飞出，
+ *   读作「角尖一下下戳出去」；空放时没有目标锚点也照常沿线刺出。
  * 数：`data.sparks`（物攻派生）绑定每一刺与命中的发射量，`data.intensity`（每刺威力派生）抬高亮度，
  *   `data.index` 让同一串里越到后面的一刺略强。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -45,7 +46,7 @@ const FuryattackDefinition: ParticleDefinition = {
                     name: "pierce", bind: "source", offset: [0, 0.35, -0.3], height: 0.35, fit: "body", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/slash",
                     burst: { count: { data: "sparks", fallback: 12 }, at: { data: "index", fallback: 0 } },
-                    shape: { kind: "line", length: 0.3 }, direction: "toward", speed: [0.5, 1.1], spread: 8,
+                    shape: { kind: "line", length: 0.3 }, direction: "shape", speed: [0.5, 1.1], spread: 8,
                     lifetime: [4, 8], size: [0.3, 0.06], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 240
                 }
@@ -81,7 +82,7 @@ const FuryattackDefinition: ParticleDefinition = {
                     name: "empty", bind: "source", offset: [0, 0.4, -0.2], height: 0.4, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "sparks", fallback: 10 }, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 2.6 } }, direction: "toward", speed: [0.04, 0.16], spread: 16, drag: 0.9,
+                    shape: { kind: "line", length: { data: "reach", fallback: 2.6 } }, direction: "shape", speed: [0.04, 0.16], spread: 16, drag: 0.9,
                     lifetime: [7, 12], size: [0.08, 0.02],
                     color: 0xB8A67E, alpha: [0.3, 0], light: "world", maxParticles: 80
                 }

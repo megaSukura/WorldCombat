@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.guardswap.summary": "Use psychic power to switch the Defense and Sp. Def stat changes of both sides for a window: you take the guard the foe has raised, and both return when the window ends. It works only on foes, and treats Pokemon and other bodies alike.",
+  "worldcombat.skill.guardswap.summary": "Temporarily exchange Defense and Sp. Def stages with a chosen ally or foe. Only this exchange expires; later stage changes remain.",
   "worldcombat.skill.guardswap.use.0": "Take the Defense and Sp. Def the foe has raised",
   "worldcombat.skill.guardswap.use.1": "Dump your own lowered Defense onto the foe",
   "worldcombat.skill.guardswap.use.2": "Borrow the foe's wall for one round",
   "worldcombat.skill.guardswap.description.0": "Switch Defense and Sp. Def stat changes with an enemy target within %1$s blocks, held for %2$s; a clear line is required, and it cannot be used on yourself or an ally.",
-  "worldcombat.skill.guardswap.description.2": "Only the steps each side has already built are switched: the thicker the foe's guard, the more you gain, and your own steps land on them. Neither side can be swapped again while the window is open; both return to their old stages when the window ends or is cleared.",
+  "worldcombat.skill.guardswap.description.2": "The temporary exchange owns only the difference between current stages. Expiry or removal withdraws that contribution while preserving later independent changes.",
   "worldcombat.skill.guardswap.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP to switch, then %3$s seconds to recover and a %5$s second cooldown from commit.",
   "worldcombat.skill.guardswap.growth.0": "At level %1$s the switch reaches %2$s blocks and the window lasts %3$s seconds.",
   "worldcombat.skill.guardswap.growth.1": "At level %1$s the switch reaches %2$s blocks and the window lasts %3$s seconds.",
@@ -24,5 +24,8 @@
   "world_combat.move.guardswap.text.even": "Even guard, nothing changed",
   "world_combat.move.guardswap.text.reverted": "Guard switched back",
   "world_combat.move.guardswap.text.miss": "No one to switch with",
-  "effect.world_combat.guardswap_window": "Guard Swap"
+  "effect.world_combat.guardswap_window": "Guard Swap",
+  "worldcombat.skill.guardswap.preference.ai.share": "Share with allies",
+  "worldcombat.skill.guardswap.preference.ai.share.help": "Allow giving your higher stages to an ally; off by default.",
+  "worldcombat.skill.guardswap.description.1": "Choose an ally or foe. Either existing swap window prevents another swap; equal stages need no exchange."
 }

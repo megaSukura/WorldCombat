@@ -3,8 +3,9 @@
  *
  * 原生事实：Ice／变化／威力 —／命中 —／PP 10／场上冰雹 5 回合；除冰属性外都会受伤（每回合 1/16 最大生命）。
  * 世界化：冰雹不是慢慢下雪，而是**一块块冰从头顶砸下来**——施法者把上空的水汽冻成硬雹、朝选定的那片压下去，
- * 冰柱崩落后贴地碎开：除冰属性外，露在外面的活体被一趟趟砸掉生命（每趟 1/16 上下），撞地时升起霜雾；
- * 冰属性的身体不受砸，反而被冷气裹上一层白霜；落下的雹砸碎在地表，留下一片冻硬的冰。
+ * 冰柱崩落后贴地碎开：除冰属性外，**头顶到雹云没有实心遮挡的露天活体**被一趟趟砸掉生命（每趟 1/16 上下），
+ * 撞地时升起霜雾；屋顶、屋檐下的人这一趟只在顶棚上碎掉冰粒，身体不受砸（侧墙不挡）；
+ * 冰属性的身体不受砸，反而被冷气裹上一层白霜；落下的雹碎在地表只留短存碎冰粒子，不铺真方块。
  * 免疫：按原生属性读 Ice；无属性者照单全收。
  *
  * 数值来源（每个参数读不同的个体数据）：
@@ -16,9 +17,8 @@
  *   struckTicks    带雹余韵：基础 80 刻 + 速度 ×0.6，再乘雹法系数，夹在 50..200。
  *   pelt           每趟砸击：基础 6.25% 最大生命 +（特攻超过 60）×0.07%，再乘雹法系数，夹在 3%..13%。
  *   stoneInterval  砸击间隔：基础 78 刻 −（速度超过 40）×0.1，再乘雹法系数，夹在 50..95 刻；下得越急砸得越勤。
- *   stoneDensity   冰雹密度：基础 30 + 特攻 ÷ 9，再乘雹法系数，夹在 16..72；直接驱动粒子数量。
- *   shardCells     碎冰格数：基础 18 +（体重超过 60）×0.1，夹在 8..44；落在多少格地上留冰。
- * 配置 squall 在「暴风冰雹」和「细密冰雹」之间取舍：暴风更广更密更狠、碎冰更多，但更短更勤、冷却更长；
+ *   stoneDensity   冰雹密度：基础 30 + 特攻 ÷ 9，再乘雹法系数，夹在 16..72；直接驱动粒子数量，也驱动落地碎冰。
+ * 配置 squall 在「暴风冰雹」和「细密冰雹」之间取舍：暴风更广更密更狠，但更短更勤、冷却更长；
  * 细密反过来更省、更久，但砸得轻、范围小。
  */
 namespace PokemonSkills {
@@ -27,6 +27,7 @@ namespace PokemonSkills {
     export const hailMark = "world_combat:hail_struck";
     export const hailPeltText = "world_combat.move.hail.text.pelt";
     export const hailCoatText = "world_combat.move.hail.text.coat";
+    export const hailCoverText = "world_combat.move.hail.text.cover";
     // 语义天气：冰雹对所有共享读取者意味着被云雹压暗的日照。
     WorldEnvironment.defineWeather("hail", { sunlight: 0.45 });
 
@@ -67,21 +68,15 @@ namespace PokemonSkills {
             F.base(30).plus(F.stat("specialAttack").div(9))
                 .times(F.when(F.pref("squall"), F.const(1.4), F.const(0.85)))
                 .clamp(16, 72).round(),
-            "冰雹密度", { unit: " 点", description: "雹区里冰雹的数量；特攻越高铺得越密，粒子直接按它发射。" }),
-        shardCells: formula(
-            F.base(18).plus(F.body("weight").minus(60).max(0).times(0.1))
-                .times(F.when(F.pref("squall"), F.const(1.3), F.const(0.85)))
-                .clamp(8, 44).round(),
-            "碎冰格数", { unit: " 格", description: "落地的雹子砸碎后在地表留冰的格数；身体越重、暴风时留得越多。" })
+            "冰雹密度", { unit: " 点", description: "雹区里冰雹的数量；特攻越高铺得越密，粒子直接按它发射。" })
     });
 
     stages("hail", [{ level: 40, values: { cooldown: 126 } }, { level: 55, values: { cooldown: 108 } }]);
     describe("hail", [
         { key: "description.0", values: ["stormRadius", "stormTicks"] },
         { key: "description.1", values: ["pelt","struckTicks","stoneInterval"] },
-        { key: "description.2", values: ["shardCells"] },
         { key: "description.weather", values: [] },
-        { key: "description.3", values: ["gather", "settle"] },
+        { key: "description.2", values: ["gather", "settle"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }

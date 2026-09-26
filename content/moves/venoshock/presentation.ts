@@ -1,13 +1,13 @@
 /**
  * 毒液冲击 / venoshock 的客户端表现。
  *
- * 一句话：口边凝起一泼发亮的毒液，沿弧线甩出去砸在目标身上炸开一摊毒水；目标体内若已有毒，那摊毒会二次翻涌成更大的反应。
+ * 一句话：口边凝起一泼发亮的毒液，沿弧线甩出去砸在目标身上炸开一摊毒水；目标体内若已有毒，那摊毒才会二次翻涌成更大的反应。
  * 色相家族：毒紫与毒绿（chemicalball / poisonbubble / acidsplash），反应的强调用 impact_poison 的亮帧。
- * 拍子：起（gather 0–6t）→ 击（投射物飞行、splash 命中炸开）→ 收（react 二次反应、fizzle 落空）。
- * 范围：gather 绑施法者口边，splash / react / fizzle 落在命中点——画出的就是判定落点。
- * 运动：毒液沿下坠弧线飞（投射物自带外观），命中向外炸开、气泡向上冒，落空时溅成一小摊。
+ * 拍子：起（gather 0–6t）→ 击（flight 沿投射物飞、splash 命中炸开）→ 收（react 中毒者的二次反应、fizzle 落空）。
+ * 范围：gather 绑施法者口边，flight 绑真实投射物（`data.projectile`），splash / react / fizzle 落在命中点——画出的就是判定落点。
+ * 运动：毒液团本体由投射物外观渲染，flight 的尾迹沿投射物同一位置拖行；命中只溅开黏液，落空也只溅一小摊。
  * 数：`data.splashCount`（本次威力 / 65 派生的水花数）与 `data.reactCount`（中毒目标时的反应量）直接决定爆发粒子数，
- * `data.intensity` 同时抬高亮度与发射量。
+ * `data.intensity` 同时抬高亮度与发射量，`data.scale`（判定半径 / 0.3）放大飞行尾迹。
  * 参照节：视觉语言第二、三、四、六、九节。
  */
 const VenoshockDefinition: ParticleDefinition = {
@@ -35,6 +35,28 @@ const VenoshockDefinition: ParticleDefinition = {
                 }
             ]
         },
+        flight: {
+            duration: 0,
+            exit: { drain: 8 },
+            emitters: [
+                {
+                    name: "glob_trail", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    trail: { minDistance: 0.3 }, rate: 20,
+                    direction: "velocity", speed: [0.0, 0.03],
+                    lifetime: [4, 9], size: [0.13, 0.04],
+                    color: 0x8A3FB5, alpha: [0.8, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "glob_fume", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
+                    trail: { minDistance: 0.45 }, rate: 10,
+                    direction: "velocity", speed: [0.01, 0.06], spread: 24, drag: 0.94,
+                    lifetime: [5, 10], size: [0.06, 0.02],
+                    color: 0x9BE86B, alpha: [0.6, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
         splash: {
             duration: 24,
             exit: { stop: 12, drain: 18 },
@@ -56,15 +78,6 @@ const VenoshockDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.07, 0.26],
                     lifetime: [10, 18], size: [0.16, 0.04],
                     color: 0x8A3FB5, alpha: [0.8, 0], gravity: 0.04, drag: 0.9, light: "full", maxParticles: 150
-                },
-                {
-                    name: "bubbles", bind: "target", height: 0.45,
-                    particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    burst: { count: 40 },
-                    shape: { kind: "sphere", radius: 0.55 },
-                    direction: "up", speed: [0.03, 0.14],
-                    lifetime: [10, 20], size: [0.08, 0.02],
-                    color: 0x9BE86B, alpha: [0.7, 0], gravity: -0.01, light: "full", maxParticles: 160
                 },
                 {
                     name: "ring", bind: "target", offset: [0, 0.05, 0], height: 0,

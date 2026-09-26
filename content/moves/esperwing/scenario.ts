@@ -21,7 +21,7 @@ Smoke.scenario("esperwing", function (stage) {
         stage.expect(stage.casts("esperwing", caster) >= 1, "caster committed esperwing");
         stage.expect(stage.damageTo(foe) > 0, "esperwing dealt damage to the foe");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/esperwing"), "esperwing left its speed aura on the caster");
-        stage.note("critical hits come from the native critRatio 2 roll; the speed boost is written to the caster while the aura window is the visible read", {
+        stage.note("the left wing sweeps first then the right wing, each target hit at most once; the speed boost is written only after the second wing lands, and the aura window is the visible read. Critical hits come from the native critRatio 2 roll", {
             casts: stage.casts("esperwing", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             aura: stage.hasMobEffect(caster, "world_combat:status/esperwing"),

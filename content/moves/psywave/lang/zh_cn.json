@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.psywave.summary": "朝目标推出一道不稳定的念力波前：它沿瞄准方向穿透多个对手，每命中一个结算一次特殊伤害，且每次出手的强度都不同——画面上的环数与亮度直接显示这一发是强是弱。",
+  "worldcombat.skill.psywave.summary": "朝任意方向推出一道不稳定的念力波前：它沿瞄准方向穿透多个对手，每命中一个结算一次特殊伤害。每次出手的强度都不同，但在准备期就摇定并显示在画面里——出招前看环数与亮度就知道这一发是强是弱，出手后不再改变。",
   "worldcombat.skill.psywave.use.0": "打穿排成一列的几个目标",
   "worldcombat.skill.psywave.use.1": "用便宜的一发补伤害，赌一次高波动",
   "worldcombat.skill.psywave.use.2": "在稳流式下当作稳定的远程输出",
-  "worldcombat.skill.psywave.description.0": "命中造成约 %1$s 点特殊伤害；每次出手还会在基准的 (1 − %2$s) 到 (1 + %2$s) 之间摇一个强度，因此这一发实际打多少每次都不同。",
+  "worldcombat.skill.psywave.description.0": "命中造成约 %1$s 点特殊伤害；每次出手还会在基准的 (1 − %2$s) 到 (1 + %2$s) 之间摇一个强度，并在准备期就固定下来——准备与飞行的环数、亮度提前显示这一发的强弱，出手后不再改变。",
   "worldcombat.skill.psywave.description.1": "波前推 %1$s 格、每刻 %2$s 格、判定宽 %3$s 格。",
   "worldcombat.skill.psywave.description.2": "波前最多穿过 %1$s 个目标。",
   "worldcombat.skill.psywave.surge.on": "当前为涌动：威力 ×1.2、波动幅度 ×1.5，更容易摇出高低两端，收招快 3 刻；代价是射程不变、冷却不降。",

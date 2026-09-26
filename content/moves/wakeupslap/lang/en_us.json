@@ -26,7 +26,7 @@
   "worldcombat.skill.wakeupslap.preference.ai.maxChase": "Attack distance",
   "worldcombat.skill.wakeupslap.preference.ai.maxChase.help": "Only close in when the target is within this distance; higher chases sleeping targets further out.",
   "worldcombat.skill.wakeupslap.preference.ai.wake": "Slap sleepers",
-  "worldcombat.skill.wakeupslap.preference.ai.wake.help": "On: prioritize sleeping targets for the doubled-power hit. Off: keep the ordinary low priority without weighting sleep.",
+  "worldcombat.skill.wakeupslap.preference.ai.wake.help": "On: prioritize sleeping targets for the doubled-power hit; but this slap wakes them, possibly buying them a turn right away. Off: keep the ordinary low priority without weighting sleep.",
   "worldcombat.skill.wakeupslap.timing": "Range %1$s blocks; wind-up %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.wakeupslap.growth.0": "From level %1$s: slam power rises to %2$s.",
   "worldcombat.skill.wakeupslap.growth.1": "From level %1$s: slam power %2$s, lunge distance %3$s.",

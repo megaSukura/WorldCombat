@@ -1,10 +1,11 @@
 /**
  * 自然之恩 / naturalgift —— 客户端表现。
  *
- * 一句话：一缕树果色的光顺着手臂/嘴边聚起、越嚼越亮 → 施法者带着这口元素踏前一步，身后拖一条同色的
- * 短痕 → 命中处迸出果屑、果肉与种子、炸开一圈元素光环 → 落空处只剩一小撮扬尘。
+ * 一句话：一缕树果色的光顺着手臂/嘴边聚起、真实果肉（种子）被嚼碎着往嘴里汇、越嚼越亮 → 施法者带着这口
+ * 元素踏前一步，身后拖一条同色的短痕 → 命中处迸出果屑、果肉与种子、炸开一圈元素光环（颜色即那颗果的属性色，
+ * 配合浮出的属性名）→ 落空或撞墙处只剩一小撮扬尘。踏击只结算一记。
  * 色相家族：树果属性色（data.tint）为唯一主色，细节用近白，尘屑留中性。
- * 数量由服务端算出的机制值驱动：咀嚼光点 = data.motes，命中果屑 = data.bursts，种子 = data.seeds，
+ * 数量由服务端算出的机制值驱动：咀嚼光点与果肉 = data.motes，命中果屑 = data.bursts，种子 = data.seeds，
  * 光环直径 = data.scale。体型由引擎的 body fit 处理。
  * 拍子：嚼（chew）→ 踏（step）→ 击（impact）／空（fizzle）。
  */
@@ -29,6 +30,14 @@ const NaturalGiftDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.01, 0.04],
                     lifetime: [8, 14], size: [0.06, 0.01],
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "flesh", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/grass/seed",
+                    rate: { data: "motes", fallback: 12 }, shape: { kind: "sphere", radius: 0.55 },
+                    direction: "inward", speed: [0.02, 0.07], spin: 8,
+                    lifetime: [7, 13], size: [0.11, 0.02],
+                    color: { data: "tint", fallback: 0x9ED47A }, alpha: [0.95, 0], light: "full", maxParticles: 60
                 }
             ]
         },

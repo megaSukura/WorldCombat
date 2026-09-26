@@ -4,11 +4,13 @@
  * 一句话：施法者头顶兜起一颗冷冽翻涌的水团 → 水团拖着一路水花飞向对手 → 迎头炸开一蓬冷水 →
  *   目标身上挂着往下滴的水痕（湿透）→ 冰面形态下，落点结起一圈泛白的冰。
  * 色相家族：冷水青蓝（0x6FC3E8／0x8FD6F5）为主，冰白（0xEAF9FF）只给水花高光与冰面。
- * 拍子：起 windup（兜水）→ 飞 throw（水团）→ 泼 drench（炸开）→ 湿 soak（目标滴水）→ 冰 glaze（落点结冰）。
- * 范围：单体招；命中发生在目标身上，冰面形态的冰圈半径读 `data.radius`（体型派生的冰面半径）。
- * 运动：水团沿发射方向直线飞行（服务端投射物），水花从落点向外炸开、水痕贴着目标往下滴。
- * 数：水花数量绑定 `data.drops`（特攻与等级派生），掉攻级数绑定 `data.stages`，冰面块数绑定 `data.cells`，
- *   强度绑定 `data.intensity`（单发威力 / 50）。
+ * 拍子：起 windup（兜水）→ 飞 throw（水团）→ 泼 drench（从头到脚淋下）→ 湿 soak（目标滴水）→ 冰 glaze（落点结冰）。
+ * 范围：自由瞄准单体招；命中发生在实际接触者身上，冰面形态的冰圈半径读 `data.radius`（体型派生的冰面半径）。
+ * 运动：水团沿发射方向直线飞行（服务端投射物），throw 时刻的发射器绑在真实弹体 id 上，与弹体同行；
+ *   命中后水从头顶沿身体往下淋，落点水花向外炸开，水痕贴着目标往下滴。
+ * 数：水花数量绑定 `data.drops`（特攻与等级派生），掉攻级数绑定 `data.stages`，是否已湿的加成绑定 `data.bonus`
+ *   （命中当刻多一圈双层冷水纹），冰面块数绑定 `data.cells`（terrainResult 真正放下的格），强度绑定
+ *   `data.intensity`（实际受击者上下文求出的威力 / 50）。
  */
 const ChillingwaterDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -62,6 +64,15 @@ const ChillingwaterDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
+                    name: "pour", bind: "target", height: 0.95, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    burst: { count: { data: "drops", fallback: 10 }, at: 0 },
+                    shape: { kind: "line", length: 1.1 },
+                    direction: "down", speed: [0.05, 0.22], spread: 12,
+                    lifetime: [8, 16], size: [0.14, 0.02],
+                    color: 0x8FD6F5, alpha: [0.85, 0], light: "world", maxParticles: 80
+                },
+                {
                     name: "burst", bind: "target", height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
                     burst: { count: { data: "drops", fallback: 10 }, at: 1 },
@@ -78,6 +89,15 @@ const ChillingwaterDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.18], gravity: 0.04, drag: 0.92,
                     lifetime: [8, 16], size: [0.12, 0.02],
                     color: 0x8FD6F5, alpha: [0.8, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "chill_ring", bind: "target", height: 0.2, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: { data: "bonus", fallback: 0 }, interval: 3, repeats: 2 },
+                    shape: { kind: "ring", radius: 0.5 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [10, 18], size: [0.14, 0.02],
+                    color: 0xEAF9FF, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 32
                 }
             ]
         },

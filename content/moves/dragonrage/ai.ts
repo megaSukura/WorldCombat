@@ -2,9 +2,9 @@
  * 龙之怒 / dragonrage 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
- * 这是固定 40 的重击，所以 `ai.finish`（默认开）在目标生命已经掉到一半以下时把它排到前面——
- * 固定伤害不看防御与相性，残血高防的目标正是它最划算的场合；代价是可能把这一发用在并不最危险的目标上。
- * 关闭则只按威胁本身排序。怒爆式与猛撞式不改变出手条件，只改变作用形状。
+ * 这是固定 40 的重击，所以 `ai.value`（默认开）按实际收益排序：目标防御越高越划算（这是唯一不在意防御的
+ * 一击），剩余生命越接近 40 收益越大；生命极厚的目标会因为 40 占比很小而自然降分，不会盲目倾泻。
+ * 关闭则只按威胁本身排序。急袭式只改变弹速与射程，不改变出手条件。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("dragonrage", {
@@ -24,21 +24,28 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 26;
-            if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.5) score += 18;
+            if (CompanionBehavior.ai<boolean>(capability, "value", true)) {
+                // 固定 40 的收益：目标防御越高越划算（这是唯一不在意防御的一击）；剩余生命越接近 40，
+                // 这一击占的比例越大。生命极厚的 Boss 因此自然降分，按实际收益而非只看威胁。
+                const stats = CompanionBehavior.combatStats(context, target);
+                const defence = stats && stats.stats && typeof stats.stats.def === "number" ? stats.stats.def : null;
+                if (defence !== null) score += Math.max(0, Math.min(14, (defence - 60) * 0.12));
+                score += 18 * Math.max(0, Math.min(1, 40 / Math.max(1, target.health)));
+            }
             return score;
         }
     });
 
     addPreferences("dragonrage", {}, [
-        field(pathOf("erupt"), "怒爆式", "boolean", {
-            help: "开启：龙息弹抵达时在落点炸开，范围内所有敌人各吃固定 40 并被向外推开，但射程更短、冷却更长、不再按住目标。关闭（猛撞式，默认）：单体、撞退更直、并短暂按住目标。"
+        field(pathOf("swift"), "急袭式", "boolean", {
+            help: "开启：龙息弹飞得更急（约 ×1.25）、射程压短（约 ×0.85），更难被对手在起手窗口里走位躲开，代价是打得更近。关闭（常规式，默认）：射程与弹速均衡。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 16, step: 1,
             help: "超过这个距离就不出手，先走近。越大越会在更远处先手砸出。"
         }),
-        field(pathOf("ai.finish"), "残血优先", "boolean", {
-            help: "开启：目标生命掉到一半以下时优先用它收尾（固定伤害不看防御）；关闭：只按威胁本身排序。"
+        field(pathOf("ai.value"), "按收益评分", "boolean", {
+            help: "开启：按这一击的实际收益排序——目标防御越高越优先（固定 40 不看防御），剩余生命越接近 40 越优先；生命极厚的目标会相应降分。关闭：只按威胁本身排序。"
         })
     ]);
 }

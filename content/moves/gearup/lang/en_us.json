@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.gearup.summary": "Temporarily raises Attack and Special Attack for nearby eligible allies: Plus/Minus Pokémon, iron golems, and companions holding metal tools.",
+  "worldcombat.skill.gearup.summary": "Temporarily raises Attack and Special Attack for nearby eligible allies: Plus/Minus Pokémon, iron golems, and companions holding metal tools. Eligibility is read once at cast; those linked carry the drive with them.",
   "worldcombat.skill.gearup.use.0": "Strengthen Plus/Minus allies, iron golems, or allies holding metal tools",
   "worldcombat.skill.gearup.use.1": "Wind up the damage before a close scuffle",
   "worldcombat.skill.gearup.use.2": "Make Plus/Minus teammates stronger together",
   "worldcombat.skill.gearup.description.0": "Transfers power within %1$s blocks for %2$s.",
-  "worldcombat.skill.gearup.description.1": "Eligible allies gain %1$s Attack stages and %2$s Special Attack stages. The gains end with the effect.",
+  "worldcombat.skill.gearup.description.1": "Allies eligible at cast, within the chain, gain %1$s Attack stages and %2$s Special Attack stages. This is one snapshot: once linked, dropping the tool or leaving the range keeps the drive until the effect ends or is cleared.",
   "worldcombat.skill.gearup.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.gearup.steady.on": "Steady: +1 more Attack and Sp. Atk, x1.15 wider chain, x1.25 longer run, at +3 ticks telegraph and x1.12 cooldown.",
   "worldcombat.skill.gearup.steady.off": "Overdrive: cheaper telegraph and cooldown, an x0.8 shorter chain, a shorter run and the base stages.",

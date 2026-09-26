@@ -39,6 +39,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["gazeRange","recoil"] },
         { key: "reapply", values: [] },
         { key: "description.2", values: ["tempo", "recharge"] },
+        { key: "description.blocked", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

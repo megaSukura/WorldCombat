@@ -2,22 +2,22 @@
  * 冷笑话 / chillyreception 的参数。
  *
  * 原生事实：Ice／变化／威力 —／命中 —／PP 10／讲一个冷到极点的笑话后与后备宝可梦替换；场上下雪 5 回合。
- * 世界化：这招的念头是「冷场的交接」——施法者抛出一句冷到没人接得住的话，全场安静下来：身边的敌人被这阵
- * 尴尬冻住（共享身份 `world_combat:status/cold_silence`，当前动作被打断、仇恨暂时松开），雪随之落下；
- * 施法者趁这片安静抽身退开，把场子留给下一只上来的伙伴。**有合法后备时由原生队伍操作收回自己、让后备在抽身落点登场；
- * 没有后备时保留可观察到的冷场与退场部分。**
+ * 世界化：这招的念头是「冷场的交接」——施法者抛出一句冷到没人接得住的话，全场安静下来：身边的敌人接到
+ * 一次**可被正常免疫的短打断**（`world_combat:interrupt` 动作事件，无法打断的动作照常继续），并挂上
+ * 共享身份 `world_combat:status/cold_silence`；雪随之落下；施法者趁这片安静退到场内一处背离威胁、站得住的
+ * 落点，把场子留给下一只上来的伙伴。**有合法后备时由原生队伍操作收回自己、让后备在同一点登场；
+ * 没有后备时只撤一步、留在场上。核心退场不依赖打断成功。**
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   gather         起手：基础 14 刻，速度每快 1 点减 0.05，夹在 9..22；话讲得越快，冷场越早。
  *   settle         收招：基础 10 刻，速度每快 1 点减 0.02，夹在 6..15。
  *   silenceRadius  冷场半径：基础 7 格 +（特攻超过 60）×0.02 +（身高超过 1.4）×1.2，再乘梗法系数，夹在 4..13。
- *   pauseTicks     冷场时长：基础 24 刻 +（特攻超过 60）×0.05，再乘梗法系数，夹在 12..44；敌人被打断多久。
  *   hushTicks      余冷：基础 40 刻 + 亲密度 ÷ 8，夹在 40..90；身份留多久，越亲近讲的梗越冷。
  *   snowRadius     雪区半径：基础 8 格 +（特攻超过 60）×0.015 +（身高超过 1.4）×1.0，再乘梗法系数，夹在 5..14。
  *   snowTicks      雪区持续：基础 260 刻 + 20 级起每级 4 刻，再乘梗法系数，夹在 180..460；比雪景短。
  *   snowDensity    雪花密度：基础 26 + 特攻 ÷ 9，再乘梗法系数，夹在 14..64；直接驱动粒子数量。
- *   withdraw       抽身距离：基础 6 格 +（速度超过 40）×0.05，夹在 4..10。
- * 配置 punchline 在「重梗」和「轻描淡写」之间取舍：重梗冷场更大更久、余冷更长，但雪更短、冷却更长；
+ *   withdraw       抽身距离：基础 6 格 +（速度超过 40）×0.05，夹在 4..10；退场点沿此距离探。
+ * 配置 punchline 在「重梗」和「轻描淡写」之间取舍：重梗冷场更大、余冷更长、雪更密，但雪更短、冷却更长；
  * 轻描淡写冷场更小，但雪下得更久、冷却更短。
  */
 namespace PokemonSkills {
@@ -43,11 +43,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("punchline"), F.const(1.25), F.const(0.85)))
                 .clamp(4, 13).round(2),
             "冷场半径", { unit: " 格", description: "笑话冷到多大的一片区域；特攻越高、体型越大越广，重梗 ×1.25、轻描淡写 ×0.85。" }),
-        pauseTicks: seconds(
-            F.base(24).plus(F.stat("specialAttack").minus(60).max(0).times(0.05))
-                .times(F.when(F.pref("punchline"), F.const(1.3), F.const(0.8)))
-                .clamp(12, 44).round(),
-            "冷场时长", "身边的敌人被这阵尴尬冻住多久；特攻越高越久，重梗更久。"),
         hushTicks: seconds(
             F.base(40).plus(F.individual("friendship").div(8))
                 .times(F.when(F.pref("punchline"), F.const(1.3), F.const(0.85)))
@@ -76,7 +71,7 @@ namespace PokemonSkills {
 
     stages("chillyreception", [{ level: 40, values: { cooldown: 140 } }, { level: 55, values: { cooldown: 120 } }]);
     describe("chillyreception", [
-        { key: "description.0", values: ["silenceRadius","pauseTicks","hushTicks"] },
+        { key: "description.0", values: ["silenceRadius","hushTicks"] },
         { key: "description.1", values: ["snowRadius","snowTicks"] },
         { key: "description.2", values: ["withdraw"] },
         { key: "description.3", values: ["gather", "settle"] },

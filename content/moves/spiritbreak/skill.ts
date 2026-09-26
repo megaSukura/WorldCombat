@@ -1,19 +1,4 @@
-/**
- * 灵魂冲击 / spiritbreak —— 注册与动作。
- *
- * 核心念头：把一股压人的妖精气势收拢到身上，低头沿直线朝对手撞上去。命中的那一下把对手的气势打散
- *   （特攻 −1），并把冲击化作一圈向外炸开的妖精光环，把人推得踉跄后退。它是削势二式里唯一贴身、
- *   唯一物理、唯一掉特攻的一个。
- *
- * 两幕：
- *   起（windup，提交前）：气势从四周收拢包住全身、越收越亮（`action.present` 预告）。
- *   撞（rush → smash → aura）：提交后逐刻沿瞄准方向冲锋，身周拖着妖精气流；命中活物时结算一次
- *     接触物理伤害、必然掉特攻（`NativeEffects.boost(spa, -stages)`）、把目标沿冲锋方向推开，
- *     并在冲击点炸开一圈妖精光环。撞空或撞墙就收势。
- *
- * 与同族分开：泼冷水是远程单体、留湿身、掉攻击；灵魂冲击是**贴身冲撞、纯气势、掉特攻**。
- * 配置 `shatter`（碎魂式）由公式改威力／掉级／击退／距离、由 resolve 改时序。
- */
+/** A short approach carries a narrow active palm, able to intercept one supported hostile projectile. */
 namespace PokemonSkills {
     const spiritbreakScene = "world_combat:move_spiritbreak";
     const spiritbreakText = "world_combat.move.spiritbreak.text.smash";
@@ -23,9 +8,9 @@ namespace PokemonSkills {
         id: "spiritbreak",
         cooldownParameter: "wait",
         name: "Spirit Break",
-        description: "把一股压人的妖精气势收拢到身上，低头撞向对手：命中时造成接触物理伤害、把对手的特攻打掉，并把人推开；冲击点炸开一圈妖精光环。碎魂式更重、掉特攻更多、推得更远，但冲得更短、回气更久。",
+        description: "短步切入并推出一掌，掌前短窗可击散一枚原生允许拦截的敌弹；掌击实际首碰敌人时结算原主伤、削特攻和受力推开。特殊不支持的弹照常继续，空掌也可迎弹。",
         uses: ["贴身压制一个法系输出", "把对手从阵型里撞开、打散它的特攻", "在狭窄空间里用冲撞抢身位"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.4,
         maxRange: 6.5,
         prepare: 12,
@@ -36,7 +21,7 @@ namespace PokemonSkills {
         defaults: { shatter: false, ai: { maxChase: 10 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("spiritbreak", "momentum", pokemon) + 0.8, geometry: "line", style: "spiritbreak",
+            return { radius: p("spiritbreak", "momentum", pokemon) / 2 + 1, geometry: "line", style: "spiritbreak",
                 color: 0xF58CB8, label: config && config.shatter === true ? "碎魂式灵魂冲击" : "灵魂冲击" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -46,7 +31,7 @@ namespace PokemonSkills {
                 recover: Math.round(p("spiritbreak", "aftercast", context)),
                 cooldown: Math.round(p("spiritbreak", "wait", context)),
                 active: 0,
-                range: Math.min(skills["spiritbreak"].maxRange!, p("spiritbreak", "momentum", context) + 1.0)
+                range: Math.min(skills["spiritbreak"].maxRange!, p("spiritbreak", "momentum", context) / 2 + 1.0)
             };
         },
         windup: function (action, config, prepare) {
@@ -59,17 +44,17 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const power = p("spiritbreak", "spirit", action);
-            const momentum = Math.max(2.0, p("spiritbreak", "momentum", action));
+            const momentum = Math.max(.5, p("spiritbreak", "momentum", action) / 2);
             const pace = Math.max(0.7, p("spiritbreak", "pace", action));
             const radius = Math.max(0.4, p("spiritbreak", "cloak", action));
             const push = Math.max(0.2, p("spiritbreak", "push", action));
             const stages = Math.max(1, Math.min(2, Math.round(p("spiritbreak", "drop", action))));
             const sparks = Math.max(12, Math.round(p("spiritbreak", "sparks", action)));
-            const halo = Math.max(30, Math.round(p("spiritbreak", "halo", action)));
+            const halo = Math.max(6, Math.min(16, Math.round(p("spiritbreak", "halo", action) / 4)));
             const direction = aim(action);
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.55));
             const intensity = Math.max(0.6, Math.min(2.4, power / 75));
-            let travelled = 0, settled = false;
+            let travelled = 0, settled = false, intercepted = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
@@ -83,27 +68,44 @@ namespace PokemonSkills {
                 sound(current, "cobblemon:impact.fairy");
                 if (landed && scope.valid(victim)) {
                     NativeEffects.boost(scope, victim, "spa", -stages);
-                    scope.displace(victim, direction.scale(push));
+                    scope.hitDisplace(victim, direction.scale(push));
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), spiritbreakText, [stages], 30);
                 }
-                WorldFeedback.emit(scope, spiritbreakScene, 1, point,
-                    { moment: "aura", radius: radius * 3, sparks: sparks, drop: stages, halo: halo, scale: scale, intensity: intensity }, 26);
                 finish(current);
             }
 
+            function interceptPalm(current:CombatAction):void {
+                if(intercepted)return;
+                const scope=current.world(),at=current.origin(),front=at.plus(direction.scale(1)),region=WorldGeometry.bodySegment(at,front,.4);
+                const shots:CombatProjectileFacts[]=JSON.parse(scope.projectiles(at,2));
+                for(let i=0;i<shots.length;i++){
+                    const shot=shots[i];if(!shot.hostile||!shot.interceptable)continue;
+                    const min=WorldCombat.point(shot.boundsMin[0],shot.boundsMin[1],shot.boundsMin[2]),max=WorldCombat.point(shot.boundsMax[0],shot.boundsMax[1],shot.boundsMax[2]);
+                    const point=WorldCombat.point(shot.position[0],shot.position[1],shot.position[2]);
+                    if(!region.intersects(min,max)||!scope.clear(at,point))continue;
+                    if(scope.interceptProjectile(shot.id)){
+                        intercepted=true;WorldFeedback.emit(scope,spiritbreakScene,1,point,{moment:"intercept",sparks:sparks,scale:scale},halo);break;
+                    }
+                }
+            }
+            function palm(current:CombatAction):void {
+                interceptPalm(current);const from=current.origin(),hit=current.trace(from,from.plus(direction.scale(1)),Math.min(.4,radius));
+                const end=hit.position();movementScenes.show(current,"palm",from,{moment:"palm",path:[[from.x(),from.y(),from.z()],[end.x(),end.y(),end.z()]]});
+                if(hit.hitEntity())smash(current,hit);else current.after(2,finish);
+            }
             function advance(current: CombatAction): void {
+                interceptPalm(current);
                 const scope = current.world(), here = current.origin();
                 const step = Math.min(pace, Math.max(0, momentum - travelled));
-                if (step <= 0.001) { finish(current); return; }
-                const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius);
-                const hit = swept.hit;
-                if (hit.hitEntity()) { smash(current, hit); return; }
-                const moved = swept.moved;
-                travelled += moved;
-                if (hit.blocked() || moved < 0.05 || travelled >= momentum) { finish(current); return; }
-                movementScenes.show(current, "rush", here, { moment: "rush", sparks: sparks, scale: scale, intensity: intensity });
-                current.after(1, function (next: CombatAction) { advance(next); });
+                if (step <= .001) { palm(current); return; }
+                const swept = sweepStep(current, direction.scale(step), radius),hit=swept.hit;
+                interceptPalm(current);
+                if(hit.hitEntity()){smash(current,hit);return;}
+                travelled+=swept.moved;
+                const end=current.origin().plus(direction.scale(1));
+                movementScenes.show(current,"palm",current.origin(),{moment:"palm",path:[[current.origin().x(),current.origin().y(),current.origin().z()],[end.x(),end.y(),end.z()]]});
+                if(hit.blocked()||swept.moved<.05||travelled>=momentum){palm(current);return;}
+                current.after(1,advance);
             }
 
             sound(action, "minecraft:entity.iron_golem.attack");

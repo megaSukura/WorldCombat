@@ -1,13 +1,13 @@
 /**
  * 隐形岩 / stealthrock 的客户端表现。
  *
- * 一句话：脚边碎石被抬到半空，散成一片缓缓浮沉的石阵悬在那里；有东西闯进来时，几块石头从阵里砸向它。
+ * 一句话：脚边碎石被抬到半空，散成 6 枚小石悬在各自轨位上；有人闯入时，最近那枚小石从它所在的轨位飞出，
+ * 打中目标（或撞上墙）时溅开碎屑；空位会在一段时间后补回。
  * 色相家族：岩石灰（0x9E9A90 偏冷的石面）为主、冷白（0xE8E6DE）做落地高光，`sparkle/smallsparkle` 原色做尖端反光。
- * 拍子：起（windup 起石）→ 抬（throw 抛出 / raise 散成阵）→ 驻（hum 悬浮 / hit 砸中）→ 收（hum 自然淡出）。
- * 范围：raise 与 hum 都是 `bind:"point"`、`fit:"none"`；`data.radius` 既画地面圈也画悬浮球面，画出来的就是会被砸的空域。
- * 运动：碎石被抛出后沿速度走；散开时从地面向上升起成球面，驻留时每块石沿竖直方向缓缓浮沉；砸中时石块朝目标下坠。
- * 数：`data.stones`（特攻派生）决定悬浮石与砸落石块的数量，`data.heavy`（沉岩/浮岩）决定落地的重击亮度，`data.scale`（半径/参考 2.6）控制尺寸。
- * 参照节：视觉语言第二、三、四、五、七、九节。
+ * 拍子：起（windup）→ 抬（throw / raise）→ 守（launch 离轨短飞 / hit 命中）→ 碎（shatter 打空撞墙）。
+ * 范围：raise 是 `bind:"point"`、`fit:"none"`；6 个悬石轨位由独立 scene 逐帧按真实槽位绘制（见文件末）。
+ * 运动：岩块由 `bind:"projectile"` 跟随真实弹体；命中朝目标下坠、撞墙向外溅开。
+ * 数：`data.power`（机制威力）决定命中碎屑数量，`data.stones` 决定抛/抬的石量，`data.scale`（半径/参考 2.6）控制尺寸。
  */
 const StealthRockDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -63,11 +63,11 @@ const StealthRockDefinition: ParticleDefinition = {
                 {
                     name: "rise", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: { data: "stones", fallback: 18 }, interval: 3, repeats: 3 },
+                    burst: { count: { data: "stones", fallback: 6 }, interval: 3, repeats: 3 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
                     direction: "up", speed: [0.06, 0.18], spread: 14, spin: 30,
                     lifetime: [14, 26], size: [0.3, 0.06],
-                    color: 0x9E9A90, alpha: [0.9, 0], maxParticles: 140
+                    color: 0x9E9A90, alpha: [0.9, 0], maxParticles: 90
                 },
                 {
                     name: "dust_cloud", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
@@ -75,37 +75,29 @@ const StealthRockDefinition: ParticleDefinition = {
                     burst: { count: 44 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
                     direction: "up", speed: [0.03, 0.1],
                     lifetime: [14, 26], size: [0.1, 0.02],
-                    color: 0xE8E6DE, alpha: [0.45, 0], maxParticles: 110
+                    color: 0xE8E6DE, alpha: [0.45, 0], maxParticles: 90
                 }
             ]
         },
-        hum: {
-            exit: { drain: 30 },
+        launch: {
+            duration: 26,
+            exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "hover", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
+                    name: "flying", bind: "projectile", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/large_rock",
-                    rate: { data: "stones", fallback: 18 },
-                    shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.6 } },
-                    gravity: 0, velocity: { y: "0.02*(1-2*t)" }, spin: 12,
-                    lifetime: [18, 30], size: [0.22, 0.34],
-                    color: 0x9E9A90, alpha: [0.55, 0.2], maxParticles: 120
+                    rate: 20, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "velocity", speed: [0.01, 0.04], spread: 12, spin: 26,
+                    lifetime: [8, 14], size: [0.2, 0.04],
+                    color: 0x9E9A90, alpha: [0.9, 0], maxParticles: 30
                 },
                 {
-                    name: "embers", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
-                    rate: 10, shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.6 } },
-                    gravity: 0, velocity: { y: "0.01*(1-2*t)" },
-                    lifetime: [14, 24], size: [0.08, 0.22],
-                    color: 0xE8E6DE, alpha: [0.3, 0], light: "full", maxParticles: 40
-                },
-                {
-                    name: "glints", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 6, shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.6 } },
-                    gravity: 0,
-                    lifetime: [10, 18], size: [0.06, 0.02],
-                    color: 0xFFFFFF, alpha: [0.4, 0], light: "full", maxParticles: 24
+                    name: "depart", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [8, 14], size: [0.08, 0.02],
+                    color: 0xE8E6DE, alpha: [0.5, 0], maxParticles: 24
                 }
             ]
         },
@@ -125,11 +117,33 @@ const StealthRockDefinition: ParticleDefinition = {
                 {
                     name: "fall", bind: "target", height: 1.3,
                     particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: { data: "stones", fallback: 12 } },
+                    burst: { count: { data: "stones", fallback: 8 } },
                     shape: { kind: "sphere", radius: 0.5 },
                     direction: "down", speed: [0.08, 0.2], spread: 20, spin: 40,
                     lifetime: [8, 16], size: [0.2, 0.04],
                     color: 0x9E9A90, alpha: [0.9, 0], maxParticles: 50
+                }
+            ]
+        },
+        shatter: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "bits", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.06, 0.18], spread: 26, spin: 30,
+                    lifetime: [6, 12], size: [0.16, 0.03],
+                    color: 0x9E9A90, alpha: [0.85, 0], maxParticles: 26
+                },
+                {
+                    name: "grit", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0xE8E6DE, alpha: [0.45, 0], maxParticles: 24
                 }
             ]
         }
@@ -137,3 +151,23 @@ const StealthRockDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_stealthrock", 1, StealthRockDefinition);
+
+// 6 个真实轨位：有石头的轨位画一块石，空轨位只留一圈淡淡的空座。数据来自 field 的 slots（世界坐标 + 占位）。
+// 绑定在 field 效果上（WorldFeedback.onEffect），随石阵自然到期或被替换一起消失。
+WorldCombatClient.scene("world_combat:move_stealthrock_field", 1, function (frame) {
+    const entry: CombatSceneEntry<{ slots: number[][]; radius: number; heavy: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const slots = entry.data.slots || [];
+    for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        if (slot[3]) {
+            frame.billboard(slot[0], slot[1], slot[2], 0.022, function (surface) {
+                surface.fill(-6, -7, 12, 14, 0xE0A9A49A);
+                surface.fill(-8, -9, 16, 3, 0xE0E8E6DE);
+            });
+        }
+        else {
+            frame.ring(slot[0], slot[1], slot[2], 0.12, 0x66807C74);
+        }
+    }
+});

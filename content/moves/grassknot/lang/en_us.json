@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.grassknot.summary": "Call the grass and roots out of the ground and let the target's own weight take it down: the heavier it is, the harder it falls. A patch of turf opens under the target and closes a moment later, snaring whoever is still standing in it; step out and you escape. The binding form snares wider and longer but closes more slowly.",
+  "worldcombat.skill.grassknot.summary": "Call the grass and roots out of the ground and let the target's own weight take it down: the heavier it is, the harder it falls. A low knot of roots opens at the chosen spot and closes a moment later, snaring whoever is still standing in it with both feet on the ground; jump or step out and you escape. The binding form snares wider and longer but closes more slowly.",
   "effect.world_combat.grassknot_snare": "Snared",
   "worldcombat.skill.grassknot.use.0": "Let a heavy target trip over its own weight",
-  "worldcombat.skill.grassknot.use.1": "Leave a patch of turf that denies a piece of ground",
+  "worldcombat.skill.grassknot.use.1": "Deny a piece of ground under a foe",
   "worldcombat.skill.grassknot.use.2": "Reach in and slow a heavy, fast or hard-hitting foe",
-  "worldcombat.skill.grassknot.description.0": "Opens a %2$s block snare under the target and deals about %1$s special damage to everyone inside when it closes; heavier targets take more.",
-  "worldcombat.skill.grassknot.description.1": "There are %1$s seconds between the turf opening and the vines closing, so stepping out dodges it; the opened turf stays in the world for about %2$s seconds.",
-  "worldcombat.skill.grassknot.description.2": "A snared target cannot move for about %1$s (though it can still act) and carries a slow for about %2$s (movement speed 70%% lower); it loses %3$s Speed stages (Pokemon drop Speed stages, other combatants lose movement speed), and that stage drop does not come back when the snare expires.",
+  "worldcombat.skill.grassknot.description.0": "Opens a %2$s block knot of roots at the chosen spot and deals about %1$s special damage to enemies inside when it closes, but only to those with both feet on the ground; heavier targets take more, and jumping clear dodges it entirely.",
+  "worldcombat.skill.grassknot.description.1": "There are %1$s seconds between the knot opening and the roots closing; stay standing inside to be caught, while stepping out or jumping clear dodges it. The move leaves no blocks in the world.",
+  "worldcombat.skill.grassknot.description.2": "A snared target cannot move for about %1$s (though it can still act) and carries a slow for about %2$s (movement speed 70%% lower); it loses %3$s Speed stages (Pokemon drop Speed stages, other combatants lose movement speed), and that stage drop does not come back when the snare expires. A target that resists control still takes the full weight damage, but is not snared.",
   "worldcombat.skill.grassknot.knot.on": "Binding form: a wider and longer snare with a heavier trip, at the cost of a longer delay, slightly less power and a longer recovery and cooldown.",
   "worldcombat.skill.grassknot.knot.off": "Quick-trip form: a small, fast snare with more power and a quicker cast, but a shorter hold.",
   "worldcombat.skill.grassknot.timing": "Sow within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
@@ -18,7 +18,6 @@
   "worldcombat.skill.grassknot.value.rootTicks": "Hold duration",
   "worldcombat.skill.grassknot.value.tripTicks": "Off-balance duration",
   "worldcombat.skill.grassknot.value.tripStages": "Speed drop",
-  "worldcombat.skill.grassknot.value.patchTicks": "Turf lifetime",
   "worldcombat.skill.grassknot.preference.knot": "Binding form",
   "worldcombat.skill.grassknot.preference.knot.help": "On: a wider and longer snare with a heavier trip, but a longer delay (easier to step out of), slightly less power and a longer recovery and cooldown. Off: a small, fast snare with more power and a quicker cast.",
   "worldcombat.skill.grassknot.preference.ai.maxChase": "Sowing distance",
@@ -26,6 +25,7 @@
   "worldcombat.skill.grassknot.preference.ai.minMass": "Heavy targets only",
   "worldcombat.skill.grassknot.preference.ai.minMass.help": "It will not open with Grass Knot against a target lighter than this many kg; 0 means always. Raise it to save the move for heavy foes.",
   "world_combat.move.grassknot.text.trip": "Snared %1$s",
+  "world_combat.move.grassknot.text.hit": "Tripped %1$s but did not snare them",
   "world_combat.move.grassknot.text.miss": "Nothing to trip",
   "worldcombat.skill.grassknot.value.reach": "Cast range"
 }

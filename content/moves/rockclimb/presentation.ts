@@ -13,6 +13,8 @@
 const RockclimbDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        route:{emitters:[{name:"body_route",bind:"path",fit:"world",particle:"world_combat_core:cobblemon/generic/tinydust",rate:16,shape:{kind:"polyline"},lifetime:[3,6],size:[.06,.01],color:0x9A6B3F,alpha:[.5,.1]}]},
+        grip:{duration:14,emitters:[{name:"wall_claws",bind:"point",fit:"world",particle:"world_combat_core:cobblemon/generic/spike",burst:{count:2},shape:{kind:"sphere",radius:.1},lifetime:[5,12],size:[.12,.02],color:0x9A6B3F,alpha:[.7,0]}]},
         crouch: {
             duration: 20,
             exit: { stop: 9, drain: 14 },

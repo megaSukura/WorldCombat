@@ -12,6 +12,8 @@
  * 与同族分开：木角是冲撞、吸取拳是直拳、吸血是持续的咬、茶炮是远程；只有悔念剑是扇面斩击，
  *   并且把「自己残血」当燃料。配置 `sweep` 让它在宽弧清场与窄弧单点之间取舍。
  *
+ * 选择是 `aim`：朝一个方向或推荐的敌人挥出一道扇形，不再要求先锁定单体；空扫或扫到墙上只出剑，方块不变。
+ *
  * 命中、防御、相性与暴击走共享 `hurt`；回复走共享伤害载荷的 `drain`，对所有战斗者同一条路。
  */
 namespace PokemonSkills {
@@ -36,9 +38,9 @@ namespace PokemonSkills {
         id: "bitterblade",
         cooldownParameter: "recharge",
         name: "Bitter Blade",
-        description: "扫出一道悔恨的火弧，弧内敌人各挨一记并汲取其生命；自身失去的生命越多，这一剑越重。",
+        description: "朝一个方向或敌人扫出一道悔恨的火弧，弧内敌人各挨一记并汲取其生命；自身失去的生命越多，这一剑越重；空扫或扫墙只出剑。",
         uses: ["一扫清掉身前挤着的一群", "残血时把悔意变成更重的一剑并回血", "用一趟火弧同时压低多个目标"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.2,
         maxRange: 4.6,
         prepare: 9,

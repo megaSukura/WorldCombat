@@ -19,7 +19,7 @@ namespace PokemonSkills {
         name: "Horn Drill",
         description: "蹲身把角高速旋转成钻头，沿一条直线钻出去——线路上第一个挡路的活体被钻尖贯穿、一次结清（一击必杀）。它是这一族里唯一会位移的一记：让开这条线，或者躲到墙后，钻头就只能扎进地里。",
         uses: ["在近身对角线路上贯穿一个目标", "逼对手横向让开，撞上墙就自己停住", "对手站桩时用一记钻穿终结它"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 10,
         prepare: 14,
@@ -46,7 +46,8 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            if (target === null) return "";
+            if (!world.valid(target) || world.friendly(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "target-left";
             if (body.position().minus(action.origin()).length() > action.range() + 0.3) return "out-of-range";
@@ -62,7 +63,7 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(horndrillScene);
             const world = action.world(), actor = action.actor(), target = action.target();
-            const origin = action.origin(), direction = aim(action);
+            const origin = action.origin(), direction = WorldGeometry.flatUnit(aim(action));
             const span = Math.max(4, p(horndrillId, "span", action));
             const girth = Math.max(0.45, p(horndrillId, "girth", action));
             const thrust = Math.max(0.4, p(horndrillId, "thrust", action));
@@ -90,7 +91,7 @@ namespace PokemonSkills {
                     scope.sound("minecraft:item.trident.hit", at, 14, "{}");
                 } else {
                     WorldFeedback.emit(scope, horndrillScene, 1, at, { moment: "miss", bore: bore, scale: scale }, 22);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), horndrillMissText, [], 22);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), result === "resisted" ? "world_combat.move.horndrill.text.resisted" : horndrillMissText, [], 22);
                     scope.sound("minecraft:block.stone.break", at, 12, "{}");
                 }
                 movementScenes.finish(current, done);
@@ -106,10 +107,10 @@ namespace PokemonSkills {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const result = horndrillExecute(current, victim);
-                        if (result !== "miss") { finish(current, result, hit.position()); return; }
+                        finish(current, result, hit.position()); return;
                     }
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
+                const moved = swept.moved;
                 travelled += moved;
                 movementScenes.show(current, "bore", from, { moment: "bore", target: targetRef, bore: bore, scale: scale,
                         progress: Math.min(1, travelled / Math.max(0.001, span)) });
@@ -117,7 +118,8 @@ namespace PokemonSkills {
                 current.after(1, advance);
             }
 
-            advance(action);
+            action.releaseTarget();
+            action.after(mark, advance);
         }
     });
 }

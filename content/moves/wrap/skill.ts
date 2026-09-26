@@ -1,23 +1,4 @@
-/**
- * 紧束 / wrap 的出手方式。
- *
- * 核心念头：**甩出一圈藤蔓把目标裹住、绞紧**——命中就把它钉在原地、把它的力气一并压住，藤茧自己收紧，
- * 不需要施法者维持：甩完就能走开。目标是**真的被钉住**：动不了、打不痛，每隔一会儿被绞一次伤害；
- * 只能等藤茧走完，或被外力一脚踹到足够快把藤茧撕开。
- *
- * 三幕：
- *   起（windup，提交前）：藤蔓在身侧盘起、蓄势，只播预告。
- *   裹（lash → coil）：提交后沿瞄准方向甩出一圈藤；裹住第一个活体即结算一记 crush 接触伤害、挂上
- *       `world_combat:status/partiallytrapped`（本单元 `world_combat:wrap_coil`）、按 atkStages 压住攻击、
- *       并用 rooted 把它钉在原地。
- *   绞（crush / release / torn）：绑定效果每 2 刻维持藤茧表现；每 `interval` 绞一次。藤茧走完自己的时间、
- *       被外力清掉、目标倒下时松开；目标被推到超过 `tearSpeed` 就提前撕开。
- *
- * 与同族分开：绑紧把目标拴在施法者身边拖着走、越拉越紧、施法者也被拖慢；紧束把藤茧独立留在目标身上，
- * 施法者可离开，目标是钉住 + 攻击被压，伤害平稳不递增。与缠绕（一次性减速＋短定身）也不同。
- *
- * 配置 `cocoon`（密缠式）由 resolve 改时序、由公式改威力／时长／攻击压制／撕开阈值，提交后才触碰世界。
- */
+/** Maintain a close constriction while holding the action; distance, interruption or release ends every owned layer. */
 namespace PokemonSkills {
     const wrapScene = "world_combat:move_wrap";
     const wrapCoil = "world_combat:wrap_coil";
@@ -37,13 +18,14 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    WorldCombat.effect(wrapBond, 1, 400, "actor", wrapBondData, EffectProtocols.unchanged);
+    WorldCombat.effect(wrapBond, 1, 400, "action", wrapBondData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(wrapBond, "start", function (effect) { effect.schedule("squeeze", "squeeze", 1, "{}"); });
     WorldCombat.effectHandler(wrapBond, "squeeze", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         if (world.mobEffect(victim, wrapCoil) === null) { data.reason = "released"; effect.state(JSON.stringify(data)); effect.end(); return; }
-        const body = world.observe(victim);
+        const source = world.observe(effect.source()), body = world.observe(victim);
+        if (!source || !body || source.position().minus(body.position()).length() > data.reach || !world.clear(source.position(), body.position())) { effect.end(); return; }
         if (body === null) { effect.end(); return; }
         if (world.tick() > (data.grace || 0) && body.velocity().length() > data.tearSpeed) {
             data.reason = "torn"; effect.state(JSON.stringify(data)); effect.end(); return;
@@ -63,19 +45,13 @@ namespace PokemonSkills {
             }
             world.sound("minecraft:block.wool.step", at !== null ? at.position() : body.position(), 14, "{}");
         }
-        WorldFeedback.keep(world, wrapCoilKey + String(victim.ref()), wrapScene, 1, body.position(),
-            { moment: "coil", target: String(victim.ref()), height: data.coilHeight, notes: data.notes, pulses: data.pulses || 0 }, 20);
         effect.schedule("squeeze", "squeeze", 2, "{}");
     });
     WorldCombat.effectHandler(wrapBond, "end", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (world.valid(victim)) {
             const coil = MobEffects.read(world, victim, wrapCoil);
-            if (coil !== null) world.removeMobEffect(victim, wrapCoil, coil.key());
-            // 提前撕开时，把本单元这一份 rooted 一并解掉（按来源过滤，别动别人的）。
-            const roots = world.effects(victim, "world_combat:rooted");
-            for (let i = 0; i < roots.length; i++) if (String(roots[i].source().ref()) === String(world.source().ref()))
-                world.operation(roots[i].id(), "world_combat:dispel", "{}");
+            if (coil !== null && data.carrier && MobEffects.matches(world, victim, data.carrier)) world.removeMobEffect(victim, wrapCoil, coil.key());
             const body = world.observe(victim);
             if (body !== null) {
                 WorldFeedback.emit(world, wrapScene, 1, body.position(),
@@ -91,9 +67,9 @@ namespace PokemonSkills {
         id: "wrap",
         cooldownParameter: "recharge",
         name: "Wrap",
-        description: "甩出一圈长身或藤蔓把目标自下而上裹住、绞紧：命中就把它钉在原地，并把它挥拳的力气一并压住。藤茧自己收紧，不需要你维持——甩完就能走开。目标只能等藤茧走完，或被外力一脚踹到足够快把它撕开。",
-        uses: ["钉住一个危险目标并压住它的攻击", "把对手按在原地交给队友", "用藤茧独自磨掉一个难缠的近战目标"],
-        kind: "enemy",
+        description: "按住技能维持贴身紧束，自己放慢脚步，目标暂时降低攻击并定期受到绞击。松手、拉开距离、断视线或被打断会松开；目标仍能移动。",
+        uses: ["贴身维持紧束并压住危险目标的攻击", "把对手按在原地交给队友", "用藤茧独自磨掉一个难缠的近战目标"],
+        kind: "aim",
         range: 2.7,
         maxRange: 3.8,
         prepare: 8,
@@ -153,20 +129,31 @@ namespace PokemonSkills {
 
             if (!hurt(action, target, "wrap", crush, { damage: damageSpec("wrap", "crush"), contact: true })) { done(action); return; }
             if (!CombatStatus.apply(world, target, "partiallytrapped", wrapCoil, coilTicks, 0, { unique: true })) { done(action); return; }
-            WorldEffects.apply(world, target, "rooted", {}, coilTicks);
-            NativeEffects.boost(world, target, "atk", -stages);
+            const carrier = MobEffects.read(world, target, wrapCoil);
+            if (!carrier) { done(action); return; }
+            NativeEffects.boostWindow(world, target, { atk: -stages }, coilTicks, "world_combat:move/wrap", carrier);
+            world.attribute(action.actor(), "minecraft:generic.movement_speed", -.45, "add_multiplied_total");
             const body = world.observe(target);
             if (body === null) { done(action); return; }
             const state = { crush: crush, interval: interval, coilHeight: coilHeight, tearSpeed: tearSpeed, notes: notes,
-                next: world.tick() + interval, grace: world.tick() + 8, pulses: 0, reason: "" };
+                reach: reach + 1, carrier: MobEffects.anchor(carrier), next: world.tick() + interval, grace: world.tick() + 8, pulses: 0, reason: "" };
             const existing = world.effects(target, wrapBond);
             for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
-            world.effect(wrapBond, target, JSON.stringify(state), coilTicks + 40);
+            const bond = action.effect(wrapBond, target, JSON.stringify(state), coilTicks);
+            WorldFeedback.onEffect(world, bond, wrapCoilKey + bond, wrapScene, 1, body.position(),
+                { moment: "coil", target: String(target.ref()), path: [String(action.actor().ref()), String(target.ref())], height: coilHeight, notes: notes });
             WorldFeedback.emit(world, wrapScene, 1, body.position(),
                 { moment: "seize", target: String(target.ref()), height: coilHeight, notes: notes, stages: stages }, 26);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), wrapCoilText, [stages], 24);
             sound(action, "cobblemon:impact.normal");
-            done(action);
+            const began = world.tick();
+            function maintain(current: CombatAction): void {
+                const scope = current.world();
+                if (scope.tick() - began >= coilTicks || !scope.valid(target!) || !scope.effects(target!, wrapBond).some(view => view.id() === bond)) { done(current); return; }
+                current.after(2, maintain);
+            }
+            maintain(action);
         }
     });
+    WorldCombat.preview("world_combat:wrap", JSON.stringify({ radius: .5, lineOfSight: true, input: { version: 1, steps: ["point"], sustained: true } }));
 }

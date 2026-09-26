@@ -25,11 +25,15 @@ public final class NativeProjectileChecks {
     private static CombatProjectile projectile;
     private static Entity credited;
     private static String options = "{}";
-    private static int beforeUnload;
+    private static int beforeUnload, beforeIntercept;
     public static void launch(ActionContext action) {
         action.commit(1);
         var id = action.projectile(action.origin(), new Point(speed, 0, 0), 0, radius, 40, 80,
-            (current, hit) -> { impacts++; if (hit.hitEntity()) require(current.hit(hit, 4, "native", "{}"), "Native damage was rejected"); },
+            (current, hit) -> {
+                impacts++;
+                if (hit.blocked()) require(hit.blockPosition() != null && !hit.blockFace().isEmpty(), "Native block contact lost its surface facts");
+                if (hit.hitEntity()) require(current.hit(hit, 4, "native", "{}"), "Native damage was rejected");
+            },
             current -> { completions++; current.finish(); }, options);
         var level = (net.minecraft.server.level.ServerLevel) actor.level();
         projectile = (CombatProjectile) level.getEntity(UUID.fromString(id));
@@ -44,13 +48,21 @@ public final class NativeProjectileChecks {
         try {
             switch (age++) {
                 case 0 -> {
-                    prepare(server); NativeSweepChecks.run(combat, level);
+                    prepare(server); NativeSweepChecks.run(combat, level); NativeHealingChecks.run(combat, level); NativeMobEffectChecks.run(combat, level); NativeCriticalChecks.run(combat, level); NativeHitMotionChecks.run(combat, level); NativeLocomotionChecks.run(combat, level); NativeDamageFloorChecks.run(combat, level); NativeTerrainFactsChecks.run(combat, level); NativeEquipmentSuppressionChecks.run(combat, level); NativeGroundLiftChecks.run(combat, level);
+                    NativeEquipmentPickupChecks.run(combat, level);
+                    NativeEffectTransferChecks.run(combat, level);
+                    NativeDeathChecks.run(combat, level);
+                    NativeProjectileObservationChecks.run(combat, level);
+                    NativePierceChecks.run(combat, level);
                     actor = mob(EntityType.COW, level, 2); target = mob(EntityType.COW, level, 8);
                     NeoForge.EVENT_BUS.addListener((ProjectileImpactEvent event) -> {
                         if (event.getProjectile() instanceof CombatProjectile) { nativeEvents++; if (cancel) event.setCanceled(true); }
                     });
                     NeoForge.EVENT_BUS.addListener((LivingIncomingDamageEvent event) -> {
                         if (event.getSource().getDirectEntity() instanceof CombatProjectile) {
+                            var provenance = new com.google.gson.JsonObject();
+                            NativeDamageFacts.add(provenance, event.getSource(), event.getEntity(), "");
+                            require(!provenance.getAsJsonArray("projectilePath").isEmpty(), "Accepted native impact did not retain its actual flight before damage");
                             require(event.getSource().is(DamageTypeTags.IS_PROJECTILE), "Native projectile damage tag missing");
                             require(event.getSource().getSourcePosition().equals(((CombatProjectile) event.getSource().getDirectEntity()).damageOrigin()), "Impact lost native shield/knockback origin");
                             damageEvents++; credited = event.getSource().getEntity();
@@ -113,6 +125,13 @@ public final class NativeProjectileChecks {
                 case 69 -> {
                     require(completions == beforeUnload, "Unloaded flight dispatched completion");
                     combat.runtime().cancelActor(combat.bind(actor), "native-cancel"); clean(combat);
+                    options = "{}"; speed = .1; beforeIntercept = completions; cast(combat);
+                    require(combat.interceptProjectile(combat.bind(target), null, projectile.getUUID())
+                        && projectile.isRemoved(), "Interception did not remove the native managed entity");
+                }
+                case 71 -> {
+                    require(completions == beforeIntercept + 1, "Interception bypassed managed safe-boundary completion");
+                    clean(combat);
                     done = true; mark("PASS native projectiles: tracking, sweep, impact cancellation, target block, radius, deflection attribution, homing, bounce, unload, scope cleanup and sound observations");
                 }
             }

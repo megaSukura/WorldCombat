@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.drainpunch.summary": "Punch a nearby target and recover health based on the damage dealt.",
+  "worldcombat.skill.drainpunch.summary": "Punch a nearby target or aim the punch in a direction; a hit deals damage and returns part of it to the user, while a swing through air or into a wall heals nothing.",
   "worldcombat.skill.drainpunch.description.0": "The punch deals about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.drainpunch.description.1": "Punch reach %1$s blocks (also the real range), knuckle radius %2$s blocks.",
   "worldcombat.skill.drainpunch.description.2": "Each punch that lands restores %1$s of the damage actually dealt to the user.",
@@ -26,6 +26,6 @@
   "worldcombat.skill.drainpunch.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.drainpunch.preference.ai.healBelow.help": "Below this health ratio the user prefers drain punch as sustain; higher starts leaning on it for healing sooner.",
   "world_combat.move.drainpunch.text.hit": "Knuckles in",
-  "world_combat.move.drainpunch.text.sap": "Force drawn back %1$s%%",
+  "world_combat.move.drainpunch.text.sap": "Force drawn back %1$s",
   "world_combat.move.drainpunch.text.miss": "Swing through air"
 }

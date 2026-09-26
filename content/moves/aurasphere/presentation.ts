@@ -4,10 +4,10 @@
  * 一句话：波导之力从施法者体内被逼到掌前、凝成一颗脉动的蓝色球，随后沿瞄准线射出、一路拐弯咬住目标，
  *   命中处炸开一圈格斗冲击与散开的波导光点。
  * 色相家族：波导蓝（0x6FA8FF）为主体，近白蓝（0xDCEBFF）在球心与光点；饱和只出现在球心与命中核心的小面积。
- * 拍子：起 charge（体内逼出波导）→ 行 flight（球飞行、拐弯、拖尾）→ 击 burst（命中炸开）→ 收 miss。
+ * 拍子：起 charge（体内逼出波导）→ 行 flight（球飞行、拐弯、拖尾）→ 击 burst（命中炸开）→ 收 miss（撞墙或耗尽散球）。
  * 范围：burst 的环按 `data.scale`（判定半径 / 0.32）画开，玩家看出这颗球能压住多大一圈。
- * 运动：flight 绑 projectile 沿轨迹拖尾；`data.direction` 不写，球的实际朝向由引擎追踪决定，画面与机制同步。
- * 数：`data.motes`（特攻与等级派生）决定飞行与命中的光点密度；命中强弱按 `data.intensity` 抬亮。
+ * 运动：flight 由动作拥有的 actionScenes 绑定真实弹体；挂上目标时球的实际朝向由引擎追踪决定，空放时沿 `data.direction` 直飞。
+ * 数：`data.motes`（特攻与等级派生）决定飞行与命中的光点密度；命中强弱按 `data.intensity` 抬亮；撞墙只在真实接触点散球。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const AurasphereDefinition: ParticleDefinition = {

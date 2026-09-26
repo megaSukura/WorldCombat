@@ -44,7 +44,7 @@ const ExpandingForceDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 24 },
             emitters: [
                 {
-                    name: "wave_hit", bind: "target", height: 0.5,
+                    name: "wave_hit", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_psychic",
                     burst: { count: 3 }, shape: { kind: "sphere", radius: 0.22 },
                     direction: "outward", speed: [0.0, 0.05],
@@ -52,7 +52,7 @@ const ExpandingForceDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 6
                 },
                 {
-                    name: "wave_ring", bind: "target", height: 0.5,
+                    name: "wave_ring", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
                     burst: { count: 2 }, shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.06, 0.16],
@@ -60,7 +60,15 @@ const ExpandingForceDefinition: ParticleDefinition = {
                     color: 0xB79BFF, alpha: [0.85, 0], light: "full", maxParticles: 12
                 },
                 {
-                    name: "wave_swirl", bind: "target", height: 0.4,
+                    name: "wave_edge", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 3.0 },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [12, 20], size: [0.34, 0.12],
+                    color: 0x9A7BFF, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 6
+                },
+                {
+                    name: "wave_swirl", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
                     burst: { count: 10 }, shape: { kind: "sphere", radius: 0.28 },
                     direction: "outward", speed: [0.04, 0.12], spin: 10,
@@ -73,6 +81,14 @@ const ExpandingForceDefinition: ParticleDefinition = {
             duration: 40,
             exit: { stop: 10, drain: 30 },
             emitters: [
+                {
+                    name: "collapse", bind: "source", offset: [0, 0.08, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: 18, at: 0 }, shape: { kind: "ring", radius: 0.7 },
+                    direction: "inward", speed: [0.10, 0.24],
+                    lifetime: [4, 9], size: [0.26, 0.05],
+                    color: 0xD9CCFF, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 24
+                },
                 {
                     name: "shock", bind: "source", offset: [0, 0.08, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
@@ -108,8 +124,8 @@ const ExpandingForceDefinition: ParticleDefinition = {
             ]
         },
         field: {
-            duration: { data: "ticks", fallback: 200 },
-            exit: { drain: 40 },
+            duration: 0,
+            exit: { stop: 0, drain: 40 },
             emitters: [
                 {
                     name: "field_edge", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",

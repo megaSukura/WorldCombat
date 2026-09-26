@@ -51,7 +51,7 @@ namespace PokemonSkills {
         id: "spite",
         cooldownParameter: "recharge",
         name: "Spite",
-        description: "向一个目标送出一道缓慢、会自动转向的怨念：命中宝可梦时从它最后使用的那一招里抠走 4 点 PP，并让怀恨留在它身上——移动变慢、技能冷却延长。怨念本身不造成伤害，追不上、被甩开或撞到障碍就散去。",
+        description: "向一个目标送出一道缓慢、会自动转向的怨念：命中宝可梦时从它最后使用的那一招里抠走 4 点 PP，并让怀恨留在它身上；没有 PP 的普通生物扣不到 PP，只被怀恨拖慢移动与技能冷却。怨念本身不造成伤害，追不上、被甩开或撞到障碍就散去。",
         uses: ["惩罚刚出手的目标", "抠掉对手关键招式的 PP", "拖慢追击者"],
         kind: "enemy",
         range: 12,
@@ -112,6 +112,7 @@ namespace PokemonSkills {
                     CombatStatus.apply(scope, struck, "grudge", SPITE_EFFECT, grudgeTicks, 0, { unique: true });
                     WorldFeedback.emit(scope, spiteScene, 1, point, {
                         moment: "bite", target: ref, shards: shards, taken: taken,
+                        native: String(struck.domain()) !== "cobblemon",
                         intensity: found === null ? 1 : 1 + Math.min(1, taken / Math.max(1, cut))
                     }, 34);
                     if (taken > 0) {

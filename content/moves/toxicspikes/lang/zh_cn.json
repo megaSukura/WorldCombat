@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.toxicspikes.summary": "把一把带毒的菱角撒到选定的地面上，插成一片毒菱：踏进来的贴地敌人中毒，留在里面毒素持续被维持。在同一片地上再由同一施放者撒一次会叠到第二层，踩到的就变成剧毒。敌方毒属性的身体走进来会把整片毒菱吸掉；钢属性与免疫者直接穿过。",
+  "worldcombat.skill.toxicspikes.summary": "把一把带毒的菱角撒到选定的地面上，插成一片毒菱：脚部与毒菱同层的贴地敌人踏进来就中毒，留在里面毒素维持，但已经带着同等或更毒的目标不会被重施、剧毒进度不被重置。在同一片同层地上再由同一施放者撒一次会叠到第二层，踩到的就变成剧毒；楼上不会踩到楼下的毒菱。敌方毒属性的身体走进来会把整片毒菱吸掉；钢属性与免疫者直接穿过。",
   "worldcombat.skill.toxicspikes.use.0": "提前封住一条通道或门口",
   "worldcombat.skill.toxicspikes.use.1": "让追击的敌人持续中毒",
   "worldcombat.skill.toxicspikes.use.2": "叠到第二层逼出剧毒",
-  "worldcombat.skill.toxicspikes.description.0": "踩进毒菱的贴地敌人中毒 %1$s（叠到第二层变剧毒）；毒菱阵半径约 %2$s 格。敌方毒属性的身体走进来会把整片毒菱吸掉、自己不受影响，钢属性与免疫者则直接穿过。",
-  "worldcombat.skill.toxicspikes.description.1": "一片毒菱在世界上留 %1$s；留在阵里的敌人毒素被持续维持，走出后按剩余时间走完。",
+  "worldcombat.skill.toxicspikes.description.0": "脚部与毒菱同层、贴地踩进来的敌人中毒 %1$s（叠到第二层变剧毒）；毒菱阵半径约 %2$s 格。敌方毒属性的身体走进来会把整片毒菱吸掉、自己不受影响，钢属性与免疫者则直接穿过；已经带着同等或更毒的目标不会被重施。",
+  "worldcombat.skill.toxicspikes.description.1": "一片毒菱在世界上留 %1$s；留在阵里的敌人毒素维持，但已经带着同等或更毒的目标只保留它自己的合法剩余时长、剧毒进度不被重置；走出后按剩余时间走完。",
   "worldcombat.skill.toxicspikes.option.on": "开启烈毒式：中毒时长约 ×1.4，但毒菱阵收窄到约 0.8 倍、存在更短、起手 +2 刻、冷却更长，用来让一个目标中毒得久。",
   "worldcombat.skill.toxicspikes.option.off": "关闭烈毒式（缓和式）：毒菱阵铺大约 1.15 倍、存在更久、出手更快，代价是中毒时长约 ×0.8，用来罩住一片地等人踩。",
   "worldcombat.skill.toxicspikes.timing": "可把毒菱撒到 %1$s 格内的落点，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",

@@ -62,7 +62,7 @@ namespace PokemonSkills {
                     { moment: "bite", target: String(target.ref()), berry: berry !== null ? 1 : 0, scale: scale,
                         motes: Math.round(motes), bits: berry !== null ? Math.round(motes) : Math.round(motes * 0.4) }, 26);
                 sound(current, "cobblemon:move.bite.target");
-                if (landed && scope.valid(target)) scope.displace(target, direction.scale(push));
+                if (landed && scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
                 if (landed && held !== null && scope.valid(target) && NativeItems.takeHeld(scope, target, held.held).ok) {
                     var eaten = held.berry;
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), bugbiteEatText, [{ key: eaten.name, fallback: "berry" }], 28);

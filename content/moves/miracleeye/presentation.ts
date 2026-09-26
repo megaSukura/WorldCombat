@@ -1,16 +1,18 @@
 /**
  * 奇迹之眼 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者额前凝起一只淡紫的眼睛，一道心眼线穿到对手身上；对手被两圈紫青念环由外向内收住，
- *   心眼窗口里一直有念环在它身上转。
+ * 一句话：施法者额前凝起一只淡紫的眼睛，一道心眼线连到对手身上；对手被两圈紫青念环收住，同时施法者自己头上
+ *   亮起一圈小准星——目标环与自准星是两条独立的生命周期，谁先到期就先 fade。
  *
- * 色相家族：念紫（0xB07CE8）做心眼主体，青（0x7CD8E8）做瞳孔环高光，淡紫白（0xE0C8FF）做细节。
- * 层次：凝神（起手，念光向额前收）→ 看穿（一条心眼线＋目标两圈念环＋心眼火花）→ 持眼（低密度念环）
- *   → 褪去／被挡／落空。
- * 起击收：windup（凝神）→ read（看穿）→ hold（持眼，慢慢离场）→ fade（走空）。
- * 范围：单体心眼，心眼线与目标念环画的正是被看穿的那个人；心眼距离由 reach 决定，画面沿视线铺开。
- * 运动：心眼线从施法者沿视线飞向目标（bind path polyline），念环由外向内收；持眼时念环在目标身上慢转。
- * 数：心眼线与念环的密度读 data.motes（特攻派生），抬起的命中级数读 data.added（决定念环层数与亮度）。
+ * 色相家族：念紫（0xB07CE8）做心眼主体，青（0x7CD8E8）做瞳孔环与自准星，淡紫白（0xE0C8FF）做细节。
+ * 层次：凝神（起手，念光向额前收）→ 看穿（一条心眼线＋目标两圈念环＋心眼火花）
+ *   ＋ 自照（施法者头上的小准星亮起）→ 持眼（目标低密度念环、自己准星慢转，各自随自身的托管效果结束）
+ *   → 褪去／自照收束／被挡／落空。
+ * 起击收：windup（凝神）→ focus（自照亮起）→ read（看穿）→ hold＋focus_hold（两端持续）→ fade／focus_end（各自走空）。
+ * 范围：单体心眼，心眼线与目标念环画的正是被看穿的那个人；心眼距离由 reach 决定。
+ * 运动：心眼线是施法者与目标之间一条瞬时直线（bind path + shape polyline，整条边同时采样，不是沿线飞行的前沿）；
+ *   念环由外向内收；自准星绕自己的头慢转，绑在本次命中窗口这条托管效果上。
+ * 数：心眼线与念环的密度读 data.motes（特攻派生），抬起的命中级数读 data.added（决定念环层数与自准星亮度）。
  */
 const MiracleeyeDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -26,6 +28,20 @@ const MiracleeyeDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0xE0C8FF, alpha: [0.55, 0], light: "full", maxParticles: 26
+                }
+            ]
+        },
+        focus: {
+            duration: 24,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "focus_flash", bind: "source", height: 1.35,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    burst: { count: { data: "added", fallback: 2 }, interval: 3, repeats: 2 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0x7CD8E8, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 20
                 }
             ]
         },
@@ -58,12 +74,25 @@ const MiracleeyeDefinition: ParticleDefinition = {
                     color: 0xB07CE8, alpha: [0.5, 0], light: "full", maxParticles: 44
                 },
                 {
-                    name: "eye_spark", bind: "source", height: 1.35,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: 8 }, shape: { kind: "sphere_surface", radius: 0.2 },
-                    direction: "outward", speed: [0.03, 0.1],
-                    lifetime: [10, 18], size: [0.08, 0.01],
-                    color: 0xE0C8FF, alpha: [0.9, 0], light: "full", maxParticles: 20
+                    name: "self_reticle", bind: "source", height: 1.35,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: { data: "added", fallback: 2 } }, shape: { kind: "ring", radius: 0.24 },
+                    direction: "inward", speed: [0.04, 0.1],
+                    lifetime: [10, 16], size: [0.2, 0.08],
+                    color: 0x7CD8E8, alpha: [0.85, 0], light: "full", maxParticles: 24
+                }
+            ]
+        },
+        focus_hold: {
+            exit: { drain: 18 },
+            emitters: [
+                {
+                    name: "reticle", bind: "source", height: 1.4,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    rate: { data: "added", fallback: 4 }, shape: { kind: "ring", radius: 0.22 },
+                    direction: "inward", speed: [0.01, 0.04], spin: 5,
+                    lifetime: [10, 16], size: [0.1, 0.02], alphaMode: "sin",
+                    color: 0x7CD8E8, alpha: [0.4, 0], light: "full", maxParticles: 16
                 }
             ]
         },
@@ -77,6 +106,19 @@ const MiracleeyeDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.06], spin: 4,
                     lifetime: [12, 20], size: [0.12, 0.02], alphaMode: "sin",
                     color: 0xB07CE8, alpha: [0.34, 0], light: "full", maxParticles: 22
+                }
+            ]
+        },
+        focus_end: {
+            duration: 20,
+            emitters: [
+                {
+                    name: "reticle_loose", bind: "source", height: 1.4,
+                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
+                    burst: { count: 10 }, shape: { kind: "ring", radius: 0.22 },
+                    direction: "outward", speed: [0.02, 0.07],
+                    lifetime: [10, 16], size: [0.08, 0.01],
+                    color: 0x7CD8E8, alpha: [0.4, 0], light: "world", maxParticles: 18
                 }
             ]
         },

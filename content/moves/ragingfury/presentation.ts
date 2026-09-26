@@ -1,13 +1,13 @@
 /**
  * 大愤慨 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者喉头先聚起一团橙红的火，随后朝前猛地喷出一条贴地的火线；被烧到的人身上炸开火星，
- *   火线的尽头落下一片翻卷的余烬，一直冒着烟；冲完头顶转起眩晕的气流。
+ * 一句话：施法者喉头先聚起一团橙红的火，随后从嘴端朝前猛地推进一条狭长火舌；被烧到的人身上炸开火星，
+ *   火舌实际扫过的地面留下细短的余火，一直冒着烟；喷完头顶转起眩晕的气流。
  * 色相家族：橙红 0xE2531B 与亮黄 0xFFCF6A 为主，低饱和烟灰 0x6B5146 只做余烬与余韵；火与烟是一家色相。
- * 层次：聚火（tempo）→ 火线（charge）→ 命中火星（scorch）→ 落点余烬（ember）→ 余烬持续（smolder）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
- * 范围：charge 的 `line_fill` 绑 `path`、用 `polygon` 填出服务端与判定共用的那条火线走廊（data.path），
- *   画出的面就是会被烧到的范围；落点余烬用一个铺在地面的圆盘画出 `emberRadius`。
- * 运动：火线沿朝向喷出、火星向前翻卷；余烬贴着地面翻滚上升；冲势条沿 `data.direction` 指向。
+ * 层次：聚火（tempo）→ 火舌（charge）→ 命中火星（scorch）→ 触地余火（ember）→ 余火持续（smolder）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
+ * 范围：charge 的 `line_fill` 绑 `path`、用 `polygon` 填出服务端裁墙后的真实火束（data.path），画出的面就是会被烧到的范围；
+ *   余烬的地面圆盘半径读 `data.radius`（真实 emberRadius），与判定同源。
+ * 运动：火舌从嘴端沿 `data.direction` 推进、火星向前翻卷；余烬贴着地面翻滚上升。
  * 数：服务端把 `data.sparks`（火星数）、`data.intensity`（威力）与 `data.scale`（火线/余烬尺寸）交给发射器，数量和强度按机制走。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -96,7 +96,7 @@ const RagingFuryDefinition: ParticleDefinition = {
                 {
                     name: "ember_disc", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 40, shape: { kind: "circle", radius: 2.2 },
+                    rate: 40, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.05, 0.18], drag: 0.94,
                     lifetime: [14, 24], size: [0.16, 0.02],
                     color: 0xE2531B, alpha: [0.65, 0], light: "full", maxParticles: 140
@@ -104,7 +104,7 @@ const RagingFuryDefinition: ParticleDefinition = {
                 {
                     name: "ember_glow", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    burst: { count: 16, repeats: 3, interval: 8 }, shape: { kind: "circle", radius: 2.2 },
+                    burst: { count: 16, repeats: 3, interval: 8 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.06, 0.2], drag: 0.92,
                     lifetime: [12, 22], size: [0.5, 0.06], sizeMode: "sin",
                     color: 0xFFCF6A, alpha: [0.5, 0], light: "full", bloom: 0.25, maxParticles: 60
@@ -118,7 +118,7 @@ const RagingFuryDefinition: ParticleDefinition = {
                 {
                     name: "smolder_loop", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 14, shape: { kind: "circle", radius: 2.2 },
+                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.04, 0.14], drag: 0.94,
                     lifetime: [14, 24], size: [0.14, 0.02],
                     color: 0xE2531B, alpha: [0.5, 0], light: "full", maxParticles: 70
@@ -126,7 +126,7 @@ const RagingFuryDefinition: ParticleDefinition = {
                 {
                     name: "smolder_smoke", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 10, shape: { kind: "circle", radius: 2.2 },
+                    rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.02, 0.08], drag: 0.94,
                     lifetime: [16, 28], size: [0.16, 0.02],
                     color: 0x6B5146, alpha: [0.35, 0], light: "world", maxParticles: 50

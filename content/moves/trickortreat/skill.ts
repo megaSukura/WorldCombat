@@ -1,18 +1,23 @@
 /**
  * 万圣夜 / trickortreat 的出手方式。
  *
- * 核心念头：邀请对手参加万圣夜——**给它套上一件幽灵外壳**，追加幽灵属性。壳里它得到幽灵本系，一般与格斗
- *   打不上它，幽灵与恶反而效果绝佳；一件外套能套在本来不是幽灵、且临时属性层还放得下第三条的对手身上。
+ * 核心念头：邀请目标参加万圣夜——**给它套上一件幽灵外壳**，追加幽灵属性。壳里它得到幽灵本系，一般与格斗
+ *   打不上它，幽灵与恶反而效果绝佳；一件外套能套在本来不是幽灵、且临时属性层还放得下第三条的目标身上。
+ *   敌友皆可：给敌套壳是打开它的幽灵／恶弱点，给友套壳是替它挡下一般／格斗。
  *
  * 三幕：
  *   招呼（windup，提交前只观察与预告，可被打断，不花代价）。
  *   披壳（提交后）：把目标当前属性加一条 ghost 写进 NativeModifiers 的临时属性层，并挂世界效果
  *     world_combat:trick_shell（共享身份 world_combat:status/trickortreat）；记录层 world_combat:trick_record
- *     记下属性层实例、装饰量与外壳时长。属性和 STAB、受击相性、AI 与 ready 一起变化。
- *   脱壳（外壳到期或被解除）：解除属性层，属性随原生个体本身恢复；自然到期额外播一次剥落。
+ *     记下属性层实例、装饰量与外壳时长，并绑定持壳表现。属性和 STAB、受击相性、AI 与 ready 一起变化。
+ *   脱壳（外壳到期或被解除）：解除属性层，属性随原生个体本身恢复；自然到期额外播一次剥落。若属性层先被
+ *     单独解除（被别的驱散带走），记录层会立刻把外壳一起脱掉，画面不留一件空壳。
  *
  * 与识破同族：识破一族在对手身上「看穿并摘掉幽灵」，万圣夜反过来「把幽灵外壳套上去」——一摘一套，正好成对。
- * 反制：双属性目标套不上（预检直接拒绝，不浪费 20 发 PP）；识破／气味侦测能把壳的幽灵免疫再摘掉。
+ * 反制：已是幽灵、属性层已满、或属性被特性锁定的目标套不上（预检直接拒绝，不浪费 20 发 PP）；非宝可梦没有
+ *   属性，同样明确拒绝，不编造属性。识破／气味侦测能把壳的幽灵免疫再摘掉。
+ *
+ * 瞄准：kind:aim。敌我实体都可指定，空点不套壳（走 fizzle），照付同样的 PP 与冷却。
  */
 namespace PokemonSkills {
     function trickortreatAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.15, 0)); }
@@ -25,7 +30,26 @@ namespace PokemonSkills {
         });
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(trickortreatRecordEffect, "start", function () { });
+    // 持壳表现绑到记录层上；并每 20 刻核对属性层是否还带着 ghost，层被单独解除时立刻整件脱掉。
+    WorldCombat.effectHandler(trickortreatRecordEffect, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        const body = world.observe(target);
+        if (body !== null) WorldFeedback.onEffect(world, effect.id(), "hold", trickortreatScene, 1, body.position(),
+            { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(data.motes) / 2)) });
+        effect.schedule("watch", "watch", 20, "{}");
+    });
+    WorldCombat.effectHandler(trickortreatRecordEffect, "watch", function (effect) {
+        const world = effect.world(), target = effect.target();
+        if (!world.valid(target)) { effect.end(); return; }
+        const types = trickortreatTypes(world, target);
+        if (types.indexOf("ghost") < 0) {
+            const shell = MobEffects.read(world, target, trickortreatShellEffect);
+            if (shell !== null) world.removeMobEffect(target, trickortreatShellEffect, shell.key());
+            effect.end();
+            return;
+        }
+        effect.schedule("watch", "watch", 20, "{}");
+    });
     WorldCombat.effectHandler(trickortreatRecordEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     function trickortreatRecordOf(world: CombatWorld, target: CombatActor): any {
@@ -68,27 +92,13 @@ namespace PokemonSkills {
         world.sound("minecraft:entity.vex.ambient", body.position(), 12, "{}");
     });
 
-    // 存续期：每 20 刻续一圈目标身上的南瓜灯火花，数量沿用本招算出的装饰量。
-    WorldCombat.on("world_combat:move_trickortreat/hold", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== trickortreatShellEffect || event.world().tick() % 20 !== 0) return;
-        const world = event.world(), target = event.actor();
-        if (!world.valid(target) || MobEffects.read(world, target, trickortreatShellEffect) === null) return;
-        const record = trickortreatRecordOf(world, target);
-        if (record === null) return;
-        const body = world.observe(target);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_trickortreat/hold/" + String(target.ref()), trickortreatScene, 1, body.position(),
-            { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(record.motes) / 2)) }, 40);
-    });
-
     define({
         id: trickortreatId,
         cooldownParameter: "recharge",
         name: "万圣夜",
-        description: "邀请对手参加万圣夜：给它套上一件幽灵外壳、追加幽灵属性——一般与格斗打不上它，幽灵与恶反而效果绝佳，直到壳剥落。",
-        uses: ["给目标套成幽灵，打开它的幽灵／恶弱点", "封住一个靠一般或格斗输出的对手", "配合识破，把壳的幽灵免疫再摘掉"],
-        kind: "enemy",
+        description: "邀请目标参加万圣夜：给它套上一件幽灵外壳、追加幽灵属性——一般与格斗打不上它，幽灵与恶反而效果绝佳，直到壳剥落。敌友都能套。",
+        uses: ["给目标套成幽灵，打开它的幽灵／恶弱点", "给友方套壳，挡下一般与格斗的打击", "配合识破，把壳的幽灵免疫再摘掉"],
+        kind: "aim",
         range: 6,
         maxRange: 10,
         prepare: 7,
@@ -116,7 +126,8 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            if (target === null) return "";              // 空点：不套壳，execute 走 fizzle
+            if (!world.valid(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p(trickortreatId, "reach", action)) return "out-of-range";
@@ -134,7 +145,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const self = world.observe(actor);
             const origin = self === null ? action.origin() : self.position();
-            if (target === null || !world.valid(target) || world.friendly(target)) {
+            if (target === null || !world.valid(target)) {
                 WorldFeedback.emit(world, trickortreatScene, 1, action.targetPosition(), { moment: "fizzle" }, 16);
                 done(action);
                 return;
@@ -142,15 +153,16 @@ namespace PokemonSkills {
             const at = world.observe(target);
             const point = at === null ? action.targetPosition() : at.position();
             if (!world.clear(origin, point)) {
-                WorldFeedback.emit(world, trickortreatScene, 1, point, { moment: "blocked", target: String(target.ref()) }, 20);
+                WorldFeedback.emit(world, trickortreatScene, 1, point, { moment: "blocked", target: String(target.ref()), reason: "no-line" }, 20);
                 WorldFeedback.text(world, trickortreatAbove(point), trickortreatBlockedText, [], 26);
                 done(action);
                 return;
             }
             const refusal = trickortreatRefusal(world, target);
             if (refusal) {
-                WorldFeedback.emit(world, trickortreatScene, 1, point, { moment: "fizzle", target: String(target.ref()), reason: refusal }, 18);
-                WorldFeedback.text(world, trickortreatAbove(point), trickortreatNoRoomText, [], 28);
+                WorldFeedback.emit(world, trickortreatScene, 1, point, { moment: "blocked", target: String(target.ref()), reason: refusal }, 20);
+                WorldFeedback.text(world, trickortreatAbove(point),
+                    refusal === "no-room" || refusal === "already-ghost" ? trickortreatNoRoomText : trickortreatBlockedText, [], 28);
                 done(action);
                 return;
             }

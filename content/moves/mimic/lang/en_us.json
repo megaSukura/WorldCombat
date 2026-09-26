@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.mimic.summary": "Temporarily replace Mimic’s move slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves.",
-  "worldcombat.skill.mimic.use.0": "Borrow a foe's move",
+  "worldcombat.skill.mimic.summary": "Temporarily replace Mimic’s move slot with a target's or ally's recent move. Known non-Pokémon attacks are translated into corresponding moves, and the slot returns when the borrow ends.",
+  "worldcombat.skill.mimic.use.0": "Borrow a target's or ally's move",
   "worldcombat.skill.mimic.use.1": "Throw a foe's set-up back at it",
   "worldcombat.skill.mimic.use.2": "Punish a heavy attack just used",
-  "worldcombat.skill.mimic.description.0": "The line reaches a visible foe within %1$s blocks; reading takes %2$s s.",
+  "worldcombat.skill.mimic.description.0": "The line reaches a visible demonstrator within %1$s blocks (enemy or ally); reading takes %2$s s.",
   "worldcombat.skill.mimic.description.1": "Only moves used within the last %1$s s are remembered; the borrowed move stays on the user for %2$s s, then returns.",
   "worldcombat.skill.mimic.description.2": "Stance is %1$s.",
   "worldcombat.skill.mimic.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
@@ -21,8 +21,9 @@
   "worldcombat.skill.mimic.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of sending the line. Larger values borrow from further away.",
   "worldcombat.skill.mimic.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.mimic.preference.ai.leaveStation.help": "When on, the user may leave its post to mimic; when off, it only casts at what it can reach from where it stands.",
-  "world_combat.move.mimic.text.copy": "Learned %1$s",
+  "world_combat.move.mimic.text.copy": "Borrowed %1$s (%2$s s)",
   "world_combat.move.mimic.text.empty": "Nothing to borrow",
+  "world_combat.move.mimic.text.noprovider": "No demonstrator to borrow from",
   "world_combat.move.mimic.text.snap": "The line was cut",
   "worldcombat.skill.mimic.world": "A known native attack successfully used by a non-Pokémon within %1$s is translated into an existing move, borrowed for %2$s: ordinary melee→Tackle, sting→Poison Sting, ram→Headbutt, mace→Slam, arrow→Fury Attack, trident→Horn Attack, fireball→Ember, sonic boom→Sonic Boom, indirect magic→Psybeam. Unlisted attacks cannot be copied."
 }

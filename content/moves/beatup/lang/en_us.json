@@ -5,7 +5,7 @@
   "worldcombat.skill.beatup.use.2": "Use numbers to chip a single bulky target",
   "worldcombat.skill.beatup.description.0": "Each shade deals about %1$s physical damage (the leader's blow); every ally scales its own blow by its Attack relative to the leader, from 0.45x up to 1.8x.",
   "worldcombat.skill.beatup.description.1": "Calls living, visible friendly allies within %1$s blocks to pile in, up to %2$s members in total (including yourself), one blow every %3$s.",
-  "worldcombat.skill.beatup.description.2": "Command wind-up %1$s s; shades rush the target at %2$s blocks per tick and their blow settles on arrival - no accuracy roll and no cover check.",
+  "worldcombat.skill.beatup.description.2": "Command wind-up %1$s s; each ally launches a straight shade from its own position toward the locked point at %2$s blocks per tick, and the blow only settles on the first non-allied body it touches - walls block it and a target that moves away is missed.",
   "worldcombat.skill.beatup.widen.on": "Swarm style: rally radius ×1.3, each blow ×0.82 — more allies join, each lighter.",
   "worldcombat.skill.beatup.widen.off": "Elite style: rally radius ×0.7, each blow ×1.2 — only close strong allies join, fewer but heavier blows.",
   "worldcombat.skill.beatup.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
@@ -34,5 +34,5 @@
   "worldcombat.skill.beatup.preference.ai.leaveStation.help": "When on, it calls the pack even under a hold order; off keeps it only when convenient in place.",
   "world_combat.move.beatup.text.muster": "Beat up · %1$s allies rush in",
   "world_combat.move.beatup.text.hit": "Hit %1$s",
-  "worldcombat.skill.beatup.description.flow": "Every shade rushes the same target; if the target falls or leaves the remaining blows stop, and an ally that goes down or is removed before its turn is skipped."
+  "worldcombat.skill.beatup.description.flow": "Every shade flies at the same locked point (the target's centre or the chosen world point at commit) and can be aimed at empty ground; a target that falls, moves or hides behind a wall makes that blow miss, and an ally that goes down or is removed before its turn is skipped."
 }

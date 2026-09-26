@@ -6,7 +6,7 @@
   "worldcombat.skill.teeterdance.description.0": "Centred on the user, the rhythm reaches a radius of %1$s blocks; every living thing inside except the user is dazed for %2$s, staggered a step every 12 ticks and likely to fumble an action.",
   "worldcombat.skill.teeterdance.careful.on": "Considerate: friendlies inside are spared, at the cost of radius x0.8, duration x0.8, wind-up +2 ticks and cooldown x1.1.",
   "worldcombat.skill.teeterdance.careful.off": "All-out: everyone inside except the user sways, allies included; wider, longer and cheaper.",
-  "worldcombat.skill.teeterdance.description.1": "Each stagger is about %1$s blocks and each action attempted has about %1$s x0.9 chance to be wasted.",
+  "worldcombat.skill.teeterdance.description.1": "Every 12 ticks a stagger attempts about %1$s blocks (actual movement is limited by collision and resistance; no trail is drawn when nothing moves); each attempted action has about %1$s x0.9 chance to be wasted.",
   "worldcombat.skill.teeterdance.description.2": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s. The wind-up can be interrupted at no cost.",
   "worldcombat.skill.teeterdance.timing": "The dance reaches %1$s blocks; wind-up %2$s s, recovery %3$s s, %4$s PP and cooldown %5$s s from commit.",
   "worldcombat.skill.teeterdance.value.danceRadius": "Dance radius",

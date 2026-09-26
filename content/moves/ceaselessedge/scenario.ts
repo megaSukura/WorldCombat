@@ -22,7 +22,7 @@ Smoke.scenario("ceaselessedge", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("ceaselessedge", caster) >= 1, "the caster committed ceaselessedge");
             stage.expect(stage.damageTo(foe) > 0, "the slash or the planted shell shards cut the foe");
-            stage.note("crit and the exact splinter cell are random; the sleeping foe stays on the patch so it should keep being cut", {
+            stage.note("crit and the exact splinter cell are random; the sleeping foe is standing where the patch lands, so its first entry into the shards cuts it once (staying does not repeatedly re-cut)", {
                 casts: stage.casts("ceaselessedge", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

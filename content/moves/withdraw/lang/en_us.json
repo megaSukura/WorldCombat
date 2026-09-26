@@ -15,7 +15,6 @@
   "worldcombat.skill.withdraw.value.blocks": "Blocks",
   "worldcombat.skill.withdraw.value.window": "Shell duration",
   "worldcombat.skill.withdraw.value.shell": "Shell radius",
-  "worldcombat.skill.withdraw.value.plates": "Shell plates",
   "worldcombat.skill.withdraw.value.tempo": "Telegraph",
   "worldcombat.skill.withdraw.value.aftercast": "Recovery",
   "worldcombat.skill.withdraw.value.wait": "Cooldown",
@@ -29,5 +28,5 @@
   "world_combat.move.withdraw.text.block": "Shell blocked a hit (%1$s left)",
   "world_combat.move.withdraw.text.open": "Shell opened",
   "effect.world_combat.withdraw_shell": "Shell",
-  "worldcombat.skill.withdraw.description.shell": "The shell only stops attacks from enemies, not self-inflicted or environmental damage; when its hits run out or its time ends the shell cracks open and the Defence it raised is taken back."
+  "worldcombat.skill.withdraw.description.shell": "The shell only stops attacks from enemies, not self-inflicted or environmental damage; it shows the blocks left as one large shell petal each, and when the hits run out or the time ends the shell opens at once, releasing this cast's root and the Defence it raised."
 }

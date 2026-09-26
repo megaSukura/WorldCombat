@@ -30,5 +30,7 @@
   "world_combat.move.spiritshackle.text.pin": "Shadow pinned for %1$s s",
   "world_combat.move.spiritshackle.text.release": "The shadow comes loose",
   "world_combat.move.spiritshackle.text.snap": "The thread snaps",
+  "world_combat.move.spiritshackle.text.noanchor": "No shadow to stitch underfoot",
+  "world_combat.move.spiritshackle.text.blocked": "The shadow cannot be stitched",
   "effect.world_combat.spiritshackle_pinned": "Shadow stitched"
 }

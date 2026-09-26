@@ -16,6 +16,7 @@ Smoke.scenario("healpulse", function (stage) {
     var caster = stage.pokemon({ species: "chansey", level: 32, moves: ["healpulse"], at: [0, 0, 0] });
     var ally = stage.pokemon({ species: "pikachu", level: 30, moves: [], at: [4, 0, 0] });
     stage.team("pulse", [caster, ally]);
+    stage.noai(ally);
 
     var injuredAt = 0;
     stage.after(8, function () {

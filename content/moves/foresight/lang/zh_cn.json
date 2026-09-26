@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.foresight.summary": "用一眼把对手看穿：在它身上留下识破印记，剥掉它当下的闪避并把它照亮；印记里幽灵的虚体被看实，一般与格斗打得上。",
+  "worldcombat.skill.foresight.summary": "用一眼把对手看穿：在它身上留下识破印记，剥掉它当下的闪避并把它照亮；印记里幽灵的虚体被看实，一般与格斗打得上，看实的那一拍会在它身上炸出实影闪。",
   "worldcombat.skill.foresight.use.0": "在打幽灵前先破掉它的免疫",
   "worldcombat.skill.foresight.use.1": "把躲躲闪闪的目标敲定下来",
   "worldcombat.skill.foresight.use.2": "替队友的一般或格斗招铺路",
@@ -7,7 +7,7 @@
   "worldcombat.skill.foresight.description.1": "印记里目标被照亮 %1$s，隔着掩体也看得见。",
   "worldcombat.skill.foresight.deep.on": "深识：起手 %1$s、冷却 %2$s，换更长的窗口与更久的照亮。",
   "worldcombat.skill.foresight.deep.off": "快识：窗口短、起手快、冷却短，适合频繁地破免疫。",
-  "worldcombat.skill.foresight.description.2": "识破距离 %1$s 格，起手 %2$s，收招 %3$s；视线被挡、目标已被识破或已有奇迹之眼时放不出。",
+  "worldcombat.skill.foresight.description.2": "识破距离 %1$s 格，起手 %2$s，收招 %3$s；视线被挡或目标已被识破时放不出。",
   "worldcombat.skill.foresight.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.foresight.value.window": "识破窗口",
   "worldcombat.skill.foresight.value.reveal": "照亮时长",
@@ -28,5 +28,5 @@
   "world_combat.move.foresight.text.blocked": "视线被挡，看不穿",
   "world_combat.move.foresight.text.empty": "没有可识破的对象",
   "effect.world_combat.foresight_mark": "被识破",
-  "worldcombat.skill.foresight.description.release": "窗口走完或印记被清除时，剥掉的闪避原样还回，印记褪去。"
+  "worldcombat.skill.foresight.description.release": "窗口走完或印记被清除时，剥掉的闪避原样还回，印记褪去；再次识破会先把上一份闪避还回，不在同一份上反复扣还。"
 }

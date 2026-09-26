@@ -9,7 +9,7 @@
   "worldcombat.skill.throatchop.description.2": "突刺距离 %1$s 格、判定半径 %2$s 格；起手 %3$s 秒、收招 %4$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.throatchop.choke.on": "锁喉：封声时长 ×1.25，代价是威力 ×0.9、起手多 2 刻、冷却多 6 刻。",
   "worldcombat.skill.throatchop.choke.off": "割喉：出手更快、威力 ×1.15，代价是封声只有 ×0.75。",
-  "worldcombat.skill.throatchop.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.throatchop.timing": "朝瞄准方向或 %1$s 格内的目标递出短刺，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.throatchop.growth.0": "达到 %1$s 级，威力提升至 %2$s、封声延长至 %3$s。",
   "worldcombat.skill.throatchop.value.chop": "威力",
   "worldcombat.skill.throatchop.value.silenceTicks": "封声时长",

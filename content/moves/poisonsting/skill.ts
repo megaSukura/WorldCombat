@@ -6,9 +6,10 @@
  *
  * 三幕：
  *   起（windup，提交前）：举针、针尖挂着毒滴的预告（`action.present`，可被打断、不花 PP）。
- *   飞（fly）：提交后射出一枚细针投射物，带有限追踪，拖一条毒绿灯尾。
- *   扎（stick → seep）：命中目标的瞬间只结算 `tip` 物理伤害并把针留在身上；隔 `seep` 之后毒才在伤口里发作，
- *       按 `poisonChance` 施加共享中毒身份。命中墙或无人只播落空。
+ *   飞（fly）：提交后射出一枚细针投射物，带有限追踪（只有真的有实体目标时才追），拖一条毒绿灯尾；可对空、对墙射。
+ *   扎（stick → seep）：命中实体且**真的造成伤害**，才在这名受击者身上留一个短命托管效果，隔 `seep` 之后
+ *       毒才在伤口里发作，按 `poisonChance` 施加共享中毒身份；飞针动作当场结束，不等渗毒。
+ *       被拒绝伤害／免疫、命中墙或无人：只在真实接触点插针碎落，不创建有效毒针。
  *
  * 与同族分开：毒击是站定出臂的近身重刺、双针是一记两根、臂贝武器是重炮；只有毒针是**一发一发往外甩的便宜细针**，
  *   反制方式是走位甩开飞行中的针。
@@ -17,14 +18,56 @@ namespace PokemonSkills {
     const poisonstingScene = "world_combat:move_poisonsting";
     const poisonstingVenomText = "world_combat.move.poisonsting.text.venom";
     const poisonstingWhiffText = "world_combat.move.poisonsting.text.whiff";
+    /** 中针后留在受击者身上的短命托管效果：到 `seep` 那一刻判定毒；被提前清除就不结算。 */
+    const poisonstingSeepMark = "world_combat:move_poisonsting/seep";
+
+    /**
+     * 托管渗毒：针真的扎出伤害后才创建，挂在受击者身上。它自己安排一次 `seep` 到时，
+     * 表现与它同生共死；被 `world_combat:dispel` 提前清掉时不施加毒。
+     */
+    function poisonstingSeepStart(effect: CombatEffect): void {
+        const world = effect.world();
+        const state = JSON.parse(effect.state());
+        const victim = world.actor(String(state.ref));
+        if (victim === null || !world.valid(victim)) { effect.end(); return; }
+        const body = world.observe(victim);
+        if (body === null) { effect.end(); return; }
+        // 本载体就是本 source 创建的托管效果，presentOn 随它自然或提前结束一起清理。
+        WorldFeedback.onEffect(world, effect.id(), "embed", poisonstingScene, 1, body.position(),
+            { moment: "embed", target: String(state.ref), needles: state.needles, scale: state.scale, intensity: state.intensity });
+        effect.schedule("seep", "seep", Math.max(1, Math.round(Number(state.seep))), "{}");
+    }
+    function poisonstingSeepTick(effect: CombatEffect): void {
+        const world = effect.world();
+        const state = JSON.parse(effect.state());
+        const victim = world.actor(String(state.ref));
+        if (victim === null || !world.valid(victim)) { effect.end(); return; }
+        const body = world.observe(victim);
+        if (body === null) { effect.end(); return; }
+        const poisoned = world.random() < Number(state.chance)
+            && CombatStatus.inflict(world, victim, "poison", Math.max(40, Math.round(Number(state.venomTicks))), 0, { secondary: true });
+        WorldFeedback.emit(world, poisonstingScene, 1, body.position(),
+            { moment: "seep", target: String(state.ref), needles: state.needles, scale: state.scale, intensity: state.intensity }, 22);
+        if (poisoned) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.0, 0)), poisonstingVenomText, [], 22);
+        if (poisoned) world.sound("cobblemon:impact.poison", body.position(), 14, "{}");
+        effect.end();
+    }
+    WorldCombat.effect(poisonstingSeepMark, 1, 200, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object" || typeof value.ref !== "string") throw new Error("Invalid poison sting seep state");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(poisonstingSeepMark, "start", poisonstingSeepStart);
+    WorldCombat.effectHandler(poisonstingSeepMark, "seep", poisonstingSeepTick);
+    WorldCombat.effectHandler(poisonstingSeepMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
         id: "poisonsting",
         cooldownParameter: "recharge",
         name: "Poison Sting",
-        description: "甩出一发廉价的远程细针，伤害极低但射程远、出手快、冷却短。针扎进身体后毒在伤口里慢慢渗开，按概率让目标中毒。倒钩针更容易留住毒，代价是飞得慢、打得更轻。",
+        description: "甩出一发廉价的远程细针，伤害极低但射程远、出手快、冷却短。可以朝任意方向、方块或目标射出；针真的扎出伤害后毒才在伤口里慢慢渗开，按概率让目标中毒。倒钩针更容易留住毒，代价是飞得慢、打得更轻。",
         uses: ["远距离反复点射", "给远处目标慢慢挂上毒", "在冷却缝隙里补一发小伤害"],
-        kind: "enemy",
+        kind: "aim",
         range: 11,
         maxRange: 15,
         prepare: 6,
@@ -69,8 +112,9 @@ namespace PokemonSkills {
             const scale = Math.max(0.5, Math.min(1.8, radius / 0.14));
             const intensity = Math.max(0.6, Math.min(1.8, power / 15));
             const appearance: any = { sprite: "cobblemon:particle/generic/spike", tint: 0x9BE86B, glow: true, scale: Math.max(0.8, radius / 0.14) };
+            // 只有真的有实体目标时才有限追踪；对空/对点直飞。
             if (target !== null && world.valid(target)) appearance.homing = { target: String(target.ref()), turn: 16, range: action.range() };
-            let settled = false, stuck = false, stuckRef = "";
+            let settled = false, resolved = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
@@ -81,32 +125,37 @@ namespace PokemonSkills {
                     const scope = current.world();
                     const victim = hit.target();
                     const point = hit.position();
+                    if (victim === null || !scope.valid(victim)) {
+                        // 普通碰墙（或首碰不是活体）：只在真实接触点插针碎落。
+                        resolved = true;
+                        WorldFeedback.emit(scope, poisonstingScene, 1, point,
+                            { moment: "whiff", needles: needles, scale: scale }, 16);
+                        return;
+                    }
+                    const dealt = impact(current, hit, "poisonsting", power, { damage: damageSpec("poisonsting", "tip") });
+                    if (!dealt) {
+                        // 免伤／拒绝伤害：不插有效毒针。
+                        resolved = true;
+                        WorldFeedback.emit(scope, poisonstingScene, 1, point,
+                            { moment: "whiff", needles: needles, scale: scale }, 16);
+                        return;
+                    }
                     WorldFeedback.emit(scope, poisonstingScene, 1, point,
-                        { moment: "stick", target: victim === null ? "" : String(victim.ref()), needles: needles,
+                        { moment: "stick", target: String(victim.ref()), needles: needles,
                             projectile: flight, scale: scale, intensity: intensity }, 18);
-                    if (victim === null || !scope.valid(victim)) return;
-                    impact(current, hit, "poisonsting", power, { damage: damageSpec("poisonsting", "tip") });
-                    stuck = true; stuckRef = String(victim.ref());
-                    current.after(seep, function (inner: CombatAction) {
-                        const body = inner.world();
-                        const wounded = body.actor(stuckRef);
-                        if (wounded === null || !body.valid(wounded)) { finish(inner); return; }
-                        const poisoned = body.random() < chance && CombatStatus.inflict(body, wounded, "poison", venomTicks, 0, { secondary: true });
-                        const at = body.observe(wounded);
-                        if (at !== null) {
-                            WorldFeedback.emit(body, poisonstingScene, 1, at.position(),
-                                { moment: "seep", target: stuckRef, needles: needles, scale: scale, intensity: intensity }, 22);
-                            if (poisoned) WorldFeedback.text(body, at.position().plus(WorldCombat.point(0, 1.0, 0)), poisonstingVenomText, [], 22);
-                        }
-                        if (poisoned) body.sound("cobblemon:impact.poison", at === null ? inner.origin() : at.position(), 14, "{}");
-                        finish(inner);
-                    });
+                    resolved = true;
+                    // 真的扎出伤害才留毒；由这个短命托管效果到 `seep` 时判定，动作不等待渗毒。
+                    scope.effect(poisonstingSeepMark, victim, JSON.stringify({
+                        ref: String(victim.ref()), chance: chance, venomTicks: venomTicks, seep: seep,
+                        needles: needles, scale: scale, intensity: intensity
+                    }), seep + 40);
                 }
             }, function (current: CombatAction) {
-                if (stuck) return;
-                WorldFeedback.emit(current.world(), poisonstingScene, 1, current.targetPosition(),
-                    { moment: "whiff", needles: needles, scale: scale }, 16);
-                WorldFeedback.text(current.world(), current.targetPosition().plus(WorldCombat.point(0, 0.4, 0)), poisonstingWhiffText, [], 18);
+                if (!resolved) {
+                    WorldFeedback.emit(current.world(), poisonstingScene, 1, current.targetPosition(),
+                        { moment: "whiff", needles: needles, scale: scale }, 16);
+                    WorldFeedback.text(current.world(), current.targetPosition().plus(WorldCombat.point(0, 0.4, 0)), poisonstingWhiffText, [], 18);
+                }
                 finish(current);
             });
             WorldFeedback.emit(world, poisonstingScene, 1, action.origin(),

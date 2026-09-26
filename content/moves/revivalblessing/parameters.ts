@@ -1,25 +1,4 @@
-/**
- * 复生祈祷 / revivalblessing —— 参数、数值来源与共享身份。
- *
- * 原生事实（Cobblemon 1.8 / Showdown）：Normal／变化／威力 —／命中 —／PP 1／noPPBoosts／heal／target self；
- *   说明是「通过以慈爱之心祈祷，让陷入昏厥的后备宝可梦以回复一半HP的状态复活」。
- *
- * 世界化翻译：祈祷**会真正复苏自己队伍里昏厥的伙伴**——为最近倒下的同阵营伙伴在倒下处立起光柱，若队伍里有
- *   同队昏厥者则按本招的复活比例恢复它的真实生命，并给自己与身边的伙伴挂上慈爱祝福；野生或无后备时，祈祷只落在
- *   倒下位置。倒下记录由 `world_combat:damage_applied` 里 `after <= 0` 的死亡事件收集（同伴关系用队伍／主人判定）。
- *
- * 数据分散：
- *   prayerRange   祈祷能触及多远 = 等级 ＋ 配置；它也是本招的实际射程；
- *   beaconTicks   光柱停留多久 = 等级 ＋ 配置；
- *   blessTicks    慈爱祝福时长 = 亲密度 ＋ 配置；
- *   beams         光柱里升起的光束数 = 等级；
- *   motes         落下光点 = 特防（沉静的守护）；
- *   tempo／aftercast／recharge = 速度／等级／配置。
- *
- * 配置 vigil（守夜祷告）：开启＝祈祷范围 ×1.25、光柱 ×1.35、祝福 ×1.2，代价是起手 +4、冷却 +40；
- *   关闭（简短祈祷）＝范围 ×0.85、光柱 ×0.8、祝福 ×0.9，起手与冷却更省。两向各有局面：久守 vs 快祷。
- * 无伤害段：这是祈祷＋加状态的 Status 招。
- */
+/** Native half-health revival; nearby death-site reach only controls the optional beacon. */
 namespace PokemonSkills {
     export const revivalblessingId = "revivalblessing";
     export const revivalblessingScene = "world_combat:move_revivalblessing";
@@ -29,7 +8,7 @@ namespace PokemonSkills {
     export const revivalblessingNoneText = "world_combat.move.revivalblessing.text.none";
     export const revivalblessingAnointText = "world_combat.move.revivalblessing.text.anoint";
     export const revivalblessingReviveText = "world_combat.move.revivalblessing.text.revive";
-    /** 倒下记录的可祈祷窗口（协议常量）：超过这么久就不再回应祈祷。 */
+    /** 倒下记录的可祈祷窗口（协议常量）：超过这个时间只按真实队伍顺序选择，不再为旧倒下地点立光柱。 */
     export var revivalblessingWindow = 1600;
 
     actionParameters.define(revivalblessingId, {
@@ -42,7 +21,7 @@ namespace PokemonSkills {
                 .clamp(4, 14).round(2),
             "祈祷范围", {
                 unit: " 格",
-                description: "祈祷能触及多远：这个范围内有同阵营的伙伴倒下过，才立得起光柱。它也是本招的实际射程。"
+                description: "祈祷能触及多远：这个范围内有对应伙伴的倒下记录时，成功复苏会在那里立起光柱。队伍复苏不受距离限制。"
             }),
         /** 光柱停留：120 +（等级 − 30）×1.5 [−20,45]；守夜 ×1.35／简短 ×0.8；夹 80..320。 */
         beaconTicks: seconds(
@@ -50,12 +29,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("vigil", text("worldcombat.skill.revivalblessing.preference.vigil")), F.const(1.35), F.const(0.8)))
                 .clamp(80, 320).round(0),
             "光柱停留", "祈祷光柱在原地立多久；等级越高、守夜祷告时留得越久。"),
-        /** 慈爱祝福：100 + 亲密度 ÷ 3；守夜 ×1.2／简短 ×0.9；夹 80..240。 */
-        blessTicks: seconds(
-            F.base(100).plus(F.individual("friendship").div(3))
-                .times(F.when(F.pref("vigil", text("worldcombat.skill.revivalblessing.preference.vigil")), F.const(1.2), F.const(0.9)))
-                .clamp(80, 240).round(0),
-            "慈爱祝福", "施法者与身边伙伴身上「复生祝福」身份的时长；亲密度越高留得越久。"),
         /** 光束数：6 +（等级 − 30）×0.2 [−2,6]；夹 4..14。 */
         beams: formula(
             F.base(6).plus(F.level().minus(30).times(0.2).clamp(-2, 6)).clamp(4, 14).round(0),

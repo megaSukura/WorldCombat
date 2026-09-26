@@ -1,14 +1,16 @@
 /**
  * 水之誓约 / waterpledge 的出手方式与场地规则。
  *
- * 核心念头：一纸水之誓约被按进地里，水柱从选定点涌地而起，浇透柱内的敌人、把他们推开顶起并拖慢；
- *   柱脚留下一汪浸水的誓约印，站上去的人一直被泡着。若落点附近已有火或草的誓约印，两纸誓约彼此应答：
- *   这一击更重，周围挂起彩虹（水＋火）或塌成湿地（水＋草）——组合产物取决于另一元素，与原生一致。
+ * 核心念头：一纸水之誓约被按进地里，水柱从选定点涌地而起，浇透柱内的敌人、把他们沿水势推开顶起；
+ *   柱脚只留下一圈短寿的誓约印——它是「这里立过水之誓约」的标记，本身不再拖慢。若落点附近已有火或草的
+ *   誓约印，两纸誓约彼此应答：这一击更重，并把脚下**同一圈印**当场挂起彩虹（水＋火，持续为友方回复）
+ *   或塌成湿地（水＋草，持续陷住／拖慢）——持续效果只在真正共鸣时才出现，组合产物取决于另一元素，与原生一致。
+ *   湿地的控制走可被原生拒绝的尝试，拒绝过的对象不再每次扫描重挂 rooted。
  *
  * 三幕：
  *   起（windup，提交前）：落点浮出一圈水纹符文，只播预告（可免费打断）。
- *   击（erupt → hit）：提交后水柱涌起，柱内每个敌人挨一次 `pillar`、被浇湿拖慢、被推开顶起；柱脚浸出水渍。
- *   留（scar / rainbow / wetland）：誓约印持续拖慢；若与另一誓约共鸣，则换成更广的组合场。
+ *   击（erupt → hit）：提交后水柱涌起，柱内每个敌人挨一次 `pillar`、被推开顶起；柱脚浸出一圈短印。
+ *   留（scar → rainbow / wetland）：短印只是共鸣标记；与另一誓约共鸣时，同一印记换成组合场。
  */
 namespace PokemonSkills {
     function waterpledgePoint(field: WorldEffects.Field): CombatPoint {
@@ -32,85 +34,52 @@ namespace PokemonSkills {
         return best;
     }
 
+    /** 附近已有任何组合场就不再叠一层；组合是这一击的收束，不是堆叠物。 */
     function waterpledgeComboExists(world: CombatWorld, point: CombatPoint, radius: number): boolean {
-        const actors = world.query(point, radius, false);
-        const list: CombatActor[] = [world.source()];
-        for (let i = 0; i < actors.length; i++) list.push(actors[i]);
-        for (let a = 0; a < list.length; a++) {
-            const fields = world.effects(list[a], "world_combat:field");
-            for (let f = 0; f < fields.length; f++) {
-                const state = JSON.parse(String(fields[f].data()));
-                if (!state.combo) continue;
-                const centre = WorldCombat.point(state.position[0], state.position[1], state.position[2]);
-                if (centre.minus(point).length() <= radius + (Number(state.radius) || 0)) return true;
-            }
+        const areas = WorldEffects.areas(world);
+        for (let i = 0; i < areas.length; i++) {
+            if (!areas[i].data || !areas[i].data.combo) continue;
+            if (waterpledgeAreaPoint(areas[i]).minus(point).length() <= radius + areas[i].radius) return true;
         }
         return false;
     }
 
-    /** 柱脚把自然地表浸成湿石；只动表层可换方块，租借 `linger`，到期原方块回来。 */
-    function waterpledgeGround(world: CombatWorld, point: CombatPoint, radius: number, ticks: number, cap: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        const limit = Math.max(4, Math.round(cap)), r = Math.ceil(radius);
-        for (let dx = -r; dx <= r && cells.length < limit; dx++) for (let dz = -r; dz <= r && cells.length < limit; dz++) {
-            if (dx * dx + dz * dz > radius * radius) continue;
-            const x = baseX + dx, z = baseZ + dz;
-            for (let dy = 1; dy >= -2; dy--) {
-                const y = baseY + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const key = x + "," + y + "," + z;
-                if (!seen[key] && id !== "minecraft:prismarine") { seen[key] = true; cells.push({ x: x, y: y, z: z, block: "minecraft:prismarine" }); }
-                break;
-            }
+    /** 一次可被原生拒绝的控制尝试：rooted 没落地就记进 refused，之后不再重复挂；拖慢照常。 */
+    function waterpledgeRoot(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, rootTicks: number, slowTicks: number): boolean {
+        const refused = field.data.refused || (field.data.refused = {});
+        const ref = String(actor.ref());
+        let rooted = false;
+        if (!refused[ref]) {
+            const id = WorldEffects.apply(world, actor, "rooted", {}, rootTicks);
+            rooted = id > 0 && world.effects(actor, "world_combat:rooted").length > 0;
+            if (!rooted) refused[ref] = 1;
         }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
+        MobEffects.apply(world, actor, "minecraft:slowness", slowTicks, 1);
+        return rooted;
     }
 
-    // 誓约印：站在上面的非友方持续被泡着拖慢。
+    // 誓约印：立誓的标记，本身不拖慢；只有水＋火共鸣的彩虹持续为友方回复、水＋草共鸣的湿地持续陷住／拖慢。
     WorldEffects.fieldRule(waterpledgeScar, {
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            MobEffects.apply(world, actor, "minecraft:slowness", 40, 0);
-        },
-        scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_waterpledge/scar/" + effect.id(), waterpledgeScene, 1, waterpledgePoint(field),
-                { moment: "scar", radius: field.radius, scale: field.radius / 1.6, count: Math.round(8 + field.radius * 6) }, 20);
-        }
-    });
-
-    // 彩虹：水＋火共鸣后的祝福地；友方持续回复。
-    WorldEffects.fieldRule(waterpledgeRainbow, {
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (!world.friendly(actor)) return;
-            MobEffects.apply(world, actor, "minecraft:regeneration", 100, 0);
-        },
-        scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_waterpledge/rainbow/" + effect.id(), waterpledgeScene, 1, waterpledgePoint(field),
-                { moment: "rainbow", radius: field.radius, scale: field.radius / 1.6, count: Math.round(16 + field.radius * 8) }, 20);
-        }
-    });
-
-    // 湿地：水＋草共鸣后的广域泥沼；非友方踩进来被陷住，站在里面持续被拖慢。
-    WorldEffects.fieldRule(waterpledgeWetland, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            WorldEffects.apply(world, actor, "rooted", {}, 30);
-            MobEffects.apply(world, actor, "minecraft:slowness", 80, 2);
+            if (field.data.combo !== "wetland" || world.friendly(actor)) return;
+            waterpledgeRoot(world, actor, field, Math.max(16, Math.round(Number(field.data.root) || 30)), Math.max(40, Math.round(Number(field.data.slow) || 60)));
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            MobEffects.apply(world, actor, "minecraft:slowness", 60, 2);
+            const combo = field.data.combo;
+            if (combo === "rainbow") {
+                if (!world.friendly(actor)) return;
+                MobEffects.apply(world, actor, "minecraft:regeneration", 100, 0);
+            } else if (combo === "wetland") {
+                if (world.friendly(actor)) return;
+                MobEffects.apply(world, actor, "minecraft:slowness", Math.max(40, Math.round(Number(field.data.slow) || 60)), 1);
+            }
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_waterpledge/wetland/" + effect.id(), waterpledgeScene, 1, waterpledgePoint(field),
-                { moment: "wetland", radius: field.radius, scale: field.radius / 1.6, count: Math.round(18 + field.radius * 9) }, 20);
+            const combo = field.data.combo;
+            const moment = combo === "rainbow" ? "rainbow" : combo === "wetland" ? "wetland" : "scar";
+            WorldFeedback.onEffect(world, effect.id(), "world_combat:move_waterpledge/pledge", waterpledgeScene, 1, waterpledgePoint(field),
+                { moment: moment, radius: field.radius, scale: field.radius / 1.6,
+                    count: Math.round(Number(field.data.marks) || 10) + (combo ? Math.round(field.radius * 6) : 0) });
         }
     });
 
@@ -118,8 +87,8 @@ namespace PokemonSkills {
         id: waterpledgeId,
         cooldownParameter: "recharge",
         name: "水之誓约",
-        description: "在选定地面立起一纸水之誓约：水柱涌地而起，把柱内敌人推开顶起并拖慢，柱脚留下一汪浸水的誓约印。落点附近已有火或草的誓约印时共鸣——这一击更重，落点处变成彩虹（水＋火，持续为友方回复）或湿地（水＋草，踩进去会被陷住并重度拖慢）。",
-        uses: ["在远处地面立起水柱并推开敌人", "用一汪浸水的誓约印泡住一块地", "与火／草誓约连成彩虹或湿地"],
+        description: "在选定地面立起一纸水之誓约：水柱涌地而起，把柱内敌人推开顶起，柱脚留下一圈短寿的誓约印（只作共鸣标记，本身不拖慢）。落点附近已有火或草的誓约印时共鸣——这一击更重，同一圈印当场挂起彩虹（水＋火，持续为站入的友方回复）或塌成湿地（水＋草，踩进去会被陷住并重度拖慢；对控制免疫的目标只留拖慢）。",
+        uses: ["在远处地面立起水柱并推开敌人", "用一圈短印标出可共鸣的地面", "与火／草誓约连成彩虹或湿地"],
         kind: "point",
         range: 9,
         maxRange: 16,
@@ -155,7 +124,6 @@ namespace PokemonSkills {
             const radius = Math.max(1.1, p(waterpledgeId, "pillarRadius", action));
             const height = Math.max(2.4, p(waterpledgeId, "pillarHeight", action));
             const power = p(waterpledgeId, "pillar", action);
-            const slow = Math.max(40, Math.round(p(waterpledgeId, "slowTicks", action)));
             const push = p(waterpledgeId, "push", action);
             const lift = p(waterpledgeId, "lift", action);
             const markRadius = Math.max(1.0, p(waterpledgeId, "markRadius", action));
@@ -163,8 +131,9 @@ namespace PokemonSkills {
             const detect = p(waterpledgeId, "comboDetect", action);
             const comboScale = p(waterpledgeId, "comboScale", action);
             const comboPower = p(waterpledgeId, "comboPower", action);
+            const slow = Math.max(40, Math.round(p(waterpledgeId, "slowTicks", action)));
             const burst = Math.round(p(waterpledgeId, "burst", action));
-            const cells = Math.round(p(waterpledgeId, "scarCells", action));
+            const marks = Math.round(p(waterpledgeId, "scarCells", action));
             const cap = Math.max(1, Math.round(p(waterpledgeId, "maxTargets", action)));
             const combo = waterpledgeComboAt(world, point, detect);
             const scale = markRadius / 1.6;
@@ -172,32 +141,35 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:impact.water");
             WorldFeedback.emit(world, waterpledgeScene, 1, point,
-                { moment: "erupt", radius: radius, height: height, count: burst, combo: combo === "" ? 0 : 1 }, 40);
+                { moment: "erupt", radius: radius, height: height, count: burst }, 40);
 
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, radius, { below: 0.5, above: height }), function (enemy, facts) {
                 if (hits >= cap) return;
-                if (world.valid(enemy)) MobEffects.apply(world, enemy, "minecraft:slowness", slow, 0);
+                // 伤害被拒绝就不算命中：不推开、不播命中表现。
                 if (!hurt(action, enemy, waterpledgeId, power * (combo === "" ? 1 : comboPower), { damage: damageSpec(waterpledgeId, "pillar") })) return;
                 hits++;
                 const away = facts.position().minus(action.origin());
                 const direction = away.length() > 0.3 ? away : action.direction();
                 if (world.valid(enemy)) {
-                    world.displace(enemy, WorldCombat.point(direction.x(), 0, direction.z()).unit().scale(push));
-                    if (lift > 0) world.motion(enemy, WorldCombat.point(0, lift, 0), true);
+                    world.hitDisplace(enemy, WorldCombat.point(direction.x(), 0, direction.z()).unit().scale(push));
+                    if (lift > 0) world.hitImpulse(enemy, WorldCombat.point(0, lift, 0));
                 }
                 WorldFeedback.emit(world, waterpledgeScene, 1, facts.position(), { moment: "hit", target: String(enemy.ref()), count: 10, scale: scale }, 20);
             });
 
-            WorldEffects.field(world, waterpledgeScar, point, markRadius,
-                { element: "water", radius: markRadius, scale: scale }, markTicks);
-            waterpledgeGround(world, point, markRadius, markTicks, cells);
+            // 柱脚先留一圈短寿誓约印：共鸣标记，本身不拖慢；贴地水痕只由粒子表达。
+            const brand = WorldEffects.field(world, waterpledgeScar, point, markRadius,
+                { element: "water", radius: markRadius, scale: scale, marks: marks, root: 30, slow: slow }, markTicks);
 
+            // 与另一誓约共鸣：把同一圈印就地换成组合场并延长；一次施放只触发一次，已有组合场不再叠。
             let arena = false;
             if (combo !== "" && !waterpledgeComboExists(world, point, markRadius * comboScale)) {
                 arena = true;
                 const arenaRadius = markRadius * comboScale;
-                WorldEffects.field(world, combo === "rainbow" ? waterpledgeRainbow : waterpledgeWetland, point, arenaRadius,
-                    { element: "water", combo: combo, radius: arenaRadius, scale: arenaRadius / 1.6 }, Math.round(markTicks * 1.6));
+                WorldEffects.update(world, brand, {
+                    data: { combo: combo, radius: arenaRadius, scale: arenaRadius / 1.6, marks: marks, root: 30, slow: Math.max(slow, 60) },
+                    radius: arenaRadius, ticks: Math.round(markTicks * 1.6)
+                });
                 WorldFeedback.emit(world, waterpledgeScene, 1, point,
                     { moment: combo === "rainbow" ? "rainbow" : "wetland", radius: arenaRadius, scale: arenaRadius / 1.6, count: 60 }, 46);
                 sound(action, combo === "rainbow" ? "minecraft:block.amethyst_block.chime" : "minecraft:block.wet_grass.break");

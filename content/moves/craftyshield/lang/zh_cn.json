@@ -23,13 +23,13 @@
   "worldcombat.skill.craftyshield.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.craftyshield.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑织阵；调小只在贴身受压时织，调大在更远处就先准备好。",
   "worldcombat.skill.craftyshield.preference.ai.opening": "出手时机",
-  "worldcombat.skill.craftyshield.preference.ai.opening.help": "受压时织阵：只在对手正攻击自己或主人、或自己刚被打过时织阵；随时：见威胁就先织上。",
+  "worldcombat.skill.craftyshield.preference.ai.opening.help": "受压时织阵：只在真的见到敌方出手变化招式、附近队友已中关键异常、或对手正扑向自家人时织阵；随时：见威胁就先织上，当常备防御。",
   "worldcombat.skill.craftyshield.preference.ai.opening.incoming": "受压时织阵",
   "worldcombat.skill.craftyshield.preference.ai.opening.anytime": "随时",
   "worldcombat.skill.craftyshield.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.craftyshield.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去织阵。",
   "world_combat.move.craftyshield.text.raise": "戏法防守（可拨 %1$s 条／%2$s 人／%3$s 秒）",
-  "world_combat.move.craftyshield.text.deflect": "符阵拨开变化招式",
+  "world_combat.move.craftyshield.text.deflect": "符阵拨开变化招式（余 %1$s／%2$s 枚）",
   "world_combat.move.craftyshield.text.fall": "符阵收拢",
   "effect.world_combat.crafty_shield": "戏法防守"
 }

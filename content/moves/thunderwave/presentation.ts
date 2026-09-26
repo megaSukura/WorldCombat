@@ -1,13 +1,13 @@
 /**
  * 电磁波 / Thunder Wave 的客户端表现。
  *
- * 一句话：施法者指尖攒起一小团电，一放电，一条折来折去却笔直打向目标的黄色电光沿直线炸开，
+ * 一句话：施法者指尖攒起一小团电，一放电，一条折来折去却笔直打向真实终点的黄色电光瞬间整条炸开，
  *   在被打到的人身上缠成一圈麻花一样的电花，然后缓缓收掉。
  * 色相家族：电黄（0xF2E24A）与冷白（0xFFFDE8）为全部主体，浅青绿（0xC8F0A0）只做细节小点。没有第二个色相。
- * 拍子：起（windup，攒电）→ 击（bolt 电线沿直线炸开）→ 收（jolt 缠身电花 / blocked·shielded·immune 消散）。
- * 范围：bolt 的发射器绑在 `data.path` 上，顶点就是判定用的那条直线——画出来的形状就是电流真正走的那条线；
- *   blocked 在墙面上消散，shielded 在挡线的同伴身上消散，玩家一眼能看出是谁吃掉了这一记。
- * 运动：电流沿直线朝目标爬；`joltSpeed` 越大，火花撒得越密（`flux` 为每秒撒多少点）。
+ * 拍子：起（windup，攒电）→ 击（bolt 电流瞬间铺满真实线段）→ 收（jolt 缠身电花 / blocked·shielded·immune·air 消散）。
+ * 范围：bolt 的发射器绑在 `data.path` 上，顶点就是判定真正停下的那半段——画出来的形状就是电流实际走的距离；
+ *   blocked 在真实方块面上消散，shielded 在挡线的同伴身上消散，air 是空放时电流在半空散掉。
+ * 运动：电流是瞬发的，整条线同一刻亮起；`joltSpeed` 只决定火花炸开的密度（`flux` 为每秒撒多少点）。
  * 数：服务端把 `arcs`（电弧条数）与 `intensity`（麻痹越久越亮）交给下面的发射器，画面里的数量和强度与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -153,6 +153,30 @@ const ThunderWaveDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0xE8FAFF, alpha: [0.7, 0], light: "full", maxParticles: 22
+                }
+            ]
+        },
+        air: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "air_fizzle", bind: "point", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
+                    burst: { count: { data: "arcs", fallback: 8 } },
+                    shape: { kind: "sphere", radius: 0.18 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [6, 12], size: [0.07, 0.01],
+                    color: 0xF2E24A, alpha: [0.85, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "air_smoke", bind: "point", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 6 },
+                    shape: { kind: "sphere", radius: 0.14 },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [10, 18], size: [0.1, 0.18],
+                    color: 0x6E7C88, alpha: [0.22, 0], light: "world", maxParticles: 16
                 }
             ]
         }

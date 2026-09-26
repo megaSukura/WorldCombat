@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.gigatonhammer.summary": "连人带锤旋身蓄力，再把巨锤高高抡下砸在身前地面；锤落处沿地面掀起一道冲击波向前推进，把沿线敌人一起顶开。砸完收招很长，短时间内无法再抡起巨锤——换成别的招式可以提前恢复。横扫式让巨锤扫过一圈，代价是威力与节奏。",
+  "worldcombat.skill.gigatonhammer.summary": "连人带锤旋身蓄力，再把巨锤高高抡下砸在身前地面；锤落先砸中近圈一次，再沿地面掀起一道分三段依序推进的冲击波，把沿线敌人依次顶开，同一目标只吃主锤或震波中的一份。砸完收招很长，短时间内无法再抡起巨锤——换成别的招式可以提前恢复。横扫式让巨锤扫过一圈，代价是威力与节奏。",
   "worldcombat.skill.gigatonhammer.use.0": "旋身蓄力后把巨锤抡下",
   "worldcombat.skill.gigatonhammer.use.1": "用地面冲击波把沿线敌人一起顶开",
   "worldcombat.skill.gigatonhammer.use.2": "被围时用横扫式扫过一圈",
-  "worldcombat.skill.gigatonhammer.description.0": "巨锤落在身前 %3$s 格处，正中的主目标受到约 %1$s 点物理伤害；锤落沿地面掀起一道长约 %4$s 格的地面冲击波，被波及的其他敌人各受到约 %2$s 点物理伤害（都按物攻结算）。",
+  "worldcombat.skill.gigatonhammer.description.0": "巨锤落在身前 %3$s 格处，近圈的主目标受到约 %1$s 点物理伤害；锤落沿地面掀起一道长约 %4$s 格的地面冲击波，分三段依序前移，被波及的其他敌人各受到约 %2$s 点物理伤害（都按物攻结算），同一目标只吃其中一份。",
   "worldcombat.skill.gigatonhammer.description.1": "冲击波半宽 %1$s 格，击退目标 %2$s 格；蓄力需要 %3$s。",
+  "worldcombat.skill.gigatonhammer.description.wave": "冲击波每刻推进 %1$s 格；画面里三段地纹按这个速度依次前移。",
   "worldcombat.skill.gigatonhammer.description.2": "抡完这一锤后禁复 %1$s：这段时间内不能再次抡锤，换成任何别的招式都会让它提前恢复。",
   "worldcombat.skill.gigatonhammer.sweep.on": "当前横扫式：旋身把巨锤扫过一圈，身边一圈敌人都吃到锤击、冲击波更长；代价是威力 ×0.75、收招 +6 刻、冷却 +8 刻。",
   "worldcombat.skill.gigatonhammer.sweep.off": "当前过顶式：锤砸身前一点、冲击波向前推进，主目标满威力。",
@@ -16,6 +17,7 @@
   "worldcombat.skill.gigatonhammer.value.reach": "落锤点距离",
   "worldcombat.skill.gigatonhammer.value.shockLength": "冲击波长度",
   "worldcombat.skill.gigatonhammer.value.shockHalfWidth": "冲击波半宽",
+  "worldcombat.skill.gigatonhammer.value.shockSpeed": "冲击波推进速度",
   "worldcombat.skill.gigatonhammer.value.push": "顶开距离",
   "worldcombat.skill.gigatonhammer.value.dust": "碎屑数量",
   "worldcombat.skill.gigatonhammer.value.spin": "旋身蓄力",
@@ -31,5 +33,5 @@
   "worldcombat.skill.gigatonhammer.preference.ai.crowd": "瞄准扎堆",
   "worldcombat.skill.gigatonhammer.preference.ai.crowd.help": "开启（配合横扫式）：目标近旁还站着别的敌人时更愿意抡锤，因为一圈都能扫到；关闭则只看单点收益。",
   "world_combat.move.gigatonhammer.text.slam": "承受 %1$s 点锤击，被波及 %2$s 个",
-  "world_combat.move.gigatonhammer.text.tired": "巨锤未抬起"
+  "world_combat.move.gigatonhammer.text.tired": "巨锤未抬起，%1$s 秒后可再抡或换招恢复"
 }

@@ -22,6 +22,13 @@ namespace PokemonSkills {
     const dynamicpunchRecoilText = "world_combat.move.dynamicpunch.text.recoil";
     /** 反噬基数（最大生命比例）；被这一拳震懵的目标打中别人时按攻击放大。 */
     const dynamicpunchRecoilFraction = 0.05;
+    /**
+     * 反噬预算系数：自伤同时受这一击真实伤害回执（damage_applied 的 actual）约束。
+     * 高最大生命的 Boss 不会被按血条白削——它挥出的这一下有多重，反噬最多就还多痛。
+     */
+    const dynamicpunchRecoilBudget = 1;
+    /** 托管载体：把“震懵”的飞鸟表现绑在真实混乱效果的生命周期上，驱散即停。 */
+    const dynamicpunchDazeMark = "world_combat:move_dynamicpunch/daze_mark";
 
     /** 只有当代表载体就是本单元的 id 时，本单元的行为才接管。 */
     function dynamicpunchCarrier(world: CombatWorld, actor: CombatActor): CombatMobEffect | null {
@@ -47,7 +54,7 @@ namespace PokemonSkills {
         name: "Dynamic Punch",
         description: "抡圆了全身力气的一记横扫重拳：身前扫出一道扇面，站在里面的人各挨一记并必定被震得混乱，走出扇面就落空，挥空还要多失衡一会儿。",
         uses: ["贴身用一道扇面横扫，逼对手走位躲开", "打中就把目标震懵，给队友制造失手窗口", "在对手残血、退无可退时赌一记重拳"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 3.8,
         prepare: 12,
@@ -104,7 +111,10 @@ namespace PokemonSkills {
                     if (!hurt(current, victim, "dynamicpunch", power,
                         { damage: damageSpec("dynamicpunch", "haymaker"), contact: true, punch: true })) return;
                     hits++;
-                    CombatStatus.apply(scope, victim, "confusion", dynamicpunchEffect, daze, Math.round(chance * 100), { unique: true });
+                    // 状态真落上才挂托管表现；同一目标已有载体时不重复挂。
+                    if (CombatStatus.apply(scope, victim, "confusion", dynamicpunchEffect, daze, Math.round(chance * 100), { unique: true })
+                        && scope.effects(victim, dynamicpunchDazeMark).length === 0)
+                        scope.effect(dynamicpunchDazeMark, victim, "{}", Math.max(1, Math.min(2400, daze)));
                     WorldFeedback.emit(scope, dynamicpunchScene, 1, facts.position(),
                         { moment: "impact", target: String(victim.ref()), intensity: intensity, daze: daze }, 30);
                     WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.3, 0)), dynamicpunchDazeText, [], 34);
@@ -140,7 +150,9 @@ namespace PokemonSkills {
         const facts = PokemonDamage.combatants.read(world, actor);
         const attack = facts.stats.atk || 0;
         const fraction = dynamicpunchRecoilFraction * Math.max(0.4, Math.min(2.5, attack / 100));
-        const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
+        // 反噬预算来自这一击的真实回执：自伤不超过它真正造成的伤害，高血 Boss 不会被按血条白削。
+        const budget = Math.max(0, Number(data.actual) || 0) * dynamicpunchRecoilBudget;
+        const loss = -world.health(actor, -Math.min(body.maxHealth() * fraction, budget), "world_combat:confusion");
         if (loss <= 0) return;
         const power = Math.max(0.2, Math.min(3, loss / Math.max(1, body.maxHealth()) * 12));
         WorldFeedback.emit(world, dynamicpunchScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);
@@ -148,15 +160,33 @@ namespace PokemonSkills {
         world.sound("minecraft:entity.player.hurt", body.position(), 14, "{}");
     });
 
-    // 混乱存续期：低密度的飞鸟每 20 刻续期，让出本体视线。
-    WorldCombat.on("world_combat:move_dynamicpunch/linger", "world_combat:mob_effect_tick", "", function (event) {
+    // 混乱存续期：飞鸟表现绑在托管载体上，随真实混乱效果自然到期或提前驱散一起结束，不靠自己的计时。
+    function dynamicpunchDazeWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = world.mobEffect(target, dynamicpunchEffect);
+        if (carrier === null) { effect.end(); return; }
+        // 本载体就是本 source 创建的托管效果，presentOn 随它一起清理。
+        WorldFeedback.onEffect(world, effect.id(), "linger", dynamicpunchScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()) });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(dynamicpunchDazeMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid dynamicpunch daze mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(dynamicpunchDazeMark, "start", dynamicpunchDazeWatch);
+    WorldCombat.effectHandler(dynamicpunchDazeMark, "watch", dynamicpunchDazeWatch);
+    WorldCombat.effectHandler(dynamicpunchDazeMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 混乱被牛奶／/effect clear 提前拿掉时，立即撤掉托管表现，不等它自己的下一次巡检。
+    WorldCombat.on("world_combat:move_dynamicpunch/daze-release", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== dynamicpunchEffect) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "dynamicpunch:" + String(actor.ref()), dynamicpunchScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 40);
+        world.effects(actor, dynamicpunchDazeMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
     });
 }

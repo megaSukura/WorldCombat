@@ -1,14 +1,4 @@
-/**
- * 王者盾牌 / kingsshield 的出手方式。
- *
- * 念头的形状：一面竖起的纹章钢盾在身前立稳（raise），按总量挡下打来的伤害招式（hold → block）；
- * 每一次直接的接触让盾沿把攻击者的攻击锐度削下去（punish）；量尽或到时则钢盾沉下（fall）。
- * 三幕：立盾 → 拒止 → 削锋／收盾。
- *
- * 钢盾本体是共享 GuardEffects 的 pool 模式（规则 world_combat:move_kingsshield），撑盾期间施法者身上挂
- * 真实 MobEffect `world_combat:king_guard`，承载共享身份 world_combat:status/kingsshield。
- * 打磨：变化招式不进 pool，所以**会照常落到身上**——这是它与尖刺防守／碉堡的取舍，说明里写明。
- */
+/** Hold a fixed-facing shield; front contact attacks can lose Attack once per attacker. */
 namespace PokemonSkills {
     const kingShieldScene = "world_combat:move_kingsshield";
     export const KingShieldRule = "world_combat:move_kingsshield";
@@ -19,9 +9,6 @@ namespace PokemonSkills {
     const kingShieldFallText = "world_combat.move.kingsshield.text.fall";
     /** 表现里的参考半径：`data.scale = 实际盾影半径 / 这个数`。 */
     const kingShieldReferenceRadius = 1.6;
-    /** 每个攻击者在本次钢盾窗口里是否已经被削过。 */
-    const kingShieldParried: { [key: string]: boolean } = Object.create(null);
-
     function kingShieldScale(radius: number): number {
         return Math.max(0.5, Math.min(2.2, (radius || kingShieldReferenceRadius) / kingShieldReferenceRadius));
     }
@@ -31,26 +18,31 @@ namespace PokemonSkills {
     function kingShieldContact(data: any): boolean {
         return DamageSemantics.read(data).contact;
     }
-    function kingShieldClear(effect: CombatEffect): void {
-        const prefix = String(effect.id()) + ":";
-        Object.keys(kingShieldParried).forEach(function (entry) { if (entry.indexOf(prefix) === 0) delete kingShieldParried[entry]; });
-    }
-
+    const kingShieldPose = "world_combat:kingsshield_pose";
+    WorldCombat.effect(kingShieldPose, 1, 1200, "action", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(kingShieldPose, "start", function () {});
+    WorldCombat.effectHandler(kingShieldPose, "end", function (effect) {
+        const data = JSON.parse(effect.state()), world = effect.world(), actor = effect.target();
+        world.operation(data.guard, "world_combat:dispel", "{}");
+        if (world.valid(actor) && MobEffects.matches(world, actor, data.carrier)) MobEffects.consume(world, actor, kingShieldEffect);
+    });
     GuardEffects.register(KingShieldRule, {
         /** 只挡敌对来源的伤害；变化招式与自身来源都不进这条。 */
         accepts: function (effect, state, incoming) {
             const world = effect.world();
-            return !!incoming.source && String(incoming.source.ref()) !== String(effect.target().ref()) && !world.friendly(incoming.source);
+            if (!incoming.source || String(incoming.source.ref()) === String(effect.target().ref()) || world.friendly(incoming.source)) return false;
+            if (!DamageSemantics.read(incoming.data).attack && String(incoming.data.kind) !== "move") return false;
+            const source = incoming.data.sourcePosition, body = world.observe(effect.target()), d = (<any>state).direction;
+            if (!Array.isArray(source) || !body || !d) return false;
+            const anchor = (<any>state).anchor;
+            if (body.position().minus(WorldCombat.point(anchor[0], anchor[1], anchor[2])).length() > .6) return false;
+            const dx = source[0] - body.position().x(), dz = source[2] - body.position().z(), length = Math.sqrt(dx * dx + dz * dz);
+            return length > .001 && (dx * d[0] + dz * d[2]) / length >= .5;
         },
         pulse: function (effect, state) {
-            const world = effect.world(), body = world.observe(effect.target());
-            if (body === null) return;
-            if (effect.remaining() <= 8) kingShieldClear(effect);
-            const initial = (<any>state).initial || state.capacity || 1;
-            WorldFeedback.keep(world, kingShieldHoldKey, kingShieldScene, 1, body.position(), {
-                moment: "hold", target: String(effect.target().ref()),
-                scale: kingShieldScale((<any>state).radius), intensity: kingShieldIntensity(state.capacity, initial)
-            }, 20);
+            const world = effect.world(), actor = effect.target(), body = world.observe(actor), custom: any = state;
+            if (!body || !MobEffects.matches(world, actor, custom.carrier)) { effect.end(); return; }
+            if (body.position().minus(WorldCombat.point(custom.anchor[0], custom.anchor[1], custom.anchor[2])).length() > .6) { MobEffects.consume(world, actor, kingShieldEffect); effect.end(); }
         },
         guarded: function (effect, state, amount, incoming) {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -58,9 +50,9 @@ namespace PokemonSkills {
             const custom: any = state, scale = kingShieldScale(custom.radius);
             const attacker = incoming.source && String(incoming.source.ref()) !== String(target.ref()) && world.observe(incoming.source) !== null ? incoming.source : null;
             if (attacker !== null && kingShieldContact(incoming.data) && !world.friendly(attacker)) {
-                const key = String(effect.id()) + ":" + String(attacker.ref());
-                if (!kingShieldParried[key]) {
-                    kingShieldParried[key] = true;
+                const key = String(attacker.ref());
+                if (!custom.parried[key]) {
+                    custom.parried[key] = true; effect.state(JSON.stringify(state));
                     const drop = Math.max(1, custom.drop || 1), point = world.observe(attacker)!.position();
                     NativeEffects.boost(world, attacker, "atk", -drop);
                     WorldFeedback.emit(world, kingShieldScene, 1, point, { moment: "punish", target: String(attacker.ref()),
@@ -80,7 +72,6 @@ namespace PokemonSkills {
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), kingShieldBlockText, [blocked, remaining], 30);
             world.sound("minecraft:item.shield.block", body.position(), 16, "{}");
             if (state.capacity <= 0) {
-                kingShieldClear(effect);
                 MobEffects.consume(world, target, kingShieldEffect);
             }
         }
@@ -104,7 +95,7 @@ namespace PokemonSkills {
         id: "kingsshield",
         cooldownParameter: "charge",
         name: "King's Shield",
-        description: "摆出王者钢盾，为自身按总量挡下敌人打来的伤害招式，并削去接触者的攻击；变化招式照常落到身上，护盾耗尽或到时即散。",
+        description: "站定举起朝向固定的王者钢盾，承受正面攻击；背后来击照常命中。本次举盾对每名真正接触盾面的攻击者只削攻一次。",
         uses: ["挡住近战的连续伤害并削其攻击", "为下一记交手先把对手打软", "用最厚的一面钢盾硬吃齐射"],
         kind: "self",
         range: 0,
@@ -112,7 +103,7 @@ namespace PokemonSkills {
         active: 0,
         recover: 6,
         cooldown: 85,
-        stationary: false,
+        stationary: true,
         style: "regal",
         defaults: { majesty: false, ai: { range: 5 } },
         fields: [],
@@ -148,13 +139,29 @@ namespace PokemonSkills {
             const previous = state(world, actor, GuardEffects.stallKey), now = world.tick();
             const count = previous && typeof previous.stall === "number" && now - (previous.at || 0) <= p("kingsshield", "stallReset", action) ? previous.stall : 0;
             setState(world, actor, GuardEffects.stallKey, { stall: count + 1, at: now });
-            MobEffects.apply(world, actor, kingShieldEffect, window, 0);
-            GuardEffects.apply(world, actor, { rule: KingShieldRule, mode: "pool", capacity: capacity, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: 0, initial: capacity, radius: radius, drop: drop } as any, window);
+            const carrier = MobEffects.apply(world, actor, kingShieldEffect, window, 0);
+            if (!carrier) { done(action); return; }
+            const facing = WorldGeometry.flatUnit(action.direction());
+            const guard = GuardEffects.apply(world, actor, { rule: KingShieldRule, mode: "pool", capacity: capacity, fraction: 1,
+                minimumHealth: 0, charges: 0, linkRange: 0, initial: capacity, radius: radius, drop: drop,
+                direction: [facing.x(), 0, facing.z()], parried: {}, carrier: MobEffects.anchor(carrier),
+                anchor: [action.origin().x(), action.origin().y(), action.origin().z()] } as any, window);
+            action.effect(kingShieldPose, actor, JSON.stringify({ guard: guard, carrier: MobEffects.anchor(carrier) }), window);
+            const centre = action.origin().plus(facing.scale(radius * .55)), side = WorldCombat.point(-facing.z(), 0, facing.x()).scale(radius * .65);
+            const corners = [centre.minus(side).plus(WorldCombat.point(0, -.5, 0)), centre.plus(side).plus(WorldCombat.point(0, -.5, 0)),
+                centre.plus(side).plus(WorldCombat.point(0, 1, 0)), centre.minus(side).plus(WorldCombat.point(0, 1, 0)), centre.minus(side).plus(WorldCombat.point(0, -.5, 0))];
+            WorldFeedback.onEffect(world, guard, kingShieldHoldKey + ":" + guard, kingShieldScene, 1, centre,
+                { moment: "hold", path: corners.map(p => [p.x(), p.y(), p.z()]) });
             sound(action, "minecraft:block.anvil.place");
             action.present("world_combat:move_kingsshield:raise2", kingShieldScene, 1, action.origin(),
                 JSON.stringify({ moment: "raise", scale: kingShieldScale(radius), drop: drop }));
-            done(action);
+            world.stopMovement(actor);
+            function hold(current: CombatAction): void {
+                const scope = current.world();
+                if (!scope.effects(current.actor(), "world_combat:guard").some(view => view.id() === guard)) { done(current); return; }
+                current.after(1, hold);
+            }
+            action.after(1, hold);
         }
     });
 }

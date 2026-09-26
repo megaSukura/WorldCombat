@@ -2,6 +2,7 @@
 namespace PokemonSkills {
     const synchronoiseScene = "world_combat:move_synchronoise";
     const synchronoiseResonance = "world_combat:resonance";
+    const synchronoiseReveal = "world_combat:move_synchronoise_reveal";
     const synchronoiseHitText = "world_combat.move.synchronoise.text.hit";
     const synchronoisePassText = "world_combat.move.synchronoise.text.pass";
 
@@ -22,10 +23,6 @@ namespace PokemonSkills {
         if (id === "minecraft:ender_dragon") return ["dragon"];
         return ["normal"];
     }
-    MobEffects.react("world_combat:move_synchronoise/reveal", synchronoiseResonance, "world_combat:mob_effect_tick",
-        event => event.actor(), function (event, actor) {
-            if (event.world().tick() % 5 === 0) MobEffects.apply(event.world(), actor, "minecraft:glowing", 6, 0);
-        });
 
     /** 两组频率是否有交集。 */
     function synchronoiseShares(caster: string[], target: string[]): boolean {
@@ -41,6 +38,44 @@ namespace PokemonSkills {
         }
         return 0xE8E8F8;
     }
+
+    /**
+     * 同频目标的显形：一个与「同频」记号同寿的托管效果。它把目标照亮，并在本效果作用域内租下这次发光——
+     * 结束时只撤自己租的那一次；目标身上已有更久或更亮的发光则原样留着。记号被牛奶／清除时随效果一起收走。
+     */
+    WorldCombat.effect(synchronoiseReveal, 1, 1200, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.glow !== "string") throw new Error("Invalid synchronoise reveal");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(synchronoiseReveal, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(target) || !CombatStatus.has(world, target, "resonance")) { effect.end(); return; }
+        const current = MobEffects.read(world, target, data.glow);
+        // 别人已经照得更久就不去碰它；否则补一次并租下自己的这一次发光。
+        if (!current || current.duration() >= 0 && current.duration() < effect.remaining()) {
+            const applied = MobEffects.apply(world, target, data.glow, effect.remaining(), 0);
+            data.lease = applied !== null && (!current || String(current.key()) !== String(applied.key()))
+                ? MobEffects.bind(world, target, data.glow, applied) : 0;
+        } else data.lease = 0;
+        effect.state(JSON.stringify(data));
+        effect.schedule("hold", "hold", 4, "{}");
+    });
+    WorldCombat.effectHandler(synchronoiseReveal, "hold", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(target) || !CombatStatus.has(world, target, "resonance")
+            || data.lease && !MobEffects.present(world, data.lease)) { effect.end(); return; }
+        effect.schedule("hold", "hold", 4, "{}");
+    });
+    WorldCombat.effectHandler(synchronoiseReveal, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    // 「同频」记号被外力清除时，连带收走它的显形（自然到期同样在本效果结束时收走）。
+    WorldCombat.on("world_combat:move_synchronoise/clear", "world_combat:mob_effect_removed", "", function (event) {
+        if (String(JSON.parse(String(event.data())).id) !== synchronoiseResonance) return;
+        const world = event.world(), actor = event.actor();
+        if (MobEffects.read(world, actor, synchronoiseResonance) !== null) return;
+        world.effects(actor, synchronoiseReveal).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+    });
 
     define({
         id: "synchronoise",
@@ -73,8 +108,15 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const world = action.sense(), actor = action.actor();
+            const frequency = synchronoiseFrequencies(world, actor);
+            const radius = Math.max(3.2, p("synchronoise", "waveRadius", action));
+            let resonances = 0;
+            const body = world.observe(actor);
+            if (body !== null) WorldGeometry.selectEnemies(world, WorldGeometry.ring(body.position(), 0, radius, { below: 3, above: 3 }),
+                function (enemy) { if (synchronoiseShares(frequency, synchronoiseFrequencies(world, enemy))) resonances++; });
             action.present("synchronoise:attune", synchronoiseScene, 1, action.origin(),
-                JSON.stringify({ moment: "attune", tint: synchronoiseTint(PokemonDamage.combatants.read(action.sense(), action.actor()).types),
+                JSON.stringify({ moment: "attune", tint: synchronoiseTint(frequency), resonances: resonances,
                     tight: config && config.tight === true }));
             return prepare;
         },
@@ -89,7 +131,7 @@ namespace PokemonSkills {
             const echoTicks = Math.max(16, Math.round(p("synchronoise", "echoTicks", action)));
             const marks = Math.max(4, Math.round(p("synchronoise", "marks", action)));
             const cap = Math.max(1, Math.round(p("synchronoise", "maxTargets", action)));
-            const casterTypes = PokemonDamage.combatants.read(world, actor).types;
+            const casterTypes = synchronoiseFrequencies(world, actor);
             const tint = synchronoiseTint(casterTypes);
             const scale = radius / 5.2;
             const intensity = Math.max(0.5, Math.min(2.2, power / 120));
@@ -107,9 +149,17 @@ namespace PokemonSkills {
                 if (linked >= cap) return;
                 if (!hurt(action, enemy, "synchronoise", power, { damage: damageSpec("synchronoise", "pulse") })) return;
                 linked++;
-                if (world.valid(enemy)) MobEffects.apply(world, enemy, synchronoiseResonance, resonanceTicks, 0);
+                if (world.valid(enemy)) {
+                    MobEffects.apply(world, enemy, synchronoiseResonance, resonanceTicks, 0);
+                    // 显形与被锁住的记号同寿：托管效果结束或提前被清除时，发光和持续表现一起收走。
+                    const reveal = world.effect(synchronoiseReveal, enemy,
+                        JSON.stringify({ glow: "minecraft:glowing" }), resonanceTicks + 2);
+                    if (reveal > 0) WorldFeedback.onEffect(world, reveal, "resonance:" + ref, synchronoiseScene, 1,
+                        facts.position(), { moment: "resonance", target: ref, tint: tint, intensity: intensity });
+                }
                 WorldFeedback.emit(world, synchronoiseScene, 1, facts.position(),
-                    { moment: "lock", target: ref, tint: tint, count: Math.round(12 + power * 0.22), scale: scale, intensity: intensity }, 26);
+                    { moment: "lock", target: ref, tint: tint, path: [String(actor.ref()), ref],
+                        count: Math.round(12 + power * 0.22), scale: scale, intensity: intensity }, 26);
             });
 
             WorldFeedback.emit(world, synchronoiseScene, 1, centre,

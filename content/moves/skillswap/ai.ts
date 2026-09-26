@@ -4,12 +4,42 @@ namespace CompanionBehavior {
     CompanionBehavior.registerFact("world_combat:skillswap-ability", function (access: CombatWorld, actor: CombatActor): string {
         return PokemonSkills.skillswapAbility(access, actor);
     });
-    /** 只读事实：一个宝可梦当前特性的“有效程度”——0 无特性，1 有但未实现，2 有实现会真正参与战斗。 */
-    CompanionBehavior.registerFact("world_combat:skillswap-worth", function (access: CombatWorld, actor: CombatActor): number {
-        const name = PokemonSkills.skillswapAbility(access, actor);
-        if (!name) return 0;
-        return NativeAbilities.registry.has(name) ? 2 : 1;
-    });
+    /** Compare only the supported outgoing rules of actual equipped attacks; unknown utility stays neutral. */
+    function skillswapAttackFit(access: CombatWorld, actor: CombatActor, ability: string): number {
+        const pokemon = CobblemonCombat.pokemon(actor), facts = PokemonDamage.sourceFacts(pokemon, access, actor);
+        const native = facts.data.native;
+        native.state = JSON.parse(JSON.stringify(native.state)); native.state.layers = native.state.layers || {};
+        native.state.layers.ability = ability;
+        let best = 0;
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const entry = pokemon.move(slot); if (!entry || entry.pp() <= 0) continue;
+            const id = NativeLoadout.selection(access, slot, entry, actor).id, move = CobblemonCombat.moveTemplate(id);
+            if (String(move.category()) === "status" || !(move.power() > 0)) continue;
+            const result = PokemonDamage.preview(access, actor, facts, move, {});
+            if (result.available) best = Math.max(best, result.amount);
+        }
+        return best;
+    }
+    function skillswapValue(context: WorldBehavior.Context, target: Entity): number {
+        const cache = context.scratch.skillSwapValues || (context.scratch.skillSwapValues = {});
+        if (cache[target.ref] !== undefined) return cache[target.ref];
+        const access = world(context), self = source(context), own = access.actor(self.ref), other = access.actor(target.ref);
+        if (!own || !other) return 0;
+        let value = 0;
+        if (domain(context, target) !== "cobblemon") {
+            const a = CombatCopies.read(access, own), b = CombatCopies.read(access, other);
+            Object.keys(a).forEach(id => { if (b[id] !== undefined) value += (b[id] - a[id]) / Math.max(.1, Math.abs(a[id]), Math.abs(b[id])); });
+            // A friendly exchange is useful only when the presently engaged recipient gains more than its caster.
+            if (target.friendly) value = target.attacking && !self.attacking ? -value : 0;
+        } else {
+            const mine = skillswapAbilityOf(context, self), theirs = skillswapAbilityOf(context, target);
+            const ownBefore = skillswapAttackFit(access, own, mine), ownAfter = skillswapAttackFit(access, own, theirs);
+            const theirBefore = skillswapAttackFit(access, other, theirs), theirAfter = skillswapAttackFit(access, other, mine);
+            value = (ownAfter - ownBefore) / Math.max(1, ownBefore)
+                + (target.friendly ? 1 : -1) * (theirAfter - theirBefore) / Math.max(1, theirBefore);
+        }
+        cache[target.ref] = value; return value;
+    }
 
     function skillswapAbilityOf(context: WorldBehavior.Context, target: CompanionBehavior.Entity): string {
         return CompanionBehavior.fact<string>(context, "world_combat:skillswap-ability", target) || "";
@@ -17,7 +47,7 @@ namespace CompanionBehavior {
 
     function skillswapWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
-        if (target.health <= 0 || target.friendly || !target.visible) return false;
+        if (target.health <= 0 || !target.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.domain(context, self) !== "cobblemon") return false;
@@ -26,35 +56,29 @@ namespace CompanionBehavior {
         if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
         if (CompanionBehavior.domain(context, target) !== "cobblemon") {
             const access = CompanionBehavior.world(context), own = access.actor(self.ref), foe = access.actor(target.ref);
-            return !!own && !!foe && CombatCopies.differs(access, own, CombatCopies.read(access, foe));
+            return !!own && !!foe && CombatCopies.differs(access, own, CombatCopies.read(access, foe)) && skillswapValue(context, target) > .05;
         }
         const mine = skillswapAbilityOf(context, self), theirs = skillswapAbilityOf(context, target);
         if (!mine || !theirs || mine === theirs) return false;
-        const worth = CompanionBehavior.fact<number>(context, "world_combat:skillswap-worth", target);
-        if (worth === null || worth <= 0) return false;
-        if (CompanionBehavior.ai<boolean>(item, "requireActive", false) && worth < 2) return false;
-        return true;
+        if (NativeAbilities.flag(mine, "failskillswap") || NativeAbilities.flag(theirs, "failskillswap")) return false;
+        if (ai<boolean>(item, "requireActive", false) && !NativeAbilities.registry.has(theirs)) return false;
+        return target.friendly ? skillswapValue(context, target) > .05 : skillswapValue(context, target) >= -.05;
     }
 
     registerUse("skillswap", {
-        protocols: ["world_combat:control"],
+        protocols: ["world_combat:control", "world_combat:bolster"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (target === null) return true;
             return skillswapWants(context, item, target);
         },
         accepts: function (context, _item, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return target.ref !== source(context).ref && target.health > 0 && target.visible;
         },
         priority: function (context, item, target) {
             if (target === null || !skillswapWants(context, item, target)) return 0;
-            const self = CompanionBehavior.source(context);
-            const mine = CompanionBehavior.fact<number>(context, "world_combat:skillswap-worth", self);
-            const theirs = CompanionBehavior.fact<number>(context, "world_combat:skillswap-worth", target);
-            if (mine === null || theirs === null) return 45;
-            if (theirs > mine) return 65;
-            if (theirs < mine) return 25;
-            return 45;
+            const value = skillswapValue(context, target);
+            return value > .05 ? Math.min(70, 45 + value * 20) : 20;
         },
         approach: function (context, _item, target) {
             const access = CompanionBehavior.world(context), self = CompanionBehavior.source(context);

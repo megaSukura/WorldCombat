@@ -21,7 +21,7 @@ Smoke.scenario("falseswipe", function (stage) {
         stage.expect(stage.casts("falseswipe", caster) >= 1, "caster committed falseswipe");
         stage.expect(stage.damageTo(foe) > 0, "falseswipe dealt damage to the foe");
         stage.expect(foe.alive(), "the sparing cut left the target standing");
-        stage.note("the target is pre-damaged to ~8 HP; a lethal cut is capped by the mercy intercept, so it survives at 1 HP", {
+        stage.note("the target is pre-damaged to ~8 HP; this lethal cut is capped by the per-hit native health floor (minimumHealth 1), so it survives at 1 HP", {
             casts: stage.casts("falseswipe", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeHealth: Math.round(foe.health() * 10) / 10,

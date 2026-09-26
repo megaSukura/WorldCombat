@@ -39,7 +39,9 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || !smackdownWants(context, capability, target)) return 0;
-            return smackdownFlies(context, target) ? 46 : 20;
+            // 真正离地的目标最值（岩弹能实际把它拖下来）；只是会飞但站在地上的次之；走地的普通目标再次。
+            if (target.grounded === false) return 50;
+            return smackdownFlies(context, target) ? 38 : 20;
         }
     });
 

@@ -4,9 +4,11 @@
  * 什么局面有意义：有可见威胁、在 ai.maxChase（默认 6）格以内、对方还没被封锁。
  *   目标正在逃跑时加分（`ai.catchRunners` 默认开）：它正要离开，一堵墙正好封在背影一侧。
  *   贴身的目标也加分：把冲上来的对手按进近战范围。
+ * 己方撤退通道不封：如果拟建弧的范围里正隔着自己的友方（友方在威胁更远的一侧、又落在弧宽以内），
+ *   这堵墙会把队友隔在墙外，宁可不封。Boss 推不动也没关系——墙本身是真的障碍，推挤只是附带的短动作。
  * 对谁出手：当前威胁；已被 trapped（任何来源）的目标跳过，不浪费一次封路。
  * 够不到怎么办：reach 就是立墙距离，超出的先走近；这是贴近的招，多数时候需要靠身。
- * 放完之后：目标被墙与术者夹住、走不快，伙伴交回共享顺序决定继续压制还是换目标。
+ * 放完之后：目标被墙与术者夹住、若贴住墙则走不快，伙伴交回共享顺序决定继续压制还是换目标。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("block", { ai: { maxChase: 6, catchRunners: true, leaveStation: false } }, [
@@ -15,11 +17,31 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 
+    /** 拟建弧会不会把某个友方隔在墙外：友方在威胁更远的一侧、又落在弧宽以内就返回真。 */
+    function blockTrapsAlly(context: WorldBehavior.Context, threat: Entity): boolean {
+        const self = source(context);
+        const dx = threat.point[0] - self.point[0], dz = threat.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 0.01) return false;
+        const ux = dx / length, uz = dz / length;
+        const nearby = (context.facts.nearby || []) as Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === self.ref || !other.friendly || other.health <= 0) continue;
+            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            const along = ox * ux + oz * uz;
+            if (along <= length || along > length + 6) continue;
+            if (Math.abs(ox * uz - oz * ux) <= 4) return true;
+        }
+        return false;
+    }
+
     function blockWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (status(context, threat, "trapped")) return false;
+        if (blockTrapsAlly(context, threat)) return false;
         return context.facts.focus === threat.ref || distance(self.point, threat.point) <= ai<number>(item, "maxChase", 6);
     }
 

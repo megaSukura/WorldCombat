@@ -6,7 +6,12 @@
     "world_combat:skill_runtime": "0.1",
     "world_combat:companion_runtime": "0.1",
     "world_combat:mechanisms": "0.1",
-    "world_combat:native": "0.1"
+    "world_combat:native": "0.1",
+    "world_combat:move/energyball": "0.1",
+    "world_combat:move/hydropump": "0.1",
+    "world_combat:move/flamethrower": "0.1",
+    "world_combat:move/powergem": "0.1",
+    "world_combat:move/triattack": "0.1"
   },
   "sources": [
     "parameters.ts",

@@ -2,13 +2,14 @@
  * 佯攻 / feint 的客户端表现。
  *
  * 一句话：施法者压低身子、脚边碎光向前收束 → 一记虚晃贴地扑出去，拖出短促的金色风痕 → 扑到对手身上时，
- *   撑在它外面的守护先碎成一圈冷灰碎光（掀得越干净、碎光越多），随后金白的一戳真正落进去。
+ *   撑在它外面的守护先碎成一圈冷灰碎光（掀得越干净、碎光越多，peel 只在实际解掉护层时播放），随后金白的一戳
+ *   （jab）真正落进去；没掀到也没打中就只留空戳（miss）。
  * 色相家族：暖金白（0xE8D9A0 主体、0xFFF3C4 亮面、近白核心）为主体，守护碎光用中性冷灰蓝（0xAEB7C4）
  *   作破守的对照；无第二个色相。
- * 拍子：起 wind 0–14t ／ 扑 rush（逐刻续期）／ 掀 peel 0–24t ／ 中 jab ／ 空 miss。
- * 范围：peel／jab 绑目标点，半径按 `data.scale`（判定半径 / 0.5）缩放，玩家一眼看出这一戳能碰到多大。
- * 运动：wind 的碎光朝身体前方收束；rush 的风痕沿 `data.direction` 拖尾；peel 的守护碎光从目标表面向外炸。
- * 数：`data.sparks`（速度与物攻派生的碎光数）驱动 wind／rush 的发射量，`data.broken`（掀掉的守护层数）
+ * 拍子：起 wind 0–14t ／ 扑 rush（逐刻续期）／ 掀 peel 0–24t ／ 中 jab 0–20t ／ 空 miss。
+ * 范围：peel／jab 绑真实接触点，半径按 `data.scale`（判定半径 / 0.5）缩放，玩家一眼看出这一戳能碰到多大。
+ * 运动：wind 的碎光朝身体前方收束；rush 的风痕沿 `data.direction` 拖尾；peel 的守护碎光从接触点向外炸。
+ * 数：`data.sparks`（速度与物攻派生的碎光数）驱动 wind／rush／jab 的发射量，`data.broken`（掀掉的守护层数）
  *   决定 peel 碎光的数量与亮度，`data.intensity`（威力 / 34）抬高命中那一下的密度。
  */
 const FeintDefinition: ParticleDefinition = {
@@ -80,14 +81,6 @@ const FeintDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.12, 0.34],
                     lifetime: [8, 16], size: [0.12, 0.02],
                     color: 0xDCE6F2, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 40
-                },
-                {
-                    name: "stab", bind: "target", offset: [0, 0.45, 0], height: 0.45,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
-                    burst: { count: 14, at: 1 }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "shape", speed: [0.08, 0.28],
-                    lifetime: [6, 12], size: [0.32, 0.05], sizeMode: "index",
-                    color: 0xFFF3C4, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 40
                 }
             ]
         },

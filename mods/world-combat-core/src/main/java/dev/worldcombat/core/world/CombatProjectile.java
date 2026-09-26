@@ -11,7 +11,7 @@ import net.minecraft.world.phys.*;
 /**
  * A native throwable entity. Content supplies payloads; vanilla and NeoForge own movement and impacts.
  * Flight options ride in the appearance JSON: `homing` {target: uuid, turn: degrees/tick, delay: ticks, range: blocks},
- * `pierce` (entities passed through before settling), `bounce` (block rebounds, with `restitution` 0..1).
+ * `pierce` (nonnegative entity count, or true for each entity once during the flight), `bounce` (block rebounds, with `restitution` 0..1).
  */
 public final class CombatProjectile extends ThrowableProjectile {
     private static final EntityDataAccessor<Float> GRAVITY = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.FLOAT);
@@ -24,8 +24,9 @@ public final class CombatProjectile extends ThrowableProjectile {
     private Consumer<Impact> impact;
     private Runnable complete;
     private boolean settled;
-    private boolean hitAllies;
+    private boolean hitAllies, pierceAll;
     private Vec3 impactOrigin;
+    private com.google.gson.JsonArray currentDamagePath;
     private java.util.UUID homingTarget;
     private double homingTurn, homingRange = 64;
     private int homingDelay, pierce, bounce;
@@ -57,7 +58,15 @@ public final class CombatProjectile extends ThrowableProjectile {
                 homingDelay = homing.has("delay") ? Math.max(0, homing.get("delay").getAsInt()) : 0;
                 if (homing.has("range")) homingRange = Math.max(1, Math.min(64, homing.get("range").getAsDouble()));
             }
-            if (root.has("pierce")) pierce = Math.max(0, Math.min(64, root.get("pierce").getAsInt()));
+            if (root.has("pierce")) {
+                var value = root.getAsJsonPrimitive("pierce");
+                if (value.isBoolean()) pierceAll = value.getAsBoolean();
+                else if (value.isNumber()) {
+                    int count = value.getAsBigDecimal().intValueExact();
+                    if (count < 0) throw new IllegalArgumentException("Negative projectile pierce count");
+                    pierce = count;
+                }
+            }
             if (root.has("bounce")) bounce = Math.max(0, Math.min(64, root.get("bounce").getAsInt()));
             if (root.has("restitution")) restitution = Math.max(0, Math.min(1, root.get("restitution").getAsDouble()));
         } catch (RuntimeException ignored) { }
@@ -89,6 +98,13 @@ public final class CombatProjectile extends ThrowableProjectile {
     public String appearance() { return entityData.get(APPEARANCE); }
     public Vec3 damageOrigin() { return impactOrigin == null ? position() : impactOrigin; }
     void damageOrigin(Vec3 origin) { impactOrigin = origin; }
+    com.google.gson.JsonArray damagePath(com.google.gson.JsonArray value) {
+        var previous = currentDamagePath; currentDamagePath = value; return previous;
+    }
+    public com.google.gson.JsonArray damagePath() {
+        return currentDamagePath != null ? currentDamagePath.deepCopy()
+            : combat == null ? new com.google.gson.JsonArray() : combat.projectileObservations().path(this);
+    }
     @Override protected double getDefaultGravity() { return entityData.get(GRAVITY); }
     @Override protected boolean canHitEntity(Entity entity) {
         if (!super.canHitEntity(entity) || pierced.contains(entity.getUUID())) return false;
@@ -103,7 +119,7 @@ public final class CombatProjectile extends ThrowableProjectile {
         if (level().isClientSide || settled) return;
         Entity target = hit instanceof EntityHitResult entity ? entity.getEntity() : null;
         boolean continues = false;
-        if (target != null && pierce > 0) { pierce--; pierced.add(target.getUUID()); continues = true; }
+        if (target != null && (pierceAll || pierce > 0)) { if (!pierceAll) pierce--; pierced.add(target.getUUID()); continues = true; }
         else if (hit instanceof BlockHitResult block && bounce > 0) {
             bounce--; continues = true;
             var velocity = getDeltaMovement(); var normal = Vec3.atLowerCornerOf(block.getDirection().getNormal());
@@ -115,7 +131,10 @@ public final class CombatProjectile extends ThrowableProjectile {
         if (!continues) settled = true;
         impact.accept(new Impact(MinecraftCombat.point(hit.getLocation()), target instanceof LivingEntity living ? combat.bind(living) : null,
             hit.getType() == HitResult.Type.BLOCK, getStringUUID(), target == null ? "" : target.getStringUUID(),
-            getOwner() instanceof LivingEntity owner ? combat.bind(owner) : null, MinecraftCombat.point(impactOrigin)));
+            getOwner() instanceof LivingEntity owner ? combat.bind(owner) : null, MinecraftCombat.point(impactOrigin),
+            hit instanceof BlockHitResult block ? MinecraftCombat.point(Vec3.atLowerCornerOf(block.getBlockPos())) : null,
+            hit instanceof BlockHitResult block ? block.getDirection().getName() : "",
+            combat.projectileObservations().path(this).toString()));
         if (settled) { complete.run(); discard(); }
     }
     @Override public void tick() {

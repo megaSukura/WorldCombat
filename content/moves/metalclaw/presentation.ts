@@ -2,11 +2,11 @@
  * 金属爪 / metalclaw 的客户端表现。
  *
  * 一句话：双爪在身侧亮起一层冷钢光，随后左右两记短促的爪风劈向前方；劈中处炸开小片钢火星，
- *   爪刃被磨出锋口时，施法者身上升起一圈钢白磨光。
+ *   只有真的被磨出锋口的那一记，爪尖才闪起一圈钢白磨光，而不是无条件罩在施法者身上。
  * 色相家族：冷钢灰蓝（0xC8CEDA）与近白高光（0xF2F6FF）为主，中性尘（tinydust）只做余韵；没有第二个色相。
- * 拍子：起（windup 聚刃光）→ 劈（rake 两道爪风）→ 击（hit 钢火星）→ 磨（sharpen 升光）→ 空（miss 散尘）。
- * 范围：`rake` 用与判定同源的 `path` 画出施法者→爪程末端的同一条线，线有多长、玩家就知道能劈到多远。
- * 运动：爪风沿该线由近及远扫出，火星从命中点向外抛并受重力；磨光从脚边竖直升起。
+ * 拍子：起（windup 聚刃光）→ 劈（rake 两道爪风）→ 击（hit 钢火星）→ 磨（sharpen 爪尖闪）→ 空（miss 散尘）。
+ * 范围：`rake` 用与判定同源的 `path` 画出施法者→真实首碰点（实体或墙）的同一条线，画到哪、玩家就知道劈到哪。
+ * 运动：爪风沿该线扫出，火星从命中点向外抛并受重力；磨光在真实爪尖位置闪起、向上飘。
  * 数：`data.sparks`（物攻与速度派生）绑定爪风与命中的粒子数，`data.intensity`（本次威力比例）缩放发射量，
  *   `data.stages`（实际磨起的物攻级数）绑定磨光光环的数量。
  */
@@ -87,19 +87,20 @@ const MetalclawDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "hone_ring", bind: "source", offset: [0, 0.08, 0], height: 0.08,
+                    name: "hone_ring", bind: "point", offset: [0, 0.06, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: { data: "stages", fallback: 1 } },
-                    shape: { kind: "ring", radius: 0.7 },
-                    direction: "outward", speed: [0.05, 0.16],
-                    lifetime: [10, 16], size: [0.24, 0.44],
+                    shape: { kind: "ring", radius: 0.32 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [10, 16], size: [0.18, 0.34],
                     color: 0xF2F6FF, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 16
                 },
                 {
-                    name: "hone_up", bind: "source", offset: [0, 0.2, 0], height: 0.2,
+                    name: "hone_up", bind: "point", offset: [0, 0.16, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: { data: "stages", fallback: 1 }, shape: { kind: "circle", radius: 0.5 },
-                    direction: "up", speed: [0.08, 0.28], drag: 0.9,
+                    burst: { count: { data: "stages", fallback: 1 }, interval: 3, repeats: 3 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "up", speed: [0.08, 0.26], drag: 0.9,
                     lifetime: [8, 14], size: [0.12, 0.03],
                     color: 0xF2F6FF, alpha: [0.85, 0], light: "full", bloom: 0.5, maxParticles: 50
                 }

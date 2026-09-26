@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.dynamicpunch.summary": "A full-power roundhouse: it sweeps a fan in front, every enemy inside takes a blow and is always left confused, stepping out of the fan avoids it, and whiffing leaves the user overextended.",
   "worldcombat.skill.dynamicpunch.description.0": "Swing a fan-shaped roundhouse: every enemy caught in it takes one hit for about %1$s contact and punch damage; the fan spans %2$s degrees over a %3$s block reach.",
-  "worldcombat.skill.dynamicpunch.description.1": "Anyone swept is always left confused for %1$s: while confused, every attempt to use a move or strike has a %2$s chance to fail outright and waste that attempt; a confused creature that hits a non-ally also hurts itself, taking 5% of its own max HP scaled by its Attack between 0.4 and 2.5 times.",
+  "worldcombat.skill.dynamicpunch.description.1": "Anyone swept is always left confused for %1$s: while confused, every attempt to use a move or strike has a %2$s chance to fail outright and waste that attempt; a confused creature that hits a non-ally also hurts itself based on its Attack, but the self-damage never exceeds the damage that blow actually dealt.",
   "worldcombat.skill.dynamicpunch.description.2": "If nothing is swept, the user cannot recover the swing and wastes a further %1$s s before acting again.",
   "worldcombat.skill.dynamicpunch.reckless.on": "Reckless form: more power, a wider fan and a longer confusion, but a longer wind-up, recovery and cooldown, and a longer overextend on a whiff.",
   "worldcombat.skill.dynamicpunch.reckless.off": "Controlled form: a shorter wind-up, recovery and cooldown and a lighter overextend, at the cost of a lighter blow, a narrower fan and a shorter confusion.",

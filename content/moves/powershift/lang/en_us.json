@@ -23,7 +23,10 @@
   "worldcombat.skill.powershift.preference.ai.minGap.help": "A threat closer than this makes the companion fight on instead of swapping; larger gives up the swap more often up close.",
   "worldcombat.skill.powershift.preference.ai.minEdge": "Minimum edge",
   "worldcombat.skill.powershift.preference.ai.minEdge.help": "The move is skipped unless the Attack/Defence ratio (higher over lower) reaches this; raising it only shifts on extreme attackers or defenders, avoiding pointless back-and-forth.",
+  "worldcombat.skill.powershift.preference.ai.low": "Low-health threshold",
+  "worldcombat.skill.powershift.preference.ai.low.help": "A health ratio below this counts as low: with high Attack and low Defence it shifts into the defensive form. Raising it shifts to defence earlier; lowering it waits until near death.",
   "world_combat.move.powershift.text.shifted": "Power Shift · Attack %1$s Defence %2$s swapped",
+  "world_combat.move.powershift.text.invalid": "These two strengths cannot be traded",
   "world_combat.move.powershift.text.reverted": "Power returns to place",
   "effect.world_combat.powershift_stance": "Power Shift"
 }

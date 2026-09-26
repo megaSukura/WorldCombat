@@ -7,9 +7,9 @@
  * 色相家族：暗红（0xB0303A）为主体与扑击、深血红（0x7A1F2A）只压核心，近白（0xFFE0E6）只给高光；
  *   不引入第二色相——「恐怖的脸」与「吻」用同一族深浅区分。
  * 拍子：起 windup（鬼脸）→ 扑 pounce（贴地突进）→ 吻 kiss（脸前爆心）／扭开 miss／免疫 immune；余韵 linger 收拢。
- * 范围：pounce 沿 `data.path`（自身与目标两个真实顶点）连线，线长即实际扑击路径；扑到哪就打到哪。
- * 运动：pounce 的粒子沿直线随触地烟向前冲；kiss 的心从目标脸侧向外炸开再上浮。
- * 数：`data.hearts`（体重换算）决定落吻心的数量与余韵亮度；`data.ringRadius`（剩余睡眠比例换算）决定余韵环大小。
+ * 范围：pounce 贴本体，由真实身体移动带出拖尾（不再画一条静态连线）；kiss 在真实接触点爆开。
+ * 运动：pounce 的粒子随身体移动带出触地烟与心形拖尾；kiss 的心从目标脸侧向外炸开再上浮。
+ * 数：`data.hearts`（体重换算）决定扑击拖尾、落吻与扭开时的心的数量；`data.scale`（判定半径换算）缩放各处粒子尺寸；`data.ringRadius`（剩余睡眠比例换算）决定余韵环大小。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const LovelykissDefinition: ParticleDefinition = {
@@ -38,24 +38,26 @@ const LovelykissDefinition: ParticleDefinition = {
             ]
         },
         pounce: {
-            duration: 28,
-            exit: { stop: 14, drain: 16 },
+            duration: 40,
+            exit: { stop: 20, drain: 16 },
             emitters: [
                 {
-                    name: "rush", bind: "path",
+                    // 贴本体：粒子沿身体真实移动带出触地烟，不是画一条线冒充飞行。
+                    name: "rush", bind: "source", offset: [0, 0.03, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    shape: { kind: "polyline" }, rate: 12,
-                    direction: "shape", speed: [0.02, 0.08], spread: 16,
+                    rate: 40, shape: { kind: "box", size: [0.3, 0.28, 0.3] },
+                    orient: "velocity", direction: "away", speed: [0.02, 0.1], trail: { minDistance: 0.22 },
                     lifetime: [8, 14], size: [0.22, 0.34],
-                    color: 0x7A1F2A, alpha: [0.25, 0], light: "world", maxParticles: 60
+                    color: 0x7A1F2A, alpha: [0.25, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "trail_heart", bind: "path",
+                    // 身后拖出的一串心：随身体移动沿历史采样，数量由体重换算的 hearts 驱动。
+                    name: "trail_heart", bind: "source", offset: [0, 0.3, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/status/infatuation_heart",
-                    shape: { kind: "polyline" }, rate: { data: "hearts", fallback: 8 },
-                    direction: "shape", speed: [0.02, 0.08], spin: 20,
+                    rate: { data: "hearts", fallback: 8 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "away", speed: [0.02, 0.08], spin: 20, trail: { minDistance: 0.3 },
                     lifetime: [8, 14], size: [0.18, 0.06], sizeMode: "sin",
-                    color: 0xB0303A, alpha: [0.7, 0], light: "full", maxParticles: 80
+                    color: 0xB0303A, alpha: [0.7, 0], light: "full", maxParticles: 110
                 }
             ]
         },
@@ -97,7 +99,7 @@ const LovelykissDefinition: ParticleDefinition = {
                 {
                     name: "twist", bind: "target", height: 0.72,
                     particle: "world_combat_core:cobblemon/generic/status/infatuation_heart",
-                    burst: { count: 12, interval: 3, repeats: 2 }, shape: { kind: "sphere", radius: 0.24 },
+                    burst: { count: { data: "hearts", fallback: 12 }, interval: 3, repeats: 2 }, shape: { kind: "sphere", radius: 0.24 },
                     direction: "outward", speed: [0.05, 0.18], drag: 0.9,
                     lifetime: [10, 16], size: [0.18, 0.05],
                     color: 0xB0303A, alpha: [0.6, 0], light: "world", maxParticles: 30

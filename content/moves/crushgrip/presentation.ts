@@ -2,13 +2,13 @@
  * 捏碎 / crushgrip 的客户端表现。
  *
  * 一句话：目标两侧先浮出两片暗铁的掌影，随即合拢捏出一个实心的暗色光团、石屑沿掌口崩出；高举式再把它整个人
- *   提起、按住，然后砸回地面，落点炸开一圈冲击。
+ *   提起、按住，然后砸回地面，落点炸开一圈冲击；举不起来就只松掌放出一点暗尘。
  * 色相家族：暗铁（0x8A8794）主体、冷白（0xD8D4E0）强调、深灰（0x403C4A）余韵；单一色相。
- * 拍子：起 loom（掌影张开）→ 击 grip（合拢）→ 提 hoist（高举式）→ 落 slam（高举式）→ 空 whiff。
+ * 拍子：起 loom（掌影张开）→ 击 grip（合拢）→ 提 rise / 持 hoist → 落 fall / 着地 slam → 空 whiff / 松掌 release。
  * 范围：grip 的掌口环半径按 `data.scale`（实际掌口半径 / 0.7）铺开，画出的圈就是被捏住的范围。
- * 运动：掌影自两侧向中心合拢；碎屑沿掌口外抛带重力；高举式有一道向上的拖痕、落地有一圈贴地冲击。
- * 数：`data.motes`（物攻与体重派生）决定碎屑量，`data.intensity`（本击威力 / 100）抬高亮度，
- *   `data.lift`（体重派生）只用于提升幕的纵向铺开。
+ * 运动：掌影自两侧向中心合拢；碎屑沿掌口外抛带重力；hoist 的上升拖痕贴着目标真实的上升轨迹，slam 的尘柱按
+ *   `data.drop`（实际到达的落高）铺开、只有真的被举起才会出现。
+ * 数：`data.motes`（物攻与体重派生）决定碎屑量，`data.intensity`（本击威力 / 100）抬高亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const CrushgripDefinition: ParticleDefinition = {
@@ -77,19 +77,24 @@ const CrushgripDefinition: ParticleDefinition = {
                 }
             ]
         },
-        hoist: {
+        rise: {
             duration: 20,
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "rise", bind: "target", offset: [0, 0, 0], height: 0.2, fit: "none",
+                    name: "rise", bind: "target", offset: [0, 0.2, 0], fit: "none", trail: { minDistance: 0.12 },
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: 16 },
-                    shape: { kind: "circle", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
-                    direction: "up", speed: [0.12, 0.34],
-                    lifetime: [6, 12], size: [0.2, 0.05],
-                    color: 0xD8D4E0, alpha: [0.6, 0], light: "full", maxParticles: 70
-                },
+                    rate: 30, shape: { kind: "circle", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    direction: "up", speed: { data: "lift", fallback: 0.25 },
+                    lifetime: [8, 14], size: [0.2, 0.05],
+                    color: 0xD8D4E0, alpha: [0.6, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
+        hoist: {
+            duration: 20,
+            exit: { stop: 2, drain: 12 },
+            emitters: [
                 {
                     name: "grip_hold", bind: "target", offset: [0, 0, 0], height: 0.5, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
@@ -97,6 +102,32 @@ const CrushgripDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.01, 0.05], spin: 16,
                     lifetime: [8, 15], size: [0.26, 0.06],
                     color: 0x8A8794, alpha: [0.4, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        fall: {
+            duration: 20,
+            exit: { stop: 2, drain: 8 },
+            emitters: [{
+                name: "fall", bind: "target", offset: [0, 0, 0], fit: "body", trail: { minDistance: 0.12 },
+                particle: "world_combat_core:cobblemon/generic/speedlines",
+                rate: 26, shape: { kind: "box", size: [0.35, 1, 0.35] },
+                direction: "down", speed: [0.1, 0.3], lifetime: [5, 10], size: [0.18, 0.04],
+                color: 0x8A8794, alpha: [0.5, 0], light: "world", maxParticles: 70
+            }]
+        },
+        release: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "open", bind: "target", offset: [0, 0.1, 0], height: 0.4, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: { data: "motes", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.5 },
+                    direction: "outward", speed: [0.02, 0.1], drag: 0.92,
+                    lifetime: [9, 16], size: [0.26, 0.08],
+                    color: 0x403C4A, alpha: [0.35, 0], light: "world", maxParticles: 30
                 }
             ]
         },

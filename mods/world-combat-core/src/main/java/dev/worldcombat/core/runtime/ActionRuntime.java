@@ -32,7 +32,7 @@ public final class ActionRuntime {
     public ActionRuntime(CombatHost host, ContentRegistry content) {
         this.host = host;
         this.content = content;
-        projectiles = new ManagedProjectiles(host);
+        projectiles = new ManagedProjectiles(this);
         effects = new dev.worldcombat.core.runtime.effect.EffectRuntime(host, content.effects());
         effects.attach(this);
         epoch = content.epoch();
@@ -69,7 +69,8 @@ public final class ActionRuntime {
         var spec = content.preview(id).input();
         String implied = ActionInput.implied(arguments.get(ActionInput.KEY), spec, target, actor, host);
         if (!Objects.equals(implied, arguments.get(ActionInput.KEY))) { arguments = new HashMap<>(arguments); arguments.put(ActionInput.KEY, implied); }
-        ActionInput.validate(arguments.get(ActionInput.KEY), spec, definition.range(), actor, host, effects);
+        var normalizedInput = ActionInput.validate(arguments.get(ActionInput.KEY), spec, definition.range(), actor, host, effects);
+        if (!spec.steps().isEmpty()) { arguments = new HashMap<>(arguments); arguments.put(ActionInput.KEY, normalizedInput.json()); }
         if (cooldown(actor, id) > 0) throw new ActionRejectedException("cooldown");
         if (!conflicts(actor, definition).isEmpty()) throw new ActionRejectedException("busy");
         if (spec.sustained() && !definition.composition().owns("input")) throw new ActionRejectedException("input-claim-required");
@@ -111,8 +112,9 @@ public final class ActionRuntime {
 
     private ActionTarget effectiveTarget(ActionDefinition definition, ActorHandle actor, ActionTarget target) {
         if (target == null) throw new ActionRejectedException("invalid-target");
-        return definition.targetKind().equals("self")
-            ? ActionTarget.entity(actor, host.position(actor), target.direction()) : target;
+        if (definition.targetKind().equals("self")) return ActionTarget.entity(actor, host.position(actor), target.direction());
+        return target.entity() != null && host.valid(target.entity())
+            ? ActionTarget.entity(target.entity(), host.closestPoint(target.entity(), target.point()), target.direction()) : target;
     }
 
     private void validateTarget(ActionDefinition definition, ActorHandle actor, ActionTarget target) {
@@ -129,9 +131,9 @@ public final class ActionRuntime {
             || kind.equals("point") && !target.kind().equals("point")
             || kind.equals("motion") && entity)
             throw new ActionRejectedException("invalid-target");
-        if (entity && !kind.equals("self") && kind.equals("friend") != host.friendly(actor, target.entity()))
+        if (entity && (kind.equals("enemy") || kind.equals("friend")) && kind.equals("friend") != host.friendly(actor, target.entity()))
             throw new ActionRejectedException(kind.equals("friend") ? "choose-friend" : "choose-enemy");
-        Point position = entity ? host.position(target.entity()) : target.point();
+        Point position = entity ? host.closestPoint(target.entity(), host.position(actor)) : target.point();
         if (!target.kind().equals("direction") && host.position(actor).minus(position).length() > range)
             throw new ActionRejectedException("out-of-range");
     }
@@ -174,7 +176,7 @@ public final class ActionRuntime {
         host.checkThread();
         for (var context : active(actor)) {
             var spec = content.preview(context.definition.id()).input();
-            if (context.definition.composition().owns("input") && spec.sustained() && Objects.equals(controller, context.controller()))
+            if (!context.inputReleased && context.definition.composition().owns("input") && spec.sustained() && Objects.equals(controller, context.controller()))
                 return ActionInput.parse(context.controlJson, spec).token();
         }
         return 0;
@@ -185,9 +187,22 @@ public final class ActionRuntime {
         var spec = content.preview(context.definition.id()).input();
         if (!spec.sustained() || token <= 0 || ActionInput.parse(context.argument(ActionInput.KEY), spec).token() != token) return false;
         if (stop) { finish(context, "input-stopped"); return true; }
+        if (context.inputReleased) return false;
         var input = ActionInput.validate(json, spec, context.definition.range(), actor, host, effects);
         if (input.token() != token) return false;
         context.controlJson = input.json(); context.controlTick = tick;
+        return true;
+    }
+    /** A physical key release is distinct from cancellation. Only a declared listener takes over that edge. */
+    public synchronized boolean releaseInput(ActorHandle actor, UUID controller, long token, String json) {
+        if (!control(actor, controller, token, json, false)) return false;
+        var context = active(actor).stream().filter(it -> it.definition.composition().owns("input")).findFirst().orElse(null);
+        if (context == null) return false;
+        if (context.listeners.values().stream().noneMatch(listener -> listener.event().equals("world_combat:input-release"))) {
+            finish(context, "input-stopped"); return true;
+        }
+        context.inputReleased = true;
+        invoke(context, current -> current.emit("world_combat:input-release"));
         return true;
     }
     /** Actor events broadcast to a stable snapshot; new instances wait for the next event. */
@@ -267,7 +282,7 @@ public final class ActionRuntime {
         for (var context : List.copyOf(instances.values())) {
             if (!isCurrent(context)) continue;
             var spec = content.preview(context.definition.id()).input();
-            if (spec.sustained() && ActionInput.parse(context.argument(ActionInput.KEY), spec).token() > 0 && tick - context.controlTick > 15) {
+            if (!context.inputReleased && spec.sustained() && ActionInput.parse(context.argument(ActionInput.KEY), spec).token() > 0 && tick - context.controlTick > 15) {
                 finish(context, "input-timeout"); continue;
             }
             if (!host.valid(context.actor()) || !host.mayAct(context.actor(), context.controller())) {
@@ -450,7 +465,7 @@ public final class ActionRuntime {
         // Rollback has completed. Release the failed action first; reactions have their own writable lifecycle.
         finish(context, reason);
         if (host.valid(context.actor()))
-            content.hooks().emit(this, "world_combat:action_rejected", context.actor(), context.target(), data.toString(), null, true);
+            content.hooks().emit(this, "world_combat:action_rejected", context.actor(), context.target(), data.toString(), null, true, context.executionOrigin);
     }
 
     void finish(ActionContext context, String reason) {
@@ -464,6 +479,10 @@ public final class ActionRuntime {
             if (context.definition.composition().steers() && !claimed(context.actor(), "movement") && !claimed(context.actor(), "aim")) host.stopMovement(context.actor());
             context.release();
             host.report(context.id(), context.definition.id(), reason, null);
+            var ended = new com.google.gson.JsonObject();
+            ended.addProperty("instance", context.id()); ended.addProperty("content", context.definition.id());
+            ended.addProperty("reason", reason); ended.addProperty("committed", context.committed);
+            content.hooks().emit(this, "world_combat:action_ended", context.actor(), context.target(), ended.toString(), null, false);
         }
     }
 
@@ -474,11 +493,20 @@ public final class ActionRuntime {
     }
 
     public long now() { return tick; }
+    /** The actual live scope supplies this identity; callers cannot select another actor's execution. */
+    public ExecutionOrigin origin(long owner) {
+        if (owner < 0) return effects.origin(-owner);
+        var action = instances.get(owner);
+        return action == null ? null : action.executionOrigin;
+    }
     public ManagedProjectiles projectiles() { return projectiles; }
     public ContentRegistry content() { return content; }
     public dev.worldcombat.core.runtime.effect.EffectRuntime effects() { return effects; }
     public WorldHooks.Result event(String topic, ActorHandle actor, ActorHandle target, String data, boolean writable) {
         return content.hooks().emit(this, topic, actor, target, data, null, writable);
+    }
+    public WorldHooks.Result event(String topic, ActorHandle actor, ActorHandle target, String data, boolean writable, ExecutionOrigin origin) {
+        return content.hooks().emit(this, topic, actor, target, data, null, writable, origin);
     }
 
     public synchronized Stats stats() {

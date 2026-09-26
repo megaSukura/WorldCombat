@@ -50,7 +50,7 @@ namespace PokemonSkills {
             F.base(0.45).plus(F.body("height").minus(1.4).times(0.16).clamp(-0.1, 0.4)).clamp(0.3, 0.95).round(2),
             "鞭线宽度", {
                 unit: "格",
-                description: "抽出的窄线有多粗（判定到线两侧各多少格）；身架越大线越粗，越容易顺带扫到沿线的人。"
+                description: "抽出的三维窄线有多粗（到线段的实际距离在这个范围内才算命中）；身架越大线越粗，越容易顺带扫到贴着线的人，但高过线两格的目标仍打不到。"
             }),
         /** 抽击次数：双抽式 2 记 / 单抽式 1 记；夹在 1..2。 */
         strokes: formula(

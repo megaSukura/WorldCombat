@@ -30,6 +30,5 @@
   "worldcombat.skill.dragondarts.preference.ai.crowd": "瞄准扎堆",
   "worldcombat.skill.dragondarts.preference.ai.crowd.help": "开启：目标近旁还站着别的敌人时更愿意出箭，因为分头式能各追一只；关闭则只按普通远程攻击排序。",
   "worldcombat.skill.dragondarts.preference.ai.leaveStation": "驻守时允许离位",
-  "worldcombat.skill.dragondarts.preference.ai.leaveStation.help": "开启后，驻守命令下也会为出箭离开站位；关闭则只在原地够得到时出手。",
-  "world_combat.move.dragondarts.text.miss": "没有可追的目标"
+  "worldcombat.skill.dragondarts.preference.ai.leaveStation.help": "开启后，驻守命令下也会为出箭离开站位；关闭则只在原地够得到时出手。"
 }

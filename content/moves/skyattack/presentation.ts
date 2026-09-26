@@ -6,7 +6,8 @@
  * 色相家族：暖白金光（0xFFE8A8 主体、0xFFF6DC 高光）＋淡天蓝（0xBFD9EF）做风与速度线；没有第二个色相。
  * 拍子：起 charge（聚光，由少到多）→ 腾 rise（上升速度线）→ 坠 fall（向下光柱，`ratio` 越接近 1 越亮）→
  *   击 strike（命中迸光）／落 land（冲击环）→ 懵 flinch。
- * 范围：land 的地面环用 `data.scale`（落点半径换算）铺开，画出来的就是这一砸覆盖的地；站出环外就压不到。
+ * 范围：fall 在 `data.point`（起跳那刻锁死的落点）上持续泛出标记环，land 的地面环用 `data.scale`（落点半径换算）铺开，
+ *   画出来的就是这一砸覆盖的地；站出环外或落点在坠落途中被走开就压不到。
  * 运动：唯一有形状的运动是垂直方向——rise 向上、fall 向下拖着光柱、strike 在命中点爆开；一眼看出是从天而降。
  * 数：`data.orbs`（蓄势派生）绑定聚光量，`data.shock`（物攻派生）绑定冲击环与碎光数量，与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -77,6 +78,16 @@ const SkyAttackDefinition: ParticleDefinition = {
                     direction: "down", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.06, 0.01],
                     color: 0xBFD9EF, alpha: [0.5, 0], light: "world", maxParticles: 80
+                },
+                {
+                    // 固定落点标记：data.point 是起跳那刻锁死的落点，随下降反复泛起，站在圈里才会被砸到。
+                    name: "mark", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1, interval: 8, repeats: 3 },
+                    shape: { kind: "ring", radius: 0.7, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.02, 0.1],
+                    lifetime: [10, 16], size: [0.5, 0.12], sizeMode: "index",
+                    color: 0xFFE8A8, alpha: [0.55, 0], light: "world", maxParticles: 6
                 }
             ]
         },

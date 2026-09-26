@@ -1,14 +1,14 @@
 /**
  * 龙尾 / dragontail 的客户端表现。
  *
- * 一句话：施法者身后拢起一道龙鳞紫的尾光，随即抡尾在身前扫开一整片扇形——紫色的鳞光填满整个扇面、
- *   外缘拖出一道路径，被扫中的敌人身上炸开一记龙击并被抛向远处。
+ * 一句话：施法者身后拢起一道龙鳞紫的尾光，随即粗尾从一侧到另一侧真实摆过——紫色的尾身贴着弧线扫出去、
+ *   尾尖一段亮得更白，被扫中的敌人身上炸开一记龙击并被抛向远处。
  * 色相家族：龙鳞紫（0x7C5CD8 主体、0x5B3FA8 余韵）＋淡紫白（0xE4DAFA）只给尾锋与外缘高光；没有第二个色相。
- * 拍子：起（windup 拢尾）→ 击（sweep 扇面铺开，只播一次）→ 结果（impact 逐目标龙击）→ 持续（flee 被打飞者的余尘）→ 空（miss 落空）。
- * 范围：sweep 的扇面用服务端算出的同一组顶点（`data.path`，原点＋圆弧采样）以 polygon 填满、polyline 勾边，
- *   画出来的就是判定覆盖的那片扇形；站在扇面外就扫不到。
- * 运动：鳞光从原点向外沿扇面铺开并上扬；被扫中者沿背离施法者的方向滑出、抛起。
- * 数：扇面鳞光数量由 `data.shards`（物攻派生）驱动；命中的那一记用 `data.primary`（是否正对目标）区分强弱。
+ * 拍子：起（windup 拢尾）→ 扫（sweep 尾体每刻更新到实际尾端，路径/尾尖由服务端同一份数据给出）→
+ *   结果（impact 逐目标龙击，尾梢重击更大更亮）→ 空（miss 落空）。
+ * 范围：sweep 的尾体用 `data.path`（中心 → 当刻尾端）以 polyline 采样，尾端 `data.point` 放尾尖亮斑；
+ *   尾端被墙截断时路径与亮斑一起停在接触点，画出来的就是真实扫到的那一段。
+ * 数：尾身与尾尖的粒子数量由 `data.shards`（物攻派生）驱动；命中那一记用 `data.size` 区分尾梢／内段强弱。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const DragonTailDefinition: ParticleDefinition = {
@@ -37,34 +37,35 @@ const DragonTailDefinition: ParticleDefinition = {
             ]
         },
         sweep: {
-            duration: 24,
-            exit: { stop: 10, drain: 16 },
+            duration: 16,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "fan", bind: "path", fit: "none", offset: [0, 0, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
-                    burst: { count: { data: "shards", fallback: 14 }, interval: 3, repeats: 2 },
-                    shape: { kind: "polygon" },
-                    direction: "shape", speed: [0.06, 0.24], spread: 20,
-                    lifetime: [6, 13], size: [0.28, 0.06], sizeMode: "index",
-                    color: 0x7C5CD8, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 160
-                },
-                {
-                    name: "edge", bind: "path", fit: "none", offset: [0, 0.05, 0], height: 0,
+                    name: "tail", bind: "path", fit: "none", offset: [0, 0.32, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/swipe",
-                    burst: { count: 10 },
+                    burst: { count: { data: "shards", fallback: 14 }, interval: 1, repeats: 2 },
                     shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.05, 0.2],
-                    lifetime: [8, 16], size: [0.5, 0.14],
-                    color: 0xE4DAFA, alpha: [0.7, 0], light: "full", maxParticles: 60
+                    direction: "shape", speed: [0.05, 0.2], spread: 18,
+                    lifetime: [6, 12], size: [0.24, 0.46], sizeMode: "index",
+                    color: 0x7C5CD8, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 220
                 },
                 {
-                    name: "core", bind: "source", offset: [0, 0.35, 0.4], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 }, shape: { kind: "circle", radius: 0.6, thickness: 0 },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [8, 14], size: [0.5, 0.16],
-                    color: 0x7C5CD8, alpha: [0.6, 0], light: "world", maxParticles: 6
+                    name: "tip", bind: "point", fit: "none", offset: [0, 0.32, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
+                    burst: { count: { data: "shards", fallback: 12 } },
+                    shape: { kind: "sphere", radius: 0.42 },
+                    direction: "outward", speed: [0.06, 0.24], spread: 24,
+                    lifetime: [6, 12], size: [0.3, 0.06], sizeMode: "index",
+                    color: 0xE4DAFA, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 60
+                },
+                {
+                    name: "edge", bind: "path", fit: "none", offset: [0, 0.28, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 8 },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.04, 0.16],
+                    lifetime: [8, 15], size: [0.07, 0.01],
+                    color: 0xE4DAFA, alpha: [0.6, 0], light: "full", maxParticles: 60
                 }
             ]
         },
@@ -75,11 +76,11 @@ const DragonTailDefinition: ParticleDefinition = {
                 {
                     name: "crack", bind: "target", height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
-                    burst: { count: 8 },
-                    shape: { kind: "sphere_surface", radius: 0.32 },
+                    burst: { count: { data: "shards", fallback: 8 } },
+                    shape: { kind: "sphere_surface", radius: 0.34 },
                     direction: "outward", speed: [0.07, 0.24], spread: 26,
-                    lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
-                    color: 0x7C5CD8, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 30
+                    lifetime: [6, 12], size: [{ data: "size", fallback: 0.3 }, 0.05], sizeMode: "index",
+                    color: 0x7C5CD8, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 34
                 },
                 {
                     name: "lash", bind: "target", height: 0.55,
@@ -88,33 +89,6 @@ const DragonTailDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.02, 0.06],
                     lifetime: [6, 11], size: [0.42, 0.12],
                     color: 0xE4DAFA, alpha: [0.85, 0], light: "full", maxParticles: 8
-                }
-            ]
-        },
-        rout: {
-            duration: 18,
-            exit: { stop: 6, drain: 12 },
-            emitters: [
-                {
-                    name: "mark", bind: "target", height: 0.7,
-                    particle: "world_combat_core:cobblemon/generic/exclamation",
-                    burst: { count: 1 }, shape: { kind: "point" },
-                    direction: "up", speed: [0.02, 0.04],
-                    lifetime: [10, 16], size: [0.3, 0.1],
-                    color: 0xE4DAFA, alpha: [0.8, 0], light: "full", maxParticles: 3
-                }
-            ]
-        },
-        flee: {
-            exit: { drain: 22 },
-            emitters: [
-                {
-                    name: "dust", bind: "target", height: 0.25,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 6, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.02, 0.08], gravity: 0.01,
-                    lifetime: [8, 14], size: [0.06, 0.01],
-                    color: 0x8C78C8, alpha: [0.4, 0], alphaMode: "sin", light: "world", maxParticles: 22
                 }
             ]
         },

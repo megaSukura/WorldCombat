@@ -1,15 +1,29 @@
-/**
- * 气味侦测 的伙伴 AI 用途：这招自己的一套出手计划。
- *
- * 什么局面有意义：有一个看得见、够得着（ai.maxChase 内）且视线畅通的威胁，自己身上还没有同一次追踪印记。
- * 什么时候最想出手：对手正在拉开（共享 movement 感官判为 fleeing）时 priority 抬到 86——气味最适合咬住一个
- *   想跑的目标；目标是幽灵时 78，先破掉它的一般/格斗免疫；其余 56。
- * 对谁出手：当前威胁；已经带着 foresight／odorsleuth 身份的目标跳过，避免浪费 40 发 PP。
- * 够不到怎么办：reach 就是嗅闻距离（按体型估算），由共享接近逻辑把身体带进范围；视线被挡或距离不够时不急。
- * 放完之后：气味留在目标身上、一般与格斗接得上、脚步被拖慢；印记还在时不重复。
- * 配置：ai.maxChase 限制考虑距离；ai.leaveStation 决定驻守时是否离位。
- */
+/** Use identification on Ghosts/runners, then search only the recently observed scent point. */
 namespace CompanionBehavior {
+    registerFact("world_combat:odorsleuth/trail", function (world, actor) {
+        const trail = world.effects(actor, PokemonSkills.odorsleuthTrail)[0]; if (!trail) return null;
+        const data = JSON.parse(trail.data());
+        return !data.visible && world.tick() - data.seen <= data.memory && world.actor(data.ref) ? data : null;
+    });
+    function odorsleuthLost(context: WorldBehavior.Context): any {
+        if (context.facts.mounted || context.facts.intent === "hold" || context.facts.intent === "stay" || context.senses["world_combat:threat"]) return null;
+        return fact<any>(context, "world_combat:odorsleuth/trail", source(context));
+    }
+    registry.goal({ id: "world_combat:odorsleuth/search", propose: function (context) {
+        const trail = odorsleuthLost(context);
+        return trail ? [{ id: "scent:" + trail.ref, kind: "world_combat:odorsleuth/search", data: { ref: trail.ref } }] : [];
+    } });
+    registry.method({ id: "world_combat:odorsleuth/search", propose: function (_context, goal) {
+        return goal.kind === "world_combat:odorsleuth/search" ? [{ id: "last-seen", data: {} }] : [];
+    }, create: function () { return WorldBehavior.step(function (context) {
+        const trail = odorsleuthLost(context); if (!trail) return WorldBehavior.success();
+        if (distance(source(context).point, trail.point) <= .8) return WorldBehavior.success();
+        const result = navigate(context, trail.point, .8);
+        return result === "path-blocked" ? WorldBehavior.success() : WorldBehavior.running();
+    }); } });
+    orderGoals("world_combat:odorsleuth/search", function (_context, order) {
+        const at = order.indexOf("world_combat:command"); order.splice(at < 0 ? order.length : at, 0, "world_combat:odorsleuth/search");
+    });
     PokemonSkills.addPreferences("odorsleuth", { ai: { maxChase: 14, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 22, 1),
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")

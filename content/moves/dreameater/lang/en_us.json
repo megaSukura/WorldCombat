@@ -27,7 +27,8 @@
   "worldcombat.skill.dreameater.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.dreameater.preference.ai.healBelow.help": "Below this health ratio the user prefers dream eater as sustain; higher leans on it for healing sooner.",
   "world_combat.move.dreameater.text.feast": "Devoured the dream",
-  "world_combat.move.dreameater.text.sap": "Dream restored %1$s%%",
+  "world_combat.move.dreameater.text.sap": "Dream restored %1$s",
   "world_combat.move.dreameater.text.wake": "Awake - no dream to eat",
+  "world_combat.move.dreameater.text.fade": "The dream slipped out of reach",
   "worldcombat.skill.dreameater.description.additional": "The target must be asleep; dealing damage wakes it, so a single sleep window usually feeds only one draw."
 }

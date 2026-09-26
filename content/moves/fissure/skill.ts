@@ -20,7 +20,7 @@ namespace PokemonSkills {
         name: "Fissure",
         description: "把震荡压进土里，一道裂缝沿地表直窜到对手脚下张口——站在那块地上的人被一次结清（一击必杀）。它隔得远，但只认站在地上、且属性上吃得到地面系的目标；张口前的预告就是对手走开的窗口。",
         uses: ["从远处点掉一个站在地上的高价值目标", "逼对手离开脚下的位置或跳起来", "在地面留下裂缝，标出这块地不再安全"],
-        kind: "enemy",
+        kind: "aim",
         range: 7,
         maxRange: 11,
         prepare: 16,
@@ -47,7 +47,8 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            if (target === null) return "";
+            if (!world.valid(target) || world.friendly(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "target-left";
             if (!body.grounded()) return "target-airborne";
@@ -82,18 +83,16 @@ namespace PokemonSkills {
                     direction: [flow.x(), flow.y(), flow.z()], span: span, radius: sink, spall: spall, scale: scale }, mark + 24);
             sound(action, "minecraft:block.deepslate.break");
 
+            action.releaseTarget();
             action.after(mark, function (current: CombatAction) {
                 const scope = current.world();
-                const victim = target === null ? null : action.target();
-                let result = "miss", airborne = false;
-                if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                    const caught = scope.observe(victim);
-                    if (caught !== null && caught.health() > 0) {
-                        if (!caught.grounded()) airborne = true;
-                        else if (caught.position().minus(at).length() <= sink + caught.width() * 0.5)
-                            result = fissureExecute(current, victim);
-                    }
-                }
+                let victim: CombatActor | null = null, nearest = Infinity, airborne = false;
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, sink, { below: 2, above: 2 }), function (enemy, facts) {
+                    if (!facts.grounded()) { airborne = true; return; }
+                    const distance = facts.position().minus(at).length();
+                    if (distance < nearest && scope.clear(origin, facts.position())) { victim = enemy; nearest = distance; }
+                });
+                const result = victim === null ? "miss" : fissureExecute(current, victim);
                 const placed = fissureRent(scope, current.origin(), at, sink, ticks, cells);
                 if (result === "kill") {
                     WorldFeedback.emit(scope, fissureScene, 1, at,
@@ -102,7 +101,7 @@ namespace PokemonSkills {
                     scope.sound("cobblemon:impact.ground", at, 16, "{}");
                 } else {
                     WorldFeedback.emit(scope, fissureScene, 1, at, { moment: "miss", radius: sink, scale: scale }, 22);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.8, 0)), airborne ? fissureAirText : fissureMissText, [], 22);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.8, 0)), result === "resisted" ? "world_combat.move.fissure.text.resisted" : airborne ? fissureAirText : fissureMissText, [], 22);
                     scope.sound("minecraft:block.gravel.break", at, 12, "{}");
                 }
                 WorldFeedback.emit(scope, fissureScene, 1, at, { moment: "rent", radius: sink, cells: placed, scale: scale }, 34);

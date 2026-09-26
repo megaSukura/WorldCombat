@@ -28,6 +28,8 @@ namespace PokemonSkills {
     export const babydolleyesStatus = "charmed";
     export const babydolleyesGazeText = "world_combat.move.babydolleyes.text.gaze";
     export const babydolleyesBlockedText = "world_combat.move.babydolleyes.text.blocked";
+    export const babydolleyesCappedText = "world_combat.move.babydolleyes.text.capped";
+    export const babydolleyesWardedText = "world_combat.move.babydolleyes.text.warded";
 
     actionParameters.define(babydolleyesId, {
         drop: formula(

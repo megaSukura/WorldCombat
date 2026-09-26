@@ -3,9 +3,9 @@
   "worldcombat.skill.spicyextract.use.0": "Open a focus-fire window for your whole team",
   "worldcombat.skill.spicyextract.use.1": "Turn a tank into a glass cannon",
   "worldcombat.skill.spicyextract.use.2": "Scorch a small cluster in a tight space",
-  "worldcombat.skill.spicyextract.description.0": "Hurl the extract at the target (or its feet): every enemy within the burst gains %1$s Attack stages and loses %2$s Defence stages; the payoff belongs to everyone attacking it.",
-  "worldcombat.skill.spicyextract.description.1": "The haze has a %1$s-block radius and lingers about %2$s s; enemies who walk in are scorched once (each target resolves once per haze).",
-  "worldcombat.skill.spicyextract.description.2": "The bottle flies at %1$s blocks/tick with a %2$s-block hit radius over a %3$s-block range; it can be deflected or blocked by cover.",
+  "worldcombat.skill.spicyextract.description.0": "Hurl the extract at a point: every enemy within the burst gains %1$s Attack stages and loses %2$s Defence stages; the single body the bottle hits directly can be an ally, who receives the same double-edged boost on purpose. The payoff belongs to everyone attacking it, and nothing here deals damage.",
+  "worldcombat.skill.spicyextract.description.1": "The haze has a %1$s-block radius and lingers about %2$s s, filtering enemies only; enemies who walk in are scorched once (each target resolves once per haze, and those already hit by the burst are not stacked again).",
+  "worldcombat.skill.spicyextract.description.2": "The bottle flies at %1$s blocks/tick with a %2$s-block hit radius over a %3$s-block range; it can be deflected or blocked by cover, and bursts on the surface it strikes.",
   "worldcombat.skill.spicyextract.description.3": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s. Concentration options: neat extract bursts up close on one target for the deepest window; diluted spray reaches further and covers a small cluster, but each dose is milder.",
   "worldcombat.skill.spicyextract.timing": "Short windup and recovery; one throw with an area resolution, paced by its cooldown.",
   "worldcombat.skill.spicyextract.value.blast": "Haze radius",
@@ -28,5 +28,5 @@
   "worldcombat.skill.spicyextract.preference.ai.leaveStation": "Leave post to throw",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation.help": "When on, the companion leaves its post to throw.",
   "world_combat.move.spicyextract.text.burn": "Scorched (Attack +%1$s / Defence -%2$s)",
-  "worldcombat.skill.spicyextract.description.additional": "The Attack and Defence stage changes stay until stages are cleared or the target leaves combat; the haze itself deals no damage."
+  "worldcombat.skill.spicyextract.description.additional": "The Attack and Defence stage changes stay until stages are cleared or the target leaves combat; the whole move deals no damage, only changing Attack and Defence."
 }

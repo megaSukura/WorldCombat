@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.recover.summary": "让身体自行再生：在一段窗口里按刻把生命补回来，总量随伤势最多约最大生命的六成；伤得越重回得越多，而且不锁足、可以边走边修。清除身上的再生效果会掐断剩余的回复。",
+  "worldcombat.skill.recover.summary": "让身体自行再生：在一段窗口里按刻把生命补回来，总量随伤势最多约最大生命的六成；伤得越重回得越多，而且不锁足、可以边走边修。开始新的出手、被打断或清除身上的再生效果都会立刻掐断剩余回复，只保留已经补进去的部分。",
   "worldcombat.skill.recover.use.0": "在走位中持续补回生命",
   "worldcombat.skill.recover.use.1": "重伤时让细胞干得更猛",
   "worldcombat.skill.recover.use.2": "用不锁足的窗口换一段安全的回复",
@@ -21,10 +21,12 @@
   "worldcombat.skill.recover.preference.steady.help": "开启稳态：回复总量 +0.05、再生窗口 ×1.35（每刻更慢、总量更足），代价是冷却 ×1.08、暴露更久；关闭速生：回复 −0.04、窗口 ×0.75、冷却 ×0.95。",
   "worldcombat.skill.recover.preference.ai.healBelow": "再生阈值",
   "worldcombat.skill.recover.preference.ai.healBelow.help": "自身生命低于该比例就启动再生；调低更倾向硬撑，调高则一掉血就开始再生。",
+  "worldcombat.skill.recover.preference.ai.safeDistance": "安全距离",
+  "worldcombat.skill.recover.preference.ai.safeDistance.help": "可见敌人进入这个距离、或正被敌人攻击时，不再优先启动再生（生命低于阈值一半时无视它先保命）；调大要求退得更开，调小更愿意贴着战场修。",
   "world_combat.move.recover.text.begin": "细胞开始再生",
   "world_combat.move.recover.text.full": "再生完毕，生命已满",
   "world_combat.move.recover.text.end": "再生收势",
   "world_combat.move.recover.text.broken": "再生被掐断",
   "effect.world_combat.regenerating": "再生（按刻回复）",
-  "worldcombat.skill.recover.description.1": "再生期间每隔 2 刻回复一小份；清除身上的再生效果（牛奶或 /effect clear）会立刻掐断剩余回复，满血时无法发动。"
+  "worldcombat.skill.recover.description.1": "再生期间每隔 2 刻回复一小份；开始新的出手、被打断或清除身上的再生效果（牛奶或 /effect clear）都会立刻掐断剩余回复，只保留已经补进去的部分，满血时无法发动。"
 }

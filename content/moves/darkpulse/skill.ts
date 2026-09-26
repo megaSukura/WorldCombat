@@ -2,14 +2,14 @@
  * 恶之波动 / darkpulse 的出手方式。
  *
  * 核心念头：从胸口逼出一团充满恶意的暗色气场，朝选定的一片地推过去；抵达或半路撞上人时炸开成一片
- * 恶意领域，罩住的人各挨一记，可能被恐惧攥住而愣住。气场会飞、会停、会在落点留一小阵，玩家看得见
- * 它走到了哪、罩住了谁。
+ * 恶意领域，罩住的人各挨一记，可能被恐惧攥住而愣住。气团飞到哪、在哪里炸开，玩家看得见；罩住谁也只
+ * 认那一次实际接触。
  *
  * 三幕：
  *   起（windup，提交前）：低头把恶意压在胸口、四周暗点向内收拢的预告。
  *   行（release → travel）：提交后气场从胸口脱手，沿直线推向落点，一路拖出碎缕。
- *   爆（burst → linger）：抵达或撞人时炸开一片领域，半径内的敌人各挨一记并各掷一次畏缩；
- *       落点残留一小阵不散的恶意，按 lingerTicks 淡去。
+ *   爆（burst）：抵达或撞人时炸开一片领域，半径内的敌人各挨一记并各掷一次畏缩；爆心与半径都以实际碰撞点为准，
+ *       气团散去后不再留下看似持续伤害的余韵。
  *
  * 与同族的区分：暗影球是只打单体、命中后磨防的幽灵球；恶之波动是到点炸开、罩住一片的暗色气场。
  *
@@ -65,6 +65,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(darkpulseScene);
             const world = action.world();
             const origin = action.origin();
             const centre = action.targetPosition();
@@ -74,7 +75,6 @@ namespace PokemonSkills {
             const radius = p("darkpulse", "radius", action);
             const chance = p("darkpulse", "flinchChance", action);
             const flinchTicks = Math.round(p("darkpulse", "flinchTicks", action));
-            const linger = Math.max(20, Math.round(p("darkpulse", "lingerTicks", action)));
             const motes = Math.max(8, Math.round(p("darkpulse", "motes", action)));
             const scale = bloom / 3.0;
             const intensity = Math.max(0.5, Math.min(2, power / 70));
@@ -83,12 +83,13 @@ namespace PokemonSkills {
             const distance = Math.max(0.6, centre.minus(origin).length());
             let detonated = false, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
-            /** 气场停下（或撞到人）时：把落点那一圈里的敌人各结算一次，并留下一小阵恶意。 */
+            /** 气场停在（或撞上）实际接触点时：把该点那一圈里的敌人各结算一次，气团随即散去。 */
             function detonate(current: CombatAction, point: CombatPoint): void {
                 if (detonated) return;
                 detonated = true;
+                scenes.stop(current, "travel");
                 const scope = current.world();
                 let hits = 0;
                 WorldFeedback.emit(scope, darkpulseScene, 1, point,
@@ -104,8 +105,6 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.1, 0)), darkpulseFlinchText, [], 26);
                     }
                 });
-                WorldFeedback.keep(scope, "darkpulse:linger:" + current.id(), darkpulseScene, 1, point,
-                    { moment: "linger", scale: scale, intensity: intensity, motes: motes }, linger);
                 sound(current, "cobblemon:impact.dark");
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)),
                     hits > 0 ? darkpulseHitText : darkpulseMissText, hits > 0 ? [hits] : [], 26);
@@ -128,8 +127,8 @@ namespace PokemonSkills {
                 impact: function (current: CombatAction, hit: CombatImpact) { detonate(current, hit.position()); }
             }, function (current: CombatAction) { detonate(current, current.targetPosition()); });
 
-            WorldFeedback.keep(world, "darkpulse:trail:" + action.id(), darkpulseScene, 1, chest,
-                { moment: "travel", projectile: flight, scale: scale, intensity: intensity, motes: motes }, 80);
+            scenes.show(action, "travel", chest,
+                { moment: "travel", projectile: flight, scale: scale, intensity: intensity, motes: motes });
         }
     });
 

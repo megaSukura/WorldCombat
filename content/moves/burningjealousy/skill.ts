@@ -3,9 +3,9 @@ namespace PokemonSkills {
     define({
         id: burningjealousyId,
         cooldownParameter: "recharge", name: "妒火",
-        description: "朝前喷出扇形火焰。目标的能力强化和药水、信标增益越多，这一击越重，并会留下灼伤。",
-        uses: ["惩罚刚强化过的对手", "一次扫过身前挤成一排的敌人", "用灼伤压制正在铺垫的强化手"],
-        kind: "enemy", range: 5, maxRange: 8, prepare: 7, active: 1, recover: 8, cooldown: 32,
+        description: "朝一个方向喷出扇形火焰，强化中的目标烧得更重、被留下灼伤，普通目标只吃基础火伤。可以对着空地空喷，方块不会留下火圈。",
+        uses: ["惩罚刚强化过的对手", "一次扫过身前挤成一排的敌人", "用灼伤压制正在铺垫的强化手", "朝空地空喷，逼走位或配合队友"],
+        kind: "aim", range: 5, maxRange: 8, prepare: 7, active: 1, recover: 8, cooldown: 32,
         style: "fire", stationary: true, maximumTicks: 120,
         defaults: { fixate: false, ai: { maxChase: 10, minStages: 1, leaveStation: false } },
         fields: [field(pathOf("fixate"), "妒噬式", "boolean", {

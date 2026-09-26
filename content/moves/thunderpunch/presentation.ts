@@ -1,13 +1,14 @@
 /**
  * 雷电拳 / thunderpunch 的客户端表现。
  *
- * 一句话：拳面窜起电流、快拳正中目标炸开一撮电火花，随即一道电弧贴着地面从命中点跳向下一个敌人，
- * 沿途噼啪闪出分枝。
+ * 一句话：拳面窜起电流、快拳正中目标炸开一撮电火花；接着一条短粗电索把双方拴住并随双方位置移动，
+ * 在放电窗里越来越亮；目标退开就断电熄灭，贴满窗口才在目标身上炸开放电并把分枝电弧送向邻敌。
  * 色相家族：电弧黄（0xE8D24A）与近白（0xFFFBE0）；饱和黄只出现在电流与火花的细小面积。
- * 拍子：起 charge（拳面聚电）→ 击 hit（命中电爆）→ 链 arc（电弧跳向下一个目标）与 whiff（空拳）。
- * 范围：arc 的电弧用 `data.path`（命中点 → 下一个目标）画成折线，玩家看出电流能追到哪。
- * 运动：拳面沿瞄准方向冲出，电弧沿命中点与目标之间的那条折线走。
- * 数：火花分枝数绑 `data.bolts`（速度换算），命中强度绑 `data.intensity`。
+ * 拍子：起 charge（拳面聚电）→ 击 hit（命中电爆）→ 贴 contact（电索，progress 逐渐变亮）→
+ *   放电 discharge 或断电 break → 链 arc（电弧跳向邻敌）与 whiff（空拳）。
+ * 范围：contact 的电索用 `data.path: ["source","target"]`，两端实体每帧跟随；arc 用电弧折线。
+ * 运动：拳面沿瞄准方向冲出，电弧从真实目标跃向邻敌。
+ * 数：contact 的分枝数绑 `data.bolts`，亮度绑 `data.progress`；命中强度绑 `data.intensity`。
  */
 const ThunderpunchDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -55,6 +56,67 @@ const ThunderpunchDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2], spread: 30,
                     lifetime: [5, 9], size: [0.12, 0.03], sizeMode: "index",
                     color: 0xE8D24A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 60
+                }
+            ]
+        },
+        contact: {
+            duration: 0,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "tether", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/bolt",
+                    shape: { kind: "polyline" }, rate: 16,
+                    direction: "shape", orient: "direction", speed: [0.02, 0.07],
+                    lifetime: [3, 6], size: [0.3, 0.07],
+                    color: 0xFFFBE0, alpha: [{ data: "progress", fallback: 0.45 }, 0], light: "full", bloom: 0.5, maxParticles: 44
+                },
+                {
+                    name: "crackle", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    shape: { kind: "polyline" }, burst: { count: { data: "bolts", fallback: 5 }, interval: 2, repeats: 3 },
+                    direction: "shape", orient: "direction", speed: [0.04, 0.16], spread: 20,
+                    lifetime: [3, 7], size: [0.14, 0.04], sizeMode: "index",
+                    color: 0xE8D24A, alpha: [{ data: "progress", fallback: 0.4 }, 0], light: "full", bloom: 0.35, maxParticles: 60
+                }
+            ]
+        },
+        discharge: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "flash", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
+                    burst: { count: 18 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "shape", speed: [0.08, 0.28], spread: 26,
+                    lifetime: [5, 10], size: [0.36, 0.07], sizeMode: "index",
+                    color: 0xFFFBE0, alpha: [1, 0], light: "full", bloom: 0.55
+                },
+                {
+                    name: "sendoff", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    burst: { count: { data: "bolts", fallback: 5 }, interval: 2, repeats: 2 },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.08, 0.24], spread: 30,
+                    lifetime: [5, 9], size: [0.14, 0.03], sizeMode: "index",
+                    color: 0xE8D24A, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 60
+                }
+            ]
+        },
+        break: {
+            duration: 14,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "snuff", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "inward", speed: [0.05, 0.18],
+                    lifetime: [3, 7], size: [0.14, 0.03], sizeMode: "index",
+                    color: 0x8A7E3A, alpha: [0.5, 0], light: "world", maxParticles: 24
                 }
             ]
         },

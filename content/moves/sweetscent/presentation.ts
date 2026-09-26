@@ -13,6 +13,9 @@
 const SweetScentDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        trail: { duration: 12, emitters: [{ name: "scent_steps", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+            burst: { count: 6 }, shape: { kind: "polyline" }, direction: "up", speed: [.005, .02], lifetime: [8, 12],
+            size: [.08, .02], color: 0xEACD91, alpha: [.35, 0], light: "world", maxParticles: 12 }] },
         windup: {
             duration: 14,
             emitters: [

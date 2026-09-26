@@ -6,8 +6,9 @@
  *
  * 幕：
  *   起（windup，提交前）：刃上聚起一层气，层数越高越亮。
- *   斩（cut → bite，提交后）：朝目标垫前一步，按 `gap` 刻挥出 `cuts` 刀；每一刀沿身前短走廊判定，
- *       走廊里的非友方各吃一记 `bite` 接触斩击。刀数是真实结算次数，与连斩层数一致。
+ *   斩（cut → bite，提交后）：这一趟的挥刀方向在提交时锁定，朝该方向垫前一步，按 `gap` 刻挥出 `cuts` 刀；
+ *       每一刀沿锁定方向的短走廊判定，左右交替，走廊里的非友方各吃一记 `bite` 接触斩击。
+ *       刀数是真实结算次数，与连斩层数一致；对手在这一趟中途走出走廊，后面的刀就不再落到它身上。
  *   续（rise / drop）：这一趟有命中就继续攒层（封顶第 3 层），层数上升时刃口亮一次并浮字；
  *       整趟落空就把层数清零，层数也就此散去。
  *
@@ -32,7 +33,7 @@ namespace PokemonSkills {
         name: "Fury Cutter",
         description: "连续命中时攻击次数增加；落空或使用其他招式会清空累积。",
         uses: ["一趟挥出翻倍的刀数", "连续命中攒层，越接越深", "换招或落空就把层数清空"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.3,
         maxRange: 2.9,
         prepare: 5,
@@ -78,16 +79,16 @@ namespace PokemonSkills {
             const sparks = Math.max(4, Math.min(30, Math.round(bite * 0.5)));
             const notes = Math.max(12, Math.min(60, Math.round(cuts * 14)));
             const up = WorldCombat.point(0, 1.2, 0);
+            // 提交时锁定这一趟的挥刀方向：整趟所有刀都沿它走，不会逐拍瞬转去追到身后。
+            const course = aim(action);
 
-            // 垫前一步：朝目标方向贴近，最多停在判定边缘，避免冲过头。
+            // 垫前一步：朝锁定方向贴近，最多停在判定边缘，避免冲过头。
             const self = world.observe(action.actor());
             if (self !== null && step > 0.05) {
-                const victim = action.target();
-                const victimBody = victim !== null && world.valid(victim) ? world.observe(victim) : null;
-                const delta = victimBody !== null ? victimBody.position().minus(self.position()) : action.direction().scale(step);
+                const delta = action.targetPosition().minus(self.position());
                 const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
                 const advance = Math.min(step, Math.max(0, flat - blade - 0.3));
-                if (advance > 0.05) world.displace(action.actor(), aim(action).scale(advance));
+                if (advance > 0.05) world.displace(action.actor(), course.scale(advance));
             }
 
             let landed = 0, settled = false;
@@ -118,7 +119,7 @@ namespace PokemonSkills {
                     const held = MobEffects.read(scope, actor, furycutterMomentum);
                     if (held !== null && scope.removeMobEffect(actor, held.id(), held.key()))
                         WorldFeedback.emit(scope, furycutterScene, 1, at, { moment: "drop" }, 22);
-                    WorldFeedback.emit(scope, furycutterScene, 1, at.plus(aim(current).scale(reach * 0.6)),
+                    WorldFeedback.emit(scope, furycutterScene, 1, at.plus(course.scale(reach * 0.6)),
                         { moment: "miss", scale: scale }, 18);
                     WorldFeedback.text(scope, at.plus(up), furycutterMissText, [], 22);
                 }
@@ -129,7 +130,7 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const body = scope.observe(current.actor());
                 if (body === null) { finish(current); return; }
-                const origin = body.position(), direction = aim(current);
+                const origin = body.position(), direction = course;
                 WorldFeedback.emit(scope, furycutterScene, 1, origin,
                     { moment: "cut", path: furycutterLane(origin, direction, reach, blade), side: index % 2 === 0 ? -1 : 1,
                         index: index, cuts: cuts, notes: notes, sparks: sparks, scale: scale, intensity: intensity,

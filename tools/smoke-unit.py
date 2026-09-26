@@ -33,6 +33,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from content_resources import install_content_resources  # noqa: E402
+from prebuilt_runtime import snapshot_mods  # noqa: E402
 
 BOOT_BUDGET = 300
 SCENARIO_BUDGET = 600
@@ -243,6 +244,7 @@ def main():
         print(re.sub(r"\x1b\[[0-9;]*m", "", (run.stderr or run.stdout))[-6000:]); return 1
 
     spec = json.loads((ROOT / "mods/cobblemon-world-combat/build/p1-launch/server.json").read_text(encoding="utf-8"))
+    spec = snapshot_mods(ROOT, output, spec)
     work = (ROOT / "runs" / ("smoke-" + output.name)).resolve()
     if not work.is_relative_to((ROOT / "runs").resolve()) or not work.name.startswith("smoke-"):
         raise RuntimeError("Smoke work directory must stay inside the project's runs directory")

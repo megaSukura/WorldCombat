@@ -17,7 +17,7 @@ Smoke.scenario("babydolleyes", function (stage) {
         stage.expect(stage.casts("babydolleyes") > 0, "baby-doll eyes was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/charmed"), "the target carried the shared charmed identity");
         stage.expect(stage.attribute(target, "minecraft:generic.attack_damage") < baseAttack - 0.001, "the target's attack fell with the Attack drop");
-        stage.note("圆瞳落地；起手极短、凝视与疾视的取舍、视线与距离都不是本场的必然事实。攻击下降级数由特攻之外的配置（凝视 2／疾视 1）决定，写进 note 供核对。", {
+        stage.note("圆瞳落地；起手极短、凝视与疾视的取舍、视线与距离都不是本场的必然事实。执行按本次真实 gazeRange 复查距离与视线，只有 NativeEffects.boost 真的扣出等级才会垂下攻势符号；实际降了几级写进 note 供核对。", {
             casts: stage.casts("babydolleyes"), baseAttack: baseAttack,
             attack: stage.attribute(target, "minecraft:generic.attack_damage"),
             casterHp: caster.health(), targetHp: target.health()

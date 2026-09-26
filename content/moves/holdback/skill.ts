@@ -5,8 +5,9 @@
  *
  * 两幕：
  *   起（windup，提交前）：沉身开肩，把这一扫的力道抡到最大。
- *   扫（sweep → strike，提交后）：朝身前 `reach` 半径、`angle` 半角的扇形扫出一记接触横扫，扇面里的非友方各挨一下；
- *       每个目标在结算前都被 `world_combat:holdback_mercy` 截停在「至少剩 1 HP」，所以谁都不会被扫倒。
+ *   扫（sweep → strike，提交后）：`kind: "aim"`——朝任意方向或世界点扫出一记接触横扫，扇形张角 `angle` 是
+ *       **总张角**，判定与画面共用同一个数；扇面里的非友方各挨一下，但被实墙挡住的挥臂够不到的目标不结算
+ *       （`world.clear` 沿真实刀路挡刀）。每个目标都用本次伤害自带的 `minimumHealth: 1` 截停，所以谁都不会被扫倒。
  *       沉腰式扫完后，收势把施法者自己钉住 `brace` 刻。
  *
  * 与同族分开：点到为止是单点精准的细切；手下留情是一道宽扇形横扫，能同时留手好几个，慢而宽。
@@ -16,35 +17,17 @@
 namespace PokemonSkills {
     const holdbackId = "holdback";
     const holdbackScene = "world_combat:move_holdback";
-    const holdbackMercy = "world_combat:holdback_mercy";
     const holdbackSpareText = "world_combat.move.holdback.text.spare";
     const holdbackMissText = "world_combat.move.holdback.text.miss";
 
-    /** 拦截这一扫的致命数值：每个被扫中的目标都在结算前截到「至少剩 1 HP」。 */
-    WorldCombat.effect(holdbackMercy, 1, 40, "actor", function (json) { return JSON.stringify(JSON.parse(json)); }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(holdbackMercy, "start", function (effect) {
-        effect.listen("world_combat:incoming", "world_combat:intercept", "intercept");
-    });
-    WorldCombat.effectHandler(holdbackMercy, "intercept", function (effect) {
-        const event = effect.event();
-        if (String(event.target().key()) !== String(effect.target().key())) return;
-        if (String(event.source().key()) !== String(effect.source().key())) return;
-        const data = JSON.parse(String(event.payload()));
-        if (String(data.move) !== holdbackId || !(data.amount > 0)) return;
-        const world = effect.world(), body = world.observe(effect.target());
-        if (body === null) { effect.end(); return; }
-        const cap = Math.max(0, body.health() - 1);
-        if (data.amount > cap) { data.amount = cap; data.mercy = true; event.payload(JSON.stringify(data)); }
-        effect.end();
-    });
-
-    /** 扇形扇面顶点：从 origin 起，绕朝向张开 angle 半角、半径 reach；判定与表现共用同一组点。 */
+    /** 扇形扇面顶点：从 origin 起，绕朝向张开 `angle` **总张角**、半径 reach；判定与表现共用同一组点。 */
     function holdbackArc(origin: CombatPoint, direction: CombatPoint, reach: number, angle: number): number[][] {
         const forward = WorldCombat.point(direction.x(), 0, direction.z());
         const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
+        const half = Math.max(0, Math.min(360, angle)) * Math.PI / 360;
         const base = Math.atan2(heading.x(), heading.z()), points: number[][] = [[origin.x(), origin.y() + 0.5, origin.z()]];
         for (let step = 0; step <= 10; step++) {
-            const theta = base + (-angle + 2 * angle * step / 10) * Math.PI / 180;
+            const theta = base + (-half + 2 * half * step / 10);
             points.push([origin.x() + Math.sin(theta) * reach, origin.y() + 0.5, origin.z() + Math.cos(theta) * reach]);
         }
         return points;
@@ -55,9 +38,9 @@ namespace PokemonSkills {
         id: holdbackId,
         cooldownParameter: "recharge",
         name: "Hold Back",
-        description: "朝身前扇形扫出一记收着力气的横扫：扇面里的所有非友方都只会削血，目标至少留下 1 HP。沉腰式更宽更沉、扫完要沉腰；快扫更快更轻。",
+        description: "朝身前扇形扫出一记收着力气的横扫：扇面里的所有非友方都只会削血，目标至少留下 1 HP。张角就是画面真正扫开的范围，实墙会挡住挥臂够不到的目标。沉腰式更宽更沉、扫完要沉腰；快扫更快更轻。",
         uses: ["一次把几个目标都削到低血便于捕捉", "在混战里同时压制而不打倒任何人", "替队友留活口、控制场面"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 3.4,
         prepare: 9,
@@ -102,14 +85,15 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.0, reach / 2.6));
             const intensity = Math.max(0.6, Math.min(2.4, power / 50));
             const path = holdbackArc(origin, direction, reach, angle);
-            let hits = 0, totalDust = 0;
+            let hits = 0;
 
             WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, direction, reach, angle, { below: 0.8, above: depth }),
                 function (victim, facts) {
-                    world.effect(holdbackMercy, victim, "{}", 12);
-                    if (!hurt(action, victim, holdbackId, power, { damage: damageSpec(holdbackId, "sweep"), contact: true })) return;
+                    // 实墙挡住挥臂：挡刀线过不去就不结算，扇边可见范围与判定一致。
+                    if (!world.clear(origin, facts.position())) return;
+                    if (!hurt(action, victim, holdbackId, power,
+                        { damage: damageSpec(holdbackId, "sweep"), contact: true, minimumHealth: 1 })) return;
                     hits++;
-                    totalDust += dust;
                     WorldFeedback.emit(world, holdbackScene, 1, facts.position(),
                         { moment: "strike", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity }, 18);
                 });
@@ -127,10 +111,12 @@ namespace PokemonSkills {
         }
     });
 
-    // 收手标记：任一被扫中的目标保住了 1 HP 时，在它身上补一记收手标记与浮字。
+    // 收手标记：每个真正被 1 HP 下限截停、保住了 1 HP 的目标，在它身上补一记收刃星与浮字。
+    // 读 damage_applied 的实际结果（after <= 1），不把「伤害被接受」当成「到达 1 HP」。
     WorldCombat.on("world_combat:move_holdback/spare", "world_combat:damage_applied", "", function (event) {
         const data = JSON.parse(String(event.data()));
-        if (String(data.move) !== holdbackId || data.mercy !== true) return;
+        if (String(data.move) !== holdbackId || !(data.actual > 0)) return;
+        if (typeof data.after !== "number" || data.after > 1) return;
         const world = event.world(), target = event.target();
         if (target === null || typeof data.x !== "number") return;
         const at = WorldCombat.point(data.x, data.y, data.z);

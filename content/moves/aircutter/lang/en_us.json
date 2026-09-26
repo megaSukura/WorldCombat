@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.aircutter.summary": "Spread a single sheet of thin wind blades that sweeps the sector in front and cuts several foes at once; short wind-up, low cooldown, high critical chance. Focus form is narrower and heavier; wide-fan form is wider and denser.",
+  "worldcombat.skill.aircutter.summary": "Spread a single sheet of thin wind blades toward a direction or world point, sweeping that sector and cutting several foes at once, and it can be loosed at empty air; short wind-up, low cooldown, high critical chance. Focus form is narrower and heavier; wide-fan form is wider and denser.",
   "worldcombat.skill.aircutter.use.0": "Sweep a whole arc of foes in front in one spread",
   "worldcombat.skill.aircutter.use.1": "Cut several targets bunched inside the fan at once",
   "worldcombat.skill.aircutter.use.2": "Instant and cheap, forcing foes to move during the short wind-up",

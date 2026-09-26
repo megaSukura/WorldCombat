@@ -1,14 +1,13 @@
 /**
  * 精神之牙 / psychicfangs 的客户端表现。
  *
- * 一句话：身周卷起一圈精神涡流后扑出去，身前那条窄走廊被粉色牙影咬合，命中处爆出一口精神火花；
- * 若目标身上有屏障，它会顺着咬合点裂成一圈紫白碎片被吸入齿间。
+ * 一句话：身周卷起精神涡流后，两排牙尖从口边逐刻向前伸出；尖端碰到第一处身体或屏障时合拢一次——
+ * 咬住身体就爆出一口精神火花，碰到屏障就把它吸进牙隙。
  * 色相家族：品红与深紫（精神）为底，近白做齿尖高光；屏障碎片用偏冷的高光，呼应「咬碎屏障」的第二层含义。
- * 拍子：起（windup 涡流）→ 扑（lunge 速度线）→ 咬（bite 牙影与火花）→ 吞（break 碎片被吸走）→ 空（miss）。
- * 范围：bite 用 path 画出服务端走廊判定的同一组四个顶点；走廊多长多窄，画面就是那条走廊。
- * 运动：涡流向内收进身体，扑出时速度线向后拖，咬合是短促外爆，碎片随后向齿间收拢。
- * 数：`data.power`（这一口实际威力）绑定咬合火花量，`data.wards`（咬碎的屏障层数）绑定碎片波数，
- * `data.scale`（咬合半径 / 0.5）放大走廊与爆发范围。
+ * 拍子：起（windup 涡流）→ 伸（reach 牙框前伸、开口收窄）→ 咬（bite 合拢火花）→ 吞（devour 碎片吸入）→ 挡（blocked 撞墙）→ 空（miss）。
+ * 范围：reach 的 path 是两侧牙尖连成的同一道口线，point 是当前牙尖；咬合与吞壁都读服务端给的闭合点。
+ * 数：`data.power`（这一口实际威力）绑定咬合火花量，`data.wards`（真实清除的层数）绑定碎片量，
+ * `data.openRadius`（开口半宽，随伸出收窄）驱动闭合、`data.scale`（咬合半径 / 0.5）放范围。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const PsychicfangsDefinition: ParticleDefinition = {
@@ -36,25 +35,25 @@ const PsychicfangsDefinition: ParticleDefinition = {
                 }
             ]
         },
-        lunge: {
-            duration: 14,
-            exit: { stop: 6, drain: 12 },
+        reach: {
+            duration: 40,
+            exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "dash", bind: "source", offset: [0, 0.6, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: 16, interval: 2, repeats: 2 }, shape: { kind: "circle", radius: 0.35 },
-                    direction: "away", speed: [0.1, 0.3], orient: "direction",
-                    lifetime: [6, 11], size: [0.22, 0.06], sizeMode: "index",
-                    color: 0xC080E0, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 60
+                    name: "jaws", bind: "path", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/fang",
+                    shape: { kind: "polyline" },
+                    rate: 26, direction: "shape", speed: [0.04, 0.14], spread: 8,
+                    lifetime: [5, 10], size: [0.22, 0.06], sizeMode: "index",
+                    color: 0xF0E0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 90
                 },
                 {
-                    name: "wake", bind: "source", offset: [0, 0.55, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    burst: { count: 14 }, shape: { kind: "sphere_surface", radius: 0.4 },
-                    direction: "outward", speed: [0.03, 0.12],
-                    lifetime: [8, 14], size: [0.2, 0.06],
-                    color: 0xD060C0, alpha: [0.5, 0], light: "full", maxParticles: 40
+                    name: "closing", bind: "point", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
+                    shape: { kind: "circle", radius: { data: "openRadius", fallback: 0.5 } },
+                    orient: "direction", rate: 18, direction: "inward", speed: [0.04, 0.12],
+                    lifetime: [6, 12], size: [0.16, 0.04], sizeMode: "sin",
+                    color: 0xD060C0, alpha: [0.5, 0], light: "full", maxParticles: 60
                 }
             ]
         },
@@ -63,12 +62,12 @@ const PsychicfangsDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "lane", bind: "path", offset: [0, 0.5, 0],
+                    name: "jaws", bind: "path", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/bite",
-                    shape: { kind: "polygon" },
-                    rate: 24, direction: "shape", speed: [0.03, 0.1],
-                    lifetime: [8, 15], size: [0.34, 0.08],
-                    color: 0xE0A0E8, alpha: [0.35, 0], light: "full", maxParticles: 110
+                    shape: { kind: "polyline" },
+                    rate: 22, direction: "shape", speed: [0.04, 0.12],
+                    lifetime: [6, 12], size: [0.3, 0.08], sizeMode: "index",
+                    color: 0xF0E0FF, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 70
                 },
                 {
                     name: "impact", bind: "point", offset: [0, 0.55, 0],
@@ -80,23 +79,24 @@ const PsychicfangsDefinition: ParticleDefinition = {
                     color: 0xF4E0FF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
                 },
                 {
-                    name: "fangs", bind: "point", offset: [0, 0.55, 0],
+                    name: "teeth", bind: "point", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/fang",
-                    burst: { count: 8, at: 1 }, shape: { kind: "circle", radius: { data: "scale", fallback: 0.5 } },
-                    direction: "inward", speed: [0.06, 0.18],
+                    burst: { count: 10, at: 1 },
+                    shape: { kind: "circle", radius: { data: "openRadius", fallback: 0.06 } },
+                    orient: "direction", direction: "inward", speed: [0.06, 0.18],
                     lifetime: [6, 12], size: [0.26, 0.1],
                     color: 0xF0E0FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 }
             ]
         },
-        break: {
+        devour: {
             duration: 24,
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "shards", bind: "point", offset: [0, 0.65, 0],
+                    name: "shards", bind: "point", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
-                    burst: { count: { data: "wards", fallback: 0 }, interval: 2, repeats: 3 },
+                    burst: { count: { data: "wards", fallback: 1 }, interval: 1, repeats: 3 },
                     shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1 } },
                     direction: "inward", speed: [0.08, 0.26],
                     lifetime: [10, 18], size: [0.16, 0.03], sizeMode: "index",
@@ -104,12 +104,28 @@ const PsychicfangsDefinition: ParticleDefinition = {
                 },
                 {
                     name: "ring", bind: "point", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    burst: { count: 20, at: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.12, 0.24],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: 18, at: 0 },
+                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.6 } },
+                    direction: "inward", speed: [0.12, 0.24],
                     lifetime: [10, 18], size: [0.5, 0.16], sizeMode: "sin",
                     color: 0xD060C0, alpha: [0.5, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        blocked: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "clash", bind: "point", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    gravity: 0.05, drag: 0.92,
+                    lifetime: [7, 13], size: [0.08, 0.02],
+                    color: 0xB090C0, alpha: [0.5, 0], light: "world", maxParticles: 30
                 }
             ]
         },
@@ -118,7 +134,7 @@ const PsychicfangsDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "fizzle", bind: "source", offset: [0, 0.6, 0], height: 0.3,
+                    name: "fizzle", bind: "point", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
                     burst: { count: 14, at: 0 }, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.03, 0.12],

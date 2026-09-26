@@ -3,7 +3,7 @@
   "worldcombat.skill.bubble.use.0": "起手极短、PP 省，缠斗里反复吹",
   "worldcombat.skill.bubble.use.1": "一次打到身前扇形里的好几个敌人",
   "worldcombat.skill.bubble.use.2": "把跑得快的对手打滑，压它速度",
-  "worldcombat.skill.bubble.description.0": "每个被糊到的目标每次施放只挨一次 %1$s 点特殊伤害；一口气分 %3$s 轮、每轮吹 %2$s 个泡泡。",
+  "worldcombat.skill.bubble.description.0": "每个被糊到的目标每波只挨一次 %1$s 点特殊伤害；一口气分 %3$s 轮、每轮吹 %2$s 个泡泡。",
   "worldcombat.skill.bubble.description.1": "泡群在身前铺开 %1$s 度的扇形，最远吹到 %2$s 格，泡泡以 %3$s 格/刻飞行，判定 %4$s 格。",
   "worldcombat.skill.bubble.description.2": "命中后有 %1$s 的概率使目标速度等级下降 %2$s 级（按能力等级计，不会随泡沫消失而恢复），并把它糊上泡泡 %3$s。",
   "worldcombat.skill.bubble.description.3": "两轮之间隔 %1$s。",

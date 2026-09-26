@@ -24,7 +24,6 @@
 namespace PokemonSkills {
     export const mefirstId = "mefirst";
     export const mefirstScene = "world_combat:move_mefirst";
-    export const mefirstSurgeEffect = "world_combat:mefirst_surge";
     export const mefirstTakeText = "world_combat.move.mefirst.text.take";
     export const mefirstMissText = "world_combat.move.mefirst.text.miss";
 

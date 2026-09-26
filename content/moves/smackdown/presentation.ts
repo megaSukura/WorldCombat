@@ -2,13 +2,13 @@
  * 击落 / smackdown 的客户端表现。
  *
  * 一句话：施法者手边卷起一小撮石屑，随即一支系着配重的岩弹脱手飞出、拖着一小截土烟；砸中离地的对手时，
- * 目标脚下炸开一小圈迸射的碎石与尘土，随后贴着地面留下一圈被砸实的灰印；砸中走地的对手只有同样的撞点；
- * 打空则只在落点扬一点尘。
+ * 撞点向上牵出一条配重索并开始向下拽，目标带着向下拖的尘土与碎石真实下坠；只有真正接触到地面那一刻，
+ * 才在脚下炸开一小圈迸射的碎石与被砸实的灰印；砸中走地的对手只有同样的撞点；打空则只在落点扬一点尘。
  * 色相家族：岩棕与石灰（earth / large_rock / impact_rock / tinydust）为主体，近白只做每一记撞击的高光。
- * 拍子：起（windup 聚石屑）→ 飞（flight 拖尾）→ 落（hit 撞点、drop 拖落、pin 贴地灰印、miss 落空扬尘）。
- * 范围：drop 的一圈按 `data.scale`（拖落速度 / 0.8）画出目标落点那一小圈；pin 的一圈跟着目标。
- * 运动：flight 绑 projectile 拖尾；hit 碎块带重力四散；drop 尘环从落点向外压平。
- * 数：`data.power`（本击威力）决定 hit 碎块量，`data.intensity` 抬高撞击亮度，`data.pull` 决定拖落力度。
+ * 拍子：起（windup 聚石屑）→ 飞（flight 拖尾）→ 落（hit 撞点与配重索、drag 下坠拖痕、land 落地尘环、pin 贴地灰印、miss 落空扬尘）。
+ * 范围：land 的一圈按 `data.scale`（下坠速度 / 0.8）画出目标落点那一小圈；pin 的一圈跟着目标。
+ * 运动：flight 绑 projectile 拖尾；hit 的配重索向上牵引、碎块带重力四散；drag 的尘土整段向下拖；land 尘环从落点向外压平。
+ * 数：`data.power`（本击威力）决定 hit 碎块量，`data.intensity` 抬高撞击亮度，`data.fall` 决定下坠拖痕密度。
  */
 const SmackdownDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -82,6 +82,15 @@ const SmackdownDefinition: ParticleDefinition = {
                     color: 0x9A8A72, alpha: [0.9, 0], light: "world", maxParticles: 70
                 },
                 {
+                    name: "weight", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    rate: 26, shape: { kind: "line", length: 1.1 },
+                    direction: "down", speed: [0.12, 0.34], spread: 10,
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0x6E5A44, alpha: [0.7, 0], light: "world", maxParticles: 44
+                },
+                {
                     name: "dust", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 12, at: 1 },
@@ -93,12 +102,36 @@ const SmackdownDefinition: ParticleDefinition = {
                 }
             ]
         },
-        drop: {
+        drag: {
+            duration: 120,
+            exit: { stop: 20, drain: 30 },
+            emitters: [
+                {
+                    name: "pull", bind: "target", fit: "none", offset: [0, -0.35, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "drops", fallback: 24 },
+                    shape: { kind: "cylinder", radius: 0.34, length: 1.3, thickness: 0.6 },
+                    direction: "down", speed: [0.18, 0.5], spread: 8,
+                    gravity: 0.06, drag: 0.9,
+                    lifetime: [7, 13], size: [0.08, 0.01],
+                    color: 0x8A7A62, alpha: [0.62, 0], light: "world", maxParticles: 70
+                },
+                {
+                    name: "tether", bind: "target", fit: "none", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    rate: 12, shape: { kind: "line", length: 1.1 },
+                    direction: "down", speed: [0.06, 0.18],
+                    lifetime: [6, 12], size: [0.07, 0.02],
+                    color: 0x6E5A44, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        land: {
             duration: 30,
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "slam", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "slam", bind: "target", fit: "none", offset: [0, -0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: { data: "count", fallback: 12 }, at: 0, interval: 2, repeats: 4 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
@@ -107,7 +140,7 @@ const SmackdownDefinition: ParticleDefinition = {
                     color: 0x9A8A72, alpha: [0.7, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "crush", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "crush", bind: "target", fit: "none", offset: [0, -0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: 20, at: 1 },
                     shape: { kind: "ring", radius: 0.4 },

@@ -7,7 +7,7 @@
   "worldcombat.skill.healbell.description.1": "每隔 %1$s 再响一声，重响时重新清洗当时范围内自己与伙伴身上的异常；范围内没有任何有害状态时无法发动。",
   "worldcombat.skill.healbell.stance.resonant": "长鸣：铃声半径 ×1.25、多响一声，代价是起手与冷却更长（一次更透彻的全清）。",
   "worldcombat.skill.healbell.stance.short": "短鸣：起手更快、冷却更短，半径与声数维持基础（一次更频繁的净化）。",
-  "worldcombat.skill.healbell.timing": "自身招式；准备 %1$s 秒后消耗 %3$s PP 发动，之后收招 %2$s 秒，冷却 %4$s 秒。准备期间不能移动，可被打断。",
+  "worldcombat.skill.healbell.timing": "自身招式；准备 %1$s 秒后消耗 %3$s PP 发动，随后收招 %2$s 秒，冷却 %4$s 秒。准备期间可以移动，铃声每次从施术者当前所在处响起。",
   "worldcombat.skill.healbell.value.chimeRadius": "铃声半径",
   "worldcombat.skill.healbell.value.peals": "铃响次数",
   "worldcombat.skill.healbell.value.pealGap": "铃声间隔",

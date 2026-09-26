@@ -6,6 +6,7 @@
   "worldcombat.skill.frostbreath.description.0": "冷雾罩住的每个敌人各吃约 %1$s 点冰属性特殊伤害，扇形张开 %2$s 度。这一击必定击中要害。",
   "worldcombat.skill.frostbreath.description.1": "冷雾铺出 %1$s 格，以 %2$s 格/刻漫过去；雾到才结算，走出雾外就躲开了。",
   "worldcombat.skill.frostbreath.description.2": "被冷雾罩住的敌人冻僵 %1$s、移动速度降低 28%；脚下可承载积雪、上方空着的地面最多覆上 %2$s 格薄雪，停留 %3$s。",
+  "worldcombat.skill.frostbreath.targeting": "可以朝任意方向呼出，也能点一个敌人；冷雾只罩住中间没有实墙阻挡的对象，走出扇面或躲在墙后都会躲开。空呼时在真实能落雪的地面留下一层薄雪。",
   "worldcombat.skill.frostbreath.wide.on": "当前为广呼：雾弧更宽、雾团更厚、结霜更多、冻僵更久，但呼程更短、雾更慢、威力略减，起手与冷却更久。",
   "worldcombat.skill.frostbreath.wide.off": "当前为细呼：窄、远、快、重的一道冷气，代价是覆盖面收窄。",
   "worldcombat.skill.frostbreath.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -31,6 +32,8 @@
   "worldcombat.skill.frostbreath.preference.ai.cluster.help": "开启：目标身边还挤着别的敌人时优先呼出，一团冷雾罩多个；关闭则只按普通远程攻击排序。",
   "worldcombat.skill.frostbreath.preference.ai.finish": "残血补刀",
   "worldcombat.skill.frostbreath.preference.ai.finish.help": "开启：目标生命比例越低排得越前；关闭则只按普通远程攻击排序。",
+  "worldcombat.skill.frostbreath.preference.ai.advantage": "择慢打厚",
+  "worldcombat.skill.frostbreath.preference.ai.advantage.help": "开启：优先选移速慢、或防御厚的敌人——厚甲吃必定要害的冷雾最划算，疾走者容易在雾漫到前走出扇面、相应降权。关闭：只按普通远程攻击排序，不区分走位与防御。",
   "world_combat.move.frostbreath.text.chill": "冻僵",
   "world_combat.move.frostbreath.text.miss": "冷雾散空",
   "effect.world_combat.frostbreath_chill": "冻僵"

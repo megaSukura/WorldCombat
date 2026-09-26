@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.rockblast.summary": "Tears stones out of the ground and hurls them one after another on a low arc: each stone strikes once and leaves rubble where it lands. Stones scatter, so only up close does the whole burst connect; the boulder choice is fewer and heavier, tighter and steeper.",
+  "worldcombat.skill.rockblast.summary": "Tears stones out of the ground and hurls them one after another on a low arc at the chosen landing zone: each stone only strikes once it truly connects and kicks up rubble dust at the real impact. Stones scatter, so only up close does the whole burst connect; aim at an entity, a ground point or a raised direction and walls will truly stop the stones. The boulder choice is fewer and heavier, tighter and steeper.",
   "worldcombat.skill.rockblast.use.0": "A burst of arcing heavy stones at close-mid range",
-  "worldcombat.skill.rockblast.use.1": "Crack the ground at the landing point into rubble",
+  "worldcombat.skill.rockblast.use.1": "Aim at a landing zone to press a moving target",
   "worldcombat.skill.rockblast.use.2": "Use the boulder choice to pile single-stone damage on a thick target",
   "worldcombat.skill.rockblast.description.0": "Each stone deals about %1$s physical damage, and the burst tears out %2$s stones (2-5 natively, set by the user's data).",
-  "worldcombat.skill.rockblast.description.1": "Stones are hurled every %1$s at %2$s blocks/tick, reaching %3$s blocks with up to ±%4$s spread.",
+  "worldcombat.skill.rockblast.description.1": "Stones are hurled every %1$s at %2$s blocks/tick on an arc, reaching %3$s blocks with up to ±%4$s spread.",
   "worldcombat.skill.rockblast.description.2": "Each stone has a %1$s block hit radius and falls at %2$s blocks/tick^2.",
   "worldcombat.skill.rockblast.boulder.on": "Boulder: per-stone power x1.4, larger stones, spread x0.6 and a steeper arc; costs a burst capped at 3 stones, interval +2 ticks, stone speed x0.92, wind-up +3 ticks and cooldown +5 ticks.",
   "worldcombat.skill.rockblast.boulder.off": "Shatter burst: up to 5 stones, interval -1 tick and a faster throw; costs per-stone power x0.85, smaller stones and spread x1.2.",
@@ -20,7 +20,7 @@
   "worldcombat.skill.rockblast.value.reach": "Range",
   "worldcombat.skill.rockblast.value.spread": "Spread",
   "worldcombat.skill.rockblast.value.chips": "Rock chips",
-  "worldcombat.skill.rockblast.value.rubble": "Rubble duration",
+  "worldcombat.skill.rockblast.value.rubble": "Dust linger",
   "worldcombat.skill.rockblast.value.tempo": "Wind-up",
   "worldcombat.skill.rockblast.value.aftercast": "Recovery",
   "worldcombat.skill.rockblast.value.recharge": "Cooldown",
@@ -30,5 +30,5 @@
   "worldcombat.skill.rockblast.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger prefers opening from farther away.",
   "worldcombat.skill.rockblast.preference.ai.finish": "Prefer low health",
   "worldcombat.skill.rockblast.preference.ai.finish.help": "On: low-health targets rank higher so the burst finishes them; off: all targets score the same.",
-  "worldcombat.skill.rockblast.description.additional": "Whether it strikes an enemy or the ground, each stone crumbles the top layer of a small patch at the impact point into rubble; the rubble lasts %1$s before the original blocks return, and a stone that misses leaves a shorter one."
+  "worldcombat.skill.rockblast.description.additional": "Whether it strikes an enemy or a hard surface, each stone kicks up rubble dust at the real impact and never replaces terrain; the dust lingers briefly, shorter and fainter when the hit is refused or the stone spends itself."
 }

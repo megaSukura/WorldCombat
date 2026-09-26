@@ -29,9 +29,9 @@ namespace PokemonSkills {
         copies: formula(
             F.const(2).plus(F.stat("speed").times(0.01)).plus(F.level().times(0.01)).floor().clamp(1, 5),
             "分身数", { unit: " 个", description: "留下的残影数量；身法越快、等级越高越多。" }),
-        mirrorPool: percent(
-            F.const(0.35).plus(F.stat("speed").times(0.002)).clamp(0.18, 0.70),
-            "残影总量", "残影合起来能替本体挨下的伤害，按最大生命比例；速度越快预算越大。"),
+        mirrorPool: formula(
+            F.const(.35).plus(F.stat("speed").times(.002)).times(6).clamp(1.08,4.2),
+            "侧移距离", { unit:"格", description:"短移的实际距离预算，速度越快能横移得越远，墙会缩短行程。" }),
         mirrorWindow: seconds(
             F.const(160).plus(F.level().times(3)).plus(F.stat("speed").times(0.5)).clamp(100, 420),
             "残影时长", "残影能维持多久；等级与速度让它撑得更久。"),

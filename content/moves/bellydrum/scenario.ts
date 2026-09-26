@@ -41,7 +41,7 @@ Smoke.scenario("bellydrum", function (stage) {
         stage.expect(caster.health() <= maximum * 0.56, "belly drum paid the cost down to about half the maximum health");
         stage.after(60, function () {
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/bellydrum"), "the power window is carried by the shared status world_combat:status/bellydrum");
-            stage.note("物攻等级的具体数值在私有装配里没有读取原语：NativeEffects.boost(self, \"atk\", stages) 写入 +6，并由同名状态窗口在结束时收回。起鼓后的生命、力量窗口时长（frenzy 约 10 秒 / endure 约 24 秒）与准备/收招随体重与速度变化，属于设计事实，由完整装配的人工试玩核对。", {
+            stage.note("物攻等级的具体数值在私有装配里没有读取原语：NativeEffects.boostWindow 以 world_combat:bellydrum 状态为载具写入 +6，窗口结束或被清除时只撤回自己那几级，期间别处降攻不会让到期多扣。起鼓后的生命、力量窗口时长（frenzy 约 10 秒 / endure 约 24 秒）与准备/收招随体重与速度变化，属于设计事实，由完整装配的人工试玩核对。", {
                 casterCasts: stage.casts("bellydrum", caster),
                 maximumHealth: Math.round(maximum * 10) / 10,
                 casterHealth: Math.round(caster.health() * 10) / 10,

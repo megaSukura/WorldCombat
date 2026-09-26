@@ -1,16 +1,17 @@
 /**
  * 冰冻光束 / icebeam 的出手方式。
  *
- * 核心念头：把冷气压成一束笔直、瞬间贯穿的光——它不飞、等不了，沿着瞄准线整条烧过去；被穿过的每个人
- *   各挨一次冻伤并可能被冻住，光束尽头的地表留下一道会滑的冰。
+ * 核心念头：把冷气压成一束笔直、停留片刻的冷光——它不飞，沿着瞄准方向整条亮起，并在实际墙面处截断；
+ *   被光路穿过的每个人各挨一次冻伤并可能被冻住；光束停留期间会反复扫过这条固定光路，新走进来的人也会
+ *   被补中（每人只结算一次）。
  *
  * 两幕（一击完成）：
  *   起（windup，提交前）：嘴边聚起冷雾的预告（action.present）。
- *   击（beam → impact → rime）：提交后瞬发——沿瞄准线整条走廊一次结算，按距离取最前面的 pierce 个敌人，
- *       各结算一次冰属性特殊伤害并按 freezeChance 掷冰冻；光束停留 linger 刻；地面沿同一组顶点冻出冰线，
- *       停留 frostTicks 后原方块回来。
+ *   驻（beam → impact）：提交后先沿瞄准方向做一次方块射线，确定光束真正能到哪（墙后不亮）；在 beamTicks
+ *       内按间隔反复扫过这条固定光路，按距离取最前面的 pierce 个敌人各结算一次冰属性特殊伤害并按
+ *       freezeChance 掷冰冻；光束结束的一刻整条同时熄灭。
  *
- * 反制：光束只沿一条窄线，站在线外安全；冰冻是概率，不是必定。走位或掩体能读出并躲开这条线。
+ * 反制：光束只沿一条固定直线，发出后不再转向；站到线外或切到墙后安全。冰冻是概率，不是必定。
  * 配置 focus（聚焦式）：更窄更短、单体更重、冰冻概率更高，但穿透更少、起手与冷却更久。
  */
 namespace PokemonSkills {
@@ -20,46 +21,29 @@ namespace PokemonSkills {
 
     function icebeamCoords(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
 
-    /** 沿光束的地面冻出一道冰线（租借，linger，到期原方块回来）。 */
-    function icebeamRime(world: CombatWorld, origin: CombatPoint, heading: CombatPoint, length: number, halfWidth: number, ticks: number, cap: number): number {
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const cells: any[] = [];
-        const limit = Math.max(6, Math.round(cap));
-        const steps = Math.ceil(length), spread = Math.max(0, Math.round(halfWidth));
-        const baseY = Math.floor(origin.y());
-        for (let i = 0; i <= steps && cells.length < limit; i++) {
-            const centre = origin.plus(heading.scale(i));
-            for (let s = -spread; s <= spread && cells.length < limit; s++) {
-                const at = centre.plus(side.scale(s));
-                const x = Math.floor(at.x()), z = Math.floor(at.z());
-                for (let dy = 1; dy >= -3; dy--) {
-                    const y = baseY + dy;
-                    const block = world.block(WorldCombat.point(x, y, z));
-                    if (block === null) break;
-                    const id = String(block.id());
-                    if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                    const above = world.block(WorldCombat.point(x, y + 1, z));
-                    const over = above === null ? "" : String(above.id());
-                    if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
-                        cells.push({ x: x, y: y, z: z, block: "minecraft:ice" });
-                    break;
-                }
-            }
+    /**
+     * 从 origin 沿 heading 找到光路真正能到的位置：前方有方块就以墙面为界，否则到 maxLength 的尽头。
+     * `wall` 是命中方块的格（没有方块时为空），表现据此在墙面结出霜花。
+     */
+    function icebeamEnd(world: CombatWorld, origin: CombatPoint, heading: CombatPoint, maxLength: number): { end: CombatPoint; wall: CombatPoint | null } {
+        const far = origin.plus(heading.scale(maxLength));
+        const clip = world.clipBlocks(origin, far);
+        if (clip !== null && clip.blocked()) {
+            const hitPoint = clip.position();
+            const reach = Math.min(maxLength, hitPoint.minus(origin).length());
+            const block = clip.blockPosition();
+            return { end: origin.plus(heading.scale(reach)), wall: hitPoint };
         }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
+        return { end: clip === null ? origin : far, wall: null };
     }
 
     define({
         id: "icebeam",
         cooldownParameter: "wait",
         name: "Ice Beam",
-        description: "把冷气压成一束笔直贯穿的光，瞬间烧过整条瞄准线：被穿过的每个敌人各挨一次冰属性伤害并可能被冻住，沿途地面留下一道湿滑冰线。聚焦式收窄换更重的一束，扩散式更宽更远。",
-        uses: ["隔空贯穿排成一条线的敌人", "对远处的高威胁目标先手点名", "用地面冰线把一条通道铺滑"],
-        kind: "enemy",
+        description: "沿瞄准方向亮起一条笔直冷光，并在实际墙面处截断：光路穿过的每个敌人各挨一次冰属性伤害并可能被冻住；光束停留片刻，期间走进光路的新敌人也会被补中（每人只结算一次）。发出后不再转向，站到线外或墙后安全。聚焦式收窄换更重的一束，扩散式更宽更远。",
+        uses: ["隔空贯穿排成一条线的敌人", "对远处的高威胁目标先手点名", "用一条固定光路补中随后走进来的敌人"],
+        kind: "aim",
         range: 13,
         maxRange: 18,
         prepare: 10,
@@ -95,72 +79,77 @@ namespace PokemonSkills {
             const origin = body === null ? action.origin() : body.position();
             const at = action.targetPosition();
             const flat = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
-            const heading = flat.length() < 0.3 ? aim(action) : flat.unit();
-            const length = Math.max(4, p("icebeam", "beamLength", action));
+            const heading = WorldGeometry.flatUnit(flat, action.direction());
+            const maxLength = Math.max(4, p("icebeam", "beamLength", action));
             const halfWidth = Math.max(0.2, p("icebeam", "beamWidth", action));
             const power = p("icebeam", "beam", action);
             const maxTargets = Math.max(1, Math.round(p("icebeam", "pierce", action)));
             const freezeChance = Math.max(0, Math.min(1, p("icebeam", "freezeChance", action)));
             const beamTicks = Math.max(4, Math.round(p("icebeam", "linger", action)));
-            const frostTicks = Math.max(40, Math.round(p("icebeam", "frostTicks", action)));
-            const rimeCells = Math.max(6, Math.round(p("icebeam", "rimeCells", action)));
-            const end = origin.plus(heading.scale(length));
-            const scale = length / 13.0;
+            let cut = icebeamEnd(world, origin, heading, maxLength);
+            let end = cut.end, length = end.minus(origin).length(), scale = length / 13.0;
             const intensity = Math.max(0.6, Math.min(2.4, power / 85));
-            const hit: { [ref: string]: boolean } = {};
-            const target = action.target();
-            const targetRef = target === null ? "" : String(target.ref());
-            let hits = 0, settled = false;
+            const interval = Math.max(2, Math.round(beamTicks / 4));
+            let path = [icebeamCoords(origin), icebeamCoords(end)], lastWall = "";
             const direction = [heading.x(), heading.y(), heading.z()];
-            // 冰线在提交后立刻铺下（租借，linger）：动作结束时租约不会随动作被收回。
-            const placed = icebeamRime(world, origin, heading, length, halfWidth, frostTicks, rimeCells);
+            const hit: { [ref: string]: boolean } = {};
+            const scenes = WorldFeedback.actionScenes(icebeamScene, 1);
+            let hits = 0, elapsed = 0, settled = false;
 
-            function settle(current: CombatAction): void {
-                if (settled) return;
-                settled = true;
-                const scope = current.world();
-                WorldFeedback.emit(scope, icebeamScene, 1, origin.plus(heading.scale(length / 2)),
-                    { moment: "rime", path: [icebeamCoords(origin), icebeamCoords(end)], cells: placed, scale: scale }, 26);
-                WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.3, 0)),
-                    hits > 0 ? icebeamHitText : icebeamMissText, hits > 0 ? [hits] : [], 26);
-                sound(current, "cobblemon:impact.ice");
-                done(current);
+            function caught(current: CombatAction, victim: CombatActor, spot: CombatPoint): void {
+                if (!hurt(current, victim, "icebeam", power,
+                    { damage: damageSpec("icebeam", "beam"), status: "frozen", chance: freezeChance })) return;
+                hits++;
+                WorldFeedback.emit(current.world(), icebeamScene, 1, spot,
+                    { moment: "impact", target: String(victim.ref()), intensity: intensity, scale: scale }, 22);
+                sound(current, "cobblemon:move.icebeam.target_1");
             }
 
-            function sweep(current: CombatAction, remaining: number): void {
-                const scope = current.world();
-                const region = WorldGeometry.lane(origin, heading, length, halfWidth, { below: 2, above: 3 });
-                const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-                WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                    if (hit[String(enemy.ref())]) return;
-                    candidates.push({ actor: enemy, at: facts.position() });
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scenes.finish(current, function (next) {
+                    WorldFeedback.text(next.world(), origin.plus(WorldCombat.point(0, 1.3, 0)),
+                        hits > 0 ? icebeamHitText : icebeamMissText, hits > 0 ? [hits] : [], 26);
+                    sound(next, "cobblemon:impact.ice");
+                    done(next);
                 });
-                candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
-                for (let i = 0; i < candidates.length && hits < maxTargets; i++) {
-                    const victim = candidates[i].actor;
-                    hit[String(victim.ref())] = true;
-                    hits++;
-                    if (!hurt(current, victim, "icebeam", power,
-                        { damage: damageSpec("icebeam", "beam"), status: "frozen", chance: freezeChance })) continue;
-                    WorldFeedback.emit(scope, icebeamScene, 1, candidates[i].at,
-                        { moment: "impact", target: String(victim.ref()), intensity: intensity, scale: scale }, 24);
-                    WorldFeedback.text(scope, candidates[i].at.plus(WorldCombat.point(0, 1.35, 0)), icebeamHitText, [hits], 22);
-                    sound(current, "cobblemon:move.icebeam.target_1");
+            }
+
+            function pass(current: CombatAction): void {
+                const scope = current.world();
+                cut = icebeamEnd(scope, origin, heading, maxLength);
+                end = cut.end; length = end.minus(origin).length(); scale = length / 13.0;
+                path = [icebeamCoords(origin), icebeamCoords(end)];
+                scenes.show(current, "beam", origin,
+                    { moment: "beam", direction: direction, path: path, width: halfWidth, beamTicks: beamTicks,
+                        pierce: maxTargets, intensity: intensity, scale: scale,
+                        rate: Math.round(90 + power * .7), shardRate: Math.round(20 + power * .2) });
+                const wallKey = cut.wall === null ? "" : icebeamCoords(cut.wall).join(",");
+                if (cut.wall !== null && wallKey !== lastWall) WorldFeedback.emit(scope, icebeamScene, 1, cut.wall,
+                    { moment: "wall", direction: [-direction[0], -direction[1], -direction[2]],
+                        impactCount: Math.round(14 + power * .3), intensity: intensity, scale: scale }, 22);
+                lastWall = wallKey;
+                if (hits < maxTargets && length > .001) {
+                    const region = WorldGeometry.lane(origin, heading, length, halfWidth, { below: 2, above: 3 });
+                    const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
+                    WorldGeometry.selectEnemies(current.world(), region, function (enemy, facts) {
+                        if (hit[String(enemy.ref())] || !scope.clear(origin, facts.position())) return;
+                        candidates.push({ actor: enemy, at: facts.position() });
+                    });
+                    candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
+                    for (let i = 0; i < candidates.length && hits < maxTargets; i++) {
+                        hit[String(candidates[i].actor.ref())] = true;
+                        caught(current, candidates[i].actor, candidates[i].at);
+                    }
                 }
-                if (remaining > 1 && hits < maxTargets) {
-                    current.after(Math.max(3, Math.floor(beamTicks / 2)), function (next) { sweep(next, remaining - 1); });
-                    return;
-                }
-                settle(current);
+                elapsed += interval;
+                if (elapsed < beamTicks) current.after(interval, pass);
+                else finish(current);
             }
 
             sound(action, "cobblemon:move.icebeam.actor");
-            WorldFeedback.emit(world, icebeamScene, 1, origin,
-                { moment: "beam", target: targetRef, direction: direction, length: length, width: halfWidth, beamTicks: beamTicks,
-                    path: [icebeamCoords(origin), icebeamCoords(end)], pierce: maxTargets, intensity: intensity, scale: scale, hits: 0,
-                    rate: Math.round(90 + power * 0.7), shardRate: Math.round(20 + power * 0.2), impactCount: Math.round(14 + power * 0.3),
-                    rimeRate: Math.round(18 + rimeCells * 1.4) }, beamTicks + 16);
-            sweep(action, 2);
+            pass(action);
         }
     });
 }

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "world_combat:move/transform",
-  "version": "0.1",
+  "version": "0.2",
   "requires": {
     "world_combat:skill_runtime": "0.1",
     "world_combat:companion_runtime": "0.1",

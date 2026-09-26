@@ -6,10 +6,11 @@
  *
  * 一幕半：
  *   起（windup，提交前）：脚边气流开始打旋、粉尘贴地聚起，预告这一圈风（`action.present`）。
- *   扫（burst → strip）：提交后风圈从自身向外铺开半径 `sweep`：圈里的非友方身上的反射壁、光墙、
- *     极光幕、白雾、神秘守护一起被解除（共享身份 `cure`），并被下降闪避等级 `strip` 与防御等级 `expose`，
- *     挂上共享身份 world_combat:status/defogged 的破绽；同时烟幕身份被从每个圈内活体身上吹散；
- *     风还掀掉圈内的烟幕场地与撒菱／隐形岩／黏网／毒菱场地。全程没有伤害、没有击退。
+ *   扫（burst → strip）：提交后风圈从自身向外铺开半径 `sweep`：先把自方与圈内活体身上的烟幕吹散（空周边也先
+ *     清自己），圈里的非友方身上的反射壁、光墙、极光幕、白雾、神秘守护一起被解除（共享身份 `cure`），并按
+ *     能力政策实际下降闪避 `strip` 与防御 `expose`；只有真正降下去的那一下才挂 world_combat:status/defogged
+ *     破绽并显示门户线；风还掀掉风带里的烟幕场地与撒菱／隐形岩／黏网／毒菱场地，被墙挡住的、破不开的都不算
+ *     已清。全程没有伤害、没有击退。
  *
  * 与同族分开：吹飞是把人沿风向推走的逐退，劈瓦是贴身一记把屏障震碎；只有清除浓雾是**以自身为轴、
  *   大范围、无伤害**的打扫——它抹掉的是「守势」而不是「位置」或「血量」。
@@ -21,6 +22,7 @@ namespace PokemonSkills {
     const defogStripText = "world_combat.move.defog.text.strip";
     const defogClearText = "world_combat.move.defog.text.clear";
     const defogGustText = "world_combat.move.defog.text.gust";
+    const defogHazeText = "world_combat.move.defog.text.haze";
 
     /** 共享身份：这一扫会从对手身上抹掉的屏障。 */
     const defogScreens = ["reflect", "lightscreen", "auroraveil", "mist", "safeguard"];
@@ -38,10 +40,33 @@ namespace PokemonSkills {
         return removed;
     }
 
-    /** 掀掉圆心周围 radius 内、声明为这些类别的场地；返回掀掉的场地数。 */
+    /** 会被这一扫吹散的遮蔽身份：烟幕。自己和友方身上的烟也一并散，不需要先看见敌人。 */
+    function defogCureHaze(world: CombatWorld, actor: CombatActor): boolean {
+        if (!CombatStatus.has(world, actor, "smoked")) return false;
+        if (!CombatStatus.cure(world, actor, "smoked")) return false;
+        const body = world.observe(actor);
+        if (body !== null)
+            WorldFeedback.emit(world, defogScene, 1, body.position(), { moment: "haze", target: String(actor.ref()) }, 24);
+        return true;
+    }
+
+    /**
+     * 掀掉圆心周围 radius 内、声明为这些类别的场地；只把真正被 dispel 成功的算作已清。
+     * 风是要贴着地面扫出去的：场地整实例处理，但高度要落在风带里，中间被墙挡住的不算扫到。
+     */
     function defogPurgeFields(world: CombatWorld, centre: CombatPoint, radius: number): number {
         let cleared = 0;
-        for (let r = 0; r < defogFieldTags.length; r++) cleared += WorldEffects.clearTagged(world, defogFieldTags[r], centre, radius);
+        for (let r = 0; r < defogFieldTags.length; r++) {
+            const areas = WorldEffects.areasWithTag(world, defogFieldTags[r], centre, radius);
+            for (let i = 0; i < areas.length; i++) {
+                const area = areas[i];
+                const at = WorldCombat.point(area.position[0], area.position[1], area.position[2]);
+                if (at.y() < centre.y() - 3 || at.y() > centre.y() + 4) continue;
+                if (at.minus(centre).length() > radius + area.radius) continue;
+                if (!world.clear(centre, at)) continue;
+                if (world.operation(area.id, "world_combat:dispel", "{}")) cleared++;
+            }
+        }
         return cleared;
     }
 
@@ -75,7 +100,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_defog:gather", defogScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", gale: config && config.gale === true }));
+                JSON.stringify({ moment: "windup", intensity: config && config.gale === true ? 1.3 : 1 }));
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -93,33 +118,51 @@ namespace PokemonSkills {
             const ticks = Math.max(90, Math.round(p("defog", "linger", action)));
             const motes = Math.max(12, Math.round(p("defog", "motes", action)));
             const scale = sweep / 6;
-            let caught = 0, clipped = 0;
+            let caught = 0, clipped = 0, hazed = 0;
 
             sound(action, "minecraft:entity.breeze.whirl");
             WorldFeedback.emit(world, defogScene, 1, origin,
-                { moment: "burst", radius: sweep, motes: motes, scale: scale }, 30);
+                { moment: "burst", motes: motes, scale: scale }, 30);
+            // 空周边也要先把自己身上的遮蔽吹散：遮蔽解除与是否看得见敌人无关。
+            if (defogCureHaze(world, self)) hazed++;
             WorldGeometry.select(world, WorldGeometry.ring(origin, 0, sweep, { below: 3, above: 4 }), function (actor, facts) {
                 if (String(actor.ref()) === String(self.ref())) return;
-                // 风把眼里的烟也一并吹散：烟幕身份对谁都解除。
-                if (CombatStatus.has(world, actor, "smoked")) CombatStatus.cure(world, actor, "smoked");
+                // 风贴着地面绕墙走：中间被方块挡住的身体不算在风圈里。
+                if (!world.clear(origin, facts.position())) return;
+                if (defogCureHaze(world, actor)) hazed++;
                 if (facts.friendly()) return;
                 caught++;
                 const purged = defogPurgeActor(world, actor);
                 clipped += purged;
-                MobEffects.apply(world, actor, defogExposed, ticks, 0);
+                const beforeEvasion = NativeEffects.effectiveStage(world, actor, "evasion");
+                const beforeDef = NativeEffects.effectiveStage(world, actor, "def");
                 NativeEffects.boost(world, actor, "evasion", -strip);
                 NativeEffects.boost(world, actor, "def", -expose);
-                WorldFeedback.emit(world, defogScene, 1, facts.position(),
-                    { moment: "strip", target: String(actor.ref()), strip: strip, expose: expose,
-                        purged: purged, motes: Math.max(8, Math.round(motes * 0.5)), scale: scale }, 26);
-                WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.1, 0)), defogStripText, [strip, expose], 28);
+                const stripped = Math.max(0, beforeEvasion - NativeEffects.effectiveStage(world, actor, "evasion"));
+                const exposed = Math.max(0, beforeDef - NativeEffects.effectiveStage(world, actor, "def"));
+                const opened = stripped + exposed;
+                if (opened > 0) MobEffects.apply(world, actor, defogExposed, ticks, 0);
+                if (opened > 0 || purged > 0) {
+                    const away = facts.position().minus(origin);
+                    const direction = away.length() < 0.05 ? WorldCombat.point(0, 0, 1) : away.unit();
+                    WorldFeedback.emit(world, defogScene, 1, facts.position(),
+                        { moment: "strip", target: String(actor.ref()),
+                          direction: [direction.x(), direction.y(), direction.z()],
+                          peeled: purged > 0 ? Math.max(6, purged * 5) : 0,
+                          motes: Math.max(8, Math.round(motes * 0.5)),
+                          opened: opened > 0 ? Math.max(8, opened * 6) : 0, scale: scale }, 26);
+                    if (opened > 0)
+                        WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.1, 0)), defogStripText, [stripped, exposed], 28);
+                }
             });
             const fields = defogPurgeFields(world, origin, sweep);
             sound(action, "minecraft:entity.breeze.wind_burst");
             WorldFeedback.emit(world, defogScene, 1, origin,
-                { moment: "clear", radius: sweep, motes: motes, caught: caught, clipped: clipped, fields: fields, scale: scale }, 28);
+                { moment: "clear", motes: motes, cleared: Math.max(0, clipped + fields), scale: scale }, 28);
             if (clipped + fields > 0)
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), defogClearText, [clipped, fields], 30);
+            else if (hazed > 0)
+                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), defogHazeText, [hazed], 26);
             else
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), defogGustText, [caught], 26);
             done(action);

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.strangesteam.summary": "朝选定地点喷出一柱迷幻蒸汽，蒸汽在落点摊成一片低垂的云：云里第一次被喷到的人挨一记烫伤并可能迷得恍惚；留在云里会被持续熏着，恍惚被不断续上。",
+  "worldcombat.skill.strangesteam.summary": "朝选定地点喷出一柱迷幻蒸汽，蒸汽沿直线前进、被真墙挡在到达处并散成一片低垂的云：云里第一次被喷到的人挨一记烫伤并可能迷得恍惚；留在云里会被持续熏着，恍惚被不断续上。",
   "worldcombat.skill.strangesteam.use.0": "封住一个落点或门口",
   "worldcombat.skill.strangesteam.use.1": "一次罩住几个挤在一起的敌人",
   "worldcombat.skill.strangesteam.use.2": "用停留的云持续压制进出的人",
-  "worldcombat.skill.strangesteam.description.0": "云罩到某个敌人时先给它一记首喷，造成约 %1$s 点特殊伤害；云半径 %2$s 格、喷射距离 %3$s 格，贴地圆盘标出的就是云的范围。",
+  "worldcombat.skill.strangesteam.description.0": "喷射沿直线前进，被真墙挡在实际到达处才开云（门墙后不会凭空开雾）。云罩到某个敌人时先给它一记首喷，造成约 %1$s 点特殊伤害；云半径 %2$s 格、喷射距离 %3$s 格，贴地圆盘标出的就是云的范围。",
   "worldcombat.skill.strangesteam.description.1": "云停留 %2$s，最多同时罩住 %3$s 个敌人；留在云里的敌人每隔约 3 秒被续熏约 %1$s 点特殊伤害，恍惚被不断续上。施放者倒下或离得太远，云会提前散去。",
   "worldcombat.skill.strangesteam.description.2": "被喷到后有 %1$s 概率迷得恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散。",
   "worldcombat.skill.strangesteam.dense.on": "当前为浓雾：云更大更久、迷幻概率更高时长更长，代价是首喷威力更低，适合封路与持续压制。",

@@ -3,8 +3,8 @@
  *
  * 场面：只会蛮力的有力精灵（Machamp 36 级）对一只被点住、不会还手的铁傀儡（耐打又不会跑掉的靶子），
  *   相隔 2 格。AI 只有这一招可用。
- * 必然事实：本招被提交过、目标受过伤害、冲击在地面留下坑（方块变成裂石或粗土）。
- * 命中/撞飞距离、自身攻防下降的具体级数、震荡式是否扫到第二名目标，都写进 note 供读轨迹判断。
+ * 必然事实：本招被提交过、目标受过伤害（真实首碰结算），且不再改动任何地面方块（旧的假坑已移除）。
+ * 命中/撞飞距离、自身攻防下降的级数、震荡式是否扫到第二名目标，都写进 note 供读轨迹判断。
  */
 Smoke.scenario("superpower", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:grass_block");
@@ -19,18 +19,20 @@ Smoke.scenario("superpower", function (stage) {
     }, function () {
         stage.after(20, function () {
             var changed = stage.changedBlocks();
+            var stages = stage.stages(caster);
             stage.expect(stage.casts("superpower", caster) > 0, "superpower was committed");
-            stage.expect(stage.damageTo(foe) > 0, "the lunge dealt damage to the foe");
-            stage.expect(changed.some(function (b) { return b.after === "minecraft:cracked_stone_bricks" || b.after === "minecraft:coarse_dirt"; }),
-                "the impact left a crater in the ground");
-            stage.note("superpower observations", {
+            stage.expect(stage.damageTo(foe) > 0, "the real first contact dealt damage to the foe");
+            stage.expect(!changed.some(function (b) { return b.after === "minecraft:cracked_stone_bricks" || b.after === "minecraft:coarse_dirt"; }),
+                "the lunge no longer replaces ground blocks");
+            stage.note("superpower observations: parameters evaluate per real contact; a whiff/wall only raises dust and pays no cost", {
                 casts: stage.casts("superpower", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 moved: Math.round(stage.travelled(caster) * 10) / 10,
-                ownHurt: Math.round(stage.damageTo(caster) * 10) / 10,
+                attackStage: stages.atk || 0,
+                defenseStage: stages.def || 0,
                 changed: changed
             });
             stage.done();
         });
-    }, "superpower commits and its lunge lands within 45 s");
+    }, "superpower commits and its first real contact lands within 45 s");
 });

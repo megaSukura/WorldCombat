@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.autotomize.summary": "当场把身上没用的部件一块块撬下来甩到地上：身体一下子轻了，速度大幅提高，残件成为场上真实可拾取的物件。轻身窗口里重力变小、身体浮起来——这是「变轻」在世界里的兑现。部件不会长回来。",
+  "worldcombat.skill.autotomize.summary": "当场把身上没用的外壳一块块撬下来甩出去：身体一下子轻了，速度大幅提高。轻身窗口里重力变小，跳得更高、落得更慢——这是「变轻」在世界里的兑现，静止时仍站在地面。外壳抛落后自行散掉，不是可拾取的物品；部件不会长回来。",
   "worldcombat.skill.autotomize.use.0": "开战前卸一轮，把速度拉起来",
-  "worldcombat.skill.autotomize.use.1": "用卸下的残件在场上留下痕迹",
-  "worldcombat.skill.autotomize.use.2": "轻身窗口里浮起来，借身法绕过地形",
-  "worldcombat.skill.autotomize.description.0": "卸下部件后速度提升 %1$s 级，轻身结束后也不收回；掉下约 %2$s 块残件，它们会被甩出约 %3$s 格/刻，落地后是真实可拾取的物品。",
-  "worldcombat.skill.autotomize.description.1": "「轻身」维持约 %1$s；期间重力下调 %2$s，身体浮起、跳得更高、下落更慢。",
+  "worldcombat.skill.autotomize.use.1": "被追时先提速，再决定追或退",
+  "worldcombat.skill.autotomize.use.2": "轻身窗口里跳得更高，借身法跨过小高差",
+  "worldcombat.skill.autotomize.description.0": "卸下外壳后速度提升 %1$s 级，轻身结束后也不收回；甩出约 %2$s 块外壳、速度约 %3$s 格/刻，落地片刻后自行散掉，不留下可拾取的资源。",
+  "worldcombat.skill.autotomize.description.1": "「轻身」维持约 %1$s；期间重力下调 %2$s，跳得更高、落得更慢（不会静止悬浮）。",
   "worldcombat.skill.autotomize.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.autotomize.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.autotomize.growth.0": "达到 %1$s 级，轻身窗口延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -22,6 +22,6 @@
   "worldcombat.skill.autotomize.preference.ai.minGap": "贴身下限",
   "worldcombat.skill.autotomize.preference.ai.minGap.help": "威胁近于这个距离时不再卸件、直接应对；调大更常在近身时放弃提速。",
   "world_combat.move.autotomize.text.shed": "身体轻量化（速度 +%1$s／卸下 %2$s 件）",
-  "world_combat.move.autotomize.text.light": "轻身（重力 −%1$s%%）",
+  "world_combat.move.autotomize.text.light": "轻身（重力 −%1$s%%，跳得更高落得更慢）",
   "effect.world_combat.lightened": "轻身"
 }

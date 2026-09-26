@@ -44,7 +44,7 @@ const HappyHourDefinition: ParticleDefinition = {
                     name: "banner", bind: "point", fit: "none", offset: [0, 0.08, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 16 },
-                    shape: { kind: "ring", radius: 4.5, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4.5 }, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.08, 0.24],
                     lifetime: [10, 20], size: [0.24, 0.08], sizeMode: "index",
                     color: 0xFFD24A, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 44
@@ -53,7 +53,7 @@ const HappyHourDefinition: ParticleDefinition = {
                     name: "rise", bind: "point", fit: "none", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/star",
                     rate: { data: "motes", fallback: 20 },
-                    shape: { kind: "circle", radius: 4.5, thickness: 1, rotation: [90, 0, 0] },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 4.5 }, thickness: 1, rotation: [90, 0, 0] },
                     direction: "up", speed: [0.03, 0.12], spin: 14,
                     lifetime: [12, 24], size: [0.12, 0.02],
                     color: 0xFFF3C4, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 260
@@ -76,7 +76,7 @@ const HappyHourDefinition: ParticleDefinition = {
                     name: "halo", bind: "point", fit: "none", offset: [0, 0.07, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     rate: { data: "motes", fallback: 20 },
-                    shape: { kind: "circle", radius: 4.5, thickness: 1, rotation: [90, 0, 0] },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 4.5 }, thickness: 1, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.0, 0.03], gravity: -0.004, drag: 0.98,
                     lifetime: [14, 28], size: [0.07, 0.01], alphaMode: "sin",
                     color: 0xFFD24A, alpha: [0.5, 0], light: "full", maxParticles: 180
@@ -84,7 +84,7 @@ const HappyHourDefinition: ParticleDefinition = {
                 {
                     name: "motes", bind: "point", fit: "none", offset: [0, 0.12, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 8, shape: { kind: "circle", radius: 4.5, thickness: 0.9, rotation: [90, 0, 0] },
+                    rate: 8, shape: { kind: "circle", radius: { data: "radius", fallback: 4.5 }, thickness: 0.9, rotation: [90, 0, 0] },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [12, 24], size: [0.05, 0.01], alphaMode: "sin",
                     color: 0xFFF3C4, alpha: [0.35, 0], light: "world", maxParticles: 120

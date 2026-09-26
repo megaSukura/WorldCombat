@@ -34,6 +34,11 @@ namespace PokemonSkills {
             let base = 26;
             if (distance > 6) base += 6;
             if (CompanionBehavior.ratio(target) < 0.5) base += 8;
+            // 开阔夜空月华最盛时这一炮最重，优先打；横移目标没有追踪，球飞到时可能已经走开，降一档。
+            const sky = context.facts.skyVisible ? 1 : 0, day = context.facts.day ? 1 : 0, rain = Number(context.facts.rain || 0);
+            if (sky && !day && (1 - rain * 0.6) > 0.5) base += 6;
+            const velocity = target.velocity;
+            if (velocity && Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.15) base -= 6;
             return base;
         }
     });

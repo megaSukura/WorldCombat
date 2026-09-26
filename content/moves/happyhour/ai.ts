@@ -8,6 +8,11 @@
  * 放完之后：场地亮着的那段时间里，圈内每倒下一名对手都留下一捧真币；光环还在时不再重复施放。
  */
 namespace CompanionBehavior {
+    registerFact("world_combat:happyhour/radius", (access, actor, config) => PokemonSkills.p("happyhour", "radius",
+        { world: access, actor: actor, detail: { values: config } }));
+    function happyhourRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        return fact<number>(context, "world_combat:happyhour/radius", source(context), item.data.config)!;
+    }
     /** 庆典半径内看得见的非友方数量。 */
     function happyhourCrowd(context: WorldBehavior.Context, self: Entity, radius: number): number {
         const nearby = context.facts.nearby as Entity[];
@@ -30,15 +35,15 @@ namespace CompanionBehavior {
             const threat: Entity | null = context.senses["world_combat:threat"];
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             if (distance(self.point, threat.point) > ai<number>(capability, "maxChase", 12)) return false;
-            const radius = capability.data.range > 1 ? capability.data.range : 4.5;
-            return happyhourCrowd(context, self, Math.max(4.5, radius)) >= ai<number>(capability, "minFoes", 1);
+            const radius = happyhourRadius(context, capability);
+            return happyhourCrowd(context, self, radius) >= ai<number>(capability, "minFoes", 1);
         },
         accepts: function (context, _capability, target) { return target.ref === source(context).ref; },
         approachTarget: function (context) { return source(context); },
         priority: function (context, capability) {
             const self = source(context);
-            const radius = capability.data.range > 1 ? capability.data.range : 4.5;
-            const crowd = happyhourCrowd(context, self, Math.max(4.5, radius));
+            const radius = happyhourRadius(context, capability);
+            const crowd = happyhourCrowd(context, self, radius);
             return crowd > 0 ? Math.min(72, 48 + (crowd - 1) * 8) : 0;
         }
     });

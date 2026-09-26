@@ -23,7 +23,9 @@
   "worldcombat.skill.junglehealing.preference.ai.healBelow": "救助阈值",
   "worldcombat.skill.junglehealing.preference.ai.healBelow.help": "自己或伙伴生命低于该比例才把丛林治疗排进救助计划；调低更倾向继续输出，调高一有人掉血就放。",
   "worldcombat.skill.junglehealing.preference.ai.maxChase": "施救距离",
-  "worldcombat.skill.junglehealing.preference.ai.maxChase.help": "目标离自己这个距离以内才考虑唤丛林；调小只在身边时救，调大愿意靠过去。",
+  "worldcombat.skill.junglehealing.preference.ai.maxChase.help": "伙伴离自己这个距离以内才被算进这圈丛林；调小只在身边时救，调大愿意靠过去把更远的伙伴一起罩进来。",
+  "worldcombat.skill.junglehealing.preference.ai.rescueCount": "结伴救助人数",
+  "worldcombat.skill.junglehealing.preference.ai.rescueCount.help": "没有有害状态、只有受伤时，至少这么多个伙伴（含自己）受伤才动用这场昂贵群救；调到 1 单人小伤也放，调高只留给真正的团救。",
   "world_combat.move.junglehealing.text.embrace": "丛林缠上，回复 %1$s，净化 %2$s 项",
-  "worldcombat.skill.junglehealing.description.condition": "圈内没有人受伤、也没有人带着有害状态时不会被唤出；脚下是自然地面（草、土、苔、泥一类）时，回复比例再 +5 个百分点、藤蔓半径再 +0.5 格，深根会把这些一并放大。"
+  "worldcombat.skill.junglehealing.description.condition": "圈内没有人受伤、也没有人带着有害状态时不会被唤出；只有单独一人轻微掉血、且没人带病时，AI 不会为这点小伤动用这场群救。脚下是自然地面（草、土、苔、泥一类）时，回复比例再 +5 个百分点、藤蔓半径再 +0.5 格，深根会把这些一并放大。"
 }

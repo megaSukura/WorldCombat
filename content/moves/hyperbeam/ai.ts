@@ -4,7 +4,8 @@
  * 什么局面下出手：对手可见、敌对、活着且在光柱长度以内；光柱能一起打穿的活体数不少于 `ai.minLine`
  * （默认 1，即单个目标也放）。因为打完有一段较久的熄火，自身生命要高于 `ai.minHealth`（或这一束能收掉残血）才出手。
  * 对谁出手：在候选里挑「站得最成一条线」的那个——从自己到它拉出的走廊里敌人越多越优先（selectTarget）。
- * 怎么够到：共享接近把身位收到射程以内，然后沿目标方向射出光柱（`kind: "enemy"`）。
+ * 出手值不值：排线价值与「放完这段熄火暴露的风险」一起算——排得越密越值得，自身血量越低越压低意愿。
+ * 怎么够到：共享接近把身位收到射程以内，然后沿目标方向射出光柱（`kind: "aim"`，朝方向也能放）。
  * 出手前后：放完交回共享交战计划；熄火期间招式由共享起手门禁自动屏蔽。
  */
 namespace PokemonSkills {
@@ -67,7 +68,11 @@ namespace PokemonSkills {
             if (!target) return 0;
             const lineup = hyperbeamLineup(context, capability, target);
             const base = lineup >= 3 ? 66 : lineup >= 2 ? 34 : 24;
-            return CompanionBehavior.ratio(target) <= 0.3 ? base + 12 : base;
+            const score = CompanionBehavior.ratio(target) <= 0.3 ? base + 12 : base;
+            // 熄火空挡的风险：血量越低越不肯承担，排线收益仍可把它买回来。
+            const health = CompanionBehavior.ratio(CompanionBehavior.source(context));
+            const exposure = health >= 0.6 ? 0 : health >= 0.4 ? 6 : 14;
+            return Math.max(0, score - exposure);
         }
     });
 

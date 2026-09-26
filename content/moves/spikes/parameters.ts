@@ -6,16 +6,18 @@
  *   落地（isGrounded）的生物触发，未被踩到的撒菱一直留在对手一侧。
  *
  * 世界化：把「在对手脚下撒一层菱」翻成**一片留在世界地面上的尖刺**——施法者把一把碎片抛到选定的地面，
- *   落地插成一圈尖刺（`WorldEffects.field`，规则 `world_combat:hazard/spikes`）；谁踏进这一圈就被扎一次，
- *   还站在里面会每隔一小段时间再被扎；同一片地上再撒一次就多叠一层，层数直接放大每次扎伤。只有贴地
- *   （grounded）的生物会被扎，飞在半空的生物从尖刺上方过去。它是本组四招里唯一会**层数叠加**的伤害陷阱。
+ *   落地插成一圈尖刺（`WorldEffects.field`，规则 `world_combat:hazard/spikes`）；踏进来的那一刻被扎一次，
+ *   之后必须真的在刺地里走出 `step`（约 0.9 格）才会再被扎一次，原地站着不再周期掉血；同一片地上再撒一次
+ *   就多叠一层，层数直接放大每次扎伤。只有贴地（grounded）且脚部与刺地同一层的生物会被扎，飞在半空的生物
+ *   从上方过去。它是本组四招里唯一会**层数叠加**、且按步伐而非时间结算的伤害陷阱。
  *
  * 数值来源（每个参数读不同的个体数据，分散到不同参数上）：
  *   pierce         每层刺伤威力：基础 20 + 物攻偏移 + 等级偏移；密布 ×1.2 / 撒布 ×0.9；夹 14..64。
  *   layerGain      每多叠一层的伤害增量（占每层威力的比例）：物攻偏移；密布 ×1.15；夹 0.2..0.6。
  *   patchRadius    尖刺圈半径：体宽（撒得开）＋物攻（撒得远）；密布 ×0.75 / 撒布 ×1.2；夹 1.5..4.2。
  *   patchTicks     尖刺存在时长：等级（越熟练留得越久）＋HP（越结实越久）；夹 140..460。
- *   treadInterval  站在刺上的再扎间隔：速度（越快越密）；密布 ×0.85；夹 12..34。
+ *   treadInterval  两次踩伤之间的最短间隔：速度（越快扎得越密）；密布 ×0.85；夹 12..34。
+ *   step           必须实际走出的水平距离：几何常量 0.9 格；原地站着不再被扎，只有真正跨过这段才再触发。
  *   reach          抛撒距离：速度与等级；夹 6..12，也是实际射程。
  *   throwSpeed     抛撒速度：速度。
  *   shards         碎片数：物攻；它同时是画面里尖刺与碎屑的数量。
@@ -69,7 +71,13 @@ namespace PokemonSkills {
             F.base(22).minus(F.stat("speed").minus(60).times(0.03).clamp(-3, 5))
                 .times(F.when(F.pref("dense"), F.const(0.85), F.const(1)))
                 .clamp(12, 34).round(0),
-            "再扎间隔", "还站在尖刺圈里的人每隔多久被再扎一次；速度越快扎得越密，密布式 ×0.85。"),
+            "再扎间隔", "两次踩伤之间的最短间隔；只有真的走出步距才会触发，所以它给步伐设上限、不能靠贴边连刷。速度越快越密，密布式 ×0.85。"),
+        step: formula(
+            F.base(0.9).clamp(0.6, 1.2).round(2),
+            "步距", {
+                unit: "格",
+                description: "在刺地里必须实际走过的水平距离，每跨过这么远再被扎一次；原地站着不会被重复扎。"
+            }),
         reach: formula(
             F.base(8)
                 .plus(F.stat("speed").minus(60).times(0.02).clamp(-1, 2))
@@ -112,7 +120,7 @@ namespace PokemonSkills {
 
     describe(spikesId, [
         { key: "description.0", values: ["pierce","layerGain"] },
-        { key: "description.1", values: ["patchRadius","patchTicks","treadInterval"] },
+        { key: "description.1", values: ["patchRadius","patchTicks","step","treadInterval"] },
         { key: "description.stacks", values: ["maxLayers"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["dense"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["dense"]) !== true; } },

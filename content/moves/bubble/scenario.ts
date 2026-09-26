@@ -22,7 +22,7 @@ Smoke.scenario("bubble", function (stage) {
         stage.expect(stage.casts("bubble", caster) > 0, "bubble was committed");
         stage.expect(stage.damageTo(near) > 0, "the bubble fan hit the first foe on the line");
         stage.expect(stage.damageTo(far) > 0, "a bubble pierced through and hit the foe behind it");
-        stage.note("sudsy is a roughly 10% base roll (bubble.sudsChance); volleys, bubbles per volley, stages and duration follow Speed/Sp. Atk/body and the dense/rapid choice. Each foe takes damage once per cast even if several bubbles touch it", {
+        stage.note("sudsy is a roughly 10% base roll (bubble.sudsChance); volleys, bubbles per volley, stages and duration follow Speed/Sp. Atk/body and the dense/rapid choice. Within one volley each foe takes damage at most once even if several bubbles touch it", {
             casts: stage.casts("bubble", caster),
             near: Math.round(stage.damageTo(near) * 10) / 10,
             far: Math.round(stage.damageTo(far) * 10) / 10,

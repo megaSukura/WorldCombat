@@ -6,6 +6,7 @@
   "worldcombat.skill.aurasphere.description.0": "Deals about %1$s Fighting special damage. This attack never misses.",
   "worldcombat.skill.aurasphere.description.1": "Range %1$s blocks, sphere speed %2$s blocks/tick, turning up to %3$s degrees per tick toward the target, with a hitbox radius of about %4$s blocks.",
   "worldcombat.skill.aurasphere.description.2": "The sphere can hold a target within %1$s blocks, so it cannot be shaken off once launched.",
+  "worldcombat.skill.aurasphere.targeting": "Pick any entity regardless of side, or just a direction or world point; with no living target the sphere flies straight along the chosen direction without homing and bursts harmlessly on a wall. Whether it holds a target depends only on the target staying within the lock range after launch.",
   "worldcombat.skill.aurasphere.seek.on": "Distant guidance: longer range and harder turning, at the cost of a little power, sphere speed, and longer wind-up and cooldown.",
   "worldcombat.skill.aurasphere.seek.off": "Direct blast: a thicker, faster, heavier sphere, at the cost of a shorter range.",
   "worldcombat.skill.aurasphere.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

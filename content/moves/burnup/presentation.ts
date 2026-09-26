@@ -1,18 +1,3 @@
-/**
- * 燃尽 / burnup 的客户端表现。
- *
- * 一句话：施法者全身的火先向内收拢、体表透出白亮，然后朝身前喷出一道白焰锥面，正对的人被烧穿；
- *   喷完火熄了，只剩一层暗红余烬贴着自己慢慢散。
- * 色相家族：白热一族（0xFFF1D6 焰心 / 0xFFB347 焰体 / 0xD9611E 暗红余烬，烟近黑 0x2A2118）——
- *   第二色相（暗红）只用在燃尽后的「已经烧空」这一段。
- * 拍子：起 kindle（0–8t 收火泛白）→ 击 burst（锥面白焰冲出）→ 烧 scorch／侧焰 splash → 尽 spent（余烬暗淡）。
- * 范围：burst 的锥面用与判定同一个几何（`data.half` 半角、`data.reach` 长度、`orient:direction`），
- *   扫到哪块区域就是画面里那片白焰——玩家一眼看出站在正前方会吃满。
- * 运动：白焰沿 `data.direction` 向前张开；前沿以 `data.speed` 冲出；命中点余焰向外翻卷、落地成灰。
- * 数：锥面每层的发射量绑定 `data.ember`（特攻与等级换算），命中强度绑定 `data.intensity`（实际伤害换算），
- *   几何尺度绑定 `data.scale`（射程换算）。
- * 参照节：视觉语言第二、三、四、六、九节。
- */
 const BurnupDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -39,36 +24,16 @@ const BurnupDefinition: ParticleDefinition = {
             ]
         },
         burst: {
-            duration: 18,
-            exit: { stop: 10, drain: 22 },
+            exit: { stop: 0, drain: 10 },
             emitters: [
-                {
-                    name: "cone_core", bind: "source", offset: [0, 0.45, 0], height: 0.4, orient: "direction",
+                { name: "white_front", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    burst: { count: { data: "ember", fallback: 24 }, at: 0 },
-                    shape: { kind: "cone_volume", radius: 0.45, angleDegrees: { data: "half", fallback: 31 }, length: { data: "reach", fallback: 6.8 } },
-                    direction: "shape", speed: [0.2, 0.7],
-                    lifetime: [7, 14], size: [0.3, 0.05], sizeMode: "index",
-                    color: 0xFFF1D6, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 260
-                },
-                {
-                    name: "cone_body", bind: "source", offset: [0, 0.4, 0], height: 0.35, orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    rate: 90,
-                    shape: { kind: "cone_volume", radius: 0.45, angleDegrees: { data: "half", fallback: 31 }, length: { data: "reach", fallback: 6.8 } },
-                    direction: "shape", speed: [0.1, 0.4],
-                    lifetime: [10, 18], size: [0.4, 0.12],
-                    color: 0xFFB347, alpha: [0.55, 0], light: "full", maxParticles: 360
-                },
-                {
-                    name: "cone_ash", bind: "source", offset: [0, 0.35, 0], height: 0.3, orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 34,
-                    shape: { kind: "cone_volume", radius: 0.45, angleDegrees: { data: "half", fallback: 31 }, length: { data: "reach", fallback: 6.8 } },
-                    direction: "shape", speed: [0.04, 0.2], gravity: 0.02, drag: 0.93,
-                    lifetime: [14, 26], size: [0.4, 0.16],
-                    color: 0x2A2118, alpha: [0.4, 0], light: "world", maxParticles: 160
-                }
+                    rate: 90, shape: { kind: "polyline" }, direction: "up", speed: [0.01, 0.04],
+                    lifetime: [5, 9], size: [0.28, 0.04], color: 0xFFF1D6, alpha: [0.9, 0], light: "full" },
+                { name: "spent_edge", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/ember", rate: { data: "ember", fallback: 24 },
+                    shape: { kind: "polyline" }, direction: "up", speed: 0.02,
+                    lifetime: [9, 14], size: [0.09, 0.02], color: 0xFFB347, alpha: [0.6, 0], light: "world" }
             ]
         },
         scorch: {

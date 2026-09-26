@@ -4,11 +4,13 @@
  * 一句话：掌心凝出一颗火球射出去，火球拖着焰尾沿浅弧飞行；命中点炸开一团火，炸开的同时几滴火从爆点被甩出去，
  * 沿着弧线落到旁边每个对手身上，各自绽开一小簇火。
  * 色相家族：橙红（0xFF8A3C）与余烬黄（0xFFD06A），烟收在深褐（0x3A2A22）；饱和只出现在火球、爆点与火滴的小面积。
- * 拍子：起（gather 凝火）→ 飞（flight 焰尾）→ 击（burst 炸开）→ 溅（splash 火滴轨迹 → drop 落点）→ 收（fade 残烟）。
+ * 拍子：起（gather 凝火）→ 飞（flight 焰尾）→ 击（burst 炸开）→ 溅（splash 火滴轨迹 → drop 落点）
+ *   ／散（scatter 撞墙或非活体只散火）→ 收（fade 残烟）。
  * 范围：`burst` 的 `ring` 用 `shape.radius: 2.0` 配上 `data.scale`（溅射半径 / 2.0）画出来，这圈火环的半径就是
- *   机制里的溅射半径——玩家一眼看出站得离目标多近会被溅到。
- * 运动：火球沿浅弧飞出并撒火星；`splash` 沿 `data.path`（爆点→被溅到的对手）铺出火滴轨迹，drop 在对手身上绽放。
- * 数：`burst`／`splash` 的粒子量绑 `data.drops`（特攻与等级换算出机制数），强度绑 `data.intensity`（主爆威力派生），
+ *   机制里的溅射半径——玩家一眼看出站得离目标多近会被溅到。撞到方块/非活体只播 `scatter`，不画这圈火环。
+ * 运动：火球沿浅弧飞出并撒火星；`splash` 沿 `data.path`（爆点→被溅到的对手）铺出火滴轨迹，drop 在对手身上绽放；
+ *   `scatter` 在受击的方块面上向外散火，画的就是撞墙那一下。
+ * 数：`burst`／`scatter` 的粒子量绑 `data.drops`（特攻与等级换算出机制数），强度绑 `data.intensity`（主爆威力派生），
  *   飞行火星量绑 `data.embers`。
  */
 const FlameburstDefinition: ParticleDefinition = {
@@ -128,6 +130,29 @@ const FlameburstDefinition: ParticleDefinition = {
                     rate: 10, shape: { kind: "sphere", radius: 0.4 }, direction: "outward", speed: [0.02, 0.08], gravity: 0.05,
                     lifetime: [10, 16], size: [0.06, 0.01],
                     color: 0x9A8258, alpha: [0.25, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        scatter: {
+            duration: 22,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "spray", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "drops", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.28 }, direction: "outward", speed: [0.05, 0.2], spread: 22,
+                    gravity: 0.08, drag: 0.94,
+                    lifetime: [8, 14], size: [0.13, 0.02], sizeMode: "index",
+                    color: 0xFFD06A, alpha: [0.9, 0], light: "full", maxParticles: 48
+                },
+                {
+                    name: "hiss", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 4, at: 0 },
+                    shape: { kind: "sphere", radius: 0.26 }, direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.16, 0.26],
+                    color: 0x3A2A22, alpha: [0.22, 0], light: "world", maxParticles: 16
                 }
             ]
         }

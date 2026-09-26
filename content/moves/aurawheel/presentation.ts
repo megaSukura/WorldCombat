@@ -1,10 +1,11 @@
 /**
  * 气场轮的表现：
- * 「施法者把颊囊能量聚成一只轮子贴地滚出，卷起草屑与电花；命中后脚下升起提速的环。」
+ * 「施法者把颊囊能量聚成一只轮子贴地滚出去；轮子按滚动方向竖起，沿真实路程转，停下时散成脚边速度纹。」
  *
- * 色相家族：贴图取白/浅灰，实际色相由服务端按形态算出的 data.tint 乘出——电为黄、恶为暗。
- * 拍子：蓄力 spin → 滚动 roll（拉出地面尾迹）→ 命中的爆发 → 提速的上升环。
- * 范围：roll 沿身体运动在地面拉线，strike 的点爆半径与 boost 的环读出作用范围。
+ * 色相家族：轮缘与尘取白/灰，实际色相由服务端按形态算出的 data.tint 只作辅助（命中、提速与蓄力的几处强调色）。
+ * 拍子：蓄力 spin（轮子在脚边成形）→ 滚动 roll（竖直轮廓沿数据里的轴向转向、转速绑实际位移）→
+ *       命中 strike → 停轮提速 boost（轮子散成脚边速度纹 + 上升环）。
+ * 运动：roll 的轮子用 orient: direction 按 data.direction（轮轴）竖起，spin 由 data.spin（实际每刻位移派生）驱动。
  * 数：命中碎片数量由服务端按最终威力算出的 data.count 决定。
  */
 const AuraWheelDefinition: ParticleDefinition = {
@@ -30,13 +31,31 @@ const AuraWheelDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "inward", speed: [0.06, 0.14],
                     lifetime: [8, 14], size: [0.12, 0.02],
-                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", maxParticles: 60
+                    color: { data: "tint", fallback: 0xFFFFFF }, alpha: [0.9, 0], light: "full", maxParticles: 60
                 }
             ]
         },
-        // 滚动：贴地滚出，身后留下草屑与轮影。
+        // 滚动：竖直轮子按滚动方向（轮轴 data.direction）竖起，转速随实际位移，沿路卷起尘土。
         roll: {
             emitters: [
+                {
+                    name: "wheel", bind: "source", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    orient: "direction",
+                    rate: 14, shape: { kind: "ring", radius: 0.5 },
+                    direction: "outward", speed: [0.0, 0.03], spin: { data: "spin", fallback: 40 },
+                    lifetime: [8, 14], size: [0.4, 0.55],
+                    color: 0xE8E8E8, alpha: [0.7, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "spokes", bind: "source", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/drill",
+                    orient: "direction",
+                    rate: 18, shape: { kind: "sphere", radius: 0.25 },
+                    direction: "outward", speed: [0.01, 0.05], spin: { data: "spin", fallback: 40 },
+                    lifetime: [6, 10], size: [0.3, 0.14],
+                    color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 60
+                },
                 {
                     name: "roll_dust", bind: "source", height: 0.05, offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
@@ -48,20 +67,12 @@ const AuraWheelDefinition: ParticleDefinition = {
                     light: "world", maxParticles: 160
                 },
                 {
-                    name: "roll_wheel", bind: "source", height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/drill",
-                    trail: { minDistance: 0.25 }, rate: 20,
-                    direction: "velocity", speed: [0.0, 0.03], spin: 40,
-                    lifetime: [6, 10], size: [0.4, 0.2],
-                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", maxParticles: 80
-                },
-                {
-                    name: "roll_ring", bind: "source", height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    trail: { minDistance: 0.35 }, rate: 12,
-                    direction: "velocity", speed: [0.0, 0.02],
-                    lifetime: [8, 12], size: [0.5, 0.3],
-                    color: 0xFFFFFF, alpha: [0.5, 0], light: "full", maxParticles: 60
+                    name: "roll_speed", bind: "source", height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    trail: { minDistance: 0.3 }, rate: 16,
+                    direction: "velocity", speed: [0.0, 0.03], spin: { data: "spin", fallback: 40 },
+                    lifetime: [5, 9], size: [0.3, 0.05],
+                    color: 0xD8D8D8, alpha: [0.6, 0], light: "full", maxParticles: 80
                 }
             ]
         },
@@ -77,7 +88,7 @@ const AuraWheelDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.34 },
                     direction: "shape", speed: [0.08, 0.26],
                     lifetime: [8, 14], size: [0.5, 0.06], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5
+                    color: { data: "tint", fallback: 0xFFFFFF }, alpha: [1, 0], light: "full", bloom: 0.5
                 },
                 {
                     name: "strike_glints", bind: "point", fit: "none", offset: [0, 0.45, 0],
@@ -96,15 +107,24 @@ const AuraWheelDefinition: ParticleDefinition = {
                     shape: { kind: "ring", radius: 1.1 },
                     direction: "outward", speed: [0.06, 0.16],
                     lifetime: [10, 16], size: [0.5, 1.0],
-                    color: 0xFFFFFF, alpha: [0.6, 0], light: "full"
+                    color: 0xE8E8E8, alpha: [0.6, 0], light: "full"
                 }
             ]
         },
-        // 提速：脚下升起一圈上升环。
+        // 停轮提速：轮子散成脚边速度纹，同时脚下升起提速的上升环。
         boost: {
             duration: 28,
             exit: { stop: 16, drain: 20 },
             emitters: [
+                {
+                    name: "stop_marks", bind: "source", height: 0.08,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 14 },
+                    shape: { kind: "ring", radius: 0.6 },
+                    direction: "outward", speed: [0.04, 0.14], drag: 0.9,
+                    lifetime: [10, 18], size: [0.24, 0.04],
+                    color: { data: "tint", fallback: 0xFFFFFF }, alpha: [0.7, 0], light: "full", maxParticles: 60
+                },
                 {
                     name: "boost_ring", bind: "source", height: 0.25,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
@@ -112,7 +132,7 @@ const AuraWheelDefinition: ParticleDefinition = {
                     shape: { kind: "ring", radius: 0.6 },
                     direction: "up", speed: [0.03, 0.08],
                     lifetime: [12, 20], size: [0.4, 1.0],
-                    color: 0xFFFFFF, alpha: [0.7, 0], light: "full"
+                    color: { data: "tint", fallback: 0xFFFFFF }, alpha: [0.7, 0], light: "full"
                 },
                 {
                     name: "boost_motes", bind: "source", height: 0.35,

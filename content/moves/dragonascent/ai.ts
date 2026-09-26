@@ -4,11 +4,24 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 11）格之内；更远交给共享接近逻辑。
  *   这一记提交那一刻就弃守（自降防特防），只有在自身生命比例不低于 `ai.minHealth`（默认 0＝不限制）时才起手。
  * 对谁出手：它要先升空再下砸，越有点水平余量越有效——距离达到 `ai.airMargin`（默认 2.5）格时加一档，
- *   贴到 1.5 格以内减一档，让位给更贴身的招；`ai.finish`（默认开）打开时残血目标更高。
+ *   贴到 1.5 格以内减一档，让位给更贴身的招；落点周围还挤着别的敌人时再高一档，因为它本来就是一记照顾一片的落地冲击；
+ *   `ai.finish`（默认开）打开时残血目标更高。
  * 够不到怎么办：reach 就是本招射程，先走到射程里；升空途中目标消失就落回原地，代价已经付过。
- * 放完之后：交回共享交战计划等冷却；落点裂石留在场上，但本招不因它改后续决策。
+ * 放完之后：交回共享交战计划等冷却；落地不再留下地形，本招不因它改后续决策。
  */
 namespace PokemonSkills {
+    /** 目标落点周围还挤着几个别的敌人（决定这一记值不值得砸进人堆）。 */
+    function dragonascentClustered(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
+        const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || other.ref === target.ref) continue;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
+        }
+        return count;
+    }
+
     function dragonascentWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
@@ -36,8 +49,10 @@ namespace PokemonSkills {
             let score = distance <= capability.data.range ? 16 : 0;
             const margin = CompanionBehavior.ai<number>(capability, "airMargin", 2.5);
             if (distance >= margin) score += 6; else if (distance <= 1.5) score -= 6;
+            // 对群敌：落点附近还有别人时更值，单 Boss 贴身时上一条已经把分数压低。
+            if (dragonascentClustered(context, target, 3.0) > 0) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) < 0.45) score += 8;
-            return score;
+            return Math.max(0, score);
         }
     });
 

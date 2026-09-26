@@ -19,7 +19,7 @@ Smoke.scenario("psychocut", function (stage) {
     }, function () {
         stage.expect(stage.casts("psychocut", caster) >= 1, "caster committed psycho cut");
         stage.expect(stage.damageTo(foe) > 0, "psycho cut dealt damage to the foe");
-        stage.note("critical hits come from the native critRatio 2 roll; whether the crescent's cross also catches a nearby foe depends on where the target stands, and this stage has a single target", {
+        stage.note("critical hits come from the native critRatio 2 roll; the cross is built from the blade's actual incoming direction and only foes lying on its two traced strokes take the echo, so this single-target stage sees no extra victim", {
             casts: stage.casts("psychocut", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

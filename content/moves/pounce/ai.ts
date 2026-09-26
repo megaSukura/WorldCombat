@@ -3,10 +3,25 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，在 `ai.maxChase` 之内。它是一记中距离的扑击，价值在于贴上去并缠住对方。
  * 对谁出手：当前威胁；不可见、友方或已倒下的不接受。`ai.preferFresh` 开启时，已经带着 clung 身份的目标排后。
+ * 弧线净空：跳跃拱顶处放不下自己的身体（低顶棚、洞穴、贴墙）时大幅降低推荐，不在低顶棚下盲选高扑；
+ *   较远、且在射程内的目标更贴合这条高弧的用途，优先度更高。
  * 够不到怎么办：`reach` 就是本招射程，不够就先走近；它负责把距离一口气缩掉，不负责远程骚扰。
  * 放完之后：目标被缠身、速度等级下降，交回共享交战计划；残血目标让这一扑更有收尾价值。
  */
 namespace PokemonSkills {
+    /** 跳跃拱顶（弧的中点、脚高度 + apex）处是否能容下施法者的身体；同一决策帧内缓存。 */
+    function pounceArcClear(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
+        return CompanionBehavior.observedFlag(context, "pounce:arc:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            const apex = p("pounce", "apex", world);
+            const width = self.width === undefined ? 0.9 : self.width, height = self.height === undefined ? 1.4 : self.height;
+            const selfFeet = self.point[1] - height / 2;
+            const probe = CompanionBehavior.point([(self.point[0] + target.point[0]) / 2, selfFeet + apex,
+                (self.point[2] + target.point[2]) / 2]);
+            return world.freeSpace(probe, width, height);
+        });
+    }
+
     CompanionBehavior.registerUse("pounce", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -21,8 +36,12 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+            if (gap > capability.data.range) return 0;
+            const clear = pounceArcClear(context, target);
             let score = 19;
+            if (!clear) score -= 16;
+            else if (gap >= capability.data.range * 0.55) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "preferFresh", true) && CompanionBehavior.status(context, target, "clung")) score -= 12;
             if (CompanionBehavior.ratio(target) <= 0.35) score += 10;
             if (CompanionBehavior.fleeing(context, target)) score += 8;

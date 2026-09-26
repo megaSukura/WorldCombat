@@ -2,6 +2,22 @@
 namespace PokemonSkills {
     function encoreAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
+    /** 普通攻击按伤害类型归成可读的攻击类别；点名的标签用这个类别，而不是裸的 damageType。 */
+    function encoreKind(type: string): string {
+        const value = String(type || "");
+        if (value === "minecraft:mob_attack" || value === "minecraft:mob_attack_no_aggro" || value === "minecraft:player_attack"
+            || value === "minecraft:sting" || value === "minecraft:ram" || value === "minecraft:mace_smash") return "melee";
+        if (value === "minecraft:arrow" || value === "minecraft:trident" || value === "minecraft:mob_projectile" || value === "minecraft:thrown") return "ranged";
+        if (value === "minecraft:magic" || value === "minecraft:indirect_magic" || value === "minecraft:wither_skull"
+            || value === "minecraft:dragon_breath" || value === "minecraft:sonic_boom") return "magic";
+        return "other";
+    }
+    /** 被点名那一手的可读标签：宝可梦用招名，普通生物用攻击类别。 */
+    function encoreAllowedArg(loop: any): any {
+        if (loop && loop.native) return { key: "world_combat.move.encore.kind." + String(loop.kind || "other"), fallback: String(loop.id || "") };
+        return { key: "cobblemon.move." + String(loop.id), fallback: String(loop.id) };
+    }
+
     /** 回声标记：记录被点名的那一手与画面要用的数。 */
     function encoreLoopView(world: CombatWorld, actor: CombatActor): CombatEffectView | null {
         const views = world.effects(actor, encoreLoop);
@@ -12,30 +28,48 @@ namespace PokemonSkills {
         return view === null ? null : JSON.parse(String(view.data()));
     }
 
-    /** 收回本单元加在目标身上的原生锁定层（`only` 指向被点名的招时才收，别的层不动）。 */
-    function encoreDropLock(world: CombatWorld, actor: CombatActor, id: string): void {
-        const layers = world.effects(actor, "cobblemon_world_combat:modifier");
-        for (let i = 0; i < layers.length; i++) {
-            const value = JSON.parse(String(layers[i].data()));
-            if (value && value.only === id) world.operation(layers[i].id(), "world_combat:dispel", "{}");
-        }
+    /** 只收回本实例创建的那层原生锁定；别的来源留下的 `only` 层不动。 */
+    function encoreDisownLock(world: CombatWorld, loop: any): void {
+        if (loop && typeof loop.lockId === "number" && loop.lockId > 0) world.operation(loop.lockId, "world_combat:dispel", "{}");
     }
     function encoreDropMark(world: CombatWorld, actor: CombatActor): void {
         const views = world.effects(actor, encoreLoop);
         for (let i = 0; i < views.length; i++) world.operation(views[i].id(), "world_combat:dispel", "{}");
     }
-    /** 提前结束：拿掉身份效果与锁定层；身份被移除后由 removed 处理器负责画面。 */
-    function encoreRelease(world: CombatWorld, actor: CombatActor, id: string): void {
+    /** 提前结束：拿掉身份效果与自己的锁定层。 */
+    function encoreRelease(world: CombatWorld, actor: CombatActor, loop: any): void {
         const effect = MobEffects.read(world, actor, encoreEffect);
         if (effect !== null) world.removeMobEffect(actor, encoreEffect, effect.key());
         encoreDropMark(world, actor);
-        encoreDropLock(world, actor, id);
+        encoreDisownLock(world, loop);
+    }
+    /** 被外力清除或到期：只收回标记与锁定层；是否播退场由调用处决定。 */
+    function encoreTeardown(world: CombatWorld, actor: CombatActor, loop: any): void {
+        encoreDropMark(world, actor);
+        encoreDisownLock(world, loop);
+    }
+    /** 改用别的攻击被挡下时的一眼可见：头顶划下一道否定线，叉掉它想用的那一手。 */
+    function encoreShowReject(world: CombatWorld, actor: CombatActor, loop: any): void {
+        const body = world.observe(actor);
+        if (body === null) return;
+        const head = body.position().plus(WorldCombat.point(0, Math.max(0.9, body.height() * 0.8), 0));
+        const half = Math.max(0.24, 0.18 + (loop.radius || 0.35) * 0.4);
+        const path = [
+            [head.x() - half, head.y() + half, head.z()],
+            [head.x() + half, head.y() - half, head.z()]
+        ];
+        WorldFeedback.emit(world, encoreScene, 1, body.position(),
+            { moment: "reject", target: String(actor.ref()), motes: loop.motes || 10, path: path,
+                scale: Math.max(0.5, (loop.radius || 0.35) / 0.35) }, 22);
+        WorldFeedback.text(world, encoreAbove(body.position()), encoreRejectText, [encoreAllowedArg(loop)], 26);
     }
 
     WorldCombat.effect(encoreLoop, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (typeof value.id !== "string" || !value.id) throw new Error("Invalid encore move");
         if (typeof value.ticks !== "number" || !isFinite(value.ticks) || value.ticks < 1) throw new Error("Invalid encore duration");
+        if (value.lockId !== undefined && (typeof value.lockId !== "number" || !isFinite(value.lockId) || value.lockId < 0))
+            throw new Error("Invalid encore lock");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(encoreLoop, "start", function () { });
@@ -109,14 +143,25 @@ namespace PokemonSkills {
             const ticks = Math.max(60, Math.round(p(encoreId, "callTicks", action)));
             const motes = Math.max(6, Math.round(p(encoreId, "motes", action)));
             const radius = Math.max(0.3, p(encoreId, "loopRadius", action));
-            MobEffects.apply(world, target, encoreEffect, ticks, 0);
+            // 身份效果落下后才有回声；载体没落成就不制造旁路锁定。
+            const carrier = MobEffects.apply(world, target, encoreEffect, ticks, 0);
+            if (carrier === null) {
+                WorldFeedback.emit(world, encoreScene, 1, at, { moment: "miss", target: String(target.ref()) }, 20);
+                WorldFeedback.text(world, encoreAbove(at), encoreMissText, [], 28);
+                done(action);
+                return;
+            }
+            const previous = encoreLoopOf(world, target);
+            if (previous !== null) encoreDisownLock(world, previous);
             encoreDropMark(world, target);
+            let lockId = 0;
+            if (String(target.domain()) === "cobblemon") lockId = NativeModifiers.apply(world, target, { only: last!.id }, ticks);
             world.effect(encoreLoop, target, JSON.stringify({ id: last!.id, key: last!.key, slot: last!.slot,
-                ticks: ticks, max: ticks, motes: motes, radius: radius, native: !!native, target: native ? native.target : "" }), ticks);
-            if (String(target.domain()) === "cobblemon") NativeModifiers.apply(world, target, { only: last!.id }, ticks);
+                ticks: ticks, max: ticks, motes: motes, radius: radius, native: !!native, kind: native ? encoreKind(native.type) : "",
+                lockId: lockId, target: native ? native.target : "" }), ticks);
             WorldFeedback.emit(world, encoreScene, 1, at,
                 { moment: "loop", target: String(target.ref()), motes: motes, scale: radius / 0.35 }, 34);
-            WorldFeedback.text(world, encoreAbove(at), encoreLockText, [Math.round(ticks / 20)], 34);
+            WorldFeedback.text(world, encoreAbove(at), encoreLockText, [Math.round(ticks / 20), encoreAllowedArg({ id: last!.id, native: !!native, kind: native ? encoreKind(native.type) : "" })], 34);
             done(action);
         }
     });
@@ -143,7 +188,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(world, encoreScene, 1, body.position(), { moment: "spent", target: String(actor.ref()) }, 26);
                     WorldFeedback.text(world, encoreAbove(body.position()), encoreFadeText, [], 26);
                 }
-                encoreRelease(world, actor, loop.id);
+                encoreRelease(world, actor, loop);
                 return;
             }
         }
@@ -163,11 +208,38 @@ namespace PokemonSkills {
         const view = encoreLoopView(world, actor);
         if (view === null) return;
         const loop = JSON.parse(String(view.data()));
-        encoreDropMark(world, actor);
-        encoreDropLock(world, actor, loop.id);
+        encoreTeardown(world, actor, loop);
         if (String(data.cause) !== "expired" || !world.valid(actor)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, encoreScene, 1, body.position(), { moment: "release", target: String(actor.ref()) }, 24);
+    });
+
+    // 宝可梦改用别的招式：`only` 层已经在提交前顶回这一手，这里只把「叉掉」演出来。
+    WorldCombat.on("world_combat:move_encore/reject-move", "world_combat:before_commit", "cobblemon_world_combat:before", function (event) {
+        const world = event.world(), actor = event.actor(), action = event.action();
+        if (action === null || String(actor.domain()) !== "cobblemon") return;
+        if (MobEffects.read(world, actor, encoreEffect) === null) return;
+        const loop = encoreLoopOf(world, actor);
+        if (loop === null || loop.native) return;
+        const layers = NativeModifiers.read(world, actor);
+        if (layers.only !== loop.id) return;
+        const executing = NativeLoadout.executing(action);
+        if (executing === null || String(executing.id()) === loop.id) return;
+        encoreShowReject(world, actor, loop);
+    });
+
+    // 普通生物改用别的攻击：伤害在命中层被挡住前，先把「叉掉」演出来。
+    WorldCombat.on("world_combat:move_encore/reject-native", "world_combat:damage_incoming", "world_combat:status/attacks", function (event) {
+        const target = event.target(), actor = event.actor();
+        if (target === null || actor === null || String(actor.key()) === String(target.key())) return;
+        const world = event.world();
+        if (MobEffects.read(world, actor, encoreEffect) === null) return;
+        const loop = encoreLoopOf(world, actor);
+        if (loop === null || !loop.native) return;
+        const data = JSON.parse(String(event.data()));
+        if (!(data.amount > 0) || !DamageSemantics.read(data).attack) return;
+        if (String(data.damageType) === loop.id) return;
+        encoreShowReject(world, actor, loop);
     });
 }

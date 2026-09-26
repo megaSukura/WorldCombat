@@ -1,16 +1,17 @@
 /**
  * 修长之角 / smartstrike 的出手方式。
  *
- * 核心念头：角尖自己锁定目标，一路修正方向追着刺过去——甲越硬，角咬得越深，所以这一刺躲不掉。
+ * 核心念头：角尖自己锁定目标，一路修正方向追着刺过去——甲越硬，角咬得越深。转向有上限，所以持续横移
+ * 或绕到侧面能把角甩开；正面有墙时角尖停在墙面，不会隔墙刺到。
  *
  * 两幕：
  *   起（lock，提交前）：压低长角，一条锁定的细线连到对手身上（可被打断的预告）。
- *   刺（charge → stab → pierce）：提交后角尖带着施法者逐刻朝目标拐过去；每刻把前进路径扫一遍，
- *       碰到活体或追到角尖够得着时扎下去，命中把目标顶开、在甲缝上迸出钢花。
- *   目标若在起手时已离场，收角空刺。
+ *   刺（charge → stab / pierce / wall / miss）：提交后角尖带着施法者逐刻朝目标拐过去；每刻把前进路径扫一遍，
+ *       碰到活体就扎下去。贴到跟前也走一次真实短 trace，墙或同伴挡在中间就扎不到。目标离场后沿最后方向
+ *       短收一刺，不再延长锁定。命中把目标顶开、在甲缝上迸出钢花。
  *
- * 与同族分开：燕返是掠过的整条刀路，修长之角是**锁定后单点追刺**；燕返靠速度覆盖，这招靠转向修正与
- * 「目标防御越高咬得越深」。
+ * 与同族分开：燕返是掠过的整条直线刀路，修长之角是**锁定后单点追刺**；燕返靠玩家锁定方向，这招靠
+ * 有限转向修正与「目标防御越高咬得越深」。
  */
 namespace PokemonSkills {
     const smartstrikeScene = "world_combat:move_smartstrike";
@@ -33,7 +34,7 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "smartstrike",
         name: "Smart Strike",
-        description: "角尖自己锁定对手，一路修正方向追着刺过去；因为角追着人拐，所以躲不掉。刺的是甲缝，对手防御越高，这一角咬得越深。",
+        description: "角尖自己锁定对手，一路修正方向追着刺过去；角每刻最多只拐那么多，横移够快就能从侧面甩开。刺的是甲缝，对手防御越高，这一角咬得越深；墙或同伴挡在中间时角尖停在接触面，不隔墙刺到。",
         uses: ["锁定后一记追人的角刺", "专挑高防目标的甲缝", "从较远处拐着角扎上去"],
         kind: "enemy",
         range: 8,
@@ -83,7 +84,6 @@ namespace PokemonSkills {
             let settled = false;
 
             sound(action, "minecraft:entity.wind_charge.throw");
-            movementScenes.show(action, "charge", action.origin(), { moment: "charge", scale: scale, focus: focus });
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -95,8 +95,23 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                WorldFeedback.emit(scope, smartstrikeScene, 1, current.origin(), { moment: "miss", scale: scale }, 18);
-                WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.2, 0)), smartstrikeMissText, [], 20);
+                const body = scope.observe(actor);
+                const at = body === null ? current.origin() : body.position();
+                WorldFeedback.emit(scope, smartstrikeScene, 1, at, { moment: "miss", scale: scale }, 18);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), smartstrikeMissText, [], 20);
+                movementScenes.finish(current, done);
+            }
+
+            /** 角尖撞上真实方块面：在接触格迸出钢花，而不是隔墙播刺。 */
+            function wall(current: CombatAction, contact: CombatImpact): void {
+                if (settled) return;
+                settled = true;
+                const scope = current.world();
+                const cell = contact.blockPosition();
+                const at = cell === null ? contact.position() : cell;
+                WorldFeedback.emit(scope, smartstrikeScene, 1, at,
+                    { moment: "wall", face: contact.blockFace(), scale: scale, intensity: Math.max(0.6, Math.min(2.0, scale)) }, 20);
+                scope.sound("cobblemon:impact.steel", at, 12, "{}");
                 movementScenes.finish(current, done);
             }
 
@@ -114,7 +129,7 @@ namespace PokemonSkills {
                     const self = scope.observe(actor), body = scope.observe(victim);
                     if (self !== null && body !== null) {
                         const away = body.position().minus(self.position());
-                        if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                        if (away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                     }
                     const where = scope.observe(victim);
                     const at = where === null ? point : where.position();
@@ -131,32 +146,64 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
+            /** 贴身到位：也走一次真实短 trace，只有角尖真的碰到身体才扎。 */
+            function closeStab(current: CombatAction, here: CombatPoint, point: CombatPoint): void {
+                if (settled) return;
+                const scope = current.world();
+                const contact = current.trace(here, point, radius, true);
+                const other = contact.hitEntity() ? contact.target() : null;
+                if (other !== null && !scope.friendly(other) && scope.valid(other)) { stab(current, other, contact.position()); return; }
+                if (contact.blocked()) { wall(current, contact); return; }
+                miss(current);
+            }
+
+            /** 目标离场：沿最后方向短收一刺，不再延长锁定。 */
+            function recover(current: CombatAction, here: CombatPoint): void {
+                if (settled) return;
+                const scope = current.world();
+                const contact = current.trace(here, here.plus(heading.scale(Math.max(0.7, radius + 0.6))), radius, true);
+                const other = contact.hitEntity() ? contact.target() : null;
+                if (other !== null && !scope.friendly(other) && scope.valid(other)) { stab(current, other, contact.position()); return; }
+                if (contact.blocked()) { wall(current, contact); return; }
+                miss(current);
+            }
+
             function advance(current: CombatAction): void {
                 const scope = current.world();
                 const self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
+                const here = self.position();
                 const victim = selected !== null && scope.valid(selected) ? selected : null;
-                if (victim === null) { miss(current); return; }
+                if (victim === null) { recover(current, here); return; }
                 const body = scope.observe(victim);
-                if (body === null) { miss(current); return; }
-                const here = self.position(), desired = body.position().minus(here);
+                if (body === null) { recover(current, here); return; }
+                const desired = body.position().minus(here);
                 const distance = desired.length();
-                if (distance <= radius + 0.9) { stab(current, victim, body.position()); return; }
+                if (distance <= radius + 0.9) { closeStab(current, here, body.position()); return; }
                 heading = smartstrikeSteer(heading, desired, steering);
+                // 冲锋贴着地面走：横向转向仍按转向修正，垂直分量不驱动身体，避免角尖在坡地上被地形挡住。
+                const horizontal = WorldCombat.point(heading.x(), 0, heading.z());
+                const sweepDir = horizontal.length() < 0.05 ? heading : horizontal.unit();
                 const step = Math.min(speed, Math.max(0.05, distance - radius));
-                const delta = heading.scale(step);
+                const delta = sweepDir.scale(step);
+                // 冲锋朝向用当前真实转向，画面里的角尖轴与判定一致。
+                movementScenes.show(current, "charge", here,
+                    { moment: "charge", scale: scale, focus: focus, direction: [sweepDir.x(), sweepDir.y(), sweepDir.z()] });
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const other = hit.target();
-                    if (other !== null && !scope.friendly(other)) { stab(current, other, hit.position()); return; }
+                    if (other !== null && !scope.friendly(other) && scope.valid(other)) { stab(current, other, hit.position()); return; }
                 }
+                if (hit.blocked()) { wall(current, hit); return; }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < 0.05 || travelled >= lockRange + 3) { miss(current); return; }
+                if (moved < 0.05 || travelled >= lockRange + 3) { miss(current); return; }
                 current.after(1, advance);
             }
 
+            movementScenes.show(action, "charge", action.origin(),
+                { moment: "charge", scale: scale, focus: focus, direction: [heading.x(), heading.y(), heading.z()] });
             if (selected === null || !world.valid(selected)) { miss(action); return; }
             advance(action);
         }

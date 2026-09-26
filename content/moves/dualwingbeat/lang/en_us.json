@@ -4,13 +4,13 @@
   "worldcombat.skill.dualwingbeat.use.1": "Bat open then upswing, landing two beats on one target",
   "worldcombat.skill.dualwingbeat.use.2": "Sweep a small forward fan of foes aside",
   "worldcombat.skill.dualwingbeat.description.0": "Each beat deals about %1$s contact damage (physical); engage range %2$s blocks, wing-fan angle %3$s degrees.",
-  "worldcombat.skill.dualwingbeat.description.1": "The beats are %1$s apart; the first bats each target it hits up to %3$s blocks away and the second pulls it back a little. Once the first beat lands on any target, the second gains up to +%2$s power. In dive form the first beat closes up to %4$s blocks toward the target.",
+  "worldcombat.skill.dualwingbeat.description.1": "The beats are %1$s apart; each beat shoves the targets it hits up to %2$s blocks along that beat's wing swing. In dive form the first beat closes up to %3$s blocks toward the target.",
   "worldcombat.skill.dualwingbeat.description.2": "In dive form the caster pulls back %1$s blocks on the second upswing; each beat reaches up to %2$s targets.",
   "worldcombat.skill.dualwingbeat.dive.on": "Dive form now: close in first; both beats are contact, heavier and quicker, but reach is shorter and you give up position.",
   "worldcombat.skill.dualwingbeat.dive.off": "Hover form now: beat wind from a distance with longer, safer reach, but each beat is lighter and the gap is longer.",
   "worldcombat.skill.dualwingbeat.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
   "worldcombat.skill.dualwingbeat.growth.0": "From level %1$s the power per beat rises to %2$s.",
-  "worldcombat.skill.dualwingbeat.growth.1": "From level %1$s the power per beat is %2$s and the second-beat bonus rises to %3$s.",
+  "worldcombat.skill.dualwingbeat.growth.1": "From level %1$s the power per beat rises to %2$s.",
   "worldcombat.skill.dualwingbeat.growth.2": "From level %1$s the power per beat rises to %2$s.",
   "worldcombat.skill.dualwingbeat.value.wing": "Power per beat",
   "worldcombat.skill.dualwingbeat.value.reach": "Engage range",
@@ -19,7 +19,6 @@
   "worldcombat.skill.dualwingbeat.value.gap": "Gap between beats",
   "worldcombat.skill.dualwingbeat.value.swoop": "Dive distance",
   "worldcombat.skill.dualwingbeat.value.rise": "Pull-back distance",
-  "worldcombat.skill.dualwingbeat.value.wake": "Second-beat bonus",
   "worldcombat.skill.dualwingbeat.value.push": "Bat-away distance",
   "worldcombat.skill.dualwingbeat.value.maxTargets": "Targets swept",
   "worldcombat.skill.dualwingbeat.value.feathers": "Feather count",
@@ -33,6 +32,5 @@
   "worldcombat.skill.dualwingbeat.preference.ai.finishLow": "Prefer finishing low targets",
   "worldcombat.skill.dualwingbeat.preference.ai.finishLow.help": "When on, low-health targets rank higher so the two beats finish them; when off, all targets rank the same.",
   "worldcombat.skill.dualwingbeat.preference.ai.leaveStation": "Leave station",
-  "worldcombat.skill.dualwingbeat.preference.ai.leaveStation.help": "When on, the companion may leave its post to beat its wings; when off, it only casts at what it can reach from where it stands.",
-  "world_combat.move.dualwingbeat.text.wake": "Second wing drives into the opening"
+  "worldcombat.skill.dualwingbeat.preference.ai.leaveStation.help": "When on, the companion may leave its post to beat its wings; when off, it only casts at what it can reach from where it stands."
 }

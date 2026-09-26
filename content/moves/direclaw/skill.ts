@@ -1,18 +1,21 @@
 /**
  * 克命爪 / direclaw 的出手方式。
  *
- * 核心念头：一记深爪，三道爪痕同时犁开同一道伤口——爪上的余毒在收爪那一刻挑一种诅咒按进去。
- *   伤害只结算一次，状态只掷取一次；三选一的结果由爪上的毒决定，是这一招的身份。
+ * 核心念头：朝瞄准方向一记深爪，三道爪痕同时犁开身前最近的那个敌人——爪上的余毒在收爪那一刻**挑一种**诅咒按进去。
+ *   伤害只结算一次，状态只掷取一次、只尝试一次；三选一的结果由爪上的毒决定，是这一招的身份。
  *
  * 两幕（外加一次结果）：
  *   起（windup，提交前）：爪锋压上毒液、三道冷光在身前亮起，只播预告，可被打断。
- *   撕（rake）：提交后朝目标一记 `rake` 接触爪击（暴击由本招自己的 `critChance` 掷取），并在伤口处画下三道爪痕。
+ *   撕（rake）：提交后朝瞄准方向做一记真实短爪扇接触，取扇内最近的非友方结算 `rake`
+ *       （暴击由本招自己的 `critChance` 掷取），并在伤口处画下三道平行爪痕。
  *   咒（venom／numb／drowse）：命中后按 `ailmentChance` 掷一次，从中毒／麻痹／睡眠里挑一种按进伤口
- *       （`favor` 可提前指定倾向）；目标免疫则只留一下毒雾。未命中只留散毒。
+ *       （`favor` 可提前指定倾向）；目标免疫则只留一下毒雾，不再轮试另外两种。
  *
  * 与同族分开：十字毒刃是两刃合拢、靠会渗的毒；克命爪是**一记深爪、一次掷取三选一**，伤害与状态都不拖泥带水。
  *
- * 命中、防御、相性走共享 `hurt`；暴击由本招的 `critChance` 经 `features.resolve` 交给共享结算；余毒走 `CombatStatus.inflict`。
+ * 自由瞄准：`kind: "aim"` 可选任意阵营实体或方向；target 为 null 时按方向在短扇内抓第一个目标，
+ * 空抓不挑扇外远敌。命中、防御、相性走共享 `hurt`；暴击由本招的 `critChance` 经 `features.resolve` 交给共享结算；
+ * 余毒走 `CombatStatus.inflict`，一次只试一种。
  */
 namespace PokemonSkills {
     /** 余毒身份 → 浮字键。 */
@@ -45,9 +48,9 @@ namespace PokemonSkills {
         id: direclawId,
         cooldownParameter: "recharge",
         name: "Dire Claw",
-        description: "一记深爪在目标身上同时犁开三道爪痕，命中后从中毒、麻痹、睡眠里挑一种按进伤口；这一爪瞄准要害，暴击率高于普通招。开启深创更重留毒、关闭则更重伤害；余毒倾向可以指定要按哪一种。",
+        description: "朝瞄准方向一记深爪，在身前最近的敌人身上同时犁开三道爪痕，命中后从中毒、麻痹、睡眠里挑一种按进伤口（只掷一次、只试一种）；这一爪瞄准要害，暴击率高于普通招。开启深创更重留毒、关闭则更重伤害；余毒倾向可以指定要按哪一种。",
         uses: ["近身一记深爪，把三选一的余毒按进伤口", "对高危目标指定留下睡眠", "对准要害打出更高暴击的一爪"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.8,
         maxRange: 4.0,
         prepare: 7,
@@ -87,8 +90,7 @@ namespace PokemonSkills {
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const origin = self.position();
-            const heading = aim(action);
-            const target = action.target();
+            const direction = WorldGeometry.flatUnit(aim(action));
             const reach = Math.max(1.8, action.range());
             const power = p(direclawId, "rake", action);
             const chance = p(direclawId, "ailmentChance", action);
@@ -101,15 +103,18 @@ namespace PokemonSkills {
             const favour = Math.max(0, Math.min(3, Math.round(Number(config && config.favor) || 0)));
             const scale = Math.max(0.6, Math.min(1.8, cleave / direclawReference));
             const intensity = Math.max(0.6, Math.min(2.2, power / 80));
-            const lateral = WorldCombat.point(-heading.z(), 0, heading.x());
+            const lateral = WorldCombat.point(-direction.z(), 0, direction.x());
             const up = WorldCombat.point(0, 1, 0);
 
-            const foeBody = target !== null && world.valid(target) ? world.observe(target) : null;
-            const centre = foeBody !== null ? foeBody.position() : origin.plus(heading.scale(reach));
+            // 真实短爪扇接触：只取身前窄扇内最近的非友方；空抓不挑扇外远敌。
+            let struck: CombatActor | null = null;
+            WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, direction, reach, 78, { below: 1.5, above: 2.2 }),
+                function (candidate: CombatActor) { if (struck === null) struck = candidate; });
+            const body = struck !== null && world.valid(struck) ? world.observe(struck) : null;
+            const centre = body !== null ? body.position() : origin.plus(direction.scale(reach));
             const gap = gashes > 1 ? wound * 2 / (gashes - 1) : 0;
-            const primary = target !== null ? String(target.ref()) : "";
 
-            if (foeBody === null) {
+            if (body === null) {
                 WorldFeedback.emit(world, direclawScene, 1, centre, { moment: "miss", venom: venom, scale: scale }, 18);
                 WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 0.9, 0)), direclawMissText, [], 20);
                 done(action);
@@ -124,7 +129,7 @@ namespace PokemonSkills {
                         venom: venom, scale: scale, intensity: intensity, primary: index === Math.floor(gashes / 2) ? 1 : 0 }, 20);
             }
 
-            const landed = hurt(action, target!, direclawId, power,
+            const landed = hurt(action, struck!, direclawId, power,
                 { damage: damageSpec(direclawId, "rake"), contact: true, resolve: direclawCrit(critChance) });
             if (!landed) {
                 WorldFeedback.emit(world, direclawScene, 1, centre, { moment: "miss", venom: venom, scale: scale }, 18);
@@ -133,14 +138,14 @@ namespace PokemonSkills {
                 return;
             }
 
-            // 余毒：先掷一次是否留下，再按倾向或随机挑一种身份；免疫则只留毒雾。
+            // 余毒：只掷一次是否留下；留下就按倾向或随机挑一种身份只试一次，免疫不轮试另外两种。
             let ailment = "";
             if (world.random() < chance) {
                 ailment = favour >= 1 ? direclawFavours[favour] : direclawFavours[1 + Math.floor(world.random() * 3)];
-                const before = CombatStatus.has(world, target!, ailment);
-                if (CombatStatus.inflict(world, target!, ailment, ticks, 0, { secondary: true }) && !before) {
+                const before = CombatStatus.has(world, struck!, ailment);
+                if (CombatStatus.inflict(world, struck!, ailment, ticks, 0, { secondary: true }) && !before) {
                     WorldFeedback.emit(world, direclawScene, 1, centre,
-                        { moment: direclawAilmentMoment(ailment), target: String(target!.ref()), venom: venom, scale: scale,
+                        { moment: direclawAilmentMoment(ailment), target: String(struck!.ref()), venom: venom, scale: scale,
                             intensity: intensity }, 24);
                     world.sound("cobblemon:impact.poison", centre, 14, "{}");
                     WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.1, 0)), direclawAilmentText(ailment), [], 24);
@@ -149,7 +154,7 @@ namespace PokemonSkills {
                 }
             }
             WorldFeedback.emit(world, direclawScene, 1, centre,
-                { moment: "wound", target: String(target!.ref()), venom: Math.round(venom * 0.6), scale: scale, intensity: intensity }, 20);
+                { moment: "wound", target: String(struck!.ref()), venom: Math.round(venom * 0.6), scale: scale, intensity: intensity }, 20);
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.1, 0)),
                 ailment ? direclawNoAilmentText : direclawHitText, [], 22);
             world.sound("cobblemon:impact.poison", centre, 14, "{}");

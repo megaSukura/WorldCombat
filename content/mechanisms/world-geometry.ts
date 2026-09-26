@@ -1,4 +1,11 @@
 namespace WorldGeometry {
+    /** Current native head/look direction; content chooses whether to flatten it for a ground maneuver. */
+    export function facing(world: CombatWorld, actor: CombatActor): CombatPoint | null {
+        if (!world.valid(actor)) return null;
+        const entity = world.nativeEntity(actor); if (entity === null) return null;
+        const look = entity.getLookAngle();
+        return WorldCombat.point(Number(look.x), Number(look.y), Number(look.z));
+    }
     /**
      * Regions of the world for selecting who and what a move reaches. The host answers one question
      * (every living thing inside a sphere); a region turns that answer into the shape the move has:
@@ -212,4 +219,186 @@ namespace WorldGeometry {
         select(world, region, function (actor, facts) { if (!facts.friendly()) { visit(actor, facts); count++; } });
         return count;
     }
+
+    /** A volume with an exact native body-box intersection predicate. Existing point-region selection stays separate. */
+    export interface BodyRegion { boundsMin(): CombatPoint; boundsMax(): CombatPoint; intersects(min: CombatPoint, max: CombatPoint): boolean; }
+    function rectangleContains(x: number, z: number, min: CombatPoint, max: CombatPoint): boolean {
+        return x >= min.x() - 1e-9 && x <= max.x() + 1e-9 && z >= min.z() - 1e-9 && z <= max.z() + 1e-9;
+    }
+    function segmentRectangle(a: CombatPoint, b: CombatPoint, min: CombatPoint, max: CombatPoint): boolean {
+        var low = 0, high = 1, starts = [a.x(), a.z()], delta = [b.x() - a.x(), b.z() - a.z()], lo = [min.x(), min.z()], hi = [max.x(), max.z()];
+        for (var i = 0; i < 2; i++) {
+            if (Math.abs(delta[i]) < 1e-12) { if (starts[i] < lo[i] || starts[i] > hi[i]) return false; continue; }
+            var t0 = (lo[i] - starts[i]) / delta[i], t1 = (hi[i] - starts[i]) / delta[i];
+            low = Math.max(low, Math.min(t0, t1)); high = Math.min(high, Math.max(t0, t1));
+            if (low > high + 1e-9) return false;
+        }
+        return true;
+    }
+    /** A simple horizontal polygon extruded through an absolute vertical interval. */
+    export function bodyPolygon(vertices: CombatPoint[], minY: number, maxY: number): BodyRegion {
+        vertices = vertices.slice(); if (vertices.length < 3 || maxY < minY) throw new Error("Invalid body polygon");
+        var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+        vertices.forEach(p => { minX = Math.min(minX, p.x()); maxX = Math.max(maxX, p.x()); minZ = Math.min(minZ, p.z()); maxZ = Math.max(maxZ, p.z()); });
+        return { boundsMin: () => WorldCombat.point(minX, minY, minZ), boundsMax: () => WorldCombat.point(maxX, maxY, maxZ),
+            intersects: function (min, max) {
+                if (max.y() < minY || min.y() > maxY) return false;
+                if (insidePolygon(min.x(), min.z(), vertices) || insidePolygon(min.x(), max.z(), vertices)
+                    || insidePolygon(max.x(), min.z(), vertices) || insidePolygon(max.x(), max.z(), vertices)) return true;
+                for (var i = 0; i < vertices.length; i++) if (rectangleContains(vertices[i].x(), vertices[i].z(), min, max)
+                    || segmentRectangle(vertices[i], vertices[(i + 1) % vertices.length], min, max)) return true;
+                return false;
+            } };
+    }
+    export function bodyLane(origin: CombatPoint, direction: CombatPoint, length: number, halfWidth: number, vertical?: Band): BodyRegion {
+        var f = flatUnit(direction), side = WorldCombat.point(-f.z(), 0, f.x()).scale(halfWidth), end = origin.plus(f.scale(length)), v = band(vertical);
+        return bodyPolygon([origin.minus(side), end.minus(side), end.plus(side), origin.plus(side)], origin.y() - v.below, origin.y() + v.above);
+    }
+    /** Exact circle/wedge against an axis-aligned native body box; includes corners, radial edges and arc crossings. */
+    export function bodySector(origin: CombatPoint, direction: CombatPoint, radius: number, angleDegrees: number, vertical?: Band): BodyRegion {
+        var angle = Math.max(0, Math.min(360, angleDegrees)), f = flatUnit(direction), v = band(vertical), cosine = Math.cos(angle * Math.PI / 360);
+        var low = WorldCombat.point(origin.x() - radius, origin.y() - v.below, origin.z() - radius), high = WorldCombat.point(origin.x() + radius, origin.y() + v.above, origin.z() + radius);
+        function inSector(x: number, z: number): boolean {
+            var dx = x - origin.x(), dz = z - origin.z(), d = Math.sqrt(dx * dx + dz * dz);
+            return d <= radius + 1e-9 && (d < 1e-9 || angle === 360 || (dx * f.x() + dz * f.z()) / d >= cosine - 1e-9);
+        }
+        return { boundsMin: () => low, boundsMax: () => high, intersects: function (min, max) {
+            if (max.y() < low.y() || min.y() > high.y()) return false;
+            var nearestX = Math.max(min.x(), Math.min(max.x(), origin.x())), nearestZ = Math.max(min.z(), Math.min(max.z(), origin.z()));
+            if (Math.pow(nearestX - origin.x(), 2) + Math.pow(nearestZ - origin.z(), 2) > radius * radius + 1e-9) return false;
+            if (angle === 360 || rectangleContains(origin.x(), origin.z(), min, max)) return true;
+            if (inSector(min.x(), min.z()) || inSector(min.x(), max.z()) || inSector(max.x(), min.z()) || inSector(max.x(), max.z())) return true;
+            var half = angle * Math.PI / 360;
+            for (var side = -1; side <= 1; side += 2) {
+                var a = side * half, dx = f.x() * Math.cos(a) - f.z() * Math.sin(a), dz = f.x() * Math.sin(a) + f.z() * Math.cos(a);
+                if (segmentRectangle(origin, origin.plus(WorldCombat.point(dx, 0, dz).scale(radius)), min, max)) return true;
+            }
+            var xs = [min.x(), max.x()], zs = [min.z(), max.z()];
+            for (var i = 0; i < 2; i++) {
+                var x = xs[i] - origin.x(), z = zs[i] - origin.z();
+                if (Math.abs(x) <= radius) { var zz = Math.sqrt(Math.max(0, radius * radius - x * x));
+                    for (var sign = -1; sign <= 1; sign += 2) { var zc = origin.z() + sign * zz;
+                        if (zc >= min.z() && zc <= max.z() && inSector(xs[i], zc)) return true; } }
+                if (Math.abs(z) <= radius) { var xx = Math.sqrt(Math.max(0, radius * radius - z * z));
+                    for (var sign = -1; sign <= 1; sign += 2) { var xc = origin.x() + sign * xx;
+                        if (xc >= min.x() && xc <= max.x() && inSector(xc, zs[i])) return true; } }
+            }
+            return false;
+        } };
+    }
+    /** Geometry only: source, team, visibility and harm policy remain explicit in the content visitor. */
+    export function selectBodies(world: CombatWorld, region: BodyRegion, visit: (actor: CombatActor, facts: CombatObservation) => void): number {
+        var actors = world.queryBox(region.boundsMin(), region.boundsMax(), false), count = 0;
+        for (var i = 0; i < actors.length; i++) { var facts = world.observe(actors[i]);
+            if (facts && region.intersects(facts.boundsMin(), facts.boundsMax())) { visit(actors[i], facts); count++; } }
+        return count;
+    }
+
+    /** True sphere/AABB overlap, including large or asymmetric bodies whose centre is outside the sphere. */
+    export function bodySphere(centre: CombatPoint, radius: number): BodyRegion {
+        if (!isFinite(radius) || radius < 0) throw new Error("A sphere requires a finite nonnegative radius");
+        const extent = WorldCombat.point(radius, radius, radius);
+        return { boundsMin: () => centre.minus(extent), boundsMax: () => centre.plus(extent), intersects: (min, max) => {
+            const x = Math.max(min.x(), Math.min(max.x(), centre.x())) - centre.x();
+            const y = Math.max(min.y(), Math.min(max.y(), centre.y())) - centre.y();
+            const z = Math.max(min.z(), Math.min(max.z(), centre.z())) - centre.z();
+            return x * x + y * y + z * z <= radius * radius;
+        } };
+    }
+    /** A finite 3D segment using the same box inflation convention as native projectile entity sweeps. */
+    export function bodySegment(from: CombatPoint, to: CombatPoint, radius: number): BodyRegion {
+        var a = [from.x(), from.y(), from.z()], b = [to.x(), to.y(), to.z()];
+        return { boundsMin: () => WorldCombat.point(Math.min(a[0],b[0])-radius,Math.min(a[1],b[1])-radius,Math.min(a[2],b[2])-radius),
+            boundsMax: () => WorldCombat.point(Math.max(a[0],b[0])+radius,Math.max(a[1],b[1])+radius,Math.max(a[2],b[2])+radius),
+            intersects: function (min, max) {
+                var low = [min.x()-radius,min.y()-radius,min.z()-radius], high = [max.x()+radius,max.y()+radius,max.z()+radius], enter = 0, leave = 1;
+                for (var axis=0;axis<3;axis++) {
+                    var delta=b[axis]-a[axis];
+                    if (Math.abs(delta)<1e-12) { if(a[axis]<low[axis] || a[axis]>high[axis]) return false; continue; }
+                    var first=(low[axis]-a[axis])/delta,last=(high[axis]-a[axis])/delta;
+                    enter=Math.max(enter,Math.min(first,last));leave=Math.min(leave,Math.max(first,last));if(enter>leave+1e-9)return false;
+                }
+                return true;
+            } };
+    }
+    /** A convex polygonal 3D cone section. Its returned rings are the exact authored visual frontier. */
+    export function bodyFrustum(from: CombatPoint, to: CombatPoint, nearRadius: number, farRadius: number, sides = 16): BodyRegion & { near: CombatPoint[]; far: CombatPoint[] } {
+        if (![nearRadius, farRadius, sides].every(isFinite) || nearRadius < 0 || farRadius < 0 || sides < 3 || sides % 1)
+            throw new Error("Invalid polygonal frustum");
+        const length = to.minus(from).length(); if (!(length > 0)) throw new Error("A frustum needs two different centres");
+        const axis = to.minus(from).scale(1 / length);
+        const cross = (a: CombatPoint, b: CombatPoint) => WorldCombat.point(a.y()*b.z()-a.z()*b.y(), a.z()*b.x()-a.x()*b.z(), a.x()*b.y()-a.y()*b.x());
+        const dot3 = (a: CombatPoint, b: CombatPoint) => a.x()*b.x()+a.y()*b.y()+a.z()*b.z();
+        const reference = Math.abs(axis.y()) < 0.9 ? WorldCombat.point(0,1,0) : WorldCombat.point(1,0,0);
+        const right = cross(axis, reference).unit(), up = cross(right, axis).unit();
+        const near: CombatPoint[] = [], far: CombatPoint[] = [];
+        for (let i=0;i<sides;i++) {
+            const angle=i*Math.PI*2/sides, offset=right.scale(Math.cos(angle)).plus(up.scale(Math.sin(angle)));
+            near.push(from.plus(offset.scale(nearRadius))); far.push(to.plus(offset.scale(farRadius)));
+        }
+        const vertices=near.concat(far), axes=[WorldCombat.point(1,0,0),WorldCombat.point(0,1,0),WorldCombat.point(0,0,1),axis];
+        function edge(a: CombatPoint,b: CombatPoint): void {
+            const delta=b.minus(a);
+            axes.push(cross(delta,WorldCombat.point(1,0,0)),cross(delta,WorldCombat.point(0,1,0)),cross(delta,WorldCombat.point(0,0,1)));
+        }
+        for(let i=0;i<sides;i++) {
+            const j=(i+1)%sides;
+            axes.push(cross(far[i].minus(near[i]),far[j].minus(near[i])));
+            edge(near[i],near[j]);edge(far[i],far[j]);edge(near[i],far[i]);
+        }
+        const region = bodyConvex(vertices, axes);
+        return { near: near, far: far, boundsMin: region.boundsMin, boundsMax: region.boundsMax, intersects: region.intersects };
+
+    }
+    /** Shared convex-polyhedron/AABB SAT, with face normals and edge/box-axis cross products supplied by the shape. */
+    function bodyConvex(vertices: CombatPoint[], axes: CombatPoint[]): BodyRegion {
+        const dot3 = (a: CombatPoint, b: CombatPoint) => a.x()*b.x()+a.y()*b.y()+a.z()*b.z();
+        const useful=axes.filter(value=>value.length()>1e-10).map(value=>value.unit());
+        const values=vertices.map(value=>[value.x(),value.y(),value.z()]);
+        const low=WorldCombat.point(...< [number,number,number] >[0,1,2].map(index=>Math.min.apply(null,values.map(value=>value[index]))));
+        const high=WorldCombat.point(...< [number,number,number] >[0,1,2].map(index=>Math.max.apply(null,values.map(value=>value[index]))));
+        return { boundsMin:()=>low,boundsMax:()=>high,intersects:(min,max)=> {
+            const centre=min.plus(max).scale(.5),half=max.minus(min).scale(.5);
+            return useful.every(normal=> {
+                const projections=vertices.map(vertex=>dot3(vertex,normal)),middle=dot3(centre,normal);
+                const extent=Math.abs(normal.x())*half.x()+Math.abs(normal.y())*half.y()+Math.abs(normal.z())*half.z();
+                return Math.max.apply(null,projections)>=middle-extent-1e-9 && Math.min.apply(null,projections)<=middle+extent+1e-9;
+            });
+        } };
+    }
+    /** Inclusive intersection of a convex, ordered, coplanar 3D polygon extruded by halfThickness along normal.
+     * Shape policy and clipping stay with the caller; split a concave clipped outline into convex pieces. */
+    export function bodyPrism(input: CombatPoint[], normal: CombatPoint, halfThickness: number): BodyRegion {
+        if (!isFinite(halfThickness) || halfThickness < 0 || !isFinite(normal.length()) || normal.length() <= 1e-10)
+            throw new Error("Invalid prism thickness or normal");
+        const vertices = input.filter((point, index) => index === 0 || point.minus(input[index-1]).length() > 1e-10).slice();
+        if (vertices.length > 1 && vertices[0].minus(vertices[vertices.length-1]).length() <= 1e-10) vertices.pop();
+        if (vertices.length < 3 || vertices.some(point => ![point.x(), point.y(), point.z()].every(isFinite)))
+            throw new Error("A prism needs three finite vertices");
+        const n = normal.unit(), cross = (a: CombatPoint,b: CombatPoint) => WorldCombat.point(
+            a.y()*b.z()-a.z()*b.y(),a.z()*b.x()-a.x()*b.z(),a.x()*b.y()-a.y()*b.x());
+        const dot = (a: CombatPoint,b: CombatPoint) => a.x()*b.x()+a.y()*b.y()+a.z()*b.z();
+        if (vertices.some(point => Math.abs(dot(point.minus(vertices[0]),n)) > 1e-6)) throw new Error("Prism vertices must be coplanar");
+        let winding = 0;
+        const axes = [WorldCombat.point(1,0,0),WorldCombat.point(0,1,0),WorldCombat.point(0,0,1),n];
+        const offset = n.scale(halfThickness), solid = vertices.map(v=>v.minus(offset)).concat(vertices.map(v=>v.plus(offset)));
+        function edge(delta: CombatPoint): void {
+            axes.push(cross(delta,WorldCombat.point(1,0,0)),cross(delta,WorldCombat.point(0,1,0)),cross(delta,WorldCombat.point(0,0,1)));
+        }
+        for(let i=0;i<vertices.length;i++) {
+            const delta=vertices[(i+1)%vertices.length].minus(vertices[i]), face=cross(delta,n);
+            axes.push(face); edge(delta);
+            for(let j=0;j<vertices.length;j++) {
+                const side=dot(face,vertices[j].minus(vertices[i]));
+                if(Math.abs(side)<=1e-8)continue;
+                const sign=side>0?1:-1;
+                if(winding && sign!==winding)throw new Error("Prism polygon must be convex and ordered");
+                winding=sign;
+            }
+        }
+        if(!winding)throw new Error("Prism polygon has no area");
+        edge(n);
+        return bodyConvex(solid,axes);
+    }
+
 }

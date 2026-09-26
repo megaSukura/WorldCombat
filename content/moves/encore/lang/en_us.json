@@ -25,8 +25,13 @@
   "worldcombat.skill.encore.preference.ai.maxChase.help": "The partner considers a call only while a threat is this close; smaller keeps it for melee, larger chases out.",
   "worldcombat.skill.encore.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.encore.preference.ai.leaveStation.help": "When on, the partner will also leave its post to call.",
-  "world_combat.move.encore.text.lock": "Encore %1$s s",
+  "world_combat.move.encore.text.lock": "Encore %1$s s: only %2$s",
+  "world_combat.move.encore.text.reject": "The echo stops it: only %1$s",
   "world_combat.move.encore.text.fade": "The move ran dry, the echo fades",
   "world_combat.move.encore.text.miss": "Nothing worth repeating",
+  "world_combat.move.encore.kind.melee": "melee",
+  "world_combat.move.encore.kind.ranged": "ranged",
+  "world_combat.move.encore.kind.magic": "magic",
+  "world_combat.move.encore.kind.other": "attacks",
   "effect.world_combat.encore_call": "Encore call"
 }

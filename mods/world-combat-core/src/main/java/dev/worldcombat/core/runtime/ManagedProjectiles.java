@@ -7,6 +7,7 @@ import dev.worldcombat.core.runtime.effect.EffectData;
 /** Shared native-flight ownership and safe-boundary dispatch for actions and named effect handlers. */
 public final class ManagedProjectiles {
     private final CombatHost host;
+    private final ActionRuntime runtime;
     private static final class Flight {
         String id;
         long owner;
@@ -21,7 +22,7 @@ public final class ManagedProjectiles {
     private final Map<String, Flight> flights = new LinkedHashMap<>();
     private final List<Delivery> pending = new ArrayList<>();
     private final Map<Impact, Flight> receipts = new IdentityHashMap<>();
-    ManagedProjectiles(CombatHost host) { this.host = host; }
+    ManagedProjectiles(ActionRuntime runtime) { this.runtime = runtime; this.host = runtime.host; }
 
     public String spawn(long owner, ActorHandle source, UUID controller, BooleanSupplier live,
                         Point origin, Point velocity, double gravity, double radius, double range, int lifetime,
@@ -53,7 +54,7 @@ public final class ManagedProjectiles {
         var flight = receipts.get(impact);
         if (flight == null || flight.owner != owner || !live(flight) || !impact.hitEntity()) return false;
         receipts.remove(impact);
-        return host.projectileDamage(owner, flight.source, flight.controller, impact, amount, metadata);
+        return host.projectileDamage(owner, flight.source, flight.controller, impact, amount, metadata, runtime.origin(owner));
     }
     public boolean active(long owner, String id) { host.checkThread(); var flight = flights.get(id); return flight != null && flight.owner == owner && live(flight) && !flight.completed; }
     public boolean cancel(long owner, String id) {

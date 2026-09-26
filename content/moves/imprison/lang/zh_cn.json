@@ -28,6 +28,8 @@
   "world_combat.move.imprison.text.block": "%1$s 被封印顶回",
   "world_combat.move.imprison.text.fade": "封印散去",
   "world_combat.move.imprison.text.snap": "封印被拆",
+  "world_combat.move.imprison.kind.contact": "近战攻击",
+  "world_combat.move.imprison.kind.ranged": "远程攻击",
   "effect.world_combat.imprison_aura": "封印领域",
   "effect.world_combat.imprison_sealed": "封印印记"
 }

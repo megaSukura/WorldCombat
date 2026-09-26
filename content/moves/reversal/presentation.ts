@@ -1,15 +1,15 @@
 /**
  * 起死回生 / reversal 的客户端表现。
  *
- * 一句话：贴着伤口亮起的橙红光在脚下攒成一圈，随后人一低身扑到对手身下，落地时从脚下喷出一道格斗系光柱，
- * 把周围一圈敌人一起掀开，光柱的高度与喷发圈随伤势变宽。
+ * 一句话：贴着伤口亮起的橙红光在脚下攒成一圈，随后人一低身扑到对手身下，落地时朝身前掀开一道格斗系扇面，
+ * 把扇面内的敌人伤害并掀开，真被推动的目标才带出位移痕；后方没有圈光。
  * 色相家族：格斗橙红与近白（impact_fighting、groundquake、energyorb、glowingsparkle_yellow、lightbeam）为主，
  * 扬尘用暖土橙；没有冷色。
- * 拍子：起（brace 攒力）→ 行（press 扑身）→ 击（burst 喷发）→ 收（fade 空喷 / spent 反噬）。
- * 范围：burst 绑自身落点，喷发环与地面圈按 `data.scale` 画出真正会打到的半径，玩家一眼知道站多近会被掀到。
- * 运动：光从脚下向上攒起、扑身贴地拉出尘线、落地是向上冲的柱与向外炸的环。
+ * 拍子：起（brace 攒力）→ 行（press 扑身）→ 击（burst 身前扇面）→ 中（shove 推开的位移痕 / strike 免位移只吃伤害）→ 收（fade 空喷 / spent 反噬）。
+ * 范围：burst 沿服务端传来的 `data.path`（与 WorldGeometry.sector 同一组顶点）填出真正会打到的扇面，`data.arc` 是同一张角，玩家一眼知道站哪边会被掀到。
+ * 运动：光从脚下向上攒起、扑身贴地拉出尘线、落地是向前上方的扇面炸开与向外的顶。
  * 数：`data.embers`（旧伤换算）决定起手攒起的光点数量，`data.count`（实际掀到的敌人数）决定喷发的冲击数量，
- * `data.wound`（已损失生命比例）抬高光柱高度与整体亮度，`data.scale` 缩放喷发圈。
+ * `data.moved`（真实推开距离）决定位移痕长度，`data.sparks` 决定扇面碎光量，`data.wound` 抬高整体亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ReversalDefinition: ParticleDefinition = {
@@ -75,7 +75,7 @@ const ReversalDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "column", bind: "point", offset: [0, 0.1, 0],
+                    name: "column", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
                     burst: { count: { data: "count", fallback: 1 }, at: 0 },
                     shape: { kind: "point" },
@@ -84,7 +84,7 @@ const ReversalDefinition: ParticleDefinition = {
                     color: 0xFFB07A, alpha: [0.85, 0], light: "full", bloom: 0.5, maxParticles: 8
                 },
                 {
-                    name: "blast", bind: "point", offset: [0, 0.4, 0],
+                    name: "blast", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
                     burst: { count: { data: "count", fallback: 1 }, at: 1 },
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
@@ -93,23 +93,68 @@ const ReversalDefinition: ParticleDefinition = {
                     color: 0xFFE0C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 60
                 },
                 {
-                    name: "ground_ring", bind: "point", offset: [0, 0.04, 0],
+                    name: "fan_fill", bind: "path", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.06, 0.18],
-                    lifetime: [12, 20], size: [0.5, 1.1],
-                    color: 0xE8603C, alpha: [0.6, 0], light: "world"
+                    shape: { kind: "polygon" },
+                    rate: 44, direction: "shape", speed: [0.04, 0.14],
+                    lifetime: [10, 18], size: [0.4, 0.9],
+                    color: 0xE8603C, alpha: [0.5, 0], light: "world", maxParticles: 140
                 },
                 {
-                    name: "debris", bind: "point", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/dashburst",
-                    burst: { count: { data: "count", fallback: 1 } },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.08, 0.24],
-                    gravity: 0.05, drag: 0.9,
-                    lifetime: [8, 15], size: [0.35, 0.08], sizeMode: "index",
-                    color: 0xB06A44, alpha: [0.6, 0], light: "world", maxParticles: 40
+                    name: "fan_edge", bind: "path", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/energyorb",
+                    shape: { kind: "polyline" },
+                    rate: 34, direction: "shape", speed: [0.06, 0.2],
+                    lifetime: [6, 12], size: [0.16, 0.04],
+                    color: 0xFFB07A, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 110
+                },
+                {
+                    name: "fan_sparks", bind: "path", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    shape: { kind: "polygon" },
+                    burst: { count: { data: "sparks", fallback: 20 }, at: 0 },
+                    direction: "shape", speed: [0.05, 0.24],
+                    lifetime: [7, 14], size: [0.1, 0.03],
+                    color: 0xFFF0C8, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 90
+                }
+            ]
+        },
+        shove: {
+            duration: 18,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "shove_drag", bind: "target", fit: "none", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 12 },
+                    shape: { kind: "line", length: { data: "moved", fallback: 0.4 } },
+                    orient: "direction", direction: "shape", speed: [0.06, 0.2],
+                    gravity: 0.04, drag: 0.92,
+                    lifetime: [8, 15], size: [0.1, 0.02],
+                    color: 0xB06A44, alpha: [0.6, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "shove_glow", bind: "target", fit: "none", offset: [0, 0.35, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: 10 },
+                    shape: { kind: "line", length: { data: "moved", fallback: 0.4 } },
+                    orient: "direction", direction: "shape", speed: [0.05, 0.18],
+                    lifetime: [5, 10], size: [0.1, 0.02],
+                    color: 0xFFB07A, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 40
+                }
+            ]
+        },
+        strike: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "hit", bind: "target", offset: [0, 0.05, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 14, at: 0 },
+                    shape: { kind: "sphere", radius: 0.26 }, direction: "outward", speed: [0.1, 0.4],
+                    lifetime: [6, 12], size: [0.34, 0.06], sizeMode: "index",
+                    color: 0xFFE0C0, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 40
                 }
             ]
         },

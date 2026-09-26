@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.cometpunch.summary": "站定、双拳朝身前密集直击：一下接一下砸出去，拳影叠成一片。聚焦式全部砸在同一个点、每拳更重；乱打式散成一片扇面、一记能盖到并排的敌人。",
+  "worldcombat.skill.cometpunch.summary": "站定、双拳朝身前固定拳道密集直击：一下接一下砸出去，拳影叠成一片。拳道起手锁死、后拳越来越密，不能拐头追人。聚焦式砸在一条窄道上、每拳更重；乱打式罩一片固定扇面、一记能盖到并排的敌人。",
   "worldcombat.skill.cometpunch.use.0": "站定一串很重的连拳",
   "worldcombat.skill.cometpunch.use.1": "对单个厚目标用聚焦式堆单拳份量",
   "worldcombat.skill.cometpunch.use.2": "乱打式一记盖到并排的第二个敌人",
+  "worldcombat.skill.cometpunch.use.3": "只朝一个方向起手，沿固定拳道空打完整串",
   "worldcombat.skill.cometpunch.description.0": "命中后每一拳造成约 %1$s 点物理伤害，这一串最多砸 %2$s 拳（原生 2～5，由物攻与等级决定）。",
-  "worldcombat.skill.cometpunch.description.1": "两拳间隔 %1$s，能够到 %2$s 格内的对手；每拳独立掷 %3$s 命中，擦空一拳这串就停。目标倒下时这串就停，聚焦式下目标被顶出臂展也会停手。",
+  "worldcombat.skill.cometpunch.description.1": "第一拳与第二拳间隔 %1$s，之后每拳再收紧 1 刻，能够到 %2$s 格内；每拳在同一固定拳道上独立掷 %3$s 命中，擦空一拳这串就停。目标倒下或走出拳道时这一串就停；只给方向空打则沿拳道演完整串。",
   "worldcombat.skill.cometpunch.description.2": "扇面张角 %1$s°，一记最多盖到 %2$s 个目标（聚焦式为 0°、只打一个）；每拳命中后把目标沿出拳方向顶退约 %3$s 格。",
   "worldcombat.skill.cometpunch.scatter.on": "乱打式：每拳散着砸向身前一片扇面，一记能同时盖到并排的第二个人；代价是单拳威力 ×0.85、顶退 ×0.6、拳数收在 5、冷却 +2 刻。",
   "worldcombat.skill.cometpunch.scatter.off": "聚焦式：全部砸在同一个点上，单拳威力 ×1.2、顶退 ×1.4；代价是拳数收在 4、只打一个目标。",
@@ -24,7 +25,7 @@
   "worldcombat.skill.cometpunch.value.settle": "收招",
   "worldcombat.skill.cometpunch.value.recharge": "冷却",
   "worldcombat.skill.cometpunch.preference.scatter": "乱打式",
-  "worldcombat.skill.cometpunch.preference.scatter.help": "开启（乱打）：每拳散着砸向身前一片扇面，一记能同时盖到并排的第二个人；代价是单拳威力 ×0.85、顶退 ×0.6、拳数收在 5、冷却 +2 刻。关闭（聚焦）：全部砸在同一个点上，单拳威力 ×1.2、顶退 ×1.4；代价是拳数收在 4、只打一个目标。",
+  "worldcombat.skill.cometpunch.preference.scatter.help": "开启（乱打）：每拳散着砸向身前一片扇面，一记能同时盖到并排的第二个人；代价是单拳威力 ×0.85、顶退 ×0.6、拳数收在 5、冷却 +2 刻。关闭（聚焦）：全部砸在同一条固定窄道上，单拳威力 ×1.2、顶退 ×1.4；代价是拳数收在 4、只打一个目标。",
   "worldcombat.skill.cometpunch.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.cometpunch.preference.ai.maxChase.help": "超过这个距离就不主动起拳，先走近。",
   "worldcombat.skill.cometpunch.preference.ai.crowds": "瞄向扎堆",
@@ -32,5 +33,6 @@
   "worldcombat.skill.cometpunch.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.cometpunch.preference.ai.leaveStation.help": "开启后，驻守命令下也会为连续拳离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.cometpunch.text.tally": "连拳命中 %1$s / %2$s 拳",
-  "world_combat.move.cometpunch.text.miss": "第 %1$s 拳擦空"
+  "world_combat.move.cometpunch.text.miss": "第 %1$s 拳擦空",
+  "world_combat.move.cometpunch.text.out": "目标走出拳道，连拳收手（命中 %1$s 拳）"
 }

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.dragonascent.summary": "Climbs high, then dives straight down at the target: foes struck on the way take contact damage, and the landing shockwave settles the primary target, shoves anyone it catches away from the impact point and cracks the ground. The moment it launches the user's Defense and Sp. Def each drop one stage; the broad form reaches wider, catches nearby foes and shoves harder, at the cost of lower dive power.",
+  "worldcombat.skill.dragonascent.summary": "Climbs high, then dives straight down onto the landing point: the first foe contacted on the way takes contact damage, and the landing shockwave settles the primary target (dealing the full damage if the dive missed it) and shoves anyone it catches away from the impact point. The dive and the landing share one hit set, so the same target is never dealt full damage twice. The moment it launches the user's Defense and Sp. Def each drop one stage; the broad form reaches wider, catches nearby foes and shoves harder, at the cost of lower dive power.",
   "worldcombat.skill.dragonascent.use.0": "Ascend and drop straight onto a target",
   "worldcombat.skill.dragonascent.use.1": "Finish with a landing shockwave that shoves what it catches",
   "worldcombat.skill.dragonascent.use.2": "Fall past the front line onto a target behind it",
@@ -37,6 +37,5 @@
   "worldcombat.skill.dragonascent.preference.ai.minHealth.help": "Below this own health ratio the user holds Dragon Ascent back (0 = no limit). Higher saves it for a worthwhile trade.",
   "world_combat.move.dragonascent.text.slump": "Grounded: Defense -%1$s, Sp. Def -%2$s",
   "world_combat.move.dragonascent.text.land": "Shockwave caught %1$s",
-  "worldcombat.skill.dragonascent.description.shock": "The landing shockwave settles the primary target: if the dive did not strike it, the shockwave deals the full damage instead, and anyone it catches is shoved away from the impact point.",
-  "worldcombat.skill.dragonascent.description.ground": "The impact point is left as cracked stone, restoring the ground after about 7 seconds."
+  "worldcombat.skill.dragonascent.description.shock": "The landing shockwave settles the primary target: if the dive did not strike it, the shockwave deals the full damage instead, while anything already struck on the way only takes the retained share; anyone it catches is shoved away from the impact point."
 }

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.magiccoat.summary": "在身前铺开一层会弯光的膜：窗口内朝着自己递来的异常状态招与寄生种子一类会被原路弹回施放者；没接到东西就收膜。",
+  "worldcombat.skill.magiccoat.summary": "撑起一次反射光膜：合法复现可反射变化招，或挡下有真实来源的原生坏状态并按原等级与时长送回。来源免疫时只挡下；空膜收起不结账。",
   "worldcombat.skill.magiccoat.use.0": "把铺到自己身上的毒、麻痹、寄生原样还回去",
   "worldcombat.skill.magiccoat.use.1": "在对手下状态前先一步撑膜",
   "worldcombat.skill.magiccoat.use.2": "让只会用状态招的敌人反受其害",
-  "worldcombat.skill.magiccoat.description.0": "起手 %1$s 后撑开膜，膜最多撑 %2$s；这段时间里朝你递来的变化招（中毒、麻痹、寄生种子一类）会被顶回去，并立刻由你对着原施放者打出。弹回一手后膜即收起。",
-  "worldcombat.skill.magiccoat.description.1": "只有从 %1$s 格以内、朝你递来的这类招式会被接住；距离太远，或对手把招打在别处，膜都不会触发。",
-  "worldcombat.skill.magiccoat.description.2": "成功弹回后这招进入 %1$s 冷却；空膜会直接收起，不消耗 PP。弹回的那一手按你的能力结算。",
+  "worldcombat.skill.magiccoat.description.0": "起手 %1$s 后撑膜，最多等待 %2$s；接住一手可反射变化招或有真实来源的原生坏状态后收膜。状态按原等级和剩余时长返回，来源的免疫仍生效。",
+  "worldcombat.skill.magiccoat.description.1": "只接 %1$s 格以内、来源与自己间无遮挡的敌方异常；环境或未知来源状态正常生效。",
+  "worldcombat.skill.magiccoat.description.2": "接住一手后进入 %1$s 冷却；空膜不消耗 PP。复现的招式按你的能力结算，原生状态反弹失败也只算挡下。",
   "worldcombat.skill.magiccoat.sweep.on": "广膜：反射距离 ×1.3，能挡更远的来招；代价是膜更薄（持续 ×0.8）、起手 +2 刻、冷却 ×1.1。",
   "worldcombat.skill.magiccoat.sweep.off": "窄膜：持续 ×1.2、起手 −1 刻、冷却 ×0.9，等得更久更省；代价是反射距离 ×0.8。",
   "worldcombat.skill.magiccoat.timing": "自身招式，反射距离 %1$s 格；准备 %2$s 秒后撑膜，弹回来招时才消耗 %4$s PP 并进入 %5$s 冷却，随后收招 %3$s 秒。",
@@ -21,10 +21,11 @@
   "worldcombat.skill.magiccoat.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.magiccoat.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才撑膜；调小只在贴身时撑，调大在更远处就先备好。",
   "worldcombat.skill.magiccoat.preference.ai.opening": "出手时机",
-  "worldcombat.skill.magiccoat.preference.ai.opening.help": "随时：见威胁就先撑上，赌对手接下来会递状态招；受压时撑膜：只在对手正攻击自己或主人、或自己刚被打过时撑。",
+  "worldcombat.skill.magiccoat.preference.ai.opening.help": "随时：确认对手会施加异常时撑膜；受压时撑膜：已确认异常威胁，且自己或主人正受压时撑。",
   "worldcombat.skill.magiccoat.preference.ai.opening.anytime": "随时",
   "worldcombat.skill.magiccoat.preference.ai.opening.incoming": "受压时撑膜",
   "worldcombat.skill.magiccoat.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.magiccoat.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去撑膜。",
-  "world_combat.move.magiccoat.text.reflect": "弹回了 %1$s"
+  "world_combat.move.magiccoat.text.reflect": "弹回了 %1$s",
+  "world_combat.move.magiccoat.text.block": "挡下了 %1$s"
 }

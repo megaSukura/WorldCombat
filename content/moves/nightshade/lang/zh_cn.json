@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.nightshade.summary": "远程掷出一段自己等级凝成的恐怖幻影：幻影会自动追向目标，命中造成等于自身等级的固定伤害（特攻极高时更高），目标不会被打退。炸影式把这一记摊成范围爆发、同时波及周围几个敌人，但每一发变轻、收招与冷却更久。",
-  "worldcombat.skill.nightshade.description.0": "钻心的一刻造成 %1$s 点固定伤害：等于使用者等级乘上一点特攻系数。对手防御不参与，只有属性免疫会挡住它。",
-  "worldcombat.skill.nightshade.description.1": "起手 %1$s 秒，幻影射程 %2$s 格、速度 %3$s 格/刻（自动追向目标），判定半径 %4$s 格；它只对敌人结算，撞到友方或一路没碰到人就散去。",
+  "worldcombat.skill.nightshade.summary": "远程掷出一段自己等级凝成的恐怖幻影：朝方向或指定地点掷出，选中敌人时幻影会追向它；命中造成等于自身等级的固定伤害（特攻极高时更高），目标不会被打退。炸影式把这一记摊成范围爆发、同时波及周围几个敌人，但每一发变轻、收招与冷却更久。",
+  "worldcombat.skill.nightshade.description.0": "钻心的一刻造成 %1$s 点固定伤害：等于使用者等级乘上一点特攻系数。对手防御不参与结算，属性免疫、护盾与原生伤害上限照常裁定。",
+  "worldcombat.skill.nightshade.description.1": "起手 %1$s 秒，幻影射程 %2$s 格、速度 %3$s 格/刻；朝方向或地点掷出，选中敌人时它才自动追向目标，空点则沿直线飞，撞墙即停。判定半径 %4$s 格；只对敌人结算，撞到友方或一路没碰到人就散去。",
   "worldcombat.skill.nightshade.splash.on": "炸影式：命中后崩向半径 %1$s 格内，最多再波及 %2$s 个其他敌人；每一发（含直击）伤害降到五成五，收招多 2 刻、冷却多 10 刻。",
   "worldcombat.skill.nightshade.splash.off": "单体式：只打命中的那一个，伤害足额。",
   "worldcombat.skill.nightshade.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -22,9 +22,12 @@
   "worldcombat.skill.nightshade.preference.ai.maxChase.help": "超过这个距离就不放幻影，先走近；越大越会在更远处先手。",
   "worldcombat.skill.nightshade.preference.ai.crowd": "聚群阈值",
   "worldcombat.skill.nightshade.preference.ai.crowd.help": "目标身边聚着这么多敌人时优先放这一记（配合炸影式一次摊到一群）；越大越只在密集处出手。",
+  "worldcombat.skill.nightshade.preference.ai.bulwark": "硬目标门槛",
+  "worldcombat.skill.nightshade.preference.ai.bulwark.help": "目标的物防或特防达到这个数值时优先放这一记：等级伤不看防御，越硬的目标这一记越划算；设为 0 则始终享受加成。",
   "worldcombat.skill.nightshade.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.nightshade.preference.ai.leaveStation.help": "开启后，驻守命令下也会为寻找射击位置离开站位；关闭则只在原地够得到时出手。",
   "worldcombat.skill.nightshade.growth.1": "%1$s 级起炸影半径扩大到 %2$s 格。",
   "world_combat.move.nightshade.text.haunt": "黑夜魔影 %1$s",
-  "world_combat.move.nightshade.text.fizzle": "幻影消散"
+  "world_combat.move.nightshade.text.fizzle": "幻影消散",
+  "world_combat.move.nightshade.text.blocked": "被挡下"
 }

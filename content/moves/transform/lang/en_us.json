@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.transform.summary": "Temporarily copy an opponent’s combat profile: a Pokémon’s moves, stats, types and Ability, or a non-Pokémon’s attack, movement and defences.",
+  "worldcombat.skill.transform.summary": "Temporarily adopt a visible subject’s real combat profile: a Pokémon’s moves, stats, types and Ability, or a non-Pokémon’s attack, movement and defences. Point at a foe or an ally; your own health and appearance stay.",
   "worldcombat.skill.transform.use.0": "Borrow a foe's whole move set and stats for a stretch",
   "worldcombat.skill.transform.use.1": "Take a foe's high-attack or high-defence shape",
   "worldcombat.skill.transform.use.2": "Switch to a completely different playstyle once you know the foe",
-  "worldcombat.skill.transform.description.0": "Against a Pokémon, copy its moves, five combat stats, types and Ability for %1$s. Keep your own health, level and appearance.",
-  "worldcombat.skill.transform.description.1": "Reach: %1$s blocks. Cannot copy an already transformed target.",
+  "worldcombat.skill.transform.description.0": "Against a Pokémon, copy its moves, five combat stats, types and Ability for %1$s. Keep your own health, level, inventory and appearance. You may target an ally.",
+  "worldcombat.skill.transform.description.1": "Reach: %1$s blocks. Cannot copy an already transformed target; an empty aim never switches to the nearest foe.",
   "worldcombat.skill.transform.description.2": "Preparation %1$s, recovery %2$s, cooldown %3$s. Expiry or cleansing restores your own combat properties.",
   "worldcombat.skill.transform.dwell.0": "Deep: shape x1.35, cooldown x1.2 — keeps the form longer, transforms less often.",
   "worldcombat.skill.transform.dwell.1": "Light: shape x0.75, cooldown x0.8 — transforms often, but each one is short.",
@@ -26,6 +26,9 @@
   "world_combat.move.transform.text.shift": "Transformed into %1$s",
   "world_combat.move.transform.text.revert": "Back to its own form",
   "world_combat.move.transform.text.fail": "No shape to copy",
+  "world_combat.move.transform.text.copy": "Copied Ability %1$s and %2$s move(s)",
+  "world_combat.move.transform.text.marks": "Borrowed %1$s combat attribute(s)",
+  "world_combat.move.transform.text.same": "Already this shape",
   "effect.world_combat.transform_shift": "Transform Shape",
   "worldcombat.skill.transform.world": "Against a non-Pokémon, copy its current native attack damage, movement speed, armour, armour toughness and knockback resistance for %1$s. Keep your own health, moves and appearance. Expiry or cleansing restores your properties; equipment and other effects still apply."
 }

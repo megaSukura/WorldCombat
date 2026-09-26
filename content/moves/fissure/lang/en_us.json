@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.fissure.summary": "Press the shock into the soil and let a seam run along the ground to open beneath the foe: whoever stands on that patch is taken in one blow. It reaches far, but only recognises grounded targets that Ground can touch; the warning window before it opens is the foe's chance to walk away.",
-  "worldcombat.skill.fissure.description.0": "The seam runs up to %1$s blocks along the ground and opens a %2$s block pit under the target; the locked target, if still standing inside, is finished in one blow - defence, armour and toughness are ignored, and only type immunity can stop it.",
+  "worldcombat.skill.fissure.description.0": "The seam reaches %1$s blocks and opens a %2$s-block gap at the selected point. The closest grounded foe still inside takes one execution attempt. Native immunity and damage rules still apply.",
   "worldcombat.skill.fissure.description.1": "There are %1$s s between locking the spot and the pit opening; every level above the target shortens it, and the target must step off or jump away in that time.",
   "worldcombat.skill.fissure.description.2": "The torn seam stays for %1$s s, tearing up to %2$s blocks of natural ground along the path and around the pit before the original blocks return.",
   "worldcombat.skill.fissure.deep.on": "Deep form: a larger pit and a longer-lived seam, but the opening is delayed by 8 ticks - a wider trap the target is also more likely to escape.",
@@ -30,5 +30,6 @@
   "world_combat.move.fissure.text.break": "Dropped into the fissure",
   "world_combat.move.fissure.text.miss": "The crack opens on nothing",
   "world_combat.move.fissure.text.air": "Spared by staying airborne",
-  "worldcombat.skill.fissure.description.ground": "It can only be cast on a grounded enemy with a clear line of sight, and the user must be standing on the ground as well; airborne targets cannot be caught."
+  "worldcombat.skill.fissure.description.ground": "It can only be cast on a grounded enemy with a clear line of sight, and the user must be standing on the ground as well; airborne targets cannot be caught.",
+  "world_combat.move.fissure.text.resisted": "The target withstood it"
 }

@@ -1,19 +1,14 @@
-/**
- * 迎头一击 / firstimpression 的客户端表现。
- *
- * 一句话：弓身一缩，虫绿的光在脚下一亮，随后整段身体贴着地面像一发甲虫炮弹砸出去——撞上的一刻炸开虫绿的冲击
- * 与向外翻卷的草叶碎屑，目标被狠狠顶开。
- * 色相家族：虫绿与黄绿（9BC24B / 6F9A2E / C9E07A）为主，命中核心一点近白；没有冷色。
- * 拍子：起 coil（弓身蓄力）→ 扑 dive（贴地飞出）→ 砸 crash（命中峰值）→ 收 miss（撞空刹停）。
- * 范围：crash 绑命中点、画出的就是撞实的位置与顶开方向；coil 的地面纹绑施法者脚边。
- * 运动：coil 的光点贴地向内收进脚下，dive 的速度线与草叶沿扑出方向掠过，crash 的碎光向外炸并带一圈地裂。
- * 数：`data.count`（扑砸威力派生）决定冲击与碎屑数，`data.stride`（扑出距离 / 0.7）决定起跳掀起的土块数，
- * `data.scale`（判定半径 / 0.44）放大判定轮廓与冲击范围。
- * 参照节：视觉语言第二、三、四、六、七、九节。
- */
 const FirstimpressionDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        opening: {
+            duration: 1200000, exit: { stop: 0, drain: 6 },
+            emitters: [{ name: "entry_cue", bind: "source", height: 0.55,
+                particle: "world_combat_core:cobblemon/generic/ring/mediumring", rate: 2,
+                shape: { kind: "ring", radius: 0.24, rotation: [90, 0, 0] },
+                speed: 0, lifetime: 10, size: [0.13, 0.07], alpha: [0.5, 0], color: 0x9BC24B,
+                light: "world", maxParticles: 3 }]
+        },
         coil: {
             duration: { data: "windup", fallback: 10 },
             exit: { stop: 5, drain: 12 },

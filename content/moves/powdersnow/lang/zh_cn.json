@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.powdersnow.summary": "朝身前吹出一片又宽又短的扇形雪霰：扇面里的每个敌人各挨一次轻冻伤、被吹退半步，并各自有概率被冻住。出手快、冷却短，可以反复吹，靠次数堆冰冻。",
+  "worldcombat.skill.powdersnow.summary": "朝瞄准方向吹出一片又宽又短的扇形雪霰：扇面里不被掩体挡住的每个敌人各挨一次轻冻伤、被吹退半步，并各自有概率被冻住。出手快、冷却短，可以反复吹，靠次数堆冰冻；也能朝空地空放。",
   "worldcombat.skill.powdersnow.use.0": "近身一口罩住挤在身前的几个敌人",
   "worldcombat.skill.powdersnow.use.1": "反复吹，一次次掷冰冻",
   "worldcombat.skill.powdersnow.use.2": "把贴上来的人吹退半步",
-  "worldcombat.skill.powdersnow.description.0": "扇面里按距离取最近的敌人，最多 %2$s 个，每个各受约 %1$s 点特殊伤害。",
+  "worldcombat.skill.powdersnow.description.0": "扇面里按距离取最近、且没有方块挡住的敌人，最多 %2$s 个，每个各受约 %1$s 点特殊伤害。",
   "worldcombat.skill.powdersnow.description.1": "吹拂距离 %1$s 格，扇面半角 %2$s 度，被吹到的目标沿背离施法者的方向推退 %3$s 格。",
   "worldcombat.skill.powdersnow.description.2": "扇面里被吹到的每个目标各有 %1$s 概率陷入冰冻；冰冻期间无法发动招式和移动，持续约 8 秒，受到火属性伤害会提前解冻。",
   "worldcombat.skill.powdersnow.description.3": "起手 %1$s，收招 %2$s，冷却 %3$s。",

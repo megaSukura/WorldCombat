@@ -2,12 +2,14 @@
  * 棱角化 / sharpen 的客户端表现。
  *
  * 一句话：施法者体表先浮起一片冷冷的金属反光，随后一片片棱锋从身上「啪」地弹出、地上的石屑被带起；
- * 窗口内每次被近身撞上，被撞的位置炸开一撮冷白棱光；棱角钝去时它们一齐缩回、碎屑落地。
+ * 窗口内每次被近身撞上，就在真实的接触点炸开一撮冷白棱光；棱角钝去时它们一齐缩回、碎屑落地。
  * 色相家族：钢灰 0xC8D0DA 为主体，冷蓝 0x8FA6C4 作阴影，近白 0xEAF0F6 作锋口与反击强调。
- * 拍子：起锋（charge 0–10t）→ 弹出（jag 0–28t）→ 棱角（edge，持续低密度）→ 反击（cut 0–18t）→ 钝去（dull 0–22t）。
+ * 拍子：起锋（charge 0–10t）→ 弹出（jag 0–28t）→ 棱角（edge，绑 boostWindow 的持续低密度）→ 反击（cut 0–18t）→ 钝去（dull 0–22t）。
  * 范围：地面碎屑环绑脚点、fit none，半径按 `data.scale`（实际棱角半径 / 1.0）推出；体表棱锋绑施法者，随体型缩放。
- * 运动：棱锋由内向外弹出 → 锋口细光缓慢游走 → 反击时冷光在受击点炸开 → 钝去时碎屑下坠。
+ * 运动：棱锋由内向外弹出 → 锋口细光缓慢游走 → 反击时冷光在真实接触点炸开 → 钝去时碎屑下坠。
  * 数：棱角数绑 `data.spikes`（物攻/体重派生），反击强度绑 `data.edge`（棱锋威力），`data.scale` 放大范围与尺寸。
+ * 持续：edge 绑在真正的棱角 boostWindow 上（服务端 `WorldFeedback.onEffect`），窗口关闭会同步收回。
+ * 接触：cut 绑真实伤害回执给出的接触点（`bind: "point"`），只在真实近身接触反应时触发。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const SharpenDefinition: ParticleDefinition = {
@@ -79,7 +81,7 @@ const SharpenDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "slash_back", bind: "target", offset: [0, 0.5, 0], height: 0.4,
+                    name: "slash_back", bind: "point", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: { data: "edge", fallback: 18 } },
                     shape: { kind: "sphere", radius: 0.35 },

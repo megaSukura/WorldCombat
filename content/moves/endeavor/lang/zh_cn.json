@@ -33,5 +33,6 @@
   "worldcombat.skill.endeavor.growth.1": "%1$s 级起顶开距离进一步提高到 %2$s 格。",
   "world_combat.move.endeavor.text.hit": "拉平 %1$s",
   "world_combat.move.endeavor.text.flat": "已经拉平了",
+  "world_combat.move.endeavor.text.blocked": "被挡下",
   "world_combat.move.endeavor.text.miss": "扑空了"
 }

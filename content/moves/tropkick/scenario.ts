@@ -1,12 +1,12 @@
 /**
  * 热带踢 / tropkick —— 可执行设计说明。
  *
- * 一句话：一记自下而上、裹着南国热浪的挑踢，命中把目标顶开（挑飞式则挑到半空）、压低它的攻击，落点烧出焦痕。
+ * 一句话：一记低平、裹着南国热浪的侧踢，命中造成接触伤害并压低目标攻击；踢完施术者回身收脚、后撤小半步。
  *
  * 场面：石头地面、晴夜。一只只会「热带踢」的甜冷美后（技能表只给这一招，AI 就只会用它）对上一只铁傀儡——
  *   铁傀儡血厚，能撑过这一脚，好让掉攻落到它的攻击属性上被读到。
  * 必然事实：热带踢被提交过；铁傀儡受到过伤害；铁傀儡的攻击属性在一次命中后下降。
- *   挑飞高度、焦痕半径、伤害数值与配置分支写进 note，供读轨迹判断。
+ *   伤害数值、实际后撤距离与站位写进 note，供读轨迹判断（后撤受可站空间限制，不是必然事实）。
  */
 Smoke.scenario("tropkick", function (stage) {
     stage.fill([-10, -1, -10], [10, -1, 10], "minecraft:stone");
@@ -25,7 +25,7 @@ Smoke.scenario("tropkick", function (stage) {
             stage.expect(stage.damageTo(golem) > 0, "the kick dealt damage to the target");
             stage.expect(stage.attribute(golem, "minecraft:generic.attack_damage") < baseAttack,
                 "the kick lowered the target's attack attribute through the shared stat ladder");
-            stage.note("trop kick is a short stepping kick that leaves a scorch ring on the ground and lowers Attack. Drive mode (default) shoves the target back; launch mode would lift it. Random parts: damage roll and crit.", {
+            stage.note("trop kick is a low, flat side kick that lowers Attack on contact; it does not move the target and leaves no scorch. After a hit the user withdraws a short step backwards when there is room behind. Random parts: damage roll and crit.", {
                 casts: stage.casts("tropkick", queen),
                 baseAttack: Math.round(baseAttack * 100) / 100,
                 attackNow: Math.round(stage.attribute(golem, "minecraft:generic.attack_damage") * 100) / 100,

@@ -19,8 +19,7 @@
  *   push      撞退：物攻。
  *   scorch    崩开威力（对旁人的溅射）：物攻与等级。
  *   embers    火星数：物攻与等级，驱动表现。
- *   igniteTicks 带豁出去时把命中者点着多久：等级。
- *   scorchTicks／scorchCells 地面焦痕停留与块数：等级与物攻。
+ *   igniteTicks 带豁出去时把命中者点着多久：等级；免疫火的生物不会被点着。
  *   tempo／settle／recharge 速度决定起手、收招、冷却。
  *
  * 配置 reckless（豁出去）：冲得更远 ×1.15、更快 ×1.08、火炸得更大 ×1.2，但收招 +3、冷却 +8，
@@ -124,18 +123,7 @@ namespace PokemonSkills {
         /** 引燃时长：基础 40 刻，等级每比 30 高 1 加 0.3 刻（夹 −6..18）；夹 30..80。 */
         igniteTicks: seconds(
             F.base(40).plus(F.level().minus(30).times(0.3).clamp(-6, 18)).clamp(30, 80).round(0),
-            "引燃时长", "带豁出去时，被撞中的人会被点着多久；等级越高烧得越久。"),
-        /** 焦痕停留：基础 70 刻 + 等级 ×0.8；夹 50..150。 */
-        scorchTicks: seconds(
-            F.base(70).plus(F.level().times(0.8)).clamp(50, 150).round(0),
-            "焦痕停留", "撞炸的落点在地面留下的焦痕停留多久；到期原方块回来。"),
-        /** 焦痕块数：基础 12 + 物攻 ×0.15；夹 8..32。同时驱动表现密度。 */
-        scorchCells: formula(
-            F.base(12).plus(F.stat("attack").times(0.15)).clamp(8, 32).round(0),
-            "焦痕块数", {
-                unit: "块",
-                description: "地面被烧焦的块数；随物攻增长，也决定画面的密度。"
-            }),
+            "引燃时长", "带豁出去时，被撞中的敌人会被点着多久；等级越高烧得越久，免疫火的生物不会被点着。"),
         /** 起手：基础 5 刻，速度每比 60 快 1 减 0.02 刻（夹 −1..2）；夹 3..9。 */
         tempo: seconds(
             F.base(5).minus(F.stat("speed").minus(60).times(0.02).clamp(-1, 2)).clamp(3, 9).round(0),
@@ -162,7 +150,7 @@ namespace PokemonSkills {
     describe(temperId, [
         { key: "description.0", values: ["flare"] },
         { key: "description.1", values: ["scorch","blast","push"] },
-        { key: "description.2", values: ["dash","charge","igniteTicks","scorchTicks","scorchCells"] },
+        { key: "description.2", values: ["dash","charge","igniteTicks"] },
         { key: "description.additional", values: [] },
         { key: "reckless.on", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },

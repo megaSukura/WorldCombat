@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.bugbuzz.summary": "振动身体压出一道锥形声波，贴地扩散、可以穿过墙面：锥内每个敌人各承受一次特殊伤害，越近越重，并可能被震得特防下降 1 级。",
+  "worldcombat.skill.bugbuzz.summary": "朝瞄准方向振动身体压出一道锥形声波，贴地扩散、可以穿过墙面：锥内每个敌人各承受一次特殊伤害，越近越重，并可能被震得特防下降 1 级；没有选中敌人也能对着空点振鸣。",
   "worldcombat.skill.bugbuzz.use.0": "中近距离一次扫到锥形范围里的敌人",
   "worldcombat.skill.bugbuzz.use.1": "隔着墙也能震到对手",
   "worldcombat.skill.bugbuzz.use.2": "用近身满额的声波压制扎堆的敌人",
-  "worldcombat.skill.bugbuzz.description.0": "声波扫到每人身上造成 %1$s 点特殊伤害。",
+  "worldcombat.skill.bugbuzz.description.0": "声波扫到每人身上各造成一次 %1$s 点特殊伤害；整道声波只结算一次，画面里的多圈波纹是声压的体积而不是多次伤害。",
   "worldcombat.skill.bugbuzz.description.1": "每个被扫到的目标有 %1$s 概率特防下降 %2$s 级。",
   "worldcombat.skill.bugbuzz.description.2": "声波张角 %1$s 度、射程 %2$s 格，威力随距离衰减到边缘的 %3$s；声音不被墙面阻挡。",
   "worldcombat.skill.bugbuzz.description.3": "沉鸣形态开启时，声波收成更窄、更远、衰减更少的一束，但单发威力略降、起手与冷却略长；关闭时锥面更宽、单发威力更足，更适合近身覆盖。",
@@ -22,6 +22,6 @@
   "worldcombat.skill.bugbuzz.preference.ai.maxChase": "鸣叫距离",
   "worldcombat.skill.bugbuzz.preference.ai.maxChase.help": "超过这个距离就不主动鸣叫，先走近；越大越愿意在更远处先手发声。",
   "worldcombat.skill.bugbuzz.preference.ai.crowd": "瞄准成排",
-  "worldcombat.skill.bugbuzz.preference.ai.crowd.help": "开启后，目标方向约 45° 内还挤着别的敌人时优先鸣叫，一道声波能多震一个；关闭则只按普通远程攻击排序。",
+  "worldcombat.skill.bugbuzz.preference.ai.crowd.help": "开启后，目标方向前方的实际锥面里还挤着别的敌人时优先鸣叫，一道声波能多震一个；关闭则只按普通远程攻击排序。",
   "world_combat.move.bugbuzz.text.sunder": "特防 -%1$s"
 }

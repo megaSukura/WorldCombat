@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.doublekick.summary": "A two-beat close attack: the first low kick pops the target off the ground and the second boot sends it away. Alternate style lifts then launches for control; straight style keeps both kicks low, faster and harder.",
+  "worldcombat.skill.doublekick.summary": "A two-beat close attack: the first low kick pops the target off the ground and the second boot sends it away. It can aim at a foe or empty ground ahead, and both kicks still finish when nothing is there. Alternate style lifts then launches for control; straight style keeps both kicks low, faster and harder.",
   "worldcombat.skill.doublekick.use.0": "A one-two close kick that lifts then launches",
   "worldcombat.skill.doublekick.use.1": "Kick a foe pressed against you out of position",
   "worldcombat.skill.doublekick.use.2": "Punish a foe that stands its ground, beat after beat",

@@ -10,7 +10,7 @@
   "worldcombat.skill.obstruct.value.window": "拒马持续",
   "worldcombat.skill.obstruct.value.capacity": "拒马量",
   "worldcombat.skill.obstruct.value.drop": "接触降防",
-  "worldcombat.skill.obstruct.value.radius": "拒马宽度",
+  "worldcombat.skill.obstruct.value.radius": "桩环半径",
   "worldcombat.skill.obstruct.value.charge": "冷却",
   "worldcombat.skill.obstruct.value.fizzle": "连用失误率",
   "worldcombat.skill.obstruct.preference.barbs": "带刺／加固",

@@ -3,8 +3,8 @@
   "worldcombat.skill.anchorshot.use.0": "Pin a fleeing target in place for an ally to finish",
   "worldcombat.skill.anchorshot.use.1": "Lock down the enemy's main threat in the open",
   "worldcombat.skill.anchorshot.use.2": "Reel a mobile target back from cover",
-  "worldcombat.skill.anchorshot.description.0": "The anchor flies at %3$s blocks per tick and clubbed the first foe in its path for about %1$s physical damage (contact); thrown distance %2$s blocks. Defence, type matchup and crits are settled on impact.",
-  "worldcombat.skill.anchorshot.description.1": "A hit drives the anchor into the ground at the target's feet and leashes it there for %1$s s. While leashed it moves about 30% slower; the chain radius is %2$s blocks and it snaps when dragged more than %3$s blocks from the anchor. Running out the chain's time or removing the trapped effect releases it at once and takes the anchor back. The anchor is pegged to the ground, so the user may walk away.",
+  "worldcombat.skill.anchorshot.description.0": "The anchor flies at %3$s blocks per tick along the chosen direction or point and clubbed the first foe in its path for about %1$s physical damage (contact); thrown distance %2$s blocks. Defence, type matchup and crits are settled on impact.",
+  "worldcombat.skill.anchorshot.description.1": "A hit drives the anchor into supported native ground at the target's feet (load-bearing blocks are never replaced) and leashes it there for %1$s s. While leashed it moves about 30% slower; the chain radius is %2$s blocks and it snaps when dragged more than %3$s blocks from the anchor. Breaking the anchor, running out the chain's time or removing the trapped effect releases it at once and takes the anchor back. The anchor is pegged to the ground, so the user may walk away; when no valid footing exists only the main hit lands, with no chain.",
   "worldcombat.skill.anchorshot.description.2": "Outside the leash, pull the target %1$s blocks toward the anchor every 2 ticks. The anchor hit radius is %2$s blocks.",
   "worldcombat.skill.anchorshot.description.3": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s; the PP 20 price.",
   "worldcombat.skill.anchorshot.heavy.on": "Heavy anchor: power x1.25, chain duration x1.25, chain length x0.85, snap distance x1.15, but wind-up +3 ticks, range x0.9, cooldown +12 ticks - pinned harder and longer.",
@@ -33,5 +33,6 @@
   "world_combat.move.anchorshot.text.snap": "The chain snapped",
   "world_combat.move.anchorshot.text.release": "Chain retracts",
   "world_combat.move.anchorshot.text.miss": "The anchor clanged down",
+  "world_combat.move.anchorshot.text.slip": "The anchor found no footing",
   "effect.world_combat.anchor_chain_status": "Anchored"
 }

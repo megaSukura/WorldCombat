@@ -4,10 +4,11 @@
  * 一句话：拳面凝起一圈白霜，一拳按在目标身上炸开冰屑；目标脚下结起一层霜壳、体表泛出青蓝寒气；
  * 若寒霜已成，第二拳把霜壳收走，目标被一层厚冰壳裹住、动弹不得。
  * 色相家族：冰青（0x8FD8F0）与霜白（0xEAF8FF）；饱和青只出现在冰屑与霜壳的小面积。
- * 拍子：起 charge（凝霜）→ 击 hit（碎冰命中）→ 结 chill（结霜）/ freeze（冻实）与 whiff（空拳）。
- * 范围：chill／freeze 绑在目标身上，画的是被作用的那个人；近身直线判定由命中瞬间的冰屑朝向读出。
+ * 拍子：起 charge（凝霜）→ 击 hit（碎冰命中）→ 结 chill（结霜）/ freeze（冻实）/ resist（免冻抵抗）与 whiff（空拳）。
+ * 范围：chill／freeze／resist 绑在目标身上，画的是被作用的那个人；近身直线判定由命中瞬间的冰屑朝向读出。
  * 运动：冰屑从拳面朝目标迸出，霜壳从命中点沿目标体表向上漫。
- * 数：冰屑数绑 `data.shards`（特攻换算），冻结强度绑 `data.intensity`，是否浸水由 `data.wet` 加一层贴地霜。
+ * 数：冰屑数绑 `data.shards`（特攻换算），冻结强度绑 `data.intensity`，浸水时贴地霜数量由 `data.floor` 变多，
+ *   冰壳脉冲数绑 `data.melt`（按真实冻结时长换算），所以画面停留与机制剩余时间一致。
  */
 const IcepunchDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -88,7 +89,7 @@ const IcepunchDefinition: ParticleDefinition = {
                 {
                     name: "shell", bind: "target", height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
-                    burst: { count: { data: "shards", fallback: 6 }, interval: 3, repeats: 2 },
+                    burst: { count: { data: "shards", fallback: 6 }, interval: 3, repeats: { data: "melt", fallback: 2 } },
                     shape: { kind: "sphere", radius: 0.38 },
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [12, 20], size: [0.26, 0.06], sizeMode: "index",
@@ -106,10 +107,34 @@ const IcepunchDefinition: ParticleDefinition = {
                 {
                     name: "floor", bind: "target", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
-                    burst: { count: 14 }, shape: { kind: "ring", radius: 0.55 },
+                    burst: { count: { data: "floor", fallback: 8 } }, shape: { kind: "ring", radius: 0.55 },
                     direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 16], size: [0.12, 0.03],
                     color: 0x8FD8F0, alpha: [0.7, 0], gravity: 0.01, drag: 0.95, light: "world", maxParticles: 40
+                }
+            ]
+        },
+        resist: {
+            duration: 20,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "brittle", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: { data: "shards", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.05, 0.18], spread: 34,
+                    lifetime: [4, 8], size: [0.12, 0.03], sizeMode: "index",
+                    color: 0xB9C6D0, alpha: [0.7, 0], gravity: 0.04, drag: 0.9, light: "world", maxParticles: 30
+                },
+                {
+                    name: "refuse", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 4, interval: 2 },
+                    shape: { kind: "ring", radius: 0.32 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [4, 8], size: [0.18, 0.05], sizeMode: "index",
+                    color: 0x8FD8F0, alpha: [0.5, 0], light: "world", maxParticles: 18
                 }
             ]
         },

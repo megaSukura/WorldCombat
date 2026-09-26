@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.shadowball.summary": "掷出一团活的暗影，直线飞行命中目标：造成特殊伤害，并可能把目标特防压低 1 级，触发时影子会短暂贴在目标身上。",
+  "worldcombat.skill.shadowball.summary": "朝瞄准方向掷出一团活的暗影，直线飞行命中目标；没有锁定敌人也能对着空点空放。命中造成特殊伤害，并可能把目标特防压低 1 级，只有真的降级时影子才短暂贴住目标。",
   "worldcombat.skill.shadowball.use.0": "中距离的单体点射",
   "worldcombat.skill.shadowball.use.1": "用暗影附着磨掉对手的特防",
   "worldcombat.skill.shadowball.use.2": "隔着一段距离先手压血",
   "worldcombat.skill.shadowball.description.0": "影球命中造成约 %1$s 点特殊伤害。",
   "worldcombat.skill.shadowball.description.1": "命中后，有 %1$s 概率把目标特防压低 %2$s 级；这是能力等级下降，不会随影球散去而恢复。",
-  "worldcombat.skill.shadowball.description.2": "影球以 %1$s 格每刻直线飞行，射程 %2$s 格，判定半径 %3$s 格。",
+  "worldcombat.skill.shadowball.description.2": "影球朝瞄准方向以 %1$s 格每刻直线飞行，射程 %2$s 格，判定半径 %3$s 格；对着空点也能射出。",
   "worldcombat.skill.shadowball.description.3": "当前凝影形态为 %1$s。",
   "worldcombat.skill.shadowball.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.shadowball.growth.0": "%1$s 级起影球威力升至 %2$s、射程 %3$s 格。",

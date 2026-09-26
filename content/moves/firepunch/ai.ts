@@ -32,14 +32,16 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 21;
             if (CompanionBehavior.ai<boolean>(capability, "preferUnlit", true) && !CompanionBehavior.status(context, target, "burn")) score += 10;
+            // 只有还能被传火点着的邻敌才算收益：已灼伤的邻居不会虚增这笔账。
             const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
-            let crowd = 0;
+            let spreadable = 0;
             for (let i = 0; i < nearby.length; i++) {
                 const other = nearby[i];
                 if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                if (CompanionBehavior.distance(other.point, target.point) <= 2.6) crowd++;
+                if (CompanionBehavior.status(context, other, "burn")) continue;
+                if (CompanionBehavior.distance(other.point, target.point) <= 2.6) spreadable++;
             }
-            if (crowd > 0) score += Math.min(12, crowd * 6);
+            if (spreadable > 0) score += Math.min(12, spreadable * 6);
             return score;
         }
     });

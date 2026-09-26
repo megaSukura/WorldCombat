@@ -12,5 +12,5 @@
   "worldcombat.skill.hiddenpower.value.focus": "凝聚环数",
   "world_combat.move.hiddenpower.text.type": "觉醒力量 · %1$s",
   "worldcombat.skill.hiddenpower.description.type": "光球的属性由使用者六项个体值的奇偶决定，也就是这只精灵自己的觉醒属性；伤害按该属性结算，因此享受本系加成、并受目标属性相性影响，同一招在不同个体手里属性不同。",
-  "worldcombat.skill.hiddenpower.description.ballistic": "光球是直线飞行的实体弹体，横向判定半径约 %1$s 格；撞到实体即爆开，只对非友方目标结算一次伤害，不会贯穿。"
+  "worldcombat.skill.hiddenpower.description.ballistic": "光球是直线飞行的实体弹体，横向判定半径约 %1$s 格；可自由瞄向方向或落点，撞到实体即按属性爆开、只对非友方目标结算一次伤害，撞到方块即在墙面碎裂结束，不会贯穿，也不留下场地。"
 }

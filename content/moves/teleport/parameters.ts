@@ -4,9 +4,8 @@
  * 原生事实（Cobblemon 1.8 / Showdown）：Psychic／变化／威力 —／命中 —／PP 20／优先度 −6／selfSwitch／target self；
  *   说明是「当有后备宝可梦在时，如果使用就可以进行替换。野生的宝可梦会逃走」。
  *
- * 世界化翻译：即时世界没有后备席，把「瞬移离场」落成**一次点对自己的瞬移**——折叠空间瞬间挪到选定落点，
- *   顺手甩掉盯着自己的敌人；野生的个体挪得更远、并彻底松开手里的目标（逃走）。真正的「和后备宝可梦替换」
- *   需要共享层提供让后备个体入场／收回当前个体的操作，本单元交付可观察到的瞬移与脱锁，替换部分见报告共享前置。
+ * 世界化翻译：即时世界没有后备席，把「瞬移离场」落成**一次点向自由三维落点的瞬移**——折叠空间瞬间挪到玩家选定的落点，
+ *   顺手甩掉盯着自己的敌人；野生的个体挪得更远、并彻底松开手里的目标（逃走）。落点必须站得下整个身体，选在墙里就直接失败。
  *
  * 数据分散：
  *   blinkRange  瞬移距离 = 特攻（折叠空间）＋ 速度（抢一瞬）＋ 野生加成 ＋ 配置；它也是本招的实际射程；
@@ -80,6 +79,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["blinkRange"] },
         { key: "description.1", values: ["shedRadius"] },
         { key: "description.2", values: [] },
+        { key: "description.3", values: [] },
         { key: "far.on", values: [], when: function (context) { return read(context.detail.values, ["far"]) === true; } },
         { key: "far.off", values: [], when: function (context) { return read(context.detail.values, ["far"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

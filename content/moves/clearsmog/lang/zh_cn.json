@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.clearsmog.summary": "掷出泥块，命中后炸出只影响敌人的清除之烟。烟使能力等级归零并清除药水增益，附着期间会反复清除新获得的强化。",
+  "worldcombat.skill.clearsmog.summary": "掷出泥块，命中点炸出只影响敌人的清除之烟：烟只清掉对手身上正向的能力提升与可移除的药水增益，附着期间反复清掉新获得的强化，不动已被压低的等级。可自由投点或按方向空掷，泥块会被墙挡住。",
   "worldcombat.skill.clearsmog.use.0": "把对手攒起来的能力一波冲回原点",
   "worldcombat.skill.clearsmog.use.1": "让一个刚刚加满级的目标短时间内留不住增益",
   "worldcombat.skill.clearsmog.use.2": "同时清掉一小撮抱团对手的等级",
-  "worldcombat.skill.clearsmog.description.0": "泥块命中造成约 %1$s 点特殊伤害，掷出距离 %2$s 格；泥块会小幅修正方向追向目标。",
-  "worldcombat.skill.clearsmog.description.1": "烟团半径 %1$s 格，使其中敌人的正负能力等级归零、药水和信标等增益消失；烟附着 %2$s，每隔 %3$s 再清除一次。",
+  "worldcombat.skill.clearsmog.description.0": "泥块命中造成约 %1$s 点特殊伤害，掷出距离 %2$s 格；可自由投点或按方向空掷，有非友方实体时泥块小幅修正方向追向它。",
+  "worldcombat.skill.clearsmog.description.1": "烟团半径 %1$s 格，清掉其中敌人的正向能力提升与可移除的药水和信标增益（不清已被压低的等级）；烟附着 %2$s，每隔 %3$s 再清一次新获得的强化。",
   "worldcombat.skill.clearsmog.description.2": "泥块以 %1$s 格/刻飞出并小幅修向目标，泥块判定 %2$s 格。",
   "worldcombat.skill.clearsmog.billow.on": "漫烟式：烟团半径 ×1.5、黏烟时长 ×1.4，但威力 ×0.85、起手 +1 刻、冷却 +8 刻——罩得更广更久。",
   "worldcombat.skill.clearsmog.billow.off": "聚泥式：威力 ×1.15、出手快、冷却短，但烟团小、黏烟短——一次精准的重泥。",

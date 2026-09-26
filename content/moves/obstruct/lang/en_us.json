@@ -10,7 +10,7 @@
   "worldcombat.skill.obstruct.value.window": "Barricade duration",
   "worldcombat.skill.obstruct.value.capacity": "Barricade pool",
   "worldcombat.skill.obstruct.value.drop": "Contact Defence drop",
-  "worldcombat.skill.obstruct.value.radius": "Barricade width",
+  "worldcombat.skill.obstruct.value.radius": "Stake ring radius",
   "worldcombat.skill.obstruct.value.charge": "Cooldown",
   "worldcombat.skill.obstruct.value.fizzle": "Repeat-use failure rate",
   "worldcombat.skill.obstruct.preference.barbs": "Barbed / Reinforced",

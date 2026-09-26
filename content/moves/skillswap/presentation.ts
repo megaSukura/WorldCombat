@@ -82,7 +82,7 @@ const SkillSwapDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 18 },
             emitters: [
                 {
-                    name: "hum_seal", bind: "source", fit: "body", offset: [0, 0.5, 0],
+                    name: "hum_seal", bind: "target", fit: "body", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: { data: "glyphs", fallback: 4 },
                     shape: { kind: "sphere_surface", radius: 0.45 },
@@ -91,7 +91,7 @@ const SkillSwapDefinition: ParticleDefinition = {
                     color: 0xF0E6FF, alpha: [0.34, 0], alphaMode: "sin", light: "full", maxParticles: 40
                 },
                 {
-                    name: "hum_ring", bind: "source", fit: "body", offset: [0, 0.45, 0],
+                    name: "hum_ring", bind: "target", fit: "body", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
                     rate: 2, shape: { kind: "ring", radius: 0.3 },
                     direction: "up", speed: [0.003, 0.012],

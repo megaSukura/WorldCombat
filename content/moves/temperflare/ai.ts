@@ -1,12 +1,13 @@
 /**
  * 豁出去 / temperflare 的 AI 用途。
  *
- * 什么局面下出手：目标可见、敌对、存活且在 `ai.maxChase`（默认 8）格内时列入候选；够不到交给共享接近逻辑。
+ * 什么局面下出手：目标可见、敌对、存活、在 `ai.maxChase`（默认 8）格内、且中间有通视线时列入候选；
+ *   隔着墙先交给共享接近逻辑找回射界，不会连续撞上同一面墙。够不到交给共享接近逻辑。
  * 对谁出手：`accepts` 只筛阵营、存活与可见；谁当前被盯上就撞给谁。
  * 排序：`ai.punishWhiff`（默认开）打开时，施法者上一次出手打空的那一刻 priority 抬到 54——那正是翻倍窗口，
  *   值得插在普通攻击前；否则按普通近战 15 排序。撞中后炸开一片火，因此身边挤着敌人时也不再额外加分。
  * 够不到怎么办：射程交给 `dash`，共享任务把身位收进冲锋距离后再撞。
- * 放完接什么：交回共享交战计划；撞空也照炸，落点留焦痕。
+ * 放完接什么：交回共享交战计划；撞空也照炸。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerFact("world_combat:temperflare/whiffed", function (access, actor) {
@@ -19,8 +20,11 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
+            const self = CompanionBehavior.source(context);
+            if (CompanionBehavior.distance(self.point, target.point)
+                > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
+            // 中间隔着墙时先交给共享接近逻辑找回射界，避免连续撞上同一面墙。
+            return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

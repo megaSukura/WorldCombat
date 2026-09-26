@@ -10,6 +10,7 @@
  *   strike  窜袭威力：速度偏移 + 草丛借势；快而轻的脚步切得更利。
  *   leap    窜跃距离：速度偏移；腿快跳得远。
  *   pace    每刻位移：速度偏移。
+ *   arc     窜跃弧高：碰撞箱高度偏移；大个子抬得高一点才过得去。
  *   haste   提速级数：草丛借势 +1，等级 56 起台阶再 +1。
  *   push    击退：速度偏移。
  *   girth   判定半径：碰撞箱高度偏移，大个子触面更宽。
@@ -72,6 +73,13 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "窜跃时每刻移动的距离；越快越突然，留给对手侧移的时间越短。"
             }),
+        /** 窜跃弧高：基础 0.8 格，碰撞箱每比 1.4 高 1 格加 0.2，夹 0.65..1.15。 */
+        arc: formula(
+            F.base(0.8).plus(F.body("height").minus(1.4).times(0.2)).clamp(0.65, 1.15).round(2),
+            "窜跃弧高", {
+                unit: "格",
+                description: "这一跃脚离地最高多少；大个子抬得高一点才过得去。仍是一记短低弧，头顶被压住时实际弧线还会降低。"
+            }),
         /** 提速级数：草丛借势 +1，等级 56 台阶再 +1，夹 1..2。 */
         haste: formula(
             F.base(1).plus(F.when(F.var("cover", text("worldcombat.skill.trailblaze.value.cover")).gte(1), F.const(1), F.const(0))).clamp(1, 2).round(0),
@@ -118,7 +126,7 @@ namespace PokemonSkills {
     ]);
 
     describe("trailblaze", [
-        { key: "description.0", values: ["strike","leap","pace"] },
+        { key: "description.0", values: ["strike","leap","pace","arc"] },
         { key: "description.1", values: ["haste","push","girth"] },
         { key: "description.cover", values: [] },
         { key: "overshoot.on", values: [], when: function (context) { return read(context.detail.values, ["overshoot"]) === true; } },

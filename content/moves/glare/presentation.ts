@@ -1,14 +1,15 @@
 /**
  * 大蛇瞪眼 / Glare 的客户端表现。
  *
- * 一句话：施法者昂起身体，腹部的花纹在身前张开成一片越铺越大的扇形光幕，扇形里每个被它盯住的人
+ * 一句话：施法者昂起身体，腹部前方的花纹朝它盯着的方向整片张开成扇形光幕，扇形里每个被它盯住的人
  *   身上亮起一圈麻花电花，然后光幕收掉。
  * 色相家族：紫罗兰（0xB48CE8）与深紫（0x8A5CFF）撑起扇形与波纹，苍白高光（0xE0D0FF）做边缘；
  *   麻痹电黄（0xF2E24A）只出现在被镇住的人身上——那是共享麻痹身份的颜色，也是玩家读「谁被麻了」的记号。
- * 拍子：起（windup，昂首鼓纹）→ 击（sweep 扇形铺开 / caught 中招者缠电）→ 收（avert 空转消散）。
+ * 拍子：起（windup，昂首鼓纹）→ 击（sweep 扇形整片亮起 / caught 中招者缠电）→ 收（avert 空转消散）。
  * 范围：sweep 的发射器绑在 `data.path` 上并用 polygon 填满，顶点与判定用的 `WorldGeometry.polygon` 是同一组——
- *   画出来的那片扇形就是真正判定的那块区域；`data.reach`/`data.angle` 供 UI 提示读数。
- * 运动：花纹从施法者一侧沿扇形向外推进；`flux` 越大推进越密，`data.sweep` 决定层与层之间的间隔。
+ *   画出来的那片扇形就是真正判定的那块区域；`belly_band` 另绑在施法者身上、随体型缩放并朝 `data.direction`
+ *   转正，让花纹读起来长在腹部前方而不是凭空出现在世界坐标里。`data.reach`/`data.angle` 供 UI 提示读数。
+ * 时机：扇形是瞬发的一次展开，不做来回扫描、也不伪造连续推进速度；`flux` 越大纹路越密。
  * 数：服务端把 `rings`（花纹层数）与 `intensity`（麻痹越久越亮）交给发射器，画出的层数与亮度与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -52,7 +53,7 @@ const GlareDefinition: ParticleDefinition = {
                 {
                     name: "fan_rim", bind: "path", height: 0,
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    burst: { count: { data: "rings", fallback: 4 }, interval: { data: "sweep", fallback: 3 }, repeats: 4 },
+                    burst: { count: { data: "rings", fallback: 4 } },
                     shape: { kind: "polyline" },
                     direction: "outward", speed: { data: "intensity", fallback: 0.2 },
                     lifetime: [8, 15], size: [0.22, 0.05], sizeMode: "index",
@@ -66,6 +67,15 @@ const GlareDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.06],
                     lifetime: [10, 20], size: [0.06, 0.01],
                     color: 0xE0D0FF, alpha: [0.7, 0], light: "full", maxParticles: 120
+                },
+                {
+                    name: "belly_band", bind: "source", offset: [0, 0.15, 0.3], height: 0.42,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
+                    burst: { count: { data: "rings", fallback: 4 } },
+                    shape: { kind: "sector", radius: 0.6, angleDegrees: { data: "angle", fallback: 90 } },
+                    orient: "heading", direction: "shape",
+                    lifetime: [8, 14], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0xE0D0FF, alpha: [0.7, 0], light: "full", maxParticles: 60
                 }
             ]
         },

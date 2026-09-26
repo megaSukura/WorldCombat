@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.venoshock.summary": "泼出一团腐蚀性毒液，沿弧线砸向目标。命中已中毒／剧毒的目标时威力翻倍，并把那份毒升格为剧毒、延长持续时间；打空只落下一摊毒水。",
-  "worldcombat.skill.venoshock.description.0": "毒液团沿弧线飞向目标，碰到第一个目标或方块即结束；命中目标造成约 %1$s 的特殊伤害，对已中毒（含剧毒）的目标这段翻倍，未命中则只留下一摊毒水。",
+  "worldcombat.skill.venoshock.summary": "泼出一团腐蚀性毒液，沿弧线砸向目标。命中已中毒／剧毒的目标时威力翻倍，并把那份毒升格为剧毒、延长持续时间；打空只溅开一摊黏液。",
+  "worldcombat.skill.venoshock.description.0": "毒液团沿弧线飞向瞄点，碰到第一个目标或方块即结束；命中目标造成约 %1$s 的特殊伤害，对已中毒（含剧毒）的目标这段翻倍，未命中只溅开一摊普通黏液。",
   "worldcombat.skill.venoshock.description.1": "命中已中毒（含剧毒）的目标时把那份毒升格为剧毒，持续至少 %1$s；若原有中毒的剩余时间更长，则在其基础上再延长约 1 秒。",
   "worldcombat.skill.venoshock.description.2": "毒液团以 %1$s 格每刻飞行、弧线重力 %2$s、判定半径 %3$s 格；命中后沿泼洒方向把目标冲退 %4$s 格。",
   "worldcombat.skill.venoshock.use.0": "远程消耗",

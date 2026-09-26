@@ -1,14 +1,13 @@
 /**
  * 精神突进 / psychoboost 的客户端表现。
  *
- * 一句话：施法者闭目、身周光华内敛，几圈念力环在目标身上从四面收拢、猛地撞合成一个亮点炸开 →
- *   回响式在片刻后于原爆点再扩散一圈回响环。
+ * 一句话：施法者闭目、身周光华内敛，几圈念力环在锁定点上从四面收拢、猛地撞合成一个亮点炸开 →
+ *   视线被遮断时念环在遮挡处向外散开而不亮爆点。
  * 色相家族：念力的品红（0xE070FF）与紫（0xA050E0）为主体，冷白（0xF0E8FF）作核心高光。
- * 拍子：起 gather（敛神）→ 合 charge（环收拢）→ 爆 implode（撞合）与 burst（命中）→ 回响 echo。
- * 范围：charge 的环半径绑 `data.scale`（内爆半径派生）；echo 用 `data.radius` 画出第二响波及的地面圈。
- * 运动：念力环由外向内收拢、撞合时向外炸开；回响环由爆点向外扩散。
- * 数：环数绑定 `data.rings`（特攻与等级派生），撞合强度绑定 `data.intensity`（威力 / 130），
- *   第二响保留比例绑定 `data.echoShare`。
+ * 拍子：起 gather（敛神）→ 合 charge（环收拢）→ 爆 implode（撞合）与 burst（命中）／散 disperse（视线遮断）。
+ * 范围：charge 的环半径绑 `data.scale`（内爆半径派生）；disperse 用 `data.scale` 画出散开的环。
+ * 运动：念力环由外向内收拢、撞合时向外炸开；被遮断时从遮挡点向外散开便止，不出现亮点。
+ * 数：环数绑定 `data.rings`（特攻与等级派生），撞合强度绑定 `data.intensity`（威力 / 130）。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const PsychoboostDefinition: ParticleDefinition = {
@@ -41,7 +40,7 @@ const PsychoboostDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "ring_outer", bind: "target", fit: "none", height: 0.5,
+                    name: "ring_outer", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
                     rate: 30, shape: { kind: "ring", radius: 2.2 },
                     direction: "inward", speed: [0.16, 0.4], spin: 16,
@@ -49,7 +48,7 @@ const PsychoboostDefinition: ParticleDefinition = {
                     color: 0xA050E0, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 90
                 },
                 {
-                    name: "ring_inner", bind: "target", fit: "none", height: 0.5,
+                    name: "ring_inner", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
                     rate: 26, shape: { kind: "ring", radius: 1.3 },
                     direction: "inward", speed: [0.14, 0.34], spin: 22,
@@ -106,27 +105,27 @@ const PsychoboostDefinition: ParticleDefinition = {
                 }
             ]
         },
-        echo: {
-            duration: 26,
-            exit: { stop: 9, drain: 18 },
+        disperse: {
+            duration: 24,
+            exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "wave", bind: "point", fit: "none", offset: [0, 0.4, 0],
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
-                    burst: { count: { data: "rings", fallback: 4 } },
-                    shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.0 } },
-                    direction: "outward", speed: [0.1, 0.34], spread: 20,
+                    name: "loose", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
+                    burst: { count: { data: "rings", fallback: 4 }, interval: 2 },
+                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1.0 } },
+                    direction: "outward", speed: [0.08, 0.3], spread: 26,
                     lifetime: [8, 16], size: [0.3, 0.05], sizeMode: "index",
-                    color: 0xD080F0, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 90
+                    color: 0x9050C0, alpha: [0.7, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "ground", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.0 } },
-                    direction: "outward", speed: [0.12, 0.3],
-                    lifetime: [9, 15], size: [0.35, 0.65],
-                    color: 0xA050E0, alpha: [0.6, 0], light: "world", maxParticles: 22
+                    name: "drift", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: { data: "rings", fallback: 4 }, interval: 2 },
+                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1.0 } },
+                    direction: "outward", speed: [0.05, 0.18], spread: 20, drag: 0.92,
+                    lifetime: [7, 14], size: [0.2, 0.03], sizeMode: "index",
+                    color: 0xE070FF, alpha: [0.55, 0], light: "world", maxParticles: 60
                 }
             ]
         }

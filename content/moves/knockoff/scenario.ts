@@ -1,11 +1,12 @@
 /**
- * 拍落的可执行设计说明：一只会拍落的精灵，对一只携带剩饭的目标出手。
+ * 拍落的可执行设计说明：一只会拍落的精灵，对一只携带剩饭、原地不动的目标出手。
  * 必然事实：本招被提交过、目标受过伤（重拍命中）。道具被拍掉并在世界里生成掉落物是确定行为，
  * 但舞台接口不暴露掉落物与持有物，故写进 note 供读轨迹判断；命中率与暴击同样不写断言。
  */
 Smoke.scenario("knockoff", function (stage) {
     var caster = stage.pokemon({ species: "Machop", level: 30, moves: ["knockoff"], at: [-3, 0, 0] });
     var foe = stage.pokemon({ species: "Geodude", level: 30, moves: ["tackle"], item: "cobblemon:leftovers", at: [3, 0, 0] });
+    stage.noai(foe);
     stage.hostile(caster, foe);
     stage.until(900, function () { return stage.casts("knockoff", caster) > 0 && stage.damageTo(foe) > 0; }, function () {
         stage.expect(stage.casts("knockoff", caster) > 0, "拍落被放出来了");

@@ -8,10 +8,13 @@
  *   起（ready）：屈腿蓄势、气流在脚下收拢，只播预告（`windup`），此时代价未结清。
  *   升（guard → climb）：提交后立刻弃守（自身防御 −guardLoss、特防 −poiseLoss 写进公共能力阶梯，中与不中都照付），
  *       随后垂直窜上 `altitude` 高度；头顶被压住时能升多少算多少，从这里就开始俯冲。
- *   坠（dive → land）：从最高点沿一条指向目标当前位置的斜线俯冲，逐刻推进并 trace；线上遇到敌人即结算一记
- *       `dive` 接触伤害；落地（命中、撞地或走完 `swoop`）时在落点荡出 `ring` 半径的冲击波，把周围的敌人
- *       以 `share` 保留一起伤到、沿远离落点方向震开 `shock` 格，并把地面砸成裂石（terrain 租借，linger）。
+ *   坠（dive → land）：从最高点沿一条指向落点的斜线俯冲，逐刻推进并 trace；途中第一位非友方接触结算一记
+ *       `dive` 接触伤害并记进本招的已命中集合；落地（命中、撞地或走完 `swoop`）时在真实落点荡出 `ring` 半径的冲击波。
+ *       落地主目标：俯冲没撞到它（或没指定实体、只瞄了落点）时由它吃下整记伤害并沿远离落点方向震开 `shock` 格；
+ *       俯冲途中已经吃过整记的对象只再吃 `share` 保留，不会被同一招连吃两份满额。广域式还波及落点周围的其他敌人。
  *   散（slump）：落地后重心一沉，身上浮起脱力灰气并浮字提示降级。
+ *
+ * 选取 `kind: "aim"`：瞄落点或敌人都行，起降路径受实际障碍限制；落地只取本体真正到达的位置。
  *
  * 与同族分开：近身战贴脸连打、突飞猛扑贴地冲、铠农炮在远处；与勇鸟猛攻比：勇鸟从空中沿一条线水平穿过目标、
  *   能串起一串；画龙点睛是垂直下砸、落点一圈冲击波，只照顾落点附近，且必须先爬升。
@@ -23,32 +26,6 @@ namespace PokemonSkills {
     const dragonascentSlumpText = "world_combat.move.dragonascent.text.slump";
     const dragonascentLandText = "world_combat.move.dragonascent.text.land";
 
-    /** 落点砸成的裂石圈：租借，`linger` 活过招式，到期原方块回来。 */
-    function dragonascentScar(world: CombatWorld, centre: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [];
-        const r = Math.ceil(radius);
-        const cx = Math.floor(centre.x()), cz = Math.floor(centre.z()), cy = Math.floor(centre.y());
-        for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius) continue;
-            const x = cx + dx, z = cz + dz;
-            for (let dy = 1; dy >= -4; dy--) {
-                const y = cy + dy;
-                const block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const surface = distance <= radius * 0.5 ? "minecraft:cracked_stone_bricks" : "minecraft:cobblestone";
-                if (id !== surface) cells.push({ x: x, y: y, z: z, block: surface });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { return world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-    }
-
     define({
         freeMovement: true,
         id: dragonascentId,
@@ -56,7 +33,7 @@ namespace PokemonSkills {
         name: "Dragon Ascent",
         description: "先窜上高空，再从正上方俯冲砸向目标：俯冲途中撞到谁就按接触结算，落地冲击波再打到落点主目标、把被波及的人沿远离落点的方向推开，并在地面留下裂石。一发动就付出自身防御与特防各下降一级的代价；广域式冲击更宽、能波及周围敌人并震得更远，代价是坠落威力更低。",
         uses: ["升空后从正上方砸向一个目标", "落地冲击波收尾并推开被波及的敌人", "越过前排直接砸到后面的目标"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.0,
         maxRange: 7.0,
         prepare: 12,
@@ -94,8 +71,8 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null || !world.valid(target)) { movementScenes.finish(action, done); return; }
-            const targetRef = String(target.ref());
+            // aim 接受实体或世界点：没有实体目标时落点就是选中的那个点。
+            const targetRef = target !== null ? String(target.ref()) : "";
             const dive = p(dragonascentId, "dive", action);
             const altitude = p(dragonascentId, "altitude", action);
             const pace = Math.max(0.2, p(dragonascentId, "pace", action));
@@ -109,8 +86,10 @@ namespace PokemonSkills {
             const broad = !!(config && config.broad);
             const intensity = Math.max(0.5, Math.min(2.4, dive / 120));
             const scale = Math.max(0.6, Math.min(2.2, ring / 2.0));
-            const traceAhead = 1.2, up = WorldCombat.point(0, 1.5, 0);
-            let direction = action.direction(), swoop = 1.5, struck = false, settled = false;
+            const committed = WorldGeometry.flatUnit(aim(action), action.direction());
+            const up = WorldCombat.point(0, 1.5, 0);
+            // struckRef：本招途中已经吃过整记 `dive` 的对象；落地共享这个集合，不重复满额。
+            let direction = committed, swoop = 1.5, struckRef = "", settled = false;
 
             // 离天落地：弃守在提交那一刻付。
             NativeEffects.boost(world, actor, "def", -guardLoss);
@@ -124,25 +103,31 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const cells = dragonascentScar(scope, at, ring, 140);
+                // 先收集落点内的人，再决定主目标：指定了实体就用它，只瞄了点就用最近的那个。
+                const found: { actor: CombatActor; facts: CombatObservation }[] = [];
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, ring, { below: 2.5, above: 3.0 }),
+                    function (other, facts) { found.push({ actor: other, facts: facts }); });
+                let anchorRef = targetRef;
+                if (anchorRef === "" && found.length > 0) anchorRef = String(found[0].actor.ref());
+                const anchorStruck = anchorRef !== "" && anchorRef === struckRef;
                 WorldFeedback.emit(scope, dragonascentScene, 1, at,
-                    { moment: "land", target: targetRef, motes: motes, scale: scale, intensity: intensity, cells: cells,
-                        ring: ring, struck: struck ? 1 : 0, broad: broad ? 1 : 0 }, 32);
+                    { moment: "land", target: anchorRef, motes: motes, scale: scale,
+                        intensity: anchorStruck ? intensity * 0.45 : intensity,
+                        ring: ring, struck: anchorStruck ? 1 : 0, broad: broad ? 1 : 0 }, 32);
                 sound(current, "cobblemon:impact.flying");
                 sound(current, "minecraft:entity.generic.big_fall");
                 let extra = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, ring, { below: 2.5, above: 3.0 }),
-                    function (other, facts) {
-                        const primary = String(other.ref()) === targetRef;
-                        if (!primary && share <= 0) return;
-                        const power = primary && !struck ? dive : dive * share;
-                        if (power <= 0) return;
-                        if (hurt(current, other, dragonascentId, power, { damage: damageSpec(dragonascentId, "dive"), contact: true })) {
-                            extra++;
-                            const away = WorldCombat.point(facts.position().x() - at.x(), 0, facts.position().z() - at.z());
-                            if (scope.valid(other) && away.length() > 0.05) scope.displace(other, away.unit().scale(shock));
-                        }
-                    });
+                for (let i = 0; i < found.length; i++) {
+                    const other = found[i].actor, facts = found[i].facts, ref = String(other.ref());
+                    const isAnchor = ref === anchorRef, already = ref === struckRef;
+                    const power = isAnchor && !already ? dive : dive * share;
+                    if (power <= 0) continue;
+                    if (hurt(current, other, dragonascentId, power, { damage: damageSpec(dragonascentId, "dive"), contact: true })) {
+                        extra++;
+                        const away = WorldCombat.point(facts.position().x() - at.x(), 0, facts.position().z() - at.z());
+                        if (scope.valid(other) && away.length() > 0.05) scope.hitDisplace(other, away.unit().scale(shock));
+                    }
+                }
                 const self = scope.observe(actor);
                 if (self !== null) {
                     WorldFeedback.emit(scope, dragonascentScene, 1, self.position(),
@@ -163,12 +148,18 @@ namespace PokemonSkills {
                 let contact: CombatPoint | null = null;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
-                    if (victim !== null && !scope.friendly(victim)) {
-                        const landed = impact(current, hit, dragonascentId, dive, { damage: damageSpec(dragonascentId, "dive"), contact: true });
-                        if (String(victim.ref()) === targetRef && landed) struck = true;
-                        WorldFeedback.emit(scope, dragonascentScene, 1, hit.position(),
-                            { moment: "hit", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 22);
-                        sound(current, "cobblemon:impact.dragon");
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        const ref = String(victim.ref());
+                        if (struckRef !== ref) {
+                            const landed = impact(current, hit, dragonascentId, dive, { damage: damageSpec(dragonascentId, "dive"), contact: true });
+                            // 伤害被拒绝时不记进已命中集合，也不冒称命中。
+                            if (landed) {
+                                struckRef = ref;
+                                WorldFeedback.emit(scope, dragonascentScene, 1, hit.position(),
+                                    { moment: "hit", target: ref, motes: motes, scale: scale, intensity: intensity }, 22);
+                                sound(current, "cobblemon:impact.dragon");
+                            }
+                        }
                     }
                     contact = hit.position();
                 }
@@ -185,11 +176,11 @@ namespace PokemonSkills {
                 movementScenes.stop(current, "climb");
                 const scope = current.world(), self = scope.observe(actor);
                 if (self === null) { movementScenes.finish(current, done); return; }
-                const victim = scope.actor(targetRef);
-                const aim = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                const aimPoint = aim !== null ? aim.position() : current.targetPosition();
+                const victim = targetRef.length > 0 ? scope.actor(targetRef) : null;
+                const observed = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                const aimPoint = observed !== null ? observed.position() : current.targetPosition();
                 const heading = aimPoint.minus(self.position());
-                direction = heading.length() < 0.3 ? current.direction() : heading.unit();
+                direction = heading.length() < 0.3 ? committed : heading.unit();
                 swoop = Math.max(1.2, heading.length() + 1.2);
                 sound(current, "minecraft:entity.ender_dragon.flap");
                 diveStep(current, 0);

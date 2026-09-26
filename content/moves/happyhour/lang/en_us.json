@@ -1,6 +1,6 @@
 {
   "effect.world_combat.happyhour_banner": "Happy Hour (celebration banner)",
-  "worldcombat.skill.happyhour.summary": "Throw a small celebration and lay a ring of golden hours under yourself; for its duration every non-ally that falls inside drops a burst of Relic Coins that would otherwise settle after the battle.",
+  "worldcombat.skill.happyhour.summary": "Set a celebration circle that awards extra coins when a hostile actually dies inside. Allied overlapping circles pay only once for that death.",
   "worldcombat.skill.happyhour.description.0": "The banner lasts %1$s s with a %2$s block radius; the ring you see is the area it senses.",
   "worldcombat.skill.happyhour.description.1": "While the banner is up, every non-ally that falls inside drops %1$s relic coins on the spot (Cobblemon relic coins when available, gold nuggets otherwise).",
   "worldcombat.skill.happyhour.lavish.on": "Lavish: x1.4 per payout and x1.15 radius, at x0.8 banner and x1.15 cooldown, for making a hard fight pay big.",
@@ -28,5 +28,5 @@
   "worldcombat.skill.happyhour.preference.ai.leaveStation.help": "On: also leave a hold position to lay the celebration.",
   "world_combat.move.happyhour.text.raise": "Happy Hour: foes falling in %1$s s each leave %2$s relic coins",
   "world_combat.move.happyhour.text.earn": "Harvested %1$s coins",
-  "worldcombat.skill.happyhour.description.stay": "The celebration stays where it was laid and the caster may walk away and keep fighting (it ends if the caster goes down or strays too far); it cannot be recast while the banner is still on you."
+  "worldcombat.skill.happyhour.description.stay": "The circle stays where it was placed while the caster acts freely. Clearing the banner or losing its owner ends the circle. One death pays once; ordinary native drops remain separate."
 }

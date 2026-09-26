@@ -2,9 +2,9 @@
  * 能量球 / energyball —— AI 用途。
  *
  * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格内时列入候选；焦点目标不受距离限制。
- * 对谁出手：`ai.verdantFirst`（默认开）打开时，若自己脚下周围有植被（能吸到生机），这一球的优先级抬高——
- *   草木繁茂处正是它最值的时候；站在石头地上则按普通远程攻击排序。
- * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再掷。
+ * 对谁出手：`ai.verdantFirst`（默认开）打开时，按自己周围真实植被份数抬高优先级——草木越多越值，
+ *   但不为远处一点增伤长途寻草：只有已经进了射程才吃这份加成，站在石头地上按普通远程攻击排序。
+ * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再掷；对 Boss 也是普通草伤。
  * 放完接什么：交回共享交战计划；落点的花草是留给战场的标记，不改变后续决策。
  */
 namespace PokemonSkills {
@@ -35,9 +35,13 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
-            const base = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 21 : 0;
+            const inRange = CompanionBehavior.distance(self.point, target.point) <= capability.data.range;
+            const base = inRange ? 21 : 0;
             if (!CompanionBehavior.ai<boolean>(capability, "verdantFirst", true)) return base;
-            return energyballVerdantValue(context, self) > 0 ? base + 12 : base;
+            // 只有已经进射程才按实际植被份数加分；射程外不为了几份生机先跑去草木里。
+            if (!inRange) return base;
+            const nature = energyballVerdantValue(context, self);
+            return base + Math.min(nature, 6) * 2 + (nature > 0 ? 4 : 0);
         }
     });
 

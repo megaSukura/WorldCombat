@@ -1,17 +1,4 @@
-/**
- * 掀榻榻米 / matblock — 执行组织与结算。
- *
- * 核心念头：把整张榻榻米从地上掀起来当盾——一片草绿席面横着翻起、护住自己与身边的伙伴；招式伤害拍在席面上
- *   被整片吃下，席子被砸得发颤、草屑飞起，吃满之后就落下，变化招式照样从席子底下钻过去。
- *
- * 两幕：
- *   沉（windup 播「按地掀席」，提交前只观察与预告，打断不花代价）。
- *   掀（提交后）：施法者与半径内的友方各挂共享身份 world_combat:status/matblock 的真实 MobEffect，
- *     并各自领到一层共享 GuardEffects 的 pool（规则 world_combat:move_matblock）：只吃 kind=move 的敌对伤害，
- *     按总量吃满即落。变化招式不带伤害，根本不进池——这就是它「无法防住变化招式」的机制来源。
- * 持续：每约 8 刻由池的 pulse 续一次席面；目标还带着身份才继续立着。
- * 结束：任一人的池吃满或到时，身份与池一起收；离开施法者太远的人随共享连接断开而失去。
- */
+/** A fixed mat sheet catches attacks crossing its front face; covered allies share its geometry. */
 namespace PokemonSkills {
     const matBlockScene = "world_combat:move_matblock";
     const matBlockEffect = "world_combat:mat_block";
@@ -22,24 +9,35 @@ namespace PokemonSkills {
     /** 表现里的参考半径：`data.scale = 实际遮蔽半径 / 这个数`。 */
     const matBlockReferenceRadius = 3.4;
 
-    // 席盾的结算点：只吃 kind=move 的敌对伤害，按 pool 吃满；吃满即收掉该人身上的身份。
+    const matBlockPlane = "world_combat:matblock_plane";
+    WorldCombat.effect(matBlockPlane, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(matBlockPlane, "start", effect => effect.schedule("watch", "watch", 8, "{}"));
+    WorldCombat.effectHandler(matBlockPlane, "watch", function (effect) {
+        const world = effect.world(), data = JSON.parse(effect.state());
+        if (!data.members.some(function (ref: string) { const actor = world.actor(ref); return actor && world.valid(actor) && GuardEffects.has(world, actor, matBlockRule); })) { effect.end(); return; }
+        effect.schedule("watch", "watch", 8, "{}");
+    });
+    function matBlockCrosses(world: CombatWorld, target: CombatActor, data: any, source: any): boolean {
+        if (!Array.isArray(source) || source.length !== 3) return false;
+        const body = world.observe(target); if (!body) return false;
+        const p = data.plane, d = data.direction, to = body.position();
+        const front = (source[0] - p[0]) * d[0] + (source[2] - p[2]) * d[2];
+        const back = (to.x() - p[0]) * d[0] + (to.z() - p[2]) * d[2];
+        if (front <= 0 || back > 0 || back < -data.depth) return false;
+        const t = front / (front - back), x = source[0] + (to.x() - source[0]) * t - p[0];
+        const z = source[2] + (to.z() - source[2]) * t - p[2], y = source[1] + (to.y() - source[1]) * t;
+        return Math.abs(x * -d[2] + z * d[0]) <= data.radius && y >= p[1] && y <= p[1] + data.height;
+    }
     GuardEffects.register(matBlockRule, {
         accepts: function (effect: CombatEffect, state: GuardEffects.State, incoming: GuardEffects.Incoming): boolean {
             const world = effect.world();
             if (!incoming.source || String(incoming.source.ref()) === String(effect.target().ref())) return false;
             if (world.friendly(incoming.source)) return false;
-            // 只有招式伤害会拍在席面上；环境伤害、状态掉血不属于「招式」，从池边漏过去。
-            return !!incoming.data && String(incoming.data.kind) === "move";
+            return (DamageSemantics.read(incoming.data).attack || String(incoming.data.kind) === "move")
+                && matBlockCrosses(world, effect.target(), state, incoming.data.sourcePosition);
         },
-        pulse: function (effect: CombatEffect, state: GuardEffects.State): void {
-            const world = effect.world(), target = effect.target();
-            if (MobEffects.read(world, target, matBlockEffect) === null) { effect.end(); return; }
-            const body = world.observe(target);
-            if (body === null) return;
-            const custom: any = state;
-            WorldFeedback.keep(world, "matblock:hold:" + String(target.ref()), matBlockScene, 1, body.position(),
-                { moment: "hold", target: String(target.ref()), slats: custom.slats, remaining: state.capacity,
-                    scale: custom.scale, intensity: matBlockIntensity(state.capacity, custom.initial) }, 20);
+        pulse: function (effect, state) {
+            if (MobEffects.read(effect.world(), effect.target(), matBlockEffect) === null) effect.end();
         },
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number, incoming: GuardEffects.Incoming): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -73,13 +71,18 @@ namespace PokemonSkills {
 
     /** 给施法者与半径内友方各挂一份席盾（身份 + 只吃招式伤害的按量吸收池）；返回这次席子罩住的人数。 */
     function matBlockCover(world: CombatWorld, caster: CombatActor, radius: number, ticks: number,
-        capacity: number, slats: number, fibers: number, linkRange: number, scale: number): number {
+        capacity: number, slats: number, fibers: number, linkRange: number, scale: number, direction: CombatPoint): number {
         const body = world.observe(caster);
         if (body === null) return 0;
+        const plane = body.position().plus(direction.scale(body.width() / 2 + .3)).plus(WorldCombat.point(0, -body.height() / 2, 0));
+        const data: any = { plane: [plane.x(), plane.y(), plane.z()], direction: [direction.x(), 0, direction.z()],
+            radius: radius, depth: radius * 2, height: Math.max(2.5, body.height() * 1.5) };
+        const members: string[] = [];
         function protect(actor: CombatActor): boolean {
             if (MobEffects.apply(world, actor, matBlockEffect, ticks, 0) === null) return false;
-            GuardEffects.apply(world, actor, { rule: matBlockRule, mode: "pool", capacity: capacity, fraction: 1,
+            GuardEffects.apply(world, actor, { plane: data.plane, direction: data.direction, radius: data.radius, depth: data.depth, height: data.height, rule: matBlockRule, mode: "pool", capacity: capacity, fraction: 1,
                 minimumHealth: 0, charges: 0, linkRange: linkRange, initial: capacity, slats: slats, fibers: fibers, scale: scale } as any, ticks);
+            members.push(String(actor.ref()));
             return true;
         }
         let reached = protect(caster) ? 1 : 0;
@@ -90,6 +93,13 @@ namespace PokemonSkills {
             if (!world.friendly(other) || world.observe(other) === null) continue;
             if (protect(other)) reached++;
         }
+        if (members.length) {
+            const sheet = world.effect(matBlockPlane, caster, JSON.stringify({ members: members }), ticks);
+            const side = WorldCombat.point(-direction.z(), 0, direction.x()).scale(radius), up = WorldCombat.point(0, data.height, 0);
+            const corners = [plane.minus(side), plane.plus(side), plane.plus(side).plus(up), plane.minus(side).plus(up), plane.minus(side)];
+            WorldFeedback.onEffect(world, sheet, "matblock:sheet:" + sheet, matBlockScene, 1, plane,
+                { moment: "hold", path: corners.map(p => [p.x(), p.y(), p.z()]), slats: slats });
+        }
         return reached;
     }
 
@@ -97,7 +107,7 @@ namespace PokemonSkills {
         id: "matblock",
         cooldownParameter: "wait",
         name: "掀榻榻米",
-        description: "把整张榻榻米掀起来当盾，替自己与身边的队友吃下招式伤害；席子吃满就落，变化招式不受影响。",
+        description: "面朝前方立起固定席墙，保护自己与后方队友。只有从正面实际穿过席面的攻击被承受，侧后方来击照常落下。",
         uses: ["替全队硬吃一轮成片的伤害招式", "在对手的重击落下前抢一拍掀席", "把一次爆发整片挡在席面外"],
         kind: "self",
         range: 1,
@@ -147,7 +157,7 @@ namespace PokemonSkills {
             const fibers = Math.max(12, Math.round(p("matblock", "fibers", action)));
             const linkRange = Math.min(32, radius * 1.6 + 1);
             const scale = matBlockScale(radius);
-            const reached = matBlockCover(world, actor, radius, window, capacity, slats, fibers, linkRange, scale);
+            const reached = matBlockCover(world, actor, radius, window, capacity, slats, fibers, linkRange, scale, WorldGeometry.flatUnit(action.direction()));
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             WorldFeedback.emit(world, matBlockScene, 1, feet,
                 { moment: "raise", target: String(actor.ref()), slats: slats, fibers: fibers, radius: radius, scale: scale,

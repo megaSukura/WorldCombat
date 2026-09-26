@@ -2,16 +2,17 @@
  * 沥青射击 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：一团黑亮的沥青从口边甩出、拖着一串黏稠的滴痕飞向目标；糊上的一刻，目标身上炸开一片黑亮的飞溅
- *   并顺着身体往下淌，脚下很快积出一滩黑色沥青；被火点着时，整片沥青腾起橙色火星与黑烟。
+ *   并顺着身体往下淌，随后身上一直覆着一层黑膜、脚下落出一摊黑色沥青；被火点着时，整片沥青腾起橙色火星与黑烟。
  *
  * 色相家族：沥青黑褐（0x1E1A17／0x3A3226）为主，黏光用一点低调暖褐（0x6B5A44）；火（0xF0A24A）只在
  *   「flare」一幕进入——火把沥青点着正是这招要告诉玩家的第二件事，第二个色相因此只在那一幕出现。
- * 层次：起势（口边聚沥青）→ 飞行（拖滴）→ 糊身（飞溅＋下淌）→ 落地滩（贴地黑斑）→ 点燃（橙火星＋黑烟）／冲掉（水花）。
- * 起击收：windup（聚）→ shot（飞）→ coat（击）→ splat（滩）→ flare／wash（余韵）。
- * 范围：命中点的飞溅半径按 `data.scale = 覆盖半径 / 1.5` 缩放，与判定里 `splash`／滩半径同源；
- *   目标身上的飞溅按其身量缩放（fit body）。
- * 运动：沥青团拖滴沿直线飞；糊上的飞溅向外炸开再受重力下坠，下淌的滴痕缓慢落下，滩上冒黏泡。
- * 数：`data.drops`（物攻换算的飞溅点数）绑定糊身与落点的发射量，`data.caught`（大泼糊到几个人）抬高滩的发射量，
+ * 层次：起势（口边聚沥青）→ 飞行（拖滴）→ 糊身（飞溅）→ 黑膜（随目标持续）→ 落点滩（贴地黑斑，边缘按真实半径）
+ *   → 点燃（橙火星＋黑烟）／冲掉（水花）。层数 3–5 层，各层贴图与运动性格拉开。
+ * 起击收：windup（聚）→ shot（飞）→ coat（击）→ film（随目标的膜）→ splat（滩）→ flare／wash（余韵）。
+ * 范围：落点的 `splat_edge` 圆环半径直接绑定 `data.edge`（服务端算出的真实滩半径），用 `fit:"world"` 按世界格画；
+ *   目标身上的膜按其身量缩放（fit body）。
+ * 运动：沥青团拖滴沿直线飞；糊上的飞溅向外炸开再受重力下坠，膜沿身体缓缓下淌，滩上冒黏泡。
+ * 数：`data.drops`（物攻换算的飞溅点数）绑定糊身与黑膜的发射量，`data.caught`（大泼糊到几个人）抬高滩的发射量，
  *   `data.fresh` 区分首次糊上与续泼。
  * 参照节：视觉语言第一、二、三、四、五、六、七、九节。
  */
@@ -78,6 +79,28 @@ const TarshotDefinition: ParticleDefinition = {
                 }
             ]
         },
+        film: {
+            duration: 0,
+            exit: { stop: 0, drain: 20 },
+            emitters: [
+                {
+                    name: "film_sheen", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    rate: { data: "drops", fallback: 10 }, shape: { kind: "sphere_surface", radius: 0.44 },
+                    direction: "inward", speed: [0.005, 0.03],
+                    lifetime: [14, 26], size: [0.14, 0.05], sizeMode: "sin",
+                    color: 0x1E1A17, alpha: [0.5, 0.1], alphaMode: "sin", light: "world", maxParticles: 44
+                },
+                {
+                    name: "film_drip", bind: "target", height: 0.86,
+                    particle: "world_combat_core:cobblemon/generic/drip",
+                    rate: 4, shape: { kind: "circle", radius: 0.34 },
+                    direction: "down", speed: [0.0, 0.02], gravity: 0.04, drag: 0.98,
+                    lifetime: [16, 28], size: [0.08, 0.02],
+                    color: 0x3A3226, alpha: [0.55, 0], alphaMode: "sin", light: "world", maxParticles: 24
+                }
+            ]
+        },
         splat: {
             duration: 26,
             exit: { stop: 10, drain: 20 },
@@ -90,6 +113,14 @@ const TarshotDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.18], spread: 40, gravity: 0.04,
                     lifetime: [10, 18], size: [0.2, 0.05], sizeMode: "index",
                     color: 0x1E1A17, alpha: [0.95, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "splat_edge", bind: "point", offset: [0, 0.07, 0], fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 20 }, shape: { kind: "ring", radius: { data: "edge", fallback: 0.6 } },
+                    direction: "outward", speed: [0.01, 0.05],
+                    lifetime: [12, 22], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0x3A3226, alpha: [0.6, 0], light: "world", maxParticles: 30
                 },
                 {
                     name: "puddle_bubble", bind: "point", offset: [0, 0.06, 0], fit: "none",

@@ -23,7 +23,10 @@
   "worldcombat.skill.powershift.preference.ai.minGap.help": "威胁近于这个距离时不再转换、直接应对；调大更常在近身时放弃转换。",
   "worldcombat.skill.powershift.preference.ai.minEdge": "最小差距",
   "worldcombat.skill.powershift.preference.ai.minEdge.help": "攻防差距（大值 / 小值）小于它就不转换；调高只在高攻或高防的极端个体上才换，避免无意义的来回。",
+  "worldcombat.skill.powershift.preference.ai.low": "低血阈值",
+  "worldcombat.skill.powershift.preference.ai.low.help": "血量比例低于它就算「低血」：攻高防低时转成守势硬扛；调高会更早转入守势，调低则只在濒危时才防守转换。",
   "world_combat.move.powershift.text.shifted": "力量转换 · 攻 %1$s 防 %2$s 对调",
+  "world_combat.move.powershift.text.invalid": "这两股力道无法对调",
   "world_combat.move.powershift.text.reverted": "力量换回原位",
   "effect.world_combat.powershift_stance": "力量转换"
 }

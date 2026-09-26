@@ -1,9 +1,9 @@
 /**
  * 鳞片噪音 / clangingscales 的伙伴 AI 用途。
  *
- * 什么局面下出手：以自身为中心、空中地面都震的一次性巨响。`ready` 要求身周 `ai.maxChase`（默认 9）格内
- *   至少站着 `ai.minFoes`（默认 2）个可见、敌对的敌人——它起手长、会自降防御，是用来一次震开一圈的，
- *   只对一个目标放不划算。`available` 还要求目标在考虑距离内；它不挑目标站不站在地上。
+ * 什么局面下出手：以自身为中心、空中地面都震的一次性巨响。`ready` 要求身周**真实波及半径 `ringRadius`**
+ *   内至少站着 `ai.minFoes`（默认 2）个可见、敌对、高度在带内且与自身通视的敌人——它起手长、会自降防御，
+ *   是用来一次震开一圈的，只对一个目标放不划算，也不会让圈外/墙后的敌人凑数。`ai.maxChase` 只是考虑距离。
  * 对谁出手：目标是圈内威胁；不可见、友方或已倒下的不接受。
  * 够不到怎么办：reach 就是本招射程，不够先走近；走到波及半径以内就原地擦响。
  * 放完之后：命中才结算伤害与震退；无论命中与否都自降防御，交回共享交战计划等冷却。
@@ -11,12 +11,19 @@
 namespace PokemonSkills {
     function clangingscalesCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
-        const limit = CompanionBehavior.ai<number>(item, "maxChase", 9);
+        const world = CompanionBehavior.world(context);
+        const radius = item.data.range;
+        const from = CompanionBehavior.point(self.point);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= limit) count++;
+            const to = CompanionBehavior.point(other.point);
+            const delta = to.minus(from);
+            if (delta.length() > radius) continue;
+            if (delta.y() < -3.5 || delta.y() > 4.0) continue;
+            if (!world.clear(from, to)) continue;
+            count++;
         }
         return count;
     }
@@ -64,7 +71,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.minFoes"), "震到人数", "number", {
             min: 1, max: 6, step: 1,
-            help: "波及圈内至少站着这么多可见、敌对的敌人才擦响；调大只被围住时用，调 1 见一个也震。"
+            help: "真实波及圈（按本个体的 ringRadius、高度带与通视复核）内至少站着这么多可见、敌对的敌人才擦响；圈外或墙后的不算。调大只被围住时用，调 1 见一个也震。"
         })
     ]);
 }

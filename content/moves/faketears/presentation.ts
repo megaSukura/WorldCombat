@@ -2,15 +2,15 @@
  * 假哭 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者眼角憋出一线水光 → 一串假泪沿视线甩到对手脸上、在它眼前炸开一圈昏暗的涟漪 →
- *   对手瞳孔一缩、脚边腾起一小撮尘，愣在原地，眼角还挂着没干的假泪。
+ *   对手护住特防的那层劲松开，眼角还挂着没干的假泪。
  *
- * 色相家族：淡天蓝（0x8FB8E8／0x6F9BD0）与近白（0xEAF3FC）为主体，被唬住的那一记掺入低饱和的暗紫灰
+ * 色相家族：淡天蓝（0x8FB8E8／0x6F9BD0）与近白（0xEAF3FC）为主体，被松防的那一记掺入低饱和的暗紫灰
  *   （0x5A5570，来自骗术的 Dark 属性）；没有别的色相。
- * 层次：眼角水光（起手）→ 沿视线的泪线＋近身泪珠（击）→ 对手身上的暗爆与涟漪（结果）→ 脚边定身的尘（结果）→
+ * 层次：眼角水光（起手）→ 沿视线的泪线＋近身泪珠（击）→ 对手身上的暗爆与松开的涟漪（结果）→
  *   眼角余泪（持续）→ 被挡住时的散点（反制读法）。
- * 起击收：windup（憋泪）→ feign（泪线飞过去）→ fluster（对手身上炸开）→ linger（余泪慢慢离场）。
+ * 起击收：windup（憋泪）→ feign（泪线飞过去）→ fluster（对手特防松开、短收势）→ linger（余泪慢慢离场）。
  * 范围：泪线用 `data.path` 的两端（施法者与目标）画出，就是这一次视线真正连起的那条线。
- * 运动：假泪沿视线从施法者甩到目标；被唬住的涟漪从目标身上向外散。
+ * 运动：假泪沿视线从施法者甩到目标；松开特防的涟漪从目标身上向外散，不画任何脚边锁圈。
  * 数：泪线密度与近身泪珠绑 `data.tears`（体型与亲近度派生），暗爆数量绑 `data.hearts`（掉级派生）。
  */
 const FakeTearsDefinition: ParticleDefinition = {
@@ -93,16 +93,7 @@ const FakeTearsDefinition: ParticleDefinition = {
                     color: 0x6F9BD0, alpha: [0.6, 0], light: "world", maxParticles: 28
                 },
                 {
-                    name: "hesitate_root", bind: "target", height: 0.06,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 16, repeats: { data: "drop", fallback: 2 }, interval: 3 },
-                    shape: { kind: "ring", radius: 0.34 },
-                    direction: "outward", speed: [0.02, 0.07], drag: 0.9,
-                    lifetime: [8, 14], size: [0.06, 0.01],
-                    color: 0x8FA0B8, alpha: [0.4, 0], light: "world", maxParticles: 40
-                },
-                {
-                    name: "hesitate_tears", bind: "target", offset: [0, 0.35, 0], height: 1.0,
+                    name: "shed_tears", bind: "target", offset: [0, 0.35, 0], height: 1.0,
                     particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
                     burst: { count: { data: "drop", fallback: 2 }, interval: 2, repeats: 3 },
                     shape: { kind: "circle", radius: 0.24 },

@@ -2,8 +2,9 @@
  * 陀螺球 / gyroball 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活，且在自己 `ai.maxChase`（默认 7）格以内；更远交给共享接近逻辑。
- * 因为这一招以「慢」为燃料，**自己速度越慢越倾向用它**（慢的个体才把陀螺转成重锤），速度快的伙伴会把它
- * 让给别的招。对手已经被打懵时补一撞也能吃到站位优势，优先级再抬一点。
+ * 因为这一招以「慢」为燃料，**对手明显比自己快时才值得用**：比较双方的原生速度事实（宝可梦的阶梯速度、其他
+ * 生物的移动速度），目标越快这枚陀螺越沉；面对明显更慢的敌人（含慢 Boss）会降权，不凭数值假设强推。
+ * 对手已经被打懵时补一撞也能吃到站位优势，优先级再抬一点。
  * 放完之后：撞开对手就重新贴上；这只是一种普通近身招，所以条件不成立时也照常出手，只是分量轻。
  */
 namespace PokemonSkills {
@@ -24,10 +25,17 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 20;
-            if (context.facts.speed <= 60) score += 12;
-            if (context.facts.speed <= 45) score += 4;
+            // 本招称的是「目标比自己快多少」：用共享的原生速度事实比较，不假设某一方的数值区间。
+            const selfSpeed = CompanionBehavior.speed(context, self);
+            const targetSpeed = CompanionBehavior.speed(context, target);
+            if (selfSpeed !== null && targetSpeed !== null && selfSpeed > 0) {
+                const edge = targetSpeed / selfSpeed;
+                if (edge >= 1.35) score += 16;
+                else if (edge >= 1.1) score += 9;
+                else if (edge < 0.85) score -= 8;
+            }
             if (CompanionBehavior.status(context, target, "flinch")) score += 4;
-            return score;
+            return Math.max(0, score);
         }
     });
 

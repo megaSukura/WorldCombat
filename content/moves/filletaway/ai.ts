@@ -2,9 +2,18 @@
  * 甩肉 / filletaway 的 AI 用途。
  *
  * 什么局面下出手（fortify）：附近有威胁、但还没有贴到脸上（距离不小于 4 格）时，先一刀削身把进攻三项拉起来，
- * 再冲上去打。生命不足以支付「削肉深度 + 保底」时不用，避免把自己削进必死区间；有交战需求才准备。
+ * 再冲上去打。近来挨过打（hurtAgo 小于 60）或敌人正快速逼近时不出手——卖血不能盖过生存；生命不足以支付
+ * 「削肉深度 + 保底」时不用。有交战需求才准备。
  */
 namespace PokemonSkills {
+    /** Positive when `threat` is closing the distance to `self`, in blocks per tick. */
+    function filletawayClosing(self: CompanionBehavior.Entity, threat: CompanionBehavior.Entity): number {
+        var sv = self.velocity || [0, 0, 0], tv = threat.velocity || [0, 0, 0];
+        var dx = self.point[0] - threat.point[0], dy = self.point[1] - threat.point[1], dz = self.point[2] - threat.point[2];
+        var length = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        return (dx * (tv[0] - sv[0]) + dy * (tv[1] - sv[1]) + dz * (tv[2] - sv[2])) / length;
+    }
+
     CompanionBehavior.registerUse("filletaway", {
         protocols: ["world_combat:fortify"],
         reach: function (context, capability) { return capability.data.range; },
@@ -17,7 +26,11 @@ namespace PokemonSkills {
             if (CompanionBehavior.ratio(self) < (deep ? 0.65 : 0.5) + reserve) return false;
             if (!threat) return false;
             var distance = CompanionBehavior.distance(self.point, threat.point);
-            return distance >= 4 && distance <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
+            if (distance < 4 || distance > CompanionBehavior.ai<number>(capability, "maxChase", 16)) return false;
+            // Already being hit, or the enemy is closing fast at close range: survival first, carve later.
+            if (typeof self.hurtAgo === "number" && self.hurtAgo < 60) return false;
+            if (distance < 7 && filletawayClosing(self, threat) > 0.12) return false;
+            return true;
         },
         accepts: function (context, capability, target) {
             return target.ref === CompanionBehavior.source(context).ref;

@@ -30,6 +30,8 @@ namespace CombatantStats {
         return !!spec && (spec.base !== undefined || spec.coefficient !== undefined || spec.evaluate !== undefined);
     }
     export class Registry {
+        /** Ordered final composition after every native/provider contribution; temporary type filters can retain future provider facts. */
+        readonly resolved = new WorldContributions.Registry<Context & { facts: Facts }>();
         private providers: Provider[] = [];
         private damageProviders: DamageProvider[] = [];
         contributeDamage(id: string, read: DamageProvider["read"], preview?: DamageProvider["preview"]): void {
@@ -69,6 +71,7 @@ namespace CombatantStats {
             var facts: Facts = { stats: { atk: attack, spa: attack }, types: [], healthScale: 1,
                 armorExcluded: 0, toughnessExcluded: 0, data: {} };
             this.providers.forEach(function (provider) { provider.read({ world: world, actor: actor }, facts); });
+            this.resolved.apply({ world: world, actor: actor, facts: facts });
             Object.keys(facts.stats).forEach(function (id) {
                 if (!isFinite(facts.stats[id])) throw new Error("Invalid combatant stat: " + id);
             });

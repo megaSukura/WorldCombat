@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.branchpoke.summary": "The user pulls a slender branch taut from the farthest reach and stabs with the spring of its tip: the longest and thinnest strike of its family, poking a single enemy on the line. It hurts most at maximum distance - the twig bends to its limit and snaps back hardest, while point-blank only reaches the base of the branch. The thorn form sharpens the tip and snags the target, slowing its movement for a moment.",
+  "worldcombat.skill.branchpoke.summary": "The user pulls a slender branch taut from the farthest reach and stabs with the spring of its tip: the longest and thinnest strike of its family, poking a single enemy on the line. It hurts most at maximum distance - the twig bends to its limit and snaps back hardest, while point-blank only reaches the base of the branch. Blocks stop the twig at the wall and an empty stab retracts at once. The thorn form sharpens the tip and snags the target, slowing its movement for a moment.",
   "worldcombat.skill.branchpoke.use.0": "The longest, thinnest straight stab from maximum range",
   "worldcombat.skill.branchpoke.use.1": "Stand at the twig's end for the full tip bonus — farther hurts more",
   "worldcombat.skill.branchpoke.use.2": "Thorn form snags the target and slows it",
   "worldcombat.skill.branchpoke.description.0": "The base of the branch deals about %1$s contact damage; reach about %2$s blocks with a %3$s block twig half-width.",
-  "worldcombat.skill.branchpoke.description.1": "Damage is multiplied by (1 + %1$s × distance/reach), so farther hurts more; the line pokes a single enemy, never piercing, and stabs at air when the line is empty.",
+  "worldcombat.skill.branchpoke.description.1": "Damage is multiplied by (1 + %1$s × distance/reach), so farther hurts more; the line pokes a single enemy and never pierces; blocks stop the twig at the wall, and an empty line retracts at once.",
   "worldcombat.skill.branchpoke.thorn.on": "Thorn mode: a hit applies Slowness level %2$s for about %1$s, reducing movement speed. Point-blank damage is about %3$s, with a thinner hit area and less tip scaling.",
   "worldcombat.skill.branchpoke.thorn.off": "Spring form: about %1$s damage at the base, a wider twig and a larger tip bonus, with a faster wind-up.",
   "worldcombat.skill.branchpoke.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

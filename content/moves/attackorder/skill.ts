@@ -3,13 +3,15 @@
  *
  * 核心念头：振翅下令，一队手下从身边依次扑向对手，每只扑到身上刺一下；被中途打掉的手下不再落这一刺。
  *   每只手下各自结算一小段伤害，所以「容易击中要害」在这里就是「小刺越多，越容易撞上要害」。
+ *   手下追的是目标身体中心这个真实最近可达点，扎刺前核对真实接触与通视；隔墙不刺，撞不进去就停留或有限绕行，
+ *   到时散去。点选空地时整队去集结、到达后散去，不会自行挑敌人。
  *
  * 两幕：
  *   起（call，提交前）：振翅，只播预告。
  *   扑（call → gather → fly → sting / slain）：提交后按 `underlings` 放出持久实体手下（WorldBodies 脑
  *       world_combat:move/attackorder/underling），它们按 `stagger` 依次起飞、朝目标追去；每只追到身上就用
  *       施法者的属性结算一记 sting（各自掷会心）；被对手打掉的手下在 `slain` 中散去、不再输出。
- *   收（spent）：够不到目标或寿命到头的手下自行散去。
+ *   收（spent）：够不到目标或寿命到头的手下自行散去；点选空地时到达集结点后散去。
  *
  * 与回复指令分开：同一个虫群，回复指令的手下围着施法者把治疗带回来，攻击指令的手下扑向敌人把伤害送出去；
  * 两者都把手下的存活当回事——打掉一只就少一份。
@@ -17,31 +19,73 @@
 namespace PokemonSkills {
     function attackorderState(brain: CombatEffect): any { return JSON.parse(brain.state()); }
 
-    /** 手下每 2 刻推进一次：未起飞就原地待命，起飞后朝目标追；追到身上就落刺。 */
+    /** 手下朝目标推进：通视就直飞，被挡就左右各让一步，仍走不通就原地停留等下一拍。 */
+    function attackorderApproach(world: CombatWorld, self: CombatObservation, goal: CombatPoint, speed: number): void {
+        var at = self.position();
+        if (world.clear(at, goal)) {
+            var direct = goal.minus(at);
+            if (direct.length() > 0.01) world.motion(self.actor(), direct.unit().scale(Math.min(speed, direct.length())), false);
+            return;
+        }
+        var delta = goal.minus(at);
+        var heading = WorldCombat.point(delta.x(), 0, delta.z());
+        if (heading.length() < 0.01) return;
+        heading = heading.unit();
+        var side = WorldCombat.point(-heading.z(), 0, heading.x());
+        for (var direction = -1; direction <= 1; direction += 2) {
+            var candidate = at.plus(side.scale(direction * 1.1)).plus(heading.scale(Math.min(1.4, delta.length())));
+            if (!world.clear(at, candidate)) continue;
+            var step = candidate.minus(at);
+            if (step.length() > 0.01) world.motion(self.actor(), step.unit().scale(Math.min(speed, step.length())), false);
+            return;
+        }
+    }
+
+    /** 手下每 2 刻推进一次：未起飞就原地待命，起飞后朝集结点或目标追；追到身上就落刺。 */
     function attackorderStep(brain: CombatEffect): void {
         var world = brain.world(), state = attackorderState(brain);
         var self = world.observe(brain.target());
         if (self === null) { brain.end(); return; }
-        var owner = world.actor(state.owner), target = world.actor(state.target);
-        if (owner === null || !world.valid(owner) || target === null || !world.valid(target)) { brain.end(); return; }
-        var body = world.observe(target);
-        if (body === null) { brain.end(); return; }
+        var owner = world.actor(state.owner);
+        if (owner === null || !world.valid(owner)) { brain.end(); return; }
         if (world.tick() < state.launchAt) {
             WorldFeedback.keep(world, "attackorder:gather:" + String(brain.target().ref()), attackorderScene, 1, self.position(),
                 { moment: "gather", target: String(owner.ref()), scale: state.scale, size: 0.14 * state.scale }, 20);
             return;
         }
-        var goal = body.position().plus(WorldCombat.point(0, body.height() * 0.5, 0));
-        var delta = goal.minus(self.position()), distance = delta.length();
-        if (distance <= 1.15) { attackorderSting(brain, owner, target, state, self); return; }
-        world.motion(brain.target(), delta.unit().scale(Math.min(state.speed, Math.max(0.05, distance))), false);
+        // 点选空地：整队飞向集结点，到达后散去，不会自行选敌。
+        if (!state.target) {
+            if (!state.rally || state.rally.length !== 3) { brain.end(); return; }
+            var rally = WorldCombat.point(state.rally[0], state.rally[1], state.rally[2]);
+            if (self.position().minus(rally).length() <= 0.9) { brain.end(); return; }
+            attackorderApproach(world, self, rally, state.speed);
+            WorldFeedback.keep(world, "attackorder:fly:" + String(brain.target().ref()), attackorderScene, 1, self.position(),
+                { moment: "fly", scale: state.scale, size: 0.16 * state.scale }, 20);
+            return;
+        }
+        var target = world.actor(state.target);
+        if (target === null || !world.valid(target)) { brain.end(); return; }
+        var body = world.observe(target);
+        if (body === null) { brain.end(); return; }
+        // 真实最近可达点就是身体中心；不再加半个身高，避免高大目标把手下引到头顶悬空点。
+        var goal = body.position();
+        var deltaToTarget = goal.minus(self.position());
+        if (deltaToTarget.length() <= body.width() * 0.5 + 0.6 && world.clear(self.position(), goal)) {
+            attackorderSting(brain, owner, target, state, self);
+            return;
+        }
+        attackorderApproach(world, self, goal, state.speed);
         WorldFeedback.keep(world, "attackorder:fly:" + String(brain.target().ref()), attackorderScene, 1, self.position(),
             { moment: "fly", target: String(target.ref()), scale: state.scale, size: 0.16 * state.scale }, 20);
     }
 
-    /** 手下扑到目标身上：用施法者的属性结算一记 sting（各自掷会心），再把结果放回世界。 */
+    /** 手下扑到目标身上：核对真实接触与通视后用施法者的属性结算 sting（各自掷会心），再把结果放回世界。 */
     function attackorderSting(brain: CombatEffect, owner: CombatActor, target: CombatActor, state: any, self: CombatObservation): void {
         var world = brain.world();
+        var body = world.observe(target);
+        if (body === null) { brain.end(); return; }
+        var at = self.position(), centre = body.position();
+        if (centre.minus(at).length() > body.width() * 0.5 + 0.6 || !world.clear(at, centre)) return;
         var template = CobblemonCombat.moveTemplate(attackorderId);
         var features = damageFeatures(attackorderId, "sting");
         features.power = state.power;
@@ -49,8 +93,8 @@ namespace PokemonSkills {
         var point = self.position();
         if (result.amount > 0 && world.valid(target)) {
             world.hurt(target, result.amount, result.metadata);
-            var at = world.observe(target);
-            if (at !== null) point = at.position();
+            var now = world.observe(target);
+            if (now !== null) point = now.position();
         }
         WorldFeedback.emit(world, attackorderScene, 1, point,
             { moment: "sting", target: String(target.ref()), scale: state.scale, power: state.power,
@@ -80,9 +124,9 @@ namespace PokemonSkills {
         id: attackorderId,
         cooldownParameter: "recharge",
         name: "Attack Order",
-        description: "振翅召出一队手下，从身边依次扑向目标，每只扑到身上各自刺一下。每只独立结算、各自掷一次会心，所以手下越多越容易撞上要害；被中途打掉的手下不再落这一刺。虫海式手下更多更脆，精锐式更少更重。",
+        description: "振翅召出一队手下，从身边依次扑向目标，每只追到身上、核对真实接触与通视后刺一下。每只独立结算、各自掷一次会心，所以手下越多越容易撞上要害；被中途打掉的手下不再落这一刺，隔墙不刺，高大目标也不会被追到头顶悬空点。点选空地时整队去集结，到达后散去且不会自行选敌。虫海式手下更多更脆，精锐式更少更重。",
         uses: ["召一队手下扑向目标各自刺一下", "用多次小刺多撞几次会心", "让手下成为能被清场的输出"],
-        kind: "enemy",
+        kind: "aim",
         range: 5.5,
         maxRange: 7.5,
         prepare: 10,
@@ -116,8 +160,10 @@ namespace PokemonSkills {
             var world = action.world();
             var actor = action.actor();
             var body = world.observe(actor);
+            if (body === null) { done(action); return; }
             var target = action.target();
-            if (body === null || target === null || !world.valid(target)) { done(action); return; }
+            var pursuing = target !== null && world.valid(target);
+            var rally = action.targetPosition();
             var count = Math.max(1, Math.round(p(attackorderId, "underlings", action)));
             var power = p(attackorderId, "sting", action);
             var speed = Math.max(0.2, p(attackorderId, "flight", action));
@@ -134,13 +180,13 @@ namespace PokemonSkills {
                     size: [0.35, 0.35], health: health, gravity: false, pushable: false, invulnerable: false,
                     silent: true, knockbackResistance: 0.6
                 }, attackorderUnderling, {
-                    owner: String(actor.ref()), target: String(target.ref()), power: power, speed: speed,
-                    launchAt: world.tick() + i * stagger, scale: scale
+                    owner: String(actor.ref()), target: pursuing ? String(target!.ref()) : "", power: power, speed: speed,
+                    launchAt: world.tick() + i * stagger, scale: scale, rally: [rally.x(), rally.y(), rally.z()]
                 }, ttl);
             }
             sound(action, "minecraft:block.beehive.exit");
             WorldFeedback.emit(world, attackorderScene, 1, body.position(),
-                { moment: "call", target: String(target.ref()), burst: count * 8, count: count, scale: scale }, 30);
+                { moment: "call", target: pursuing ? String(target!.ref()) : "", burst: count * 8, count: count, scale: scale }, 30);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), attackorderCallText, [count], 30);
             done(action);
         }

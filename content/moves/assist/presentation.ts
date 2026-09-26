@@ -1,12 +1,13 @@
 /**
  * Client definition for Assist.
  *
- * 一句话：一声呼唤从身体向四周铺开一圈青绿回声与伙伴印记，覆盖到呼唤半径（data.radius），随后
- * 借来的招式在自身炸开；印记数量随施法者的特攻（data.bonds）增长，落成爆发的数量取实际候选池
+ * 一句话：一声呼唤从身体向四周铺开一圈青绿回声与伙伴印记，覆盖到呼唤半径（data.radius），同时按服务端
+ * 查到的候选伙伴拉出稀疏连线（world_combat:move_assist_thread 自定义场景）；选定后一条白色传递线从被选中的
+ * 伙伴闪到自身，借来的招式随即接手。印记数量随施法者的特攻（data.bonds）增长，落成爆发的数量取实际候选池
  * （data.pool）。
  *
- * 色相家族：青绿 0x5FD0A0 与淡青 0x8FE8C8（伙伴），白色只用在借来招式落成的一闪。
- * 拍子：call 0–30t（起：环与印记由近及远）→ borrow 0–22t（击：白闪，收：青环散开）。
+ * 色相家族：青绿 0x5FD0A0 与淡青 0x8FE8C8（伙伴），白色只用在借来招式落成的一闪与传递线。
+ * 拍子：call 0–30t（起：环与印记由近及远）→ borrow 0–22t（击：白闪，收：青环与传递线散开）。
  * 贴图与帧尺寸来自 particle_types.txt。呼唤环绑 point，按机制半径铺开，不随体型缩放。
  */
 const assistDefinition: ParticleDefinition = {
@@ -75,6 +76,14 @@ const assistDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.3, 0.5], spread: 2,
                     lifetime: [14, 20], size: [0.3, 0.06],
                     color: 0x8FE8C8, alpha: [0.7, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "borrow_thread", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    rate: { data: "pool", fallback: 4 }, trail: { minDistance: 0.25 },
+                    shape: { kind: "polyline" }, direction: "shape", speed: [0.05, 0.14],
+                    lifetime: [7, 12], size: [0.12, 0.03],
+                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 80
                 }
             ]
         }
@@ -82,3 +91,25 @@ const assistDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_assist", 1, assistDefinition);
+
+/**
+ * Sparse candidate threads for Assist. The server lists the partner refs it actually queried; the callback draws
+ * one dim line per candidate and the real call radius, then goes quiet once the borrow is settled.
+ */
+WorldCombatClient.scene("world_combat:move_assist_thread", 1, function (frame) {
+    const entry: CombatSceneEntry<{ phase?: string; radius?: number; candidates?: string[]; provider?: string }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    if (data.phase === "handover") return;
+    const anchor = JSON.parse(frame.anchor(entry.source));
+    if (!anchor) return;
+    const radius = typeof data.radius === "number" ? data.radius : 0;
+    if (radius > 0) frame.ring(anchor.x, anchor.y + 0.1, anchor.z, radius, 0x885FD0A0);
+    const candidates = Array.isArray(data.candidates) ? data.candidates : [];
+    for (let i = 0; i < candidates.length; i++) {
+        const other = JSON.parse(frame.anchor(candidates[i]));
+        if (!other) continue;
+        const colour = candidates[i] === data.provider ? 0xFFFFFFFF : 0xAA5FD0A0;
+        frame.line(anchor.x, anchor.y + 0.55, anchor.z, other.x, other.y + 0.55, other.z, colour);
+    }
+});

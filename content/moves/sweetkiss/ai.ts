@@ -4,7 +4,7 @@
  * 什么局面有意义：有可见威胁、目标还没被混乱缠上，而且伙伴已经贴到能用亲吻距离够到的位置——
  *   这是一招纯近身事：够不到就亲空，所以伙伴会先走到近身再送吻。
  * 对谁出手：当前威胁；带着共享身份 confusion 的目标会被跳过，不重复亲。
- * 够不到怎么办：reach 取一个保守的近距离，伙伴会先走到对方脸前；接近时默认走直线。
+ * 够不到怎么办：reach 读取当前亲吻距离（由体型决定），伙伴会先走到对方脸前；接近时默认走直线。
  * 放完之后：对方出手可能作废、打中还会自伤；after 让它亲完后退开一步，别停在心猿意马的敌人刀口上。
  * 配置 kiss（轻吻／深吻）改变混乱时长与起手；ai.maxChase 决定追到多近才考虑，ai.opening 决定时机。
  */
@@ -38,7 +38,7 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("sweetkiss", {
         protocols: ["world_combat:control"],
-        reach: function () { return 2.2; },
+        reach: function (_context, item) { return item.data.range; },
         available: function (context, item, purpose, target) { return target === null ? true : sweetkissWants(context, item, target); },
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {

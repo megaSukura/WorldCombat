@@ -1,25 +1,13 @@
-// 甜甜香气的可执行设计说明：一只只会这招的宝可梦朝两只挤在一起的僵尸吐出甜云。
-// 必然事实：甜云被放出来过；两只僵尸都带上共享的「被香气浸透」身份（云在它们落点铺开，一起罩住）。
-// 具体几只中招、云停多久写进 note 供读轨迹判断；每级浸透放大 6% 伤害的效果不在这条必然事实里。
-Smoke.scenario("sweetscent", function (stage) {
-    var caster = stage.pokemon({ species: "oddish", level: 35, moves: ["sweetscent"], at: [0, 0, 0] });
-    var foeA = stage.mob({ type: "minecraft:zombie", at: [4, 0, 0] });
-    var foeB = stage.mob({ type: "minecraft:zombie", at: [4, 0, 1] });
-    stage.hostile(caster, foeA);
-    stage.hostile(caster, foeB);
-    stage.until(800, function () {
-        return stage.casts("sweetscent") > 0
-            && stage.hadMobEffect(foeA, "world_combat:status/scented")
-            && stage.hadMobEffect(foeB, "world_combat:status/scented");
-    }, function () {
-        stage.expect(stage.casts("sweetscent") > 0, "sweet scent was committed");
-        stage.expect(stage.hadMobEffect(foeA, "world_combat:status/scented"), "the first target was sweetened by the cloud");
-        stage.expect(stage.hadMobEffect(foeB, "world_combat:status/scented"), "the second target was sweetened by the cloud");
-        stage.note("both zombies carried the shared scented identity; the 6% damage amp per rank is read in damage_incoming, not asserted here", {
-            casts: stage.casts("sweetscent"),
-            damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
-            moved: Math.round((stage.travelled(foeA) + stage.travelled(foeB)) * 10) / 10
-        });
-        stage.done();
-    }, "the sweet cloud scents both zombies");
+Smoke.scenario("sweetscent",function(stage){
+ const caster=stage.pokemon({species:"oddish",level:35,moves:["sweetscent"],at:[0,0,0]}),a=stage.mob({type:"minecraft:husk",at:[4,0,0]}),b=stage.mob({type:"minecraft:husk",at:[4,0,1]});
+ stage.noai(a,b);stage.command("effect give "+b.ref.split("/")[0]+" minecraft:glowing 60 0 true");stage.provoke(caster,a);
+ stage.until(700,()=>stage.hasMobEffect(a,"world_combat:status/scented")&&stage.hasMobEffect(b,"world_combat:status/scented"),function(){
+  stage.setPp(caster,"sweetscent",0);stage.expect(stage.stages(a).evasion<0,"scent contributes legal temporary evasion loss");
+  const before=a.health();stage.hurt(a,4,"minecraft:magic",{source:caster});stage.after(2,function(){
+   stage.expect(Math.abs(before-a.health()-4)<.01,"scent no longer amplifies generic damage");
+   [a,b].forEach(actor=>{stage.command("execute as "+actor.ref.split("/")[0]+" at @s run tp @s ~8 ~ ~");stage.command("effect clear "+actor.ref.split("/")[0]+" world_combat:sweet_scent");});
+   stage.after(7,function(){stage.expect(!stage.hasMobEffect(a,"minecraft:glowing")&&stage.hasMobEffect(b,"minecraft:glowing"),"own glow lease ends while outside glow remains");
+    stage.note("Evasion, normal damage and external glowing coexistence verified; the moving scent trail is a manual visual check.");stage.done();});
+  });
+ },"scent and glow ownership");
 });

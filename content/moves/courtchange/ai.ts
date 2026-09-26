@@ -28,17 +28,20 @@ namespace CompanionBehavior {
         let result: { point: number[]; count: number } | null = null;
         if (courtchangeThreat(context, item)) {
             const world = CompanionBehavior.world(context), self = source(context);
-            const fields = PokemonSkills.courtChangeScan(world, point(self.point), item.data.range);
-            let best: number[] | null = null, bestDistance = Infinity, count = 0;
-            for (let index = 0; index < fields.length; index++) {
-                const entry = fields[index];
-                if (entry.friendly) continue;
-                count++;
-                const d = distance(self.point, [entry.point.x(), entry.point.y(), entry.point.z()]);
-                if (d >= bestDistance) continue;
-                best = [entry.point.x(), entry.point.y(), entry.point.z()]; bestDistance = d;
-            }
-            if (best !== null) result = { point: best, count: count };
+            const candidates = PokemonSkills.courtChangeScan(world, point(self.point), item.data.range);
+            const actor = world.actor(self.ref);
+            const radius = actor ? PokemonSkills.p("courtchange", "field", { world, actor, skill: PokemonSkills.skills.courtchange, detail: { values: item.data.config || {} } }) : 4;
+            let best = 0;
+            candidates.forEach(candidate => {
+                if (candidate.friendly) return;
+                const affected = PokemonSkills.courtChangeScan(world, candidate.point, radius);
+                let score = 0;
+                affected.forEach(field => {
+                    const importance = field.tags.indexOf(WorldEffects.categories.screen) >= 0 ? 2 : 1;
+                    score += field.friendly ? -importance : importance;
+                });
+                if (score > best) { best = score; result = { point: [candidate.point.x(), candidate.point.y(), candidate.point.z()], count: score }; }
+            });
         }
         context.scratch.courtFieldScan = result;
         return result;
@@ -60,7 +63,7 @@ namespace CompanionBehavior {
         },
         priority: function (context, item, _target) {
             const found = courtchangeTarget(context, item);
-            return found === null ? 0 : 100;
+            return found === null ? 0 : Math.min(85, 45 + found.count * 10);
         }
     });
 }

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.clearsmog.summary": "Throws a clod that bursts into enemy-only clearing smoke. It resets stat stages and removes native buffs, repeatedly clearing new boosts while attached.",
+  "worldcombat.skill.clearsmog.summary": "Throws a clod that bursts into enemy-only clearing smoke. It wipes positive stat changes and removable buffs, repeatedly clearing new boosts while attached, and leaves lowered stats alone. Free aim at a point or direction; walls stop the clod.",
   "worldcombat.skill.clearsmog.use.0": "Wipe a target's stacked stat changes back to neutral",
   "worldcombat.skill.clearsmog.use.1": "Stop a target that just maxed its boosts from holding them",
   "worldcombat.skill.clearsmog.use.2": "Clear the stat changes of a small clustered group at once",
-  "worldcombat.skill.clearsmog.description.0": "The clod deals about %1$s special damage on hit and reaches %2$s blocks, slightly correcting its course toward the target.",
-  "worldcombat.skill.clearsmog.description.1": "The %1$s-block smoke cloud resets enemies’ positive and negative stat stages and removes potion/beacon buffs. It clings for %2$s and clears again every %3$s.",
+  "worldcombat.skill.clearsmog.description.0": "The clod deals about %1$s special damage on hit and reaches %2$s blocks; it can be thrown freely at a point or direction, and only a live non-allied entity pulls it slightly onto course.",
+  "worldcombat.skill.clearsmog.description.1": "The %1$s-block smoke cloud wipes enemies’ positive stat changes and removable potion/beacon buffs (lowered stats stay). It clings for %2$s and clears newly gained boosts again every %3$s.",
   "worldcombat.skill.clearsmog.description.2": "The clump flies at %1$s blocks/tick and lightly steers to the target, with a %2$s block cross-section.",
   "worldcombat.skill.clearsmog.billow.on": "Billow: cloud radius x1.5 and cling x1.4, but power x0.85, wind-up +1 tick, cooldown +8 ticks - covers wider and longer.",
   "worldcombat.skill.clearsmog.billow.off": "Packed: power x1.15, faster throw and shorter cooldown, but a smaller cloud and a shorter cling - one precise heavy clump.",

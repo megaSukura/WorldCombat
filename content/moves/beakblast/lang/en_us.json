@@ -36,5 +36,5 @@
   "world_combat.move.beakblast.text.heat": "Beak heating, %1$s s to go",
   "world_combat.move.beakblast.text.sear": "Seared by the red-hot beak!",
   "world_combat.move.beakblast.text.miss": "Beak Blast went wide",
-  "worldcombat.skill.beakblast.description.aim": "The aim locks when the heat begins: if the target moves away while the beak heats, the shot still flies along the old line and misses; if the heat is interrupted the beak cools and the shot is never fired."
+  "worldcombat.skill.beakblast.description.aim": "Before firing you may raise the muzzle toward any direction or point without first picking an enemy, or simply fire into empty ground; the aim locks when the heat begins, so if the target moves away while the beak heats the shot still flies along the old line and misses (a block stops it), and if the heat is interrupted the beak cools and the shot is never fired."
 }

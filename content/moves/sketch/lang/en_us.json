@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.sketch.summary": "Permanently replace Sketch’s slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves.",
-  "worldcombat.skill.sketch.use.0": "Permanently learn one of a foe's moves",
+  "worldcombat.skill.sketch.summary": "Permanently replace Sketch’s slot with a target's or ally's recent move. Known non-Pokémon attacks are translated into corresponding moves.",
+  "worldcombat.skill.sketch.use.0": "Permanently learn a target's or ally's move",
   "worldcombat.skill.sketch.use.1": "Copy a rare set-up or recovery",
   "worldcombat.skill.sketch.use.2": "Put a heavy attack into your own move set",
-  "worldcombat.skill.sketch.description.0": "Observe a target within %1$s blocks for %2$s. A Pokémon’s last move permanently replaces Sketch’s slot with full PP.",
+  "worldcombat.skill.sketch.description.0": "Observe any demonstrator within %1$s blocks (enemy or ally) for %2$s. A Pokémon’s last move permanently replaces Sketch’s slot with full PP.",
   "worldcombat.skill.sketch.description.1": "The move requires a readable prior action. Sketch itself cannot be sketched from a Pokémon, and moves you already know are not learned again.",
   "worldcombat.skill.sketch.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.sketch.value.reach": "Sketch range",

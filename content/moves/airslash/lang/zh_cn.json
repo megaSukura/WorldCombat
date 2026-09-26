@@ -27,5 +27,6 @@
   "effect.world_combat.airslash_flinch": "畏缩",
   "world_combat.move.airslash.text.hit": "空气斩切开 %1$s 个",
   "world_combat.move.airslash.text.miss": "空气斩落空",
+  "world_combat.move.airslash.text.wall": "空气斩撞墙断刃",
   "world_combat.move.airslash.text.flinch": "被切懵"
 }

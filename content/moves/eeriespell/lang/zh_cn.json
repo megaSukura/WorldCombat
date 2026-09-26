@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.eeriespell.summary": "发射咒念伤害目标并扰乱出手。命中宝可梦还会扣除其上一招的PP；普通攻击同样会因记忆混乱而失手。",
+  "worldcombat.skill.eeriespell.summary": "发射咒念伤害目标并扰乱出手。命中宝可梦还会扣除其上一招的PP；普通攻击同样会因记忆混乱而失手。可瞄准目标，也可只朝一个方向空放。",
   "worldcombat.skill.eeriespell.use.0": "远程压制",
   "worldcombat.skill.eeriespell.use.1": "拆招",
-  "worldcombat.skill.eeriespell.description.0": "向 %2$s 格内发射咒念；命中造成约 %1$s 点特殊伤害。",
+  "worldcombat.skill.eeriespell.description.0": "向 %2$s 格内发射咒念；命中造成约 %1$s 点特殊伤害。可瞄准目标，也可只朝一个方向空放。",
   "worldcombat.skill.eeriespell.description.1": "命中后使目标带着「诡异」 %2$s，并从宝可梦最后使用的招式扣除 %1$s PP。",
-  "worldcombat.skill.eeriespell.description.2": "诡异期间，每次发动招式或命中普通攻击都有 %1$s 概率失手，本次出手不造成伤害。",
+  "worldcombat.skill.eeriespell.description.2": "诡异期间，每次发动招式或命中普通攻击都有 %1$s 概率失手，本次出手不造成伤害；真正因此失手时，目标身上会出现一次中断符号。",
   "worldcombat.skill.eeriespell.timing": "起手 %1$s，收招 %2$s，消耗 %4$s PP，冷却 %3$s。",
   "worldcombat.skill.eeriespell.value.power": "威力",
   "worldcombat.skill.eeriespell.value.drain": "抽取PP",

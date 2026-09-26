@@ -24,6 +24,7 @@ Smoke.scenario("rockslide", function (stage) {
     }, function () {
         stage.expect(stage.casts("rockslide", caster) >= 1, "golem committed rockslide");
         stage.expect(stage.damageTo(first) > 0 || stage.damageTo(second) > 0, "the rock rain dealt damage");
+        stage.expect(stage.changedBlocks().length === 0, "rockslide leaves the ground unchanged");
         stage.note("crit, the flinch roll and how many rocks landed on each foe are random and positional", {
             casts: stage.casts("rockslide", caster),
             firstDamage: Math.round(stage.damageTo(first) * 10) / 10,

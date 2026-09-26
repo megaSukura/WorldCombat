@@ -6,13 +6,15 @@
  *
  * 两幕：
  *   起（windup，提交前）：拳头攥紧、指节亮起暖光，只播预告。
- *   拳（punch → sap / miss，提交后）：朝目标推出直拳，命中结算 `jab` 接触拳击伤害，伤害的一部分经共享 `drain`
- *       抽回自身，同时沿「目标→拳面」抽出一道回流；打空只散开一圈尘。连打式把这一幕展开成三拳，逐拳间隔 `gaps` 刻。
+ *   拳（punch → sap / miss，提交后）：朝目标或瞄准方向推出直拳，命中结算 `jab` 接触拳击伤害，伤害的一部分经共享
+ *       `drain` 抽回自身，同时沿「目标→拳面」抽出一道回流；打空或打在墙上只收拳散尘，不回血。连打式把这一幕展开成
+ *       三拳，每拳重新按当前朝向短扫，逐拳间隔 `gaps` 刻。
  *
  * 与同族分开：木角是带身体的冲撞、可贯穿；吸血是咬住不放的持续抽吸；悔念剑是扇面斩击；只有吸取拳站着出拳，
  *   凭「拳距最短、出手最快、力量顺拳路回流」被认出。配置 `combo` 让它在「一记直拳」与「三连拳」两种形状间取舍。
  *
  * 命中、防御、相性与暴击走共享 `impact`；回复走共享伤害载荷的 `drain`，对宝可梦、原版生物、玩家同一条路。
+ * 选择是 `aim`：可指敌、可只朝一个方向；拳头沿真实首碰点停下，友方身体与墙都会截住拳路（伤害许可仍独立）。
  */
 namespace PokemonSkills {
     const drainPunchScene = "world_combat:move_drainpunch";
@@ -24,9 +26,9 @@ namespace PokemonSkills {
         id: "drainpunch",
         cooldownParameter: "recharge",
         name: "Drain Punch",
-        description: "近身击打目标，将造成的部分伤害转化为自身治疗。",
+        description: "近身出拳击打目标或朝一个方向打，命中造成伤害后把其中一部分转回自身；打空或打在墙上不回血。",
         uses: ["贴身时用最短的一拳抢输出", "边打边把伤害换成回血", "连打式一次压出三段伤害"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.4,
         maxRange: 3.6,
         prepare: 6,
@@ -56,24 +58,28 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const combo = config && config.combo === true;
             const power = p("drainpunch", "jab", action);
             const share = p("drainpunch", "sap", action);
             const radius = p("drainpunch", "fist", action);
+            const reach = p("drainpunch", "reach", action);
             const gap = Math.max(1, Math.round(p("drainpunch", "gaps", action)));
             const total = combo ? 3 : 1;
-            const selected = action.target();
-            const targetRef = selected !== null && world.valid(selected) ? String(selected.ref()) : "";
             const motes = Math.max(8, Math.round(power * 0.3 + share * 40));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.4));
             const intensity = Math.max(0.6, Math.min(2.2, power / 75));
             let settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-            function victim(scope: CombatWorld): CombatActor | null {
-                const value = targetRef === "" ? null : scope.actor(targetRef);
-                return value !== null && scope.valid(value) ? value : null;
+            /** 每拳重新取当前朝向：活着的敌人身体优先，其次是瞄准点，最后退回动作方向。 */
+            function heading(current: CombatAction, scope: CombatWorld): CombatPoint {
+                const selected = current.target();
+                const body = selected !== null && scope.valid(selected) ? scope.observe(selected) : null;
+                const me = scope.observe(current.actor());
+                const origin = me === null ? current.origin() : me.position();
+                const point = body !== null ? body.position() : current.targetPosition();
+                const delta = point.minus(origin);
+                return delta.length() < 0.05 ? current.direction() : delta.unit();
             }
             function whiff(current: CombatAction, at: CombatPoint, index: number): void {
                 const scope = current.world();
@@ -84,34 +90,39 @@ namespace PokemonSkills {
             }
 
             function punch(current: CombatAction, index: number): void {
-                const scope = current.world(), me = scope.observe(current.actor()), foe = victim(scope);
-                const body = foe !== null ? scope.observe(foe) : null;
+                const scope = current.world(), me = scope.observe(current.actor());
                 if (me === null) { finish(current); return; }
-                if (body === null) { whiff(current, me.position().plus(WorldCombat.point(0, 1, 0)), index); return; }
-                const dx = body.position().x() - me.position().x(), dz = body.position().z() - me.position().z();
-                const distance = Math.max(0.01, Math.sqrt(dx * dx + dz * dz));
-                const forward = WorldCombat.point(dx / distance, 0, dz / distance);
-                const hit = current.trace(me.position(), me.position().plus(forward.scale(Math.min(3.6, distance + 0.6))), radius);
+                const forward = heading(current, scope);
+                const hit = current.trace(me.position(), me.position().plus(forward.scale(reach + 0.6)), radius, true);
                 sound(current, index === 0 ? "minecraft:entity.player.attack.strong" : "minecraft:entity.player.attack.weak");
-                if (!hit.hitEntity()) { whiff(current, me.position().plus(forward.scale(Math.min(3.6, distance + 0.6))), index); return; }
-                const struck = hit.target(), at = hit.position();
+                const struck = hit.target();
+                // 墙、空处、非活体与友方身体都会截住拳路，但都不结算伤害也不回血：收拳，继续自己的连打节奏。
+                if (!hit.hitEntity() || struck === null || scope.friendly(struck)) { whiff(current, hit.position(), index); return; }
+                const at = hit.position();
+                const struckRef = String(struck.ref());
                 WorldFeedback.emit(scope, drainPunchScene, 1, at,
-                    { moment: "punch", target: struck !== null ? String(struck.ref()) : "", motes: motes, scale: scale,
+                    { moment: "punch", target: struckRef, motes: motes, scale: scale,
                         intensity: intensity, punch: index + 1, punches: total, combo: combo ? 1 : 0 }, 20);
+                const before = me.health();
                 const landed = impact(current, hit, "drainpunch", power,
                     { damage: damageSpec("drainpunch", "jab"), contact: true, punch: true, drain: share });
-                if (landed && struck !== null && scope.valid(struck)) {
+                const after = scope.observe(current.actor());
+                const healed = landed && after !== null ? Math.max(0, after.health() - before) : 0;
+                // 只有这一拳真的把血抽回来时才画回流，强弱由实际治疗量决定；目标是否已被打倒都不影响已发生的回血。
+                if (healed > 0) {
                     const self = scope.observe(current.actor());
                     const from = self === null ? current.origin() : self.position();
                     const flow = from.minus(at), span = flow.length();
                     const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
+                    const healedRatio = self === null ? 0 : healed / Math.max(1, self.maxHealth());
                     WorldFeedback.emit(scope, drainPunchScene, 1, at,
-                        { moment: "sap", path: ["target", "source"], target: String(struck.ref()),
-                            direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, scale: scale,
-                            punch: index + 1 }, 24);
+                        { moment: "sap", path: ["target", "source"], target: struckRef,
+                            direction: [inward.x(), inward.y(), inward.z()], span: span,
+                            motes: Math.max(5, Math.round(healed * 6)), scale: scale,
+                            intensity: Math.max(0.5, Math.min(2.4, healedRatio * 40)), punch: index + 1 }, 24);
                     sound(current, "cobblemon:move.bulletpunch.target");
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), drainPunchHitText, [], 20);
-                    WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.2, 0)), drainPunchSapText, [Math.round(share * 100)], 20);
+                    WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.2, 0)), drainPunchSapText, [Math.round(healed * 10) / 10], 20);
                 }
                 if (index + 1 >= total) finish(current); else current.after(gap, function (next: CombatAction) { punch(next, index + 1); });
             }

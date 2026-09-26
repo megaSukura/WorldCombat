@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.eeriespell.summary": "Fires a spell that damages the target and disrupts its attacks. Pokémon also lose PP from their last move; ordinary attacks can fumble too.",
+  "worldcombat.skill.eeriespell.summary": "Fires a spell that damages the target and disrupts its attacks. Pokémon also lose PP from their last move; ordinary attacks can fumble too. Aim at a target or just fire in one direction.",
   "worldcombat.skill.eeriespell.use.0": "Ranged pressure",
   "worldcombat.skill.eeriespell.use.1": "Move denial",
-  "worldcombat.skill.eeriespell.description.0": "Fires a spell up to %2$s blocks away, dealing about %1$s special damage on hit.",
+  "worldcombat.skill.eeriespell.description.0": "Fires a spell up to %2$s blocks away, dealing about %1$s special damage on hit. Aim at a target or just fire in one direction.",
   "worldcombat.skill.eeriespell.description.1": "On hit, applies Eerie for %2$s and removes %1$s PP from a Pokémon target’s last move.",
-  "worldcombat.skill.eeriespell.description.2": "While Eerie, each move attempt or ordinary attack hit has a %1$s chance to fail, dealing no damage on that attempt.",
+  "worldcombat.skill.eeriespell.description.2": "While Eerie, each move attempt or ordinary attack hit has a %1$s chance to fail, dealing no damage on that attempt; a real fumble shows a one-time interrupt mark on the target.",
   "worldcombat.skill.eeriespell.timing": "Wind-up %1$s, recovery %2$s, cost %4$s PP, cooldown %3$s.",
   "worldcombat.skill.eeriespell.value.power": "Power",
   "worldcombat.skill.eeriespell.value.drain": "PP drained",

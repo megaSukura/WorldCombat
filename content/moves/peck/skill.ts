@@ -8,7 +8,10 @@
  * 两幕：
  *   起（read，提交前）：缩颈、喙尖聚一点微光，只播预告。
  *   啄（jab → hit / plummet / whiff，提交后）：朝目标垫进 `lunge` 格，沿身前 `reach` 格长、`beak` 为半径的短线
- *       取第一个非友方结算 `peck` 接触伤害；离地目标乘 `airBonus` 并以 `plummet` 的初速压回地面；没啄中只留一点乱羽。
+ *       取第一个非友方结算 `peck` 接触伤害；离地目标乘 `airBonus`，再以受原生碰撞与击退抗性约束的下压把它按回地面
+ *       （实际下降才播「啄落」，免疫或抗性挡下时不补写位移）；没啄中只留一点乱羽。
+ *
+ * 选取：`kind: "aim"`——可点任意阵营实体或一个世界点，朝方向也能空啄；命中权限仍由命中层判断。
  *
  * 与同族分开：啄钻是原地旋转、连续几口把目标往后顶的钻孔，龙爪是宽弧重斩，角撞是顶住推走，木枝突刺是从最远处直刺；
  * 啄凭「贴脸、单发、对空下压」认出来。
@@ -42,9 +45,9 @@ namespace PokemonSkills {
         id: "peck",
         cooldownParameter: "recharge",
         name: "Peck",
-        description: "快速啄击近处目标。命中空中的敌人时伤害提高，并将其拉向地面。",
+        description: "快速啄击近处目标。命中空中的敌人时伤害提高，并以受原生碰撞与击退抗性约束的下压把它按向地面。",
         uses: ["贴脸一记最快、最省的单发点啄", "把离地的目标一喙压回地面", "在对手起手前抢一记速啄"],
-        kind: "enemy",
+        kind: "aim",
         range: 1.7,
         maxRange: 2.8,
         prepare: 4,
@@ -133,10 +136,16 @@ namespace PokemonSkills {
             sound(action, "cobblemon:impact.flying");
 
             if (airborne && world.valid(victim)) {
-                world.motion(victim, WorldCombat.point(0, -plummet, 0), false);
-                WorldFeedback.emit(world, peckScene, 1, foe.position(),
-                    { moment: "plummet", target: String(victim.ref()), plummet: plummet, scale: scale }, 18);
-                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.35, 0)), peckDownText, [], 20);
+                // 下压走原生受击位移：被免疫或抗性挡下时返回 0，此时不播「啄落」、不补写 motion。
+                const fell = world.hitDisplace(victim, WorldCombat.point(0, -plummet, 0));
+                if (fell > 0.01) {
+                    const now = world.observe(victim);
+                    const at = now === null ? foe.position() : now.position();
+                    WorldFeedback.emit(world, peckScene, 1, at,
+                        { moment: "plummet", target: String(victim.ref()), plummet: plummet,
+                            drives: Math.max(6, Math.min(30, Math.round(fell * 24))), scale: scale }, 18);
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.35, 0)), peckDownText, [], 20);
+                }
             }
             done(action);
         }

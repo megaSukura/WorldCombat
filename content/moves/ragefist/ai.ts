@@ -9,9 +9,9 @@
  * 放完接什么：交回共享交战计划；拳印不因出拳清空，接下来的愤怒之拳继续吃同一份积怨。
  */
 namespace PokemonSkills {
-    /** 只读、回调内缓存的拳印数（宝可梦读本单元注册的载具）。 */
+    /** 只读、回调内缓存的拳印数；宝可梦与已被授权本招的普通主体读同一副载体。 */
     CompanionBehavior.registerFact("world_combat:move_ragefist/stored", function (access, actor, _argument) {
-        if (!access.valid(actor) || String(actor.domain()) !== "cobblemon") return 0;
+        if (!access.valid(actor) || !ragefistQualified(access, actor)) return 0;
         return ragefistStored(access, actor);
     });
 

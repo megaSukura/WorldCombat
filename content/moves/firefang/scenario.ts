@@ -2,9 +2,9 @@
  * 火焰牙 / firefang 的可执行设计说明。
  *
  * 场面：只会火焰牙的黑鲁加（houndoom，L40，原生学习者）对 5 格外的卡比兽（snorlax，L50，只会跃起）；
- * 平地、白天晴天。开战后 AI 只有这一招可用，必须自己走近再咬。
+ * 平地、白天晴天。开战后 AI 只有这一招可用，必须自己走近到短咬距离再合牙。
  * 必然事实：本招被提交过；目标受到过咬合伤害。
- * 是否灼伤（scorchChance）、烧多久、穿甲窗口是否生效、是否咬懵、扑空还是咬中、暴击，都是概率与站位结果，
+ * 是否点着（scorchChance，走原生免疫）、烧多久、是否咬懵、空咬还是咬中、暴击，都是概率与站位结果，
  * 写进 note 供读轨迹判断。
  */
 Smoke.scenario("firefang", function (stage) {
@@ -20,7 +20,7 @@ Smoke.scenario("firefang", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("firefang", caster) > 0, "firefang was committed");
             stage.expect(stage.damageTo(foe) > 0, "the fire fang dealt damage");
-            stage.note("scorchChance and flinchChance are separate rolls; the burn lands through the pierce window, so a fire-immune body can still catch it", {
+            stage.note("the bite is an in-place short trace; the burn uses native immunity, so an immune body only scatters and is never pierced, and an empty bite never lights a fire", {
                 casts: stage.casts("firefang", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 moved: Math.round(stage.travelled(caster) * 10) / 10,

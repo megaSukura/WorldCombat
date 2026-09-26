@@ -4,9 +4,10 @@
  * 一句话：角尖顶起一线钢光，一条锁定细线连到对手；随后施法者带着角一路拐着方向冲过去，追到身上时在甲缝上
  * 迸出一簇钢花与一圈冲击环。
  * 色相家族：钢银与冷白（drill／smallbeam／impact_steel），强调处用一点暖金（glowingsparkle_yellow）。
- * 拍子：起（lock 锁定）→ 击（charge 冲锋、stab 扎入、pierce 甲缝迸花）→ 收（miss 空刺）。
- * 范围：lock 与 stab 使用 `data.path`／目标锚点画出服务端锁定的那条线，线连到哪就是角刺够到哪。
- * 运动：钢光顺锁定线汇聚，冲锋沿朝向目标的轴拉出，命中处钢花沿球面炸开。
+ * 拍子：起（lock 锁定）→ 击（charge 冲锋、stab 扎入、pierce 甲缝迸花、wall 撞墙迸花）→ 收（miss 空刺）。
+ * 范围：lock 与 stab 使用 `data.path`／目标锚点画出服务端锁定的那条线，线连到哪就是角刺够到哪；
+ *   charge 的角尖轴读 `data.direction`（当前真实转向），wall 的痕贴真实方块接触点。
+ * 运动：钢光顺锁定线汇聚，冲锋沿 `data.direction` 拉出，命中处钢花沿球面炸开，撞墙处钢花贴着方块面迸出。
  * 数：`data.intensity`（突刺威力派生）抬高锁定与命中的亮度，`data.notes`（威力派生）决定迸出的钢花量，
  * `data.scale`（角尖半径派生）缩放冲击环与命中范围。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -50,7 +51,7 @@ const SmartstrikeDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "lance", bind: "source", offset: [0, 0.7, 0], height: 0.5,
-                    orient: "toward",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
                     shape: { kind: "line", length: 1.4 },
                     rate: 40, direction: "up", speed: [0.02, 0.1],
@@ -59,7 +60,7 @@ const SmartstrikeDefinition: ParticleDefinition = {
                 },
                 {
                     name: "drill", bind: "source", offset: [0, 0.7, 0], height: 0.5,
-                    orient: "velocity",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/drill",
                     rate: 26, shape: { kind: "cone", radius: 0.22, angleDegrees: 16 },
                     direction: "shape", speed: [0.05, 0.2], spin: 90,
@@ -121,6 +122,30 @@ const SmartstrikeDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.14],
                     lifetime: [10, 18], size: [0.3, 0.7],
                     color: 0xC9D6E0, alpha: [0.6, 0], light: "full"
+                }
+            ]
+        },
+        wall: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "wall_hit", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
+                    burst: { count: { data: "notes", fallback: 16 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.08, 0.28],
+                    lifetime: [5, 11], size: [0.22, 0.03],
+                    color: 0xDCE6EE, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 60
+                },
+                {
+                    name: "wall_spark", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "outward", speed: [0.06, 0.22], spread: 30,
+                    lifetime: [5, 10], size: [0.06, 0.02],
+                    color: 0xFFF2C0, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 30
                 }
             ]
         },

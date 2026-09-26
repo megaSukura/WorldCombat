@@ -15,6 +15,7 @@
  *   scales   基础 16 +（特攻 + 特防）/8 + 等级 /3，夹 12..64：特攻特防越高、等级越高，鳞粉越密。
  *   veil     鳞幕半径：基础 0.6 格 + 碰撞箱高度 ×0.35，夹 0.5..1.4：身板越大幕张得越开。
  *   drift    鳞粉飘散速度：基础 0.06 + 速度 /1600，夹 0.05..0.14：越快飘得越急。
+ *   sidestep 侧步幅度：体宽 ×0.42，夹 0.18..0.7：每拍左右交替点踏，约在体宽一半以内，贴墙按净空缩步。
  *   beat     每拍间隔：速度每比 60 快 1 减 0.03 刻，夹 3..6。
  *   span     鳞幕窗口：基础 200 刻 + 等级 ×4 + 特防 ×0.8，夹 180..480；配置「厚幕」×1.35。
  *   tempo    起式：速度每比 60 快 1 减 0.03 刻，夹 4..9；配置「厚幕」+2。
@@ -59,6 +60,13 @@ namespace PokemonSkills {
                 unit: " 格/刻",
                 description: "鳞粉离体后向外飘散的速度；速度越高飘得越急。"
             }),
+        /** 侧步幅度：每拍左右交替点踏的距离，约在体宽一半以内。 */
+        sidestep: formula(
+            F.body("width").times(0.42).clamp(0.18, 0.7).round(2),
+            "侧步幅度", {
+                unit: " 格",
+                description: "每拍左右交替点踏的幅度；身板越大步幅越大，贴墙时按实际净空自动缩步。"
+            }),
         /** 每拍间隔：越快越急。 */
         beat: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.03)).clamp(3, 6).round(0),
@@ -93,7 +101,7 @@ namespace PokemonSkills {
     ]);
 
     describe("quiverdance", [
-        { key: "description.0", values: ["gift"] },
+        { key: "description.0", values: ["gift", "sidestep"] },
         { key: "description.1", values: ["span"] },
         { key: "veil.on", values: [], when: function (context) { return read(context.detail.values, ["veil"]) === true; } },
         { key: "veil.off", values: [], when: function (context) { return read(context.detail.values, ["veil"]) !== true; } },

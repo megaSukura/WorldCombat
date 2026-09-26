@@ -14,7 +14,7 @@
   "worldcombat.skill.jawlock.value.lockTicks": "Lock duration",
   "worldcombat.skill.jawlock.value.reach": "Bite reach",
   "worldcombat.skill.jawlock.value.grip": "Grip distance",
-  "worldcombat.skill.jawlock.value.lunge": "Lunge",
+  "worldcombat.skill.jawlock.value.lunge": "Lunge speed",
   "worldcombat.skill.jawlock.value.maw": "Bite chips",
   "worldcombat.skill.jawlock.value.tempo": "Windup",
   "worldcombat.skill.jawlock.value.recover": "Recovery",
@@ -31,6 +31,7 @@
   "world_combat.move.jawlock.text.break": "Torn apart",
   "world_combat.move.jawlock.text.release": "Let go",
   "world_combat.move.jawlock.text.miss": "Bit only air",
+  "world_combat.move.jawlock.text.immune": "Bit down, but it slipped the hold",
   "effect.world_combat.jaw_locked": "Locked in Jaws",
   "effect.world_combat.jaw_holding": "Jaws Locked"
 }

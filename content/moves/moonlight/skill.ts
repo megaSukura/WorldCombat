@@ -1,12 +1,12 @@
 /**
  * 月光 / Moonlight —— 执行组织。
  *
- * 核心念头：把清冷的月色披到身上。夜里晴空这一口最足，还顺带把灼伤冷却掉；白天或阴雨只剩下一点余光。
+ * 核心念头：把清冷的月色披到身上。夜里晴空这一口最足，还顺带把灼伤冷却掉；白天或阴雨只剩下一点余光，但灼伤照样会熄。
  *
- * 出手：共享节奏，短促准备（承月时长随速度缩短）。windup 在提交前判定此刻能不能见到月色，并把它写进预告。
+ * 出手：共享节奏，短促承月（时长随速度缩短）。windup 在提交前判定此刻能不能见到月色，并把它写进预告。
  * 结果：提交后按 heal（夜里晴空 × 亲密度）补回生命，并冷却掉灼伤（CombatStatus.cure 走共享身份，任何来源的
- *   灼伤都算）；若真的接住月色，画面里再落下一层银色薄雾。
- * 反制：准备期可被打断（不花 PP）；白天动用只回下限、也没月色可言，所以要看天。
+ *   灼伤都算）。治疗与解烧分别记录实际成功：禁疗时只清烧、不播大回血；解烧被拒时仍按允许结算治疗。
+ * 反制：承月期可被打断（不花 PP）；白天动用只回下限、也没月色可言，但清烧仍有效，所以仍有用途。
  */
 namespace PokemonSkills {
     const moonlightScene = "world_combat:move_moonlight";
@@ -26,21 +26,12 @@ namespace PokemonSkills {
         } else {
             healed = world.health(self, amount, "world_combat:moonlight");
         }
-        var after = world.observe(self);
-        if (healed > 0 && after) feedback(world, self, after.position(), "heal", { amount: Math.round(healed * 10) / 10 });
         return healed;
-    }
-
-    /** 夜里且天晴：共享语义天气在场时不算晴夜；无现场时读原生世界。 */
-    function moonlightSkyAt(world: CombatWorld, point: CombatPoint): boolean {
-        if (WorldEnvironment.weather(world, point) !== null) return false;
-        var env = WorldEnvironment.read(world, point);
-        return !!(env && env.loaded && !env.day && env.skyVisible && (env.rain || 0) < 0.05 && (env.thunder || 0) < 0.05);
     }
 
     define({
         id: moonlightId, name: "月光",
-        description: "把夜里晴空的月色披到身上：接住月色时按缺失生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点。",
+        description: "把夜里晴空的月色披到身上：接住月色时按缺失生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点；无论月色强弱，灼伤都会被熄掉。",
         uses: ["夜里晴空下的强回复", "顺手冷却灼伤", "白天只作小补"],
         kind: "self", range: 0, prepare: 0, active: 0, recover: 10, cooldown: 220, style: "moon",
         maximumTicks: 300,
@@ -80,9 +71,15 @@ namespace PokemonSkills {
             var share = missing > 0 ? Math.max(0, Math.min(1, gained / missing)) : 0;
             var bursts = Math.max(10, Math.min(56, Math.round(12 + (moon ? 30 : 6) + share * 18)));
             world.sound("minecraft:block.amethyst_block.resonate", point, 16, "{}");
-            WorldFeedback.emit(world, moonlightScene, 1, point,
-                { moment: "veil", target: String(self.ref()), moon: moon ? 1 : 0, share: share,
-                    bursts: bursts, scale: moon ? 1.4 : 0.85, drops: moon ? 18 : 6 }, 34);
+            if (gained > 0) {
+                WorldFeedback.emit(world, moonlightScene, 1, point,
+                    { moment: "veil", target: String(self.ref()), moon: moon ? 1 : 0, share: share,
+                        bursts: bursts, scale: moon ? 1.4 : 0.85, drops: moon ? 18 : 6 }, 34);
+            } else {
+                // 禁疗或满血时月色仍会罩下来，只是没有回血点；清烧与否走各自的回执。
+                WorldFeedback.emit(world, moonlightScene, 1, point,
+                    { moment: "hush", target: String(self.ref()), moon: moon ? 1 : 0, scale: moon ? 1 : 0.7 }, 26);
+            }
             WorldFeedback.text(world, moonlightAbove(point), gained > 0 ? moonlightTextVeil : moonlightTextDim, [], 30);
             if (cooled) {
                 sound(action, "minecraft:block.moss.place");

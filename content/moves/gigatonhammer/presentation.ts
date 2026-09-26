@@ -1,14 +1,16 @@
 /**
  * 巨力锤 / gigatonhammer 的客户端表现。
  *
- * 一句话：施法者连人带锤旋身蓄力，钢色碎屑绕着它越转越密；巨锤抡下砸在身前地面，锤落处炸开一撮钢屑与尘雾，
- *   一圈冲击波沿地面推开（过顶式向前铺成一条走廊、横扫式绕身扫满一圈）。
+ * 一句话：施法者连人带锤旋身蓄力，钢色碎屑绕着它越转越密；巨锤抡下先砸中落脚点附近一圈，再沿地面掀起一道
+ *   前推的冲击波——过顶式下把地面走廊分三段按真实时刻依次点亮前移，横扫式下绕身扫满一圈；抡完身上留下一层
+ *   力竭的标识，说明巨锤还没能重新举起。
  * 色相家族：冷钢灰（0x9AA4AE、0xC9D4DE、0xE6ECF2）做锤与冲击波，白（0xFFFFFF）只给命中那一抹，暖火星只作细节。
- * 拍子：起 wind（蓄力）→ 砸 slam（锤落）→ 击 hit（主目标）/波 wave（波及）→ 收 tired（力竭）。
- * 范围：slam 的地面走廊按 `data.path` 四点画出（与判定同一组顶点），横扫式换成 `data.radius` 的一圈；`data.scale`
- *   让画面尺寸跟着机制范围走。
- * 运动：wind 的碎屑绕身快速旋转、slam 的冲击波沿地面由内向外推开、tired 的尘贴着脚边慢慢升起。
- * 数：`data.dust`（物攻派生）绑定发射量，`data.intensity`（锤击威力派生）抬高亮度，`data.sweep` 区分两种形态。
+ * 拍子：起 wind（蓄力）→ 砸 slam（近圈锤落）→ 波 wave（三段地纹前移）/ wave-hit（被波命中）→ 击 hit（主目标）→ 收 mark/spent。
+ * 范围：slam 的靠近击用 `data.radius` 的一圈；wave 的每一段按 `data.path` 四点画出（与判定同一组顶点），`data.scale`
+ *   让画面尺寸跟着机制范围走，`data.front` 给出这一段走到了三段的第几段。
+ * 运动：wind 的碎屑绕身快速旋转、wave 的地纹由内向外按真实时刻推进、spent 的尘贴着脚边慢慢升起。
+ * 数：`data.dust`（物攻派生）绑定发射量，`data.intensity`（锤击威力派生）抬高亮度，`data.sweep` 区分两种形态，
+ *   `data.linger` 绑定禁复标记的时长。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const GigatonhammerDefinition: ParticleDefinition = {
@@ -37,28 +39,14 @@ const GigatonhammerDefinition: ParticleDefinition = {
             ]
         },
         slam: {
-            duration: 34,
-            exit: { stop: 10, drain: 14 },
+            duration: 30,
+            exit: { stop: 9, drain: 14 },
             emitters: [
-                {
-                    name: "lane", bind: "path", shape: { kind: "polygon" }, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 90, direction: "outward", speed: [0.1, 0.4], spread: 10, gravity: 0.04, drag: 0.93,
-                    lifetime: [8, 15], size: [0.18, 0.03], sizeMode: "index",
-                    color: 0xB9A88C, alpha: [0.6, 0], light: "world", maxParticles: 160
-                },
-                {
-                    name: "laneSteel", bind: "path", shape: { kind: "polygon" }, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
-                    rate: 60, direction: "outward", speed: [0.14, 0.5], spread: 12,
-                    lifetime: [7, 13], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 120
-                },
                 {
                     name: "ring", bind: "point", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    rate: 20, shape: { kind: "ring", radius: { data: "radius", fallback: 1 }, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.08, 0.3], drag: 0.93,
+                    rate: 26, shape: { kind: "ring", radius: { data: "radius", fallback: 1 }, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.12, 0.4], drag: 0.93,
                     lifetime: [9, 16], size: [0.5, 0.12], sizeMode: "index",
                     color: 0xC9D4DE, alpha: [0.6, 0], light: "world", maxParticles: 90
                 },
@@ -79,12 +67,40 @@ const GigatonhammerDefinition: ParticleDefinition = {
                 }
             ]
         },
+        wave: {
+            duration: 22,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "lane", bind: "path", shape: { kind: "polygon" }, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    rate: 80, direction: "outward", speed: [0.1, 0.4], spread: 10, gravity: 0.04, drag: 0.93,
+                    lifetime: [8, 15], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0xB9A88C, alpha: [0.6, 0], light: "world", maxParticles: 140
+                },
+                {
+                    name: "laneSteel", bind: "path", shape: { kind: "polygon" }, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
+                    rate: 50, direction: "outward", speed: [0.14, 0.5], spread: 12,
+                    lifetime: [7, 13], size: [0.14, 0.03], sizeMode: "index",
+                    color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 110
+                },
+                {
+                    name: "edge", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
+                    rate: 24, shape: { kind: "ring", radius: 0.6, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.14, 0.44], drag: 0.93,
+                    lifetime: [8, 14], size: [0.4, 0.1], sizeMode: "index",
+                    color: 0xC9D4DE, alpha: [0.7, 0], light: "world", maxParticles: 70
+                }
+            ]
+        },
         hit: {
             duration: 24,
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "crack", bind: "target", offset: [0, 0.5, 0], height: 0.5,
+                    name: "crack", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: { data: "dust", fallback: 20 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.34 }, direction: "outward", speed: [0.1, 0.4], spread: 24,
@@ -92,7 +108,7 @@ const GigatonhammerDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.42, maxParticles: 60
                 },
                 {
-                    name: "spall", bind: "target", offset: [0, 0.4, 0], height: 0.45,
+                    name: "spall", bind: "point", offset: [0, 0.32, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: { data: "dust", fallback: 14 }, at: 1 },
                     shape: { kind: "sphere_surface", radius: 0.36 }, direction: "outward", speed: [0.14, 0.42], spread: 28, gravity: 0.08,
@@ -101,12 +117,12 @@ const GigatonhammerDefinition: ParticleDefinition = {
                 }
             ]
         },
-        wave: {
+        "wave_hit": {
             duration: 20,
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "thud", bind: "target", offset: [0, 0.3, 0], height: 0.4,
+                    name: "thud", bind: "point", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/smokeorb",
                     burst: { count: { data: "dust", fallback: 10 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.28 }, direction: "outward", speed: [0.06, 0.24], spread: 24,
@@ -137,14 +153,14 @@ const GigatonhammerDefinition: ParticleDefinition = {
                 }
             ]
         },
-        tired: {
-            duration: 40,
-            exit: { stop: 26, drain: 12 },
+        spent: {
+            duration: { data: "linger", fallback: 100 },
+            exit: { stop: 12, drain: 12 },
             emitters: [
                 {
                     name: "puff", bind: "source", offset: [0, 0.15, 0], height: 0.1, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 10, shape: { kind: "circle", radius: 0.5 },
+                    rate: 8, shape: { kind: "circle", radius: 0.5 },
                     direction: "up", speed: [0.02, 0.08], spread: 16, gravity: -0.01, drag: 0.93,
                     lifetime: [16, 26], size: [0.4, 0.14], sizeMode: "sin",
                     color: 0x8A8F96, alpha: [0.3, 0], light: "world", maxParticles: 30
@@ -152,7 +168,7 @@ const GigatonhammerDefinition: ParticleDefinition = {
                 {
                     name: "heavy", bind: "source", offset: [0, 0.6, 0], height: 0.5, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 6, shape: { kind: "sphere_surface", radius: 0.4 },
+                    rate: 5, shape: { kind: "sphere_surface", radius: 0.4 },
                     direction: "inward", speed: [0.04, 0.14], drag: 0.94,
                     lifetime: [10, 18], size: [0.09, 0.02],
                     color: 0x9AA4AE, alpha: [0.4, 0], light: "full", bloom: 0.12, maxParticles: 20

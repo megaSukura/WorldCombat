@@ -1,16 +1,37 @@
 /** encore：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
+    /** 攻击方式归并：物理接触是近战，物理远程是投射，特殊是魔法。 */
+    function encoreAttackMethod(category: string, contact: boolean): string {
+        if (category === "special") return "magic";
+        return contact ? "melee" : "ranged";
+    }
+    /** 宝可梦已知配招里出现过几种攻击方式；只会一种的对手被点名后几乎没变化，收益低。 */
+    function encoreDiversity(access: CombatWorld, actor: CombatActor): number {
+        if (String(actor.domain()) !== "cobblemon") return 1;
+        const pokemon = CobblemonCombat.pokemon(actor), methods: { [name: string]: boolean } = {};
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const move = pokemon.move(slot);
+            if (move === null || String(move.category()) === "status") continue;
+            methods[encoreAttackMethod(String(move.category()), move.flag("contact"))] = true;
+        }
+        return Math.max(1, Object.keys(methods).length);
+    }
+
     /** 只读、决策内缓存：目标最近一次出手的身份、距今刻数与性质；没有出手记录返回 null。 */
     registerFact("world_combat:encore-target", function (access, actor, _argument) {
         if (String(actor.domain()) !== "cobblemon") {
             const last = DamageSemantics.recentAttack(access, actor, 400);
-            return last ? { id: last.type, since: access.tick() - last.tick, category: "physical", power: 60, failencore: 0 } : null;
+            return last ? { id: last.type, since: access.tick() - last.tick,
+                category: last.category || (last.contact ? "physical" : "special"), power: 60, failencore: 0,
+                kind: encoreAttackMethod(last.category || "", !!last.contact), diversity: 1 } : null;
         }
         const last = NativeEffects.lastMove(access, actor);
         if (last === null) return null;
         const template = CobblemonCombat.moveTemplate(last.id);
         return { id: last.id, since: Math.max(0, access.tick() - last.tick), category: String(template.category()),
-            power: template.power(), failencore: NativeLoadout.facts(template).flags.failencore ? 1 : 0 };
+            power: template.power(), failencore: NativeLoadout.facts(template).flags.failencore ? 1 : 0,
+            kind: encoreAttackMethod(String(template.category()), template.flag("contact")),
+            diversity: encoreDiversity(access, actor) };
     });
 
     function encoreInfo(context: WorldBehavior.Context, target: Entity): any {
@@ -39,7 +60,12 @@ namespace CompanionBehavior {
         priority: function (context, capability, target) {
             if (!target || !encoreWorth(context, capability, target)) return 0;
             const info = encoreInfo(context, target);
-            return info.category === "status" ? 70 : info.power <= 80 ? 45 : 30;
+            let value = info.category === "status" ? 70 : info.power <= 80 ? 45 : 30;
+            // 只会一种攻击方式的对手被点名后几乎没有变化：价值压低，但不对它假加惩罚。
+            const diversity = Math.max(1, info.diversity || 1);
+            if (diversity <= 1 && info.kind !== "magic") value = Math.min(value, 18);
+            else value += (diversity - 1) * 12;
+            return value;
         }
     });
 

@@ -2,12 +2,12 @@
  * 画龙点睛 / dragonascent 的客户端表现。
  *
  * 一句话：施法者屈腿蓄势、气流在脚下收拢 → 猛地窜上天、身上甩下风线 → 从正上方沿斜线俯冲、身体周围卷着气旋 →
- *   落地砸出一圈近白的裂石尘环、冲击波向外荡开 → 落地后重心一沉，身上浮起脱力灰气。
+ *   落地砸出一圈近白的尘环、冲击波向外荡开 → 落地后重心一沉，身上浮起脱力灰气。
  * 色相家族：天青 0x7FC8D8 与近白 0xE8F6FA 为主体，暖灰 0x8C7448 / 0x777066 作地面尘与碎石，无第二色相。
  * 拍子：起 ready（屈腿蓄势）→ 弃守 guard（护罩碎裂）→ 升 climb（窜空）→ 坠 dive（俯冲）→ 击 hit／land（砸实＋冲击波）→ 收 slump（脱力）。
- * 范围：land 的 `ring`、`shock`、`shockwave` 绑落点、`fit:"none"`，半径按 `data.scale`（冲击半径 / 2）推出，画出的圈就是被震到的地面。
+ * 范围：land 的 `ring`、`shock`、`shockwave` 绑落点、`fit:"none"`，半径按 `data.scale`（冲击半径 / 2）推出，画出的圈就是被震到的范围。
  * 运动：起手气流向内收；升空时向下的风线与脚边外卷；俯冲贴着身体拖风线、气旋外卷；落地时地环外推、碎土与石块向外崩、白环向外荡开。
- * 数：hit/land 的尘与碎屑量绑 `data.motes`（物攻派生），地面存活量绑 `data.cells`（实际砸出的格子数），核心强度绑 `data.intensity`（威力派生）。
+ * 数：hit/land 的尘与碎屑量绑 `data.motes`（物攻派生），核心强度绑 `data.intensity`（威力派生；主目标已吃满时服务端会把 land 调弱，不再画第二满击）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const DragonAscentDefinition: ParticleDefinition = {
@@ -152,7 +152,7 @@ const DragonAscentDefinition: ParticleDefinition = {
                 {
                     name: "soil", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "cells", fallback: 8 }, at: 0 },
+                    burst: { count: { data: "motes", fallback: 16 }, at: 0 },
                     shape: { kind: "circle", radius: 0.9 },
                     direction: "outward", speed: [0.06, 0.24], gravity: 0.08, drag: 0.9,
                     lifetime: [10, 18], size: [0.09, 0.02],

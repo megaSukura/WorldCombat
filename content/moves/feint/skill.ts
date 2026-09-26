@@ -6,13 +6,17 @@
  *
  * 三幕（提交前只播预告）：
  *   晃（wind，提交前）：压身、起手，只播一记虚晃的预告。
- *   扑（charge → jab）：提交后朝目标扑 `reach` 格（每刻 `rush`），贴上即先扫掉目标身上最多 `wardBreak` 层
- *       守护（`world_combat:guard` 的 dispel），再按 `jab × (1 + 每层破绽)` 结算一次伤害并把目标顶开一点。
+ *   扑（rush → jab）：提交后朝当刻自由瞄准方向短步扑进 `reach` 格（每刻 `rush`），由**原生扫掠**在真实接触
+ *       到第一个敌人那一刻才扫掉它身上最多 `wardBreak` 层守护（`world_combat:guard` 的 dispel），再按
+ *       `jab × (1 + 每层破绽)` 结算一次伤害并把目标顶开一点；墙会拦住脚步。
  *   收（peel）：被掀掉的守护当场碎成冷光，浮字报出掀掉的层数；扑空只留一路虚晃。
  *
  * 与同族分开：强力钻是压上全部重量的直线凿穿，佯攻是**先掀后戳**的轻快探路；两者都能处理守护，但玩家凭
  *   「快、轻、把罩整层掀掉」认出佯攻。守护是共享机制 GuardEffects（守住、看穿、广域防守、硬化……同一套），
  *   所以对宝可梦、原版生物、其他模组生物和玩家一视同仁。
+ *
+ * 自由瞄准：`kind: "aim"` 接受任意阵营实体或世界点，指定敌人只用来辅助靠近与定方向；没有输入目标时照常
+ *   朝当刻方向空戳一记，命中权限仍由命中层按原生敌我判定。
  *
  * 配置 `commit` 由公式改威力／破绽／掀护层数／突进与时序；提交后才触碰世界。
  */
@@ -41,7 +45,7 @@ namespace PokemonSkills {
         name: "Feint",
         description: "一次假动作把对手撑起的守护掀掉，紧接着的一戳才真正打进去；掀掉的守护层数越多，这一下越重。对没有守护的目标，它仍是一记极快的戳击。",
         uses: ["掀掉对手撑起的守护，为下一记重击开路", "用极短的起手，抢在守护替对手挡下重击前把它掀掉", "对没有守护的目标补一记极快的戳击"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.2,
         maxRange: 3.6,
         prepare: 4,
@@ -74,7 +78,6 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const target = action.target();
             const reach = Math.max(1.2, p("feint", "reach", action));
             const rush = Math.max(0.3, p("feint", "rush", action));
             const radius = Math.max(0.35, p("feint", "radius", action));
@@ -84,71 +87,84 @@ namespace PokemonSkills {
             const push = p("feint", "push", action);
             const sparks = Math.max(6, Math.round(p("feint", "sparks", action)));
             const scale = radius / feintReferenceRadius;
-            const contactGap = 0.6;
-            let travelled = 0;
+            const heading = WorldGeometry.flatUnit(aim(action), WorldCombat.point(0, 0, 1));
+            let travelled = 0, settled = false;
 
             sound(action, "cobblemon:move.quickattack.actor");
+            WorldFeedback.emit(world, feintScene, 1, action.origin(),
+                { moment: "wind", sparks: sparks, scale: scale }, 14);
 
-            /** 贴上目标：先掀守护，再按破绽加成结算这一戳；都没贴上就只留一路虚晃。 */
-            function strike(current: CombatAction, at: CombatPoint): void {
+            /** 收势：真实接触到的敌人先掀守护再结算这一戳；没接触到谁只留一路虚晃。 */
+            function strike(current: CombatAction, at: CombatPoint, victim: CombatActor | null): void {
+                if (settled) return;
+                settled = true;
                 const scope = current.world();
-                const self = scope.observe(actor);
-                const selfAt = self !== null ? self.position() : current.origin();
-                const victim = target !== null && scope.valid(target) ? target : null;
                 let broken = 0, landed = false, power = jab;
-                if (victim !== null && !scope.friendly(victim) && at.minus(selfAt).length() <= reach + radius + 0.9) {
+                if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                    const self = scope.observe(actor);
+                    const from = self !== null ? self.position() : current.origin();
                     broken = feintStrip(scope, victim, budget);
                     power = jab * (1 + expose * broken);
                     landed = hurt(current, victim, "feint", power, { damage: damageSpec("feint", "jab") });
                     if (landed && scope.valid(victim)) {
-                        const away = WorldCombat.point(at.x() - selfAt.x(), 0, at.z() - selfAt.z());
-                        if (away.length() >= 0.05) scope.displace(victim, away.unit().scale(push));
+                        const away = WorldCombat.point(at.x() - from.x(), 0, at.z() - from.z());
+                        if (away.length() >= 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                     }
                 }
-                WorldFeedback.emit(scope, feintScene, 1, at,
-                    { moment: landed ? (broken > 0 ? "peel" : "jab") : "miss", target: victim === null ? "" : String(victim.ref()),
-                        landed: landed ? 1 : 0, broken: broken, power: Math.round(power), sparks: sparks, scale: scale,
-                        intensity: Math.max(0.5, Math.min(2.2, power / 34)) }, 24);
+                // peel 只对应真正被解掉的守护层；jab 是随后的一戳；两者都没有就只是空戳。
                 if (broken > 0) {
+                    WorldFeedback.emit(scope, feintScene, 1, at,
+                        { moment: "peel", target: victim === null ? "" : String(victim.ref()),
+                            landed: landed ? 1 : 0, broken: broken, power: Math.round(power), sparks: sparks, scale: scale,
+                            intensity: Math.max(0.5, Math.min(2.2, power / 34)) }, 24);
                     sound(current, "minecraft:block.glass.break");
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), feintPeelText, [broken], 30);
-                } else if (landed) {
+                }
+                if (landed) {
+                    WorldFeedback.emit(scope, feintScene, 1, at,
+                        { moment: "jab", target: victim === null ? "" : String(victim.ref()), landed: 1,
+                            broken: broken, power: Math.round(power), sparks: sparks, scale: scale,
+                            intensity: Math.max(0.5, Math.min(2.2, power / 34)) }, 20);
                     sound(current, "cobblemon:impact.normal");
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), feintHitText, [], 24);
-                } else {
+                }
+                if (broken <= 0 && !landed) {
+                    WorldFeedback.emit(scope, feintScene, 1, at,
+                        { moment: "miss", target: victim === null ? "" : String(victim.ref()), landed: 0,
+                            broken: 0, power: Math.round(power), sparks: sparks, scale: scale, intensity: 1 }, 22);
                     sound(current, "minecraft:entity.player.attack.weak");
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), feintMissText, [], 22);
                 }
                 done(current);
             }
 
-            /** 朝目标扑进：每刻推进 `rush`，贴上或冲满 `reach` 就结算。 */
-            function chase(current: CombatAction): void {
+            /** 短步原生扫掠：每刻推进 `rush`，首个真实接触的敌人即结算；墙或射程尽头收势。 */
+            function advance(current: CombatAction): void {
+                if (settled) return;
                 const scope = current.world();
                 const self = scope.observe(actor);
                 if (self === null) { done(current); return; }
-                const victim = target !== null && scope.valid(target) ? target : null;
-                if (victim === null) { strike(current, action.targetPosition()); return; }
-                const body = scope.observe(victim);
-                if (body === null) { strike(current, action.targetPosition()); return; }
-                const delta = body.position().minus(self.position());
-                const flat = WorldCombat.point(delta.x(), 0, delta.z());
-                const distance = flat.length();
-                if (distance <= contactGap + 0.35 || travelled >= reach) { strike(current, body.position()); return; }
-                const heading = flat.length() < 1e-6 ? aim(current) : flat.unit();
-                const room = Math.min(rush, Math.max(0, distance - contactGap), Math.max(0, reach - travelled));
-                if (room <= 0.03) { strike(current, body.position()); return; }
-                const moved = scope.displace(actor, heading.scale(room));
-                travelled += moved;
+                const step = Math.min(rush, Math.max(0, reach - travelled));
+                if (step <= 0.03) { strike(current, self.position(), null); return; }
+                const swept = sweepStep(current, heading.scale(step), radius), hit = swept.hit;
+                travelled += swept.moved;
                 WorldFeedback.keep(scope, "feint:rush:" + String(current.actor().ref()), feintScene, 1, self.position(),
                     { moment: "rush", direction: [heading.x(), 0, heading.z()], sparks: sparks, scale: scale }, 8);
-                if (moved < room * 0.5) { strike(current, body.position()); return; }
-                current.after(1, function (next: CombatAction) { chase(next); });
+                if (hit.hitEntity()) {
+                    const victim = hit.target();
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) { strike(current, hit.position(), victim); return; }
+                    // 撞到友方身体或失效目标：停在真实接触点，不成伤。
+                    strike(current, hit.position(), null); return;
+                }
+                if (hit.blocked() || swept.moved < step - 1e-6 || travelled >= reach) {
+                    const after = scope.observe(actor);
+                    strike(current, after !== null ? after.position() : self.position(), null);
+                    return;
+                }
+                current.after(1, function (next: CombatAction) { advance(next); });
             }
 
-            WorldFeedback.emit(world, feintScene, 1, action.origin(),
-                { moment: "wind", sparks: sparks, scale: scale }, 14);
-            chase(action);
+            advance(action);
         }
     });
 }

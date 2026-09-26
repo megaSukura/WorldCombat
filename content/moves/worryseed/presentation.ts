@@ -1,15 +1,16 @@
 /**
  * 烦恼种子 / worryseed 的客户端表现。
  *
- * 一句话：手心里鼓起一颗种子、身边绕着几颗同样的种子 → 种子脱手拖着细尾迹飞向对手 → 命中处根须破土、
- *         冒出一撮「？」，对手身上挂着一层还没散去的绿雾。
+ * 一句话：手心里鼓起一颗种子、身边绕着几颗同样的种子 → 种子脱手拖着细尾迹飞向选中的身体 → 命中处根须破土、
+ *         冒出一撮「？」，身上挂起一层还没散去的绿雾；如果这一下把睡着的目标叫醒，头上再亮一次睁眼。
  * 色相家族：种壳绿 0x8FBF4A 作主体，嫩芽黄绿 0xE8FF9B 作高光，闷紫 0x6B5BA8 只出现在「？」与心绪层。
- * 拍子：起 gather 0–12t ／ 飞 toss 40t（沿 projectile 绑定）／ 击 plant 40t ／ 空 miss 24t。
+ * 拍子：起 gather 0–12t ／ 飞 toss 40t（沿 projectile 绑定）／ 击 plant 40t ／ 醒 wake 30t ／ 空 miss 24t。
  * 范围：plant 的空土环按 `data.scale`（种子半径比）铺开，画出这颗种子砸到多大一块；
  *   根须沿 `data.roots` 条数从地面向上炸开，就是它真正顶出的那块地。
- * 运动：种子绕手慢转、脱手后沿轨迹飞、命中时根须向上顶、「？」向上飘散。
+ * 运动：种子绕手慢转、脱手后沿轨迹飞、命中时根须向上顶、「？」向上飘散、醒来时头顶向外炸开一圈光。
  * 数：种子数绑 `data.seeds`（特攻派生），心绪数绑 `data.worries`（等级派生），根须数绑 `data.roots`
- *   （特攻与体重派生）；深植（`data.deep`）让心绪层更大更久。
+ *   （特攻与体重派生），醒来的光点数绑 `data.glints`（心绪派生）；
+ *   深植（`data.worrySize`／`data.worryLife`／`data.worryLifeMax`，都来自同一份「深植」配置）让心绪层更大更久。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const WorryseedSceneDefinition: ParticleDefinition = {
@@ -87,7 +88,8 @@ const WorryseedSceneDefinition: ParticleDefinition = {
                     burst: { count: { data: "worries", fallback: 6 } },
                     shape: { kind: "box", size: [0.7, 0.9, 0.7] },
                     direction: "up", speed: [0.03, 0.12], spread: 12, spin: 20,
-                    lifetime: [16, 28], size: [0.2, 0.08], sizeMode: "index",
+                    lifetime: [{ data: "worryLife", fallback: 16 }, { data: "worryLifeMax", fallback: 28 }],
+                    size: [{ data: "worrySize", fallback: 0.2 }, 0.08], sizeMode: "index",
                     color: 0x6B5BA8, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 90
                 },
                 {
@@ -96,8 +98,39 @@ const WorryseedSceneDefinition: ParticleDefinition = {
                     rate: 10,
                     shape: { kind: "sphere_surface", radius: 0.45 },
                     direction: "down", speed: [0.0, 0.05], spin: 30,
-                    lifetime: [12, 22], size: [0.1, 0.02], sizeMode: "sin",
+                    lifetime: [12, 22], size: [{ data: "worrySize", fallback: 0.2 }, 0.02], sizeMode: "sin",
                     color: 0x8FBF4A, alpha: [0.65, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        wake: {
+            duration: 30,
+            exit: { stop: 12, drain: 18 },
+            emitters: [
+                {
+                    name: "wake_ring", bind: "target", fit: "body", offset: [0, 0.78, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.45 },
+                    direction: "outward", speed: [0.06, 0.18],
+                    lifetime: [10, 16], size: [0.28, 0.72], sizeMode: "sin",
+                    color: 0xE8FF9B, alpha: [0.7, 0], light: "full", maxParticles: 20
+                },
+                {
+                    name: "wake_glints", bind: "target", fit: "body", offset: [0, 0.82, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "glints", fallback: 12 }, interval: 2, repeats: 2 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.08, 0.24], spread: 16, drag: 0.9,
+                    lifetime: [8, 16], size: [0.14, 0.02], sizeMode: "index",
+                    color: 0xE8FF9B, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 80
+                },
+                {
+                    name: "wake_eyes", bind: "target", fit: "body", offset: [0, 0.86, 0],
+                    particle: "world_combat_core:cobblemon/generic/hit",
+                    burst: { count: 2, at: 1 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "shape", speed: [0.03, 0.12],
+                    lifetime: [8, 12], size: [0.3, 0.06],
+                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 20
                 }
             ]
         },

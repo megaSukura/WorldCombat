@@ -19,7 +19,7 @@ Smoke.scenario("nightslash", function (stage) {
     }, function () {
         stage.expect(stage.casts("nightslash", caster) >= 1, "caster committed nightslash");
         stage.expect(stage.damageTo(foe) > 0, "nightslash dealt damage to the foe");
-        stage.note("critical hits come from the native critRatio 2 roll; the opening bonus needs the target to be attacking someone else, which the NoAI golem never does here", {
+        stage.note("the short diagonal trace stops at the first body or block, so front bodies/walls intercept it; critical hits come from the native critRatio 2 roll, and the opening bonus needs the target to be attacking someone else, which the NoAI golem never does here", {
             casts: stage.casts("nightslash", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

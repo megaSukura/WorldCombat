@@ -1,7 +1,7 @@
 /**
  * 攻击指令 / attackorder —— 可执行设计说明。
  *
- * 一句话：一只只会攻击指令的蜂女王对着身前的对手振翅，放出一队手下从身边扑过去，各自刺中目标一下。
+ * 一句话：一只只会攻击指令的蜂女王对着身前的对手振翅，放出一队手下从身边扑过去，各自追到目标身体中心、核对接触与通视后刺一下。
  * 必然事实：本招被放出过、目标受到过伤害（每只手下各自结算一小段，都回到同一个目标身上）。
  * 放出几只、每只多重、有没有被中途打掉取决于等级、档位与目标，写进 note 供读轨迹判断。
  */
@@ -18,7 +18,7 @@ Smoke.scenario("attackorder", function (stage) {
     }, function () {
         stage.expect(stage.casts("attackorder", caster) >= 1, "the vespiquen called its underlings");
         stage.expect(stage.damageTo(foe) > 0, "the underlings reached and stung the foe");
-        stage.note("手下面数（等级驱动，精锐默认 3 只、虫海 +2 只）与每只威力（物攻与等级驱动）是设计事实；每只手下用施法者的属性各自结算一次 sting、各自掷一次会心，被中途打掉的手下不再落刺。本场景的靶子不会还手，手下能全部飞到。", {
+        stage.note("手下面数（等级驱动，精锐默认 3 只、虫海 +2 只）与每只威力（物攻与等级驱动）是设计事实；每只手下追的是目标身体中心这个真实最近可达点，扎刺前用 world.clear 核对真实接触与通视，隔墙不刺，被中途打掉的手下不再落刺。本场景的靶子不会还手，手下能全部飞到。", {
             casts: stage.casts("attackorder", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive(),

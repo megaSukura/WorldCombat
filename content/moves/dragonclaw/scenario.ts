@@ -2,9 +2,9 @@
  * 龙爪 / dragonclaw 的可执行设计说明。
  *
  * 场面：一只只会龙爪的圆陆鲨（Gible）面对左右两只各距约 2 格的僵尸；设为夜晚，僵尸不会被日光灼烧，
- * 伤害只可能来自这一扫。两者开战，AI 只有这一招可用。
- * 必然事实：本招被提交过（`stage.casts`）；至少一只目标受到过伤害（扇面内有敌人）。
- * 一次扫到几个、是否撕开护甲、暴击，写进 note 供读轨迹判断。
+ * 伤害只可能来自这一扫。两者开战，AI 只有这一招可用。AI 对准其中一只，交叉中心落在它身上。
+ * 必然事实：本招被提交过（`stage.casts`）；至少一只目标受到过伤害（它所在的那条爪带覆盖到它）。
+ * 两条爪带各扫到几个、中心目标是否被撕甲、暴击，写进 note 供读轨迹判断。
  */
 Smoke.scenario("dragonclaw", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -20,8 +20,8 @@ Smoke.scenario("dragonclaw", function (stage) {
     }, function () {
         stage.after(40, function () {
             stage.expect(stage.casts("dragonclaw", caster) > 0, "dragonclaw was committed");
-            stage.expect(stage.damageTo(left) + stage.damageTo(right) > 0, "the fan caught at least one foe");
-            stage.note("宽扇形扫击；被扫中的目标防御下降，画面里两道交叉爪痕同时划过", {
+            stage.expect(stage.damageTo(left) + stage.damageTo(right) > 0, "a crossing claw band caught at least one foe");
+            stage.note("两条交叉爪带同刻判定；被任一爪带扫到的目标各结算一次伤害，中心双带共同覆盖者防御下降，画面里两道交叉爪带同时铺开", {
                 casts: stage.casts("dragonclaw", caster),
                 left: Math.round(stage.damageTo(left) * 10) / 10,
                 right: Math.round(stage.damageTo(right) * 10) / 10,
@@ -29,5 +29,5 @@ Smoke.scenario("dragonclaw", function (stage) {
             });
             stage.done();
         });
-    }, "dragonclaw sweeps the fan and catches a foe");
+    }, "dragonclaw sweeps two crossing bands and catches a foe");
 });

@@ -1,16 +1,17 @@
 /**
  * 臂锤 / hammerarm 的客户端表现。
  *
- * 一句话：施法者把整条手臂抡过头顶、拳边聚起斗气 → 一记横挥重砸落在目标身上炸开拳劲与碎土，拳面把地面
- *   砸出一圈放射状裂痕 → 惯性带得自己踉跄，身上浮起疲软的灰气。
- * 色相家族：拳劲的暖橙（impact_fighting／bigfist／hollowfist）为主体，土褐（earth／tinydust）作地面裂尘，
- *   中性灰（0x9A968C）只用在踉跄余韵；无第二色相。
- * 拍子：起 hoist（举臂聚气）→ 击 slam（拳面炸开）→ 裂 cleft（地面裂痕）→ 收 stagger（踉跄）／失 miss（扑空）。
- * 范围：单体近身，slam 的爆点与 cleft 的裂环都按 `data.radius`（裂痕半径）与 `data.scale` 铺开，
- *   裂环就是会被砸裂的那圈地面。
- * 运动：slam 的拳劲从命中点向外崩、碎土带重力落回；cleft 的裂尘贴地向外扩；stagger 的灰气缓慢上飘。
- * 数：`data.dents`（体重与物攻换算的裂地量）决定碎屑与裂尘量，`data.intensity`（威力 / 100）抬高密度与亮度，
- *   `data.speedLoss`（自身速度下降级）决定踉跄灰气的量。
+ * 一句话：施法者把整条手臂抡过头顶、拳边聚起斗气 → 沿一条真实短拳路压下，拳面在首个接触点炸开拳劲，
+ *   并按**真实接触的地材质**向外拉出一圈短放射尘线 → 惯性带得自己踉跄，身上浮起疲软的灰气。
+ * 色相家族：拳劲的暖橙（impact_fighting／bigfist／hollowfist）为主体，接触地材质尘色（`data.tint`，
+ *   黄沙／石／草／深板岩／雪／土）作地面尘线，中性灰（0x9A968C）只用在踉跄余韵；无第二色相。
+ * 拍子：起 hoist（举臂聚气）→ 挥 swing（真实拳路短线）→ 击 slam（命中炸开 + 接触地材尘线）／
+ *   wall（撞墙扬尘）／blocked（伤害被拒）→ 收 stagger（踉跄）／失 miss（扑空）。
+ * 范围：swing 用 `data.path`（与服务端 trace 同一起点、同一终点）画一条窄线；slam／wall 的尘线半径读
+ *   `data.radius`，只在真实接触点铺开，绝不改动地形。
+ * 运动：slam 的拳劲从命中点向外崩、碎屑带重力落回；wall 沿墙面扬起；stagger 的灰气缓慢上飘。
+ * 数：`data.dents`（体重与物攻换算的尘线量）决定碎屑与尘线量，`data.intensity`（威力 / 100）抬高密度与亮度，
+ *   尘线颜色由 `data.tint`（真实接触地材质）决定，`data.speedLoss`（实际降速级）决定踉跄灰气的量。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const HammerarmDefinition: ParticleDefinition = {
@@ -38,6 +39,28 @@ const HammerarmDefinition: ParticleDefinition = {
                 }
             ]
         },
+        swing: {
+            duration: 12,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "fist_line", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/hollowfist",
+                    shape: { kind: "polyline" }, burst: { count: 26 },
+                    direction: "shape", orient: "direction", speed: [0.05, 0.16], spread: 6, spin: 8,
+                    lifetime: [4, 8], size: [0.32, 0.06], sizeMode: "index",
+                    color: 0xE8A24A, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
+                },
+                {
+                    name: "smear", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    shape: { kind: "polyline" }, burst: { count: 14 },
+                    direction: "shape", orient: "direction", speed: [0.04, 0.14],
+                    lifetime: [4, 7], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0xF6C271, alpha: [0.6, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         slam: {
             duration: 22,
             exit: { stop: 8, drain: 14 },
@@ -61,48 +84,64 @@ const HammerarmDefinition: ParticleDefinition = {
                     color: 0xF6C271, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 80
                 },
                 {
-                    name: "chips", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    name: "dust_line", bind: "point", fit: "none", offset: [0, 0.22, 0],
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: { data: "dents", fallback: 10 }, at: 0 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.1 } },
+                    direction: "outward", speed: [0.05, 0.2], spread: 14,
+                    gravity: 0.04, drag: 0.92,
+                    lifetime: [9, 16], size: [0.12, 0.02],
+                    color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.8, 0], light: "world", maxParticles: 70
+                },
+                {
+                    name: "chips", bind: "point", fit: "none", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dents", fallback: 10 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.06, 0.26], spin: 12, spread: 30,
                     gravity: 0.08, drag: 0.9,
                     lifetime: [10, 18], size: [0.1, 0.02],
-                    color: 0x8C7448, alpha: [0.8, 0], light: "world", maxParticles: 80
+                    color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.8, 0], light: "world", maxParticles: 80
                 }
             ]
         },
-        cleft: {
-            duration: 24,
-            exit: { stop: 9, drain: 15 },
+        wall: {
+            duration: 20,
+            exit: { stop: 7, drain: 13 },
             emitters: [
                 {
-                    name: "crack_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.1 } },
-                    direction: "outward", speed: [0.09, 0.26],
-                    lifetime: [10, 18], size: [0.5, 1.2], sizeMode: "sin",
-                    color: 0xD9C79A, alpha: [0.55, 0], light: "world", maxParticles: 6
-                },
-                {
-                    name: "rubble", bind: "point", fit: "none", offset: [0, 0.12, 0],
-                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    name: "dents", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dents", fallback: 10 }, at: 0 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.1 } },
-                    direction: "up", speed: [0.05, 0.2], spin: 10, spread: 24,
-                    gravity: 0.09, drag: 0.9,
-                    lifetime: [12, 22], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xA89878, alpha: [0.85, 0], light: "world", maxParticles: 70
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "outward", speed: [0.08, 0.28], spread: 30,
+                    gravity: 0.08, drag: 0.9,
+                    lifetime: [9, 16], size: [0.1, 0.02],
+                    color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.85, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "dust", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "fall", bind: "point", fit: "none", offset: [0, 0.16, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dents", fallback: 10 }, at: 0 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.1 } },
                     direction: "outward", speed: [0.03, 0.14], gravity: 0.05, drag: 0.92,
-                    lifetime: [12, 20], size: [0.06, 0.02],
-                    color: 0x8C7448, alpha: [0.4, 0], light: "world", maxParticles: 80
+                    lifetime: [11, 19], size: [0.06, 0.02],
+                    color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.4, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        blocked: {
+            duration: 16,
+            exit: { stop: 6, drain: 11 },
+            emitters: [
+                {
+                    name: "choke", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    lifetime: [7, 13], size: [0.09, 0.02],
+                    color: 0x9A968C, alpha: [0.5, 0], light: "world", maxParticles: 26
                 }
             ]
         },

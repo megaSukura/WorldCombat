@@ -1,6 +1,6 @@
-// 聚光灯的可执行设计说明：这是一招把对手标成焦点的控制，所以场面要有对手，也要有能被牵过去的同伴。
-// 必然事实：施法者提交过聚光灯；对手身上出现过共享身份 world_combat:status/spotlight。
-// 伤害加成与「把原版生物指向它」是持续效果，属完整装配观察项，写进 note。
+// 聚光灯的可执行设计说明：这是一招把任意生物标成焦点的控制，所以场面要有目标，也要有会被牵过去的生物。
+// 必然事实：施法者提交过聚光灯；目标身上出现过共享身份 world_combat:status/spotlight。
+// 「空点拒绝、需要看得见的生物目标」由 ready 校验；按阵营关系改目标与易伤是持续效果，属完整装配观察项，写进 note。
 Smoke.scenario("spotlight", function (stage) {
     stage.weather("clear");
     stage.time("day");
@@ -12,11 +12,12 @@ Smoke.scenario("spotlight", function (stage) {
     stage.hostile(caster, foe);
 
     stage.until(900, function () {
-        return stage.casts("spotlight", caster) > 0 && stage.hadMobEffect(foe, "world_combat:status/spotlight");
+        // 等过第一个 sweep（mark 起点 +20 刻），让按阵营改目标与持续亮光的接戏路径真实跑一遍。
+        return stage.tick() >= 140 && stage.casts("spotlight", caster) > 0 && stage.hadMobEffect(foe, "world_combat:status/spotlight");
     }, function () {
         stage.expect(stage.casts("spotlight", caster) > 0, "the caster shone the spotlight");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/spotlight"), "the foe carried the shared spotlight identity");
-        stage.note("被照亮的对手在照明期间受到的伤害 ×(1+expose)，并由 mark 每 20 刻把施法者一侧的原版生物指向它（world.target）；脚本化的伙伴 AI 仍按自己的交战逻辑行动。暴露加成、照明时长、扫过范围与光点数分别随特攻、等级、速度与体型变化，兑现留给完整装配的人工试玩。", {
+        stage.note("目标可选友方或敌方；空点与自身由 ready 拒绝。照明期间被照者受到的伤害 ×(1+expose)，mark 每 20 刻把被照者周围与它敌对的生物指向它（world.target），world.target 拒绝的 Boss 不会被改目标、也不画线。暴露加成、照明时长、扫过范围与光点数分别随特攻、等级、速度与体型变化，照应友军的 AI 由 ai.assist 控制，兑现留给完整装配的人工试玩。", {
             casterCasts: stage.casts("spotlight", caster), foeDamage: Math.round(stage.damageTo(foe) * 10) / 10, tick: stage.tick()
         });
         stage.done();

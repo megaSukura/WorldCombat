@@ -6,9 +6,9 @@
  *
  * 两幕：
  *   起（windup，提交前）：脚边根须聚拢、绿光贴地亮起，预告这一次搭手（`action.present`）。
- *   吸（latch → drain → weaken）：提交后根须缠上目标，先按 `drain`（读目标物攻相对自身的强弱）把生命抽回自身，
- *      再把目标的物攻下降 `weak` 级、挂上共享身份 world_combat:status/strength_sapped 的虚弱与自己的机读标记，
- *      破绽持续 `latch`。目标倒下或离场则只留散去的根须。
+ *   吸（latch → drain → weaken）：提交后按真实距离与通视复查，够不到就收须；先按 `drain`（读目标此刻有效物攻
+ *      相对自身的强弱）把生命抽回自身，再把目标的物攻按能力政策实际下降 `weak` 级：只有真的降下去才挂共享身份
+ *      world_combat:status/strength_sapped 的虚弱，并显示真实变化。目标倒下或离场则只留散去的根须。
  *
  * 与同族分开：吸取／超级吸取／终极吸取抽的是**生命**，先要造成伤害；吸取力量抽的是**力气**，不看血量只
  *   看对手有多壮，一口回血的同时把对手的物攻按住——它也是本族唯一「回复 + 削弱」同体的一手。
@@ -20,6 +20,8 @@ namespace PokemonSkills {
     const strengthsapLatchText = "world_combat.move.strengthsap.text.latch";
     const strengthsapSapText = "world_combat.move.strengthsap.text.sap";
     const strengthsapMissText = "world_combat.move.strengthsap.text.miss";
+    const strengthsapRiseText = "world_combat.move.strengthsap.text.rise";
+    const strengthsapNoText = "world_combat.move.strengthsap.text.none";
 
     define({
         id: "strengthsap",
@@ -50,7 +52,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_strengthsap:gather", strengthsapScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", deep: config && config.deep === true }));
+                JSON.stringify({ moment: "windup", intensity: config && config.deep === true ? 1.25 : 1 }));
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -68,29 +70,55 @@ namespace PokemonSkills {
             }
             const body = world.observe(target), me = world.observe(self);
             if (body === null || me === null) { done(action); return; }
+            const at = body.position(), here = me.position(), span = here.minus(at).length();
+            const reach = Math.max(1.5, p("strengthsap", "reach", action));
+            // 复查真实距离与通视：按施法者中心到目标碰撞箱最近点判断（与招牌射程同一口径），
+            // 对手走开或被墙挡住就收须，不结算。
+            const edge = here.minus(world.closestPoint(target, here)).length();
+            if (edge > reach || !world.clear(here, at)) {
+                WorldFeedback.emit(world, strengthsapScene, 1, at, { moment: "fizzle" }, 18);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 0.9, 0)), strengthsapMissText, [], 22);
+                done(action);
+                return;
+            }
             const fraction = Math.max(0.08, Math.min(0.5, p("strengthsap", "drain", action)));
             const weak = Math.max(1, Math.min(2, Math.round(p("strengthsap", "weak", action))));
             const ticks = Math.max(100, Math.round(p("strengthsap", "latch", action)));
             const motes = Math.max(10, Math.round(p("strengthsap", "motes", action)));
-            const at = body.position(), here = me.position();
-            const link = here.minus(at), span = link.length();
-            const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : link.unit();
+            const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : here.minus(at).unit();
             const scale = Math.max(0.6, Math.min(1.8, motes / 18));
+            function link(moment: string, extra: any): any {
+                const data: any = { moment: moment, path: ["target", "source"], target: String(target!.ref()),
+                    direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, scale: scale };
+                Object.keys(extra || {}).forEach(function (key) { data[key] = extra[key]; });
+                return data;
+            }
 
             sound(action, "cobblemon:move.absorb.actor");
-            MobEffects.apply(world, target, strengthsapWeakened, ticks, 0);
-            NativeEffects.boost(world, target, "atk", -weak);
-            WorldFeedback.emit(world, strengthsapScene, 1, at,
-                { moment: "latch", path: ["target", "source"], target: String(target.ref()),
-                    direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, weak: weak, scale: scale }, 28);
+            // 先抽：按对手此刻的有效物攻求出的比例回血，读原生治疗许可后的真实回执。
             const healed = heal(world, self, fraction, "strengthsap");
+            // 再削弱：读首次降级的真实前后差；能力阻止或反转时如实显示，不谎称削弱，也不挂破绽。
+            const beforeAtk = NativeEffects.effectiveStage(world, target, "atk");
+            const changed = NativeEffects.boost(world, target, "atk", -weak);
+            const afterAtk = NativeEffects.effectiveStage(world, target, "atk");
+            const sapped = Math.max(0, beforeAtk - afterAtk);
+            const risen = Math.max(0, changed);
+            if (sapped > 0) MobEffects.apply(world, target, strengthsapWeakened, ticks, 0);
+            WorldFeedback.emit(world, strengthsapScene, 1, at, link("latch", { sapped: sapped }), 28);
             WorldFeedback.emit(world, strengthsapScene, 1, here,
-                { moment: "drain", path: ["target", "source"], target: String(target.ref()),
-                    direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, healed: healed, scale: scale }, 26);
-            WorldFeedback.emit(world, strengthsapScene, 1, at,
-                { moment: "weaken", target: String(target.ref()), weak: weak, motes: Math.max(8, Math.round(motes * 0.6)), scale: scale }, 24);
-            WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), strengthsapLatchText, [weak], 28);
-            WorldFeedback.text(world, here.plus(WorldCombat.point(0, 1.2, 0)), strengthsapSapText, [Math.round(healed * 10) / 10], 28);
+                link("drain", { lit: healed > 0 ? Math.max(8, Math.round(motes * 0.8)) : 0 }), 26);
+            if (sapped > 0) {
+                WorldFeedback.emit(world, strengthsapScene, 1, at,
+                    { moment: "weaken", target: String(target.ref()), weakMotes: Math.max(6, sapped * 6),
+                      motes: Math.max(8, Math.round(motes * 0.6)), scale: scale }, 24);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), strengthsapLatchText, [sapped], 28);
+            } else if (risen > 0) {
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), strengthsapRiseText, [risen], 26);
+            } else {
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), strengthsapNoText, [], 24);
+            }
+            if (healed > 0)
+                WorldFeedback.text(world, here.plus(WorldCombat.point(0, 1.2, 0)), strengthsapSapText, [Math.round(healed * 10) / 10], 28);
             sound(action, "cobblemon:move.absorb.target");
             done(action);
         }

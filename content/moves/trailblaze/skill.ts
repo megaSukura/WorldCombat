@@ -6,8 +6,10 @@
  *
  * 两幕：
  *   起（crouch，提交前）：屈膝压进脚边的草丛，草屑向脚下收拢；有草木时预告更亮。
- *   窜（leap → hit → boost）：提交后沿瞄准方向逐刻窜出，路上拖一条草绿轨迹；
- *       窜中目标结算伤害与击退，命中后提速（草丛起跳多一档）；落空则落地扬尘。
+ *   窜（leap → hit → boost）：提交后沿瞄准方向逐刻窜出，身体按分段高度差抬起一记短低弧、水平仍逐刻扫掠，
+ *       头顶压住时弧线降低；窜中目标结算伤害与击退（真的造成伤害才推人、才提速），落空则落地扬尘。
+ *
+ * 选取：kind 为 aim，可点选方向或实体、也可向空处空放；草木借势只读起跳点脚下的真实方块。
  *
  * 与同族分开：flamecharge 是直线火焰冲锋、aquastep 是多拍水舞，起草是**一次贴地的草绿窜跃**，
  * 起跳点的草木决定这一跳的分量。
@@ -33,9 +35,9 @@ namespace PokemonSkills {
         id: "trailblaze",
         cooldownParameter: "regroup",
         name: "起草",
-        description: "借草木的助力贴地窜出的一记袭击：撞上路径上第一个敌人造成伤害并把它带开，命中后自身速度提高一段；从草丛起跳时这一跳更重、提速更多。",
+        description: "借草木的助力低低跃出的一记袭击：沿瞄准方向逐刻窜跳，撞上路径上第一个敌人造成伤害并把它带开，命中后自身速度提高一段；从草丛起跳时这一跳更重、提速更多。",
         uses: ["从草木里窜出打一记措手不及", "窜到较远的对手身前打一记措手不及", "命中后提速，用新速度追下去"],
-        kind: "enemy",
+        kind: "aim",
         range: 5,
         maxRange: 7,
         prepare: 8,
@@ -79,58 +81,82 @@ namespace PokemonSkills {
             const veil = Math.round(p("trailblaze", "veil", action));
             const cover = trailblazeCoverOf(world, actor);
             const overshoot = !!(config && config.overshoot);
-            const direction = aim(action);
+            // 只取水平朝向做窜跃；竖直那一份由身体按弧线逐刻抬起。
+            const direction = WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction());
             const intensity = Math.max(0.6, Math.min(2.2, power / 60));
             const scale = stride / 3.4;
             const origin = action.origin();
+            const startBody = action.sense().observe(actor);
+            const halfHeight = startBody !== null ? startBody.height() / 2 : 0.7;
             const landing = origin.plus(direction.scale(stride));
-            const arc = origin.plus(direction.scale(stride / 2)).plus(WorldCombat.point(0, 1.1 + stride * 0.16, 0));
-            // 起跳的整体预告：一条抬起的草绿弧线，玩家一眼看出这一跳会画到哪里。
+            const middle = origin.plus(direction.scale(stride / 2));
+            let apex = p("trailblaze", "arc", action);
+            const peak = WorldCombat.point(middle.x(), origin.y() + apex, middle.z());
+            // 起跳的整体预告：一条到落点的短低弧，顶点就是身体真正会抬到的高度；有草木时才多卷一片草叶。
             movementScenes.show(action, "launch", origin, {
-                moment: "launch", cover: cover, veil: veil, scale: scale, intensity: intensity,
+                moment: "launch", cover: cover, veil: veil, scale: scale, intensity: intensity, arc: apex,
                 bloom: cover ? veil : 0,
-                path: [[origin.x(), origin.y(), origin.z()], [arc.x(), arc.y(), arc.z()], [landing.x(), landing.y(), landing.z()]]
+                path: [[origin.x(), origin.y(), origin.z()], [peak.x(), peak.y(), peak.z()], [landing.x(), landing.y(), landing.z()]]
             });
             sound(action, "minecraft:block.grass.break");
             if (cover) WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), trailblazeGrassText, [], 24);
-            let travelled = 0, struck = false, settled = false;
+            let travelled = 0, struck = false, settled = false, height = 0, airborne = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
-            function strikeNow(current: CombatAction, hit: CombatImpact): void {
+            function strikeNow(current: CombatAction, hit: CombatImpact): boolean {
                 const scope = current.world(), target = hit.target(), point = hit.position();
                 const landed = impact(current, hit, "trailblaze", power, { damage: damageSpec("trailblaze", "strike"), contact: true });
+                if (!landed) return false;
                 WorldFeedback.emit(scope, trailblazeScene, 1, point, { moment: "hit", cover: cover, veil: veil, scale: scale, intensity: intensity }, 30);
                 sound(current, "minecraft:entity.player.attack.sweep");
-                if (target !== null && scope.valid(target)) scope.displace(target, direction.scale(push));
-                if (landed) trailblazeHasteNow(current, haste);
+                if (target !== null && scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
+                trailblazeHasteNow(current, haste);
+                return true;
+            }
+
+            function land(current: CombatAction, at: CombatPoint): void {
+                const scope = current.world();
+                if (!struck) {
+                    WorldFeedback.emit(scope, trailblazeScene, 1, at, { moment: "land", cover: cover, scale: scale, veil: veil, arc: apex }, 20);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), trailblazeMissText, [], 22);
+                }
+                finish(current);
             }
 
             function advance(current: CombatAction): void {
-                const scope = current.world(), here = current.origin();
+                const scope = current.world(), body = scope.observe(actor);
+                if (body === null) { finish(current); return; }
+                const from = body.position();
                 const step = Math.min(pace, Math.max(0, stride - travelled));
-                if (step <= 0.001) { finish(current); return; }
-                const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius);
-                const hit = swept.hit;
+                if (step <= 0.001) { land(current, from); return; }
+                const ratio = Math.min(1, (travelled + step) / stride);
+                // 身体真的沿低弧抬起：水平逐刻扫掠，竖直按分段高度差走；头顶被压住就把弧降下来。
+                let dy = apex * Math.sin(Math.PI * ratio) - height;
+                dy = Math.max(-0.7, Math.min(0.7, dy));
+                if (dy > 0.001) {
+                    const feet = from.minus(WorldCombat.point(0, body.height() / 2, 0));
+                    const probe = WorldCombat.point(feet.x(), feet.y() + dy, feet.z());
+                    if (LivingActions.hasFreeSpace(scope) && !LivingActions.freeSpace(scope, probe, Math.max(0.3, body.width()), Math.max(0.5, body.height()))) {
+                        apex = height; dy = 0;
+                    }
+                }
+                if (Math.abs(dy) > 0.001) height += scope.displace(actor, WorldCombat.point(0, dy, 0));
+                if (height > 0.05) airborne = true;
+                if (ratio >= 0.5) movementScenes.stop(current, "launch");
+                const swept = sweepStep(current, direction.scale(step), radius), hit = swept.hit;
                 if (hit.hitEntity() && !struck) {
-                    struck = true;
-                    strikeNow(current, hit);
+                    struck = strikeNow(current, hit);
                     if (!overshoot) { finish(current); return; }
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= stride) {
-                    if (!struck) {
-                        const body = scope.observe(actor);
-                        if (body !== null) {
-                            WorldFeedback.emit(scope, trailblazeScene, 1, body.position(), { moment: "land", cover: cover, scale: scale }, 20);
-                            WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.1, 0)), trailblazeMissText, [], 22);
-                        }
-                    }
-                    finish(current);
+                const after = scope.observe(actor);
+                const grounded = after !== null ? after.grounded() : false;
+                if (hit.blocked() || moved < minimumMove || travelled >= stride || (airborne && grounded && ratio >= 0.4)) {
+                    land(current, after !== null ? after.position() : from);
                     return;
                 }
-                movementScenes.show(current, "wake", here, { moment: "wake", cover: cover, veil: veil, scale: scale });
+                movementScenes.show(current, "wake", from, { moment: "wake", cover: cover, veil: veil, scale: scale, arc: apex, height: height });
                 current.after(1, advance);
             }
             advance(action);

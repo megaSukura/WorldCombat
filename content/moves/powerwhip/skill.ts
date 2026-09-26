@@ -99,7 +99,7 @@ namespace PokemonSkills {
                     hits++;
                     if (world.valid(target)) {
                         const away = facts.position().minus(origin);
-                        world.displace(target, (away.length() < 0.05 ? direction : away).unit().scale(shove));
+                        world.hitDisplace(target, (away.length() < 0.05 ? direction : away).unit().scale(shove));
                     }
                     WorldFeedback.emit(world, powerwhipScene, 1, facts.position(),
                         { moment: "hit", target: String(target.ref()), leaves: leaves, scale: scale, intensity: intensity }, 24);

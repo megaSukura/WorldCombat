@@ -1,12 +1,4 @@
-/**
- * 紧束 / wrap —— 可执行设计说明。
- *
- * 场面：一只只会紧束的草系精灵（Bellsprout），对一只 NoAI 的铁傀儡——目标不会走开，藤茧不会被自己挣开，
- * 用来核对「钉住 + 压攻击 + 周期绞」。
- * 必然事实：本招被提交过；目标挨到过伤害；目标身上出现过 `partiallytrapped` 身份；
- *   目标的移动速度属性被压到接近零。
- * 绞了几次、有没有提前撕开、暴击与否，写进 note 供读轨迹判断。
- */
+/** The maintained hold damages and lowers Attack while leaving the native target mobile. */
 Smoke.scenario("wrap", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
     stage.time("day");
@@ -22,7 +14,7 @@ Smoke.scenario("wrap", function (stage) {
             stage.expect(stage.casts("wrap", caster) >= 1, "wrap was committed");
             stage.expect(stage.damageTo(heavy) > 0, "the coil crushed the target at least once");
             stage.expect(stage.hadMobEffect(heavy, "world_combat:status/partiallytrapped"), "the target was wrapped");
-            stage.expect(stage.attribute(heavy, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the coil pinned the target's movement speed");
+            stage.expect(Math.abs(stage.attribute(heavy, "minecraft:generic.movement_speed") - baseSpeed) < .001, "the maintained coil leaves the target mobile");
             stage.note("how many squeezes landed, whether the coil was torn, and the crit roll are positional/random", {
                 casts: stage.casts("wrap", caster),
                 heavyDamage: Math.round(stage.damageTo(heavy) * 10) / 10,

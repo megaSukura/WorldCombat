@@ -12,5 +12,5 @@
   "worldcombat.skill.hiddenpower.value.focus": "Gathering rings",
   "world_combat.move.hiddenpower.text.type": "Hidden Power · %1$s",
   "worldcombat.skill.hiddenpower.description.type": "The sphere's type is fixed by the parity of the user's six individual values - that individual's own Hidden Power type. Damage is dealt as that type, so it gains same-type bonus and follows type match-ups; the same move has a different type in different individuals.",
-  "worldcombat.skill.hiddenpower.description.ballistic": "The sphere is a real projectile that flies straight, with a %1$s-block hit radius; it bursts on the first body it meets and deals one hit only to a non-ally, without piercing."
+  "worldcombat.skill.hiddenpower.description.ballistic": "The sphere is a real projectile that flies straight, with a %1$s-block hit radius; aim it freely at a direction or point. It bursts on the first body it meets, dealing one hit only to a non-ally, and shatters on the first block it strikes, without piercing and leaving nothing behind."
 }

@@ -6,9 +6,12 @@
  *
  * 两幕：
  *   起（windup，提交前）：压低身体、爪尖亮起并拢住一点寒光，只播预告。
- *   挠（rake）：提交后朝目标垫前一小步，按 `span` 铺开 `lines` 道爪痕——每一道各自沿方向探出 `reach` 格、
+ *   挠（rake）：提交后朝选定方向垫前一小步，按 `span` 铺开 `lines` 道爪痕——每一道各自沿方向探出 `reach` 格、
  *       以 `line` 为半宽取第一个目标结算一记 `claw` 接触斩击；同一目标落在多道痕上就结算多次。
  *   收：一道都没抓中只留一串划空的风。
+ *
+ * 选取 `kind: "aim"`：方向或任意阵营实体都行，也可以只点一个世界点。没有实体目标时照样划出整排爪痕，
+ *   只是扫到空气或墙面、不结算伤害；近距离实体目标会被垫前逼近，点空则朝瞄准方向垫出一步。
  *
  * 与同族分开：铁爪是左右两记带磨利、撕裂爪是交叉撕甲、劈开是慢而准的单点重劈、连斩是越打越多刀的攒节奏；
  * 抓是唯一「一爪多道、痕数随速度、命中数随目标体型」的便宜快招。
@@ -45,7 +48,7 @@ namespace PokemonSkills {
         name: "Scratch",
         description: "一次掠过的爪击撕出一排平行爪痕：抬手就挠，每道痕扫过身前一小段，命中的对手各挨一道浅割；对手体型越宽、站得越近，同时被抓中的痕越多。它是全族最快、最便宜的一记。",
         uses: ["贴脸一爪划出一排爪痕", "对大体型或并排的对手一次抓多道", "用最短冷却的便宜招持续磨血"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.1,
         maxRange: 2.9,
         prepare: 6,
@@ -92,13 +95,19 @@ namespace PokemonSkills {
             const edge = Math.max(2, Math.round(notes / Math.max(2, lines)));
             const sparks = Math.max(6, Math.round(notes * 0.7));
 
+            // 中性 aim：有实体目标就逼近到爪痕边缘；只有方向或世界点时朝瞄准方向垫出一步，空挠也完整划完。
             const self = world.observe(actor);
             if (self !== null && step > 0.05) {
                 const target = action.target();
                 const body = target !== null && world.valid(target) ? world.observe(target) : null;
-                const delta = body !== null ? body.position().minus(self.position()) : heading.scale(step);
-                const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-                const advance = Math.min(step, Math.max(0, flat - reach * 0.55));
+                let advance: number;
+                if (body !== null) {
+                    const delta = body.position().minus(self.position());
+                    const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
+                    advance = Math.min(step, Math.max(0, flat - reach * 0.55));
+                } else {
+                    advance = step;
+                }
                 if (advance > 0.02) world.displace(actor, heading.scale(advance));
             }
             const moved = world.observe(actor);

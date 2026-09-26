@@ -7,30 +7,29 @@
  *
  * 翻译：把身体当场放成**一朵铺开的薄雾**：起手粉雾在脚边收拢、身体发亮；提交后雾环贴着地面向外炸开，
  *   圈内所有非友方挨一次 `bloom` 并被迷雾夺去视线（`minecraft:blindness`），施法者随之倒下。
- *   雾不是火药——它不炸坑、只铺地：炸裂后原地留下一片持续的薄雾（规则 `world_combat:field/mistyexplosion_mist`），
- *   站在里面的敌人被拖慢。与大爆炸分开：那一发毁地、掀飞、无属性加成；这一发铺雾、致盲、并在薄雾上更重。
+ *   雾不是火药——它不炸坑、只铺开一次，而且**不留可经营的持续危险区**：炸裂后雾只作一小段淡去的视效，
+ *   不再额外挂全敌减速；这一发代价已经足够，不复制控场池。与大爆炸分开：那一发毁地、掀飞、无属性加成；
+ *   这一发铺雾、致盲、并在薄雾上更重。真源（施法者）失效后不再继续跑任何过程。
  *
  * 数值来源（每项读不同的个体数据）：
  *   bloom        迷雾威力：特攻 + 等级；在薄雾中 ×`terrainBoost`（原生 ×1.5）；配置 denseMist 再调 0.92／1.08。
  *   blastRadius  雾环半径：特攻 + 体型高度；配置 denseMist ×1.05／×0.95。
  *   blindTicks   致盲时长：特攻；配置 denseMist +30／+0。
- *   mistRadius   残雾半径：特攻；配置 denseMist ×1.3／×0.8。
- *   mistTicks    残雾停留：等级；配置 denseMist ×1.3／×0.85。
+ *   mistRadius   残雾视效铺多大：特攻；配置 denseMist ×1.3／×0.8。
+ *   mistTicks    残雾视效淡去多久：等级；配置 denseMist ×1.3／×0.85。它不挂减速，只控制画面停留。
  *   terrainBoost 薄雾加成：固定 1.5（原生规则）。
  *   burst        雾絮数量：特攻（同时驱动粒子数）。
  *   tempo        起手：速度；配置 denseMist +3。
  *   recharge     冷却：等级；配置 denseMist +10／−6。
  *
- * 配置 `denseMist`（浓雾）：开启＝残雾半径 ×1.3、停留 ×1.3、致盲 +30t，但这一爆威力 ×0.92、起手 +3、冷却 +10——
- *   把一次爆发换成一整片持续控制的雾；关闭（薄爆）＝威力 ×1.08、残雾 ×0.8，炸得更脆更快。
+ * 配置 `denseMist`（浓雾）：开启＝残雾视效更广（半径 ×1.3）、淡去更久（×1.3）、致盲 +30t，但这一爆威力 ×0.92、
+ *   起手 +3、冷却 +10——雾铺得更足、致盲更久；关闭（薄爆）＝威力 ×1.08、残雾 ×0.8，炸得更脆更快。
  *
  * 伤害段 `bloom` 与参数同名，走共享换算（原生类别 Special、Fairy 属性）。
  */
 namespace PokemonSkills {
     export const mistyexplosionId = "mistyexplosion";
     export const mistyexplosionScene = "world_combat:move_mistyexplosion";
-    /** 炸裂后留下的残雾（只由本单元注册；薄雾场地单元按自己的规则另算）。 */
-    export const mistyexplosionMist = "world_combat:field/mistyexplosion_mist";
     /** 已有薄雾场地的规则名（跨单元识别，字符串常量不依赖对方是否装载）。 */
     export const mistyexplosionTerrain = "world_combat:field/mistyterrain";
     export const mistyexplosionHitText = "world_combat.move.mistyexplosion.text.hit";
@@ -65,21 +64,21 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("denseMist"), F.const(30), F.const(0)))
                 .clamp(40, 130).round(),
             "致盲时长", "被迷雾夺去视线多久；清雾之后看得见，但那时已经挨完了这一爆。"),
-        /** 残雾半径：3.6 + 特攻偏移[0,1.4]；浓雾 ×1.3 / 薄爆 ×0.8；夹 2.6..6.6。 */
+        /** 残雾视效半径：3.6 + 特攻偏移[0,1.4]；浓雾 ×1.3 / 薄爆 ×0.8；夹 2.6..6.6。 */
         mistRadius: formula(
             F.base(3.6).plus(F.stat("specialAttack").minus(60).times(0.015).clamp(0, 1.4))
                 .times(F.when(F.pref("denseMist"), F.const(1.3), F.const(0.8)))
                 .clamp(2.6, 6.6).round(2),
-            "残雾半径", {
+            "残雾范围", {
                 unit: "格",
-                description: "炸裂后原地留下的雾铺多大；浓雾更广，也决定地面雾的范围。"
+                description: "炸裂后散开的雾视效铺多大；浓雾更广，只影响画面，不留可经营的持续危险区。"
             }),
-        /** 残雾停留：200 + 等级偏移[0,140]；浓雾 ×1.3 / 薄爆 ×0.85；夹 140..420 tick。 */
+        /** 残雾视效停留：50 + 等级偏移[0,40]；浓雾 ×1.3 / 薄爆 ×0.85；夹 30..140 tick。 */
         mistTicks: seconds(
-            F.base(200).plus(F.level().minus(20).times(3).clamp(0, 140))
+            F.base(50).plus(F.level().minus(20).times(0.9).clamp(0, 40))
                 .times(F.when(F.pref("denseMist"), F.const(1.3), F.const(0.85)))
-                .clamp(140, 420).round(),
-            "残雾停留", "这片雾留多久；站在里面的敌人会持续被拖慢。"),
+                .clamp(30, 140).round(),
+            "残雾停留", "炸裂后的雾视效停留多久再淡去；它不再拖慢任何目标，只控制画面停留。"),
         /** 薄雾加成：固定 1.5（原生规则）。 */
         terrainBoost: formula(F.base(1.5).round(2),
             "薄雾加成", { unit: "倍", format: function (value) { return "×" + (Math.round(value * 100) / 100); },
@@ -117,7 +116,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["blastRadius"] },
         { key: "description.2", values: ["terrainBoost"] },
         { key: "description.3", values: ["blindTicks"] },
-        { key: "description.4", values: ["mistRadius","mistTicks"] },
+        { key: "description.4", values: [] },
         { key: "description.5", values: ["tempo","recharge"] },
         { key: "dense.on", values: [], when: function (context) { return read(context.detail.values, ["denseMist"]) === true; } },
         { key: "dense.off", values: [], when: function (context) { return read(context.detail.values, ["denseMist"]) !== true; } },

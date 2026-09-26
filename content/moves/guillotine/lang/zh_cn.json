@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.guillotine.summary": "大钳从两侧张开、罩住身前那一段扇形，合拢一刻还在钳口里的目标被一次夹断（一击必杀）。",
-  "worldcombat.skill.guillotine.description.0": "钳口从身前伸出 %1$s 格、张开 %2$s 度；扇形内最近的一个目标被一次夹断。对手防御、护甲与韧性都不参与，只有属性免疫能挡。",
+  "worldcombat.skill.guillotine.description.0": "钳口伸出 %1$s 格、张开 %2$s 度；合拢时只对钳口中央的一名敌人结算一次处决伤害。 原生免疫和伤害规则仍生效。",
   "worldcombat.skill.guillotine.description.1": "从张开钳口到合拢有 %1$s 秒预告；等级每压过对手 1 级缩短一点，对手得在这段时间里离开身前这片扇形。",
   "worldcombat.skill.guillotine.description.2": "收招 %1$s 秒，未命中时也需要完成收招。",
   "worldcombat.skill.guillotine.wide.on": "阔钳式：钳口张角 ×1.25、钳口更长，代价是合拢更慢、收招更久——更容易夹中偏开的目标。",
@@ -26,5 +26,6 @@
   "worldcombat.skill.guillotine.preference.ai.executionAbove": "残血留手阈值",
   "worldcombat.skill.guillotine.preference.ai.executionAbove.help": "目标生命比例低于这个值时，不再把一击必杀浪费在它身上；调大只在目标还很健康时出手。",
   "world_combat.move.guillotine.text.kill": "钳断",
-  "world_combat.move.guillotine.text.miss": "钳口夹空"
+  "world_combat.move.guillotine.text.miss": "钳口夹空",
+  "world_combat.move.guillotine.text.resisted": "对手撑住了"
 }

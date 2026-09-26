@@ -10,13 +10,23 @@
  * 配置 patient（耐心）换取更长的守候窗口，代价是更慢的起手与更长的冷却。
  */
 namespace PokemonSkills {
+    function mefirstNativeReach(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const scope = CompanionBehavior.world(context), threat = context.senses["world_combat:threat"] as CompanionBehavior.Entity | null;
+        const target = threat && scope.actor(threat.ref);
+        if (!target || String(target.domain()) === "cobblemon") return item.data.range;
+        const replay = NativeAttackProjection.recent(scope, target, 1200);
+        return replay ? Math.min(item.data.range, NativeAttackProjection.reach(scope, scope.source(), replay)) : item.data.range;
+    }
+
     CompanionBehavior.registerUse(mefirstId, {
         protocols: ["world_combat:attack"],
-        reach: function (_context, item) { return item.data.range; },
+        reach: mefirstNativeReach,
         available: function (context, item, _purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return false;
             if (target.friendly || target.health <= 0 || !target.visible) return false;
+            const access = CompanionBehavior.world(context), opponent = access.actor(target.ref);
+            if (!opponent || String(opponent.domain()) !== "cobblemon" && !NativeAttackProjection.recent(access, opponent, 1200)) return false;
             const self = CompanionBehavior.source(context);
             if (context.facts.focus !== target.ref
                 && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 12)) return false;

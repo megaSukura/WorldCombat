@@ -1,10 +1,10 @@
 /**
  * 飞水手里剑 / watershuriken 的客户端表现。
  *
- * 一句话：水先在掌中旋成一枚发亮的水盘，随后一枚接一枚的旋转水星沿直线甩出去，每枚命中都炸开一圈水花与气泡；
- *   甩完最后收势。
+ * 一句话：水先在掌中旋成一枚发亮的水盘，随后按真实固定节拍一枚接一枚把旋转水星甩出去，数枚可以同时在空中；
+ *   每枚命中都炸开一圈水花与气泡；甩完、且最后一枚也飞完才收势。
  * 色相家族：水蓝与青白（0x4FB8E8 / 0xBFE8F8），近白（0xF0FBFF）只给水星核心；没有第二组饱和色。
- * 拍子：起 gather（旋水成盘）→ 掷 volley（水星离手）／飞 fly（水星尾迹）→ 中 hit（水花迸溅）→ 收 settle（合掌收势）。
+ * 拍子：起 gather（旋水成盘）→ 掷 volley（水星离手，按固定 gap）／飞 fly（各枚水星各自尾迹）→ 中 hit（水花迸溅）→ 收 settle（最后飞行结束、合掌收势）。
  * 范围：hit 的水花环半径由 `data.scale`（判定半径 / 0.35）给出，玩家看出每一枚水星切中多大一圈。
  * 运动：fly 绑每一枚水星投射物、沿飞行方向拖出尾迹；hit 的水花从落点向外炸开、受重力。
  * 数：hit 与 volley 的水花数量绑定 `data.sparks`（特攻换算），亮度绑定 `data.intensity`（单枚威力换算），
@@ -53,7 +53,7 @@ const WatershurikenDefinition: ParticleDefinition = {
         },
         fly: {
             duration: 0,
-            exit: { stop: 0, drain: 8 },
+            exit: { drain: 8 },
             emitters: [
                 {
                     name: "trail", bind: "projectile", height: 0.5,

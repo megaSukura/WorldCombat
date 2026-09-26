@@ -1,12 +1,12 @@
 /**
  * 蛸固 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：术者身侧盘起几条紫色触手，猛地沿直线弹射出去咬住目标，把它钉在原地；此后每过一拍，
+ * 一句话：术者身侧盘起几条紫色触手，猛地沿直线弹射出去咬住目标，把它拖慢牵制；此后每过一拍，
  *   触手从术者身上朝目标再绷紧一次、目标身上泛起一圈被勒紧的暗紫，直到触手松开或术者倒下。
  * 色相家族：暗紫（0x8E4FA8 主体 / 0xB070C8 触手）加淡粉白高光（0xEAD6F2）；一个色相家族。
- * 拍子：起（coil 盘起）→ 击（lash 弹射咬住、逐拍 squeeze 勒紧）→ 收（release／slip 松脱）。
- * 范围：lash 与 squeeze 沿 `data.path`（术者→目标）绷成一条触手束，玩家一眼看出缠在哪；目标脚下那圈按 `data.scale` 缩放。
- * 运动：coil 的触手向身侧收拢；lash 沿路径向外弹出；squeeze 时整束朝目标方向周期性收紧、目标被向内聚拢。
+ * 拍子：起（coil 盘起）→ 击（lash 弹射咬住、hold 持续绷线、逐拍 squeeze 勒紧）→ 收（release／slip 松脱）。
+ * 范围：lash 与 squeeze 沿 `data.path`（术者→目标）绷成一条触手束，玩家一眼看出缠在哪；hold 是绑在托管触手效果上的持续绷线，效果一收即断；目标脚下那圈按 `data.scale` 缩放。
+ * 运动：coil 的触手向身侧收拢；lash 沿路径向外弹出；hold 保持两头相连、按 `data.tension`（勒紧进度）颤动；squeeze 时整束朝目标方向周期性收紧、目标被向内聚拢。
  * 数：触手道数按 `data.tentacles`（特攻换算）派生，勒紧次数按 `data.round`（已勒几拍）派生，双防降幅按 `data.drops` 派生。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
@@ -63,6 +63,27 @@ const OctolockDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.05, 0.14],
                     lifetime: [12, 18], size: [0.36, 0.75], sizeMode: "linear",
                     color: 0xB070C8, alpha: [0.85, 0], light: "full", maxParticles: 6
+                }
+            ]
+        },
+        hold: {
+            duration: 0,
+            exit: { stop: 2, drain: 12 },
+            emitters: [
+                {
+                    name: "hold_tendrils", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/grab",
+                    rate: { data: "tentacles", fallback: 10 },
+                    shape: { kind: "polyline" }, direction: "away", speed: [0.01, 0.05], spread: 8, spin: 2,
+                    lifetime: [7, 12], size: [0.11, 0.02], sizeMode: "sin",
+                    color: 0x8E4FA8, alpha: [{ data: "tension", fallback: 0.4 }, 0.02], alphaMode: "sin", light: "world", maxParticles: 48
+                },
+                {
+                    name: "hold_glint", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 6, shape: { kind: "polyline" }, direction: "away", speed: [0.02, 0.07],
+                    lifetime: [4, 8], size: [0.06, 0.01],
+                    color: 0xEAD6F2, alpha: [0.25, 0], light: "full", maxParticles: 24
                 }
             ]
         },

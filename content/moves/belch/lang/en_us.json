@@ -28,5 +28,9 @@
   "world_combat.move.belch.text.hit": "The gas caught %1$s",
   "world_combat.move.belch.text.miss": "No Berry to belch",
   "world_combat.move.belch.text.poison": "Poisoned",
-  "worldcombat.skill.belch.description.targets": "One cloud catches at most %1$s foes, and each target is struck only once."
+  "worldcombat.skill.belch.description.targets": "One cloud catches at most %1$s foes, and each target is struck only once.",
+  "worldcombat.skill.belch.value.tempo": "Wind-up",
+  "worldcombat.skill.belch.value.aftercast": "Recovery",
+  "worldcombat.skill.belch.value.recharge": "Cooldown",
+  "worldcombat.skill.belch.description.residual": "Residual haze briefly dissipates and deals no further damage or poison."
 }

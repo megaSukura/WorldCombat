@@ -1,16 +1,4 @@
-/**
- * 背水一战 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：术者沉腰怒吼，脚边炸开一圈金色阵环，一束束力场粒子从地面向上冲起；此后阵环在脚下持续明灭，
- *   直到立誓期满、阵环碎裂散去。
- * 色相家族：金琥珀（0xE0B040 阵环 / 0xF0D060 力束）加暖白高光（0xFFF2C8）；一个色相家族。
- * 拍子：起（gather 沉腰聚气）→ 击（burst 阵环炸开、力束冲起）→ 收（stand 阵环明灭、release 碎裂散去）。
- * 范围：burst／stand／release 的阵环绑 `point`、按 `data.ring`（体重换算的阵环半径）画，玩家看到脚下阵环多大就知道立誓的范围；
- *   `data.scale` 再整体缩放。
- * 运动：gather 的土点向脚边收拢；burst 的力束由地面向上冲出；stand 的阵环贴地缓慢脉动；release 时阵环向外扩后碎掉。
- * 数：冲起的力束与土点量按 `data.surge`（物攻换算的迸发量）与 `data.boosts`（顶起的项数）派生。
- * 参照节：视觉语言第一、二、三、四、六、七、九节。
- */
+/** The standing ring is the fixed movement boundary; the burst counts the granted stat choices. */
 const NoretreatDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -74,17 +62,17 @@ const NoretreatDefinition: ParticleDefinition = {
             exit: { stop: 0, drain: 22 },
             emitters: [
                 {
-                    name: "stand_ring", bind: "point", offset: [0, 0.05, 0], fit: "none",
+                    name: "stand_ring", bind: "point", offset: [0, 0.05, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 3, shape: { kind: "circle", radius: 1.6, thickness: 0.92 },
+                    rate: 3, shape: { kind: "circle", radius: { data: "ring", fallback: 2.4 }, thickness: 0.92 },
                     direction: "up", speed: [0.005, 0.02],
                     lifetime: [24, 36], size: [0.34, 0.1], sizeMode: "sin",
                     color: 0xE0B040, alpha: [0.35, 0.05], alphaMode: "sin", light: "world", maxParticles: 18
                 },
                 {
-                    name: "stand_dust", bind: "source", height: 0.2,
+                    name: "stand_dust", bind: "point", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 2, shape: { kind: "circle", radius: 1.6, thickness: 0.85 },
+                    rate: 2, shape: { kind: "circle", radius: { data: "ring", fallback: 2.4 }, thickness: 0.85 },
                     direction: "up", speed: [0.005, 0.02], gravity: 0.01, drag: 0.94,
                     lifetime: [20, 30], size: [0.12, 0.03],
                     color: 0xF0D060, alpha: [0.2, 0.02], alphaMode: "sin", light: "world", maxParticles: 10

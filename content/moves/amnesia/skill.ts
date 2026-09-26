@@ -84,23 +84,32 @@ namespace PokemonSkills {
             const purge = Math.max(1, Math.min(6, Math.round(p("amnesia", "purge", action))));
             const scale = radius / amnesiaReferenceRadius;
             const before = NativeEffects.effectiveStage(world, actor, "spd"), previous = MobEffects.read(world, actor, amnesiaBlank);
-            const carrier = MobEffects.apply(world, actor, amnesiaBlank, window, previous ? previous.amplifier() : 0), contribution = "world_combat:move/amnesia";
-            let levels = 0;
+            const contribution = "world_combat:move/amnesia";
+            let carrier = MobEffects.apply(world, actor, amnesiaBlank, window, previous ? previous.amplifier() : 0);
+            let windowId = 0, levels = 0;
             if (carrier) {
-                NativeEffects.boostWindow(world, actor, { spd: poise }, carrier.duration(), contribution, carrier, previous);
+                windowId = NativeEffects.boostWindow(world, actor, { spd: poise }, carrier.duration(), contribution, carrier, previous);
                 levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - before);
                 if (carrier.amplifier() !== levels) {
                     const shown = MobEffects.apply(world, actor, amnesiaBlank, window, levels);
-                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+                    if (shown) {
+                        const id = NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+                        if (id) windowId = id;
+                        carrier = shown;
+                    }
                 }
             }
+            // 顶到上限时不留一层空窗口、也不假装清空。
+            if (!windowId) MobEffects.consume(world, actor, amnesiaBlank);
             const forgot = amnesiaForget(world, actor, purge);
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             WorldFeedback.emit(world, amnesiaScene, 1, feet,
                 { moment: "blank", actor: String(actor.ref()), poise: levels, forgot: forgot, motes: motes, rings: rings,
                     scale: scale, deep: deep ? 1 : 0, intensity: Math.max(0.8, Math.min(1.8, 0.6 + levels / 3 + forgot * 0.15)) }, 34);
-            WorldFeedback.keep(world, "amnesia:blank:" + String(actor.ref()), amnesiaScene, 1, body.position(),
-                { moment: "sustain", actor: String(actor.ref()), motes: motes, rings: rings, scale: scale }, Math.min(window, 220));
+            if (windowId)
+                // 空明窗口还在时只留一层轻薄白光；窗口到期、被清除或刷新时随窗口一起收。
+                WorldFeedback.onEffect(world, windowId, "world_combat:move_amnesia/blank", amnesiaScene, 1, body.position(),
+                    { moment: "sustain", actor: String(actor.ref()), motes: motes, rings: rings, scale: scale });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.35, 0)),
                 forgot > 0 ? amnesiaSettleText : amnesiaCalmText, forgot > 0 ? [levels, forgot, Math.round(window / 20)] : [levels, Math.round(window / 20)], 32);
             world.sound("cobblemon:move.psychic.actor", body.position(), 16, "{}");

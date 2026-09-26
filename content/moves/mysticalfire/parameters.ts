@@ -4,9 +4,9 @@
  * 原生事实：Fire／特殊／威力 75／命中 100／PP 10／target normal／追加 100% 令目标特攻 −1。
  *
  * 翻译：把「从口中喷出特别灼热的火焰」落成一枚**会自己追上目标、绕着它盘成一圈炽焰的魔法火团**——
- * 火团脱手后沿着目标方向转向追踪，追上时夺走 1 级特攻；随后火焰缠住目标一段时间，每几刻再咬一口，
- * 缠满全程后火焰一收、再抽走 1 级特攻；命中还有概率点燃。它是四式里唯一会缠上目标、把特攻一点点
- * 抽走的那个：不是一记即走的远程，而是「贴上去不放」。
+ * 火团脱手后沿目标方向转向追踪，追上时夺走 1 级特攻；随后火焰缠住目标一段时间（独立托管效果，施放动作
+ * 结束后继续），每几刻再咬一口，缠满全程后火焰一收、再抽走 1 级特攻；命中还有概率点燃。目标跑出缠距、
+ * 施放者离场，或缠火状态被提前清除，缠火立刻断线，不再有后续。
  *
  * 数据分散（每项依赖不同的精灵数据）：
  *   core          火团威力：特攻定火多旺，等级给成长。
@@ -19,8 +19,8 @@
  *   pulseTicks    缠焰间隔：速度决定两跳之间隔多久。
  *   leash         挣脱距离：特攻决定缠住后目标跑多远算挣脱。
  *   burnChance    点燃概率：特攻与黏焰式决定。
- *   siphonStages  首次抽取级数：固定 1 级特攻。
- *   finalStages   收束抽取级数：固定 1 级特攻（缠满全程才给）。
+ *   siphonStages  首次抽取级数：固定 1 级特攻（命中的那一次）。
+ *   finalStages   收束抽取级数：固定 1 级特攻（缠满全程才给，且只给一次）。
  *   wisps         火粒数：特攻与等级派生，也驱动表现。
  *   tempo         起手：速度决定聚焰出手的快慢。
  *
@@ -28,7 +28,7 @@
  * 关闭＝火团更快更远、一发打得更痛，但缠身与点燃都少。两向分别对应「缠住一个磨」与「远程一发」。
  *
  * 伤害段 `core`（火团命中）与 `coil`（缠焰每跳）各自成段，走共享换算（原生类别 Special）。
- * 特攻下降走共享能力等级阶梯 NativeEffects.boost(..., "spa", -1)；点燃经 `impact` 的 `status: "burn"` 落到任何目标上。
+ * 特攻下降走共享能力等级阶梯 NativeEffects.boost(..., "spa", -N)；点燃经 `impact` 的 `status: "burn"` 落到任何目标上。
  */
 namespace PokemonSkills {
     actionParameters.define("mysticalfire", {
@@ -115,14 +115,14 @@ namespace PokemonSkills {
             F.base(1),
             "首次抽取级数", {
                 unit: "级",
-                description: "火团命中时夺走的能力等级；原生「降低特攻」即 1 级。"
+                description: "火团命中时夺走的能力等级；原生「降低特攻」即 1 级，命中只结算一次。"
             }),
         /** 收束抽取级数：固定 1 级特攻，缠满全程才给。 */
         finalStages: formula(
             F.base(1),
             "收束抽取级数", {
                 unit: "级",
-                description: "火焰缠满整个时长后，收束时再夺走的特攻等级。"
+                description: "火焰缠满整个时长后，收束时再夺走的特攻等级——只给一次。"
             }),
         /** 火粒数：12 + 特攻偏移[−2,6] + 等级(≥30)偏移[0,7]；夹 10..40。 */
         wisps: formula(
@@ -152,8 +152,9 @@ namespace PokemonSkills {
     describe("mysticalfire", [
         { key: "description.0", values: ["core","siphonStages"] },
         { key: "description.1", values: ["wispRange", "wispSpeed", "wispTurn"] },
-        { key: "description.2", values: ["coilTicks","coil","pulseTicks","finalStages","leash"] },
+        { key: "description.2", values: ["coilTicks","coil","pulseTicks","finalStages"] },
         { key: "description.3", values: ["burnChance"] },
+        { key: "description.release", values: ["leash"] },
         { key: "linger.on", values: ["coilTicks", "coil", "burnChance"],
             when: function (context) { return read(context.detail.values, ["linger"]) === true; } },
         { key: "linger.off", values: ["coilTicks", "burnChance"],

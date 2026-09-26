@@ -5,11 +5,12 @@
  * 树果当场被吃掉，招式的属性与威力就是那颗树果的属性与威力。
  *
  * 数值来源（原生）：Normal／物理／命中 100／PP 15；威力与属性取自携带树果的 naturalGift 表
- * （Showdown items.js：basePower 80–100、属性随果），命中后消耗树果。原生固定值只作公式起点：
+ * （Showdown items.js：basePower 80–100、属性随果），踏前之前经统一装备事务 CAS 消耗树果。原生固定值只作公式起点：
  * 威力由树果基础值加物攻成长，咀嚼时间、突进距离与速度、判定、顶开分别读不同精灵数据。
  *
  * 事实接入：树果的威力是一个自定义纯事实 `gift.power`（`defineFacts`），供威力公式与悬浮说明共用；
- * 属性由同一个读取器在伤害 `resolve` 里给出，预览与命中读同一份，因此 Tree 果属性也参与本系加成与相性。
+ * 属性由同一个读取器在伤害 `resolve` 里给出，预览与命中读同一份，因此树果属性也参与本系加成与相性。
+ * 招式在消耗成功时把吃下的那颗果存进动作数据，之后的手持读取不再参与结算；预览仍按现场手持展开。
  */
 namespace PokemonSkills {
     export interface NaturalgiftGift { power: number; type: string; colour: number; }
@@ -77,18 +78,34 @@ namespace PokemonSkills {
         }
         return "";
     }
+    /** 本次施放已经吃掉的那颗果：招式在踏前之前把它存进动作数据，命中结算因此始终按真正吃掉的那颗结算。 */
+    function naturalgiftSpent(context: any): NaturalgiftGift | null {
+        var action = context && context.action;
+        if (!action || typeof action.data !== "function") return null;
+        var raw = action.data("naturalgift.gift");
+        if (raw === null) return null;
+        try {
+            var value = JSON.parse(String(raw));
+            if (!value || !isFinite(Number(value.power))) return null;
+            return { power: Number(value.power), type: String(value.type || "normal"), colour: Number(value.colour) || 0x9ED47A };
+        } catch (error) { return null; }
+    }
+    /** 本招当前的恩赐：本次施放已吃掉的那颗优先，否则读现场手持（预览与 AI）。属性与威力同源。 */
+    export function naturalgiftGift(context: any): NaturalgiftGift | null {
+        return naturalgiftSpent(context) || naturalgiftGiftByItem(naturalgiftHeldPath(context));
+    }
     defineFacts("naturalgift", function (context: FactContext): Formula.Facts {
         return {
             read: function (id: string): Formula.Fact {
                 if (id === "gift.power") {
-                    var gift = naturalgiftGiftByItem(naturalgiftHeldPath(context));
+                    var gift = naturalgiftGift(context);
                     return gift ? gift.power : undefined;
                 }
                 return undefined;
             },
             expand: function (id: string): Formula.Explanation | undefined {
                 if (id !== "gift.power") return undefined;
-                var gift = naturalgiftGiftByItem(naturalgiftHeldPath(context));
+                var gift = naturalgiftGift(context);
                 return gift ? { value: gift.power, label: { key: "worldcombat.skill.naturalgift.value.gift" }, terms: [] } : undefined;
             }
         };
@@ -138,7 +155,7 @@ namespace PokemonSkills {
 
     defineDamage("naturalgift", "gift", { defenceCoefficient: 0.0045, rationale: "果肉借力一击穿透略强，让树果与物攻的差别更可见。" }, {
         resolve: function (damage: PokemonDamage.FeatureContext): PokemonDamage.Metadata | undefined {
-            var gift = naturalgiftGiftByItem(naturalgiftHeldPath(damage));
+            var gift = naturalgiftGift(damage);
             return gift ? { type: gift.type } : undefined;
         }
     });

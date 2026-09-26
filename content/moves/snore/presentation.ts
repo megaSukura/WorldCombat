@@ -5,7 +5,8 @@
  * 命中处炸开一圈声浪；被震懵的人头上晃星。
  * 色相家族：睡梦的苍蓝与近白（sleep_bubble / sleep_zzz / sonicboom / mediumring），灰蓝只做余韵。
  * 拍子：起（windup 聚睡泡）→ 鼾（blast 声波束、miss 散掉）→ 击（hit 炸开声浪）→ 懵（flinch 晃星）。
- * 范围：blast 沿机制给的 path 画出声波走过的整段线（同一组顶点来自服务端 trace 的嘴到终点）。
+ * 范围：blast 沿机制给的 path 画出声波走过的整段线（同一组顶点来自服务端 trace 的嘴到实际接触点，
+ *   撞上身体或墙面就止在那里；空喷才到射程尽头）。
  * 运动：声波束沿 path 铺开、气环朝向 data.direction；hit 的碎点带初速向外抛。
  * 数：`data.rings`（射程派生）决定声波束气环数，`data.count`（威力派生）决定命中碎点数，`data.intensity`
  *   抬高亮度、`data.scale`（声波判定派生）缩放尺寸与铺开范围。

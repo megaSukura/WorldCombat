@@ -3,12 +3,13 @@
  *
  * 原生事实：Poison、Status、自身、优先度 +4、PP 10；防住对手攻击的同时让接触到自己的对手中毒（Cobblemon 1.8 数据）。
  *
- * 翻译：把“毒 + 守”翻成一座**从地面鼓起的毒壁碉堡**——它像守住一样按总量挡下每一击，而每一次直接的接触
+ * 翻译：把“毒 + 守”翻成一座**从落脚点鼓起的毒壁碉堡**——它钉在释放原位按总量挡下每一击，而每一次直接的接触
  * 让攻击者被壁上的倒钩灌进毒液（走 CombatStatus.inflict 的共享主异常 `poison`，宝可梦那侧同步成原生异常，
  * 队伍 UI 与原生特性道具都跟着生效）。**对已经中毒的接触者改灌剧毒**，把战场上已有的状态当材料。
  *
  * 与家族分开：同族里尖刺防守当场掉血、王者盾牌削攻击、线阱黏速度，只有碉堡**后续持续掉血**；
- * 与尖刺防守同为“全封”（连变化招式一起挡），区别在这里结算的是一条会自己走的毒。
+ * 与尖刺防守同为“全封”（连变化招式一起挡），区别在这里结算的是一条会自己走的毒，而且**只守原位**——
+ * 离开锚点就立刻失去后续来击的拦截并收场，驻守是它的代价。
  *
  * 数值分散到多类精灵数据（每项读不同的量）：
  *   raise      鼓壁快慢：体重。
@@ -85,6 +86,7 @@ namespace PokemonSkills {
 
     describe("banefulbunker", [
         { key: "description.0", values: ["window","capacity","venom"] },
+        { key: "description.anchor", values: [] },
         { key: "description.ward", values: [] },
         { key: "description.1", values: ["raise","charge"] },
         { key: "description.2", values: ["fizzle"] }

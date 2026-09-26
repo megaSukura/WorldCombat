@@ -20,7 +20,7 @@ Smoke.scenario("firepunch", function (stage) {
         stage.after(220, function () {
             stage.expect(stage.casts("firepunch", caster) > 0, "firepunch was committed");
             stage.expect((stage.damageTo(near) + stage.damageTo(far)) > 0, "the fire punch dealt damage");
-            stage.note("命中后有 scorchChance 概率点燃并蔓延到 spreadRange 内最近的邻敌；灼伤会持续掉血并减攻", {
+            stage.note("命中后有 scorchChance 概率点燃；只有真实烧起来才从目标朝最近的、可点燃的邻敌传火一次，已灼伤/免疫/遮挡者跳过", {
                 casts: stage.casts("firepunch", caster),
                 onNear: Math.round(stage.damageTo(near) * 10) / 10,
                 onFar: Math.round(stage.damageTo(far) * 10) / 10,

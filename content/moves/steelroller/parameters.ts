@@ -5,9 +5,10 @@
  * 「在破坏场地的同时攻击对手。如果脚下没有任何场地状态存在，使出此招式时便会失败」（Cobblemon 1.8）。
  *
  * 翻译：即时战斗里场地是一片真的区域规则（`WorldEffects.field`）。本招只有站在一片场地上才滚得起来：
- *   出手时读出脚下正在生效的场地（电气／青草／薄雾／精神，含特性掀起的同名场地），把它们逐条结束
- *   （场地被压碎），再卷成钢轮沿瞄准方向滚出去，撞上首个敌人结算 `roll` 并顶开；滚过之处在地面留下
- *   一道短命的钢辙（`world.terrain` 租借，到期原方块回来）。脚下没有场地时整招失败（PP 照扣，与原作一致）。
+ *   出手时读出脚下正在生效的场地（电气／青草／薄雾／精神，含特性掀起的同名场地），把它们整片结束
+ *   （场地被压碎），把被吃掉场地的颜色卷进轮身，再卷成钢轮沿瞄准方向滚出去：真实滚过的地面才留下短命钢屑，
+ *   撞到的敌人按 `roll` 结算并顶开——可以碾过目标继续前滚，命中上限由压碎的场地数量决定（至少 1、最多 3，
+ *   同一目标只结算一次），撞到实墙即停。脚下没有场地时整招失败（PP 照扣，与原作一致）。
  *
  * 数据分散（每个参数各吃不同的精灵数据）：
  *   roll            撞击威力 = 112 + 物攻偏移 + 防御偏移；碾磨 ×1.18；夹 88..215。
@@ -15,12 +16,10 @@
  *   speed           每刻位移随速度；碾磨略慢。
  *   collisionRadius 判定半径随身高。
  *   push            击退随物攻。
- *   scarCells       钢辙块数随物攻；碾磨 ×1.4。
- *   scarTicks       钢辙停留随等级。
- *   scraper         钢屑数量随物攻与等级；驱动表现。
+ *   scraper         钢屑数量随物攻，碾磨更密；驱动真实路径上的地面钢屑与轮身细节。
  *   tempo／settle／recharge 速度与等级决定起手收招冷却；碾磨更慢更费。
  *
- * 配置 `grind`（碾磨式）：开启后碾得更重（威力 ×1.18、钢辙更长更多），代价是滚得近（距离 ×0.8、速度 ×0.9）、
+ * 配置 `grind`（碾磨式）：开启后碾得更重（威力 ×1.18、钢屑更密），代价是滚得近（距离 ×0.8、速度 ×0.9）、
  *   收招 +5 刻、冷却 +8 刻；关闭＝滚掠式，滚得远而快、收得干净，单发略轻。
  */
 namespace PokemonSkills {
@@ -46,6 +45,19 @@ namespace PokemonSkills {
         var body = world.observe(actor);
         if (body === null || !body.grounded()) return false;
         return steelrollerAreas(world, body.position()).length > 0;
+    }
+    /** 已知场地身份到场地主色的对照；未知场地回落到钢灰。表现按被吃掉场地的颜色卷进轮身。 */
+    var steelrollerTerrainColors: { [name: string]: number } = {
+        grassyterrain: 0x7CCB5A, electricterrain: 0xFFE24A, mistyterrain: 0xBFE3EF, psychicterrain: 0xD86FC0
+    };
+    export function steelrollerFieldColor(areas: WorldEffects.Area[]): number {
+        for (var i = 0; i < areas.length; i++) {
+            var identity = String(areas[i].identity || ""), slash = identity.lastIndexOf("/");
+            var name = slash >= 0 ? identity.substring(slash + 1) : identity;
+            var color = steelrollerTerrainColors[name];
+            if (typeof color === "number") return color;
+        }
+        return 0xB8BEC8;
     }
 
     actionParameters.define(steelrollerId, {
@@ -79,20 +91,13 @@ namespace PokemonSkills {
         /** 击退：0.45 +（物攻 − 60）× 0.006 [−0.1,0.5]；夹 0.3..1.0。 */
         push: formula(
             F.base(0.45).plus(F.stat("attack").minus(60).times(0.006).clamp(-0.1, 0.5)).clamp(0.3, 1.0).round(2),
-            "击退", { unit: "格", description: "被钢轮撞中的人沿滚动方向被顶开的距离；力量越大顶得越远。" }),
-        /** 钢辙块数：10 +（物攻 − 60）× 0.15 [−2,10]；碾磨 ×1.4；夹 6..28。 */
-        scarCells: formula(
-            F.base(10).plus(F.stat("attack").minus(60).times(0.15).clamp(-2, 10))
-                .times(F.when(F.pref("grind"), F.const(1.4), F.const(1))).clamp(6, 28).round(0),
-            "钢辙块数", { unit: "块", description: "滚过之后地面被压出的钢辙有多少块；物攻越高、碾磨式越长，也是画面里辙痕的密度。" }),
-        /** 钢辙停留：90 +（等级 − 40）× 1.0 [0,30] 刻；夹 70..170。 */
-        scarTicks: seconds(
-            F.base(90).plus(F.level().minus(40).times(1.0).clamp(0, 30)).clamp(70, 170).round(0),
-            "钢辙停留", "压出的钢辙过多久被地面收回；等级越高留得越久。"),
-        /** 钢屑数量：18 +（物攻 − 60）× 0.2 [−4,24]；夹 12..48。 */
+            "击退", { unit: "格", description: "被钢轮撞中的人沿滚动方向被顶开的距离；力量越大顶得越远。"
+            }),
+        /** 钢屑数量：18 +（物攻 − 60）× 0.2 [−4,24]；碾磨 ×1.2；夹 12..48。 */
         scraper: formula(
-            F.base(18).plus(F.stat("attack").minus(60).times(0.2).clamp(-4, 24)).clamp(12, 48).round(0),
-            "钢屑数量", { unit: "点", description: "滚动与撞击时迸出的钢屑数量；物攻越高越密，粒子直接按它发射。" }),
+            F.base(18).plus(F.stat("attack").minus(60).times(0.2).clamp(-4, 24))
+                .times(F.when(F.pref("grind"), F.const(1.2), F.const(1))).clamp(12, 48).round(0),
+            "钢屑数量", { unit: "点", description: "真实滚过的地面与撞击时迸出的钢屑总量；物攻越高越密，碾磨式更多，粒子按它发射。" }),
         /** 起手：12 −（速度 − 55）× 0.05 [−1,4] 刻；夹 8..16。 */
         tempo: seconds(
             F.base(12).minus(F.stat("speed").minus(55).times(0.05).clamp(-1, 4)).clamp(8, 16).round(0),
@@ -119,7 +124,7 @@ namespace PokemonSkills {
 
     describe(steelrollerId, [
         { key: "description.0", values: ["roll","distance"] },
-        { key: "description.1", values: ["speed","collisionRadius","push","scarCells","scarTicks"] },
+        { key: "description.1", values: ["speed","collisionRadius","push"] },
         { key: "grind.on", values: [], when: function (context) { return read(context.detail.values, ["grind"]) === true; } },
         { key: "grind.off", values: [], when: function (context) { return read(context.detail.values, ["grind"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

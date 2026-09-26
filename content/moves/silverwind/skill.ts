@@ -6,11 +6,12 @@
  *
  * 三幕：
  *   起（gather，提交前）：翅缘亮起银光、鳞粉朝翅上聚，只播预告。
- *   扇（blow → hit）：提交后把 `span` 度、`reach` 远的扇形向前铺满鳞粉；扇内每个非友方各结算一次 `gale`
- *       特殊伤害；鳞粉在空气里飘 `drift` 秒后落下，这段时间也是对手走出扇边的窗口。
- *   涌（surge / miss）：扇过之后掷一次反哺，成功则攻击、防御、特攻、特防、速度各升 `surgeStages` 级。
+ *   扇（blow → hit）：提交后把 `span` 度、`reach` 远的**三维薄扇**朝瞄准方向铺满鳞粉；扇面与准心平面一致，
+ *       因此能仰射空中，也能俯扫脚下。扇内每个非友方各结算一次 `gale` 特殊伤害，命中须过视线检查（墙后的不伤）。
+ *       鳞粉在空气里飘 `drift` 秒后落下；这是短余尘，没有第二次伤害或延时补伤。
+ *   涌（surge / miss）：扇过之后掷一次反哺，只按本次实际提高的项反馈，窗口保持一层。
  *
- * 配置 `dense`（浓鳞式）由 resolve 改时序、由公式改扇面／威力／反哺：开启＝短而窄、更重更稳。
+ * `kind: "aim"`：可点实体，也可点空中／地面落点；提交不要求存在敌人。
  */
 namespace PokemonSkills {
     const silverwindScene = "world_combat:move_silverwind";
@@ -18,13 +19,50 @@ namespace PokemonSkills {
     const silverwindHitText = "world_combat.move.silverwind.text.hit";
     const silverwindMissText = "world_combat.move.silverwind.text.miss";
 
-    /** 扇面外缘的顶点（含圆心），交给表现用同一组顶点画同一个扇面。 */
-    function silverwindFan(origin: CombatPoint, direction: CombatPoint, reach: number, span: number): number[][] {
-        const base = Math.atan2(direction.x(), direction.z()), half = span * Math.PI / 360, steps = 8;
-        const vertices: number[][] = [[origin.x(), origin.y() + 0.6, origin.z()]];
+    /** 面向准心的三维正交架：axis 为前向，normal 为扇面法线，side 为扇面内与 axis 垂直的方向。 */
+    function silverwindFrame(forward: CombatPoint): { axis: CombatPoint; normal: CombatPoint; side: CombatPoint } {
+        const axis = forward.length() > 1e-6 ? forward.unit() : WorldCombat.point(0, 0, 1);
+        const up = Math.abs(axis.y()) < 0.9 ? WorldCombat.point(0, 1, 0) : WorldCombat.point(1, 0, 0);
+        const side = WorldCombat.point(axis.y() * up.z() - axis.z() * up.y(), axis.z() * up.x() - axis.x() * up.z(),
+            axis.x() * up.y() - axis.y() * up.x()).unit();
+        const normal = WorldCombat.point(axis.y() * side.z() - axis.z() * side.y(), axis.z() * side.x() - axis.x() * side.z(),
+            axis.x() * side.y() - axis.y() * side.x()).unit();
+        return { axis: axis, normal: normal, side: WorldCombat.point(normal.y() * axis.z() - normal.z() * axis.y(),
+            normal.z() * axis.x() - normal.x() * axis.z(), normal.x() * axis.y() - normal.y() * axis.x()).unit() };
+    }
+
+    /** 与判定同源的扇面区域：前向距离 0..reach、法线厚度 ±halfThickness、面内半角 span/2。 */
+    function silverwindRegion(origin: CombatPoint, frame: { axis: CombatPoint; normal: CombatPoint; side: CombatPoint },
+        reach: number, span: number, halfThickness: number): WorldGeometry.Region {
+        const axis = frame.axis, normal = frame.normal, side = frame.side;
+        const cosHalf = Math.cos(Math.min(360, Math.max(0, span)) * Math.PI / 360);
+        return {
+            contains: function (point) {
+                const d = point.minus(origin);
+                const along = d.x() * axis.x() + d.y() * axis.y() + d.z() * axis.z();
+                if (along < 0 || along > reach) return false;
+                const depth = d.x() * normal.x() + d.y() * normal.y() + d.z() * normal.z();
+                if (Math.abs(depth) > halfThickness) return false;
+                const inPlane = d.minus(normal.scale(depth)), length = inPlane.length();
+                if (length < 1e-6) return true;
+                return (inPlane.x() * axis.x() + inPlane.y() * axis.y() + inPlane.z() * axis.z()) / length >= cosHalf - 1e-9;
+            },
+            centre: function () { return origin; },
+            radius: function () { return reach + halfThickness + 1; }
+        };
+    }
+
+    /** 扇面顶点（含圆心），墙面把外缘顶点截在真实碰点；判定与表现读同一组空间参数。 */
+    function silverwindFan(world: CombatWorld, origin: CombatPoint, frame: { axis: CombatPoint; normal: CombatPoint; side: CombatPoint },
+        reach: number, span: number, steps: number): CombatPoint[] {
+        const half = span * Math.PI / 360, vertices: CombatPoint[] = [origin];
         for (let i = 0; i <= steps; i++) {
-            const angle = base - half + (2 * half) * i / steps;
-            vertices.push([origin.x() + Math.sin(angle) * reach, origin.y() + 0.6, origin.z() + Math.cos(angle) * reach]);
+            const angle = -half + (2 * half) * i / steps;
+            const direction = frame.axis.scale(Math.cos(angle)).plus(frame.side.scale(Math.sin(angle)));
+            let point = origin.plus(direction.scale(reach));
+            const clip = world.clipBlocks(origin, point);
+            if (clip !== null && clip.blocked()) point = clip.position();
+            vertices.push(point);
         }
         return vertices;
     }
@@ -33,9 +71,9 @@ namespace PokemonSkills {
         id: "silverwind",
         cooldownParameter: "recharge",
         name: "Silver Wind",
-        description: "抖翅把银鳞扇成一大片向前铺开：扇面里的敌人各被割一下，鳞粉缓缓飘落后散尽；回卷的一撮鳞粉有概率把自身五项战斗能力短时各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
-        uses: ["一次割到并排站着的几个人", "在远一点的距离先手消耗", "抓住反哺后的短时强化窗口进攻"],
-        kind: "enemy",
+        description: "抖翅把银鳞扇成一大片向前铺开：扇面朝向准心所在的平面，可以仰射空中或俯扫脚下；扇面里的敌人各被割一下，墙后的打不到；鳞粉缓缓飘落后散尽，不留延时伤害。回卷的一撮鳞粉有概率把自身五项战斗能力短时各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
+        uses: ["一次割到并排站着的几个人", "仰起或压低朝空中/地面的方向先手", "抓住反哺后的短时强化窗口进攻"],
+        kind: "aim",
         range: 7.5,
         maxRange: 11,
         prepare: 10,
@@ -73,6 +111,7 @@ namespace PokemonSkills {
             if (body === null) { done(action); return; }
             const origin = body.position();
             const direction = aim(action);
+            const frame = silverwindFrame(direction);
             const reach = Math.max(4, p("silverwind", "reach", action));
             const span = Math.max(40, p("silverwind", "span", action));
             const power = p("silverwind", "gale", action);
@@ -80,7 +119,8 @@ namespace PokemonSkills {
             const stages = Math.max(1, Math.round(p("silverwind", "surgeStages", action)));
             const scales = Math.max(16, Math.round(p("silverwind", "scales", action)));
             const drift = Math.max(0.6, p("silverwind", "drift", action));
-            const fan = silverwindFan(origin, direction, reach, span);
+            const thickness = Math.max(0.7, body.height() * 0.5);
+            const fan = silverwindFan(world, origin, frame, reach, span, 8).map(function (point) { return [point.x(), point.y(), point.z()]; });
             const scale = Math.max(0.6, Math.min(2.2, reach / 7.5));
             const intensity = Math.max(0.5, Math.min(2.4, power / 62));
             const life = Math.max(30, Math.round(drift * 20) + 16);
@@ -91,12 +131,14 @@ namespace PokemonSkills {
                   scale: scale, intensity: intensity }, life);
 
             let hits = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, direction, reach, span, { below: 1.5, above: 2.8 }),
+            WorldGeometry.selectEnemies(world, silverwindRegion(origin, frame, reach, span, thickness),
                 function (victim, facts) {
                     if (String(victim.ref()) === String(actor.ref())) return;
+                    const point = facts.position();
+                    if (!world.clear(origin, point)) return;
                     if (!hurt(action, victim, "silverwind", power, { damage: damageSpec("silverwind", "gale") })) return;
                     hits++;
-                    WorldFeedback.emit(world, silverwindScene, 1, facts.position(),
+                    WorldFeedback.emit(world, silverwindScene, 1, point,
                         { moment: "hit", target: String(victim.ref()), scales: scales, scale: scale, intensity: intensity }, 22);
                 });
 
@@ -117,14 +159,27 @@ namespace PokemonSkills {
                     const data = JSON.parse(String(view.data()));
                     if (data.source === "world_combat:move/silverwind") NativeEffects.windowClose(world, view.id());
                 });
-                NativeEffects.boostWindow(world, actor, { atk: stages, def: stages, spa: stages, spd: stages, spe: stages }, window, "world_combat:move/silverwind");
-                const self = world.observe(actor);
-                const at = self === null ? origin : self.position();
-                WorldFeedback.emit(world, silverwindScene, 1, at,
-                    { moment: "surge", target: String(actor.ref()), stages: stages, scales: scales, scale: scale }, 26);
-                WorldFeedback.text(world, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),
-                    silverwindSurgeText, [stages, Math.round(window / 20)], 30);
-                world.sound("minecraft:block.beacon.power_select", at, 18, "{}");
+                const before = NativeEffects.effectiveStages(world, actor);
+                const windowId = NativeEffects.boostWindow(world, actor, { atk: stages, def: stages, spa: stages, spd: stages, spe: stages },
+                    window, "world_combat:move/silverwind");
+                if (windowId > 0) {
+                    const after = NativeEffects.effectiveStages(world, actor);
+                    const rise: any = {};
+                    let raised = 0, best = 0;
+                    ["atk", "def", "spa", "spd", "spe"].forEach(function (stat) {
+                        const gain = Math.max(0, Math.round((after[stat] || 0) - (before[stat] || 0)));
+                        if (gain > 0) { rise[stat] = gain; raised++; if (gain > best) best = gain; }
+                    });
+                    if (raised > 0) {
+                        const self = world.observe(actor);
+                        const at = self === null ? origin : self.position();
+                        WorldFeedback.emit(world, silverwindScene, 1, at,
+                            { moment: "surge", target: String(actor.ref()), rise: rise, stages: best, scales: scales, scale: scale }, 26);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),
+                            silverwindSurgeText, [raised, best, Math.round(window / 20)], 30);
+                        world.sound("minecraft:block.beacon.power_select", at, 18, "{}");
+                    }
+                }
             }
             done(action);
         }

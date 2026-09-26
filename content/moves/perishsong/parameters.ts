@@ -5,8 +5,9 @@
  *   替换后效果消失（volatile 随退场移除）；防音特性可免疫。
  *
  * 世界化：当众唱起一首三拍子的歌——半径内所有活物（包括唱的人自己）都被歌声缠上，
- *   每过一拍就离倒下更近一步；走出这场交战、被牛奶解掉、或撑到歌自己走完都会结清。
- *   它是一首同归于尽的歌：唱的人也在名单里，所以只有在自己比对手更能撑、或本来就打算换命时才划算。
+ *   每过一拍就离倒下更近一步；跑出起唱中心两倍歌声半径、撑满一整拍，或被牛奶解掉，都能甩掉它。
+ *   名单在起唱那一刻定下；它是一首同归于尽的歌，唱的人也在名单里，所以只有在自己比对手更能撑、
+ *   或本来就打算换命时才划算。
  *
  * 数值来源（每个参数读不同的个体数据，分散到不同参数）：
  *   songRadius   4 + 特攻×0.04 + 身高×0.8，挽歌 ×1.3、摇篮曲 ×0.85，夹 3..14 格；嗓门与身板决定歌声传多远。
@@ -22,10 +23,12 @@ namespace PokemonSkills {
     export const perishId = "perishsong";
     export const perishEffect = "world_combat:perish_song";
     export const perishCount = "world_combat:perish_count";
+    export const perishLinger = "world_combat:perish_linger";
     export const perishScene = "world_combat:move_perishsong";
     export const perishStatus = "perish_song";
     export const perishSongText = "world_combat.move.perishsong.text.song";
     export const perishDoomText = "world_combat.move.perishsong.text.doom";
+    export const perishWithstandText = "world_combat.move.perishsong.text.withstand";
     export const perishLiftText = "world_combat.move.perishsong.text.lift";
 
     function perishPreference(): Formula.Node {

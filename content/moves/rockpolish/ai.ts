@@ -5,7 +5,7 @@
  * 什么时候最想出手：威胁还在 ai.minGap 之外时 priority 110 抢在共享次序前——趁距离还够，把这段要站着不动的时间花掉；
  *   已经贴身就交回普通次序，不站着挨打。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：速度等级已经写进公共能力阶梯、地面留下磨亮的圈；光面还在时不再重复打磨，等它失亮后才重新考虑。
+ * 放完之后：身体短时提速并带滑行惯性；有可走的近处路面才主动准备，光面还在时不再重复打磨。
  */
 namespace PokemonSkills {
     function rockPolishThreatGap(context: WorldBehavior.Context): number {
@@ -24,7 +24,17 @@ namespace PokemonSkills {
             const gap = rockPolishThreatGap(context);
             if (gap < 0) return false;
             if (gap < CompanionBehavior.ai<number>(capability, "minGap", 4)) return false;
-            return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 15);
+            if (gap > CompanionBehavior.ai<number>(capability, "maxChase", 15)) return false;
+            const world = CompanionBehavior.world(context), actor = world.actor(self.ref);
+            const body = actor && world.observe(actor), threat = context.senses["world_combat:threat"];
+            if (!body || !threat) return false;
+            const foot = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            const heading = WorldGeometry.flatUnit(WorldCombat.point(threat.point[0], threat.point[1], threat.point[2]).minus(foot));
+            for (let step = 1; step <= 3; step++) {
+                const support = SurfacePaths.support(world, foot.plus(heading.scale(step)), .6, 1);
+                if (!support || !world.freeSpace(support.plus(WorldCombat.point(0, .03, 0)), body.width(), body.height())) return false;
+            }
+            return true;
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

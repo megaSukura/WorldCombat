@@ -30,7 +30,7 @@ namespace PokemonSkills {
         name: "Leafage",
         description: "抖下一把嫩叶，沿瞄准方向张成一个小扇面撒出去：叶子各走一条短弧，最先扎中的那一片造成伤害，其余旋落在落点。它便宜、出手极短、回得快；重叶式叶少而重、撒得更远，疾撒式叶多而轻、压住走位。",
         uses: ["便宜、快速的远程消耗，一记接一记地撒", "用一片扇叶兜住来回走位的对手", "在近距离补最后一下"],
-        kind: "enemy",
+        kind: "aim",
         range: 7,
         maxRange: 12,
         prepare: 4,
@@ -72,6 +72,7 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.8, radius / leafageReference));
             const intensity = Math.max(0.6, Math.min(2.0, power / 32));
             const direction = aim(action);
+            const scenes = WorldFeedback.actionScenes(leafageScene);
             let landed = false, remaining = count, settled = false;
             function finish(current: CombatAction): void {
                 if (settled || remaining > 0) return;
@@ -81,9 +82,18 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, leafageScene, 1, body.position(), { moment: "miss", scale: scale }, 18);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.05, 0)), leafageMissText, [], 20);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
-            function complete(current: CombatAction): void { remaining--; finish(current); }
+            function complete(current: CombatAction, index: number): void {
+                scenes.stop(current, "flight" + index);
+                remaining--;
+                finish(current);
+            }
+            // 没扎中活物的叶子都明确落地：撞墙、撞友方、或被别的叶先扎中后，只在落点积一小撮绿屑，不结算伤害。
+            function landLeaf(scope: CombatWorld, at: CombatPoint): void {
+                WorldFeedback.emit(scope, leafageScene, 1, at,
+                    { moment: "land", leaves: Math.max(2, Math.round(count * 0.35)), scale: scale }, 26);
+            }
 
             sound(action, "cobblemon:move.razorleaf.actor_1");
             for (let index = 0; index < count; index++) {
@@ -93,12 +103,7 @@ namespace PokemonSkills {
                     appearance: { sprite: "cobblemon:particle/generic/grass/leaf", tint: 0x9BD25A, glow: false, scale: scale },
                     impact: function (current: CombatAction, hit: CombatImpact) {
                         const scope = current.world(), who = hit.target(), at = hit.position();
-                        if (who === null) {
-                            WorldFeedback.emit(scope, leafageScene, 1, at,
-                                { moment: "land", leaves: Math.max(2, Math.round(count * 0.35)), scale: scale }, 26);
-                            return;
-                        }
-                        if (!scope.valid(who) || scope.friendly(who) || landed) return;
+                        if (who === null || !scope.valid(who) || scope.friendly(who) || landed) { landLeaf(scope, at); return; }
                         landed = true;
                         if (!impact(current, hit, leafageId, power, { damage: damageSpec(leafageId, "toss") })) return;
                         WorldFeedback.emit(scope, leafageScene, 1, at,
@@ -106,9 +111,9 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), leafageHitText, [], 20);
                         sound(current, "cobblemon:impact.grass");
                     }
-                }, function (current: CombatAction) { complete(current); });
-                WorldFeedback.emit(world, leafageScene, 1, action.origin(),
-                    { moment: "flight", projectile: flight, leaves: count, scale: scale, intensity: intensity }, 40);
+                }, function (current: CombatAction) { complete(current, index); });
+                scenes.show(action, "flight" + index, action.origin(),
+                    { moment: "flight", projectile: flight, leaves: count, scale: scale, intensity: intensity });
             }
             WorldFeedback.emit(world, leafageScene, 1, action.origin(),
                 { moment: "toss", direction: [direction.x(), direction.y(), direction.z()], spread: spread,

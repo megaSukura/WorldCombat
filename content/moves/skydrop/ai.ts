@@ -8,22 +8,11 @@
  * 够不到交给共享接近逻辑（抓取距离很短，必须贴到身边）。
  */
 namespace CompanionBehavior {
-    /** 目标的原生体重探针（千克）；非宝可梦或读取失败按 0 处理。 */
-    registerFact("world_combat:move_skydrop/weight", function (access, actor) {
-        if (String(actor.domain()) !== "cobblemon") return 0;
-        try { return Number(CobblemonCombat.pokemon(actor).weight()); } catch (error) { return 0; }
-    });
-
-    function skydropWeight(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
-        const value = fact<number>(context, "world_combat:move_skydrop/weight", target, null);
-        return typeof value === "number" && isFinite(value) ? value : 0;
-    }
-
-    function skydropValid(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
-        if (context.facts.mounted) return false;
-        if (target.friendly || target.health <= 0 || !target.visible) return false;
-        if (CompanionBehavior.distance(source(context).point, target.point) > ai<number>(item, "maxChase", 8)) return false;
-        return skydropWeight(context, target) <= ai<number>(item, "maxWeight", 300);
+    function skydropValid(context:WorldBehavior.Context,item:WorldBehavior.Capability,target:Entity):boolean{
+        if(context.facts.mounted||target.friendly||target.health<=0||!target.visible)return false;
+        const access=world(context),self=source(context),actor=access.actor(self.ref),victim=access.actor(target.ref);if(!actor||!victim)return false;
+        const capacity=PokemonSkills.p("skydrop","liftCap",{world:access,actor:actor,skill:PokemonSkills.skills["skydrop"],detail:{values:{}}});
+        return PokemonSkills.skydropEligible(access,actor,victim,Math.min(capacity,ai<number>(item,"maxWeight",300)),ai<number>(item,"maxChase",8));
     }
 
     /** 目标身边 4 格内还站着几个别的活敌。 */
@@ -49,7 +38,7 @@ namespace CompanionBehavior {
         accepts: function (context, item, target) {
             if (context.facts.mounted) return false;
             if (target.friendly || target.health <= 0 || !target.visible) return false;
-            return skydropWeight(context, target) <= ai<number>(item, "maxWeight", 300);
+            return skydropValid(context,item,target);
         },
         priority: function (context, item, target) {
             if (!target || !skydropValid(context, item, target)) return 0;

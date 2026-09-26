@@ -7,9 +7,9 @@
  *
  * 两幕（提交后由共享节奏驱动 execute）：
  *   起（windup，提交前）：缩身蓄势，只播预告表现，可免费打断。
- *   跃与踢（提交后）：逐刻沿抛物线先升后俯；上升阶段把落点钉在目标实时位置，进入俯冲时把落点锁死，
- *       此后对手横移就能让开。俯冲途中 trace 撞到活体即按 kick 结算接触伤害、沿飞踢方向踹开 shove 格；
- *       到达落点时在 hitRadius 内再选一次最近的敌人；都空才是踢偏，按 crash 比例自伤。落回地面后收招。
+ *   跃与踢（提交后）：逐刻沿抛物线先升后俯；提交即锁线，方向固定不再拐向目标，之后对手横移就能让开。
+ *       俯冲途中真实本体撞到活体即按 kick 结算接触伤害、沿飞踢方向踹开 shove 格，并就此落地收势；
+ *       半途撞墙、或到点都没有接触就是踢偏，在真实落点按 crash 比例自伤。落回地面后收招。
  *
  * 与同族分开：飞膝踢先拔高再直坠、更重更狠；下压踢是抬腿下劈的两拍；闪电强袭带电蓄势。
  * 飞踢是其中最低平、最快、反伤最轻的一记。
@@ -54,7 +54,7 @@ namespace PokemonSkills {
         name: "Jump Kick",
         description: "一记低平的腾空飞踢：缩身蹬地，沿浅弧冲上去，腿横着扫出。踢实就把对手踹开，踢偏脚踝硬磕地面、自伤一截。跳击家族里最干净、最快的一记。",
         uses: ["用一记便宜的腾空踢打出接触伤害", "把贴脸的对手踹开、拉出身位", "给残血对手补上最后一脚"],
-        kind: "enemy",
+        kind: "aim",
         range: 5.5,
         maxRange: 9,
         prepare: 7,
@@ -104,19 +104,24 @@ namespace PokemonSkills {
             const settleSpeed = Math.max(0.2, p("jumpkick", "settleSpeed", action));
             const scale = hitRadius / 0.65;
             const intensity = Math.max(0.6, Math.min(2.2, power / 100));
+            // 提交即锁线：冻结选点/目标点，之后只沿这条线飞，不自动拐向原敌。
+            action.releaseTarget();
             const start = self.position();
             const apexY = start.y() + leapHeight;
-            const target = action.target();
             const riseLimit = Math.max(1, Math.ceil(leapHeight / leapSpeed)) + 6;
-            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
-            let locked = targetBody !== null ? jumpkickGround(world, targetBody.position(), targetBody.height() * 0.5)
+            // 有实体目标就用它的实时位置定线（提交时冻结一次），否则用自由选点。
+            const targetActor = action.target();
+            const targetBody = targetActor !== null && world.valid(targetActor) ? world.observe(targetActor) : null;
+            const locked = targetBody !== null ? jumpkickGround(world, targetBody.position(), targetBody.height() * 0.5)
                 : jumpkickGround(world, action.targetPosition(), 0.7);
+            const heading = WorldGeometry.flatUnit(locked.minus(start), action.direction());
             let finished = false;
 
             function finish(current: CombatAction): void { if (!finished) { finished = true; movementScenes.finish(current, done); } }
 
             sound(action, "minecraft:entity.player.attack.strong");
-            movementScenes.show(action, "leap", start, { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust,
+            movementScenes.show(action, "leap", start, { moment: "leap", scale: scale, intensity: intensity, dust: dust,
+                    direction: [heading.x(), 0, heading.z()],
                     path: [[start.x(), start.y(), start.z()], [locked.x(), apexY, locked.z()]] });
 
             function settle(current: CombatAction): void {
@@ -150,38 +155,30 @@ namespace PokemonSkills {
                 const live = current.world();
                 const body = live.observe(victim);
                 const point = body === null ? at : body.position();
-                hurt(current, victim, "jumpkick", power, { damage: damageSpec("jumpkick", "kick"), contact: true });
+                if (!hurt(current, victim, "jumpkick", power, { damage: damageSpec("jumpkick", "kick"), contact: true })) {
+                    crashLanding(current, point); return;
+                }
                 if (live.valid(victim)) {
-                    const away = point.minus(live.observe(actor)!.position());
+                    const me = live.observe(actor);
+                    const away = me === null ? direction : point.minus(me.position());
                     const flat = WorldCombat.point(away.x(), 0, away.z());
                     const push = flat.length() < 0.01 ? direction : flat.unit();
                     live.displace(victim, push.scale(shove));
                 }
                 WorldFeedback.emit(live, jumpkickScene, 1, point,
-                    { moment: "impact", target: String(victim.ref()), scale: scale, intensity: intensity, dust: dust,
-                        count: Math.round(18 + power * 0.35),
-                        direction: [direction.x(), direction.y(), direction.z()] }, 30);
+                    { moment: "impact", target: String(victim.ref()), scale: scale, intensity: intensity,
+                        count: Math.round(18 + power * 0.35) }, 30);
                 sound(current, "cobblemon:impact.fighting");
                 sound(current, "minecraft:entity.player.attack.strong");
                 WorldFeedback.text(live, jumpkickAbove(point), jumpkickHitText, [], 26);
                 settle(current);
             }
 
-            function resolve(current: CombatAction, at: CombatPoint, direction: CombatPoint): void {
-                const live = current.world();
-                let victim: CombatActor | null = null, best = 1e9;
-                const region = WorldGeometry.ring(at, 0, hitRadius, { below: 1, above: 2 });
-                WorldGeometry.selectEnemies(live, region, function (candidate, facts) {
-                    if (String(candidate.ref()) === String(actor.ref())) return;
-                    const gap = facts.position().minus(at).length();
-                    if (gap < best) { best = gap; victim = candidate; }
-                });
-                if (victim === null && target !== null && live.valid(target)) {
-                    const body = live.observe(target);
-                    if (body !== null && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
-                }
-                if (victim !== null) impactOn(current, victim, at, direction);
-                else crashLanding(current, at);
+            /** 全程没有真实接触：就在落体当下的真实地面落地，按 crash 比例自伤，不拐向原敌。 */
+            function land(current: CombatAction): void {
+                const live = current.world(), me = live.observe(actor);
+                const at = me === null ? current.origin() : jumpkickGround(live, me.position(), me.height() * 0.5);
+                crashLanding(current, at);
             }
 
             function dive(current: CombatAction): void {
@@ -193,7 +190,7 @@ namespace PokemonSkills {
                 const distance = toward.length();
                 const floor = jumpkickFloor(live, from, me.height() * 0.5);
                 if (distance <= Math.max(0.5, hitRadius) || from.y() - me.height() * 0.5 <= floor + 0.15) {
-                    resolve(current, locked, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
+                    land(current);
                     return;
                 }
                 const dir = toward.unit();
@@ -208,10 +205,10 @@ namespace PokemonSkills {
                         return;
                     }
                 }
-                if (trace.blocked()) { resolve(current, current.origin(), dir); return; }
+                if (trace.blocked()) { land(current); return; }
                 const moved = swept.moved + (trace.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
-                if (moved < Math.min(0.06, stepLen * 0.4)) { resolve(current, current.origin(), dir); return; }
-                movementScenes.show(current, "dive", from, { moment: "dive", scale: scale, intensity: intensity, hitRadius: hitRadius,
+                if (moved < Math.min(0.06, stepLen * 0.4)) { land(current); return; }
+                movementScenes.show(current, "dive", from, { moment: "dive", scale: scale, intensity: intensity,
                         direction: [dir.x(), dir.y(), dir.z()],
                         path: [[from.x(), from.y(), from.z()], [locked.x(), locked.y(), locked.z()]] });
                 current.after(1, function (next) { dive(next); });
@@ -220,10 +217,6 @@ namespace PokemonSkills {
             function rise(current: CombatAction, step: number): void {
                 const live = current.world(), me = live.observe(actor);
                 if (me === null) { finish(current); return; }
-                if (target !== null && live.valid(target)) {
-                    const body = live.observe(target);
-                    if (body !== null) locked = jumpkickGround(live, body.position(), body.height() * 0.5);
-                }
                 if (step >= riseLimit || me.position().y() >= apexY - 0.05) { dive(current); return; }
                 const up = Math.min(leapSpeed, Math.max(0, apexY - me.position().y()));
                 const flatX = locked.x() - me.position().x(), flatZ = locked.z() - me.position().z();
@@ -232,7 +225,9 @@ namespace PokemonSkills {
                 const delta = WorldCombat.point(flat < 0.01 ? 0 : flatX / flat * horiz, up, flat < 0.01 ? 0 : flatZ / flat * horiz);
                 jumpkickResetFall(live, actor);
                 live.displace(actor, delta);
-                movementScenes.show(current, "leap", me.position(), { moment: "leap", height: leapHeight, scale: scale, intensity: intensity, dust: dust });
+                movementScenes.show(current, "leap", me.position(), { moment: "leap", scale: scale, intensity: intensity, dust: dust,
+                        direction: [heading.x(), 0, heading.z()],
+                        path: [[start.x(), start.y(), start.z()], [locked.x(), apexY, locked.z()]] });
                 current.after(1, function (next) { rise(next, step + 1); });
             }
 

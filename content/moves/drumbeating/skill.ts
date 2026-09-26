@@ -1,68 +1,27 @@
-/**
- * 鼓击 / drumbeating 的出手方式。
- *
- * 核心念头：敲响鼓，让根须跟着鼓点沿地面冲向目标——每一拍都是一道破土的波峰，前几拍把目标震得站不稳，
- * 最后一拍根须缠住它的腿脚，把它的动作拖住、速度压下去；破土而出的根留在原地，过一阵才缩回土里。
- *
- * 三幕：
- *   起（tune，提交前）：抬手落槌、在鼓面上聚起一圈音粒与草屑，只播预告。
- *   奏（wave → strike，提交后）：每 `interval` 刻一拍，波峰从脚下沿地面冲向目标；到达时在目标脚下破土，
- *       圈内敌人各吃一记 `beat`（前几拍）或 `final`（末拍）伤害。
- *   缠（bind → root）：末拍按 `slowStages` 压速度、挂 rootbound 身份、把腿脚别住一瞬，并在目标脚下留下 `rootCells` 块
- *       根系（`terrain` 租借、`linger`），到期原方块回来。
- *
- * 与本族其他三招分开：泥巴射击／下盘踢／虫扑都是接触或投射物；鼓击是唯一**不接触、走地面、分多拍**的一招，
- * 根须是真正留在世界里的东西。掉速走 `NativeEffects.boost` 的共享速度等级，对宝可梦和其他生物同一条路。
- */
+/** Each beat advances a finite root head along native support; only a completed arrival settles that beat. */
 namespace PokemonSkills {
     const drumbeatingScene = "world_combat:move_drumbeating";
     const drumbeatingBound = "world_combat:drumbeating_bound";
     const drumbeatingBindText = "world_combat.move.drumbeating.text.bind";
     const drumbeatingBeatText = "world_combat.move.drumbeating.text.beat";
 
-    /** 在目标脚下按半径铺一圈根须；只放地表上方的空气格，到期原方块回来，活物站在格子里时等它走开再合上。 */
-    function drumbeatingRoots(world: CombatWorld, point: CombatPoint, radius: number, cells: number, ticks: number): number {
-        const placed: any[] = [];
-        const r = Math.ceil(radius + 0.4), bx = Math.floor(point.x()), bz = Math.floor(point.z());
-        for (let ring = 1; ring <= 2 && placed.length < cells; ring++) {
-            const at = radius * (ring === 1 ? 0.55 : 1.0);
-            const step = ring === 1 ? 4 : 6;
-            for (let i = 0; i < step && placed.length < cells; i++) {
-                const a = (i / step) * Math.PI * 2 + (ring === 1 ? 0.4 : 0);
-                const x = bx + Math.round(Math.cos(a) * at), z = bz + Math.round(Math.sin(a) * at);
-                for (let dy = 1; dy >= -3; dy--) {
-                    const block = world.block(WorldCombat.point(x, Math.floor(point.y()) + dy, z));
-                    if (block === null) continue;
-                    const id = String(block.id());
-                    if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock") break;
-                    const above = world.block(WorldCombat.point(x, Math.floor(point.y()) + dy + 1, z));
-                    if (above === null) break;
-                    const aboveId = String(above.id());
-                    if (aboveId !== "minecraft:air" && aboveId !== "minecraft:short_grass" && aboveId !== "minecraft:tall_grass") break;
-                    placed.push({ x: x, y: Math.floor(point.y()) + dy + 1, z: z, block: "minecraft:mangrove_roots" });
-                    break;
-                }
-            }
-        }
-        if (!placed.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: placed, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return placed.length;
-    }
-
+    const drumbeatingVisual="world_combat:drumbeating_visual";
+    WorldCombat.effect(drumbeatingVisual,1,1200,"actor",json=>json,EffectProtocols.unchanged);
+    function drumbeatingWatch(effect:CombatEffect):void{const world=effect.world(),data=JSON.parse(effect.state());
+        if(!world.valid(effect.target())||!MobEffects.matches(world,effect.target(),data.carrier)){effect.end();return;}effect.schedule("watch","watch",2,"{}");}
+    WorldCombat.effectHandler(drumbeatingVisual,"start",drumbeatingWatch);WorldCombat.effectHandler(drumbeatingVisual,"watch",drumbeatingWatch);
     /** 末拍缠住一名目标：共享速度等级、rootbound 身份、短定身与脚下根须。 */
     function drumbeatingBind(world: CombatWorld, target: CombatActor, point: CombatPoint, stages: number,
         bindTicks: number, rootTicks: number, rootCells: number): void {
         NativeEffects.boost(world, target, "spe", -stages);
-        MobEffects.apply(world, target, drumbeatingBound, bindTicks, 0);
+        const carrier=MobEffects.apply(world,target,drumbeatingBound,bindTicks,0);if(!carrier)return;
         if (rootTicks > 0) WorldEffects.apply(world, target, "rooted", {}, rootTicks);
-        const laid = drumbeatingRoots(world, point, 1.2, rootCells, bindTicks);
+        const visual=world.effect(drumbeatingVisual,target,JSON.stringify({carrier:MobEffects.anchor(carrier)}),bindTicks);
         world.sound("minecraft:block.mangrove_roots.place", point, 16, "{}");
         const body = world.observe(target);
-        WorldFeedback.keep(world, "drumbeating:root:" + String(target.ref()), drumbeatingScene, 1,
+        WorldFeedback.onEffect(world,visual,"drumbeating:root:"+visual,drumbeatingScene,1,
             body === null ? point : body.position(),
-            { moment: "root", target: String(target.ref()), stages: stages, cells: laid, tick: bindTicks }, bindTicks);
+            { moment: "root", target: String(target.ref()), stages: stages, cells: rootCells, tick: bindTicks });
         if (body !== null) {
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), drumbeatingBindText, [stages], 30);
         }
@@ -71,9 +30,9 @@ namespace PokemonSkills {
     define({
         id: "drumbeating",
         name: "Drum Beating",
-        description: "敲响鼓，让根须跟着鼓点沿地面冲向目标：每一拍都是一道破土的波峰，前几拍隔着地面造成伤害，最后一拍根须缠住它的腿脚，把目标钉住一瞬并压低速度；破土而出的根留在原地，过一阵才缩回土里。深根式根留得更久、多压一级速度、破土更宽，每拍更轻。",
+        description: "每拍鼓点把根头沿真实地面逐段送出，拍起时固定那一拍的落点；抵达才破土结算。末拍实际命中后缠脚降速，断地会截停当前根路。",
         uses: ["隔着地面钉住一个对手", "连奏数拍逐拍造成伤害，末拍再压低速度、钉住腿脚", "在目标脚下留下一圈根须"],
-        kind: "enemy",
+        kind: "aim",
         range: 11,
         maxRange: 11,
         prepare: 12,
@@ -134,15 +93,27 @@ namespace PokemonSkills {
                 const feet = feetOf(self.height(), self.position());
                 const live = targetRef === "" ? null : scope.actor(targetRef);
                 const liveBody = live === null ? null : scope.observe(live);
-                const ground = liveBody === null ? locked.minus(WorldCombat.point(0, 0.7, 0)) : feetOf(liveBody.height(), liveBody.position());
-                const horizontal = Math.sqrt(Math.pow(feet.x() - ground.x(), 2) + Math.pow(feet.z() - ground.z(), 2));
-                const travel = Math.max(2, Math.min(9, Math.round(horizontal / pace)));
+                const desired = liveBody === null ? locked : feetOf(liveBody.height(), liveBody.position());
+                const start = SurfacePaths.support(scope,feet,.1,1.1), ground = SurfacePaths.support(scope,desired,.1,3);
                 const final = index >= beats - 1;
-                WorldFeedback.emit(scope, drumbeatingScene, 1, feet,
-                    { moment: "wave", beat: index + 1, beats: beats, notes: notes, scale: scale, final: final ? 1 : 0,
-                        path: [[feet.x(), feet.y(), feet.z()], [ground.x(), ground.y(), ground.z()]] }, travel + 10);
-                sound(current, "minecraft:block.note_block.basedrum");
-                current.after(travel, function (next: CombatAction) { strikeAt(next, index, ground, live, final); });
+                sound(current,"minecraft:block.note_block.basedrum");
+                if(!start||!ground){nextBeat(current,index);return;}
+                const delta=ground.minus(start), heading=WorldGeometry.flatUnit(delta), length=Math.min(reach,Math.sqrt(delta.x()*delta.x()+delta.z()*delta.z()));
+                let head=start,travelled=0;
+                function travel(next:CombatAction):void{
+                    const step=SurfacePaths.advance(next.world(),head,heading,Math.min(pace,length-travelled),{up:1,down:1,spacing:.25,samples:8});
+                    travelled+=step.travelled;head=step.point;
+                    WorldFeedback.emit(next.world(),drumbeatingScene,1,head,{moment:"wave",beat:index+1,beats,notes,scale,final:final?1:0,
+                        path:step.path.map(point=>[point.x(),point.y()+.03,point.z()])},5);
+                    if(step.ended){nextBeat(next,index);return;}
+                    if(travelled>=length-.01){strikeAt(next,index,head,live,final);return;}
+                    next.after(1,travel);
+                }
+                travel(current);
+            }
+            function nextBeat(current:CombatAction,index:number):void{
+                if(index>=beats-1){finish(current);return;}
+                current.after(interval,next=>beatAt(next,index+1));
             }
 
             /** 波峰到达：破土结算这一拍。 */
@@ -151,9 +122,9 @@ namespace PokemonSkills {
                 const power = final ? finalPower : beatPower;
                 const intensity = Math.max(0.6, Math.min(2.2, power / 50));
                 let struck = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, Math.max(0.8, beatRadius), { below: 1.6, above: 1.6 }),
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySector(point.plus(WorldCombat.point(0,.2,0)), WorldCombat.point(1,0,0), Math.max(.8,beatRadius), 360, {below:.2,above:1.2}),
                     function (other, facts) {
-                        if (struck >= 3) return;
+                        if (struck >= 3 || scope.friendly(other)) return;
                         struck++;
                         const landed = hurt(current, other, "drumbeating", power,
                             { damage: damageSpec("drumbeating", final ? "final" : "beat") });
@@ -170,6 +141,7 @@ namespace PokemonSkills {
                 current.after(interval, function (next: CombatAction) { beatAt(next, index + 1); });
             }
 
+            action.releaseTarget();
             beatAt(action, 0);
         }
     });

@@ -8,9 +8,10 @@
  * 近白只做高光小点。落空时改播灰白（0x9AA0A6）——「话没传到」与「点着了」两种结果一眼可分。
  * 层次：聚怒（起手，源侧）／声浪（出口，源侧沿指向）／炸开＋内收环（命中，目标侧）／
  * 怒火（持续，目标头顶与脚边）／散尽（收）。
- * 起击收：windup（聚怒）→ shout（出口）→ taunt（炸开并留下怒火）→ rage（持续）→ fade／subside（收）。
+ * 起击收：windup（聚怒）→ shout（出口）→ taunt（炸开并留下怒火）→ goad（注意转向施法者）→ rage（持续）→ fade／subside（收）。
  * 数：出口与炸开的爆发量绑定服务端算出的 data.rage；持续怒火密度随 data.intensity 变化，
  * 该强度由标记剩余比例（data.surge）派生；落空的灰白小爆绑定同一 rage，只换色相。
+ * goad 只在 world.target 真的把敌人注意拉向施法者时播放：一条沿 data.direction 的怒线从目标指向施法者。
  */
 const TauntDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -95,6 +96,28 @@ const TauntDefinition: ParticleDefinition = {
                     direction: "down", speed: [0.03, 0.1],
                     lifetime: [12, 22], size: [0.07, 0.02],
                     color: 0x3A0A0A, alpha: [0.5, 0], gravity: 0.02, drag: 0.95, light: "world", maxParticles: 36
+                }
+            ]
+        },
+        goad: {
+            duration: 26,
+            exit: { stop: 8, drain: 18 },
+            emitters: [
+                {
+                    name: "goad_line", bind: "target", height: 0.72, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    rate: 30, shape: { kind: "line", length: { data: "reach", fallback: 6 } },
+                    direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [6, 10], size: [0.1, 0.03],
+                    color: 0xE2531B, alpha: [0.5, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "goad_marks", bind: "target", offset: [0, 1.05, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/mood/anger_red",
+                    burst: { count: 6, interval: 4, repeats: 2 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.2, 0.05],
+                    color: 0xC0392B, alpha: [0.8, 0], light: "full", maxParticles: 14
                 }
             ]
         },

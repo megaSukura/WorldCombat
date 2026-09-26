@@ -24,5 +24,7 @@
   "worldcombat.skill.mirrormove.preference.ai.leaveStation.help": "When on, the user may leave its post to mirror; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.mirrormove.text.reflect": "Mirrored %1$s",
   "world_combat.move.mirrormove.text.dull": "The mirror finds nothing",
-  "worldcombat.skill.mirrormove.world": "Against a non-Pokémon, return its latest successful native attack within %1$s as an immediate hit of the same damage type. Use its pre-armour damage times %2$s, then apply the target’s defences again. Range and clear sight are required. Extra statuses and projectile flight are not copied."
+  "worldcombat.skill.mirrormove.world": "Against a non-Pokémon, return its latest successful native attack within %1$s as an immediate hit of the same damage type. Use its pre-armour damage times %2$s, then apply the target’s defences again. Range and clear sight are required. Extra statuses and projectile flight are not copied.",
+  "world_combat.move.mirrormove.text.native_contact": "Native contact replay",
+  "world_combat.move.mirrormove.text.native_projectile": "Native projectile replay"
 }

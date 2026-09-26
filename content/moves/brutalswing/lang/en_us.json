@@ -3,7 +3,7 @@
   "worldcombat.skill.brutalswing.use.0": "Sweep a full circle when surrounded",
   "worldcombat.skill.brutalswing.use.1": "Break up a close-quarters surround and fling the nearby foes off",
   "worldcombat.skill.brutalswing.use.2": "Close-range cover that costs no Speed: one turn and it is over",
-  "worldcombat.skill.brutalswing.description.0": "Spins one full circle on the spot, hitting every foe within %2$s blocks of the user once each, in any direction, for %1$s physical damage.",
+  "worldcombat.skill.brutalswing.description.0": "Spins one full circle on the spot, hitting every foe within %2$s blocks of the user once each, in any direction, for %1$s physical damage. Real walls block the blade; only the side actually swept is struck, including foes that step into the blade path.",
   "worldcombat.skill.brutalswing.description.1": "Each swept foe is flung outward up to %1$s blocks (less when blocked); the full turn takes about %2$s s.",
   "worldcombat.skill.brutalswing.wide.on": "Broad form: radius x1.18, knock-back x1.3 and +3 ticks per full turn; costs impact power x0.85, wind-up +2 ticks, recovery +3 ticks and cooldown +6 ticks.",
   "worldcombat.skill.brutalswing.wide.off": "Tight form: spins closer, shorter and faster with a heavier single hit; but throws less and cannot reach farther foes.",
@@ -22,7 +22,7 @@
   "worldcombat.skill.brutalswing.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.brutalswing.preference.ai.maxChase.help": "The companion only considers the sweep when a threat is within this distance. Smaller spins only at contact, larger dives into a crowd first.",
   "worldcombat.skill.brutalswing.preference.ai.minFoes": "Foes to sweep",
-  "worldcombat.skill.brutalswing.preference.ai.minFoes.help": "Spins only with at least this many visible hostile foes inside the radius. Higher reserves it for being surrounded; 1 spins at a single foe.",
+  "worldcombat.skill.brutalswing.preference.ai.minFoes.help": "Spins only with at least this many visible hostile foes inside the sweep radius. Higher reserves it for being surrounded; 1 spins at a single foe.",
   "world_combat.move.brutalswing.text.swept": "Sweep: %1$s foes",
   "world_combat.move.brutalswing.text.miss": "Sweep missed"
 }

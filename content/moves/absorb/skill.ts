@@ -6,8 +6,10 @@
  *
  * 两幕：
  *   起（windup，提交前）：身侧收拢一圈青绿光点，只播预告。
- *   抽（reach → sip / miss，提交后）：沿瞄准方向 trace 一条 `reach` 长的藤；撞上活体即结算 `sip` 汲取伤害，
- *       命中伤害的一半经共享 `drain` 载荷转回自身，同时沿「目标→自身」抽出一束汁流；撞空则藤尖在尽头散开。
+ *   抽（reach → sip / miss，提交后）：`kind: "aim"` 可朝任意方向或世界点探藤，也能空放。先做一次权威
+ *       `action.trace(..., true)`，藤尖画到真实首碰点（实体或方块），而不是画满整条 `reach`；撞上敌人且伤害成功
+ *       才结算 `sip` 汲取——命中伤害的一半经共享 `drain` 载荷转回自身，同时沿「目标→自身」抽出一束汁流。
+ *       墙与友方先挡住藤尖、不结算敌方伤害，伤害被拒就不再显示回流。
  *
  * 与同族分开：超级吸取把孢荚抛出去、终极吸取从地里拱出大根三拍连抽、木角用身体撞进去；
  * 只有吸取是藤不脱手的一啄，靠"藤从身上伸出去"这件事被认出。
@@ -20,13 +22,31 @@ namespace PokemonSkills {
     const absorbSapText = "world_combat.move.absorb.text.sap";
     const absorbMissText = "world_combat.move.absorb.text.miss";
 
+    /** 藤的折线顶点：两端落在施法者与真实首碰点，中间朝侧向微微鼓出，画出的就是判定真正走到的那条短藤。 */
+    function absorbVine(origin: CombatPoint, tip: CombatPoint, segments: number, sag: number): number[][] {
+        const path: number[][] = [[origin.x(), origin.y(), origin.z()]];
+        const delta = tip.minus(origin);
+        const horizontal = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
+        const nx = horizontal < 0.001 ? 1 : -delta.z() / horizontal;
+        const nz = horizontal < 0.001 ? 0 : delta.x() / horizontal;
+        for (let i = 1; i < segments; i++) {
+            const t = i / segments;
+            const at = origin.plus(delta.scale(t));
+            const bulge = Math.sin(Math.PI * t) * sag;
+            const droop = Math.sin(Math.PI * t) * sag * 0.45;
+            path.push([at.x() + nx * bulge, at.y() - droop, at.z() + nz * bulge]);
+        }
+        path.push([tip.x(), tip.y(), tip.z()]);
+        return path;
+    }
+
     define({
         id: "absorb",
         cooldownParameter: "recharge",
         name: "Absorb",
-        description: "命中目标并汲取生命，为自己恢复生命。",
+        description: "朝瞄准方向探出一根短藤，点中敌人就汲取生命为自己恢复；可以空放，墙与友方会先挡下藤尖。",
         uses: ["贴身时用最短冷却的一口维持血量", "在小口伤害里顺手把血线拉回来", "够得着就点一口：起手、收招、冷却都短，节奏轻快"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.0,
         maxRange: 6.6,
         prepare: 5,
@@ -57,6 +77,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
+            const actor = action.actor();
             const reach = p("absorb", "reach", action);
             const lash = p("absorb", "lash", action);
             const power = p("absorb", "sip", action);
@@ -64,34 +85,47 @@ namespace PokemonSkills {
             const direction = aim(action);
             const origin = action.origin();
             const motes = Math.max(6, Math.round(power * 0.4 + share * 40));
-            const scale = lash / 0.36;
+            const scale = Math.max(0.7, lash / 0.36);
             const end = origin.plus(direction.scale(reach));
 
+            // 权威判定先行：线的第一个实体（含友方与自身阻挡）或方块就是藤尖的真实落点。
+            const hit = action.trace(origin, end, lash, true);
+            const contact = hit.position();
+            const lander = hit.hitEntity() ? hit.target() : null;
+            const victim = lander !== null && !world.friendly(lander) && String(lander.ref()) !== String(actor.ref()) ? lander : null;
+            const span = contact.minus(origin).length();
+            const sag = Math.max(0.02, Math.min(0.32, span * 0.05));
+
             WorldFeedback.emit(world, absorbScene, 1, origin,
-                { moment: "reach", path: ["source", [end.x(), end.y(), end.z()]], direction: [direction.x(), direction.y(), direction.z()],
-                    span: reach, motes: motes }, 18);
+                { moment: "reach", path: absorbVine(origin, contact, 4, sag), point: [contact.x(), contact.y(), contact.z()],
+                    span: span, motes: motes, scale: scale }, 16);
             sound(action, "cobblemon:move.absorb.actor");
 
-            const hit = action.trace(origin, end, lash);
-            const target = hit.target();
-            if (hit.hitEntity() && target !== null && !world.friendly(target)) {
-                const at = hit.position();
+            if (victim !== null && world.valid(victim)) {
                 const landed = impact(action, hit, "absorb", power,
                     { damage: damageSpec("absorb", "sip"), drain: share });
-                const flow = origin.minus(at);
-                const span = flow.length();
-                const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
-                WorldFeedback.emit(world, absorbScene, 1, at,
-                    { moment: "sip", path: ["target", "source"], target: String(target.ref()),
-                        direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes }, 26);
-                sound(action, "cobblemon:move.absorb.target");
                 if (landed) {
-                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.05, 0)), absorbHitText, [], 22);
+                    const at = world.observe(victim);
+                    const point = at === null ? contact : at.position();
+                    const flow = origin.minus(point);
+                    const run = flow.length();
+                    const inward = run < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
+                    WorldFeedback.emit(world, absorbScene, 1, point,
+                        { moment: "sip", path: ["target", "source"], target: String(victim.ref()),
+                            direction: [inward.x(), inward.y(), inward.z()], span: run, motes: motes, scale: scale }, 26);
+                    sound(action, "cobblemon:move.absorb.target");
+                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.05, 0)), absorbHitText, [], 22);
                     WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), absorbSapText, [Math.round(share * 100)], 22);
                 }
+            } else if (lander !== null) {
+                // 友方（或自己）先挡住藤尖：停在身体上，不结算敌方伤害。
+                WorldFeedback.emit(world, absorbScene, 1, contact, { moment: "miss", scale: scale }, 12);
+            } else if (hit.blocked()) {
+                const wall = hit.blockPosition();
+                WorldFeedback.emit(world, absorbScene, 1, wall === null ? contact : wall, { moment: "miss", scale: scale }, 12);
             } else {
-                WorldFeedback.emit(world, absorbScene, 1, end, { moment: "miss", scale: scale }, 16);
-                WorldFeedback.text(world, end.plus(WorldCombat.point(0, 0.8, 0)), absorbMissText, [], 18);
+                WorldFeedback.emit(world, absorbScene, 1, contact, { moment: "miss", scale: scale }, 14);
+                WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 0.8, 0)), absorbMissText, [], 18);
                 sound(action, "minecraft:block.grass.break");
             }
             done(action);

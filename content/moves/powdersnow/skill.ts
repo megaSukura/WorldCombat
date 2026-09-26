@@ -1,15 +1,17 @@
 /**
  * 细雪 / powdersnow 的出手方式。
  *
- * 核心念头：低头吸一口冷气，朝身前吹出一片又宽又短的扇形雪霰——它不追远，只求便宜、快、能一直吹；
- *   扇面里的每个敌人各挨一次轻冻伤、被吹退半步，并各自掷一次冰冻。这是一招用来反复掷冰冻的工具。
+ * 核心念头：低头吸一口冷气，朝瞄准方向吹出一片又宽又短的扇形雪霰——它不追远，只求便宜、快、能一直吹；
+ *   扇面里的每个敌人各挨一次轻冻伤、被吹退半步，并各自掷一次冰冻，中间的方块会挡住雪。这是一招用来
+ *   反复掷冰冻的工具，可以朝空地空放。
  *
  * 两幕（一击完成）：
  *   起（windup，提交前）：嘴边凝起一层薄霜的预告。
- *   吹（puff → impact）：提交后瞬发——扇面内按距离取最近的 maxTargets 个敌人，各结算一次 puff 伤害、
- *       沿背离施法者的方向推退 push、按 freezeChance 掷冰冻。不留下任何东西。
+ *   吹（puff → impact）：提交后瞬发——朝瞄准方向张开一片短扇，扇面内按距离取最近的 maxTargets 个且不被
+ *       掩体挡住的敌人，各结算一次 puff 伤害、沿背离施法者的方向推退 push、按 freezeChance 掷冰冻。
+ *       不留下任何东西。
  *
- * 反制：扇面短而宽，退开一步就出范围；冰冻是概率，单次很轻，威胁在次数。
+ * 反制：扇面短而宽，退开一步就出范围，躲到方块后也不会被吹到；冰冻是概率，单次很轻，威胁在次数。
  * 配置 flurry（乱雪式）：扇面更宽更远、能打更多人、冰冻概率更高，但每人吃得轻、冷却略长。
  */
 namespace PokemonSkills {
@@ -36,9 +38,9 @@ namespace PokemonSkills {
         id: "powdersnow",
         cooldownParameter: "wait",
         name: "Powder Snow",
-        description: "朝身前吹出一片又宽又短的扇形雪霰：扇面里的每个敌人各挨一次轻冻伤、被吹退半步，并各自有概率被冻住。出手快、冷却短，可以反复吹，靠次数堆冰冻。",
+        description: "朝瞄准方向吹出一片又宽又短的扇形雪霰：扇面里不被掩体挡住的每个敌人各挨一次轻冻伤、被吹退半步，并各自有概率被冻住。出手快、冷却短，可以反复吹，靠次数堆冰冻；也能朝空地空放。",
         uses: ["近身一口罩住挤在身前的几个敌人", "反复吹，一次次掷冰冻", "把贴上来的人吹退半步"],
-        kind: "enemy",
+        kind: "aim",
         range: 5.5,
         maxRange: 8,
         prepare: 6,
@@ -74,7 +76,7 @@ namespace PokemonSkills {
             const origin = body === null ? action.origin() : body.position();
             const at = action.targetPosition();
             const flat = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
-            const heading = flat.length() < 0.3 ? aim(action) : flat.unit();
+            const heading = WorldGeometry.flatUnit(flat, action.direction());
             const reach = Math.max(2.5, p("powdersnow", "range", action));
             const halfAngle = Math.max(10, p("powdersnow", "angle", action));
             const power = p("powdersnow", "puff", action);
@@ -91,12 +93,12 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.powdersnow.actor");
             WorldFeedback.emit(world, powdersnowScene, 1, origin,
-                { moment: "puff", target: String(actor.ref()), direction: [heading.x(), heading.y(), heading.z()],
-                    path: path, reach: reach, angle: halfAngle, scale: scale, intensity: intensity, rate: rate, hits: 0 }, 20);
+                { moment: "puff", path: path, scale: scale, intensity: intensity, rate: rate }, 20);
 
             const region = WorldGeometry.sector(origin, heading, reach, halfAngle * 2, { below: 2, above: 3 });
             const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
             WorldGeometry.selectEnemies(world, region, function (enemy, facts) {
+                if (!world.clear(origin, facts.position())) return;      // 掩体挡雪
                 candidates.push({ actor: enemy, at: facts.position() });
             });
             candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
@@ -107,9 +109,13 @@ namespace PokemonSkills {
                 hits++;
                 const away = candidates[i].at.minus(origin);
                 const headingAway = away.length() < 0.05 ? heading : away.unit();
-                if (world.valid(victim)) world.displace(victim, headingAway.scale(push));
+                if (world.valid(victim)) world.hitDisplace(victim, headingAway.scale(push));
                 WorldFeedback.emit(world, powdersnowScene, 1, candidates[i].at,
-                    { moment: "impact", target: String(victim.ref()), intensity: intensity, scale: scale, impactCount: impactCount }, 20);
+                    { moment: "impact", target: String(victim.ref()), direction: [headingAway.x(), headingAway.y(), headingAway.z()],
+                        intensity: intensity, scale: scale, impactCount: impactCount }, 20);
+                if (CombatStatus.has(world, victim, "frozen"))
+                    WorldFeedback.emit(world, powdersnowScene, 1, candidates[i].at,
+                        { moment: "frozen", target: String(victim.ref()), intensity: intensity, scale: scale }, 24);
             }
             WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)),
                 hits > 0 ? powdersnowHitText : powdersnowMissText, hits > 0 ? [hits] : [], 22);

@@ -19,11 +19,16 @@ interface CombatActor {
 interface CombatImpact {
     /** Native projectile UUID; empty for an instantaneous trace. */
     projectile(): string;
+    /** Immutable JSON CombatProjectilePathSegment[] captured at this contact. Empty for instantaneous traces. */
+    projectilePath(): string;
     /** Native hit entity UUID, including non-living entities whose target() is null. Empty on block hits. */
     entity(): string;
     /** Native owner at impact, including deflection; lifetime remains with the original action/effect. Null for an instantaneous trace or absent living owner. */
     source(): CombatActor | null;
     position(): CombatPoint;
+    /** Native cell and outward face for block ray/projectile impacts. Null/empty when no specific block contact was issued (including body obstruction). */
+    blockPosition(): CombatPoint | null;
+    blockFace(): "down" | "up" | "north" | "south" | "west" | "east" | "";
     target(): CombatActor | null;
     blocked(): boolean;
     hitEntity(): boolean;
@@ -41,6 +46,7 @@ interface CombatAction {
     target(): CombatActor | null;
     direction(): CombatPoint;
     range(): number;
+    /** aim accepts entities of any relation or a point; enemy/friend explicitly filter relations. Selection does not grant damage permission. */
     targetKind(): "enemy" | "friend" | "aim" | "point" | "motion" | "self";
     /** Replace preparation input for subsequent callbacks. Validates relation and range (bounded by the registered maximum); retains this action's costs, cooldown identity and lifecycle. Original control() selections remain readable; commitment validates the replacement target dependency. */
     retarget(kind: "enemy" | "friend" | "aim" | "point" | "motion" | "self", target: CombatActor | null,
@@ -59,7 +65,7 @@ interface CombatAction {
     reject(reason: string): void;
     /** Source body's native bounding-box centre in world coordinates. */
     origin(): CombatPoint;
-    /** Selected entity body centre, or the selected point/directional endpoint. */
+    /** Selected entity's body-local aim point, following native AABB movement and resizing; default centre inputs stay centred. Point/direction inputs keep their endpoint. */
     targetPosition(): CombatPoint;
     /** After commitment, freeze the last target point and allow this action to continue if that target leaves. The original handle still requires world.valid checks. */
     releaseTarget(): void;
@@ -68,14 +74,18 @@ interface CombatAction {
     /** Attach a host-backed cost; commit validates and settles all attached costs together. */
     cost(cost: CombatCost): void;
     after(ticks: number, callback: (action: CombatAction) => void): void;
+    /** Listening for world_combat:input-release opts into physical key release: the final control snapshot stays readable,
+     * the callback decides whether to fire or reject, and the released action no longer needs input heartbeats.
+     * Explicit cancellation, source invalidation and maxTicks still end it. Without this listener, release cancels. */
     on(event: string, callback: (action: CombatAction) => void): number;
     off(token: number): void;
     emit(event: string): void;
-    trace(from: CombatPoint, to: CombatPoint, radius: number): CombatImpact;
+    /** Optional allied contacts for interception/support; returned allied contacts do not authorize friendly damage. Default false. */
+    trace(from: CombatPoint, to: CombatPoint, radius: number, hitAllies?: boolean): CombatImpact;
     /** Committed movement owner only. Move the native body on one straight segment (finite delta, at most 4 blocks), stopping at the first reached enemy or obstruction. Native half-width/height and radius (capped at 1) combine by maximum, not addition. Nonzero sweeps include endpoint and initial body contacts; zero delta is a no-op. Walls do not cause a lateral slide. Returned hits have the same action-owned, once-only settlement contract as trace. */
     moveSweep(delta: CombatPoint, radius: number): CombatImpact;
     /** Vanilla throwable entity with NeoForge impacts, native tracking and action-owned cleanup. Returns its entity UUID. Impact receipts are scoped to the hit callback. Options may include item/sprite, scale, tint and glow. */
-    /** `appearance` JSON also carries flight options: `homing` {target, turn (deg/tick), delay, range}, `pierce` (entities passed through), `bounce` (block rebounds) with `restitution`. */
+    /** `appearance` JSON also carries flight options: `homing` {target, turn (deg/tick), delay, range}, `pierce` (nonnegative integer entities passed through, or true for each entity once; walls/range/lifetime still end flight), `bounce` (block rebounds) with `restitution`. */
     projectile(origin: CombatPoint, velocity: CombatPoint, gravity: number, radius: number, range: number, lifetime: number,
         hit: (action: CombatAction, impact: CombatImpact) => void, complete: (action: CombatAction) => void, appearance?: string): string;
     damage(impact: CombatImpact, amount: number): boolean;
@@ -119,7 +129,9 @@ declare const WorldCombat: {
      */
     preview(action: string, json: string): void;
     /** world_combat:item_use is a native pre-use gate: {operation: start|continue|release|use|block|entity, hand, item, count}.
-     * Rejecting prevents that use of the held stack; inventory and equipment remain in native ownership. */
+     * Rejecting prevents that use of the held stack; inventory and equipment remain in native ownership.
+     * world_combat:mob_effect_incoming is a native pre-application gate with CombatNativeMobEffectFacts.
+     * reject prevents that effect attempt; source facts are exact native caller attribution, and acceptance preserves native rules. */
     on(id: string, topic: string, after: string, handler: (event: CombatWorldEvent) => void): void;
     contentPack(id: string, version: string, dependencies: string): void;
     effect(id: string, schema: number, maxTicks: number, lifetime: "action" | "actor" | "persistent",

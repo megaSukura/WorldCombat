@@ -1,83 +1,93 @@
-/**
- * 您先请 / afteryou —— 执行组织。
- *
- * 核心念头：向一个伙伴让出你的节奏——一道引线搭上它，催它紧接着你出手；你把这一拍让出去，自己下一拍要等更久。
- *
- * 三幕：起（windup，提交前）掌心攒起一束先手之光；让（提交后）引线搭上伙伴，
- *   伙伴拿到一段加速窗口（world_combat:skill_haste 临时修饰，冷却按 100/(100+急速) 缩短），
- *   自己背上一段让手减速（负急速）；兑现（伙伴在窗口内第一次出手时浮出「紧接着行动」）；
- *   收（窗口走完／被清除，两边自动收回修饰）。
- *
- * 与同族分开：帮助（helpinghand）加的是下一次命中的伤害，改的是「多重」；您先请不碰伤害，
- *   只把行动节律往伙伴那边挪——伙伴来得更快，自己更慢。
- * 反制：引线要有一条通视直线、伙伴要在够得到的距离内；加速只缩短下一次出手的等待，不改变招式的威力与效果。
- */
+/** Transfer one preparation beat, with an owned waiting token and an independent cost to the helper. */
 namespace PokemonSkills {
-    /** 窗口内被兑现的伙伴：第一拍浮字，后续只播速度闪光，不刷屏。 */
-    var afteryouSpent: { [ref: string]: boolean } = Object.create(null);
-
-    function afteryouDropEffect(world: CombatWorld, actor: CombatActor, id: string): void {
-        const effect = MobEffects.read(world, actor, id);
-        if (effect !== null) world.removeMobEffect(actor, id, effect.key());
+    interface AfterYouState { carrier: MobEffects.Anchor; haste: number; motes: number; max: number; spent?: number; player?: boolean; }
+    function afteryouActive(effect: CombatEffect, state: AfterYouState): boolean {
+        const world = effect.world();
+        if (!world.valid(effect.target()) || !MobEffects.matches(world, effect.target(), state.carrier)) { effect.end(); return false; }
+        return true;
     }
-    function afteryouDropCarrier(world: CombatWorld, actor: CombatActor, id: string): void {
-        const views = world.effects(actor, id);
-        for (let i = 0; i < views.length; i++) world.operation(views[i].id(), "world_combat:dispel", "{}");
+    function afteryouGo(effect: CombatEffect, state: AfterYouState, ticks: number): void {
+        const world = effect.world(), body = world.observe(effect.target());
+        state.spent = ticks; effect.state(JSON.stringify(state));
+        if (body) {
+            WorldFeedback.emit(world, afteryouScene, 1, body.position(), { moment: "go", target: String(effect.target().ref()), motes: state.motes, haste: state.haste }, 24);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)),
+                ticks < 0 ? "world_combat.move.afteryou.text.native" : afteryouGoText, ticks < 0 ? [] : [ticks], 28);
+        }
+        effect.end();
     }
-    function afteryouMarkOf(world: CombatWorld, actor: CombatActor): any {
-        const views = world.effects(actor, afteryouMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+    function afteryouAdvance(effect: CombatEffect, state: AfterYouState): boolean {
+        const world = effect.world(), pending = LivingActions.preparing(world, effect.target())
+            .filter(clock => clock.advanced === 0 && clock.remaining > 1).sort((a, b) => b.remaining - a.remaining);
+        if (!pending.length) return false;
+        const clock = pending[0], requested = Math.max(1, Math.floor(clock.remaining * state.haste / (100 + state.haste)));
+        const ticks = LivingActions.advancePreparation(world, effect.target(), clock.instance, requested);
+        if (!(ticks > 0)) return false;
+        afteryouGo(effect, state, ticks); return true;
     }
-
-    // 正急速载体：托管效果随自身结束自动收回临时属性修饰；伙伴、原版生物、玩家走同一条原生属性路径。
-    WorldCombat.effect(afteryouHaste, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.haste !== "number" || !isFinite(value.haste) || value.haste <= 0) throw new Error("Invalid after you haste");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(afteryouHaste, "start", function (effect) {
-        const world = effect.world(), actor = effect.target(), value = JSON.parse(String(effect.state() || "{}"));
-        if (!world.valid(actor) || typeof value.haste !== "number") return;
-        world.attribute(actor, "world_combat:skill_haste", value.haste, "add_value");
+    [afteryouMark, afteryouDrag].forEach(id => {
+        WorldCombat.effect(id, 2, 1200, "actor", json => {
+            const value = JSON.parse(json);
+            if (!MobEffects.validAnchor(value.carrier) || !isFinite(value.haste) || value.haste < 0) throw new Error("Invalid beat transfer");
+            return JSON.stringify(value);
+        }, () => { throw new Error("Beat transfer ownership changed"); });
+        WorldCombat.effectHandler(id, "start", id === afteryouMark ? afteryouStart : afteryouCostStart);
+        WorldCombat.effectHandler(id, "operation:world_combat:dispel", effect => effect.end());
     });
-    WorldCombat.effectHandler(afteryouHaste, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    // 负急速载体：施法者让出的一拍。
-    WorldCombat.effect(afteryouDrag, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.drag !== "number" || !isFinite(value.drag) || value.drag <= 0) throw new Error("Invalid after you drag");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(afteryouDrag, "start", function (effect) {
-        const world = effect.world(), actor = effect.target(), value = JSON.parse(String(effect.state() || "{}"));
-        if (!world.valid(actor) || typeof value.drag !== "number") return;
-        world.attribute(actor, "world_combat:skill_haste", -value.drag, "add_value");
+    function afteryouStart(effect: CombatEffect): void {
+        const state: AfterYouState = JSON.parse(effect.state()), world = effect.world();
+        if (!afteryouActive(effect, state)) return;
+        MobEffects.bind(world, effect.target(), state.carrier.id);
+        if (afteryouAdvance(effect, state)) return;
+        const body = world.observe(effect.target()); if (!body) { effect.end(); return; }
+        if (body.player()) {
+            state.player = world.attribute(effect.target(), "minecraft:generic.attack_speed", state.haste / 100, "add_multiplied_total");
+            effect.state(JSON.stringify(state));
+        }
+        world.present("world_combat:afteryou/pending", afteryouScene, 1, body.position(), JSON.stringify({
+            moment: "ready", target: String(effect.target().ref()), motes: state.motes, haste: state.haste
+        }));
+        effect.schedule("watch", "watch", 1, "{}");
+    }
+    WorldCombat.effectHandler(afteryouMark, "watch", effect => {
+        const state: AfterYouState = JSON.parse(effect.state());
+        if (afteryouActive(effect, state) && !afteryouAdvance(effect, state)) effect.schedule("watch", "watch", 1, "{}");
     });
-    WorldCombat.effectHandler(afteryouDrag, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    // 画面旁挂：伙伴的加速数与引线光点数。
-    WorldCombat.effect(afteryouMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.haste !== "number" || typeof value.motes !== "number" || typeof value.max !== "number") throw new Error("Invalid after you mark");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(afteryouMark, "start", function () { });
-    WorldCombat.effectHandler(afteryouMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    // 画面旁挂：施法者让手的减速与时限。
-    WorldCombat.effect(afteryouCostMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.drag !== "number" || typeof value.max !== "number") throw new Error("Invalid after you cost mark");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(afteryouCostMark, "start", function () { });
-    WorldCombat.effectHandler(afteryouCostMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(afteryouMark, "operation:world_combat:afteryou/native", effect => {
+        const state: AfterYouState = JSON.parse(effect.state());
+        if (state.player && String(effect.caller().key()) === String(effect.target().key()) && afteryouActive(effect, state)) afteryouGo(effect, state, -1);
+    });
+    WorldCombat.on("world_combat:move_afteryou/native", "world_combat:damage_incoming", "", event => {
+        const data: CombatNativeDamageFacts = JSON.parse(event.data()), world = event.world();
+        if (data.scripted || data.damageType !== "minecraft:player_attack" || !data.sourceActor) return;
+        world.effects(event.actor(), afteryouMark).forEach(view => world.operation(view.id(), "world_combat:afteryou/native", "{}"));
+    });
+    WorldCombat.effectHandler(afteryouMark, "end", effect => {
+        const state: AfterYouState = JSON.parse(effect.state()), world = effect.world();
+        if (state.spent || !world.valid(effect.target())) return;
+        const body = world.observe(effect.target()); if (body) WorldFeedback.emit(world, afteryouScene, 1, body.position(),
+            { moment: "fade", target: String(effect.target().ref()), motes: state.motes }, 22);
+    });
+    function afteryouCostStart(effect: CombatEffect): void {
+        const state: AfterYouState = JSON.parse(effect.state()), world = effect.world();
+        if (!afteryouActive(effect, state)) return;
+        MobEffects.bind(world, effect.target(), state.carrier.id);
+        world.attribute(effect.target(), "world_combat:skill_haste", -state.haste, "add_value");
+        effect.schedule("watch", "watch", 1, "{}");
+    }
+    WorldCombat.effectHandler(afteryouDrag, "watch", effect => {
+        if (afteryouActive(effect, JSON.parse(effect.state()))) effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(afteryouDrag, "end", effect => {
+        const world = effect.world(), body = world.valid(effect.target()) && world.observe(effect.target());
+        if (body) WorldFeedback.emit(world, afteryouScene, 1, body.position(), { moment: "recover", target: String(effect.target().ref()) }, 20);
+    });
 
     define({
         id: afteryouId,
         cooldownParameter: "recharge",
         name: "您先请",
-        description: "向一名离得够近、看得见的伙伴让出手先：它在一段窗口内获得技能急速、出招冷却更短，你自己则背上负急速、冷却变长。伙伴在窗口内第一次出手时会浮出「紧接着行动」。",
+        description: "把一拍让给近处伙伴：实际缩短其当前或等待窗内下一次标准准备，至少留一刻；同次准备只受助一次。玩家得到一次原生近战攻速助力。自己短时恢复变慢。",
         uses: ["让伙伴抢在自己的拍子前先手出手", "在队友的大招前把节奏让过去", "把一次连招的出手顺序调过来"],
         kind: "friend",
         range: 4,
@@ -91,7 +101,7 @@ namespace PokemonSkills {
         fields: [
             field(pathOf("lead"), "让手方式", "choice", {
                 options: [{ value: 1, label: "催促" }, { value: 0, label: "托付" }],
-                help: "催促：加速 ×1.2、窗口 ×0.7，一拍抢得狠但短；托付：加速 ×0.85、窗口 ×1.4，细水长流。用爆发强度换持续时间。"
+                help: "催促：催速强度 ×1.2、等待窗 ×0.7；托付：强度 ×0.85、等待窗 ×1.4。两种方式都只提前一次准备。"
             })
         ],
         indicator: function (config, pokemon) {
@@ -124,85 +134,23 @@ namespace PokemonSkills {
                     motes: p(afteryouId, "motes", action), lead: config && config.lead === 1 ? 1 : 0 }));
             return prepare;
         },
-        execute: function (action, move, config, done) {
-            const world = action.world(), self = action.actor(), target = action.target();
-            const body = world.observe(self), ally = target === null ? null : world.observe(target);
-            if (target === null || !world.valid(target) || ally === null || body === null
-                || !world.friendly(target) || String(target.ref()) === String(self.ref())
-                || !world.clear(body.position(), ally.position())) { done(action); return; }
-            const ticks = Math.max(20, Math.round(p(afteryouId, "readyTicks", action)));
-            const haste = Math.max(10, Math.round(p(afteryouId, "haste", action)));
-            const yieldTicks = Math.max(20, Math.round(p(afteryouId, "yieldTicks", action)));
-            const drag = Math.max(5, Math.round(p(afteryouId, "drag", action)));
-            const motes = Math.max(6, Math.round(p(afteryouId, "motes", action)));
-            const targetRef = String(target.ref()), selfRef = String(self.ref());
-            // 刷新而不是叠加：先收掉伙伴身上旧的加速与自己旧的让手，再挂新的。
-            afteryouDropEffect(world, target, afteryouReady);
-            afteryouDropCarrier(world, target, afteryouHaste);
-            afteryouDropCarrier(world, target, afteryouMark);
-            afteryouDropEffect(world, self, afteryouYield);
-            afteryouDropCarrier(world, self, afteryouDrag);
-            afteryouDropCarrier(world, self, afteryouCostMark);
-            delete afteryouSpent[targetRef];
-            MobEffects.apply(world, target, afteryouReady, ticks, 0);
-            world.effect(afteryouHaste, target, JSON.stringify({ haste: haste }), ticks);
-            world.effect(afteryouMark, target, JSON.stringify({ haste: haste, motes: motes, max: ticks, caster: selfRef }), ticks);
-            MobEffects.apply(world, self, afteryouYield, yieldTicks, 0);
-            world.effect(afteryouDrag, self, JSON.stringify({ drag: drag }), yieldTicks);
-            world.effect(afteryouCostMark, self, JSON.stringify({ drag: drag, max: yieldTicks }), yieldTicks);
-            WorldFeedback.emit(world, afteryouScene, 1, body.position(),
-                { moment: "call", target: targetRef, path: [selfRef, targetRef], motes: motes, haste: haste,
-                    scale: Math.max(0.6, Math.min(2, haste / 80)) }, 24);
-            WorldFeedback.emit(world, afteryouScene, 1, ally.position(),
-                { moment: "ready", target: targetRef, motes: motes, haste: haste, scale: Math.max(0.6, Math.min(2, ticks / 120)) }, 30);
+        execute: function (action, _move, _config, done) {
+            const world = action.world(), self = action.actor(), target = action.target(), body = world.observe(self);
+            const ally = target && world.observe(target);
+            if (!target || !body || !ally || String(self.key()) === String(target.key()) || !world.friendly(target)
+                || ally.position().minus(body.position()).length() > p(afteryouId, "reach", action) || !world.clear(body.position(), ally.position())) { done(action); return; }
+            const ticks = Math.max(20, Math.round(p(afteryouId, "readyTicks", action))), haste = Math.max(1, p(afteryouId, "haste", action));
+            const motes = Math.max(6, Math.round(p(afteryouId, "motes", action))), yielding = Math.max(20, Math.round(p(afteryouId, "yieldTicks", action)));
+            const cost = MobEffects.apply(world, self, afteryouYield, yielding, 0);
+            if (!cost) { done(action); return; }
+            const carrier = MobEffects.apply(world, target, afteryouReady, ticks, 0);
+            if (!carrier) { world.removeMobEffect(self, cost.id(), cost.key()); done(action); return; }
+            world.effect(afteryouDrag, self, JSON.stringify({ carrier: MobEffects.anchor(cost), haste: Math.max(5, p(afteryouId, "drag", action)), motes: 0, max: yielding }), yielding);
+            world.effect(afteryouMark, target, JSON.stringify({ carrier: MobEffects.anchor(carrier), haste: haste, motes: motes, max: ticks }), ticks);
+            WorldFeedback.emit(world, afteryouScene, 1, body.position(), { moment: "call", target: String(target.ref()),
+                path: [String(self.ref()), String(target.ref())], motes: motes, haste: haste }, 24);
             WorldFeedback.text(world, ally.position().plus(WorldCombat.point(0, 1.15, 0)), afteryouCallText, [Math.round(ticks / 20)], 32);
-            sound(action, "minecraft:block.amethyst_block.chime");
-            done(action);
+            sound(action, "minecraft:block.amethyst_block.chime"); done(action);
         }
-    });
-
-    // 兑现：伙伴在窗口内真的出手时，浮出「紧接着行动」——这一拍被用在了哪里，玩家看得到。
-    WorldCombat.on("world_combat:move_afteryou/go", "world_combat:committed", "", function (event) {
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || !CombatStatus.has(world, actor, afteryouStatus)) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        const mark = afteryouMarkOf(world, actor);
-        const ref = String(actor.ref()), first = !afteryouSpent[ref];
-        afteryouSpent[ref] = true;
-        WorldFeedback.emit(world, afteryouScene, 1, body.position(),
-            { moment: "go", target: ref, motes: mark ? mark.motes : 10, haste: mark ? mark.haste : 0 }, 24);
-        if (first) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), afteryouGoText, [], 28);
-    });
-
-    // 窗口走完或被人清除：收掉加速载体与旁挂；到期有一段安静褪去，被清除就直接收回。
-    WorldCombat.on("world_combat:move_afteryou/fade", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== afteryouReady) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const expired = String(data.cause) === "expired";
-        afteryouDropCarrier(world, actor, afteryouHaste);
-        afteryouDropCarrier(world, actor, afteryouMark);
-        delete afteryouSpent[String(actor.ref())];
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.emit(world, afteryouScene, 1, body.position(),
-            { moment: expired ? "fade" : "clear", target: String(actor.ref()), expired: expired ? 1 : 0 }, 22);
-        if (expired) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), afteryouFadeText, [], 24);
-    });
-
-    // 让手结束：收掉施法者背上的减速载体与旁挂，让下一拍正常到来。
-    WorldCombat.on("world_combat:move_afteryou/yield", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== afteryouYield) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        afteryouDropCarrier(world, actor, afteryouDrag);
-        afteryouDropCarrier(world, actor, afteryouCostMark);
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.emit(world, afteryouScene, 1, body.position(), { moment: "recover", target: String(actor.ref()) }, 20);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), afteryouYieldText, [], 20);
     });
 }

@@ -32,7 +32,8 @@ namespace PokemonSkills {
     export function boltbeakLead(context: FactContext): number {
         const world = context.world, actor = context.actor;
         if (!world || !actor || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return 0;
-        const target = context.action ? context.action.target() : context.target ? context.target.actor || null : null;
+        // 先手翻倍以实际碰到的那个目标为准：显式 target 优先于动作选定的目标。
+        const target = context.target && context.target.actor ? context.target.actor : context.action ? context.action.target() : null;
         if (!target || !world.valid(target) || world.friendly(target)) return 0;
         const window = p(boltbeakId, "window", <NumberContext>context);
         const self = world.observe(actor), foe = world.observe(target);

@@ -93,6 +93,13 @@ namespace PokemonSkills {
         confusePerStage: seconds(
             F.base(20).plus(F.stat("specialAttack").times(0.08)).clamp(10, 60).round(0),
             "每级延长", "目标每带着一级正面能力等级，错乱再延长多久；特攻越高唱得越缠人。"),
+        /** 尾音落点：9 + (特攻 − 60) × 0.03 刻，回响式 ×1.4，夹 6..18。 */
+        tailDelay: seconds(
+            F.base(9)
+                .plus(F.stat("specialAttack").minus(60).times(0.03).clamp(-1.5, 3))
+                .times(F.when(F.pref("echo"), F.const(1.4), F.const(1)))
+                .clamp(6, 18).round(0),
+            "尾音延迟", "首拍短音落下后多久才拖出尾音；特攻越高、回响式越久。只有到那时仍留在声锥里、且满足强化或追击条件的目标才会被尾音惑乱。"),
         /** 音符数：18 + 特攻 × 0.3，夹 12..80。 */
         motes: formula(
             F.base(18).plus(F.stat("specialAttack").times(0.3)).clamp(12, 80).round(0),
@@ -127,6 +134,7 @@ namespace PokemonSkills {
     describe(alluringvoiceId, [
         { key: "description.0", values: ["voice", "reach", "angle", "maxTargets"] },
         { key: "description.1", values: ["confuseBase", "confusePerStage", "fumble"] },
+        { key: "description.2", values: ["tailDelay"] },
         { key: "echo.on", values: [], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
         { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
         { key: "world", values: [] },

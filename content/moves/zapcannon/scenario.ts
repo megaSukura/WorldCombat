@@ -7,8 +7,8 @@
  *   昏睡让弹体有一个几乎不动的目标，用来验证「慢弹命中」这条主线；地面铺平、白天晴天。
  *
  * 必然事实：本招被提交过；目标受到过炮弹伤害；目标身上出现过共享麻痹身份
- *   （本招的麻痹是必定生效的，不是随机掷——若目标为电属性则免疫，本场景用非电属性的小海狮）。
- * 随机量写进 note：暴击、以及慢弹对走位的修正量。
+ *   （麻痹在真实造成伤害后必定生效——若目标为电属性则免疫，本场景用非电属性的小海狮）。
+ * 随机量写进 note：暴击，以及慢弹沿锁定方向的落点。
  */
 Smoke.scenario("zapcannon", function (stage) {
     stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
@@ -24,7 +24,7 @@ Smoke.scenario("zapcannon", function (stage) {
             stage.expect(stage.casts("zapcannon", caster) >= 1, "the caster committed zap cannon");
             stage.expect(stage.damageTo(foe) > 0, "the shell dealt damage to the foe");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/paralysis"), "the shell paralysed the foe (guaranteed on hit)");
-            stage.note("crit and how much the limited homing had to steer are random; the recoil pushes the caster back and is a position result", {
+            stage.note("crit and where the unguided shell lands along its locked heading are random; the recoil pushes the caster back and is a position result", {
                 casts: stage.casts("zapcannon", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeParalysed: stage.hadMobEffect(foe, "world_combat:status/paralysis"),

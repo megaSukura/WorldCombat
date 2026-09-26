@@ -1,16 +1,16 @@
 /**
  * 薄雾炸裂 / mistyexplosion 的客户端表现。
  *
- * 一句话：施法者身上先滚满粉雾、身体发亮，随后整片薄雾贴地向外炸开成一圈粉白光环，把圈里的人蒙住；
- *   雾不散，原地留下一层缓慢翻涌的残雾。
+ * 一句话：施法者身上先滚满粉雾、身体发亮，随后整片薄雾贴地向外**炸开一次**成粉白光环，把圈里的人蒙住；
+ *   雾不再经营，只作一小段淡去的视效飘散。
  * 色相家族：粉白到浅金（largeobscure_pink／obscuringsmoke／glowingsparkle_pink／aura_white／impact_fairy），
  *   与三誓约的橙红、黄绿、青蓝在色相上分开；金色只出现在强调层的小面积上。
- * 拍子：起（swell，提交前收雾发亮）→ 击（bloom 雾环炸开 + hit 命中点）→ 留（mist 残雾）。
+ * 拍子：起（swell，提交前收雾发亮）→ 击（bloom 雾环一次炸开 + hit 命中点）→ 散（mist 短视效淡去）。
  * 范围：swell／bloom／mist 的环半径 = `data.scale` × 参考 4.4 格（bloom）／4.4（swell）／3.6（mist），
  *   玩家看到的那圈雾就是实际波及范围。
- * 运动：swell 向内收拢；bloom 贴地向外炸开并略微上浮（雾比火慢）；mist 低低地翻滚、不遮挡视线以外的东西。
+ * 运动：swell 向内收拢；bloom 贴地向外一次炸开并略微上浮（雾比火慢）；mist 只低低地飘一下就散，不画边圈、不留危险区提示。
  * 数：`data.count`（由特攻派生）决定雾絮与光点数量，`data.intensity`（威力 / 120）决定亮度与密度，
- *   `data.boosted` 在薄雾上加重一层金色光点。
+ *   `data.gold`（站在薄雾上时为本次雾絮的六成，否则 0）决定金色强调光点的数量。
  * 参照节：视觉语言第二、三、四、五、七、九节；残雾是持续状态，按第五节「少而稳」写。
  */
 const MistyexplosionDefinition: ParticleDefinition = {
@@ -45,7 +45,7 @@ const MistyexplosionDefinition: ParticleDefinition = {
                 {
                     name: "mist_ring", bind: "point", height: 0.15,
                     particle: "world_combat_core:cobblemon/generic/smoke/largeobscure_pink",
-                    burst: { count: { data: "count", fallback: 90 }, interval: 2, repeats: 6 },
+                    burst: { count: { data: "count", fallback: 90 }, interval: 2, repeats: 1 },
                     shape: { kind: "circle", radius: 4.4 },
                     direction: "outward", speed: [0.08, 0.4],
                     lifetime: [14, 26], size: [0.5, 0.1], sizeMode: "index",
@@ -63,7 +63,7 @@ const MistyexplosionDefinition: ParticleDefinition = {
                 {
                     name: "shimmer", bind: "point", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
-                    burst: { count: { data: "count", fallback: 60 }, interval: 3, repeats: 4 },
+                    burst: { count: { data: "count", fallback: 60 }, interval: 3, repeats: 1 },
                     shape: { kind: "circle", radius: 4.4 },
                     direction: "up", speed: [0.04, 0.22],
                     lifetime: [14, 26], size: [0.16, 0.02],
@@ -72,7 +72,7 @@ const MistyexplosionDefinition: ParticleDefinition = {
                 {
                     name: "gold", bind: "point", height: 0.25,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    burst: { count: { data: "count", fallback: 40 }, interval: 4, repeats: 3 },
+                    burst: { count: { data: "gold", fallback: 0 }, interval: 4, repeats: 1 },
                     shape: { kind: "circle", radius: 4.4 },
                     direction: "up", speed: [0.05, 0.25],
                     lifetime: [12, 22], size: [0.1, 0.02],
@@ -105,24 +105,26 @@ const MistyexplosionDefinition: ParticleDefinition = {
             ]
         },
         mist: {
-            duration: 34,
-            exit: { stop: 24, drain: 30 },
+            duration: 20,
+            exit: { stop: 10, drain: 26 },
             emitters: [
                 {
                     name: "lost_mist", bind: "point", height: 0.08,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    rate: 20, shape: { kind: "circle", radius: 3.6 },
-                    direction: "up", speed: [0.005, 0.03],
-                    lifetime: [20, 36], size: [0.4, 0.7],
-                    color: 0xE8B6D0, alpha: [0.22, 0], light: "world", maxParticles: 120
+                    burst: { count: { data: "count", fallback: 40 }, at: 0 },
+                    shape: { kind: "circle", radius: 3.6 },
+                    direction: "outward", speed: [0.01, 0.06],
+                    lifetime: [16, 30], size: [0.4, 0.7],
+                    color: 0xE8B6D0, alpha: [0.3, 0], light: "world", maxParticles: 160
                 },
                 {
                     name: "drifting", bind: "point", height: 0.12,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
-                    rate: 6, shape: { kind: "circle", radius: 3.4 },
-                    direction: "up", speed: [0.005, 0.02],
-                    lifetime: [18, 30], size: [0.08, 0.02],
-                    color: 0xFFD7EE, alpha: [0.4, 0], light: "world", maxParticles: 40
+                    burst: { count: 10, at: 0, interval: 6, repeats: 2 },
+                    shape: { kind: "circle", radius: 3.4 },
+                    direction: "up", speed: [0.01, 0.04],
+                    lifetime: [14, 24], size: [0.08, 0.02],
+                    color: 0xFFD7EE, alpha: [0.5, 0], light: "world", maxParticles: 40
                 }
             ]
         }

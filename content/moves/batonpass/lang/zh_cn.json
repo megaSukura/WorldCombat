@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.batonpass.summary": "把自己的能力变化和增益递给伙伴。有后备时让后备接棒登场；否则交给身边选定的友方，自己退开。",
+  "worldcombat.skill.batonpass.summary": "把自己的能力变化和增益递给明确选中的场内友方；未选实体时交给合法后备，真实转交后自己退开或收回。",
   "worldcombat.skill.batonpass.use.0": "把攒起来的能力等级整体交给队友",
   "worldcombat.skill.batonpass.use.1": "被削弱前把自己的成长交给别人带走",
   "worldcombat.skill.batonpass.use.2": "残血时把接力棒递出去，自己脱身",

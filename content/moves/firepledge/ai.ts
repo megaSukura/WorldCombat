@@ -3,10 +3,10 @@
  *
  * 什么局面下出手：目标是可见、存活、非友方，且在 `ai.maxChase`（默认 12）格内。火柱指哪打哪，
  *   所以它是一张中距离的常规输出；落点附近已有草／水的誓约印时 priority 抬到 54——共鸣的那一击更重，
- *   还会把地面换成火海或彩虹，值得优先接上。
+ *   还会把同一圈印扩成火海或彩虹，值得优先接上。落点已经压着一片组合场时不再出火柱：一记火柱不叠第二层场。
  * 对谁出手：当前威胁；`accepts` 只排除友方、已死、看不见的。
  * 怎么够到：共享接近把身位收进射程（`kind: point`，以目标位置为落点）。
- * 放完接什么：交回共享交战计划；誓约印与组合场留在原地按自己的寿命消散。
+ * 放完接什么：交回共享交战计划；短印与组合场留在原地按自己的寿命消散。
  * 排序：共鸣可用 54，否则 34；上限 54，压过普通攻击但不抢紧急救援。
  */
 namespace PokemonSkills {
@@ -29,12 +29,25 @@ namespace PokemonSkills {
         return false;
     }
 
+    /** 落点已经压着一片组合场：不再无脑叠场。 */
+    function firepledgeArenaAt(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const point = WorldCombat.point(target.point[0], target.point[1], target.point[2]);
+        const areas = WorldEffects.areas(world);
+        for (let i = 0; i < areas.length; i++) {
+            if (!areas[i].data || !areas[i].data.combo) continue;
+            if (WorldCombat.point(areas[i].position[0], areas[i].position[1], areas[i].position[2]).minus(point).length() <= 1 + areas[i].radius) return true;
+        }
+        return false;
+    }
+
     CompanionBehavior.registerUse(firepledgeId, {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
+            if (firepledgeArenaAt(context, target)) return false;
             return firepledgeTarget(context, capability, target);
         },
         accepts: function (context, capability, target) {

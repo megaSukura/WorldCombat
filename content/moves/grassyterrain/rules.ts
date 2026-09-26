@@ -2,7 +2,9 @@
  * 青草场地 / grassyterrain 的场地规则与属性结算，对所有战斗者一致。
  *
  * 草地是一条区域规则：每 5 刻扫描半径内、贴地（grounded）的活体，给他们补 `world_combat:grassyterrain_ground`
- * （身份 `world_combat:status/grassyterrain`）。带该身份的活体：草属性招式威力 ×1.3，地震与重踏威力减半；
+ * （身份 `world_combat:status/grassyterrain`）。带该身份的活体：草属性招式威力 ×1.3；站在草地上的贴地活体
+ * 被草根护着，受到的地震与重踏威力减半——减伤落在「受击者是否站在草地上」，而不是「施法者是否站在草地上」，
+ * 所以场外的地震打进场内被卸掉一半，而站在草地里朝场外放的震招不受影响。
  * 站上草地的活体按各自最大生命缓慢回复（对双方一视同仁，所以「趁对手满血时补自己」才有意义）。
  * 开启 blooming 时，草地每 20 刻照料附近一处可生长的植物，用完 growth 次为止。
  * 属性改写放在 `PokemonDamage.metadata`，结算前对任何来源的招式生效。
@@ -73,9 +75,13 @@ namespace PokemonSkills {
 
     PokemonDamage.metadata.define({ id: "world_combat:move_grassyterrain/power", apply: function (context) {
         if (!context.world || !context.actor || !(context.metadata.power > 0)) return;
-        if (!CombatStatus.has(context.world, context.actor, "grassyterrain")) return;
         var type = String(context.metadata.type).toLowerCase(), move = String(context.metadata.move);
-        if (type === "grass") context.metadata.power *= 1.3;
-        if (move === "earthquake" || move === "bulldoze") context.metadata.power *= 0.5;
+        if (type === "grass" && CombatStatus.has(context.world, context.actor, "grassyterrain")) context.metadata.power *= 1.3;
+        if (move !== "earthquake" && move !== "bulldoze") return;
+        // 减伤跟随受击者：只有站在草地上的贴地目标才被草根卸力，施法者站在草里打场外目标不受影响。
+        if (!context.target) return;
+        var body = context.world.observe(context.target);
+        if (body === null || !body.grounded() || !CombatStatus.has(context.world, context.target, "grassyterrain")) return;
+        context.metadata.power *= 0.5;
     } });
 }

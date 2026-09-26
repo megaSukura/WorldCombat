@@ -3,8 +3,8 @@
   "worldcombat.skill.anchorshot.use.0": "把想逃跑的目标钉在原地等队友收",
   "worldcombat.skill.anchorshot.use.1": "在开阔地一对一锁住对方的主力",
   "worldcombat.skill.anchorshot.use.2": "把高机动目标从掩体边拽回来",
-  "worldcombat.skill.anchorshot.description.0": "锚头以每刻 %3$s 格的速度飞出，砸中飞行路线上第一个敌人，造成约 %1$s 点物理伤害（接触）；掷出距离 %2$s 格。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.anchorshot.description.1": "命中后把锚钉在目标脚下的地面，并把它拴在锚点上 %1$s 秒：被拴期间移动速度降低约 30%；链长半径 %2$s 格，被外力拽离锚点超过 %3$s 格链就绷断。链走完时间或被清除时立即松开并收回锚点；锚点固定在地面，术者可以走开。",
+  "worldcombat.skill.anchorshot.description.0": "锚头以每刻 %3$s 格的速度沿选定方向或世界点飞出，砸中飞行路线上第一个敌人，造成约 %1$s 点物理伤害（接触）；掷出距离 %2$s 格。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.anchorshot.description.1": "命中后把锚钉在目标脚边原生允许、下方有支撑的地面上（不替换承重块），并把它拴在锚点上 %1$s 秒：被拴期间移动速度降低约 30%；链长半径 %2$s 格，被外力拽离锚点超过 %3$s 格链就绷断。锚被破坏、链走完时间或被清除时立即松开并收回锚点；锚点固定在地面，术者可以走开。放不下合格地面时只结算主击，不建链。",
   "worldcombat.skill.anchorshot.description.2": "目标走出链长时，每2刻向锚点回拽 %1$s 格；锚头判定半径 %2$s 格。",
   "worldcombat.skill.anchorshot.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒；PP 20 的代价。",
   "worldcombat.skill.anchorshot.heavy.on": "重锚式：威力 ×1.25、链维持时长 ×1.25、链长 ×0.85、绷断距离 ×1.15，但起手 +3 刻、射程 ×0.9、冷却 +12 刻——钉得更死更久。",
@@ -33,5 +33,6 @@
   "world_combat.move.anchorshot.text.snap": "链绷断了",
   "world_combat.move.anchorshot.text.release": "链收回",
   "world_combat.move.anchorshot.text.miss": "锚砸空了",
+  "world_combat.move.anchorshot.text.slip": "锚头钉不进地面",
   "effect.world_combat.anchor_chain_status": "被锚拴住"
 }

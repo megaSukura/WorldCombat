@@ -1,15 +1,17 @@
 /**
  * 冰锥 / iciclespear 的客户端表现。
  *
- * 一句话：施法者呼出一口寒气、身侧凝出一排冰晶，一根接一根笔直射出去；打中的在目标身上「啪」地碎开、
- *   冰屑四散，落点脚下的地面结出一小片霜，最后霜圈缓缓扩开再散去。
+ * 一句话：施法者身前横排凝出一排冰晶，一次齐射全部笔直平行射出；打中的在目标身上「啪」地碎开、冰屑四散，
+ *   撞在硬面上的当场碎冰，落点只留一圈会消散的冰屑，不再冻地。
  * 色相家族：冰青（0x9FD8E8／0xBFE8F5 偏色）＋近白冰晶高光＋一点 impact 亮边；整体低饱和。
- * 拍子：起 gather（凝冰）→ 射 volley（一根接一根）→ 碎 shatter（冰屑崩开）→ 霜 frost（地面结霜）。
- * 范围：本招是单体直飞连发，画面靠每根冰锥的直线标出「这一条线上会被打到」；命中后在落点画出 `frost`
- *   半径的霜圈，让玩家读出结霜范围（data.scale = 霜圈半径 / 1.0）。
- * 运动：每根冰锥沿准线高速直飞（几乎不散，画出的冰晶本体由原生实体渲染），命中向外崩冰屑，霜圈贴地扩开。
- * 数：`data.shots` 让起手读出一梭几根，`data.shards`（特攻换算的碎冰量）绑定命中冰屑量，`data.scale`
- *   （霜圈半径 / 1.0）绑定霜圈大小，`data.intensity`（单锥威力 / 25）放大整幕，`data.rime` 让霜附式多一层亮边。
+ * 拍子：起 gather（凝出整排冰锥、画出冰排宽度）→ 射 volley（真实平行路径）→ 碎 shatter（命中碎冰）／
+ *   破 break（撞块碎冰）／ 冰屑 frost → 淡 fade。
+ * 范围：本招是同向齐排，画面上用一排平行的真实冰锥标出「整排宽度覆盖到哪」，没有地面轮廓。
+ * 运动：每根冰锥是服务端同时发射的真投递（`bind:"projectile"`），沿同一条准线平行飞出；
+ *   `gather` 另用 `bind:"path"` + `shape:"polyline"` 沿 `data.path`（左右端点）在整条边上采样，画出冰排宽度。
+ * 数：`data.shots` 让起手读出一排几根，`data.shards`（特攻换算的碎冰量）绑定命中冰屑量，`data.frost`
+ *   与 `data.scale`（冰屑范围 / 1.0）绑定霜圈大小，`data.intensity`（单锥威力 / 25）放大整幕，
+ *   `data.rime` 让霜附式多一层亮边，`data.path` / `data.direction` 与判定读同一组冰排几何。
  */
 const IciclespearDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -26,6 +28,14 @@ const IciclespearDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.09],
                     lifetime: [5, 10], size: [0.14, 0.03],
                     color: 0xBFE8F5, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 22
+                },
+                {
+                    name: "rank", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
+                    rate: 26, shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.01, 0.06],
+                    lifetime: [5, 11], size: [0.07, 0.02],
+                    color: 0x9FD8E8, alpha: [0.55, 0], light: "world", maxParticles: 44
                 },
                 {
                     name: "cold", bind: "source", offset: [0, 0.4, 0.2], height: 0.3,
@@ -45,7 +55,7 @@ const IciclespearDefinition: ParticleDefinition = {
                     name: "spear", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
                     trail: { minDistance: 0.2 }, rate: 30,
-                    direction: "outward", speed: [0.0, 0.02], spin: 5,
+                    direction: "velocity", speed: [0.0, 0.02], spin: 5,
                     lifetime: [4, 8], size: [0.18, 0.04],
                     color: 0xBFE8F5, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 30
                 },
@@ -53,7 +63,7 @@ const IciclespearDefinition: ParticleDefinition = {
                     name: "wake", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
                     trail: { minDistance: 0.28 }, rate: 16,
-                    direction: "outward", speed: [0.01, 0.05], gravity: 0.03, drag: 0.93,
+                    direction: "velocity", speed: [0.01, 0.05],
                     lifetime: [5, 11], size: [0.06, 0.015],
                     color: 0x9FD8E8, alpha: [0.5, 0], light: "world", maxParticles: 28
                 }
@@ -114,6 +124,45 @@ const IciclespearDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1], gravity: 0.05, drag: 0.9,
                     lifetime: [8, 15], size: [0.06, 0.02],
                     color: 0xCFEFF8, alpha: [0.5, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        break: {
+            duration: 16,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "shatter", bind: "point", fit: "none", offset: [0, 0.18, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: { data: "shards", fallback: 6 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.05, 0.2], spread: 26, gravity: 0.1, drag: 0.9,
+                    lifetime: [8, 15], size: [0.14, 0.04],
+                    color: 0xBFE8F5, alpha: [0.85, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "powder", bind: "point", fit: "none", offset: [0, 0.16, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "circle", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.1], gravity: 0.05, drag: 0.9,
+                    lifetime: [8, 14], size: [0.06, 0.02],
+                    color: 0x9FD8E8, alpha: [0.4, 0], light: "world", maxParticles: 22
+                }
+            ]
+        },
+        fade: {
+            duration: 14,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "thin", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.01, 0.06], gravity: 0.04, drag: 0.9,
+                    lifetime: [8, 14], size: [0.05, 0.02],
+                    color: 0x9FD8E8, alpha: [0.35, 0], light: "world", maxParticles: 14
                 }
             ]
         }

@@ -9,7 +9,8 @@
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一道的伤害（`stage.damageTo`）；施法者挪动过位置
  *   （`stage.travelled`——每一道都会侧移换位）。
  *   爪数（2～5，随速度／物攻／等级变化）、每道命中率 80、抓空即断、暴击与游走还是扑抓式，都是随机或配置结果，
- *   写进 note 供读轨迹判断。
+ *   写进 note 供读轨迹判断。本招已可只朝一个方向起手（无实体目标），后续按当前真实接触继续、隔墙不追伤；
+ *   场景仍让 AI 直接点敌人，保证必然出现命中。
  */
 Smoke.scenario("furyswipes", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -25,7 +26,7 @@ Smoke.scenario("furyswipes", function (stage) {
             stage.expect(stage.casts("furyswipes", caster) >= 1, "the caster committed furyswipes");
             stage.expect(stage.damageTo(foe) > 0, "furyswipes raked the foe");
             stage.expect(stage.travelled(caster) > 0.3, "the caster moved while working around the foe");
-            stage.note("cuts (2-5) follow speed/attack/level; each rake rolls 80% and a whiff ends the pass; roam vs pounce changes the arc and the sidestep", {
+            stage.note("cuts (2-5) follow speed/attack/level; each rake rolls 80% and a whiff ends the pass; roam vs pounce changes the arc and the sidestep; the move can also start from a bare direction with no target and no longer chases damage through a wall", {
                 casts: stage.casts("furyswipes", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 casterTravelled: Math.round(stage.travelled(caster) * 10) / 10,

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.magnitude.summary": "Presses down and makes the ground shudder in place: every grounded foe in the ring takes a hit at a rolled magnitude (4..10), heavier the higher it lands; a strong enough quake interrupts a foe's action. Airborne targets are untouched. Deep focus rolls higher, reaches wider and interrupts more reliably, but is slower.",
+  "worldcombat.skill.magnitude.summary": "Presses down and rolls this cast's magnitude first (4..10, shown right away), lets the ground pre-shudder for about 0.3 s, then makes it quake in place: every grounded foe in the ring takes a hit, heavier the higher it lands; leave the ground during the pre-shudder to dodge it. A strong enough quake interrupts a foe's action. Deep focus rolls higher, reaches wider and interrupts more reliably, but is slower.",
   "worldcombat.skill.magnitude.use.0": "Quake every grounded foe standing around you at once",
   "worldcombat.skill.magnitude.use.1": "Interrupt a foe that is charging or attacking",
   "worldcombat.skill.magnitude.use.2": "Skip airborne targets and hit the ones standing",
@@ -7,6 +7,7 @@
   "worldcombat.skill.magnitude.description.0": "At magnitude 7 each grounded foe in the ring takes about %1$s damage; a cast scales with the rolled magnitude (4/5/6/7/8/9/10 as x0.14/0.43/0.71/1/1.29/1.57/2.14). The target's defence, type and crit are settled on the hit.",
   "worldcombat.skill.magnitude.description.1": "It reaches %1$s blocks; those caught are jolted upward at %2$s blocks/tick and staggered %3$s blocks, up to %4$s grounded foes per cast. Airborne targets are not shaken.",
   "worldcombat.skill.magnitude.description.2": "At a rolled magnitude of %1$s or more, the current action of anyone caught is broken; actions that cannot be interrupted are unaffected.",
+  "worldcombat.skill.magnitude.description.3": "On commit it shows the magnitude it rolled and pre-shudders the ground for about 0.3 s before the quake settles; leave the ground during the pre-shudder to dodge this hit.",
   "worldcombat.skill.magnitude.fault.on": "Deep focus: the rolled magnitude is shifted +1 (higher floor, higher average), the reach is x1.15 and the interrupt threshold -1, at wind-up +4 and cooldown +14.",
   "worldcombat.skill.magnitude.fault.off": "Shallow focus: the magnitude may land anywhere in 4..10 (possibly small), the reach is x0.9, and wind-up and cooldown are shorter for faster hands.",
   "worldcombat.skill.magnitude.timing": "Can only be used while grounded; it reaches %1$s blocks. After %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown.",
@@ -28,6 +29,7 @@
   "worldcombat.skill.magnitude.preference.ai.maxChase.help": "The companion only considers Magnitude when a threat is this close; lower it to quake only at arm's reach, raise it to walk in further first.",
   "worldcombat.skill.magnitude.preference.ai.minFoes": "Foes in range",
   "worldcombat.skill.magnitude.preference.ai.minFoes.help": "At least this many visible, grounded foes must stand inside the ring before it quakes; raise it for surrounded-only use, set it to 1 to quake at a single target.",
+  "world_combat.move.magnitude.text.tell": "Magnitude %1$s",
   "world_combat.move.magnitude.text.hit": "Magnitude %1$s - hit %2$s",
   "world_combat.move.magnitude.text.miss": "Magnitude %1$s - no one stood there",
   "world_combat.move.magnitude.text.break": "Interrupted %1$s"

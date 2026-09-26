@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.bonemerang.summary": "Throw the bone in hand: it sweeps past the target, loops behind it and flies back, striking once on the way out and once on the way back. It flies to the turn point locked at the throw and homes in on the target's current spot on the return, so stepping aside dodges the first pass.",
+  "worldcombat.skill.bonemerang.summary": "A breakable bone flies toward the release-time turning point, then directly toward your current catch position. Each direction hits only the first enemy actually contacted. Sidestepping changes the return line; walls break the bone, and catching adds no damage.",
   "worldcombat.skill.bonemerang.use.0": "Throw from mid range, hitting on the way out and back",
   "worldcombat.skill.bonemerang.use.1": "Let the looping second pass cover the first one's gap",
   "worldcombat.skill.bonemerang.use.2": "Throw before the target repositions and force it off its spot",
   "worldcombat.skill.bonemerang.description.0": "The bone flies at %2$s blocks per tick out to %3$s blocks, dealing about %1$s Ground damage on the way out; the target's Defence, type matchup and crits are settled on impact.",
-  "worldcombat.skill.bonemerang.description.1": "The bone loops back after passing %4$s blocks beyond the target, bowing %5$s blocks to the side; the return pass deals about %1$s Ground damage. Its strike radius is %2$s blocks and the loop-through radius %3$s, so both passes together come close to one full bonemerang.",
+  "worldcombat.skill.bonemerang.description.1": "Return power %1$s, contact radius %2$s blocks; catch within %3$s blocks of your body. Outward overshoot %4$s and sideways bow %5$s both stay within the throw budget.",
   "worldcombat.skill.bonemerang.description.2": "The bone has %1$s durability; if it shatters or times out it drops where it falls.",
   "worldcombat.skill.bonemerang.arc.on": "Arcing Loop: it flies further past, bows further to the side and slower, with the outbound pass 15 percent lighter and the return 20 percent heavier on a longer cooldown: a heavier but harder-to-land loop.",
   "worldcombat.skill.bonemerang.arc.off": "Straight Out and Back: faster, flatter, both passes even and a shorter cooldown: steadier, but no return bonus.",
@@ -18,7 +18,7 @@
   "worldcombat.skill.bonemerang.value.overshoot": "Past distance",
   "worldcombat.skill.bonemerang.value.bow": "Loop bow",
   "worldcombat.skill.bonemerang.value.hitRadius": "Bone radius",
-  "worldcombat.skill.bonemerang.value.catchRadius": "Loop-through radius",
+  "worldcombat.skill.bonemerang.value.catchRadius": "Catch distance",
   "worldcombat.skill.bonemerang.value.boneHealth": "Bone durability",
   "worldcombat.skill.bonemerang.value.spin": "Bone chips",
   "worldcombat.skill.bonemerang.value.tempo": "Preparation",
@@ -33,5 +33,5 @@
   "world_combat.move.bonemerang.text.catch": "The bone returns (%1$s hits)",
   "world_combat.move.bonemerang.text.miss": "The bone flies through empty air",
   "world_combat.move.bonemerang.text.break": "The bone shattered",
-  "worldcombat.skill.bonemerang.description.return": "The bone flies toward the turn point locked at the throw; on the way back it first homes in on wherever the target now stands, then returns to the caster's hand. Each target can be hit at most once on each pass, so stepping aside dodges the outbound strike."
+  "worldcombat.skill.bonemerang.description.return": "The return tracks your present hand position, so sidestepping can sweep it into another enemy. Walls break the bone; catching only retrieves it."
 }

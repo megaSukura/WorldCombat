@@ -7,7 +7,8 @@
  * 拍子：起 read（缩颈聚光）→ 啄 jab（短线点出）→ 击 hit（羽屑炸开）／落 plummet（向下拖痕）／空 whiff（乱羽）。
  * 范围：jab 的窄带用 `data.path`（与服务端 lane 同一组四个顶点）铺成一条短线，玩家一眼看出只有这条线会被啄到。
  * 运动：喙线沿 `data.direction` 一次点出，命中羽屑向外崩、plummet 的拖痕向目标下方走。
- * 数：羽屑量绑 `data.feathers`（物攻换算），命中强度绑 `data.intensity`（本击威力 / 34），喙线长度与尺寸绑 `data.scale`。
+ * 数：羽屑量绑 `data.feathers`（物攻换算），命中强度绑 `data.intensity`（本击威力 / 34），喙线长度与尺寸绑 `data.scale`；
+ *     plummet 的拖痕条数绑 `data.drives`（实际下压距离换算）——被抗性挡下时服务端根本不发这一刻，画面不会对不动的目标播被打落。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const PeckDefinition: ParticleDefinition = {
@@ -79,7 +80,7 @@ const PeckDefinition: ParticleDefinition = {
                 {
                     name: "drive", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: 12, interval: 2, repeats: 2 },
+                    burst: { count: { data: "drives", fallback: 12 }, interval: 2, repeats: 2 },
                     shape: { kind: "line", length: 0.6 },
                     direction: "down", speed: [0.14, 0.34],
                     lifetime: [5, 9], size: [0.2, 0.04], sizeMode: "index",

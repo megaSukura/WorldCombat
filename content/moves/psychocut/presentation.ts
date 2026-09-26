@@ -89,11 +89,33 @@ const PsychocutDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {
-                    name: "echo_ring", bind: "target", offset: [0, 0.45, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    burst: { count: 1, at: 0 }, shape: { kind: "point" },
-                    lifetime: [10, 14], size: [0.5, 0.12],
-                    color: 0xB57BE8, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 6
+                    name: "echo_stroke", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    shape: { kind: "polyline" }, rate: 28, direction: "shape", speed: [0.04, 0.14], spread: 5,
+                    lifetime: [5, 10], size: [0.26, 0.05], sizeMode: "index",
+                    color: 0xD9C0F8, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 60
+                },
+                {
+                    name: "echo_spark", bind: "target", offset: [0, 0.45, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    burst: { count: 6, at: 0 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.18], spread: 24,
+                    lifetime: [7, 13], size: [0.1, 0.02],
+                    color: 0xE0C4FF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 16
+                }
+            ]
+        },
+        scatter: {
+            duration: 18,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "scatter_blade", bind: "point", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
+                    burst: { count: 12, at: 0 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [8, 14], size: [0.16, 0.03],
+                    color: 0xB57BE8, alpha: [0.5, 0], light: "full", maxParticles: 24
                 }
             ]
         },

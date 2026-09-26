@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.freezingglare.summary": "Shoot an instant, travel-less psychic glare from your eyes: the psi line leaps between enemies, and every target it lands on takes Psychic damage and may be frozen. Because it is the mind that freezes, it can even freeze Ice types and abilities that are normally immune. If line of sight is cut, it does nothing.",
+  "worldcombat.skill.freezingglare.summary": "Shoot an instant, travel-less psychic glare from your eyes: the psi line leaps between enemies in clear sight, and every target it lands on takes Psychic damage and may be frozen. Each leap needs real line of sight, and a cut line stops the chain; the freeze still obeys Ice typing, freeze-immune abilities and Boss control immunity.",
   "worldcombat.skill.freezingglare.use.0": "Land an unavoidable hit on a kiting target in the open",
-  "worldcombat.skill.freezingglare.use.1": "Chain through a packed group and freeze several at once",
-  "worldcombat.skill.freezingglare.use.2": "Answer Ice types and immunity holders that should not be freezable",
+  "worldcombat.skill.freezingglare.use.1": "Chain through a packed group and name several targets at once",
+  "worldcombat.skill.freezingglare.use.2": "Deal Psychic damage to Ice or freeze-immune targets even when the freeze cannot land",
   "worldcombat.skill.freezingglare.description.0": "The first target takes about %1$s Psychic damage; the psi line then leaps to the nearest enemy, hitting up to %2$s enemies in all (the first included), with each further leap multiplying the power by %3$s.",
-  "worldcombat.skill.freezingglare.description.1": "Sight range %1$s, leap distance %2$s; the first strike and every leap need an unobstructed line of sight, and when it is blocked the move resolves nothing at all.",
-  "worldcombat.skill.freezingglare.description.2": "Each target has a %1$s chance to be frozen for 8 seconds; while frozen it cannot start new moves or ordinary attacks and cannot move, and fire damage thaws it at once. Before the hit a %2$s immunity-ignoring window opens, during which Ice typing and freeze-immune abilities cannot stop this freeze.",
+  "worldcombat.skill.freezingglare.description.1": "Sight range %1$s, leap distance %2$s; the first strike and every leap need an unobstructed line of sight, and a blocked leap stops the chain at the last real landing point.",
+  "worldcombat.skill.freezingglare.description.2": "Each target has a %1$s chance to be frozen for 8 seconds; while frozen it cannot start new moves or ordinary attacks and cannot move, and fire damage thaws it at once. The freeze still obeys Ice typing, freeze-immune abilities and Boss control immunity; no ice shell is shown when the freeze fails.",
   "worldcombat.skill.freezingglare.description.3": "Windup %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.freezingglare.unblinking.on": "Unblinking mode now: one more leap, longer range and a higher freeze chance, but a slower windup and cooldown.",
   "worldcombat.skill.freezingglare.unblinking.off": "Quick-glance mode now: fast and cheap, but it leaps to fewer and closer targets with a slightly lower freeze chance.",
@@ -18,7 +18,6 @@
   "worldcombat.skill.freezingglare.value.chainRange": "Leap distance",
   "worldcombat.skill.freezingglare.value.reach": "Sight range",
   "worldcombat.skill.freezingglare.value.freezeChance": "Freeze chance",
-  "worldcombat.skill.freezingglare.value.immunityWindow": "Immunity-ignoring window",
   "worldcombat.skill.freezingglare.value.tempo": "Windup",
   "worldcombat.skill.freezingglare.value.aftermath": "Recovery",
   "worldcombat.skill.freezingglare.value.wait": "Cooldown",
@@ -28,8 +27,6 @@
   "worldcombat.skill.freezingglare.preference.ai.maxChase.help": "The companion only considers Freezing Glare while a target is within this many blocks; smaller keeps it close, larger locks on from further away.",
   "worldcombat.skill.freezingglare.preference.ai.preferChains": "Prefer chainable targets",
   "worldcombat.skill.freezingglare.preference.ai.preferChains.help": "When on, the companion prefers targets with others packed around them (the psi line leaps on); off considers a single target only.",
-  "worldcombat.skill.freezingglare.preference.ai.preferImmune": "Prefer freeze-immune targets",
-  "worldcombat.skill.freezingglare.preference.ai.preferImmune.help": "When on, the companion prefers Ice types, whose freeze immunity this move pierces; off treats all targets alike.",
   "world_combat.move.freezingglare.text.hit": "Freezing Glare chained through %1$s targets",
   "world_combat.move.freezingglare.text.blocked": "The line of sight was blocked"
 }

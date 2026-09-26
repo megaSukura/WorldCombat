@@ -6,7 +6,7 @@
   "worldcombat.skill.ragefist.description.0": "Each ghostly punch deals about %1$s contact damage; every fist mark you carry adds one more punch, currently %2$s marks.",
   "worldcombat.skill.ragefist.description.1": "The pass throws %1$s punches, %2$s ticks apart, each dealing its own damage.",
   "worldcombat.skill.ragefist.description.2": "Each punch reaches %1$s blocks with a %2$s block hit radius and shoves the target %3$s blocks; every hit you take refreshes the marks to %4$s.",
-  "worldcombat.skill.ragefist.description.3": "Each time another source actually damages you (status moves do not count) you bank one fist mark, up to %1$s in a fight; past the cap only the timer refreshes. Throwing the flurry does not spend the marks - they scatter only after their duration runs out without further hits.",
+  "worldcombat.skill.ragefist.description.3": "Each time another enemy actually damages you with a real attack you bank one fist mark (environment damage, self-recoil and pure status DoT do not count), up to %1$s in a fight; past the cap only the timer refreshes. Throwing the flurry does not spend the marks - they scatter only after their duration runs out without further hits.",
   "worldcombat.skill.ragefist.fury.on": "Frenzy form: the mark cap drops to 4 (up to 5 punches), but the punch interval is -1, preparation -1 and cooldown -5 - a snappy flurry for fragile targets.",
   "worldcombat.skill.ragefist.fury.off": "Grudge form: the mark cap is 6 (up to 7 punches) on the standard rhythm - slower, but a higher ceiling in a long brawl, made for tanky targets.",
   "worldcombat.skill.ragefist.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s committed cooldown.",

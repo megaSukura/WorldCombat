@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.hyperbeam.summary": "Compress all power into one piercing beam: enemies in the corridor are punched through together, and standing in a line is punished; the user is left spent afterwards, unable to act or move.",
+  "worldcombat.skill.hyperbeam.summary": "Pick a direction or point and compress all power into one piercing beam: enemies in the corridor are punched through together, a wall cuts it short, and standing in a line is punished; the user is left spent afterwards, unable to act or move, and an empty shot still spends them.",
   "worldcombat.skill.hyperbeam.description.0": "The beam pierces every target in the corridor for about %1$s special damage each.",
   "worldcombat.skill.hyperbeam.description.1": "It punches through up to %1$s bodies, settled nearest first, and reaches %2$s blocks; a wall stops it, and targets whose line is blocked by a wall are not pierced.",
   "worldcombat.skill.hyperbeam.description.2": "The corridor is %1$s blocks half-wide; the wind-up is %2$s.",

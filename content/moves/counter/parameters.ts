@@ -28,6 +28,8 @@ namespace PokemonSkills {
 
     export interface CounterRecord { amount: number; tick: number; source: string; }
     export var counterLedger: { [ref: string]: CounterRecord } = Object.create(null);
+    /** 账本的托管载体：身上那几道「记着这笔账」的短裂纹，随记录一起出现、消耗或过期一起灭。 */
+    export const counterDebtMark = "world_combat:move_counter/debt_mark";
 
     export function counterRemember(world: CombatWorld, victim: CombatActor, source: CombatActor, amount: number): void {
         counterLedger[String(victim.ref())] = { amount: amount, tick: world.tick(), source: String(source.ref()) };
@@ -37,15 +39,58 @@ namespace PokemonSkills {
             for (var i = 0; i < refs.length; i++) if (now - counterLedger[refs[i]].tick > 1200) delete counterLedger[refs[i]];
         }
     }
-    export function counterConsume(actor: CombatActor): void { delete counterLedger[String(actor.ref())]; }
+    export function counterConsume(world: CombatWorld | null, actor: CombatActor): void {
+        delete counterLedger[String(actor.ref())];
+        if (world !== null && world.valid(actor)) {
+            var marks = world.effects(actor, counterDebtMark);
+            for (var i = 0; i < marks.length; i++) world.operation(marks[i].id(), "world_combat:dispel", "{}");
+        }
+    }
+    /**
+     * 账本窗口随「持有账的那只宝可梦」求值。伤害事件/托管效果的作用域 source 未必是这只宝可梦，
+     * 因此显式给出 pokemon/world/actor 的上下文，而不是直接把 world 交给 p（那会去读 world.source()）。
+     */
+    function counterWindowFor(world: CombatWorld, actor: CombatActor): number {
+        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return p(counterId, "window");
+        return p(counterId, "window", <ParameterSource>{ world: world, actor: actor, pokemon: CobblemonCombat.pokemon(actor) });
+    }
+    /** Ticks left before this actor's physical debt goes stale; 0 when there is none. */
+    export function counterRemaining(world: CombatWorld, actor: CombatActor): number {
+        if (!world.valid(actor)) return 0;
+        var record = counterLedger[String(actor.ref())];
+        if (!record) return 0;
+        return Math.max(1, counterWindowFor(world, actor) - (world.tick() - record.tick));
+    }
     /** The fresh physical debt on this actor, or null; the window is the move's own parameter. */
     export function counterRecord(world: CombatWorld | null, actor: CombatActor | null): CounterRecord | null {
         if (!world || !actor || !world.valid(actor)) return null;
         var record = counterLedger[String(actor.ref())];
         if (!record || !(record.amount > 0)) return null;
-        var window = p(counterId, "window", String(actor.domain()) === "cobblemon" ? world : undefined);
-        return world.tick() - record.tick <= window ? record : null;
+        return world.tick() - record.tick <= counterWindowFor(world, actor) ? record : null;
     }
+    /**
+     * 台账载体的巡检：把「身上的短裂纹」绑在这个托管效果上（世界反馈随效果清理），记录一旦消耗或过期就收掉载体。
+     * 裂纹的疏密由账上的实际伤害量驱动。
+     */
+    function counterDebtWatch(effect: CombatEffect): void {
+        var world = effect.world(), target = effect.target();
+        var body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        var record = counterRecord(world, target);
+        if (record === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "crack", counterScene, 1, body.position(),
+            { moment: "crack", target: String(target.ref()), gather: Math.round(10 + Math.min(64, record.amount * 0.5)) });
+        effect.remaining(counterRemaining(world, target));
+        effect.schedule("watch", "watch", 8, "{}");
+    }
+    WorldCombat.effect(counterDebtMark, 1, 2400, "actor", function (json) {
+        var value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid counter debt mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(counterDebtMark, "start", counterDebtWatch);
+    WorldCombat.effectHandler(counterDebtMark, "watch", counterDebtWatch);
+    WorldCombat.effectHandler(counterDebtMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
     export function counterRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
         var world = action.world();
@@ -77,6 +122,40 @@ namespace PokemonSkills {
         var source = event.actor();
         if (source !== null && String(source.key()) === String(victim.key())) return;
         counterRemember(world, victim, source, data.actual);
+        // 只给真正会这招的宝可梦留身上的记账短裂纹，避免给全世界每一次物理挨打都造载体。
+        if (String(victim.domain()) === "cobblemon" && CobblemonCombat.pokemon(victim).canAccessMove(counterId)
+            && world.effects(victim, counterDebtMark).length === 0) {
+            world.effect(counterDebtMark, victim, "{}", Math.max(1, Math.round(counterWindowFor(world, victim))));
+        }
+    });
+
+    // 返还命中后由真实伤害回执驱动：浮字与碎片量读这次实际扣的血（护甲、免疫、Boss 规则之后的结果），
+    // 不再把计划中的 refund 当作实际返还报出来。
+    WorldCombat.on("world_combat:move_counter/strike", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data()));
+        if (!(data.actual > 0)) return;
+        var action = event.action();
+        var owned = action !== null && String(action.content()) === "world_combat:counter";
+        if (String(data.move || "") !== counterId && !owned) return;
+        var target = event.target();
+        if (target === null) return;
+        var world = event.world();
+        var body = world.valid(target) ? world.observe(target) : null;
+        var point = typeof data.x === "number" && typeof data.y === "number" && typeof data.z === "number"
+            ? WorldCombat.point(data.x, data.y, data.z) : body === null ? null : body.position();
+        if (point === null) return;
+        var scale = 1;
+        if (action !== null) {
+            var raw = action.data("counter/strike");
+            if (raw !== null) {
+                try { var payload = JSON.parse(raw); if (payload.scale > 0 && isFinite(payload.scale)) scale = payload.scale; } catch (error) { /* keep the default */ }
+            }
+        }
+        var actual = Math.round(data.actual);
+        WorldFeedback.emit(world, counterScene, 1, point,
+            { moment: "strike", target: String(target.ref()), count: Math.round(14 + data.actual / 2), scale: scale,
+                power: Math.round(data.actual * 10) / 10 }, 30);
+        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), counterHitText, [actual], 26);
     });
 
     defineFacts(counterId, function (context: FactContext): Formula.Facts {

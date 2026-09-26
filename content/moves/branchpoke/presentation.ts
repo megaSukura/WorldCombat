@@ -1,14 +1,14 @@
 /**
  * 木枝突刺 / branchpoke 的客户端表现。
  *
- * 一句话：身侧的枝叶收拢、枝尖聚起一点绿光，随后一根细枝绷直朝目标戳出去，末梢戳到尽头时弯出一记回弹、
- * 冒出一小簇嫩芽；命中处炸开草系冲击与散叶，刺枝式还会留下一点挂枝的绿环。
+ * 一句话：身侧的枝叶收拢、枝尖聚起一点绿光，随后一根细枝绷直朝目标戳出去；只有真的戳到目标时枝梢才在接触点弯出一记回弹、
+ * 冒出一小簇嫩芽（贴脸命中只是轻回弹），命中处炸开草系冲击与散叶，刺枝式还会留下一点挂枝的绿环。
  * 色相家族：叶绿（0x8CC24E）作主体、亮黄绿（0xB6E06A）作细节、近白（0xEAF8C8）作强调；中性尘屑收尾。
- * 拍子：起 coil（收枝聚光）→ 戳 thrust（细枝戳出）与 tip（末梢回弹）→ 击 hit（散叶）／挂枝 snare ／空 miss。
- * 范围：thrust 的细线用 `data.path`（与服务端 lane 同一条细线）画成一条亮线，玩家一眼看出只有这条线会被戳到。
- * 运动：细枝沿 `data.direction` 一次绷直戳出，tip 的嫩芽在枝梢向上冒出；命中散叶沿目标向外崩开。
- * 数：枝线与命中散叶的量绑 `data.leaves`（物攻换算），末梢嫩芽与命中的尺寸读 `data.scale`
- *     （服务端传的「越远越疼」倍率，1 + 弹劲 × 距离比例）——戳得越远、画面里的枝梢越饱满。
+ * 拍子：起 coil（收枝聚光）→ 戳 thrust（细枝戳出）→ 击 hit（散叶）与 tip（实际末梢命中时弹亮）／挂枝 snare ／空 miss。
+ * 范围：thrust 的细线用 `data.path`（与服务端裁过方块的判定线同一组顶点）画成一条亮线，玩家一眼看出只有这条线会被戳到；方块把枝梢挡在墙前。
+ * 运动：细枝沿 `data.direction` 一次绷直戳出，tip 的嫩芽在接触点向上冒出；命中散叶沿目标向外崩开。
+ * 数：枝线与命中散叶的量绑 `data.leaves`（物攻换算），tip 的嫩芽量绑 `data.tipLeaves`（按末梢距离比例递减），
+ *     末梢嫩芽与命中的尺寸读 `data.scale`（服务端传的「越远越疼」倍率，1 + 弹劲 × 距离比例）——戳得越远、画面里的枝梢越饱满。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const BranchpokeDefinition: ParticleDefinition = {
@@ -57,7 +57,7 @@ const BranchpokeDefinition: ParticleDefinition = {
                 {
                     name: "sprout", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/grass/sprout",
-                    burst: { count: 8, at: 0 }, shape: { kind: "ring", radius: 0.2 },
+                    burst: { count: { data: "tipLeaves", fallback: 8 }, at: 0 }, shape: { kind: "ring", radius: 0.2 },
                     direction: "up", speed: [0.04, 0.14],
                     lifetime: [8, 14], size: [0.16, 0.03], sizeMode: "index",
                     color: 0xB6E06A, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 26
@@ -65,7 +65,7 @@ const BranchpokeDefinition: ParticleDefinition = {
                 {
                     name: "seed", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/grass/seed",
-                    burst: { count: { data: "leaves", fallback: 14 }, at: 0 },
+                    burst: { count: { data: "tipLeaves", fallback: 10 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.2 },
                     direction: "outward", speed: [0.05, 0.18], gravity: 0.05, drag: 0.94,
                     lifetime: [7, 13], size: [0.09, 0.02], sizeMode: "index",

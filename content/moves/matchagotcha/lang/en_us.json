@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.matchagotcha.summary": "Hurl a tea bubble at distant foes; it bursts on impact, hitting every enemy in the ring once and draining life from each, with a chance to burn and thawing any frozen foe caught in the splash.",
+  "worldcombat.skill.matchagotcha.summary": "Hurl a tea bubble at a foe, the ground, or a high point; it bursts once at the real landing whether it strikes a living target, hits a block, or runs out of range, hitting every enemy in the ring and draining life from each, with a chance to burn and thawing any frozen foe caught in the splash.",
   "worldcombat.skill.matchagotcha.description.0": "The blast deals about %1$s special damage; the target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.matchagotcha.description.1": "The tea bubble flies up to %1$s blocks and can be dodged in flight; it bursts on hitting a living target over a %2$s block radius, hitting every foe inside once, while a miss that lands on the ground bursts for nothing.",
+  "worldcombat.skill.matchagotcha.description.1": "The tea bubble flies up to %1$s blocks and can be dodged in flight; striking a living target, hitting a block, or running out of range all burst once at that point over a %2$s block radius, hitting every foe inside once.",
   "worldcombat.skill.matchagotcha.description.2": "%1$s of the damage dealt is restored to the user.",
   "worldcombat.skill.matchagotcha.description.3": "Each foe splashed has a %1$s chance to be burned for %2$s: it loses about 1/16 of its max health every 5 seconds and its physical damage is halved; frozen foes inside the burst are thawed.",
   "worldcombat.skill.matchagotcha.whisk.on": "Whisked: splashes a wider area around the landing point with a higher burn chance, but each target is hit lighter, siphons less and the range is shorter.",
@@ -28,6 +28,5 @@
   "worldcombat.skill.matchagotcha.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.matchagotcha.preference.ai.healBelow.help": "Below this health ratio the user prefers matcha gotcha as sustain; higher starts leaning on it for healing sooner.",
   "world_combat.move.matchagotcha.text.hit": "Splashed",
-  "world_combat.move.matchagotcha.text.scald": "Scalded",
-  "world_combat.move.matchagotcha.text.dud": "Spilled"
+  "world_combat.move.matchagotcha.text.scald": "Scalded"
 }

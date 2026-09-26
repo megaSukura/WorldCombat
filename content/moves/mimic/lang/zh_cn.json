@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.mimic.summary": "临时把对手最近一招借进模仿所在的招式格；普通生物的已知攻击会转译为对应招式。",
-  "worldcombat.skill.mimic.use.0": "借来对手的招式",
+  "worldcombat.skill.mimic.summary": "临时把目标或同伴最近一招借进模仿所在的招式格；普通生物的已知攻击会转译为对应招式，时间到自动还回原槽。",
+  "worldcombat.skill.mimic.use.0": "借来目标或同伴的招式",
   "worldcombat.skill.mimic.use.1": "把对手的强化还回去",
   "worldcombat.skill.mimic.use.2": "惩罚刚出手的强攻",
-  "worldcombat.skill.mimic.description.0": "念线搭到 %1$s 格内看得见的对手，读取需要 %2$s 秒。",
+  "worldcombat.skill.mimic.description.0": "念线搭到 %1$s 格内看得见的示范者（敌我皆可），读取需要 %2$s 秒。",
   "worldcombat.skill.mimic.description.1": "只记住 %1$s 秒以内的出手；借来的那一手在自己身上留 %2$s 秒，之后自动还回去。",
   "worldcombat.skill.mimic.description.2": "当前为 %1$s。",
   "worldcombat.skill.mimic.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -21,8 +21,9 @@
   "worldcombat.skill.mimic.preference.ai.maxChase.help": "超过这个距离就不主动牵念线，先走近；越大越愿意从远处先借一招。",
   "worldcombat.skill.mimic.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.mimic.preference.ai.leaveStation.help": "开启后，驻守命令下也会为模仿离开站位；关闭则只在原地够得到时出手。",
-  "world_combat.move.mimic.text.copy": "学会 %1$s",
+  "world_combat.move.mimic.text.copy": "借得 %1$s（%2$s 秒）",
   "world_combat.move.mimic.text.empty": "读不到可借的招",
+  "world_combat.move.mimic.text.noprovider": "附近没有可借的示范者",
   "world_combat.move.mimic.text.snap": "念线被切断",
   "worldcombat.skill.mimic.world": "普通生物在 %1$s 内成功用过的已知原生攻击，会转译为对应的现有招式，借用 %2$s：普通近战→撞击，蜇刺→毒针，冲撞→头锤，重锤→摔打，箭矢→乱击，三叉戟→角撞，火球→火花，音爆→音爆，间接魔法→幻象光线。未列出的攻击无法模仿。"
 }

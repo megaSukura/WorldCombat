@@ -4,7 +4,8 @@
  * 什么局面下出手：挂在共享的 attack 位上。带骨棒乱打的伙伴把它当**中距离掷骨夯地**：目标可见、敌对、存活，
  *   在 `ai.maxChase`（默认 11）以内就出手；更远交给共享接近逻辑。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.cluster`（默认开）打开时，目标近旁还站着
- *   别的敌人会让它更愿意出手——落点震波能一次覆盖一片；只有一个目标时留给别的近身招。
+ *   别的敌人会让它更愿意出手——落点震波能一次覆盖一片；只有一个目标时留给别的近身招。落点震波只沿地面传，
+ *   所以贴地的目标加分、飞行/悬空的目标降权，让别的招去处理它。
  * 够不到怎么办：掷距交给 `throwRange`，共享任务负责把身位送进掷距。
  * 放完之后：这一串夯完（或目标先倒）就收势，交回共享交战计划等冷却。
  * 优先级：基础 14；已在掷距内 +4；`ai.cluster` 开启且目标近旁 ≥1 个敌人 +8。仅剩本招可选时，它仍在普通顺序里被选中。
@@ -44,6 +45,8 @@ namespace CompanionBehavior {
             let score = 14;
             if (range <= item.data.range) score += 4;
             if (ai<boolean>(item, "cluster", true) && bonerushCluster(context, target) >= 1) score += 8;
+            // 震波沿地面传：贴地目标才吃得到，飞行/悬空的目标降权，让别的招接手。
+            score += target.grounded === false ? -8 : 4;
             return score;
         }
     });

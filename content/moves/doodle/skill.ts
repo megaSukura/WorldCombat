@@ -3,6 +3,7 @@ namespace PokemonSkills {
     export const doodleScene = "world_combat:move_doodle";
     export const doodleInk = "world_combat:doodle_sketch";
     export const doodleAbilityText = "world_combat.move.doodle.text.ability";
+    export const doodleTraitText = "world_combat.move.doodle.text.trait";
     export const doodleUnchangedText = "world_combat.move.doodle.text.same";
     const doodleAbilityPattern = /^[a-z0-9]{1,64}$/;
     const doodleReferenceRadius = 4.5;
@@ -34,9 +35,9 @@ namespace PokemonSkills {
         id: "doodle",
         cooldownParameter: "recharge",
         name: "Doodle",
-        description: "把对手的特性描给自己与附近同伴；描绘普通生物时，复制其最突出的战斗特征。",
-        uses: ["把对手的强力特性一次复制给全队", "开战前统一队伍的特性", "围绕一只特性关键的对手组织队伍"],
-        kind: "enemy",
+        description: "把一个样本的特性描给自己与附近同伴；样本可以是敌人，也可以是同伴。描绘普通生物时，复制其最突出的战斗特征。",
+        uses: ["把对手的强力特性一次复制给全队", "开战前以同伴或对手为样本统一队伍的特性", "围绕一只特性关键的对手组织队伍"],
+        kind: "aim",
         range: 8,
         maxRange: 15,
         prepare: 9,
@@ -62,26 +63,29 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            // aim: a foe or a companion can be the sample; an empty point has nothing to sketch.
+            if (target === null || !world.valid(target)) return "invalid-target";
             if (String(actor.domain()) !== "cobblemon") return "no-ability";
-            const body = world.observe(target);
-            if (body === null) return "invalid-target";
+            const body = world.observe(target), self = world.observe(actor);
+            if (body === null || self === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("doodle", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
+            const canvas = Math.max(1.5, p("doodle", "canvas", action));
+            const squad = Math.max(1, Math.round(p("doodle", "squad", action)));
             if (String(target.domain()) !== "cobblemon") {
-                const self = world.observe(actor), values = PokemonSkills.copiedNativeTrait(world, target);
-                return self && doodleRecipients(world, actor, self.position(), p("doodle", "canvas", action), Math.max(1, Math.round(p("doodle", "squad", action))), true)
+                // The sample's characteristic can go to any friendly body that still differs; the sample is not stamped back onto itself.
+                const values = PokemonSkills.copiedNativeTrait(world, target);
+                return doodleRecipients(world, actor, self.position(), canvas, squad, true)
                     .some(recipient => CombatCopies.differs(world, recipient, values)) ? "" : "nothing-to-copy";
             }
+            // Only a copyable sample and a recipient that can still be modified counts; a same-or-immune recipient is skipped.
             const theirs = doodleAbility(world, target);
             if (!theirs) return "target-suppressed";
             if (!NativeModifiers.abilityCopyable(world, target)) return "uncopyable";
-            const self = world.observe(actor);
-            if (self === null) return "invalid-target";
-            const canvas = Math.max(1.5, p("doodle", "canvas", action));
-            const squad = Math.max(1, Math.round(p("doodle", "squad", action)));
-            const recipients = doodleRecipients(world, actor, self.position(), canvas, squad);
-            const any = recipients.some(function (recipient) { return doodleAbility(world, recipient) !== theirs; });
+            const any = doodleRecipients(world, actor, self.position(), canvas, squad).some(function (recipient) {
+                return String(recipient.domain()) === "cobblemon" && NativeModifiers.abilitySuppressible(world, recipient)
+                    && doodleAbility(world, recipient) !== theirs;
+            });
             return any ? "" : "nothing-to-copy";
         },
         windup: function (action, config, prepare) {
@@ -95,61 +99,97 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
-            const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null) { done(action); return; }
-            if (String(target.domain()) !== "cobblemon") {
-                const hold = Math.max(40, Math.round(p("doodle", "hold", action)));
-                const values = PokemonSkills.copiedNativeTrait(world, target);
-                doodleRecipients(world, actor, body.position(), p("doodle", "canvas", action), Math.max(1, Math.round(p("doodle", "squad", action))), true).forEach(recipient => {
-                    if (!CombatCopies.differs(world, recipient, values)) return;
-                    const carrier = MobEffects.apply(world, recipient, doodleInk, hold, 0);
-                    if (carrier) CombatCopies.apply(world, recipient, values, hold, "doodle", MobEffects.anchor(carrier));
-                });
-                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "canvas", target: String(actor.ref()), path: [String(target.ref()), String(actor.ref())], traits: 8, marks: 8, scale: 1 }, 30);
-                sound(action, "minecraft:entity.illusioner.cast_spell"); done(action); return;
-            }
-            const ability = doodleAbility(world, target);
-            if (!ability || !doodleAbilityPattern.test(ability) || !NativeModifiers.abilityCopyable(world, target)) {
-                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()) }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
-                sound(action, "minecraft:block.amethyst_block.break");
-                done(action);
-                return;
-            }
+            const body = world.observe(actor), sample = target === null ? null : world.observe(target);
+            if (target === null || !world.valid(target) || body === null || sample === null) { done(action); return; }
             const canvas = Math.max(1.5, p("doodle", "canvas", action));
             const squad = Math.max(1, Math.round(p("doodle", "squad", action)));
             const hold = Math.max(40, Math.round(p("doodle", "hold", action)));
             const marks = Math.max(6, Math.round(p("doodle", "marks", action)));
             const scale = canvas / doodleReferenceRadius;
-            const recipients = doodleRecipients(world, actor, body.position(), canvas, squad);
-            let applied = 0;
-            WorldFeedback.emit(world, doodleScene, 1, body.position(),
-                { moment: "canvas", target: String(actor.ref()), marks: marks, scale: scale, canvas: canvas }, 34);
-            recipients.forEach(function (recipient) {
-                if (String(recipient.domain()) !== "cobblemon") return;
-                const own = doodleAbility(world, recipient);
-                if (own === ability) return;
-                NativeModifiers.apply(world, recipient, { ability: ability }, hold);
-                MobEffects.apply(world, recipient, doodleInk, hold, 0);
-                applied++;
-                const at = world.observe(recipient);
-                if (at === null) return;
+            const from = String(actor.ref());
+            const casterPoint = body.position();
+            // The sample stroke is drawn along the real sample->caster line, then branches out to each actual recipient.
+            const inward = body.position().minus(sample.position());
+            const distance = inward.length();
+            const direction = distance < 0.05 ? WorldCombat.point(0, 1, 0) : inward.unit();
+            WorldFeedback.emit(world, doodleScene, 1, sample.position(),
+                { moment: "canvas", path: [String(target.ref()), from], marks: marks, scale: scale,
+                    canvas: canvas, span: distance, direction: [direction.x(), direction.y(), direction.z()] }, 34);
+            function stamp(recipient: CombatActor, at: CombatObservation): void {
                 const recipientRef = String(recipient.ref());
-                if (recipientRef !== String(actor.ref()))
-                    WorldFeedback.emit(world, doodleScene, 1, at.position(),
-                        { moment: "spread", target: recipientRef, path: [String(actor.ref()), recipientRef], marks: marks, scale: scale }, 30);
+                if (recipientRef !== from)
+                    WorldFeedback.emit(world, doodleScene, 1, casterPoint,
+                        { moment: "spread", path: [from, recipientRef], marks: marks, scale: scale }, 30);
                 WorldFeedback.emit(world, doodleScene, 1, at.position(),
                     { moment: "stamp", target: recipientRef, marks: marks, scale: scale }, 26);
-            });
-            if (applied === 0) {
-                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()) }, 22);
+            }
+            function glow(layer: number, recipientRef: string, at: CombatObservation): void {
+                // The stamp's sheen is presented on that recipient's own layer, so it ends with the copy, not on its own clock.
+                if (layer) WorldFeedback.onEffect(world, layer, "world_combat:doodle:glow:" + recipientRef, doodleScene, 1,
+                    at.position(), { moment: "glow", target: recipientRef, marks: marks });
+            }
+            let applied = 0;
+            if (String(target.domain()) !== "cobblemon") {
+                const values = PokemonSkills.copiedNativeTrait(world, target);
+                const trait = Object.keys(values)[0] || "";
+                doodleRecipients(world, actor, body.position(), canvas, squad, true).forEach(function (recipient) {
+                    if (!CombatCopies.differs(world, recipient, values)) return;
+                    const at = world.observe(recipient);
+                    if (at === null) return;
+                    const carrier = MobEffects.apply(world, recipient, doodleInk, hold, 0);
+                    if (carrier === null) return;
+                    const copy = CombatCopies.apply(world, recipient, values, hold, "doodle", MobEffects.anchor(carrier));
+                    applied++;
+                    const recipientRef = String(recipient.ref());
+                    stamp(recipient, at);
+                    glow(copy, recipientRef, at);
+                });
+                if (applied === 0) {
+                    WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle" }, 22);
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
+                    sound(action, "minecraft:block.amethyst_block.break");
+                    done(action);
+                    return;
+                }
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleTraitText,
+                    [{ key: "attribute.name." + trait.replace("minecraft:", ""), fallback: trait }, applied], 44);
+                sound(action, "minecraft:item.book.put");
+                done(action);
+                return;
+            }
+            const ability = doodleAbility(world, target);
+            if (!ability || !doodleAbilityPattern.test(ability) || !NativeModifiers.abilityCopyable(world, target)) {
+                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle" }, 22);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
                 sound(action, "minecraft:block.amethyst_block.break");
                 done(action);
                 return;
             }
-            WorldFeedback.keep(world, "world_combat:doodle:glow:" + String(actor.ref()), doodleScene, 1, body.position(),
-                { moment: "glow", target: String(actor.ref()), marks: marks, scale: scale }, Math.min(hold, 160));
+            doodleRecipients(world, actor, body.position(), canvas, squad).forEach(function (recipient) {
+                if (String(recipient.domain()) !== "cobblemon") return;
+                if (!NativeModifiers.abilitySuppressible(world, recipient)) return;
+                const own = doodleAbility(world, recipient);
+                if (own === ability) return;
+                const at = world.observe(recipient);
+                if (at === null) return;
+                // The recipient's ink marker owns its layer; cleansing one ends both together.
+                const marker = MobEffects.apply(world, recipient, doodleInk, hold, 0);
+                if (marker === null) return;
+                const layer = NativeModifiers.apply(world, recipient,
+                    { ability: ability, carrier: MobEffects.anchor(marker) }, hold);
+                if (!layer) return;
+                applied++;
+                const recipientRef = String(recipient.ref());
+                stamp(recipient, at);
+                glow(layer, recipientRef, at);
+            });
+            if (applied === 0) {
+                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle" }, 22);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
+                done(action);
+                return;
+            }
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleAbilityText,
                 [{ key: "cobblemon.ability." + ability, fallback: ability }, applied], 44);
             sound(action, "minecraft:item.book.put");

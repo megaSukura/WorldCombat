@@ -1,13 +1,14 @@
 /**
  * 晶光转转 / mortalspin 的伙伴 AI 用途。
  *
- * 什么局面下出手：一记原地旋开的放毒招。缠在身上的 rooted 世界效果或共享身份 partiallytrapped／trapped／
+ * 什么局面下出手：一记原地撒晶放毒的脱缚招。缠在身上的 rooted 世界效果或共享身份 partiallytrapped／trapped／
  *   leechseed 还在时，它立刻出手（priority 112，抢在所有行动前）。没有束缚时，目标是可见、敌对、存活、
  *   且在 `ai.maxChase`（默认 8）格内的敌人——目标还没中毒时最值（priority 46），已经中毒时优先级降到 24。
- * 对谁出手：没有束缚时由共享任务把目标带进 `radius` 内再原地旋开；`ai.cluster`（默认开）打开时，目标身边
- *   3.5 格内还挤着别的敌人就抬高 priority，一次给一圈人上毒。
- * 够不到怎么办：交给共享接近逻辑；走不到就先不旋。
- * 放完之后：束缚被甩掉、身边一圈人中毒，交回共享交战计划。
+ * 对谁出手：没有束缚时由共享任务把目标带进 `radius` 内再原地撒晶；`ai.cluster`（默认开）打开时，目标身边
+ *   3.5 格内还挤着别的敌人就抬高 priority，一次把毒晶撒向一圈人。
+ * 够不到怎么办：交给共享接近逻辑；走不到就先不撒。
+ * 放完之后：束缚被甩掉、身周的人沾到毒晶中毒，交回共享交战计划。毒免疫的 Boss 仍会被毒晶砸中吃到基础晶击，
+ *   只是挂不上毒（命中层的原生免疫判断），所以不因毒免疫就不出手。
  */
 namespace PokemonSkills {
     function mortalspinBound(context: WorldBehavior.Context): boolean {

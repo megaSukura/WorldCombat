@@ -1,13 +1,15 @@
 /**
  * 啄食 / pluck —— 注册与动作。
  *
- * 念头：伸长喙一记快速啄击，够得远也够得高；若对手携带树果，当场啄下吞掉、立刻获得效果。
+ * 念头：伸长喙沿真实瞄准一记快速啄击，够得远也够得高；若对手携带树果，当场啄下吞掉、立刻获得效果。
  * 两幕：
  *   起（windup，提交前）：抬头、张开喙，风纹沿喙尖聚起——预告这一啄的方向与高度。
- *   啄（execute，提交后）：沿瞄准方向伸出一条长喙走廊（判定带抬升），啄中走廊内最近的一个非友方；
- *       若它携带树果，果子经统一的原生装备事务被啄下并当场吞掉，效果立刻落到自己身上（回复 / 解异常 / 升能力等级）。
- *       走廊内无人时，喙尖停在前方、只掀起一缕风屑。
- * 与同为“吃果”的虫咬分开：啄食不贴近、不咀嚼，靠长喙与抬升高度取胜，吞得快而浅（吸收系数低于 1）。
+ *   啄（execute，提交后）：沿真实三维瞄准伸出喙尖，用 action.trace 只取第一个碰到的身体或方块；
+ *       朝上瞄准时能在 reach 之外再向上够 lift 格，因此能啄到浮空的对手，横瞄则不会命中离线高处，隔墙也没有啄击。
+ *       首个身体是携带树果的非友方时，果子经统一的原生装备事务被啄下并当场吞掉，效果立刻落到自己身上
+ *       （回复 / 解异常 / 升能力等级）；被墙或友方挡下就停在接触点。
+ *   收：喙尖缩回口部（actionScenes 转段），空啄只掀起一缕风屑。
+ * 与同为“吃果”的虫咬分开：啄食不贴近、不咀嚼，靠长喙与仰角取胜，吞得快而浅（吸收系数低于 1）。
  * 树果经统一装备契约被取走（宝可梦携带物与原版生物/玩家的手同一路径），不复制、不凭空生成；
  * 效果落在所有战斗者共有的回复、异常身份与能力等级载体上。
  */
@@ -21,6 +23,8 @@ namespace PokemonSkills {
     const pluckNoneText = "world_combat.move.pluck.text.none";
     const pluckPlainText = "world_combat.move.pluck.text.plain";
     const pluckMissText = "world_combat.move.pluck.text.miss";
+
+    function pluckVertex(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
 
     function pluckSavor(current: CombatAction, result: any, motes: number, scale: number): void {
         var world = current.world(), actor = current.actor(), body = world.observe(actor);
@@ -40,53 +44,77 @@ namespace PokemonSkills {
     }
 
     function pluckPeck(action: CombatAction, done: (current: CombatAction) => void): void {
-        var world = action.world(), actor = action.actor(), direction = aim(action), origin = action.origin();
-        var reach = p("pluck", "reach", action), radius = p("pluck", "radius", action), lift = p("pluck", "lift", action);
+        var world = action.world(), actor = action.actor(), direction = aim(action);
+        var reach = p("pluck", "reach", action), lift = p("pluck", "lift", action), radius = Math.max(0.1, p("pluck", "radius", action));
         var power = p("pluck", "peck", action), push = p("pluck", "push", action);
-        var absorb = p("pluck", "absorb", action), motes = p("pluck", "motes", action);
+        var absorb = p("pluck", "absorb", action), motes = Math.round(p("pluck", "motes", action));
         var body = world.observe(actor), scale = body ? (body.width() + body.height()) / 2.3 : 1;
-        var end = origin.plus(direction.scale(reach));
-        var path = [[origin.x(), origin.y(), origin.z()], [end.x(), end.y(), end.z()]];
-        var lane = WorldGeometry.lane(origin, direction, reach, radius, { below: 1.0, above: lift });
+        var origin = body !== null ? body.position() : action.origin();
+        // 朝上瞄准时，喙在 reach 之外再向上多够 lift × 仰角；横瞄时 y≈0，喙仍是 reach 长。
+        var span = reach + lift * Math.max(0, Math.min(1, direction.y()));
+        var hit = action.trace(origin, origin.plus(direction.scale(span)), radius, true);
+        var contact = hit.position(), delta = contact.minus(origin), length = delta.length();
+        var actual = length < 0.01 ? direction : delta.unit();
+        var scenes = WorldFeedback.actionScenes(pluckScene);
+
         sound(action, "cobblemon:move.gust.actor");
-        WorldFeedback.emit(world, pluckScene, 1, origin,
-            { moment: "peck", path: path, direction: [direction.x(), direction.y(), direction.z()],
-                scale: scale, lift: lift, motes: Math.round(motes) }, 24);
-        var nearest: CombatActor[] = [], best = Infinity, strike = end;
-        WorldGeometry.selectEnemies(world, lane, function (victim, facts) {
-            var distance = facts.position().minus(origin).length();
-            if (distance < best) { best = distance; nearest = [victim]; strike = facts.position(); }
-        });
-        if (nearest.length === 0) {
-            WorldFeedback.emit(world, pluckScene, 1, end, { moment: "miss", scale: scale }, 20);
-            WorldFeedback.text(world, end, pluckMissText, [], 22);
-            done(action);
+        scenes.show(action, "beak", origin, { moment: "peck", path: [pluckVertex(origin), pluckVertex(contact)],
+            direction: [actual.x(), actual.y(), actual.z()], scale: scale, lift: lift, span: length, motes: motes });
+
+        function retract(current: CombatAction): void {
+            var self = current.world().observe(actor);
+            var at = self !== null ? self.position() : current.origin();
+            var near = at.plus(actual.scale(Math.min(0.35, length * 0.25)));
+            scenes.show(current, "beak", at, { moment: "peck", path: [pluckVertex(at), pluckVertex(near)],
+                direction: [actual.x(), actual.y(), actual.z()], scale: scale, lift: lift, span: 0.35, motes: motes });
+            scenes.finish(current, done);
+        }
+
+        var target = hit.hitEntity() ? hit.target() : null;
+        if (target !== null && String(target.key()) !== String(actor.key()) && !world.friendly(target)) {
+            var held = NativeItems.heldBerry(world, target), berry = held !== null ? held.berry : null;
+            var landed = hurt(action, target, "pluck", power, { damage: damageSpec("pluck", "peck"), contact: true });
+            WorldFeedback.emit(world, pluckScene, 1, contact,
+                { moment: "hit", target: String(target.ref()), berry: berry !== null ? 1 : 0, scale: scale,
+                    motes: motes, bits: berry !== null ? motes : 0,
+                    back: [-actual.x(), -actual.y(), -actual.z()] }, 24);
+            sound(action, "cobblemon:impact.flying");
+            if (landed && world.valid(target)) world.hitDisplace(target, actual.scale(push));
+            if (landed && held !== null && world.valid(target) && NativeItems.takeHeld(world, target, held.held).ok) {
+                WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 0.9, 0)), pluckEatText, [{ key: berry!.name, fallback: "berry" }], 28);
+                sound(action, "cobblemon:item.berry.eat");
+                pluckSavor(action, pluckAbsorb(action, held.berry, absorb), motes, scale);
+            } else if (landed) {
+                WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 0.9, 0)), pluckPlainText, [], 26);
+            }
+            action.after(2, function (next: CombatAction) { retract(next); });
             return;
         }
-        var victim = nearest[0], held = NativeItems.heldBerry(world, victim), berry = held !== null ? held.berry : null;
-        var landed = hurt(action, victim, "pluck", power, { damage: damageSpec("pluck", "peck"), contact: true });
-        WorldFeedback.emit(world, pluckScene, 1, strike,
-            { moment: "hit", target: String(victim.ref()), berry: berry !== null ? 1 : 0, scale: scale,
-                motes: Math.round(motes), bits: berry !== null ? Math.round(motes) : 0 }, 24);
-        sound(action, "cobblemon:impact.flying");
-        if (landed && world.valid(victim)) world.displace(victim, direction.scale(push));
-        if (landed && held !== null && world.valid(victim) && NativeItems.takeHeld(world, victim, held.held).ok) {
-            WorldFeedback.text(world, strike.plus(WorldCombat.point(0, 0.9, 0)), pluckEatText, [{ key: berry!.name, fallback: "berry" }], 28);
-            sound(action, "cobblemon:item.berry.eat");
-            pluckSavor(action, pluckAbsorb(action, held.berry, absorb), motes, scale);
-        } else if (landed) {
-            WorldFeedback.text(world, strike.plus(WorldCombat.point(0, 0.9, 0)), pluckPlainText, [], 26);
+        if (target !== null || hit.hitEntity()) {
+            WorldFeedback.emit(world, pluckScene, 1, contact,
+                { moment: "ward", target: target !== null ? String(target.ref()) : "", scale: scale }, 18);
+            action.after(2, function (next: CombatAction) { retract(next); });
+            return;
         }
-        done(action);
+        if (hit.blocked()) {
+            var cell = hit.blockPosition(), point = cell === null ? contact : cell;
+            WorldFeedback.emit(world, pluckScene, 1, point,
+                { moment: "wall", face: hit.blockFace(), scale: scale, motes: Math.round(motes * 0.5) }, 20);
+            action.after(2, function (next: CombatAction) { retract(next); });
+            return;
+        }
+        WorldFeedback.emit(world, pluckScene, 1, contact, { moment: "miss", scale: scale }, 20);
+        WorldFeedback.text(world, contact, pluckMissText, [], 22);
+        action.after(2, function (next: CombatAction) { retract(next); });
     }
 
     define({
         id: "pluck",
         cooldownParameter: "recharge",
         name: "啄食",
-        description: "用喙啄击对手，够得远也够得高（能啄到浮在空中的目标）；若它携带树果，就把果子啄下来当场吃掉，果子的效果立刻落到自己身上。不贴近、不咀嚼，吞得快而浅。",
-        uses: ["远处啄一口并吃掉对手的树果", "啄到浮在空中的对手", "把对手的树果立刻变成自己的回复或强化"],
-        kind: "enemy",
+        description: "沿真实瞄准伸喙啄击，够得远也够得高（仰起能啄到浮在空中的目标）；只取第一个碰到的身体，墙和友方会先挡住。若它携带树果，就把果子啄下来当场吃掉，果子的效果立刻落到自己身上。不贴近、不咀嚼，吞得快而浅。",
+        uses: ["远处啄一口并吃掉对手的树果", "仰起长喙啄到浮在空中的对手", "把对手的树果立刻变成自己的回复或强化"],
+        kind: "aim",
         range: 3.6,
         maxRange: 6.5,
         prepare: 6,
@@ -94,8 +122,8 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 22,
         style: "peck",
-        defaults: { swoop: false, ai: { maxChase: 14, leaveStation: false, berryOnly: false } },
-        fields: [flag("swoop", "俯冲")],
+        defaults: { outreach: false, ai: { maxChase: 14, leaveStation: false, berryOnly: false } },
+        fields: [flag("outreach", "伸喙")],
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["pluck"], detail: { values: config },
                 world: world || null, actor: actor || null, attributes: attributes };

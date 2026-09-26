@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.aquatail.summary": "Swing the tail into an arc of water that presses forward: the crest advances from point-blank out to its reach, everyone it catches takes contact damage, is shoved away from the caster and stays drenched (movement speed -10%). If the target is burned, the wave cures the burn and puts out its fire. The wave travels, so stepping out of the arc or backing past the crest dodges it.",
+  "worldcombat.skill.aquatail.summary": "Swing the tail into an arc of water that presses forward: the crest advances from point-blank out to its reach, everyone it catches takes contact damage, is shoved away from the caster and stays drenched (movement speed -10%). If the target is burned, the wave cures the burn and puts out its fire. The wave travels, so stepping out of the arc, backing past the crest, or a wall in between dodges it; aiming at the ground swings it with no target at all.",
   "worldcombat.skill.aquatail.use.0": "Sweep the people in front with an advancing water wall",
   "worldcombat.skill.aquatail.use.1": "Shove a foe that is right in your face away with its footing",
   "worldcombat.skill.aquatail.use.2": "Put out a target's fire and burn with one wave",
   "worldcombat.skill.aquatail.description.0": "The wave deals about %1$s contact damage and shoves the target about %2$s blocks away from the caster; each target can be caught only once per wave.",
   "worldcombat.skill.aquatail.description.1": "The wave opens %1$s degrees and presses out to %2$s blocks, fading to %3$s of full power at the edge.",
-  "worldcombat.skill.aquatail.description.2": "The crest advances in %1$s beats from point-blank to its reach; more beats means a slower wave, and stepping out of the arc or backing past the crest dodges it.",
+  "worldcombat.skill.aquatail.description.2": "The crest advances in %1$s beats from point-blank to its reach; more beats means a slower wave, and stepping out of the arc, backing past the crest, or a wall in between dodges it.",
   "worldcombat.skill.aquatail.description.3": "A hit leaves the target drenched for %1$s, slowing its movement speed by 10%% for the duration; it wears off on its own.",
   "worldcombat.skill.aquatail.description.4": "Heavy wave form is currently %1$s.",
   "worldcombat.skill.aquatail.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

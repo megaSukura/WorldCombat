@@ -7,7 +7,8 @@
  * 拍子：起（boil 烧开）→ 击（burst 张开扇面、scald 命中）→ 收（余汽上升）。
  * 范围：扇面的顶点由服务端按机制 reach/angle 生成（`data.path`），画面画的就是判定罩住的那块扇面。
  * 运动：白汽沿扇面径向由内向外翻涌，越远越淡；水花受重力下落。
- * 数：`data.vapor`（特攻派生的白汽量）决定密度，`data.sunlight`（是否强日照）决定亮度与浓淡，画面里的数与机制一致。
+ * 数：`data.vapor`（特攻派生的白汽量）决定密度，`data.heat`（晴天更厚的热纹）与 `data.hot`（晴天扇面核心的烫红量）
+ *   决定浓度与热度，`data.sunlight`（是否强日照）决定整体亮度，画面里的数与机制一致。
  */
 const HydroSteamDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -35,7 +36,7 @@ const HydroSteamDefinition: ParticleDefinition = {
                 {
                     name: "heat", bind: "source", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: 8, shape: { kind: "sphere", radius: 0.4 },
+                    rate: { data: "heat", fallback: 6 }, shape: { kind: "sphere", radius: 0.4 },
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [6, 12], size: [0.07, 0.01],
                     color: 0xE0662A, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 30
@@ -65,7 +66,7 @@ const HydroSteamDefinition: ParticleDefinition = {
                 {
                     name: "hot_core", bind: "path", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: { data: "sunlight", fallback: 0 }, shape: { kind: "polygon" },
+                    rate: { data: "hot", fallback: 0 }, shape: { kind: "polygon" },
                     direction: "up", speed: [0.02, 0.1],
                     lifetime: [8, 16], size: [0.09, 0.01],
                     color: 0xE0662A, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 80

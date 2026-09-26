@@ -5,11 +5,13 @@
  *   挨打时裂纹炸开、火星四溅，打满就整颗崩开、碎板坠地。
  *
  * 色相家族：铁蓝（0x9BB0C9）为主体，冷白（0xE4EDF7）做高光，深铁（0x5E6E80）做余韵；没有第二个色相。
- * 层次：向心收拢的铁屑（起）／合拢的铁板、铁环、火星（击）／贴身的冷光（收）／裂纹与坠落的碎板（末）。
+ * 层次：向心收拢的铁屑（起）／合拢的铁板、铁环、火星（击）／贴身的冷光与逐块熄灭的壳板（收）／裂纹与坠落的碎板（末）。
  * 起击收：curl（缩壳）→ brace（合壳）→ hold（持壳）→ crack（裂纹）→ shatter（崩开）。
  * 范围：壳环绑身体、fit body，半径按 `data.scale`（实际壳半径 / 1.2）缩放，画出来的圈就是壳护到的范围。
  * 运动：铁屑向心收拢；铁板由体表向外合拢；火星向外溅；崩开时碎板受重力落下。
- * 数：壳板量绑 `data.plates`（防御与等级派生），挨打强度绑 `data.intensity`（承伤池剩余比例），`data.scale` 放大整片半径与粒子尺寸。
+ * 数：壳板量绑 `data.plates`（防御与等级派生，固定 6–8 块），剩余壳板绑 `data.left`（承伤池剩余比例派生，
+ *   由自定义场景 `world_combat:move_shelter_shell` 逐块画出、逐块熄灭），挨打强度绑 `data.intensity`，
+ *   `data.scale` 放大整片半径与粒子尺寸。
  * 持续状态：持壳期低密度、贴身，放在体表与脚边，玩家仍看得清目标。
  */
 const ShelterDefinition: ParticleDefinition = {
@@ -151,3 +153,28 @@ const ShelterDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_shelter", 1, ShelterDefinition);
+
+// 壳板：固定 6–8 块围着身体排一圈，每块代表初始承伤额度的一份；`data.left` 是还剩几块，
+// 每吃下一份就少画一块（逐块熄灭），容量归零时一块不剩。绑定在承伤池效果上，随它存续、随它收。
+WorldCombatClient.scene("world_combat:move_shelter_shell", 1, function (frame) {
+    const entry: CombatSceneEntry<{ plates: number; left: number; radius: number; scale: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data;
+    const plates = Math.max(1, Math.round(data.plates || 1));
+    const left = Math.max(0, Math.min(plates, Math.round(data.left == null ? plates : data.left)));
+    let x = entry.position[0], y = entry.position[1], z = entry.position[2], height = 1.4;
+    const anchor = JSON.parse(frame.anchor(entry.source));
+    if (anchor) { x = anchor.x; y = anchor.y; z = anchor.z; height = Math.max(0.6, anchor.height); }
+    const radius = Math.max(0.35, data.radius || (data.scale || 1) * 1.2);
+    const size = Math.max(0.014, Math.min(0.05, 0.02 * (data.scale || 1)));
+    for (let i = 0; i < left; i++) {
+        const angle = (i / plates) * Math.PI * 2;
+        const px = x + Math.cos(angle) * radius;
+        const pz = z + Math.sin(angle) * radius;
+        const py = y + height * (0.35 + 0.35 * (i % 2));
+        frame.billboard(px, py, pz, size, function (surface) {
+            surface.fill(-7, -9, 14, 18, 0xF09BB0C9);
+            surface.fill(-9, -11, 18, 3, 0xF0E4EDF7);
+        });
+    }
+});

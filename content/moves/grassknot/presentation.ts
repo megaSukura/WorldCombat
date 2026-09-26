@@ -40,28 +40,28 @@ const GrassKnotDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "patch_edge", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "patch_edge", bind: "point", fit: "none", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     rate: 8, shape: { kind: "ring", radius: 2.4 },
-                    direction: "inward", speed: [0.0, 0.02],
+                    direction: "inward", speed: [0.0, 0.01],
                     lifetime: [12, 20], size: [0.42, 0.7], sizeMode: "sin",
                     color: 0x6FA34A, alpha: [0.45, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "sprout_burst", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "sprout_burst", bind: "point", fit: "none", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/sprout",
                     burst: { count: 22, at: 1 },
                     shape: { kind: "ring", radius: 2.2 },
-                    direction: "up", speed: [0.06, 0.2],
+                    direction: "up", speed: [0.03, 0.1],
                     gravity: 0.03, drag: 0.95,
                     lifetime: [12, 22], size: [0.16, 0.02], sizeMode: "index",
                     color: 0x8CC63F, alpha: [0.85, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "patch_seeds", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "patch_seeds", bind: "point", fit: "none", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/seed",
                     rate: 24, shape: { kind: "circle", radius: 2.3 },
-                    direction: "outward", speed: [0.02, 0.08],
+                    direction: "outward", speed: [0.01, 0.05],
                     gravity: 0.04, drag: 0.94,
                     lifetime: [10, 18], size: [0.07, 0.01],
                     color: 0x5A7A34, alpha: [0.4, 0], light: "world", maxParticles: 80

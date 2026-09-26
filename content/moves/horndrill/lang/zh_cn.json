@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.horndrill.summary": "蹲身把角高速旋转成钻头，沿一条直线钻出去——线路上第一个挡路的活体被钻尖贯穿、一次结清（一击必杀）。它是这一族里唯一会位移的一记：让开这条线，或者躲到墙后，钻头就只能扎进地里。",
-  "worldcombat.skill.horndrill.description.0": "沿直线钻出 %1$s 格，钻头判定半径 %2$s 格；线路上被钻到的第一个敌人被一次结清，钻头随即停下，友方会被直接穿过。对手防御、护甲与韧性都不参与，只有属性免疫能挡；被免疫挡下时钻头也就此停住。",
+  "worldcombat.skill.horndrill.description.0": "沿直线钻出 %1$s 格，钻头判定半径 %2$s 格；首次实际碰到敌人就结算一次处决伤害并停止。 原生免疫和伤害规则仍生效。",
   "worldcombat.skill.horndrill.description.1": "从锁定钻路到冲出去有 %1$s 秒起钻蓄势；施放者等级每压过对手 1 级就缩短一点，被对手压级时则更长，对手得在这段时间里让开这条线。",
   "worldcombat.skill.horndrill.description.2": "冲速 %1$s 格/刻；撞墙、钻到尽头或钻中目标都会停下。",
   "worldcombat.skill.horndrill.wide.on": "扩钻式：钻头判定 ×1.35，但冲程更短、蓄势更慢、收招更久——更慢更好躲，但不在正中也会被扫到。",
@@ -27,5 +27,6 @@
   "worldcombat.skill.horndrill.preference.ai.executionAbove": "残血留手阈值",
   "worldcombat.skill.horndrill.preference.ai.executionAbove.help": "目标生命比例低于这个值时，不再把一击必杀浪费在它身上；调大只在目标还很健康时出手。",
   "world_combat.move.horndrill.text.kill": "钻穿",
-  "world_combat.move.horndrill.text.miss": "钻头扎空"
+  "world_combat.move.horndrill.text.miss": "钻头扎空",
+  "world_combat.move.horndrill.text.resisted": "对手撑住了"
 }

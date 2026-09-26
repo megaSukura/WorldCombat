@@ -3,8 +3,8 @@
  *
  * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase` 以内；自己不在坐骑上；目标身上还没有
  * `partiallytrapped`（已经卷着再放是浪费）。它是一处区域控制：适合先手拴住想跑的目标，或把近战目标拖在圈里。
- * 对谁出手：`ai.preferMovers` 开启时只对正在移动或逃跑的威胁出手（用它的位移换对手的机动性）；关闭时对
- * 任何范围内的威胁都愿意放。焦点目标另加一档。
+ * 对谁出手：贴地移动的目标优先（水流从脚下起，地面单位最能被绕住）；`ai.preferMovers` 开启时只对正在移动或
+ * 逃跑的威胁出手（用它的位移换对手的机动性）；关闭时对任何范围内的威胁都愿意放。焦点目标另加一档。
  * 够不到怎么办：交给共享接近逻辑把身位收到射程内。
  * 放完之后：交回共享交战计划；目标仍带着水流时不再重复。
  */
@@ -40,6 +40,7 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !whirlpoolWants(context, capability, target)) return 0;
             let base = 14;
+            if (target.grounded) base += 8;
             if (whirlpoolMoving(target)) base += 10;
             if (CompanionBehavior.fleeing(context, target)) base += 20;
             if (context.facts.focus === target.ref) base += 16;
@@ -56,7 +57,7 @@ namespace PokemonSkills {
             help: "威胁离自己这么远以内才考虑潮旋；调小只在近处卷水，调大愿意从更远处先手拴住目标。"
         }),
         field(pathOf("ai.preferMovers"), "只卷移动目标", "boolean", {
-            help: "开启：只对正在移动或逃跑的威胁卷水，优先剥夺对手的机动性；关闭：对任何范围内的威胁都愿意卷。"
+            help: "开启：只对正在移动或逃跑的威胁卷水，优先剥夺对手的机动性；关闭：对任何范围内的威胁都愿意卷。贴地移动的目标本就会优先。"
         })
     ]);
 }

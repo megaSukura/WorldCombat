@@ -5,21 +5,22 @@
  *   self boosts { spa: -2 }，无次要效果；target normal（单体）。已实装学习者 96 位。
  *   描述「使出全部力量攻击对手。使用之后会因为反作用力，自己的特攻大幅降低」。
  *
- * 翻译：把「一次把全部力量排出去」翻成即时战斗里**一次排空全身热量**——热浪在身前铺开一张扇形，
- *   沿准线扫过去，站在扇面里的人一起挨烧，落点地上留下一片焦痕。反作用力就是特攻掉 2 级，提交那一刻就付：
- *   热量排空的同时精神力也被抽走。过载式压得更满，威力更高，但自身特攻掉 3 级。
+ * 核心念头：**一次排空全身的热量**——把热量逼到身前压成一张扇形热浪沿固定准线推出去，越靠近术者的目标吃得越足
+ *   （内层满额、外层打折）并可能被点燃；落点只留下一阵短热尘，不改动地面。热量排空的同时精神力也被抽走，
+ *   自身特攻掉 2 级（过载式掉 3 级）。
  *
- * 与同族分开：飞叶风暴是旋转前进并留场的叶刃、流星群是从头顶砸下的陨石群、精神突进是隔空内爆；
- *   过热是唯一**身前一张同时罩住几人的扇形热浪**，也是唯一在过载式下比原生多掉一级特攻的那记。
+ * 与同族分开：飞叶风暴是旋转前进并沿路旋切的叶刃、流星群是从头顶砸下的陨石群、精神突进是隔空内爆；
+ *   过热是唯一**身前一张同时罩住几人、按内外层分伤**的扇形热浪。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   heat        威力：特攻给温、体重给热容、等级拾级；过载式更足。
  *   cone        扇面张角：体型（宽）决定热浪铺多开。
+ *   inner       内层占比：特攻决定满额区推进多远。
  *   gust        热浪推进速度：速度决定风口多快。
  *   reach       射程：特攻给送出的距离、速度给起步。
- *   share       扇内次要目标保留：特攻决定烧得均匀与否。
- *   scorch      灼痕半径：特攻决定烧得多开。
- *   scorchTicks 灼痕时长：等级与特攻决定焦地留多久。
+ *   share       外层保留：特攻决定外层烧得均匀与否。
+ *   scorch      热尘半径：特攻决定余热铺得多开。
+ *   scorchTicks 热尘时长：等级与特攻决定余热留多久。
  *   burnChance  点燃概率：特攻与等级决定。
  *   embers      火星数：特攻派生，驱动画面里的火星与火团。
  *   insightLoss 自身特攻下降级：原生 2 级，过载式 3 级。
@@ -54,6 +55,10 @@ namespace PokemonSkills {
                 unit: "度",
                 description: "热浪在身前铺开多宽；体型越宽的个体风口越开。画面里那张扇面就是这个角度。"
             }),
+        /** 内层占比：基础 0.5；特攻每比 60 多 1 加 0.002（夹 −0.05..0.12）；夹 0.35..0.7。 */
+        inner: percent(
+            F.base(0.5).plus(F.stat("specialAttack").minus(60).times(0.002).clamp(-0.05, 0.12)).clamp(0.35, 0.7).round(2),
+            "内层占比", "扇面里吃满威力的一段占射程的比例；特攻越高满额区推得越远，扇内越靠外的敌人越吃亏。"),
         /** 推进速度：基础 1.25 格/刻；速度每比 55 快 1 加 0.008（夹 −0.2..0.5）；夹 0.9..1.9。 */
         gust: formula(
             F.base(1.25).plus(F.stat("speed").minus(55).times(0.008).clamp(-0.2, 0.5)).clamp(0.9, 1.9).round(2),
@@ -75,17 +80,17 @@ namespace PokemonSkills {
         share: percent(
             F.base(0.5).minus(F.stat("specialAttack").minus(60).times(0.002).clamp(-0.15, 0.2)).clamp(0.25, 0.75).round(2),
             "扇内保留", "同被扇面烧到的其他目标保留多少威力；特攻越高烧得越均匀。"),
-        /** 灼痕半径：基础 1.1 格；特攻每比 60 多 1 加 0.006（夹 0..0.7）；夹 0.8..2.2。 */
+        /** 热尘半径：基础 1.1 格；特攻每比 60 多 1 加 0.006（夹 0..0.7）；夹 0.8..2.2。 */
         scorch: formula(
             F.base(1.1).plus(F.stat("specialAttack").minus(60).times(0.006).clamp(0, 0.7)).clamp(0.8, 2.2).round(2),
-            "灼痕半径", {
+            "热尘半径", {
                 unit: "格",
-                description: "热浪在落点烧焦的地面有多大；特攻越高烧得越开。画面里那块焦地就是这个半径。"
+                description: "热浪过后余热在地面铺开的范围；特攻越高铺得越开。画面里那圈上升的热尘就是这个半径，只留一阵，不改地面。"
             }),
-        /** 灼痕时长：基础 90 刻；等级每比 20 高 1 加 0.8（夹 0..50）；夹 70..180。 */
+        /** 热尘时长：基础 50 刻；等级每比 20 高 1 加 0.4（夹 0..20）；夹 40..90。 */
         scorchTicks: seconds(
-            F.base(90).plus(F.level().minus(20).times(0.8).clamp(0, 50)).clamp(70, 180).round(0),
-            "灼痕时长", "落点焦地留多久；等级越高留得越久。到时原方块回来。"),
+            F.base(50).plus(F.level().minus(20).times(0.4).clamp(0, 20)).clamp(40, 90).round(0),
+            "热尘时长", "余热热尘留多久；等级越高飘得越久。到时自然散去。"),
         /** 点燃概率：基础 10%；特攻每比 60 多 1 加 0.0015（夹 −0.04..0.10）；夹 5%..25%。 */
         burnChance: percent(
             F.base(0.10).plus(F.stat("specialAttack").minus(60).times(0.0015).clamp(-0.04, 0.10)).clamp(0.05, 0.25).round(3),
@@ -132,8 +137,8 @@ namespace PokemonSkills {
 
     describe("overheat", [
         { key: "description.0", values: ["heat"] },
-        { key: "description.1", values: ["cone","reach","gust","share"] },
-        { key: "description.2", values: ["burnChance","scorch","scorchTicks"] },
+        { key: "description.1", values: ["cone","reach","gust","inner","share"] },
+        { key: "description.2", values: ["burnChance"] },
         { key: "description.3", values: ["insightLoss"] },
         { key: "vent.on", values: [], when: function (context) { return read(context.detail.values, ["vent"]) === true; } },
         { key: "vent.off", values: [], when: function (context) { return read(context.detail.values, ["vent"]) !== true; } },

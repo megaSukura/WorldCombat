@@ -33,5 +33,5 @@
   "world_combat.move.powertrip.text.hit": "嚣张冲撞（%1$s）",
   "world_combat.move.powertrip.text.through": "气势穿堂（第 %1$s 人）",
   "world_combat.move.powertrip.text.miss": "冲势落空",
-  "worldcombat.skill.powertrip.world": "自身攻、防、特攻、特防、速度的正面等级，以及药水、信标等增益都计入强化；增益I级计1层。"
+  "worldcombat.skill.powertrip.world": "自身攻、防、特攻、特防、速度、命中、闪避七项的正面等级，以及真正带行为的药水、信标等增益都计入强化；增益I级计1层，只借身份的载体不计。"
 }

@@ -6,7 +6,7 @@
  *
  * 翻译：即时战斗没有回合，本实现把「上一回合招式没有打中」落成**一次真实的失手**——施法者上一次
  *   进攻出手没打出伤害时，身上会留下「憋愤」状态（共享身份 world_combat:status/stompingtantrum）；
- *   带着这口气再跺脚，这一脚威力翻倍、裂缝更长、把人掀得更高。任何命中都会把这口气消掉。
+ *   带着这口气再跺脚，这一脚威力翻倍、裂缝更深更响。任何命中都会把这口气消掉。
  *   记为事件：world_combat:committed 记下一次出手，world_combat:damage_applied 记下它有没有打中。
  *
  * 数据分散（每项读不同的精灵数据）：
@@ -16,8 +16,7 @@
  *   launch    上抛初速：物攻与体重（越沉越能把人掀起来）。
  *   shove     向外推开：物攻。
  *   flows     裂缝颗粒数：物攻与等级，直接驱动画面密度。
- *   shock     憋愤时末端二次崩塌的半径：身高。
- *   rentTicks／rentCells 地面裂痕停留多久、铺多少块：等级与物攻。
+ *   rentTicks／rentCells 缝上浮尘停留多久、铺多少点：等级与物攻。
  *   tempo／settle／recharge 速度决定起手、收招、冷却。
  *
  * 配置 deep（深跺）：裂缝更宽 ×1.25、上抛 ×1.15、裂痕更久 ×1.3，但威力 ×0.92、裂缝略短 ×0.95、
@@ -109,24 +108,17 @@ namespace PokemonSkills {
                 unit: "个",
                 description: "沿裂缝迸出的土石数量；物攻与等级越高越密，直接驱动画面的发射量。"
             }),
-        /** 末端崩塌半径：基础 1.3 格，碰撞箱每比 1.4 高 1 格加 0.4（夹 −0.1..0.8）；夹 1.0..2.4。 */
-        shock: formula(
-            F.base(1.3).plus(F.body("height").minus(1.4).times(0.4).clamp(-0.1, 0.8)).clamp(1.0, 2.4).round(2),
-            "末端崩塌半径", {
-                unit: "格",
-                description: "带着憋愤跺下时，裂缝尽头二次崩塌的范围；大个子跺出的坑更大。"
-            }),
-        /** 裂痕停留：基础 120 刻 + 等级 ×0.8；深跺 ×1.3；夹 80..300。 */
+        /** 缝上浮尘停留：基础 120 刻 + 等级 ×0.8；深跺 ×1.3；夹 80..300。 */
         rentTicks: seconds(
             F.base(120).plus(F.level().times(0.8))
                 .times(F.when(F.pref("deep"), F.const(1.3), F.const(1))).clamp(80, 300).round(0),
-            "裂痕停留", "跺开的地面留在地上的裂痕停留多久；到期原方块回来。"),
-        /** 裂痕块数：基础 18 + 物攻 ×0.2；夹 14..48。同时驱动表现密度。 */
+            "裂痕停留", "跺开后缝上浮尘停留多久；到期自然散去。"),
+        /** 缝上点位数：基础 18 + 物攻 ×0.2；夹 14..48。同时驱动表现密度。 */
         rentCells: formula(
             F.base(18).plus(F.stat("attack").times(0.2)).clamp(14, 48).round(0),
-            "裂痕块数", {
-                unit: "块",
-                description: "地面被跺裂的块数；随物攻增长，也决定画面的密度。"
+            "裂痕点数", {
+                unit: "点",
+                description: "沿裂缝铺开的浮尘与碎屑点数；随物攻增长，也决定画面的密度。"
             }),
         /** 起手：基础 9 刻，速度每比 55 快 1 减 0.03 刻（夹 −1.5..3），深跺 +3；夹 5..16。 */
         tempo: seconds(
@@ -153,7 +145,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["tremor"] },
         { key: "description.rage", values: [] },
         { key: "description.1", values: ["fissure", "halfWidth", "launch", "shove"] },
-        { key: "description.2", values: ["rentTicks", "rentCells"] },
+        { key: "description.2", values: [] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
@@ -162,11 +154,13 @@ namespace PokemonSkills {
     ]);
 
     // ---- 记账：把「上一次出手落空」落成身上的 reality（憋愤）----
-    // 每一次进攻出手（targetKind = enemy）提交时，看上一次进攻出手到这一刻有没有打出过伤害；
+    // 每一次进攻出手（kind = enemy 或 aim）提交时，看上一次进攻出手到这一刻有没有打出过伤害；
     // 没有则说明上一招打空了，施加/续上共享身份。任何命中都会消掉这口气，不靠回合。
     WorldCombat.on("world_combat:stompingtantrum/swing", "world_combat:committed", "", function (event) {
         const action = event.action();
-        if (action === null || action.targetKind() !== "enemy") return;
+        if (action === null) return;
+        const kind = action.targetKind();
+        if (kind !== "enemy" && kind !== "aim") return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor) || world.observe(actor) === null) return;
         const ref = String(actor.ref()), now = world.tick(), previous = stompSwings[ref];

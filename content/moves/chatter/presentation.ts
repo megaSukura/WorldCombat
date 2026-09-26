@@ -3,12 +3,14 @@
  *
  * 一句话：鸟把一串尖锐的颤音压到身前张开的扇面上 → 扇面里泛起一层乱窜的音符与风纹，一下接一下 →
  *   被叫到的人头顶炸开一团晕眩鸟与问号，之后一直有鸟在头顶打转。
- * 色相家族：飞行系的淡蓝（0xA9C7E8）打底，混乱的紫（0x8A7CE8 / 0xEDE9FF）只出现在击点与晕眩层——
+ * 色相家族：飞行系的淡蓝（0xA9C7E8）打底，混乱的紫（0x8A7CE8 / 0xEDE9FF）只出现在击点与乱拍——
  *   一个效果两家色：蓝是声音本身，紫是脑子乱掉的结果。
- * 拍子：起 gather（聚颤音）→ 叫 screech（每一声一张扇面，多声叠出密度）→ 击 scramble（头顶炸开）→ 收 linger（鸟绕头）。
+ * 拍子：起 gather（聚颤音）→ 叫 screech（每一声一张扇面，多声叠出密度）→ 击 scramble（叫到的那一下就炸开一次）→
+ *   乱拍 fumble（真的打中别人被反噬时再画一次，不全程挂鸟）。
  * 范围：screech 用与判定同一组 `data.path` 顶点填出扇面，玩家一眼看出站在哪块扇形里会被叫到。
  * 运动：声纹从施法者口边沿 `data.direction` 向扇面外冲；喂进去的音符与风纹朝同方向散开。
- * 数：每一声的发射量绑定 `data.screech`（音数，特攻与等级换算），`data.index`／`data.bursts` 让玩家数得出第几声。
+ * 数：每一声的发射量绑定 `data.screech`（音数，特攻与等级换算），`data.index`／`data.bursts` 让玩家数得出第几声，
+ *   `data.spin` 让相邻两串的声环反向旋开，音节分得清。
  */
 const ChatterDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -70,7 +72,7 @@ const ChatterDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: 0.3 },
-                    direction: "outward", speed: [0.05, 0.16],
+                    direction: "outward", speed: [0.05, 0.16], spin: { data: "spin", fallback: 8 },
                     lifetime: [8, 14], size: [0.24, 0.6],
                     color: 0x8A7CE8, alpha: [0.5, 0], light: "full", maxParticles: 6
                 }
@@ -121,20 +123,6 @@ const ChatterDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0x8A7CE8, alpha: [0.9, 0], light: "full", maxParticles: 20
-                }
-            ]
-        },
-        linger: {
-            duration: { data: "tick", fallback: 60 },
-            exit: { drain: 20 },
-            emitters: [
-                {
-                    name: "linger_birds", bind: "target", offset: [0, 0.45, 0], height: 0.8,
-                    particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
-                    rate: 2, shape: { kind: "ring", radius: 0.34 },
-                    direction: "up", speed: [0.01, 0.03], spin: 4,
-                    lifetime: [16, 26], size: [0.08, 0.01], sizeMode: "sin",
-                    color: 0x8A7CE8, alpha: [0.45, 0], light: "full", maxParticles: 10
                 }
             ]
         }

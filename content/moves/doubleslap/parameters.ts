@@ -33,6 +33,7 @@ namespace PokemonSkills {
     export const doubleslapTallyText = "world_combat.move.doubleslap.text.tally";
     export const doubleslapMissText = "world_combat.move.doubleslap.text.miss";
     export const doubleslapAwayText = "world_combat.move.doubleslap.text.away";
+    export const doubleslapEmptyText = "world_combat.move.doubleslap.text.empty";
 
     actionParameters.define(doubleslapId, {
         /** 单掌威力：15 + 物攻偏移[−4,15]×0.16 + 等级(≥25)偏移[0,8]×0.3；交叉 ×0.85 / 直抽 ×1.2；夹 8..32。 */

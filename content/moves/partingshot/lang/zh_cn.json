@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.partingshot.summary": "朝对手甩下一句带刺的狠话：话飞过去扎中后，把对手的攻击与特攻各削几级、挂上羞辱身份，自己趁机退开。话没送到就不退。",
+  "worldcombat.skill.partingshot.summary": "朝瞄准方向甩下一句带刺的狠话，首碰为准：话扎中对手后把它的攻击与特攻各削几级、挂上羞辱身份，然后有后备队友就换手、没后备就逐刻退开。话没送到既不削也不退。",
   "worldcombat.skill.partingshot.use.0": "把对手的输出削下去再脱身",
   "worldcombat.skill.partingshot.use.1": "在自己要撤时顺手废掉追兵的手",
   "worldcombat.skill.partingshot.use.2": "先射一句狠话再拉开距离",
   "worldcombat.skill.partingshot.description.0": "扎中对手后，它的攻击与特攻各降低 %1$s 级，并带上 %2$s 的羞辱身份；削级会一直留到这场战斗结束或被能力重置，羞辱身份存续期间伙伴不会再对它甩狠话，也能被清除有害效果的手段驱散。",
   "worldcombat.skill.partingshot.description.1": "话声射程 %1$s 格、飞行速度 %2$s 格/刻；扎中后自己背离对手退开最多 %3$s 格，话没扎到就既不削级也不退开。",
+  "worldcombat.skill.partingshot.description.2": "扎中后的收场：有合法后备队友在待命时，直接在落点与它换手；没有后备就沿背离对手的方向逐刻后退最多 %1$s 格，撞到墙就停。",
   "worldcombat.skill.partingshot.venom.on": "毒舌：稳稳削 2 级、羞辱更久 ×1.3，代价是射程 ×0.85、飞行 ×0.8（更慢更容易躲）、冷却 +14。",
   "worldcombat.skill.partingshot.venom.off": "快嘴：射程 ×1.1、飞行 ×1.1、冷却 −6，毒劲只按特攻走。",
   "worldcombat.skill.partingshot.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
@@ -29,5 +30,6 @@
   "worldcombat.skill.partingshot.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去甩话。",
   "world_combat.move.partingshot.text.barb": "羞辱 · 攻特攻 −%1$s",
   "world_combat.move.partingshot.text.whiff": "狠话落空",
+  "world_combat.move.partingshot.text.switch": "换手",
   "effect.world_combat.parting_shot": "被抛下狠话"
 }

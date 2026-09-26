@@ -91,7 +91,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(focuspunchId, "punch"), contact: true, punch: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, focuspunchScene, 1, hit.position(),
                             { moment: "strike", target: String(victim.ref()), count: count, scale: radius / 0.5,

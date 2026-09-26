@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.milkdrink.summary": "The user tips its head back for several deep gulps: the heal arrives in portions for about half of maximum health, and the last gulp washes away poison. It can keep moving while drinking, but every gulp costs a few breaths.",
+  "worldcombat.skill.milkdrink.summary": "The user tips its head back for several deep gulps: the heal arrives in portions for about half of maximum health, and the last gulp washes away poison. It can keep moving while drinking, but every gulp costs a few breaths; an unfinished drink (cancelled or interrupted) keeps only what was already drunk and never cures early.",
   "worldcombat.skill.milkdrink.use.0": "Take the heal in several gulps",
   "worldcombat.skill.milkdrink.use.1": "Wash off poison along the way",
   "worldcombat.skill.milkdrink.use.2": "Worth using even at full health while poisoned",
@@ -21,8 +21,10 @@
   "worldcombat.skill.milkdrink.preference.warm.help": "On (warm): +0.05 healing and a 1.3x gulp interval (drunk slowly), at 1.08x cooldown. Off (chilled): -0.03 healing, a 0.8x gulp interval and 0.94x cooldown.",
   "worldcombat.skill.milkdrink.preference.ai.healBelow": "Drink below",
   "worldcombat.skill.milkdrink.preference.ai.healBelow.help": "The companion drinks below this health ratio; lower endures longer, higher drinks at the first wound. Poison overrides this threshold.",
+  "worldcombat.skill.milkdrink.preference.ai.safeDistance": "Safe distance",
+  "worldcombat.skill.milkdrink.preference.ai.safeDistance.help": "A visible enemy inside this distance, or attacking the companion, stops it from starting a drink (poison or health under half the threshold ignores this); larger retreats further, smaller drinks amid the fight.",
   "world_combat.move.milkdrink.text.drink": "Drinks deeply",
   "world_combat.move.milkdrink.text.clean": "The poison is washed away",
   "world_combat.move.milkdrink.text.quenched": "Quenched and refreshed",
-  "worldcombat.skill.milkdrink.description.1": "Each gulp only restores what is missing at that moment, so starting near full health yields less than the listed total; it can only be used while you are missing health or poisoned."
+  "worldcombat.skill.milkdrink.description.1": "Each gulp only restores what is missing at that moment, so starting near full health yields less than the listed total; poison is washed away only when the last gulp is truly finished (cancelling or being interrupted keeps the drunk part and never cures early). It can be used while missing health or poisoned, and at full health while poisoned it still drinks through to the cure."
 }

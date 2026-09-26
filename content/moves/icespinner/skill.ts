@@ -6,10 +6,12 @@
  *
  * 三幕（提交前只播预告）：
  *   起（windup）：脚下结冰、身体加速旋转，只播预告。
- *   旋（execute）：提交后贴地旋转着朝目标方向冲 `reach` 格；先刮掉路径周围 `sweep` 半径内的所有场地，
- *       再在冲过的地面铺一圈冰面；撞上首个敌人即按 `spin` 结算接触伤害并把它顶开；冲完或受阻则收势。
- *   定（execute 尾）：旋转收势、站稳（skid）。
+ *   旋（execute）：提交后贴地旋转着朝瞄准方向冲 `reach` 格——可以朝地面上的一个点划过场地，不要求有敌人；
+ *       先刮掉路径周围 `sweep` 半径内的所有场地，再在冲过的地面铺一圈冰面；撞上首个敌人即按 `spin` 结算
+ *       接触伤害并把它顶开；冲完或受阻则收势。
+ *   定（execute 尾）：旋转收势、站稳（skid，只在已经走过的末端）。
  *
+ * 选取：`kind: "aim"`——方向或世界点都能放；`execute` 用 `aim(action)` 读取方向，不因没有目标而提前结束。
  * 与同族分开：疾速转轮是旋转冲撞后**自己减速**的火系招，铁滚轮是**吃场地**、没有场地就不成立；
  *   冰旋是唯一边冲边**刮掉场地**、并在地面留下冰面的冰系旋转招。配置 `slick` 由公式改冲距／冲速／威力／冰面。
  */
@@ -66,7 +68,7 @@ namespace PokemonSkills {
         name: "Ice Spinner",
         description: "脚上结起薄冰，旋转着撞进目标：沿途把场地整片刮掉，冲过的地面留下一圈会滑、会化掉的冰面，命中按接触结算冰系伤害并把目标顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
         uses: ["压进一个贴地的目标并把它顶开", "把对手依赖的场地一次刮掉", "在冲过的地面留下一圈临时冰面"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.2,
         maxRange: 5.4,
         prepare: 9,
@@ -154,7 +156,7 @@ namespace PokemonSkills {
                             scale: scale, intensity: intensity, cleared: cleared }, 28);
                     if (landed && victim !== null && scope.valid(victim)) {
                         sound(current, "cobblemon:impact.ice");
-                        scope.displace(victim, direction.scale(push));
+                        scope.hitDisplace(victim, direction.scale(push));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), icespinnerHitText, [], 24);
                         finish(current, true, point);
                     } else {
@@ -164,7 +166,7 @@ namespace PokemonSkills {
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                movementScenes.show(current, "spin", here, { moment: "spin", direction: [direction.x(), 0, direction.z()], shards: shards, scale: scale, intensity: intensity });
+                movementScenes.show(current, "spin", here, { moment: "spin", direction: [direction.x(), 0, direction.z()], shards: shards, scale: scale, intensity: intensity, cleared: cleared });
                 if (hit.blocked() || moved < 0.05 || travelled >= length) { finish(current, false, current.origin()); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }

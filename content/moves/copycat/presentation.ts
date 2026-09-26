@@ -42,6 +42,15 @@ const copycatDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 22 },
             emitters: [
                 {
+                    name: "replay_thread", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/thought_trail_small",
+                    rate: { data: "echoes", fallback: 6 }, trail: { minDistance: 0.25 },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.14, 0.3],
+                    lifetime: [8, 14], size: [0.12, 0.02],
+                    color: 0x9FE8DC, alpha: [0.85, 0], light: "full", maxParticles: 80
+                },
+                {
                     name: "replay_shell", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/accentorb",
                     burst: { count: { data: "echoes", fallback: 6 } },
@@ -91,6 +100,31 @@ const copycatDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [16, 22], size: [0.26, 0.08], sizeMode: "sin",
                     color: 0x8FA6B0, alpha: [0.8, 0], light: "full", maxParticles: 4
+                }
+            ]
+        },
+        // 借到了那一手，但这次瞄准没给出它需要的目标：来源的影子在身前打转又散，提示“还差一个目标”。
+        aimless: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "aimless_ring", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 10, interval: 5, repeats: 2 },
+                    shape: { kind: "ring", radius: 0.45 },
+                    direction: "inward", speed: [0.12, 0.24],
+                    lifetime: [10, 16], size: [0.16, 0.03],
+                    color: 0x8FA6B0, alpha: [0.6, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "aimless_mark", bind: "source", offset: [0, 1.0, 0], height: 0.8,
+                    particle: "world_combat_core:cobblemon/generic/question",
+                    burst: { count: 2 },
+                    shape: { kind: "point" },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [16, 22], size: [0.24, 0.08], sizeMode: "sin",
+                    color: 0x9FE8DC, alpha: [0.8, 0], light: "full", maxParticles: 4
                 }
             ]
         }

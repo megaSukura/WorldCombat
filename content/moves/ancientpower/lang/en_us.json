@@ -5,7 +5,7 @@
   "worldcombat.skill.ancientpower.use.2": "Attack during the temporary five-stat surge",
   "worldcombat.skill.ancientpower.description.0": "Primal power bursts out from the user: every foe within %2$s blocks takes about %1$s special damage, once each.",
   "worldcombat.skill.ancientpower.description.1": "Caught foes are pushed about %1$s blocks away from the centre and lifted about %2$s blocks up; terrain and collisions can shorten that.",
-  "worldcombat.skill.ancientpower.description.2": "If at least one foe is hit, there is a %1$s chance to raise the user's Attack, Defence, Special Attack, Special Defence and Speed by %2$s for %3$s; another trigger resets the clock and keeps a single layer.",
+  "worldcombat.skill.ancientpower.description.2": "If at least one foe is hit, there is a %1$s chance to raise the user's Attack, Defence, Special Attack, Special Defence and Speed by %2$s for %3$s; another trigger resets the clock and keeps a single layer. Stats already at their cap are not stacked, and the feedback shows only what truly rose.",
   "worldcombat.skill.ancientpower.description.3": "The blast reaches about %1$s blocks above and below, catching airborne targets too. Deep-source form narrows the radius but raises damage and surge chance at the cost of a longer wind-up and cooldown; wide form covers more ground, shoves farther and casts faster.",
   "worldcombat.skill.ancientpower.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.ancientpower.growth.0": "From level %1$s the power rises to %2$s and the radius to %3$s blocks.",
@@ -27,7 +27,7 @@
   "worldcombat.skill.ancientpower.preference.ai.maxChase.help": "The companion only considers ancient power within this distance; smaller casts it only at point-blank, larger is willing to close in first.",
   "worldcombat.skill.ancientpower.preference.ai.minFoes": "Foes in ring",
   "worldcombat.skill.ancientpower.preference.ai.minFoes.help": "Cast only when at least this many visible, hostile foes stand within the considered distance; set it to 1 to blast the first foe (building the surge over time), higher keeps it for when surrounded.",
-  "world_combat.move.ancientpower.text.surge": "Five stats +%1$s (%2$s s)",
+  "world_combat.move.ancientpower.text.surge": "Surge: %1$s stat(s) +%2$s (%3$s s)",
   "world_combat.move.ancientpower.text.hit": "Ancient power blasted %1$s foe(s)",
   "world_combat.move.ancientpower.text.miss": "The primal power falls flat",
   "worldcombat.skill.ancientpower.value.surgeTicks": "Surge duration"

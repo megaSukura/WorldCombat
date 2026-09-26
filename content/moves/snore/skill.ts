@@ -6,11 +6,12 @@
  *
  * 两幕（回响开启时是同一幕连演两次）：
  *   起（windup，提交前）：翻身、口鼻边聚起一圈睡泡的预告。
- *   鼾（blast → hit/miss）：提交后从口鼻朝目标喷出一道声波；命中一震并掷一次畏缩，落空就散在空气里。
- *       回响开启时，隔 `gap` 刻再喷一声。
+ *   鼾（blast → hit/miss）：提交后从口鼻朝选定的方向喷出一道声波；判定止于实际接触的第一具身体或墙面，
+ *       声线也只画到那里。命中一震并掷一次畏缩，落空就散在接触点空气中。回响开启时，隔 `gap` 刻再喷一声；
+ *       这期间若施法者已经醒来，第二声不再凭空响起，首声的结算保留。
  *
  * 与同族的区分：吵闹是以醒着的自己为圆心、连喊数圈、阻止周围人入睡的持续声浪；
- * 打鼾是睡着时朝一个目标喷出的当场鼾声，只有一响或两响，直接把对手震懵。
+ * 打鼾是睡着时朝一个方向喷出的当场鼾声，只有一响或两响，直接把对手震懵。
  *
  * 畏缩：施加本单元声明的 MobEffect（共享身份 `world_combat:status/flinch`）并投递
  * `world_combat:interrupt`；全局起手门禁在窗口内拒绝新动作，伤害阶段不受影响。
@@ -34,7 +35,7 @@ namespace PokemonSkills {
         name: "Snore",
         description: "只能在睡觉时使用：朝目标喷出一声鼾，造成特殊伤害并可能把它震懵；开启回响会连喷两声，每声更轻。睡得越沉，鼾声越响、送得越远。",
         uses: ["睡眠中被打时的还手", "把近身的目标震懵，给自己争取醒来的空档", "用回响连掷两次畏缩"],
-        kind: "enemy",
+        kind: "aim",
         range: 9,
         maxRange: 16,
         prepare: 8,
@@ -87,6 +88,8 @@ namespace PokemonSkills {
 
             function burst(current: CombatAction, index: number): void {
                 const scope = current.world();
+                // 回响的第二声要以仍在睡眠为前提：中途被伤害唤醒就到此为止，首声的结算保留。
+                if (index > 0 && (!scope.valid(current.actor()) || !CombatStatus.behaves(scope, current.actor(), "sleep"))) { finish(current); return; }
                 const body = scope.observe(current.actor());
                 const mouth = (body === null ? current.origin() : body.position()).plus(WorldCombat.point(0, 0.4, 0));
                 let direction = aim(current);
@@ -100,8 +103,10 @@ namespace PokemonSkills {
                 }
                 const end = mouth.plus(direction.scale(span));
                 const hit = current.trace(mouth, end, radius);
+                // 声线止于实际接触：撞到身体或方块都用命中点，未接触时才到射程尽头。
+                const stop = hit.position();
                 WorldFeedback.emit(scope, snoreScene, 1, mouth,
-                    { moment: "blast", path: [[mouth.x(), mouth.y(), mouth.z()], [end.x(), end.y(), end.z()]],
+                    { moment: "blast", path: [[mouth.x(), mouth.y(), mouth.z()], [stop.x(), stop.y(), stop.z()]],
                         direction: [direction.x(), direction.y(), direction.z()], rings: rings, count: count, scale: scale, intensity: intensity, echo: index }, 18);
                 if (hit.hitEntity()) {
                     const victim = hit.target();
@@ -117,7 +122,7 @@ namespace PokemonSkills {
                     }
                     sound(current, "cobblemon:impact.normal");
                 } else {
-                    WorldFeedback.emit(scope, snoreScene, 1, end, { moment: "miss", scale: scale }, 16);
+                    WorldFeedback.emit(scope, snoreScene, 1, stop, { moment: "miss", scale: scale }, 16);
                 }
                 fired++;
                 if (fired >= echoes) {

@@ -86,12 +86,29 @@ namespace PokemonSkills {
                 var selection = preferred.length ? NativeLoadout.select(current, preferred, pick) : null;
                 if (!selection && preferred.length !== ids.length) selection = NativeLoadout.select(current, ids, pick);
                 if (!selection) { current.reject("no-move"); return; }
-                current.present("metronome:draw", "world_combat:move_metronome", 1, current.origin(), JSON.stringify({ moment: "draw", hues: hues }));
+                var drawnType = String(CobblemonCombat.moveTemplate(selection.id).type());
+                current.present("metronome:draw", "world_combat:move_metronome", 1, current.origin(), JSON.stringify({
+                    moment: "draw", hues: hues, move: selection.id, type: drawnType, color: TypeColors.of(drawnType)
+                }));
                 NativeLoadout.call(current, selection.id, { input: selection.options.input, eligibility: "caller", cooldown: p("metronome", "recharge", current) });
             });
         }
     });
     NativeLoadout.availableWhen("metronome", function () {
         return metronomePool().length ? "" : "no-move";
+    });
+    // The borrowed move commits under Metronome's own action, so the drawn identity is only settled there:
+    // reveal the actual localized move name once, then the borrowed move's own presentation takes over.
+    WorldCombat.on("world_combat:metronome/committed", "world_combat:committed", "", function (event) {
+        var action = event.action();
+        if (action === null || String(action.content()) !== "world_combat:metronome") return;
+        var world = event.world(), body = world.observe(event.actor());
+        if (body === null) return;
+        var executing = NativeLoadout.executing(action);
+        if (executing === null) return;
+        world.sound("minecraft:block.amethyst_block.chime", body.position(), 16, "{}");
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)),
+            "world_combat.move.metronome.text.draw",
+            [{ key: "cobblemon.move." + String(executing.id()), fallback: String(executing.id()) }], 36);
     });
 }

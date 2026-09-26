@@ -16,6 +16,8 @@ namespace CompanionBehavior {
     }
 
     function horndrillWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const access = CompanionBehavior.world(context), observed = access.actor(String(target.ref));
+        if (observed && access.effects(observed, PokemonSkills.horndrillResisted).length) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return !horndrillImmune(target);
     }

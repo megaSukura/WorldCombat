@@ -2,10 +2,10 @@
  * 奇异之光 / confuseray 的参数与数值来源。
  *
  * 原生事实：Ghost、Status、威力 —、命中 100、PP 10、目标 normal（单体）／volatile confusion。
- * 世界化：一束幽光从施法者射向目标，划过一段距离后落到它身上；命中即挂共享身份
+ * 世界化：朝任意方向或世界点放出一束幽光，划过一段距离后落在第一个碰到的东西上；命中活体即挂共享身份
  * world_combat:status/confusion 的真实 MobEffect。它不是隔空的「必定混乱」，而是一件看得见、
- * 可以躲到掩体后的事：光束是一条直线，被挡住就落空。混乱期间目标每次想出手都可能被打散、
- * 打中时还会被自己的力气反噬（行为写在本单元 skill.ts，与家族共享）。
+ * 可以躲到掩体后的事：光束是一条直线，被墙或任意身体截断就停在那里，空放也照常。混乱期间目标每次想出手
+ * 都可能被打散、打中时还会被自己的力气反噬（行为写在本单元 skill.ts，与家族共享）。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   beamReach   20 + 特攻 × 0.05 格，夹 8..30；特攻越高，这束光射得越远。
@@ -26,6 +26,11 @@ namespace PokemonSkills {
     export const confuserayBaseChance = 0.3;
     /** 反噬基数（最大生命比例）；被光晃晕的目标打中别人时按攻击放大。 */
     export const confuserayRecoilFraction = 0.055;
+    /**
+     * 反噬预算系数：自伤同时受这次实际攻击回执（damage_applied 的 actual）约束。
+     * 高最大生命的 Boss 不会被按血条白削——它挥出的这一下有多重，反噬最多就还多痛。
+     */
+    export const confuserayRecoilBudget = 1;
 
     actionParameters.define(confuserayId, {
         beamReach: formula(F.const(20).plus(F.stat("specialAttack").times(0.05)).clamp(8, 30), "射程", {

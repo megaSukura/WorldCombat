@@ -9,10 +9,17 @@
  * 放完之后：目标被钉住，施法者也按同一时长被钉住，随后交回共享顺序。
  */
 namespace PokemonSkills {
+    // 只读地试问共享控制门禁：目标（守护、免控 Boss 等）会拒绝 partiallytrapped 时，别把它当成能夹住，
+    // 免得 AI 主动把自己钉在空壳上。
+    CompanionBehavior.registerFact("world_combat:move_clamp/control", function (access: CombatWorld, actor: CombatActor, _argument: any): boolean {
+        return CombatStatus.allowed(access, actor, "partiallytrapped", 40, 0, { effect: "world_combat:clamped_shell" }).allowed;
+    });
+
     function clampWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "partiallytrapped")) return false;
+        if (CompanionBehavior.fact<boolean>(context, "world_combat:move_clamp/control", target) === false) return false;
         if (CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(item, "minSelf", 0.35)) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(item, "maxChase", 6);
@@ -28,7 +35,8 @@ namespace PokemonSkills {
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible
-                && !CompanionBehavior.status(context, target, "partiallytrapped");
+                && !CompanionBehavior.status(context, target, "partiallytrapped")
+                && CompanionBehavior.fact<boolean>(context, "world_combat:move_clamp/control", target) !== false;
         },
         approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {

@@ -25,8 +25,6 @@
   "worldcombat.skill.dragoncheer.preference.roar.help": "开启：长啸，半径 ×1.15、时长 ×1.25、附加比例更高，但起手 +4 刻、冷却 ×1.2，适合开打前一次罩住全队；关闭：短吼，半径 ×0.9、时长 ×0.8、附加比例 ×0.9，起手与冷却更低，适合拉锯里随时补。",
   "worldcombat.skill.dragoncheer.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.dragoncheer.preference.ai.maxChase.help": "威胁进入这个距离内才考虑吼；越大越早开始蓄声势。",
-  "worldcombat.skill.dragoncheer.preference.ai.allyRange": "罩人距离",
-  "worldcombat.skill.dragoncheer.preference.ai.allyRange.help": "身边这个距离内有还没被鼓舞的友方才值得出手；调小只在贴身时吼，调大愿意为稍远的队友先吼一声。",
   "worldcombat.skill.dragoncheer.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.dragoncheer.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会为鼓舞队友离开原位。",
   "world_combat.move.dragoncheer.text.ready": "龙声鼓舞·长啸（%1$s 人 · %2$s 秒）",

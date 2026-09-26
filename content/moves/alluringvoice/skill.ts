@@ -9,9 +9,9 @@ namespace PokemonSkills {
     define({
         id: alluringvoiceId,
         cooldownParameter: "recharge", name: "魅诱之声",
-        description: "向前唱出锥形声场，伤害并扰乱敌人。强化中的目标会混乱；普通生物正在追击，或玩家刚命中过敌人时，也会被歌声扰乱。",
-        uses: ["惩罚刚强化过的对手，让它自乱阵脚", "一次扫过身前一条线上的敌人", "在对手铺垫强化时抢先唱散它"],
-        kind: "enemy", range: 7, maxRange: 11, prepare: 7, active: 1, recover: 8, cooldown: 34,
+        description: "先唱出一声短音、对声锥内的敌人结算一次伤害，隔一小段再拖出尾音：那一刻仍留在锥里、正在追击或带着强化的目标会被尾音惑乱，出手可能作废、打中别人还会反噬自己。可朝任意方向空唱，走出声锥就能躲掉尾音。",
+        uses: ["惩罚刚强化过的对手，让它自乱阵脚", "一次扫过身前一条线上的敌人", "用尾音罩住正在追击的敌人", "朝空地空唱，逼对手绕开声锥"],
+        kind: "aim", range: 7, maxRange: 11, prepare: 7, active: 1, recover: 8, cooldown: 34,
         style: "sound", stationary: true, maximumTicks: 120,
         defaults: { echo: false, ai: { maxChase: 13, minStages: 1, leaveStation: false } },
         fields: [field(pathOf("echo"), "回响式", "boolean", {
@@ -44,6 +44,7 @@ namespace PokemonSkills {
             if (body === null) { done(action); return; }
             const origin = body.position(), targetPos = action.targetPosition();
             const delta = targetPos.minus(origin);
+            // 方向提交时固定；两拍共用同一组顶点与同一片扇区，第二拍不再重新瞄准。
             const direction = delta.length() < 0.01 ? action.direction() : delta.unit();
             const reach = p(alluringvoiceId, "reach", action);
             const angle = p(alluringvoiceId, "angle", action);
@@ -51,45 +52,60 @@ namespace PokemonSkills {
             const baseTicks = Math.max(40, Math.round(p(alluringvoiceId, "confuseBase", action)));
             const perStage = Math.max(0, Math.round(p(alluringvoiceId, "confusePerStage", action)));
             const fumble = Math.max(0.05, Math.min(0.9, p(alluringvoiceId, "fumble", action)));
+            const tailDelay = Math.max(4, Math.round(p(alluringvoiceId, "tailDelay", action)));
             const maxTargets = Math.round(p(alluringvoiceId, "maxTargets", action));
             const motes = Math.round(p(alluringvoiceId, "motes", action));
             const scale = reach / alluringvoiceReferenceReach;
             const vertices = alluringVoicePath(alluringVoiceFan(origin, direction, reach, angle));
             const fumblePct = Math.round(fumble * 100);
-            let hits = 0, dazed = 0, best = 0;
+            const region = WorldGeometry.sector(origin, direction, reach, angle, { below: 2, above: 3 });
+            let hits = 0, best = 0;
 
             sound(action, "cobblemon:move.sing.actor");
-            const region = WorldGeometry.sector(origin, direction, reach, angle, { below: 2, above: 3 });
+            // 首拍：短而实的一声，只结算一次原伤害，此刻不施混乱。
             WorldGeometry.selectEnemies(world, region, function (victim, facts) {
                 if (hits >= maxTargets) return;
                 const boost = alluringVoiceBoost(world, victim);
                 const dealt = hurt(action, victim, alluringvoiceId, power, { damage: damageSpec(alluringvoiceId, "voice"), sound: true });
                 if (!dealt) return;
                 hits++;
-                let confused = false;
-                if (boost > 0) {
-                    const ticks = Math.max(60, baseTicks + boost * perStage);
-                    confused = CombatStatus.apply(world, victim, "confusion", alluringvoiceSong, ticks, fumblePct, { unique: true });
-                    if (confused) {
-                        dazed++;
-                        if (boost > best) best = boost;
-                        WorldFeedback.keep(world, "alluringvoice:daze:" + String(victim.ref()), alluringvoiceScene, 1,
-                            facts.position(), { moment: "daze", target: String(victim.ref()), stages: boost,
-                                tick: Math.min(ticks, 220) }, Math.min(ticks, 200));
-                    }
-                }
+                if (boost > best) best = boost;
                 WorldFeedback.emit(world, alluringvoiceScene, 1, facts.position(),
-                    { moment: "hit", target: String(victim.ref()), stages: boost, confused: confused ? 1 : 0,
+                    { moment: "hit", target: String(victim.ref()), stages: boost,
                         motes: Math.max(6, Math.round(motes / 2)), intensity: 1 + Math.min(1.2, boost * 0.12) }, 28);
             });
             WorldFeedback.emit(world, alluringvoiceScene, 1, origin,
                 { moment: "wave", path: vertices, reach: reach, angle: angle, scale: scale, hits: hits,
-                    dazed: dazed, stages: best, motes: motes, rise: 0.8 + Math.min(4, best * 0.35),
+                    stages: best, motes: motes, rise: 0.8 + Math.min(4, best * 0.35),
                     intensity: 1 + Math.min(1.6, best * 0.15 + hits * 0.2) }, 42);
-            if (best > 0) WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.45, 0)), alluringvoiceDazeText, [best], 36);
-            else WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.35, 0)), alluringvoiceStrikeText, [hits], 30);
-            world.sound(best > 0 ? "cobblemon:status.volatile.confusion.actor" : "cobblemon:impact.fairy", origin, 16, "{}");
-            done(action);
+            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.35, 0)), alluringvoiceStrikeText, [hits], 30);
+
+            // 第二拍：拖长的尾音。只对那一刻仍留在同一片声锥里、且满足强化／追击条件的目标施混乱，不再补伤害。
+            action.after(tailDelay, function (next) {
+                const live = next.world();
+                if (live.observe(actor) === null) { done(next); return; }
+                const late = WorldGeometry.sector(origin, direction, reach, angle, { below: 2, above: 3 });
+                let dazed = 0, bestLate = 0;
+                WorldGeometry.selectEnemies(live, late, function (victim, facts) {
+                    if (dazed >= maxTargets) return;
+                    const boost = alluringVoiceBoost(live, victim);
+                    if (boost <= 0) return;
+                    const ticks = Math.max(60, baseTicks + boost * perStage);
+                    if (!CombatStatus.apply(live, victim, "confusion", alluringvoiceSong, ticks, fumblePct, { unique: true })) return;
+                    dazed++;
+                    if (boost > bestLate) bestLate = boost;
+                    WorldFeedback.keep(live, "alluringvoice:daze:" + String(victim.ref()), alluringvoiceScene, 1,
+                        facts.position(), { moment: "daze", target: String(victim.ref()), stages: boost,
+                            tick: Math.min(ticks, 220) }, Math.min(ticks, 200));
+                });
+                WorldFeedback.emit(live, alluringvoiceScene, 1, origin,
+                    { moment: "tail", path: vertices, reach: reach, angle: angle, scale: scale, dazed: dazed,
+                        stages: bestLate, motes: motes, rise: 0.8 + Math.min(4, bestLate * 0.35),
+                        intensity: 1 + Math.min(1.2, bestLate * 0.12 + dazed * 0.2) }, 36);
+                if (bestLate > 0) WorldFeedback.text(live, origin.plus(WorldCombat.point(0, 1.45, 0)), alluringvoiceDazeText, [bestLate], 36);
+                live.sound(bestLate > 0 ? "cobblemon:status.volatile.confusion.actor" : "cobblemon:impact.fairy", origin, 16, "{}");
+                done(next);
+            });
         }
     });
 

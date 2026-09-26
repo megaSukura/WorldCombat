@@ -70,7 +70,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, covetScene, 1, point, { moment: "charm", target: String(target.ref()),
                         soft: soften, scale: scale, hearts: Math.round(hearts * (0.7 + intensity * 0.2)) }, 28);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), covetCharmText, [soften], 26);
-                    scope.displace(target, direction.scale(push));
+                    scope.hitDisplace(target, direction.scale(push));
                 }
                 sound(current, "cobblemon:impact.normal");
                 if (stolen) {

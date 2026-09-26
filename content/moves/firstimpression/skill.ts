@@ -1,18 +1,4 @@
-/**
- * 迎头一击 / firstimpression 的出手方式。
- *
- * 核心念头：被放上场的那一瞬间，不给对手任何准备，整段身体像一发虫甲炮弹砸过去——第一次起飞就是最重的一下，
- *   也只砸得出这一下。它和击掌奇袭共用一个时机，但那份时机换来的是全组最重的开场重击，而不是打断。
- *
- * 三幕：
- *   起（windup，提交前）：弓身蓄势，脚下泛起虫绿的蓄力纹；不是刚出场就只作空起势（present coil / whiff）。
- *   扑（dive）：提交后沿瞄准方向整段扑出，身后拖出绿色速度线。
- *   砸（crash）：撞上活体即结算 slam 接触伤害，并把人沿冲势狠狠顶开；一路撞空则收势落空（miss）。
- *
- * 与同族分开：
- *   击掌奇袭同样只认「刚出场」，但那一记轻、快、只求拍懵；迎头一击慢半拍、没有懵，要的是开场一下把人打残。
- *   头锤是随时能用的短冷却近战；迎头一击一辈子只在刚上场时砸一次，份量也重得多。
- */
+/** The first action of this encounter pays for a full-body opening lunge. */
 namespace PokemonSkills {
     const firstimpressionHitText = "world_combat.move.firstimpression.text.hit";
     const firstimpressionMissText = "world_combat.move.firstimpression.text.miss";
@@ -25,7 +11,7 @@ namespace PokemonSkills {
         description: "刚被放上场时整段身体扑出去的一记虫甲重砸：出手极快、份量全组最重，撞上就把对手狠狠顶开；一旦自己已经出过手，就要等重新算作「刚出场」才能再砸。",
         uses: ["刚上场就砸出一记最重的扑击", "开场一下把对手打残",
                "趁对手还没反应过来把它顶到墙角"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.2,
         maxRange: 5.8,
         prepare: 5,
@@ -93,7 +79,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(firstimpressionId, "slam"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, firstimpressionScene, 1, hit.position(),
                             { moment: "crash", target: String(victim.ref()), count: count, scale: scale,

@@ -5,7 +5,7 @@
   "worldcombat.skill.outrage.use.2": "用高额连续接触伤害压低一个对手",
   "worldcombat.skill.outrage.description.0": "锁定一个对手后低头连撞 %2$s 次，每次对撞到的目标造成约 %1$s 点接触伤害；每次冲撞只有走廊里最近的那名敌人会被撞中（可能只是挡在前面的别人），最后一撞再乘 %3$s 的终结倍率。",
   "worldcombat.skill.outrage.description.1": "每次冲撞最远 %1$s 格，起撞前先向前垫进最多 %5$s 格，两撞之间隔 %2$s；判定半径 %3$s 格，命中把目标沿冲撞方向顶开最多 %4$s 格。",
-  "worldcombat.skill.outrage.description.2": "撞完后自身陷入恍惚 %1$s：期间每次想出手有 %2$s 概率被打散，失手时还会受到自身最大生命约 1.2%% 至 5%% 的反噬，并让恍惚重新计时（至少再持续约 3 秒）。",
+  "worldcombat.skill.outrage.description.2": "撞完后自身陷入恍惚 %1$s：期间每次想出手有 %2$s 概率被打散，失手时还会受到自身最大生命约 1.2%% 至 5%% 的反噬；反噬不会延长恍惚。",
   "worldcombat.skill.outrage.relentless.on": "穷追式：每撞威力约 ×0.97，但冲得更远、把目标顶得更狠，起手与冷却更久、恍惚也更长。",
   "worldcombat.skill.outrage.relentless.off": "疾撞式：贴得更近、节奏更快、失控更短，但够不到远处的目标。",
   "worldcombat.skill.outrage.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP；提交后冷却 %5$s 秒。",

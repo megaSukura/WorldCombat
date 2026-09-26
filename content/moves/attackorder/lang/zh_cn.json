@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.attackorder.summary": "振翅召出一队手下，从身边依次扑向目标，每只扑到身上各自刺一下。每只独立结算、各自掷一次会心，所以手下越多越容易撞上要害；被中途打掉的手下不再落这一刺。虫海式手下更多更脆，精锐式更少更重。",
+  "worldcombat.skill.attackorder.summary": "振翅召出一队手下，从身边依次扑向目标，每只追到身体最近可达点、核对真实接触与通视后刺一下。每只独立结算、各自掷一次会心，所以手下越多越容易撞上要害；被中途打掉的手下不再落这一刺，隔薄墙不刺，高大目标也不会被追到头顶悬空点。点选空地时整队去集结、到达后散去，不会自行选敌。虫海式手下更多更脆，精锐式更少更重。",
   "worldcombat.skill.attackorder.description.0": "召出 %1$s 只手下，从你身边依次扑向目标；每只追上后只刺一下，造成约 %2$s 点不接触伤害便消散。每次小刺各自结算、各自掷一次会心，所以手下越多越容易击中要害。",
   "worldcombat.skill.attackorder.description.1": "指挥距离 %1$s 格；手下以 %2$s 格/刻飞行，按 %3$s 刻的间隔依次放出。",
-  "worldcombat.skill.attackorder.description.2": "每只手下有 %1$s 点生命，最多在场上停留 %2$s；被打掉的手下不再落刺，一直够不到目标的到时会自行散去。",
+  "worldcombat.skill.attackorder.description.2": "每只手下有 %1$s 点生命，最多在场上停留 %2$s；被打掉的手下不再落刺，隔墙不刺，一直够不到目标的到时会自行散去。",
   "worldcombat.skill.attackorder.stance.swarm": "虫海式：多召唤2只手下，每只威力为原来的0.8倍、生命为3点；飞行速度比精锐式慢，适合用更多次攻击压制目标。",
   "worldcombat.skill.attackorder.stance.elite": "精锐式：每只威力 ×1.25、飞得更快、单只生命 7，代价是面数更少。",
   "worldcombat.skill.attackorder.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

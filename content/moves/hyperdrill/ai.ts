@@ -4,7 +4,9 @@
  * 什么局面下出手：一记贴身的直线凿穿。目标可见、敌对、存活，且在 `ai.maxChase`（默认 8）格内；更远交给
  *   共享接近逻辑。它最值钱的地方是**凿开守护**，所以目标身上有守护时它最想出手。
  * 对谁出手：`ai.breakGuard`（默认开）打开时，身上带着守护（任何 GuardEffects 池）的目标 priority 抬到 92，
- *   抢在共享交战次序之前；没有守护的目标按普通重击排序（18）。
+ *   抢在共享交战次序之前；没有守护的目标按普通重击排序（18）。贯穿式开启时再做两种只读判断：
+ *   目标之后沿同一条线还站着别的可见敌人（成线）时抬分；目标之后一段距离内没有可继续钻穿的空位（旁边无通路）
+ *   时降分换招，不把一整记长钻浪费在死路上。判断都放在只读世界入口 `CompanionBehavior.world(context)`。
  * 够不到怎么办：reach 就是本招冲距，先走近；钻进途中目标消失或离开范围就收招，不留下任何代价。
  * 放完之后：凿掉的守护当场碎掉，交回共享交战计划。目标没有守护时它仍是一记高额接触重击，不会空转。
  */
@@ -25,6 +27,43 @@ namespace PokemonSkills {
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
     }
+    /** 只读探针：自身→目标这条线、目标之后一段距离内还有没有可继续钻穿的空位。 */
+    function hyperdrillAhead(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        return CompanionBehavior.observedFlag(context, "hyperdrill:ahead:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+            const length = Math.sqrt(dx * dx + dz * dz);
+            if (!(length > 0.01)) return false;
+            const height = target.height === undefined ? (self.height === undefined ? 1.4 : self.height) : target.height;
+            const width = self.width === undefined ? 0.9 : self.width;
+            for (let ahead = 1.2; ahead <= 3.4; ahead += 1.0) {
+                const point = CompanionBehavior.point([target.point[0] + dx / length * ahead, target.point[1] - height / 2,
+                    target.point[2] + dz / length * ahead]);
+                if (world.freeSpace(point, width, height)) return true;
+            }
+            return false;
+        });
+    }
+    /** 只读探针：目标之后沿同一条线还站着至少一个可见敌人，说明这记长贯穿能多钻一个。 */
+    function hyperdrillLinesUp(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        return CompanionBehavior.observedFlag(context, "hyperdrill:line:" + target.ref, function () {
+            const self = CompanionBehavior.source(context).point;
+            const dx = target.point[0] - self[0], dz = target.point[2] - self[2];
+            const length = Math.sqrt(dx * dx + dz * dz);
+            if (!(length > 0.01)) return false;
+            const fx = dx / length, fz = dz / length;
+            const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+            for (let index = 0; index < nearby.length; index++) {
+                const other = nearby[index];
+                if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+                const ox = other.point[0] - self[0], oz = other.point[2] - self[2];
+                const along = ox * fx + oz * fz;
+                const lateral = Math.abs(ox * fz - oz * fx);
+                if (along > length + 0.4 && lateral <= 1.8) return true;
+            }
+            return false;
+        });
+    }
 
     CompanionBehavior.registerUse("hyperdrill", {
         protocols: ["world_combat:attack", "world_combat:contact"],
@@ -42,7 +81,13 @@ namespace PokemonSkills {
             let score = 18;
             if (CompanionBehavior.ai<boolean>(capability, "breakGuard", true) && hyperdrillGuards(context, target) > 0) score += 74;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range) score += 6;
-            return score;
+            const config: any = capability.data.config || {};
+            if (config.through === true) {
+                // 成线目标优先；旁边无通路就降分换招，不把长贯穿浪费在死路上。
+                if (hyperdrillLinesUp(context, target)) score += 6;
+                if (!hyperdrillAhead(context, target)) score -= 9;
+            }
+            return Math.max(1, score);
         }
     });
 

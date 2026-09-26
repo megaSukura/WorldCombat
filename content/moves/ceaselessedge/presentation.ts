@@ -1,15 +1,16 @@
 /**
  * 秘剑・千重涛 / ceaselessedge 的客户端表现。
  *
- * 一句话：壳刃抽出的刹那刃身浮起珠光 → 一刀斜掠切过目标 → 甩下的贝壳碎片在它脚边插成一圈并微微反光；
- *   有东西踏进来时那一处崩起碎片，同一片地斩得越多、圈越亮。
+ * 一句话：壳刃抽出的刹那刃身浮起珠光 → 一刀斜掠朝瞄准方向切过 → 刀锋落点的贝壳碎片插成一圈，层数越斩越多、圈越亮；
+ *   贴地目标真踏进来/跨过边界时那一处崩起碎片（tread），留在圈里只轻轻刮一下（graze）。
  * 色相家族：珠贝白 0xEAF6F2 与青贝光 0x9FE8DC 为主，深螺壳绿 0x2E4A46 只压在刃痕与圈底作轮廓；没有第二个色相。
- * 拍子：起（windup 聚珠光）→ 斩（slash 斜掠刃痕）→ 留（lay 碎片插开）→ 驻（hum 低鸣／tread 踩中）→ 收。
- * 范围：lay 与 hum 绑 `point`、`fit:"none"`，用 `data.radius` 画圈，画出来的就是会被割的那块地；
+ * 拍子：起（windup 聚珠光）→ 斩（slash 斜掠刃痕）→ 留（lay 碎片插开、按层数亮起同心层）→
+ *   驻（hum 低鸣／tread 踏中／graze 轻刮）→ 收。
+ * 范围：lay 与 hum 绑 `point`、`fit:"none"`，用 `data.radius` 画圈、`data.layerRadius` 画当前层数的那一道圈；
  *   slash 用 `data.path` 画那道斜痕。
- * 运动：起手珠光向内收；斩击沿刃痕从一角拉到对角、碎片向外崩开插地；踩中时碎片向上翻起再落下。
- * 数：`data.shards`（物攻派生）决定碎片密度、`data.sharpen`（锋利层数）决定亮度、`data.scale`（半径/参考 2.2）控制尺寸，
- *   `data.fresh` 让踏入的第一刀比站着的轻割明显更重。
+ * 运动：起手珠光向内收；斩击沿刃痕从一角拉到对角、碎片向外崩开插地；踩中时碎片向上翻起再落下，轻刮只带一层薄屑。
+ * 数：`data.shards`（物攻派生）决定碎片密度、`data.layers`（锋利层数）决定同心层亮点数、`data.gleam`（层数派生亮度）抬亮整圈，
+ *   `data.scale`（半径/参考 2.2）控制尺寸，`data.fresh` 让踏入的第一刀比轻刮明显更重。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const CeaselessedgeDefinition: ParticleDefinition = {
@@ -72,6 +73,15 @@ const CeaselessedgeDefinition: ParticleDefinition = {
                     color: 0xEAF6F2, alpha: [0.6, 0], light: "full", maxParticles: 70
                 },
                 {
+                    name: "layer_ring", bind: "point", offset: [0, 0.14, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    burst: { count: { data: "layers", fallback: 1 }, at: 1 },
+                    shape: { kind: "ring", radius: { data: "layerRadius", fallback: 2.2 } },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [12, 20], size: [0.14, 0.02],
+                    color: 0x9FE8DC, alpha: [{ data: "gleam", fallback: 0.55 }, 0], light: "full", maxParticles: 24
+                },
+                {
                     name: "splinters", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/caltrop",
                     burst: { count: { data: "shards", fallback: 22 }, interval: 2, repeats: 2 },
@@ -102,6 +112,14 @@ const CeaselessedgeDefinition: ParticleDefinition = {
                     color: 0xCFE8E0, alpha: [0.26, 0], maxParticles: 50
                 },
                 {
+                    name: "layer", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: { data: "layers", fallback: 1 }, shape: { kind: "ring", radius: { data: "layerRadius", fallback: 2.2 } },
+                    direction: "up", speed: [0.003, 0.02],
+                    lifetime: [14, 24], size: [0.14, 0.34],
+                    color: 0x9FE8DC, alpha: [{ data: "gleam", fallback: 0.4 }, 0], light: "full", maxParticles: 40
+                },
+                {
                     name: "shells", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/caltrop",
                     rate: { data: "shards", fallback: 22 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
@@ -112,11 +130,11 @@ const CeaselessedgeDefinition: ParticleDefinition = {
                 {
                     name: "glint", bind: "point", offset: [0, 0.14, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    rate: { data: "sharpen", fallback: 1 },
+                    rate: { data: "layers", fallback: 1 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.002, 0.02],
                     lifetime: [10, 18], size: [0.07, 0.02],
-                    color: 0x9FE8DC, alpha: [0.45, 0], light: "full", maxParticles: 30
+                    color: 0x9FE8DC, alpha: [{ data: "gleam", fallback: 0.45 }, 0], light: "full", maxParticles: 30
                 }
             ]
         },
@@ -141,6 +159,22 @@ const CeaselessedgeDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2], spin: 34,
                     lifetime: [8, 16], size: [0.12, 0.03],
                     color: 0xCFE8E0, alpha: [0.85, 0], maxParticles: 50
+                }
+            ]
+        },
+        // 留在圈里的轻刮：只有一层薄屑贴着脚边，不亮出踏中那记脚伤。
+        graze: {
+            duration: 18,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "shave", bind: "target", height: 0.18,
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    burst: { count: { data: "shards", fallback: 6 }, at: 1 },
+                    shape: { kind: "ring", radius: 0.24 },
+                    direction: "outward", speed: [0.03, 0.12], spin: 20,
+                    lifetime: [6, 12], size: [0.12, 0.02],
+                    color: 0xCFE8E0, alpha: [0.5, 0], maxParticles: 24
                 }
             ]
         },

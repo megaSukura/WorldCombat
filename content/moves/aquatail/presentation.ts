@@ -6,7 +6,8 @@
  * 色相家族：水蓝的一族（0x6FC6E8 / 0x8FD4F0 为主体，0xE8F8FF 只做浪头高光，水汽用中性灰）。
  * 拍子：起 lash（甩尾聚水）→ 推 crest（每拍一道弧，叠成推进的浪）→ 击 hit（拍中）／浇 douse（水汽）→ 收 miss（空浪湿痕）。
  * 范围：crest 用与判定同一组 `data.path` 顶点填出弧形环带，玩家一眼看出站在哪条弧里会被拍到。
- * 运动：弧带随 `data.step`／`data.steps` 一站一站往外推，浪头朝 `data.direction` 向外翻卷。
+ * 运动：弧带随 `data.step`／`data.steps` 一站一站往外推，浪头朝 `data.direction` 向外翻卷；
+ *   `data.outer` 同时驱动一条从尾根沿同一朝向扫到浪头的细水线，把这一挥的来路连出来，不留下持续水域。
  * 数：水花量绑定 `data.splash`（物攻与体重换算），弧带尺度绑定 `data.scale`（尾长换算），亮度绑定 `data.intensity`（浪威力换算）。
  */
 const AquaTailDefinition: ParticleDefinition = {
@@ -63,6 +64,14 @@ const AquaTailDefinition: ParticleDefinition = {
                     gravity: 0.06, drag: 0.94,
                     lifetime: [10, 20], size: [0.08, 0.02],
                     color: 0xBFE8FA, alpha: [0.7, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "crest_sweep", bind: "source", fit: "world", offset: [0, 0.15, 0], orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    shape: { kind: "line", length: { data: "outer", fallback: 3.6 } },
+                    burst: { count: 7, at: 0 }, direction: "shape", speed: [0.06, 0.22], spread: 8,
+                    lifetime: [6, 12], size: [0.16, 0.04],
+                    color: 0x8FD4F0, alpha: [0.6, 0], light: "full", maxParticles: 40
                 }
             ]
         },

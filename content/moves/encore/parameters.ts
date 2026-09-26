@@ -8,6 +8,7 @@ namespace PokemonSkills {
     export const encoreLockText = "world_combat.move.encore.text.lock";
     export const encoreFadeText = "world_combat.move.encore.text.fade";
     export const encoreMissText = "world_combat.move.encore.text.miss";
+    export const encoreRejectText = "world_combat.move.encore.text.reject";
 
     function encorePreference(): Formula.Node {
         return F.pref("strict", { key: "worldcombat.skill.encore.preference.strict" });

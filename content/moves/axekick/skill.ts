@@ -1,16 +1,19 @@
 /**
  * 下压踢 / axekick 的出手方式。
  *
- * 核心念头：一次抬腿高劈、脚踵直落的两拍动作。先把腿抬到高处（起手，是对手读得到的预告），再一脚踵
- * 朝下劈进对手头顶；劈中会砸乱对手的架势，有概率把它劈得恍惚。劈空，脚踵砸地、自伤一截。它几乎原地起落，
- * 是跳击家族里最贴地、自伤最轻的一招，签名是那条抬起→直落的斧劈线。
+ * 核心念头：一次短垫步后原地抬腿高劈、脚踵直落的两拍动作。先朝准心垫一小步站定，把腿抬到高处（亮给对手看，
+ * 是对手读得到的预告），再一脚踵朝下劈进面前一条固定的窄竖带；劈中会砸乱对手的架势，有概率把它劈得恍惚。
+ * 竖带空着，脚踵才砸地、自伤一截。它不再把整个人抛出去，是跳击家族里最贴地、自伤最轻的一招，
+ * 签名是那条抬起→直落的斧劈线。
  *
  * 三幕（提交后由共享节奏驱动 execute）：
  *   起（windup，提交前）：抬腿蓄势，只播预告，可免费打断。
- *   抬（提交后 rise）：短促拔起，落点钉在目标实时位置。
- *   劈（apex → chop）：顶点锁死落点并 emit 斧线；随后沿直线下劈，trace 撞到活体即按 chop 结算接触伤害、
- *       掷一次 dazeChance 决定是否把震撼挂成本单元的恍惚载体（共享身份 world_combat:status/confusion），
- *       并撞开 shove 格；到达落点在 hitRadius 内再选一次最近的敌人；都空即劈偏，按 crash 自伤。
+ *   抬（step → raise）：朝准心短垫一步（撞墙即停），站定亮出面前固定的窄竖带 telegraph 刻。
+ *   劈（chop）：竖带区域取第一个非友方真实接触者，按 chop 结算接触伤害、掷一次 dazeChance 决定是否把震撼
+ *       挂成本单元的恍惚载体（共享身份 world_combat:status/confusion）、并撞开 shove 格；竖带空着就脚踵砸地，
+ *       按 crash 自伤。不凭旧 target 补中，也不把整个人送出去。
+ *
+ * 选取 `kind: "aim"`：朝自由方向或世界点抬腿都行，target 为 null、目标离场、空劈都成立；方向交给 aim()。
  *
  * 恍惚行为（本单元写）：被劈晕的目标每次试图出手按载体振幅掷骰、中则本次出手作废；
  * 它打中非友方时按自身攻击结算一道自伤。消费方用 CombatStatus.has(world, actor, "confusion") 按身份读取。
@@ -43,11 +46,6 @@ namespace PokemonSkills {
         return WorldCombat.point(point.x(), axekickFloor(world, point, halfHeight), point.z());
     }
 
-    function axekickResetFall(world: CombatWorld, actor: CombatActor): void {
-        world.motion(actor, WorldCombat.point(0, 0, 0), false);
-        try { const native = world.nativeEntity(actor); if (native) native.fallDistance = 0; } catch (error) { }
-    }
-
     function axekickAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.1, 0)); }
 
     /** 本单元自己的恍惚载体：只有当代表载体就是本单元的 id 时，本单元的行为才接管。 */
@@ -61,11 +59,11 @@ namespace PokemonSkills {
         id: "axekick",
         cooldownParameter: "recharge",
         name: "Axe Kick",
-        description: "抬腿高劈、脚跟直落，命中造成伤害并有几率使目标恍惚；劈偏时脚踵砸地、自己受伤。",
+        description: "朝任意方向短垫一步后原地抬腿，脚跟沿一条固定的窄竖带往下劈，命中造成伤害并有几率使目标恍惚；竖带空着时脚踵砸地、自己受伤。",
         uses: ["用一记直落的下劈砸穿硬目标", "给刚起手或刚增益的对手一记恍惚", "贴脸时用最轻自伤的一记收尾"],
-        kind: "enemy",
-        range: 4.2,
-        maxRange: 7.5,
+        kind: "aim",
+        range: 4.0,
+        maxRange: 6.5,
         prepare: 7,
         active: 30,
         recover: 9,
@@ -76,7 +74,7 @@ namespace PokemonSkills {
         defaults: { high: false, ai: { maxChase: 8, spareConfused: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("axekick", "reach", pokemon), geometry: "circle", style: "aerial", color: 0x9B6BE0,
+            return { radius: p("axekick", "reach", pokemon), geometry: "line", style: "aerial", color: 0x9B6BE0,
                 label: config && config.high === true ? "高劈" : "低位快劈" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -100,11 +98,18 @@ namespace PokemonSkills {
             const self = world.observe(actor);
             if (self === null) { movementScenes.finish(action, done); return; }
 
-            const hopHeight = Math.max(1.0, p("axekick", "hopHeight", action));
-            const hopSpeed = Math.max(0.2, p("axekick", "hopSpeed", action));
+            action.releaseTarget();
+            const heading = WorldGeometry.flatUnit(aim(action), action.direction());
+            const step = Math.max(0.2, p("axekick", "step", action));
+            const reach = Math.max(1.2, p("axekick", "reach", action));
+            const bandHeight = Math.max(0.8, p("axekick", "hopHeight", action));
+            const halfWidth = Math.max(0.2, p("axekick", "hitRadius", action));
+            const hopSpeed = Math.max(0.45, p("axekick", "hopSpeed", action));
             const chopSpeed = Math.max(0.4, p("axekick", "chopSpeed", action));
-            const drift = Math.max(0, p("axekick", "drift", action));
-            const hitRadius = Math.max(0.4, p("axekick", "hitRadius", action));
+            // 抬腿/下劈越快，对应表现的动画越短——速度直接接到客户端 moment 时长。
+            const raiseTicks = Math.max(6, Math.round(16 / hopSpeed));
+            const chopTicks = Math.max(5, Math.round(16 / chopSpeed));
+            const telegraph = Math.max(1, Math.round(p("axekick", "telegraph", action)));
             const power = p("axekick", "chop", action);
             const crash = Math.max(0.03, Math.min(0.6, p("axekick", "crash", action)));
             const shove = Math.max(0, p("axekick", "shove", action));
@@ -112,36 +117,32 @@ namespace PokemonSkills {
             const dazeChance = p("axekick", "dazeChance", action);
             const fumbleChance = p("axekick", "fumbleChance", action);
             const dazeTicks = Math.max(20, Math.round(p("axekick", "dazeTicks", action)));
-            const settleSpeed = Math.max(0.2, p("axekick", "settleSpeed", action));
-            const scale = hitRadius / 0.6;
+            const scale = Math.max(0.5, Math.min(2, halfWidth / 0.42));
             const intensity = Math.max(0.6, Math.min(2.2, power / 120));
             const start = self.position();
-            const apexY = start.y() + hopHeight;
-            const target = action.target();
-            const riseLimit = Math.max(1, Math.ceil(hopHeight / hopSpeed)) + 4;
-            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
-            let locked = targetBody !== null ? axekickGround(world, targetBody.position(), targetBody.height() * 0.5)
-                : axekickGround(world, action.targetPosition(), 0.7);
             let finished = false;
 
             function finish(current: CombatAction): void { if (!finished) { finished = true; movementScenes.finish(current, done); } }
 
+            /** 竖带中心的地面点：面前固定一处，脚下为基、沿准心偏移。 */
+            function bandCentre(feet: CombatPoint): CombatPoint {
+                const distance = 0.15 + reach * 0.5;
+                return WorldCombat.point(feet.x() + heading.x() * distance, feet.y(), feet.z() + heading.z() * distance);
+            }
+            function bandTop(feet: CombatPoint): CombatPoint {
+                const centre = bandCentre(feet);
+                return WorldCombat.point(centre.x(), feet.y() + bandHeight, centre.z());
+            }
+            /** 判定区：竖带中心处，沿准心半长 reach/2、横切半宽 halfWidth、从地面向上 bandHeight。 */
+            function bandRegion(feet: CombatPoint): WorldGeometry.Region {
+                return WorldGeometry.box(bandCentre(feet), heading, WorldCombat.point(reach * 0.5, 0, halfWidth),
+                    { below: 0.6, above: bandHeight });
+            }
+
             sound(action, "cobblemon:move.aerialace.actor_1");
-            movementScenes.show(action, "raise", start, { moment: "raise", height: hopHeight, scale: scale, intensity: intensity, dust: dust,
-                    path: [[start.x(), start.y(), start.z()], [start.x(), apexY, start.z()]] });
 
             function settle(current: CombatAction): void {
                 movementScenes.stop(current);
-                const live = current.world(), me = live.observe(actor);
-                if (me === null) { finish(current); return; }
-                axekickResetFall(live, actor);
-                const floor = axekickFloor(live, me.position(), me.height() * 0.5);
-                const feet = me.position().y() - me.height() * 0.5;
-                if (feet > floor + 0.15) {
-                    live.displace(actor, WorldCombat.point(0, -Math.max(0.4, Math.min(settleSpeed, feet - floor + 0.3)), 0));
-                    current.after(1, function (next) { settle(next); });
-                    return;
-                }
                 finish(current);
             }
 
@@ -168,103 +169,78 @@ namespace PokemonSkills {
                     WorldFeedback.text(live, axekickAbove(at), axekickCrashText, [], 26);
                 }
                 sound(current, "minecraft:entity.generic.big_fall");
-                settle(current);
+                current.after(5, function (next) { settle(next); });
             }
 
-            function impactOn(current: CombatAction, victim: CombatActor, at: CombatPoint, direction: CombatPoint): void {
+            function impactOn(current: CombatAction, victim: CombatActor, centre: CombatPoint): void {
                 const live = current.world();
                 const body = live.observe(victim);
-                const point = body === null ? at : body.position();
+                const point = body === null ? centre : body.position();
                 if (!hurt(current, victim, "axekick", power, { damage: damageSpec("axekick", "chop"), contact: true })) {
-                    crashLanding(current, at); return;
+                    crashLanding(current, centre); return;
                 }
                 if (live.valid(victim)) {
-                    const away = point.minus(live.observe(actor)!.position());
+                    const me = live.observe(actor);
+                    const away = me === null ? heading : point.minus(me.position());
                     const flat = WorldCombat.point(away.x(), 0, away.z());
-                    const push = flat.length() < 0.01 ? direction : flat.unit();
+                    const push = flat.length() < 0.01 ? heading : flat.unit();
                     live.displace(victim, push.scale(shove));
                 }
-                WorldFeedback.emit(live, axekickScene, 1, point,
-                    { moment: "impact", target: String(victim.ref()), scale: scale, intensity: intensity, dust: dust,
-                        count: Math.round(18 + power * 0.35),
-                        direction: [direction.x(), direction.y(), direction.z()] }, 28);
+                // 脚跟落在对手头顶：判定与表现都用同一个真实落点。
+                const head = body === null ? centre : body.position().plus(WorldCombat.point(0, body.height() * 0.45, 0));
+                WorldFeedback.emit(live, axekickScene, 1, head,
+                    { moment: "impact", scale: scale, intensity: intensity, count: Math.round(18 + power * 0.35) }, 28);
                 sound(current, "cobblemon:impact.fighting");
                 sound(current, "minecraft:entity.player.attack.sweep");
                 WorldFeedback.text(live, axekickAbove(point), axekickHitText, [], 26);
                 if (live.valid(victim)) daze(current, victim, point);
-                settle(current);
+                current.after(5, function (next) { settle(next); });
             }
 
-            function resolve(current: CombatAction, at: CombatPoint, direction: CombatPoint): void {
+            /** 短垫步：沿准心向前一小步，撞到实体或方块就停在原地，不把整个人送出去。 */
+            function stepPhase(current: CombatAction): void {
                 const live = current.world();
+                const swept = sweepStep(current, heading.scale(step), 0.3);
+                const hit = swept.hit;
+                if (!hit.blocked() && !hit.hitEntity() && swept.remaining.length() > 0.001) live.displace(actor, swept.remaining);
+                raise(current, 0);
+            }
+
+            /** 站定亮出竖带，等到 telegraph 刻才劈下——这段停顿是对手让开的窗口。 */
+            function raise(current: CombatAction, wait: number): void {
+                const live = current.world(), me = live.observe(actor);
+                if (me === null) { finish(current); return; }
+                const feet = me.position().minus(WorldCombat.point(0, me.height() * 0.5, 0));
+                const centre = bandCentre(feet), top = bandTop(feet);
+                movementScenes.show(current, "raise", feet, { moment: "raise", raiseTicks: raiseTicks,
+                    path: [[centre.x(), centre.y(), centre.z()], [top.x(), top.y(), top.z()]],
+                    scale: scale, intensity: intensity, dust: dust });
+                if (wait >= telegraph) { chop(current, feet); return; }
+                current.after(1, function (next) { raise(next, wait + 1); });
+            }
+
+            function chop(current: CombatAction, feet: CombatPoint): void {
+                movementScenes.stop(current, "raise");
+                const live = current.world();
+                const centre = bandCentre(feet), top = bandTop(feet);
+                movementScenes.show(current, "chop", centre, { moment: "chop", direction: [0, -1, 0], chopTicks: chopTicks,
+                    point: [top.x(), top.y(), top.z()],
+                    path: [[top.x(), top.y(), top.z()], [centre.x(), centre.y(), centre.z()]],
+                    scale: scale, intensity: intensity });
+                const region = bandRegion(feet);
                 let victim: CombatActor | null = null, best = 1e9;
-                const region = WorldGeometry.ring(at, 0, hitRadius, { below: 1, above: 2 });
                 WorldGeometry.selectEnemies(live, region, function (candidate, facts) {
                     if (String(candidate.ref()) === String(actor.ref())) return;
-                    const gap = facts.position().minus(at).length();
+                    // 方块遮断脚路：到接触点没有直视线就不算劈到。
+                    if (!live.clear(feet.plus(WorldCombat.point(0, 0.4, 0)), facts.position())) return;
+                    const gap = facts.position().minus(feet).length();
                     if (gap < best) { best = gap; victim = candidate; }
                 });
-                if (victim === null && target !== null && live.valid(target) && !live.friendly(target)) {
-                    const body = live.observe(target);
-                    if (body !== null && body.visible() && body.health() > 0 && body.position().minus(at).length() <= hitRadius + body.width()) victim = target;
-                }
-                if (victim !== null) impactOn(current, victim, at, direction);
-                else crashLanding(current, at);
+                if (victim !== null) impactOn(current, victim, centre);
+                else crashLanding(current, centre);
             }
 
-            function chop(current: CombatAction): void {
-                movementScenes.stop(current, "raise");
-                const live = current.world(), me = live.observe(actor);
-                if (me === null) { finish(current); return; }
-                const from = me.position();
-                const toward = locked.minus(from);
-                const distance = toward.length();
-                const floor = axekickFloor(live, from, me.height() * 0.5);
-                if (distance <= Math.max(0.5, hitRadius) || from.y() - me.height() * 0.5 <= floor + 0.15) {
-                    resolve(current, from, toward.length() < 0.01 ? WorldCombat.point(0, -1, 0) : toward.unit());
-                    return;
-                }
-                const dir = toward.unit();
-                const stepLen = Math.min(chopSpeed, distance);
-                const delta = dir.scale(stepLen);
-                axekickResetFall(live, actor);
-                const swept = sweepStep(current, delta, hitRadius), trace = swept.hit;
-                if (trace.hitEntity()) {
-                    const victim = trace.target();
-                    if (victim !== null && String(victim.ref()) !== String(actor.ref()) && !live.friendly(victim)) {
-                        impactOn(current, victim, trace.position(), dir);
-                        return;
-                    }
-                }
-                if (trace.blocked()) { resolve(current, current.origin(), dir); return; }
-                const moved = swept.moved + (trace.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
-                if (moved < Math.min(0.06, stepLen * 0.4)) { resolve(current, current.origin(), dir); return; }
-                movementScenes.show(current, "chop", from, { moment: "chop", scale: scale, intensity: intensity, hitRadius: hitRadius,
-                        direction: [dir.x(), dir.y(), dir.z()],
-                        path: [[from.x(), from.y(), from.z()], [locked.x(), locked.y(), locked.z()]] });
-                current.after(1, function (next) { chop(next); });
-            }
-
-            function raise(current: CombatAction, step: number): void {
-                const live = current.world(), me = live.observe(actor);
-                if (me === null) { finish(current); return; }
-                if (target !== null && live.valid(target)) {
-                    const body = live.observe(target);
-                    if (body !== null) locked = axekickGround(live, body.position(), body.height() * 0.5);
-                }
-                if (step >= riseLimit || me.position().y() >= apexY - 0.05) { chop(current); return; }
-                const up = Math.min(hopSpeed, Math.max(0, apexY - me.position().y()));
-                const flatX = locked.x() - me.position().x(), flatZ = locked.z() - me.position().z();
-                const flat = Math.sqrt(flatX * flatX + flatZ * flatZ);
-                const horiz = Math.min(drift, flat);
-                const delta = WorldCombat.point(flat < 0.01 ? 0 : flatX / flat * horiz, up, flat < 0.01 ? 0 : flatZ / flat * horiz);
-                axekickResetFall(live, actor);
-                live.displace(actor, delta);
-                movementScenes.show(current, "raise", me.position(), { moment: "raise", height: hopHeight, scale: scale, intensity: intensity, dust: dust });
-                current.after(1, function (next) { raise(next, step + 1); });
-            }
-
-            raise(action, 0);
+            stepPhase(action);
         }
     });
 

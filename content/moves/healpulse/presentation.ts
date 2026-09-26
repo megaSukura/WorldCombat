@@ -1,14 +1,15 @@
 /**
  * 治愈波动 / Heal Pulse 的粒子语言。
  *
- * 一句话：施法者胸口拢起一圈温润的蓝白光，一收一放把它推出去；波沿直线飞向伙伴，抵达时整圈化开、把他裹住。
+ * 一句话：施法者胸口拢起一圈温润的蓝白光，一收一放把它推出去；波一面前行一面把走过的路留成光带，
+ *   抵达伙伴时整圈化开、把他裹住。
  * 色相家族：波青 0x8FD8E8 作主体，近白 0xEAFBFF 作高光与回复，淡紫 0x9AA8E0 只作余韵。
- * 拍子：起（windup）／送（emit）／行（seek）／化（wash）；被挡下或伙伴离场时走 fizzle。
- * 范围：emit 的环与 wash 的环半径都绑定 data.radius（波动半径），画出的正是判定用的尺度；seek 沿 data.path（施法者→伙伴的连线）铺开。
- * 运动：seek 的波沿两端身体之间的连线一束束涌向伙伴（direction: toward），涌动的时长由服务端的飞行时间决定（消息到期即收），
- *   玩家从光带持续多久读出这一口要赶多远；抵达时 wash 在伙伴身上整圈化开。
- * 数：波动光点绑定 data.motes（特攻换算），wash 的化开数量再乘 data.share（实际回复占最大生命的比例），
- *   所以补得越足、画面越亮越满；overcharge 时 emit 更沉更亮。
+ * 拍子：起（windup）／送（emit）／行（seek）／化（wash）；超范围或伙伴离场走 fizzle。
+ * 运动：seek 由服务端每刻更新同一份数据——`point` 是波前当前位置、`path` 是「施法者→波前」已走过的光带、
+ *   `direction` 是施法者→伙伴的实时方向。wave_front 绑 point 并靠 orient:"direction" 把环面转向行进方向，
+ *   玩家读到的是一个真的在往前走的前沿；wave_lane 绑 path 沿已走过的线段铺开、朝向伙伴。
+ * 数：快慢与粗细读 `density`（光点换算）、`radius`（波动半径）、`frontScale`（波前随行程放大）、
+ *   `laneSize`／`sparkSize`（随体型与特攻的上下限）；wash 的化开数量绑定 `glow`，只随**实际回复量**决定，补得越足越亮。
  */
 const HealPulseDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -58,26 +59,32 @@ const HealPulseDefinition: ParticleDefinition = {
             ]
         },
         seek: {
-            duration: 44,
-            exit: { stop: 40, drain: 8 },
+            duration: 0,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "wave_lane", bind: "path", offset: [0, 0.5, 0],
+                    name: "wave_lane", bind: "path", fit: "none", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
-                    burst: { count: { data: "motes", fallback: 18 }, interval: 2, repeats: 12 },
-                    shape: { kind: "polyline", closed: false }, direction: "toward", orient: "direction",
-                    speed: [0.08, 0.2], drag: 0.9,
-                    lifetime: [6, 12], size: { data: "scale", fallback: 0.2 }, sizeMode: "sin",
-                    color: 0x8FD8E8, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 100
+                    rate: { data: "density", fallback: 6 }, shape: { kind: "polyline", closed: false },
+                    direction: "toward", speed: [0.04, 0.12], drag: 0.9,
+                    lifetime: [6, 12], size: { data: "laneSize", fallback: 0.18 }, sizeMode: "sin",
+                    color: 0x8FD8E8, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
-                    name: "wave_spark", bind: "path", offset: [0, 0.5, 0],
+                    name: "wave_front", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: { data: "density", fallback: 6 }, shape: { kind: "ring", radius: { data: "radius", fallback: 0.75 } },
+                    orient: "direction", direction: "shape", speed: [0.02, 0.08], drag: 0.92,
+                    lifetime: [6, 12], size: { data: "frontScale", fallback: 0.24 },
+                    color: 0xEAFBFF, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 70
+                },
+                {
+                    name: "wave_spark", bind: "point", fit: "none", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: { data: "motes", fallback: 18 }, interval: 2, repeats: 12 },
-                    shape: { kind: "polyline", closed: false }, direction: "toward",
-                    speed: [0.1, 0.26], drag: 0.92,
-                    lifetime: [5, 10], size: [0.06, 0.01],
-                    color: 0xEAFBFF, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 90
+                    rate: { data: "density", fallback: 6 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 0.4 } },
+                    direction: "shape", speed: [0.03, 0.12], drag: 0.94,
+                    lifetime: [5, 10], size: { data: "sparkSize", fallback: 0.06 },
+                    color: 0xEAFBFF, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 70
                 }
             ]
         },
@@ -96,7 +103,7 @@ const HealPulseDefinition: ParticleDefinition = {
                 {
                     name: "wash_motes", bind: "target", offset: [0, 0.4, 0], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: { data: "motes", fallback: 18 }, interval: 3, repeats: 3 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 0.75 } },
+                    burst: { count: { data: "glow", fallback: 12 }, interval: 3, repeats: 3 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 0.75 } },
                     direction: "up", speed: [0.03, 0.12], drag: 0.92,
                     lifetime: [12, 22], size: [0.07, 0.01],
                     color: 0xEAFBFF, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 80
@@ -107,7 +114,7 @@ const HealPulseDefinition: ParticleDefinition = {
                     rate: { data: "glow", fallback: 8 }, shape: { kind: "sphere", radius: 0.35 },
                     direction: "outward", speed: [0.01, 0.04],
                     lifetime: [10, 18], size: [0.2, 0.05],
-                    color: 0x9AA8E0, alpha: [0.4, 0], light: "full", maxParticles: 24
+                    color: 0x9AA8E0, alpha: [0.4, 0], light: "full", maxParticles: 30
                 }
             ]
         },
@@ -116,11 +123,11 @@ const HealPulseDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "break", bind: "source", offset: [0, 0.5, 0], height: 0.2,
+                    name: "break", bind: "point", offset: [0, 0.5, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 10 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 0.6 } },
                     direction: "outward", speed: [0.02, 0.08], drag: 0.9,
-                    lifetime: [8, 16], size: [0.07, 0.01],
+                    lifetime: [8, 16], size: { data: "scale", fallback: 0.07 },
                     color: 0x9AA8E0, alpha: [0.5, 0], light: "world", maxParticles: 20
                 }
             ]

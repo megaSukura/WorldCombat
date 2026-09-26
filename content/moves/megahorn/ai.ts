@@ -3,6 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 7）格内；它射程长，够不到先让共享接近逻辑送进角程。
  * 对谁出手：`ai.huntTough`（默认开）把血厚、体型大的目标排得更前——一发最重的单点刺换掉对方主力。
+ * 稳定直线才有意义：正对且侧向速度小的目标分最高；快速绕侧、横向移动的目标会降权，等它转回正面再刺。
  * 出手位置：喜欢 2.5 格到射程之间（长角线正好贯穿），贴得太近反而容易刺空。
  * 放完之后：深植式会把目标钉住一会儿，交回共享计划让队友接手；甩角式把目标挑离阵地，接下来继续追。
  */
@@ -39,6 +40,14 @@ namespace PokemonSkills {
             let score = 24;
             if (distance >= 2.5) score += 4;
             if (distance < 1.2) score -= 6;
+            // 快速绕侧的目标会滑出窄角线：按相对角线的横向速度降权；正面站定的目标维持高分。
+            const fast = target.velocity;
+            if (fast && fast.length >= 3) {
+                const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+                const flat = Math.sqrt(dx * dx + dz * dz) || 1;
+                const lateral = Math.abs(fast[0] * (-dz / flat) + fast[2] * (dx / flat));
+                if (lateral > 0.12) score -= Math.min(9, Math.round(lateral * 32));
+            }
             if (CompanionBehavior.ai<boolean>(capability, "huntTough", true) && (target.maximum || 20) >= 90) score += 6;
             return score;
         }

@@ -7,7 +7,7 @@
   "worldcombat.skill.firstimpression.description.1": "It lunges up to %1$s blocks along the aim at %2$s blocks per tick with a %3$s block radius; it stops at the first enemy it touches, and on a hit shoves it back up to %4$s blocks.",
   "worldcombat.skill.firstimpression.reckless.on": "Reckless form: heavier, farther and with a harder shove, but a slower wind-up, longer recovery and cooldown, and harder to get back up.",
   "worldcombat.skill.firstimpression.reckless.off": "Steady form: base power with a clean landing that stands back up quickly.",
-  "worldcombat.skill.firstimpression.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s. Usable only when more than about 30 seconds have passed since the user's last action - usually right after entering battle, before it has acted.",
+  "worldcombat.skill.firstimpression.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, %4$s PP and %5$s s cooldown. Only the first action of this encounter; waiting while engaged does not refresh it. Disengage to regain it.",
   "worldcombat.skill.firstimpression.growth.0": "From level %1$s the slam power rises to %2$s.",
   "worldcombat.skill.firstimpression.growth.1": "From level %1$s the slam power rises to %2$s and the leap to %3$s blocks.",
   "worldcombat.skill.firstimpression.value.slam": "Slam power",
@@ -24,5 +24,5 @@
   "worldcombat.skill.firstimpression.preference.ai.maxChase.help": "Only lunge in at a foe within this distance. The leap is medium, so larger values commit earlier; smaller values keep it to point-blank openings.",
   "world_combat.move.firstimpression.text.hit": "First Impression %1$s",
   "world_combat.move.firstimpression.text.miss": "Whiffed",
-  "worldcombat.skill.firstimpression.description.2": "A lunge that comes up empty (blocked by terrain or reaching full distance without touching a foe) deals no damage; and any use, hit or miss, spends the opening."
+  "worldcombat.skill.firstimpression.description.2": "Only the first action of this encounter. Other moves, ordinary native attacks and missed lunges spend the opening. Disengage to regain it."
 }

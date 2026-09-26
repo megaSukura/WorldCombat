@@ -1,29 +1,23 @@
-/**
- * 真气弹 / focusblast —— 注册与动作。
- *
- * 三幕：
- *   蓄（charge，提交前）：施法者沉身站定，气点从四面向身前压紧（`action.present` 预告）；可被打断，不花 PP。
- *   飞（travel，提交后）：一团不稳定真气沿准线砸出——按 `scatter` 随机偏一个角度，等级与特攻越高越听话。
- *   击（blast / fizzle）：命中活物时结算一次全校最重的特殊伤害，并把目标沿气团方向推开 `blowback`，
- *       按概率用共享 `NativeEffects.boost(..., "spd", -1)` 压低特防；打空只留一下溃散。
- *
- * 与同族分开：磨防远击四式里唯一站定蓄势、唯一把人推开、唯一用散布如实表达命中率、也唯一不留下任何东西。
- * 配置 `unleash`（全力释放）由 resolve 改时序、由公式改威力／散布。
- */
+/** A bounded held charge makes final spread depend on recent aim stability, then launches one heavy projectile. */
 namespace PokemonSkills {
     const focusblastScene = "world_combat:move_focusblast";
     const focusblastSunderText = "world_combat.move.focusblast.text.sunder";
 
+    function focusblastAim(action:CombatAction):CombatPoint {
+        const input=JSON.parse(action.control()||"{}"),sample=input.samples&&input.samples[0];
+        const point=sample&&sample.point?WorldCombat.point(sample.point[0],sample.point[1],sample.point[2]):action.targetPosition();
+        const delta=point.minus(action.origin());return delta.length()>.001?delta.unit():action.direction();
+    }
     define({
         id: "focusblast",
         name: "Focus Blast",
-        description: "站定把气在体内压紧，再把一团不稳定的真气砸向目标：造成全族最重的特殊伤害，把目标推开，并可能压低其特防 1 级。力量太满时会明显飞偏，等级越高越稳。",
+        description: "按住蓄势，准备完成后松手打出真气重弹，额外至多十六刻便自动放出。最后短窗瞄得越稳，散射越小，最低降到四分之一；威力沿原预算，命中推开并可能降特防。",
         uses: ["拉开距离对站桩目标砸出最重的一发", "把贴脸的对手或掩体后的人推出去", "用最高单发伤害先行减员"],
-        kind: "enemy",
+        kind: "aim",
         range: 16,
         maxRange: 22,
         prepare: 26,
-        active: 0,
+        active: 80,
         recover: 12,
         cooldown: 40,
         style: "focus",
@@ -41,21 +35,45 @@ namespace PokemonSkills {
                 prepare: Math.round(p("focusblast", "charge", context)),
                 recover: 12,
                 cooldown: 40 + (unleash ? 4 : 0),
-                active: 0,
+                active: 80,
                 range: p("focusblast", "reach", context)
             };
         },
-        windup: function (action, config, prepare) {
-            action.present("world_combat:focusblast:" + action.id(), focusblastScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", motes: Math.round(p("focusblast", "motes", action)),
-                    unleash: config && config.unleash ? 1 : 0 }));
-            return prepare;
+        windup:function(action,config,prepare){
+            const start=action.sense().tick(),input=JSON.parse(action.control()||"{}"),direction=focusblastAim(action);
+            action.data("focusblast/charge",JSON.stringify({start:start,ready:start+prepare,stable:0,direction:[direction.x(),direction.y(),direction.z()],manual:!!input.token,released:false,fired:false}));
+            action.on("world_combat:input-release",function(current){
+                const state=JSON.parse(current.data("focusblast/charge")||"{}");if(state.fired)return;
+                if(current.sense().tick()<state.ready){current.reject("charge-incomplete");return;}
+                state.released=true;current.data("focusblast/charge",JSON.stringify(state));
+            });
+            function sample(current:CombatAction):void {
+                const state=JSON.parse(current.data("focusblast/charge")||"{}");if(state.fired)return;
+                const now=focusblastAim(current),old=WorldCombat.point(state.direction[0],state.direction[1],state.direction[2]);
+                const dot=now.x()*old.x()+now.y()*old.y()+now.z()*old.z();
+                state.stable=dot>=Math.cos(2*Math.PI/180)?Math.min(8,state.stable+1):Math.max(0,state.stable-4);
+                state.direction=[now.x(),now.y(),now.z()];current.data("focusblast/charge",JSON.stringify(state));
+                const spread=p("focusblast","scatter",current)*(1-.75*state.stable/8);
+                current.present("world_combat:focusblast/charge",focusblastScene,1,current.origin(),JSON.stringify({moment:"charge",jitter:.12+spread*.025,motes:p("focusblast","motes",current),unleash:config&&config.unleash?1:0}));
+                current.after(1,sample);
+            }
+            sample(action);return prepare;
         },
         execute: function (action, move, config, done) {
+            function release(current:CombatAction):void {
+                const state=JSON.parse(current.data("focusblast/charge")||"{}");
+                current.stopMovement();
+                const elapsed=current.world().tick()-state.ready;
+                if(!state.released && elapsed < (state.manual?16:6)){current.after(1,release);return;}
+                state.fired=true;current.data("focusblast/charge",JSON.stringify(state));
+                current.present("world_combat:focusblast/charge",focusblastScene,1,current.origin(),JSON.stringify({moment:"charge",lifecycle:{reason:"released",tick:current.world().tick()}}));
+                launch(current,state);
+            }
+            function launch(action:CombatAction,state:any):void {
             const world = action.world();
             const origin = action.origin();
             const power = p("focusblast", "core", action);
-            const scatter = p("focusblast", "scatter", action);
+            const scatter = p("focusblast", "scatter", action)*(1-.75*Math.min(8,state.stable)/8);
             const speed = p("focusblast", "velocity", action);
             const radius = p("focusblast", "radius", action);
             const chance = p("focusblast", "sunderChance", action);
@@ -69,7 +87,8 @@ namespace PokemonSkills {
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
             // 散布：把准线在水平面上随机偏转 `scatter` 度以内的一个角度，这就是原生 70 命中的即时翻译。
-            const base = aim(action);
+            const base = focusblastAim(action);
+            action.releaseTarget();
             const tilt = (world.random() * 2 - 1) * scatter * Math.PI / 180;
             const side = WorldCombat.point(-base.z(), 0, base.x());
             const lateral = side.length() < 0.001 ? WorldCombat.point(1, 0, 0) : side.unit();
@@ -93,7 +112,7 @@ namespace PokemonSkills {
                         if (landed) {
                             const outward = point.minus(origin);
                             if (outward.length() > 0.1 && scope.valid(victim))
-                                scope.displace(victim, WorldCombat.point(outward.x(), 0, outward.z()).unit().scale(blowback));
+                                scope.hitDisplace(victim, WorldCombat.point(outward.x(), 0, outward.z()).unit().scale(blowback));
                             if (scope.valid(victim) && scope.random() < chance) {
                                 NativeEffects.boost(scope, victim, "spd", -stages);
                                 const body = scope.observe(victim);
@@ -111,8 +130,10 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) { finish(current); });
 
-            WorldFeedback.keep(world, "focusblast:trail:" + action.id(), focusblastScene, 1, origin,
-                { moment: "travel", projectile: flight, motes: motes, scale: scale, intensity: intensity }, 90);
+            WorldFeedback.actionScenes(focusblastScene).show(action,"flight",origin,{moment:"travel",projectile:flight,motes:motes,scale:scale,intensity:intensity});
+            }
+            release(action);
         }
     });
+    WorldCombat.preview("world_combat:focusblast",JSON.stringify({radius:.3,lineOfSight:true,input:{version:1,steps:["point"],sustained:true}}));
 }

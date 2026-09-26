@@ -9,7 +9,7 @@
  * 拍子：起 lean（凑近）→ 吻 kiss（心爆＋妖精冲击＋吸取束）＋ 汲 mend（施法者回血）／空 miss（散心）。
  * 范围：kiss 的吸取束长度读 `data.span`（目标到施法者的真实距离），方向读 `data.direction`，画的就是这一吻够到的线。
  * 运动：心先在目标处爆开，吸取束沿「目标→自身」把玫红光点抽回；mend 在施法者身上向上冒起回血光。
- * 数：`data.hearts`（特攻与亲密度换算）决定爆开的心数与吸取束密度，`data.sap`（回血比例百分比）决定回血量感。
+ * 数：`data.hearts`（特攻与亲密度换算）决定爆开的心数与吸取束密度，`data.heal`（实际补回的生命）决定回血量感。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const DrainingkissDefinition: ParticleDefinition = {
@@ -75,7 +75,7 @@ const DrainingkissDefinition: ParticleDefinition = {
                 {
                     name: "glow", bind: "source", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
-                    burst: { count: { data: "sap", fallback: 14 } }, shape: { kind: "sphere_surface", radius: 0.42 },
+                    burst: { count: { data: "heal", fallback: 14 } }, shape: { kind: "sphere_surface", radius: 0.42 },
                     direction: "up", speed: [0.03, 0.12],
                     lifetime: [12, 20], size: [0.1, 0.01],
                     color: 0xFFD0E4, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 42

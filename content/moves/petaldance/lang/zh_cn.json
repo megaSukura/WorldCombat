@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.petaldance.summary": "原地旋舞，一圈圈花瓣从脚下卷成风暴：每一圈对周围一圈敌人造成范围特攻伤害并把它们轻推开；舞步沿弧线漂开，走过的地方落下花瓣。舞完自己陷入恍惚，出手可能被打散。",
-  "worldcombat.skill.petaldance.use.0": "隔着一段距离削一圈贴过来的敌人",
+  "worldcombat.skill.petaldance.summary": "裹着一圈外沿花裙连续舞步移动：花裙外沿扫过的人吃范围特攻伤害并被轻推开，贴近中心的中空里反而安全；走过的地方落下花瓣。舞完自己陷入恍惚，出手可能被打散。",
+  "worldcombat.skill.petaldance.use.0": "用中空花裙外沿削一圈贴过来的敌人",
   "worldcombat.skill.petaldance.use.1": "用特攻处理一堆低特防目标",
-  "worldcombat.skill.petaldance.use.2": "把花瓣留在地上标记自己舞过的区域",
-  "worldcombat.skill.petaldance.description.0": "旋舞 %2$s 圈，每圈对周围一圈敌人各造成约 %1$s 点特殊伤害。",
-  "worldcombat.skill.petaldance.description.1": "风暴半径 %1$s 格，两圈之间隔 %2$s；每圈沿弧线漂开 %3$s 格，把圈里人朝外轻推 %4$s 格。",
-  "worldcombat.skill.petaldance.description.2": "每圈在落脚处的地表留下最多 %1$s 块花瓣，只落在能长草的方块上；保留 %2$s，到期后花瓣消失、方块复原。",
-  "worldcombat.skill.petaldance.description.3": "舞完自己陷入恍惚 %1$s：期间每次出手尝试有 %2$s 的概率被打散而作废，落空时还会被花瓣反割、损失一小部分最大生命，并让恍惚重新计时。",
+  "worldcombat.skill.petaldance.use.2": "走位让裙边扫到敌人、同时把安全的中空留给队友",
+  "worldcombat.skill.petaldance.description.0": "沿当刻瞄准舞 %2$s 圈，每圈对花裙外沿上的敌人各造成约 %1$s 点特殊伤害。",
+  "worldcombat.skill.petaldance.description.1": "花裙外半径 %1$s 格、内空占外半径的 %2$s（小于这个比例的目标处在中空里，安全），两圈之间隔 %3$s；每圈沿弧线漂开 %4$s 格，把外沿上的人朝外轻推 %5$s 格。",
+  "worldcombat.skill.petaldance.description.2": "每圈在真实可支撑的地面留下最多 %1$s 块花瓣，保留 %2$s，到期后花瓣消失、方块复原。",
+  "worldcombat.skill.petaldance.description.3": "舞完自己陷入恍惚 %1$s：期间每次出手尝试有 %2$s 的概率被打散而作废，落空时还会被花瓣反割、损失一小部分最大生命；反噬不会延长恍惚。",
   "worldcombat.skill.petaldance.drift.on": "旋舞式：漂得更远、风暴更宽、花瓣留得更久、舞完晕得更久，但每圈威力略降（×0.96）、起手与冷却更久。",
   "worldcombat.skill.petaldance.drift.off": "原地舞：转在原地、收放更快、失控更短，但范围与留痕都收窄。",
   "worldcombat.skill.petaldance.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，发动后冷却 %5$s 秒。",
@@ -14,7 +14,8 @@
   "worldcombat.skill.petaldance.growth.1": "%1$s 级起每圈威力抬到 %2$s、每圈花瓣升到 %3$s 块。",
   "worldcombat.skill.petaldance.value.bloom": "每圈威力",
   "worldcombat.skill.petaldance.value.strikes": "旋舞圈数",
-  "worldcombat.skill.petaldance.value.radius": "风暴半径",
+  "worldcombat.skill.petaldance.value.radius": "花裙外半径",
+  "worldcombat.skill.petaldance.value.inner": "花裙内空占比",
   "worldcombat.skill.petaldance.value.drift": "旋舞步",
   "worldcombat.skill.petaldance.value.push": "花瓣推挤",
   "worldcombat.skill.petaldance.value.petals": "花瓣格数",
@@ -39,5 +40,5 @@
   "world_combat.move.petaldance.text.daze": "舞完之后晕头转向",
   "world_combat.move.petaldance.text.chip": "花瓣反割 %1$s",
   "effect.world_combat.petaldance_daze": "花瓣舞（恍惚）",
-  "worldcombat.skill.petaldance.description.stance": "起舞到收招期间自己站定原处，动作不会被打断，舞完才恢复自由行动。"
+  "worldcombat.skill.petaldance.description.stance": "起舞期间允许自由移动，花裙随真实身体一起走；动作不会被打断，舞完才结束。"
 }

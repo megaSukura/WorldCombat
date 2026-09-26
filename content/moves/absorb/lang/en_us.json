@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.absorb.summary": "Hit a target and drain its life to restore your health.",
+  "worldcombat.skill.absorb.summary": "Reach out a short vine in the aimed direction and drain an enemy's life to heal; you can cast it into empty space, and walls or allies stop the tip first.",
   "worldcombat.skill.absorb.description.0": "The vine tip deals about %1$s special damage; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.absorb.description.1": "The vine reaches %1$s blocks (also the real range) with a %2$s block tip radius.",
   "worldcombat.skill.absorb.description.2": "%1$s of the damage dealt is restored to the user.",

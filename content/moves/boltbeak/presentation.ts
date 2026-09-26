@@ -1,12 +1,12 @@
 /**
  * 电喙 / boltbeak 的客户端表现。
  *
- * 一句话：施法者喙尖蓄起一簇电 → 贴着地面一路电花直啄出去 → 啄中时炸开一圈电（先手时更亮更白）→
- * 目标身上噼啪留一小段 → 施法者拖着电弧退开。
+ * 一句话：施法者喙尖蓄起一簇电 → 贴着地面一路电花直啄出去，喙尖拉出一条细电线 → 啄中时炸开一圈电
+ * （先手时更亮更白）→ 目标身上噼啪留一小段 → 立即停掉前冲、拖着电弧沿真实路径后抽。
  * 色相家族：电黄与近白（electricity_yellow / electricity_white / impact_electric），先手一拍多一层冷白。
- * 拍子：起 charge → 冲 dart → 击 strike / first → 留 static → 收（退步尾迹）。
+ * 拍子：起 charge → 冲 dart → 击 strike / first → 留 static → 抽 withdraw；扑空走 miss。
  * 范围：dart 沿突刺逐刻铺开；strike/first 的点爆与环由 `data.scale`（判定半径派生）决定大小。
- * 运动：dart 的电花朝向 `orient: velocity` 沿啄出的方向拉直；退步时前一段电花留在原地散去。
+ * 运动：dart 的电花与喙尖细线朝 `orient: velocity` 沿啄出的方向拉直；withdraw 沿身体真实后退方向拖电，读 `data.retreated`。
  * 数：`data.sparks`（突刺进度派生）决定冲刺电花，`data.count`（最终威力派生）决定命中碎点，
  *   `data.doubled` 决定先手一拍是否更亮；画面里的数量与机制里的数一致。
  */
@@ -47,6 +47,14 @@ const BoltbeakDefinition: ParticleDefinition = {
                     direction: "away", speed: [0.05, 0.2], spread: 16,
                     lifetime: [5, 10], size: [0.13, 0.02],
                     alpha: [0.9, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "beaktip", bind: "source", offset: [0, 0, 0], height: 0.7, orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    rate: 14, shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [3, 7], size: [0.08, 0.01],
+                    alpha: [1, 0], light: "full", maxParticles: 40
                 },
                 {
                     name: "trail", bind: "source", offset: [0, 0, 0], height: 0.4,
@@ -128,6 +136,37 @@ const BoltbeakDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.09], spread: 26,
                     lifetime: [7, 14], size: [0.07, 0.01],
                     alpha: [0.75, 0], light: "full", maxParticles: 26
+                }
+            ]
+        },
+        withdraw: {
+            duration: 14,
+            exit: { stop: 4, drain: 10 },
+            emitters: [
+                {
+                    name: "pull", bind: "source", offset: [0, 0, 0], height: 0.5, orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    rate: 22, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "away", speed: [0.04, 0.14], spread: 14,
+                    lifetime: [5, 10], size: [0.12, 0.02],
+                    alpha: [0.85, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "streak", bind: "source", offset: [0, 0, 0], height: 0.45, orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    rate: 14, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "away", speed: [0.04, 0.14], spread: 12,
+                    lifetime: [5, 10], size: [0.16, 0.02],
+                    alpha: [0.6, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "static", bind: "source", offset: [0, 0, 0], height: 0.1, trail: { minDistance: 0.32 },
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    rate: 10, shape: { kind: "sphere", radius: 0.18 },
+                    direction: "outward", speed: [0.02, 0.07],
+                    gravity: 0.02, drag: 0.92,
+                    lifetime: [7, 13], size: [0.07, 0.01],
+                    alpha: [0.7, 0], light: "full", maxParticles: 26
                 }
             ]
         },

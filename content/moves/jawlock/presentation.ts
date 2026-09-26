@@ -4,11 +4,11 @@
  * 一句话：施法者压低身、张开的颚间亮起一对獠牙 → 猛扑上去咬中，目标身上炸开一圈恶色咬痕与飞散的牙屑 →
  *   咬住期间两者之间绷着一条噬合的暗色链、目标身上持续有牙屑被啃下 → 直到被拉开或倒下，链断、双方各自震开。
  * 色相家族：暗紫（0x6E4A8C / 0x9A7BFF）作恶属性主体，象牙白（0xF2EAD8）只给獠牙与咬痕高光，烟黑收地面。
- * 拍子：起 gather（张颚）→ 击 lock（咬中）→ 持 hold（互锁的链）→ 收 release（松口）/ break（被拉开）/ free（施法者脱身）。
+ * 拍子：起 gather（张颚）→ 击 lock（咬中并成锁）/ snap（咬中但目标免疫束缚，只留这一口）→ 持 hold（互锁的链）→ 收 release（松口）/ break（被拉开）/ free（施法者脱身）。
  * 范围：这招作用在两者之间，lock/free 绑各自的身体，hold 沿 `data.path` 的两个实体顶点画一条链——
- *   链绷在谁和谁之间，玩家一眼看出这两只被锁在一起；`data.grip` 决定链的松紧表现。
+ *   链绷在谁和谁之间，玩家一眼看出这两只被锁在一起；`data.grip` 决定 lock 那一圈咬痕半径。
  * 运动：咬痕与牙屑从咬点向外迸，链上的粒子贴着连线往复噬动，被拉开时链上粒子向两侧甩开。
- * 数：`data.maw`（物攻派生）决定咬痕与牙屑的数量，`data.lock`（对峙时长）给持续链一个可读的密度，强度读 `data.intensity`（咬合威力）。
+ * 数：`data.maw`（物攻派生）决定咬痕与牙屑的数量，`data.beats`（对峙时长换算）决定咬住后一圈圈收束的次数，强度读 `data.intensity`（咬合威力）。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const JawlockMoveDefinition: ParticleDefinition = {
@@ -25,7 +25,7 @@ const JawlockMoveDefinition: ParticleDefinition = {
                     shape: { kind: "box", size: [0.34, 0.14, 0.14] },
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [5, 10], size: [0.14, 0.03],
-                    color: 0xF2EAD8, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 18
+                    color: 0xF2EAD8, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: { data: "maw", fallback: 18 }
                 },
                 {
                     name: "threat", bind: "source", offset: [0, 0.3, 0.32], height: 0.2,
@@ -62,11 +62,35 @@ const JawlockMoveDefinition: ParticleDefinition = {
                 {
                     name: "clench", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 1, at: 0 },
+                    burst: { count: 1, at: 0, interval: 6, repeats: { data: "beats", fallback: 1 } },
                     shape: { kind: "ring", radius: { data: "grip", fallback: 2.4 } },
                     direction: "inward", speed: [0.04, 0.1],
                     lifetime: [8, 14], size: [0.2, 0.06],
                     color: 0x9A7BFF, alpha: [0.6, 0], light: "full", maxParticles: 14
+                }
+            ]
+        },
+        snap: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "crunch", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: 2, interval: 2 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.06, 0.22], spread: 22,
+                    lifetime: [5, 10], size: [0.28, 0.05], sizeMode: "index",
+                    color: 0xE6DEFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 22
+                },
+                {
+                    name: "chips", bind: "target", height: 0.48,
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "maw", fallback: 12 }, at: 1 },
+                    shape: { kind: "ring", radius: 0.28 },
+                    direction: "outward", speed: [0.06, 0.22], spread: 16, gravity: 0.04, drag: 0.9,
+                    lifetime: [8, 15], size: [0.12, 0.03],
+                    color: 0xF2EAD8, alpha: [0.85, 0], light: "world", maxParticles: 50
                 }
             ]
         },
@@ -88,6 +112,15 @@ const JawlockMoveDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [6, 12], size: [0.14, 0.03],
                     color: 0x6E4A8C, alpha: [0.6, 0], light: "world", maxParticles: 50
+                },
+                {
+                    name: "strain", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1, interval: 12, repeats: { data: "beats", fallback: 2 } },
+                    shape: { kind: "ring", radius: 0.34 },
+                    direction: "inward", speed: [0.03, 0.08],
+                    lifetime: [8, 14], size: [0.18, 0.06],
+                    color: 0x9A7BFF, alpha: [0.5, 0], light: "full", maxParticles: 24
                 }
             ]
         },

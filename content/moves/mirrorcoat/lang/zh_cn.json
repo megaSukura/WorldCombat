@@ -4,7 +4,7 @@
   "worldcombat.skill.mirrorcoat.use.1": "惩罚远程特攻手",
   "worldcombat.skill.mirrorcoat.use.2": "在安全距离上把承伤转成输出",
   "worldcombat.skill.mirrorcoat.description.0": "把最近一次挨到的特殊伤害以两倍射回去，约 %1$s 点；只有最近 %2$s 内挨到的账才算数，出招后账就清空。",
-  "worldcombat.skill.mirrorcoat.description.1": "光束射程 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格。这一记按固定伤害结算，属性免疫会直接挡下；返还额最多是自身最大生命的 %4$s。",
+  "worldcombat.skill.mirrorcoat.description.1": "光束射程 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；可锁定敌人，也可朝射程内的空点直射（没锁定实体时光束不再追人）。这一记按固定伤害结算，属性免疫或方块会直接截下；返还额最多是自身最大生命的 %4$s。",
   "worldcombat.skill.mirrorcoat.polish.on": "开启抛光镜面：记账窗口多 1.2 秒、返还上限比例加 8%，但起手多 3 刻、冷却多 8 刻。",
   "worldcombat.skill.mirrorcoat.polish.off": "关闭抛光镜面：收镜更快、只认眼前的账。",
   "worldcombat.skill.mirrorcoat.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

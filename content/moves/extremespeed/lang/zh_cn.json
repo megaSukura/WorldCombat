@@ -6,7 +6,7 @@
   "worldcombat.skill.extremespeed.description.0": "沿瞄准方向高速冲撞，撞上沿途第一个敌人即造成约 %1$s 点接触伤害（只命中这一个），判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.extremespeed.description.1": "沿瞄准方向冲刺最多 %1$s 格、每刻 %2$s 格，撞到方块或被挡住就提前收势；撞实把目标沿冲撞方向顶开约 %3$s 格。",
   "worldcombat.skill.extremespeed.description.2": "贯穿式命中后从它身上再冲约 %1$s 格停在身后。",
-  "worldcombat.skill.extremespeed.overrun.on": "贯穿式：撞上不停、从对方身上穿过去再冲一段停在它身后（可换位／继续追），但这一下 ×0.9、收招 +3 刻。",
+  "worldcombat.skill.extremespeed.overrun.on": "贯穿式：撞上不停、从对方身上穿过去再冲一段停在它身后（可换位／继续追）；余势会被后排身体或墙截住，也不会再补伤害。代价是这一下 ×0.9、收招 +3 刻。",
   "worldcombat.skill.extremespeed.overrun.off": "重撞式：自己撞中即停、这一下最重、收招更快；目标仍会被顶开。",
   "worldcombat.skill.extremespeed.timing": "可向 %1$s 格内施放；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.extremespeed.growth.0": "达到 %1$s 级，撞击威力提升至 %2$s。",

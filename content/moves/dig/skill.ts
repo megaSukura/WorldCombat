@@ -2,16 +2,16 @@
  * 挖洞 / Dig — 世界内的动作。
  *
  * 核心念头：钻进地里，绕开地表障碍，在你选定的那一点破土冲出，把范围内的东西连同那块地的表层一起
- * 掀上天。原生“钻地无敌”改由信息与材料承接：落点在起手时锁定并在落点画出范围，准备期就是对手
- * 唯一能走开的窗口；破土的气势取决于脚下是什么——松土掀得又宽又高，石头范围小但更疼，水面或悬空
- * 几乎炸不起来。
+ * 掀上天。计划落点在起手时锁定并画出范围，准备期就是对手唯一能走开的窗口；真正钻出时读的是身体实际
+ * 到达的位置——落点受保护或太挤时就在实际安全处破土，材料和范围都按那里采样。破土的气势取决于脚下
+ * 是什么——松土掀得又宽又高，石头范围小但更疼，水面或悬空几乎炸不起来。
  *
  * 形态
  *   - kind "motion"：12 格内选一个落点（不是敌人），施法者准备后消失在原地。
  *   - windup（提交前）：脚边地裂／落点画出范围与预览，可被打断且不花 PP。这是对手走开的窗口。
  *   - dive：等待 burrowTicks 后 teleport 到落点并破土。
- *   - erupt：以落点为心结算范围内所有敌对活体的地面物理伤害（距离衰减）与向上击飞；材料决定破土的
- *     范围、击飞高度与额外伤害，也决定表现用哪种碎屑。破土在地表留下冲击痕：把落点那一层的自然地表
+ *   - erupt：以实际钻出位置为心结算范围内所有敌对活体的地面物理伤害（距离衰减）与向上击飞；材料决定
+ *     破土的范围、击飞高度与额外伤害，也决定表现用哪种碎屑。破土在地表留下冲击痕：把出土处那一层自然地表
  *     方块换成粗土或碎石这类同位置的冲击方块（world.terrain 租借，replace 盖住原地表），痕迹在战斗中
  *     真实可见、之后自行恢复原样，不掉落物、不永久改地形，也不挖空、不触碰矿石、建材与带方块实体的方块。
  *
@@ -113,18 +113,28 @@ namespace PokemonSkills {
     function digErupt(current: CombatAction, move: CombatPokemonMove, config: any, destination: CombatPoint, done: (current: CombatAction) => void): void {
         var id = "dig", world = current.world(), actor = current.actor();
         var ambush = !!config.ambush;
-        var material = digMaterial(world, destination);
-        var radius = p(id, "eruptionRadius", current) * (ambush ? DIG_AMBUSH_RADIUS : 1) * material.radius;
-        var power = p(id, "power", current) * (ambush ? DIG_AMBUSH_POWER : 1) * material.power;
-        var launch = p(id, "launch", current) * (ambush ? DIG_AMBUSH_LAUNCH : 1) * material.launch;
         var collision = p(id, "collisionRadius", current);
         var maxTargets = p(id, "maxTargets", current);
 
+        // 钻出读的是实际到达的位置：teleport 被落点保护或拥挤拒绝时，位移能走到哪算哪；破土在身体真正所在的
+        // 地方发生，材料、范围、碎屑和冲击痕都采样那里，而不是把远端计划点当结果。
         if (!world.teleport(actor, destination)) {
-            var self = world.observe(actor);
-            if (self !== null) world.displace(actor, destination.minus(self.position()));
+            var moving = world.observe(actor);
+            if (moving !== null) {
+                var foot = moving.position().minus(WorldCombat.point(0, moving.height() * 0.5, 0));
+                world.displace(actor, destination.minus(foot));
+            }
         }
-        var center = destination.plus(WorldCombat.point(0, 0.2, 0)), actors = world.query(center, radius, false), hits = 0;
+        var body = world.observe(actor);
+        if (body === null) { done(current); return; }
+        var center = body.position().minus(WorldCombat.point(0, body.height() * 0.5, 0)).plus(WorldCombat.point(0, 0.2, 0));
+        var drift = Math.sqrt(Math.pow(center.x() - destination.x(), 2) + Math.pow(center.z() - destination.z(), 2));
+        var material = digMaterial(world, center);
+        var radius = p(id, "eruptionRadius", current) * (ambush ? DIG_AMBUSH_RADIUS : 1) * material.radius;
+        var power = p(id, "power", current) * (ambush ? DIG_AMBUSH_POWER : 1) * material.power;
+        var launch = p(id, "launch", current) * (ambush ? DIG_AMBUSH_LAUNCH : 1) * material.launch;
+
+        var actors = world.query(center, radius, false), hits = 0;
         for (var i = 0; i < actors.length && hits < maxTargets; i++) {
             var target = actors[i];
             if (String(target.ref()) === String(actor.ref()) || world.friendly(target)) continue;
@@ -138,9 +148,11 @@ namespace PokemonSkills {
             if (!hit.hitEntity() || hit.target() === null || String(hit.target()!.ref()) !== String(target.ref())) continue;
             var landed = impact(current, hit, id, power * Math.max(0.5, 1 - distance / radius * 0.5));
             if (!landed) continue;
-            if (world.valid(target) && launch > 0) world.displace(target, WorldCombat.point(0, launch, 0));
+            if (world.valid(target) && launch > 0) world.hitDisplace(target, WorldCombat.point(0, launch, 0));
             hits += 1;
         }
+        // 计划落点与实际出土点不一致时，让落点预告先熄灭，再在身体所在处破土。
+        if (drift > 0.75) WorldFeedback.emit(world, DIG_SCENE, 1, destination.plus(WorldCombat.point(0, 0.03, 0)), { moment: "mark_lost", scale: radius / 2.6 }, 20);
         WorldFeedback.emit(world, DIG_SCENE, 1, center, { moment: material.moment, scale: radius / 2.6, intensity: 1 + Math.min(1.5, hits * 0.4) }, 50);
         digScar(world, center, radius, material);
         WorldFeedback.emit(world, DIG_SCENE, 1, center, { moment: "settle", scale: radius / 2.6, intensity: 1 + Math.min(1, hits * 0.25) }, 34);
@@ -151,7 +163,7 @@ namespace PokemonSkills {
     define({
         freeMovement: true,
         id: "dig", name: "挖洞",
-        description: "钻入地下、绕开地表障碍，在选定落点破土：范围内敌人受到地面伤害并被掀飞，落点那一层地表被换成粗土或碎石、留下冲击痕，之后自行恢复。落点材料决定破土范围、击飞高度与附加伤害。",
+        description: "钻入地下、绕开地表障碍，在选定落点破土：范围内敌人受到地面伤害并被掀飞，出土处那一层地表被换成粗土或碎石、留下冲击痕，之后自行恢复。真正钻出以身体实际到达的位置为准，落点受保护或太挤时就在安全处破土；落点材料决定破土范围、击飞高度与附加伤害。",
         uses: ["位移突袭", "范围击飞", "绕后攻击"],
         kind: "motion", range: 12, active: 10, style: "ground-burrow", maximumTicks: 180,
         defaults: { ambush: false },

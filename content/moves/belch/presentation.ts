@@ -57,16 +57,16 @@ const BelchDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 18 },
             emitters: [
                 {
-                    name: "gas", bind: "path", offset: [0, 0.45, 0],
+                    name: "gas", bind: "path", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    shape: { kind: "polygon" },
+                    shape: { kind: "polyline" },
                     rate: { data: "motes", fallback: 40 }, direction: "shape", speed: [0.05, 0.2], spread: 14,
                     gravity: -0.008, drag: 0.93, spin: 5,
                     lifetime: [12, 24], size: [0.34, 0.14],
                     color: 0x8FB84A, alpha: [0.34, 0], light: "world", maxParticles: 260
                 },
                 {
-                    name: "edge", bind: "path", offset: [0, 0.42, 0],
+                    name: "edge", bind: "path", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     shape: { kind: "polyline" },
                     rate: 44, direction: "shape", speed: [0.08, 0.28], spread: 16,
@@ -106,18 +106,18 @@ const BelchDefinition: ParticleDefinition = {
             exit: { stop: 20, drain: 40 },
             emitters: [
                 {
-                    name: "drift", bind: "path", offset: [0, 0.4, 0],
+                    name: "drift", bind: "path", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    shape: { kind: "polygon" },
+                    shape: { kind: "polyline" },
                     rate: { data: "motes", fallback: 30 }, direction: "up", speed: [0.01, 0.05], spread: 10,
                     drag: 0.95, spin: 3,
                     lifetime: [24, 44], size: [0.4, 0.18],
                     color: 0x7FA044, alpha: [0.16, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "motes", bind: "path", offset: [0, 0.5, 0],
+                    name: "motes", bind: "path", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    shape: { kind: "polygon" },
+                    shape: { kind: "polyline" },
                     rate: 14, direction: "up", speed: [0.01, 0.06], spread: 12,
                     lifetime: [16, 30], size: [0.07, 0.01],
                     color: 0xC8D860, alpha: [0.25, 0], light: "full", maxParticles: 90

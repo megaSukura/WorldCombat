@@ -5,9 +5,9 @@
  * 贴地铺一圈霜，被砸懵的人头上晃星。
  * 色相家族：冰青（0x9FD8E8）与近白（0xDFF6FF）为主，深青（0x6FB8D0）只在碎冰上出现。
  * 拍子：起（windup 聚寒气、mark 落点记号）→ 击（fall 垂直坠落、shatter 落地碎冰）→ 收（hit 命中、flinch 砸懵）。
- * 范围：mark 与 shatter 的地面圈按 `data.radius`（碎裂半径）与 `data.scale` 铺开，画出的就是会被扫到的那圈。
- * 运动：冰柱绑 projectile 沿竖直方向落下并拖着冰尘；碎冰向四周带重力外抛。
- * 数：`data.count`（碎冰威力派生）决定立起的冰柱与碎冰量，`data.height`（坠落高度）决定记号柱的高度。
+ * 范围：mark 与 shatter 的地面圈按 `data.scale`（碎裂半径 / 1.7）铺开，画出的就是会被扫到的那圈；落点即柱尖垂线足点。
+ * 运动：冰柱绑 projectile 沿竖直方向落下并拖着冰尘；碎冰向四周带重力外抛，落地后不再有持续冰场。
+ * 数：`data.count`（碎冰威力派生）决定立起的冰柱与碎冰量，`data.height`（实际落高，已被顶棚截短）标注柱高。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const IciclecrashDefinition: ParticleDefinition = {
@@ -42,7 +42,7 @@ const IciclecrashDefinition: ParticleDefinition = {
                 {
                     name: "aim", bind: "point", fit: "none", offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
-                    rate: 6, shape: { kind: "ring", radius: { data: "radius", fallback: 1.7 } },
+                    rate: 6, shape: { kind: "ring", radius: 1.7 },
                     direction: "outward", speed: [0.01, 0.06],
                     lifetime: [12, 20], size: [0.5, 1.0], sizeMode: "sin",
                     color: 0x9FD8E8, alpha: [0.4, 0], light: "world", maxParticles: 60
@@ -50,7 +50,7 @@ const IciclecrashDefinition: ParticleDefinition = {
                 {
                     name: "shiver", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
-                    rate: 26, shape: { kind: "ring", radius: { data: "radius", fallback: 1.7 } },
+                    rate: 26, shape: { kind: "ring", radius: 1.7 },
                     direction: "inward", speed: [0.02, 0.1],
                     gravity: -0.006, drag: 0.94,
                     lifetime: [8, 16], size: [0.08, 0.02],
@@ -59,7 +59,7 @@ const IciclecrashDefinition: ParticleDefinition = {
                 {
                     name: "beckon", bind: "point", fit: "none", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
-                    rate: 14, shape: { kind: "ring", radius: { data: "radius", fallback: 1.7 } },
+                    rate: 14, shape: { kind: "ring", radius: 1.7 },
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [8, 15], size: [0.14, 0.03],
                     color: 0xDFF6FF, alpha: [0.65, 0], light: "full", bloom: 0.3, maxParticles: 70
@@ -116,7 +116,7 @@ const IciclecrashDefinition: ParticleDefinition = {
                     name: "frost_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
                     burst: { count: { data: "count", fallback: 16 }, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.7 } },
+                    shape: { kind: "ring", radius: 1.7 },
                     direction: "outward", speed: [0.06, 0.26], spread: 12,
                     gravity: 0.02, drag: 0.9,
                     lifetime: [12, 22], size: [0.09, 0.02],

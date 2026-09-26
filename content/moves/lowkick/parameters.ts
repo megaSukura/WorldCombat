@@ -11,6 +11,8 @@
  *   lunge      突进距离：施法者速度 + 等级；配置 reap 加长。
  *   speed      突进速度：施法者速度；踢出的节奏。
  *   collisionRadius 判定半径：施法者碰撞箱高度。
+ *   followRange 扫堂腿弧：施法者碰撞箱高度 + 速度；配置 reap 开启时，顺腿带倒第二人的短程。
+ *   followArc  扫堂弧度：固定的腿弧张角（几何常量）。
  *   tripStages 掉速等级：**目标体重**（1..3 级）。
  *   rootTicks  绊住时长：**目标体重**；越重越难立刻站稳。
  *   tripTicks  失衡持续：**目标体重** + 等级。
@@ -66,6 +68,17 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "扫腿能碰到的横向半径；身板越大腿越长。"
             }),
+        /** 扫堂腿弧：基础 1.7 格；碰撞箱每比 1.4 高 1 格加 0.1（上限 +0.4）；速度每比 60 快 1 加 0.005（上限 +0.3）；夹在 1.2..2.4。 */
+        followRange: formula(
+            F.base(1.7).plus(F.body("height").minus(1.4).times(0.1).clamp(0, 0.4))
+                .plus(F.stat("speed").minus(60).times(0.005).clamp(0, 0.3))
+                .clamp(1.2, 2.4).round(2),
+            "扫堂腿弧", {
+                unit: "格",
+                description: "扫堂式顺腿带倒第二人时的短程；腿越长、扫得越快，腿弧越长。第二人还必须在接触点的可见范围内，不在背后、不隔墙。"
+            }),
+        /** 扫堂弧度：固定 150 度张角，只覆盖接触点前方的腿弧，背后的目标不顺带。 */
+        followArc: n(150, "扫堂弧度", "度", "扫堂式腿弧的整张角；只顺腿扫到接触点前方约 150 度内的目标，背后的人不会被带倒。"),
         /** 掉速等级：基础 1；目标体重每超过 25kg 一档加 1，最多 3 级；夹在 1..3。 */
         tripStages: formula(
             F.base(1).plus(lowkickMassNode.gte(500).times(F.const(1))).plus(lowkickMassNode.gte(1000).times(F.const(1))).clamp(1, 3).round(0),
@@ -112,7 +125,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["sweep", "collisionRadius"] },
         { key: "description.1", values: ["lunge", "speed"] },
         { key: "description.2", values: ["tripStages","rootTicks","tripTicks"] },
-        { key: "reap.on", values: [], when: function (context) { return read(context.detail.values, ["reap"]) === true; } },
+        { key: "reap.on", values: ["followRange"], when: function (context) { return read(context.detail.values, ["reap"]) === true; } },
         { key: "reap.off", values: [], when: function (context) { return read(context.detail.values, ["reap"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.sweep"] },

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.chloroblast.summary": "Release all stored chlorophyll at once as a fan-shaped blast in front: every enemy caught takes a hit that weakens with distance, and the user loses health in proportion to the power released.",
+  "worldcombat.skill.chloroblast.summary": "Spray all stored chlorophyll in any direction or at a world point as a fan-shaped blast: every enemy caught takes a hit that is heavier up close, and empty casts are allowed. The user loses health in proportion to the power released.",
   "worldcombat.skill.chloroblast.description.0": "The fan deals about %1$s Grass special damage over a %2$s-block radius and a %3$s-degree spread, catching every enemy inside with clear line of sight.",
   "worldcombat.skill.chloroblast.description.1": "The fan's edge loses %1$s of its centre power; casting costs %2$s times maximum health, hit or miss.",
   "worldcombat.skill.chloroblast.burst.on": "Burst: spread ×1.35 covering nearly a half-circle to catch a looser group, at the cost of a shorter radius and lower power.",

@@ -5,9 +5,10 @@
  *   非接触；与草之誓约、水之誓约组合时威力升到 150，并按组合把场地变成火海／彩虹。
  *
  * 翻译：把「柱状攻击 + 与另一誓约组合成场地」翻成**一根从选定点拔地而起的火柱**：柱体对范围内每个敌人
- *   结算一次特殊伤害并点燃；柱脚下留一圈燃烧的誓约印（本单元场地规则 `world_combat:field/pledge_fire`），
- *   站在上面的敌人持续燃烧。落点附近已有草或水的誓约印时两者共鸣：这一击威力 ×`comboPower`，
- *   并把周围变成**火海**（火＋草）或**彩虹**（火＋水）——组合产物按另一元素的身份决定，与原生一致。
+ *   结算一次特殊伤害并点燃；柱脚下留一圈短寿的誓约印（本单元场地规则 `world_combat:field/pledge_fire`），
+ *   它是「这里立过火之誓约」的标记，**本身不再持续灼烧**。落点附近已有草或水的誓约印时两者共鸣：
+ *   这一击威力 ×`comboPower`，并把**同一圈印当场扩成**火海（火＋草）或彩虹（火＋水）——
+ *   持续灼烧／持续治疗只在真正共鸣时才出现，组合产物按另一元素的身份决定，与原生一致。
  *
  * 数值来源（每项读不同的个体数据，把差距摊到不同参数上）：
  *   pillar       火柱威力：特攻 + 等级（火越热烧得越狠）；配置 fierce 再调 1.12／0.96。
@@ -15,28 +16,25 @@
  *   pillarHeight 火柱高度：等级（等级越高柱越高）。
  *   burnTicks    点燃持续：特攻（火越烈烧得越久）。
  *   markRadius   誓约印半径：体型高度。
- *   markTicks    誓约印停留：等级；配置 fierce 让它更短（烧得更猛留得短）／更长。
+ *   markTicks    誓约印停留：等级；配置 fierce 让它更短／更长。它只标记共鸣机会，不灼烧。
  *   reach        施放距离：特攻。
  *   comboDetect  共鸣判定半径：特攻（越强的火越容易与别的誓约呼应）。
  *   comboScale   组合场半径倍率：特攻；配置 fierce 再调。
  *   comboPower   组合威力倍率：特攻。
  *   burst        画面火星数量：特攻（同时驱动粒子数）。
- *   scarCells    地面烙痕块数：特攻（同时驱动粒子与租借范围）。
+ *   scarCells    柱脚地面焦痕数量：特攻（驱动贴地焦痕粒子的密度）。
  *   tempo        起手：速度。recharge 冷却：等级；配置 fierce 更长。
  *
  * 配置 `fierce`（烈誓）：开启＝威力 ×1.12、柱更粗、冷却 +12，但誓约印只留七成时间；关闭（缓誓）＝威力 ×0.96、
- *   誓约印 ×1.25、冷却更短。两向都有适用局面：烈誓吃一波爆发，缓誓把地面烧得更久。
+ *   誓约印 ×1.25、冷却更短。两向都有适用局面：烈誓吃一波爆发，缓誓留更长的共鸣窗口。
  *
  * 伤害段 `pillar` 与参数同名，走共享换算（原生类别 Special、Fire 属性）。
  */
 namespace PokemonSkills {
     export const firepledgeId = "firepledge";
     export const firepledgeScene = "world_combat:move_firepledge";
-    /** 本单元的燃烧誓约印（只由本单元注册；别的誓约按同一套命名读取它）。 */
+    /** 本单元的火之誓约印（只由本单元注册；别的誓约按同一套命名读取它，共鸣后仍是这一条规则）。 */
     export const firepledgeScar = "world_combat:field/pledge_fire";
-    /** 火＋草 → 火海；火＋水 → 彩虹。 */
-    export const firepledgeSea = "world_combat:field/firepledge_seaoffire";
-    export const firepledgeRainbow = "world_combat:field/firepledge_rainbow";
     export const firepledgeHitText = "world_combat.move.firepledge.text.hit";
     export const firepledgeComboText = "world_combat.move.firepledge.text.combo";
     export const firepledgeMissText = "world_combat.move.firepledge.text.miss";
@@ -81,12 +79,12 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "柱脚下那圈燃烧的誓约印覆盖多大；体型越高印越宽，也决定地面烙痕的范围。"
             }),
-        /** 誓约印停留：180 + 等级偏移[0,120]，烈誓 ×0.7 / 缓誓 ×1.25；夹 100..340 tick。 */
+        /** 誓约印停留：110 + 等级偏移[0,80]，烈誓 ×0.7 / 缓誓 ×1.25；夹 80..240 tick。它只是共鸣窗口，不灼烧。 */
         markTicks: seconds(
-            F.base(180).plus(F.level().minus(20).times(2.5).clamp(0, 120))
+            F.base(110).plus(F.level().minus(20).times(1.6).clamp(0, 80))
                 .times(F.when(F.pref("fierce"), F.const(0.7), F.const(1.25)))
-                .clamp(100, 340).round(),
-            "誓约印停留", "这圈燃烧的印留多久；站在上面的敌人会持续燃烧。烈誓留得短、缓誓留得久。"),
+                .clamp(80, 240).round(),
+            "誓约印停留", "柱脚这圈火之誓约印留多久；它是「这里立过火誓」的标记，本身不灼烧，只在与草／水誓印共鸣时把同一圈印当场扩成组合场并延长。烈誓留得短、缓誓留得久。"),
         /** 施放距离：10 + 特攻偏移[−1.5,5]；夹 8..16。 */
         reach: formula(
             F.base(10).plus(F.stat("specialAttack").minus(60).times(0.03).clamp(-1.5, 5)).clamp(8, 16).round(1),
@@ -124,12 +122,12 @@ namespace PokemonSkills {
                 unit: "个",
                 description: "火柱窜起时喷出的火星数量；特攻越高越密，粒子直接按它发射。"
             }),
-        /** 地面烙痕块数：10 + 特攻 ×0.06；夹 8..20。 */
+        /** 地面焦痕数量：10 + 特攻 ×0.06；夹 8..20。驱动贴地焦痕粒子的密度，不再替换地表方块。 */
         scarCells: formula(
             F.base(10).plus(F.stat("specialAttack").times(0.06)).clamp(8, 20).round(0),
-            "地面烙痕块数", {
-                unit: "块",
-                description: "柱脚把地表烙成焦土的块数；随特攻增长，也决定烙痕的密度。"
+            "地面焦痕数量", {
+                unit: "处",
+                description: "柱脚留在地面上的焦痕数量；随特攻增长，直接决定贴地焦痕粒子的密度（只作视觉痕迹，不改动方块）。"
             }),
         /** 起手：10 − 速度偏移[−3,3]；夹 6..16 tick。 */
         tempo: seconds(
@@ -154,7 +152,7 @@ namespace PokemonSkills {
     describe(firepledgeId, [
         { key: "description.0", values: ["pillar","maxTargets"] },
         { key: "description.1", values: ["pillarRadius","pillarHeight","burnTicks"] },
-        { key: "description.2", values: ["markRadius","markTicks","scarCells"] },
+        { key: "description.2", values: ["markRadius","markTicks"] },
         { key: "description.3", values: ["comboDetect","comboPower","comboScale"] },
         { key: "description.4", values: ["reach", "tempo"] },
         { key: "fierce.on", values: [], when: function (context) { return read(context.detail.values, ["fierce"]) === true; } },

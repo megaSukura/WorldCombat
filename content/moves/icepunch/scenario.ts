@@ -3,7 +3,7 @@
  *
  * 场面：只会冰冻拳的冰拳手（Weavile）贴着只会跃起、不会还手的卡比兽（Snorlax），晴天平地。
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害。
- * 是否结霜（第一拳必结）、是否触发冻结（需目标已结霜或浸水），写进 note 供读轨迹判断。
+ * 是否结霜（目标无霜且不湿时）、是否触发冻结（已有霜或浸水且未免疫），写进 note 供读轨迹判断。
  */
 Smoke.scenario("icepunch", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -18,7 +18,7 @@ Smoke.scenario("icepunch", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("icepunch", caster) > 0, "icepunch was committed");
             stage.expect(stage.damageTo(foe) > 0, "the frost punch dealt damage");
-            stage.note("首拳留寒霜（减速）；目标已带寒霜或浸水时下一拳改为冻结", {
+            stage.note("命中先尝试冻结（已有寒霜或浸水时），成功才收走寒霜；否则留一层新寒霜；免冻目标保留原霜", {
                 casts: stage.casts("icepunch", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 chilled: stage.hadMobEffect(foe, "world_combat:status/chill"),

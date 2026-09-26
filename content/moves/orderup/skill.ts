@@ -1,45 +1,23 @@
 /**
  * 上菜 / orderup 的出手方式。
  *
- * 核心念头：以潇洒的身手端出一记不接触的精准下手；若身边跟着一只小个子伙伴（「菜」），还会按它的样子
- * 给施法者补上一项能力——Droopy 提防御、Stretchy 提速度、其余提攻击。它也是全族唯一出手即增益的一招。
+ * 核心念头：小伙伴给出指令，使用者端出一记短程平抛的龙形菜势；首接触结算一次非接触伤害。
+ *   若身边跟着一只小个子伙伴（「菜」），还会按它的样子给施法者补上一项能力——Droopy 提防御、
+ *   Stretchy 提速度、其余提攻击；分餐式再把这个增益分给身旁队友。它不拆防护幕。
  * 三幕：
- *   起（windup，提交前）：托手成盘，盘中聚起一点暖光。
- *   端（execute → serve）：提交后沿瞄准方向踏近半步，在身前一条窄走廊里拍下；命中处亮起礼花火花。
- *   供（dish）：若「菜」在 dishRange 内，按它的样子为自身（分餐式再为身旁队友）补上能力。
- *   碎（break）：下手落点半径内的反射壁、光墙与极光幕一并震碎。
+ *   起（windup，提交前）：托手成盘，盘中聚起一点暖光（`action.present`）。
+ *   令（order）：伙伴到施法者之间亮起一道短指令线；能力只在**实际存在伙伴**时补上，补到谁就在谁身上亮出小符。
+ *   端（serve → fly/hit）：提交后从身体平抛出一枚托盘形龙气，沿瞄准方向短程飞出；首个接触的身体结算一次
+ *       非接触伤害后菜势收掉；没碰到人则原地散掉。空点也能出手，增益照旧由真实伙伴决定。
  *
- * 与同族分开：劈瓦是贴身手刀；精神之牙是会吞屏障的咬击；怒牛是整段位移的冲撞。
- * 上菜不接触、单发更轻，但会把碎壁与一碟「菜」一起端出来。
+ * 瞄准：`kind: "aim"` 接受任意阵营实体或世界点；不破坏方块，也不拆防护幕。
+ * 与同族分开：劈瓦是竖直刀痕的贴身快劈；精神之牙只在第一处身体或屏障上闭合一次；怒牛是整段位移的冲撞。
  */
 namespace PokemonSkills {
     const orderupScene = "world_combat:move_orderup";
     const orderupDishText = "world_combat.move.orderup.text.dish";
-    const orderupBreakText = "world_combat.move.orderup.text.break";
     const orderupMissText = "world_combat.move.orderup.text.miss";
 
-    function orderupShatter(world: CombatWorld, centre: CombatPoint, radius: number): number {
-        let broken = 0;
-        const zones = WorldEffects.areasWithTag(world, WorldEffects.categories.screen);
-        for (let z = 0; z < zones.length; z++) {
-            const area = zones[z];
-            const at = WorldCombat.point(area.position[0], area.position[1], area.position[2]);
-            if (at.minus(centre).length() > radius + area.radius) continue;
-            if (world.operation(area.id, "world_combat:dispel", "{}")) broken++;
-        }
-        const actors: CombatActor[] = world.query(centre, radius, false).slice();
-        actors.push(world.source());
-        const seen: { [ref: string]: boolean } = {};
-        for (let i = 0; i < actors.length; i++) {
-            const actor = actors[i];
-            if (!actor || !world.valid(actor)) continue;
-            const ref = String(actor.ref());
-            if (seen[ref]) continue;
-            seen[ref] = true;
-            broken += CombatStatus.cureTagged(world, actor, WorldEffects.categories.screen);
-        }
-        return broken;
-    }
     /** 「菜」：自身 dishRange 内、比自身明显小的友方里最小的一只。 */
     function orderupDish(world: CombatWorld, actor: CombatActor, self: CombatObservation, range: number): CombatActor | null {
         const actors = world.query(self.position(), range, false);
@@ -69,25 +47,15 @@ namespace PokemonSkills {
         return "atk";
     }
     function orderupStatIndex(stat: string): number { return stat === "def" ? 1 : stat === "spe" ? 2 : 0; }
-    function orderupLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): CombatPoint[] {
-        const forward = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(heading.scale(reach));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))];
-    }
-    function orderupPath(vertices: CombatPoint[]): number[][] {
-        return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
-    }
 
     define({
         freeMovement: true,
         id: "orderup",
         cooldownParameter: "recharge",
         name: "上菜",
-        description: "以潇洒的身手端出一记不接触的精准下手：拍伤目标，震碎下手点周围的反射壁、光墙与极光幕；若身边带着小个子伙伴，还会按它的样子给自身（或分给队友）补上一项能力。",
-        uses: ["一记不接触的优雅精准拍击", "带着小个子伙伴时顺手强化自身", "用碎壁与增益同时打开局面"],
-        kind: "enemy",
+        description: "小伙伴给出指令，使用者端出一记短程平抛的龙形菜势：首个碰到的身体结算一次非接触伤害。身边带着小个子伙伴时，还会按它的样子给自身（分餐式再给身旁队友）补上一项能力；不拆防护幕，空放也能靠真实伙伴上菜。",
+        uses: ["一记短程抛出的龙形菜势", "带着小个子伙伴时顺手强化自身", "用同一份上菜同时打开攻击与增益"],
+        kind: "aim",
         range: 3.0,
         maxRange: 4.4,
         prepare: 8,
@@ -98,7 +66,7 @@ namespace PokemonSkills {
         defaults: { share: false, ai: { maxChase: 8, serve: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: pokemon ? p("orderup", "reach", pokemon) : 3, geometry: "circle", style: "serve",
+            return { radius: pokemon ? p("orderup", "reach", pokemon) : 3, geometry: "line", style: "serve",
                 color: 0xF0C86A, label: config && config.share ? "分餐式" : "独享式" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -121,76 +89,103 @@ namespace PokemonSkills {
             const share = !!(config && config.share);
             const direction = aim(action);
             const reach = p("orderup", "reach", action);
-            const half = p("orderup", "serveWidth", action);
+            const width = p("orderup", "serveWidth", action);
             const power = p("orderup", "serve", action);
-            const wardBreak = p("orderup", "wardBreak", action);
+            const flight = p("orderup", "flight", action);
             const range = p("orderup", "dishRange", action);
             const shareRadius = p("orderup", "shareRadius", action);
             const stages = Math.max(1, Math.round(p("orderup", "serveStages", action)));
+            const scale = width / 0.45;
+            const scenes = WorldFeedback.actionScenes(orderupScene);
+            let settled = false;
 
-            const self = world.observe(actor);
-            if (self !== null) {
-                const victim = action.target();
-                const victimBody = victim !== null && world.valid(victim) ? world.observe(victim) : null;
-                const delta = victimBody !== null ? victimBody.position().minus(self.position()) : direction.scale(reach);
-                const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-                const step = Math.min(0.6, Math.max(0, flat - half - 0.35));
-                if (step > 0.05) world.displace(actor, direction.scale(step));
+            function finish(current: CombatAction): void { scenes.finish(current, done); }
+
+            function present(current: CombatAction, key: string, point: CombatPoint, data: any): void {
+                scenes.show(current, key, point, data);
             }
-            const moved = world.observe(actor);
-            const origin = moved === null ? action.origin() : moved.position();
-
-            const vertices = orderupLane(origin, direction, reach, half);
-            const lane = WorldGeometry.lane(origin, direction, reach, half, { below: 1.4, above: 2.2 });
-            let strike = origin.plus(direction.scale(reach)), hits = 0, wards = 0;
-            WorldGeometry.selectEnemies(world, lane, function (victim, facts) {
-                if (hits === 0) strike = facts.position();
-                hits++;
-                wards += orderupShatter(world, facts.position(), wardBreak);
-                hurt(action, victim, "orderup", power, { damage: damageSpec("orderup", "serve") });
-            });
-            if (hits === 0) wards += orderupShatter(world, strike, wardBreak);
-
-            // 供：把「菜」端出来。小个子友方在 dishRange 内时，按它的样子补一项能力。
-            let dished = 0;
-            if (self !== null) {
-                const dish = orderupDish(world, actor, self, range);
-                if (dish !== null) {
-                    dished = 1;
-                    const stat = orderupDishStat(dish);
-                    const selfStages = share ? stages : stages + 1;
-                    NativeEffects.boost(world, actor, stat, selfStages);
-                    if (share) {
-                        const allies = world.query(self.position(), shareRadius, false);
-                        let served = 0;
-                        for (let i = 0; i < allies.length && served < 4; i++) {
-                            const other = allies[i];
-                            if (!other || !world.valid(other) || String(other.key()) === String(actor.key())) continue;
-                            if (!world.friendly(other)) continue;
-                            NativeEffects.boost(world, other, stat, stages);
-                            served++;
+            function orderAndDish(current: CombatAction, self: CombatObservation): boolean {
+                const scope = current.world();
+                const dish = orderupDish(scope, current.actor(), self, range);
+                if (dish === null) return false;
+                const dishBody = scope.observe(dish);
+                if (dishBody === null) return false;
+                const stat = orderupDishStat(dish);
+                const caster = self.position();
+                present(current, "order", dishBody.position(), {
+                    moment: "order",
+                    path: [[dishBody.position().x(), dishBody.position().y(), dishBody.position().z()],
+                        [caster.x(), caster.y(), caster.z()]],
+                    direction: [direction.x(), direction.y(), direction.z()],
+                    scale: scale
+                });
+                const selfStages = share ? stages : stages + 1;
+                NativeEffects.boost(scope, current.actor(), stat, selfStages);
+                WorldFeedback.emit(scope, orderupScene, 1, caster,
+                    { moment: "dish", stat: orderupStatIndex(stat), stages: selfStages, target: String(current.actor().ref()), scale: scale }, 30);
+                WorldFeedback.text(scope, caster.plus(WorldCombat.point(0, 1.3, 0)), orderupDishText, [selfStages], 32);
+                if (share) {
+                    const allies = scope.query(caster, shareRadius, false);
+                    let served = 0;
+                    for (let i = 0; i < allies.length && served < 4; i++) {
+                        const other = allies[i];
+                        if (!other || !scope.valid(other) || String(other.key()) === String(current.actor().key())) continue;
+                        if (!scope.friendly(other)) continue;
+                        NativeEffects.boost(scope, other, stat, stages);
+                        const body = scope.observe(other);
+                        if (body !== null) {
+                            WorldFeedback.emit(scope, orderupScene, 1, body.position(),
+                                { moment: "dish", stat: orderupStatIndex(stat), stages: stages, target: String(other.ref()), scale: scale }, 28);
+                        }
+                        served++;
+                    }
+                }
+                sound(current, "minecraft:block.note_block.bell");
+                return true;
+            }
+            function launch(current: CombatAction): void {
+                const scope = current.world();
+                const radius = Math.max(0.25, width * 0.7);
+                const shot = LivingActions.projectile(current, {
+                    speed: flight, range: reach, radius: radius, gravity: 0.03, lifetime: 80,
+                    appearance: { item: "minecraft:bowl", glow: true, scale: Math.max(0.6, Math.min(1.3, width / 0.6)),
+                        tint: 0xF0C86A },
+                    impact: function (inner: CombatAction, contact: CombatImpact) {
+                        if (settled) return;
+                        const live = inner.world(), victim = contact.target(), point = contact.position();
+                        if (victim === null || !live.valid(victim) || live.friendly(victim)) return;
+                        settled = true;
+                        const landed = impact(inner, contact, "orderup", power,
+                            { damage: damageSpec("orderup", "serve") });
+                        WorldFeedback.emit(live, orderupScene, 1, point,
+                            { moment: "hit", target: String(victim.ref()), power: Math.round(power), scale: scale }, 24);
+                        if (landed) sound(inner, "minecraft:block.bell.use");
+                    }
+                }, function (inner: CombatAction) {
+                    if (!settled) {
+                        settled = true;
+                        const live = inner.world(), body = live.observe(inner.actor());
+                        if (body !== null) {
+                            WorldFeedback.emit(live, orderupScene, 1, body.position(), { moment: "miss", scale: scale }, 18);
+                            WorldFeedback.text(live, body.position().plus(WorldCombat.point(0, 1.0, 0)), orderupMissText, [], 20);
                         }
                     }
-                    WorldFeedback.emit(world, orderupScene, 1, self.position(),
-                        { moment: "dish", stat: orderupStatIndex(stat), stages: selfStages, dished: 1, target: String(actor.ref()) }, 30);
-                    WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.3, 0)), orderupDishText, [selfStages], 32);
-                    sound(action, "minecraft:block.note_block.bell");
-                }
+                    scenes.stop(inner, "fly");
+                    finish(inner);
+                });
+                present(current, "fly", current.origin(), { moment: "fly", projectile: shot, scale: scale, power: Math.round(power) });
+                sound(current, "minecraft:item.trident.throw");
             }
 
-            WorldFeedback.emit(world, orderupScene, 1, strike,
-                { moment: "serve", path: orderupPath(vertices), power: Math.round(power), hits: hits, dished: dished,
-                    scale: half / 0.45, direction: [direction.x(), direction.y(), direction.z()] }, 24);
-            WorldFeedback.emit(world, orderupScene, 1, strike,
-                { moment: "break", wards: wards, scale: wardBreak / 8 }, 26);
-            sound(action, "minecraft:block.bell.use");
-            if (wards > 0) {
-                sound(action, "minecraft:block.glass.break");
-                WorldFeedback.text(world, strike.plus(WorldCombat.point(0, 1.2, 0)), orderupBreakText, [wards], 30);
+            const self = world.observe(actor);
+            if (self !== null && orderAndDish(action, self)) {
+                action.after(5, function (next: CombatAction) {
+                    scenes.stop(next, "order");
+                    if (!settled) launch(next);
+                });
+            } else {
+                launch(action);
             }
-            if (hits === 0)
-                WorldFeedback.text(world, strike.plus(WorldCombat.point(0, 1.0, 0)), orderupMissText, [], 24);
-            done(action);
         }
     });
 }

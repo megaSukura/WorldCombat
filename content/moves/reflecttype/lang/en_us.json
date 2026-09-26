@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.reflecttype.summary": "Copy a Pokémon’s current types, or a non-Pokémon’s armour. Mirror All also copies armour toughness and knockback resistance.",
+  "worldcombat.skill.reflecttype.summary": "Mirror one chosen target: a Pokémon yields its current types, a non-Pokémon yields its current armour. Friend or foe both work; you cannot mirror yourself, and pointing at the ground is invalid. A source with nothing readable or no actual change is refused.",
   "worldcombat.skill.reflecttype.use.0": "Copy the opponent's type to flip your matchups",
-  "worldcombat.skill.reflecttype.use.1": "Follow an opponent whose type was changed",
+  "worldcombat.skill.reflecttype.use.1": "Borrow a type from a friend or foe that hardens your defence",
   "worldcombat.skill.reflecttype.use.2": "Take only the primary type and dodge a secondary weakness",
   "worldcombat.skill.reflecttype.description.0": "Range %1$s blocks, preparation %2$s. Copy a Pokémon’s current primary type; Mirror All also copies its secondary type.",
   "worldcombat.skill.reflecttype.description.1": "Copied Pokémon types last %1$s and determine type matchups, same-type bonuses and type-based immunities.",
@@ -19,13 +19,14 @@
   "worldcombat.skill.reflecttype.value.glints": "Glint count",
   "worldcombat.skill.reflecttype.preference.pair": "Mirror both types",
   "worldcombat.skill.reflecttype.preference.pair.help": "On: copies the secondary type too, duration ×1.25, cooldown +14 ticks, the closest match. Off: copies only the first type, duration ×0.8, cooldown −8 ticks, avoiding extra weaknesses from a secondary type.",
-  "worldcombat.skill.reflecttype.preference.ai.maxChase": "Chase distance",
-  "worldcombat.skill.reflecttype.preference.ai.maxChase.help": "Only consider mirroring a threat inside this distance; larger mirrors earlier from farther away, smaller only at close range.",
+  "worldcombat.skill.reflecttype.preference.ai.maxChase": "Search distance",
+  "worldcombat.skill.reflecttype.preference.ai.maxChase.help": "Look for a worthwhile source within this distance; larger will walk farther for a harder face, smaller only picks from close by.",
   "worldcombat.skill.reflecttype.preference.ai.leaveStation": "Leave post when holding",
-  "worldcombat.skill.reflecttype.preference.ai.leaveStation.help": "On, a holding companion will leave its post to mirror a foe; off, it only casts when already in reach.",
+  "worldcombat.skill.reflecttype.preference.ai.leaveStation.help": "On, a holding companion will leave its post to mirror a better source; off, it only picks from sources already in reach.",
   "effect.world_combat.reflecttype": "Reflect Type",
   "world_combat.move.reflecttype.text.one": "Reflected into %1$s",
   "world_combat.move.reflecttype.text.pair": "Reflected into %1$s and %2$s",
   "world_combat.move.reflecttype.text.fail": "No type to reflect",
+  "world_combat.move.reflecttype.text.armor": "Armour mirrored",
   "worldcombat.skill.reflecttype.world": "Against a non-Pokémon, copy its current armour; Mirror All also copies armour toughness and knockback resistance. The copy lasts %1$s, ending on expiry or cleansing. Copied defences can be weaker than your own; later equipment and effects still change the result."
 }

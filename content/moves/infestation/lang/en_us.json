@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.infestation.summary": "The user flings a swarm of bugs onto the target to cling and gnaw at it, and the target cannot move while infested; trade time for space.",
+  "worldcombat.skill.infestation.summary": "Four clusters of bugs cling and gnaw. The target can move, shedding one cluster after each stretch travelled; fewer remaining clusters means weaker bites.",
   "worldcombat.skill.infestation.description.0": "The hit deals about %1$s special damage and leaves the swarm on the target.",
-  "worldcombat.skill.infestation.description.1": "The swarm clings for %1$s, during which the target cannot move; every %3$s it gnaws off %2$s of the target's maximum health (at least 1 point each bite). The swarm disperses when its duration runs out or it is cleared (milk, /effect clear, and the like).",
+  "worldcombat.skill.infestation.description.1": "The swarm lasts up to %1$s. While intact, it requests %2$s of maximum health every %3$s; shedding clusters proportionally reduces later bites. Native damage rules settle the loss, and curing the swarm ends it immediately.",
   "worldcombat.skill.infestation.description.2": "Range %1$s blocks, swarm speed %2$s blocks per tick; it attaches to the first target it touches in flight (collision radius %4$s blocks) and scatters if it hits a block first. Wind-up %3$s.",
   "worldcombat.skill.infestation.use.0": "Stick a lasting gnaw on a stubborn target",
-  "worldcombat.skill.infestation.use.1": "Pin the target in place",
+  "worldcombat.skill.infestation.use.1": "Make stationary attackers move to shake off bugs",
   "worldcombat.skill.infestation.use.2": "Force the target to clear the status or fight back first",
   "worldcombat.skill.infestation.value.bite": "Initial bite power",
   "worldcombat.skill.infestation.value.swarmShare": "Per-bite share",
@@ -23,5 +23,7 @@
   "effect.world_combat.infestation_swarm": "Infestation",
   "world_combat.move.infestation.text.cling": "Clung %1$s s",
   "world_combat.move.infestation.text.fizzle": "Bugs scatter",
-  "world_combat.move.infestation.text.release": "Swarm disperses"
+  "world_combat.move.infestation.text.release": "Swarm disperses",
+  "worldcombat.skill.infestation.description.shed": "Every %1$s blocks actually travelled sheds one of four clusters. Shedding all four clears the swarm.",
+  "worldcombat.skill.infestation.value.shakeDistance": "Distance per shed cluster"
 }

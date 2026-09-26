@@ -259,6 +259,37 @@ const SkullBashDefinition: ParticleDefinition = {
                     color: 0x8A7A64, alpha: [0.7, 0], light: "world", maxParticles: 50
                 }
             ]
+        },
+        // 空放撞墙：只在真正撞到的方块格上炸开一小片碎岩，读得出这一记头锤停在哪。
+        crash: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "crash_flash", bind: "point", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
+                    burst: { count: 18 }, shape: { kind: "sphere", radius: 0.3, thickness: 0.5 },
+                    direction: "outward", speed: [0.08, 0.24],
+                    lifetime: [6, 12], size: [0.34, 0.05], sizeMode: "index",
+                    color: 0xFFF2E0, alpha: [1, 0], light: "full", bloom: 0.25
+                },
+                {
+                    name: "crash_rocks", bind: "point", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: 16 }, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.08, 0.24], gravity: 0.1, drag: 0.88,
+                    lifetime: [12, 24], size: [0.26, 0.1],
+                    color: 0xA08E72, alpha: [0.9, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "crash_dust", bind: "point", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 12 }, shape: { kind: "ring", radius: 0.34 },
+                    direction: "outward", speed: [0.04, 0.14], gravity: 0.02, drag: 0.9,
+                    lifetime: [14, 26], size: [0.2, 0.3],
+                    color: 0x7A6E5C, alpha: [0.4, 0], light: "world", maxParticles: 40
+                }
+            ]
         }
     }
 };

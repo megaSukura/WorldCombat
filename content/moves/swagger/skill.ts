@@ -8,9 +8,11 @@
  * 出手：短起手（windup 播红怒预告）后提交。
  * 命中：NativeEffects.boost 一条路径把攻击礼物送给任何对象；CombatStatus.apply 挂共享混乱身份
  *       world_combat:status/confusion；world.target 把怪物仇恨拉向施法者。
+ * 分幕：怒符（礼物本身）与仇恨转移（goad 拉线）分开呈现；混乱没挂上时仍播礼物与灰白「不为所动」。
  * 持续：混乱存续期由本单元的 MobEffect 承担（物品栏可见、/effect 可用），周期性 keep 播放飞鸟。
  * 随机分支：目标每次试图出手（world_combat:before_commit）按 chance 掷骰；中则本次出手作废。
- * 反噬：目标每次打中非友方时（world_combat:damage_applied）按自身攻击结算自伤，让「礼物」变成凶器。
+ * 反噬：目标每次打中非友方时（world_combat:damage_applied）按自身攻击结算自伤；自伤上限绑定该次攻击的
+ *       实际伤害，避免高生命目标只因为血多就被按比例白削。反噬自伤自身不会再触发一次。
  * 反制：抬高的攻击同样落在施法者与它队友身上；混乱可被共享策略在施加时拒绝（此处仍照给礼物）。
  */
 namespace PokemonSkills {
@@ -70,15 +72,24 @@ namespace PokemonSkills {
             const landed = CombatStatus.apply(world, target, "confusion", swaggerConfusion, ticks,
                 Math.round(chance * 100), { unique: true });
             const targetBody = world.observe(target);
-            if (targetBody !== null && !targetBody.player()) world.target(target, caster);
+            const pulled = !(targetBody !== null && targetBody.player()) && world.target(target, caster);
             if (targetBody !== null) {
                 const scale = Math.max(0.6, Math.min(2, ticks / 160));
                 const burst = Math.round(18 + chance * 90);
+                // 怒符：礼物本身落在目标身上，无论混乱是否挂上。
                 WorldFeedback.emit(world, swaggerScene, 1, targetBody.position(),
                     { moment: "taunt", target: String(target.ref()), gift: gift, burst: burst, scale: scale, intensity: scale }, 34);
                 WorldFeedback.text(world, targetBody.position().plus(WorldCombat.point(0, 1, 0)),
                     landed ? swaggerRageText : swaggerResistText, [gift], 44);
                 world.sound("minecraft:entity.ravager.roar", targetBody.position(), 18, "{}");
+                // 仇恨转移单独一幕：只有真的把怪物拉向自己时才画拉线。
+                if (pulled && world.valid(caster)) {
+                    const away = action.origin().minus(targetBody.position());
+                    const direction = away.length() < 0.01 ? [0, 1, 0] : [away.x() / away.length(), away.y() / away.length(), away.z() / away.length()];
+                    WorldFeedback.emit(world, swaggerScene, 1, targetBody.position(),
+                        { moment: "goad", target: String(target.ref()), direction: direction }, 26);
+                }
+                if (!landed) WorldFeedback.emit(world, swaggerScene, 1, targetBody.position(), { moment: "resist" }, 18);
             }
             done(action);
         }
@@ -91,13 +102,18 @@ namespace PokemonSkills {
         if (victim === null || String(actor.key()) === String(victim.key()) || world.friendly(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
+        // 只响应真实攻击回执：反噬自伤（cause 为混乱）不再触发第二次。
+        if (String(data.cause || "") === "world_combat:confusion") return;
         if (swaggerCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body === null) return;
         const facts = PokemonDamage.combatants.read(world, actor);
         const attack = facts.stats.atk || 0;
         const fraction = swaggerRecoilFraction * Math.max(0.4, Math.min(2.5, attack / 100));
-        const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
+        // 基数按最大生命，但上限绑定这一次攻击的实际伤害，Boss 不会因血多被白削。
+        const base = body.maxHealth() * fraction;
+        const cap = data.actual * swaggerRecoilCap;
+        const loss = -world.health(actor, -Math.min(base, cap), "world_combat:confusion");
         if (loss <= 0) return;
         const power = Math.max(0.2, Math.min(3, loss / Math.max(1, body.maxHealth()) * 12));
         WorldFeedback.emit(world, swaggerScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);

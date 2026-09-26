@@ -21,6 +21,23 @@ namespace PokemonSkills {
         return NativeEffects.invertStages(world, actor, onlyGains) + MobEffects.invert(world, actor, onlyGains);
     }
 
+    /** 翻面前按符号清点即将被反转的项：`down` 是正面变负面（增益被拆），`up` 是负面变正面（减益被救）。 */
+    export function topsySigns(world: CombatWorld, actor: CombatActor, onlyGains: boolean): { up: number; down: number; total: number } {
+        const signs = { up: 0, down: 0, total: 0 };
+        const stages = NativeEffects.effectiveStages(world, actor);
+        for (let index = 0; index < topsyStats.length; index++) {
+            const value = Number(stages[topsyStats[index]]) || 0;
+            if (value > 0) signs.down++;
+            else if (value < 0 && !onlyGains) signs.up++;
+        }
+        MobEffects.invertible(world, actor, onlyGains ? "beneficial" : undefined).forEach(function (effect) {
+            if (onlyGains || String(effect.category()) === "beneficial") signs.down++;
+            else signs.up++;
+        });
+        signs.total = signs.up + signs.down;
+        return signs;
+    }
+
     actionParameters.define(topsyId, {
         reach: formula(
             F.base(7).plus(F.stat("speed").minus(60).times(0.02).as("速度"))

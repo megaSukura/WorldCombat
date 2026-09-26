@@ -5,6 +5,7 @@
   "worldcombat.skill.vcreate.description.2": "出手瞬间就付代价：自身防御 −%1$s、特防 −%2$s、速度 −%3$s 级，无论是否命中都照付。",
   "worldcombat.skill.vcreate.nova.on": "尽燃式：热焰威力 ×1.15、V 焰更盛，但自身速度额外再降一段，收招 +2 刻、冷却 +8 刻，冲程 ×0.95、冲速 ×0.94——赌上机动性的一次爆发。",
   "worldcombat.skill.vcreate.nova.off": "收焰式：冲速 ×1.1、冲程 ×1.1、冷却 −8 刻，代价是热焰威力 ×0.95。",
+  "worldcombat.skill.vcreate.description.aim": "可以朝任意方向或一个瞄点扑出，不要求先选中敌人；没有实体时就沿所选方向/落点冲出去，撞到方块或冲满冲程就在那里收住，三段降级无论中与不中都照付。最先撞到的一个敌对活体吃这一记，命中后立刻收招、不会穿过它继续冲。",
   "worldcombat.skill.vcreate.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.vcreate.growth.0": "达到 %1$s 级，热焰威力提升至 %2$s。",
   "worldcombat.skill.vcreate.growth.1": "达到 %1$s 级，热焰威力提升至 %2$s，冲程延到 %3$s 格。",

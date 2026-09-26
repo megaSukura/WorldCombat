@@ -1,10 +1,11 @@
 /**
  * 突袭 / suckerpunch 的客户端表现。
  *
- * 一句话：施法者眼里闪过一丝暗光、盯住正在抬手的对手 → 身体一闪消失、只留一条黑影，下一瞬已经贴在目标
- * 身上刺出一记暗色冲击；读空时只是扑了个空、散开一缕黑烟。
+ * 一句话：施法者眼里闪过一丝暗光 → 读到附近有人在出手时，被读到的目标边缘闪一条黑线 → 身体一闪消失、
+ * 只留一条黑影，下一瞬已经贴上第一个活体刺出一记暗色冲击；读空或撞到不在出手窗的活体时只扑了个空、
+ * 散开一缕黑烟。
  * 色相家族：暗紫（0x6B5AA8）与近黑（0x1E1630）、近白（0xE8E0FF）；亮色只给刺中那一下的核心。
- * 拍子：读 read（盯住目标，提交前）→ 闪 flash（身体消失）→ 击 strike（刺中）／空 whiff（读空）。
+ * 拍子：读 read（盯住目标，提交前）→ 闪 flash（身体消失）→ 击 strike（有效窗口命中）／空 whiff（读空或撞错人）。
  * 范围：strike 的爆环半径用 `data.scale`（判定半径 / 0.38）给出，玩家看出这一刺能咬住多大一圈。
  * 运动：read 的暗光由外向内收、并有一点掠向目标；strike 的黑影由内向外炸、亮屑沿速度方向甩出。
  * 数：`data.count`（刺击威力派生）决定命中碎片与黑屑的数量，`data.power` 抬高亮度；数量与机制里的数一致。
@@ -26,12 +27,12 @@ const SuckerpunchDefinition: ParticleDefinition = {
                 },
                 {
                     name: "mark", bind: "target", height: 0.7,
-                    particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: 2 },
-                    shape: { kind: "sphere", radius: 0.16 },
+                    shape: { kind: "line", length: 0.9 },
                     direction: "outward", speed: [0.01, 0.05],
-                    lifetime: [4, 7], size: [0.08, 0.02],
-                    color: 0xC8B8FF, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 6
+                    lifetime: [4, 7], size: [0.16, 0.04],
+                    color: 0x1E1630, alpha: [0.85, 0], light: "world", maxParticles: 6
                 }
             ]
         },

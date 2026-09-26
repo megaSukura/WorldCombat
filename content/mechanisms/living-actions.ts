@@ -4,7 +4,7 @@ namespace LivingActions {
     export function first(action: CombatAction, key: string): boolean {
         var id = "world_combat:once/" + key.replace(":", "/");
         if (action.data(id) !== null) return false;
-        action.data(id, "true"); return true;
+        action.data(id, "{}"); return true;
     }
     export interface Lifecycle { interruptible?: boolean | ((action: CombatAction) => boolean); }
     /** Shared and self-managed rhythms use the same action-owned subscriptions and host cleanup. */
@@ -28,7 +28,7 @@ namespace LivingActions {
     /** A bounded inline input view; the original action owns costs, cooldown identity, timers and cleanup. */
     export interface Input {
         target: string | null; point: number[]; direction: number[]; range: number; cooldown?: number; released?: boolean; committed?: boolean;
-        metadata?: any; live?: boolean; kind?: ReturnType<CombatAction["targetKind"]>;
+        metadata?: any; live?: boolean; anchor?: number[]; kind?: ReturnType<CombatAction["targetKind"]>;
     }
     function point(value: number[]): CombatPoint { return WorldCombat.point(value[0], value[1], value[2]); }
     export function coordinates(value: CombatPoint): number[] { return [value.x(), value.y(), value.z()]; }
@@ -51,7 +51,19 @@ namespace LivingActions {
     }
     export function input(action: CombatAction, selection: Input): CombatAction { return new InputView(host(action), selection); }
     class InputView implements CombatAction {
-        constructor(public native: CombatAction, private selection: Input) {}
+        constructor(public native: CombatAction, private selection: Input) {
+            if (selection.target !== null && !selection.live && !selection.released && !selection.anchor) {
+                const target = this.target(), body = target && this.sense().observe(target);
+                if (body) {
+                    const min = coordinates(body.boundsMin()), max = coordinates(body.boundsMax());
+                    selection.anchor = min.map((low, i) => max[i] === low ? .5 : Math.max(0, Math.min(1, (selection.point[i] - low) / (max[i] - low))));
+                }
+            }
+        }
+        private bodyPoint(body: CombatObservation): number[] {
+            const min = coordinates(body.boundsMin()), max = coordinates(body.boundsMax()), anchor = this.selection.anchor!;
+            return min.map((low, i) => low + (max[i] - low) * anchor[i]);
+        }
         private next(current: CombatAction): CombatAction { return new InputView(current, this.selection); }
         id() { return this.native.id(); }
         parent() { return this.native.parent(); }
@@ -74,7 +86,7 @@ namespace LivingActions {
             if (this.selection.target !== null && !this.selection.released) {
                 var target = this.target(), body = target && this.sense().observe(target);
                 if (!body) { this.reject("target-left"); return point(this.selection.point); }
-                this.selection.point = coordinates(body.position());
+                this.selection.point = this.bodyPoint(body);
             }
             return point(this.selection.point);
         }
@@ -83,7 +95,7 @@ namespace LivingActions {
             if (this.selection.live) this.selection.point = coordinates(this.native.targetPosition());
             else if (!this.selection.released && this.selection.target !== null) {
                 var target = this.sense().actor(this.selection.target), body = target && this.sense().observe(target);
-                if (body) this.selection.point = coordinates(body.position());
+                if (body) this.selection.point = this.bodyPoint(body);
             }
             this.selection.released = true;
         }
@@ -106,7 +118,7 @@ namespace LivingActions {
         on(event: string, callback: (action: CombatAction) => void) { return this.native.on(event, current => callback(this.next(current))); }
         off(token: number) { this.native.off(token); }
         emit(event: string) { this.native.emit(event); }
-        trace(from: CombatPoint, to: CombatPoint, radius: number) { return this.native.trace(from, to, radius); }
+        trace(from: CombatPoint, to: CombatPoint, radius: number, hitAllies = false) { return this.native.trace(from, to, radius, hitAllies); }
         moveSweep(delta: CombatPoint, radius: number) { return this.native.moveSweep(delta, radius); }
         projectile(origin: CombatPoint, velocity: CombatPoint, gravity: number, radius: number, range: number, lifetime: number,
             hit: (action: CombatAction, impact: CombatImpact) => void, complete: (action: CombatAction) => void, appearance?: string) {
@@ -136,6 +148,34 @@ namespace LivingActions {
         finish() { this.native.finish(); }
         cancel() { this.native.cancel(); }
     }
+    export interface Preparation { instance: number; remaining: number; total: number; advanced: number; }
+    interface PreparationClock { actor: string; total: number; elapsed: number; tick: number; token: number; advanced: number; }
+    const preparationClocks: { [instance: string]: PreparationClock } = Object.create(null);
+    const preparationRequests: { [instance: string]: { ticks: number; advanced: number } } = Object.create(null);
+    const preparationChannel = "world_combat:preparation/advance";
+    /** Only the standard run preparation is declared here; custom action waits and later phases remain their own clocks. */
+    export function preparing(world: CombatWorld, actor: CombatActor): Preparation[] {
+        if (!world.valid(actor) || world.observe(actor) === null) return [];
+        const ref = String(actor.ref()), now = world.tick(), result: Preparation[] = [];
+        Object.keys(preparationClocks).forEach(id => {
+            const clock = preparationClocks[id]; if (clock.actor !== ref) return;
+            const remaining = Math.max(0, clock.total - clock.elapsed - Math.max(0, now - clock.tick));
+            if (remaining > 0) result.push({ instance: Number(id), remaining: remaining, total: clock.total, advanced: clock.advanced });
+        });
+        return result;
+    }
+    /** Writable delivery to a live instance; returns actual shortened ticks, preserving at least one preparation tick. */
+    export function advancePreparation(world: CombatWorld, actor: CombatActor, instance: number, ticks: number): number {
+        if (!isFinite(ticks) || ticks < 1 || ticks % 1) return 0;
+        if (preparationRequests[String(instance)] || !preparing(world, actor).some(clock => clock.instance === instance && clock.remaining > 1)) return 0;
+        const request = { ticks: ticks, advanced: 0 }; preparationRequests[String(instance)] = request;
+        try { world.deliver(actor, instance, preparationChannel); return request.advanced; }
+        finally { delete preparationRequests[String(instance)]; }
+    }
+    WorldCombat.on("world_combat:preparation/ended", "world_combat:action_ended", "", event => {
+        const id = String(JSON.parse(event.data()).instance);
+        delete preparationClocks[id]; delete preparationRequests[id];
+    });
     export interface Plan {
         prepare: number; recover: number; cooldown: number;
         stationary?: boolean; turn?: number; interruptible?: Lifecycle["interruptible"];
@@ -149,8 +189,24 @@ namespace LivingActions {
         });
         var initialReason = plan.ready ? plan.ready(action) : "";
         if (initialReason) { action.reject(initialReason); return; }
-        var completed = false;
+        var completed = false, preparationTicks = plan.prepare;
         lifecycle(action, { interruptible: plan.interruptible });
+        const preparationId = String(action.id());
+        if (preparationTicks > 0) {
+            const clock: PreparationClock = { actor: String(action.actor().ref()), total: preparationTicks, elapsed: 0,
+                tick: action.sense().tick(), token: 0, advanced: 0 };
+            clock.token = action.on(preparationChannel, current => {
+                const request = preparationRequests[preparationId]; if (!request || preparationClocks[preparationId] !== clock) return;
+                const remaining = preparationTicks - clock.elapsed - Math.max(0, current.sense().tick() - clock.tick);
+                const shortened = Math.max(0, Math.min(request.ticks, remaining - 1));
+                preparationTicks -= shortened; clock.total = preparationTicks; clock.advanced += shortened; request.advanced = shortened;
+            });
+            preparationClocks[preparationId] = clock;
+        }
+        function releasePreparation(current: CombatAction): void {
+            const clock = preparationClocks[preparationId];
+            if (clock) { current.off(clock.token); delete preparationClocks[preparationId]; }
+        }
         function phase(current: CombatAction, name: string, elapsed: number, duration: number): void {
             current.stage(name);
             posture(current, plan);
@@ -166,11 +222,14 @@ namespace LivingActions {
             completed = true; current.releaseTarget(); recover(current, 0);
         }
         function prepare(current: CombatAction, elapsed: number): void {
-            if (elapsed < plan.prepare) {
-                phase(current, "preparing", elapsed, plan.prepare);
+            if (elapsed < preparationTicks) {
+                const clock = preparationClocks[preparationId];
+                if (clock) { clock.elapsed = elapsed; clock.tick = current.sense().tick(); }
+                phase(current, "preparing", elapsed, preparationTicks);
                 current.after(1, function (next) { prepare(next, elapsed + 1); });
                 return;
             }
+            releasePreparation(current);
             var reason = plan.ready ? plan.ready(current) : "";
             if (reason) { current.reject(reason); return; }
             current.commit(plan.cooldown);
@@ -241,7 +300,8 @@ namespace LivingActions {
         /** Spin rate of the rendered projectile, in the host's units. */
         spin?: number;
         homing?: { target: string; turn?: number; delay?: number; range?: number };
-        pierce?: number; bounce?: number; restitution?: number;
+        /** Number of entities passed through, or true for every entity once; walls, range and lifetime still end flight. */
+        pierce?: number | boolean; bounce?: number; restitution?: number;
     }
     export interface Flight {
         speed: number; range: number; radius: number; direction?: CombatPoint;

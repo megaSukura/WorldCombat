@@ -2,8 +2,8 @@
  * 暗影之骨 / shadowbone 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
- * 这是全族唯一的远程攻击，`reach` 直接取招式射程，所以它会在中远距离先手出手；`ai.spookFirst`（默认开）
- * 在目标还没被慑住时抬高优先级——用地最远的一记先挂上慑防；目标已经带着破防身份就把优先级降下来。
+ * `reach` 直接取招式射程，所以它会在中远距离先手出手；`ai.spookFirst`（默认开）在目标还没被慑住时抬高优先级——
+ * 先用远程一记挂上慑防；目标已经带着破防身份就把优先级降下来。贴脸时优先让近身招式处理，不抢快拳。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("shadowbone", {

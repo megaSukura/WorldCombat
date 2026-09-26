@@ -3,7 +3,7 @@
  *
  * 必然事实：本招被提交过（`stage.casts`）；幽风追到目标脚下收拢并造成伤害（`damageTo`）。
  * 反哺是否触发（约 10% 起）、把目标朝中心收拢了多少都写进 note 供读轨迹判断；
- * 追踪转向与走位躲风由完整装配的人工试玩核对。
+ * 有限转向、总路程与走位躲风由完整装配的人工试玩核对。
  */
 Smoke.scenario("ominouswind", function (stage) {
     stage.fill([-10, -1, -6], [10, -1, 6], "minecraft:stone");

@@ -1,20 +1,21 @@
 /**
  * 鳞射 / scaleshot 的出手方式。本族「拆甲换力」的连射型。
  *
- * 核心念头：**一梭脱鳞**——抖开背鳞，鳞片一片接一片沿准线射向目标；每片削掉一点护壳，这梭打完身上轻了
+ * 核心念头：**一梭脱鳞**——抖开背鳞，鳞片沿自由瞄准方向一片接一片射出；每片削掉一点护壳，这梭打完身上轻了
  *   （速度 +1）但也露了底（防御 −1）。卖的是「用脱甲换机动」。
  *
  * 三幕（提交前只播预告）：
  *   起（shake）：抖身，背鳞竖起、边缘亮起，只播预告。
- *   射（volley → hit / husk）：提交后每 `gap` 刻射出一片鳞（带 `spread` 偏角），鳞片朝目标修正；
- *       命中非友方结算一次 `shard` 物理伤害、崩出鳞屑；落在硬面只留一小撮碎屑。发数 `shots`（2～5）。
- *       散鳞式（配置 spray）把鳞片轮流分给身前锥形内至多 `maxTargets` 个敌人。
+ *   射（volley → hit / husk）：提交后每 `gap` 刻射出一片鳞（保留 3D 方向与垂直分量、带 `spread` 偏角）；
+ *       无目标也能空射，2～5 片照实射完才脱鳞。聚鳞式让每片有限追踪原瞄实体；散鳞式按面前真实可见把鳞片
+ *       分给至多 `maxTargets` 个敌人，面前没人就按扇向散射。已选目标失效时该片射向当时准点，不凭空跳过。
  *   脱（shed）：这一梭射完（或目标全部倒下）后自身速度 +`speedGain`、防御 −`guardLoss`，浮字提示。
  *
- * 与同族分开：蛮力是近身单体最重的一击、砸地留坑、自身攻防双降；火焰鞭是长鞭剥对手甲；鳞片噪音是环身特殊声爆；
+ * 与同族分开：蛮力是近身单体最重的一击、自身攻防双降；火焰鞭是长鞭剥对手甲；鳞片噪音是环身特殊声爆；
  *   鳞射是**远距 2～5 段小撞击，打完自身提速降防**，本族唯一会加速的招式。
  *
  * 配置 `spray` 由公式改威力／射程／散布／时序，由本文件改目标分配；提交后才触碰世界。
+ * 选取 `kind:"aim"`：方向、世界点或任意阵营实体都能放，空射有真实鳞片与代价；攻击许可仍由命中层裁定。
  */
 namespace PokemonSkills {
     const scaleshotScene = "world_combat:move_scaleshot";
@@ -25,9 +26,9 @@ namespace PokemonSkills {
         id: "scaleshot",
         cooldownParameter: "recharge",
         name: "Scale Shot",
-        description: "抖开背鳞，鳞片一片接一片射向目标，连续削 2～5 次；这一梭打完自身速度 +1 级、防御 −1 级。散鳞式把鳞片分给身前一群敌人，单发更轻、露底更多。",
+        description: "抖开背鳞，鳞片沿瞄准方向一片接一片射向目标，连续削 2～5 次；这一梭打完自身速度 +1 级、防御 −1 级。可以空射；散鳞式把鳞片分给身前一群真实可见的敌人，单发更轻、露底更多。",
         uses: ["中远距离一梭鳞片连续削目标", "用一梭小撞击把速度拉起来接下一手", "散鳞式把鳞片分给身前一群敌人"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 12,
         prepare: 8,
@@ -63,7 +64,6 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const target = action.target();
             const origin = action.origin();
             const aiming = aim(action);
             const power = p("scaleshot", "shard", action);
@@ -80,13 +80,13 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.8, shardRadius / 0.2));
             const intensity = Math.max(0.5, Math.min(2.0, power / 25));
             const shards = Math.round(6 + power * 0.5);
-            let settled = false;
+            const target = action.target();
+            const originalRef = target !== null && world.valid(target) ? String(target.ref()) : null;
+            let settled = false, resolved = 0;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            let resolved = 0;
-
-            /** 脱鳞：这一梭打完把速度抬起来、防御降下去；这是使用本招的固定代价与收益。 */
+            /** 脱鳞：这一梭打完把速度抬起来、防御降下去；这是使用本招的固定代价与收益，整梭只结算一次。 */
             function shed(current: CombatAction): void {
                 if (settled) return;
                 const scope = current.world();
@@ -102,57 +102,60 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            if (target === null || !world.valid(target)) {
-                WorldFeedback.emit(world, scaleshotScene, 1, origin,
-                    { moment: "husk", shards: Math.round(shards * 0.5), intensity: intensity, scale: scale }, 14);
-                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.1, 0)), scaleshotMissText, [], 22);
-                shed(action); return;
-            }
-            const startRef = String(target.ref());
+            // 散鳞式：把面前真实可见、通视的敌人按距离分给鳞片；面前没人时按扇向散射。
             const refs: string[] = [];
+            if (spray && originalRef !== null) refs.push(originalRef);
             if (spray) {
-                refs.push(startRef);
                 WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, aiming, reach, 70, { below: 2, above: 3 }),
-                    function (other) {
+                    function (other, facts) {
                         const ref = String(other.ref());
-                        if (ref !== startRef && refs.length < maxTargets) refs.push(ref);
+                        if (ref === originalRef || refs.length >= maxTargets) return;
+                        if (!facts.visible() || !world.clear(origin, facts.position())) return;
+                        refs.push(ref);
                     });
-            } else {
-                refs.push(startRef);
+            } else if (originalRef !== null) refs.push(originalRef);
+
+            /** 一片鳞的初始朝向：优先有分配的实体，失效时射向当时准点；保留垂直分量。 */
+            function headingFor(current: CombatAction, self: CombatPoint, ref: string | null): CombatPoint {
+                const scope = current.world();
+                if (ref !== null) {
+                    const victim = scope.actor(ref);
+                    const body = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                    if (body !== null) return body.position().minus(self);
+                }
+                const aimPoint = current.targetPosition();
+                const delta = aimPoint.minus(self);
+                return delta.length() < 0.05 ? aiming : delta;
             }
 
-            /** 射出一片鳞：优先选一名还活着的目标，鳞片朝它修正；落定后计数，全部落定即脱鳞。 */
+            /** 射出第 index 片鳞；落定后计数，全部落定即脱鳞。 */
             function launch(current: CombatAction, index: number): void {
+                if (settled) return;
                 const scope = current.world();
                 const self = scope.observe(actor);
-                let ref: string | null = null;
-                for (let k = 0; k < refs.length; k++) {
-                    const candidate = refs[(index + k) % refs.length];
-                    const actorRef = scope.actor(candidate);
-                    if (actorRef !== null && scope.valid(actorRef)) { ref = candidate; break; }
-                }
-                const victim = ref !== null ? scope.actor(ref) : null;
-                const vbody = victim !== null ? scope.observe(victim) : null;
-                if (self === null || ref === null || vbody === null) {
-                    resolved++;
-                    if (resolved >= shots) shed(current);
-                    return;
-                }
-                let heading = vbody.position().minus(self.position());
-                if (heading.length() < 0.05) heading = aiming;
-                heading = heading.unit();
+                if (self === null) { finish(current); return; }
+                const start = self.position();
+                const ref = refs.length > 0 ? refs[index % refs.length] : originalRef;
+                let direction = headingFor(current, start, ref);
+                if (direction.length() < 0.05) direction = aiming;
+                direction = direction.unit();
                 const angle = (scope.random() * 2 - 1) * spread * Math.PI / 180;
                 const cos = Math.cos(angle), sin = Math.sin(angle);
-                const direction = WorldCombat.point(heading.x() * cos - heading.z() * sin, 0,
-                    heading.x() * sin + heading.z() * cos);
+                direction = WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(),
+                    direction.x() * sin + direction.z() * cos);
                 const shot = index + 1;
+                let homing: any = undefined;
+                if (!spray && ref !== null && ref === originalRef) {
+                    const watched = scope.actor(ref);
+                    if (watched !== null && scope.valid(watched)) homing = { target: ref, turn: 5, delay: 0, range: reach + 3 };
+                }
                 sound(current, "minecraft:entity.arrow.shoot");
                 const flight = LivingActions.projectile(current, {
                     speed: shardSpeed, range: current.range() + 1.5, radius: shardRadius, direction: direction, gravity: 0,
                     lifetime: Math.max(20, Math.round((current.range() + 1.5) / Math.max(0.2, shardSpeed) + 8)),
                     appearance: { sprite: "cobblemon:generic/spike", tint: 0x7C8CE8, glow: true,
                         scale: Math.max(0.6, Math.min(1.6, shardRadius * 2.6)),
-                        homing: { target: ref, turn: 5, delay: 0, range: reach + 3 } },
+                        homing: homing },
                     impact: function (inner: CombatAction, hit: CombatImpact) {
                         const scope2 = inner.world(), pnt = hit.position(), v = hit.target();
                         if (v !== null && scope2.valid(v) && !scope2.friendly(v)) {
@@ -171,7 +174,7 @@ namespace PokemonSkills {
                     resolved++;
                     if (resolved >= shots) shed(inner);
                 });
-                WorldFeedback.keep(scope, "scaleshot:shot:" + current.id() + ":" + shot, scaleshotScene, 1, self.position(),
+                WorldFeedback.keep(scope, "scaleshot:shot:" + current.id() + ":" + shot, scaleshotScene, 1, start,
                     { moment: "volley", projectile: flight, shot: shot, shots: shots, shards: shards,
                         intensity: intensity, scale: scale, direction: [direction.x(), direction.y(), direction.z()] }, 40);
             }
@@ -179,7 +182,7 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.dragonclaw.actor");
             WorldFeedback.emit(world, scaleshotScene, 1, origin,
                 { moment: "shake", shots: shots, shards: shards, intensity: intensity, scale: scale, spray: spray ? 1 : 0 }, 14);
-            // 一梭连发：第一片立即射出，之后每 `gap` 刻一片；鳞片各自落定，全部落定后脱鳞。
+            // 一梭连发：第一片立即射出，之后每 `gap` 刻一片；各片各自落定，全部落定后脱鳞。空射也照此射完。
             for (let i = 0; i < shots; i++) {
                 if (i === 0) launch(action, 0);
                 else action.after(i * gap, function (next: CombatAction) { launch(next, i); });
@@ -188,4 +191,3 @@ namespace PokemonSkills {
         }
     });
 }
-

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.dragonbreath.summary": "Take a deep breath and exhale a fan of dragon breath: the cone fills from near to far, each swept foe is hit only once and softer at range, and may be left paralysed, which slows its movement and can make its moves fail.",
   "worldcombat.skill.dragonbreath.description.0": "Each foe the breath sweeps takes about %1$s special damage, falling off with distance.",
-  "worldcombat.skill.dragonbreath.description.1": "It reaches %1$s blocks in front and opens %2$s degrees, catching up to %3$s foes with each caught only once.",
+  "worldcombat.skill.dragonbreath.description.1": "It reaches %1$s blocks in front and opens %2$s degrees, catching up to %3$s foes with each caught only once; you may spray empty ground, and a wall blocks the breath so foes behind it are not swept.",
   "worldcombat.skill.dragonbreath.description.2": "A swept foe that actually takes damage has a %1$s%% chance to be left paralysed: paralysis lasts about 40 seconds, cutting movement speed by 50%% and giving a 25%% chance to fail any attempted move or attack (Electric-type foes are immune). The cone fills from near to far over %2$s seconds.",
   "worldcombat.skill.dragonbreath.use.0": "Sweep a fan of breath across what is in front",
   "worldcombat.skill.dragonbreath.use.1": "Catch a row of foes in one breath",

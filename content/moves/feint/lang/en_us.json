@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.feint.summary": "A decoy that knocks down whatever guard the target has raised, and only then does the real jab land; the more guard layers torn away, the heavier the hit. Against a target with no guard it is still a very fast jab.",
+  "worldcombat.skill.feint.summary": "A decoy that lunges a short step along the current aim and only peels the target's guard on real contact, so the following jab can truly land; the more guard layers torn away, the heavier the hit. Against a target with no guard it is still a very fast jab, and walls stop the step.",
   "worldcombat.skill.feint.use.0": "Strip a raised guard to open the target for a heavy follow-up",
   "worldcombat.skill.feint.use.1": "Use its very short wind-up to peel a guard away before it can soak a heavier blow",
   "worldcombat.skill.feint.use.2": "Land a very fast jab on a target with no guard",

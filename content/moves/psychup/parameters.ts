@@ -8,7 +8,7 @@ namespace PokemonSkills {
                 .clamp(5, 14).round(1),
             "读取距离", {
                 unit: "格",
-                description: "能隔着多远把对手的架势读进自己；个头越高、特攻越强读得越远。它也是本招实际射程的来源。"
+                description: "能隔着多远把目标（对手或同伴）的架势读进自己；个头越高、特攻越强读得越远。它也是本招实际射程的来源。"
             }),
         tempo: seconds(
             F.base(9, "基础").minus(F.stat("speed").minus(40).times(0.045).clamp(-2, 6).as("速度")).clamp(4, 12).round(),

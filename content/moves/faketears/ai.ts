@@ -1,13 +1,13 @@
 /**
  * 假哭 的伙伴 AI 用途：这招自己的一套出手计划——先凑近到看得清脸，再挤出眼泪。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、视线通畅、目标还没被唬住。它是骗术，必须被看见，
- *   所以 `available` 会真的比一次视线；被掩体挡住就先绕出角度，而不是硬凑。
- * 什么时候最想出手：目标正忙着打别人（没在防自己）时 priority 抬高一截——假哭专挑对方走神的一瞬；
- *   迎击模式（ai.opening=targeting）下只在目标正攻自己或主人、或自己刚被打过时才用。
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、通视、目标还没被唬住。它是骗术，眼泪要能送到脸上，
+ *   所以 `available` 会真的比一次视线（只看地形遮挡，不看对方朝向）；被掩体挡住就先绕出角度，而不是硬凑。
+ * 什么时候最想出手：按实际收益排序，不要求目标注意施法者——特防高于物防的目标最值得先松开；
+ *   队友正在集火这个方向时更值。自己刚挨过打也给一点加成，但它只是处境，不是出手前提。
  * 对谁出手：当前威胁；已经带着「不知所措」身份的目标跳过。
  * 够不到怎么办：reach 就是假哭距离（很短），共享任务会先把身位压到射程内。
- * 放完之后：目标特防下降并在原地僵住一下；伙伴随即交回共享顺序。
+ * 放完之后：目标特防下降；伙伴随即交回共享顺序，让队友去打这段窗口。
  */
 namespace CompanionBehavior {
     function faketearsVisible(context: WorldBehavior.Context, threat: Entity): boolean {
@@ -22,10 +22,17 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 8)) return false;
         if (status(context, threat, "flustered")) return false;
-        if (!faketearsVisible(context, threat)) return false;
-        if (ai<string>(item, "opening", "anytime") !== "targeting") return true;
-        const owner = context.facts.owner;
-        return threat.attacking === self.ref || !!owner && threat.attacking === owner.ref || self.hurtAgo < 40;
+        return faketearsVisible(context, threat);
+    }
+
+    /** 这个方向是否已有队友在集火；有就更值得把特防缺口开在这里。 */
+    function faketearsAllyFocus(context: WorldBehavior.Context, threat: Entity): boolean {
+        const nearby = context.facts.nearby as Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly && other.health > 0 && other.attacking === threat.ref) return true;
+        }
+        return false;
     }
 
     registerUse("faketears", {
@@ -37,15 +44,18 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !faketearsWants(context, item, target)) return 0;
             const self = source(context);
-            const distracted = target.attacking && target.attacking !== self.ref ? 12 : 0;
-            const provoked = self.hurtAgo < 40 ? 6 : 0;
-            return Math.min(90, 50 + distracted + provoked);
+            // 特防高于物防的目标是先松开特防、再让队友特攻集火的理想人选。
+            const facts = combatStats(context, target);
+            const special = facts && facts.stats && typeof facts.stats.spd === "number" && typeof facts.stats.def === "number"
+                ? facts.stats.spd - facts.stats.def : 0;
+            const focus = (special > 0 ? 10 : 0) + (faketearsAllyFocus(context, target) ? 8 : 0);
+            const pressured = self.hurtAgo < 40 ? 6 : 0;
+            return Math.min(92, 50 + focus + pressured);
         }
     });
 
-    PokemonSkills.addPreferences("faketears", { ai: { maxChase: 8, opening: "anytime", leaveStation: false } }, [
+    PokemonSkills.addPreferences("faketears", { ai: { maxChase: 8, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 2, 14, 1),
-        PokemonSkills.choice("ai.opening", "出手时机", ["anytime", "targeting"], ["随时", "迎击时"]),
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 }

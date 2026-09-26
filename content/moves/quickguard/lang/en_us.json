@@ -22,7 +22,7 @@
   "worldcombat.skill.quickguard.preference.brace.1": "Snap",
   "worldcombat.skill.quickguard.preference.brace.0": "Steady",
   "worldcombat.skill.quickguard.preference.ai.trigger": "Reaction distance",
-  "worldcombat.skill.quickguard.preference.ai.trigger.help": "Consider raising the brace when a threat is within this distance; larger predicts earlier but wastes more braces.",
+  "worldcombat.skill.quickguard.preference.ai.trigger.help": "Consider the brace only when a threat is within this distance and something in the alert radius shows priority pressure (a priority move in its set, or an observed priority strike); larger predicts earlier but wastes more braces.",
   "worldcombat.skill.quickguard.preference.ai.ally": "Wait for an ally",
   "worldcombat.skill.quickguard.preference.ai.ally.help": "When on, the brace is only raised while another ally is inside the alert radius; when off, pressure on the user is enough.",
   "world_combat.move.quickguard.text.raise": "Quick Guard (knock %1$s / %2$s covered / %3$s s)",

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.flamewheel.summary": "向前滚动，攻击沿途敌人并有机会使其灼伤，同时解除自身冰冻。",
+  "worldcombat.skill.flamewheel.summary": "朝瞄准方向蜷成火轮滚过去，碾过沿途每个敌人并有机会使其灼伤；滚动起步时解除自身冰冻，没有敌人也能空滚。",
   "worldcombat.skill.flamewheel.description.0": "火轮碾过目标造成约 %1$s 的接触伤害，最远滚 %2$s 格、滚动速度 %3$s 格每刻、轮径 %4$s 格。",
   "worldcombat.skill.flamewheel.description.1": "首个目标之后被碾到的人承受 %1$s 的威力；命中若目标尚未灼伤，有 %2$s 的概率使其灼伤，并顺滚动方向把目标挤开 %3$s 格。灼伤持续%4$s，期间物理攻击减半、每 5 秒损失约 1/16 最大生命；火属性等天生免疫者不会被点燃。命中不会停止滚动。",
   "worldcombat.skill.flamewheel.fierce.on": "烈焰轮：灼伤概率显著提高、滚得更慢更短——把滚动换成持续点燃。",

@@ -4,10 +4,10 @@
  * 一句话：施法者理好一束花、扬手掷出；花束翻飞着拐弯追上门，碰到目标的一瞬整束绽开、花瓣向四面扑开，
  *   落点铺下一片粉色花瓣。
  * 色相家族：花粉（0xF0A6C8 / 0xF6D6E6）为主体，近白（0xFFF2F6）在花瓣与强调；草绿（0x8CC24E）只在茎叶的小面积。
- * 拍子：起 windup（理花）→ 行 flight（花束翻飞追人）→ 击 bloom（命中绽开）→ 果 petalbed（落点花瓣）→ 收 miss。
+ * 拍子：起 windup（理花）→ 行 flight（花束翻飞追人）→ 击 bloom（命中绽开）→ 果 petalbed（落点花瓣）→ 收 miss（撞墙散花）。
  * 范围：bloom 的花瓣圈按 `data.bloomRadius` 铺开，玩家看出这一束能波及多大一圈。
- * 运动：flight 绑 projectile、由引擎追踪；bloom 的花瓣沿 `direction: "outward"` 扑开并受重力落回。
- * 数：`data.petals`（物攻与等级派生）决定飞行与绽开的花瓣密度，`data.cells`（落点花瓣格数）决定地面花瓣数量。
+ * 运动：flight 由动作拥有的 actionScenes 绑定真实弹体；有目标时由引擎追踪，空投时沿 `data.direction` 直飞。bloom 的花瓣沿 `direction: "outward"` 扑开并受重力落回。
+ * 数：`data.petals`（物攻与等级派生）决定飞行与绽开的花瓣密度，`data.cells`（terrainResult 真正放下的花瓣格数）决定地面花瓣数量。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FlowertrickDefinition: ParticleDefinition = {

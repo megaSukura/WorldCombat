@@ -1,9 +1,9 @@
 /**
  * 攀瀑 / waterfall 的可执行设计说明。
  *
- * 场面：只会攀瀑的浮潜鼬（Floatzel）对三格外的卡比兽（Snorlax，只带跃起、不会还手），晴天平地。
- * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（水帘拍实）。
- * 是否畏缩（约 20% 起）、被冲退多远、雨势加成与暴击，写进 note 供读轨迹判断。
+ * 场面：只会攀瀑的浮潜鼬（Floatzel）对四格外的卡比兽（Snorlax，只带跃起、不会还手），晴天平地。
+ * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（水柱抬身后向前上方扑实）。
+ * 实际升高（受净空限制）、是否畏缩（约 20% 起）、被冲退多远与是否扑空，写进 note 供读轨迹判断。
  */
 Smoke.scenario("waterfall", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -16,8 +16,8 @@ Smoke.scenario("waterfall", function (stage) {
         return stage.casts("waterfall", caster) > 0 && stage.damageTo(foe) > 0;
     }, function () {
         stage.expect(stage.casts("waterfall", caster) > 0, "waterfall was committed");
-        stage.expect(stage.damageTo(foe) > 0, "the pouncing water curtain dealt damage");
-        stage.note("畏缩概率约 20% 起、受物攻与雨势影响；冲退距离与是否扑空见实现", {
+        stage.expect(stage.damageTo(foe) > 0, "the rising pounce dealt contact damage");
+        stage.note("水柱先按净空抬身再向前上方扑击；畏缩概率约 20% 起、受物攻与雨势影响；实际升高、冲退距离与是否扑空见实现与轨迹", {
             casts: stage.casts("waterfall", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             movedFoe: Math.round(stage.travelled(foe) * 10) / 10,

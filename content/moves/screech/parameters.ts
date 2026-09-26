@@ -4,14 +4,16 @@
  * 原生：Normal／Status／威力 —／命中 85／PP 40／目标 normal（单体）／boosts={def:-2}／
  *       flags 含 sound、bypasssub、mirror（声音类，隔着掩体也听得见）。
  *
- * 世界化：把「一声尖啸」展开成**一条笔直而细的声浪走廊**——施法者张口，高频声波沿一条窄道推出去；
- *   声音不被掩体挡住，也不在第一个被扎中的人身上停下，排在走廊里的人全都得松开防御。这是本组射程最长、
- *   唯一能一次扫到多人、且唯一作用于物防的一招。走廊的形状（长度与宽度）与判定读同一份顶点。
+ * 世界化：把「一声尖啸」展开成**一道从嘴前向前推进的薄声前沿**——施法者张口，高频声波沿一条窄道扫出去；
+ *   声音不被掩体挡住，前沿每经过一个敌人一次，就把它那层防御松开一次（同一个人只降一次，不叠降）。
+ *   这是本组射程最长、唯一能一次扫到多人、且唯一作用于物防的一招。走廊的长度与宽度由 WorldGeometry.lane 判定，
+ *   表现读同一组机制数值，前沿位置与服务端推进距离同步。
  *   与同族分开：假哭是贴脸单体、金属音是回响单体、怪异电波是绕身一圈；刺耳声只做「一条线上的所有人」。
  *
  * 数值来源（每个参数读不同的精灵数据）：
  *   reach   声浪长度：基础 5 格 + 碰撞箱高度×1.0 + 等级×0.03，尖啸 ×0.8；夹 4..12。身板越高、越老练，吼得越远。
  *   lane    走廊宽度：基础 0.7 格 + 碰撞箱宽度×0.6 + 体重/200，尖啸 ×0.55；夹 0.6..2.2。嘴越大、越重，开口越宽。
+ *   front   前沿推进：基础 13 刻 − (特攻 − 60) × 0.04；夹 8..15。嗓音越强，整道前沿扫完全程越快。
  *   drop    物防下降：基础 2 级，特攻 ≥ 110 加 1 级（嗓音更尖利），尖啸再加 1 级；夹 2..3。
  *   ringing 耳鸣时长：基础 110 刻 + 等级×2.5，尖啸 ×0.55／长鸣 ×1.4；夹 90..380。等级越高越震耳。
  *   tempo   起手：基础 9 刻 − (速度 − 60) × 0.04；夹 6..13。速度越快越早开嗓。
@@ -44,6 +46,9 @@ namespace PokemonSkills {
                 unit: " 格",
                 description: "声浪走廊的半宽（两侧各这么多）；施法者身体越宽、体重越大，开口越宽，尖啸收窄成一根针。"
             }),
+        front: seconds(
+            F.base(13).minus(F.stat("specialAttack").minus(60).max(0).times(0.04)).clamp(8, 15).round(0),
+            "前沿推进", "声浪从嘴前推到最远处的整段时间；特攻越高，整道前沿扫得越快、越早落到远处的人身上。"),
         drop: formula(
             F.base(2).plus(F.when(F.stat("specialAttack").gte(110), F.const(1), F.const(0)))
                 .plus(F.when(F.pref("shrill", text("worldcombat.skill.screech.preference.shrill")), F.const(1), F.const(0)))
@@ -69,7 +74,7 @@ namespace PokemonSkills {
 
     describe(screechId, [
         { key: "description.0", values: ["drop","ringing"] },
-        { key: "description.1", values: ["reach","lane"] },
+        { key: "description.1", values: ["reach","lane","front"] },
         { key: "description.2", values: ["tempo", "wait"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);

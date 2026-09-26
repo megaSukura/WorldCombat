@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.wildcharge.summary": "An electrified charge: gather the current over your body, smash straight in and drive it into the target (a chance to paralyze). The circuit hurts you too, and being soaked leaks harder. Take Down, live-wired.",
+  "worldcombat.skill.wildcharge.summary": "An electrified charge: gather the current over your body, smash straight in and drive it into the target - a dry target rolls for paralysis, a soaked one is conducted for certain. The circuit hurts you too, and being soaked leaks from the very start of the charge. Take Down, live-wired.",
   "worldcombat.skill.wildcharge.description.0": "The charge deals about %1$s Electric contact damage to the target it hits; it dashes up to %2$s blocks at %3$s blocks per tick with a %4$s block collision radius.",
-  "worldcombat.skill.wildcharge.description.1": "On a hit, a target that is not already paralyzed has a %1$s chance to be paralyzed for about 40 seconds: while paralyzed it moves at half speed and each action has a 25%% chance to fail. Whether or not paralysis lands, the user takes %2$s times the actual damage as recoil and shoves the target %3$s blocks along the charge.",
+  "worldcombat.skill.wildcharge.description.1": "On a hit the current is driven in: a dry target that is not already paralyzed has a %1$s chance to be paralyzed, while a soaked target is conducted once with certainty (unless immune). Paralysis lasts about 40 seconds: half speed and a 25%% chance for each action to fail. Whether or not paralysis lands, the user takes %2$s times the actual damage as recoil and shoves the target %3$s blocks along the charge.",
   "worldcombat.skill.wildcharge.overload.on": "Overload: the current runs wide open - power, paralysis chance, knockback, charge distance and sparks all rise, but the recoil is heavier and the wind-up and cooldown are longer.",
   "worldcombat.skill.wildcharge.overload.off": "Governed: lower power and recoil, a shorter wind-up and a slightly smaller paralysis chance - for fast, grinding play.",
   "worldcombat.skill.wildcharge.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP with a %5$s s cooldown.",
@@ -28,10 +28,11 @@
   "worldcombat.skill.wildcharge.preference.ai.maxChase": "Charge distance",
   "worldcombat.skill.wildcharge.preference.ai.maxChase.help": "Within this distance the user starts the charge; smaller stays in your face, larger charges from further out.",
   "worldcombat.skill.wildcharge.preference.ai.spareParalyzed": "Spare paralyzed",
-  "worldcombat.skill.wildcharge.preference.ai.spareParalyzed.help": "On: do not spend the charge on an already paralyzed target, save the current for one that is not. Off: compete by the shared order only.",
+  "worldcombat.skill.wildcharge.preference.ai.spareParalyzed.help": "On: an already paralyzed target is ranked clearly lower so the current is saved for one that is not, but it can still be hit for damage when nothing better is around. Off: compete together with the other attack candidates.",
   "world_combat.move.wildcharge.text.hit": "Wild Charge",
   "world_combat.move.wildcharge.text.miss": "Discharged",
   "world_combat.move.wildcharge.text.recoil": "Circuit recoil",
   "world_combat.move.wildcharge.text.shock": "Paralyzed",
-  "worldcombat.skill.wildcharge.description.2": "Only the first target struck is resolved. If the charge runs its full distance or is stopped by a wall or an obstacle without connecting, the current discharges harmlessly and the user takes no recoil. A soaked target takes more power and a higher paralysis chance; a soaked user loses power and takes heavier recoil."
+  "world_combat.move.wildcharge.text.leak": "Soaked leak",
+  "worldcombat.skill.wildcharge.description.2": "Only the first target struck is resolved. If the charge runs its full distance or is stopped by a wall or an obstacle without connecting, the current discharges harmlessly on the spot (or into the wall) and the user takes no recoil. A soaked target takes more power and is conducted into paralysis for certain; a soaked user leaks at the very start of the charge, loses power and takes heavier recoil."
 }

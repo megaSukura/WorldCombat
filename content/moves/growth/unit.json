@@ -10,6 +10,7 @@
   },
   "sources": [
     "parameters.ts",
+    "body.ts",
     "skill.ts",
     "ai.ts"
   ],

@@ -15,6 +15,9 @@ namespace NativeAbilityRecipes {
     }
     /** Absorbs damage of one move type; ordinary damage carries no type and passes through. */
     export function absorption(ids: string, type: string, recovery: number, stat?: string, stages = 1): void {
+        type = type.toLowerCase();
+        const types = NativeAbilities.property<string[]>(ids, "absorbedTypes", []);
+        if (types.indexOf(type) < 0) property(ids, "absorbedTypes", types.concat([type]));
         on(ids, "incoming", function (context, data) {
             if (data.type !== type) return;
             data.amount = 0;

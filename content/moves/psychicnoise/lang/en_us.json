@@ -9,7 +9,7 @@
   "worldcombat.skill.psychicnoise.description.2": "prepare %1$s s, recover %2$s s, cooldown %3$s s.",
   "worldcombat.skill.psychicnoise.pierce.on": "Piercing screech: the wave passes through up to 4 targets, at the cost of x0.8 power and a x0.85 block duration.",
   "worldcombat.skill.psychicnoise.pierce.off": "Focused: a single target, with stronger power and a longer block.",
-  "worldcombat.skill.psychicnoise.timing": "Castable on enemies within %1$s blocks; commits after %2$s s and costs %4$s PP; recovers for %3$s s and starts a %5$s s cooldown.",
+  "worldcombat.skill.psychicnoise.timing": "Fire the wave in a chosen direction (up to %1$s blocks); commits after %2$s s and costs %4$s PP; recovers for %3$s s and starts a %5$s s cooldown.",
   "worldcombat.skill.psychicnoise.growth.0": "At level %1$s power rises to %2$s and the block extends to %3$s.",
   "worldcombat.skill.psychicnoise.value.noise": "Sound-wave power",
   "worldcombat.skill.psychicnoise.value.sealTicks": "Block duration",

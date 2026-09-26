@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.shadowball.summary": "Hurl a living blob of shadow in a straight line: it deals special damage and may lower the target's Sp. Def by 1 stage, clinging to it for a moment when it does.",
+  "worldcombat.skill.shadowball.summary": "Hurl a living blob of shadow along the aim; it flies straight and can be fired at an empty point when no enemy is locked. On a hit it deals special damage and may lower the target's Sp. Def by 1 stage, clinging only when the drop actually lands.",
   "worldcombat.skill.shadowball.use.0": "Precision single-target fire at mid range",
   "worldcombat.skill.shadowball.use.1": "Cling to a target and wear down its Sp. Def",
   "worldcombat.skill.shadowball.use.2": "Open from a distance before closing",
   "worldcombat.skill.shadowball.description.0": "The ball deals about %1$s special damage on a hit.",
   "worldcombat.skill.shadowball.description.1": "On a hit there is a %1$s chance to lower the target's Sp. Def by %2$s stage as a stat stage that does not recover when the ball is gone.",
-  "worldcombat.skill.shadowball.description.2": "The ball flies straight at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius.",
+  "worldcombat.skill.shadowball.description.2": "The ball flies straight along the aim at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius; it can also be fired at an empty point.",
   "worldcombat.skill.shadowball.description.3": "Dense form is currently %1$s.",
   "worldcombat.skill.shadowball.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.shadowball.growth.0": "From level %1$s the ball rises to %2$s power and %3$s blocks of range.",

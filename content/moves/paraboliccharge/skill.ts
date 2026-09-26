@@ -35,7 +35,7 @@ namespace PokemonSkills {
         recover: 9,
         cooldown: 30,
         style: "parabola",
-        defaults: { wide: false, ai: { maxChase: 7, cluster: true } },
+        defaults: { wide: false, ai: { maxChase: 7, cluster: true, healBelow: 0.8 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p(parabolicchargeId, "dish", pokemon) : 3.4, geometry: "area", style: "parabola", color: 0xFFE96A,
@@ -69,14 +69,18 @@ namespace PokemonSkills {
             const cap = Math.max(1, Math.round(p(parabolicchargeId, "maxTargets", action)));
             const scale = Math.max(0.6, Math.min(1.8, radius / 3.4));
             const motes = Math.max(12, Math.round(power * 0.3 + radius * 8));
+            const before = body === null ? 0 : body.health();
             let total = 0, settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
+                // 回收闪光按实际总治疗量取亮度：伤害被拒、免疫或满血时不会亮成已经吸回了血。
+                const after = scope.observe(current.actor());
+                const healed = Math.max(0, Math.round((after === null ? before : after.health()) - before));
                 WorldFeedback.keep(scope, "paraboliccharge:dish:" + String(current.actor().ref()), parabolicchargeScene, 1, centre,
-                    { moment: "reclaim", radius: radius, arcs: arcs, focus: focus, targets: total, sap: Math.round(share * 100) }, 28);
+                    { moment: "reclaim", radius: radius, arcs: arcs, focus: focus, targets: total, heal: healed }, 28);
                 WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.3, 0)),
                     total > 0 ? parabolicchargeReclaimText : parabolicchargeMissText, total > 0 ? [total] : [], 28);
                 done(current);
@@ -91,6 +95,8 @@ namespace PokemonSkills {
                 const ref = String(enemy.ref());
                 if (ref === String(action.actor().ref()) || total >= cap) return;
                 const at = facts.position();
+                // 实墙截电路：只有与施术者真实导通的通视目标才吃这一发并产生回补。
+                if (!world.clear(centre, at)) return;
                 const flow = centre.minus(at), span = flow.length();
                 const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
                 if (!hurt(action, enemy, parabolicchargeId, power,

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.acid.summary": "Lob a glob of harsh acid: it bursts beside the target and splashes every enemy around the landing spot, then leaves a corrosive pool on the ground that keeps biting anyone who stays. On hit it may lower the target's Sp. Def by 1 stage.",
+  "worldcombat.skill.acid.summary": "Lob a glob of harsh acid: on a hit it finds the nearest legal support and spreads, splashing every enemy around the landing spot and leaving a corrosive pool that keeps biting anyone who stays. It can also be aimed at an empty point with no enemy selected, and it only scatters when no support is found. On hit it may lower the target's Sp. Def by 1 stage.",
   "worldcombat.skill.acid.use.0": "Splash everyone around a landing spot at close range",
   "worldcombat.skill.acid.use.1": "Leave a lingering pool to lock down a patch of ground",
   "worldcombat.skill.acid.use.2": "Wear down Sp. Def with the cheapest cast",
   "worldcombat.skill.acid.description.0": "The glob bursts and deals about %1$s special damage to every enemy around the landing spot, once each.",
-  "worldcombat.skill.acid.description.1": "The acid covers a radius of %1$s blocks around the landing spot.",
+  "worldcombat.skill.acid.description.1": "The acid spreads over %1$s blocks around the landing spot; acid that hits a wall drips to the nearest legal support, and with no support it only scatters without leaving a pool.",
   "worldcombat.skill.acid.description.2": "The pool left on the ground deals %1$s damage to every enemy inside it, lasting %2$s and biting once every %3$s.",
   "worldcombat.skill.acid.description.3": "Each enemy splashed has a %1$s chance to have its Sp. Def lowered by %2$s stage(s), so it takes more special damage afterwards.",
   "worldcombat.skill.acid.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

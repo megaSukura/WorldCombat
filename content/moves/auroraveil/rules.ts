@@ -2,7 +2,8 @@
  * 极光幕 / auroraveil 的极光区规则与结算，只护住友方。
  *
  * 极光区由 WorldEffects.field 驱动：每 5 刻扫描半径内的活体，给**友方**补 world_combat:auroraveil_screen
- *   （身份 world_combat:status/auroraveil）与自己的 world_combat:auroraveil_mark；离开圈子或极光结束时收回。
+ *   （身份 world_combat:status/auroraveil）与自己的 world_combat:auroraveil_mark；离开圈子、被墙隔断或极光结束时收回。
+ *   每个受护者的标记上挂一条连回幕心的细丝表现（`WorldFeedback.onEffect`），标记一收，细丝同时断。
  *   受击时在 NativeEffects.incomingRules 里读到受击者的标记，按 cutPhys／cutSpec 分别削减物理与特殊伤害。
  * 极光只护友方，敌人走进来也读不到幕——这是它和「玩水」一视同仁的水洼最大的不同。
  */
@@ -19,6 +20,16 @@ namespace PokemonSkills {
         }
         return best;
     }
+    /** 受护者到幕心的细丝；绑在这名受护者的标记效果上，离区、被墙隔断或驱散时随标记一起收走。 */
+    function auroraVeilThread(world: CombatWorld, actor: CombatActor, markId: number, field: WorldEffects.Field): void {
+        if (typeof markId !== "number" || markId <= 0) return;
+        if (world.observe(actor) === null) return;
+        const centre = auroraVeilPoint(field);
+        WorldFeedback.onEffect(world, markId, "world_combat:move_auroraveil/thread/" + markId, auroraveilScene, 1, centre,
+            { moment: "thread", target: String(actor.ref()),
+                path: [String(actor.ref()), [centre.x(), centre.y() + 0.1, centre.z()]],
+                ribbons: field.data.ribbons, ceiling: field.data.ceiling });
+    }
     function auroraVeilApply(world: CombatWorld, actor: CombatActor, ticks: number, field: WorldEffects.Field): boolean {
         if (MobEffects.apply(world, actor, auroraveilEffect, ticks, 0) === null) return false;
         const data: any = {};
@@ -27,9 +38,13 @@ namespace PokemonSkills {
         const views = world.effects(actor, auroraveilMark);
         for (let i = 0; i < views.length; i++) {
             const state = JSON.parse(String(views[i].data()));
-            if (state.fieldId === field.id && world.operation(views[i].id(), "world_combat:refresh", JSON.stringify({ ticks: ticks }))) return true;
+            if (state.fieldId === field.id && world.operation(views[i].id(), "world_combat:refresh", JSON.stringify({ ticks: ticks }))) {
+                auroraVeilThread(world, actor, views[i].id(), field);
+                return true;
+            }
         }
-        world.effect(auroraveilMark, actor, JSON.stringify(data), ticks);
+        const markId = world.effect(auroraveilMark, actor, JSON.stringify(data), ticks);
+        auroraVeilThread(world, actor, markId, field);
         return true;
     }
 
@@ -51,6 +66,15 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(auroraveilMark, "operation:world_combat:dispel", function (effect) {
         if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
         effect.end();
+    });
+    // 标记一走（自然到期、离区、被墙隔断或驱散），连回幕心的细丝当场断在受护者身上。
+    WorldCombat.effectHandler(auroraveilMark, "end", function (effect) {
+        const world = effect.world(), actor = effect.target(), body = world.observe(actor);
+        if (body === null) return;
+        let ribbons = 6;
+        try { const state = JSON.parse(effect.state()); if (typeof state.ribbons === "number") ribbons = state.ribbons; } catch (error) { }
+        WorldFeedback.emit(world, auroraveilScene, 1, body.position(),
+            { moment: "fade", target: String(actor.ref()), ribbons: ribbons }, 24);
     });
 
     WorldEffects.fieldRule(auroraveilField, {
@@ -78,9 +102,11 @@ namespace PokemonSkills {
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = auroraVeilPoint(field);
             WorldFeedback.keep(world, "world_combat:move_auroraveil/field/" + effect.id(), auroraveilScene, 1, centre,
-                { moment: "veil", ribbons: field.data.ribbons, scale: field.radius / 4 }, 20);
+                { moment: "veil", ribbons: field.data.ribbons, scale: field.radius / 4,
+                    ceiling: field.data.ceiling, midHeight: field.data.midHeight,
+                    highRibbons: field.data.highRibbons, lowRibbons: field.data.lowRibbons }, 20);
         }
-    }, { tags: [WorldEffects.categories.screen] });
+    }, { tags: [WorldEffects.categories.screen], transferable: true });
 
     /** 极光下的友方：按伤害类别分别削减。 */
     NativeEffects.incomingRules.define({ id: "world_combat:move_auroraveil/screen", apply: function (hit: NativeEffects.Hit) {
@@ -100,7 +126,9 @@ namespace PokemonSkills {
         const body = world.observe(target);
         if (body === null) return;
         const source = hit.source, attacker = source && world.valid(source) && String(source.key()) !== String(target.key()) ? world.observe(source) : null;
-        const payload: any = { moment: "block", target: String(target.ref()), blocked: Math.round(blocked * 10) / 10, ribbons: mark.ribbons };
+        const burst = Math.max(6, Math.min(24, Math.round(blocked * 2)));
+        const payload: any = { moment: "block", target: String(target.ref()),
+            blocked: Math.round(blocked * 10) / 10, burst: burst, ribbons: mark.ribbons };
         if (attacker !== null) {
             const away = attacker.position().minus(body.position());
             if (away.length() > 0.01) { const direction = away.unit(); payload.direction = [direction.x(), direction.y(), direction.z()]; }

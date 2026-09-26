@@ -5,11 +5,11 @@
  *   （Cobblemon 1.8，85 位学习者）。
  *
  * 翻译：把「用蓄满电流的牙齿咬住对手」落成**一记最快的扑咬，让电流从牙齿穿身**——它是本族里出手最快、扑得最远的一口；
- * 命中按几率让目标麻痹（共享身份 world_combat:status/paralysis，宝可梦同步为原生麻痹）。独有部分在**电锁**：
- * 咬的是一具已经麻了的身体时，抽搐的肌肉被电流锁住，目标会被短暂定在原地（`world_combat:rooted`）——
- * 因此它专门接手别人（或自己）已经麻掉的目标。咬实的那一下也有几率把目标咬懵（共享身份 world_combat:status/flinch）。
+ * 命中按几率让目标麻痹（共享身份 world_combat:status/paralysis，宝可梦同步为原生麻痹）。咬中一具已经麻了的身体时，
+ * 电流会在这一次接触上炸得更亮，但只按主伤结算，不再叠加定身强控。咬实的那一下也有几率把目标咬懵
+ * （共享身份 world_combat:status/flinch）。
  *
- * 与同族分开：雷电拳是拳、电流会链到旁边的敌人；雷电牙是牙，只咬身前的目标，把已经麻掉的目标钉住。
+ * 与同族分开：雷电拳是拳、电流会链到旁边的敌人；雷电牙是牙，只咬身前的目标，出手最快、扑得最远。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   fang         咬合威力：物攻定咬合力，速度定电流的狠劲；过载式把每一口摊薄。
@@ -17,14 +17,13 @@
  *   grip         獠牙判定：身高派生。
  *   numbChance   麻痹几率：特攻与等级决定电流能不能麻住；过载式更高。
  *   numbTicks    麻痹时长：特攻与等级；过载式更久。
- *   lockTicks    电锁时长：体重（肌肉量）决定钉多久；过载式更久。
  *   flinchChance 畏缩几率：速度派生；过载式略降。
  *   flinchTicks  畏缩持续：固定 9 刻，过载式 +2。
  *   sparks       电弧数：速度派生，表现按它画出每处放电的枝数。
  *   tempo/aftercast/recharge：速度决定起手、收招与冷却。
  *
- * 配置 `overload`（过载式）双向取舍：开启＝麻痹几率 +12%%、麻痹 ×1.2、电锁 ×1.6，但咬合威力 ×0.88、冷却 +4 刻；
- * 关闭（点穴式）＝咬得更重、循环更快，但麻得更短、锁得更短。两个方向各有局面。
+ * 配置 `overload`（过载式）双向取舍：开启＝麻痹几率 +12%%、麻痹 ×1.2，但咬合威力 ×0.88、冷却 +4 刻；
+ * 关闭（点穴式）＝咬得更重、循环更快，但麻得更短。两个方向各有局面。
  *
  * 伤害段 `fang` 与参数同名，走共享换算；麻痹经共享状态路由落到任何战斗者身上。
  */
@@ -79,12 +78,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("overload", text("worldcombat.skill.thunderfang.preference.overload")), F.const(1.2), F.const(1)))
                 .clamp(120, 360).round(0),
             "麻痹时长", "目标被麻住的时长；特攻越高、等级越高麻得越久，过载式更久。"),
-        /** 电锁时长：12 + 体重偏移[−4,18] + 过载 8；夹 6..30。 */
-        lockTicks: seconds(
-            F.base(12).plus(F.body("weight").minus(60).times(0.2).clamp(-4, 18))
-                .plus(F.when(F.pref("overload", text("worldcombat.skill.thunderfang.preference.overload")), F.const(8), F.const(0)))
-                .clamp(6, 30).round(0),
-            "电锁时长", "咬中已经麻掉的目标时，抽搐的肌肉被电流锁住、原地定住的时长；体重越大（肌肉越多）锁得越久，过载式更久。"),
         /** 畏缩几率：0.20 + 速度偏移[−0.05,0.12]；过载 ×0.85；夹 0.10..0.46。 */
         flinchChance: percent(
             F.base(0.20).plus(F.stat("speed").minus(55).times(0.0011).clamp(-0.05, 0.12))
@@ -132,7 +125,7 @@ namespace PokemonSkills {
     describe("thunderfang", [
         { key: "description.0", values: ["fang", "grip"] },
         { key: "description.1", values: ["numbChance","numbTicks"] },
-        { key: "description.2", values: ["lockTicks"] },
+        { key: "description.2", values: [] },
         { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "overload.on", values: [], when: function (context) { return read(context.detail.values, ["overload"]) === true; } },
         { key: "overload.off", values: [], when: function (context) { return read(context.detail.values, ["overload"]) !== true; } },

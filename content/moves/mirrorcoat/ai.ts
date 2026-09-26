@@ -1,9 +1,9 @@
 /**
  * 镜面反射 / mirrorcoat 的 AI 用途。
  *
- * 什么局面下出手：有可见的敌对威胁、且在 `ai.maxChase` 之内就列入候选——先迎上去立镜、逼对手出手。
- * 账本上有新鲜的特殊伤害（`mirrorcoatDebt > 0`）时若账主在射程内，priority 抬到 70；其他敌人 50，
- * 没有账时只给 5。它能在远处兑现，所以 `ai.maxChase` 通常比近战大。
+ * 什么局面下出手：只有账本上有新鲜的特殊伤害（`mirrorcoatDebt > 0`）时才可选——不花 PP 空放镜面。
+ * 账主在射程内时 priority 70，其他敌人 50。它能在远处兑现，所以 `ai.maxChase` 通常比近战大。
+ * 手动施放不受此限：玩家仍可朝任意世界点空发一次，招式自己会明确显示「镜无可映」。
  */
 namespace PokemonSkills {
     CompanionBehavior.readFacts("world_combat:move_mirrorcoat/ai-fact", function (frame, access) {
@@ -18,6 +18,7 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (!(context.facts.mirrorcoatDebt > 0)) return false;
             if (!target) return true;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
@@ -29,7 +30,6 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            if (!(context.facts.mirrorcoatDebt > 0)) return 5;
             return context.facts.mirrorcoatDebtor === target.ref ? 70 : 50;
         }
     });

@@ -4,22 +4,26 @@
  * 原生事实：水、物理、威力 30、命中 95、PP 10、优先度 0、接触、连续 3 次（`multihit: 3`）、无追加效果。
  * 全招 1 位学习者（轻身鳕 / Veluza）。
  *
- * 翻译：把「以默契的跳跃溅起水花击向对手、连续 3 次」翻成**三次利落的钻击**——每一次是一记落下的水花，
- *   不是三支箭同时离弦，也不是一根骨头去一回。三次的「默契」落在两处：一是节奏固定，三下之间的间隔由速度
- *   决定、连成一串；二是**水留在身上**——每一次命中都把目标打湿（共享身份 `world_combat:status/drenched`），
- *   已经湿透的目标被下一钻打得更重（`soakBonus`）。所以三下都落在同一个目标上时，第三下最重；中间任一下走空，
- *   后面的钻击就少一层加成。原生的固定 30×3 被翻成一次出手里三记可各躲的落点。
+ * 翻译：把「以默契的跳跃溅起水花击向对手、连续 3 次」翻成**自己连续三次短跳扎下**——每一次都是一段真实的身体
+ *   短弧：起跳、升到 `leap` 高、再沿当刻自由瞄准的落点扎下去，下落首次碰到敌体、或落地水花范围内有敌人时结算。
+ *   两钻之间重新读取瞄准，所以可以在两跳之间换下一落点、换成另一个敌人，也可以空跳换位。三次的「默契」落在两处：
+ *   一是节奏固定（`interval`，速度决定连得多紧），二是**水留在身上**——每钻命中都把目标打湿（共享身份
+ *   `world_combat:status/drenched`），已经湿透的目标被下一钻按 `soakBonus` 加重。三下都落在同一个目标上时第三下最重。
+ *   钻击不再按计划距离补伤：不是瞬移到落点，墙把横移挡住就落在实际到达处，抗位移的 Boss 也照吃真实钻击。
  *
  * 数据分散（每个参数读不同的精灵数据，小差距因此能看出不同）：
- *   splash   每钻威力：物攻定落下的分量、速度定钻入的急。
+ *   splash    每钻威力：物攻定落下的分量、速度定钻入的急。
  *   soakBonus 湿身加成：物攻决定水压，已经湿透的目标吃到的倍数。
- *   leap     跳跃高度：体重决定跳得多高（越重越低）。
- *   diveSpan 钻击距离：碰撞箱宽度决定够得多远。
- *   diveRadius 水花判定：身高决定一次钻击扫过的范围。
- *   interval 节拍：速度决定三钻连得多紧；配置的深潜更慢。
+ *   leap      跳跃高度：体重决定跳得多高（越重越低），同时驱动上升水线的长度。
+ *   diveSpan  钻击距离：碰撞箱宽度决定够得多远（也是本招射程来源）。
+ *   diveRadius 水花判定：身高决定落地能扫到的范围。
+ *   riseSpeed 上升速度：速度决定升得多快，快就不给对手反应时间。
+ *   fallSpeed 下落速度：体重决定落得多急，重砸更难在下落中躲开。
+ *   interval  节拍：速度决定三钻连得多紧；配置的深潜更慢。
  *   drenchTicks 湿身时长：物攻与等级决定水留在身上多久。
- *   splashes 水花点数：物攻派生，表现按它发射。
+ *   splashes  水花点数：物攻派生，表现按它发射。
  *   tempo/recover/recharge：速度与配置共同决定起手、收招与冷却。
+ *   collisionRadius/minimumMove：身体逐刻移动的真实碰撞半径与最小有效位移，内部参数。
  *
  * 配置 `plunge`（深潜）双向取舍：开启＝跳得更高、每钻重 20%、水花判定更大、湿身更久，但节拍更慢、冷却更久
  *   ——更难躲、更痛，但给对手更长的窗口；关闭（连跳，默认）＝三钻更快、每钻轻 10%、循环更短，但水花更小、
@@ -51,14 +55,14 @@ namespace PokemonSkills {
                 .clamp(0.35, 1.1).round(2),
             "跳跃高度", {
                 unit: "格",
-                description: "每一钻起跳的高度；体重越轻跳得越高。深潜整体再抬高一档，从更高处落下。画面里起跳溅起的水点数量按它发射。"
+                description: "每一钻起跳的高度；体重越轻跳得越高。深潜整体再抬高一档，从更高处落下。画面里起跳水线的长度与水滴初速按它发射。"
             }),
         /** 钻击距离：2.8 + 碰撞箱宽度偏移[−0.15,0.6]；夹 2.6..3.4。 */
         diveSpan: formula(
             F.base(2.8).plus(F.body("width").minus(0.9).times(0.4).clamp(-0.15, 0.6)).clamp(2.6, 3.4).round(2),
             "钻击距离", {
                 unit: "格",
-                description: "一次钻击能够到多远；身体越宽够得越远。它加上一点出手余量就是本招的实际射程来源。"
+                description: "每一钻的落点离起跳处最远多少；身体越宽够得越远。它加上一点出手余量就是本招的实际射程来源。"
             }),
         /** 水花判定：0.55 + 身高偏移[−0.06,0.35]；深潜 ×1.2；夹 0.45..1.0。 */
         diveRadius: formula(
@@ -67,7 +71,21 @@ namespace PokemonSkills {
                 .clamp(0.45, 1.0).round(2),
             "水花判定", {
                 unit: "格",
-                description: "一次钻击溅起的水花能扫到多大范围；大个子水花更大，深潜再放宽一档。"
+                description: "一钻落地时水花能扫到多大范围；大个子水花更大，深潜再放宽一档。下落中直接碰到身体会提前结算。"
+            }),
+        /** 上升速度：0.5 + 速度偏移[−0.12,0.35]；夹 0.3..0.9。 */
+        riseSpeed: formula(
+            F.base(0.5).plus(F.stat("speed").minus(45).times(0.006).clamp(-0.12, 0.35)).clamp(0.3, 0.9).round(3),
+            "上升速度", {
+                unit: "格/刻",
+                description: "每一钻升到最高处的快慢；速度越快越早到顶、越少给对手反应时间。"
+            }),
+        /** 下落速度：0.95 + 体重偏移[−0.15,0.5]；夹 0.6..1.6。 */
+        fallSpeed: formula(
+            F.base(0.95).plus(F.body("weight").minus(40).times(0.004).clamp(-0.15, 0.5)).clamp(0.6, 1.6).round(2),
+            "下落速度", {
+                unit: "格/刻",
+                description: "沿落点扎下去的快慢；体重越大落得越急，越难在下落途中横移躲开。"
             }),
         /** 节拍：5 − 速度偏移[−1,1.5]；深潜 +2；夹 3..9。 */
         interval: seconds(
@@ -103,7 +121,11 @@ namespace PokemonSkills {
             F.base(28).minus(F.stat("speed").minus(45).times(0.05).clamp(-2, 5))
                 .plus(F.when(F.pref("plunge", text("worldcombat.skill.tripledive.preference.plunge")), F.const(6), F.const(0)))
                 .clamp(18, 42).round(0),
-            "冷却", "再起三钻前的等待；速度越快回得越快，深潜更久。PP 10 的代价。")
+            "冷却", "再起三钻前的等待；速度越快回得越快，深潜更久。PP 10 的代价。"),
+        /** 逐刻身体移动的碰撞半径，内部参数。 */
+        collisionRadius: hidden(0.3),
+        /** 单步最小有效位移，低于它视作被挡住，内部参数。 */
+        minimumMove: hidden(0.05)
     });
 
     stages("tripledive", [
@@ -115,9 +137,10 @@ namespace PokemonSkills {
 
     describe("tripledive", [
         { key: "description.0", values: ["splash", "diveSpan", "diveRadius"] },
-        { key: "description.1", values: ["soakBonus","drenchTicks"] },
+        { key: "description.1", values: ["soakBonus", "drenchTicks"] },
         { key: "description.2", values: ["interval"] },
-        { key: "description.additional", values: ["diveSpan","diveRadius"] },
+        { key: "description.3", values: ["riseSpeed", "fallSpeed"] },
+        { key: "description.additional", values: ["diveSpan", "diveRadius"] },
         { key: "plunge.on", values: [], when: function (context) { return read(context.detail.values, ["plunge"]) === true; } },
         { key: "plunge.off", values: [], when: function (context) { return read(context.detail.values, ["plunge"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

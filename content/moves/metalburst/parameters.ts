@@ -73,6 +73,42 @@ namespace PokemonSkills {
         metalburstRemember(world, victim, source, data.actual);
     });
 
+    // 每个真正吃到伤害的对象由真实回执分别驱动：碎片量、浮字都读实际扣血；
+    // 主目标用一簇集中片（core），其余用溅射片（splash），碎片从爆心沿通视方向飞来。
+    WorldCombat.on("world_combat:move_metalburst/strike", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data()));
+        if (!(data.actual > 0)) return;
+        var action = event.action();
+        var owned = action !== null && String(action.content()) === "world_combat:metalburst";
+        if (String(data.move || "") !== metalburstId && !owned) return;
+        var target = event.target();
+        if (target === null) return;
+        var world = event.world();
+        var body = world.valid(target) ? world.observe(target) : null;
+        var point = typeof data.x === "number" && typeof data.y === "number" && typeof data.z === "number"
+            ? WorldCombat.point(data.x, data.y, data.z) : body === null ? null : body.position();
+        if (point === null) return;
+        var scale = 1, primary = "", cx: number | null = null, cy: number | null = null, cz: number | null = null;
+        if (action !== null) {
+            var raw = action.data("metalburst/strike");
+            if (raw !== null) {
+                try {
+                    var payload = JSON.parse(raw);
+                    if (payload.scale > 0 && isFinite(payload.scale)) scale = payload.scale;
+                    primary = String(payload.primary || "");
+                    if (isFinite(payload.cx) && isFinite(payload.cy) && isFinite(payload.cz)) { cx = payload.cx; cy = payload.cy; cz = payload.cz; }
+                } catch (error) { /* keep the defaults */ }
+            }
+        }
+        var isPrimary = primary !== "" && String(target.ref()) === primary;
+        var output: any = { moment: isPrimary ? "core" : "splash", target: String(target.ref()), scale: scale,
+            count: Math.round(isPrimary ? 12 + data.actual / 2 : 8 + data.actual / 3), power: Math.round(data.actual * 10) / 10 };
+        if (cx !== null && cy !== null && cz !== null) output.path = [[cx, cy, cz], String(target.ref())];
+        WorldFeedback.emit(world, metalburstScene, 1, point, output, 26);
+        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.05, 0)), metalburstHitText, [Math.round(data.actual)], 24);
+        world.sound("cobblemon:impact.steel", point, 15, "{}");
+    });
+
     defineFacts(metalburstId, function (context: FactContext): Formula.Facts {
         return { read: function (id: string): Formula.Fact {
             if (id === "metalburst.stored") {

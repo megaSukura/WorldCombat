@@ -1,7 +1,7 @@
 {
   "name": "worldcombat-content",
   "private": true,
-  "version": "0.1.0-alpha.7",
+  "version": "0.1.0-alpha.8",
   "scripts": {
     "build:content": "node tools/build-content.mjs",
     "install:demo": "node tools/install-demo.mjs"

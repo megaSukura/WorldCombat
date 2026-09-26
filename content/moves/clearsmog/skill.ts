@@ -5,10 +5,13 @@ namespace PokemonSkills {
         return NativeEffects.effectiveStages(world, actor);
     }
 
-    /** 把 actor 的能力等级全部冲回原点（含它自己拥有的临时窗口）；返回真正冲掉的等级数（绝对值之和）。 */
+    /**
+     * 只冲掉 actor 身上正向的能力变化（含正向临时窗口），并清掉可移除的有益效果；返回真正清掉的量。
+     * 不清负向等级，也不碰不可移除的 Boss 阶段身份：清除被拒绝时这里不会再回写生命/属性。
+     */
     export function clearsmogErase(world: CombatWorld, actor: CombatActor): number {
         if (!world.valid(actor)) return 0;
-        return NativeEffects.resetStages(world, actor, true, "clearsmog", "clearsmog")
+        return NativeEffects.consumePositiveStages(world, actor, "clearsmog")
             + MobEffects.clear(world, actor, "beneficial");
     }
 
@@ -91,9 +94,9 @@ namespace PokemonSkills {
         id: clearsmogId,
         cooldownParameter: "recharge",
         name: "Clear Smog",
-        description: "掷出泥块，命中后炸出只影响敌人的清除之烟。烟使能力等级归零并清除药水增益，附着期间会反复清除新获得的强化。",
+        description: "掷出泥块，命中点炸出只影响敌人的清除之烟：烟只清掉对手身上正向的能力提升与可移除的药水增益，附着期间反复清掉新获得的强化，不动已被压低的等级。可自由投点或按方向空掷，泥块会被墙挡住。",
         uses: ["把对手攒起来的能力一波冲回原点", "让一个刚刚加满级的目标短时间内留不住增益", "同时清掉一小撮抱团对手的等级"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 13,
         prepare: 7,
@@ -127,10 +130,8 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) {
-                WorldFeedback.emit(world, clearsmogScene, 1, action.targetPosition(), { moment: "fizzle" }, 16);
-                done(action); return;
-            }
+            // 自由投点/方向：只有真实存在的非友方实体才修正泥块方向；否则沿瞄准方向直飞。
+            const homing = target !== null && world.valid(target) && !world.friendly(target) ? String(target.ref()) : null;
             const power = p(clearsmogId, "mud", action);
             const speed = Math.max(0.8, p(clearsmogId, "flight", action));
             const radius = Math.max(0.16, p(clearsmogId, "clayRadius", action));
@@ -139,19 +140,28 @@ namespace PokemonSkills {
             const cloud = Math.max(1.4, p(clearsmogId, "cloudRadius", action));
             const scale = Math.max(0.6, Math.min(2.2, cloud / clearsmogReference));
             const intensity = Math.max(0.6, Math.min(2.2, power / 42));
+            const direction = aim(action);
             let burst = false, settled = false;
 
             sound(action, "cobblemon:move.sludgebomb.actor");
+            const appearance: LivingActions.ProjectileAppearance = {
+                sprite: "cobblemon:particle/generic/mud/mudsplash", tint: 0x8E9C7A,
+                scale: Math.max(0.7, Math.min(1.6, radius / 0.26))
+            };
+            if (homing !== null) appearance.homing = { target: homing, turn: 9, delay: 1, range: reach + 2 };
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: reach + 2, radius: radius, gravity: 0.02, lifetime: 140,
-                appearance: { sprite: "cobblemon:particle/generic/mud/mudsplash", tint: 0x8E9C7A,
-                    scale: Math.max(0.7, Math.min(1.6, radius / 0.26)),
-                    homing: { target: String(target.ref()), turn: 9, delay: 1, range: reach + 2 } },
+                speed: speed, range: reach + 2, radius: radius, gravity: 0.02, lifetime: 140, direction: direction,
+                appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), victim = hit.target(), at = hit.position();
-                    if (victim === null || !scope.valid(victim) || scope.friendly(victim) || burst) return;
+                    if (burst) return;
+                    if (victim !== null) {
+                        // 命中友方或已离场实体只是一记空撞，不结算伤害也不附烟。
+                        if (!scope.valid(victim) || scope.friendly(victim)) return;
+                        if (!impact(current, hit, clearsmogId, power, { damage: damageSpec(clearsmogId, "mud") })) return;
+                    }
+                    // 实体或方块的真实接触点都是泥团炸开处；烟只落到实际命中点范围内的非友方身上。
                     burst = true;
-                    if (!impact(current, hit, clearsmogId, power, { damage: damageSpec(clearsmogId, "mud") })) return;
                     const result = clearsmogBurst(scope, current, at);
                     sound(current, "cobblemon:impact.poison");
                     if (result.erased > 0) sound(current, "minecraft:block.beacon.deactivate");

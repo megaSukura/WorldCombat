@@ -12,6 +12,7 @@ public final class EffectRuntime {
                         int remaining, String data, List<Timer> timers, List<Listener> listeners) {}
     static final class Instance {
         long id, action;
+        ExecutionOrigin origin;
         EffectRegistry.Definition definition;
         ActorHandle source, target;
         Anchor sourceAnchor, targetAnchor;
@@ -48,6 +49,13 @@ public final class EffectRuntime {
         this.host = host; this.registry = registry; epoch = registry.epoch();
     }
     public long create(String id, ActorHandle source, ActorHandle target, UUID controller, long action, String data, int ticks) {
+        return create(id, source, target, controller, action, data, ticks, actions == null ? null : actions.origin(action));
+    }
+    public ExecutionOrigin origin(long id) {
+        host.checkThread(); var instance = active.get(id);
+        return instance == null ? null : instance.origin;
+    }
+    public long create(String id, ActorHandle source, ActorHandle target, UUID controller, long action, String data, int ticks, ExecutionOrigin origin) {
         host.checkThread(); current();
         var definition = registry.get(id);
         if (definition == null) throw new ActionRejectedException("effect-unavailable");
@@ -56,6 +64,7 @@ public final class EffectRuntime {
         if (definition.lifetime().equals("action") && (action <= 0 || actions != null && !actions.exists(action))) throw new IllegalArgumentException("Effect requires a live action owner");
         var instance = new Instance();
         instance.id = ++nextId; instance.action = action; instance.definition = definition;
+        instance.origin = origin != null && origin.belongsTo(source) ? origin : null;
         instance.source = source; instance.target = target; instance.controller = controller;
         instance.sourceAnchor = anchor(source); instance.targetAnchor = anchor(target);
         instance.data = registry.data(definition, data); instance.remaining = ticks;
@@ -77,6 +86,63 @@ public final class EffectRuntime {
         String key = "operation:" + operation;
         if (!instance.definition.handlers().containsKey(key)) return false;
         invoke(instance, key, EffectData.copy(input), null, caller);
+        return true;
+    }
+    /** Compare canonical stored snapshots, normalize all replacements, then publish after the whole set is committed. */
+    public boolean compareStates(ActorHandle caller, UUID controller, String json) {
+        host.checkThread(); current();
+        var root = com.google.gson.JsonParser.parseString(EffectData.copy(json)).getAsJsonObject();
+        if (root.size() != 1 || !root.has("updates") || !root.get("updates").isJsonArray())
+            throw new IllegalArgumentException("Expected effect state updates");
+        record Update(Instance instance, String expected, String requested, String replacement) {}
+        var updates = new ArrayList<Update>(); var identifiers = new HashSet<Long>();
+        for (var element : root.getAsJsonArray("updates")) {
+            if (!element.isJsonObject()) throw new IllegalArgumentException("Expected an effect state update");
+            var value = element.getAsJsonObject();
+            if (value.size() != 3 || !value.has("id") || !value.has("expected") || !value.has("data")
+                || !value.get("id").isJsonPrimitive() || !value.getAsJsonPrimitive("id").isNumber()
+                || !value.get("expected").isJsonPrimitive() || !value.getAsJsonPrimitive("expected").isString()
+                || !value.get("data").isJsonPrimitive() || !value.getAsJsonPrimitive("data").isString())
+                throw new IllegalArgumentException("Invalid effect state update");
+            long id = value.getAsJsonPrimitive("id").getAsBigDecimal().longValueExact();
+            if (id <= 0 || !identifiers.add(id)) throw new IllegalArgumentException("Duplicate or invalid effect instance");
+            updates.add(new Update(active.get(id), value.get("expected").getAsString(), value.get("data").getAsString(), null));
+        }
+        for (var update : updates) {
+            var instance = update.instance();
+            if (instance == null || !live(instance) || !instance.endReason.isEmpty()) return false;
+            permitted(caller, instance.target, controller);
+            if (!instance.data.equals(update.expected())) return false;
+        }
+        for (int i = 0; i < updates.size(); i++) {
+            var update = updates.get(i);
+            updates.set(i, new Update(update.instance(), update.expected(), update.requested(), registry.data(update.instance().definition, update.requested())));
+        }
+        // A normalizer may call other content. Recheck every original snapshot after all normalizers have returned.
+        current();
+        for (var update : updates) {
+            var instance = update.instance();
+            if (!live(instance) || !instance.endReason.isEmpty() || !instance.data.equals(update.expected())) return false;
+            permitted(caller, instance.target, controller);
+        }
+        var modified = new ArrayList<Instance>();
+        for (var update : updates) if (!update.instance().data.equals(update.replacement())) {
+            update.instance().data = update.replacement(); modified.add(update.instance());
+        }
+        // These are subsequent observations. Reentrant observers see the complete commit and may make later changes.
+        for (var instance : modified) {
+            try { changed(instance); }
+            catch (RuntimeException error) { host.report(-instance.id, instance.definition.id(), "Effect state committed; change observer failed", error); }
+        }
+        return true;
+    }
+    /** Publish through an effect created by this source, so its release owns the presentation too. */
+    public boolean present(long id, ActorHandle caller, UUID controller, String key, String type, int version, Point point, String data) {
+        host.checkThread(); current();
+        var instance = active.get(id);
+        if (instance == null || !live(instance) || !instance.source.equals(caller) || !instance.endReason.isEmpty()) return false;
+        permitted(caller, instance.target, controller);
+        host.present(-id, instance.source, key, type, version, point, data);
         return true;
     }
     public String emit(String event, int version, ActorHandle source, ActorHandle target, UUID controller, String payload) {

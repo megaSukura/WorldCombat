@@ -1,14 +1,15 @@
 /**
  * 高温重压 / heatcrash 的客户端表现。
  *
- * 一句话：施法者全身火苗卷起、越烧越旺 → 带着一条火尾腾空翻转 → 以火身砸在落点上，火浪与燃烧的碎石向外炸开 →
- * 被砸中的目标身上窜起明火，落点留下一片仍在冒火星的焦土。
- * 色相家族：暖橙到深红（flame / ember / wisp / impact_fire）为主体，焦黑（floorscorch_big / burning_rock）作地面，
+ * 一句话：施法者全身火苗卷起 → 低低扑出去、身体几乎贴着地面 → 触地后贴地滑出，身后拖出一道火擦痕 →
+ * 压中的目标身上爆开火星，能被点着的则窜起明火。
+ * 与重磅冲撞分开：这里是**低平**的身体与贴地滑痕，没有高跃与落点圆爆；停止后火痕很快熄灭。
+ * 色相家族：暖橙到深红（flame / ember / wisp / impact_fire）为主体，焦黑（floorscorch_big / burning_rock）作地面擦痕，
  * 烟灰（smoke / tinydust）作余韵；只在核心与明火层出现高饱和橙。
- * 拍子：起（windup 蓄火）→ 行（leap 火尾腾空）→ 击（crash 火浪、impact 命中）→ 收（burn 明火、焦土余烬）。
- * 范围：crash 绑落点、fit none，火浪环按 `data.scale`（实际落点半径 / 1.8）、焦土面按 `data.scorch`（焦土半径 / 1.8）铺开。
- * 运动：腾空时火苗沿历史拖尾并向上卷，落地是贴地外扩的火浪加向上崩的燃石，明火层贴目标向上窜。
- * 数：crash 的燃石量绑 `data.bursts`（命中目标数派生）、强度绑 `data.intensity`；impact 是否起明火由 `data.burn` 决定。
+ * 拍子：起（windup 蓄火）→ 扑（pounce 低弧）→ 滑（slide 贴地火线、scorch 火擦痕）→ 停（stop 余烬）→ 击（impact 压中、shove 被顶开、burn 明火）。
+ * 范围：pounce／slide 绑施法者身体，跟着真实运动；scorch 绑实际贴地点，宽度按 `data.scale`（火痕宽 / 0.45）铺开。
+ * 运动：扑是低平外扩的火苗，滑是贴地拖尾加地面擦痕；命中是短促外爆，明火贴目标向上窜。
+ * 数：scorch 的数量绑定机制值（宽度/强度），impact 的强度绑 `data.intensity`（威力 / 90），burn 的余烬量绑 `data.embers`。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const HeatCrashDefinition: ParticleDefinition = {
@@ -37,83 +38,94 @@ const HeatCrashDefinition: ParticleDefinition = {
                 }
             ]
         },
-        leap: {
-            duration: 28,
-            exit: { stop: 20, drain: 14 },
+        pounce: {
+            duration: 14,
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "fire_trail", bind: "source", offset: [0, 0.4, 0], height: 0.4,
+                    name: "low_flame", bind: "source", offset: [0, 0.25, 0], height: 0.24,
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    rate: 40, trail: { minDistance: 0.28 },
-                    shape: { kind: "box", size: [0.4, 0.5, 0.4] },
-                    direction: "outward", speed: [0.03, 0.14],
+                    rate: 34, shape: { kind: "box", size: [0.5, 0.28, 0.5] },
+                    direction: "outward", speed: [0.03, 0.12],
                     gravity: -0.01, drag: 0.95,
-                    lifetime: [8, 14], size: [0.2, 0.02], sizeMode: "index",
-                    color: 0xFF8A2A, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 180
+                    lifetime: [7, 12], size: [0.18, 0.02], sizeMode: "index",
+                    color: 0xFF8A2A, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 120
                 },
                 {
-                    name: "sparks", bind: "source", offset: [0, 0.3, 0], height: 0.3,
+                    name: "pounce_embers", bind: "source", offset: [0, 0.16, 0], height: 0.16,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 30, trail: { minDistance: 0.24 },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.05, 0.2],
-                    gravity: 0.06, drag: 0.93,
-                    lifetime: [8, 16], size: [0.07, 0.01],
-                    color: 0xFFC46A, alpha: [0.8, 0], light: "full", maxParticles: 140
+                    rate: 26, shape: { kind: "sphere", radius: 0.3, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.05, 0.18],
+                    gravity: 0.05, drag: 0.93,
+                    lifetime: [7, 14], size: [0.06, 0.01],
+                    color: 0xFFC46A, alpha: [0.8, 0], light: "full", maxParticles: 100
                 }
             ]
         },
-        crash: {
-            duration: 36,
-            exit: { stop: 18, drain: 22 },
+        slide: {
+            duration: 40,
+            exit: { stop: 14, drain: 18 },
             emitters: [
                 {
-                    name: "fire_wave", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
-                    burst: { count: 14, at: 1 },
-                    shape: { kind: "ring", radius: 1.8 },
-                    direction: "outward", speed: [0.16, 0.42],
-                    lifetime: [7, 13], size: [0.7, 0.14], sizeMode: "index",
-                    alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 70
+                    name: "ground_flame", bind: "source", offset: [0, 0.12, 0], height: 0.1,
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: 30, trail: { minDistance: 0.24 },
+                    shape: { kind: "box", size: [0.5, 0.16, 0.5] },
+                    direction: "outward", speed: [0.02, 0.1],
+                    gravity: -0.005, drag: 0.96,
+                    lifetime: [6, 11], size: [0.16, 0.02], sizeMode: "index",
+                    color: 0xFF8A2A, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 140
                 },
                 {
-                    name: "burning_rocks", bind: "point", fit: "none", offset: [0, 0.12, 0],
-                    particle: "world_combat_core:cobblemon/generic/burning_rock",
-                    burst: { count: { data: "bursts", fallback: 24 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 1.1 },
-                    direction: "outward", speed: [0.12, 0.4], spread: 40,
-                    gravity: 0.12, drag: 0.93,
-                    collision: { bounces: 2, verticalBounce: 0.4, dragAfter: 0.6 },
-                    lifetime: [14, 26], size: [0.2, 0.04], sizeMode: "index",
-                    alpha: [0.95, 0], light: "full", bloom: 0.2, maxParticles: 130
-                },
+                    name: "slide_embers", bind: "source", offset: [0, 0.1, 0], height: 0.08,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    rate: 24, trail: { minDistance: 0.2 },
+                    shape: { kind: "point" },
+                    direction: "outward", speed: [0.03, 0.14],
+                    gravity: 0.04, drag: 0.94,
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xFFC46A, alpha: [0.7, 0], light: "full", maxParticles: 120
+                }
+            ]
+        },
+        scorch: {
+            duration: 24,
+            exit: { stop: 8, drain: 16 },
+            emitters: [
                 {
-                    name: "flame_burst", bind: "point", fit: "none", offset: [0, 0.3, 0],
-                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    burst: { count: 46, at: 1 },
-                    shape: { kind: "sphere", radius: 1.0 },
-                    direction: "up", speed: [0.06, 0.28],
-                    gravity: -0.02, drag: 0.93,
-                    lifetime: [10, 20], size: [0.24, 0.02], sizeMode: "index",
-                    alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 160
-                },
-                {
-                    name: "scorch_face", bind: "point", fit: "none", offset: [0, 0.03, 0],
+                    name: "scorch_mark", bind: "point", fit: "none", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/scorch/floorscorch_big",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "circle", radius: 1.8 },
+                    shape: { kind: "circle", radius: 0.45 },
                     direction: "outward", speed: [0.0, 0.01],
-                    lifetime: [26, 34], size: [3.4, 3.6],
-                    alpha: [0.8, 0], light: "world", maxParticles: 4
+                    lifetime: [14, 18], size: [0.8, 0.9],
+                    alpha: [0.7, 0], light: "world", maxParticles: 3
                 },
                 {
-                    name: "ash_smoke", bind: "point", fit: "none", offset: [0, 0.35, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 28, shape: { kind: "circle", radius: 1.4, thickness: 0.7 },
-                    direction: "up", speed: [0.03, 0.12],
-                    gravity: -0.01, drag: 0.95,
-                    lifetime: [22, 36], size: [0.36, 0.5],
-                    color: 0x40342C, alpha: [0.4, 0], light: "world", maxParticles: 70
+                    name: "scorch_ember", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: 4, at: 1 },
+                    shape: { kind: "circle", radius: 0.4 },
+                    direction: "up", speed: [0.02, 0.08],
+                    gravity: 0.03, drag: 0.94,
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xFFC46A, alpha: [0.6, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        stop: {
+            duration: 18,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "ash_out", bind: "source", offset: [0, 0.14, 0], height: 0.12,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: 16 },
+                    shape: { kind: "ring", radius: 0.4, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.04, 0.16],
+                    gravity: 0.06, drag: 0.9,
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xFF9A3A, alpha: [0.6, 0], light: "full", maxParticles: 60
                 }
             ]
         },
@@ -122,7 +134,7 @@ const HeatCrashDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 18 },
             emitters: [
                 {
-                    name: "hit_core", bind: "target", height: 0.55,
+                    name: "hit_core", bind: "target", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
                     burst: { count: 14, at: 1 },
                     shape: { kind: "sphere", radius: 0.42 },
@@ -131,7 +143,7 @@ const HeatCrashDefinition: ParticleDefinition = {
                     alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 50
                 },
                 {
-                    name: "hit_embers", bind: "target", height: 0.4,
+                    name: "hit_embers", bind: "target", height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: 30 },
                     shape: { kind: "sphere", radius: 0.44 },
@@ -139,6 +151,22 @@ const HeatCrashDefinition: ParticleDefinition = {
                     gravity: 0.05, drag: 0.92,
                     lifetime: [10, 18], size: [0.07, 0.01],
                     alpha: [0.9, 0], light: "full", maxParticles: 120
+                }
+            ]
+        },
+        shove: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "pushed_ash", bind: "target", offset: [0, 0.1, 0], height: 0.1,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 8, at: 1 },
+                    shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.05, 0.16],
+                    gravity: 0.02, drag: 0.92,
+                    lifetime: [8, 14], size: [0.18, 0.28],
+                    color: 0x3A302A, alpha: [0.35, 0], light: "world", maxParticles: 30
                 }
             ]
         },

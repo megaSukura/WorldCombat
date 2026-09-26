@@ -1,21 +1,4 @@
-/**
- * 背水一战 / noretreat —— 执行组织。
- *
- * 核心念头：**一声怒吼顶起全身五道力，同时把脚钉进地里——退无可退。**
- *   它是本族唯一自己给自己上锁的一招：代价明明白白，这段时间里你挪不动半步，只能站定打。
- *   放它的时机是「我还站得住、且已经贴上了必须解决的目标」；低血时把自己钉在别人刀下并不划算。
- *
- * 三幕：
- *   聚（windup，提交前）：术者沉腰、脚下卷起一圈土纹（只观察与预告，可被打断不花代价）。
- *   立（commit）：五项各 +1 走 NativeEffects.boost（不忽略特性），给自己挂共享身份 `world_combat:status/noretreat`
- *      与 `world_combat:status/trapped` 的真实 MobEffect，移动归零；随后的持久标记 `world_combat:noretreat_stand`
- *      维持脚下的阵环，时长走完或术者倒下才拔脚。
- *   拔（release）：阵环散去、MobEffect 被精确移除，术者恢复自由。
- *
- * 与同族分开：扎根拿移动换续血、黑色目光靠凝视维持；背水一战拿移动换一次全项强化，锁更短、油门更猛。
- *
- * 配置 `rush`（疾战）由 resolve 改时序，由公式改时长／冷却：只顶三项、站得更短，但冷却更短。
- */
+/** A local oath grants owned stage layers while the caster remains inside its fixed boundary. */
 namespace PokemonSkills {
     const noRetreatReferenceRing = 1.6;
 
@@ -27,32 +10,22 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    function noRetreatVisual(world: CombatWorld, self: CombatActor, data: any, ticks: number): void {
-        const body = world.observe(self);
-        if (body === null) return;
-        WorldFeedback.keep(world, "noretreat:stand:" + String(self.ref()), noRetreatScene, 1, body.position(),
-            { moment: "stand", target: String(self.ref()), boosts: data.boosts, surge: data.surge,
-                ring: data.ring, scale: data.scale, intensity: data.intensity }, ticks);
-    }
-
     WorldCombat.effect(noRetreatStand, 1, 600, "actor", noRetreatStandData, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(noRetreatStand, "start", function (effect) {
-        const world = effect.world(), self = effect.target();
-        if (!world.valid(self)) { effect.end(); return; }
-        noRetreatVisual(world, self, JSON.parse(effect.state()), 24);
-        effect.schedule("watch", "watch", 20, "{}");
-    });
+    WorldCombat.effectHandler(noRetreatStand, "start", effect => effect.schedule("watch", "watch", 1, "{}"));
     WorldCombat.effectHandler(noRetreatStand, "watch", function (effect) {
-        const world = effect.world(), self = effect.target();
-        if (!world.valid(self)) { effect.end(); return; }
-        noRetreatVisual(world, self, JSON.parse(effect.state()), 24);
-        effect.schedule("watch", "watch", 20, "{}");
+        const world = effect.world(), self = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(self) || !MobEffects.matches(world, self, data.carrier)) { effect.end(); return; }
+        const result = WorldBoundaries.contain(world, self, { centre: WorldCombat.point(data.centre[0], data.centre[1], data.centre[2]),
+            radius: data.ring, margin: .35, height: 3, step: .45 }, (actor, delta) => world.displace(actor, delta));
+        if (result === "escaped" || result === "refused") { effect.end(); return; }
+        effect.schedule("watch", "watch", 1, "{}");
     });
+    WorldCombat.effectHandler(noRetreatStand, "operation:world_combat:dispel", effect => effect.end());
     WorldCombat.effectHandler(noRetreatStand, "end", function (effect) {
         const world = effect.world(), self = effect.target(), data = JSON.parse(effect.state());
         if (world.valid(self)) {
             const mark = MobEffects.read(world, self, noRetreatEffect);
-            if (mark !== null) world.removeMobEffect(self, noRetreatEffect, mark.key());
+            if (mark !== null && MobEffects.matches(world, self, data.carrier)) world.removeMobEffect(self, noRetreatEffect, mark.key());
             const body = world.observe(self);
             if (body !== null) {
                 WorldFeedback.emit(world, noRetreatScene, 1, body.position(),
@@ -72,20 +45,12 @@ namespace PokemonSkills {
         for (let index = 0; index < marks.length; index++) world.operation(marks[index].id(), "world_combat:dispel", "{}");
     });
 
-    // 立誓期间术者自己动不了：导航速度归零（移动速度属性由状态效果自带）。
-    WorldCombat.on("world_combat:move_noretreat/root", "world_combat:navigate", "", function (event) {
-        if (MobEffects.read(event.world(), event.actor(), noRetreatEffect) === null) return;
-        const data = JSON.parse(String(event.data()));
-        data.speed = 0;
-        event.data(JSON.stringify(data));
-    });
-
     define({
         freeMovement: true,
         id: noRetreatId,
         cooldownParameter: "recharge",
         name: "背水一战",
-        description: "一声怒吼顶起全身的力，同时把脚钉进地里：攻击、防御、特攻、特防、速度各 +1，但这段时间里无法移动。已经立过誓时不能再立；低血时把自己钉在别人刀下并不划算。",
+        description: "在脚下立起小型阵界，获得一段全项强化；可在圈内走位，靠近边缘受收束。被外力带出、状态清除或到期时只撤本次强化。",
         uses: ["贴近目标后强化自己，站定迎战", "被追上时用一次全项强化换最后一段输出", "配合队友的控制，把强化窗口放在对方走不掉的时候"],
         kind: "self",
         range: 1,
@@ -98,7 +63,7 @@ namespace PokemonSkills {
         stationary: true,
         defaults: { rush: false, ai: { maxChase: 12 } },
         fields: [
-            field(pathOf("rush"), "疾战", "boolean", { help: "开启（疾战）：只顶起攻击、特攻、速度三项，立誓时长减半、冷却 ×0.75——出手快、脱身快，但放弃双防。关闭（背水）：五项全 +1，站得更久、冷却更长——全面强化，但把自己钉得更久。" })
+            field(pathOf("rush"), "疾战", "boolean", { help: "开启（疾战）：只顶起攻击、特攻、速度三项，立誓时长减半、冷却 ×0.75——出手快、脱身快，但放弃双防。关闭（背水）：五项全 +1，站得更久、冷却更长——全面强化，但在阵界内迎战更久。" })
         ],
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[noRetreatId], detail: { values: config },
@@ -133,18 +98,19 @@ namespace PokemonSkills {
             const rush = !!(config && config.rush);
             const standTicks = Math.max(80, Math.round(p(noRetreatId, "standTicks", action)));
             const surge = Math.max(8, Math.round(p(noRetreatId, "surge", action)));
-            const ring = Math.max(0.8, p(noRetreatId, "ring", action));
+            const ring = Math.max(2.4, p(noRetreatId, "ring", action));
             const scale = Math.max(0.5, Math.min(2.2, ring / noRetreatReferenceRing));
             const intensity = Math.max(0.7, Math.min(2.2, surge / 20));
             const stats = rush ? ["atk", "spa", "spe"] : ["atk", "def", "spa", "spd", "spe"];
-            for (let index = 0; index < stats.length; index++) NativeEffects.boost(world, self, stats[index], 1);
-            if (!CombatStatus.has(world, self, "trapped"))
-                CombatStatus.apply(world, self, "noretreat", noRetreatEffect, standTicks, 0, { unique: true });
-            world.stopMovement(self);
-            const marks = world.effects(self, noRetreatStand);
-            for (let index = 0; index < marks.length; index++) world.operation(marks[index].id(), "world_combat:dispel", "{}");
-            world.effect(noRetreatStand, self, JSON.stringify({ standTicks: standTicks, boosts: stats.length,
-                surge: surge, ring: ring, scale: scale, intensity: intensity }), standTicks);
+            const carrier = MobEffects.apply(world, self, noRetreatEffect, standTicks, 0);
+            if (!carrier) { done(action); return; }
+            const stages: { [key: string]: number } = {}; stats.forEach(stat => stages[stat] = 1);
+            NativeEffects.boostWindow(world, self, stages, standTicks, "world_combat:move/noretreat", carrier);
+            const centre = body.position();
+            const stand = world.effect(noRetreatStand, self, JSON.stringify({ standTicks, boosts: stats.length, surge, ring, scale, intensity,
+                centre: [centre.x(), centre.y(), centre.z()], carrier: MobEffects.anchor(carrier) }), standTicks);
+            WorldFeedback.onEffect(world, stand, "noretreat:stand:" + stand, noRetreatScene, 1, centre.plus(WorldCombat.point(0, -body.height() / 2 + .03, 0)),
+                { moment: "stand", boosts: stats.length, surge, ring, scale, intensity });
             WorldFeedback.emit(world, noRetreatScene, 1, body.position(),
                 { moment: "burst", target: String(self.ref()), boosts: stats.length, surge: surge, ring: ring,
                     scale: scale }, 30);

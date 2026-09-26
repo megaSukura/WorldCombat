@@ -1,14 +1,15 @@
 /**
  * 岩斧 / stoneaxe 的客户端表现。
  *
- * 一句话：岩斧举过头顶、斧刃结起石屑 → 一斧劈下在目标身上拉出一道岩痕、斧头崩裂 → 岩石碎片在落点四周
- *   浮成一圈缓缓打转；有东西走进空域时碎片砸下，崩解式则整片一次崩落。
+ * 一句话：岩斧举过头顶、斧刃结起石屑 → 一斧劈下在目标身上拉出一道岩痕、斧头崩裂 → 数量有限的岩石碎片在落点
+ *   悬成一圈，余量越多圈上石块越多；每个新进入的敌人被从它正上方落下的一块岩砸中，屋顶会先一步挡住下落岩，
+ *   砸完余量归零整片散尽；崩解式第一次被闯进就一次全落。
  * 色相家族：岩石灰褐 0xB7B3A6 / 0x8A7F6B 为主，近白高光 0xE7E2D6 作斧刃与碎石尖端；没有第二个色相。
- * 拍子：起（windup 举斧聚屑）→ 劈（chop 斧痕）→ 悬（raise 浮起 / hum 低鸣）→ 砸（hit 逐次 / shatter 整片崩落）→ 收。
- * 范围：raise 与 hum 绑 `point`、`fit:"none"`，用 `data.radius` 画圈、`data.lift` 把石阵抬到机制高度，
- *   画出来的空域就是会被砸的那块；`data.shatter` 让崩解式在画面上更密更亮。
- * 运动：起手石屑向斧刃收；劈下时斧痕自上而下拉过；碎片先向上崩起再停在 `data.lift` 处缓缓打转；被砸时向下砸落。
- * 数：`data.rocks`（物攻派生）决定悬浮石与碎屑数量，`data.scale`（半径/参考 2.4）控制尺寸与范围。
+ * 拍子：起（windup 举斧聚屑）→ 劈（chop 斧痕）→ 悬（raise 浮起 / hum 低鸣、数量随余量下降）→
+ *   落（fall 竖直落到目标 / hit 砸中 / blocked 砸在屋顶 / shatter 崩解整落）→ 竭（spent 散尽）→ 收。
+ * 范围：raise 与 hum 绑 `point`、`fit:"none"`，用 `data.radius` 画圈、`data.lift` 把石阵抬到机制高度、`data.rocks` 是剩余可数石数。
+ * 运动：起手石屑向斧刃收；劈下时斧痕自上而下拉过；碎片先向上崩起再停在 `data.lift` 处；落岩沿 `data.drop` 竖直砸下。
+ * 数：`data.rocks`（剩余库存派生）决定悬浮石与碎屑数量、`data.drop`（真实落距）决定下落线长度、`data.scale`（半径/参考 2.4）控制尺寸。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const StoneaxeDefinition: ParticleDefinition = {
@@ -97,7 +98,7 @@ const StoneaxeDefinition: ParticleDefinition = {
                 {
                     name: "floaters", bind: "point", offset: [0, { data: "lift", fallback: 1.4 }, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
-                    rate: { data: "rocks", fallback: 20 }, shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.4 } },
+                    rate: { data: "rocks", fallback: 20 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.4 }, thickness: 0.35 },
                     direction: "up", speed: [0.003, 0.02], spread: 20, spin: 8,
                     lifetime: [16, 30], size: [0.16, 0.34],
                     color: 0xB7B3A6, alpha: [0.4, 0], maxParticles: 120
@@ -113,10 +114,75 @@ const StoneaxeDefinition: ParticleDefinition = {
                 {
                     name: "glint", bind: "point", offset: [0, { data: "lift", fallback: 1.4 }, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
-                    rate: 4, shape: { kind: "sphere", radius: { data: "radius", fallback: 2.4 } },
+                    rate: 4, shape: { kind: "ring", radius: { data: "radius", fallback: 2.4 } },
                     direction: "up", speed: [0.002, 0.015],
                     lifetime: [10, 18], size: [0.06, 0.02],
                     color: 0xE7E2D6, alpha: [0.4, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        // 一块悬岩真落下：从目标正上方的岩位竖直砸到目标，数量随余量。
+        fall: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "drop", bind: "point", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: { data: "rocks", fallback: 12 }, at: 1 },
+                    shape: { kind: "line", length: { data: "drop", fallback: 1.4 }, rotation: [180, 0, 0] },
+                    direction: "down", speed: [0.18, 0.4], spread: 8, spin: 20,
+                    lifetime: [5, 10], size: [0.22, 0.26],
+                    color: 0xE7E2D6, alpha: [0.95, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "trail", bind: "point", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/burning_rock",
+                    burst: { count: { data: "rocks", fallback: 8 } },
+                    shape: { kind: "line", length: { data: "drop", fallback: 1.4 }, rotation: [180, 0, 0] },
+                    direction: "down", speed: [0.14, 0.34], spread: 12, spin: 18,
+                    lifetime: [6, 11], size: [0.12, 0.03],
+                    color: 0x8A7F6B, alpha: [0.8, 0], maxParticles: 30
+                }
+            ]
+        },
+        // 竖直段被屋顶拦住：只砸在方块表面的一小片崩屑，不伤目标。
+        blocked: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "splinter", bind: "point", offset: [0, 0.1, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: { data: "rocks", fallback: 6 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.2], gravity: 0.05, spin: 24,
+                    lifetime: [7, 14], size: [0.12, 0.02],
+                    color: 0x8A7F6B, alpha: [0.7, 0], maxParticles: 24
+                }
+            ]
+        },
+        // 余量归零：石阵散尽前最后落下的碎屑。
+        spent: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "crumble", bind: "point", offset: [0, 0.1, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 26 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.4 } },
+                    direction: "outward", speed: [0.03, 0.12], gravity: 0.03,
+                    lifetime: [10, 20], size: [0.09, 0.02],
+                    color: 0xB7B3A6, alpha: [0.55, 0], maxParticles: 50
+                },
+                {
+                    name: "last_chips", bind: "point", offset: [0, { data: "lift", fallback: 1.4 }, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: 10 },
+                    shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.4 } },
+                    direction: "down", speed: [0.06, 0.2], gravity: 0.05, spin: 20,
+                    lifetime: [8, 16], size: [0.12, 0.02],
+                    color: 0x8A7F6B, alpha: [0.7, 0], maxParticles: 30
                 }
             ]
         },

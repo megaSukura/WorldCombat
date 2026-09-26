@@ -52,6 +52,27 @@ const ScaryfaceDefinition: ParticleDefinition = {
                 }
             ]
         },
+        blocked: {
+            duration: 20,
+            emitters: [
+                {
+                    name: "blocked_line", bind: "path", height: 0.8,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 24, shape: { kind: "polyline" },
+                    speed: [0.0, 0.01],
+                    lifetime: [5, 9], size: [0.09, 0.02],
+                    color: 0x5B2A86, alpha: [0.45, 0], light: "world", maxParticles: 36
+                },
+                {
+                    name: "blocked_scuff", bind: "point", height: 0.8,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.01, 0.05], drag: 0.9,
+                    lifetime: [6, 12], size: [0.06, 0.01],
+                    color: 0x3A1E52, alpha: [0.4, 0], light: "world", maxParticles: 22
+                }
+            ]
+        },
         fizzle: {
             duration: 14,
             emitters: [

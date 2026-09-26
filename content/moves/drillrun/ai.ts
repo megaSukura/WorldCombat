@@ -23,9 +23,12 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             const distance = CompanionBehavior.distance(self.point, target.point);
-            if (distance > capability.data.range + 1.5) return 0;
+            if (distance > capability.data.range) return 0;
             if (!CompanionBehavior.ai<boolean>(capability, "line", true)) return 24;
-            // 数一数身后这条冲刺方向上一共排了几个敌人：两个以上就值得一钻贯穿。
+            // 用本个体实际的冲程与钻头判定数一数这条冲刺线上排了几个敌人：两个以上才值得一钻贯穿。
+            const world = CompanionBehavior.world(context);
+            const charge = p(drillrunId, "charge", world);
+            const radius = p(drillrunId, "drill", world);
             const direction = [target.point[0] - self.point[0], 0, target.point[2] - self.point[2]];
             const length = Math.sqrt(direction[0] * direction[0] + direction[2] * direction[2]) || 1;
             direction[0] /= length; direction[2] /= length;
@@ -36,9 +39,10 @@ namespace PokemonSkills {
                 if (other.friendly || !(other.health > 0) || other.ref === self.ref) continue;
                 const dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
                 const along = dx * direction[0] + dz * direction[2];
-                if (along < 0 || along > capability.data.range + 2) continue;
+                if (along < 0 || along > charge) continue;
                 const lateral = Math.abs(dx * direction[2] - dz * direction[0]);
-                if (lateral <= 1.4) inLine++;
+                const half = radius + (typeof other.width === "number" ? other.width / 2 : 0.45);
+                if (lateral <= half) inLine++;
             }
             return inLine >= 2 ? 40 : 24;
         }

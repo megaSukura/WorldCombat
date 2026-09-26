@@ -9,16 +9,30 @@
 Smoke.scenario("substitute", function (stage) {
     var a = stage.pokemon({ species: "Eevee", level: 30, moves: ["substitute"], at: [-2, 0, 0] });
     var b = stage.mob({ type: "minecraft:zombie", at: [7, 0, 0] });
-    stage.hostile(a, b);
+    stage.noai(b);
+    stage.provoke(a, b);
     stage.until(600, function () {
         return stage.casts("substitute") > 0 && stage.hadMobEffect(a, "world_combat:status/substitute");
     }, function () {
         stage.expect(stage.casts("substitute") > 0, "substitute was committed");
         stage.expect(stage.hadMobEffect(a, "world_combat:status/substitute"), "the ward identity landed on the caster");
-        stage.after(180, function () {
-            stage.note("substitute ward", { casts: stage.casts("substitute"), damageOnCaster: stage.damageTo(a),
-                damageOnZombie: stage.damageTo(b), health: Math.round(a.health() * 10) / 10 });
-            stage.done();
+        stage.setPp(a, "substitute", 0);
+        stage.after(20, function () {
+            var before = a.health();
+            stage.hurt(a, 5, "minecraft:generic", { source: b });
+            stage.after(2, function () {
+                stage.expect(Math.abs(a.health() - before) < .01, "the connected substitute took the incoming hit");
+                stage.command("effect clear " + a.ref.split("/")[0] + " world_combat:substitute");
+                stage.after(24, function () {
+                    var unguarded = a.health();
+                    stage.hurt(a, 5, "minecraft:generic", { source: b });
+                    stage.after(2, function () {
+                        stage.expect(a.health() < unguarded, "clearing the carrier also ended damage redirection");
+                        stage.note("Linked damage redirection and native-carrier cleanup verified; connection visuals remain manual.");
+                        stage.done();
+                    });
+                });
+            });
         });
     }, "substitute is raised");
 });

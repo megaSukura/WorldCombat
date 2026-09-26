@@ -5,10 +5,10 @@
  *   目标继续朝后延伸 → 被扎穿的人头顶冒起 Z；如果这一声裂了，音束在起点就散成一撮走音的音符。
  *
  * 色相家族：叶绿（0x7CC24E）为主体音束与波纹，亮黄绿（0xB6E06A）做细节，近白（0xEFFBD8）只给音束核心与睡下的高光。
- * 拍子：起 windup（含叶）→ 吹 beam（音束沿直线铺开）→ 眠 sleep（头顶 Z）／裂 crack（起点散音符）。
- * 范围：beam 的 `lance` 绑在施法者身上、`fit: "none"`，shape 用 `data.span`（音束长度求值）画出一条沿
- *   `data.direction` 的直线；线到哪，就唱到哪——玩家一眼看出只有这条线会被带走。
- * 运动：音束沿直线一次铺开，`data.speed`（音的推进）决定波纹串推进的快慢；sleep 的 Z 自下而上升起。
+ * 拍子：起 windup（含叶）→ 吹 beam（一瞬铺开的细线）→ 眠 sleep（头顶 Z）／裂 crack（起点散音符）。
+ * 范围：beam 的 `lance` 绑在施法者身上、`fit: "world"`，shape 用 `data.span`（墙截出的实际音线长度）画出
+ *   一条沿 `data.direction` 的直线；线到哪，就唱到哪——玩家一眼看出只有这条线会被带走，打墙就短一截。
+ * 运动：音束一次铺开，`data.flow`（音的推进）决定线条与波纹串推进的快慢；sleep 的 Z 自下而上升起。
  * 数：`data.shrills`（特攻与等级换算）决定音束上的波纹与线条数量；`data.lane`（体宽换算）决定线内环的半径。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -39,29 +39,32 @@ const GrassWhistleDefinition: ParticleDefinition = {
         },
         beam: {
             duration: 30,
-            exit: { stop: 15, drain: 18 },
+            exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "lance", bind: "point", fit: "none", height: 0.35,
+                    // 一次铺开的瞬时细线：长度就是 `data.span`（墙截出的实际音线长），`fit:"world"` 让判定与画面共用同一格数。
+                    name: "lance", bind: "point", fit: "world", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     shape: { kind: "line", length: { data: "span", fallback: 10 } }, orient: "direction",
-                    rate: { data: "lines", fallback: 20 }, speed: [0.2, 0.4],
+                    burst: { count: { data: "lines", fallback: 20 } }, direction: "shape",
+                    speed: { data: "flow", fallback: 0.2 },
                     lifetime: [8, 14], size: [0.22, 0.04],
                     color: 0x7CC24E, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 90
                 },
                 {
-                    name: "lance_core", bind: "point", fit: "none", height: 0.35,
+                    name: "lance_core", bind: "point", fit: "world", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     shape: { kind: "line", length: { data: "span", fallback: 10 } }, orient: "direction",
-                    rate: { data: "shrills", fallback: 5 }, speed: [0.1, 0.25],
+                    burst: { count: { data: "shrills", fallback: 5 } }, direction: "shape",
+                    speed: { data: "flow", fallback: 0.2 },
                     lifetime: [7, 12], size: [0.14, 0.03],
                     color: 0xEFFBD8, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 70
                 },
                 {
-                    name: "rings", bind: "point", fit: "none", height: 0.35,
+                    name: "rings", bind: "point", fit: "world", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     shape: { kind: "ring", radius: { data: "lane", fallback: 0.7 }, rotation: [90, 0, 0] },
-                    orient: "direction", rate: { data: "shrills", fallback: 5 },
+                    orient: "direction", burst: { count: { data: "shrills", fallback: 5 } },
                     direction: "shape", speed: [0.0, 0.02],
                     lifetime: [12, 18], size: [0.26, 0.06],
                     color: 0xB6E06A, alpha: [0.6, 0], light: "full", maxParticles: 60

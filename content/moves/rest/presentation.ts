@@ -1,12 +1,13 @@
 /**
  * 睡觉 / Rest 的粒子语言。
  *
- * 一句话：身体一沉，一圈睡意的紫雾在脚边合拢；睡下后脚边展开半透明的安眠穹顶，气泡与 Z 慢慢升；睡满时
- *   暖金光从身上绽开、穹顶收束散去，被中途打醒只留一团灰紫的迷糊。
+ * 一句话：身体一沉，一圈睡意的紫雾在脚边合拢；睡下后只剩贴身的呼吸泡与 Z 慢慢升，呼吸随已睡比例放慢
+ *   变大；睡满时暖金光从身上绽开，被中途打醒只留一记短破裂——全程不画保护圈。
  * 色相家族：睡眠紫 0x7A6BD0 为地面与主体，浅紫 0xB9A8F0 作高光，暖金 0xFFE08A 只出现在睡满那一拍。
- * 拍子：起（windup）／眠（sleep 持续）／醒（wake）／爽（refreshed）。
- * 持续状态：睡眠层的密度与位置都在脚边与头顶，保持低透明，让玩家透过它看清目标与被谁惊醒。
- * 机制驱动：wake／refreshed 的爆发粒子数绑定 data.burst，该值由服务端按「已睡比例」与固定基数算出。
+ * 拍子：起（windup）／眠（sleep 持续）／醒（wake 短破裂）／爽（refreshed）。
+ * 持续状态：睡眠只在身体周围，清楚露出施法者本身，让玩家看见它还在挨打。
+ * 机制驱动：sleep 的 rate／size 绑定 data.breath／data.breathSize（服务端按已睡比例算好）；wake／refreshed
+ *   的爆发数绑定 data.burst。
  */
 const RestDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -42,28 +43,20 @@ const RestDefinition: ParticleDefinition = {
             ]
         },
         sleep: {
-            exit: { drain: 24 },
+            exit: { drain: 20 },
             emitters: [
                 {
-                    name: "sleep_floor", bind: "point", offset: [0, 0.04, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 5, shape: { kind: "circle", radius: 1.2, thickness: 0.85 },
-                    direction: "up", speed: [0.004, 0.016],
-                    lifetime: [30, 50], size: [0.14, 0.05],
-                    color: 0x7A6BD0, alpha: [0.2, 0.03], alphaMode: "sin", light: "world", maxParticles: 40
-                },
-                {
-                    name: "sleep_wall", bind: "point", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/screen",
-                    rate: 4, shape: { kind: "cylinder", radius: 1.15, length: 1.4 },
-                    direction: "up", speed: [0.003, 0.012],
-                    lifetime: [26, 44], size: [0.14, 0.04],
-                    color: 0x7A6BD0, alpha: [0.1, 0.02], light: "full", maxParticles: 28
+                    name: "sleep_breath", bind: "target", offset: [0, 0.35, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    rate: { data: "breath", fallback: 8 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.006, 0.02],
+                    lifetime: [18, 30], size: { data: "breathSize", fallback: 0.12 },
+                    color: 0x7A6BD0, alpha: [0.4, 0], light: "world", maxParticles: 30
                 },
                 {
                     name: "sleep_bubbles", bind: "target", offset: [0, 0.45, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/status/sleep_bubble",
-                    rate: 6, shape: { kind: "ring", radius: 0.36 },
+                    rate: { data: "breath", fallback: 6 }, shape: { kind: "ring", radius: 0.36 },
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [18, 28], size: [0.14, 0.02],
                     color: 0x7A6BD0, alpha: [0.5, 0], light: "world", maxParticles: 18
@@ -87,32 +80,24 @@ const RestDefinition: ParticleDefinition = {
             ]
         },
         wake: {
-            duration: 30,
-            exit: { stop: 10, drain: 18 },
+            duration: 26,
+            exit: { stop: 8, drain: 14 },
             emitters: [
                 {
                     name: "wake_burst", bind: "target", offset: [0, 0.5, 0], height: 0.3,
                     burst: { count: { data: "burst", fallback: 20 } }, shape: { kind: "sphere_surface", radius: 0.42 },
                     particle: "world_combat_core:cobblemon/moves/wish_star",
                     direction: "outward", speed: [0.06, 0.18], drag: 0.88,
-                    lifetime: [12, 22], size: [0.22, 0.03],
+                    lifetime: [10, 18], size: [0.22, 0.03],
                     color: 0xB9A8F0, alpha: [0.95, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "wake_dome", bind: "point", offset: [0, 0.08, 0], height: 0,
-                    burst: { count: 16 }, shape: { kind: "ring", radius: 1.15 },
-                    particle: "world_combat_core:cobblemon/generic/screen",
-                    direction: "up", speed: [0.05, 0.12],
-                    lifetime: [16, 28], size: [0.34, 0.1],
-                    color: 0xB9A8F0, alpha: [0.4, 0], light: "full", maxParticles: 26
-                },
-                {
-                    name: "wake_mote", bind: "point", offset: [0, 0.06, 0], height: 0,
-                    burst: { count: 24, repeats: 2, interval: 5 }, shape: { kind: "circle", radius: 1.1 },
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    direction: "up", speed: [0.03, 0.09],
-                    lifetime: [12, 22], size: [0.07, 0.01],
-                    color: 0xD8C8F5, alpha: [0.8, 0], light: "full", maxParticles: 60
+                    name: "wake_snap", bind: "target", offset: [0, 0.55, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    burst: { count: 10 }, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.12], drag: 0.9,
+                    lifetime: [8, 14], size: [0.3, 0.04],
+                    color: 0xE7DDF8, alpha: [0.9, 0], light: "full", maxParticles: 24
                 }
             ]
         },

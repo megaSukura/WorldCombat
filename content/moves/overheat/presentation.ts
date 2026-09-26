@@ -1,14 +1,15 @@
 /**
  * 过热 / overheat 的客户端表现。
  *
- * 一句话：喉间与胸口聚起白热的光、热气往身前压 → 一整张扇形热浪沿准线推出去，白热核心牵着一片翻卷的火与火星 →
- *   扫到的地方炸开火团、地面留下一块慢慢暗下去的焦痕 → 排空后施法者身上腾起余烟。
+ * 一句话：喉间与胸口聚起白热的光、热气往身前压 → 一整张扇形热浪沿固定准线推出去，白热核心牵着一片翻卷的火与火星 →
+ *   前沿扫到的地方炸开火团（靠内的更亮更密）→ 排空后施法者身上腾起余烟，落点只留一圈短热尘。
  * 色相家族：白热黄（0xFFE8A0）作核心，火橙（0xFF7A2A）作主体，深褐烟（0x3A2E2A）衬托；无第二色相。
- * 拍子：起 gather（聚热）→ 推 wave（扇形热浪）→ 击 blast（命中）与 scorch（焦地）→ 收 slump（余烟）。
- * 范围：wave 的扇面沿 `data.direction` 指向、张角 `data.cone`、长度 `data.reach`，画面就是会被烧到的扇面。
- * 运动：热浪沿准线向外推、火星随热流翻卷上升；焦痕贴地不动。
- * 数：火星数与火团密度绑定 `data.embers`（特攻派生），强度绑定 `data.intensity`（威力 / 120），
- *   焦痕半径绑定 `data.scorch`（机制灼痕半径）。
+ * 拍子：起 gather（聚热）→ 推 wave（扇形热浪）→ 击 blast（命中）与 scorch（短热尘）→ 收 slump（余烟）。
+ * 范围：wave 的扇面沿 `data.direction` 指向、张角 `data.cone`、长度 `data.reach`，画面就是会被烧到的扇面，
+ *   `data.inner` 标出吃满威力的内层距离。
+ * 运动：热浪沿准线向外推、火星随热流翻卷上升；短热尘贴地上升后自然散去。
+ * 数：火星数与火团密度绑定 `data.embers`（特攻派生），强度绑定 `data.intensity`（威力 / 120；内层满额、外层打折），
+ *   热尘半径绑定 `data.scorch`（机制余热半径）。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const OverheatDefinition: ParticleDefinition = {
@@ -59,6 +60,15 @@ const OverheatDefinition: ParticleDefinition = {
                     gravity: 0.01, drag: 0.96,
                     lifetime: [8, 18], size: [0.16, 0.02],
                     color: 0xFF7A2A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 160
+                },
+                {
+                    name: "core", bind: "source", fit: "none", offset: [0, 0.5, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
+                    burst: { count: { data: "embers", fallback: 22 } },
+                    shape: { kind: "cone_volume", radius: 0.35, length: { data: "inner", fallback: 4 }, angleDegrees: { data: "cone", fallback: 22 } },
+                    orient: "direction", direction: "shape", speed: [0.3, 0.9], spread: 5,
+                    lifetime: [6, 12], size: [0.34, 0.06],
+                    color: 0xFFF6D0, alpha: [0.9, 0], light: "full", bloom: 0.6, maxParticles: 70
                 }
             ]
         },
@@ -91,22 +101,22 @@ const OverheatDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 20 },
             emitters: [
                 {
-                    name: "ground", bind: "point", fit: "none", offset: [0, 0.02, 0],
-                    particle: "world_combat_core:cobblemon/generic/scorch/floorscorch",
-                    burst: { count: 1 },
-                    shape: { kind: "point" },
-                    direction: "up", speed: [0, 0],
-                    lifetime: [40, 90], size: { data: "scorch", fallback: 1.1 },
-                    color: 0x5A2A18, alpha: [0.85, 0], light: "world", maxParticles: 2
+                    name: "heat", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "embers", fallback: 18 } },
+                    shape: { kind: "circle", radius: { data: "scorch", fallback: 1.1 }, thickness: 0.85 },
+                    direction: "up", speed: [0.02, 0.09], drag: 0.9,
+                    lifetime: [10, 20], size: [0.16, 0.03],
+                    color: 0x8A6A52, alpha: [0.45, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "ash", bind: "point", fit: "none", offset: [0, 0.15, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    name: "ash", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "embers", fallback: 18 } },
                     shape: { kind: "circle", radius: { data: "scorch", fallback: 1.1 } },
-                    direction: "up", speed: [0.02, 0.1], drag: 0.9,
-                    lifetime: [14, 26], size: [0.28, 0.5],
-                    color: 0x3A2E2A, alpha: [0.3, 0], light: "world", maxParticles: 60
+                    direction: "up", speed: [0.02, 0.12], gravity: 0.02, drag: 0.9,
+                    lifetime: [8, 16], size: [0.08, 0.01],
+                    color: 0xFF7A2A, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 50
                 }
             ]
         },

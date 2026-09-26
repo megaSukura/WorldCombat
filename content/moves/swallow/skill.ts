@@ -1,19 +1,4 @@
-/**
- * 吞下 / swallow 的执行组织。
- *
- * 核心念头：把攒在身体里的那口力咽下去，化成一波回复。它是「蓄力」的兑现——层数攒得越满，这一口回得越足，
- *   满三层时一次回满。等满再吞是收益也是风险：这段时间壳会被打掉。
- *
- * 两幕：
- *   咽（windup 播「含住」，提交前只观察与预告，可被打断，打断不花代价）。
- *   化开（提交后）：按共享身份 world_combat:status/stockpile 读出层数、算出这次回复，一层不留地消费掉它；
- *     一口吞＝一次大回波；慢咽＝分三小口，边回边补新受的伤。挂上「咽力」标记。
- * 结束：咽力标记走完只是消化完毕，随后淡去。
- *
- * 与蓄力的接线：层数只按共享身份读（amplifier = 层数），消费也用 MobEffects.consumeTagged 按 tag 移除；
- *   蓄力单元自己的 mob_effect_removed 处理会把每层的防御/特防收回，这里不需要也不该重复处理。
- * 与同族分开：水流环是持续小口、扎根是钉地慢回；吞下是一次性爆发回血，回多少全看攒了几层。
- */
+/** Consume the actual shared stockpile once, then restore health from the paid layer snapshot. */
 namespace PokemonSkills {
     const swallowScene = "world_combat:move_swallow";
     const swallowEffect = "world_combat:swallowed";
@@ -64,14 +49,16 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_swallow:hold", swallowScene, 1, action.origin(),
-                JSON.stringify({ moment: "hold", sip: config && config.sipping === true ? 1 : 0 }));
+                JSON.stringify({ moment: "hold", layers: swallowLayers(action.sense(), action.actor()), sip: config && config.sipping === true ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
             const world = action.world(), self = action.actor(), body = world.observe(self);
             if (body === null) { done(action); return; }
-            const layers = swallowLayers(world, self);
+            const consumed = MobEffects.consumeTagged(world, self, swallowPowerTag);
+            const layers = consumed.reduce((count, value) => Math.max(count, Math.min(3, value.amplifier())), 0);
             if (layers <= 0) { done(action); return; }
+            action.data("world_combat:swallow/layers", JSON.stringify({ layers: layers }));
             const worth = Math.max(0, Math.min(1, p("swallow", "worth", action)));
             const sipping = !!(config && config.sipping);
             const digestTicks = Math.max(20, Math.round(p("swallow", "digestTicks", action)));
@@ -79,7 +66,6 @@ namespace PokemonSkills {
             const spread = Math.max(0.6, p("swallow", "spread", action));
             const scale = spread / swallowReferenceRadius;
             MobEffects.apply(world, self, swallowEffect, sipping ? digestTicks : Math.min(digestTicks, 30), layers);
-            MobEffects.consumeTagged(world, self, swallowPowerTag);
             if (sipping) {
                 const step = Math.max(1, Math.round(digestTicks / swallowSips)), share = worth / swallowSips;
                 let index = 0, settled = false;

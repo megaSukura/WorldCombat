@@ -1,13 +1,4 @@
-/**
- * 山岚摔 / stormthrow —— AI 用途。
- *
- * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 6）格内；够不到交给共享接近逻辑。
- *   它是近身擒摔，出手距离收得紧，先贴近再摔。
- * 对谁出手：`ai.grapple`（默认开）打开时，正在攻击自己或主人的目标排前——摔翻一个扑上来的威胁收益最大；
- *   `ai.finish`（默认开）打开时，残血目标排前。
- * 够不到怎么办：reach 就是抓取距离，先走近；对手在抓取前退出距离就抓空。
- * 放完之后：摔翻与落点碎土交回共享交战计划，碎土是租借地形会自己到期还原。
- */
+/** Prefer a safe rear flank for repositioning; native refusal still leaves the critical grip strike. */
 namespace PokemonSkills {
     function stormthrowWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
@@ -32,6 +23,9 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const gap = CompanionBehavior.distance(self.point, target.point);
             let score = gap <= capability.data.range + 0.6 ? 24 : 0;
+            const access = CompanionBehavior.world(context), dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2], length = Math.sqrt(dx * dx + dz * dz) || 1;
+            const side = WorldCombat.point(self.point[0] - dz / length * 1.5 - dx / length, target.point[1] - (target.height || 1.8) / 2, self.point[2] + dx / length * 1.5 - dz / length);
+            if (access.freeSpace(side, target.width || .6, target.height || 1.8)) score += 8;
             if (CompanionBehavior.ai<boolean>(capability, "grapple", true)) {
                 const owner = context.facts.owner;
                 if (target.attacking === self.ref || !!owner && target.attacking === owner.ref) score += 12;
@@ -43,7 +37,7 @@ namespace PokemonSkills {
 
     addPreferences(stormthrowId, {}, [
         field(pathOf("pin"), "锁摔", "boolean", {
-            help: "开启（锁摔）：摔翻时长 ×1.4、碎土更大，但威力 ×0.9、起手 +2 刻、冷却 +8 刻。关闭（急摔）：威力 ×1.12、摔翻更短、更快更省。一个换「压住一个身位」，一个换「一记更狠的伤害」。"
+            help: "开启（锁摔）：摔翻时长 ×1.4、旋身尘纹更密，但威力 ×0.9、起手 +2 刻、冷却 +8 刻。关闭（急摔）：威力 ×1.12、摔翻更短、更快更省。一个换「压住一个身位」，一个换「一记更狠的伤害」。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 3, max: 12, step: 1,

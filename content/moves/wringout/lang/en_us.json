@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.wringout.summary": "A spiral of force wraps the target head to foot and twists tighter, wringing the strength out of it: special attack sets how deep the twist bites, and the more HP the target still has, the greater the power. It is the only one of the three pressing moves driven by special attack and the only one that can twist twice: the twin form adds a second wring after the first, recomputed against the target's HP at that moment.",
+  "worldcombat.skill.wringout.summary": "A spiral of force sweeps a narrow line along the aim and wraps the first foe it meets, twisting tighter head to foot to wring the strength out of it: special attack sets how deep the twist bites, and the more HP the target still has, the greater the power. It is the only one of the three pressing moves driven by special attack and the only one that can twist twice: the twin form adds a second, opposite twist after the first, recomputed against the target's HP at that moment - but a target that leaves the original cast range or is cut off by a wall escapes the second twist.",
   "worldcombat.skill.wringout.description.0": "Wring Out deals %1$s Normal special damage; the more HP the target still has, the heavier the twist.",
-  "worldcombat.skill.wringout.description.1": "You can reach %1$s blocks.",
-  "worldcombat.skill.wringout.twin.on": "Twin form: a second wring lands %1$s s after the first, recomputed against the target's HP then and taking about %2$s more; single-hit power is x0.89, wind-up +2 ticks and cooldown +5 ticks.",
+  "worldcombat.skill.wringout.description.1": "You can reach %1$s blocks; the swept line has a %2$s-block radius and only the first foe it meets is caught - a wall stops the line cold.",
+  "worldcombat.skill.wringout.twin.on": "Twin form: a second, opposite wring lands %1$s s after the first, recomputed against the target's HP then and taking about %2$s more; it misses if the target leaves the original cast range or a wall comes between. Single-hit power is x0.89, wind-up +2 ticks and cooldown +5 ticks.",
   "worldcombat.skill.wringout.twin.off": "Single form (default): one twist, heavier and quicker, with no follow-up.",
   "worldcombat.skill.wringout.timing": "Wind-up %1$s s, recovery %2$s s, cost %3$s PP, cooldown %4$s s.",
   "worldcombat.skill.wringout.growth.0": "From level %1$s: wring power rises to %2$s.",
@@ -12,6 +12,7 @@
   "worldcombat.skill.wringout.use.2": "Turn a high special attack into damage on the whole bar",
   "worldcombat.skill.wringout.value.wring": "Wring power",
   "worldcombat.skill.wringout.value.reach": "Reach",
+  "worldcombat.skill.wringout.value.grip": "Grip radius",
   "worldcombat.skill.wringout.value.coilRadius": "Spiral radius",
   "worldcombat.skill.wringout.value.coil": "Spiral duration",
   "worldcombat.skill.wringout.value.secondFactor": "Second-wring factor",
@@ -23,12 +24,13 @@
   "worldcombat.skill.wringout.value.hpRatio": "Target HP fraction",
   "worldcombat.skill.wringout.value.healthFactor": "Target intactness factor",
   "worldcombat.skill.wringout.preference.twin": "Twin form",
-  "worldcombat.skill.wringout.preference.twin.help": "On: a second wring follows the first a few ticks later, recomputed against the target's HP then and taking about x0.9 more; single-hit power x0.89, wind-up +2 ticks, cooldown +5 ticks. Off: single form, heavier and quicker with no follow-up.",
+  "worldcombat.skill.wringout.preference.twin.help": "On: an opposite second wring follows the first a few ticks later, recomputed against the target's HP then and taking about x0.9 more; it misses if the target leaves the original cast range or a wall comes between. Single-hit power x0.89, wind-up +2 ticks, cooldown +5 ticks. Off: single form, heavier and quicker with no follow-up.",
   "worldcombat.skill.wringout.preference.ai.maxChase": "Wring distance",
   "worldcombat.skill.wringout.preference.ai.maxChase.help": "Beyond this distance the user closes in before twisting. Larger values reach from further out and get walked away from during the gather more often.",
   "worldcombat.skill.wringout.preference.ai.preferHealthy": "Wring healthy targets first",
   "worldcombat.skill.wringout.preference.ai.preferHealthy.help": "On: sort targets by remaining HP fraction, full-HP foes first (the twist is heaviest on them). Off: only the threat itself counts, so it will wring wounded foes too.",
   "world_combat.move.wringout.text.wring": "Wring Out, twist %1$s",
   "world_combat.move.wringout.text.twin": "Wring Out, twist again",
-  "world_combat.move.wringout.text.miss": "Wring Out found nothing to twist"
+  "world_combat.move.wringout.text.miss": "Wring Out found nothing to twist",
+  "world_combat.move.wringout.text.broken": "Wring Out's hold was torn"
 }

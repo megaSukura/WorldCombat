@@ -6,9 +6,9 @@
  * 色相家族：龙紫与暗紫（impact_dragon 0x7C6BE8／wisp 0x4A3A78／obscuringsmoke），暗红凶气（anger_red）做点缀，
  *   近白高光（0xFFF3FF）只给命中那一下。
  * 拍子：起（menace 张杀气）→ 扑（leap 腾起下坠）→ 击（crash/impact 砸地崩土）／空（miss 扬尘）→ 懵（stagger）。
- * 范围：menace 的圈半径绑 `data.menace`（威压半径），crash 的贴地环半径绑 `data.scale`（落点半径 / 2.0），
- *   画出的就是这一扑的威慑圈与落点范围。
- * 运动：menace 的凶气由内向外铺开、缓慢上浮；leap 的黑焰沿龙影上抛再下坠；crash 的冲击贴地向外扩、土屑带重力外抛。
+ * 范围：menace 的圈半径绑 `data.menace`（威压半径），同时用 `data.point`/`data.lockRadius` 在锁点上铺一圈预告，
+ *   报出这一扑将落在哪；crash 的贴地环半径绑 `data.scale`（落点半径 / 2.0），砸的就是这一扑的真实落点范围。
+ * 运动：menace 的凶气由内向外铺开、缓慢上浮；leap 的黑焰沿本体上抛再下坠；crash 的冲击贴地向外扩、土屑带重力外抛。
  * 数：`data.dust`（物攻派生）决定砸地的土屑量，`data.intensity`（威力派生）抬高命中亮度，`data.hop` 只用于腾空幕铺开。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -34,11 +34,20 @@ const DragonrushDefinition: ParticleDefinition = {
                     rate: 10, shape: { kind: "sphere", radius: 0.4 }, direction: "up", speed: [0.01, 0.05],
                     lifetime: [10, 18], size: [0.2, 0.04],
                     color: 0xE0526E, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 30
+                },
+                {
+                    // 锁点预告：menace 只负责报出这一扑将落在哪，落点真被挡住时由动作让它消退。
+                    name: "lock_mark", bind: "point", offset: [0, 0.06, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
+                    rate: 8, shape: { kind: "ring", radius: { data: "lockRadius", fallback: 1.4 }, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.4, 1.1],
+                    color: 0x8A78F0, alpha: [0.4, 0], light: "world", maxParticles: 30
                 }
             ]
         },
         leap: {
-            duration: 18,
+            duration: 0,
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {

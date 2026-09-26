@@ -7,10 +7,12 @@
  * 两幕（提交前只播预告）：
  *   起（windup）：压低重心、把脚放稳。
  *   踢（dash → strike）：提交后沿瞄准方向短促突进；trace 碰到活体的一刻结算 `sweep` 接触伤害。
- *       目标**双脚离地**时扫不到腿：只有半伤、不绊倒（airbornePenalty）。命中后目标被扫倒：
- *       挂 MobEffect 身份 tripped、掉速度等级、短时间无法迈步。扫堂式（reap）会顺手带倒目标身旁的另一名敌人。
- *       冲到底或撞墙算落空，收腿扬尘。
+ *       目标**双脚离地**时扫不到腿：只有半伤、不绊倒（airbornePenalty），画面改用擦过而非扬尘。
+ *       命中后目标被扫倒：挂 MobEffect 身份 tripped、掉速度等级、短时间无法迈步。
+ *       扫堂式（reap）顺着这一脚的方向，把主目标侧前方一小段腿弧内、且从接触点看得见的另一名敌人也带倒；
+ *       不在背后、隔墙的人不会被自动扫到。冲到底或撞墙算落空，收腿扬尘。
  *
+ * 输入：`kind: "aim"`——方向、点或实体都行；提交时不要求存在敌人，空踢只扬尘。
  * 伤害按每个目标各自的体重分别求值。提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -27,20 +29,22 @@ namespace PokemonSkills {
         return p("lowkick", "sweep", context);
     }
 
-    /** 扫倒一个目标：挂共享身份 tripped 的 MobEffect、掉速度等级、短时间无法迈步。 */
-    function lowkickTrip(world: CombatWorld, target: CombatActor, stages: number, rootTicks: number, tripTicks: number): void {
-        MobEffects.apply(world, target, lowkickStaggerEffect, Math.max(20, Math.round(tripTicks)), 0);
+    /** 扫倒一个目标：挂共享身份 tripped 的 MobEffect、掉速度等级、短时间无法迈步。返回控制是否真的成立。 */
+    function lowkickTrip(world: CombatWorld, target: CombatActor, stages: number, rootTicks: number, tripTicks: number): boolean {
+        const stagger = MobEffects.apply(world, target, lowkickStaggerEffect, Math.max(20, Math.round(tripTicks)), 0);
+        if (stagger === null) return false;
         NativeEffects.boost(world, target, "spe", -Math.max(1, stages));
         WorldEffects.apply(world, target, "rooted", {}, Math.max(5, Math.round(rootTicks)));
+        return true;
     }
 
     define({
         freeMovement: true,
         id: "lowkick",
         name: "Low Kick",
-        description: "一记专扫支撑腿的下段快踢：对手越重，重心越难拉回，摔得越狠。它贴身、快、便宜，没有留在地上的东西；对双脚离地的人扫不到腿，只有半伤。扫堂式会顺手带倒身旁的另一名敌人。",
+        description: "一记专扫支撑腿的下段快踢：对手越重，重心越难拉回，摔得越狠。它贴身、快、便宜，没有留在地上的东西；对双脚离地的人扫不到腿，只有半伤。扫堂式顺着这一脚的侧前方腿弧，把从接触点看得见的另一名敌人也带倒，但背后或隔墙的人扫不到。",
         uses: ["贴身扫倒笨重的目标", "打断靠腿脚起势的冲锋", "对高攻重型对手做一记便宜的快踢"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 4.6,
         prepare: 6,
@@ -69,6 +73,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            action.releaseTarget();
             const movementScenes = WorldFeedback.actionScenes(lowkickScene);
             const world = action.world();
             const length = p("lowkick", "lunge", action);
@@ -78,12 +83,15 @@ namespace PokemonSkills {
             const rootTicks = Math.max(5, Math.round(p("lowkick", "rootTicks", action)));
             const tripTicks = Math.max(20, Math.round(p("lowkick", "tripTicks", action)));
             const penalty = Math.max(0.1, Math.min(1, p("lowkick", "airbornePenalty", action)));
+            const arcRange = p("lowkick", "followRange", action);
+            const arcDegrees = p("lowkick", "followArc", action);
             const reap = !!(config && config.reap);
             const direction = aim(action);
+            const directionData = [direction.x(), direction.y(), direction.z()];
             const scale = radius / 0.4;
             let travelled = 0, settled = false;
 
-            movementScenes.show(action, "dash", action.origin(), { moment: "dash", scale: scale, stride: Math.max(3, Math.round(length / 0.7)) });
+            movementScenes.show(action, "dash", action.origin(), { moment: "dash", scale: scale, stride: Math.max(3, Math.round(length / 0.7)), direction: directionData });
             sound(action, "minecraft:entity.player.attack.sweep");
 
             function settle(current: CombatAction, moment: string, textKey: string): void {
@@ -100,8 +108,8 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
-            /** 结算对一名目标的扫踢；腾空者只被擦到。返回是否命中。 */
-            function strike(current: CombatAction, target: CombatActor, point: CombatPoint): boolean {
+            /** 结算对一名目标的扫踢；腾空者只被擦到，画面用擦过而非扬尘。返回是否命中。 */
+            function strike(current: CombatAction, target: CombatActor, point: CombatPoint, chained: boolean): boolean {
                 const scope = current.world();
                 const facts = scope.observe(target);
                 const airborne = facts !== null && !facts.grounded();
@@ -109,26 +117,32 @@ namespace PokemonSkills {
                 if (airborne) power *= penalty;
                 const landed = hurt(current, target, "lowkick", power,
                     { damage: damageSpec("lowkick", "sweep"), contact: true });
+                const moment = chained ? "follow" : airborne ? "graze" : "impact";
                 WorldFeedback.emit(scope, lowkickScene, 1, point,
-                    { moment: "impact", target: String(target.ref()), intensity: Math.max(0.6, Math.min(2.2, power / 70)),
-                        airborne: airborne ? 1 : 0, coils: 6 + stages * 3 }, 26);
-                if (landed && !airborne && scope.valid(target)) lowkickTrip(scope, target, stages, rootTicks, tripTicks);
+                    { moment: moment, target: String(target.ref()), intensity: Math.max(0.6, Math.min(2.2, power / 70)),
+                        airborne: airborne ? 1 : 0, coils: 6 + stages * 3, direction: directionData }, 26);
+                if (landed && !airborne && scope.valid(target) && lowkickTrip(scope, target, stages, rootTicks, tripTicks))
+                    WorldFeedback.emit(scope, lowkickScene, 1, point,
+                        { moment: "trip", target: String(target.ref()), coils: 6 + stages * 3, direction: directionData }, 22);
                 if (facts !== null)
                     WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.2, 0)),
                         airborne ? lowkickAirText : lowkickHitText, [], 22);
                 return landed;
             }
 
-            /** 扫堂式：把主目标身旁 1.7 格内的另一名敌人也带倒。 */
+            /** 扫堂式：顺着这一脚的侧前方腿弧，把主目标旁一小段内、从接触点看得见的另一名敌人也带倒。 */
             function follow(current: CombatAction, primary: CombatActor, point: CombatPoint): void {
                 const scope = current.world();
                 if (scope.friendly(primary)) return;
+                const arc = WorldGeometry.sector(point, direction, arcRange, arcDegrees, { below: 1.2, above: 1.6 });
                 let extras = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, 1.7, { below: 1.5, above: 2 }),
-                    function (other) {
+                WorldGeometry.selectEnemies(scope, arc,
+                    function (other, facts) {
                         if (extras >= 1 || String(other.ref()) === String(primary.ref())) return;
+                        // 隔墙或不在同一侧的人不会被顺腿带倒。
+                        if (!scope.clear(point, facts.position())) return;
                         extras++;
-                        strike(current, other, point);
+                        strike(current, other, point, true);
                     });
             }
 
@@ -144,7 +158,7 @@ namespace PokemonSkills {
                     const target = hit.target();
                     const point = hit.position();
                     if (target !== null && !scope.friendly(target)) {
-                        strike(current, target, point);
+                        strike(current, target, point, false);
                         if (reap && scope.valid(target)) follow(current, target, point);
                         settle(current, "impact", "");
                         return;

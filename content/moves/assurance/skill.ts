@@ -84,7 +84,7 @@ namespace PokemonSkills {
                         const landed = impact(current, hit, assuranceId, power, { damage: damageSpec(assuranceId, "ambush"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05 && scope.valid(victim)) scope.displace(victim, away.unit().scale(push));
+                            if (away.length() > 0.05 && scope.valid(victim)) scope.hitDisplace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, assuranceScene, 1, hit.position(),
                             { moment: wounded ? "ambush" : "strike", target: String(victim.ref()), wounded: wounded ? 1 : 0,

@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.stickyweb.summary": "Toss a wad of silk at a chosen patch of ground so it spreads into a web: a grounded foe that steps in loses a Speed stage and is stuck in the web for a while, and the drag is kept up while it stays. It deals no damage - it only slows foes down. Airborne bodies pass above it. The anchored form drops one more stage and sticks longer but lays smaller; the wide form covers more ground, faster, for one stage only.",
+  "worldcombat.skill.stickyweb.summary": "Toss a wad of silk at a chosen patch of ground so it spreads into crossing web lines and an outer ring: only a grounded foe whose feet really touch a line is caught - it loses one Speed stage (once per body per web) and is stuck in the web for a while. Gaps are safe to step through or jump over, and airborne bodies pass above. The anchored form drops one more stage and sticks longer but lays smaller; the wide form covers more ground, faster, for one stage only.",
   "worldcombat.skill.stickyweb.use.0": "Turn a patch of ground into a slow zone ahead of time",
   "worldcombat.skill.stickyweb.use.1": "Snare a foe that charges or flees",
   "worldcombat.skill.stickyweb.use.2": "Cut the mobility of a fast target",
-  "worldcombat.skill.stickyweb.description.0": "Each time an enemy grounded foe steps in, it loses %1$s of Speed and is stuck for %2$s; for Pokemon this is the native Speed stage, for vanilla and modded bodies the movement-speed attribute. Airborne bodies are not caught.",
-  "worldcombat.skill.stickyweb.description.1": "The web has a radius of about %1$s blocks and stays for %2$s; a foe that stays inside keeps the drag and walks it off over the remaining time once it leaves; laying again on the same ground replaces the user's earlier web.",
+  "worldcombat.skill.stickyweb.description.0": "A grounded foe whose feet touch a web line loses %1$s of Speed and is stuck for %2$s; for Pokemon this is the native Speed stage, for vanilla and modded bodies the movement-speed attribute. Each body loses Speed only once per web - rubbing the line again does not cut it further.",
+  "worldcombat.skill.stickyweb.description.1": "The web has a radius of about %1$s blocks and stays for %2$s, made of %3$s crossing lines plus an outer ring; the contact band is about %4$s blocks, so only feet inside it count and the gaps are safe to walk or jump through. Lines are clipped to the real floor and never pass through floors or solid walls; airborne bodies pass above. Laying again on the same ground replaces the user's earlier web.",
+  "worldcombat.skill.stickyweb.description.2": "While stuck, footspeed is kept down by the status itself: movement speed is reduced by 30%.",
   "worldcombat.skill.stickyweb.option.on": "Anchored on: one more Speed stage and a longer stick and web life, but the web narrows to about 0.8x, +2 ticks wind-up and a longer cooldown - for sealing one narrow path.",
   "worldcombat.skill.stickyweb.option.off": "Anchored off (wide): the web lays about 1.25x wider, is faster to lay with a shorter cooldown, at one stage and a shorter stick - for covering a wide patch.",
   "worldcombat.skill.stickyweb.timing": "Throw the web at a point within %1$s: after %2$s of preparation it spends %4$s PP; the recovery is %3$s and the cooldown %5$s from commit.",
@@ -12,6 +13,8 @@
   "worldcombat.skill.stickyweb.value.strandTicks": "Stick duration",
   "worldcombat.skill.stickyweb.value.webRadius": "Web radius",
   "worldcombat.skill.stickyweb.value.webTicks": "Web duration",
+  "worldcombat.skill.stickyweb.value.threads": "Crossing lines",
+  "worldcombat.skill.stickyweb.value.band": "Band width",
   "worldcombat.skill.stickyweb.value.strands": "Strand count",
   "worldcombat.skill.stickyweb.value.reach": "Throw distance",
   "worldcombat.skill.stickyweb.value.throwSpeed": "Throw speed",
@@ -25,6 +28,5 @@
   "worldcombat.skill.stickyweb.preference.ai.lead.help": "Lead a moving target by this many ticks; 0 lays on its current spot, larger suits stopping a charging foe.",
   "world_combat.move.stickyweb.text.lay": "Sticky web spreads",
   "world_combat.move.stickyweb.text.snare": "Caught in sticky web (Speed -%1$s)",
-  "effect.world_combat.stickywebbed": "Caught in sticky web",
-  "worldcombat.skill.stickyweb.description.2": "While stuck, footspeed is kept down by the status itself: movement speed is reduced by 30%."
+  "effect.world_combat.stickywebbed": "Caught in sticky web"
 }

@@ -1,19 +1,20 @@
 /**
  * 魅诱之声 / alluringvoice 的粒子语言。
  *
- * 一句话：施法者身前先亮起一排音符与心形、随吸气往喉口收 → 一整条天使般的窄声场朝前荡开，音符沿声场的
- * 两条边线飞出、粉白光粒填满整片锥形 → 被唱中的普通目标炸开一圈粉光，而正带着强化的目标头顶开始绕着
- * 一圈迷乱的飞鸟，挥之不去；被惑乱者一旦用力打空，还会在它身上炸出反噬的乱光。
+ * 一句话：施法者身前先亮起一排音符与心形、随吸气往喉口收 → 第一拍是一整条实心的窄声场朝前荡开，音符沿
+ * 两条边线飞出、粉白光粒填满整片锥形，命中者身上炸开一圈粉光 → 第二拍同样的顶点晕出一层更淡、更散的尾音，
+ * 仍在锥里、正带着强化或追击的目标头顶开始绕着一圈迷乱的飞鸟；被惑乱者一旦用力打空，还会炸出反噬的乱光。
  *
  * 色相家族：天使粉（0xF2A0C8）作主体与声场，近白粉（0xFFEAF4）给命中闪，金粉（0xFFD9A0）只点缀音符号，
  * 余韵用暗粉烟（0x8A4A68）。
- * 拍子：起 charge（14t）→ 唱 wave（30t）→ 击 hit（26t，逐目标）→ 持 daze／linger（逐刻续期）→ 反噬 fumble。
+ * 拍子：起 charge（14t）→ 首拍 wave（实心短音，30t）+ 击 hit（26t，逐目标）→ 尾拍 tail（更淡更散，36t）
+ * → 持 daze／linger（逐刻续期）→ 反噬 fumble。
  *
- * 范围：wave 的发射器绑 `data.path`（服务端 alluringVoiceFan 生成的锥形顶点），用 polygon／polyline 画出整片声场；
- * 玩家一眼知道站在锥形里会被唱到。
+ * 范围：wave 与 tail 的发射器都绑 `data.path`（服务端 alluringVoiceFan 生成的锥形顶点），用 polygon／polyline
+ * 画出整片声场；两拍共用同一组顶点，玩家一眼知道站在锥形里会被唱到、走出去就躲掉尾音。
  * 运动：音符沿锥形边线朝外飞、心形向上飘；声场随 path 顶点固定在世界上。
- * 机制驱动：`data.motes`（特攻派生的音符数）决定 wave 的密度，`data.stages`（命中目标里最高的正面等级）与
- * `data.intensity` 决定 wave 与 daze 的强度，`data.scale`（声场半径 / 7）决定声场的尺寸。
+ * 机制驱动：`data.motes`（特攻派生的音符数）决定 wave／tail 的密度，`data.stages`（命中目标里最高的正面等级）与
+ * `data.intensity` 决定 wave、tail 与 daze 的强度，`data.scale`（声场半径 / 7）决定声场的尺寸。
  */
 const AlluringVoiceDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -78,6 +79,46 @@ const AlluringVoiceDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [18, 30], size: [0.32, 0.5],
                     color: 0x8A4A68, alpha: [0.28, 0], light: "world", maxParticles: 50
+                }
+            ]
+        },
+        // 尾：第二拍拖出的长尾音，同一组顶点、更淡更散；走到锥外就看不到这一拍盖在自己头上。
+        tail: {
+            duration: 24,
+            exit: { stop: 10, drain: 18 },
+            emitters: [
+                {
+                    name: "tail_notes", bind: "path", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    rate: { data: "motes", fallback: 16 }, shape: { kind: "polyline" },
+                    direction: "up", speed: [0.02, 0.1],
+                    lifetime: [10, 18], size: [0.26, 0.08], sizeMode: "sin",
+                    color: 0xF2A0C8, alpha: [0.4, 0], light: "full", maxParticles: 120
+                },
+                {
+                    name: "tail_fill", bind: "path", offset: [0, 0.07, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 18, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.1, 0.03],
+                    color: 0xFFEAF4, alpha: [0.28, 0], light: "full", maxParticles: 120
+                },
+                {
+                    // Faded tail height reads data.stages among the targets the tail actually dazed.
+                    name: "tail_edge", bind: "point", fit: "none", offset: [0, 0.08, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 14, interval: 3, repeats: 2 }, shape: { kind: "cylinder", radius: 0.4, length: { data: "rise", fallback: 1.0 } },
+                    direction: "up", speed: [0.04, 0.16],
+                    lifetime: [10, 18], size: [0.14, 0.03],
+                    color: 0xFFD9A0, alpha: [0.4, 0], light: "full", maxParticles: 90
+                },
+                {
+                    name: "tail_smoke", bind: "point", fit: "none", offset: [0, 0.14, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/largeobscure_pink",
+                    burst: { count: 8, interval: 4, repeats: 2 }, shape: { kind: "circle", radius: 1.1 },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [18, 30], size: [0.34, 0.52],
+                    color: 0x8A4A68, alpha: [0.2, 0], light: "world", maxParticles: 40
                 }
             ]
         },

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.mist.summary": "用白雾覆盖身体与身边的队友；雾里谁的能力等级都不会被对手压低。雾跟着施法者走，离开范围的人会失去这层保护。",
+  "worldcombat.skill.mist.summary": "用白雾覆盖身体与身边的队友；雾里谁的能力等级都不会被对手压低。雾跟着施法者走，离开范围的人会失去这层保护；多个白雾来源各自维持，一个结束不会撤掉另一个。",
   "worldcombat.skill.mist.use.0": "挡住成片的降防、降攻、降速",
   "worldcombat.skill.mist.use.1": "护住正在蓄力或布置的队友",
   "worldcombat.skill.mist.use.2": "在对方准备削弱前先一步张雾",
   "worldcombat.skill.mist.description.0": "白雾罩住自己与半径 %2$s 格内的队友 %1$s：期间雾内任何人要下降的能力等级都会被雾挡下、不会生效。",
-  "worldcombat.skill.mist.description.1": "随施法者移动而移动；施法者当前射程 %1$s 格。走出半径的队友不再被补雾，会在身上的雾走完后失去保护；雾只挡「降低」，挡不住伤害与控制。",
+  "worldcombat.skill.mist.description.1": "随施法者移动而移动；施法者当前射程 %1$s 格。走出半径的队友不再被这份来源补雾，会在短续期走完后失去这一份保护；多个来源分别结算，一个结束不会撤掉另一个。雾只挡「降低」，挡不住伤害与控制。",
   "worldcombat.skill.mist.description.2": "吐雾要 %1$s，收势 %2$s，冷却 %3$s。浓雾／薄雾的取舍见白雾形态说明。",
   "worldcombat.skill.mist.veil.0": "浓雾：半径 ×1.25、时长 ×1.2，代价是起手 +3 刻、冷却 ×1.15——罩得广、罩得久。",
   "worldcombat.skill.mist.veil.1": "薄雾：半径 ×0.75、时长 ×0.75，换来起手 −2 刻、冷却 ×0.8——张得快、补得勤。",

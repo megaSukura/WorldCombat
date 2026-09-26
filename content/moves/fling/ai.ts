@@ -1,10 +1,4 @@
-/**
- * 投掷 / fling —— AI 用途。
- *
- * 出手局面：手里有道具、目标是可见敌对的活体、且在 `ai.maxChase`（默认 12）格内时，作为远程攻击出手。
- * 空手时不参与候选。候选排序按道具的投掷价值：带状态或一窒效果的最优先，其次看投掷威力；轻道具排在最后。
- * 配置：多远考虑出手、驻守指令下是否离位。
- */
+/** Feed a useful real Berry to a partner; offensive and valuable items require an appropriate explicit policy. */
 namespace CompanionBehavior {
     function flingHeld(context: WorldBehavior.Context): PokemonSkills.FlingItem | null {
         var access = CompanionBehavior.world(context);
@@ -13,29 +7,35 @@ namespace CompanionBehavior {
         return PokemonSkills.flingItemOf(CobblemonCombat.pokemon(actor));
     }
 
+    function flingSnapshot(context: WorldBehavior.Context): NativeItems.Held | null {
+        const access=world(context), actor=access.actor(source(context).ref); return actor?NativeItems.heldOf(access,actor):null;
+    }
+    function flingHelpful(context: WorldBehavior.Context, target: Entity): boolean {
+        const berry=NativeItems.berryFrom(flingSnapshot(context));if(!berry)return false;
+        return berry.heal>0&&ratio(target)<.9 || berry.cures.some(name=>status(context,target,name));
+    }
     registerUse("fling", {
-        protocols: ["world_combat:attack", "world_combat:ranged"],
-        reach: function (context: WorldBehavior.Context, item: WorldBehavior.Capability): number { return item.data.range; },
-        available: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, purpose: string, target: WorldMethods.Subject | null): boolean {
-            if (!flingHeld(context)) return false;
-            if (!target) return true;
-            var goal: any = context.choice && context.choice.goal && context.choice.goal.data;
-            if (goal && goal.ref === target.ref) return true;
-            return distance(source(context).point, target.point) <= ai(item, "maxChase", 12);
+        protocols: ["world_combat:attack", "world_combat:ranged", "world_combat:heal"],
+        reach: (_context,item)=>item.data.range,
+        available: function(context,item,_purpose,target){
+            const held=flingHeld(context);if(!held)return false;
+            if(!target)return true;
+            if(distance(source(context).point,target.point)>ai<number>(item,"maxChase",12))return false;
+            if(target.friendly)return item.data.config.helpFriends!==false&&target.ref!==source(context).ref&&flingHelpful(context,target);
+            return !held.berry && (held.status!=="" || held.flinch || ai<boolean>(item,"allowGear",false));
         },
-        accepts: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject): boolean {
-            return !target.friendly && target.health > 0 && target.visible;
-        },
-        priority: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject | null): number {
-            var held = flingHeld(context);
-            if (!held) return 0;
-            if (held.status || held.flinch) return 45;
-            return held.power >= 90 ? 40 : held.power >= 60 ? 30 : 20;
+        accepts: function(context,_item,target){return target.health>0&&target.visible&&(!target.friendly||flingHelpful(context,target));},
+        priority: function(context,_item,target){
+            const held=flingHeld(context);if(!held)return 0;
+            if(target&&target.friendly)return 60+Math.round((1-ratio(target))*25);
+            return held.status||held.flinch?45:held.power>=90?40:20;
         }
     });
 
-    PokemonSkills.addPreferences("fling", { ai: { maxChase: 12, leaveStation: true } }, [
+    PokemonSkills.addPreferences("fling", { helpFriends: true, ai: { maxChase: 12, leaveStation: true, allowGear: false } }, [
         PokemonSkills.number("ai.maxChase", "投掷距离", 4, 24, 1),
-        PokemonSkills.flag("ai.leaveStation", "驻守时离位")
+        PokemonSkills.flag("ai.leaveStation", "驻守时离位"),
+        PokemonSkills.flag("helpFriends", "给伙伴喂树果"),
+        PokemonSkills.flag("ai.allowGear", "允许投出普通装备")
     ]);
 }

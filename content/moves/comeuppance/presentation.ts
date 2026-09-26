@@ -1,42 +1,45 @@
 /**
  * 复仇 / comeuppance 的客户端表现。
  *
- * 一句话：施法者把最近吃下的那笔伤害收成目标身上的一枚暗记（账越大记越亮）→ 暗影在身边聚起、
- * 压着记等一拍 → 离手贴着账主追过去，命中时炸开一记暗影；没有账时暗记散成几缕烟。
+ * 一句话：目标身上只浮起一道收得很紧的暗紫细指示（账越大略亮）→ 暗影在施法者自己身边聚起、
+ * 盘着等一拍 → 离手贴着账主追过去，命中时炸开一记暗影；没有账时暗记散成几缕烟。
  * 色相家族：暗紫到近黑（impact_dark / obscuringsmoke / mediumfadeorb），命中处混一点冷光。
- * 拍子：起 mark（压记）→ 候 lurk（凝影）→ 讨 flight／strike（追讨）／散 whiff。
- * 范围：mark 的暗记环与 strike 的爆环半径由 `data.scale`（判定半径派生）给出。
- * 运动：mark 的粒子向目标身上收；lurk 在施法者身边旋转聚集；flight 沿追踪轨迹拖出黑烟。
- * 数：`data.glyphs`（账本伤害派生）决定压记粒子量，`data.count`（返还伤害派生）决定命中碎片数量。
+ * 拍子：起 mark（目标细指示）→ 候 lurk（施法者身边凝影，时长读 data.duration）→ 讨 flight／strike（追讨）／散 whiff。
+ * 范围：mark 的指示环与 strike 的爆环半径由 `data.scale`（判定半径派生）给出。
+ * 运动：mark 的细环贴目标轻收；lurk 在施法者身边旋转聚集；flight 沿追踪轨迹拖出黑烟。
+ * 数：`data.glyphs`（账本伤害派生）决定细指示粒子量，`data.count`（返还伤害派生）决定命中碎片数量。
  */
 const ComeuppanceDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         mark: {
-            duration: { data: "windup", fallback: 5 },
+            // 目标身上的「细指示」：一道收得很紧的暗紫细环与几缕黑烟，表示这笔仇指向了它，
+            // 而不是已经在它头上预演一记必然落伤。账越重指示略亮，但不铺满目标；
+            // 起手的账指示与延迟期的锁定指示共用这一拍，时长读 data.duration。
+            duration: { data: "duration", fallback: 5 },
             exit: { stop: 4, drain: 14 },
             emitters: [
                 {
-                    name: "sigil", bind: "target", height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/orb/mediumfadeorb",
-                    rate: { data: "glyphs", fallback: 16 }, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "inward", speed: [0.03, 0.13], spread: 24,
-                    lifetime: [7, 13], size: [0.15, 0.03], sizeMode: "sin",
-                    color: 0x6B4A8A, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 80
+                    name: "ring", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1, interval: 5, repeats: 8 },
+                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.42 } },
+                    direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [6, 11], size: [0.24, 0.08],
+                    color: 0x6B4A8A, alpha: [0.6, 0], light: "full", maxParticles: 16
                 },
                 {
-                    name: "ring", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 1, interval: 6, repeats: 6 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.7 } },
-                    direction: "inward", speed: [0.03, 0.08],
-                    lifetime: [8, 14], size: [0.32, 0.12],
-                    color: 0x4A3266, alpha: [0.6, 0], light: "full", maxParticles: 24
+                    name: "mote", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/orb/mediumfadeorb",
+                    rate: { data: "glyphs", fallback: 8 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "inward", speed: [0.02, 0.08], spread: 16,
+                    lifetime: [6, 12], size: [0.1, 0.02], sizeMode: "sin",
+                    color: 0x8A6AB0, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 28
                 }
             ]
         },
         lurk: {
-            duration: { data: "windup", fallback: 12 },
+            duration: { data: "duration", fallback: 12 },
             exit: { stop: 4, drain: 12 },
             emitters: [
                 {

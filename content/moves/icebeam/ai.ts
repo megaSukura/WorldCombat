@@ -12,7 +12,7 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.preferLines", "优先连线目标")
     ]);
 
-    /** 目标身后（沿施法者→目标方向更远处、夹角很小）还有几个敌人，就是这一束光能多穿几个。 */
+    /** 目标身后（沿施法者→目标方向更远处、夹角很小）还有几个敌人；按 8 刻后的位置把正在穿线的人也算进来。 */
     function icebeamLineCount(context: WorldBehavior.Context, target: Entity): number {
         const self = source(context);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
@@ -24,7 +24,8 @@ namespace CompanionBehavior {
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            let ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            if (other.velocity) { ox += other.velocity[0] * 8; oz += other.velocity[2] * 8; }
             const forward = ox * ux + oz * uz;
             if (forward <= length + 0.5) continue;
             const lateral = Math.abs(ox * uz - oz * ux);

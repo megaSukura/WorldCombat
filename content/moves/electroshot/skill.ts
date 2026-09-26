@@ -1,30 +1,34 @@
 /**
  * 电光束 / electroshot —— 出手方式。
  *
- * 核心念头：把四周的电抽进身体（特攻 +1），再射出一束会追着目标走的高压电矛；下雨时电直接从雨里取，抬手即发。
+ * 核心念头：把四周的电抽进身体（特攻 +1），再朝瞄准的点射出一束高压电矛；选中实体时有限追踪，
+ *           下雨时电直接从雨里取，抬手即发。
  *
  * 两幕（雨天只有第二幕）：
  *   起（gather，提交前）：电沿着地面与身体四周爬升、卷成一道矛尖；只播预告，可被打断（打断不花 PP）。
- *   击（shot → travel → burst / fizzle）：提交后先结算特攻 +1，再射出一束高速电矛；
- *       它会朝目标修正（homing，转向强度由 `homing` 决定），命中处结算 `lance` 并补一道纯视觉的闪电闪光；
- *       打空只留一下散开的电弧。
+ *   击（shot → travel → burst / resist / ward / fizzle）：提交后先结算特攻 +1，再射出电矛；
+ *       选中了非友方实体时它会朝目标修正（homing，转向强度由 `homing` 决定），只选了地点就沿该方向直飞。
+ *       真打中活体并结算成功才炸开电花并落一道光；被免疫或护住只留一记散电，撞墙则贴在方块面上散掉，打空沿末方向散掉。
+ *       特攻提升在聚电完成时已经结算，落空也保留。
  *
  * 与同族分开：日光束是晴天里的宽光带、日光刃是贴身斩、流星光束一定蓄且走弧；
- *   电光束是唯一「雨天即时、单体追踪」的那个——它的价值在晴天要站定聚电、雨天立刻抬手打出去。
+ *   电光束是唯一「雨天即时、按实体有限追踪」的那个——它的价值在晴天要站定聚电、雨天立刻抬手打出去。
  */
 namespace PokemonSkills {
     const electroshotScene = "world_combat:move_electroshot";
     const electroshotRainText = "world_combat.move.electroshot.text.rain";
     const electroshotBoostText = "world_combat.move.electroshot.text.boost";
     const electroshotHitText = "world_combat.move.electroshot.text.hit";
+    const electroshotResistText = "world_combat.move.electroshot.text.resist";
+    const electroshotWardText = "world_combat.move.electroshot.text.ward";
     const electroshotMissText = "world_combat.move.electroshot.text.miss";
 
     define({
         id: "electroshot",
         name: "电光束",
-        description: "站定把电从四周抽进身体、特攻提升，再射出一束会追着目标走的高压电矛。下雨时直接从雨里取电、当场发射。晴天要站定聚电，雨天立刻抬手打出去。",
+        description: "站定把电从四周抽进身体、特攻提升，再射出一束高压电矛：瞄准实体时有限追踪，只瞄地点就沿该方向直射。下雨时直接从雨里取电、当场发射。晴天要站定聚电，雨天立刻抬手打出去。",
         uses: ["雨天里的即时高压点射", "追着走位也甩不掉的一束", "先攒一级特攻再出手"],
-        kind: "enemy",
+        kind: "aim",
         range: 15,
         maxRange: 24,
         prepare: 26,
@@ -69,7 +73,10 @@ namespace PokemonSkills {
             const stages = Math.max(1, Math.round(p("electroshot", "boost", action)));
             const scale = Math.max(0.6, Math.min(2.2, power / 130));
             const intensity = Math.max(0.6, Math.min(2.6, power / 130));
-            const target = action.target();
+            const selected = action.target();
+            // 只有选中非友方实体才有限追踪；只选地点时沿瞄准方向直射，落空也沿末方向散掉。
+            const homing = selected !== null && world.valid(selected) && !world.friendly(selected) ? selected : null;
+            const travel = WorldFeedback.actionScenes(electroshotScene);
             let settled = false;
 
             // 聚电完成：特攻提升落在共享能力等级上，命中与否都保留。
@@ -83,14 +90,14 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.8, 0)), electroshotRainText, [], 24);
             sound(action, "cobblemon:move.thunderbolt.actor");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; travel.finish(current, done); } }
 
             const appearance: LivingActions.ProjectileAppearance = {
                 sprite: "cobblemon:particle/generic/orb/energyorb", tint: 0xFFE84D, glow: true,
                 scale: Math.max(0.9, Math.min(1.8, radius / 0.26))
             };
-            if (target !== null && world.valid(target))
-                appearance.homing = { target: String(target.ref()), turn: turn, delay: 1, range: action.range() + 6 };
+            if (homing !== null)
+                appearance.homing = { target: String(homing.ref()), turn: turn, delay: 1, range: action.range() + 6 };
 
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, lifetime: Math.max(30, Math.round(action.range() / Math.max(0.2, speed) + 30)),
@@ -99,22 +106,42 @@ namespace PokemonSkills {
                     const scope = current.world();
                     const point = hit.position();
                     const victim = hit.target();
+                    travel.stop(current, "travel");
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        impact(current, hit, "electroshot", power, { damage: damageSpec("electroshot", "lance") });
-                        scope.lightning(point, true);
+                        const landed = impact(current, hit, "electroshot", power, { damage: damageSpec("electroshot", "lance") });
+                        if (landed) {
+                            scope.lightning(point, true);
+                            WorldFeedback.emit(scope, electroshotScene, 1, point,
+                                { moment: "burst", target: String(victim.ref()), arcs: arcs, scale: scale, intensity: intensity }, 26);
+                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), electroshotHitText, [], 24);
+                            sound(current, "minecraft:item.trident.thunder");
+                            sound(current, "cobblemon:move.thunderbolt.target");
+                        } else {
+                            WorldFeedback.emit(scope, electroshotScene, 1, point,
+                                { moment: "resist", target: String(victim.ref()), arcs: Math.max(4, Math.round(arcs * 0.4)), scale: scale }, 22);
+                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), electroshotResistText, [], 22);
+                            sound(current, "minecraft:block.amethyst_block.resonate");
+                        }
+                    } else if (victim !== null) {
                         WorldFeedback.emit(scope, electroshotScene, 1, point,
-                            { moment: "burst", target: String(victim.ref()), arcs: arcs, scale: scale, intensity: intensity }, 26);
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), electroshotHitText, [], 24);
-                        sound(current, "minecraft:item.trident.thunder");
-                        sound(current, "cobblemon:move.thunderbolt.target");
+                            { moment: "ward", target: String(victim.ref()), arcs: Math.max(4, Math.round(arcs * 0.4)), scale: scale }, 20);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), electroshotWardText, [], 20);
+                    } else if (hit.blocked()) {
+                        const cell = hit.blockPosition();
+                        const stop = cell === null ? point : cell;
+                        WorldFeedback.emit(scope, electroshotScene, 1, stop,
+                            { moment: "fizzle", point: [stop.x(), stop.y(), stop.z()], face: hit.blockFace(), arcs: arcs, scale: scale }, 20);
                     } else {
-                        WorldFeedback.emit(scope, electroshotScene, 1, point, { moment: "fizzle", point: [point.x(), point.y(), point.z()], arcs: arcs, scale: scale }, 20);
+                        WorldFeedback.emit(scope, electroshotScene, 1, point,
+                            { moment: "fizzle", point: [point.x(), point.y(), point.z()], arcs: arcs, scale: scale }, 20);
                     }
+                    finish(current);
                 }
             }, function (current: CombatAction) { finish(current); });
 
-            WorldFeedback.keep(world, "electroshot:travel:" + action.id(), electroshotScene, 1, origin,
-                { moment: "travel", projectile: flight, arcs: arcs, scale: scale, intensity: intensity }, 90);
+            // 极近距离或贴墙时首碰可能早于本次订阅；已结束就不再补一段飞行画面。
+            if (!settled) travel.show(action, "travel", origin,
+                { moment: "travel", projectile: flight, arcs: arcs, scale: scale, intensity: intensity });
         }
     });
 }

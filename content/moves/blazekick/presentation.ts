@@ -4,10 +4,11 @@
  * 一句话：施法者拧身、火从脚跟裹到脚尖（起），裹火的腿沿一道上扬的火弧从身后挑到身前（踢），
  *   命中处炸开一簇火花、被踢中的人被挑离地面；点着的人身上持续窜起明火（燃）。
  * 色相家族：火橙（0xE2531B 主体）＋亮黄（0xFFB347 细节）＋近白（0xFFF0C0 命中核心）；没有第二个色相。
- * 拍子：起 coil（聚火）→ 踢 spin（火弧划过）→ 中 kick（命中迸火）→ 燃 ignite（持续明火）／空 miss。
- * 范围：spin 的火弧用服务端算出的同一组 `data.path` 顶点（从身后低位、越过头顶、落到目标）以 polyline 画出，
- *   弧线经过的地方就是这一脚的判定轨迹——一条上扬的弧，不是直线也不是正面扇形。
- * 运动：火星沿弧线从下往上掠过再落向目标；被踢中者被挑离地面，画面跟随机制里的 `launch`。
+ * 拍子：起 coil（聚火）→ 踢 spin（火弧划过）→ 中 kick（命中迸火）→ 燃 ignite（持续明火）／挑飞 launch／空 miss。
+ * 范围：spin 的火弧用服务端算出的同一组 `data.path` 顶点（从身后低位、越过头顶、落到真实首碰点）以 polyline 画出，
+ *   弧线经过的地方就是这一脚的判定轨迹——一条上扬的弧，不是直线也不是正面扇形；首碰落在哪里，弧线就画到哪里。
+ * 运动：火星沿弧线从下往上掠过再落向目标；只有原生击飞真正改变了速度，才补一幕向上的升空火星（launch），
+ *   被抗性/事件拒绝击飞的目标没有这一幕。
  * 数：`data.embers`（特攻派生）绑定火弧与命中的火星数量，`data.intensity`（威力换算）驱动亮度，与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -111,6 +112,22 @@ const BlazeKickDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.1],
                     lifetime: [8, 15], size: [0.14, 0.02],
                     color: 0xFFB347, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 40
+                }
+            ]
+        },
+        launch: {
+            duration: 24,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    // 原生击飞成功才播：目标身上拖起一道向上的火星，拒绝击飞者不出现这一幕。
+                    name: "rise", bind: "target", offset: [0, 0.2, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "embers", fallback: 12 }, interval: 4, repeats: 3 },
+                    shape: { kind: "cylinder", radius: 0.28, length: 0.5 },
+                    direction: "up", speed: [0.04, 0.2], gravity: 0.03, drag: 0.94,
+                    lifetime: [7, 14], size: [0.09, 0.02], sizeMode: "index",
+                    color: 0xFFB347, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
                 }
             ]
         },

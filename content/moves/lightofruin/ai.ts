@@ -61,7 +61,11 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 14)) return false;
             if (lightofruinLineup(context, capability, target) < CompanionBehavior.ai<number>(capability, "minLine", 1)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.5);
-            return CompanionBehavior.ratio(self) >= minHealth || CompanionBehavior.ratio(target) <= 0.3;
+            const ratio = CompanionBehavior.ratio(self);
+            // 自己越虚越惜用：仅略高于门槛时要求贯穿更多人，才肯吃这笔按实伤走的总反噬。
+            if (ratio < minHealth) return CompanionBehavior.ratio(target) <= 0.3;
+            if (ratio < minHealth + 0.15 && lightofruinLineup(context, capability, target) < CompanionBehavior.ai<number>(capability, "minLine", 1) + 1) return false;
+            return true;
         },
         accepts: function (context, capability, target) { return lightofruinValid(target); },
         priority: function (context, capability, target) {
@@ -70,7 +74,10 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             const lineup = lightofruinLineup(context, capability, target);
             const base = lineup >= 3 ? 60 : lineup >= 2 ? 34 : 22;
-            return CompanionBehavior.ratio(target) <= 0.3 ? base + 10 : base;
+            // 反噬按打出的总伤害走：自己越虚，越不愿拿一列人去赌这一发。
+            const drain = Math.round((1 - CompanionBehavior.ratio(self)) * 30);
+            const score = (CompanionBehavior.ratio(target) <= 0.3 ? base + 10 : base) - drain;
+            return Math.max(1, score);
         }
     });
 

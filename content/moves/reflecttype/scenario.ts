@@ -1,25 +1,46 @@
-/**
- * 镜面属性的可执行设计说明。
- *
- * 场面：一只只会镜面属性的海星星（水属性，等级 40）对 4 格外的卡蒂狗（火属性，没有招式）。
- *   双方属性不同、都是宝可梦，预检通过；AI 会在看到威胁后照抄对手的属性。
- * 必然事实：本招被提交过；施法者身上出现过共享身份 world_combat:status/reflecttype 的标记
- *   （只有 types 层真正写入时才会挂上）。
- * 随机结果：照镜的具体时机、对手是否走动写进 note 供读轨迹判断。
- * 属性照抄走共享 NativeModifiers types 层，smoke 不能直接读属性，预期照到 fire 记在 note 里。
- */
+namespace ReflecttypeReviewScenario {
+    var casterRef = "";
+    var mirrored = "", restored = "";
+    WorldCombat.on("checks:reflecttype/type-added", "world_combat:mob_effect_added", "", function (event) {
+        if (String(event.actor().ref()).indexOf(casterRef) !== 0 || JSON.parse(event.data()).id !== "world_combat:reflecttype") return;
+        var world = event.world(), actor = event.actor();
+        mirrored = PokemonSkills.reflecttypeRead(world, actor).join(",");
+    });
+    WorldCombat.on("checks:reflecttype/type-removed", "world_combat:mob_effect_removed", "", function (event) {
+        if (String(event.actor().ref()).indexOf(casterRef) !== 0 || JSON.parse(event.data()).id !== "world_combat:reflecttype") return;
+        restored = PokemonSkills.reflecttypeRead(event.world(), event.actor()).join(",");
+    });
+/** Native type and ordinary armour branches, each restored by clearing its own carrier. */
 Smoke.scenario("reflecttype", function (stage) {
-    stage.fill([-6, -1, -6], [6, -1, 6], "minecraft:stone");
-    var caster = stage.pokemon({ species: "Staryu", level: 40, moves: ["reflecttype"], at: [-2, 0, 0] });
-    var target = stage.pokemon({ species: "Growlithe", level: 24, moves: [], at: [2, 0, 0] });
-    stage.hostile(caster, target);
-    stage.note("staged: staryu(40, water) reflecttype vs growlithe(24, fire); the target's type is readable and differs");
-    stage.until(1200, function () { return stage.hadMobEffect(caster, "world_combat:status/reflecttype"); }, function () {
-        stage.expect(stage.casts("reflecttype", caster) >= 1, "reflecttype was committed");
-        stage.expect(stage.hadMobEffect(caster, "world_combat:status/reflecttype"), "the reflecttype status appeared on the caster");
-        stage.note("reflecttype committed; the target's current type is written onto the caster through the shared NativeModifiers types layer (expected: fire)", {
-            casts: stage.casts("reflecttype", caster)
+    stage.fill([-12, -1, -6], [12, -1, 6], "minecraft:stone");
+    var caster = stage.pokemon({ species: "Staryu", level: 40, moves: ["reflecttype"], at: [-7, 0, 0] });
+    var target = stage.pokemon({ species: "Pikachu", level: 24, moves: [], at: [-3, 0, 0] });
+    var defender = stage.pokemon({ species: "Staryu", level: 40, moves: ["reflecttype"], at: [5, 0, 0] });
+    var zombie = stage.mob({ type: "minecraft:husk", at: [8, 0, 0] });
+    stage.noai(zombie);
+    stage.command("item replace entity " + zombie.ref.split("/")[0] + " armor.chest with minecraft:diamond_chestplate");
+    var armourBefore = stage.attribute(defender, "minecraft:generic.armor");
+    casterRef = caster.ref; mirrored = ""; restored = "";
+    stage.after(3, function () { stage.provoke(caster, target); stage.provoke(defender, zombie); });
+    stage.until(1000, function () {
+        return mirrored === "electric" && stage.hasMobEffect(defender, "world_combat:reflecttype")
+            && stage.attribute(defender, "minecraft:generic.armor") > armourBefore + .5;
+    }, function () {
+        stage.expect(mirrored === "electric", "the native branch reads the copied electric type");
+        stage.expect(stage.casts("reflecttype", defender) > 0, "ordinary enemy armour is a valid AI benefit");
+        stage.expect(Math.abs(stage.attribute(defender, "minecraft:generic.armor") - stage.attribute(zombie, "minecraft:generic.armor")) < .01,
+            "the ordinary branch copied real armour");
+        stage.setPp(caster, "reflecttype", 0); stage.setPp(defender, "reflecttype", 0);
+        stage.command("effect clear " + caster.ref.split("/")[0] + " world_combat:reflecttype");
+        stage.command("effect clear " + defender.ref.split("/")[0] + " world_combat:reflecttype");
+        stage.after(8, function () {
+            stage.expect(restored === "water", "clearing the carrier restores the original native type");
+            stage.expect(Math.abs(stage.attribute(defender, "minecraft:generic.armor") - armourBefore) < .01,
+                "clearing the carrier restores the original armour");
+            stage.note("Actual type/armour application and carrier cleanup verified; aiming, mirror appearance and Boss attribute diversity remain playtest observations.");
+            stage.done();
         });
-        stage.done();
-    }, "the type is mirrored");
+    }, "both real copy branches are active");
 });
+
+}

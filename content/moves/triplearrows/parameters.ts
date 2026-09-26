@@ -6,10 +6,13 @@
  *
  * 翻译：把「使出一记腿技后同时发射 3 箭」落成**两拍**——先一记低扫腿踢开护架，再同时射出 3 支箭。
  * 箭的伤害按支分（每支一段 `volley`，三支都命中≈原生的 90 威力总量），三箭齐发所以可以散开打不同目标；
- * 高暴击落成两处：原生暴击等级已由共享结算读取，另外**被这一脚踢开护架的目标会被三箭直接命中要害**
- * （`critical` 覆写）。50% 的降防落在腿技这一段、30% 的畏缩只在第一次命中时掷一次（与原生「一次判定」一致）。
+ * 高暴击落成两处：原生暴击等级已由共享结算读取，另外**只有被这一脚真正踢中护架的目标**会被三箭直接命中要害
+ * （`critical` 覆写，按目标 ref 对齐）。50% 的降防落在腿技这一段、30% 的畏缩只在第一次命中时掷一次（与原生「一次判定」一致）。
  * 降防用 `NativeEffects.boost(...,"def",-N)` + 共享身份 `world_combat:status/guardbroken`；
  * 畏缩用本单元声明的 `world_combat:status/flinch` 并投递 `world_combat:interrupt`。
+ *
+ * 选取是 aim：方向点或实体都能放。腿只够到 `reach` 的近身长度（判定与画面用同一条真实腿线），远距离不会凭空踢中，
+ * 只送三箭；箭会被墙挡住。实际施放射程由 `arrowRange` 决定，`reach` 只描述这一步近身腿技。
  *
  * 数据分散：
  *   kick          腿技威力：物攻定踢开护架的力道（这段只占小头）。
@@ -22,8 +25,8 @@
  *   flinchChance  畏缩几率：速度定箭势多急（原生 30%，只在第一次命中时掷）。
  *   flinchTicks   畏缩时长：固定 14 刻。
  *   arrowSpeed    箭速：速度定箭飞多急。
- *   arrowRange    箭程：等级与速度定箭能追多远。
- *   reach         腿技距离：速度定够得到多远；也是本招的实际射程来源。
+ *   arrowRange    箭程：等级与速度定箭能追多远；也是本招的实际射程来源。
+ *   reach         腿技距离（近身）：速度定这一步低扫腿够到多近，不随目标剩余距离拉长。
  *   kickRadius / arrowRadius 判定：身高定腿与箭的判定大小。
  *
  * 配置 `fan`（扇形齐射）：开＝三箭散开 14°、每支 ×0.85（铺开打几个人），但冷却更久；
@@ -99,12 +102,12 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "箭能飞多远；腿技踢开后目标走开时，箭还能追出去的距离。"
             }),
-        /** 腿技距离：3.4 + 速度偏移[−0.3,0.9]；夹 3.0..4.6。 */
+        /** 腿技距离：3.4 + 速度偏移[−0.3,0.9]；夹 3.0..4.6；只描述这一步近身低扫腿，不随目标距离拉长。 */
         reach: formula(
             F.base(3.4).plus(F.stat("speed").minus(60).times(0.02).clamp(-0.3, 0.9)).clamp(3.0, 4.6).round(2),
             "腿技距离", {
                 unit: "格",
-                description: "低扫腿够得到多远；速度快的个体步幅更大。它也是本招的实际射程来源。"
+                description: "低扫腿这一步能扫到多近；速度快的个体步幅更大。它只描述近身腿技，远处的目标不会被它凭空踢到——远处只送三箭。"
             }),
         /** 腿技判定：0.5 + 身高偏移[−0.05,0.3]；夹 0.4..0.85。 */
         kickRadius: formula(
@@ -131,10 +134,9 @@ namespace PokemonSkills {
     ]);
 
     describe("triplearrows", [
-        { key: "description.0", values: ["kick","kickRadius"] },
+        { key: "description.0", values: ["kick","kickRadius","reach"] },
         { key: "description.1", values: ["drawTicks","volley","spread","arrowSpeed","arrowRange","arrowRadius"] },
-        { key: "description.2", values: ["guardChance","guardStages","guardTicks","flinchChance","flinchTicks"] },
-        { key: "fan.on", values: [], when: function (context) { return read(context.detail.values, ["fan"]) === true; } },
+        { key: "description.2", values: ["guardChance","guardStages","guardTicks","flinchChance","flinchTicks"] },        { key: "fan.on", values: [], when: function (context) { return read(context.detail.values, ["fan"]) === true; } },
         { key: "fan.off", values: [], when: function (context) { return read(context.detail.values, ["fan"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.volley"] },

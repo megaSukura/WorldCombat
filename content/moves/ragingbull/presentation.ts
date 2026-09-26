@@ -5,11 +5,11 @@
  * 谁，谁就被整套冲势撞开，屏障随之炸成碎片。
  * 色相家族：蹄尘与近白（冲撞本身）为底，角气用随形态变化的单色 tint（普通灰白／格斗赤红／火橘／水蓝），
  * 屏障碎片用一处冷蓝高光。
- * 拍子：起（windup 聚气）→ 冲（charge 尘迹与速度线）→ 撞（ram 角气爆发）→ 碎（break 碎片）→ 空（miss）。
- * 范围：这是一条直线冲撞，运动本身画出作用范围；ram 绑命中点，break 的碎片按碎壁半径 scale 铺开。
+ * 拍子：起（windup 聚气）→ 冲（charge 尘迹与速度线）→ 撞（ram 角气爆发）→ 碎（break 真实穿越处的碎片）→ 收（settle 刹停扬尘）。
+ * 范围：这是一条直线冲撞，运动本身画出作用范围；ram 绑命中点，break 的碎片出现在身体真实扫过的屏障处，终点 settle 收势。
  * 运动：角气向内收再顺着冲势向外甩，蹄尘贴地拖尾，命中是短促外爆，碎片带重力四散。
  * 数：`data.scale`（牛身半径 / 0.5）放大尘迹与爆发，`data.power`（冲撞威力）绑定角气火花的发射量，
- * `data.wards`（震碎的屏障层数）绑定碎片波数。
+ * `data.wards`（实际撞碎的屏障层数）绑定碎片波数。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const RagingbullDefinition: ParticleDefinition = {
@@ -120,7 +120,7 @@ const RagingbullDefinition: ParticleDefinition = {
                 }
             ]
         },
-        miss: {
+        settle: {
             duration: 18,
             exit: { stop: 6, drain: 12 },
             emitters: [

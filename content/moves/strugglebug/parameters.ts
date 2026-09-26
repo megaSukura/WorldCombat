@@ -27,6 +27,7 @@ namespace PokemonSkills {
     export const strugglebugId = "strugglebug";
     export const strugglebugScene = "world_combat:move_strugglebug";
     export const strugglebugEffect = "world_combat:infested";
+    export const strugglebugCling = "world_combat:strugglebug_cling";
     export const strugglebugClingText = "world_combat.move.strugglebug.text.cling";
     export const strugglebugMissText = "world_combat.move.strugglebug.text.miss";
 

@@ -4,6 +4,8 @@
  * 念头的形状：压低重心、架住肩甲站定（windup，提交前只播预告）→ 沿瞄准方向把整副身板推出去（drive）→
  * 顶上活体的一刻结算接触伤害（impact）→ 不滑开，顶着对方沿同一方向一路碾过去（grind），推完站定（settle）。
  * 碾推式把撞击摊成一段持续顶推；硬停式几乎一下推完。命中 100 落成“不瞄偏”，顶不上则推完距离收势（miss）。
+ * 选取 aim：可点方向或实体、也可空放；方向短进受真实碰撞限制，不凭预定推距继续表现目标移动。
+ * 顶住不动（目标免位移或被挡）时立即转“压实”收势，不再多帧研磨，主伤已在接触时按防御结算。
  * 两幕：drive → impact + grind。提交后才触碰世界。配置 grind 通过 resolve 改变时序与公式取值。
  */
 namespace PokemonSkills {
@@ -16,9 +18,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "bodypress",
         name: "Body Press",
-        description: "压低重心架住肩甲，把整副身板连同护甲一起推出去；撞上就顶住不放，把对手一路推走。防御越高，这一下越重、顶得越远。",
+        description: "压低重心架住肩甲，朝选定方向把整副身板连同护甲一起推出去；撞上就顶住不放，把对手一路推走，顶不动就立即压实收势。可以只选方向朝空处推。防御越高，这一下越重、顶得越远。",
         uses: ["用护甲与体重顶开挡路的对手", "把目标一路推出掩体或推下高台", "在守势里反推一波"],
-        kind: "enemy",
+        kind: "aim",
         range: 3,
         maxRange: 6,
         prepare: 10,
@@ -28,6 +30,9 @@ namespace PokemonSkills {
         style: "contact",
         defaults: { grind: true, ai: { maxChase: 8, minHealth: 0.35 } },
         fields: [],
+        indicator: function (config, pokemon) {
+            return { radius: (pokemon ? p("bodypress", "lunge", pokemon) : 3.0) + 0.6, geometry: "line", style: "contact", color: 0xE9B071, label: "扑击" };
+        },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon: pokemon, skill: skills["bodypress"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
             const grind = !(config && config.grind === false);
@@ -77,7 +82,7 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
-            /** 碾推幕：目标与施法者一起沿推进方向移动，把对方一路顶走。 */
+            /** 碾推幕：目标与施法者一起沿推进方向移动，把对方一路顶走；顶不动就地压实收势。 */
             function grindOver(current: CombatAction, ref: string, remaining: number, left: number): void {
                 if (settled) return;
                 const scope = current.world();
@@ -85,13 +90,21 @@ namespace PokemonSkills {
                 const body = scope.observe(current.actor());
                 if (victim === null || !scope.valid(victim) || body === null || remaining <= 0.02 || left <= 0) { settle(current, true); return; }
                 const step = Math.min(remaining / Math.max(1, left), 0.4);
+                // 位移回执决定这一段是否真的推进：免位移或被挡（moved≈0）时不再多帧研磨。
                 const moved = scope.displace(victim, direction.scale(step));
-                if (moved > 0) scope.displace(current.actor(), direction.scale(moved));
+                if (moved < p("bodypress", "minimumMove", current)) {
+                    const at = scope.observe(victim);
+                    if (at !== null) WorldFeedback.emit(scope, bodypressScene, 1, at.position(),
+                        { moment: "compress", target: ref, scale: scale, intensity: intensity, clods: clods }, 24);
+                    settle(current, true);
+                    return;
+                }
+                scope.displace(current.actor(), direction.scale(moved));
                 const victimBody = scope.observe(victim);
+                // 碾推条带只按实际目标位移延伸（remaining 只减去真实的 moved）。
                 if (victimBody !== null) WorldFeedback.keep(scope, "bodypress:grind:" + String(current.actor().ref()), bodypressScene, 1,
                     victimBody.position(), { moment: "grind", target: ref, scale: scale, intensity: intensity,
-                        ratio: 1 - remaining / Math.max(0.001, shove) }, 6);
-                if (moved < p("bodypress", "minimumMove", current)) { settle(current, true); return; }
+                        ratio: 1 - remaining / Math.max(0.001, shove), travel: Math.round((shove - remaining) * 10) / 10 }, 6);
                 current.after(1, function (next: CombatAction) { grindOver(next, ref, remaining - moved, left - 1); });
             }
 
@@ -113,7 +126,7 @@ namespace PokemonSkills {
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), bodypressGrindText, [shove], 28);
                             grindOver(current, String(target.ref()), shove, grindTicks);
                         } else {
-                            scope.displace(target, direction.scale(shove));
+                            scope.hitDisplace(target, direction.scale(shove));
                             settle(current, true);
                         }
                         return;

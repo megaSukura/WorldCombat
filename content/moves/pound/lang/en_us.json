@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.pound.summary": "A quick, wide swat in front of you: the quick form has no wind-up while the heavy form spends one beat raising the limb; whatever stands in the fan takes the hit and is nudged aside. The cheapest move of the family - shortest cooldown, and it can catch several targets packed side by side, at the cost of the lowest single hit and a very shallow fan.",
+  "worldcombat.skill.pound.summary": "A quick, wide swat in front of you: the quick form has no wind-up while the heavy form spends one beat raising the limb; whatever stands in the fan takes the hit and is nudged aside. The cheapest move of the family - shortest cooldown, and it can catch several targets packed side by side, at the cost of the lowest single hit and a very shallow fan. Pick any target, or just aim a direction and swat empty air; a solid wall blocks the fan.",
   "worldcombat.skill.pound.use.0": "An instant, cheap melee swat",
   "worldcombat.skill.pound.use.1": "Catch several targets packed together in one swat",
   "worldcombat.skill.pound.use.2": "Toss one in between other moves",
   "worldcombat.skill.pound.description.0": "Sweeps a %2$s degree fan reaching %3$s blocks; every non-ally inside takes about %1$s physical damage.",
   "worldcombat.skill.pound.description.1": "A struck target is pushed about %1$s blocks along the swat.",
+  "worldcombat.skill.pound.description.aim": "Free aim: pick an any-relation entity, or just give a direction or world point and swat empty air; the whole fan still sweeps with no target, and a solid wall keeps it from reaching behind.",
   "worldcombat.skill.pound.heavy.on": "Heavy form: a harder swat with a wider fan that pushes the target a step, but it gains a preparation and a longer cooldown.",
   "worldcombat.skill.pound.heavy.off": "Quick form: instant, with the shortest recovery and cooldown and always ready, but the lowest single hit and almost no push.",
   "worldcombat.skill.pound.timing": "Cast within %1$s blocks; a %2$s s wind-up, costing %4$s PP, then %3$s s recovery and a %5$s s cooldown.",

@@ -9,6 +9,11 @@
 namespace PokemonSkills {
     CompanionBehavior.registerUse("kingsshield", {
         protocols: ["world_combat:survive"],
+        target: function (context, _item, target) {
+            const threat = context.senses["world_combat:threat"];
+            if (!threat) return target;
+            const facing = JSON.parse(JSON.stringify(target)); facing.point = threat.point.slice(); return facing;
+        },
         reach: function (context, capability) { return 0; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;

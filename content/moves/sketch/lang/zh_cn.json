@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.sketch.summary": "把对手最近一招永久写进写生所在的招式格；普通生物的已知攻击会转译为对应招式。",
-  "worldcombat.skill.sketch.use.0": "永久学会对手的一手",
+  "worldcombat.skill.sketch.summary": "把目标或同伴最近一招永久写进写生所在的招式格；普通生物的已知攻击会转译为对应招式。",
+  "worldcombat.skill.sketch.use.0": "永久学会目标或同伴的一手",
   "worldcombat.skill.sketch.use.1": "复制稀有的强化或回复",
   "worldcombat.skill.sketch.use.2": "把强攻收进自己的招式表",
-  "worldcombat.skill.sketch.description.0": "在 %1$s 格内看准目标，描摹起手 %2$s；宝可梦最后使用的招式会永久替换写生所在的招式格，并获得完整PP。",
+  "worldcombat.skill.sketch.description.0": "在 %1$s 格内看准任意示范者（敌我皆可），描摹起手 %2$s；宝可梦最后使用的招式会永久替换写生所在的招式格，并获得完整PP。",
   "worldcombat.skill.sketch.description.1": "没有可读取的出手时无法发动；宝可梦的写生本身无法被写生，已经会的招式也不会重复学习。",
   "worldcombat.skill.sketch.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.sketch.value.reach": "描摹距离",

@@ -15,14 +15,14 @@
  *   hammer     砸击威力：物攻定拳面、**体重**定下砸的份量、等级定发力；顺势式把力分薄。
  *   reach      出手距离：身高给臂长、速度给上前的半步。
  *   knock      砸退距离：物攻给推力，**目标体重**抵掉一部分；顺势式砸得更远。
- *   cleft      裂痕半径：体重决定拳面把地面砸裂多开。
- *   dents      裂地量：体重与物攻决定砸出多少块裂痕（顺带决定画面的碎屑量）。
+ *   cleft      尘线半径：体重决定真实接触地材的短尘线扬多开。
+ *   dents      尘线量：体重与物攻决定扬出多少条尘线（顺带决定画面的碎屑量）。
  *   speedLoss  自身速度下降：原生固定 1 级，是无法回避的代价。
  *   tempo/aftercast/recharge：速度定起手与收招、等级定熟练度，顺势式更慢。
  *
- * 配置 `followthrough`（顺势式，默认关）双向取舍：开＝砸退 ×1.35、裂痕更大更密，代价是威力 ×0.9、
+ * 配置 `followthrough`（顺势式，默认关）双向取舍：开＝砸退 ×1.35、尘线更大更密，代价是威力 ×0.9、
  *   起手 +2 刻、收招 +3 刻、冷却 +6 刻；关（屏息式）＝在接触前收住力，单发更重、出手更快，但砸退与
- *   裂地都小。两向各有适用局面（把人砸出阵地 vs 打实单发）。
+ *   尘线都小。两向各有适用局面（把人砸出阵地 vs 打实单发）。
  *
  * 伤害段 `hammer` 与参数同名，走共享换算（原始类别 Physical），接触＋拳击由 `punch` 标记落定。
  */
@@ -69,17 +69,17 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "被这一记砸开多远；物攻越强推得越远，目标越重越推不动，顺势式把冲势全压在这一下上。"
             }),
-        /** 裂痕半径：基础 1.1 格；体重每比 300hg 多 1hg 加 0.001（夹 −0.2..0.8）；顺势 ×1.25；夹 0.8..2.4。 */
+        /** 尘线半径：基础 1.1 格；体重每比 300hg 多 1hg 加 0.001（夹 −0.2..0.8）；顺势 ×1.25；夹 0.8..2.4。 */
         cleft: formula(
             F.base(1.1)
                 .plus(F.body("weight").minus(300).times(0.001).clamp(-0.2, 0.8))
                 .times(F.when(F.pref("followthrough", text("worldcombat.skill.hammerarm.preference.followthrough")), F.const(1.25), F.const(1.0)))
                 .clamp(0.8, 2.4).round(2),
-            "裂痕半径", {
+            "尘线半径", {
                 unit: "格",
-                description: "拳面落地处把地面砸裂多开；身体越沉裂得越广，顺势式更大。画出的裂环就是这个半径。"
+                description: "真实接触点的地材质尘线向四周扬开多远；身体越沉扬得越开，顺势式更大。画出的就是这一圈短尘线，不改动地形。"
             }),
-        /** 裂地量：基础 10；体重每比 300hg 多 1hg 加 0.03（夹 −2..8）；物攻每比 60 多 1 加 0.06（夹 −2..8）；
+        /** 尘线量：基础 10；体重每比 300hg 多 1hg 加 0.03（夹 −2..8）；物攻每比 60 多 1 加 0.06（夹 −2..8）；
          *  顺势 +6；夹 6..30 并向下取整。 */
         dents: formula(
             F.base(10)
@@ -87,9 +87,9 @@ namespace PokemonSkills {
                 .plus(F.stat("attack").minus(60).times(0.06).clamp(-2, 8))
                 .plus(F.when(F.pref("followthrough", text("worldcombat.skill.hammerarm.preference.followthrough")), F.const(6), F.const(0)))
                 .clamp(6, 30).floor(),
-            "裂地量", {
-                unit: "块",
-                description: "砸出的裂痕块数；身体越沉、物攻越高裂得越多，顺势式再多裂一圈。它同时决定画面里崩出的碎屑量。"
+            "尘线量", {
+                unit: "条",
+                description: "真实接触点扬出的尘线条数；身体越沉、物攻越高扬得越多，顺势式再多一圈。它同时决定画面里崩出的碎屑量。"
             }),
         /** 自身速度下降级：原生固定 1 级；夹 1..6。 */
         speedLoss: formula(
@@ -128,12 +128,12 @@ namespace PokemonSkills {
     describe("hammerarm", [
         { key: "description.0", values: ["hammer","reach"] },
         { key: "description.1", values: ["knock","speedLoss"] },
-        { key: "description.ground", values: ["cleft","dents"] },
+        { key: "description.ground", values: [] },
         { key: "description.2", values: ["tempo", "recharge"] },
-        { key: "followthrough.on", values: ["cleft", "dents"], when: function (context) { return read(context.detail.values, ["followthrough"]) === true; } },
+        { key: "followthrough.on", values: [], when: function (context) { return read(context.detail.values, ["followthrough"]) === true; } },
         { key: "followthrough.off", values: [], when: function (context) { return read(context.detail.values, ["followthrough"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.hammer", "tier.0.knock"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.hammer", "tier.1.dents"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.hammer"] }
     ]);
 }

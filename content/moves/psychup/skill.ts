@@ -16,9 +16,9 @@ namespace PokemonSkills {
         id: "psychup",
         cooldownParameter: "recharge",
         name: "Psych Up",
-        description: "将自己的能力等级调整成目标的样子，并复制目标现有的药水、信标等增益。只取增益模式保留自己更高的能力等级。",
-        uses: ["对手刚给自己加完状态时立刻对齐", "把对手的增益变成自己的增益", "照单全收时把对手的负面也一并接过来"],
-        kind: "enemy",
+        description: "把自己的能力等级与药水增益调整成目标的样子；目标可以是敌人，也可以是让你借势的同伴。只取增益模式保留自己更高的能力等级。",
+        uses: ["对手刚给自己加完状态时立刻对齐", "把对手或同伴的增益变成自己的增益", "照单全收时把目标的负面也一并接过来"],
+        kind: "aim",
         range: 7,
         maxRange: 14,
         prepare: 9,
@@ -45,7 +45,8 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            // aim: any-relation entity works; an empty point has no reference to read, so it is refused here.
+            if (target === null || !world.valid(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("psychup", "reach", action)) return "out-of-range";
@@ -65,25 +66,31 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
-            const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null) { done(action); return; }
+            const body = world.observe(actor), other = target === null ? null : world.observe(target);
+            if (target === null || !world.valid(target) || body === null || other === null) { done(action); return; }
             const span = Math.max(40, Math.round(p("psychup", "span", action)));
             const echoes = Math.max(6, Math.round(p("psychup", "echoes", action)));
             const selective = !!(config && config.selective);
             // The shared copy entry reads both effective ladders, so a Pokemon's native stages and every other
             // body's CombatStages land on the same route; `selective` keeps the per-move "gains only" rule.
             const copied = NativeEffects.copyStages(world, actor, target, false, selective);
-            const native = MobEffects.copy(world, target, actor, "beneficial", span);
-            const changed = copied.changed + native, link = copied.total + native;
-            if (changed > 0) MobEffects.apply(world, actor, psychupLink, span, 0);
-            const path: (string | number[])[] = [String(actor.ref()), String(target.ref())];
+            const potions = MobEffects.copy(world, target, actor, "beneficial", span);
+            // Report the actual changed items per route: stages moved and potion effects copied. Unchanged
+            // entries stay dark in the scene because no symbol is emitted for them.
+            const stats = copied.changed, copiedItems = stats + potions;
+            const inward = body.position().minus(other.position());
+            const distance = inward.length();
+            const direction = distance < 0.05 ? WorldCombat.point(0, 1, 0) : inward.unit();
+            if (copiedItems > 0) MobEffects.apply(world, actor, psychupLink, span, 0);
+            const path: (string | number[])[] = [String(target.ref()), String(actor.ref())];
+            WorldFeedback.emit(world, psychupScene, 1, other.position(),
+                { moment: "mirror", path: path, stats: stats, potions: potions,
+                    echoes: echoes, span: distance, direction: [direction.x(), direction.y(), direction.z()],
+                    intensity: Math.max(0.6, Math.min(2, 0.45 + copiedItems * 0.18)) }, 30);
             WorldFeedback.emit(world, psychupScene, 1, body.position(),
-                { moment: "mirror", path: path, target: String(target.ref()), stats: changed, echoes: echoes,
-                    link: link, scale: 1, intensity: Math.max(0.6, Math.min(2, link / 4)) }, 30);
-            WorldFeedback.emit(world, psychupScene, 1, body.position(),
-                { moment: "settle", target: String(actor.ref()), stats: changed, echoes: echoes }, 24);
+                { moment: "settle", stats: stats, potions: potions }, 24);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)),
-                changed > 0 ? psychupLinkedText : psychupFullText, [changed], 36);
+                copiedItems > 0 ? psychupLinkedText : psychupFullText, [stats, potions], 36);
             sound(action, "minecraft:entity.illusioner.mirror_move");
             done(action);
         }

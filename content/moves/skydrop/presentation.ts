@@ -13,6 +13,7 @@
 const SkydropDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        release:{duration:12,emitters:[{name:"broken_grip",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/tinydust",burst:{count:6},shape:{kind:"sphere_surface",radius:.35},lifetime:[4,8],size:[.08,.01],color:0x9FC6E8,alpha:[.4,0]}]},
         windup: {
             duration: 12,
             exit: { stop: 6, drain: 10 },

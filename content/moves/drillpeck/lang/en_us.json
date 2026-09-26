@@ -30,5 +30,5 @@
   "worldcombat.skill.drillpeck.preference.ai.finish": "Finish the wounded",
   "world_combat.move.drillpeck.text.hit": "Drilled %1$s bites",
   "world_combat.move.drillpeck.text.miss": "Spun through empty air",
-  "worldcombat.skill.drillpeck.description.3": "It first steps %1$s blocks toward the target, stopping at the edge of the hitbox without passing through it; each bite strikes only the first foe on the drill axis in front, and the drill retracts as soon as the target leaves that axis."
+  "worldcombat.skill.drillpeck.description.3": "It first steps %1$s blocks toward the target, stopping at the edge of the hitbox without passing through it; each bite strikes only the nearest visible foe on the fixed drill axis in front, and after the target leaves that axis the remaining bites miss but the drill still spins through all its bites before recovering."
 }

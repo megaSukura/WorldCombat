@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.doubleslap.summary": "Two palms take turns at point-blank: one hand after the other slaps back and forth, nudging the target sideways with every hit. The crossing mode is many light slaps that wobble it; the straight mode is fewer, heavier slaps.",
+  "worldcombat.skill.doubleslap.summary": "Two palms take turns at point-blank: one hand after the other slaps back and forth, nudging the target sideways with every hit. The facing locks at the start and it keeps the same close foe; the crossing mode is many light slaps that wobble it, the straight mode is fewer, heavier slaps.",
   "worldcombat.skill.doubleslap.use.0": "A burst of fast little slaps at point-blank range",
   "worldcombat.skill.doubleslap.use.1": "Pile damage on a low-defence target through sheer slap count",
   "worldcombat.skill.doubleslap.use.2": "Crossing mode wobbles the target left and right to break its footing",
-  "worldcombat.skill.doubleslap.description.0": "Slap a single foe at point-blank: each slap deals about %1$s physical damage, and the string throws up to %2$s slaps (2-5, set by the user's data).",
-  "worldcombat.skill.doubleslap.description.1": "Slaps come every %1$s, reaching a target within %2$s blocks; each slap rolls %3$s to hit, and a whiff ends the string. The string also ends early if the target drops or is pushed out of reach.",
+  "worldcombat.skill.doubleslap.use.3": "Aim at a bare direction and an empty palm just ends the string",
+  "worldcombat.skill.doubleslap.description.0": "Slap a single close foe at point-blank: each slap deals about %1$s physical damage, and the string throws up to %2$s slaps (2-5, set by the user's data).",
+  "worldcombat.skill.doubleslap.description.1": "Slaps come every %1$s, each judged in its own palm's short fan within %2$s blocks; each slap rolls %3$s to hit, and a whiff ends the string. Only the foe locked at the start is kept - if it drops or is knocked out of the palm fan the string ends early.",
   "worldcombat.skill.doubleslap.description.2": "Crossing mode knocks the target about %1$s blocks to the opposite side (0 in straight mode).",
   "worldcombat.skill.doubleslap.cross.on": "Crossing: both hands alternate, each slap knocks the target to the opposite side and the string can reach 5 slaps; costs per-slap power x0.85, slightly shorter reach and cooldown +2 ticks.",
   "worldcombat.skill.doubleslap.cross.off": "Straight: the same hand keeps slugging, per-slap power x1.2 and slightly longer reach; costs a string capped at 4 slaps and no sideways nudge at all.",
@@ -26,10 +27,11 @@
   "worldcombat.skill.doubleslap.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.doubleslap.preference.ai.maxChase.help": "Beyond this distance the user closes in first. This move has a very short reach, so the default is small too.",
   "worldcombat.skill.doubleslap.preference.ai.steady": "Prefer steady targets",
-  "worldcombat.skill.doubleslap.preference.ai.steady.help": "On: targets that barely move (pinned, against a wall, standing still) rank higher because they eat the whole string; running targets rank lower. Off: all targets score the same.",
+  "worldcombat.skill.doubleslap.preference.ai.steady.help": "On: targets that barely move (pinned, against a wall, standing still) rank higher because they eat the whole string; fast movers that can slip out of the palm fan rank lower. Off: all targets score the same.",
   "worldcombat.skill.doubleslap.preference.ai.leaveStation": "Leave station when guarding",
   "worldcombat.skill.doubleslap.preference.ai.leaveStation.help": "On: the user will leave its station for Double Slap; off: it only casts when already in reach.",
   "world_combat.move.doubleslap.text.tally": "%1$s slaps landed",
   "world_combat.move.doubleslap.text.miss": "Slap %1$s whiffed",
-  "world_combat.move.doubleslap.text.away": "The target slipped out of reach (%1$s slaps landed)"
+  "world_combat.move.doubleslap.text.away": "The target slipped out of reach (%1$s slaps landed)",
+  "world_combat.move.doubleslap.text.empty": "No target within the palm fan"
 }

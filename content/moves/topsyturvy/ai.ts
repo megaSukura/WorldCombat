@@ -19,29 +19,61 @@ namespace CompanionBehavior {
         return typeof value === "number" ? value : 0;
     }
 
-    function topsyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+    function topsyChase(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        return CompanionBehavior.ai<number>(item, "maxChase", 10);
+    }
+
+    function topsyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
         if (context.facts.mounted) return false;
-        if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if (context.facts.focus === threat.ref) return true;
-        return CompanionBehavior.distance(source(context).point, threat.point) <= CompanionBehavior.ai<number>(item, "maxChase", 10);
+        if (target.health <= 0 || !target.visible) return false;
+        if (context.facts.focus === target.ref) return true;
+        return CompanionBehavior.distance(source(context).point, target.point) <= topsyChase(context, item);
+    }
+
+    /** 对敌：只有净翻转对它不利（增益多于减益，或择映式下确有增益）才值得甩镜，绝不帮它解掉弱化。
+     *  对友：看它被削了多少减益（值高才值得救）。 */
+    function topsyEnemyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        if (threat.friendly) return false;
+        if (!topsyWants(context, item, threat)) return false;
+        const positive = topsyStageValue(context, threat, "positive");
+        const negative = topsyStageValue(context, threat, "negative");
+        if (item.data.config && item.data.config.gain === true) return positive > 0;
+        return positive > negative;
+    }
+
+    function topsyAllyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, ally: Entity): boolean {
+        if (!ally.friendly || String(ally.ref) === String(source(context).ref)) return false;
+        if (!topsyWants(context, item, ally)) return false;
+        return topsyStageValue(context, ally, "negative") > 0;
     }
 
     registerUse("topsyturvy", {
-        protocols: ["world_combat:control"],
+        protocols: ["world_combat:attack", "world_combat:control", "world_combat:bolster"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (context.facts.mounted) return false;
-            return target === null ? true : topsyWants(context, item, target);
+            if (target === null) return true;
+            return target.friendly ? topsyAllyWants(context, item, target) : topsyEnemyWants(context, item, target);
         },
-        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
+        accepts: function (context, item, target) {
+            if (target.health <= 0 || !target.visible) return false;
+            return target.friendly ? topsyAllyWants(context, item, target) : topsyEnemyWants(context, item, target);
+        },
         approachTarget: function (_context, _item, target) { return target; },
         priority: function (context, item, target) {
-            if (!target || !topsyWants(context, item, target)) return 2;
+            if (!target || (target.friendly ? !topsyAllyWants(context, item, target) : !topsyEnemyWants(context, item, target))) return 2;
+            if (target.friendly) {
+                const negative = topsyStageValue(context, target, "negative");
+                let score = 20 + negative * 8;
+                if (context.facts.focus === target.ref) score += 8;
+                return Math.max(2, Math.min(96, score));
+            }
             const positive = topsyStageValue(context, target, "positive");
             const negative = topsyStageValue(context, target, "negative");
             const onlyGains = !!(item.data.config && item.data.config.gain === true);
             let score = 16 + positive * 8;
             if (positive >= CompanionBehavior.ai<number>(item, "minStages", 1)) score += 10;
+            // 全翻式下，减益越多翻完越帮对手；先算净值，避免替敌人解掉它的弱化。
             if (!onlyGains) score -= negative * 6;
             if (context.facts.focus === target.ref) score += 8;
             return Math.max(2, Math.min(96, score));
@@ -51,7 +83,7 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("topsyturvy", {}, [
         PokemonSkills.field(PokemonSkills.pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 4, max: 20, step: 1,
-            help: "威胁进入这个距离内才考虑甩镜；越大越早出手、也越容易空放。"
+            help: "威胁或受削的队友进入这个距离内才考虑甩镜；越大越早出手、也越容易空放。"
         }),
         PokemonSkills.field(PokemonSkills.pathOf("ai.minStages"), "抬价门槛", "number", {
             min: 1, max: 6, step: 1,

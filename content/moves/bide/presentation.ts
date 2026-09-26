@@ -99,6 +99,22 @@ const BideDefinition: ParticleDefinition = {
                     color: 0xFFF6E6, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 90
                 },
                 {
+                    name: "release_link", bind: "path", fit: "none", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    rate: 90, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.08, 0.24], spread: 10,
+                    lifetime: [5, 10], size: [0.26, 0.05], sizeMode: "index",
+                    color: 0xE06A3C, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 90
+                },
+                {
+                    name: "release_spark", bind: "path", fit: "none", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 30, trail: { minDistance: 0.3 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.04, 0.14],
+                    lifetime: [7, 14], size: [0.08, 0.01], sizeMode: "index",
+                    color: 0xFFF6E6, alpha: [0.8, 0], light: "full", maxParticles: 60
+                },
+                {
                     name: "out_ring", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 3, interval: 4 }, shape: { kind: "ring", radius: { data: "reach", fallback: 6 } },

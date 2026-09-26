@@ -33,7 +33,9 @@ namespace PokemonSkills {
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
-            return threat.attacking === self.ref ? 90 : 45;
+            // 正被点名时抢先收势；刚挨过一记也说明对手在持续输出，值得开一次账。
+            if (threat.attacking === self.ref) return 90;
+            return self.hurtAgo < 40 ? 65 : 45;
         }
     });
 

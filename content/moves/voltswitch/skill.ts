@@ -1,14 +1,14 @@
 /**
  * 伏特替换 / voltswitch 的出手方式与余电场。
  *
- * 核心念头：一次跳闸——把一道电弧钉在目标身上，然后顺着电流把自己「切换」到落点：不是跑过去，是瞬间出现；
+ * 核心念头：一次跳闸——把一道电弧钉向瞄向的实体或位置，然后顺着电流把自己「切换」到落点：不是跑过去，是瞬间出现；
  *   原地留下一小片还在嗡嗡响的电荷。三道折返里只有它是远程、特殊、且用瞬移换位。
  *
  * 三幕：
  *   起（charge，提交前）：身体表面电荷聚起、毛刺立起，落点方向先亮起一个接地的光点，只播预告。
- *   放（bolt，提交后）：一道电弧飞向目标，命中结算 volt 特殊伤害。
- *   切（switch，提交后）：自己瞬间出现在落点（有伙伴在附近就落到他身后），原地留下电荷区（余电式）。
- *   续（zap）：电荷区每 20 刻电击站进去的敌人，到期自行散去。
+ *   放（bolt，提交后）：一道电弧沿瞄准方向飞出，命中非友方活体才结算 volt 特殊伤害；空放也照常撤离。
+ *   切（switch，提交后）：自己瞬间出现在核对过安全空间的落点（有伙伴在附近就落到他身后），一次施放只换位一次。
+ *   续（zap）：余电式在原地留电荷区，每 20 刻用电系伤害语义电击站进去的敌人，到期自行散去；表现随这片 managed field 清理。
  *
  * 与同族分开：急速折返走一条 U 回到自己一侧，快速折返越过目标；伏特替换不接触、是特殊伤害，用瞬移换位，
  *   还可能留下带电的地面。提交前只观察、只 `present`；命中、瞬移、余电都在提交后写。
@@ -19,7 +19,7 @@ namespace PokemonSkills {
     const voltswitchRelayText = "world_combat.move.voltswitch.text.relay";
     const voltswitchSwitchText = "world_combat.move.voltswitch.text.switch";
 
-    // 余电：留在原地的电荷区每 `interval` 刻电击范围内的非友方，按 `zap` 结算固定伤害。
+    // 余电：留在原地的电荷区每 `interval` 刻电击范围内的非友方，走与电弧同一套电系伤害语义，金额沿用本招的余电预算。
     WorldEffects.fieldRule(voltswitchField, {
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (world.friendly(actor)) return;
@@ -31,16 +31,18 @@ namespace PokemonSkills {
             if (world.tick() < (next[ref] || 0)) return;
             next[ref] = world.tick() + interval;
             const zap = Math.max(1, Number(field.data && field.data.zap) || 2);
-            world.hurt(actor, zap, JSON.stringify({ kind: "move", move: "voltswitch", type: "electric", category: "special",
-                cause: "world_combat:voltswitch_relay", bypassCooldown: true, action: 0 }));
+            // 属性相性、地面免疫与原生减伤/许可都照常参与；结算的是算好的余电预算，不再直接改血。
+            const landed = PokemonDamage.fixed(world, actor, CobblemonCombat.moveTemplate("voltswitch"), zap,
+                { knockback: false, bypassCooldown: true }, "immunity");
             WorldFeedback.emit(world, voltswitchScene, 1, body.position(),
-                { moment: "zap", target: ref, motes: Math.max(4, Math.round(zap * 2)) }, 16);
+                { moment: "zap", target: ref, motes: Math.max(4, Math.round(zap * 2)), landed: landed ? 1 : 0 }, 16);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
-            WorldFeedback.keep(world, "voltswitch:field:" + effect.id(), voltswitchScene, 1, centre,
+            // 表现绑在这片 managed field 上，随它自然到期或提前驱散一起收掉。
+            WorldFeedback.onEffect(world, effect.id(), "voltswitch:field", voltswitchScene, 1, centre,
                 { moment: "field", radius: field.radius, scale: Math.max(0.5, Math.min(2.0, field.radius / 2.8)),
-                    motes: Math.round(Number(field.data && field.data.motes) || 16) }, 20);
+                    motes: Math.round(Number(field.data && field.data.motes) || 16) });
         }
     });
 
@@ -81,8 +83,10 @@ namespace PokemonSkills {
         const blink = p("voltswitch", "blink", current), arc = p("voltswitch", "arc", current), rally = p("voltswitch", "rally", current);
         const landing = voltswitchLanding(world, actor, origin, heading, lateral, blink, arc, rally);
         const feet = WorldCombat.point(landing.point.x(), landing.point.y() - body.height() / 2, landing.point.z());
-        if (!world.teleport(actor, feet))
-            voltswitchShove(world, actor, WorldCombat.point(feet.x() - origin.x(), 0, feet.z() - origin.z()));
+        // 落点先核对安全可站位；附近找不到空位就退回真实位移收束（teleport 失败时沿方向推开）。
+        const spot = LivingActions.freeSpot(world, feet, body.width(), body.height(), 3) || feet;
+        if (!world.teleport(actor, spot))
+            voltswitchShove(world, actor, WorldCombat.point(spot.x() - origin.x(), 0, spot.z() - origin.z()));
         const after = world.observe(actor);
         const landed = after !== null ? after.position() : landing.point;
         WorldFeedback.emit(world, voltswitchScene, 1, origin, {
@@ -112,9 +116,9 @@ namespace PokemonSkills {
         id: "voltswitch",
         cooldownParameter: "recharge",
         name: "Volt Switch",
-        description: "射出一道电弧钉在目标身上，随即顺着电流瞬移到落点；余电式还会在原地留下一片会电击的电荷区，直放式则与待命的一只换手。用换位代替撤退，是三道折返里唯一的远程特殊。",
+        description: "射出一道电弧钉向瞄向的实体或位置，随即顺着电流瞬移到安全落点；余电式还会在原地留下一片会电击的电荷区，直放式则与待命的一只换手。空放也能撤离，是三道折返里唯一的远程特殊。",
         uses: ["远程点一下再瞬移，重新找站位", "被打崩前放电脱身", "在原地留一片电荷封住走位"],
-        kind: "enemy",
+        kind: "aim",
         range: 10,
         maxRange: 15,
         prepare: 5,
@@ -159,9 +163,15 @@ namespace PokemonSkills {
             const zap = p("voltswitch", "zap", action);
             const scale = Math.max(0.6, Math.min(1.9, radius / 0.35));
             const intensity = Math.max(0.6, Math.min(2.2, power / 52));
-            let settled = false;
+            let settled = false, blinked = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            // 一次施放只换位一次：命中回执与自然完成都经过这道门闩。
+            function blinkOnce(current: CombatAction): void {
+                if (blinked) return;
+                blinked = true;
+                voltswitchBlink(current, actor, relay, fieldRadius, fieldTicks, zap, 20, motes);
+            }
 
             sound(action, "minecraft:entity.wind_charge.throw");
             const flight = LivingActions.projectile(action, {
@@ -176,7 +186,7 @@ namespace PokemonSkills {
                         { moment: "strike", target: victim !== null ? String(victim.ref()) : "",
                             motes: motes, scale: scale, intensity: intensity, landed: landed ? 1 : 0 }, 22);
                     sound(current, "cobblemon:impact.electric");
-                    voltswitchBlink(current, actor, relay, fieldRadius, fieldTicks, zap, 20, motes);
+                    blinkOnce(current);
                     finish(current);
                 }
             }, function (current: CombatAction) {
@@ -184,7 +194,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, voltswitchScene, 1, at,
                     { moment: "miss", motes: motes, scale: scale }, 18);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1, 0)), "world_combat.move.voltswitch.text.miss", [], 20);
-                voltswitchBlink(current, actor, relay, fieldRadius, fieldTicks, zap, 20, motes);
+                blinkOnce(current);
                 finish(current);
             });
             WorldFeedback.keep(world, "voltswitch:flight:" + action.id(), voltswitchScene, 1, action.origin(),

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.magicroom.summary": "Raises a silent space on the chosen ground: bodies standing inside lose every held-item effect. Both sides are treated alike, and stepping out restores you at once.",
-  "worldcombat.skill.magicroom.use.0": "Shut down a foe that leans on its item",
-  "worldcombat.skill.magicroom.use.1": "Make items useless before an item exchange",
-  "worldcombat.skill.magicroom.use.2": "Let an item-independent team take the edge",
-  "worldcombat.skill.magicroom.description.0": "Raises a space of radius %2$s blocks on the chosen ground, lasting %1$s; living bodies inside lose every held-item effect (the item itself is not lost), recover the moment they step out, and the whole area is restored when the space ends.",
+  "worldcombat.skill.magicroom.summary": "Raises a silent space on the chosen ground: bodies standing inside have equipment attribute bonuses paused and Pokemon held-item effects sealed. Both sides are treated alike, and stepping out restores you at once.",
+  "worldcombat.skill.magicroom.use.0": "Shut down a foe that leans on its equipment",
+  "worldcombat.skill.magicroom.use.1": "Make equipment useless before an equipment swap",
+  "worldcombat.skill.magicroom.use.2": "Let an equipment-independent team take the edge",
+  "worldcombat.skill.magicroom.description.0": "Raises a space of radius %2$s blocks on the chosen ground, lasting %1$s; inside, equipment attribute bonuses are paused and Pokemon held-item effects are sealed (equipment and enchantments are not lost), everything recovers the moment a body steps out, and the whole area is restored when the space ends. Third-party custom slots and other mods' active abilities are not covered.",
   "worldcombat.skill.magicroom.description.1": "Current range: %1$s blocks. The room affects both sides.",
   "worldcombat.skill.magicroom.description.2": "Raising the space takes %1$s, the recovery is %2$s and the cooldown %3$s. See the hush note for the long/quick trade-off.",
   "worldcombat.skill.magicroom.hush.0": "Long: duration x1.2 and radius x1.1 (silent longer, wider), at +2 ticks wind-up and x1.15 cooldown.",
@@ -27,6 +27,6 @@
   "worldcombat.skill.magicroom.preference.ai.leaveStation": "Leave the station",
   "worldcombat.skill.magicroom.preference.ai.leaveStation.help": "On, a companion holding its station will step out to raise the space.",
   "world_combat.move.magicroom.text.open": "Magic room up %1$s s",
-  "world_combat.move.magicroom.text.gag": "Held item falls silent",
-  "effect.world_combat.magicroom_gag": "Item silenced"
+  "world_combat.move.magicroom.text.gag": "Equipment bonuses sealed",
+  "effect.world_combat.magicroom_gag": "Silenced"
 }

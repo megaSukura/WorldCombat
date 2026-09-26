@@ -11,8 +11,14 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(item, "minSelf", 0.35)) return false;
-        return CompanionBehavior.distance(self.point, target.point)
-            <= CompanionBehavior.ai<number>(item, "maxChase", 9);
+        if (CompanionBehavior.distance(self.point, target.point)
+            > CompanionBehavior.ai<number>(item, "maxChase", 9)) return false;
+        // 低顶不选：头顶放不下这次拔起就换别的招，避免假升空。
+        const world = CompanionBehavior.world(context);
+        const from = CompanionBehavior.point(self.point);
+        const head = from.plus(WorldCombat.point(0, (self.height || 1.4) * 0.6, 0));
+        const ceiling = world.clipBlocks(head, head.plus(WorldCombat.point(0, 2.4, 0)));
+        return ceiling === null || !ceiling.blocked();
     }
 
     CompanionBehavior.registerUse("highjumpkick", {
@@ -33,6 +39,11 @@ namespace PokemonSkills {
             let score = 22;
             if (CompanionBehavior.ratio(target) >= 0.7) score += 14;
             if (context.facts.focus === target.ref) score += 8;
+            // 停顿或正在攻击的对手更值这一记重膝；高速横移的目标容易在滞空窗口里让开。
+            if (target.attacking) score += 6;
+            const velocity = target.velocity;
+            const moving = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : 0;
+            if (moving > 0.2 && !target.attacking) score -= 8;
             return score;
         },
         after: function (context, capability, target, progress) {

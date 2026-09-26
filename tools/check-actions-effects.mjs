@@ -79,8 +79,10 @@ function actor(id, native = false, friendly = false, x = 0) {
 }
 const source = actor('source', true, true), enemy = actor('recipient', false, false, 3), friend = actor('partner', false, true, 2);
 const world = { source: () => source, tick: () => tick, random: () => { rolls++; return .1; }, valid: a => a.alive,
+  closestPoint: a => point(a.x, 0, 0),
   friendly: a => a.friendly, actor: ref => actors.find(a => a.ref() === ref && a.alive) || null,
-  observe: a => a.alive ? { position: () => point(a.x, 0, 0), health: () => a.health, maxHealth: () => a.maximum } : null,
+  observe: a => a.alive ? { position: () => point(a.x, 0, 0), health: () => a.health, maxHealth: () => a.maximum,
+    boundsMin: () => a.box ? point(...a.box[0]) : point(a.x, 0, 0), boundsMax: () => a.box ? point(...a.box[1]) : point(a.x, 0, 0) } : null,
   effects: (a, id) => id === 'cobblemon_world_combat:individual' && a.native ? [{ id: () => actors.indexOf(a) + 1, data: () => JSON.stringify(a.state) }]
     : id === 'cobblemon_world_combat:modifier' ? a.modifiers : [],
   attributeValue: () => null,
@@ -129,13 +131,15 @@ function template(id, kind = 'physical') {
 function register(id, kind = 'enemy', recipe = noop, range = 8) {
   template(id); L.define(id, `fixture:${id}`, '1', 100, kind, range, recipe); return templates.get(id);
 }
+let nextActionId = 0;
 function action(target = enemy, range = 8, inputArguments = {}) {
+  const instance = ++nextActionId;
   const store = new Map(), subscriptions = new Map(), timers = [], costs = [];
   const arguments_ = { 'native-slot': '0', 'native-move': source.move.key(), 'native-selection': 'native', ...inputArguments };
   let token = 0, open = true, committed = false, released = false, nativeCooldown = 0, hits = [], kind = target ? 'enemy' : 'point';
   const maximum = range; let position = target ? point(target.x, 0, 0) : point(4, 0, 0), direction = point(1, 0, 0);
   const check = () => assert(open, 'No action access after cancellation');
-  const raw = { raw: true, id: () => 1, content: () => 'fixture:entry', actor: () => source, target: () => target,
+  const raw = { raw: true, id: () => instance, content: () => 'fixture:entry', actor: () => source, target: () => target,
     sense: () => world, world: () => { check(); assert(committed, 'World writes require commit'); return world; },
     argument: key => arguments_[key] ?? null,
     origin: () => point(0, 0, 0), targetPosition: () => {
@@ -167,7 +171,8 @@ function action(target = enemy, range = 8, inputArguments = {}) {
       timers.push({ at: tick + 2, callback: complete }); return 'fixture-projectile';
     },
     approach: () => 'moving', face: noop, stopMovement: noop, present: noop,
-    reject(reason) { throw Error(`rejected:${reason}`); }, cancel() { check(); open = false; timers.length = 0; subscriptions.clear(); },
+    reject(reason) { throw Error(`rejected:${reason}`); }, cancel() { check(); open = false; timers.length = 0; subscriptions.clear();
+      emit('world_combat:action_ended', source, target, { instance, content: 'fixture:entry', reason: 'cancelled', committed }); },
     finish() { this.cancel(); },
     advance() { tick++; for (const task of [...timers]) if (task.at <= tick) { timers.splice(timers.indexOf(task), 1); if (open) task.callback(raw); } },
     get open() { return open; }, get committed() { return committed; }, get released() { return released; },
@@ -315,7 +320,7 @@ check('shared and self-managed lifecycles cancel preparation, execution and reco
     A.run(current, { prepare: phase === 'prepare' ? 2 : 0, recover: 3, cooldown: 4 }, (next, done) => {
       if (phase === 'recover') done(next); else next.after(2, done);
     });
-    assert.equal(current.subscriptionCount, 2); const paid = source.pp; current.emit('world_combat:interrupt');
+    assert.equal(current.subscriptionCount, phase === 'prepare' ? 3 : 2); const paid = source.pp; current.emit('world_combat:interrupt');
     current.advance(); assert(!current.open); assert.equal(source.pp, paid);
   }
   let executed = false;
@@ -452,7 +457,7 @@ check('non-slot target rejection keeps real range, relationships and live grant 
   frame.capabilities[0].data.available = false; assert(!B.invoke(frame, 'fixture:grant', input));
   frame.capabilities = []; assert(!B.invoke(frame, 'fixture:grant', input));
   B.grant(frame, { id: 'fixture:aim_grant', action: 'fixture:aim', use: 'fixture:use', protocols: [], kind: 'aim', range: 4 });
-  assert(!B.invoke(frame, 'fixture:aim_grant', { ref: friend.ref(), point: [1, 0, 0] }));
+  assert(B.invoke(frame, 'fixture:aim_grant', { ref: friend.ref(), point: [1, 0, 0] }), 'Neutral aim preserves a live ally identity');
   B.grant(frame, { id: 'fixture:point_grant', action: 'fixture:point', use: 'fixture:use', protocols: [], kind: 'point', range: 4 });
   assert(!B.invoke(frame, 'fixture:point_grant', { ref: enemy.ref(), point: [5, 0, 0] }));
 });
@@ -467,7 +472,7 @@ check('cloud helpers require a registered caller field and forward only its supp
   for (let i = 0; i < 24; i++) current.advance();
   assert.equal(fieldRequests.length, 1);
   const request = fieldRequests[0]; assert.equal(request.id, 'world_combat:field'); assert.equal(request.data.rule, 'fixture:cloud_region');
-  assert.deepEqual(request.data.position, [4, 0, 0]); assert.deepEqual(request.data.data, { action: 1, value: 3 });
+  assert.deepEqual(request.data.position, [4, 0, 0]); assert.deepEqual(request.data.data, { action: current.id(), value: 3 });
   assert.equal(request.ticks, 20); assert.equal(source.pp, 5); assert(!current.open);
   assert.equal(source.markers.size + enemy.markers.size + friend.markers.size, 0);
 });
@@ -549,6 +554,37 @@ check('defender hit callbacks still run when settlement exhausts the attacker', 
   N.applied({ world: () => incomingWorld, actor: () => enemy, target: () => source, data: () => '{"actual":8,"recoil":0.5}' });
   assert(!enemy.alive); assert.equal(received, 1);
 });
+check('major transfer gates once, uses exact native transaction and mirrors only actual success', () => {
+  const from = actor('major_sender'), to = actor('major_receiver');
+  carrierTags.set('world_combat:burn', ['burn']);
+  let gates = 0, calls = 0, mirrored = 0, cured = 0, refuse = true, argumentsUsed = 0;
+  S.gate.define({ id: 'fixture:major_gate', applies: value => value.actor === to, apply: () => gates++ });
+  S.applied.define({ id: 'fixture:major_applied', applies: value => value.actor === to, apply: () => mirrored++ });
+  S.cured.define({ id: 'fixture:major_cured', applies: value => value.actor === from, apply: () => cured++ });
+  const local = { ...world, transferMobEffect(a, b, id, key, replacement) {
+    calls++; argumentsUsed = arguments.length;
+    assert.equal(a.markers.get(id).key(), key);
+    if (refuse) return false;
+    const previous = a.markers.get(id), next = replacement ? JSON.parse(replacement)
+      : { id, duration: previous.duration(), amplifier: previous.amplifier() };
+    a.markers.delete(id); world.marker(b, next.id, next.duration, next.amplifier); return true;
+  } };
+  world.marker(from, 'world_combat:burn', 47, 0);
+  const observed = world.mobEffect(from, 'world_combat:burn');
+  assert.equal(S.transferMajor(local, from, to, 'burn', observed, { duration: 141 }).applied, false);
+  assert.equal(gates, 1); assert.equal(calls, 1); assert.equal(mirrored, 0); assert.equal(cured, 0);
+  assert.equal(world.mobEffect(from, 'world_combat:burn').duration(), 47); assert.equal(to.markers.size, 0);
+  refuse = false;
+  assert.equal(S.transferMajor(local, from, to, 'burn', observed, { duration: 141 }).applied, true);
+  assert.equal(gates, 2); assert.equal(calls, 2); assert.equal(mirrored, 1); assert.equal(cured, 1);
+  assert.equal(world.mobEffect(to, 'world_combat:burn').duration(), 141); assert.equal(from.markers.size, 0);
+  to.markers.clear(); world.marker(from, 'world_combat:burn', -1, 0);
+  assert(S.transferMajor(local, from, to, 'burn', world.mobEffect(from, 'world_combat:burn')).applied);
+  assert.equal(argumentsUsed, 4); assert.equal(world.mobEffect(to, 'world_combat:burn').duration(), -1);
+  world.marker(from, 'fixture:thermal_a', 30, 0);
+  assert.equal(S.transferMajor(local, from, to, 'burn', world.mobEffect(from, 'fixture:thermal_a')).reason, 'unsupported-carrier');
+  assert.equal(calls, 3, 'Producer-specific payloads are not silently moved as shared native defaults');
+});
 check('field registration is discoverable and named contributions compose with the owning rule', () => {
   const visited = [];
   assert(!W.hasFieldRule('fixture:absent'));
@@ -599,6 +635,39 @@ check('fieldRule declares identity and tags, and membership binds one member mar
   W.membership('fixture:member_zone', 'fixture:member_mark', { ticks: 30, amplifier: 1 });
   assert(W.hasFieldRule('fixture:member_zone'));
 });
+check('portable fields preserve state and remaining clock while old members leave before new entry', () => {
+  const calls = [], stored = [];
+  W.fieldRule('fixture:portable', { enter: (scope, actor, field) => calls.push(['enter', scope.source().ref(), field.id]),
+    leave: (scope, actor, field) => calls.push(['leave', scope.source().ref(), field.id]) }, { transferable: true });
+  assert.equal(W.fieldTransferable('fixture:portable'), true);
+  assert.equal(W.fieldTransferable('fixture:region'), false);
+  W.fieldRule('fixture:flight_owned', { canTransfer: field => !field.data.flying }, { transferable: true });
+  assert.equal(W.areaTransferable({ rule: 'fixture:flight_owned', data: { flying: true } }), false);
+  assert.equal(W.areaTransferable({ rule: 'fixture:flight_owned', data: { flying: false } }), true);
+  const original = { rule: 'fixture:portable', position: [0, 0, 0], radius: 3, data: { charges: 2, geometry: [[1, 0, 2], [3, 0, 4]] }, members: [enemy.ref()], reassignedMembers: [friend.ref()], id: 37 };
+  let oldState = JSON.stringify(original), newState = '', ended = false;
+  const scope = { ...world, source: () => source, actor: ref => ref === enemy.ref() ? enemy : source,
+    effects: () => stored };
+  const transfer = { world: () => scope, source: () => source, input: () => JSON.stringify({ holder: enemy.ref() }),
+    state: () => oldState, remaining: () => 61, reject: reason => { throw Error(reason); },
+    copyTo(holder, target, json, ticks) { assert.equal(holder, enemy); assert.equal(target, enemy); assert.equal(ticks, 61);
+      newState = json; stored.push({ id: () => 42 }); calls.push(['create']); return 42; },
+    end() { ended = true; handlers.get('world_combat:field/end')(transfer); } };
+  handlers.get('world_combat:field/operation:world_combat:reassign')(transfer);
+  assert(ended); assert.deepEqual(JSON.parse(newState).data, original.data); assert.deepEqual(JSON.parse(newState).position, original.position);
+  assert.deepEqual(JSON.parse(newState).members, []); assert.equal(JSON.parse(oldState).members.length, 1);
+  assert.deepEqual(JSON.parse(newState).reassignedMembers, [friend.ref(), enemy.ref()], 'Another transfer before the first scan retains both unscanned and current contact history');
+  handlers.get('world_combat:field/scan')({ world: () => ({ ...scope, source: () => enemy, query: () => [source] }), source: () => enemy,
+    id: () => 42, remaining: () => 60, state(value) { if (value !== undefined) newState = value; return newState; }, schedule: noop, end: noop });
+  assert.deepEqual(calls, [['create'], ['leave', source.ref(), 37], ['enter', enemy.ref(), 42]]);
+  ended = false; calls.length = 0; oldState = JSON.stringify({ ...original, rule: 'fixture:region' });
+  assert.throws(() => handlers.get('world_combat:field/operation:world_combat:reassign')(transfer), /field-not-transferable/);
+  assert(!ended); assert.equal(calls.length, 0);
+  oldState = JSON.stringify(original);
+  const denied = { ...transfer, copyTo() { throw Error('native permission denied'); } };
+  assert.throws(() => handlers.get('world_combat:field/operation:world_combat:reassign')(denied), /native permission denied/);
+  assert(!ended); assert.equal(calls.length, 0);
+});
 check('weather reads the newest declared field, layers and restores the older sky', () => {
   const view = (id, tag) => ({ id: () => id, source: () => source, remaining: () => 20,
     data: () => JSON.stringify({ rule: 'fixture:sky_' + tag, identity: 'world_combat:weather/' + tag,
@@ -623,5 +692,39 @@ check('stepped displacement and native free-space probing reuse the host entries
   const spot = A.freeSpot(free, point(0, 0, 0), .9, 1.4, 2);
   assert(spot && spot.x() === 2 && spot.z() === 0);
   assert.equal(A.freeSpot(world, point(0, 0, 0), .9, 1.4, 2), null);
+});
+check('inline aim keeps a normalized body point across resize and recipient mapping', () => {
+  register('surface_route', 'aim'); source.move = templates.get('entry');
+  const current = action(), previousX = enemy.x; enemy.box = [[2, 0, -1], [6, 10, 1]];
+  const mapped = A.input(current, { target: enemy.ref(), point: [2, .2, 0], direction: [1, 0, 0], range: 8, kind: 'aim' });
+  assert.equal(mapped.targetPosition().y(), .2);
+  enemy.box = [[3, 0, -2], [11, 20, 2]];
+  const at = mapped.targetPosition(); assert.deepEqual([at.x(), at.y(), at.z()], [3, .4, 0]);
+  const input = L.inputFor(mapped, 'surface_route', enemy);
+  assert.equal(input.target, enemy); assert.equal(input.point.y(), .4, 'A borrowed aim must retain the selected local body point');
+  delete enemy.box; enemy.x = previousX; current.cancel();
+});
+check('declared preparation clocks advance only their own live uncommitted phase', () => {
+  source.move = templates.get('entry');
+  const current = action(), other = action(); let settled = 0, later = 0;
+  const control = { ...world, deliver(actor, instance, topic) {
+    const found = [current, other].find(value => value.id() === instance && value.open && value.actor() === actor);
+    if (!found) return false; found.emit(topic); return true;
+  } };
+  A.run(current, { prepare: 8, recover: 2, cooldown: 12 }, (handle, done) => {
+    settled++; handle.after(4, () => later++); done(handle);
+  });
+  A.run(other, { prepare: 20, recover: 0, cooldown: 3 }, (handle, done) => done(handle));
+  assert.equal(A.preparing(control, source).find(clock => clock.instance === current.id()).remaining, 8);
+  assert.equal(A.advancePreparation(control, source, current.id(), 100), 7, 'At least one real preparation tick remains');
+  assert.equal(current.committed, false);
+  current.advance();
+  assert.equal(current.committed, true); assert.equal(current.cooldown, 12); assert.equal(settled, 1);
+  assert.equal(A.advancePreparation(control, source, current.id(), 2), 0, 'Recovery is not preparation');
+  assert.equal(A.preparing(control, source).length, 1, 'Another action retains its clock');
+  assert.equal(later, 0, 'Unrelated after callbacks were not advanced');
+  other.cancel(); assert.equal(A.preparing(control, source).length, 0, 'Cancellation removes only its own visible clock');
+  current.advance(); current.advance(); assert.equal(settled, 1); assert.equal(later, 0);
+  const waiting = action(); assert.equal(A.advancePreparation(control, source, waiting.id(), 2), 0, 'Undeclared input waits cannot be advanced'); waiting.cancel();
 });
 console.log(`PASS actions/effects: ${count} neutral mechanism scenarios`);

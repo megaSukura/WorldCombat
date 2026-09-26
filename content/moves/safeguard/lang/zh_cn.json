@@ -31,6 +31,6 @@
   "world_combat.move.safeguard.text.guard": "守护挡下异常",
   "world_combat.move.safeguard.text.fade": "守护收拢",
   "effect.world_combat.safeguard_veil": "神秘守护",
-  "worldcombat.skill.safeguard.description.3": "光罩每秒为附近队友续上守护。光罩结束时，范围内队友的守护被收回；施法者和提前离开者可能保留余效，最长约 %1$s。清除施法者身上的守护会提前结束光罩。",
+  "worldcombat.skill.safeguard.description.3": "光罩每秒为附近队友续上守护。离开半径的队友按各自剩余的守护时间短暂保留，最长约 %1$s；施法者的光罩结束时，这份守护一并收回。多个神秘守护各自维持，清掉一个不会撤掉另一个；清除施法者身上的守护会提前结束这份光罩。",
   "worldcombat.skill.safeguard.value.residualDuration": "残余守护上限"
 }

@@ -25,6 +25,9 @@ public final class WorldCombatCore {
         dev.worldcombat.core.world.CombatWorldContent.register(modBus);
         PublicAttributes.register(modBus);
         NativeItemUse.install(NeoForge.EVENT_BUS);
+        NativeMobEffectGate.install(NeoForge.EVENT_BUS);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeDeathFacts::observe);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeCriticals::apply);
         dev.worldcombat.core.client.particles.ParticleTypes.register(modBus);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.PlayLevelSoundEvent.AtPosition event) -> {
             if (event.getLevel() instanceof ServerLevel level) {
@@ -57,6 +60,10 @@ public final class WorldCombatCore {
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.level.BlockDropsEvent event) -> {
             CombatServices.get(event.getLevel().getServer()).effects().drops(event);
         });
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.entity.living.LivingHealEvent event) -> {
+            if (!event.isCanceled() && event.getEntity().level() instanceof ServerLevel level)
+                CombatServices.get(level.getServer()).healing(event);
+        });
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event) -> {
             if (event.getLevel() instanceof ServerLevel level) CombatServices.get(level.getServer()).effects().breaking(event);
         });
@@ -83,15 +90,27 @@ public final class WorldCombatCore {
         NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> CombatCommands.register(event.getDispatcher()));
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) -> LOGGER.info("WorldCombat core server started."));
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> CombatServices.get(event.getServer()).tick());
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.tick.EntityTickEvent.Pre event) -> {
+            if (!event.isCanceled() && event.getEntity() instanceof net.minecraft.world.entity.projectile.Projectile && event.getEntity().level() instanceof ServerLevel level)
+                CombatServices.get(level.getServer()).projectileObservations().before(event.getEntity());
+        });
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.EntityTickEvent.Post event) -> {
+            if (event.getEntity() instanceof net.minecraft.world.entity.projectile.Projectile && event.getEntity().level() instanceof ServerLevel level)
+                CombatServices.get(level.getServer()).projectileObservations().after(event.getEntity());
+        });
         NeoForge.EVENT_BUS.addListener((ServerStoppingEvent event) -> CombatServices.stopping(event.getServer()));
         NeoForge.EVENT_BUS.addListener((ServerStoppedEvent event) -> CombatServices.stopped(event.getServer()));
         NeoForge.EVENT_BUS.addListener((EntityJoinLevelEvent event) -> {
+            if (event.getEntity() instanceof net.minecraft.world.entity.projectile.Projectile && event.getLevel() instanceof ServerLevel level)
+                CombatServices.get(level.getServer()).projectileObservations().joined(event.getEntity());
             if (event.getLevel() instanceof ServerLevel && event.getEntity() instanceof LivingEntity entity) {
                 CombatServices.domain(entity).joined(entity);
                 PublicAttributes.observe(entity);
             }
         });
         NeoForge.EVENT_BUS.addListener((EntityLeaveLevelEvent event) -> {
+            if (event.getEntity() instanceof net.minecraft.world.entity.projectile.Projectile && event.getLevel() instanceof ServerLevel level)
+                CombatServices.get(level.getServer()).projectileObservations().left(event.getEntity());
             if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof LivingEntity entity) {
                 CombatServices.get(level.getServer()).left(entity);
                 PublicAttributes.forget(entity);

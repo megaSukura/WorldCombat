@@ -4,24 +4,25 @@
  * 原生事实：Normal／物理／威力 80／命中 75／PP 20／优先度 0／接触，无追加效果（Cobblemon 1.8，87 位学习者）。
  * 描述「使用长长的尾巴或藤蔓等摔打对手进行攻击」。
  *
- * 翻译：把「把长肢高高扬起再摔下来」翻成**一次落点会落空的重砸**——扬起的那一瞬砸点就定在对手当时站的地方，
- * 之后砸下去，站在那个圆里的人各挨一记最重的接触伤害、被震开一段；在落下前挪开的人就只是看着它砸空。
- * 原生 75 命中在这里不是掷骰子，而是**给出一个看得见的躲避窗口**（`fallTicks`），站住不动就吃满、侧身就走掉。
+ * 翻译：把「把长肢高高扬起再摔下来」翻成**一次沿地面犁出窄长落痕的重砸**——扬起的那一瞬落点就定死，
+ * 长肢从肢体前端一路砸到那个点、在地面犁出一道条带，条带里的非友方各挨一记最重的接触伤害、被震开一段；
+ * 在落下前挪出条带的人就只是看着它砸空。原生 75 命中在这里不是掷骰子，而是**给出一个看得见的躲避窗口**
+ * （`fallTicks`），站在条带上就吃满、横走挪开就走掉。
  *
  * 与同族分开（打击对的两招，都不留状态）：
  *   拍击 —— 抬手即出、扇面扫过，便宜、快、一次拍到几个；
- *   摔打 —— 慢、重、落点先画出来，是全族最高的单发，也是最容易落空的一记。
+ *   摔打 —— 慢、重、落痕先画出来，是一道窄长条带、专吃一字排开或堵在窄道的目标，也是最容易落空的一记。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   impact     砸击威力：物攻定砸劲，体重把这一下压得更沉；沉砸式更重。
- *   crater     砸坑半径：体重决定震开多大一块地面，身高给长肢挥出的幅度；沉砸式更大。
- *   reach      扬起距离：身高给长肢抡起的长度，也是实际射程。
+ *   width      落痕宽度：身板越宽犁出的条带越宽；沉砸式再放开一截。
+ *   reach      扬起距离：身高给长肢抡起的长度，也是落痕能够到的最远处与实际射程。
  *   fallTicks  砸落时长：速度决定这一下多快落下——也是留给对手挪开的窗口；沉砸式更慢、更好躲。
  *   shockPush  震开距离：施法者体重推得远，被砸者越高大越站得住；沉砸式推得更狠。
  *   dust       扬尘数量：体重与物攻换算，表现按它发射。
  *   tempo／aftercast／recharge：速度定起收节奏，等级让冷却回得更快；沉砸式整体更缓。
  *
- * 配置 `heavy`（沉砸式，默认关）双向取舍：开＝更重、砸坑更大、震得更远，但落下更慢（更好躲）、收招与冷却更久；
+ * 配置 `heavy`（沉砸式，默认关）双向取舍：开＝更重、落痕更宽、震得更远，但落下更慢（更好躲）、收招与冷却更久；
  * 关（疾砸式）＝落得快、出手快、更容易砸中移动目标，但单发略低、面小。两向各有局面（打站桩 vs 追移动目标）。
  *
  * 伤害段 `impact` 与参数同名，走共享换算；对手防御、相性与暴击在命中时由共享结算。
@@ -39,16 +40,14 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "长肢砸中的一下能造成的威力；物攻定砸劲、体重把份量压进去，沉砸式再抬一截。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 砸坑半径：1.0 + 体重偏移[−0.12,0.7] + 身高偏移[−0.1,0.5]；沉砸 ×1.2；夹 0.8..2.6 格。 */
-        crater: formula(
-            F.base(1.0)
-                .plus(F.body("weight").minus(60).times(0.02).clamp(-0.12, 0.7))
-                .plus(F.body("height").minus(1.4).times(0.35).clamp(-0.1, 0.5))
-                .times(F.when(F.pref("heavy", text("worldcombat.skill.slam.preference.heavy")), F.const(1.2), F.const(1)))
-                .clamp(0.8, 2.6).round(2),
-            "砸坑半径", {
+        /** 落痕宽度：身宽 ×1.0；沉砸 ×1.3 / 疾砸 ×0.95；夹 0.5..2.2 格。 */
+        width: formula(
+            F.body("width")
+                .times(F.when(F.pref("heavy", text("worldcombat.skill.slam.preference.heavy")), F.const(1.3), F.const(0.95)))
+                .clamp(0.5, 2.2).round(2),
+            "落痕宽度", {
                 unit: "格",
-                description: "砸下去震开多大一块圆形地面，也是判定范围；越重的个体砸坑越大，沉砸式再铺开一截。画面里地面上那个圆就是它。"
+                description: "长肢从肢体前端砸到落点、在地面犁出的窄长条带有多宽；身板越宽条带越宽，沉砸式再放开一截。画面里那道长条就是判定范围，站到条带外就砸不到。"
             }),
         /** 扬起距离：2.6 + 身高偏移[−0.3,1.0]；夹 2.2..3.8 格。 */
         reach: formula(
@@ -104,19 +103,20 @@ namespace PokemonSkills {
 
     stages("slam", [
         { level: 30, values: { impact: 96 } },
-        { level: 46, values: { impact: 112, crater: 1.3 } }
+        { level: 46, values: { impact: 112, width: 1.3 } }
     ]);
 
     defineDamage("slam", "impact", { defenceCoefficient: 0.005,
         rationale: "钝重下砸；摔打靠长肢的份量砸开地面，防御按默认系数减伤。" }, { contact: true });
 
     describe("slam", [
-        { key: "description.0", values: ["impact", "crater"] },
+        { key: "description.0", values: ["impact", "width"] },
         { key: "description.1", values: ["reach","fallTicks","shockPush"] },
+        { key: "description.aim", values: [] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.impact"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.impact", "tier.1.crater"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.impact", "tier.1.width"] }
     ]);
 }

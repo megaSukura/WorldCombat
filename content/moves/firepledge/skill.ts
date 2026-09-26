@@ -1,17 +1,19 @@
 /**
  * 火之誓约 / firepledge 的出手方式与场地规则。
  *
- * 核心念头：一纸火之誓约被按进地里，火柱从选定点拔地而起，把柱内的敌人烧着；柱脚留下一圈燃烧的誓约印，
- *   站上去的人会一直烧。若落点附近已有草或水的誓约印，两纸誓约彼此应答：这一击更重，
- *   脚下整片地变成火海（火＋草）或挂起彩虹（火＋水）——组合产物取决于另一元素，与原生一致。
+ * 核心念头：一纸火之誓约被按进地里，火柱从选定点拔地而起，把柱内的敌人烧着；柱脚只留下一圈短寿的
+ *   誓约印——它是「这里立过火之誓约」的标记，本身不再持续灼烧。若落点附近已有草或水的誓约印，
+ *   两纸誓约彼此应答：这一击更重，并把脚下**同一圈印**当场扩成火海（火＋草）或彩虹（火＋水），
+ *   持续灼烧／持续治疗只在真正共鸣时才出现。组合产物取决于另一元素，与原生一致。
  *
  * 三幕：
  *   起（windup，提交前）：落点画出一圈誓约符文，只播预告（可免费打断）。
- *   击（erupt → hit）：提交后火柱拔地而起，柱内每个敌人挨一次 `pillar` 并被点燃；柱脚烙出焦土。
- *   留（scar / seaoffire / rainbow）：誓约印持续燃；若与另一誓约共鸣，则换成更广的组合场。
+ *   击（erupt → hit）：提交后火柱拔地而起，柱内每个敌人挨一次 `pillar` 并被点燃；柱脚烙出一圈短印。
+ *   留（scar → seaoffire / rainbow）：短印只是共鸣标记；与另一誓约共鸣时，同一印记扩成更广的组合场。
  *
  * 誓约印是真实的 `WorldEffects` 场地效果（规则由本单元注册）。别的誓约单元按同一命名约定读取
- * `world_combat:field/pledge_<元素>`，所以三招可以跨单元共鸣，而不必互相依赖。
+ * `world_combat:field/pledge_<元素>`，所以三招可以跨单元共鸣，而不必互相依赖。共鸣不新起一层场：
+ * 同一印记被 `WorldEffects.update` 就地扩容并进入组合态，一次施放只触发一次。
  */
 namespace PokemonSkills {
     function firepledgePoint(field: WorldEffects.Field): CombatPoint {
@@ -37,79 +39,33 @@ namespace PokemonSkills {
 
     /** 附近已有任何组合场就不再叠一层；组合是这一击的收束，不是堆叠物。 */
     function firepledgeComboExists(world: CombatWorld, point: CombatPoint, radius: number): boolean {
-        const actors = world.query(point, radius, false);
-        const list: CombatActor[] = [world.source()];
-        for (let i = 0; i < actors.length; i++) list.push(actors[i]);
-        for (let a = 0; a < list.length; a++) {
-            const fields = world.effects(list[a], "world_combat:field");
-            for (let f = 0; f < fields.length; f++) {
-                const state = JSON.parse(String(fields[f].data()));
-                if (!state.combo) continue;
-                const centre = WorldCombat.point(state.position[0], state.position[1], state.position[2]);
-                if (centre.minus(point).length() <= radius + (Number(state.radius) || 0)) return true;
-            }
+        const areas = WorldEffects.areas(world);
+        for (let i = 0; i < areas.length; i++) {
+            if (!areas[i].data || !areas[i].data.combo) continue;
+            if (firepledgeAreaPoint(areas[i]).minus(point).length() <= radius + areas[i].radius) return true;
         }
         return false;
     }
 
-    /** 柱脚把自然地表烙成焦土；只动表层可换方块，租借 `linger`，到期原方块回来。 */
-    function firepledgeGround(world: CombatWorld, point: CombatPoint, radius: number, ticks: number, cap: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        const limit = Math.max(4, Math.round(cap)), r = Math.ceil(radius);
-        for (let dx = -r; dx <= r && cells.length < limit; dx++) for (let dz = -r; dz <= r && cells.length < limit; dz++) {
-            if (dx * dx + dz * dz > radius * radius) continue;
-            const x = baseX + dx, z = baseZ + dz;
-            for (let dy = 1; dy >= -2; dy--) {
-                const y = baseY + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const key = x + "," + y + "," + z;
-                if (!seen[key] && id !== "minecraft:netherrack") { seen[key] = true; cells.push({ x: x, y: y, z: z, block: "minecraft:netherrack" }); }
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
-    // 誓约印：站在上面的非友方持续燃烧；画面是一圈贴地的炭红余烬。
+    // 誓约印：立誓的标记，本身不持续灼烧；只有火＋草共鸣的火海持续点燃其中的非友方，
+    // 火＋水共鸣的彩虹持续为站入的友方回复。表现绑在印记效果自己身上，随其自然到期或提前驱散一起收。
     WorldEffects.fieldRule(firepledgeScar, {
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            CombatStatus.inflict(world, actor, "burn", Math.max(20, Math.round(Number(field.data.burn) || 60)));
+            const combo = field.data.combo;
+            if (combo === "seaoffire") {
+                if (world.friendly(actor)) return;
+                CombatStatus.inflict(world, actor, "burn", Math.max(60, Math.round(Number(field.data.burn) || 100)));
+            } else if (combo === "rainbow") {
+                if (!world.friendly(actor)) return;
+                MobEffects.apply(world, actor, "minecraft:regeneration", 100, 0);
+            }
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_firepledge/scar/" + effect.id(), firepledgeScene, 1, firepledgePoint(field),
-                { moment: "scar", radius: field.radius, scale: field.radius / 1.7, count: Math.round(8 + field.radius * 6) }, 20);
-        }
-    });
-
-    // 火海：火＋草共鸣后的广域燃烧地；非友方持续燃烧。
-    WorldEffects.fieldRule(firepledgeSea, {
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (world.friendly(actor)) return;
-            CombatStatus.inflict(world, actor, "burn", Math.max(60, Math.round(Number(field.data.burn) || 100)));
-        },
-        scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_firepledge/sea/" + effect.id(), firepledgeScene, 1, firepledgePoint(field),
-                { moment: "seaoffire", radius: field.radius, scale: field.radius / 1.7, count: Math.round(20 + field.radius * 10) }, 20);
-        }
-    });
-
-    // 彩虹：火＋水共鸣后的祝福地；友方持续回复。
-    WorldEffects.fieldRule(firepledgeRainbow, {
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (!world.friendly(actor)) return;
-            MobEffects.apply(world, actor, "minecraft:regeneration", 100, 0);
-        },
-        scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_firepledge/rainbow/" + effect.id(), firepledgeScene, 1, firepledgePoint(field),
-                { moment: "rainbow", radius: field.radius, scale: field.radius / 1.7, count: Math.round(16 + field.radius * 8) }, 20);
+            const combo = field.data.combo;
+            const moment = combo === "seaoffire" ? "seaoffire" : combo === "rainbow" ? "rainbow" : "scar";
+            WorldFeedback.onEffect(world, effect.id(), "world_combat:move_firepledge/pledge", firepledgeScene, 1, firepledgePoint(field),
+                { moment: moment, radius: field.radius, scale: field.radius / 1.7,
+                    count: Math.round(Number(field.data.marks) || 12) + (combo ? Math.round(field.radius * 6) : 0) });
         }
     });
 
@@ -117,8 +73,8 @@ namespace PokemonSkills {
         id: firepledgeId,
         cooldownParameter: "recharge",
         name: "火之誓约",
-        description: "在选定地面立起一纸火之誓约：火柱拔地而起，烧穿柱内敌人并点燃他们，柱脚留下一圈持续燃烧的誓约印。落点附近已有草或水的誓约印时共鸣——这一击更重，脚下变成火海（火＋草）或挂起彩虹（火＋水）。",
-        uses: ["在远处地面立起火柱", "用燃烧的誓约印封住一块地", "与草／水誓约连成火海或彩虹"],
+        description: "在选定地面立起一纸火之誓约：火柱拔地而起，烧穿柱内敌人并点燃他们，柱脚留下一圈短寿的誓约印（只作共鸣标记，本身不持续灼烧）。落点附近已有草或水的誓约印时共鸣——这一击更重，同一圈印当场扩成火海（火＋草，持续灼烧其中的敌人）或彩虹（火＋水，持续为站入的友方回复）。",
+        uses: ["在远处地面立起火柱", "用一圈短印标出可共鸣的地面", "与草／水誓约连成火海或彩虹"],
         kind: "point",
         range: 10,
         maxRange: 18,
@@ -161,7 +117,7 @@ namespace PokemonSkills {
             const comboScale = p(firepledgeId, "comboScale", action);
             const comboPower = p(firepledgeId, "comboPower", action);
             const burst = Math.round(p(firepledgeId, "burst", action));
-            const cells = Math.round(p(firepledgeId, "scarCells", action));
+            const marks = Math.round(p(firepledgeId, "scarCells", action));
             const cap = Math.max(1, Math.round(p(firepledgeId, "maxTargets", action)));
             const combo = firepledgeComboAt(world, point, detect);
             const scale = markRadius / 1.7;
@@ -169,26 +125,30 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:impact.fire");
             WorldFeedback.emit(world, firepledgeScene, 1, point,
-                { moment: "erupt", radius: radius, height: height, count: burst, combo: combo === "" ? 0 : 1 }, 40);
+                { moment: "erupt", radius: radius, height: height, count: burst }, 40);
 
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, radius, { below: 0.5, above: height }), function (enemy, facts) {
                 if (hits >= cap) return;
-                if (world.valid(enemy)) CombatStatus.inflict(world, enemy, "burn", burn);
+                // 伤害被拒绝就不算命中：不点燃、不播命中表现。
                 if (!hurt(action, enemy, firepledgeId, power * (combo === "" ? 1 : comboPower), { damage: damageSpec(firepledgeId, "pillar") })) return;
                 hits++;
+                if (world.valid(enemy)) CombatStatus.inflict(world, enemy, "burn", burn);
                 WorldFeedback.emit(world, firepledgeScene, 1, facts.position(), { moment: "hit", target: String(enemy.ref()), count: 10, scale: scale }, 20);
             });
 
-            WorldEffects.field(world, firepledgeScar, point, markRadius,
-                { element: "fire", burn: burn, radius: markRadius, scale: scale }, markTicks);
-            firepledgeGround(world, point, markRadius, markTicks, cells);
+            // 柱脚先留一圈短寿誓约印：共鸣标记，本身不灼烧；贴地焦痕只由粒子表达。
+            const brand = WorldEffects.field(world, firepledgeScar, point, markRadius,
+                { element: "fire", burn: burn, radius: markRadius, scale: scale, marks: marks }, markTicks);
 
+            // 与另一誓约共鸣：把同一圈印就地扩成组合场并延长；一次施放只触发一次，已有组合场不再叠。
             let arena = false;
             if (combo !== "" && !firepledgeComboExists(world, point, markRadius * comboScale)) {
                 arena = true;
                 const arenaRadius = markRadius * comboScale;
-                WorldEffects.field(world, combo === "seaoffire" ? firepledgeSea : firepledgeRainbow, point, arenaRadius,
-                    { element: "fire", combo: combo, burn: Math.max(burn, 100), radius: arenaRadius, scale: arenaRadius / 1.7 }, Math.round(markTicks * 1.6));
+                WorldEffects.update(world, brand, {
+                    data: { combo: combo, burn: Math.max(burn, 100), radius: arenaRadius, scale: arenaRadius / 1.7, marks: marks },
+                    radius: arenaRadius, ticks: Math.round(markTicks * 1.6)
+                });
                 WorldFeedback.emit(world, firepledgeScene, 1, point,
                     { moment: combo === "seaoffire" ? "seaoffire" : "rainbow", radius: arenaRadius, scale: arenaRadius / 1.7, count: 60 }, 46);
                 sound(action, combo === "seaoffire" ? "minecraft:block.fire.ambient" : "minecraft:block.amethyst_block.chime");

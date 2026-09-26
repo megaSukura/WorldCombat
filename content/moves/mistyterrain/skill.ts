@@ -3,7 +3,8 @@
  *
  * 念头的形状：施法者把雾从身下压向地面（windup：脚边腾起雾絮）→ 落点炸开一圈雾环、薄雾贴着地皮漫满一片
  * （surge）→ 站上去的活体被雾裹住：异常状态落不下来、龙属性来招被削掉一半（field / ward）→
- * 开到净化时，雾还把场上已经中的异常洗掉（cleanse）→ 雾散（field 到期）。三幕：起手 → 漫雾 → 挡异常与削龙。
+ * 开到净化时，雾在活体首次进入本次雾时把已经中的异常洗掉一次（cleanse）→ 雾散（field 到期）。
+ * 三幕：起手 → 漫雾 → 挡异常与削龙；净化的清除每块雾每个活体只发生一次。
  *
  * 提交前只播预告；薄雾在提交后漫。它是租借效果（`WorldEffects.field`），到期自己结束。
  */
@@ -11,7 +12,7 @@ namespace PokemonSkills {
     define({
         id: mistyterrainId,
         name: "薄雾场地",
-        description: "在选定的地面铺开薄雾：站在场上的活体不会陷入异常状态，受到的龙属性招式伤害减半。开启净化时还会洗掉已经中的异常。对双方一视同仁。",
+        description: "在选定的地面铺开薄雾：站在场上的活体不会陷入异常状态，受到的龙属性招式伤害减半。开启净化时，首次进入本次雾的活体还会被洗掉已经中的异常一次。对双方一视同仁。",
         uses: ["护住队伍不被上异常", "削掉对手的龙属性爆发", "净化已经中毒、灼伤、麻痹的队友"],
         kind: "point",
         range: 15,
@@ -55,7 +56,7 @@ namespace PokemonSkills {
                 { mark: mark, density: density, dragon: dragon, purify: config && config.purify ? 1 : 0, surge: surge }, ticks);
             world.sound("minecraft:block.conduit.activate", point, 22, "{}");
             WorldFeedback.emit(world, mistyterrainScene, 1, point,
-                { moment: "surge", radius: radius, scale: radius / 3.2, density: density, dragon: dragon }, 46);
+                { moment: "surge", scale: radius / 3.2, density: density }, 46);
             done(action);
         }
     });

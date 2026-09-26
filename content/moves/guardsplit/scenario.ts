@@ -17,7 +17,7 @@ Smoke.scenario("guardsplit", function (stage) {
     }, function () {
         stage.expect(stage.casts("guardsplit", caster) > 0, "防守平分被放出来了");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/guardsplit"), "平分窗口带上了共享身份");
-        stage.note("壶壶的守势底子之和高于幸福蛋，施术者读到差距后才平分；平到的数值与窗口长度写进 note 供读轨迹判断。",
+        stage.note("壶壶的守势底子之和高于幸福蛋，施术者读到差距后才平分；平到的数值与窗口长度写进 note 供读轨迹判断。伙伴选择与视觉仍由人工试玩检查。",
             { casts: stage.casts("guardsplit", caster), damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10, casterAlive: caster.alive() });
         stage.done();
     }, "防守平分");

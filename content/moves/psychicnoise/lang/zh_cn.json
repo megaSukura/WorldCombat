@@ -9,7 +9,7 @@
   "worldcombat.skill.psychicnoise.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.psychicnoise.pierce.on": "贯穿啸叫：音波可穿过最多 4 个目标，代价是威力 ×0.8、封回复时长 ×0.85。",
   "worldcombat.skill.psychicnoise.pierce.off": "聚焦：只打一个目标，威力与封回复更足。",
-  "worldcombat.skill.psychicnoise.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",
+  "worldcombat.skill.psychicnoise.timing": "朝瞄准方向直射音波（%1$s 格内），起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.psychicnoise.growth.0": "达到 %1$s 级，威力提升至 %2$s、封回复延长至 %3$s。",
   "worldcombat.skill.psychicnoise.value.noise": "音波威力",
   "worldcombat.skill.psychicnoise.value.sealTicks": "封回复时长",

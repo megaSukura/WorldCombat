@@ -1,87 +1,63 @@
-/**
- * 回收利用 / recycle —— 第 111 组「持有物与生命的双向交换」。
- *
- * 机制与数值来源：
- * - 原生（Cobblemon 1.8 / Showdown）：一般、变化、PP 10、自身目标；把战斗中已经消耗掉的自己的持有物再生，
- *   让它重新可以再次使用（Showdown 从 `pokemon.lastItem` 里取回并清空记忆）。
- * - 即时翻译：一次「回收」——施法者俯身，把散落的碎片与记忆里的那件道具一起收拢回掌心，重新锻成原来的持有物。
- *   记忆来自事件：战斗者绑定或自身事实变化（`world_combat:actor_bound`／`actor_changed`）时盯着持有物，
- *   只要它是一件新的，就把这整件（含组件）记进本招的个体状态；持有物变空时复位观察位，下次再拿到就重新记。
- *   回收成功即清空记忆（一次一件，和原生一样）；再失去、再拿回，才值得再来一次。
- * - 配置 scavenge（就地取材）：开启后回收范围更大（×1.8），会先扫一遍周围地上的掉落物，若正好是同一种道具，
- *   就把它吸回来当材料（该掉落物从世界里消失），还原出的栈保留它原本的组件；代价是起手变长（×1.25）——
- *   没找到材料时这段搜索就白花了。关闭则只凭记忆复原，起手更短（×0.85），世界不动。
- * - 参数分散到精灵数据：起手与收手取速度，冷却与等级挂钩，回收半径取等级与体型高度，回收火花取等级。
- *
- * 没有伤害段：这是变化招式，回收持有物本身就是结算。
- */
+/** Recover one item from a confirmed consumption receipt; nearby material moves through an atomic native pickup. */
 namespace PokemonSkills {
     declare const Java: { loadClass(name: string): any };
-
-    export interface RecycleMemory { id?: string; stack?: string | null; count?: number; }
-
-    /** 本招记住的「上一次消耗掉的持有物」；空对象表示没有可回收的东西。 */
+    const recycleMemoryEffect = "world_combat:recycle_memory";
+    let recycleReceiptSequence = 0;
+    const recycleClaims: { [actor: string]: boolean } = Object.create(null);
+    export interface RecycleMemory { id?: string; stack?: string | null; count?: number; token?: string; consumed?: boolean; }
+    WorldCombat.effect(recycleMemoryEffect, 1, 1200000, "actor", json => JSON.stringify(JSON.parse(json)), EffectProtocols.unchanged);
+    WorldCombat.effectHandler(recycleMemoryEffect, "start", () => {});
+    WorldCombat.effectHandler(recycleMemoryEffect, "operation:world_combat:dispel", effect => effect.end());
     export function recycleMemory(world: CombatWorld, actor: CombatActor): RecycleMemory {
-        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return {};
-        try { return state(world, actor, "recycle") || {}; } catch (error) { return {}; }
+        if (!world.valid(actor)) return {};
+        const value = String(actor.domain()) === "cobblemon" ? state(world, actor, "recycle")
+            : world.effects(actor, recycleMemoryEffect).map(view => JSON.parse(view.data()))[0];
+        return value && value.consumed === true && value.token ? value : {};
     }
-
-    /** 上一次观察到的持有物 id；持有物一变就把它整件记进个体状态，从「有」变「空」时把观察位复位。 */
-    const recycleSeen: { [id: string]: string } = Object.create(null);
-
-    function recycleTrack(event: CombatWorldEvent): void {
-        const actor = event.actor(), world = event.world();
-        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return;
-        let pokemon: CombatPokemon;
-        try { pokemon = CobblemonCombat.pokemon(actor); } catch (error) { return; }
-        const key = String(pokemon.id()), held = String(pokemon.heldItem());
-        if (!held) { recycleSeen[key] = ""; return; }
-        if (recycleSeen[key] === held) return;
-        recycleSeen[key] = held;
-        const stack = pokemon.heldStack();
-        try { setState(world, actor, "recycle", { id: held, stack: stack.serialized(), count: stack.count() }); } catch (error) { }
+    function recycleWrite(world: CombatWorld, actor: CombatActor, value: RecycleMemory): void {
+        if (String(actor.domain()) === "cobblemon") { setState(world, actor, "recycle", value); return; }
+        world.effects(actor, recycleMemoryEffect).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+        if (value.id) world.effect(recycleMemoryEffect, actor, JSON.stringify(value), 1200000);
     }
-    // 绑定与自身事实变化时记录当前持有物；不逐刻轮询，也不广播 tick。
-    WorldCombat.on("world_combat:move_recycle/bound", "world_combat:actor_bound", "", recycleTrack);
-    WorldCombat.on("world_combat:move_recycle/track", "world_combat:actor_changed", "", recycleTrack);
-
-    /**
-     * 把记住的持有物放回手里：走统一的原生装备写入（按序列化栈 CAS 装入空槽），保留组件。
-     * scavenge 开启时先扫半径内的掉落物，找到同种就把它吸回并消耗（返回 found: true 与它的栈）。
-     * 返回 null 表示这次回收没有成立（含原生写入被拒）。
-     */
+    WorldCombat.on("world_combat:move_recycle/consumed", "world_combat:item_consumed", "", event => {
+        const world = event.world(), actor = event.actor(), holder = event.target(), data = JSON.parse(event.data());
+        if (!holder || String(actor.key()) !== String(holder.key()) || !world.valid(actor) || !(data.count > 0) || !data.item) return;
+        const stack = JSON.parse(String(data.item));
+        if (typeof stack.id !== "string") return;
+        stack.count = 1;
+        recycleWrite(world, actor, { id: stack.id, stack: JSON.stringify(stack), count: 1, consumed: true,
+            token: String(world.tick()) + "/" + String(++recycleReceiptSequence) });
+    });
     export function recycleRestore(world: CombatWorld, actor: CombatActor, memory: RecycleMemory, scavenge: boolean, radius: number): any {
-        if (!memory.id) return null;
-        let foundPoint: CombatPoint | null = null, stack = memory.stack || null, found = false;
-        if (scavenge) {
-            try {
-                const level = world.nativeLevel(), Registries = Java.loadClass("net.minecraft.core.registries.BuiltInRegistries");
-                const NativeRegistryFacts = Java.loadClass("dev.worldcombat.core.world.NativeRegistryFacts");
-                const self = world.observe(actor);
-                if (self !== null) {
-                    const near: any = world.nativeEntities(self.position(), radius, "minecraft:item");
-                    for (let index = 0; index < near.length; index++) {
-                        const entity = near[index];
-                        if (!entity || typeof entity.getItem !== "function") continue;
-                        const dropped = entity.getItem();
-                        if (dropped === null || dropped.isEmpty()) continue;
-                        if (String(Registries.ITEM.getKey(dropped.getItem())) !== memory.id) continue;
-                        const serialized = NativeRegistryFacts.serializeStack(level, dropped);
-                        if (serialized) { stack = serialized; found = true; foundPoint = self.position(); }
-                        entity.discard();
-                        break;
-                    }
-                }
-            } catch (error) { }
-        }
+        const ref = String(actor.ref());
+        if (!memory.id || !memory.stack || recycleClaims[ref] || recycleMemory(world, actor).token !== memory.token || NativeItems.heldOf(world, actor)) return null;
+        // Native callbacks may reenter content; only this synchronous claim may spend this receipt.
+        recycleClaims[ref] = true;
+        let result: any = null;
         try {
-            if (!stack) return null;
-            // 统一的装备写入：按序列化栈 CAS 装入空槽，保留组件；写入被拒时原样返回 null，不清记忆。
-            if (!NativeItems.giveHeld(world, actor, stack).ok) return null;
-            try { setState(world, actor, "recycle", {}); } catch (error) { }
-            return { id: memory.id, stack: stack, found: found, point: foundPoint };
-        } catch (error) {
-            return null;
+            if (scavenge) {
+                const body = world.observe(actor), slot = NativeItems.slotOf(actor);
+                if (!body) return null;
+                const entities: any[] = world.nativeEntities(body.position(), radius, "minecraft:item") as any;
+                const Registries = Java.loadClass("net.minecraft.core.registries.BuiltInRegistries");
+                const Facts = Java.loadClass("dev.worldcombat.core.world.NativeRegistryFacts");
+                for (let i = 0; i < entities.length; i++) {
+                    const item = entities[i], stack = item.getItem();
+                    if (!stack || stack.isEmpty() || String(Registries.ITEM.getKey(stack.getItem())) !== memory.id) continue;
+                    const at = WorldCombat.point(Number(item.getX()), Number(item.getY()), Number(item.getZ()));
+                    if (!world.clear(body.position(), at)) continue;
+                    const expected = Facts.serializeStack(world.nativeLevel(), stack); if (!expected) continue;
+                    const receipt = NativeItems.receipt(world.equipmentCollectResult(actor, slot.provider, slot.slot, slot.index, "",
+                        String(item.getStringUUID()), String(expected), 1));
+                    if (!receipt.ok) return null;
+                    return result = { id: memory.id, stack: receipt.item, found: true, point: at };
+                }
+            }
+            if (!NativeItems.giveHeld(world, actor, memory.stack).ok) return null;
+            return result = { id: memory.id, stack: memory.stack, found: false, point: null };
+        } finally {
+            try { if (result && world.valid(actor) && recycleMemory(world, actor).token === memory.token) recycleWrite(world, actor, {}); }
+            finally { delete recycleClaims[ref]; }
         }
     }
 

@@ -87,7 +87,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(30).times(0.5).clamp(0, 20))
                 .plus(F.when(F.pref("shatter", text("worldcombat.skill.spiritbreak.preference.shatter")), F.const(16), F.const(0)))
                 .clamp(30, 80).round(0),
-            "余韵时长", "冲击点残留的气势光环停留多久；等级越高、碎魂式留得越久。"),
+            "余韵时长", "成功拦截时碎光的短余韵预算；实际发射时按短窗收束。"),
         tempo: seconds(
             F.base(12)
                 .minus(F.stat("speed").minus(60).times(0.03).clamp(-1.5, 2))

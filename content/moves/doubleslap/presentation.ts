@@ -6,8 +6,9 @@
  * 色相家族：掌风粉白（0xF6C9D2 偏色）与命中近白（0xFFFFFF）做本体与强调，掌风碎屑（tinydust 原色）只做余韵。
  * 拍子：起 raise（抬掌聚风）→ 抽 swing（一记记掌影）→ 中 hit / 空 miss·away → 收 settle。
  * 范围：本招是贴身单体连抽，画面靠贴在对手身上的一记记掌印标出「谁会被抽到」，没有地面轮廓。
- * 运动：`swipe` 从施法者朝目标锚点扇出（`orient: "toward"`），掌影的滚转由 `data.tilt`（左右交替的 ±角度）驱动，
- *   读作「一会从左扇、一会从右扇」；模型侧对手会被 `sway` 真的拨动一下，画面与位移一致。
+ * 运动：`swing` 从服务端算出的那只掌的真实起点（`data.point`，左右交替）朝目标扇出，所以左右掌各有自己的起点；
+ *   掌影的滚转由 `data.tilt`（左右交替的 ±角度）驱动，读作「一会从左扇、一会从右扇」。
+ *   命中 `hit` 落在目标朝这只掌最近的脸侧接触点；够不着时 `away` 从掌位朝脱出方向收手。
  * 数：`data.smack`（物攻换算的掌风量）绑定每一掌与命中的发射量，`data.index` / `data.slaps` 让画面读出演到第几掌、
  *   还剩几掌，`data.intensity`（单掌威力派生）抬高亮度，`data.scale`（臂展换算）让大个子的掌风更大。
  */
@@ -41,7 +42,7 @@ const DoubleslapDefinition: ParticleDefinition = {
             exit: { drain: 8 },
             emitters: [
                 {
-                    name: "palm", bind: "source", offset: [0, 0.5, -0.15], height: 0.45, fit: "body",
+                    name: "palm", bind: "point", offset: [0, 0.25, 0], fit: "none",
                     orient: "toward",
                     particle: "world_combat_core:cobblemon/generic/swipe",
                     burst: { count: 1, at: 0 },
@@ -66,7 +67,7 @@ const DoubleslapDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {
-                    name: "impact", bind: "target", offset: [0, 0.45, 0], height: 0.45, fit: "body",
+                    name: "impact", bind: "point", offset: [0, 0.35, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "sphere", radius: 0.22 },
@@ -75,7 +76,7 @@ const DoubleslapDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 16
                 },
                 {
-                    name: "chaff", bind: "target", offset: [0, 0.4, 0], height: 0.45, fit: "body",
+                    name: "chaff", bind: "point", offset: [0, 0.35, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "smack", fallback: 12 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.26 },
@@ -90,7 +91,7 @@ const DoubleslapDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 8 },
             emitters: [
                 {
-                    name: "whiff", bind: "target", offset: [0, 0.45, 0], height: 0.45, fit: "body",
+                    name: "whiff", bind: "point", offset: [0, 0.35, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "smack", fallback: 10 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.24 },
@@ -105,10 +106,10 @@ const DoubleslapDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 9 },
             emitters: [
                 {
-                    name: "slip", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "slip", bind: "point", fit: "none", offset: [0, 0.35, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 10, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 2.4 } }, direction: "toward", speed: [0.03, 0.14], spread: 14, drag: 0.9,
+                    shape: { kind: "line", length: { data: "reach", fallback: 2.4 } }, direction: "shape", speed: [0.03, 0.14], spread: 14, drag: 0.9,
                     lifetime: [7, 12], size: [0.06, 0.02],
                     color: 0xE8D6DA, alpha: [0.3, 0], light: "world", maxParticles: 40
                 }

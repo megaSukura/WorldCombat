@@ -25,6 +25,7 @@
   "worldcombat.skill.honeclaws.preference.ai.minGap": "Close-range floor",
   "worldcombat.skill.honeclaws.preference.ai.minGap.help": "A threat closer than this makes the companion attack instead of sharpening; larger gives up the hone more often up close.",
   "world_combat.move.honeclaws.text.honed": "Hone Claws · Attack +%1$s Accuracy +%2$s",
+  "world_combat.move.honeclaws.text.capped": "The edge is already at its limit - nothing was honed this time",
   "world_combat.move.honeclaws.text.faded": "The edge dulls",
   "effect.world_combat.honeclaws_edge": "Honed Edge",
   "worldcombat.skill.honeclaws.description.additional": "When the edge runs out or is cleared early, the Attack and accuracy it added are taken back by the amount actually gained; if a stat is already at its cap, less is added and only that much is taken back."

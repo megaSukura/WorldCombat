@@ -2,8 +2,8 @@
   "worldcombat.skill.crunch.summary": "扑上去一口咬住，牙关研磨把护甲压塌：咬实后隔一小会儿再嚼一记，磨完有机会让目标防御下降并留下一道破防缺口。獠牙的防御系数低于惯例，专啃硬壳；比咬住重、慢，却是可靠的破防开端。",
   "worldcombat.skill.crunch.description.0": "咬实那一下造成 %1$s 的接触伤害，獠牙的防御系数低于惯例，对高防目标更有效。",
   "worldcombat.skill.crunch.description.1": "朝目标扑出 %1$s 格、每刻 %2$s 格，咬合判定半径 %3$s 格。",
-  "worldcombat.skill.crunch.description.2": "咬住后研磨 %1$s，结束时再结算一记 %2$s 的研磨伤害。",
-  "worldcombat.skill.crunch.description.3": "研磨结束时有 %1$s 的概率让目标防御下降 %2$s 级，并挂上持续 %3$s 的破防身份——这道身份本身不改变属性，带着它的目标会被能撕旧缺口的招多降一级防御。",
+  "worldcombat.skill.crunch.description.2": "咬住后研磨 %1$s，全程保持咬合到结束才再结算一记 %2$s 的研磨伤害；期间目标拉开、被墙隔开或失效会立即松口，不隔空磨伤。",
+  "worldcombat.skill.crunch.description.3": "第二段研磨伤害真实造成后，才有 %1$s 的概率让目标防御下降 %2$s 级，并挂上持续 %3$s 的破防身份——这道身份本身不改变属性，带着它的目标会被能撕旧缺口的招多降一级防御。",
   "worldcombat.skill.crunch.crush.on": "碾压式：磨得更久、咬塌几率更高、破防缺口留得更久，但咬合略轻、起手与冷却更长。",
   "worldcombat.skill.crunch.crush.off": "疾咬式：出手更快、单口更重，但研磨更短、更难咬塌护甲。",
   "worldcombat.skill.crunch.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -30,8 +30,11 @@
   "worldcombat.skill.crunch.preference.ai.maxChase.help": "超过这个距离就不主动扑咬，先走近。越大追得越执着，也越容易扑空后停在对手身边。",
   "worldcombat.skill.crunch.preference.ai.openGuard": "优先开缺口",
   "worldcombat.skill.crunch.preference.ai.openGuard.help": "开启：优先咬还没有破防身份的目标，把缺口留给后续招吃；关闭：把咬碎当普通近身重咬排序。",
+  "worldcombat.skill.crunch.preference.ai.hardShell": "先咬硬壳",
+  "worldcombat.skill.crunch.preference.ai.hardShell.help": "开启：防御越高、体型越大的目标优先，让专门啃硬壳的獠牙先开缺口；关闭：所有近身目标按普通重咬排序。",
   "world_combat.move.crunch.text.latch": "咬住不松",
   "world_combat.move.crunch.text.crush": "护甲被压塌 %1$s 级",
   "world_combat.move.crunch.text.miss": "咬空",
+  "world_combat.move.crunch.text.release": "松口",
   "effect.world_combat.crunch_cracked": "咬碎·护甲缺口"
 }

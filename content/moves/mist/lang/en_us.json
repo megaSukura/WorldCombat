@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.mist.summary": "Cloaks the body and nearby allies in a white mist; inside it no combatant's stat stages can be lowered. The mist follows the caster, and anyone who leaves its reach loses the cover.",
+  "worldcombat.skill.mist.summary": "Cloaks the body and nearby allies in a white mist; inside it no combatant's stat stages can be lowered. The mist follows the caster, and anyone who leaves its reach loses the cover; several mist sources are kept separately, so one ending does not remove another.",
   "worldcombat.skill.mist.use.0": "Block blanket drops to defence, attack or speed",
   "worldcombat.skill.mist.use.1": "Cover an ally that is winding up or setting up",
   "worldcombat.skill.mist.use.2": "Raise the mist before the foe starts weakening you",
   "worldcombat.skill.mist.description.0": "The mist covers the caster and allies within %2$s blocks for %1$s: while it holds, any stat-stage drop on anyone inside is caught by the mist and never takes effect.",
-  "worldcombat.skill.mist.description.1": "It follows the caster's movement; the current cast range is %1$s blocks. Allies who leave the radius stop being renewed and lose the cover once their mist runs out; it only stops drops, not damage or control.",
+  "worldcombat.skill.mist.description.1": "It follows the caster's movement; the current cast range is %1$s blocks. Allies who leave the radius stop being renewed by this source and lose this cover once its short renewal runs out; several sources settle separately, so one ending does not remove another. It only stops drops, not damage or control.",
   "worldcombat.skill.mist.description.2": "Breathing the mist takes %1$s, the recovery is %2$s and the cooldown %3$s. See the veil note for the dense/thin trade-off.",
   "worldcombat.skill.mist.veil.0": "Dense: radius x1.25, duration x1.2, at +3 ticks wind-up and x1.15 cooldown — wide and long.",
   "worldcombat.skill.mist.veil.1": "Thin: radius x0.75, duration x0.75, in exchange for -2 ticks wind-up and x0.8 cooldown — quick to raise and refresh.",

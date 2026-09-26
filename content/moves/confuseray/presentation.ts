@@ -1,14 +1,15 @@
 /**
  * 奇异之光 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者手里攒起一束幽紫的光，沿直线射出去；命中处炸开一团幽灵色的火花，
- * 目标头顶从此转着一只迷路的飞鸟。
+ * 一句话：施法者手里攒起一束幽紫的细光，沿真实判定的方向射出去，到第一个碰上的东西就停住；
+ * 照进活人的眼里只落下枚晕符，之后目标头顶一直转着一只迷路的飞鸟。
  *
  * 色相家族：幽紫（0x8A5CFF）为主体，靛蓝（0x5A3FA0）只压在核心，近白只做高光小点。
- * 层次：汇聚（起手）、光束（沿目标方向的直线，长度绑机制射程）、命中爆（幽灵冲击＋内收环）、
- *       迷乱飞鸟（持续）、反噬（打中别人后自伤的一顿）。
- * 起击收：windup（攒光）→ beam（射出去）→ main（落到眼里）→ linger（还在发懵）。
- * 数：命中爆的爆发量与光束上的高光数按服务端 data.motes 派生，越强的特攻越密；光束长度按 data.reach。
+ * 层次：汇聚（起手）、细光（沿 data.direction 的截断直线，长度绑机制射程 data.reach）、
+ *       晕符（命中只一枚，绑在目标头顶）、打墙（splinter 撞在真实方块面）、
+ *       被身体挡下（blocked）、控制免疫（ward）、空放（dissipate）、迷乱飞鸟（持续）、反噬（真正失误后碎开）。
+ * 起击收：windup（攒光）→ beam（到截断点为止）→ main（晕符）→ linger（还在发懵）。
+ * 数：细光上的高光数与命中密度按服务端 data.motes 派生，越强的特攻越密；光束长度按 data.reach。
  */
 const ConfuserayDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -38,58 +39,94 @@ const ConfuserayDefinition: ParticleDefinition = {
             duration: 26,
             emitters: [
                 {
-                    name: "beam_core", bind: "source", height: 0.62, orient: "toward",
+                    name: "beam_core", bind: "source", height: 0.62, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
-                    rate: 170, shape: { kind: "line", length: { data: "reach", fallback: 16 } },
-                    direction: "shape", speed: [0.4, 0.8],
-                    lifetime: [5, 10], size: [0.26, 0.04],
-                    color: 0x8A5CFF, alpha: [0.95, 0], light: "full", maxParticles: 260
+                    rate: 150, shape: { kind: "line", length: { data: "reach", fallback: 16 } },
+                    direction: "shape", speed: [0.35, 0.7],
+                    lifetime: [4, 9], size: [0.18, 0.03],
+                    color: 0x8A5CFF, alpha: [0.95, 0], light: "full", maxParticles: 220
                 },
                 {
-                    name: "beam_glint", bind: "source", height: 0.62, orient: "toward",
+                    name: "beam_glint", bind: "source", height: 0.62, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "motes", fallback: 16 }, interval: 2, repeats: 2 },
                     shape: { kind: "line", length: { data: "reach", fallback: 16 } },
-                    direction: "shape", speed: [0.3, 0.7],
-                    lifetime: [6, 12], size: [0.12, 0.02],
+                    direction: "shape", speed: [0.25, 0.6],
+                    lifetime: [6, 12], size: [0.1, 0.02],
                     color: 0xCDB8FF, alpha: [0.95, 0], light: "full", maxParticles: 180
                 }
             ]
         },
         main: {
-            duration: 40,
+            duration: 42,
             emitters: [
                 {
-                    name: "hit_core", bind: "target", height: 0.7,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_ghost",
-                    burst: { count: { data: "motes", fallback: 20 } }, shape: { kind: "sphere", radius: 0.26 },
-                    direction: "outward", speed: [0.06, 0.26],
-                    lifetime: [7, 14], size: [0.3, 0.03], sizeMode: "index",
-                    color: 0xB9A2FF, alpha: [1, 0], light: "full", bloom: 0.3
-                },
-                {
-                    name: "hit_ring", bind: "target", height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 42 }, shape: { kind: "ring", radius: 0.5 },
-                    direction: "inward", speed: [0.05, 0.11],
-                    lifetime: [12, 18], size: [0.36, 0.16],
-                    color: 0x8A5CFF, alpha: [0.55, 0], light: "full", maxParticles: 70
-                },
-                {
-                    name: "hit_bird", bind: "target", offset: [0, 0.3, 0], height: 1.05,
+                    name: "stun_mark", bind: "target", offset: [0, 0.3, 0], height: 1.05,
                     particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
                     burst: { count: 5, interval: 3, repeats: 3 }, shape: { kind: "circle", radius: 0.34 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [16, 26], size: [0.24, 0.12], sizeMode: "sin",
-                    color: 0x8A5CFF, alpha: [0.6, 0], light: "full", maxParticles: 20
+                    color: 0x8A5CFF, alpha: [0.65, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        ward: {
+            duration: 24,
+            emitters: [
+                {
+                    name: "ward_flare", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.03, 0.12], drag: 0.9,
+                    lifetime: [8, 14], size: [0.14, 0.02],
+                    color: 0x4A3A78, alpha: [0.5, 0], light: "world", maxParticles: 20
+                }
+            ]
+        },
+        blocked: {
+            duration: 18,
+            emitters: [
+                {
+                    name: "blocked_soak", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: 8 }, shape: { kind: "sphere_surface", radius: 0.24 },
+                    direction: "inward", speed: [0.03, 0.1],
+                    lifetime: [8, 14], size: [0.12, 0.02],
+                    color: 0x5A3FA0, alpha: [0.5, 0], light: "full", maxParticles: 18
+                }
+            ]
+        },
+        splinter: {
+            duration: 20,
+            emitters: [
+                {
+                    name: "wall_scatter", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 }, shape: { kind: "sphere_surface", radius: 0.22 },
+                    direction: "outward", speed: [0.04, 0.16], spread: 24, gravity: 0.02, drag: 0.9,
+                    lifetime: [8, 16], size: [0.08, 0.01],
+                    color: 0x8A5CFF, alpha: [0.6, 0], light: "world", maxParticles: 28
                 },
                 {
-                    name: "hit_dust", bind: "target", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 28 }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.02, 0.1], drag: 0.92,
-                    lifetime: [14, 24], size: [0.06, 0.01],
-                    color: 0x5A3FA0, alpha: [0.5, 0], light: "world", maxParticles: 44
+                    name: "wall_spark", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 6 }, shape: { kind: "sphere_surface", radius: 0.18 },
+                    direction: "outward", speed: [0.05, 0.2], spread: 20,
+                    lifetime: [6, 12], size: [0.1, 0.02],
+                    color: 0xCDB8FF, alpha: [0.8, 0], light: "full", maxParticles: 16
+                }
+            ]
+        },
+        dissipate: {
+            duration: 16,
+            emitters: [
+                {
+                    name: "fade_glint", bind: "point", height: 0.4, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.02, 0.08], drag: 0.88,
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0xCDB8FF, alpha: [0.5, 0], light: "full", maxParticles: 16
                 }
             ]
         },

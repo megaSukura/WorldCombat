@@ -16,6 +16,7 @@
     "PokemonChangeMixin",
     "PokemonHeldAccess",
     "PokemonMovementMixin",
+    "PokemonGroundLiftMixin",
     "PokemonPastureMixin",
     "PokemonStoreReadMixin",
     "PokemonSpawnCountMixin",

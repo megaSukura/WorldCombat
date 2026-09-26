@@ -51,6 +51,22 @@ const DoodleSceneDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 22 },
             emitters: [
                 {
+                    name: "canvas_link", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/thought_trail_small",
+                    shape: { kind: "polyline" },
+                    rate: { data: "marks", fallback: 6 }, direction: "shape", speed: [0.03, 0.1], spread: 10,
+                    lifetime: [8, 15], size: [0.08, 0.02], sizeMode: "sin",
+                    color: 0x6E7BFF, alpha: [0.55, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "canvas_flow", bind: "point", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    shape: { kind: "line", length: { data: "span", fallback: 4 } },
+                    rate: { data: "marks", fallback: 8 }, direction: "shape", speed: [0.14, 0.4], spread: 8,
+                    lifetime: [7, 13], size: [0.12, 0.02], sizeMode: "index",
+                    color: 0x6E7BFF, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 120
+                },
+                {
                     name: "canvas_sheet", bind: "source", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/scaling",
                     burst: { count: { data: "marks", fallback: 8 }, interval: 2, repeats: 2 },

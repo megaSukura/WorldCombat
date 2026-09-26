@@ -1,17 +1,9 @@
-/**
- * 山岚摔 / stormthrow 的客户端表现。
- *
- * 一句话：施法者沉身扑上、一把抓住对手，隔一拍把它整个人掀翻砸进地面——土块向四周翻起、尘土炸开一圈。
- * 色相家族：土黄（0xC98B3A / 0xB07A3C）为主体，近白（0xF2E4C9）只在抓握与命中的强调小面积。
- * 拍子：起 windup（沉身）→ 抓 grab（抓住）→ 击 slam（掀翻砸地、碎土翻起）→ 收 miss。
- * 范围：slam 的翻土按 `data.cells`（碎土格数）铺开，尘土与土块正好落在被砸翻的那一圈。
- * 运动：grab 的抓握在目标身上收拢；slam 的土块沿 `direction: "outward"` 向四周翻出、受重力落回。
- * 数：`data.dust`（物攻派生）决定尘土数量，`data.cells`（碎土格数）决定土块数量，`data.intensity` 抬亮命中。
- * 参照节：视觉语言第二、三、四、六、七、九节。
- */
+/** Grab contact and actual native turning path; an immovable grip uses a short palm impact. */
 const StormthrowDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        press: { duration: 14, emitters: [{ name: "grip_press", bind: "target", fit: "body", particle: "world_combat_core:cobblemon/generic/hit_yellow",
+            burst: { count: 8 }, shape: { kind: "sphere_surface", radius: .45 }, speed: [.015, .045], lifetime: [6, 10], size: [.22, .04], alpha: [.8, 0] }] },
         windup: {
             duration: { data: "windup", fallback: 10 },
             exit: { stop: 6, drain: 12 },
@@ -62,6 +54,9 @@ const StormthrowDefinition: ParticleDefinition = {
             duration: 30,
             exit: { stop: 12, drain: 20 },
             emitters: [
+                { name: "actual_turn", bind: "path", fit: "none", particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "strands", fallback: 8 } }, shape: { kind: "polyline" }, speed: [.005, .02],
+                    lifetime: [10, 20], size: [.16, .04], color: 0xC98B3A, alpha: [.5, 0] },
                 {
                     name: "crater", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",

@@ -4,6 +4,8 @@ namespace PokemonSkills {
     export const growthSunlight = 0.6;
 
     actionParameters.define("growth", {
+        bodyGain: percent(F.base(0.12).plus(F.stat("specialAttack").times(0.0005)).clamp(0.12, 0.24),
+            "体型增长", "暂时增大身体与碰撞体积；特攻越高增长越多，狭窄空间会限制增长。重复生长刷新时限而不叠大。"),
         /** 攻击提升：阳光足时 +2。 */
         atkGift: formula(
             F.base(1).plus(F.when(F.world("sunlight").gte(F.const(growthSunlight)), F.const(1), F.const(0))).clamp(1, 2).round(0),
@@ -41,7 +43,7 @@ namespace PokemonSkills {
             F.base(220).plus(F.level().times(4))
 
                 .clamp(160, 700).round(0),
-            "长大窗口", "「长大」标记存在多久；等级越高越久。"),
+            "长大窗口", "身体暂时增大的时限；等级越高越久，到期或清除后恢复原有大小。"),
         /** 起手：速度决定抽长多快。 */
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(60).times(0.03))
@@ -60,7 +62,8 @@ namespace PokemonSkills {
 
     describe("growth", [
         { key: "description.0", values: ["atkGift", "spaGift"] },
-        { key: "description.2", values: ["grownTicks","tempo","aftercast","wait"] },
+        { key: "body", values: ["bodyGain", "grownTicks"] },
+        { key: "description.2", values: ["tempo","aftercast","wait"] },
         { key: "timing", values: [] }
     ]);
 }

@@ -1,9 +1,9 @@
 /**
  * 金属爆炸 / metalburst 的 AI 用途。
  *
- * 什么局面下出手：有可见的敌对威胁、且在 `ai.maxChase` 之内就列入候选——先靠近、逼对手出手。
- * 账本上有新鲜的伤害（`metalburstDebt > 0`）时若威胁就是账主，priority 抬到 65；否则 55；没有账时只给 5。
- * 目标身边还挤着其他敌人时再加 10——这正是范围爆破的适用局面。
+ * 什么局面下出手：只有账本上有新鲜的伤害（`metalburstDebt > 0`）时才可选——不花 PP 空响。
+ * 若威胁就是账主，priority 抬到 65；否则 55。计数按「自己身边这一圈」里挤着几个敌人，而不是目标周边：
+ * 本招圆心永远是自身，账主站得远也炸不到。手动施放不受此限，仍可对空点自爆圈。
  */
 namespace PokemonSkills {
     CompanionBehavior.readFacts("world_combat:move_metalburst/ai-fact", function (frame, access) {
@@ -18,6 +18,7 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (!(context.facts.metalburstDebt > 0)) return false;
             if (!target) return true;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
@@ -28,15 +29,16 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
+            // 圆心始终是自己：只把爆圈内够得到的威胁当作候选，远处账主不在这一圈里。
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            if (!(context.facts.metalburstDebt > 0)) return 5;
             let score = context.facts.metalburstDebtor === target.ref ? 65 : 55;
             const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+            const radius = capability.data.range;
             let crowd = 0;
             for (let index = 0; index < nearby.length; index++) {
                 const other = nearby[index];
                 if (other.ref === self.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-                if (CompanionBehavior.distance(target.point, other.point) <= 2.8) crowd++;
+                if (CompanionBehavior.distance(self.point, other.point) <= radius) crowd++;
             }
             return crowd >= 1 ? score + 10 : score;
         }

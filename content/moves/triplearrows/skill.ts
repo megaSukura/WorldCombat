@@ -2,14 +2,17 @@
  * 三连箭 / triplearrows 的出手方式。
  *
  * 核心念头：**一记低扫腿踢开护架，紧接三箭同时离弦**——腿不是用来伤人的，是用来让对手的护架空出来；
- * 三支箭一起走，被踢开的那一下会被钉在要害上（暴击），箭势重时还会把人压得开不了手（畏缩）。
+ * 三支箭一起走，被这一脚真正踢开的那一下会被钉在要害上（暴击），箭势重时还会把人压得开不了手（畏缩）。
  *
  * 两拍：
  *   起（windup，提交前）：压低身子、箭尾聚光。
- *   一击（kick）：提交后朝目标一记低扫腿，命中即结算一次小接触伤害；按踢开几率压一级防御、
- *       挂共享身份 `world_combat:status/guardbroken`。踢开与否决定后面三箭是否必中要害。
- *   二击（volley）：隔 `drawTicks` 同时射出 3 支箭（外观是真的箭）。每支箭命中结算一段 `volley`；
- *       第一次命中时掷一次畏缩，中了就把目标压住（共享身份 `world_combat:status/flinch` + `world_combat:interrupt`）。
+ *   一击（kick）：提交后朝方向点或选中目标的方向扫出一腿。腿只够到 `reach` 那点近身长度，**不随目标离得多远拉长**：
+ *       近处踢中活物才结算一次小接触伤害，并按踢开几率压一级防御、挂共享身份 `world_combat:status/guardbroken`。
+ *       只有被这一脚真正踢中的那个目标，本轮三箭才会钉在要害上；远处只收箭伤，不虚构腿伤。
+ *   二击（volley）：隔 `drawTicks` 同时射出 3 支箭（外观是真的箭，每条箭迹各自跟随自己的投射物）。每支箭命中结算
+ *       一段 `volley`；第一次命中时掷一次畏缩，中了就把目标压住（共享身份 `world_combat:status/flinch` + `world_combat:interrupt`）。
+ *
+ * 选取：kind 为 aim——方向点或实体都能放，远距离可以直接三箭；箭会被墙挡住，腿够不到就不会有腿伤。
  *
  * 与同族分开：同是「一击留痕、降防御」，撕裂爪是踏前交叉撕、铁尾是慢而重的下砸、暗影之骨是远程骨投、
  * 碎岩是贴脸连点、雷鸣蹴击是绕步踢；三连箭是**腿技开路 + 三箭齐发**，破防只是给箭让路，箭才是主角——
@@ -27,11 +30,11 @@ namespace PokemonSkills {
     define({
         id: "triplearrows",
         name: "Triple Arrows",
-        description: "先一记低扫腿踢开对手的护架，再同时射出 3 支箭：三箭可以打同一个目标，也可以扇形散开照顾几个；被踢开护架的目标会被钉在要害上，箭势重时把目标压得开不了手。",
+        description: "先朝方向点或选中目标扫出一记近身低腿踢开护架，再同时射出 3 支箭：三箭可以打同一个目标，也可以扇形散开照顾几个。腿只够到近身一点，远距离不会凭空踢中，只送三箭；被这一脚真正踢开护架的目标会被钉在要害上，箭势重时把目标压得开不了手。",
         uses: ["腿技踢开护架后三箭齐发", "扇形齐射同时照顾挤在一起的目标", "中距离单体高暴击连射"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.4,
-        maxRange: 4.6,
+        maxRange: 16,
         prepare: 8,
         active: 34,
         recover: 9,
@@ -51,7 +54,7 @@ namespace PokemonSkills {
                 recover: p("triplearrows", "recover", context),
                 cooldown: p("triplearrows", "cooldown", context) + (fan ? 6 : 0),
                 active: skills["triplearrows"].active,
-                range: p("triplearrows", "reach", context)
+                range: p("triplearrows", "arrowRange", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -74,43 +77,50 @@ namespace PokemonSkills {
             const flinchTicks = Math.max(1, Math.round(p("triplearrows", "flinchTicks", action)));
             const arrowSpeed = p("triplearrows", "arrowSpeed", action);
             const arrowRange = p("triplearrows", "arrowRange", action);
+            const kickReach = p("triplearrows", "reach", action);
             const kickRadius = p("triplearrows", "kickRadius", action);
             const arrowRadius = p("triplearrows", "arrowRadius", action);
             const arrows = 3;
             const intensity = Math.max(0.5, Math.min(2.2, volleyPower / 32));
-            let opened = false, settled = false;
+            let opened = false, openedRef = "", settled = false, flinchRolled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            // 一拍：低扫腿。
+            // 一拍：只够到近身一点的低扫腿；踢中谁，谁的护架才可能开。
             const me = world.observe(action.actor());
             const aimPoint = action.targetPosition();
             const delta = me !== null ? WorldCombat.point(aimPoint.x() - me.position().x(), 0, aimPoint.z() - me.position().z()) : WorldCombat.point(0, 0, 1);
             const forward = delta.length() < 1e-6 ? aim(action) : delta.unit();
             const from = me !== null ? me.position() : action.origin();
-            const distance = Math.max(0.4, delta.length());
-            const kick = action.trace(from, from.plus(forward.scale(Math.min(7, distance + 0.9))), kickRadius);
+            const kickEnd = from.plus(forward.scale(kickReach));
+            const kick = action.trace(from, kickEnd, kickRadius);
             sound(action, "minecraft:entity.player.attack.sweep");
             if (kick.hitEntity()) {
                 const victim = kick.target(), point = kick.position();
                 const landed = impact(action, kick, "triplearrows", kickPower,
                     { damage: damageSpec("triplearrows", "kick"), contact: true }, "kick");
                 WorldFeedback.emit(world, triplearrowsScene, 1, point,
-                    { moment: "kick", target: victim !== null ? String(victim.ref()) : "", intensity: intensity }, 22);
+                    { moment: "kick", target: victim !== null ? String(victim.ref()) : "", reach: kickReach,
+                        point: [point.x(), point.y(), point.z()],
+                        path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]], intensity: intensity }, 22);
                 if (landed && victim !== null && world.valid(victim)) {
                     opened = world.random() < guardChance;
                     if (opened) {
+                        openedRef = String(victim.ref());
                         NativeEffects.boost(world, victim, "def", -guardStages);
                         MobEffects.apply(world, victim, triplearrowsGuard, guardTicks, 0);
                         WorldFeedback.emit(world, triplearrowsScene, 1, point,
-                            { moment: "guard", target: String(victim.ref()), stages: guardStages }, 22);
+                            { moment: "guard", target: openedRef, stages: guardStages }, 22);
                         WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), triplearrowsGuardText, [guardStages], 26);
                     }
                     sound(action, "cobblemon:impact.fighting");
                 }
             } else {
-                WorldFeedback.emit(world, triplearrowsScene, 1, from.plus(forward.scale(distance * 0.6)),
-                    { moment: "kick", target: "", intensity: intensity }, 20);
+                // 腿够不到就只是在脚前短区扫过，不做成远处的腿伤。
+                WorldFeedback.emit(world, triplearrowsScene, 1, from,
+                    { moment: "kick", target: "", reach: kickReach, direction: [forward.x(), 0, forward.z()],
+                        point: [kickEnd.x(), kickEnd.y(), kickEnd.z()],
+                        path: [[from.x(), from.y(), from.z()], [kickEnd.x(), kickEnd.y(), kickEnd.z()]], intensity: intensity }, 20);
             }
 
             /** 二拍：三箭齐发。每支箭第一次命中时掷一次畏缩（与原生一次判定一致）。 */
@@ -144,13 +154,17 @@ namespace PokemonSkills {
                 const scope = current.world(), victim = hit.target();
                 if (victim === null || scope.friendly(victim)) return;
                 const features: any = { damage: damageSpec("triplearrows", "volley"), contact: false };
-                if (opened) features.critical = true;
+                if (opened && openedRef !== "" && String(victim.ref()) === openedRef) features.critical = true;
                 const result = impact(current, hit, "triplearrows", volleyPower, features, "volley");
                 const point = hit.position();
                 WorldFeedback.emit(scope, triplearrowsScene, 1, point,
-                    { moment: "hit", target: String(victim.ref()), arrows: arrows, spread: spread, crit: opened ? 1 : 0, intensity: intensity }, 22);
+                    { moment: "hit", target: String(victim.ref()), arrows: arrows, spread: spread,
+                        crit: opened && String(victim.ref()) === openedRef ? 1 : 0, intensity: intensity }, 22);
                 sound(current, "minecraft:entity.arrow.hit");
-                if (!result || !scope.valid(victim) || !LivingActions.first(current, "triplearrows/flinch")) return;
+                if (!result || !scope.valid(victim)) return;
+                // 一次施放只在第一支真正命中的箭上掷一次畏缩（与原生「一次判定」一致）。
+                if (flinchRolled) return;
+                flinchRolled = true;
                 if (scope.random() >= flinchChance) return;
                 if (MobEffects.apply(scope, victim, triplearrowsFlinch, flinchTicks, 0) === null) return;
                 scope.deliver(victim, "world_combat:interrupt");

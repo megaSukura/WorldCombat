@@ -34,11 +34,20 @@ namespace PokemonSkills {
     /** 哀兵窗口与哀兵半径：同伴倒下的余波在场上停留多久、能传到多远（协议常量）。 */
     export const retaliateWindow = 160;
     export const retaliateRadius = 20;
-    /** 每个哀兵记住的凶手（供 AI 优先追打）。 */
+    /** 每个哀兵记住的凶手，以及那名同伴真正倒下的位置（供 AI 追凶与起手「余光」读同一份事实）。 */
     var retaliateGrudges: { [ref: string]: string } = Object.create(null);
+    var retaliateOrigins: { [ref: string]: { x: number; y: number; z: number } } = Object.create(null);
+    /** 已经结算过的倒下 ref；同一场倒下被多张伤害回执重复报告时只认第一次，不反复刷新哀兵窗口。 */
+    var retaliateDeaths: { [ref: string]: number } = Object.create(null);
 
     /** 同伴倒下时记下的凶手 ref，没有则空串。 */
     export function retaliateGrudge(ref: string): string { return retaliateGrudges[ref] || ""; }
+
+    /** 那名同伴真正倒下的位置（身体中心）；没有现场记录时返回 null。 */
+    export function retaliateOrigin(ref: string): number[] | null {
+        const origin = retaliateOrigins[ref];
+        return origin === undefined ? null : [origin.x, origin.y, origin.z];
+    }
 
     /** 两名战斗者是否同阵营；用原生 isAlliedTo，与世界的阵营判断一致。 */
     function retaliateAllied(world: CombatWorld, first: CombatActor, second: CombatActor): boolean {
@@ -141,6 +150,11 @@ namespace PokemonSkills {
         if (victim === null || !world.valid(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0) || !(data.after <= 0)) return;
+        const victimRef = String(victim.ref()), now = world.tick();
+        const seen = retaliateDeaths[victimRef];
+        if (seen !== undefined && now - seen < retaliateWindow) return;
+        retaliateDeaths[victimRef] = now;
+        if (Object.keys(retaliateDeaths).length > 128) retaliateDeaths = Object.create(null);
         const body = world.observe(victim);
         if (body === null) return;
         const killer = event.actor();
@@ -152,8 +166,10 @@ namespace PokemonSkills {
             if (killer !== null && String(killer.ref()) === String(other.ref())) continue;
             if (!world.valid(other) || world.observe(other) === null) continue;
             if (!retaliateAllied(world, victim, other)) continue;
+            const otherRef = String(other.ref());
             CombatStatus.apply(world, other, retaliateStatus, retaliateEffect, retaliateWindow, 0, { unique: true });
-            retaliateGrudges[String(other.ref())] = killer === null ? "" : String(killer.ref());
+            retaliateGrudges[otherRef] = killer === null ? "" : String(killer.ref());
+            retaliateOrigins[otherRef] = { x: data.x, y: data.y, z: data.z };
         }
     });
 }

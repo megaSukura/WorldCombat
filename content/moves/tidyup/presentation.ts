@@ -2,15 +2,16 @@
  * 大扫除 / tidyup 的客户端表现。
  *
  * 一句话：施术者把扫具拢到身前、在脚边扫开 → 一圈圈清扫环贴着地面向外扩，尘屑被推向四周 →
- *   扫到的东西在原地碎开、向四面崩散 → 扫完一圈青亮的环从脚下荡起，轻快落地。
+ *   每件真正被扫掉的东西在它自己的位置碎开、向四面崩散 → 扫完一圈青亮的环从脚下荡起，轻快落地。
  * 色相家族：清扫米白 0xF2E9D8 为环与主体，尘灰 0xA79E8C 作扬尘与余韵，清亮青 0x9FE3D6 只落在轻快强调层。
- * 拍子：起（draw 0–14t）→ 扫（sweep 0–34t，按 sweeps 重放）→ 清（clear 0–30t）→ 提（rise 0–30t）→ 存（hum 持续）→ 收（fade）。
+ * 拍子：起（draw 0–14t）→ 扫（sweep 0–34t，按 sweeps 重放）→ 清（clear 0–30t，每件一处）→ 提（rise 0–30t）→ 存（hum 持续）→ 收（fade）。
  * 范围：sweep/rise 的地面环绑 `point`、fit none，几何半径 3.2 按 `data.scale`（实际清扫半径 / 3.2）推出，
- *   画出的圈就是这一次真正扫到、也是判定会用到的范围。
- * 运动：draw 尘屑在脚边打转；sweep 清扫环一圈圈向外扩张、尘被推开；clear 被扫掉的东西向外崩散；rise 青环从脚下荡起；hum 尘屑极慢上浮；fade 落定。
+ *   画出的圈就是这一次真正扫到、也是判定会用到的范围；clear 绑 `point`，只在服务端确认清掉的真实地点播放。
+ * 运动：draw 尘屑在脚边打转；sweep 清扫环一圈圈向外扩张、尘被推开；clear 被扫掉的东西在各自位置向外崩散；rise 青环从脚下荡起；hum 尘屑极慢上浮；fade 落定。
  * 数：扬尘数绑 `data.debris`（物攻与速度派生），地面环重放次数绑 `data.sweeps`（速度派生），
- *   清场粒子数绑 `data.cleared`（执行时实际扫走的东西数）、轻快强调绑 `data.shine`（本次抬起的级数派生）；
- *   扫得越远越干净，画面里的粒子与碎屑越多。
+ *   清场粒子数绑 `data.cleared`（执行时实际成功 dispel 的数量）、轻快强调绑 `data.shine`（本次抬起的级数派生）；
+ *   扫得越远越干净，画面里的粒子与碎屑越多；没有真正清掉时不出现清场碎屑。
+ * 持续：hum 绑在真正的轻快窗口上（服务端 `WorldFeedback.onEffect`），窗口结束或提前清除会同步收回。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const TidyUpDefinition: ParticleDefinition = {
@@ -76,19 +77,19 @@ const TidyUpDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "clear_burst", bind: "source", offset: [0, 0.25, 0], height: 0.2,
+                    name: "clear_burst", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
-                    burst: { count: { data: "cleared", fallback: 0 }, at: 1 },
-                    shape: { kind: "ring", radius: 1.0 },
+                    burst: { count: { data: "cleared", fallback: 1 }, at: 1 },
+                    shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.06, 0.18],
                     lifetime: [7, 13], size: [0.3, 0.05],
                     color: 0xF2E9D8, alpha: [0.85, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "clear_bits", bind: "source", offset: [0, 0.2, 0], height: 0.15,
+                    name: "clear_bits", bind: "point", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    burst: { count: { data: "cleared", fallback: 0 }, at: 1 },
-                    shape: { kind: "ring", radius: 1.0 },
+                    burst: { count: { data: "cleared", fallback: 1 }, at: 1 },
+                    shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.1, 0.24], gravity: 0.05, spin: 14,
                     lifetime: [10, 18], size: [0.12, 0.03],
                     color: 0xA79E8C, alpha: [0.8, 0], light: "world", maxParticles: 60

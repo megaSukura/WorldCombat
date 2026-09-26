@@ -7,41 +7,21 @@
  * 三幕：
  *   起势（windup，提交前）：抬爪、压低重心，冷光与细火星在爪边聚拢；可被打断，打断不消耗任何东西。
  *   磨（提交后）：物攻与命中能力等级各抬起（原生 +1，配置「深磨」物攻 +2），挂上共享身份
- *     world_combat:status/honeclaws 的锋口窗口；同时另存一份「这次各加了多少」的记号，供窗口结束时按数收回。
- *     随后按 scrapes 刮几下，每下甩出爪痕与火星，命中能力等级在爪边亮起。
- *   收（收势）：锋口定住、浮出结果；窗口走完或被清除时，这次抬起的等级原样收回。
+ *     world_combat:status/honeclaws 的锋口窗口。等级本身由 boostWindow 拥有并绑在这层锋口载体上：
+ *     窗口到期、被提前清除，或再次施放刷新同一窗口时，都只会撤去本招这一次实际贡献的级数。
+ *   收（收势）：锋口定住、浮出结果；窗口走完或被清除时，本招的等级随窗口自行收回。
  *
  * 与同族分开：盘蜷是慢而完整的架势（攻/防/命中三项、窗口最长）；磨爪是随手一蹭，只抬攻与命中，最快、最便宜。
  */
 namespace PokemonSkills {
     const honeclawsScene = "world_combat:move_honeclaws";
     const honeclawsEdge = "world_combat:honeclaws_edge";
-    const honeclawsMark = "world_combat:honeclaws_mark";
+    const honeclawsContribution = "world_combat:move/honeclaws";
     const honeclawsText = "world_combat.move.honeclaws.text.honed";
+    const honeclawsCappedText = "world_combat.move.honeclaws.text.capped";
     const honeclawsFadeText = "world_combat.move.honeclaws.text.faded";
     /** 表现里的参考半径：`data.scale = 实际刮擦半径 / 这个数`。 */
     const honeclawsReference = 0.7;
-
-    // 记号：记录这次磨爪各自加了多少级，窗口结束时照数收回。加在两个属性上，单靠 amplifier 存不下。
-    WorldCombat.effect(honeclawsMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json);
-        if (typeof value.rise !== "number" || typeof value.focus !== "number") throw new Error("Invalid hone claws mark");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(honeclawsMark, "start", function () { });
-
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function honeclawsStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function honeclawsRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = honeclawsStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, honeclawsStage(world, actor, stat) - before);
-    }
 
     define({
         id: "honeclaws",
@@ -86,41 +66,45 @@ namespace PokemonSkills {
             const focus = Math.max(1, Math.min(2, Math.round(p("honeclaws", "focus", action))));
             const window = Math.max(80, Math.round(p("honeclaws", "edge", action)));
             const scrapes = Math.max(8, Math.round(p("honeclaws", "scrapes", action)));
-            const gainedRise = honeclawsRaise(world, actor, "atk", rise);
-            const gainedFocus = honeclawsRaise(world, actor, "accuracy", focus);
-            MobEffects.apply(world, actor, honeclawsEdge, window, Math.max(gainedRise, gainedFocus));
-            world.effect(honeclawsMark, actor, JSON.stringify({ rise: gainedRise, focus: gainedFocus }), window);
+            const before = NativeEffects.effectiveStages(world, actor);
+            // 锋口载体拥有这份攻/准贡献：刷新先按 previous 结束同招旧窗口，只续上本招自己那一份。
+            const previous = MobEffects.read(world, actor, honeclawsEdge);
+            const carrier = MobEffects.apply(world, actor, honeclawsEdge, window, previous ? previous.amplifier() : 0);
+            let windowId = 0, gainedRise = 0, gainedFocus = 0;
+            if (carrier) {
+                windowId = NativeEffects.boostWindow(world, actor, { atk: rise, accuracy: focus }, carrier.duration(),
+                    honeclawsContribution, carrier, previous);
+                const raised = NativeEffects.effectiveStages(world, actor);
+                gainedRise = Math.max(0, (raised.atk || 0) - (before.atk || 0));
+                gainedFocus = Math.max(0, (raised.accuracy || 0) - (before.accuracy || 0));
+            }
             const gain = gainedRise + gainedFocus;
+            // 上限未增：不留一层空锋口，也不播完整升级，只刮掉表面浮光。
+            if (!windowId) MobEffects.consume(world, actor, honeclawsEdge);
+            const scale = 1;
             WorldFeedback.emit(world, honeclawsScene, 1, body.position(),
                 { moment: "hone", actor: String(actor.ref()), scrapes: scrapes, rise: gainedRise, focus: gainedFocus,
-                    gain: gain, shine: Math.max(6, gain * 7), scale: 1,
+                    gain: gain, shine: gain * 7, full: gain > 0 ? 1 : 0, scale: scale,
                     intensity: Math.max(0.8, Math.min(2, gain / 2 + scrapes / 40)) }, 30);
-            WorldFeedback.keep(world, "honeclaws:edge:" + String(actor.ref()), honeclawsScene, 1, body.position(),
-                { moment: "hum", actor: String(actor.ref()), scrapes: Math.max(6, Math.round(scrapes / 3)) }, Math.min(window, 120));
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), honeclawsText, [gainedRise, gainedFocus], 30);
+            if (windowId)
+                // 锋口窗口还在的期间，爪尖只留极小亮点；窗口结束或被清除时这条表现随窗口一起收。
+                WorldFeedback.onEffect(world, windowId, "world_combat:move_honeclaws/edge", honeclawsScene, 1, body.position(),
+                    { moment: "hum", actor: String(actor.ref()), scrapes: Math.max(6, Math.round(scrapes / 3)), scale: scale });
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)),
+                gain > 0 ? honeclawsText : honeclawsCappedText, gain > 0 ? [gainedRise, gainedFocus] : [], 30);
             world.sound("cobblemon:move.dragonclaw.actor", body.position(), 16, "{}");
             done(action);
         }
     });
 
-    // 锋口窗口走完或被清除：按记号把这次磨出的物攻与命中原样收回（只收到各自当前实际持有的正等级）。
+    // 锋口窗口走完或被清除：等级由载体窗口自行收回，这里只收尾表现。
     WorldCombat.on("world_combat:move_honeclaws/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== honeclawsEdge) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const marks = world.effects(actor, honeclawsMark);
-        let rise = 0, focus = 0;
-        if (marks.length) {
-            const mark = JSON.parse(String(marks[0].data()));
-            if (typeof mark.rise === "number") rise = Math.max(0, Math.round(mark.rise));
-            if (typeof mark.focus === "number") focus = Math.max(0, Math.round(mark.focus));
-            world.operation(marks[0].id(), "world_combat:dispel", "{}");
-        }
-        const lostRise = Math.min(rise, Math.max(0, honeclawsStage(world, actor, "atk")));
-        if (lostRise > 0) NativeEffects.boost(world, actor, "atk", -lostRise);
-        const lostFocus = Math.min(focus, Math.max(0, honeclawsStage(world, actor, "accuracy")));
-        if (lostFocus > 0) NativeEffects.boost(world, actor, "accuracy", -lostFocus);
+        // 刷新／替换时旧载体被移除而新载体仍在：不是真的结束，不播散去。
+        if (MobEffects.read(world, actor, honeclawsEdge)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, honeclawsScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 24);

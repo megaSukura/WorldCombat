@@ -2,13 +2,14 @@
  * 战吼 / nobleroar 的客户端表现。
  *
  * 一句话：施法者挺胸吸气、脚下卷起一圈风 → 一声低吼，一圈锥形声压从正面推出去，贴着地面铺满整片锥面，
- * 气流边缘卷着金白的声纹 → 被罩住的敌人身上，光点顺着身体往下沉、脚边腾起一小股尘。
+ * 气流边缘卷着金白的声纹 → 被吼到的人身上，光点顺着身体往下沉、脚边腾起一小股尘，额前压下一枚短符。
  * 色相家族：暗金 0xC9A24A 与金白 0xFFE9A8 为主体，土黄 0xD8B060 作被压者的细节；烟尘层压到近黑。
  * 拍子：起（gather 0–12t）→ 击（roar 0–30t）→ 中（cowed 逐目标 0–26t）→ 收（settle）。
- * 范围：roar 的锥形地面顶点即判定用的锥面（`data.path`），铺到哪就是会被吼到的地；`data.reach`／`data.halfArc` 与机制同源。
- * 运动：声压沿锥轴向外推、沿着顶点连线填满锥面；被压者的光点往下沉。
+ * 范围：roar 的锥形地面顶点即判定用的锥面（`data.path`），铺到哪就是会被吼到的地；锥体沿 `data.direction` 张开，
+ *   与 `WorldGeometry.sector` 读同一组 origin/heading/reach/arc。
+ * 运动：声压沿锥轴向外推、沿着顶点连线填满锥面；被压者的光点往下沉、短符从上压下。
  * 数：声浪量绑 `data.volume`（体重派生），锥的张角绑 `data.halfArc`，锥长按 5 格参考值书写、
- *   由服务端 `data.scale = reach / 5` 缩放到机制射程，掉级绑 `data.cow`。
+ *   由服务端 `data.scale = reach / 5` 缩放到机制射程，掉级绑 `data.cow`，短符次数绑 `data.cow`。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const NobleRoarDefinition: ParticleDefinition = {
@@ -106,6 +107,15 @@ const NobleRoarDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.2, 0.06],
                     color: 0x6A5A38, alpha: [0.35, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "press", bind: "target", offset: [0, 0, 0], height: 0.42, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/hit_yellow",
+                    burst: { count: { data: "cow", fallback: 1 }, at: 2 },
+                    shape: { kind: "circle", radius: 0.3 },
+                    direction: "down", speed: [0.02, 0.08], gravity: 0.01,
+                    lifetime: [5, 10], size: [0.22, 0.05], sizeMode: "index",
+                    color: 0xE8C860, alpha: [0.85, 0], light: "full", maxParticles: 20
                 }
             ]
         },

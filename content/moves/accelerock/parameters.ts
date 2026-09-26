@@ -5,9 +5,9 @@
  *   描述「迅速撞向对手进行攻击。必定能够先制攻击」。
  *
  * 翻译：把「先制」翻成一记**裹着岩石整个撞出去的身体冲撞**：起手先把碎岩披到身上（可读的预告），
- *   然后沿瞄准方向贴地高速推进，撞实一下按 `slam` 结算接触伤害、把目标顶开，并在落点崩出一小片碎石疤。
- *   它是全族最重的一记——不像水流喷射那样把自己浇透，也不像电光一闪那样轻巧：一块石头撞上去，地上留下一道痕。
- *   与最像的电光一闪分开：靠岩石外壳、碎石迸溅与落点疤痕读出来；与水流喷射分开：水柱拖尾换成石头屑，不浇湿。
+ *   然后沿瞄准方向贴地高速推进，撞实一下按 `slam` 结算接触伤害、把目标顶开，并在真实落点扬起一片碎石尘。
+ *   它是全族最重的一记——不像水流喷射那样把自己浇透，也不像电光一闪那样轻巧：一块石头撞上去，尘迹在落点扬起又散。
+ *   与最像的电光一闪分开：靠岩石外壳、碎石迸溅与落点石尘读出来；与水流喷射分开：水柱拖尾换成石头屑，不浇湿。
  *
  * 数据分散（每个参数各吃不同的精灵数据，落到不同参数上）：
  *   slam            撞击威力：物攻给冲量、速度给撞速；破阵式每一下 ×0.85。
@@ -16,12 +16,11 @@
  *   collisionRadius 判定半径：身高决定石身多宽。
  *   shove           顶开距离：物攻决定把目标撞飞多远；破阵式 ×0.7（力气分给贯穿）。
  *   shards          碎石数量：速度与体重驱动，表现按它发射。
- *   pierce          贯穿数：背刺式 1（撞上即停）；破阵式 2，极快时 3——一路碾过去。
- *   scar            碎石疤半径：体重与等级决定落点崩多大。
- *   rubble          碎石疤时长：体重与等级决定地上的痕留多久。
+ *   pierce          贯穿数：普通式 1（撞上即停）；破阵式 2，极快时 3——一路碾过去。
+ *   scar            碎石尘半径：体重与等级决定落点扬起的尘迹多大（纯画面）。
  *   tempo/settle/recharge 速度决定节奏；破阵式更慢更费。
  *
- * 配置 `breakthrough`（破阵式）双向取舍：开启＝沿冲刺线一路碾过去（最多 2～3 个目标）、每个落点都留疤，
+ * 配置 `breakthrough`（破阵式）双向取舍：开启＝沿冲刺线一路碾过去（最多 2～3 个目标）、每个落点都扬尘，
  *   但每一下 ×0.85、顶开 ×0.7、起手 +2 刻、收招 +3 刻、冷却 +6 刻；关闭＝撞上第一个就停，这一下最重、顶得最远。
  *   一个换「撞穿一排」，一个换「一下撞飞」。
  *
@@ -84,19 +83,14 @@ namespace PokemonSkills {
                 base: 1, unit: "个",
                 description: "这一记能沿冲刺线撞穿几个敌人；普通式撞上即停，破阵式撞穿 2 个，速度极快时 3 个。"
             }),
-        /** 碎石疤半径：1.0 +（体重 − 100）× 0.004 [−0.1,0.5] +（等级 − 30）× 0.01 [−0.1,0.3]；夹 0.7..1.8。 */
+        /** 碎石尘半径：1.0 +（体重 − 100）× 0.004 [−0.1,0.5] +（等级 − 30）× 0.01 [−0.1,0.3]；夹 0.7..1.8。 */
         scar: formula(
             F.base(1.0).plus(F.body("weight").minus(100).times(0.004).clamp(-0.1, 0.5))
                 .plus(F.level().minus(30).times(0.01).clamp(-0.1, 0.3)).clamp(0.7, 1.8).round(2),
-            "碎石疤半径", {
-                base: 1.0, unit: "格",
-                description: "落点地面被崩出的碎石疤有多大；越重、等级越高的个体砸得越开，画面按它画圈。"
+            "碎石尘半径", {
+                base: 1.0, unit: "格", visible: false,
+                description: "落点扬起的碎石尘铺开多大，画面按它画圈；越重、等级越高的个体砸得越开。它不再改动任何方块。"
             }),
-        /** 碎石疤时长：80 +（体重 − 100）× 0.3 [−10,40] +（等级 − 30）× 0.5 [0,30]；夹 50..180 刻。 */
-        rubble: seconds(
-            F.base(80).plus(F.body("weight").minus(100).times(0.3).clamp(-10, 40))
-                .plus(F.level().minus(30).times(0.5).clamp(0, 30)).clamp(50, 180).round(0),
-            "碎石疤时长", "落点崩出的碎石疤在地上留多久，到期原方块回来；越重、等级越高留得越久。"),
         /** 起手：3 −（速度 − 55）× 0.02 [−0.8,1.5] + 破阵 2；夹 0..6 刻。 */
         tempo: seconds(
             F.base(3).minus(F.stat("speed").minus(55).times(0.02).clamp(-0.8, 1.5))
@@ -130,7 +124,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["slam", "collisionRadius"] },
         { key: "description.1", values: ["charge", "pace", "shove"] },
         { key: "description.2", values: ["pierce"] },
-        { key: "description.3", values: ["scar","rubble"] },
         { key: "breakthrough.on", values: ["pierce"], when: function (context) { return read(context.detail.values, ["breakthrough"]) === true; } },
         { key: "breakthrough.off", values: [], when: function (context) { return read(context.detail.values, ["breakthrough"]) !== true; } },
         { key: "timing", values: ["charge", "tempo", "settle", "pp", "recharge"] },

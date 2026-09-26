@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.fairylock.summary": "Call down a ring of fairy light that seals off a patch of ground: every living thing inside the radius — you and your allies included — is pinned where it stands until the lattice breaks. Anyone who walks in is caught too, and anyone pushed out is freed.",
+  "worldcombat.skill.fairylock.summary": "Raise a symmetric boundary: caster, allies and foes can move inside, with restraint only near the edge. External departure or native refusal releases a member; newcomers can enter.",
   "worldcombat.skill.fairylock.use.0": "Lock a fleeing foe inside one patch of ground while your team focuses it",
   "worldcombat.skill.fairylock.use.1": "Pin a whole melee in place in tight terrain",
   "worldcombat.skill.fairylock.use.2": "Trap a highly mobile target in a small patch it cannot break away from",
-  "worldcombat.skill.fairylock.description.0": "The lattice forms a ring of radius %1$s blocks centred on the caster and holds for about %2$s; every living thing inside — the caster included — is pinned and cannot move, while standing outside is unaffected.",
-  "worldcombat.skill.fairylock.description.1": "While it lasts, targets that enter the area later are caught too, and anyone pushed out of the ring is freed at once; when the duration runs out or the caster falls, the lattice breaks and everyone inside is freed together.",
+  "worldcombat.skill.fairylock.description.0": "The fixed boundary has radius %1$s blocks and lasts %2$s. Movement stays normal inside; restraint acts near its edge.",
+  "worldcombat.skill.fairylock.description.1": "Later entrants join. Actors moved outside or refusing native received movement are released. Expiry or source departure removes the boundary and its owned statuses.",
   "worldcombat.skill.fairylock.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.fairylock.option.on": "Deep lock: the seal lasts x1.4; the cost is radius x0.8, wind-up +4 ticks and cooldown +20 ticks — held longer but a smaller, slower, pricier cage.",
   "worldcombat.skill.fairylock.option.off": "Wide lock: a larger ring, faster and cheaper; the cost is a shorter hold.",

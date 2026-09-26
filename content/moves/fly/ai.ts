@@ -22,24 +22,48 @@ namespace CompanionBehavior {
         return block === null || String(block.id()).indexOf("air") >= 0;
     }
 
+    /** 是不是配置里的定点击落：此时落点范围大，值得等落区聚起人再一起压。 */
+    function flyPin(item: WorldBehavior.Capability): boolean {
+        return !!item.data.config && item.data.config.track === false;
+    }
+    /** 目标落区附近聚着几个敌人，用来决定定点击落值不值得飞。 */
+    function flyNearbyEnemies(context: WorldBehavior.Context, threat: Entity, radius: number): number {
+        var nearby = context.facts.nearby as Entity[], count = 0;
+        for (var i = 0; i < nearby.length; i++) {
+            if (nearby[i].friendly || nearby[i].health <= 0) continue;
+            if (distance(nearby[i].point, threat.point) <= radius) count++;
+        }
+        return count;
+    }
+
     const flyChase = PokemonSkills.number("ai.maxChase", "俯冲距离", 3, 22, 1);
     flyChase.help = "伙伴在威胁离自己这么远以内时才考虑飞翔；调小只在近处落击，调大愿意从更远处飞过去。";
     const flyHealth = PokemonSkills.number("ai.minHealth", "最低血线", 0.15, 0.9, 0.05);
     flyHealth.help = "伙伴生命低于这个比例时才把飞翔当成“躲开近战的一击”，priority 提前；调高更常在挨打时飞。";
+    const flyCrowd = PokemonSkills.number("ai.crowd", "落区敌人数", 1, 4, 1);
+    flyCrowd.help = "定点击落时，落点附近至少聚着这么多敌人才飞，好一次压住一群；追踪俯冲不受此限，设为 1 则单个目标也飞。";
     const flyLeave = PokemonSkills.flag("ai.leaveStation", "离开驻守点");
     flyLeave.help = "开启后，驻守中的伙伴会离开原位飞出去落击敌人。";
 
-    PokemonSkills.addPreferences("fly", { ai: { maxChase: 14, minHealth: 0.5, leaveStation: false } }, [flyChase, flyHealth, flyLeave]);
+    PokemonSkills.addPreferences("fly", { ai: { maxChase: 14, minHealth: 0.5, crowd: 1, leaveStation: false } }, [flyChase, flyHealth, flyCrowd, flyLeave]);
+
+    /** 这个目标此刻值不值得飞：看得见、活着、非友方、在俯冲距离内；定点击落再要求落区聚够人。 */
+    function flyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        if (threat.friendly || !threat.visible || threat.health <= 0) return false;
+        if (context.facts.focus !== threat.ref && distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 14)) return false;
+        if (flyPin(item)) {
+            var need = ai<number>(item, "crowd", 1);
+            if (need > 1 && flyNearbyEnemies(context, threat, 3.0) < need) return false;
+        }
+        return true;
+    }
 
     registerUse("fly", {
         protocols: ["world_combat:attack"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (!flyOpen(context)) return false;
-            if (!target) return true;
-            if (target.friendly || !target.visible || target.health <= 0) return false;
-            if (context.facts.focus !== target.ref && distance(source(context).point, target.point) > ai<number>(item, "maxChase", 14)) return false;
-            return true;
+            return !target || flyWants(context, item, target);
         },
         priority: function (context, item, target) {
             if (!target) return 0;
@@ -49,8 +73,7 @@ namespace CompanionBehavior {
             return 0;
         },
         accepts: function (context, item, target) {
-            return !target.friendly && target.visible && target.health > 0
-                && (context.facts.focus === target.ref || distance(source(context).point, target.point) <= ai<number>(item, "maxChase", 14));
+            return flyWants(context, item, target);
         }
     });
 }

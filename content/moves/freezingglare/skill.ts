@@ -2,17 +2,18 @@
  * 冰冷视线 / freezingglare 的出手方式。
  *
  * 核心念头：抬眼锁定一个目标，从双眼中射出一道瞬发、不飞行的精神视线——念力线落到一个敌人身上后会跳向
- *   最近的下一个敌人，一路传递；因为走的是精神而不是寒气，它连本该免疫冰冻的冰属性与相关特性也能冻住。
+ *   最近的下一个敌人，一路传递；每一跳都要有实际通视，视线被切断就停止后续跳跃。精神主伤与冰冻分别遵守
+ *   原生类型、特性与 Boss 控制免疫，不用任何隐藏的穿透窗口。
  *
  * 三幕：
  *   起（focus，提交前）：双眼亮起、目标身上落下锁定印记的预告。
  *   凝（glare → chain ×chains → impact）：提交后瞬发——从施法者到首个目标，再逐跳跳到链内最近的敌人；
- *       每个被盯到的目标在命中前开一段免疫穿透窗口，然后结算 glare×falloff^n 的特殊伤害并按 freezeChance
- *       掷冰冻（忽略特性免疫）。没有飞行时间，视线被切断就完全无效。
- *   阻（blocked）：施法者与目标之间没有清晰视线时，念力在眼前溃散，不结算任何东西。
+ *       每个被盯到的目标结算 glare×falloff^n 的特殊伤害并按 freezeChance 掷冰冻。没有飞行时间，视线被
+ *       切断就停止后续链。
+ *   阻（blocked）：施法者与首个目标之间没有清晰视线时，念力在眼前溃散，不结算任何东西。
  *
- * 反制：需要一条通视的线——中间有方块、绕背或躲进掩体，这一记就打不出来；冰冻是概率。配置 unblinking
- * （凝视式）：多一跳、射程更远、冰冻概率更高，但起手与冷却更久。
+ * 反制：需要一条通视的线——中间有方块、绕背或躲进掩体，这一记就打不出来；冰冻是概率，且冰属性与免冻
+ *   特性/Boss 照常免疫。配置 unblinking（凝视式）：多一跳、射程更远、冰冻概率更高，但起手与冷却更久。
  */
 namespace PokemonSkills {
     const freezingglareScene = "world_combat:move_freezingglare";
@@ -41,8 +42,8 @@ namespace PokemonSkills {
         id: "freezingglare",
         cooldownParameter: "wait",
         name: "Freezing Glare",
-        description: "从双眼中射出一道瞬发、不飞行的精神视线：念力线在敌人之间跳跃，每个被盯到的目标各挨一次精神伤害并可能被冻住；它连本该免疫冰冻的冰属性和相关特性也能冻住。视线被切断则完全无效。",
-        uses: ["对需要一条通视的风筝目标一击必中", "在挤在一起的一队敌人之间传导，一次冻住多人", "专门点掉本不该被冻住的冰属性与免疫目标"],
+        description: "从双眼中射出一道瞬发、不飞行的精神视线：念力线在敌人之间跳跃，每个被盯到的目标各挨一次精神伤害并可能被冻住；每一跳都要有真实通视，视线被切断就停止后续链。冰冻照常遵守冰属性、免冻特性与 Boss 控制免疫，命中失败就不会显示冰壳。",
+        uses: ["对需要一条通视的风筝目标一击必中", "在挤在一起的一队敌人之间传导，一次点名多人", "用精神伤害处理冰属性或免冻目标，冰冻不成也照常主伤"],
         kind: "enemy",
         range: 11,
         maxRange: 16,
@@ -51,7 +52,7 @@ namespace PokemonSkills {
         recover: 7,
         cooldown: 36,
         style: "gaze",
-        defaults: { unblinking: false, ai: { maxChase: 15, preferChains: true, preferImmune: true } },
+        defaults: { unblinking: false, ai: { maxChase: 15, preferChains: true } },
         fields: [flag("unblinking", "凝视式")],
         indicator: function (config, pokemon) {
             return { radius: p("freezingglare", "reach", pokemon), geometry: "line", style: "gaze", color: 0xB48CE8,
@@ -96,7 +97,6 @@ namespace PokemonSkills {
             const chains = Math.max(1, Math.round(p("freezingglare", "chains", action)));
             const chainRange = Math.max(1.5, p("freezingglare", "chainRange", action));
             const freezeChance = Math.max(0, Math.min(1, p("freezingglare", "freezeChance", action)));
-            const windowTicks = Math.max(20, Math.round(p("freezingglare", "immunityWindow", action)));
             const scale = power / 88;
             const intensity = Math.max(0.6, Math.min(2.4, power / 88));
             const used: { [ref: string]: boolean } = {};
@@ -113,12 +113,13 @@ namespace PokemonSkills {
                 path.push(freezingglareCoords(at));
                 used[ref] = true;
                 jumps++;
-                NativeEffects.breakTypeImmunity(world, current, windowTicks);
-                const features: any = { damage: damageSpec("freezingglare", "glare"), status: "frozen", chance: freezeChance };
-                features.ignoreAbility = true;
-                if (hurt(action, current, "freezingglare", currentPower, features)) {
+                if (hurt(action, current, "freezingglare", currentPower,
+                    { damage: damageSpec("freezingglare", "glare"), status: "frozen", chance: freezeChance })) {
                     WorldFeedback.emit(world, freezingglareScene, 1, at,
                         { moment: "impact", target: ref, intensity: intensity, scale: scale, jump: step + 1 }, 24);
+                    if (CombatStatus.has(world, current, "frozen"))
+                        WorldFeedback.emit(world, freezingglareScene, 1, at,
+                            { moment: "frozen", target: ref, intensity: intensity, scale: scale, jump: step + 1 }, 24);
                     sound(action, "cobblemon:impact.psychic");
                 }
                 currentPower *= falloff;

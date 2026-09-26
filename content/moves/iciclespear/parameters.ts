@@ -5,34 +5,32 @@
  *   48 位学习者（Cobblemon 1.8 / Showdown）。描述「向对手发射锋利的冰柱进行攻击。连续攻击2～5次」。
  *   本族里命中 100、PP 最多，是「最稳的一梭」。
  *
- * 翻译：把回合制的「2～5 连击」翻成**碎冰齐射**——呼出一排冰晶，一根接一根笔直射向目标；
- *   每根命中留一次 `spear` 物理伤害，并**碎在目标身上**散出冰屑；落点脚下的地面结霜（snow 覆盖）。
- *   命中 100 翻成「几乎不散」：直飞、无追踪也几乎不偏，是远距离最可靠的一梭。
- *   霜寒按每根命中叠加振幅，被击中的目标会被冰屑拖慢——这是它比岩石爆击「命中更稳」的另一半。
+ * 翻译：把回合制的「2～5 连击」翻成**碎冰齐排**——在身前横排凝出一排平行冰锥，同一刻左右错位射出；
+ *   每根首次碰实体各结算一次 `spear` 物理伤害，并**碎在目标身上**散出冰屑；命中让目标霜寒、移速变慢。
+ *   命中 100 翻成「方向平行」：整排同向直飞、不追不散，近处宽目标会被多根同时穿中，这正是它的覆盖来源。
+ *   取消原「每落点换雪块」：落点只留会消散的冰屑，霜寒只随实际命中。
  *
  * 与同族／同侪分开：
- *   岩石爆击 —— 弧线重石，落点崩碎石；
+ *   岩石爆击 —— 弧线重石，真撞点崩起碎石尘；
  *   飞弹针   —— 追踪细针，钉在目标身上；
  *   尖刺加农炮 —— 直线重钉，穿一排、把人顶开；
- *   冰锥     —— 直飞冰晶、几乎不散，碎在目标身上并让落点结霜，本族唯一在**地面**留下痕迹的冰。
+ *   冰锥     —— 齐排平行同发，靠整排宽度覆盖宽目标。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   spear  单锥威力：特攻塑造冰晶的锋度，等级定冰的硬度。
  *   shots  锥数：物攻与等级决定这一梭有几根（夹 2..5；霜附收在 3）。
- *   gap    间隔：速度决定冰锥喷得多密。
  *   velocity 锥速：速度决定冰锥飞得多快。
- *   radius 冰锥判定：体型高度定单根的碰撞大小。
+ *   radius 冰锥判定：体型高度定单根的碰撞大小，也决定整排的横向间距。
  *   reach  射程：特攻与等级决定能打多远，也是本招的实际射程来源。
- *   spread 散布：速度与配置决定冰锥散多开（原生 100 命中的翻译：几乎不散）。
  *   chill  霜寒时长：等级与配置决定减速维持多久。
- *   frost  霜圈半径：等级与配置决定落点结霜的地面范围。
+ *   frost  冰屑范围：等级与配置决定命中处冰屑散开的可见范围。
  *   shards 碎冰量：特攻换算的碎屑量，驱动命中表现。
  *   tempo／aftercast／recharge：速度定节奏，霜附更慢更长。
  *
  * 配置 `rime`（霜附式）双向取舍（默认关）：
- *   开＝每根命中的霜寒振幅 +1（减速等级高一档）、霜寒时长 ×1.6、结霜范围 ×1.3；代价是锥数收在 3、间隔 +1 刻、
+ *   开＝每根命中的霜寒振幅 +1（减速等级高一档）、霜寒时长 ×1.6、冰屑范围 ×1.3；代价是锥数收在 3、
  *       单锥威力 ×0.9、起手 +2 刻、冷却 +4 刻。
- *   关（纯碎式）＝锥数可到 5、间隔更密、单锥威力 ×1.1；代价是只留最浅的霜寒与更小的霜圈。
+ *   关（纯碎式）＝锥数可到 5、单锥威力 ×1.1、冷却 −4 刻；代价是只留最浅的霜寒与更小的冰屑范围。
  *
  * 状态 `world_combat:iciclespear_chill`（本单元 startup 注册）只借共享身份 `world_combat:status/chill`，
  *   行为写在 rules.ts：按振幅施加对应等级的减速。宝可梦身上不自动同步成原生异常，这是本招的选择。
@@ -70,12 +68,6 @@ namespace PokemonSkills {
                 unit: "根",
                 description: "这一梭射出几根冰锥；物攻、速度与等级越高越多（原生 2～5）。霜附形态收在 3 根，纯碎形态可到 5 根。"
             }),
-        /** 间隔：基础 4 刻，速度每比 55 快 1 减 0.025（夹 −1..1.5）；霜附 +1；夹 2..6。 */
-        gap: seconds(
-            F.base(4).minus(F.stat("speed").minus(55).times(0.025).clamp(-1, 1.5))
-                .plus(F.when(F.pref("rime", text("worldcombat.skill.iciclespear.preference.rime")), F.const(1), F.const(0)))
-                .clamp(2, 6).round(0),
-            "间隔", "两根冰锥之间隔多久射出；速度越快越密，霜附稍缓。"),
         /** 锥速：基础 1.9，速度每比 55 快 1 加 0.012（夹 −0.2..0.5）；夹 1.5..2.8。 */
         velocity: formula(
             F.base(1.9).plus(F.stat("speed").minus(55).times(0.012).clamp(-0.2, 0.5)).clamp(1.5, 2.8).round(2),
@@ -100,29 +92,20 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "冰锥能打到多远；特攻与等级越高送得越远。它也是本招的实际射程来源。"
             }),
-        /** 散布：基础 1.8°，速度每比 55 快 1 加 0.015°（夹 0..1.2）；霜附 ×0.8 / 纯碎 ×1.1；夹 1..3.5。 */
-        spread: formula(
-            F.base(1.8).plus(F.stat("speed").minus(55).times(0.015).clamp(0, 1.2))
-                .times(F.when(F.pref("rime", text("worldcombat.skill.iciclespear.preference.rime")), F.const(0.8), F.const(1.1)))
-                .clamp(1, 3.5).round(1),
-            "散布", {
-                unit: "°",
-                description: "每根冰锥射出时的随机偏角；速度快的个体喷得略散。这就是原生 100 命中的翻译：几乎不散、远距离也可靠。霜附收得更紧、纯碎更开。"
-            }),
         /** 霜寒时长：基础 60 刻，等级每比 25 多 1 加 1.2（夹 0..50）；霜附 ×1.6；夹 50..170。 */
         chill: seconds(
             F.base(60).plus(F.level().minus(25).times(1.2).clamp(0, 50))
                 .times(F.when(F.pref("rime", text("worldcombat.skill.iciclespear.preference.rime")), F.const(1.6), F.const(1.0)))
                 .clamp(50, 170).round(0),
             "霜寒时长", "每根冰锥命中后减速维持多久；每根新锥都会把时间刷新。霜附维持得更久。"),
-        /** 霜圈半径：基础 1.0 格，等级每比 25 多 1 加 0.02（夹 0..0.7）；霜附 ×1.3；夹 0.8..2.2。 */
+        /** 冰屑范围：基础 1.0 格，等级每比 25 多 1 加 0.02（夹 0..0.7）；霜附 ×1.3；夹 0.8..2.2。 */
         frost: formula(
             F.base(1.0).plus(F.level().minus(25).times(0.02).clamp(0, 0.7))
                 .times(F.when(F.pref("rime", text("worldcombat.skill.iciclespear.preference.rime")), F.const(1.3), F.const(1.0)))
                 .clamp(0.8, 2.2).round(2),
-            "霜圈半径", {
+            "冰屑范围", {
                 unit: "格",
-                description: "冰锥碎掉时在落点结霜的地面范围；等级越高、霜附式越大。它决定画面里的霜圈大小。"
+                description: "冰锥命中时冰屑散开的可见范围；等级越高、霜附式越大。它只影响表现，不改动地面方块。"
             }),
         /** 碎冰量：基础 12，特攻每比 55 多 1 加 0.16（夹 −4..14）；夹 8..32。 */
         shards: formula(
@@ -158,8 +141,8 @@ namespace PokemonSkills {
 
     describe("iciclespear", [
         { key: "description.0", values: ["spear","shots"] },
-        { key: "description.1", values: ["gap", "velocity", "reach", "spread"] },
-        { key: "description.2", values: ["radius","chill","frost"] },
+        { key: "description.1", values: ["velocity", "reach"] },
+        { key: "description.2", values: ["radius","chill"] },
         { key: "rime.on", values: [], when: function (context) { return read(context.detail.values, ["rime"]) === true; } },
         { key: "rime.off", values: [], when: function (context) { return read(context.detail.values, ["rime"]) !== true; } },
         { key: "timing", values: ["range","tempo","aftercast","pp","recharge"] },

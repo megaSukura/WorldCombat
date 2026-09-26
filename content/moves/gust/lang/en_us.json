@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.gust.summary": "Whipping its wings, the user launches a short compressed puff of wind: a hit shoves the target along the wind, and an airborne target is blown farther and lifted a little. It is cheap, quick to reuse and lightly homing; the shove choice pushes harder for less power, the cut choice hits harder and shoves less.",
+  "worldcombat.skill.gust.summary": "Whipping its wings, the user launches a short compressed puff of wind at a chosen direction or target: a hit shoves the target along the wind it actually flew, and an airborne target is blown farther and lifted a little. It can be fired into open air; it is cheap, quick to reuse and lightly homes on a target; the shove choice pushes harder for less power, the cut choice hits harder and shoves less.",
   "worldcombat.skill.gust.use.0": "Cheap, fast ranged chip you can throw again and again",
   "worldcombat.skill.gust.use.1": "Push a target off cover, off a ledge or away from an ally",
   "worldcombat.skill.gust.use.2": "Blow an airborne target farther away",

@@ -10,8 +10,9 @@ Smoke.scenario("flareblitz", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
-    var caster = stage.pokemon({ species: "arcanine", level: 45, moves: ["flareblitz"], at: [-3, 0, 0] });
-    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [3, 0, 0] });
+    // 对手放在一个冲程之内：本招的冲程来自精灵数据，摆放太远就只能冲空。
+    var caster = stage.pokemon({ species: "arcanine", level: 45, moves: ["flareblitz"], at: [-1.5, 0, 0] });
+    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [1.0, 0, 0] });
     stage.hostile(caster, foe);
     stage.until(1200, function () {
         return stage.casts("flareblitz", caster) > 0 && stage.damageTo(caster) > 0 && stage.damageTo(foe) > 0;

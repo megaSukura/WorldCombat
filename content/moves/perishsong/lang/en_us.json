@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.perishsong.summary": "Sings a three-beat song: every living thing that hears it within the radius, the singer included, goes down when the count runs out. Disengaging or being cured shakes it off. It is a mutual-destruction song, worth it only when you can outlast the foe or already intend to trade lives.",
+  "worldcombat.skill.perishsong.summary": "Sings a three-beat song: every living thing that hears it within the radius, the singer included, goes down when the count runs out. Running past twice the song radius and staying out for a full beat, or being cured, shakes it off. It is a mutual-destruction song, worth it only when you can outlast the foe or already intend to trade lives.",
   "worldcombat.skill.perishsong.use.0": "Level the fight when you are losing and force a rush or a retreat",
   "worldcombat.skill.perishsong.use.1": "Name a whole crowd at once",
   "worldcombat.skill.perishsong.use.2": "Take the enemy's main threat with you in a lost exchange",
   "worldcombat.skill.perishsong.description.0": "At the moment the song starts, every living thing within %1$s blocks - friend or foe, the singer included - is written onto the list; each beat lasts %2$s, and when three beats are done they all go down together.",
-  "worldcombat.skill.perishsong.description.1": "Starting the song takes %1$s, with a %2$s cooldown. Falling out of combat for a while or being cured with milk shakes the song off without settling.",
+  "worldcombat.skill.perishsong.description.1": "Starting the song takes %1$s, with a %2$s cooldown. Running past twice the song radius and staying out for a full beat, or being cured with milk, shakes the song off without settling.",
   "worldcombat.skill.perishsong.dirge.0": "Dirge: the song carries farther and each beat is longer, but the cooldown is longer.",
   "worldcombat.skill.perishsong.dirge.1": "Lullaby: the song is closer and each beat is shorter with a shorter cooldown - a smaller list, settled faster.",
   "worldcombat.skill.perishsong.timing": "Cast around yourself: after %1$s of preparation it spends %3$s PP; the recovery is %2$s and the cooldown %4$s from commit.",
@@ -24,7 +24,8 @@
   "worldcombat.skill.perishsong.preference.ai.leaveStation.help": "When on, the partner will also leave its post to start the song.",
   "world_combat.move.perishsong.text.song": "Perish Song: down in %1$s beats (%2$s heard)",
   "world_combat.move.perishsong.text.doom": "The count runs out",
+  "world_combat.move.perishsong.text.withstand": "The beats ended, yet it was not taken",
   "world_combat.move.perishsong.text.lift": "Shook off the song",
   "effect.world_combat.perish_song": "Perish Song",
-  "worldcombat.skill.perishsong.description.additional": "The list is fixed the moment the song starts, so stepping back out of the radius no longer frees anyone; when the three beats end it takes each listed creature's entire current health at once."
+  "worldcombat.skill.perishsong.description.additional": "The list is fixed the moment the song starts; running past twice the song radius and staying out for a full beat, or being cured, still frees you. When the three beats end it makes a single attempt, taking each remaining listed creature's entire current health at once; a target the native settlement refuses is left standing."
 }

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.wavecrash.summary": "Charge into a target, knock it back and soak it, taking recoil damage. Deals more damage while the user is soaked. Choose a thick shell for protection or a thin blade for reach.",
+  "worldcombat.skill.wavecrash.summary": "Surge in a thick shell of water to knock a target back and soak it, taking recoil damage. Deals more damage while the user is soaked; a thick shell hits harder with lighter recoil, a thin blade reaches further.",
   "worldcombat.skill.wavecrash.description.0": "The user surges along a straight line in a shell of water, up to about %2$s blocks at about %3$s blocks per tick with a collision radius of about %4$s blocks; it deals about %1$s contact damage to the first target it hits and stops, and only spills early when nothing is hit or terrain blocks it, hitting at most one target.",
   "worldcombat.skill.wavecrash.description.1": "On a hit the user takes %1$s times the actual damage as recoil; the target is shoved %3$s blocks along the surge and left with the soaked identity for %2$s (an already-soaked target is not re-timed), which later Water and Electric effects that read soaked can use.",
   "worldcombat.skill.wavecrash.thick.on": "Thick shell: higher power, lighter recoil and a longer soak, but a shorter surge and a slower wind-up and cooldown.",
@@ -28,6 +28,8 @@
   "worldcombat.skill.wavecrash.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger starts surges sooner, and is easier to whiff.",
   "worldcombat.skill.wavecrash.preference.ai.preferDry": "Prefer dry targets",
   "worldcombat.skill.wavecrash.preference.ai.preferDry.help": "On: prefer targets that are not yet soaked (a hit leaves them soaked). Off: rank by threat and distance alone.",
+  "worldcombat.skill.wavecrash.preference.ai.minHealth": "Health reserve",
+  "worldcombat.skill.wavecrash.preference.ai.minHealth.help": "While dry, below this health fraction the user stops surging just to apply soaked (a target already soaked is still fair game). Higher is more protective, and grabs fewer openers.",
   "effect.world_combat.wavecrash_soaked": "Soaked",
   "world_combat.move.wavecrash.text.hit": "Wave Crash",
   "world_combat.move.wavecrash.text.drench": "Soaked",

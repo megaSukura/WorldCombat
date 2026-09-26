@@ -10,7 +10,7 @@ Smoke.scenario("flowertrick", function (stage) {
     stage.until(900, function () { return stage.casts("flowertrick", meowscarada) > 0 && stage.damageTo(snorlax) > 0; }, function () {
         stage.expect(stage.casts("flowertrick", meowscarada) > 0, "千变万花被扔出来了");
         stage.expect(stage.damageTo(snorlax) > 0, "花束绽开打到了目标身上");
-        stage.note("花束会一路朝目标修正方向（必定命中），命中时按共享暴击强制要害（必定击中要害）。变量：伤害浮动、结环是否溅到旁人、以及目标恰好在飞行中走远的极少数情况。落点会租出 minecraft:pink_petals（到期原方块回来）。",
+        stage.note("花束会一路朝目标修正方向（必定命中），命中时按共享暴击强制要害（必定击中要害）。当前为 kind:aim：点实体时挂追踪，只给方向或世界点则沿所选方向直飞、撞到方块或友方在接触点散花而不结算；空放与目标离场不再提前结束动作。变量：伤害浮动、结环是否溅到旁人、以及目标恰好在飞行中走远的极少数情况。落点只会租出原生真正放下的 minecraft:pink_petals（到期原方块回来）。",
             { casts: stage.casts("flowertrick", meowscarada), damage: Math.round(stage.damageTo(snorlax) * 10) / 10,
               changed: stage.changedBlocks().length });
         stage.done();

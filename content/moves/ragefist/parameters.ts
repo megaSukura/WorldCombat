@@ -66,6 +66,23 @@ namespace PokemonSkills {
         return Math.max(0, Math.min(cap, effect.amplifier()));
     }
 
+    /**
+     * 本招资格：宝可梦看当前有效配招是否带本招；其他生物看是否已挂上拳印载体（含 0 层）。
+     * 资格先于拳印存在，所以普通主体不会因为「还没有 held」而被锁死；未拥有本招者不攒印。
+     */
+    export function ragefistQualified(world: CombatWorld, actor: CombatActor): boolean {
+        if (!world.valid(actor)) return false;
+        if (String(actor.domain()) === "cobblemon") return NativeLoadout.hasEquipped(world, actor, ragefistId);
+        return MobEffects.read(world, actor, ragefistCharge) !== null;
+    }
+
+    /** 给普通主体做一次资格初始化：挂上 0 层拳印载体，之后才从这里攒印。宝可梦由配招本身给出资格。 */
+    export function ragefistAuthorize(world: CombatWorld, actor: CombatActor): boolean {
+        if (!world.valid(actor) || String(actor.domain()) === "cobblemon") return false;
+        if (MobEffects.read(world, actor, ragefistCharge) !== null) return true;
+        return MobEffects.apply(world, actor, ragefistCharge, ragefistStance(world, actor), 0) !== null;
+    }
+
     defineFacts(ragefistId, function (context: FactContext): Formula.Facts {
         return { read: function (id: string) {
             if (id !== "ragefist.stored") return undefined;

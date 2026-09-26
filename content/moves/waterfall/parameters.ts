@@ -4,13 +4,14 @@
  * 原生事实：Water、物理、威力 80、命中 100、PP 15、接触，命中后 20% 概率使目标畏缩
  *   （Cobblemon 1.8 / Showdown），全招 147 位学习者。
  *
- * 翻译：把「以惊人的气势扑向对手」落成一次**贴身的水瀑扑撞**——水从身后涌起成一道竖直水帘，
- * 施法者缩身蓄势后整身扑出，像瀑布从高处砸下；撞实的一刻水帘拍在目标身上把它冲退并震懵。
- * 它比波动冲短、比铁头快，落点是「被水拍懵」而不是「被浇透或砸飞」。攀瀑之名还保留一层环境读法：
- * 下着雨时水势更盛，威力与震懵都抬一档。
+ * 翻译：把「以惊人的气势扑向对手」落成一次**先抬身、再向前上方顶出的水瀑扑撞**——水从脚下涌成一道
+ * 竖直水柱把身体托高（头顶有方块时按实际净空压低），施法者从低处向前上方整身扑出，像逆流跃上瀑布；
+ * 撞实的一刻水帘向上拍散，把目标冲退并震懵。它比波动冲竖、比铁头野，收势是「被水拍懵」而不是
+ * 「被浇透或砸飞」。攀瀑之名还保留一层环境读法：下着雨时水势更盛，威力与震懵都抬一档。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   crash      扑击威力：物攻给狠度，速度把扑势压进去；雨中 ×1.14；瀑落式 ×1.08。
+ *   climb      抬升高度：体重越轻抬得越高，等级让水柱更足；它是水柱的目标高度。
  *   pounce     扑击距离：速度与身高决定扑得多远，也是本招射程基准。
  *   pace       扑速：速度决定每刻推进多少。
  *   collisionRadius 判定半径：身高决定身周水墙多宽。
@@ -18,10 +19,9 @@
  *   flinchTicks  畏缩时长：等级决定；瀑落式更长。
  *   shove      冲开距离：体重与速度决定把目标冲退多远。
  *   spray      水花数：速度与物攻派生，表现按它发射。
- *   curtain    水帘高度：身高决定身后水帘多高，表现按它画。
  *   起手／收招／冷却：速度决定。
  *
- * 配置 `torrent`（瀑落式）双向取舍：开启＝扑得更远更重、震得更久、水帘更高，但扑速更慢、
+ * 配置 `torrent`（瀑落式）双向取舍：开启＝扑得更远更重、震得更久、抬得更高，但扑速更慢、
  * 起手与冷却更久；关闭（急流式）＝更短更快、循环更顺，代价是单下更轻、震得更短。
  *
  * 伤害段 `crash` 走共享换算，接触标记写在 defineDamage 上。
@@ -88,11 +88,13 @@ namespace PokemonSkills {
                 unit: "个",
                 description: "扑撞与命中溅起的水花数量，随速度与物攻增长；粒子按它发射，画面里的数量和机制一致。"
             }),
-        curtain: formula(
-            F.base(1.6).plus(F.body("height").minus(1.4).times(0.5).clamp(-0.2, 1.2)).clamp(1.2, 3.0).round(2),
-            "水帘高度", {
+        climb: formula(
+            F.base(1.5).minus(F.body("weight").minus(50).times(0.005).clamp(-0.2, 0.8))
+                .plus(F.level().minus(30).times(0.012).clamp(0, 0.6))
+                .clamp(0.8, 2.6).round(2),
+            "抬升高度", {
                 unit: "格",
-                description: "身后涌起的竖直水帘有多高；体型越高水帘越高。表现里的水帘按它铺开。"
+                description: "脚下水柱能把身体托多高；越轻、等级越高抬得越高，头顶有方块时按实际净空压低。表现里的水柱高度就是实际升起来的高度。"
             }),
         tempo: seconds(
             F.base(9).minus(F.stat("speed").minus(55).times(0.04).clamp(-2, 3))
@@ -122,7 +124,7 @@ namespace PokemonSkills {
         rationale: "水帘拍上去把力摊开，钝撞更容易透过护甲，让体格与等级差更明显。" }, { contact: true });
 
     describe("waterfall", [
-        { key: "description.0", values: ["crash","pounce","pace","collisionRadius"] },
+        { key: "description.0", values: ["crash","pounce","pace","collisionRadius","climb"] },
         { key: "description.path", values: [] },
         { key: "description.1", values: ["shove","flinchChance","flinchTicks"] },
         { key: "description.rain", values: [] },

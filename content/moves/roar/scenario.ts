@@ -1,23 +1,14 @@
-/**
- * 吼叫的可执行设计说明。
- *
- * 场面：一只只会「吼叫」的伙伴面对一只近身的对手（4 格，落在默认 6 格吼叫距离内）。
- * 必然事实：本招被提交过、对手身上出现过共享身份 world_combat:status/routed（溃退）。
- * 对手被逐开多远、是否掉头走开、有没有被逼回来，都受它的 AI 与走位影响，写进 note 供读轨迹判断；
- * 命中是必然的（无伤害、无命中检定），但被它躲出圈外就不写死。
- */
-Smoke.scenario("roar", function (stage) {
-    var caster = stage.pokemon({ species: "Arcanine", level: 32, moves: ["roar"], at: [0, 0, 0] });
-    var foe = stage.pokemon({ species: "Snorlax", level: 30, moves: ["tackle"], at: [4, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(900, function () {
-        return stage.casts("roar", caster) > 0 && stage.hadMobEffect(foe, "world_combat:status/routed");
-    }, function () {
-        stage.expect(stage.casts("roar", caster) > 0, "吼叫被放出来了");
-        stage.expect(stage.hadMobEffect(foe, "world_combat:status/routed"), "溃退身份落到了对手身上");
-        stage.note("吼叫无伤害；溃退期间对手失去目标并被逐开守卫圈。逐退距离与是否转身走开随对手 AI 变化，不作为断言。",
-            { casts: stage.casts("roar", caster), travelled: Math.round(stage.travelled(foe) * 10) / 10,
-                damageOnFoe: stage.damageTo(foe), casterToFoe: Math.round(Math.sqrt(Math.pow(foe.position()[0] - caster.position()[0], 2) + Math.pow(foe.position()[2] - caster.position()[2], 2)) * 10) / 10 });
-        stage.done();
-    }, "吼叫放出来且对手带上溃退");
+Smoke.scenario("roar",function(stage){
+ const caster=stage.pokemon({species:"arcanine",level:40,moves:["roar"],at:[0,0,0]}),foe=stage.mob({type:"minecraft:husk",at:[2.3,0,0]});
+ stage.after(2,function(){stage.provoke(caster,foe);stage.provoke(foe,caster);});let markedAt=0,marked:number[]=[];
+ stage.until(800,function(){if(!markedAt&&stage.hasMobEffect(foe,"world_combat:roar_routed")){markedAt=stage.tick();marked=foe.position();stage.setPp(caster,"roar",0);}return markedAt>0&&Math.sqrt(Math.pow(foe.position()[0]-marked[0],2)+Math.pow(foe.position()[2]-marked[2],2))>.65;},function(){
+  stage.expect(stage.hasMobEffect(foe,"world_combat:roar_routed"),"the moving receiver still owns accepted fear");
+  stage.expect(stage.damageEvents("world_combat").length===0,"the roar dealt no action damage");
+  stage.command("effect clear "+foe.ref.split("/")[0]+" world_combat:roar_routed");const before=foe.position(),toward=caster.position().map((n,i)=>n-before[i]);
+  stage.after(4,function(){stage.provoke(foe,caster);stage.after(30,function(){
+   const after=foe.position(),dot=(after[0]-before[0])*toward[0]+(after[2]-before[2])*toward[2];
+   stage.expect(!stage.hasMobEffect(foe,"world_combat:roar_routed"),"native fear carrier was cleared");stage.expect(dot>.3,"the released mob can navigate toward its native target again");
+   stage.note("Real native escape movement, zero roar damage and resumed target navigation verified. Walls, threatened allies and fear-immune Bosses remain manual checks.",{travel:stage.travelled(foe)});stage.done();
+  });});
+ },"receiver-owned native fear path");
 });

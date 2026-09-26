@@ -1,8 +1,16 @@
 /** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace PokemonSkills {
+    function mirrormoveNativeReach(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const scope = CompanionBehavior.world(context), threat = context.senses["world_combat:threat"] as CompanionBehavior.Entity | null;
+        const target = threat && scope.actor(threat.ref);
+        if (!target || String(target.domain()) === "cobblemon") return item.data.range;
+        const replay = NativeAttackProjection.recent(scope, target, 1200);
+        return replay ? Math.min(item.data.range, NativeAttackProjection.reach(scope, scope.source(), replay)) : item.data.range;
+    }
+
     /** 只读、决策内缓存：目标最近一次可折返的招式 id；空串表示没有。 */
     CompanionBehavior.registerFact("world_combat:mirrormove-last", function (access, actor, _argument) {
-        return String(actor.domain()) !== "cobblemon" ? DamageSemantics.recentAttack(access, actor, p(mirrormoveId, "focus", access)) ? "native" : "" : mirrorRead(access, actor);
+        return String(actor.domain()) !== "cobblemon" ? NativeAttackProjection.recent(access, actor, p(mirrormoveId, "focus", access)) ? "native" : "" : mirrorRead(access, actor);
     });
 
     function mirrorPower(id: string): number {
@@ -11,7 +19,7 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse(mirrormoveId, {
         protocols: ["world_combat:attack"],
-        reach: function (_context, item) { return item.data.range; },
+        reach: mirrormoveNativeReach,
         available: function (context, item, _purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return false;

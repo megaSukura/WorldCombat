@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.irontail.summary": "先把钢尾抡起、沿一条锁定的线亮出预告，再重砸到落点：圈内目标挨一记重击并被顶开，砸实了可能把护甲砸陷、防御下降一级或更深；最重也最慢，对手可以走出落点躲开。",
   "worldcombat.skill.irontail.description.0": "重砸落在锁定的落点；落点圈内的每个敌人各挨 %1$s 的接触伤害，并被沿背离落点的方向推开 %2$s 格。",
-  "worldcombat.skill.irontail.description.1": "尾长 %1$s 格，落点判定半径 %2$s 格；目标在抬尾的预告窗口里走出落点就能躲开。",
+  "worldcombat.skill.irontail.description.1": "尾长 %1$s 格，落点判定半径 %2$s 格；落点可直接点选，超过尾长的点无效，被墙挡住时砸在接触表面、方块不会被破坏。目标在抬尾的预告窗口里走出落点就能躲开。",
   "worldcombat.skill.irontail.description.2": "砸实后有 %1$s 的概率让目标防御下降 %2$s 级，并留下砸凹标记持续 %3$s；这道标记本身不改变属性，别的破防招会借它把防御压得更低。",
   "worldcombat.skill.irontail.description.3": "抬尾到砸下相隔 %1$s。",
   "worldcombat.skill.irontail.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -23,6 +23,8 @@
   "worldcombat.skill.irontail.preference.ai.maxChase.help": "超过这个距离就不抬尾，先走近。越大越会从远处抡起，也越容易在抬尾期被走出落点。",
   "worldcombat.skill.irontail.preference.ai.heavyFirst": "留给硬目标",
   "worldcombat.skill.irontail.preference.ai.heavyFirst.help": "开启：优先对还没被砸凹、血量过半的目标重砸；关闭：当普通近身攻击排序。",
+  "worldcombat.skill.irontail.preference.ai.pinned": "砸站定的",
+  "worldcombat.skill.irontail.preference.ai.pinned.help": "开启：目标站定或被拖慢时优先抬尾重砸，正在跑动的目标降权（它们能在砸下前走出落点）；关闭：不区分动静。",
   "world_combat.move.irontail.text.dent": "护甲被砸陷 %1$s 级",
   "world_combat.move.irontail.text.miss": "铁尾砸空了",
   "effect.world_combat.irontail_dented": "铁尾·砸凹"

@@ -22,7 +22,7 @@ Smoke.scenario("psywave", function (stage) {
         stage.expect(stage.casts("psywave", user) > 0, "starmie committed psywave");
         stage.expect(stage.damageTo(front) > 0, "the wave dealt damage to the first target");
         stage.expect(stage.damageTo(back) > 0, "the wave pierced through to the second target");
-        stage.note("the wave pierces a line of non-allies; per-cast damage is rolled from (1 - swing) to (1 + swing) and applied to every target the front passes.", {
+        stage.note("the wave is aimed freely and pierces a line of non-allies; the per-cast intensity is rolled once during preparation from (1 - swing) to (1 + swing), locked into this cast's action data, and applied to every target the front passes (and shown by the preparation rings).", {
             casts: stage.casts("psywave", user),
             dealt: Math.round(stage.damageBy(user) * 10) / 10,
             frontDamage: Math.round(stage.damageTo(front) * 10) / 10,

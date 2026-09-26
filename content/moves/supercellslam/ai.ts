@@ -12,8 +12,24 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(item, "minSelf", 0.3)) return false;
-        return CompanionBehavior.distance(self.point, target.point)
-            <= CompanionBehavior.ai<number>(item, "maxChase", 10);
+        if (CompanionBehavior.distance(self.point, target.point)
+            > CompanionBehavior.ai<number>(item, "maxChase", 10)) return false;
+        const world = CompanionBehavior.world(context);
+        const from = CompanionBehavior.point(self.point), to = CompanionBehavior.point(target.point);
+        // 净空：头顶要放得下这一次拔起。
+        const head = from.plus(WorldCombat.point(0, (self.height || 1.4) * 0.6, 0));
+        const ceiling = world.clipBlocks(head, head.plus(WorldCombat.point(0, 1.6, 0)));
+        if (ceiling !== null && ceiling.blocked()) return false;
+        // 斜扑通路：到目标要有直视线，墙后不补目标。
+        if (!world.clear(from, to)) return false;
+        // 敌快离点：目标正沿远离方向快速移动时，锁死的落点线会扑空，避用。
+        const velocity = target.velocity;
+        if (velocity) {
+            const awayX = target.point[0] - self.point[0], awayZ = target.point[2] - self.point[2];
+            const away = Math.sqrt(awayX * awayX + awayZ * awayZ);
+            if (away > 0.5 && (velocity[0] * awayX + velocity[2] * awayZ) / away > 0.18) return false;
+        }
+        return true;
     }
 
     CompanionBehavior.registerUse("supercellslam", {

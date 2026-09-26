@@ -31,6 +31,9 @@ public final class WorldHooks {
     }
     public boolean has(String topic) { return enabledTopics.getOrDefault(topic, 0) > 0; }
     public Result emit(ActionRuntime runtime, String topic, ActorHandle actor, ActorHandle target, String data, ActionContext action, boolean writable) {
+        return emit(runtime, topic, actor, target, data, action, writable, null);
+    }
+    public Result emit(ActionRuntime runtime, String topic, ActorHandle actor, ActorHandle target, String data, ActionContext action, boolean writable, ExecutionOrigin origin) {
         runtime.host.checkThread();
         if (!runtime.content.ready() || runtime.content.epoch() != epoch) return new Result(data, "");
         if (++depth > 12) { depth--; throw new IllegalStateException("Host reaction depth exceeded"); }
@@ -38,7 +41,7 @@ public final class WorldHooks {
             for (String id : order) {
                 var hook = hooks.get(id);
                 if (disabled.contains(id) || !hook.topic().equals(topic)) continue;
-                try (var event = new WorldEvent(runtime, topic, actor, target, data, action, writable)) {
+                try (var event = new WorldEvent(runtime, topic, actor, target, data, action, writable, origin)) {
                     long started = ScriptProfile.start();
                     try {
                         hook.callback().accept(event); data = event.result();

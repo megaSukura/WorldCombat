@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.sweetscent.summary": "Spit a lingering cloud of sweet aroma at a chosen spot; anyone inside is drenched in scent so every hit on them from any source lands harder.",
+  "worldcombat.skill.sweetscent.summary": "Lay a scent cloud that temporarily lowers enemies' evasion and reveals their outlines. Movement after leaving the cloud leaves brief scent points along their real route.",
   "worldcombat.skill.sweetscent.use.0": "Turn an area into a vulnerability zone",
   "worldcombat.skill.sweetscent.use.1": "Focus fire an enemy the cloud has covered",
   "worldcombat.skill.sweetscent.use.2": "Seal a doorway or corridor",
-  "worldcombat.skill.sweetscent.description.0": "A drenched target gains %1$s rank(s) of Scented and keeps the aroma for %2$s after leaving the cloud; each rank amplifies all damage dealt to it by 6%.",
+  "worldcombat.skill.sweetscent.description.0": "Scent grants up to %1$s stages of temporary evasion loss and lingers for %2$s after leaving. Native stat policies and immunity still apply; damage keeps its usual rules.",
   "worldcombat.skill.sweetscent.description.1": "The cloud radius is %1$s, lingers %2$s and scents up to %3$s bodies per scan.",
   "worldcombat.skill.sweetscent.description.2": "Reach %1$s blocks, windup %2$s, cooldown %3$s.",
   "worldcombat.skill.sweetscent.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
@@ -26,5 +26,5 @@
   "world_combat.move.sweetscent.text.cloud": "Sweet aroma spreads",
   "world_combat.move.sweetscent.text.scented": "Scented (rank %1$s)",
   "effect.world_combat.sweet_scent": "Scented",
-  "worldcombat.skill.sweetscent.description.additional": "The cloud only scents enemies it has a clear line to and deals no damage itself; enemies inside keep having the aroma renewed, while allies are unaffected."
+  "worldcombat.skill.sweetscent.description.additional": "Only enemies reachable by line of sight are scented. Short position traces follow actual movement. This window releases only its own glowing lease; external glowing retains its original owner."
 }

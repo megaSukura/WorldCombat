@@ -3,7 +3,8 @@
  *
  * 薄雾是一条区域规则：每 5 刻扫描半径内、贴地（grounded）的活体，给他们补 `world_combat:mistyterrain_ground`
  *   （身份 `world_combat:status/mistyterrain`）。带该身份者：共享的异常施加被 `CombatStatus.gate` 拒绝；
- *   龙属性来招的伤害在入场结算时乘 `dragon`（原生 ×0.5）。开启净化时，雾还会把已有的有害状态效果洗掉。
+ *   龙属性来招的伤害在入场结算时乘 `dragon`（原生 ×0.5）。开启净化时，雾在活体首次进入本次雾时洗掉已有的
+ *   有害状态效果一次——之后持续只按正常防异常拒绝新状态；退出再入不再触发，避免反复清场。
  */
 namespace PokemonSkills {
     function mistyPoint(field: WorldEffects.Field): CombatPoint {
@@ -19,9 +20,17 @@ namespace PokemonSkills {
         const body = world.observe(actor);
         if (body === null || !body.grounded()) return false;
         MobEffects.apply(world, actor, mistyterrainGround, Math.max(40, Math.round(Number(field.data.mark) || 60)) + 20, 0);
-        if (Number(field.data.purify) > 0 && mistyCleanse(world, actor)) {
-            WorldFeedback.emit(world, mistyterrainScene, 1, body.position(), { moment: "cleanse", target: String(actor.ref()) }, 26);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), mistyterrainCleanseText, [], 26);
+        if (Number(field.data.purify) > 0) {
+            // 每块雾、每个活体只在首次进入时净化一次；`cleansed` 随场地数据保存，退出再入不再触发。
+            const cleansed = field.data.cleansed || (field.data.cleansed = {});
+            const ref = String(actor.ref());
+            if (!cleansed[ref]) {
+                cleansed[ref] = 1;
+                if (mistyCleanse(world, actor)) {
+                    WorldFeedback.emit(world, mistyterrainScene, 1, body.position(), { moment: "cleanse", target: ref }, 26);
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), mistyterrainCleanseText, [], 26);
+                }
+            }
         }
         return true;
     }

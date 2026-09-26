@@ -31,6 +31,6 @@
   "world_combat.move.safeguard.text.guard": "The ward turns the status away",
   "world_combat.move.safeguard.text.fade": "The ward closes",
   "effect.world_combat.safeguard_veil": "Safeguard",
-  "worldcombat.skill.safeguard.description.3": "The ward refreshes nearby allies once per second. When the field ends, allies still inside lose its protection; the user and allies who left early may retain up to about %1$s of residual protection. Clearing the user’s ward ends the field early.",
+  "worldcombat.skill.safeguard.description.3": "The ward refreshes nearby allies once per second. Allies who leave the radius keep a short remnant of their own, up to about %1$s; when the user's field ends this protection is withdrawn with it. Overlapping wards are kept separately, so clearing one does not remove another; clearing the user's ward ends this field early.",
   "worldcombat.skill.safeguard.value.residualDuration": "Maximum lingering protection"
 }

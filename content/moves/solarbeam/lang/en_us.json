@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.solarbeam.summary": "Gather sunlight while standing still, then release a piercing beam along a straight corridor. Strong sunlight allows immediate release; rain reduces power and slows the gather.",
+  "worldcombat.skill.solarbeam.summary": "Gather sunlight while standing still, then release a piercing beam along the aimed direction, striking the corridor from near to far; solid blocks cut the beam off at the wall. Strong sunlight allows immediate release; rain reduces power and slows the gather.",
   "worldcombat.skill.solarbeam.use.0": "Pierce a line across open ground",
   "worldcombat.skill.solarbeam.use.1": "An unannounced heavy hit in clear weather",
   "worldcombat.skill.solarbeam.description.0": "The beam deals about %1$s special damage to each target it strikes.",

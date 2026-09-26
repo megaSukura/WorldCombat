@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.firespin.summary": "Hurl a spark onto the target and raise a spinning column of fire that travels with it: the column keeps scorching the target and tries to ignite it, and the target cannot outrun its own fire. The only escape is to put it out - become soaked (in water, in rain, hit by a water move) and the fire goes out at once. The blaze style hits harder and faster but lasts less; the ember style burns longer and steadier.",
+  "worldcombat.skill.firespin.summary": "Hurl a freely aimed spark that raises a spinning column of fire on the first enemy it strikes, travelling with it: the column keeps scorching the target and tries to ignite it, and the target cannot outrun its own fire. The only escape is to put it out - become soaked (in water, in rain, hit by a water move) and the fire goes out at once. Recasting only replaces the old column, never stacking several. The blaze style hits harder and faster but lasts less; the ember style burns longer and steadier.",
   "worldcombat.skill.firespin.use.0": "Stick to a highly mobile target and keep scorching it",
   "worldcombat.skill.firespin.use.1": "Pressure a bulky target with ignited damage over time",
   "worldcombat.skill.firespin.use.2": "Force a foe to reposition to put the fire out",
   "worldcombat.skill.firespin.use.3": "Drive a target out of water, then light it up",
   "worldcombat.skill.firespin.description.0": "The spark deals about %1$s special damage and raises a fire column that travels with the target.",
-  "worldcombat.skill.firespin.description.1": "The column lasts %1$s and licks the target every %2$s, each lick dealing about %5$s special damage; while it is not already burning, each lick also has a %3$s chance to set it burning for %4$s, which burns away 1/16 of its maximum health every 5 seconds and halves its physical attacks.",
+  "worldcombat.skill.firespin.description.1": "The column lasts %1$s and licks the target every %2$s, each lick dealing about %5$s special damage; only a lick that actually dealt damage can, while the target is not already burning, set it burning with a %3$s chance for %4$s, which burns away 1/16 of its maximum health every 5 seconds and halves its physical attacks.",
   "worldcombat.skill.firespin.description.2": "Range %1$s blocks; the spark homes in on the target at %2$s blocks per tick.",
   "worldcombat.skill.firespin.option.on": "Blaze style on: power x1.1, interval x0.8, ignite chance x1.25, cooldown +6, but duration x0.8 - it hits harder and ends sooner.",
   "worldcombat.skill.firespin.option.off": "Blaze style off (ember): full power, longer interval, lower ignite chance, but it lasts longer, made to wear a target down.",

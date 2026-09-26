@@ -1,15 +1,16 @@
 /**
  * 骨棒乱打 / bonerush 的客户端表现。
  *
- * 一句话：施法者把手里那截硬骨一枚枚按弧线抛出，骨头落地砸出贴地的震波圈与碎石，落点那层地面被震出裂痕、
- *   过一会儿自己长回去；每一击都比上一击更近落地，最后一击的圈最大。
+ * 一句话：施法者把手里那截硬骨一枚枚按弧线抛出，骨头落地砸出贴地的震波圈与碎石，落点只留一圈会自己散去的
+ *   尘痕（不改动地表）；每一击都比上一击更近落地，最后一击的圈最大。
  * 色相家族：骨白（0xEAE0C8）做骨头与震波，落尘土黄（0xD8C9A6）与暗褐（0x8A7458）做地面；没有第二个色相。
- * 拍子：起 draw（拔骨聚光）→ 掷 throw（骨头弧线飞行）→ 夯 slam（落点震波）→ 裂 crack（地痕）→ 中 hit → 收 settle。
- * 范围：slam 用 `data.shock` 画贴地的整圈震波，圈的大小就是落点判定半径；crack 用 `data.radius` 铺开地痕，
+ * 拍子：起 draw（拔骨聚光）→ 掷 throw（骨头弧线飞行）→ 夯 slam（落点震波）→ 裂 crack（尘痕）→ 中 hit → 收 settle。
+ * 范围：slam 用 `data.shock` 画贴地的整圈震波，圈的大小就是落点判定半径；crack 用 `data.radius` 铺开尘痕，
  *   玩家一眼看出骨头落在哪、波及多广。
- * 运动：throw 绑定 `data.projectile`，碎屑贴着飞行中的骨头拖出轨迹，读出「骨头走的是弧线」。
- * 数：`data.dust`（物攻派生）绑定每一击的发射量，`data.intensity`（每击威力派生）抬高亮度，
- *   `data.final`（末击倍率派生）让最后一击的圈更亮更大。
+ * 运动：throw 由服务端 actionScenes 携带真实投递 ref，碎屑贴着飞行中的骨头拖出真实弧线，撞到接触面就停。
+ * 数：`data.dust`（物攻派生）绑定每一击的发射量，`data.intensity`（每击实际威力派生，末击重夯的 × 系数已
+ *   算进去）让最后一击的圈更亮更大，`data.linger`（尘痕时长派生）决定尘痕粒子活多久，
+ *   `data.lifted`（实际顶起才有）只在真被顶起的目标身上加一撮上扬尘。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const BonerushDefinition: ParticleDefinition = {
@@ -91,10 +92,10 @@ const BonerushDefinition: ParticleDefinition = {
                 {
                     name: "seam", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "cells", fallback: 8 }, at: 0, repeats: 2, interval: 4 },
+                    burst: { count: { data: "dust", fallback: 12 }, at: 0, repeats: 2, interval: 4 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.2 }, thickness: 1, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.04, 0.18], spread: 40, gravity: 0.05, drag: 0.9,
-                    lifetime: [10, 18], size: [0.12, 0.02],
+                    lifetime: { data: "linger", fallback: 80 }, size: [0.12, 0.02],
                     color: 0x8A7458, alpha: [0.55, 0], light: "world", maxParticles: 260
                 }
             ]
@@ -118,6 +119,14 @@ const BonerushDefinition: ParticleDefinition = {
                     shape: { kind: "sphere_surface", radius: 0.32 }, direction: "outward", speed: [0.12, 0.4], spread: 32, gravity: 0.07, drag: 0.9,
                     lifetime: [9, 16], size: [0.08, 0.02],
                     color: 0x8A7458, alpha: [0.5, 0], light: "world", maxParticles: 220
+                },
+                {
+                    name: "lift", bind: "target", offset: [0, 0.2, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "lifted", fallback: 0 }, at: 0 },
+                    shape: { kind: "ring", radius: 0.24, rotation: [90, 0, 0] }, direction: "up", speed: [0.1, 0.34], spread: 10, gravity: 0.02, drag: 0.9,
+                    lifetime: [7, 12], size: [0.1, 0.02],
+                    color: 0xD8C9A6, alpha: [0.5, 0], light: "world", maxParticles: 40
                 }
             ]
         },

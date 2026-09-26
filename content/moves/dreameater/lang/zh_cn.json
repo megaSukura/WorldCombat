@@ -27,7 +27,8 @@
   "worldcombat.skill.dreameater.preference.ai.healBelow": "回血优先阈值",
   "worldcombat.skill.dreameater.preference.ai.healBelow.help": "自身生命低于这个比例时，把食梦当续航手段优先出手；越高越早靠它回血。",
   "world_combat.move.dreameater.text.feast": "吃掉了它的梦",
-  "world_combat.move.dreameater.text.sap": "梦境回血 %1$s%%",
+  "world_combat.move.dreameater.text.sap": "梦境回血 %1$s",
   "world_combat.move.dreameater.text.wake": "它醒着，没有梦可吃",
+  "world_combat.move.dreameater.text.fade": "梦够不到了",
   "worldcombat.skill.dreameater.description.additional": "目标必须正在睡觉；命中造成伤害后它会惊醒，所以同一个睡眠窗口通常只能抽取一次。"
 }

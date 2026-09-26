@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.telekinesis.summary": "用念力把一名对手抬离地面悬在半空：悬空期间它的移动被大幅压住，地面招式与地形危害也够不到它。",
+  "worldcombat.skill.telekinesis.summary": "把一名可抬身体真实托到低空，敌人受原生抗性和控制许可约束，也可托起明确选中的伙伴。顶棚限制高度，受伤、解除或失距松开；实际离地才免地面招。",
   "worldcombat.skill.telekinesis.use.0": "把要跑的对手吊在半空集火",
   "worldcombat.skill.telekinesis.use.1": "让地面招式打不到它（也保护它免受地面招）",
   "worldcombat.skill.telekinesis.use.2": "在对手挪不动时集火",
-  "worldcombat.skill.telekinesis.description.0": "对 %1$s 格内的一名对手施放，把它抬离地面 %2$s 秒，期间压掉它 %3$s 的移动；悬空时地面招式与坠落、仙人掌一类的地面危害伤不到它，被击落或扎根的目标则提不起来。",
+  "worldcombat.skill.telekinesis.description.0": "对 %1$s 格内可见身体托举至低空，窗口至多 %2$s 秒，压低移动 %3$s；只有确实悬离支撑面时才免地面类型伤害。",
   "worldcombat.skill.telekinesis.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.telekinesis.pin.on": "压住：压制 95%、几乎钉死，但存续 ×0.7、冷却 ×1.25、起手 +3。",
   "worldcombat.skill.telekinesis.pin.off": "托起：存续 ×1.15、冷却 ×0.9，出手更省、吊得更久，但目标还能挪一小步。",
@@ -33,5 +33,6 @@
   "world_combat.move.telekinesis.text.cut": "念力被切断，失托落下",
   "world_combat.move.telekinesis.text.negate": "地面招式够不到",
   "worldcombat.skill.telekinesis.description.3": "同一名对手已被悬空时不能再抬；地鼠、三地鼠、沙丘娃、噬沙堡爷这类本就钻地的物种也抬不起来，起手还要求中间没有遮挡、看得见目标。",
-  "worldcombat.skill.telekinesis.description.4": "时间走完念力自行松开，被压住的移动随之恢复；中途被击落类效果（击落、重力）打断则提前结束。"
+  "worldcombat.skill.telekinesis.description.4": "时间走完念力自行松开，被压住的移动随之恢复；中途被击落类效果（击落、重力）打断则提前结束。",
+  "worldcombat.skill.telekinesis.description.1": "扎根、击落与原生拒绝会阻止托举；受到实际伤害、解除、施术者失效或偏离托点便松开。顶棚决定实际高度。"
 }

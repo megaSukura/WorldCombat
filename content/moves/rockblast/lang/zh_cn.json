@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.rockblast.summary": "从脚下的地里掰出石块，一块接一块按弧线抛向目标：每块落地砸一次，并把落点崩成碎石。石块抛得散、贴脸才吃得满；巨岩式少而重、抛得更紧更陡。",
+  "worldcombat.skill.rockblast.summary": "从脚下的地里掰出石块，一块接一块按弧线抛向瞄准的落区：每块真正砸中才结算一次，并在真撞点崩起碎石尘。石块抛得散、贴脸才吃得满；可瞄实体、地面点或抬高的方向，墙会把石头真的截下来。巨岩式少而重、抛得更紧更陡。",
   "worldcombat.skill.rockblast.use.0": "中近距离一梭有弧线的重石",
-  "worldcombat.skill.rockblast.use.1": "把落点地面崩成碎石",
+  "worldcombat.skill.rockblast.use.1": "瞄准落区压住会移动的目标",
   "worldcombat.skill.rockblast.use.2": "对厚目标用巨岩式堆单块伤害",
   "worldcombat.skill.rockblast.description.0": "每块石头造成约 %1$s 点物理伤害，这一梭会掰出 %2$s 块（原生 2～5，随精灵数据变化）。",
-  "worldcombat.skill.rockblast.description.1": "石块每隔 %1$s 以 %2$s 格/刻抛出，能打到 %3$s 格内，散布 ±%4$s。",
+  "worldcombat.skill.rockblast.description.1": "石块每隔 %1$s 以 %2$s 格/刻沿弧线抛出，能打到 %3$s 格内，散布 ±%4$s。",
   "worldcombat.skill.rockblast.description.2": "单块石头判定 %1$s 格、按 %2$s 格/刻²弧坠下落。",
   "worldcombat.skill.rockblast.boulder.on": "巨岩式：单石威力 ×1.4、石块更大、散布 ×0.6、弧更陡；代价是投石数收在 3、间隔 +2 刻、石速 ×0.92、起手 +3 刻、冷却 +5 刻。",
   "worldcombat.skill.rockblast.boulder.off": "碎岩霰弹：投石数可到 5 块、间隔 −1 刻、抛得更快；代价是单石威力 ×0.85、石块更小、散布 ×1.2。",
@@ -20,7 +20,7 @@
   "worldcombat.skill.rockblast.value.reach": "射程",
   "worldcombat.skill.rockblast.value.spread": "散布",
   "worldcombat.skill.rockblast.value.chips": "碎岩量",
-  "worldcombat.skill.rockblast.value.rubble": "碎石存续",
+  "worldcombat.skill.rockblast.value.rubble": "落尘停留",
   "worldcombat.skill.rockblast.value.tempo": "起手",
   "worldcombat.skill.rockblast.value.aftercast": "收招",
   "worldcombat.skill.rockblast.value.recharge": "冷却",
@@ -30,5 +30,5 @@
   "worldcombat.skill.rockblast.preference.ai.maxChase.help": "超过这个距离就不主动抛石，先走近。越大越愿意从更远处先手。",
   "worldcombat.skill.rockblast.preference.ai.finish": "优先收残血",
   "worldcombat.skill.rockblast.preference.ai.finish.help": "开启：残血目标排得更前，用这一梭石块收尾；关闭则所有目标同价。",
-  "worldcombat.skill.rockblast.description.additional": "无论砸中敌人还是砸在地上，每块石头都会把落点一小片最上层地表崩成碎石；碎石存续 %1$s，到期原方块回来，砸空那一下的碎石更短暂。"
+  "worldcombat.skill.rockblast.description.additional": "无论砸中敌人还是砸在硬面上，每块石头都在真实撞点崩起碎石尘，不替换地表方块；落尘短暂停留，被拒或砸空时更短暂、更淡。"
 }

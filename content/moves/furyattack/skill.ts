@@ -10,6 +10,9 @@
  *   刺（thrust，提交后）：`jabs` 刺。每一刺沿身前 `reach` 长、`tipWidth` 半宽的窄走廊判定，至多 `maxTargets`
  *       个非友方各吃一记 `jab` 接触伤害，随后被沿刺击方向顶退 `push` 格。每刺独立掷 `accuracy`；
  *       目标已被顶出 `reach` 之外，或这一刺落空，这串就停（浮字提示）。
+ *
+ * 选取 `kind: "aim"`：可以点任意阵营实体，也可以只给一个方向起手；准线在提交那一刻锁死，每刺同轴。
+ *   空放沿固定准线刺完整串，撞不到人也不提前收势；跟步走原生可达位移，撞墙则照实停住。
  *   收（settle）：这一串刺完收势，余尘落定。
  *
  * 与同族分开：乱抓会绕圈换位、扫尾拍打是原地整圈旋尾、骨棒乱打是掷骨夯地；只有乱击站定不挪、把目标一路顶退，
@@ -33,9 +36,9 @@ namespace PokemonSkills {
         id: furyattackId,
         cooldownParameter: "recharge",
         name: "Fury Attack",
-        description: "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方这串就断。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
-        uses: ["站定用角喙朝一点连续突刺", "每一刺把对手顶退，一路把它推出射程", "追击式跟住走位，把整串吃满"],
-        kind: "enemy",
+        description: "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方这串就断。可以点敌人，也可以只给一个方向起手，准线在起手时锁死、每刺同轴；空放会沿准线刺完整串。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
+        uses: ["站定用角喙朝一点连续突刺", "每一刺把对手顶退，一路把它推出射程", "追击式跟住走位，把整串吃满", "只朝一个方向起手，沿固定准线空刺完整串"],
+        kind: "aim",
         range: 2.9,
         maxRange: 4.3,
         prepare: 5,
@@ -74,8 +77,7 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            const targetRef = target !== null && world.valid(target) ? String(target.ref()) : "";
             const power = p(furyattackId, "jab", action);
             const jabs = Math.max(2, Math.min(5, Math.round(p(furyattackId, "jabs", action))));
             const gap = Math.max(2, Math.round(p(furyattackId, "gap", action)));
@@ -90,6 +92,9 @@ namespace PokemonSkills {
             const band = { below: 1.0, above: 1.9 };
             const scale = Math.max(0.5, Math.min(1.8, half / 0.38));
             const intensity = Math.max(0.5, Math.min(2.4, power / 18));
+            // 提交那刻锁死一条准线；每刺同轴，不再随目标转身。命中 85 的偏角只在这一刻挂上。
+            const heading = NativeSemantics.aim(action, move,
+                WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction()), 1.3);
             let index = 0, landed = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
@@ -109,30 +114,30 @@ namespace PokemonSkills {
                 if (settled) return;
                 if (index >= jabs) { settle(current); return; }
                 const scope = current.world();
-                const victim = scope.actor(targetRef);
-                const vbody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                 const self = scope.observe(actor);
-                if (self === null || vbody === null) { finish(current); return; }
+                if (self === null) { finish(current); return; }
                 const origin = self.position();
-                let toTarget = vbody.position().minus(origin);
-                if (toTarget.length() < 0.05) toTarget = current.direction();
                 const shot = index + 1;
-                // 目标被前面的刺顶出射程：这一串到此为止。
-                if (toTarget.length() > reach + 0.3) {
-                    WorldFeedback.emit(scope, furyattackScene, 1, origin.plus(toTarget.unit().scale(reach)),
-                        { moment: "out", index: shot, jabs: jabs, reach: reach, sparks: sparks, scale: scale }, 18);
-                    WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), furyattackOutText, [landed], 22);
-                    settle(current);
-                    return;
+                // 有实体目标时：被前面的刺顶出射程就到此为止。空放/方向刺没有这个条件，沿固定准线继续。
+                if (targetRef !== "") {
+                    const victim = scope.actor(targetRef);
+                    const vbody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                    if (vbody === null || vbody.position().minus(origin).length() > reach + 0.3) {
+                        WorldFeedback.emit(scope, furyattackScene, 1, origin.plus(heading.scale(reach)),
+                            { moment: "out", index: shot, jabs: jabs, reach: reach, sparks: sparks, scale: scale }, 18);
+                        WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), furyattackOutText, [landed], 22);
+                        settle(current);
+                        return;
+                    }
                 }
-                // 命中 85：共享偏角让这一刺真的会歪。
-                const heading = NativeSemantics.aim(current, move, toTarget.unit(), 1.3);
+                // 每刺同轴：判定与表现共用提交时锁死的那条准线。
                 const lane = furyattackLane(origin, heading, reach, half);
                 WorldFeedback.emit(scope, furyattackScene, 1, origin,
                     { moment: "thrust", path: lane, index: shot, jabs: jabs, reach: reach,
                         direction: [heading.x(), heading.y(), heading.z()], sparks: sparks, scale: scale, intensity: intensity }, 18);
                 sound(current, "minecraft:entity.player.attack.weak");
-                if (scope.random() > accuracy) {
+                // 只对实体目标掷这一刺的命中率；朝空方向直接看真实接触。
+                if (targetRef !== "" && scope.random() > accuracy) {
                     WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), furyattackMissText, [shot], 20);
                     settle(current);
                     return;
@@ -140,23 +145,24 @@ namespace PokemonSkills {
                 let hits = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.lane(origin, heading, reach, half, band), function (other, facts) {
                     if (hits >= cap) return;
+                    if (!scope.clear(origin, facts.position())) return;
                     if (!hurt(current, other, furyattackId, power, { damage: damageSpec(furyattackId, "jab"), contact: true })) return;
                     hits++;
                     landed++;
                     const at = facts.position();
-                    if (scope.valid(other)) scope.displace(other, WorldCombat.point(heading.x(), 0, heading.z()).scale(push));
+                    if (scope.valid(other)) scope.hitDisplace(other, WorldCombat.point(heading.x(), 0, heading.z()).scale(push));
                     WorldFeedback.emit(scope, furyattackScene, 1, at,
                         { moment: "hit", target: String(other.ref()), index: shot, jabs: jabs, sparks: sparks,
                             push: Math.round(push * 100) / 100, scale: scale, intensity: intensity }, 20);
                     scope.sound("cobblemon:impact.fighting", at, 14, "{}");
                 });
-                if (hits === 0) {
+                if (hits === 0 && targetRef !== "") {
                     WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), furyattackMissText, [shot], 20);
                     settle(current);
                     return;
                 }
                 index = shot;
-                // 追击式：把距离重新压回射程内，好让下一刺够得着。
+                // 追击式：把距离重新压回射程内；走原生可达位移，撞墙则照实停住。
                 if (close && step > 0.05) scope.displace(actor, WorldCombat.point(heading.x(), 0, heading.z()).scale(step));
                 if (index >= jabs) { settle(current); return; }
                 current.after(gap, thrust);

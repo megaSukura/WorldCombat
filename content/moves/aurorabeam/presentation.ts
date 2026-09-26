@@ -3,11 +3,12 @@
  *
  * 一句话：施法者身前把冷光折成一点棱镜 → 一条彩虹缎带沿瞄准线冲出去、一路留下跳跃的虹色光点 →
  * 命中处炸开冰色冲击与一圈虹光，落点地面结出一小片霜；被冷光刺到的人身上再亮一圈虹环。
+ * 撞到冰雪表面时先在真实方块面上亮出一个小接触斑，随即在角点折一下、留下一闪棱镜光。
  * 色相家族：冰蓝（0x9FE8FF / 0xB8F0FF）为主体，虹彩（shinesparkle_rainbow 原色）只在光带与强调层跳动。
- * 拍子：起 windup（折棱镜）→ 行 travel（光带冲刺）→ 击 beam/hit（光带与命中）→ 果 chill（降攻）与
- *   rime（结霜）→ 收 miss。
- * 范围：beam 的光带用与判定同一段 `data.path` 画出「照到了哪」；rime 的霜斑按 `data.scale`（band / 10）铺开。
- * 运动：travel 绑 projectile 沿直线拖尾；beam 沿路径拉一条残余光带；rime 的霜点贴地向外扩。
+ * 拍子：起 windup（折棱镜）→ 行 travel（光带冲刺）→ 击 beam/hit（光带与命中）→ 折 glint/prism（冰面折射）
+ *   → 果 chill（降攻）与 rime（结霜）→ 收 miss。
+ * 范围：beam 的光带用真实飞行段拼出的 `data.path` 画出「照到了哪」；rime 的霜斑按 `data.scale`（band / 10）铺开。
+ * 运动：travel 绑 projectile 沿每段真实方向拖尾；beam 沿真实折线拉一条残余光带；rime 的霜点贴地向外扩。
  * 数：`data.shimmer`（特攻与等级派生）决定光带与命中虹光的密度，`data.intensity` 抬高亮度。
  */
 const AuroraBeamDefinition: ParticleDefinition = {
@@ -76,6 +77,45 @@ const AuroraBeamDefinition: ParticleDefinition = {
                     shape: { kind: "polyline" }, direction: "shape", speed: [0.02, 0.12], spread: 16, spin: 10,
                     lifetime: [8, 16], size: [0.1, 0.02],
                     color: 0xFFFFFF, alpha: [0.8, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
+        glint: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "patch", bind: "point", fit: "none", offset: [0, 0.02, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: { data: "shimmer", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.16 },
+                    direction: "outward", speed: [0.02, 0.08], spread: 40,
+                    lifetime: [6, 12], size: [0.08, 0.01],
+                    color: 0xCFF4FF, alpha: [0.7, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        prism: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "fold", bind: "point", fit: "none", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
+                    burst: { count: { data: "shimmer", fallback: 14 } },
+                    shape: { kind: "line", length: 0.7 },
+                    direction: "shape", speed: [0.04, 0.16], spread: 22, spin: 14,
+                    lifetime: [8, 16], size: [0.1, 0.02],
+                    color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 50
+                },
+                {
+                    name: "corner", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/orb/glowing_dots_cyan",
+                    burst: { count: 3, interval: 2 },
+                    shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [6, 12], size: [0.16, 0.03],
+                    color: 0x9FE8FF, alpha: [0.9, 0], light: "full", maxParticles: 12
                 }
             ]
         },

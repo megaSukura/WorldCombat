@@ -2,7 +2,8 @@
  * 恶之波动 / darkpulse 的伙伴 AI 用途。
  *
  * 什么局面下出手：中距离的一团恶意气场，目标可见、敌对、存活且在 `ai.maxChase`（默认 14）格内。
- * 它是范围招：`ai.cluster` 打开时，目标身边 3.5 格内还挤着别的敌人就抬高 priority，一次罩住一片。
+ * 它是范围招：`ai.cluster` 打开时，按气团实际第一接触点身边 3.5 格内挤着多少敌人来抬 priority，
+ * 一次罩住一片；`ai.cluster` 关闭则只按普通远程攻击排序。
  * 对谁出手：以候选敌人所在位置为落点；`accepts` 只筛阵营、存活与可见，不筛距离（距离归 `approach`）。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再出手。
  * 放完接什么：交回共享交战计划；它是一记中距离的点射，不负责收尾。
@@ -24,6 +25,27 @@ namespace PokemonSkills {
         return count;
     }
 
+    /** 气团沿直线飞行，途中第一具挡路且可见的敌人会提前引爆；评分以这个实际接触点为准。 */
+    function darkpulseFirstContact(context: WorldBehavior.Context, target: CompanionBehavior.Entity): CompanionBehavior.Entity {
+        var from = CompanionBehavior.source(context).point;
+        var dx = target.point[0] - from[0], dz = target.point[2] - from[2];
+        var length = Math.sqrt(dx * dx + dz * dz);
+        if (!(length > 0.1)) return target;
+        var ux = dx / length, uz = dz / length;
+        var nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        var first = target, firstAlong = length;
+        for (var i = 0; i < nearby.length; i++) {
+            var other = nearby[i];
+            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+            var ox = other.point[0] - from[0], oz = other.point[2] - from[2];
+            var along = ox * ux + oz * uz;
+            if (along <= 0.1 || along >= firstAlong) continue;
+            if (Math.abs(ox * uz - oz * ux) > 0.9) continue;
+            first = other; firstAlong = along;
+        }
+        return first;
+    }
+
     CompanionBehavior.registerUse("darkpulse", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -38,7 +60,8 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !darkpulseWants(context, capability, target)) return 0;
             if (!CompanionBehavior.ai<boolean>(capability, "cluster", true)) return 20;
-            return darkpulseCluster(context, target) >= 2 ? 36 : 20;
+            // 半路撞人时爆圈会停在实际第一接触点，按那点周围的密度评分。
+            return darkpulseCluster(context, darkpulseFirstContact(context, target)) >= 2 ? 36 : 20;
         }
     });
 

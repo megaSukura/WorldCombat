@@ -16,6 +16,9 @@
  * 畏缩：施加本单元声明的 MobEffect（共享身份 `world_combat:status/flinch`，只借身份、行为自写）并投递
  * `world_combat:interrupt`；下方门禁在窗口内拒绝新动作，伤害阶段不受影响。
  *
+ * 选取 kind: "aim"：可点敌人、也可直接点一处世界落点，空放照常起跳砸向那个点；起跳那一刻落点固定、不再追踪，
+ *   坠落途中无论撞到实体还是被墙挡住都立刻结束俯冲，落地只收势、不再追加范围满伤。
+ *
  * 配置 highDive（高空式）由 resolve 改时序、由公式改高度/威力/畏缩，提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -36,9 +39,9 @@ namespace PokemonSkills {
         id: "skyattack",
         cooldownParameter: "recharge",
         name: "Sky Attack",
-        description: "先停在原地蓄一整拍（可被打断），再腾到落点上方笔直坠下砸成一记重击；落点在起跳那刻定住、不会追踪，坠下途中目标走开就会落空。命中按概率使目标畏缩、打断其动作。高空式蓄得更久、砸得更狠。",
+        description: "先停在原地蓄一整拍（可被打断），再腾到落点上方笔直坠下砸成一记重击；可以点敌人，也可以直接点一处落点，空放照样起跳落空。落点在起跳那刻定住、不会追踪，坠下途中目标走开就会落空；坠落时头顶被墙或方块挡住就只能爬到多少算多少。命中按概率使目标畏缩、打断其动作。高空式蓄得更久、砸得更狠。",
         uses: ["先蓄一拍再从上空砸下一记重击", "越过地面阻挡打到远处的目标", "从上方砸中飞在空中的对手"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 26,
@@ -120,29 +123,35 @@ namespace PokemonSkills {
                 const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
-                    if (victim !== null && String(victim.ref()) !== String(actor.ref()) && !scope.friendly(victim)) {
+                    if (victim !== null && String(victim.ref()) !== String(actor.ref())) {
+                        // 首接触即结束俯冲：撞到非友方结算重击，撞到友方只停在身体上、不结算伤害。
                         const at = hit.position();
-                        const landed = impact(current, hit, "skyattack", power,
-                            { damage: damageSpec("skyattack", "plunge"), contact: false });
-                        WorldFeedback.emit(scope, skyattackScene, 1, at,
-                            { moment: "strike", target: String(victim.ref()), shock: shock, scale: scale,
-                                intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 26);
-                        sound(current, "cobblemon:impact.flying");
-                        if (landed && scope.valid(victim)) {
-                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), skyattackHitText, [], 26);
-                            if (scope.random() < chance && skyattackFlinch(scope, victim, flinchTicks)) {
-                                WorldFeedback.emit(scope, skyattackScene, 1, at, { moment: "flinch", target: String(victim.ref()) }, 22);
-                                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.6, 0)), skyattackFlinchText, [], 22);
+                        let struck = false;
+                        if (!scope.friendly(victim)) {
+                            const landed = impact(current, hit, "skyattack", power,
+                                { damage: damageSpec("skyattack", "plunge"), contact: false });
+                            WorldFeedback.emit(scope, skyattackScene, 1, at,
+                                { moment: "strike", target: String(victim.ref()), shock: shock, scale: scale,
+                                    intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 26);
+                            sound(current, "cobblemon:impact.flying");
+                            if (landed && scope.valid(victim)) {
+                                struck = true;
+                                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), skyattackHitText, [], 26);
+                                if (scope.random() < chance && skyattackFlinch(scope, victim, flinchTicks)) {
+                                    WorldFeedback.emit(scope, skyattackScene, 1, at, { moment: "flinch", target: String(victim.ref()) }, 22);
+                                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.6, 0)), skyattackFlinchText, [], 22);
+                                }
                             }
                         }
-                        land(current, at, true);
+                        land(current, at, struck);
                         return;
                     }
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 if (hit.blocked() || moved < minimumMove) { land(current, current.origin(), false); return; }
                 movementScenes.show(current, "fall", self.position(), { moment: "fall", shock: shock, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, 1 - gap / Math.max(0.001, altitude)) });
+                        ratio: Math.min(1, 1 - gap / Math.max(0.001, altitude)),
+                        point: [dropPoint.x(), dropPoint.y(), dropPoint.z()] });
                 current.after(1, function (next: CombatAction) { plunge(next); });
             }
 

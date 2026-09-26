@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.spark.summary": "Quickly strike a target, possibly paralyzing it. Deals more damage to targets with low health.",
+  "worldcombat.skill.spark.summary": "Lunge a short way in the aimed direction wreathed in current; the first enemy you hit takes damage, is shoved and may be paralyzed. Deals more damage to hurt targets.",
   "worldcombat.skill.spark.description.0": "A charged tackle that settles about %1$s contact damage on a single target; it closes up to %2$s blocks at %3$s blocks per tick with a %4$s block hit radius.",
   "worldcombat.skill.spark.description.1": "On a hit there is a %1$s%% chance to paralyze the target for %2$s (an already-paralyzed target is not re-applied; Electric types are immune) and shove it %3$s blocks; while paralyzed the target's movement speed is halved and each action has a 25%% chance to fail.",
   "worldcombat.skill.spark.overcharge.on": "Overcharge: higher power and paralyze chance and a longer paralysis, but a slower windup and a longer cooldown - pin the target down once.",

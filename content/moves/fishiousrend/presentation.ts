@@ -1,14 +1,14 @@
 /**
  * 鳃咬 / fishiousrend 的客户端表现。
  *
- * 一句话：施法者张开鳃、嘴边聚起一层水汽 → 扑上去咬住目标的一刻炸开一圈水花（先咬住时更重更白）→
- * 咬合处水纹收拢、目标被拖近时脚边溅水。
+ * 一句话：施法者张开鳃、嘴边聚起一层水汽 → 拖着一道水线扑近（途中首敌优先）→ 咬住目标的一刻炸开一圈水花
+ * （先咬住时更重更白）→ 两片鳃刃之间拉出一条水线，随真实 drag 一节节向自己收短；拖不动只在口中压出一记短咬。
  * 色相家族：水蓝与近白（impact_water / waterjet / water_ripple / giantsplash），先咬住一拍多一层冷白。
- * 拍子：起 coil → 击 bite / clamp → 收（水纹散去）。
+ * 拍子：起 coil → 扑 lunge → 咬 bite / clamp → 收线 reel；免拉走 press，扑空走 miss。
  * 范围：coil 画在施法者嘴边与脚下；bite/clamp 的点爆与环由 `data.scale`（咬合判定派生）决定大小。
- * 运动：水花由咬合点向外炸；水纹自中心一圈圈扩散后向内收；拖拽的尾迹留在目标被拉动的一侧。
+ * 运动：lunge 的水线朝 `orient: velocity` 沿扑击方向拉直；reel 的实体顶点沿 `data.path`（猎物→施法者）逐帧收短；press 在口中炸开。
  * 数：`data.count`（最终威力派生）决定水花与碎片数量，`data.slow`（压速级数）决定咬合处的水纹层数，
- *   `data.doubled` 决定先咬住一拍是否更亮；画面里的数量与机制里的数一致。
+ *   `data.dragged`（已拖动距离）驱动收线强度，`data.doubled` 决定先咬住一拍是否更亮；画面里的数量与机制里的数一致。
  */
 const FishiousrendDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -32,6 +32,29 @@ const FishiousrendDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 16], size: [0.16, 0.03],
                     color: 0x4AA6D8, alpha: [0.6, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        lunge: {
+            duration: 10,
+            exit: { stop: 3, drain: 8 },
+            emitters: [
+                {
+                    name: "wake", bind: "source", offset: [0, 0, 0], height: 0.5, orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    rate: 26, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "away", speed: [0.04, 0.16], spread: 14,
+                    lifetime: [5, 10], size: [0.16, 0.02],
+                    color: 0x9FD8EE, alpha: [0.85, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "spray", bind: "source", offset: [0, 0, 0], height: 0.2, trail: { minDistance: 0.3 },
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    rate: 16, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    gravity: 0.04, drag: 0.9,
+                    lifetime: [7, 13], size: [0.08, 0.01],
+                    color: 0x6FB6D8, alpha: [0.7, 0], light: "world", maxParticles: 40
                 }
             ]
         },
@@ -90,6 +113,49 @@ const FishiousrendDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.06, 0.12],
                     lifetime: [10, 16], size: [0.5, 0.2],
                     color: 0x4AA6D8, alpha: [0.7, 0], light: "full", maxParticles: 8
+                }
+            ]
+        },
+        reel: {
+            duration: 16,
+            exit: { stop: 4, drain: 10 },
+            emitters: [
+                {
+                    name: "line", bind: "path", shape: { kind: "polyline" },
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    rate: 30, direction: "shape", speed: [0.02, 0.08], spread: 12,
+                    lifetime: [5, 10], size: [0.15, 0.02],
+                    color: 0x7FC8E8, alpha: [0.8, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "closing", bind: "path", shape: { kind: "polyline" },
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    rate: 12, direction: "shape", speed: [0.02, 0.07],
+                    lifetime: [7, 13], size: [0.12, 0.02],
+                    color: 0x4AA6D8, alpha: [0.7, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "grip", bind: "target", offset: [0, 0, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
+                    rate: 12, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.03, 0.1],
+                    lifetime: [7, 13], size: [0.09, 0.02],
+                    color: 0x9FD8EE, alpha: [0.8, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        press: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "crush", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    burst: { count: 10 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 20,
+                    lifetime: [7, 13], size: [0.14, 0.02],
+                    color: 0x4AA6D8, alpha: [0.7, 0], light: "full", maxParticles: 24
                 }
             ]
         },

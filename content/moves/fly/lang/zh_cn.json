@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.fly.summary": "跃出近战射程飞上开阔天空，悬停一下再从目标头顶落下来：命中造成接触伤害并把它向下压、向后推。头顶净空决定能飞多高——开阔处飞满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。悬停期间贴地近战够不着，但远程打得中。",
+  "worldcombat.skill.fly.summary": "跃出近战射程飞上开阔天空，悬停一下再落下来：命中造成接触伤害并把它向下压、向后推。可以瞄准敌人（按配置决定是否追踪），也可以选一个空点定点落下，范围更大、能一次压住一群。头顶净空决定实际能飞多高——开阔处飞满、一击最重，屋檐或洞穴压顶时只能低跳，威力与预告一起缩水；空点落击打到空地不会凭空炸开。悬停期间贴地近战够不着，但远程打得中。",
   "worldcombat.skill.fly.use.0": "跳过近战火力从上方落击",
   "worldcombat.skill.fly.use.1": "越过矮墙、沟壑与人群",
   "worldcombat.skill.fly.use.2": "在有掩体前抢一个高处落点",
   "worldcombat.skill.fly.description.0": "落击造成 %1$s 点接触伤害，并把目标向下压、向后推。",
   "worldcombat.skill.fly.description.1": "先以 %2$s 格每刻爬升到约 %1$s 格高，再悬停落下。",
   "worldcombat.skill.fly.description.2": "悬停 %1$s 刻；落地判定以 %2$s 格为基准（追踪俯冲收窄、定点击落放大），命中把目标向下压住约 %3$s 格。",
-  "worldcombat.skill.fly.description.3": "起手那一刻头顶的净空决定实际高度：开阔天空吃满，一击最重；屋檐、洞穴或树冠压顶时只能低跳到天花板下方，这一击随之最轻只剩全高的一半多。",
+  "worldcombat.skill.fly.description.3": "起手那一刻头顶的净空决定实际高度：开阔天空吃满，一击最重；屋檐、洞穴或树冠压顶时只能低跳到天花板下方，这一击随之最轻只剩全高的一半多。落地时会浮出这一跳实际取得的高度，伤害就是按它算的。",
   "worldcombat.skill.fly.description.4": "悬停期间贴地的近战够不着，但远程打得到；这段时间目标可以走位，也能钻进能挡住下落线的掩体。悬停中身上带有可见的「凌空」状态，它把施放者当作空中目标，其他招式与伙伴会据此判断。",
   "worldcombat.skill.fly.stance.track": "追踪俯冲：悬停期间落点跟在目标实时位置上，判定窄、单点，适合咬住会走位的目标。",
   "worldcombat.skill.fly.stance.pin": "定点击落：起手锁死落点、范围放大近两倍，最多一次压住 %1$s 个敌人（离落点越远压得越轻），但目标走开就落空，收招与冷却更长。",
@@ -28,7 +28,10 @@
   "worldcombat.skill.fly.preference.ai.maxChase.help": "伙伴在威胁离自己这么远以内时才考虑飞翔；调小只在近处落击，调大愿意从更远处飞过去。",
   "worldcombat.skill.fly.preference.ai.minHealth": "最低血线",
   "worldcombat.skill.fly.preference.ai.minHealth.help": "伙伴生命低于这个比例时才把飞翔当成“躲开近战的一击”，priority 提前；调高更常在挨打时飞。",
+  "worldcombat.skill.fly.preference.ai.crowd": "落区敌人数",
+  "worldcombat.skill.fly.preference.ai.crowd.help": "定点击落时，落点附近至少聚着这么多敌人才飞，好一次压住一群；追踪俯冲不受此限，设为 1 则单个目标也飞。",
   "worldcombat.skill.fly.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.fly.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位飞出去落击敌人。",
-  "effect.world_combat.fly_airborne": "凌空"
+  "effect.world_combat.fly_airborne": "凌空",
+  "world_combat.move.fly.text.height": "凌空高度 %1$s 格"
 }

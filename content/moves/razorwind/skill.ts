@@ -6,8 +6,10 @@
  *
  * 三幕：
  *   蓄（windup，提交前）：站定，一圈风之刃在身周拧出、越积越多越亮；只播预告，可被打断（打断不花 PP）。
- *   发（release，提交后）：整把扇子沿瞄准方向铺开（WorldGeometry.polygon 的扇形，判定与表现共用这组顶点）。
- *   切（cut → miss）：扇面里距离最近的至多 `blades` 个非友方各挨一记 `blade` 风刃；一个没扫到就落空。
+ *   发（release，提交后）：整把扇子沿瞄准方向按距离拆三段依次释放（每段是环扇，判定与表现共用这组顶点）；
+ *       提交后方向固定，空扇照常一段段推进。
+ *   切（cut → miss）：扇面里距离最近的至多 `blades` 个非友方各挨一记 `blade` 风刃，按所在段在对应时刻结算、每人只一次；
+ *       一个都没扫到就落空。
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器在命中点补一发亮白强调与浮字。
  *
  * 与同族分开：日光束是一条笔直的贯穿光柱、水波刀是细水线、精神利刃是会拐弯的月牙——旋风刀是唯一
@@ -34,13 +36,28 @@ namespace PokemonSkills {
         return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
     }
 
+    /** 一段环扇（第 band 段）的顶点：外弧从 −half 到 +half，再沿内弧回到起点；判定与表现共用这组顶点。 */
+    function razorwindBand(origin: CombatPoint, direction: CombatPoint, inner: number, outer: number, halfDeg: number): CombatPoint[] {
+        const forward = WorldCombat.point(direction.x(), 0, direction.z());
+        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
+        const side = WorldCombat.point(-heading.z(), 0, heading.x());
+        const half = halfDeg * Math.PI / 180, segments = 6, vertices: CombatPoint[] = [];
+        function ray(angle: number, distance: number): CombatPoint {
+            return origin.plus(heading.scale(Math.cos(angle)).plus(side.scale(Math.sin(angle))).scale(distance));
+        }
+        for (let i = 0; i <= segments; i++) vertices.push(ray(-half + 2 * half * (i / segments), outer));
+        if (inner <= 0.05) vertices.push(origin);
+        else for (let i = segments; i >= 0; i--) vertices.push(ray(-half + 2 * half * (i / segments), inner));
+        return vertices;
+    }
+
     define({
         id: razorwindId,
         cooldownParameter: "recharge",
         name: "Razor Wind",
-        description: "站定把四周气流拧成一把把风之刃，蓄够后朝正前方甩出一整片扇面：由近及远，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
+        description: "站定把四周气流拧成一把把风之刃，蓄够后朝瞄准方向甩出一整片扇面：扇面按距离由近及远分三段依次推进，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
         uses: ["站定把气流拧成一把把风之刃", "蓄够了把正前方铺成一个扇面甩出去", "一次扫到成排的敌人，暴击率高一档"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 15.5,
         prepare: 26,
@@ -87,41 +104,54 @@ namespace PokemonSkills {
             const motes = Math.max(10, Math.round(p(razorwindId, "motes", action)));
             const scale = Math.max(0.6, Math.min(2.2, cap / razorwindReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 80));
-            const vertices = razorwindFan(origin, direction, reach, half);
-            const path = razorwindPath(vertices);
+            const waves = 3, segment = reach / waves, gap = 5, bladeSpec = damageSpec(razorwindId, "blade");
 
+            // Membership is sampled when each visible band reaches it; the cast shares one total cap.
+            const struck: { [ref: string]: boolean } = Object.create(null);
+            action.releaseTarget();
             sound(action, "minecraft:entity.breeze.wind_burst");
-            WorldFeedback.emit(world, razorwindScene, 1, origin.plus(WorldCombat.point(0, 0.6, 0)),
-                { moment: "release", path: path, direction: [direction.x(), direction.y(), direction.z()],
-                    blades: cap, motes: motes, scale: scale, intensity: intensity }, 26);
 
-            const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-            WorldGeometry.selectEnemies(world, WorldGeometry.polygon(vertices, { below: 1.2, above: 2.6 }),
-                function (enemy, facts) {
-                    if (!world.clear(origin, facts.position())) return;
-                    candidates.push({ actor: enemy, at: facts.position() });
-                });
-            candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
-
+            const scenes = WorldFeedback.actionScenes(razorwindScene);
             let hits = 0;
-            for (let index = 0; index < candidates.length && hits < cap; index++) {
-                const candidate = candidates[index];
-                if (!hurt(action, candidate.actor, razorwindId, power,
-                    { damage: damageSpec(razorwindId, "blade"), slice: true })) continue;
-                hits++;
-                WorldFeedback.emit(world, razorwindScene, 1, candidate.at,
-                    { moment: "cut", target: String(candidate.actor.ref()), motes: motes, scale: scale, intensity: intensity }, 22);
-            }
 
-            if (hits === 0) {
-                WorldFeedback.emit(world, razorwindScene, 1, origin.plus(direction.scale(reach)), { moment: "miss", scale: scale }, 18);
-                WorldFeedback.text(world, origin.plus(direction.scale(reach * 0.7)).plus(WorldCombat.point(0, 0.9, 0)), razorwindMissText, [], 22);
-            } else {
-                WorldFeedback.text(world, origin.plus(direction.scale(Math.min(reach, 1.6))).plus(WorldCombat.point(0, 1.0, 0)),
-                    razorwindHitText, [hits], 24);
-                sound(action, "cobblemon:impact.normal");
+            function release(current: CombatAction, step: number): void {
+                const scope = current.world();
+                if (step > 0) scenes.stop(current, "wave" + (step - 1));
+                if (step >= waves) {
+                    if (hits === 0) {
+                        WorldFeedback.emit(scope, razorwindScene, 1, origin.plus(direction.scale(reach * 0.72)).plus(WorldCombat.point(0, 0.6, 0)),
+                            { moment: "miss", scale: scale }, 18);
+                        WorldFeedback.text(scope, origin.plus(direction.scale(reach * 0.5)).plus(WorldCombat.point(0, 0.9, 0)), razorwindMissText, [], 22);
+                    } else {
+                        WorldFeedback.text(scope, origin.plus(direction.scale(Math.min(reach, 1.8))).plus(WorldCombat.point(0, 1.0, 0)), razorwindHitText, [hits], 24);
+                        sound(action, "cobblemon:impact.normal");
+                    }
+                    scenes.finish(current, done);
+                    return;
+                }
+                const inner = segment * step, outer = segment * (step + 1);
+                scenes.show(current, "wave" + step, origin,
+                    { moment: "release", path: razorwindPath(razorwindBand(origin, direction, inner, outer, half)),
+                        band: step, waves: waves, direction: [direction.x(), direction.y(), direction.z()],
+                        blades: cap, motes: motes, scale: scale, intensity: intensity });
+                const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
+                WorldGeometry.selectEnemies(scope, WorldGeometry.polygon(razorwindBand(origin, direction, inner, outer, half), { below: 1.2, above: 2.6 }),
+                    function (enemy, facts) {
+                        if (struck[String(enemy.ref())] || !scope.clear(origin, facts.position())) return;
+                        candidates.push({ actor: enemy, at: facts.position() });
+                    });
+                candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
+                for (let index = 0; index < candidates.length && hits < cap; index++) {
+                    const candidate = candidates[index], ref = String(candidate.actor.ref());
+                    struck[ref] = true;
+                    if (!hurt(current, candidate.actor, razorwindId, power, { damage: bladeSpec, slice: true })) continue;
+                    hits++;
+                    WorldFeedback.emit(scope, razorwindScene, 1, candidate.at,
+                        { moment: "cut", target: ref, motes: motes, scale: scale, intensity: intensity }, 22);
+                }
+                current.after(gap, function (next: CombatAction) { release(next, step + 1); });
             }
-            done(action);
+            release(action, 0);
         }
     });
 

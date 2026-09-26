@@ -7,11 +7,12 @@
  *
  * 两幕：
  *   起（gather，提交前）：嗓子里聚起颤音，只播预告。
- *   叫（screech × bursts → scramble）：提交后按 `interval` 连叫，每一声沿瞄准方向张开一道扇面、
+ *   叫（screech × bursts → scramble）：提交后按 `interval` 连叫，每一声沿**起叫时锁定的那一向**张开一道扇面、
  *       扇面内每个非友方各结算一次 shriek（多段）；谁第一次被叫到就挂上本单元混乱载体
- *       （共享身份 world_combat:status/confusion）并浮出晕眩。全部叫完才收势。
+ *       （共享身份 world_combat:status/confusion）并浮出一次乱拍。全部叫完才收势。可以对着空地空喊，不需要锁敌。
  *
- * 混乱行为（本单元自己的变体，与家族写法一致）：目标每次想出手都可能被打散；打中非友方时按自身攻击反噬。
+ * 混乱行为（本单元自己的变体，与家族写法一致）：目标每次想出手都可能被打散；打中非友方时按**本次实际伤害**
+ *   乘当前攻击倍率反噬，不再单靠 Boss 的最大生命放大伤害。
  * 与同族分开：奇异之光是一束直线幽光、必须看得见；爆裂拳是近身一抡顺带必乱；喋喋不休是中近距离、
  *   穿墙的连续几声，混乱是「烦出来」的，射程与单发威力都让给了段数。
  */
@@ -38,9 +39,9 @@ namespace PokemonSkills {
         id: chatterId,
         cooldownParameter: "recharge",
         name: "Chatter",
-        description: "对着身前一道扇面连叫几串尖锐的颤音：每一声都结算一次声音伤害，被叫到的人立刻陷入混乱——之后每次想出手都可能被打散，打中别人还会被自己的力气反噬。声波不被掩体阻挡，代价是射程短、每一声都轻。",
+        description: "对着身前一道扇面连叫几串尖锐的颤音：每一声都结算一次声音伤害，被叫到的人立刻陷入混乱——之后每次想出手都可能被打散，打中别人还会被自己这一下造成的伤害反噬。声波不被掩体阻挡，代价是射程短、每一声都轻；不选敌人也能朝任意方向空喊。",
         uses: ["贴上去用一串尖叫连打几下", "隔着掩体把对手叫懵", "给危险的目标挂上失手与被反噬的窗口"],
-        kind: "enemy",
+        kind: "aim",
         range: 8.5,
         maxRange: 13,
         prepare: 11,
@@ -83,6 +84,8 @@ namespace PokemonSkills {
             const screech = Math.max(5, Math.round(p(chatterId, "screech", action)));
             const scale = Math.max(0.6, Math.min(2.4, reach / 9));
             const intensity = Math.max(0.6, Math.min(2.2, power / 24));
+            // 起叫时锁定这一向：每一串都用同一个朝向，不在连叫途中瞬间掉头去追四周的敌人。
+            const direction = aim(action);
             const caught: { [ref: string]: boolean } = {};
             let pulse = 0, hits = 0, settled = false;
 
@@ -92,12 +95,12 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const here = scope.observe(actor);
                 const origin = here === null ? centre : here.position();
-                const direction = aim(current);
                 const path = chatterFan(origin, direction, reach, angle, 10);
                 WorldFeedback.emit(scope, chatterScene, 1, origin,
                     { moment: "screech", path: path, direction: [direction.x(), direction.y(), direction.z()],
                         angle: angle, reach: reach, screech: screech, scale: scale,
-                        index: pulse + 1, bursts: bursts, intensity: intensity }, 20);
+                        index: pulse + 1, bursts: bursts, intensity: intensity,
+                        spin: pulse % 2 === 0 ? 8 : -8 }, 20);
                 WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, direction, reach, angle, { below: 2, above: 3 }), function (victim, facts) {
                     if (String(victim.ref()) === String(actor.ref())) return;
                     if (!hurt(current, victim, chatterId, power, { damage: damageSpec(chatterId, "shriek"), sound: true })) return;
@@ -134,24 +137,14 @@ namespace PokemonSkills {
         if (body === null) return;
         const facts = PokemonDamage.combatants.read(world, actor);
         const attack = facts.stats.atk || 0;
-        const fraction = chatterRecoilFraction * Math.max(0.4, Math.min(2.5, attack / 100));
-        const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
+        const multiplier = Math.max(0.4, Math.min(2.5, attack / 100));
+        // 反噬以本次实际伤害为上限、按当前攻击倍率预算：Boss 的高最大生命不会把这一下额外放大。
+        const fraction = chatterRecoilFraction * multiplier;
+        const loss = -world.health(actor, -data.actual * fraction, "world_combat:confusion");
         if (loss <= 0) return;
         const power = Math.max(0.2, Math.min(3, loss / Math.max(1, body.maxHealth()) * 12));
         WorldFeedback.emit(world, chatterScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), chatterRecoilText, [Math.round(loss * 10) / 10], 30);
         world.sound("minecraft:entity.player.hurt", body.position(), 14, "{}");
-    });
-
-    // 混乱存续期：低密度的晕眩鸟每 20 刻续期，让出本体视线。
-    WorldCombat.on("world_combat:move_chatter/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== chatterEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "chatter:" + String(actor.ref()), chatterScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 40);
     });
 }

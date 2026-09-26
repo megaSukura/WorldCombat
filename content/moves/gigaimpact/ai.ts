@@ -3,10 +3,25 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这是一记带真实力竭的全力冲撞，
  * 所以只在自身生命高于 `ai.minHealth`、或对手已经能用这一下收掉时才排到前面。
- * 贴身且在射程内时 priority 抬高，让它在多个近战候选里先冲；对手残血且已进入冲程时最优先。
- * 力竭期间招式自动不可用（共享起手门禁），不需要本文件额外判断。
+ * 贴身且在射程内时 priority 抬高；对手残血且已进入冲程时最优先。
+ * 冲完自己会定在原地，所以身边还挤着多个近敌时明显降优先——那是挨打的窗口；
+ * 有己方伙伴贴近掩护时再抬一点，敢在有后手时冲。力竭期间招式自动不可用（共享起手门禁）。
  */
 namespace PokemonSkills {
+    /** 施法者身周贴近的其他活体：敌人数（冲完被围的代价）与友方数（能掩护的后手）。 */
+    function gigaimpactSurround(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): { crowd: number; cover: number } {
+        var nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+        var crowd = 0, cover = 0;
+        for (var i = 0; i < nearby.length; i++) {
+            var other = nearby[i];
+            if (!other.visible || !(other.health > 0)) continue;
+            var away = CompanionBehavior.distance(other.point, self.point);
+            if (other.friendly) { if (away <= 6) cover++; }
+            else if (String(other.ref) !== String(target.ref) && away <= 5) crowd++;
+        }
+        return { crowd: crowd, cover: cover };
+    }
+
     CompanionBehavior.registerUse("gigaimpact", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -25,8 +40,12 @@ namespace PokemonSkills {
             if (!target) return 0;
             var self = CompanionBehavior.source(context);
             var close = CompanionBehavior.distance(self.point, target.point) <= capability.data.range;
-            if (CompanionBehavior.ratio(target) <= 0.3 && close) return 74;
-            return close ? 22 : 0;
+            if (!close) return 0;
+            var score = CompanionBehavior.ratio(target) <= 0.3 ? 74 : 22;
+            var around = gigaimpactSurround(context, self, target);
+            score -= Math.min(3, around.crowd) * 8;
+            if (around.cover > 0) score += Math.min(2, around.cover) * 5;
+            return Math.max(0, score);
         }
     });
 

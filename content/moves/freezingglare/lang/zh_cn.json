@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.freezingglare.summary": "从双眼中射出一道瞬发、不飞行的精神视线：念力线在敌人之间跳跃，每个被盯到的目标各挨一次精神伤害并可能被冻住；它连本该免疫冰冻的冰属性和相关特性也能冻住。视线被切断则完全无效。",
+  "worldcombat.skill.freezingglare.summary": "从双眼中射出一道瞬发、不飞行的精神视线：念力线在通视的敌人之间跳跃，每个被盯到的目标各挨一次精神伤害并可能被冻住。每一跳都要有真实通视，视线被切断就停止后续链；冰冻照常遵守冰属性、免冻特性与 Boss 控制免疫。",
   "worldcombat.skill.freezingglare.use.0": "对需要一条通视的风筝目标一击必中",
-  "worldcombat.skill.freezingglare.use.1": "在挤在一起的一队敌人之间传导，一次冻住多人",
-  "worldcombat.skill.freezingglare.use.2": "专门点掉本不该被冻住的冰属性与免疫目标",
+  "worldcombat.skill.freezingglare.use.1": "在挤在一起的一队敌人之间传导，一次点名多人",
+  "worldcombat.skill.freezingglare.use.2": "用精神伤害处理冰属性或免冻目标，冰冻不成也照常主伤",
   "worldcombat.skill.freezingglare.description.0": "首目标受到约 %1$s 点精神伤害；念力线接着跳向最近的敌人，最多命中 %2$s 个敌人（含第一个），每往后跳一个威力乘以 %3$s。",
-  "worldcombat.skill.freezingglare.description.1": "视距射程 %1$s，跳跃距离 %2$s；无论首发还是每一跳都需要一条没有被挡住的视线，视线被挡住时这一记完全不结算。",
-  "worldcombat.skill.freezingglare.description.2": "每个目标各有 %1$s 概率陷入冰冻，持续 8 秒；冰冻期间无法发动新招或进行普通攻击、也无法移动，受到火属性伤害会立刻解冻。命中前会开启 %2$s 的免疫穿透窗口，窗口内冰属性与免疫冰冻的特性也挡不住这次冰冻。",
+  "worldcombat.skill.freezingglare.description.1": "视距射程 %1$s，跳跃距离 %2$s；无论首发还是每一跳都需要一条没有被挡住的视线，某一跳被挡住就停在最后一个真实跳点。",
+  "worldcombat.skill.freezingglare.description.2": "每个目标各有 %1$s 概率陷入冰冻，持续 8 秒；冰冻期间无法发动新招或进行普通攻击、也无法移动，受到火属性伤害会立刻解冻。冰冻照常遵守冰属性、免冻特性与 Boss 控制免疫；没有冻住就不会显示冰壳。",
   "worldcombat.skill.freezingglare.description.3": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.freezingglare.unblinking.on": "当前为凝视式：多跳一个目标、射程更远、冰冻概率更高，但起手与冷却更久。",
   "worldcombat.skill.freezingglare.unblinking.off": "当前为速瞥式：出手快、冷却短，但跳得更少、更近，冰冻概率略低。",
@@ -18,7 +18,6 @@
   "worldcombat.skill.freezingglare.value.chainRange": "跳跃距离",
   "worldcombat.skill.freezingglare.value.reach": "视距射程",
   "worldcombat.skill.freezingglare.value.freezeChance": "冰冻概率",
-  "worldcombat.skill.freezingglare.value.immunityWindow": "免疫穿透窗口",
   "worldcombat.skill.freezingglare.value.tempo": "起手",
   "worldcombat.skill.freezingglare.value.aftermath": "收招",
   "worldcombat.skill.freezingglare.value.wait": "冷却",
@@ -28,8 +27,6 @@
   "worldcombat.skill.freezingglare.preference.ai.maxChase.help": "目标离自己这么远以内才考虑冰冷视线；调小只在近处瞪，调大愿意从更远处锁定。",
   "worldcombat.skill.freezingglare.preference.ai.preferChains": "优先可连跳目标",
   "worldcombat.skill.freezingglare.preference.ai.preferChains.help": "开启后优先挑身边挤着别人的目标（念力线会跳过去）；关闭则只看单个目标。",
-  "worldcombat.skill.freezingglare.preference.ai.preferImmune": "优先冰冻免疫目标",
-  "worldcombat.skill.freezingglare.preference.ai.preferImmune.help": "开启后优先挑冰属性目标——它们的冰冻免疫正好被这一招穿透；关闭则一视同仁。",
   "world_combat.move.freezingglare.text.hit": "冰冷视线连跳 %1$s 个目标",
   "world_combat.move.freezingglare.text.blocked": "视线被挡住"
 }

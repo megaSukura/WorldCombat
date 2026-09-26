@@ -2,18 +2,22 @@
  * 沥青射击 / tarshot — 执行组织。
  *
  * 核心念头：**把一团黏稠的沥青泼在目标身上**——它糊住脚步（速度 -1、移动变黏），也糊开了它对火焰的弱点
- *   （任何火属性招式打上去伤害 ×2）；泼洒过的地方会留下沥青滩，谁踩进去谁被糊上，水会把它冲掉。
+ *   （任何火属性招式打上去伤害 ×2）；泼洒过的地方会留下一摊装饰性的沥青（只铺在空气上方，不替换承重块），
+ *   谁踩进去谁被糊上，水会把它冲掉。
  *
  * 三幕：
  *   起（windup，提交前）：沥青在口边聚成一团黑亮（只观察与预告）。
- *   泼（shot → coat，提交后）：沥青团沿直线飞出；命中活体即糊身：
+ *   泼（shot → coat，提交后）：沥青团沿施放方向飞出；命中活体即糊身：
  *       挂共享身份 `world_combat:status/tarshot` 的 `world_combat:tar_coated`（糊身时长），
- *       首次命中再掉 `speedDrop` 级速度，并在命中点留下 `puddle` 半径的沥青滩
- *       （`world_combat:field/tar` 规则：踩进去的非友方同样被糊上）；大泼形态把 `splash` 半径内的非友方一起糊上。
+ *       首次命中再掉 `speedDrop` 级速度；命中点或落点铺一摊沥青（`world_combat:field/tar` 规则：踩进去的非友方
+ *       同样被糊上）；大泼形态把 `splash` 半径内的非友方一起糊上。糊身期间身上持续覆一层黑膜（`film`）。
  *   验（弱点）：结算任何火属性招式时，`PokemonDamage.metadata` 读取目标的 `tarshot` 身份，把这一段威力 ×2；
  *       火打在糊了沥青的目标上还会把它点着一下（flare）；目标湿身或下雨时沥青被冲掉（wash）。
  *
- * 与同族分开：它不封锁退路，而是同时降速度、开弱点；目标身上黑亮发黏、脚下留一滩黑，谁都能一眼读出。
+ * 目标形状：`kind:"aim"`，方向投团。点敌人就飞向它；点地面或空放就沿方向飞、耗尽后在那一点散开落脚，
+ *   同样留下沥青滩。目标离场时按当时的落点处理，不强制存在敌人。
+ *
+ * 与同族分开：它不封锁退路，而是同时降速度、开弱点；目标身上黑亮发黏、脚下留一摊黑，谁都能一眼读出。
  *
  * 配置 `wide`（大泼）由 resolve 改时序与射程，由公式改覆盖半径与飞行：能一次糊多人，但更慢更近更费。
  */
@@ -22,7 +26,9 @@ namespace PokemonSkills {
     const tarshotScene = "world_combat:move_tarshot";
     const tarshotCoated = "world_combat:tar_coated";
     const tarshotField = "world_combat:tar";
-    const tarshotPuddleBlock = "minecraft:black_concrete";
+    const tarshotFilm = "world_combat:tarshot_film";
+    const tarshotFilmKey = "tarshot:film:";
+    const tarshotPuddleBlock = "minecraft:black_carpet";
     /** 被糊住时的导航速度系数：沥青黏住脚步，AI 的移动意图也被压到六成。 */
     const tarshotStick = 0.4;
     const tarshotCoatText = "world_combat.move.tarshot.text.coat";
@@ -50,38 +56,87 @@ namespace PokemonSkills {
         }
     });
 
-    /** 在命中点/落点铺一小滩沥青：把最上面那层地表替换成租借的黑块，到期原方块回来。 */
+    /**
+     * 在命中点/落点铺一小摊沥青：只在空气上方铺一层装饰性的地毯，不替换任何承重块，
+     * 到期由租约归还原方块。
+     */
     function tarshotPuddle(world: CombatWorld, centre: CombatPoint, radius: number, ticks: number): number {
         const cells: any[] = [], r = Math.ceil(radius), baseY = Math.floor(centre.y());
         for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
-            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
-            for (let dy = 1; dy >= -4; dy--) {
-                const at = WorldCombat.point(centre.x() + dx, baseY + dy, centre.z() + dz);
-                const block = world.block(at);
+            if (dx * dx + dz * dz > radius * radius) continue;
+            const x = Math.floor(centre.x()) + dx, z = Math.floor(centre.z()) + dz;
+            let surface: number | null = null;
+            for (let probe = baseY + 2; probe >= baseY - 4; probe--) {
+                const block = world.block(WorldCombat.point(x, probe, z));
                 if (block === null) break;
                 const id = String(block.id());
                 if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
                 if (id === "minecraft:water" || id === "minecraft:lava") break;
-                cells.push({ x: Math.floor(at.x()), y: Math.floor(at.y()), z: Math.floor(at.z()), block: tarshotPuddleBlock });
-                break;
+                surface = probe; break;
             }
+            if (surface === null) continue;
+            const atY = surface + 1;
+            const above = world.block(WorldCombat.point(x, atY, z));
+            if (above === null) continue;
+            const aboveId = String(above.id());
+            if (!(aboveId === "minecraft:air" || aboveId === "minecraft:cave_air" || aboveId === "minecraft:void_air")) continue;
+            if (!world.canSurvive(WorldCombat.point(x, atY, z), tarshotPuddleBlock)) continue;
+            cells.push({ x: x, y: atY, z: z, block: tarshotPuddleBlock });
         }
         if (!cells.length) return 0;
-        try { return world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
+        try {
+            const receipt = JSON.parse(world.terrainResult(JSON.stringify({ cells: cells, replace: false, linger: true, bestEffort: true }), Math.max(40, Math.round(ticks))));
+            return Array.isArray(receipt.placed) ? receipt.placed.length : 0;
+        } catch (error) { return 0; }
     }
 
-    /** 糊身：挂身份、首次命中掉速度、在脚下留下沥青滩。 */
+    /** 身上那层黑膜：随目标移动，糊身还在就一直亮着。 */
+    function tarshotFilmVisual(world: CombatWorld, actor: CombatActor, data: any): void {
+        const body = world.observe(actor);
+        if (body === null) return;
+        WorldFeedback.keep(world, tarshotFilmKey + String(actor.ref()), tarshotScene, 1, body.position(),
+            { moment: "film", target: String(actor.ref()), drops: data.drops, scale: data.scale }, 40);
+    }
+
+    WorldCombat.effect(tarshotFilm, 1, 600, "actor", function (json: string): string {
+        const value = JSON.parse(json);
+        ["drops", "scale"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid tarshot film state");
+        });
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(tarshotFilm, "start", function (effect) {
+        const world = effect.world(), victim = effect.target();
+        if (!world.valid(victim) || MobEffects.read(world, victim, tarshotCoated) === null) { effect.end(); return; }
+        tarshotFilmVisual(world, victim, JSON.parse(effect.state()));
+        effect.schedule("watch", "watch", 4, "{}");
+    });
+    WorldCombat.effectHandler(tarshotFilm, "watch", function (effect) {
+        const world = effect.world(), victim = effect.target();
+        if (!world.valid(victim)) { effect.end(); return; }
+        const coat = MobEffects.read(world, victim, tarshotCoated);
+        if (coat === null) { effect.end(); return; }
+        if (coat.duration() >= 0) effect.remaining(Math.max(1, coat.duration()));
+        tarshotFilmVisual(world, victim, JSON.parse(effect.state()));
+        effect.schedule("watch", "watch", 4, "{}");
+    });
+    WorldCombat.effectHandler(tarshotFilm, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    /** 糊身：挂身份、首次命中掉速度、铺滩、起黑膜。 */
     function tarshotCoat(world: CombatWorld, actor: CombatActor, ticks: number, drop: number, drops: number): void {
         const fresh = MobEffects.read(world, actor, tarshotCoated) === null;
         MobEffects.apply(world, actor, tarshotCoated, ticks, 0);
         if (fresh && drop > 0) NativeEffects.boost(world, actor, "spe", -drop);
         const body = world.observe(actor);
         if (body === null) return;
+        const scale = Math.max(0.6, Math.min(2.4, body.width() / 0.9));
         WorldFeedback.emit(world, tarshotScene, 1, body.position(),
-            { moment: "coat", target: String(actor.ref()), drops: drops, fresh: fresh ? 1 : 0,
-                scale: Math.max(0.6, Math.min(2.4, body.width() / 0.9)) }, 30);
+            { moment: "coat", target: String(actor.ref()), drops: drops, fresh: fresh ? 1 : 0, scale: scale }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), tarshotCoatText, [drop], 28);
+        // 黑膜跟随目标：换一块干净的控制器，让它随糊身状态一起结束。
+        const films = world.effects(actor, tarshotFilm);
+        for (let i = 0; i < films.length; i++) world.operation(films[i].id(), "world_combat:dispel", "{}");
+        world.effect(tarshotFilm, actor, JSON.stringify({ drops: drops, scale: scale }), ticks);
     }
 
     // 沥青黏住脚步：被糊期间 AI 的导航速度压到六成（移动速度属性由状态效果自带）。
@@ -92,7 +147,7 @@ namespace PokemonSkills {
         event.data(JSON.stringify(data));
     });
 
-    // 水会把沥青冲掉：湿身（下雨、泡水）时精确移除这层沥青。
+    // 水会把沥青冲掉：湿身（下雨、泡水）时精确移除这层沥青。黑膜随状态消失自行结束。
     WorldCombat.on("world_combat:move_tarshot/wash", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== tarshotCoated) return;
@@ -126,9 +181,9 @@ namespace PokemonSkills {
         id: tarshotId,
         cooldownParameter: "recharge",
         name: "沥青射击",
-        description: "把一团黏稠的沥青泼向一个对手：命中后糊住它，降低它的速度等级、压慢它的脚步，并让它在糊身期间对火焰的弱点翻倍——任何火属性招式打上去伤害 ×2。命中点会留下一滩沥青，踩进去的非友方同样被糊上；水会把沥青冲掉。",
+        description: "朝一个方向泼出一团黏稠的沥青：命中活体就糊住它，降低它的速度等级、压慢它的脚步，并让它在糊身期间对火焰的弱点翻倍——任何火属性招式打上去伤害 ×2。也可以直接点地面，沥青飞到落点散开，留下一摊只铺在空气上方的黑色沥青（踩进去的非友方同样被糊上）；水会把沥青冲掉。",
         uses: ["在队友的火招之前先糊住目标", "拖慢一个高速目标并逼它退开", "把一片地面泼成谁踩谁黏的沥青滩"],
-        kind: "enemy",
+        kind: "aim",
         range: 9,
         maxRange: 13,
         prepare: 9,
@@ -179,16 +234,18 @@ namespace PokemonSkills {
             function splat(current: CombatAction, point: CombatPoint): void {
                 const scope = current.world();
                 const area = wide ? splash : Math.max(0.4, splash * 0.4);
+                const puddleRadius = wide ? puddle * 1.15 : puddle;
                 let caught = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, area), function (actor) {
                     tarshotCoat(scope, actor, coatTicks, drop, drops);
                     caught++;
                 });
-                tarshotPuddle(scope, point, wide ? puddle * 1.15 : puddle, puddleTicks);
-                WorldEffects.field(scope, tarshotField, point, wide ? puddle * 1.15 : puddle,
+                tarshotPuddle(scope, point, puddleRadius, puddleTicks);
+                WorldEffects.field(scope, tarshotField, point, puddleRadius,
                     { ticks: coatTicks, drop: drop }, puddleTicks);
                 WorldFeedback.emit(scope, tarshotScene, 1, point,
-                    { moment: "splat", drops: drops, caught: caught, weakness: weakness, scale: area / 1.5 }, 24);
+                    { moment: "splat", drops: drops, caught: caught, weakness: weakness,
+                        scale: Math.max(0.6, Math.min(2.2, area / 1.5)), edge: puddleRadius }, 24);
             }
 
             sound(action, "minecraft:block.slime_block.place");

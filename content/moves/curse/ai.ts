@@ -26,12 +26,20 @@ namespace CompanionBehavior {
         [curseChase, curseBloodFloor, curseLeave]);
 
     registerUse("curse", {
-        protocols: ["world_combat:control"],
+        protocols: ["world_combat:control", "world_combat:fortify"],
         reach: function (context, capability) { return capability.data.range; },
-        available: function (context, capability, _purpose, target) {
+        available: function (context, capability, purpose, target) {
+            const use = purpose.substring(purpose.lastIndexOf(":") + 1);
             if (context.facts.mounted) return false;
             if (!context.senses["world_combat:threat"]) return false;
             if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(capability, "leaveStation", false)) return false;
+            if (!curseSelfGhost(context)) {
+                const self = source(context), threat = context.senses["world_combat:threat"];
+                return use === "fortify" && !status(context, self, "cursed_pact")
+                    && (stage(context, self, "atk") < 6 || stage(context, self, "def") < 6)
+                    && (!threat || !fleeing(context, threat));
+            }
+            if (use !== "control") return false;
             if (!target) return true;
             const self = source(context);
             if (target.friendly || target.health <= 0 || !target.visible) return false;
@@ -42,6 +50,7 @@ namespace CompanionBehavior {
             return distance(self.point, target.point) <= ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, _capability, target) {
+            if (!curseSelfGhost(context)) return target.ref === source(context).ref;
             return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {

@@ -13,6 +13,7 @@ Smoke.scenario("inferno", function (stage) {
     var caster = stage.pokemon({ species: "houndour", level: 45, moves: ["inferno"], at: [-3, 0, 0] });
     var foe = stage.pokemon({ species: "snorlax", level: 32, moves: ["splash"], ability: "gluttony", at: [2, 0, 0] });
     stage.hostile(caster, foe);
+    stage.after(5, function () { stage.prefer(caster, "inferno", { pin: true }); });
     stage.until(1600, function () {
         return stage.casts("inferno", caster) > 0 && stage.damageTo(foe) > 0;
     }, function () {

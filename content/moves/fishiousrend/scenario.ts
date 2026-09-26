@@ -12,8 +12,10 @@ Smoke.scenario("fishiousrend", function (stage) {
     stage.time("night");
     stage.weather("clear");
     const caster = stage.pokemon({ species: "gyarados", level: 45, moves: ["fishiousrend"], at: [-2, 0, 0], properties: "nature=adamant" });
-    const target = stage.pokemon({ species: "raticate", level: 22, moves: ["tackle"], at: [2, 0, 0] });
+    const target = stage.pokemon({ species: "raticate", level: 22, moves: ["tackle"], at: [1.5, 0, 0] });
     stage.hostile(caster, target);
+    // 固定靶：让扑咬在确定距离内可达，拖拽与压速的读数不被逃跑走位干扰。
+    stage.noai(target);
     stage.until(600, function () { return stage.casts("fishiousrend", caster) >= 1 && stage.damageTo(target) > 0; }, function () {
         stage.expect(stage.casts("fishiousrend", caster) >= 1, "gyarados committed fishious rend");
         stage.expect(stage.damageTo(target) > 0, "the gill bite dealt damage");

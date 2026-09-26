@@ -7,7 +7,8 @@
  * 只给收拢那一下与反哺。
  * 拍子：起 gather（冷雾聚拢）→ 奔 travel（一线幽丝）→ 收 coil（暗旋炸开）→ hit（逐个凛住）→ 涌 surge／空 miss。
  * 范围：coil 的暗旋与环按服务端传的 `data.radius`（真实收拢半径）画出，玩家看到的圈就是会被收拢的地。
- * 运动：幽丝沿 `data.path` 的顶点（施法者→行进中的风头）连成一线；收拢时幽丝从圈外朝中心收。
+ * 运动：幽丝沿 `data.path` 的顶点（施法者一路留下的实际航迹）连成一线；收拢时幽丝从圈外朝中心收；
+ *   撞墙提前收风时，额外的 scatter 拍在墙面散开。
  * 数：`data.wisps`（特攻与等级换算）决定卷起的幽丝量，`data.intensity` 缩放发射量。
  */
 const OminousWindDefinition: ParticleDefinition = {
@@ -54,6 +55,30 @@ const OminousWindDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.06], spread: 12,
                     lifetime: [10, 18], size: [0.2, 0.03],
                     color: 0x6E7A99, alpha: [0.35, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        scatter: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "scatter_wind", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
+                    burst: { count: { data: "wisps", fallback: 12 }, at: 1 },
+                    shape: { kind: "hemisphere", radius: { data: "radius", fallback: 1.6 } },
+                    direction: "outward", speed: [0.05, 0.22], spread: 26, spin: 18,
+                    lifetime: [8, 16], size: [0.24, 0.04],
+                    color: 0x9BA8C8, alpha: [0.6, 0], light: "world", maxParticles: 80
+                },
+                {
+                    name: "scatter_smoke", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 10, at: 1 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.6 } },
+                    direction: "outward", speed: [0.02, 0.1], spread: 16,
+                    lifetime: [10, 18], size: [0.18, 0.03],
+                    color: 0x6E7A99, alpha: [0.35, 0], light: "world", maxParticles: 40
                 }
             ]
         },

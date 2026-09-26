@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.growth.summary": "Grow and raise Attack and Special Attack together; sunlight doubles the boosts as green rings and leaves spread outward.",
+  "worldcombat.skill.growth.summary": "Raise Attack and Special Attack, with stronger gains in sunlight. Temporarily grow larger where there is room; cramped spaces limit size without preventing the stat boosts.",
   "worldcombat.skill.growth.use.0": "Open a fight by growing once to pad both offences",
   "worldcombat.skill.growth.use.1": "Grow double under sunlight",
   "worldcombat.skill.growth.description.0": "Currently grants +%1$s Attack and +%2$s Special Attack stages. Sunlight strengthens the growth.",
-  "worldcombat.skill.growth.description.2": "The grown marker is the visible swollen-body state and lasts about %1$s; the Attack and Sp. Atk gains are stat stages that fade after leaving combat. Wind-up %2$s s, recovery %3$s s, cooldown %4$s s.",
+  "worldcombat.skill.growth.description.2": "Returning to normal size or clearing Grown retains the stat stages until their ordinary expiry. Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.growth.timing": "The telegraph can be interrupted without paying anything; PP and cooldown settle only after commit.",
   "worldcombat.skill.growth.value.atkGift": "Attack gain",
   "worldcombat.skill.growth.value.spaGift": "Sp. Atk gain",
@@ -19,7 +19,10 @@
   "worldcombat.skill.growth.preference.ai.waitForSun.help": "On: in sunlight the companion grows ahead of the shared order (each offence gains an extra stage). Off: distance only, no waiting for sun.",
   "worldcombat.skill.growth.preference.ai.shadeGrowth": "Never grow in shade",
   "worldcombat.skill.growth.preference.ai.shadeGrowth.help": "On: skip growth outside sunlight and save it for a sunny moment. Off: grow in shade too (one stage less each).",
-  "world_combat.move.growth.text.grown": "Growth (Attack +%1$s / Sp. Atk +%2$s)",
-  "world_combat.move.growth.text.sunfed": "Sun-fed growth (Attack +%1$s / Sp. Atk +%2$s)",
-  "effect.world_combat.grown": "Grown"
+  "world_combat.move.growth.text.grown": "Growth (Attack %1$s / Sp. Atk %2$s)",
+  "world_combat.move.growth.text.sunfed": "Sun-fed growth (Attack %1$s / Sp. Atk %2$s)",
+  "effect.world_combat.grown": "Grown",
+  "worldcombat.skill.growth.body": "Body and collision size grow by up to %1$s for %2$s, then return. Special Attack affects growth, and level affects duration. Recasting refreshes this window without stacking ever larger bodies.",
+  "worldcombat.skill.growth.value.bodyGain": "Body growth",
+  "world_combat.move.growth.text.crowded": "Cramped: body growth limited"
 }

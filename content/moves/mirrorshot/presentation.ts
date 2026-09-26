@@ -113,7 +113,7 @@ const MirrorshotDefinition: ParticleDefinition = {
                 {
                     name: "glare", bind: "target", height: 0.75,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 6, shape: { kind: "circle", radius: 0.3 },
+                    rate: { data: "glints", fallback: 6 }, shape: { kind: "circle", radius: 0.3 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [14, 22], size: [0.07, 0.02],
                     color: 0xCFE8FF, alpha: [0.45, 0], light: "full", maxParticles: 20

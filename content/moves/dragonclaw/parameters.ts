@@ -4,18 +4,19 @@
  * 原生事实（Cobblemon 1.8）：龙、物理、威力 80、命中 100、PP 15、优先度 0、接触、无追加效果（62 位学习者）。
  * 描述「用尖锐的巨爪劈开对手进行攻击」。它是本组单发最重的一记。
  *
- * 翻译：把「用巨爪劈开」翻成**站定、举双爪，朝身前一整片扇形同时划下两道路交叉的爪痕**——
- * 正面的敌人都被扫到，且被抓中的目标**护甲被爪尖撕开、防御下降**（能力等级，对所有战斗者同一条路径）。
- * 它放弃贴脸点刺，换来的是一整片正面压制；本组只有它会削弱护甲。
+ * 翻译：把「用巨爪劈开」翻成**站定、举双爪，朝身前一整片宽面同时划下两道交叉的巨爪带**——
+ * 两道爪带同刻判定，被任一带扫到的敌人都结算原主伤；只有落在两带交叉中心、被双爪共同覆盖的目标**护甲被爪尖撕开、防御下降**
+ * （能力等级，对所有战斗者同一条路径），边缘只被单爪蹭到的目标只受伤、不掉防。本组只有它会削弱护甲。
  *
  * 与同族分开：劈开是窄走廊、慢而期待要害的单点重劈；连斩是越接越多刀的攒节奏；啄、角撞、木枝突刺都是单点直线；
- * 龙爪凭「宽扇形、一次扫多个、并把护甲撕开」认出来。
+ * 龙爪凭「两条交叉爪带、中心撕甲、边缘只伤」认出来。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   rend       爪击威力：物攻定爪力、等级给狠劲；单爪式更重、交叉式把力摊到更宽的面。
  *   reach      爪程：身高给臂长与踏出的半步，速度给一点前探，也是实际射程。
- *   spread     扇面张角：体宽给臂展，交叉式把扇面拉得更开。
- *   depth      扇面高度：身高决定这一扫覆盖到多高。
+ *   spread     两爪带夹角：体宽给臂展，交叉式把两条爪带拉得更开。
+ *   depth      爪带垂直覆盖：身高决定这一扫覆盖到多高。
+ *   claw       爪带半宽：体宽决定每条爪带多粗；它决定交叉中心的大小。
  *   rendStages 撕甲级别：配置决定交叉 2 级 / 单爪 1 级。
  *   marks      爪痕量：物攻换算，驱动表现。
  *   tempo／aftercast／recharge：速度定节奏，交叉式以更长的起手与冷却换面积与撕甲。
@@ -48,21 +49,28 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "巨爪能扫到多远；身高给臂长与踏出的半步、速度给前探。它也是本招的实际射程来源。"
             }),
-        /** 扇面张角：交叉 140° / 单爪 84°，再按体宽偏移[−6,12] ×10；夹 70..156。 */
+        /** 两爪带夹角：交叉 140° / 单爪 84°，再按体宽偏移[−6,12] ×10；夹 70..156。 */
         spread: formula(
             F.when(F.pref("cross", text("worldcombat.skill.dragonclaw.preference.cross")), F.const(140), F.const(84))
                 .plus(F.body("width").minus(0.9).times(10).clamp(-6, 12))
                 .clamp(70, 156).round(0),
-            "扇面张角", {
+            "两爪带夹角", {
                 unit: "度",
-                description: "面前这一整片扇形的总张角；身架越宽臂展越开。画面里那道扇面就是判定范围，站在扇面外就不会被抓到。"
+                description: "两条爪带之间的夹角；身架越宽臂展越开、X 张得越宽。画面里那两道交叉爪带就是判定范围，不在带上就不会被抓到。"
             }),
         /** 扇面高度：1.6 + 身高偏移[−0.2,0.7] ×0.4；夹 1.3..2.4。 */
         depth: formula(
             F.base(1.6).plus(F.body("height").minus(1.4).times(0.4).clamp(-0.2, 0.7)).clamp(1.3, 2.4).round(2),
             "扇面高度", {
                 unit: "格",
-                description: "这一扫从脚上覆盖到多高；高大的个体扫得更高。"
+                description: "两道爪带从脚上覆盖到多高；高大的个体扫得更高。"
+            }),
+        /** 爪带半宽：0.5 + 体宽偏移[−0.12,0.35] ×0.35；夹 0.36..0.9。 */
+        claw: formula(
+            F.base(0.5).plus(F.body("width").minus(0.9).times(0.35).clamp(-0.12, 0.35)).clamp(0.36, 0.9).round(2),
+            "爪带半宽", {
+                unit: "格",
+                description: "两道交叉爪带各自的横向半宽；身架越宽爪带越粗。两带在身前的交叉中心共同覆盖的目标会被撕甲，只被单带蹭到的边缘目标只受伤。"
             }),
         /** 撕甲级别：交叉 2 级 / 单爪 1 级；夹 1..2。 */
         rendStages: formula(
@@ -106,8 +114,8 @@ namespace PokemonSkills {
     defineDamage("dragonclaw", "rend", {}, { contact: true, slice: true });
 
     describe("dragonclaw", [
-        { key: "description.0", values: ["rend","reach","spread"] },
-        { key: "description.1", values: ["depth","rendStages"] },
+        { key: "description.0", values: ["rend","reach","claw"] },
+        { key: "description.1", values: ["spread","depth","rendStages"] },
         { key: "cross.on", values: ["spread","rendStages","rend"], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: ["spread","rendStages","rend"], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

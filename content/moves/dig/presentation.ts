@@ -137,6 +137,29 @@ const DigDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 计划落点没能到达：预告在计划点上向内收熄，读得出这一铲没在原定处破土。
+        mark_lost: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "lost_seep", bind: "point", offset: [0, 0.04, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 20 }, shape: { kind: "ring", radius: 2.6 },
+                    direction: "inward", speed: [0.05, 0.16], gravity: 0.02,
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0x8A6A48, alpha: [0.45, 0], light: "world", maxParticles: 44
+                },
+                {
+                    name: "lost_fizzle", bind: "point", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 6 }, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [12, 22], size: [0.18, 0.3],
+                    color: 0x6A4E32, alpha: [0.3, 0], light: "world", maxParticles: 16
+                }
+            ]
+        },
         dive: {
             duration: 22,
             exit: { stop: 10, drain: 16 },

@@ -20,7 +20,7 @@
   "worldcombat.skill.sonicboom.value.settle": "Recovery",
   "worldcombat.skill.sonicboom.value.recharge": "Cooldown",
   "worldcombat.skill.sonicboom.preference.reverb": "Reverb form",
-  "worldcombat.skill.sonicboom.preference.reverb.help": "On: a second boom follows the first along the same direction a moment later, removing another fixed 20 from anyone still on the line; the cost is a longer self-hold and cooldown. Off (single form, default): one boom, quicker and cheaper.",
+  "worldcombat.skill.sonicboom.preference.reverb.help": "On: a second boom follows the first along the same direction a moment later, removing another fixed 20 from anyone still on the line (good against a target that stays put); the cost is a longer self-hold and cooldown. Off (single form, default): one boom, quicker and cheaper.",
   "worldcombat.skill.sonicboom.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.sonicboom.preference.ai.maxChase.help": "Beyond this distance it closes in instead of firing. Larger values open from further away.",
   "worldcombat.skill.sonicboom.preference.ai.finish": "Finish low health",

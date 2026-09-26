@@ -3,15 +3,16 @@
  *
  * 核心念头：把水聚成贴身的壳，整个人连着水墙一起涌出去——撞实的一刻水壳在接触面炸开，把目标浇透并冲开。
  * 施法者本身湿透（雨里、水里）时水势更盛；厚水壳让威力更高、反伤更轻、浇得更久，代价是涌得更短更慢。
+ * 选取为 aim：可点选目标或只给方向空冲，撞上第一个敌人或墙即停，一路没有水墙残留（水壳只随身与命中爆发）。
  *
  * 三幕：
  *   起（windup，提交前）：水从四周收拢成壳，只播预告。
  *   涌（surge → impact / spill）：提交后逐刻沿瞄准方向涌进，trace 撞上活体即结算 surge 接触伤害，
  *       按 recoil 比例反伤自己（共享结算），把目标沿涌进方向冲开 push 格并浇上湿身
- *       （共享身份 world_combat:status/soaked，与水流裂破同一件事）；一路无人则水壳散开、白涌一趟。
+ *       （共享身份 world_combat:status/soaked，与水流裂破同一件事）；一路无人则水壳在自己实际终点散开。
  *
- * 与同族分开：舍身冲撞是干身猛撞、撞完双方被弹开；勇鸟猛攻从空中俯冲穿线；木槌用坚硬躯体砸地。
- * 波动冲的辨识点是水：它把目标浇湿，而且施法者湿透时更狠。配置 thick 由 resolve 改时序、由公式改数值。
+ * 与同族分开：舍身冲撞是干身猛撞、撞完贴住压身；勇鸟猛攻从空中俯冲穿线；木槌用坚硬躯体垂直砸下。
+ * 波动冲的辨识点是水：贴身的厚壳把目标浇湿、撞碎在敌人身上，施法者湿透时更狠。
  */
 namespace PokemonSkills {
     const wavecrashScene = "world_combat:move_wavecrash";
@@ -27,7 +28,7 @@ namespace PokemonSkills {
         name: "Wave Crash",
         description: "冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳更注重防护，薄水刃提供更远射程。",
         uses: ["裹水冲开一个目标", "把目标浇透，留给后续的水与电", "在雨里或水里冲出去，水势更盛"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.2,
         maxRange: 7.6,
         prepare: 9,
@@ -35,7 +36,7 @@ namespace PokemonSkills {
         recover: 9,
         cooldown: 44,
         style: "water",
-        defaults: { thick: false, ai: { maxChase: 10, preferDry: true } },
+        defaults: { thick: false, ai: { maxChase: 10, preferDry: true, minHealth: 0.3 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("wavecrash", "collisionRadius", pokemon) * 1.7, geometry: "line", style: "water",
@@ -72,13 +73,17 @@ namespace PokemonSkills {
             const thick = !!(config && config.thick);
             const self = world.observe(actor);
             const wet = self !== null && self.wet();
-            const direction = aim(action);
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
+            // 喷流用显式后方向：surge 阶段把背向冲势的向量放进 data.direction，供 orient:"direction" 使用。
+            const back = WorldCombat.point(-direction.x(), -direction.y(), -direction.z());
+            const backData: number[] = [back.x(), back.y(), back.z()];
             const scale = radius / 0.6;
+            const shellRadius = Math.round(scale * (thick ? 1.15 : 1) * 100) / 100;
             const boost = (wet ? 1.15 : 1) * (thick ? 1.08 : 1);
             const intensity = Math.max(0.6, Math.min(2.6, power / 115 * boost));
             let travelled = 0, settled = false;
 
-            movementScenes.show(action, "surge", action.origin(), { moment: "surge", spray: spray, scale: scale, intensity: intensity, wet: wet ? 1 : 0, thick: thick ? 1 : 0 });
+            movementScenes.show(action, "surge", action.origin(), { moment: "surge", spray: spray, shell: shellRadius, scale: scale, intensity: intensity, direction: backData });
             sound(action, "cobblemon:move.waterpulse.actor");
             sound(action, "minecraft:item.trident.riptide_1");
 
@@ -108,10 +113,11 @@ namespace PokemonSkills {
                         { damage: damageSpec("wavecrash", "surge"), contact: true, recoil: recoil });
                     WorldFeedback.emit(scope, wavecrashScene, 1, point,
                         { moment: "impact", target: target ? String(target.ref()) : "", spray: spray, scale: scale,
+                            direction: [direction.x(), direction.y(), direction.z()],
                             intensity: Math.max(0.6, Math.min(2.6, power / 110 * boost)) }, 30);
                     sound(current, "cobblemon:impact.water");
                     if (landed && target !== null && scope.valid(target)) {
-                        scope.displace(target, direction.scale(push));
+                        scope.hitDisplace(target, direction.scale(push));
                         if (!CombatStatus.has(scope, target, "soaked")) {
                             CombatStatus.apply(scope, target, "soaked", WavecrashSoaked, drenchTicks);
                             WorldFeedback.emit(scope, wavecrashScene, 1, point,
@@ -128,8 +134,8 @@ namespace PokemonSkills {
                 const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { spill(current); return; }
-                movementScenes.show(current, "surge", origin, { moment: "surge", spray: spray, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
+                movementScenes.show(current, "surge", origin, { moment: "surge", spray: spray, shell: shellRadius, scale: scale, intensity: intensity,
+                        direction: backData, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 

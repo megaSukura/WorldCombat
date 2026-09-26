@@ -1,15 +1,8 @@
-/**
- * 蛛网 的伙伴 AI 用途：这招自己的一套出手计划——把目标一层层裹住，缠到动不了。
- *
- * 什么局面有意义：有可见威胁、在 ai.maxChase（默认 10）格以内、目标还没被缠到上限。
- *   正在逃跑的目标加分（`ai.catchRunners` 默认开）：它正要离开，一层丝先黏住脚步。
- *   已经缠过一层但还没到上限的目标也值得再补一层（`ai.layerUp` 默认开）——层数越高越难走。
- *   目标身上着火时不出手（`ai.avoidBurning` 默认开）：火会立刻把刚吐上去的丝烧开，白白浪费一次。
- * 对谁出手：当前威胁；已经被缠满层数的跳过。
- * 够不到怎么办：reach 就是吐丝距离，超出先走近；黏丝有飞行时间，掩体挡住时交回共享接近逻辑。
- * 放完之后：目标被裹住、层数越高越走不动，伙伴交回共享顺序继续补层或换目标。
- */
+/** Directly cocoon dangerous contacts; lead moving runners with a real floor web and avoid refreshing full layers. */
 namespace CompanionBehavior {
+    registerFact("world_combat:spiderweb/layers", function (access, actor) { const web = MobEffects.read(access, actor, "world_combat:spiderweb_wrapped"); return web ? web.amplifier() + 1 : 0; });
+    registerFact("world_combat:spiderweb/cap", function (access, actor, config) { return PokemonSkills.p("spiderweb", "layerCap",
+        { pokemon: CobblemonCombat.pokemon(actor), world: access, actor, skill: PokemonSkills.skills["spiderweb"], detail: { values: config } }); });
     PokemonSkills.addPreferences("spiderweb", { ai: { maxChase: 10, layerUp: true, catchRunners: true, avoidBurning: true, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 20, 1),
         PokemonSkills.flag("ai.layerUp", "补缠已缠目标"),
@@ -23,6 +16,9 @@ namespace CompanionBehavior {
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         const wrapped = status(context, threat, "trapped");
+        const layers = fact<number>(context, "world_combat:spiderweb/layers", threat) || 0;
+        const cap = fact<number>(context, "world_combat:spiderweb/cap", self, item.data.config) || 3;
+        if (layers >= cap) return false;
         if (wrapped && !ai<boolean>(item, "layerUp", true)) return false;
         if (ai<boolean>(item, "avoidBurning", true) && status(context, threat, "burn")) return false;
         return context.facts.focus === threat.ref || distance(self.point, threat.point) <= ai<number>(item, "maxChase", 10);
@@ -30,6 +26,15 @@ namespace CompanionBehavior {
 
     registerUse("spiderweb", {
         protocols: ["world_combat:control"],
+        target: function (context, item, target) {
+            const velocity = target.velocity || [0,0,0], speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
+            if (!ai<boolean>(item, "catchRunners", true) || speed < .08 || !target.grounded) return target;
+            const access = world(context), self = source(context);
+            const predicted = WorldGeometry.ground(access, point([target.point[0] + velocity[0] * 6, target.point[1], target.point[2] + velocity[2] * 6]));
+            if (predicted.minus(point(self.point)).length() > item.data.range) return target;
+            const floor = access.block(predicted.plus(WorldCombat.point(0,-.1,0))); if (!floor || floor.id() === "minecraft:air") return target;
+            const choice = JSON.parse(JSON.stringify(target)); choice.ref = ""; choice.point = [predicted.x(), predicted.y(), predicted.z()]; return choice;
+        },
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) { return !target || spiderwebWants(context, item, target); },
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },

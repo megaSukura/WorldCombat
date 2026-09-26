@@ -4,8 +4,9 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 9）格之内；更远交给共享接近逻辑。
  *   它是靠发数堆伤害的物理连发，靠得越近越不容易被走位甩掉，所以偏好中近距离。
  * 对谁出手：`ai.finish`（默认开）打开时，残血目标多一档分，用一梭子密集小撞击收尾；关闭则所有目标同价。
- * 够不到怎么办：reach 就是本招射程，不够先走近；连发之间目标若倒下，这一梭子自然收住。
- * 放完之后：这一梭子打完（或目标先倒）就收势，交回共享交战计划等冷却。
+ * 够不到怎么办：reach 就是本招射程，不够先走近；每发按真实弹速飞行，AI 会在出膛时按目标当前移动前置，
+ *   但已经出膛的籽不追踪——目标中途转向会甩掉后续的发。
+ * 放完之后：这一梭子打完、在场弹落地后就收势，交回共享交战计划等冷却。
  */
 namespace PokemonSkills {
     function bulletseedWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {

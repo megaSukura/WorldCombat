@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.swift.summary": "从身周迸出一圈星形光弹，每颗星自己拐弯追向一个对手，因此必定命中；散星时可同时咬住多个敌人，聚星时全部砸向选定目标。",
+  "worldcombat.skill.swift.summary": "从身周迸出一圈星形光弹，每颗星自己拐弯追向一个对手；选中敌人时散星可同时咬住多个，聚星则全部砸向选定目标，未选中敌人时沿瞄准方向散出。星不做随机命中检定，但会撞上地形或在追上之前燃尽而落空。",
   "worldcombat.skill.swift.description.0": "每颗星造成 %1$s 的伤害，一次迸出 %2$s 颗。",
   "worldcombat.skill.swift.description.1": "星以 %1$s 度每刻转向、%2$s 格每刻飞行，能锁定 %3$s 格内的对手。",
   "worldcombat.skill.swift.description.2": "每颗星的判定半径 %1$s 格。",
@@ -16,13 +16,12 @@
   "worldcombat.skill.swift.value.lockRange": "锁定距离",
   "worldcombat.skill.swift.value.collisionRadius": "判定半径",
   "worldcombat.skill.swift.preference.scatter": "散星",
-  "worldcombat.skill.swift.preference.scatter.help": "开启：星分散到射程内每个对手，覆盖更广，但选定目标吃到的星更少、起手多 2 刻、冷却多 3 刻。关闭：全部星集中打选定目标，单体更重、更快。",
+  "worldcombat.skill.swift.preference.scatter.help": "开启：星分散到射程内每个看得见的对手，覆盖更广，但选定目标吃到的星更少、起手多 2 刻、冷却多 3 刻。关闭：全部星集中打选定目标，单体更重、更快。",
   "worldcombat.skill.swift.preference.ai.maxChase": "射击距离",
   "worldcombat.skill.swift.preference.ai.maxChase.help": "超过这个距离就不主动发射，先走近。越大越会在更远处先手。",
   "worldcombat.skill.swift.preference.ai.spread": "散星取材",
-  "worldcombat.skill.swift.preference.ai.spread.help": "开启后，目标身边还有别的敌人时优先发射，让散星同时咬住两个；关闭则只按普通远程攻击排序。",
+  "worldcombat.skill.swift.preference.ai.spread.help": "开启后，目标身边还有别的看得见的敌人时优先发射，让散星同时咬住两个；关闭则只按普通远程攻击排序（聚星收单）。",
   "worldcombat.skill.swift.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.swift.preference.ai.leaveStation.help": "开启后，驻守命令下也会为找射界离开站位；关闭则只在原地够得到时发射。",
-  "world_combat.move.swift.text.fade": "没有可追的目标",
-  "worldcombat.skill.swift.description.additional": "未开启散星时，全部星都追向选定目标；开启散星时，先分出星给选定目标，再把其余的依次分给锁定距离内的其他敌人，因此选定目标吃到的星会变少。"
+  "worldcombat.skill.swift.description.additional": "选中敌人：未开启散星时全部星追向选定目标，开启散星时先分给选定目标、再把其余的依次分给锁定距离内看得见的其他敌人，所以选定目标吃到的星会变少。未选中敌人：星沿瞄准方向散出，不会自动追友方。星只在撞上实体或方块、或飞完射程后停下；撞到方块时在撞点熄灭。"
 }

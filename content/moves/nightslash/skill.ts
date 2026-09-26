@@ -1,29 +1,31 @@
 /**
  * 暗袭要害 / nightslash 的出手方式。
  *
- * 核心念头：脚下牵出一缕影线，顺着影线在对手身上切出一道暗痕——它不动、不闪，只在对手把空门露出来
- *   的那一瞬加重。它是本族唯一**读对手注意力**的一击：目标正把攻击对着别人时，这一刀更重。
+ * 核心念头：站定收刀，朝本次瞄准方向递出一记身前窄斜切；刀口从肩侧斜下，落在第一个真实接触上。它不动、
+ *   不闪，只在对手把空门露出来的那一瞬加重。它是本族唯一**读对手注意力**的一击：目标正把攻击对着别人时，这一刀更重。
  *
  * 三幕：
- *   伏（windup，提交前）：施法者伏低，脚边聚起一圈暗影；只播预告，可被打断（打断不花 PP）。
- *   牵（thread，提交后）：一缕暗影从脚下牵到目标身前，标出这一刀的来路。
- *   斩（cut → miss）：目标吃一记 `cut` 接触斩击；命中那一刻若它正把攻击对着别人（空门），
- *       公式里的 `nightslash.opening` 让威力显著抬高，并在落点补一记更亮的暗痕。
+ *   伏（windup，提交前）：施法者收刀伏低，脚边聚起一圈暗影；只播预告，可被打断（打断不花 PP）。
+ *   斩（cut → miss）：朝本次手动朝向递出短窄刀路（`kind: "aim"`，方向、点或空挥都行）；
+ *       `action.trace(..., true)` 取真实首碰（前排的身体与墙都会截住），第一个接触的非友方吃一记 `cut` 接触斩击；
+ *       命中那一刻若它正把攻击对着别人（空门），公式里的 `nightslash.opening` 让威力显著抬高，并在落点补一记更亮的暗痕。
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器再补一发亮紫强调与浮字。
  *
  * 与既有招分开：出奇一击闪到背后放假替身、燕返掠一整条刀路、暗影拳从目标影子里出拳——暗袭要害站着不动，
  *   身份是「等对手露出空门」。与空手劈（找护甲的缝）、以牙还牙（打刚受过的伤）读的不是同一件事。
  */
 namespace PokemonSkills {
+    /** 窄刀路的接触半径（格）；几何常量，不随个体变化。 */
+    const nightslashEdge = 0.26;
     define({
         id: nightslashId,
         cooldownParameter: "recharge",
         name: "Night Slash",
-        description: "站定，从脚下牵出一缕影线，顺着影线在对手身上切出一道暗痕——不走位、不闪身。暴击率比同族高一档；目标正把攻击对着别人时，这一刀会明显更重。",
-        uses: ["脚下牵出一缕影线，在对手身上切一道暗痕", "对手正忙着打别人时这一刀更重", "站定出手，不走位不闪身"],
-        kind: "enemy",
-        range: 3.0,
-        maxRange: 4.2,
+        description: "站定收刀，朝本次瞄准方向递出一记身前窄斜切：刀口从肩侧斜下，落在第一个接触的身体或方块上。不走位、不闪身；暴击率比同族高一档，目标正把攻击对着别人时，这一刀会明显更重。",
+        uses: ["站定朝瞄准方向递出一记窄斜切", "对手正忙着打别人时这一刀更重", "站定出手，不走位不闪身"],
+        kind: "aim",
+        range: 2.6,
+        maxRange: 3.6,
         prepare: 7,
         active: 0,
         recover: 6,
@@ -54,46 +56,66 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor();
-            const target = action.target();
             const direction = aim(action);
-            const reach = p(nightslashId, "reach", action);
-            const depth = p(nightslashId, "depth", action);
-            const power = p(nightslashId, "cut", action);
+            const reach = Math.max(1.2, p(nightslashId, "reach", action));
+            const depth = Math.max(0.4, p(nightslashId, "depth", action));
             const motes = Math.max(10, Math.round(p(nightslashId, "motes", action)));
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const origin = self.position();
-            const scale = Math.max(0.6, Math.min(2.0, depth / nightslashReference));
-            const intensity = Math.max(0.6, Math.min(2.4, power / 70));
+            const heading = WorldCombat.point(direction.x(), 0, direction.z());
+            const side = heading.length() < 1e-6 ? WorldCombat.point(1, 0, 0)
+                : WorldCombat.point(-heading.unit().z(), 0, heading.unit().x());
+            const height = self.height();
+            // 肩侧起手：从肩高、偏一侧的起刀点，斜下递向瞄准方向的落点。
+            const from = origin.plus(WorldCombat.point(0, height * 0.35, 0)).plus(side.scale(Math.min(0.4, height * 0.18)));
+            const to = origin.plus(direction.scale(reach));
 
-            if (target === null || !world.valid(target) || world.friendly(target)) {
-                WorldFeedback.emit(world, nightslashScene, 1, origin.plus(direction.scale(reach)), { moment: "miss", scale: scale }, 16);
-                WorldFeedback.text(world, origin.plus(direction.scale(reach)).plus(WorldCombat.point(0, 0.9, 0)), nightslashMissText, [], 20);
+            // 权威判定：窄刀路的第一接触（含友方身体与实墙）就是刀口真实停下的地方。
+            const contact = action.trace(from, to, nightslashEdge, true);
+            const at = contact.position();
+            const lander = contact.hitEntity() ? contact.target() : null;
+            const victim = lander !== null && String(lander.ref()) !== String(actor.ref()) && !world.friendly(lander) ? lander : null;
+            const blade = [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]];
+
+            if (victim === null) {
+                // 空挥或撞墙：刀停在接触点，只留一记窄斜收刀。
+                WorldFeedback.emit(world, nightslashScene, 1, at,
+                    { moment: "cut", path: blade, direction: [direction.x(), direction.y(), direction.z()],
+                        motes: motes, scale: Math.max(0.5, Math.min(2.0, depth / nightslashReference)),
+                        intensity: 0.7, opening: 0, target: "" }, 16);
+                WorldFeedback.emit(world, nightslashScene, 1, at, { moment: "miss", scale: 1 }, 14);
+                if (!contact.blocked() && lander === null)
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 0.9, 0)), nightslashMissText, [], 20);
+                sound(action, "minecraft:entity.player.attack.sweep");
                 done(action);
                 return;
             }
-            const foe = world.observe(target);
-            if (foe === null) { done(action); return; }
-            const strike = foe.position();
-            const busy = foe.attacking();
+
+            const foe = world.observe(victim);
+            const busy = foe === null ? null : foe.attacking();
             const opening = busy !== null && String(busy.ref()) !== String(actor.ref());
+            // 用真实命中目标求威力：空门加成属于这一刀真正切到的人。
+            const power = p(nightslashId, "cut", withTarget(factContext(action), victim));
+            const scale = Math.max(0.6, Math.min(2.0, depth / nightslashReference));
+            const intensity = Math.max(0.6, Math.min(2.4, power / 70));
 
-            WorldFeedback.emit(world, nightslashScene, 1, origin,
-                { moment: "thread", path: [[origin.x(), origin.y(), origin.z()], [strike.x(), strike.y(), strike.z()]],
-                    direction: [direction.x(), direction.y(), direction.z()], motes: motes, scale: scale, intensity: intensity }, 20);
+            WorldFeedback.emit(world, nightslashScene, 1, at,
+                { moment: "cut", path: blade, direction: [direction.x(), direction.y(), direction.z()],
+                    motes: motes, scale: scale, intensity: intensity, target: String(victim.ref()) }, 20);
 
-            const landed = hurt(action, target, nightslashId, power,
+            const landed = impact(action, contact, nightslashId, power,
                 { damage: damageSpec(nightslashId, "cut"), contact: true, slice: true });
-            WorldFeedback.emit(world, nightslashScene, 1, strike,
-                { moment: landed ? "cut" : "miss", target: String(target.ref()), opening: opening ? 1 : 0,
-                    motes: motes, scale: scale, intensity: intensity }, 20);
             if (landed) {
-                if (opening) WorldFeedback.emit(world, nightslashScene, 1, strike,
-                    { moment: "seam", target: String(target.ref()), motes: motes, scale: scale, intensity: intensity }, 22);
-                WorldFeedback.text(world, strike.plus(WorldCombat.point(0, 1.1, 0)), opening ? nightslashSeamText : nightslashHitText, [], 22);
+                if (opening) WorldFeedback.emit(world, nightslashScene, 1, at,
+                    { moment: "seam", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 22);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), opening ? nightslashSeamText : nightslashHitText, [], 22);
                 sound(action, "cobblemon:impact.dark");
             } else {
-                WorldFeedback.text(world, strike.plus(WorldCombat.point(0, 1.1, 0)), nightslashMissText, [], 20);
+                // 伤害被拒（免疫、不可选中）：不声称命中，只留一记软收。
+                WorldFeedback.emit(world, nightslashScene, 1, at,
+                    { moment: "miss", target: String(victim.ref()), scale: scale }, 16);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), nightslashMissText, [], 20);
             }
             sound(action, "minecraft:entity.player.attack.sweep");
             done(action);

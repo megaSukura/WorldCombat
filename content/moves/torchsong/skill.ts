@@ -89,7 +89,7 @@ namespace PokemonSkills {
                     if (!landed) return;
                     struck++;
                     const otherBody = scope.observe(other);
-                    if (otherBody !== null) scope.displace(other, direction.scale(push));
+                    if (otherBody !== null) scope.hitDisplace(other, direction.scale(push));
                 });
                 hits += struck;
                 if (struck > 0) {

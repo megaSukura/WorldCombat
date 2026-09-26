@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.volttackle.summary": "蓄力后冲撞目标，并以电流攻击落点附近的敌人，有机会使其麻痹；命中后自身承受反伤，冲空时电荷就地泄放、不自伤。",
+  "worldcombat.skill.volttackle.summary": "蓄电后朝瞄准方向爆冲，撞到的第一个敌人受到伤害、被顶开并有机会麻痹；只有真的撞伤主目标，才从接触点把电流波及附近的其他敌人。冲空时电荷就地泄放、不自伤。",
   "worldcombat.skill.volttackle.description.0": "蓄电后爆冲造成约 %1$s 的接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
   "worldcombat.skill.volttackle.description.1": "命中后有 %1$s%% 的概率让目标麻痹 %4$s；麻痹期间移动速度减半，且每次尝试出招有 25%% 概率失败，可被治愈清除。目标已麻痹时不再重复施加。自己按实际伤害的 %2$s 反噬，并把目标沿冲撞方向顶开 %3$s 格。",
   "worldcombat.skill.volttackle.description.2": "撞实后积压的电荷从落点向四周炸开：半径 %1$s 格内、与落点通视的其他非友方各受到本击威力 %3$s 的伤害，并有 %4$s%% 的概率麻痹 %5$s，最多 %2$s 人。",

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.bitterblade.summary": "扫出一道悔恨的火弧，弧内敌人各挨一记并汲取其生命；自身失去的生命越多，这一剑越重。",
+  "worldcombat.skill.bitterblade.summary": "朝一个方向或敌人扫出一道悔恨的火弧，弧内敌人各挨一记并汲取其生命；自身失去的生命越多，这一剑越重；空扫或扫墙只出剑。",
   "worldcombat.skill.bitterblade.description.0": "这一剑对剑弧扫到的每个敌人各造成约 %1$s 的接触斩击伤害；施法者失去的生命越多、悔意越深，斩击越重。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.bitterblade.description.1": "剑弧张开 %1$s 度、最远 %2$s 格（也是实际射程），剑锋判定 %3$s 格。",
   "worldcombat.skill.bitterblade.description.2": "造成的伤害有 %1$s 转回自身生命；残血时这个比例还会上升。",
@@ -24,7 +24,7 @@
   "worldcombat.skill.bitterblade.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.bitterblade.preference.ai.maxChase.help": "超过这个距离就不主动挥剑，先走近。越大越愿意在更远处先扫一记。",
   "worldcombat.skill.bitterblade.preference.ai.cluster": "围住才挥",
-  "worldcombat.skill.bitterblade.preference.ai.cluster.help": "开启：身前射程内挤着两个以上敌人时把悔念剑排前，当清场手段；关闭：只当一记普通近战排序。",
+  "worldcombat.skill.bitterblade.preference.ai.cluster.help": "开启：按「朝某个方向挥能一次罩住几个有效敌人」挑朝向，身前挤着敌人时把悔念剑排前当清场手段；关闭：只当一记普通近战排序。",
   "worldcombat.skill.bitterblade.preference.ai.hurtBelow": "残血加成阈值",
   "worldcombat.skill.bitterblade.preference.ai.hurtBelow.help": "自身生命低于这个比例时，悔意让这一剑更沉，优先级抬一档；越高越早把它当反打手段。",
   "world_combat.move.bitterblade.text.edge": "斩中",

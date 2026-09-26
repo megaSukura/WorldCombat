@@ -3,10 +3,13 @@
  *
  * 一句话：伤口处一层青绿的再生光顺着身体往上爬，细密的微光贴着皮肤一圈圈升起来，把血一点点补回去。
  * 色相家族：青绿 0x7FD8A0 作主体，暖白 0xE9FFF0 作高光，深绿 0x2E6B45 只作收尾余尘。
- * 拍子：起（windup）／聚（begin）／生（regenerate，持续）／收（settle）／断（broken）。
- * 范围：作用于自己，绑 source（fit body）——光晕半径绑定 data.glow，玩家看得出它是贴着这具身体在修，而不是一块地面区域。
- * 机制驱动：regenerate 的上升微光速率绑定 data.rate（每刻回复量派生）、细节亮度随 data.scale（光晕范围派生）、
- *   环脉冲的半径随 data.glow —— 伤越重、身量越大，画面越密越亮。
+ * 拍子：起（windup）／聚（begin）／生（regenerate，每次真实治疗推一次）／收（settle）／断（broken）。
+ * 生命周期：regenerate 由本次 execute 的 WorldFeedback.actionScenes 承载；结束时 stop／finish 收势，
+ *   被打断或转为新的出手时动作清理、broken 当刻停流——不会在驱散后继续播完同样的时长。
+ * 范围：作用于自己，绑 source（fit body）——光晕半径绑定 data.glow，玩家看得出它是贴着这具身体在修，而不是一块地面区域；
+ *   移动时光仍贴着身体跟随，不停。
+ * 机制驱动：regenerate 的上升微光速率绑定 data.rate（每刻回复量派生）、明细亮度随 data.intensity（本次真实回量派生）、
+ *   整体尺寸随 data.scale（光晕范围派生）、环脉冲半径随 data.glow、已交付进度随 data.fill —— 伤越重、回得越实，画面越密越亮。
  */
 const RecoverDefinition: ParticleDefinition = {
     interrupt: "drain",

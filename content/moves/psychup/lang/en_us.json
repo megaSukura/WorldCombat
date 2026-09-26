@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.psychup.summary": "Matches the target’s stat stages and copies its potion/beacon buffs. Gains-only mode preserves the user’s higher stat stages.",
+  "worldcombat.skill.psychup.summary": "Matches the target’s stat stages and potion buffs; the target may be a foe or a companion you borrow momentum from. Gains-only mode preserves your own higher stat stages.",
   "worldcombat.skill.psychup.use.0": "Snap to the target right after it buffs itself",
-  "worldcombat.skill.psychup.use.1": "Turn the opponent's boosts into your own",
+  "worldcombat.skill.psychup.use.1": "Turn a foe's or companion's boosts into your own",
   "worldcombat.skill.psychup.use.2": "Take the target's drops too when mirroring everything",
-  "worldcombat.skill.psychup.description.0": "Reads a target within %1$s blocks and clear sight, with a %2$s wind-up. The target must have changed stat stages or a buff to copy.",
+  "worldcombat.skill.psychup.description.0": "Reads a target (foe or companion) within %1$s blocks and clear sight, with a %2$s wind-up. The target must have changed stat stages or a buff to copy.",
   "worldcombat.skill.psychup.description.1": "Copied native buffs last at most %1$s, limited by their original remaining duration. Stat stages follow encounter rules. The link icon marks the copy and briefly prevents the companion from recasting it.",
   "worldcombat.skill.psychup.select.0": "Gain only: copies only the favourable steps and ignores ones that would weaken you; costs +20 ticks of cooldown and halves the marker.",
   "worldcombat.skill.psychup.select.1": "Mirror all: copies every stat change the target has, negatives included; shorter cooldown and a longer marker.",
@@ -23,6 +23,6 @@
   "worldcombat.skill.psychup.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.psychup.preference.ai.leaveStation.help": "On: a holding companion will leave its post to read the target. Off: it casts only where it already stands.",
   "effect.world_combat.psychup_link": "Psych Up",
-  "world_combat.move.psychup.text.linked": "Linked: %1$s steps",
+  "world_combat.move.psychup.text.linked": "Linked: %1$s stat steps, %2$s buffs",
   "world_combat.move.psychup.text.full": "Already in sync"
 }

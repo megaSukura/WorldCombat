@@ -4,6 +4,7 @@
   "worldcombat.skill.highhorsepower.description.1": "冲程 %1$s 格、冲速 %2$s 格每刻：贴地直线冲出，正面以 %3$s 格判定半径扫过，撞上第一名非友方目标即停下并只对它结算；撞到方块或冲满冲程也会收住。",
   "worldcombat.skill.highhorsepower.press.on": "当前为压身式：威力更高、撞击点向下压出一圈更重的尘环，把目标留在近身继续打；但顶开更近、冲程更短、冷却更久。",
   "worldcombat.skill.highhorsepower.press.off": "当前为顶头式：顶开更远、冲程更长、冷却更短；代价是威力略低。",
+  "worldcombat.skill.highhorsepower.description.aim": "可以朝任意方向或一个瞄点冲出，不要求先选中敌人；没有实体时就沿所选方向/落点冲过去，撞到方块或冲满冲程就在那里停住，冲空不会隔空伤到谁。",
   "worldcombat.skill.highhorsepower.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.highhorsepower.growth.0": "达到 %1$s 级，冲撞威力提升至 %2$s，冲程延到 %3$s 格。",
   "worldcombat.skill.highhorsepower.growth.1": "达到 %1$s 级，冲撞威力提升至 %2$s，顶开距离增至 %3$s 格。",

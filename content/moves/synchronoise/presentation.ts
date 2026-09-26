@@ -2,14 +2,16 @@
  * 同步干扰 / synchronoise 的客户端表现。
  *
  * 一句话：施法者头顶聚起一团自己属性色的频率光，电波以自身为圆心扫开一圈；被扫过的同频目标身上炸开
- * 锁光、聚起同频的光尘，不同频的目标只被波淡淡穿过；扫完身周留下一圈圈同频余音。
+ * 锁光、并从施法者牵出一条同频连线，不同频的目标只被波淡淡穿过；被锁住的目标持续亮着同频显形，
+ * 直到记号到期或被清除才随托管效果一起收走；扫完身周留下一圈圈同频余音。
  * 色相家族：整招只有**施法者属性的颜色**一家（服务端把属性色作为载荷 `tint` 传入，贴图数字按白色书写，
  * 由引擎按 tint 染色），外加中性近白做频率核心。
- * 拍子：起（attune 聚频）→ 播（wave 电波扫开、lock 锁住同频 / pass 穿过不同频）→ 收（echo 余音 / miss 白扫）。
+ * 拍子：起（attune 聚频，`data.resonances` 记可共振人数）→ 播（wave 电波扫开、lock 锁住同频＋连线 / pass 穿过不同频）
+ *   → 持（resonance 随记号存续的显形）→ 收（echo 余音 / miss 白扫）。
  * 范围：attune / wave / echo 的地面圈按服务端传的 `data.radius`（真实电波半径）画出，玩家看到的圈就是会被扫到的地。
- * 运动：电波从圆心同时向外扫开，同频目标身上的光向内收拢锁住，不同频的目标只是被一圈淡纹穿过后散掉。
- * 数：`data.links`（实际被锁住的同频人数）决定频率核心的爆开量，`data.marks`（特攻与等级派生）决定余音环数，
- * `data.flow`（半径派生）决定环上密度，`data.count`（威力派生）决定锁住的爆光量。
+ * 运动：电波从圆心同时向外扫开，同频目标身上的光沿连线向内收拢锁住，不同频的目标只是被一圈淡纹穿过后散掉。
+ * 数：`data.resonances`（预告里可共振的人数）决定起手聚起的频率点，`data.links`（实际被锁住的同频人数）决定频率核心的爆开量，
+ * `data.marks`（特攻与等级派生）决定余音环数，`data.flow`（半径派生）决定环上密度，`data.count`（威力派生）决定锁住的爆光量。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const SynchronoiseDefinition: ParticleDefinition = {
@@ -34,6 +36,15 @@ const SynchronoiseDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.06], spread: 10,
                     lifetime: [10, 18], size: [0.3, 0.12],
                     color: 0xFFFFFF, alpha: [0.55, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "echoes", bind: "source", height: 0.65,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    burst: { count: { data: "resonances", fallback: 0 }, interval: 3, repeats: 2 },
+                    shape: { kind: "sphere_surface", radius: 0.6 },
+                    direction: "inward", speed: [0.02, 0.08], spread: 12,
+                    lifetime: [8, 16], size: [0.08, 0.02],
+                    color: 0xFFFFFF, alpha: [0.6, 0], light: "full", maxParticles: 40
                 }
             ]
         },
@@ -107,6 +118,43 @@ const SynchronoiseDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.08], spread: 6,
                     lifetime: [10, 18], size: [0.3, 0.55], sizeMode: "linear",
                     color: 0xFFFFFF, alpha: [0.7, 0], light: "full", maxParticles: 12
+                },
+                {
+                    name: "link", bind: "path", height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    shape: { kind: "polyline" }, rate: 22,
+                    direction: "shape", speed: [0.01, 0.06],
+                    lifetime: [6, 12], size: [0.18, 0.05],
+                    color: 0xFFFFFF, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 40
+                }
+            ]
+        },
+        resonance: {
+            exit: { drain: 20 },
+            emitters: [
+                {
+                    name: "outline", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    rate: 8, shape: { kind: "sphere_surface", radius: 0.55 },
+                    direction: "inward", speed: [0.01, 0.05], spread: 10,
+                    lifetime: [10, 18], size: [0.3, 0.1],
+                    color: 0xFFFFFF, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 24
+                },
+                {
+                    name: "motes", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    rate: 6, shape: { kind: "sphere", radius: 0.5 },
+                    direction: "outward", speed: [0.01, 0.04], spread: 12,
+                    lifetime: [12, 22], size: [0.07, 0.02],
+                    color: 0xFFFFFF, alpha: [0.5, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "band", bind: "target", height: 0.05,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
+                    rate: 4, shape: { kind: "ring", radius: 0.6 },
+                    direction: "outward", speed: [0.01, 0.04], spread: 6,
+                    lifetime: [10, 18], size: [0.3, 0.55], sizeMode: "linear",
+                    color: 0xFFFFFF, alpha: [0.4, 0], light: "full", maxParticles: 20
                 }
             ]
         },

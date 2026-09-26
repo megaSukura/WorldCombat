@@ -157,7 +157,16 @@ namespace WorldBehaviorHost {
             if (this.enrich) this.enrich(result); return result;
         }
         operations(access: CombatWorld, use: (capability: WorldBehavior.Capability, target: WorldMethods.Subject) => WorldMethods.Submission): WorldMethods.Host {
-            return { move: function (destination, within, memory) { return WorldAI.navigate(access, point(destination), within, memory); },
+            var adapter = this;
+            return { subject: function (ref) {
+                    var actor = access.actor(ref);
+                    if (!actor || String(actor.ref()) !== ref || !access.valid(actor)) return null;
+                    var view = access.observe(actor);
+                    return view ? adapter.snapshot(view, access) : null;
+                },
+                move: function (destination, within, memory) { return WorldAI.navigate(access, point(destination), within, memory); },
+                reachPoint: function (target, from) { const body = target.ref ? access.actor(target.ref) : null;
+                    return body ? coordinates(access.closestPoint(body, point(from))) : target.point; },
                 stop: function () { access.stopMovement(); }, face: function (target, yaw, pitch) { access.face(point(target), yaw, pitch); },
                 use: use, random: function () { return access.random(); } };
         }

@@ -6,12 +6,15 @@
  *   在石头离手后挪一步就能让开；这一记卖的是「便宜、能动、可以一记接一记地扔」。
  *
  * 两幕（提交前只播预告）：
- *   抄（scoop，提交前）：低头、脚边尘土与石屑向手心收，只播预告。
+ *   抄（scoop，提交前）：低头、脚边尘土与石屑向手心收，只抄起**一块**石，只播预告。
  *   扔（release → flight → hit / ground）：提交后把石头沿瞄准方向甩出；平击式贴身体高度平直飞，
  *       高抛式走一道能越过矮墙的弧。命中活物砸一记 `stone` 物理伤害并崩出石屑；落到地面只扬一点尘。
  *
  * 与同族分开：岩石爆击是一梭带弧线的多发石、把落点砸成碎石；岩石封锁投重石封地；岩崩罩一片；
  *   落石只有一块、走直线、不接触地面、不留痕——玩家凭「一小块石头快而平地飞出去」认出它。
+ *
+ * 选取 `kind: "aim"`：方向、世界点或任意阵营实体都能投，无敌也能空放；命中权限仍由命中层判断。
+ *   高抛只在有真实落点时按该点算 ballistic 弧线，纯方向/空放退回朝向直投，不为 `target` 为 null 提前收招。
  *
  * 配置 `lob`（高抛式）由公式改弧坠/散布/威力/石速、由 resolve 改时序；提交后才触碰世界。
  */
@@ -59,13 +62,23 @@ namespace PokemonSkills {
         return WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(), direction.x() * sin + direction.z() * cos);
     }
 
+    /** 原生方块表面法线；未知接触回退竖直向上，供碎石贴面铺开。 */
+    function rockthrowFaceNormal(face: string): number[] {
+        if (face === "down") return [0, -1, 0];
+        if (face === "north") return [0, 0, -1];
+        if (face === "south") return [0, 0, 1];
+        if (face === "west") return [-1, 0, 0];
+        if (face === "east") return [1, 0, 0];
+        return [0, 1, 0];
+    }
+
     define({
         id: "rockthrow",
         cooldownParameter: "recharge",
         name: "Rock Throw",
-        description: "从脚边地上抄起一块小石，平直、快速地甩向目标：一块石头一次伤害，砸中崩出石屑。石头不追踪，对手在它离手后挪一步就能让开；高抛式能越过矮墙，但更散更慢。",
+        description: "从脚边地上抄起一块小石，平直、快速地甩向瞄准的方向或落点：一块石头一次伤害，砸中崩出石屑。可以朝任意方向/落点空投，不要求先锁定对手；石头不追踪，对手在它离手后挪一步就能让开；高抛式能越过矮墙，但更散更慢。",
         uses: ["便宜的远程消耗，一记接一记地扔", "对站着不动的目标稳定点射", "用高抛式越过掩体打后面的目标"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 4,
@@ -103,7 +116,6 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const origin = action.origin();
-            const target = action.target();
             const point = action.targetPosition();
             const power = p("rockthrow", "stone", action);
             const speed = Math.max(0.4, p("rockthrow", "velocity", action));
@@ -117,17 +129,20 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.6, radius / 0.22));
             const intensity = Math.max(0.5, Math.min(2.0, power / 40));
             const distance = point.minus(origin).length();
+            const scenes = WorldFeedback.actionScenes(rockthrowScene);
             let settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
-            let direction = lob && target !== null ? LivingActions.ballistic(origin, point, speed, gravity) : null;
+            // 高抛只在真的有落点时按该点算弧线；纯方向/无点空放退回提交朝向直投。
+            let direction: CombatPoint | null = null;
+            if (lob && distance > 0.25) direction = LivingActions.ballistic(origin, point, speed, gravity);
             if (direction === null) direction = aim(action);
             direction = rockthrowScatter(direction, (world.random() * 2 - 1) * spread * Math.PI / 180);
 
             sound(action, "cobblemon:move.rockthrow.actor");
             WorldFeedback.emit(world, rockthrowScene, 1, origin,
-                { moment: "release", lob: lob ? 1 : 0, shards: shards, scale: scale, intensity: intensity }, 16);
+                { moment: "release", lob: lob ? 1 : 0, shards: shards, scale: scale, intensity: intensity }, 16, "rockthrow:release");
 
             const flight = LivingActions.projectile(action, {
                 speed: speed, direction: direction, gravity: gravity, range: Math.max(reach, distance + 3),
@@ -135,6 +150,8 @@ namespace PokemonSkills {
                 appearance: { block: material, spin: true, scale: Math.max(0.4, Math.min(0.9, radius * 2.2)) } as any,
                 impact: function (inner: CombatAction, hit: CombatImpact): void {
                     const scope = inner.world(), at = hit.position(), struck = hit.target();
+                    // 石头停下的那一刻，跟随它的飞行表现随之收尾，不空转。
+                    scenes.stop(inner, "flight");
                     if (hit.hitEntity() && struck !== null && scope.valid(struck) && !scope.friendly(struck)) {
                         if (!impact(inner, hit, "rockthrow", power, { damage: damageSpec("rockthrow", "stone") })) return;
                         WorldFeedback.emit(scope, rockthrowScene, 1, at,
@@ -142,13 +159,18 @@ namespace PokemonSkills {
                         sound(inner, "cobblemon:impact.rock");
                         return;
                     }
-                    WorldFeedback.emit(scope, rockthrowScene, 1, at,
-                        { moment: "ground", shards: Math.round(shards * 0.5), scale: scale }, 16);
+                    // 打到方块：用原生方块格与表面呈现真实撞点；其余未知接触用收到的接触点。
+                    const cell = hit.blockPosition();
+                    const face = hit.blockFace();
+                    WorldFeedback.emit(scope, rockthrowScene, 1, cell === null ? at : cell,
+                        { moment: "ground", shards: Math.round(shards * 0.5), scale: scale, face: face,
+                            direction: rockthrowFaceNormal(face), blocked: hit.blocked() ? 1 : 0 }, 16);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.5, 0)), rockthrowMissText, [], 18);
                 }
             }, function (inner: CombatAction) { finish(inner); });
-            WorldFeedback.keep(world, "rockthrow:flight:" + action.id(), rockthrowScene, 1, origin,
-                { moment: "flight", projectile: flight, shards: shards, scale: scale, intensity: intensity }, 120);
+            // 飞行只由本次动作拥有：转段或结束即收尾，不再用固定时长的独立 keep 空转。
+            scenes.show(action, "flight", origin,
+                { moment: "flight", projectile: flight, shards: shards, scale: scale, intensity: intensity });
         }
     });
 }

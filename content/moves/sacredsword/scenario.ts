@@ -20,7 +20,7 @@ Smoke.scenario("sacredsword", function (stage) {
         stage.after(40, function () {
             stage.expect(stage.casts("sacredsword", caster) > 0, "sacredsword was committed");
             stage.expect(stage.damageTo(foe) > 0, "the long cut landed");
-            stage.note("一记刃程最长的正前切斩，只切选中的目标；本招无视目标涨起来的防御能力等级。铁傀儡没有涨防，居合式会把身位整个送出去，随机暴击留待人工试玩。", {
+            stage.note("一记刃程最长的正前切斩：剑线只碰到的第一个非友方才吃这一刀，墙当面截住就停在墙面；本招无视目标涨起来的防御能力等级，但装备护甲仍参与减伤。铁傀儡没有涨防，居合式会把身位整个送出去，随机暴击留待人工试玩。", {
                 casts: stage.casts("sacredsword", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 onCaster: Math.round(stage.damageTo(caster) * 10) / 10,

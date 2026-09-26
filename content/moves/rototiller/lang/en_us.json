@@ -3,8 +3,8 @@
   "worldcombat.skill.rototiller.use.0": "Turn the soil under your Grass allies so they grow stronger together",
   "worldcombat.skill.rototiller.use.1": "Till a patch at the fight's position and make foes go around it",
   "worldcombat.skill.rototiller.use.2": "Leave airborne Grass types a patch they cannot touch",
-  "worldcombat.skill.rototiller.description.0": "Tills a %1$s-block radius for %2$s and gives up to eight growing plants one native growth attempt each. Existing crops and farmland are preserved.",
-  "worldcombat.skill.rototiller.description.1": "Grounded Grass Pokémon gain %1$s Attack and Special Attack stages while they remain inside the active area.",
+  "worldcombat.skill.rototiller.description.0": "Tills a %1$s-block radius of natural soil (grass, dirt, coarse dirt, podzol and kin) for %2$s. Building surfaces are left unchanged, and farmland and crops are preserved. Each actually tilled tile gives up to eight growing plants one native growth attempt.",
+  "worldcombat.skill.rototiller.description.1": "Grounded Grass Pokémon gain %1$s Attack and Special Attack stages only while standing on an actually tilled tile; leaving, floating, or stepping onto an untilled hole ends it.",
   "worldcombat.skill.rototiller.description.2": "Range %1$s blocks; telegraph %2$s, recovery %3$s, cooldown %4$s.",
   "worldcombat.skill.rototiller.ridge.on": "Ridge: a wider, longer patch, +1 more stage on both stats, at +3 ticks telegraph and x1.15 cooldown.",
   "worldcombat.skill.rototiller.ridge.off": "Quick till: a smaller, shorter patch with the base boost, cheaper in both telegraph and cooldown - till and move.",
@@ -26,6 +26,7 @@
   "worldcombat.skill.rototiller.preference.ai.maxChase": "Tilling distance",
   "worldcombat.skill.rototiller.preference.ai.maxChase.help": "Consider tilling only while a Grass ally is this close; smaller stays local, larger walks over.",
   "world_combat.move.rototiller.text.till": "Rototiller (both stats +%1$s/%2$s / %3$s s / %4$s tiles)",
+  "world_combat.move.rototiller.text.barren": "Nothing to till here",
   "world_combat.move.rototiller.text.fed": "Soil-fed (Attack +%1$s / Sp. Atk +%2$s)",
   "world_combat.move.rototiller.text.fade": "The soil settles back",
   "effect.world_combat.rototiller_plowed": "Rototilled"

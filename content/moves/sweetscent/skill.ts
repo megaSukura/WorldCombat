@@ -1,47 +1,54 @@
-/**
- * 甜甜香气 / Sweet Scent — 执行组织。
- *
- * 核心念头：朝选定的点吐出一团甜香，香气落地摊成一片会停留的云；云里的人被香气浸透，
- *   躲不掉、藏不住——之后任何来源打在它身上的伤害都被放大，这就是「大幅降低闪避率」在即时交战里的样子。
- *
- * 出手：短起手（windup 在施法者嘴边聚起金色香息）后提交，按配置决定香气铺得多开、留得多浓。
- * 云：WorldEffects.field 的甜云（规则 world_combat:field/sweetscent 定义在本单元）每 5 刻扫一次，
- *     罩住范围内的非友方，按节流挂共享身份 world_combat:status/scented，强度写进效果等级。
- * 易伤：MobEffects.reactTagged 监听 world_combat:damage_incoming；目标带着身份时，按等级放大来犯伤害。
- * 反制：走出云外留香会自然走完；云有存在时长；只放大伤害，不造成伤害，也不阻止对方离场。
- */
+/** A finite scent cloud leaves owned evasion loss and short, actual-position scent traces. */
 namespace PokemonSkills {
     function sweetscentCentre(field: WorldEffects.Field): CombatPoint {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
 
-    /** 一个身处甜云中的战斗者：按当前状态挂上「浸透」，并按 refresh 节流，避免每 5 刻重挂一次。 */
+    const sweetscentTrail = "world_combat:sweetscent_trail";
+    WorldCombat.effect(sweetscentTrail, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(sweetscentTrail, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
+        // An external glowing application remains under its existing owner.
+        if (!MobEffects.read(world, target, "minecraft:glowing")) {
+            const glow = MobEffects.apply(world, target, "minecraft:glowing", effect.remaining(), 0);
+            if (glow) data.glow = MobEffects.bind(world, target, "minecraft:glowing", glow);
+        }
+        NativeEffects.boostWindow(world, target, { evasion: -data.rank }, effect.remaining(), "world_combat:move/sweetscent", MobEffects.read(world, target, sweetscentEffect));
+        effect.state(JSON.stringify(data)); effect.schedule("trace", "trace", 4, "{}");
+    });
+    WorldCombat.effectHandler(sweetscentTrail, "trace", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state()), body = world.observe(target);
+        if (!body || !MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
+        const at = body.position(), before = WorldCombat.point(data.last[0], data.last[1], data.last[2]);
+        if (at.minus(before).length() >= .25) {
+            WorldFeedback.emit(world, sweetscentScene, 1, at, { moment: "trail", path: [data.last, [at.x(), at.y(), at.z()]], rank: data.rank }, 12);
+            data.last = [at.x(), at.y(), at.z()]; effect.state(JSON.stringify(data));
+        }
+        effect.schedule("trace", "trace", 4, "{}");
+    });
+    WorldCombat.effectHandler(sweetscentTrail, "operation:world_combat:dispel", effect => effect.end());
     function sweetscentExpose(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, fresh: boolean): boolean {
         if (world.friendly(actor)) return false;
         const ref = String(actor.ref()), next = field.data.next || (field.data.next = {}), now = world.tick();
         if (!fresh && now < (next[ref] || 0)) return false;
-        const first = next[ref] === undefined;
         next[ref] = now + Math.max(10, Math.round(field.data.refresh || 40));
-        const rank = Math.max(1, Math.min(3, Math.round(field.data.rank || 1)));
-        const ticks = Math.max(40, Math.round(field.data.scent || 120));
-        MobEffects.apply(world, actor, sweetscentEffect, ticks, rank - 1);
-        const body = world.observe(actor);
-        if (body !== null) {
-            WorldFeedback.emit(world, sweetscentScene, 1, body.position(),
-                { moment: "scented", target: ref, rank: rank, scale: 1 + rank * 0.2 }, 24);
-            if (first) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)),
-                "world_combat.move.sweetscent.text.scented", [rank], 30);
-        }
+        const rank = Math.max(1, Math.min(3, Math.round(field.data.rank || 1))), ticks = Math.max(40, Math.round(field.data.scent || 120));
+        world.effects(actor, sweetscentTrail).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+        const carrier = MobEffects.apply(world, actor, sweetscentEffect, ticks, rank - 1), body = world.observe(actor);
+        if (!carrier || !body) return false;
+        world.effect(sweetscentTrail, actor, JSON.stringify({ carrier: MobEffects.anchor(carrier), rank,
+            last: [body.position().x(), body.position().y(), body.position().z()], glow: 0 }), ticks);
+        WorldFeedback.emit(world, sweetscentScene, 1, body.position(), { moment: "scented", target: ref, rank, scale: 1 + rank * .2 }, 20);
         return true;
     }
-
     // 甜云的行为：续播画面、按节流给范围内的非友方留香。规则登记一次，全场共用。
     WorldEffects.fieldRule(sweetscentField, {
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             if (!(field.data && typeof field.data.rank === "number")) return;
             const centre = sweetscentCentre(field), radius = field.radius, scale = radius / 2.2;
-            WorldFeedback.keep(world, "sweetscent:cloud", sweetscentScene, 1, centre,
-                { moment: "cloud", scale: scale, rank: field.data.rank }, 40);
+            WorldFeedback.onEffect(world, effect.id(), "sweetscent:cloud:" + effect.id(), sweetscentScene, 1, centre,
+                { moment: "cloud", scale: scale, rank: field.data.rank });
             const actors = world.query(centre, radius, false);
             const cap = Math.max(1, Math.round(field.data.maxTargets || 3));
             let applied = 0;
@@ -55,22 +62,11 @@ namespace PokemonSkills {
         }
     });
 
-    // 被香气浸透：任何来源打在这个目标上的伤害按浸透等级放大。身份由别的单元也能产出，这里只按 tag 读。
-    MobEffects.reactTagged("world_combat:move_sweetscent/vulnerable", sweetscentSpot, "world_combat:damage_incoming",
-        function (event) { return event.target(); },
-        function (event, _actor, effect) {
-            const data = JSON.parse(String(event.data()));
-            if (!(data.amount > 0) || data.bypassesInvulnerability) return;
-            const rank = Math.max(1, effect.amplifier() + 1);
-            data.amount = data.amount * (1 + rank * sweetscentRankBonus);
-            event.data(JSON.stringify(data));
-        });
-
     define({
         id: sweetscentId,
         cooldownParameter: "recharge",
         name: "甜甜香气",
-        description: "朝选定地点吐出一片会停留的甜云；云里的人被香气浸透，之后任何来源打在它身上的伤害都被放大——躲不掉也藏不住。",
+        description: "朝地面铺一片甜云，沾香的敌人暂时降低闪避并显出轮廓；离云后移动会留下短暂香点，便于沿真实路线追踪。",
         uses: ["把一片区域变成易伤区", "配合队友集火一个被香气罩住的目标", "封住门口或通道"],
         kind: "point",
         range: 7,

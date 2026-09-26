@@ -144,7 +144,7 @@ namespace PokemonSkills {
                         { moment: "impact", target: victim ? String(victim.ref()) : "", scale: scale,
                             intensity: intensity, hits: Math.round(16 + power * 0.18) }, 26);
                     if (landed && victim !== null && scope.valid(victim)) {
-                        scope.displace(victim, direction.scale(shove));
+                        scope.hitDisplace(victim, direction.scale(shove));
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), zenheadbuttHitText, [], 22);
                         if (scope.random() < chance && zenheadbuttFlinch(scope, victim, flinchTicks)) {
                             WorldFeedback.emit(scope, zenheadbuttScene, 1, at, { moment: "stagger", target: String(victim.ref()) }, 26);

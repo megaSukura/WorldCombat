@@ -93,6 +93,7 @@ const ScaldDefinition: ParticleDefinition = {
         },
         pool: {
             duration: 0,
+            exit: { stop: 10, drain: 26 },
             emitters: [
                 {
                     name: "ripples", bind: "point", fit: "none", offset: [0, 0.05, 0],
@@ -153,6 +154,29 @@ const ScaldDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.1], drag: 0.9,
                     lifetime: [8, 16], size: [0.18, 0.32],
                     color: 0xDCE8EE, alpha: [0.3, 0], light: "world", maxParticles: 18
+                }
+            ]
+        },
+        trickle: {
+            duration: 20,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "run", bind: "point", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    burst: { count: { data: "drops", fallback: 8 }, at: 1, interval: 4, repeats: 3 },
+                    shape: { kind: "sphere", radius: 0.12 },
+                    direction: "down", speed: [0.0, 0.08], gravity: 0.05,
+                    lifetime: [8, 16], size: [0.08, 0.01],
+                    color: 0xCFEFFF, alpha: [0.85, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "steam", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    rate: 8, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "up", speed: [0.01, 0.05], drag: 0.9,
+                    lifetime: [8, 16], size: [0.12, 0.24],
+                    color: 0xEAF6FF, alpha: [0.3, 0], light: "world", maxParticles: 20
                 }
             ]
         }

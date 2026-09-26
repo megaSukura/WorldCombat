@@ -1,16 +1,4 @@
-/**
- * 妖精之锁 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：术者头顶聚起一圈旋转的粉色光点，随即一柱妖精光栅从天落下，在地面圈出一整圈光的圆墙；
- *   圈内每一样东西都被光栏罩住，被扣住的活体周身再缠上一圈粉光，直到光栅碎开才一起松开。
- * 色相家族：粉紫（0xF7A8D8 主体 / 0xE07AB8 立柱）加近白高光（0xFFE6F4）；一个色相家族。
- * 拍子：起（charge 聚光）→ 击（seal 光栅落下、圆墙立起、逐人扣住）→ 收（release 光栅碎散）。
- * 范围：seal／net 的地面圆环与竖墙绑 `point`、按 `data.radius`（真实封印半径）画，玩家一眼看出站哪会被关住；
- *   `data.scale` 再整体缩放。
- * 运动：charge 的光点向头顶收拢；net 的立柱贴圆墙向上浮起、圆环缓慢脉动；release 时圆环向外扩、立柱向上散掉。
- * 数：圆墙粒子量按 `data.lattice`（特攻换算的光栅道数）派生，立柱按 `data.bars`（等级换算的立柱数）派生。
- * 参照节：视觉语言第一、二、三、四、六、七、九节。
- */
+/** A finite lattice marks the same fixed radius used by membership and edge restraint. */
 const FairylockDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {

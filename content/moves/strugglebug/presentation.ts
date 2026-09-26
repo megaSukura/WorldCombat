@@ -54,31 +54,31 @@ const StrugglebugDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 16 },
             emitters: [
                 {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.12, 0],
-                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: 110,
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 }, thickness: 0.76 },
-                    direction: "outward", speed: [0.1, 0.3], spread: 10,
-                    lifetime: [8, 16], size: [0.16, 0.04],
-                    color: 0xC7D855, alpha: [0.55, 0], light: "world", maxParticles: 200
-                },
-                {
-                    name: "crawl", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "front", bind: "path", fit: "none", offset: [0, 0.07, 0],
                     particle: "world_combat_core:cobblemon/generic/ground_bugs",
                     rate: { data: "motes", fallback: 24 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 }, thickness: 0.7 },
-                    direction: "outward", speed: [0.06, 0.22], spread: 24, gravity: 0.015,
-                    lifetime: [8, 16], size: [0.08, 0.015],
-                    color: 0x9FB13A, alpha: [0.75, 0], light: "world", maxParticles: 220
+                    shape: { kind: "polyline", closed: true },
+                    direction: "up", speed: [0.0, 0.05], gravity: 0.012,
+                    lifetime: [8, 16], size: [0.09, 0.02],
+                    color: 0x9FB13A, alpha: [0.8, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "ground", bind: "point", fit: "none", offset: [0, 0.04, 0],
+                    name: "ridge", bind: "path", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 60,
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 }, thickness: 0.8 },
-                    direction: "outward", speed: [0.08, 0.26],
-                    lifetime: [6, 12], size: [0.06, 0.01],
-                    color: 0xEAF0B0, alpha: [0.5, 0], light: "world", maxParticles: 160
+                    rate: 46,
+                    shape: { kind: "polyline", closed: true },
+                    direction: "up", speed: [0.0, 0.06],
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xC7D855, alpha: [0.45, 0], light: "world", maxParticles: 150
+                },
+                {
+                    name: "ground", bind: "point", fit: "none", offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 40,
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 }, thickness: 0.9 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xEAF0B0, alpha: [0.35, 0], light: "world", maxParticles: 140
                 }
             ]
         },
@@ -112,6 +112,30 @@ const StrugglebugDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.16], spread: 28,
                     lifetime: [8, 16], size: [0.07, 0.01],
                     color: 0xD8E36A, alpha: [0.8, 0], light: "full", maxParticles: 26
+                }
+            ]
+        },
+        cling: {
+            duration: 30,
+            exit: { stop: 10, drain: 20 },
+            emitters: [
+                {
+                    name: "carrier", bind: "target", offset: [0, 0.07, 0], height: 0.15,
+                    particle: "world_combat_core:cobblemon/generic/ground_bugs",
+                    rate: { data: "motes", fallback: 12 },
+                    shape: { kind: "circle", radius: 0.42, thickness: 0.9 },
+                    direction: "shape", speed: [0.0, 0.03], gravity: 0.012,
+                    lifetime: [8, 14], size: [0.08, 0.015],
+                    color: 0x9FB13A, alpha: [0.6, 0], light: "world", maxParticles: 28
+                },
+                {
+                    name: "feet", bind: "target", offset: [0, 0.05, 0], height: 0.1,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 10,
+                    shape: { kind: "circle", radius: 0.4 },
+                    direction: "up", speed: [0.0, 0.04],
+                    lifetime: [8, 14], size: [0.05, 0.01],
+                    color: 0xC7D855, alpha: [0.4, 0], light: "world", maxParticles: 16
                 }
             ]
         },

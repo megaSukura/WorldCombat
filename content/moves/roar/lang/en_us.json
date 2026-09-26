@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.roar.summary": "Roar out a ring of sound that shakes every enemy in range into losing its target and leaving the fight; an opponent with a reserve is truly switched out, while wild or reserveless ones are only driven off. It deals no damage, it only drives them off.",
-  "worldcombat.skill.roar.use.0": "Drive off the enemies crowding you all at once",
+  "worldcombat.skill.roar.summary": "Roar at nearby foes. Creatures that accept fear follow real native paths to a safe distance, then resume normal choices when the short window ends. Resistant bodies are not controlled, players keep movement input, and legal reserve switches remain available. No damage.",
+  "worldcombat.skill.roar.use.0": "Make nearby enemies walk away along real escape paths",
   "worldcombat.skill.roar.use.1": "Break a surround and buy yourself breathing room",
   "worldcombat.skill.roar.use.2": "Push a whole ring of opponents back in a melee",
   "worldcombat.skill.roar.description.0": "Shout out a %1$s block ring around yourself; the ring you see is exactly the edge of what gets caught.",
-  "worldcombat.skill.roar.description.1": "Every enemy inside is marked Routed for %1$s seconds; while it lasts, anything closer than %2$s blocks is driven %3$s blocks away every 10 ticks.",
-  "worldcombat.skill.roar.description.2": "No damage: it only drives opponents out of the engagement and turns them away. Pokemon, vanilla mobs, modded creatures and players all take the same path.",
+  "worldcombat.skill.roar.description.1": "Accepted fear lasts up to %1$s; stop at %2$s blocks of safe distance. Walk at %3$s times native path speed, with walls and ground determining escape routes.",
+  "worldcombat.skill.roar.description.2": "Pokemon with a legal reserve can still be switched out. If no route works, release this navigation lease; no periodic shoves or repeated target clearing.",
   "worldcombat.skill.roar.unleash.on": "Unleash on: the ring is x1.25 wider and the rout x1.15 longer, at the cost of +3 ticks of preparation and +20 ticks of cooldown.",
   "worldcombat.skill.roar.unleash.off": "Unleash off: faster to come out, -10 ticks of cooldown and a narrower ring, good for repeated shoves.",
   "worldcombat.skill.roar.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
@@ -13,7 +13,7 @@
   "worldcombat.skill.roar.growth.1": "At level %1$s the ring widens to %2$s blocks and the rout lasts %3$s seconds.",
   "worldcombat.skill.roar.value.reach": "Ring radius",
   "worldcombat.skill.roar.value.flee": "Rout duration",
-  "worldcombat.skill.roar.value.panic": "Drive-off step",
+  "worldcombat.skill.roar.value.panic": "Escape pace",
   "worldcombat.skill.roar.value.keepOut": "Keep-out distance",
   "worldcombat.skill.roar.value.tempo": "Preparation",
   "worldcombat.skill.roar.value.recover": "Recovery",
@@ -28,8 +28,8 @@
   "worldcombat.skill.roar.preference.ai.leaveStation": "Leave station to roar",
   "worldcombat.skill.roar.preference.ai.leaveStation.help": "On: it will leave its station under a hold order to roar. Off: it only does so when the enemies are already inside its ring.",
   "effect.world_combat.roar_routed": "Routed",
-  "world_combat.move.roar.text.wave": "Roared %1$s opponent(s) off",
+  "world_combat.move.roar.text.wave": "Roar affected %1$s foes",
   "world_combat.move.roar.text.miss": "The roar fades into the air",
   "world_combat.move.roar.text.switch": "Roar · forced switch",
-  "worldcombat.skill.roar.description.additional": "On impact it interrupts the target's current interruptible action, clears its combat target and shoves it hard away from you; each beat of the rout also clears its target again. An opponent with an available reserve is truly switched out and the reserve takes its place; wild or reserve-less ones are only driven off."
+  "worldcombat.skill.roar.description.additional": "Fear immunity prevents navigation control. Players keep their own movement and receive only the move’s permitted immediate interruption."
 }

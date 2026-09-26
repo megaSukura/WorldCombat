@@ -1,15 +1,4 @@
-/**
- * 王者盾牌的客户端表现。
- *
- * 一句话：一面竖起的钢盾在身前立稳、盾面浮起金色纹章，来击在盾面磕出金属火花，接触的攻击者被盾沿一顶、攻击锐度当场下降；
- * 量尽或到时钢盾沉下。
- * 色相家族：钢蓝灰为主体（impact_steel／smoke／mediumring），金色纹章与火花为强调（glowingsparkle_yellow／bigsparkle）。
- * 拍子：起（raise 0–16t，盾面自下而上拼合并浮出纹章）→ 击（block 每次磕挡、punish 每次削锋）→ 收（fall 沉盾）。
- * 范围：hold 的盾影环按 `data.scale`（盾影半径／1.6）铺开——画面就是被判定的那一圈。
- * 运动：起手盾面向上拼合、金纹浮起；持盾几乎静止，被撞击处向内一震；削锋时从接触点向攻击者撒出金色火花。
- * 数：`data.bolts`（削攻级数 ×8）就是 punish 金火花的根数，`data.intensity`（剩余量／初始量）决定亮度，`data.scale` 放大盾影环。
- * 参照节：视觉语言第二、三、四、六、七、九节。
- */
+/** A fixed front-facing plate with native-contact sparks and one punishment flash per attacker. */
 const KingShieldDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -44,27 +33,10 @@ const KingShieldDefinition: ParticleDefinition = {
             ]
         },
         hold: {
-            // 持续状态：低密度钢蓝盾影环与少量金纹，放在脚边，让玩家看清目标。
-            emitters: [
-                {
-                    name: "ward_ring", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 5, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.0, 0.01],
-                    lifetime: [24, 40], size: [0.48, 0.48], sizeMode: "sin",
-                    color: 0x8FA0B4, alpha: [0.22, 0.07], alphaMode: "sin",
-                    light: "world", maxParticles: 16
-                },
-                {
-                    name: "glint", bind: "source", offset: [0, 0.9, 0], height: 0.4, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 4, shape: { kind: "sphere", radius: 0.35 },
-                    direction: "up", speed: [0.0, 0.02],
-                    lifetime: [20, 34], size: [0.07, 0.02], sizeMode: "sin",
-                    color: 0xF2C85A, alpha: [0.5, 0.1], alphaMode: "sin",
-                    light: "full", maxParticles: 12
-                }
-            ]
+            emitters: [{ name: "sheet_outline", bind: "path", fit: "none",
+                particle: "world_combat_core:cobblemon/generic/screen_color", rate: 24,
+                shape: { kind: "polyline" }, direction: "up", speed: [0, .002],
+                lifetime: [8, 12], size: [.16, .12], color: 0x8FA0B4, alpha: [.55, .15], light: "world", maxParticles: 36 }]
         },
         block: {
             duration: 22,

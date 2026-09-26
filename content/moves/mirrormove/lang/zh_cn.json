@@ -24,5 +24,7 @@
   "worldcombat.skill.mirrormove.preference.ai.leaveStation.help": "开启后，驻守命令下也会为折返离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.mirrormove.text.reflect": "折返 %1$s",
   "world_combat.move.mirrormove.text.dull": "镜面折不动",
-  "worldcombat.skill.mirrormove.world": "对普通生物，读取它在 %1$s 内最近一次成功的原生攻击，立即以相同伤害类型回敬目标；取那次护甲结算前的伤害乘以 %2$s，目标的防护重新结算。需要目标仍在射程内且视线畅通；不会复制攻击的额外状态或飞行轨迹。"
+  "worldcombat.skill.mirrormove.world": "对普通生物，读取它在 %1$s 内最近一次成功的原生攻击，立即以相同伤害类型回敬目标；取那次护甲结算前的伤害乘以 %2$s，目标的防护重新结算。需要目标仍在射程内且视线畅通；不会复制攻击的额外状态或飞行轨迹。",
+  "world_combat.move.mirrormove.text.native_contact": "回敬近身影击",
+  "world_combat.move.mirrormove.text.native_projectile": "回敬投射影弹"
 }

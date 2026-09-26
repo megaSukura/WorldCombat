@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.barbbarrage.summary": "抖身抖出无数毒针，摊成一面扇形齐射出去。针数随等级与速度增长，整轮威力按针数均分；只要有一针命中，就有机会让目标中毒。目标已经中毒时整轮翻倍。",
-  "worldcombat.skill.barbbarrage.description.0": "一轮齐射发出 %1$s 根毒针，向瞄准方向摊开成 %2$s 度的扇形；每根针各自飞行，可以命中各自的目标。",
+  "worldcombat.skill.barbbarrage.description.0": "一轮齐射发出 %1$s 根毒针，朝瞄准方向（也可以空放）摊开成 %2$s 度的扇形；每根针各自飞行、各自命中，撞上方块的针只扎住，不再造成伤害。",
   "worldcombat.skill.barbbarrage.description.1": "整轮合计约 %1$s 点物理伤害，命中时按针数均分到每一针；单针以 %2$s 格每刻飞行。目标已中毒或带剧毒时，整轮伤害翻倍。",
-  "worldcombat.skill.barbbarrage.description.2": "整轮结束后，只要至少一针命中，就有 %1$s 的概率让其中一个命中的目标中毒、持续 %2$s（多目标时只毒到最后命中的那个）；每根命中的毒针都会沿瞄准方向把目标冲退 %3$s 格。",
+  "worldcombat.skill.barbbarrage.description.2": "整轮结束后，只要至少一针命中，就有 %1$s 的概率让命中针数最多的那个目标中毒、持续 %2$s（平局时取最先命中的那个）；每根命中的毒针都会沿瞄准方向把目标冲退 %3$s 格。",
   "worldcombat.skill.barbbarrage.use.0": "扇形压制的物理远程",
   "worldcombat.skill.barbbarrage.use.1": "用一面扇形压制一群敌人，有机会给其中一个挂毒",
   "worldcombat.skill.barbbarrage.use.2": "追击中毒的敌人",

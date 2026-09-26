@@ -1,20 +1,4 @@
-/**
- * 吼叫 / roar —— 第 078 组「强制退场」。
- *
- * 机制与数值来源：
- * - 原生（Cobblemon 1.8 / Showdown）：一般、变化、PP 20、优先度 -6、命中 100；说明是
- *   「放走对手，强制拉后备宝可梦上场；如果对手为野生宝可梦，战斗将直接结束」。
- * - 即时战斗翻译：一声吼，以自己为中心把声浪贴地铺开一圈，圈里的所有敌人被震慑、失去当前目标并被逐出
- *   交战圈（溃退），没有伤害；有合法后备的对手会被原生队伍操作真正换下，野生或没有后备时只逐退。
- *   它是本组唯一绕身一圈、唯一不挑方向的逐退，靠威势而不是推击；代价是射程短、起手慢、冷却长。
- *   溃退即共享身份 `world_combat:status/routed`（本单元效果 world_combat:roar_routed）：
- *   带着它的活体会失去目标，并在一段时间里每 10 刻被从施法者身边逐开一步。
- * - 参数分散到精灵数据：声浪半径取特攻（嗓门）与身高（肺量），溃退时长取物攻（凶悍）与等级（名望），
- *   每刻驱逐步长取体重（分量），驱逐保持距离取防御（镇不镇得住），起手／收招／冷却取速度与等级，
- *   声波道数取特攻。同一招在两只精灵手里，半径、时长、步长、节奏各不相同。
- * - 配置 unleash（狂啸）：开启＝声浪 ×1.25、持续时间 ×1.15，代价是起手 +3 刻、冷却 +20 刻；
- *   关闭＝出手更快、冷却更短、声浪较窄。一次逼退得更开更久，换更长的站定与等待。
- */
+/** Fear keeps its original reach and duration; panic controls native path speed rather than a forced step. */
 namespace PokemonSkills {
     export const roarId = "roar";
     export const roarRouted = "world_combat:roar_routed";
@@ -44,14 +28,14 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("unleash", text("worldcombat.skill.roar.preference.unleash")), F.const(1.15), F.const(1)))
                 .clamp(50, 200).round(0),
             "溃退时长", "被吼退的敌人多久失去斗志；越凶悍、等级越高的个体吼得越久，狂啸更长。"),
-        /** 驱逐步长：基础 0.7 格 +（体重 − 50）×0.006（夹 -0.1..+0.6）；夹在 0.5..1.4 格。 */
+        /** 逃离步频：基础 0.7 格 +（体重 − 50）×0.006（夹 -0.1..+0.6）；夹在 0.5..1.4 格。 */
         panic: formula(
-            F.base(0.7, "驱逐步长")
+            F.base(0.7, "逃离步频")
                 .plus(F.body("weight").minus(50).times(0.006).clamp(-0.1, 0.6))
                 .clamp(0.5, 1.4).round(2),
-            "驱逐步长", {
-                unit: " 格",
-                description: "溃退期间每 10 刻把敌人从你身边逐开多远；身子越重的个体推得越开。"
+            "逃离步频", {
+                unit: " 倍",
+                description: "逃离时相对自身原生导航速度的倍率；身体沿真实可走路径行走。"
             }),
         /** 保持距离：基础 3.0 格 +（防御 − 60）×0.012（夹 -0.4..+0.8）+（身高 − 1.4）×0.4（夹 -0.2..+0.8）；夹在 2.6..6 格。 */
         keepOut: formula(
@@ -61,7 +45,7 @@ namespace PokemonSkills {
                 .clamp(2.6, 6).round(2),
             "保持距离", {
                 unit: " 格",
-                description: "溃退期间敌人只要离你不足这么远，就会被再一次逐开；越镇得住场面、体格越高，逼得越远。"
+                description: "接受恐惧后向外寻找退路，到这个安全距离停步；受效短窗结束恢复正常选择。"
             }),
         /** 起手：基础 9 刻 −（速度 − 60）×0.03（夹 -2..+2）；unleash +3；夹在 5..15 刻。 */
         tempo: seconds(

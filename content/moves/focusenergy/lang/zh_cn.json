@@ -29,8 +29,8 @@
   "worldcombat.skill.focusenergy.preference.ai.minGap.help": "威胁近于这个距离时不再聚气、直接攻击；调大更常在近身时放弃聚气。",
   "worldcombat.skill.focusenergy.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.focusenergy.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也不阻止它先吸这口气。",
-  "world_combat.move.focusenergy.text.ready": "聚气 · %1$s 秒（要害 +%2$s%%）",
-  "world_combat.move.focusenergy.text.deep": "聚气·深呼吸 · %1$s 秒（要害 +%2$s%%）",
+  "world_combat.move.focusenergy.text.ready": "聚气 · 约 %1$s 秒后满气（满气要害 +%2$s%%）",
+  "world_combat.move.focusenergy.text.deep": "聚气·深呼吸 · 约 %1$s 秒后满气（满气要害 +%2$s%%）",
   "world_combat.move.focusenergy.text.fade": "聚气散去",
   "effect.world_combat.focus_breath": "聚气",
   "worldcombat.skill.focusenergy.description.2": "身上已有龙声鼓舞时无法聚气。"

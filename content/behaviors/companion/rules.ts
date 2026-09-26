@@ -61,11 +61,10 @@ namespace CompanionBehavior {
             } });
         registry.sense({ id: "world_combat:partner", after: ["world_combat:threat"], read: function (context) {
                 var self = source(context), threat = context.senses["world_combat:threat"];
-                var maySelf = WorldBehavior.capabilities(context, "world_combat:bolster").some(function (item) { return item.data.config.allowSelf; });
-                var attendInjured = WorldBehavior.capabilities(context, "world_combat:bolster").some(item => ai<string>(item, "prefer", "engaged") === "injured");
+                var purpose = threat ? "world_combat:bolster" : "world_combat:travel-help";
+                var maySelf = WorldBehavior.capabilities(context, purpose).some(function (item) { return item.data.config.allowSelf; });
                 return WorldMethods.search(context, (context.facts.nearby as Entity[]).concat(maySelf ? [self] : []), function (other) {
-                    return other.friendly && other.health > 0 && other.visible && (attendInjured && ratio(other) < .95 || (threat ? !!other.attacking || other.hurtAgo < 60
-                        : distance(other.point, self.point) > 4 || other.ref === self.ref && distance(self.point, context.facts.anchor) > 5));
+                    return other.friendly && other.health > 0 && other.visible && options(context, purpose, other).length > 0;
                 }, function (a, b) { return distance(a.point, self.point) - distance(b.point, self.point); });
             } });
         registry.policy({ id: "world_combat:individual", prepare: function (context) {

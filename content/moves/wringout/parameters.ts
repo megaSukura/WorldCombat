@@ -10,7 +10,8 @@
  *
  * 数据分散（每个参数读不同的精灵数据）：
  *   wring        绞紧威力：特攻决定拧进去多深，等级给一点分寸；再乘上「目标完整度」系数（满血最重、残血最轻）。
- *   reach        伸手距离：身高给臂／蔓的长度，也是实际射程来源。
+ *   reach        伸手距离：身高给臂／蔓的长度，也是这束力能扫多远、第二拧还能不能维持的实际射程来源。
+ *   grip         抓取半径：碰撞箱宽度决定这束力扫过的窄线多宽；只有被窄线碰到的第一个敌人才会被缠住。
  *   coilRadius   螺旋半径：碰撞箱宽度决定缠得多开。
  *   coil         螺旋时长：等级决定这一拧持续几刻。
  *   secondFactor 第二段倍率：特攻决定再拧一下的余劲（双绞式）。
@@ -20,6 +21,7 @@
  *
  * 配置 `twin`（双绞式，默认关）双向取舍：开＝拧完一记后隔 `gap` 再拧一记（第二段按目标当时的血量重算、约再吃
  *   `secondFactor` 倍），代价是单段威力 ×0.89、起手 +2 刻、冷却 +5 刻；关（单绞式）＝一记拧完，单段更重、更快。
+ *   第二拧要目标仍在原施放范围且与施法者之间没有实墙，第一拧成功不保证第二拧。
  *
  * 伤害段 `wring`：目标完整度在**命中时按每个目标自己的血量重算**（见 defineDamage 的 resolve）。
  */
@@ -34,6 +36,13 @@ namespace PokemonSkills {
         return F.const(0.30).plus(
             F.target("actor.healthRatio", text("worldcombat.skill.wringout.value.hpRatio")).times(0.70))
             .as(text("worldcombat.skill.wringout.value.healthFactor"));
+    }
+
+    /** 威力环的粗细：命中当刻目标还剩多少血（0.28 残血～0.70 满血）；结算与表现读同一次血量。 */
+    export function wringoutGirth(world: CombatWorld, actor: CombatActor): number {
+        const body = world.observe(actor);
+        const ratio = body === null || body.maxHealth() <= 0 ? 0 : Math.max(0, Math.min(1, body.health() / body.maxHealth()));
+        return Math.round((0.28 + ratio * 0.42) * 100) / 100;
     }
 
     actionParameters.define(wringoutId, {
@@ -55,6 +64,13 @@ namespace PokemonSkills {
             "伸手距离", {
                 unit: "格",
                 description: "这一拧能够到多远，也是本招的实际射程来源；体型越高大伸得越远。"
+            }),
+        /** 抓取半径：0.32 + (宽度−0.9)×0.1[−0.04,0.18]；夹 0.25..0.6。 */
+        grip: formula(
+            F.base(0.32).plus(F.body("width").minus(0.9).times(0.1).clamp(-0.04, 0.18)).clamp(0.25, 0.6).round(2),
+            "抓取半径", {
+                unit: "格",
+                description: "这束螺旋力在瞄准方向上扫过的窄线半径；只有被这条窄线碰到的第一个敌人才会被缠住，线被墙截住就绞空。身板越宽抓得越开。"
             }),
         /** 螺旋半径：0.95 + (宽度−0.9)×0.5[−0.15,0.6]；夹 0.7..1.8。 */
         coilRadius: formula(
@@ -122,7 +138,7 @@ namespace PokemonSkills {
 
     describe(wringoutId, [
         { key: "description.0", values: ["wring"] },
-        { key: "description.1", values: ["reach"] },
+        { key: "description.1", values: ["reach","grip"] },
         { key: "twin.on", values: ["gap","secondFactor"], when: function (context) { return read(context.detail.values, ["twin"]) === true; } },
         { key: "twin.off", values: [], when: function (context) { return read(context.detail.values, ["twin"]) !== true; } },
         { key: "timing", values: ["prepare", "recover", "pp", "cooldown"] },

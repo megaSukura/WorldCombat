@@ -1,14 +1,13 @@
 /**
  * 上菜 / orderup 的客户端表现。
  *
- * 一句话：托手成盘、盘中亮起一点暖金，随后以潇洒的身段踏前半步拍下一记；若身边跟着小个子伙伴，
- * 一盘「菜」会先亮起，再化作对应能力的光环套上施法者（分餐式再向队友散开）。
- * 色相家族：暖金与米白（托盘的礼数与拍击）为底，玫瑰色只做点缀；能力光环按提升的能力取红／蓝／黄之一的窄色。
- * 拍子：起（windup 托盘聚金）→ 端（serve 落面与礼花）→ 供（dish 能力光环）→ 碎（break 碎片）→ 空（miss）。
- * 范围：serve 用 path 画出服务端走廊判定的同一组四个顶点；dish 的光环半径按 shareRadius、碎壁碎片按碎壁半径铺开。
- * 运动：暖金向盘中收，拍下是短促外爆，碎片向外散，能力光环从脚边扩开再收拢。
- * 数：`data.power`（下手威力）绑定落面礼花量，`data.stages`（增益级数）绑定能力光环的环数，
- * `data.wards`（震碎的屏障层数）绑定碎片波数，`data.scale`（下手半宽 / 0.45）放落面范围。
+ * 一句话：托手成盘、盘中亮起一点暖金；实际伙伴先递来一道短指令线，随后一枚托盘形龙气平抛飞出，
+ * 碰到第一个身体时拍出一圈礼花；成功加到谁，就在谁身上按能力亮出对应的小符。
+ * 色相家族：暖金与米白（托盘与菜势）为底，玫瑰色只做点缀；能力光环按提升的能力取红／蓝／黄之一的窄色。
+ * 拍子：起（windup 托盘聚金）→ 令（order 伙伴到自身）→ 端（fly 龙气飞行）→ 中（hit 礼花）→ 供（dish 能力小符）→ 空（miss 散掉）。
+ * 范围：order 的 path 是伙伴与施法者两点连成的同一道短指令线；fly 绑真实投射物，命中与增益点都读服务端给的坐标。
+ * 数：`data.power`（下手威力）绑定命中礼花量，`data.stages`（增益级数）绑定能力光环环数，
+ * `data.stat`（提升的能力序号）选光环色，`data.scale`（下手半宽 / 0.45）放菜势范围。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const OrderupDefinition: ParticleDefinition = {
@@ -36,18 +35,54 @@ const OrderupDefinition: ParticleDefinition = {
                 }
             ]
         },
-        serve: {
+        order: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "line", bind: "path", offset: [0, 0.7, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    shape: { kind: "polyline" },
+                    rate: 22, direction: "shape", speed: [0.03, 0.12], spread: 8,
+                    lifetime: [6, 12], size: [0.14, 0.03], sizeMode: "index",
+                    color: 0xF0D9A0, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 60
+                },
+                {
+                    name: "note", bind: "path", offset: [0, 0.75, 0],
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    shape: { kind: "polyline" },
+                    rate: 8, direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [10, 16], size: [0.16, 0.04],
+                    color: 0xE8A0B0, alpha: [0.5, 0], light: "full", maxParticles: 24
+                }
+            ]
+        },
+        fly: {
+            duration: 40,
+            exit: { stop: 12, drain: 14 },
+            emitters: [
+                {
+                    name: "qi", bind: "projectile", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/scalingshaded",
+                    rate: 26, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "away", speed: [0.04, 0.16], orient: "velocity",
+                    lifetime: [6, 11], size: [0.2, 0.05], sizeMode: "index",
+                    color: 0xF0C86A, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 70
+                },
+                {
+                    name: "tip", bind: "projectile", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
+                    rate: 10, shape: { kind: "sphere", radius: 0.18 },
+                    direction: "away", speed: [0.02, 0.1], orient: "velocity",
+                    lifetime: [5, 10], size: [0.22, 0.06], sizeMode: "index",
+                    color: 0xF4E4C0, alpha: [0.6, 0], light: "full", bloom: 0.35, maxParticles: 40
+                }
+            ]
+        },
+        hit: {
             duration: 20,
             exit: { stop: 8, drain: 14 },
             emitters: [
-                {
-                    name: "lane", bind: "path", offset: [0, 0.45, 0],
-                    particle: "world_combat_core:cobblemon/generic/swipe",
-                    shape: { kind: "polygon" },
-                    rate: 30, direction: "shape", speed: [0.03, 0.1],
-                    lifetime: [8, 14], size: [0.24, 0.05],
-                    color: 0xF0D9A0, alpha: [0.28, 0], light: "full", maxParticles: 90
-                },
                 {
                     name: "impact", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
@@ -87,7 +122,8 @@ const OrderupDefinition: ParticleDefinition = {
                     shape: { kind: "ring", radius: 0.6 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [12, 20], size: [0.4, 0.14], sizeMode: "sin",
-                    color: 0xF0D060, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 40
+                    color: { attribute: "stat", colors: { "0": 0xF07070, "1": 0x70A8F0, "2": 0xF0D060 }, fallback: 0xF0D060 },
+                    alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 40
                 },
                 {
                     name: "spark", bind: "target", offset: [0, 0.8, 0], height: 0.3,
@@ -99,37 +135,12 @@ const OrderupDefinition: ParticleDefinition = {
                 }
             ]
         },
-        break: {
-            duration: 22,
-            exit: { stop: 9, drain: 15 },
-            emitters: [
-                {
-                    name: "shards", bind: "point", offset: [0, 0.6, 0],
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
-                    burst: { count: { data: "wards", fallback: 0 }, interval: 2, repeats: 3 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.08, 0.24], spread: 26,
-                    gravity: 0.05, drag: 0.94,
-                    lifetime: [10, 18], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0xBFD8F0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 90
-                },
-                {
-                    name: "ring", bind: "point", offset: [0, 0.5, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 18, at: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.1, 0.22],
-                    lifetime: [10, 16], size: [0.4, 0.14], sizeMode: "sin",
-                    color: 0xDCEFFF, alpha: [0.5, 0], light: "full", maxParticles: 30
-                }
-            ]
-        },
         miss: {
             duration: 16,
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "spill", bind: "source", offset: [0, 0.4, 0], height: 0.3,
+                    name: "spill", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 12, at: 0 },
                     shape: { kind: "sphere", radius: 0.35 },

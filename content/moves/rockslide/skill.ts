@@ -5,10 +5,11 @@
  * 它是一招覆盖：块数决定能罩住多大一片、谁会挨到，每块本身不重，最先砸实的那块决定畏缩的拳头。
  *
  * 三幕：
- *   起（windup，提交前）：低头、在脚边卷起一圈石屑的预告。
- *   击（throw → flight → impact）：提交后逐块抛岩石，每块沿抛物线飞行（看得见、能躲），落在选定的那片地
- *       里自己的一小块上；落地时那一小圈里的敌人各挨一记（同一目标一次施放最多两记），第一次挨砸掷畏缩。
- *   收（rubble）：全部落定后，落点中央被砸出一片碎石地面，留一会儿后自己恢复。
+ *   起（windup，提交前）：低头、在脚边卷起一圈石屑，并在选定地面亮出这把雨会罩住的那圈（实际 spread 半径）。
+ *   击（throw → launch → hit）：提交后逐块抛岩石，每块沿抛物线飞行（看得见、能躲），落在选定的那片地
+ *       里自己的一小块上；接触到地就在实际接触点炸开落点尘，接触点那一小圈里的敌人各挨一记
+ *       （同一目标一次施放最多两记），第一次挨砸掷畏缩。每块石头各有自己的弧线与尾迹，落地即停尾迹。
+ *   收（settle）：全部落定后报出砸中几人；不翻动地面。
  *
  * 配置 `scatter`（散布式）由 resolve 改时序、由公式改块数与单块威力：开启＝广而轻，关闭＝窄而重。
  *
@@ -28,37 +29,11 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 把落点周围的地面砸成碎石；石头、方块实体与液体不动，到期原方块回来。 */
-    function rockslideRubble(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): void {
-        var cells: any[] = [], r = Math.ceil(radius);
-        var px = point.x(), py = point.y(), pz = point.z();
-        for (var dx = -r; dx <= r; dx++) for (var dz = -r; dz <= r; dz++) {
-            var distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius) continue;
-            var x = Math.floor(px) + dx, z = Math.floor(pz) + dz;
-            for (var dy = 0; dy >= -2; dy--) {
-                var y = Math.floor(py) + dy;
-                var block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                var id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                // 不能用沙砾：FallingBlock 会被宿主的 terrain 以 unsupported-terrain 拒绝，整批租赁作废。
-                var surface = distance <= radius * 0.5 ? "minecraft:cobblestone" : "minecraft:tuff";
-                if (id !== surface) cells.push({ x: x, y: y, z: z, block: surface });
-                break;
-            }
-        }
-        if (!cells.length) return;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return; }
-    }
-
     define({
         id: "rockslide",
         name: "Rock Slide",
         description: "把身前地面上的岩石一块块沿弧线甩向选定的一片地：落点周围的敌人挨砸，同一目标最多吃两记，被砸实的可能畏缩；散布式罩得更开，集中式每块更重。",
-        uses: ["覆盖一片地面", "同时压住几个挤在一起的敌人", "把小范围的敌人砸懵", "在落点留下碎石地"],
+        uses: ["覆盖一片地面", "同时压住几个挤在一起的敌人", "把小范围的敌人砸懵"],
         kind: "point",
         range: 9,
         maxRange: 14,
@@ -84,14 +59,18 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const centre = action.targetPosition();
             action.present("rockslide:windup", rockslideScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", scatter: config && config.scatter === true }));
+                JSON.stringify({ moment: "windup", scatter: config && config.scatter === true,
+                    point: [centre.x(), centre.y(), centre.z()],
+                    scale: p("rockslide", "spread", action) / 2.6 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const origin = action.origin();
             const centre = action.targetPosition();
+            const scenes = WorldFeedback.actionScenes(rockslideScene);
             const count = Math.max(1, Math.round(p("rockslide", "boulders", action)));
             const spread = p("rockslide", "spread", action);
             const rockRadius = p("rockslide", "rockRadius", action);
@@ -101,7 +80,6 @@ namespace PokemonSkills {
             const flinchTicks = Math.round(p("rockslide", "flinchTicks", action));
             const hitCap = Math.max(1, Math.round(p("rockslide", "hitCap", action)));
             const interval = Math.max(1, Math.round(p("rockslide", "interval", action)));
-            const rubbleTicks = Math.max(20, Math.round(p("rockslide", "rubbleTicks", action)));
             const gravity = 0.045;
             const flightRange = Math.max(6, centre.minus(origin).length() + 5);
             const scale = spread / 2.6;
@@ -109,22 +87,25 @@ namespace PokemonSkills {
             const hits: { [ref: string]: number } = {};
             const flinched: { [ref: string]: boolean } = {};
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
             sound(action, "cobblemon:move.rockthrow.actor");
             WorldFeedback.emit(world, rockslideScene, 1, origin, { moment: "throw", spread: spread, count: count }, 24);
 
-            /** 每块岩石落地时，把它那一小圈里的敌人各结算一次（同一目标有上限），并把落地处翻成碎石。 */
-            function landed(current: CombatAction, point: CombatPoint): void {
+            /** 每块岩石在真实接触点炸开落点尘，并把它那一小圈里的敌人各结算一次（同一目标有上限）。 */
+            function landed(current: CombatAction, point: CombatPoint, index: number): void {
                 const scope = current.world();
-                rockslideRubble(scope, point, rockRadius, rubbleTicks);
+                scenes.stop(current, "rock/" + index);
+                const scaleHit = rockRadius / 1.05;
+                const intensity = Math.max(0.5, Math.min(2, power / 50));
+                WorldFeedback.emit(scope, rockslideScene, 1, point,
+                    { moment: "hit", scale: scaleHit, count: Math.round(10 + power * 0.3), intensity: intensity }, 22);
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, rockRadius, { below: 1, above: 4 }), function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if ((hits[ref] || 0) >= hitCap) return;
                     if (!hurt(current, enemy, "rockslide", power, { damage: damageSpec("rockslide", "rockfall") })) return;
                     hits[ref] = (hits[ref] || 0) + 1; strikes++;
                     WorldFeedback.emit(scope, rockslideScene, 1, facts.position(),
-                        { moment: "hit", target: ref, scale: rockRadius / 1.05, intensity: Math.max(0.5, Math.min(2, power / 50)),
-                            count: Math.round(10 + power * 0.3) }, 22);
+                        { moment: "strike", target: ref, scale: scaleHit, intensity: intensity }, 22);
                     if (!flinched[ref] && scope.random() < chance && rockslideFlinch(scope, enemy, flinchTicks)) {
                         flinched[ref] = true;
                         WorldFeedback.emit(scope, rockslideScene, 1, facts.position(), { moment: "flinch", target: ref }, 24);
@@ -139,10 +120,12 @@ namespace PokemonSkills {
                 const angle = scope.random() * Math.PI * 2, distance = Math.sqrt(scope.random()) * spread;
                 const target = centre.plus(WorldCombat.point(Math.cos(angle) * distance, 0, Math.sin(angle) * distance));
                 const direction = LivingActions.ballistic(origin, target, speed, gravity) || aim(current);
+                const key = "rock/" + index;
                 pending++;
                 const flight = current.projectile(origin, direction.scale(speed), gravity, rockRadius * 0.7, flightRange, 120,
-                    function (inner, hit) { landed(inner, hit.position()); },
+                    function (inner, hit) { landed(inner, hit.position(), index); },
                     function (inner) {
+                        scenes.stop(inner, key);
                         pending--;
                         if (thrown >= count && pending <= 0) {
                             rockslideSettle(inner);
@@ -151,8 +134,8 @@ namespace PokemonSkills {
                     },
                     JSON.stringify({ block: "minecraft:stone", scale: Math.max(0.6, rockRadius * 1.5), spin: true }));
                 thrown++;
-                WorldFeedback.emit(scope, rockslideScene, 1, origin,
-                    { moment: "launch", projectile: flight, direction: [direction.x(), direction.y(), direction.z()], rate: Math.round(24 + speed * 30) }, 100);
+                scenes.show(current, key, origin,
+                    { moment: "launch", projectile: flight, direction: [direction.x(), direction.y(), direction.z()], rate: Math.round(24 + speed * 30) });
                 sound(current, "minecraft:block.stone.break");
                 if (thrown >= count) return;
                 current.after(interval, function (next) { throwOne(next, index + 1); });

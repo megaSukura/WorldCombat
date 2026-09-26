@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.stickyweb.summary": "把一团黏丝抛到选定的地面、摊成一张网：踏进来的贴地敌人速度掉一档，并在一段时间里被网黏住、脚步发沉；留在网里这层黏劲一直被维持。它不造成伤害，只把对手拖慢。飞在半空的生物从网上方过去。深锚式多降一级、黏得更久但网更小，广铺式网更大更快但只降一级。",
+  "worldcombat.skill.stickyweb.summary": "把一团黏丝抛到选定的地面，摊成几张交叉黏线加一圈外环：只有脚部真实踩到丝线的贴地敌人才会被黏住，速度等级对每名目标只降一次，并在一段时间里被网缠住、脚步发沉；离开丝线后拖劲按剩余时间自然脱开。网孔可以小步穿行或跳过，飞在半空的从上方过去。深锚式多降一级、黏得更久但网更小，广铺式网更大更快但只降一级。",
   "worldcombat.skill.stickyweb.use.0": "提前把一片地面变成减速区",
   "worldcombat.skill.stickyweb.use.1": "缠住冲锋或逃跑的敌人",
   "worldcombat.skill.stickyweb.use.2": "压低高速目标的机动",
-  "worldcombat.skill.stickyweb.description.0": "敌方贴地目标每次踏进黏网，速度下降 %1$s，并被网黏住 %2$s；对宝可梦落到原生速度等级，原版生物与其他模组生物落到移动速度属性。飞在半空的生物不会被黏到。",
-  "worldcombat.skill.stickyweb.description.1": "黏网半径约 %1$s 格，存在 %2$s；留在网里的目标黏劲被持续维持，走出去后按剩余时间慢慢脱开；同一片地上再织会替换掉自己之前的旧网。",
+  "worldcombat.skill.stickyweb.description.0": "脚部踩到某条黏线的贴地目标速度下降 %1$s，并被网黏住 %2$s；对宝可梦落到原生速度等级，原版生物与其他模组生物落到移动速度属性。每名目标对每张网只降一次速度，重复蹭线不会继续扣。",
+  "worldcombat.skill.stickyweb.description.1": "黏网半径约 %1$s 格、存在 %2$s，由 %3$s 条交叉黏线加一圈外环组成；判定带半宽约 %4$s 格，只有脚部落在带内才算踩中，网孔是安全的，可以小步穿过或跳过。线按真实地表裁断，不穿楼板和实墙，飞在半空的生物从上方过去；同一片地上再织会替换掉自己之前的旧网。",
+  "worldcombat.skill.stickyweb.description.2": "被网黏住期间脚步被压低：这个状态本身让移动速度降低 30%。",
   "worldcombat.skill.stickyweb.option.on": "开启深锚式：多降一级速度、黏身与黏网都更久，但网收窄到约 0.8 倍、起手 +2 刻、冷却更长，用来把一条窄路黏死。",
   "worldcombat.skill.stickyweb.option.off": "关闭深锚式（广铺式）：网铺大约 1.25 倍、出手更快、冷却更短，代价是只降一级速度、黏得更短，用来罩住一大片地。",
   "worldcombat.skill.stickyweb.timing": "可把黏网抛到 %1$s 格内的落点，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",
@@ -12,7 +13,9 @@
   "worldcombat.skill.stickyweb.value.strandTicks": "黏身时长",
   "worldcombat.skill.stickyweb.value.webRadius": "黏网半径",
   "worldcombat.skill.stickyweb.value.webTicks": "黏网存续时长",
-  "worldcombat.skill.stickyweb.value.strands": "黏丝数量",
+  "worldcombat.skill.stickyweb.value.threads": "交叉黏线",
+  "worldcombat.skill.stickyweb.value.band": "丝带宽度",
+  "worldcombat.skill.stickyweb.value.strands": "黏丝缕数",
   "worldcombat.skill.stickyweb.value.reach": "抛网距离",
   "worldcombat.skill.stickyweb.value.throwSpeed": "抛网速度",
   "worldcombat.skill.stickyweb.value.tempo": "起手",
@@ -25,6 +28,5 @@
   "worldcombat.skill.stickyweb.preference.ai.lead.help": "对移动中的目标提前这么多刻落点；0 表示直接撒在目标当前位置，调大更适合拦冲过来的对手。",
   "world_combat.move.stickyweb.text.lay": "黏黏网摊开了",
   "world_combat.move.stickyweb.text.snare": "被黏黏网黏住（速度 -%1$s）",
-  "effect.world_combat.stickywebbed": "被黏黏网黏住",
-  "worldcombat.skill.stickyweb.description.2": "被网黏住期间脚步持续被压低：这个状态本身让移动速度降低 30%。"
+  "effect.world_combat.stickywebbed": "被黏黏网黏住"
 }

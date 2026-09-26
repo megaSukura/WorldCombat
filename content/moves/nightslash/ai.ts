@@ -2,16 +2,20 @@
  * 暗袭要害 / nightslash 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 6）格以内；更远交给共享接近逻辑。
- * 对谁出手：`ai.punishOpening`（默认开）打开时，正把攻击对着别人（空门）的目标优先——这一刀在那时最重；
+ * 对谁出手：`ai.punishOpening`（默认开）打开时，正咬着队友的目标优先——队友牵住仇恨时它露出的空门最大，
+ *   这一刀在那时最重；不为空门强行改仇恨，也不去抢队友已经盯上的目标，只按现有仇恨排序。
  *   目标残血且 `ai.finishLow` 打开时再抬一档收尾。
  * 站位：它站定出手，由共享接近把身位收进出手距离。
  * 放完之后：交回共享交战计划；若目标仍露空门，冷却一过可以再来一刀。
  */
 namespace PokemonSkills {
-    function nightslashBusy(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        const busy = (<any>target).attacking;
+    /** 目标此刻是否正咬着施法者的一个活着的队友（队友牵住了仇恨）。 */
+    function nightslashPunish(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const busy = target.attacking;
         if (typeof busy !== "string" || busy.length === 0) return false;
-        return busy !== CompanionBehavior.source(context).ref;
+        if (busy === CompanionBehavior.source(context).ref) return false;
+        const bitten = CompanionBehavior.entity(context, busy);
+        return !!bitten && bitten.friendly && bitten.health > 0;
     }
 
     CompanionBehavior.registerUse(nightslashId, {
@@ -31,7 +35,7 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range + 1.2) return 0;
             let score = 22;
-            if (CompanionBehavior.ai<boolean>(capability, "punishOpening", true) && nightslashBusy(context, target)) score += 18;
+            if (CompanionBehavior.ai<boolean>(capability, "punishOpening", true) && nightslashPunish(context, target)) score += 18;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", false) && CompanionBehavior.ratio(target) < 0.45) score += 12;
             return score;
         }

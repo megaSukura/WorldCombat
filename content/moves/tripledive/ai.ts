@@ -2,8 +2,9 @@
  * 三连钻 / tripledive 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 5）格内；更远交给共享接近逻辑。
- * 为什么对湿身目标出手：三钻的价值在那一层「湿透」——已经带着 `world_combat:status/drenched` 的目标
- *   每一钻都吃 `soakBonus`，所以 `ai.drenchFirst`（默认开）下它排得更前；刚被自己或队友打湿过的目标最划算。
+ * 为什么选目标：三钻的价值在那一层「湿透」——已经带着 `world_combat:status/drenched` 的目标每一钻都吃 `soakBonus`，
+ *   所以 `ai.drenchFirst`（默认开）下它排得更前；大体型更好接触、水花范围也更容易扫到，`ai.preferLarge`（默认开）
+ *   再给一档分。每跳执行时都会按当前身位重新取可达落点（本招射程很短，目标跑远时这一钻就落在可达范围内收势）。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。
  * 放完之后：三钻落地自己收势，交回共享交战计划；带着冷却时不会重复起跳。
  */
@@ -26,6 +27,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 24;
             if (CompanionBehavior.ai<boolean>(capability, "drenchFirst", true) && CompanionBehavior.status(context, target, "drenched")) score += 10;
+            const bulk = (target.width === undefined ? 0.9 : target.width) * (target.height === undefined ? 1.4 : target.height);
+            if (CompanionBehavior.ai<boolean>(capability, "preferLarge", true) && bulk >= 2.2) score += 8;
             return score;
         }
     });
@@ -40,6 +43,9 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.drenchFirst"), "优先打湿身", "boolean", {
             help: "开启：已经带着「湿透」的目标排得更前（每一钻都吃湿身加成）；关闭则所有目标同价。"
+        }),
+        field(pathOf("ai.preferLarge"), "优先大体型", "boolean", {
+            help: "开启：身体体积较大的目标（更好接触、水花范围更易扫到）多一档分；关闭则只看湿身与距离。"
         })
     ]);
 }

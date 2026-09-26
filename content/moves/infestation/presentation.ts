@@ -1,16 +1,4 @@
-/**
- * 死缠烂打 / infestation 的客户端表现。
- *
- * 一句话：一团虫子从施法者身前甩出去、扑到目标身上缠住它，之后虫群贴着目标持续爬动啃咬，直到散去。
- * 色相家族：虫身的黄绿与泥褐（ground_bugs/flying_bugs 原色、impact_bug 亮帧），配一点点酸黄；
- * 与同族三招（白灰冲击、橙红爆炸、翠绿挥弧）在色相上分开。
- * 拍子：起（windup 0–8t 聚虫）→ 击（cast 飞出 → cling 附着）→ 收（bite 每口一次，swarm 持续到 release）。
- * 范围：cling 的附着环绑命中点，半径随 `data.scale`（虫群判定半径 / 0.35）；swarm 的爬行层贴目标身体。
- * 运动：虫子沿投射物方向飞向目标，附着后贴身体绕行爬动；被清掉时向外散去。
- * 数：`data.count`（由每口啃咬比例派生）决定 bite 时炸出的虫数；`data.pulses`（已咬口数）累积提高强度；
- * 缠着期间由 mob_effect_tick 维持低密度的 swarm 画面。
- * 参照节：视觉语言第二、三、四、五、七、九节。
- */
+/** 四个短寿命附着虫簇由剩余虫份分别开关，甩落沿实际运动反向落下。 */
 const InfestationDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -98,28 +86,25 @@ const InfestationDefinition: ParticleDefinition = {
                 }
             ]
         },
-        swarm: {
-            duration: 30,
-            exit: { stop: 20, drain: 14 },
-            emitters: [
-                {
-                    name: "crawl", bind: "target", offset: [0, 0.45, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/ground_bugs",
-                    rate: 7, shape: { kind: "ring", radius: 0.42 },
-                    direction: "shape", speed: [0.01, 0.05], spin: 6,
-                    lifetime: [14, 24], size: [0.08, 0.02],
-                    color: 0x8FA83A, alpha: [0.4, 0], light: "world", maxParticles: 40
-                },
-                {
-                    name: "haze", bind: "target", offset: [0, 0.4, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
-                    rate: 3, shape: { kind: "sphere", radius: 0.34 },
-                    direction: "up", speed: [0.004, 0.02],
-                    lifetime: [14, 22], size: [0.14, 0.02],
-                    color: 0x6E7A3A, alpha: [0.28, 0], light: "world", maxParticles: 20
-                }
-            ]
-        },
+        swarm: { emitters: [
+                { name: "group0", bind: "target", offset: [-0.3, 0.2, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ground_bugs", rate: { data: "g0", fallback: 10 },
+                    shape: { kind: "point" }, speed: 0, lifetime: 4, size: .1, color: 0x8FA83A, alpha: [.8, .2], light: "world" },
+                { name: "group1", bind: "target", offset: [0.3, 0.2, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ground_bugs", rate: { data: "g1", fallback: 10 },
+                    shape: { kind: "point" }, speed: 0, lifetime: 4, size: .1, color: 0x8FA83A, alpha: [.8, .2], light: "world" },
+                { name: "group2", bind: "target", offset: [-0.2, 0.8, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ground_bugs", rate: { data: "g2", fallback: 10 },
+                    shape: { kind: "point" }, speed: 0, lifetime: 4, size: .1, color: 0x8FA83A, alpha: [.8, .2], light: "world" },
+                { name: "group3", bind: "target", offset: [0.2, 0.8, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ground_bugs", rate: { data: "g3", fallback: 10 },
+                    shape: { kind: "point" }, speed: 0, lifetime: 4, size: .1, color: 0x8FA83A, alpha: [.8, .2], light: "world" }
+        ] },
+        shed: { duration: 16, emitters: [
+            { name: "shed", bind: "point", orient: "direction", particle: "world_combat_core:cobblemon/generic/ground_bugs",
+                burst: { count: { data: "count", fallback: 1 } }, shape: { kind: "point" }, direction: [0, -.2, -1],
+                speed: .12, gravity: .04, lifetime: 12, size: [.1, .04], color: 0x8FA83A, alpha: [.8, 0], light: "world" }
+        ] },
         release: {
             duration: 24,
             exit: { stop: 12, drain: 18 },

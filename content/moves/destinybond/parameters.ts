@@ -26,6 +26,8 @@ namespace PokemonSkills {
     export const destinyStatus = "destiny_bond";
     export const destinyBindText = "world_combat.move.destinybond.text.bind";
     export const destinyDragText = "world_combat.move.destinybond.text.drag";
+    export const destinyGrazeText = "world_combat.move.destinybond.text.graze";
+    export const destinyResistText = "world_combat.move.destinybond.text.resist";
     export const destinyLiftText = "world_combat.move.destinybond.text.lift";
 
     function destinyPreference(): Formula.Node {

@@ -8,7 +8,7 @@
  * 范围：release 用 `data.path` 画出服务端扇形的同一组顶点（顶点 + 弧）——扇形铺多大、张多开，画面就是那片绿。
  * 运动：叶绿素由内向外沿扇形铺开、边缘沿弧同时扩张；命中叶屑在目标处炸开；枯叶在施法者身上垂直下落。
  * 数：`data.motes`（特攻与体重派生）决定扇形密度与落叶量，`data.intensity`（威力 / 150）抬高亮度与密度，
- * `data.ratio`（离中心的距离比例）让命中的爆开随远近增减，`data.cost`（自损比例）决定枯叶的密集程度。
+ * `data.count`（按到中心距离的远近，以及枯叶按实际自损派生）让近处命中浓、远处命中淡，也让枯叶只随真实失血变密。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ChloroblastDefinition: ParticleDefinition = {
@@ -90,7 +90,7 @@ const ChloroblastDefinition: ParticleDefinition = {
                 {
                     name: "burst", bind: "target", offset: [0, 0.5, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass",
-                    burst: { count: { data: "motes", fallback: 40 }, at: 0 },
+                    burst: { count: { data: "count", fallback: 20 }, at: 0 },
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
                     direction: "outward", speed: [0.07, 0.26], spread: 24,
                     lifetime: [7, 13], size: [0.3, 0.05], sizeMode: "index",

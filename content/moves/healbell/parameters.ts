@@ -51,7 +51,7 @@ namespace PokemonSkills {
             F.base(11).minus(F.stat("speed").minus(60).times(0.04).clamp(-3, 3).as("速度修正"))
                 .times(F.when(F.pref("resonant", healbellResonant), F.const(1.2), F.const(0.9)).as("长鸣"))
                 .clamp(5, 18).round(0),
-            "起手", "把铃声送出去之前的准备；速度越快越短，长鸣档更慢。准备期间不能移动，可被打断。"),
+            "起手", "把铃声送出去之前的准备；速度越快越短，长鸣档更慢。准备期间可以移动，铃声每次从施术者当前所在处响起。"),
         aftercast: seconds(
             F.base(8).plus(F.body("height").minus(1.2).times(0.5).clamp(-1, 2)).clamp(5, 12).round(0),
             "收招", "铃声落定后的收势；身板越大收得稍慢。"),

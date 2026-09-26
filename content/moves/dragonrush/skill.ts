@@ -22,14 +22,22 @@ namespace PokemonSkills {
         return true;
     }
 
+    /** 候选锁点：aim 的实体或世界点取 targetPosition；只有方向输入时退到身前射程处。 */
+    function dragonrushLock(action: CombatAction): CombatPoint {
+        try { return action.targetPosition(); } catch (error) { }
+        const direction = action.direction();
+        const forward = direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
+        return action.origin().plus(forward.scale(action.range()));
+    }
+
     define({
         freeMovement: true,
         id: dragonrushId,
         cooldownParameter: "recharge",
         name: "Dragon Rush",
-        description: "先在身周铺开一圈可见的杀气，再从高处沿弧线俯冲砸在锁定点上：落点附近的敌人一起被撞开，扑得比对手越快、越容易把它撞得畏缩。落点在起跳时锁定，对手在滞空期走开就能躲过。",
-        uses: ["先亮一圈威压、再前扑砸在锁定点上", "把落点周围的敌人一起撞开", "用速度差把对手镇得无法出手"],
-        kind: "enemy",
+        description: "先在身周铺开一圈可见的杀气，再从高处沿弧线俯冲砸在锁定点上：落点附近的敌人一起被撞开，扑得比对手越快、越容易把它撞得畏缩。落点在起跳时锁定，对手在滞空期走开就能躲过。可以瞄敌人也可以直接点落点；头顶净空决定能腾多高，被墙或天花板挡住就在真正到达的位置砸落，不会隔着障碍轰在原锁点上。",
+        uses: ["先亮一圈威压、再前扑砸在锁定点上", "把落点周围的敌人一起撞开", "用速度差把对手镇得无法出手", "在开阔处朝任意落点扑砸"],
+        kind: "aim",
         range: 5.0,
         maxRange: 8.0,
         prepare: 10,
@@ -55,45 +63,69 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const lock = dragonrushLock(action);
             action.present("dragonrush:menace", dragonrushScene, 1, action.origin(),
                 JSON.stringify({ moment: "menace", menace: p(dragonrushId, "menace", action), windup: prepare,
-                    dread: config && config.dread === true }));
+                    dread: config && config.dread === true, lock: 1, point: [lock.x(), lock.y(), lock.z()],
+                    lockRadius: p(dragonrushId, "landRadius", action) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(dragonrushScene);
             const world = action.world();
-            const origin = action.origin();
-            const landing = action.targetPosition();
+            const actor = action.actor();
+            const self = world.observe(actor);
+            const origin = self === null ? action.origin() : self.position();
+            // 落点在起跳这一刻锁死：aim 实体锚在它身上、点则取那个点，飞行途中不再改锁。
+            const landing = dragonrushLock(action);
             const power = p(dragonrushId, "dive", action);
             const accuracy = p(dragonrushId, "accuracy", action);
             const radius = p(dragonrushId, "landRadius", action);
             const chance = p(dragonrushId, "flinchChance", action);
             const flinchTicks = Math.round(p(dragonrushId, "flinchTicks", action));
             const push = p(dragonrushId, "push", action);
-            const hop = p(dragonrushId, "hop", action);
+            const hopMax = p(dragonrushId, "hop", action);
             const air = Math.max(6, Math.round(p(dragonrushId, "airTicks", action)));
             const dust = Math.max(10, Math.round(p(dragonrushId, "dust", action)));
             const scale = Math.max(0.7, Math.min(2.2, radius / 2.0));
             const intensity = Math.max(0.6, Math.min(2.3, power / 80));
             const delta = landing.minus(origin);
             const flat = WorldCombat.point(delta.x(), 0, delta.z());
-            const heading = flat.length() < 1e-6 ? aim(action) : flat.unit();
+            const heading = flat.length() < 1e-6 ? WorldGeometry.flatUnit(aim(action), action.direction()) : flat.unit();
             const approach = Math.max(0, Math.min(flat.length() - 0.3, action.range()));
+            // 腾空高度受当前空间约束：天花板低就矮跳，开阔处才铺满。
+            const hop = self === null ? hopMax : Math.max(0.6, Math.min(hopMax, dragonrushHeadroom(world, self, hopMax)));
             const rise = Math.max(2, Math.floor(air / 2));
             const fall = Math.max(2, air - rise);
             const horizontal = approach / air;
             const up = hop / rise;
             const down = hop / fall;
+            let settled = false;
 
-            WorldFeedback.emit(world, dragonrushScene, 1, origin, { moment: "leap", scale: scale, hop: hop, dust: dust }, 22);
+            // 锁点预告刷新到真正锁定的落点；起跳后跟着本体。
+            action.present("dragonrush:menace", dragonrushScene, 1, origin,
+                JSON.stringify({ moment: "menace", menace: p(dragonrushId, "menace", action), windup: 0,
+                    dread: config && config.dread === true, lock: 1, point: [landing.x(), landing.y(), landing.z()], lockRadius: radius }));
             sound(action, "minecraft:entity.ender_dragon.flap");
+            scenes.show(action, "leap", origin, { moment: "leap", scale: scale, hop: hop, dust: dust });
+
+            /** 锁点已失效或本体即将落地：让预告消退，不再指着旧落点。 */
+            function fadeLock(current: CombatAction): void {
+                current.present("dragonrush:menace", dragonrushScene, 1, origin,
+                    JSON.stringify({ moment: "menace", menace: 0, lock: 0, point: [landing.x(), landing.y(), landing.z()],
+                        lifecycle: { reason: "settled", tick: current.world().tick() } }));
+            }
 
             function land(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
                 const scope = current.world();
-                const body = scope.observe(current.actor());
-                const at = body === null ? landing : body.position();
+                const body = scope.observe(actor);
+                // 落点只取本体真正到达的位置；被墙或天花板挡住时不会在原锁点远程炸圈。
+                const at = body === null ? current.origin() : body.position();
                 const hit = scope.random() < accuracy;
                 let hits = 0;
+                fadeLock(current);
                 WorldFeedback.emit(scope, dragonrushScene, 1, at,
                     { moment: hit ? "crash" : "miss", scale: scale, dust: dust, intensity: intensity }, 32);
                 sound(current, hit ? "cobblemon:impact.dragon" : "minecraft:item.mace.smash_air");
@@ -105,7 +137,7 @@ namespace PokemonSkills {
                             hits++;
                             if (!landed) return;
                             const away = facts.position().minus(at);
-                            if (scope.valid(target) && away.length() >= 0.05) scope.displace(target, away.unit().scale(push));
+                            if (scope.valid(target) && away.length() >= 0.05) scope.hitDisplace(target, away.unit().scale(push));
                             WorldFeedback.emit(scope, dragonrushScene, 1, facts.position(),
                                 { moment: "impact", target: String(target.ref()), dust: dust, intensity: intensity }, 26);
                             if (scope.random() < chance && dragonrushFlinch(scope, target, flinchTicks)) {
@@ -117,20 +149,23 @@ namespace PokemonSkills {
                 }
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.5, 0)),
                     hits > 0 ? dragonrushHitText : dragonrushMissText, hits > 0 ? [hits] : [], 28);
-                done(current);
+                scenes.finish(current, done);
             }
 
-            function descend(current: CombatAction, elapsed: number): void {
-                if (elapsed >= fall) { land(current); return; }
-                current.world().displace(current.actor(), heading.scale(horizontal).plus(WorldCombat.point(0, -down, 0)));
-                current.after(1, function (next: CombatAction) { descend(next, elapsed + 1); });
+            function advance(current: CombatAction, elapsed: number): void {
+                if (settled) return;
+                const scope = current.world();
+                if (elapsed >= air) { land(current); return; }
+                const vertical = elapsed < rise ? up : -down;
+                const movedHorizontal = scope.displace(actor, heading.scale(horizontal));
+                const movedVertical = scope.displace(actor, WorldCombat.point(0, vertical, 0));
+                // 平飞被墙挡，或上升被天花板压住：在真实可达的位置结束这一扑。
+                if (horizontal > 0.02 && movedHorizontal < horizontal * 0.5) { land(current); return; }
+                if (elapsed < rise && up > 0.02 && movedVertical < up * 0.5) { land(current); return; }
+                current.after(1, function (next: CombatAction) { advance(next, elapsed + 1); });
             }
-            function ascend(current: CombatAction, elapsed: number): void {
-                if (elapsed >= rise) { descend(current, 0); return; }
-                current.world().displace(current.actor(), heading.scale(horizontal).plus(WorldCombat.point(0, up, 0)));
-                current.after(1, function (next: CombatAction) { ascend(next, elapsed + 1); });
-            }
-            ascend(action, 0);
+
+            advance(action, 0);
         }
     });
 

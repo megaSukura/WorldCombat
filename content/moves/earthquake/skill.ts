@@ -9,8 +9,9 @@
  *   起（windup，提交前）：施法者沉身，脚边尘土被震得跳起、地面浮现将被掀开的圈。
  *   掀（rupture → hit）：提交后地面整块掀起；圈内每个站在地上的敌人各挨一次 `tremor`，被向上抛起
  *       `launch`、沿离中心的方向推开 `shove`。空中的目标只看到掀起、吃不到伤害。
- *   痕（rent）：掀完后地面上留下放射状深缝，停留一会儿后原方块回来。
- *   余震（aftershock，仅余震式）：主震后 `aftershockDelay` 刻再掀一次半威力的余震，还没站稳的人再挨一下。
+ *   痕（rent）：掀完后地面扬起放射状裂纹，停留一会儿自然散去——只由表现层承载，不换地面方块。
+ *   余震（aftershock，仅余震式）：主震后 `aftershockDelay` 刻再按 `fissureRadius × 0.85` 掀一次半威力的余震，
+ *       主震没踩在地上的敌人若此刻已落地会再挨一下；同一人一次施放最多主震或余震挨一次。
  *
  * 配置 `aftershock`（余震式）由 resolve 改时序、由公式改威力；开启＝主震更轻但补一次余震、起手与冷却更长。
  */
@@ -19,62 +20,12 @@ namespace PokemonSkills {
     const earthquakeHitText = "world_combat.move.earthquake.text.hit";
     const earthquakeMissText = "world_combat.move.earthquake.text.miss";
 
-    /** 被掀开的地面形态：泥土类翻成粗土，石头类崩成碎石，深板岩类崩成深板岩碎石，沙地翻成砂岩。 */
-    function earthquakeBroken(id: string): string {
-        if (id === "minecraft:grass_block" || id === "minecraft:dirt" || id === "minecraft:coarse_dirt" ||
-            id === "minecraft:podzol" || id === "minecraft:rooted_dirt" || id === "minecraft:moss_block") return "minecraft:coarse_dirt";
-        if (id === "minecraft:deepslate" || id === "minecraft:cobbled_deepslate") return "minecraft:cobbled_deepslate";
-        if (id === "minecraft:stone" || id === "minecraft:granite" || id === "minecraft:diorite" ||
-            id === "minecraft:andesite" || id === "minecraft:tuff" || id === "minecraft:gravel") return "minecraft:cobblestone";
-        if (id === "minecraft:sand" || id === "minecraft:red_sand") return "minecraft:sandstone";
-        return "";
-    }
-
-    /** 放射状的深缝：从中心向 `rays` 个方向各切一条，再沿外缘补一圈；只动地表的可换方块，到期原方块回来。 */
-    function earthquakeRent(world: CombatWorld, point: CombatPoint, radius: number, ticks: number, cap: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        const limit = Math.max(8, Math.round(cap)), rays = 6, step = Math.max(0.8, radius / 9);
-
-        function surface(x: number, z: number): void {
-            if (cells.length >= limit) return;
-            for (let dy = 1; dy >= -3; dy--) {
-                const y = baseY + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const key = x + "," + y + "," + z;
-                if (!seen[key]) {
-                    const broken = earthquakeBroken(id);
-                    if (broken !== "" && broken !== id) { seen[key] = true; cells.push({ x: x, y: y, z: z, block: broken }); }
-                }
-                break;
-            }
-        }
-
-        for (let ray = 0; ray < rays && cells.length < limit; ray++) {
-            const angle = ray * (Math.PI * 2 / rays) + 0.35, dx = Math.cos(angle), dz = Math.sin(angle);
-            for (let d = 1; d * step <= radius && cells.length < limit; d++)
-                surface(baseX + Math.round(dx * d * step), baseZ + Math.round(dz * d * step));
-        }
-        const rim = Math.max(8, Math.round(radius * 2.4));
-        for (let i = 0; i < rim && cells.length < limit; i++) {
-            const angle = i * (Math.PI * 2 / rim) + 0.2;
-            surface(baseX + Math.round(Math.cos(angle) * radius), baseZ + Math.round(Math.sin(angle) * radius));
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
     define({
         requiresGround: true,
         id: "earthquake",
         name: "Earthquake",
-        description: "把重量砸进大地，脚下整片地面同时掀起：只命中站在地上的敌人，被掀中的人向上抛起并被向外推开；掀完在地面留下放射状深缝。余震式主震更轻，但过一会儿再掀一次。",
-        uses: ["一次掀到身周一圈站在地上的敌人", "打断贴身的围攻、把人掀离地面", "跳过空中的目标，专打站桩的对手", "在地面留下裂缝标出下一次交战区"],
+        description: "把重量砸进大地，脚下整片地面同时掀起：只命中站在地上的敌人，被掀中的人向上抛起并被向外推开；掀完地面扬起放射状裂纹后散去。余震式主震更轻，但过一会儿再掀一次。",
+        uses: ["一次掀到身周一圈站在地上的敌人", "打断贴身的围攻、把人掀离地面", "跳过空中的目标，专打站桩的对手", "在掀起后留下裂纹残痕，标出刚刚震过的地面"],
         kind: "self",
         range: 4.6,
         maxRange: 7.4,
@@ -101,9 +52,12 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const aftershock = config && config.aftershock === true;
+            const area = p("earthquake", "fissureRadius", action);
             action.present("earthquake:stomp", earthquakeScene, 1, action.origin(),
-                JSON.stringify({ moment: "stomp", area: p("earthquake", "fissureRadius", action),
-                    aftershock: config && config.aftershock === true }));
+                JSON.stringify({ moment: "stomp", area: area,
+                    aftershock: aftershock, aftershockArea: aftershock ? area * 0.85 : 0,
+                    aftershockMarks: aftershock ? Math.round(12 + area * 6) : 0 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -111,6 +65,7 @@ namespace PokemonSkills {
             const body = world.observe(action.actor());
             const centre = body !== null ? body.position() : action.origin();
             const radius = Math.max(2.8, p("earthquake", "fissureRadius", action));
+            const aftershockRadius = radius * 0.85;
             const power = p("earthquake", "tremor", action);
             const launch = p("earthquake", "launch", action);
             const shove = p("earthquake", "shove", action);
@@ -123,21 +78,25 @@ namespace PokemonSkills {
             const struck: { [ref: string]: boolean } = {};
             let hits = 0, settled = false;
 
-            /** 一次掀地：圈内每个还站在地上的敌人各挨一记，被向上抛起并向外推开。 */
-            function rupture(current: CombatAction, amount: number, moment: string): void {
+            /**
+             * 一次掀地，`reach` 为这一次的真实波及半径：圈内每个还站在地上的敌人各挨一记，
+             * 被向上抛起并向外推开。抛起/推开都走原生受击位移入口，抗性、权限、骑乘与事件取消由它处理；
+             * `struck` 只在这记伤害真正结算成功后登记，主震没踩在地上的敌人留给余震再抓。
+             */
+            function rupture(current: CombatAction, amount: number, reach: number): void {
                 const scope = current.world();
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 2.5, above: 2.5 }), function (enemy, facts) {
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, reach, { below: 2.5, above: 2.5 }), function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === String(current.actor().ref()) || hits >= cap) return;
-                    if (!facts.grounded()) return;
-                    if (moment === "aftershock" && struck[ref]) return;
-                    struck[ref] = true;
+                    if (!facts.grounded() || struck[ref]) return;
                     if (!hurt(current, enemy, "earthquake", amount, { damage: damageSpec("earthquake", "tremor") })) return;
+                    struck[ref] = true;
                     hits++;
                     const away = facts.position().minus(centre);
                     if (scope.valid(enemy)) {
-                        if (away.length() > 0.2) scope.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
-                        scope.motion(enemy, WorldCombat.point(0, launch, 0), true);
+                        if (away.length() > 0.2)
+                            scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
+                        scope.hitImpulse(enemy, WorldCombat.point(0, launch, 0));
                     }
                     WorldFeedback.emit(scope, earthquakeScene, 1, facts.position(),
                         { moment: "hit", target: ref, scale: scale, intensity: Math.max(0.5, Math.min(2.2, amount / 95)), count: Math.round(12 + amount * 0.28) }, 24);
@@ -148,9 +107,9 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const placed = earthquakeRent(scope, centre, radius, rentTicks, cells);
                 WorldFeedback.emit(scope, earthquakeScene, 1, centre,
-                    { moment: "rent", radius: radius, cells: placed, ruptured: hits, flow: Math.round(36 + placed * 1.6) }, 30);
+                    { moment: "rent", radius: radius, cells: cells, linger: rentTicks, ruptured: hits,
+                        flow: Math.round(36 + cells * 1.6) }, rentTicks);
                 WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.2, 0)),
                     hits > 0 ? earthquakeHitText : earthquakeMissText, hits > 0 ? [hits] : [], 26);
                 done(current);
@@ -162,15 +121,15 @@ namespace PokemonSkills {
                     intensity: Math.max(0.6, Math.min(2.4, power / 95)), cells: cells,
                     marks: Math.round(14 + power * 0.3), flow: Math.round(60 + radius * 26) }, 28);
             sound(action, "cobblemon:impact.ground");
-            rupture(action, power, "rupture");
+            rupture(action, power, radius);
 
             if (!aftershock) { finish(action); return; }
             action.after(delay, function (next: CombatAction) {
                 WorldFeedback.emit(next.world(), earthquakeScene, 1, centre,
-                    { moment: "aftershock", radius: radius * 0.85, scale: scale, cells: Math.round(cells * 0.5),
-                        marks: Math.round(8 + power * 0.15), flow: Math.round(40 + radius * 18) }, 24);
+                    { moment: "aftershock", radius: aftershockRadius, scale: scale, cells: Math.round(cells * 0.5),
+                        marks: Math.round(8 + power * 0.15), flow: Math.round(40 + aftershockRadius * 18) }, 24);
                 sound(next, "cobblemon:impact.ground");
-                rupture(next, power * 0.5, "aftershock");
+                rupture(next, power * 0.5, aftershockRadius);
                 finish(next);
             });
         }

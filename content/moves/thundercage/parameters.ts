@@ -19,7 +19,8 @@
  *   duration     电笼持续 175 刻 + 特攻偏移 + 等级；广笼式 ×1.15。
  *   interval     笼内电击间隔 20 刻 − 速度偏移。
  *   radius       笼半径 1.6 格 + **目标体型宽度**偏移；广笼式 ×1.35。
- *   push         越界推回 0.6 格 + 特攻偏移（电栅把目标弹回笼内的距离）。
+ *   height       笼高 2.4 格 + **目标体型高度**偏移；目标越出笼顶即脱出。
+ *   push         越界推回 0.6 格 + 特攻偏移（电栅把目标弹回笼内的距离，写实走原生抗推）。
  *   bars         电栅根数 12 + 特攻 ×0.1，同时驱动画面里的笼柱数量。
  *   paralyzeChance 麻痹概率 0.18 + 特攻偏移；夹 0.08..0.45。
  *   speed        电矢速度 0.9 + 速度偏移。
@@ -77,12 +78,21 @@ namespace PokemonSkills {
                 base: 1.6, unit: "格",
                 description: "电笼的半径，也是画面里那圈电栅的位置；目标越宽，笼子围得越大。"
             }),
+        /** 笼高：2.4 + 目标高度偏移[−0.3,1.0]；夹 1.7..3.4 格。 */
+        height: formula(
+            F.base(2.4)
+                .plus(F.target("body.height").as("目标体型高度").minus(1.4).times(0.7).clamp(-0.3, 1.0))
+                .clamp(1.7, 3.4).round(2),
+            "笼高", {
+                base: 2.4, unit: "格",
+                description: "电栅竖到多高；目标越出笼顶就能脱身。越高的目标，笼子相应立得越高。"
+            }),
         /** 越界推回：0.6 + 特攻偏移[−0.1,0.4]；夹 0.3..1.1 格。 */
         push: formula(
             F.base(0.6).plus(F.stat("specialAttack").minus(60).times(0.004).clamp(-0.1, 0.4)).clamp(0.3, 1.1).round(2),
             "越界推回", {
                 base: 0.6, unit: "格",
-                description: "目标越过电栅时被弹回笼内的距离；特攻越高，电弧弹得越狠。"
+                description: "目标越过电栅时被弹回笼内的距离；特攻越高弹得越狠。原生抗推或碰撞让这次弹回带不回目标时，电笼就此解开。"
             }),
         /** 电栅根数：12 + 特攻 ×0.1；夹 8..28。同时驱动画面里的笼柱数量。 */
         bars: formula(
@@ -125,7 +135,7 @@ namespace PokemonSkills {
     describe("thundercage", [
         { key: "description.0", values: ["cage"] },
         { key: "description.1", values: ["duration","interval","arc","paralyzeChance"] },
-        { key: "description.2", values: ["radius","reach","speed"] },
+        { key: "description.2", values: ["radius","height","reach","speed"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

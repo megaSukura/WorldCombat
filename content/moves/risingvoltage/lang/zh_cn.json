@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.risingvoltage.summary": "先顿足把电按进地面，电流窜到对手脚下再向上竖起一根电柱；目标脚下带着电场的电荷时，这一柱的威力翻倍、也更粗更高，柱内的非友方会被一起贯穿。",
+  "worldcombat.skill.risingvoltage.summary": "先顿足把电按进地面，电流窜到出手时锁定的落点，再从那里向上竖起一根电柱；落点上脚下带着电场电荷的人这一柱威力翻倍、也更粗更高，柱内的非友方会被一起贯穿。落点不再跟着目标横移。",
   "worldcombat.skill.risingvoltage.use.0": "惩罚站在电气场地上的对手",
-  "worldcombat.skill.risingvoltage.use.1": "隔空从对手脚下升起一柱电击",
+  "worldcombat.skill.risingvoltage.use.1": "隔空从锁定落点升起一柱电击",
   "worldcombat.skill.risingvoltage.use.2": "一次贯穿挤在落点附近的一圈人",
   "worldcombat.skill.risingvoltage.description.0": "对升起的电柱内每个敌人造成约 %1$s 点特殊伤害；若该敌人脚下带着电场电荷，它这一份翻倍——每个目标各按自己脚下结算。",
-  "worldcombat.skill.risingvoltage.description.1": "电流最多爬到 %1$s 格外的落点，爬行速度约 %2$s 格/刻，到达后电柱才从该处升起；目标若先离场，电柱改在出手时锁定的落点升起。",
+  "worldcombat.skill.risingvoltage.description.1": "电流最多爬到 %1$s 格外的落点，爬行速度约 %2$s 格/刻，到达后电柱才从该处升起；落点在出手时锁定，目标离开也在原地升起——没有敌人时同样能空放一根电柱。",
   "worldcombat.skill.risingvoltage.description.2": "电柱半径 %1$s 格、高 %2$s 格，柱内每个非友方各挨一次电击。",
   "worldcombat.skill.risingvoltage.overcharge.on": "当前过载式：威力 ×1.2、电柱更粗更高，但射程 ×0.85、起手多 3 刻、冷却多 8 刻。",
   "worldcombat.skill.risingvoltage.overcharge.off": "当前稳压式：射得更远、起手与冷却更省，柱身更细。",
@@ -27,7 +27,7 @@
   "worldcombat.skill.risingvoltage.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.risingvoltage.preference.ai.maxChase.help": "超过这个距离就不主动出手，先走近；越大越愿意在更远处点着地脉。",
   "worldcombat.skill.risingvoltage.preference.ai.seekCharged": "专打带电目标",
-  "worldcombat.skill.risingvoltage.preference.ai.seekCharged.help": "开启：脚下带着电场电荷的目标排到最前，因为这一柱对它们翻倍；关闭则只按普通远程攻击排序。",
+  "worldcombat.skill.risingvoltage.preference.ai.seekCharged.help": "开启：脚下带着电场电荷的目标排到最前，因为这一柱对它们翻倍；同时更愿意打扎堆/站定的人、少打快速横移的人；关闭则只按普通远程攻击排序。",
   "world_combat.move.risingvoltage.text.charged": "电荷贯穿 ×%1$s",
   "world_combat.move.risingvoltage.text.hit": "电柱贯穿 ×%1$s",
   "world_combat.move.risingvoltage.text.miss": "电力升空"

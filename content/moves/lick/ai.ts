@@ -2,8 +2,8 @@
  * 舌舔 / lick 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；够不到交给共享接近逻辑。
- * 这是一记便宜的长舌单点，价值在麻痹，所以 `ai.opening` 默认选“只对未麻痹目标”——跳过已经发麻的敌人，
- * 把这一舔留给还能被麻的人；选“随时”就用它当普通起手。速度快的伙伴舌长更长、麻意更重，由公式承担。
+ * 这是一记便宜的长舌单点，价值在麻痹，所以 `ai.opening` 默认是“优先未麻痹目标”——把这一舔留给还能被麻的人，
+ * 但已经发麻的敌人也不会被排除，仍可当普通轻击舔中。速度快的伙伴舌长更长、麻意更重，由公式承担。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("lick", {
@@ -16,16 +16,17 @@ namespace PokemonSkills {
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
         },
         accepts: function (context, capability, target) {
-            if (target.friendly || target.health <= 0 || !target.visible) return false;
-            if (CompanionBehavior.ai<string>(capability, "opening", "unparalyzed") === "unparalyzed" && CompanionBehavior.status(context, target, "paralysis")) return false;
-            return true;
+            // 已麻痹的目标也能当普通轻击舔；「只对未麻痹」只体现在优先级上，不再排除。
+            return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 18;
-            if (!CompanionBehavior.status(context, target, "paralysis")) score += 8;
+            const numb = CompanionBehavior.status(context, target, "paralysis");
+            if (!numb) score += 8;
+            else if (CompanionBehavior.ai<string>(capability, "opening", "unparalyzed") === "unparalyzed") score -= 4;
             return score;
         }
     });
@@ -41,9 +42,9 @@ namespace PokemonSkills {
         field(pathOf("ai.opening"), "出手时机", "choice", {
             options: [
                 { value: "anytime", label: "随时" },
-                { value: "unparalyzed", label: "只对未麻痹目标" }
+                { value: "unparalyzed", label: "优先未麻痹目标" }
             ],
-            help: "默认只舔还没发麻的目标，把麻痹留给还能被麻的人；选“随时”就用它当普通起手。"
+            help: "默认优先舔还没发麻的目标，把麻痹留给还能被麻的人，但已经发麻的敌人也能被当作普通轻击舔中；选“随时”则一视同仁。"
         })
     ]);
 }

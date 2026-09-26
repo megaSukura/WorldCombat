@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.spark.summary": "迅速撞击目标，有机会使其麻痹。对残血目标的伤害更高。",
+  "worldcombat.skill.spark.summary": "朝瞄准的短方向一个带电箭步扑上去，撞到的第一个敌人受到伤害、被顶开，并有机会麻痹；对残血目标伤害更高。",
   "worldcombat.skill.spark.description.0": "带电撞上去，一次只对一个目标结算约 %1$s 的接触伤害；最远贴 %2$s 格、突进速度 %3$s 格每刻、判定半径 %4$s 格。",
   "worldcombat.skill.spark.description.1": "命中后有 %1$s%% 的机会让对方麻痹 %2$s（已经麻痹的目标不会重复施加；电属性免疫麻痹），并把目标顶开 %3$s 格。麻痹期间目标移动速度减半，且每次行动有 25%% 的概率失败。",
   "worldcombat.skill.spark.overcharge.on": "蓄电式：威力与麻痹概率更高、麻得更久，但起手更慢、冷却更长——一次把目标钉住。",

@@ -1,14 +1,14 @@
 /**
  * 催眠术 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者眼眶亮起紫光、脑侧攒起一圈暗示光环 → 光环沿「自身→目标」的直线一圈圈滚过去 →
- *   压过去的目标头顶浮起 Z 与一圈逐渐收拢的余韵环；压不过去则光环在它身上散成一撮困意的雾。
+ * 一句话：施法者眼眶亮起紫光、脑侧攒起一圈暗示光环 → 一条通视细线把自身与目标连起来，一道暗示波沿它真实
+ *   飞过去 → 压过去的目标头顶浮起 Z 与一圈逐渐收拢的余韵环；压不过去则光环在它身上散成一撮困意的雾。
  *
  * 色相家族：靛紫（0x7D5BD8）为主体与推进光环，深紫（0x3B2A6B）只压在核心，近白紫（0xE8D9FF）只给眼与余韵高光。
- * 拍子：起 windup（攒环）→ 送 wave（沿线推进）→ 落 sleep（头顶 Z）／散 resist（散雾）；余韵 linger 随时间收拢。
- * 范围：wave 沿 `data.path`（自身与目标两个真实顶点）连线，长度即真实凝视距离 `data.span`；线到哪就打到哪。
- * 运动：wave 的环沿直线以 `data.speed` 推进并 `orient: "direction"` 指向目标；sleep 的 Z 自下而上升起。
- * 数：`data.rings`（特攻换算）决定推进环与落点 Z 的数量与亮度；`data.ringRadius`（剩余睡眠比例换算）决定余韵环大小。
+ * 拍子：起 windup（攒环）→ 送 wave（细线相连、真实投射物沿它飞）→ 落 sleep（头顶 Z）／散 resist（散雾）／断 immune；余韵 linger 随时间收拢。
+ * 范围：wave 的细线沿 `data.path`（自身与目标/空放落点两个真实顶点）连线，长度即真实凝视距离；飞行的前沿是真实投射物，细线本身不做沿线飞行。
+ * 运动：暗示波由真实投射物承载、沿细线推进；sleep 的 Z 自下而上升起，resist 的环向外弹散。
+ * 数：`data.rings`（特攻换算）决定细线密度、枪口爆发与落点 Z 的数量；`data.scale` 随落点半径缩放宽窄；`data.ringRadius`（剩余睡眠比例换算）决定余韵环大小。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const HypnosisDefinition: ParticleDefinition = {
@@ -41,20 +41,22 @@ const HypnosisDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "advance", bind: "path",
+                    // 通视细线：沿线采样的静态线，表示这一波要走的路线；真实飞行由投射物承担。
+                    name: "thread", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
                     shape: { kind: "polyline" }, rate: { data: "rings", fallback: 6 },
-                    direction: "shape", speed: [0.02, 0.06], spread: 10, spin: 40,
-                    lifetime: [8, 15], size: [0.16, 0.03], sizeMode: "index",
-                    color: 0x7D5BD8, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 90
+                    direction: "shape", speed: [0.01, 0.04], spread: 6, spin: 30,
+                    lifetime: [8, 14], size: [0.1, 0.02], sizeMode: "index",
+                    color: 0x7D5BD8, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 70
                 },
                 {
-                    name: "front", bind: "target", height: 0.72,
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
-                    rate: 6, shape: { kind: "circle", radius: 0.26 },
-                    direction: "inward", speed: [0.04, 0.12], spin: 60,
-                    lifetime: [8, 14], size: [0.22, 0.05],
-                    color: 0xE8D9FF, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 40
+                    // 起手：眼眶与头侧攒出的紫光，暗示波从这里送出。
+                    name: "muzzle", bind: "source", height: 0.9,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: { data: "rings", fallback: 6 } }, shape: { kind: "circle", radius: 0.2 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0xE8D9FF, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 24
                 }
             ]
         },

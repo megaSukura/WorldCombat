@@ -13,7 +13,13 @@
     "skill.ts",
     "ai.ts"
   ],
+  "startupSources": [
+    "startup.ts"
+  ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "mobEffectIcons": {
+    "world_combat:mysticalfire_wrap": "cobblemon:particle/generic/fire/wisp"
+  }
 }

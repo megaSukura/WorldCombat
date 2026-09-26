@@ -73,6 +73,10 @@ public final class ComplexInput {
         var current = sustained; sustained = null;
         if (current != null && current.aim != null) CompanionInput.submit("input-stop", current.slot, current.aim, Long.toString(current.token), "{}");
     }
+    public static void release() {
+        var current = sustained; sustained = null;
+        if (current != null && current.aim != null) CompanionInput.submit("input-release", current.slot, current.aim, Long.toString(current.token), payload(current));
+    }
     public static void cancel() {
         selection = null; stopSustained();
     }
@@ -86,6 +90,7 @@ public final class ComplexInput {
     }
     public static boolean choose(boolean back) { return choose(back, null); }
     private static boolean choose(boolean back, CompanionInput.Aim firstAim) {
+        if (selection == null && sustained != null && sustained.menu) { if (back) cancel(); else release(); return true; }
         var current = selection; if (current == null) return false;
         if (back) { if (current.samples.isEmpty()) selection = null; else current.samples.removeLast(); return true; }
         var sample = sample(current, firstAim); if (sample == null) return true;
@@ -102,7 +107,7 @@ public final class ComplexInput {
         if (!inGame || CompanionInput.actor() == null) { cancel(); return; }
         var current = sustained;
         if (current != null) {
-            if (!current.menu && !CompanionInput.physicallyDown(current.held)) { stopSustained(); return; }
+            if (!current.menu && !CompanionInput.physicallyDown(current.held)) { release(); return; }
             current.samples.clear(); var sample = sample(current);
             if (sample == null) { stopSustained(); return; }
             current.samples.add(sample);

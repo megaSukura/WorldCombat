@@ -46,13 +46,13 @@ namespace PokemonSkills {
         falloff: percent(
             F.base(0.85).plus(F.stat("specialAttack").minus(70).times(0.0008).clamp(-0.08, 0.1)).clamp(0.72, 0.96).round(3),
             "边缘保留", "声墙推到扇形最外沿时还剩多少威力；特攻越高的个体声压越匀、前后越一致。它比同族任何一声都高，这是巨声「远近都挨一样重」的来源。"),
-        /** 扇面张角：100° + 体重偏移[−22,46] + 等级(≥30)偏移[0,10]；聚声 ×0.6 / 散声 ×1.3；夹 40..200。 */
+        /** 扇面张角：100° + 体重偏移[−22,46] + 等级(≥30)偏移[0,10]；聚声 ×0.6 / 散声 ×1.3；夹 40..170。 */
         arc: formula(
             F.base(100)
                 .plus(F.body("weight").minus(400).times(0.03).clamp(-22, 46))
                 .plus(F.level().minus(30).times(0.2).clamp(0, 10))
                 .times(F.when(F.pref("focused"), F.const(0.6), F.const(1.3)))
-                .clamp(40, 200).round(1),
+                .clamp(40, 170).round(1),
             "扇面张角", {
                 unit: "度",
                 description: "声墙朝前铺开的整片角度；身体越沉、等级越高的个体喉腔越厚、铺得越宽，聚声时把这一片收窄。"

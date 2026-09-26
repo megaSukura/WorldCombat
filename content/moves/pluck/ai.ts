@@ -2,10 +2,11 @@
  * 啄食 / pluck —— AI 用途。
  *
  * 什么局面下出手：目标是可见、敌对、还活着的活体，且在 `ai.maxChase`（默认 14）格内；更远交给共享接近逻辑。
- * 长喙走廊能啄到抬升范围内的目标，因此浮空或站高处的对手也在候选内（只要在走廊的高度带里）。
- * 排序按“这一啄值不值”：目标持有树果时更优先（能吃到回复、强化或解异常）；空手目标当一记远程啄击参与排序。
+ * 对谁出手：目标持有树果时最优先（能吃到回复、强化或解异常）；浮空或站高处、横瞄够不到的对手次之
+ *   （仰起喙在 reach 之外再够 lift 格正是本招的用法）；空手平地目标当一记普通远程啄击参与排序。
+ * 保持原地可触及才出手：本招本身不扑进也不回撤，靠近到射程由共享接近逻辑完成，不需要冲入近战。
  * `ai.berryOnly` 开启后只在目标持有树果时出手，作为专门的吃果手段；关闭则空手时也照常啄。
- * `swoop` 属于本招配置（更远更高但更轻），不改变候选排序。
+ * `outreach` 属于本招配置（更远更高但更轻），不改变候选排序。
  */
 namespace CompanionBehavior {
     function pluckTargetBerry(context: WorldBehavior.Context, subject: WorldMethods.Subject): boolean {
@@ -29,7 +30,11 @@ namespace CompanionBehavior {
         },
         priority: function (context, item, target) {
             if (!target) return 0;
-            return pluckTargetBerry(context, target) ? 52 : 22;
+            var self = CompanionBehavior.source(context);
+            var score = 22;
+            if (pluckTargetBerry(context, target)) score = 52;
+            if (target.point[1] - self.point[1] > 1.0) score += 10;
+            return score;
         }
     });
 

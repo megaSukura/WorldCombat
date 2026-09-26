@@ -15,6 +15,9 @@
  * 与同族分开：蛮力（superpower）是舍身突进、自身攻防双降并留坑；直冲钻（drillrun）旋转钻穿一条线、地面犁沟；
  *   泰山压顶（bodyslam）从上方砸落。十万马力只有这一次贴地正面冲撞、撞完自己站住、什么都不留下。
  *
+ * 选取：`kind: "aim"`——可以指向任意阵营的实体或一个世界点，也能空放；没有选中实体时就沿瞄准方向/落点冲出，
+ *   撞到方块或冲满冲程就在那里收住，冲空也不会隔空伤到谁。伤害权限仍由命中层按敌我关系判断。
+ *
  * 配置 `press`（压身式）由 `resolve` 改时序与射程、由公式改威力／顶开／冷却，提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -25,7 +28,7 @@ namespace PokemonSkills {
         name: "High Horsepower",
         description: "压低整个身体、把质量当武器的一次贴地正面冲撞：撞上的那一刻，体重与速度换算成的「马力」数浮在撞击点上方，扬起的尘量也按它走。撞完自己站住，不留坑、不自损，全部内容就是这一份份量。",
         uses: ["用全身质量压低冲撞一个目标", "把对手撞离阵地，或压在近身继续打", "把体重与速度换成看得见的马力数"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.4,
         maxRange: 5.6,
         prepare: 7,
@@ -114,7 +117,7 @@ namespace PokemonSkills {
                                 WorldFeedback.emit(scope, highhorsepowerScene, 1, at,
                                     { moment: "press", target: String(victim.ref()), might: might, dust: dust,
                                         scale: scale, intensity: intensity }, 26);
-                            scope.displace(victim, direction.scale(shove));
+                            scope.hitDisplace(victim, direction.scale(shove));
                             WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)),
                                 highhorsepowerMightText, [might], 30);
                         }

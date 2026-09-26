@@ -2,7 +2,7 @@
  * 青草场地 / grassyterrain 的客户端表现。
  *
  * 一句话：施法者脚下泛起一圈绿光、把草种按进土里 → 草叶成圈从落点涌出、铺满一块地 →
- * 站上去的活体脚下冒出草根与上浮的绿芒，被草托着慢慢回血；密植时还从草里飞起种子去喂幼苗。
+ * 踩在草上的活体从真实脚接地处长出一小片草叶、被草托着慢慢回血，离地者脚下没有这束脉冲；密植时还从草里飞起种子去喂幼苗。
  * 色相家族：草绿 0x7CCB5A 作主体、嫩绿 0x9FE07A 作边缘、近白 0xEDF8DC 只给叶片高光与治疗。
  * 起击收：起 windup 24t ／击 sprout 46t ／持 field 每 5 刻续期 ／击 root 20t ／击 heal 30t ／击 growth 30t。
  * 持续状态：field 是贴地草叶边圈与缓慢呼吸的绿芒，低密度、贴脚边，不遮视线；边圈画出「站哪里被托住」。
@@ -17,7 +17,8 @@
  * field  呼吸 sparkle       环上上浮     0.11-0.02 26-44 0.4→0 ≤40
  * field  尘   tinydust      上浮         0.05-0.01 30-55 0.14→0 ≤30
  * root   草根 sprout        向上         0.24-0.10 16-26 0.9→0 ≤20
- * heal   绿芒 glowingsparkle 上浮         0.12-0.02 16-28 0.9→0 ≤30
+ * heal   叶芽 sprout        自脚接地长起 0.24-0.10 18-30 0.95→0 ≤12
+ * heal   绿芒 glowingsparkle 自脚接地升腾 0.12-0.02 16-28 0.9→0 ≤30
  * growth 种子 xsseed         下落         0.10-0.02 14-26 0.9→0 ≤30
  */
 const GrassyTerrainDefinition: ParticleDefinition = {
@@ -98,13 +99,19 @@ const GrassyTerrainDefinition: ParticleDefinition = {
             duration: 30,
             exit: { stop: 8, drain: 20 },
             emitters: [
-                { name: "uptake", bind: "target", height: 0.5,
+                { name: "uptake", bind: "target", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: 14 }, shape: { kind: "ring", radius: 0.45 },
                     direction: "up", speed: [0.03, 0.07],
                     lifetime: [16, 28], size: [0.12, 0.02],
                     color: 0xA9E87A, alpha: [0.9, 0], light: "full", maxParticles: 30 },
-                { name: "flash", bind: "target", height: 0.5,
+                { name: "leaf", bind: "target", offset: [0, 0.03, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
+                    burst: { count: 3 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "up", speed: [0.03, 0.08],
+                    lifetime: [18, 30], size: [0.24, 0.10],
+                    color: 0x8FCF6E, alpha: [0.95, 0], light: "full", maxParticles: 12 },
+                { name: "flash", bind: "target", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/orb/scaling",
                     burst: { count: 3 }, shape: { kind: "sphere", radius: 0.2 },
                     direction: "up", speed: [0.01, 0.03],

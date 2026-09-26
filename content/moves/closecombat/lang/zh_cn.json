@@ -3,7 +3,7 @@
   "worldcombat.skill.closecombat.use.0": "贴脸用一串快拳把对手打残",
   "worldcombat.skill.closecombat.use.1": "横扫式一次扫到挤在正面的几个人",
   "worldcombat.skill.closecombat.use.2": "在对手退开之前把一口气打完",
-  "worldcombat.skill.closecombat.description.0": "贴进对手怀里连打最多 %2$s 下，合计约 %1$s 点物理伤害；目标被顶出贴身距离时，剩下的拳会落空、连打提前结束。",
+  "worldcombat.skill.closecombat.description.0": "贴进对手怀里连打最多 %2$s 下，合计约 %1$s 点物理伤害；每一拳都按当时的身体朝向短扫，目标离开拳距就这一拳落空、不追过去，整串照打完后收招。",
   "worldcombat.skill.closecombat.description.1": "贴身 %1$s 格内可打；每下间隔 %2$s 刻，每打完一下你最多朝对手垫进 %4$s 格，每一下命中都把对手顶开 %3$s 格。",
   "worldcombat.skill.closecombat.description.2": "提交那一刻即弃守：自身防御下降 %1$s 级、特防下降 %2$s 级，无论是否打中都要付。",
   "worldcombat.skill.closecombat.wide.on": "横扫式：每一拳同时扫到正面 %1$s 度扇形内的其他敌人，各吃该拳 %2$s 的威力。",

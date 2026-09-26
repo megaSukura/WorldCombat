@@ -4,7 +4,7 @@
   "worldcombat.skill.dizzypunch.use.1": "把小扇面里的几个敌人一起打懵",
   "worldcombat.skill.dizzypunch.use.2": "用混乱制造失手窗口",
   "worldcombat.skill.dizzypunch.description.0": "按 %3$s 的节拍打出 %2$s 拳；每拳扫过身前宽 %4$s 度、远 %5$s 格的扇面，扇面里的敌人各挨约 %1$s 点接触、拳类伤害，同一目标会被后续每一拍继续打中。",
-  "worldcombat.skill.dizzypunch.description.1": "整串打完时，被打中的每个人各有 %1$s 概率陷入混乱 %2$s：混乱期间每次想出手有 %3$s 概率被打散；若它在此期间打中非友方，还会被自己的力气反噬，承受自身最大生命约 6%% 的自伤，攻击越高反噬越重。",
+  "worldcombat.skill.dizzypunch.description.1": "整串打完时，真正被打中的每个人各有 %1$s 概率陷入混乱 %2$s：混乱期间每次想出手有 %3$s 概率被打散；若它在此期间打中非友方，还会被自己的力气反噬，自伤约为自身最大生命的 6%%（攻击越高越重），但不会超过它这一下真正造成的伤害。",
   "worldcombat.skill.dizzypunch.rapid.on": "疾风连打：多打一拳、节拍更紧、起手收招与冷却更短，但每拳 ×0.82、混乱更短更少见。",
   "worldcombat.skill.dizzypunch.rapid.off": "重拳节拍：拳少而重、更容易打晕，但循环更慢。",
   "worldcombat.skill.dizzypunch.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %5$s 秒，耗 %4$s PP。",

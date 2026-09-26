@@ -17,6 +17,15 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("seedbomb", {
         protocols: ["world_combat:attack"],
+        target:function(context,item,target){
+            if(target.grounded===false)return target;
+            const world=CompanionBehavior.world(context),entity=world.actor(target.ref),body=entity?world.observe(entity):null;
+            if(!body)return target;
+            const velocity=CompanionBehavior.velocity(context,target)||[0,0,0],lead=WorldCombat.point(velocity[0]*6,0,velocity[2]*6);
+            const base=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()).plus(lead.length()>2.5?lead.unit().scale(2.5):lead);
+            const floor=SurfacePaths.support(world,base,1,2);if(!floor)return null;
+            const result=JSON.parse(JSON.stringify(target));result.ref="";result.point=[floor.x(),floor.y()+.04,floor.z()];return result;
+        },
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;

@@ -5,6 +5,7 @@
   "worldcombat.skill.flameburst.description.2": "Range %1$s blocks, %2$s blocks per tick, %3$s block body radius.",
   "worldcombat.skill.flameburst.spread.on": "Spreading form: the fire reaches farther and heavier with more droplets, at lower burst power and a shorter throw.",
   "worldcombat.skill.flameburst.spread.off": "Direct form: a heavier burst thrown farther, at a smaller and weaker splash.",
+  "worldcombat.skill.flameburst.description.aim": "You may throw the ball toward any direction or point without first picking an enemy; a ball that strikes a block or any non-living body only scatters a small spray of fire on the surface, with no burst ring and no splash, and only a hit on a hostile living body spills the fire onto the other foes around the blast.",
   "worldcombat.skill.flameburst.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.flameburst.growth.0": "From level %1$s the burst rises to %2$s and the splash to %3$s.",
   "worldcombat.skill.flameburst.growth.1": "From level %1$s the burst rises to %2$s and the splash radius to %3$s blocks.",

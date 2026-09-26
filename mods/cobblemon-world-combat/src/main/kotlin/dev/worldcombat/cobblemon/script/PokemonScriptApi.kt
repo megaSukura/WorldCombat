@@ -76,6 +76,10 @@ class PokemonScriptApi {
     /** Same revive step with a readable reason; JSON {ok,reason,restored}. */
     fun reviveResult(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, slot: Int, ratio: Double) =
         NativeParty.reviveResult(world, actor, slot, ratio)
+    /** CAS form keeps an explicitly selected party individual stable across preparation. */
+    fun reviveResult(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, slot: Int, ratio: Double, expectedId: String) =
+        NativeParty.reviveResult(world, actor, slot, ratio, expectedId)
+
     fun status(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, id: String, seconds: Int, expected: String) = NativeMechanics.status(world, actor, id, seconds, expected)
     fun statusSeconds(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, seconds: Int, expected: String) = NativeMechanics.statusSeconds(world, actor, seconds, expected)
     fun statusMirror(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, expected: String) = NativeMechanics.statusMirror(world, actor, expected)

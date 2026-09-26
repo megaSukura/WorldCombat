@@ -32,7 +32,8 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            const self = CompanionBehavior.source(context);
+            if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             const mass = lowkickMassOf(context, target);
             let score = 22;
             if (mass >= 1000) score += 26;
@@ -40,6 +41,21 @@ namespace PokemonSkills {
             if (target.grounded === false) score -= 18;
             if (CompanionBehavior.status(context, target, "tripped")) score -= 14;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) score += 30;
+            // 扫堂式只有真的有人落在这一脚的侧前方腿弧里才值得偏好；背后的人带不到。
+            if (CompanionBehavior.ai<boolean>(capability, "reap", false)) {
+                const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+                const length = Math.sqrt(dx * dx + dz * dz) || 1;
+                const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+                for (let i = 0; i < nearby.length; i++) {
+                    const other = nearby[i];
+                    if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
+                    const ox = other.point[0] - target.point[0], oz = other.point[2] - target.point[2];
+                    if (Math.sqrt(ox * ox + oz * oz) > 1.7) continue;
+                    if ((ox * dx + oz * dz) / length < -0.2) continue;
+                    score += 12;
+                    break;
+                }
+            }
             return score;
         }
     });

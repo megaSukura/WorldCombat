@@ -14,14 +14,21 @@
  */
 namespace PokemonSkills {
     /**
-     * 把一笔算好的固定伤害交给原生受伤入口：类型免疫按属性表拦住，护甲在本函数里排除
-     * （固定伤害不参与防御比拼），其余原生结算保持原样。返回是否真的造成了伤害。
+     * 把一笔算好的固定伤害交给原生受伤入口，并返回目标实际失去的生命（世界单位）。
+     * 类型免疫按属性表拦住，护甲在本函数里排除（固定伤害不参与防御比拼），其余原生结算（护盾、
+     * 减伤、伤害上限）照常生效。返回 0 表示被免疫或原生裁定完全挡下，调用方据此显示「被挡」而不是成功伤害。
      */
-    export function endeavorRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
+    export function endeavorRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): number {
         const world = action.world();
-        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return false;
-        return PokemonDamage.fixed(world, target, CobblemonCombat.moveTemplate("endeavor"), amount,
+        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return 0;
+        const before = world.observe(target);
+        if (before === null) return 0;
+        const start = before.health();
+        const landed = PokemonDamage.fixed(world, target, CobblemonCombat.moveTemplate("endeavor"), amount,
             { contact: contact, knockback: false, bypassCooldown: true, ignoreArmor: true }, "immunity", action);
+        const after = world.observe(target);
+        if (after !== null) return Math.max(0, start - after.health());
+        return landed ? start : 0;
     }
 
     actionParameters.define("endeavor", {
@@ -74,7 +81,7 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "扑上去时判定能不能拉平的横向半径；身板越大判定越宽。"
             }),
-        maximumStride: hidden(0.25)
+        minimumMove: hidden(0.03)
     });
 
     stages("endeavor", [

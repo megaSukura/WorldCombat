@@ -2,12 +2,13 @@
  * 怒火中烧 / fierywrath 的出手方式。
  *
  * 核心念头：把憋住的怒火从身体里炸开成一道环状气场——它必须以自己为中心，所以得先把自己送进人堆里；
- * 近处被灼得更狠，圈内所有人被震得可能懵住；开启余怒时气场还留一会儿，持续灼烧没走开的人。
+ * 近处被灼得更狠，圈内所有人被震得可能懵住；开启余怒时气场还留在最初中心一会儿，持续灼烧没走开的人。
  *
  * 三幕：
  *   起（windup，提交前）：身体发抖、暗红火焰朝身内收拢的预告。
  *   击（burst → hit）：提交后以自身为中心炸开气场，按到中心的距离衰减对圈内敌人各结算一次，掷一次畏缩并向外轻推。
- *   收（linger / fade）：余怒式留下一段持续气场，按 `pulseTicks` 反复灼烧还在圈里的人；否则一次即止。
+ *   收（aura / scorch / fade）：余怒式在爆发中心立起一段持续气场，按 `pulseTicks` 反复灼烧还在圈里的人；
+ *       气场不跟着人走。否则一次即止。
  *
  * 配置 `linger`（余怒）由 resolve 改时序、由公式改爆发威力与推距：开启＝留场持续，关闭＝一发更重。
  *
@@ -30,7 +31,7 @@ namespace PokemonSkills {
     define({
         id: "fierywrath",
         name: "Fiery Wrath",
-        description: "把愤怒从身体里炸开成一道以自身为中心的环状气场：圈内敌人按距离近重远轻地吃伤，被震实的可能畏缩并被向外轻推。要站进人堆中央才打得到人；余怒式还会留下一段持续灼烧，爆发式一发更重。",
+        description: "把恶属性的怒火从身体里炸开成一道以自身为中心的环状气场：圈内敌人按距离近重远轻地吃伤，被震实的可能畏缩并被向外轻推。要站进人堆中央才打得到人；余怒式还会在爆发中心留下一段持续怒焰，反复灼烧没走开的人，爆发式一发更重。",
         uses: ["被围住时一次性清一圈", "把贴身围上来的敌人震得畏缩并打断它们", "守住一块地方", "对自己越危急打得越痛"],
         kind: "self",
         range: 3,
@@ -66,6 +67,7 @@ namespace PokemonSkills {
             const self = action.actor();
             const body = world.observe(self);
             const centre = body !== null ? body.position() : action.origin();
+            const scenes = WorldFeedback.actionScenes(fierywrathScene);
             const radius = p("fierywrath", "auraRadius", action);
             const power = p("fierywrath", "wrath", action);
             const edgeKeep = p("fierywrath", "edgeKeep", action);
@@ -77,6 +79,7 @@ namespace PokemonSkills {
             const pulseTicks = Math.max(2, Math.round(p("fierywrath", "pulseTicks", action)));
             const linger = !!(config && config.linger);
             const scale = radius / 3.0;
+            // 全部以施法者此刻的真实身体中心为圆心；气场的距离衰减也读这里。
             const region = WorldGeometry.ring(centre, 0, radius, { below: 2, above: 4 });
             let elapsed = 0, settled = false;
 
@@ -87,10 +90,10 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), fierywrathScene, 1, centre, { moment: "miss", scale: scale, radius: radius }, 20);
                     WorldFeedback.text(current.world(), centre.plus(WorldCombat.point(0, 1.2, 0)), fierywrathMissText, [], 22);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
-            /** 一次结算：按到中心的距离衰减，圈内每个敌人各挨一次。 */
+            /** 一次结算：按到自身的距离衰减，圈内每个敌人各挨一次。 */
             function strike(current: CombatAction, amount: number, segment: string, withFlinch: boolean, moment: string): number {
                 const scope = current.world();
                 let touched = 0;
@@ -116,9 +119,9 @@ namespace PokemonSkills {
             }
 
             function pulse(current: CombatAction, struck: number): void {
-                const touched = strike(current, afterglow, "afterglow", false, "afterglow");
+                const touched = strike(current, afterglow, "afterglow", false, "scorch");
                 if (touched > 0) WorldFeedback.emit(current.world(), fierywrathScene, 1, centre,
-                    { moment: "linger", scale: scale, radius: radius, marks: Math.max(6, touched * 6) }, 22);
+                    { moment: "pulse", scale: scale, radius: radius, marks: Math.max(6, touched * 6) }, 22);
                 elapsed += pulseTicks;
                 if (elapsed >= lingerTicks) {
                     WorldFeedback.emit(current.world(), fierywrathScene, 1, centre, { moment: "fade", scale: scale, radius: radius }, 26);
@@ -134,8 +137,12 @@ namespace PokemonSkills {
                 { moment: "burst", scale: scale, radius: radius, marks: Math.max(10, struck * 8), intensity: Math.max(0.5, Math.min(2.2, power / 90)) }, 28);
             if (struck > 0) WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.2, 0)), fierywrathHitText, [struck], 26);
             sound(action, "cobblemon:impact.dark");
-            if (linger && world.valid(self)) pulse(action, struck);
-            else finish(action, struck);
+            if (linger && world.valid(self)) {
+                // 余怒气场钉在爆发时的中心，由 actionScenes 维持，fade 时随动作结束清理；不跟着人走。
+                scenes.show(action, "aura", centre,
+                    { moment: "aura", scale: scale, radius: radius, marks: Math.max(8, struck * 6) });
+                pulse(action, struck);
+            } else finish(action, struck);
         }
     });
 

@@ -14,9 +14,9 @@
  *   airTicks   腾空时长：速度。
  *   leap       跳跃距离：速度 + 体重；配置 anchor 收短。
  *   collisionRadius 判定半径：碰撞箱高度。
- *   craterRadius 坑半径：体重；配置 anchor 略大。
- *   craterTicks 坑留存：等级。
  *   prepare/recover/cooldown 起手／收招／冷却：速度；配置 anchor 另加。
+ *
+ * 本招不替换地表、不在世界里留坑：重量由身体着地的顿挫与碎屑表现，落地结算始终跟随身体真实落点。
  *
  * 配置 `anchor`（沉坠式，默认关）双向取舍：开＝跃得近、单点威力更高、坑更大，但顶开更少、收招与冷却更久；
  * 关＝冲跳式，跃得远、顶开更开，单发更轻。两向各有局面（单点行刑 vs 群控开路）。
@@ -94,19 +94,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "砸中活体时的横向判定半径；身板越大越宽。"
             }),
-        /** 坑半径：基础 1.4 格；体重每比 100kg 多 1kg 加 0.035（上限 +1.2）；沉坠 ×1.1；夹在 1.2..3.0。 */
-        craterRadius: formula(
-            F.base(1.4).plus(F.body("weight").minus(1000).times(0.035).clamp(0, 1.2))
-                .times(F.when(F.pref("anchor", text("worldcombat.skill.heavyslam.preference.anchor")), F.const(1.1), F.const(1)))
-                .clamp(1.2, 3.0).round(2),
-            "坑半径", {
-                unit: "格",
-                description: "地面被砸碎的范围；越重砸得越大，沉坠式更狠。坑会自己平复。"
-            }),
-        /** 坑留存：基础 100 刻；等级每高 1 级加 2；夹在 80..260。 */
-        craterTicks: seconds(
-            F.base(100).plus(F.level().minus(20).times(2)).clamp(80, 260).round(0),
-            "坑留存", "砸碎的地面留多久；到期原方块回来。"),
         /** 起手：基础 9 刻；速度每比 60 快 1 减 0.04 刻（上限 −3）；沉坠 +2；夹在 5..15。 */
         prepare: seconds(
             F.base(9).minus(F.stat("speed").minus(60).times(0.04).clamp(-1, 3))
@@ -137,7 +124,7 @@ namespace PokemonSkills {
     describe("heavyslam", [
         { key: "description.0", values: ["crush","landRadius"] },
         { key: "description.1", values: ["leap", "hop", "airTicks", "shove"] },
-        { key: "description.2", values: ["craterRadius","craterTicks"] },
+        { key: "landing", values: [] },
         { key: "anchor.on", values: [], when: function (context) { return read(context.detail.values, ["anchor"]) === true; } },
         { key: "anchor.off", values: [], when: function (context) { return read(context.detail.values, ["anchor"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

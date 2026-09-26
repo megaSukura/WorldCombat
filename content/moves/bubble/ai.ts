@@ -6,6 +6,7 @@
  * 为什么优先跑得快的目标：这招打不疼、但会打滑压速度，`ai.crippleRunners`（默认开）下正在快速移动的
  *   目标多一档分——先把它从速度优势里拽下来。
  * 对谁出手：当前威胁；已经带着共享身份 sudsy 的目标在 `ai.skipSudsy`（默认开）下降一档，把这一口留给还清爽的对手。
+ *   站着不动、血厚的大 Boss 降一档：这口轻泡不值得为减速反复铺。
  * 够不到怎么办：reach 就是本招射程，不够先走近；泡群会铺开一片，站得正对更划算。
  * 放完之后：被打滑的人掉速度、带着 sudsy 一段时间，伙伴交回共享顺序继续缠斗。
  */
@@ -41,6 +42,7 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) <= capability.data.range) score += 4;
             if (CompanionBehavior.ai<boolean>(capability, "crippleRunners", true) && bubbleMoving(target)) score += 8;
             if (CompanionBehavior.ai<boolean>(capability, "skipSudsy", true) && CompanionBehavior.status(context, target, "sudsy")) score -= 7;
+            if (target.maximum !== undefined && target.maximum >= 120 && !bubbleMoving(target)) score -= 6;
             return score;
         }
     });

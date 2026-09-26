@@ -55,26 +55,26 @@ const metronomeDefinition: ParticleDefinition = {
             ]
         },
         draw: {
-            duration: 22,
-            exit: { stop: 14, drain: 20 },
+            duration: 20,
+            exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "draw_flash", bind: "source", height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
-                    burst: { count: { data: "hues", fallback: 6 }, at: 0 },
-                    shape: { kind: "sphere", radius: 0.5 },
-                    direction: "shape", speed: [0.2, 0.5], spread: 12,
-                    lifetime: [12, 20], size: [0.28, 0.03],
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 120
+                    name: "draw_collapse", bind: "source", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: { data: "hues", fallback: 6 } },
+                    shape: { kind: "ring", radius: 0.8 },
+                    direction: "inward", speed: [0.18, 0.4], spread: 6,
+                    lifetime: [8, 14], size: [0.24, 0.06],
+                    color: { data: "color", fallback: 0xC8A0FF }, alpha: [0.8, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "draw_ring", bind: "source", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    burst: { count: 24 },
-                    shape: { kind: "ring", radius: 0.7 },
-                    direction: "outward", speed: [0.3, 0.5], spread: 2,
-                    lifetime: [14, 20], size: [0.3, 0.06],
-                    color: 0xC8A0FF, alpha: [0.7, 0], light: "full", maxParticles: 60
+                    name: "draw_symbol", bind: "source", height: 0.62,
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    burst: { count: 1, at: 4 },
+                    shape: { kind: "point" },
+                    direction: "up", speed: [0.0, 0.04],
+                    lifetime: [14, 20], size: [0.5, 0.2], sizeMode: "sin",
+                    color: { data: "color", fallback: 0xFFFFFF }, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 2
                 }
             ]
         }

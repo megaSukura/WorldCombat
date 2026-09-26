@@ -132,6 +132,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["pulse"] },
         { key: "description.1", values: ["reach","velocity","turn","radius"] },
         { key: "description.2", values: ["lockRange"] },
+        { key: "targeting", values: [] },
         { key: "seek.on", values: [], when: function (context) { return read(context.detail.values, ["seek"]) === true; } },
         { key: "seek.off", values: [], when: function (context) { return read(context.detail.values, ["seek"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

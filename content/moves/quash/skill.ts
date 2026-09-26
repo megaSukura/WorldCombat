@@ -15,28 +15,59 @@ namespace PokemonSkills {
     const Quash = "world_combat:quash";
     const quashPinText = "world_combat.move.quash.text.pin";
     const quashFizzleText = "world_combat.move.quash.text.fizzle";
-    // 提交前拦截发生在只读作用域，不能写世界；剩余压下次数放在本单元的瞬时脚本状态里，效果消失时清掉。
-    const quashDenials: { [ref: string]: number } = {};
-
-    WorldCombat.on("world_combat:quash/deny", "world_combat:before_commit", "", function (event) {
-        var world = event.world(), actor = event.actor();
-        var effect = MobEffects.read(world, actor, Quash);
-        if (effect === null) return;
-        var ref = String(actor.ref()), left = quashDenials[ref] === undefined ? effect.amplifier() : quashDenials[ref];
-        if (left <= 0) return;
-        quashDenials[ref] = left - 1;
-        event.reject("quashed");
+    const quashVisual = "world_combat:quash_visual";
+    WorldCombat.effect(quashVisual, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(quashVisual, "start", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "pin", quashScene, 1, body.position(), { moment: "pin", target: String(target.ref()) });
+        effect.schedule("status", "status", 1, "{}");
     });
-    WorldCombat.on("world_combat:quash/release", "world_combat:mob_effect_removed", "", function (event) {
-        var data = JSON.parse(String(event.data()));
-        if (String(data.id) !== Quash) return;
-        delete quashDenials[String(event.actor().ref())];
+    WorldCombat.effectHandler(quashVisual, "status", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        if (MobEffects.read(world, target, Quash) === null) {
+            WorldFeedback.emit(world, quashScene, 1, body.position(), { moment: "release", target: String(target.ref()) }, 20);
+            effect.end(); return;
+        }
+        effect.schedule("status", "status", 1, "{}");
     });
+    WorldCombat.effectHandler(quashVisual, "operation:world_combat:dispel", effect => effect.end());
+    const quashAttempt = "world_combat:quash/attempt";
+    CombatStatus.actions.define({ id: "world_combat:quash/deny", apply: function (context) {
+        if (context.phase !== "commit" && !(context.phase === "damage" && DamageSemantics.read(context.metadata).attack)) return;
+        const prior = MoveExecutions.read(context.world, quashAttempt);
+        if (prior && prior.denied) {
+            context.blocked.quashed = true; context.detail.quashed = { status: "quash", repeated: true }; return;
+        }
+        const effect = MobEffects.read(context.world, context.actor, Quash);
+        if (effect === null || effect.amplifier() <= 0) return;
+        context.blocked.quashed = true;
+        context.detail.quashed = { status: "quash", carrier: String(effect.key()) };
+    } });
+    // Read-only commitment chooses the refusal; its writable rejection receipt spends exactly one native carrier count.
+    CombatStatus.rejected.define({ id: "world_combat:quash/spend", apply: function (context) {
+        if (context.reason !== "quashed" || context.details.repeated) return;
+        const world = context.world, actor = context.actor;
+        if (world.originInstance()) {
+            const prior = MoveExecutions.read(world, quashAttempt);
+            if (prior && prior.denied) return;
+            MoveExecutions.write(world, quashAttempt, { denied: true });
+        }
+        const effect = MobEffects.read(world, actor, Quash);
+        if (effect === null || String(effect.key()) !== context.details.carrier || effect.amplifier() <= 0) return;
+        const left = effect.amplifier() - 1, remaining = Math.max(1, effect.duration());
+        if (!world.removeMobEffect(actor, Quash, String(effect.key()))) return;
+        MobEffects.apply(world, actor, Quash, remaining, left);
+        const body = world.observe(actor);
+        if (body !== null) WorldFeedback.emit(world, quashScene, 1, body.position(),
+            { moment: "strike", target: String(actor.ref()), count: 8, size: .12, speed: .12 }, 12);
+    } });
 
     define({
         id: "quash",
         name: "Quash",
-        description: "把一道压制之力砸向目标：打断它正在准备的动作，并在它身上留下压制。压制期间它接下来的数次出手会被压回去（不花资源，只是晚一拍），移动也被压慢，被压的次数越多越接近钉住。",
+        description: "尝试打断目标可中断的准备，并让它接下来的有限次出手晚一拍；压制期间移动变慢。",
         uses: ["打断对手正在蓄的大招", "抢先一拍保住自己的位置", "把冲上来的目标压慢"],
         kind: "enemy",
         range: 9,
@@ -69,7 +100,7 @@ namespace PokemonSkills {
             const radius = p("quash", "traceRadius", action);
             const lockTicks = p("quash", "lockTicks", action);
             const deny = Math.max(1, Math.round(p("quash", "deny", action)));
-            const hit = action.trace(origin, centre, radius);
+            const hit = action.trace(origin, centre, radius, true);
             const target = hit.target();
             if (!hit.hitEntity() || target === null || !world.valid(target) || world.friendly(target)) {
                 WorldFeedback.emit(world, quashScene, 1, centre, { moment: "fizzle" }, 20);
@@ -81,11 +112,11 @@ namespace PokemonSkills {
             const point = hit.position(), ref = String(target.ref());
             world.interrupt(target, "world_combat:quash");
             if (MobEffects.apply(world, target, Quash, lockTicks, deny) !== null) {
-                quashDenials[ref] = deny;
                 const count = Math.round(16 + lockTicks / 6);
                 WorldFeedback.emit(world, quashScene, 1, point, { moment: "strike", target: ref,
                     count: count, size: 0.08 + count * 0.006, speed: 0.16 + count * 0.008 }, 30);
-                WorldFeedback.emit(world, quashScene, 1, point, { moment: "pin", target: ref }, lockTicks);
+                world.effects(target, quashVisual).forEach(effect => world.operation(effect.id(), "world_combat:dispel", "{}"));
+                world.effect(quashVisual, target, "{}", lockTicks + 1);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.3, 0)), quashPinText, [], 30);
             }
             sound(action, "minecraft:entity.warden.sonic_boom");

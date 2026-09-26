@@ -33,16 +33,30 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 把球脚下最近的地面压成一段平痕；地面会被压平、到期原方块自己回来。 */
-    function steamrollerTread(world: CombatWorld, here: CombatPoint, ticks: number): void {
+    /** 可被压成平痕的表土；石头、木板等保持原样，不新增坑。 */
+    function steamrollerSoil(id: string): boolean {
+        return ["minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:rooted_dirt",
+            "minecraft:podzol", "minecraft:mycelium", "minecraft:mud", "minecraft:moss_block", "minecraft:farmland"].indexOf(id) >= 0;
+    }
+
+    /** 把球脚下最近的表土压成一段平痕；只替换已有表土，横跨 width 格，到期原方块自己回来。 */
+    function steamrollerTread(world: CombatWorld, here: CombatPoint, side: CombatPoint, width: number, ticks: number): void {
         for (var dy = 0; dy <= 3; dy++) {
             const probe = here.plus(WorldCombat.point(0, -0.5 - dy, 0));
             const block = world.block(probe);
             if (block === null || String(block.id()) === "minecraft:air") continue;
+            if (!steamrollerSoil(String(block.id()))) return;
             const cell = block.position();
-            try {
-                world.terrain(JSON.stringify({ cells: [{ x: cell.x(), y: cell.y(), z: cell.z(), block: "minecraft:dirt_path" }], replace: true, linger: true }), ticks);
-            } catch (error) { }
+            for (var index = 0; index < width; index++) {
+                const offset = index - (width - 1) / 2;
+                const x = Math.round(cell.x() + side.x() * offset);
+                const z = Math.round(cell.z() + side.z() * offset);
+                const target = world.block(WorldCombat.point(x, cell.y(), z));
+                if (target === null || !steamrollerSoil(String(target.id()))) continue;
+                try {
+                    world.terrain(JSON.stringify({ cells: [{ x: x, y: cell.y(), z: z, block: "minecraft:dirt_path" }], replace: true, linger: true }), ticks);
+                } catch (error) { }
+            }
             return;
         }
     }
@@ -52,7 +66,7 @@ namespace PokemonSkills {
         id: steamrollerId,
         cooldownParameter: "recharge",
         name: "Steamroller",
-        description: "把自己揉成一团滚出去，从一整排对手身上碾过去：滚到谁身上谁就吃一记压扁式伤害、被推着往前，还可能被压得一愣。滚过之后地面留下一道会自己恢复的平痕，是本组最便宜、冷却最短的一记。",
+        description: "把自己揉成一团滚出去，从一整排对手身上碾过去：滚到谁身上谁就吃一记压扁式伤害、被推着往前，还可能被压得一愣。可以朝任意方向滚；沿本体真正滚过的那段路径，碾压半径内的敌人各中一次，撞实体不挡路、撞到实体墙才停。滚过处的表土留下一条会自己恢复的平痕，石头等地形保持原样。是本组最便宜、冷却最短的一记。",
         uses: ["一次碾过一整排敌人", "低消耗低冷却地连续压场", "滚出一条被人踩出来的平痕"],
         kind: "enemy",
         range: 4.0,
@@ -86,6 +100,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
+            const scenes = WorldFeedback.actionScenes(steamrollerScene);
             const body = world.observe(action.actor());
             const origin = body === null ? action.origin() : body.position();
             const power = p(steamrollerId, "squash", action);
@@ -96,18 +111,23 @@ namespace PokemonSkills {
             const flinchTicks = Math.round(p(steamrollerId, "flinchTicks", action));
             const push = p(steamrollerId, "push", action);
             const dirty = Math.max(8, Math.round(p(steamrollerId, "dirt", action)));
+            const treadCells = Math.max(1, Math.round(p(steamrollerId, "treadCells", action)));
+            const treadTicks = Math.round(p(steamrollerId, "treadTicks", action));
             const scale = Math.max(0.7, Math.min(2.0, radius / 0.5));
             const intensity = Math.max(0.55, Math.min(2.2, power / 66));
-            let direction = WorldCombat.point(action.direction().x(), 0, action.direction().z());
-            if (direction.length() < 0.05) direction = WorldCombat.point(1, 0, 0);
-            direction = direction.unit();
-            const lane = steamrollerLane(origin, direction, length + radius, radius);
+            // 自由方向：aim 的方向/落点直接当滚向，空滚也走同一条路。
+            const aimed = aim(action);
+            let direction = WorldCombat.point(aimed.x(), 0, aimed.z());
+            direction = direction.length() < 0.05 ? WorldCombat.point(1, 0, 0) : direction.unit();
+            const side = WorldCombat.point(-direction.z(), 0, direction.x());
+            // 把设计的总压痕块数摊到这一趟的帧数上，决定每步压多宽的一小段表土。
+            const steps = Math.max(1, Math.ceil(length / Math.max(0.05, speed)));
+            const treadWidth = Math.max(1, Math.min(3, Math.round(treadCells / steps)));
             let travelled = 0, crushed = 0, settled = false;
             const hitRefs: { [ref: string]: boolean } = {};
 
-            WorldFeedback.emit(world, steamrollerScene, 1, origin,
-                { moment: "roll", scale: scale, dirt: dirty, intensity: intensity,
-                    direction: [direction.x(), direction.y(), direction.z()], path: lane }, 50);
+            scenes.show(action, "roll", origin, { moment: "roll", scale: scale, dirt: dirty, tread: treadCells, intensity: intensity,
+                direction: [direction.x(), direction.y(), direction.z()], path: steamrollerLane(origin, direction, radius, radius) });
             sound(action, "minecraft:entity.ravager.step");
 
             function finish(current: CombatAction): void {
@@ -118,41 +138,52 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, steamrollerScene, 1, at, { moment: "whiff", scale: scale, dirt: dirty }, 20);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), steamrollerMissText, [], 20);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world();
-                const here = current.origin();
+                const before = current.origin();
                 const remaining = length - travelled;
                 if (remaining <= 0.02) { finish(current); return; }
                 const delta = direction.scale(Math.min(speed, remaining));
-                const probe = current.trace(here, here.plus(delta), radius);
-
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(here, 0, radius + 0.35, { below: 2.2, above: 2.6 }),
-                    function (target, facts) {
-                        const ref = String(target.ref());
-                        if (hitRefs[ref]) return;
-                        hitRefs[ref] = true;
-                        const landed = hurt(current, target, steamrollerId, power,
-                            { damage: damageSpec(steamrollerId, "squash"), contact: true });
-                        if (!landed) return;
-                        crushed++;
-                        if (scope.valid(target)) scope.displace(target, direction.scale(push));
-                        WorldFeedback.emit(scope, steamrollerScene, 1, facts.position(),
-                            { moment: "crush", target: ref, dirt: dirty, scale: scale, intensity: intensity }, 24);
-                        WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.0, 0)), steamrollerHitText, [Math.round(power)], 22);
-                        if (scope.random() < chance && steamrollerFlinch(scope, target, flinchTicks)) {
-                            WorldFeedback.emit(scope, steamrollerScene, 1, facts.position(), { moment: "stagger", target: ref }, 22);
-                            WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.3, 0)), steamrollerFlinchText, [], 22);
-                        }
-                    });
-
-                if (probe.blocked()) { finish(current); return; }
+                // 实体墙止步：先探这一小段是否撞到方块；实体接触不算挡路。
+                const probe = current.trace(before, before.plus(delta), radius);
+                // 本体扫掠：撞实体不挡路、可继续原剩余行程。
                 const moved = scope.displace(current.actor(), delta);
+                const end = current.origin();
+                // 近地覆盖真实移动过的那一段：滚到哪压到哪，而不是预测的整条走廊。
+                if (moved > 0.001) {
+                    const laneStart = before.minus(direction.scale(radius));
+                    WorldGeometry.selectEnemies(scope,
+                        WorldGeometry.lane(laneStart, direction, moved + radius * 2, radius + 0.35, { below: 2.2, above: 2.6 }),
+                        function (target, facts) {
+                            const ref = String(target.ref());
+                            if (hitRefs[ref]) return;
+                            hitRefs[ref] = true;
+                            const landed = hurt(current, target, steamrollerId, power,
+                                { damage: damageSpec(steamrollerId, "squash"), contact: true });
+                            if (!landed) return;
+                            crushed++;
+                            if (scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
+                            WorldFeedback.emit(scope, steamrollerScene, 1, facts.position(),
+                                { moment: "crush", target: ref, dirt: dirty, scale: scale, intensity: intensity }, 24);
+                            WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.0, 0)), steamrollerHitText, [Math.round(power)], 22);
+                            if (scope.random() < chance && steamrollerFlinch(scope, target, flinchTicks)) {
+                                WorldFeedback.emit(scope, steamrollerScene, 1, facts.position(), { moment: "stagger", target: ref }, 22);
+                                WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.3, 0)), steamrollerFlinchText, [], 22);
+                            }
+                        });
+                }
                 travelled += moved;
-                steamrollerTread(scope, here, Math.round(p(steamrollerId, "treadTicks", current)));
-                if (moved < p(steamrollerId, "minimumMove", current) || travelled >= length) { finish(current); return; }
+                // 平痕跟已走过的那段：只压已有表土，不新增坑。
+                steamrollerTread(scope, end, side, treadWidth, treadTicks);
+                scenes.show(current, "roll", end, { moment: "roll", scale: scale, dirt: dirty, tread: treadCells, intensity: intensity,
+                    direction: [direction.x(), direction.y(), direction.z()], path: steamrollerLane(origin, direction, travelled + radius, radius) });
+                if (probe.blocked() || moved < p(steamrollerId, "minimumMove", current) || travelled >= length) {
+                    finish(current);
+                    return;
+                }
                 current.after(1, advance);
             }
             advance(action);

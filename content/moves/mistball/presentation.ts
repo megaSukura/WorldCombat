@@ -90,8 +90,8 @@ const MistballDefinition: ParticleDefinition = {
                     rate: 40,
                     shape: { kind: "sphere", radius: { data: "cloud", fallback: 1.2 } },
                     direction: "outward", speed: [0.03, 0.12], spin: 4,
-                    lifetime: [14, 26], size: [0.4, 0.12],
-                    color: 0xEDEAF7, alpha: [0.34, 0], light: "world", maxParticles: 160
+                    lifetime: [14, 26], size: [0.32, 0.1],
+                    color: 0xEDEAF7, alpha: [0.22, 0], light: "world", maxParticles: 120
                 },
                 {
                     name: "drift", bind: "target", offset: [0, 0.5, 0], height: 0.5,
@@ -111,11 +111,11 @@ const MistballDefinition: ParticleDefinition = {
                 {
                     name: "wrap", bind: "target", offset: [0, 0.4, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 26,
+                    rate: 22,
                     shape: { kind: "sphere", radius: { data: "cloud", fallback: 1.2 } },
                     direction: "inward", speed: [0.02, 0.08], spin: 3,
-                    lifetime: [12, 22], size: [0.24, 0.06],
-                    color: 0xD8D2EE, alpha: [0.3, 0], light: "world", maxParticles: 80
+                    lifetime: [12, 22], size: [0.2, 0.05],
+                    color: 0xD8D2EE, alpha: [0.2, 0], light: "world", maxParticles: 60
                 },
                 {
                     name: "stuck_down", bind: "target", offset: [0, 0.45, 0], height: 0.5,

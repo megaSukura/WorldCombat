@@ -5,9 +5,9 @@
  * 「对手→自身」抽回身上。没有东西飞出去：藤的两端始终是施法者与命中点。
  *
  * 色相家族：草绿（0x7CB342／0x5C9E2E）与嫩白（0xDCE775），近白只给命中核心；无第二色相。
- * 拍子：起 windup（聚点）→ 抽 reach（探藤）→ 汲 sip（命中峰值＋回流）／空 miss（藤尖空甩）。
- * 范围：reach 的线长读 `data.span`（实际藤长），方向读 `data.direction`；藤尖到哪，玩家就看得见哪会被点到。
- * 运动：reach 沿 direction 由内向外，sip 的线发射器 orient=direction 沿「目标→自身」把汁点抽回来，
+ * 拍子：起 windup（聚点）→ 抽 reach（藤尖画到真实首碰点）→ 汲 sip（命中峰值＋回流）／空 miss（藤尖空甩）。
+ * 范围：reach 的藤读 `data.path`（施法者到真实首碰点的折线），藤尖读 `data.point`（同一个首碰点）——判定走到哪，藤就画到哪；
+ *   墙或友方截停时藤尖就停在接触处。sip 的线发射器 orient=direction 沿「目标→自身」把汁点抽回来，
  *   path 发射器把目标与施法者连成一条实线，读得出它在抽谁。
  * 数：`data.motes`（威力与抽取比例换算）决定探藤与回流的密度，`data.scale`（藤尖判定 / 0.36）放大光点尺寸。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -38,23 +38,23 @@ const AbsorbDefinition: ParticleDefinition = {
             ]
         },
         reach: {
-            duration: 18,
-            exit: { stop: 12, drain: 12 },
+            duration: 14,
+            exit: { stop: 8, drain: 10 },
             emitters: [
                 {
-                    name: "vine", bind: "point", orient: "direction",
+                    name: "vine", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    shape: { kind: "line", length: { data: "span", fallback: 4 } },
+                    shape: { kind: "polyline" },
                     rate: { data: "motes", fallback: 10 },
                     direction: "shape", speed: [0.02, 0.09], spread: 12, spin: 40,
                     lifetime: [5, 10], size: [0.14, 0.03], sizeMode: "index",
                     color: 0x7CB342, alpha: [0.85, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "vine_tip", bind: "point", orient: "direction",
+                    name: "vine_tip", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
-                    burst: { count: 3, at: 4 }, shape: { kind: "point" },
-                    direction: "shape", speed: [0.0, 0.04],
+                    burst: { count: 3, at: 2 }, shape: { kind: "point" },
+                    direction: "outward", speed: [0.0, 0.04],
                     lifetime: [6, 12], size: [0.16, 0.02],
                     color: 0xDCE775, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 12
                 }

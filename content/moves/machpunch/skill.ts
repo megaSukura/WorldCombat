@@ -7,8 +7,9 @@
  * 两幕：
  *   起（windup，提交前）：拳锋在身前收拢、压缩空气在拳上成形，只播预告（present chamber）；默认起手 0 刻，
  *       这一拍极短，重拳式才看得清。
- *   打（execute）：提交后从身体中心朝目标方向做一次瞬时直线判定——撞上非友方活体就结算 jab（带 punch 标记）、
- *       把它顶开一点，并在接触点炸开音爆环（boom）；一路无人在射程线上就只是挥空（whiff）。
+ *   打（execute）：提交后从身体中心朝瞄准方向做一次瞬时直线判定——拳锋细闪先到；撞上非友方活体就只结算一次 jab
+ *       （带 punch 标记）并沿出拳方向把它顶开一点；成功与免伤都在真实接触点给一次接触回执，免伤只显示格挡不报伤害数。
+ *       音爆延后极短 1–2 刻，只是一声短音爆与小冲环，不二次伤害；一路无人在射程线上就只是挥空（whiff）。
  *
  * 与同族分开：快手还击只在对手出手时闪身刺、有闪身位移；音速拳任何时候都能出、不闪身。
  *   击掌奇袭只在刚出场、拍懵并打断；音速拳没有懵、没有打断，只是最快的贴身一拳。
@@ -20,7 +21,7 @@ namespace PokemonSkills {
         name: "Mach Punch",
         description: "脚不动，拳头过隙——一记快到声音都追不上的直拳。起手可以短到瞬发、施法者不位移，只在已经贴近到一臂之内时打得中；拳锋先到，音爆后到。重拳式先蓄一拍换更重的一拳。",
         uses: ["贴身时最快的先手一拳", "不位移地收掉残血目标", "接在别的招之后立刻补一下"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.2,
         maxRange: 3.8,
         prepare: 0,
@@ -31,7 +32,7 @@ namespace PokemonSkills {
         defaults: { heavy: false, ai: { maxChase: 5 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: (pokemon ? p(machpunchId, "reach", pokemon) : 2.2) * 1.3, geometry: "line", style: "punch", color: 0xF2A65A,
+            return { radius: (pokemon ? p(machpunchId, "reach", pokemon) : 2.2) + 0.5, geometry: "line", style: "punch", color: 0xF2A65A,
                 label: config && config.heavy === true ? "音速拳·重拳" : "音速拳" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -51,8 +52,8 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
-            const actor = action.actor();
             const direction = aim(action);
+            action.releaseTarget();
             const reach = p(machpunchId, "reach", action);
             const radius = p(machpunchId, "collisionRadius", action);
             const power = p(machpunchId, "jab", action);
@@ -67,30 +68,42 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:entity.player.attack.weak");
 
-            function finish(current: CombatAction, at: CombatPoint, moment: string, textKey: string, args: any[]): void {
-                const scope = current.world();
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), textKey, args, 22);
-                scope.sound(moment === "whiff" ? "minecraft:entity.player.attack.sweep" : "cobblemon:impact.fighting", at, 14, "{}");
-                done(current);
+            /** 音爆延后极短 1–2 刻，只在真实接触点发声／画小冲环，不二次伤害。 */
+            function boomLater(current: CombatAction, at: CombatPoint, landed: boolean): void {
+                current.after(2, function (next: CombatAction) {
+                    const scope = next.world();
+                    WorldFeedback.emit(scope, machpunchScene, 1, at,
+                        { moment: landed ? "boom" : "blocked", point: [at.x(), at.y(), at.z()],
+                            count: count, ring: ring, boom: boom, scale: scale, intensity: intensity }, 18);
+                    scope.sound("minecraft:entity.warden.sonic_boom", at, 14, "{}");
+                });
             }
 
             const hit = action.trace(origin, end, radius);
             const victim = hit.target();
             if (hit.hitEntity() && victim !== null && world.valid(victim) && !world.friendly(victim)) {
-                WorldFeedback.emit(world, machpunchScene, 1, hit.position(),
-                    { moment: "boom", target: String(victim.ref()), count: count, ring: ring, boom: boom, scale: scale, intensity: intensity }, 26);
-                world.sound("minecraft:entity.warden.sonic_boom", hit.position(), 14, "{}");
-                const landed = impact(action, hit, machpunchId, power, { damage: damageSpec(machpunchId, "jab"), contact: true, punch: true });
-                if (landed && world.valid(victim)) {
-                    const away = hit.position().minus(origin);
-                    if (away.length() > 0.05) world.displace(victim, away.unit().scale(push));
+                const at = hit.position();
+                WorldFeedback.emit(world, machpunchScene, 1, at,
+                    { moment: "contact", point: [at.x(), at.y(), at.z()], target: String(victim.ref()), scale: scale, intensity: intensity }, 14);
+                const landed = impact(action, hit, machpunchId, power,
+                    { damage: damageSpec(machpunchId, "jab"), contact: true, punch: true });
+                if (landed) {
+                    if (world.valid(victim)) world.hitDisplace(victim, direction.scale(push));
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), machpunchBoomText, [Math.round(power)], 22);
+                    world.sound("cobblemon:impact.fighting", at, 14, "{}");
+                } else {
+                    world.sound("minecraft:entity.player.attack.nodamage", at, 14, "{}");
                 }
-                finish(action, hit.position(), "boom", machpunchBoomText, [Math.round(power)]);
+                boomLater(action, at, landed);
+                done(action);
                 return;
             }
-            WorldFeedback.emit(world, machpunchScene, 1, end,
-                { moment: "whiff", ring: ring, boom: boom, scale: scale, intensity: intensity }, 20);
-            finish(action, end, "whiff", machpunchWhiffText, []);
+            const at = hit.blocked() ? hit.position() : end;
+            WorldFeedback.emit(world, machpunchScene, 1, at,
+                { moment: "whiff", point: [at.x(), at.y(), at.z()], ring: ring, boom: boom, scale: scale, intensity: intensity }, 16);
+            world.sound("minecraft:entity.player.attack.sweep", at, 14, "{}");
+            WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), machpunchWhiffText, [], 22);
+            done(action);
         }
     });
 }

@@ -20,10 +20,13 @@
   "worldcombat.skill.powertrick.preference.ai.maxChase": "Trick distance",
   "worldcombat.skill.powertrick.preference.ai.maxChase.help": "The move is considered only when the threat is within this distance; larger means flipping into form earlier.",
   "worldcombat.skill.powertrick.preference.ai.minGap": "Close-range floor",
-  "worldcombat.skill.powertrick.preference.ai.minGap.help": "Below this distance the companion stops flipping and just reacts; larger means giving up the trick more often at close range.",
+  "worldcombat.skill.powertrick.preference.ai.minGap.help": "Before the first flip, a threat closer than this stops the stance being set up; larger means giving up the first flip more often at close range (flipping back is not limited by it).",
   "worldcombat.skill.powertrick.preference.ai.minEdge": "Minimum gap",
-  "worldcombat.skill.powertrick.preference.ai.minEdge.help": "The Attack/Defence gap (larger / smaller) must reach this to flip; raising it plays the trick only on extreme attackers or walls, avoiding pointless back-and-forth.",
+  "worldcombat.skill.powertrick.preference.ai.minEdge.help": "Before the first flip, the Attack/Defence gap (larger / smaller) must reach this to flip; flipping back is not limited by it. Raising it plays the trick only on extreme attackers or walls, avoiding pointless back-and-forth.",
+  "worldcombat.skill.powertrick.preference.ai.low": "Low-health threshold",
+  "worldcombat.skill.powertrick.preference.ai.low.help": "Below this health ratio counts as \"low\": in the attack form the companion flips back to defence to survive. Higher flips back sooner, lower later.",
   "effect.world_combat.powertrick_hold": "Power Trick",
   "world_combat.move.powertrick.text.trick": "Atk/Def swapped: %1$s ↔ %2$s",
-  "world_combat.move.powertrick.text.revert": "Atk/Def restored: %1$s ↔ %2$s"
+  "world_combat.move.powertrick.text.revert": "Atk/Def restored: %1$s ↔ %2$s",
+  "world_combat.move.powertrick.text.invalid": "These two forces cannot be swapped"
 }

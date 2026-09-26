@@ -29,5 +29,6 @@
   "worldcombat.skill.defog.preference.ai.leaveStation.help": "On: also leave a hold position to sweep foes.",
   "world_combat.move.defog.text.strip": "Wide open (evasion -%1$s, defence -%2$s)",
   "world_combat.move.defog.text.clear": "Blew away %1$s screen(s), %2$s field(s)",
-  "world_combat.move.defog.text.gust": "The wind swept %1$s foe(s)"
+  "world_combat.move.defog.text.gust": "The wind swept %1$s foe(s)",
+  "world_combat.move.defog.text.haze": "Blew away %1$s haze(s)"
 }

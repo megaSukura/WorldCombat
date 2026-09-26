@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.magicalleaf.summary": "散出一群会拐弯追人的叶，从四面八方一起收拢——叶会追，所以打得到。合围时从整圈散开绕到对手四周，直取时从前方小锥面直插。",
+  "worldcombat.skill.magicalleaf.summary": "散出一群会拐弯追人的叶，从四面八方一起收拢——叶会追，所以打得到。选中对手时整群叶发射时锁定它；没有选中实体时朝瞄准方向散射，叶不再另找目标。合围时从整圈散开绕到对手四周，直取时从前方小锥面直插。",
   "worldcombat.skill.magicalleaf.use.0": "散出一群会拐弯的叶追一个对手",
   "worldcombat.skill.magicalleaf.use.1": "从四面八方合围，逼对手无处可躲",
   "worldcombat.skill.magicalleaf.use.2": "在对手拉开距离时仍然咬住它",
@@ -26,6 +26,5 @@
   "worldcombat.skill.magicalleaf.preference.ai.maxChase.help": "超过这个距离就不主动散叶，先走近。越大越会在更远处先手。",
   "worldcombat.skill.magicalleaf.preference.ai.trackMovers": "追动目标",
   "worldcombat.skill.magicalleaf.preference.ai.trackMovers.help": "开启后，正在移动的敌人优先成为散叶目标（叶会拐弯拦在前面）；关闭则只按普通远程攻击排序。",
-  "world_combat.move.magicalleaf.text.fade": "叶散空",
-  "worldcombat.skill.magicalleaf.description.chase": "散出的整群叶一齐朝施放时选中的那一个对手拐弯收拢，每片叶各自结算一次伤害，同一目标可以挨到多片；若施放时目标已不在，叶群当场散空。"
+  "worldcombat.skill.magicalleaf.description.chase": "选中对手时，整群叶在发射那一刻锁定它、各自拐弯收拢，每片叶各结算一次伤害，同一目标可以挨到多片；目标提前离场时，叶保持最后的方向自然散去，不会另找目标。没有选中实体时叶朝瞄准方向散射。撞到方块会在撞点碎开。"
 }

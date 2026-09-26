@@ -1,15 +1,17 @@
 /**
  * 加农水炮 / hydrocannon 的出手方式。
  *
- * 核心念头：把水压到极限，朝目标喷出一道笔直的水柱——它把命中的活体顶开、泼透；湿透的目标再吃一发会更重。
+ * 核心念头：把水压到极限，压成一发粗短的水炮朝目标直冲——它把命中的活体顶开、泼透；湿透的目标再吃一发会更重。
  * 放完水压泄尽，施法者力竭一段时间，无法行动也无法移动。
  *
  * 三幕：
  *   起：身前水流旋转收束、水花四溅（windup，提交前）。
- *   击：提交后水柱沿瞄准方向高速射出；命中活体即按精灵数据结算 `jet`，沿水柱方向把目标顶开，
- *       并泼上共享身份 `world_combat:status/soaked` 的浸湿状态（本单元效果）；已经湿透的目标多受一份 `drenchBonus`。
- *   收：水柱落下，施法者挂上 `world_combat:status/mustrecharge` 力竭并浮字；期间 mob_effect_tick 维持滴水。
+ *   击：提交后炮口压缩喷出、与弹体断开，水炮沿锁定方向高速飞行；命中活体即按精灵数据结算 `jet`，沿水炮方向把目标顶开，
+ *       并泼上共享身份 `world_combat:status/soaked` 的浸湿状态（本单元效果）；已经湿透的目标多受一份 `drenchBonus`；
+ *       撞到方块就在墙面散水（fizzle），只打第一处接触、不穿透、不留下会继续伤人的水流。
+ *   收：水炮落下，施法者挂上 `world_combat:status/mustrecharge` 力竭并浮字；期间 mob_effect_tick 维持低伏的干燥喘息，不再持续发水。
  *
+ * 选取：`kind: "aim"`——朝方向或世界点都能放，空放也成立；AI 仍可为攻击用途推荐敌人，命中权限由命中层判定。
  * 「无法行动」由 CombatStatus.actions 门禁实现；「无法移动」由效果自带的速度归零与 rooted 补上。
  */
 namespace PokemonSkills {
@@ -41,9 +43,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "hydrocannon",
         name: "Hydro Cannon",
-        description: "把水压到极限喷出一道笔直的高压水柱：命中把目标顶开并泼得湿透，湿透的目标再吃一发更重；放完自己力竭一段时间，无法行动也无法移动。",
-        uses: ["一道笔直的高压水柱", "把目标顶开并泼得湿透", "对已经湿透的目标补一发更重的水炮"],
-        kind: "enemy",
+        description: "朝方向或点把水压到极限、压成一发粗短的高压水炮射出去：命中把目标顶开并泼得湿透，湿透的目标再吃一发更重；水炮撞上第一个活的或方块即停，不会穿透，放完自己力竭一段时间，无法行动也无法移动。",
+        uses: ["一发压缩的高压水炮", "把目标顶开并泼得湿透", "对已经湿透的目标补一发更重的水炮"],
+        kind: "aim",
         range: 11,
         maxRange: 20,
         prepare: 11,
@@ -74,6 +76,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(hydrocannonScene);
             const world = action.world();
             const origin = action.origin();
             const direction = aim(action);
@@ -87,22 +90,33 @@ namespace PokemonSkills {
             const base = Math.max(1, Math.round(p("hydrocannon", "exhaust", action)));
             const scale = radius / 0.5;
             const intensity = Math.max(0.6, Math.min(2.6, power / 150));
-            let landed = false, struck = 0;
+            const heading = [direction.x(), direction.y(), direction.z()];
+            let landed = false, struck = 0, settled = false;
+
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             sound(action, "cobblemon:move.hydropump.actor");
+            // 炮口：压缩水团一次喷出后与弹体断开，不再有连流。
+            WorldFeedback.emit(world, hydrocannonScene, 1, origin,
+                { moment: "muzzle", scale: scale, intensity: intensity, direction: heading }, 14);
+
             const flight = LivingActions.projectile(action, {
                 speed: speed,
                 range: reach + 1.5,
                 radius: radius,
                 direction: direction,
                 gravity: 0,
-                appearance: { sprite: "cobblemon:particle/generic/water/waterjet", scale: 1.2 },
+                appearance: { sprite: "cobblemon:particle/generic/water/waterjet", scale: 1.6 },
                 impact: function (current, hit, age) {
                     const scope = current.world();
+                    // 首个接触即停：命中弹体随接触结束，余下的轨迹不再有隐形水流。
+                    scenes.stop(current, "jet");
                     const at = hit.position();
                     const victim = hit.hitEntity() ? hit.target() : null;
                     if (victim === null) {
-                        WorldFeedback.emit(scope, hydrocannonScene, 1, at, { moment: "fizzle", point: [at.x(), at.y(), at.z()], scale: scale }, 24);
+                        const blockPoint = hit.blockPosition();
+                        WorldFeedback.emit(scope, hydrocannonScene, 1, blockPoint === null ? at : blockPoint,
+                            { moment: "fizzle", point: [at.x(), at.y(), at.z()], scale: scale, face: hit.blockFace() }, 24);
                         sound(current, "minecraft:entity.generic.splash");
                         return;
                     }
@@ -117,7 +131,7 @@ namespace PokemonSkills {
                     MobEffects.apply(scope, victim, hydrocannonDrenchEffect, soak, 0);
                     WorldFeedback.emit(scope, hydrocannonScene, 1, at,
                         { moment: "burst", target: String(victim.ref()), scale: scale, intensity: intensity,
-                            count: Math.round(50 + amount * 0.9), soaked: soaked, shove: shove }, 30);
+                            count: Math.round(50 + amount * 0.9), soaked: soaked, shove: shove, direction: heading }, 30);
                     if (soaked) WorldFeedback.emit(scope, hydrocannonScene, 1, at, { moment: "drench", target: String(victim.ref()), scale: scale }, 24);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), soaked ? hydrocannonDrenchText : hydrocannonHitText, [], 26);
                     sound(current, "cobblemon:move.hydropump.target");
@@ -126,11 +140,12 @@ namespace PokemonSkills {
             }, function complete(current) {
                 if (!landed) WorldFeedback.text(current.world(), current.targetPosition().plus(WorldCombat.point(0, 1.0, 0)), hydrocannonMissText, [], 24);
                 hydrocannonSpent(current, base, struck, intensity);
-                done(current);
+                finish(current);
             });
-            WorldFeedback.emit(world, hydrocannonScene, 1, origin,
+            // 弹体飞行：场景跟着真实投射物走，命中/落地即刻 stop，不拖出一条看不到伤害的水流。
+            scenes.show(action, "jet", origin,
                 { moment: "jet", projectile: flight, scale: scale, intensity: intensity, range: reach,
-                    direction: [direction.x(), direction.y(), direction.z()] }, 120);
+                    notes: Math.round(20 + power * 0.6), direction: heading });
         }
     });
 

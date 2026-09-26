@@ -1,12 +1,4 @@
-/**
- * 充能的行为，对所有战斗者一致。
- *
- * charge_up 只借共享身份 `world_combat:status/charge`，行为在这里写：任何生物带着它时，下一次电属性招式
- * 命中都会在结算前把伤害 ×2，并立刻用掉电荷——无论那一招来自哪个单元。判断走 `NativeEffects.incomingRules`
- * （原生伤害的入场结算点），按有效属性 data.type 过滤，所以属性被别的单元改成电的招式同样吃这个加成。
- * charge_mark 是同一股电的机读记录（聚电数量、电晕/放电半径、聚电速度），用来让表现按本招算出的数值画，
- * 并在用掉时知道放电该多大。电荷自然走到头、或用掉时，都从身上炸开/褪去，两条岔路画面不同。
- */
+/** 充电：提交下一次电属性攻击时消费电荷，整次动作及其派生段共享加成；特防提升独立保留。 */
 namespace PokemonSkills {
     WorldCombat.effect(chargeMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
@@ -28,24 +20,28 @@ namespace PokemonSkills {
         if (views.length) world.operation(views[0].id(), "world_combat:dispel", "{}");
     }
 
-    // 电流的兑现点：带电荷者用出电属性招式并命中时，伤害 ×2，电荷炸开。
-    NativeEffects.incomingRules.define({ id: "world_combat:move_charge/discharge", apply: function (hit) {
-        const data = hit.data;
-        if (!data || data.kind !== "move" || data.type !== "Electric") return;
-        const world = hit.world, source = hit.source;
-        if (!world.valid(source)) return;
+    const chargeExecution = "world_combat:charge/execution";
+    // 提交时选择整次电招；多段、多个对象与派生效果共用宿主来源中的这一份电。
+    MoveExecutions.committed.define({ id: "world_combat:move_charge/commit", after: ["world_combat:move_electrify/commit"], apply: function (context) {
+        const world = context.world, source = context.actor;
+        const eligible = context.metadata.some(data => String(data.type).toLowerCase() === "electric" && data.category !== "status");
         const mark = chargeMarkOf(world, source);
-        if (MobEffects.consume(world, source, chargeUp) === null) return;
-        data.amount *= 2;
+        const enabled = eligible && MobEffects.consume(world, source, chargeUp) !== null;
+        MoveExecutions.write(world, chargeExecution, { enabled: enabled });
+        if (!enabled) return;
         chargeReleaseMark(world, source);
         const body = world.observe(source);
         if (body === null) return;
-        const power = typeof data.power === "number" && isFinite(data.power) ? data.power : 0;
+        const power = context.metadata.reduce((best, data) => Math.max(best, Number(data.power) || 0), 0);
         const surge = Math.max(1, Math.min(3, power / 40));
         WorldFeedback.emit(world, chargeScene, 1, body.position(),
             { moment: "discharge", actor: String(source.ref()), surge: surge, burst: Math.round(24 * surge),
                 scale: Math.max(0.5, (mark ? mark.discharge : 0.9) / 0.9) }, 26);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), chargeSpentText, [], 24);
+    } });
+    NativeEffects.incomingRules.define({ id: "world_combat:move_charge/discharge", after: ["world_combat:execution/native", "world_combat:move_electrify/native"], apply: function (hit) {
+        const held = MoveExecutions.read(hit.world, chargeExecution);
+        if (held && held.enabled && String(hit.data.type).toLowerCase() === "electric") hit.data.amount *= 2;
     } });
 
     // 持电：每 20 刻续一次电弧，数量沿用本招算出的聚电数量；电荷没了就不播。
@@ -58,8 +54,9 @@ namespace PokemonSkills {
         if (mark === null) return;
         const body = world.observe(actor);
         if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_charge/aura/" + String(actor.ref()), chargeScene, 1, body.position(),
-            { moment: "aura", actor: String(actor.ref()), sparks: mark.sparks, aura: mark.radius, scale: Math.max(0.5, mark.radius / 0.5) }, 40);
+        const owner = world.effects(actor, chargeMark)[0];
+        if (owner) WorldFeedback.onEffect(world, owner.id(), "aura", chargeScene, 1, body.position(),
+            { moment: "aura", actor: String(actor.ref()), sparks: mark.sparks, aura: mark.radius, scale: Math.max(0.5, mark.radius / 0.5) });
     });
 
     // 自散：时间走完，电荷安静褪去；被外力解除时不播。

@@ -4,9 +4,9 @@
  * 一句话：站定后一圈风刃在身周拧起、越积越多，随后整把扇子朝身前铺开，扇面里的目标被风刃扫出成片碎屑；
  * 真切中要害时再闪一记亮白。
  * 色相家族：淡青白与近白（swirlingwind／cut／swipe 的青白偏色）＋中性尘（tinydust）＋白色强调。
- * 拍子：蓄（charge 风刃绕身累积）→ 发（release 扇面铺开）→ 切（cut 命中爆）→ 强调（crit 要害）。
- * 范围：release 用 `data.path`（与服务端 WorldGeometry.polygon 同一组扇形顶点）铺满整个扇面；扇面多大画面就是那块。
- * 运动：charge 风刃绕身旋转并向内收，release 扇面由扇心向外扫开，cut 碎屑沿切口向外爆。
+ * 拍子：蓄（charge 风刃绕身累积）→ 发（release 三段环扇按真实推进时刻依次亮起）→ 切（cut 命中爆）→ 强调（crit 要害）。
+ * 范围：release 用 `data.path`（与服务端 `razorwindBand` 同一段环扇顶点）按 `data.band` 逐段画出推进中的扇面；哪段亮就打到哪。
+ * 运动：charge 风刃绕身旋转并向内收，release 每段环扇的边缘由内向外亮起，cut 碎屑沿切口向外爆。
  * 数：`data.blades`（速度与特攻换算）绑定绕身风刃的发射量，`data.motes` 绑定扇面与命中的风屑量；
  *   `data.scale`／`data.intensity` 让散流式比集刃式更大更亮。
  * 参照节：视觉语言第二、三、四、六、七、九节。

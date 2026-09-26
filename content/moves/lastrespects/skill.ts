@@ -1,29 +1,37 @@
-/**
- * 扫墓 / lastrespects 的出手方式。
- *
- * 核心念头：为倒下的伙伴送行——施法者低头默立，悔恨从地里升起，汇成一道随行的鬼影；它一路走向对手，
- *   把这一记替倒下的伙伴扫出去。**倒下的伙伴越多，随行的鬼影越多、这一扫越重。**
- *
- * 三幕：
- *   起（windup，提交前）：低头默立，脚下按倒下伙伴数升起鬼影（只播预告）。
- *   行（march → strike）：提交后贴着地面走向目标，一道鬼影线从施法者连到目标、随两者移动。
- *   击（strike / sweep）：走到目标身前落下这一扫——送行式聚到一点重打一个；随行式在半宽 `width` 的
- *       走廊里向前扫过去，路上每个敌人各吃一记 `mourn`，被顶开 `push`。
- *   收（miss）：一路没碰到人则在终点散去。
- *
- * 与同族分开：愤怒之拳记的是**自己挨了几下**、打出一串快拳；扫墓记的是**伙伴倒了几位**，是一记
- *   替他们慢慢送上门的重扫——鬼影走在地上、数量随倒下人数增加，人越多走得越远越沉。
- */
+/** A managed native ghost flight leaves the caster free after release; its forward contact is the only damage frontier. */
 namespace PokemonSkills {
-    /** 一条走廊的四个角（起、终各两侧）；判定与外扩鬼影共用同一组顶点。 */
-    function lastrespectsLane(start: CombatPoint, end: CombatPoint, half: number): number[][] {
-        const flat = WorldCombat.point(end.x() - start.x(), 0, end.z() - start.z());
-        const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        return [start, end, end.minus(side.scale(half)), start.minus(side.scale(half))]
-            .map(function (point) { return [point.x(), point.y(), point.z()]; });
-    }
-
+    const lastrespectsFlight = "world_combat:lastrespects_flight";
+    WorldCombat.effect(lastrespectsFlight, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(lastrespectsFlight, "start", effect => {
+        const world = effect.world(), data = JSON.parse(effect.state());
+        const start = WorldCombat.point(data.position[0], data.position[1], data.position[2]);
+        const direction = WorldCombat.point(data.direction[0], data.direction[1], data.direction[2]);
+        const id = WorldEffects.projectile(effect, { origin: start, velocity: direction.scale(data.speed),
+            radius: data.width, range: data.reach, lifetime: 100, hit: "hit", complete: "complete",
+            appearance: { sprite: "world_combat_core:cobblemon/generic/fire/wisp", scale: data.width, tint: 0x9FE8D0,
+                glow: true, pierce: data.trail } });
+        WorldFeedback.onEffect(world, effect.id(), "procession", lastrespectsScene, 1, start,
+            { moment: "march", projectile: id, ghosts: data.ghosts, fallen: data.fallen, width: data.width,
+                direction: data.direction });
+    });
+    WorldCombat.effectHandler(lastrespectsFlight, "hit", effect => {
+        const hit = effect.impact(); if (!hit) return;
+        const world = effect.world(), data = JSON.parse(effect.state()), target = hit.target(), point = hit.position();
+        if (!hit.hitEntity()) {
+            WorldFeedback.emit(world, lastrespectsScene, 1, point, { moment: "miss" }, 16); return;
+        }
+        if (!target || !world.valid(target)) return;
+        const features: PokemonDamage.Features = damageFeatures(lastrespectsId, "mourn");
+        features.power = data.power; features.knockback = false;
+        const result = PokemonDamage.resolve(world, hit.source() || effect.source(), target, CobblemonCombat.moveTemplate(lastrespectsId), features);
+        if (!(result.amount > 0) || !world.projectileHit(hit, result.amount, result.metadata)) return;
+        if (world.valid(target)) world.hitDisplace(target, WorldCombat.point(data.direction[0], data.direction[1], data.direction[2]).scale(data.push));
+        WorldFeedback.emit(world, lastrespectsScene, 1, point,
+            { moment: "strike", point: [point.x(), point.y(), point.z()], ghosts: data.ghosts, fallen: data.fallen }, 24);
+        WorldFeedback.text(world, point, lastrespectsStrikeText, [data.fallen, data.ghosts], 26);
+        world.sound("minecraft:entity.evoker_fangs.attack", point, 16, "{}");
+    });
+    WorldCombat.effectHandler(lastrespectsFlight, "complete", effect => effect.end());
     define({
         freeMovement: true,
         id: lastrespectsId,
@@ -31,7 +39,7 @@ namespace PokemonSkills {
         name: "Last Respects",
         description: "为倒下的伙伴送行：从地里升起随行的鬼影，一路走向对手落下这一扫。同阵营倒下的伙伴越多，鬼影越多、这一扫越重；随行式扫过一条走廊，送行式聚到一点重打一个。",
         uses: ["伙伴倒下后替他们扫出这一记", "随行时沿路清掉一条走廊", "送行时把一个人重捶出很远"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.4,
         maxRange: 7.0,
         prepare: 7,
@@ -64,94 +72,18 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), self = action.actor();
-            const body = world.observe(self);
-            if (body === null) { done(action); return; }
-            const start = body.position();
-            const direction = aim(action);
-            const reach = Math.max(2.6, p(lastrespectsId, "reach", action));
-            const step = p(lastrespectsId, "speed", action);
-            const power = p(lastrespectsId, "mourn", action);
-            const width = p(lastrespectsId, "width", action);
-            const push = p(lastrespectsId, "push", action);
-            const ghosts = Math.max(2, Math.round(p(lastrespectsId, "ghosts", action)));
-            const fallen = lastrespectsCount(world, self);
-            const trail = !!(config && config.trail === true);
-            const scale = Math.max(0.7, Math.min(2.0, width / 0.5));
-            const intensity = Math.max(0.6, Math.min(2.6, power / 60));
-            const startRef = String(self.ref());
-            const victimRef = action.target() !== null ? String(action.target()!.ref()) : "";
-            let travelled = 0, struck = false;
-
+            const world = action.world(), direction = aim(action), start = action.origin();
+            const fallen = lastrespectsCount(world, action.actor());
+            world.effect(lastrespectsFlight, action.actor(), JSON.stringify({
+                position: [start.x(), start.y(), start.z()], direction: [direction.x(), direction.y(), direction.z()],
+                reach: p(lastrespectsId, "reach", action), speed: p(lastrespectsId, "speed", action),
+                power: p(lastrespectsId, "mourn", action), width: p(lastrespectsId, "width", action),
+                push: p(lastrespectsId, "push", action), ghosts: p(lastrespectsId, "ghosts", action),
+                fallen: fallen, trail: config && config.trail === true
+            }), 100);
             sound(action, "cobblemon:move.shadowball.actor");
-            if (fallen > 0) WorldFeedback.text(world, start.plus(WorldCombat.point(0, 1.25, 0)), lastrespectsMarchText, [fallen], 24);
-            WorldFeedback.keep(world, "lastrespects:march:" + action.id(), lastrespectsScene, 1, start,
-                { moment: "march", path: victimRef !== "" ? [startRef, victimRef] : [startRef],
-                    ghosts: ghosts, fallen: fallen, scale: scale, intensity: intensity },
-                Math.max(40, Math.round(reach / Math.max(0.05, step)) + 24));
-
-            function strike(current: CombatAction): void {
-                if (struck) return;
-                struck = true;
-                const scope = current.world();
-                const here = current.origin();
-                let landed = 0;
-                if (trail) {
-                    const span = Math.max(0.6, travelled);
-                    const region = WorldGeometry.lane(start, direction, span, width, { below: 1.4, above: 2.4 });
-                    WorldFeedback.emit(scope, lastrespectsScene, 1, start,
-                        { moment: "sweep", path: lastrespectsLane(start, here, width), width: width, ghosts: ghosts, fallen: fallen,
-                            scale: scale, intensity: intensity }, 28);
-                    WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                        if (!hurt(current, enemy, lastrespectsId, power, { damage: damageSpec(lastrespectsId, "mourn") })) return;
-                        landed++;
-                        if (scope.valid(enemy)) {
-                            const away = facts.position().minus(start);
-                            if (away.length() > 0.2) scope.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
-                        }
-                        WorldFeedback.emit(scope, lastrespectsScene, 1, facts.position(),
-                            { moment: "strike", target: String(enemy.ref()), ghosts: ghosts, fallen: fallen, scale: scale, intensity: intensity }, 24);
-                    });
-                } else {
-                    WorldFeedback.emit(scope, lastrespectsScene, 1, here,
-                        { moment: "strike", path: lastrespectsLane(start, here, width), ghosts: ghosts, fallen: fallen,
-                            scale: scale, intensity: intensity }, 26);
-                    const victim = current.target();
-                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        if (hurt(current, victim, lastrespectsId, power, { damage: damageSpec(lastrespectsId, "mourn") })) {
-                            landed++;
-                            const away = here.minus(start);
-                            if (scope.valid(victim) && away.length() > 0.2) scope.displace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
-                            WorldFeedback.emit(scope, lastrespectsScene, 1, here,
-                                { moment: "strike", target: String(victim.ref()), ghosts: ghosts, fallen: fallen, scale: scale, intensity: intensity }, 24);
-                        }
-                    }
-                }
-                if (landed > 0) {
-                    WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.25, 0)), lastrespectsStrikeText, [fallen, ghosts], 26);
-                    sound(current, "minecraft:entity.evoker_fangs.attack");
-                } else {
-                    WorldFeedback.emit(scope, lastrespectsScene, 1, here, { moment: "miss", scale: scale }, 20);
-                    WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.0, 0)), lastrespectsMissText, [], 22);
-                }
-                done(current);
-            }
-
-            function advance(current: CombatAction): void {
-                const scope = current.world(), here = current.origin();
-                const delta = direction.scale(Math.min(step, reach - travelled));
-                const moved = scope.displace(current.actor(), delta);
-                travelled += moved;
-                const victim = current.target();
-                let close = false;
-                if (victim !== null && scope.valid(victim)) {
-                    const vb = scope.observe(victim);
-                    if (vb !== null) close = vb.position().minus(here).length() <= Math.max(0.9, width + 0.5);
-                }
-                if (close || travelled >= reach || moved < 0.05) { strike(current); return; }
-                current.after(1, advance);
-            }
-            advance(action);
+            if (fallen > 0) WorldFeedback.text(world, start, lastrespectsMarchText, [fallen], 24);
+            done(action);
         }
     });
 }

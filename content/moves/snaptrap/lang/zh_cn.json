@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.snaptrap.summary": "把一只撑开的铁夹抛到选定的点上埋好，然后走开：哪个敌人先踩进来就被一口咬住钉在原地，夹齿持续磨到时长走完或被扯开。广域式更容易踩到但更轻更短；精准式埋得更久更狠。",
+  "worldcombat.skill.snaptrap.summary": "把一只撑开的铁夹抛到选定的点上埋好，然后走开：哪个敌人先踩进来就被一口咬住钉在原地，夹齿持续磨到时长走完、被扯开、被墙隔开或被清除。先咬伤失败或束缚被拒时只保留接触咬，不持续磨伤。广域式更容易踩到但更轻更短；精准式埋得更久更狠。",
   "worldcombat.skill.snaptrap.use.0": "提前在敌人必经之路上埋夹",
   "worldcombat.skill.snaptrap.use.1": "封住一条通道的一角",
   "worldcombat.skill.snaptrap.use.2": "把冲过来的目标钉住等队友来收",
@@ -31,9 +31,10 @@
   "worldcombat.skill.snaptrap.preference.ai.maxChase.help": "威胁离自己这么远以内才考虑埋夹；调小只在近处埋，调大愿意先把夹子埋到远处的路上。",
   "worldcombat.skill.snaptrap.preference.ai.lead": "提前量",
   "worldcombat.skill.snaptrap.preference.ai.lead.help": "对移动目标提前这么多刻埋夹；0 表示埋在目标当前位置，调大更适合拦冲过来的对手。",
-  "worldcombat.skill.snaptrap.preference.ai.preferMovers": "只埋移动目标",
-  "worldcombat.skill.snaptrap.preference.ai.preferMovers.help": "开启：只对正在移动或逃跑的威胁埋夹，站着不动的目标留给普通攻击；关闭：对任何范围内的威胁都愿意埋。",
+  "worldcombat.skill.snaptrap.preference.ai.preferMovers": "偏向移动目标",
+  "worldcombat.skill.snaptrap.preference.ai.preferMovers.help": "开启：更愿意把夹子埋在正在移动或逃跑的威胁前面，站着不动的目标排到后面；关闭：对所有范围内的威胁一视同仁。它是排序倾向，不会让站着不动的目标完全不被埋。",
   "world_combat.move.snaptrap.text.snap": "夹住了 %1$s 秒",
+  "world_combat.move.snaptrap.text.bite": "咬中但没能夹住",
   "world_combat.move.snaptrap.text.fade": "夹子收起",
   "world_combat.move.snaptrap.text.slip": "从夹齿里滑脱",
   "effect.world_combat.snared_jaw": "被捕兽夹夹住"

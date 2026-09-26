@@ -1,13 +1,14 @@
 /**
  * 加农光炮 / flashcannon —— 客户端表现。
  *
- * 一句话：全身的光被一束束收进身前一点、越收越亮 → 一条高速光矛沿准线射出、拖着一条亮尾 → 命中处炸开
- * 钢白冲击与火星；光矛继续穿过后面的人，每人身上再炸一下；撞墙只留散光。
- * 色相家族：冷钢白（0xBFE8FF）为主，近白（0xF2FAFF）只给矛尖与击点，钢灰（0x4E6A80）做余韵。
- * 拍子：起 converge（收光）→ 行 travel（射出）→ 击 hit（逐个命中）／散 fizzle。
- * 范围：单发直线点射（命中 100、不偏线），由 travel 的轨迹读出；贯穿时同一道矛继续向后。
- * 运动：光束 `inward` 收进矛心；光矛以服务端速度沿准线飞出并穿过目标。
- * 数：converge／hit 的光束数绑定 `data.beams`（特攻与等级换算），强度绑定 `data.intensity`（该次命中威力 / 80）。
+ * 一句话：全身的光被一束束收进身前一点、越收越亮 → 一道细长光杆沿真实速度射出、拖着一条短尾 → 命中处炸开
+ * 钢白冲击与火星；光杆继续穿过后面的人、每穿一人暗一分；撞墙只在墙面散成一片平面光屑。
+ * 色相家族：冷钢白（0xBFE8FF）为主，近白（0xF2FAFF）只给杆心与击点，钢灰（0x4E6A80）做余韵。
+ * 拍子：起 converge（收光）→ 发 muzzle（离手）→ 行 lance（光杆飞行，随真实投射物）→ 击 hit（逐个命中）／散 shatter（撞墙）。
+ * 范围：lance 的杆长由 `shape: line` 沿速度 orient 画出（判定半径不变）；贯穿时同一道杆继续向后。
+ * 运动：光束 `inward` 收进杆心；光杆以服务端速度沿准线飞出并穿过目标，`lance` 随投射物生命周期收放。
+ * 数：converge／hit 的光束数绑定 `data.beams`（特攻与等级换算），强度绑定 `data.intensity`（该次实际威力 / 80），
+ *   每穿一人同一个 key 更新一次、杆光随之变暗；shatter 按 `data.direction`（原生方块面法线）贴面铺开。
  */
 const FlashCannonDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -43,23 +44,53 @@ const FlashCannonDefinition: ParticleDefinition = {
                 }
             ]
         },
-        travel: {
-            duration: 100,
-            exit: { stop: 80, drain: 14 },
+        muzzle: {
+            duration: 14,
+            exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "lance_core", bind: "projectile", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/orb/energyorb",
-                    rate: 48, shape: { kind: "sphere", radius: 0.16 },
-                    direction: "velocity", speed: [0.0, 0.03],
-                    lifetime: [5, 10], size: [0.3, 0.05],
-                    color: 0xF2FAFF, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 48
+                    name: "muzzle_flash", bind: "source", offset: [0, 0.3, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.08, 0.3], spread: 24,
+                    lifetime: [4, 9], size: [0.1, 0.02],
+                    color: 0xF2FAFF, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 30
                 },
                 {
-                    name: "lance_trail", bind: "projectile", fit: "none",
+                    name: "muzzle_ring", bind: "source", offset: [0, 0.3, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.22 },
+                    direction: "shape", speed: [0.05, 0.15],
+                    lifetime: [6, 12], size: [0.2, 0.4],
+                    color: 0x8EA9BF, alpha: [0.6, 0], light: "world", maxParticles: 6
+                }
+            ]
+        },
+        lance: {
+            duration: 60,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "lance_rod", bind: "projectile", fit: "none", orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    shape: { kind: "line", length: 1.5 },
+                    rate: 150, direction: "shape", speed: [0.0, 0.04], spread: 6,
+                    lifetime: [3, 7], size: [0.16, 0.03],
+                    color: 0xF2FAFF, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 90
+                },
+                {
+                    name: "lance_core", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    rate: 40, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "velocity", speed: [0.0, 0.02],
+                    lifetime: [4, 8], size: [0.22, 0.04],
+                    color: 0xBFE8FF, alpha: [0.9, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "lance_tail", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    trail: { minDistance: 0.22 }, rate: 34,
-                    direction: "away", speed: [0.0, 0.06], spread: 16,
+                    trail: { minDistance: 0.24 }, rate: 40,
+                    direction: "away", speed: [0.0, 0.06], spread: 14,
                     lifetime: [5, 12], size: [0.06, 0.01],
                     color: 0xBFE8FF, alpha: [0.7, 0], light: "full", maxParticles: 120
                 }
@@ -99,26 +130,26 @@ const FlashCannonDefinition: ParticleDefinition = {
                 }
             ]
         },
-        fizzle: {
+        shatter: {
             duration: 20,
-            exit: { stop: 6, drain: 16 },
+            exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "fizzle_flash", bind: "point", offset: [0, 0.3, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    burst: { count: 10 },
-                    shape: { kind: "sphere", radius: 0.22 },
-                    direction: "outward", speed: [0.05, 0.2], spread: 30,
-                    lifetime: [6, 12], size: [0.12, 0.02],
-                    color: 0xBFE8FF, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 26
+                    name: "shatter_face", bind: "point", orient: "direction", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: { data: "beams", fallback: 16 } },
+                    shape: { kind: "ring", radius: 0.26 },
+                    direction: "outward", speed: [0.06, 0.24], spread: 10,
+                    lifetime: [6, 14], size: [0.1, 0.02],
+                    color: 0xBFE8FF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 70
                 },
                 {
-                    name: "fizzle_dust", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "none",
+                    name: "shatter_dust", bind: "point", orient: "direction", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 12 },
-                    shape: { kind: "sphere", radius: 0.24 },
-                    direction: "outward", speed: [0.04, 0.14], spread: 24, gravity: 0.03,
-                    lifetime: [8, 14], size: [0.06, 0.01],
+                    shape: { kind: "circle", radius: 0.2 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 8, gravity: 0.02,
+                    lifetime: [8, 16], size: [0.06, 0.01],
                     color: 0x8EA9BF, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]

@@ -11,10 +11,11 @@
  * 数值来源（每项读不同的精灵数据或世界事实）：
  *   beam      月华威力：特攻定球的实度、等级定拢光的熟练，月华再补一截。
  *   moonlight 月华比例：世界事实（露天×夜×少雨）算出的 0..1，画面与公式读同一份。
+ *   reach     飞行射程：独立的真实攻击距离，由特攻、等级与月华决定；与爆开半径无关。
  *   arcChance 降攻概率：特攻与等级定基础，月华再加一截，凝华式再抬一点。
  *   boltSpeed 弹速：速度定飞多快，凝华式更慢更重。
  *   collisionRadius 判定半径：身高定球的体积。
- *   burst     爆开半径：特攻定月牙铺多开。
+ *   burst     爆开半径：只作命中点的画面大小，不携带攻击距离、不造成范围伤害。
  *   rays      辉光道数：特攻与月华定，也驱动画面。
  *   dropStages 特攻下降级数：固定 1 级。
  *   focusMotes 被夺光点：特攻定，也驱动画面。
@@ -53,6 +54,17 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "月华球打在身上那一下的基础威力；特攻越高、等级越高越实，头顶的月光越盛补得越多。对手特防、相性与暴击在命中时另算。"
             }),
+        /** 射程：12 + 特攻偏移[−1.5,4] + 等级(≥25)偏移[0,2] + 月华 ×1；夹 9..19。独立于爆开半径。 */
+        reach: formula(
+            F.base(12)
+                .plus(F.stat("specialAttack").minus(60).times(0.04).clamp(-1.5, 4))
+                .plus(F.level().minus(25).times(0.1).clamp(0, 2))
+                .plus(moonblastMoonlit().times(1))
+                .clamp(9, 19).round(1),
+            "射程", {
+                unit: "格",
+                description: "月华球能飞出的最远距离；特攻越高、等级越高、月光越盛飞得越远。它单独决定打得到多远，命中的爆开半径只影响画面大小，不会扩大攻击距离或造成范围伤害。"
+            }),
         /** 月华比例：露天 × 非白天 × (1 − 雨 × 0.6)，夹 0..1。 */
         moonlight: percent(
             moonblastMoonlit(),
@@ -89,7 +101,7 @@ namespace PokemonSkills {
                 .clamp(0.6, 1.9).round(2),
             "爆开半径", {
                 unit: "格",
-                description: "月牙在命中点炸开的大小；特攻越高铺得越开，流月式的边缘更散。"
+                description: "月牙在命中点炸开的大小；特攻越高铺得越开，流月式的边缘更散。它只决定画面的月牙尺度，命中仍是单体首碰。"
             }),
         /** 辉光道数：8 + 特攻偏移[−2,4] + 月华 ×2；夹 6..16。 */
         rays: formula(
@@ -143,10 +155,10 @@ namespace PokemonSkills {
         { key: "description.0", values: ["beam"] },
         { key: "description.1", values: ["arcChance", "dropStages"] },
         { key: "description.2", values: ["moonlight"] },
-        { key: "description.3", values: ["burst"] },
+        { key: "description.3", values: ["reach"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["condense"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["condense"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["reach", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.beam"] }
     ]);
 }

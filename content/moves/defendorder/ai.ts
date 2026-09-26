@@ -4,9 +4,10 @@
  * 什么局面有意义：有威胁、且在 ai.maxChase 内时先召一队手下贴上身，再回头交战。
  *   甲壳还在身上时不再重复召唤（本招会拒绝 already-guarded）。
  * 什么时候最想出手：血量掉到 ai.panic 以下（正在挨压）时 priority 104 抢在共享次序前——防招要在被打崩之前召好；
- *   只是有威胁时退回 88，先按普通次序交战。
+ *   只是有威胁时退回 88，先按普通次序交战。最近被对手一口气清掉过两只以上手下（范围清小体）时，
+ *   估收益更保守，两个档位分别降到 92／74，但仍会在濒危时出手。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：甲壳的等级随活着的手下浮动；手下被清掉后甲壳变薄，本招在窗口内不再重召，等甲壳散尽再考虑。
+ * 放完之后：甲壳的等级随活着的手下浮动；手下被清掉后甲壳当刻变薄，本招在窗口内不再重召，等甲壳散尽再考虑。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerFact("world_combat:move_defendorder/guards", function (access, actor, _argument) {
@@ -39,8 +40,13 @@ namespace PokemonSkills {
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return 0;
-            const panic = CompanionBehavior.ai<number>(capability, "panic", 0.55);
-            return CompanionBehavior.ratio(self) < panic ? 104 : 88;
+            const panic = CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "panic", 0.55);
+            // 最近被成片清过小体：同样局面下更保守，但濒危时仍抢在共享次序前召。
+            const world = CompanionBehavior.world(context);
+            const actor = world.actor(self.ref);
+            const aoe = actor !== null && defendorderAoeRecent(world, actor);
+            if (aoe) return panic ? 92 : 74;
+            return panic ? 104 : 88;
         }
     });
 

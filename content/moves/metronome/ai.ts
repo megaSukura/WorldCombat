@@ -13,6 +13,11 @@ namespace CompanionBehavior {
         PokemonSkills.choice("bias", "挥指倾向", ["none", "near", "far"], ["全谱", "偏近身", "偏远程"])
     ]);
 
+    /** A real protection candidate available this frame (protect, endure, ...), read from the live uses. */
+    function metronomeGuarded(context: WorldBehavior.Context): boolean {
+        return CompanionBehavior.options(context, "world_combat:survive").length > 0;
+    }
+
     registerUse("metronome", {
         protocols: ["world_combat:attack"],
         available: function (context) {
@@ -21,6 +26,12 @@ namespace CompanionBehavior {
             if (status(context, self, "sleep") || status(context, self, "frozen")) return false;
             return PokemonSkills.metronomePool().length > 0;
         },
-        priority: function () { return -5; }
+        // Kept below concrete attacks. While the body is in danger with no protection candidate,
+        // a random draw is not offered as a life-saver: it drops further instead of competing with survival.
+        priority: function (context) {
+            var self = source(context);
+            if (ratio(self) < 0.3 && !metronomeGuarded(context)) return -30;
+            return -5;
+        }
     });
 }

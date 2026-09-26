@@ -21,7 +21,7 @@ namespace PokemonSkills {
         name: "Retaliate",
         description: "为倒下的同伴报仇：朝敌人直直撞过去；同伴刚倒下时，这一记翻倍、越亲近的同伴倒下打得越重，命中后这口气才泄。",
         uses: ["同伴倒下后立刻替它还手", "带着哀兵之痛打出一记翻倍直撞", "朝刚打完同伴的敌人撞过去"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.0,
         maxRange: 4.2,
         prepare: 6,
@@ -48,8 +48,14 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const world = action.sense(), actor = action.actor();
             const avenging = world.valid(actor) && CombatStatus.has(world, actor, retaliateStatus);
-            action.present("world_combat:retaliate:mourn", retaliateScene, 1, action.origin(),
-                JSON.stringify({ moment: "mourn", avenge: avenging ? 1 : 0, solemn: config && config.solemn === true, windup: prepare }));
+            const here = action.origin();
+            const origin = avenging ? retaliateOrigin(String(actor.ref())) : null;
+            const from = origin === null ? null : WorldCombat.point(origin[0], origin[1], origin[2]);
+            // 起手时把「真正倒下的那名同伴的位置」交给表现画一束短余光；不凭粒子另造一个亡灵攻击者。
+            const link = from === null ? 0 : Math.max(6, Math.min(28, Math.round(from.minus(here).length() * 1.6)));
+            const data: any = { moment: "mourn", windup: prepare, wisp: avenging ? 12 : 0, link: link };
+            if (from !== null) data.path = [[from.x(), from.y(), from.z()], "source"];
+            action.present("world_combat:retaliate:mourn", retaliateScene, 1, here, JSON.stringify(data));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -68,7 +74,7 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "minecraft:entity.iron_golem.attack");
-            movementScenes.show(action, "charge", start.position(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], streaks: streaks, avenge: avenging ? 1 : 0, scale: scale });
+            movementScenes.show(action, "charge", start.position(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()], streaks: streaks, scale: scale });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
@@ -82,11 +88,15 @@ namespace PokemonSkills {
                         const landed = impact(current, hit, retaliateId, power, { damage: damageSpec(retaliateId, "vengeance"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05 && scope.valid(victim)) scope.displace(victim, away.unit().scale(push));
+                            if (away.length() > 0.05 && scope.valid(victim)) scope.hitDisplace(victim, away.unit().scale(push));
                             if (avenging) CombatStatus.cure(scope, current.actor(), retaliateStatus);
                             WorldFeedback.emit(scope, retaliateScene, 1, hit.position(),
-                                { moment: "strike", target: String(victim.ref()), avenge: avenging ? 1 : 0, streaks: streaks, scale: scale,
+                                { moment: "strike", target: String(victim.ref()), streaks: streaks, scale: scale,
                                     intensity: Math.max(0.6, Math.min(2.2, power / 70)) }, 26);
+                            if (avenging)
+                                WorldFeedback.emit(scope, retaliateScene, 1, hit.position(),
+                                    { moment: "release", streaks: streaks, scale: scale,
+                                        intensity: Math.max(0.6, Math.min(2.2, power / 70)) }, 24);
                             sound(current, avenging ? "minecraft:entity.player.attack.strong" : "cobblemon:impact.normal");
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)),
                                 avenging ? retaliateRageText : retaliateHitText, [], 26);
@@ -99,7 +109,7 @@ namespace PokemonSkills {
                 travelled += moved;
                 if (hit.blocked() || moved < 0.05 || travelled >= length) {
                     WorldFeedback.emit(scope, retaliateScene, 1, current.origin(),
-                        { moment: "miss", avenge: avenging ? 1 : 0, scale: scale }, 20);
+                        { moment: "miss", scale: scale }, 20);
                     WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.0, 0)), retaliateMissText, [], 26);
                     sound(current, "minecraft:entity.player.attack.nodamage");
                     movementScenes.finish(current, done);

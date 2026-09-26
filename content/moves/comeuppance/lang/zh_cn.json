@@ -4,7 +4,7 @@
   "worldcombat.skill.comeuppance.use.1": "惩罚先手打中自己的远程敌人",
   "worldcombat.skill.comeuppance.use.2": "把承伤转成一记延迟的重击",
   "worldcombat.skill.comeuppance.description.0": "把最近一次来自他人的受伤记成一笔仇，新的受伤会顶掉旧账；施放时按这笔仇的 1.5 倍交给暗影追讨，当前返还 %1$s 点。只有最近 %2$s 内挨到的伤害还算数，不分物理与特殊。",
-  "worldcombat.skill.comeuppance.description.1": "追讨射程 %1$s 格，暗影每刻飞 %2$s 格、判定半径 %4$s 格；压记后隔 %3$s 秒放出会自行追向目标的暗影。返还额最多是自身最大生命的 %5$s，按固定值结算，只被目标护甲削减。",
+  "worldcombat.skill.comeuppance.description.1": "追讨射程 %1$s 格，暗影每刻飞 %2$s 格、判定半径 %4$s 格；压记后隔 %3$s 秒放出会自行追向目标的暗影。返还额最多是自身最大生命的 %5$s；它按原生固定伤害结算，会被目标护甲等原生规则削减，属性免疫则直接挡下。",
   "worldcombat.skill.comeuppance.grudge.on": "开启记仇式：记账窗口多 2 秒、追讨延迟多 0.5 秒，能从更久以前的那笔仇出发，但起手多 2 刻、冷却多 8 刻。",
   "worldcombat.skill.comeuppance.grudge.off": "关闭记仇式：更快追讨、只认眼前的账。",
   "worldcombat.skill.comeuppance.timing": "可对 %1$s 格内的敌人施放，起手 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

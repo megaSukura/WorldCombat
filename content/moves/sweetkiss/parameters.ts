@@ -23,6 +23,11 @@ namespace PokemonSkills {
     export const sweetkissSpot = "world_combat:status/confusion";
     export const sweetkissBaseChance = 0.3;
     export const sweetkissRecoilFraction = 0.055;
+    /**
+     * 反噬预算系数：自伤同时受这次实际攻击回执（damage_applied 的 actual）约束。
+     * 高最大生命的 Boss 不会被按血条白削——它挥出的这一下有多重，反噬最多就还多痛。
+     */
+    export const sweetkissRecoilBudget = 1;
 
     actionParameters.define(sweetkissId, {
         kissReach: formula(F.const(2.4).plus(F.body("width").times(0.8)).clamp(2.6, 4.0), "亲吻距离", {

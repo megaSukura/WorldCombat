@@ -21,7 +21,7 @@ Smoke.scenario("waterpulse", function (stage) {
         stage.expect(stage.casts("waterpulse", caster) > 0, "waterpulse was committed");
         stage.expect(stage.damageTo(near) > 0, "the water bead struck one foe");
         stage.expect(stage.damageTo(far) > 0, "the expanding water rings washed over the other foe nearby");
-        stage.note("混乱是约 20% 的概率（waterpulse.chance），几圈水波、耳鸣多久由速度与特攻决定", {
+        stage.note("混乱是约 20% 的概率（waterpulse.chance），水波不穿墙；几圈水波、耳鸣多久由速度与特攻决定", {
             casts: stage.casts("waterpulse", caster),
             near: Math.round(stage.damageTo(near) * 10) / 10,
             far: Math.round(stage.damageTo(far) * 10) / 10,

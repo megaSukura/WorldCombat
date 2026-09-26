@@ -1,15 +1,15 @@
 /**
  * 浸水 / soak 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者手里聚起一汪水，几道水柱沿视线冲到对手身上把它浇透，脚下炸开一圈水花、荡出几圈水纹，
- *   地面留下一小块发亮的湿泥；水干了，从它身上滴下水珠。
+ * 一句话：施法者手里聚起一汪水，几道水柱沿视线连到对象身上把它浇透，落点炸开一圈水花、荡出几圈水纹；
+ *   之后对象身上一直挂着湿漉的水膜，直到水干时滴下水珠。空点只在地上泼开一圈水。
  *
  * 色相家族：水蓝（0x4FA8E8 主体／0x5AA8E8 水流）与浅青（0xA8D8F0 雾）撑起全部层次，近白只给水花核心。
  * 层次：聚（起手，水汽在手里内收）→ 浇（水柱沿视线冲、柱身下灌＋雾）→ 落（水花炸开、水纹荡开、雾点下沉）
- *   → 干／落空。
- * 起击收：gather（聚）→ pour（浇）→ splash（落）→ dry（干）。
- * 范围：splash 的水花与水纹半径直接绑 `data.splash`（实际漫流半径），画出的那圈就是判定圈；湿泥铺在同一块地面。
- * 运动：水柱沿 source→target 的 polyline 冲过去，落点处柱身向下灌、水花向外炸开后受重力下沉，水纹贴地扩散。
+ *   → 湿（贴身水膜，随属性层结束）→ 干／空。
+ * 起击收：gather（聚）→ pour（浇）→ splash（落）→ film（湿，绑定托管效果）→ dry（干）／empty（空点）。
+ * 范围：splash 的水花与水纹半径直接绑 `data.splash`（实际漫流半径），画出的那圈就是判定圈。
+ * 运动：水柱沿 source→target 的 polyline 整条边同时采样连接两点，落点处柱身向下灌、水花向外炸开后受重力下沉。
  * 数：水流条数读 `data.streaks`（特攻派生）、水花圈数读 `data.ripples`（速度派生），水柱与雾的尺寸随 `data.scale`。
  */
 const SoakDefinition: ParticleDefinition = {
@@ -97,6 +97,51 @@ const SoakDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1], gravity: 0.006, drag: 0.92,
                     lifetime: [12, 22], size: [0.06, 0.01],
                     color: 0xC8E8FF, alpha: [0.5, 0], light: "full", maxParticles: 80
+                }
+            ]
+        },
+        film: {
+            exit: { drain: 24 },
+            emitters: [
+                {
+                    name: "sheen", bind: "target", offset: [0, 0.7, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    rate: { data: "drops", fallback: 6 }, shape: { kind: "sphere_surface", radius: 0.34 },
+                    direction: "down", speed: [0.01, 0.05], gravity: 0.014,
+                    lifetime: [12, 20], size: [0.1, 0.02],
+                    color: 0x7FC0E8, alpha: [0.45, 0], light: "world", maxParticles: 22
+                },
+                {
+                    name: "gloss", bind: "target", offset: [0, 0.6, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
+                    rate: 3, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.005, 0.02],
+                    lifetime: [16, 26], size: [0.09, 0.02], alphaMode: "sin",
+                    color: 0xC8E8FF, alpha: [0.35, 0], light: "full", maxParticles: 14
+                }
+            ]
+        },
+        empty: {
+            duration: 24,
+            exit: { stop: 10, drain: 16 },
+            emitters: [
+                {
+                    name: "puddle", bind: "point", offset: [0, 0.08, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    burst: { count: 1 },
+                    shape: { kind: "ring", radius: { data: "splash", fallback: 1.6 }, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [12, 20], size: [0.28, 0.7], sizeMode: "index",
+                    color: 0x9FD0F0, alpha: [0.5, 0], light: "full", maxParticles: 8
+                },
+                {
+                    name: "drops", bind: "point", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    burst: { count: { data: "ripples", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "outward", speed: [0.03, 0.12], gravity: 0.03,
+                    lifetime: [10, 18], size: [0.1, 0.02],
+                    color: 0x5AA8E8, alpha: [0.6, 0], light: "world", maxParticles: 30
                 }
             ]
         },

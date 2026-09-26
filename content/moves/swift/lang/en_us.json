@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.swift.summary": "A ring of star-shaped rays bursts out and each star curves after a different foe, so it never misses; scatter them across enemies or concentrate them all on the target.",
+  "worldcombat.skill.swift.summary": "A ring of star-shaped rays bursts out and each star curves after a different foe; with a foe selected, scatter across several or concentrate on one, and with none selected the stars spread along your aim. Stars make no random accuracy roll, but terrain or a long flight can still stop them.",
   "worldcombat.skill.swift.description.0": "Each star deals %1$s damage; %2$s stars burst out at once.",
   "worldcombat.skill.swift.description.1": "A star turns up to %1$s degrees per tick and flies at %2$s blocks per tick, locking foes within %3$s blocks.",
   "worldcombat.skill.swift.description.2": "Each star has a %1$s block hit radius.",
@@ -16,13 +16,12 @@
   "worldcombat.skill.swift.value.lockRange": "Lock range",
   "worldcombat.skill.swift.value.collisionRadius": "Hit radius",
   "worldcombat.skill.swift.preference.scatter": "Scatter",
-  "worldcombat.skill.swift.preference.scatter.help": "On: stars spread across every foe in range, covering more, but the chosen target takes fewer stars, with 2 ticks more windup and 3 ticks more cooldown. Off: every star rushes the chosen target, heavier and faster on one.",
+  "worldcombat.skill.swift.preference.scatter.help": "On: stars spread across every visible foe in range, covering more, but the chosen target takes fewer stars, with 2 ticks more windup and 3 ticks more cooldown. Off: every star rushes the chosen target, heavier and faster on one.",
   "worldcombat.skill.swift.preference.ai.maxChase": "Shooting range",
   "worldcombat.skill.swift.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of firing. Larger values open up further.",
   "worldcombat.skill.swift.preference.ai.spread": "Use the spread",
-  "worldcombat.skill.swift.preference.ai.spread.help": "On: firing jumps in priority when another foe stands near the target, so the scatter catches both. Off: order it like a plain ranged attack.",
+  "worldcombat.skill.swift.preference.ai.spread.help": "On: firing jumps in priority when another visible foe stands near the target, so the scatter catches both. Off: order it like a plain ranged attack (concentrate on one).",
   "worldcombat.skill.swift.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.swift.preference.ai.leaveStation.help": "On: the user may leave its post to find a line of fire; off: it only fires from where it stands.",
-  "world_combat.move.swift.text.fade": "No target to chase",
-  "worldcombat.skill.swift.description.additional": "With Scatter off every star chases the chosen target; with Scatter on the chosen target is served first, then the remaining stars are dealt out one by one to other foes within lock range, so the chosen target takes fewer."
+  "worldcombat.skill.swift.description.additional": "With a foe selected: Scatter off sends every star at the chosen target; Scatter on serves the chosen target first, then deals the rest one by one to other visible foes within lock range, so the chosen target takes fewer. With no foe selected the stars spread along your aim and never seek allies on their own. A star only stops on an entity, on a block (extinguished at the impact point), or when its range runs out."
 }

@@ -15,6 +15,9 @@
  * 与同族分开：蛮力降攻防并在地面留坑、近身战是一串快拳、十万马力用体重平地冲撞不留东西；Ｖ热焰是唯一同时
  *   压上防御、特防、速度三段的近身冲撞，也是威力最高的一记。玩家凭「前额那道 V 形火 + 撞完自己又慢又脆」认出它。
  *
+ * 选取：`kind: "aim"`——可以指向任意阵营的实体或一个世界点，也能空冲；没有选中实体时就沿瞄准方向扑出去，
+ *   撞到方块或冲满冲程就在那里收住，代价照付。伤害权限仍由命中层按敌我关系判断。
+ *
  * 配置 `nova`（尽燃式）由 `resolve` 改时序与射程、由公式改威力／弹速／降级，提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -25,7 +28,7 @@ namespace PokemonSkills {
         name: "V-create",
         description: "从前额生出灼热的火焰、把自身当弹丸撞出去：前额的火张成一个 V，整个人拖着这道 V 撞进目标怀里，命中爆成一团火。代价写在明面上——提交那一刻就把防御、特防、速度三段一起压下去，无论中与不中都照付。它是全项目威力最高的一档近身冲撞。",
         uses: ["前额起火、把自身当弹丸撞穿一个目标", "用一次最重的近身交换压血", "赌上机动性换最高一档的爆发"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.8,
         maxRange: 6.5,
         prepare: 10,
@@ -99,7 +102,8 @@ namespace PokemonSkills {
                 }
                 WorldFeedback.emit(scope, vcreateScene, 1, at,
                     { moment: "slump", flames: flames, scale: scale, intensity: intensity, landed: struck ? 1 : 0,
-                        guardLoss: guardLoss, poiseLoss: poiseLoss, speedLoss: speedLoss }, 26);
+                        guardLoss: guardLoss, poiseLoss: poiseLoss, speedLoss: speedLoss,
+                        slump: 8 + (guardLoss + poiseLoss + speedLoss) * 5 }, 26);
                 WorldFeedback.text(scope, at.plus(up), vcreateSlumpText, [guardLoss, poiseLoss, speedLoss], 30);
                 movementScenes.finish(current, done);
             }
@@ -121,7 +125,7 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, vcreateScene, 1, at,
                             { moment: "impact", target: String(victim.ref()), nova: nova ? 1 : 0, flames: flames,
                                 scale: scale, intensity: intensity }, 30);
-                        if (landed && scope.valid(victim)) scope.displace(victim, direction.scale(push));
+                        if (landed && scope.valid(victim)) scope.hitDisplace(victim, direction.scale(push));
                         scope.sound("cobblemon:impact.fire", at, 15, "{}");
                         scope.sound("minecraft:entity.generic.explode", at, 12, "{}");
                         finish(current);

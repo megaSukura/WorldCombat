@@ -65,7 +65,7 @@ namespace PokemonSkills {
         /** 出手横向间隔：0.45 + 宽度偏移[0,0.8]；夹 0.3..1.2。 */
         spread: formula(
             F.base(0.45).plus(F.body("width").minus(0.9).times(0.4).clamp(0, 0.8)).clamp(0.3, 1.2).round(2),
-            "出手间隔", { unit: "格", description: "两支龙箭从身体两侧分开的距离；体型越宽分得越开，分头时更容易各追一只。" }),
+            "出手间隔", { unit: "格", description: "两支龙箭从身体两侧分开起飞的距离；体型越宽分得越开，分头时两支的起飞线更明显。" }),
         /** 追踪转向：18 + 速度偏移[−4,8]；夹 12..30。 */
         turn: formula(
             F.base(18).plus(F.stat("speed").minus(60).times(0.1).clamp(-4, 8)).clamp(12, 30).round(0),

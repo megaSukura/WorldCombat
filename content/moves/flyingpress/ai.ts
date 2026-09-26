@@ -37,6 +37,15 @@ namespace PokemonSkills {
             let base = 22;
             if (CompanionBehavior.ai<boolean>(capability, "preferAir", true) && flyingpressFlies(context, target)) base += 18;
             if (context.facts.focus === target.ref) base += 8;
+            // 预判走得慢的目标更好压：水平速度很快的对手容易在一次校向后侧移躲开。
+            const velocity = target.velocity;
+            const speed = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : -1;
+            if (speed >= 0) base += speed < 0.05 ? 6 : speed > 0.2 ? -6 : 0;
+            // 头顶留得下真实跃起空间才值得高跳；顶棚太低的场地降权。
+            const world = CompanionBehavior.world(context);
+            const self = CompanionBehavior.source(context);
+            const probe = CompanionBehavior.point([self.point[0], self.point[1] + 1.3, self.point[2]]);
+            if (!world.freeSpace(probe, 0.7, 0.7)) base -= 8;
             return base;
         }
     });

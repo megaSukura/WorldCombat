@@ -21,7 +21,7 @@ namespace NativeLoadout {
     }
     export interface Input {
         target: string | null; point: number[]; direction: number[]; range: number; cooldown?: number; released?: boolean; metadata?: any;
-        live?: boolean; kind?: ReturnType<CombatAction["targetKind"]>;
+        live?: boolean; anchor?: number[]; kind?: ReturnType<CombatAction["targetKind"]>;
     }
     export interface ActionRuntime {
         input(action: CombatAction, input: Input): CombatAction;
@@ -58,7 +58,7 @@ namespace NativeLoadout {
         if (binding.kind === "point" || binding.kind === "motion") target = null;
         var observed = target && world.observe(target);
         if (target && !observed) return refused("target-left");
-        var at = binding.kind === "self" ? observed!.position() : input.point || (observed ? observed.position() : action.targetPosition());
+        var at = binding.kind === "self" ? observed!.position() : input.point || inheritedPoint(action, target, observed);
         var direction = input.direction || at.minus(action.origin()); if (direction.length() < .001) direction = action.direction();
         var args: { [key: string]: string | number | boolean } = {};
         Object.keys(options.arguments || {}).forEach(function (key) {
@@ -218,27 +218,33 @@ namespace NativeLoadout {
         if (target !== null && !world.valid(target)) return "target-left";
         if (kind === "self") return "";
         var reach = binding.currentRange ? Math.min(binding.range!, binding.currentRange(action)) : binding.range!;
-        if (action.targetPosition().minus(action.origin()).length() > Math.min(action.range(), reach)) return "out-of-range";
+        var rangePoint = target === null ? action.targetPosition() : world.closestPoint(target, action.origin());
+        if (rangePoint.minus(action.origin()).length() > Math.min(action.range(), reach)) return "out-of-range";
         if ((kind === "enemy" || kind === "friend") && target === null || (kind === "point" || kind === "motion") && target !== null ||
-            target !== null && (kind === "friend") !== world.friendly(target)) return "invalid-target";
+            target !== null && (kind === "enemy" || kind === "friend") && (kind === "friend") !== world.friendly(target)) return "invalid-target";
         return "";
     }
     function coordinates(value: CombatPoint): number[] { return [value.x(), value.y(), value.z()]; }
+    function inheritedPoint(action: CombatAction, target: CombatActor | null, body: CombatObservation | null): CombatPoint {
+        const original = action.target();
+        return target && original && String(target.ref()) === String(original.ref()) ? action.targetPosition()
+            : body ? body.position() : action.targetPosition();
+    }
     /** Map a chosen recipient into a borrowed move's declared input shape. Candidate selection stays with the caller. */
     export function inputFor(action: CombatAction, id: string, recipient: CombatActor | null, point?: CombatPoint): CallOptions["input"] | null {
         var binding = bindings[id]; if (!binding || !binding.kind) return null;
         var kind = binding.kind, target = kind === "self" ? action.actor() : recipient;
         var body = target && action.sense().observe(target);
         if ((kind === "self" || kind === "enemy" || kind === "friend") && !body) return null;
-        var at = point || (body ? body.position() : action.targetPosition());
+        var at = point || inheritedPoint(action, target, body);
         if (kind === "self") at = body!.position();
         var direction = at.minus(action.origin()); if (direction.length() < .001) direction = action.direction();
-        return { target: kind === "enemy" || kind === "friend" || kind === "self" ? target : null, point: at, direction: direction };
+        return { target: kind === "point" || kind === "motion" ? null : target, point: at, direction: direction };
     }
     function mapped(action: CombatAction, binding: Binding, options: CallOptions): Input {
         var input = options.input || {}, kind = binding.kind;
         var target = kind === "self" ? action.actor() : input.target === undefined ? action.target() : input.target;
-        var at = input.point || (target ? action.sense().observe(target)!.position() : action.targetPosition());
+        var at = input.point || inheritedPoint(action, target, target ? action.sense().observe(target) : null);
         if (kind === "point" || kind === "motion") target = null;
         if (kind === "self") at = action.sense().observe(action.actor())!.position();
         var direction = input.direction || at.minus(action.origin());

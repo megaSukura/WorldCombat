@@ -5,17 +5,28 @@ namespace PokemonSkills {
         return NativeEffects.effectiveStages(world, actor);
     }
 
-    /** 背离 awayFrom 退开 distance；优先瞬移到落点，失败就一步步位移。返回实际移动量。 */
-    function batonpassStep(world: CombatWorld, actor: CombatActor, awayFrom: CombatPoint, distance: number): number {
-        const body = world.observe(actor);
-        if (body === null || !(distance > 0)) return 0;
-        const from = body.position();
-        const flat = WorldCombat.point(from.x() - awayFrom.x(), 0, from.z() - awayFrom.z());
-        if (flat.length() < 0.01) return 0;
-        const step = flat.unit().scale(distance);
-        const feet = WorldCombat.point(from.x(), from.y() - body.height() / 2, from.z());
-        if (world.teleport(actor, feet.plus(step))) return distance;
-        return world.displace(actor, step);
+    export function batonpassCanGive(world: CombatWorld, actor: CombatActor, positiveOnly = false): boolean {
+        const stages = batonpassStages(world, actor);
+        return Object.keys(stages).some(stat => positiveOnly ? stages[stat] > 0 : stages[stat] !== 0) || MobEffects.native(world, actor, "beneficial").length > 0;
+    }
+    function batonpassPartner(action: CombatAction): CombatActor | null {
+        const world = action.sense(), target = action.target();
+        if (!target || !world.valid(target) || !world.friendly(target) || String(target.ref()) === String(action.actor().ref())) return null;
+        const body = world.observe(target);
+        return body && world.closestPoint(target, action.origin()).minus(action.origin()).length() <= p(batonpassId, "handoffRange", action)
+            && world.clear(action.origin(), body.position()) ? target : null;
+    }
+    function batonpassStep(action: CombatAction, awayFrom: CombatPoint, distance: number, done: (current: CombatAction) => void): void {
+        const from = action.origin(), delta = WorldCombat.point(from.x() - awayFrom.x(), 0, from.z() - awayFrom.z());
+        if (delta.length() < .01 || !(distance > 0)) { done(action); return; }
+        const direction = delta.unit(); let left = distance;
+        function step(current: CombatAction): void {
+            const moved = current.world().displace(current.actor(), direction.scale(Math.min(.35, left)));
+            left -= moved;
+            if (moved < .02 || left < .02) { done(current); return; }
+            current.after(1, step);
+        }
+        step(action);
     }
 
     define({
@@ -23,9 +34,9 @@ namespace PokemonSkills {
         id: batonpassId,
         cooldownParameter: "recharge",
         name: "Baton Pass",
-        description: "把自己的能力变化和增益递给伙伴。有后备时让后备接棒登场；否则交给身边选定的友方，自己退开。",
+        description: "把自己的能力变化和增益递给伙伴。优先交给明确选定的场内友方；未选实体时让合法后备在交棒点登场，实际转交后自己退开或收回。",
         uses: ["把攒起来的能力等级整体交给队友", "被削弱前把自己的成长交给别人带走", "残血时把接力棒递出去，自己脱身"],
-        kind: "friend",
+        kind: "aim",
         range: 5,
         maxRange: 9,
         prepare: 8,
@@ -52,13 +63,19 @@ namespace PokemonSkills {
                 range: p(batonpassId, "handoffRange", context)
             };
         },
-        ready: function (action, config) {
-            const target = action.target();
-            if (target === null) return "invalid-target";
-            if (String(target.ref()) === String(action.actor().ref())) return "no-partner";
-            return "";
+        ready: function (action) {
+            const world = action.sense(), self = action.actor();
+            if (!batonpassCanGive(world, self)) return "nothing-to-pass";
+            if (action.target() !== null) return batonpassPartner(action) ? "" : "no-partner";
+            const saved = action.data("world_combat:batonpass/reserve"), roster = partyRoster(world, self);
+            if (saved) { const expected = JSON.parse(saved); return roster.some(member => member.id === expected.id && member.slot === expected.slot && !member.active && !member.fainted && member.state === "inactive") ? "" : "reserve-changed"; }
+            return partyReserve(roster, partyActiveId(world, self)) ? "" : "no-partner";
         },
         windup: function (action, config, prepare) {
+            if (action.target() === null) {
+                const reserve = partyReserve(partyRoster(action.sense(), action.actor()), partyActiveId(action.sense(), action.actor()));
+                if (reserve) action.data("world_combat:batonpass/reserve", JSON.stringify({ slot: reserve.slot, id: reserve.id }));
+            }
             action.present("world_combat:move_batonpass:gather", batonpassScene, 1, action.origin(),
                 JSON.stringify({ moment: "gather", relay: config && config.relay ? 1 : 0 }));
             return prepare;
@@ -80,25 +97,19 @@ namespace PokemonSkills {
                 world.sound("minecraft:entity.player.attack.nodamage", origin, 14, "{}");
             }
 
-            // 真实换人：有合法后备时先让它在原地登场，把所选等级交接给它，再收回自己——交棒之后旧作用域不再使用。
-            // 没有后备时退回到既有的「把棒递给身边最近的伙伴」。
-            const reserve = partyReserve(partyRoster(world, self), partyActiveId(world, self));
-            let recipient: CombatActor | null = null, switched = false;
-            if (reserve !== null) {
+            let recipient = target === null ? null : batonpassPartner(action), switched = false;
+            if (target !== null && !recipient) { lone(); done(action); return; }
+            if (target === null) {
+                const raw = action.data("world_combat:batonpass/reserve"), expected = raw && JSON.parse(raw);
+                const reserve = expected && partyRoster(world, self).filter(member => member.id === expected.id && member.slot === expected.slot
+                    && !member.active && !member.fainted && member.state === "inactive")[0];
+                if (!reserve) { lone(); done(action); return; }
                 const sent = partySendOut(world, self, reserve.slot, partyFeet(selfBody));
-                if (sent.ok && sent.ref) {
-                    const incoming = world.actor(sent.ref);
-                    if (incoming !== null) { recipient = incoming; switched = true; }
-                }
+                if (sent.ok && sent.ref) recipient = world.actor(sent.ref);
+                if (!recipient) { lone(); done(action); return; }
+                switched = true;
             }
-            if (recipient === null) {
-                if (target === null || !world.valid(target) || !world.friendly(target) || String(target.ref()) === String(self.ref())) {
-                    lone(); done(action); return;
-                }
-                recipient = target;
-            }
-            // If the native send-out already recalled the caster, the old scope is spent; finish on the native result alone.
-            if (switched && !world.valid(self)) { done(action); return; }
+            if (!recipient || !world.valid(recipient)) { lone(); done(action); return; }
 
             // 取绝对值最大的几项，直到 `carry` 用完；没递出的等级留在自己身上。
             const stages = batonpassStages(world, self);
@@ -119,6 +130,10 @@ namespace PokemonSkills {
 
             moved += MobEffects.transfer(world, self, recipient, left);
 
+            if (moved <= 0) {
+                if (switched) partyRecall(world, recipient);
+                lone(); done(action); return;
+            }
             const path: (string | number[])[] = [String(self.ref()), String(recipient.ref())];
             WorldFeedback.emit(world, batonpassScene, 1, origin,
                 { moment: "stream", path: path, target: String(recipient.ref()), motes: motes, moved: moved, scale: scale }, 26);
@@ -135,15 +150,15 @@ namespace PokemonSkills {
             }
             if (switched) {
                 // 交棒已经完成；收回旧个体，此后只依赖原生结果，不再使用旧的动作／世界作用域。
-                partyRecall(world, self);
+                if (partyRecall(world, self)) return;
                 done(action); return;
             }
             if (ally !== null && withdraw > 0) {
                 const flat = origin.minus(ally.position());
                 const direction = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
-                batonpassStep(world, self, ally.position(), withdraw);
                 WorldFeedback.emit(world, batonpassScene, 1, origin,
                     { moment: "step", direction: [direction.x(), 0, direction.z()], withdraw: withdraw, scale: scale }, 20);
+                batonpassStep(action, ally.position(), withdraw, done); return;
             }
             done(action);
         }

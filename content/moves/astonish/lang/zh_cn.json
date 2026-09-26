@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.astonish.summary": "没有预警的一声尖叫：起手为 0 的贴脸瞬发打断，伤害很轻，却几乎必然让目标一滞；环境越暗，威力、畏缩几率与持续都更强。",
+  "worldcombat.skill.astonish.summary": "没有预警的一声尖叫：起手为 0 的贴脸瞬发打断，伤害很轻，却几乎必然让目标一滞；墙或前排会先挡下这一声，环境越暗，威力、畏缩几率与持续都更强。",
   "worldcombat.skill.astonish.description.0": "这一声造成约 %1$s 的接触伤害，惊吓判定半径 %2$s 格；环境越暗越凶。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.astonish.description.1": "最多贴近到 %1$s 格施展。",
+  "worldcombat.skill.astonish.description.1": "最多贴近到 %1$s 格施展；墙或前排的身体会先挡下这一声，墙后的人不受击。",
   "worldcombat.skill.astonish.description.2": "命中后有 %1$s 几率让目标畏缩 %2$s：先打断它当前可被中断的动作，期间它无法发动新招或进行普通攻击，但仍能移动、也仍会被击中；黑暗里几率与持续都更高。",
   "worldcombat.skill.astonish.lurk.on": "潜吓式：原地不动、几乎不扑近，但畏缩更久更易、伤得更轻、收招与冷却更长。",
   "worldcombat.skill.astonish.lurk.off": "疾呼式：稍稍扑近、出手利落、单发略高。",

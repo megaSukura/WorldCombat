@@ -12,12 +12,15 @@
  *   duration 基础 140 刻；等级 20 起每级 +1.1；体重每比 4kg 多 1kg +0.3；尖刻 ×0.75／冷嘲 ×1.35。
  *   gift     给目标的攻击等级：基础 1，尖刻 +1，等级 45 起 +1；夹在 1..3 级。
  *   recoil   反噬基数：按最大生命比例；尖刻 ×1.3／冷嘲 ×0.7。实际值再按被激怒者当前攻击放大。
+ *   recoilCap 反噬的上限：按触发这一击的实际伤害取比例，保证高生命目标不会只因为血多就被百分比白削。
  *   telegraph/recover/cooldown 由 resolve 返回：起手吃速度、收招吃体型、冷却吃等级，名字不与保留键冲突。
  * 配置 goad 双向取舍：尖刻挑衅让礼物更重、失手更易，但怒火更短、反噬更重；冷嘲热讽礼物更轻，却烧得更久、反噬更轻。
  */
 namespace PokemonSkills {
     /** 每次命中的反噬基数（最大生命比例），skill.ts 的结算读这里，保证与公式同源。 */
     export const swaggerRecoilFraction = 0.055;
+    /** 反噬占触发一击实际伤害的比例上限，skill.ts 的结算读这里。 */
+    export const swaggerRecoilCap = 0.6;
 
     actionParameters.define("swagger", {
         /** 失手几率：基础 0.28，特攻每比 60 多 0.0015，尖刻 +0.12，夹在 0.18..0.55。 */
@@ -51,6 +54,10 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("goad", text("worldcombat.skill.swagger.preference.goad")), F.const(1.3), F.const(0.7)))
                 .clamp(0.03, 0.09),
             "反噬比例", "被激怒者打中时的自伤基数（按最大生命）；实际值再按其当前攻击放大，越凶砸得越重。"),
+        /** 反噬上限：最多为触发一击实际伤害的该比例，高生命目标不会只因血多就被按比例白削。 */
+        recoilCap: percent(
+            F.base(swaggerRecoilCap),
+            "反噬上限", "反噬最多是触发这一击实际伤害的该比例；高生命目标不会再因最大生命高而被百分比削血。"),
         /** 起手：速度每比 60 快 1 少 0.04 刻，夹 5..11。 */
         telegraph: seconds(
             F.base(9).minus(F.stat("speed").minus(60).max(0).times(0.04)).clamp(5, 11).round(0),
@@ -67,7 +74,7 @@ namespace PokemonSkills {
 
     describe("swagger", [
         { key: "description.0", values: ["gift","duration"] },
-        { key: "description.1", values: ["chance","recoil"] },
+        { key: "description.1", values: ["chance","recoil","recoilCap"] },
         { key: "description.sustain", values: [] },
         { key: "description.2", values: ["telegraph", "aftermath", "wait", "range"] }
     ]);

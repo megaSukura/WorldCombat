@@ -3,11 +3,12 @@
  *
  * 原生：Normal／Physical／威力 130／命中 100／PP 10／charge（第一回合缩头提防御，第二回合攻击）／contact。
  * 世界化：念头是“缩头护住要害，再把护住的头当撞锤甩出去”。提交后先蹲桩蓄力：期间被 rooted、
- * 提升护甲与原生防御，并用共用的 GuardEffects 架住伤害；然后沿直线重撞。
- * 撞上第一个敌人时读它背后：若背后被墙/方块堵住（world.clear 不通），这一下把它钉在墙上，
- * 追加 slamBonus 并把它的节奏撞乱（rooted）；同时把目标背后的方块凿成一个临时缺口（world.terrain
+ * 提升护甲与原生防御，并用共用的 GuardEffects 架住伤害；然后沿锁定方向直线重撞，撞空就撞在墙上停住。
+ * 撞上第一个敌人时从它的身体沿冲撞方向做一次短距方块碰撞射线：只有身体真的贴到墙面才把它钉在墙上，
+ * 追加 slamBonus 并把它的节奏撞乱（rooted），同时把贴着的方块凿成一个临时缺口（world.terrain
  * 的 linger 租约，换成空气、breachTicks 后原地形自己放回）——撞锤把墙本身也当成目标，
- * 战场短时间里多出一条通路，时间一到墙就长回来，不留永久改动。
+ * 战场短时间里多出一条通路，时间一到墙就长回来，不留永久改动。墙在身后有缝隙（例如免疫位移、离墙还有
+ * 一截的 Boss）时不虚构墙撞，主击照常结算。
  *
  * 数值来源（每个参数取不同的精灵数据，公式即悬浮说明里展开的那一棵）：
  *   power           = 基础 58 + 体重 / 40（夹在 0..+24，体重单位 0.1kg；越重撞得越沉）。
@@ -90,6 +91,7 @@ namespace PokemonSkills {
         slamStun: ticks(20, "撞墙僵直", "撞墙时把目标撞乱、定住的刻数。"),
         slamBlocks: n(4, "缺口格数", " 格", "撞墙时最多把目标背后这么多格凿成缺口；缺口是临时租借的，撞不动的方块（基岩、保护区域、带方块实体的方块）不会被改动。"),
         breachTicks: ticks(120, "缺口存续", "凿出的缺口在这么多秒后自行合拢、原地形放回；这段时间里别的生物与别的招都能走过去。"),
+        // 贴墙探测的封顶距离；实际探测从目标身体中心沿冲撞方向取 半宽 + 0.3 格（两者取较小值），墙在身后有缝隙就不算。
         slamReach: hidden(1.6),
         traceAhead: hidden(2),
         minimumMove: hidden(0.05)
@@ -116,7 +118,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["distance","power"] },
         { key: "description.1", values: ["charge","armorGain","braceBlock","guardStage"] },
         { key: "description.2", values: ["speed", "collisionRadius", "push"] },
-        { key: "description.3", values: ["slamBonus","slamStun","slamBlocks","breachTicks","slamReach"] },
+        { key: "description.3", values: ["slamBonus","slamStun","slamBlocks","breachTicks"] },
         { key: "stance.quick", values: [], when: function (context) { return !read(context.detail.values, ["deep"]); } },
         { key: "stance.deep", values: [], when: function (context) { return !!read(context.detail.values, ["deep"]); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

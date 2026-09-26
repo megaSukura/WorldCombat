@@ -10,7 +10,8 @@
  *   画面里的扇面就是判定的扇面，玩家能看出站哪会被抓。
  * 运动：每道从施法者身前贴着目标铺开，方向由 `data.direction` 给出；落空那道只在空气里划一道就淡出。
  * 数：`data.dust`（物攻派生）绑定命中与余尘的发射量，`data.intensity`（每道威力派生）抬高亮度与尺寸，
- *   `data.index`／`data.cuts` 让同一趟里越到后面的爪痕略强。
+ *   `data.index`／`data.cuts` 让同一趟里越到后面的爪痕略强；`data.tilt`（左右交替派生）让每道爪痕的
+ *   roll 交替翻转，读出左右爪轮换。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FuryswipesDefinition: ParticleDefinition = {
@@ -40,7 +41,7 @@ const FuryswipesDefinition: ParticleDefinition = {
                     rate: 38,
                     burst: { count: { data: "index", fallback: 1 }, repeats: 3, interval: 3 },
                     shape: { kind: "sector", radius: { data: "reach", fallback: 2.4 }, angleDegrees: { data: "span", fallback: 130 } },
-                    direction: "shape", speed: [0.08, 0.3], spread: 14, spin: 10,
+                    direction: "shape", speed: [0.08, 0.3], spread: 14, spin: 10, roll: { data: "tilt", fallback: 0 },
                     lifetime: [6, 11], size: [0.26, 0.05], sizeMode: "index",
                     color: 0xF2F6FF, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 260
                 },

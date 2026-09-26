@@ -116,13 +116,13 @@ const HighjumpkickDefinition: ParticleDefinition = {
                     color: 0xFFF0E8, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
                 },
                 {
-                    name: "ground", bind: "target", offset: [0, 0.06, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 26 },
-                    shape: { kind: "ring", radius: { data: "hitRadius", fallback: 0.7 } },
-                    direction: "outward", speed: [0.08, 0.22], spread: 10,
-                    lifetime: [10, 17], size: [0.44, 0.1], sizeMode: "index",
-                    color: 0xD0A090, alpha: [0.6, 0], light: "world"
+                    name: "grit", bind: "target", offset: [0, 0.06, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "dust", fallback: 16 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.06, 0.2], spread: 20,
+                    lifetime: [9, 16], size: [0.08, 0.02], sizeMode: "index",
+                    color: 0x9A8A6B, alpha: [0.5, 0], gravity: 0.04, drag: 0.9, light: "world", maxParticles: 70
                 }
             ]
         },

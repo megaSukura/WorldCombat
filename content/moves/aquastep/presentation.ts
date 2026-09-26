@@ -37,9 +37,10 @@ const AquastepDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {
+                    // 整圈水纹只在真的迈出这一步时亮起（data.ring 由位移回执给出）。
                     name: "ring", bind: "source", offset: [0, 0.06, 0], height: 0.06,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.55 },
+                    burst: { count: { data: "ring", fallback: 1 } }, shape: { kind: "ring", radius: 0.55 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [9, 15], size: [0.34, 0.5],
                     color: 0x4FC3E8, alpha: [0.65, 0], light: "world", maxParticles: 20
@@ -55,15 +56,15 @@ const AquastepDefinition: ParticleDefinition = {
                 {
                     name: "foam", bind: "source", offset: [0, 0.18, 0], height: 0.18,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    rate: 14, shape: { kind: "ring", radius: 0.45 }, direction: "up", speed: [0.05, 0.18],
+                    rate: { data: "splash", fallback: 14 }, shape: { kind: "ring", radius: 0.45 }, direction: "up", speed: [0.05, 0.18],
                     gravity: 0.04, lifetime: [7, 12], size: [0.08, 0.02],
                     color: 0xBFEFFF, alpha: [0.6, 0], light: "world", maxParticles: 50
                 }
             ]
         },
         spin: {
-            duration: 30,
-            exit: { stop: 8, drain: 16 },
+            duration: 24,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
                     name: "blade", bind: "point", offset: [0, 0.35, 0],

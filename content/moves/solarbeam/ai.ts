@@ -17,21 +17,14 @@ namespace PokemonSkills {
         const reach = typeof capability.data.range === "number" ? capability.data.range : 12;
         const broad = !!(capability.data.config && capability.data.config.broad);
         const half = (broad ? 1.1 : 0.5) + (self.height === undefined ? 0 : Math.max(0, self.height - 1.4) * 0.2);
-        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-        const length = Math.sqrt(dx * dx + dz * dz);
-        if (length < 0.01) return 1;
-        const hx = dx / length, hz = dz / length;
-        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const access = CompanionBehavior.world(context), origin = CompanionBehavior.point(self.point);
+        const delta = CompanionBehavior.point(target.point).minus(origin);
+        if (delta.length() < .01) return 1;
+        const region = WorldGeometry.bodySegment(origin, origin.plus(delta.unit().scale(reach)), half);
         let count = 0;
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (other.friendly || !(other.health > 0) || !other.visible) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-            const along = ox * hx + oz * hz;
-            if (along <= 0.2 || along > reach) continue;
-            if (Math.abs(ox * hz - oz * hx) > half) continue;
-            count++;
-        }
+        WorldGeometry.selectBodies(access, region, (other, body) => {
+            if (!access.friendly(other) && body.health() > 0 && body.visible()) count++;
+        });
         return Math.max(1, count);
     }
 

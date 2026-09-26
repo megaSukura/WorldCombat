@@ -1,13 +1,17 @@
 /**
  * 快手还击 / upperhand 的客户端表现。
  *
- * 一句话：施法者掌心亮起、盯住对手刚抬起的那一手 → 一记掌根贴上去，在对手身上炸开暖金冲击、几只眩晕鸟
- * 转起来（它被按停了）；读不到先制招时只是空拍一下、掌心散去。
+ * 一句话：读到先制招时掌心亮起、一记掌根贴上去，在对手身上炸开暖金冲击、几只眩晕鸟转起来（它被按停了）；
+ *   普通原生敌人抬手的瞬间，身前立起一道窄窄的正面掌纹（ready）——接住冲击后纹路折向攻击者（fold），
+ *   窗口空过只把双掌合上（clasp），不画成功击退。
  * 色相家族：暖金（0xE0B060）与近白（0xFFF0D0）；金色只出现在掌面与命中核心。
- * 拍子：察 alert（盯住先制意图，提交前）→ 扫 sweep（横扫式扇面，可选）→ 击 strike／wide（命中）→ 空 whiff（读空）。
+ * 拍子：察 alert（读到先制意图，提交前）→ 立掌 ready（正面窗口，可选）→ 折 fold（接住）| 合 clasp（空过）
+ *   → 扫 sweep／击 strike／wide（命中）→ 空 whiff（主动踏进落空）。
  * 范围：wide 的扇面用 `data.path`（与判定同一组顶点）填成多边形，横扫覆盖到哪块地一眼可见；
+ *   ready 的正面扇区用 `data.arc` 给出总张角、用 `data.window` 决定存在时长；
  *   strike／wide 的爆环半径用 `data.scale`（判定半径 / 0.4）给出。
- * 运动：alert 的光由外向内收；sweep 的掌风沿扇面掠过；strike 的碎片由内向外炸，眩晕鸟在目标头顶绕圈。
+ * 运动：alert 的光由外向内收；ready 的掌纹朝向由 `data.direction` 决定；fold 的线折向 `data.direction`；
+ *   sweep 的掌风沿扇面掠过；strike 的碎片由内向外炸，眩晕鸟在目标头顶绕圈。
  * 数：`data.count`（掌根威力派生）决定命中碎片数，`data.power` 抬高亮度；数量与机制里的数一致。
  */
 const UpperhandDefinition: ParticleDefinition = {
@@ -33,6 +37,73 @@ const UpperhandDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.01, 0.05],
                     lifetime: [4, 7], size: [0.08, 0.02],
                     color: 0xFFF0D0, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 6
+                }
+            ]
+        },
+        ready: {
+            duration: { data: "window", fallback: 8 },
+            exit: { stop: 1, drain: 6 },
+            emitters: [
+                {
+                    name: "ward", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    shape: { kind: "sector", radius: 1.5, angleDegrees: { data: "arc", fallback: 130 } },
+                    fit: "world", orient: "heading", direction: "shape",
+                    rate: 26, speed: [0.01, 0.04],
+                    lifetime: [4, 8], size: [0.16, 0.02], sizeMode: "index",
+                    color: 0xE0B060, alpha: [0.45, 0], light: "full", bloom: 0.2, maxParticles: 120
+                },
+                {
+                    name: "palm", bind: "source", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/hollowfist",
+                    shape: { kind: "line", length: 0.75 }, fit: "world", orient: "direction", direction: "shape",
+                    rate: 8, speed: [0.01, 0.03],
+                    lifetime: [4, 8], size: [0.22, 0.05],
+                    color: 0xFFF0D0, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 24
+                }
+            ]
+        },
+        fold: {
+            duration: 12,
+            exit: { stop: 4, drain: 10 },
+            emitters: [
+                {
+                    name: "foldline", bind: "source", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    shape: { kind: "line", length: 1.3 }, fit: "world", orient: "direction", direction: "shape",
+                    burst: { count: 10 }, speed: [0.06, 0.2],
+                    lifetime: [5, 9], size: [0.2, 0.04],
+                    color: 0xFFF0D0, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 40
+                },
+                {
+                    name: "ring", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    shape: { kind: "ring", radius: 0.7 }, fit: "world", direction: "outward",
+                    burst: { count: 1 }, speed: [0.04, 0.1],
+                    lifetime: [8, 12], size: [0.34, 0.12],
+                    color: 0xC88A3E, alpha: [0.5, 0], light: "world"
+                }
+            ]
+        },
+        clasp: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "shut", bind: "source", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    shape: { kind: "sphere", radius: 0.22 }, direction: "inward",
+                    burst: { count: 8 }, speed: [0.03, 0.1],
+                    lifetime: [7, 12], size: [0.12, 0.03],
+                    color: 0xE0B060, alpha: [0.5, 0], light: "full", maxParticles: 20
+                },
+                {
+                    name: "dust", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    shape: { kind: "sphere", radius: 0.2 }, direction: "outward",
+                    burst: { count: 4 }, speed: [0.02, 0.07],
+                    lifetime: [8, 14], size: [0.14, 0.04],
+                    color: 0x9A8860, alpha: [0.35, 0], light: "world", maxParticles: 14
                 }
             ]
         },

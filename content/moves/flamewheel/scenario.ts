@@ -9,8 +9,9 @@ Smoke.scenario("flamewheel", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
-    var caster = stage.pokemon({ species: "rapidash", level: 45, moves: ["flamewheel"], at: [-3, 0, 0] });
-    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [2.5, 0, 0] });
+    // 火轮要滚到人身上才有一次踩过：对手摆在一个滚动距离之内。
+    var caster = stage.pokemon({ species: "rapidash", level: 45, moves: ["flamewheel"], at: [-1.5, 0, 0] });
+    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [1.0, 0, 0] });
     stage.hostile(caster, foe);
     stage.until(1200, function () {
         return stage.casts("flamewheel", caster) > 0 && stage.damageTo(foe) > 0;

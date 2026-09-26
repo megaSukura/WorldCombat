@@ -105,7 +105,7 @@ namespace PokemonSkills {
                             intensity: intensity, hits: Math.round(18 + power * 0.14) }, 32);
                     sound(current, "minecraft:entity.goat.ram_impact");
                     if (landed && victim !== null && scope.valid(victim)) {
-                        scope.displace(victim, direction.scale(shove));
+                        scope.hitDisplace(victim, direction.scale(shove));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), headsmashHitText, [], 30);
                     }
                     // 这一撞的反震由共享结算按 recoil 比例落在自己身上；这里只补表现。

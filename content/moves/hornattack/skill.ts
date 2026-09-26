@@ -6,10 +6,12 @@
  *
  * 三幕：
  *   起（brace，提交前）：低头、后腿蹬地、角尖压低，只播预告。
- *   顶（gore → impact，提交后）：朝前趟进 `rush` 格，沿身前 `reach` 格长、`horn` 半宽的窄线取第一个非友方
- *       结算 `gore` 接触伤害，并按 `shove` 把它顶开一记。
- *   推（push，可续几刻）：角不松，把目标沿地面以 `carrySpeed` 每刻前推，总共推走 `carry` 格；
- *       撞到墙或推到距离尽头就松角。施法者跟着一起前移，推完才收势。
+ *   顶（gore → impact，提交后）：先做一次**原生短接触**（moveSweep）——身体朝 `heading` 趟出 `rush` 格，
+ *       停在第一个实体或障碍上；只有真的接触到非友方才结算一次 `gore` 接触伤害。撞墙或空趟就收角，不越墙找原目标。
+ *   推（push，可续几刻）：角不松，**先把目标沿地面推一步**，再按目标实际被推动的位移把本体跟进同样距离；
+ *       目标被拒、撞墙或推不动（实际位移≈0）就立刻松角——绝不空推让本体穿过目标。只此一次初伤，推行过程不追加伤害。
+ *
+ * 选取：`kind: "aim"`——可点任意阵营实体或一个世界点；首敌由原生接触建立，命中权限仍由命中层判断。
  *
  * 与同族分开：超级角击是长蓄势、单点窄线的重刺（会钉住或挑飞）；头锤扑上去撞出畏缩；撞击从身侧滑过换位；
  * 角撞凭「锁住、贴着地面把目标一路推走」认出来。
@@ -29,24 +31,16 @@ namespace PokemonSkills {
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
     }
 
-    /** 角线判定与画面共用的四个顶点：从身体高度沿方向铺 `reach` 格、半宽 `half` 的窄带。 */
-    function hornattackLane(origin: CombatPoint, heading: CombatPoint, reach: number, half: number): number[][] {
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const near = origin.plus(WorldCombat.point(0, -0.05, 0));
-        const far = near.plus(heading.scale(reach));
-        const a = near.plus(side.scale(half)), b = near.minus(side.scale(half));
-        const c = far.minus(side.scale(half)), d = far.plus(side.scale(half));
-        return [[a.x(), a.y(), a.z()], [b.x(), b.y(), b.z()], [c.x(), c.y(), c.z()], [d.x(), d.y(), d.z()]];
-    }
+    function hornattackCoords(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
 
     define({
         freeMovement: true,
         id: "hornattack",
         cooldownParameter: "recharge",
         name: "Horn Attack",
-        description: "低头扎进对手、把角锁在伤口上，用整个身体把对方沿地面一路顶出去：不是一记击退，而是一段持续的地面推移。它是全组唯一「顶住推走」的一记，体重越重顶得越远。",
-        uses: ["低头一记角撞并顶开贴身目标", "把对手沿地面一路推离掩体或站位", "低消耗的近身压制"],
-        kind: "enemy",
+        description: "低头扎进对手、把角锁在伤口上，用整个身体把对方沿地面一路顶出去：先做一次原生短接触锁定首敌、只结算一次初伤，随后先把目标推走、再按它实际被推动的距离跟进本体；目标被拒或撞墙就立即松角。它是全组唯一「顶住推走」的一记，体重越重顶得越远。",
+        uses: ["低头一记原生接触顶中贴身目标", "把对手沿地面一路推离掩体或站位", "低消耗的近身压制"],
+        kind: "aim",
         range: 1.9,
         maxRange: 2.8,
         prepare: 7,
@@ -78,10 +72,10 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(hornattackScene);
             const world = action.world();
             const actor = action.actor();
             const heading = hornattackHeading(aim(action));
-            const reach = Math.max(1.5, p("hornattack", "reach", action));
             const horn = Math.max(0.26, p("hornattack", "horn", action));
             const rush = Math.max(0, p("hornattack", "rush", action));
             const shove = Math.max(0, p("hornattack", "shove", action));
@@ -94,44 +88,48 @@ namespace PokemonSkills {
             const direction = [heading.x(), heading.y(), heading.z()];
 
             const self = world.observe(actor);
-            if (self !== null && rush > 0.05) {
-                const target = action.target();
-                const body = target !== null && world.valid(target) ? world.observe(target) : null;
-                const delta = body !== null ? body.position().minus(self.position()) : heading.scale(rush);
-                const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-                const advance = Math.min(rush, Math.max(0, flat - reach * 0.6));
-                if (advance > 0.02) world.displace(actor, heading.scale(advance));
-            }
-            const moved = world.observe(actor);
-            const origin = moved === null ? action.origin() : moved.position();
+            if (self === null) { done(action); return; }
+            const start = self.position();
 
             sound(action, "minecraft:entity.hoglin.angry");
-            WorldFeedback.emit(world, hornattackScene, 1, origin,
-                { moment: "gore", path: hornattackLane(origin, heading, reach, horn), direction: direction,
-                    reach: reach, dust: dust, scale: scale, intensity: intensity }, 18);
+            // 原生短接触选首敌：身体沿 heading 趟出 rush 格，停在第一个实体或障碍，不越过墙去找原目标。
+            const swept = sweepStep(action, heading.scale(rush), horn);
+            const contact = swept.hit;
+            const afterBody = world.observe(actor);
+            const origin = afterBody === null ? start : afterBody.position();
+            const path = [hornattackCoords(start), hornattackCoords(origin)];
+            const victim = contact.hitEntity() ? contact.target() : null;
 
-            const found: CombatActor[] = [];
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, reach, horn, { below: 1.0, above: 1.6 }),
-                function (candidate) { if (found.length === 0) found.push(candidate); });
-            if (found.length === 0) {
-                WorldFeedback.emit(world, hornattackScene, 1, origin.plus(heading.scale(reach * 0.9)),
-                    { moment: "miss", dust: Math.round(dust * 0.6), scale: scale }, 18);
-                WorldFeedback.text(world, origin.plus(heading.scale(reach * 0.9)).plus(WorldCombat.point(0, 1.0, 0)), hornattackMissText, [], 20);
+            if (victim === null) {
+                const wall = contact.blockPosition();
+                const stop = wall !== null ? wall : (contact.blocked() ? contact.position() : origin);
+                WorldFeedback.emit(world, hornattackScene, 1, stop,
+                    { moment: "miss", path: path, dust: Math.round(dust * 0.6), scale: scale }, 18);
+                WorldFeedback.text(world, stop.plus(WorldCombat.point(0, 1.0, 0)), hornattackMissText, [], 20);
                 done(action);
                 return;
             }
 
-            const victim = found[0];
             const foe = world.observe(victim);
             if (foe === null) { done(action); return; }
-            if (!hurt(action, victim, "hornattack", power, { damage: damageSpec("hornattack", "gore"), contact: true })) { done(action); return; }
-            sound(action, "cobblemon:impact.normal");
-            WorldFeedback.emit(world, hornattackScene, 1, foe.position(),
-                { moment: "impact", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity }, 20);
-            WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.1, 0)), hornattackHitText, [], 20);
-            if (shove > 0.02 && world.valid(victim)) world.displace(victim, heading.scale(shove));
+            const foeActor: CombatActor = victim;
 
-            let carried = shove, settled = false;
+            WorldFeedback.emit(world, hornattackScene, 1, contact.position(),
+                { moment: "gore", path: path, direction: direction, dust: dust, scale: scale, intensity: intensity }, 18);
+            if (!hurt(action, victim, "hornattack", power, { damage: damageSpec("hornattack", "gore"), contact: true })) { done(action); return; }
+
+            sound(action, "cobblemon:impact.normal");
+            const contactBody = world.observe(victim);
+            const contactPoint = contactBody === null ? contact.position() : contactBody.position();
+            WorldFeedback.emit(world, hornattackScene, 1, contactPoint,
+                { moment: "impact", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity }, 20);
+            WorldFeedback.text(world, contactPoint.plus(WorldCombat.point(0, 1.1, 0)), hornattackHitText, [], 20);
+
+            // 初始顶退也按实际位移跟进：先动目标、再动本体。
+            const shoved = world.valid(victim) ? world.displace(victim, heading.scale(shove)) : 0;
+            let carried = shoved;
+            if (shoved > hornattackMinimum && world.valid(actor)) world.displace(actor, heading.scale(shoved));
+            let settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -140,22 +138,30 @@ namespace PokemonSkills {
                 const body = scope.observe(actor);
                 const at = body === null ? origin : body.position();
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), hornattackPushText, [Math.round(carried * 10) / 10], 24);
-                done(current);
+                scenes.finish(current, done);
             }
 
             function push(current: CombatAction, remaining: number): void {
                 const scope = current.world();
-                if (!scope.valid(victim) || remaining <= 0.02) { finish(current); return; }
+                if (!scope.valid(foeActor) || remaining <= hornattackMinimum || carried >= carry) { finish(current); return; }
                 const step = Math.min(carrySpeed, remaining);
                 const back = heading.scale(step);
-                const targetMoved = scope.displace(victim, back);
-                if (scope.valid(actor)) scope.displace(actor, back);
+                // 先把目标推一步；推不动（被拒/撞墙/抗性）就立即收角，绝不空推穿过目标。
+                const targetMoved = scope.displace(foeActor, back);
+                if (targetMoved < hornattackMinimum) { finish(current); return; }
                 carried += targetMoved;
-                const body = scope.observe(victim);
-                if (body !== null)
-                    WorldFeedback.emit(scope, hornattackScene, 1, body.position(),
-                        { moment: "push", target: String(victim.ref()), dust: Math.round(dust * 0.7), scale: scale, intensity: intensity }, 12);
-                if (targetMoved < hornattackMinimum || carried >= carry) { finish(current); return; }
+                const followed = scope.valid(actor) ? scope.displace(actor, heading.scale(targetMoved)) : 0;
+                // 本体被挡、跟不上目标的实际位移就松角，不让角与被顶目标脱开。
+                if (followed < targetMoved - 0.05) { finish(current); return; }
+                const foeBody = scope.observe(foeActor);
+                if (foeBody !== null) scenes.show(current, "pushFoe", foeBody.position(),
+                    { moment: "push", target: String(foeActor.ref()), dust: Math.round(dust * 0.7), scale: scale, intensity: intensity,
+                        moved: Math.round(targetMoved * 100) / 100 });
+                const selfBody = scope.observe(actor);
+                if (selfBody !== null) scenes.show(current, "pushBody", selfBody.position(),
+                    { moment: "push", dust: Math.round(dust * 0.7), scale: scale, intensity: intensity,
+                        moved: Math.round(followed * 100) / 100 });
+                if (remaining - step <= hornattackMinimum || carried >= carry) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { push(next, remaining - step); });
             }
 

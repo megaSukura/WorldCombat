@@ -206,24 +206,92 @@ namespace NativeEffects {
     export function windowClose(world: CombatWorld, windowId: number): boolean {
         return CombatStages.closeWindow(world, windowId);
     }
-    function transferWindow(effect: CombatEffect, definition: string): void {
-        var world = effect.world(), input = JSON.parse(effect.input()), state = JSON.parse(effect.state());
-        var target = typeof input.target === "string" ? world.actor(input.target) : null, value = state.stages && state.stages[input.stat] || 0;
-        var take = Number(input.amount);
-        if (!target || !world.valid(target) || String(target.key()) === String(effect.target().key()) || CombatStages.stats.indexOf(input.stat) < 0
-            || !isFinite(take) || take % 1 || !take || value * take <= 0 || Math.abs(take) > Math.abs(value)
-            || !CombatStages.windowAlive(world, effect.target(), state)) { effect.reject("invalid-transfer"); return; }
-        var changes: { [stat: string]: number } = {}; changes[input.stat] = take;
-        var id = NativeEffects.boostWindow(world, target, changes, effect.remaining(), state.source || "stage-transfer");
-        if (!id) { effect.reject("stage-blocked"); return; }
-        var owner: CombatStages.WindowOwner = { actor: String(effect.target().ref()), definition: definition, id: effect.id() };
-        if (!world.operation(id, input.handoff === true ? "world_combat:stage_adopt" : "world_combat:stage_owner", JSON.stringify(owner))) {
-            NativeEffects.windowClose(world, id); effect.reject("invalid-owner"); return;
+    interface StageSnapshot { view: CombatEffectView; data: string; }
+    interface StageUpdate { id: number; expected: string; data: string; }
+    interface TransferPlan { from: CombatStages.Change; to: CombatStages.Change; amount: number; }
+    const transferReceipts: { id: number; moved: number }[] = [];
+    function persistentStageView(world: CombatWorld, actor: CombatActor): CombatEffectView | null {
+        return String(actor.domain()) === "cobblemon" ? model(world, actor) : CombatStages.persistent(world, actor);
+    }
+    function stageSnapshot(world: CombatWorld, actor: CombatActor): StageSnapshot[] {
+        const base = persistentStageView(world, actor), windows = stageWindows(world, actor);
+        return (base ? [base].concat(windows) : windows).map(view => ({ view: view, data: String(view.data()) }));
+    }
+    function updatesFor(snapshots: StageSnapshot[]): StageUpdate[] {
+        return snapshots.map(value => ({ id: value.view.id(), expected: value.data, data: value.data }));
+    }
+    function updateState(updates: StageUpdate[], view: CombatEffectView, value: any): void {
+        const existing = updates.filter(item => item.id === view.id())[0], data = JSON.stringify(value);
+        if (existing) existing.data = data;
+        else updates.push({ id: view.id(), expected: String(view.data()), data: data });
+    }
+    /** Policies run once on both sides; a transfer conserves signed units, so reversed grants cannot create an opposite bonus. */
+    function transferPlan(world: CombatWorld, from: CombatActor, to: CombatActor, stat: string, amount: number): TransferPlan | null {
+        const source = CombatStages.plan(world, from, stat, -amount, "stage-transfer", "transfer", { ignoreAbility: true, transfer: true }, effectiveStage(world, from, stat));
+        if (!source.allowed || !isFinite(source.amount) || source.amount * amount >= 0) return null;
+        const target = CombatStages.plan(world, to, stat, amount, "stage-transfer", "transfer", { transfer: true }, effectiveStage(world, to, stat));
+        if (!target.allowed || !isFinite(target.amount) || target.amount * amount <= 0) return null;
+        let accepted = target.amount;
+        if (String(to.domain()) === "cobblemon") {
+            const state = read(world, to), name = ability(CobblemonCombat.pokemon(to), state);
+            if (accepted < 0 && NativeAbilities.flag(name, "statLossImmune")) return null;
+            const change = { stat: stat, amount: accepted, source: target.source, reason: target.reason };
+            NativeAbilities.apply(world, to, "boost", change, state); accepted = change.amount;
         }
-        state.stages[input.stat] = value - take;
-        if (!state.stages[input.stat]) delete state.stages[input.stat];
-        // Empty parents retain their native lease until the moved contribution's original lifetime ends.
-        effect.state(JSON.stringify(state));
+        if (!isFinite(accepted) || accepted * amount <= 0) return null;
+        const count = Math.floor(Math.min(Math.abs(amount), Math.abs(source.amount), Math.abs(accepted)));
+        return count > 0 ? { from: source, to: target, amount: amount > 0 ? count : -count } : null;
+    }
+    function publishTransfer(world: CombatWorld, from: CombatActor, to: CombatActor, stat: string, plan: TransferPlan): void {
+        plan.from.amount = -plan.amount; plan.to.amount = plan.amount;
+        if (String(to.domain()) === "cobblemon" && world.valid(to)) NativeAbilities.apply(world, to, "boosted",
+            { stat: stat, amount: plan.amount, source: plan.to.source, reason: plan.to.reason }, read(world, to));
+        CombatStages.publish(plan.from, plan.from.before, Math.max(-6, Math.min(6, plan.from.before - plan.amount)));
+        CombatStages.publish(plan.to, plan.to.before, Math.max(-6, Math.min(6, plan.to.before + plan.amount)));
+    }
+    function preparedStage(world: CombatWorld, actor: CombatActor, definition: string, data: any, ticks: number, handoff: boolean): CombatEffectView | null {
+        let id = world.effect(definition, actor, JSON.stringify(data), ticks), adopted = 0, returned = false;
+        try {
+            if (handoff && String(world.source().key()) !== String(actor.key())) {
+                adopted = CombatStages.adoptPrepared(world, id); if (!adopted) return null; id = adopted;
+            }
+            const result = world.effects(actor, definition).filter(view => view.id() === id)[0];
+            returned = !!result; return result || null;
+        } finally { if (!returned) windowClose(world, id); }
+    }
+    function transferWindow(effect: CombatEffect, definition: string): void {
+        const world = effect.world(), input = JSON.parse(effect.input()), state = JSON.parse(effect.state()), source = effect.target();
+        const target = typeof input.target === "string" ? world.actor(input.target) : null, value = state.stages && state.stages[input.stat] || 0;
+        const requested = Number(input.amount), originalId = effect.id();
+        if (!target || !world.valid(target) || String(target.key()) === String(source.key()) || CombatStages.stats.indexOf(input.stat) < 0
+            || !isFinite(requested) || requested % 1 || !requested || value * requested <= 0 || Math.abs(requested) > Math.abs(value)
+            || !CombatStages.windowAlive(world, source, state)) { effect.reject("invalid-transfer"); return; }
+        const snapshots = stageSnapshot(world, source).concat(stageSnapshot(world, target));
+        const sourceStage = effectiveStage(world, source, input.stat), targetStage = effectiveStage(world, target, input.stat), sign = requested > 0 ? 1 : -1;
+        if (sourceStage * sign <= 0) return;
+        const bounded = sign * Math.min(Math.abs(requested), Math.abs(sourceStage), sign > 0 ? 6 - targetStage : targetStage + 6);
+        const plan = transferPlan(world, source, target, input.stat, bounded); if (!plan) return;
+        const receiverDefinition = String(target.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+        const data: any = { stages: {}, source: state.source || "stage-transfer", pending: true, origin: state.origin || String(effect.source().ref()) };
+        if (!input.handoff) data.owner = { actor: String(source.ref()), definition: definition, id: originalId };
+        const receiver = preparedStage(world, target, receiverDefinition, data, effect.remaining(), input.handoff === true);
+        if (!receiver) return;
+        let committed = false;
+        try {
+            if (!CombatStages.windowAlive(world, source, state) || effectiveStage(world, source, input.stat) !== plan.from.before
+                || effectiveStage(world, target, input.stat) !== plan.to.before) return;
+            const updates = updatesFor(snapshots), donor = snapshots.filter(value => value.view.id() === originalId)[0];
+            if (!donor) return;
+            const next = JSON.parse(donor.data); next.stages[input.stat] -= plan.amount;
+            if (!next.stages[input.stat]) delete next.stages[input.stat];
+            const received = JSON.parse(String(receiver.data())); delete received.pending; received.stages[input.stat] = plan.amount;
+            updateState(updates, donor.view, next); updateState(updates, receiver, received);
+            committed = world.compareEffectStates(JSON.stringify({ updates: updates }));
+            if (!committed) return;
+            const receipt = transferReceipts.length ? transferReceipts[transferReceipts.length - 1] : null;
+            if (receipt && receipt.id === originalId) receipt.moved = Math.abs(plan.amount);
+            publishTransfer(world, source, target, input.stat, plan);
+        } finally { if (!committed) windowClose(world, receiver.id()); }
     }
     CombatStages.transferWindow = transferWindow;
     function stageWindows(world: CombatWorld, actor: CombatActor): CombatEffectView[] {
@@ -231,6 +299,37 @@ namespace NativeEffects {
         return world.effects(actor, definition).filter(function (view) {
             var state = JSON.parse(String(view.data())); return state.stages && CombatStages.windowAlive(world, actor, state);
         });
+    }
+    /** Consume positive contributions themselves. Negative entries and unrelated window fields keep their
+     * source/lifetime; expiration therefore cannot reveal a debt written to offset an earlier positive window. */
+    export function consumePositiveStages(world: CombatWorld, actor: CombatActor, source = "stage-consume"): number {
+        if (!world.valid(actor)) return 0;
+        let spent = 0;
+        CombatStages.stats.forEach(stat => {
+            const state = read(world, actor), before = effectiveStage(world, actor, stat), windows = stageWindows(world, actor);
+            const base = Math.max(0, state.stages[stat] || 0);
+            const positive = windows.map(view => ({ view: view, value: Math.max(0, JSON.parse(String(view.data())).stages[stat] || 0) }));
+            const total = positive.reduce((sum, entry) => sum + entry.value, base);
+            if (!total) return;
+            const plan = CombatStages.plan(world, actor, stat, -total, source, "consume", { ignoreAbility: true }, before);
+            if (!plan.allowed || !isFinite(plan.amount) || !(plan.amount < 0)) return;
+            const budget = Math.min(total, Math.max(0, -Math.round(plan.amount)));
+            let removed = 0;
+            if (base > 0) {
+                const take = Math.min(base, budget);
+                state.stages[stat] = base - take;
+                if (!state.stages[stat]) delete state.stages[stat];
+                write(world, actor, state);
+                removed += Math.max(0, base - Math.max(0, read(world, actor).stages[stat] || 0));
+            }
+            positive.forEach(entry => {
+                const take = Math.min(entry.value, Math.max(0, budget - removed));
+                if (take > 0 && world.operation(entry.view.id(), "world_combat:stage_edit",
+                    JSON.stringify({ stat: stat, expected: entry.value, value: entry.value - take }))) removed += take;
+            });
+            if (removed > 0) { spent += removed; CombatStages.publish(plan, before, effectiveStage(world, actor, stat)); }
+        });
+        return spent;
     }
     /** Invert selected effective stats by inverting each contributing layer in place; expiration remains unchanged. */
     export function invertStages(world: CombatWorld, actor: CombatActor, onlyGains = false): number {
@@ -251,30 +350,57 @@ namespace NativeEffects {
         });
         return count;
     }
-    /** Transfer a bounded signed amount; temporary contributions retain source, owner and remaining lifetime. */
+    /** Transfer signed units after both policies accept them. The host CAS keeps both sides atomic, and each temporary contribution retains its owner/lifetime. */
     export function transferStage(world: CombatWorld, from: CombatActor, to: CombatActor, stat: string, amount: number, handoff = false): number {
         if (!world.valid(from) || !world.valid(to) || String(from.key()) === String(to.key()) || CombatStages.stats.indexOf(stat) < 0 || !isFinite(amount) || !amount) return 0;
-        var before = effectiveStage(world, from, stat), other = effectiveStage(world, to, stat), sign = amount > 0 ? 1 : -1;
-        if (before * sign <= 0) return 0;
-        var left = Math.min(Math.abs(Math.round(amount)), Math.abs(before), sign > 0 ? 6 - other : other + 6), moved = 0;
-        var base = read(world, from).stages[stat] || 0;
-        if (base * sign > 0 && left > 0) {
-            var take = sign * Math.min(left, Math.abs(base));
-            if (boost(world, to, stat, take, false, "stage-transfer", "transfer")) {
-                boost(world, from, stat, -take, true, "stage-transfer", "transfer");
-                left -= Math.abs(take); moved += Math.abs(take);
-                if (handoff && String(to.domain()) !== "cobblemon") world.effects(to, CombatStages.definition).forEach(function (view) {
-                    world.operation(view.id(), "world_combat:stage_adopt", "{}");
-                });
+        const sign = amount > 0 ? 1 : -1, requested = Math.abs(Math.round(amount)); let moved = 0;
+        function budget(): number {
+            const own = effectiveStage(world, from, stat), other = effectiveStage(world, to, stat);
+            return own * sign <= 0 ? 0 : Math.max(0, Math.min(requested - moved, Math.abs(own), sign > 0 ? 6 - other : other + 6));
+        }
+        const donor = persistentStageView(world, from), recipient = persistentStageView(world, to);
+        const base = donor ? JSON.parse(String(donor.data())).stages[stat] || 0 : 0;
+        const recipientBase = recipient ? JSON.parse(String(recipient.data())).stages[stat] || 0 : 0;
+        const cap = sign > 0 ? 6 - recipientBase : recipientBase + 6;
+        const count = base * sign > 0 ? Math.min(budget(), Math.abs(base), cap) : 0;
+        if (donor && count > 0) {
+            const snapshots = stageSnapshot(world, from).concat(stageSnapshot(world, to));
+            const plan = transferPlan(world, from, to, stat, sign * count);
+            if (plan) {
+                const ordinary = String(to.domain()) !== "cobblemon";
+                const receiver = ordinary ? preparedStage(world, to, CombatStages.definition, { stages: {}, pending: true }, CombatStages.idleTicks, handoff) : recipient;
+                if (receiver) {
+                    let committed = false;
+                    try {
+                        if (effectiveStage(world, from, stat) === plan.from.before && effectiveStage(world, to, stat) === plan.to.before) {
+                            const updates = updatesFor(snapshots), sourceData = JSON.parse(String(donor.data()));
+                            const targetData = recipient ? JSON.parse(String(recipient.data())) : { stages: {} };
+                            sourceData.stages[stat] = base - plan.amount;
+                            if (!sourceData.stages[stat]) delete sourceData.stages[stat];
+                            targetData.stages[stat] = recipientBase + plan.amount;
+                            if (!targetData.stages[stat]) delete targetData.stages[stat];
+                            delete targetData.pending;
+                            updateState(updates, donor, sourceData);
+                            if (ordinary && recipient) { const retired = JSON.parse(String(recipient.data())); retired.pending = true; updateState(updates, recipient, retired); }
+                            updateState(updates, receiver, targetData);
+                            committed = world.compareEffectStates(JSON.stringify({ updates: updates }));
+                            if (committed) {
+                                moved += Math.abs(plan.amount);
+                                if (ordinary && recipient) windowClose(world, recipient.id());
+                                publishTransfer(world, from, to, stat, plan);
+                            }
+                        }
+                    } finally { if (ordinary && !committed) windowClose(world, receiver.id()); }
+                }
             }
         }
-        stageWindows(world, from).forEach(function (view) {
-            var value = JSON.parse(String(view.data())).stages[stat] || 0;
+        stageWindows(world, from).forEach(view => {
+            const value = JSON.parse(String(view.data())).stages[stat] || 0, left = budget();
             if (left <= 0 || value * sign <= 0) return;
-            var take = sign * Math.min(left, Math.abs(value));
-            if (world.operation(view.id(), "world_combat:stage_transfer", JSON.stringify({ target: String(to.ref()), stat: stat, amount: take, handoff: handoff }))) {
-                left -= Math.abs(take); moved += Math.abs(take);
-            }
+            const request = { id: view.id(), moved: 0 }; transferReceipts.push(request);
+            try { world.operation(view.id(), "world_combat:stage_transfer", JSON.stringify({ target: String(to.ref()), stat: stat,
+                amount: sign * Math.min(left, Math.abs(value)), handoff: handoff })); moved += request.moved; }
+            finally { transferReceipts.pop(); }
         });
         return moved;
     }
@@ -601,7 +727,7 @@ namespace NativeEffects {
             if (statusWarded(event.world(), target)) event.reject("status-ward");
         });
     }
-    WorldCombat.on("cobblemon_world_combat:incoming", "world_combat:damage_incoming", "world_combat:effects_incoming", incoming);
+    WorldCombat.on("cobblemon_world_combat:incoming", "world_combat:damage_incoming", "world_combat:effects_incoming,world_combat:status/attacks", incoming);
     WorldCombat.on("cobblemon_world_combat:applied", "world_combat:damage_applied", "", applied);
 }
 if (typeof CobblemonCombat !== "undefined") NativeEffects.install();

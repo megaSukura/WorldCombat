@@ -30,9 +30,9 @@ namespace PokemonSkills {
         id: gyroballId,
         cooldownParameter: "recharge",
         name: "Gyro Ball",
-        description: "站定把自己旋成一枚沉重的钢陀螺，把「对手比自己快多少」拧进转速，再短促地撞上去：对手越快，这一撞越沉、画面里的陀螺越大。慢的个体才把它用成重锤。",
-        uses: ["对手比自己快时的一记重撞", "贴身在原地转满再短促撞出", "用速度差把画面里的陀螺越转越大"],
-        kind: "enemy",
+        description: "站定把自己旋成一枚沉重的钢陀螺，把「对手比自己快多少」拧进转速，再短促地撞上去：对手越快，这一撞越沉、画面里的陀螺越大。慢的个体才把它用成重锤。可以瞄敌人，也可以朝任意方向或落点短冲——没点敌人时空冲不另找替代，滚到尽头或撞墙就收势。",
+        uses: ["对手比自己快时的一记重撞", "贴身在原地转满再短促撞出", "用速度差把画面里的陀螺越转越大", "朝空方向或落点短冲试探"],
+        kind: "aim",
         range: 3.0,
         maxRange: 5.2,
         prepare: 9,
@@ -58,8 +58,10 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const load = p(gyroballId, "load", action);
             action.present("gyroball:spin", gyroballScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", load: p(gyroballId, "load", action), windup: prepare,
+                JSON.stringify({ moment: "charge", load: load,
+                    scale: Math.max(0.65, Math.min(2.3, 0.65 + load * 0.28)), windup: prepare,
                     brace: config && config.brace === true }));
             return prepare;
         },
@@ -69,8 +71,6 @@ namespace PokemonSkills {
             const actor = action.actor();
             const self = world.observe(actor);
             const origin = self === null ? action.origin() : self.position();
-            const target = action.target();
-            const victim = target !== null && world.valid(target) ? world.observe(target) : null;
             const load = p(gyroballId, "load", action);
             const length = p(gyroballId, "lunge", action);
             const step = p(gyroballId, "rush", action);
@@ -78,14 +78,12 @@ namespace PokemonSkills {
             const power = p(gyroballId, "roll", action);
             const push = p(gyroballId, "push", action);
             const grains = Math.max(8, Math.round(p(gyroballId, "grains", action)));
-            const traceAhead = p(gyroballId, "traceAhead", action);
             const scale = Math.max(0.65, Math.min(2.3, 0.65 + load * 0.28));
             const intensity = Math.max(0.6, Math.min(2.3, power / 70));
-            let direction = victim !== null
-                ? WorldCombat.point(victim.position().x() - origin.x(), 0, victim.position().z() - origin.z())
-                : WorldCombat.point(action.direction().x(), 0, action.direction().z());
-            if (direction.length() < 0.05) direction = WorldCombat.point(0, 0, 1);
-            direction = direction.unit();
+            // aim 接受任意阵营实体或世界点：实体用于估算速度比，点/方向则直接当滚向；没有目标也不另找替代。
+            const aimed = aim(action);
+            let direction = WorldCombat.point(aimed.x(), 0, aimed.z());
+            direction = direction.length() < 0.05 ? WorldCombat.point(0, 0, 1) : direction.unit();
             let travelled = 0, settled = false;
 
             movementScenes.show(action, "roll", origin, { moment: "roll", load: Math.round(load * 100) / 100, scale: scale, grains: grains, intensity: intensity,
@@ -95,9 +93,12 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
-            function whiff(current: CombatAction, at: CombatPoint): void {
+            /** 空转收势；被墙挡住在真实方块面收，没撞到就在停顿处收。 */
+            function whiff(current: CombatAction, at: CombatPoint, wall: CombatImpact | null): void {
                 const scope = current.world();
-                WorldFeedback.emit(scope, gyroballScene, 1, at, { moment: "whiff", scale: scale, load: Math.round(load * 100) / 100 }, 20);
+                WorldFeedback.emit(scope, gyroballScene, 1, at, { moment: "whiff", scale: scale, load: Math.round(load * 100) / 100,
+                    wall: wall !== null && wall.blocked() ? 1 : 0,
+                    face: wall !== null && wall.blocked() ? wall.blockFace() : "" }, 20);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), gyroballMissText, [], 20);
                 sound(current, "minecraft:block.anvil.land");
                 finish(current);
@@ -107,18 +108,19 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const here = current.origin();
                 const remaining = length - travelled;
-                if (remaining <= 0.02) { whiff(current, here); return; }
+                if (remaining <= 0.02) { whiff(current, here, null); return; }
                 const delta = direction.scale(Math.min(step, remaining));
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const struck = hit.target(), at = hit.position();
+                    // 命中表现落在真实本体接触点；伤害被拒时不顶开、不谎报成功。
                     const landed = struck !== null && impact(current, hit, gyroballId, power,
                         { damage: damageSpec(gyroballId, "roll"), contact: true });
                     WorldFeedback.emit(scope, gyroballScene, 1, at,
                         { moment: "hit", target: struck ? String(struck.ref()) : "", scale: scale,
                             load: Math.round(load * 100) / 100, grains: grains, intensity: intensity }, 26);
                     if (landed && struck !== null && scope.valid(struck)) {
-                        scope.displace(struck, direction.scale(push));
+                        scope.hitDisplace(struck, direction.scale(push));
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), gyroballHitText, [Math.round(power)], 24);
                         if (load >= 1.5) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.45, 0)), gyroballSpinText, [], 24);
                     }
@@ -126,10 +128,13 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < p(gyroballId, "minimumMove", current) || travelled >= length) {
-                    whiff(current, current.origin());
+                travelled += swept.moved;
+                if (hit.blocked()) {
+                    whiff(current, hit.blockPosition() === null ? hit.position() : hit.blockPosition()!, hit);
+                    return;
+                }
+                if (swept.moved < p(gyroballId, "minimumMove", current) || travelled >= length) {
+                    whiff(current, current.origin(), null);
                     return;
                 }
                 current.after(1, advance);

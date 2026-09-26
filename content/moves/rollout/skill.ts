@@ -1,29 +1,54 @@
 /**
  * 滚动 / rollout 的出手方式。
  *
- * 核心念头：把自己缩成一颗只会越滚越重的石球——一趟一趟撞进去，每中一趟，下一趟就重一倍；
- * 中途落空或换用别的招式，石头就散成一地碎石，重新从最轻的一趟开始。
- * 它的身份是「接住」：玩家要做的是别停、别换招，并在把人顶开之后重新贴上；对手的读法是拉开距离或打断。
+ * 核心念头：把自己缩成一颗只会越滚越重的石球——一趟一趟真实地滚进目标，每滚中一趟，下一趟就重一倍；
+ * 中途撞墙、落空或换用别的招式，石头就散成一地碎石，重新从最轻的一趟开始。
+ * 它的身份是「接住」：玩家要做的是别停、别换招，并在把人顶开之后重新贴上；对手的读法是拉开距离、绕墙或打断。
  *
  * 两幕：
  *   起（windup，提交前）：压低身体蜷成石球，脚边碎石向里聚拢；层数越高聚得越密（`stage` 进载荷）。
- *   滚（execute，提交后）：朝目标垫前 `lunge` 格，沿身前一条与判定同顶点的短走廊滚过去——走廊里的
- *       非友方各吃一记 `roll` 接触撞击，首个目标被顶开 `push` 格，石球弹回 `recoil` 格。
- *       命中即把连滚层数抬一级（`roll` 下一趟按 2^层数 变重），并续上 `window` 的连滚窗口；
- *       落空则当场清空层数；接满 `chain` 趟就自然收束，余势散尽。
+ *   滚（execute，提交后）：逐刻沿当前瞄准滚行 `step` 格，每刻最多朝瞄准转 `turn` 度（重滚更少，惯性更大），
+ *       直到真实首碰或滚满 `reach`。判定、表现与前沿使用同一个身体位置与方向：`sweepStep` 用原生身体扫过，
+ *       第一处实体接触才结算一段 `roll`——真实撞中且命中率通过时把人顶开 `push` 格、从真实碰撞点弹回 `recoil` 格；
+ *       撞到实墙就收束，什么都没碰到就是空滚。命中即把连滚层数抬一级（`roll` 下一趟按 2^层数 变重）并续上
+ *       `window` 的窗口；撞墙/落空/擦偏则当场清空层数；接满 `chain` 趟就自然收束，余势散尽。
  *
  * 与同族分开：冰球是**一次出手内**发射、会追踪回头的冰弹；铁滚轮要吃掉脚下场地且只碾一趟；
- *   滚动是唯一**跨出手逐趟变重**、靠把人顶开来逼你重新贴上的石球。连斩也跨出手，但它翻的是刀数，滚动翻的是单趟威力。
+ *   滚动是唯一**跨出手逐趟变重**、真实滚行有惯性、靠把人顶开来逼你重新贴上的石球。连斩也跨出手，但它翻的是刀数，滚动翻的是单趟威力。
  */
 namespace PokemonSkills {
-    /** 一趟滚击扫过的走廊四个角：origin 起、朝 direction 长 length、半宽 half；判定与表现共用。 */
-    function rolloutLane(origin: CombatPoint, direction: CombatPoint, length: number, half: number): number[][] {
-        const forward = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(heading.scale(length));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))]
-            .map(function (point) { return [point.x(), point.y(), point.z()]; });
+    /** 当刻自由瞄准：按住技能键时读控制点（逐刻可转向），AI 或未声明的输入回退到动作选点。 */
+    function rolloutAim(action: CombatAction): CombatPoint {
+        try {
+            const parsed = JSON.parse(action.control());
+            const samples = parsed && parsed.samples;
+            if (samples && samples.length && samples[0].point && samples[0].point.length === 3)
+                return WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]);
+        } catch (error) { }
+        try { return action.targetPosition(); } catch (error) { }
+        return action.origin().plus(action.direction().scale(2));
+    }
+    /** 每刻把滚动方向朝瞄准方向转，最多 `degrees` 度；这就是石球的惯性，不能瞬间拐回。 */
+    function rolloutTurn(from: CombatPoint, to: CombatPoint, degrees: number): CombatPoint {
+        const a = WorldCombat.point(from.x(), 0, from.z());
+        const b = WorldCombat.point(to.x(), 0, to.z());
+        if (a.length() < 1e-6) return b.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : b.unit();
+        if (b.length() < 1e-6) return a.unit();
+        const unitA = a.unit(), unitB = b.unit();
+        const dot = Math.max(-1, Math.min(1, unitA.x() * unitB.x() + unitA.z() * unitB.z()));
+        const angle = Math.acos(dot) * 180 / Math.PI;
+        if (angle <= 1e-3 || angle <= degrees) return unitB;
+        const amount = Math.max(0, Math.min(1, degrees / angle));
+        return unitA.scale(1 - amount).plus(unitB.scale(amount)).unit();
+    }
+    /** 起滚方向：优先当刻瞄准，其次动作选点；都没有就沿原方向。 */
+    function rolloutHeading(action: CombatAction, origin: CombatPoint): CombatPoint {
+        const delta = rolloutAim(action).minus(origin);
+        const flat = WorldCombat.point(delta.x(), 0, delta.z());
+        if (flat.length() > 0.05) return flat.unit();
+        const direction = action.direction();
+        const fallback = WorldCombat.point(direction.x(), 0, direction.z());
+        return fallback.length() > 1e-6 ? fallback.unit() : WorldCombat.point(0, 0, 1);
     }
 
     define({
@@ -31,9 +56,9 @@ namespace PokemonSkills {
         id: rolloutId,
         cooldownParameter: "recharge",
         name: "Rollout",
-        description: "一趟接一趟地缩成石球滚进目标：每命中一趟，下一趟就更重（最多 5 趟），命中还会把人顶开，所以想接着滚就得重新贴上。落空或换用任何别的招式都会把层数清空。",
-        uses: ["一趟一趟地滚进目标身上", "每命中一趟，下一趟翻倍变重", "落空或换招就把层数清空"],
-        kind: "enemy",
+        description: "一趟接一趟地缩成石球滚进目标：石球有惯性，只能缓慢朝瞄准转向；每真实撞中一趟，下一趟就更重（最多 5 趟），撞中还会把人顶开，所以想接着滚就得重新贴上。撞墙、擦偏或换用任何别的招式都会把层数清空。",
+        uses: ["一趟一趟地滚进目标身上", "每真实撞中一趟，下一趟翻倍变重", "石球惯性大，只能缓慢转向；撞墙或落空就散架清层"],
+        kind: "aim",
         range: 3.4,
         maxRange: 5.2,
         prepare: 6,
@@ -69,16 +94,15 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const self = world.observe(actor);
-            const target = action.target();
-            if (self === null || target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            if (self === null) { done(action); return; }
             const reach = p(rolloutId, "reach", action);
             const radius = p(rolloutId, "radius", action);
-            const lunge = p(rolloutId, "lunge", action);
             const power = p(rolloutId, "roll", action);
             const push = p(rolloutId, "push", action);
             const recoil = p(rolloutId, "recoil", action);
             const accuracy = p(rolloutId, "accuracy", action);
+            const step = Math.max(0.15, p(rolloutId, "step", action));
+            const turn = Math.max(1, p(rolloutId, "turn", action));
             const chain = Math.max(3, Math.round(p(rolloutId, "chain", action)));
             const windowTicks = Math.max(20, Math.round(p(rolloutId, "window", action)));
             const grains = Math.max(6, Math.round(p(rolloutId, "grains", action)));
@@ -86,78 +110,104 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.6, power / 12));
             const scale = Math.max(0.7, Math.min(2.2, (radius + stage * 0.08) / rolloutReference));
             const up = WorldCombat.point(0, 1.1, 0);
+            const scenes = WorldFeedback.actionScenes(rolloutScene);
+            let direction = rolloutHeading(action, self.position());
+            let travelled = 0;
+            let settled = false;
 
-            const victim = world.observe(target);
-            const start = self.position();
-            let direction = victim !== null
-                ? WorldCombat.point(victim.position().x() - start.x(), 0, victim.position().z() - start.z())
-                : action.direction();
-            if (direction.length() < 0.05) direction = WorldCombat.point(0, 0, 1);
-            direction = direction.unit();
-            const distance = victim !== null ? victim.position().minus(start).length() : 0;
-
-            // 垫前一步：最多贴到判定边缘，避免冲过头。
-            const forward = Math.min(lunge, Math.max(0, distance - radius - 0.25));
-            if (forward > 0.05) world.displace(actor, direction.scale(forward));
-            const moved = world.observe(actor);
-            const origin = moved !== null ? moved.position() : start;
-            const lane = Math.max(radius + 0.35, forward + radius + 0.4);
-            if (victim !== null) action.face(victim.position(), 18, 18);
-
-            WorldFeedback.emit(world, rolloutScene, 1, origin,
-                { moment: "roll", stage: stage, power: Math.round(power * 10) / 10, path: rolloutLane(origin, direction, lane, radius),
-                    direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity, grains: grains }, 20);
-            sound(action, "minecraft:block.stone.hit");
-
-            let landed = false;
-            let hitPoint: any = null;
-            if (world.random() < accuracy) {
-                WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, direction, lane, radius, { below: 1.2, above: 2.2 }),
-                    function (victimActor, facts) {
-                        if (landed) return;
-                        if (hurt(action, victimActor, rolloutId, power, { damage: damageSpec(rolloutId, "roll"), contact: true })) {
-                            landed = true;
-                            hitPoint = facts.position();
-                            if (world.valid(victimActor)) world.displace(victimActor, WorldCombat.point(direction.x(), 0, direction.z()).scale(push));
-                        }
-                    });
-            }
-
-            const landedAt: CombatPoint = hitPoint;
-            if (landed) {
-                WorldFeedback.emit(world, rolloutScene, 1, landedAt,
-                    { moment: "hit", target: targetRef, stage: stage, power: Math.round(power * 10) / 10, grains: grains, scale: scale, intensity: intensity }, 24);
-                WorldFeedback.text(world, landedAt.plus(up), rolloutHitText, [Math.round(power)], 26);
-                sound(action, "cobblemon:impact.rock");
-                if (recoil > 0.05) world.displace(actor, direction.scale(-Math.min(recoil, forward + 0.2)));
-            } else {
-                WorldFeedback.emit(world, rolloutScene, 1, origin.plus(direction.scale(radius + 0.5)),
-                    { moment: "whiff", stage: stage, scale: scale }, 20);
-                WorldFeedback.text(world, origin.plus(up), rolloutMissText, [], 24);
-                sound(action, "minecraft:block.stone.break");
-            }
-
-            const settled = world.observe(actor);
-            const where = settled !== null ? settled.position() : origin;
-            const held = MobEffects.read(world, actor, rolloutMomentum);
-            if (landed) {
-                const next = stage + 1;
-                if (held !== null) world.removeMobEffect(actor, held.id(), held.key());
-                if (next >= chain) {
-                    WorldFeedback.emit(world, rolloutScene, 1, where, { moment: "cap", stage: next, chain: chain, scale: 1.8, intensity: intensity }, 26);
-                    WorldFeedback.text(world, where.plus(up), rolloutCapText, [chain], 28);
-                    sound(action, "minecraft:entity.generic.big_fall");
-                } else {
-                    MobEffects.apply(world, actor, rolloutMomentum, windowTicks, next);
-                    WorldFeedback.emit(world, rolloutScene, 1, where,
-                        { moment: "rise", stage: next, power: Math.round(power * 10) / 10, grains: grains, scale: 0.7 + next * 0.3 }, 24);
-                    WorldFeedback.text(world, where.plus(up), rolloutRiseText, [next], 26);
-                    sound(action, "minecraft:entity.player.attack.strong");
+            function finishRoll(current: CombatAction, landed: boolean): void {
+                if (settled) return;
+                settled = true;
+                const scope = current.world();
+                scenes.stop(current, "roll");
+                const body = scope.observe(actor);
+                const where = body !== null ? body.position() : current.origin();
+                const held = MobEffects.read(scope, actor, rolloutMomentum);
+                if (landed) {
+                    const next = stage + 1;
+                    if (held !== null) scope.removeMobEffect(actor, held.id(), held.key());
+                    if (next >= chain) {
+                        WorldFeedback.emit(scope, rolloutScene, 1, where, { moment: "cap", stage: next, chain: chain, scale: 1.8, intensity: intensity }, 26);
+                        WorldFeedback.text(scope, where.plus(up), rolloutCapText, [chain], 28);
+                        sound(current, "minecraft:entity.generic.big_fall");
+                    } else {
+                        MobEffects.apply(scope, actor, rolloutMomentum, windowTicks, next);
+                        WorldFeedback.emit(scope, rolloutScene, 1, where,
+                            { moment: "rise", stage: next, power: Math.round(power * 10) / 10, grains: grains, scale: 0.7 + next * 0.3 }, 24);
+                        WorldFeedback.text(scope, where.plus(up), rolloutRiseText, [next], 26);
+                        sound(current, "minecraft:entity.player.attack.strong");
+                    }
+                } else if (held !== null && scope.removeMobEffect(actor, held.id(), held.key())) {
+                    WorldFeedback.emit(scope, rolloutScene, 1, where, { moment: "drop" }, 22);
                 }
-            } else if (held !== null && world.removeMobEffect(actor, held.id(), held.key())) {
-                WorldFeedback.emit(world, rolloutScene, 1, where, { moment: "drop" }, 22);
+                scenes.finish(current, done);
             }
-            done(action);
+
+            function stopEmpty(current: CombatAction, origin: CombatPoint): void {
+                const scope = current.world();
+                WorldFeedback.emit(scope, rolloutScene, 1, origin.plus(direction.scale(radius + 0.4)),
+                    { moment: "whiff", stage: stage, scale: scale }, 20);
+                WorldFeedback.text(scope, origin.plus(up), rolloutMissText, [], 24);
+                sound(current, "minecraft:block.stone.break");
+                finishRoll(current, false);
+            }
+
+            function roll(current: CombatAction): void {
+                if (settled) return;
+                const scope = current.world();
+                const body = scope.observe(actor);
+                if (body === null) { finishRoll(current, false); return; }
+                direction = rolloutTurn(direction, rolloutAim(current).minus(body.position()), turn);
+                const origin = body.position();
+                const leg = Math.min(step, Math.max(0, reach - travelled));
+                if (leg <= 0.001) { stopEmpty(current, origin); return; }
+                scenes.show(current, "roll", origin, { moment: "roll", stage: stage, scale: scale, intensity: intensity,
+                    grains: grains, travelled: travelled, turn: turn, rim: 0.16 + stage * 0.07,
+                    direction: [direction.x(), direction.y(), direction.z()] });
+                const swept = sweepStep(current, direction.scale(leg), radius), hit = swept.hit;
+                let progressed = swept.moved;
+
+                if (hit.hitEntity()) {
+                    const victim = hit.target();
+                    const hostile = victim !== null && scope.valid(victim) && !scope.friendly(victim);
+                    if (hostile && scope.random() < accuracy) {
+                        const landed = hurt(current, victim, rolloutId, power, { damage: damageSpec(rolloutId, "roll"), contact: true });
+                        if (landed) {
+                            if (scope.valid(victim)) scope.hitDisplace(victim, direction.scale(push));
+                            WorldFeedback.emit(scope, rolloutScene, 1, hit.position(),
+                                { moment: "hit", stage: stage, power: Math.round(power * 10) / 10, grains: grains, scale: scale, intensity: intensity }, 24);
+                            WorldFeedback.text(scope, hit.position().plus(up), rolloutHitText, [Math.round(power)], 26);
+                            sound(current, "cobblemon:impact.rock");
+                            const back = Math.min(recoil, travelled + progressed);
+                            if (back > 0.05) scope.displace(actor, direction.scale(-back));
+                            finishRoll(current, true);
+                            return;
+                        }
+                    }
+                    if (hostile) { finishRoll(current, false); return; }
+                    // 非敌对实体只是挡了一下，滚过它继续走，不算命中也不断链。
+                    if (swept.remaining.length() > 0.001) progressed += scope.displace(actor, swept.remaining);
+                }
+                travelled += progressed;
+                if (hit.blocked()) {
+                    const wall = hit.blockPosition();
+                    const at = wall !== null ? wall : hit.position();
+                    WorldFeedback.emit(scope, rolloutScene, 1, at,
+                        { moment: "wall", stage: stage, scale: scale, face: hit.blockFace() }, 22);
+                    sound(current, "minecraft:block.stone.hit");
+                    finishRoll(current, false);
+                    return;
+                }
+                if (travelled >= reach - 1e-4) { stopEmpty(current, origin.plus(direction.scale(progressed))); return; }
+                if (!hit.hitEntity() && progressed <= 1e-4) { stopEmpty(current, origin); return; }
+                current.after(1, roll);
+            }
+
+            sound(action, "minecraft:block.stone.hit");
+            roll(action);
         }
     });
+
+    // 玩家按住技能键持续滚动、滚行中缓慢转向瞄准；AI 提交仍带一个目标，读同一条控制输入。
+    WorldCombat.preview("world_combat:rollout", JSON.stringify({ input: { version: 1, steps: ["point"], sustained: true } }));
 }

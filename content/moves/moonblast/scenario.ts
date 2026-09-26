@@ -19,7 +19,7 @@ Smoke.scenario("moonblast", function (stage) {
     }, function () {
         stage.expect(stage.casts("moonblast", caster) > 0, "月亮之力被放出来了");
         stage.expect(stage.damageTo(foe) > 0, "月华球打中了目标");
-        stage.note("降攻是概率结果（基础三成起、随特攻与月华上升），只作记录；本场为开阔夜空，月华应接近满值；换到白天或室内威力会明显降低。",
+        stage.note("降攻是概率结果（基础三成起、随特攻与月华上升），只有实际降级成功才有记录；本场为开阔夜空，月华应接近满值，射程也更远；换到白天或室内威力与射程都会明显降低。命中炸开的月牙只是画面，不会在旁边的敌人身上造成范围伤害。",
             { casts: stage.casts("moonblast", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive() });
         stage.done();

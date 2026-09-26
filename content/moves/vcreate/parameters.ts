@@ -153,6 +153,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["guardLoss","poiseLoss","speedLoss"] },
         { key: "nova.on", values: [], when: function (context) { return read(context.detail.values, ["nova"]) === true; } },
         { key: "nova.off", values: [], when: function (context) { return read(context.detail.values, ["nova"]) !== true; } },
+        { key: "description.aim", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.flare"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.flare", "tier.1.charge"] }

@@ -1,21 +1,31 @@
 /**
  * 电力上升 / risingvoltage —— 注册与动作。
  *
- * 核心念头：顿足把电按进地皮，电流沿地面窜到对手脚下，再从那里竖起一根电柱从下往上击穿；
- *   目标脚下若带着电场的电荷（共享身份 world_combat:status/electricterrain），这一柱翻倍、也更粗更高。
+ * 核心念头：顿足把电按进地皮，电流沿地面窜到一处固定的落点，再从那里竖起一根电柱从下往上击穿；
+ *   站在落点上的人脚下若带着电场的电荷（共享身份 world_combat:status/electricterrain），这一柱翻倍、也更粗更高。
  *
  * 三幕：
  *   起（coil，提交前）：施法者顿足，脚边的地纹亮起、电弧在腿侧打转，只播预告。
- *   爬（crawl，提交后）：电流沿地面窜向目标脚下，爬行速度决定到达时刻（画面是一条爬行电线）。
+ *   爬（crawl，提交后）：电流从脚下沿地面逐刻窜向**出手时锁定的柱底**，前端端点始终等于柱底（画面是一条会生长的爬行电线）。
  *   升（pillar / hit）：落点竖起电柱，半径 `columnRadius`、高 `columnHeight` 内的非友方各挨一次 `bolt`
- *       （脚下带电者翻倍，每人各算各的）；目标中途离场则电柱在最后落点原地升起。
+ *       （脚下带电者翻倍，每人各算各的）；柱底不再跟着目标横移——目标走了，电柱仍在锁定的那一点升起。
  *
- * 与同族分开：精神剑是贴身电光斩、加成来自施法者自己脚下的电荷；电力上升是隔空从**目标**脚下升起的电柱。
+ * 与同族分开：精神剑是贴身电光刺、加成来自施法者自己脚下的电荷；电力上升是隔空从**锁定落点**升起的电柱。
  */
 namespace PokemonSkills {
-    function risingvoltageStrike(action: CombatAction, targetRef: string, done: (current: CombatAction) => void): void {
+    function risingvoltageStrike(action: CombatAction, done: (current: CombatAction) => void): void {
         const world = action.world();
         const actor = action.actor();
+        const self = world.observe(actor);
+        if (self === null) { done(action); return; }
+        const origin = self.position();
+        // 柱底在出手时就锁定：实体目标取它此刻脚下，点选则取所选点；提交后不再沿目标横移。
+        const aimPoint = action.targetPosition();
+        const watched = action.target();
+        const watchedBody = watched !== null && world.valid(watched) ? world.observe(watched) : null;
+        const feetY = watchedBody !== null ? watchedBody.position().y() - watchedBody.height() / 2 : aimPoint.y();
+        const base = WorldCombat.point(aimPoint.x(), Math.floor(feetY), aimPoint.z());
+        if (typeof action.releaseTarget === "function") action.releaseTarget();
         const crawl = Math.max(0.6, p(risingvoltageId, "crawl", action));
         const power = p(risingvoltageId, "bolt", action);
         const radius = Math.max(0.6, p(risingvoltageId, "columnRadius", action));
@@ -23,24 +33,17 @@ namespace PokemonSkills {
         const arcs = Math.max(8, Math.round(p(risingvoltageId, "arcs", action)));
         const perTarget = damageFeatures(risingvoltageId, "bolt");
         const scale = radius / risingvoltageReference;
-        const fallback = action.targetPosition();
-        const self = world.observe(actor);
-        const origin = self !== null ? self.position() : action.origin();
-        const first = world.actor(targetRef);
-        const firstBody = first !== null && world.valid(first) ? world.observe(first) : null;
-        const startDistance = firstBody !== null ? firstBody.position().minus(origin).length() : fallback.minus(origin).length();
-        const delay = Math.max(2, Math.round(startDistance / crawl));
+        const delta = base.minus(origin);
+        const delay = Math.max(2, Math.round(delta.length() / crawl));
+        const scenes = WorldFeedback.actionScenes(risingvoltageScene);
 
         sound(action, "cobblemon:move.thundershock.actor");
-        WorldFeedback.emit(world, risingvoltageScene, 1, origin,
-            { moment: "crawl", path: [String(actor.ref()), targetRef], delay: delay, arcs: arcs, scale: scale }, delay + 20);
 
-        action.after(delay, function (current: CombatAction): void {
+        function arr(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
+
+        function rise(current: CombatAction): void {
             const scope = current.world();
-            const victim = scope.actor(targetRef);
-            const body = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-            const at = body !== null ? body.position() : fallback;
-            const base = WorldCombat.point(at.x(), at.y() - (body !== null ? body.height() / 2 : 0), at.z());
+            scenes.stop(current, "crawl");
             const region = WorldGeometry.ring(base, 0, radius, { below: 1.2, above: height });
             let hits = 0, chargedHits = 0;
 
@@ -52,7 +55,7 @@ namespace PokemonSkills {
                 if (charged) chargedHits++;
                 WorldFeedback.emit(scope, risingvoltageScene, 1, facts.position(),
                     { moment: "hit", target: String(enemy.ref()), charged: charged ? 1 : 0, arcs: arcs,
-                        scale: scale, intensity: charged ? 1.8 : 1 }, 24);
+                        scale: scale * (charged ? 1.2 : 1), intensity: charged ? 1.8 : 1 }, 24);
                 scope.sound("cobblemon:impact.electric", facts.position(), 14, "{}");
             });
 
@@ -63,17 +66,28 @@ namespace PokemonSkills {
             WorldFeedback.text(scope, base.plus(WorldCombat.point(0, Math.min(height, 4) * 0.7, 0)),
                 chargedHits > 0 ? risingvoltageChargedText : (hits > 0 ? risingvoltageHitText : risingvoltageMissText),
                 hits > 0 ? [hits] : [], 30);
-            done(current);
-        });
+            scenes.finish(current, done);
+        }
+
+        // 电流逐刻沿地面向前端推进；前端端点等于锁定的柱底，不沿目标移动。
+        function crawlStep(current: CombatAction, step: number): void {
+            const front = origin.plus(delta.scale(Math.min(1, (step + 1) / delay)));
+            scenes.show(current, "crawl", origin,
+                { moment: "crawl", path: [arr(origin), arr(front)], arcs: arcs, scale: scale });
+            if (step + 1 >= delay) { rise(current); return; }
+            current.after(1, function (next: CombatAction): void { crawlStep(next, step + 1); });
+        }
+
+        crawlStep(action, 0);
     }
 
     define({
         id: risingvoltageId,
         cooldownParameter: "recharge",
         name: "电力上升",
-        description: "先顿足把电按进地面，电流窜到对手脚下再向上竖起一根电柱；目标脚下带着电场的电荷时，这一柱的威力翻倍、也更粗更高，柱内的非友方会被一起贯穿。",
-        uses: ["惩罚站在电气场地上的对手", "隔空从对手脚下升起一柱电击", "一次贯穿挤在落点附近的一圈人"],
-        kind: "enemy",
+        description: "先顿足把电按进地面，电流窜到出手时锁定的落点，再从那里向上竖起一根电柱；落点上脚下带着电场电荷的人这一柱威力翻倍、也更粗更高，柱内的非友方会被一起贯穿。落点不再跟着目标横移。",
+        uses: ["惩罚站在电气场地上的对手", "隔空从锁定落点升起一柱电击", "一次贯穿挤在落点附近的一圈人"],
+        kind: "aim",
         range: 12,
         maxRange: 18,
         prepare: 9,
@@ -103,9 +117,8 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const target = action.target();
-            if (target === null) { done(action); return; }
-            risingvoltageStrike(action, String(target.ref()), done);
+            // 空柱也能执行：没有敌人时电柱照样在所选落点升起，只是打不到人。
+            risingvoltageStrike(action, done);
         }
     });
 }

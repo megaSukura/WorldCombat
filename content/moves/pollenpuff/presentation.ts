@@ -6,10 +6,10 @@
  * 色相家族：花粉金黄（0xE8B84A）与草绿（0xA8C63A）为主体，暖白（0xFFF2C8）做核心；
  *   一个黄绿家族，不分第二个色相——伤害与回复靠运动（向外炸 vs 向上飘）区分，而不是靠两种颜色。
  * 拍子：起（windup 拢粉）→ 掷（throw 粉团低弧飞出）→ 散（burst 落点散开）→ 分（hit 敌人被炸 / mend 同伴被养）。
- * 范围：burst 绑落点、按 `data.scale`（实际散开半径 ÷ 参考 1.9）缩放球形覆盖——画出的那圈就是判定圈。
+ * 范围：burst 绑落点、用 `data.radius`（实际散开半径，fit:world）画球形覆盖——画出的那圈就是判定圈。
  * 运动：粉团沿低弧飞向落点；落地时敌人那侧向外炸、同伴那侧向上飘。
- * 数：`data.motes`（威力与回复比例派生）决定花粉量，`data.struck`／`data.mended` 决定爆点与暖光点数，
- *   `data.mend`（回复比例）决定治疗光的亮度。
+ * 数：`data.motes`（威力与回复比例派生）决定花粉量，`data.healed`（实际恢复量）驱动治疗光的强度，
+ *   `data.struck`／`data.mended` 决定爆点与暖光点数。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const PollenpuffDefinition: ParticleDefinition = {
@@ -64,27 +64,27 @@ const PollenpuffDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 14 },
             emitters: [
                 {
-                    name: "cloud", bind: "point", height: 0.2,
+                    name: "cloud", bind: "point", height: 0.2, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/powder",
                     burst: { count: { data: "motes", fallback: 20 }, interval: 2, repeats: 2 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: { data: "radius", fallback: 1.9 } },
                     direction: "outward", speed: [0.05, 0.2], spread: 55, drag: 0.9, gravity: 0.006,
                     lifetime: [12, 22], size: [0.14, 0.04], spin: 16,
                     color: 0xE8B84A, alpha: [0.85, 0], light: "world", maxParticles: 110
                 },
                 {
-                    name: "grit", bind: "point", height: 0.15,
+                    name: "grit", bind: "point", height: 0.15, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/grass/seed",
                     burst: { count: { data: "motes", fallback: 14 } },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: { data: "radius", fallback: 1.9 } },
                     direction: "outward", speed: [0.06, 0.22], gravity: 0.02, spin: 20,
                     lifetime: [10, 20], size: [0.09, 0.02],
                     color: 0xA8C63A, alpha: [0.8, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "ring", bind: "point", offset: [0, 0.04, 0], height: 0,
+                    name: "ring", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 12 }, shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    burst: { count: 12 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1.9 }, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [10, 16], size: [0.18, 0.07],
                     color: 0xFFF2C8, alpha: [0.55, 0], light: "full", maxParticles: 26

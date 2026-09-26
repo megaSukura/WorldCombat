@@ -7,17 +7,17 @@
  * 两幕：
  *   起（windup，提交前）：眉间紫光向内收拢，只播预告。
  *   击（flight → hit/burst，提交后）：念弹沿直线飞出；命中活体结算一次 pulse 伤害，按 confuseChance
- *       掷一次恍惚（本单元自己的共享身份载体 world_combat:status/confusion）。
+ *       掷一次恍惚（本单元自己的共享身份载体 world_combat:confusion_pulse）。
  *
  * 恍惚行为（本单元自己的变体）：目标每次想出手都掷一次失手（概率存在载体振幅里）；被打散时念力再敲
- * 一下——按目标自身特攻放大的一点最大生命伤害，并把恍惚续上。这是念力「越挣扎越被磨」的读法。
+ * 一下——按目标自身特攻放大的一点最大生命伤害。恍惚时长在首次实际施加时确定，之后不再刷新，
+ * 因此一直出手也会在既定时长后自行清醒。反噬注册在共享 CombatStatus.rejected 贡献上：共享层原生攻击
+ * 直接走该 registry，自有行动也走同一入口，普通怪已接入的攻击失手与画面对应。
  */
 namespace PokemonSkills {
     /** 被打散时念力再敲一下的基础值；按目标自身特攻放大。skill.ts 与说明同源。 */
     const confusionChipBase = 0.012;
     const confusionChipPerSpecialAttack = 0.00012;
-    /** 被敲一下后恍惚至少再续这么多刻，保证「越挣扎越被缠」。 */
-    const confusionRefresh = 60;
 
     /** 只有代表载体就是本单元的 id 时，本单元的门禁才接管。 */
     function confusionCarrier(world: CombatWorld, actor: CombatActor): CombatMobEffect | null {
@@ -41,7 +41,7 @@ namespace PokemonSkills {
         name: "Confusion",
         description: "向对手弹出一枚微弱的念弹：贴地直线窜出，命中造成特殊伤害，并可能把目标搅得恍惚。恍惚期间目标出手会失手，每次失手还会被念力再敲一下。",
         uses: ["便宜快速的远程骚扰", "用低伤害反复磨血", "压制喜欢连续出手的对手"],
-        kind: "enemy",
+        kind: "aim",
         range: 11,
         maxRange: 16,
         prepare: 9,
@@ -82,7 +82,7 @@ namespace PokemonSkills {
             const motes = Math.max(8, Math.round(p(confusionId, "motes", action)));
             const scale = Math.max(0.6, Math.min(2.2, radius / 0.3));
             const intensity = Math.max(0.5, Math.min(2.2, power / 52));
-            let impacted = false, settled = false;
+            let settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
@@ -96,7 +96,6 @@ namespace PokemonSkills {
                 speed: speed, range: action.range(), radius: radius, lifetime: 120,
                 appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
-                    impacted = true;
                     const scope = current.world();
                     const point = hit.position();
                     const victim = hit.target();
@@ -117,16 +116,15 @@ namespace PokemonSkills {
         }
     });
 
-    // 失手反应：共享门禁掷中后出手作废；这里把念力再敲一下、恍惚续上（本单元的失败反应）。
-    WorldCombat.on("world_combat:move_confusion/fumble", "world_combat:action_rejected", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.reason) !== "confused" && String(data.details && data.details.status) !== "confusion") return;
-        const world = event.world(), actor = event.actor();
-        // Match the exact carrier named in the rejection so stacked confusion sources cannot double-punish.
-        const carrier = data.details && data.details.effect !== undefined ? String(data.details.effect) : "";
+    // 失手反噬：失手判定由共享 CombatStatus.actions 门禁在 before_commit 与原生攻击命中时掷骰。
+    // 这里把再敲一下注册进共享 CombatStatus.rejected 贡献，自有行动与普通怪已接入的原生攻击走同一入口；
+    // 按 effect 身份过滤只处理本单元载体，每次实际拒绝只触发一次；不刷新时长，结束由首次实际施加的剩余时间决定。
+    CombatStatus.rejected.define({ id: "world_combat:move_confusion/fumble", apply: function (context) {
+        if (context.status !== "confusion") return;
+        const carrier = context.details && context.details.effect !== undefined ? String(context.details.effect) : "";
         if (carrier && carrier !== confusionEffect) return;
-        const effect = confusionCarrier(world, actor);
-        if (effect === null) return;
+        const world = context.world, actor = context.actor;
+        if (!world.valid(actor) || confusionCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body !== null) {
             const facts = PokemonDamage.combatants.read(world, actor);
@@ -134,16 +132,14 @@ namespace PokemonSkills {
             const fraction = Math.max(0.012, Math.min(0.05, confusionChipBase + specialAttack * confusionChipPerSpecialAttack));
             const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
             if (loss > 0) {
-                const remaining = Math.max(0, effect.duration());
-                CombatStatus.apply(world, actor, "confusion", confusionEffect, Math.max(confusionRefresh, remaining), effect.amplifier(), { unique: true });
                 WorldFeedback.emit(world, confusionScene, 1, body.position(), { moment: "punish", target: String(actor.ref()) }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), confusionChipText, [Math.round(loss * 10) / 10], 24);
                 world.sound("minecraft:entity.player.hurt", body.position(), 12, "{}");
             }
         }
-    });
+    } });
 
-    // 恍惚存续期：低密度的飞鸟与紫点每 20 刻续期，让出本体视线。
+    // 恍惚存续期：低密度的飞鸟与紫点每 20 刻续期，让出本体视线；状态结束后不再续期，晕圈随之自然淡出。
     WorldCombat.on("world_combat:move_confusion/linger", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== confusionEffect) return;

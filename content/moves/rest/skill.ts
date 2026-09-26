@@ -8,6 +8,8 @@
  *   睡满则按 heal 回复缺失生命、治愈全部有害状态效果，并在沉睡档获得「神清气爽」；被任何伤害惊醒则按
  *   elapsed/duration 的比例回复、追加 minecraft:slowness。睡着期间无法行动。
  * 反制：准备期可被打断且不花 PP；睡着后任意一次伤害就能惊醒，砍掉回复并让施法者迟缓；小憩档更快但报酬更低。
+ * 表现：不画任何保护圈；脚边与头顶的呼吸泡随已睡比例放慢变大，被惊醒只留一记短破裂，回血与清状态按实际
+ *   结算数值浮字。
  */
 namespace PokemonSkills {
     const restScene = "world_combat:move_rest";
@@ -35,12 +37,15 @@ namespace PokemonSkills {
         return healed;
     }
 
-    function restCure(world: CombatWorld, self: CombatActor): void {
-        CombatStatus.cureHarmful(world, self);
+    function restCure(world: CombatWorld, self: CombatActor): number {
+        return CombatStatus.cureHarmful(world, self);
     }
 
+    /** 睡姿表现：ratio 是已睡比例，驱动「呼吸泡」随进度放慢变大，让玩家从画面读出回血比例。 */
     function restSleepBody(self: CombatActor, duration: number, shortNap: boolean, ratio: number) {
-        return { moment: "sleep", target: String(self.ref()), deep: !shortNap, ratio: ratio };
+        var progress = Math.max(0, Math.min(1, ratio));
+        return { moment: "sleep", target: String(self.ref()), deep: !shortNap, ratio: progress,
+            breath: Math.max(3, Math.round(9 - 5 * progress)), breathSize: Math.round((0.1 + 0.1 * progress) * 100) / 100 };
     }
 
     define({
@@ -83,9 +88,11 @@ namespace PokemonSkills {
             var missing = Math.max(0, body.maxHealth() - body.health());
             sound(action, "minecraft:block.beacon.deactivate");
             if (!CombatStatus.inflict(world, self, "sleep", duration)) {
-                restApplyHeal(world, self, missing, healFraction * 0.5);
-                WorldFeedback.emit(world, restScene, 1, body.position(), { moment: "wake", target: String(self.ref()), complete: false, ratio: 0.5, burst: 10 }, 26);
-                WorldFeedback.text(world, restAbove(body.position()), restTextGroggy, [], 30);
+                var early = restApplyHeal(world, self, missing, healFraction * 0.5);
+                WorldFeedback.emit(world, restScene, 1, body.position(),
+                    { moment: "wake", target: String(self.ref()), complete: false, ratio: 0.5,
+                        healed: Math.round(early * 10) / 10, cured: 0, burst: 10 }, 26);
+                WorldFeedback.text(world, restAbove(body.position()), restTextGroggy, [Math.round(early * 10) / 10, 0], 30);
                 done(action);
                 return;
             }
@@ -108,9 +115,10 @@ namespace PokemonSkills {
                 }
                 settled = true;
                 var ratio = Math.max(0, Math.min(1, elapsed / Math.max(1, duration)));
-                restApplyHeal(access, self, missing, healFraction * ratio);
-                restCure(access, self);
+                var healed = restApplyHeal(access, self, missing, healFraction * ratio);
+                var cured = restCure(access, self);
                 var complete = ratio >= 0.98;
+                var amount = Math.round(healed * 10) / 10;
                 if (complete && !shortNap) {
                     MobEffects.apply(access, self, restRefreshedEffect, Math.round(p(restId, "refreshTicks", current)), 0);
                     sound(current, "minecraft:entity.player.levelup");
@@ -120,8 +128,9 @@ namespace PokemonSkills {
                 if (!complete)
                     MobEffects.apply(access, self, "minecraft:slowness", Math.round(p(restId, "wakeSlowTicks", current)), 0);
                 WorldFeedback.emit(access, restScene, 1, now.position(),
-                    { moment: "wake", target: String(self.ref()), complete: complete, ratio: ratio, burst: Math.round(8 + 40 * ratio) }, 30);
-                WorldFeedback.text(access, restAbove(now.position()), complete ? restTextWake : restTextGroggy, [], 30);
+                    { moment: "wake", target: String(self.ref()), complete: complete, ratio: ratio,
+                        healed: amount, cured: cured, burst: Math.round(8 + 40 * ratio) }, 30);
+                WorldFeedback.text(access, restAbove(now.position()), complete ? restTextWake : restTextGroggy, [amount, cured], 30);
                 done(current);
             }
             action.after(1, step);

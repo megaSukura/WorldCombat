@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.meanlook.summary": "Pins one visible target in place with a dark, arresting gaze: the user must stand still and keep staring; if cover blocks the line, the target is dragged away, or the user is interrupted, the gaze breaks and the target is free at once. Hold the skill key to keep staring, release to stop.",
+  "worldcombat.skill.meanlook.summary": "Pins one visible target in place with a dark, arresting gaze: the user must stand still and keep staring; if cover blocks the line, the target is dragged away, or the user is interrupted, the gaze breaks and the target is free at once. A control-immune target makes the lock fail outright, leaving no press and no damage. Hold the skill key to keep staring, release to stop.",
   "worldcombat.skill.meanlook.use.0": "Pin a fleeing target in place for allies to finish",
   "worldcombat.skill.meanlook.use.1": "Lock a high-mobility target into the melee",
   "worldcombat.skill.meanlook.use.2": "Hold the enemy's main force in a one-on-one in the open",
@@ -32,5 +32,5 @@
   "world_combat.move.meanlook.text.release": "The gaze releases",
   "world_combat.move.meanlook.text.blocked": "Line of sight blocked",
   "effect.world_combat.meanlook_gaze": "Held by the dark gaze",
-  "worldcombat.skill.meanlook.description.gaze": "A locked target cannot move on its own but can still act from where it stands; the user holds the skill key to keep staring, and the target is freed at once when the key is released or the user is interrupted."
+  "worldcombat.skill.meanlook.description.gaze": "A locked target cannot move on its own but can still act from where it stands; the user holds the skill key to keep staring, and the target is freed at once when the key is released or the user is interrupted. Against a control-immune target the lock is not established: the scene shows it and no other damage is substituted."
 }

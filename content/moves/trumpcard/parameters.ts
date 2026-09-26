@@ -30,7 +30,16 @@ namespace PokemonSkills {
         /** 余牌消耗：1 − 本招剩余 PP 比例，夹在 0..1。它是本招威力的读数来源，也用于表现强度。 */
         spent: percent(
             F.const(1).minus(F.resource("ppRatio", text("worldcombat.skill.trumpcard.value.ppRatio"))).clamp(0, 1).round(3),
-            "余牌消耗", "这叠牌用掉了多少；越大代表剩下的牌越少、下一掷越重，最后一张是满值。"),
+            "余牌消耗", "这叠牌用掉了多少；越大代表剩下的牌越少、这一掷越重，末牌是满值。"),
+        /** 投后余牌：本招当前 PP − 1（这一张会付掉），夹在 0..每叠上限。它是画面里手中剩余小牌数的读数来源。 */
+        ppRemaining: formula(
+            F.resource("pp").minus(1).clamp(0, 99),
+            "投后余牌", {
+                unit: "张",
+                description: "这一掷用掉一张后还剩几张牌；0 表示这是末牌。补满 PP 后这个值会跟着回升，不会再显示成末牌。"
+            }),
+        /** 这叠牌上限：本招最大 PP，用于把余牌换算成档位；拿不到时按 5。 */
+        maxCards: formula(F.resource("maxPp").clamp(1, 99), "", { visible: false, base: 5 }),
         /** 飞行速度：基础 0.9 格/刻，速度每比 60 多 1 加 0.005（夹 −0.15..+0.4），必中 ×0.85；夹在 0.6..1.5。 */
         flightSpeed: formula(
             F.base(0.9).plus(F.stat("speed").minus(60).times(0.005).clamp(-0.15, 0.4))
@@ -74,7 +83,7 @@ namespace PokemonSkills {
     defineDamage("trumpcard", "power", {});
 
     describe("trumpcard", [
-        { key: "description.0", values: ["power", "spent"] },
+        { key: "description.0", values: ["power", "spent", "ppRemaining"] },
         { key: "description.1", values: ["flightSpeed", "flightRange", "collisionRadius"] },
         { key: "description.2", values: ["turn", "push"] },
         { key: "sure.on", values: [], when: function (context) { return read(context.detail.values, ["sure"]) === true; } },

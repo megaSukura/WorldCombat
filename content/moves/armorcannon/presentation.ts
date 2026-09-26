@@ -2,12 +2,12 @@
  * 铠农炮 / armorcannon 的客户端表现。
  *
  * 一句话：施法者身上腾起火星、胸前的护甲烧红并收成一副火壳 → 火壳沿准线射出去，拖出一条火星尾迹 →
- *   命中炸开一团火与崩落的碎甲，落点烧出一圈焦地 → 后坐卸掉，铠甲缺口往外冒余烟与落火。
- * 色相家族：火橙 0xFF8C3A 与暖黄 0xFFC06A 为主体，近白 0xFFF0D0 只给弹体核心，焦黑 0x3A2A22 作地面与余韵；火与烟是一家。
- * 拍子：起 ready（烧甲凝壳）→ 弃守 guard（护甲崩片）→ 射 travel（沿准线飞行）→ 击 burst（炸开火团）→ 收 slump（余烟）／散 fizzle（飞空）。
- * 范围：burst 的 `scorch_ring` 与 `smoke` 绑落点、`fit:"none"`，半径按 `data.scale`（灼痕半径 / 1.4）推出，画出的圈就是被烧到的地面。
- * 运动：travel 沿弹体运动方向拖火星；burst 向外交崩碎甲与火点、烟团上浮、地环外推；slump 余烟缓慢上浮、落火下沉。
- * 数：burst 的碎甲量、火点量绑 `data.plates`（体重派生），地面存活量绑 `data.cells`（实际烧出的格子数），核心强度绑 `data.intensity`（威力派生）。
+ *   命中或撞块在真落点炸开一团火与崩落的碎甲 → 落点在 burst 后浮起一圈短时热壳残屑（residue），随后后坐卸掉、铠甲缺口冒余烟。
+ * 色相家族：火橙 0xFF8C3A 与暖黄 0xFFC06A 为主体，近白 0xFFF0D0 只给弹体核心，焦黑 0x3A2A22 作烟与余韵；火与烟是一家。
+ * 拍子：起 ready（烧甲凝壳）→ 弃守 guard（护甲崩片）→ 射 travel（沿准线飞行）→ 击 burst（炸开火团）→ 屑 residue（热壳余烬）→ 收 slump（余烟）／散 fizzle（飞空）。
+ * 范围：burst 的 `scorch_ring` 绑落点、`fit:"none"`，半径直接绑 `data.scorch`（落点热屑半径），residue 的圈也按它铺开。
+ * 运动：travel 沿弹体运动方向拖火星；burst 向外交崩碎甲与火点、烟团上浮、地环外推；residue 余烬原地明灭上浮；slump 余烟缓慢上浮、落火下沉。
+ * 数：burst 的碎甲量、火点量、烟量与 residue 的余烬量绑 `data.plates`（体重派生），核心强度绑 `data.intensity`（威力派生）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ArmorCannonDefinition: ParticleDefinition = {
@@ -116,7 +116,7 @@ const ArmorCannonDefinition: ParticleDefinition = {
                     name: "scorch_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: 0.5 },
+                    shape: { kind: "ring", radius: { data: "scorch", fallback: 1.0 } },
                     direction: "outward", speed: [0.16, 0.38],
                     lifetime: [8, 14], size: [0.6, 0.12], sizeMode: "index",
                     color: 0x3A2A22, alpha: [0.8, 0], light: "world", maxParticles: 6
@@ -124,11 +124,35 @@ const ArmorCannonDefinition: ParticleDefinition = {
                 {
                     name: "smoke", bind: "point", fit: "none", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: { data: "cells", fallback: 8 }, at: 0 },
+                    burst: { count: { data: "plates", fallback: 8 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.5 },
                     direction: "up", speed: [0.02, 0.1],
                     lifetime: [16, 28], size: [0.4, 0.16],
                     color: 0x3A2A22, alpha: [0.5, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        residue: {
+            duration: 60,
+            exit: { stop: 20, drain: 24 },
+            emitters: [
+                {
+                    name: "heat", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "plates", fallback: 8 }, at: 0 },
+                    shape: { kind: "circle", radius: { data: "scorch", fallback: 1.0 } },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [14, 24], size: [0.09, 0.01],
+                    color: 0xFFC06A, alpha: [0.55, 0], light: "full", maxParticles: 50
+                },
+                {
+                    name: "ash", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: { data: "plates", fallback: 8 }, at: 0 },
+                    shape: { kind: "circle", radius: { data: "scorch", fallback: 1.0 } },
+                    direction: "outward", speed: [0.01, 0.03], gravity: 0.02, drag: 0.94,
+                    lifetime: [20, 34], size: [0.1, 0.02],
+                    color: 0x3A2A22, alpha: [0.4, 0], light: "world", maxParticles: 44
                 }
             ]
         },

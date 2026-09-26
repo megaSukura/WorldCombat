@@ -24,7 +24,7 @@ Smoke.scenario("watershuriken", function (stage) {
             stage.expect(stage.casts("watershuriken", caster) > 0, "water shuriken was committed");
             stage.expect(stage.damageTo(foe) > 0, "the water stars dealt damage");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/soaked"), "the target was soaked");
-            stage.note("the star count (2-5) follows level/Special Attack/Speed and the focused choice; each star settles its own special damage and refreshes the shared soaked identity. Star count, spread and crits are probability-free data results.", {
+            stage.note("the stars fire on a fixed beat independent of the previous star, so several can share the air; the direction is fixed at cast and never chases the old target. Each star settles its own special damage and refreshes the shared soaked identity, and the action closes after the last flight. Star count, spread and crits are probability-free data results.", {
                 casts: stage.casts("watershuriken", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 moved: Math.round(stage.travelled(caster) * 10) / 10,

@@ -1,17 +1,19 @@
 /**
  * 暗影之骨 / shadowbone 的出手方式。
  *
- * 核心念头：从身侧唤出一根缠着灵魂的骨棒，脱手掷出；灵魂自己牵引骨棒追上目标，命中时炸开阴气、发出一声惨叫，
- * 被砸中的人被那股阴气慑住、防御松动。它是破防四打里唯一不接触、能在远处兑现的一记。
+ * 核心念头：从身侧唤出一根缠着灵魂的骨棒，脱手掷出；灵魂只在瞄定目标时牵引骨棒追上，空掷则照直飞。命中时炸开
+ * 阴气、发出一声惨叫，被砸中的人被那股阴气慑住、防御松动。它不接触，能在远处兑现。
  *
  * 三幕：
  *   起（windup，提交前）：身侧浮起骨影与阴气，骨头在手里成形。
- *   击（throw → impact）：提交后把骨棒掷出，骨棒带一圈灵魂尾迹飞向目标（灵魂牵引，命中 100 落成“会自己找上”），
- *       命中活物时结算一次不接触伤害，并按慑防几率降防、挂上慑防标记。
- *   收：骨棒没砸中活物就落在地上，留成一根真骨头（pickupDelay 后有拾取延迟），谁都能捡；命中处只有一声闷响后散去。
+ *   击（throw → impact）：提交后把骨棒掷出，骨棒带一圈灵魂尾迹飞行；显式瞄定目标时灵魂牵引（命中 100 落成“会自己找上”），
+ *       方向空掷则照直飞、按自身寿命散掉。命中活物时结算一次不接触伤害，并按慑防几率降防、挂上慑防标记。
+ *   收：骨棒没砸中活物就落在地上，留成一根真骨头（pickupDelay 后有拾取延迟），谁都能捡；每次施放最多一份，
+ *       命中活物不会再多掉一根。命中处只有一声闷响后散去。
  *
- * 与同族分开：碎岩是贴脸连点、铁尾是慢而重的下砸、撕裂爪是踏前交叉撕抓；暗影之骨是远程骨投，攻击距离最远、
- * 单发最贵。共享身份 world_combat:status/guardbroken 由 startup.ts 声明。
+ * 选取为 aim：方向、点或任意阵营实体都能放，可以预判空投；不要提交时存在敌人。
+ * 与同族分开：碎岩是贴脸连点、铁尾是慢而重的下砸、撕裂爪是踏前交叉撕抓；暗影之骨是远程骨投，单发更贵。
+ * 共享身份 world_combat:status/guardbroken 由 startup.ts 声明。
  */
 namespace PokemonSkills {
     const shadowboneScene = "world_combat:move_shadowbone";
@@ -21,9 +23,9 @@ namespace PokemonSkills {
     define({
         id: "shadowbone",
         name: "Shadow Bone",
-        description: "从身侧唤出一根缠着灵魂的骨棒，掷向远处的对手：骨棒自己追向目标，命中时造成不接触伤害，有机会把目标慑得防御下降一级；是全族唯一的远程一记，攻击距离最远但单发最贵。",
-        uses: ["在远处掷出带灵魂的骨棒", "用最远的攻击先手压低防御", "把落空的骨头留在战场上给谁都能捡"],
-        kind: "enemy",
+        description: "从身侧唤出一根缠着灵魂的骨棒，掷向远处的对手：显式瞄定目标时骨棒会自己追上去，空掷则照直飞出；命中时造成不接触伤害，有机会把目标慑得防御下降一级。落空的骨头会留在地上，谁都能捡。",
+        uses: ["在远处掷出带灵魂的骨棒", "先手压低一个远敌的防御", "把落空的骨头留在战场上给谁都能捡"],
+        kind: "aim",
         range: 5.0,
         maxRange: 9.0,
         prepare: 8,
@@ -64,12 +66,13 @@ namespace PokemonSkills {
             const scale = radius / 0.3;
             const target = action.target();
             const origin = action.origin();
-            let settled = false;
+            let settled = false, dropped = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
             sound(action, "cobblemon:move.shadowball.actor");
 
-            const appearance: LivingActions.ProjectileAppearance = { item: "minecraft:bone", glow: true, scale: 1.1 };
+            // 真实骨棒会翻着飞；只有显式瞄定目标才让灵魂牵引，手动空掷就照直飞。
+            const appearance: any = { item: "minecraft:bone", glow: true, spin: true, scale: 1.1 };
             if (target !== null && world.valid(target))
                 appearance.homing = { target: String(target.ref()), turn: 14, range: range };
             const flight: LivingActions.Flight = {
@@ -83,8 +86,9 @@ namespace PokemonSkills {
                     if (victim !== null && !scope.friendly(victim)) {
                         const landed = impact(current, hit, "shadowbone", power, { damage: damageSpec("shadowbone", "bone"), contact: false });
                         if (landed && scope.valid(victim) && scope.random() < chance) {
-                            NativeEffects.boost(scope, victim, "def", -stages);
-                            if (MobEffects.apply(scope, victim, shadowboneMark, markTicks, 0) !== null) {
+                            // 实际被慑住（未被免疫）才留慑纹与标记。
+                            if (NativeEffects.boost(scope, victim, "def", -stages) !== 0
+                                && MobEffects.apply(scope, victim, shadowboneMark, markTicks, 0) !== null) {
                                 const body = scope.observe(victim);
                                 if (body !== null) {
                                     WorldFeedback.emit(scope, shadowboneScene, 1, body.position(),
@@ -94,8 +98,9 @@ namespace PokemonSkills {
                                 }
                             }
                         }
-                    } else if (hit.blocked() && !hit.hitEntity()) {
-                        // 骨棒没砸中活物：落在地上留成一根真骨头，给世界里的人捡。
+                    } else if (hit.blocked() && !hit.hitEntity() && !dropped) {
+                        // 骨棒没砸中活物：落在地上留成一根真骨头；每次施放最多一份。
+                        dropped = true;
                         scope.dropItem(point, "minecraft:bone", 1, JSON.stringify({ pickupDelay: 40 }));
                         scope.sound("minecraft:block.bone_block.break", point, 10, "{}");
                     }

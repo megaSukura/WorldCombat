@@ -66,8 +66,10 @@ const TrailblazeDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 10 },
             emitters: [
                 {
+                    // 身后的短尾：按移动距离沿历史落点撒叶，身体一停尾迹就收住。
                     name: "trail", bind: "source", offset: [0, 0.2, 0], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    trail: { minDistance: 0.35 },
                     rate: { data: "veil", fallback: 18 }, shape: { kind: "sphere", radius: 0.3 },
                     direction: "away", speed: [0.02, 0.08], gravity: 0.03, drag: 0.95,
                     spin: 30, lifetime: [7, 13], size: [0.14, 0.03],

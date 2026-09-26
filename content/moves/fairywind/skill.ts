@@ -23,7 +23,7 @@ namespace PokemonSkills {
         name: "Fairy Wind",
         description: "抖身卷起一阵打着旋的香风，沿瞄准方向扑出去：风会穿过一个又一个对手而不停下，每个被扫到的都被甩到风的侧面。广旋式扫得更宽、穿得更多、甩得更开，但单次更轻、更慢；轻掠式更细更利、出手更快。",
         uses: ["一条直线扫过并排站着的几个对手", "把冲上来的目标甩离自己的正面", "远距离先手，用风把对手推离掩体"],
-        kind: "enemy",
+        kind: "aim",
         range: 9,
         maxRange: 14,
         prepare: 6,
@@ -67,6 +67,7 @@ namespace PokemonSkills {
             const side = WorldCombat.point(-direction.z(), 0, direction.x()).unit();
             const scale = Math.max(0.6, Math.min(2.0, radius / fairywindReference));
             const intensity = Math.max(0.6, Math.min(2.2, power / 38));
+            const scenes = WorldFeedback.actionScenes(fairywindScene);
             let settled = false, hits = 0;
 
             function finish(current: CombatAction, at: CombatPoint): void {
@@ -76,7 +77,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, fairywindScene, 1, at,
                     { moment: hits > 0 ? "dissipate" : "miss", motes: Math.round(motes * 0.6), scale: scale, intensity: intensity }, 22);
                 if (hits === 0) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.7, 0)), fairywindMissText, [], 20);
-                done(current);
+                scenes.finish(current, done);
             }
 
             sound(action, "cobblemon:move.gust.actor");
@@ -86,7 +87,7 @@ namespace PokemonSkills {
                 pierce: cap
             };
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: reach, gravity: 0, radius: radius, lifetime: 160,
+                speed: speed, range: reach, gravity: 0, radius: radius, lifetime: 160, direction: direction,
                 appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), victim = hit.target(), at = hit.position();
@@ -94,19 +95,25 @@ namespace PokemonSkills {
                     if (!impact(current, hit, fairywindId, power, { damage: damageSpec(fairywindId, "gale"), flags: { wind: true } })) return;
                     hits++;
                     const spin = hits % 2 === 0 ? 1 : -1;
-                    if (scope.valid(victim)) scope.displace(victim, side.scale(fling * spin));
+                    // 侧甩方向由旋向决定；位移按原生回执结算，推不动就不把这一下算成被甩开。
+                    const heading = side.scale(spin);
+                    const moved = scope.valid(victim) ? scope.displace(victim, heading.scale(fling)) : 0;
                     WorldFeedback.emit(scope, fairywindScene, 1, at,
                         { moment: "hit", target: String(victim.ref()), motes: motes, hits: hits, spin: spin,
-                          fling: fling, scale: scale, intensity: intensity }, 22);
+                          fling: Math.round(moved * 100) / 100, scale: scale, intensity: intensity,
+                          direction: [heading.x(), heading.y(), heading.z()] }, 22);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), fairywindHitText, [hits], 20);
                     sound(current, "cobblemon:impact.fairy");
                 }
             }, function (current: CombatAction) {
-                const scope = current.world();
                 finish(current, current.targetPosition());
             });
-            WorldFeedback.keep(world, "fairywind:flight:" + action.id(), fairywindScene, 1, action.origin(),
-                { moment: "flight", projectile: flight, motes: motes, scale: scale, intensity: intensity }, 140);
+            // 风柱迸出：朝真实方向推散香尘，随后转由 projectile 绑定的飞行段接续。
+            WorldFeedback.emit(world, fairywindScene, 1, action.origin(),
+                { moment: "launch", direction: [direction.x(), direction.y(), direction.z()],
+                  motes: motes, scale: scale, intensity: intensity }, 16);
+            scenes.show(action, "flight", action.origin(),
+                { moment: "flight", projectile: flight, motes: motes, scale: scale, intensity: intensity });
         }
     });
 }

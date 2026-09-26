@@ -5,6 +5,7 @@
  * 所以门槛低——只要有目标就愿意滚。
  * 对谁出手：`ai.preferIgnite`（默认开）时，还没被点着的目标排前面；`ai.preferCrowd`（默认开）时，
  * 目标身边挤着越多敌人越优先——火轮会碾过挡在路上的一串人，朝人堆滚比朝落单的人滚更值。
+ * 自身被冻住时明确提权：滚动是直接位移，不受冰冻的速度压制，正好借这团火把自己化开。
  * 够不到怎么办：先按共享接近逻辑走近到 reach 之内。
  * 放完之后：一路滚过去，接着按共享交战计划继续追击或收势。
  */
@@ -43,6 +44,7 @@ namespace PokemonSkills {
             const distance = CompanionBehavior.distance(self.point, target.point);
             if (distance > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return 0;
             let score = 22;
+            if (CompanionBehavior.status(context, self, "frozen")) score += 20;
             if (CompanionBehavior.ai<boolean>(capability, "preferIgnite", true) && !CompanionBehavior.status(context, target, "burn")) score += 14;
             if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true)) score += Math.min(18, flamewheelCrowd(context, target) * 8);
             if (distance <= range) score += 4;

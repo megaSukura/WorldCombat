@@ -2,10 +2,23 @@
  * 毒千针 / barbbarrage 的 AI 用途。
  *
  * 什么局面下出手：物理远程齐射，对手可见、敌对、活着且在 `ai.maxChase` 之内即可。
- * 它对已中毒的目标整轮翻倍、也能自己把毒撒上：优先打没有毒的目标（去上毒），中毒的目标 priority 也高（去吃倍率）。
- * 具体偏好：没毒 30、有毒 22——都高于普通兜底，让它比单体爆破更常被选中。
+ * 对谁出手：目标已中毒／剧毒时 priority 抬得最高——贴准它这一轮整轮翻倍、还把毒坐实；
+ *   目标身边 3 格内还挤着别的敌人时再加一档，宽面扫射能顺带把毒撒到更多身上；不额外经营地面。
+ * 够不到就交给共享接近逻辑。
  */
 namespace PokemonSkills {
+    /** 目标 3 格内还挤着几个别的敌人；用于判断宽面扫射是否划算。 */
+    function barbbarrageCrowdCount(context: WorldBehavior.Context, target: WorldMethods.Subject): number {
+        const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || other.ref === target.ref) continue;
+            if (CompanionBehavior.distance(other.point, target.point) <= 3) count++;
+        }
+        return count;
+    }
+
     CompanionBehavior.registerUse("barbbarrage", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -21,7 +34,12 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
-            return CompanionBehavior.status(context, target, "poison") ? 22 : 30;
+            const poisoned = CompanionBehavior.status(context, target, "poison") || CompanionBehavior.status(context, target, "toxic");
+            const crowd = barbbarrageCrowdCount(context, target);
+            let score = 22;
+            if (poisoned) score += 18;
+            if (crowd >= 2) score += 6;
+            return score;
         }
     });
 

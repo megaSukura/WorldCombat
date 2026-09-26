@@ -11,8 +11,11 @@ public interface CombatHost {
                               double range, int lifetime, java.util.function.Consumer<Impact> hit, Runnable complete, String appearance) {
         throw new UnsupportedOperationException("Native projectiles are unavailable");
     }
-    default boolean projectileDamage(ActionContext action, Impact impact, double amount, String metadata) { return projectileDamage(action.id(), action.actor(), action.controller(), impact, amount, metadata); }
+    default boolean projectileDamage(ActionContext action, Impact impact, double amount, String metadata) { return projectileDamage(action.id(), action.actor(), action.controller(), impact, amount, metadata, action.executionOrigin); }
     default boolean projectileDamage(long owner, ActorHandle source, UUID controller, Impact impact, double amount, String metadata) { throw new UnsupportedOperationException(); }
+    default boolean projectileDamage(long owner, ActorHandle source, UUID controller, Impact impact, double amount, String metadata, ExecutionOrigin origin) {
+        return projectileDamage(owner, source, controller, impact, amount, ExecutionOrigin.stamp(metadata, origin));
+    }
     default void removeProjectile(long owner, String id) { throw new UnsupportedOperationException(); }
     default void stopProjectile(long owner, String id) { throw new UnsupportedOperationException(); }
     default EquipmentObservation[] equipment(ActorHandle source, ActorHandle target) { return new EquipmentObservation[0]; }
@@ -38,16 +41,28 @@ public interface CombatHost {
     default String equipmentTakeResult(ActorHandle target, String provider, String slot, int index, String expected, int count) { throw new UnsupportedOperationException(); }
     default String equipmentDropResult(ActorHandle target, String provider, String slot, int index, String expected, String data, int count) { throw new UnsupportedOperationException(); }
     default String equipmentGiveResult(ActorHandle target, String provider, String slot, int index, String expected, String item, int count) { throw new UnsupportedOperationException(); }
+    default String equipmentCollectResult(ActorHandle source, ActorHandle target, String provider, String slot, int index, String expected,
+                                          String entity, String expectedDrop, int count) { throw new UnsupportedOperationException(); }
     default String equipmentExchangeResult(ActorHandle first, String firstProvider, String firstSlot, int firstIndex, String firstExpected,
                                            ActorHandle second, String secondProvider, String secondSlot, int secondIndex, String secondExpected, int count) { throw new UnsupportedOperationException(); }
     default boolean freeSpace(ActorHandle source, Point point, double width, double height) { throw new UnsupportedOperationException(); }
     boolean valid(ActorHandle handle);
     boolean mayAct(ActorHandle actor, UUID controller);
     Point position(ActorHandle handle);
+    /** Native body bounds; point-only hosts retain their existing position semantics. */
+    default BodyBounds bounds(ActorHandle handle) { var point = position(handle); return new BodyBounds(point, point); }
+    default Point closestPoint(ActorHandle handle, Point point) { return bounds(handle).closest(point); }
     Impact trace(ActorHandle actor, UUID controller, Point from, Point to, double radius);
+    default Impact trace(ActorHandle actor, UUID controller, Point from, Point to, double radius, boolean hitAllies) {
+        if (hitAllies) throw new UnsupportedOperationException();
+        return trace(actor, controller, from, to, radius);
+    }
     default Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius) { throw new UnsupportedOperationException(); }
     boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount);
     default boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata) { return damage(actor, target, controller, amount); }
+    default boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata, ExecutionOrigin origin) {
+        return damage(actor, target, controller, amount, ExecutionOrigin.stamp(metadata, origin));
+    }
     void particle(ActorHandle actor, Point point);
     default void present(long owner, ActorHandle actor, String key, String type, int version, Point point, String data) { throw new UnsupportedOperationException(); }
     default void presentFor(long owner, ActorHandle actor, String key, String type, int version, Point point, String data, int ticks) { throw new UnsupportedOperationException(); }
@@ -78,15 +93,36 @@ public interface CombatHost {
     /** Domain-published public facts about the target (see {@code CombatDomain.facts}); empty when unavailable. */
     default com.google.gson.JsonObject facts(ActorHandle target) { return new com.google.gson.JsonObject(); }
     default AttributeObservation attributeValue(ActorHandle source, ActorHandle target, String id) { return null; }
+    default Point[] terrainCells(ActorHandle viewer, long id) { return new Point[0]; }
+    default boolean transferMobEffect(ActorHandle operator, ActorHandle from, ActorHandle to, String id, String expected, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
+    default boolean transferMobEffect(ActorHandle operator, ActorHandle from, ActorHandle to, String id, String expected, String replacement, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
+    default boolean replaceMobEffect(ActorHandle operator, ActorHandle target, String id, String expected, int ticks, int amplifier, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
+    default boolean groundLift(long owner, ActorHandle actor, double height, double speed, double probe) { throw new UnsupportedOperationException(); }
+    default int suppressEquipment(long owner, ActorHandle target) { throw new UnsupportedOperationException(); }
+    default AttributeObservation attributeValue(ActorHandle source, ActorHandle target, String id, long excludedOwner) { return attributeValue(source, target, id); }
     default ActorHandle actorNear(ActorHandle source, UUID entity) { return null; }
     default ActorHandle[] query(ActorHandle source, Point point, double radius, boolean visibleOnly) { throw new UnsupportedOperationException(); }
+    default ActorHandle[] queryBox(ActorHandle source, Point min, Point max, boolean visibleOnly) { throw new UnsupportedOperationException(); }
+    default Impact clipBlocks(ActorHandle source, Point from, Point to) { throw new UnsupportedOperationException(); }
+    default String projectiles(ActorHandle source, Point centre, double radius) { return "[]"; }
+    default boolean interceptProjectile(ActorHandle source, UUID controller, UUID id) { return interceptProjectile(source, controller, id, false); }
+    default boolean interceptProjectile(ActorHandle source, UUID controller, UUID id, boolean includeNonHostile) { return false; }
     default boolean visible(ActorHandle source, ActorHandle target) { throw new UnsupportedOperationException(); }
     default double random(ActorHandle source) { throw new UnsupportedOperationException(); }
     default double displace(ActorHandle source, ActorHandle target, Point delta, UUID controller) { throw new UnsupportedOperationException(); }
     default boolean teleport(ActorHandle source, ActorHandle target, Point point, UUID controller) { throw new UnsupportedOperationException(); }
     default boolean swap(ActorHandle source, ActorHandle first, ActorHandle second, UUID controller) { throw new UnsupportedOperationException(); }
     default double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause) { throw new UnsupportedOperationException(); }
+    default double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause, double minimumHealth) {
+        if (minimumHealth != 0) throw new UnsupportedOperationException("Native damage floor unavailable");
+        return health(source, target, controller, delta, cause);
+    }
     default void marker(ActorHandle target, String id, int ticks, int amplifier) { throw new UnsupportedOperationException(); }
+    /** Preserve the actual applying actor for native MobEffect applicability and other mod listeners. */
+    default void marker(ActorHandle source, ActorHandle target, String id, int ticks, int amplifier) { marker(target, id, ticks, amplifier); }
+    default void marker(ActorHandle source, ActorHandle target, String id, int ticks, int amplifier, ExecutionOrigin origin) {
+        marker(source, target, id, ticks, amplifier);
+    }
     default MobEffectObservation mobEffect(ActorHandle target, String id) { throw new UnsupportedOperationException(); }
     default String mobEffectCategory(String id) { return ""; }
     default MobEffectObservation[] mobEffects(ActorHandle target) { throw new UnsupportedOperationException(); }
@@ -105,6 +141,9 @@ public interface CombatHost {
     default boolean configureBody(ActorHandle actor, String json) { return false; }
     default boolean dismissBody(ActorHandle caller, ActorHandle actor) { return false; }
     default boolean motion(ActorHandle target, Point velocity, boolean add) { throw new UnsupportedOperationException(); }
+    default boolean knockback(ActorHandle source, ActorHandle target, UUID controller, double strength, Point direction) { throw new UnsupportedOperationException(); }
+    default boolean hitImpulse(ActorHandle source, ActorHandle target, UUID controller, Point velocity) { throw new UnsupportedOperationException(); }
+    default double hitDisplace(ActorHandle source, ActorHandle target, UUID controller, Point delta) { throw new UnsupportedOperationException(); }
     default boolean mount(ActorHandle rider, ActorHandle vehicle) { throw new UnsupportedOperationException(); }
     default String placeBlock(ActorHandle actor, UUID controller, Point point, String state, String data) { throw new UnsupportedOperationException(); }
     default String breakBlock(ActorHandle actor, UUID controller, Point point, boolean drops) { throw new UnsupportedOperationException(); }

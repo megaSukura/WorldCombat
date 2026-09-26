@@ -4,9 +4,10 @@
  * 一句话：施法者把毒泥压进弹壳、点着引信掷出；炸弹沿弧线落到对手脚边，插在地上嗞嗞冒烟、慢慢鼓胀，
  *   引信烧完的一刻炸开一圈毒泥与毒烟，把圈里的人和地一起染绿。
  * 色相家族：污泥绿（moves/sludgebomb / goo/chemicalsplash / ooze）为主体，毒紫（poisonbubble）做小面积毒气，白亮只用炸开那一下。
- * 拍子：起（shell 压弹点引信）→ 落（flight 拖尾、fuse 鼓胀冒烟）→ 炸（burst 圈开、毒烟腾起、淡出）。
- * 范围：fuse 与 burst 的地面圈都按服务端传的 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地。
- * 运动：炸弹沿服务端算好的弧线飞（projectile 绑定尾迹），毒烟向上腾、泥点向外迸。
+ * 拍子：起（shell 压弹点引信）→ 掷（flight 拖尾）→ 停（fuse 真实落点上的弹体、鼓胀冒烟、警戒圈）→ 炸（burst 圈开、毒烟腾起、淡出）。
+ * 范围：fuse 与 burst 的地面圈都按服务端传的 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地；
+ *   fuse 只由真实落点上的托管效果承载，随它自然结束或被驱散一起收圈。
+ * 运动：炸弹沿服务端算好的弧线飞（projectile 绑定尾迹），落地后由点绑定的弹体贴着落点不动，毒烟向上腾、泥点向外迸。
  * 数：`data.fumes`（特攻派生）决定毒烟与泥点的密度，`data.hits`/`data.intensity`（命中数与威力派生）决定爆开的亮度。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
@@ -62,6 +63,14 @@ const SludgebombDefinition: ParticleDefinition = {
             duration: { data: "fuse", fallback: 22 },
             exit: { drain: 12 },
             emitters: [
+                {
+                    name: "bomb", bind: "point", offset: [0, 0.16, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/moves/sludgebomb",
+                    burst: { count: 1, at: 1 },
+                    shape: { kind: "point" },
+                    lifetime: 400, size: 0.45,
+                    color: 0xFFFFFF, alpha: [1, 1], light: "world", maxParticles: 1
+                },
                 {
                     name: "swell", bind: "point", offset: [0, 0.18, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",

@@ -6,8 +6,9 @@
  * 色相家族：浅青与近白（gust／small_gust／swirlingwind／largering 的原色偏青），强调点用纯白。
  * 拍子：起 gather（聚气）→ 射 release（弹出）→ 飞 flight（螺旋气团）→ 击 burst（翻卷风环）／散 dissipate。
  * 范围：`burst` 的地面环半径由 `data.scale`（风团判定 / 0.55）缩放，玩家一眼知道这一圈会被风兜住。
- * 运动：风弹沿直线走并小幅转向目标；命中后一圈风环贴地向外翻卷，越离地托得越高（`data.airborne`）。
- * 数：`data.motes`（特攻换算的风团量）绑定飞行与爆开的气团数量，`data.lift`（离地目标才非零）绑定上托气流，
+ * 运动：风弹沿直线走并小幅转向目标；命中后一圈风环贴地向外翻卷，`push` 速度线沿 `data.direction`（风实际吹到的方向）
+ *   拉出方向感；只有真的把离地目标吹动时（`data.lift` 非零）才补上托气流。
+ * 数：`data.motes`（特攻换算的风团量）绑定飞行与爆开的气团数量，`data.lift`（离地且真的被吹动才非零）绑定上托气流，
  *   `data.scale`（风团判定 / 0.55）缩放地面风环，`data.intensity`（威力 / 34）放大整幕。
  */
 const GustDefinition: ParticleDefinition = {
@@ -95,11 +96,11 @@ const GustDefinition: ParticleDefinition = {
                     color: 0xEDF6FA, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 60
                 },
                 {
-                    name: "push", bind: "point", fit: "none", offset: [0, 0.35, 0],
+                    name: "push", bind: "point", fit: "none", offset: [0, 0.35, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: 8, at: 1 },
-                    shape: { kind: "sphere", radius: 0.36 },
-                    direction: "outward", speed: [0.08, 0.3], spread: 24,
+                    shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.08, 0.3], spread: 16,
                     lifetime: [5, 10], size: [0.2, 0.06],
                     color: 0xFFFFFF, alpha: [0.6, 0], light: "full", maxParticles: 24
                 },

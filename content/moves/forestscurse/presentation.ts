@@ -1,4 +1,9 @@
-/** 森林诅咒的根须、树冠与解除落叶；grove 与 scale 控制表现范围。 */
+/**
+ * 森林诅咒：根须只表示那层追加的草属性，不缠住对象；叶纹层与它原有属性的表现并存，直到诅咒褪去。
+ * sign（召）→ root／canopy（种，地面根须＋头顶叶冠）→ hold（缠，绑定托管效果的贴身叶纹，与原属性并存）
+ *   → lift（散，到期落叶）／empty（空点只卷起几片叶）／fizzle（种不上）。
+ * grove 与 scale 控制表现范围；hold 的叶纹随 data.leaves 与 data.grove 变化。
+ */
 const ForestscurseDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -86,6 +91,42 @@ const ForestscurseDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1], spin: 22,
                     lifetime: [12, 20], size: [0.1, 0.02],
                     color: 0x5FA83C, alpha: [0.7, 0], light: "world", maxParticles: 50
+                }
+            ]
+        },
+        hold: {
+            exit: { drain: 24 },
+            emitters: [
+                {
+                    name: "vein", bind: "target", offset: [0, 0.35, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    rate: 3, shape: { kind: "sphere_surface", radius: 0.34 },
+                    direction: "outward", speed: [0.01, 0.04], spin: 10,
+                    lifetime: [16, 26], size: [0.09, 0.02],
+                    color: 0x6FBF3C, alpha: [0.4, 0], light: "world", maxParticles: 18
+                },
+                {
+                    name: "crown", bind: "target", offset: [0, 1.55, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/grass/leaf",
+                    rate: { data: "leaves", fallback: 6 }, shape: { kind: "ring", radius: { data: "grove", fallback: 1.4 }, rotation: [90, 0, 0] },
+                    direction: "down", speed: [0.01, 0.04], gravity: 0.01, spin: 12,
+                    lifetime: [16, 26], size: [0.12, 0.03],
+                    color: 0x8FD84C, alpha: [0.35, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        empty: {
+            duration: 20,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "loose_leaf", bind: "point", offset: [0, 0.3, 0],
+                    particle: "world_combat_core:cobblemon/generic/grass/leaf",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.02, 0.07], gravity: 0.014, spin: 10,
+                    lifetime: [10, 18], size: [0.1, 0.02],
+                    color: 0x7FA84C, alpha: [0.35, 0], light: "world", maxParticles: 16
                 }
             ]
         },

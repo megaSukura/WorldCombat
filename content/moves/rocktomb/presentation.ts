@@ -1,14 +1,15 @@
 /**
  * 岩石封锁 / rocktomb 的客户端表现。
  *
- * 一句话：脚边拎起一块重石头、沿低弧线砸向目标；砸中后目标脚下一圈石柱拔地而起把它围住，离地时石头只炸成石屑。
+ * 一句话：脚边拎起一块重石头、沿低弧线砸向方向点或选中目标；砸中落地目标（或真正落地）后，脚下一圈石柱拔地而起，
+ * 每根成功放下的石柱各起一缕尘，离地或砸墙时石头只炸成石屑。
  * 色相家族：岩石的暖灰褐（earth／tinydust／large_rock／impact_rock 原色）＋一处近白高光（glowingsparkle）标示围栏合拢。
- * 拍子：起（windup 拎石）→ 击（throw 飞行、hit 砸实）→ 收（cage 围栏合拢 / shatter 石屑 / miss 落地）。
- * 范围：`cage` 用 `ring` 形状画出与判定同一半径的围栏圈（服务端 `WorldGeometry.ring(centre, inner, cageRadius)`），
- *   `data.scale`＝封锁半径 / 1.3 让画面圈随目标体型与配置缩放；玩家一眼知道站多近会被围。
- * 运动：拎石是石屑向内收，飞行是贴石屑的短尾迹，围栏是贴地环向外扩后再向上立起；离地则整块石头向外炸开。
- * 数：`data.notes`（投石威力换算）绑定命中石屑数，`data.pillars`（实际放下的石柱格数）绑定围栏起立量，
- *   `data.stages`（实际降速级数）绑定合拢高光的强度，`data.intensity`（威力 / 55）放大整幕。
+ * 拍子：起（windup 拎石）→ 击（throw 飞行、hit 砸实）→ 收（cage 围栏合拢 / pillar 逐根起尘 / shatter 石屑 / miss 落地）。
+ * 范围：`cage` 用 ring 形状画出与判定同一半径的地面圈（`data.scale`＝封锁半径 / 1.3）；石柱不再整圈一次冒，
+ *   改由服务端对原生真正放下的每一根石柱各发一次 `pillar`（bind point，点在真实格子上），缺口处不会亮。
+ * 运动：拎石是石屑向内收，飞行是贴石屑的短尾迹，围栏是贴地环向外扩后再逐根起尘；离地/砸墙则整块石头向外炸开。
+ * 数：`data.notes`（投石威力换算）绑定命中石屑数，`data.pillars`（实际放下的石柱根数，仅作留档）与逐根 `pillar` 的
+ *   实际发点数绑定围栏量，`data.stages`（实际降速级数）绑定合拢高光的强度，`data.intensity`（威力 / 55）放大整幕。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const RocktombDefinition: ParticleDefinition = {
@@ -92,26 +93,6 @@ const RocktombDefinition: ParticleDefinition = {
                     color: 0x7A6A56, alpha: [0.45, 0], light: "world", maxParticles: 4
                 },
                 {
-                    name: "pillar_rise", bind: "point", offset: [0, 0.0, 0],
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "pillars", fallback: 10 }, at: 0, interval: 2 },
-                    shape: { kind: "ring", radius: 1.3 },
-                    direction: "up", speed: [0.16, 0.32],
-                    gravity: 0.09, drag: 0.94,
-                    lifetime: [14, 22], size: [0.2, 0.06],
-                    color: 0xA79783, alpha: [0.85, 0], light: "full", maxParticles: 60
-                },
-                {
-                    name: "pillar_core", bind: "point", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: { data: "pillars", fallback: 10 }, at: 2, interval: 3 },
-                    shape: { kind: "ring", radius: 1.3 },
-                    direction: "up", speed: [0.1, 0.22],
-                    gravity: 0.1, drag: 0.92, spin: 6,
-                    lifetime: [12, 20], size: [0.26, 0.2],
-                    color: 0xB8A894, alpha: [0.8, 0], light: "world", maxParticles: 40
-                },
-                {
                     name: "lock_glow", bind: "point", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "stages", fallback: 1 }, at: 6, interval: 4, repeats: 3 },
@@ -119,6 +100,32 @@ const RocktombDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.14],
                     lifetime: [8, 14], size: [0.12, 0.03],
                     color: 0xF4EEDC, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 30
+                }
+            ]
+        },
+        pillar: {
+            duration: 30,
+            exit: { stop: 10, drain: 16 },
+            emitters: [
+                {
+                    name: "pillar_dust", bind: "point", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 4, at: 0 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "up", speed: [0.08, 0.22],
+                    gravity: 0.08, drag: 0.92,
+                    lifetime: [10, 18], size: [0.15, 0.04],
+                    color: 0x8A7A62, alpha: [0.8, 0], light: "world", maxParticles: 20
+                },
+                {
+                    name: "pillar_core", bind: "point", offset: [0, 0.3, 0],
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: 1, at: 1 },
+                    shape: { kind: "sphere", radius: 0.2 },
+                    direction: "up", speed: [0.06, 0.14],
+                    gravity: 0.09, drag: 0.9, spin: 6,
+                    lifetime: [8, 14], size: [0.18, 0.1],
+                    color: 0xB8A894, alpha: [0.75, 0], light: "world", maxParticles: 6
                 }
             ]
         },

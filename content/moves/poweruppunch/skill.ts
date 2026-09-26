@@ -6,11 +6,12 @@
  *
  * 两幕：
  *   起（windup，提交前）：收拳、拧腰，指节上先亮起一层硬光，只播预告。
- *   硬（execute，提交后）：朝瞄准方向一记直拳探出去（reach／radius），打到活体结算一记 jab 接触+拳伤害；
- *       命中即把拳头硬化 `gain` 级（`NativeEffects.boost(...,"atk",gain)`，写入公共能力阶梯），并刷新共享身份
- *       `world_combat:status/hardened` 的「拳硬」窗口（amplifier 记录本招累计抬起的级数）。物攻等级抬高后，
- *       下一记直拳经共享伤害结算更重——「越来越硬」直接发生在伤害上。硬化到顶（+6）时额外亮一下、浮出「拳已硬到极致」。
- *   续（linger）：窗口内的拳上留一层硬光；窗口到期或被清除时，按 amplifier 原样收回这段等级。
+ *   硬（execute，提交后）：朝瞄准方向一记直拳探出去（reach／radius），真实首碰决定打中谁（墙与友方身体同样挡拳）；
+ *       只有这一拳真的造成伤害（`impact` 回执为真）才算命中，击倒目标的最后一拳同样算。命中后用
+ *       `NativeEffects.boostWindow` 把这次实际抬到的物攻级数挂到「拳已变硬」载体窗口上：
+ *       续期由同一次应用上的旧窗口原样结转，到期、被清除或下次刷新都只收回本招自己贡献的那几级，
+ *       不从当前等级减总数，也不会扣掉别处（或已满）的攻击等级。这一拳空放或对手免疫时得不到等级。
+ *   续（linger）：窗口内的拳上留一层硬光，环片数量对应当前窗口实际增益；窗口结束或被清除时随窗口一起收。
  *
  * 与同族分开：同是拳类，迷昏拳是**一串按节拍的连拳**（一记内打多下、打懵），增强拳是**一记单拳**，
  *   它的重复跨施放累积——打在同一个对手身上，第二拳、第三拳比第一拳重。蓄劲配置把这一点推得更陡。
@@ -20,38 +21,43 @@
 namespace PokemonSkills {
     const poweruppunchScene = "world_combat:move_poweruppunch";
     const poweruppunchHardened = "world_combat:poweruppunch_hardened";
+    const poweruppunchContribution = "world_combat:move/poweruppunch";
     const poweruppunchHardenText = "world_combat.move.poweruppunch.text.harden";
     const poweruppunchPeakText = "world_combat.move.poweruppunch.text.peak";
     const poweruppunchMissText = "world_combat.move.poweruppunch.text.miss";
     const poweruppunchFadeText = "world_combat.move.poweruppunch.text.fade";
 
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function poweruppunchStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
+    /** 本招窗口贡献所在的定义：宝可梦走原生修正层，其他战斗者走共享阶梯窗口。 */
+    function poweruppunchWindowDefinition(actor: CombatActor): string {
+        return String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
     }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function poweruppunchRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = poweruppunchStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, poweruppunchStage(world, actor, stat) - before);
+    /** 本招窗口实际贡献的物攻级数（按窗口效果 id 或旧载体 key 匹配本招来源的那一层）。 */
+    export function poweruppunchWindowLevels(world: CombatWorld, actor: CombatActor, id?: number, carrierKey?: string): number {
+        if (!world.valid(actor)) return 0;
+        const views = world.effects(actor, poweruppunchWindowDefinition(actor));
+        for (let i = 0; i < views.length; i++) {
+            const value = JSON.parse(String(views[i].data()));
+            if (!value || !value.stages || value.source !== poweruppunchContribution) continue;
+            if (id !== undefined && views[i].id() === id) return Math.max(0, Number(value.stages.atk) || 0);
+            if (carrierKey !== undefined && value.carrier && String(value.carrier.key) === carrierKey)
+                return Math.max(0, Number(value.stages.atk) || 0);
+        }
+        return 0;
     }
-    /** 挂上/刷新「拳硬」窗口，amplifier 记录本招累计抬起的级数，供窗口结束时原样收回。 */
-    function poweruppunchOpen(world: CombatWorld, actor: CombatActor, ticks: number, levels: number): number {
-        const existing = MobEffects.read(world, actor, poweruppunchHardened);
-        const total = Math.min(6, Math.max(0, existing === null ? 0 : existing.amplifier()) + levels);
-        MobEffects.apply(world, actor, poweruppunchHardened, ticks, total);
-        return total;
+    /** AI 与表现共用的窗口快照：是否还戴着、剩余刻数、本窗口实际增益。 */
+    export function poweruppunchWindow(world: CombatWorld, actor: CombatActor): { active: boolean; remaining: number; total: number } {
+        const effect = MobEffects.read(world, actor, poweruppunchHardened);
+        if (effect === null) return { active: false, remaining: 0, total: 0 };
+        return { active: true, remaining: effect.duration(), total: poweruppunchWindowLevels(world, actor, undefined, String(effect.key())) };
     }
 
     define({
         id: "poweruppunch",
         cooldownParameter: "recharge",
         name: "增强拳",
-        description: "一记短促直拳打上去：拳本身不重，但每次命中都会让自己的拳头硬一分（物攻 +1 级，蓄劲 +2 级），打中的那一下把下一次打得更重。手感在起势，不在单次伤害。",
-        uses: ["用一记必中的直拳起势，把物攻垫起来", "贴身对同一个目标连打，越打越重", "在开战几拍内把攻击拉满再转重手"],
-        kind: "enemy",
+        description: "一记短促直拳打上去：拳本身不重，但每次命中都会让自己的拳头硬一分（物攻 +1 级，蓄劲 +2 级），打中的那一下把下一次打得更重。手感在起势，不在单次伤害；只有真正造成伤害的拳头才算，击倒目标的最后一拳同样算。",
+        uses: ["用一记直拳起势，把物攻垫起来", "贴身对同一个目标连打，越打越重", "在开战几拍内把攻击拉满再转重手"],
+        kind: "aim",
         range: 2.5,
         maxRange: 2.9,
         prepare: 6,
@@ -93,9 +99,8 @@ namespace PokemonSkills {
             const knock = p("poweruppunch", "knock", action);
             const sparks = Math.max(6, Math.round(p("poweruppunch", "sparks", action)));
             const charge = !!(config && config.charge === true);
-            const before = poweruppunchStage(world, actor, "atk");
             const scale = Math.max(0.6, Math.min(2.0, reach / 2.2));
-            const intensity = Math.max(0.6, Math.min(2.4, jab / 20 + before / 6));
+            const intensity = Math.max(0.6, Math.min(2.4, jab / 20 + NativeEffects.effectiveStage(world, actor, "atk") / 6));
 
             const aimed = action.targetPosition();
             const flat = WorldCombat.point(aimed.x() - body.position().x(), 0, aimed.z() - body.position().z());
@@ -107,7 +112,8 @@ namespace PokemonSkills {
                     sparks: sparks, scale: scale, intensity: intensity, charge: charge ? 1 : 0 }, 20);
             sound(action, "minecraft:entity.player.attack.sweep");
 
-            const strike = action.trace(from, from.plus(forward.scale(reach)), radius);
+            // 真实首碰：短拳沿方向探出；友方身体也纳入接触（伤害许可仍由命中层独立决定），墙同样挡拳。
+            const strike = action.trace(from, from.plus(forward.scale(reach)), radius, true);
             if (!strike.hitEntity()) {
                 WorldFeedback.emit(world, poweruppunchScene, 1, from.plus(forward.scale(reach * 0.7)),
                     { moment: "whiff", sparks: Math.round(sparks * 0.5), scale: scale }, 18);
@@ -117,59 +123,70 @@ namespace PokemonSkills {
             }
             const victim = strike.target();
             const point = strike.position();
+            // 只有真正造成伤害才算命中；击倒目标的最后一拳仍在此结算成功后照常增强。
             const landed = impact(action, strike, "poweruppunch", jab,
                 { damage: damageSpec("poweruppunch", "jab"), contact: true, punch: true }, "jab");
-            if (!landed || victim === null || !world.valid(victim)) {
+            if (!landed) {
                 WorldFeedback.emit(world, poweruppunchScene, 1, point,
                     { moment: "whiff", sparks: Math.round(sparks * 0.5), scale: scale }, 18);
+                WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), poweruppunchMissText, [], 20);
                 done(action);
                 return;
             }
-            const victimBody = world.observe(victim);
-            if (victimBody !== null) world.displace(victim, forward.scale(knock));
-            const gained = poweruppunchRaise(world, actor, "atk", gain);
-            const total = poweruppunchOpen(world, actor, window, gained);
-            const peaked = total >= 6 && total - gained < 6;
+            // 命中回执已成立：即使目标倒下也把这一拳算作有效热身。
+            if (victim !== null && world.valid(victim)) world.displace(victim, forward.scale(knock));
+
+            const previous = MobEffects.read(world, actor, poweruppunchHardened);
+            const previousKey = previous !== null ? String(previous.key()) : "";
+            const beforeOwned = previousKey.length ? poweruppunchWindowLevels(world, actor, undefined, previousKey) : 0;
+            const carrier = MobEffects.apply(world, actor, poweruppunchHardened, window, previous !== null ? previous.amplifier() : 0);
+            let windowId = 0, owned = 0;
+            if (carrier !== null) {
+                windowId = NativeEffects.boostWindow(world, actor, { atk: gain }, carrier.duration(),
+                    poweruppunchContribution, carrier, previous);
+                if (windowId) owned = poweruppunchWindowLevels(world, actor, windowId);
+            }
+            // 上限已被别处占满、本招一层都加不上时不留下空窗口，也不记成 +1。
+            if (!windowId) MobEffects.consume(world, actor, poweruppunchHardened);
+            const gained = Math.max(0, owned - beforeOwned);
+            const peaked = owned >= 6 && beforeOwned < 6;
+
             const after = world.observe(actor);
             const fist = after === null ? from : after.position();
             WorldFeedback.emit(world, poweruppunchScene, 1, point,
-                { moment: "harden", target: String(victim.ref()), gained: gained, total: total, sparks: sparks,
-                    scale: scale, intensity: intensity, charge: charge ? 1 : 0 }, 24);
+                { moment: peaked ? "peak" : "harden", target: String(victim !== null && world.valid(victim) ? victim.ref() : ""),
+                    gained: gained, total: owned, sparks: sparks, scale: scale, intensity: intensity, charge: charge ? 1 : 0 }, 24);
             WorldFeedback.emit(world, poweruppunchScene, 1, fist.plus(WorldCombat.point(0, after === null ? 1 : after.height() * 0.6, 0)),
-                { moment: peaked ? "peak" : "harden", target: String(actor.ref()), gained: gained, total: total,
+                { moment: peaked ? "peak" : "harden", target: String(actor.ref()), gained: gained, total: owned,
                     sparks: sparks, scale: scale, intensity: intensity }, 28);
-            WorldFeedback.text(world, fist.plus(WorldCombat.point(0, (after === null ? 1.4 : after.height()) + 0.1, 0)),
-                peaked ? poweruppunchPeakText : poweruppunchHardenText, peaked ? [total] : [gained, total], 30);
+            // 只续期而没涨级时不冒升级数字；真的涨了级才浮字。
+            if (gained > 0 || peaked) {
+                WorldFeedback.text(world, fist.plus(WorldCombat.point(0, (after === null ? 1.4 : after.height()) + 0.1, 0)),
+                    peaked ? poweruppunchPeakText : poweruppunchHardenText, peaked ? [owned] : [gained, owned], 30);
+            }
+            // 拳上的持续硬光绑在这次真正的窗口上：窗口自然到期、刷新或被清除时随它一起收。
+            if (windowId) {
+                WorldFeedback.onEffect(world, windowId, "world_combat:move_poweruppunch/linger", poweruppunchScene, 1,
+                    fist.plus(WorldCombat.point(0, after === null ? 0.9 : after.height() * 0.6, 0)),
+                    { moment: "linger", target: String(actor.ref()), total: owned,
+                        scale: scale, intensity: intensity, full: owned >= 6 ? 14 : 0 });
+            }
             sound(action, "cobblemon:impact.fighting");
             done(action);
         }
     });
 
-    // 拳硬窗口走完或被清除：把这段直拳抬起的物攻等级原样收回（只收到当前实际持有的正等级）。
+    // 拳硬窗口走完或被清除：等级由载体窗口按实际贡献自行收回，这里只收回尾表现。
     WorldCombat.on("world_combat:move_poweruppunch/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== poweruppunchHardened) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        const loss = Math.min(levels, Math.max(0, poweruppunchStage(world, actor, "atk")));
-        if (loss > 0) NativeEffects.boost(world, actor, "atk", -loss);
+        // 刷新／替换时旧载体被移除而新载体仍在：不是真的结束，不播散去。
+        if (MobEffects.read(world, actor, poweruppunchHardened) !== null) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, poweruppunchScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 24);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, body.height() + 0.1, 0)), poweruppunchFadeText, [loss], 24);
-    });
-
-    // 拳硬存续期：拳上留一层低密度硬光，每 20 刻续期一次，让出本体视线。
-    WorldCombat.on("world_combat:move_poweruppunch/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== poweruppunchHardened) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "poweruppunch:hardened:" + String(actor.ref()), poweruppunchScene, 1,
-            body.position().plus(WorldCombat.point(0, body.height() * 0.6, 0)),
-            { moment: "linger", target: String(actor.ref()), total: Math.max(0, Number(data.amplifier) || 0) }, 40);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, body.height() + 0.1, 0)), poweruppunchFadeText, [], 24);
     });
 }

@@ -24,6 +24,11 @@ namespace PokemonSkills {
     export const supersonicSpot = "world_combat:status/confusion";
     export const supersonicBaseChance = 0.3;
     export const supersonicRecoilFraction = 0.055;
+    /**
+     * 反噬预算系数：自伤同时受这次实际攻击回执（damage_applied 的 actual）约束。
+     * 高最大生命的 Boss 不会被按血条白削——它挥出的这一下有多重，反噬最多就还多痛。
+     */
+    export const supersonicRecoilBudget = 1;
     /** 波面画面上的一圈基准半径（格）；服务端传 scale = 真实半径 / 这个值。 */
     export const supersonicRingReference = 6;
 

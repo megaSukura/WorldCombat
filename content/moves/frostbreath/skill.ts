@@ -13,6 +13,10 @@
  * 与同族／近邻分开：极光束是一条细快的直线光（点名最前一个、压攻击、留霜斑）；冰息是一片宽而慢的扇形冷雾
  *   （罩住一片、必暴、冻僵、留霜）；冰砾是一枚瞬发物理碎冰；冰冻光束是贯穿一条线。冷雾的形状本身就是判定区，
  *   表现用同一组扇形顶点画出（path + polygon）。
+ *
+ * 选取 `kind: "aim"`：可朝任意方向或世界点呼出，也能点任意阵营实体；提交后方向锁死，冷雾沿这条方向铺开。
+ *   目标是空、离场或空呼都不提前结束——照样把这一口呼完、在真实到达的位置留一层薄雪。攻击许可仍由命中层按敌我
+ *   关系判断；墙后的对象被 `world.clear` 排除（墙替它挡住冷雾），阵前站着的人才吃这一口。
  */
 namespace PokemonSkills {
     /** 在落点地表上方空格结出一层霜，租约到期清去薄雪；返回实际铺出的格数。 */
@@ -63,7 +67,7 @@ namespace PokemonSkills {
         name: "Frost Breath",
         description: "呼出一片宽而慢的冷雾：罩住的敌人各吃一记必定击中要害的冰属性特殊伤害并被冻僵，落点结出一层霜。广呼罩得更宽；细呼更快更远更重。",
         uses: ["罩住挤在一起的一片敌人", "用必定要害的冷雾压低一群目标", "在窄口铺一片冻得发僵的霜"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 12,
         prepare: 12,
@@ -71,7 +75,7 @@ namespace PokemonSkills {
         recover: 9,
         cooldown: 34,
         style: "frost",
-        defaults: { wide: false, ai: { maxChase: 14, cluster: true, finish: true } },
+        defaults: { wide: false, ai: { maxChase: 14, cluster: true, finish: true, advantage: true } },
         fields: [flag("wide", "广呼")],
         indicator: function (config, pokemon) {
             return { radius: p(frostbreathId, "reach", pokemon), geometry: "cone", style: "frost", color: 0xCFEAF8,
@@ -130,10 +134,12 @@ namespace PokemonSkills {
                 const region = WorldGeometry.sector(origin, heading, reach, spread, { below: 2.5, above: 3 });
                 let hits = 0;
                 WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
+                    const at = facts.position();
+                    // 墙替它挡住冷雾：不在扇面里或中间隔着实墙的对象不算被罩住。
+                    if (!scope.clear(origin, at)) return;
                     hits++;
                     const landed = hurt(current, enemy, frostbreathId, power,
                         { damage: damageSpec(frostbreathId, "breath"), critical: true });
-                    const at = facts.position();
                     WorldFeedback.emit(scope, frostbreathScene, 1, at,
                         { moment: "hit", target: String(enemy.ref()), motes: motes, size: size * 1.3, intensity: intensity }, 24);
                     if (landed) {
@@ -149,8 +155,11 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, frostbreathScene, 1, origin.plus(heading.scale(reach * 0.62)),
                     { moment: "burst", motes: motes, size: size * 1.5, hits: hits, intensity: intensity }, 26);
                 if (hits === 0) {
+                    // 空呼：冷雾在真实呼程末端散去；只在实际结出薄雪的位置留痕，放不下就不画霜。
+                    WorldFeedback.emit(scope, frostbreathScene, 1, far, { moment: "miss", motes: motes, size: size }, 22);
                     const cells = frostbreathRime(scope, far, Math.max(4, Math.round(frost * 0.5)), frostTicks);
-                    WorldFeedback.emit(scope, frostbreathScene, 1, far, { moment: "rime", cells: cells, size: size * 0.7 }, 24);
+                    if (cells > 0)
+                        WorldFeedback.emit(scope, frostbreathScene, 1, far, { moment: "rime", cells: cells, size: size * 0.7 }, 24);
                     WorldFeedback.text(scope, far.plus(WorldCombat.point(0, 1.0, 0)), frostbreathMissText, [], 22);
                 }
                 if (!settled) { settled = true; done(current); }

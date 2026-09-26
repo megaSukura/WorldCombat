@@ -3,7 +3,8 @@
  *
  * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格内时列入候选；焦点目标不受距离限制。
  * 对谁出手：只接受站在地上的目标（离地的从地脉上方过去，`accepts` 直接排除）；`ai.stillFirst`（默认开）
- *   打开时，移动速度慢的目标排前——地脉在目标脚下发动，站着不动的目标最不容易在亮记号时走开。
+ *   打开时，移动慢的目标排前——地脉锁在起手选定的一点，站着不动的最不容易在亮记号时走开；
+ *   正在和人对打（被牵制、无暇挪步）的目标也略微优先。真正的提前量在起手的锁点里，之后不再追目标。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再落脉。
  * 放完接什么：交回共享交战计划；裂地是留给战场的痕迹，不改变后续决策。
  */
@@ -32,6 +33,7 @@ namespace PokemonSkills {
             let score = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 22 : 0;
             if (target.grounded === true) score += 8;
             if (CompanionBehavior.ai<boolean>(capability, "stillFirst", true) && earthpowerStill(context, target)) score += 6;
+            if (target.attacking) score += 3;
             return score;
         }
     });

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.solarbeam.summary": "站定聚光，再沿直线放出贯穿的光柱，依次攻击走廊内的敌人。强日光下直接发射；阴雨天威力降低、聚光更慢。",
+  "worldcombat.skill.solarbeam.summary": "站定聚光，再朝瞄准方向放出贯穿的光柱，依次攻击走廊内的敌人；光柱被方块截断，只打到墙前。强日光下直接发射；阴雨天威力降低、聚光更慢。",
   "worldcombat.skill.solarbeam.use.0": "在开阔地上贯穿一条线",
   "worldcombat.skill.solarbeam.use.1": "晴天里的无预警重击",
   "worldcombat.skill.solarbeam.description.0": "光柱命中每个目标造成约 %1$s 点特殊伤害。",

@@ -30,6 +30,6 @@
   "worldcombat.skill.present.preference.ai.riskBelow": "Back off below",
   "worldcombat.skill.present.preference.ai.riskBelow.help": "Below this health ratio the companion lowers the box's priority, since it might heal the target instead. Higher uses it less on near-dead targets.",
   "world_combat.move.present.text.hit": "Box blasted %1$s",
-  "world_combat.move.present.text.candy": "It was candy, healed %1$s%%",
+  "world_combat.move.present.text.candy": "It was candy, healed %1$s",
   "world_combat.move.present.text.empty": "The box was empty"
 }

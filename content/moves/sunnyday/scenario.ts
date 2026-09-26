@@ -1,10 +1,10 @@
 // 大晴天：把烈日叫到交战区，光里的人被晒暖。断言“放出来了”和“有人挂上共享的晴暖身份”两件必然事实。
-// 火招增强、水招削弱、解冻与烘干在结算与场地规则里读取；本场景没有第二只会水火招的施法者，留给轨迹与试玩观察。
+// 施法者带一记火属性招，AI 才会把这片阳光读成净收益并出手；火招增强、水招削弱、解冻与烘干在结算与场地规则里读取，留给轨迹与试玩观察。
 Smoke.scenario("sunnyday", function (stage) {
     stage.weather("clear");
     stage.time("day");
 
-    const caster = stage.pokemon({ species: "charmander", level: 32, moves: ["sunnyday"], at: [-4, 0, 0] });
+    const caster = stage.pokemon({ species: "charmander", level: 32, moves: ["ember", "sunnyday"], at: [-4, 0, 0] });
     const target = stage.pokemon({ species: "rattata", level: 20, moves: [], at: [4, 0, 0] });
     stage.hostile(caster, target);
     stage.until(900, function () {

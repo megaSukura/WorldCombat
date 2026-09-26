@@ -1,21 +1,33 @@
 /**
  * 愤怒 / rage 的伙伴 AI 用途。
  *
- * 什么局面下出手：有可见的敌对威胁、在 `ai.maxChase`（默认 7）格内，自己身上还没有怒火（有火时不重复开火），
- *   且生命高于 `ai.healthFloor`（默认 35%%）——火要靠挨打才旺，半条命以下再开就是送。它是先手的自我强化：
- *   伙伴会先把火点上，再迎着对手换血。
+ * 什么局面下出手：有可见的敌对威胁、在 `ai.maxChase`（默认 7）格内。自己没有怒火时，生命要高于
+ *   `ai.healthFloor`（默认 35%）才点火——火要靠挨打才旺，半条命以下再开就是送。它是先手的自我强化。
+ * 有怒火时怎么打：健康且还没收获就再等一轮对手的真实攻击；一旦这一姿态已经实际涨到攻击
+ *   （`rageFedCount` ≥ 1）或自身陷入危险（低于底线／刚被打），就立刻回击（对单招个体即重开怒火），
+ *   不让自己无限站着挨打。
  * 对谁出手：当前威胁；若那矛头正对着自己（`attacking` 是自己）就排到前面——那正是「马上要挨打」的时机。
  * 够不到怎么办：射程由 `blink` 决定，共享任务把身位收进距离后再抡这一记。
- * 放完之后：火已经点着，交回共享交战计划、正常对拼，每一记挨打都在涨攻。
+ * 放完之后：火已经点着，交回共享交战计划、正常对拼，每一记真实挨打都在涨攻。
  */
 namespace PokemonSkills {
+    function rageActor(context: WorldBehavior.Context): CombatActor | null {
+        const world = CompanionBehavior.world(context);
+        return world.actor(CompanionBehavior.source(context).ref);
+    }
+
     function rageWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         const self = CompanionBehavior.source(context);
-        if (CompanionBehavior.status(context, self, "rage")) return false;
-        if (CompanionBehavior.ratio(self) * 100 < CompanionBehavior.ai<number>(item, "healthFloor", 35)) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
-        return CompanionBehavior.distance(self.point, target.point) <= CompanionBehavior.ai<number>(item, "maxChase", 7);
+        if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 7)) return false;
+        const hasRage = CompanionBehavior.status(context, self, "rage");
+        const healthy = CompanionBehavior.ratio(self) * 100 >= CompanionBehavior.ai<number>(item, "healthFloor", 35);
+        if (!hasRage) return healthy;
+        // 火在烧：健康且还没收获时再等一轮；已有实际收益、刚挨过打或已陷危险就回击。
+        if (!healthy || self.hurtAgo < 80) return true;
+        const actor = rageActor(context);
+        return actor !== null && rageFedCount(actor) >= 1;
     }
 
     CompanionBehavior.registerUse(rageId, {
@@ -23,9 +35,6 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
-            const self = CompanionBehavior.source(context);
-            if (CompanionBehavior.status(context, self, "rage")) return false;
-            if (CompanionBehavior.ratio(self) * 100 < CompanionBehavior.ai<number>(capability, "healthFloor", 35)) return false;
             return !target || rageWants(context, capability, target);
         },
         accepts: function (context, capability, target) {
@@ -48,7 +57,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.healthFloor"), "开火下限", "number", {
             min: 10, max: 100, step: 5,
-            help: "自身生命高于这个百分比才开火——火要靠挨打才旺，生命太低时开火风险大。调低更敢在残血时赌一把，调高则只在状态好时强化。"
+            help: "自身生命高于这个百分比才开火——火要靠挨打才旺，生命太低时开火风险大。调低更敢在残血时赌一把，调高则只在状态好时强化；火已点起后低于此线会立即回击而不是继续等。"
         })
     ]);
 }

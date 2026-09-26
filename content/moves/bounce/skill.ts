@@ -11,6 +11,10 @@
  *   落（execute 后半）：沿落点斜坠下砸；落点半径内的敌人各挨一记接触伤害，被向下压、向后推，
  *       并按概率陷入麻痹。起跳那一刻头顶的净空决定实际高度，这一击随之变轻或变重。
  *
+ * 瞄准：`kind: "aim"`——可以点敌人，也可以直接朝脚下的地面点发力。没有实体时用世界点落位，
+ * 把瞄点投到地面并按这一跳的最大水平距离收口，不会把落点甩到远处；空放照常起跳、悬停、落地。
+ * 表现与判定读同一份锁定落点与同一份实际高度。
+ *
  * 与同族的飞翔分开：飞翔是「爬上高空、横掠战场、竖直俯冲」，弹跳是「原地竖直弹起、沿落点斜坠」，
  * 没有滑翔、没有重新锁定，靠压缩/回弹的地面环与落地电劲读出来。
  *
@@ -25,9 +29,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: bounceId,
         cooldownParameter: "recharge", name: "弹跳",
-        description: "蹲身压地后笔直弹起、短暂悬停在最高点，再沿落点斜坠砸下：落点范围内的敌人受到接触伤害并被向下压、向后推，有机会被落地那一下麻住。起跳时头顶的净空决定能弹多高——开阔处弹满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。",
-        uses: ["跳过近战火力，从上方砸下来", "落地带麻痹，打断对手的节奏", "在有掩体前抢一个高空落点"],
-        kind: "enemy", range: 5, maxRange: 7, prepare: 6, active: 60, recover: 7, cooldown: 30,
+        description: "蹲身压地后笔直弹起、短暂悬停在最高点，再沿落点斜坠砸下：落点范围内的敌人受到接触伤害并被向下压、向后推，有机会被落地那一下麻住。可以点敌人，也可以直接朝地面点发力——瞄点会投到地面并收在这一跳的距离内，空放照常起跳落下。起跳时头顶的净空决定能弹多高——开阔处弹满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。",
+        uses: ["跳过近战火力，从上方砸下来", "落地带麻痹，打断对手的节奏", "在有掩体前抢一个高空落点", "直接朝脚下或前方地面点发力空放"],
+        kind: "aim", range: 5, maxRange: 7, prepare: 6, active: 60, recover: 7, cooldown: 30,
         style: "leap", stationary: true, maximumTicks: 200,
         defaults: { crush: false, ai: { maxChase: 9, escapeBelow: 0.55, leaveStation: false } },
         fields: [field(pathOf("crush"), "重落式", "boolean", {
@@ -62,9 +66,19 @@ namespace PokemonSkills {
             const target = action.target();
             const lockedBody = target !== null && world.observe(target) !== null ? world.observe(target) : null;
             const start = body.position();
-            const lock = lockedBody !== null ? lockedBody.position() : action.targetPosition();
-            // Ground projection of the locked point, so the hang marker draws on the floor the target stands on.
-            const lockGround = lockedBody !== null ? WorldCombat.point(lock.x(), lock.y() - lockedBody.height() * 0.5, lock.z()) : lock;
+            // 落点在起跳那一刻锁死：点实体就锚在它脚下，点世界点就投到那片地面。
+            const aimPoint = action.targetPosition();
+            const rawLock = lockedBody !== null ? lockedBody.position() : aimPoint;
+            const groundLock = lockedBody !== null
+                ? WorldCombat.point(rawLock.x(), rawLock.y() - lockedBody.height() * 0.5, rawLock.z())
+                : WorldGeometry.ground(world, rawLock);
+            // 水平引线收在这一跳的最大距离内，不会把落点甩到画面外。
+            const lead = WorldCombat.point(groundLock.x() - start.x(), 0, groundLock.z() - start.z());
+            const maxLead = Math.max(0.5, p(bounceId, "hopDistance", action));
+            const lockGround = lead.length() <= maxLead || lead.length() < 1e-6 ? groundLock
+                : WorldCombat.point(start.x() + lead.unit().x() * maxLead, groundLock.y(), start.z() + lead.unit().z() * maxLead);
+            // 坠落终点取落点上方一点（有实体时取其身体中心），标记仍画在地面的 lockGround。
+            const lock = WorldCombat.point(lockGround.x(), lockedBody !== null ? rawLock.y() : lockGround.y() + 0.9, lockGround.z());
             const maxHeight = p(bounceId, "hopHeight", action);
             const height = Math.max(0, Math.min(maxHeight, bounceHeadroom(world, body, maxHeight)));
             const heightFactor = BOUNCE_LOW_POWER + (1 - BOUNCE_LOW_POWER) * (height / Math.max(0.5, maxHeight));
@@ -107,7 +121,7 @@ namespace PokemonSkills {
                     const dealt = hurt(current, other, bounceId, power * Math.max(0.6, 1 - gap / radius * 0.4),
                         { damage: damageSpec(bounceId, "leap"), contact: true });
                     if (!dealt) continue;
-                    if (live.valid(other)) live.displace(other, WorldCombat.point(direction.x() * push, -press, direction.z() * push));
+                    if (live.valid(other)) live.hitDisplace(other, WorldCombat.point(direction.x() * push, -press, direction.z() * push));
                     if (!wasNumb && chance > 0 && live.random() < chance
                         && CombatStatus.inflict(live, other, "paralysis", paralyzeTicks, 0, { secondary: true })) paralyzed++;
                     hits++;

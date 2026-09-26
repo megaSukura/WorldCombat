@@ -22,6 +22,10 @@ namespace WorldMethods {
     /** Positive number = exact accepted action instance, 0/false = refusal. Boolean-only hosts retain busy-based completion. */
     export type Submission = number | boolean;
     export interface Host {
+        /** Detached facts for one explicitly known reference; null when it is unloaded or invalid. Does not discover subjects. */
+        subject?(ref: string): Subject | null;
+        /** Point-only hosts use the subject point. Body hosts can supply the closest reachable body point for range/navigation. */
+        reachPoint?(target: Subject, from: number[]): number[];
         move(point: number[], within: number, memory: WorldBehavior.Bag): string;
         stop(): void;
         face(point: number[], yaw: number, pitch: number): void;
@@ -112,11 +116,33 @@ namespace WorldMethods {
         var x = a[0] - b[0], y = a[1] - b[1], z = a[2] - b[2]; return Math.sqrt(x * x + y * y + z * z);
     }
     export function source(context: WorldBehavior.Context): Subject { return context.facts.self; }
+    interface KnownSubjects { tick: number; actor: string; values: { [ref: string]: Subject | null }; }
     export function find(context: WorldBehavior.Context, ref: string): Subject | null {
         if (source(context).ref === ref) return source(context);
         var nearby: Subject[] = context.facts.nearby || [];
         for (var i = 0; i < nearby.length; i++) if (nearby[i].ref === ref) return nearby[i];
-        return null;
+        var known = context.scratch.knownSubjects as KnownSubjects | undefined;
+        return known && known.tick === context.tick && known.actor === context.actor
+            && Object.prototype.hasOwnProperty.call(known.values, ref) ? known.values[ref] : null;
+    }
+    /**
+     * Explicitly observe a reference already known to this content (for example an observed attacker).
+     * Self/nearby facts take priority. Other detached subjects, including null and visible=false, are cached only
+     * in this frame's scratch. find/goalSubject may then read them; they never query the host or extend nearby.
+     * A later frame must explicitly observe again. Visibility and geometric eligibility remain content policy.
+     */
+    export function observeKnown(context: WorldBehavior.Context, ref: string): Subject | null {
+        if (typeof ref !== "string" || !ref) return null;
+        var present = find(context, ref); if (present) return present;
+        var known = context.scratch.knownSubjects as KnownSubjects | undefined;
+        if (!known || known.tick !== context.tick || known.actor !== context.actor)
+            known = context.scratch.knownSubjects = { tick: context.tick, actor: context.actor, values: Object.create(null) };
+        if (Object.prototype.hasOwnProperty.call(known.values, ref)) return known.values[ref];
+        var host = context.services.behavior as Host | undefined, value = host && host.subject ? host.subject(ref) : null;
+        // The single-reference contract cannot replace the requested identity or publish malformed coordinates.
+        known.values[ref] = value && value.ref === ref && Array.isArray(value.point) && value.point.length === 3
+            && value.point.every(function (coordinate) { return typeof coordinate === "number" && isFinite(coordinate); }) ? value : null;
+        return known.values[ref];
     }
     /** The subject a use is being considered for: the active choice's goal, or the candidate the library is proposing against. */
     export function goalSubject(context: WorldBehavior.Context): Subject | null {
@@ -339,7 +365,9 @@ namespace WorldMethods {
             if (!approachTarget || approachTarget.health !== undefined && approachTarget.health <= 0) return WorldBehavior.failure("target-left");
             if (context.facts.busy && !this.library.isReady(context, item, subject)) return WorldBehavior.running();
             var reach = this.reach(context, item, purpose); if (reach < 0) return WorldBehavior.failure("invalid-use-reach");
-            var here = source(context).point, outside = distance(here, approachTarget.point) > reach;
+            var here = source(context).point, host = context.services.behavior as Host;
+            var approachPoint = host && host.reachPoint ? host.reachPoint(approachTarget, here) : approachTarget.point;
+            var outside = distance(here, approachPoint) > reach;
             var plan = usage.approach ? usage.approach(context, item, approachTarget, reach) : null;
             if (plan === "wait") { this.stop(context); this.report(context, "waiting", purpose); return WorldBehavior.running(); }
             var placement = progress.placement;
@@ -354,7 +382,7 @@ namespace WorldMethods {
             var reposition = placement && !placement.arrived;
             if (outside || reposition) {
                 if (this.options.mayApproach && !this.options.mayApproach(context, item, purpose, approachTarget)) return WorldBehavior.failure("guard-range");
-                var destination = reposition ? placement.point : approachTarget.point, within = reposition ? 1 : reach;
+                var destination = reposition ? placement.point : approachPoint, within = reposition ? 1 : reach;
                 var navigation = this.move(context, destination, within), moving = navigation === "moving" || navigation === "arrived";
                 if (navigation === "arrived" && reposition) placement.arrived = true;
                 this.report(context, moving ? "approaching" : "blocked", moving ? purpose : navigation);

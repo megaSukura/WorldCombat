@@ -1,17 +1,4 @@
-/**
- * 死缠烂打 / infestation 的出手方式。
- *
- * 核心念头：甩出一团虫子扑到目标身上缠住它；虫子持续啃咬，而且只要缠着，目标就无法逃走——用时间换空间。
- *
- * 三幕：
- *   起：虫群在身前聚拢（windup）。
- *   击：提交后虫群飞向目标；命中（或撞到东西）即附着：先结算一次初击（bite），再把共享身份
- *       `world_combat:status/partiallytrapped`（本单元 startup 效果，自带速度归零定身）挂到目标身上。
- *   收：绑定效果 `world_combat:infestation_bond` 按 `interval` 每隔一段时间咬一口（按目标最大生命比例），
- *       直到时间走完或被外力（牛奶、/effect clear、别的招式）清掉，虫群散去。
- *
- * 宝可梦那一层：本状态只带身份、不自动同步成原生异常，符合原生 partiallytrapped 本就是 volatile、不进队伍 UI 的语义。
- */
+/** 四簇虫附体持续啃咬；实际走过的路程逐簇甩落，余下虫份决定后续伤害。 */
 namespace PokemonSkills {
     const infestationScene = "world_combat:move_infestation";
     const infestationSwarmEffect = "world_combat:infestation_swarm";
@@ -20,62 +7,65 @@ namespace PokemonSkills {
     const infestationFizzleText = "world_combat.move.infestation.text.fizzle";
     const infestationReleaseText = "world_combat.move.infestation.text.release";
 
-    function infestationBondData(json: string): string {
-        const value = JSON.parse(json);
-        ["interval", "share", "pulses"].forEach(function (key) {
-            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid infestation bond");
-        });
-        if (value.share <= 0 || value.interval < 1) throw new Error("Invalid infestation bond");
-        return JSON.stringify(value);
-    }
-
-    WorldCombat.effect(infestationBond, 1, 1200, "actor", infestationBondData, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(infestationBond, "start", function (effect) {
-        const data = JSON.parse(effect.state());
-        effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
-    });
-    WorldCombat.effectHandler(infestationBond, "pulse", function (effect) {
-        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(victim) || MobEffects.read(world, victim, infestationSwarmEffect) === null) { effect.end(); return; }
-        const body = world.observe(victim);
+    const infestationGroups = 4;
+    WorldCombat.effect(infestationBond, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(infestationBond, "start", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target), data = JSON.parse(effect.state());
         if (body === null) { effect.end(); return; }
-        const amount = Math.max(1, Math.floor(body.maxHealth() * data.share));
-        world.health(victim, -amount, "world_combat:infestation");
-        data.pulses = (data.pulses || 0) + 1;
+        data.lease = MobEffects.bind(world, target, infestationSwarmEffect);
+        data.last = [body.position().x(), body.position().y(), body.position().z()]; data.distance = 0;
         effect.state(JSON.stringify(data));
-        WorldFeedback.emit(world, infestationScene, 1, body.position(), { moment: "bite", target: String(victim.ref()),
-            count: Math.round(8 + data.share * 900), intensity: Math.max(0.6, Math.min(2.2, data.share / 0.018)), pulses: data.pulses }, 20);
-        world.sound("cobblemon:move.infestation.residual", body.position(), 16, "{}");
-        effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
+        effect.schedule("motion", "motion", 1, "{}");
+        effect.schedule("pulse", "pulse", data.interval, "{}");
     });
-    WorldCombat.effectHandler(infestationBond, "operation:world_combat:dispel", function (effect) { effect.end(); });
-    WorldCombat.effectHandler(infestationBond, "end", function (effect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) return;
-        const state = MobEffects.read(world, victim, infestationSwarmEffect);
-        if (state !== null) world.removeMobEffect(victim, infestationSwarmEffect, state.key());
-        const body = world.observe(victim);
-        if (body !== null) {
-            WorldFeedback.emit(world, infestationScene, 1, body.position(), { moment: "release", target: String(victim.ref()) }, 22);
-            WorldFeedback.text(world, body.position(), infestationReleaseText, [], 24);
+    WorldCombat.effectHandler(infestationBond, "motion", effect => {
+        const world = effect.world(), victim = effect.target(), body = world.observe(victim), data = JSON.parse(effect.state());
+        if (body === null || !MobEffects.present(world, data.lease)) { effect.end(); return; }
+        const at = body.position(), delta = at.minus(WorldCombat.point(data.last[0], data.last[1], data.last[2]));
+        data.last = [at.x(), at.y(), at.z()]; data.distance += delta.length();
+        const shed = Math.min(data.groups, Math.floor(data.distance / data.shakeDistance));
+        if (shed > 0) {
+            data.groups -= shed; data.distance -= shed * data.shakeDistance;
+            WorldFeedback.emit(world, infestationScene, 1, at, { moment: "shed", count: shed,
+                direction: [delta.x(), delta.y(), delta.z()] }, 16);
         }
+        effect.state(JSON.stringify(data));
+        if (data.groups <= 0) { effect.end(); return; }
+        const view: any = { moment: "swarm", target: String(victim.ref()), groups: data.groups };
+        for (let i = 0; i < infestationGroups; i++) view["g" + i] = data.groups > i ? 10 : 0;
+        WorldFeedback.onEffect(world, effect.id(), "swarm", infestationScene, 1, at, view);
+        effect.schedule("motion", "motion", 1, "{}");
     });
-    // 外力提前清掉虫群（牛奶、/effect clear、别的招式）时，绑定随之结束。
-    WorldCombat.on("world_combat:move_infestation/release", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== infestationSwarmEffect) return;
-        const world = event.world(), victim = event.actor();
-        if (!world.valid(victim) || MobEffects.read(world, victim, infestationSwarmEffect) !== null) return;
-        const bonds = world.effects(victim, infestationBond);
-        for (let i = 0; i < bonds.length; i++) world.operation(bonds[i].id(), "world_combat:dispel", "{}");
+    WorldCombat.effectHandler(infestationBond, "pulse", effect => {
+        const world = effect.world(), victim = effect.target(), body = world.observe(victim), data = JSON.parse(effect.state());
+        if (body === null || !MobEffects.present(world, data.lease)) { effect.end(); return; }
+        const amount = Math.max(1, Math.floor(body.maxHealth() * data.share)) * data.groups / infestationGroups;
+        data.pulses++; effect.state(JSON.stringify(data));
+        PokemonDamage.residual(world, victim, "infestation", amount, { share: data.share, groups: data.groups, pulses: data.pulses });
+        effect.schedule("pulse", "pulse", data.interval, "{}");
     });
+    WorldCombat.effectHandler(infestationBond, "operation:world_combat:dispel", effect => effect.end());
+    WorldCombat.effectHandler(infestationBond, "end", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target);
+        if (body === null) return;
+        WorldFeedback.emit(world, infestationScene, 1, body.position(), { moment: "release", target: String(target.ref()) }, 22);
+        WorldFeedback.text(world, body.position(), infestationReleaseText, [], 24);
+    });
+    PokemonDamage.onDamageApplied("world_combat:infestation/residual", receipt => {
+        const fact = WorldFeedback.receipt(receipt.event);
+        if (fact === null || !(fact.actual > 0)) return;
+        const world = receipt.world, at = fact.point, data = receipt.data;
+        WorldFeedback.emit(world, infestationScene, 1, at, { moment: "bite", target: String(receipt.target.ref()),
+            count: data.groups * 2, intensity: .6 + data.groups * .1, pulses: data.pulses }, 20);
+        world.sound("cobblemon:move.infestation.residual", at, 16, "{}");
+    }, { move: "infestation", segment: "residual" });
 
     define({
         id: "infestation",
         name: "Infestation",
-        description: "甩出一团虫子缠住目标，持续啃咬，并且只要缠着目标就无法移动；用时间换空间。",
-        uses: ["给难缠的目标挂持续啃咬", "把目标定在原地", "逼对手先来清状态或反打"],
-        kind: "enemy",
+        description: "甩出四簇虫黏住目标持续啃咬。目标可以移动，每跑过一段距离便甩落一簇，剩下的虫越少，啃咬越轻。",
+        uses: ["给难缠的目标挂持续啃咬", "迫使站定输出的敌人走动甩虫", "逼对手先来清状态或反打"],
+        kind: "aim",
         range: 12,
         maxRange: 18,
         prepare: 8,
@@ -125,13 +115,14 @@ namespace PokemonSkills {
                         sound(current, "minecraft:entity.generic.splash");
                         return;
                     }
-                    impact(current, hit, "infestation", bite, { damage: damageSpec("infestation", "bite"), contact: true });
+                    if (!impact(current, hit, "infestation", bite, { damage: damageSpec("infestation", "bite"), contact: true })) return;
                     if (!CombatStatus.apply(body, target, "partiallytrapped", infestationSwarmEffect, ticks, 0, { unique: true })) {
                         WorldFeedback.emit(body, infestationScene, 1, hit.position(), { moment: "immune", target: String(target.ref()) }, 22);
                         return;
                     }
-                    WorldEffects.apply(body, target, "rooted", {}, ticks);
-                    body.effect(infestationBond, target, JSON.stringify({ interval: interval, share: share, pulses: 0 }), ticks);
+                    body.effects(target, infestationBond).forEach(effect => body.operation(effect.id(), "world_combat:dispel", "{}"));
+                    body.effect(infestationBond, target, JSON.stringify({ interval: interval, share: share, pulses: 0,
+                        groups: infestationGroups, shakeDistance: p("infestation", "shakeDistance", current) }), ticks);
                     const ref = String(target.ref());
                     WorldFeedback.emit(body, infestationScene, 1, hit.position(), { moment: "cling", target: ref, scale: scale, share: share }, 28);
                     WorldFeedback.text(body, hit.position(), infestationClingText, [Math.round(ticks / 20 * 10) / 10], 30);
@@ -143,29 +134,4 @@ namespace PokemonSkills {
         }
     });
 
-    WorldCombat.on("world_combat:move_infestation/halt", "world_combat:mob_effect_added", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== infestationSwarmEffect) return;
-        event.world().stopMovement(event.actor());
-    });
-
-    // 「无法逃走」：虫群缠着期间把导航速度归零，对所有活体（含宝可梦的脚本导航）一致。
-    WorldCombat.on("world_combat:move_infestation/roots", "world_combat:navigate", "", function (event) {
-        if (event.world().mobEffect(event.actor(), infestationSwarmEffect) === null) return;
-        const data = JSON.parse(String(event.data()));
-        data.speed = 0;
-        event.data(JSON.stringify(data));
-    });
-
-    // 虫群缠着期间维持一段低密度的爬行画面：少而稳，贴在身体周围，不遮挡目标。
-    WorldCombat.on("world_combat:move_infestation/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== infestationSwarmEffect || event.world().tick() % 10 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_infestation/swarm/" + String(actor.ref()), infestationScene, 1,
-            body.position(), { moment: "swarm", target: String(actor.ref()) }, 24);
-    });
 }

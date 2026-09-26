@@ -6,12 +6,13 @@
  *
  * 三幕：
  *   起（charge，提交前）：脚下裂出一圈将被撑开的古纹，只播预告，是周围对手走出范围的窗口。
- *   爆（erupt → hit）：提交后古能从脚下炸开，`reach` 半径的半球内每个非友方各结算一次 `primal` 特殊伤害，
- *       沿背离中心方向被推开 `push` 格、向上托起 `lift` 格；地面浮起一圈符文。
- *   涌（surge / fade）：冲击散开后掷一次反哺，成功则攻击、防御、特攻、特防、速度各升 `surgeStages` 级，
- *       失败只留余尘。
+ *   爆（erupt → hit）：提交后古能从脚下炸开，`reach` 半径、`band` 上下高度的半球内每个非友方各结算一次
+ *       `primal` 特殊伤害；水平外推与向上托起分别按真实向量构造，头顶正上方的目标也拿到合法的向上分量，
+ *       位移走原生受击入口，实际挪动多少由地形与击退抗性决定。
+ *   涌（surge / fade）：冲击散开后掷一次反哺。五项能力此刻才真正写入窗口；只按本次实际提高的项反馈，
+ *       并把持续符文绑在这个窗口上，窗口自然到期或被清除时符文一起收。窗口只保留一层。
  *
- * 配置 `deep`（深源式）由 resolve 改时序、由公式改半径／威力／反哺：开启＝窄而重、更稳，关闭＝广而快。
+ * `kind: "self"`：以自身为中心，不要求选中敌人；AI 只把真正落在半径与上下高度内、视线可达的敌人计入圈内。
  */
 namespace PokemonSkills {
     const ancientpowerScene = "world_combat:move_ancientpower";
@@ -72,6 +73,7 @@ namespace PokemonSkills {
             const runes = Math.max(6, Math.round(p("ancientpower", "runes", action)));
             const scale = Math.max(0.6, Math.min(2.4, radius / 3.4));
             const intensity = Math.max(0.5, Math.min(2.4, power / 62));
+            const ring = Math.max(0.9, Math.min(2.6, radius * 0.42));
 
             sound(action, "minecraft:block.ancient_debris.break");
             WorldFeedback.emit(world, ancientpowerScene, 1, centre,
@@ -82,9 +84,12 @@ namespace PokemonSkills {
                 if (String(enemy.ref()) === String(actor.ref())) return;
                 if (!hurt(action, enemy, "ancientpower", power, { damage: damageSpec("ancientpower", "primal") })) return;
                 hits++;
+                // 水平外推与向上托起分别构造：头顶正上方的目标水平分量为零，仍拿到合法的向上分量而不是零向量。
                 const away = facts.position().minus(centre);
-                if (world.valid(enemy) && away.length() > 0.05)
-                    world.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push).plus(WorldCombat.point(0, lift, 0)));
+                const flat = WorldCombat.point(away.x(), 0, away.z());
+                const outward = flat.length() > 0.05 ? flat.unit().scale(push) : WorldCombat.point(0, 0, 0);
+                const delta = outward.plus(WorldCombat.point(0, lift, 0));
+                if (world.valid(enemy) && delta.length() > 0.01) world.hitDisplace(enemy, delta);
                 WorldFeedback.emit(world, ancientpowerScene, 1, facts.position(),
                     { moment: "hit", target: String(enemy.ref()), radius: radius, shards: shards, scale: scale, intensity: intensity }, 24);
             });
@@ -100,18 +105,35 @@ namespace PokemonSkills {
             if (world.random() < chance && world.valid(actor)) {
                 const window = Math.max(1, Math.round(p("ancientpower", "surgeTicks", action)));
                 const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+                // 窗口只保留一层：先按本招来源结束旧窗口，再写入这一次；被拒的项不会留下债务。
                 world.effects(actor, definition).forEach(function (view) {
                     const data = JSON.parse(String(view.data()));
                     if (data.source === "world_combat:move/ancientpower") NativeEffects.windowClose(world, view.id());
                 });
-                NativeEffects.boostWindow(world, actor, { atk: stages, def: stages, spa: stages, spd: stages, spe: stages }, window, "world_combat:move/ancientpower");
-                const self = world.observe(actor);
-                const at = self === null ? centre : self.position();
-                WorldFeedback.emit(world, ancientpowerScene, 1, at,
-                    { moment: "surge", target: String(actor.ref()), stages: stages, radius: radius, shards: shards, scale: scale }, 28);
-                WorldFeedback.text(world, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),
-                    ancientpowerSurgeText, [stages, Math.round(window / 20)], 30);
-                world.sound("minecraft:block.beacon.power_select", at, 18, "{}");
+                const before = NativeEffects.effectiveStages(world, actor);
+                const windowId = NativeEffects.boostWindow(world, actor, { atk: stages, def: stages, spa: stages, spd: stages, spe: stages },
+                    window, "world_combat:move/ancientpower");
+                if (windowId > 0) {
+                    const after = NativeEffects.effectiveStages(world, actor);
+                    const rise: any = {};
+                    let raised = 0, best = 0;
+                    ["atk", "def", "spa", "spd", "spe"].forEach(function (stat) {
+                        const gain = Math.max(0, Math.round((after[stat] || 0) - (before[stat] || 0)));
+                        if (gain > 0) { rise[stat] = gain; raised++; if (gain > best) best = gain; }
+                    });
+                    if (raised > 0) {
+                        const self = world.observe(actor);
+                        const at = self === null ? centre : self.position();
+                        // 持续符文绑在这次真正的能力窗口上：窗口到期或被清除会同步收回。
+                        WorldFeedback.onEffect(world, windowId, "world_combat:move_ancientpower/runes", ancientpowerScene, 1, at,
+                            { moment: "hum", rise: rise, runes: runes, ring: ring, scale: scale });
+                        WorldFeedback.emit(world, ancientpowerScene, 1, at,
+                            { moment: "surge", target: String(actor.ref()), rise: rise, stages: best, radius: radius, shards: shards, scale: scale }, 28);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),
+                            ancientpowerSurgeText, [raised, best, Math.round(window / 20)], 30);
+                        world.sound("minecraft:block.beacon.power_select", at, 18, "{}");
+                    }
+                }
             }
             done(action);
         }

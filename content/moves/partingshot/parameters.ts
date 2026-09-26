@@ -5,8 +5,9 @@
  *   boosts = { atk: −1, spa: −1 }／selfSwitch／target normal；
  *   说明是「抛下狠话威吓对手，降低攻击和特攻后，和后备宝可梦进行替换」。
  *
- * 世界化翻译：即时世界没有后备席，把「抛下一句狠话再换人」落成**朝对手甩出一句带刺的话**——话像一支暗色的镖飞过去，
- *   扎中后把对手的攻击与特攻各削几级，自己趁机背离对手退开。没有替身席可换，替换部分见报告共享前置。
+ * 世界化翻译：把「抛下一句狠话再换人」落成**朝瞄准方向甩出一句带刺的话**——话像一支暗色的镖飞过去，
+ *   首碰为准；扎中真实非友方活体后把对手的攻击与特攻各削几级，自己趁机背离对手退开。有合法后备队友在待命时，
+ *   直接在落点与它换手；没有后备就沿实际脚步逐刻后退，撞墙即停。选取是 `kind: "aim"`，可以空放。
  *
  * 数据分散：
  *   drop        削掉的等级 = 特攻（话越毒）＋ 配置；夹 1..2；
@@ -27,6 +28,7 @@ namespace PokemonSkills {
     export const partingshotStatus = "parting_shot";
     export const partingshotText = "world_combat.move.partingshot.text.barb";
     export const partingshotMissText = "world_combat.move.partingshot.text.whiff";
+    export const partingshotSwitchText = "world_combat.move.partingshot.text.switch";
 
     actionParameters.define(partingshotId, {
         /** 羞辱级数：1 +（特攻 ≥ 110 时 +1）+（毒舌时 +1）；夹 1..2。 */
@@ -99,6 +101,7 @@ namespace PokemonSkills {
     describe(partingshotId, [
         { key: "description.0", values: ["drop","markTicks"] },
         { key: "description.1", values: ["reach","flight","withdraw"] },
+        { key: "description.2", values: ["withdraw"] },
         { key: "venom.on", values: [], when: function (context) { return read(context.detail.values, ["venom"]) === true; } },
         { key: "venom.off", values: [], when: function (context) { return read(context.detail.values, ["venom"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

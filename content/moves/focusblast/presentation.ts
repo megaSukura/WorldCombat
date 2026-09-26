@@ -13,13 +13,12 @@ const FocusBlastDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         charge: {
-            duration: 34,
-            exit: { stop: 12, drain: 18 },
+            exit: { drain: 8 },
             emitters: [
                 {
                     name: "charge_aura", bind: "source", offset: [0, 0.25, 0], height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/aura_white",
-                    rate: 26, shape: { kind: "sphere", radius: 0.62 },
+                    rate: 26, shape: { kind: "sphere", radius: { data: "jitter", fallback: .5 } },
                     direction: "inward", speed: [0.06, 0.2],
                     lifetime: [8, 16], size: [0.3, 0.06],
                     color: 0xE8C86A, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 60
@@ -27,7 +26,7 @@ const FocusBlastDefinition: ParticleDefinition = {
                 {
                     name: "charge_motes", bind: "source", offset: [0, 0.3, 0], height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    rate: 24, shape: { kind: "sphere", radius: 0.55 },
+                    rate: 24, shape: { kind: "sphere", radius: { data: "jitter", fallback: .5 } },
                     direction: "inward", speed: [0.08, 0.26],
                     lifetime: [6, 12], size: [0.1, 0.02],
                     color: 0xFFF4C8, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 50

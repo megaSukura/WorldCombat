@@ -9,8 +9,11 @@
 namespace PokemonSkills {
     function jumpkickWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-            <= CompanionBehavior.ai<number>(item, "maxChase", 9);
+        const self = CompanionBehavior.source(context);
+        if (CompanionBehavior.distance(self.point, target.point)
+            > CompanionBehavior.ai<number>(item, "maxChase", 9)) return false;
+        // 短直线可接近：到目标要有直视线，墙后不拐向原敌。
+        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     CompanionBehavior.registerUse("jumpkick", {
@@ -29,7 +32,10 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             if (CompanionBehavior.ai<boolean>(capability, "preferWeak", true) && CompanionBehavior.ratio(target) <= 0.35) return 30;
-            return 16;
+            // 快敌仍需预判：横移越快的目标越容易在被锁死的浅弧窗口里让开，降权但不禁用。
+            const velocity = target.velocity;
+            const moving = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : 0;
+            return moving > 0.25 ? 12 : 16;
         }
     });
 

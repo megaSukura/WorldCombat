@@ -4,7 +4,7 @@
   "worldcombat.skill.aquastep.use.1": "Sweep everyone standing in the ring",
   "worldcombat.skill.aquastep.use.2": "Boost Speed, then either back off or press in",
   "worldcombat.skill.aquastep.description.0": "The spin deals about %1$s damage; the user first taps %2$s beats around the target, %3$s blocks per beat at %4$s s per beat, and rain adds a beat and weight to the spin.",
-  "worldcombat.skill.aquastep.description.1": "The spin sweeps a %1$s block radius: the chosen target takes the full hit while other foes in the ring take %2$s of the damage; landing on the chosen target raises the user's Speed by %3$s stages, and each swept target is pushed about %4$s blocks outward.",
+  "worldcombat.skill.aquastep.description.1": "The spin sweeps a %1$s block radius: the chosen target takes the full hit while other foes in the ring take %2$s of the damage; landing on the chosen target raises the user's Speed by %3$s stages (with an empty point, the first foe swept counts as the chosen one), and each swept target is pushed about %4$s blocks outward.",
   "worldcombat.skill.aquastep.twirl.on": "Twirl: the beats circle the target and the final step lands behind it, for a trickier angle.",
   "worldcombat.skill.aquastep.twirl.off": "Tap: the beats hop left and right out front, and the final step stays in front.",
   "worldcombat.skill.aquastep.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

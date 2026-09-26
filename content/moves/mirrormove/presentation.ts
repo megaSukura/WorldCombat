@@ -13,6 +13,18 @@
 const mirrormoveDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        native_contact: { duration: 5, exit: { stop: 2, drain: 3 }, emitters: [{ name: "shadow_palm", bind: "source", height: 0.5, orient: "direction",
+            particle: "world_combat_core:cobblemon/generic/hollowfist", burst: { count: 1 }, shape: { kind: "point" },
+            direction: [0,0,1], speed: .5, lifetime: 3, size: [.4,.15], color: 0xBFE6F5, alpha: [.85,0], light: "full" }] },
+        native_flight: { exit: { stop: 0, drain: 5 }, emitters: [{ name: "shadow_flight", bind: "projectile",
+            particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle", rate: 14, trail: { minDistance: .2 },
+            shape: { kind: "point" }, speed: 0, lifetime: 6, size: [.06,.02], color: 0xBFE6F5, alpha: [.6,0], light: "world" }] },
+        native_hit: { duration: 10, exit: { stop: 0, drain: 5 }, emitters: [{ name: "shadow_hit", bind: "point",
+            particle: "world_combat_core:cobblemon/generic/hit_yellow", burst: { count: 1 }, shape: { kind: "point" },
+            speed: 0, lifetime: 5, size: [.3,.05], color: 0xBFE6F5, alpha: [.9,0], light: "full" }] },
+        native_miss: { duration: 8, exit: { stop: 0, drain: 5 }, emitters: [{ name: "shadow_miss", bind: "point",
+            particle: "world_combat_core:cobblemon/generic/tinydust", burst: { count: 3 }, shape: { kind: "sphere", radius: .12 },
+            speed: .02, lifetime: 5, size: [.06,.02], color: 0xBFE6F5, alpha: [.4,0], light: "world" }] },
         brace: {
             duration: 14,
             exit: { stop: 8, drain: 12 },

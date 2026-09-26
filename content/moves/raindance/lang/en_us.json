@@ -23,7 +23,7 @@
   "worldcombat.skill.raindance.preference.ai.maxChase": "Call distance",
   "worldcombat.skill.raindance.preference.ai.maxChase.help": "The companion only calls rain while a threat is within this distance; lower calls it up close, higher sets it up in advance.",
   "worldcombat.skill.raindance.preference.ai.advance": "Push the rain at the foe",
-  "worldcombat.skill.raindance.preference.ai.advance.help": "On, the rain is called between you and the threat so the fighting line falls inside it; off, it is called at your feet to shield yourself first.",
+  "worldcombat.skill.raindance.preference.ai.advance.help": "On, the rain is pushed a few blocks toward the threat; off (default), it is kept over the side it helps most, first covering a burning ally or yourself.",
   "worldcombat.skill.raindance.preference.ai.leaveStation": "Leave the station",
   "worldcombat.skill.raindance.preference.ai.leaveStation.help": "On, a companion holding its station will step out to call rain.",
   "world_combat.move.raindance.text.drench": "Drenched",

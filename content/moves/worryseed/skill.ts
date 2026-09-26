@@ -12,18 +12,22 @@ namespace PokemonSkills {
         return NativeEffects.ability(pokemon, state);
     }
 
-    /** 目标特性是否还能被这颗种子顶掉：读得出、不是不眠、且允许被压制。 */
+    /**
+     * 这颗种子还能不能顶掉目标的特性：读得出、不是不眠、不是天生免疫睡眠，且允许被压制。
+     * 不可替换与已不眠都沿用原生拒绝，不虚构一次成功。
+     */
     export function worryseedPlantable(ability: string): boolean {
-        return !!ability && ability !== "insomnia" && !NativeAbilities.flag(ability, "cantsuppress");
+        return !!ability && ability !== "insomnia"
+            && !NativeAbilities.flag(ability, "cantsuppress") && !NativeAbilities.flag(ability, "statusImmune");
     }
 
     define({
         id: "worryseed",
         cooldownParameter: "recharge",
         name: "Worry Seed",
-        description: "种下烦恼，使目标从招式造成的睡眠中醒来，并在种子存续期间抵抗再次催眠；宝可梦的特性还会暂时变为不眠。",
-        uses: ["顶掉对手的强力特性换成一枚不眠", "让对手睡不下去，封掉催眠类打法"],
-        kind: "enemy",
+        description: "投出一颗烦恼种子：命中敌人时把它的特性暂时换成不眠、并叫醒它；命中睡着的友方会把它叫醒，种子存续期间两者都抵抗再次催眠。可以空投，落到地面就散开。",
+        uses: ["顶掉对手的强力特性换成一枚不眠", "把睡着的伙伴叫醒，并替它挡住之后的催眠", "让对手睡不下去，封掉催眠类打法"],
+        kind: "aim",
         range: 7,
         maxRange: 14,
         prepare: 9,
@@ -31,7 +35,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 70,
         style: "seed",
-        defaults: { deep: false, ai: { maxChase: 13, leaveStation: false } },
+        defaults: { deep: false, helpFriends: true, ai: { maxChase: 13, leaveStation: false } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["worryseed"], detail: { values: config } };
@@ -49,12 +53,14 @@ namespace PokemonSkills {
             };
         },
         ready: function (action) {
-            const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            const world = action.sense(), target = action.target(), origin = action.origin();
+            // 空投：只朝一个世界点运种，能落到射程内就允许；没有实体也不额外找敌人。
+            if (target === null) return action.targetPosition().minus(origin).length() > action.range() ? "out-of-range" : "";
+            if (!world.valid(target)) return "target-left";
             const body = world.observe(target);
-            if (body === null) return "invalid-target";
-            if (body.position().minus(action.origin()).length() > p("worryseed", "reach", action)) return "out-of-range";
-            if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (body === null) return "target-left";
+            if (body.position().minus(origin).length() > action.range()) return "out-of-range";
+            if (!world.clear(origin, body.position())) return "no-line";
             if (CombatStatus.has(world, target, "worryseed")) return "already-planted";
             if (String(target.domain()) === "cobblemon") {
                 const ability = worryseedAbility(world, target);
@@ -64,15 +70,17 @@ namespace PokemonSkills {
             return "";
         },
         windup: function (action, config, prepare) {
+            const target = action.target();
+            const path = target === null ? [String(action.actor().ref())] : [String(action.actor().ref()), String(target.ref())];
             action.present("world_combat:worryseed:gather", worryseedScene, 1, action.origin(), JSON.stringify({
-                moment: "gather", seeds: p("worryseed", "seeds", action), deep: config && config.deep ? 1 : 0
+                moment: "gather", path: path, seeds: p("worryseed", "seeds", action), deep: config && config.deep ? 1 : 0
             }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null) { done(action); return; }
+            if (body === null) { done(action); return; }
             const deep = !!(config && config.deep);
             const velocity = p("worryseed", "velocity", action);
             const radius = Math.max(0.15, p("worryseed", "radius", action));
@@ -80,7 +88,10 @@ namespace PokemonSkills {
             const seeds = Math.max(10, Math.round(p("worryseed", "seeds", action)));
             const worries = Math.max(4, Math.round(p("worryseed", "worries", action)));
             const roots = Math.max(6, Math.round(p("worryseed", "roots", action)));
-            const targetRef = String(target.ref());
+            const worrySize = Math.round(0.2 * (deep ? 1.35 : 1) * 100) / 100;
+            const worryLife = deep ? 22 : 16, worryLifeMax = deep ? 34 : 28;
+            const chosen = target !== null && world.valid(target) ? String(target.ref()) : "";
+            const chosenFriend = chosen !== "" && world.friendly(target!);
             const from = body.position().plus(WorldCombat.point(0, body.height() * 0.55, 0));
             const aimed = action.targetPosition().minus(from);
             const direction = aimed.length() < 0.01 ? action.direction() : aimed.unit();
@@ -93,31 +104,45 @@ namespace PokemonSkills {
             }
             function plant(current: CombatAction, impact: CombatImpact): void {
                 const scope = current.world(), hit = impact.target(), at = impact.position();
-                if (hit !== null && scope.valid(hit) && !scope.friendly(hit)) {
-                    if (String(hit.domain()) === "cobblemon") {
-                        NativeModifiers.apply(scope, hit, { ability: "insomnia" }, hold);
+                // 只对明确选中的实体施加；空投顺路撞到敌人也算种上。撞到别的身体或方块就散开。
+                const valid = hit !== null && scope.valid(hit);
+                const intended = valid && chosen !== "" && String(hit!.ref()) === chosen;
+                const strayEnemy = valid && chosen === "" && !scope.friendly(hit!);
+                if (valid && (intended || strayEnemy)) {
+                    if (String(hit!.domain()) === "cobblemon") {
+                        const ability = worryseedAbility(scope, hit!);
+                        if (ability === "insomnia" || !NativeModifiers.abilitySuppressible(scope, hit!)) {
+                            WorldFeedback.emit(scope, worryseedScene, 1, at, { moment: "miss", seeds: seeds, scale: scale }, 22);
+                            finish(current);
+                            return;
+                        }
+                        NativeModifiers.apply(scope, hit!, { ability: "insomnia" }, hold);
                     }
-                    MobEffects.apply(scope, hit, worryseedMark, hold, deep ? 1 : 0);
-                    const woke = CombatStatus.has(scope, hit, "sleep") ? CombatStatus.cure(scope, hit, "sleep") : false;
-                    const spot = scope.observe(hit);
-                    if (spot !== null) {
-                        WorldFeedback.emit(scope, worryseedScene, 1, spot.position(),
-                            { moment: "plant", target: String(hit.ref()), seeds: seeds, worries: worries, roots: roots, deep: deep ? 1 : 0, scale: scale }, 40);
-                        WorldFeedback.text(scope, spot.position().plus(WorldCombat.point(0, 1.35, 0)),
-                            woke ? worryseedWokeText : worryseedPlantText, [], 40);
-                    }
+                    MobEffects.apply(scope, hit!, worryseedMark, hold, deep ? 1 : 0);
+                    const woke = CombatStatus.has(scope, hit!, "sleep") ? CombatStatus.cure(scope, hit!, "sleep") : false;
+                    const spot = scope.observe(hit!);
+                    const anchor = spot === null ? at : spot.position();
+                    WorldFeedback.emit(scope, worryseedScene, 1, anchor,
+                        { moment: "plant", target: String(hit!.ref()), seeds: seeds, worries: worries, roots: roots,
+                            deep: deep ? 1 : 0, worrySize: worrySize, worryLife: worryLife, worryLifeMax: worryLifeMax, scale: scale }, 40);
+                    if (woke)
+                        WorldFeedback.emit(scope, worryseedScene, 1, anchor.plus(WorldCombat.point(0, spot === null ? 1.0 : spot.height() * 0.7, 0)),
+                            { moment: "wake", target: String(hit!.ref()), glints: Math.max(8, Math.round(worries * 1.5)), scale: scale }, 30);
+                    WorldFeedback.text(scope, anchor.plus(WorldCombat.point(0, 1.35, 0)), woke ? worryseedWokeText : worryseedPlantText, [], 40);
                     sound(current, "minecraft:block.grass.place");
                 } else {
-                    WorldFeedback.emit(scope, worryseedScene, 1, at, { moment: "miss", seeds: seeds, scale: scale }, 24);
+                    const wall = impact.blocked() ? impact.blockPosition() : null;
+                    WorldFeedback.emit(scope, worryseedScene, 1, wall === null ? at : wall, { moment: "miss", seeds: seeds, scale: scale }, 24);
                 }
                 finish(current);
             }
+            const appearance: LivingActions.ProjectileAppearance = {
+                sprite: "cobblemon:particle/generic/grass/seed", scale: Math.max(0.6, scale), tint: 0x6E9B3A, hitAllies: chosenFriend
+            };
+            if (chosen !== "") appearance.homing = { target: chosen, turn: 5, delay: 1, range: action.range() };
             const flight = LivingActions.projectile(action, {
                 speed: velocity, range: action.range(), radius: radius, lifetime: 140,
-                direction: direction,
-                appearance: { sprite: "cobblemon:particle/grass/seed", scale: Math.max(0.6, scale), tint: 0x6E9B3A,
-                    homing: { target: targetRef, turn: 5, delay: 1, range: action.range() } },
-                impact: plant
+                direction: direction, appearance: appearance, impact: plant
             }, finish);
             WorldFeedback.emit(world, worryseedScene, 1, from,
                 { moment: "toss", projectile: flight, seeds: seeds, scale: scale }, 40);

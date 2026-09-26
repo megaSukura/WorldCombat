@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.barbbarrage.summary": "Shake loose a fan of countless toxic barbs. The number of barbs grows with level and speed, and the total power is split across them; if even one lands it may poison the target. Against a target already poisoned the whole volley is doubled.",
-  "worldcombat.skill.barbbarrage.description.0": "One volley fires %1$s barbs fanned across %2$s degrees; each barb flies on its own and can strike its own target.",
+  "worldcombat.skill.barbbarrage.description.0": "One volley fires %1$s barbs fanned across %2$s degrees along the aim direction (a bare empty shot works too); each barb flies and strikes on its own, and a barb that meets a block only sticks there without further damage.",
   "worldcombat.skill.barbbarrage.description.1": "The volley deals about %1$s physical damage in total, split across its barbs on hit; each barb flies at %2$s blocks per tick. Against a target already poisoned or badly poisoned the whole volley is doubled.",
-  "worldcombat.skill.barbbarrage.description.2": "After the volley, if at least one barb landed there is a %1$s chance to poison one of the struck targets for %2$s (with several, only the last one hit is poisoned); each barb that lands shoves its target %3$s blocks along the aim.",
+  "worldcombat.skill.barbbarrage.description.2": "After the volley, if at least one barb landed there is a %1$s chance to poison the struck target that took the most barbs for %2$s (ties go to the first one hit); each barb that lands shoves its target %3$s blocks along the aim.",
   "worldcombat.skill.barbbarrage.use.0": "Fan out physical ranged pressure",
   "worldcombat.skill.barbbarrage.use.1": "Fan pressure over a group and maybe poison one of them",
   "worldcombat.skill.barbbarrage.use.2": "Chase a poisoned enemy",

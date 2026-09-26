@@ -14,7 +14,7 @@
   "worldcombat.skill.jawlock.value.lockTicks": "对峙时长",
   "worldcombat.skill.jawlock.value.reach": "咬合距离",
   "worldcombat.skill.jawlock.value.grip": "维持距离",
-  "worldcombat.skill.jawlock.value.lunge": "扑身距离",
+  "worldcombat.skill.jawlock.value.lunge": "扑身速度",
   "worldcombat.skill.jawlock.value.maw": "咬齿数量",
   "worldcombat.skill.jawlock.value.tempo": "起手",
   "worldcombat.skill.jawlock.value.recover": "收招",
@@ -31,6 +31,7 @@
   "world_combat.move.jawlock.text.break": "被扯开",
   "world_combat.move.jawlock.text.release": "松口",
   "world_combat.move.jawlock.text.miss": "扑空了",
+  "world_combat.move.jawlock.text.immune": "咬中了，但锁不住",
   "effect.world_combat.jaw_locked": "被紧咬住",
   "effect.world_combat.jaw_holding": "紧咬不放"
 }

@@ -29,8 +29,8 @@
   "worldcombat.skill.focusenergy.preference.ai.minGap.help": "A threat closer than this makes the companion fight instead of breathing; larger gives up the breath more often up close.",
   "worldcombat.skill.focusenergy.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.focusenergy.preference.ai.leaveStation.help": "On: a hold order no longer stops it from taking this breath first.",
-  "world_combat.move.focusenergy.text.ready": "Focus Energy - %1$s s (crit +%2$s%%)",
-  "world_combat.move.focusenergy.text.deep": "Focus Energy (deep) - %1$s s (crit +%2$s%%)",
+  "world_combat.move.focusenergy.text.ready": "Focus Energy - full breath in ~%1$s s (crit +%2$s%%)",
+  "world_combat.move.focusenergy.text.deep": "Focus Energy (deep) - full breath in ~%1$s s (crit +%2$s%%)",
   "world_combat.move.focusenergy.text.fade": "Focus Energy faded",
   "effect.world_combat.focus_breath": "Focus Energy",
   "worldcombat.skill.focusenergy.description.2": "Cannot be used while Dragon Cheer is already on you."

@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.dig.summary": "钻入地下、绕开地表障碍，在选定落点破土：范围内敌人受到地面伤害并被掀飞，落点那一层地表被换成粗土或碎石、留下冲击痕，之后自行恢复。落点材料决定破土范围、击飞高度与附加伤害。",
+  "worldcombat.skill.dig.summary": "钻入地下、绕开地表障碍，在选定落点破土：范围内敌人受到地面伤害并被掀飞，出土处那一层地表被换成粗土或碎石、留下冲击痕，之后自行恢复。真正钻出以身体实际到达的位置为准，落点受保护或太挤时就在安全处破土；落点材料决定破土范围、击飞高度与附加伤害。",
   "worldcombat.skill.dig.use.0": "位移突袭",
   "worldcombat.skill.dig.use.1": "范围击飞",
   "worldcombat.skill.dig.use.2": "绕后攻击",
   "worldcombat.skill.dig.description.0": "破土时造成约 %1$s 点物理伤害，离爆心越远伤害越低（最低约一半）。",
   "worldcombat.skill.dig.description.1": "破土半径为 %1$s 格；它随自身体重增大。",
   "worldcombat.skill.dig.description.2": "钻入地下 %1$s 刻后在落点破土；自身速度越快等待越短。",
-  "worldcombat.skill.dig.description.3": "爆心在开始挖洞时就被锁定：准备期目标可以走出范围躲开。落点材料决定破土——泥土、沙、砾石等松软地面范围更大、掀得更高；石头地面范围更小但更疼；水面或悬空几乎炸不起来。",
+  "worldcombat.skill.dig.description.3": "爆心在开始挖洞时就被锁定：准备期目标可以走出范围躲开。真正钻出时读的是身体实际到达的位置：落点受保护或被占住时，破土就在实际安全处发生，不会隔空打到计划点。落点材料决定破土——泥土、沙、砾石等松软地面范围更大、掀得更高；石头地面范围更小但更疼；水面或悬空几乎炸不起来。",
   "worldcombat.skill.dig.description.4": "已开启「伏击」：准备更久、冷却更长，但破土范围、威力与击飞都更高。",
   "worldcombat.skill.dig.description.5": "未开启「伏击」：准备与冷却更短，破土范围与击飞保持基础值。",
   "worldcombat.skill.dig.description.6": "破土会在落点地表留下冲击痕：把那一层自然地表方块换成粗土或碎石，痕迹在战斗中真实可见，之后自己恢复原样；不掉落物，也不动矿石、建材与容器。水面与悬空不会留下痕迹。",
@@ -29,5 +29,5 @@
   "worldcombat.skill.dig.preference.ai.crowd.help": "目标身边至少聚着这么多敌人时才挖，设为 1 则单个目标也挖。",
   "worldcombat.skill.dig.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.dig.preference.ai.maxChase.help": "目标离自己这么远以内才考虑挖洞。",
-  "worldcombat.skill.dig.description.motion": "本招不指定敌人：在 %1$s 格内选一个落点，钻入地下后移动到该点破土。破土对范围内敌人每个只结算一次、最多命中 %2$s 个，并向上掀飞命中的目标（基础约 %3$s 格，落点材料再增减）。"
+  "worldcombat.skill.dig.description.motion": "本招不指定敌人：在 %1$s 格内选一个落点，钻入地下后移动到该点破土；若该点不可达，就在实际到达处破土。破土对范围内敌人每个只结算一次、最多命中 %2$s 个，并向上掀飞命中的目标（基础约 %3$s 格，落点材料再增减）。"
 }

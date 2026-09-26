@@ -10,8 +10,9 @@ Smoke.scenario("spark", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
-    var caster = stage.pokemon({ species: "mareep", level: 40, moves: ["spark"], at: [-2.5, 0, 0] });
-    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [2, 0, 0] });
+    // 电光是全族射程最短的一招：对手要摆在一个箭步之内才可能被撞到。
+    var caster = stage.pokemon({ species: "mareep", level: 40, moves: ["spark"], at: [-1.2, 0, 0] });
+    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [0.8, 0, 0] });
     stage.hostile(caster, foe);
     stage.until(1200, function () {
         return stage.casts("spark", caster) > 0 && stage.damageTo(foe) > 0;

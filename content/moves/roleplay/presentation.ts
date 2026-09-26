@@ -51,10 +51,18 @@ const RoleplaySceneDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "don_ribbon", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    name: "don_link", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/thought_trail_large",
                     shape: { kind: "polyline" },
-                    rate: { data: "traits", fallback: 10 }, direction: "shape", speed: [0.1, 0.28], spread: 6,
+                    rate: { data: "traits", fallback: 8 }, direction: "shape", speed: [0.04, 0.14], spread: 8,
+                    lifetime: [8, 15], size: [0.09, 0.02], sizeMode: "sin",
+                    color: 0xFFC24A, alpha: [0.6, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "don_flow", bind: "point", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    shape: { kind: "line", length: { data: "span", fallback: 4 } },
+                    rate: { data: "traits", fallback: 10 }, direction: "shape", speed: [0.16, 0.42], spread: 6,
                     lifetime: [7, 13], size: [0.14, 0.03], sizeMode: "index",
                     color: 0xFFC24A, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 160
                 },

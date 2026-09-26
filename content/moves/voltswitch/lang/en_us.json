@@ -6,7 +6,7 @@
   "worldcombat.skill.voltswitch.description.0": "The arc strikes a non-allied living target for about %1$s special damage.",
   "worldcombat.skill.voltswitch.description.1": "Range %1$s blocks, the arc flies at %2$s blocks per tick with a %3$s block hit radius.",
   "worldcombat.skill.voltswitch.description.2": "Blinks %1$s blocks and offsets %2$s blocks to the side; with a partner within %3$s blocks it lands behind them.",
-  "worldcombat.skill.voltswitch.description.3": "With the relay style, a charged patch of radius %1$s blocks is left behind for %2$s, zapping every non-ally inside for %3$s damage every 20 ticks.",
+  "worldcombat.skill.voltswitch.description.3": "With the relay style, a charged patch of radius %1$s blocks is left behind for %2$s, hitting every non-ally inside with a %3$s-power Electric strike every 20 ticks (type matchup applies; Ground is immune).",
   "worldcombat.skill.voltswitch.relay.on": "Relay style: leaves a zapping charged patch and stays on the field; arc power ×0.85, cooldown +6 ticks, blink ×0.85.",
   "worldcombat.skill.voltswitch.relay.off": "Plain style: arc power ×1.2, blink ×1.2, nothing left behind; with a reserve, swaps straight to it.",
   "worldcombat.skill.voltswitch.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
@@ -37,5 +37,5 @@
   "world_combat.move.voltswitch.text.relay": "Switch · relay",
   "world_combat.move.voltswitch.text.miss": "Missed · still switched out",
   "world_combat.move.voltswitch.text.switch": "Volt Switch · switch out",
-  "worldcombat.skill.voltswitch.description.blink": "The blink happens whether or not the arc hits; with no ally to relay to, the user blinks away from the target with a sideways offset, and a blocked landing is pushed as far along that way as it can go."
+  "worldcombat.skill.voltswitch.description.blink": "The blink happens whether or not the arc hits, including firing at open ground, and only once per cast; the landing is checked for safe space first, and with no ally to relay to the user blinks away from the aim with a sideways offset, pushed along that way when no free spot is found."
 }

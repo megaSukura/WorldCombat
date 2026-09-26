@@ -1,13 +1,14 @@
 /**
  * 飞叶快刀 / razorleaf 的客户端表现。
  *
- * 一句话：施法者身侧的叶排成一列、边缘亮起，随后一波波锋利的叶顺着瞄准方向笔直削出去，叶幕贴着地面扫过窄带，
+ * 一句话：施法者身侧的叶排成一列、边缘亮起，随后一波波锋利的叶顺着瞄准方向真实向前推进，叶幕贴着地面扫过窄带，
  * 削中目标时爆开一团叶屑。
  * 色相家族：草绿与浅黄绿（razorleaf／smallleaf／impact_grass），近白叶光（impact_grass_white／white）只给暴击那一下。
- * 拍子：起（gather 排叶）→ 发（sweep 每波叶幕沿窄带飞出）→ 中（cut 命中爆叶屑）→ 强调（crit）。
- * 范围：sweep 的线形形状用 `data.reach` 当长度、`data.spread` 当半宽，贴着瞄准方向铺开，画出来的带子就是判定真扫到的窄带。
- * 运动：gather 的叶向一条线收拢；sweep 的叶沿 `data.direction` 笔直高速飞出、碎叶留在身后；cut 时叶屑向外炸。
- * 数：`data.leaves`（速度派生）决定每波飞出几片叶、命中爆开多少叶屑，`data.wave`/`data.waves` 让第几波可读，
+ * 拍子：起（gather 排叶）→ 发（sweep 每波叶幕沿窄带逐段推进）→ 中（cut 命中爆叶屑）→ 强调（crit）。
+ * 范围：sweep 每帧的 `data.path` 就是服务端这一小段真实位移的两端，画多长推进到哪；服务端用 `WorldGeometry.bodyLane`
+ *   沿同一段位移判定，命中只发生在叶幕真正经过时。
+ * 运动：gather 的叶向一条线收拢；sweep 的碎叶沿 `data.path` 铺设、叶尖随前沿推进；cut 时叶屑向外炸。
+ * 数：`data.leaves`（速度派生）决定每波飞行与命中爆开的叶量，`data.wave`/`data.waves` 让第几波可读，
  * `data.intensity` 抬高亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -29,25 +30,32 @@ const RazorleafDefinition: ParticleDefinition = {
             ]
         },
         sweep: {
-            duration: 14,
+            duration: 16,
             exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    name: "lane_blades", bind: "point", fit: "none", orient: "direction",
+                    name: "lane_blades", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    burst: { count: { data: "leaves", fallback: 12 }, at: 0, interval: 1, repeats: 2 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 9 } },
-                    direction: "shape", speed: [0.5, 0.95], spread: 6, spin: 26, sizeMode: "index",
-                    lifetime: [7, 13], size: [0.24, 0.04],
+                    rate: { data: "leaves", fallback: 12 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.4, 0.85], spread: 6, spin: 26, sizeMode: "index",
+                    lifetime: [6, 12], size: [0.24, 0.04],
                     color: 0xD8F0A8, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 90
                 },
                 {
-                    name: "lane_wake", bind: "point", fit: "none", orient: "direction",
+                    name: "lane_wake", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 34, shape: { kind: "line", length: { data: "reach", fallback: 9 } },
+                    rate: 26, shape: { kind: "polyline" },
                     direction: "shape", speed: [0.15, 0.4], spread: 10, spin: 20,
                     lifetime: [9, 16], size: [0.14, 0.02],
                     color: 0x9ED070, alpha: [0.4, 0], light: "world", maxParticles: 80
+                },
+                {
+                    name: "front_edge", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
+                    burst: { count: { data: "leaves", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.25, 0.6], spread: 14, spin: 24,
+                    lifetime: [5, 10], size: [0.26, 0.05], sizeMode: "index",
+                    color: 0xE8F7C0, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 60
                 }
             ]
         },

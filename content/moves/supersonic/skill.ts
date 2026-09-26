@@ -6,10 +6,11 @@
  *
  * 出手：短起手（windup 播蓄声预告）后提交。
  * 命中：提交后声浪以 origin 为心、按 waveSpeed 每刻扩一圈；扫到的非友方挂共享身份
- *       world_combat:status/confusion 的 world_combat:supersonic_ring。已有混乱只被刷新。
+ *       world_combat:status/confusion 的 world_combat:supersonic_ring，已有混乱只被刷新；只有状态真正落上才显示晕符，
+ *       被控制免疫挡下时不产生状态也不爆亮。表现里的波环半径每一刻都严格等于当刻的判定 radius。
  * 持续：混乱存续期由该 MobEffect 承担，周期性 keep 播放头顶飞鸟。
  * 随机分支：目标每次试图出手（world_combat:before_commit）按载体振幅掷骰；中则本次出手作废。
- * 反噬：目标每次打中非友方（world_combat:damage_applied）按自身攻击结算自伤。
+ * 反噬：目标每次打中非友方（world_combat:damage_applied）按自身攻击结算自伤，且不超过这一击真正造成的伤害。
  * 反制：声浪要时间扩散，离得远或在它推到之前跑开就不被扫到；波前之外是安全的。
  */
 namespace PokemonSkills {
@@ -79,7 +80,8 @@ namespace PokemonSkills {
                     if (body === null || scope.friendly(other)) continue;
                     if (body.position().minus(origin).length() > radius) continue;
                     swept.push(key);
-                    CombatStatus.apply(scope, other, "confusion", supersonicEffect, ticks, Math.round(chance * 100), { unique: true });
+                    // 只有状态真的落上才画晕符；被控制免疫挡下时波面不爆亮。
+                    if (!CombatStatus.apply(scope, other, "confusion", supersonicEffect, ticks, Math.round(chance * 100), { unique: true })) continue;
                     const at = body.position();
                     WorldFeedback.emit(scope, supersonicScene, 1, at,
                         { moment: "mark", target: key, scale: Math.max(0.5, Math.min(2, ticks / 180)) }, 30);
@@ -107,7 +109,9 @@ namespace PokemonSkills {
         const facts = PokemonDamage.combatants.read(world, actor);
         const attack = facts.stats.atk || 0;
         const fraction = supersonicRecoilFraction * Math.max(0.4, Math.min(2.5, attack / 100));
-        const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
+        // 反噬预算来自这一击的真实回执：自伤不超过它真正造成的伤害，高血 Boss 不会被按血条白削。
+        const budget = Math.max(0, Number(data.actual) || 0) * supersonicRecoilBudget;
+        const loss = -world.health(actor, -Math.min(body.maxHealth() * fraction, budget), "world_combat:confusion");
         if (loss <= 0) return;
         const power = Math.max(0.2, Math.min(3, loss / Math.max(1, body.maxHealth()) * 12));
         WorldFeedback.emit(world, supersonicScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);

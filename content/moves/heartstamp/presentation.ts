@@ -1,15 +1,16 @@
 /**
  * 爱心印章 / heartstamp 的客户端表现。
  *
- * 一句话：施法者抬眼冒出一颗心、飞向目标并在它头顶炸开成粉色心环（目标头上浮出「被萌到了」）→ 施法者贴地
- * 扑过去、拖一条粉色残影 → 命中处炸开一圈精神波与碎心，乘机命中时更大更亮 → 被拍懵的人头上晃星。
+ * 一句话：施法者抬眼冒出一颗心、飞向目标并在它头顶炸开成粉色心环，同时一圈随实际疏忽窗口收缩的暗纹收拢
+ * （目标头上浮出「被萌到了」）→ 施法者贴地扑过去、拖一条粉色残影 → 命中处炸开一圈精神波与碎心，
+ * 乘机命中时印章向内闭合、更大更亮，普通碰撞只炸普通精神波 → 被拍懵的人头上晃星。
  * 色相家族：粉与玫红（infatuation_heart / fadeheart_white / glowingsparkle_pink / mediumring）为主体，
  *   精神紫（impact_psychic）只给「击」那一拍。
- * 拍子：起 windup（抬眼）→ 骗 feint（爱心炸开）→ 行 dash（扑击残影）→ 击 hit/seize（命中）→ 懵 flinch。
+ * 拍子：起 windup（抬眼）→ 骗 feint（爱心炸开、窗口收缩）→ 行 dash（扑击残影）→ 击 hit/seize（命中）→ 懵 flinch。
  * 范围：dash 沿机制给的位移逐刻铺开，命中 hit/seize 在接触点炸开一圈（点数按 `data.intensity` 派生）。
  * 运动：dash 残影朝向 `orient: velocity` 沿扑击方向；feint 的心向外抛、命中碎心带重力下坠。
- * 数：`data.hearts`（疏忽窗口时长派生）决定卖萌心数，`data.intensity`（实际一击威力派生）决定命中强调与碎心数，
- *   `data.scale`（接触判定派生）缩放尺寸。
+ * 数：`data.hearts`（实际疏忽窗口时长派生）决定卖萌心数，`data.charmTicks`（实际挂上的 MobEffect 时长）决定
+ *   窗口暗纹的收缩长度，`data.intensity`（实际一击威力派生）决定命中强调与碎心数，`data.scale`（接触判定派生）缩放尺寸。
  */
 const HeartStampDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -37,7 +38,7 @@ const HeartStampDefinition: ParticleDefinition = {
             ]
         },
         feint: {
-            duration: 26,
+            duration: { data: "charmTicks", fallback: 32 },
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
@@ -58,6 +59,16 @@ const HeartStampDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.24],
                     lifetime: [10, 16], size: [0.28, 0.7],
                     color: 0xE68BB4, alpha: [0.7, 0], light: "full", maxParticles: 4
+                },
+                {
+                    // 随实际 MobEffect 时长收缩的破绽暗纹：寿命就是这一份疏忽的时间。
+                    name: "window", bind: "target", offset: [0, 0.14, 0], height: 0.62,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1 },
+                    shape: { kind: "point" },
+                    speed: [0.0, 0.0],
+                    lifetime: { data: "charmTicks", fallback: 32 }, size: [0.75, 0.06], sizeMode: "linear",
+                    color: 0xE68BB4, alpha: [0.75, 0], light: "full", maxParticles: 4
                 },
                 {
                     name: "charm_sparkle", bind: "target", offset: [0, 0.4, 0], height: 0.7,
@@ -145,8 +156,8 @@ const HeartStampDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: 0.36 },
-                    direction: "outward", speed: [0.12, 0.32],
-                    lifetime: [12, 20], size: [0.36, 1.0],
+                    direction: "inward", speed: [0.0, 0.12],
+                    lifetime: [12, 20], size: [1.0, 0.2],
                     color: 0xE68BB4, alpha: [0.8, 0], light: "full", maxParticles: 6
                 },
                 {

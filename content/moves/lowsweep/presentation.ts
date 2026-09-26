@@ -73,7 +73,7 @@ const LowsweepDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 14 },
             emitters: [
                 {
-                    name: "blunt", bind: "target", height: 0.28,
+                    name: "blunt", bind: "point", height: 0.28,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
                     burst: { count: 12, at: 1 },
                     shape: { kind: "sphere", radius: 0.34 },
@@ -82,7 +82,7 @@ const LowsweepDefinition: ParticleDefinition = {
                     color: 0xFFE0B8, alpha: [1, 0], light: "full", bloom: 0.3, maxParticles: 46
                 },
                 {
-                    name: "foot", bind: "target", height: 0.12,
+                    name: "foot", bind: "point", height: 0.12,
                     particle: "world_combat_core:cobblemon/generic/foot",
                     burst: { count: { data: "spark", fallback: 8 }, at: 1 },
                     shape: { kind: "arc", radius: 0.4, arcDegrees: 150, rotation: [90, 0, 0] },
@@ -91,7 +91,7 @@ const LowsweepDefinition: ParticleDefinition = {
                     color: 0xE8C08A, alpha: [0.85, 0], light: "world", maxParticles: 36
                 },
                 {
-                    name: "grit", bind: "target", height: 0.1,
+                    name: "grit", bind: "point", height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 18 },
                     shape: { kind: "sphere", radius: 0.4 },

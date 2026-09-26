@@ -33,7 +33,7 @@ Smoke.scenario("purify", function (stage) {
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/poison"), "the teammate had carried the poison identity");
         stage.expect(!stage.hasMobEffect(ally, "world_combat:status/poison"), "purify drew the poison out of the teammate");
         stage.expect(caster.health() > casterWoundedAt, "the user gained life from the drawn-out affliction");
-        stage.note("抽取以落点 captureRadius 内最近的带异常战斗者为目标（伙伴或对手都行），回复量 = 目标最大生命 × heal 比例；抽完若目标身上再无主异常，异常身份随之消失并同步原生状态。密度、范围与回复随特攻/特防/体型/等级变化；深引／轻引在回复与手感之间取舍。落空（附近无带异常目标）与对对手施放的取舍留给完整装配的人工试玩。", {
+        stage.note("这招是中性瞄准：直接点到谁就抽谁，只瞄到地面时才在落点 captureRadius 内取最近的带异常者（伙伴或对手都行）；只有真正抽到东西才回血，回复量 = 目标最大生命 × heal 比例。抽完若目标身上再无主异常，异常身份随之消失并同步原生状态。密度、范围与回复随特攻/特防/体型/等级变化；深引／轻引在回复与手感之间取舍。落空（瞄准对象已干净、或附近无带异常目标）与 AI 对对手的取舍留给完整装配的人工试玩。", {
             casterCasts: stage.casts("purify", caster),
             allyPoisonEver: stage.hadMobEffect(ally, "world_combat:status/poison"),
             allyPoisonNow: stage.hasMobEffect(ally, "world_combat:status/poison"),

@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.fly.summary": "Leap out of melee reach into open sky, hover a beat, then drop onto the target from above: a contact hit that presses it down and shoves it back. The headroom above decides how high you can climb - open sky gives the full drop, while a roof or cave forces a low hop with a weaker hit. Ground melee cannot reach the hover, but ranged attacks can.",
+  "worldcombat.skill.fly.summary": "Leap out of melee reach into open sky, hover a beat, then drop: a contact hit that presses the target down and shoves it back. Aim at a foe (tracking follows the configuration) or at an empty spot for a wider pinned drop that can press a whole group. The headroom above decides the real height - open sky gives the full drop, while a roof or cave forces a low hop whose hit and telegraph shrink together; a pinned drop onto open ground does not fake an explosion. Ground melee cannot reach the hover, but ranged attacks can.",
   "worldcombat.skill.fly.use.0": "Skip the melee and drop from above",
   "worldcombat.skill.fly.use.1": "Cross low walls, ditches and crowds",
   "worldcombat.skill.fly.use.2": "Claim a high landing before cover arrives",
   "worldcombat.skill.fly.description.0": "The drop deals %1$s contact damage and presses the target down and back.",
   "worldcombat.skill.fly.description.1": "Climb at %2$s blocks/tick to about %1$s blocks up, then hover and fall.",
   "worldcombat.skill.fly.description.2": "Hovers for %1$s ticks; the landing check is based on %2$s blocks (narrower for a tracked dive, wider for a pinned drop), pressing the target down about %3$s blocks.",
-  "worldcombat.skill.fly.description.3": "The headroom above at the moment of casting sets the real height: open sky gives the full drop and the heaviest hit; a roof, cave or canopy forces a low hop under the ceiling, where the hit is at most a bit over half as heavy.",
+  "worldcombat.skill.fly.description.3": "The headroom above at the moment of casting sets the real height: open sky gives the full drop and the heaviest hit; a roof, cave or canopy forces a low hop under the ceiling, where the hit is at most a bit over half as heavy. The height actually reached floats up on landing, and the damage is computed from it.",
   "worldcombat.skill.fly.description.4": "While hovering, ground melee cannot reach the user, but ranged attacks can; the target can reposition in that window, or duck under cover that blocks the descent line. The hover carries a visible Airborne status that counts the user as airborne, which other moves and companions read.",
   "worldcombat.skill.fly.stance.track": "Tracked dive: the landing follows the target's live position while hovering - a narrow, single spot that pins a mover.",
   "worldcombat.skill.fly.stance.pin": "Pinned drop: the landing is locked at cast with nearly twice the radius, pressing up to %1$s foes at once (farther from the landing means a lighter blow) - but a target that walks out escapes, and recovery and cooldown are longer.",
@@ -28,7 +28,10 @@
   "worldcombat.skill.fly.preference.ai.maxChase.help": "How far a foe may be before the companion considers Fly; lower keeps it close, higher lets it fly out farther.",
   "worldcombat.skill.fly.preference.ai.minHealth": "Minimum HP",
   "worldcombat.skill.fly.preference.ai.minHealth.help": "The companion treats Fly as an escape strike below this HP fraction, moving it up the order; higher makes it fly more often when hurt.",
+  "worldcombat.skill.fly.preference.ai.crowd": "Foes at the landing",
+  "worldcombat.skill.fly.preference.ai.crowd.help": "In a pinned drop, only fly when at least this many foes cluster near the landing, so one drop presses a group; a tracked dive ignores this, and 1 means a lone target is enough.",
   "worldcombat.skill.fly.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.fly.preference.ai.leaveStation.help": "When on, a companion on hold will leave its post to fly out and drop on a foe.",
-  "effect.world_combat.fly_airborne": "Airborne"
+  "effect.world_combat.fly_airborne": "Airborne",
+  "world_combat.move.fly.text.height": "Airborne %1$s blocks"
 }

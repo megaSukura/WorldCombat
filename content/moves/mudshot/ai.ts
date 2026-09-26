@@ -2,11 +2,24 @@
  * 泥巴射击 的伙伴 AI 用途。
  *
  * 什么局面下出手：有可见威胁、在 `ai.maxChase` 之内。它是一记中距离、必定掉速的糊腿，价值在于先把跑得快的对手压住。
- * 对谁出手：当前威胁；不可见、友方或已倒下的目标不接受。`ai.crippleRunners` 开启时，正在快速移动的目标优先。
+ * 对谁出手：当前威胁；不可见、友方或已倒下的目标不接受。`ai.crippleRunners` 开启时，正在快速移动的目标优先；
+ *   目标脚边挤着一小群敌人时也更值得，一泼糊到多个人。已经带着 mired 的目标排后，避免重复投资。
  * 够不到怎么办：`reach` 就是本招射程，不够就先走近；这是一记平射，不负责远程压制。
  * 放完之后：目标腿脚被 mired、速度等级下降，交回共享顺序继续战斗。
  */
 namespace PokemonSkills {
+    function mudshotCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const centre = target.point, nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const radius = target.width === undefined ? 1 : Math.max(0.9, target.width + 0.6);
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || other.ref === target.ref) continue;
+            if (CompanionBehavior.distance(other.point, centre) <= radius) count++;
+        }
+        return count;
+    }
+
     CompanionBehavior.registerUse("mudshot", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -31,6 +44,9 @@ namespace PokemonSkills {
                 else if (pace >= 0.09) score += 7;
             }
             if (CompanionBehavior.status(context, target, "mired")) score -= 10;
+            const crowd = mudshotCrowd(context, target);
+            if (crowd >= 2) score += 10;
+            else if (crowd === 1) score += 4;
             if (CompanionBehavior.ratio(target) <= 0.3) score += 6;
             return score;
         }
@@ -38,7 +54,7 @@ namespace PokemonSkills {
 
     addPreferences("mudshot", {}, [
         field(pathOf("wide"), "阔泼", "boolean", {
-            help: "开启：泥浆泼得更宽、掉速更深、地上泥洼更久，但单发更轻、射程更近、冷却更久。关闭：一道更重更远更快的泥浆，只糊得住脚下这一小圈。"
+            help: "开启：泥浆泼得更宽、掉速更深、地上污痕更久，但单发更轻、射程更近、冷却更久。关闭：一道更重更远更快的泥浆，只糊得住脚下这一小圈。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 4, max: 20, step: 1,

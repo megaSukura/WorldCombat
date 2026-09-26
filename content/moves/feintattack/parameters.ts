@@ -67,6 +67,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["strike"] },
         { key: "description.1", values: ["reach", "behind"] },
         { key: "description.2", values: ["decoyTicks"] },
+        { key: "description.aim", values: [] },
         { key: "decoy.on", values: [], when: function (context) { return read(context.detail.values, ["decoy"]) === true; } },
         { key: "decoy.off", values: [], when: function (context) { return read(context.detail.values, ["decoy"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

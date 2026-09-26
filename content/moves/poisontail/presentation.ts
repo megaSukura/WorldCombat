@@ -51,12 +51,13 @@ const PoisonTailDefinition: ParticleDefinition = {
                     color: 0x6B4E8A, alpha: [0.85, 0], light: "world", maxParticles: 120
                 },
                 {
+                    // 沿弧线 index 递增到尾梢：size 由小到大、越靠尾梢越亮，尾尖才是抹毒的那一段。
                     name: "edge", bind: "path", fit: "none", offset: [0, 0.02, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: { data: "drops", fallback: 12 } },
                     shape: { kind: "polyline" },
                     direction: "shape", speed: [0.05, 0.2],
-                    lifetime: [7, 14], size: [0.14, 0.03], sizeMode: "index",
+                    lifetime: [7, 14], size: [0.07, 0.2], sizeMode: "index",
                     color: 0x9BE86B, alpha: [0.9, 0], light: "full", bloom: 0.22, maxParticles: 90
                 }
             ]

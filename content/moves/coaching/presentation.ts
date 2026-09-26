@@ -8,6 +8,7 @@
  * 层次：提气（起）／火花带与叮嘱爆发（击）／旁人领会（接力）／受教者身边的标记（持续）／褪去（收）。
  * 起击收：call（起）→ shout（击）→ drill（击）→ learn（接力）→ ready（持续）→ fade（收）。
  * 范围：叮嘱爆发的环按 `data.scale`（传授半径 / 3）推出，画出来的圈就是教会荡到的范围。
+ * 接力：shout 沿施法者→受教者飞过去；learn 再用 `data.path` 从受教者连到每个真正领会的同学，谁没被教到就不出现。
  * 运动：提示向上冒；火花带沿施法者到伙伴的连线飞过去；叮嘱标记向外炸开后上浮；持续标记缓慢升起。
  * 数：叮嘱标记数绑 `data.motes`（特攻派生），攻防等级写进 `data.atk`/`data.def` 影响强度，尺寸与范围绑 `data.scale`。
  * 持续状态：持续层贴在受教者肩侧，低密度，让出目标本体视线。
@@ -95,6 +96,15 @@ const CoachingDefinition: ParticleDefinition = {
             duration: 20,
             exit: { stop: 7, drain: 14 },
             emitters: [
+                {
+                    name: "learn_line", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: { data: "motes", fallback: 10 }, interval: 2, repeats: 2 },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.04, 0.14], drag: 0.9, spin: 16,
+                    lifetime: [10, 18], size: [0.14, 0.03],
+                    color: 0xF2C15A, alpha: [0.8, 0], light: "full", maxParticles: 60
+                },
                 {
                     name: "learn_spark", bind: "target", fit: "body", height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",

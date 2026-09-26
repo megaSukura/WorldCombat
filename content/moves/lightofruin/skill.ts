@@ -12,6 +12,8 @@
  *
  * 与同族分开：铁蹄光线固定自损、只打第一个；叶绿爆震是扇形、自损随放出的力量；随机光没有自损。
  * 破灭之光贯穿整列、只按**真正造成的伤害**反噬——穿得越多，自己越危险，玩家凭这条反向烧回的火认它。
+ *
+ * 选取 `kind: "aim"`：可朝任意方向或世界点迸出光柱，也能空放；方块在真实格处截束，命中权限仍由命中层结算。
  */
 namespace PokemonSkills {
     /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的走廊四角；判定与表现共用这组顶点。 */
@@ -30,9 +32,9 @@ namespace PokemonSkills {
         id: lightofruinId,
         cooldownParameter: "recharge",
         name: "Light of Ruin",
-        description: "借永恒之花的力量，从胸前花心迸出一根粗重的贯穿光柱：打穿正前方整列敌人，反噬按真正造成的伤害结算——穿得越多，自己越危险。",
+        description: "借永恒之花的力量，朝任意方向或世界点从花心迸出一根粗重的贯穿光柱：打穿沿线整列敌人、撞墙即截束，也能空放。反噬按真正造成的伤害结算——穿得越多，自己越危险。",
         uses: ["一根粗重的贯穿光柱打穿正前方整列敌人", "让反噬只按真正造成的伤害结算", "透支式把力量都借出来，赌一发清场"],
-        kind: "enemy",
+        kind: "aim",
         range: 11,
         maxRange: 20,
         prepare: 14,
@@ -77,8 +79,13 @@ namespace PokemonSkills {
             const petals = Math.max(1, Math.round(p(lightofruinId, "petals", action)));
             const scale = half / 0.95;
             const intensity = Math.max(0.6, Math.min(2.8, power / 140));
-            const vertices = lightofruinLane(origin, direction, reach, half);
-            const tip = origin.plus(direction.scale(reach));
+            // 方块截束：clipBlocks 给出射线上第一个方块格，光柱在墙面收束；判定与画面读到同一条截断线。
+            const muzzle = Math.min(1.6, half + 0.4);
+            const clip = world.clipBlocks(origin.plus(direction.scale(muzzle)), origin.plus(direction.scale(reach)));
+            const wall = clip !== null && clip.blocked() ? clip : null;
+            const laneReach = wall !== null ? Math.max(0.5, wall.position().minus(origin).length()) : reach;
+            const vertices = lightofruinLane(origin, direction, laneReach, half);
+            const tip = origin.plus(direction.scale(laneReach));
             const before = world.observe(actor);
             const healthBefore = before !== null ? before.health() : 0;
             let hits = 0;
@@ -87,7 +94,7 @@ namespace PokemonSkills {
             sound(action, "minecraft:entity.illusioner.cast_spell");
             WorldFeedback.emit(world, lightofruinScene, 1, origin,
                 { moment: "ray", path: lightofruinPath(vertices), direction: [direction.x(), direction.y(), direction.z()],
-                    petals: petals, pierce: pierce, scale: scale, intensity: intensity,
+                    petals: petals, pierce: pierce, scale: scale, intensity: intensity, blocked: wall !== null ? 1 : 0,
                     notes: Math.round(40 + power * 0.6) }, 28);
 
             const region = WorldGeometry.polygon(vertices, { below: 2, above: 3 });
@@ -98,6 +105,7 @@ namespace PokemonSkills {
             });
             candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
             for (let index = 0; index < candidates.length && hits < pierce; index++) {
+                // 反噬可能先把施术者打失效：立刻停手，后续目标不再从已经不存在的来源结算。
                 if (!world.valid(actor)) break;
                 const candidate = candidates[index];
                 if (!hurt(action, candidate.actor, lightofruinId, power,
@@ -111,19 +119,25 @@ namespace PokemonSkills {
             if (hits > 0) {
                 sound(action, "cobblemon:impact.fairy");
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.5, 0)), lightofruinHitText, [hits], 26);
+            } else if (wall !== null) {
+                const cell = wall.blockPosition();
+                WorldFeedback.emit(world, lightofruinScene, 1, wall.position(),
+                    { moment: "wall", petals: petals, scale: scale, face: wall.blockFace(),
+                        block: cell !== null ? [cell.x(), cell.y(), cell.z()] : undefined }, 20);
             } else {
                 WorldFeedback.emit(world, lightofruinScene, 1, tip, { moment: "fizzle", petals: petals, scale: scale }, 20);
                 WorldFeedback.text(world, tip.plus(WorldCombat.point(0, 0.8, 0)), lightofruinMissText, [], 22);
             }
 
             const after = world.observe(actor);
-            const selfLoss = after !== null ? Math.max(0, healthBefore - after.health()) : 0;
+            const selfLoss = Math.max(0, healthBefore - (after !== null ? after.health() : 0));
             if (hits > 0 && selfLoss > 0) {
                 const loss = Math.round(selfLoss * 10) / 10;
-                WorldFeedback.emit(world, lightofruinScene, 1, after!.position(),
+                const at = after !== null ? after.position() : origin;
+                WorldFeedback.emit(world, lightofruinScene, 1, at,
                     { moment: "recoil", target: String(actor.ref()), petals: petals, scale: scale, recoil: recoil,
                         damage: loss, count: Math.max(8, Math.round(selfLoss)), intensity: Math.max(0.6, Math.min(2.8, selfLoss / 30)) }, 30);
-                WorldFeedback.text(world, after!.position().plus(WorldCombat.point(0, 1.4, 0)), lightofruinRecoilText, [loss], 28);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.4, 0)), lightofruinRecoilText, [loss], 28);
                 sound(action, "minecraft:block.respawn_anchor.charge");
             }
             done(action);

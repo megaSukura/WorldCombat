@@ -6,8 +6,7 @@
  *
  * 翻译：把「聚宇宙之力→放」翻成「把天上的碎星拉下来收进身体（原作的特攻 +1 保留为共享能力等级），
  *   再抛出一颗走抛物线的陨石」。落点炸开一圈：正面命中的目标吃 `meteor`，落点半径 `blast` 内的其他敌人吃 `splash`；
- *   被顶开的距离由 `blowback` 决定。落点地面砸出焦黑的坑（world.terrain 的 linger 租约），
- *   陨石因此既越过掩体，又在世界留下痕迹。
+ *   被顶开的距离由 `blowback` 决定。落点只留一记短促碎石，不改写地面方块；陨石因此越过掩体，而不改地形。
  *
  * 数据分散（每个参数取不同的精灵数据；公式即悬浮里展开的那一棵）：
  *   meteor  直接命中威力：特攻定重量、等级定掌握；深空形态牺牲一点抛出的分量。
@@ -18,7 +17,6 @@
  *   blast   落点半径：碰撞箱高度决定爆开多大；深空形态再大一点。
  *   stone   陨石判定半径：碰撞箱高度决定石头多大。
  *   starlight 星光点数：特攻与等级，驱动表现的密度。
- *   craterTicks 坑的留存：等级决定焦黑地面存在多久。
  *   blowback 落点顶开：特攻越高顶得越开。
  *
  * 配置 `deep`（深空）双向取舍：开启＝聚星多 1 级特攻（+2 级）、落点更大，但聚星更久（×1.3）、
@@ -92,10 +90,6 @@ namespace PokemonSkills {
                 unit: "簇",
                 description: "聚星与落地时迸出的星点数，也驱动画面密度；特攻与等级越高越密。"
             }),
-        /** 坑的留存：80 + (等级−20)×0.5（夹 0..50）刻；夹 50..130 刻。 */
-        craterTicks: seconds(
-            F.base(80).plus(F.level().minus(20).times(0.5).clamp(0, 50)).clamp(50, 130).round(0),
-            "坑的留存", "落点砸出的焦黑地面存留的时长，时间一到原方块自己放回；等级越高留得越久。"),
         /** 落点顶开：0.3 + (特攻−60)×0.004（夹 0..0.45）；夹 0.2..0.8 格。 */
         blowback: formula(
             F.base(0.3).plus(F.stat("specialAttack").minus(60).times(0.004).clamp(0, 0.45)).clamp(0.2, 0.8).round(2),
@@ -118,7 +112,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["meteor","splash"] },
         { key: "description.1", values: ["charge", "boost"] },
         { key: "description.2", values: ["velocity","blast","stone"] },
-        { key: "description.3", values: ["blowback","craterTicks"] },
+        { key: "description.3", values: ["blowback"] },
         { key: "stance.deep", values: [], when: function (context) { return !!read(context.detail.values, ["deep"]); } },
         { key: "stance.light", values: [], when: function (context) { return !read(context.detail.values, ["deep"]); } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

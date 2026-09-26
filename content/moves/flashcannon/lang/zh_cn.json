@@ -3,6 +3,7 @@
   "worldcombat.skill.flashcannon.use.0": "一发扫掉排成一条线的敌人",
   "worldcombat.skill.flashcannon.use.1": "穿透并逐个压低沿线目标的特防",
   "worldcombat.skill.flashcannon.use.2": "中远距离的高精度单体射杀",
+  "worldcombat.skill.flashcannon.use.3": "朝空处或墙试射，光矛散成一片光屑",
   "worldcombat.skill.flashcannon.description.0": "光矛命中造成 %1$s 点特殊伤害。",
   "worldcombat.skill.flashcannon.description.1": "光矛可穿透 %1$s 个后续目标，每穿过一人后的威力保留 %2$s。",
   "worldcombat.skill.flashcannon.description.2": "对每个命中目标各有 %1$s 概率把其特防压低 %2$s 级，之后它承受的特殊攻击会更重。",

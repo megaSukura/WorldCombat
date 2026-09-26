@@ -1,4 +1,4 @@
-/** 日光束：蓄力后贯穿直线上的敌人；阳光影响蓄力和威力，光束与命中碎光承载反馈。 */
+/** 日光束：聚光后朝瞄准方向放出一束贯穿直线；真实方块截断光柱，身体判定与光芯使用同一三维线段及宽度。 */
 namespace PokemonSkills {
     const solarbeamScene = "world_combat:move_solarbeam";
     const solarbeamSunText = "world_combat.move.solarbeam.text.sun";
@@ -6,12 +6,12 @@ namespace PokemonSkills {
     const solarbeamPierceText = "world_combat.move.solarbeam.text.pierce";
     const solarbeamFizzleText = "world_combat.move.solarbeam.text.fizzle";
 
-    /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的走廊四角；判定与表现共用这一组顶点。 */
+    /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的三维光带四角。 */
     function solarbeamLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): CombatPoint[] {
         const flat = WorldCombat.point(direction.x(), 0, direction.z());
         const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
         const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(heading.scale(reach));
+        const end = origin.plus(direction.scale(reach));
         return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))];
     }
 
@@ -22,9 +22,9 @@ namespace PokemonSkills {
     define({
         id: "solarbeam",
         name: "日光束",
-        description: "站定聚光，再沿直线放出贯穿的光柱，依次攻击走廊内的敌人。强日光下直接发射；阴雨天威力降低、聚光更慢。",
+        description: "站定聚光，再朝瞄准方向放出贯穿的光柱，依次攻击走廊内的敌人；光柱被方块截断，只打到墙前。强日光下直接发射；阴雨天威力降低、聚光更慢。",
         uses: ["在开阔地上贯穿一条线", "晴天里的无预警重击"],
-        kind: "enemy",
+        kind: "aim",
         range: 12,
         maxRange: 20,
         prepare: 24,
@@ -61,7 +61,8 @@ namespace PokemonSkills {
             const world = action.world();
             const origin = action.origin();
             const direction = aim(action);
-            const reach = Math.max(3, action.range());
+            action.releaseTarget();
+            const wanted = Math.max(3, action.range());
             const half = Math.max(0.2, p("solarbeam", "width", action));
             const power = p("solarbeam", "ray", action);
             const pierce = Math.max(1, Math.round(p("solarbeam", "pierce", action)));
@@ -69,6 +70,10 @@ namespace PokemonSkills {
             const light = Math.max(6, Math.round(p("solarbeam", "light", action)));
             const scale = Math.max(0.6, Math.min(2.2, half / 0.62));
             const intensity = Math.max(0.6, Math.min(2.6, power / 120));
+            // 光柱先由真实方块截断，同一线段驱动身体接触与光带。
+            const block = world.clipBlocks(origin, origin.plus(direction.scale(wanted)));
+            const reach = block === null ? 0 : block.blocked() ? block.position().minus(origin).length() : wanted;
+            const tip = origin.plus(direction.scale(reach));
             const vertices = solarbeamLane(origin, direction, reach, half);
             const path = solarbeamPath(vertices);
             let hits = 0;
@@ -78,24 +83,30 @@ namespace PokemonSkills {
                 { moment: "beam", path: path, direction: [direction.x(), direction.y(), direction.z()],
                     light: light, scale: scale, intensity: intensity, pierce: pierce, reach: reach }, 26);
 
-            const region = WorldGeometry.polygon(vertices, { below: 2, above: 3 });
+            const region = WorldGeometry.bodySegment(origin, tip, half);
             const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-            WorldGeometry.selectEnemies(world, region, function (enemy, facts) {
-                if (!world.clear(origin, facts.position())) return;
-                candidates.push({ actor: enemy, at: facts.position() });
+            if (reach > .001) WorldGeometry.selectBodies(world, region, function (enemy, facts) {
+                if (world.friendly(enemy) || String(enemy.ref()) === String(action.actor().ref())) return;
+                const point = world.closestPoint(enemy, origin);
+                if (point === null || !world.clear(origin, point)) return;
+                candidates.push({ actor: enemy, at: point });
             });
             candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
             for (let index = 0; index < candidates.length && hits < pierce; index++) {
                 const candidate = candidates[index];
                 if (!hurt(action, candidate.actor, "solarbeam", power, { damage: damageSpec("solarbeam", "ray") })) continue;
                 hits++;
-                if (world.valid(candidate.actor)) world.displace(candidate.actor, direction.scale(push));
+                if (world.valid(candidate.actor)) world.hitDisplace(candidate.actor, direction.scale(push));
                 WorldFeedback.emit(world, solarbeamScene, 1, candidate.at,
                     { moment: "pierce", target: String(candidate.actor.ref()), light: light, scale: scale,
                         intensity: Math.max(0.6, Math.min(2.6, power / 120)) }, 24);
             }
 
-            const tip = origin.plus(direction.scale(reach));
+            if (block !== null && block.blocked()) {
+                const stop = block.position();
+                WorldFeedback.emit(world, solarbeamScene, 1, stop,
+                    { moment: "wall", point: [stop.x(), stop.y(), stop.z()], face: block.blockFace(), light: light, scale: scale, intensity: intensity }, 24);
+            }
             if (hits > 0) {
                 WorldFeedback.text(world, tip.plus(WorldCombat.point(0, 0.8, 0)), hits > 1 ? solarbeamPierceText : solarbeamHitText, hits > 1 ? [hits] : [], 28);
                 sound(action, "minecraft:block.beacon.activate");

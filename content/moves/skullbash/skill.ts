@@ -25,6 +25,16 @@ namespace PokemonSkills {
     function skullBashAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
     /**
+     * 目标此刻是不是被这一撞真正按在墙上：从目标身体中心沿冲撞方向做原生方块碰撞射线，只有身体贴到墙面
+     * 才算；墙在身后更远处有缝隙时不算。射线只看方块（原生 COLLIDER），不看活体，所以不会被目标自己挡住。
+     */
+    function skullBashPinned(world: CombatWorld, body: CombatObservation, direction: CombatPoint, reach: number): boolean {
+        var probe = Math.max(0.2, Math.min(reach, body.width() * 0.5 + 0.3));
+        var from = body.position();
+        return !world.clear(from, from.plus(direction.scale(probe)));
+    }
+
+    /**
      * 撞锤把目标身后的墙凿出一个临时缺口：在背后脚、头两层，各向内再凿一格，最多 slamBlocks 格，
      * 每格都交给 world.terrain 的 linger 租约（换成空气、breachTicks 后把原方块放回）。
      * 缺口活过这一撞本身，给别的生物与别的招留出一条能走过去的路，时间一到墙自己长回原样。
@@ -64,8 +74,8 @@ namespace PokemonSkills {
 
     define({
         freeMovement: true,
-        id: "skullbash", name: "火箭头锤", description: "先缩头蓄力，临时增加护甲、防御与减伤，再沿直线撞击第一个敌人。敌人背后紧贴墙壁时，这一撞更重，并会将其定住、尝试撞开一处临时缺口。",
-        uses: ["正面破阵", "以防御换重击", "把对手顶到墙上"], kind: "enemy", range: 8, prepare: 0, active: 60, recover: 14, cooldown: 70, style: "charge",
+        id: "skullbash", name: "火箭头锤", description: "先缩头蓄力，临时增加护甲、防御与减伤，再沿锁定方向直线撞出：撞上第一个敌人就造成接触伤害并推开它；目标身体真的被压到墙上时这一撞更重，并把它定住、尝试撞开一处临时缺口。没撞到敌人时会撞在墙上停住。",
+        uses: ["正面破阵", "以防御换重击", "把对手顶到墙上"], kind: "aim", range: 8, prepare: 0, active: 60, recover: 14, cooldown: 70, style: "charge",
         defaults: { deep: true },
         fields: [field(pathOf("deep"), "深蓄", "boolean", { help: "开启（深蓄）：蓄力更长、护甲与减伤更强、防御再 +1 级、冲得更远，但收招更长；关闭（速收）：蓄力更短、护甲略低、收招更快，但撞得更弱更短。" })],
         indicator: function (config) {
@@ -94,7 +104,8 @@ namespace PokemonSkills {
             const guard = p("skullbash", "guardStage", action) + (deep ? 1 : 0);
             const block = p("skullbash", "braceBlock", action) * (deep ? 1.1 : 0.85);
             sound(action, "minecraft:block.anvil.land");
-            WorldEffects.apply(world, self, "rooted", {}, charge + 8);
+            // 缩头架住不动只到出膛前一瞬：rooted 在冲撞开始的几刻前解除，脚本冲撞本身不受减速影响。
+            WorldEffects.apply(world, self, "rooted", {}, Math.max(2, charge - 4));
             world.attribute(self, "minecraft:generic.armor", armor, "add_value");
             GuardEffects.apply(world, self, {
                 rule: skullBashBraceRule, mode: "pool", capacity: 100000, fraction: Math.min(1, block),
@@ -130,14 +141,14 @@ namespace PokemonSkills {
                             const body = w.observe(target);
                             if (body) {
                                 const before = body.health();
-                                // A wall right behind the victim is the move's extra material: pinned foes take more and lose their rhythm.
-                                const behind = body.position().plus(direction.scale(p("skullbash", "slamReach", current)));
-                                const pinned = !w.clear(body.position(), behind);
+                                // 墙撞只在身体真的贴到墙面时成立：从身体中心沿冲撞方向做一次短距方块碰撞射线，
+                                // 墙在身后有缝隙（例如免位移、离墙还有一截的 Boss）就不算，主击照常结算。
+                                const pinned = skullBashPinned(w, body, direction, p("skullbash", "slamReach", current));
                                 const blow = power * (pinned ? p("skullbash", "slamBonus", current) : 1);
                                 const landed = impact(current, hit, move.id(), blow, { contact: true }, "skullbash");
                                 const after = w.observe(target), dealt = Math.max(0, before - (after ? after.health() : before));
                                 if (landed) {
-                                    if (w.valid(target)) w.displace(target, direction.scale(push));
+                                    if (w.valid(target)) w.hitDisplace(target, direction.scale(push));
                                     WorldFeedback.emit(w, skullBashScene, 1, body.position(), { moment: pinned ? "slam" : "impact", target: String(target.ref()), intensity: 1 + Math.min(1, dealt / Math.max(1, body.maxHealth())) * 4 }, pinned ? 46 : 40);
                                     if (pinned) {
                                         if (w.valid(target)) WorldEffects.apply(w, target, "rooted", {}, p("skullbash", "slamStun", current));
@@ -155,6 +166,14 @@ namespace PokemonSkills {
                     }
                     const moved = swept.moved;
                     travelled += moved;
+                    // 空放撞墙：在真正撞到的原生方块格上停住并留一处墙尘，落点就是撞点。
+                    if (hit.blocked()) {
+                        const blockAt = hit.blockPosition();
+                        const at = blockAt === null ? current.origin() : blockAt;
+                        WorldFeedback.emit(w, skullBashScene, 1, at, { moment: "crash", target: casterRef, face: hit.blockFace() }, 22);
+                        WorldFeedback.text(w, skullBashAbove(at), skullBashWhiffText, [], 26);
+                        movementScenes.finish(current, done); return;
+                    }
                     if (moved < p("skullbash", "minimumMove", current) || travelled >= length) {
                         WorldFeedback.emit(w, skullBashScene, 1, current.origin(), { moment: "skid", target: casterRef }, 20);
                         WorldFeedback.text(w, skullBashAbove(current.origin()), skullBashWhiffText, [], 26);

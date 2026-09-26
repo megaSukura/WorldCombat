@@ -93,6 +93,9 @@ public final class NativeInteropChecks {
         check(payload.getAsJsonObject("extension").get("value").getAsInt() == 7 && !payload.get("direct").getAsBoolean()
             && !payload.get("sourceLiving").getAsBoolean() && payload.get("sourceEntity").getAsString().isEmpty(),
             "Environmental damage fabricated a living attacker or lost extension metadata");
+        check(payload.get("sourcePosition").isJsonNull(), "Positionless damage fabricated an origin");
+        NativeDamageFacts.add(payload, new DamageSource(damageEntry, new net.minecraft.world.phys.Vec3(3, 4, 5)), null, "");
+        check(payload.getAsJsonArray("sourcePosition").toString().equals("[3.0,4.0,5.0]"), "Native explicit damage origin was lost");
         System.out.println("PASS native interop: property-preserving states, exact/reloaded tags, detached components, native stack round trips and damage provenance");
     }
 }

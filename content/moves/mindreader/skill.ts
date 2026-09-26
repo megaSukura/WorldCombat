@@ -1,17 +1,21 @@
 /**
  * 心之眼 / mindreader 的出手方式。
  *
- * 核心念头：凝神读穿对手的下一个动作——把自己的准星拉满，**下一次命中因此不会落偏**；读用掉即散。
+ * 核心念头：看清一个对手正在朝哪里走，再用一次更准的攻击兑现读势——短期照亮它、把自己的命中抬起来，
+ *   并且窗口期间在它脚下画一条随真实速度更新的趋势虚线；只有打中**所读的那个目标**才兑现。
  *
  * 三幕：
  *   凝神（windup，提交前只观察与预告，可被打断，不花代价）。
  *   读穿（提交后）：给自己挂 world_combat:mindreader_eyes（身份 world_combat:status/mindreader）并把命中等级
- *     拉到满（共享 NativeSemantics.aim 的精度因此满值），同时把目标照亮；标记 world_combat:mindreader_mark
- *     记下实际抬起的等级、读光量与目标。
- *   兑现（下一次伤害命中）：NativeEffects.appliedRules 用掉这层读，把抬起的命中等级原样收回，读光从目标身上散开。
- *   自散：不出手时窗口走完，安静褪去并收回等级（world_combat:mob_effect_removed）。
+ *     交给一段 boostWindow 抬起（共享 NativeSemantics.aim 的精度因此提高），同时把目标照亮；标记
+ *     world_combat:mindreader_mark 记下目标、读光、窗口 id 与本次实际抬起的等级。
+ *     刷新时先撤旧：boostWindow 按 previous 只续本招这一份，旧窗口被关闭，不会叠加或漏撤。
+ *   读势（窗口期间）：每 4 刻采一次目标的真实 velocity，在当前位置到约 6 刻速度外推点之间画短方向虚线，
+ *     长度封顶 3 格；静止则收成一点；趋势线遇实墙截断。它只表示当前运动趋势，不预测未来动作。
+ *   兑现（伤害命中）：只有打中所读目标且造成真实伤害时，用掉这层读——撤载体、关窗口，读线从目标缩回施法者。
+ *   自散：读到期、被清除，或目标失效/离场时，读势收起并原样收回命中等级（world_combat:mob_effect_removed）。
  *
- * 与同族分开：磨砺只关心自己这一击的要害；锁定把目标钉住；心之眼改的是**施法者自己的准星**，并把对手照亮。
+ * 与同族分开：磨爪只抬自己的攻与命中；锁定把目标钉住；心之眼读的是**对手的运动方向**，并用一次兑现的攻击收走。
  * 目标若在读还在时退出射程、被清除类效果解掉，或让这一击落空，都拿不到兑现。
  */
 namespace PokemonSkills {
@@ -19,10 +23,13 @@ namespace PokemonSkills {
 
     WorldCombat.effect(mindreaderMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
-        ["added", "motes", "reveal"].forEach(function (key) {
+        if (typeof value.target !== "string" || !value.target) throw new Error("Invalid mindreader mark: target");
+        ["motes", "reveal", "windowId", "focus"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid mindreader mark: " + key);
         });
-        if (typeof value.target !== "string") throw new Error("Invalid mindreader mark: target");
+        if (value.carrier !== undefined && value.carrier !== null) {
+            if (typeof value.carrier.id !== "string" || typeof value.carrier.key !== "string") throw new Error("Invalid mindreader mark: carrier");
+        }
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(mindreaderMark, "start", function () { });
@@ -36,23 +43,45 @@ namespace PokemonSkills {
         const views = world.effects(actor, mindreaderMark);
         if (views.length) world.operation(views[0].id(), "world_combat:dispel", "{}");
     }
-    /** 命中等级只有宝可梦有；其他战斗者没有这个概念，返回 0。 */
-    function mindreaderRaise(world: CombatWorld, actor: CombatActor, request: number): number {
-        if (String(actor.domain()) !== "cobblemon") return 0;
-        const before = NativeEffects.stage(NativeEffects.read(world, actor), "accuracy");
-        NativeEffects.boost(world, actor, "accuracy", Math.max(0, Math.round(request)));
-        return Math.max(0, NativeEffects.stage(NativeEffects.read(world, actor), "accuracy") - before);
+    /**
+     * 趋势虚线：每 pulse 刻采一次目标真实速度，在当前位置到 trend 刻外推点之间画一条短线，长度封顶 cap 格；
+     * 静止收成一点，遇可确认实墙截断。表现绑在本次读数标记（本 source 创建）上，读结束即随标记清理。
+     */
+    function mindreaderTrendUpdate(world: CombatWorld, actor: CombatActor, markId: number, mark: any, at: CombatObservation): void {
+        const base = at.position().plus(WorldCombat.point(0, -0.4 * at.height(), 0));
+        const velocity = at.velocity(), speed = velocity.length(), moving = speed >= mindreaderMoveEpsilon;
+        let end = base;
+        if (moving) {
+            end = base.plus(velocity.unit().scale(Math.min(speed * mindreaderTrend, mindreaderTrendCap)));
+            const clip = world.clipBlocks(base, end);
+            if (clip && clip.blocked()) end = clip.position().minus(velocity.unit().scale(0.15));
+        }
+        WorldFeedback.onEffect(world, markId, "world_combat:move_mindreader/trend", mindreaderTrendScene, 1, base,
+            { moment: "trend", target: String(mark.target),
+                path: [[base.x(), base.y(), base.z()], [end.x(), end.y(), end.z()]],
+                moving: moving ? 1 : 0, motes: Math.max(6, Math.round(Number(mark.motes) || 14)),
+                outline: Math.max(0.2, at.width() * 0.65),
+                intensity: Math.max(0.5, Math.min(2, speed * 6 + 0.5)) });
     }
-    function mindreaderRestore(world: CombatWorld, actor: CombatActor, added: number): void {
-        if (added <= 0 || String(actor.domain()) !== "cobblemon") return;
-        NativeEffects.boost(world, actor, "accuracy", -added);
-    }
-    /** 收束这层读：释放标记、原样收回命中等级；自然到期的岔路额外播一次褪去。 */
-    function mindreaderClose(world: CombatWorld, actor: CombatActor, cause: string): void {
+    /** 收束这层读：撤标记、关窗口、撤载体（只收回本招这一份命中等级），并按原因收尾表现。 */
+    function mindreaderClose(world: CombatWorld, actor: CombatActor, cause: string, point: CombatPoint | null): void {
         const mark = mindreaderMarkOf(world, actor);
         if (mark === null) return;
         mindreaderReleaseMark(world, actor);
-        mindreaderRestore(world, actor, Math.max(0, Math.round(Number(mark.added) || 0)));
+        if (Number(mark.windowId) > 0) NativeEffects.windowClose(world, Number(mark.windowId));
+        if (MobEffects.read(world, actor, mindreaderEffect) !== null) MobEffects.consume(world, actor, mindreaderEffect);
+        if (cause === "spent") {
+            const body = point === null ? world.observe(actor) : null;
+            const at = point === null ? (body === null ? null : body.position()) : point;
+            if (at === null) return;
+            const motes = Math.max(10, Math.round(Number(mark.motes) || 14));
+            WorldFeedback.emit(world, mindreaderScene, 1, at,
+                { moment: "strike", target: String(mark.target), path: [String(mark.target), String(actor.ref())],
+                    motes: motes, intensity: Math.max(0.8, Math.min(2.2, motes / 14 + 0.5)) }, 26);
+            world.sound("minecraft:entity.player.attack.crit", at, 14, "{}");
+            WorldFeedback.text(world, mindreaderAbove(at), mindreaderReadText, [], 26);
+            return;
+        }
         if (cause !== "expired") return;
         const body = world.observe(actor);
         if (body === null) return;
@@ -60,7 +89,7 @@ namespace PokemonSkills {
         WorldFeedback.text(world, mindreaderAbove(body.position()), mindreaderFadeText, [], 22);
     }
 
-    // 兑现点：带读者下一次伤害命中时用掉这层读，收回命中等级，读光从目标身上散开。
+    // 兑现点：带读者打中所读目标、且造成真实伤害时用掉这层读，读线缩回施法者并熄灭；打其他目标不兑现。
     NativeEffects.appliedRules.define({ id: "world_combat:move_mindreader/spend", apply: function (hit) {
         const data = hit.data;
         if (!data || !(data.actual > 0)) return;
@@ -69,20 +98,9 @@ namespace PokemonSkills {
         if (!world.valid(source)) return;
         const mark = mindreaderMarkOf(world, source);
         if (mark === null) return;
-        mindreaderReleaseMark(world, source);
-        mindreaderRestore(world, source, Math.max(0, Math.round(Number(mark.added) || 0)));
-        if (!MobEffects.consumeTagged(world, source, StatusVocabulary.tag(mindreaderStatus)).length) return;
+        if (String(hit.target.ref()) !== String(mark.target)) return;
         const victim = world.observe(hit.target);
-        const ratio = victim === null ? 0 : Math.max(0, Math.min(1, data.actual / Math.max(1, victim.maxHealth())));
-        const motes = Math.max(10, Math.round((mark.motes || 14) * (0.6 + ratio)));
-        const sourceBody = world.observe(source);
-        if (sourceBody === null) return;
-        WorldFeedback.emit(world, mindreaderScene, 1, sourceBody.position(),
-            { moment: "strike", target: String(source.ref()), path: [String(source.ref()), String(hit.target.ref())],
-                motes: motes, intensity: Math.max(0.6, Math.min(2.2, 0.7 + ratio)) }, 26);
-        world.sound("minecraft:entity.player.attack.crit", sourceBody.position(), 14, "{}");
-        const victimBody = victim;
-        if (victimBody !== null) WorldFeedback.text(world, mindreaderAbove(victimBody.position()), mindreaderReadText, [], 26);
+        mindreaderClose(world, source, "spent", victim === null ? null : victim.position());
     } });
 
     // 自散/外解：窗口走到头或被牛奶一类效果解除时，收回命中等级；自然到期额外播一次褪去。
@@ -91,30 +109,37 @@ namespace PokemonSkills {
         if (String(data.id) !== mindreaderEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        mindreaderClose(world, actor, String(data.cause));
-    });
-
-    // 存续期：每 20 刻续一条从自己到目标读线，数量沿用本招算出的读光数。
-    WorldCombat.on("world_combat:move_mindreader/aura", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== mindreaderEffect || event.world().tick() % 20 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || MobEffects.read(world, actor, mindreaderEffect) === null) return;
         const mark = mindreaderMarkOf(world, actor);
         if (mark === null) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_mindreader/link/" + String(actor.ref()), mindreaderScene, 1, body.position(),
-            { moment: "link", target: String(actor.ref()), path: [String(actor.ref()), String(mark.target)],
-                motes: Math.max(8, Math.round(Number(mark.motes) || 14) / 2) }, 40);
+        // 刷新时旧载体被移除而新载体仍在：这不是读结束，不撤新的窗口。
+        if (mark.carrier && MobEffects.read(world, actor, mindreaderEffect) !== null && MobEffects.matches(world, actor, mark.carrier)) return;
+        mindreaderClose(world, actor, String(data.cause), null);
+    });
+
+    // 存续期：每 4 刻按目标真实速度更新一次趋势虚线；目标失效或离场即收。
+    WorldCombat.on("world_combat:move_mindreader/aura", "world_combat:mob_effect_tick", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== mindreaderEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        const mark = mindreaderMarkOf(world, actor);
+        if (mark === null) return;
+        const target = world.actor(String(mark.target));
+        if (target === null || !world.valid(target)) { mindreaderClose(world, actor, "lost", null); return; }
+        if (world.tick() % mindreaderPulse !== 0) return;
+        const views = world.effects(actor, mindreaderMark);
+        if (!views.length) return;
+        const at = world.observe(target);
+        if (at === null) return;
+        mindreaderTrendUpdate(world, actor, views[0].id(), mark, at);
     });
 
     define({
         id: mindreaderId,
         cooldownParameter: "recharge",
         name: "心之眼",
-        description: "凝神读穿对手的下一个动作：把自己的命中拉满并把对手照亮，让下一次命中不会落偏；读用掉即散。",
-        uses: ["在对手要闪开前先把准星拉满", "照亮躲在掩体后的目标", "为一次必须命中的关键攻击做铺垫"],
+        description: "看清一个对手正在朝哪里走：短期照亮它、把自己的命中拉起来，并用一条随它真实移动更新的趋势线指出方向；只有你随后打中这个目标才兑现读势。",
+        uses: ["在对手横移或撤退前先看清它的走向", "把命中拉满，为一次必须命中的追击铺路", "照亮躲在掩体后、正在移动的目标"],
         kind: "enemy",
         range: 8,
         maxRange: 12,
@@ -157,7 +182,7 @@ namespace PokemonSkills {
             }
             const at = world.observe(target);
             const point = at === null ? action.targetPosition() : at.position();
-            if (!world.clear(origin, point)) {
+            if (point.minus(origin).length() > p(mindreaderId, "reach", action) || !world.clear(origin, point)) {
                 WorldFeedback.emit(world, mindreaderScene, 1, point, { moment: "blocked", target: String(target.ref()) }, 20);
                 WorldFeedback.text(world, mindreaderAbove(point), "world_combat.move.mindreader.text.blocked", [], 28);
                 done(action);
@@ -166,18 +191,32 @@ namespace PokemonSkills {
             const ticks = Math.max(60, Math.round(p(mindreaderId, "readTicks", action)));
             const reveal = Math.max(40, Math.round(p(mindreaderId, "reveal", action)));
             const motes = Math.max(8, Math.round(p(mindreaderId, "motes", action)));
-            const added = mindreaderRaise(world, actor, p(mindreaderId, "focus", action));
-            MobEffects.apply(world, actor, mindreaderEffect, ticks, 0);
+            const focus = Math.max(1, Math.min(6, Math.round(p(mindreaderId, "focus", action))));
+            // 刷新：载体交给 boostWindow 拥有并只收回本招这一份；previous 让同招旧窗口被替换而不是叠加/漏撤。
+            const previous = MobEffects.read(world, actor, mindreaderEffect);
+            const before = NativeEffects.effectiveStage(world, actor, "accuracy");
+            const carrier = MobEffects.apply(world, actor, mindreaderEffect, ticks, previous ? previous.amplifier() : 0);
+            let windowId = 0, gained = 0;
+            if (carrier) {
+                windowId = NativeEffects.boostWindow(world, actor, { accuracy: focus }, carrier.duration(),
+                    "world_combat:move/mindreader", carrier, previous);
+                gained = Math.max(0, NativeEffects.effectiveStage(world, actor, "accuracy") - before);
+            }
+            if (!windowId) MobEffects.consume(world, actor, mindreaderEffect);
             MobEffects.apply(world, target, "minecraft:glowing", reveal, 0);
             mindreaderReleaseMark(world, actor);
-            world.effect(mindreaderMark, actor, JSON.stringify({ added: added, motes: motes, reveal: reveal, target: String(target.ref()) }), ticks);
+            // 标记略长于载体，让载体自然到期后的收尾仍能读到本层读；趋势表现绑在它上面随读结束清理。
+            const markId = world.effect(mindreaderMark, actor, JSON.stringify({
+                target: String(target.ref()), motes: motes, reveal: reveal, windowId: windowId, focus: gained,
+                carrier: carrier ? MobEffects.anchor(carrier) : null }), ticks + 8);
             sound(action, "minecraft:block.enchantment_table.use");
             if (self !== null) {
                 WorldFeedback.emit(world, mindreaderScene, 1, self.position(),
                     { moment: "read", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                        motes: motes, reveal: reveal, added: added, scale: Math.max(0.6, Math.min(2, ticks / 200)) }, 30);
-                WorldFeedback.text(world, mindreaderAbove(self.position()), mindreaderReadyText, [added], 30);
+                        motes: motes, reveal: reveal, added: gained, scale: Math.max(0.6, Math.min(2, ticks / 200)) }, 30);
+                WorldFeedback.text(world, mindreaderAbove(self.position()), mindreaderReadyText, [gained], 30);
             }
+            if (at !== null) mindreaderTrendUpdate(world, actor, markId, { target: String(target.ref()), motes: motes }, at);
             done(action);
         }
     });

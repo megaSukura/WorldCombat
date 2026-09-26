@@ -2,39 +2,28 @@
  * 抛下狠话 / partingshot 的出手方式。
  *
  * 核心念头：转身离开时甩下一句带刺的话——话像一支暗色的镖飞出去，扎进对手心里，把他的攻击与特攻各削几级，
- *   自己趁机背离他退开。狠话是这招的身份：**削的是对手的输出，不是它的血**。
+ *   自己趁机背离他真正退开；有后备队友在待命时，直接在同一点完成换手。狠话是这招的身份：**削的是对手的输出，不是它的血**。
  *
  * 两幕：
  *   起（barb，提交前）：嘴边聚起一缕暗话的碎点，只播预告。
- *   抛（launch → drain／whiff，提交后）：一句狠话朝目标飞过去；扎中活体就把它的物攻与特攻各削 `drop` 级、
- *     挂上共享身份 `world_combat:status/parting_shot`，然后施法者背离对手退开 `withdraw`；被让开就一直飞到落空，
- *     落空不退（话没送到，自己还得站着）。
+ *   抛（launch → drain／block／whiff，提交后）：一句狠话沿弹道朝瞄准方向飞出去，首碰为准；扎中真实非友方活体才
+ *     把物攻与特攻各削 `drop` 级、挂上共享身份 `world_combat:status/parting_shot`，然后：
+ *       - 有合法后备：`partySwitchOut` 在同一点换手，交接光只在真的切队成功时亮；
+ *       - 无后备：沿背离对手的实际脚步逐刻后退 `withdraw`，撞墙即停。
+ *     被墙挡下、擦过友方或一路落空都不削级、不退步（话没送到，自己还得站着）。
  *
  * 与同族分开：接棒递好处、瞬间移动只挪自己、临别礼物以命相换；只有抛下狠话**远远地削掉对手的输出再走**，
- *   是一支会飞的减法。提交前只观察、只 present；削级、退步与粒子都在提交后写。
+ *   是一支会飞的减法。提交前只观察、只 present；削级、退步、换人与粒子都在提交后写。
  */
 namespace PokemonSkills {
-    /** 背离 awayFrom 退开 distance；优先瞬移到落点，失败就一步步位移。返回实际移动量。 */
-    function partingshotStep(world: CombatWorld, actor: CombatActor, awayFrom: CombatPoint, distance: number): number {
-        const body = world.observe(actor);
-        if (body === null || !(distance > 0)) return 0;
-        const from = body.position();
-        const flat = WorldCombat.point(from.x() - awayFrom.x(), 0, from.z() - awayFrom.z());
-        if (flat.length() < 0.01) return 0;
-        const step = flat.unit().scale(distance);
-        const feet = WorldCombat.point(from.x(), from.y() - body.height() / 2, from.z());
-        if (world.teleport(actor, feet.plus(step))) return distance;
-        return world.displace(actor, step);
-    }
-
     define({
         freeMovement: true,
         id: partingshotId,
         cooldownParameter: "recharge",
         name: "Parting Shot",
-        description: "朝对手甩下一句带刺的狠话：话飞过去扎中后，把对手的攻击与特攻各削几级、挂上羞辱身份，自己趁机退开。话没送到就不退。",
-        uses: ["把对手的输出削下去再脱身", "在自己要撤时顺手废掉追兵的手", "先射一句狠话再拉开距离"],
-        kind: "enemy",
+        description: "朝瞄准方向甩下一句带刺的狠话，首碰为准：话扎中对手后把它的攻击与特攻各削几级、挂上羞辱身份，然后有后备就换手、没后备就逐刻退开。话没送到既不削也不退。",
+        uses: ["把对手的输出削下去再脱身", "在自己要撤时顺手废掉追兵的手", "有队友接应时削完就换人上场"],
+        kind: "aim",
         range: 8,
         maxRange: 14,
         prepare: 6,
@@ -71,14 +60,54 @@ namespace PokemonSkills {
             const body = world.observe(self);
             if (body === null) { done(action); return; }
             const origin = body.position();
+            const bodyHeight = body.height();
             const drop = Math.max(1, Math.min(2, Math.round(p(partingshotId, "drop", action))));
             const mark = Math.max(60, Math.round(p(partingshotId, "markTicks", action)));
             const motes = Math.max(8, Math.round(p(partingshotId, "motes", action)));
             const speed = p(partingshotId, "flight", action);
             const withdraw = p(partingshotId, "withdraw", action);
             const scale = Math.max(0.5, Math.min(1.3, 0.55 + motes / 70));
-            let settled = false;
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            const scenes = WorldFeedback.actionScenes(partingshotScene, 1);
+            let settled = false, handled = false;
+
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
+
+            // 命中后的收场只发生一次：有后备就真换人，没有就沿实际脚步逐刻退，撞墙即停。
+            function withdrawAfter(current: CombatAction, away: CombatPoint): void {
+                const scope = current.world();
+                const reserve = partyReserve(partyRoster(scope, self), partyActiveId(scope, self));
+                if (reserve !== null) {
+                    const stand = scope.observe(self);
+                    const feet = stand === null ? null : partyFeet(stand);
+                    const result = partySwitchOut(scope, self, reserve.slot, feet);
+                    if (result.ok) {
+                        const at = stand === null ? origin : stand.position();
+                        WorldFeedback.emit(scope, partingshotScene, 1, at,
+                            { moment: "switch", drop: drop, motes: motes, scale: scale }, 24);
+                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), partingshotSwitchText, [], 26);
+                    }
+                    finish(current);
+                    return;
+                }
+                const flat = WorldCombat.point(away.x(), 0, away.z());
+                const direction = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
+                let remaining = withdraw;
+                const path: number[][] = [[origin.x(), origin.y() - bodyHeight / 2, origin.z()]];
+                function step(next: CombatAction): void {
+                    const here = next.world().observe(self);
+                    if (here === null || remaining <= 0.05) { finish(next); return; }
+                    const leg = Math.min(1.2, remaining);
+                    const moved = next.world().displace(self, direction.scale(leg));
+                    const after = next.world().observe(self);
+                    if (after !== null) path.push([after.position().x(), after.position().y() - after.height() / 2, after.position().z()]);
+                    remaining -= moved;
+                    scenes.show(next, "step", origin, { moment: "step", drop: drop, motes: motes, scale: scale,
+                        direction: [direction.x(), 0, direction.z()], path: path.slice() });
+                    if (moved < leg - 0.05 || remaining <= 0.05) { finish(next); return; }
+                    next.after(1, step);
+                }
+                step(current);
+            }
 
             WorldFeedback.emit(world, partingshotScene, 1, origin,
                 { moment: "launch", motes: motes, drop: drop, scale: scale }, 22);
@@ -87,34 +116,40 @@ namespace PokemonSkills {
             LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.28,
                 appearance: { sprite: "cobblemon:generic/exclamation", scale: scale, tint: 0x6A3FA0, glow: true },
-                impact: function (current, hit) {
-                    const scope = current.world(), victim = hit.target();
-                    if (victim === null || !scope.valid(victim) || scope.friendly(victim)) {
-                        const at = hit.position();
-                        WorldFeedback.emit(scope, partingshotScene, 1, at, { moment: "whiff", motes: motes, scale: scale }, 18);
-                        finish(current); return;
+                impact: function (current: CombatAction, hit: CombatImpact) {
+                    handled = true;
+                    const scope = current.world(), victim = hit.target(), point = hit.position();
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        // 只记录实际落下的等级：被特性/免疫拒绝时不假报羞辱。
+                        const atkDrop = -NativeEffects.boost(scope, victim, "atk", -drop);
+                        const spaDrop = scope.valid(victim) ? -NativeEffects.boost(scope, victim, "spa", -drop) : 0;
+                        const applied = Math.max(atkDrop, spaDrop);
+                        const struck = scope.observe(victim);
+                        const at = struck !== null ? struck.position() : point;
+                        if (applied > 0) {
+                            MobEffects.apply(scope, victim, partingshotEffect, mark, 0);
+                            WorldFeedback.emit(scope, partingshotScene, 1, at,
+                                { moment: "drain", target: String(victim.ref()), motes: motes, drop: applied, scale: scale,
+                                    intensity: Math.max(0.7, Math.min(2, 0.7 + applied * 0.5)) }, 26);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), partingshotText, [applied], 28);
+                        }
+                        withdrawAfter(current, origin.minus(at));
+                    } else {
+                        // 墙挡、友方或无效首碰：话没送到，不削级也不退。
+                        const block = hit.blockPosition();
+                        WorldFeedback.emit(scope, partingshotScene, 1, point,
+                            { moment: "whiff", motes: motes, scale: scale, blocked: hit.blocked() ? 1 : 0,
+                                blockFace: hit.blockFace(),
+                                block: block === null ? null : [block.x(), block.y(), block.z()] }, 18);
+                        finish(current);
                     }
-                    NativeEffects.boost(scope, victim, "atk", -drop);
-                    if (scope.valid(victim)) NativeEffects.boost(scope, victim, "spa", -drop);
-                    if (scope.valid(victim)) MobEffects.apply(scope, victim, partingshotEffect, mark, 0);
-                    const struck = scope.observe(victim);
-                    if (struck !== null) {
-                        WorldFeedback.emit(scope, partingshotScene, 1, struck.position(),
-                            { moment: "drain", target: String(victim.ref()), motes: motes, drop: drop, scale: scale,
-                                intensity: Math.max(0.7, Math.min(2, 0.7 + drop * 0.5)) }, 26);
-                        WorldFeedback.text(scope, struck.position().plus(WorldCombat.point(0, 1.15, 0)), partingshotText, [drop], 28);
-                        partingshotStep(scope, self, struck.position(), withdraw);
-                        const flat = origin.minus(struck.position());
-                        const direction = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
-                        WorldFeedback.emit(scope, partingshotScene, 1, origin,
-                            { moment: "step", direction: [direction.x(), 0, direction.z()], withdraw: withdraw, scale: scale }, 20);
-                    }
-                    scope.sound("minecraft:entity.illusioner.cast_spell", hit.position(), 14, "{}");
-                    finish(current);
+                    scope.sound("minecraft:entity.illusioner.cast_spell", point, 14, "{}");
                 }
-            }, function (current) {
+            }, function (current: CombatAction) {
+                if (handled) return;
+                handled = true;
                 WorldFeedback.emit(current.world(), partingshotScene, 1, current.origin(),
-                    { moment: "whiff", motes: motes, scale: scale }, 18);
+                    { moment: "whiff", motes: motes, scale: scale, blocked: 0 }, 18);
                 WorldFeedback.text(current.world(), current.origin().plus(WorldCombat.point(0, 1.2, 0)), partingshotMissText, [], 20);
                 finish(current);
             });

@@ -39,6 +39,7 @@ namespace PokemonSkills {
     export const anchorshotSnapText = "world_combat.move.anchorshot.text.snap";
     export const anchorshotReleaseText = "world_combat.move.anchorshot.text.release";
     export const anchorshotMissText = "world_combat.move.anchorshot.text.miss";
+    export const anchorshotSlipText = "world_combat.move.anchorshot.text.slip";
     export const anchorshotAnchorBlock = "minecraft:chain";
     /** 表现里锚头判定的参考值（格）；服务端传 scale = 实际判定 / 这个值。 */
     export const anchorshotReference = 0.28;

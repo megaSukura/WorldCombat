@@ -8,10 +8,18 @@ Smoke.scenario("wideguard", function (stage) {
     var caster = stage.pokemon({ species: "shieldon", level: 34, moves: ["wideguard"], at: [-2, 0, 0] });
     var ally = stage.pokemon({ species: "pikachu", level: 30, moves: ["tackle"], at: [0, 0, 0] });
     // 敌人用远程招式（ember 不带 contact 旗标），正是宽墙该挡的那一类。
-    var foe = stage.pokemon({ species: "charmander", level: 20, moves: ["ember"], at: [6, 0, 0] });
+    var foe = stage.pokemon({ species: "charmander", level: 20, moves: ["ember"], at: [5, 0, 0] });
     stage.team("wall", [caster, ally]);
     stage.hostile(ally, foe);
     stage.hostile(caster, foe);
+    // 威胁定在原地，保持在反应距离内；让远程威胁已经在打——一支原生箭从 charmander 落到 pikachu 身上，
+    // 留下非接触攻击事实，AI 据此才立墙。隔一段再补一次，避免 AI 恰好在证据过期后才做判断。
+    stage.noai(foe);
+    function volley() {
+        stage.command("damage " + String(ally.ref).split("/")[0] + " 2 minecraft:arrow by " + String(foe.ref).split("/")[0]);
+    }
+    stage.after(40, volley);
+    stage.after(240, volley);
 
     stage.until(900, function () {
         return stage.casts("wideguard", caster) > 0 && stage.hadMobEffect(ally, "world_combat:status/wideguard");

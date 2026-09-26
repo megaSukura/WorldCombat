@@ -21,7 +21,7 @@
   "worldcombat.skill.sunnyday.preference.ai.maxChase": "Call distance",
   "worldcombat.skill.sunnyday.preference.ai.maxChase.help": "The companion only calls sunlight while a threat is within this distance; lower calls it up close, higher sets it up in advance.",
   "worldcombat.skill.sunnyday.preference.ai.advance": "Push the sun at the foe",
-  "worldcombat.skill.sunnyday.preference.ai.advance.help": "On, the sun is called between you and the threat so the fighting line falls in the light; off, it is called at your feet to shield yourself first.",
+  "worldcombat.skill.sunnyday.preference.ai.advance.help": "On, the sun is pushed a few blocks toward the threat; off (default), it is kept over the side it helps most, first covering an ally with a Fire or charging move, or one that needs thawing or drying.",
   "worldcombat.skill.sunnyday.preference.ai.leaveStation": "Leave the station",
   "worldcombat.skill.sunnyday.preference.ai.leaveStation.help": "On, a companion holding its station will step out to call sunlight.",
   "world_combat.move.sunnyday.text.sunlit": "Sunlit",

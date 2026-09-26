@@ -22,7 +22,7 @@
   "worldcombat.skill.wideguard.preference.brace.1": "广墙",
   "worldcombat.skill.wideguard.preference.brace.0": "厚墙",
   "worldcombat.skill.wideguard.preference.ai.trigger": "反应距离",
-  "worldcombat.skill.wideguard.preference.ai.trigger.help": "威胁进入这个距离就考虑立墙；越大越早预判，也越可能白立。",
+  "worldcombat.skill.wideguard.preference.ai.trigger.help": "威胁进入这个距离、并且确实在打远程／范围（宽墙能挡的那类）时，才考虑立墙；越大越早预判，也越可能白立。",
   "worldcombat.skill.wideguard.preference.ai.cover": "留到有伙伴才立墙",
   "worldcombat.skill.wideguard.preference.ai.cover.help": "开启后，只有警戒范围内还有别的友方才立墙；关闭则自己受压就立。",
   "world_combat.move.wideguard.text.raise": "广域防守（卸力 %1$s／%2$s 人／%3$s 秒）",

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.healpulse.summary": "Sends a healing wave out along the aim line toward a chosen ally; it restores about half of their maximum health on arrival. Flight time depends on distance and wave speed, so farther allies are reached later, and an ally dropped during the wait is missed.",
+  "worldcombat.skill.healpulse.summary": "Sends a healing wave out along the aim line toward a chosen ally; it restores about half of their maximum health on arrival. Flight time depends on distance and wave speed, so farther allies are reached later; the wavefront follows the ally's current position, but an ally pulled out of range or dropped before it arrives is missed.",
   "worldcombat.skill.healpulse.use.0": "Top an ally up from a distance",
   "worldcombat.skill.healpulse.use.1": "Send health before an ally goes down",
   "worldcombat.skill.healpulse.use.2": "A travelling rescue across open ground",
@@ -27,5 +27,5 @@
   "world_combat.move.healpulse.text.wash": "The wave lands, +%1$s",
   "world_combat.move.healpulse.text.full": "Already at full health",
   "world_combat.move.healpulse.text.fizzle": "The wave fizzles",
-  "worldcombat.skill.healpulse.description.travel": "The wave travels straight to the ally and cannot be intercepted; if the ally is down, gone or no longer friendly when it arrives, the heal is lost."
+  "worldcombat.skill.healpulse.description.travel": "The wave runs straight along the line from caster to ally and cannot be intercepted, with its front following the ally's current position; if the ally is down, gone, no longer friendly, or pulled beyond the cast range along the way, the heal is lost (PP and cooldown still paid)."
 }

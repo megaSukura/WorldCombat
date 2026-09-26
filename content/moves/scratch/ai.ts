@@ -3,6 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 4）格内；抓的射程最短，更远先交给共享接近逻辑。
  * 对谁出手：`ai.huntBig`（默认开）把体型宽的对手排得更前——一爪能同时抓中更多道痕；残血目标再加一档收尾。
+ * 贴到近处时对任何目标都有基础分，可作为低耗填充随手甩出，不挑目标宽窄。
  * 够不到怎么办：这是全族最便宜的招，够不到就先贴近，不急着换别的。
  * 放完之后：目标掉一层血，交回共享顺序决定继续贴脸还是等冷却；它是持续压制时最顺的一记。
  */
@@ -33,6 +34,8 @@ namespace PokemonSkills {
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "huntBig", true) && (target.width || 0.9) >= 1.2) score += 8;
             if (CompanionBehavior.ratio(target) < 0.4) score += 6;
+            // 它也是全族最便宜、冷却最短的一记：贴到近处就能当低耗填充，不挑目标宽窄。
+            if (distance <= 1.4) score += 3;
             return score;
         }
     });

@@ -21,6 +21,8 @@
   "worldcombat.skill.healingwish.preference.broadcast.help": "On: x1.4 radius and x0.85 wait, but only x0.7 healing. Off (focused wish): x0.85 radius, x1.2 wait and full healing. Each direction has its moments.",
   "worldcombat.skill.healingwish.preference.ai.sacrificeBelow": "Sacrifice threshold",
   "worldcombat.skill.healingwish.preference.ai.sacrificeBelow.help": "The companion gives up its life only when below this ratio with an ally in need nearby; lower endures longer, higher wishes at the first low health.",
+  "worldcombat.skill.healingwish.preference.ai.allyBelow": "Rescue scale",
+  "worldcombat.skill.healingwish.preference.ai.allyBelow.help": "An ally counts as an important patient worth wishing for only below this ratio (or while carrying a harmful status); lower only sacrifices for the badly hurt, higher also leaves a wish for a lightly wounded ally.",
   "worldcombat.skill.healingwish.preference.ai.reach": "Wish reach",
   "worldcombat.skill.healingwish.preference.ai.reach.help": "An ally within this distance is worth wishing for; lower sacrifices only when adjacent, higher leaves a wish for allies further out.",
   "world_combat.move.healingwish.text.offer": "Healing wish (waits ~%1$s s)",

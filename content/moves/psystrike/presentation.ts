@@ -1,13 +1,13 @@
 /**
  * 精神击破 / psystrike 的客户端表现。
  *
- * 一句话：施法者周身念力上涌、目标头顶压出一圈下压的印记 → 一整块深紫重物从上方追着目标砸落、拖着下坠的光屑 →
- *   落地炸成一圈白边冲击面与飞散的碎块，目标身上再闪过一道裂特防的紫纹。
+ * 一句话：施法者周身念力上涌、标记点上方压出一圈下压的印记 → 一整块深紫重物从标记点正上方竖直砸落、拖着下坠的光屑 →
+ *   在真实撞点（实体或方块）炸成一圈白边冲击面与飞散的碎块；被砸伤的目标身上再闪过一道裂特防的紫纹。
  * 色相家族：深紫蓝（0x6A3FD0 主 / 0x9B7BEE 亮 / 0xE4D8FF 近白核心），近白只给砸落的核心与冲击面；无第二个色相。
- * 拍子：起 conjure/mark 0–22t ／ 落 descend 0–80t ／ 砸 crush 0–30t ／ 裂 sunder ／ 场 shock ／ 空 miss。
+ * 拍子：起 conjure 0–22t ／ 标记 mark ／ 落 descend 0–80t ／ 砸 crush 0–30t ／ 裂 sunder ／ 场 shock ／ 空 miss。
  * 范围：crush 的贴地大环与 shock 的外扩环都按 `data.scale`（判定半径 / 0.5）铺开，就是这一压盖住的那块地方。
- * 运动：conjure 向上涌；mark 的印记缓缓下压；descend 绑 projectile 沿下落方向甩出下坠的光屑；
- *   crush 由内向外炸、碎块受重力落下；shock 环贴地向外扩。
+ * 运动：conjure 向上涌；mark 的印记固定在标记点缓缓下压；descend 绑 projectile 沿下落方向甩出下坠的光屑；
+ *   crush 在真实撞点由内向外炸、碎块受重力落下；shock 环贴地向外扩。
  * 数：`data.cracks`（特攻与等级派生的碎裂数）驱动砸落与冲击的碎块量，`data.intensity`（重压威力派生）抬高亮度。
  */
 const PsystrikeDefinition: ParticleDefinition = {
@@ -40,7 +40,7 @@ const PsystrikeDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 18 },
             emitters: [
                 {
-                    name: "seal", bind: "target", offset: [0, 1.4, 0], height: 0.4, orient: "fixed",
+                    name: "seal", bind: "point", offset: [0, 1.4, 0], height: 0.4, orient: "fixed",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
                     rate: 5, shape: { kind: "ring", radius: 0.5 },
                     direction: "inward", speed: [0.01, 0.05], spin: 8,
@@ -48,7 +48,7 @@ const PsystrikeDefinition: ParticleDefinition = {
                     color: 0x9B7BEE, alpha: [0.55, 0], light: "full", maxParticles: 14
                 },
                 {
-                    name: "weight", bind: "target", offset: [0, 0.6, 0], height: 0.6,
+                    name: "weight", bind: "point", offset: [0, 0.6, 0], height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: { data: "cracks", fallback: 18 }, shape: { kind: "sphere", radius: 0.45 },
                     direction: "down", speed: [0.02, 0.08],
@@ -84,7 +84,7 @@ const PsystrikeDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "core", bind: "target", offset: [0, 0.16, 0], height: 0.45,
+                    name: "core", bind: "point", offset: [0, 0.16, 0], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_psychic",
                     burst: { count: 3, interval: 2 },
                     shape: { kind: "sphere", radius: 0.34 },
@@ -93,7 +93,7 @@ const PsystrikeDefinition: ParticleDefinition = {
                     color: 0xE4D8FF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 12
                 },
                 {
-                    name: "shock_ring", bind: "target", offset: [0, -0.5, 0], height: 0, orient: "fixed",
+                    name: "shock_ring", bind: "point", offset: [0, -0.5, 0], height: 0, orient: "fixed",
                     particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
@@ -102,7 +102,7 @@ const PsystrikeDefinition: ParticleDefinition = {
                     color: 0x6A3FD0, alpha: [0.7, 0], light: "full", maxParticles: 5
                 },
                 {
-                    name: "debris", bind: "target", offset: [0, 0.24, 0], height: 0.5,
+                    name: "debris", bind: "point", offset: [0, 0.24, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
                     burst: { count: { data: "cracks", fallback: 20 }, interval: 1, repeats: 2 },
                     shape: { kind: "sphere", radius: 0.36 },

@@ -26,6 +26,51 @@ namespace PokemonSkills {
     export const psychicNoiseFadeText = "world_combat.move.psychicnoise.text.recovered";
     export const psychicNoiseFizzleText = "world_combat.move.psychicnoise.text.fizzle";
 
+    // 感知：谁身上有治疗招式或治疗道具、谁最近实际回复过。用来让 AI 优先封真正会回血的敌人，
+    // 而不是只按血量高低猜。
+    export var psychicNoiseHealAt: { [ref: string]: number } = Object.create(null);
+
+    /** 一个原生招式 id 是否带 heal 标记；未知 id 按 false 处理。 */
+    export function psychicNoiseHealMove(id: string): boolean {
+        if (!id) return false;
+        try { return !!CobblemonCombat.moveTemplate(id).flag("heal"); } catch (error) { return false; }
+    }
+    /** 目标是否带着治疗手段：原生治疗招式，或身上带治疗量的树果。 */
+    export function psychicNoiseHealCapable(world: CombatWorld, actor: CombatActor): boolean {
+        if (!world.valid(actor)) return false;
+        try {
+            var helds = NativeItems.helds(world, actor);
+            for (var i = 0; i < helds.length; i++) {
+                var berry = NativeItems.berryFrom(helds[i]);
+                if (berry !== null && berry.heal > 0) return true;
+            }
+        } catch (error) { }
+        if (String(actor.domain()) === "cobblemon") {
+            try {
+                var pokemon = CobblemonCombat.pokemon(actor);
+                for (var slot = 0; slot < pokemon.moveSlots(); slot++) {
+                    var move = pokemon.move(slot); if (!move) continue;
+                    if (psychicNoiseHealMove(String(move.id()))) return true;
+                }
+            } catch (error) { }
+        }
+        return false;
+    }
+    /** 目标是否在最近一段时间内实际回复过（共享 healing_incoming 桥的观察）。 */
+    export function psychicNoiseRecentHeal(world: CombatWorld, actor: CombatActor): boolean {
+        var at = psychicNoiseHealAt[String(actor.ref())];
+        return at !== undefined && world.tick() - at < 200;
+    }
+
+    // 记录任何走原生治疗事件的回复（招式、特性、携带物、其他 Mod），供 AI 判断谁在回血。
+    WorldCombat.on("world_combat:move_psychicnoise/witness", "world_combat:healing_incoming", "", function (event: CombatWorldEvent) {
+        var actor = event.actor(), world = event.world();
+        if (actor === null || !world.valid(actor)) return;
+        var data = JSON.parse(String(event.data()));
+        if (!(data.originalAmount > 0)) return;
+        psychicNoiseHealAt[String(actor.ref())] = world.tick();
+    });
+
     // 回复封锁：任何走共享治疗入口（招式／特性／携带物）的回复，只要目标带着 healblock 身份就被清零。
     // 身份是共享的 world_combat:status/healblock，别的单元将来用同一个身份施加的封锁也一并生效。
     NativeEffects.healing.define({ id: "world_combat:move/psychicnoise/seal", apply: function (context) {

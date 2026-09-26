@@ -8,7 +8,7 @@
  * 世界化：诅咒是一次**交换**——把自身的一部分押出去。
  *   幽灵个体：当场押上半条命，把债记在对手身上；之后每隔一段从对手身上扣一口，债走完或被清掉才停。
  *   非幽灵个体：押上敏捷，换来凶悍与硬壳（物攻/防御 +，速度 −），并在身上烙下一枚短暂的契约印记。
- *   出招仍需要一个对手作为「凝视的对象」，所以 kind 是 enemy；幽灵把债推给对手，其他个体只能自己吞下。
+ *   幽灵需要敌方实体；非幽灵可自行发动交换。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   reach       诅咒距离：基础 5 格 + 特攻/120，夹 4..8；凝视得越远的个体够得越远。
@@ -74,7 +74,7 @@ namespace PokemonSkills {
             when: function (context) { return curseGhostType(context.pokemon); } },
         { key: "description.ghost.1", values: ["bloodCost","reach"],
             when: function (context) { return curseGhostType(context.pokemon); } },
-        { key: "description.plain.0", values: ["pactGain", "reach"],
+        { key: "description.plain.0", values: ["pactGain"],
             when: function (context) { return !curseGhostType(context.pokemon); } },
         { key: "description.plain.1", values: ["prepare"],
             when: function (context) { return !curseGhostType(context.pokemon); } },

@@ -4,17 +4,20 @@
  * 原生事实：冰／物理／威力 20／命中 90／PP 10／接触；连续 3 次、每一下独立掷命中（multiaccuracy），
  * 每中一次威力提高（20→40→60），中途落空这串就断（Cobblemon 1.8，42 位学习者）。
  *
- * 翻译：把「一脚比一脚重的三段旋转踢」落成**原地转身、每转一圈扫出一脚**——三脚都在身前一段扇形里判定，
- * 第 n 脚威力 = kick × (1 + ramp × 已中脚数)。每脚独立掷命中，落空这串就停；扫的是扇形而不是一条线，
- * 所以站得近的第二个对手也会被旋到。原生的固定 20×n 拆成「基础威力 × 递增」两个参数，分别吃不同数据。
- * 与三连踢分开：三旋击是**原地旋转、宽弧横扫**、单脚更重、够得更远；三连踢是**朝前的窄走廊直踢**、更快更准。
+ * 翻译：把「一脚比一脚重的三段旋转踢」落成**滑着身子旋踢三圈**——三脚之间身体沿释放方向的侧弧短滑步，
+ * 每脚的前向来自滑步的真实切线，扫在身前一段扇形里；第 n 脚威力 = kick × (1 + ramp × 已中脚数)。
+ * 每脚独立掷命中，落空这串就停；扫的是扇形而不是一条线，所以站得近的第二个对手也会被旋到。
+ * 原生的固定 20×n 拆成「基础威力 × 递增」两个参数，分别吃不同数据。
+ * 与三连踢分开：三旋击是**滑步旋身、宽弧横扫**、单脚更重、够得更远；三连踢是**站定朝前的窄走廊直踢**、更快更准。
  *
  * 数值分散（每个参数各吃不同的精灵数据，小差距才在场上看得出来）：
  *   kick      第一脚威力：物攻定踢得多沉；再乘递增。
  *   kicks     脚数：固定 3 脚。
  *   ramp      每中一脚的递增系数：等级决定这串越踢越重的斜率。
- *   arc       扫过角度：本招「旋转」的身份落在这一项；横扫式更宽。
+ *   arc       每脚扫过角度：本招「横扫」的身份落在这一项；横扫式更宽。
  *   reach     踢击距离：速度与身高决定旋身够到多远，也是本招实际射程来源。
+ *   slide     每次侧滑距离：速度决定身体沿着冰弧滑出多远，下一脚的切线因此变向。
+ *   spin      每次侧滑转角：速度决定滑步转多急；两段滑步合起来就是三脚之间的旋身角。
  *   gap       脚间隔：速度决定三脚连得多紧。
  *   accuracy  每脚命中率：速度提高它；横扫式因旋得宽而略降。
  *   sparks    冰屑点数：物攻派生，表现按它发射。
@@ -73,7 +76,24 @@ namespace PokemonSkills {
                 .clamp(2.3, 3.8).round(2),
             "踢击距离", {
                 unit: "格",
-                description: "旋身一脚能够到多远；速度与身高决定贴上去的短距，也是本招实际射程来源。"
+                description: "滑步旋身时一脚能够到多远；速度与身高决定旋身半径，也是本招实际射程来源。"
+            }),
+        /** 每次侧滑距离：1.5 + 速度偏移[−0.3,0.6] + 身高偏移[−0.1,0.25]；夹 1.0..2.4。 */
+        slide: formula(
+            F.base(1.5)
+                .plus(F.stat("speed").minus(50).times(0.008).clamp(-0.3, 0.6))
+                .plus(F.body("height").minus(1.4).times(0.06).clamp(-0.1, 0.25))
+                .clamp(1.0, 2.4).round(2),
+            "侧滑距离", {
+                unit: "格",
+                description: "两脚之间身体沿着侧弧滑出多远；速度越快滑得越远，下一脚的切线因此转得更多。滑步受身体碰撞约束，撞墙就停在那里。"
+            }),
+        /** 每次侧滑转角：42 + 速度偏移[−10,16]；夹 24..66。 */
+        spin: formula(
+            F.base(42).plus(F.stat("speed").minus(50).times(0.18).clamp(-10, 16)).clamp(24, 66).round(0),
+            "侧滑转角", {
+                unit: "度",
+                description: "每次侧滑把身体朝向转过多少度，也就是下一脚切线的偏角；两段滑步合起来就是三脚之间的旋身弧度。三脚不瞬转追敌，方向来自真实滑过的弧。"
             }),
         /** 脚间隔：5 − 速度偏移[−1,1.5]，横扫 +1 / 收势 −1；夹 3..8。 */
         gap: seconds(
@@ -98,7 +118,7 @@ namespace PokemonSkills {
         /** 起手：6 − 速度偏移[−0.8,1.5]；夹 4..9。 */
         tempo: seconds(
             F.base(6).minus(F.stat("speed").minus(50).times(0.02).clamp(-0.8, 1.5)).clamp(4, 9).round(0),
-            "起手", "转身蓄势到第一脚扫出的时间；速度越快越短。"),
+            "起手", "滑步蓄势到第一脚扫出的时间；速度越快越短。"),
         /** 收招：7 − 速度偏移[−0.8,1.6]，横扫 +2；夹 4..11。 */
         recover: seconds(
             F.base(7).minus(F.stat("speed").minus(50).times(0.02).clamp(-0.8, 1.6))
@@ -122,7 +142,7 @@ namespace PokemonSkills {
 
     describe(tripleaxelId, [
         { key: "description.0", values: ["kick","kicks","ramp"] },
-        { key: "description.1", values: ["arc","reach","accuracy","gap"] },
+        { key: "description.1", values: ["arc","reach","slide","spin","accuracy","gap"] },
         { key: "description.additional", values: [] },
         { key: "widen.on", values: [], when: function (context) { return read(context.detail.values, ["widen"]) === true; } },
         { key: "widen.off", values: [], when: function (context) { return read(context.detail.values, ["widen"]) !== true; } },

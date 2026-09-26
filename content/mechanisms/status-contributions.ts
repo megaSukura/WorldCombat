@@ -40,6 +40,13 @@ namespace StatusContributions {
         const found = world.effects(target, manager).filter(view => JSON.parse(String(view.data())).carrier === carrier);
         return found.length ? found[0] : null;
     }
+    /** Present in the recipient's native-event scope. The carrier owns the scene, including early removal.
+     * Callers provide the same key to update it without restarting its clock; a foreign source is refused. */
+    export function present(world: CombatWorld, target: CombatActor, carrier: string, key: string, scene: string,
+        version: number, point: CombatPoint, data: any): boolean {
+        const projection = carrierManager(world, target, carrier);
+        return projection !== null && world.presentOn(projection.id(), key, scene, version, point, JSON.stringify(data));
+    }
     function projection(records: CombatEffectView[]): { ticks: number; amplifier: number } {
         let ticks = 1, amplifier = 0;
         records.forEach(view => {

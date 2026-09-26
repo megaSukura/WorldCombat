@@ -15,11 +15,5 @@
   ],
   "clientSources": [
     "presentation.ts"
-  ],
-  "startupSources": [
-    "startup.ts"
-  ],
-  "mobEffectIcons": {
-    "world_combat:dragontail_routed": "minecraft:mob_effect/weakness"
-  }
+  ]
 }

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.hornattack.summary": "The user lowers its head, drives the horn in and keeps it locked in the wound while its whole body shoves the target backward across the ground: not a single knockback but a stretch of sustained pushing. It is the family's only move that locks on and bulldozes, and the heavier the user the farther it drives.",
-  "worldcombat.skill.hornattack.use.0": "Gore a close target and shove it off",
+  "worldcombat.skill.hornattack.summary": "The user lowers its head, drives the horn in and keeps it locked in the wound while its whole body shoves the target backward across the ground: it first makes one native short contact to lock the first foe and deals its single initial hit, then pushes the target first and follows with its own body by the distance actually moved; a refused target or a wall ends the push at once, never shoving through it. It is the family's only move that locks on and bulldozes, and the heavier the user the farther it drives.",
+  "worldcombat.skill.hornattack.use.0": "Gore a close target with a native contact and shove it off",
   "worldcombat.skill.hornattack.use.1": "Drive a foe across the ground away from cover or position",
   "worldcombat.skill.hornattack.use.2": "Cheap close-range pressure",
   "worldcombat.skill.hornattack.description.0": "The horn point deals about %1$s contact damage; reach about %2$s blocks with a %3$s block horn half-width.",
-  "worldcombat.skill.hornattack.description.1": "The hit shoves the target about %1$s blocks at once; the horn stays locked, the user follows and keeps pushing it along the ground to a total of about %2$s blocks including that first shove, and a wall or a target that will not budge ends the push.",
+  "worldcombat.skill.hornattack.description.1": "The horn stays locked after the hit: it pushes the target one step along the ground, then moves the user forward by the distance the target actually moved, to a total of about %2$s blocks including the about %1$s block initial shove; a refused target, a wall or a target that will not budge ends the push at once.",
   "worldcombat.skill.hornattack.drive.on": "Bulldoze form: carries the target about %1$s blocks and about %2$s damage per gore, but with a longer wind-up, recovery and cooldown.",
   "worldcombat.skill.hornattack.drive.off": "Quick form: releases after about %1$s blocks and about %2$s damage, with the shortest wind-up and cycle.",
   "worldcombat.skill.hornattack.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",
@@ -28,5 +28,5 @@
   "world_combat.move.hornattack.text.hit": "Gored",
   "world_combat.move.hornattack.text.push": "Shoved %1$s blocks",
   "world_combat.move.hornattack.text.miss": "Gored at air",
-  "worldcombat.skill.hornattack.description.additional": "One cast gores at most a single foe on the horn line and never hits allies, leaving other targets alone; before the stab the user lurches up to about %1$s blocks toward the target, stopping once the horn tip is in contact (less if blocked). The locked push that follows deals no further damage."
+  "worldcombat.skill.hornattack.description.additional": "One cast gores at most a single foe on the horn line and never hits allies, leaving other targets alone; before the stab the user lurches up to about %1$s blocks forward, and the native body sweep stops at the first entity or obstruction rather than going around a wall to the original target. The locked push that follows deals no further damage."
 }

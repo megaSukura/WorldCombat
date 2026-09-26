@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.toxic.summary": "Spit a glob of venom into the target: a hit leaves it badly poisoned, and every few seconds the poison deepens a stage so it bites more often; when the venom runs its full time it erupts for a chunk of maximum health (this can finish it), while a cure makes it wither early.",
+  "worldcombat.skill.toxic.summary": "Spit venom that deepens over time, making native poison pulses more frequent. Curing it immediately stops further escalation; expiry lets it fade.",
   "worldcombat.skill.toxic.description.0": "The venom flies at %2$s blocks per tick toward a target within %1$s blocks, with a flight hit radius of %3$s blocks; terrain in the way or a dodge makes it fizzle.",
   "worldcombat.skill.toxic.description.1": "On a hit the target is badly poisoned; every %1$s ticks the poison deepens one stage up to stage %3$s, and each deeper stage makes the poison damage tick more often. The venom lasts at most %2$s. Poison- and Steel-type or otherwise poison-immune targets cannot be poisoned, so the move does nothing to them.",
-  "worldcombat.skill.toxic.description.2": "When the venom has run its full time it erupts for %1$s%% of the target's maximum health (this can finish it); if the poison is cured before then, the venom withers early and never erupts.",
+  "worldcombat.skill.toxic.description.2": "Native poison settles the damage, including immunity, mitigation and its minimum-health rule. Curing poison immediately stops escalation.",
   "worldcombat.skill.toxic.use.0": "Open by poisoning a tough target",
   "worldcombat.skill.toxic.use.1": "Turn a hard fight into a war of attrition",
   "worldcombat.skill.toxic.use.2": "Force the target to spend a cure or retreat",
@@ -12,15 +12,13 @@
   "worldcombat.skill.toxic.value.venomTicks": "Venom duration",
   "worldcombat.skill.toxic.value.escalateInterval": "Deepening interval",
   "worldcombat.skill.toxic.value.ampCap": "Poison stage cap",
-  "worldcombat.skill.toxic.value.burstShare": "Eruption share",
   "worldcombat.skill.toxic.preference.virulent": "Virulent stance",
-  "worldcombat.skill.toxic.preference.virulent.help": "On: shorter venom (x0.72) but faster deepening (interval x0.62) and a heavier eruption (x1.3), to break the target sooner. Off: longer venom (x1.08) with slower deepening, for a long war of attrition.",
+  "worldcombat.skill.toxic.preference.virulent.help": "On: shorter duration (x0.72), faster escalation (interval x0.62). Off: longer duration (x1.08) with slower escalation for sustained pressure.",
   "worldcombat.skill.toxic.preference.ai.maxChase": "Venom distance",
   "worldcombat.skill.toxic.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of spitting. Larger values chase harder and whiff more in the open.",
   "worldcombat.skill.toxic.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.toxic.preference.ai.leaveStation.help": "When on, the user may leave its post to apply venom; when off, it only spits at what it can reach from where it stands.",
   "world_combat.move.toxic.text.root": "Toxic Venom rooted",
   "world_combat.move.toxic.text.escalate": "Poison deepened to stage %1$s",
-  "world_combat.move.toxic.text.burst": "Toxic eruption %1$s",
   "world_combat.move.toxic.text.fizzle": "Venom splashed down"
 }

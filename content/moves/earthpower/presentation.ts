@@ -1,14 +1,14 @@
 /**
  * 大地之力 / earthpower —— 客户端表现。
  *
- * 一句话：目标脚下的地面亮起一圈将被掀开的记号 → 那一点的地面自下而上崩开、土石块被抛到半空、外缘一圈震波
+ * 一句话：选定的地面亮起一圈固定记号 → 那一点的地面自下而上崩开、一柱土尘按真实上顶高度窜起、外缘一圈震波
  * 贴着地面扫开 → 被顶起的敌人身上炸开尘土，地面留下一小片裂开的土石。
  * 色相家族：土黄与灰岩（earth / large_rock / tinydust / groundquake / impact_ground）为主体，
  * 淡黄高光（0xEDE0C0）只给崩开那一下。
  * 拍子：起 mark（亮记号）→ 击 erupt（崩开）→ hit（逐个顶起）→ 收 rupture（裂痕）／miss（落空前轻响）。
- * 范围：mark 与 erupt 的地面圈按服务端传的 `data.radius`（真实爆发半径）画出，玩家看到的圈就是会被掀到的地。
- * 运动：土石块从地面向上崩起再落下，震波环贴地向外扫；marks 从记号圈内向上渗。
- * 数：`data.shards`（特攻与等级换算）决定崩起与飞石数量，`data.cells`（实际裂开块数）决定裂痕余尘。
+ * 范围：mark 与 erupt 的地面圈按服务端传的 `data.radius`（真实爆发半径）画在同一锁定点上，玩家看到的圈就是会被掀到的地。
+ * 运动：土石块从地面向上崩起再落下，震波环贴地向外扫；柱子高度读 `data.column`（由真实 `launch` 换算）。
+ * 数：`data.shards`（特攻与等级换算）决定崩起与飞石数量，`data.cells`（`terrainResult` 实际裂开块数）决定裂痕余尘。
  */
 const EarthPowerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -75,6 +75,15 @@ const EarthPowerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.1, 0.4], spread: 20,
                     lifetime: 9, size: [0.4, 0.06], sizeMode: "index",
                     color: 0xEDE0C0, alpha: [1, 0], light: "full", bloom: 0.3, maxParticles: 8
+                },
+                {
+                    name: "erupt_column", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    shape: { kind: "line", length: { data: "column", fallback: 1.4 } },
+                    rate: 34, direction: "up", speed: [0.12, 0.4], spread: 12,
+                    gravity: 0.06, drag: 0.9,
+                    lifetime: [8, 16], size: [0.14, 0.03],
+                    color: 0xA87B3A, alpha: [0.85, 0], light: "world", maxParticles: 80
                 }
             ]
         },
@@ -100,6 +109,15 @@ const EarthPowerDefinition: ParticleDefinition = {
                     gravity: 0.08, drag: 0.94,
                     lifetime: [12, 24], size: [0.12, 0.02],
                     color: 0x8A6A44, alpha: [0.85, 0], light: "world", maxParticles: 80
+                },
+                {
+                    name: "hit_column", bind: "target", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    shape: { kind: "line", length: { data: "column", fallback: 1.4 } },
+                    rate: 18, direction: "up", speed: [0.08, 0.26], spread: 16,
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [6, 14], size: [0.1, 0.02],
+                    color: 0x6E5233, alpha: [0.7, 0], light: "world", maxParticles: 50
                 }
             ]
         },

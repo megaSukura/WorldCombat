@@ -6,63 +6,51 @@
  *
  * 三幕：
  *   起势（windup，提交前）：把扫具拢到身前、压低身形，尘屑在脚边打转；可被打断，不消耗任何东西。
- *   扫（提交后）：按 sweep 半径扫开——同一片场地里四条陷阱规则的场地效果整片收走，替身按承载效果结束；
- *     随后攻击与速度各抬起（原生 +1），挂上共享身份 world_combat:status/tidyup 的轻快窗口，
- *     并另存一枚只记窗口 id 的记号，供窗口结束时按 id 提前结束。
+ *   扫（提交后）：按 sweep 半径扫开——同一片场地里声明为入场陷阱的场地效果整片收走，替身按承载效果结束；
+ *     只有真正被 dispel 成功的才算清掉（被拒绝的不计入已清）。随后攻击与速度各抬起（原生 +1），
+ *     挂上共享身份 world_combat:status/tidyup 的轻快窗口。等级由 boostWindow 拥有并绑在这层轻快载体上。
  *   收（收势）：扬起的一圈尘落下，浮出结果；窗口走完或被清除时，这次抬起的攻与速随窗口收回。
  *
  * 与同族分开：其他三支只是调整自己；大扫除会**改变世界**——把对手花时间布下的陷阱一次抹掉，这也是它最大的价值。
  * 没有陷阱可扫时它仍然抬攻速，所以也是一支可用的整备招。
  */
 namespace PokemonSkills {
-    // 记号：只记这次轻快窗口的 id；窗口结束时按 id 提前结束它（已自然到期则无事发生）。等级账在窗口自己身上。
-    WorldCombat.effect(tidyupMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json);
-        if (typeof value.window !== "number" || !isFinite(value.window)) throw new Error("Invalid tidy up mark");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(tidyupMark, "start", function () { });
-
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function tidyupStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
     function tidyupScan(radius: number): number { return Math.min(32, Math.max(4, Math.ceil(radius) + 2)); }
 
     /**
      * 这片场地里的入场陷阱：只按生产者声明的类别识别，不枚举规则 id，新陷阱自动可扫。
      * 位置与维度由共享查询按真实场地提供。
      */
-    export function tidyupHazardsNear(world: CombatWorld, centre: CombatPoint, radius: number): { id: number; rule: string }[] {
-        const areas = WorldEffects.hazards(world, centre, radius), result: { id: number; rule: string }[] = [];
-        for (let index = 0; index < areas.length; index++) result.push({ id: areas[index].id, rule: areas[index].rule });
+    export function tidyupHazardsNear(world: CombatWorld, centre: CombatPoint, radius: number): { id: number; rule: string; position: number[] }[] {
+        const areas = WorldEffects.hazards(world, centre, radius), result: { id: number; rule: string; position: number[] }[] = [];
+        for (let index = 0; index < areas.length; index++) result.push({ id: areas[index].id, rule: areas[index].rule, position: areas[index].position });
         return result;
     }
 
-    /** 这片场地里的替身：承载效果挂在主人身上，替身身体半径内或主人半径内部的都算。 */
-    export function tidyupWardsNear(world: CombatWorld, centre: CombatPoint, radius: number): number[] {
-        const result: number[] = [], seen: string[] = [];
-        function consider(owner: CombatActor | null): void {
+    /** 这片场地里的替身：承载效果挂在主人身上，替身身体半径内或主人半径内部的都算；位置取实际被扫的身体。 */
+    export function tidyupWardsNear(world: CombatWorld, centre: CombatPoint, radius: number): { id: number; position: number[] }[] {
+        const result: { id: number; position: number[] }[] = [], seen: string[] = [];
+        function consider(owner: CombatActor | null, at: number[]): void {
             if (owner === null) return;
             const ref = String(owner.ref());
             if (seen.indexOf(ref) >= 0) return;
             const wards = world.effects(owner, tidyupWard);
             if (!wards.length) return;
             seen.push(ref);
-            for (let index = 0; index < wards.length; index++) result.push(wards[index].id());
+            for (let index = 0; index < wards.length; index++) result.push({ id: wards[index].id(), position: at });
         }
         if (!world.valid(world.source())) return result;
         const actors = world.query(centre, tidyupScan(radius), false);
         for (let index = 0; index < actors.length; index++) {
             const actor = actors[index], body = world.observe(actor);
             if (body === null || body.position().minus(centre).length() > radius) continue;
-            consider(actor);
+            const at = [body.position().x(), body.position().y(), body.position().z()];
+            consider(actor, at);
             const owner = world.helperSource(actor);
-            if (owner !== null) consider(owner);
+            if (owner !== null) consider(owner, at);
         }
-        consider(world.source());
+        const self = world.observe(world.source());
+        consider(world.source(), self === null ? [centre.x(), centre.y(), centre.z()] : [self.position().x(), self.position().y(), self.position().z()]);
         return result;
     }
 
@@ -112,28 +100,46 @@ namespace PokemonSkills {
             const sweeps = Math.max(2, Math.round(p(tidyupId, "sweeps", action)));
             const debris = Math.max(8, Math.round(p(tidyupId, "debris", action)));
             const here = body.position(), scale = sweep / tidyupReference;
+            // 只把真正被 dispel 成功的算作已清；被拒绝的请求不计入，也不显示为已清。
+            let cleared = 0;
             const hazards = tidyupHazardsNear(world, here, sweep);
-            for (let index = 0; index < hazards.length; index++) world.operation(hazards[index].id, "world_combat:dispel", "{}");
+            for (let index = 0; index < hazards.length; index++) {
+                if (!world.operation(hazards[index].id, "world_combat:dispel", "{}")) continue;
+                cleared++;
+                // 只有真正被清掉的地点扬起碎屑，位置取该陷阱真实所在。
+                WorldFeedback.emit(world, tidyupScene, 1, WorldCombat.point(hazards[index].position[0], hazards[index].position[1], hazards[index].position[2]),
+                    { moment: "clear", actor: String(actor.ref()), cleared: 1, sweep: sweep, scale: scale }, 30);
+            }
             const wards = tidyupWardsNear(world, here, sweep);
-            for (let index = 0; index < wards.length; index++) world.operation(wards[index], "world_combat:dispel", "{}");
-            const cleared = hazards.length + wards.length;
-            const beforeAtk = tidyupStage(world, actor, "atk"), beforeSpe = tidyupStage(world, actor, "spe");
-            const windowId = NativeEffects.boostWindow(world, actor, { atk: rise, spe: haste }, window, "tidyup");
-            const gainedRise = Math.max(0, tidyupStage(world, actor, "atk") - beforeAtk);
-            const gainedHaste = Math.max(0, tidyupStage(world, actor, "spe") - beforeSpe);
-            MobEffects.apply(world, actor, tidyupKit, window, Math.max(gainedRise, gainedHaste));
-            world.effect(tidyupMark, actor, JSON.stringify({ window: windowId }), window);
+            for (let index = 0; index < wards.length; index++) {
+                if (!world.operation(wards[index].id, "world_combat:dispel", "{}")) continue;
+                cleared++;
+                WorldFeedback.emit(world, tidyupScene, 1, WorldCombat.point(wards[index].position[0], wards[index].position[1], wards[index].position[2]),
+                    { moment: "clear", actor: String(actor.ref()), cleared: 1, sweep: sweep, scale: scale }, 30);
+            }
+            const before = NativeEffects.effectiveStages(world, actor);
+            // 轻快载体拥有这份攻/速贡献：刷新先按 previous 结束同招旧窗口，只续上本招自己那一份。
+            const previous = MobEffects.read(world, actor, tidyupKit);
+            const carrier = MobEffects.apply(world, actor, tidyupKit, window, previous ? previous.amplifier() : 0);
+            let windowId = 0, gainedRise = 0, gainedHaste = 0;
+            if (carrier) {
+                windowId = NativeEffects.boostWindow(world, actor, { atk: rise, spe: haste }, carrier.duration(),
+                    tidyupContribution, carrier, previous);
+                const raised = NativeEffects.effectiveStages(world, actor);
+                gainedRise = Math.max(0, (raised.atk || 0) - (before.atk || 0));
+                gainedHaste = Math.max(0, (raised.spe || 0) - (before.spe || 0));
+            }
+            if (!windowId) MobEffects.consume(world, actor, tidyupKit);
             WorldFeedback.emit(world, tidyupScene, 1, here,
                 { moment: "sweep", actor: String(actor.ref()), sweep: sweep, scale: scale, sweeps: sweeps, debris: debris,
                     cleared: cleared, intensity: Math.max(0.8, Math.min(2, debris / 30 + cleared / 3)) }, 34);
-            if (cleared > 0)
-                WorldFeedback.emit(world, tidyupScene, 1, here,
-                    { moment: "clear", actor: String(actor.ref()), cleared: cleared, sweep: sweep, scale: scale }, 30);
             WorldFeedback.emit(world, tidyupScene, 1, here,
                 { moment: "rise", actor: String(actor.ref()), sweep: sweep, scale: scale,
-                    rise: gainedRise, haste: gainedHaste, shine: Math.max(6, (gainedRise + gainedHaste) * 7) }, 30);
-            WorldFeedback.keep(world, "tidyup:kit:" + String(actor.ref()), tidyupScene, 1, here,
-                { moment: "hum", actor: String(actor.ref()), scale: scale }, Math.min(window, 150));
+                    rise: gainedRise, haste: gainedHaste, shine: Math.max(0, (gainedRise + gainedHaste) * 7) }, 30);
+            if (windowId)
+                // 轻快亮点绑在真正的轻快窗口上，窗口结束或被清除会同步收回。
+                WorldFeedback.onEffect(world, windowId, "world_combat:move_tidyup/kit", tidyupScene, 1, here,
+                    { moment: "hum", actor: String(actor.ref()), scale: scale });
             WorldFeedback.text(world, here.plus(WorldCombat.point(0, 1.3, 0)),
                 cleared > 0 ? tidyupClearText : tidyupText, cleared > 0 ? [cleared, gainedRise, gainedHaste] : [gainedRise, gainedHaste], 32);
             world.sound("minecraft:entity.player.attack.sweep", here, 18, "{}");
@@ -141,18 +147,14 @@ namespace PokemonSkills {
         }
     });
 
-    // 轻快窗口走完或被清除：按记号把这次抬起的攻与速原样收回（只收到各自当前实际持有的正等级）。
+    // 轻快窗口走完或被清除：等级由载体窗口自行收回，这里只收尾表现。
     WorldCombat.on("world_combat:move_tidyup/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== tidyupKit) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const marks = world.effects(actor, tidyupMark);
-        if (marks.length) {
-            const mark = JSON.parse(String(marks[0].data()));
-            if (typeof mark.window === "number") NativeEffects.windowClose(world, mark.window);
-            world.operation(marks[0].id(), "world_combat:dispel", "{}");
-        }
+        // 刷新／替换时旧载体被移除而新载体仍在：不是真的结束。
+        if (MobEffects.read(world, actor, tidyupKit)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, tidyupScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 26);

@@ -27,5 +27,6 @@
   "effect.world_combat.airslash_flinch": "Flinch",
   "world_combat.move.airslash.text.hit": "Air Slash cuts %1$s",
   "world_combat.move.airslash.text.miss": "The air blade finds nothing",
+  "world_combat.move.airslash.text.wall": "The air blade shatters on the wall",
   "world_combat.move.airslash.text.flinch": "Cut off balance"
 }

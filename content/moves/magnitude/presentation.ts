@@ -5,11 +5,12 @@
  * 震级越大地颤得越猛、尘跳得越高，震级够大时被打断的人身上炸开一道短促的白光。
  * 色相家族：土黄与灰岩为主体（earth / large_rock / tinydust / ring/groundquake），
  * 灰白只给打断那一下的高光。与地震共用土色，但地震是整块掀起、这里是原地密颤。
- * 拍子：起 brace 沉身 ／ 震 shake 连颤几道 + hit 逐处 ／ 断 stagger ／ 收 settle 或空震 miss。
- * 范围：shake / settle 的地面圈按 `data.radius`（真实震幅）画出，圈就是会颤到的地。
- * 运动：尘与碎石从整片地里向上蹦起再落回，横颤环贴着地面在原地一次次扩散开。
+ * 拍子：起 brace 沉身 ／ 预 presage 亮出震级并预震 ／ 震 shake 连颤几道 + hit 逐处 ／ 断 stagger ／ 空震 miss。
+ * 范围：presage / shake 的地面圈按 `data.radius`（真实震幅）画出，圈就是会颤到的地。
+ * 运动：预震时地面轻颤、碎屑点点跳起；落震命中后尘与碎石才从整片地里强扬，横颤环贴地扩散开。
  * 数：`data.crests`（物攻派生）决定横颤道数，`data.dust`（物攻与体重派生）决定尘与碎石的量，
- *   `data.magnitude`（当场掷出的震级）驱动强度与亮度，`data.scale`（震幅/3.8）放大尺度。
+ *   `data.tremble`（震级派生）决定预震幅度，`data.magnitude`（掷出的震级）驱动强度与亮度，
+ *   `data.scale`（震幅/3.8）放大尺度。
  */
 const MagnitudeDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -35,6 +36,31 @@ const MagnitudeDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.04], spread: 8,
                     lifetime: [10, 16], size: [0.34, 0.5], sizeMode: "linear",
                     color: 0xA08C6E, alpha: [0.35, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        presage: {
+            duration: 12,
+            exit: { stop: 4, drain: 12 },
+            emitters: [
+                {
+                    name: "tell_ring", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
+                    burst: { count: { data: "crests", fallback: 3 }, interval: 2, repeats: 2, at: 0 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.8 } },
+                    direction: "up", speed: { data: "tremble", fallback: 0.05 }, spread: 6,
+                    lifetime: [8, 14], size: [0.4, 0.7], sizeMode: "linear",
+                    color: 0xA08C6E, alpha: [0.5, 0], light: "world", maxParticles: 80
+                },
+                {
+                    name: "tell_dust", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "dust", fallback: 16 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 3.8 } },
+                    direction: "up", speed: { data: "tremble", fallback: 0.05 }, spread: 14,
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [10, 18], size: [0.05, 0.01],
+                    color: 0x6E5A44, alpha: [0.4, 0], light: "world", maxParticles: 140
                 }
             ]
         },
@@ -129,20 +155,6 @@ const MagnitudeDefinition: ParticleDefinition = {
                     gravity: 0.08, drag: 0.95,
                     lifetime: [12, 22], size: [0.14, 0.03],
                     color: 0x9A8A72, alpha: [0.75, 0], light: "world", maxParticles: 30
-                }
-            ]
-        },
-        settle: {
-            duration: 22,
-            exit: { stop: 9, drain: 18 },
-            emitters: [
-                {
-                    name: "settle_dust", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 3.8 } },
-                    direction: "up", speed: [0.005, 0.03],
-                    lifetime: [16, 28], size: [0.04, 0.01],
-                    color: 0x6E5A44, alpha: [0.25, 0], light: "world", maxParticles: 100
                 }
             ]
         },

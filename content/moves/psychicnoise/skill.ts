@@ -41,13 +41,28 @@ namespace PokemonSkills {
         if (expired) WorldFeedback.text(world, psychicNoiseAbove(body.position()), psychicNoiseFadeText, [], 28);
     });
 
+    // 封疗桥：带着 healblock 身份的目标，任何原生／跨 Mod 的合法治疗都在这里被清零，走原生取消规则，
+    // 不直接改生命；实际拦下一次回复时在目标耳侧补一记短断音，让玩家看出「这口奶被堵住了」。
+    WorldCombat.on("world_combat:move_psychicnoise/seal", "world_combat:healing_incoming", "", function (event: CombatWorldEvent) {
+        var actor = event.actor(), world = event.world();
+        if (actor === null || !world.valid(actor)) return;
+        if (!CombatStatus.has(world, actor, psychicNoiseStatus)) return;
+        var data = JSON.parse(String(event.data()));
+        if (!(data.originalAmount > 0) || !(data.amount > 0)) return;
+        data.amount = 0;
+        event.data(JSON.stringify(data));
+        var body = world.observe(actor);
+        if (body !== null) WorldFeedback.emit(world, psychicNoiseScene, 1, body.position(),
+            { moment: "mute", target: String(actor.ref()) }, 20);
+    });
+
     define({
         id: psychicNoiseId,
         cooldownParameter: "recharge",
         name: "Psychic Noise",
         description: "射出一道令人不适的音波造成特殊伤害，并让目标在一段时间内无法通过招式、特性或携带的道具回复 HP。",
         uses: ["压住对手的治疗与回复", "惩罚靠回复硬撑的对手", "远程压制并封住续战能力"],
-        kind: "enemy",
+        kind: "aim",
         range: 10,
         maxRange: 18,
         prepare: 10,
@@ -84,18 +99,24 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.psychic.actor");
             const appearance: any = { sprite: "cobblemon:generic/psychic/psyswirl", tint: 0xE06AD0, glow: true, scale: 0.9 };
             if (pierce) appearance.pierce = 4;
+            // 按真实发射几何预计算飞行末点：无重力直线，射程即是实际终点；完成时用它散音，不再用可能过期的目标点。
+            const launch = action.origin(), heading = aim(action);
+            const endPoint = launch.plus(heading.scale(reach));
+            let resolved = false;
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: reach, radius: radius, direction: aim(action), gravity: 0,
+                speed: speed, range: reach, radius: radius, direction: heading, gravity: 0,
                 lifetime: Math.max(40, Math.round(reach / speed) + 40),
                 appearance: appearance,
                 impact: function (current, hit, age) {
                     const scope = current.world(), target = hit.target();
                     if (target === null || scope.friendly(target)) {
+                        resolved = true;
                         WorldFeedback.emit(scope, psychicNoiseScene, 1, hit.position(), { moment: "fizzle" }, 20);
                         return;
                     }
                     const landed = impact(current, hit, psychicNoiseId, power, { damage: damageSpec(psychicNoiseId, "noise"), sound: true });
                     if (!landed) return;
+                    resolved = true;
                     CombatStatus.apply(scope, target, psychicNoiseStatus, psychicNoiseEffect, ticks, 0, { unique: true });
                     const point = hit.position();
                     WorldFeedback.emit(scope, psychicNoiseScene, 1, point,
@@ -106,7 +127,8 @@ namespace PokemonSkills {
                     scope.sound("minecraft:entity.warden.attack_impact", point, 10, "{}");
                 }
             }, function (current) {
-                WorldFeedback.emit(current.world(), psychicNoiseScene, 1, current.targetPosition(), { moment: "fizzle" }, 18);
+                // 只有整条波从未接触任何目标时才算落空，且落点用实际末点，不在未命中的目标身上假散音。
+                if (!resolved) WorldFeedback.emit(current.world(), psychicNoiseScene, 1, endPoint, { moment: "fizzle" }, 18);
                 done(current);
             });
             WorldFeedback.emit(world, psychicNoiseScene, 1, action.origin(),

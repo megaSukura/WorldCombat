@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.copycat.summary": "Pick up the last move used anywhere on the field and perform it again; it fails if no move has been used yet.",
-  "worldcombat.skill.copycat.use.0": "Throw a foe's heavy attack right back",
+  "worldcombat.skill.copycat.summary": "Pick up the move that just rang out nearby and perform it again; it fails if nobody has acted yet, or the borrowed move has no legal target.",
+  "worldcombat.skill.copycat.use.0": "Borrow a nearby foe's heavy attack and throw it back",
   "worldcombat.skill.copycat.use.1": "Copy an ally's buff or setup",
   "worldcombat.skill.copycat.use.2": "Chain onto the move someone just teed up",
-  "worldcombat.skill.copycat.description.0": "The borrowed move reaches up to %1$s blocks; only moves used within %2$s are remembered.",
+  "worldcombat.skill.copycat.description.0": "The borrowed move reaches up to %1$s blocks, and only moves used within that distance and within %2$s are remembered.",
   "worldcombat.skill.copycat.description.2": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.copycat.deep.on": "Deep echo: a longer memory window that catches older moves, but a slower windup and a longer cooldown.",
   "worldcombat.skill.copycat.deep.off": "Shallow echo: quick and cheap, but it only catches the sound that just rang.",
@@ -21,6 +21,7 @@
   "worldcombat.skill.copycat.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.copycat.preference.ai.leaveStation.help": "When on, the user may leave its post to echo; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.copycat.text.copy": "Copied %1$s",
-  "world_combat.move.copycat.text.empty": "No sound on the field yet",
-  "worldcombat.skill.copycat.description.1": "Copycat takes the most recent move used by anyone on the field, friend or foe. It fails when nobody has acted, the echo is older than the memory window, its user has left, or the move cannot be copied. Self and ally-targeted moves land on the user; other moves need a nearby enemy and fail without one. Copycat pays only its own PP and cooldown, not the borrowed move's PP."
+  "world_combat.move.copycat.text.empty": "Nothing nearby yet",
+  "world_combat.move.copycat.text.target": "%1$s needs a target",
+  "worldcombat.skill.copycat.description.1": "Copycat takes the most recently committed move within its echo range, friend or foe. It fails when nobody has acted, the echo is older than the memory window, its user has left, or the move cannot be copied. Self and ally-targeted moves land on the user; enemy-targeted moves need you to aim at a legal enemy this cast, while point and directional moves may be aimed at open ground. Copycat pays only its own PP and cooldown, not the borrowed move's PP."
 }

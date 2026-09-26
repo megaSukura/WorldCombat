@@ -1,13 +1,14 @@
 /**
  * 电网 / electroweb 的客户端表现。
  *
- * 一句话：指爪间先织起一团电丝，随后一张发光的电网被抛出去，落地摊开成一张平铺在地上的网面，
- * 网线持续噼啪；有东西踩上去时那一处炸开电花，网面还留在原地一段时间才暗下去。
+ * 一句话：指爪间先织起一团电丝，随后一张发光的电网被抛出去，落地摊开成一张平铺在地上的网格——纵横
+ * 网线噼啪作响；有东西踩上去时那处脚下炸开电花，网面还留在原地一段时间才暗下去。
  * 色相家族：电青（0xC7EEFF）为主、浅黄（0xFFF3B0）作过载火花，白色只做命中点高光——电与白光是一家。
  * 拍子：起（weave 织网）→ 掷（toss 抛出）→ 驻（spread 张开 / hum 通电 / catch 踩中 / zap 余电）→ 收（hum 自然淡出）。
- * 范围：spread 与 hum 都是 `bind: "point"`、`fit: "none"`，用 `data.radius` 画 ring 与 circle，
- *   画出来的网面就是实际会被电到的那块地。
- * 运动：网面抛出时贴着抛物线走；摊开后粒子主要沿网面横向铺开，只有踩中时向上炸。
+ * 范围：spread 与 hum 的网格用 `bind: "path"` 的 polyline 直接消费服务端 `data.path`（贴地蛇形网线，
+ *   由实际落点与半径算出），另配一圈边环；画出来的网线就是实际会被电到的那块地。
+ * 离网后的短余丝单独用 `residual` 绑在目标身上，和地网分开。
+ * 运动：网面抛出时贴着抛物线走；摊开后网线持续通电，只有踩中时脚下向上炸。
  * 数：`data.flow`（网面半径派生）决定网线密度，`data.stages`（减速级数）决定命中亮度与电花量，
  *   `data.scale`（半径 / 参考半径 2.2）控制粒子尺寸。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -64,6 +65,15 @@ const ElectrowebDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
+                    name: "open_mesh", bind: "path", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    shape: { kind: "polyline" },
+                    burst: { count: { data: "flow", fallback: 60 }, interval: 3, repeats: 3 },
+                    direction: "up", speed: [0.02, 0.1], spread: 20,
+                    lifetime: [8, 16], size: [0.12, 0.02],
+                    color: 0xC7EEFF, alpha: [0.75, 0], light: "full", bloom: 0.25, maxParticles: 160
+                },
+                {
                     name: "open_ring", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 40 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
@@ -94,20 +104,28 @@ const ElectrowebDefinition: ParticleDefinition = {
                     color: 0xBFE9FF, alpha: [0.4, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "net_mesh", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "net_mesh", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    rate: { data: "flow", fallback: 50 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
-                    direction: "up", speed: [0.005, 0.04], spread: 24,
+                    shape: { kind: "polyline" },
+                    rate: { data: "flow", fallback: 50 }, direction: "up", speed: [0.005, 0.04], spread: 24,
                     lifetime: [12, 22], size: [0.09, 0.02],
                     color: 0xC7EEFF, alpha: [0.5, 0], light: "full", maxParticles: 160
                 },
                 {
+                    name: "net_mesh_white", bind: "path", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    shape: { kind: "polyline" },
+                    rate: { data: "flow", fallback: 40 }, direction: "up", speed: [0.005, 0.03], spread: 18,
+                    lifetime: [12, 22], size: [0.08, 0.02],
+                    color: 0xBFE9FF, alpha: [0.5, 0], light: "full", maxParticles: 140
+                },
+                {
                     name: "net_spokes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/spinbeam",
-                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
-                    direction: "outward", speed: [0.04, 0.14], spin: 20,
+                    rate: 12, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
+                    direction: "up", speed: [0.02, 0.08], spin: 20,
                     lifetime: [8, 16], size: [0.1, 0.03],
-                    color: 0xFFF3B0, alpha: [0.45, 0], light: "full", bloom: 0.25, maxParticles: 90
+                    color: 0xFFF3B0, alpha: [0.4, 0], light: "full", bloom: 0.25, maxParticles: 80
                 }
             ]
         },
@@ -116,16 +134,16 @@ const ElectrowebDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "jolt", bind: "target", height: 0.45,
+                    name: "jolt", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
                     burst: { count: { data: "stages", fallback: 2 }, interval: 4, repeats: 2, at: 1 },
-                    shape: { kind: "sphere", radius: 0.34 },
+                    shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.08, 0.28], spread: 20,
                     lifetime: [6, 12], size: [0.4, 0.05], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 50
                 },
                 {
-                    name: "bind", bind: "target", height: 0.85,
+                    name: "bind", bind: "target", height: 0.8,
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     burst: { count: 20, interval: 4, repeats: 3 },
                     shape: { kind: "ring", radius: 0.36 },
@@ -140,13 +158,49 @@ const ElectrowebDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "residual", bind: "target", height: 0.5,
+                    name: "residual", bind: "target", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     burst: { count: { data: "count", fallback: 10 } },
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [6, 12], size: [0.09, 0.02],
                     color: 0xFFF3B0, alpha: [0.7, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        residual: {
+            exit: { drain: 26 },
+            emitters: [
+                {
+                    name: "threads", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    rate: 12, shape: { kind: "ring", radius: 0.4 },
+                    direction: "inward", speed: [0.01, 0.06],
+                    lifetime: [8, 16], size: [0.07, 0.02],
+                    color: 0xC7EEFF, alpha: [0.5, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "short_threads", bind: "target", height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    rate: { data: "stages", fallback: 1 }, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.01, 0.05],
+                    lifetime: [8, 16], size: [0.06, 0.02],
+                    color: 0xFFF3B0, alpha: [0.4, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        fizzle: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "scatter", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: 14, at: 1 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    lifetime: [6, 12], size: [0.1, 0.02],
+                    color: 0xC7EEFF, alpha: [0.6, 0], light: "full", maxParticles: 40
                 }
             ]
         }

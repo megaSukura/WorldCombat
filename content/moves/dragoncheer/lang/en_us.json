@@ -25,8 +25,6 @@
   "worldcombat.skill.dragoncheer.preference.roar.help": "On: long roar, radius x1.15, duration x1.25 and a higher bonus, but 4 ticks more telegraph and a longer cooldown - cover the whole team once before the fight. Off: short bark, radius x0.9, duration x0.8 and x0.9 bonus, with a lower telegraph and cooldown, ready to top up in a long trade.",
   "worldcombat.skill.dragoncheer.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.dragoncheer.preference.ai.maxChase.help": "Consider the roar when a threat is within this distance; larger starts gathering the cry earlier.",
-  "worldcombat.skill.dragoncheer.preference.ai.allyRange": "Cover distance",
-  "worldcombat.skill.dragoncheer.preference.ai.allyRange.help": "Worth casting when an uncheered ally is within this distance; smaller roars only up close, larger reaches for a further ally.",
   "worldcombat.skill.dragoncheer.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.dragoncheer.preference.ai.leaveStation.help": "On: a hold order no longer stops it from leaving its post to cheer allies.",
   "world_combat.move.dragoncheer.text.ready": "Dragon Cheer (long roar) - %1$s allies, %2$s s",

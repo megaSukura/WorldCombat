@@ -40,15 +40,24 @@ namespace PokemonSkills {
             const gap = CompanionBehavior.distance(self.point, target.point);
             if (gap > capability.data.range) return 0;
             let score = 22;
+            // 贯穿走直线：只有真正排在目标身后同一条线上的人，才值得为这一穿多给分。
             if (flamechargePierce(capability) && CompanionBehavior.ai<boolean>(capability, "preferClusters", true)) {
-                let inline = 0;
-                const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
-                for (let i = 0; i < nearby.length; i++) {
-                    const other = nearby[i];
-                    if (other.friendly || other.health <= 0 || other.ref === target.ref || !other.visible) continue;
-                    if (CompanionBehavior.distance(other.point, self.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 11)) inline++;
+                const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+                const span = Math.sqrt(dx * dx + dz * dz);
+                if (span > 0.01) {
+                    const ux = dx / span, uz = dz / span;
+                    let inline = 1;
+                    const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+                    for (let i = 0; i < nearby.length; i++) {
+                        const other = nearby[i];
+                        if (other.friendly || other.health <= 0 || other.ref === target.ref || !other.visible) continue;
+                        const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+                        const along = ox * ux + oz * uz, across = Math.abs(ox * uz - oz * ux);
+                        if (along <= 0.5 || along > span + capability.data.range || across > 1.6) continue;
+                        inline++;
+                    }
+                    if (inline >= 2) score += 18;
                 }
-                if (inline >= 2) score += 18;
             }
             return score;
         },

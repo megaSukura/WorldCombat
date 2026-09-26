@@ -4,7 +4,7 @@
  * 一句话：暗红的气在爪上收拢，一记直取咽喉的突刺递出去；命中处炸开一团暗色冲击，咽喉上留下
  *   一圈暗红的封声印记，印记在目标缓过来之前一直沉着。
  * 色相家族：暗红 0x7A1E3A 作主体、深紫黑 0x2A0A18 作阴影，近白与浅粉 0xF0B8C8 只做印记与高光。
- * 拍子：起（windup 聚气）→ 刺（thrust 沿方向递出、hit 命中炸开）→ 封（linger 咽喉印记）→ 收（recover 褪去／subside 被硬解／whiff 落空）。
+ * 拍子：起（windup 聚气）→ 刺（thrust 沿方向递出）→ 中（hit 只做伤害闪光；真封住才补 seal 喉环闭合；撞墙／撞友方为 block）→ 封（linger 咽喉印记）→ 收（recover 褪去／subside 被硬解／whiff 落空）。
  * 范围：thrust 的直线长度绑服务端 data.reach（真实突刺距离），玩家看得出这一刺够到哪。
  * 运动：聚气朝手部收束，突刺沿 data.direction 直出；命中在目标身上向外炸开。
  * 数：命中冲击的量随 data.intensity（威力派生），突刺的密度随 data.scale（距离派生）。
@@ -69,20 +69,56 @@ const ThroatchopDefinition: ParticleDefinition = {
                     color: 0xF0B8C8, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },
                 {
-                    name: "seal_ring", bind: "target", offset: [0, 0.2, 0], height: 0.82,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.32 },
-                    direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [12, 20], size: [0.34, 0.7], sizeMode: "linear",
-                    color: 0x7A1E3A, alpha: [0.85, 0], light: "full", maxParticles: 10
-                },
-                {
                     name: "hit_dust", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 10 }, shape: { kind: "sphere", radius: 0.28 },
                     direction: "outward", speed: [0.02, 0.1], drag: 0.9,
                     lifetime: [12, 20], size: [0.2, 0.05],
                     color: 0x2A0A18, alpha: [0.4, 0], light: "world", maxParticles: 22
+                }
+            ]
+        },
+        seal: {
+            duration: 26,
+            exit: { stop: 8, drain: 16 },
+            emitters: [
+                {
+                    name: "throat_close", bind: "target", offset: [0, 0.2, 0], height: 0.82,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 2, interval: 3 }, shape: { kind: "ring", radius: 0.32 },
+                    direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [12, 20], size: [0.34, 0.7], sizeMode: "linear",
+                    color: 0x7A1E3A, alpha: [0.85, 0], light: "full", maxParticles: 16
+                },
+                {
+                    name: "seal_pulse", bind: "target", offset: [0, 0.05, 0], height: 0.84,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: { data: "motes", fallback: 12 } }, shape: { kind: "circle", radius: 0.28 },
+                    direction: "up", speed: [0.02, 0.07],
+                    lifetime: [12, 20], size: [0.07, 0.01], sizeMode: "index",
+                    color: 0xF0B8C8, alpha: [0.8, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        block: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "clang", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.06, 0.24], spread: 24,
+                    lifetime: [7, 13], size: [0.26, 0.04], sizeMode: "index",
+                    color: 0x2A0A18, alpha: [0.7, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "scrape", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.22 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.28, 0.6], sizeMode: "linear",
+                    color: 0xF0B8C8, alpha: [0.6, 0], light: "full", maxParticles: 12
                 }
             ]
         },

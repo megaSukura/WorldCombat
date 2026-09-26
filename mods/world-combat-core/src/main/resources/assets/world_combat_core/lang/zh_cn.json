@@ -7,5 +7,7 @@
   "worldcombat.attributes.healing_received": "受治疗加成",
   "worldcombat.attributes.curiosity": "探索意愿修正",
   "worldcombat.attributes.risk": "冒险倾向修正",
-  "worldcombat.attributes.persistence": "坚持倾向修正"
+  "worldcombat.attributes.persistence": "坚持倾向修正",
+  "worldcombat.attributes.ground_slipperiness": "身体滑行系数",
+  "worldcombat.attributes.ground_support": "地表支撑"
 }

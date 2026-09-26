@@ -4,8 +4,8 @@
  * 核心念头：把最近吃下的伤害记成一笔仇，先给账主压上一枚暗记，隔一拍之后放出暗影贴着它追讨。
  *
  * 三幕：
- *   起（windup，提交前）：暗记在目标身上浮现、收束成一点；账越大记越亮（present mark）。
- *   候（execute 起）：暗影在施法者身边聚起，压着这枚记等一拍（stalkDelay）。
+ *   起（windup，提交前）：目标身上只浮起一道收得很紧的暗紫细指示，表示这笔仇指向了它（present mark）。
+ *   候（execute 起）：账在施放时被取走；暗影在施法者自己身边聚起、盘着等一拍（stalkDelay），不是目标头顶的落伤预告。
  *   讨（launch）：暗影离手、追着账主飞；命中时按账本以 1.5 倍结算，没有账时暗记消散（whiff）。
  *
  * 与同族分开：复仇是隔空、延迟、追人的一记暗影；金属爆炸是自身为中心、即时落地的钢爆。
@@ -46,7 +46,8 @@ namespace PokemonSkills {
             const amount = record === null ? 0 : record.amount;
             action.present("comeuppance:mark", comeuppanceScene, 1, action.origin(),
                 JSON.stringify({ moment: "mark", target: String(action.target() === null ? "" : action.target()!.ref()),
-                    glyphs: Math.round(10 + Math.min(70, amount * 0.6)), grudge: config && config.grudge === true, windup: prepare }));
+                    glyphs: Math.round(6 + Math.min(26, amount * 0.3)), grudge: config && config.grudge === true, duration: prepare,
+                    scale: p(comeuppanceId, "collisionRadius", action) / 0.34 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -66,8 +67,16 @@ namespace PokemonSkills {
             const delay = Math.max(1, Math.round(p(comeuppanceId, "stalkDelay", action)));
             let settled = false;
             sound(action, "minecraft:entity.evoker.cast_spell");
-            WorldFeedback.emit(world, comeuppanceScene, 1, action.targetPosition(),
-                { moment: "lurk", target: targetRef, scale: p(comeuppanceId, "collisionRadius", action) / 0.34 }, delay + 24);
+            // 延迟这一拍是「在施法者身边盘仇」，不是在目标头顶预演落伤：仇影先聚在自己身上等一拍。
+            const selfBody = world.observe(self);
+            const targetBody = world.observe(target);
+            const scale = p(comeuppanceId, "collisionRadius", action) / 0.34;
+            WorldFeedback.emit(world, comeuppanceScene, 1, selfBody === null ? action.origin() : selfBody.position(),
+                { moment: "lurk", target: targetRef, duration: delay, scale: scale }, delay + 24);
+            // 同时只给目标留一道很轻的指向环，随延迟走完自行熄灭，表示暗影正在锁定它而不是已经命中。
+            if (targetBody !== null)
+                WorldFeedback.emit(world, comeuppanceScene, 1, targetBody.position(),
+                    { moment: "mark", target: targetRef, duration: delay, scale: scale }, delay + 8);
 
             function launch(current: CombatAction): void {
                 const scope = current.world(), body = scope.observe(current.actor());

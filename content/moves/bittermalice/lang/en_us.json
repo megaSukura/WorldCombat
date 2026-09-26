@@ -4,7 +4,7 @@
   "worldcombat.skill.bittermalice.use.1": "Turn low health into the heaviest grudge strike",
   "worldcombat.skill.bittermalice.use.2": "Finish an afflicted foe (grudge mode also strips its affliction)",
   "worldcombat.skill.bittermalice.description.0": "The grudge hand closes on the target for %1$s special damage.",
-  "worldcombat.skill.bittermalice.description.1": "Releases the grudge within %1$s blocks; it flies at %2$s blocks per tick toward the target with a %3$s block collision radius.",
+  "worldcombat.skill.bittermalice.description.1": "Releases the grudge within %1$s blocks; it flies at %2$s blocks per tick along the aimed direction, homing on a target when one is chosen, with a %3$s block collision radius; an empty cast flies to its end and fades.",
   "worldcombat.skill.bittermalice.description.2": "A hit lowers the target’s Attack by %1$s stages.",
   "worldcombat.skill.bittermalice.description.3": "The lower the user's health, the deeper the grudge and the heavier the blow.",
   "worldcombat.skill.bittermalice.grudge.on": "Grudge: this strike is unconditionally raised to x1.35 power with a 2-stage Attack drop on hit, and its cast is slower; if the target carries a major status (burn/paralysis/poison/frozen/sleep), the hit first devours one of them, curing the target.",
@@ -30,6 +30,8 @@
   "worldcombat.skill.bittermalice.preference.ai.afflicted.help": "On: enemies already carrying a status rank higher (lingering mode doubles on them). Off: ordinary combat ordering.",
   "worldcombat.skill.bittermalice.preference.ai.wounded": "Cast more when wounded",
   "worldcombat.skill.bittermalice.preference.ai.wounded.help": "On: below half health the companion is more willing to cast this move (the grudge deepens and hits harder). Off: no weighting by its own health.",
+  "worldcombat.skill.bittermalice.preference.ai.devour": "Grudge devours status",
+  "worldcombat.skill.bittermalice.preference.ai.devour.help": "Grudge mode only. On: prefer targets carrying a major status and devour it for x1.35 power and a 2-stage Attack drop. Off: avoid afflicted targets so the status stays for an ally's payoff (only pick unafflicted foes). Lingering mode ignores this option.",
   "world_combat.move.bittermalice.text.grasp": "Attack -%1$s",
   "world_combat.move.bittermalice.text.devour": "Devoured status - Attack -%1$s",
   "world_combat.move.bittermalice.text.miss": "Bitter Malice fades"

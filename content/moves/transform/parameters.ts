@@ -4,14 +4,16 @@
  * 原生事实：Normal／变化／威力 0／必中／PP 10／目标单体；flags `failencore`／`failcopycat`／`failmimic`／`failinstruct`；
  *   「变身成对手宝可梦的样子，能够使用和对手完全相同的招式」——复制目标的招式、六维、类型与特性，HP 不变。
  *
- * 核心念头：照着一名对手的样子重塑自己——招式、六维、类型、特性整套搬过来一段时间；它变成谁的形状，
- *   就只能用谁的手。它不是借一手，也不是只抄特性，而是把整个战斗形态一次性换过来。
+ * 核心念头：照准一名看得见的对象，把它的实际战斗配置整套借过来一段时间——它变成谁的样子，就只能用谁的手。
+ *   它不是借一手，也不是只抄特性，而是把整个战斗形态一次性换过来；自己的生命与外形不动。
  *
  * 世界化：即时战斗没有「换出场就还原」的回合边界，于是变身落成一段有寿命的临时层——走共享的
  *   NativeModifiers（与腹鼓、纹理、模仿同一套临时覆盖机制），把目标的六维、类型、特性与全部招式
- *   写进施法者身上；到期或被清除时按旁挂记下的层 id 精确收回，施法者回到自己原来的形态。
- *   变身期间挂共享身份 world_combat:status/transformed，消费方与 AI 用 CombatStatus.has 按身份读。
- *   目标是宝可梦时才有可复制的形态；不能复制一个正在变身的对手（原生的「不能抄副本」规则）。
+ *   写进施法者身上；普通主体则走 CombatCopies，只借它限定表里的攻击、移动与防护属性。每次变身由一枚
+ *   自己的 transformMark 记下复制层与载体；宝可梦层用 stage_owner 挂到 mark 上，mark 一结束或载体被
+ *   替换，这层立即停止贡献。变身期间挂共享身份 world_combat:status/transformed，消费方与 AI 用
+ *   CombatStatus.has 按身份读。中性瞄准：可以指向队友借配置，空选不会自动改指最近敌。
+ *   不能复制一个正在变身的对象（原生的「不能抄副本」规则），刷新时新旧层各自精确收回。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   hold     基础 300 刻 + 等级 ×4 + 特防 ×1.5，夹 200..900；等级与特防支撑这层临时形态更久。
@@ -35,6 +37,9 @@ namespace PokemonSkills {
     export const transformShiftText = "world_combat.move.transform.text.shift";
     export const transformRevertText = "world_combat.move.transform.text.revert";
     export const transformFailText = "world_combat.move.transform.text.fail";
+    export const transformCopyText = "world_combat.move.transform.text.copy";
+    export const transformMarkText = "world_combat.move.transform.text.marks";
+    export const transformSameText = "world_combat.move.transform.text.same";
 
     actionParameters.define(transformId, {
         hold: seconds(

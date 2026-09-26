@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.morningsun.summary": "Draws the clear daytime sun down onto itself: catching the morning light restores about two thirds of the health it has already lost and grants a burst of speed, while night or rain restores only a little with no boost.",
+  "worldcombat.skill.morningsun.summary": "Draws the clear daytime sun down onto itself: catching the morning light restores about two thirds of the health it has already lost and grants a burst of speed, while night or rain restores only a little with no boost; it can keep moving during the greeting.",
   "worldcombat.skill.morningsun.use.0": "A strong heal under clear day",
   "worldcombat.skill.morningsun.use.1": "Trade the heal for a speed boost",
   "worldcombat.skill.morningsun.use.2": "A small top-up at night",
-  "worldcombat.skill.morningsun.description.0": "Restores %1$s of the health already lost: close to 2/3 under a clear day, only the base amount at night or in rain; more with higher Special Attack. Cannot be used at full health.",
-  "worldcombat.skill.morningsun.description.1": "Settles after %1$s of greeting; catching the morning light also grants %2$s of increased movement speed, otherwise none.",
+  "worldcombat.skill.morningsun.description.0": "Restores %1$s of the health already lost: close to 2/3 under a clear day (or the shared harsh sun), only the base amount at night or in rain; more with higher Special Attack. Cannot be used at full health.",
+  "worldcombat.skill.morningsun.description.1": "Settles after %1$s of greeting, during which it may still move; catching the morning light also grants %2$s of increased movement speed, otherwise none. A heal that lands nothing shows no heal success, and a refused boost is not claimed.",
   "worldcombat.skill.morningsun.timing": "A self move; after %1$s s of greeting it spends %3$s PP, recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.morningsun.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.morningsun.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
@@ -12,12 +12,12 @@
   "worldcombat.skill.morningsun.value.sunriseTicks": "Greeting duration",
   "worldcombat.skill.morningsun.value.vigorTicks": "Morning vigour",
   "worldcombat.skill.morningsun.value.dawn": "Morning light",
-  "worldcombat.skill.morningsun.value.dawn.yes": "clear day",
+  "worldcombat.skill.morningsun.value.dawn.yes": "clear day (or shared harsh sun)",
   "worldcombat.skill.morningsun.value.dawn.no": "night or rain",
   "worldcombat.skill.morningsun.preference.ai.healBelow": "Heal threshold",
   "worldcombat.skill.morningsun.preference.ai.healBelow.help": "Below this health ratio the companion schedules Morning Sun; lower endures longer, higher greets the light at the first wound.",
   "worldcombat.skill.morningsun.preference.ai.waitForSky": "Wait for morning",
-  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "On: only cast in strong sunlight, holding the move at night or in rain (little heal, no boost). Off: cast whenever wounded and accept the floor heal.",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "On: only cast when the morning light is available (clear day or shared harsh sun), holding the move at night or in rain (little heal, no boost); below half the heal threshold it takes the floor heal instead of waiting. Off: cast whenever wounded.",
   "world_combat.move.morningsun.text.dawn": "Morning light",
   "world_combat.move.morningsun.text.dim": "Faint light"
 }

@@ -7,9 +7,9 @@
  *
  * 两幕：
  *   起（lash，提交前）：尾巴甩起、水光在尾梢聚成一道弧，只播预告。
- *   推浪（crest × steps → hit / drench / miss）：提交后按 `steps` 一拍一拍把浪头往外推；每一拍判定
- *       落在本拍环带里的敌人：结算一次 wave（越远越淡）、把人沿背离方向推开、挂上湿身（共享身份 soaked）；
- *       被拍中的火与灼伤被浇熄并腾起水汽。全部推完才收势。
+ *   推浪（crest × steps → hit / drench / miss）：提交后按 `steps` 一拍一拍把浪头沿所选方向往外推；每一拍判定
+ *       落在本拍环带里、且从浪根通视的敌人：结算一次 wave（越远越淡）、把人沿背离方向推开、挂上湿身（共享身份 soaked）；
+ *       被拍中的火与灼伤被浇熄并腾起水汽。墙挡住的人拍不到，全部推完才收势。
  *
  * 与同族分开：铁尾锁定一点、钢铁重砸；水流尾是一片向前压的弧形水墙，判定随浪头推进，把人推走而不是砸凹。
  */
@@ -35,9 +35,9 @@ namespace PokemonSkills {
         id: aquatailId,
         cooldownParameter: "recharge",
         name: "Aqua Tail",
-        description: "借转身把尾巴抡成一道向前压的弧形水墙：浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；命中带着灼伤的目标时，这道水会解除灼伤、熄灭其身上的火。浪是推进的，走出弧面或退到浪头之外就能躲开。",
+        description: "借转身把尾巴抡成一道向前压的弧形水墙：浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；命中带着灼伤的目标时，这道水会解除灼伤、熄灭其身上的火。浪是推进的，走出弧面、退到浪头之外，或被墙挡住都能躲开；不选敌人也能朝地面空放。",
         uses: ["用一片向前压的弧形水墙拍开身前的人", "把贴身的敌人连同身位一起推走", "一浪浇熄对手身上的火与灼伤"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.6,
         maxRange: 5.4,
         prepare: 11,
@@ -112,19 +112,21 @@ namespace PokemonSkills {
                     if (caught[ref]) return;
                     const point = facts.position(), distance = point.minus(origin).length();
                     if (distance < inner || distance > outer + 0.25) return;
+                    // 遮挡检查与画面里的浪头读同一起点与朝向：墙截住的这一段拍不到后面的人。
+                    if (!scope.clear(origin, point)) return;
                     caught[ref] = true;
                     const ratio = reach <= 0 ? 0 : Math.min(1, distance / reach);
                     const strength = 1 - (1 - falloff) * ratio;
                     // 浪先沾上水，再拍实：湿身在命中前落下，拍空时只收回本单元那一份。
-                    CombatStatus.apply(scope, victim, "soaked", aquatailEffect, soak, 0);
+                    const soaked = CombatStatus.apply(scope, victim, "soaked", aquatailEffect, soak, 0);
                     if (!hurt(current, victim, aquatailId, power * strength, { damage: damageSpec(aquatailId, "wave"), contact: true })) {
-                        MobEffects.consume(scope, victim, aquatailEffect);
+                        if (soaked) MobEffects.consume(scope, victim, aquatailEffect);
                         return;
                     }
                     hits++;
                     if (scope.valid(victim)) {
                         const away = WorldCombat.point(point.x() - origin.x(), 0, point.z() - origin.z());
-                        if (away.length() >= 0.05) scope.displace(victim, away.unit().scale(push));
+                        if (away.length() >= 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                     }
                     const at = scope.observe(victim);
                     const atPoint = at === null ? point : at.position();
@@ -138,7 +140,7 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, aquatailScene, 1, atPoint, { moment: "douse", target: ref, scale: scale }, 26);
                         WorldFeedback.text(scope, atPoint.plus(WorldCombat.point(0, 1.1, 0)), aquatailDouseText, [], 26);
                         scope.sound("minecraft:block.fire.extinguish", atPoint, 14, "{}");
-                    } else {
+                    } else if (soaked) {
                         WorldFeedback.text(scope, atPoint.plus(WorldCombat.point(0, 1.1, 0)), aquatailDrenchText, [], 22);
                     }
                 });

@@ -56,8 +56,8 @@ const SeismicTossDefinition: ParticleDefinition = {
             ]
         },
         hurl: {
-            duration: 30,
-            exit: { stop: 26, drain: 10 },
+            duration: { data: "duration", fallback: 30 },
+            exit: { stop: { data: "duration", fallback: 30 }, drain: 10 },
             emitters: [
                 {
                     name: "arc_trail", bind: "target", height: 0.5,

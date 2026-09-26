@@ -4,20 +4,18 @@
  * 机制与数值来源：
  * - 原生（Cobblemon 1.8 / Showdown）：飞行、变化、PP 20、优先度 -6、命中 100；说明是
  *   「吹飞对手，强制拉后备宝可梦上场；如果对手为野生宝可梦，战斗将直接结束」。
- * - 即时战斗翻译：朝选定的方向推出一道向前推进的风墙。风墙从施法者身前出发，以每刻固定速度向远处扫，
- *   沿途扫到的敌人被沿风向推出，并被打上共享身份 `world_combat:status/routed`（本单元效果
- *   world_combat:whirlwind_routed），失去目标、被逐出交战圈；有合法后备的对手会被原生队伍操作真正换下。
- *   它是一条走得远、扫得长的风道，不造成伤害；
- *   风墙走得越远，留给对手闪开的余地越大——离开风道半径就整发躲过。
- * - 参数分散到精灵数据：风道长度取速度（气息），风道半径取身高（体量），推进速度取速度，吹飞距离取体重，
- *   溃退时长取特攻，驱逐步长取特攻，保持距离取防御，粒子数量取速度，时序取速度与等级。
- * - 配置 wide（宽阔风墙）：开启＝风墙宽度 ×1.35，代价是长度 ×0.85、吹飞距离 ×0.9；关闭＝又窄又长、
+ * - 即时战斗翻译：朝选定方向推出一道向前推进的风墙。风墙从施法者身前出发，以每刻固定速度扫到风道尽头；
+ *   每个推进拍上有一道横风带，按真实方块裁剪——同一侧向位置被墙挡住的人，风到不了；开口处风继续通过。
+ *   风墙推进期间只对真实风道内、且随风吹过身位的人沿风向做受击位移，累计不超过 blow 总预算；
+ *   离开风面立即不再推动，抗位移的目标推不动也不强绕。没有伤害；有合法后备的对手被原生队伍操作真正换下。
+ *   本招不再持续清目标：被吹开者随后照常重新寻敌。
+ * - 参数分散到精灵数据：风道长度取速度（气息），风道半径取身高（体量），推进速度取速度，吹飞总预算取体重，
+ *   粒子数量取速度，时序取速度与等级。
+ * - 配置 wide（宽阔风墙）：开启＝风墙宽度 ×1.35，代价是长度 ×0.85、吹飞预算 ×0.9；关闭＝又窄又长、
  *   吹得更远，适合远距离清场。两个方向各有适用局面。
  */
 namespace PokemonSkills {
     export const whirlwindId = "whirlwind";
-    export const whirlwindRouted = "world_combat:whirlwind_routed";
-    export const whirlwindRout = "world_combat:whirlwind_rout";
     export const whirlwindScene = "world_combat:move_whirlwind";
     export const whirlwindBlowText = "world_combat.move.whirlwind.text.blow";
     export const whirlwindMissText = "world_combat.move.whirlwind.text.miss";
@@ -53,39 +51,15 @@ namespace PokemonSkills {
                 unit: " 格/刻",
                 description: "风墙每刻向前走多远；速度越快扫得越快，留给对手闪开的时间也越少。"
             }),
-        /** 吹飞距离：基础 1.6 格 +（体重 − 50）×0.004（夹 -0.1..+0.6）；wide ×0.9；夹在 0.8..3.8 格。 */
+        /** 吹飞总预算：基础 1.6 格 +（体重 − 50）×0.004（夹 -0.1..+0.6）；wide ×0.9；夹在 0.8..3.8 格。 */
         blow: formula(
-            F.base(1.6, "吹飞距离")
+            F.base(1.6, "吹飞总预算")
                 .plus(F.body("weight").minus(50).times(0.004).clamp(-0.1, 0.6))
                 .times(F.when(F.pref("wide", text("worldcombat.skill.whirlwind.preference.wide")), F.const(0.9), F.const(1)))
                 .clamp(0.8, 3.8).round(2),
-            "吹飞距离", {
+            "吹飞总预算", {
                 unit: " 格",
-                description: "被风墙扫到时沿风向推出的距离；身子越重的个体吹得越开，宽阔风墙略短。"
-            }),
-        /** 溃退时长：基础 60 刻 +（特攻 − 60）×0.25（夹 -10..+30）；夹在 40..140 刻。 */
-        flee: seconds(
-            F.base(60, "溃退时长")
-                .plus(F.stat("specialAttack").minus(60).times(0.25).clamp(-10, 30))
-                .clamp(40, 140).round(0),
-            "溃退时长", "被吹飞的敌人多久回不过神；特攻越高吹得越晕。"),
-        /** 驱逐步长：基础 0.8 格 +（特攻 − 60）×0.004（夹 -0.1..+0.5）；夹在 0.5..1.6 格。 */
-        panic: formula(
-            F.base(0.8, "驱逐步长")
-                .plus(F.stat("specialAttack").minus(60).times(0.004).clamp(-0.1, 0.5))
-                .clamp(0.5, 1.6).round(2),
-            "驱逐步长", {
-                unit: " 格",
-                description: "溃退期间每 10 刻沿风向把敌人再推开多远；特攻越高推得越开。"
-            }),
-        /** 保持距离：基础 3.0 格 +（防御 − 60）×0.012（夹 -0.4..+0.8）；夹在 2.6..6 格。 */
-        keepOut: formula(
-            F.base(3.0, "保持距离")
-                .plus(F.stat("defence").minus(60).times(0.012).clamp(-0.4, 0.8))
-                .clamp(2.6, 6).round(2),
-            "保持距离", {
-                unit: " 格",
-                description: "溃退期间敌人只要离你不足这么远，就会被风再一次推开；越镇得住场面逼得越远。"
+                description: "风墙推进期间，沿风向推一个目标的累计上限；身子越重的个体吹得越开，宽阔风墙略短。抗位移的目标推不动，但风照常扫过。"
             }),
         /** 风尘数量：基础 16 个 +（速度 − 60）×0.2（夹 -2..+18）；夹在 12..40 个；驱动画面里的风尘数量。 */
         motes: formula(
@@ -126,7 +100,7 @@ namespace PokemonSkills {
     describe(whirlwindId, [
         { key: "description.0", values: ["reach","band"] },
         { key: "description.1", values: ["front", "blow"] },
-        { key: "description.2", values: ["flee", "keepOut", "panic"] },
+        { key: "description.2", values: [] },
         { key: "description.3", values: [] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },

@@ -15,5 +15,11 @@
   ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:visegrip_hold": "cobblemon:particle/generic/grab"
+  }
 }

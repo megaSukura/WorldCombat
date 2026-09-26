@@ -1,7 +1,7 @@
 /** batonpass：行为、参数与目标条件以本单元实现为准。 */
 namespace CompanionBehavior {
     registerUse("batonpass", {
-        protocols: ["world_combat:bolster"],
+        protocols: ["world_combat:bolster", "world_combat:fortify"],
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, target) {
             if (context.facts.mounted) return false;
@@ -9,13 +9,21 @@ namespace CompanionBehavior {
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             if (!target || target.health <= 0 || !target.visible) return false;
             const self = source(context);
-            if (!target.friendly || String(target.ref) === String(self.ref)) return false;
+            const access = world(context), actor = access.actor(self.ref);
+            if (!actor || !PokemonSkills.batonpassCanGive(access, actor, true)) return false;
+            if (String(target.ref) === String(self.ref)) return ratio(self) < .5 && !!PokemonSkills.partyReserve(PokemonSkills.partyRoster(access, actor), PokemonSkills.partyActiveId(access, actor));
+            if (!target.friendly) return false;
             if (status(context, target, "baton_pass")) return false;
             return distance(self.point, target.point) <= ai<number>(capability, "maxChase", 12);
         },
         accepts: function (context, _capability, target) {
-            return target.friendly && target.health > 0 && target.visible
-                && String(target.ref) !== String(source(context).ref) && !status(context, target, "baton_pass");
+            if (target.ref === source(context).ref) return true;
+            return target.friendly && target.health > 0 && target.visible && !status(context, target, "baton_pass");
+        },
+        target: function (context, _capability, target) {
+            if (target.ref !== source(context).ref) return target;
+            // A reserve handoff is the same no-entity input a player can choose; the native roster selects its member.
+            const empty: Entity = JSON.parse(JSON.stringify(target)); empty.ref = ""; return empty;
         },
         priority: function (context, _capability, target) {
             if (!target || !target.friendly || target.health <= 0) return 0;

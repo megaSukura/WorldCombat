@@ -6,7 +6,7 @@
  * 色相家族：近白金做爆心高光（0xFFF4D8），暖橙与浓烟作主体（cloudyfire_white / smoke / burning_rock），
  * 土黄只给落尘。与同族的大爆炸共用暖色家族，但自爆更小、更快、烟更少。
  * 拍子：起 swell 急涨 ／ 击 detonate 爆开 + hit 逐处 ／ 收 scorch 或空爆 miss。
- * 范围：detonate / scorch 的球与地面圈按 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地方。
+ * 范围：swell 的预告地圈、detonate / scorch 的球与地面圈都按 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地方。
  * 运动：膨胀的内聚光 → 爆心向外炸飞 → 尘烟上腾、碎屑带重力回落 → 落尘在地面慢慢散去。
  * 数：`data.debris`（体重与物攻派生）决定炸飞碎屑与浓烟的量，`data.intensity`（威力派生）抬高亮度与密度，
  *   `data.cells`（炸焦块数）驱动地面残屑，`data.scale`（爆心/4.0）放大尺度。
@@ -42,6 +42,14 @@ const SelfDestructDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [8, 14], size: [0.06, 0.01],
                     color: 0xC7A98A, alpha: [0.5, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "telegraph", bind: "source", offset: [0, 0.04, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/largering",
+                    rate: 8, shape: { kind: "ring", radius: { data: "radius", fallback: 4.0 } },
+                    direction: "inward", speed: [0.01, 0.04], spread: 6,
+                    lifetime: [8, 14], size: [0.5, 0.8], sizeMode: "linear",
+                    color: 0xE8A24A, alpha: [0.55, 0], light: "world", maxParticles: 70
                 }
             ]
         },

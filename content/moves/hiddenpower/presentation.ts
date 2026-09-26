@@ -1,52 +1,43 @@
 /**
  * 觉醒力量的表现：
- * 「使用者身上的属性被收拢成一颗白球，沿直线射向目标，命中处按同一属性炸开光斑。」
+ * 「起手只在身前立起这颗球弹的实际属性符号，随后沿直线射出，首碰处按同一属性碎开。」
  *
  * 色相家族：贴图取白色/浅灰，实际色相按个体值算出的 data.type 走共享 type 色表——同一个家族随属性变色。
- * 拍子：起 charge（凝聚，拉长）→ 击 impact（爆发，短促）→ 收（alpha 归零 + drain）。
- * 范围：flight 沿投射物画线；impact 的点爆半径由 ringRadius 读出命中范围。
- * 数：光斑、光点与凝聚环数量分别由 power/focus 绑定的 data 字段决定。
+ * 拍子：charge（只立属性符号，简单）→ flight（真实球弹的尾迹）→ burst（撞到实体的属性爆发）→
+ *       shatter（撞到方块的碎裂，碎片朝原生方块面反弹）。
+ * 范围：flight 沿投射物画线；burst/shatter 的爆点半径由 ringRadius 读出。
+ * 数：光斑、光点与符号环数量分别由 power/focus 绑定的 data 字段决定，块面方向由 data.direction 驱动。
  */
 const HiddenPowerDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        // 凝聚：白球在身前收拢，细点向内汇聚，环数随特攻阶梯。
+        // 凝聚：只立起这颗球弹的实际觉醒属性符号，不做场地。
         charge: {
             duration: 40,
             exit: { stop: 30, drain: 20 },
             emitters: [
                 {
-                    name: "core", bind: "source", height: 0.55,
+                    name: "sigil", bind: "source", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
                     rate: { data: "coreRate", fallback: 7 },
-                    shape: { kind: "sphere", radius: 0.22 },
+                    shape: { kind: "sphere", radius: 0.2 },
                     direction: "shape", speed: [0.0, 0.02],
                     lifetime: [12, 20], size: [0.2, 0.34], sizeMode: "sin",
                     color: TypeColors.binding("type", 0x9B59FF), alpha: [0.7, 0.15], alphaMode: "sin",
                     light: "full", bloom: 0.4, maxParticles: 24
                 },
                 {
-                    name: "motes", bind: "source", height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: { data: "moteRate", fallback: 13 },
-                    shape: { kind: "sphere_surface", radius: 0.45 },
-                    direction: "inward", speed: [0.06, 0.14],
-                    lifetime: [10, 18], size: [0.09, 0.015],
-                    color: TypeColors.binding("type", 0x9B59FF), alpha: [0.9, 0], light: "full",
-                    maxParticles: { data: "moteCap", fallback: 100 }
-                },
-                {
-                    name: "rings", bind: "source", height: 0.4,
+                    name: "sigil_rings", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
                     burst: { count: { data: "ringCount", fallback: 2 }, interval: 6, repeats: 3 },
-                    shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "outward", speed: [0.04, 0.1],
-                    lifetime: [10, 16], size: [0.24, 0.06],
-                    color: TypeColors.binding("type", 0x9B59FF), alpha: [0.6, 0], light: "full", maxParticles: 40
+                    shape: { kind: "ring", radius: 0.28, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.16, 0.04],
+                    color: TypeColors.binding("type", 0x9B59FF), alpha: [0.6, 0], light: "full", maxParticles: 24
                 }
             ]
         },
-        // 射出：沿投射物拉出同色尾迹。
+        // 射出：沿真实球弹拉出同色尾迹。
         flight: {
             emitters: [
                 {
@@ -67,8 +58,8 @@ const HiddenPowerDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 命中：按属性炸开，光斑数量随威力。
-        impact: {
+        // 命中实体：按属性炸开，光斑数量随威力。
+        burst: {
             duration: 24,
             exit: { stop: 12, drain: 20 },
             emitters: [
@@ -99,6 +90,31 @@ const HiddenPowerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.15],
                     lifetime: [10, 16], size: [0.35, 0.8],
                     color: TypeColors.binding("type", 0x9B59FF), alpha: [0.55, 0], light: "full"
+                }
+            ]
+        },
+        // 撞墙：碎块沿原生方块面朝来弹方向崩开。
+        shatter: {
+            duration: 20,
+            exit: { stop: 8, drain: 16 },
+            emitters: [
+                {
+                    name: "shards", bind: "point", fit: "none", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    burst: { count: { data: "count", fallback: 24 } },
+                    shape: { kind: "line", length: 0.22 },
+                    direction: "shape", speed: [0.08, 0.28], spread: 30,
+                    lifetime: [6, 12], size: [0.3, 0.04], sizeMode: "index",
+                    color: TypeColors.binding("type", 0x9B59FF), alpha: [1, 0], light: "full", bloom: 0.4
+                },
+                {
+                    name: "dust", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "count", fallback: 24 } },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "outward", speed: [0.04, 0.16], gravity: 0.04, drag: 0.92,
+                    lifetime: [10, 18], size: [0.07, 0.02],
+                    color: 0x9A9A9A, alpha: [0.5, 0], light: "world", maxParticles: 80
                 }
             ]
         }

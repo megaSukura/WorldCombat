@@ -1,17 +1,18 @@
 /**
  * 冷笑话 / chillyreception 的客户端表现。
  *
- * 一句话：施法者头顶先浮起几缕悬着的话音与问号 → 话音落下，一圈尴尬的冷场从脚下推开、身边的敌人头上冒出问号、
- * 身上结起霜，雪花静静落下来 → 施法者趁安静从原地化开、留下一撮白气。
+ * 一句话：施法者头顶先浮起几缕悬着的话音与问号 → 话音落下，一圈尴尬的冷场从脚下推开、身边被真正打断的
+ * 敌人头上冒出问号、身上结起霜，雪花静静落下来 → 施法者在实际退场点化开、留下一撮白气。
  * 色相家族：冷灰蓝 0x9AA8B8 画「尴尬与安静」，冰白 0xEAF6FF／0xF2FAFF 画雪与霜；白是中性色，只算一个色相加上中性。
- * 起击收：起 windup 26t ／击 burst 44t ／持 field 每 5 刻续期 ／击 silence 24t ／击 bow 26t。
+ * 起击收：起 windup 26t（先静止一拍、后化雪）／击 burst 44t ／持 field 绑在雪区效果上 ／击 silence 24t ／击 bow 26t。
  * 持续状态：field 是稀疏缓慢的落雪加一层贴地薄雾，密度低、让出视线；一圈冷灰环画出「站哪里会被冷场罩住」。
  * 机制驱动：冷场半径决定问号、冷场环与雾的大小（data.scale = 半径/7），雪花数量直接读本招算出的 snowDensity，
- *   burst 的强度读被冻住的敌人数（data.hushed），每处冷场的停顿长度由 pauseTicks 派生（data.pause）。
+ *   burst 的强度读被真正打断的敌人数（data.hushed）。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
- * windup  悬停话音 thought_trail_small 上浮＋收束 0.06-0.01 14-26 0.5→0 ≤80
+ * windup  悬停话音 thought_trail_small 静止一拍     0.06-0.01 14-22 0.5→0 ≤80
  * windup  问号     question            头顶浮动     0.2-0.1  12-22 0.6→0 ≤20
+ * windup  化雪     powdered_snow       先静后散     0.2-0.06  10-18 0.5→0 ≤40
  * burst   冷场环   mediumring          贴地外扩     2.4-0.5  22-36 0.5→0 ≤40
  * burst   白气     tinydust            贴地外涌     0.06-0.02 14-26 0.4→0 ≤160
  * field   雪花     icy_snow            缓慢下落     0.1-0.02 18-34 0.45→0 ≤200
@@ -27,18 +28,24 @@ const ChillyReceptionDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 10, drain: 18 },
             emitters: [
-                { name: "trail", bind: "source", offset: [0, 1.6, 0], height: 0, fit: "body",
+                { name: "bubble", bind: "source", offset: [0, 1.9, 0], height: 0, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/thought_trail_small",
-                    rate: 20, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "up", speed: [0.01, 0.05],
-                    lifetime: [14, 26], size: [0.06, 0.01],
+                    burst: { count: 10, at: 1, interval: 6, repeats: 2 },
+                    shape: { kind: "point" }, direction: "up", speed: [0.004, 0.02],
+                    lifetime: [14, 22], size: [0.06, 0.01],
                     color: 0x9AA8B8, alpha: [0.5, 0], light: "world", maxParticles: 80 },
                 { name: "prompt", bind: "source", offset: [0, 2.0, 0], height: 0, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/question",
                     burst: { count: { data: "punchline", fallback: 0 }, at: 1 },
                     shape: { kind: "point" }, direction: "up", speed: [0.02, 0.06],
                     lifetime: [12, 22], size: [0.2, 0.1], sizeMode: "index",
-                    color: 0x9AA8B8, alpha: [0.6, 0], light: "full", maxParticles: 20 }
+                    color: 0x9AA8B8, alpha: [0.6, 0], light: "full", maxParticles: 20 },
+                { name: "melt", bind: "source", offset: [0, 1.6, 0], height: 0, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    burst: { count: 18, at: 16 }, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.03, 0.1], gravity: 0.004, drag: 0.96,
+                    lifetime: [10, 18], size: [0.2, 0.06], sizeMode: "index",
+                    color: 0xF2FAFF, alpha: [0.5, 0], light: "world", maxParticles: 40 }
             ]
         },
         burst: {

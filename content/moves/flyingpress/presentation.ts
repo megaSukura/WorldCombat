@@ -4,9 +4,9 @@
  * 一句话：施法者蹲身一压、脚下扬起一圈尘土，随即沿一道竖直的气柱跃到空中，随后斜线俯冲压下——落点同时
  * 炸开格斗系的拳形冲击与飞行系的下压气流，把站着的对手连人带地压出一圈尘土。
  * 色相家族：暖金与近白（impact_fighting / impact_flying / dashburst / speedlines）为主体，落尘用中性 tinydust。
- * 拍子：起（crouch 收尘）→ 跃（leap 气柱）→ 压（press 双属性冲击、glance 擦过）→ 收（land 落尘）。
- * 范围：press 的一圈按 `data.scale`（压击判定 / 0.9）铺开；leap 的气柱高度读 `data.height`（跃起高度）。
- * 运动：leap 是竖直上升的气柱，press 是向外压平的冲击环与四散碎块。
+ * 拍子：起（crouch 收尘）→ 跃（leap 气柱）→ 标（mark 锁定落点短影）→ 压（press 双属性冲击、glance 撞墙擦尘、whiff 压空）→ 收（land 落尘）。
+ * 范围：press 的一圈按 `data.scale`（压击判定 / 0.9）铺开；leap 的气柱高度读 `data.height`（真实可升程）；mark 短影钉在锁死的俯冲终点。
+ * 运动：leap 是竖直上升的气柱，press 是向外压平的冲击环与四散碎块，glance/whiff 只有一小圈擦尘。
  * 数：`data.count`（重压威力派生）决定落点冲击量，`data.intensity` 抬高亮度。
  */
 const FlyingpressDefinition: ParticleDefinition = {
@@ -53,6 +53,20 @@ const FlyingpressDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.05, 0.2], spread: 10,
                     lifetime: [8, 14], size: [0.14, 0.03],
                     color: 0xDCEBFA, alpha: [0.4, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        mark: {
+            duration: 70,
+            exit: { stop: 12, drain: 16 },
+            emitters: [
+                {
+                    name: "shadow", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 8, shape: { kind: "circle", radius: { data: "scale", fallback: 1 }, thickness: 0.6 },
+                    direction: "outward", speed: [0.0, 0.04],
+                    lifetime: [10, 16], size: [0.24, 0.06], sizeMode: "index",
+                    color: 0xC8A86A, alpha: [0.4, 0], light: "world", maxParticles: 26
                 }
             ]
         },
@@ -103,6 +117,22 @@ const FlyingpressDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.9,
                     lifetime: [9, 15], size: [0.06, 0.01],
                     color: 0xB8A886, alpha: [0.45, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        whiff: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "empty", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 },
+                    shape: { kind: "ring", radius: 0.36 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 12,
+                    gravity: 0.03, drag: 0.9,
+                    lifetime: [9, 15], size: [0.05, 0.01],
+                    color: 0xB8A886, alpha: [0.4, 0], light: "world", maxParticles: 20
                 }
             ]
         },

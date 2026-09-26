@@ -3,11 +3,11 @@
   "worldcombat.skill.skillswap.use.0": "把对手的强力特性取过来自己用",
   "worldcombat.skill.skillswap.use.1": "把自己的负面特性甩给对手",
   "worldcombat.skill.skillswap.use.2": "打乱对手依赖特性建立的打法",
-  "worldcombat.skill.skillswap.description.0": "选择 %1$s 格内的一名对手，交换持续 %2$s；宝可梦之间对调可交换的当前特性，双方已有交换效果时无法再次交换。",
+  "worldcombat.skill.skillswap.description.0": "选择 %1$s 格内的一名友方或敌方，交换持续 %2$s；宝可梦之间对调可交换的当前特性，双方已有交换效果时无法再次交换。",
   "worldcombat.skill.skillswap.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.skillswap.hold.on": "久换：对调存续 ×1.9、冷却 ×1.3，适合把一份好特性用满一段战斗，但这段时间里换不回来。",
   "worldcombat.skill.skillswap.hold.off": "速换：对调存续 ×0.7、冷却 ×0.9，出手便宜、很快能换回来，适合先试一下对手的特性。",
-  "worldcombat.skill.skillswap.timing": "对单体对手施放，准备 %2$s 秒后消耗 %4$s PP 对调，结束后收招 %3$s 秒，提交起冷却 %5$s 秒，当前射程 %1$s 格。",
+  "worldcombat.skill.skillswap.timing": "对明确选定的实体施放，准备 %2$s 秒后消耗 %4$s PP 对调，结束后收招 %3$s 秒，提交起冷却 %5$s 秒，当前射程 %1$s 格。",
   "worldcombat.skill.skillswap.growth.0": "达到 %1$s 级，对调存续延长至 %2$s、提交起冷却缩短至 %3$s。",
   "worldcombat.skill.skillswap.growth.1": "达到 %1$s 级，对调存续进一步延长至 %2$s、提交起冷却再缩短至 %3$s。",
   "worldcombat.skill.skillswap.value.reach": "识别距离",
@@ -28,5 +28,6 @@
   "world_combat.move.skillswap.text.gain": "特性：%1$s",
   "world_combat.move.skillswap.text.same": "特性相同，无需对调",
   "world_combat.move.skillswap.text.returned": "交换结束",
-  "worldcombat.skill.skillswap.world": "目标为普通生物时，双方临时交换出招时的原生攻击力、移动速度、护甲、护甲韧性与抗击退能力，持续 %1$s；任一方效果被清除后双方一起恢复。装备留在原主身上，之后的属性变化照常生效。"
+  "worldcombat.skill.skillswap.world": "目标为普通生物时，只交换双方共同拥有的原生攻击力、移动速度、护甲、护甲韧性与抗击退属性，持续 %1$s；一端窗口失效后本对贡献一起撤除。装备留在原主身上，后续其他属性贡献照常生效。",
+  "world_combat.move.skillswap.text.attributes": "双方共同拥有的攻击、移动与防护属性"
 }

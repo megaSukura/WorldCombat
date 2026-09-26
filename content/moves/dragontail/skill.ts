@@ -1,90 +1,44 @@
 /**
- * 龙尾 / dragontail —— 注册、逐退行为与动作。
+ * 龙尾 / dragontail —— 注册与动作。
  *
- * 核心念头：抡起尾巴在身前扫出一整片扇形，把站在里面的敌人一起抽飞——挨得越近越疼，飞出后失去目标、
- *           被逐出交战圈。本组唯一「带伤害又带范围」的逐退。
- * 一幕半：
- *   起（windup，提交前）：龙鳞色的尾光在身后拢起、地盘微微震动，预告这一扫。
- *   扫（execute，提交后）：以施法者为原点、朝目标方向扫出 reach 格半径、sweep 度的扇形；扇形内每个非友方
- *       活体都挨一记 lash（正对的目标吃满威力，其余的人吃 share 折扣），随后沿背离施法者的方向被弹开 hurl 格、
- *       抛起 lift 格；每个被扫中者打上共享身份 world_combat:status/routed（本单元效果
- *       world_combat:dragontail_routed），并挂上逐退驱动 world_combat:dragontail_rout，之后每 10 刻再被扫开。
- * 与同族分开：龙尾是正面一大片扇形横扫，能一次扫中多人；巴投是抓一个摔到背后；吼叫绕身一圈无伤；吹飞是一条远风道。
+ * 核心念头：从一侧到另一侧用 6 刻甩出一道真实的尾扫弧，尾梢外三分之一砸得最重、内段只是扫开；每个被扫到的人
+ *   沿背离方向被当次送飞、抛起，有后备的对手被真正换下。墙会在尾巴当刻停住，墙后的人扫不到。
+ * 一幕：
+ *   起（windup，提交前）：龙鳞色的尾光在身后拢起、地盘微震，预告这一扫。
+ *   扫（execute，提交后）：以施法者为原点、朝瞄准方向，从一侧到另一侧分 6 刻摆尾。每一刻从中心到当刻尾尖做一次
+ *       原生 ray：命中方块就把尾扫截断到接触点，墙后的目标扫不到。落在本刻窄扇内、且未越过截断点的非友方各挨
+ *       一次：距中心 ≥ reach×tip（尾梢外三分之一）吃满 lash，内段吃 share；每人只算一次。中者沿背离方向被
+ *       `hitDisplace` 送飞（读到实际路程，抗位移只吃伤害）、再用 `hitImpulse` 抛起 lift，有合法后备者 `partyForceOut`。
+ * 与同族分开：龙尾是一次真实摆尾的正面扇形横扫，能一次扫中多人；巴投是抓一个摔到背后；吼叫绕身一圈无伤；
+ *   吹飞是一条向前推进、会被墙截断的风道。
  */
 namespace PokemonSkills {
-    const dragontailBeat = 10;
+    const dragontailSteps = 6;
 
-    /** 位移单次上限 4 格，超出时拆成几步走完。 */
-    function dragontailShove(world: CombatWorld, target: CombatActor, dir: CombatPoint, distance: number): void {
-        let left = distance, guard = 0;
-        while (left > 0.05 && guard++ < 8) {
-            const step = Math.min(3.5, left);
-            if (world.displace(target, dir.scale(step)) <= 0.01) return;
-            left -= step;
+    /** 单次位移上限 4 格，超出时拆成几步走完；每步读实际路程，撞墙/抗位移即停下。返回实际送出的距离。 */
+    function dragontailSend(world: CombatWorld, target: CombatActor, dir: CombatPoint, distance: number): number {
+        let remaining = distance, moved = 0;
+        for (let guard = 0; guard < 4 && remaining > 0.05; guard++) {
+            const leg = Math.min(4, remaining);
+            const applied = world.hitDisplace(target, dir.scale(leg));
+            moved += applied;
+            if (!(applied > 0) || applied < leg - 0.01) break;
+            remaining -= leg;
         }
+        return moved;
     }
-
-    function dragontailRoutBody(world: CombatWorld, caster: CombatActor, target: CombatActor, dir: CombatPoint,
-        flee: number, panic: number, keepOut: number): void {
-        const duration = Math.max(20, Math.round(flee));
-        CombatStatus.apply(world, target, "routed", dragontailRouted, duration);
-        world.effect(dragontailRout, target, JSON.stringify({ caster: String(caster.ref()),
-            dir: [dir.x(), 0, dir.z()], keepOut: keepOut, panic: panic }), duration);
-    }
-
-    WorldCombat.effect(dragontailRout, 1, 400, "actor", function (json: string): string {
-        const state = JSON.parse(json);
-        if (!state || !Array.isArray(state.dir) || state.dir.length !== 3 || !isFinite(state.keepOut) || !isFinite(state.panic))
-            throw new Error("Invalid dragontail rout state");
-        return JSON.stringify(state);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(dragontailRout, "start", function (effect: CombatEffect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) { effect.end(); return; }
-        const body = world.observe(victim);
-        world.interrupt(victim, "world_combat:routed");
-        world.target(victim, null);
-        if (body !== null)
-            WorldFeedback.emit(world, dragontailScene, 1, body.position(), { moment: "rout", target: String(victim.ref()) }, 20);
-        effect.schedule("surge", "surge", dragontailBeat, "{}");
-    });
-    WorldCombat.effectHandler(dragontailRout, "surge", function (effect: CombatEffect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) { effect.end(); return; }
-        const state = JSON.parse(effect.state()), body = world.observe(victim);
-        if (body === null) { effect.end(); return; }
-        world.target(victim, null);
-        const dir = WorldCombat.point(state.dir[0], 0, state.dir[2]);
-        const caster = state.caster ? world.actor(state.caster) : null;
-        const from = caster !== null ? world.observe(caster) : null;
-        let away = dir;
-        let distance = 0;
-        if (from !== null) {
-            const delta = body.position().minus(from.position());
-            distance = delta.length();
-            if (delta.length() > 0.01) away = WorldCombat.point(delta.x(), 0, delta.z());
-        }
-        if (away.length() > 0.01 && distance < state.keepOut) {
-            world.displace(victim, away.unit().scale(state.panic));
-            const after = world.observe(victim);
-            if (after !== null)
-                WorldFeedback.keep(world, "world_combat:move_dragontail:" + String(victim.ref()), dragontailScene, 1, after.position(),
-                    { moment: "flee", target: String(victim.ref()) }, 18);
-        }
-        effect.schedule("surge", "surge", dragontailBeat, "{}");
-    });
 
     define({
         id: dragontailId,
         cooldownParameter: "recharge",
         name: "龙尾",
-        description: "抡起尾巴在身前扫开一大片扇形，把里面的敌人一起抽飞、失去目标、逐出战斗；有后备的对手会被真正换下，正对的对手吃最重的一记。",
+        description: "从一侧到另一侧甩出一道尾扫，把身前一整片扇形里的敌人抽飞：尾梢外三分之一挨满威力、内段只被扫开，每人只挨一次；有后备的对手会被真正换下。墙会在尾巴当刻截住那一段尾扫，挡不住的目标仍吃伤害但送不动。",
         uses: ["当面横扫、把一排敌人一起抽开", "在敌人贴身时把它们扫出近身圈", "对单个厚实目标打一击并送走"],
-        kind: "enemy",
+        kind: "aim",
         range: 3,
         maxRange: 4.5,
         prepare: 10,
-        active: 1,
+        active: 6,
         recover: 8,
         cooldown: 100,
         style: "tail",
@@ -93,7 +47,7 @@ namespace PokemonSkills {
         resolve: function (pokemon: CombatPokemon, config: any, world?: CombatWorld | null, actor?: CombatActor | null, attributes?: IndividualAttributes.Context) {
             const context: NumberContext = { pokemon, skill: skills[dragontailId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return { prepare: Math.round(p(dragontailId, "tempo", context)), recover: Math.round(p(dragontailId, "aftercast", context)),
-                cooldown: Math.round(p(dragontailId, "recharge", context)), active: 1, range: p(dragontailId, "reach", context) };
+                cooldown: Math.round(p(dragontailId, "recharge", context)), active: 6, range: p(dragontailId, "reach", context) };
         },
         windup: function (action: CombatAction, config: any, prepare: number) {
             const body = action.sense().observe(action.actor());
@@ -107,50 +61,90 @@ namespace PokemonSkills {
                 label: config && config.high ? "龙尾·高抛" : "龙尾" };
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
+            const scenes = WorldFeedback.actionScenes(dragontailScene, 1);
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             const centre = body !== null ? body.position() : action.origin();
-            const heading = aim(action);
+            if (action.target() !== null) action.releaseTarget();
+            const heading = WorldGeometry.flatUnit(aim(action), action.direction());
             const reach = p(dragontailId, "reach", action), sweep = p(dragontailId, "sweep", action);
+            const lash = p(dragontailId, "lash", action);
             const hurl = p(dragontailId, "hurl", action), lift = p(dragontailId, "lift", action);
-            const flee = p(dragontailId, "flee", action), panic = p(dragontailId, "panic", action);
-            const keepOut = p(dragontailId, "keepOut", action), shards = Math.round(p(dragontailId, "shards", action));
-            const share = p(dragontailId, "share", action);
-            const primary = action.target() !== null ? String(action.target()!.ref()) : "";
-            const groundY = body !== null ? centre.y() - body.height() / 2 : centre.y() - 0.7;
-            const half = sweep * Math.PI / 360, base = Math.atan2(heading.z(), heading.x()), steps = 9;
-            const path: number[][] = [[centre.x(), groundY, centre.z()]];
-            for (let index = 0; index <= steps; index++) {
-                const angle = base - half + 2 * half * index / steps;
-                path.push([centre.x() + Math.cos(angle) * reach, groundY, centre.z() + Math.sin(angle) * reach]);
+            const shards = Math.round(p(dragontailId, "shards", action));
+            const share = p(dragontailId, "share", action), tip = p(dragontailId, "tip", action);
+            const height = body !== null ? body.height() : 1.4, width = body !== null ? body.width() : 0.9;
+            const band = { below: Math.max(0.7, height * 0.55), above: Math.max(0.85, height * 0.6) };
+            const half = sweep * Math.PI / 360, base = Math.atan2(heading.z(), heading.x());
+            const gauge = Math.max(0.18, width * 0.35);
+            // 尾巴扫的是身体而不是中心点：按体宽给一点接触余量，尾端擦到身体边缘也算命中。
+            const contact = Math.max(0.35, width * 0.5);
+            const wedge = Math.max(24, sweep / dragontailSteps * 1.3);
+            const scale = Math.max(0.6, Math.min(2.2, reach / 3));
+            const struck: { [ref: string]: boolean } = Object.create(null);
+            let index = 0, hits = 0, settled = false;
+
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scenes.finish(current, function (next: CombatAction) {
+                    const scope = next.world(), above = centre.plus(WorldCombat.point(0, 1.3, 0));
+                    if (hits === 0) WorldFeedback.emit(scope, dragontailScene, 1, centre, { moment: "miss", scale: scale }, 16);
+                    WorldFeedback.text(scope, above, hits > 0 ? dragontailHitText : dragontailMissText, hits > 0 ? [hits] : [], 26);
+                    done(next);
+                });
             }
-            let hits = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.sector(centre, heading, reach, sweep, { below: 2, above: 3 }), function (target, facts) {
-                const ref = String(target.ref());
-                if (ref === String(actor.ref())) return;
-                const landed = hurt(action, target, dragontailId, p(dragontailId, "lash", action) * (ref === primary ? 1 : share),
-                    { damage: damageSpec(dragontailId, "lash"), contact: true });
-                WorldFeedback.emit(world, dragontailScene, 1, facts.position(),
-                    { moment: "impact", target: ref, shards: shards, primary: ref === primary ? 1 : 0 }, 24);
-                hits++;
-                if (!landed || !world.valid(target)) return;
-                const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
-                const dir = away.length() < 0.01 ? WorldCombat.point(heading.x(), 0, heading.z()) : away.unit();
-                dragontailShove(world, target, dir, hurl);
-                world.motion(target, WorldCombat.point(dir.x(), 0, dir.z()).scale(Math.min(2.4, hurl * 0.4)).plus(WorldCombat.point(0, lift, 0)), true);
-                dragontailRoutBody(world, actor, target, dir, flee, panic, keepOut);
-                const after = world.observe(target);
-                if (after !== null && partyForceOut(world, target, partyFeet(after)) !== null)
-                    WorldFeedback.text(world, after.position().plus(WorldCombat.point(0, 1.1, 0)), dragontailSwitchText, [], 24);
-            });
-            WorldFeedback.emit(world, dragontailScene, 1, centre,
-                { moment: "sweep", scale: reach / 3, reach: reach, sweep: Math.round(sweep), hits: hits, shards: shards, path: path }, 24);
-            if (hits === 0) WorldFeedback.emit(world, dragontailScene, 1, centre, { moment: "miss", scale: reach / 3 }, 16);
-            world.sound(hits > 0 ? "cobblemon:impact.dragon" : "cobblemon:move.dragonclaw.actor", centre, 20, "{}");
-            const above = centre.plus(WorldCombat.point(0, 1.5, 0));
-            if (hits > 0) WorldFeedback.text(world, above, dragontailHitText, [hits], 28);
-            else WorldFeedback.text(world, above, dragontailMissText, [], 24);
-            done(action);
+
+            function sweepTick(current: CombatAction): void {
+                const scope = current.world();
+                const t = dragontailSteps <= 1 ? 0 : index / (dragontailSteps - 1);
+                const angle = base - half + 2 * half * t;
+                const dir = WorldCombat.point(Math.cos(angle), 0, Math.sin(angle));
+                const full = centre.plus(WorldCombat.point(dir.x() * reach, 0, dir.z() * reach));
+                // 当刻的尾体从中心伸到尾尖；撞到方块就在接触点截断，墙后的这一段扫不到。
+                const probe = current.trace(centre, full, gauge, false);
+                const clipped = probe.blockPosition() !== null && !probe.hitEntity();
+                const end = clipped ? probe.position() : full;
+                const effective = Math.max(0, end.minus(centre).length());
+                scenes.show(current, "tail", centre, {
+                    moment: "sweep",
+                    path: [[centre.x(), centre.y(), centre.z()], [end.x(), end.y(), end.z()]],
+                    point: [end.x(), end.y(), end.z()],
+                    direction: [dir.x(), 0, dir.z()],
+                    reach: reach, effective: effective, clipped: clipped ? 1 : 0,
+                    shards: shards, tip: tip, scale: scale
+                });
+                if (effective > 0.15) WorldGeometry.selectEnemies(scope,
+                    WorldGeometry.sector(centre, dir, effective + contact, wedge, band), function (target, facts) {
+                    const ref = String(target.ref());
+                    if (ref === String(actor.ref()) || struck[ref]) return;
+                    const distance = facts.position().minus(centre).length();
+                    if (distance > effective + contact) return;
+                    struck[ref] = true;
+                    const heavy = distance >= reach * tip;
+                    const landed = hurt(current, target, dragontailId, lash * (heavy ? 1 : share),
+                        { damage: damageSpec(dragontailId, "lash"), contact: true });
+                    WorldFeedback.emit(scope, dragontailScene, 1, facts.position(),
+                        { moment: "impact", target: ref, shards: Math.round(shards * (heavy ? 0.6 : 0.35)),
+                            size: heavy ? 0.4 : 0.26, primary: heavy ? 1 : 0 }, 22);
+                    hits++;
+                    if (!landed || !scope.valid(target)) return;
+                    const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
+                    const pushDir = away.length() < 0.01 ? WorldCombat.point(dir.x(), 0, dir.z()) : away.unit();
+                    const moved = dragontailSend(scope, target, pushDir, hurl);
+                    // 位移被墙或抗性挡住时只留下短压缩接触，不再补一记虚拟飞出。
+                    if (moved > 0.1)
+                        scope.hitImpulse(target, WorldCombat.point(pushDir.x(), 0, pushDir.z()).scale(Math.min(2.4, hurl * 0.4))
+                            .plus(WorldCombat.point(0, lift, 0)));
+                    const after = scope.observe(target);
+                    if (after !== null && partyForceOut(scope, target, partyFeet(after)) !== null)
+                        WorldFeedback.text(scope, after.position().plus(WorldCombat.point(0, 1.1, 0)), dragontailSwitchText, [], 24);
+                });
+                index++;
+                if (index >= dragontailSteps) { finish(current); return; }
+                current.after(1, function (next: CombatAction) { sweepTick(next); });
+            }
+
+            sound(action, "cobblemon:move.dragonclaw.actor");
+            sweepTick(action);
         }
     });
 }
-

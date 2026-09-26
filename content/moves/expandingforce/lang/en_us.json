@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.expandingforce.summary": "Slam psychic force into the target's ground, leaving a psychic terrain that slows grounded foes; cast it while standing on one and it absorbs the field, detonating around you to hit every nearby foe for more.",
+  "worldcombat.skill.expandingforce.summary": "Slam psychic force into the chosen ground: a local impact at the landing point leaves a psychic terrain that slows grounded foes. Cast it while standing on one and it absorbs the field instead, detonating around you to hit every nearby foe for more, then spreads a fresh field underfoot.",
   "worldcombat.skill.expandingforce.use.0": "Area control",
   "worldcombat.skill.expandingforce.use.1": "Terrain play",
-  "worldcombat.skill.expandingforce.description.0": "Deals about %1$s special damage.",
-  "worldcombat.skill.expandingforce.description.1": "Spreads a psychic terrain of radius %1$s blocks at the impact point for %2$s s; while it lasts, grounded enemies inside have their movement slowed, while allies and airborne targets are unaffected.",
-  "worldcombat.skill.expandingforce.description.2": "If the user is grounded on a psychic terrain, it absorbs the field instead and detonates around itself within %1$s blocks, hitting every foe in range at 1.5x power, then spreads a fresh terrain at the impact point.",
+  "worldcombat.skill.expandingforce.description.0": "Deals about %1$s special damage within %2$s blocks of the chosen landing point.",
+  "worldcombat.skill.expandingforce.description.1": "Spreads a psychic terrain of radius %1$s blocks at the landing point for %2$s s; while it lasts, grounded enemies inside have their movement slowed, while allies and airborne targets are unaffected.",
+  "worldcombat.skill.expandingforce.description.2": "If the user is grounded on a psychic terrain, it absorbs the field instead and detonates around itself within %1$s blocks, hitting every foe in range at 1.5x power, then spreads a fresh terrain under itself.",
   "worldcombat.skill.expandingforce.timing": "Range %1$s blocks; windup %2$s s, recovery %3$s s, cooldown %4$s s.",
   "worldcombat.skill.expandingforce.value.power": "Power",
   "worldcombat.skill.expandingforce.value.burst": "Detonation radius",
@@ -15,5 +15,5 @@
   "worldcombat.skill.expandingforce.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.expandingforce.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to spread terrain; when off it stays put.",
   "worldcombat.skill.expandingforce.preference.ai.crowd": "Crowd threshold",
-  "worldcombat.skill.expandingforce.preference.ai.crowd.help": "With this many enemies gathered within 6 blocks of the target, the cast is raised to a high-priority opening; a higher threshold is harder to trigger."
+  "worldcombat.skill.expandingforce.preference.ai.crowd.help": "Counting within 6 blocks of yourself when detonating, or of the landing point on a normal cast: this many enemies raises the cast to a high priority; a higher threshold is harder to trigger."
 }

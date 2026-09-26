@@ -20,7 +20,6 @@
  *   reach          施放距离 9 格 + 等级 + 物攻（力量把这把雨送得更远）。
  *   flinchChance   畏缩几率 0.24 + 物攻偏移；散布式每块更轻所以略降。
  *   interval       两块之间的间隔 4 刻 − 速度偏移（手快的连得更快）。
- *   rubbleTicks    落点碎石停留 80 刻 + 等级（地面被砸出的碎石堆留多久）。
  *
  * 配置 `scatter`（散布式）：开启＝块数 ×1.5、覆盖半径 ×1.35、单块 ×0.82、畏缩略降，用来扫一片；
  * 关闭＝块数 ×0.7、覆盖 ×0.8、单块 ×1.16、畏缩略升，把伤害集中到目标身上。两向各有适用局面。
@@ -94,10 +93,6 @@ namespace PokemonSkills {
         interval: seconds(
             F.base(4).minus(F.stat("speed").minus(60).times(0.006).clamp(-1, 1.5)).clamp(2, 6).round(0),
             "投掷间隔", "两块岩石之间隔多久；速度快的个体连得更快。"),
-        /** 碎石停留：80 + 等级 ×0.6；夹 50..150；落点被砸出的碎石地面留着，到期原方块回来。 */
-        rubbleTicks: seconds(
-            F.base(80).plus(F.level().times(0.6)).clamp(50, 150).round(0),
-            "碎石停留", "落点被砸出的碎石地面停留多久；到期原方块回来。"),
         /** 同一目标一次施放最多被砸几次，避免多块叠在同一人身上。 */
         hitCap: hidden(2)
     });
@@ -114,7 +109,6 @@ namespace PokemonSkills {
         { key: "description.1", values: ["boulders", "spread"] },
         { key: "description.2", values: ["reach", "throwSpeed"] },
         { key: "description.3", values: ["flinchChance","flinchTicks"] },
-        { key: "description.4", values: ["rubbleTicks"] },
         { key: "scatter.on", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) === true; } },
         { key: "scatter.off", values: [], when: function (context) { return read(context.detail.values, ["scatter"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

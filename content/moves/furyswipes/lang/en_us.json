@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.furyswipes.summary": "Work around the target and rake it from a new angle again and again; one whiff ends the pass. The roaming form sweeps wider, circles farther and lands more often; the pounce form presses straight in, narrows to one lane and hits each rake harder.",
+  "worldcombat.skill.furyswipes.summary": "Work around the target and rake it from a new angle again and again; one whiff ends the pass. You can point at an enemy or just give a direction and keep raking along the real contact, so a target behind a wall is not chased. The roaming form sweeps wider, circles farther and lands more often; the pounce form presses straight in, narrows to one lane and hits each rake harder.",
   "worldcombat.skill.furyswipes.use.0": "Circle a nearby target while raking it over and over",
   "worldcombat.skill.furyswipes.use.1": "Rake from the side and rear, forcing the target to keep turning",
   "worldcombat.skill.furyswipes.use.2": "Pounce form presses in and pins the target against one side",
+  "worldcombat.skill.furyswipes.use.3": "Start from a direction alone and keep raking along the real contact",
   "worldcombat.skill.furyswipes.description.0": "Each rake deals about %1$s contact damage (Attack-driven); up to %2$s rakes per pass, each at %3$s accuracy. One whiff ends the pass.",
   "worldcombat.skill.furyswipes.description.1": "Claw reach %1$s blocks, rake arc %2$s degrees; you reposition %3$s blocks before each rake, %4$s between rakes. Each rake's arc hits 1-2 targets (a wider arc reaches more).",
   "worldcombat.skill.furyswipes.pounce.on": "Pounce form: press straight in, each rake heavier and farther, pinning the target to one side; the cost is a narrowed arc, almost no sidestep and slightly lower accuracy.",

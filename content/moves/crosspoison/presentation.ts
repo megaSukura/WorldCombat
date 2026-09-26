@@ -2,11 +2,11 @@
  * 十字毒刃 / crosspoison 的客户端表现。
  *
  * 一句话：两片毒刃在身前左右分开、刃口滴着毒（起），随即从两侧同时合拢、在对手身上剪出一个 X（剪），
- *   切口里随即渗出一层毒痕、过一瞬再冒起一圈绿泡（渗）。
+ *   被两条刃共同覆盖的正中目标补上 X 成形的收束并真正中毒（合/毒）。
  * 色相家族：毒绿（0x9BE86B 刃口、0xD7F5A8 高光）＋深紫（0x6B4E8A 刃身与余韵）；没有第二个色相。
- * 拍子：起 spread（两刃分开聚毒）→ 剪 slit×2（两刃各划一条斜线）→ 合 seal（X 成形）→ 中 cut（逐目标毒击）→ 渗 venom／seep。
- * 范围：slit 的两条斜线用服务端算出的 `data.path` 顶点（落点两侧对角）以 polyline 画出，两线之间的窄缝就是判定
- *   （`data.spread` 决定张多开；`data.scale` 只服务端缩放粒子尺寸，不重复缩放这组世界顶点）；站在窄缝外就划不到。
+ * 拍子：起 spread（两刃分开聚毒）→ 剪 slit×2（两刃各划一条斜线，各自可被墙截短）→ 合 seal（交点双中）→ 中 cut → 毒 venom／空 miss。
+ * 范围：slit 的两条斜线用服务端算出的 `data.path` 顶点（裁剪后的真实刃线）以 polyline 画出；判定与画面读同一组顶点
+ *   （`data.spread` 决定交叉点张多开；`data.scale` 只服务端缩放粒子尺寸，不重复缩放这组世界顶点）；站在刃线外就划不到。
  * 运动：两刃**同时**从左右向中间收拢，交汇在落点——与十字劈先后落下的两劈在画面上截然不同。
  * 数：`data.drops`（物攻派生）绑定刃口与切口迸出的毒滴数量，`data.intensity`（威力换算）驱动亮度，与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -118,21 +118,6 @@ const CrossPoisonDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.08], gravity: 0.04, drag: 0.92,
                     lifetime: [10, 18], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0x9BE86B, alpha: [0.75, 0], light: "world", maxParticles: 40
-                }
-            ]
-        },
-        seep: {
-            duration: 20,
-            exit: { stop: 7, drain: 14 },
-            emitters: [
-                {
-                    name: "creep", bind: "target", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
-                    burst: { count: { data: "drops", fallback: 12 }, interval: 4, repeats: 3 },
-                    shape: { kind: "sphere_surface", radius: 0.32 },
-                    direction: "outward", speed: [0.02, 0.1], gravity: 0.05, drag: 0.9,
-                    lifetime: [10, 18], size: [0.08, 0.02], sizeMode: "sin",
-                    color: 0x6B4E8A, alpha: [0.6, 0], light: "world", maxParticles: 50
                 }
             ]
         },

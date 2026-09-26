@@ -2,13 +2,14 @@
  * 青草滑梯 / grassyglide 的客户端表现。
  *
  * 一句话：脚边青草收拢、身体压低，随后整个人贴着地面滑出去，身后翻起一条长长的草浪；撞上谁就在接触处爆开
- *   一层草叶，并在地上压出一小片会站人的青草（站着淡长、慢慢枯回去）。脚下有草起手时，第一拍会亮起一圈托举绿光。
+ *   一层草叶，并在落点扬起一撮转瞬即逝的短草（纯装饰，不铺场地、不授青草身份）。脚下**真站在青草场地上**起手时，
+ *   第一拍会亮起一圈托举绿光，代表起手归零、滑得更远更快。
  * 色相家族：草绿一族（0x7CCB5A 主体、0x9FE06A 亮叶、0x4E7A3A 暗叶、0xE8F4D0 只做草尖高光），尘土用中性灰。
- * 拍子：起 gather／boost（聚草压低）→ 滑 slide（鱼雷式草浪）→ 击 hit（接触爆草）→ 种 plant／patch（长出草皮）→ 收 whiff。
- * 范围：hit 绑命中点画在接触处；plant 与 patch 都绑落地点，`data.radius`／`data.scale` 就是那片草的真实半径。
+ * 拍子：起 gather／boost（聚草压低）→ 滑 slide（鱼雷式草浪）→ 击 hit（接触爆草）→ 落痕 plant（短草一扬）→ 收 whiff。
+ * 范围：hit 与 plant 都绑命中点画在接触处，`data.scale` 是身体尺度的换算，只用于这一记的尺度。
  * 运动：slide 是沿施法者自身运动（orient: velocity）拖出的草浪，草叶向后翻；托举绿光向内收拢再向上抬。
  * 数：slide 与 hit 的草叶量绑定 `data.tufts`（速度与等级换算），尺度绑定 `data.scale`（判定半径换算），
- *   patch 的草叶密度同样绑定 `data.tufts`；命中强弱由 `data.intensity`（滑撞威力换算）决定亮暗。
+ *   plant 的草叶量同样绑定 `data.tufts`；命中强弱由 `data.intensity`（滑撞威力换算）决定亮暗。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const GrassyglideDefinition: ParticleDefinition = {
@@ -118,50 +119,27 @@ const GrassyglideDefinition: ParticleDefinition = {
             ]
         },
         plant: {
-            duration: 28,
-            exit: { stop: 10, drain: 16 },
+            duration: 16,
+            exit: { stop: 6, drain: 14 },
             emitters: [
-                {
-                    name: "plant_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: 0.6 },
-                    direction: "outward", speed: [0.08, 0.24],
-                    lifetime: [10, 18], size: [0.4, 0.9],
-                    color: 0x7CCB5A, alpha: [0.6, 0], light: "world", maxParticles: 8
-                },
                 {
                     name: "plant_sprout", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/sprout",
-                    burst: { count: { data: "tufts", fallback: 18 }, at: 0 },
-                    shape: { kind: "circle", radius: 1.4 },
+                    burst: { count: { data: "tufts", fallback: 12 }, at: 0 },
+                    shape: { kind: "circle", radius: 0.7 },
                     direction: "up", speed: [0.05, 0.18],
-                    lifetime: [10, 18], size: [0.22, 0.06], sizeMode: "index",
-                    color: 0x9FE06A, alpha: [0.85, 0], light: "world", maxParticles: 60
-                }
-            ]
-        },
-        patch: {
-            duration: 30,
-            exit: { stop: 10, drain: 20 },
-            emitters: [
-                {
-                    name: "patch_sprout", bind: "point", fit: "none", offset: [0, 0.04, 0],
-                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
-                    rate: { data: "tufts", fallback: 20 },
-                    shape: { kind: "circle", radius: 1.4 },
-                    direction: "up", speed: [0.02, 0.06],
-                    lifetime: [16, 28], size: [0.16, 0.04],
-                    color: 0x7CCB5A, alpha: [0.3, 0], light: "world", maxParticles: 40
+                    lifetime: [8, 14], size: [0.18, 0.05], sizeMode: "index",
+                    color: 0x9FE06A, alpha: [0.8, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "patch_leaf", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    name: "plant_leaf", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 8, shape: { kind: "circle", radius: 1.4 },
-                    direction: "up", speed: [0.01, 0.05],
-                    spin: 4,
-                    lifetime: [20, 34], size: [0.12, 0.03],
-                    color: 0x9FE06A, alpha: [0.22, 0], light: "world", maxParticles: 26
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "circle", radius: 0.7 },
+                    direction: "up", speed: [0.02, 0.08],
+                    spin: 4, gravity: 0.05,
+                    lifetime: [8, 14], size: [0.1, 0.02],
+                    color: 0x7CCB5A, alpha: [0.35, 0], light: "world", maxParticles: 20
                 }
             ]
         },

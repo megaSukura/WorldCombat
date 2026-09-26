@@ -27,6 +27,15 @@ namespace PokemonSkills {
         return count;
     }
 
+    /** 目标脚边是否已经有**自己**铺下的沸水洼：已有就在原地合并刷新，不再攒一记新弹。 */
+    function scaldOwnPool(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context);
+        const areas = WorldEffects.areas(CompanionBehavior.world(context), "world_combat:field/scald",
+            CompanionBehavior.point(target.point), 2.5);
+        for (let i = 0; i < areas.length; i++) if (areas[i].source === self.ref) return true;
+        return false;
+    }
+
     CompanionBehavior.registerUse("scald", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -48,6 +57,7 @@ namespace PokemonSkills {
             if (CompanionBehavior.ai<boolean>(capability, "soakWet", true) && target.wet) score += 8;
             if (CompanionBehavior.ai<boolean>(capability, "soakCrowd", true))
                 score += Math.min(16, scaldCrowd(context, target) * 8);
+            if (scaldOwnPool(context, target)) score -= 14;
             return score;
         }
     });

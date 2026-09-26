@@ -13,9 +13,10 @@
  *   rootTicks  绊住时长：**目标体重**（越重越难立刻爬起）+ 配置 knot。
  *   tripTicks  失衡持续：**目标体重** + 等级；带着 tripped 身份的时间。
  *   tripStages 掉速等级：**目标体重**（1..3 级，对其他战斗者落到移动速度属性）。
- *   patchTicks 草皮留存：等级；这一招在世界里留下的时间。
  *   reach      播种距离：施法者特攻 + 等级；驱动目标接受范围。
  *   prepare/recover/cooldown 起手／收招／冷却：速度与等级，配置 knot 另加。
+ *
+ * 本招不留任何世界方块：低伏的根结只在延迟里存在，收拢即散，因此没有留存参数。
  *
  * 配置 `knot`（缠绞式，默认关）双向取舍：开＝缠结范围更大、绊住更久、失衡更重，但缠绊延迟更长（更容易被迈开）、
  * 单发威力略低、收招与冷却更久；关＝小范围快绊，单发更重、出手更快。两向各有局面（控场 vs 速伤）。
@@ -80,10 +81,6 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "失衡期间下降的速度能力等级；越重掉得越多（对宝可梦落到原生等级，对其他战斗者落到移动速度属性）。"
             }),
-        /** 草皮留存：基础 120 刻；等级每高 1 级加 2；夹在 100..360。 */
-        patchTicks: seconds(
-            F.base(120).plus(F.level().minus(20).times(2)).clamp(100, 360).round(0),
-            "草皮留存", "这一招把脚下翻成草皮后，草皮留多久；到期原方块回来。"),
         /** 播种距离：基础 6 格；特攻每比 60 多 1 加 0.03（上限 +3）；等级每高 1 级加 0.02（上限 +2）；夹在 5..11。 */
         reach: formula(
             F.base(6).plus(F.stat("specialAttack").minus(60).times(0.03).clamp(-0.5, 3))
@@ -118,7 +115,7 @@ namespace PokemonSkills {
 
     describe("grassknot", [
         { key: "description.0", values: ["snare","snareRadius"] },
-        { key: "description.1", values: ["snareDelay", "patchTicks"] },
+        { key: "description.1", values: ["snareDelay"] },
         { key: "description.2", values: ["rootTicks","tripTicks","tripStages"] },
         { key: "knot.on", values: [], when: function (context) { return read(context.detail.values, ["knot"]) === true; } },
         { key: "knot.off", values: [], when: function (context) { return read(context.detail.values, ["knot"]) !== true; } },

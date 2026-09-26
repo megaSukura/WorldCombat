@@ -3,7 +3,7 @@
   "worldcombat.skill.blastburn.description.0": "落点爆炸对半径内每个敌人造成 %1$s 的特殊伤害。",
   "worldcombat.skill.blastburn.description.1": "爆散半径 %1$s 格；被波及的对手各有 %2$s 的概率被点燃，灼伤持续 %3$s，期间持续掉血、物理伤害减半（火属性等天生免疫者不会被点燃）。",
   "worldcombat.skill.blastburn.description.2": "火球落定后自己过热力竭 %1$s，无论是否炸到人；期间无法发动招式、普通攻击或移动。",
-  "worldcombat.skill.blastburn.description.3": "投送射程 %1$s 格、火球速度 %2$s 格每刻；飞行途中撞上活体即提前引爆，判定半径 %4$s 格；起手 %3$s。",
+  "worldcombat.skill.blastburn.description.3": "投送射程 %1$s 格、火球速度 %2$s 格每刻；飞行途中撞上活体或方块即提前引爆，判定半径 %4$s 格；爆圈不穿墙，被方块挡住的对手不受影响；起手 %3$s。",
   "worldcombat.skill.blastburn.use.0": "远距离大爆炸",
   "worldcombat.skill.blastburn.use.1": "同时烧到挤在一起的对手",
   "worldcombat.skill.blastburn.use.2": "用一次过热换一片清场",
@@ -27,5 +27,6 @@
   "effect.world_combat.blastburn_overheat": "过热",
   "world_combat.move.blastburn.text.blast": "爆炸烈焰 命中 %1$s",
   "world_combat.move.blastburn.text.fizzle": "只炸到地面",
+  "world_combat.move.blastburn.text.immune": "无法点燃",
   "world_combat.move.blastburn.text.exhaust": "过热 %1$s 秒"
 }

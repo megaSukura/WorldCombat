@@ -1,36 +1,43 @@
 /**
- * 快手还击 / upperhand —— 参数、数值来源与「对手正在出先制招」的读取。
+ * 快手还击 / upperhand —— 参数、数值来源与「对手正在出先制招 / 正在贴身抢攻」的读取。
  *
  * 原生事实：Fighting／物理／威力 65／命中 100／PP 15／优先度 +3／接触；
  * 「察觉到对手的动作后用掌根攻击，让对手畏缩。如果对手使出的招式不是先制攻击，则会失败」（Cobblemon 1.8）。
  *
- * 翻译：即时战斗里没有回合先制，本招把「对手要使出先制攻击」翻成一条**可读的出手记录**：任何生物提交招式时
- *   （世界事件 `world_combat:committed`），只要该招式的原生优先度 > 0 且不是变化招式，就记下这一刻与招式；
- *   快手还击在出手时读取目标是否在最近 `window` 刻内有这样一笔记录——有就一记掌根打实并**把它按停**
- *   （挂上共享身份 `world_combat:status/flinch` 并投递 `world_combat:interrupt`，正在执行的那一招被打断），
- *   没有就落空（PP 照扣）。它是本族唯一**打断对手招式**的一招：突袭只抢一下伤害，快手还击要的是对手这一下作废。
+ * 翻译：即时战斗里没有回合先制，本招保留两条可读的抢攻入口：
+ *   一、**读到先制招**：任何生物提交招式时（世界事件 `world_combat:committed`），只要该招式原生优先度 > 0 且不是变化招式，
+ *       就记下这一刻与招式；快手还击在出手时读到目标最近 `window` 刻内有这样一笔记录，就主动踏进一记掌根打实并把它按停。
+ *   二、**正面迎掌**：普通原生敌人（原版怪等）没有公开的先制意图，就手动放招架起 `parryWindow` 刻的正面迎掌；
+ *       第一次从正面来的**近身接触攻击**（`world_combat:incoming` 的真实 contact 事实）到来时，削掉这一次伤害 `parryCut`、
+ *       立刻还一掌，并按需展开横扫。窗口过期只合掌。
+ * 它仍是本族唯一以「截住对手这一手」为目的的一招：突袭只抢一下伤害，快手还击要的是抢回节奏。
  *
  * 数据分散（每个参数各吃不同的精灵数据）：
- *   snap        掌根威力 = 52 + 物攻偏移 + 等级偏移；横扫 ×0.88；夹 36..135。
- *   window      读取窗口 = 0.9 + 速度偏移[−0.12,0.3] 秒；夹 0.6..1.8。
- *   reach       掌程 = 2.4 + 速度偏移 + 物攻偏移；夹 2.2..3.8；也是射程来源。
- *   speed       踏进每刻位移随速度。
+ *   snap            掌根威力 = 52 + 物攻偏移 + 等级偏移；横扫 ×0.88；夹 36..135。
+ *   window          先制读取窗口 = 0.9 + 速度偏移[−0.12,0.3] 秒；夹 0.6..1.8。
+ *   reach           掌程 = 2.4 + 速度偏移 + 物攻偏移；夹 2.2..3.8；也是射程来源。
+ *   speed           踏进每刻位移随速度。
  *   collisionRadius 判定半径随身高。
- *   push        击退随物攻。
- *   swipe／arc   横扫分支的扇面半径与张角随身高与速度。
- *   flinchTicks 按停时长随等级；横扫分支略短（有力分摊）。
+ *   push            击退随物攻。
+ *   swipe／arc       横扫分支的扇面半径与张角随身高与速度。
+ *   flinchTicks     按停时长随等级；横扫分支略短（有力分摊）。
+ *   parryWindow     正面迎掌时长随速度；夹 6..12 刻（基准 8 刻）。
+ *   parryArc        迎掌总张角随速度；夹 100..180 度。
+ *   parryCut        迎掌减伤比例随防御；夹 0.24..0.36（基准 0.30）。
  *   tempo／settle／recharge 速度决定起手收招冷却；横扫更慢更费。
  *
  * 配置 `wide`（横扫式）在「一掌把人按停」和「一圈人各挨一下」之间取舍：开启扇面 `swipe`／`arc` 覆盖多个敌人、
- *   各按停较短，单发 ×0.88、收招 +3、冷却 +5；关闭＝点掌，单发更重、按停更久。
+ *   各按停较短，单发 ×0.88、收招 +3、冷却 +5；关闭＝点掌，单发更重、按停更久。横扫只在一次成功迎击之后展开。
  */
 namespace PokemonSkills {
     export const upperhandId = "upperhand";
     export const upperhandScene = "world_combat:move_upperhand";
     export const upperhandFlinchEffect = "world_combat:upperhand_flinch";
+    export const upperhandRule = "world_combat:move_upperhand";
     export const upperhandAlertText = "world_combat.move.upperhand.text.alert";
     export const upperhandHitText = "world_combat.move.upperhand.text.hit";
     export const upperhandWhiffText = "world_combat.move.upperhand.text.whiff";
+    export const upperhandGuardText = "world_combat.move.upperhand.text.guard";
 
     /** 目标最近一次「正在出先制招」的记录。 */
     export interface UpperhandRead { tick: number; move: string; priority: number; }
@@ -54,6 +61,30 @@ namespace PokemonSkills {
     export function upperhandFresh(world: CombatWorld, ref: string, window: number): boolean {
         var record = upperhandReads[ref];
         return record !== undefined && world.tick() - record.tick <= Math.max(1, window);
+    }
+    /** 起手/出手时挑一个处在正面、且在窗口内提交过先制招的最近敌人；没有返回 null。 */
+    export function upperhandMark(world: CombatWorld, actor: CombatActor, origin: CombatPoint, direction: CombatPoint, reach: number,
+        halfArcDegrees: number, window: number): CombatActor | null {
+        var radius = Math.max(0.5, reach), best = radius + 0.01, nearest: CombatActor | null = null;
+        var forward = WorldCombat.point(direction.x(), 0, direction.z());
+        var heading = forward.length() < 1e-6 ? null : forward.unit();
+        var cosHalf = Math.cos(Math.max(0, Math.min(180, halfArcDegrees)) * Math.PI / 180);
+        var found = world.query(origin, radius, false);
+        for (var i = 0; i < found.length; i++) {
+            var candidate = found[i];
+            if (candidate === null || String(candidate.ref()) === String(actor.ref()) || world.friendly(candidate)) continue;
+            if (!upperhandFresh(world, String(candidate.ref()), window)) continue;
+            var body = world.observe(candidate);
+            if (body === null) continue;
+            var delta = body.position().minus(origin);
+            if (heading !== null) {
+                var flat = WorldCombat.point(delta.x(), 0, delta.z());
+                if (flat.length() > 1e-6 && flat.unit().x() * heading.x() + flat.unit().z() * heading.z() < cosHalf) continue;
+            }
+            var gap = delta.length();
+            if (gap <= best) { best = gap; nearest = candidate; }
+        }
+        return nearest;
     }
 
     actionParameters.define(upperhandId, {
@@ -103,6 +134,18 @@ namespace PokemonSkills {
             F.base(30).plus(F.level().minus(30).times(0.8).clamp(0, 26))
                 .minus(F.when(F.pref("wide"), F.const(6), F.const(0))).clamp(20, 70).round(0),
             "按停时长", "被掌根按停的敌人多久不能开始新动作；等级越高按得越久，横扫式因为分摊而略短。"),
+        /** 正面迎掌时长：8 +（速度 − 55）× 0.05 [−2,4]；夹 6..12 刻。 */
+        parryWindow: seconds(
+            F.base(8).plus(F.stat("speed").minus(55).times(0.05).clamp(-2, 4)).clamp(6, 12).round(0),
+            "迎掌时长", "没有先制记录时正面架掌的时间；手快的个体多守几刻。窗口一过就合掌，不会一直守下去。"),
+        /** 迎掌总张角：130 +（速度 − 55）× 0.4 [−18,34] 度；夹 100..180。 */
+        parryArc: formula(
+            F.base(130).plus(F.stat("speed").minus(55).times(0.4).clamp(-18, 34)).clamp(100, 180).round(0),
+            "迎掌张角", { unit: "度", description: "正面能罩住的总张角；越快的个体转身越快、守得越宽。仍只挡正面，背后打来不算。" }),
+        /** 迎掌减伤：0.30 +（防御 − 60）× 0.0006 [−0.03,0.05]；夹 0.24..0.36。 */
+        parryCut: percent(
+            F.base(0.30).plus(F.stat("defense").minus(60).times(0.0006).clamp(-0.03, 0.05)).clamp(0.24, 0.36),
+            "迎掌减伤", "正面接住的那一次近身接触伤害被削掉的比例（约三成）；体格厚实的个体架得更稳。只削这一次，不是无敌，远程与背后都不算。"),
         /** 起手：1 −（速度 − 55）× 0.005 [−0.15,0.3]；夹 1..3。 */
         tempo: seconds(
             F.base(1).minus(F.stat("speed").minus(55).times(0.005).clamp(-0.15, 0.3)).clamp(1, 3).round(0),
@@ -129,8 +172,9 @@ namespace PokemonSkills {
 
     describe(upperhandId, [
         { key: "description.0", values: ["snap","window"] },
+        { key: "description.1", values: ["parryWindow", "parryArc", "parryCut"] },
         { key: "description.2", values: ["flinchTicks"] },
-        { key: "description.1", values: ["reach", "speed", "collisionRadius", "push", "flinchTicks"] },
+        { key: "description.3", values: ["reach", "speed", "collisionRadius", "push"] },
         { key: "wide.on", values: ["swipe","arc"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
@@ -139,9 +183,12 @@ namespace PokemonSkills {
     ]);
 
     // 记账：任何生物提交一次优先度 > 0 的攻击招式，就记下这一刻；快手还击读取它判断对手正在出先制招。
+    // 攻击招式可能是 enemy（锁定目标）或 aim（朝一个方向）；两者都算，变化招式与自身/友方目标不算。
     WorldCombat.on("world_combat:upperhand/read", "world_combat:committed", "", function (event: CombatWorldEvent) {
         var action = event.action();
-        if (action === null || action.targetKind() !== "enemy") return;
+        if (action === null) return;
+        var kind = action.targetKind();
+        if (kind !== "enemy" && kind !== "aim") return;
         var world = event.world(), actor = event.actor();
         if (!world.valid(actor) || world.observe(actor) === null) return;
         var moveId = upperhandMoveId(String(action.content()));

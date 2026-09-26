@@ -14,7 +14,7 @@ Smoke.scenario("leaftornado", function (stage) {
         stage.after(110, function () {
             stage.expect(stage.casts("leaftornado", caster) >= 1, "leaftornado was committed");
             stage.expect(stage.damageTo(foe) > 0, "the target took leaftornado damage");
-            stage.note("旋风在落点固定成形，拍数由 duration/interval 决定，目标可以走出范围躲开后续切割；致盲每目标整场只结算一次", {
+            stage.note("旋风按 point 放在选定落点后固定不动，拍数由 duration/interval 决定，目标可以走出范围躲开后续切割；致盲每目标整场只结算一次", {
                 casts: stage.casts("leaftornado", caster), onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 movedFoe: Math.round(stage.travelled(foe) * 10) / 10
             });

@@ -4,7 +4,7 @@ import com.google.gson.*;
 
 /** Copies JSON values across the script boundary; never retains engine objects. */
 public final class EffectData {
-    public static final Gson GSON = new Gson();
+    public static final Gson GSON = new GsonBuilder().serializeNulls().create();
     public record Limits(int characters, int depth, int nodes, int stringLength) {
         public Limits {
             if (characters < 1 || depth < 1 || nodes < 1 || stringLength < 1) throw new IllegalArgumentException("Invalid JSON limits");

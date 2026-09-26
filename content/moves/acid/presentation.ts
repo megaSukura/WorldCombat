@@ -4,7 +4,7 @@
  * 一句话：施法者口边鼓起一囊冒泡的强酸 → 一团酸glob低弧抛出、一路滴落 → 落地炸开溅绿、泼到周围敌人身上 →
  * 地面留下一滩持续冒泡的腐蚀酸池。
  * 色相家族：酸绿（0x5B8C22 / 0x9BD34A）为主，近黄绿（0xD6F08A）只给溅点；气泡收在灰绿。
- * 拍子：起 windup（鼓酸）→ 泼 throw（低弧）→ 击 splash（炸开）→ 留 pool（酸池冒泡）。
+ * 拍子：起 windup（鼓酸）→ 泼 throw（低弧）→ 击 splash（炸开）→ 留 pool（酸池冒泡）／空 fizzle（无处落脚只散雾）。
  * 范围：酸池发射范围直接读取真实半径；轮廓与持续冒泡由场地效果拥有。
  * 运动：酸glob沿抛物线飞行（服务端重力），落地后酸滴向外抛、贴地摊开。
  * 数：酸滴数绑定 `data.drops`（特攻与等级换算），强度绑定 `data.intensity`（单发威力 / 40）。
@@ -110,6 +110,31 @@ const AcidDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.0, 0.015],
                     lifetime: [8, 12], size: [0.2, 0.08],
                     color: 0x5B8C22, alpha: [0.55, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        fizzle: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "fizzle_mist", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "up", speed: [0.02, 0.07],
+                    lifetime: [8, 16], size: [0.16, 0.03],
+                    color: 0x5B8C22, alpha: [0.4, 0], light: "world", maxParticles: 16
+                },
+                {
+                    name: "fizzle_drops", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
+                    burst: { count: { data: "drops", fallback: 8 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.03, 0.1], spread: 26,
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [8, 16], size: [0.07, 0.01],
+                    color: 0x9BD34A, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         }

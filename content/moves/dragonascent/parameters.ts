@@ -6,8 +6,8 @@
  *   「从天空中急速下降攻击对手。自己的防御和特防会降低」。
  *
  * 翻译：把「升空后从天而降砸下来」翻成即时战斗里的一次**垂直俯冲**——先窜上 `altitude` 高，再从正上方把整个
- *   身体砸向目标，落地一圈冲击波把周围的人一起震开、地面留下裂石。它是全族里唯一要走「升空」这一幕的招，
- *   高度与俯冲速度都写进参数；弃守的根据是「离了天、落地那一刻门户大开」——在提交那一刻付。
+ *   身体砸向落点，落地一圈冲击波把周围的人一起震开。途中接触与落地共享本招的已命中集合：同一对象不会连吃两份满额。
+ *   它是全族里唯一要走「升空」这一幕的招，高度与俯冲速度都写进参数；弃守的根据是「离了天、落地那一刻门户大开」——在提交那一刻付。
  *
  * 与同族分开：近身战贴脸连打、突飞猛扑贴地冲、铠农炮在远处；与勇鸟猛攻比：勇鸟从空中沿一条线水平穿过目标、
  *   能串起一串；画龙点睛是垂直下砸、落点一圈冲击波，只照顾落点附近，且必须先爬升。
@@ -161,7 +161,6 @@ namespace PokemonSkills {
         { key: "description.1", values: ["reach", "altitude", "pace", "radius"] },
         { key: "description.shock", values: [] },
         { key: "description.2", values: ["guardLoss","poiseLoss"] },
-        { key: "description.ground", values: [] },
         { key: "broad.on", values: ["share","shock"], when: function (context) { return read(context.detail.values, ["broad"]) === true; } },
         { key: "broad.off", values: [], when: function (context) { return read(context.detail.values, ["broad"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

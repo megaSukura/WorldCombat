@@ -1,60 +1,32 @@
-/**
- * 影子分身 / doubleteam — 执行组织。
- *
- * 核心念头：用极快的身法在原地留下一圈与本体同步的残影；来袭的攻击先打在残影上，残影替本体挨下这一击，
- * 挨得越多越淡，磨完就散。它不给本体加血、不加防，只是把伤害引到影子上。
- *
- * 出手：短起手（windup 播加速预告）后提交；对自身施放，不需要目标。
- * 命中：提交后挂共享身份 world_combat:status/doubleteam 的 world_combat:doubleteam_mirror（移速小幅提升），
- *       宝可梦再抬一级闪避等级；替打预算交给共享 GuardEffects 的 pool 模式（保护本身用的是同一套机制）。
- * 持续：残影存续期由该 MobEffect 承担；GuardEffects 每 8 刻 pulse 一次续播画面，挨打时播放碎裂。
- * 结束：预算磨完即碎（collapse）；状态被提前解掉（牛奶、清除）时在同一刻收回 guard。
- * 反制：残影只吃伤害、不挡控制与状态；预算有限，磨穿后剩下的照常落到本体。
- */
+/** A short real sidestep leaves attackable, one-hit afterimages at visited positions. */
 namespace PokemonSkills {
-    function doubleteamAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
-
-    GuardEffects.register(doubleteamRule, {
-        pulse: function (effect, state) {
-            const world = effect.world(), body = world.observe(effect.target());
-            if (body === null) return;
-            const initial = (<any>state).initial || state.capacity || 1;
-            const copies = Math.max(1, Math.round((<any>state).copies || 1));
-            WorldFeedback.keep(world, "doubleteam-hold", doubleteamScene, 1, body.position(),
-                { moment: "sustain", target: String(effect.target().ref()), copies: copies,
-                    intensity: Math.max(0.15, Math.min(1, state.capacity / initial)) }, 20);
-        },
-        guarded: function (effect, state, amount, incoming) {
-            const world = effect.world(), target = effect.target(), body = world.observe(target);
-            if (body === null) return;
-            const initial = (<any>state).initial || state.capacity || 1;
-            const copies = Math.max(1, Math.round((<any>state).copies || 1));
-            const blocked = Math.round(amount * 10) / 10;
-            const remaining = Math.round(state.capacity * 10) / 10;
-            const intensity = Math.max(0.2, Math.min(1, state.capacity / initial));
-            WorldFeedback.emit(world, doubleteamScene, 1, body.position(),
-                { moment: "shatter", target: String(target.ref()), copies: copies, blocked: blocked, remaining: remaining, intensity: intensity }, 26);
-            WorldFeedback.text(world, doubleteamAbove(body.position()),
-                "world_combat.move.doubleteam.text.shatter", [blocked, remaining], 30);
-            world.sound("cobblemon:move.doubleteam.actor", body.position(), 12, "{}");
-            if (state.capacity <= 0) {
-                WorldFeedback.emit(world, doubleteamScene, 1, body.position(),
-                    { moment: "collapse", target: String(target.ref()), copies: copies }, 32);
-                WorldFeedback.text(world, doubleteamAbove(body.position()), "world_combat.move.doubleteam.text.collapse", [], 30);
-                world.sound("minecraft:entity.illusioner.mirror_move", body.position(), 14, "{}");
-            }
-        }
-    });
-
+    function doubleteamAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0,1,0)); }
+    const doubleteamBody="world_combat:doubleteam_body";
+    WorldBodies.define(doubleteamBody,{maxTicks:600,start:function(brain){
+        const world=brain.world(),body=world.observe(brain.target()); if(!body)return;
+        WorldFeedback.onEffect(world,brain.id(),"doubleteam:body:"+brain.id(),doubleteamScene,1,body.position(),{moment:"sustain",target:String(brain.target().ref()),copies:1,intensity:.5});
+    },tick:{every:4,handler:function(brain){
+        const world=brain.world(),data=JSON.parse(brain.state()),owner=world.actor(data.owner);
+        if(!owner || !world.valid(owner) || !MobEffects.matches(world,owner,data.carrier))brain.end();
+    }},operations:{"world_combat:doubleteam/attracted":function(brain){
+        const data=JSON.parse(brain.state()),input=JSON.parse(brain.input());data.attracted.push(input.ref);brain.state(JSON.stringify(data));
+    }},end:function(brain){
+        const world=brain.world(),data=JSON.parse(brain.state()),self=brain.target(),owner=world.actor(data.owner);
+        data.attracted.forEach(function(ref:string){const enemy=world.actor(ref),body=enemy&&world.observe(enemy),target=body&&body.attacking();
+            if(enemy&&target&&String(target.ref())===String(self.ref()))world.target(enemy,owner&&world.valid(owner)?owner:null);});
+        WorldFeedback.emit(world,doubleteamScene,1,WorldCombat.point(data.position[0],data.position[1],data.position[2]),
+            {moment:"shatter",intensity:.65,copies:1},18);
+    }});
     define({
+        freeMovement: true,
         id: doubleteamId,
         cooldownParameter: "recharge",
         name: "影子分身",
-        description: "用极快的身法留下数个与本体同步的残影；来袭的攻击先打在残影上，残影替本体挨下这一击，磨完就散，身法也随之更快。它不加血、不加防，只把伤害引到影子上。",
+        description: "向选定侧方短移，在实际经过的位置留下数个一击即破的假身；追兵可能扑向旧位置，本体仍正常承受命中的伤害。保留短时加速与原闪避提升。",
         uses: ["在被集火前先手留影，把伤害引到影子上", "被追击时借加速脱身，让残影替你挨打", "为换位或撤退争取几秒"],
-        kind: "self",
-        range: 0,
-        maxRange: 0,
+        kind: "motion",
+        range: 4,
+        maxRange: 5,
         prepare: 12,
         active: 1,
         recover: 6,
@@ -71,7 +43,7 @@ namespace PokemonSkills {
                 prepare: Math.round(p(doubleteamId, "tempo", context)) + (swarm ? 3 : -2),
                 recover: Math.round(p(doubleteamId, "aftercast", context)),
                 cooldown: Math.round(p(doubleteamId, "recharge", context) * (swarm ? 1.2 : 0.75)),
-                range: 0,
+                range: 4,
                 active: 1
             };
         },
@@ -82,39 +54,47 @@ namespace PokemonSkills {
         },
         indicator: function () { return { radius: 1.4, geometry: "circle", style: "afterimage", color: 0x9AA8C8, label: "影子分身" }; },
         execute: function (action, move, config, done) {
-            const world = action.world(), actor = action.actor(), body = world.observe(actor);
-            if (body === null) { done(action); return; }
-            const swarm = config.deploy !== "swift";
-            const copies = Math.max(1, Math.min(5, Math.round(p(doubleteamId, "copies", action)) + (swarm ? 1 : -1)));
-            const window = Math.max(40, Math.round(p(doubleteamId, "mirrorWindow", action) * (swarm ? 1.25 : 0.8)));
-            const fraction = Math.max(0.1, Math.min(1, p(doubleteamId, "mirrorPool", action) * (swarm ? 1.25 : 0.8)));
-            const motes = Math.max(4, Math.round(p(doubleteamId, "motes", action)));
-            const capacity = Math.max(1, body.maxHealth() * fraction);
-            MobEffects.apply(world, actor, doubleteamEffect, window, 0);
-            if (String(actor.domain()) === "cobblemon") NativeEffects.boost(world, actor, "evasion", 1);
-            const guard: any = { rule: doubleteamRule, mode: "pool", capacity: capacity, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: 0, initial: capacity, copies: copies, window: window };
-            GuardEffects.apply(world, actor, guard, window);
-            if (!swarm) MobEffects.apply(world, actor, "minecraft:speed", window, 1);
-            WorldFeedback.emit(world, doubleteamScene, 1, body.position(),
-                { moment: "deploy", target: String(actor.ref()), copies: copies, motes: motes,
-                    scale: Math.max(0.6, Math.min(2, window / 180)) }, 40);
-            WorldFeedback.text(world, doubleteamAbove(body.position()), "world_combat.move.doubleteam.text.deploy", [copies], 40);
-            sound(action, "cobblemon:move.doubleteam.actor");
-            done(action);
+            const world = action.world(), actor = action.actor(), body = world.observe(actor); if (!body) { done(action); return; }
+            const swarm = config.deploy !== "swift", copies = Math.max(1, Math.min(5, Math.round(p(doubleteamId,"copies",action)) + (swarm ? 1 : -1)));
+            const window = Math.max(40,Math.round(p(doubleteamId,"mirrorWindow",action)*(swarm ? 1.25 : .8)));
+            const distance = Math.min(4,p(doubleteamId,"mirrorPool",action)*(swarm ? .85 : 1.15));
+            const heading = WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()),action.direction()), path = [body.position()];
+            const carrier = MobEffects.apply(world,actor,doubleteamEffect,window,0);
+            if (!carrier) { done(action); return; }
+            if (String(actor.domain()) === "cobblemon") NativeEffects.boost(world,actor,"evasion",1);
+            if (!swarm) MobEffects.apply(world,actor,"minecraft:speed",window,1);
+            let travelled=0;
+            function deploy(current: CombatAction): void {
+                const scope=current.world(), created: CombatActor[]=[];
+                for (let i=0;i<copies;i++) {
+                    const index=Math.min(path.length-2,Math.floor(i*Math.max(1,path.length-1)/copies)); if(index<0)break;
+                    const at=path[index].minus(WorldCombat.point(0,body!.height()/2,0));
+                    if(!scope.freeSpace(at,body!.width(),body!.height()))continue;
+                    const shadow=WorldBodies.spawn(scope,at,{appearance:{sprite:"cobblemon:generic/orb/xsfadeorblite",scale:Math.max(.7,body!.height()),tint:0x8898BC},
+                        size:[body!.width(),body!.height()],health:1,gravity:false,pushable:false,knockbackResistance:1,silent:true},doubleteamBody,
+                        { owner:String(actor.ref()),carrier:MobEffects.anchor(carrier!),attracted:[],position:[at.x(),at.y(),at.z()] },window);
+                    created.push(shadow);
+                }
+                const nearby=scope.query(path[0],7,true);
+                for(let i=0;i<nearby.length && created.length;i++) {
+                    const enemy=nearby[i], facts=scope.observe(enemy); if(!facts || scope.friendly(enemy))continue;
+                    const attacking=facts.attacking(); if(!attacking || String(attacking.ref())!==String(actor.ref()))continue;
+                    const shadow=created[i%created.length];
+                    if(scope.target(enemy,shadow))WorldBodies.operate(scope,shadow,"world_combat:doubleteam/attracted",{ref:String(enemy.ref())});
+                }
+                WorldFeedback.emit(scope,doubleteamScene,1,current.origin(),{moment:"deploy",copies:created.length,motes:p(doubleteamId,"motes",current)},24);
+                WorldFeedback.text(scope,doubleteamAbove(current.origin()),"world_combat.move.doubleteam.text.deploy",[created.length],24);
+                done(current);
+            }
+            function shift(current: CombatAction): void {
+                const step=Math.min(.65,distance-travelled), before=current.origin();
+                const moved=current.world().displace(current.actor(),heading.scale(step));
+                travelled+=moved;path.push(current.origin());
+                if(moved<step-.02 || travelled>=distance-.01){deploy(current);return;}
+                current.after(1,shift);
+            }
+            sound(action,"minecraft:entity.illusioner.mirror_move"); shift(action);
         }
     });
 
-    // 状态被提前解掉时（牛奶、清除、被取代），在同一刻收回替打预算，避免残影消失了还在挡伤害。
-    WorldCombat.on("world_combat:move_doubleteam/dispel", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== doubleteamEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const guards = world.effects(actor, "world_combat:guard");
-        for (let i = 0; i < guards.length; i++) {
-            const state = JSON.parse(String(guards[i].data()));
-            if (state.rule === doubleteamRule) world.operation(guards[i].id(), "world_combat:dispel", "{}");
-        }
-    });
 }

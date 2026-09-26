@@ -3,9 +3,9 @@
  *
  * 场面：只会伏特替换的小磁怪（Magnemite，30 级，原生真实学习者）对六格外只会跃起、不会还手的卡比兽
  *   （Snorlax，40 级），晴天平地。必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（电弧命中）；
- *   施法者移动过（放电后瞬移到落点）。
+ *   施法者移动过（放电后瞬移到落点）。选取为 `kind: "aim"`，这里交给 AI 按仇恨推荐目标。
  * 默认「余电式」会在原地留下一片电荷区；对手是否踏进去被电到由走位决定，写进 note。
- * 真正的「和后备宝可梦替换」需要共享入口，本场景只验证可观察到的部分（见报告共享前置）。
+ * 本场景的施法者没有后备队伍，验证的是「无后备仍能场内闪退」。
  */
 Smoke.scenario("voltswitch", function (stage) {
     stage.fill([-10, -1, -10], [10, -1, 10], "minecraft:stone");
@@ -20,7 +20,7 @@ Smoke.scenario("voltswitch", function (stage) {
         stage.expect(stage.casts("voltswitch", caster) > 0, "volt switch was committed");
         stage.expect(stage.damageTo(foe) > 0, "the arc connected");
         stage.expect(stage.travelled(caster) > 0.5, "the user blinked to a new spot");
-        stage.note("电弧威力与射程随特攻、余电区随特攻与等级、切换距离随速度；默认余电式在原位置留下一片电荷区。对手是否踏进电荷区被电到由走位决定。真正的后备宝可梦替换需要共享的入场／收回入口。", {
+        stage.note("电弧威力与射程随特攻、余电区随特攻与等级、切换距离随速度；默认余电式在原位置留下一片电荷区，每 20 刻按电系伤害语义电击范围内非友方（地面系免疫）。一次施放只瞬移一次，落点先核对安全空间；无后备时留在场内。对手是否踏进电荷区被电到由走位决定。", {
             casts: stage.casts("voltswitch", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             travelled: Math.round(stage.travelled(caster) * 10) / 10,

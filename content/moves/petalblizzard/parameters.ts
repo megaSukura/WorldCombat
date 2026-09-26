@@ -18,7 +18,7 @@
  *   draw         第一阵把目标向中心拽 0.3 格 + 物攻偏移。
  *   lash         后几阵把目标向外甩 0.42 格 + 物攻偏移。
  *   petals       卷起的花瓣数 30 + 物攻 ×0.3 + 等级（同时驱动画面密度与落地花瓣数）。
- *   settleTicks  落地花瓣停留 200 刻 + 等级。
+ *   settleTicks  落瓣余韵 44 刻 + 等级 ×0.4（内部视觉参数，只驱动落瓣散尽的时长，不留在世界里）。
  *
  * 配置 `cyclone`（回旋式）：开启＝风暴收窄到 0.72 倍、每阵 ×1.28、多一阵、拽与甩都更猛，但起手与冷却更长；
  *   关闭＝风暴更广（×1.15）、每阵更轻、收手更快，适合一次罩一小片、追散开的目标。两向各有适用局面。
@@ -87,10 +87,11 @@ namespace PokemonSkills {
                 unit: "片",
                 description: "一次风暴卷起的花瓣数；随物攻与等级增长，也决定画面的密度与落到地上的花瓣数量。"
             }),
-        /** 落地花瓣停留：200 + 等级 ×1.5；夹 140..360。 */
-        settleTicks: seconds(
-            F.base(200).plus(F.level().times(1.5)).clamp(140, 360).round(0),
-            "落地花瓣停留", "被甩出去的花瓣落在地面停留多久；到期花瓣消失、原方块回来。"),
+        /** 落瓣余韵：44 + 等级 ×0.4；夹 40..90。内部视觉参数：只驱动散落花瓣渐消的时长，不改变世界方块。 */
+        settleTicks: formula(
+            F.base(44).plus(F.level().times(0.4)).clamp(40, 90).round(0),
+            "落瓣余韵", { presentation: "seconds", visible: false,
+                description: "内部视觉参数：被甩出去的花瓣落地后散尽的时长。它不改变世界方块，玩家说明里不展示。" }),
         maxTargets: hidden(10)
     });
 
@@ -104,7 +105,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["petal","gusts","maxTargets"] },
         { key: "description.1", values: ["stormRadius", "gustTicks"] },
         { key: "description.2", values: ["draw", "lash"] },
-        { key: "description.3", values: ["petals","settleTicks"] },
+        { key: "description.3", values: [] },
         { key: "cyclone.on", values: [], when: function (context) { return read(context.detail.values, ["cyclone"]) === true; } },
         { key: "cyclone.off", values: [], when: function (context) { return read(context.detail.values, ["cyclone"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

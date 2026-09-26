@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.bravebird.summary": "收翅弹起到低空，沿一条斜线俯冲穿过目标、落在它身后；线上遇到的敌人依次受击，每穿中一人各按比例反震自己。高掠式更重更远，低掠式更快更安全。",
-  "worldcombat.skill.bravebird.description.0": "俯冲线上每个敌人各挨一记约 %1$s 点的接触伤害；整条斜线长 %2$s 格、俯冲速度 %3$s 格每刻、判定半径 %4$s 格。",
+  "worldcombat.skill.bravebird.summary": "收翅弹起到低空，沿一条斜线俯冲穿过所选落点、落在它后方；线上遇到的敌人依次受击，每穿中一人各按比例反震自己。可点选落点或只给方向空掠，实际受地形限制。高掠式更重更远，低掠式更快更安全。",
+  "worldcombat.skill.bravebird.description.0": "俯冲线上每个敌人各挨一记约 %1$s 点的接触伤害；整条斜线长 %2$s 格、俯冲速度 %3$s 格每刻、判定半径 %4$s 格。落点只预告可达路线，撞墙或穿满上限即落地。",
   "worldcombat.skill.bravebird.description.1": "起跳高度 %1$s 格，头顶受阻时从够得到的高度出发；每穿中一人按该次伤害的 %2$s 反震自己，一趟线上最多穿 %3$s 人、被穿过的人沿俯冲方向被带开 %4$s 格。穿满上限、走完路程或被地形挡下就落地收势。",
   "worldcombat.skill.bravebird.high.on": "高掠式：起跳更高、俯冲更重更远，但反伤更重、起手与冷却更久。",
   "worldcombat.skill.bravebird.high.off": "低掠式：贴地掠过，更快更安全，威力与射程收一档。",

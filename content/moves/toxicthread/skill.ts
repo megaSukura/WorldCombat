@@ -18,9 +18,9 @@ namespace PokemonSkills {
         id: toxicthreadId,
         cooldownParameter: "recharge",
         name: "毒丝",
-        description: "吐出一缕带毒的丝缠住对手，使其中毒并降低速度；命中后可以沿丝线把对手拽近，或就地把它钉住。丝会飞，掩体与走位能躲开。",
+        description: "吐出一缕带毒的丝缠住对手，使其中毒并降低速度；命中后可以沿丝线把对手拽近，或就地把它钉住。丝会飞，掩体与走位能躲开。拽得动才会被拉近，拽不动的目标只会吃毒与减速。",
         uses: ["先下手削弱高速目标", "把扑上来的近战拽乱站位", "给难缠的对手叠一层持续掉血的中毒"],
-        kind: "enemy",
+        kind: "aim",
         range: 5,
         maxRange: 7,
         prepare: 8,
@@ -64,6 +64,11 @@ namespace PokemonSkills {
             const speed = Math.max(0.5, p(toxicthreadId, "strandSpeed", action));
             const radius = Math.max(0.12, p(toxicthreadId, "strandRadius", action));
             const threads = Math.max(8, Math.round(p(toxicthreadId, "threads", action)));
+            // 提交时锁定发射点与方向；命中按实际碰撞，落空按毒丝自己飞到的位置垂下。
+            const launch = action.origin();
+            const offset = action.targetPosition().minus(launch);
+            const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
+            const landing = launch.plus(direction.scale(action.range()));
             sound(action, "cobblemon:move.stringshot.actor");
             let resolved = false;
             function resolve(current: CombatAction, point: CombatPoint, entity: CombatActor | null): void {
@@ -71,26 +76,48 @@ namespace PokemonSkills {
                 resolved = true;
                 const scope = current.world();
                 if (entity === null || !scope.valid(entity) || scope.friendly(entity)) {
+                    // 空点/墙挡：毒渍只在落点做短装饰，不产生任何效果。
                     WorldFeedback.emit(scope, toxicthreadScene, 1, point, { moment: "droop", threads: threads }, 20);
                     return;
                 }
-                MobEffects.apply(scope, entity, toxicthreadEffect, venom, 0);
-                NativeEffects.boost(scope, entity, "spe", -drop);
-                const poisoned = CombatStatus.inflict(scope, entity, "poison", venom);
                 const at = scope.observe(entity);
                 if (at === null) return;
+                // 毒与慢先各自按回执落地。
+                MobEffects.apply(scope, entity, toxicthreadEffect, venom, 0);
+                const dropped = -NativeEffects.boost(scope, entity, "spe", -drop);
+                const poisoned = CombatStatus.inflict(scope, entity, "poison", venom);
+                // 再按实际位移决定收丝或钉住；拉不动就收成松丝，不再假装牵引。
                 const selfAt = scope.observe(current.actor());
+                let moved = 0, pinned = false;
                 if (selfAt !== null) {
-                    const line = selfAt.position().minus(at.position());
-                    if (reel && line.length() > 0.05) scope.displace(entity, line.unit().scale(pull));
-                    else if (anchor > 0) WorldEffects.apply(scope, entity, "rooted", {}, anchor);
+                    if (reel) {
+                        const line = selfAt.position().minus(at.position());
+                        if (line.length() > 0.05) moved = scope.displace(entity, line.unit().scale(pull));
+                    } else if (anchor > 0) {
+                        pinned = WorldEffects.apply(scope, entity, "rooted", {}, anchor) > 0;
+                    }
                 }
-                WorldFeedback.emit(scope, toxicthreadScene, 1, at.position(),
-                    { moment: "latch", path: [String(current.actor().ref()), String(entity.ref())], target: String(entity.ref()),
-                        drop: drop, threads: threads, reel: reel ? 1 : 0, poisoned: poisoned ? 1 : 0, scale: 1 }, 26);
-                WorldFeedback.text(scope, toxicthreadAbove(at.position()), "world_combat.move.toxicthread.text.latch", [drop], 34);
+                const nowAt = scope.observe(entity);
+                const endpoint = nowAt === null ? at.position() : nowAt.position();
+                const slack = reel ? moved < Math.max(0.08, pull * 0.25) : (anchor > 0 && !pinned);
+                const poisonTufts = poisoned ? threads : 0;
+                const head = selfAt === null ? endpoint : selfAt.position();
+                let path: any[] = [String(current.actor().ref()), String(entity.ref())];
+                if (slack) {
+                    const mid = WorldCombat.point((head.x() + endpoint.x()) / 2, Math.min(head.y(), endpoint.y()) + 0.25, (head.z() + endpoint.z()) / 2);
+                    path = [String(current.actor().ref()), [mid.x(), mid.y(), mid.z()], String(entity.ref())];
+                }
+                WorldFeedback.emit(scope, toxicthreadScene, 1, endpoint,
+                    { moment: slack ? "slack" : "latch", path: path, target: String(entity.ref()),
+                        drop: dropped > 0 ? drop : 0, threads: threads, poisonTufts: poisonTufts,
+                        reel: reel ? 1 : 0, poisoned: poisoned ? 1 : 0,
+                        moved: Math.round(moved * 100) / 100, drag: Math.round(moved * 6), scale: 1 }, 26);
+                if (dropped > 0)
+                    WorldFeedback.text(scope, toxicthreadAbove(endpoint), "world_combat.move.toxicthread.text.latch", [drop], 34);
+                else
+                    WorldFeedback.text(scope, toxicthreadAbove(endpoint), "world_combat.move.toxicthread.text.noslow", [], 30);
                 if (!poisoned)
-                    WorldFeedback.text(scope, toxicthreadAbove(at.position()), "world_combat.move.toxicthread.text.immune", [], 30);
+                    WorldFeedback.text(scope, toxicthreadAbove(endpoint), "world_combat.move.toxicthread.text.immune", [], 30);
             }
             const strand = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, lifetime: 50,
@@ -100,7 +127,7 @@ namespace PokemonSkills {
                     resolve(current, hit.position(), target !== null && !current.world().friendly(target) ? target : null);
                 }
             }, function (current) {
-                resolve(current, current.targetPosition(), null);
+                resolve(current, landing, null);
                 done(current);
             });
             WorldFeedback.emit(world, toxicthreadScene, 1, origin,

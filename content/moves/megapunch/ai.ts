@@ -33,6 +33,14 @@ namespace PokemonSkills {
             let score = 22;
             if (CompanionBehavior.ai<boolean>(capability, "preferWounded", true) && CompanionBehavior.ratio(target) < 0.5) score += 12;
             if (distance <= capability.data.range * 0.7) score += 6;
+            if (context.facts.grounded) score += 4;
+            const planted = CompanionBehavior.ai<boolean>(capability, "planted", false);
+            if (planted) {
+                // 扎根式收招长，挑一个有安全起手窗口的目标：对方正咬着别人、或刚被打得踉跄时才值得停步出拳。
+                const busyElsewhere = !!target.attacking && target.attacking !== self.ref;
+                if (busyElsewhere || target.hurtAgo < 20) score += 6;
+                else if (target.attacking === self.ref) score -= 8;
+            }
             return score;
         }
     });

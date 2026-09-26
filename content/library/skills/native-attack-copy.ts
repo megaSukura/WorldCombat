@@ -19,4 +19,21 @@ namespace PokemonSkills {
         };
         const id = moves[attack.type]; return id && skills[id] ? id : "";
     }
+    /** The unit keeps its own waiting/recognition visuals; this draws the actual supported native replay. */
+    export function playNativeCopy(action: CombatAction, replay: NativeAttackProjection.Replay, move: string,
+        multiplier: number, scene: string, recovery: number, textKey: string): void {
+        const scenes = WorldFeedback.actionScenes(scene);
+        WorldFeedback.text(action.world(), action.origin(), textKey, [], 24);
+        NativeAttackProjection.play(action, replay, { move: move, multiplier: multiplier,
+            show: (current, phase, at, projectile) => {
+                const direction = current.targetPosition().minus(current.origin());
+                const heading = direction.length() > .001 ? direction.unit() : current.direction();
+                const data = { moment: phase === "contact" ? "native_contact" : phase === "launch" ? "native_flight" : phase === "hit" ? "native_hit" : "native_miss",
+                    projectile: projectile || "", direction: [heading.x(), heading.y(), heading.z()] };
+                if (phase === "contact" || phase === "launch") scenes.show(current, "projection", at, data);
+                else WorldFeedback.emit(current.world(), scene, 1, at, data, 12);
+            },
+            done: current => scenes.finish(current, settled => settled.after(Math.max(1, Math.round(recovery)), end => end.finish()))
+        });
+    }
 }

@@ -1,16 +1,21 @@
-/**
- * 蓄力 的伙伴 AI 用途：这是这招自己的一套出手计划。
- *
- * 什么局面有意义：有威胁、且在 ai.maxChase 内、且有交战需求时，先连蓄几层再压上去。
- * 什么时候最想出手：层数还没到 ai.hoardTo（默认 2）且威胁还在 ai.minGap 之外时 priority 106，抢在共享交战次序前
- *   连压几口；已经攒够就退回普通次序先交战，只在空隙里补到 3 层；贴身（小于 minGap）时让位给普通攻击。
- * 对谁出手：自己；不需要接近，由共用任务直接施放。蓄满 3 层后本招会被拒绝（full-charge），不再尝试。
- * 放完之后：每层写进公共能力阶梯与光壳窗口；层数被对手打掉后回到上面的判断，重新想补。
- */
+/** Store toward the chosen reserve; full stores are spent only when the small release helps. */
 namespace PokemonSkills {
     CompanionBehavior.registerFact("world_combat:move_stockpile/layers", function (access, actor, _argument) {
         return stockpileLayers(access, actor);
     });
+
+    CompanionBehavior.registerFact("world_combat:move_stockpile/consumers", function (access, actor) {
+        return { swallow: NativeLoadout.hasEquipped(access, actor, "swallow"), spitup: NativeLoadout.hasEquipped(access, actor, "spitup") };
+    });
+    function stockpileReleaseUseful(context: WorldBehavior.Context, item: WorldBehavior.Capability): boolean {
+        const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
+        const consumers = CompanionBehavior.fact<any>(context, "world_combat:move_stockpile/consumers", self) || {};
+        const ratio = CompanionBehavior.ratio(self);
+        if (consumers.swallow && ratio < 0.7 || consumers.spitup && ratio >= 0.7) return false;
+        return item.data.config.break === "burst"
+            ? !!threat && CompanionBehavior.distance(self.point, threat.point) <= 3 && threat.visible
+            : ratio < 0.9;
+    }
 
     CompanionBehavior.registerUse("stockpile", {
         protocols: ["world_combat:fortify"],
@@ -18,7 +23,7 @@ namespace PokemonSkills {
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
-            if ((CompanionBehavior.fact<number>(context, "world_combat:move_stockpile/layers", self) || 0) >= stockpileMaxLayers) return false;
+            if ((CompanionBehavior.fact<number>(context, "world_combat:move_stockpile/layers", self) || 0) >= stockpileMaxLayers) return stockpileReleaseUseful(context, capability);
             if (!threat) return false;
             if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
@@ -27,8 +32,9 @@ namespace PokemonSkills {
         approachTarget: function (context) { return CompanionBehavior.source(context); },
         priority: function (context, capability, _target) {
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return 0;
             const self = CompanionBehavior.source(context);
+            if ((CompanionBehavior.fact<number>(context, "world_combat:move_stockpile/layers", self) || 0) >= stockpileMaxLayers) return stockpileReleaseUseful(context, capability) ? 85 : 0;
+            if (!threat) return 0;
             if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return 0;
             const layers = CompanionBehavior.fact<number>(context, "world_combat:move_stockpile/layers", self) || 0;
             if (layers < CompanionBehavior.ai<number>(capability, "hoardTo", 2)) return 106;

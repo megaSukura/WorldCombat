@@ -1,16 +1,30 @@
 /**
  * 灵骚 / poltergeist —— 注册与动作。
  *
- * 念头三幕：一幕凝神（提交前 `windup`，掌心聚起幽火，目标的道具先是轻轻一颤）→ 一幕扯离（提交后那件道具
- * 被攥离目标手边，贴图沿一条偏出的弧线飞出）→ 一幕砸回（道具折返、砸在主人身上，命中结算物理伤害并顶开；
- * bind 开启时道具贴着目标不放、使其减速）。目标空手时起手即失败（`ready` 返回 no-item，不花 PP、不进冷却）。
- * 道具只是被操纵，从不被取走，命中后仍在对方手里。
+ * 念头三幕：一幕凝神（提交前 `windup`，掌心聚起幽火，目标的道具先是轻轻一颤，同时记下它的完整快照）→
+ * 一幕扯离（提交后复核最初那份快照仍原样，那件道具才被攥离目标手边，贴图沿一条偏出的弧线飞出）→
+ * 一幕砸回（道具折返、砸在主人身上，命中结算物理伤害并顶开；bind 开启时道具贴着目标不放、使其减速）。
+ * 目标空手时起手即失败（`ready` 返回 no-item，不花 PP、不进冷却）；蓄力间目标放下或换掉那件道具同样使这次操控落空、
+ * 不生成弹体，避免画面让玩家以为东西已掉地。道具只是被操纵，从不被取走，命中后仍在对方手里。
  */
 namespace PokemonSkills {
     const poltergeistScene = "world_combat:move_poltergeist";
     const poltergeistSlamText = "world_combat.move.poltergeist.text.slam";
     const poltergeistBindText = "world_combat.move.poltergeist.text.bind";
     const poltergeistFizzleText = "world_combat.move.poltergeist.text.fizzle";
+    /** 蓄力开始时观察到的持有物快照，存在本次动作内供提交时复核。 */
+    const poltergeistHeldKey = "world_combat:poltergeist/held";
+
+    function poltergeistRememberHeld(action: CombatAction, target: CombatActor): void {
+        var held = poltergeistHeldOf(action.sense(), target);
+        if (held !== null) action.data(poltergeistHeldKey, JSON.stringify(held));
+    }
+
+    function poltergeistStoredHeld(action: CombatAction): PoltergeistHeld | null {
+        var raw = action.data(poltergeistHeldKey);
+        if (raw === null) return null;
+        try { return JSON.parse(raw); } catch (error) { return null; }
+    }
 
     function poltergeistThrow(action: CombatAction, target: CombatActor, held: PoltergeistHeld, done: (current: CombatAction) => void): void {
         var world = action.world(), center = world.observe(target);
@@ -89,9 +103,14 @@ namespace PokemonSkills {
                 range: p("poltergeist", "reach", context) };
         },
         ready: function (action: CombatAction, config: any): string {
-            var target = action.target();
-            if (!target) return "";
-            return poltergeistHeldOf(action.sense(), target) !== null ? "" : "no-item";
+            var target = action.target(), world = action.sense();
+            if (!target || !world.valid(target)) return "no-target";
+            var held = poltergeistHeldOf(world, target);
+            if (held === null) return "no-item";
+            var prior = poltergeistStoredHeld(action);
+            if (prior !== null && !poltergeistSameHeld(prior, held)) return "held-changed";
+            action.data(poltergeistHeldKey, JSON.stringify(held));
+            return "";
         },
         windup: function (action: CombatAction, config: any, prepare: number) {
             var world = action.sense(), actor = action.actor(), target = action.target();
@@ -99,6 +118,7 @@ namespace PokemonSkills {
             action.present("world_combat:poltergeist:" + action.id(), poltergeistScene, 1, action.origin(),
                 JSON.stringify({ moment: "channel", scale: scale, bind: !!(config && config.bind) }));
             if (target) {
+                poltergeistRememberHeld(action, target);
                 var theirs = world.observe(target);
                 if (theirs !== null) action.present("world_combat:poltergeist:mark:" + action.id(), poltergeistScene, 1, theirs.position(),
                     JSON.stringify({ moment: "shiver", target: String(target.ref()) }));
@@ -108,8 +128,9 @@ namespace PokemonSkills {
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
             var target = action.target(), world = action.world();
             if (!target || !world.valid(target)) { done(action); return; }
-            var held = poltergeistHeldOf(world, target);
-            if (held === null) {
+            var held = poltergeistHeldOf(world, target), prior = poltergeistStoredHeld(action);
+            if (held === null || (prior !== null && !poltergeistSameHeld(prior, held))) {
+                poltergeistStallSet(world, action.actor(), target, 400);
                 WorldFeedback.emit(world, poltergeistScene, 1, action.origin(), { moment: "fizzle" }, 22);
                 WorldFeedback.text(world, action.origin().plus(WorldCombat.point(0, 1.1, 0)), poltergeistFizzleText, [], 26);
                 done(action);

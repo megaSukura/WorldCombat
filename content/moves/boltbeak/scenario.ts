@@ -12,8 +12,10 @@ Smoke.scenario("boltbeak", function (stage) {
     stage.time("day");
     stage.weather("clear");
     const caster = stage.pokemon({ species: "pikachu", level: 45, moves: ["boltbeak"], at: [-2, 0, 0] });
-    const target = stage.pokemon({ species: "rattata", level: 22, moves: ["tackle"], at: [2, 0, 0] });
+    const target = stage.pokemon({ species: "rattata", level: 22, moves: ["tackle"], at: [1.5, 0, 0] });
     stage.hostile(caster, target);
+    // 固定靶：让直线先手啄在确定距离内可达，读数不被逃跑走位干扰。
+    stage.noai(target);
     stage.until(600, function () { return stage.casts("boltbeak", caster) >= 1 && stage.damageTo(target) > 0; }, function () {
         stage.expect(stage.casts("boltbeak", caster) >= 1, "pikachu committed bolt beak");
         stage.expect(stage.damageTo(target) > 0, "the electric peck dealt damage");

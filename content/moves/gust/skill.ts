@@ -6,9 +6,12 @@
  *
  * 三幕（提交前只播预告）：
  *   起（gather，提交前）：翅缘卷起一环气旋、气团朝翅尖收，只播预告。
- *   飞（flight，提交后）：风弹沿直线弹出、小幅追踪目标；飞过的路上拖着螺旋的气团。
- *   击（burst / dissipate）：命中活物结算一记 `blast` 特殊伤害，并沿背离施法者的方向把它推开
+ *   飞（flight，提交后）：风弹沿瞄准方向弹出、小幅追踪目标；飞过的路上拖着螺旋的气团。
+ *   击（burst / dissipate）：命中活物结算一记 `blast` 特殊伤害，并沿**风实际吹到的方向**把它推开
  *       `push` 格（离地目标 ×1.8 并上托）；打空或撞地就在落点散开。
+ *
+ * 选取 `kind: "aim"`：方向、世界点或任意阵营实体都能扇，无敌也能空放；命中权限仍由命中层判断。
+ *   目标为 null 时不做追踪，沿提交朝向直飞并对落点散开，不为空放提前收招。
  *
  * 与同族分开：空气斩是一道薄月牙直线切开、空气利刃是张开一整片扇面、暴风是一堵会走的宽风墙；起风是一发
  *   即散、专门用来推人的小风团，玩家凭「一团风把人推着走」认出它。
@@ -20,13 +23,29 @@ namespace PokemonSkills {
     const gustLiftText = "world_combat.move.gust.text.lift";
     const gustMissText = "world_combat.move.gust.text.miss";
 
+    /** 风弹接触那一刻的真实风向：优先用捕获的投射物轨迹末段，其次施法者→接触点，最后退回瞄准朝向。 */
+    function gustImpactHeading(hit: CombatImpact, origin: CombatPoint, at: CombatPoint, fallback: CombatPoint): CombatPoint {
+        const path = JSON.parse(hit.projectilePath() || "[]");
+        if (Array.isArray(path) && path.length > 0) {
+            const last = path[path.length - 1];
+            if (last && Array.isArray(last.from) && Array.isArray(last.to)) {
+                const delta = WorldCombat.point(last.to[0] - last.from[0], 0, last.to[2] - last.from[2]);
+                if (delta.length() > 0.01) return delta.unit();
+            }
+        }
+        const flown = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
+        if (flown.length() > 0.01) return flown.unit();
+        const flat = WorldCombat.point(fallback.x(), 0, fallback.z());
+        return flat.length() > 0.01 ? flat.unit() : WorldCombat.point(0, 0, 1);
+    }
+
     define({
         id: "gust",
         cooldownParameter: "recharge",
         name: "Gust",
-        description: "振翅扇出一记短促的压缩风弹：命中的对手被沿风的方向推开，正离地的目标被吹得更远、还往上托一点。它便宜、回得快、会小幅追踪；推风式推得更远、威力更轻，削风式更重、推得更近。",
+        description: "振翅扇出一记短促的压缩风弹：飞向瞄准的方向或实体，命中的对手被沿风实际吹到的方向推开，正离地的目标被吹得更远、还往上托一点。可以朝空地空放；它便宜、回得快、对实体小幅追踪；推风式推得更远、威力更轻，削风式更重、推得更近。",
         uses: ["便宜、快速的远程消耗，一记接一记地扇", "把对手推离掩体、推下平台或推开队友", "对飞在空中的目标吹得更远"],
-        kind: "enemy",
+        kind: "aim",
         range: 9,
         maxRange: 13,
         prepare: 5,
@@ -74,39 +93,42 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.55));
             const intensity = Math.max(0.5, Math.min(2.0, power / 34));
             const direction = aim(action);
+            const scenes = WorldFeedback.actionScenes(gustScene);
             let settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             const appearance: any = { tint: 0xDCE9F0 };
             if (target !== null) appearance.homing = { target: String(target.ref()), turn: 14, delay: 1, range: reach + 2 };
 
             sound(action, "cobblemon:move.gust.actor");
             WorldFeedback.emit(world, gustScene, 1, origin,
-                { moment: "release", motes: motes, scale: scale, intensity: intensity, shove: shove ? 1 : 0 }, 16);
+                { moment: "release", motes: motes, scale: scale, intensity: intensity, shove: shove ? 1 : 0 }, 16, "gust:release");
 
             const flight = LivingActions.projectile(action, {
                 speed: speed, direction: direction, gravity: 0, range: reach + 3, radius: radius, lifetime: 160,
                 appearance: appearance,
                 impact: function (inner: CombatAction, hit: CombatImpact): void {
                     const scope = inner.world(), at = hit.position(), struck = hit.target();
+                    scenes.stop(inner, "flight");
                     if (hit.hitEntity() && struck !== null && scope.valid(struck) && !scope.friendly(struck)) {
                         if (!impact(inner, hit, "gust", power, { damage: damageSpec("gust", "blast"), flags: { wind: true } })) return;
                         const body = scope.observe(struck);
                         const airborne = body !== null && (!body.grounded()
                             || CombatStatus.has(scope, struck, "fly") || CombatStatus.has(scope, struck, "magnetrise"));
+                        const heading = gustImpactHeading(hit, origin, at, direction);
                         const distance = pushBase * (airborne ? 1.8 : 1);
-                        if (scope.valid(struck)) {
-                            const delta = at.minus(origin);
-                            const flat = WorldCombat.point(delta.x(), 0, delta.z());
-                            const heading = flat.length() < 0.01 ? WorldCombat.point(direction.x(), 0, direction.z()) : flat.unit();
-                            scope.displace(struck, WorldCombat.point(heading.x() * distance, airborne ? 0.35 : 0, heading.z() * distance));
-                        }
+                        // 推动按实际收到的位移结算：推不动就不再把它当作被吹走。
+                        let moved = 0;
+                        if (scope.valid(struck))
+                            moved = scope.displace(struck, WorldCombat.point(heading.x() * distance, airborne ? 0.35 : 0, heading.z() * distance));
                         WorldFeedback.emit(scope, gustScene, 1, at,
-                            { moment: "burst", target: String(struck.ref()), push: distance, motes: motes, scale: scale,
-                                intensity: intensity, airborne: airborne ? 1 : 0, lift: airborne ? 12 : 0 }, 22);
+                            { moment: "burst", target: String(struck.ref()), push: Math.round(moved * 100) / 100, motes: motes, scale: scale,
+                                intensity: intensity, airborne: airborne ? 1 : 0, lift: airborne && moved > 0.05 ? 12 : 0,
+                                direction: [heading.x(), heading.y(), heading.z()] }, 22);
                         sound(inner, "cobblemon:move.gust.target");
-                        if (airborne) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), gustLiftText, [], 24);
+                        // 空气托举只在真把离地目标吹动时表现。
+                        if (airborne && moved > 0.05) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), gustLiftText, [], 24);
                         return;
                     }
                     WorldFeedback.emit(scope, gustScene, 1, at,
@@ -114,8 +136,8 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.5, 0)), gustMissText, [], 18);
                 }
             }, function (inner: CombatAction) { finish(inner); });
-            WorldFeedback.keep(world, "gust:flight:" + action.id(), gustScene, 1, origin,
-                { moment: "flight", projectile: flight, motes: motes, scale: scale, intensity: intensity }, 160);
+            scenes.show(action, "flight", origin,
+                { moment: "flight", projectile: flight, motes: motes, scale: scale, intensity: intensity });
         }
     });
 }

@@ -4,6 +4,7 @@
  * 这招的 AI 围绕「穿过守护」：普通目标它只是一记偏重的幽灵劈击，真正值得出手的是撑了罩的对手。
  *   - 何时考虑：目标看得见、活着、非友方，在 `ai.maxChase` 内（或它就是焦点）；普通属性打不动（幽灵免疫），直接跳过。
  *   - 对谁出手：优先身上带着守护（任何 GuardEffects 池）的目标——现身那一刻能把它整层震碎；其余按普通近战排序。
+ *   - 落点：用 `CompanionBehavior.world(context).freeSpace` 探一下目标身后那一步放不放得下自己；放不下就降权，不硬潜。
  *   - 出手前：由共用任务走到 reach；消失一拍期间它打不着也看不出来，落点仍然贴着目标。
  *   - 够不到：由共用任务靠近；驻守且没开 leaveStation 时不硬追。
  *   - 放完之后：目标守护被震碎、这一刀落下，交回共享交战计划。
@@ -25,6 +26,16 @@ namespace CompanionBehavior {
     function phantomForceGuards(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const value = CompanionBehavior.fact<number>(context, "world_combat:move_phantomforce/guards", target);
         return typeof value === "number" ? value : 0;
+    }
+    /** 现身落点探针：目标身后约一步处要真的放得下这具身体，否则不如不潜。 */
+    function phantomForceLanding(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const access = world(context), self = source(context);
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 1e-6) return true;
+        const behind = point([target.point[0] + dx / length * 1.2, target.point[1], target.point[2] + dz / length * 1.2]);
+        try { return access.freeSpace(behind, self.width || 0.9, self.height || 1.4); }
+        catch (error) { return true; }
     }
 
     const phantomForceChase = PokemonSkills.number("ai.maxChase", "潜袭距离", 3, 20, 1);
@@ -56,7 +67,8 @@ namespace CompanionBehavior {
             const self = source(context);
             if (ratio(self) < ai<number>(item, "escapeBelow", 0.5) && distance(self.point, target.point) <= item.data.range) return 60;
             if (ai<boolean>(item, "breakGuard", true) && phantomForceGuards(context, target) > 0) return 92;
-            return 14;
+            // 目标身后放不下这具身体时降权，不把自己送进一个站不住的落点。
+            return phantomForceLanding(context, target) ? 14 : 4;
         }
     });
 }

@@ -5,9 +5,10 @@
  * self mustrecharge（下一回合无法行动）。
  *
  * 翻译：保留「向对手发射巨大的岩石」，把原生的单体命中翻成即时战斗里**一发抛射的巨石**：
- * 巨石沿抛物线飞向目标，落地／撞上活体即碎裂，把落点周围一圈的敌人一起砸伤并向外顶开，
- * 地面被砸出一片碎石（世界留痕），随后施法者扛石过力、力竭一段时间无法行动也无法移动。
- * 石头走抛物线，所以掩体不一定救得了目标——这是它相对直线水柱与光柱的身份。
+ * 巨石沿抛物线飞向选定落点，落地／撞上活体即碎裂，把落点周围一圈的敌人一起砸伤并向外顶开，
+ * 落点只扬起短命的碎石尘（不替换地面方块），随后施法者扛石过力、力竭一段时间无法行动也无法移动。
+ * 石头走抛物线，所以矮掩体不一定救得了目标，但高墙仍会在半途把它挡碎——这是它相对直线水柱与光柱的身份。
+ * 选取为 `kind: "point"`：自由选落点空投；预告的可达点按这块石头的真实初速与重力算出，不保证穿高墙。
  * 数据分散：物攻决定威力、碎范围与顶开距离，体重决定巨石判断粗细与抛速（越重越慢、越好躲），
  * 速度决定起手，等级拾级抬升威力并决定碎石停留多久。配置 `crush`（碾碎）是真正的取舍：
  * 开启＝巨石更重、砸得更开、更疼，但飞行更慢、更容易被躲，力竭更久；关闭＝更轻更快、恢复更快、碎范围更小。
@@ -86,7 +87,7 @@ namespace PokemonSkills {
         /** 碎石停留：基础 60 tick，等级每比 20 高 1 加 1.2 tick；夹在 40..140 tick。 */
         rubbleTicks: seconds(
             F.base(60).plus(F.level().minus(20).times(1.2).clamp(0, 80)).clamp(40, 140).round(),
-            "碎石停留", "落点被砸出的碎石地面停留多久；到期原方块回来。")
+            "碎屑停留", "落点扬起的临时碎石视觉停留多久；只影响画面，地面方块保持原材质。")
     });
 
     stages("rockwrecker", [
@@ -100,7 +101,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["boulder"] },
         { key: "description.1", values: ["radius", "reach"] },
         { key: "description.flight", values: ["collisionRadius"] },
-        { key: "description.2", values: ["shove","rubbleTicks"] },
+        { key: "description.2", values: ["shove"] },
         { key: "description.3", values: ["speed","charge","exhaust"] }
     ]);
 }

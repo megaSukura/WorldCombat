@@ -2,7 +2,7 @@
  * 抓 / scratch 的客户端表现。
  *
  * 一句话：爪尖先亮起一点寒光，随后一整排平行爪痕贴着身前扫出去，每一道刮过的地方崩起细屑；
- * 被多道痕同时抓中的目标身上连炸几次白色的抓痕与碎屑，抓空的爪锋只在空气里划出几道浅弧。
+ * 被多道痕同时抓中的目标身上只在接触点闪出爪痕与碎屑（不做爆圈），抓空的爪锋只在空气里划出几道浅弧。
  * 色相家族：象牙白（0xFFF8E8）作主体、暖骨色（0xD8C7A8）作余韵，中性尘屑收尾；饱和色只出现在爪尖寒光的小面积。
  * 拍子：起 charge（爪尖聚光）→ 击 rake（一排爪痕扫出）与 hit（每道痕的命中）→ 收 scrape／whiff。
  * 范围：rake 的每一道用 `data.path`（与服务端 trace 同一组端点）画成一条痕，玩家一眼看出身前这一弧会被扫到。
@@ -61,13 +61,14 @@ const ScratchDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
+                    // 只在被抓中的那一点崩出爪痕与碎屑，不做成爆圈：命中形貌与 rake 的痕一致。
                     name: "mark", bind: "target", height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    particle: "world_combat_core:cobblemon/generic/scratch",
                     burst: { count: { data: "sparks", fallback: 10 } },
-                    shape: { kind: "sphere", radius: 0.26 },
-                    direction: "shape", speed: [0.06, 0.2], spread: 20,
-                    lifetime: [5, 9], size: [0.34, 0.05], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.35
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.06, 0.2], spread: 26, spin: 8,
+                    lifetime: [5, 9], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xFFF8E8, alpha: [0.9, 0], light: "full", bloom: 0.3
                 },
                 {
                     name: "flecks", bind: "target", height: 0.5,

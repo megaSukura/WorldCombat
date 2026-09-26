@@ -7,8 +7,11 @@
  * 三幕：
  *   起（windup，提交前）：原地转起来、翅与喙拉出螺旋，只播预告。
  *   钻（bore）：提交后朝目标垫进 `lunge` 格，沿身前 `reach` 格长、`bore` 为半径的短轴每 `gap` 刻钻一口；
- *       每一口对轴上的第一个非友方结算 `bite` 接触伤害（离地目标乘 `airBonus`）并顶开 `push` 格。
- *   收：目标离开轴心就收起钻头（drift）；一口没咬中只留旋了个空。
+ *       每一口在轴内重选最近、可见的非友方，对它结算 `bite` 接触伤害（离地目标乘 `airBonus`）并顶开 `push` 格；
+ *       目标漂出轴心或隔墙就这一口落空（drift），但整支钻仍转完所有口数、空钻也完整收势。
+ *   收：全部口数转完才收势；一口没咬中只留旋了个空。
+ *
+ * 选取 `kind: "aim"`：方向或任意阵营实体都行，也可以空钻；朝向在提交那一刻锁成一条固定的短轴。
  *
  * 与同族分开：直冲钻是贴地钻穿一整排并犁沟、抓是一爪多道同时划出、连斩是越打越多刀的攒节奏；
  * 啄钻是唯一「原地停留、连续几口、把目标一口口往后顶」的接触钻孔。
@@ -39,7 +42,7 @@ namespace PokemonSkills {
         name: "Drill Peck",
         description: "原地旋起来，把身体拧成一支钻，贴着身前一条短轴一下一下地把尖喙钻进去：不是一记，而是连续几口，每一口都把对手往后顶一点。对手离地时每一口更狠——尖喙专钻空中的破绽。它是全族唯一的持续接触钻孔。",
         uses: ["原地旋成一支钻，连续几口钻同一个目标", "把贴脸的目标一口口往后顶开", "对离地的目标钻得更狠"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.5,
         maxRange: 3.4,
         prepare: 10,
@@ -87,6 +90,8 @@ namespace PokemonSkills {
             const shavings = Math.max(8, Math.round(p("drillpeck", "shavings", action)));
             const scale = Math.max(0.6, Math.min(1.8, reach / 2.5));
             const intensity = Math.max(0.6, Math.min(2.2, power / 16));
+            // 钻轴是整段持续过程：用 actionScenes 保持旋转到所有口数转完，收势时 stop/finish。
+            const scenes = WorldFeedback.actionScenes(drillpeckScene);
 
             const self = world.observe(actor);
             if (self !== null && lunge > 0.05) {
@@ -101,10 +106,10 @@ namespace PokemonSkills {
             const origin = moved === null ? action.origin() : moved.position();
 
             sound(action, "minecraft:item.trident.riptide_1");
-            WorldFeedback.emit(world, drillpeckScene, 1, origin,
+            scenes.show(action, "bore", origin,
                 { moment: "bore", path: drillpeckAxis(origin, heading, reach), reach: reach, bites: bites,
                     shavings: shavings, scale: scale, intensity: intensity,
-                    direction: [heading.x(), heading.y(), heading.z()] }, 22);
+                    direction: [heading.x(), heading.y(), heading.z()] });
 
             let index = 0, landed = 0, settled = false;
 
@@ -121,7 +126,7 @@ namespace PokemonSkills {
                 } else {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), drillpeckHitText, [landed], 22);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
             function chomp(current: CombatAction): void {
@@ -129,22 +134,30 @@ namespace PokemonSkills {
                 const body = scope.observe(actor);
                 if (body === null) { finish(current); return; }
                 const from = body.position();
-                const found: CombatActor[] = [];
+                // 每一口都在固定短轴里重选：只取轴内、通视、离施法者最近的对手；漂出轴心或隔墙就这一口落空。
+                const found: { actor: CombatActor; facts: CombatObservation; distance: number }[] = [];
                 WorldGeometry.selectEnemies(scope, WorldGeometry.lane(from, heading, reach, bore, { below: 1.2, above: 2.6 }),
-                    function (candidate: CombatActor) { if (found.length === 0) found.push(candidate); });
+                    function (candidate: CombatActor, facts: CombatObservation) {
+                        if (!scope.clear(from, facts.position())) return;
+                        found.push({ actor: candidate, facts: facts, distance: facts.position().minus(from).length() });
+                    });
                 if (found.length === 0) {
                     WorldFeedback.emit(scope, drillpeckScene, 1, from.plus(heading.scale(reach * 0.7)),
                         { moment: "drift", index: index, scale: scale, intensity: intensity }, 16);
-                    finish(current);
+                    index++;
+                    if (index >= bites) { finish(current); return; }
+                    current.after(gap, chomp);
                     return;
                 }
-                const victim = found[0];
+                found.sort(function (first, second) { return first.distance - second.distance; });
+                const victim = found[0].actor;
                 const foe = scope.observe(victim);
                 if (foe !== null) {
                     const airborne = !foe.grounded();
                     const per = power * (airborne ? airBonus : 1);
                     if (hurt(current, victim, "drillpeck", per, { damage: damageSpec("drillpeck", "bite"), contact: true })) {
                         landed++;
+                        // 只在真实接触点闪这一口；没咬中的口不挂命中表现。
                         WorldFeedback.emit(scope, drillpeckScene, 1, foe.position(),
                             { moment: "bite", target: String(victim.ref()), index: index, bites: bites,
                                 airborne: airborne ? 1 : 0, shavings: shavings, scale: scale, intensity: intensity }, 16);
@@ -154,7 +167,7 @@ namespace PokemonSkills {
                                     scale: scale, intensity: intensity }, 20);
                         if (landed === 1) sound(current, "cobblemon:impact.flying");
                         else sound(current, "minecraft:entity.player.attack.weak");
-                        if (scope.valid(victim)) scope.displace(victim, heading.scale(push));
+                        if (scope.valid(victim)) scope.hitDisplace(victim, heading.scale(push));
                     }
                 }
                 index++;

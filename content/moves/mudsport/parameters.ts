@@ -3,9 +3,9 @@
  *
  * 原生事实：Ground／变化／威力 —／命中 必中／PP 15／target all／场上 pseudoweather 5 回合，期间电属性招式
  *   被削弱（Gen 6+ 系数约 0.33）。
- * 世界化：把「5 回合的场地」翻成一片真的铺在地表的泥滩——施法者把泥甩开，泥浆贴地糊满一圈，
- *   地表方块换成泥；站在泥里的活体被糊上厚泥，使出的电属性招式被乘上 electricFactor，离开泥滩后还糊一阵。
- *   泥是材料：它压电，不像水那样灭火；两者是同一族的两种地面。
+ * 世界化：把「5 回合的场地」翻成一片铺在地面的泥滩——施法者把泥甩开，泥浆贴地糊满一圈，用一层薄泥面标出
+ *   范围；站在泥里的活体被糊上厚泥，使出的电属性招式被乘上 electricFactor，离开泥滩后还糊一阵。
+ *   泥是材料：它压电，不像水那样灭火；两者是同一族的两种地面。薄泥面只是读范围的画面，不替换地表方块。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   tempo        起手：基础 12 刻 − 速度 ×0.03，加铺法修正（厚泥 +3、稀泥 −2），夹 4..18。
@@ -17,7 +17,7 @@
  *   coatTicks    糊泥余量：基础 80 刻 + 速度 ×0.5，夹 50..180；离开泥滩后电招仍被压的时长。
  *   electricFactor 电招削弱：基础 0.55 − 特防 ×0.0012，再乘铺法系数（厚泥 ×0.85），夹 0.3..0.7。
  *   mudDensity   泥花数量：基础 20 + 特攻 ×0.1，夹 12..48；直接驱动粒子数量。
- *   mudCells     盖泥格数：基础 8 + 速度 ×0.3，夹 4..24；每轮把几格地表换成泥。
+ *   mudCover     薄泥面点数：基础 10 + 速度 ×0.3，夹 6..28；贴地薄泥面的点数，粒子直接按它发射。
  * 配置 thick 在「小而深、糊得久、压得低的厚泥」和「大而浅、起手与冷却都更短的稀泥」之间取舍。
  */
 namespace PokemonSkills {
@@ -62,14 +62,14 @@ namespace PokemonSkills {
                 description: "被糊泥者使出的电属性招式威力乘上的系数；特防越高压得越低，厚泥 ×0.85、稀泥 ×1。" }),
         mudDensity: formula(F.base(20).plus(F.stat("specialAttack").times(0.1)).clamp(12, 48).round(0),
             "泥花数量", { unit: " 点", description: "泥滩里翻起的泥花数量；特攻越高铺得越密，粒子直接按它发射。" }),
-        mudCells: formula(F.base(8).plus(F.stat("speed").times(0.3)).clamp(4, 24).round(0),
-            "盖泥格数", { unit: " 格", description: "每轮把几格地表换成泥；速度越快翻得越多。" })
+        mudCover: formula(F.base(10).plus(F.stat("speed").times(0.3)).clamp(6, 28).round(0),
+            "薄泥面点数", { unit: " 点", description: "泥滩里贴地薄泥面的点数；速度越快铺得越密，粒子直接按它发射。" })
     });
     describe(mudsportId, [
         { key: "description.0", values: ["reach"] },
         { key: "description.1", values: ["mudRadius", "mudTicks"] },
         { key: "description.2", values: ["electricFactor"] },
-        { key: "description.3", values: ["mudCells"] },
+        { key: "description.3", values: [] },
         { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },

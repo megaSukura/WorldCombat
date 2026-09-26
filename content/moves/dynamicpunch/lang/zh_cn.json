@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.dynamicpunch.summary": "抡圆了全身力气的一记横扫重拳：身前扫出一道扇面，站在里面的人各挨一记并必定被震得混乱，走出扇面就落空，挥空还要多失衡一会儿。",
   "worldcombat.skill.dynamicpunch.description.0": "抡出一记扇形横扫，扫中范围内的每个敌人各受一次约 %1$s 点接触+拳伤害；扇面张角 %2$s 度、拳程 %3$s 格。",
-  "worldcombat.skill.dynamicpunch.description.1": "被扫中的人必定陷入混乱 %1$s：期间每次想发动招式或出手攻击时，有 %2$s 的概率直接失败、错失这次出手；混乱者打中非友方时还会被自己的力气反噬，以自身最大生命的 5% 为基数、随物攻在 0.4 至 2.5 倍间放大自伤。",
+  "worldcombat.skill.dynamicpunch.description.1": "被扫中的人必定陷入混乱 %1$s：期间每次想发动招式或出手攻击时，有 %2$s 的概率直接失败、错失这次出手；混乱者打中非友方时还会被自己的力气反噬，按自身物攻结算自伤，但自伤不会超过它这一击真正造成的伤害。",
   "worldcombat.skill.dynamicpunch.description.2": "一个目标都没扫中时，收不住势、多花 %1$s 秒才能再动。",
   "worldcombat.skill.dynamicpunch.reckless.on": "拼命式：威力更高、扇面更开、晕得更久，但起手、收招、冷却更长，挥空失衡也更久。",
   "worldcombat.skill.dynamicpunch.reckless.off": "控制式：起手、收招、冷却更短，挥空失衡更轻，代价是单下更轻、扇面更窄、晕得更短。",

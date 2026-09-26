@@ -1,15 +1,15 @@
 /**
  * 大爆炸 / explosion 的客户端表现。
  *
- * 一句话：地面从施法者脚下裂开、光从缝里漏出并向内收拢，随后炸成一朵顶天立地的火球，
- * 近白爆心在正中，外圈冲击环贴着地面横扫出去，浓烟与燃烧的碎屑满天，最后留下一片焦黑弹坑。
+ * 一句话：地面从施法者脚下裂开、光从缝里漏出并向内收拢；提交后身上带着一圈看得见的引信朝爆点压进，
+ * 三道引信环由外向内逐一熄灭、爆圈贴着真实半径跟随身体，引信烧完才炸成一朵顶天立地的火球，最后留下焦黑弹坑。
  * 色相家族：近白金做爆心高光（0xFFF6E0），暖橙火球作主体（cloudyfire_white / flame），
  * 浓烟用中性深灰，土黄只给飞散的燃烧碎屑。比自爆更大、更亮、烟更多。
- * 拍子：起 charge 蓄力 ／ 爆 detonate 火球 ／ 冲 shock 冲击环 ／ 击 hit 逐处 ／ 收 crater 或空爆 miss。
- * 范围：detonate / crater 的球与地面圈按 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地。
- * 运动：光与尘向内收拢 → 火球从中心向外炸开 → 冲击环贴地横扫 → 浓烟上腾、燃烧碎屑带重力回落。
+ * 拍子：起 charge 蓄力 ／ 引 fuse 引信推进 ／ 爆 detonate 火球 ／ 冲 shock 冲击环 ／ 击 hit 逐处 ／ 收 crater 或空爆 miss。
+ * 范围：fuse 的爆圈与 detonate / crater 的球与地面圈按 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地。
+ * 运动：光与尘向内收拢 → 引信环随身体移动并逐一熄灭 → 火球从爆心向外炸开 → 冲击环贴地横扫 → 浓烟上腾、碎屑回落。
  * 数：`data.debris`（体重与物攻派生）决定火球、碎屑与浓烟的量，`data.intensity`（威力派生）抬高亮度与密度，
- *   `data.cells`（弹坑块数）驱动地面余烬，`data.scale`（爆心/5.6）放大尺度。
+ *   `data.cells`（弹坑块数）驱动地面余烬，`data.scale`（爆心/5.6）放大尺度；`data.remaining/total` 驱动引信熄灭。
  */
 const ExplosionDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -43,6 +43,61 @@ const ExplosionDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.9,
                     lifetime: [10, 18], size: [0.07, 0.01],
                     color: 0xC7A98A, alpha: [0.55, 0], light: "world", maxParticles: 90
+                }
+            ]
+        },
+        fuse: {
+            duration: 0,
+            exit: { stop: 3, drain: 14 },
+            emitters: [
+                {
+                    name: "coverage", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
+                    rate: { data: "pulse", fallback: 8 }, shape: { kind: "ring", radius: { data: "radius", fallback: 5.6 }, thickness: 0.1 },
+                    direction: "up", speed: [0, 0.02], spread: 3,
+                    lifetime: [10, 18], size: [0.7, 1.15], sizeMode: "linear",
+                    color: 0xF0A94E, alpha: [0.5, 0], light: "world", bloom: 0.25, maxParticles: 90
+                },
+                {
+                    name: "fuse3", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: { data: "fuse3", fallback: 10 }, shape: { kind: "ring", radius: { data: "fuse3Radius", fallback: 4.0 }, thickness: 0.12 },
+                    direction: "up", speed: [0, 0.02], spread: 4,
+                    lifetime: [8, 15], size: [0.4, 0.7], sizeMode: "linear",
+                    color: 0xFFD98A, alpha: [0.75, 0], light: "full", bloom: 0.35, maxParticles: 70
+                },
+                {
+                    name: "fuse2", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: { data: "fuse2", fallback: 10 }, shape: { kind: "ring", radius: { data: "fuse2Radius", fallback: 2.7 }, thickness: 0.12 },
+                    direction: "up", speed: [0, 0.02], spread: 4,
+                    lifetime: [8, 15], size: [0.36, 0.62], sizeMode: "linear",
+                    color: 0xFFC46A, alpha: [0.75, 0], light: "full", bloom: 0.35, maxParticles: 60
+                },
+                {
+                    name: "fuse1", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: { data: "fuse1", fallback: 12 }, shape: { kind: "ring", radius: { data: "fuse1Radius", fallback: 1.3 }, thickness: 0.16 },
+                    direction: "up", speed: [0, 0.03], spread: 5,
+                    lifetime: [7, 13], size: [0.3, 0.5], sizeMode: "linear",
+                    color: 0xFFF0C8, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 60
+                },
+                {
+                    name: "cord", bind: "source", offset: [0, 0.45, 0], height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: { data: "pulse", fallback: 16 }, shape: { kind: "sphere_surface", radius: 0.55 },
+                    direction: "inward", speed: [0.05, 0.18], spread: 12,
+                    lifetime: [5, 11], size: [0.11, 0.01],
+                    color: 0xFFE9A0, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 50
+                },
+                {
+                    name: "grit", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 5.6 } },
+                    direction: "inward", speed: [0.04, 0.16], spread: 14,
+                    gravity: 0.02, drag: 0.9,
+                    lifetime: [9, 17], size: [0.06, 0.01],
+                    color: 0xC7A98A, alpha: [0.5, 0], light: "world", maxParticles: 80
                 }
             ]
         },

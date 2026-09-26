@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.sludgebomb.summary": "The user loads sludge into a shell and throws it to the target's feet, where it skitters and hisses on a lit fuse; when the fuse burns out the ring around it is hurt, shoved back and may be poisoned. A foe can step out before it blows. Sealed style is wider and more poisonous at the cost of a lighter blast and a longer fuse.",
+  "worldcombat.skill.sludgebomb.summary": "The user loads sludge into a shell and throws it to the target's feet (or at open ground), where it lands at the real spot and hisses on a lit fuse; when the fuse burns out the ring around it is hurt, shoved back and may be poisoned. A foe can step out before it blows, and the user is free to act once the shell leaves. Sealed style is wider and more poisonous at the cost of a lighter blast and a longer fuse.",
   "worldcombat.skill.sludgebomb.use.0": "Drop a delayed bomb into a group and scatter it",
   "worldcombat.skill.sludgebomb.use.1": "Seal off a patch of the foe's path",
   "worldcombat.skill.sludgebomb.use.2": "Poison everyone around the blast at once",
@@ -30,7 +30,7 @@
   "worldcombat.skill.sludgebomb.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.sludgebomb.preference.ai.maxChase.help": "Only foes within this distance become bombing candidates; the shared approach logic then walks the companion into throw range. Higher starts the chase earlier.",
   "worldcombat.skill.sludgebomb.preference.ai.crowd": "Prefer clusters",
-  "worldcombat.skill.sludgebomb.preference.ai.crowd.help": "On, the companion prefers a bomb when another foe stands within 3.5 blocks of the target, catching the group; off keeps the normal attack order.",
+  "worldcombat.skill.sludgebomb.preference.ai.crowd.help": "On, the companion prefers a bomb when another foe stands within the bomb's real blast radius (which follows sealed, body and Sp. Atk), catching the group; off keeps the normal attack order.",
   "worldcombat.skill.sludgebomb.preference.ai.leaveStation": "Leave post to cast",
   "worldcombat.skill.sludgebomb.preference.ai.leaveStation.help": "On, the companion may leave its post to bomb a target; off restricts it to throws it can make from where it stands.",
   "world_combat.move.sludgebomb.text.burst": "Caught %1$s",

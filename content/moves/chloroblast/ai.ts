@@ -72,9 +72,13 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
-            if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
+            const distance = CompanionBehavior.distance(self.point, target.point);
+            if (distance > capability.data.range) return 0;
             const crowd = chloroblastCrowd(context, capability, target);
-            return 18 + Math.min(30, (crowd - 1) * 14) + (CompanionBehavior.ratio(target) <= 0.3 ? 10 : 0);
+            let score = 18 + Math.min(30, (crowd - 1) * 14) + (CompanionBehavior.ratio(target) <= 0.3 ? 10 : 0);
+            // 单远敌降权：只罩住一个、还站在扇形远端时，宁可先走近或换更省的招。
+            if (crowd <= 1 && distance > capability.data.range * 0.7) score -= 10;
+            return Math.max(1, score);
         }
     });
 

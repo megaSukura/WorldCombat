@@ -20,6 +20,11 @@
  *   rageCap     一次姿态最多涨几档（暴怒式 4 / 蓄怒式 6）。
  *   tempo／settle／recharge 速度决定起手、收招、冷却；暴怒式起手更慢、冷却更久。
  *
+ * 添柴只认**真实被敌对攻击打中**：由 `DamageSemantics.read(data).attack` 确认为一次攻击、
+ * `actual > 0`，并排除自己与友方；中毒、灼烧等 DOT 与变化招式不会养怒。每次真正涨了几档
+ * 以 `NativeEffects.boost` 返回的**实际等级差**为准：已到设计封顶或被特性拒绝时记 0，不刷新、
+ * 不冒火光，避免「显示升级但其实没涨」。
+ *
  * 配置 `fury`（暴怒式）双向取舍：开启＝每挨一记涨 2 档、但封顶更低（4）、火更短、起手慢 2 刻、冷却多 4 刻——
  *   两记就烧满，窗口也短；关闭＝每记 1 档、封顶 6、火更长、出手更快，靠时间慢慢烧旺。快与久，各有用处。
  *
@@ -48,14 +53,15 @@ namespace PokemonSkills {
         if (profile && world.valid(actor)) world.marker(actor, rageEffect, profile.ticks, 0);
     }
 
-    /** 挨了一记：在封顶以内涨档，返回实际涨了几档（0 表示已到顶）。 */
+    /** 挨了一记：在封顶以内涨档，返回实际涨了几档（0 表示已到顶或被拒绝）。 */
     export function rageStoke(world: CombatWorld, actor: CombatActor): number {
         var ref = String(actor.ref()), profile = rageProfiles[ref];
         if (!profile || !world.valid(actor)) return 0;
         var fed = rageFed[ref] || 0;
         if (fed >= profile.cap) return 0;
-        var gain = Math.min(profile.perHit, profile.cap - fed);
-        NativeEffects.boost(world, actor, "atk", gain);
+        // 以真实等级差记账：特性拒绝、外部已顶到 +6 或任何被改写的增量都留在实际值上。
+        var gain = NativeEffects.boost(world, actor, "atk", Math.min(profile.perHit, profile.cap - fed));
+        if (!(gain > 0)) return 0;
         rageFed[ref] = fed + gain;
         return gain;
     }

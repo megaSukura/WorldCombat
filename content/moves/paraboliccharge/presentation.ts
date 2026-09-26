@@ -11,7 +11,7 @@
  *   charge 的虚线盘给出预告的同一块区域。
  * 运动：dish 的电弧向外甩出后受重力下弯（抛物线的形状），内收环朝中心聚；pull 沿「目标→自身」把电光抽回。
  * 数：`data.arcs`（特攻与等级派生）决定电弧道数，`data.motes`（威力与半径派生）决定盘的密度，
- *   `data.targets`（实际吸到的目标数）决定回光量与"吸回几道"的视觉强度。
+ *   `data.targets`（实际吸到的目标数）写在服务端文字里，`data.heal`（实际总治疗量）决定回收闪光的亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const ParabolicchargeDefinition: ParticleDefinition = {
@@ -132,7 +132,7 @@ const ParabolicchargeDefinition: ParticleDefinition = {
                 {
                     name: "glow", bind: "source", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    burst: { count: { data: "targets", fallback: 10 } }, shape: { kind: "sphere_surface", radius: 0.46 },
+                    burst: { count: { data: "heal", fallback: 10 } }, shape: { kind: "sphere_surface", radius: 0.46 },
                     direction: "up", speed: [0.03, 0.14],
                     lifetime: [12, 20], size: [0.1, 0.01],
                     color: 0xFFF4B0, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 48

@@ -6,20 +6,22 @@
  *
  * 两幕：
  *   起（windup，提交前）：水在拳上聚拢、压缩成一股，只播预告（present squeeze）。
- *   打（execute）：提交后朝目标方向做一次瞬时直线判定——撞上非友方活体就结算 torrent 接触伤害、
- *       把它浇透（共享身份 soaked）、沿水柱方向顶退；若它带着火或灼伤，这一拳把火浇熄。一路无人在射程线上就只是挥空（whiff）。
+ *   打（execute）：提交后朝瞄准方向（或世界点方向）做一次瞬时直线判定——
+ *       撞上第一个非友方活体就结算 `torrent` 接触伤害、把它浇透（共享身份 soaked）、沿水柱方向顶退；
+ *       若它带着火或灼伤，这一拳把火浇熄。若玩家**明确选中一个友方**，则只走无伤支援：把对方身上的火浇熄，
+ *       不造成任何伤害；默认方向下的友方不会被误伤（伤害权限由命中层判定）。一路无人在射程线上就只是挥空（whiff）。
  *
  * 与同族分开：音速拳也是不位移的直拳，但没有水、拳程更短、不浇湿；水流喷射是把自己整个裹进水柱冲过去。
- *   喷射拳站着不动，水柱只裹拳，靠水花与水痕读出来。
+ *   喷射拳站着不动，水柱只裹拳，靠水花与水痕读出来，还能替着火的同伴洗一把。
  */
 namespace PokemonSkills {
     define({
         id: jetpunchId,
         cooldownParameter: "recharge",
         name: "Jet Punch",
-        description: "站定不动，把水压缩在拳上压成一条水柱，几乎瞬发地一记直拳打出去：拳程被水柱推出身外，命中把对手浇透、沿水柱方向冲退，带着灼伤的目标还会被这一拳浇熄。全族唯一的拳水招。水锤式改成接触瞬间炸开、把目标推得更远。",
-        uses: ["贴身瞬发的先手重拳", "一拳把对手浇透并推离原位", "近身快速补刀或把追兵顶开"],
-        kind: "enemy",
+        description: "站定不动，把水压缩在拳上压成一条水柱，几乎瞬发地一记直拳打出去：拳程被水柱推出身外，命中把对手浇透、沿水柱方向冲退，带着灼伤的目标还会被这一拳浇熄。明确选中着火的同伴时改为无伤浇灭，不造成伤害。全族唯一的拳水招。",
+        uses: ["贴身瞬发的先手重拳", "一拳把对手浇透并推离原位", "替着火的同伴浇灭身上的火（明确选中友方，无伤）"],
+        kind: "aim",
         range: 2.8,
         maxRange: 5.0,
         prepare: 1,
@@ -27,7 +29,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 16,
         style: "jet",
-        defaults: { hammer: false, ai: { maxChase: 6, preserveBurn: true, preferDry: true, finish: true } },
+        defaults: { hammer: false, ai: { maxChase: 6, preserveBurn: true, preferDry: true, finish: true, cureAllies: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p(jetpunchId, "reach", pokemon) : 2.8) + 0.4, geometry: "line", style: "jet", color: 0x3FA8E0,
@@ -50,8 +52,10 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
+            const actor = action.actor();
+            const selected = action.target();
             const direction = aim(action);
-            const reach = p(jetpunchId, "reach", action);
+            const reach = Math.max(1.6, p(jetpunchId, "reach", action));
             const radius = p(jetpunchId, "burst", action);
             const power = p(jetpunchId, "torrent", action);
             const drive = p(jetpunchId, "drive", action);
@@ -61,10 +65,39 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.2, power / 70));
             const origin = action.origin();
             const end = origin.plus(direction.scale(reach));
+            const hammer = config && config.hammer === true;
 
             sound(action, "cobblemon:move.watergun.actor");
             WorldFeedback.emit(world, jetpunchScene, 1, origin,
-                { moment: "thrust", spray: spray, scale: scale, intensity: intensity, reach: reach, hammer: config && config.hammer === true ? 1 : 0 }, 20);
+                { moment: "thrust", spray: spray, scale: scale, intensity: intensity, reach: reach,
+                    direction: [direction.x(), direction.y(), direction.z()], hammer: hammer ? 1 : 0 }, 20);
+
+            // 明确选中一个友方：只走无伤支援，把对方身上的火浇熄，不造成伤害。
+            if (selected !== null && world.valid(selected) && world.friendly(selected) && String(selected.ref()) !== String(actor.ref())) {
+                const body = world.observe(selected);
+                const at = body !== null ? body.position() : action.targetPosition();
+                if (at.minus(origin).length() > reach + 0.6 || !world.clear(origin, at)) {
+                    WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "whiff", target: String(selected.ref()), spray: spray, scale: scale }, 18);
+                    done(action);
+                    return;
+                }
+                if (CombatStatus.has(world, selected, "burn")) {
+                    const cured = CombatStatus.cure(world, selected, "burn");
+                    const out = world.ignite(selected, 0);
+                    if (cured || out) {
+                        WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "douse", target: String(selected.ref()), aid: 1, scale: scale }, 26);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.25, 0)), jetpunchDouseText, [], 24);
+                        world.sound("minecraft:block.fire.extinguish", at, 14, "{}");
+                    } else {
+                        WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "whiff", target: String(selected.ref()), spray: spray, scale: scale }, 18);
+                    }
+                } else {
+                    // 干着的同伴：只溅一片水花，不挂状态、不造成伤害。
+                    WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "whiff", target: String(selected.ref()), spray: spray, scale: scale }, 18);
+                }
+                done(action);
+                return;
+            }
 
             const hit = action.trace(origin, end, radius);
             const victim = hit.target();
@@ -78,7 +111,7 @@ namespace PokemonSkills {
                 if (landed && world.valid(victim)) {
                     CombatStatus.apply(world, victim, "soaked", jetpunchDrenchedEffect, drench, 0, { unique: true });
                     const away = at.minus(origin);
-                    if (away.length() > 0.05) world.displace(victim, away.unit().scale(drive));
+                    if (away.length() > 0.05) world.hitDisplace(victim, away.unit().scale(drive));
                     WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), jetpunchHitText, [Math.round(power)], 22);
                     if (CombatStatus.has(world, victim, "burn")) {
                         CombatStatus.cure(world, victim, "burn");

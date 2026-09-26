@@ -25,6 +25,7 @@ Smoke.scenario("clamp", function (stage) {
         stage.expect(stage.casts("clamp", caster) >= 1, "cloyster committed clamp");
         stage.expect(stage.damageTo(heavy) > 0, "the shell crushed the target");
         stage.expect(stage.hadMobEffect(heavy, "world_combat:clamped_shell"), "the target was clamped");
+        stage.expect(stage.hadMobEffect(caster, "world_combat:clamping"), "the caster locked itself only after the control landed");
         stage.expect(stage.attribute(heavy, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the clamp pinned the iron golem's movement speed");
         stage.note("how many crunches landed and the crit roll are positional/random", {
             casts: stage.casts("clamp", caster),

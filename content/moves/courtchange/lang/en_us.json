@@ -3,7 +3,7 @@
   "worldcombat.skill.courtchange.use.0": "Reclaim a dangerous field the enemy laid down",
   "worldcombat.skill.courtchange.use.1": "Flip a vortex or snare under the foe's feet",
   "worldcombat.skill.courtchange.use.2": "Trade an old field of your own for a more useful enemy one",
-  "worldcombat.skill.courtchange.description.0": "Pick a point within %2$s blocks; every field effect within %1$s blocks is reassigned - enemy fields pass to you, and your own fields go to the nearest enemy.",
+  "worldcombat.skill.courtchange.description.0": "Choose a point within %2$s blocks and exchange explicitly transferable fields within %1$s blocks: hostile fields become yours and friendly fields pass to the nearest enemy. Position, remaining time and resource history are retained. Stealth Rock waits for existing flights to end before transferring.",
   "worldcombat.skill.courtchange.swift.on": "Swift swap: %1$s telegraph and %2$s cooldown, at the cost of radius x0.85 - quick and small, made for long trades.",
   "worldcombat.skill.courtchange.swift.off": "Steady swap: radius x1.2, at the cost of a higher telegraph and cooldown - one circle covers a much wider stretch.",
   "worldcombat.skill.courtchange.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",

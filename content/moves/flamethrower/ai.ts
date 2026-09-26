@@ -2,9 +2,10 @@
  * 喷射火焰 / flamethrower 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 13）格内；更远先交给共享接近逻辑。
- * 对谁出手：`ai.preferClusters`（默认开）打开时，目标身边 3 格内还挤着别的敌人就抬高 priority——一发扇面
- *   把一条走廊一起点着正是它最值的时候；目标还没被烧着时略优先。够不到交给共享接近逻辑。
- * 放完之后：一道持续火墙，扫完即回，交回共享交战计划。
+ * 对谁出手：`ai.preferClusters`（默认开）打开时，目标身边 3 格内还挤着别的敌人就抬高 priority——按住喷口把
+ *   一条走廊一起烧正是它最值的时候；目标还没被烧着时略优先。够不到交给共享接近逻辑。
+ * 放完之后：喷窗约 1 秒、站定压火，喷完即回，交回共享交战计划。AI 提交时朝目标方向起喷；持续转向由玩家
+ *   按住时逐刻送来的控制点实现，AI 这一侧保持一次朝目标即可。
  */
 namespace PokemonSkills {
     function flamethrowerWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -56,7 +57,7 @@ namespace PokemonSkills {
             help: "超过这个距离就不主动喷火，先走近；越大越愿意在更远处先手。"
         }),
         field(pathOf("ai.preferClusters"), "成线时优先", "boolean", {
-            help: "开启后，目标身边 3 格内还挤着别的敌人时优先喷火，一条火舌一起烧；关闭则只按普通攻击排序。"
+            help: "开启后，目标身边 3 格内还挤着别的敌人时优先喷火，按住喷口把一条走廊一起烧；关闭则只按普通攻击排序。"
         })
     ]);
 }

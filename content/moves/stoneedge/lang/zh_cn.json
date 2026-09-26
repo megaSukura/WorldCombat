@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.stoneedge.summary": "蹲身把地气压进脚下，裂缝朝目标裂开，石刺在缝上一段段顶出：站在脊带里的人被从下方刺中，第一名吃满威力，同一条脊上越靠后的目标越轻；被顶裂的地面会留在原地再合上。散刺式把脊铺宽罩住并排的人，尖刺式是窄而长的一条缝。",
+  "worldcombat.skill.stoneedge.summary": "蹲身把地气压进脚下，裂缝在释放那一刻锁定方向朝前裂开，石刺沿真实地表一段段顶出：站在脊带里的人被从下方刺中，第一名吃满威力，同一条脊上越靠后的目标越轻；被顶裂的地面会留在原地再合上。起点与方向锁死后施术者再移动也不拖动裂缝，地面断开、越过高墙或台阶太陡时裂缝就停在上一段。散刺式把脊铺宽罩住并排的人，尖刺式是窄而长的一条缝。",
   "worldcombat.skill.stoneedge.description.0": "站在脊带里的每名敌人只被刺中一次，第一名受到约 %1$s 点岩石属性物理伤害；脊带横向半宽 %2$s 格。",
-  "worldcombat.skill.stoneedge.description.1": "裂缝从脚下裂出 %1$s 格，由 %2$s 段石刺依次顶出。",
+  "worldcombat.skill.stoneedge.description.1": "裂缝从脚下锁定方向裂出最多 %1$s 格，由 %2$s 段石刺依次顶出；每段都要找到真实承载地表，断口、高墙或过陡台阶会让它提前停下。",
   "worldcombat.skill.stoneedge.description.2": "同一条脊上越靠后的目标，威力保留 %1$s；被顶裂的地面留存 %2$s。",
   "worldcombat.skill.stoneedge.stance.wide": "散刺式：脊带铺宽 1.8 倍、石刺段数 +2，一条缝罩住并排的敌人；代价是威力 ×0.9、裂线更短、起手与冷却更久。",
   "worldcombat.skill.stoneedge.stance.sharp": "尖刺式：窄而长的一条缝，威力 ×1.06、射程 ×1.1，适合把一条线上的单个目标刺穿；代价是覆盖窄。",

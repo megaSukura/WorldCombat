@@ -7,7 +7,8 @@
  * 范围：这一招只作用在电团飞过的一条直线上；flight 各层绑 `projectile` 锚点沿弹道铺开，画面即那条弹道。
  * 运动：charge 的电花向里收成一颗球；flight 的核沿 projectile 高速直行、电弧留在身后（trail）；burst 向外炸。
  * 数：`data.sparks`（特攻与载荷派生）决定电花与电弧量，`data.scale`（速度差载荷派生）决定电团体积，
- *   `data.intensity`（威力派生）抬高命中亮度——画面里的数与机制里的数一致。
+ *   `data.intensity`（威力派生）抬高命中亮度——发射用预计目标载荷，burst 用命中时的实际载荷。
+ *   flight 是没有固定寿命的持续段（duration 0），由动作在命中、撞方块或飞满射程时 stop/finish。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ElectroballDefinition: ParticleDefinition = {
@@ -34,7 +35,7 @@ const ElectroballDefinition: ParticleDefinition = {
             ]
         },
         flight: {
-            duration: 24,
+            duration: 0,
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {

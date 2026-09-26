@@ -14,7 +14,7 @@ Smoke.scenario("safeguard", function (stage) {
         stage.expect(stage.casts("safeguard", caster) > 0, "safeguard was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/safeguard"), "caster carried the shared safeguard identity");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/safeguard"), "the nearby ally carried the shared safeguard identity");
-        stage.note("神秘守护以施法者为锚，提交时与之后每 20 刻把同一份守护补给半径内的友方；带身份的活体上，经共享状态路由落下的异常都会被 gate 拒绝（本私有装配对手只有撞击，不带异常状态，兑现留给完整装配试玩）。半径、时长、光点数随身高/特防/等级变化，深守与早守各有取舍。", {
+        stage.note("神秘守护以施法者为锚，提交时与之后每 20 刻按来源租约把同一份守护补给半径内的友方；每份来源各有独立贡献，重叠的两个神秘守护清掉一个不会撤掉另一个（本私有装配只有撞击，异常被挡与重叠清理留给完整装配试玩核对）。离开半径的人按各自剩余的守护时间短暂保留；带身份的活体上，经共享状态路由落下的异常都会被 gate 拒绝，已有异常不受影响。半径、时长、光点数随身高/特防/等级变化，深守与早守各有取舍。", {
             casts: stage.casts("safeguard", caster), casterHp: caster.health(), allyHp: ally.health()
         });
         stage.done();

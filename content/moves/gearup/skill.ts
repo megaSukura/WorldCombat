@@ -1,4 +1,8 @@
-/** 给附近符合传动条件的友方暂时提高攻击和特攻：正电、负电宝可梦，以及铁傀儡或手持金属工具的伙伴。 */
+/**
+ * 给附近符合传动条件的友方暂时提高攻击和特攻：正电、负电宝可梦，以及铁傀儡或手持金属工具的伙伴。
+ * 资格在**施放这一刻**读一次：那一刻合格的人接上传动，之后即使放下工具、走出齿链范围，动力也留在身上直到真到期；
+ * 反过来，施放之后才合格的不会被补上。资格只是这次快照的入口，不是每 tick 复查。
+ */
 namespace PokemonSkills {
     function gearupStage(world: CombatWorld, actor: CombatActor, stat: string): number {
         return NativeEffects.stage(NativeEffects.read(world, actor), stat);
@@ -33,14 +37,13 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(gearupMark, "start", function () { });
     WorldCombat.effectHandler(gearupMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 给一个正负电友方挂上传动状态并记录这次抬起的等级；已在身上的人不重复叠加。 */
-    function gearupGrant(world: CombatWorld, actor: CombatActor, drive: number, spark: number, ticks: number): boolean {
-        if (MobEffects.read(world, actor, gearupEffect) !== null) return false;
+    /** 给一个正负电友方挂上传动状态并记录这次抬起的等级；已在身上的人不重复叠加。返回承载本次传动的托管效果 id（0 表示没给）。 */
+    function gearupGrant(world: CombatWorld, actor: CombatActor, drive: number, spark: number, ticks: number): number {
+        if (MobEffects.read(world, actor, gearupEffect) !== null) return 0;
         NativeEffects.boost(world, actor, "atk", Math.max(1, Math.min(6, Math.round(drive))));
         NativeEffects.boost(world, actor, "spa", Math.max(1, Math.min(6, Math.round(spark))));
         MobEffects.apply(world, actor, gearupEffect, ticks, 0);
-        world.effect(gearupMark, actor, JSON.stringify({ drive: Math.round(drive), spark: Math.round(spark) }), ticks);
-        return true;
+        return world.effect(gearupMark, actor, JSON.stringify({ drive: Math.round(drive), spark: Math.round(spark) }), ticks);
     }
 
     // 动力散去、被人解除：按记录把这次抬起的物攻与特攻原样收回（只收当前实际持有的正等级）。
@@ -71,7 +74,7 @@ namespace PokemonSkills {
         id: gearupId,
         cooldownParameter: "wait",
         name: "辅助齿轮",
-        description: "给附近符合传动条件的友方暂时提高攻击和特攻：正电、负电宝可梦，以及铁傀儡或手持金属工具的伙伴。",
+        description: "给附近符合传动条件的友方暂时提高攻击和特攻：正电、负电宝可梦，以及铁傀儡或手持金属工具的伙伴。资格只在施放这一刻结算一次；接上的人之后放下工具或走出范围，动力也留到结束。",
         uses: ["为正负电伙伴、铁傀儡或持金属工具的队友提高攻击", "在近身缠斗前把输出拉起来", "让带正负电特性的队友一起变强"],
         kind: "self",
         range: 1,
@@ -131,13 +134,20 @@ namespace PokemonSkills {
                 if (!world.friendly(other) || !gearupQualifies(world, other)) continue;
                 const obs = world.observe(other);
                 if (obs === null) continue;
-                if (!gearupGrant(world, other, drive, spark, ticks)) continue;
-                linked.push(String(other.ref()));
+                // 只有这次真正被传动上的伙伴才算受益人；已经在转的人不重复也反馈。
+                const mark = gearupGrant(world, other, drive, spark, ticks);
+                if (!mark) continue;
+                const ref = String(other.ref());
+                linked.push(ref);
                 WorldFeedback.emit(world, gearupScene, 1, obs.position(),
-                    { moment: "drive", target: String(other.ref()), drive: drive, spark: spark,
+                    { moment: "drive", target: ref, drive: drive, spark: spark,
                       motes: Math.max(8, Math.round(teeth * 0.5)), scale: scale }, 28);
+                // 持续动力绑在传动自己的记录上：离开齿链范围不会掉，只有动力真到期或被清除才收。
+                WorldFeedback.onEffect(world, mark, "world_combat:move_gearup/drive/" + ref, gearupScene, 1, obs.position(),
+                    { moment: "drive_hold", target: ref, drive: drive, spark: spark,
+                      motes: Math.max(6, Math.round(teeth * 0.3)), scale: scale });
                 WorldFeedback.text(world, obs.position().plus(WorldCombat.point(0, 1.25, 0)), gearupDriveText, [drive, spark], 28);
-                if (String(other.ref()) !== selfRef) world.sound("cobblemon:impact.steel", obs.position(), 10, "{}");
+                if (ref !== selfRef) world.sound("cobblemon:impact.steel", obs.position(), 10, "{}");
             }
             const path: string[] = [];
             for (let i = 0; i < linked.length; i++) { path.push(selfRef); path.push(linked[i]); }

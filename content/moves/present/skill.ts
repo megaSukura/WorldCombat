@@ -20,15 +20,16 @@ namespace PokemonSkills {
     const presentCandyText = "world_combat.move.present.text.candy";
     const presentEmptyText = "world_combat.move.present.text.empty";
 
-    /** 落点附近最近的活物；用来决定「当着谁开盒」。 */
+    /** 落点附近最近、且与盒子有真实通路的活物；墙后的最近者拿不到糖。 */
     function presentNearest(world: CombatWorld, point: CombatPoint, radius: number): CombatActor | null {
         const found = world.query(point, radius, false);
         let best: CombatActor | null = null, closest = radius + 1;
         for (let i = 0; i < found.length; i++) {
             const facts = world.observe(found[i]);
             if (facts === null) continue;
-            const gap = facts.position().minus(point).length();
-            if (gap <= radius && gap < closest) { closest = gap; best = found[i]; }
+            const at = facts.position();
+            const gap = at.minus(point).length();
+            if (gap <= radius && gap < closest && world.clear(point, at)) { closest = gap; best = found[i]; }
         }
         return best;
     }
@@ -85,19 +86,22 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
+                // 结果只掷一次、先定下再结算；完成回调与命中回调共用这一个 settled 闭包，不会二次开盒。
                 const roll = scope.random();
+                const candy = roll < sweet;
 
-                if (roll < sweet) {
+                if (candy) {
+                    // 糖从真实盒点弹出；只有与盒子通路畅通的最近活物才拿得到，隔墙者被跳过。
                     const recipient = presentNearest(scope, point, radius + 0.6);
-                    const at = recipient === null ? point : (scope.observe(recipient) === null ? point : scope.observe(recipient)!.position());
                     let healed = 0;
                     if (recipient !== null) healed = heal(scope, recipient, mend, "present");
-                    WorldFeedback.emit(scope, presentScene, 1, at,
+                    WorldFeedback.emit(scope, presentScene, 1, point,
                         { moment: "candy", target: recipient === null ? "" : String(recipient.ref()),
                             friend: recipient !== null && scope.friendly(recipient) ? 1 : 0,
-                            motes: motes, scale: scale, healed: Math.round(healed * 10) / 10 }, 30);
+                            motes: motes, scale: scale, healed: Math.max(0, Math.round(healed)) }, 30);
                     sound(current, "minecraft:entity.allay.item_given");
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), presentCandyText, [Math.round(mend * 100)], 26);
+                    if (healed > 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), presentCandyText, [Math.round(healed * 10) / 10], 26);
+                    else WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), presentEmptyText, [], 22);
                     done(current);
                     return;
                 }
@@ -106,6 +110,8 @@ namespace PokemonSkills {
                 let struck = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, radius, { below: 2, above: 3 }), function (other, facts) {
                     if (String(other.ref()) === String(current.actor().ref()) || struck >= 8) return;
+                    // 机关只咬与盒点真实连通的敌人，实墙替目标挡住炸开。
+                    if (!scope.clear(point, facts.position())) return;
                     if (!hurt(current, other, presentId, power * tier,
                         { damage: damageSpec(presentId, "surprise") })) return;
                     struck++;

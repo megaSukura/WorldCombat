@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.flamecharge.summary": "Charges in a straight line cloaked in flame: the first target struck takes the full hit and is knocked aside, then the user's Speed rises; with pierce it ploughs on, each later foe along the line taking a lighter hit.",
+  "worldcombat.skill.flamecharge.summary": "Charges in a straight line cloaked in flame: the first target actually hurt takes the full hit and is knocked aside, then the user's Speed rises; with pierce it ploughs on, each later foe along the line taking a lighter hit.",
   "worldcombat.skill.flamecharge.use.0": "Charge straight into a lone target",
   "worldcombat.skill.flamecharge.use.1": "Set a whole line of clustered foes alight",
   "worldcombat.skill.flamecharge.use.2": "Boost Speed, then run the new speed down",
   "worldcombat.skill.flamecharge.description.0": "The charge deals about %1$s damage, rushing %2$s blocks at %3$s blocks/tick; when the user is soaked the hit is ×0.85.",
-  "worldcombat.skill.flamecharge.description.1": "With pierce the first target takes full damage and each later foe struck along the line takes %1$s of it; a hit raises the user's Speed by %2$s stage(s) (at most once per cast, fading once combat ends) and knocks the struck target about %3$s blocks along the charge. The charge's lateral hit radius is about %4$s blocks.",
+  "worldcombat.skill.flamecharge.description.1": "With pierce the first target actually hurt takes full damage and each later foe struck along the line takes %1$s of it; a landed hit raises the user's Speed by %2$s stage(s) (at most once per cast, fading once combat ends) and knocks the struck target about %3$s blocks along the charge. Contacts that are immune or blocked neither carry nor boost. The charge's lateral hit radius is about %4$s blocks.",
   "worldcombat.skill.flamecharge.pierce.on": "Pierce: charge through the first target and set the rest of the line alight (later targets take the pierce share); each hit is lighter and the cooldown longer.",
   "worldcombat.skill.flamecharge.pierce.off": "Focused: stop on the first target, heavier and quicker to recover.",
   "worldcombat.skill.flamecharge.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

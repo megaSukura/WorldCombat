@@ -27,6 +27,11 @@ namespace PokemonSkills {
             if (!target) return true;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
+            // 头顶太矮就跳不起来：先看身体上方那一段是不是空的，窄顶棚下不出手。
+            const world = CompanionBehavior.world(context);
+            const selfTop = self.point[1] + (typeof self.height === "number" && self.height > 0 ? self.height : 1.4) * 0.5;
+            const headroom = CompanionBehavior.point([self.point[0], selfTop + 0.6, self.point[2]]);
+            if (!world.freeSpace(headroom, typeof self.width === "number" && self.width > 0 ? self.width : 0.9, 1.4)) return false;
             const targetMass = Math.max(1, heavyslamMassOf(context, target));
             const ratio = heavyslamMassOf(context, self) / targetMass;
             return ratio >= CompanionBehavior.ai<number>(capability, "minRatio", 0);

@@ -8,6 +8,8 @@
  */
 const FlingDefinition: ParticleDefinition = {
     moments: {
+        feed: { duration: 20, emitters: [{ name: "berry_taken", bind: "target", fit: "body", particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+            burst: { count: 10 }, shape: { kind: "sphere", radius: .4 }, direction: "up", speed: [.015, .045], lifetime: [8, 16], size: [.13, .03], color: 0xB9E283, alpha: [.7, 0] }] },
         draw: {
             duration: 18,
             exit: { stop: 12, drain: 10 },

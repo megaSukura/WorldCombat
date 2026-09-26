@@ -43,6 +43,17 @@ namespace PokemonSkills {
     const dragonrushEdge: Formula.Node = F.stat("speed")
         .minus(F.target("stat.speed", { key: "worldcombat.skill.dragonrush.value.targetSpeed", fallback: "目标速度" })).max(0);
 
+    /** 头顶到第一块非空气方块之间的净空（身体中心能升多高）；开阔时返回 limit。弧线高度受当前空间约束。 */
+    export function dragonrushHeadroom(world: CombatWorld, body: CombatObservation, limit: number): number {
+        const pos = body.position(), top = pos.y() + body.height() * 0.5;
+        const steps = Math.ceil(limit * 2) + 2;
+        for (let step = 0; step <= steps; step++) {
+            const block = world.block(WorldCombat.point(pos.x(), top + step * 0.5, pos.z()));
+            if (block !== null && String(block.id()).indexOf("air") < 0) return Math.max(0, step * 0.5 - 0.4);
+        }
+        return limit;
+    }
+
     actionParameters.define(dragonrushId, {
         /** 俯冲威力：(80 + 物攻偏移[−14,38] + 体重偏移[0,24] + 身高偏移[−2,8]) × 威压 0.94 / 迅袭 1.08；夹 58..158。 */
         dive: formula(

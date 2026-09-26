@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.quash.summary": "Slam a slab of pressure onto the target: its current action is broken and Quash is left on it. While quashed, its next few attempted actions are pushed back (no resources spent, just a beat late), and its movement is dragged down, the more so the more it is pressed.",
+  "worldcombat.skill.quash.summary": "Try to interrupt an interruptible preparation and deny a limited number of subsequent attempts. Movement remains slowed during the effect.",
   "worldcombat.skill.quash.description.0": "Sends a press of force at the aim point up to %1$s blocks away with a %2$s block collision radius; it affects only the first non-ally it strikes, and fizzles if terrain or an ally blocks the way.",
-  "worldcombat.skill.quash.description.1": "A hit breaks the target's current action and leaves Quash for %1$s: its next %2$s attempted actions are pushed back (no resources spent, just a beat late); once those are used up it acts normally even while quashed, and Quash ends when it expires or is cleared.",
+  "worldcombat.skill.quash.description.1": "Try to interrupt an interruptible action and suppress the target for %1$s. Deny its next %2$s attempts; one native projectile or damage delivery spends only one denial. After those are spent it can act normally while the remaining slow expires or is cured.",
   "worldcombat.skill.quash.use.0": "Break a move the target is charging",
   "worldcombat.skill.quash.use.1": "Steal a beat and hold your ground",
   "worldcombat.skill.quash.use.2": "Slow a target that charges you down",

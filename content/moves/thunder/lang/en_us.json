@@ -2,7 +2,7 @@
   "worldcombat.skill.thunder.summary": "Gather the clouds, then drop a column of thunder onto the target point from the sky: a small but brutal hit. It always lands in rain, scatters more in sun, and a roof blocks it entirely.",
   "worldcombat.skill.thunder.description.0": "The bolt deals about %1$s special Electric damage where it lands.",
   "worldcombat.skill.thunder.description.1": "Every enemy within %1$s blocks of the strike is hit, and each that actually takes damage has a %2$s%% chance to be left paralysed: paralysis lasts about 40 s, halving movement speed and giving a 25%% chance for each attempted action to fail (Electric types are immune); it can also be cleansed.",
-  "worldcombat.skill.thunder.description.2": "It strikes up to %1$s blocks away after a %2$s s charge; it always lands in rain, falls to half accuracy on a clear day with open sky and to about 70%% otherwise. If the target has a roof or rock overhead, the bolt is blocked entirely and deals nothing.",
+  "worldcombat.skill.thunder.description.2": "It strikes up to %1$s blocks away after a %2$s s charge; you may pick open ground to lead the landing, so stepping away dodges it. It always lands in rain, falls to half accuracy on a clear day with open sky and to about 70%% otherwise. If the chosen spot has a roof or rock overhead, the bolt is blocked entirely and deals nothing.",
   "worldcombat.skill.thunder.use.0": "Drop a bolt on a target from afar",
   "worldcombat.skill.thunder.use.1": "Call a sure strike in the rain",
   "worldcombat.skill.thunder.use.2": "Shut the bolt down with a roof",

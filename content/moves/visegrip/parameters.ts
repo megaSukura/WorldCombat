@@ -1,30 +1,4 @@
-/**
- * 夹住 / visegrip 的参数与伤害段。
- *
- * 原生事实（Cobblemon 1.8 / Showdown）：一般、物理、威力 55、命中 100、PP 30、单目标、接触、无次要效果。
- *
- * 翻译：把「将对手从两侧夹住」翻成**两只钳子从两侧同时合上、往身前一带**——施法者扑上一步，两钳一左一右夹住
- *   目标碾一下，再顺势把它拽近；钳口相对目标越大，这一夹越实，越重越大的目标越难拽动。
- *   这是本组唯一会改变目标位置的一招：把目标从远处拽进近身，为下一记铺路。
- * 与同为擒抱/控制的招分开：
- *   贝壳夹击 —— 厚壳长时长碾磨，双方一起被钉住；
- *   缠绕     —— 青藤缠上、压低速度与定身，伤害极低；
- *   夹住     —— 一次干脆的双侧钳夹，伤害不低、把人拽近，不留持续状态。
- * 与同为接触物理的身体招分开：龙锤是自上而下的重砸，夹住是横向两侧的一夹一拽。
- *
- * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
- *   squeeze 钳夹威力 34 + 物攻偏移 + 等级偏移 − 目标体型偏移（钳口相对越小，越夹不动大目标）。
- *   reach   钳夹距离 2.4 格 + 身高偏移 + 速度偏移（钳臂越长、出手越快够得越远）。
- *   lunge   扑身距离 0.9 格 + 速度偏移（快的人补得上一步）。
- *   drag    拽近距离 0.9 + 物攻偏移 − 目标质量偏移（越重的目标越拽不动）。
- *   motes   钳口碎屑数量 18 + 物攻偏移（同时驱动画面密度）。
- *   tempo/aftercast/recharge  速度决定起手／收招／冷却。
- *
- * 配置 haul（拖拽式）双向取舍：开＝拽近 ×1.35、距离略长，代价是威力 ×0.9；关（碾夹式）＝威力 ×1.18、
- *   拽近 ×0.65。两向各有局面（把人拖进近身 vs 原地碾一记重的）。
- *
- * 伤害段 squeeze 与参数同名，走共享换算（原始类别 Physical）。
- */
+/** Original squeeze and drag budgets use the body actually caught by the claws. */
 namespace PokemonSkills {
     /** 目标质量（hg）：宝可梦读原生体重，其他生物按碰撞箱体积估算；越大越难被钳口拽动。 */
     const visegripMassNode: Formula.Node = F.when(F.target("body.weight"),
@@ -38,7 +12,7 @@ namespace PokemonSkills {
             F.base(34)
                 .plus(F.stat("attack").minus(60).times(0.26).clamp(-8, 30))
                 .plus(F.level().minus(20).times(0.22).clamp(0, 10))
-                .minus(F.target("body.height").minus(1.4).times(2.2).clamp(-3, 10))
+                .minus(F.target("actor.height").minus(1.4).times(2.2).clamp(-3, 10))
                 .times(F.when(F.pref("haul", text("worldcombat.skill.visegrip.preference.haul")), F.const(0.9), F.const(1.18)))
                 .clamp(20, 80).round(1),
             "钳夹威力", {

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.dragonbreath.summary": "深吸一口气，朝身前喷出一道扇形龙息：锥形由近及远铺满，扫中的敌人每个只吃一次伤害、越远力道越弱，并有机会被麻住——麻痹会拖慢移动，还让出招有概率失败。",
   "worldcombat.skill.dragonbreath.description.0": "被龙息扫中的敌人各受到约 %1$s 点特殊伤害，越远越轻。",
-  "worldcombat.skill.dragonbreath.description.1": "气息从身前铺到 %1$s 格远、张开 %2$s 度，最多扫到 %3$s 个敌人，每个敌人只被扫中一次。",
+  "worldcombat.skill.dragonbreath.description.1": "气息从身前铺到 %1$s 格远、张开 %2$s 度，最多扫到 %3$s 个敌人，每个敌人只被扫中一次；可以对着空地空喷，墙会挡住气息、墙后的敌人扫不到。",
   "worldcombat.skill.dragonbreath.description.2": "被扫中并实际受伤的敌人有 %1$s%% 概率陷入麻痹：麻痹持续约 40 秒，期间移动速度降低 50%%、每次尝试出招有 25%% 概率失败（电属性免疫）。锥形由近及远在 %2$s 秒内铺满。",
   "worldcombat.skill.dragonbreath.use.0": "喷出一道扇形吐息扫过身前一片",
   "worldcombat.skill.dragonbreath.use.1": "一次扫到排成一列的多个敌人",

@@ -5,11 +5,11 @@
  * 「可以比对手先攻击。对手使出的招式如果不是攻击招式则会失败」（Cobblemon 1.8）。
  *
  * 翻译：即时战斗里没有回合先手，本招把「抢在对手的招式之前」翻成一记**几乎不占时间的黑暗贴身打断**：
- *   施放瞬间（prepare 极短）朝锁定目标闪身贴上去刺出一记；成功与否取决于出手那一刻目标是不是正“在出手”。
- *   「正在出手」按两条可观察事实读取：目标是活的且当前有攻击对象（`CombatActor.attacking` 非空，僵尸一类
- *   原版近战走这条），或者它在最近 `window` 刻内提交过一次攻击招式（世界事件 `world_combat:committed`
- *   记下出手，非变化的招式不算）。两条都不成立时这一记会落空——PP 照扣（与原作「招式失败」一致），
- *   所以 AI 只在读准时才提议，而玩家可以硬赌。
+ *   朝瞄准方向闪身刺出一记；这一刺打中的第一个活体要处在出手窗内才算命中。
+ *   「正在出手」按两条可观察事实读取：目标最近 `window` 刻内完成过一次真实攻击（原生近战／投射物由
+ *   `DamageSemantics.recentAttack` 提供，脚本招式由世界事件 `world_combat:committed` 记下，非变化招式不算）。
+ *   两条都不成立时这一记会落空——PP 照扣（与原作「招式失败」一致），所以 AI 只在读准时才提议，而玩家可以
+ *   朝任意方向硬赌，空放也会消费。
  *
  * 数据分散（每个参数各吃不同的精灵数据）：
  *   sneak           刺击威力 = 58 + 物攻偏移 + 速度偏移；预判 ×1.15；夹 44..150。
@@ -48,13 +48,33 @@ namespace PokemonSkills {
     export function suckerpunchRemember(world: CombatWorld, actor: CombatActor, moveId: string): void {
         suckerpunchReads[String(actor.ref())] = { tick: world.tick(), move: moveId };
     }
+    /** 该活体此刻是否处在出手窗内：刚完成过真实原生攻击，或最近提交过一次脚本攻击招式。window 是本招参数。 */
+    export function suckerpunchOpen(world: CombatWorld, actor: CombatActor | null, window: number): boolean {
+        if (actor === null || !world.valid(actor)) return false;
+        var reach = Math.max(1, window);
+        if (DamageSemantics.recentAttack(world, actor, reach) !== null) return true;
+        var record = suckerpunchReads[String(actor.ref())];
+        return record !== undefined && world.tick() - record.tick <= reach;
+    }
     /** 出手那一刻目标是否正「在出手」；window 是本招参数。 */
     export function suckerpunchArmed(world: CombatWorld, target: CombatActor | null, window: number): boolean {
         if (target === null || !world.valid(target) || world.friendly(target)) return false;
-        var body = world.observe(target);
-        if (body !== null && body.attacking() !== null) return true;
-        var record = suckerpunchReads[String(target.ref())];
-        return record !== undefined && world.tick() - record.tick <= Math.max(1, window);
+        return suckerpunchOpen(world, target, window);
+    }
+    /** 起手时找一个能读到出手窗的邻近敌人做标记；读不到返回 null（表现为单纯蓄势）。 */
+    export function suckerpunchMark(world: CombatWorld, origin: CombatPoint, range: number, window: number): CombatActor | null {
+        var radius = Math.max(0.5, range), best = radius + 0.01, nearest: CombatActor | null = null;
+        var found = world.query(origin, radius, false);
+        for (var i = 0; i < found.length; i++) {
+            var candidate = found[i];
+            if (candidate === null || world.friendly(candidate)) continue;
+            if (!suckerpunchOpen(world, candidate, window)) continue;
+            var body = world.observe(candidate);
+            if (body === null) continue;
+            var gap = body.position().minus(origin).length();
+            if (gap <= best) { best = gap; nearest = candidate; }
+        }
+        return nearest;
     }
 
     actionParameters.define(suckerpunchId, {

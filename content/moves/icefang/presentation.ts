@@ -2,9 +2,9 @@
  * 冰冻牙 / icefang 的客户端表现。
  *
  * 一句话：牙间凝起冷霜、冰屑绕口打转 → 沿一条直线扑出、身后拖出霜迹 → 咬实的一刻在接触点炸开冰色迸溅与獠牙剪影，
- * 隔一拍后寒气在伤口里发作、把目标从脚往上一层层冻住；若目标本就冻着，咬中的瞬间冰壳四散崩碎。
+ * 隔一拍后寒气在伤口里发作、把目标从脚往上一层层冻住；若目标本就冻着，咬中的瞬间冰壳四散崩碎；若冻不住，冷气只在表面散一层霜。
  * 色相家族：冰蓝（0x8FD8F0）与霜白（0xE8FAFF），深蓝（0x4FA8D8）只压在核心一点。
- * 拍子：起 charge（凝霜）→ 扑 pounce → 咬 bite（命中峰值）／ 碎 shatter ／ 冻 freeze → 懵 flinch ／ miss。
+ * 拍子：起 charge（凝霜）→ 扑 pounce → 咬 bite（命中峰值）／ 碎 shatter ／ 冻 freeze ／ 抗 resist → 懵 flinch ／ miss。
  * 范围：bite／shatter／freeze 绑命中点与目标，画出的就是咬中的位置与结冰的身体。
  * 运动：速度线沿扑出方向掠过；freeze 的冰晶由下向上包住目标；shatter 的碎片向外崩开；flinch 的星子从头顶上飘。
  * 数：`data.shards`（特攻派生）决定结冰与碎片层的数量；`data.intensity`（威力 / 66）抬高密度与亮度；
@@ -138,6 +138,32 @@ const IcefangDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.09],
                     lifetime: [10, 16], size: [0.16, 0.04],
                     color: 0xE8FAFF, alpha: [0.8, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        resist: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "sheet", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    burst: { count: { data: "shards", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "outward", speed: [0.08, 0.24],
+                    gravity: 0.03, drag: 0.9,
+                    lifetime: [6, 12], size: [0.12, 0.03],
+                    color: 0xC8ECFA, alpha: [0.8, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "shed", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: { data: "shards", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.1, 0.28],
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [5, 10], size: [0.1, 0.03],
+                    color: 0x8FD8F0, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 50
                 }
             ]
         },

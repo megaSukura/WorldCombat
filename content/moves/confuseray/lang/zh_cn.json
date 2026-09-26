@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.confuseray.summary": "放出一束幽光照向目标，命中后使它陷入混乱：每次出手都可能作废，打中别人时还会被自己的力量反噬。光是一条直线，掩体与走位都能让它落空。",
+  "worldcombat.skill.confuseray.summary": "朝指定方向或世界点放出一束幽光照过去，命中后使它陷入混乱：每次出手都可能作废，打中别人时还会被自己的力量反噬。光是一条直线，第一个碰到的墙或身体就会把它截断，空照也照常。",
   "worldcombat.skill.confuseray.use.0": "远程单体扰乱，让高输出的敌人打空",
   "worldcombat.skill.confuseray.use.1": "在安全距离打断远程压制",
   "worldcombat.skill.confuseray.use.2": "为队友的集火制造失手窗口",
-  "worldcombat.skill.confuseray.description.0": "被幽光照到后陷入混乱，持续 %1$s：期间它每次出手有约三成概率作废，打中别人时还会被自己的力量反噬、按自身攻击受到自伤。",
-  "worldcombat.skill.confuseray.description.1": "基础射程 %1$s 格，判定半径 %2$s 格；当前配置下射程 %3$s 格。光束沿直线前进、需要视线畅通，只命中直线上的第一个目标。",
+  "worldcombat.skill.confuseray.description.0": "被幽光照到后陷入混乱，持续 %1$s：期间它每次出手有约三成概率作废，打中别人时还会被自己的力量反噬、按自身攻击受到自伤——但反噬不会超过它这一击真正造成的伤害。",
+  "worldcombat.skill.confuseray.description.1": "朝方向或地点放光，不必先选中敌人；基础射程 %1$s 格，判定半径 %2$s 格，当前配置下射程 %3$s 格。光束沿直线前进、需要视线畅通，第一个身体或方块会把它截断，只对直线上的第一个非友方生效。",
   "worldcombat.skill.confuseray.description.2": "汇聚幽光要 %1$s，收招 %2$s，冷却 %3$s。广照射程更远；凝神的混乱持续时间 ×1.35，代价是射程更近、起手多0.2秒、冷却约长15%。两种形态的判定半径和失手概率相同。",
   "worldcombat.skill.confuseray.value.beamReach": "射程",
   "worldcombat.skill.confuseray.value.beamRadius": "判定半径",

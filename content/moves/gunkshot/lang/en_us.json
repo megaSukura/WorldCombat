@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.gunkshot.summary": "The user crams a mass of filthy garbage into its body and fires it straight as a cannon shell: the only physical hit in the family, dealing heavy damage, shoving the target hard and possibly poisoning it. The shell carries a spread, so it misses more the farther it flies. Heavy load hits harder and drifts more; light load is steadier and faster.",
+  "worldcombat.skill.gunkshot.summary": "The user crams a mass of filthy garbage into its body and fires it straight as a cannon shell (open ground works too): the only physical hit in the family, dealing heavy damage, shoving the target hard and possibly poisoning it. The shell carries a spread, so it misses more the farther it flies: a wall is smeared once, while a wide shot scatters at its real trajectory end. Heavy load hits harder and drifts more; light load is steadier and faster.",
   "worldcombat.skill.gunkshot.use.0": "One very heavy physical hit at range",
   "worldcombat.skill.gunkshot.use.1": "Blast a charging target back",
   "worldcombat.skill.gunkshot.use.2": "Gamble on a shot that can miss",
@@ -34,5 +34,6 @@
   "world_combat.move.gunkshot.text.hit": "Slammed",
   "world_combat.move.gunkshot.text.poison": "Poisoned",
   "world_combat.move.gunkshot.text.immune": "Poison-immune",
-  "world_combat.move.gunkshot.text.whiff": "Wide"
+  "world_combat.move.gunkshot.text.whiff": "Wide",
+  "world_combat.move.gunkshot.text.wall": "Smeared"
 }

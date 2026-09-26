@@ -21,6 +21,7 @@ Smoke.scenario("burnup", function (stage) {
             stage.expect(stage.casts("burnup", user) > 0, "burn up was committed");
             stage.expect(stage.damageTo(foe) > 0, "the white fire dealt damage");
             stage.expect(stage.hadMobEffect(user, "world_combat:status/burned_out"), "the user became burned out");
+            stage.expect(stage.casts("burnup", user) === 1, "The consumed Fire identity blocked another cast during the spent window");
             stage.note("burn out strips the Fire type via a shared NativeModifiers types layer for the effect's lifetime; the ready gate then refuses another cast", {
                 casts: stage.casts("burnup", user),
                 dealt: Math.round(stage.damageBy(user) * 10) / 10,

@@ -1,16 +1,4 @@
-/**
- * 紧束 / wrap 的客户端表现。
- *
- * 一句话：藤蔓在身侧盘起（起）→ 甩出一圈藤裹住目标（甩→裹）→ 目标身上一圈缠到头颈的藤茧缓慢收紧、
- * 每绞一下沿身体炸开一圈藤屑（绞）→ 藤茧散开叶片落下（解）／被外力踹开时向两侧崩开（撕）。
- * 色相家族：淡橄榄绿（0x7E9C5A，高光 0xD9E3C0）为主，碎屑用暖米 tinydust；单一色相，比缠绕的饱和绿更灰更淡。
- * 拍子：起 gather → 甩 lash → 裹 seize → 持 coil（藤茧，持续）→ 绞 crush（周期）→ 解 release / torn / whiff。
- * 范围：seize 与 coil 都绑目标、画在目标身上，说明「被裹住的是它」；cyl 长度绑 `data.height`（目标身高派生），
- *      画出的藤茧高度就是被裹住的高度。
- * 运动：藤茧自下而上箍紧，`data.pulses` 越多收得越紧；crush 时藤屑向外炸，torn 时沿水平两侧崩开。
- * 数：藤屑数量绑 `data.notes`（物攻派生），绞击强度绑 `data.intensity`（本绞威力 / 18），收紧档位绑 `data.pulses`。
- * 参照节：视觉语言第一、二、三、四、五、六、七、九节（持续状态少而稳）。
- */
+/** The coil follows its actual maintained bond and releases with that effect. */
 const WrapDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {

@@ -5,42 +5,61 @@
  *
  * 两幕：
  *   闭（windup 播「缩壳」，提交前只观察与预告，打断不花代价）。
- *   壳（提交后）：NativeEffects.boost(def, gift) 写入公共能力阶梯，挂上共享身份 world_combat:status/shelter 的
- *     壳窗口；同时给一层有独立承伤额度的 GuardEffects 池（吃满即崩）。铁盾形态的壳还把自己钉住（见 startup.ts）。
- * 结束：壳被打裂、被清除或到期时，GuardEffects 池结束、这段防护抬起的等级原样收回——对手有一次磨掉它的反制。
+ *   壳（提交后）：NativeEffects.boostWindow 把两级防御挂到共享身份 world_combat:status/shelter
+ *     的壳窗口上（窗口归属这层壳载体，只收本次实际贡献）；同时给一层有独立承伤额度的
+ *     GuardEffects 池（吃满即崩）。固定数量的壳板由托管场景随承伤池逐块熄灭（见 presentation.ts）。
+ * 结束：壳被打裂、被清除或到期时，GuardEffects 池结束、这段防护抬起的等级随窗口原样收回——
+ *   对手有一次磨掉它的反制。
  */
 namespace PokemonSkills {
     const shelterScene = "world_combat:move_shelter";
+    const shelterPlatesScene = "world_combat:move_shelter_shell";
     const shelterShell = "world_combat:shelter_shell";
     const shelterSealed = "world_combat:shelter_sealed";
     const shelterRule = "world_combat:shelter";
+    const shelterContribution = "world_combat:move/shelter";
     const shelterBraceText = "world_combat.move.shelter.text.brace";
     const shelterShatterText = "world_combat.move.shelter.text.shatter";
     /** 表现里的参考半径：`data.scale = 实际壳半径 / 这个数`。 */
     const shelterReferenceRadius = 1.2;
 
-    // 壳的承伤池：吃满即崩，崩开时把壳窗口一起结束。
+    /** 这份 guard 还剩几块壳板：每块代表初始承伤额度的一份。 */
+    function shelterLeft(state: GuardEffects.State, plates: number, initial: number): number {
+        return Math.max(0, Math.min(plates, Math.ceil(plates * state.capacity / Math.max(1, initial))));
+    }
+
+    // 壳的承伤池：吃满即崩，崩开时把壳窗口一起结束。画面绑在这条 guard 上，随它存续、随它收。
     GuardEffects.register(shelterRule, {
         pulse: function (effect: CombatEffect, state: GuardEffects.State): void {
             const world = effect.world(), body = world.observe(effect.target());
             if (body === null) return;
-            const plates = Math.max(4, Math.round(Number((<any>state).plates) || 8));
-            const scale = Math.max(0.5, Number((<any>state).scale) || 1);
-            const initial = Math.max(1, Number((<any>state).initial) || state.capacity || 1);
-            WorldFeedback.keep(world, "shelter:shell:" + String(effect.target().ref()), shelterScene, 1, body.position(),
-                { moment: "hold", actor: String(effect.target().ref()), plates: plates, scale: scale,
-                    intensity: Math.max(0.2, Math.min(1, state.capacity / initial)) }, 20);
+            const custom: any = state;
+            const plates = Math.max(6, Math.min(8, Math.round(Number(custom.plates) || 8)));
+            const scale = Math.max(0.5, Number(custom.scale) || 1);
+            const radius = Math.max(0.4, Number(custom.radius) || scale * shelterReferenceRadius);
+            const initial = Math.max(1, Number(custom.initial) || state.capacity || 1);
+            const left = shelterLeft(state, plates, initial);
+            WorldFeedback.onEffect(world, effect.id(), "shelter:plates:" + effect.id(), shelterPlatesScene, 1, body.position(),
+                { moment: "shell", actor: String(effect.target().ref()), plates: plates, left: left, radius: radius, scale: scale });
+            WorldFeedback.onEffect(world, effect.id(), "shelter:sheen:" + effect.id(), shelterScene, 1, body.position(),
+                { moment: "hold", actor: String(effect.target().ref()), plates: plates, left: left, scale: scale });
         },
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
             if (body === null) return;
-            const initial = Math.max(1, Number((<any>state).initial) || state.capacity || 1);
-            const plates = Math.max(4, Math.round(Number((<any>state).plates) || 8));
-            const scale = Math.max(0.5, Number((<any>state).scale) || 1);
+            const custom: any = state;
+            const plates = Math.max(6, Math.min(8, Math.round(Number(custom.plates) || 8)));
+            const scale = Math.max(0.5, Number(custom.scale) || 1);
+            const radius = Math.max(0.4, Number(custom.radius) || scale * shelterReferenceRadius);
+            const initial = Math.max(1, Number(custom.initial) || state.capacity || 1);
+            const left = shelterLeft(state, plates, initial);
             WorldFeedback.emit(world, shelterScene, 1, body.position(),
                 { moment: "crack", actor: String(target.ref()), blocked: Math.round(amount * 10) / 10,
-                    remaining: Math.max(0, Math.round(state.capacity * 10) / 10), plates: plates, scale: scale,
+                    remaining: Math.max(0, Math.round(state.capacity * 10) / 10), plates: plates, left: left, scale: scale,
                     intensity: Math.max(0.25, Math.min(1, state.capacity / initial)) }, 24);
+            // 实际吸收才裂：每吃下一份就熄灭一块壳板。
+            WorldFeedback.onEffect(world, effect.id(), "shelter:plates:" + effect.id(), shelterPlatesScene, 1, body.position(),
+                { moment: "shell", actor: String(target.ref()), plates: plates, left: left, radius: radius, scale: scale });
             world.sound("minecraft:block.anvil.hit", body.position(), 12, "{}");
             if (state.capacity <= 0) {
                 const shell = MobEffects.read(world, target, shelterShell) || MobEffects.read(world, target, shelterSealed);
@@ -48,19 +67,6 @@ namespace PokemonSkills {
             }
         }
     });
-
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function shelterStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function shelterRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = shelterStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, shelterStage(world, actor, stat) - before);
-    }
 
     define({
         freeMovement: function (config) { return config.seal !== false; },
@@ -106,14 +112,34 @@ namespace PokemonSkills {
             const gift = Math.max(1, Math.min(2, Math.round(p("shelter", "gift", action))));
             const window = Math.max(60, Math.round(p("shelter", "window", action)));
             const fraction = Math.max(0.05, Math.min(0.6, p("shelter", "shield", action)));
-            const plates = Math.max(6, Math.round(p("shelter", "plates", action)));
+            const plates = Math.max(6, Math.min(8, Math.round(p("shelter", "plates", action))));
             const shellRadius = Math.max(0.7, p("shelter", "shell", action));
             const capacity = Math.max(1, body.maxHealth() * fraction);
             const scale = shellRadius / shelterReferenceRadius;
-            const levels = shelterRaise(world, actor, "def", gift);
-            MobEffects.apply(world, actor, seal ? shelterSealed : shelterShell, window, levels);
+            const effectId = seal ? shelterSealed : shelterShell, otherId = seal ? shelterShell : shelterSealed;
+            // 已有壳不叠放：先收掉本招旧承伤池；换形态时连另一种壳一起清，窗口与池随载体结束。
+            const guards = world.effects(actor, "world_combat:guard");
+            for (let i = 0; i < guards.length; i++) {
+                const state = JSON.parse(String(guards[i].data()));
+                if (state.rule === shelterRule) world.operation(guards[i].id(), "world_combat:dispel", "{}");
+            }
+            if (MobEffects.read(world, actor, otherId) !== null) MobEffects.consume(world, actor, otherId);
+            // 防御等级走 boostWindow，窗口归属这层壳载体：到期／破裂／被清除只收回本次实际贡献，不误扣别处等级。
+            const before = NativeEffects.effectiveStage(world, actor, "def");
+            const previous = MobEffects.read(world, actor, effectId);
+            const carrier = MobEffects.apply(world, actor, effectId, window, previous ? previous.amplifier() : 0);
+            let levels = 0;
+            if (carrier) {
+                NativeEffects.boostWindow(world, actor, { def: gift }, carrier.duration(), shelterContribution, carrier, previous);
+                levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
+                if (carrier.amplifier() !== levels) {
+                    const shown = MobEffects.apply(world, actor, effectId, window, levels);
+                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), shelterContribution, shown, carrier);
+                }
+            }
             GuardEffects.apply(world, actor, { rule: shelterRule, mode: "pool", capacity: capacity, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: 0, plates: plates, scale: scale, initial: capacity } as any, window);
+                minimumHealth: 0, charges: 0, linkRange: 0, plates: plates, scale: scale, radius: shellRadius,
+                initial: capacity } as any, window);
             WorldFeedback.emit(world, shelterScene, 1, body.position(),
                 { moment: "brace", actor: String(actor.ref()), levels: levels, capacity: Math.round(capacity * 10) / 10,
                     plates: plates, seal: seal ? 1 : 0, scale: scale,
@@ -126,20 +152,20 @@ namespace PokemonSkills {
         }
     });
 
-    // 壳被清除或到期：结束同一层的承伤池，收回抬起的等级。
+    // 壳被清除或到期：结束同一层的承伤池。等级随载体窗口自行收回；只有真的没有壳了才播破裂。
     WorldCombat.on("world_combat:move_shelter/shatter", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data())), id = String(data.id);
         if (id !== shelterShell && id !== shelterSealed) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        // 刷新／换形态：已换成同一次施放的新壳，不当作破裂。
+        const other = MobEffects.read(world, actor, id === shelterShell ? shelterSealed : shelterShell);
+        if (MobEffects.read(world, actor, id) !== null || other !== null) return;
         const guards = world.effects(actor, "world_combat:guard");
         for (let i = 0; i < guards.length; i++) {
             const state = JSON.parse(String(guards[i].data()));
             if (state.rule === shelterRule) world.operation(guards[i].id(), "world_combat:dispel", "{}");
         }
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        const loss = Math.min(levels, Math.max(0, shelterStage(world, actor, "def")));
-        if (loss > 0) NativeEffects.boost(world, actor, "def", -loss);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, shelterScene, 1, body.position(), { moment: "shatter", actor: String(actor.ref()) }, 28);

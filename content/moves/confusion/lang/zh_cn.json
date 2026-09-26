@@ -33,5 +33,5 @@
   "effect.world_combat.confusion_pulse": "恍惚",
   "world_combat.move.confusion.text.daze": "恍惚",
   "world_combat.move.confusion.text.chip": "念力 -%1$s",
-  "worldcombat.skill.confusion.description.chip": "被打散时，念力按目标自身特攻再敲一击，扣掉它最大生命的约 1.2%~5%（特攻越高越重），并把恍惚至少再续 3 秒——越挣扎越被磨。"
+  "worldcombat.skill.confusion.description.chip": "被打散时，念力按目标自身特攻再敲一击，扣掉它最大生命的约 1.2%~5%（特攻越高越重）；恍惚不会因此延长，走完既有时间就结束。"
 }

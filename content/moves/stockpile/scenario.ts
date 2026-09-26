@@ -1,32 +1,45 @@
-/**
- * 蓄力 的可执行设计说明。
- *
- * 场面：一只只会「蓄力」的吞食兽（30 级）与一只弱小的小拉达隔开 9 格、石质场地上开战；技能表里只有这一招，
- *   所以 AI 只能先连蓄几层。有威胁且在蓄力距离内、还没贴身时，它会先压几口再考虑交战。
- * 必然事实：本招被提交过；施术者身上出现过共享身份 world_combat:status/stockpile 的光壳窗口。
- *   蓄了几层、破了层没有、每层抬了多少、光壳撑多久写进 note 供读轨迹判断（私有装配没有读取原生能力等级的读取原语）。
- */
+/** Resource ownership: damage preserves stored layers, full stores release one, removal retains other buffs. */
 Smoke.scenario("stockpile", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "swalot", level: 30, moves: ["stockpile"], at: [-3, 0, 0] });
-    var foe = stage.pokemon({ species: "rattata", level: 12, moves: ["tackle"], at: [6, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1200, function () {
-        return stage.casts("stockpile", caster) > 0
-            && stage.hadMobEffect(caster, "world_combat:status/stockpile");
-    }, function () {
-        stage.expect(stage.casts("stockpile", caster) > 0, "stockpile was committed");
-        stage.expect(stage.hadMobEffect(caster, "world_combat:status/stockpile"), "the shell window carried the shared identity");
-        stage.after(80, function () {
-            stage.note("each layer gives +1 Defense and +1 Sp. Def (native for a Pokemon and unreadable here) up to 3 layers; AI hoards to ai.hoardTo (default 2) then fights. A real hit cracks one layer and removes its stage; the window takes the rest back by its stored mark when it ends.", {
-                casts: stage.casts("stockpile", caster),
-                damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
-                damageByCaster: Math.round(stage.damageBy(caster) * 10) / 10,
-                casterAlive: caster.alive()
-            });
-            stage.done();
+    stage.time("day"); stage.weather("clear");
+    const caster = stage.pokemon({ species: "swalot", level: 30, moves: ["stockpile"], at: [-3, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:cow", at: [5, 0, 0] });
+    stage.noai(foe); stage.hostile(caster, foe);
+    stage.after(5, () => {
+    stage.prefer(caster, "stockpile", { break: "mend", ai: { hoardTo: 3, minGap: 0 } });
+    stage.boost(caster, { def: 2 });
+    stage.until(500, () => stage.casts("stockpile", caster) >= 1, () => {
+        const before = stage.stages(caster);
+        stage.expect(before.def === 3 && before.spd === 1, "first stored layer adds its own defenses to existing gains");
+        stage.hurt(caster, 1, "minecraft:mob_attack", { source: foe });
+        stage.after(2, () => {
+            const after = stage.stages(caster);
+            stage.expect(stage.damageTo(caster) > 0, "the resource check received real hostile damage");
+            stage.expect(after.def === before.def && after.spd === before.spd, "taking damage preserves the stored layer");
+            stage.until(500, () => stage.casts("stockpile", caster) >= 3, () => {
+                const full = stage.stages(caster);
+                stage.expect(full.def === 5 && full.spd === 3, "three stored layers retain separate defensive contributions");
+                stage.hurt(caster, 40, "minecraft:mob_attack", { source: foe });
+                stage.after(2, () => {
+                const wounded = caster.health();
+                stage.until(250, () => stage.casts("stockpile", caster) >= 4, () => {
+                    stage.after(1, () => {
+                        const released = stage.stages(caster);
+                        stage.expect(released.def === 4 && released.spd === 2, "using a full store spends exactly one owned layer");
+                        stage.expect(caster.health() > wounded, "the chosen mend release restored actual health");
+                        stage.setPp(caster, "stockpile", 0);
+                        stage.command("effect clear " + caster.ref.split("/")[0] + " world_combat:stockpile_charge");
+                        stage.after(2, () => {
+                            const ended = stage.stages(caster);
+                            stage.expect(ended.def === 2 && ended.spd === 0, "clearing the shared carrier preserves the unrelated defense boost");
+                            stage.note("stored-resource ownership", { casts: stage.casts("stockpile", caster), before, full, released, ended });
+                            stage.done();
+                        });
+                    });
+                }, "full stockpile releases one breath");
+                });
+            }, "stockpile reaches three layers");
         });
-    }, "stockpile engages");
+    }, "stockpile creates a stored layer");
+    });
 });

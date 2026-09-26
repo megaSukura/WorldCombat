@@ -6,10 +6,12 @@
  *
  * 色相家族：雾白青（0xBFE6F0）为主体，近白（0xE8F6FA）做高光，灰青（0x9FC3CC）做脚下影与淡出。
  * 一个效果一个色相家族。要遮挡是这招的本意，所以主体层可以密；但持续层压在脚下与身侧，让出目标本体视线。
- * 层次：吐雾（起手，源侧）／铺开环＋雾团（罩住一圈）／身周薄雾（持续）／吞掉下降（事件）／散开（收）。
- * 起击收：windup（聚雾）→ veil（铺开）→ veiled（持续）→ guard（吞掉一次下降）→ fade（散）。
+ * 层次：吐雾（起手，源侧）／铺开环＋雾团（罩住一圈）／身周薄雾（持续）／吞掉下降（事件）／
+ *       某人丢雾（lose）／整片来源退出（fade）。
+ * 起击收：windup（聚雾）→ veil（铺开）→ veiled（持续）→ guard（吞掉一次下降）→ lose（某人失雾）→ fade（来源退出）。
  * 数：铺开的雾团量与持续时间绑定服务端算出的 data.density；雾圈半径绑定 data.field；
  * 吞掉下降的粒子量绑定实际被还原的等级数（data.motes 由 absorbed 派生）。
+ * lose 由来源租约退出触发：只有真的失去这一份保护的人才闪一小股雾；最后一个来源退出才播整片的 fade。
  */
 const MistDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -106,6 +108,20 @@ const MistDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [8, 14], size: [0.14, 0.02], sizeMode: "index",
                     color: 0xBFE6F0, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 22
+                }
+            ]
+        },
+        lose: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "lose_puff", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/smoke/glowingsmoke_cyan",
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.03, 0.12], drag: 0.92,
+                    lifetime: [10, 18], size: [0.22, 0.1],
+                    color: 0x9FC3CC, alpha: [0.45, 0], light: "world", maxParticles: 24
                 }
             ]
         },

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.pyroball.summary": "Ignites a small stone and kicks it as a fiery ball: it arcs out trailing flame, bursts into fire and shards on impact, may set the target alight, and leaves a scorch that fades on the ground.",
+  "worldcombat.skill.pyroball.summary": "Rolls a small stone from the feet to the kick point, ignites it, then drives it out: the fiery ball arcs away trailing flame, bursts into fire and shards on impact, may set the target alight, and leaves a quick-fading scorch on the ground.",
   "worldcombat.skill.pyroball.use.0": "A high-power fireball shot at medium range",
   "worldcombat.skill.pyroball.use.1": "Chip with a driven shot that may ignite",
   "worldcombat.skill.pyroball.use.2": "Leave a scorch at the landing to mark the kick",

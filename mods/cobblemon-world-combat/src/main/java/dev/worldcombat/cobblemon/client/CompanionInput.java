@@ -208,24 +208,23 @@ public final class CompanionInput {
                 e -> e.isAlive() && e != mc.player && (e != actor || kind.equals("friend")))) {
             var hit = candidate.getBoundingBox().inflate(0.25).clip(eye, picked);
             if (hit.isPresent() && eye.distanceToSqr(hit.get()) < nearest) {
-                nearest = eye.distanceToSqr(hit.get()); target = candidate;
+                nearest = eye.distanceToSqr(hit.get()); target = candidate; picked = closest(candidate.getBoundingBox(), hit.get());
             }
         }
         boolean friend = kind.equals("friend");
-        if (self) target = actor;
+        if (self) { target = actor; picked = actor.getBoundingBox().getCenter(); }
         else if (playerTarget) { target = mc.player; picked = mc.player.getBoundingBox().getCenter(); }
         boolean entityPoint = kind.equals("point") && skill.preview().input().sustained() && target != null;
-        if (entityPoint) picked = target.getBoundingBox().getCenter();
-        if (kind.equals("point") || kind.equals("motion")) target = null;
+        if (kind.equals("point") || kind.equals("motion")) { target = null; if (!entityPoint) picked = block.getLocation(); }
         if (friend && target == null) {
             if (!state.protectedTarget().equals(ControlCommand.NONE))
                 for (var ally : mc.level.getEntitiesOfClass(LivingEntity.class, actor.getBoundingBox().inflate(32)))
                     if (ally.getUUID().equals(state.protectedTarget())) { target = ally; break; }
             if (target == null) target = actor;
+            picked = target.getBoundingBox().getCenter();
         }
-        if (target != null) picked = target.getBoundingBox().getCenter();
-        else if (!playerTarget && block.getType() == HitResult.Type.MISS && !entityPoint) picked = origin.add(look.scale(Math.max(1, skill.range() - 0.25)));
-        else if (!playerTarget && kind.equals("point")) picked = picked.add(((BlockHitResult) block).getDirection().getNormal().getX() * 0.02,
+        if (target == null && !playerTarget && block.getType() == HitResult.Type.MISS && !entityPoint) picked = origin.add(look.scale(Math.max(1, skill.range() - 0.25)));
+        else if (target == null && !playerTarget && kind.equals("point") && !entityPoint && block.getType() == HitResult.Type.BLOCK) picked = picked.add(((BlockHitResult) block).getDirection().getNormal().getX() * 0.02,
             ((BlockHitResult) block).getDirection().getNormal().getY() * 0.02, ((BlockHitResult) block).getDirection().getNormal().getZ() * 0.02);
         // Directional casts keep camera pitch; horizontal motion and cardinal placement explicitly
         // request a ground heading. Native riding continues to own the mount's body rotation.
@@ -235,7 +234,7 @@ public final class CompanionInput {
         direction = direction.yRot((float) rotation);
         Vec3 end = picked;
         String reason = "";
-        if (origin.distanceTo(picked) > skill.range()) reason = "out-of-range";
+        if (origin.distanceTo(target == null ? picked : closest(target.getBoundingBox(), origin)) > skill.range()) reason = "out-of-range";
         if (!skill.available()) reason = skill.reason().isEmpty() ? "content-unavailable" : skill.reason();
         if (skill.preview().lineOfSight()) {
             var obstruction = mc.level.clip(new ClipContext(origin, picked, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, actor));
@@ -254,6 +253,10 @@ public final class CompanionInput {
         return new Aim(target == null ? ControlCommand.NONE : target.getUUID(), point(picked), point(direction), origin, end, reason);
     }
     private static Point point(Vec3 v) { return new Point(v.x, v.y, v.z); }
+    private static Vec3 closest(AABB box, Vec3 point) {
+        var result = dev.worldcombat.core.world.CombatGeometry.bounds(box).closest(point(point));
+        return new Vec3(result.x(), result.y(), result.z());
+    }
     private static void cast(int slot) {
         if (state == null || actor() == null) { notifyReason("send-out"); return; }
         var aim = aim(slot);

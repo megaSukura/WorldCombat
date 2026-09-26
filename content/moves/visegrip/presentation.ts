@@ -1,19 +1,10 @@
-/**
- * 夹住 / visegrip 的客户端表现。
- *
- * 一句话：施法者双钳张开、身子压低，随后两钳从两侧合上，在目标身上收拢成一圈向内挤的力道，
- * 撞出一撮碎屑，命中后目标被这圈力道朝施法者方向带近。
- * 色相家族：暖橙与骨白（grab / hit / impact_normal / spike）为主体，近白只做钳口合上的一下。
- * 拍子：起（open 双钳张开蓄势）→ 夹（clamp 合上、向内挤、迸出碎屑）→ 收（miss 夹空）。
- * 范围：这招只作用在贴身一个目标身上，所以每层都绑 `target`（或施法者 `source`），没有地面圈。
- * 运动：钳口从外向内收拢（`direction: "inward"`），碎屑向外迸；被拽近时力道随 `target` 锚点移动。
- * 数：`data.motes`（物攻派生）决定碎屑量，`data.drag`（物攻与目标质量派生）决定向内收拢的强度与残余，
- *   `data.intensity`（本击威力派生）抬高命中亮度。
- * 参照节：视觉语言第二、三、四、七、九节。
- */
+/** Claws follow real short paths; the held connection ends with the action. */
 const VisegripDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        close: { duration: 7, emitters: [{ name: "claw_edge",bind:"path",fit:"world",particle:"world_combat_core:cobblemon/generic/spike",rate:24,shape:{kind:"polyline"},lifetime:[3,6],size:[.12,.04],color:0xE89080,alpha:[.75,0] }] },
+        hold: { emitters: [{name:"held_joint",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/grab",rate:14,shape:{kind:"sphere_surface",radius:.35},lifetime:[2,4],size:[.25,.12],color:0xE89080,alpha:[.6,.1]}] },
+        release: { duration:8,emitters:[{name:"open_again",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/spike",burst:{count:4},shape:{kind:"sphere_surface",radius:.3},direction:"outward",speed:[.02,.05],lifetime:[3,6],size:[.1,.02],alpha:[.5,0]}] },
         open: {
             duration: 12,
             exit: { stop: 5, drain: 10 },

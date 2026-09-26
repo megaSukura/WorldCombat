@@ -6,9 +6,10 @@
  *
  * 三幕：
  *   起势（windup，提交前）：两股力道在身侧分开成形，一股偏暖（攻势）、一股偏冷（守势）；可被打断，不消耗任何东西。
- *   倒转（提交后）：把两边的数值对调——宝可梦走共享临时属性层，其他战斗者把原版攻击与护甲属性对调；
- *     挂上共享身份 world_combat:status/powershift 的交换窗口，并另存一份「这次换的是哪一个过程」的记号。
- *   锁定（收势）：两股力道穿过后锁住，浮出结果；窗口走完或被清除时，按记号结束这次交换，数值自动回到原样。
+ *   倒转（提交后）：先撤掉本招上一次拥有的交换层，再读取此刻真正的基础攻防（含其他效果的影响）——
+ *     宝可梦走共享临时属性层并把这层挂在交换窗口上；其他战斗者只在攻击与护甲属性都真实存在时对调，
+ *     缺项明确无效、不会拿 0 伪造。挂上共享身份 world_combat:status/powershift 的交换窗口，并记下本次拥有的机制 id。
+ *   锁定（收势）：两股力道穿过后锁住，浮出结果；窗口走完或被清除时，只结束本次交换，数值自动回到原样。
  *
  * 与同族分开：磨爪、盘蜷改的是能力等级（-6..+6 的阶梯）；力量转换不动等级，只把两个现成数值对调，
  *   换来的是另一种形态而不是更高的强度，并且可以精确地换回去。
@@ -18,10 +19,12 @@ namespace PokemonSkills {
     const powershiftStance = "world_combat:powershift_stance";
     const powershiftMark = "world_combat:powershift_mark";
     const powershiftSwap = "world_combat:powershift_swap";
+    const powershiftContribution = "world_combat:move/powershift";
     const powershiftText = "world_combat.move.powershift.text.shifted";
+    const powershiftInvalidText = "world_combat.move.powershift.text.invalid";
     const powershiftFadeText = "world_combat.move.powershift.text.reverted";
 
-    // 记号：记录这次交换由哪个托管效果承载，窗口提前结束时照它精确结束（其余修饰效果不受影响）。
+    // 记号：记录这次交换由哪个机制承载；刷新时先按它撤掉上一次，窗口提前结束时也照它精确结束。
     WorldCombat.effect(powershiftMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json);
         if (typeof value.swap !== "number") throw new Error("Invalid power shift mark");
@@ -39,21 +42,34 @@ namespace PokemonSkills {
         const world = effect.world(), actor = effect.target();
         const attack = world.attributeValue(actor, "minecraft:generic.attack_damage");
         const armour = world.attributeValue(actor, "minecraft:generic.armor");
-        const attackValue = attack === null ? 0 : attack.value(), armourValue = armour === null ? 0 : armour.value();
-        if (attack !== null) world.attribute(actor, "minecraft:generic.attack_damage", armourValue - attackValue, "add_value");
-        if (armour !== null) world.attribute(actor, "minecraft:generic.armor", attackValue - armourValue, "add_value");
+        // 只有两项都真实存在时才对调；缺项不应被当成 0 去伪造交换。
+        if (attack === null || armour === null) { effect.end(); return; }
+        const attackValue = attack.value(), armourValue = armour.value();
+        world.attribute(actor, "minecraft:generic.attack_damage", armourValue - attackValue, "add_value");
+        world.attribute(actor, "minecraft:generic.armor", attackValue - armourValue, "add_value");
     });
     WorldCombat.effectHandler(powershiftSwap, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 交换前两样本钱的实际值：宝可梦读原生攻防，其他战斗者读原版攻击与护甲。 */
-    function powershiftValues(world: CombatWorld, actor: CombatActor): { attack: number; defence: number } {
+    /** 交换前两样本钱的实际值：宝可梦读原生攻防，其他战斗者读原版攻击与护甲；缺项返回 null。 */
+    function powershiftValues(world: CombatWorld, actor: CombatActor): { attack: number; defence: number } | null {
         if (String(actor.domain()) === "cobblemon") {
             const state = NativeEffects.read(world, actor), pokemon = CobblemonCombat.pokemon(actor);
             return { attack: NativeEffects.stat(pokemon, state, "atk"), defence: NativeEffects.stat(pokemon, state, "def") };
         }
         const attack = world.attributeValue(actor, "minecraft:generic.attack_damage");
         const armour = world.attributeValue(actor, "minecraft:generic.armor");
-        return { attack: attack === null ? 0 : attack.value(), defence: armour === null ? 0 : armour.value() };
+        if (attack === null || armour === null) return null;
+        return { attack: attack.value(), defence: armour.value() };
+    }
+
+    /** 撤掉本招上一次拥有的交换层与记号：重复施放先回到干净的基础值，再建立唯一新窗口。 */
+    function powershiftWithdraw(world: CombatWorld, actor: CombatActor): void {
+        const marks = world.effects(actor, powershiftMark);
+        for (let index = 0; index < marks.length; index++) {
+            const mark = JSON.parse(String(marks[index].data()));
+            if (typeof mark.swap === "number" && mark.swap >= 0) world.operation(mark.swap, "world_combat:dispel", "{}");
+            world.operation(marks[index].id(), "world_combat:dispel", "{}");
+        }
     }
 
     define({
@@ -71,7 +87,7 @@ namespace PokemonSkills {
         cooldown: 80,
         style: "shift",
         stationary: true,
-        defaults: { hold: false, ai: { maxChase: 14, minGap: 3, minEdge: 1.15 } },
+        defaults: { hold: false, ai: { maxChase: 14, minGap: 3, minEdge: 1.05, low: 0.6 } },
         fields: [flag("hold", "维持")],
         indicator: function (config, _pokemon) {
             return { radius: 0.9, geometry: "area", style: "shift", color: 0x9FD8E8,
@@ -97,25 +113,37 @@ namespace PokemonSkills {
             if (body === null) { done(action); return; }
             const window = Math.max(80, Math.round(p("powershift", "window", action)));
             const bands = Math.max(10, Math.round(p("powershift", "bands", action)));
+            // 重复施放先撤掉本招自己的交换层，再读取此刻真正的基础值。
+            powershiftWithdraw(world, actor);
             const values = powershiftValues(world, actor);
+            if (values === null) {
+                WorldFeedback.emit(world, powershiftScene, 1, body.position(),
+                    { moment: "reject", actor: String(actor.ref()), scale: 1 }, 20);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), powershiftInvalidText, [], 24);
+                done(action);
+                return;
+            }
             const gap = Math.abs(values.attack - values.defence);
             const reach = Math.max(0.4, Math.min(1.6, gap / 60));
             const duration = window + 2;
+            const stance = MobEffects.apply(world, actor, powershiftStance, window, 0);
+            if (stance === null) { done(action); return; }
             let mechanism = -1;
             if (String(actor.domain()) === "cobblemon") {
                 mechanism = NativeModifiers.apply(world, actor,
-                    { stats: { atk: Math.max(1, Math.round(values.defence)), def: Math.max(1, Math.round(values.attack)) } }, duration);
+                    { stats: { atk: Math.max(1, Math.round(values.defence)), def: Math.max(1, Math.round(values.attack)) },
+                        carrier: MobEffects.anchor(stance), source: powershiftContribution }, duration);
             } else {
                 mechanism = world.effect(powershiftSwap, actor, "{}", duration);
             }
             world.effect(powershiftMark, actor, JSON.stringify({ swap: mechanism }), duration);
-            MobEffects.apply(world, actor, powershiftStance, window, 0);
             WorldFeedback.emit(world, powershiftScene, 1, body.position(),
                 { moment: "cross", actor: String(actor.ref()), bands: bands, scale: 1, reach: reach, gap: Math.round(gap * 10) / 10,
                     intensity: Math.max(0.8, Math.min(2, gap / 60 + bands / 40)) }, 32);
-            WorldFeedback.keep(world, "powershift:aura:" + String(actor.ref()), powershiftScene, 1, body.position(),
-                { moment: "hum", actor: String(actor.ref()), bands: Math.max(6, Math.round(bands / 3)), reach: reach },
-                Math.min(window, 160));
+            // 保持期间的小双色扣环绑在真正的交换机制上，窗口关闭、交换结束时一起收。
+            if (mechanism > 0)
+                WorldFeedback.onEffect(world, mechanism, "world_combat:move_powershift/hold", powershiftScene, 1, body.position(),
+                    { moment: "hum", actor: String(actor.ref()), bands: Math.max(6, Math.round(bands / 3)), reach: reach });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), powershiftText,
                 [Math.round(values.attack), Math.round(values.defence)], 30);
             world.sound("cobblemon:move.doubleteam.actor", body.position(), 16, "{}");
@@ -123,12 +151,14 @@ namespace PokemonSkills {
         }
     });
 
-    // 交换窗口走完或被清除：按记号结束这次交换，数值自动回到原样；其余修饰效果不受影响。
+    // 交换窗口走完或被清除：按记号结束本次交换（宝可梦的交换层随窗口自行结束，这里是同一条收尾），数值自动回到原样。
     WorldCombat.on("world_combat:move_powershift/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== powershiftStance) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        // 刷新／替换时旧窗口被移除而新窗口仍在：不是真的结束。
+        if (MobEffects.read(world, actor, powershiftStance)) return;
         const marks = world.effects(actor, powershiftMark);
         if (marks.length) {
             const mark = JSON.parse(String(marks[0].data()));

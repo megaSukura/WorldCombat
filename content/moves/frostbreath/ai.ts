@@ -3,7 +3,8 @@
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格内；够不到交给共享接近逻辑。
  * 对谁出手：`ai.cluster`（默认开）打开时，目标附近还挤着别的敌人就抬高 priority——扇形的价值在「罩一片」；
- *   `ai.finish`（默认开）打开时，残血目标排前。
+ *   `ai.finish`（默认开）打开时，残血目标排前；`ai.advantage`（默认开）打开时，慢的或防御厚的目标排前
+ *   （必暴冷雾最能啃厚甲，疾走者则容易在雾漫到前走出扇面，横向速度越高越降权）。冷雾慢到、走出扇面就躲开。
  * 够不到怎么办：reach 就是本招实际射程，先走近。
  * 放完之后：冷雾的冻僵与落点霜交回共享交战计划，霜是租借地形会自己到期还原。
  */
@@ -41,6 +42,16 @@ namespace PokemonSkills {
                 }
             }
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 8);
+            if (CompanionBehavior.ai<boolean>(capability, "advantage", true)) {
+                // 疾走者会在冷雾漫到前走出扇面，横向速度越高越降权。
+                const velocity = CompanionBehavior.velocity(context, target);
+                const flat = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : 0;
+                score -= Math.min(18, Math.round(flat * 45));
+                // 厚甲架势吃必暴冷雾最划算：防御越高排得越前。
+                const stats = CompanionBehavior.combatStats(context, target);
+                const defence = stats && stats.stats && typeof stats.stats.def === "number" ? stats.stats.def : null;
+                if (defence !== null) score += Math.max(0, Math.min(12, (defence - 60) * 0.1));
+            }
             return score;
         }
     });
@@ -58,6 +69,9 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.finish"), "残血补刀", "boolean", {
             help: "开启：目标生命比例越低排得越前；关闭则只按普通远程攻击排序。"
+        }),
+        field(pathOf("ai.advantage"), "择慢打厚", "boolean", {
+            help: "开启：优先选移速慢、或防御厚的敌人——厚甲吃必定要害的冷雾最划算，疾走者容易在雾漫到前走出扇面、相应降权。关闭：只按普通远程攻击排序，不区分走位与防御。"
         })
     ]);
 }

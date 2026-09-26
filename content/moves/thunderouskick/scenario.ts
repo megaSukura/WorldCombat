@@ -21,7 +21,7 @@ Smoke.scenario("thunderouskick", function (stage) {
     }, function () {
         stage.expect(stage.casts("thunderouskick", caster) >= 1, "caster committed thunderous kick");
         stage.expect(stage.damageTo(foe) > 0, "thunderous kick dealt damage to the foe");
-        stage.note("the feint count and the guard-break stages depend on Speed and on whether the foe was distracted", {
+        stage.note("only steps actually travelled count; the guard break scales with real feints and on whether the foe was distracted; a blocked flank only allows an in-place short kick or a whiff", {
             casts: stage.casts("thunderouskick", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             guardbroken: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),

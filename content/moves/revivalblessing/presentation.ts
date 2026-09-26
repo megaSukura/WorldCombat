@@ -1,25 +1,4 @@
-/**
- * 复生祈祷 / revivalblessing 的客户端表现。
- *
- * 一句话：施法者低头合掌、脚边聚起暖光 → 在倒下的伙伴处从地面升起几束金色光柱、金点缓缓飘落 →
- *   施法者与身边伙伴身上浮起一层慈爱光环。
- * 色相家族：慈爱金 0xFFE98A 画主线，暖白 0xFFFBE8 只给「立起光柱」那一下，琥珀 0xB69A4A 作地面余韵。
- * 起击收：起 kneel 14t ／ 立 beacon 由机制时长决定 ／ 祝 anoint 22t ／ 合 pray 30t ／ 空 none 18t。
- * 范围：beacon 的光柱与地面金环立在倒下处、落在 `prayerRange` 覆盖的那块地上；anoint 的金环贴在每个受祝福者身上，
- *   玩家一眼看出这次祈祷照到了哪里、照到了谁。
- * 运动：beacon 的光柱从地面竖直升起、金点缓慢上浮后回落；anoint 的光环从身体向外扩散；pray 的暖光贴地推开。
- * 数：beacon 的竖直光束数量直接读本招算出的 `beams`（等级派生），飘落光点数量读 `motes`（特防派生），
- *   地面金环大小读 `scale`（光点密度派生），pray 的亮度读 `anointed`（被祝福的人数派生）。
- *
- * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
- * kneel  起始  orb/orb            向内收    0.10-0.02 12-18 0.6→0 ≤40
- * beacon 主体  generic/lightbeam  竖直升起  0.3-0.9   20-30 0.7→0 ≤40
- * beacon 细节  glowingsparkle     缓慢上浮  0.08-0.02 16-26 0.8→0 ≤70
- * beacon 地面  mediumring         贴地外扩  1.8-0.5  22-32 0.5→0 ≤32
- * anoint 结果  orb/xsboost        球面向外  0.14-0.03 12-20 0.85→0 ≤48
- * pray   合十  giantring_white    贴地外扩  2.0-0.5  24-34 0.5→0 ≤32
- * none   落空  smoke              原地一小撮 0.12-0.04 10-16 0.4→0 ≤16
- */
+/** Prayer opening, actual revival pulse, and an optional beacon at the matching recorded death site. */
 const RevivalBlessingDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {

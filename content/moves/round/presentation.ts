@@ -1,13 +1,16 @@
 /**
  * 轮唱 / round 的客户端表现。
  *
- * 一句话：施法者清嗓起调、音符绕着身体打转 → 这句歌的余韵落到身边每个同伴头上（每人浮起一串音符）→
+ * 一句话：施法者清嗓起调、音符绕着身体打转 → 这句歌的余韵落到身边每个同伴头上，另有一枚音符从领唱者直飞过去 →
  *   歌句沿瞄准方向掠到目标身上，在落点炸开一圈金色音符；接唱的那一句更亮更密。
  * 色相家族：温暖的象牙金（0xFFE9B0 / 0xE8C86A）为主体，近白（0xFFF6DC）只给击点高光；不引入第二个色相。
- * 拍子：起 charge（清嗓）→ 传 join（余韵落同伴）→ 唱 verse（歌句掠过）→ 击 impact / 收 miss。
+ * 拍子：起 charge（清嗓）→ 传 join（余韵落同伴 + 一枚交接音符）→ 唱 verse（歌句掠过）→ 击 impact / 收 miss。
  * 范围：verse 用与判定同一起止 `data.path` 画出歌句走的那条线；impact 的环按 `data.splash`／`data.scale` 收束在落点。
- * 运动：音符沿 path 从施法者掠向目标，速度由 `data.speed`（歌速）驱动；join 的音符在每个同伴头顶旋起。
- * 数：burst 量与 `data.notes`（音数，特攻与等级换算）一致；`data.chorus`（接上的同伴数）在起唱处多叠一层。
+ * 运动：verse 的音符是 `polyline` 沿线采样、`direction:"shape"` 从采点朝线段两端散开，速度由 `data.speed`（歌速）驱动；
+ *   join 的交接音符是一枚 point 绑在领唱者身体中心（`data.point`）、`direction:"toward"` 朝同伴锚点直飞的粒子，
+ *   `data.flightSpeed` 用两点实际距离除以 `data.flight`（飞行刻数），drag 1、无散度，飞满这段时间正好抵达并收掉。
+ * 数：burst 量与 `data.notes`（音数，特攻与等级换算）一致；`data.answered`（是否消费了自身余韵起唱）额外放出一枚落入歌线的音符；
+ *   `data.chorusAlpha`（接上的同伴数换算）只在有同伴接上时点亮起唱处的合唱光圈，独唱没有。
  */
 const RoundDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -55,6 +58,14 @@ const RoundDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.12],
                     lifetime: [8, 14], size: [0.26, 0.6],
                     color: 0xE8C86A, alpha: [0.55, 0], light: "full", maxParticles: 6
+                },
+                {
+                    name: "join_handoff", bind: "point", fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    burst: { count: 1, at: 0 }, rate: 0,
+                    direction: "toward", speed: { data: "flightSpeed", fallback: 0.8 }, drag: 1,
+                    lifetime: { data: "flight", fallback: 8 }, size: [0.16, 0.03],
+                    color: 0xFFE9B0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 2
                 }
             ]
         },
@@ -81,13 +92,22 @@ const RoundDefinition: ParticleDefinition = {
                     color: 0xFFF6DC, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 50
                 },
                 {
+                    name: "verse_answer", bind: "source", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    burst: { count: { data: "answered", fallback: 0 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.06, 0.18],
+                    lifetime: [10, 16], size: [0.18, 0.04],
+                    color: 0xFFF6DC, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 12
+                },
+                {
                     name: "verse_pulse", bind: "source", offset: [0, 0.1, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
                     burst: { count: 1, repeats: 2, interval: 3 },
                     shape: { kind: "ring", radius: 0.4 },
                     direction: "outward", speed: [0.02, 0.06],
                     lifetime: [10, 18], size: [0.3, 0.7],
-                    color: 0xE8C86A, alpha: [0.4, 0], light: "full", maxParticles: 8
+                    color: 0xE8C86A, alpha: [{ data: "chorusAlpha", fallback: 0 }, 0], light: "full", maxParticles: 8
                 }
             ]
         },

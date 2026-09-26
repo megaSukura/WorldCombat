@@ -1,12 +1,12 @@
 /**
  * 仆刀 / kowtowcleave 的客户端表现。
  *
- * 一句话：施法者低头跪拜、身上坠下一层暗影，目标身上裂开一道「空门」标记；随后一道暗色刀光从施法者划到目标，
- * 命中处炸开暗色斩击。
+ * 一句话：施法者低头跪拜、身上坠下一层暗影，目标身上裂开一道「空门」标记；随后一道暗色刀光从施法者划到实际接触点，
+ *         贴近途中拖出一缕低伏的暗影；命中处炸开暗色斩击，追不上则只在原地收刀。
  * 色相家族：暗紫与近黑（impact_dark、obscuringsmoke、slash），强调处用一点冷白。
- * 拍子：起（bow 跪拜）→ 示（open 空门标记）→ 击（cleave 刀光与斩击）→ 收（miss 收刀）。
- * 范围：cleave 用 path 画出服务端从施法者到目标的同一组顶点，刀光划到哪、够多宽，画面就是那条线。
- * 运动：暗影从身上坠下，刀光沿 path 从施法者扫到目标，空门标记在目标身上停留到窗口结束。
+ * 拍子：起（bow 跪拜）→ 示（open 空门标记）→ 进（lunge 低伏欺近）→ 击（cleave 刀光与斩击）→ 收（miss 收刀）。
+ * 范围：cleave 用 path 画出服务端从施法者到**实际接触点**的同一组顶点；追不到就不会有 cleave，只在施法者处 miss。
+ * 运动：暗影从身上坠下，刀光沿 path 从施法者扫到接触点，空门标记在目标身上停留到窗口结束。
  * 数：`data.stages`（卸防等级）绑定 open 的标记数量，`data.intensity`（劈砍威力 / 85）抬高刀光与斩击亮度，
  * `data.open`（是否吃到空门）决定斩击是否更亮。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -54,6 +54,28 @@ const KowtowcleaveDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.01, 0.05],
                     lifetime: [14, 24], size: [0.2, 0.06],
                     color: 0x6A4A8A, alpha: [0.35, 0], light: "full", maxParticles: 14
+                }
+            ]
+        },
+        lunge: {
+            duration: 14,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "trail", bind: "source", offset: [0, 0.3, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    rate: 18, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "down", speed: [0.01, 0.05],
+                    lifetime: [6, 12], size: [0.16, 0.05],
+                    color: 0x3A2C4A, alpha: [0.3, 0], light: "world", maxParticles: 44
+                },
+                {
+                    name: "edge", bind: "source", offset: [0, 0.5, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 10, shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [5, 10], size: [0.07, 0.02],
+                    color: 0xD8C8F0, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 26
                 }
             ]
         },

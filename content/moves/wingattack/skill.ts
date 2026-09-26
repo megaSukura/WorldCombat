@@ -2,12 +2,15 @@
  * 翅膀攻击 / wingattack 的出手方式。
  *
  * 核心念头：**大大展开双翼，用它一整片拍出去**——翅膀张多宽，扇面就有多宽；站在扇面里的对手各挨一记，
- *   并被沿身体两侧推开。它是飞系里最基础、最便宜的一记：站定、只出一拍，宽度就是它的身份。
+ *   并被沿身体两侧推开：目标在中线左右哪边，就推向哪边，把正前方让出来。它是飞系里最基础、最便宜的一记：
+ *   站定、只出一拍，宽度就是它的身份。
  *
  * 两幕（提交前只播预告）：
  *   展（spread，提交前）：双翼在身侧张开、羽毛与气拢成将拍未拍的扇，只播预告。
- *   扫（sweep → shove / miss）：提交后整片扇面在身前张开、同一刻结算；扇面内最近的至多 `targets` 个
- *       非友方各挨一记 `bash` 接触伤害，并沿背离施法者的方向被推开 `push` 格；一个都没扫到只落几根羽毛。
+ *   扫（sweep → shove / miss）：提交后左右两片翼锋各扫过扇面的一半、同一刻结算；扇面内最近的至多 `targets` 个
+ *       非友方各挨一记 `bash` 接触伤害，并被推离中线；推不动时如实保留原地，不重写它的运动。一个都没扫到只落几根羽毛。
+ *
+ * 选取 `kind: "aim"`：自由前向扇扫，方向或世界点都能张开、空挥可用；命中权限仍由命中层判断。
  *
  * 与同族分开：双翼是俯冲上扬的两拍、施法者自身在动；啄是单点快啄；空气利刃是远程特殊扇面。翅膀攻击是
  *   站定的、一拍的接触横扫，玩家凭「张开的翅膀有多宽、扇面就多宽」认出它。
@@ -24,15 +27,25 @@ namespace PokemonSkills {
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
     }
 
-    /** 扇面顶点：origin 为扇心，向两侧各张 half 度、长 reach；判定与表现共用这一组顶点。 */
-    function wingattackFan(origin: CombatPoint, heading: CombatPoint, reach: number, span: number): CombatPoint[] {
-        const base = Math.atan2(heading.x(), heading.z()), half = span * Math.PI / 360, steps = 10;
+    /** 半片扇面顶点（side<0 左半、side>0 右半）：origin 为扇心，从中心线向该侧张开 half 度、长 reach；
+     *  左右两片合起来就是判定的整个扇区，表现直接读这组顶点。 */
+    function wingattackHalf(origin: CombatPoint, heading: CombatPoint, reach: number, span: number, side: number): CombatPoint[] {
+        const base = Math.atan2(heading.x(), heading.z()), half = span * Math.PI / 360, steps = 6;
         const vertices: CombatPoint[] = [origin];
         for (let i = 0; i <= steps; i++) {
-            const angle = base - half + 2 * half * i / steps;
+            const t = side < 0 ? i / steps - 1 : i / steps;
+            const angle = base + t * half;
             vertices.push(origin.plus(WorldCombat.point(Math.sin(angle) * reach, 0, Math.cos(angle) * reach)));
         }
         return vertices;
+    }
+
+    /** 目标相对中线的侧向推力：偏向中线哪边就推向哪边；正落在中线上按原轻推规则沿正面推，不随机换边。 */
+    function wingattackSidePush(delta: CombatPoint, heading: CombatPoint): CombatPoint {
+        const flat = WorldCombat.point(delta.x(), 0, delta.z());
+        const forward = flat.x() * heading.x() + flat.z() * heading.z();
+        const lateral = WorldCombat.point(flat.x() - forward * heading.x(), 0, flat.z() - forward * heading.z());
+        return lateral.length() > 0.05 ? lateral.unit() : heading;
     }
 
     function wingattackPath(vertices: CombatPoint[]): number[][] {
@@ -43,9 +56,9 @@ namespace PokemonSkills {
         id: "wingattack",
         cooldownParameter: "recharge",
         name: "Wing Attack",
-        description: "大大展开双翼，用一整片翅膀横扫身前的扇面：扇面内最近的非友方各挨一记接触伤害，并被沿身体两侧推开。宽扫式更宽、扫更多人、推得更开但单体更轻；收翼式单发更重、只扫一人。",
+        description: "大大展开双翼，左右各一片翼锋横扫身前的扇面：扇面内最近的非友方各挨一记接触伤害，并被推向中线左右各自那一侧，把正前方让出来。可朝方向或空地空挥。宽扫式更宽、扫更多人、推得更开但单体更轻；收翼式单发更重、只扫一人。",
         uses: ["一次展翅扫开身前一小片对手", "把贴身的人推开、给自己让出落点", "便宜、稳定、可以反复扇的飞系接触一记"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.2,
         maxRange: 4.8,
         prepare: 4,
@@ -92,32 +105,44 @@ namespace PokemonSkills {
             const wide = !!(config && config.wide);
             const scale = Math.max(0.6, Math.min(2, reach / 3.2));
             const intensity = Math.max(0.5, Math.min(2.0, power / 45));
-            const vertices = wingattackFan(origin, heading, reach, span);
-
-            sound(action, "cobblemon:move.aerialace.actor_1");
-            WorldFeedback.emit(world, wingattackScene, 1, origin,
-                { moment: "sweep", path: wingattackPath(vertices), chaff: chaff, targets: limit, span: span, push: push,
-                    scale: scale, intensity: intensity, wide: wide ? 1 : 0 }, 22);
-
+            const leftPath = wingattackPath(wingattackHalf(origin, heading, reach, span, -1));
+            const rightPath = wingattackPath(wingattackHalf(origin, heading, reach, span, 1));
+            const victims: { victim: CombatActor; facts: CombatObservation }[] = [];
             let hits = 0;
+
             WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, heading, reach, span, { below: 2, above: 2.5 }),
                 function (victim: CombatActor, facts: CombatObservation) {
-                    if (hits >= limit) return;
+                    if (victims.length >= limit) return;
                     if (facts.position().minus(origin).length() < 0.001) return;
-                    if (!hurt(action, victim, "wingattack", power, { damage: damageSpec("wingattack", "bash"), contact: true, knockback: false })) return;
-                    hits++;
-                    if (!world.valid(victim)) return;
-                    const body = world.observe(victim);
-                    if (body === null) return;
-                    const delta = body.position().minus(origin);
-                    const outward = delta.length() < 0.01 ? heading : WorldCombat.point(delta.x(), 0, delta.z()).unit();
-                    world.displace(victim, outward.scale(push));
+                    victims.push({ victim: victim, facts: facts });
                 });
+
+            sound(action, "cobblemon:move.aerialace.actor_1");
+            // 左右各一片翼锋：两片合起来就是服务端判定的同一组扇面顶点，画面与范围一致。
+            WorldFeedback.emit(world, wingattackScene, 1, origin,
+                { moment: "sweep", path: leftPath, side: "left", chaff: chaff, targets: Math.max(1, victims.length), span: span,
+                    scale: scale, intensity: intensity, wide: wide ? 1 : 0 }, 22, "wingattack:sweep:left");
+            WorldFeedback.emit(world, wingattackScene, 1, origin,
+                { moment: "sweep", path: rightPath, side: "right", chaff: chaff, targets: Math.max(1, victims.length), span: span,
+                    scale: scale, intensity: intensity, wide: wide ? 1 : 0 }, 22, "wingattack:sweep:right");
+
+            for (const entry of victims) {
+                if (!hurt(action, entry.victim, "wingattack", power,
+                    { damage: damageSpec("wingattack", "bash"), contact: true, knockback: false })) continue;
+                hits++;
+                if (!world.valid(entry.victim)) continue;
+                const body = world.observe(entry.victim);
+                if (body === null) continue;
+                // 推向该目标相对中线所偏的那一侧；推不动就保留原地，不重写它的运动，也不冒充推成功。
+                const away = wingattackSidePush(body.position().minus(origin), heading);
+                const moved = push > 0 ? world.displace(entry.victim, away.scale(push)) : 0;
+                WorldFeedback.emit(world, wingattackScene, 1, body.position(),
+                    { moment: "shove", target: String(entry.victim.ref()), chaff: chaff, push: Math.round(moved * 100) / 100,
+                        direction: [away.x(), away.y(), away.z()], scale: scale, intensity: intensity }, 18);
+            }
 
             if (hits > 0) {
                 sound(action, "cobblemon:impact.flying");
-                WorldFeedback.emit(world, wingattackScene, 1, origin.plus(heading.scale(reach * 0.5)),
-                    { moment: "shove", chaff: chaff, targets: hits, push: push, scale: scale, intensity: intensity }, 18);
             } else {
                 WorldFeedback.emit(world, wingattackScene, 1, origin.plus(heading.scale(reach * 0.4)),
                     { moment: "miss", chaff: Math.round(chaff * 0.5), scale: scale }, 18);

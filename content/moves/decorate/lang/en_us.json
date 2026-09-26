@@ -1,16 +1,18 @@
 {
-  "worldcombat.skill.decorate.summary": "Works up a bundle of cream and ribbon and gives it to another ally: their Attack and Sp. Atk rise sharply and the ornaments shine on them for a while. The piece needs a wearer.",
+  "worldcombat.skill.decorate.summary": "Works up a bundle of cream and ribbon and sends it flying to another ally; only when the ribbon actually lands do their Attack and Sp. Atk rise sharply, and the ornaments shine on them for a while. A wall or another body can block it, and a lost ally means a miss. The piece needs a wearer.",
   "worldcombat.skill.decorate.use.0": "Turn a nearby ally into the main threat before a fight",
   "worldcombat.skill.decorate.use.1": "Load both offences onto a partner before they charge",
   "worldcombat.skill.decorate.use.2": "Sharpen a companion other than yourself",
-  "worldcombat.skill.decorate.description.0": "Raises one ally's Attack and Sp. Atk by %1$s stages each; the target must be another combatant.",
-  "worldcombat.skill.decorate.description.1": "The decoration shines on the target for about %1$s; the Attack and Sp. Atk gain does not end when the shine does — the shine is only the piece's marker.",
+  "worldcombat.skill.decorate.description.0": "Send a bundle of cream and ribbon flying to another ally; when it actually lands, their Attack and Sp. Atk rise by %1$s stages each. A wall or another body blocks it, and a lost ally makes it scatter - nothing lands from afar.",
+  "worldcombat.skill.decorate.description.1": "Once delivered, the decoration shines on the target for about %1$s; the Attack and Sp. Atk gain does not end when the shine does - the shine is only the piece's marker.",
   "worldcombat.skill.decorate.description.2": "Cast range %1$s blocks; telegraph %2$s s, recovery %3$s s, cooldown %4$s s.",
+  "worldcombat.skill.decorate.description.3": "The ribbon travels at about %1$s blocks per tick; farther allies are reached later, and that flight is the opponent's window to strike first.",
   "worldcombat.skill.decorate.timing": "The telegraph can be interrupted without paying anything; PP and cooldown settle only after commit.",
   "worldcombat.skill.decorate.value.gift": "Offence gain",
   "worldcombat.skill.decorate.value.veneer": "Decoration time",
   "worldcombat.skill.decorate.value.trinkets": "Ornaments",
   "worldcombat.skill.decorate.value.reach": "Cast range",
+  "worldcombat.skill.decorate.value.flight": "Delivery speed",
   "worldcombat.skill.decorate.value.tempo": "Telegraph",
   "worldcombat.skill.decorate.value.aftercast": "Recovery",
   "worldcombat.skill.decorate.value.wait": "Cooldown",
@@ -25,5 +27,6 @@
   "worldcombat.skill.decorate.preference.ai.leaveStation": "Leave post to decorate",
   "worldcombat.skill.decorate.preference.ai.leaveStation.help": "On: leave a hold post to deliver the decoration to an ally.",
   "world_combat.move.decorate.text.adorned": "Decorated (Attack +%1$s / Sp. Atk +%1$s)",
+  "world_combat.move.decorate.text.blocked": "Decoration was blocked",
   "effect.world_combat.decorated": "Decorated"
 }

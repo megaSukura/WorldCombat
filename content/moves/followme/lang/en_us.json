@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.followme.summary": "Beckons on the spot, pulling nearby enemies' attacks onto the caster for as long as the call holds. No type or target restrictions, and no buffs for anyone.",
+  "worldcombat.skill.followme.summary": "Beckons on the spot and asks every respondable enemy in the call radius to point its attacks at the caster, then keeps only those that accepted. Players and taunt-immune bosses may decline; this does not force anyone to close in and grants no buffs.",
   "worldcombat.skill.followme.use.0": "Take the fire meant for a nearby ally",
   "worldcombat.skill.followme.use.1": "Pull enemies off an ally so it can break away",
   "worldcombat.skill.followme.use.2": "Block pursuers in the open and gather the fight onto yourself",
-  "worldcombat.skill.followme.description.0": "Call radius %1$s blocks, attention holds for %2$s. Enemies inside have their attack target repeatedly pointed at you; this does not force them to close in, and they can still move or act as they like.",
-  "worldcombat.skill.followme.description.1": "Re-pulls every %1$s; once the hold ends it stops retargeting and enemies choose their targets on their own.",
+  "worldcombat.skill.followme.description.0": "Call radius %1$s blocks, attention holds for %2$s. The first call asks each enemy inside to turn on you; afterwards only those that accepted are maintained, and refused ones are not retried. Turning does not force them to close in, and they can still move or act as they like.",
+  "worldcombat.skill.followme.description.1": "Every %1$s the accepted enemies are pointed at you again; once the hold ends it stops retargeting and enemies choose their targets on their own.",
   "worldcombat.skill.followme.shout.on": "Shout: radius x1.25 and cooldown x1.1 to sweep in farther enemies, at the cost of hold duration x0.7.",
   "worldcombat.skill.followme.shout.off": "Beckon: radius x0.8, but hold duration x1.35 and cooldown x0.9 - hold a few close enemies longer.",
   "worldcombat.skill.followme.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",

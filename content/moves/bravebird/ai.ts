@@ -4,6 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这一招的价值在“线”——
  * 开启 `ai.preferLine`（默认开）时，如果目标身后（或身前）的走廊里还站着第二个敌人，就把它排到最前，
  * 一次俯冲串起一串；没有第二个人时按普通候选排。距离过近（贴着身）时排得靠后：俯冲需要一点起跳空间。
+ * 高掠式需要更高的起跳空间，头顶被压住时用原生空域探针把它降优先，避免虚假升高。
  * 够不到交给共享接近逻辑。
  * 放完之后：俯冲把人留在自己身后，如果最近威胁贴得太近就先拉开一点，再准备下一次俯冲。
  */
@@ -13,6 +14,15 @@ namespace PokemonSkills {
 
     function bravebirdValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
+    }
+
+    /** 头顶是否还有升空空间；没有原生探针时不做惩罚。 */
+    function bravebirdCanRise(context: WorldBehavior.Context): boolean {
+        const self = CompanionBehavior.source(context);
+        const world = CompanionBehavior.world(context);
+        if (!LivingActions.hasFreeSpace(world)) return true;
+        const point = CompanionBehavior.point([self.point[0], self.point[1] + 1.8, self.point[2]]);
+        return LivingActions.freeSpace(world, point, Math.max(0.5, (self.width || 0.8) * 0.8), Math.max(0.8, (self.height || 1.4) * 0.8));
     }
 
     /** 目标身后那条走廊里还站着几个没被打过的敌人。 */
@@ -67,7 +77,8 @@ namespace PokemonSkills {
             if (gap > capability.data.range) return 0;
             let score = gap < 1.6 ? 14 : 26;
             if (CompanionBehavior.ai<boolean>(capability, "preferLine", true) && bravebirdInline(context, target) >= 1) score += 22;
-            return score;
+            if (capability.data.config && capability.data.config.high === true && !bravebirdCanRise(context)) score -= 12;
+            return Math.max(1, score);
         },
         after: function (context, capability, target, progress) { return bravebirdAfter(context, progress); }
     });

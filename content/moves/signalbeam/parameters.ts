@@ -4,34 +4,33 @@
  * 原生事实：Bug／特殊／威力 75／命中 100／PP 15／单体；10% 概率使目标混乱（Cobblemon 1.8 / Showdown，
  * 描述作 "a sinister beam of light"）。
  *
- * 翻译：把「一道信号光」落成一条**沿瞄准方向拉开的信号走廊**——施法者点亮身前的信号源，整条走廊一次照到
- * 路径上的每个敌人；被照到的人信号错乱。它是本族学习者最多的一员，也是唯一**一次点一走廊人**的远程招式；
- * 与幻象光线分开：幻象光线是一条会追的紫光只打一个，信号光束是一条不会拐弯的宽走廊。
+ * 翻译：把「一道信号光」拆成**身体左右两个信号源各射出一条细束**，两束在手动瞄点交叉。每条束单独被真实墙
+ * 裁剪、单独结算；交点同时被两束照到的目标才吃满伤害。瞄近点交叉后张开扫两侧，瞄远点前段还宽。
+ * 与幻象光线（会拐弯追人的单弹）、极光束（会折射的单束）分开的正是这套**双发射点焦点几何**。
  *
  * 数据分散（每项读不同的精灵数据）：
- *   beam         光束威力：特攻定信号强度，等级让信号更烈。
- *   reach        走廊长度：特攻决定信号能铺多远。
- *   gauge        走廊半宽：体宽与身高决定光束多宽——身体越大，铺得越宽。
+ *   beam         光束威力：特攻定信号强度，等级让信号更烈；这是“满额”威力，每条束实际只结一半。
+ *   reach        细束长度：特攻决定每条束能铺多远。
+ *   gauge        双束间距：体宽与身高决定两个发射点分开多远——越大，同一点里两束张角越大。
  *   confuseChance 错乱概率：原生 10% 起，特攻与等级提高，脉冲模式更高。
  *   dazeTicks    错乱时长：特攻与等级决定信号错乱多久。
  *   fumble       失手率：错乱期间每次想出手被打散的概率，存进载体振幅。
  *   motes        光点数：特攻与等级派生，驱动画面密度。
  *   起手／收招／冷却：速度决定。
  *
- * 配置 `pulse`（脉冲）双向取舍：开启＝走廊更窄、单发 ×1.15、错乱概率 ×1.3，但射程 ×0.88，
- * 适合点名一个；关闭（连续）＝走廊更宽更长、可一次兜住更多人，代价是单发与错乱概率更基础。
+ * 配置 `pulse`（脉冲）双向取舍：开启＝双束张角更窄、单束 ×1.15、错乱概率 ×1.3，但射程 ×0.88，
+ * 适合点名一个；关闭（连续）＝发射点更开、射程更长，代价是单束与错乱概率更基础。
  *
- * 错乱行为（本单元自己的变体）：目标每次想出手都可能被打散；此外，错乱期间它再挨任何招式命中，错乱的信号
- * 都会反冲一下——按自身特攻额外掉一点血。这是信号光束区别于幻象光线（被打散时续时长）的地方。
+ * 错乱行为：只沿用共享身份 confusion 的失手门禁（由共享 CombatStatus 承担）。旧版“错乱后挨别人打再额外
+ * 扣最大生命”的尾钩已删除，伤害只发生在束线上。
  *
- * 伤害段 `beam`：命中那一下随精灵数据变化的那部分，走共享换算（原始类别 Special）。
+ * 伤害段 `beam`：两束共用的那一段，走共享换算（原始类别 Special）；每条束按 power × 0.5 结算，重叠即满额。
  */
 namespace PokemonSkills {
     export const signalbeamId = "signalbeam";
     export const signalbeamScene = "world_combat:move_signalbeam";
     export const signalbeamEffect = "world_combat:signalbeam_jam";
     export const signalbeamDazeText = "world_combat.move.signalbeam.text.daze";
-    export const signalbeamJoltText = "world_combat.move.signalbeam.text.jolt";
     export const signalbeamMissText = "world_combat.move.signalbeam.text.miss";
 
     actionParameters.define(signalbeamId, {
@@ -44,28 +43,28 @@ namespace PokemonSkills {
                 .clamp(36, 116).round(1),
             "光束威力", {
                 unit: "威力",
-                description: "走廊里每个敌人各吃一次的基础威力；特攻越高信号越烈，脉冲模式单发更重。对手特防、相性与暴击在命中时另算。"
+                description: "两束叠加的满额威力：每条细束各按它的一半结算，交点同时被两束照到才吃满。特攻越高信号越烈，脉冲模式单束更重。对手特防、相性与暴击在命中时另算。"
             }),
-        /** 走廊长度：12 + 特攻偏移[−1.5,4]，脉冲 ×0.88／连续 ×1.12；夹 8..18。 */
+        /** 细束长度：12 + 特攻偏移[−1.5,4]，脉冲 ×0.88／连续 ×1.12；夹 8..18。 */
         reach: formula(
             F.base(12)
                 .plus(F.stat("specialAttack").minus(54).times(0.05).clamp(-1.5, 4))
                 .times(F.when(F.pref("pulse"), F.const(0.88), F.const(1.12)))
                 .clamp(8, 18).round(2),
-            "走廊长度", {
+            "细束长度", {
                 unit: "格",
-                description: "信号走廊能铺多远；特攻越高越远，连续模式更长。它也是本招的实际射程来源。"
+                description: "每条细束能铺多远；特攻越高越远，连续模式更长。它也是本招的实际射程来源。"
             }),
-        /** 走廊半宽：0.7 + 体宽偏移[−0.1,0.5] + 身高偏移[−0.05,0.3]，脉冲 ×0.62／连续 ×1.3；夹 0.45..2.2。 */
+        /** 双束间距（发射点半距）：0.7 + 体宽偏移[−0.1,0.5] + 身高偏移[−0.05,0.3]，脉冲 ×0.62／连续 ×1.3；夹 0.45..2.2。 */
         gauge: formula(
             F.base(0.7)
                 .plus(F.body("width").minus(0.9).times(0.5).clamp(-0.1, 0.5))
                 .plus(F.body("height").minus(1.4).times(0.2).clamp(-0.05, 0.3))
                 .times(F.when(F.pref("pulse"), F.const(0.62), F.const(1.3)))
                 .clamp(0.45, 2.2).round(2),
-            "走廊半宽", {
+            "双束间距", {
                 unit: "格",
-                description: "信号走廊的半宽（判定与画面同宽）；体宽和身高越大铺得越宽，连续模式更宽。它同时驱动画面里那条光带的宽度。"
+                description: "左右两个发射点各离身体中心多远：越大，两束在同一瞄点里的张角越大、扫过的两侧越宽；体宽和身高越大分得越开，连续模式更开。画面里的两条束线读的就是这个间距。"
             }),
         /** 错乱概率：10% + 特攻偏移[−4%,12%] + 等级(≥25)偏移[0,6%]，脉冲 ×1.3；夹 8%..42%。 */
         confuseChance: percent(
@@ -104,18 +103,18 @@ namespace PokemonSkills {
                 .minus(F.stat("speed").minus(58).times(0.035).clamp(-2.5, 3))
                 .plus(F.when(F.pref("pulse"), F.const(2), F.const(0)))
                 .clamp(6, 16).round(0),
-            "起手", "点亮信号源、把光摊成一条走廊的时间；速度越快越短，脉冲多收一刻。"),
+            "起手", "点亮左右信号源、把两条细束对准交点的时间；速度越快越短，脉冲多收一刻。"),
         /** 收招：8 − 速度偏移[−1.5,2.5]；夹 5..12。 */
         aftercast: seconds(
             F.base(8).minus(F.stat("speed").minus(58).times(0.02).clamp(-1.5, 2.5)).clamp(5, 12).round(0),
-            "收招", "拉出光带后的收势；速度越快越利落。"),
+            "收招", "拉出双束后的收势；速度越快越利落。"),
         /** 冷却：28 − 速度偏移[−5,8]，脉冲 +5；夹 18..44。 */
         recharge: seconds(
             F.base(28)
                 .minus(F.stat("speed").minus(58).times(0.05).clamp(-5, 8))
                 .plus(F.when(F.pref("pulse"), F.const(5), F.const(0)))
                 .clamp(18, 44).round(0),
-            "冷却", "再次拉开信号走廊前的等待；脉冲模式蓄得更久。"),
+            "冷却", "再次射出双束前的等待；脉冲模式蓄得更久。"),
         /** 单次最多点几个人：协议常量。 */
         maxTargets: hidden(4)
     });

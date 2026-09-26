@@ -1,20 +1,10 @@
-/**
- * 气味侦测 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：施法者沿空气嗅出一缕琥珀色的气味，气味一路缠到对手身上；对手被一圈暖黄的气味雾罩住，
- *   追踪窗口里不断有气味丝从它身上往外拖，走到哪跟到哪。
- *
- * 色相家族：琥珀黄（0xE8D08A）做气味主体，橄榄绿（0xA8B860）做咬住的记号，灰白（0xC6C6B8）收尘。
- * 层次：嗅闻（起手，气味在口鼻前聚成一丝）→ 咬住（一条气味丝＋目标气味雾＋记号火花）→ 拖住（低密度气味丝）
- *   → 褪去／被挡／落空。
- * 起击收：windup（嗅闻）→ pick（咬住）→ hold（拖住，慢慢离场）→ fade（走空）。
- * 范围：单体追踪，气味丝与目标气味雾画的正是被咬住的那个人；嗅闻距离由 reach 决定，画面沿视线铺开。
- * 运动：气味丝从施法者沿视线飞向目标（bind path polyline），目标气味雾贴着它往外散；持味时气味丝在它身上拖。
- * 数：气味丝与气味雾的密度读 data.motes（物攻派生），拖慢比例读 data.drag（决定气味雾的厚度与下沉速度）。
- */
+/** Visible identification and a fixed, fading last-observed scent point. */
 const OdorsleuthDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        trail: { emitters: [{ name: "remembered_scent", bind: "point", fit: "none", particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+            rate: { data: "motes", fallback: 6 }, shape: { kind: "sphere", radius: .35 }, direction: "up", speed: [.005, .025],
+            lifetime: [12, 20], size: [.13, .03], color: 0xE8D08A, alpha: [.35, 0], light: "world", maxParticles: 30 }] },
         windup: {
             duration: 14,
             exit: { stop: 6, drain: 12 },

@@ -21,7 +21,16 @@ Smoke.scenario("mefirst", function (stage) {
             stage.note("the stolen beat landed as the caster's own attack", {
                 damageByCaster: Math.round(stage.damageBy(caster) * 10) / 10, damageToTarget: Math.round(stage.damageTo(target) * 10) / 10
             });
-            stage.done();
+            stage.command("kill " + target.ref.split("/")[0]);
+            const nativeCaster = stage.pokemon({ species: "snorlax", level: 50, moves: ["mefirst"], at: [12, 0, 0] });
+            const nativeFoe = stage.mob({ type: "minecraft:zombie", at: [14, 0, 0] });
+            stage.time("night"); stage.hostile(nativeCaster, nativeFoe);
+            stage.until(600, () => stage.casts("mefirst", nativeCaster) > 0 && stage.damageBy(nativeCaster) > 0, () => {
+                stage.expect(stage.damageBy(nativeFoe) > 0, "The ordinary opponent supplied a real native attack first");
+                stage.expect(stage.damageBy(nativeCaster) > 0, "The copied ordinary punch made real short-range contact");
+                stage.note("Both the Pokemon recipe and supported native-contact branches were exercised", { nativeCasts: stage.casts("mefirst", nativeCaster), nativeDamage: stage.damageBy(nativeCaster) });
+                stage.done();
+            }, "Supported native attack projection");
         }, "stolen beat lands");
     }, "mefirst cast");
 });

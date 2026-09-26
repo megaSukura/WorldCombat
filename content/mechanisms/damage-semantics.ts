@@ -31,7 +31,7 @@ namespace DamageSemantics {
         data.contact = facts.contact;
         return data;
     }
-    export interface RecentAttack { tick: number; type: string; contact: boolean; target: string; amount: number; actual: number; category: string; tags: string[]; }
+    export interface RecentAttack { tick: number; type: string; contact: boolean; target: string; amount: number; actual: number; category: string; tags: string[]; directType?: string; projectilePath?: CombatProjectilePathSegment[]; }
     const memory = "world_combat:native_attack_memory";
     /** Last successful native attack, including a player's melee/projectile attack; actor-scoped and finite. */
     export function recentAttack(world: CombatWorld, actor: CombatActor, maximumAge = 100): RecentAttack | null {
@@ -50,6 +50,6 @@ namespace DamageSemantics {
         if (!(data.actual > 0) || !facts.attack || !target || !world.valid(actor) || String(actor.key()) === String(target.key())) return;
         world.effects(actor, memory).forEach(effect => world.operation(effect.id(), "world_combat:forget", "{}"));
         world.effect(memory, actor, JSON.stringify({ tick: world.tick(), type: String(data.damageType), contact: facts.contact,
-            target: String(target.ref()), amount: data.amount, actual: data.actual, category: facts.category, tags: data.damageTags || [] }), 1200);
+            target: String(target.ref()), amount: data.amount, actual: data.actual, category: facts.category, tags: data.damageTags || [], directType: data.directType || "", projectilePath: data.projectilePath || [] }), 1200);
     });
 }

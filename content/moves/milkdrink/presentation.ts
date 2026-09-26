@@ -3,10 +3,11 @@
  *
  * 一句话：它仰头连饮，瓶口浮起一串乳白泡沫，奶滴顺着身体滑下化作暖光，最后一口清亮的水光把毒冲散。
  * 色相家族：乳白 0xFFFBF0 作奶与高光，浅奶蓝 0xDCEBF0 作泡沫与冲毒水光，淡金 0xE8D9A8 只作余韵。
- * 拍子：起（windup）／饮（open）／口（gulp，每口一次）／净（refresh，解毒时）／抹（wipe）。
+ * 拍子：起（windup）／举瓶（open）／每口（gulp，每喝一口推一次）／净（refresh，真正喝完最后一口且解毒时）／抹（wipe）。
+ *   gulp 逐口出现、由每次 execute 逐口 emit，不依赖等间隔整段闪烁；真正补进生命时 data.intensity 更足，满血解毒时补 0 也照喝。
  * 范围：作用于自己，绑 source（fit body）；冲毒一幕的水光半径绑定 data.clean（身高派生），一眼看出解毒波及的范围。
- * 机制驱动：每口溅起的奶滴数绑定 data.drops（体重派生）、口数随 data.total、整体尺寸随 data.scale ——
- *   体重越大、口数越多，画面里的奶滴与节拍越清楚。
+ * 机制驱动：每口溅起的奶滴数绑定 data.drops（体重派生）、口数随 data.total、整体尺寸随 data.scale、
+ *   每口强弱随 data.intensity（本次真实回量派生）—— 体重越大、回得越实，画面里的奶滴与节拍越清楚。
  */
 const MilkdrinkDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -29,16 +30,17 @@ const MilkdrinkDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "first_gulp", bind: "source", offset: [0, 0.7, 0], height: 0.35,
+                    name: "raise", bind: "source", offset: [0, 0.7, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
-                    burst: { count: { data: "drops", fallback: 16 } }, shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.02, 0.08], gravity: 0.015,
+                    burst: { count: { data: "drops", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.02, 0.08], gravity: 0.015,
                     lifetime: [12, 20], size: [0.07, 0.01],
-                    color: 0xFFFBF0, alpha: [0.85, 0], light: "world", maxParticles: 60
+                    color: 0xFFFBF0, alpha: [0.85, 0], light: "world", maxParticles: 40
                 },
                 {
                     name: "glow", bind: "source", offset: [0, 0.5, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
-                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.4 }, direction: "up", speed: [0.02, 0.07],
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.4 }, direction: "up", speed: [0.02, 0.07],
                     lifetime: [12, 20], size: { data: "scale", fallback: 0.1 },
                     color: 0xFFFBF0, alpha: [0.7, 0], light: "full", bloom: 0.15, maxParticles: 30
                 }

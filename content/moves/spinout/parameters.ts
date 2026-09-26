@@ -16,6 +16,7 @@
  *   spin       撞击威力：物攻定撞面、**速度**给旋转动量、等级定发力；预旋式 ×1.1。
  *   reach      冲距：速度决定起步多快、身高决定步幅；预旋式冲得更远。
  *   rush       冲速：速度决定每刻推进多少，快的个体冲刺更疾；预旋式更快。
+ *   turn       甩尾转角：体重决定后半段甩得多开、速度决定收得多紧，形成弯曲的轮痕。
  *   knock      撞开距离：物攻给推力，**目标体重**抵掉一部分。
  *   sparks     磨地火星：速度与体重决定火星密度（也是画面发射量的来源）。
  *   scuffRadius 磨痕半径：体重决定撞击点磨出的地面痕铺多开。
@@ -69,6 +70,16 @@ namespace PokemonSkills {
             "冲速", {
                 unit: "格/刻",
                 description: "旋转冲刺时每刻推进的距离；速度快的个体转得更疾，越快贴上目标越难被走位甩掉，预旋式更快。"
+            }),
+        /** 甩尾转角：基础 35 度；体重每比 300hg 多 1hg 加 0.01（夹 −4..6）；速度每比 55 快 1 减 0.05（夹 −5..4）；夹 25..45。 */
+        turn: formula(
+            F.base(35)
+                .plus(F.body("weight").minus(300).times(0.01).clamp(-4, 6))
+                .minus(F.stat("speed").minus(55).times(0.05).clamp(-5, 4))
+                .clamp(25, 45).round(1),
+            "甩尾转角", {
+                unit: "度",
+                description: "后半段甩尾累计偏转的角度；身体越沉甩得越开，速度越快收得越紧。它决定地面那道弯轮痕弯多少。"
             }),
         /** 撞开距离：基础 0.6 格；物攻每比 60 多 1 加 0.008（夹 −0.2..0.7）；目标体重每比 300hg 重 1hg 减 0.0005（最多减 0.6）；
          *  夹 0.2..1.8。 */
@@ -138,6 +149,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["spin","reach"] },
         { key: "description.1", values: ["knock","speedLoss"] },
         { key: "description.2", values: ["rush"] },
+        { key: "description.3", values: ["turn"] },
         { key: "preload.on", values: [], when: function (context) { return read(context.detail.values, ["preload"]) === true; } },
         { key: "preload.off", values: [], when: function (context) { return read(context.detail.values, ["preload"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

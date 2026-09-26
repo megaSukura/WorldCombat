@@ -24,6 +24,8 @@
   "worldcombat.skill.selfdestruct.value.maxTargets": "Target limit",
   "worldcombat.skill.selfdestruct.preference.focus": "Focused blast",
   "worldcombat.skill.selfdestruct.preference.focus.help": "On (focused blast): power about x1.28, the blast narrows to x0.74 and wind-up is -2, at cooldown +6 - for hammering one priority target. Off (spread blast): power about x0.88, the blast spreads x1.18, wind-up +2 and cooldown -6 - to cover a crowd. Either way the user goes down.",
+  "worldcombat.skill.selfdestruct.preference.ai.sacrifice": "Sacrifice willingly",
+  "worldcombat.skill.selfdestruct.preference.ai.sacrifice.help": "On (sacrifice willingly): the companion will self-destruct at full health too, as long as enough targets stand in the blast; off (default): only below the desperation threshold. Either way the user goes down.",
   "worldcombat.skill.selfdestruct.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.selfdestruct.preference.ai.maxChase.help": "Beyond this distance the companion will not walk in to detonate; it is a point-blank move.",
   "worldcombat.skill.selfdestruct.preference.ai.minFoes": "Foes for the blast",

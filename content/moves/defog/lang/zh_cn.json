@@ -29,5 +29,6 @@
   "worldcombat.skill.defog.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去扫人。",
   "world_combat.move.defog.text.strip": "门户大开（闪避 −%1$s、防御 −%2$s）",
   "world_combat.move.defog.text.clear": "吹散屏障 %1$s 层、场地 %2$s 处",
-  "world_combat.move.defog.text.gust": "风扫过 %1$s 个对手"
+  "world_combat.move.defog.text.gust": "风扫过 %1$s 个对手",
+  "world_combat.move.defog.text.haze": "吹散浓雾 %1$s 处"
 }

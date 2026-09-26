@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.magiccoat.summary": "Spread a light-bending film in front of you: status moves and seeds aimed at you during the window are bounced straight back at the user; an empty window just collapses.",
+  "worldcombat.skill.magiccoat.summary": "Raise a one-use reflective film. Reproduce a reflectable status move, or block a sourced native harmful effect and return its original strength and duration. An immune source is only blocked; an empty window costs no PP.",
   "worldcombat.skill.magiccoat.use.0": "Send poison, paralysis and seeds aimed at you straight back",
   "worldcombat.skill.magiccoat.use.1": "Have the film up before a foe applies a status",
   "worldcombat.skill.magiccoat.use.2": "Make status-only foes suffer their own tricks",
-  "worldcombat.skill.magiccoat.description.0": "After %1$s of wind-up the film rises and holds for up to %2$s; a status move aimed at you in that time (afflictions, Leech Seed and the like) is turned back and immediately used by you against its original user. The film drops after it bounces one move.",
-  "worldcombat.skill.magiccoat.description.1": "Only such a move aimed at you from within %1$s blocks is caught; from farther away, or when the foe aims elsewhere, the film does nothing.",
-  "worldcombat.skill.magiccoat.description.2": "After a successful bounce the move goes on a %1$s cooldown; an empty film simply collapses and costs no PP. The bounced move is settled with your own stats.",
+  "worldcombat.skill.magiccoat.description.0": "After %1$s of preparation, wait for up to %2$s. Catch one reflectable status move or sourced native harmful effect, then close the film. Native effects return at the same strength and duration and still respect the source’s immunity.",
+  "worldcombat.skill.magiccoat.description.1": "Catch hostile status attempts from within %1$s blocks and with an unobstructed line to their source. Environmental or unknown-source effects apply normally.",
+  "worldcombat.skill.magiccoat.description.2": "Catching one attempt starts a %1$s cooldown; an empty window costs no PP. Reproduced moves use your stats; when a returned native effect is refused, the original is still blocked.",
   "worldcombat.skill.magiccoat.sweep.on": "Wide film: reflect reach x1.3 to catch farther moves; the film is thinner (duration x0.8), +2 ticks wind-up, x1.1 cooldown.",
   "worldcombat.skill.magiccoat.sweep.off": "Narrow film: duration x1.2, -1 tick wind-up, x0.9 cooldown to wait longer and cheaper; reflect reach x0.8.",
   "worldcombat.skill.magiccoat.timing": "Self move with a %1$s-block film reach; after %2$s of preparation the film rises. Only bouncing a move spends %4$s PP and starts the %5$s cooldown, then the recovery is %3$s.",
@@ -21,10 +21,11 @@
   "worldcombat.skill.magiccoat.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.magiccoat.preference.ai.maxChase.help": "The partner only raises the film while a threat is this close; smaller keeps it for melee, larger prepares further out.",
   "worldcombat.skill.magiccoat.preference.ai.opening": "When to raise",
-  "worldcombat.skill.magiccoat.preference.ai.opening.help": "Anytime: raise at any threat, betting on a status move next. When pressured: raise only while the foe attacks the partner or its owner, or the partner was just hurt.",
+  "worldcombat.skill.magiccoat.preference.ai.opening.help": "Anytime: raise against a known status threat. When pressured: require that status threat and pressure on the partner or owner.",
   "worldcombat.skill.magiccoat.preference.ai.opening.anytime": "Anytime",
   "worldcombat.skill.magiccoat.preference.ai.opening.incoming": "When pressured",
   "worldcombat.skill.magiccoat.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.magiccoat.preference.ai.leaveStation.help": "When on, the partner will also leave its post to raise the film.",
-  "world_combat.move.magiccoat.text.reflect": "Bounced back %1$s"
+  "world_combat.move.magiccoat.text.reflect": "Bounced back %1$s",
+  "world_combat.move.magiccoat.text.block": "Blocked %1$s"
 }

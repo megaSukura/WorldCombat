@@ -3,7 +3,7 @@
  *
  * 场面：只会过热的喷火龙（Charizard，特攻向）对一只被点住、不会还手的铁傀儡，相隔 6 格，晴天平地。
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（热浪扇面扫到它）。
- * 命中率（原生 90）、点燃是概率、自身特攻下降级数与焦痕属于设计事实，写进 note 供读轨迹判断。
+ * 命中率（原生 90）、点燃是概率、自身特攻下降级与内外层分伤属于设计事实，写进 note 供读轨迹判断。
  */
 Smoke.scenario("overheat", function (stage) {
     stage.fill([-12, -1, -12], [12, -1, 12], "minecraft:stone");
@@ -18,7 +18,7 @@ Smoke.scenario("overheat", function (stage) {
     }, function () {
         stage.expect(stage.casts("overheat", caster) > 0, "overheat was committed");
         stage.expect(stage.damageTo(foe) > 0, "the heat fan caught the foe");
-        stage.note("点燃、扇面是否同时扫到别人、自身特攻下降级数与焦痕属于设计事实；由完整装配的人工试玩核对", {
+        stage.note("点燃、扇面是否同时扫到别人、自身特攻下降级与内外层分伤属于设计事实；由完整装配的人工试玩核对", {
             casts: stage.casts("overheat", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             changedBlocks: stage.changedBlocks(),

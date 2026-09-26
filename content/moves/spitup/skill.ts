@@ -1,12 +1,4 @@
-/**
- * 喷出 / spitup 的出手方式。
- *
- * 念头的形状：把攒在身体里的压缩力推上喉咙（gather，提交前只播预告；层数越多光点越大）→ 一口吐出：
- *   直喷式是一发沿直线飞出的重弹，命中炸开；喷散式是身前一片锥形、一次罩住多个目标 → 吐完**放空全部层数**，
- *   那几层防护跟着交出去（借共享身份 cure，蓄力单元自己收回等级并散开光壳）。
- * 没有蓄力层就使不出：`ready` 在提交前拦下（不花 PP）。这是本组唯一读自己存量、也是唯一需要先放另一招（蓄力）的一招。
- * 提交后才触碰世界；准备期只 present。
- */
+/** Cash in the successfully consumed shared stockpile at launch; flight uses that fixed resource snapshot. */
 namespace PokemonSkills {
     const spitupSpitText = "world_combat.move.spitup.text.spit";
     const spitupMissText = "world_combat.move.spitup.text.miss";
@@ -29,7 +21,7 @@ namespace PokemonSkills {
         name: "Spit Up",
         description: "把蓄力攒下的压缩力一口吐出去：蓄了几层就有多重，弹体更大更快；没有蓄力层时这一招根本使不出。出手会一次放空全部层数，那几层防御与特防加成也跟着交出去。喷散式把这一口摊成身前一整片锥形，一次罩住多个敌人，但每个目标更轻。",
         uses: ["先蓄力攒层，再一口把攒下的力全吐出去", "喷散式一次罩住站成一排的敌人", "把层数留着当保险，等对手露出破绽再全放"],
-        kind: "enemy",
+        kind: "aim",
         range: 10,
         maxRange: 18,
         prepare: 6,
@@ -69,14 +61,9 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const origin = action.origin();
-            const layers = spitupLayers(world, actor);
-            let spent = false;
-            function spend(scope: CombatWorld): void {
-                if (spent) return;
-                spent = true;
-                // 放空：按共享身份一次收回全部蓄力层；蓄力单元自己会把防护等级与光壳一起收走。
-                CombatStatus.cure(scope, actor, spitupStockpile);
-            }
+            const consumed = MobEffects.consumeTagged(world, actor, StatusVocabulary.tag(spitupStockpile));
+            const layers = consumed.reduce((count, value) => Math.max(count, Math.min(3, value.amplifier())), 0);
+            action.data("world_combat:spitup/layers", JSON.stringify({ layers: layers }));
             if (layers < 1) {
                 WorldFeedback.emit(world, spitupScene, 1, origin, { moment: "whiff", layers: 0 }, 18);
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), spitupMissText, [], 22);
@@ -106,7 +93,6 @@ namespace PokemonSkills {
                         intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 30);
                 sound(action, "minecraft:entity.llama.spit");
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), spitupSpitText, [layers, hits], 26);
-                spend(world);
                 done(action);
                 return;
             }
@@ -137,7 +123,6 @@ namespace PokemonSkills {
                 }
             }, function (current) {
                 const scope = current.world();
-                spend(scope);
                 if (!struck) {
                     WorldFeedback.emit(scope, spitupScene, 1, current.targetPosition(),
                         { moment: "whiff", motes: Math.round(motes * 0.6), layers: layers }, 18);

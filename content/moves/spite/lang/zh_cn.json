@@ -1,11 +1,11 @@
 {
   "effect.world_combat.spite_grudge": "怀恨",
-  "worldcombat.skill.spite.summary": "向一个目标送出一道缓慢、会自动转向的怨念：命中宝可梦时从它最后使用的那一招里抠走 4 点 PP，并让怀恨留在它身上——移动变慢、技能冷却延长。怨念本身不造成伤害，追不上、被甩开或撞到障碍就散去。",
+  "worldcombat.skill.spite.summary": "向一个目标送出一道缓慢、会自动转向的怨念：命中宝可梦时从它最后使用的那一招里抠走 4 点 PP，对没有 PP 的普通生物则扣不到。无论扣没扣到，怀恨都会留下，令目标移动变慢、技能冷却延长。怨念本身不造成伤害，追不上、被甩开或撞到障碍就散去。",
   "worldcombat.skill.spite.use.0": "惩罚刚出手的目标",
   "worldcombat.skill.spite.use.1": "抠掉对手关键招式的 PP",
   "worldcombat.skill.spite.use.2": "拖慢追击者",
   "worldcombat.skill.spite.description.0": "怨念能送到 %1$s 格，飞行速度 %2$s 格每刻、判定半径 %3$s 格；它本身不造成伤害，命中只会抽走 PP 并留下怀恨。",
-  "worldcombat.skill.spite.description.1": "命中宝可梦时，从它最后使用的那一招里抠走 %1$s 点 PP；只认 %2$s 以内的出手，更久以前、没有可扣的招式或被剥空 PP 时就扣不到，但怀恨照挂。",
+  "worldcombat.skill.spite.description.1": "命中宝可梦时，从它最后使用的那一招里抠走 %1$s 点 PP；只认 %2$s 以内的出手，更久以前、没有可扣的招式或被剥空 PP 时就扣不到。普通生物没有 PP，扣不到任何点数，但仍会被怀恨拖慢。",
   "worldcombat.skill.spite.description.2": "怨念每刻最多朝目标转向 %2$s 度，追不上、被绕开或撞到障碍就散去——那样不会扣 PP 也不会留下怀恨；命中则怀恨持续 %1$s，期间目标移动速度降低 15%%、技能急速 −30（技能冷却约延长四成），再次命中会刷新时长。",
   "worldcombat.skill.spite.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.spite.growth.0": "%1$s 级起记忆窗口升至 %2$s 秒、怀恨 %3$s 秒。",

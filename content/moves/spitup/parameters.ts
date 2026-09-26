@@ -46,6 +46,8 @@ namespace PokemonSkills {
     defineFacts(spitupId, function (context: FactContext): Formula.Facts {
         return { read: function (id: string) {
             if (id !== "state.stockpile") return undefined;
+            const paid = context.action && context.action.data("world_combat:spitup/layers");
+            if (paid !== null && paid !== undefined) return Number(JSON.parse(paid).layers);
             if (!context.world || !context.actor || !context.world.valid(context.actor)) return undefined;
             return spitupLayers(context.world, context.actor);
         } };

@@ -26,6 +26,6 @@
   "worldcombat.skill.drainingkiss.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.drainingkiss.preference.ai.healBelow.help": "Below this health ratio the user prefers draining kiss as sustain; higher leans on it for healing sooner.",
   "world_combat.move.drainingkiss.text.kiss": "Breath stolen",
-  "world_combat.move.drainingkiss.text.mend": "Kissed back %1$s%% health",
+  "world_combat.move.drainingkiss.text.mend": "Kissed back %1$s health",
   "world_combat.move.drainingkiss.text.miss": "Kissed empty air"
 }

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.fling.summary": "Hurl the held item at the target: power follows its weight and effects follow its kind; it is spent from your hand and by default stays where it lands.",
+  "worldcombat.skill.fling.summary": "Throw one real held item with its own effect. Allies can catch and eat Berries without hostile physical damage. An uneaten item is dropped or broken according to the setting.",
   "worldcombat.skill.fling.use.0": "Ranged item throw",
   "worldcombat.skill.fling.use.1": "Hand a Flame Orb or Poison Barb to the foe",
   "worldcombat.skill.fling.use.2": "Give a Berry back to the opponent",
   "worldcombat.skill.fling.description.0": "Hurls the held item at the target for %1$s Dark physical damage; the item's fling weight sets the power.",
-  "worldcombat.skill.fling.description.1": "Throws within %1$s blocks after %2$s s; the item's effect resolves on hit: a Berry is eaten by the target and heals it about 12.5%% of its maximum health, a Flame Orb burns, a Poison Barb poisons, a Toxic Orb badly poisons, a Light Ball paralyzes (the target may be immune), and a King's Rock or Razor Fang interrupts an interruptible action.",
-  "worldcombat.skill.fling.description.2": "The item is spent from your hand as it leaves. By default it stays, dropping where it lands, and can be picked up by anyone after %1$s s; turned off it shatters on impact, leaves nothing, and hits at x1.2 power.",
+  "worldcombat.skill.fling.description.1": "Reach is %1$s blocks with %2$s seconds of preparation. Berries apply their own healing, cure or stat effect. Offensive item effects still require a successful authorized enemy hit.",
+  "worldcombat.skill.fling.description.2": "One item is atomically removed from the native stack at launch. An eaten Berry cannot also drop. Other items normally land with a %1$s-second pickup delay; disabling drops breaks them for x1.2 hostile power.",
   "worldcombat.skill.fling.timing": "Windup %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.fling.value.throw": "Power",
   "worldcombat.skill.fling.value.item": "Fling power",
@@ -22,11 +22,13 @@
   "worldcombat.skill.fling.preference.ai.maxChase.help": "Only throw within this distance; farther targets are left to the shared approach logic.",
   "worldcombat.skill.fling.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.fling.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to throw; when off it stays put.",
-  "world_combat.move.fling.text.berry": "The foe ate the Berry",
+  "world_combat.move.fling.text.berry": "Berry eaten",
   "world_combat.move.fling.text.flinch": "Flinched",
   "world_combat.move.fling.text.burn": "Burned",
   "world_combat.move.fling.text.paralysis": "Paralyzed",
   "world_combat.move.fling.text.poison": "Poisoned",
   "world_combat.move.fling.text.toxic": "Badly poisoned",
-  "worldcombat.skill.fling.description.projectile": "The item flies in an arc at %1$s blocks per tick with a %2$s-block hit radius, and knocks the target back %3$s blocks on a hit."
+  "worldcombat.skill.fling.description.projectile": "The item flies in an arc at %1$s blocks per tick with a %2$s-block hit radius, and knocks the target back %3$s blocks on a hit.",
+  "worldcombat.skill.fling.preference.helpFriends": "Feed Berries to allies",
+  "worldcombat.skill.fling.preference.ai.allowGear": "Allow throwing regular equipment"
 }

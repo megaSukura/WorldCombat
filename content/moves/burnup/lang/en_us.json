@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.burnup.summary": "Draw every flame in the body inward, then vent a cone of white fire in front: the aimed target takes full damage while other foes in the cone take the side flame. Afterwards the user is truly burned out — for a while it is no longer Fire type and cannot light another Burn Up; it can only be cast while the user is Fire type.",
+  "worldcombat.skill.burnup.summary": "Draw every flame in the body inward, then vent a cone of white fire in front: the first central-core contact takes full damage while other foes in the cone take the side flame. Afterwards the user is truly burned out — for a while it is no longer Fire type and cannot light another Burn Up; it can only be cast while the user is Fire type.",
   "worldcombat.skill.burnup.description.0": "The white fire deals about %1$s special damage, already including the 1.12x bonus for the user's own Fire typing; it can only be cast while the user is Fire type.",
-  "worldcombat.skill.burnup.description.1": "The white fire reaches %1$s blocks and opens a %2$s degree cone, its front rushing out at %3$s blocks per tick; the aimed target takes full damage and other foes in the cone each take %4$s.",
-  "worldcombat.skill.burnup.description.2": "Afterwards the user is burned out for %1$s: it no longer has the Fire type (a Fire-only user falls back to Normal), losing Fire's same-type bonus and match-up, and cannot cast Burn Up again; the typing returns when the burnout ends or is cleared.",
+  "worldcombat.skill.burnup.description.1": "The white fire reaches %1$s blocks and opens a %2$s degree cone, its front rushing out at %3$s blocks per tick; the first central-core contact takes full damage and other foes in the cone each take %4$s.",
+  "worldcombat.skill.burnup.description.2": "Spend Fire for %1$s at release, even on a miss. Other types remain; a pure Fire body becomes typeless. The carrier ending restores its contribution. This shot retains the same-type budget for its actual resolved launch type.",
   "worldcombat.skill.burnup.use.0": "Scorch a cone with one blast",
   "worldcombat.skill.burnup.use.1": "Trade the Fire typing for one heavy hit",
   "worldcombat.skill.burnup.use.2": "Ignite everything clustered ahead",

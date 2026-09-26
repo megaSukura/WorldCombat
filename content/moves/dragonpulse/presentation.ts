@@ -4,8 +4,8 @@
  * 一句话：张口把龙息压成一圈圈青紫的同心波面，从嘴前一圈接一圈沿直线推出去，扫过的目标身上炸开龙属冲击，
  * 尽头留下一缕散去的余波。
  * 色相家族：龙青（0x7FE6D0）为主体、紫（0x9A6BE0）作波面内芯，强调用原型 impact_dragon。
- * 拍子：起（charge 聚气）→ 推（release 脱手、pulse 沿途推进、impact 逐个命中）→ 收（bloom 连锁炸开、fade 散去）。
- * 范围：pulse 绑 projectile，波面沿直线推进，线两侧由 `data.scale`（波面厚度 / 0.42）决定展开；连锁时 bloom 的环半径读 `data.scale`（连锁半径 / 1.6）。
+ * 拍子：起（charge 聚气）→ 推（release 脱手、pulse 沿途推进、impact 逐个命中）→ 链（chain 同线连穿、后续 impact 按衰减反复）→ 收（fade 散去）。
+ * 范围：pulse 绑 projectile，波面沿直线推进，线两侧由 `data.scale`（波面厚度 / 0.42）决定展开；chain 整条线读 `data.path`、线宽读 `data.scale`（连锁线宽 / 0.6）。
  * 运动：波面逐圈向外鼓、沿轴前进；推进速度由服务端决定，画面跟着弹体走。
  * 数：`data.flow`（波面道数换算的流量）绑定 pulse 的发射率，`data.rings` 决定同屏几道波环，
  * `data.intensity`（本击威力 / 76）抬高命中亮度，命中个数写进 `data.hits`。
@@ -109,27 +109,27 @@ const DragonpulseDefinition: ParticleDefinition = {
                 }
             ]
         },
-        bloom: {
-            duration: 30,
-            exit: { stop: 14, drain: 20 },
+        chain: {
+            duration: 28,
+            exit: { stop: 13, drain: 18 },
             emitters: [
                 {
-                    name: "ring_out", bind: "point", offset: [0, 0.15, 0],
+                    name: "rail", bind: "path", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 2, at: 0, interval: 3 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [9, 16], size: [0.35, 0.85],
-                    color: 0x7FE6D0, alpha: [0.6, 0], light: "full", maxParticles: 16
+                    shape: { kind: "polyline" },
+                    rate: { data: "flow", fallback: 90 }, amount: { data: "rings", fallback: 3 },
+                    direction: "shape", speed: [0.04, 0.14],
+                    lifetime: [7, 14], size: [0.3, 0.6], sizeMode: "sin",
+                    color: 0x7FE6D0, alpha: [0.45, 0], light: "world", maxParticles: 160
                 },
                 {
-                    name: "burst", bind: "point", offset: [0, 0.3, 0],
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
-                    burst: { count: { data: "rings", fallback: 3 } },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
-                    direction: "shape", speed: [0.06, 0.24],
-                    lifetime: [6, 12], size: [0.36, 0.06], sizeMode: "index",
-                    color: 0xD8FBF0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 60
+                    name: "chain_core", bind: "path", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    shape: { kind: "polyline" },
+                    burst: { count: { data: "flow", fallback: 60 } },
+                    direction: "shape", speed: [0.05, 0.18], spread: 10,
+                    lifetime: [6, 12], size: [0.13, 0.04],
+                    color: 0xB79AF0, alpha: [0.75, 0], light: "full", maxParticles: 140
                 }
             ]
         },

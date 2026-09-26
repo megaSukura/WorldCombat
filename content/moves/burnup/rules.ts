@@ -1,43 +1,34 @@
-/**
- * 燃尽 / burnup 的状态行为：把「不再是火属性」落到 NativeModifiers 的 types 层上。
- *
- * 效果 `world_combat:burnup_spent`（本单元 startup 注册，身份 world_combat:status/burned_out）挂上后，
- * 这里把它当时的属性去掉 fire 写进一条与效果同寿命的 types 层；效果结束（自然到期、牛奶、被清除、离场）
- * 时立刻解除这条层，属性随原生个体本身恢复。单火属性的个体去掉 fire 后没有可留的类型，
- * 退为 normal（原生不提供无属性表示，这是最接近的中性写法）。
- * 判定与表现都读同一份结果：`NativeEffects.types` 带层，于是本系加成、受击相性、AI 与 `ready` 一起变化。
- */
+/** One carrier owns fire removal; empty remaining types stay empty, and other type sources survive cleanup. */
 namespace PokemonSkills {
-    /** 施法者 ref → 本单元为它挂的那条 types 层实例 id。 */
-    var burnupSpentLayers: { [ref: string]: number } = Object.create(null);
-
-    /** 去掉 fire 之后剩下的属性；一个都不剩时退为 normal。 */
-    function burnupRemainingTypes(world: CombatWorld, actor: CombatActor): string[] {
-        const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(world, actor);
-        const remaining = NativeEffects.types(pokemon, state).filter(function (type: string) { return type !== "fire"; });
-        return remaining.length ? remaining : ["normal"];
+    const burnupWindow = "world_combat:burnup_window";
+    export function burnupSpend(world: CombatWorld, actor: CombatActor, ticks: number): boolean {
+        const types = PokemonDamage.combatants.read(world, actor).types.filter(type => type !== "fire");
+        const carrier = MobEffects.apply(world, actor, burnupSpentEffect, ticks, 0); if (!carrier) return false;
+        world.effect(burnupWindow, actor, JSON.stringify({ carrier: MobEffects.anchor(carrier), types: types }), ticks);
+        return true;
     }
-
-    WorldCombat.on("world_combat:move_burnup/spend", "world_combat:mob_effect_added", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== burnupSpentEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return;
-        const key = String(actor.ref()), previous = burnupSpentLayers[key];
-        if (previous) world.operation(previous, "world_combat:dispel", "{}");
-        const ticks = Math.max(1, Math.round(Number(data.duration) || 200));
-        burnupSpentLayers[key] = NativeModifiers.apply(world, actor, { types: burnupRemainingTypes(world, actor) }, ticks);
+    PokemonDamage.combatants.resolved.define({ id: "world_combat:burnup/types", apply: context => {
+        if (String(context.actor.domain()) === "cobblemon") return;
+        const active = context.world.effects(context.actor, burnupWindow).some(view =>
+            MobEffects.matches(context.world, context.actor, JSON.parse(String(view.data())).carrier));
+        if (active) context.facts.types = context.facts.types.filter(type => type !== "fire");
+    } });
+    WorldCombat.effect(burnupWindow, 1, 1200000, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(burnupWindow, "start", effect => {
+        const world = effect.world(), actor = effect.target(), data = JSON.parse(effect.state()), body = world.observe(actor);
+        if (!body || !MobEffects.matches(world, actor, data.carrier)) { effect.end(); return; }
+        data.lease = MobEffects.bind(world, actor, burnupSpentEffect); effect.state(JSON.stringify(data));
+        if (String(actor.domain()) === "cobblemon") NativeModifiers.apply(world, actor, { types: data.types,
+            owner: { id: effect.id(), definition: burnupWindow, actor: String(actor.ref()) } }, effect.remaining());
+        WorldFeedback.onEffect(world, effect.id(), "spent", burnupScene, 1, body.position(), { moment: "spent", target: String(actor.ref()) });
+        effect.schedule("watch", "watch", 1, "{}");
     });
-
-    WorldCombat.on("world_combat:move_burnup/reignite", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== burnupSpentEffect) return;
-        const world = event.world(), key = String(event.actor().ref()), layer = burnupSpentLayers[key];
-        if (!layer) return;
-        world.operation(layer, "world_combat:dispel", "{}");
-        delete burnupSpentLayers[key];
-        const body = world.observe(event.actor());
-        if (body === null) return;
-        WorldFeedback.emit(world, burnupScene, 1, body.position(), { moment: "reignite", target: key }, 38);
+    WorldCombat.effectHandler(burnupWindow, "watch", effect => {
+        if (!MobEffects.present(effect.world(), JSON.parse(effect.state()).lease)) { effect.end(); return; }
+        effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(burnupWindow, "end", effect => {
+        const world = effect.world(), body = world.observe(effect.target());
+        if (body) WorldFeedback.emit(world, burnupScene, 1, body.position(), { moment: "reignite", target: String(effect.target().ref()) }, 24);
     });
 }

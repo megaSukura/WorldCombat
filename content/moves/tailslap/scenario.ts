@@ -9,7 +9,8 @@
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一圈的伤害（`stage.damageTo`）；目标被向外推得挪动过
  *   （`stage.travelled`——每一圈命中都会把圈内的人沿背离方向推开）。
  *   圈数（2～5，随体重／速度／等级变化）、每圈命中率 85、某一圈是否没拍实、旋扫还是砸尾式，都是随机或配置结果，
- *   写进 note 供读轨迹判断。
+ *   写进 note 供读轨迹判断。旋扫式每圈分四段依次转过（不是一次整圈爆），同一个敌人一圈只吃一次；
+ *   本招也可不点目标直接以自身为心起旋。
  */
 Smoke.scenario("tailslap", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -25,7 +26,7 @@ Smoke.scenario("tailslap", function (stage) {
             stage.expect(stage.casts("tailslap", caster) >= 1, "the caster committed tailslap");
             stage.expect(stage.damageTo(foe) > 0, "a spin landed on the foe");
             stage.expect(stage.travelled(foe) > 0.2, "the outward shove moved the foe");
-            stage.note("laps (2-5) follow weight/speed/level; each lap rolls 85% and a missed lap does not stop the spin; spin hits the full circle, smash narrows to the front arc", {
+            stage.note("laps (2-5) follow weight/speed/level; each lap rolls 85% and a missed lap does not stop the spin; the spin turns its full circle in four consecutive segments and hits a given enemy once per lap, smash narrows to the front arc; the move also works with no target selected", {
                 casts: stage.casts("tailslap", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeTravelled: Math.round(stage.travelled(foe) * 10) / 10,

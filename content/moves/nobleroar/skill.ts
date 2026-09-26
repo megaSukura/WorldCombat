@@ -10,6 +10,10 @@
  *     `WorldGeometry.sector` 选出锥内所有非友方，逐个 NativeEffects.boost 掉物攻与特攻（怒吼 1 级／低吼 2 级），
  *     并挂上共享身份 world_combat:status/cowed 的「气短」标记；表现用的锥形顶点与判定读同一份形状。
  *
+ * 选取是 `kind: "aim"`：可以锁定锥内的一个敌人，也可以只朝一条通道/一个方向吼。方向、点、空放都成立，
+ * 提交时不要求存在敌人；攻击权限与目标关系不影响这一吼，锥内谁是非友方就压谁。声音按既定策略穿墙，
+ * 所以不需要视线，表现里也不加根束之类的控制——被吼到的人照常走动出手。
+ *
  * 与同族分开：本组里唯一作用于身前一片、且唯一的声波招；其余三招都只碰自己人。
  */
 namespace PokemonSkills {
@@ -40,9 +44,9 @@ namespace PokemonSkills {
         id: "nobleroar",
         cooldownParameter: "wait",
         name: "Noble Roar",
-        description: "站定把胸一挺，一声低吼朝身前推出整片锥形声压。锥内的敌人避无可避，物攻与特攻一起被压下去；越窄的低吼压得越深。",
-        uses: ["正面吼住一片冲上来的敌人", "在开战前先把对方的输出压下去", "用宽阔的声压同时照顾到一小簇目标"],
-        kind: "enemy",
+        description: "站定把胸一挺，一声低吼朝选定的方向推出锥形声压，也可以直接锁住锥内的一个敌人。锥内的非友方一起被压低物攻与特攻；越窄的低吼压得越深。气短只是被吼过的标记，被压的人照常走动出手。",
+        uses: ["正面吼住一片冲上来的敌人", "在开战前先把对方的输出压下去", "朝一条通道主动发声，或同时照顾一小簇目标"],
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 11,
@@ -54,7 +58,7 @@ namespace PokemonSkills {
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["nobleroar"], detail: { values: config } };
-            return { radius: p("nobleroar", "reach", context), geometry: "area", style: "roar", color: 0xE8C860,
+            return { radius: p("nobleroar", "reach", context), geometry: "cone", style: "roar", color: 0xE8C860,
                 label: config && Number(config.form) === 1 ? "低吼" : "怒吼" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {

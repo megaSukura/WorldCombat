@@ -6,10 +6,10 @@
  *   对谁出手  当前 threat；焦点目标直接通过。
  *   出手时机  ai.opening = incoming 时只在 threat 正攻击自己/主人（或自己刚受伤）时掷出飞吻。
  *   够不到    由共用任务走到 reach；accepts 不按距离硬拒，会先靠近再掷。
- *   放完之后  目标出手变得不可靠、又被拴在你身边，随后把伤害交回共用交战计划。
- *   优先级    插在 world_combat:defend 之前；对正在逃跑的目标给 100（越过共用顺序），把它拴住。
+ *   放完之后  目标出手变得不可靠、且只在你视线与羁绊范围内维持，随后把伤害交回共用交战计划。
+ *   优先级    插在 world_combat:defend 之前；对正在逃跑的目标给 100（越过共用顺序），把它留住。
  * ai.leaveStation：驻守中的伙伴是否愿意离位去掷这个飞吻。
- * ai.runnersOnly：只牵制正在逃跑的威胁，把它当成留人技能而不是泛用软控。
+ * ai.runnersOnly：只留正在逃跑的威胁，把它当成留人技能而不是泛用软控。
  */
 namespace CompanionBehavior {
     const attractChase = PokemonSkills.number("ai.maxChase", "示好距离", 2, 24, 1);
@@ -19,7 +19,7 @@ namespace CompanionBehavior {
     const attractLeave = PokemonSkills.flag("ai.leaveStation", "离开驻守点");
     attractLeave.help = "开启后，驻守中的伙伴会离开原位去对示好距离内的威胁掷飞吻。";
     const attractRunners = PokemonSkills.flag("ai.runnersOnly", "只牵制逃者");
-    attractRunners.help = "开启后，伙伴只对正在逃跑的威胁掷飞吻，把它拴住；关闭时对范围内任何威胁都愿意示好。";
+    attractRunners.help = "开启后，伙伴只对正在逃跑的威胁掷飞吻，把它留住；关闭时对范围内任何威胁都愿意示好。";
 
     PokemonSkills.addPreferences("attract", { ai: { maxChase: 12, opening: "anytime", leaveStation: false, runnersOnly: false } },
         [attractChase, attractOpening, attractLeave, attractRunners]);

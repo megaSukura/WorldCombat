@@ -3,13 +3,20 @@
  *
  * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 6）格内；刃程是本族最长，够不到先让共享接近逻辑送进来。
  * 对谁出手：`ai.breakGuard`（默认开）在目标有正面防御等级时显著抬分——本招无视这些涨防，用来切扎了防御的对手；
- *   `ai.finish` 收残血。它只切一个目标，不挑人堆。
+ *   但只有自己与目标之间有一条干净的直线（长线角度）时才抢，挡在墙后不选；`ai.finish` 收残血。
+ *   装备护甲不在无视范围，普通高甲目标照常按原生防御参与。它只切一个目标，不挑人堆。
  * 出手位置：站在刃程内（可远至约 3 格），拉满再斩；居合式会额外把身位送出去。
  * 放完之后：交回共享交战计划；起手较长，之后再补别的招。
  */
 namespace PokemonSkills {
     function sacredswordValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
+    }
+
+    /** 长线角度：自己与目标之间没有实墙截住这条直斩。 */
+    function sacredswordAngle(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context);
+        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     /** 只读、回调内缓存的「目标正面防御等级总数」；由参数层的同一份阶梯读取。 */
@@ -37,6 +44,8 @@ namespace PokemonSkills {
             if (!target) return 0;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             if (distance > capability.data.range) return 0;
+            // 长线角度被墙截住时不抢这一刀；交给共享接近改换位置。
+            if (!sacredswordAngle(context, target)) return 0;
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "breakGuard", true) && sacredswordGuardNow(context, target) > 0) score += 14;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) score += 10;

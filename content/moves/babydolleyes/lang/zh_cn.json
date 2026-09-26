@@ -3,7 +3,7 @@
   "worldcombat.skill.babydolleyes.use.0": "被追上来的物攻威胁逼住时先压低它",
   "worldcombat.skill.babydolleyes.use.1": "在它出手前抢一记先手削弱",
   "worldcombat.skill.babydolleyes.use.2": "配合队友把一只近身威胁的出手压软",
-  "worldcombat.skill.babydolleyes.description.0": "被看软者损失 %1$s 级攻击，并带上心软标记 %2$s；心软期间伙伴不会对它重复睁眼。攻击下降是属性等级，不会随标记到期自动恢复，而会保留到它离开战斗、攻击等级被重置为止。",
+  "worldcombat.skill.babydolleyes.description.0": "被看软者带上心软标记 %2$s，伙伴不会对它重复睁眼；攻击能真正下降时再损失 %1$s 级（已免疫或已到底则只留标记、不再下降）。攻击下降是属性等级，不会随标记到期自动恢复，而会保留到它离开战斗、攻击等级被重置为止。",
   "worldcombat.skill.babydolleyes.description.1": "凝视距离 %1$s 格，只作用于一个看得见的敌人；需要视线，被掩体挡住就落空。",
   "worldcombat.skill.babydolleyes.description.2": "起手 %1$s，收招 %2$s。起手远短于普通招式，所以几乎总能先落下。",
   "worldcombat.skill.babydolleyes.stare.on": "凝视：卸 2 级、距离更远、持续更久，但起手 %1$s、冷却 %2$s，先手优势变小。",
@@ -28,5 +28,7 @@
   "worldcombat.skill.babydolleyes.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去睁眼。",
   "world_combat.move.babydolleyes.text.gaze": "看软 · 攻击 -%1$s",
   "world_combat.move.babydolleyes.text.blocked": "视线被挡",
+  "world_combat.move.babydolleyes.text.capped": "心软 · 攻击已到底",
+  "world_combat.move.babydolleyes.text.warded": "心软被挡下",
   "effect.world_combat.babydoll_eyes": "被圆瞳看软"
 }

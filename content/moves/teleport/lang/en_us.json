@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.teleport.summary": "Fold space to blink to a chosen spot and shake the foes locked onto you; a wild user jumps farther and releases its own target. It leaves nothing behind and recharges quickly.",
+  "worldcombat.skill.teleport.summary": "Fold space to blink to a manually chosen 3D spot and shake the foes locked onto you; a wild user jumps farther and releases its own target. A spot the whole body cannot stand in fails outright, and nothing is left behind.",
   "worldcombat.skill.teleport.use.0": "Open distance the instant you are pinned",
   "worldcombat.skill.teleport.use.1": "Shake the pursuers locked onto you",
-  "worldcombat.skill.teleport.use.2": "Skip a short stretch of terrain to safety",
-  "worldcombat.skill.teleport.description.0": "Blink up to %1$s blocks to the chosen spot, which cannot be where you already stand; it leaves nothing behind.",
+  "worldcombat.skill.teleport.use.2": "Reach a cliff top or platform to safety",
+  "worldcombat.skill.teleport.description.0": "Blink up to %1$s blocks to the chosen 3D spot — ground or a raised platform. It cannot be where you already stand, and a spot the whole body cannot fit in (such as inside a wall) fails outright. It leaves nothing behind.",
   "worldcombat.skill.teleport.description.1": "The moment you blink away, foes within %1$s blocks of where you stood that were locked onto you lose their target.",
   "worldcombat.skill.teleport.far.on": "Far blink: distance ×1.35 and shed radius ×1.2, at the cost of wind-up +3 and cooldown +26.",
   "worldcombat.skill.teleport.far.off": "Flash step: distance ×0.85, shed radius ×0.9 — cheaper wind-up and cooldown, good for repeated short hops.",
@@ -29,5 +29,6 @@
   "worldcombat.skill.teleport.preference.ai.leaveStation.help": "When on, the user blinks away from its post even under a hold order.",
   "world_combat.move.teleport.text.blink": "Teleport · %1$s blocks",
   "world_combat.move.teleport.text.flee": "Teleport escape · %1$s blocks",
-  "worldcombat.skill.teleport.description.2": "A wild user rides the momentum of escape to blink farther, and releases its own target on arrival."
+  "worldcombat.skill.teleport.description.2": "A wild user rides the momentum of escape to blink farther, and releases its own target on arrival.",
+  "worldcombat.skill.teleport.description.3": "The landing is a free 3D point, including raised platforms; pursuit is shed only after a real, successful move, so a failed blink neither clears aggro nor moves you."
 }

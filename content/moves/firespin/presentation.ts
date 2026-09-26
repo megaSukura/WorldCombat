@@ -4,9 +4,10 @@
  * 一句话：施法者掌心先卷起一撮回旋的火舌，随后火种追着目标飞去，命中的地方腾起一道绕着目标打转、跟着它走的火柱；
  * 火柱不断往目标身上舔火、把地面烤出焦痕；目标湿透时火柱「嗤」地化成一团白汽熄灭。
  * 色相家族：橙红（0xE86A2A）为主、亮黄（0xFFD060）做火舌高光、近白（0xFFF0C0）只在中心；焦痕用暗褐。
- * 拍子：起（charge 聚火）→ 掷（cast 火种）→ 驻（wrap 立柱 / column 回旋 / lick 舔火）→ 收（release / douse）。
+ * 拍子：起（charge 聚火）→ 掷（cast 火种）→ 驻（wrap 立柱 / column 回旋 / lick 舔火）→ 收（release / douse）；碰墙走 scatter。
  * 范围：column 是 `bind: "target"`，用 `data.radius` 画横截面、`data.height` 画柱高——目标站在哪，那圈火就跟到哪。
- * 运动：火柱沿局部 +Y 上升并自转，火舌向外甩后被拽回；舔火时整柱炸出一圈火舌。
+ * 运动：火柱沿局部 +Y 上升并自转，`spiral` 用只留边缘的圆环随柱身盘旋上升，火舌向外甩后被拽回；
+ *   lick 只在服务端确认这一下真的造成伤害时才短亮，未命中不出现。
  * 数：`data.flow`（火柱半径派生）决定火柱密度，`data.count`（灼烧威力派生）决定舔火那下的火舌量，
  *   `data.intensity`（威力 / 24）抬高亮度，`data.pulses`（已舔次数）让火柱越烧越旺，`data.scale`（半径 / 0.85）控制粒子尺寸。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -109,6 +110,16 @@ const FirespinDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.93,
                     lifetime: [12, 20], size: [0.06, 0.01],
                     color: 0x6E5546, alpha: [0.4, 0], light: "world", maxParticles: 90
+                },
+                {
+                    name: "spiral", bind: "target", offset: [0, 0, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    rate: { data: "flow", fallback: 60 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 0.85 }, thickness: 1 },
+                    direction: "up", speed: [0.05, 0.16], spin: 28,
+                    gravity: -0.008, drag: 0.95,
+                    lifetime: [10, 18], size: [0.09, 0.02],
+                    color: 0xFFD060, alpha: [0.55, 0], light: "full", maxParticles: 180
                 }
             ]
         },
@@ -191,6 +202,22 @@ const FirespinDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [6, 11], size: [0.06, 0.01],
                     color: 0xB98A6A, alpha: [0.4, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        scatter: {
+            duration: 16,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "sparks", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: 14 },
+                    shape: { kind: "ring", radius: 0.36 },
+                    direction: "outward", speed: [0.03, 0.14],
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [6, 11], size: [0.08, 0.01],
+                    color: 0xFFD060, alpha: [0.6, 0], light: "full", maxParticles: 40
                 }
             ]
         }

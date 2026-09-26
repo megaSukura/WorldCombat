@@ -1,10 +1,10 @@
 /**
  * 冲天拳 / skyuppercut 的客户端表现。
  *
- * 一句话：蹲身把拳收到腰下、脚下蹬起一圈尘，随后一道竖直的弧线贴着身前挑上去，被顶中的目标身上炸开格斗冲击、
- * 整个人带着一串上冲的气流离开地面，在头顶停一瞬再落下。
+ * 一句话：蹲身把拳收到腰下、脚下蹬起一圈尘，随后一道竖直的弧线贴着身前由低到高挑上去，被顶中的目标身上炸开格斗冲击、
+ * 整个人带着一串上冲的气流离开地面，再按重力落回；只有真的被顶起的目标才有起跳轨迹。
  * 色相家族：暖琥珀（0xFFC06A）作主体、暖白（0xFFF4DC）作强调、红棕（0xD8843A）作细节；中性尘屑收尾。
- * 拍子：起 wind（收拳蓄劲）→ 击 rise（竖直弧挑出）与 launch（顶起）→ 收 hang（空中停留）／whiff（挑空）。
+ * 拍子：起 wind（收拳蓄劲）→ 击 rise（竖直弧挑出）与 launch（顶起）→ 收 hang（空中命中强调）／whiff（挑空）。
  * 范围：rise 的竖直弧用 `data.path`（与服务端扇面同一条挑线）画出来，玩家一眼看出身前这一柱会被挑到。
  * 运动：挑线沿 `data.direction` 从腰下向头顶上升；被顶起的目标身上气流向上、尘屑带重力落下。
  * 数：挑线粒子量绑 `data.sparks`（物攻换算），竖直高度绑 `data.airReach`（身高换算），命中爆点绑同一个值。
@@ -96,24 +96,26 @@ const SkyuppercutDefinition: ParticleDefinition = {
             ]
         },
         hang: {
-            duration: 24,
-            exit: { stop: 8, drain: 14 },
+            duration: 20,
+            exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "stall", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 4, shape: { kind: "sphere", radius: 0.42 },
-                    direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [8, 14], size: [0.24, 0.05],
-                    color: 0xFFF4DC, alpha: [0.5, 0], light: "full", bloom: 0.25, maxParticles: 26
+                    // 空中命中的上冲强调：气流向上抽离，不画停留环、不暗示目标被强制悬停。
+                    name: "riseAir", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 10, interval: 2, repeats: 2 },
+                    shape: { kind: "cylinder", radius: 0.24, length: 0.9 },
+                    direction: "up", speed: [0.12, 0.3],
+                    lifetime: [6, 11], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0xFFF4DC, alpha: [0.7, 0], light: "world", maxParticles: 32
                 },
                 {
-                    name: "motes", bind: "target", height: 0.7,
+                    name: "motes", bind: "target", height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: 6, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.02, 0.08],
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.28 },
+                    direction: "up", speed: [0.05, 0.16],
                     lifetime: [7, 13], size: [0.12, 0.03],
-                    color: 0xFFF4DC, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 30
+                    color: 0xFFF4DC, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 26
                 }
             ]
         },

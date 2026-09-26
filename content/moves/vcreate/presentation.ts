@@ -4,11 +4,12 @@
  * 一句话：前额先炸开一团炽白的火、火舌向两侧张成一个 V，随后整个人拖着这道 V 形焰尾撞进目标怀里；命中时爆成
  *   一团火球，撞完身上的火焰萎落成两条残焰，V 一点点暗下去——那就是三段降级的样子。
  * 色相家族：炽白（0xFFF0C0）到橙红（0xFF7A2E），烟收在深褐（0x3A241C）；饱和集中在额焰、命中与残焰的小面积。
- * 拍子：起（kindle 额焰张成 V）→ 冲（hurl V 形焰尾）→ 击（impact 爆开）→ 萎（slump 残焰与落灰）／失（miss）。
+ * 拍子：起（kindle 额焰张成 V）→ 冲（hurl V 形焰尾贴前额）→ 击（impact 爆开）→ 萎（slump 残焰与落灰）／失（miss）。
  * 范围：`impact` 的爆开与 `ring` 用 `data.scale`（前额火焰判定 / 0.5）铺开，画出来的就是撞面宽度。
- * 运动：`hurl` 的 trail 沿施法者实际扑过的路线铺开，画面即那条冲刺线；命中时火与碎石向外抛。
+ * 运动：`hurl` 的 trail 沿施法者实际扑过的路线铺开，画面即那条冲刺线；前额那道 V 在冲刺全程贴着头，命中时火与碎石向外抛。
  * 数：`impact`／`kindle` 的火舌量绑 `data.flames`（物攻换算出机制数），强度绑 `data.intensity`（实际威力派生）；
- *   `data.progress` 让冲程中的火焰随前进更盛，`data.nova` 区分尽燃／收焰。
+ *   `data.progress` 让冲程中的火焰随前进更盛，`data.nova` 区分尽燃／收焰；`slump` 的落灰量绑 `data.slump`
+ *   （三段实际降级合计换算），降得越狠画面越沉。
  */
 const VcreateDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -79,6 +80,29 @@ const VcreateDefinition: ParticleDefinition = {
                     rate: 16, shape: { kind: "line", length: 0.9, rotation: [0, 0, 90] }, direction: "shape",
                     speed: [0.02, 0.08],
                     lifetime: [4, 8], size: [0.32, 0.06], color: 0xFFE0A0, alpha: [0.5, 0], light: "full", bloom: 0.2, maxParticles: 60
+                },
+                {
+                    name: "v_left", bind: "source", offset: [0, 0.85, 0], height: 0.85,
+                    trail: { minDistance: 0.24 },
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: 14, shape: { kind: "line", length: 1.0, rotation: [0, 55, 0] }, direction: "shape",
+                    speed: [0.03, 0.12],
+                    lifetime: [6, 12], size: [0.18, 0.03], color: 0xFF7A2E, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 50
+                },
+                {
+                    name: "v_right", bind: "source", offset: [0, 0.85, 0], height: 0.85,
+                    trail: { minDistance: 0.24 },
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: 14, shape: { kind: "line", length: 1.0, rotation: [0, -55, 0] }, direction: "shape",
+                    speed: [0.03, 0.12],
+                    lifetime: [6, 12], size: [0.18, 0.03], color: 0xFF7A2E, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 50
+                },
+                {
+                    name: "v_core", bind: "source", offset: [0, 0.85, 0], height: 0.85,
+                    trail: { minDistance: 0.2 },
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    rate: 12, shape: { kind: "sphere", radius: 0.2 }, direction: "outward", speed: [0.02, 0.09],
+                    lifetime: [6, 11], size: [0.14, 0.02], color: 0xFFF0C0, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 40
                 }
             ]
         },
@@ -147,6 +171,13 @@ const VcreateDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 14, shape: { kind: "sphere", radius: 0.35 }, direction: "down", speed: [0.02, 0.08], gravity: 0.08,
                     lifetime: [10, 18], size: [0.07, 0.02], color: 0x6A5548, alpha: [0.35, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "slump_ash", bind: "source", offset: [0, 0.35, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "slump", fallback: 24 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.42 }, direction: "down", speed: [0.03, 0.12], gravity: 0.1,
+                    lifetime: [12, 20], size: [0.08, 0.02], color: 0x6A5548, alpha: [0.4, 0], light: "world", maxParticles: 60
                 }
             ]
         },

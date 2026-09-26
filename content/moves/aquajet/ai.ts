@@ -1,4 +1,4 @@
-/** 用水击进攻并打湿目标；清除敌方灼伤会损失持续伤害，因此默认降低这种出手的优先级。 */
+/** 用水击进攻并打湿目标；施放者身在水里时水柱更猛，因此略微上调这种出手的优先级；清除敌方灼伤会损失持续伤害，因此默认降低这种出手的优先级。 */
 namespace PokemonSkills {
     CompanionBehavior.registerUse(aquajetId, {
         protocols: ["world_combat:attack", "world_combat:contact"],
@@ -17,6 +17,7 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 23;
+            if (self.wet) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "preserveBurn", true) && CompanionBehavior.status(context, target, "burn")) score -= 16;
             if (CompanionBehavior.ai<boolean>(capability, "preferDry", true) && CompanionBehavior.status(context, target, "soaked")) score -= 8;
             if (CompanionBehavior.ratio(target) <= 0.3) score += 8;

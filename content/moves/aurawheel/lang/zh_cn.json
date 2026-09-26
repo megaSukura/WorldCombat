@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.aurawheel.summary": "把颊囊里的能量滚成轮子贴地撞向目标；使用后自身速度提高，属性随样子在电与恶之间变化。",
+  "worldcombat.skill.aurawheel.summary": "在 12 格内选一个落点，把颊囊里的能量滚成轮子贴地滚过去；使用后自身速度提高，属性随样子在电与恶之间变化。",
   "worldcombat.skill.aurawheel.use.0": "翻滚重击",
-  "worldcombat.skill.aurawheel.description.0": "朝目标方向贴地滚出：撞到第一个生物或障碍就停下，若撞到的是敌人则造成约 %1$s 点物理伤害；最远滚 %2$s 格、每刻推进 %3$s 格、滚动时碰撞半径 %4$s 格。无论有没有撞到人，出招后都会使自己速度提高 %5$s 级；伤害属性随样子变化，空腹形态为恶、其余为电。",
+  "worldcombat.skill.aurawheel.description.0": "在 12 格内选定一个落点并在该方向贴地滚出：撞到第一个生物或障碍就停下，若撞到的是敌人则造成约 %1$s 点物理伤害；最远滚 %2$s 格、每刻推进 %3$s 格、滚动时碰撞半径 %4$s 格。不必瞄准敌人，也可以用来空滚换位；无论有没有撞到人，出招后都会使自己速度提高 %5$s 级；伤害属性随样子变化，空腹形态为恶、其余为电。",
   "worldcombat.skill.aurawheel.description.1": "PP 消耗 %1$s；冷却 %2$s 秒。",
   "worldcombat.skill.aurawheel.timing": "射程 %1$s 格；起手 %2$s，收招 %3$s。",
   "worldcombat.skill.aurawheel.value.power": "气场轮威力",

@@ -12,17 +12,26 @@ public final class EffectChecks {
         final Thread thread = Thread.currentThread();
         String authority = "owner-a";
         int errors;
+        Runnable changedObserver = () -> {};
+        boolean permission = true, dimension = true;
+        ActorHandle far;
         final List<ActorHandle> changes = new ArrayList<>();
         final Map<Long, List<Runnable>> resources = new HashMap<>();
+        final Map<String, String> presentations = new HashMap<>();
+        public void present(long owner, ActorHandle source, String key, String type, int version, Point point, String data) {
+            presentations.put(owner + "/" + key, data);
+        }
         public void lease(long owner, Runnable cleanup) { resources.computeIfAbsent(owner, key -> new ArrayList<>()).add(cleanup); }
         public void release(long owner, String reason) {
+            presentations.keySet().removeIf(key -> key.startsWith(owner + "/"));
             var values = resources.remove(owner);
             if (values != null) for (var cleanup : values) cleanup.run();
         }
-        public void effectChanged(ActorHandle actor) { changes.add(actor); }
+        public void effectChanged(ActorHandle actor) { changes.add(actor); changedObserver.run(); }
         public boolean valid(ActorHandle actor) { return actors.contains(actor); }
-        public boolean mayAct(ActorHandle actor, UUID controller) { return valid(actor); }
-        public Point position(ActorHandle actor) { return new Point(0, 0, 0); }
+        public boolean mayAct(ActorHandle actor, UUID controller) { return valid(actor) && permission; }
+        public boolean sameWorld(ActorHandle first, ActorHandle second) { return dimension; }
+        public Point position(ActorHandle actor) { return new Point(actor.equals(far) ? 65 : 0, 0, 0); }
         public Impact trace(ActorHandle actor, UUID controller, Point from, Point to, double radius) { throw new UnsupportedOperationException(); }
         public boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount) { return true; }
         public void particle(ActorHandle actor, Point point) {}
@@ -54,6 +63,84 @@ public final class EffectChecks {
     }
     private static void scenario(String name, Runnable body) { body.run(); passed++; System.out.println("PASS effects " + name); }
     public static void main(String[] args) {
+        scenario("effect snapshot transaction commits all states before observing and rejects stale or malformed sets", () -> {
+            var f = new Fixture(); f.effect(EFFECT, "actor", effect -> {}); f.ready();
+            long first = f.create(EFFECT), second = f.create(EFFECT);
+            var updates = new com.google.gson.JsonArray();
+            for (long id : new long[]{first, second}) { var value = new com.google.gson.JsonObject();
+                value.addProperty("id", id); value.addProperty("expected", "{}"); value.addProperty("data", "{\"value\":1}"); updates.add(value); }
+            var request = new com.google.gson.JsonObject(); request.add("updates", updates);
+            final int[] observations = {0};
+            f.host.changedObserver = () -> {
+                require(number(f.runtime.state(first), "value") == 1 && number(f.runtime.state(second), "value") == 1, "Observer saw a half-committed transfer"); observations[0]++;
+            };
+            require(f.runtime.compareStates(f.actor, null, request.toString()) && observations[0] == 2, "Two-state commit or notifications failed");
+            f.host.changedObserver = () -> {};
+            require(!f.runtime.compareStates(f.actor, null, request.toString()), "Stale snapshots wrote new state");
+            updates.forEach(value -> value.getAsJsonObject().addProperty("expected", "{\"value\":1}"));
+            updates.get(0).getAsJsonObject().addProperty("data", "{\"value\":2}");
+            updates.get(1).getAsJsonObject().addProperty("data", "[]");
+            rejects(() -> f.runtime.compareStates(f.actor, null, request.toString()));
+            require(number(f.runtime.state(first), "value") == 1, "Normalization failure wrote the earlier participant");
+            updates.get(1).getAsJsonObject().addProperty("data", "{\"value\":2}");
+            updates.get(1).getAsJsonObject().addProperty("id", first);
+            rejects(() -> f.runtime.compareStates(f.actor, null, request.toString()));
+            updates.get(1).getAsJsonObject().addProperty("id", second);
+            f.host.permission = false; require(!f.runtime.compareStates(f.actor, null, request.toString()), "Unavailable owner mutated a transaction"); f.host.permission = true;
+            f.host.dimension = false; require(!f.runtime.compareStates(f.actor, null, request.toString()), "Cross-dimension owner mutated state"); f.host.dimension = true;
+            var receiver = new ActorHandle("checks", UUID.randomUUID(), UUID.randomUUID(), 1); f.host.actors.add(receiver);
+            long distant = f.runtime.create(EFFECT, f.actor, receiver, null, 1, "{}", 100); f.host.far = receiver;
+            updates.get(1).getAsJsonObject().addProperty("id", distant); updates.get(1).getAsJsonObject().addProperty("expected", "{}");
+            rejects(() -> f.runtime.compareStates(f.actor, null, request.toString()));
+            require(number(f.runtime.state(first), "value") == 1 && f.runtime.state(distant).equals("{}"), "Range refusal partly committed");
+        });
+        scenario("committed effect transactions retain their receipt when an observer fails", () -> {
+            var f = new Fixture(); f.effect(EFFECT, "actor", effect -> {}); f.ready(); long id = f.create(EFFECT);
+            var value = new com.google.gson.JsonObject(); value.addProperty("id", id); value.addProperty("expected", "{}"); value.addProperty("data", "{\"value\":2}");
+            var updates = new com.google.gson.JsonArray(); updates.add(value); var request = new com.google.gson.JsonObject(); request.add("updates", updates);
+            f.host.changedObserver = () -> { throw new IllegalStateException("Expected observer fault"); };
+            require(f.runtime.compareStates(f.actor, null, request.toString()), "Committed states were reported as failed");
+            require(number(f.runtime.state(id), "value") == 2 && f.host.errors == 1, "Observer error was lost or the commit was rolled back");
+        });
+        scenario("reentrant observers make later changes after the complete transaction", () -> {
+            var f = new Fixture(); f.effect(EFFECT, "actor", effect -> {});
+            f.handler(EFFECT, "operation:checks:later", effect -> effect.state("{\"value\":5}")); f.ready();
+            long first = f.create(EFFECT), second = f.create(EFFECT); var updates = new com.google.gson.JsonArray();
+            for (long id : new long[]{first, second}) { var value = new com.google.gson.JsonObject(); value.addProperty("id", id);
+                value.addProperty("expected", "{}"); value.addProperty("data", "{\"value\":1}"); updates.add(value); }
+            var request = new com.google.gson.JsonObject(); request.add("updates", updates); final boolean[] seen = {false};
+            f.host.changedObserver = () -> { if (seen[0]) return; seen[0] = true;
+                require(number(f.runtime.state(first), "value") == 1 && number(f.runtime.state(second), "value") == 1, "Reentrant observer entered a half commit");
+                f.runtime.operate(second, "checks:later", f.actor, null, "{}"); };
+            require(f.runtime.compareStates(f.actor, null, request.toString()) && number(f.runtime.state(second), "value") == 5,
+                "Later observer mutation was overwritten by the original commit");
+        });
+        scenario("native post-commit notifications stop at replacement or departure and retain committed failures", () -> {
+            var f = new Fixture(); Object installed = new Object(); Object[] current = {installed}; boolean[] alive = {true}; int[] calls = {0};
+            dev.worldcombat.core.world.PostCommitNotifications.run(f.host, "checks:notifications", () -> alive[0] && current[0] == installed,
+                () -> { calls[0]++; current[0] = new Object(); }, () -> { throw new AssertionError("Obsolete instance installed attributes after replacement"); });
+            require(calls[0] == 1 && f.host.errors == 0, "Replacement did not stop the old notification sequence");
+            current[0] = installed;
+            dev.worldcombat.core.world.PostCommitNotifications.run(f.host, "checks:notifications", () -> alive[0] && current[0] == installed,
+                () -> { alive[0] = false; }, () -> { throw new AssertionError("Departed entity received an old started callback"); });
+            alive[0] = true;
+            dev.worldcombat.core.world.PostCommitNotifications.run(f.host, "checks:notifications", () -> alive[0] && current[0] == installed,
+                () -> { throw new IllegalStateException("Expected notification fault"); }, () -> calls[0]++);
+            require(calls[0] == 2 && f.host.errors == 1 && current[0] == installed, "Notification failure hid the committed state or skipped a still-current later callback");
+        });
+        scenario("attached presentation follows its existing owner and rejects a foreign source", () -> {
+            var f = new Fixture(); f.effect(EFFECT, "actor", effect -> {});
+            f.handler(EFFECT, "operation:checks:dispel", EffectContext::end); f.ready();
+            long id = f.create(EFFECT); var at = new Point(0, 0, 0);
+            require(f.runtime.present(id, f.actor, null, "outline", "checks:scene", 1, at, "{}"), "Live owned effect refused a scene");
+            require(f.runtime.present(id, f.actor, null, "outline", "checks:scene", 1, at, "{\"phase\":2}"), "Scene update failed");
+            require(f.host.presentations.size() == 1, "Updating a scene created duplicate owners");
+            var other = new ActorHandle("checks", UUID.randomUUID(), UUID.randomUUID(), 1); f.host.actors.add(other);
+            require(!f.runtime.present(id, other, null, "foreign", "checks:scene", 1, at, "{}"), "Another source attached to the effect");
+            f.runtime.operate(id, "checks:dispel", f.actor, null, "{}");
+            require(f.host.presentations.isEmpty(), "Early dispel retained the presentation");
+            require(!f.runtime.present(id, f.actor, null, "outline", "checks:scene", 1, at, "{}"), "Ended effect accepted a presentation");
+        });
         scenario("source invalidation releases resources without invoking unavailable end handlers", () -> {
             var f = new Fixture(); final int[] cleanup = {0}, end = {0};
             f.effect(EFFECT, "actor", effect -> f.host.lease(-effect.id(), () -> cleanup[0]++));

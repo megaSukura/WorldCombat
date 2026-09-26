@@ -15,7 +15,6 @@
   "worldcombat.skill.withdraw.value.blocks": "硬挡次数",
   "worldcombat.skill.withdraw.value.window": "缩壳时长",
   "worldcombat.skill.withdraw.value.shell": "壳半径",
-  "worldcombat.skill.withdraw.value.plates": "壳片数",
   "worldcombat.skill.withdraw.value.tempo": "起手",
   "worldcombat.skill.withdraw.value.aftercast": "收招",
   "worldcombat.skill.withdraw.value.wait": "冷却",
@@ -29,5 +28,5 @@
   "world_combat.move.withdraw.text.block": "壳挡下一击（还剩 %1$s 次）",
   "world_combat.move.withdraw.text.open": "壳开了",
   "effect.world_combat.withdraw_shell": "龟壳",
-  "worldcombat.skill.withdraw.description.shell": "壳只挡来自敌人的攻击，不挡自己或环境造成的伤害；次数用尽或时间走完时壳会裂开，抬起的防御也一并收回。"
+  "worldcombat.skill.withdraw.description.shell": "壳只挡来自敌人的攻击，不挡自己或环境造成的伤害；壳上显示还剩下的全挡次数（一枚大壳瓣＝一次），次数用尽或时间走完时当刻开壳、解除本次定身，抬起的防御也一并收回。"
 }

@@ -1,16 +1,4 @@
-/**
- * 炸蛋 / eggbomb 的客户端表现。
- *
- * 一句话：施法者把一枚大蛋举过头顶抡圆，蛋沿一道沉甸甸的弧线砸出去；命中的一刻炸开一圈蛋壳碎片与蛋液，
- *   蛋液在地上摊成一小片发亮的黄斑，存续期内谁踩上去都滑。
- * 色相家族：蛋壳的米白与蛋黄的暖黄（eggbomb_egg／eggshards／softboiled_egg 原色），命中处近白高光。
- * 拍子：起 heave（抡蛋）→ 射 release（脱手）→ 飞 flight（沉甸甸的弧）→ 击 shatter（炸壳）／落 splash（摊蛋液）
- *   → 收 slick（地面黄斑留一段时间）。
- * 范围：`splash` 与 `slick` 的地面圈由 `data.scale`（滑蛋液半径 / 1.6）缩放，玩家一眼知道站哪会踩到滑。
- * 运动：蛋本体由原生实体按 item 外观渲染；粒子补抡手、飞行尾迹、破碎与摊开。散开有随机偏角（原生 75 命中）。
- * 数：`data.shards`（物攻换算的碎壳量）绑定破碎与摊开的碎片数量，`data.scale` 统一缩放整幕，
- *   `data.intensity`（威力 / 90）放大发射量，`data.slick`（存续刻数）决定地面黄斑续多久。
- */
+/** Native egg flight, brief landing cracks and one shell burst; the rolling body is rendered by its native appearance. */
 const EggbombDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -129,28 +117,6 @@ const EggbombDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.18], gravity: 0.05, drag: 0.9,
                     lifetime: [10, 18], size: [0.18, 0.06],
                     color: 0xF2C14E, alpha: [0.85, 0], light: "world", maxParticles: 40
-                }
-            ]
-        },
-        slick: {
-            duration: 0,
-            exit: { stop: 0, drain: 30 },
-            emitters: [
-                {
-                    name: "pool", bind: "point", fit: "none", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/moves/softboiled_egg",
-                    rate: 12, shape: { kind: "circle", radius: 1.6 },
-                    direction: "outward", speed: [0.0, 0.02], spriteFrom: "age",
-                    lifetime: [14, 24], size: [0.24, 0.16], sizeMode: "linear",
-                    color: 0xF2C14E, alpha: [0.45, 0.05], light: "world", maxParticles: 60
-                },
-                {
-                    name: "shine", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 6, shape: { kind: "circle", radius: 1.5 },
-                    direction: "outward", speed: [0.0, 0.02], gravity: 0.01, drag: 0.96,
-                    lifetime: [8, 16], size: [0.07, 0.02],
-                    color: 0xFFF3C4, alpha: [0.5, 0], light: "full", maxParticles: 28
                 }
             ]
         }

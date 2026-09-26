@@ -1,13 +1,13 @@
 /**
  * 龙尾 / dragontail —— 伙伴 AI 用途。
  *
- * 什么局面下出手：正面一大片扇形横扫，带伤害也带逐退。`available` 只要求威胁在 `ai.maxChase`（默认 8）格内；
- *   更远由共享接近逻辑走过去。
- * 对谁出手：`selectTarget` 挑「扇里人最多」的那一个当正面——以施法者为顶点、候选方向为轴，数一数还有几个敌人
- *   落在 `ai.arc`（默认 75 度）半张角、射程之内；串得越多越优先。玩家「关注」的焦点目标直接 honored。
+ * 什么局面下出手：从一侧摆到另一侧的正面扇形横扫，带伤害也带逐退。`available` 只要求威胁在 `ai.maxChase`
+ *   （默认 8）格内；更远由共享接近逻辑走过去。
+ * 对谁出手：`selectTarget` 挑「扇里人最多」的那个方向当正面，并偏向正在攻击自己／主人的高威胁目标——让它在
+ *   扇心（通常正是尾梢区）先吃这一扫；踢飞抗性高的对手仍会被这一记打中，只是送不动。玩家「关注」的焦点目标直接 honored。
  * 什么时候最想出手：扇里人多时 priority 更高；自己血量偏低时略微提前——被围住时先扫开一圈。
  * 够不到怎么办：reach 就是尾扫半径，共享任务先靠近到射程内再扫。
- * 放完之后：被扫中者受伤、沿背离你的方向被弹开并逐出交战圈，伙伴交回共享交战计划。
+ * 放完之后：被扫中者受伤、沿背离你的方向被送开并可能被强制换下，伙伴交回共享交战计划。
  * `ai.leaveStation`：驻守中的伙伴是否愿意离位去扫（默认关闭）。
  */
 namespace CompanionBehavior {
@@ -25,6 +25,12 @@ namespace CompanionBehavior {
             if ((ox * dx + oz * dz) / (distance * length) >= cosHalf) count++;
         });
         return count;
+    }
+
+    /** 方向分：扇里人越多越好，正在攻击自己的高威胁者当扇心再加一点。 */
+    function dragontailScore(context: WorldBehavior.Context, item: WorldBehavior.Capability, subject: Entity): number {
+        const threat = subject.attacking === source(context).ref ? 1.5 : 0;
+        return dragontailArc(context, item, subject) * 2 + threat;
     }
 
     function dragontailCandidates(context: WorldBehavior.Context, item: WorldBehavior.Capability): Entity[] {
@@ -46,9 +52,9 @@ namespace CompanionBehavior {
             if (proposed && proposed.ref === context.facts.focus) return proposed;
             const candidates = dragontailCandidates(context, item);
             if (!candidates.length) return proposed || null;
-            let best = candidates[0], bestScore = dragontailArc(context, item, candidates[0]);
+            let best = candidates[0], bestScore = dragontailScore(context, item, candidates[0]);
             for (let i = 1; i < candidates.length; i++) {
-                const score = dragontailArc(context, item, candidates[i]);
+                const score = dragontailScore(context, item, candidates[i]);
                 if (score > bestScore) { bestScore = score; best = candidates[i]; }
             }
             return best;
@@ -56,7 +62,7 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target) return 24;
-            let base = 24 + Math.min(18, dragontailArc(context, item, target) * 6);
+            let base = 24 + Math.min(18, dragontailScore(context, item, target) * 3);
             if (ratio(source(context)) < 0.5) base += 6;
             return Math.min(80, base);
         }

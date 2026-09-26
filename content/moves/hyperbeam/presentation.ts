@@ -1,14 +1,15 @@
 /**
  * 破坏光线 / hyperbeam 的客户端表现。
  *
- * 一句话：施法者身前收束出一颗冷白光点，随后一条贯穿的直线光带从身前一直射向尽头；走廊里被贯穿的活体各自
- * 炸开一个白蓝贯穿点，光柱熄灭后施法者身上只剩一层暗下去的低伏余烬，标明「熄火」这段时间。
+ * 一句话：施法者身前收束出一颗冷白光点，一条窄中心线锁定这次瞄准的走廊；随后一条贯穿的直线光带从身前一直
+ * 射到实际截断点（撞墙即止），走廊里被贯穿的活体各自炸开一个白蓝贯穿点；光柱熄灭后施法者身上只剩一层暗下去
+ * 的低伏余烬，标明「熄火」这段时间，余烬密度按这一束实际贯穿的人数给出。
  * 色相家族：冷白到浅青（speedlines／glowing_dots_cyan 原色、impact_normal 亮帧、tinydust 中性），核心近白。
- * 拍子：起（windup 聚光）→ 击（beam 走廊 + pierce 贯穿点，或 fizzle 落空）→ 收（spent 起、recharge 维持整段熄火）。
- * 范围：beam 用 path 画出服务端 WorldGeometry.polygon 的同一组四个顶点——走廊有多长多宽，画面就是那条光带。
+ * 拍子：起（windup 聚光 + 窄中心线）→ 击（beam 走廊 + pierce 贯穿点，或 fizzle 落空）→ 收（spent 起、recharge 维持整段熄火）。
+ * 范围：beam 用 path 画出服务端同一组四个顶点，光带尽头就是实际的方块截断点——画多长，判定就到哪。
  * 运动：光带沿走廊由近及远铺开、边缘同时向前扫过；贯穿点在命中处向外炸开；熄火时余烬原地慢慢下沉。
  * 数：`data.notes`（光束威力换算）与 `data.intensity`（威力/150）决定光带与贯穿点的密度，`data.pierce`（贯穿上限）
- * 决定边缘强调的强度，`data.seconds`（熄火秒数）决定余烬维持密度。
+ * 决定边缘强调的强度，`data.seconds`（熄火秒数）与 `data.heat`（1 + 贯穿人数 ×3）决定余烬维持密度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const HyperbeamDefinition: ParticleDefinition = {
@@ -41,6 +42,14 @@ const HyperbeamDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [5, 10], size: [0.05, 0.02],
                     color: 0xB9C4CC, alpha: [0.45, 0], light: "world", maxParticles: 36
+                },
+                {
+                    name: "aim_line", bind: "path", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    shape: { kind: "polyline" },
+                    rate: 42, direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [4, 9], size: [0.06, 0.015], sizeMode: "index",
+                    color: 0xCFF4FF, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 80
                 }
             ]
         },
@@ -163,18 +172,18 @@ const HyperbeamDefinition: ParticleDefinition = {
                 {
                     name: "dim_core", bind: "source", offset: [0, 0.65, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
-                    rate: 5, shape: { kind: "sphere", radius: 0.24 },
+                    rate: { data: "heat", fallback: 2 }, shape: { kind: "sphere", radius: 0.24 },
                     direction: "down", speed: [0.005, 0.02],
                     lifetime: [16, 26], size: [0.08, 0.02],
-                    color: 0x9FB6C2, alpha: [0.35, 0], light: "full", maxParticles: 26
+                    color: 0x9FB6C2, alpha: [0.35, 0], light: "full", maxParticles: 40
                 },
                 {
                     name: "ground_haze", bind: "source", offset: [0, 0.03, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 4, shape: { kind: "ring", radius: 0.4 },
+                    rate: { data: "heat", fallback: 2 }, shape: { kind: "ring", radius: 0.4 },
                     direction: "up", speed: [0.005, 0.02],
                     lifetime: [14, 22], size: [0.05, 0.02],
-                    color: 0x93A0AA, alpha: [0.3, 0], light: "world", maxParticles: 20
+                    color: 0x93A0AA, alpha: [0.3, 0], light: "world", maxParticles: 28
                 }
             ]
         }

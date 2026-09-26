@@ -1,11 +1,12 @@
 // 刺耳声的可执行设计说明：一只只会刺耳声的 Zubat 与两只排成一线的僵尸隔几格开战。
 // 必然事实：本招被提交过；至少一只僵尸的护甲下降（物防落到 armor 属性）、并挂上共享身份 world_combat:status/deafened。
-// 走廊到底罩住几只、掉 2 级还是 3 级随站位与配置变化，写进 note 供读轨迹判断。
+// 两只僵尸冻在原地，好让声前沿沿走廊依次扫过；走廊到底罩住几只、掉 2 级还是 3 级随站位与配置变化，写进 note。
 Smoke.scenario("screech", function (stage) {
     stage.fill([-8, -1, -6], [12, -1, 6], "minecraft:stone");
     var caster = stage.pokemon({ species: "zubat", level: 35, moves: ["screech"], at: [0, 0, 0] });
-    var foeA = stage.mob({ type: "minecraft:zombie", at: [4, 0, 0] });
-    var foeB = stage.mob({ type: "minecraft:zombie", at: [8, 0, 0] });
+    var foeA = stage.mob({ type: "minecraft:zombie", at: [3, 0, 0] });
+    var foeB = stage.mob({ type: "minecraft:zombie", at: [6, 0, 0] });
+    stage.noai(foeA, foeB);
     var armorA = stage.attribute(foeA, "minecraft:generic.armor");
     var armorB = stage.attribute(foeB, "minecraft:generic.armor");
     stage.hostile(caster, foeA);

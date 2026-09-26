@@ -82,6 +82,13 @@ namespace PokemonSkills {
         jab: seconds(
             F.base(4).minus(F.stat("speed").minus(60).times(0.03).clamp(-1, 2)).clamp(2, 7).round(0),
             "出拳延迟", "提交到真正出拳之间的引电时间；速度越快出拳越急。"),
+        /** 放电窗口：4 − 速度偏移[−1,2]；夹 3..6。四刻内双方仍在拳程且通视才补余下伤害并放链电。 */
+        contact: formula(
+            F.base(4).minus(F.stat("speed").minus(60).times(0.01).clamp(-1, 2)).clamp(3, 6).round(0),
+            "放电窗口", {
+                unit: "刻",
+                description: "首拳命中后电索必须贴住的时长；窗口内双方仍在拳程且互相看得见，才补上余下伤害并从真实目标放链电。速度越快窗口越短，目标及时退开就会断电。"
+            }),
         /** 起手：5 − 速度偏移[−1,2]；夹 3..9。 */
         tempo: seconds(
             F.base(5).minus(F.stat("speed").minus(60).times(0.03).clamp(-1, 2)).clamp(3, 9).round(0),
@@ -121,7 +128,7 @@ namespace PokemonSkills {
     defineDamage("thunderpunch", "spark", {});
 
     describe("thunderpunch", [
-        { key: "description.0", values: ["volt","collisionRadius"] },
+        { key: "description.0", values: ["volt","collisionRadius","contact"] },
         { key: "description.1", values: ["numbChance"] },
         { key: "description.2", values: ["chainRange","arcs","spark","arcChance"] },
         { key: "overcharge.on", values: [], when: function (context) { return read(context.detail.values, ["overcharge"]) === true; } },

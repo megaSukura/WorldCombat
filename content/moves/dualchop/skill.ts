@@ -1,58 +1,48 @@
 /**
  * 二连劈 / dualchop —— 出手方式。
  *
- * 核心念头：一记**同点两劈**。抡起坚硬的前肢/角，第一劈砸开对方的架势、并在落点地面留下一道裂痕；第二劈
- *   顺着这道裂痕劈进同一处，第一劈命中则这一下撕得更深。两下都是站定、垂直的向前重击，龙属性能量沿裂痕扩散。
+ * 核心念头：一记**两道刀路**。第一刀沿提交时锁定的准线窄而重地竖劈下去，只取刀路上的第一个目标，墙会截停；
+ *   第一刀砸地留下一条（纯视觉的）裂痕。第二刀隔 `gap` 刻，以第一刀的实际落点为圆心，横向展开一记又宽又短的
+ *   横斩，扫过落点两侧。两刀形状不同、各自结算，第二刀不依赖第一刀命中来加成。
  *
  * 幕：
- *   起（raise，提交前）：前肢抬起、对准落点，只播预告（`action.present`，可打断、不花 PP）。
- *   一（chop1，提交后）：第一劈。身前扇形内最多 `maxTargets` 个非友方各挨一记 `chop` 接触伤害，被顶开 `push` 格；
- *       随后在地面沿朝向租出一道长 `quake` 的裂痕（到期原方块回来）。
- *   二（chop2）：`gap` 之后第二劈。再次扫过扇形，第一劈命中者在这劈吃到 `breach` 加成；走出扇面或裂痕的人躲开。
+ *   起（raise，提交前）：前肢先竖举再横转、对准准线，只播预告（`action.present`，可打断、不花 PP）。
+ *   一（chop1，提交后）：第一刀。沿准线 `action.trace` 一条 `edge` 半宽的刀路，只碰刀路上的第一个非友方；
+ *       命中结算 `chop` 并把目标顶开；随后沿第一刀实际触地点画出一道 `quake` 格长的裂痕（只画线、不动方块）。
+ *   二（chop2）：以第一刀落点为圆心、`breadth` 半径、`span` 张角的宽短横斩，扫过落点两侧，最多 `maxTargets` 个，
+ *       每个结算一次 `slash`；走出横斩范围的人自然躲开。
  *   收（settle）：收势的余震。
  *
- * 与同族分开：二连击是水平回扫、把人来回推；双翼是掠飞、有升力；只有二连劈是**站定、垂直下砸、地面开裂**，
- *   第一劈的裂痕就是第二劈的落点标记，反制方式是趁两劈之间离开裂痕。
+ * 选取：`kind: "aim"`——方向或世界点都能锁准线，提交后可空劈；墙挡线不穿透，两刀之间走出横斩范围就能躲第二刀。
+ *
+ * 与同族分开：二连击是原地左右回扫、把人来回推；双翼是掠飞、有升力；双光束是两道远程眼束。只有二连劈是**站定、
+ *   一竖一横两道刀路**，第二刀的横斩围绕第一刀的落点展开。
  */
 namespace PokemonSkills {
-    /** 在身前沿朝向租出一道地面裂痕；返回实际铺出的格数与用于表现的顶点。 */
-    function dualchopCrack(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, length: number, ticks: number): { placed: number; path: number[][] } {
-        const heading = WorldCombat.point(direction.x(), 0, direction.z());
-        const flat = heading.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : heading.unit();
-        const cells: any[] = [], path: number[][] = [];
-        const steps = Math.max(1, Math.round(length));
-        for (let i = 1; i <= steps; i++) {
-            const at = origin.plus(flat.scale(i));
-            const x = Math.floor(at.x()), z = Math.floor(at.z()), baseY = Math.floor(at.y());
-            for (let dy = 1; dy >= -3; dy--) {
-                const y = baseY + dy;
-                const block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                const above = world.block(WorldCombat.point(x, y + 1, z));
-                const over = above === null ? "" : String(above.id());
-                if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air") {
-                    cells.push({ x: x, y: y, z: z, block: "minecraft:cracked_stone_bricks" });
-                    path.push([x + 0.5, y + 1.02, z + 0.5]);
-                }
-                break;
-            }
+    /** 第一刀实际触地的视觉裂痕：沿 origin→landing 的水平线采样、吸附到地面；只画线，不改动方块。 */
+    function dualchopGroundPath(world: CombatWorld, origin: CombatPoint, landing: CombatPoint, length: number): number[][] {
+        const delta = WorldCombat.point(landing.x() - origin.x(), 0, landing.z() - origin.z());
+        const distance = delta.length();
+        const heading = distance < 0.01 ? WorldCombat.point(0, 0, 1) : delta.unit();
+        const span = Math.max(1, Math.min(length, distance > 0.01 ? distance : length));
+        const probeY = Math.max(origin.y(), landing.y()) + 2;
+        const points = WorldGeometry.along(WorldCombat.point(origin.x(), 0, origin.z()),
+            WorldCombat.point(origin.x() + heading.x() * span, 0, origin.z() + heading.z() * span), 1.0);
+        const path: number[][] = [];
+        for (let i = 0; i < points.length; i++) {
+            const ground = WorldGeometry.ground(world, WorldCombat.point(points[i].x(), probeY, points[i].z()), 6);
+            path.push([ground.x(), ground.y() + 0.03, ground.z()]);
         }
-        if (!cells.length) return { placed: 0, path: path };
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return { placed: 0, path: path }; }
-        return { placed: cells.length, path: path };
+        return path;
     }
 
     define({
         id: dualchopId,
         cooldownParameter: "recharge",
         name: "Dual Chop",
-        description: "抡起坚硬的前肢站定连劈两下：第一劈砸开对方架势、并在地面留下一道裂痕，第二劈顺着这道裂痕劈进同一处，第一劈命中则撕得更深。裂痕追击式集中一块窄面，分劈式把身前一小片敌人一起劈到。",
-        uses: ["站定抡起前肢，朝同一处连劈两下", "第一劈砸地留裂痕，第二劈追着裂痕撕深", "分劈式把身前一小片敌人一起劈到"],
-        kind: "enemy",
+        description: "抡起坚硬的前肢站定连劈两下：第一刀沿准线窄而重地竖劈，只劈刀路上的第一个目标；第二刀以第一刀的落点为圆心横展开一记宽短横斩，扫过落点两侧。裂痕只是第一刀实际触地的视觉线，不改动方块。",
+        uses: ["站定先竖劈准线，再横斩落点两侧", "第一刀窄而重，第二刀宽短照顾多个", "把身前一小片敌人用横斩一起劈到"],
+        kind: "aim",
         range: 2.9,
         maxRange: 4.2,
         prepare: 9,
@@ -60,8 +50,8 @@ namespace PokemonSkills {
         recover: 8,
         cooldown: 28,
         style: "chop",
-        defaults: { breach: true, ai: { maxChase: 9, finishLow: false, leaveStation: true } },
-        fields: [flag("breach", "裂痕追击")],
+        defaults: { ai: { maxChase: 9, finishLow: false, leaveStation: true } },
+        fields: [],
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[dualchopId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
@@ -75,87 +65,109 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const shards = Math.max(6, Math.round(p("dualchop", "shards", action)));
             action.present("dualchop:raise:" + action.id(), dualchopScene, 1, action.origin(),
-                JSON.stringify({ moment: "raise", windup: prepare, shards: shards, breach: config && config.breach === true ? 1 : 0 }));
+                JSON.stringify({ moment: "raise", windup: prepare, shards: shards }));
             return prepare;
         },
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills[dualchopId], detail: { values: config } };
-            return {
-                radius: p("dualchop", "reach", context), geometry: "cone", style: "chop", color: 0xC79BE8,
-                label: config && config.breach === true ? "二连劈·裂痕" : "二连劈·分劈"
-            };
+            return { radius: p("dualchop", "reach", context), geometry: "cone", style: "chop", color: 0xC79BE8, label: "二连劈" };
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const breach = !!(config && config.breach === true);
-            const power = p("dualchop", "chop", action);
+            const chop = p("dualchop", "chop", action);
+            const slash = p("dualchop", "slash", action);
             const gap = Math.max(2, Math.round(p("dualchop", "gap", action)));
             const reach = Math.max(2, action.range());
+            const edge = p("dualchop", "edge", action);
+            const breadth = p("dualchop", "breadth", action);
             const span = p("dualchop", "span", action);
-            const breachBonus = p("dualchop", "breach", action);
             const push = p("dualchop", "push", action);
             const quake = p("dualchop", "quake", action);
             const crackTicks = Math.max(40, Math.round(p("dualchop", "crackTicks", action)));
             const shards = Math.max(8, Math.round(p("dualchop", "shards", action)));
             const cap = Math.max(1, Math.round(p("dualchop", "maxTargets", action)));
-            const band = { below: 1.5, above: 2.6 };
-            let landedFirst = false, settled = false;
+            const self = world.observe(actor);
+            const origin = self === null ? action.origin() : self.position();
+            const half = self === null ? 0.7 : self.height() / 2;
+            const lift = Math.max(0, half - 0.2);
+            // 朝向在提交时固定：整招只用这一次读到的准线与落点。
+            const aimPoint = action.targetPosition();
+            const delta = aimPoint.minus(origin.plus(WorldCombat.point(0, lift, 0)));
+            const direction = delta.length() < 0.01 ? action.direction() : delta.unit();
+            const heading = [direction.x(), direction.y(), direction.z()];
+            const scale = Math.max(0.6, Math.min(2, reach / 2.9));
+            let settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            function chop(current: CombatAction, index: number): void {
+            /** 第二刀：以第一刀落点为圆心的宽短横斩，扫过落点两侧。 */
+            function cross(current: CombatAction, landing: CombatPoint): void {
                 const scope = current.world();
-                const self = scope.observe(actor);
-                if (self === null) {
-                    if (index === 1) { finish(current); return; }
-                    current.after(2, function (next: CombatAction) { chop(next, 1); });
-                    return;
-                }
-                const origin = self.position();
-                const direction = aim(current);
-                const heading = [direction.x(), direction.y(), direction.z()];
-                WorldFeedback.emit(scope, dualchopScene, 1, origin,
-                    { moment: index === 0 ? "chop1" : "chop2", index: index + 1, reach: reach, span: span, shards: shards,
-                        breach: breach ? 1 : 0, direction: heading }, 22);
+                WorldFeedback.emit(scope, dualchopScene, 1, landing,
+                    { moment: "chop2", direction: heading, breadth: breadth, span: span, maxTargets: cap, shards: shards,
+                        scale: scale, intensity: Math.max(0.5, Math.min(2, slash / 45)) }, 24);
+                const intensity = Math.max(0.5, Math.min(2, slash / 45));
                 let hits = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, direction, reach, span, band), function (victim, facts) {
-                    if (hits >= cap) return;
-                    const bonus = index === 1 && landedFirst ? 1 + breachBonus : 1;
-                    if (!hurt(current, victim, dualchopId, power * bonus, { damage: damageSpec(dualchopId, "chop"), contact: true })) return;
-                    hits++;
-                    if (index === 0) landedFirst = true;
-                    const at = scope.observe(victim);
-                    const point = at === null ? facts.position() : at.position();
-                    if (scope.valid(victim) && index === 0) {
-                        const away = WorldCombat.point(point.x() - origin.x(), 0, point.z() - origin.z());
-                        if (away.length() >= 0.05) scope.displace(victim, away.unit().scale(push));
-                    }
-                    WorldFeedback.emit(scope, dualchopScene, 1, point,
-                        { moment: index === 0 ? "hit1" : "hit2", target: String(victim.ref()), shards: shards, index: index + 1,
-                            intensity: Math.max(0.5, Math.min(2, (power * bonus) / 60)) }, 22);
-                    scope.sound("cobblemon:impact.dragon", point, 14, "{}");
-                });
-                if (index === 0) {
-                    const crack = dualchopCrack(scope, origin, direction, quake, crackTicks);
-                    if (crack.placed > 0)
-                        WorldFeedback.emit(scope, dualchopScene, 1, origin,
-                            { moment: "crack", path: crack.path, quake: quake, scale: Math.max(0.6, Math.min(2, quake / 4)) }, Math.min(200, crackTicks));
-                    else
-                        WorldFeedback.emit(scope, dualchopScene, 1, origin.plus(direction.scale(reach * 0.5)),
-                            { moment: "miss1", reach: reach, span: span, shards: shards }, 18);
-                    current.after(gap, function (next: CombatAction) { chop(next, 1); });
-                    return;
-                }
-                if (index === 1 && hits > 0 && landedFirst)
-                    WorldFeedback.text(scope, origin.plus(direction.scale(reach * 0.5)).plus(WorldCombat.point(0, 1.0, 0)), dualchopBreachText, [], 22);
-                WorldFeedback.emit(scope, dualchopScene, 1, origin.plus(direction.scale(reach * 0.5)),
-                    { moment: "settle", reach: reach, quake: quake, shards: shards }, 18);
+                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(landing, direction, breadth, span, { below: 1.6, above: 2.4 }),
+                    function (victim, facts) {
+                        if (hits >= cap) return;
+                        if (!hurt(current, victim, dualchopId, slash, { segment: "slash", damage: damageSpec(dualchopId, "slash"), contact: true })) return;
+                        hits++;
+                        const at = scope.observe(victim);
+                        const point = at === null ? facts.position() : at.position();
+                        WorldFeedback.emit(scope, dualchopScene, 1, point,
+                            { moment: "hit2", target: String(victim.ref()), shards: shards, intensity: intensity }, 22);
+                        scope.sound("cobblemon:impact.dragon", point, 14, "{}");
+                    });
+                if (hits === 0)
+                    WorldFeedback.emit(scope, dualchopScene, 1, landing, { moment: "miss2", breadth: breadth, span: span, shards: shards }, 18);
+                WorldFeedback.emit(scope, dualchopScene, 1, landing,
+                    { moment: "settle", breadth: breadth, span: span, shards: shards }, 18);
                 finish(current);
             }
 
+            /** 第一刀：沿准线的窄重竖劈，只取刀路第一接触。 */
+            function slashLine(current: CombatAction): void {
+                const scope = current.world();
+                const body = scope.observe(actor);
+                const base = body === null ? origin : body.position();
+                const from = base.plus(WorldCombat.point(0, lift, 0));
+                const to = from.plus(direction.scale(reach));
+                const contact = current.trace(from, to, edge, true);
+                const at = contact.position();
+                const lander = contact.hitEntity() ? contact.target() : null;
+                const victim = lander !== null && String(lander.ref()) !== String(actor.ref()) && !scope.friendly(lander) ? lander : null;
+                const blade = [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]];
+                WorldFeedback.emit(scope, dualchopScene, 1, base,
+                    { moment: "chop1", path: blade, direction: heading, reach: reach, edge: edge, shards: shards,
+                        scale: scale, intensity: Math.max(0.5, Math.min(2, chop / 55)) }, 22);
+                if (victim !== null && scope.valid(victim)) {
+                    const landed = impact(current, contact, dualchopId, chop, { segment: "chop", damage: damageSpec(dualchopId, "chop"), contact: true });
+                    if (landed) {
+                        const body2 = scope.observe(victim);
+                        const point = body2 === null ? at : body2.position();
+                        const flat = WorldCombat.point(direction.x(), 0, direction.z());
+                        if (flat.length() >= 0.001) scope.hitDisplace(victim, flat.unit().scale(push));
+                        WorldFeedback.emit(scope, dualchopScene, 1, point,
+                            { moment: "hit1", target: String(victim.ref()), shards: shards, intensity: Math.max(0.5, Math.min(2, chop / 55)) }, 22);
+                        scope.sound("cobblemon:impact.dragon", point, 14, "{}");
+                    } else {
+                        WorldFeedback.emit(scope, dualchopScene, 1, at, { moment: "miss1", shards: shards, blocked: 0 }, 18);
+                    }
+                } else {
+                    WorldFeedback.emit(scope, dualchopScene, 1, at, { moment: "miss1", shards: shards, blocked: contact.blocked() ? 1 : 0 }, 18);
+                }
+                // 裂痕是纯视觉线：沿第一刀实际触地点吸附到地面铺开，不改动任何方块。
+                const crack = dualchopGroundPath(scope, base, at, quake);
+                if (crack.length > 1)
+                    WorldFeedback.emit(scope, dualchopScene, 1, base,
+                        { moment: "crack", path: crack, quake: quake, shards: shards, scale: Math.max(0.6, Math.min(2, quake / 4)) }, Math.min(200, crackTicks));
+                current.after(gap, function (next: CombatAction) { cross(next, at); });
+            }
+
             sound(action, "minecraft:entity.iron_golem.attack");
-            chop(action, 0);
+            slashLine(action);
         }
     });
 }

@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.roleplay.summary": "Temporarily borrow a Pokémon’s Ability, or a non-Pokémon’s strongest attack, movement or defensive characteristic.",
+  "worldcombat.skill.roleplay.summary": "Temporarily borrow a target’s Ability, or a non-Pokémon’s strongest attack, movement or defensive characteristic. The target may be a foe or a companion who demonstrates for you.",
   "worldcombat.skill.roleplay.use.0": "Borrow the target's Ability for this stretch",
-  "worldcombat.skill.roleplay.use.1": "Copy a strong Ability onto yourself",
+  "worldcombat.skill.roleplay.use.1": "Copy a strong Ability from a companion or foe onto yourself",
   "worldcombat.skill.roleplay.use.2": "Switch to a better Ability before the fight",
   "worldcombat.skill.roleplay.description.0": "Range %1$s blocks, preparation %2$s. Against a Pokémon, copy its current Ability.",
   "worldcombat.skill.roleplay.description.1": "A copied Pokémon Ability lasts %1$s, then your own returns. Suppressed or uncopyable Abilities cannot be borrowed.",
@@ -24,6 +24,7 @@
   "worldcombat.skill.roleplay.preference.ai.leaveStation.help": "On: a holding companion will leave its post to trace the target. Off: it casts only where it already stands.",
   "effect.world_combat.roleplay_mask": "Role Play",
   "world_combat.move.roleplay.text.ability": "Ability: %1$s",
+  "world_combat.move.roleplay.text.trait": "Trait: %1$s",
   "world_combat.move.roleplay.text.same": "Nothing new to trace",
   "worldcombat.skill.roleplay.world": "Against non-Pokémon, borrow their strongest attack, movement or defensive characteristic for %1$s, using its value at casting. Expiry or cleansing restores your own properties; later equipment and effects still apply."
 }

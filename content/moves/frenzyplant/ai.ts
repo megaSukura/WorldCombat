@@ -22,6 +22,12 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("frenzyplant", {
         protocols: ["world_combat:attack"],
+        target:function(context,_item,target){
+            const access=CompanionBehavior.world(context),actor=access.actor(target.ref),body=actor?access.observe(actor):null;
+            if(!body)return null;
+            const ground=SurfacePaths.support(access,WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()),.1,2);if(!ground)return null;
+            const choice=JSON.parse(JSON.stringify(target));choice.ref="";choice.point=[ground.x(),ground.y(),ground.z()];return choice;
+        },
         reach: function (context, capability) { return capability.data.range; },
         selectTarget: function (context, capability, proposed) {
             if (proposed.friendly || !(proposed.health > 0) || !proposed.visible) return proposed;
@@ -51,6 +57,9 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
+            const access=CompanionBehavior.world(context),point=CompanionBehavior.point(target.point);
+            let clear=0;for(let i=0;i<4;i++){const a=i*Math.PI/2,from=point.plus(WorldCombat.point(Math.cos(a)*2,1,Math.sin(a)*2));const clip=access.clipBlocks(from,point);if(clip&&!clip.blocked())clear++;}
+            if(!clear)return 0;
             const cluster = frenzyplantCluster(context, capability, target);
             return cluster >= 3 ? 48 : cluster >= 2 ? 26 : 12;
         }

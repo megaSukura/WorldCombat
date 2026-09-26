@@ -20,7 +20,7 @@ Smoke.scenario("shadowclaw", function (stage) {
     }, function () {
         stage.expect(stage.casts("shadowclaw", caster) >= 1, "caster committed shadow claw");
         stage.expect(stage.damageTo(foe) > 0, "shadow claw dealt damage to the foe");
-        stage.note("critical hits come from the native critRatio 2 roll; the NoAI golem never attacks back, so every claw lands while the target is not facing the caster (ambush bonus applies)", {
+        stage.note("critical hits come from the native critRatio 2 roll; the NoAI golem never attacks back, so every claw lands while the target is not facing the caster (ambush bonus applies). The shadow band walks the real stone floor and the claw reverses from the band's end; the trace, not the selected target, decides the contact", {
             casts: stage.casts("shadowclaw", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

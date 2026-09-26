@@ -1,4 +1,4 @@
-/** Share your Ability with enemy Pokémon caught in the rhythm; non-Pokémon instead match your movement pace. */
+/** Share your Ability with the selected Pokémon; a non-Pokémon instead has its movement speed pulled toward the caster's. */
 namespace PokemonSkills {
     export const entrainmentScene = "world_combat:move_entrainment";
     export const entrainmentMark = "world_combat:entrainment";
@@ -32,9 +32,9 @@ namespace PokemonSkills {
         id: "entrainment",
         cooldownParameter: "recharge",
         name: "Entrainment",
-        description: "用节拍把范围内敌方宝可梦的特性改为自己的；普通生物则跟随自己的移动节奏。",
-        uses: ["把自己的负面特性塞给对手", "用普通特性顶掉对手的强力特性", "让围在身边的一圈敌人一起改特性"],
-        kind: "enemy",
+        description: "把一段节拍送到一个明确选中的对象身上：宝可梦的特性会暂时变成施放者的；普通生物的移动速度则被朝施放者当前的速度拉近，改变幅度有上限。只作用于这一个对象。",
+        uses: ["把自己的负面特性塞给对手", "用普通特性顶掉对手的强力特性", "把强特性或速度节奏传给一个伙伴"],
+        kind: "aim",
         range: 8,
         maxRange: 15,
         prepare: 8,
@@ -42,33 +42,33 @@ namespace PokemonSkills {
         recover: 7,
         cooldown: 80,
         style: "rhythm",
-        defaults: { whole: false, ai: { maxChase: 13, leaveStation: false } },
+        defaults: { snap: false, ai: { maxChase: 13, leaveStation: false } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["entrainment"], detail: { values: config } };
             return { radius: p("entrainment", "reach", context), geometry: "line", style: "rhythm", color: 0xE8C24A,
-                label: config && config.whole === true ? "找伙伴 · 全场" : "找伙伴" };
+                label: config && config.snap === true ? "找伙伴 · 紧拍" : "找伙伴" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["entrainment"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
-            const whole = !!(config && config.whole);
             return {
                 prepare: Math.round(p("entrainment", "tempo", context)),
                 recover: Math.round(p("entrainment", "aftercast", context)),
-                cooldown: Math.round(p("entrainment", "recharge", context)) + (whole ? 16 : -10),
+                cooldown: Math.round(p("entrainment", "recharge", context)),
                 active: 0,
                 range: p("entrainment", "reach", context)
             };
         },
         ready: function (action) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            if (String(actor.domain()) !== "cobblemon") return "no-ability";
+            if (target === null || !world.valid(target)) return "invalid-target";
+            if (String(target.key()) === String(actor.key())) return "invalid-target";
             const body = world.observe(target);
-            if (body === null) return "invalid-target";
-            if (body.position().minus(action.origin()).length() > p("entrainment", "reach", action)) return "out-of-range";
+            if (body === null) return "target-left";
+            if (body.position().minus(action.origin()).length() > action.range()) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
             if (String(target.domain()) !== "cobblemon") return world.attributeValue(target, CombatCopies.speed) ? "" : "no-rhythm";
+            if (String(actor.domain()) !== "cobblemon") return "no-ability";
             const mine = entrainmentAbility(world, actor), theirs = entrainmentAbility(world, target);
             if (!mine) return "self-suppressed";
             if (!entrainmentShareable(mine)) return "self-locked";
@@ -78,27 +78,27 @@ namespace PokemonSkills {
             return "";
         },
         windup: function (action, config, prepare) {
+            const target = action.target();
+            const path = target === null ? [String(action.actor().ref())] : [String(action.actor().ref()), String(target.ref())];
             action.present("world_combat:entrainment:dance", entrainmentScene, 1, action.origin(), JSON.stringify({
-                moment: "dance", beats: p("entrainment", "beats", action), whole: config && config.whole ? 1 : 0
+                moment: "dance", path: path, beats: p("entrainment", "beats", action), snap: config && config.snap ? 1 : 0
             }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null) { done(action); return; }
-            const whole = !!(config && config.whole);
+            if (target === null || !world.valid(target) || body === null || String(target.key()) === String(actor.key())) { done(action); return; }
             const velocity = p("entrainment", "velocity", action);
-            const splash = Math.max(1.6, p("entrainment", "splash", action));
             const hold = Math.max(60, Math.round(p("entrainment", "hold", action)));
             const beats = Math.max(6, Math.round(p("entrainment", "beats", action)));
             const sway = Math.max(8, Math.round(p("entrainment", "sway", action)));
-            const targetRef = String(target.ref());
-            const path: (string | number[])[] = [String(actor.ref()), targetRef];
+            const blend = Math.max(0.05, Math.min(1, p("entrainment", "blend", action)));
+            const pull = Math.max(0.05, Math.min(1, p("entrainment", "pull", action)));
+            const chosen = String(target.ref());
             const aimed = action.targetPosition().minus(body.position());
-            const distance = Math.max(1, aimed.length());
-            const delay = Math.max(2, Math.round(distance / Math.max(0.5, velocity)));
-            const scale = splash / 3.2;
+            const direction = aimed.length() < 0.01 ? action.direction() : aimed.unit();
+            const scale = Math.max(0.6, Math.min(1.8, beats / 10));
             const intensity = Math.max(0.7, Math.min(2, hold / 260));
             let settled = false;
             function finish(current: CombatAction): void {
@@ -106,46 +106,72 @@ namespace PokemonSkills {
                 settled = true;
                 done(current);
             }
-            WorldFeedback.emit(world, entrainmentScene, 1, body.position(),
-                { moment: "beat", target: targetRef, path: path, beats: beats, scale: scale, intensity: intensity }, delay + 44);
-            action.after(delay, function (current) {
-                const scope = current.world(), mine = entrainmentAbility(scope, current.actor());
-                const foe = scope.actor(targetRef);
-                let centre = current.targetPosition();
-                if (foe !== null && scope.valid(foe)) {
-                    const foeBody = scope.observe(foe);
-                    if (foeBody !== null) centre = foeBody.position();
+            function breakBeat(scope: CombatWorld, point: CombatPoint): void {
+                WorldFeedback.emit(scope, entrainmentScene, 1, point,
+                    { moment: "fizzle", target: String(actor.ref()), beats: beats, scale: scale }, 22);
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.35, 0)), entrainmentSameText, [], 34);
+            }
+            /** 拍子真正落到受术者身上才结算；被别的身体挡住或目标离场就断拍，不当成已经同步。 */
+            function land(current: CombatAction, impact: CombatImpact): void {
+                const scope = current.world(), foe = impact.target();
+                const selfBody = scope.observe(current.actor());
+                if (foe === null || !scope.valid(foe) || String(foe.ref()) !== chosen) {
+                    breakBeat(scope, selfBody === null ? current.origin() : selfBody.position());
+                    finish(current);
+                    return;
                 }
-                let shared = 0;
-                if (String(target.domain()) !== "cobblemon" || mine && entrainmentShareable(mine)) {
-                    WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, splash, { below: 2, above: 3 }),
-                        function (other, facts) {
-                            if (String(other.domain()) !== "cobblemon") {
-                                const carrier = MobEffects.apply(scope, other, entrainmentMark, hold, 0);
-                                if (carrier) { CombatCopies.apply(scope, other, CombatCopies.read(scope, current.actor(), [CombatCopies.speed]), hold, "entrainment", MobEffects.anchor(carrier)); shared++; }
-                                return;
+                const mine = entrainmentAbility(scope, current.actor());
+                let shared = false;
+                if (String(foe.domain()) === "cobblemon") {
+                    const theirs = entrainmentAbility(scope, foe);
+                    if (mine && entrainmentShareable(mine) && theirs && theirs !== mine && entrainmentReceivable(theirs)) {
+                        NativeModifiers.apply(scope, foe, { ability: mine }, hold);
+                        MobEffects.apply(scope, foe, entrainmentMark, hold, 0);
+                        shared = true;
+                    }
+                } else {
+                    const mineSpeed = scope.attributeValue(current.actor(), CombatCopies.speed);
+                    const theirsSpeed = scope.attributeValue(foe, CombatCopies.speed);
+                    if (mineSpeed !== null && theirsSpeed !== null) {
+                        const from = theirsSpeed.value(), to = mineSpeed.value();
+                        const wanted = Math.max(from * (1 - pull), Math.min(from * (1 + pull), from + (to - from) * blend));
+                        if (Math.abs(wanted - from) > 0.0005) {
+                            const carrier = MobEffects.apply(scope, foe, entrainmentMark, hold, 0);
+                            if (carrier) {
+                                const values: CombatCopies.Values = {};
+                                values[CombatCopies.speed] = wanted;
+                                CombatCopies.apply(scope, foe, values, hold, "entrainment", MobEffects.anchor(carrier));
+                                shared = true;
                             }
-                            const theirs = entrainmentAbility(scope, other);
-                            if (!mine || !entrainmentShareable(mine) || !theirs || theirs === mine || !entrainmentReceivable(theirs)) return;
-                            NativeModifiers.apply(scope, other, { ability: mine }, hold);
-                            MobEffects.apply(scope, other, entrainmentMark, hold, whole ? 1 : 0);
-                            shared++;
-                            WorldFeedback.emit(scope, entrainmentScene, 1, facts.position(),
-                                { moment: "spread", target: String(other.ref()), path: [String(current.actor().ref()), String(other.ref())],
-                                    sway: sway, scale: scale, intensity: intensity }, 32);
-                        });
+                        }
+                    }
                 }
-                const spot = scope.observe(current.actor());
-                if (spot !== null) {
-                    WorldFeedback.emit(scope, entrainmentScene, 1, spot.position(),
-                        { moment: shared > 0 ? "settle" : "fizzle", target: String(current.actor().ref()), path: path,
-                            beats: beats, sway: sway, shared: shared, scale: scale, intensity: intensity }, 36);
-                    WorldFeedback.text(scope, spot.position().plus(WorldCombat.point(0, 1.35, 0)),
-                        shared > 0 ? entrainmentSharedText : entrainmentSameText, [shared], 40);
+                const foeBody = scope.observe(foe);
+                if (shared) {
+                    // 两端脚边同频短环：一边在受术者，一边在施术者，表示两边踩到了同一条拍子上。
+                    if (foeBody !== null)
+                        WorldFeedback.emit(scope, entrainmentScene, 1, foeBody.position(),
+                            { moment: "sync", target: String(foe.ref()), path: [chosen, String(current.actor().ref())], beats: beats, sway: sway, scale: scale, intensity: intensity }, 32);
+                    if (selfBody !== null)
+                        WorldFeedback.emit(scope, entrainmentScene, 1, selfBody.position(),
+                            { moment: "sync", target: String(current.actor().ref()), path: [String(current.actor().ref()), chosen], beats: beats, sway: sway, scale: scale, intensity: intensity }, 32);
+                    WorldFeedback.text(scope, selfBody === null ? current.origin() : selfBody.position().plus(WorldCombat.point(0, 1.35, 0)), entrainmentSharedText, [], 40);
+                } else {
+                    breakBeat(scope, selfBody === null ? current.origin() : selfBody.position());
                 }
-                sound(current, shared > 0 ? "minecraft:block.note_block.bell" : "minecraft:block.amethyst_block.break");
+                sound(current, shared ? "minecraft:block.note_block.bell" : "minecraft:block.amethyst_block.break");
                 finish(current);
-            });
+            }
+            const appearance: LivingActions.ProjectileAppearance = {
+                sprite: "cobblemon:particle/generic/note", scale: Math.max(0.6, scale), tint: 0xE8C24A,
+                hitAllies: true, homing: { target: chosen, turn: 8, delay: 0, range: action.range() }
+            };
+            const flight = LivingActions.projectile(action, {
+                speed: velocity, range: action.range(), radius: Math.max(0.3, 0.35 * scale), lifetime: 120,
+                direction: direction, appearance: appearance, impact: land
+            }, finish);
+            WorldFeedback.emit(world, entrainmentScene, 1, body.position(),
+                { moment: "beat", projectile: flight, target: chosen, path: [String(actor.ref()), chosen], beats: beats, scale: scale, intensity: intensity }, 40);
             sound(action, "minecraft:block.note_block.pling");
         }
     });

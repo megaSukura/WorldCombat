@@ -19,6 +19,9 @@
 const SpiderwebDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        web: { emitters: [{ name: "surface_silk", bind: "path", fit: "none", particle: "world_combat_core:cobblemon/generic/cotton",
+            rate: { data: "threads", fallback: 18 }, shape: { kind: "polygon" }, speed: [0, 0], lifetime: [10, 18],
+            size: [.14, .09], color: 0xE6E2D6, alpha: [.55, .2], light: "world", maxParticles: 70 }] },
         windup: {
             duration: 16,
             exit: { stop: 7, drain: 15 },

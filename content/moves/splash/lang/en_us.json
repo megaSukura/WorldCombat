@@ -20,9 +20,9 @@
   "worldcombat.skill.splash.preference.leap.help": "On: hop height x1.35 but hop distance x0.7 and wind-up +1 tick — for clearing a step or ducking a ground-hugging blow. Off: low and long, for repositioning and opening distance.",
   "worldcombat.skill.splash.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.splash.preference.ai.maxChase.help": "The partner only considers a flop while a threat is this close; larger makes it reposition from farther out.",
-  "worldcombat.skill.splash.preference.ai.retreatBelow": "Retreat health",
-  "worldcombat.skill.splash.preference.ai.retreatBelow.help": "With an attack on hand, the partner only hops away while below this health fraction and crowded; raise it to flee sooner, lower it to hop only when nearly gone.",
-  "worldcombat.skill.splash.preference.ai.keepAway": "Keep-away",
-  "worldcombat.skill.splash.preference.ai.keepAway.help": "The gap the partner aims to keep when flopping toward a threat; it lands this far out instead of on top of the foe.",
+  "worldcombat.skill.splash.preference.ai.retreatBelow": "Crisis health",
+  "worldcombat.skill.splash.preference.ai.retreatBelow.help": "With an attack on hand, the partner treats the flop as an escape (higher priority) while below this health fraction and crowded; raise it to pull out sooner, lower it to hop only when nearly gone.",
+  "worldcombat.skill.splash.preference.ai.keepAway": "Melee gap",
+  "worldcombat.skill.splash.preference.ai.keepAway.help": "A foe this close counts as crowding the partner; only then does a partner that has an attack hop away, picking the landing spot with a freeSpace probe.",
   "world_combat.move.splash.text.nothing": "Nothing happened..."
 }

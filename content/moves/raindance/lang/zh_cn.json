@@ -23,7 +23,7 @@
   "worldcombat.skill.raindance.preference.ai.maxChase": "布雨距离",
   "worldcombat.skill.raindance.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑求雨；调小只在贴身时叫雨，调大愿意提前布置。",
   "worldcombat.skill.raindance.preference.ai.advance": "把雨压向对手",
-  "worldcombat.skill.raindance.preference.ai.advance.help": "开启后把雨叫在自己与威胁之间，让交战区落在雨里；关闭则叫在脚下先护住自己。",
+  "worldcombat.skill.raindance.preference.ai.advance.help": "开启后把雨往威胁方向推几步；关闭（默认）则把雨留在收益最大的一方——先盖住带灼伤的队友或自己。",
   "worldcombat.skill.raindance.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.raindance.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去叫雨。",
   "world_combat.move.raindance.text.drench": "被淋湿",

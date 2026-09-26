@@ -1,15 +1,17 @@
 /**
  * 水流裂破 / liquidation 的客户端表现。
  *
- * 一句话：水先在身上裹成一层贴身的刃、随人一起前进，撞实的一刻水刃从接触面整片炸开，顺着裂口在目标
- * 身上留下几道亮青的裂痕，湿水从裂口往里渗。
- * 色相家族：水蓝与近白泡沫（water_ripple / giantsplash / impact_water 原色）为底，裂痕与渗水用高饱和亮青，
- * 只在破防幕的小面积上出现。
- * 拍子：起（windup 聚水）→ 行（shroud 裹水前进）→ 击（impact 水刃炸开）→ 收（crack 裂痕 / miss 收势）。
- * 范围：impact 与 crack 都绑命中点，画出的就是水刃劈开的位置；shroud 贴施法者、随它一起移动。
- * 运动：聚水向内收成壳，行进时水痕沿历史拖尾，命中是整片外爆，裂痕沿球面向外扯开。
- * 数：`data.scale`（水刃半径 / 0.5）放大水壳与炸开范围，`data.bursts`（18 + 威力 × 0.24）直接绑定命中的
- * 总溅水量，`data.spokes`（破防级数 × 10）决定裂痕的条数，`data.intensity`（本击威力 / 85）抬高核心亮度。
+ * 一句话：水先在身上压成一层贴身的窄刃，向前踏出半步；随后这层刃贴着身体由一侧向另一侧扫过，
+ * 只有当前刃段发白沫水花；扫到的目标在接触面炸开一记水花，破防时顺着裂口留几道亮青的裂痕。
+ * 色相家族：水蓝与近白泡沫（water_ripple / giantsplash / impact_water / waterjet 原色）为底，
+ * 裂痕与渗水用高饱和亮青，只在破防的小面积上出现。
+ * 拍子：起（windup 聚水）→ 踏（step 前踏）→ 扫（blade 触及横扫）→ 击（hit 接触水花）→ 收（crack 裂痕 / miss 收势）。
+ * 范围：blade 绑施法者、随它移动，`orient: "heading"` 读 `data.direction`，用 `data.reach` 与 `data.blade` 画出与判定
+ * 同一份原点、半径、张角的窄刃段；hit 与 crack 都绑命中点，画出的就是刃段擦到的位置。
+ * 运动：聚水向内收成壳，前踏溅一小片，刃段随方向逐拍转向并向外喷，命中是整片外爆，裂痕沿球面向外扯开。
+ * 数：`data.reach`（扇刃半径）定刃长，`data.blade`（本拍刃张角）定刃宽，`data.scale`（水刃厚度 / 0.42）放大尺寸，
+ * `data.bursts`（16 + 威力 × 0.2）直接绑定命中的总溅水量，`data.spokes`（破防级数 × 10）决定裂痕条数，
+ * `data.progress` 是横扫进度，`data.intensity`（本击威力 / 85）抬高核心亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const LiquidationDefinition: ParticleDefinition = {
@@ -37,64 +39,74 @@ const LiquidationDefinition: ParticleDefinition = {
                 }
             ]
         },
-        shroud: {
-            duration: 48,
-            exit: { stop: 36, drain: 14 },
+        step: {
+            duration: 18,
+            exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "blade_shell", bind: "source", offset: [0, 0.5, 0], height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    rate: 40, shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
-                    direction: "inward", speed: [0.04, 0.15],
-                    lifetime: [6, 12], size: [0.22, 0.05], sizeMode: "sin",
-                    color: 0x6FB6E8, alpha: [0.62, 0], light: "full", maxParticles: 240
-                },
-                {
-                    name: "edge_jet", bind: "source", offset: [0, 0.45, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
-                    rate: 20, shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
-                    direction: "outward", speed: [0.06, 0.2], spread: 8,
-                    lifetime: [5, 10], size: [0.16, 0.04],
-                    alpha: [0.8, 0], light: "full", maxParticles: 160
-                },
-                {
-                    name: "wake", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    name: "plant", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    rate: 30, shape: { kind: "ring", radius: 0.34 },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [6, 12], size: [0.07, 0.02],
-                    color: 0x9FC6DE, alpha: [0.45, 0], light: "world", maxParticles: 140
+                    burst: { count: 18 },
+                    shape: { kind: "ring", radius: 0.4, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.05, 0.2], gravity: 0.05, drag: 0.94,
+                    lifetime: [8, 15], size: [0.07, 0.02],
+                    color: 0x9FC6DE, alpha: [0.5, 0], light: "world", maxParticles: 60
                 }
             ]
         },
-        impact: {
-            duration: 28,
-            exit: { stop: 14, drain: 20 },
+        blade: {
+            duration: 0,
+            exit: { stop: 0, drain: 12 },
+            emitters: [
+                {
+                    name: "edge", bind: "source", offset: [0, 0.4, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    rate: 46, orient: "heading", fit: "world",
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, innerRadius: 0.3,
+                        angleDegrees: { data: "blade", fallback: 30 } },
+                    direction: "outward", speed: [0.08, 0.26], spread: 6,
+                    lifetime: [5, 10], size: [0.14, 0.035],
+                    alpha: [0.9, 0], light: "full", maxParticles: 180
+                },
+                {
+                    name: "foam", bind: "source", offset: [0, 0.35, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    rate: 26, orient: "heading", fit: "world",
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 2.7 }, innerRadius: 0.3,
+                        angleDegrees: { data: "blade", fallback: 30 } },
+                    direction: "outward", speed: [0.05, 0.18], sizeMode: "sin",
+                    lifetime: [6, 12], size: [0.16, 0.04],
+                    color: 0xBFE6FF, alpha: [0.7, 0], light: "full", maxParticles: 140
+                }
+            ]
+        },
+        hit: {
+            duration: 24,
+            exit: { stop: 12, drain: 18 },
             emitters: [
                 {
                     name: "core", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_water",
-                    burst: { count: 20, at: 1 },
+                    burst: { count: 16, at: 1 },
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
                     direction: "shape", speed: [0.06, 0.26],
-                    lifetime: [7, 12], size: [0.4, 0.05], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 80
+                    lifetime: [6, 11], size: [0.38, 0.05], sizeMode: "index",
+                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 70
                 },
                 {
                     name: "burst", bind: "target", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
-                    burst: { count: { data: "bursts", fallback: 38 } },
+                    burst: { count: { data: "bursts", fallback: 30 } },
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
-                    direction: "outward", speed: [0.08, 0.3],
-                    gravity: 0.05, drag: 0.92,
-                    lifetime: [10, 18], size: [0.26, 0.05],
-                    color: 0xBFE6FF, alpha: [0.78, 0], light: "full", maxParticles: 260
+                    direction: "outward", speed: [0.08, 0.3], gravity: 0.05, drag: 0.92,
+                    lifetime: [9, 16], size: [0.24, 0.05],
+                    color: 0xBFE6FF, alpha: [0.78, 0], light: "full", maxParticles: 200
                 }
             ]
         },
         crack: {
-            duration: 26,
-            exit: { stop: 12, drain: 20 },
+            duration: 24,
+            exit: { stop: 12, drain: 18 },
             emitters: [
                 {
                     name: "fissure", bind: "target", height: 0.45,
@@ -108,12 +120,11 @@ const LiquidationDefinition: ParticleDefinition = {
                 {
                     name: "bleed", bind: "target", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    burst: { count: 22, at: 2 },
+                    burst: { count: 20, at: 2 },
                     shape: { kind: "sphere", radius: 0.4 },
-                    direction: "outward", speed: [0.04, 0.16],
-                    gravity: 0.05, drag: 0.93,
+                    direction: "outward", speed: [0.04, 0.16], gravity: 0.05, drag: 0.93,
                     lifetime: [10, 18], size: [0.08, 0.02],
-                    color: 0x9FE4FF, alpha: [0.7, 0], light: "world", maxParticles: 100
+                    color: 0x9FE4FF, alpha: [0.7, 0], light: "world", maxParticles: 90
                 }
             ]
         },
@@ -124,12 +135,11 @@ const LiquidationDefinition: ParticleDefinition = {
                 {
                     name: "spill", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    burst: { count: 26 },
+                    burst: { count: 24 },
                     shape: { kind: "ring", radius: 0.44, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.05, 0.2],
-                    gravity: 0.05, drag: 0.94,
+                    direction: "outward", speed: [0.05, 0.2], gravity: 0.05, drag: 0.94,
                     lifetime: [8, 15], size: [0.07, 0.02],
-                    color: 0x9FC6DE, alpha: [0.5, 0], light: "world", maxParticles: 80
+                    color: 0x9FC6DE, alpha: [0.5, 0], light: "world", maxParticles: 70
                 }
             ]
         }

@@ -1,14 +1,17 @@
 /**
  * 飞叶快刀 / razorleaf —— 注册与动作。
  *
- * 核心念头：一口气把一列锋利的叶顺着瞄准方向连甩出去——叶一片接一片地削过同一条窄带，站在这条带子里的
- *   对手被一波接一波地削。它有两幕：甩出、连发。
+ * 核心念头：一口气把一列锋利的叶顺着瞄准方向连甩出去——每一波是一道短寿命的叶幕，从身前沿同一条窄带
+ *   真实地向前推进，叶幕经过谁、谁才被削；站桩排成一列的对手会被一波接一波地削，横移的人能在后波到来前
+ *   走出窄带躲开。它有两幕：甩出、连发推进。
  *
  * 幕：
  *   起（windup，提交前）：叶在身侧排成一列、边缘亮起，只播预告，可被打断。
- *   发（execute → wave × N → hit/miss）：提交后叶片沿瞄准方向一波一波飞出，每波扫过同一段窄带
- *       （WorldGeometry.lane，判定与表现共用这组范围），带里的每个非友方各吃一次 `leaf` 物理伤害；
- *       每波之间有 `gap` 刻的间隔，`waves` 波走完收势。没人被削到只留一阵空叶风。
+ *   发（execute → wave × N → hit/miss）：提交时锁定方向；每隔 `gap` 刻甩出新一波叶幕。每波每刻按 `pace`
+ *       沿窄带推进一段，对刚扫过的这一小段（判定与表现共用同一段位移）里的每个非友方各结算一次 `leaf`
+ *       物理伤害，每个目标每波只吃一次；撞到方块则这一波后段被截断。所有波走完收势。没人被削到只留一阵空叶风。
+ *
+ * 选取：`kind: "aim"`——方向或世界点都能瞄，提交后方向不再追随；空放也成立，命中权限仍由命中层判断。
  *
  * 高暴击沿用原生 critRatio 2 的共享结算；暴击命中时由本单元监听器在命中点补一记更亮的叶光强调。
  */
@@ -17,9 +20,9 @@ namespace PokemonSkills {
         id: razorleafId,
         cooldownParameter: "recharge",
         name: "Razor Leaf",
-        description: "沿同一条窄带一波波甩出锋利的叶，削穿排成一列的对手；起手极短、连发多拍，容易击中要害。撒叶式铺得更宽、每波更重但少一波，连叶式连发更多但叶幕更窄。",
+        description: "朝选定方向沿同一条窄带一波波甩出锋利的叶，每道叶幕真实向前推进、削穿排成一列的对手；横移的人能在后波到来前走出窄带躲开。起手极短、连发多拍，容易击中要害。撒叶式铺得更宽、每波更重但少一波，连叶式连发更多但叶幕更窄。",
         uses: ["沿同一条窄带连发一波波叶刃", "削穿排成一列的对手", "站桩的敌人被一拍接一拍反复削"],
-        kind: "enemy",
+        kind: "aim",
         range: 9,
         maxRange: 14,
         prepare: 6,
@@ -60,14 +63,18 @@ namespace PokemonSkills {
             const leaves = Math.max(6, Math.round(p(razorleafId, "leaves", action)));
             const waves = Math.max(1, Math.round(p(razorleafId, "waves", action)));
             const gap = Math.max(1, Math.round(p(razorleafId, "gap", action)));
+            const pace = Math.max(0.2, p(razorleafId, "pace", action));
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const origin = self.position();
+            const heading = WorldGeometry.flatUnit(direction, WorldCombat.point(0, 0, 1));
             const scale = Math.max(0.6, Math.min(2.0, reach / razorleafReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 16));
-            const heading = [direction.x(), direction.y(), direction.z()];
-            const lane = WorldGeometry.lane(origin, direction, reach, spread, { below: 1.4, above: 2.6 });
-            let index = 0, hits = 0, settled = false;
+            const directionList = [heading.x(), 0, heading.z()];
+            const scenes = WorldFeedback.actionScenes(razorleafScene);
+            interface Front { key: string; wave: number; point: CombatPoint; travelled: number; seen: { [ref: string]: boolean }; }
+            const fronts: Front[] = [];
+            let launched = 0, active = 0, hits = 0, settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -77,35 +84,67 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, razorleafScene, 1, origin, { moment: "miss", scale: scale }, 18);
                     WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), razorleafMissText, [], 20);
                 } else {
-                    WorldFeedback.text(scope, origin.plus(WorldCombat.point(direction.x(), 0, direction.z()).unit().scale(reach * 0.5))
-                        .plus(WorldCombat.point(0, 0.95, 0)), razorleafHitText, [hits], 22);
+                    WorldFeedback.text(scope, origin.plus(heading.scale(reach * 0.5)).plus(WorldCombat.point(0, 0.95, 0)),
+                        razorleafHitText, [hits], 22);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
-            function wave(current: CombatAction): void {
+            function launch(current: CombatAction): void {
+                fronts.push({ key: "front" + launched, wave: launched + 1, point: origin, travelled: 0, seen: {} });
+                active++;
+                sound(current, launched % 2 === 0 ? "cobblemon:move.razorleaf.actor_1" : "cobblemon:move.razorleaf.actor_2");
+                launched++;
+            }
+
+            function step(current: CombatAction, elapsed: number): void {
                 if (settled) return;
-                if (index >= waves) { finish(current); return; }
-                index++;
                 const scope = current.world();
-                WorldFeedback.emit(scope, razorleafScene, 1, origin,
-                    { moment: "sweep", direction: heading, reach: reach, spread: spread, leaves: leaves,
-                        wave: index, waves: waves, scale: scale, intensity: intensity }, gap + 16);
-                WorldGeometry.selectEnemies(scope, lane, function (target, facts) {
-                    if (!hurt(current, target, razorleafId, power,
-                        { damage: damageSpec(razorleafId, "leaf"), slice: true })) return;
-                    hits++;
-                    WorldFeedback.emit(scope, razorleafScene, 1, facts.position(),
-                        { moment: "cut", target: String(target.ref()), leaves: leaves, leafRadius: leafRadius,
-                            wave: index, scale: scale, intensity: intensity }, 18);
-                });
-                sound(current, index % 2 === 0 ? "cobblemon:move.razorleaf.actor_1" : "cobblemon:move.razorleaf.actor_2");
-                if (index >= waves) { finish(current); return; }
-                current.after(gap, wave);
+                if (launched < waves && elapsed >= launched * gap) launch(current);
+                for (let index = 0; index < fronts.length; index++) {
+                    const front = fronts[index];
+                    const remaining = reach - front.travelled;
+                    if (remaining <= 0.01) { scenes.stop(current, front.key); active--; fronts.splice(index, 1); index--; continue; }
+                    const from = front.point;
+                    const desired = from.plus(heading.scale(Math.min(pace, remaining)));
+                    const clip = scope.clipBlocks(from, desired);
+                    const wall = clip !== null && clip.blocked();
+                    const end = wall && clip !== null ? clip.position() : desired;
+                    const span = end.minus(from).length();
+                    if (span > 0.01) {
+                        const region = WorldGeometry.bodyLane(from, heading, span, spread, { below: 1.4, above: 2.6 });
+                        WorldGeometry.selectBodies(scope, region, function (target, facts) {
+                            const ref = String(target.ref());
+                            if (scope.friendly(target) || front.seen[ref]) return;
+                            front.seen[ref] = true;
+                            if (!hurt(current, target, razorleafId, power,
+                                { damage: damageSpec(razorleafId, "leaf"), slice: true })) return;
+                            hits++;
+                            WorldFeedback.emit(scope, razorleafScene, 1, facts.position(),
+                                { moment: "cut", target: ref, leaves: leaves, leafRadius: leafRadius,
+                                    wave: front.wave, scale: scale, intensity: intensity }, 18);
+                        });
+                    }
+                    front.point = end;
+                    front.travelled += span;
+                    if (wall || front.travelled >= reach - 0.01) {
+                        scenes.stop(current, front.key);
+                        active--;
+                        fronts.splice(index, 1);
+                        index--;
+                        continue;
+                    }
+                    scenes.show(current, front.key, front.point, {
+                        moment: "sweep", path: [[from.x(), from.y(), from.z()], [end.x(), end.y(), end.z()]],
+                        direction: directionList, leaves: leaves, leafRadius: leafRadius, spread: spread,
+                        wave: front.wave, waves: waves, scale: scale, intensity: intensity
+                    });
+                }
+                if (launched >= waves && active <= 0) { finish(current); return; }
+                current.after(1, function (next: CombatAction) { step(next, elapsed + 1); });
             }
 
-            sound(action, "cobblemon:move.razorleaf.actor_1");
-            wave(action);
+            step(action, 0);
         }
     });
 

@@ -1,14 +1,15 @@
 /**
  * 木槌 / woodhammer 的客户端表现。
  *
- * 一句话：躯体绷硬、抬起，再整副砸下；落地的一刻木屑从接触面炸开，脚下一圈地裂贴着地表拉开，
- * 砸空时同样砸裂地面，只是没有那声闷响。
+ * 一句话：躯体绷硬、抬起，再整副砸下；落地的一刻碎木沿接触面喷出，脚下一圈短暂的地裂碎屑贴着地表拉开，
+ * 砸空时同样溅起碎屑，只是没有那声闷响。地裂只是画面，不改变任何方块。
  * 色相家族：木绿与树皮褐（0x7A8B4A / 0x8C6A3F）为底，草绿的冲击与浅木色碎屑点缀，饱和黄绿只给砸击核心一点。
- * 拍子：起 harden（绷硬）→ 举 raise（抬起）→ 砸 fall（砸下）→ 击 impact（木屑炸开＋地裂）／ whiff（砸空）。
- * 范围：impact 与 whiff 都绑落点、画的就是砸到哪；地裂沿 `data.path` 以落点为中心铺成一圈。
- * 运动：绷硬向内收；砸下时速度线自上而下压；命中木屑向外炸、地裂贴地向外扩。
- * 数：`data.splinters`（物攻与体重派生）决定木屑与命中的总量，`data.cells`（实际砸裂的地表块数）
- * 决定地裂圈上的碎块数，`data.intensity`（威力 / 115）抬高密度与亮度，`data.scale`（判定半径 / 0.62）放大砸面。
+ * 拍子：起 harden（绷硬）→ 举 raise（抬起）→ 砸 fall（砸下）→ 击 impact（碎木与裂纹）／ whiff（砸空）。
+ * 范围：impact 与 whiff 绑落点、画的就是砸到哪；crack 绑原生接触格，按 crackTicks 存续；raise/fall 贴真实身体升降。
+ * 运动：绷硬向内收；砸下时速度线沿真实运动向下压；命中碎木沿 `data.face` 外法线喷、裂纹贴地向外扩。
+ * 数：`data.splinters`（物攻与体重派生）决定碎木总量，`data.cracks`（地裂碎屑数）决定裂纹圈上的碎块数，
+ * `data.crackTicks` 决定裂纹存续，`data.height`（真实升降高度）拉长竖向槌影，
+ * `data.intensity`（威力 / 115）抬高密度与亮度，`data.scale`（判定半径 / 0.62）放大砸面。
  */
 const WoodhammerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -43,10 +44,19 @@ const WoodhammerDefinition: ParticleDefinition = {
                     name: "lift", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/earth",
                     rate: 14, shape: { kind: "ring", radius: 0.4, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.04, 0.14],
-                    gravity: 0.03, drag: 0.93,
+                    direction: "down", speed: [0.03, 0.12],
+                    drag: 0.93,
                     lifetime: [8, 15], size: [0.1, 0.02],
                     color: 0x8C6A3F, alpha: [0.45, 0], light: "world", maxParticles: 50
+                },
+                {
+                    name: "updraft", bind: "source", offset: [0, 0.4, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    orient: "velocity",
+                    rate: 20, shape: { kind: "line", length: { data: "height", fallback: 0.5 } },
+                    direction: "shape", speed: [0.05, 0.18],
+                    lifetime: [5, 9], size: [0.16, 0.04],
+                    color: 0xD8D2B0, alpha: [0.6, 0], light: "full", maxParticles: 90
                 }
             ]
         },
@@ -57,8 +67,9 @@ const WoodhammerDefinition: ParticleDefinition = {
                 {
                     name: "drive", bind: "source", offset: [0, 0.45, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 30, shape: { kind: "box", size: [0.36, 0.32, 0.36] },
-                    direction: "down", speed: [0.08, 0.26], trail: { minDistance: 0.24 },
+                    orient: "velocity",
+                    rate: 30, shape: { kind: "line", length: { data: "height", fallback: 0.6 } },
+                    direction: "shape", speed: [0.08, 0.26], trail: { minDistance: 0.24 },
                     lifetime: [4, 8], size: [0.2, 0.05],
                     color: 0xD8D2B0, alpha: [0.7, 0], light: "full", maxParticles: 160
                 },
@@ -89,9 +100,10 @@ const WoodhammerDefinition: ParticleDefinition = {
                 {
                     name: "splinter", bind: "target", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/large_rock",
+                    orient: "direction",
                     burst: { count: { data: "splinters", fallback: 24 } },
-                    shape: { kind: "sphere_surface", radius: 0.44 },
-                    direction: "outward", speed: [0.1, 0.3], spin: 12,
+                    shape: { kind: "cone", radius: 0.5, angleDegrees: 55 },
+                    direction: "shape", speed: [0.1, 0.3], spin: 12,
                     gravity: 0.04, drag: 0.9,
                     lifetime: [12, 22], size: [0.2, 0.05],
                     color: 0x8C6A3F, alpha: [0.8, 0], light: "world", maxParticles: 120
@@ -104,16 +116,6 @@ const WoodhammerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.14],
                     lifetime: [12, 20], size: [0.5, 1.1], sizeMode: "sin",
                     color: 0x7A8B4A, alpha: [0.45, 0], light: "world"
-                },
-                {
-                    name: "scar", bind: "target", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "cells", fallback: 10 } },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
-                    direction: "outward", speed: [0.05, 0.18],
-                    gravity: 0.04, drag: 0.92,
-                    lifetime: [12, 22], size: [0.1, 0.02],
-                    color: 0x6E5A3C, alpha: [0.6, 0], light: "world", maxParticles: 90
                 }
             ]
         },
@@ -124,7 +126,7 @@ const WoodhammerDefinition: ParticleDefinition = {
                 {
                     name: "groundhit", bind: "source", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass_white",
-                    burst: { count: { data: "cells", fallback: 10 }, at: 0 },
+                    burst: { count: { data: "cracks", fallback: 10 }, at: 0 },
                     shape: { kind: "hemisphere", radius: 0.46, rotation: [180, 0, 0] },
                     direction: "up", speed: [0.08, 0.28], spread: 16,
                     lifetime: [9, 16], size: [0.4, 0.06], sizeMode: "index",
@@ -133,12 +135,27 @@ const WoodhammerDefinition: ParticleDefinition = {
                 {
                     name: "soil", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "cells", fallback: 10 } },
+                    burst: { count: { data: "cracks", fallback: 10 } },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
                     direction: "outward", speed: [0.06, 0.2],
                     gravity: 0.04, drag: 0.92,
                     lifetime: [10, 18], size: [0.1, 0.02],
                     color: 0x8C6A3F, alpha: [0.55, 0], light: "world", maxParticles: 90
+                }
+            ]
+        },
+        crack: {
+            duration: 0,
+            emitters: [
+                {
+                    name: "scar", bind: "point", offset: [0, 0.04, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: { data: "cracks", fallback: 10 } },
+                    shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
+                    direction: "outward", speed: [0.02, 0.08],
+                    gravity: 0, drag: 0.8,
+                    lifetime: { data: "crackTicks", fallback: 80 }, size: [0.09, 0.02],
+                    color: 0x6E5A3C, alpha: [0.5, 0], light: "world", maxParticles: 60
                 }
             ]
         }

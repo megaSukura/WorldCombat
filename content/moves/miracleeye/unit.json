@@ -20,6 +20,7 @@
     "startup.ts"
   ],
   "mobEffectIcons": {
-    "world_combat:miracleeye_mark": "minecraft:mob_effect/conduit_power"
+    "world_combat:miracleeye_mark": "minecraft:mob_effect/conduit_power",
+    "world_combat:miracleeye_focus": "minecraft:mob_effect/night_vision"
   }
 }

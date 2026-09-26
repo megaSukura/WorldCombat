@@ -31,9 +31,9 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 21;
+            let crowd = 0;
             if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true)) {
                 const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
-                let crowd = 0;
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
@@ -42,6 +42,11 @@ namespace PokemonSkills {
                 if (crowd > 0) score += Math.min(18, crowd * 9);
             }
             if (CompanionBehavior.status(context, target, "paralysis")) score -= 8;
+            // 站定目标（扎根 / 被束缚）能让放电窗稳满，优先贴近；对一直跑的敌人没有可链邻敌时不为了链电强追。
+            if (CompanionBehavior.bound(context, target)) score += 8;
+            const motion = CompanionBehavior.velocity(context, target);
+            const speed = motion ? Math.sqrt(motion[0] * motion[0] + motion[2] * motion[2]) : 0;
+            if (crowd === 0 && speed > 0.15) score -= 6;
             return score;
         }
     });

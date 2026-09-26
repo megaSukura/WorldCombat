@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.followme.summary": "原地抬手招呼，把喊话半径内敌人的攻击目标不断拉到自己身上；喊住时长之内注意都在你身上，不限属性、也不给谁加成。",
+  "worldcombat.skill.followme.summary": "原地抬手招呼，对喊话半径内可响应的敌人各发一次把攻击目标转向你的请求，之后只维持已经回应的那些；玩家或拒绝转向的 Boss 可以不应，本招不强迫靠近、也不给加成。",
   "worldcombat.skill.followme.use.0": "替身边的同伴把火力引到自己身上",
   "worldcombat.skill.followme.use.1": "把贴住同伴的敌人拉过来，给同伴脱身的机会",
   "worldcombat.skill.followme.use.2": "在开阔地挡住追兵，把交战点聚到自己这里",
-  "worldcombat.skill.followme.description.0": "喊话半径 %1$s 格，注意被拉住 %2$s；范围内的敌人会被不断把攻击目标指向你，但不会被强迫靠近，仍可自行走位或出手。",
-  "worldcombat.skill.followme.description.1": "每 %1$s 重新指向一次；喊住时长走完后不再重新指向，之后敌人按自己的判断选择目标。",
+  "worldcombat.skill.followme.description.0": "喊话半径 %1$s 格，注意被拉住 %2$s；第一声会对范围内的敌人各发一次转向请求，之后只维持已经回应的那些——没回应的不再追写。转向不强迫它们靠近，它们仍可自行走位或出手。",
+  "worldcombat.skill.followme.description.1": "每 %1$s 对已经回应的敌人重新指向一次；喊住时长走完后不再重新指向，之后敌人按自己的判断选择目标。",
   "worldcombat.skill.followme.shout.on": "喊话：半径 ×1.25、冷却 ×1.1，把更远的敌人一嗓子扫进来；代价是喊住时长 ×0.7。",
   "worldcombat.skill.followme.shout.off": "招手：半径 ×0.8，但喊住时长 ×1.35、冷却 ×0.9，盯住近处一小撮更久。",
   "worldcombat.skill.followme.timing": "自身招式，准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，冷却 %4$s 秒。",

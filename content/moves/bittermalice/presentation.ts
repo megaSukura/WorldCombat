@@ -6,9 +6,11 @@
  * 色相家族：幽灵的暗紫（0x8A6BE0 主体、0xC9A8F0 亮面）配幽绿（0x8FE0A8 强调），余韵用近黑紫。
  * 拍子：聚 seethe 0–8t ／ 飞 reach ／ 攥 grasp ／ 空 miss。
  * 范围：seethe 与 grasp 绑各自锚点，尺寸按 `data.scale`（判定半径 / 0.45）缩放；grasp 画出的那圈就是攥中的位置。
- * 运动：seethe 的怨念绕身向内收；reach 的残念沿投射物轨迹拖尾；grasp 的怨火从目标表面外炸、攥光向内收。
- * 数：`data.motes`（特攻与等级派生的怨念数）驱动 seethe／reach／grasp 发射量，`data.stages`（掉攻级数）决定
- *   grasp 的压环重放，`data.consumed`（怨念式是否吞掉异常）追加更亮的幽绿环，`data.intensity`（威力 / 66）抬高密度。
+ * 运动：seethe 的怨念绕身向内收；reach 的残念沿投射物轨迹拖尾；grasp 的怨火从目标表面外炸、攥光向内收；
+ *   吞掉异常时那束光按被吞异常的颜色**向内抽进手**，而不是普通向外爆圈。
+ * 数：`data.seethe`（怨念数 × 自身伤势倍数）驱动 seethe 发射量，`data.motes` 驱动 reach／grasp；`data.stages`
+ *   （掉攻级数）决定 grasp 的压环重放，`data.consumed` / `data.consumedColor`（怨念式是否吞掉异常、吞的是哪个）
+ *   决定那束内收光是否存在与颜色，`data.intensity`（威力 / 66）抬高密度。
  */
 const BitterMaliceSceneDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -28,7 +30,7 @@ const BitterMaliceSceneDefinition: ParticleDefinition = {
                 {
                     name: "orb", bind: "source", offset: [0, 0.4, 0], height: 0.25,
                     particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
-                    rate: { data: "motes", fallback: 16 }, shape: { kind: "sphere", radius: 0.55 },
+                    rate: { data: "seethe", fallback: 16 }, shape: { kind: "sphere", radius: 0.55 },
                     direction: "inward", speed: [0.08, 0.24], spin: 14,
                     lifetime: [7, 13], size: [0.12, 0.02], sizeMode: "sin",
                     color: 0xC9A8F0, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 70
@@ -92,9 +94,9 @@ const BitterMaliceSceneDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "consumed", fallback: 0 }, interval: 1 },
                     shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "outward", speed: [0.16, 0.4],
+                    direction: "inward", speed: [0.16, 0.4],
                     lifetime: [9, 16], size: [0.14, 0.02],
-                    color: 0x8FE0A8, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 24
+                    color: { data: "consumedColor", fallback: 0x8FE0A8 }, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 24
                 }
             ]
         },

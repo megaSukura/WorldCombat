@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.falseswipe.summary": "An extremely precise shallow cut along a thin seam in front: it only chips HP and always leaves the target with at least 1 HP. Full draws a heavier, slower blow; Light is lighter and quicker.",
+  "worldcombat.skill.falseswipe.summary": "An extremely precise shallow cut thrust toward the aim: it cuts only the first non-ally on the blade path, only chips HP and always leaves the target with at least 1 HP. The path is narrow, so walls and bodies in the way stop it first. Full draws a heavier, slower blow; Light is lighter and quicker.",
   "worldcombat.skill.falseswipe.use.0": "Cut a target down to 1 HP for capture",
   "worldcombat.skill.falseswipe.use.1": "Keep pressure on a foe that must stay alive",
   "worldcombat.skill.falseswipe.use.2": "Whittle a threat without killing it",
   "worldcombat.skill.falseswipe.use.3": "Control a target's remaining HP before the finish",
   "worldcombat.skill.falseswipe.description.0": "The shallow cut deals about %1$s damage; if that would be lethal it is capped so the target keeps at least 1 HP. The target's defence, type and crit are settled on the hit.",
-  "worldcombat.skill.falseswipe.description.1": "The seam is about %1$s blocks long, %2$s blocks half-wide, and runs from the feet up to about %3$s blocks; every non-friendly body along it is cut once.",
+  "worldcombat.skill.falseswipe.description.1": "The blade is about %1$s blocks long with a %2$s block radius, thrust from about %3$s blocks above the feet; it cuts only the first non-ally on the path, and a wall or a body in the way stops it first.",
   "worldcombat.skill.falseswipe.option.on": "Full draw: power about x1.18 and reach +0.2 blocks, at wind-up +3 and cooldown +6 ticks - heavier but slower.",
   "worldcombat.skill.falseswipe.option.off": "Light: power about x0.82, a faster cast and a shorter cooldown - lighter and more nimble.",
   "worldcombat.skill.falseswipe.timing": "Cut up to %1$s blocks away; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
@@ -13,7 +13,7 @@
   "worldcombat.skill.falseswipe.value.cut": "Cut power",
   "worldcombat.skill.falseswipe.value.reach": "Cut reach",
   "worldcombat.skill.falseswipe.value.edge": "Seam half-width",
-  "worldcombat.skill.falseswipe.value.depth": "Cut height",
+  "worldcombat.skill.falseswipe.value.depth": "Blade height",
   "worldcombat.skill.falseswipe.value.hold": "Held-back sparks",
   "worldcombat.skill.falseswipe.value.tempo": "Wind-up",
   "worldcombat.skill.falseswipe.value.aftercast": "Recovery",
@@ -25,5 +25,6 @@
   "worldcombat.skill.falseswipe.preference.ai.spareHigh": "Prefer thick targets",
   "worldcombat.skill.falseswipe.preference.ai.spareHigh.help": "On: a high-HP target scores one tier higher, for chipping without killing; off: ranked as an ordinary melee move and used less on a nearly-downed target.",
   "world_combat.move.falseswipe.text.spare": "Held back - at least 1 HP",
-  "world_combat.move.falseswipe.text.miss": "Cuts only air"
+  "world_combat.move.falseswipe.text.miss": "Cuts only air",
+  "worldcombat.reason.falseswipe-spared": "Already cut to the point"
 }

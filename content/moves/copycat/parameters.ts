@@ -6,9 +6,9 @@
  *
  * 原生事实（Showdown copycat）：Normal／变化／命中 —／PP 20／target self；`onHit` 取 `this.lastMove`
  *   （全场最后使用的招式），若不存在或带 `failcopycat` 就失败，否则 `useMove(move.id, pokemon)` 原样使出。
- * 世界化：由 world_combat:committed 维护一条全局“最近一次出手”账本（只记已实装的招式动作），
- *   本招在 windup（提交前）把账本快照进 action.data——这样自己提交成 copycat 也不会把要捡的那一手冲掉；
- *   execute 检查窗口、是否已实装、是否带 failcopycat，然后经 NativeLoadout.call 沿用同一笔提交把它使出。
+ * 世界化：由 world_combat:committed 维护一份短期账本，每位出手者只留最近一条（只记已实装的招式动作）；
+ *   本招在 run 里按“附近 + 最新”挑一条，经 NativeLoadout.call 沿用同一笔提交把它使出，并把玩家的 aim 交给它。
+ *   远处战斗的记录不会盖掉本地动作，需要时再按窗口过期。
  *
  * 每个参数读不同的精灵数据（分散到不同参数）：
  *   span      借来的招式最多能到多远；速度与等级共同决定，也是本招的实际射程来源。
@@ -25,10 +25,12 @@ namespace PokemonSkills {
     export const copycatScene = "world_combat:move_copycat";
     export const copycatCopyText = "world_combat.move.copycat.text.copy";
     export const copycatEmptyText = "world_combat.move.copycat.text.empty";
+    export const copycatTargetText = "world_combat.move.copycat.text.target";
 
-    /** 全局回声账本：最近一次真正提交的、已实装招式动作。 */
+    /** 短期回声账本：每位出手者各留最近一条，施术者在附近挑最新的一条借，远处战斗不抢走本地动作。 */
     export interface CopycatEcho { id: string; tick: number; ref: string; }
-    export var copycatLedger: CopycatEcho | null = null;
+    export var copycatEchoes: { [ref: string]: CopycatEcho } = Object.create(null);
+    export function copycatRemember(echo: CopycatEcho): void { copycatEchoes[echo.ref] = echo; }
 
     actionParameters.define(copycatId, {
         span: formula(
@@ -72,7 +74,7 @@ namespace PokemonSkills {
         { key: "timing", values: ["span","prepare","recover","pp","cooldown"] }
     ]);
 
-    // 记账：任何生物提交一次已实装的招式动作就记下这一刻；仿效读取它捡起“最后响起的那一手”。
+    // 记账：任何生物提交一次已实装的招式动作就更新它自己那条记录；仿效在附近按时间挑最新的一条。
     WorldCombat.on("world_combat:move_copycat/ledger", "world_combat:committed", "", function (event) {
         const action = event.action();
         if (action === null) return;
@@ -80,6 +82,6 @@ namespace PokemonSkills {
         if (!world.valid(actor)) return;
         const executing = NativeLoadout.executing(action);
         if (executing === null) return;
-        copycatLedger = { id: String(executing.id()), tick: world.tick(), ref: String(actor.ref()) };
+        copycatRemember({ id: String(executing.id()), tick: world.tick(), ref: String(actor.ref()) });
     });
 }

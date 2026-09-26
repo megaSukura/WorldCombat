@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.rocktomb.summary": "Hurl a heavy boulder to pin the target's legs: a struck target loses Speed, and the ground under its feet rises into a ring of stone pillars that seals its movement. Only a grounded target can be caged. The siege style cages wider and longer for two Speed stages; the smash style hits harder for one.",
-  "worldcombat.skill.rocktomb.description.0": "A living hit takes %1$s non-contact damage with a %2$s block boulder radius.",
+  "worldcombat.skill.rocktomb.summary": "Hurl a heavy boulder at a direction point or a chosen target: a struck target loses Speed, and on landing the ground under its feet rises into a ring of stone pillars with a walkable gap that seals its movement. A boulder that truly lands on replaceable ground cages that spot too. Only a grounded target can be caged. The siege style cages wider and longer for two Speed stages; the smash style hits harder for one.",
+  "worldcombat.skill.rocktomb.description.0": "A living hit takes %1$s non-contact damage with a %2$s block boulder radius; you may aim a direction, a point or an entity, and no enemy is required at commit.",
   "worldcombat.skill.rocktomb.description.1": "You can hurl up to %1$s blocks with a %2$s blocks per tick throw speed.",
-  "worldcombat.skill.rocktomb.description.2": "A grounded target gets a %2$s block ring of stone pillars %3$s blocks tall around its feet, its Speed dropped by %1$s stage; the ring lasts %4$s before the original blocks return, but the Speed drop does not end with it. An airborne target cannot be caged and is not slowed, taking only the boulder.",
+  "worldcombat.skill.rocktomb.description.2": "A grounded target gets stone pillars %4$s blocks tall around its feet, with a base radius of %2$s blocks and an exit at least %3$s blocks wide; the actual body leaves extra clearance where needed. Its Speed drops by %1$s stage. The ring lasts %5$s before the original blocks return, but the Speed drop does not end with it. The exit lets the caged target walk out. An airborne target cannot be caged and is not slowed; when the ground is protected or pillars cannot be placed, only rubble scatters but the Speed drop still applies.",
   "worldcombat.skill.rocktomb.trap.on": "Siege style: a wider, taller cage, two Speed stages and a longer-lasting ring, but a lighter blow.",
   "worldcombat.skill.rocktomb.trap.off": "Smash style: a heavier boulder, one Speed stage, a narrower and shorter cage.",
   "worldcombat.skill.rocktomb.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -16,6 +16,7 @@
   "worldcombat.skill.rocktomb.value.throwRange": "Cast range",
   "worldcombat.skill.rocktomb.value.collisionRadius": "Boulder radius",
   "worldcombat.skill.rocktomb.value.cageRadius": "Cage radius",
+  "worldcombat.skill.rocktomb.value.cageGap": "Cage gap",
   "worldcombat.skill.rocktomb.value.cageHeight": "Pillar height",
   "worldcombat.skill.rocktomb.value.encaseStages": "Seal stages",
   "worldcombat.skill.rocktomb.value.cageTicks": "Cage duration",
@@ -28,6 +29,8 @@
   "worldcombat.skill.rocktomb.preference.ai.sealRunner.help": "On: prefer a target that is moving or fleeing, and rank airborne or already-encased targets last. Off: treat it as an ordinary mid-range attack.",
   "world_combat.move.rocktomb.text.encase": "Movement sealed %1$s stage",
   "world_combat.move.rocktomb.text.shatter": "The target was airborne; the boulder broke",
+  "world_combat.move.rocktomb.text.wall": "The boulder shattered on the wall",
+  "world_combat.move.rocktomb.text.blocked": "No pillars could rise; the movement is still slowed",
   "world_combat.move.rocktomb.text.miss": "The boulder missed",
   "effect.world_combat.rocktomb_tomb": "Rock Tomb: Sealed"
 }

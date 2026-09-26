@@ -26,6 +26,16 @@ namespace PokemonSkills {
     const stompFlinchText = "world_combat.move.stomp.text.flinch";
     const stompShockText = "world_combat.move.stomp.text.shock";
     const stompMissText = "world_combat.move.stomp.text.miss";
+    /** 起手锁定的踩点；兑现时读回同一点，目标走出脚印就避开主击。 */
+    const stompLandingKey = "world_combat:move_stomp/landing";
+
+    function stompLanding(action: CombatAction): CombatPoint | null {
+        const raw = action.data(stompLandingKey);
+        if (raw === null) return null;
+        const value = JSON.parse(raw);
+        if (!value || typeof value.x !== "number" || typeof value.y !== "number" || typeof value.z !== "number") return null;
+        return WorldCombat.point(value.x, value.y, value.z);
+    }
 
     function stompFlinch(world: CombatWorld, target: CombatActor, ticks: number): boolean {
         if (MobEffects.apply(world, target, stompFlinchEffect, ticks, 0) === null) return false;
@@ -77,9 +87,9 @@ namespace PokemonSkills {
         id: "stomp",
         cooldownParameter: "recharge",
         name: "Stomp",
-        description: "把全身重量往下砸的一脚：近身招里单发最重，命中后有机会踩懵目标，脚下的震波还会波及落点周围站着的其他敌人、也有机会震懵——但只砸得到站在地上的目标，空中的人躲得开。",
+        description: "把全身重量往下砸的一脚：朝选定的近处地表落脚，正下方站在脚印里的目标吃最重的一击、有机会被踩懵，脚下的震波还会波及落点周围站着的其他敌人——走出脚印就能避开主击，腾空的人躲得开震波。",
         uses: ["把靠近的地面目标一脚踩实，并尝试震懵", "顺带震到落点周围站着的其他敌人", "在对手被逼到地面时兑现最重的一击"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.4,
         maxRange: 3.2,
         prepare: 10,
@@ -103,16 +113,20 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            // 起手锁定踩点：兑现时读回同一点，标记与落足不会各指一处。
+            const locked = action.targetPosition();
+            action.data(stompLandingKey, JSON.stringify({ x: locked.x(), y: locked.y(), z: locked.z() }));
+            const foot = p("stomp", "foot", action);
             action.present("world_combat:stomp:" + action.id(), stompScene, 1, action.origin(),
                 JSON.stringify({ moment: "raise", heavy: config && config.heavy === true, windup: prepare }));
+            action.present("world_combat:stomp:mark:" + action.id(), stompScene, 1, WorldGeometry.ground(action.sense(), locked, 4),
+                JSON.stringify({ moment: "mark", foot: foot, heavy: config && config.heavy === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const target = action.target();
             const self = world.observe(actor);
-            const body = target !== null && world.valid(target) ? world.observe(target) : null;
             if (self === null) { done(action); return; }
 
             const power = p("stomp", "slam", action);
@@ -124,13 +138,18 @@ namespace PokemonSkills {
             const chance = p("stomp", "flinchChance", action);
             const stagger = p("stomp", "staggerChance", action);
             const flinchTicks = Math.round(p("stomp", "flinchTicks", action));
-            const direction = aim(action);
             const scale = foot / 0.5;
             const intensity = Math.max(0.5, Math.min(2.4, power / 80));
-            const grounded = body !== null && body.grounded() && body.position().minus(self.position()).length() <= skills["stomp"].range + 0.6;
-            const landing = body !== null
-                ? (grounded ? body.position() : WorldCombat.point(body.position().x(), self.position().y(), body.position().z()))
-                : self.position().plus(direction.scale(1.2));
+
+            // 踩点用起手锁定的点：目标走出脚印就避开主击。越出射程收回，墙会真实截断。
+            const origin = self.position();
+            let landing = stompLanding(action) || action.targetPosition();
+            const offset = landing.minus(origin);
+            if (offset.length() > skills["stomp"].range) landing = origin.plus(offset.unit().scale(skills["stomp"].range));
+            const probe = action.trace(origin, landing, foot);
+            if (probe.blocked() && !probe.hitEntity()) landing = probe.position();
+            // 落到实处：脚下有地面就贴地，悬空的点保持空踩（不会凭空生成坑）。
+            landing = WorldGeometry.ground(world, landing, 4);
 
             WorldFeedback.emit(world, stompScene, 1, landing,
                 { moment: "slam", scale: 1, intensity: intensity, foot: foot, shock: Math.round(shock * 100) / 100,
@@ -138,11 +157,15 @@ namespace PokemonSkills {
             sound(action, "minecraft:item.mace.smash_ground_heavy");
             sound(action, "cobblemon:impact.ground");
 
-            let hits = 0;
-            if (grounded && target !== null) {
-                const foe = target;
+            // 主击：按实际脚印范围选正下方站在地上的受击者，移出脚印就躲开主击。
+            let main: CombatActor | null = null;
+            WorldGeometry.selectEnemies(world, WorldGeometry.ring(landing, 0, Math.max(0.35, foot), { below: 2, above: 1.6 }), function (enemy, facts) {
+                if (main !== null || !facts.grounded()) return;
+                main = enemy;
+            });
+            const foe = main as CombatActor | null;
+            if (foe !== null) {
                 if (hurt(action, foe, "stomp", power, { damage: damageSpec("stomp", "slam"), contact: true })) {
-                    hits++;
                     WorldFeedback.emit(world, stompScene, 1, landing,
                         { moment: "hit", target: String(foe.ref()), scale: scale, intensity: intensity,
                             quake: Math.max(10, Math.round(shock * 24)) }, 24);
@@ -156,11 +179,11 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, landing.plus(WorldCombat.point(0, 1.0, 0)), stompMissText, [], 22);
             }
 
-            // 震波：落点周围站在地上的其他人各吃一记较轻的 aftershock，并按 staggerChance 掷畏缩。
+            // 震波：落点周围站在地上的其他人各吃一记较轻的 aftershock，并按 staggerChance 掷畏缩；不重复主受击者。
             let shaken = 0;
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(landing, 0, shock, { below: 2, above: 1 }), function (enemy, facts) {
                 const ref = String(enemy.ref());
-                if (ref === String(actor.ref()) || (target !== null && ref === String(target.ref()))) return;
+                if (ref === String(actor.ref()) || (foe !== null && ref === String(foe.ref()))) return;
                 if (!facts.grounded() || shaken >= 3) return;
                 if (!hurt(action, enemy, "stomp", shockPower, { damage: damageSpec("stomp", "aftershock") })) return;
                 shaken++;

@@ -6,9 +6,10 @@
  * 色相家族：淡紫（0x8E6FE0 主 / 0xB49CF0 亮 / 0xE6DCFF 核心），近白只给穿透核心；无第二个色相。
  * 拍子：起 unstable 0–16t ／ 推 flight 0–70t ／ 中 hit 0–26t ／ 空 miss。
  * 范围：flight 的直立波前环半径与 hit 的贴地环都按 `data.scale`（波宽 / 0.55）铺开；波宽也决定判定。
- * 运动：unstable 上下乱跳；flight 绑 projectile 并把环立到运动方向上（`orient: velocity`）；hit 由内向外炸。
- * 数：`data.rings`（本此强度系数派生的环数）驱动波前与命中的发射量，`data.intensity`（同一系数）抬高亮度与尺寸——
- *   玩家因此能一眼读出这一发是强是弱。
+ * 运动：unstable 上下乱跳，并以环数提前展示本此摇到的强度；flight 绑 projectile 并把环立到运动方向上
+ *   （`orient: velocity`）；hit 由内向外炸。
+ * 数：`data.rings`（准备期固定下来的环数）驱动 unstable 与 hit 的发射量，`data.intensity`（同一强度）抬高
+ *   亮度与尺寸——玩家因此能在出手前和命中后都读出这一发是强是弱。
  */
 const PsywaveDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -32,6 +33,16 @@ const PsywaveDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.16, 0.03],
                     color: 0xE6DCFF, alpha: [0.9, 0], light: "full", maxParticles: 24
+                },
+                {
+                    // 准备期就把本此摇到的环数亮出来：玩家出手前便能读出这一发的强弱。
+                    name: "pulse", bind: "source", offset: [0, 0.1, 0], height: 0.66, orient: "fixed",
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: { data: "rings", fallback: 3 }, interval: 3, repeats: 2 },
+                    shape: { kind: "ring", radius: 0.42 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    lifetime: [8, 16], size: [0.32, 0.8],
+                    color: 0x8E6FE0, alpha: [0.75, 0], light: "full", maxParticles: 32
                 }
             ]
         },

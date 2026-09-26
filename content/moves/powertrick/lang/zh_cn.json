@@ -20,10 +20,13 @@
   "worldcombat.skill.powertrick.preference.ai.maxChase": "戏法距离",
   "worldcombat.skill.powertrick.preference.ai.maxChase.help": "威胁进入这个距离内才考虑戏法；越大越早把形态翻好。",
   "worldcombat.skill.powertrick.preference.ai.minGap": "贴身下限",
-  "worldcombat.skill.powertrick.preference.ai.minGap.help": "威胁近于这个距离时不再翻面、直接应对；调大更常在近身时放弃戏法。",
+  "worldcombat.skill.powertrick.preference.ai.minGap.help": "还没翻面时，威胁近于这个距离就先不摆姿态；调大更常在近身时放弃初次翻面（翻回不受它限制）。",
   "worldcombat.skill.powertrick.preference.ai.minEdge": "最小差距",
-  "worldcombat.skill.powertrick.preference.ai.minEdge.help": "攻防差距（大值 / 小值）小于它就不翻；调高只在高攻或高防的极端个体上才演，避免无意义的来回。",
+  "worldcombat.skill.powertrick.preference.ai.minEdge.help": "还没翻面时，攻防差距（大值 / 小值）小于它就不翻；翻回不受它限制。调高只在高攻或高防的极端个体上才演，避免无意义的来回。",
+  "worldcombat.skill.powertrick.preference.ai.low": "低血阈值",
+  "worldcombat.skill.powertrick.preference.ai.low.help": "血量比例低于它就算「低血」：翻成攻势形时会主动翻回守势保命，调高更早翻回、调低更晚。",
   "effect.world_combat.powertrick_hold": "力量戏法",
   "world_combat.move.powertrick.text.trick": "攻/防对调：%1$s ↔ %2$s",
-  "world_combat.move.powertrick.text.revert": "攻/防归位：%1$s ↔ %2$s"
+  "world_combat.move.powertrick.text.revert": "攻/防归位：%1$s ↔ %2$s",
+  "world_combat.move.powertrick.text.invalid": "这两股力道无法对调"
 }

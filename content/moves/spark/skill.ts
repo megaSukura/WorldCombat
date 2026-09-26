@@ -4,6 +4,9 @@
  * 核心念头：贴身的一点电——电花从全身窜起，一个箭步贴上去，撞实的一刻把电流灌进对方。
  * 它是本族里射程最短、出手最快、循环最短、也最没有代价的一招；对已经残血的目标尤其狠，适合收尾。
  *
+ * 选取 `kind: "aim"`：短方向或世界点都能扑，`target` 为 null 时沿提交朝向照常突进，不因没有敌人就提前结束；
+ * 真实撞上第一个可命中活体才结算，友方与方块只挡路。
+ *
  * 两幕：
  *   起（windup，提交前）：电花从全身窜起、向内收拢，只播预告。
  *   撞（dash → zap / fizzle）：提交后逐刻沿瞄准方向突进；trace 撞上活体即按 jolt 结算接触伤害，
@@ -25,9 +28,9 @@ namespace PokemonSkills {
         id: "spark",
         cooldownParameter: "recharge",
         name: "Spark",
-        description: "迅速撞击目标，有机会使其麻痹。对残血目标的伤害更高。",
+        description: "朝瞄准的短方向一个带电箭步扑上去，撞到的第一个敌人受到伤害、被顶开，并有机会麻痹；对残血目标伤害更高。",
         uses: ["贴身把还没麻痹的对手挂上麻痹", "用最短的一手收掉一个残血的目标", "在缠斗里高频骚扰、逼对手换位"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.0,
         maxRange: 3.8,
         prepare: 5,
@@ -69,8 +72,13 @@ namespace PokemonSkills {
             const numbTicks = Math.round(p("spark", "numbTicks", action));
             const arcs = Math.round(p("spark", "arcs", action));
             const push = p("spark", "push", action);
-            const overcharge = !!(config && config.overcharge);
-            const direction = aim(action);
+            // 贴地箭步：把瞄准方向压成水平，避免垂直分量让身体扫到地面而被挡停。
+            const aimed = aim(action);
+            const level = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const flat = level.length() > 0.001 ? level : WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            const direction = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
+            // 方向已冻结：目标离场或死亡不再中断这一箭步，空放沿提交朝向继续。
+            action.releaseTarget();
             const scale = radius / 0.45;
             const intensity = Math.max(0.6, Math.min(2.2, power / 68));
             const start = action.origin();
@@ -80,7 +88,7 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.thundershock.actor");
             movementScenes.show(action, "dash", start, { moment: "dash", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    arcs: arcs, scale: scale, intensity: intensity, overcharge: overcharge ? 1 : 0 });
+                    arcs: arcs, scale: scale, intensity: intensity });
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
@@ -119,7 +127,7 @@ namespace PokemonSkills {
                     sound(current, "cobblemon:move.thundershock.target");
                     sound(current, "cobblemon:impact.electric");
                     if (landed && target !== null && scope.valid(target)) {
-                        scope.displace(target, direction.scale(push));
+                        scope.hitDisplace(target, direction.scale(push));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), sparkHitText, [], 24);
                         if (finisher) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.7, 0)), sparkFinishText, [], 26);
                         if (!already && CombatStatus.has(scope, target, "paralysis"))
@@ -131,7 +139,7 @@ namespace PokemonSkills {
                 const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { fizzle(current); return; }
-                movementScenes.show(current, "wake", origin, { moment: "wake", arcs: arcs, scale: scale, intensity: intensity });
+                movementScenes.show(current, "wake", origin, { moment: "wake", arcs: arcs, scale: scale });
                 current.after(1, advance);
             }
 

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.gunkshot.summary": "把一大团脏垃圾压进身体、当炮弹直线轰出去：这一族唯一的物理重击，命中的话伤得很重、把目标狠狠顶开、可能中毒；但炮弹带偏角，离得越远越容易打偏。重装取向更狠更飘，轻装取向更稳更快。",
+  "worldcombat.skill.gunkshot.summary": "把一大团脏垃圾压进身体、当炮弹直线轰出去（也可对空地点开炮）：这一族唯一的物理重击，命中的话伤得很重、把目标狠狠顶开、可能中毒；但炮弹带偏角，离得越远越容易打偏。撞墙只糊一次污，空飞在真实轨迹末端散落。重装取向更狠更飘，轻装取向更稳更快。",
   "worldcombat.skill.gunkshot.use.0": "远距离一发很重的物理打击",
   "worldcombat.skill.gunkshot.use.1": "把冲上来的目标轰开",
   "worldcombat.skill.gunkshot.use.2": "用可能打偏的一炮赌一次高收益",
@@ -34,5 +34,6 @@
   "world_combat.move.gunkshot.text.hit": "轰中了",
   "world_combat.move.gunkshot.text.poison": "中毒了",
   "world_combat.move.gunkshot.text.immune": "不吃中毒",
-  "world_combat.move.gunkshot.text.whiff": "打偏了"
+  "world_combat.move.gunkshot.text.whiff": "打偏了",
+  "world_combat.move.gunkshot.text.wall": "糊在墙上"
 }

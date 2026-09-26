@@ -1,13 +1,13 @@
 /**
  * 龙锤 / dragonhammer 的客户端表现。
  *
- * 一句话：施法者弓身扬起、龙气沿身体向上收拢，随后整个身体自上而下砸在目标点，砸出一圈龙属冲击与碎屑，
- * 目标身上的龙气顺着砸击方向被撞开、趴伏在地（速度大幅下降）。
- * 色相家族：龙紫（0x9A7BE0 / 0xB79AF0 / impact_dragon / energyorb）为主体，近白只做砸中一刻的核心。
- * 拍子：起（rear 弓身聚龙气）→ 砸（impact 落点一圈冲击 + 目标被撞飞、砸趴）→ 收（whiff 砸空）。
- * 范围：这招只作用在贴身一个目标身上，所以每层都绑 `target`（或施法者 `source`），没有地面圈。
- * 运动：龙气起手时向上收拢、砸下时沿落点向外炸开；碎屑带重力散落。
- * 数：`data.dust`（体重与物攻派生）决定冲击碎屑量，`data.scale`（体型派生）控制尺寸，
+ * 一句话：施法者弓身扬起、龙气沿身体向上收拢，随后从身体前上端落下一道宽大的龙纹锤影，沿真实垂直弧砸到接触点，
+ *   命中一声闷响、目标被撞开，只留一小片短尘；没砸中就只有一点落空尘。
+ * 色相家族：龙紫（0x7078C8 / 0x9A7BE0 / 0xC9B4F2）为主体，近白只做砸中一刻的核心。
+ * 拍子：起（rear 弓身聚龙气）→ 砸（swing 锤影沿真实弧逐刻扫过、与判定同一条路径）→ 落（impact 接触点闷响／whiff 落空短尘）。
+ * 范围：swing 的锤影绑 `data.path`（本刻真正扫过的那一段弧），命中绑真实接触点，不做全身乱球或圆爆。
+ * 运动：龙气起手时向上收拢；swing 的锤影沿弧逐刻向下；碎屑带重力短促散落。
+ * 数：`data.dust`（体重与物攻派生）决定接触碎屑量，`data.scale`（体型派生）控制尺寸，
  *   `data.intensity`（本击威力派生）抬高命中亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -36,12 +36,42 @@ const DragonhammerDefinition: ParticleDefinition = {
                 }
             ]
         },
-        impact: {
-            duration: 30,
-            exit: { stop: 12, drain: 22 },
+        swing: {
+            exit: { drain: 8 },
             emitters: [
                 {
-                    name: "burst", bind: "target", height: 0.5,
+                    name: "shadow", bind: "path", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/energyorb",
+                    shape: { kind: "polyline" },
+                    rate: 60, direction: "outward", speed: [0.02, 0.1], spread: 10,
+                    lifetime: [5, 10], size: [0.52, 0.1], sizeMode: "index",
+                    color: 0x9A7BE0, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 120
+                },
+                {
+                    name: "edge", bind: "path", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
+                    shape: { kind: "polyline" },
+                    rate: 34, direction: "outward", speed: [0.01, 0.06],
+                    lifetime: [5, 10], size: [0.28, 0.05], sizeMode: "index",
+                    color: 0xC9B4F2, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 80
+                },
+                {
+                    name: "grit", bind: "path", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    shape: { kind: "polyline" },
+                    rate: 22, direction: "outward", speed: [0.03, 0.12],
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [7, 13], size: [0.07, 0.02],
+                    color: 0x8A7A98, alpha: [0.6, 0], light: "world", maxParticles: 80
+                }
+            ]
+        },
+        impact: {
+            duration: 26,
+            exit: { stop: 10, drain: 16 },
+            emitters: [
+                {
+                    name: "crush", bind: "point", offset: [0, 0.35, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
                     burst: { count: { data: "dust", fallback: 20 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
@@ -50,58 +80,49 @@ const DragonhammerDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 70
                 },
                 {
-                    name: "shock", bind: "target", offset: [0, -0.4, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: 0.5 },
-                    direction: "outward", speed: [0.1, 0.35], spread: 6,
-                    lifetime: [10, 18], size: [0.6, 1.1], sizeMode: "linear",
-                    color: 0x9A7BE0, alpha: [0.7, 0], light: "full", maxParticles: 20
-                },
-                {
-                    name: "debris", bind: "target", offset: [0, -0.3, 0], height: 0.1, fit: "none",
+                    name: "debris", bind: "point", offset: [0, -0.2, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dust", fallback: 12 }, at: 0 },
-                    shape: { kind: "sphere_surface", radius: 0.4 },
+                    shape: { kind: "sphere_surface", radius: 0.36 },
                     direction: "outward", speed: [0.08, 0.28], spread: 20,
-                    gravity: 0.05, drag: 0.9,
-                    lifetime: [10, 20], size: [0.14, 0.03],
+                    gravity: 0.06, drag: 0.9,
+                    lifetime: [8, 16], size: [0.13, 0.03],
                     color: 0x8A7A98, alpha: [0.8, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "energy", bind: "source", offset: [0, 0.9, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/orb/energyorb",
-                    burst: { count: 10, at: 0 },
-                    shape: { kind: "sphere", radius: 0.5 },
-                    direction: "down", speed: [0.15, 0.5], spread: 16,
-                    lifetime: [8, 14], size: [0.3, 0.05],
-                    color: 0xC9B4F2, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
+                    name: "stagger", bind: "point", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    burst: { count: { data: "stagger", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "up", speed: [0.02, 0.07], spread: 12,
+                    lifetime: [10, 16], size: [0.12, 0.03],
+                    color: 0xC9B4F2, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 20
                 }
             ]
         },
         whiff: {
             duration: 18,
-            exit: { stop: 7, drain: 14 },
+            exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "puff", bind: "source", offset: [0, 0.2, 0.3], height: 0.1, fit: "none",
+                    name: "puff", bind: "point", offset: [0, 0.15, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: 12, at: 0 },
-                    shape: { kind: "ring", radius: 0.5 },
-                    direction: "outward", speed: [0.05, 0.2], spread: 14,
-                    gravity: 0.02, drag: 0.9,
-                    lifetime: [10, 18], size: [0.24, 0.06],
-                    color: 0x8A7A98, alpha: [0.4, 0], light: "world", maxParticles: 24
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.04, 0.18], spread: 14,
+                    gravity: 0.03, drag: 0.9,
+                    lifetime: [8, 15], size: [0.3, 0.08],
+                    color: 0x8A7A98, alpha: [0.45, 0], light: "world", maxParticles: 24
                 },
                 {
-                    name: "dust", bind: "source", offset: [0, 0.15, 0.3], height: 0.1, fit: "none",
+                    name: "dust", bind: "point", offset: [0, 0.1, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 16, at: 0 },
+                    burst: { count: { data: "dust", fallback: 16 }, at: 0 },
                     shape: { kind: "circle", radius: 0.5, thickness: 0.7 },
                     direction: "outward", speed: [0.04, 0.18], spread: 16,
-                    gravity: 0.02, drag: 0.92,
-                    lifetime: [8, 16], size: [0.06, 0.01],
-                    color: 0xA89AB8, alpha: [0.5, 0], light: "world", maxParticles: 40
+                    gravity: 0.03, drag: 0.92,
+                    lifetime: [8, 15], size: [0.07, 0.02],
+                    color: 0xA89AB8, alpha: [0.55, 0], light: "world", maxParticles: 40
                 }
             ]
         }

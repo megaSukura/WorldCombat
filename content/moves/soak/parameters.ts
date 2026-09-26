@@ -5,17 +5,16 @@
  *   `onHit` 把目标的属性直接置成单一水属性，已经是纯水时失败。
  *
  * 世界化：即时战场用共享的临时属性层承载——往目标身上浇一道水柱，把它**当前的全部属性冲掉、换成单一水**。
- *   于是它自己得到水本系、防守面随之变成水的水抗与雷／草弱点。属性层由 NativeModifiers 的 types 层承担，
+  *   于是它自己得到水本系、防守面随之变成水的水抗与雷／草弱点。属性层由 NativeModifiers 的 types 层承担，
  *   到期自动还原原生属性；同时挂共享身份 `world_combat:status/soak` 的标记，别的作者可按身份消费。
- *   水浇过的地方会留下一小块湿泥（`world.terrain` 租借的真方块，水干了原方块回来）。
+ *   敌友都可以指：浇敌人是打开它的弱点，浇友方是替它挡下火／水／冰／钢、代价是怕雷怕草；空点只泼水。
  *
  * 每个参数是一棵公式，依赖分散在不同精灵数据上：
  *   reach    浇淋距离：体型与等级决定水柱能送到多远。它也是本招实际射程的来源。
  *   hold     浸透时长：等级与特攻决定水多难干，配置「漫流」把水摊薄、每只都更短。
  *   splash   漫流半径：体型宽度决定水花铺开的范围，也是判定圈与画面尺度。
- *   streaks  水柱条数：特攻决定从施法者冲到对手身上的水流条数（也驱动粒子数量）。
+ *   streaks  水柱条数：特攻决定从施法者冲到对象身上的水流条数（也驱动粒子数量）。
  *   ripples  水花圈数：速度决定落地后荡开的水花圈数（也驱动粒子数量）。
- *   puddle   湿泥留存：体重决定溅出的水量，以及那格湿泥留多久。
  *   tempo    起手：速度决定把水聚起来多快。
  *   aftercast 收势：特防决定浇完站得多稳。
  *   recharge 冷却：速度决定多久能再浇一次，漫流更费力。
@@ -47,9 +46,6 @@ namespace PokemonSkills {
         ripples: formula(
             F.base(6, "基础").plus(F.stat("speed").div(28).as("速度")).clamp(6, 18).round(),
             "水花圈数", { unit: "圈", description: "落地后一圈圈荡开的水花数量；速度越快越密。" }),
-        puddle: seconds(
-            F.base(90, "基础").plus(F.body("weight").div(600).as("体重")).clamp(70, 220).round(),
-            "湿泥留存", "被浇湿的表土留多久；越沉的目标溅出的水越多，湿泥留得越久。它是一格真方块，水干了原方块回来。"),
         tempo: seconds(
             F.base(9, "基础").minus(F.stat("speed").minus(40).times(0.05).clamp(-2, 4).as("速度")).clamp(5, 13).round(),
             "起手", "把水聚起来所需时间；速度越快起得越快。"),
@@ -69,7 +65,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["hold"] },
         { key: "description.3", values: [] },
         { key: "description.1", values: ["reach","tempo","aftercast"] },
-        { key: "description.2", values: ["splash", "puddle"] },
+        { key: "description.2", values: ["splash"] },
         { key: "flood.on", values: ["splash","recharge"], when: function (context) { return read(context.detail.values, ["flood"]) === true; } },
         { key: "flood.off", values: ["hold"], when: function (context) { return read(context.detail.values, ["flood"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

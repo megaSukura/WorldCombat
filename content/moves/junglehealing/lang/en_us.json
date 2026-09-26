@@ -23,7 +23,9 @@
   "worldcombat.skill.junglehealing.preference.ai.healBelow": "Healing threshold",
   "worldcombat.skill.junglehealing.preference.ai.healBelow.help": "The jungle is called when the user or an ally is below this health ratio; lower keeps attacking, higher heals at the first wound.",
   "worldcombat.skill.junglehealing.preference.ai.maxChase": "Rescue distance",
-  "worldcombat.skill.junglehealing.preference.ai.maxChase.help": "The jungle is considered only for a subject within this distance; lower keeps it close, higher closes a gap first.",
+  "worldcombat.skill.junglehealing.preference.ai.maxChase.help": "Only allies within this distance count toward the jungle ring; lower heals up close, higher walks over to cover more allies.",
+  "worldcombat.skill.junglehealing.preference.ai.rescueCount": "Rescue party size",
+  "worldcombat.skill.junglehealing.preference.ai.rescueCount.help": "With no harmful status, this many wounded allies (including the user) are needed before spending the costly group rescue; 1 heals a single small wound, higher saves it for a real party rescue.",
   "world_combat.move.junglehealing.text.embrace": "The jungle wraps in, +%1$s, cleansed %2$s",
-  "worldcombat.skill.junglehealing.description.condition": "The jungle is not called when nobody in the ring is wounded or carrying a harmful status; natural ground underfoot (grass, dirt, moss, mud and the like) adds 5 percentage points of healing and 0.5 blocks of radius, which deep roots scale up too."
+  "worldcombat.skill.junglehealing.description.condition": "The jungle is not called when nobody in the ring is wounded or carrying a harmful status; a single small wound with nobody afflicted will not make the AI spend this group rescue. Natural ground underfoot (grass, dirt, moss, mud and the like) adds 5 percentage points of healing and 0.5 blocks of radius, which deep roots scale up too."
 }

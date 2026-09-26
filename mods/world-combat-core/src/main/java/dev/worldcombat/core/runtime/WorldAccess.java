@@ -12,15 +12,29 @@ public final class WorldAccess {
     private final boolean writable;
     private final long owner;
     private final long epoch;
+    private final ExecutionOrigin inheritedOrigin;
     public WorldAccess(ActionRuntime runtime, ActorHandle source, UUID controller, Runnable guard, boolean writable, long owner) {
+        this(runtime, source, controller, guard, writable, owner, null);
+    }
+    public WorldAccess(ActionRuntime runtime, ActorHandle source, UUID controller, Runnable guard, boolean writable, long owner, ExecutionOrigin origin) {
         this.runtime = runtime; this.source = source; this.controller = controller; this.guard = guard;
         this.writable = writable; this.owner = owner; epoch = runtime.content.epoch();
+        inheritedOrigin = origin != null && origin.belongsTo(source) ? origin : null;
     }
     public void check() {
         runtime.host.checkThread(); guard.run();
         if (epoch != runtime.content.epoch() || !runtime.content.ready()) throw new ActionInactiveException("World scope expired");
     }
     public ActorHandle source() { check(); return source; }
+    private ExecutionOrigin origin() { return inheritedOrigin != null ? inheritedOrigin : runtime.origin(owner); }
+    /** Empty outside an attributed execution; the same token follows its derived effects and projectiles. */
+    public String originInstance() { check(); var origin = origin(); return origin == null ? "" : origin.instance(); }
+    public String originData(String key) { check(); EffectData.id(key); var origin = origin(); return origin == null ? null : origin.data(key); }
+    public void originData(String key, String value) {
+        requireMutation(source); var origin = origin();
+        if (origin == null) throw new IllegalStateException("No originating execution in this scope");
+        origin.data(key, value);
+    }
     public long tick() { check(); return runtime.now(); }
     public boolean valid(ActorHandle target) { check(); return runtime.host.valid(target) && runtime.host.sameWorld(source, target); }
     public void requireMutation(ActorHandle target) {
@@ -41,6 +55,12 @@ public final class WorldAccess {
             throw new ActionRejectedException("out-of-range");
     }
     public WorldObservation observe(ActorHandle target) { check(); return runtime.host.observe(source, target); }
+    /** Project a world point onto this live body's actual AABB; does not grant damage permission. */
+    public Point closestPoint(ActorHandle target, Point point) {
+        check();
+        if (point == null || !runtime.host.valid(target) || !runtime.host.sameWorld(source, target)) throw new ActionRejectedException("target-left");
+        return runtime.host.closestPoint(target, point);
+    }
     public EquipmentObservation[] equipment(ActorHandle target) { check(); return runtime.host.equipment(source, target); }
     /**
      * Compare-and-set removal of a native equipment stack from any source. {@code provider} is the snapshot's
@@ -100,6 +120,32 @@ public final class WorldAccess {
         requireMutation(target); selector(provider, slot); json(expected, 8192);
         return runtime.host.equipmentTakeResult(target, provider, slot, index, expected == null ? "" : expected, count);
     }
+    /** Explicit consumption, distinct from taking, dropping or exchanging a stack. */
+    public String equipmentConsumeResult(ActorHandle holder, String provider, String slot, int index, String expected, int count) {
+        return equipmentConsumeResult(holder, provider, slot, index, expected, count, holder);
+    }
+    public String equipmentConsumeResult(ActorHandle holder, String provider, String slot, int index, String expected, int count, ActorHandle consumer) {
+        requireMutation(consumer);
+        if (count < 1) throw new IllegalArgumentException("Consumption requires a positive count");
+        var receipt = equipmentTakeResult(holder, provider, slot, index, expected, count);
+        var data = com.google.gson.JsonParser.parseString(receipt).getAsJsonObject();
+        if (data.get("ok").getAsBoolean() && data.get("count").getAsInt() > 0) {
+            data.addProperty("provider", provider); data.addProperty("slot", slot); data.addProperty("index", index);
+            data.addProperty("operator", source.ref());
+            var execution = origin(); if (execution != null && !execution.belongsTo(consumer)) execution = null;
+            ExecutionOrigin.stamp(data, execution);
+            runtime.event("world_combat:item_consumed", consumer, holder, data.toString(), true, execution);
+        }
+        return receipt;
+    }
+    /** Atomic transfer from one exact native dropped stack into an empty equipment slot. */
+    public String equipmentCollectResult(ActorHandle target, String provider, String slot, int index, String expected,
+                                         String entity, String expectedDrop, int count) {
+        requireMutation(target); selector(provider, slot); json(expected, 8192); json(expectedDrop, 8192);
+        if (count < 1 || count > 64) throw new IllegalArgumentException("Invalid pickup count");
+        UUID.fromString(entity);
+        return runtime.host.equipmentCollectResult(source, target, provider, slot, index, expected == null ? "" : expected, entity, expectedDrop, count);
+    }
     /** Readable receipt for the CAS drop; `drop` is the item entity UUID, `reason` the refusal. */
     public String equipmentDropResult(ActorHandle target, String provider, String slot, int index, String expected, String data) {
         return equipmentDropResult(target, provider, slot, index, expected, data, 0);
@@ -153,6 +199,29 @@ public final class WorldAccess {
     }
     public AttributeObservation attributeValue(ActorHandle target, String id) {
         check(); EffectData.id(id); return runtime.host.attributeValue(source, target, id);
+    }
+    public Point[] terrainCells(long id) { check(); return runtime.host.terrainCells(source, id); }
+    public boolean transferMobEffect(ActorHandle from, ActorHandle to, String id, String expected) {
+        requireMutation(from);requireMutation(to);EffectData.id(id);
+        if(expected==null) throw new IllegalArgumentException("Invalid effect comparison key");
+        return runtime.host.transferMobEffect(source,from,to,id,expected,origin());
+    }
+    public boolean transferMobEffect(ActorHandle from, ActorHandle to, String id, String expected, String replacement) {
+        requireMutation(from);requireMutation(to);EffectData.id(id);
+        if(expected==null) throw new IllegalArgumentException("Invalid effect comparison key");
+        return runtime.host.transferMobEffect(source,from,to,id,expected,EffectData.copy(replacement),origin());
+    }
+    public boolean replaceMobEffect(ActorHandle target,String id,String expected,int ticks,int amplifier) {
+        requireMutation(target);EffectData.id(id);
+        if(expected==null)throw new IllegalArgumentException("Invalid effect comparison key");
+        return runtime.host.replaceMobEffect(source,target,id,expected,ticks,amplifier,origin());
+    }
+    public boolean groundLift(ActorHandle target, double height, double speed, double probe) {
+        requireMutation(target); return move(target) && runtime.host.groundLift(owner,target,height,speed,probe);
+    }
+    public int suppressEquipment(ActorHandle target) { requireMutation(target); return runtime.host.suppressEquipment(owner, target); }
+    public AttributeObservation attributeValue(ActorHandle target, String id, boolean excludeOwned) {
+        check(); EffectData.id(id); return runtime.host.attributeValue(source, target, id, excludeOwned ? owner : 0);
     }
     public MobEffectObservation mobEffect(ActorHandle target, String id) {
         check(); EffectData.id(id);
@@ -237,8 +306,31 @@ public final class WorldAccess {
     }
     public ActorHandle[] query(Point centre, double radius, boolean visibleOnly) {
         check(); nearby(centre);
-        if (!Double.isFinite(radius) || radius <= 0 || radius > 32) throw new IllegalArgumentException("Query radius outside bounds");
+        queryRadius(radius);
         return runtime.host.query(source, centre, radius, visibleOnly);
+    }
+    public String projectiles(Point centre, double radius) {
+        check(); nearby(centre); queryRadius(radius);
+        return runtime.host.projectiles(source, centre, radius);
+    }
+    public boolean interceptProjectile(String id) {
+        return interceptProjectile(id, false);
+    }
+    public boolean interceptProjectile(String id, boolean includeNonHostile) {
+        requireMutation(source);
+        return runtime.host.interceptProjectile(source, controller, UUID.fromString(id), includeNonHostile);
+    }
+    private static void queryRadius(double radius) {
+        if (!Double.isFinite(radius) || radius <= 0 || radius > 32) throw new IllegalArgumentException("Query radius outside bounds");
+    }
+    public ActorHandle[] queryBox(Point min, Point max, boolean visibleOnly) {
+        check();
+        if (min.x() > max.x() || min.y() > max.y() || min.z() > max.z()) throw new IllegalArgumentException("Reversed query box");
+        nearby(min.plus(max).scale(0.5)); queryRadius(max.minus(min).length() / 2);
+        return runtime.host.queryBox(source, min, max, visibleOnly);
+    }
+    public Impact clipBlocks(Point from, Point to) {
+        check(); nearby(from); nearby(to); return runtime.host.clipBlocks(source, from, to);
     }
     /**
      * One call that observes everyone `query` would return, as a JSON array of plain subjects. Behavior code reads a
@@ -326,16 +418,20 @@ public final class WorldAccess {
     public boolean teleport(ActorHandle target, Point point) { requireMutation(target); nearby(point); return move(target) && runtime.host.teleport(source, target, point, controller); }
     public boolean swap(ActorHandle first, ActorHandle second) { requireMutation(first); requireMutation(second); return move(first) && move(second) && runtime.host.swap(source, first, second, controller); }
     public double health(ActorHandle target, double delta, String cause) {
+        return health(target, delta, cause, 0);
+    }
+    public double health(ActorHandle target, double delta, String cause, double minimumHealth) {
         requireMutation(target); EffectData.id(cause);
+        if (!Double.isFinite(minimumHealth) || minimumHealth < 0 || minimumHealth > Float.MAX_VALUE) throw new IllegalArgumentException("Invalid minimum health");
         if (delta == 0) return 0;
         NativeAmounts.delta(delta);
-        return runtime.host.health(source, target, controller, delta, cause);
+        return runtime.host.health(source, target, controller, delta, cause, minimumHealth);
     }
     public boolean hurt(ActorHandle target, double amount, String metadata) {
         requireMutation(target);
         if (amount == 0) return false;
         NativeAmounts.positive(amount);
-        return runtime.host.damage(source, target, controller, amount, EffectData.copy(metadata));
+        return runtime.host.damage(source, target, controller, amount, metadata, origin());
     }
     /** Named handlers belong to the enclosing managed effect; bare hooks attach an effect first. */
     public String projectile(Point origin, Point velocity, double gravity, double radius, double range, int lifetime,
@@ -366,7 +462,7 @@ public final class WorldAccess {
     public void marker(ActorHandle target, String id, int ticks, int amplifier) {
         requireMutation(target); EffectData.id(id);
         if (ticks < -1 || ticks > 1728000 || amplifier < 0 || amplifier > 255) throw new IllegalArgumentException("Invalid marker");
-        runtime.host.marker(target, id, ticks, amplifier);
+        runtime.host.marker(source, target, id, ticks, amplifier, origin());
     }
     public long terrain(String cells, int ticks) {
         requireMutation(source);
@@ -412,6 +508,35 @@ public final class WorldAccess {
         if (!move(target)) return false;
         if (!Double.isFinite(velocity.length()) || velocity.length() > 4) throw new IllegalArgumentException("Velocity exceeds the step budget");
         return runtime.host.motion(target, velocity, add);
+    }
+    private boolean receivedMovementTarget(ActorHandle target) {
+        if (!runtime.host.valid(target) || !runtime.host.sameWorld(source, target)) return false;
+        nearby(runtime.host.position(target));
+        return true;
+    }
+    /** Vanilla received knockback; an unavailable recipient is a normal refusal after source authorization. */
+    public boolean knockback(ActorHandle target, double strength, Point direction) {
+        requireMutation(source);
+        if (!Double.isFinite(strength) || strength < 0 || strength > 4 || direction == null || !Double.isFinite(direction.length()))
+            throw new IllegalArgumentException("Invalid received knockback");
+        if (!receivedMovementTarget(target)) return false;
+        return runtime.host.knockback(source, target, controller, strength, direction);
+    }
+    /** Adds a received 3D velocity impulse, honoring native knockback event and resistance. */
+    public boolean hitImpulse(ActorHandle target, Point velocity) {
+        requireMutation(source);
+        if (velocity == null || !Double.isFinite(velocity.length()) || velocity.length() > 4)
+            throw new IllegalArgumentException("Received impulse exceeds the step budget");
+        if (!receivedMovementTarget(target)) return false;
+        return runtime.host.hitImpulse(source, target, controller, velocity);
+    }
+    /** Received displacement in blocks, applying the same native event/resistance policy before collision. */
+    public double hitDisplace(ActorHandle target, Point delta) {
+        requireMutation(source);
+        if (delta == null || !Double.isFinite(delta.length()) || delta.length() > 4)
+            throw new IllegalArgumentException("Received displacement exceeds the step budget");
+        if (!receivedMovementTarget(target)) return 0;
+        return runtime.host.hitDisplace(source, target, controller, delta);
     }
     private static void json(String value, int limit) { if (value == null || value.length() > limit) throw new IllegalArgumentException("Invalid JSON argument"); }
     /** Places a block state lastingly (protection mods and the mobGriefing rule apply). Empty result = placed, otherwise the reason. */
@@ -477,7 +602,7 @@ public final class WorldAccess {
     public ActorHandle helperSource(ActorHandle target) { check(); return runtime.host.helperSource(target); }
     public String helperData(ActorHandle target) { check(); return runtime.host.helperData(target); }
     public long effect(String definition, ActorHandle target, String data, int ticks) {
-        requireMutation(target); return runtime.effects().create(definition, source, target, controller, owner > 0 ? owner : 0, data, ticks);
+        requireMutation(target); return runtime.effects().create(definition, source, target, controller, owner > 0 ? owner : 0, data, ticks, origin());
     }
     public EffectRuntime.View[] effects(ActorHandle target, String definition) {
         check();
@@ -493,19 +618,29 @@ public final class WorldAccess {
     public boolean operation(long id, String operation, String data) {
         requireMutation(source); return runtime.effects().operate(id, operation, source, controller, data);
     }
+    /** JSON {updates:[{id,expected,data}]}; raw stored expected/data strings, with all-or-none replacement before notifications. */
+    public boolean compareEffectStates(String data) {
+        requireMutation(source); return runtime.effects().compareStates(source, controller, data);
+    }
     public String signal(String event, int version, ActorHandle target, String data) {
         requireMutation(target); return runtime.effects().emit(event, version, source, target, controller, data, "scope", owner);
     }
     public void particle(Point point) { check(); nearby(point); runtime.host.particle(source, point); }
     public void present(String key, String type, int version, Point point, String data) {
         requireMutation(source); nearby(point); EffectData.key(key); EffectData.id(type);
-        if (version < 1 || version > 1000 || data == null || data.length() > 2048) throw new IllegalArgumentException("Invalid presentation");
+        if (version < 1 || data == null) throw new IllegalArgumentException("Invalid presentation");
         runtime.host.present(owner, source, key, type, version, point, EffectData.copy(data));
+    }
+    /** Attach a presentation to this source's existing managed effect, including its early removal/reload cleanup. */
+    public boolean presentOn(long effect, String key, String type, int version, Point point, String data) {
+        requireMutation(source); nearby(point); EffectData.key(key); EffectData.id(type);
+        if (version < 1) throw new IllegalArgumentException("Invalid presentation version");
+        return runtime.effects().present(effect, source, controller, key, type, version, point, EffectData.copy(data));
     }
     /** A bounded receipt survives owner release; the wire includes the release tick and reason. */
     public void presentFor(String key, String type, int version, Point point, String data, int ticks) {
         requireMutation(source); nearby(point); EffectData.key(key); EffectData.id(type);
-        if (owner == 0 || version < 1 || version > 1000 || data == null || data.length() > 4096 || ticks < 1 || ticks > 200)
+        if (owner == 0 || version < 1 || data == null || ticks < 1 || ticks > 200)
             throw new IllegalArgumentException("Invalid presentation receipt");
         runtime.host.presentFor(owner, source, key, type, version, point, EffectData.copy(data), ticks);
     }

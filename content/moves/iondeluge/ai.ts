@@ -1,13 +1,16 @@
 /**
  * 等离子浴 / Ion Deluge — 伙伴 AI 用途与自己的出手计划。
  *
- * 浴场是区域铺场，收益与风险都在「铺在哪」：
- *   何时考虑  有 threat 在 ai.maxChase 之内、这招就绪、自己目前没站在已有的离子浴里（不浪费）。
+ * 浴场是区域铺场，收益与风险都在「铺在哪」。它只把一般属性招式变成电，所以只在能算出实际收益时铺：
+ *   何时考虑  有 threat 在 ai.maxChase 之内、这招就绪、自己目前没站在已有的离子浴里、没有重叠的旧场。
+ *   铺不铺    只在本方（自己或附近伙伴）有一个电属性且带一般属性招式的攻击者（改电后吃本系），
+ *             或者威胁确定会出一般属性招式、而本方有地面系免疫者会把它改出来的电招吃掉时。未知来源的
+ *             普通攻击一律不当作一般属性，所以不会为主观猜测铺场。
  *   铺在哪    ai.placement = towardThreat 时压在对手与自己之间，让交战线落在浴场里；
  *             underSelf 时罩住自己，适合自己要用一般属性招式、或想把安全区放在脚下。
  *   对谁出手  地面一点；由共用任务走到 reach 后按 choice 的落点施放。
  *   放完之后  区域内双方都会被电离，随后把伤害交回共用交战计划；自己站在浴里时不再重复铺。
- *   优先级    插在 world_combat:defend 之前，让它作为开打前的场地准备。
+ *   优先级    插在 world_combat:defend 之前，让它作为开打前的场地准备；已有重叠场时降一档，不抢着再铺。
  * ai.leaveStation：驻守中的伙伴是否愿意离位去铺场。
  */
 namespace CompanionBehavior {
@@ -26,6 +29,61 @@ namespace CompanionBehavior {
         for (let i = 0; i < items.length; i++) if (items[i].data.move === "iondeluge") return items[i];
         return null;
     }
+    /** The native individual behind a subject, or null for ordinary mobs and unknown mod bodies. */
+    function ionPokemon(context: WorldBehavior.Context, subject: Entity): CombatPokemon | null {
+        const actor = world(context).actor(subject.ref);
+        if (!actor || String(actor.domain()) !== "cobblemon") return null;
+        return CobblemonCombat.pokemon(actor);
+    }
+    /** Only a known native individual's loadout is read; an unknown attacker is never assumed to be Normal. */
+    function ionKnowsNormal(context: WorldBehavior.Context, subject: Entity): boolean {
+        const pokemon = ionPokemon(context, subject);
+        if (!pokemon) return false;
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const move = pokemon.move(slot);
+            if (move && String(move.type()).toLowerCase() === "normal") return true;
+        }
+        return false;
+    }
+    /** Effective types from the shared native facts, so type-rewrite layers count too. */
+    function ionHasType(context: WorldBehavior.Context, subject: Entity, type: string): boolean {
+        const access = world(context), actor = access.actor(subject.ref);
+        if (!actor || String(actor.domain()) !== "cobblemon") return false;
+        const types = NativeEffects.types(CobblemonCombat.pokemon(actor), NativeEffects.read(access, actor));
+        for (let i = 0; i < types.length; i++) if (String(types[i]).toLowerCase() === type) return true;
+        return false;
+    }
+    /** An Electric attacker carrying a Normal move turns that move into a same-type Electric hit inside the bath. */
+    function ionAttackerBenefit(context: WorldBehavior.Context, subject: Entity): boolean {
+        return ionHasType(context, subject, "electric") && ionKnowsNormal(context, subject);
+    }
+    function ionGroundWall(context: WorldBehavior.Context, subject: Entity): boolean {
+        return ionHasType(context, subject, "ground");
+    }
+    function ionAllyBenefit(context: WorldBehavior.Context): boolean {
+        const self = source(context), reach = 8;
+        if (ionAttackerBenefit(context, self)) return true;
+        const nearby: Entity[] = context.facts.nearby || [];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (!other.friendly || other.health <= 0 || !other.visible) continue;
+            if (distance(self.point, other.point) <= reach && ionAttackerBenefit(context, other)) return true;
+        }
+        return false;
+    }
+    /** The threat's known Normal moves become Electric, which a Ground-type on our side is immune to. */
+    function ionCounterBenefit(context: WorldBehavior.Context, threat: Entity): boolean {
+        if (!ionKnowsNormal(context, threat)) return false;
+        const self = source(context), reach = 8;
+        if (ionGroundWall(context, self)) return true;
+        const nearby: Entity[] = context.facts.nearby || [];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (!other.friendly || other.health <= 0 || !other.visible) continue;
+            if (distance(self.point, other.point) <= reach && ionGroundWall(context, other)) return true;
+        }
+        return false;
+    }
     /** Standing in an existing ion bath makes this cast pointless. */
     function ionInsideField(context: WorldBehavior.Context): boolean {
         const access = world(context), self = source(context);
@@ -34,18 +92,27 @@ namespace CompanionBehavior {
             if (distance(areas[i].position, self.point) <= areas[i].radius) return true;
         return false;
     }
+    /** A live bath already covering the threat's ground means another cast adds little. */
+    function ionOverlaps(context: WorldBehavior.Context, threat: Entity | null): boolean {
+        if (!threat) return false;
+        const areas = WorldEffects.areas(world(context), PokemonSkills.ionField);
+        for (let i = 0; i < areas.length; i++)
+            if (distance(areas[i].position, threat.point) <= areas[i].radius + 1) return true;
+        return false;
+    }
     function ionWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity | null): boolean {
         const self = source(context);
         if (!threat || threat.health <= 0 || !threat.visible || threat.friendly) return false;
         if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
-        return !ionInsideField(context);
+        if (ionInsideField(context)) return false;
+        return ionAllyBenefit(context) || ionCounterBenefit(context, threat);
     }
 
     registerUse("iondeluge", {
         protocols: ["world_combat:prepare"],
         reach: function (_context, item) { return item.data.range; },
-        priority: function () { return 55; },
+        priority: function (context) { return ionOverlaps(context, context.senses["world_combat:threat"]) ? 30 : 55; },
         available: function (context, item, _purpose, _target) { return ionWants(context, item, context.senses["world_combat:threat"]); }
     });
     registry.goal({ id: "world_combat:move_iondeluge/goal", propose: function (context) {

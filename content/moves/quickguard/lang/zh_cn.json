@@ -22,7 +22,7 @@
   "worldcombat.skill.quickguard.preference.brace.1": "抢拍",
   "worldcombat.skill.quickguard.preference.brace.0": "稳架",
   "worldcombat.skill.quickguard.preference.ai.trigger": "反应距离",
-  "worldcombat.skill.quickguard.preference.ai.trigger.help": "威胁进入这个距离就考虑架板；越大越早预判，也越可能白架。",
+  "worldcombat.skill.quickguard.preference.ai.trigger.help": "威胁进入这个距离、并且警戒范围内确有先制压力（敌人配招带先制，或见过它真的出手先制）时才考虑架板；越大越早预判，也越可能白架。",
   "worldcombat.skill.quickguard.preference.ai.ally": "留到有伙伴才架板",
   "worldcombat.skill.quickguard.preference.ai.ally.help": "开启后，只有警戒范围内还有别的友方才架板；关闭则自己受压就架。",
   "world_combat.move.quickguard.text.raise": "快速防守（磕力 %1$s／%2$s 人／%3$s 秒）",

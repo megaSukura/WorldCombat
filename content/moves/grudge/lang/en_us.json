@@ -23,8 +23,12 @@
   "worldcombat.skill.grudge.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.grudge.preference.ai.leaveStation.help": "When on, the partner will also leave its post to set the grudge.",
   "world_combat.move.grudge.text.mark": "Grudge set %1$s s",
-  "world_combat.move.grudge.text.drain": "Grudge claimed: the killing attack is sealed",
+  "world_combat.move.grudge.text.drain": "Grudge claimed: %1$s is sealed",
   "world_combat.move.grudge.text.wasted": "The grudge strikes empty air",
+  "world_combat.move.grudge.kind.melee": "melee",
+  "world_combat.move.grudge.kind.ranged": "ranged",
+  "world_combat.move.grudge.kind.magic": "magic",
+  "world_combat.move.grudge.kind.other": "attacks",
   "world_combat.move.grudge.text.lift": "The grudge disperses",
   "effect.world_combat.grudge_watch": "Grudge",
   "effect.world_combat.grudge_toll": "Grudge Debt"

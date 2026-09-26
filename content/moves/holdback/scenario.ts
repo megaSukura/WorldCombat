@@ -11,8 +11,8 @@ Smoke.scenario("holdback", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "zangoose", level: 40, moves: ["holdback"], at: [-3, 0, 0] });
-    var near = stage.mob({ type: "minecraft:iron_golem", at: [1, 0, -0.7] });
-    var side = stage.mob({ type: "minecraft:iron_golem", at: [1, 0, 0.7] });
+    var near = stage.mob({ type: "minecraft:iron_golem", at: [1, 0, -0.3] });
+    var side = stage.mob({ type: "minecraft:iron_golem", at: [1, 0, 0.3] });
     stage.hostile(caster, near);
     stage.hostile(caster, side);
     stage.command("execute as @e[type=minecraft:iron_golem,distance=..9] run data merge entity @s {NoAI:1b}");
@@ -23,7 +23,9 @@ Smoke.scenario("holdback", function (stage) {
         stage.expect(stage.casts("holdback", caster) >= 1, "caster committed holdback");
         stage.expect(stage.damageTo(near) + stage.damageTo(side) > 0, "holdback dealt damage to the fan");
         stage.expect(near.alive() && side.alive(), "the sparing sweep left both targets standing");
-        stage.note("both targets are pre-damaged to ~8 HP; the mercy intercept caps every hit so neither is knocked out", {
+        // Both golems stand within the real total-angle fan, so one sweep clamps each to the per-hit health floor.
+        stage.expect(near.health() <= 1.01 && side.health() <= 1.01, "the fan spared both targets down to 1 HP");
+        stage.note("both targets are pre-damaged to ~8 HP and stand inside the true fan; each hit is capped by the per-hit native health floor (minimumHealth 1), so neither is knocked out", {
             casts: stage.casts("holdback", caster),
             damageNear: Math.round(stage.damageTo(near) * 10) / 10,
             damageSide: Math.round(stage.damageTo(side) * 10) / 10,

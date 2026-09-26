@@ -4,20 +4,21 @@
  * 原生事实：Normal／物理／威力 70／命中 100／PP 10／接触；
  *   「对于麻痹状态下的对手，威力会变成 2 倍。但相反对手的麻痹也会被治愈」（Cobblemon 1.8）。
  *
- * 翻译：把一粒呛人的盐拍在对手脸上——麻痹的神经被这一激，痛感翻倍，但人也因此清醒过来。即时战斗里
- *   直接读共享身份 `world_combat:status/paralysis`：目标正麻痹时这一记翻倍，命中后 `CombatStatus.cure`
- *   把麻痹解掉。所以它是一记**打醒别人的终结技**：趁麻痹的窗口一口气打重，代价是解除了自己的控制。
+ * 翻译：贴近伸手，把一把呛人的盐拍在对方脸上——麻痹的神经被这一激，痛感翻倍，但人也因此清醒过来。
+ *   即时战斗里直接读共享身份 `world_combat:status/paralysis`：这次真正被拍中的那个人正麻痹时这一记翻倍，
+ *   命中后 `CombatStatus.cure` 把麻痹解掉；拍中麻痹的同伴则不造成伤害，只把它拍醒。判读用现场那个被害人
+ *   重建上下文（`withTarget`），**显式 target 优先于原锁定目标**；换人挡线时按实际被拍者结算。
+ *
+ * 攻击权限独立：同伴不会被这条伤害；要结算先经过共用伤害层的友方拒绝。
  *
  * 数据分散（每项依赖不同的精灵数据）：
- *   salts   清醒威力 62 + 物攻偏移 + 等级偏移；目标麻痹时 ×2，粗盐式 ×0.90。
- *   reach   掴击距离 2.4 格 + 速度偏移；也是实际射程来源，短促。
- *   step    每刻位移 0.90 格/刻 + 速度偏移。
+ *   salts   清醒威力 62 + 物攻偏移 + 等级偏移；实际被拍者麻痹时 ×2，粗盐式 ×0.90。
+ *   reach   拍击距离 2.2 格 + 速度偏移；也是实际射程来源，短促。
  *   radius  判定半径 0.30 格 + 体型高度偏移。
  *   push    拍开 0.18 格 + 物攻偏移；粗盐式 ×1.5。
- *   stagger 粗盐留下的踉跄 1.2 秒 + 等级偏移（治愈麻痹后额外的一段减速）。
+ *   stagger 粗盐留下的踉跄 1.2 秒 + 等级偏移（实际治愈麻痹后额外的一段减速）。
  *   puff    盐屑数 12 + 速度偏移 + 等级偏移，驱动表现。
  *   spark   醒神火花数 4 − 速度偏移，表现麻痹离体。
- *   spark 之外的 spark 是协议常量。
  *   start／settle／recharge 速度决定起手、收招、冷却。
  *
  * 配置 `coarse`（粗盐）：开启＝拍开 ×1.5、治愈后额外留下一段踉跄（减速），但本击 ×0.90、冷却 +3；
@@ -27,14 +28,15 @@ namespace PokemonSkills {
     export const smellingsaltsId = "smellingsalts";
     export const smellingsaltsScene = "world_combat:move_smellingsalts";
     export const smellingsaltsWakeText = "world_combat.move.smellingsalts.text.wake";
+    export const smellingsaltsAllyText = "world_combat.move.smellingsalts.text.ally";
     export const smellingsaltsHitText = "world_combat.move.smellingsalts.text.hit";
     export const smellingsaltsMissText = "world_combat.move.smellingsalts.text.miss";
 
-    /** 命中目标此刻是否正麻痹；1 即这一记会被盐激醒并翻倍。 */
+    /** 本次被拍中者此刻是否正麻痹；1 即这一记会被盐激醒并翻倍。显式 target 优先，动作原目标是兜底。 */
     export function smellingsaltsNumb(context: FactContext): number {
         const world = context.world, actor = context.actor;
         if (!world || !actor || !world.valid(actor)) return 0;
-        const target = context.action ? context.action.target() : context.target ? context.target.actor || null : null;
+        const target = context.target ? context.target.actor || null : context.action ? context.action.target() : null;
         if (!target || !world.valid(target)) return 0;
         return CombatStatus.has(world, target, "paralysis") ? 1 : 0;
     }
@@ -47,7 +49,7 @@ namespace PokemonSkills {
     });
 
     actionParameters.define(smellingsaltsId, {
-        /** 清醒威力：62 + 物攻偏移[−14,34] + 等级偏移[−4,10]；目标麻痹 ×2、粗盐式 ×0.90 / 常规 ×1.06；夹 38..160。 */
+        /** 清醒威力：62 + 物攻偏移[−14,34] + 等级偏移[−4,10]；实际被拍者麻痹 ×2、粗盐式 ×0.90 / 常规 ×1.06；夹 38..160。 */
         salts: formula(
             F.base(62)
                 .plus(F.stat("attack").minus(58).times(0.30).clamp(-14, 34))
@@ -57,21 +59,14 @@ namespace PokemonSkills {
                 .clamp(38, 160).round(1),
             "清醒威力", {
                 unit: "威力",
-                description: "这一记盐击的基准威力；物攻与等级越高越重。目标正麻痹时翻倍，并在命中后解除它的麻痹。对手防御、相性与暴击在命中时另算。"
+                description: "这一记盐击的基准威力；物攻与等级越高越重。实际拍中的目标正麻痹时翻倍，并在命中后解除它的麻痹。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 掴击距离：3.2 格 + 速度偏移[−0.3,0.8]；夹 2.9..4.0；也是实际射程来源。 */
+        /** 拍击距离：2.2 格 + 速度偏移[−0.3,0.6]；夹 1.8..3.0；也是实际射程来源。 */
         reach: formula(
-            F.base(3.2).plus(F.stat("speed").minus(58).times(0.010).clamp(-0.3, 0.8)).clamp(2.9, 4.0).round(2),
-            "掴击距离", {
+            F.base(2.2).plus(F.stat("speed").minus(58).times(0.008).clamp(-0.3, 0.6)).clamp(1.8, 3.0).round(2),
+            "拍击距离", {
                 unit: "格",
-                description: "这一记盐击能够到的最大距离，也是本招的实际射程来源；出手快的个体够得更前。"
-            }),
-        /** 每刻位移：0.90 格/刻 + 速度偏移[−0.15,0.35]；夹 0.65..1.35。 */
-        step: formula(
-            F.base(0.90).plus(F.stat("speed").minus(58).times(0.0035).clamp(-0.15, 0.35)).clamp(0.65, 1.35).round(2),
-            "拍击速度", {
-                unit: "格/刻",
-                description: "拍上去每刻移动的距离；越快越打得出这记措手不及。"
+                description: "伸手拍盐能够到的最大距离，也是本招的实际射程来源；出手快的个体够得更前。"
             }),
         /** 判定半径：0.30 格 + 体型高度偏移[−0.06,0.26]；夹 0.26..0.56。 */
         radius: formula(
@@ -80,19 +75,19 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "这一掌能拍中多大一圈；身板大的个体掌面更宽。"
             }),
-        /** 拍开：(0.18 + 物攻偏移[−0.05,0.25]) × 粗盐 1.5；夹 0.12..0.60。 */
+        /** 拍开：(0.18 + 物攻偏移[−0.05,0.25]) × 粗盐 1.5；夹 0.12..0.60。只对敌方生效。 */
         push: formula(
             F.base(0.18).plus(F.stat("attack").minus(58).times(0.003).clamp(-0.05, 0.25))
                 .times(F.when(F.pref("coarse", text("worldcombat.skill.smellingsalts.preference.coarse")), F.const(1.5), F.const(1.0)))
                 .clamp(0.12, 0.60).round(2),
             "拍开", {
                 unit: "格",
-                description: "命中后把目标拍开一点的距离；物攻高、用粗盐时拍得更远。"
+                description: "拍中敌方后把它拍开一点的距离；物攻高、用粗盐时拍得更远。拍中友方不会推开它。"
             }),
-        /** 踉跄：24 刻（1.2 秒）+ 等级偏移[0,12 刻]；夹 16..40 刻（粗盐在治愈麻痹后额外留下的减速时长）。 */
+        /** 踉跄：24 刻（1.2 秒）+ 等级偏移[0,12 刻]；夹 16..40 刻（粗盐在治愈敌方麻痹后额外留下的减速时长）。 */
         stagger: seconds(
             F.base(24).plus(F.level().minus(28).times(0.2).clamp(0, 12)).clamp(16, 40).round(0),
-            "踉跄", "粗盐式把对手拍醒后，它还会踉跄多久（这段减速留在治愈麻痹之后）。"),
+            "踉跄", "粗盐式把敌方拍醒后，它还会踉跄多久（这段减速留在治愈麻痹之后）。"),
         /** 盐屑数：12 + 速度偏移[−3,18] + 等级偏移[−2,4]；夹 8..30。 */
         puff: formula(
             F.base(12).plus(F.stat("speed").minus(58).times(0.14).clamp(-3, 18))
@@ -131,7 +126,7 @@ namespace PokemonSkills {
     describe(smellingsaltsId, [
         { key: "description.0", values: ["salts"] },
         { key: "description.paralysis", values: [] },
-        { key: "description.1", values: ["reach", "step", "radius", "push"] },
+        { key: "description.1", values: ["reach", "radius", "push"] },
         { key: "coarse.on", values: [], when: function (context) { return read(context.detail.values, ["coarse"]) === true; } },
         { key: "coarse.off", values: [], when: function (context) { return read(context.detail.values, ["coarse"]) !== true; } },
         { key: "timing", values: ["range", "start", "settle", "pp", "recharge"] },

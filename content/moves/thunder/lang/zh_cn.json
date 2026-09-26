@@ -2,7 +2,7 @@
   "worldcombat.skill.thunder.summary": "先蓄雷云，再从天空朝目标落点劈下一柱暴雷：范围小但极重，雨里必定命中、晴天更容易打偏，屋顶能挡下整记雷。",
   "worldcombat.skill.thunder.description.0": "落雷命中处造成约 %1$s 点特殊电击伤害。",
   "worldcombat.skill.thunder.description.1": "落点半径 %1$s 格内的每个敌人都会挨一记雷击，实际受伤的目标各有 %2$s%% 的概率陷入麻痹：麻痹约持续 40 秒，期间移动速度降低 50%%、每次尝试出招有 25%% 概率失败（电属性免疫），可被治愈清除。",
-  "worldcombat.skill.thunder.description.2": "最远 %1$s 格落下，前摇 %2$s 秒；雨天必定命中，晴朗白天且头顶开阔时命中率降到一半，其余情况约七成。目标头顶被屋顶或岩石遮住时，整记雷被挡下、不造成伤害。",
+  "worldcombat.skill.thunder.description.2": "最远 %1$s 格落下，前摇 %2$s 秒；可点选一块空地预判落点，走出去就能躲开。雨天必定命中，晴朗白天且头顶开阔时命中率降到一半，其余情况约七成。选定落点头顶被屋顶或岩石遮住时，整记雷被挡下、不造成伤害。",
   "worldcombat.skill.thunder.use.0": "从远处劈下一个目标",
   "worldcombat.skill.thunder.use.1": "在雨里召唤必定命中的天雷",
   "worldcombat.skill.thunder.use.2": "用屋檐关掉这记天雷",

@@ -2,7 +2,7 @@
   "worldcombat.skill.supercellslam.summary": "蓄电后跃起，向目标猛冲并释放电击，将其击退。落空会使自身受到反伤。",
   "worldcombat.skill.supercellslam.description.0": "带电下压命中造成约 %1$s 点接触伤害；对手防御、电属性相性与暴击在命中时另算。",
   "worldcombat.skill.supercellslam.description.1": "腾起 %1$s 格、上升速度 %2$s 格每刻、下坠速度 %3$s 格每刻、腾空前移 %4$s 格每刻。",
-  "worldcombat.skill.supercellslam.description.2": "可对 %1$s 格内的敌人施放，落点放电半径 %2$s 格；若坠落后仍没有命中任何目标，则按其最大生命 %3$s 的比例自伤。",
+  "worldcombat.skill.supercellslam.description.2": "可对 %1$s 格内的敌人施放；下扑本体撞到第一个非友方活体即命中并落地收势，半途撞墙或到点都没有接触，就在真实落点按自身最大生命 %2$s 的比例自伤。",
   "worldcombat.skill.supercellslam.description.3": "击退目标 %1$s 格。",
   "worldcombat.skill.supercellslam.description.4": "当前蓄电 %1$s 级：每级使强袭威力提高 7%、下坠更快、落空自伤 +1 个百分点，但起手 +2 刻、冷却 +3 刻、射程 -0.2 格。",
   "worldcombat.skill.supercellslam.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
@@ -34,5 +34,5 @@
   "worldcombat.skill.supercellslam.preference.ai.minSelf.help": "自身生命比例低于这个值时不再用闪电强袭（落空自伤可能致命）。调高更保守，调低更愿意冒险。",
   "world_combat.move.supercellslam.text.hit": "闪电强袭",
   "world_combat.move.supercellslam.text.crash": "落空了",
-  "worldcombat.skill.supercellslam.description.aim": "腾起时落点持续对准目标的实时位置；转入下坠后落点锁定，目标横移就能让开。下坠途中撞到任何非友方活体即当场命中，只结算一个目标；一直到落点都没有撞到，就在放电半径内取最近的敌人；全程一无所获（包括半途撞上墙体）才算落空。"
+  "worldcombat.skill.supercellslam.description.aim": "提交时落点即刻锁死，腾起与斜扑都只走这条锁定线。下扑途中本体撞到第一个非友方活体即当场命中，只结算一个目标并落地收势；半途撞墙、或到点都没有接触，就在真实落点砸一次并按最大生命反噬，不会回头补原来那个目标。"
 }

@@ -1,9 +1,9 @@
 /**
  * 大蛇瞪眼 / Glare — 出手方式。
  *
- * 核心念头：一记瞬发、不飞行的扇形怒目。施法者昂起身体、把腹部的花纹撑开，面前扇形里每一个和它眼睛之间
- *   没有遮挡的敌人一起被镇住。它不造成伤害（原生威力 0），靠的是宽、必中与三式里最长的麻痹；代价是
- *   够得最近、起手最久，而且**必须看得见**——躲到墙后、绕到侧背或站到扇形之外的人完全不受影响。
+ * 核心念头：一记瞬发、不飞行的扇形怒目。施法者昂起身体、把腹部的花纹朝前撑开，面前扇形里每一个和它眼睛之间
+ *   没有遮挡的敌人一起被镇住。它不造成伤害（原生威力 0），靠的是覆盖面；代价是够得最近、起手最久，
+ *   而且**必须看得见**——躲到墙后、绕到侧背或站到扇形之外的人完全不受影响。
  *
  * 幕：
  *   起（windup，提交前）：昂首、花纹亮起的预告（`action.present`）。
@@ -36,9 +36,9 @@ namespace PokemonSkills {
         id: glareId,
         cooldownParameter: "recharge",
         name: "Glare",
-        description: "昂起身体、把腹部花纹撑开成一片扇形怒目，把面前扇形里所有看得见它的敌人一起镇住。它不造成伤害，靠的是宽、必中与三式里最长的麻痹；躲到墙后、绕到侧背或站到扇形之外就完全不受影响。电属性对麻痹免疫。",
+        description: "昂起身体、把腹部花纹朝前撑开成一片扇形怒目，把面前扇形里所有看得见它的敌人一起镇住。它不造成伤害，靠的是覆盖面；躲到墙后、绕到侧背或站到扇形之外就完全不受影响。电属性对麻痹免疫。",
         uses: ["一次镇住围上来的一群", "把最硬的近战钉在原地", "逼对手绕开或退到扇形之外"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 11,
         prepare: 11,
@@ -80,13 +80,16 @@ namespace PokemonSkills {
             const rings = Math.max(2, Math.round(p(glareId, "patternRings", action)));
             const sweepSpeed = Math.max(0.8, p(glareId, "gazeSpeed", action));
             const intensity = Math.max(0.6, Math.min(2.4, lockTicks / 260));
-            const vertices = glareFan(origin, aim(action), reach, angle, 8);
+            // 方向点或实体都能放：facing 就是判定扇形的中线，也是画面里腹纹正面朝向。
+            const facing = aim(action);
+            const vertices = glareFan(origin, facing, reach, angle, 8);
             const path = vertices.map(glareCoords);
             sound(action, "cobblemon:move.scaryface.actor");
             WorldFeedback.emit(world, glareScene, 1, origin,
                 { moment: "sweep", path: path, reach: reach, angle: angle, rings: rings,
                     flux: Math.round(26 + sweepSpeed * 10), sweep: Math.max(1, Math.round(8 - sweepSpeed)),
-                    intensity: intensity, scale: Math.max(0.5, Math.min(2.2, reach / 6)) }, 30);
+                    intensity: intensity, scale: Math.max(0.5, Math.min(2.2, reach / 6)),
+                    direction: [facing.x(), facing.y(), facing.z()] }, 30);
 
             let caught = 0;
             WorldGeometry.select(world, WorldGeometry.polygon(vertices, { below: 2, above: 3 }), function (actor, facts) {

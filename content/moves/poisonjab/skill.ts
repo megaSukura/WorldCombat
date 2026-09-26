@@ -11,7 +11,10 @@
  *   中（sting / whiff）：结算 `jab` 物理伤害、按概率施加共享中毒身份并顶开目标；只碰到墙或没人则播落空。
  *
  * 与同族分开：毒针是飞出去的小针、双针是一记两下、臂贝武器是重炮；只有毒击是**不出身体、只出肢体**的一记
- *   近身延长重刺，反制方式是退出它的出臂距离或切断视线。
+ *   近身延长重刺，反制方式是退出它的出臂距离、侧身站开，或把别的身体挡在线上。
+ *
+ * 自由瞄准：`kind: "aim"` 可对任何阵营实体、方块或世界里一个点出刺；空刺合法，刺中谁由真实 trace 的**首碰**决定，
+ *   前排的身体（哪怕友方）会先挡下这一记，不能隔着它去扎后排。
  */
 namespace PokemonSkills {
     const poisonjabScene = "world_combat:move_poisonjab";
@@ -26,7 +29,7 @@ namespace PokemonSkills {
         name: "Poison Jab",
         description: "站定把带毒的肢体沿直线递向瞄准的对手：物理重击，按概率在伤口里留下毒，并把它顶开一点。深刺式更狠，代价是够得更近、起手更慢。",
         uses: ["近身延长的一记重刺", "把靠近的目标扎毒并顶开", "在对手出手前先手压制"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 4.2,
         prepare: 8,
@@ -60,14 +63,12 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const self = action.actor();
-            const target = action.target();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
-            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
-            let heading = (targetBody === null ? action.targetPosition() : targetBody.position()).minus(origin);
+            let heading = action.targetPosition().minus(origin);
             if (heading.length() < 0.01) heading = action.direction();
             const direction = heading.length() < 0.01 ? WorldCombat.point(0, 0, 1) : heading.unit();
-            const reach = p("poisonjab", "reach", action);
+            const reach = Math.max(0.5, p("poisonjab", "reach", action));
             const radius = p("poisonjab", "touchReach", action);
             const power = p("poisonjab", "jab", action);
             const chance = p("poisonjab", "poisonChance", action);
@@ -76,50 +77,50 @@ namespace PokemonSkills {
             const drops = Math.max(6, Math.round(p("poisonjab", "drops", action)));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.95));
             const intensity = Math.max(0.6, Math.min(2, power / 80));
-            const end = origin.plus(direction.scale(Math.min(reach, Math.max(0.01, heading.length()))));
+            const end = origin.plus(direction.scale(reach));
             const swing = Math.max(3, Math.round(8 + power * 0.1));
+
+            // 判定与画面同源：肢体沿这条 3D 直线递出去，首碰（实体或墙）就是它真正停在的地方，友方身体也会先挡下。
+            const hit = action.trace(origin, end, radius, true);
+            const victim = hit.hitEntity() ? hit.target() : null;
+            const contact = hit.position();
+            const span = Math.max(0.4, Math.min(reach, contact.minus(origin).length()));
 
             sound(action, "minecraft:entity.player.attack.strong");
             WorldFeedback.emit(world, poisonjabScene, 1, origin,
                 { moment: "thrust", drops: drops, swing: swing, scale: scale, intensity: intensity,
-                    direction: [direction.x(), direction.y(), direction.z()], reach: reach }, 20);
+                    direction: [direction.x(), direction.y(), direction.z()], reach: span }, 20);
 
-            // 肢体沿这条直线递到射程；够到目标（距离 + 体积）且中间通视才算刺中，否则刺空。
-            const halfSelf = selfBody === null ? 0.45 : selfBody.width() * 0.5;
-            let contact = false;
-            let point = end;
-            if (target !== null && world.valid(target) && targetBody !== null) {
-                point = targetBody.position();
-                const gap = point.minus(origin).length();
-                const halfTarget = targetBody.width() * 0.5;
-                if (gap <= reach + halfSelf + halfTarget && world.clear(origin, point)) contact = true;
-            }
-
-            if (contact && target !== null) {
-                const dealt = hurt(action, target, "poisonjab", power,
+            if (victim !== null && !world.friendly(victim)) {
+                const dealt = hurt(action, victim, "poisonjab", power,
                     { damage: damageSpec("poisonjab", "jab"), contact: true });
-                let poisoned = false;
                 if (dealt) {
-                    if (world.valid(target)) world.displace(target, direction.scale(push));
-                    if (world.valid(target) && world.random() < chance)
-                        poisoned = CombatStatus.inflict(world, target, "poison", venomTicks, 0, { secondary: true });
-                    const wound = world.valid(target) ? world.observe(target) : null;
-                    WorldFeedback.emit(world, poisonjabScene, 1, wound === null ? point : wound.position(),
-                        { moment: "sting", target: String(target.ref()), drops: drops, swing: swing,
+                    // 伤害成功才推、才播毒；被拒绝时不推动也不声称中毒。
+                    world.hitDisplace(victim, direction.scale(push));
+                    let poisoned = false;
+                    if (world.valid(victim) && world.random() < chance)
+                        poisoned = CombatStatus.inflict(world, victim, "poison", venomTicks, 0, { secondary: true });
+                    const wound = world.valid(victim) ? world.observe(victim) : null;
+                    const at = wound === null ? contact : wound.position();
+                    WorldFeedback.emit(world, poisonjabScene, 1, at,
+                        { moment: "sting", target: String(victim.ref()), drops: drops, swing: swing,
                             scale: scale, intensity: intensity }, 24);
-                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)),
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.0, 0)),
                         poisoned ? poisonjabVenomText : poisonjabHitText, [], 24);
-                    if (poisoned) world.sound("cobblemon:impact.poison", point, 14, "{}");
+                    if (poisoned) world.sound("cobblemon:impact.poison", at, 14, "{}");
                 } else {
-                    WorldFeedback.emit(world, poisonjabScene, 1, point, { moment: "sting", target: String(target.ref()),
-                        drops: Math.round(drops * 0.5), swing: swing, scale: scale, intensity: intensity }, 20);
-                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), poisonjabImmuneText, [], 22);
+                    WorldFeedback.emit(world, poisonjabScene, 1, contact,
+                        { moment: "whiff", drops: Math.round(drops * 0.5), swing: swing, scale: scale }, 20);
+                    WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 1.0, 0)), poisonjabImmuneText, [], 22);
                 }
-            } else {
-                WorldFeedback.emit(world, poisonjabScene, 1, end,
-                    { moment: "whiff", drops: Math.round(drops * 0.4), swing: swing, scale: scale }, 18);
-                WorldFeedback.text(world, end.plus(WorldCombat.point(0, 0.6, 0)), poisonjabWhiffText, [], 20);
+                done(action);
+                return;
             }
+
+            // 首碰是墙、身体挡住的是友方、或整条线是空的：只收回肢体。
+            WorldFeedback.emit(world, poisonjabScene, 1, contact,
+                { moment: "whiff", drops: Math.round(drops * 0.4), swing: swing, scale: scale }, 18);
+            WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 0.6, 0)), poisonjabWhiffText, [], 20);
             done(action);
         }
     });

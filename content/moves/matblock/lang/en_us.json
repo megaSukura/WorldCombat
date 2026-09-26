@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.matblock.summary": "Tears a whole tatami mat up as a shield, eating move damage for the user and nearby allies. The mat falls once it is used up, and status moves pass under it.",
+  "worldcombat.skill.matblock.summary": "Raise a fixed sheet in your facing direction, covering yourself and allies behind it. Only attacks that actually cross its front face are caught; side and rear attacks pass.",
   "worldcombat.skill.matblock.use.0": "Eat a whole spread of damaging moves for the team",
   "worldcombat.skill.matblock.use.1": "Raise the mat a beat before a heavy hit lands",
   "worldcombat.skill.matblock.use.2": "Keep one burst outside the mat",
-  "worldcombat.skill.matblock.description.0": "The mat absorbs about %1$s points of enemy move damage for the caster and each protected ally, standing for about %2$s s; it falls once used up. Status moves, environmental damage and status wear pass through it.",
-  "worldcombat.skill.matblock.description.1": "On cast it covers the user and allies within %1$s blocks; a protected ally who strays too far from the caster, or loses line of sight, is dropped early.",
+  "worldcombat.skill.matblock.description.0": "Each covered actor has about %1$s damage capacity for %2$s seconds. Native melee, projectiles and damaging moves must cross the front; environmental damage and damage over time pass.",
+  "worldcombat.skill.matblock.description.1": "Allies within %1$s blocks are selected at cast; this also sets the sheet half-width. Its position and facing stay fixed. Leaving its rear cover or losing the connection removes protection.",
   "worldcombat.skill.matblock.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.matblock.fold.upright": "Upright: absorption x1.3, duration x1.15, radius x0.85, at +2 ticks wind-up and x1.15 cooldown — thick and hard to batter through.",
   "worldcombat.skill.matblock.fold.spread": "Spread: radius x1.25, absorption x0.8, duration x0.85, in exchange for -1 tick wind-up and x0.85 cooldown — wide and quick to raise.",

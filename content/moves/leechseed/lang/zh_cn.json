@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.leechseed.summary": "向一名敌人抛出一粒种子：命中后根扎进它身上，每隔一会儿抽走它一口最大生命回补自己。种子到期、被清除、目标倒下或施放者离场都会枯萎；草属性和已被寄生的目标种不活。",
+  "worldcombat.skill.leechseed.summary": "沿瞄准方向抛出一粒种子：命中敌人后根扎进它身上，每隔一会儿抽走它一口最大生命回补自己。种子到期、被清除、目标倒下或施放者离场都会枯萎；草属性和已被寄生的目标种不活，墙会挡下种子，空放只让它落地。",
   "worldcombat.skill.leechseed.use.0": "把硬仗拖成消耗战，一点点把自己养回来",
   "worldcombat.skill.leechseed.use.1": "在对手身上留一根持续的抽血线",
   "worldcombat.skill.leechseed.use.2": "配合拉开距离，让根替自己耗血",
-  "worldcombat.skill.leechseed.description.0": "射程 %1$s 格，需要通视直线；种子扎下后存在 %2$s。草属性种不活，已被寄生的目标也不能再次种下。",
+  "worldcombat.skill.leechseed.description.0": "射程 %1$s 格，种子沿瞄准方向飞行、墙会挡下它；种子扎下后存在 %2$s。草属性种不活，已被寄生的目标也不能再次种下。",
   "worldcombat.skill.leechseed.description.1": "根每隔 %1$s 从目标身上抽走其最大生命的 %2$s（至少 1 点），按实际抽到的量治疗施放者。目标倒下、种子到期、被清除或施放者离场后，根即枯萎。",
   "worldcombat.skill.leechseed.description.2": "种子飞行速度 %1$s，判定半径 %2$s 格。",
   "worldcombat.skill.leechseed.gluttony.on": "贪食：每口抽量 ×1.35、抽取间隔 ×0.75，见效更快；代价是种子存续 ×0.7。",
   "worldcombat.skill.leechseed.gluttony.off": "缓吸：种子存续 ×1.25、抽取间隔 ×1.15，抽得更久更稳；每口抽量不变。",
-  "worldcombat.skill.leechseed.timing": "对单体敌人施放，准备 %2$s 秒后消耗 %4$s PP 撒种；结束后收招 %3$s 秒，冷却 %5$s 秒，当前射程 %1$s 格。",
+  "worldcombat.skill.leechseed.timing": "沿瞄准方向撒种：准备 %2$s 秒后消耗 %4$s PP；结束后收招 %3$s 秒，冷却 %5$s 秒，当前射程 %1$s 格。",
   "worldcombat.skill.leechseed.growth.0": "达到 %1$s 级，播种距离延长至 %2$s 格、种子存续 %3$s。",
   "worldcombat.skill.leechseed.growth.1": "达到 %1$s 级，播种距离进一步延长至 %2$s 格、种子存续 %3$s。",
   "worldcombat.skill.leechseed.value.reach": "播种距离",
@@ -32,5 +32,6 @@
   "world_combat.move.leechseed.text.root": "生根 %1$s 秒",
   "world_combat.move.leechseed.text.drain": "抽走 %1$s",
   "world_combat.move.leechseed.text.immune": "种不活",
+  "world_combat.move.leechseed.text.seeded": "已有种子",
   "effect.world_combat.leech_seed": "寄生种子"
 }

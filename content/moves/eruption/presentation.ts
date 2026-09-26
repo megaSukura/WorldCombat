@@ -1,15 +1,15 @@
 /**
  * 喷火 / eruption 的客户端表现。
  *
- * 一句话：火先被压进脚下（地面裂开暗红的光）→ 一柱火从身上冲天、一圈冲击贴着地整圈炸开，
+ * 一句话：火先被压进脚下（地面裂开暗红的光、身前一柱暗红预告）→ 一柱火从身上冲天、一圈冲击贴着地整圈炸开，
  *   圈里的人各自烧起来并被掀飞 → 火退成一地暗红余烬与灰烟慢慢灭。
  * 色相家族：火焰橙红的一族（0xFF6A2A／0xFFC24A／0xFFE2A0）为主体，黑烟（smoke）与土黄碎屑（earth）衬托；
  *   唯一近白是火柱根部的高光。
  * 拍子：压（charge）→ 喷（burst 火柱与冲击、hit 烧身）→ 烬（ash 余烬）。
  * 范围：burst 的贴地冲击环与碎屑盘按 `data.radius`（真实波及半径）铺满，画出来的就是会被喷到的那块地。
- * 运动：火柱竖直冲起，冲击环与碎屑沿地表向外扩，余烬带重力下落。
- * 数：`data.sparks`（特攻与体重派生的迸溅量）决定火屑与灰量，`data.column`（体型派生）决定火柱高度，
- *   `data.count`（威力派生）决定命中火量，`data.heat`（剩余血量派生）决定整体亮度与灰烬层厚度。
+ * 运动：火柱竖直冲起，冲击环与碎屑沿地表向外扩，余烬带重力下落、只作画面不暗示持续伤。
+ * 数：`data.sparks`（特攻与体重派生的迸溅量）决定火屑与灰量，`data.column`（体型派生）决定火柱高度与起手预告柱，
+ *   `data.cells`（半径派生）决定碎屑与烟量，`data.count`（威力×衰减派生）决定命中火量，`data.intensity`（威力派生）整体加权。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const EruptionDefinition: ParticleDefinition = {
@@ -34,6 +34,14 @@ const EruptionDefinition: ParticleDefinition = {
                     direction: "down", speed: [0.02, 0.1],
                     lifetime: [8, 16], size: [0.22, 0.04],
                     color: 0xFFC24A, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 70
+                },
+                {
+                    name: "telegraph_column", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    rate: 10, shape: { kind: "cylinder", radius: 0.35, length: { data: "column", fallback: 2.2 } },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.1, 0.02],
+                    color: 0xB0402A, alpha: [0.35, 0], light: "world", maxParticles: 24
                 },
                 {
                     name: "heat_smoke", bind: "source", offset: [0, 0.1, 0], height: 0,
@@ -134,7 +142,7 @@ const EruptionDefinition: ParticleDefinition = {
                 {
                     name: "smoulder", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    burst: { count: { data: "cells", fallback: 12 }, interval: 6, repeats: 3, at: 1 },
+                    burst: { count: { data: "cells", fallback: 12 }, at: 1 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 3.4 } },
                     direction: "outward", speed: [0.02, 0.09], spread: 18, gravity: 0.02, drag: 0.92,
                     lifetime: [10, 20], size: [0.09, 0.02],

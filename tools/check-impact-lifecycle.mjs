@@ -4,14 +4,26 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 // Neutral action/target fixtures: a lethal settlement must not cancel independent aftermath.
-const context = vm.createContext({});
+const context = vm.createContext({WorldCombat:{on:()=>{}}});
 for (const file of ['content/mechanisms/living-actions.ts', 'content/library/skills/effects.ts'])
   vm.runInContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES2017, module: ts.ModuleKind.None }
   }).outputText, context, { filename: file });
 const A = context.LivingActions, P = context.PokemonSkills;
-const point = x => ({ x: () => x, y: () => 0, z: () => 0 });
-context.WorldCombat = { point: x => point(x) };
+{
+  const values = new Map();
+  const action = { data(key, value) {
+    if (value === undefined) return values.get(key) ?? null;
+    const parsed = JSON.parse(value);
+    assert(parsed && typeof parsed === 'object' && !Array.isArray(parsed), 'host action data requires an object');
+    values.set(key, value);
+  } };
+  assert(A.first(action, 'checks:gate'));
+  assert(!A.first(action, 'checks:gate'));
+  assert(A.first(action, 'checks:other'));
+}
+const point = (x,y=0,z=0) => ({ x: () => x, y: () => y, z: () => z });
+context.WorldCombat = { point };
 context.CobblemonCombat = { moveTemplate: id => id };
 context.NativeLoadout = { hitMetadata: (_action, extra) => extra };
 context.damageSegments = () => ['primary']; context.damageFeatures = () => ({ damage: {} });
@@ -26,7 +38,8 @@ function fixture() {
     valid: who => { check(); return !!who?.alive; },
     friendly: () => false,
     actor: ref => [source, target, extra].find(who => who.ref() === ref && who.alive) ?? null,
-    observe: who => { check(); return who?.alive ? { position: () => point(who.x) } : null; }
+    observe: who => { check(); return who?.alive ? { position: () => point(who.x),
+      boundsMin:()=>point(who.x-.5,0,-.5),boundsMax:()=>point(who.x+.5,2,.5) } : null; }
   };
   const action = {
     actor: () => source, target: () => target, world: () => world, sense: () => world,
@@ -65,8 +78,8 @@ function fixture() {
   const f = fixture();
   const mapped = A.input(f.action, { target: 'original', point: [2, 0, 0], direction: [1, 0, 0], range: 10 });
   assert(P.hurt(mapped, f.target, 'fixture', 1));
-  assert.equal(mapped.targetPosition().x(), 7, 'mapped release does not read an invalid entity again');
-  assert.equal(f.action.targetPosition().x(), 7, 'the underlying host retains the same last target point');
+  assert.equal(mapped.targetPosition().x(), 6.5, 'mapped release retains its selected body surface without reading a dead entity');
+  assert.equal(f.action.targetPosition().x(), 7, 'the underlying action retains its own last target point');
   f.action.nextTick();
 }
 for (const invalidation of ['source', 'action']) {

@@ -1,13 +1,15 @@
 /**
  * 金属爆炸 / metalburst 的客户端表现。
  *
- * 一句话：施法者体表泛起金属应力纹、火星沿壳乱窜（账越大越密）→ 从体内向外炸开一圈钢色冲击与碎片，
- * 账主正面挨满、周围的人各吃到一份溅射；没有账时外壳只空响一声、冒几缕灰。
- * 色相家族：钢灰与金黄（impact_steel / scalingshaded / largering / glowingsparkle_yellow），落空时降为灰。
- * 拍子：起 brace（聚应力）→ 击 burst（爆炸）→ 溢 splash（旁人吃溅射）／空 whiff。
- * 范围：burst 的冲击环与碎片半径由 `data.scale`（爆炸半径派生）给出——玩家一眼看出站多近会被炸到。
- * 运动：brace 的火星贴着体表乱窜；burst 的碎片由内向外炸、环贴地平推。
- * 数：`data.gather`（账本伤害派生）决定聚应力粒子量，`data.count`（返还伤害派生）决定冲击碎片数量。
+ * 一句话：施法者体表泛起金属应力纹、火星沿壳乱窜（账越大越密）→ 从体内向外炸开一圈钢色冲击，
+ * 碎片再沿爆心到每个合法对象的通视线集中飞去；吃满额的主目标落一簇密片（core），旁人各吃一份溅射（splash），
+ * 被墙挡/被免疫的对象只留一记钝响（blocked）；没有账时外壳只空响一声、冒几缕灰。
+ * 色相家族：钢灰与金黄（impact_steel / scalingshaded / largering / glowingsparkle_yellow / spike），落空时降为灰。
+ * 拍子：起 brace（聚应力）→ 击 burst（爆炸）→ 满 core／溢 splash（真实回执）／钝 blocked／空 whiff。
+ * 范围：burst 的冲击环与碎片半径由 `data.scale`（爆炸半径派生）给出——玩家一眼看出站多近会被炸到；
+ *   splash/core 的碎片线由 `data.path`（爆心 → 该对象顶点）给出，与判定用的是同一条通视线。
+ * 运动：brace 的火星贴着体表乱窜；burst 的碎片由内向外炸；splash/core 的碎片沿路径线飞向对象。
+ * 数：`data.gather`（账本伤害派生）决定聚应力粒子量，`data.count`（这次实际扣血派生）决定碎片数量。
  */
 const MetalburstDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -73,6 +75,15 @@ const MetalburstDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
+                    name: "arc", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "count", fallback: 10 } },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.03, 0.1],
+                    lifetime: [6, 12], size: [0.12, 0.04],
+                    color: 0xC9B15A, alpha: [0.85, 0], light: "full", maxParticles: 70
+                },
+                {
                     name: "chips", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: { data: "count", fallback: 10 } },
@@ -80,6 +91,46 @@ const MetalburstDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.06, 0.22],
                     lifetime: [6, 11], size: [0.26, 0.05], sizeMode: "index",
                     color: 0xC9B15A, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 70
+                }
+            ]
+        },
+        core: {
+            // 吃满额的主目标：碎片沿爆心到它的那条通视线集中飞来，落点用一簇更密的钢片。
+            duration: 26,
+            exit: { stop: 12, drain: 18 },
+            emitters: [
+                {
+                    name: "arc", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "count", fallback: 18 } },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.04, 0.14],
+                    lifetime: [7, 13], size: [0.14, 0.04],
+                    color: 0xE3CD7A, alpha: [0.95, 0], light: "full", maxParticles: 100
+                },
+                {
+                    name: "cluster", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
+                    burst: { count: { data: "count", fallback: 18 } },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "shape", speed: [0.07, 0.24],
+                    lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xE3CD7A, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 80
+                }
+            ]
+        },
+        blocked: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "clang", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/minihit",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    lifetime: [6, 10], size: [0.16, 0.04],
+                    color: 0xB0B0B0, alpha: [0.7, 0], light: "world", maxParticles: 28
                 }
             ]
         },

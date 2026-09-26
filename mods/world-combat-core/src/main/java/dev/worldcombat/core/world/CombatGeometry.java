@@ -13,6 +13,9 @@ import net.minecraft.world.phys.Vec3;
 
 /** Geometry shared by server effects and client previews. */
 public final class CombatGeometry {
+    public static dev.worldcombat.core.runtime.BodyBounds bounds(AABB box) {
+        return new dev.worldcombat.core.runtime.BodyBounds(new Point(box.minX, box.minY, box.minZ), new Point(box.maxX, box.maxY, box.maxZ));
+    }
     public static List<BlockPos> cells(ActionPreview preview, Point point, Point direction) {
         BlockPos center = BlockPos.containing(point.x(), point.y(), point.z());
         var cells = new ArrayList<BlockPos>();

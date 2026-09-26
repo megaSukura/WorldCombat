@@ -5,12 +5,11 @@
  *   描述「瞬间制作冰块，快速地扔向对手。必定能够先制攻击」。
  *
  * 翻译：本招把「瞬间制冰、快速扔出」翻成一记**当场结出、贴直线掷出的冰砾**——起手最短（几乎瞬发），
- *   冰砾高速直线飞出，撞上谁就把那一处炸成冰碴、并把击中的目标**冻得发僵**（共享身份 chill，借冰锤／冰冻拳等的同一身份）；
- *   落点还会把脚下那一片地面**冻出薄冰**（租借，linger，到期原方块回来），踩上去会滑——这就是「瞬间制作冰块」留在世界里的样子。
- *   它是本族唯一的远程物理招。
+ *   一枚冰砾高速直线飞出，撞上谁就结算 shard 物理伤害、并把击中的目标**冻得发僵**（共享身份 chill）；
+ *   砸到地形只碎一撮冰碴，飞尽自然消散。它是本族唯一的远程物理招，不在世界里留下薄冰、场地或残骸。
  *
  * 与场上最像的招分开：冰冻光束是等待蓄力的贯穿光束、按特殊结算、冻成一条线；冰锥是多枚追身细锥。
- *   冰砾只有一枚、瞬发、按物理结算，落点冻出的是**一小块薄冰**而不是一条线。
+ *   冰砾只有一枚、瞬发、按物理结算，落点不替换任何方块。
  *
  * 数据分散（每个参数各吃不同的精灵数据，落到不同参数上）：
  *   shard       冰砾威力：物攻给分量、速度给掷速；碎冰式每一下略轻。
@@ -18,14 +17,12 @@
  *   velocity    飞行速度：速度决定掷得多快，目标越难闪。
  *   radius      判定半径：身高决定冰砾多粗。
  *   chillTicks  冻僵时长：等级与体重决定僵多久。
- *   frostRadius 薄冰半径：身高与等级决定冻多大一片；碎冰式更大。
- *   frostTicks  薄冰持续：等级决定留多久；碎冰式更久。
  *   splinters   冰碴数量：速度与等级驱动，表现按它发射。
- *   splash/splashRadius 碎冰式：崩到周围的人各吃一记按物攻换算的溅射，范围随物攻略增。
+ *   splash/splashRadius 碎冰式：首次撞实体时崩到周围的人各吃一记按物攻换算的溅射，范围随物攻略增。
  *   tempo/settle/recharge 速度决定节奏；碎冰式更慢更费。
  *
- * 配置 `shatter`（碎冰式）双向取舍：开启＝命中时崩碎，溅到周围一小圈敌人（各按 splash 系数）、薄冰更大更久，
- *   但飞行更慢、射程更近、收招与冷却更久；关闭＝单发硬冰砾，飞得快、扔得远、回得快。一个换「炸开一片」，一个换「点掉一个」。
+ * 配置 `shatter`（碎冰式）双向取舍：开启＝首次撞实体时崩碎，溅到周围一小圈敌人（各按 splash 系数），
+ *   但飞行更慢、射程更近、收招与冷却更久；关闭＝单发硬冰砾，飞得快、扔得远、回得快。一个换「崩开一片」，一个换「点掉一个」。
  *
  * 伤害段 `shard` 与参数同名，走共享物理换算；对手防御、相性与暴击在命中时统一结算。
  * 冻僵用的载体 world_combat:iceshard_chill 在 startup.ts 注册并打共享身份 chill（identity_only）。
@@ -70,24 +67,11 @@ namespace PokemonSkills {
         radius: formula(
             F.base(0.22).plus(F.body("height").minus(1.4).times(0.05).clamp(-0.04, 0.14)).clamp(0.18, 0.44).round(2),
             "判定半径", { unit: "格", description: "冰砾飞行与命中的判定粗细；体型越高冰砾越粗。画面里的冰砾大小就是它。" }),
-        /** 冻僵时长：40 +（等级 − 20）× 0.6 [0,30] +（体重 − 100）× 0.05 [−5,15]；夹 30..110 刻。 */
+        /** 冻僵时长：28 +（等级 − 20）× 0.4 [0,20] +（体重 − 100）× 0.03 [−3,9]；夹 20..80 刻。 */
         chillTicks: seconds(
-            F.base(40).plus(F.level().minus(20).times(0.6).clamp(0, 30))
-                .plus(F.body("weight").minus(100).times(0.05).clamp(-5, 15)).clamp(30, 110).round(0),
-            "冻僵时长", "被冰砾砸中后冻得发僵（共享身份 chill）挂多久；等级与体重越高僵得越久，移动更慢。"),
-        /** 薄冰半径：1.2 +（身高 − 1.4）× 0.4 [−0.2,0.8] +（等级 − 20）× 0.015 [0,0.5]；碎冰 ×1.5；夹 1.0..2.6。 */
-        frostRadius: formula(
-            F.base(1.2).plus(F.body("height").minus(1.4).times(0.4).clamp(-0.2, 0.8))
-                .plus(F.level().minus(20).times(0.015).clamp(0, 0.5))
-                .times(F.when(F.pref("shatter", text("worldcombat.skill.iceshard.preference.shatter")), F.const(1.5), F.const(1)))
-                .clamp(1.0, 2.6).round(2),
-            "薄冰半径", { unit: "格", description: "落点冻出的薄冰有多大一片（会滑的真实方块）；身板越大、等级越高越广，碎冰式更大。" }),
-        /** 薄冰持续：80 +（等级 − 20）× 1.2 [0,48]；碎冰 ×1.4；夹 60..220 刻。 */
-        frostTicks: seconds(
-            F.base(80).plus(F.level().minus(20).times(1.2).clamp(0, 48))
-                .times(F.when(F.pref("shatter", text("worldcombat.skill.iceshard.preference.shatter")), F.const(1.4), F.const(1)))
-                .clamp(60, 220).round(0),
-            "薄冰持续", "落点那片薄冰留多久；到期原方块回来。等级越高、碎冰式越久。"),
+            F.base(28).plus(F.level().minus(20).times(0.4).clamp(0, 20))
+                .plus(F.body("weight").minus(100).times(0.03).clamp(-3, 9)).clamp(20, 80).round(0),
+            "冻僵时长", "被冰砾砸中后冻得发僵（共享身份 chill）挂多久；等级与体重越高僵得越久，移动更慢。这是短暂的霜寒，不是长控。"),
         /** 冰碴数量：16 +（速度 − 55）× 0.26 [−3,12] +（等级 − 20）× 0.3 [0,8]；夹 12..40。 */
         splinters: formula(
             F.base(16).plus(F.stat("speed").minus(55).times(0.26).clamp(-3, 12))
@@ -99,7 +83,7 @@ namespace PokemonSkills {
         /** 溅射系数：0.5 +（物攻 − 55）× 0.002 [−0.05,0.15]；夹 0.4..0.7。只有碎冰式用到。 */
         splash: percent(
             F.base(0.5).plus(F.stat("attack").minus(55).times(0.002).clamp(-0.05, 0.15)).clamp(0.4, 0.7),
-            "溅射系数", "碎冰式崩到的周围敌人各吃主伤害的这个比例；物攻越高崩得越重。"),
+            "溅射系数", "碎冰式首次撞实体时崩到的周围敌人各吃主伤害的这个比例；物攻越高崩得越重。"),
         /** 溅射半径：1.5 +（物攻 − 55）× 0.006 [−0.2,0.6]；夹 1.2..2.6。只有碎冰式用到。 */
         splashRadius: formula(
             F.base(1.5).plus(F.stat("attack").minus(55).times(0.006).clamp(-0.2, 0.6)).clamp(1.2, 2.6).round(2),
@@ -132,7 +116,6 @@ namespace PokemonSkills {
     describe(iceshardId, [
         { key: "description.0", values: ["shard", "radius"] },
         { key: "description.1", values: ["reach","velocity","chillTicks"] },
-        { key: "description.2", values: ["frostRadius","frostTicks"] },
         { key: "shatter.on", values: ["splashRadius","splash"], when: function (context) { return read(context.detail.values, ["shatter"]) === true; } },
         { key: "shatter.off", values: [], when: function (context) { return read(context.detail.values, ["shatter"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },

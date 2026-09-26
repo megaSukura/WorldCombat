@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.flamewheel.summary": "Roll forward, damaging enemies along the path and possibly burning them. Thaws the user.",
+  "worldcombat.skill.flamewheel.summary": "Curl into a fire wheel and roll in the aimed direction, grinding over every enemy along the way and possibly burning them. Starting to roll thaws the user; it can also roll harmlessly with no target.",
   "worldcombat.skill.flamewheel.description.0": "The rolling wheel deals about %1$s contact damage; it rolls up to %2$s blocks at %3$s blocks per tick with a %4$s block wheel radius.",
   "worldcombat.skill.flamewheel.description.1": "Targets after the first take %1$s of the power; a hit on a target that is not burning yet has a %2$s chance to burn it and shoves it %3$s blocks along the roll. The burn lasts %4$s, halving physical attacks and costing about 1/16 of maximum health every 5 s; Fire-types and other naturally immune targets cannot be lit. Hits do not stop the roll.",
   "worldcombat.skill.flamewheel.fierce.on": "Blaze Wheel: much higher burn chance, slower and shorter roll - trade the roll for lasting ignition.",

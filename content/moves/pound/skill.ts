@@ -11,6 +11,9 @@
  *       各结算一记 swat 接触伤害，并被沿拍向推开 `nudge` 格。拍到几个、碎屑多少都从这一拍算出。
  *   果：一个人都没拍到只留一掌破风。
  *
+ * 选取 `kind: "aim"`：可点任意阵营实体、也可只给一个方向或世界点，没点到敌人也照样拍出整片扇面；
+ *   扇面被实墙挡住时拍不进去（方块挡手）。攻击许可仍由命中层决定，AI 仍按仇恨推荐敌人。
+ *
  * 与同族分开：摔打慢而重、打点会落空；拍击是所有打击招里唯一「瞬发＋扇面扫」的一记。
  * 配置 `heavy`（重拍式）由 resolve 改时序、由公式改威力／扇面／推距，提交后才触碰世界。
  */
@@ -43,9 +46,9 @@ namespace PokemonSkills {
         id: "pound",
         cooldownParameter: "recharge",
         name: "Pound",
-        description: "抬手在身前扫出一记短扇面：快拍式没有蓄势，重拍式多一拍起手；拍到扇面里的目标就各挨一下、各被拍到一边。它是全族最便宜的一招——冷却最短，一次能拍到贴身并排的几个目标；代价是单发最低、扇面很浅。",
+        description: "抬手在身前扫出一记短扇面：快拍式没有蓄势，重拍式多一拍起手；拍到扇面里的目标就各挨一下、各被拍到一边。它是全族最便宜的一招——冷却最短，一次能拍到贴身并排的几个目标；代价是单发最低、扇面很浅。可点任意目标，也可只朝一个方向空拍；扇面被墙挡住就拍不进去。",
         uses: ["瞬发的一记便宜近身拍击", "一次拍到贴身并排的几个目标", "在别的招之间随手补一下"],
-        kind: "enemy",
+        kind: "aim",
         range: 1.9,
         maxRange: 2.7,
         prepare: 3,
@@ -97,10 +100,12 @@ namespace PokemonSkills {
 
             WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, heading, reach, arc, { below: 1.2, above: 2.4 }),
                 function (victim, facts) {
+                    // 方块挡手：扇面探到墙就停，隔墙拍不到人。
+                    if (!world.clear(origin, facts.position())) return;
                     if (!hurt(action, victim, "pound", power,
                         { damage: damageSpec("pound", "swat"), contact: true })) return;
                     struck.push(String(victim.ref()));
-                    if (world.valid(victim) && nudge > 0.01) world.displace(victim, heading.scale(nudge));
+                    if (world.valid(victim) && nudge > 0.01) world.hitDisplace(victim, heading.scale(nudge));
                     WorldFeedback.emit(world, poundScene, 1, facts.position(),
                         { moment: "hit", target: String(victim.ref()), count: crumble, scale: scale, intensity: intensity }, 16);
                 });

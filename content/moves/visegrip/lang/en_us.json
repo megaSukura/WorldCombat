@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.visegrip.summary": "The user lunges in and clamps both pincers shut on one nearby target from either side, then hauls it toward itself. The bigger the target, the lighter the squeeze, and the heavier it is the harder to drag; a target still out of reach after the step is missed. Drag pulls the target closer with a slightly longer reach but hits softer; Grind hits harder for a shorter pull.",
+  "worldcombat.skill.visegrip.summary": "Step in and close two real pincer paths on the first enemy for one squeeze. A body that accepts the grip is held for up to six ticks; Haul backs away and draws it along. Distance, walls or interruption release it, while grab-resistant bodies take only the strike.",
   "worldcombat.skill.visegrip.use.0": "Yank a fleeing target back into melee",
   "worldcombat.skill.visegrip.use.1": "Land a solid contact hit on a target smaller than your pincers",
-  "worldcombat.skill.visegrip.use.2": "Drag a distant foe into an ally's range",
+  "worldcombat.skill.visegrip.use.2": "Briefly draw a nearby opponent away from its group",
   "worldcombat.skill.visegrip.use.3": "A short, cheap physical tool at close quarters",
-  "worldcombat.skill.visegrip.description.0": "The pincers clamp a single target for about %1$s contact damage; the bigger the target's body, the lighter the squeeze. Reach is about %2$s blocks; Defence, type matchups and crit are settled on impact.",
-  "worldcombat.skill.visegrip.description.1": "The user closes about %2$s blocks when casting; if the target is still beyond pincer reach after the step, the clamp misses. On a hit the target is dragged about %1$s blocks toward the user (heavier targets resist).",
+  "worldcombat.skill.visegrip.description.0": "The first enemy contacted by the real claws takes %1$s power within %2$s blocks; walls stop the claws.",
+  "worldcombat.skill.visegrip.description.1": "Approach up to %2$s blocks. An accepted grip lasts six ticks: Haul backs away within the original %1$s-block drag budget, while Crush tightens in place.",
   "worldcombat.skill.visegrip.haul.on": "Drag on: the target is hauled about ×1.35 closer with a slightly longer reach, at about ×0.9 damage, to pull foes into an ally's range.",
   "worldcombat.skill.visegrip.haul.off": "Drag off (Grind): about ×1.18 damage with only a short tug (about ×0.65 drag).",
   "worldcombat.skill.visegrip.timing": "Cast at a target within %1$s blocks; after a %2$s-second prepare it spends %4$s PP, then recovers %3$s seconds; cooldown %5$s seconds from commit.",
@@ -28,5 +28,6 @@
   "world_combat.move.visegrip.text.miss": "The pincers closed on air",
   "worldcombat.skill.visegrip.value.tempo": "Wind-up",
   "worldcombat.skill.visegrip.value.aftercast": "Recovery",
-  "worldcombat.skill.visegrip.value.recharge": "Cooldown"
+  "worldcombat.skill.visegrip.value.recharge": "Cooldown",
+  "effect.world_combat.visegrip_hold": "Pincer Grip"
 }

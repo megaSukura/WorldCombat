@@ -1,80 +1,28 @@
 /**
  * 冲岩 / accelerock 的出手方式。
  *
- * 核心念头：把碎岩披到身上，整个身体贴地撞出去——一块石头砸上去，落点崩出一小片碎石疤。
+ * 核心念头：把碎岩披到身上，整个身体贴地撞出去——一块石头撞实一下，把目标顶开、扬起一片碎石尘。
  *   它是全族最重的一记：不像水流喷射把自己浇透，也不像电光一闪那样轻巧，卖的是「岩石取自你脚下的世界」
- *   与「撞出一条痕」。撞上第一个就停是常态；破阵式会让它沿冲刺线一路碾过去。
+ *   与「撞出的那一下」。撞上第一个就停是常态；破阵式会让它沿冲刺线一路碾过去。
  *
  * 两幕：
  *   起（windup，提交前）：脚下与身侧碎岩浮起、拢成石身，只播预告（present gather）。
  *   冲（execute）：提交后沿瞄准方向逐刻推进，身后拖一道石屑；撞上非友方活体就结算 `slam` 接触伤害、
- *       把它沿冲刺方向顶开，并在落点崩出碎石疤（租借，linger，到期原方块回来）；破阵式不停下，继续碾后面的目标。
- *       一路冲到尽头没撞上任何人就收势落空（miss）。
+ *       把它沿冲刺方向顶开，并在真实落点扬起一片碎石尘（只作画面，不再替换任何方块）；破阵式不停下，继续碾后面的目标。
+ *       一路冲到尽头没撞上任何人、或撞上实墙就收势落空（miss）。
  *
  * 与同族分开：电光一闪是轻巧的一道速度影子、撞上即停不留痕；水流喷射把自己裹进水柱、命中浇透；
- *   冲岩是石身、碎石迸溅，并在地面留下一道碎石疤——这是它独有的读法。
+ *   冲岩是石身、碎石迸溅，落点只留一片会散去的石尘——它不再改动地形。
  */
 namespace PokemonSkills {
-    /** 把地表方块归到一个「岩石类」材质：深板岩归碎深板岩、沙归沙岩，其余石质归圆石。 */
-    function accelerockMaterial(id: string): string {
-        const value = String(id);
-        if (value.indexOf("deepslate") >= 0) return "minecraft:cobbled_deepslate";
-        if (value.indexOf("blackstone") >= 0) return "minecraft:blackstone";
-        if (value.indexOf("sand") >= 0) return "minecraft:sandstone";
-        if (value.indexOf("netherrack") >= 0) return "minecraft:netherrack";
-        if (value.indexOf("basalt") >= 0) return "minecraft:basalt";
-        if (value.indexOf("tuff") >= 0) return "minecraft:tuff";
-        if (value.indexOf("ice") >= 0) return "minecraft:packed_ice";
-        if (value.indexOf("obsidian") >= 0) return "minecraft:obsidian";
-        return "minecraft:cobblestone";
-    }
-
-    /** 读施法者脚下最近的一层实心方块，作为这一记石身的材质来源。 */
-    function accelerockSurface(world: CombatWorld, at: CombatPoint): string {
-        for (let dy = 0; dy >= -3; dy--) {
-            const block = world.block(WorldCombat.point(at.x(), at.y() + dy, at.z()));
-            if (block === null) continue;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava") continue;
-            return id;
-        }
-        return "minecraft:stone";
-    }
-
-    /** 在落点崩出一小片碎石疤（租借，linger，到期原方块回来）；返回崩了几格。 */
-    function accelerockScar(world: CombatWorld, point: CombatPoint, radius: number, block: string, ticks: number): number {
-        const cells: any[] = [], steps = Math.max(0, Math.min(2, Math.ceil(radius)));
-        const px = Math.floor(point.x()), py = Math.floor(point.y()), pz = Math.floor(point.z());
-        for (let dx = -steps; dx <= steps; dx++) for (let dz = -steps; dz <= steps; dz++) {
-            if (Math.sqrt(dx * dx + dz * dz) > radius + 0.4) continue;
-            const x = px + dx, z = pz + dz;
-            for (let dy = 1; dy >= -2; dy--) {
-                const y = py + dy;
-                const found = world.block(WorldCombat.point(x, y, z));
-                if (found === null) break;
-                const id = String(found.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                if (id === block) break;
-                cells.push({ x: x, y: y, z: z, block: block });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
     define({
         freeMovement: true,
         id: accelerockId,
         cooldownParameter: "recharge",
         name: "Accelerock",
-        description: "把碎岩披到身上，整个身体贴地撞出去：撞实一下把人顶飞，落点崩出一小片碎石疤。全族最重的一记先制。破阵式改成沿冲刺线一路碾过去。",
-        uses: ["贴地一记最重的石身先手，把目标撞飞", "破阵式撞穿一排贴在一起的敌人", "落点崩出碎石疤，改变脚下的地面"],
-        kind: "enemy",
+        description: "把碎岩披到身上，整个身体贴地撞出去：撞实一下把人顶飞，落点扬出一片碎石尘。全族最重的一记先制。破阵式改成沿冲刺线一路碾过去。",
+        uses: ["贴地一记最重的石身先手，把目标撞飞", "破阵式撞穿一排贴在一起的敌人", "撞出的碎石尘在落点扬起又很快散去"],
+        kind: "aim",
         range: 4.2,
         maxRange: 7.4,
         prepare: 3,
@@ -113,38 +61,38 @@ namespace PokemonSkills {
             const shove = p(accelerockId, "shove", action);
             const shards = Math.max(12, Math.round(p(accelerockId, "shards", action)));
             const pierce = Math.max(1, Math.round(p(accelerockId, "pierce", action)));
-            const scarRadius = p(accelerockId, "scar", action);
-            const rubbleTicks = Math.max(40, Math.round(p(accelerockId, "rubble", action)));
+            const scar = Math.max(0.4, p(accelerockId, "scar", action));
             const breakthrough = config && config.breakthrough === true;
-            const material = accelerockMaterial(accelerockSurface(world, action.origin()));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.5));
             const intensity = Math.max(0.6, Math.min(2.2, power / 50));
             const stuck: { [ref: string]: boolean } = {};
+            const scenes = WorldFeedback.actionScenes(accelerockScene);
             let travelled = 0, strikes = 0;
 
             function finish(current: CombatAction, at: CombatPoint, moment: string): void {
                 const scope = current.world();
+                scenes.stop(current);
                 if (moment === "miss") {
                     WorldFeedback.emit(scope, accelerockScene, 1, at, { moment: "miss", shards: Math.round(shards * 0.6), scale: scale }, 18);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), accelerockMissText, [], 20);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
             function smash(current: CombatAction, at: CombatPoint, victim: CombatActor): void {
                 const scope = current.world();
-                const cells = accelerockScar(scope, at, scarRadius, material, rubbleTicks);
                 WorldFeedback.emit(scope, accelerockScene, 1, at,
                     { moment: "smash", target: String(victim.ref()), shards: shards, puff: Math.round(shards * 0.4), scale: scale, intensity: intensity,
-                        scar: scarRadius, cells: cells, rubble: rubbleTicks, breakthrough: breakthrough ? 1 : 0 }, 24);
-                if (cells > 0)
-                    WorldFeedback.emit(scope, accelerockScene, 1, at, { moment: "scar", scar: scarRadius, cells: cells, scale: Math.max(0.5, scarRadius / 1.0) }, 22);
+                        scar: scar, breakthrough: breakthrough ? 1 : 0 }, 24);
+                // 落点只留一片会散的碎石尘，不再替换任何方块。
+                WorldFeedback.emit(scope, accelerockScene, 1, at,
+                    { moment: "scar", scar: scar, scale: Math.max(0.5, scar / 1.0), shards: Math.round(shards * 0.5), intensity: intensity }, 22);
                 scope.sound("minecraft:block.stone.break", at, 14, "{}");
             }
 
             sound(action, "cobblemon:move.rockthrow.actor");
-            action.present("accelerock:charge", accelerockScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", shards: shards, scale: scale, intensity: intensity, breakthrough: breakthrough ? 1 : 0 }));
+            scenes.show(action, "charge", action.origin(),
+                { moment: "charge", shards: shards, scale: scale, intensity: intensity, breakthrough: breakthrough ? 1 : 0 });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
@@ -163,7 +111,7 @@ namespace PokemonSkills {
                                 strikes++;
                                 smash(current, hit.position(), victim);
                                 const away = hit.position().minus(origin);
-                                if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(shove));
+                                if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(shove));
                             }
                             if (!breakthrough || strikes >= pierce) stop = true;
                         }

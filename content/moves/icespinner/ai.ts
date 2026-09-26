@@ -4,7 +4,8 @@
  * 什么局面下出手：目标可见、敌对、存活、**站在地上**，且在 `ai.maxChase`（默认 7）格内；够不到交给共享接近逻辑。
  *   它是一记贴地旋转冲撞，空中的对手不在候选里。
  * 对谁出手：`ai.clearTerrain`（默认开）打开时，身上带着任一场地身份（共享身份 world_combat:status/<场地名>，
- *   读法与其他状态一致）的目标排最前——旋过去顺手把场地刮掉；否则按普通近战排序。
+ *   读法与其他状态一致）且冲刺路线可达的目标排最前——旋过去顺手把场地刮掉；路线被墙或窄缝挡住则退回普通近战排序。
+ *   路线用只读世界入口 `CompanionBehavior.world(context)` 的 `freeSpace` 逐点探测，不凭空判定可达。
  * 够不到怎么办：reach 就是本招实际冲距，先走近。
  * 放完之后：交回共享交战计划；冲过的冰面与刮掉的场地都是它留下的结果。
  */
@@ -15,6 +16,26 @@ namespace PokemonSkills {
         for (let i = 0; i < icespinnerTerrains.length; i++)
             if (CompanionBehavior.status(context, target, icespinnerTerrains[i])) return true;
         return false;
+    }
+
+    /** 沿自身→目标逐点用原生 freeSpace 探路；撞墙、窄缝或空档不足则路线不可达。 */
+    function icespinnerRouteOpen(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const self = CompanionBehavior.source(context);
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (!(length > 0.01)) return true;
+        const reach = Math.max(2.0, Math.min(capability.data.range, length + 0.6));
+        const width = self.width === undefined ? 0.9 : self.width;
+        const height = self.height === undefined ? 1.4 : self.height;
+        const stepX = dx / length, stepZ = dz / length;
+        // 从自身体积之外起步采样，避免把自己的碰撞箱算成路障。
+        const start = Math.max(1.2, width * 0.5 + 0.5);
+        for (let d = start; d <= reach; d += 0.8) {
+            const feet = CompanionBehavior.point([self.point[0] + stepX * d, self.point[1] - height / 2, self.point[2] + stepZ * d]);
+            if (!world.freeSpace(feet, width, height)) return false;
+        }
+        return true;
     }
 
     function icespinnerWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -39,7 +60,8 @@ namespace PokemonSkills {
             if (!target || !icespinnerWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
             let score = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 16 : 0;
-            if (CompanionBehavior.ai<boolean>(capability, "clearTerrain", true) && icespinnerOnTerrain(context, target)) score += 22;
+            if (CompanionBehavior.ai<boolean>(capability, "clearTerrain", true) && icespinnerOnTerrain(context, target)
+                && icespinnerRouteOpen(context, capability, target)) score += 22;
             return score + Math.round(CompanionBehavior.ratio(target) * 5);
         }
     });

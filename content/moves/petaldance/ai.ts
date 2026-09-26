@@ -1,5 +1,5 @@
 /**
- * 花瓣舞 的伙伴 AI 用途：一套「在外围旋舞、削一圈」的出手计划。
+ * 花瓣舞 的伙伴 AI 用途：一套「在外围走位、用花裙外沿削」的出手计划。
  *
  * 什么局面有意义：威胁可见、敌对、存活，且在 ai.maxChase（默认 12）格以内（花瓣舞够得远，比近战敢早开），
  *   并且以自己为圆心、风暴半径内至少站着 ai.minFoes（默认 1）个非友方。人不够就先由共享接近逻辑继续靠近。
@@ -14,13 +14,13 @@ namespace CompanionBehavior {
     }
 
     function petalFoes(context: WorldBehavior.Context, centre: number[], radius: number): number {
-        const nearby = context.facts.nearby as Entity[];
+        const access = CompanionBehavior.world(context), actor = access.source();
+        const ratio = PokemonSkills.p(PokemonSkills.petaldanceId, "inner", { world: access, actor: actor,
+            skill: PokemonSkills.skills[PokemonSkills.petaldanceId], detail: { values: {} } });
         let count = 0;
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (!other.visible || other.friendly || other.health <= 0) continue;
-            if (CompanionBehavior.distance(other.point, centre) <= radius) count++;
-        }
+        WorldGeometry.selectBodies(access, PokemonSkills.petaldanceRing(CompanionBehavior.point(centre), radius * ratio, radius), (other, body) => {
+            if (!access.friendly(other) && body.health() > 0 && body.visible()) count++;
+        });
         return count;
     }
 
@@ -33,8 +33,8 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false)
             && CompanionBehavior.distance(self.point, threat.point) > radius) return false;
         // A visible target outside the ring can be approached. Only sensed, visible neighbours count.
-        const centre = CompanionBehavior.distance(self.point, threat.point) > radius ? threat.point : self.point;
-        return petalFoes(context, centre, radius) >= minimum;
+        if (CompanionBehavior.distance(self.point, threat.point) > radius) return true;
+        return petalFoes(context, self.point, radius) >= minimum;
     }
 
     CompanionBehavior.registerUse(PokemonSkills.petaldanceId, {
@@ -42,6 +42,7 @@ namespace CompanionBehavior {
         reach: function (context, capability) { return petalRadius(capability); },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (CompanionBehavior.status(context, CompanionBehavior.source(context), "confusion")) return false;
             if (!target) return true;
             if (!petalWants(context, capability, target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)

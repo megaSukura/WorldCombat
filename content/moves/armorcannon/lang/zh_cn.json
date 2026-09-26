@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.armorcannon.summary": "把熊熊燃烧的铠甲做成一副火壳射出去：远距特殊炮击，命中或落地会在落点烧出焦地。开炮时自身防御与特防各下降一级，命中与否都要付。散爆式命中炸开一团火、波及落点周围的人，代价是单发威力更低。",
+  "worldcombat.skill.armorcannon.summary": "把熊熊燃烧的铠甲做成一副火壳射出去：远距特殊炮击，命中活物或撞上障碍都在真落点炸开、留下一圈短暂的热壳残屑。开炮时自身防御与特防各下降一级，命中与否都要付。散爆式命中炸开一团火、波及落点周围的人，代价是单发威力更低。",
   "worldcombat.skill.armorcannon.use.0": "远距离用一发烧甲炮弹点掉一个目标",
   "worldcombat.skill.armorcannon.use.1": "散爆式炸开落点周围挤在一起的敌人",
-  "worldcombat.skill.armorcannon.use.2": "在远处打一发再退开、把焦地留在场上",
+  "worldcombat.skill.armorcannon.use.2": "在远处打一发再退开",
   "worldcombat.skill.armorcannon.description.0": "射出烧红的铠甲火壳，命中造成约 %1$s 点特殊伤害。",
   "worldcombat.skill.armorcannon.description.1": "射程 %1$s 格、弹速 %2$s 格/刻，弹体碰撞半径 %3$s 格。",
   "worldcombat.skill.armorcannon.description.2": "炮弹出手前铠甲就已烧掉：自身防御下降 %1$s 级、特防下降 %2$s 级，命中与否都要付。",
@@ -17,8 +17,8 @@
   "worldcombat.skill.armorcannon.value.radius": "弹体碰撞半径",
   "worldcombat.skill.armorcannon.value.blast": "散爆半径",
   "worldcombat.skill.armorcannon.value.share": "散爆保留",
-  "worldcombat.skill.armorcannon.value.scorch": "灼痕半径",
-  "worldcombat.skill.armorcannon.value.scorchTicks": "灼痕时长",
+  "worldcombat.skill.armorcannon.value.scorch": "落点热屑半径",
+  "worldcombat.skill.armorcannon.value.scorchTicks": "余烬时长",
   "worldcombat.skill.armorcannon.value.plates": "装甲片数",
   "worldcombat.skill.armorcannon.value.guardLoss": "自身防御下降",
   "worldcombat.skill.armorcannon.value.poiseLoss": "自身特防下降",
@@ -37,5 +37,5 @@
   "worldcombat.skill.armorcannon.preference.ai.minHealth.help": "自身生命比例低于这个值就不主动烧甲开炮（0＝不限制）。调高能让它把这一发留给值得交换的局面。",
   "world_combat.move.armorcannon.text.slump": "铠甲烧尽：防御 −%1$s、特防 −%2$s",
   "world_combat.move.armorcannon.text.burst": "火团波及 %1$s 人",
-  "worldcombat.skill.armorcannon.description.3": "炮弹命中或在障碍上炸开时，落点会烧出一片半径 %1$s 格的黑石焦地，持续 %2$s 刻，到时原方块恢复；炮弹飞完仍未命中，则不留焦地。"
+  "worldcombat.skill.armorcannon.description.3": "炮弹命中活物或在障碍上炸开时，落点都会散开热壳残屑，余烬随后自然熄灭（只是表现，不改动地面方块）；炮弹飞完仍未命中，则不留残屑。"
 }

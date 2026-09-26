@@ -1,9 +1,10 @@
 /**
- * 治愈波动 的伙伴 AI：这是一口远距离的救助，只送给别人、送给自己没有意义。
+ * 治愈波动 的伙伴 AI：这是一口会赶路的远距离救助，只送给别人、送给自己没有意义。
  *
  * 何时考虑：共享的「伤者」感官挑出一个生命低于 ai.healBelow（默认 0.75）的友方，且它在 ai.maxChase（默认 12）以内。
  * 对谁出手：那个受伤的伙伴；不接受自己、也不接受敌人——这是送给别人的波。
- * 候选之间怎么排：伙伴生命低于 0.4 时 priority 抬到 100，抢在共享交战次序前先救；其余情况 42。
+ * 候选之间怎么排：生命低于 0.4 的急危者抬到 100 以上，且越近越先（波到得越快、越不容易被抢在前面打倒）；
+ *   其余按距离递减，靠近的优先。急危近友因此排在普通补血之前。
  * 够不到怎么办：reach 就是本招射程，共享任务先走近再送；波在路上的飞行时间由本招的机制承担。
  * 放完之后：伙伴拿到这一口，伙伴交回共享顺序继续战斗。
  * 配置：overcharge 切换超载／轻吐；ai.healBelow 与 ai.maxChase 调救助阈值与愿意跑多远送。
@@ -33,8 +34,10 @@ namespace CompanionBehavior {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            if (!target.friendly || String(target.ref) === String(source(context).ref)) return 0;
-            return ratio(target) < 0.4 ? 100 : 42;
+            const self = source(context);
+            if (!target.friendly || String(target.ref) === String(self.ref)) return 0;
+            const near = Math.max(0, 12 - Math.min(12, distance(self.point, target.point)));
+            return ratio(target) < 0.4 ? 100 + near : 42 - Math.max(0, 12 - near);
         }
     });
 }

@@ -1,14 +1,14 @@
 /**
  * 滚动 / rollout 的客户端表现。
  *
- * 一句话：一颗土黄石球贴着地面从近处一路滚向对手，碎石沿走廊被卷起；撞上的那一下整颗球炸开一圈石屑，
- * 滚得越重球越大、碎屑越密；连滚层数存在时，脚边一圈石屑持续向里聚拢，告诉你这股势还没散。
- * 色相家族：土黄与石灰（earth／large_rock／bar），近白高光（quickattack_dashlines／bigsparkle），中性尘（tinydust）。
- * 拍子：起（charge 聚石）→ 滚（roll 走廊）→ 击（hit 崩石）→ 续（rise 层数上升／aura 层数存续／cap 接满）→ 收（drop／fade）。
- * 范围：roll 用 `data.path`（与服务端 WorldGeometry.lane 同一组四个顶点）铺成走廊，走廊多长多宽画面就是那块。
- * 运动：走廊沿瞄准方向由近及远（orient 固定、顶点来自服务端）；层数越高球的体积越大（`data.scale`）。
- * 数：roll 的碎石量绑定 `data.grains`（每趟威力换算），hit 的崩石量绑定 `data.grains`、亮度绑定 `data.intensity`，
- *   aura／rise 的球径绑定 `data.scale`／`data.stage`——画面里的数与机制里的数一致。
+ * 一句话：一颗土黄石球贴着真实身体路线翻滚向前，滚过的地面卷起碎石与尘线；撞中谁就在谁身上炸开一圈石屑，
+ * 撞上实墙在墙面崩出碎石，什么都没碰就只留下一撮尘；连滚层数越高轮缘越粗、碎屑越密。
+ * 色相家族：土黄与石灰（earth／large_rock／tinydust），近白高光（quickattack_dashlines／bigsparkle）。
+ * 拍子：起（charge 聚石）→ 滚（roll 跟随真实身体路线）→ 击（hit 崩石／wall 撞墙）→ 续（rise 层数上升／aura 存续／cap 接满）→ 收（whiff 空滚／drop 断链）。
+ * 范围：roll 的每一帧位置就是身体当刻位置（bind source），`data.direction` 给出当刻滚行方向，弯线与弹回都来自真实位置。
+ * 运动：速度线用 orient velocity 沿真实滚行方向拉直；石屑绕身翻滚（spin）。
+ * 数：roll 的碎石量与速度线量绑定 `data.grains`，轮缘粗细绑定 `data.rim`（层数派生），球径与亮度绑定
+ *   `data.scale`／`data.intensity`——画面里的数与机制里的数一致（层数越高轮缘越粗）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const RolloutDefinition: ParticleDefinition = {
@@ -37,30 +37,32 @@ const RolloutDefinition: ParticleDefinition = {
             ]
         },
         roll: {
-            duration: 20,
-            exit: { stop: 5, drain: 12 },
+            duration: 40,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "swept_ground", bind: "path", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    shape: { kind: "polygon" }, rate: 34, direction: "shape", speed: [0.04, 0.16],
-                    lifetime: [6, 12], size: { data: "scale", fallback: 1 },
-                    color: 0x9A8A72, alpha: [0.45, 0], light: "world", maxParticles: 90
+                    name: "tumbling_rim", bind: "source", offset: [0, 0.45, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    rate: { data: "grains", fallback: 14 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    direction: "outward", speed: [0.03, 0.14], spread: 18, spin: 26,
+                    lifetime: [6, 12], size: [{ data: "rim", fallback: 0.16 }, 0.04], sizeMode: "index",
+                    color: 0x9A8A72, alpha: [0.9, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "speed_lines", bind: "path", offset: [0, 0.35, 0],
+                    name: "roll_dash", bind: "source", offset: [0, 0.35, 0], height: 0.2, orient: "velocity",
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    shape: { kind: "polyline" }, rate: 22, direction: "shape", speed: [0.06, 0.22],
-                    lifetime: [4, 8], size: [0.28, 0.06], sizeMode: "index",
-                    color: 0xE8E0CC, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 60
+                    rate: 18, shape: { kind: "line", length: 0.8 }, direction: "shape", speed: [0.06, 0.22],
+                    lifetime: [4, 8], size: [0.26, 0.05], sizeMode: "index",
+                    color: 0xE8E0CC, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 50
                 },
                 {
-                    name: "rolling_dust", bind: "path", offset: [0, 0.2, 0],
+                    name: "ground_dust", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polygon" }, rate: { data: "grains", fallback: 14 }, direction: "outward", speed: [0.03, 0.14],
+                    rate: { data: "grains", fallback: 14 }, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    direction: "outward", speed: [0.03, 0.12],
                     gravity: 0.04, drag: 0.93,
                     lifetime: [10, 18], size: [0.07, 0.02],
-                    color: 0x9A927E, alpha: [0.5, 0], light: "world", maxParticles: 64
+                    color: 0x9A927E, alpha: [0.5, 0], light: "world", maxParticles: 56
                 }
             ]
         },
@@ -98,6 +100,30 @@ const RolloutDefinition: ParticleDefinition = {
                 }
             ]
         },
+        wall: {
+            duration: 20,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "wall_chip", bind: "point", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
+                    burst: { count: { data: "grains", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.35 },
+                    direction: "outward", speed: [0.05, 0.2], spread: 40,
+                    lifetime: [5, 11], size: [0.24, 0.05], sizeMode: "index",
+                    color: 0xD8C6A2, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 40
+                },
+                {
+                    name: "wall_grit", bind: "point", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.12], gravity: 0.06, drag: 0.9,
+                    lifetime: [10, 18], size: [0.06, 0.02],
+                    color: 0x8A7D64, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         whiff: {
             duration: 18,
             exit: { stop: 5, drain: 9 },
@@ -110,6 +136,15 @@ const RolloutDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.14], gravity: 0.05, drag: 0.9,
                     lifetime: [10, 18], size: [0.07, 0.02],
                     color: 0x8A7D64, alpha: [0.45, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "skid_ring", bind: "point", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.03, 0.1], spread: 12,
+                    lifetime: [8, 15], size: [0.1, 0.02],
+                    color: 0x9A927E, alpha: [0.5, 0], light: "world", maxParticles: 24
                 }
             ]
         },

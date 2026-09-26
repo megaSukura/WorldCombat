@@ -2,16 +2,34 @@
  * 金属音 的伙伴 AI 用途：这招自己的一套出手计划——找一段对方看不见自己的距离，站定把音磨出去。
  *
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没被磨出回响。声音不需要通视，掩体挡不住它，
- *   所以真正理想的局面是「我看得见它、它打不到我、中间还隔着墙」——`available` 不要求视线，priority
- *   会给「被掩体挡住的那一侧」加分，让它优先躲着磨。
- * 什么时候最想出手：目标被掩体挡住（看不到施法者）时 priority 抬高；目标离得较远、还在赶路时也加分。
+ *   但磨音要站定好几段，所以真正理想的局面是「有队友在前面承伤、目标又走不动」——此时把特防一层层刮开最值。
+ *   自己贴得太近又刚挨过打时降低优先级，先别站着挨磨。`available` 不要求视线。
+ * 什么时候最想出手：目标被掩体挡住（看不到施法者）时 +12；附近有队友最近在承伤时 +12；目标几乎不移动时 +10；
+ *   自己贴身且刚被打过时 -16。
  * 对谁出手：当前威胁；已经带着「刮擦」身份的目标跳过，避免重复。
  * 够不到怎么办：reach 就是回响距离，共享任务会先走近到听得见的距离再磨。
- * 放完之后：目标特防大降并带着很长一段回响；伙伴交回共享顺序。
+ * 放完之后：目标特防被分级磨低并带着很长一段回响；伙伴交回共享顺序。
  */
 namespace CompanionBehavior {
     function metalsoundHidden(context: WorldBehavior.Context, threat: Entity): boolean {
         return !world(context).clear(point(threat.point), point(source(context).point));
+    }
+
+    /** 目标几乎不移动时更适合站着磨；速度事实缺失时按中性处理。 */
+    function metalsoundSlow(context: WorldBehavior.Context, threat: Entity): boolean {
+        const value = velocity(context, threat);
+        if (!value) return false;
+        return Math.sqrt(value[0] * value[0] + value[2] * value[2]) < 0.05;
+    }
+
+    /** 附近是否有队友最近在承伤——有人顶在前面，磨音的窗口才撑得住。 */
+    function metalsoundAllyPressed(context: WorldBehavior.Context, threat: Entity): boolean {
+        const nearby = context.facts.nearby as Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly && other.health > 0 && other.hurtAgo < 40 && distance(other.point, threat.point) <= 8) return true;
+        }
+        return false;
     }
 
     function metalsoundWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
@@ -32,10 +50,13 @@ namespace CompanionBehavior {
         approachTarget: function (_context, _item, target) { return target; },
         priority: function (context, item, target) {
             if (!target || !metalsoundWants(context, item, target)) return 0;
-            const self = source(context);
-            const cover = metalsoundHidden(context, target) ? 14 : 0;
-            const far = distance(self.point, target.point) > 5 ? 8 : 0;
-            return Math.min(90, 48 + cover + far);
+            const self = source(context), gap = distance(self.point, target.point);
+            let value = 44;
+            if (metalsoundHidden(context, target)) value += 12;
+            if (metalsoundAllyPressed(context, target)) value += 12;
+            if (metalsoundSlow(context, target)) value += 10;
+            if (gap < 5 && self.hurtAgo < 40) value -= 16;
+            return Math.max(0, Math.min(90, value));
         }
     });
 

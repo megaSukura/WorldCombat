@@ -27,18 +27,23 @@ namespace WorldEffects {
     export function hazard(name: string): string { return identity("hazard", name); }
     export function screen(name: string): string { return identity("screen", name); }
     export var categories = { terrain: category("terrain"), weather: category("weather"), hazard: category("hazard"), screen: category("screen"), haze: category("haze") };
-    export interface FieldRuleOptions { identity?: string; tags?: string[]; lineOfSight?: boolean; }
+    export interface FieldRuleOptions { identity?: string; tags?: string[]; lineOfSight?: boolean;
+        /** Opt in only when all ownership lives in field/source, leave releases members, and data is portable unchanged. */
+        transferable?: boolean;
+    }
     export interface Field {
         identity?: string; rule: string; position: number[]; radius: number; data: any; members: string[];
         /** Declared tags and current effect facts, filled for callbacks. Defaults keep pre-tag fields working. */
         tags?: string[]; lineOfSight?: boolean; id?: number; remaining?: number;
+        /** Previous membership on the first scan after a source change; producers retain their own hit history. */
+        reassignedMembers?: string[];
     }
     export interface Area {
         id: number; source: string; rule: string; identity: string; tags: string[];
         position: number[]; radius: number; pending: boolean; remaining: number; data: any;
     }
     var rules: { [id: string]: Rule } = Object.create(null);
-    var definitions: { [id: string]: { identity: string; tags: string[]; lineOfSight: boolean } } = Object.create(null);
+    var definitions: { [id: string]: { identity: string; tags: string[]; lineOfSight: boolean; transferable: boolean } } = Object.create(null);
     function positioned(value: any): boolean {
         return Array.isArray(value) && value.length === 3 && value.every(function (entry: any) { return typeof entry === "number" && isFinite(entry); });
     }
@@ -138,7 +143,7 @@ namespace WorldEffects {
      * `field.data` is saved and persists across scans. `field.id`/`field.remaining` are the owning effect's
      * read-only facts for the current scan.
      */
-    export interface Rule { enter?: (world: CombatWorld, actor: CombatActor, field: Field) => void; stay?: (world: CombatWorld, actor: CombatActor, field: Field) => void; leave?: (world: CombatWorld, actor: CombatActor, field: Field) => void; scan?: (effect: CombatEffect, world: CombatWorld, field: Field) => void; }
+    export interface Rule { canTransfer?: (field: Field) => boolean; enter?: (world: CombatWorld, actor: CombatActor, field: Field) => void; stay?: (world: CombatWorld, actor: CombatActor, field: Field) => void; leave?: (world: CombatWorld, actor: CombatActor, field: Field) => void; scan?: (effect: CombatEffect, world: CombatWorld, field: Field) => void; }
     /**
      * A producer owns its callback id; identity and tags let independent producers share consumers.
      * `lineOfSight` defaults true: members need an unobstructed line from the field centre. Set it false
@@ -149,11 +154,23 @@ namespace WorldEffects {
         if (rules[id]) throw new Error("Duplicate field rule: " + id);
         var options: FieldRuleOptions = typeof identityOrOptions === "string" ? { identity: identityOrOptions } : (identityOrOptions || {});
         rules[id] = rule;
-        definitions[id] = { identity: options.identity || id, tags: options.tags ? options.tags.slice() : [], lineOfSight: options.lineOfSight !== false };
+        definitions[id] = { identity: options.identity || id, tags: options.tags ? options.tags.slice() : [], lineOfSight: options.lineOfSight !== false, transferable: options.transferable === true };
     }
     export function hasFieldRule(id: string): boolean { return !!rules[id]; }
     export function fieldIdentity(id: string): string | null { return definitions[id] ? definitions[id].identity : null; }
     export function fieldTags(id: string): string[] { return definitions[id] ? definitions[id].tags.slice() : []; }
+    export function fieldTransferable(id: string): boolean { return !!definitions[id] && definitions[id].transferable; }
+    export function areaTransferable(area: Area): boolean {
+        return fieldTransferable(area.rule) && (!rules[area.rule].canTransfer || rules[area.rule].canTransfer!({
+            rule: area.rule, position: area.position, radius: area.radius, data: area.data, members: [], id: area.id, remaining: area.remaining
+        }));
+    }
+    /** Explicit producer support; the operation keeps geometry, resource data and remaining clock. */
+    export function reassign(world: CombatWorld, id: number, holder: CombatActor): boolean {
+        try { return world.operation(id, "world_combat:reassign", JSON.stringify({ holder: String(holder.ref()) })); }
+        catch (error) { return false; }
+    }
+
     /** Explicit named additions preserve one owner for the field's base rule. */
     export interface FieldContext { phase: "enter" | "stay" | "leave" | "scan"; world: CombatWorld; field: Field; actor: CombatActor | null; }
     function available(world: CombatWorld, actor: CombatActor | null): boolean {
@@ -317,6 +334,24 @@ namespace WorldEffects {
         }, EffectProtocols.unchanged);
         WorldCombat.effectHandler("world_combat:field", "start", function (effect) { effect.schedule("scan", "scan", 1, "{}"); });
         WorldCombat.effectHandler("world_combat:field", "operation:world_combat:dispel", function (effect) { effect.end(); });
+        WorldCombat.effectHandler("world_combat:field", "operation:world_combat:reassign", function (effect) {
+            const state: Field & { owner?: string } = JSON.parse(effect.state()), world = effect.world();
+            const request = JSON.parse(effect.input()), holder = typeof request.holder === "string" ? world.actor(request.holder) : null;
+            if (!fieldTransferable(state.rule) || state.owner || rules[state.rule].canTransfer && !rules[state.rule].canTransfer!(state)) { effect.reject("field-not-transferable"); return; }
+            if (!holder || !world.valid(holder) || String(holder.ref()) === String(effect.source().ref())) { effect.reject("invalid-field-holder"); return; }
+            const body = world.observe(holder), point = WorldAI.point(state.position);
+            if (!body || point.minus(body.position()).length() > fieldLimits.sourceRange || effect.remaining() < 1) { effect.reject("field-holder-too-far"); return; }
+            const replacement: Field = JSON.parse(JSON.stringify(state)); replacement.reassignedMembers = (state.reassignedMembers || []).concat(state.members)
+                .filter((ref, index, all) => all.indexOf(ref) === index); replacement.members = [];
+            delete replacement.id; delete replacement.remaining;
+            // Creation is permission-checked and its first scan is scheduled for the next tick. The old end handler
+            // still receives every original member, so leave precedes every new-source enter.
+            const created = effect.copyTo(holder, holder, JSON.stringify(replacement), effect.remaining());
+            if (!(created > 0) || !world.effects(holder, "world_combat:field").some(view => view.id() === created)) {
+                effect.reject("field-transfer-refused"); return;
+            }
+            effect.end();
+        });
         // A later callback may merge same-rule state or refresh the field while its members keep their marks.
         WorldCombat.effectHandler("world_combat:field", "operation:world_combat:update", function (effect) {
             var request: FieldUpdate = JSON.parse(effect.input()), state: Field = JSON.parse(effect.state());
@@ -371,6 +406,7 @@ namespace WorldEffects {
             // Later callbacks can remove members that were already visited in this scan.
             state.members = members.filter(function (ref) { var actor = world.actor(ref); return actor !== null && world.observe(actor) !== null; });
             if (!active()) return;
+            delete state.reassignedMembers;
             effect.state(JSON.stringify(state)); effect.schedule("scan", "scan", fieldLimits.scanInterval, "{}");
         });
         WorldCombat.effectHandler("world_combat:field", "end", function (effect) {

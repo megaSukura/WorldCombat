@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.mudslap.summary": "Hurl a fistful of wet mud in the target's face. The damage is light, but its accuracy always drops.",
+  "worldcombat.skill.mudslap.summary": "Hurl a fistful of wet mud in the aimed direction or at a spot. A living hit deals light damage and always drops its accuracy.",
   "worldcombat.skill.mudslap.use.0": "Open at close-to-mid range with a guaranteed accuracy drop",
   "worldcombat.skill.mudslap.use.1": "Set up the next big move",
   "worldcombat.skill.mudslap.use.2": "Cheap, reliable chip damage",

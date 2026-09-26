@@ -4,7 +4,8 @@
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 12）格内；更远交给共享接近逻辑。
  *   本招是地点招，AI 会把云铺在目标所在的位置。
  * 对谁出手：`ai.crowd`（默认开）打开时，目标身边还挤着别人排前——一片云能一次罩住几人；
- *   `ai.finish`（默认开）打开时残血目标排前；已经带着共享迷幻身份的目标排后。
+ *   `ai.finish`（默认开）打开时残血目标排前；已经带着共享迷幻身份的目标排后；
+ *   正在逃离的目标（共享 movement 感知）排后：它马上会离开云，续熏收益低。
  * 够不到怎么办：reach 就是喷射距离，不够先走近。
  * 放完之后：交回共享交战计划；云会留在落点，持续熏着进出的人。
  */
@@ -44,6 +45,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.ai<boolean>(capability, "crowd", true)) score += Math.min(18, strangesteamCrowd(context, target) * 9);
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 7);
             if (CompanionBehavior.status(context, target, "confusion")) score -= 6;
+            // 正在逃离的目标马上会离开云，续熏收益低：压低它的排序，把云留给更可能久留的人。
+            if (CompanionBehavior.fleeing(context, target)) score -= 5;
             return score;
         }
     });

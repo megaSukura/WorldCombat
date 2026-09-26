@@ -5,10 +5,10 @@
  * 用力会伤到自己。它不隔空、不远射——够不到就亲空，所以走位是它的读法。
  *
  * 出手：贴到亲吻距离内才能提交；ready 复核目标是否还在、是否够得到，够不到就作废（不花 PP）。
- * 命中：在目标身上炸开一团心，挂共享身份 world_combat:status/confusion 的 world_combat:sweetkiss_blush。
+ * 命中：源与目标相触处只落一枚吻印，挂共享身份 world_combat:status/confusion 的 world_combat:sweetkiss_blush。
  * 持续：混乱存续期由该 MobEffect 承担，周期性 keep 播放头顶的心与飞鸟。
  * 随机分支：目标每次试图出手（world_combat:before_commit）按载体振幅掷骰；中则本次出手作废。
- * 反噬：目标每次打中非友方（world_combat:damage_applied）按自身攻击结算自伤。
+ * 反噬：目标每次打中非友方（world_combat:damage_applied）按自身攻击结算自伤，且不超过这一击真正造成的伤害。
  * 反制：距离是硬门槛；目标跑开、被队友挡开或自己够不到都亲空。已有混乱只被刷新，不叠加。
  */
 namespace PokemonSkills {
@@ -78,7 +78,12 @@ namespace PokemonSkills {
             const ticks = Math.max(20, Math.round(p(sweetkissId, "mistTicks", action) * (deep ? 1.3 : 0.8)));
             const chance = Math.max(0.05, Math.min(0.9, sweetkissBaseChance + (deep ? 0.1 : 0)));
             const hearts = Math.max(1, Math.round(p(sweetkissId, "hearts", action)));
-            CombatStatus.apply(world, target, "confusion", sweetkissEffect, ticks, Math.round(chance * 100), { unique: true });
+            // 只有状态真的落上才留吻印；被共享 gate 挡下时按亲空处理。
+            if (!CombatStatus.apply(world, target, "confusion", sweetkissEffect, ticks, Math.round(chance * 100), { unique: true })) {
+                WorldFeedback.emit(world, sweetkissScene, 1, at, { moment: "fizzle", target: String(target.ref()) }, 18);
+                done(action);
+                return;
+            }
             WorldFeedback.emit(world, sweetkissScene, 1, at,
                 { moment: "kiss", target: String(target.ref()), hearts: hearts, scale: Math.max(0.6, Math.min(2, ticks / 180)) }, 40);
             WorldFeedback.text(world, sweetkissAbove(at), "world_combat.move.sweetkiss.text.kissed", [Math.round(ticks / 20)], 44);
@@ -100,7 +105,9 @@ namespace PokemonSkills {
         const facts = PokemonDamage.combatants.read(world, actor);
         const attack = facts.stats.atk || 0;
         const fraction = sweetkissRecoilFraction * Math.max(0.4, Math.min(2.5, attack / 100));
-        const loss = -world.health(actor, -body.maxHealth() * fraction, "world_combat:confusion");
+        // 反噬预算来自这一击的真实回执：自伤不超过它真正造成的伤害，高血 Boss 不会被按血条白削。
+        const budget = Math.max(0, Number(data.actual) || 0) * sweetkissRecoilBudget;
+        const loss = -world.health(actor, -Math.min(body.maxHealth() * fraction, budget), "world_combat:confusion");
         if (loss <= 0) return;
         const power = Math.max(0.2, Math.min(3, loss / Math.max(1, body.maxHealth()) * 12));
         WorldFeedback.emit(world, sweetkissScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);

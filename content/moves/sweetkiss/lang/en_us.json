@@ -4,7 +4,7 @@
   "worldcombat.skill.sweetkiss.use.1": "Open a miss window before an ally's focus fire",
   "worldcombat.skill.sweetkiss.use.2": "Make an opponent's combo fumble in a grapple",
   "worldcombat.skill.sweetkiss.description.0": "It only lands within kissing distance (%1$s blocks, scaled by body size); with the current form that distance is %2$s blocks. Out of reach it simply misses, at no PP cost.",
-  "worldcombat.skill.sweetkiss.description.1": "A kissed target is left confused for %1$s: each action has a 30% chance to be wasted (40% for a Deep kiss), and landing a hit on an enemy backlashes for about 2%–14% of its maximum health, scaling with its Attack. A repeat kiss only refreshes the confusion, never stacks it, and higher friendship means a longer daze.",
+  "worldcombat.skill.sweetkiss.description.1": "A kissed target is left confused for %1$s: each action has a 30% chance to be wasted (40% for a Deep kiss), and landing a hit on an enemy backlashes for about 2%–14% of its maximum health, scaling with its Attack but never exceeding the damage that hit actually dealt. A repeat kiss only refreshes the confusion, never stacks it, and higher friendship means a longer daze.",
   "worldcombat.skill.sweetkiss.description.2": "Leaning in and delivering the kiss takes %1$s, the recovery is %2$s and the cooldown %3$s. The kiss is a choice: a Light kiss has x0.9 cooldown and x0.8 confusion duration; a Deep kiss adds +6 ticks of wind-up, +4 of recovery and x1.15 cooldown, buying x1.3 confusion duration and +10 percentage points of fumble chance.",
   "worldcombat.skill.sweetkiss.value.kissReach": "Kissing distance",
   "worldcombat.skill.sweetkiss.value.mistTicks": "Confusion duration",

@@ -1,13 +1,15 @@
 /**
  * 精神强念 / psychic 的客户端表现。
  *
- * 一句话：施法者身前收拢一团深紫念力 → 目标脚边合拢一圈念力环、身上缠起向内的念力丝 → 片刻后整团
- * 猛地一挤、炸开一圈白边大环；被压到特防时冒一圈紫星。
+ * 一句话：施法者身前收拢一团深紫念力 → 目标脚边合拢一圈念力环、身上缠起向内的念力丝，并牵一条连到
+ * 念力锚点的丝线随持续瞄准移动 → 窗口结束整团猛地一挤、炸开一圈白边大环；被压到特防时冒一圈紫星。
  * 色相家族：深紫蓝（0x7A52E6 主 / 0xB49CF0 亮 / 0x4A2FA0 暗）为主体，近白只给挤压核心。
- * 拍子：起 windup/lock（聚念与锁定）→ 握 grip（合拢与缠丝）→ 挤 squeeze（爆发）→ 压 sunder（特防）→ 收 miss。
+ * 拍子：起 windup/lock（聚念与锁定）→ 握 grip（合拢、缠丝、锚点连线，随操纵窗口每刻更新）→ 挤 squeeze（爆发）
+ *   → 压 sunder（特防）→ 松 release 与空握 empty。
  * 范围：grip 的贴地环与 squeeze 的冲击环按 `data.scale`（擒压威力 / 92）铺开，就是这一握压住的那块地方。
- * 运动：windup 向内收；lock 的环缓缓自转；grip 的念力丝由外向内收拢；squeeze 整团向外炸开。
- * 数：`data.spirals`（特攻与等级派生）决定缠丝与贴地环的密度，`data.intensity` 抬高亮度。
+ * 运动：windup 向内收；lock 的环缓缓自转；grip 的念力丝由外向内收拢、丝线连到当刻锚点；squeeze 整团向外炸开。
+ * 数：`data.spirals`（特攻与等级派生）决定缠丝、丝线、贴地环与释放的密度，`data.intensity` 抬高亮度；
+ *   实际抗位移时服务端把 intensity 抬高，读作念力手绷紧而目标没有被推走。
  */
 const PsychicDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -50,7 +52,7 @@ const PsychicDefinition: ParticleDefinition = {
         },
         grip: {
             duration: 30,
-            exit: { stop: 10, drain: 22 },
+            exit: { stop: 12, drain: 22 },
             emitters: [
                 {
                     name: "cage", bind: "target", offset: [0, 0.1, 0], height: 0.5,
@@ -78,6 +80,23 @@ const PsychicDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.04, 0.14],
                     lifetime: [10, 18], size: [0.07, 0.01],
                     color: 0x8E7BC0, alpha: [0.6, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "tether", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    rate: { data: "spirals", fallback: 14 },
+                    shape: { kind: "polyline" }, direction: "shape", speed: [0.02, 0.09], spread: 14, spin: 8,
+                    lifetime: [8, 14], size: [0.12, 0.02],
+                    color: 0xB49CF0, alpha: [0.8, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "anchor", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
+                    burst: { count: 1, interval: 5, repeats: 3 },
+                    shape: { kind: "ring", radius: 0.22 },
+                    direction: "outward", speed: [0.02, 0.08], spin: 10,
+                    lifetime: [8, 14], size: [0.16, 0.34],
+                    color: 0x9B7BEE, alpha: [0.7, 0], light: "full", maxParticles: 8
                 }
             ]
         },
@@ -141,6 +160,36 @@ const PsychicDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [10, 16], size: [0.16, 0.02],
                     color: 0x6B58A0, alpha: [0.5, 0], light: "world", maxParticles: 18
+                }
+            ]
+        },
+        empty: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "clench", bind: "point", fit: "none", offset: [0, 0.18, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
+                    burst: { count: { data: "spirals", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.05, 0.16], drag: 0.9,
+                    lifetime: [8, 14], size: [0.14, 0.02],
+                    color: 0x7A52E6, alpha: [0.7, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        release: {
+            duration: 18,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "slip", bind: "target", offset: [0, 0.15, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    burst: { count: { data: "spirals", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.05, 0.18], spread: 26, spin: 6,
+                    lifetime: [10, 16], size: [0.14, 0.02],
+                    color: 0x6B58A0, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         }

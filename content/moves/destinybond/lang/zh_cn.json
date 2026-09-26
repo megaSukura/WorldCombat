@@ -24,6 +24,8 @@
   "worldcombat.skill.destinybond.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去系线。",
   "world_combat.move.destinybond.text.bind": "命线系上 %1$s 秒",
   "world_combat.move.destinybond.text.drag": "同命：一起倒下",
+  "world_combat.move.destinybond.text.graze": "同命：只牵走了它一部分",
+  "world_combat.move.destinybond.text.resist": "同命：凶手抵住了这一牵",
   "world_combat.move.destinybond.text.lift": "命线松开",
   "effect.world_combat.destiny_bond": "同命",
   "worldcombat.skill.destinybond.description.2": "身上已经有一条命线时再施放会失败；命线走完时长或被清除后松开，只要你还没有倒下，就没有人会被拖下去。"

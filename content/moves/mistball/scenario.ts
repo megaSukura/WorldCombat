@@ -18,7 +18,7 @@ Smoke.scenario("mistball", function (stage) {
     }, function () {
         stage.expect(stage.casts("mistball", caster) > 0, "薄雾球被放出来了");
         stage.expect(stage.damageTo(foe) > 0, "羽绒雾球打中了目标");
-        stage.note("缠身（约五成起，随特攻与等级上升）是概率结果，只作记录；球走的是弧线，落点随目标走位变化。",
+        stage.note("缠身（约五成起，随特攻与等级上升）是概率结果，只作记录；球走的是真实弧线、落点随目标走位变化，射程由独立参数决定。只有减速真的挂上时，目标身上才留下跟随它的贴身羽绒雾，驱散立即散。",
             { casts: stage.casts("mistball", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 downcast: stage.hadMobEffect(foe, "world_combat:status/downcast"), foeAlive: foe.alive() });
         stage.done();

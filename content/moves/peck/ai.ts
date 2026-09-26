@@ -2,7 +2,8 @@
  * 啄 / peck 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 4）格内；喙程很短，够不到先让共享接近逻辑送进来。
- * 对谁出手：`ai.pickAir`（默认开）把已经离地的目标排得更前——啄正好把它压回地面；`ai.finish` 收残血。
+ * 对谁出手：`ai.pickAir`（默认开）把已经离地的目标排得更前——啄正好把它压回地面，越近给的优先越高；
+ * 地面目标作为快速填充的次选；`ai.finish` 收残血。
  * 出手位置：贴身（1.4 格内），越靠越容易在对手起手前抢到这一啄。
  * 放完之后：交回共享交战计划，冷却短，适合一记接一记地补。
  */
@@ -26,8 +27,9 @@ namespace PokemonSkills {
             if (!target) return 0;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             if (distance > capability.data.range) return 0;
-            let score = 14;
-            if (CompanionBehavior.ai<boolean>(capability, "pickAir", true) && target.grounded === false) score += 12;
+            let score = 12;
+            if (CompanionBehavior.ai<boolean>(capability, "pickAir", true) && target.grounded === false)
+                score += distance <= 2 ? 16 : 10;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) score += 12;
             return score;
         }

@@ -3,9 +3,9 @@
   "worldcombat.skill.spicyextract.use.0": "给全队开一个「揍它」的窗口",
   "worldcombat.skill.spicyextract.use.1": "把一只肉盾烧成玻璃炮",
   "worldcombat.skill.spicyextract.use.2": "在狭窄地形一次辣到一小簇敌人",
-  "worldcombat.skill.spicyextract.description.0": "把辣椒精华甩到目标身上（或它脚边）：落点半径内所有敌人攻击 +%1$s 级、防御 −%2$s 级；收益属于所有打它的人。",
-  "worldcombat.skill.spicyextract.description.1": "辣雾半径 %1$s 格，残留约 %2$s 秒；新走进雾里的敌人也会被辣一次（同一目标在同一片雾里只结算一次）。",
-  "worldcombat.skill.spicyextract.description.2": "精华瓶以 %1$s 格/刻飞出、判定半径 %2$s 格，射程 %3$s 格；瓶子可能被打偏或被掩体挡下。",
+  "worldcombat.skill.spicyextract.description.0": "把辣椒精华甩到落点：半径内所有敌人攻击 +%1$s 级、防御 −%2$s 级；直接被瓶子砸中的那一个可以是队友，定向获得这份双刃提升。收益属于所有打它的人，全程不造成任何伤害。",
+  "worldcombat.skill.spicyextract.description.1": "辣雾半径 %1$s 格，残留约 %2$s 秒，只筛选敌人；新走进雾里的敌人也会被辣一次（同一目标在同一片雾里只结算一次，落点已命中的不会被入场再叠）。",
+  "worldcombat.skill.spicyextract.description.2": "精华瓶以 %1$s 格/刻飞出、判定半径 %2$s 格，射程 %3$s 格；瓶子可能被打偏或被掩体挡下，挡下时在接触面炸开。",
   "worldcombat.skill.spicyextract.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒。浓度可选：原液浓缩贴脸砸一只最狠，稀释喷洒抛得更远、一次铺开一小簇，但每一口都更淡。",
   "worldcombat.skill.spicyextract.timing": "短起手、短收招；一次投掷、范围结算，之后靠冷却限制节奏。",
   "worldcombat.skill.spicyextract.value.blast": "辣雾半径",
@@ -28,5 +28,5 @@
   "worldcombat.skill.spicyextract.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去甩瓶。",
   "world_combat.move.spicyextract.text.burn": "被辣到（攻击 +%1$s／防御 −%2$s）",
-  "worldcombat.skill.spicyextract.description.additional": "被辣到的攻击与防御等级变化会一直保留，直到被清除能力等级或目标脱离战斗；辣雾本身不造成伤害。"
+  "worldcombat.skill.spicyextract.description.additional": "被辣到的攻击与防御等级变化会一直保留，直到被清除能力等级或目标脱离战斗；整套效果不造成任何伤害，只改攻防。"
 }

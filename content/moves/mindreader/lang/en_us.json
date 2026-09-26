@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.mindreader.summary": "Read the foe's next move: your accuracy is maxed and the foe is revealed, so the next hit will not go wide; the read is spent on the strike.",
-  "worldcombat.skill.mindreader.use.0": "Max your aim before the foe slips away",
-  "worldcombat.skill.mindreader.use.1": "Light up a target hiding behind cover",
-  "worldcombat.skill.mindreader.use.2": "Set up a hit that must land",
-  "worldcombat.skill.mindreader.description.0": "The read raises your accuracy to %1$s stages and stays for %2$s.",
+  "worldcombat.skill.mindreader.summary": "Read where a foe is actually moving: reveal it, raise your accuracy, and mark its current heading with a trend line that follows its real motion; the read only pays off when you hit that same target.",
+  "worldcombat.skill.mindreader.use.0": "See a strafing or retreating foe's heading before it slips away",
+  "worldcombat.skill.mindreader.use.1": "Max your aim before a chase that must land",
+  "worldcombat.skill.mindreader.use.2": "Light up a moving target hiding behind cover",
+  "worldcombat.skill.mindreader.description.0": "The read raises your accuracy by %1$s stages and stays for %2$s.",
   "worldcombat.skill.mindreader.description.1": "The target is revealed for %1$s and stays visible through cover.",
-  "worldcombat.skill.mindreader.description.2": "Read range %1$s blocks, windup %2$s, recovery %3$s. Single target and needs line of sight.",
+  "worldcombat.skill.mindreader.description.2": "Read range %1$s blocks, windup %2$s, recovery %3$s. Single target, needs line of sight and range.",
   "worldcombat.skill.mindreader.predict.on": "Predict: a longer read, longer reveal and more light, but windup costs %1$s more and cooldown grows to %2$s.",
   "worldcombat.skill.mindreader.predict.off": "Quick read: a shorter read and reveal and a shorter cooldown, good for maxing your aim often.",
   "worldcombat.skill.mindreader.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
@@ -28,5 +28,5 @@
   "world_combat.move.mindreader.text.fade": "Read faded",
   "world_combat.move.mindreader.text.blocked": "Sight blocked",
   "effect.world_combat.mindreader_eyes": "Mind Reader",
-  "worldcombat.skill.mindreader.description.3": "The accuracy lasts only until the read is spent: your next successful physical or special hit uses up the read and immediately returns the accuracy, and it is also returned when the read expires or is cleared."
+  "worldcombat.skill.mindreader.description.3": "The read only pays off when you hit that same target for real damage, immediately returning the accuracy; hitting another target does not spend it, and expiration or removal returns the accuracy too."
 }

@@ -1,14 +1,12 @@
 /**
  * 黏黏网 / stickyweb 的客户端表现。
  *
- * 一句话：口边先拢起一缕黏丝，随后一团丝被抛出去、落地摊成一张贴地的网，网线挂在地面上微微发亮；
- * 有东西踩上去时那一处被丝缠住、丝向上收，网还留在原地。
+ * 一句话：口边先拢起一缕黏丝，随后一团丝被抛出去、落地摊成几张交叉黏线，线就是真正的判定带；有目标踩到
+ * 某条线时，那处丝缠向脚边并留下一段拖丝，网孔保持透明可辨。
  * 色相家族：丝白偏米（0xF2EAC0）为主、虫绿（0xA8C46A）只出现在丝屑与踩中高光的小面积上。
- * 拍子：起（windup 拢丝）→ 抛（throw 抛出 / spread 摊开）→ 黏（snare 踩中 / hum 持续）→ 收（hum 自然淡出）。
- * 范围：spread 与 hum 都是 `bind:"point"`、`fit:"none"`，用 `data.radius` 画 ring 与 circle，圈就是会被黏住的那块地。
- * 运动：丝团抛出时沿速度走；摊开时网线贴地向外铺；踩中时丝向上收缠住目标；持续时网线极慢地起伏。
- * 数：`data.strands`（特攻派生）决定网线密度，`data.stages`（减速级数）决定踩中时丝的缠绕量，`data.scale`（半径/参考 2.6）控制尺寸。
- * 参照节：视觉语言第二、三、四、五、七、九节。
+ * 拍子：起（windup 拢丝）→ 抛（throw 抛出 / spread 落地散开）→ 黏（snare 踩中 / strand 拖丝）→ 收（随效果结束淡出）。
+ * 范围：spread 是 `bind:"point"`、`fit:"none"`，只做一次中心爆开，不画实心圆盘；网线由独立 scene 按真实线段绘制。
+ * 数：`data.strands`（特攻派生）决定丝屑密度，`data.stages`（减速级数）决定踩中时丝的缠绕量，`data.scale` 控制尺寸。
  */
 const StickyWebDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -50,62 +48,39 @@ const StickyWebDefinition: ParticleDefinition = {
             ]
         },
         spread: {
-            duration: 32,
-            exit: { stop: 12, drain: 20 },
+            duration: 30,
+            exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "open_ring", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 34 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "outward", speed: [0.05, 0.15],
-                    lifetime: [10, 18], size: [0.22, 0.48],
-                    color: 0xF2EAC0, alpha: [0.55, 0], maxParticles: 70
-                },
-                {
-                    name: "mesh", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    name: "puff", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/cotton",
-                    burst: { count: { data: "strands", fallback: 18 }, interval: 3, repeats: 3 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                    burst: { count: { data: "strands", fallback: 18 } },
+                    shape: { kind: "sphere", radius: { data: "radius", fallback: 2.6 } },
                     direction: "outward", speed: [0.03, 0.1], spin: 12,
-                    lifetime: [14, 24], size: [0.22, 0.05],
-                    color: 0xF2EAC0, alpha: [0.7, 0], maxParticles: 120
+                    lifetime: [12, 22], size: [0.16, 0.03],
+                    color: 0xF2EAC0, alpha: [0.65, 0], maxParticles: 90
                 },
                 {
-                    name: "dew", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
+                    name: "dew", bind: "point", offset: [0, 0.15, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: 20 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                    burst: { count: 18 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 2.6 } },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [10, 18], size: [0.06, 0.02],
                     color: 0xFFFFFF, alpha: [0.4, 0], light: "full", maxParticles: 30
                 }
             ]
         },
-        hum: {
-            exit: { drain: 30 },
+        fizzle: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "web_ring", bind: "point", offset: [0, 0.07, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    rate: 12, shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "up", speed: [0.003, 0.02],
-                    lifetime: [14, 24], size: [0.16, 0.36],
-                    color: 0xF2EAC0, alpha: [0.24, 0], maxParticles: 50
-                },
-                {
-                    name: "strands", bind: "point", offset: [0, 0.09, 0], height: 0, fit: "none",
+                    name: "loose", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/cotton",
-                    rate: { data: "strands", fallback: 18 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "up", speed: [0.002, 0.02], spin: 8,
-                    lifetime: [16, 28], size: [0.18, 0.36],
-                    color: 0xF2EAC0, alpha: [0.32, 0], maxParticles: 110
-                },
-                {
-                    name: "glints", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 5, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "up", speed: [0.001, 0.01],
-                    lifetime: [10, 18], size: [0.06, 0.02],
-                    color: 0xFFFFFF, alpha: [0.35, 0], light: "full", maxParticles: 24
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.08], spin: 10,
+                    lifetime: [8, 14], size: [0.1, 0.02],
+                    color: 0xF2EAC0, alpha: [0.5, 0], maxParticles: 20
                 }
             ]
         },
@@ -132,8 +107,31 @@ const StickyWebDefinition: ParticleDefinition = {
                     color: 0xA8C46A, alpha: [0.8, 0], maxParticles: 50
                 }
             ]
+        },
+        strand: {
+            emitters: [
+                {
+                    name: "tug", bind: "target", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/cotton",
+                    rate: 5, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "inward", speed: [0.01, 0.05], spin: 6,
+                    lifetime: [10, 18], size: [0.09, 0.25],
+                    color: 0xF2EAC0, alpha: [0.32, 0], maxParticles: 18
+                }
+            ]
         }
     }
 };
 
 WorldCombatParticles.scene("world_combat:move_stickyweb", 1, StickyWebDefinition);
+
+// 真实网线：按服务端裁剪后的线段顶点逐条画线，线就是判定带，网孔保持透明；绑定在 field 效果上，随它存续/清理。
+WorldCombatClient.scene("world_combat:move_stickyweb_web", 1, function (frame) {
+    const entry: CombatSceneEntry<{ segments: number[][]; radius: number; threads: number; band: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const segments = entry.data.segments || [];
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        frame.line(segment[0], segment[1], segment[2], segment[3], segment[4], segment[5], 0xCCF2EAC0);
+    }
+});

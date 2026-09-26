@@ -2,8 +2,8 @@
  * 火花 / ember 的可执行设计说明。
  *
  * 场面：只会火花的小火龙（Charmander）对六格外只带跃起、不会还手的卡比兽（Snorlax），晴天平地。
- * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（火种命中）。
- * 引燃是 10% 起的概率（本单元 burnChance 公式）、暴击与散布见实现，写进 note 供读轨迹判断。
+ * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（自由瞄准的浅弧弹命中大目标）。
+ * 引燃是 10% 起的概率（本单元 burnChance 公式）、暴击见实现；只有真的点着才开长烧表现，写进 note 供读轨迹判断。
  */
 Smoke.scenario("ember", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -17,7 +17,7 @@ Smoke.scenario("ember", function (stage) {
     }, function () {
         stage.expect(stage.casts("ember", caster) > 0, "ember was committed");
         stage.expect(stage.damageTo(foe) > 0, "the small flame struck the foe");
-        stage.note("引燃约 10% 起（ember.burnChance）、暴击随机；星速与弧线见实现", {
+        stage.note("自由 3D 瞄准、重力与实墙决定浅弧；引燃约 10% 起（ember.burnChance）、暴击随机；仅真实点燃才显示长烧", {
             casts: stage.casts("ember", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             burned: stage.hadMobEffect(foe, "world_combat:status/burn"),

@@ -19,7 +19,7 @@ Smoke.scenario("karatechop", function (stage) {
     }, function () {
         stage.expect(stage.casts("karatechop", caster) >= 1, "caster committed karatechop");
         stage.expect(stage.damageTo(foe) > 0, "karatechop dealt damage to the foe");
-        stage.note("critical hits come from the native critRatio 2 roll; the chop lowers the foe's defence reduction", {
+        stage.note("the short blade path stops at the first body or wall; critical hits come from the native critRatio 2 roll, and the chop lowers the foe's defence reduction", {
             casts: stage.casts("karatechop", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

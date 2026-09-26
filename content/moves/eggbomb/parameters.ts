@@ -1,35 +1,4 @@
-/**
- * 炸蛋 / eggbomb —— 参数与伤害段。
- *
- * 原生事实：Normal／物理／威力 100／命中 75／PP 10／优先度 0／非接触（Cobblemon 1.8 / Showdown）。
- *   描述「向对手用力投掷大大的蛋进行攻击。」6 位学习者。
- *
- * 翻译：把「用最大力气抡出一枚大蛋」落成一次**沉稳、笨重的单发抛掷**——它重、它不好瞄（原生 75 翻成
- *   较大的「散布」，等级越高越能压住），砸中就是本族最重的单体一记；抡偏了蛋就在落点摔碎，摊开一小片
- *   滑蛋液，之后走到那里的人都会打滑。所以躲开也有代价——这是它和种子炸弹（可控的头顶种雨、覆盖一圈）
- *   分开的地方：炸蛋是一枚巨大的、抡过头的蛋，命中很重、失手的落点也会留一地滑。
- *
- * 技术：滑蛋液是 `world_combat:status/slick` 共享身份，由本单元在 `startup.ts` 声明的 MobEffect
- *   （`world_combat:eggbomb_slick`，自带移动速度修饰）承载；落点那圈由 `WorldEffects.field` 的
- *   字段规则 `world_combat:eggbomb_slick` 维持，踩进来的非友方被刷新这段状态。
- *
- * 配置 `heavy`（重蛋式）双向取舍：开＝威力 ×1.2、覆盖更广、滑得更久，代价是散布 ×1.35、石速 ×0.85、
- *   起手 +4 刻、冷却 +8 刻；关（直投式）＝散布 ×0.8、抛得更快、起手更短，代价是威力 ×0.85、覆盖更小。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   egg     蛋威力 ← 物攻＋等级，heavy ×1.2 / 直投 ×0.85。
- *   heave   抛掷速度 ← 物攻，heavy ×0.85。
- *   scatter 散布 ← 等级（越高越稳），heavy ×1.35 / 直投 ×0.8。
- *   radius  蛋判定 ← 体型高度。
- *   reach   射程 ← 物攻＋等级，也是本招实际射程来源。
- *   splash  滑蛋液半径 ← 体型高度，heavy ×1.15。
- *   shards  碎壳量 ← 物攻。
- *   slickTicks 滑蛋液存续 ← 等级，heavy ×1.2。
- *   arc     弧坠 ← 体重，heavy ×1.2。
- *   tempo／aftercast／recharge ← 速度，heavy 更慢更长。
- *
- * 伤害段 `egg` 与参数同名，走共享换算（原始类别 Physical）；对手防御、相性与暴击在命中时另算。
- */
+/** Original heavy-egg scaling drives its lob, finite roll and one shared burst budget. */
 namespace PokemonSkills {
     actionParameters.define("eggbomb", {
         /** 蛋威力：70 + 物攻偏移[−14,34] + 等级(≥25)偏移[0,12]；heavy ×1.2 / 直投 ×0.85；夹 48..130。 */
@@ -78,14 +47,14 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "大蛋能抡到多远的目标；物攻与等级越高送得越远。它也是本招的实际射程来源。"
             }),
-        /** 滑蛋液半径：1.6 + 体型高度偏移[−0.4,1.2]；heavy ×1.15；夹 1.2..3.0。 */
+        /** 裂爆半径：1.6 + 体型高度偏移[−0.4,1.2]；heavy ×1.15；夹 1.2..3.0。 */
         splash: formula(
             F.base(1.6).plus(F.body("height").minus(1.4).times(0.5).clamp(-0.4, 1.2))
                 .times(F.when(F.pref("heavy", text("worldcombat.skill.eggbomb.preference.heavy")), F.const(1.15), F.const(1.0)))
                 .clamp(1.2, 3.0).round(2),
-            "滑蛋液半径", {
+            "裂爆半径", {
                 unit: "格",
-                description: "蛋摔碎后摊开多大一圈滑蛋液；大个子的蛋摊得更宽。它也是指示圈与滑区判定的半径。"
+                description: "蛋裂开时的实际伤害半径；大个子与重蛋式扩大范围，总威力由命中者分担。"
             }),
         /** 碎壳量：12 + 物攻偏移[−3,12]；夹 9..26。 */
         shards: formula(
@@ -96,10 +65,10 @@ namespace PokemonSkills {
             }),
         /** 滑蛋液存续：50 刻 + 等级(≥25)偏移[0,40]；heavy ×1.2；夹 40..120。 */
         slickTicks: seconds(
-            F.base(50).plus(F.level().minus(25).times(0.8).clamp(0, 40))
+            F.base(5).plus(F.level().minus(25).times(.08).clamp(0, 4))
                 .times(F.when(F.pref("heavy", text("worldcombat.skill.eggbomb.preference.heavy")), F.const(1.2), F.const(1.0)))
-                .clamp(40, 120).round(0),
-            "滑蛋液存续", "落点那圈滑蛋液留多久；等级越高、重蛋式留得越久，这段时间里走进去的人都会打滑。"),
+                .clamp(4, 12).round(0),
+            "最多滚动", "落地后的最大滚动时长，等级与重蛋式略延长；遇墙或停稳会更早裂开。"),
         /** 弧坠：0.03 + 体重偏移[−0.006,0.02]；heavy ×1.2；夹 0.02..0.06。 */
         arc: formula(
             F.base(0.03).plus(F.body("weight").minus(40).times(0.0001).clamp(-0.006, 0.02))

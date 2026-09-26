@@ -1,14 +1,14 @@
 /**
  * 岩石炮 / rockwrecker 的客户端表现。
  *
- * 一句话：施法者把一块巨石举过头顶，沿抛物线砸向目标；落地的一刻整块石头碎开，一圈石灰石屑向外炸开、
- * 地面被砸出裂纹，随后施法者身上只剩一层疲惫的余尘。
+ * 一句话：施法者把一块巨石举过头顶，沿抛物线砸向选定落点；实体石轮廓清楚、下方跟着一枚地面影，落地的一刻整块石头
+ * 碎开，一圈石灰岩屑向外炸开、地面扬起短命的碎石尘，随后施法者身上只剩一层疲惫的余尘。
  * 色相家族：石灰与土褐（large_rock／earth／tinydust 原色、impact_rock 亮帧），裂纹用近白高光。
- * 拍子：起（windup 举石）→ 抛（throw 起手 → flight 飞行）→ 击（shatter 碎裂、crush 每目标）→ 收（spent 起、recharge 维持力竭）。
+ * 拍子：起（windup 举石）→ 抛（throw 起手 → flight 飞行）→ 击（shatter 碎裂、crush 每目标、rubble 临时碎石）→ 收（spent 起、recharge 维持力竭）。
  * 范围：shatter 绑落点、fit none，裂纹环与碎屑按 `data.scale`（碎裂半径 / 1.9）铺开——画出的那圈就是实际碎裂范围。
- * 运动：巨石沿抛物线飞行、尾迹贴投射物历史；落地碎屑向外抛并受重力；被顶开的目标方向由碎屑流读出。
+ * 运动：巨石沿抛物线飞行、尾迹贴投射物历史、地面影跟着下落；落地碎屑向外抛并受重力；被顶开的方向由碎屑流读出。
  * 数：`data.count`（巨石威力换算）决定碎屑数量，`data.intensity`（威力/150）决定碎屑与裂纹密度，
- * `data.shove`（顶开距离）决定碎屑向外拉的距离，`data.seconds`（力竭秒数）决定收场余尘密度。
+ * `data.shove`（顶开距离）决定碎屑向外拉的距离，`data.debris`（碎石停留）决定临时碎石场的存续，`data.seconds`（力竭秒数）决定收场余尘密度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const RockwreckerDefinition: ParticleDefinition = {
@@ -70,6 +70,14 @@ const RockwreckerDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05], trail: { minDistance: 0.2 },
                     lifetime: [8, 15], size: [0.24, 0.5],
                     color: 0x6E6152, alpha: [0.3, 0], light: "world", maxParticles: 160
+                },
+                {
+                    name: "landing_shadow", bind: "projectile", fit: "none", offset: [0, -0.55, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 5, shape: { kind: "point" },
+                    direction: "outward", speed: [0.0, 0.0],
+                    lifetime: [6, 12], size: [0.35, 0.85], sizeMode: "linear",
+                    color: 0x2E2A22, alpha: [0.4, 0], light: "world", maxParticles: 24
                 }
             ]
         },
@@ -144,6 +152,29 @@ const RockwreckerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [8, 15], size: [0.1, 0.02],
                     color: 0x7A6E5A, alpha: [0.4, 0], light: "world", maxParticles: 70
+                }
+            ]
+        },
+        rubble: {
+            duration: { data: "debris", fallback: 60 },
+            exit: { stop: 20, drain: 24 },
+            emitters: [
+                {
+                    name: "settled_rubble", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    rate: { data: "count", fallback: 8 }, shape: { kind: "circle", radius: { data: "radius", fallback: 1.9 }, thickness: 0.7 },
+                    direction: "outward", speed: [0.0, 0.02],
+                    gravity: 0.02, drag: 0.9,
+                    lifetime: [12, 24], size: [0.08, 0.02], sizeMode: "index",
+                    color: 0x8C8270, alpha: [0.5, 0], light: "world", maxParticles: 80
+                },
+                {
+                    name: "settling_dust", bind: "point", fit: "none", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 6, shape: { kind: "circle", radius: { data: "radius", fallback: 1.9 }, thickness: 0.8 },
+                    direction: "up", speed: [0.005, 0.02],
+                    lifetime: [14, 24], size: [0.06, 0.02],
+                    color: 0x7A6E5A, alpha: [0.28, 0], light: "world", maxParticles: 50
                 }
             ]
         },

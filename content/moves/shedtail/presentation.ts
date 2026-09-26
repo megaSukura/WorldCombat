@@ -1,15 +1,17 @@
 /**
  * 断尾 / shedtail 的客户端表现。
  *
- * 一句话：身侧一道弧光收紧 → 一截血肉尾巴被切下来留在原地 → 自己拉着一串速度线沿撤离方向窜出去 →
- * 尾巴每 20 刻朝四周收紧一圈，把敌人的注意力牵回自己身上 → 尾巴被啃碎时血肉外抛，或到点淡去。
- * 色相家族：血肉褐红为主（0xB0705A、0x8A4A3C），撤离速度线用暖白，只有牵引环用一点饱和的红。
- * 拍子：起（windup 0–10t）→ 击（shed 1–18t）→ 收（depart 8–22t 与 lure 持续 / break、expire 20–28t）。
+ * 一句话：身侧一道弧光收紧 → 一截血肉尾巴被切下来留在原地 → 自己沿真实可达的撤离路径拖出一串速度线窜出去 →
+ * 尾巴每 20 刻朝四周收紧一圈，把真正被引动的敌人各连一条线拉回自己身上 → 尾巴被啃碎时血肉外抛，或到点淡去；
+ * 有后备时后备在撤离落点登场，与留在原地的尾巴分开。
+ * 色相家族：血肉褐红为主（0xB0705A、0x8A4A3C），撤离速度线用暖白，只有牵引连线用一点饱和的红。
+ * 拍子：起（windup 0–10t）→ 击（shed 1–18t）→ 收（depart 8–22t / lure 持续 / switch 26t / break、expire 20–28t）。
  * 范围：shed 绑尾巴落点、lure 的环半径按 `data.scale`（牵引范围 / 8）画出尾巴真正拉得住的范围，
- *       站进这个环的敌人就是会被牵住的那些。
- * 运动：断尾瞬间血肉向外甩；撤离速度线沿 `data.direction` 拖出；牵引环由外向内收紧，表示把敌人往尾巴上拉。
+ *       站进这个环的敌人就是会被牵住的那些；lure 的连线只连实际重定向成功的敌人。
+ * 运动：断尾瞬间血肉向外甩；撤离速度线沿 `data.path`（机制验证过的真实路径）拖出；牵引环由外向内收紧，
+ *       连线把每个被牵住的敌人拉向尾巴。
  * 数：`data.scale`（尾巴耐久 / 0.25 最大生命）缩放 shed 的血肉爆；`data.intensity`（被牵住的敌人数 / 2）
- *     抬高 lure 的环亮度与数量——拉住的敌人越多，画面越明显。
+ *     抬高 lure 的环亮度与数量——拉住的敌人越多，画面越明显；`data.moved` 是实际撤走的距离，铺出速度线。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const ShedTailDefinition: ParticleDefinition = {
@@ -75,26 +77,56 @@ const ShedTailDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 14 },
             emitters: [
                 {
-                    name: "depart_lines", bind: "source", offset: [0, 0.45, 0], height: 0.35,
+                    name: "depart_lines", bind: "path", fit: "none", offset: [0, 0.45, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 34, shape: { kind: "box", size: [0.3, 0.24, 0.3] }, orient: "direction",
+                    rate: 34, shape: { kind: "polyline" }, orient: "direction",
                     direction: "shape", speed: [0.02, 0.1], trail: { minDistance: 0.2 },
                     lifetime: [5, 9], size: [0.18, 0.05],
                     color: 0xFFE4CC, alpha: [0.7, 0], light: "full", maxParticles: 200
                 },
                 {
-                    name: "depart_dust", bind: "source", offset: [0, 0.03, 0], height: 0,
+                    name: "depart_dust", bind: "path", fit: "none", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 20, shape: { kind: "box", size: [0.3, 0.16, 0.3] }, orient: "direction",
+                    rate: 20, shape: { kind: "polyline" },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [8, 14], size: [0.06, 0.02],
                     color: 0xC79A6B, alpha: [0.5, 0], light: "world", maxParticles: 90
                 }
             ]
         },
+        switch: {
+            duration: 26,
+            exit: { stop: 12, drain: 16 },
+            emitters: [
+                {
+                    name: "switch_arrive", bind: "point", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/mediumfadeorb",
+                    burst: { count: 18 }, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.05, 0.2],
+                    lifetime: [10, 18], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0xE7C7B0, alpha: [0.8, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "switch_ring", bind: "point", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 18 }, shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [12, 18], size: [0.32, 0.1],
+                    color: 0x8A4A3C, alpha: [0.5, 0], light: "world"
+                }
+            ]
+        },
         lure: {
             exit: { drain: 24 },
             emitters: [
+                {
+                    name: "lure_link", bind: "path", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    rate: 10, shape: { kind: "polyline" }, direction: "shape", speed: [0.0, 0.03],
+                    trail: { minDistance: 0.24 },
+                    lifetime: [12, 18], size: [0.1, 0.02], sizeMode: "index",
+                    color: 0xE0705A, alpha: [0.7, 0], light: "full", maxParticles: 80
+                },
                 {
                     name: "lure_ring", bind: "point", offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",

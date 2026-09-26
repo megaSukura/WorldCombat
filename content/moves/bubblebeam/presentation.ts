@@ -1,15 +1,13 @@
 /**
  * 泡沫光线 / bubblebeam 的客户端表现。
  *
- * 一句话：口边堆起一团泡，随后整团泡沫涌出去、沿途散成一片浮起的小泡；命中处「啪」地炸开，
- *   泡沫沿准线继续漫开一层，被糊到的人身上不停往上冒泡、直到泡沫自己爆掉。
+ * 一句话：口边堆起一团泡，随后按节拍一颗接一颗吐出可辨认的慢泡球，各自沿线飘、首次碰到谁/墙就在哪破开；
+ *   被糊到的人身上不停往上冒泡、直到泡沫自己爆掉。
  * 色相家族：泡沫青（0x8FE0F0）与近白（0xEAFBFF）；大面积低饱和的泡面 + 小面积高亮的泡核心。
- * 拍子：起 charge（堆泡）→ 涌 stream（泡沫团 + 泡尾）→ 击 burst（炸开）／ 空 splat → 漫 douse／foam → 收 cling／pop。
- * 范围：foam 的地面/锥面层用作者参考半径 2.0 格、按 `data.scale`（溅沫半径 / 2.0）缩放，与服务端锥面判定同一片；
- *   玩家看泡沫雾铺到哪，就知道站哪会被糊到。
- * 运动：泡沫团沿准线飞、小泡带轻微上浮（浮力）向外散；命中向外炸开，落点泡沫向外漫。
+ * 拍子：起 charge（堆泡）→ 涌 stream（每颗泡各自飘）→ 击 burst（破在实体上）／ 空 splat（破在墙或尽头）→ 收 cling／pop。
+ * 运动：每颗泡球沿当刻准线慢速飘行（服务端 velocity），小泡带轻微上浮（浮力）向外散；没被碰到的继续前行。
  * 数：`data.bubbles`（特攻＋等级换算的泡数）绑定各层发射量；`data.stages` / `data.slowed` 让掉速那一下更亮；
- *   `data.intensity`（泡沫威力 / 65）放大整幕，`data.scale`（判定 / 0.28）让大个子的泡沫团更大。
+ *   `data.intensity`（总威力 / 65）放大整幕，`data.scale`（泡半径 / 0.28）让大个子的泡球更大。
  */
 const BubblebeamDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -100,46 +98,6 @@ const BubblebeamDefinition: ParticleDefinition = {
                     drag: 0.92,
                     lifetime: [8, 15], size: [0.08, 0.02],
                     color: 0xEAFBFF, alpha: [0.8, 0], light: "full", maxParticles: 70
-                }
-            ]
-        },
-        douse: {
-            duration: 20,
-            exit: { stop: 8, drain: 13 },
-            emitters: [
-                {
-                    name: "coat", bind: "target", offset: [0, 0.5, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/bubble/bubble",
-                    burst: { count: 14, at: 0 },
-                    shape: { kind: "sphere", radius: 0.36 },
-                    direction: "outward", speed: [0.05, 0.18], spread: 28,
-                    drag: 0.93,
-                    lifetime: [9, 16], size: [0.12, 0.03],
-                    color: 0x8FE0F0, alpha: [0.85, 0], light: "full", maxParticles: 40
-                }
-            ]
-        },
-        foam: {
-            duration: 26,
-            exit: { stop: 12, drain: 16 },
-            emitters: [
-                {
-                    name: "spread", bind: "point", fit: "none", offset: [0, 0.16, 0],
-                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
-                    shape: { kind: "ring", radius: 2.0 },
-                    burst: { count: { data: "bubbles", fallback: 22 }, at: 0 },
-                    direction: "outward", speed: [0.04, 0.18], spread: 10,
-                    lifetime: [10, 18], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0x8FE0F0, alpha: [0.7, 0], light: "world", maxParticles: 150
-                },
-                {
-                    name: "crest", bind: "point", fit: "none", offset: [0, 0.24, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    shape: { kind: "ring", radius: 2.0 },
-                    burst: { count: 20, at: 0 },
-                    direction: "outward", speed: [0.05, 0.22], spread: 8,
-                    lifetime: [8, 14], size: [0.3, 0.07],
-                    color: 0xEAFBFF, alpha: [0.55, 0], light: "full", maxParticles: 60
                 }
             ]
         },

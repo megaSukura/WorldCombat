@@ -1,12 +1,4 @@
-/**
- * 死缠烂打的 AI 用途。
- *
- * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase` 之内，而且身上还没有 `partiallytrapped` 身份
- * （缠着再放是浪费）。这是一记持续伤害兼定身，适合先手拴住目标或逼它分心去清状态。
- * 对谁出手：焦点目标优先；生命越高、越难缠的目标越值得先缠上。
- * 怎么够到：共享接近把身位收到射程以内。
- * 出手前后：放完交回共享交战计划；目标已被缠住时不再重复施放。
- */
+/** 站定敌人承受完整虫份，快速运动敌人能逐簇甩落；保持基础伤害用途。 */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("infestation", {
         protocols: ["world_combat:attack"],
@@ -27,8 +19,9 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const close = CompanionBehavior.distance(self.point, target.point) <= capability.data.range;
             if (!close) return 0;
-            // 越满血的对手越值得先缠住；焦点目标另加一档。
-            return Math.round(CompanionBehavior.ratio(target) * 40) + (context.facts.focus === target.ref ? 24 : 0);
+            const scope = CompanionBehavior.world(context), actor = scope.actor(target.ref), body = actor === null ? null : scope.observe(actor);
+            const motionCost = body === null ? 0 : Math.min(25, body.velocity().length() * 60);
+            return Math.round(CompanionBehavior.ratio(target) * 40 - motionCost) + (context.facts.focus === target.ref ? 24 : 0);
         }
     });
 

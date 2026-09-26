@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.furyattack.summary": "Plant your feet and jab a horn or beak into one point again and again; each jab shoves the target back, and once it is out of reach the string ends. The shove form stays rooted and pushes the target away; the chase form follows in and lands the whole string.",
+  "worldcombat.skill.furyattack.summary": "Plant your feet and jab a horn or beak into one point again and again; each jab shoves the target back, and once it is out of reach the string ends. You can point at an enemy or just give a direction; the line locks at cast and every jab shares that axis, and an empty cast still throws the full string along it. The shove form stays rooted and pushes the target away; the chase form follows in and lands the whole string.",
   "worldcombat.skill.furyattack.use.0": "Plant your feet and jab a point with horn or beak over and over",
   "worldcombat.skill.furyattack.use.1": "Each jab shoves the target, driving it out of range",
   "worldcombat.skill.furyattack.use.2": "Chase form follows the target and lands the whole string",
+  "worldcombat.skill.furyattack.use.3": "Start from a direction alone and throw the full string along the locked line",
   "worldcombat.skill.furyattack.description.0": "Each jab deals about %1$s contact damage (Attack-driven); up to %2$s jabs per string, each at %3$s accuracy. One miss or a target shoved out of reach ends the string.",
   "worldcombat.skill.furyattack.description.1": "Jab reach %1$s blocks, tip half-width %2$s blocks, each jab shoves the target %3$s blocks, %4$s between jabs.",
   "worldcombat.skill.furyattack.description.2": "In the chase form each jab advances %1$s blocks; each jab hits up to %2$s targets.",

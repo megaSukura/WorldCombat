@@ -30,7 +30,8 @@ namespace PokemonSkills {
             return grassknotMassOf(context, target) >= CompanionBehavior.ai<number>(capability, "minMass", 0) * 10;
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            // 飞在空中的目标脚下没有支撑，收结绊不到；本招不推荐这类目标。
+            return !target.friendly && target.health > 0 && target.visible && target.grounded !== false;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

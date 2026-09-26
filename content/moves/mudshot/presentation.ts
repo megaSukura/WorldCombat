@@ -4,8 +4,8 @@
  * 一句话：脚边抓起一团湿泥压成扁块，贴着地面平甩出去——泥块一路甩下细泥点，砸在目标脚下炸开一圈低平的泥花，
  * 泥浆顺着泼溅糊上附近人的腿脚，落点地上留下一片湿泥。
  * 色相家族：湿泥的棕（0x6E5438）与浅褐（0x9A7B54），余韵收在近白的细尘。
- * 拍子：起 gather（抓泥收拢）→ 飞 streak（平飞拖泥）→ 泼 splash（泥花贴地炸开）→ 糊 mire / coated（腿脚挂泥）→ 收 slick（地上泥洼）。
- * 范围：splash 的地环与 slick 的泥洼按 `data.scale`（泼溅半径 / 0.9）铺开，就是真正被糊到的地面范围。
+ * 拍子：起 gather（抓泥收拢）→ 飞 streak（平飞拖泥）→ 泼 splash（泥花贴地炸开）→ 糊 mire / coated（腿脚挂泥）→ 收 slick（地上一道短污痕）。
+ * 范围：splash 的地环与 slick 的污痕按 `data.scale`（泼溅半径 / 0.9）铺开，就是真正被糊到的地面范围；slick 只是一道痕迹，不铺持续减速场。
  * 运动：泥块沿低弧平飞（服务端 ballistic 方向）；命中处泥点低平向外抛，腿脚上的泥向下滴。
  * 数：splash 的泥点数绑定 `data.coat`（特攻与等级换算），mire 的泥迹密度绑定 `data.stages`（掉速等级），
  *   强度绑定 `data.intensity`（本击威力 / 50），阔泼时点更多、范围更开。
@@ -138,24 +138,16 @@ const MudshotDefinition: ParticleDefinition = {
             ]
         },
         slick: {
-            duration: { data: "tick", fallback: 100 },
-            exit: { stop: 20, drain: 30 },
+            duration: { data: "tick", fallback: 40 },
+            exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "patch", bind: "point", fit: "none", offset: [0, 0.03, 0],
+                    name: "stain", bind: "point", fit: "none", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
-                    rate: 5, shape: { kind: "circle", radius: { data: "scale", fallback: 0.9 } },
-                    direction: "outward", speed: [0.0, 0.02],
-                    lifetime: [30, 60], size: [0.18, 0.06], sizeMode: "sin",
-                    color: 0x6E5438, alpha: [0.5, 0.08], light: "world", maxParticles: 20
-                },
-                {
-                    name: "sheen", bind: "point", fit: "none", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
                     rate: 3, shape: { kind: "circle", radius: { data: "scale", fallback: 0.9 } },
                     direction: "outward", speed: [0.0, 0.015],
-                    lifetime: [14, 24], size: [0.09, 0.02],
-                    color: 0x9A7B54, alpha: [0.35, 0], light: "world", maxParticles: 12
+                    lifetime: [20, 40], size: [0.16, 0.05], sizeMode: "sin",
+                    color: 0x6E5438, alpha: [0.4, 0.06], light: "world", maxParticles: 14
                 }
             ]
         }

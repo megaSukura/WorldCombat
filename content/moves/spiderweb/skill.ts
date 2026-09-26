@@ -1,21 +1,4 @@
-/**
- * 蛛网 / spiderweb — 执行组织。
- *
- * 核心念头：**吐一团黏丝把目标裹成茧，一层一层加上去，直到它连一步都挪不动——但火一燎就全烧开。**
- *
- * 三幕：
- *   起（windup，提交前）：丝在口边聚成一团（只观察与预告）。
- *   射（shot → wrap，提交后）：黏丝沿直线飞出；命中活体即裹身：
- *       层数 = min(上限, 目标当前层数 + 1)，时长 = 第一层时长 + (层数 − 1) × 每层增量；
- *       挂共享身份 `world_combat:status/trapped` 的 `world_combat:spiderweb_wrapped`（层数记在增幅等级里），
- *       并由随动作存亡的 `world_combat:spiderweb_cocoon` 每几刻把丝网续期、在丝松脱或被烧开时精确移除状态。
- *       同一目标再中一次先拆旧茧，避免旧茧的结束把新层清掉。
- *   收（burn / fade）：被任何火属性伤害或身上的火点着时，整圈丝一次烧光（burn）；否则时长走完自己松脱（fade）。
- *
- * 与同族分开：挡路在目标背后立实墙、黑色目光靠术者站在原地维持；蛛网缠在目标身上、术者可以走开，但怕火。
- *
- * 配置 `thick`（厚茧）由 resolve 改时序与射程，由公式改层数／时长／丝道：缠得更厚但更慢更费。
- */
+/** Silk coats actual living contacts or weaves a finite web over the native impacted surface. */
 namespace PokemonSkills {
     const spiderwebId = "spiderweb";
     const spiderwebScene = "world_combat:move_spiderweb";
@@ -35,14 +18,6 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    function spiderwebVisual(world: CombatWorld, victim: CombatActor, data: any, ticks: number): void {
-        const body = world.observe(victim);
-        if (body === null) return;
-        WorldFeedback.keep(world, spiderwebKey + String(victim.ref()), spiderwebScene, 1, body.position(),
-            { moment: "cocoon", target: String(victim.ref()), layers: data.layers, threads: data.threads,
-                scale: data.scale, intensity: Math.max(0.6, Math.min(2.4, 0.7 + data.layers * 0.4)) }, ticks);
-    }
-
     /** 找到目标的茧并取它这一次的每层减速；没有茧时用兜底值。 */
     function spiderwebSlow(world: CombatWorld, victim: CombatActor): number {
         const cocoons = world.effects(victim, spiderwebCocoon);
@@ -59,13 +34,18 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(spiderwebCocoon, "start", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) { effect.end(); return; }
-        spiderwebVisual(world, victim, JSON.parse(effect.state()), 40);
+        const state = JSON.parse(effect.state());
+        if (!state.carrier || !MobEffects.matches(world, victim, state.carrier)) { effect.end(); return; }
+        const body = world.observe(victim);
+        if (body) WorldFeedback.onEffect(world, effect.id(), spiderwebKey + effect.id(), spiderwebScene, 1, body.position(),
+            { moment: "cocoon", target: String(victim.ref()), layers: state.layers, threads: state.threads, scale: state.scale });
         effect.schedule("weave", "weave", 4, "{}");
     });
     WorldCombat.effectHandler(spiderwebCocoon, "weave", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) { effect.end(); return; }
-        spiderwebVisual(world, victim, JSON.parse(effect.state()), 40);
+        const state = JSON.parse(effect.state());
+        if (!state.carrier || !MobEffects.matches(world, victim, state.carrier)) { effect.end(); return; }
         effect.schedule("weave", "weave", 4, "{}");
     });
     // 同一目标再中一次：旧茧先让位，避免它到点时把新层一起清掉。
@@ -86,7 +66,7 @@ namespace PokemonSkills {
         const state = JSON.parse(effect.state());
         if (world.valid(victim)) {
             const web = MobEffects.read(world, victim, spiderwebWrapped);
-            if (web !== null) world.removeMobEffect(victim, spiderwebWrapped, web.key());
+            if (web !== null && state.carrier && MobEffects.matches(world, victim, state.carrier)) world.removeMobEffect(victim, spiderwebWrapped, web.key());
         }
         if (state.replaced || !world.valid(victim)) return;
         const body = world.observe(victim);
@@ -119,9 +99,11 @@ namespace PokemonSkills {
         const world = event.world(), target = event.target();
         if (target === null || !world.valid(target)) return;
         const data = JSON.parse(String(event.data()));
-        const fire = data.type === "fire"
+        const fire = (Array.isArray(data.damageTags) && data.damageTags.indexOf("minecraft:is_fire") >= 0) || data.type === "fire"
             || ["inFire", "onFire", "lava", "hotFloor", "fireball", "unattributedFireball", "campfire"].indexOf(String(data.cause || "")) >= 0;
-        if (!fire || MobEffects.read(world, target, spiderwebWrapped) === null) return;
+        if (!fire) return;
+        world.effect(spiderwebHeat, target, "{}", 20);
+        if (MobEffects.read(world, target, spiderwebWrapped) === null) return;
         const cocoons = world.effects(target, spiderwebCocoon);
         for (let i = 0; i < cocoons.length; i++) {
             if (world.operation(cocoons[i].id(), "world_combat:spiderweb/burn", "{}")) return;
@@ -130,13 +112,83 @@ namespace PokemonSkills {
         if (web !== null) world.removeMobEffect(target, spiderwebWrapped, web.key());
     });
 
+            function spiderwebWrap(scope: CombatWorld, victim: CombatActor, options: any): void {
+                const { layerCap, wrapTicks, layerBonus, threads, slow } = options;
+                const existing = MobEffects.read(scope, victim, spiderwebWrapped);
+                const held = existing === null ? 0 : existing.amplifier() + 1;
+                const layers = Math.min(layerCap, held + 1);
+                const ticks = Math.max(40, Math.round(wrapTicks + (layers - 1) * layerBonus));
+                const cocoons = scope.effects(victim, spiderwebCocoon);
+                for (let i = 0; i < cocoons.length; i++) scope.operation(cocoons[i].id(), "world_combat:spiderweb/replace", "{}");
+                const carrier = MobEffects.apply(scope, victim, spiderwebWrapped, ticks, layers - 1);
+                if (!carrier) return;
+                const body = scope.observe(victim);
+                const scale = body === null ? 1 : Math.max(0.6, Math.min(2.4, body.width() / 0.9));
+                const data = { layers: layers, threads: threads, scale: scale, slow: slow, carrier: MobEffects.anchor(carrier) };
+                scope.effect(spiderwebCocoon, victim, JSON.stringify(data), ticks);
+                WorldFeedback.emit(scope, spiderwebScene, 1, body === null ? WorldCombat.point(0, 0, 0) : body.position(),
+                    { moment: "wrap", target: String(victim.ref()), layers: layers, threads: threads,
+                        scale: scale, intensity: Math.max(0.6, Math.min(2.4, 0.7 + layers * 0.4)) }, 30);
+                WorldFeedback.text(scope, (body === null ? WorldCombat.point(0, 0, 0) : body.position()).plus(WorldCombat.point(0, 1.1, 0)),
+                    spiderwebWrapText, [layers, Math.round(ticks / 20 * 10) / 10], 30);
+                scope.sound("minecraft:block.cobweb.place", body === null ? WorldCombat.point(0, 0, 0) : body.position(), 14, "{}");
+            }
+
+    const spiderwebSurface = "world_combat:spiderweb_surface", spiderwebHeat = "world_combat:spiderweb_heat";
+    WorldCombat.effect(spiderwebHeat, 1, 20, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(spiderwebHeat, "start", function () {});
+    WorldCombat.effect(spiderwebSurface, 1, 600, "actor", json => json, EffectProtocols.unchanged);
+    function spiderwebPoint(v: number[]): CombatPoint { return WorldCombat.point(v[0], v[1], v[2]); }
+    function spiderwebTouch(body: CombatObservation, state: any): boolean {
+        const delta = body.position().minus(spiderwebPoint(state.centre)), n = state.normal, u = state.u, v = state.v;
+        const dot = function (axis: number[]) { return delta.x() * axis[0] + delta.y() * axis[1] + delta.z() * axis[2]; };
+        const extent = function (axis: number[]) { return Math.abs(axis[0]) * body.width() / 2 + Math.abs(axis[1]) * body.height() / 2 + Math.abs(axis[2]) * body.width() / 2; };
+        return Math.abs(dot(n)) <= .16 + extent(n) && Math.abs(dot(u)) <= state.half + extent(u) && Math.abs(dot(v)) <= state.half + extent(v);
+    }
+    WorldCombat.effectHandler(spiderwebSurface, "start", effect => effect.schedule("contact", "contact", 1, "{}"));
+    WorldCombat.effectHandler(spiderwebSurface, "contact", function (effect) {
+        const world = effect.world(), state = JSON.parse(effect.state()), centre = spiderwebPoint(state.centre);
+        let burned = false;
+        for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
+            const p = centre.plus(spiderwebPoint(state.u).scale(a * state.half)).plus(spiderwebPoint(state.v).scale(b * state.half));
+            const block = world.block(p), fluid = world.fluid(p);
+            if (block && block.tagged("minecraft:fire") || fluid && fluid.tagged("minecraft:lava")) burned = true;
+        }
+        const nearby = world.query(centre, Math.min(12, state.half * 2 + 4), false);
+        for (let i = 0; i < nearby.length; i++) {
+            const actor = nearby[i], body = world.observe(actor); if (!body || !spiderwebTouch(body, state)) continue;
+            if (CombatStatus.has(world, actor, "burn") || world.effects(actor, spiderwebHeat).length) { burned = true; break; }
+            if (world.friendly(actor)) continue;
+            const ref = String(actor.ref());
+            if ((state.next[ref] || 0) > world.tick()) continue;
+            spiderwebWrap(world, actor, state.options); state.next[ref] = world.tick() + 40;
+        }
+        if (burned) { state.burned = true; effect.state(JSON.stringify(state)); effect.end(); return; }
+        effect.state(JSON.stringify(state)); effect.schedule("contact", "contact", 2, "{}");
+    });
+    WorldCombat.effectHandler(spiderwebSurface, "end", function (effect) {
+        const state = JSON.parse(effect.state());
+        WorldFeedback.emit(effect.world(), spiderwebScene, 1, spiderwebPoint(state.centre),
+            { moment: state.burned ? "burn" : "fade", path: state.path, layers: 1 }, 22);
+    });
+    function spiderwebLay(world: CombatWorld, hit: CombatImpact, half: number, ticks: number, options: any): void {
+        const normals: any = { up: [0, 1, 0], down: [0, -1, 0], north: [0, 0, -1], south: [0, 0, 1], east: [1, 0, 0], west: [-1, 0, 0] };
+        const normal = normals[hit.blockFace()]; if (!normal || !hit.blockPosition()) return;
+        const u = normal[1] ? [1, 0, 0] : [normal[2], 0, -normal[0]], v = normal[1] ? [0, 0, 1] : [0, 1, 0];
+        const centre = hit.position().plus(spiderwebPoint(normal).scale(.04));
+        const path = [[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]].map(function (pair) {
+            const p = centre.plus(spiderwebPoint(u).scale(pair[0] * half)).plus(spiderwebPoint(v).scale(pair[1] * half)); return [p.x(), p.y(), p.z()];
+        });
+        const effect = world.effect(spiderwebSurface, world.source(), JSON.stringify({ centre: [centre.x(), centre.y(), centre.z()], normal, u, v, half, path, options, next: {} }), ticks);
+        WorldFeedback.onEffect(world, effect, "spiderweb:surface:" + effect, spiderwebScene, 1, centre, { moment: "web", path: path, threads: options.threads });
+    }
     define({
         id: spiderwebId,
         cooldownParameter: "recharge",
         name: "蛛网",
-        description: "吐一团黏糊糊的细丝射向一个对手，命中后把它裹成茧；同一目标再中一次就多缠一层，裹得更久、更走不动，三层以上完全钉住。术者可以走开，但任何火焰都会把整圈丝一次烧光。",
+        description: "吐出的蛛丝命中活体就叠一层茧；撞墙或地面会沿接触面织短时薄网。碰网的敌人每两秒最多加一层，火焰能烧开网与茧。",
         uses: ["把想逃跑的目标一层层裹住等队友收", "缠住一个高机动目标不让它脱离", "接在队友的火招之前，逼对手先解网"],
-        kind: "enemy",
+        kind: "aim",
         range: 7,
         maxRange: 10,
         prepare: 10,
@@ -183,35 +235,14 @@ namespace PokemonSkills {
             let settled = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            /** 裹身：加一层、续时长、起茧；火会把整圈烧开。 */
-            function wrap(current: CombatAction, victim: CombatActor): void {
-                const scope = current.world();
-                const existing = MobEffects.read(scope, victim, spiderwebWrapped);
-                const held = existing === null ? 0 : existing.amplifier() + 1;
-                const layers = Math.min(layerCap, held + 1);
-                const ticks = Math.max(40, Math.round(wrapTicks + (layers - 1) * layerBonus));
-                const cocoons = scope.effects(victim, spiderwebCocoon);
-                for (let i = 0; i < cocoons.length; i++) scope.operation(cocoons[i].id(), "world_combat:spiderweb/replace", "{}");
-                MobEffects.apply(scope, victim, spiderwebWrapped, ticks, layers - 1);
-                const body = scope.observe(victim);
-                const scale = body === null ? 1 : Math.max(0.6, Math.min(2.4, body.width() / 0.9));
-                const data = { layers: layers, threads: threads, scale: scale, slow: slow };
-                current.effect(spiderwebCocoon, victim, JSON.stringify(data), ticks);
-                WorldFeedback.emit(scope, spiderwebScene, 1, body === null ? current.targetPosition() : body.position(),
-                    { moment: "wrap", target: String(victim.ref()), layers: layers, threads: threads,
-                        scale: scale, intensity: Math.max(0.6, Math.min(2.4, 0.7 + layers * 0.4)) }, 30);
-                WorldFeedback.text(scope, (body === null ? current.targetPosition() : body.position()).plus(WorldCombat.point(0, 1.1, 0)),
-                    spiderwebWrapText, [layers, Math.round(ticks / 20 * 10) / 10], 30);
-                scope.sound("minecraft:block.cobweb.place", body === null ? current.targetPosition() : body.position(), 14, "{}");
-            }
-
             sound(action, "minecraft:block.tripwire.attach");
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius, lifetime: Math.max(40, Math.round(reach / Math.max(0.2, speed) + 30)),
                 appearance: { sprite: "cobblemon:generic/cotton", scale: 0.8, tint: 0xEDE8F0 },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), struck = hit.target();
-                    if (struck !== null && scope.valid(struck) && !scope.friendly(struck)) { wrap(current, struck); return; }
+                    if (struck !== null && scope.valid(struck) && !scope.friendly(struck)) { spiderwebWrap(scope, struck, { layerCap, wrapTicks, layerBonus, threads, slow }); return; }
+                    spiderwebLay(scope, hit, Math.max(.8, splat), wrapTicks, { layerCap, wrapTicks, layerBonus, threads, slow });
                     WorldFeedback.emit(scope, spiderwebScene, 1, hit.position(),
                         { moment: "splat", scale: splat / 0.8, laid: 0 }, 20);
                     scope.sound("minecraft:block.cobweb.break", hit.position(), 12, "{}");

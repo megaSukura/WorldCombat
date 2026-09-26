@@ -30,6 +30,6 @@
   "worldcombat.skill.present.preference.ai.riskBelow": "残血收手阈值",
   "worldcombat.skill.present.preference.ai.riskBelow.help": "目标生命低于这个比例时，伙伴会降低这盒礼物的优先级——因为盒子有可能反而把它治好。调高更少对残血目标用它。",
   "world_combat.move.present.text.hit": "盒子炸到 %1$s 个",
-  "world_combat.move.present.text.candy": "其实是糖，治了 %1$s%% 生命",
+  "world_combat.move.present.text.candy": "其实是糖，治了 %1$s 生命",
   "world_combat.move.present.text.empty": "盒子里什么也没有"
 }

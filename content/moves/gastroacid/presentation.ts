@@ -124,6 +124,16 @@ const GastroacidSceneDefinition: ParticleDefinition = {
                 }
             ]
         },
+        coat: { emitters: [
+            { name: "film", bind: "target", fit: "body", height: .5, particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                rate: 3, shape: { kind: "sphere_surface", radius: .4 }, direction: "down", speed: .015,
+                lifetime: 10, size: [.12, .06], color: 0x9BE049, alpha: [.25, 0], light: "world" }
+        ] },
+        sting: { duration: 12, emitters: [
+            { name: "acid_tick", bind: "target", fit: "body", height: .5, particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
+                burst: { count: 3 }, shape: { kind: "sphere_surface", radius: .4 }, direction: "down", speed: .06,
+                lifetime: 8, size: [.1, .02], color: 0xE8FF9B, alpha: [.8, 0], light: "world" }
+        ] },
         settle: {
             duration: 24,
             exit: { stop: 10, drain: 16 },

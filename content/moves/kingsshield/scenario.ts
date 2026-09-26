@@ -7,8 +7,8 @@
  */
 Smoke.scenario("kingsshield", function (stage) {
     var caster = stage.pokemon({ species: "Aegislash", level: 45, moves: ["kingsshield"], at: [0, 0, 0] });
-    var foe = stage.mob({ type: "minecraft:zombie", at: [6, 0, 0] });
-    stage.hostile(caster, foe);
+    var foe = stage.mob({ type: "minecraft:zombie", at: [3, 0, 0] });
+    stage.noai(foe); stage.provoke(caster, foe);
     stage.until(600, function () {
         return stage.casts("kingsshield", caster) > 0;
     }, function () {
@@ -20,7 +20,12 @@ Smoke.scenario("kingsshield", function (stage) {
             stage.expect(stage.attribute(foe, "minecraft:generic.attack_damage") < attack, "the contact lowered the attacker's Attack");
             stage.note("kingsshield block and parry", { before: before, after: stage.damageTo(caster),
                 attackFrom: attack, attackTo: stage.attribute(foe, "minecraft:generic.attack_damage"), health: caster.health() });
-            stage.done();
+            const afterFront = stage.damageTo(caster);
+            stage.command("execute as " + foe.ref.split("/")[0] + " at " + caster.ref.split("/")[0] + " run tp @s ~-3 ~ ~");
+            stage.command("damage " + caster.ref.split("/")[0] + " 8 minecraft:mob_attack by " + foe.ref.split("/")[0]);
+            stage.after(3, function () {
+                stage.expect(stage.damageTo(caster) > afterFront, "a real rear attack passes the fixed shield"); stage.done();
+            });
         });
     }, "kingsshield raised");
 });

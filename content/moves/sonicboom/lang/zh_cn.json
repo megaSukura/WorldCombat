@@ -20,7 +20,7 @@
   "worldcombat.skill.sonicboom.value.settle": "收招",
   "worldcombat.skill.sonicboom.value.recharge": "冷却",
   "worldcombat.skill.sonicboom.preference.reverb": "回响式",
-  "worldcombat.skill.sonicboom.preference.reverb.help": "开启：第一声之后隔一小段沿同一方向再爆一声，对当时还在线上的人再削固定的 20；代价是第二声把施法者多定住一段、冷却更长。关闭（单声式，默认）：一声了事，更快更省。",
+  "worldcombat.skill.sonicboom.preference.reverb.help": "开启：第一声之后隔一小段沿同一方向再爆一声，对当时还在线上的人再削固定的 20（适合仍停在准线上的目标）；代价是第二声把施法者多定住一段、冷却更长。关闭（单声式，默认）：一声了事，更快更省。",
   "worldcombat.skill.sonicboom.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.sonicboom.preference.ai.maxChase.help": "超过这个距离就不出手，先走近。越大越会在更远处先手发一声。",
   "worldcombat.skill.sonicboom.preference.ai.finish": "残血优先",

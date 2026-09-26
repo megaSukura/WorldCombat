@@ -18,6 +18,12 @@ public final class PublicAttributes {
     public static final DeferredHolder<Attribute, Attribute> CURIOSITY = number("curiosity", -Double.MAX_VALUE);
     public static final DeferredHolder<Attribute, Attribute> RISK = number("risk", -Double.MAX_VALUE);
     public static final DeferredHolder<Attribute, Attribute> PERSISTENCE = number("persistence", -Double.MAX_VALUE);
+    /** A per-body lower bound on native ground slipperiness; zero keeps the terrain's original value. */
+    public static final DeferredHolder<Attribute, Attribute> GROUND_SLIPPERINESS = REGISTRY.register("ground_slipperiness",
+        () -> new RangedAttribute("worldcombat.attributes.ground_slipperiness", 0, 0, 1).setSyncable(true));
+    /** Synced physical mode; client movement prediction uses the same supported-ground acceleration as the server. */
+    public static final DeferredHolder<Attribute, Attribute> GROUND_SUPPORT = REGISTRY.register("ground_support",
+        () -> new RangedAttribute("worldcombat.attributes.ground_support", 0, 0, 1).setSyncable(true));
     private static final Map<AttributeInstance, WeakReference<LivingEntity>> OWNERS = Collections.synchronizedMap(new WeakHashMap<>());
     private static DeferredHolder<Attribute, Attribute> number(String id, double minimum) {
         return REGISTRY.register(id, () -> new RangedAttribute("worldcombat.attributes." + id, 0, minimum, Double.MAX_VALUE).setSyncable(true));

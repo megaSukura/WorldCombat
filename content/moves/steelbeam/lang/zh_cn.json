@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.steelbeam.summary": "沿前方直线投出钢梁，伤害并推开最近的一个敌人。无论是否命中，出手后都按最大生命比例结算自损。",
+  "worldcombat.skill.steelbeam.summary": "朝任意方向或世界点抛出一道钢梁，被真实方块挡下时在墙面截断；只伤害最近的一个敌人并把它推开。无论是否命中，出手后都按最大生命比例结算自损。",
   "worldcombat.skill.steelbeam.description.0": "钢梁长 %2$s 格、半宽 %3$s 格，只攻击其中距离最近、视线无遮挡的一个敌人，造成约 %1$s 点钢属性特殊伤害。",
   "worldcombat.skill.steelbeam.description.1": "命中后尝试推开目标 %1$s 格；每次出手都以最大生命的 %2$s 结算自损，命中或落空都会支付。",
   "worldcombat.skill.steelbeam.temper.on": "淬火式：自损比例按基础值的65%计算；钢梁威力×0.9、长度×0.82、粗细×0.8，起手多2刻。当前自损已列在上方。",

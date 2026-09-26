@@ -1,9 +1,11 @@
 /**
  * 逐步击破 / chipaway 的伙伴 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 5）格内；臂程很短，够不到先让共享接近逻辑送进来。
+ * 什么局面下出手：对手可见、敌对、存活，且在与自己之间没有实墙挡住拳路、也在 `ai.maxChase`（默认 5）格内；
+ *   臂程很短，够不到先让共享接近逻辑送进来。
  * 对谁出手：`ai.breakGuard`（默认开）在目标身上有正面防御等级（防／特防）时显著抬分——本招无视这些涨防，
  *   正是用来对付扎了防御架势的对手；`ai.finish` 收残血。目标没涨防时它仍是一记稳定的连击，但不抢优先级。
+ *   装备护甲不在无视范围，普通高甲 Boss 照常按原生防御参与。
  * 出手位置：贴身（约 1.4 格内），连击短、循环快，适合一记接一记地补。
  * 放完之后：交回共享交战计划；冷却短，下一轮很快接得上。
  */
@@ -37,6 +39,8 @@ namespace PokemonSkills {
             if (!target) return 0;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             if (distance > capability.data.range) return 0;
+            // 拳路会被实墙截住：自己和目标之间连视线都没有时不抢这一拍，交给共享接近改换位置。
+            if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(CompanionBehavior.source(context).point), CompanionBehavior.point(target.point))) return 0;
             let score = 14;
             if (CompanionBehavior.ai<boolean>(capability, "breakGuard", true) && chipawayGuardNow(context, target) > 0) score += 12;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) score += 10;

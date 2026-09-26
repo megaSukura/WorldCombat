@@ -6,9 +6,14 @@
  *
  * 幕：
  *   起（windup，提交前）：叶片在身侧立起、拉长成一把刃，边缘亮起；只播预告，可被打断。
- *   斩（execute → cut/echo/miss）：提交后若目标在贴身距离外，先压上一步；随后扇区
- *       （WorldGeometry.sector，判定与表现共用同一张角）内的主目标吃满 `edge` 接触斩击并被削防
- *       `sever` 档，最多 `echoCap` 个旁人各吃 `echo` 比例的刃风。没人被斩到只留一道空挥。
+ *   斩（execute → cut/echo/miss）：提交后若选定目标在贴身距离外，先朝它压上一步；随后扇区
+ *       （WorldGeometry.sector，判定与表现共用同一张角）内的**主目标**吃满 `edge` 接触斩击并被削防
+ *       `sever` 档，最多 `echoCap` 个旁人各吃 `echo` 比例的刃风。主目标取扇内最靠准线者：有点选实体时
+ *       它优先，但必须真的落在刀弧里；没有点选时取离瞄准线最近的那个。削防只落在真实吃到满伤的主目标上，
+ *       不给全弧每人同量削防。没人被斩到只留一道空挥。
+ *
+ * 选取：`kind: "aim"`——朝方向或点环挥都成立，空挥也成立；点选实体只决定压上方向与主位优先，
+ *   目标若已走出刀弧不会隔空命中。命中权限仍由命中层判断。
  *
  * 高暴击沿用原生 critRatio 2 的共享结算；暴击命中时由本单元监听器在命中点补一记更亮的白绿强调。
  */
@@ -33,9 +38,9 @@ namespace PokemonSkills {
         id: leafbladeId,
         cooldownParameter: "recharge",
         name: "Leaf Blade",
-        description: "把一片叶当作剑，贴身一步横挥一记重斩：切开主目标并削掉它一档防御，刃风还扫到近旁的旁人；接触、单体、四记里最重的一击，容易击中要害。双手式更重并多削一档防，单手式更快更利落。",
+        description: "把一片叶当作剑，朝选定方向或点环挥一记贴身重斩：切开弧内最靠准线的主目标并削掉它一档防御，刃风还扫到近旁的旁人；接触、单体、四记里最重的一击，容易击中要害。双手式更重并多削一档防，单手式更快更利落。",
         uses: ["把一片叶当作剑，贴身横挥一记重斩", "切开主目标并削掉它一档防御", "刃风顺带扫到近旁的旁人"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.0,
         maxRange: 4.6,
         prepare: 8,
@@ -105,12 +110,35 @@ namespace PokemonSkills {
                     intensity: intensity, path: leafbladeArc(cutOrigin, direction, reach + 0.4, span),
                     twohand: config && config.twohand === true ? 1 : 0 }, 22);
 
+            // 先收齐弧内可见的对手，再选出主目标：点选实体在弧内时优先，否则取离准线最近者。
+            const candidates: { actor: CombatActor; facts: CombatObservation }[] = [];
             WorldGeometry.selectEnemies(world, region, function (victim, facts) {
-                const primary = foe !== null && target !== null && String(victim.ref()) === String(target.ref());
-                if (!primary && grazed >= cap) return;
+                if (!world.clear(cutOrigin, facts.position())) return;
+                candidates.push({ actor: victim, facts: facts });
+            });
+            const heading2 = WorldGeometry.flatUnit(direction, WorldCombat.point(0, 0, 1));
+            const side2 = WorldCombat.point(-heading2.z(), 0, heading2.x());
+            let mainRef = "";
+            if (foe !== null && target !== null) {
+                for (let index = 0; index < candidates.length; index++)
+                    if (String(candidates[index].actor.ref()) === String(target.ref())) { mainRef = String(target.ref()); break; }
+            }
+            if (mainRef === "") {
+                let best = Infinity;
+                for (let index = 0; index < candidates.length; index++) {
+                    const delta = candidates[index].facts.position().minus(cutOrigin);
+                    const lateral = Math.abs(WorldGeometry.dot(delta, side2));
+                    if (lateral < best) { best = lateral; mainRef = String(candidates[index].actor.ref()); }
+                }
+            }
+
+            for (let index = 0; index < candidates.length; index++) {
+                const victim = candidates[index].actor, facts = candidates[index].facts;
+                const primary = String(victim.ref()) === mainRef;
+                if (!primary && grazed >= cap) continue;
                 const amount = primary ? power : power * echo;
                 if (!hurt(action, victim, leafbladeId, amount,
-                    { damage: damageSpec(leafbladeId, "edge"), contact: true, slice: true })) return;
+                    { damage: damageSpec(leafbladeId, "edge"), contact: true, slice: true })) continue;
                 if (primary) {
                     hits++;
                     NativeEffects.boost(world, victim, "def", -sever);
@@ -124,7 +152,7 @@ namespace PokemonSkills {
                         { moment: "echo", target: String(victim.ref()), shards: Math.max(6, Math.round(shards * 0.6)),
                             scale: scale, intensity: intensity * 0.8 }, 18);
                 }
-            });
+            }
 
             if (hits === 0) {
                 const at = cutOrigin.plus(WorldCombat.point(direction.x(), 0, direction.z()).unit().scale(reach));

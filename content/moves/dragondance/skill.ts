@@ -1,4 +1,5 @@
-/** 龙之舞：物攻与速度由同一个载体拥有各自的临时贡献，结束时只撤去这一舞。 */
+/*     * 龙之舞：物攻与速度由同一个载体拥有各自的临时贡献，结束时只撤去这一舞。
+     * 升势用真实位移回执：顶棚压住时本舞变扁、不再穿顶；收势落在实际走完环绕的位置，抬升交还重力。 */
 namespace PokemonSkills {
     const dragondanceScene = "world_combat:move_dragondance";
     const dragondanceAiry = "world_combat:dragondance_airy";
@@ -68,14 +69,20 @@ namespace PokemonSkills {
             const raised = NativeEffects.effectiveStages(world, actor);
             const attackGain = Math.max(0, (raised.atk || 0) - (before.atk || 0));
             const speedGain = Math.max(0, (raised.spe || 0) - (before.spe || 0));
-            let index = 0, settled = false;
+            // 龙势光环绑在这次真正的攻速窗口上，随窗口自然到期或提前清除一起收。
+            WorldFeedback.onEffect(world, owned, "world_combat:move_dragondance/airy", dragondanceScene, 1, body.position(),
+                { moment: "airy", gyre: gyre, scale: scale, turns: turns, drakes: drakes,
+                    intensity: Math.max(0.7, Math.min(2.2, (gift * 2 + turns) / 4)) });
+            let index = 0, settled = false, ceiling = false, risen = 0;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
             function land(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
+                // 收势落在实际走完环绕的位置；抬升由重力自然交还，不在这里宣称已经落地。
                 WorldFeedback.emit(scope, dragondanceScene, 1, here.position(),
                     { moment: "settle", gyre: gyre, scale: scale, turns: turns, drakes: drakes, gift: gift,
+                        lift: risen, flat: ceiling ? 1 : 0,
                         intensity: Math.max(0.7, Math.min(2.2, (gift * 2 + turns) / 4)) }, 30);
                 WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), dragondanceText, [attackGain, speedGain], 30);
                 scope.sound("cobblemon:impact.dragon", here.position(), 18, "{}");
@@ -88,11 +95,19 @@ namespace PokemonSkills {
                 const at = here.position();
                 const target = WorldCombat.point(home.x() + Math.sin(angle) * gyre, at.y(), home.z() + Math.cos(angle) * gyre);
                 scope.displace(actor, WorldCombat.point(target.x() - at.x(), 0, target.z() - at.z()));
-                if (soar && lift > 0) scope.motion(actor, WorldCombat.point(0, lift, 0), true);
+                // 升势读真实位移回执：顶棚压住时只升到实际高度，之后的圈变扁，不做穿顶假盘升。
+                let lifted = 0;
+                if (soar && lift > 0 && !ceiling) {
+                    const up = scope.displace(actor, WorldCombat.point(0, lift, 0));
+                    lifted = up;
+                    if (up < lift * 0.5) ceiling = true;
+                    else risen += up;
+                }
                 const now = scope.observe(actor), point = now === null ? at : now.position();
                 WorldFeedback.emit(scope, dragondanceScene, 1, point,
                     { moment: "rise", gyre: gyre, scale: scale, turns: turns, index: index + 1, drakes: drakes,
                         soar: soar ? 1 : 0, soarMotes: soar ? Math.max(6, Math.round(drakes / 3)) : 0,
+                        lift: lifted, flat: ceiling ? 1 : 0, height: risen,
                         intensity: Math.max(0.6, Math.min(2.2, drakes / 28)) }, 22);
                 scope.sound(index === 0 ? "minecraft:entity.ender_dragon.flap" : "minecraft:entity.ender_dragon.growl", point, 14, "{}");
                 index++;

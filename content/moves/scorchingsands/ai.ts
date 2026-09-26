@@ -15,6 +15,20 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 13);
     }
 
+    /** 目标脚下是否真的踩在天然沙面：闷烧式只在能烤出连通热区的地方才值得先手。 */
+    function scorchingNatural(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), base = CompanionBehavior.point(target.point);
+        const x = Math.floor(base.x()), z = Math.floor(base.z()), top = Math.floor(base.y()) + 1;
+        for (let dy = 0; dy >= -4; dy--) {
+            const block = world.block(WorldCombat.point(x, top + dy, z));
+            if (block === null) return false;
+            const id = String(block.id());
+            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
+            return id === "minecraft:sand" || id === "minecraft:red_sand" || block.tagged("c:sand");
+        }
+        return false;
+    }
+
     function scorchingCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const nearby = (context.facts.nearby as CompanionBehavior.Entity[]) || [];
         let count = 0;
@@ -46,6 +60,7 @@ namespace PokemonSkills {
             if (target.wet) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "preferClusters", true))
                 score += Math.min(20, scorchingCluster(context, target) * 10);
+            if (capability.data.config && capability.data.config.hearth && scorchingNatural(context, target)) score += 12;
             return score;
         }
     });

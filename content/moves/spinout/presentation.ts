@@ -1,16 +1,18 @@
 /**
  * 疾速转轮 / spinout 的客户端表现。
  *
- * 一句话：施法者压低重心、脚边火星先转成一圈 → 整个人像陀螺一样贴地旋进，沿途拖出旋转的钢蓝气流与火星 →
- *   撞上目标炸开钢色冲击，地面磨出一圈痕迹，随后转速刹不住、身上浮起疲软的灰气（速度大降）。
+ * 一句话：施法者压低重心、脚边火星先转成一圈 → 整个人贴地滑出，前半直行、后半向选定侧甩尾，沿真实弯曲的
+ *   路径拖出旋转的钢蓝气流、火星与一道弯轮痕 → 撞上目标炸开钢色冲击、地面磨出一圈痕迹，随后转速刹不住、
+ *   身上浮起疲软的灰气（按实际降速）。路径是真实的：判定推进与画面读同一组 `data.path` 顶点，头不会原地
+ *   旋转却走直线。
  * 色相家族：钢蓝灰（0x6E7C8C 主体、0x9AA6B4 亮面）为主体，磨地火星的暖橙（0xFFC766）只在细节层，
  *   中性尘作余韵；无第二色相。
- * 拍子：起 wind（压腿旋起）→ 旋 spin（贴地旋进）→ 击 impact（撞实磨地）→ 收 stagger（失速）／失 miss（空转）。
- * 范围：is 一条冲刺线 + 撞击点；impact 的磨痕圈按 `data.radius`（磨痕半径）与 `data.scale` 铺开，
- *   画出的那圈就是地上被磨到的地方。
- * 运动：spin 的钢蓝气流绕身体公转并沿运动方向拖尾；impact 的冲击从撞击点向外崩、火星带重力落回；
+ * 拍子：起 wind（压腿旋起）→ 旋 spin（贴地弯曲滑行）→ 击 impact（撞实磨地）→ 收 stagger（失速）／失 miss（空转）。
+ * 范围：spin 沿 `data.path`（与服务端 sweepStep 同一条真实路径）画出轮痕与拖尾；impact 的磨痕圈按 `data.radius`
+ *   与 `data.scale` 铺开，画出的那圈就是地上被磨到的地方。
+ * 运动：spin 的钢蓝气流绕身体公转并沿实际路径拖尾；impact 的冲击从撞击点向外崩、火星带重力落回；
  *   stagger 的灰气缓慢上飘。
- * 数：`data.sparks`（速度与体重换算的火星量）决定旋进与撞击的火星密度，`data.intensity`（威力 / 100）
+ * 数：`data.sparks`（速度与体重换算的火星量）决定滑行与撞击的火星密度，`data.intensity`（威力 / 100）
  *   抬高密度与亮度，`data.radius`（磨痕半径）决定撞击点那圈痕迹。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -76,6 +78,21 @@ const SpinoutDefinition: ParticleDefinition = {
                     gravity: 0.05, drag: 0.94,
                     lifetime: [6, 12], size: [0.07, 0.01],
                     color: 0xFFC766, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 90
+                },
+                {
+                    name: "wheel_track", bind: "path", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    shape: { kind: "polyline" }, rate: 46, direction: "shape", speed: [0.02, 0.1], spin: 6,
+                    lifetime: [8, 15], size: [0.08, 0.02], sizeMode: "index",
+                    color: 0x8C8375, alpha: [0.4, 0], gravity: 0.04, drag: 0.93, light: "world", maxParticles: 80
+                },
+                {
+                    name: "wheel_spark", bind: "path", fit: "none", offset: [0, 0.09, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    shape: { kind: "polyline" }, rate: { data: "sparks", fallback: 14 }, direction: "shape",
+                    speed: [0.03, 0.13], spin: 16,
+                    lifetime: [6, 12], size: [0.07, 0.01], sizeMode: "index",
+                    color: 0xFFC766, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 70
                 }
             ]
         },

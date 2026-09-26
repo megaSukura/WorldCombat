@@ -12,13 +12,9 @@ namespace PokemonSkills {
     const obstructBlockText = "world_combat.move.obstruct.text.block";
     const obstructPunishText = "world_combat.move.obstruct.text.punish";
     const obstructShatterText = "world_combat.move.obstruct.text.shatter";
-    const obstructRadiusReference = 1.6;
     /** 每个攻击者在本次拒马窗口里是否已经被扎过。 */
     const obstructPunished: { [key: string]: boolean } = Object.create(null);
 
-    function obstructRadiusScale(radius: number): number {
-        return Math.max(0.5, Math.min(2.4, (radius || obstructRadiusReference) / obstructRadiusReference));
-    }
     function obstructIntensity(capacity: number, initial: number): number {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
     }
@@ -39,33 +35,47 @@ namespace PokemonSkills {
             const initial = (<any>state).initial || state.capacity || 1;
             WorldFeedback.keep(world, obstructHoldKey, obstructScene, 1, body.position(), {
                 moment: "hold", target: String(effect.target().ref()),
-                scale: obstructRadiusScale((<any>state).radius), intensity: obstructIntensity(state.capacity, initial)
+                reach: (<any>state).radius, intensity: obstructIntensity(state.capacity, initial)
             }, 20);
         },
         guarded: function (effect, state, amount, incoming) {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
             if (body === null) return;
-            const custom: any = state, scale = obstructRadiusScale(custom.radius);
+            const custom: any = state;
             const attacker = incoming.source && String(incoming.source.ref()) !== String(target.ref()) && world.observe(incoming.source) !== null ? incoming.source : null;
-            if (attacker !== null && obstructContact(incoming.data) && !world.friendly(attacker)) {
+            const attackerBody = attacker !== null ? world.observe(attacker) : null;
+            // 来向：away 从攻击者指向拒马（打在哪一侧），toAttacker 从拒马指向攻击者（刺从哪边顶出去）。
+            const away = attackerBody !== null ? body.position().minus(attackerBody.position()) : null;
+            const toAttacker = attackerBody !== null ? attackerBody.position().minus(body.position()) : null;
+            if (attacker !== null && attackerBody !== null && obstructContact(incoming.data) && !world.friendly(attacker)) {
                 const key = String(effect.id()) + ":" + String(attacker.ref());
                 if (!obstructPunished[key]) {
                     obstructPunished[key] = true;
-                    const drop = custom.drop || 1, point = world.observe(attacker)!.position();
+                    const drop = custom.drop || 1, point = attackerBody.position();
                     NativeEffects.boost(world, attacker, "def", -drop);
-                    WorldFeedback.emit(world, obstructScene, 1, point, { moment: "punish", target: String(attacker.ref()), drop: drop, punishCount: drop * 8, scale: scale }, 24);
+                    const punish: any = { moment: "punish", target: String(attacker.ref()), drop: drop, punishCount: drop * 8 };
+                    if (toAttacker !== null && toAttacker.length() > 0.01) {
+                        const direction = toAttacker.unit();
+                        punish.direction = [direction.x(), direction.y(), direction.z()];
+                    }
+                    WorldFeedback.emit(world, obstructScene, 1, point, punish, 24);
                     WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.4, 0)), obstructPunishText, [drop], 30);
                     world.sound("minecraft:entity.iron_golem.attack", point, 16, "{}");
                 }
             }
             const blocked = Math.round(amount * 10) / 10, remaining = Math.round(state.capacity * 10) / 10;
-            WorldFeedback.emit(world, obstructScene, 1, body.position(), { moment: "block", target: String(target.ref()),
-                scale: scale, intensity: obstructIntensity(state.capacity, custom.initial || 1), blocked: blocked, remaining: remaining }, 22);
+            const block: any = { moment: "block", target: String(target.ref()),
+                intensity: obstructIntensity(state.capacity, custom.initial || 1), blocked: blocked, remaining: remaining };
+            if (away !== null && away.length() > 0.01) {
+                const direction = away.unit();
+                block.direction = [direction.x(), direction.y(), direction.z()];
+            }
+            WorldFeedback.emit(world, obstructScene, 1, body.position(), block, 22);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), obstructBlockText, [blocked, remaining], 30);
             world.sound("minecraft:item.shield.block", body.position(), 16, "{}");
             if (state.capacity <= 0) {
                 Object.keys(obstructPunished).forEach(function (entry) { if (entry.indexOf(String(effect.id()) + ":") === 0) delete obstructPunished[entry]; });
-                WorldFeedback.emit(world, obstructScene, 1, body.position(), { moment: "shatter", target: String(target.ref()), scale: scale }, 26);
+                WorldFeedback.emit(world, obstructScene, 1, body.position(), { moment: "shatter", target: String(target.ref()), reach: custom.radius }, 26);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), obstructShatterText, [], 30);
                 world.sound("minecraft:item.shield.break", body.position(), 16, "{}");
             }
@@ -100,8 +110,8 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            const scale = obstructRadiusScale(p("obstruct", "radius", action));
-            action.present("world_combat:move_obstruct:raise", obstructScene, 1, action.origin(), JSON.stringify({ moment: "raise", scale: scale }));
+            action.present("world_combat:move_obstruct:raise", obstructScene, 1, action.origin(),
+                JSON.stringify({ moment: "raise", reach: p("obstruct", "radius", action) }));
             return prepare;
         },
         ready: function (action, config) {
@@ -124,7 +134,8 @@ namespace PokemonSkills {
             GuardEffects.apply(world, actor, guard, window);
             world.effect("world_combat:rooted", actor, "{}", window);
             sound(action, "minecraft:block.deepslate.place");
-            action.present("world_combat:move_obstruct:raise2", obstructScene, 1, action.origin(), JSON.stringify({ moment: "raise", scale: obstructRadiusScale(radius) }));
+            action.present("world_combat:move_obstruct:raise2", obstructScene, 1, action.origin(),
+                JSON.stringify({ moment: "raise", reach: radius }));
             done(action);
         }
     });

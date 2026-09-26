@@ -1,30 +1,4 @@
-/**
- * 燃尽 / burnup —— 参数、伤害段与「自己是不是火属性」的现场判读。
- *
- * 原生事实：Fire／特殊／威力 130／命中 100／PP 5；「将自己全身燃烧起火焰来，给予对手大大的伤害。
- *   自己的火属性将会消失」（Cobblemon 1.8，15 位学习者）。
- *
- * 翻译：把身体里的火一次抽干——先向内收拢（kindle），再把整团火朝身前一个锥面喷出去（outburst），
- *   锥内的敌人都被烧到，正对的那个人吃满。喷完施法者真的**燃尽**：本单元 startup 效果
- *   `world_combat:burnup_spent`（共享身份 world_combat:status/burned_out）挂上一段时间，期间它不再带火属性
- *   （由 rules.ts 通过共享 NativeModifiers 的 types 层摘掉 fire），于是火本系加成与抗性一并消失，
- *   也**再点不着第二发燃尽**（`ready` 拒绝）。这就是这一招的代价，也是它和其他火招分开的地方。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   outburst  燃尽威力：特攻定分量、等级定层数；自己带火属性时 ×1.12（烧的是自己的本系）。
- *   reach     喷发距离：特攻；也是实际射程来源。
- *   cone      锥面张角：特攻（灵力越足喷得越开）。
- *   share     侧焰比例：特攻；锥内非正对目标吃几成。
- *   speed     焰锋速度：特攻；决定伤害与画面推进的先后。
- *   hold      燃尽时长：等级；余烬式 ×0.7（更快复燃）。
- *   ember     余烬数：特攻与等级，直接驱动画面发射量。
- *   kindle/settle/recharge 速度决定起手、收招、冷却。
- *
- * 配置 `banked`（余烬）：开启＝燃尽时长 ×0.7（更快恢复火属性）、本击 ×0.9；关闭＝烧得更久、本击 ×1.1。
- *   两向各有局面：想尽快拿回本系与抗性 vs 一次把伤害打足。
- *
- * 伤害段名 outburst：这道白焰随精灵数据变化的那部分；正对目标吃满，锥内其他目标按 share 结算。
- */
+/** 释放即去火；实际三维白焰前缘的伤害、范围与临时类型成本。 */
 namespace PokemonSkills {
     export const burnupId = "burnup";
     export const burnupSpentEffect = "world_combat:burnup_spent";
@@ -35,7 +9,7 @@ namespace PokemonSkills {
 
     /** 施法者此刻是否带火属性（含 NativeModifiers 的 types 层）。 */
     export function burnupHasFireNow(world: CombatWorld, actor: CombatActor): boolean {
-        if (!world.valid(actor)) return false;
+        if (!world.valid(actor) || MobEffects.read(world, actor, burnupSpentEffect) !== null || NativeModifiers.typeLocked(world, actor)) return false;
         return PokemonDamage.combatants.read(world, actor).types.indexOf("fire") >= 0;
     }
 

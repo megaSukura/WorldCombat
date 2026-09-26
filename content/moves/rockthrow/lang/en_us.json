@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.rockthrow.summary": "Snatches a small stone from the ground at the user's feet and slings it flat and fast: one stone, one hit, shards on impact. It does not home, so a target that steps after release slips it; the lob choice clears a low wall but scatters more and flies slower.",
+  "worldcombat.skill.rockthrow.summary": "Snatches a small stone from the ground at the user's feet and slings it flat and fast at a chosen direction or point: one stone, one hit, shards on impact. It can be thrown freely with no target locked; it does not home, so a target that steps after release slips it; the lob choice clears a low wall but scatters more and flies slower.",
   "worldcombat.skill.rockthrow.use.0": "Cheap ranged chip you can throw again and again",
   "worldcombat.skill.rockthrow.use.1": "Reliable single shots at a target standing still",
   "worldcombat.skill.rockthrow.use.2": "Use the lob choice to strike over cover at a target behind it",

@@ -4,72 +4,81 @@
  * 原生事实（Cobblemon 1.8）：**一般**／特殊／威力 140／命中 100／PP 5／`cantusetwice`（无法连续使出 2 次）。
  *   介绍：「从赤红如血的满月发射出全部的气势。这个招式无法连续使出2次。」全项目仅 1 位学习者：月月熊（血月形态）。
  *
- * 翻译：把「从赤红如血的满月倾泻全部气势」落成一记**落月一击**——施法者先凝神召出一轮赤红如血的满月悬在头顶，
- *   再让满月把全部力量化作一道垂直落下的光柱，砸在对手所在的地面上，落点留下一片焦痕。
- *   它是本组唯一的特殊、远程、从天而降的重击：形状是**天上一轮月＋地上一道垂落光柱＋一圈地面焦痕**，
- *   与月光束（moonblast，从身体射出）完全不同。`cantusetwice` 翻成**气势耗尽窗口**：放完之后短时间内不能再次召月，
- *   期间换成别的招式会让气势提前平息（`spent` 参数就是这段禁复时长，由共享的最后招式记录与动作门禁实现）。
+ * 翻译：把「从赤红如血的满月倾泻全部气势」落成一记**前推月束**——施法者先凝神召出一轮赤红如血的满月悬在身前上方，
+ *   再让满月把全部气势推成一道粗直的月光束、沿锁定的方向射出去：光束先打中最靠前的首敌（`moonlight`），再按
+ *   同一条线穿透有限个后排敌人（`spill`）。光束被方块截住，不会穿墙，也不会在原地炸出一圈。`cantusetwice`
+ *   翻成**气势耗尽窗口**：放完之后短时间内不能再次召月，期间换成别的招式会让气势提前平息（`spent`）。
  *
  * 数据分散（每一项读不同的精灵数据，小差距才会在场上看得出来）：
- *   moonlight  主目标威力：特攻（气势有多满）＋等级；月蚀式为分给溅射而略降。
- *   spill      落点溅射威力：特攻；满月式为 0（只砸一点）。
- *   reach      落月距离：特攻＋等级；也是本招实际射程来源。
- *   radius     地面焦痕/溅射半径：特攻（控制月光的范围）；月蚀式更大。
+ *   moonlight  首敌威力：特攻（气势有多满）＋等级；月蚀式为分给穿透而略降。
+ *   spill      同线后排威力：特攻；光锥铺开时后方也吃一份。
+ *   reach      月束长度：特攻＋等级；也是本招实际射程来源，实际会被方块提前截断。
+ *   beamRadius 月束粗细：特攻（控制聚焦）＋碰撞箱宽度（身架越宽推得越粗）；月蚀式更粗。
+ *   pierce     同线后伤上限：等级；月蚀式更多。有限，不会沿整条线无限穿透。
  *   charge     凝神起手：速度（聚气快慢）与等级；月蚀式更短。
  *   motes      月光点数：特攻，直接驱动粒子发射量。
- *   scorchTicks 地面焦痕寿命：等级；到期原方块回来。
  *   recover    收招：体重（越重越难平复）。
  *   recharge   冷却：等级。
  *   spent      禁复时长：速度与等级（气势越快平息，越早能再次召月）。
  *
- * 配置 `eclipse`（月蚀式，默认关）双向取舍：关闭（满月式）＝全部气势砸在一点，主目标满威力、无溅射、起手更长；
- *   开启（月蚀式）＝月光铺开成一片，落点周围的敌人也吃到 `spill`，起手更短，代价是主目标威力 ×0.85。
- *   两向各有适用局面：点杀厚血用满月式，清一片用月蚀式。
+ * 配置 `eclipse`（月蚀式，默认关）双向取舍：关闭（满月式）＝月束更细、只打首敌与少量后排，主目标满威力；
+ *   开启（月蚀式）＝月束更粗、同线穿透更多后排，起手更短，代价是主目标威力 ×0.85。两向各有适用局面：
+ *   点杀厚血用满月式，打成一列用月蚀式。
  *
- * 伤害段 moonlight／spill：主目标结算 `moonlight`，落点内其他非友方结算 `spill`；规格空
+ * 伤害段 moonlight／spill：首敌结算 `moonlight`，同线后排各自结算 `spill`；规格空
  *   （共享结算乘入特攻、对手特防、相性与暴击）。
  */
 namespace PokemonSkills {
     export const bloodmoonId = "bloodmoon";
     export const bloodmoonScene = "world_combat:move_bloodmoon";
     export const bloodmoonFallText = "world_combat.move.bloodmoon.text.fall";
+    export const bloodmoonSpentText = "world_combat.move.bloodmoon.text.spent";
 
     actionParameters.define(bloodmoonId, {
-        /** 主目标威力：基础 140，特攻每比 80 多 1 加 0.5（夹 -12..55），等级每比 40 高 1 加 0.5（夹 0..12）；满月 ×1 / 月蚀 ×0.85；夹 110..215。 */
+        /** 首敌威力：基础 140，特攻每比 80 多 1 加 0.5（夹 -12..55），等级每比 40 高 1 加 0.5（夹 0..12）；满月 ×1 / 月蚀 ×0.85；夹 110..215。 */
         moonlight: formula(
             F.base(140)
                 .plus(F.stat("specialAttack").minus(80).times(0.5).clamp(-12, 55))
                 .plus(F.level().minus(40).times(0.5).clamp(0, 12))
                 .times(F.when(F.pref("eclipse"), F.const(0.85), F.const(1)))
                 .clamp(110, 215).round(1),
-            "主目标威力", {
+            "首敌威力", {
                 unit: "威力",
-                description: "月柱砸在主目标身上的特殊威力；特攻越高气势越满，等级越高落得越重。月蚀式为了铺开而略降。对手特防、相性与暴击在命中时另算。"
+                description: "月束打在最靠前那个非友方身上的特殊威力；特攻越高气势越满，等级越高落得越重。月蚀式为铺开而略降。对手特防、相性与暴击在命中时另算。"
             }),
-        /** 落点溅射威力：基础 78，特攻每比 80 多 1 加 0.35（夹 -10..40）；满月 ×0 / 月蚀 ×1；夹 40..130。 */
+        /** 同线后排威力：基础 78，特攻每比 80 多 1 加 0.35（夹 -10..40）；夹 40..130。 */
         spill: formula(
-            F.base(78).plus(F.stat("specialAttack").minus(80).times(0.35).clamp(-10, 40))
-                .times(F.when(F.pref("eclipse"), F.const(1), F.const(0))).clamp(40, 130).round(1),
-            "落点溅射威力", {
+            F.base(78).plus(F.stat("specialAttack").minus(80).times(0.35).clamp(-10, 40)).clamp(40, 130).round(1),
+            "同线后排威力", {
                 unit: "威力",
-                description: "月蚀式下落点内其他非友方各自结算的特殊威力；特攻越高越强。满月式为 0（全部气势只砸主目标）。"
+                description: "月束穿透到首敌身后的其他非友方各自结算的特殊威力；特攻越高越强。最多穿透的个数由「同线后伤上限」决定。"
             }),
-        /** 落月距离：基础 11 格，特攻每比 80 多 1 加 0.02（夹 -1..2.5），等级每比 40 高 1 加 0.08（夹 0..2.5）；夹 8..16。 */
+        /** 月束长度：基础 11 格，特攻每比 80 多 1 加 0.02（夹 -1..2.5），等级每比 40 高 1 加 0.08（夹 0..2.5）；夹 8..16，遇方块会提前截断。 */
         reach: formula(
             F.base(11)
                 .plus(F.stat("specialAttack").minus(80).times(0.02).clamp(-1, 2.5))
                 .plus(F.level().minus(40).times(0.08).clamp(0, 2.5)).clamp(8, 16).round(1),
-            "落月距离", {
+            "月束长度", {
                 unit: "格",
-                description: "能把月光落到多远的地面上；特攻与等级越高够得越远。它也是本招的实际射程来源。"
+                description: "月光束能射多远；特攻与等级越高射得越远。它也是本招的实际射程来源，但会被方块挡下、不会穿墙。"
             }),
-        /** 地面半径：基础 2.0 格，特攻每比 80 多 1 加 0.006（夹 -0.3..0.8）；满月 ×1 / 月蚀 ×1.4；夹 1.5..3.8。 */
-        radius: formula(
-            F.base(2.0).plus(F.stat("specialAttack").minus(80).times(0.006).clamp(-0.3, 0.8))
-                .times(F.when(F.pref("eclipse"), F.const(1.4), F.const(1))).clamp(1.5, 3.8).round(2),
-            "地面半径", {
+        /** 月束粗细：基础 0.5 格，特攻每比 80 多 1 加 0.003（夹 -0.1..0.25），身宽每比 0.9 宽 1 格加 0.3（夹 -0.1..0.4）；满月 ×1 / 月蚀 ×1.4；夹 0.3..1.2。 */
+        beamRadius: formula(
+            F.base(0.5)
+                .plus(F.stat("specialAttack").minus(80).times(0.003).clamp(-0.1, 0.25))
+                .plus(F.body("width").minus(0.9).times(0.3).clamp(-0.1, 0.4))
+                .times(F.when(F.pref("eclipse"), F.const(1.4), F.const(1))).clamp(0.3, 1.2).round(2),
+            "月束粗细", {
                 unit: "格",
-                description: "落月在地面砸出的焦痕与溅射范围半径；特攻越高控制得越开。月蚀式明显更大。画面里那圈地面就是判定范围。"
+                description: "月光束的判定半宽；特攻越高越聚焦，身架越宽推得越粗。月蚀式明显更粗。画面里那道光束的宽度就是判定宽度。"
+            }),
+        /** 同线后伤上限：基础 1 个，等级每比 40 高 1 加 0.03（夹 0..1）；满月 ×1 / 月蚀 ×2；夹 0..4 个。 */
+        pierce: formula(
+            F.base(1).plus(F.level().minus(40).times(0.03).clamp(0, 1))
+                .times(F.when(F.pref("eclipse"), F.const(2), F.const(1))).clamp(0, 4).round(0),
+            "同线后伤上限", {
+                unit: "个",
+                description: "月束穿过首敌后，还能沿同一条线打中几个后排非友方；等级越高越多，月蚀式翻倍，但始终有限。"
             }),
         /** 凝神起手：基础 30 刻，速度每比 60 快 1 减 0.12（夹 -4..8），等级每比 40 高 1 减 0.2（夹 0..5）；月蚀 −6；夹 16..44。 */
         charge: seconds(
@@ -82,12 +91,8 @@ namespace PokemonSkills {
             F.base(22).plus(F.stat("specialAttack").minus(80).times(0.18).clamp(-5, 20)).clamp(16, 48).round(0),
             "月光点数", {
                 unit: "点",
-                description: "月柱与落点溅起的月光点数，随特攻增长；粒子按它发射，画面里的数量和机制一致。"
+                description: "月束与命中处溅起的月光点数，随特攻增长；粒子按它发射，画面里的数量和机制一致。"
             }),
-        /** 焦痕寿命：基础 100 刻，等级每比 40 高 1 加 1.5（夹 0..40）；夹 80..220。 */
-        scorch: seconds(
-            F.base(100).plus(F.level().minus(40).times(1.5).clamp(0, 40)).clamp(80, 220).round(0),
-            "焦痕寿命", "落点地面焦痕保留多久；等级越高留得越久。到期原方块回来。"),
         /** 收招：基础 14 刻，体重每比 100 重 1 加 0.02（夹 -2..6）；夹 8..26。 */
         recover: seconds(
             F.base(14).plus(F.body("weight").minus(100).times(0.02).clamp(-2, 6)).clamp(8, 26).round(0),
@@ -108,18 +113,18 @@ namespace PokemonSkills {
 
     stages(bloodmoonId, [
         { level: 50, values: { moonlight: 158, spill: 88 } },
-        { level: 70, values: { moonlight: 176, spill: 98, radius: 2.4 } }
+        { level: 70, values: { moonlight: 176, spill: 98, beamRadius: 0.7 } }
     ]);
 
     describe(bloodmoonId, [
-        { key: "description.0", values: ["moonlight","spill","reach","radius"] },
-        { key: "description.scorch", values: ["scorch"] },
+        { key: "description.0", values: ["moonlight", "spill", "reach"] },
+        { key: "description.beam", values: ["beamRadius", "pierce"] },
         { key: "description.1", values: ["charge", "recover", "recharge"] },
         { key: "description.2", values: ["spent"] },
         { key: "eclipse.on", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) === true; } },
         { key: "eclipse.off", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.moonlight", "tier.0.spill"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.moonlight", "tier.1.spill", "tier.1.radius"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.moonlight", "tier.1.spill", "tier.1.beamRadius"] }
     ]);
 }

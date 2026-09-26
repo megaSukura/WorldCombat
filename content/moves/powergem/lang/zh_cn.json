@@ -1,9 +1,10 @@
 {
-  "worldcombat.skill.powergem.summary": "把光收进一枚宝石般的焦点，射出一条又细又长、会贯穿的宝石光线：线路上每个敌人都被依次射穿，越远分到的光越少，击点崩出碎晶。光走直线、被方块挡住，所以掩体是它唯一的空门。",
+  "worldcombat.skill.powergem.summary": "把光收进一枚宝石般的焦点，射出一条又细又长、会贯穿的宝石光线：线路上每个敌人都被依次射穿，越远分到的光越少，每个击点崩出一枚碎晶。光走直线、被方块挡住，所以掩体是它唯一的空门；不选敌人也能朝任意方向空射，或用它把两敌之间摆成一条线。",
   "worldcombat.skill.powergem.use.0": "在长距离点名一个远处的目标",
   "worldcombat.skill.powergem.use.1": "把光贯穿一条线上的敌人",
   "worldcombat.skill.powergem.use.2": "逼对手躲到掩体后才敢露头",
-  "worldcombat.skill.powergem.description.0": "光线沿直线贯穿，每个被射中的敌人各承受一次约 %1$s 点特殊伤害。",
+  "worldcombat.skill.powergem.use.3": "对着空地或两敌之间摆线自由开火",
+  "worldcombat.skill.powergem.description.0": "光线沿直线贯穿，每个被射中的敌人各承受一次约 %1$s 点特殊伤害；每个击点只崩出一枚碎晶。",
   "worldcombat.skill.powergem.description.1": "射程 %1$s 格、判定半宽 %2$s 格，远端威力衰减到近端的 %3$s；被方块挡住就止在那里。",
   "worldcombat.skill.powergem.description.3": "当前聚晶形态：%1$s。",
   "worldcombat.skill.powergem.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

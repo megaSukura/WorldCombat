@@ -4,6 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
  * 它是最便宜、最快的一记固定伤害，所以在别的招式都不划算时被当作填充；`ai.finish`（默认开）在目标生命
  * 已经很低时把它排到前面——固定 20 点不看防御，正好用来补刀；代价是可能把这一发浪费在满血目标上。
+ * 裂痕在起手窗口里即时落点，所以移动慢的目标更可能仍停在准线上；回响式的第二声尤其吃这一点，排序会再抬高。
  * 回响式不改变出手条件，只把第二声与更长的冷却带进来。
  */
 namespace PokemonSkills {
@@ -25,13 +26,19 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.35) score += 22;
+            // 裂痕在起手窗口里即时落点：移动慢的目标更可能仍停在准线上，回响式的第二声尤其吃这一点。
+            const velocity = target.velocity;
+            if (velocity) {
+                const speed = Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
+                if (speed < 0.06) score += capability.data.config && capability.data.config.reverb === true ? 10 : 5;
+            }
             return score;
         }
     });
 
     addPreferences("sonicboom", {}, [
         field(pathOf("reverb"), "回响式", "boolean", {
-            help: "开启：第一声之后隔一小段沿同一方向再爆一声，对当时还在线上的人再削固定的 20；代价是第二声把施法者多定住一段、冷却更长。关闭（单声式，默认）：一声了事，更快更省。"
+            help: "开启：第一声之后隔一小段沿同一方向再爆一声，对当时还在线上的人再削固定的 20（适合仍停在准线上的目标）；代价是第二声把施法者多定住一段、冷却更长。关闭（单声式，默认）：一声了事，更快更省。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 16, step: 1,

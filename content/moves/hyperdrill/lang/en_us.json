@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.hyperdrill.summary": "Spins the pointed part of its body into a drill and bores straight ahead: it first tears away whatever guard stands in the way, then slams the full weight of the hit in and shoves the target back. The through mode drills past several targets in a row.",
+  "worldcombat.skill.hyperdrill.summary": "Spins the pointed part of its body into a drill and bores straight along the current aim: it first tears away whatever guard stands in the way, then slams the full weight of the hit in and shoves the target back. Through mode drills past several targets; it stops at the real contact when it hits a wall, spends its charge, or the target will not budge (a Boss or hard collision), without breaking blocks or clipping through.",
   "worldcombat.skill.hyperdrill.use.0": "Bore straight through a target that raised a guard",
   "worldcombat.skill.hyperdrill.use.1": "Pierce several enemies lined up on one line",
   "worldcombat.skill.hyperdrill.use.2": "Finish whoever stands in front with high contact damage",

@@ -25,11 +25,11 @@
   "worldcombat.skill.grassyterrain.preference.ai.maxChase": "Plant distance",
   "worldcombat.skill.grassyterrain.preference.ai.maxChase.help": "The companion only plants grass while a threat is within this distance; lower plants up close, higher sets it up in advance.",
   "worldcombat.skill.grassyterrain.preference.ai.advance": "Push the grass at the foe",
-  "worldcombat.skill.grassyterrain.preference.ai.advance.help": "On, the grass is planted between you and the threat so the fighting line falls on it; off, it is planted at your feet to hold you first.",
+  "worldcombat.skill.grassyterrain.preference.ai.advance.help": "On, the grass is pushed a few blocks toward the threat; off (default), it is planted at your feet to hold you and the wounded next to you first.",
   "worldcombat.skill.grassyterrain.preference.ai.leaveStation": "Leave the station",
   "worldcombat.skill.grassyterrain.preference.ai.leaveStation.help": "On, a companion holding its station will step out to plant grass.",
   "world_combat.move.grassyterrain.text.heal": "Roots restore %1$s",
   "world_combat.move.grassyterrain.text.growth": "Sprout grows",
   "effect.world_combat.grassyterrain_ground": "Grass-held",
-  "worldcombat.skill.grassyterrain.description.field": "A grounded body standing on the grass is held up by it: its Grass moves deal x1.3, and its own Earthquake or Bulldoze is halved. Airborne bodies do not count; it applies only while standing on the grass and ends on leaving."
+  "worldcombat.skill.grassyterrain.description.field": "A grounded body standing on the grass is rooted by it: its own Grass moves deal x1.3, and any Earthquake or Bulldoze it takes is halved while it stands on the grass. The reduction follows the target, so a caster standing on grass does not weaken hits on targets outside. Airborne bodies do not count; it applies only while standing on the grass and ends on leaving."
 }

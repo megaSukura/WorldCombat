@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.mindreader.summary": "凝神读穿对手的下一个动作：把自己的命中拉满并把对手照亮，让下一次命中不会落偏；读用掉即散。",
-  "worldcombat.skill.mindreader.use.0": "在对手要闪开前先把准星拉满",
-  "worldcombat.skill.mindreader.use.1": "照亮躲在掩体后的目标",
-  "worldcombat.skill.mindreader.use.2": "为一次必须命中的关键攻击做铺垫",
-  "worldcombat.skill.mindreader.description.0": "读窗口内施法者命中等级拉到 %1$s 级，读留在身上 %2$s。",
+  "worldcombat.skill.mindreader.summary": "看清一个对手正在朝哪里走：短期照亮它、把自己的命中拉起来，并用一条随它真实移动更新的趋势线指出方向；只有你随后打中这个目标才兑现读势。",
+  "worldcombat.skill.mindreader.use.0": "在对手横移或撤退前先看清它的走向",
+  "worldcombat.skill.mindreader.use.1": "把命中拉满，为一次必须命中的追击铺路",
+  "worldcombat.skill.mindreader.use.2": "照亮躲在掩体后、正在移动的目标",
+  "worldcombat.skill.mindreader.description.0": "读窗口内施法者命中等级拉起 %1$s 级，读留在身上 %2$s。",
   "worldcombat.skill.mindreader.description.1": "目标被照亮 %1$s，掩体后也可见。",
-  "worldcombat.skill.mindreader.description.2": "读距离 %1$s 格，起手 %2$s，收招 %3$s。只有单体，需要视线。",
+  "worldcombat.skill.mindreader.description.2": "读距离 %1$s 格，起手 %2$s，收招 %3$s。只有单体，需要视线且在读距离内。",
   "worldcombat.skill.mindreader.predict.on": "预读：读窗口更久、照亮更久、读光更盛，但起手多花 %1$s、冷却拉长到 %2$s。",
   "worldcombat.skill.mindreader.predict.off": "速读：窗口与照亮更短、冷却更短，适合频繁把准星拉满。",
   "worldcombat.skill.mindreader.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -28,5 +28,5 @@
   "world_combat.move.mindreader.text.fade": "读已散去",
   "world_combat.move.mindreader.text.blocked": "视线被挡",
   "effect.world_combat.mindreader_eyes": "心之眼",
-  "worldcombat.skill.mindreader.description.3": "命中等级只在读还没用掉时有效：你的下一次物理或特殊伤害命中会用掉这层读并立刻收回命中等级；读到期或被清除时也会原样收回。"
+  "worldcombat.skill.mindreader.description.3": "只有你打中所读的那个目标、且造成真实伤害时，这层读才兑现并立刻收回命中等级；打其他目标不消耗读，读到期或被清除时也原样收回。"
 }

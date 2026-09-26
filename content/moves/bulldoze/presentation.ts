@@ -2,10 +2,10 @@
  * 重踏 / bulldoze 的客户端表现。
  *
  * 一句话：施法者抬脚、脚边卷起石屑，重踏落地后一圈地裂贴着地表向外推开，经过的每一处都激起尘土与碎石，
- * 全部落定后那片地表留下裂痕。
+ * 全部落定后波前留下一道薄裂缝再散去；地面方块本身不会被替换。
  * 色相家族：土黄与石灰（earth / large_rock / tinydust / groundquake）为主体，近白只做重踏那一下的高光。
- * 拍子：起（stomp 抬脚聚屑）→ 击（slam 落地、wave 地裂推进、hit 逐处溅屑）→ 收（crack 裂痕扬尘 / miss 落空）。
- * 范围：wave 的环按服务端传的 `data.radius`（本圈真实半径）画出，玩家看到的圈就是会被扫到的地。
+ * 拍子：起（stomp 抬脚聚屑）→ 击（slam 落地、wave 地裂推进、hit 逐处溅屑）→ 收（crack 波前余痕 / miss 落空）。
+ * 范围：wave 的环按服务端传的 `data.inner`/`data.radius`（本圈真实内外沿）画出薄带，玩家看到的圈就是会被扫到的地。
  * 运动：地裂从脚下沿地表一圈圈向外推，`progress` 配合 `radius` 让同一发射器逐轮变大。
  * 数：`data.flow`（半径派生）决定环上密度，`data.count`（威力派生）决定落点碎屑量，`data.marks` 决定重踏高光。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -78,7 +78,9 @@ const BulldozeDefinition: ParticleDefinition = {
                 {
                     name: "front", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    rate: { data: "flow", fallback: 70 }, shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 } },
+                    rate: { data: "flow", fallback: 70 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 },
+                        innerRadius: { data: "inner", fallback: 0 }, outerRadius: { data: "radius", fallback: 3.2 } },
                     direction: "outward", speed: [0.02, 0.08], spread: 8,
                     lifetime: [10, 16], size: [0.5, 0.9], sizeMode: "linear",
                     color: 0xA08C6E, alpha: [0.75, 0], light: "world", maxParticles: 120
@@ -86,7 +88,9 @@ const BulldozeDefinition: ParticleDefinition = {
                 {
                     name: "spray", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "flow", fallback: 50 }, shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 } },
+                    rate: { data: "flow", fallback: 50 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 },
+                        innerRadius: { data: "inner", fallback: 0 }, outerRadius: { data: "radius", fallback: 3.2 } },
                     direction: "outward", speed: [0.05, 0.18], spread: 16,
                     gravity: 0.04, drag: 0.9,
                     lifetime: [10, 20], size: [0.07, 0.01],
@@ -126,7 +130,7 @@ const BulldozeDefinition: ParticleDefinition = {
                 {
                     name: "scar_dust", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "flow", fallback: 40 }, shape: { kind: "circle", radius: { data: "radius", fallback: 3.2 }, thickness: 0.85 },
+                    rate: { data: "flow", fallback: 40 }, shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 }, thickness: 0.5 },
                     direction: "up", speed: [0.01, 0.05], spread: 10,
                     gravity: 0.02, drag: 0.9,
                     lifetime: [14, 26], size: [0.05, 0.01],
@@ -135,8 +139,8 @@ const BulldozeDefinition: ParticleDefinition = {
                 {
                     name: "shards", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "cells", fallback: 20 }, at: 1 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 3.2 }, thickness: 0.9 },
+                    burst: { count: { data: "marks", fallback: 20 }, at: 1 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 }, thickness: 0.6 },
                     direction: "up", speed: [0.02, 0.1], spread: 22,
                     gravity: 0.05, drag: 0.92,
                     lifetime: [12, 24], size: [0.08, 0.02],

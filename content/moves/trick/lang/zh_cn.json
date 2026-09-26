@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.trick.summary": "拉直一条超能心线，隔空把自己和目标的持有物对调：自己不必移动，只要看清目标、够得到它。手快的人起手更短，特攻与等级高的个体拉得更远。",
+  "worldcombat.skill.trick.summary": "拉直一条超能心线，隔空把自己和目标的持有物对调：自己不必移动，只要看清目标、够得到它。可以明确选择友方或敌方换装；点在空处、被墙挡住或目标走出射程都只断线不换。手快的人起手更短，特攻与等级高的个体拉得更远。",
   "worldcombat.skill.trick.use.0": "远距离把对手的好东西换过来",
   "worldcombat.skill.trick.use.1": "把自己带着的累赘塞给对手",
-  "worldcombat.skill.trick.use.2": "空手时从远处的对手身上换一件持有物",
-  "worldcombat.skill.trick.description.0": "与 %1$s 格内、视线畅通的敌人对调手里的持有物：自己原地不动，交换后双方各自拿到原本在对方手里的东西（一方空手时就是单方面的取走或交出）。",
+  "worldcombat.skill.trick.use.2": "与队友明确换装，或空手时从远处的对手身上换一件持有物",
+  "worldcombat.skill.trick.description.0": "与 %1$s 格内、视线畅通的一只生物对调手里的持有物，友方或敌方都可明确选择：自己原地不动，只有原子交换真的成功，双方才各自拿到原本在对方手里的东西（一方空手时就是单方面的取走或交出）并看到物品飞过心线。",
   "worldcombat.skill.trick.description.1": "故布疑阵 %1$s，交换后收手 %2$s，冷却 %3$s。",
   "worldcombat.skill.trick.snap.on": "瞬时抓取：起手 ×0.55、冷却 −6 刻，代价是心线缩到近身（射程 ×0.62）——更快，但必须贴近。",
   "worldcombat.skill.trick.snap.off": "从容拉线：心线更长（最远约 9 格）、冷却更足，起手也更长——够得远，但给对手更多反应时间。",
@@ -23,10 +23,10 @@
   "worldcombat.skill.trick.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.trick.preference.ai.leaveStation.help": "开启后，驻守命令下也会为拉线离开站位；关闭则只在原地够得到时出手。",
   "worldcombat.skill.trick.preference.ai.tradeOnly": "只在有物可换时出手",
-  "worldcombat.skill.trick.preference.ai.tradeOnly.help": "开启：只在目标或自己至少一方持物时才出手，作为专门的交换手段；关闭：两边都空时也照常尝试（多半落空）。",
+  "worldcombat.skill.trick.preference.ai.tradeOnly.help": "开启：只在目标或自己至少一方持物时才出手，作为专门的交换手段；关闭：也只在有物可换时打分，两边都空不给分、不空放。已知拒绝交换的目标一律不出手。",
   "world_combat.move.trick.text.swap": "换了手",
   "world_combat.move.trick.text.empty": "两边都是空手",
   "world_combat.move.trick.text.guard": "它的手抓得死",
   "world_combat.move.trick.text.miss": "心线断了",
-  "worldcombat.skill.trick.description.conditions": "目标或自己至少一方持有物、且双方都没有被封住持有物通道时才会交换；有拒绝持有物交换特性的目标也换不走。两边都空手时无法施放。"
+  "worldcombat.skill.trick.description.conditions": "起手后目标躲到墙后、走出射程或双方之间被别的身体挡下，执行时只断线、不交换；至少一方持有物、且双方都没有被封住持有物通道时才会交换，有拒绝持有物交换特性的目标也换不走。两边都空手或点选空处同样落空，不会凭空生成物品。"
 }

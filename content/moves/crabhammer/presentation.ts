@@ -35,6 +35,27 @@ const CrabhammerDefinition: ParticleDefinition = {
                 }
             ]
         },
+        press: {
+            exit: { drain: 12 },
+            emitters: [
+                {
+                    name: "pincer", bind: "path", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    shape: { kind: "polyline" },
+                    rate: 46, direction: "outward", speed: [0.02, 0.1], spread: 16,
+                    lifetime: [6, 11], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0x5FC4D4, alpha: [0.75, 0], light: "world", maxParticles: 90
+                },
+                {
+                    name: "edge", bind: "path", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/bubble/bigbubble_krabby",
+                    shape: { kind: "polyline" },
+                    rate: 22, direction: "outward", speed: [0.01, 0.06],
+                    lifetime: [7, 12], size: [0.24, 0.05],
+                    color: 0xEAFBFF, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 60
+                }
+            ]
+        },
         slam: {
             duration: 26,
             exit: { stop: 10, drain: 18 },
@@ -99,19 +120,19 @@ const CrabhammerDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 18 },
             emitters: [
                 {
-                    name: "wave", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "fan", bind: "point", fit: "world", orient: "heading", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
+                    shape: { kind: "sector", radius: { data: "radius", fallback: 2.2 }, angleDegrees: { data: "span", fallback: 90 } },
                     direction: "outward", speed: [0.1, 0.3],
                     lifetime: [12, 22], size: [0.4, 1.1], sizeMode: "sin",
-                    color: 0x5FC4D4, alpha: [0.6, 0], light: "world", maxParticles: 8
+                    color: 0x5FC4D4, alpha: [0.6, 0], light: "world", maxParticles: 10
                 },
                 {
-                    name: "foam", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    name: "foam", bind: "point", fit: "world", orient: "heading", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     burst: { count: { data: "splash", fallback: 18 }, at: 0 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
+                    shape: { kind: "sector", radius: { data: "radius", fallback: 2.2 }, angleDegrees: { data: "span", fallback: 90 } },
                     direction: "up", speed: [0.06, 0.22], spread: 22,
                     gravity: 0.06, drag: 0.92,
                     lifetime: [10, 18], size: [0.09, 0.02],

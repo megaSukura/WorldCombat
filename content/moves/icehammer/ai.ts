@@ -1,12 +1,12 @@
 /**
  * 冰锤 / icehammer 的伙伴 AI 用途。
  *
- * 什么局面下出手：一记近身的裹冰单体重砸。目标可见、敌对、存活，且在 `ai.maxChase`（默认 6）格内；
+ * 什么局面下出手：一记自由瞄准的近身裹冰单体重砸。目标可见、敌对、存活，且在 `ai.maxChase`（默认 6）格内；
  *   更远交给共享接近逻辑。和臂锤一样，这一记会让自身速度下降，所以只在够得到时用。
- * 对谁出手：`ai.chill`（默认开）打开时，**已经冰缓**的目标多一档分——冰壳更脆，这一记打得更重，
- *   也把冰缓接下去；关闭则所有目标同价。
- * 够不到怎么办：reach 就是本招射程，不够先走近；目标在起手期间跑掉就只留扑空的冰屑。
- * 放完之后：命中才付自身速度 −1；目标带着冰缓身份；交回共享交战计划等冷却。
+ * 对谁出手：`ai.chill`（默认开）打开时，**已经冰缓**的目标多一档分——冰壳更脆，这一记打得更重，也把冰缓接下去；
+ *   只有目标脚下是**正式允许的自然暴露地表**时，才把它当成能留下冰滑价值的目标再加一档分；空中或不适合的地面不估。
+ * 够不到怎么办：reach 就是本招射程，不够先走近；目标在起手期间跑掉、或拳路先碰上墙，就只留扑空的冰屑。
+ * 放完之后：命中真的挂上冰缓、真的降速、真的铺成冰面才各自有反馈；交回共享交战计划等冷却。
  */
 namespace PokemonSkills {
     function icehammerWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -14,6 +14,21 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
+    }
+
+    /** 目标脚下是不是正式允许结冰的自然暴露地表；只有是，才把这一记的冰滑价值算进去。 */
+    function icehammerGround(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const ground = WorldGeometry.ground(world, CompanionBehavior.point(target.point), 4);
+        const block = world.block(WorldCombat.point(ground.x(), ground.y() - 1, ground.z()));
+        if (block === null) return false;
+        if (block.tagged("minecraft:dirt") || block.tagged("minecraft:base_stone_overworld")
+            || block.tagged("minecraft:sand") || block.tagged("minecraft:snow")
+            || block.tagged("minecraft:terracotta") || block.tagged("minecraft:substrate_overworld")) return true;
+        const id = String(block.id());
+        return id === "minecraft:grass_block" || id === "minecraft:podzol" || id === "minecraft:mycelium"
+            || id === "minecraft:moss_block" || id === "minecraft:snow_block" || id === "minecraft:gravel"
+            || id === "minecraft:packed_ice" || id === "minecraft:ice" || id === "minecraft:clay";
     }
 
     CompanionBehavior.registerUse("icehammer", {
@@ -33,6 +48,7 @@ namespace PokemonSkills {
             let score = 16;
             if (distance <= capability.data.range) score += 8;
             if (CompanionBehavior.ai<boolean>(capability, "chill", true) && CompanionBehavior.status(context, target, "chilled")) score += 10;
+            if (icehammerGround(context, target)) score += 6;
             return score;
         }
     });

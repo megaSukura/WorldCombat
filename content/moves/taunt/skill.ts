@@ -8,6 +8,8 @@
  * 出手：短起手（windup 播聚怒预告）后提交；对单体敌人施放，需要一条通视直线。
  * 命中：提交后用 action.trace 沿直线判定；命中挂 world_combat:taunt_rage（身份 taunt），
  *       并把怒火数量、时限、来源写进 world_combat:taunt_mark 供持续画面读取。
+ * 换目标：命中后对有原生目标 AI 的敌人附一次 world.target 仇恨请求，把它的注意拉向施法者；
+ *       请求被拒（Boss 内部行为、玩家、不可转向者）时不画转头，只保留怒火封锁。
  * 持续：存续期由该 MobEffect 承担，每 20 刻 keep 一次怒火画面；怒火随时间越烧越旺（intensity 由剩余比例派生）。
  * 封锁：任何带 taunt 身份的活体在提交非伤害招式时被拒绝（CombatStatus.actions 贡献，reason world_combat:taunted）。
  * 结束：时间走完安静褪去；被牛奶、/effect clear 或覆盖时同样收场，两条岔路画面不同。
@@ -120,6 +122,17 @@ namespace PokemonSkills {
                 { moment: "taunt", target: String(target.ref()), rage: rage, scale: scale, intensity: scale }, 34);
             WorldFeedback.text(world, tauntAbove(at), tauntRageText, [Math.round(ticks / 20)], 40);
             world.sound("cobblemon:status.down.actor", at, 14, "{}");
+            // 换目标请求：对有原生目标 AI 的敌人合法地拉一次仇恨，成功才画转头。
+            // Boss 内部行为、玩家与不可转向者保持原样——world.target 返回 false 时不假播。
+            const pulled = world.target(target, caster);
+            if (pulled && world.valid(caster)) {
+                const toward = origin.minus(at);
+                const span = toward.length();
+                const direction = span < 0.01 ? [0, 1, 0] : [toward.x() / span, toward.y() / span, toward.z() / span];
+                WorldFeedback.emit(world, tauntScene, 1, at,
+                    { moment: "goad", target: String(target.ref()), rage: rage, reach: span, direction: direction,
+                        goad: goad ? 1 : 0 }, 26);
+            }
             done(action);
         }
     });

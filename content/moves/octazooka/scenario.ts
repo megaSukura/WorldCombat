@@ -13,7 +13,7 @@ Smoke.scenario("octazooka", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("octazooka", caster) >= 1, "octazooka was committed");
             stage.expect(stage.damageTo(foe) > 0, "the target took octazooka damage");
-            stage.note("一次施放喷出多股墨弹，每股各自结算伤害；致盲整次施放只掷一次（octazooka.chance），级数由特攻决定", {
+            stage.note("一次施放按节奏喷出多股墨弹，每股各自有一个炮口表现并各自结算伤害；致盲整次施放最多成功一次（octazooka.chance），级数由特攻决定；aim 空喷允许，首碰方块只留装饰墨", {
                 casts: stage.casts("octazooka", caster), onFoe: Math.round(stage.damageTo(foe) * 10) / 10
             });
             stage.done();

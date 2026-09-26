@@ -5,10 +5,10 @@
  * 越靠近中心越重、吹得越远；爆响在每个人（包括施法者自己）耳里留下耳鸣。
  *
  * 场面：普通系的爆音怪带这一招，站在一只小敌与一只原版铁傀儡旁边——小敌会冲上来（看得见被吹开），
- * 铁傀儡血厚打不死（用来核对命中后确实挂上了耳鸣）。两者都不在视线检查里，逼出「不看属性不看地面」的场面。
+ * 铁傀儡血厚、原生抗性拉满且被冻结不会自己走动，用来核对「抗推的Boss仍吃主要声伤、却不被强抛」。
  *
  * 断言只取必然事实：这招被放过、至少一个敌人挨到伤害、被打而不死的铁傀儡带上共享身份 deafened、
- * 施法者自己也带上 deafened。具体被吹开多远、暴击与距离衰减写进 note。
+ * 施法者自己也带上 deafened、抗推的铁傀儡没有被击飞。具体被吹开多远、暴击与距离衰减写进 note。
  */
 Smoke.scenario("boomburst", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -19,6 +19,7 @@ Smoke.scenario("boomburst", function (stage) {
     var thick = stage.mob({ type: "minecraft:iron_golem", at: [2.2, 0, 1.2] });
     stage.hostile(caster, foe);
     stage.hostile(caster, thick);
+    stage.noai(thick);
     stage.until(1200, function () {
         return stage.casts("boomburst", caster) >= 1 && stage.damageTo(thick) > 0;
     }, function () {
@@ -27,11 +28,13 @@ Smoke.scenario("boomburst", function (stage) {
             stage.expect(stage.damageTo(thick) > 0, "the shock wave hit the iron golem");
             stage.expect(stage.hadMobEffect(thick, "world_combat:status/deafened"), "the golem was left with ringing ears");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/deafened"), "the caster deafened itself too");
+            stage.expect(stage.travelled(thick) < 0.5, "native knockback resistance refused the fling");
             stage.note("how far each target was flung, the distance falloff and the crit roll are random/positional", {
                 casts: stage.casts("boomburst", caster),
                 foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,
                 thickDamage: Math.round(stage.damageTo(thick) * 10) / 10,
                 foeTravelled: Math.round(stage.travelled(foe) * 10) / 10,
+                thickTravelled: Math.round(stage.travelled(thick) * 10) / 10,
                 foeAlive: foe.alive()
             });
             stage.done();

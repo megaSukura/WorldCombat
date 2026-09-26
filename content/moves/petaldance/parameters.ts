@@ -18,6 +18,7 @@
  *   bloom    每圈威力：特攻定花瓣有多利，等级让舞更熟；旋舞式略收单次换更大范围。
  *   strikes  旋舞圈数：2～3 圈，特攻越高越可能多转一圈。
  *   radius   风暴半径：特攻与身高决定花瓣能卷多远，也是本招实际射程来源；旋舞式更宽。
+ *   inner    内空占比：身宽决定花裙中空多大，贴近中心的目标安全。
  *   drift    旋舞步：速度决定每一圈自己漂开多少，转出一段弧。
  *   push     花瓣推挤：特攻决定把圈里人往外推多远，很轻。
  *   petals   花瓣格数：特攻派生，决定每圈在地上留下几块花瓣。
@@ -70,6 +71,12 @@ namespace PokemonSkills {
             "风暴半径", {
                 unit: "格",
                 description: "花瓣风暴能卷到多远，也是本招的实际射程来源；特攻越高、身量越大卷得越开，旋舞式更宽。"
+            }),
+        /** 花裙内空占比：基础 0.45，身宽每比 0.9 宽 1 加 0.05（夹 -0.05..0.1）；夹 0.35..0.55。 */
+        inner: formula(
+            F.base(0.45).plus(F.body("width").minus(0.9).times(0.05).clamp(-0.05, 0.1)).clamp(0.35, 0.55).round(3),
+            "花裙内空占比", {
+                description: "花裙内圈与外圈半径之比：贴近中心（小于这个比例）的目标处在中空里，不会每圈挨花；身板越宽中空越大。"
             }),
         /** 旋舞步：基础 0.5 格，速度每比 60 快 1 加 0.006（夹 -0.15..0.45）；旋舞 ×1.3；夹 0.2..1.1。 */
         drift: formula(
@@ -153,7 +160,7 @@ namespace PokemonSkills {
 
     describe(petaldanceId, [
         { key: "description.0", values: ["bloom","strikes"] },
-        { key: "description.1", values: ["radius", "gap", "drift", "push"] },
+        { key: "description.1", values: ["radius", "inner", "gap", "drift", "push"] },
         { key: "description.stance", values: [] },
         { key: "description.2", values: ["petals","linger"] },
         { key: "description.3", values: ["dazeTicks","fumble"] },

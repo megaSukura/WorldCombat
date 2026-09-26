@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.bounce.summary": "蹲身压地后笔直弹起、短暂悬停在最高点，再沿落点斜坠砸下：落点范围内的敌人受到接触伤害并被向下压、向后推，有机会被落地那一下麻住。起跳时头顶的净空决定能弹多高——开阔处弹满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。",
+  "worldcombat.skill.bounce.summary": "蹲身压地后笔直弹起、短暂悬停在最高点，再沿落点斜坠砸下：落点范围内的敌人受到接触伤害并被向下压、向后推，有机会被落地那一下麻住。可点敌人，也可直接朝地面点发力——瞄点会投到地面并收在这一跳的距离内，空放照常起跳落下。起跳时头顶的净空决定能弹多高——开阔处弹满、一击最重，屋檐或洞穴压顶时只能低跳，威力缩水。",
   "worldcombat.skill.bounce.use.0": "跳过近战火力，从上方砸下来",
   "worldcombat.skill.bounce.use.1": "落地带麻痹，打断对手的节奏",
   "worldcombat.skill.bounce.use.2": "在有掩体前抢一个高空落点",
+  "worldcombat.skill.bounce.use.3": "直接朝脚下或前方地面点发力空放",
   "worldcombat.skill.bounce.description.0": "从空中砸下，对落点半径内最多 %2$s 个敌人各造成约 %1$s 点接触伤害；离落点越远的敌人挨得越轻，最外圈约为六成。命中者还被向下压 %3$s 格、向后推 %4$s 格。",
   "worldcombat.skill.bounce.description.1": "先笔直弹到约 %1$s 格高，再沿起跳锁定的落点斜坠，水平距离约 %2$s 格。",
   "worldcombat.skill.bounce.description.2": "在最高点悬停 %1$s，落地判定半径 %2$s 格；命中后有 %3$s 概率使目标麻痹 %4$s。麻痹期间移动速度减半，且每次出招有 25%% 概率失败。",

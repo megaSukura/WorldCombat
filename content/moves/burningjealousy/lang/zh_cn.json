@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.burningjealousy.summary": "朝前喷出扇形火焰。目标的能力强化和药水、信标增益越多，这一击越重，并会留下灼伤。",
+  "worldcombat.skill.burningjealousy.summary": "朝一个方向喷出扇形火焰。强化中的目标烧得更重并被留下灼伤，普通目标只吃基础火伤。可以对着空地空喷，方块不会留下火圈。",
   "worldcombat.skill.burningjealousy.use.0": "惩罚刚强化过的对手",
   "worldcombat.skill.burningjealousy.use.1": "一次扫过身前挤成一排的敌人",
   "worldcombat.skill.burningjealousy.use.2": "用灼伤压制正在铺垫的强化手",
+  "worldcombat.skill.burningjealousy.use.3": "朝空地空喷，逼走位或配合队友",
   "worldcombat.skill.burningjealousy.description.0": "火焰半径 %2$s 格、张角 %3$s 度，最多命中 %4$s 个敌人，每个受到一次约 %1$s 点特殊伤害。",
   "worldcombat.skill.burningjealousy.description.1": "每层强化额外增加 %1$s 倍威力，最多增加 %2$s 倍。五项正面能力等级和药水、信标等增益都计入；增益I级计1层。",
   "worldcombat.skill.burningjealousy.description.2": "有强化的目标受到灼伤，持续 %1$s，每层再延长 %2$s。灼伤使物理攻击减弱，并每5秒扣除最大生命的约1/16、至少1点生命。",

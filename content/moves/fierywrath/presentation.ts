@@ -1,12 +1,13 @@
 /**
  * 怒火中烧 / fierywrath 的客户端表现。
  *
- * 一句话：施法者周身先把暗红火焰收进体内，随即一圈酒红与炭橙的气场从身上向外炸开，贴地一圈火光扫过，
- * 余怒式下同一圈还会一段段地再亮起、慢慢熄灭；被震懵的人头上晃星。
+ * 一句话：施法者周身先把暗红火焰收进体内，随即一圈酒红与炭橙的怒焰从身上向外炸开；余怒式下爆发中心
+ * 立起一圈持续怒焰、一段段再亮起，慢慢熄灭；被震懵的人头上晃星。
  * 色相家族：酒红（0x6A2B4F）与炭橙（0xC05A3A）为主，近白（0xF6D9C0）只在爆发的核心出现；
  * 与爆炸烈焰的正橙火是两家。
- * 拍子：起（seethe 收焰）→ 击（burst 炸开、hit 逐个命中）→ 收（afterglow / linger 余怒、fade 熄灭）。
- * 范围：burst 与 linger 的地面圈按 `data.radius`（气场半径）铺满，画到哪就打到哪；气场以自身为中心。
+ * 拍子：起（seethe 收焰）→ 击（burst 炸开、hit 逐个命中）→ 收（aura 留场、scorch 逐段灼烧、fade 熄灭）。
+ * 范围：burst / aura / pulse 的地面圈都按 `data.scale`（气场半径 / 3.0）铺开，画到哪就打到哪；气场以施法者为中心，
+ * 余怒留在爆发时的中心、不跟着人走。
  * 运动：主体由内向外炸开并贴地扩散，余韵烟向上浮，余怒一段段向外脉动。
  * 数：`data.marks`（命中人数派生）决定爆发碎焰量，`data.intensity`（本次实际伤害 / 70）决定命中亮度，
  * 因此近处吃满的人比边缘的人炸得更亮。
@@ -45,7 +46,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "shock", bind: "point", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "ring", radius: 3.0 },
                     direction: "outward", speed: [0.04, 0.18],
                     lifetime: [12, 20], size: [0.5, 1.3],
                     color: 0x6A2B4F, alpha: [0.7, 0], light: "world"
@@ -54,7 +55,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "flame", bind: "point", fit: "none", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
                     burst: { count: { data: "marks", fallback: 16 }, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "ring", radius: 3.0 },
                     direction: "outward", speed: [0.1, 0.42], spread: 18,
                     lifetime: [10, 18], size: [0.22, 0.04],
                     color: 0xC05A3A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 200
@@ -82,7 +83,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "smoke", bind: "point", fit: "none", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: 14, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "ring", radius: 3.0 },
                     direction: "up", speed: [0.02, 0.1],
                     lifetime: [16, 28], size: [0.3, 0.5],
                     color: 0x4A2338, alpha: [0.3, 0], light: "world", maxParticles: 60
@@ -113,14 +114,38 @@ const FierywrathDefinition: ParticleDefinition = {
                 }
             ]
         },
-        afterglow: {
-            duration: 24,
-            exit: { stop: 10, drain: 16 },
+        scorch: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "burn", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "marks", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.06, 0.24],
+                    gravity: 0.03, drag: 0.93,
+                    lifetime: [10, 16], size: [0.1, 0.02],
+                    color: 0xE08A4A, alpha: [0.85, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "fret", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/mood/anger_red",
+                    burst: { count: 6 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.03, 0.1], spread: 14,
+                    lifetime: [8, 14], size: [0.12, 0.03],
+                    color: 0xC05A3A, alpha: [0.6, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        // 余怒留场：钉在爆发时的中心，由动作拥有；动作结束（fade）时随关键帧释放清理。
+        aura: {
             emitters: [
                 {
                     name: "aura", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: 40, shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    rate: 40, shape: { kind: "ring", radius: 3.0 },
                     direction: "inward", speed: [0.02, 0.1],
                     gravity: -0.006, drag: 0.94,
                     lifetime: [10, 18], size: [0.16, 0.03],
@@ -129,14 +154,14 @@ const FierywrathDefinition: ParticleDefinition = {
                 {
                     name: "ground", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/mood/anger_red",
-                    rate: 24, shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    rate: 24, shape: { kind: "ring", radius: 3.0 },
                     direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.1, 0.02],
                     color: 0xC05A3A, alpha: [0.45, 0], light: "world", maxParticles: 100
                 }
             ]
         },
-        linger: {
+        pulse: {
             duration: 22,
             exit: { stop: 8, drain: 14 },
             emitters: [
@@ -144,7 +169,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "pulse", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "ring", radius: 3.0 },
                     direction: "outward", speed: [0.03, 0.12],
                     lifetime: [10, 16], size: [0.4, 0.9], sizeMode: "sin",
                     color: 0xB4655A, alpha: [0.5, 0], light: "world"
@@ -153,7 +178,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "sparks", bind: "point", fit: "none", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "marks", fallback: 6 } },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "ring", radius: 3.0 },
                     direction: "up", speed: [0.04, 0.18], spread: 12,
                     gravity: 0.03, drag: 0.94,
                     lifetime: [10, 18], size: [0.07, 0.01],
@@ -184,7 +209,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "die", bind: "point", fit: "none", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 20 },
-                    shape: { kind: "hemisphere", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "hemisphere", radius: 3.0 },
                     direction: "up", speed: [0.01, 0.07],
                     lifetime: [16, 28], size: [0.28, 0.5],
                     color: 0x4A2338, alpha: [0.26, 0], light: "world", maxParticles: 70
@@ -199,7 +224,7 @@ const FierywrathDefinition: ParticleDefinition = {
                     name: "scuff", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: 14 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    shape: { kind: "ring", radius: 3.0 },
                     direction: "outward", speed: [0.05, 0.16],
                     gravity: 0.03, drag: 0.92,
                     lifetime: [10, 16], size: [0.06, 0.01],

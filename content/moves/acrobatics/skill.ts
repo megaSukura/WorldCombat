@@ -86,7 +86,7 @@ namespace PokemonSkills {
                 sound(current, "cobblemon:impact.flying");
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), bare ? acrobaticsBareText : acrobaticsStrikeText, [], 28);
                 if (landed && scope.valid(target)) {
-                    scope.displace(target, direction.scale(push));
+                    scope.hitDisplace(target, direction.scale(push));
                 }
                 var obstacle = scope.valid(target) ? scope.observe(target) : before;
                 slip(current, obstacle ? obstacle.position() : point, obstacle ? obstacle.width() : 0, landed ? carry : carry * 0.5);

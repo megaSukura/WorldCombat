@@ -62,6 +62,15 @@ const SubmissionDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
+                    // 成功抓住的双体连线：两端就是施法者与目标。
+                    name: "thread", bind: "path", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    shape: { kind: "polyline" },
+                    rate: 14, speed: [0.01, 0.05],
+                    lifetime: [6, 10], size: [0.08, 0.02],
+                    color: 0xB07A50, alpha: [0.6, 0], light: "world", maxParticles: 60
+                },
+                {
                     name: "clasp", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/grab",
                     burst: { count: 6 },
@@ -119,6 +128,40 @@ const SubmissionDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [12, { data: "pin", fallback: 20 }], size: [0.07, 0.02],
                     color: 0xD8C7A8, alpha: [0.5, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 44
+                }
+            ]
+        },
+        clash: {
+            duration: 30,
+            exit: { stop: 15, drain: 18 },
+            emitters: [
+                {
+                    // 推不动的目标：只有接触处的角力压缩，没有抡出去的碎屑与地动。
+                    name: "press", bind: "target", offset: [0, 0.12, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: { data: "hits", fallback: 12 } },
+                    shape: { kind: "hemisphere", radius: 0.5, rotation: [180, 0, 0] },
+                    direction: "up", speed: [0.06, 0.2], spread: 16,
+                    lifetime: [8, 14], size: [0.32, 0.05], sizeMode: "index",
+                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 40
+                },
+                {
+                    name: "compress", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 18 },
+                    shape: { kind: "ring", radius: 0.44 },
+                    direction: "inward", speed: [0.06, 0.18],
+                    lifetime: [10, 16], size: [0.28, 0.06],
+                    color: 0xB07A50, alpha: [0.6, 0], light: "world"
+                },
+                {
+                    name: "grit", bind: "target", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "dust", fallback: 8 },
+                    shape: { kind: "ring", radius: 0.34 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [9, 15], size: [0.06, 0.02],
+                    color: 0xD8C7A8, alpha: [0.45, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 30
                 }
             ]
         },

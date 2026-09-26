@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.lashout.summary": "Strikes harder when weakened. Negative stat stages and harmful native effects fuel its anger; a hit first removes negative stages, then reduces harmful effects.",
-  "worldcombat.skill.lashout.use.0": "Hit hard right after being weakened",
+  "worldcombat.skill.lashout.summary": "Takes a short step and slams straight ahead when weakened. Negative stat stages and harmful native effects fuel its anger; a hit removes negative stages, and Vent trades the rage for an Attack boost.",
+  "worldcombat.skill.lashout.use.0": "Slam hard up close right after being weakened",
   "worldcombat.skill.lashout.use.1": "Shed every stockpiled lowered stage at once",
   "worldcombat.skill.lashout.use.2": "Trade rage for an Attack boost",
   "worldcombat.skill.lashout.description.0": "Deals about %1$s physical damage. The power doubling from negative stat stages or harmful native effects is already included.",
-  "worldcombat.skill.lashout.description.1": "Steps in up to %1$s blocks, %2$s blocks per tick, collision radius %3$s blocks; shoves the target back %4$s blocks.",
+  "worldcombat.skill.lashout.description.1": "Steps in place %1$s blocks, then slams %2$s blocks straight ahead with a %3$s block collision radius; shoves the target back %4$s blocks.",
   "worldcombat.skill.lashout.description.2": "On hit, removes up to %1$s weakening levels, starting with the lowest stat stages and then reducing harmful native effects; reaching zero removes an effect. Vent form also grants %2$s Attack stages for %3$s.",
   "worldcombat.skill.lashout.vent.on": "Vent on: removes up to nine weakening levels on hit and grants an Attack boost; wind-up is three ticks longer and cooldown eight ticks longer.",
   "worldcombat.skill.lashout.vent.off": "Vent off: removes one weakening level on hit, with a shorter wind-up and cooldown.",
@@ -12,8 +12,8 @@
   "worldcombat.skill.lashout.growth.0": "At level %1$s the vented power rises to %2$s.",
   "worldcombat.skill.lashout.growth.1": "At level %1$s the vented power rises to %2$s and the rage boost to %3$s stages.",
   "worldcombat.skill.lashout.value.lashout": "Vented power",
-  "worldcombat.skill.lashout.value.dash": "Step-in distance",
-  "worldcombat.skill.lashout.value.speed": "Step-in speed",
+  "worldcombat.skill.lashout.value.dash": "Step distance",
+  "worldcombat.skill.lashout.value.slamReach": "Slam reach",
   "worldcombat.skill.lashout.value.collisionRadius": "Collision radius",
   "worldcombat.skill.lashout.value.push": "Knockback",
   "worldcombat.skill.lashout.value.ventLevels": "Vent levels",
@@ -32,5 +32,6 @@
   "worldcombat.skill.lashout.preference.ai.enraged.help": "On: vents on a target as soon as the user carries a negative stage (exactly the doubling window). Off: sorted like an ordinary melee attack.",
   "world_combat.move.lashout.text.hit": "Lash Out",
   "world_combat.move.lashout.text.vent": "Vented!",
-  "world_combat.move.lashout.text.rage": "Rage into power +%1$s"
+  "world_combat.move.lashout.text.rage": "Rage into power +%1$s",
+  "world_combat.move.lashout.text.miss": "Whiff"
 }

@@ -2,10 +2,11 @@
  * 十字劈 / crosschop 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 5）之内；更远交给共享接近逻辑。
- * 对谁出手：这一招射程很短，两劈又要先后落在同一个点上，所以 `ai.pointBlank`（默认开）只在贴到身上
- *   （射程六成以内）时才抬高一档——确保第一劈撞开架势后第二劈还在短射程里；关闭则按普通近身攻击排序。
+ * 对谁出手：这一招射程很短，两劈又要先后落在同一个锁定交叉点上，所以宽身体目标更值（交叉更容易同时罩住），
+ *   `ai.pointBlank`（默认开）只在贴到身上（射程六成以内）时才抬高一档——确保第一劈撞开架势后第二劈仍落在原地；
+ *   横向高速移动的目标不硬追交叉（第二劈多半落空），降低推荐让位给更稳的近身招。关闭 pointBlank 则按普通近身攻击排序。
  * 够不到怎么办：出手距离交给 `reach`，共享任务把身位收进两臂范围再劈。
- * 放完接什么：交回共享交战计划；两劈都中的人吃满破势加成，接下来由共享顺序决定追击还是脱离。
+ * 放完接什么：交回共享交战计划；只有同一目标两劈都中才吃满破势加成，接下来由共享顺序决定追击还是脱离。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse(crosschopId, {
@@ -24,9 +25,14 @@ namespace PokemonSkills {
             if (!target) return 0;
             const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             if (gap > capability.data.range) return 0;
-            const base = 22;
-            if (!CompanionBehavior.ai<boolean>(capability, "pointBlank", true)) return base;
-            return gap <= capability.data.range * 0.65 ? base + 12 : base;
+            let base = 22;
+            // 宽身体更容易被两道斜线同时罩住，交叉劈更值。
+            if ((target.width || 0.9) >= 1.2) base += 10;
+            // 横向高速移动的目标会移出锁定的交叉点，第二劈多半落空；不硬追交叉。
+            const velocity = CompanionBehavior.velocity(context, target);
+            if (velocity && (velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.0025) base -= 10;
+            if (!CompanionBehavior.ai<boolean>(capability, "pointBlank", true)) return Math.max(0, base);
+            return (gap <= capability.data.range * 0.65 ? base + 12 : base);
         }
     });
 

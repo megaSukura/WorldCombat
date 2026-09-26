@@ -6,6 +6,7 @@
  * 是否把落点周围第二个目标一起罩住、是否让目标陷入麻痹，都是位置与概率结果，写进 note 供读轨迹判断。
  */
 Smoke.scenario("bodyslam", function (stage) {
+    stage.time("night");
     var caster = stage.pokemon({ species: "Snorlax", level: 36, moves: ["bodyslam"], at: [0, 0, 0] });
     var foe = stage.mob({ type: "minecraft:zombie", at: [3, 0, 0] });
     var side = stage.mob({ type: "minecraft:zombie", at: [4, 0, 1] });

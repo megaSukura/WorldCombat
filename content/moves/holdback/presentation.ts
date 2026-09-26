@@ -2,11 +2,12 @@
  * 手下留情 / holdback 的客户端表现。
  *
  * 一句话：沉身把一记重扫抡到最大，再收着力道从一排人身上擦过去——扇面扫到哪，谁只被削血而不倒。
- * 色相家族：暖白与浅木色（softswipe／slash／impact_normal）＋中性尘（tinydust）。
- * 拍子：起（windup 抡力）→ 扫（sweep 扇形铺开、strike 逐个命中）→ 留手（spare 每个目标的收手标记）→ 空扫（miss）。
- * 范围：sweep 用 `data.path`（与服务端 WorldGeometry.sector 同一组扇形顶点）填出扇面；扇面张到哪、扫到哪就是那块。
- * 运动：扇面粒子从扇心向弧边扫出，命中处各自炸开一圈暖白与扬尘。
- * 数：`data.dust`（物攻换算的扬尘量）绑定扇面密度与命中扬尘，`data.hits`（实际扫中数）绑定弧边亮点，
+ * 色相家族：暖白与浅木色（softswipe／slash）＋中性尘（tinydust）。
+ * 拍子：起（windup 抡力）→ 扫（sweep 扇形铺开、strike 轻轻擦过）→ 留手（spare 每个目标的短收刃星）→ 空扫（miss）。
+ * 范围：sweep 用 `data.path`（与服务端 WorldGeometry.sector 同一组扇形顶点）填出扇面；服务端已按同一个**总张角**
+ *   生成顶点，扇面画到哪、判定就扫到哪，不再有画面被放宽或收窄的错觉。
+ * 运动：扇面粒子从扇心向弧边扫出，擦过目标处只散开一小圈暖白，不炸杀伤爆裂。
+ * 数：`data.dust`（物攻换算的扬尘量）绑定扇面密度与擦过扬尘，`data.hits`（实际扫中数）绑定弧边亮点，
  *   `data.intensity`（威力 / 50）放大整幕，`data.scale` 让沉腰式比快扫更大。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
@@ -64,26 +65,26 @@ const HoldbackDefinition: ParticleDefinition = {
             ]
         },
         strike: {
-            duration: 18,
-            exit: { stop: 7, drain: 11 },
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "touch_burst", bind: "target", offset: [0, 0.5, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
-                    burst: { count: { data: "dust", fallback: 14 }, at: 0 },
+                    name: "touch_brush", bind: "target", offset: [0, 0.5, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    burst: { count: { data: "dust", fallback: 10 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.32 },
-                    direction: "outward", speed: [0.06, 0.22], spread: 20,
-                    lifetime: [6, 12], size: [0.28, 0.05], sizeMode: "index",
-                    color: 0xF6EFE0, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 60
+                    direction: "outward", speed: [0.03, 0.12], spread: 14,
+                    lifetime: [6, 12], size: [0.24, 0.05], sizeMode: "index",
+                    color: 0xF6EFE0, alpha: [0.7, 0], light: "full", maxParticles: 40
                 },
                 {
                     name: "touch_dust", bind: "target", offset: [0, 0.25, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 10, at: 0 },
+                    burst: { count: 8, at: 0 },
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.03, 0.13], gravity: 0.05, drag: 0.9,
                     lifetime: [10, 16], size: [0.06, 0.02],
-                    color: 0x9A8A6A, alpha: [0.35, 0], light: "world", maxParticles: 30
+                    color: 0x9A8A6A, alpha: [0.3, 0], light: "world", maxParticles: 24
                 }
             ]
         },

@@ -6,8 +6,8 @@
  *
  * 色相家族：怒火红（0xC0392B／0xE2531B）为主体与强调，深红近黑做烟，近白只做高光小点；
  * 冷嘲被共享策略拒绝时改播灰白「不为所动」。
- * 层次：红怒（起手，源侧）／冲击＋怒纹＋内收环（命中，目标侧）／飞鸟与脚下余烬（持续）／反噬闷响（随机分支）。
- * 起击收：windup（聚怒）→ taunt（炸开并留下怒火）→ dazed（持续飞鸟）→ fumble（反噬）。
+ * 层次：红怒（起手，源侧）／冲击＋怒纹＋内收环（命中，目标侧）／拉向施法者的怒线（goad，仅仇恨真被拉动时）／飞鸟与脚下余烬（持续）／反噬闷响（随机分支）。
+ * 起击收：windup（聚怒）→ taunt（炸开并留下怒火）→ goad（把火引向施法者）→ dazed（持续飞鸟）→ fumble（反噬）。
  * 数：taunt 的爆发量与内收环半径分别绑定服务端算出的 burst 与 scale；fumble 的冲击量绑定实际反噬比例算出的 power。
  */
 const SwaggerDefinition: ParticleDefinition = {
@@ -70,6 +70,28 @@ const SwaggerDefinition: ParticleDefinition = {
                     direction: "down", speed: [0.03, 0.1],
                     lifetime: [12, 22], size: [0.07, 0.02],
                     color: 0x3A0A0A, alpha: [0.55, 0], gravity: 0.02, drag: 0.95, light: "world", maxParticles: 40
+                }
+            ]
+        },
+        goad: {
+            duration: 22,
+            exit: { stop: 6, drain: 18 },
+            emitters: [
+                {
+                    name: "pull_tether", bind: "target", height: 0.75, fit: "none", orient: "direction",
+                    particle: "world_combat_core:cobblemon/mood/anger_red",
+                    burst: { count: 12, interval: 3, repeats: 2 }, shape: { kind: "line", length: 1.5 },
+                    direction: "shape", speed: [0.14, 0.4],
+                    lifetime: [6, 11], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0xE2531B, alpha: [0.9, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "pull_mark", bind: "target", offset: [0, 1.0, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/mood/anger_red",
+                    burst: { count: 5 }, shape: { kind: "sphere", radius: 0.26 },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.26, 0.1], sizeMode: "sin",
+                    color: 0xC0392B, alpha: [0.8, 0], light: "full", maxParticles: 12
                 }
             ]
         },

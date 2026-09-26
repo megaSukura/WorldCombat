@@ -1,9 +1,10 @@
 {
-  "worldcombat.skill.aurorabeam.summary": "Fire a rainbow beam that runs along the line: it deals special damage to the first enemy, may lower its Attack by 1 stage, and leaves a small patch of frost where it lands. The wide spectrum reaches further and chills more easily; the tight one is faster and stronger.",
+  "worldcombat.skill.aurorabeam.summary": "Fire a rainbow beam that runs along the line: it deals special damage to the first enemy, may lower its Attack by 1 stage, and leaves a small patch of frost where it lands. The first time it strikes an existing snow or ice surface it mirrors off that real face once and keeps going with the remaining range; stone does not reflect. The wide spectrum reaches further and chills more easily; the tight one is faster and stronger.",
   "worldcombat.skill.aurorabeam.use.0": "A straight-line pick at mid-to-long range",
   "worldcombat.skill.aurorabeam.use.1": "Suppress physical attackers",
-  "worldcombat.skill.aurorabeam.use.2": "Leave a slick frost patch in a corridor",
-  "worldcombat.skill.aurorabeam.description.0": "The beam flies straight along the aim line and hits only the first enemy in its path for %1$s special damage.",
+  "worldcombat.skill.aurorabeam.use.2": "Clipping an ice wall to reflect onto a target behind cover",
+  "worldcombat.skill.aurorabeam.use.3": "Leave a slick frost patch in a corridor",
+  "worldcombat.skill.aurorabeam.description.0": "The beam flies along the aim line and hits only the first enemy in its path for %1$s special damage; if it meets an existing snow or ice surface on the way, it mirrors once off the real face and continues with the same remaining range, leaving frost only at its final landing point.",
   "worldcombat.skill.aurorabeam.description.1": "On hit it has a %1$s chance to lower the target's Attack by %2$s stage(s).",
   "worldcombat.skill.aurorabeam.description.2": "The beam reaches %1$s blocks at %2$s blocks/tick with a %3$s-block hit radius; it leaves up to %4$s blocks of frost that linger %5$s.",
   "worldcombat.skill.aurorabeam.spectrum.on": "Wide spectrum: longer reach, thicker hitbox, bigger and longer frost, more reliable Attack drop, at the cost of slightly less power, slower travel and longer wind-up and cooldown.",

@@ -1,6 +1,8 @@
 /** 腐蚀气体：原生持有物溶毁与普通耐久装备腐蚀共享范围，磨损比例独立列入说明参数。 */
 namespace PokemonSkills {
     export const corrosiveGasScene = "world_combat:move_corrosivegas";
+    /** 起手预告层：逐帧画出真实雾半径，并圈出此刻会被裹住的活体（队友遇险时边缘转警示色）。 */
+    export const corrosiveGasReachScene = "world_combat:move_corrosivegas_reach";
     export const corrosiveGasEffect = "world_combat:corroded";
     export const corrosiveGasStatus = "corroded";
     export const corrosiveGasMeltText = "world_combat.move.corrosivegas.text.melt";

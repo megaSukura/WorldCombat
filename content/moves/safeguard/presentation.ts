@@ -6,10 +6,12 @@
  *
  * 色相家族：守护碧（0x9FE8B0）为主体，近白（0xE8FBEE）做高光，灰青（0x8FBFA4）做脚下影与淡出。
  * 一个效果一个色相家族。持续层压得很低、放在脚边与身侧，让出目标本体视线。
- * 层次：聚光（起手）／护壁环＋光尘（罩住一圈）／身周光点（持续）／弹开一条异常（事件）／收。
- * 起击收：windup（聚光）→ ward（护壁铺开）→ warded（持续）→ guard（弹开一次）→ fade（收）。
+ * 层次：聚光（起手）／护壁环＋光尘（罩住一圈）／场边稀疏边界＋身周淡环（持续）／
+ *       新队友被覆盖时亮一次连线（进入）／弹开一条异常（事件）／某份守护余效走完（lose）／收。
+ * 起击收：windup（聚光）→ ward（护壁铺开）→ warded／boundary（持续）→ entry（有人进入）→
+ *         guard（弹开一次）→ lose（某人余效走完）→ fade（来源退出）。
  * 数：铺开的守护光点量绑定服务端算出的 data.motes；光罩半径绑定 data.field；
- * 弹开那条异常的爆发量绑定机制里的 motes（由光点数量派生）。
+ * 弹开那条异常的爆发量绑定机制里的 motes（由光点数量派生）；进入连线沿 data.path 铺设。
  */
 const SafeguardDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -76,6 +78,49 @@ const SafeguardDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [22, 34], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0xE8FBEE, alpha: [0.22, 0], light: "full", maxParticles: 14
+                },
+                {
+                    name: "veil_ring", bind: "target", height: 0.03,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 1.5, shape: { kind: "ring", radius: 0.45 },
+                    direction: "up", speed: [0.0, 0.02],
+                    lifetime: [16, 26], size: [0.14, 0.04], sizeMode: "sin",
+                    color: 0x9FE8B0, alpha: [0.22, 0], light: "world", maxParticles: 10
+                }
+            ]
+        },
+        boundary: {
+            exit: { drain: 30 },
+            emitters: [
+                {
+                    name: "edge_dust", bind: "source", height: 0.04, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 2.5, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
+                    direction: "up", speed: [0.0, 0.02],
+                    lifetime: [16, 26], size: [0.16, 0.05], sizeMode: "sin",
+                    color: 0x8FBFA4, alpha: [0.22, 0], light: "world", maxParticles: 26
+                },
+                {
+                    name: "edge_gate", bind: "source", height: 0.0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 3, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
+                    direction: "up", speed: [0.005, 0.03],
+                    lifetime: [20, 32], size: [0.06, 0.01],
+                    color: 0x9FE8B0, alpha: [0.3, 0], light: "world", maxParticles: 32
+                }
+            ]
+        },
+        entry: {
+            duration: 20,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "entry_link", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "motes", fallback: 10 } }, shape: { kind: "polyline" },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.12, 0.02], sizeMode: "index",
+                    color: 0x9FE8B0, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 24
                 }
             ]
         },
@@ -98,6 +143,20 @@ const SafeguardDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [8, 14], size: [0.14, 0.02], sizeMode: "index",
                     color: 0x9FE8B0, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 26
+                }
+            ]
+        },
+        lose: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "lose_ripple", bind: "target", height: 0.04,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 12 }, shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.02, 0.08], drag: 0.94,
+                    lifetime: [10, 18], size: [0.18, 0.05],
+                    color: 0x8FBFA4, alpha: [0.35, 0], light: "world", maxParticles: 20
                 }
             ]
         },

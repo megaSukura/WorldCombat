@@ -6,7 +6,8 @@
  * 对谁出手：当前威胁；已经麻痹的目标不重复下手，把机会留给别的控制手段。
  * 够不到怎么办：由共享任务走到 reach；accepts 不按距离硬拒。
  * 放完之后：目标移动变慢、有 25% 概率失手，伙伴交回共享顺序继续交战。
- * 优先级：基础 50；ai.preferSwift 开启时，正在快速移动的目标（先冲上来的那个）抬到 65，先把它钉住。
+ * 优先级：基础 50；ai.preferSwift 开启时，正在快速移动的目标（先冲上来的那个）抬到 65，先把它钉住；
+ *   自己到目标这条线上若已有同伴身体，电流会被引走、这记基本白放，降到 0 让给别的控制手段。
  */
 namespace PokemonSkills {
     /** 目标是否正在快速移动：速度越快越应该先被麻住。 */
@@ -14,6 +15,25 @@ namespace PokemonSkills {
         const velocity = target.velocity;
         if (!velocity) return false;
         return Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.08;
+    }
+
+    /** 自己到目标这条直线上有没有己方身体：有的话电流会在半路被引走，麻痹落不到目标身上。 */
+    function thunderwaveAllyBlocked(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context);
+        const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const span = Math.sqrt(dx * dx + dz * dz);
+        if (span < 0.5) return false;
+        const ux = dx / span, uz = dz / span;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (!other.friendly || other.ref === String(context.actor) || other.ref === target.ref) continue;
+            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            const along = ox * ux + oz * uz;
+            if (along <= 0.3 || along >= span - 0.3) continue;
+            if (Math.abs(ox * uz - oz * ux) <= 0.6) return true;
+        }
+        return false;
     }
 
     CompanionBehavior.registerUse(thunderwaveId, {
@@ -32,6 +52,7 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || CompanionBehavior.status(context, target, "paralysis")) return 0;
+            if (thunderwaveAllyBlocked(context, target)) return 0;
             return CompanionBehavior.ai<boolean>(capability, "preferSwift", true) && thunderwaveSwift(target) ? 65 : 50;
         }
     });

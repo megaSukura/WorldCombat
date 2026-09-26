@@ -40,8 +40,8 @@ const DrillrunDefinition: ParticleDefinition = {
                 {
                     name: "bore_body", bind: "source", offset: [0, 0.5, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/drill",
-                    rate: { data: "sparks", fallback: 16 }, shape: { kind: "circle", radius: 0.4 },
-                    direction: "shape", speed: [0.06, 0.22], spread: 20,
+                    rate: { data: "sparks", fallback: 16 }, shape: { kind: "cylinder", radius: 0.4, length: 0.9, thickness: 0 },
+                    orient: "direction", direction: "shape", speed: [0.06, 0.22], spread: 20,
                     lifetime: [5, 10], size: [0.4, 0.12], spin: 30,
                     color: 0xE0C98E, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 130
                 },
@@ -56,8 +56,8 @@ const DrillrunDefinition: ParticleDefinition = {
                 {
                     name: "spin_edge", bind: "source", offset: [0, 0.35, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 20, shape: { kind: "line", length: 0.8, rotation: [0, 0, 90] },
-                    direction: "shape", speed: [0.02, 0.08],
+                    rate: 20, shape: { kind: "line", length: 0.9 },
+                    orient: "direction", direction: "shape", speed: [0.02, 0.08],
                     lifetime: [4, 8], size: [0.34, 0.08],
                     color: 0xF2E6C4, alpha: [0.55, 0], light: "full", bloom: 0.25, maxParticles: 70
                 }
@@ -92,6 +92,13 @@ const DrillrunDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
+                    name: "furrow_line", bind: "path", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    shape: { kind: "polyline" }, rate: { data: "sparks", fallback: 16 }, direction: "up", speed: [0.01, 0.05],
+                    lifetime: [10, 18], size: [0.1, 0.03],
+                    color: 0x8A744C, alpha: [0.55, 0], light: "world", maxParticles: 90
+                },
+                {
                     name: "ground_burst", bind: "point", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "cells", fallback: 8 }, at: 0 },
@@ -112,6 +119,28 @@ const DrillrunDefinition: ParticleDefinition = {
                     burst: { count: 1, at: 0 }, shape: { kind: "point" },
                     lifetime: [12, 16], size: [0.7, 0.2],
                     color: 0xC7B183, alpha: [0.6, 0], light: "world", maxParticles: 4
+                }
+            ]
+        },
+        blocked: {
+            duration: 20,
+            exit: { stop: 5, drain: 11 },
+            emitters: [
+                {
+                    name: "wall_spark", bind: "point", offset: [0, 0.3, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "sparks", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.24 }, direction: "outward", speed: [0.08, 0.28], spread: 34,
+                    lifetime: [5, 10], size: [0.12, 0.03], sizeMode: "index",
+                    color: 0xFFF0C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 30
+                },
+                {
+                    name: "wall_chip", bind: "point", offset: [0, 0.24, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 10, at: 0 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.18], gravity: 0.12, drag: 0.92,
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0x7E6B48, alpha: [0.65, 0], light: "world", maxParticles: 30
                 }
             ]
         },

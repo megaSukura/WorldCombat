@@ -1,20 +1,4 @@
-/**
- * 欢乐时光 / happyhour —— 出手方式。
- *
- * 核心念头：当场摆开一场小型庆典，脚下铺出一圈还亮着的金色时光；在这段时光里，任何在圈内倒下的
- *   非友方都会当场爆出一捧本来要到战后才结算的 Relic Coin。它不攻击、不撒钱，只把战果变现。
- *
- * 两幕：
- *   起（windup，提交前）：头顶聚起翻涌的金光与星屑，预告这场庆典（`action.present`）。
- *   庆（raise → hold → payout）：提交后在自身脚下留下半径 `radius` 的金色场地（WorldEffects.field，
- *      规则 world_combat:field/happyhour 由本单元注册）并挂上共享身份 world_combat:status/happyhour 的光环，
- *      持续 `banner`；场地每 5 刻续一次金光。此后每次有非友方在这片场地里倒下，就当场落下 `purse` 枚真币
- *      （优先 cobblemon:relic_coin，缺失时退回金粒）；光环走完则场地一起收，钱归地上的人捡。
- *
- * 与同族分开：聚宝功当场撒钱换血、淘金潮倾库换伤害；只有欢乐时光是**先铺好一圈、再把之后每一场战果变现**的
- *   经营型庆典——它的收益不在施放的一刻，而在接下来倒下的每一个对手。
- * 反制：庆典有固定半径与时长，把对手拉出圈外、或拖到光环熄灭再打，就什么都收不到。
- */
+/** A stationary celebration pays once per confirmed hostile death and team; its carrier owns the field visual. */
 namespace PokemonSkills {
     const happyhourScene = "world_combat:move_happyhour";
     const happyhourBanner = "world_combat:happyhour_banner";
@@ -23,58 +7,64 @@ namespace PokemonSkills {
     const happyhourRaiseText = "world_combat.move.happyhour.text.raise";
 
     /** 在一点落下一捧真币：优先 Cobblemon 遗迹硬币，缺失时退回金粒；带初速自然落地。 */
-    function happyhourPayout(world: CombatWorld, point: CombatPoint, coins: number): void {
+    function happyhourPayout(world: CombatWorld, point: CombatPoint, coins: number): number {
         const item = world.item("cobblemon:relic_coin") !== null ? "cobblemon:relic_coin" : "minecraft:gold_nugget";
-        const count = Math.max(1, Math.min(14, Math.round(coins)));
+        const count = Math.max(1, Math.round(coins));
+        let actual = 0;
         for (let index = 0; index < count; index++) {
             const angle = world.random() * Math.PI * 2, speed = 0.15 * (0.6 + world.random() * 0.8);
             const drop = WorldCombat.point(Math.cos(angle) * 0.4, 0.4 + world.random() * 0.3, Math.sin(angle) * 0.4);
-            try {
-                world.dropItem(point.plus(drop), item, 1,
-                    JSON.stringify({ pickupDelay: 16, velocity: [Math.cos(angle) * speed, 0.22, Math.sin(angle) * speed] }));
-            } catch (error) { /* 掉落被拒绝时只保留粒子与机制 */ }
+            const itemRef = world.dropItem(point.plus(drop), item, 1,
+                JSON.stringify({ pickupDelay: 16, velocity: [Math.cos(angle) * speed, 0.22, Math.sin(angle) * speed] }));
+            if (itemRef) actual++;
         }
-        WorldFeedback.emit(world, happyhourScene, 1, point, { moment: "payout", coins: count }, 30);
-        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), happyhourEarnText, [count], 32);
+        if (!actual) return 0;
+        WorldFeedback.emit(world, happyhourScene, 1, point, { moment: "payout", coins: actual }, 30);
+        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), happyhourEarnText, [actual], 32);
         world.sound("cobblemon:block.relic_coin_pouch.place", point, 16, "{}");
+        return actual;
     }
 
-    // 金色时光场地：每 5 刻续一次金光，让玩家看见这段时间还在。
     WorldEffects.fieldRule(happyhourField, {
         scan: function (effect, world, field) {
+            if (!MobEffects.matches(world, effect.source(), field.data.anchor)) { effect.end(); return; }
+            if (!field.data.lease) field.data.lease = MobEffects.bind(world, effect.source(), happyhourBanner);
+            if (!MobEffects.present(world, field.data.lease)) { effect.end(); return; }
             const centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
-            WorldFeedback.keep(world, "happyhour:" + effect.id(), happyhourScene, 1, centre,
-                { moment: "hold", radius: field.radius, motes: Math.max(14, Math.round(Number(field.data.motes) || 20)),
-                    scale: field.radius / 4.5 }, 40);
+            WorldFeedback.onEffect(world, effect.id(), "celebration", happyhourScene, 1, centre,
+                { moment: "hold", radius: field.radius, motes: field.data.motes, scale: field.radius / 4.5 });
         }
     });
-
-    // 战果变现：任何在金色场地里倒下的非友方，当场爆出一捧真币。
-    WorldCombat.on("world_combat:move_happyhour/payout", "world_combat:damage_applied", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (!(data.after <= 0)) return;
-        const victim = event.target();
-        const world = event.world();
-        if (victim === null || !world.valid(victim) || world.friendly(victim)) return;
-        if (typeof data.x !== "number" || typeof data.y !== "number" || typeof data.z !== "number") return;
-        const point = WorldCombat.point(data.x, data.y, data.z);
-        const zones = WorldEffects.areas(world, happyhourField);
-        for (let i = 0; i < zones.length; i++) {
-            const zone = zones[i];
-            const centre = WorldCombat.point(zone.position[0], zone.position[1], zone.position[2]);
-            if (centre.minus(point).length() > zone.radius + 0.5) continue;
-            if (String(victim.ref()) === String(zone.data.caster)) continue;
-            happyhourPayout(world, point, Number(zone.data.purse) || 1);
-            return;
-        }
+    function happyhourCovers(zone: WorldEffects.Area, data: CombatNativeDeathFacts): boolean {
+        if (zone.pending || data.tick < zone.data.born) return false;
+        const dx = zone.position[0] - data.position[0], dy = zone.position[1] - data.position[1], dz = zone.position[2] - data.position[2];
+        return dx * dx + dy * dy + dz * dz <= zone.radius * zone.radius;
+    }
+    WorldCombat.on("world_combat:move_happyhour/payout", "world_combat:actor_died", "", event => {
+        const data: CombatNativeDeathFacts = JSON.parse(String(event.data())), world = event.world();
+        if (data.friendly || data.self) return;
+        const zones = WorldEffects.areas(world, happyhourField).filter(zone => {
+            const owner = world.actor(zone.source);
+            return happyhourCovers(zone, data) && owner !== null && world.valid(owner) && world.friendly(owner)
+                && MobEffects.matches(world, owner, zone.data.anchor);
+        }).sort((a, b) => a.id - b.id);
+        if (!zones.length || zones[0].source !== String(event.actor().ref())) return;
+        // The oldest covering allied field is the single payee. Mark every overlap before dropping, including a failed native drop.
+        if (zones.some(zone => zone.data.paid && zone.data.paid[data.deathId])) return;
+        zones.forEach(zone => {
+            const paid = zone.data.paid || {}; paid[data.deathId] = true;
+            WorldEffects.update(world, zone.id, { data: { paid: paid } });
+        });
+        const winner = zones[0], point = WorldCombat.point(data.position[0], data.position[1], data.position[2]);
+        const actual = happyhourPayout(world, point, Number(winner.data.purse));
+        WorldEffects.update(world, winner.id, { data: { rewarded: (Number(winner.data.rewarded) || 0) + actual } });
     });
 
     define({
         id: "happyhour",
         cooldownParameter: "recharge",
         name: "Happy Hour",
-        description: "当场摆开一场小型庆典，在自己脚下铺出一圈金色时光；在这段时光里，任何在圈内倒下的"
-            + "非友方都会当场爆出一捧本来到战后才结算的 Relic Coin。它不攻击、不撒钱，只把战果变现。",
+        description: "当场摆开一场小型庆典，在自己脚下铺出一圈金色时光；在这段时光里，圈内真实倒下的非友方留下额外的 Relic Coin，同队重叠庆典只结算一份。",
         uses: ["在一场硬仗开打前先铺好，把战果做成丰收", "守住一块要地，让倒在这里的对手都留下买路钱", "给队伍的长时间缠斗补一份场上收入"],
         kind: "self",
         range: 0,
@@ -120,9 +110,10 @@ namespace PokemonSkills {
             const coins = Math.max(3, Math.round(p("happyhour", "purse", action)));
             const motes = Math.max(14, Math.round(p("happyhour", "motes", action)));
             const scale = Math.max(0.6, Math.min(1.8, radius / 4.5));
-            MobEffects.apply(world, self, happyhourBanner, ticks, 0);
+            const banner = MobEffects.apply(world, self, happyhourBanner, ticks, 0);
+            if (banner === null) { done(action); return; }
             WorldEffects.field(world, happyhourField, origin, radius,
-                { coins: coins, purse: coins, radius: radius, motes: motes, caster: String(self.ref()) }, ticks);
+                { purse: coins, motes: motes, born: world.tick(), anchor: MobEffects.anchor(banner), paid: {}, rewarded: 0 }, ticks);
             sound(action, "minecraft:ui.toast.challenge_complete");
             WorldFeedback.emit(world, happyhourScene, 1, origin,
                 { moment: "raise", radius: radius, motes: motes, purse: coins, scale: scale }, 50);

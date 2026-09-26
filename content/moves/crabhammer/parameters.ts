@@ -92,6 +92,10 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "砸中时敲裂目标物防的级数；只有在裂甲档位下才不为零。"
             }),
+        /** 下砸扫弧：基础 6 刻，速度每比 55 快 1 减 0.02 刻（夹 -1..2）；夹在 4..9。 */
+        sweep: seconds(
+            F.base(6).minus(F.stat("speed").minus(55).times(0.02).clamp(-1, 2)).clamp(4, 9).round(0),
+            "下砸扫弧", "钳子从高到低沿面前短弧压下的这段扫弧有几刻；速度越快收得越利落，留给对手让开落点的时间越短。"),
         /** 前摇：基础 16 刻，速度每比 55 快 1 减 0.05 刻（夹 -4..8），裂甲 +2；夹在 10..24。 */
         windupTicks: seconds(
             F.base(16).minus(F.stat("speed").minus(55).times(0.05).clamp(-4, 8))

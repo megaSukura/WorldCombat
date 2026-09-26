@@ -86,7 +86,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(quickattackId, "strike"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(origin);
-                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, quickattackScene, 1, hit.position(),
                             { moment: "strike", scale: scale, backward: backward, intensity: intensity }, 8);

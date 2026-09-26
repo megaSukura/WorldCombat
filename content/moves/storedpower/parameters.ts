@@ -35,12 +35,7 @@ namespace PokemonSkills {
 
     /** 倾囊：把全部正面等级一次打出去，返回实际释放的级数。 */
     export function storedpowerSpend(world: CombatWorld, actor: CombatActor): number {
-        const stages = storedpowerStages(world, actor);
-        let spent = 0;
-        storedpowerStats.forEach(function (stat) {
-            const value = stages[stat] || 0;
-            if (value > 0) { NativeEffects.boost(world, actor, stat, -value); spent += value; }
-        });
+        const spent = NativeEffects.consumePositiveStages(world, actor, "world_combat:storedpower");
         return spent + MobEffects.clear(world, actor, "beneficial");
     }
 

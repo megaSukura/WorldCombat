@@ -10,9 +10,10 @@ Smoke.scenario("volttackle", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
-    var caster = stage.pokemon({ species: "raichu", level: 50, moves: ["volttackle"], at: [-3, 0, 0] });
-    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [3, 0, 0] });
-    var bystander = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [3, 0, 1.6] });
+    // 正面的靶子放在一个冲程之内；旁边那只贴在放电半径里，用来看群电会不会真的分出去。
+    var caster = stage.pokemon({ species: "raichu", level: 50, moves: ["volttackle"], at: [-1.5, 0, 0] });
+    var foe = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [1.0, 0, 0] });
+    var bystander = stage.pokemon({ species: "magikarp", level: 20, moves: ["splash"], at: [1.0, 0, 1.2] });
     stage.hostile(caster, foe);
     stage.hostile(caster, bystander);
     stage.until(1400, function () {

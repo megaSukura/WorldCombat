@@ -38,7 +38,8 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !clearsmogWants(context, capability, target)) return 0;
             const stages = clearsmogStageValue(context, target);
-            if (stages < CompanionBehavior.ai<number>(capability, "minStages", 2)) return 13;
+            // 持续自强的目标身上有正向等级/增益时才抬到普通交战之上；已经攒完又没留下增益时，留给黑雾一类的整片重置更省。
+            if (stages < CompanionBehavior.ai<number>(capability, "minStages", 2)) return 9;
             return Math.min(92, 34 + stages * 10);
         }
     });

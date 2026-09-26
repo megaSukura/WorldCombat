@@ -119,6 +119,12 @@ namespace NativeItems {
     export function takeHeld(world: CombatWorld, actor: CombatActor, held: HeldRef, count: number = 1): Receipt {
         return receipt(world.equipmentTakeResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, count));
     }
+    /** Consume actual material, then publish the exact consumed stack. Simple removal/throwing uses takeHeld. */
+    export function consumeHeld(world: CombatWorld, actor: CombatActor, held: HeldRef, count = 1, consumer?: CombatActor): Receipt {
+        return receipt(consumer === undefined
+            ? world.equipmentConsumeResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, count)
+            : world.equipmentConsumeResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, count, consumer));
+    }
     /** Apply exact authored wear to the observed stack, retaining components and at least one durability point. */
     export function wearHeld(world: CombatWorld, actor: CombatActor, held: Held, amount: number): Receipt {
         var durability = held.durability;

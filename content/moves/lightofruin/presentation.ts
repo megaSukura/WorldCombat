@@ -4,11 +4,12 @@
  * 一句话：施法者胸前绽开一朵苍白的花，花心迸出一根粗重的粉白光柱贯穿正前方；被贯穿的目标各自炸开一圈花瓣，
  * 随后一根反向的火沿来路烧回施法者身上——那条回烧就是「借来的力量要还」，玩家凭它认出反噬。
  * 色相家族：粉白到淡紫（glowingsparkle_pink 原色、impact_fairy 亮帧、bigsparkle／star 强调、tinydust 中性）。
- * 拍子：起 bloom（花朵绽开、蓄光）→ 放 ray（贯穿光柱）→ 中 impact（花瓣爆开）／ 空 fizzle（散光）→ 噬 recoil（回烧）。
- * 范围：ray 用 `data.path` 画出服务端走廊的同一组四个顶点——光柱有多长多粗、贯穿到哪，画面就是那根柱。
- * 运动：光柱沿走廊由近及远铺开、边缘同时向前扫；命中花瓣向外炸开；反噬层从身前沿来路反向缩回施法者。
+ * 拍子：起 bloom（花朵绽开、蓄光）→ 放 ray（贯穿光柱，撞墙处截束）→ 中 impact（花瓣爆开）／ 空 fizzle（散光）／
+ *   墙 wall（墙面迸花瓣）→ 噬 recoil（回烧）。
+ * 范围：ray 用 `data.path` 画出服务端走廊的同一组四个顶点——光柱有多长多粗、被哪面墙截断，画面就是那根柱。
+ * 运动：光柱沿走廊由近及远铺开、边缘同时向前扫；命中花瓣向外炸开；反噬层从身前沿来路反向缩回施术者。
  * 数：`data.notes`（威力换算）与 `data.intensity`（威力 / 140）决定光柱与命中的密度，`data.petals`（特攻与身高派生）
- * 决定花瓣与爆开数量，`data.pierce`（贯穿上限）决定边缘强调，`data.damage`（本次反噬量）决定回烧的强度。
+ * 决定花瓣与爆开数量，`data.pierce`（贯穿上限）决定边缘强调，`data.damage`（本次实际反噬量）决定回烧的强度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const LightofruinDefinition: ParticleDefinition = {
@@ -153,6 +154,30 @@ const LightofruinDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.12],
                     lifetime: [8, 15], size: [0.1, 0.02],
                     color: 0xD9C4D6, alpha: [0.35, 0], light: "world", maxParticles: 70
+                }
+            ]
+        },
+        wall: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "wall_petals", bind: "point", offset: [0, 0.5, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fairy",
+                    burst: { count: { data: "petals", fallback: 28 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.34 },
+                    direction: "outward", speed: [0.05, 0.22], spread: 30,
+                    lifetime: [6, 12], size: [0.26, 0.04], sizeMode: "index",
+                    color: 0xFFF3FF, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 120
+                },
+                {
+                    name: "wall_dust", bind: "point", offset: [0, 0.5, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 14, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.1],
+                    lifetime: [8, 15], size: [0.1, 0.02],
+                    color: 0xD9C4D6, alpha: [0.4, 0], light: "world", maxParticles: 60
                 }
             ]
         }

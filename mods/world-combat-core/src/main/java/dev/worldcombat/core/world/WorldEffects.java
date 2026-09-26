@@ -232,6 +232,18 @@ public final class WorldEffects {
         settlePlacements();
         for (var lease : List.copyOf(store.leases.values())) if (lease.owner() == owner) restore(lease);
     }
+    /** Read only loaded, still-owned installed cells; pending restoration is no longer an active wall. */
+    public Point[] cells(ActorHandle viewer, long id) {
+        var entity = combat.resolve(viewer); var lease = store.leases.get(id);
+        if (entity == null || lease == null || store.restoring.contains(id)
+            || !lease.dimension().equals(entity.level().dimension().location().toString())
+            || lease.expiry() <= entity.level().getGameTime()) return new Point[0];
+        var level = (ServerLevel) entity.level();
+        return lease.cells().stream().filter(cell -> level.hasChunkAt(cell.pos())
+            && entity.position().distanceToSqr(cell.pos().getCenter()) <= 64 * 64
+            && level.getBlockState(cell.pos()).equals(cell.placed()) && !broken.contains(new PendingCell(id, cell)))
+            .map(cell -> new Point(cell.pos().getX(), cell.pos().getY(), cell.pos().getZ())).toArray(Point[]::new);
+    }
     private static boolean occupied(ServerLevel world, Cell cell) {
         if (cell.before().getCollisionShape(world, cell.pos()).isEmpty()) return false;
         return !world.getEntities((net.minecraft.world.entity.Entity) null, new AABB(cell.pos()), e -> e instanceof net.minecraft.world.entity.LivingEntity && e.isAlive() && !e.isSpectator()).isEmpty();

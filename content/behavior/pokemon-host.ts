@@ -113,7 +113,7 @@ namespace PokemonBehaviorHost {
                 if (!paying || String(paying.key()) !== item.data.key) return false;
                 var selected = NativeLoadout.selection(access, item.data.slot, paying);
                 if (selected.id !== item.data.move || selected.key !== item.data.selection) return false;
-                var pointTarget = item.data.kind === "point" || item.data.kind === "motion";
+                var pointTarget = item.data.kind === "point" || item.data.kind === "motion" || item.data.kind === "aim" && !target.ref;
                 var actual = item.data.kind === "self" ? actor : pointTarget ? null : access.actor(target.ref);
                 if (!pointTarget && !actual) return false;
                 var position = WorldBehaviorHost.point(target.point), origin = access.observe(actor)!.position(), delta = position.minus(origin);

@@ -6,8 +6,9 @@
  *   三下之后还会回来一记更亮的迟到声浪。
  * 色相家族：电金黄（0xF2D24A / electricity_yellow）与近白（0xFFF6C8 / electricity_white）为主体，
  *   爆点用纯白，麻痹只加蓝紫的 status/paralysis_spark 作「结果」记号。
- * 拍子：起（charge 聚电）→ 拨（pluck 一拍拍扫过走廊）→ 击（hit 逐处轰中）→ 麻（paralyze 结果）→ 响（echo 迟到声浪）。
- * 范围：pluck／echo 的走廊用服务端传的 `data.path`（与判定 `WorldGeometry.lane` 同一组四角顶点）铺出，
+ * 拍子：起（charge 聚电）→ 拨（pluck 一拍拍扫过走廊，可逐拍换向）→ 存（string 第三线留下缓暗琴弦）
+ *   → 响（echo 原地重放那条旧线）→ 击（hit 逐处轰中）→ 麻（paralyze 结果）。
+ * 范围：pluck／echo／string 的走廊用服务端传的 `data.path`（与判定 `WorldGeometry.lane` 同一组四角顶点）铺出，
  *   `data.reach` 与 `data.half` 是同一份长度与半宽——画到哪就是会被震到哪。
  * 运动：charge 电花向内收；pluck／echo 电声沿 `data.direction` 从身上推出去、边缘电花跳着走；hit 在目标身上向外炸。
  * 数：`data.arcs`（每下威力派生）决定电花密度，`data.struck`（本次命中数）决定过电的强度，
@@ -36,6 +37,28 @@ const OverdriveDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.08], spin: 20,
                     lifetime: [8, 14], size: [0.12, 0.02],
                     color: 0xFFF6C8, alpha: [0.6, 0], light: "full", maxParticles: 16
+                }
+            ]
+        },
+        string: {
+            duration: 0,
+            exit: { stop: 0, drain: 18 },
+            emitters: [
+                {
+                    name: "faded", bind: "path", offset: [0, 0.4, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    shape: { kind: "polyline", closed: true },
+                    rate: 3, direction: "shape", speed: [0.01, 0.05], spread: 4,
+                    lifetime: [10, 18], size: [0.1, 0.02],
+                    color: 0x8A7A2A, alpha: [0.35, 0], light: "world", maxParticles: 48
+                },
+                {
+                    name: "faded_core", bind: "path", offset: [0, 0.55, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    shape: { kind: "polyline", closed: false },
+                    rate: 2, direction: "shape", speed: [0.01, 0.04],
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0x9A8A3A, alpha: [0.3, 0], light: "world", maxParticles: 32
                 }
             ]
         },

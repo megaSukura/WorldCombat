@@ -1,13 +1,4 @@
-/**
- * 辅助力量 / storedpower —— 可执行设计说明。
- *
- * 一句话：把身上攒的能力等级以自己为圆心一次放出去，圈里的每个对手都吃一记灵能新星。
- *
- * 场面：一只只会辅助力量的太阳伊布（35 级）站在两只只会「跃起」、不还手的低等级小拉达中间（一左一右各 2.2 格），
- *   逼出「以自己为圆心罩住一圈」的局面：两只小拉达都在释放半径内。
- * 必然事实：本招被提交过；**圈里的两个目标都挨到了伤害**——这一条正是范围释放与单体招的分界。
- * 命中数值、是否暴击、掀飞多远写进 note；本次场上没有蓄积等级，威力取基础档（玩家实际操作时先叠等级再放）。
- */
+// 真正的正阶梯消费、负阶梯保留和球体范围命中；窗口到期语义由中性共享回归覆盖。
 Smoke.scenario("storedpower", function (stage) {
     stage.fill([-10, -1, -8], [10, -1, 8], "minecraft:stone");
     stage.time("night");
@@ -17,13 +8,19 @@ Smoke.scenario("storedpower", function (stage) {
     var foeB = stage.pokemon({ species: "rattata", level: 12, moves: ["splash"], at: [-2.2, 0, 0.4] });
     stage.hostile(caster, foeA);
     stage.hostile(caster, foeB);
+    stage.after(1, function () {
+        stage.boost(caster, { spa: 2, spe: -1 });
+        stage.prefer(caster, "storedpower", { spend: true });
+    });
     stage.until(900, function () {
         return stage.casts("storedpower", caster) > 0 && stage.damageTo(foeA) > 0 && stage.damageTo(foeB) > 0;
     }, function () {
         stage.after(16, function () {
             stage.expect(stage.casts("storedpower", caster) > 0, "espeon committed stored power");
             stage.expect(stage.damageTo(foeA) > 0 && stage.damageTo(foeB) > 0, "the nova caught both foes inside its ring");
-            stage.note("the ring centred on the caster caught both foes; the boost term was 0 in this arena, so this is the base tier - a player stacks stages first, then releases", {
+            const stages = stage.stages(caster);
+            stage.expect((stages.spa || 0) === 0 && stages.spe === -1, "spend consumed positive power while preserving the negative speed stage");
+            stage.note("The sphere caught both foes; positive contributions were consumed once after the first successful release. Temporary-window expiry is covered by the neutral stage-consumption check.", {
                 casts: stage.casts("storedpower", caster),
                 foeADamage: Math.round(stage.damageTo(foeA) * 10) / 10,
                 foeBDamage: Math.round(stage.damageTo(foeB) * 10) / 10,

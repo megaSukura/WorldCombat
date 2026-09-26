@@ -4,23 +4,24 @@
  * 原生事实（Cobblemon 1.8，取自带 Showdown 数据）：Water／特殊／威力 80／命中 100／PP 10／优先度 0／
  *   非接触；与火之誓约、草之誓约组合时威力升到 150，并按组合把场地变成彩虹／湿地。
  *
- * 翻译：一股水柱从选定点**涌地而起**的柱状冲击：柱体对范围内每个敌人结算一次特殊伤害、把他们浇湿拖慢，
- *   并沿水势把他们推开顶起；柱脚留下一汪浸水的誓约印（规则 `world_combat:field/pledge_water`），
- *   站在上面的敌人持续被拖慢。落点附近已有火或草的誓约印时共鸣：这一击威力 ×`comboPower`，
- *   并把周围挂起**彩虹**（水＋火）或塌成**湿地**（水＋草）——组合产物按另一元素的身份决定，与原生一致。
+ * 翻译：一股水柱从选定点**涌地而起**的柱状冲击：柱体对范围内每个敌人结算一次特殊伤害，并沿水势把他们
+ *   推开顶起；柱脚只留下一圈短寿的誓约印（规则 `world_combat:field/pledge_water`），它只是共鸣标记，
+ *   **本身不拖慢**。落点附近已有火或草的誓约印时共鸣：这一击威力 ×`comboPower`，同一圈印就地挂起**彩虹**
+ *   （水＋火，持续为友方回复）或塌成**湿地**（水＋草，持续陷住／拖慢）——组合产物按另一元素的身份决定，
+ *   与原生一致。湿地控制走可被原生拒绝的尝试，拒绝过的对象不再重复挂 rooted。
  *
  * 数值来源（每项读不同的个体数据）：
  *   pillar       水柱威力：特攻 + 等级；配置 deluge 再调 1.10／0.96。
  *   pillarRadius 水柱半径：体重（身体越沉涌出的水越多）+ 特攻小幅。
  *   pillarHeight 水柱高度：等级。
- *   push／lift    推开的距离与顶起初速：体重 + 特攻（越沉越猛）。
- *   slowTicks    浇湿拖慢时长：特攻。
+ *   push／lift    推开的距离与顶起初速：体重 + 特攻（越沉越猛）。单水只做一次推开，不长期减速。
+ *   slowTicks    湿地拖慢时长：特攻（只在共鸣湿地里生效）。
  *   markRadius   誓约印半径：**当前生命比例**（满血涌得更开）+ 体重；配置 deluge 再调。
- *   markTicks    誓约印停留：等级。
+ *   markTicks    誓约印停留：等级。它只标记共鸣机会。
  *   reach        施放距离：**速度**（水势越快够得越远）；配置 deluge 缩短／延长。
  *   comboDetect  共鸣判定半径：特攻。
  *   comboScale   组合场半径倍率：特攻；配置 deluge 再调。comboPower 组合威力倍率：特攻。
- *   burst        水花数量：特攻（同时驱动粒子数）。scarCells 地面浸水块数：特攻。
+ *   burst        水花数量：特攻（同时驱动粒子数）。scarCells 地面水痕数量：特攻（驱动贴地水痕粒子）。
  *   tempo        起手：速度。recharge 冷却：等级；配置 deluge +12／−4。
  *
  * 配置 `deluge`（涌誓）：开启＝威力 ×1.10、誓约印 ×1.2、推开 ×1.25，但射程 ×0.9、冷却 +12——涌得更猛更大，
@@ -31,10 +32,8 @@
 namespace PokemonSkills {
     export const waterpledgeId = "waterpledge";
     export const waterpledgeScene = "world_combat:move_waterpledge";
+    /** 本单元的水之誓约印（只由本单元注册；共鸣后仍是这一条规则）。 */
     export const waterpledgeScar = "world_combat:field/pledge_water";
-    /** 水＋火 → 彩虹；水＋草 → 湿地。 */
-    export const waterpledgeRainbow = "world_combat:field/waterpledge_rainbow";
-    export const waterpledgeWetland = "world_combat:field/waterpledge_wetland";
     export const waterpledgeHitText = "world_combat.move.waterpledge.text.hit";
     export const waterpledgeComboText = "world_combat.move.waterpledge.text.combo";
     export const waterpledgeMissText = "world_combat.move.waterpledge.text.miss";
@@ -86,10 +85,10 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "被水势向上顶起的初速；越沉的个体掀起的水越高。"
             }),
-        /** 浇湿拖慢时长：60 + 特攻偏移[0,40]；夹 50..130 tick。 */
+        /** 湿地拖慢时长：60 + 特攻偏移[0,40]；夹 50..130 tick。只在共鸣湿地里生效，单水不拖慢。 */
         slowTicks: seconds(
             F.base(60).plus(F.stat("specialAttack").minus(60).times(0.4).clamp(0, 40)).clamp(50, 130).round(),
-            "浇湿拖慢时长", "被水柱浇透后移动被拖慢多久；特攻越高拖得越久。"),
+            "湿地拖慢时长", "水＋草共鸣的湿地里，踩进来的敌人被重度拖慢多久；特攻越高拖得越久。单水不施加拖慢。"),
         /** 誓约印半径：1.6 + 生命比例偏移[0,0.5] + 体重偏移[−0.15,0.5]；涌誓 ×1.2 / 缓流 ×0.85；夹 1.1..2.9。 */
         markRadius: formula(
             F.base(1.6)
@@ -101,10 +100,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "柱脚下那汪浸水誓约印覆盖多大；生命越满水势越足、印越宽，涌誓更大。"
             }),
-        /** 誓约印停留：170 + 等级偏移[0,120]；夹 100..320 tick。 */
+        /** 誓约印停留：120 + 等级偏移[0,80]；夹 90..240 tick。它只是共鸣窗口，不拖慢。 */
         markTicks: seconds(
-            F.base(170).plus(F.level().minus(20).times(2.5).clamp(0, 120)).clamp(100, 320).round(),
-            "誓约印停留", "这汪浸水誓约印留多久；站在上面的敌人会持续被拖慢。"),
+            F.base(120).plus(F.level().minus(20).times(1.6).clamp(0, 80)).clamp(90, 240).round(),
+            "誓约印停留", "柱脚这圈水之誓约印留多久；它是「这里立过水誓」的标记，本身不拖慢，只在与火／草誓印共鸣时把同一圈印当场扩成组合场并延长。"),
         /** 施放距离：9 + 速度偏移[−1.5,5]；涌誓 ×0.9 / 缓流 ×1.1；夹 6..16。 */
         reach: formula(
             F.base(9).plus(F.stat("speed").minus(60).times(0.03).clamp(-1.5, 5))
@@ -144,12 +143,12 @@ namespace PokemonSkills {
                 unit: "滴",
                 description: "水柱涌起时喷出的水花数量；特攻越高越密，粒子直接按它发射。"
             }),
-        /** 地面浸水块数：10 + 特攻 ×0.06；夹 8..20。 */
+        /** 地面水痕数量：10 + 特攻 ×0.06；夹 8..20。驱动贴地水痕粒子的密度，不再替换地表方块。 */
         scarCells: formula(
             F.base(10).plus(F.stat("specialAttack").times(0.06)).clamp(8, 20).round(0),
-            "地面浸水块数", {
-                unit: "块",
-                description: "柱脚把地表浸成水渍的块数；随特攻增长，也决定水渍的密度。"
+            "地面水痕数量", {
+                unit: "处",
+                description: "柱脚留在地面上的水痕数量；随特攻增长，直接决定贴地水痕粒子的密度（只作视觉痕迹，不改动方块）。"
             }),
         /** 起手：10 − 速度偏移[−3,3]；夹 6..16 tick。 */
         tempo: seconds(
@@ -174,10 +173,10 @@ namespace PokemonSkills {
     describe(waterpledgeId, [
         { key: "description.0", values: ["pillar","maxTargets"] },
         { key: "description.1", values: ["pillarRadius","pillarHeight"] },
-        { key: "description.2", values: ["push","lift","slowTicks"] },
+        { key: "description.2", values: ["push","lift"] },
         { key: "description.3", values: ["markRadius","markTicks"] },
         { key: "description.4", values: ["comboDetect","comboPower","comboScale"] },
-        { key: "description.combo", values: [] },
+        { key: "description.combo", values: ["slowTicks"] },
         { key: "description.5", values: ["reach", "tempo"] },
         { key: "deluge.on", values: [], when: function (context) { return read(context.detail.values, ["deluge"]) === true; } },
         { key: "deluge.off", values: [], when: function (context) { return read(context.detail.values, ["deluge"]) !== true; } },

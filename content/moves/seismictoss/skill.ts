@@ -1,13 +1,26 @@
-/**
- * 地球上投 / seismictoss 的出手方式。
- *
- * 念头的形状：站定、抓住对手（windup 预告 → seize 抓握）→ 把它沿一条陡弧甩出去（hurl）→ 落地砸实（slam，
- * 砸地式把对手钉住）。伤害在老鹰抓稳的那一刻直接结算，等于自己的等级；对手在空中那段无法反击。
- *
- * 三幕 + 收：windup → seize（抓握 holdTicks）→ hurl（飞行 slamDelay）→ slam。提交后才触碰世界。
- * 平地被墙挡住时抓不到（trace 被挡），扑空收势。
- */
+/** 接触结算等级伤害，短暂停顿后复核抓取，再按原生受击抗性抛起；落地阶段独立随目标存续。 */
 namespace PokemonSkills {
+    const seismictossLanding = "world_combat:seismictoss_landing";
+    WorldCombat.effect(seismictossLanding, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(seismictossLanding, "start", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target), data = JSON.parse(effect.state());
+        if (body === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "flight", seismictossScene, 1, body.position(),
+            { moment: "hurl", target: String(target.ref()), direction: data.direction, scale: data.scale, duration: effect.remaining() });
+        effect.schedule("landing", "landing", 1, "{}");
+    });
+    WorldCombat.effectHandler(seismictossLanding, "landing", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target), data = JSON.parse(effect.state());
+        if (body === null) { effect.end(); return; }
+        if (!body.grounded()) { data.airborne = true; effect.state(JSON.stringify(data)); effect.schedule("landing", "landing", 1, "{}"); return; }
+        if (!data.airborne) { effect.schedule("landing", "landing", 1, "{}"); return; }
+        WorldFeedback.emit(world, seismictossScene, 1, body.position(),
+            { moment: "slam", target: String(target.ref()), count: Math.round(14 + data.shockwave * 18), scale: data.shockwave / .9 }, 28);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), seismictossSlamText, [], 24);
+        if (data.slam) WorldEffects.apply(world, target, "rooted", {}, data.pin);
+        world.sound(data.slam ? "minecraft:item.mace.smash_ground_heavy" : "minecraft:block.anvil.land", body.position(), 15, "{}");
+        effect.end();
+    });
     const seismictossScene = "world_combat:move_seismictoss";
     const seismictossHoldText = "world_combat.move.seismictoss.text.hold";
     const seismictossSlamText = "world_combat.move.seismictoss.text.slam";
@@ -18,7 +31,7 @@ namespace PokemonSkills {
     define({
         id: "seismictoss",
         name: "Seismic Toss",
-        description: "抓取投掷：扣住对手、借重力把它甩出去，造成等于自己等级的固定伤害，再把对手抛上一条弧线砸向地面。伤害不看对手防御，只看属性免疫；砸地式把这一甩压短并让对手落地后被钉住。",
+        description: "近身抓取造成按等级和体重计算的固定伤害，短暂停顿后把仍在手边的对手抛起。投掷受抗击退和地形影响；砸地式缩短抛物线，只在目标实际落地时接上钉地。",
         uses: ["抓住对手把它甩出去", "把敌人抛离掩体或扔下高台", "用等级伤害处理高防目标"],
         kind: "enemy",
         range: 2.8,
@@ -81,43 +94,32 @@ namespace PokemonSkills {
             const flat = WorldCombat.point(hit.position().x() - body.position().x(), 0, hit.position().z() - body.position().z());
             const throwDirection = flat.length() < 0.01 ? direction : flat.unit();
             const landed = seismictossRawHit(action, victim!, damage, true);
+            if (!landed) { done(action); return; }
             const victimBody = world.observe(victim!);
             const grip = victimBody === null ? hit.position() : victimBody.position();
             WorldFeedback.emit(world, seismictossScene, 1, grip,
                 { moment: "seize", target: victimRef, count: Math.round(10 + Math.min(40, damage * 0.6)), scale: radius / 0.5 }, 26);
             WorldFeedback.text(world, grip.plus(WorldCombat.point(0, 1.2, 0)), seismictossHoldText, [Math.round(damage)], 26);
-            if (!landed) { done(action); return; }
 
-            function slamDown(current: CombatAction): void {
-                if (settled) { done(current); return; }
+            function finish(current: CombatAction): void {
+                if (settled) return;
                 settled = true;
-                const scope = current.world();
-                const thrown = scope.actor(victimRef);
-                if (thrown !== null && scope.valid(thrown)) {
-                    const facts = scope.observe(thrown);
-                    if (facts !== null) {
-                        WorldFeedback.emit(scope, seismictossScene, 1, facts.position(),
-                            { moment: "slam", target: victimRef, count: Math.round(14 + shockwave * 18), scale: shockwave / 0.9 }, 28);
-                        WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.2, 0)), seismictossSlamText, [], 24);
-                        if (slam) WorldEffects.apply(scope, thrown, "rooted", {}, pinTicks);
-                    }
-                }
-                sound(current, slam ? "minecraft:item.mace.smash_ground_heavy" : "minecraft:block.anvil.land");
                 done(current);
             }
 
             function hurl(current: CombatAction): void {
                 const scope = current.world();
                 const thrown = scope.actor(victimRef);
-                if (thrown === null || !scope.valid(thrown)) { slamDown(current); return; }
-                scope.motion(thrown, WorldCombat.point(throwDirection.x() * hurlXZ, hurlUp, throwDirection.z() * hurlXZ), false);
-                WorldFeedback.emit(scope, seismictossScene, 1, scope.observe(thrown)!.position(),
-                    { moment: "hurl", target: victimRef, direction: seismictossVector(throwDirection), scale: radius / 0.5 }, slamDelay + 12);
+                const self = scope.observe(current.actor()), facts = thrown === null ? null : scope.observe(thrown);
+                if (thrown === null || facts === null || self === null || facts.position().minus(self.position()).length() > reach + radius
+                    || !scope.clear(self.position(), facts.position())) { finish(current); return; }
+                if (!scope.hitImpulse(thrown, WorldCombat.point(throwDirection.x() * hurlXZ, hurlUp, throwDirection.z() * hurlXZ))) { finish(current); return; }
+                scope.effect(seismictossLanding, thrown, JSON.stringify({ direction: seismictossVector(throwDirection), scale: radius / .5,
+                    shockwave: shockwave, slam: slam, pin: pinTicks }), slamDelay + pinTicks + holdTicks);
                 sound(current, "minecraft:entity.wind_charge.throw");
-                current.after(slamDelay, slamDown);
+                finish(current);
             }
 
-            WorldEffects.apply(world, victim!, "rooted", {}, holdTicks);
             action.after(holdTicks, hurl);
         }
     });

@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.smartstrike.summary": "The horn locks onto the target and steers itself in as it charges; because the horn turns to follow, it comes in the target's direction so it cannot be dodged. It stabs the seam of the armour: the higher the target's Defence, the deeper it bites.",
+  "worldcombat.skill.smartstrike.summary": "The horn locks onto the target and steers itself in as it charges; it can only turn so far each tick, so a fast enough strafe slips around it. It stabs the seam of the armour: the higher the target's Defence, the deeper it bites.",
   "worldcombat.skill.smartstrike.description.0": "The horn thrust deals about %1$s damage, biting deeper the higher the target's Defence. Defence, type matchup and crit are settled on the hit.",
-  "worldcombat.skill.smartstrike.description.1": "Locks a target within %1$s blocks, closes at %2$s blocks/tick, steering up to %3$s degrees per tick, with a %4$s block tip radius; the tip keeps turning after the target and cannot be shaken by strafing, strikes whichever foe it reaches, once per cast, and comes up empty if terrain blocks it or it cannot catch up.",
+  "worldcombat.skill.smartstrike.description.1": "Locks a target within %1$s blocks, closes at %2$s blocks/tick, steering up to %3$s degrees per tick, with a %4$s block tip radius; the tip only turns so far each tick, so a steady strafe or a step around the side can shake it. It strikes whichever foe it reaches, once per cast. A wall or an ally in the way stops the tip at the contact surface instead of stabbing through; if the target leaves, it makes one short jab along the last heading.",
   "worldcombat.skill.smartstrike.description.2": "The stab drives the target back %1$s blocks.",
   "worldcombat.skill.smartstrike.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.smartstrike.growth.0": "At level %1$s: thrust power %2$s and steering %3$s degrees/tick.",
@@ -20,7 +20,7 @@
   "worldcombat.skill.smartstrike.preference.ai.maxChase": "Engage range",
   "worldcombat.skill.smartstrike.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of locking. Larger values let it strike first from further.",
   "worldcombat.skill.smartstrike.preference.ai.toughFirst": "Stab the tough first",
-  "worldcombat.skill.smartstrike.preference.ai.toughFirst.help": "On: targets with a high health ratio are preferred because the thrust feeds on Defence; off: order it like a plain thrust, useful for finishing weakened foes.",
+  "worldcombat.skill.smartstrike.preference.ai.toughFirst.help": "On: targets with high Defence are preferred because the thrust feeds on it; targets without Defence stats fall back to health ratio. Off: order it like a plain thrust, useful for finishing weakened foes.",
   "worldcombat.skill.smartstrike.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.smartstrike.preference.ai.leaveStation.help": "On: the user may leave its post to lock on; off: it only strikes from where it stands.",
   "world_combat.move.smartstrike.text.pierce": "Seam · %1$s",

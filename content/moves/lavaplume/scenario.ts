@@ -1,9 +1,9 @@
 /**
  * 喷烟 / lavaplume —— 可执行设计说明。
  *
- * 一句话：先从身上向上喷起一道熔岩烟柱，再向外塌成一道火环，圈内敌人一起挨烧、可能灼伤。
+ * 一句话：从身体竖起一柱高热烟流，自下而上扫过，柱内敌人一起挨烧、可能灼伤；烟柱升到设定高度。
  *
- * 场面：浑身熔岩的熔岩蜗牛带这一招，站在两只小敌中间；小敌用撞击还手，逼出被围住时一次烧一圈的场面。
+ * 场面：浑身熔岩的熔岩蜗牛带这一招，站在两只贴身小敌中间；小敌用撞击还手，逼出近身竖喷的场面。
  *
  * 断言只取必然事实：这招被放过、至少一只小敌挨到伤害。灼伤是否触发（约 20% 的随机掷）写进 note。
  */
@@ -20,8 +20,8 @@ Smoke.scenario("lavaplume", function (stage) {
         return stage.casts("lavaplume", caster) >= 1 && (stage.damageTo(first) > 0 || stage.damageTo(second) > 0);
     }, function () {
         stage.expect(stage.casts("lavaplume", caster) >= 1, "magcargo committed lava plume");
-        stage.expect(stage.damageTo(first) > 0 || stage.damageTo(second) > 0, "the fire ring dealt damage");
-        stage.note("crit, the burn roll and the fume ember ticks are random and positional", {
+        stage.expect(stage.damageTo(first) > 0 || stage.damageTo(second) > 0, "the plume column dealt damage");
+        stage.note("crit, the burn roll and the fume residual ticks are random and positional", {
             casts: stage.casts("lavaplume", caster),
             firstDamage: Math.round(stage.damageTo(first) * 10) / 10,
             secondDamage: Math.round(stage.damageTo(second) * 10) / 10,

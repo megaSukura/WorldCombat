@@ -21,9 +21,8 @@ namespace PokemonSkills {
         if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
         if (CompanionBehavior.ai<string>(item, "opening", "setup") === "anytime") return true;
         const last = snatchLastOf(context, target);
-        if (last && snatchStealable(last.id)) return true;
-        // 还没读到过它出什么，或它此刻没有在攻击：都可能是正要给自己加东西，值得探手一试。
-        return !last || !target.attacking;
+        if (last && context.tick - last.tick < 200 && snatchStealable(last.id)) return true;
+        return !!CompanionBehavior.fact<boolean>(context, "world_combat:snatch-opportunity", target);
     }
 
     function snatchApproach(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number[] | null {
@@ -38,6 +37,7 @@ namespace PokemonSkills {
         return null;
     }
 
+    CompanionBehavior.registerFact("world_combat:snatch-opportunity", (world, actor) => snatchOpportunity(world, actor));
     CompanionBehavior.registerFact("world_combat:snatch-last", function (access: CombatWorld, actor: CombatActor): string {
         return JSON.stringify(NativeEffects.lastMove(access, actor));
     });
@@ -59,7 +59,7 @@ namespace PokemonSkills {
     const snatchChase = number("ai.maxChase", "考虑距离", 4, 28, 1);
     snatchChase.help = "伙伴只在威胁离自己这么远以内时才探手；调小只在贴身时夺，调大愿意追出去等着抢。";
     const snatchOpening = choice("ai.opening", "出手时机", ["setup", "anytime"], ["等它要加东西", "随时"]);
-    snatchOpening.help = "等它要加东西：只在对手最近一次出手可夺、或它此刻没在攻击时才探手；随时：见威胁就探，当纯投机。";
+    snatchOpening.help = "等它要加东西：只在对手有可抢的配招或近期确实获得增益时探手；随时：见威胁就探，当纯投机。";
     const snatchStation = flag("ai.leaveStation", "驻守时允许离位");
     snatchStation.help = "开启后，收到「驻守」指令时也会离开原位去探手。";
 

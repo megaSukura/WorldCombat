@@ -13,6 +13,9 @@
  *
  * 原生的 90% 命中不掷骰：裂痕即时出现，但起手窗口里走开、或第一堵墙，都会让它从对手身上错开。
  * 固定伤害是这招的承诺：`damage` 不由攻防、相性或暴击改变。
+ *
+ * 选取：`kind: "aim"`——朝方向或世界点自由撕开，提交后可空放；裂痕在第一个接触对象（含友方与方块）处截断，
+ * 命中友方或方块只是打空，伤害许可仍由命中层判断。
  */
 namespace PokemonSkills {
     const sonicboomScene = "world_combat:move_sonicboom";
@@ -46,7 +49,7 @@ namespace PokemonSkills {
         name: "Sonic Boom",
         description: "一声音爆，空气被瞬间撕开：一条笔直的裂痕当刻连到对手身上，仿佛没有飞行时间，扫到的目标固定削掉 20 点生命（只有属性免疫能挡住）并被推开；回响式隔一小段再补一声。",
         uses: ["最便宜、最快的一记固定伤害", "用固定 20 点补刀或磨高防目标", "回响式封住一条直线"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 14,
         prepare: 6,
@@ -98,7 +101,7 @@ namespace PokemonSkills {
                 if (body === null) { done(current); return; }
                 const from = body.position().plus(WorldCombat.point(0, 0.45, 0));
                 const to = from.plus(direction.scale(reach));
-                const hit = current.trace(from, to, boomRadius);
+                const hit = current.trace(from, to, boomRadius, true);
                 const point = hit.position();
                 const enemy = hit.hitEntity() ? hit.target() : null;
                 const moment = fired > 1 ? "reverb" : "crack";
@@ -106,7 +109,7 @@ namespace PokemonSkills {
                 let landed = false;
                 if (enemy !== null && scope.valid(enemy) && !scope.friendly(enemy)) {
                     landed = sonicboomRawHit(current, enemy, damage);
-                    if (landed) scope.displace(enemy, direction.unit().scale(shove));
+                    if (landed) scope.hitDisplace(enemy, direction.unit().scale(shove));
                     WorldFeedback.emit(scope, sonicboomScene, 1, point,
                         { moment: "impact", target: String(enemy.ref()), sparks: sparks, scale: scale, intensity: intensity, echo: fired }, 22);
                 }

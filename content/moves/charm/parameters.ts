@@ -16,6 +16,8 @@
  *   hearts       14 + (特攻 − 60) × 0.22，夹 12..40；心神越盛的施法者一次洒出的心越多（也是画面里的数量）。
  *   tempo        速度 ÷ 9 + 4，飞吻 +3，夹 5..15；速度越快越早抬眼。
  *   recharge     130 + (等级 − 30) × 0.8，飞吻 +30，夹 110..220；等级越高越熟练，飞吻更费力。
+ *   kissSpeed    0.42 + (速度 − 40) × 0.004，夹 0.35..0.72 格/刻；飞吻直飞速度，够慢、可被横移躲开。
+ *   heartRadius  0.28 + 宽度 × 0.16，夹 0.2..0.55 格；飞吻弹体的碰撞半径，体格越宽越容易被截。
  */
 namespace PokemonSkills {
     export const charmId = "charm";
@@ -58,7 +60,19 @@ namespace PokemonSkills {
             F.base(130).plus(F.level().minus(30).max(0).times(0.8))
                 .plus(F.when(F.pref("kiss", text("worldcombat.skill.charm.preference.kiss")), F.const(30), F.const(0)))
                 .clamp(110, 220).round(0),
-            "冷却", "两次撒娇之间的等待；等级越高越熟练，飞吻更费力。")
+            "冷却", "两次撒娇之间的等待；等级越高越熟练，飞吻更费力。"),
+        kissSpeed: formula(
+            F.base(0.42).plus(F.stat("speed").minus(40).max(0).times(0.004)).clamp(0.35, 0.72).round(2),
+            "飞吻速度", {
+                unit: " 格/刻",
+                description: "飞吻直飞的速度；施法者速度越快越难躲，但整体够慢，横移就能避开。"
+            }),
+        heartRadius: formula(
+            F.base(0.28).plus(F.body("width").times(0.16)).clamp(0.2, 0.55).round(2),
+            "飞吻大小", {
+                unit: " 格",
+                description: "飞吻弹体的碰撞半径；体格越宽越大，也更早被墙或友方截住。"
+            })
     });
 
     describe(charmId, [
@@ -67,6 +81,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["tempo", "recharge"] },
         { key: "kiss.off", values: [], when: function (context) { return read(context.detail.values, ["kiss"]) !== true; } },
         { key: "kiss.on", values: [], when: function (context) { return read(context.detail.values, ["kiss"]) === true; } },
+        { key: "kiss.flight", values: ["kissSpeed", "heartRadius"], when: function (context) { return read(context.detail.values, ["kiss"]) === true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

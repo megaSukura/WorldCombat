@@ -1,12 +1,12 @@
 /**
  * 剧毒牙 / poisonfang 的客户端表现。
  *
- * 一句话：牙面挂起毒滴、毒雾绕口打转 → 沿一条直线扑出、身后滴下一串毒珠 → 咬实的一刻在接触点炸开毒色迸溅与獠牙剪影，
- * 隔一拍后毒液从伤口往外渗、冒成一簇毒泡；若加重成剧毒，泡更暗更密。
+ * 一句话：牙面挂起毒滴、毒雾绕口打转 → 合牙的一刻在接触点炸开毒色迸溅与獠牙剪影 →
+ * 隔一拍后毒液从伤口往外渗、冒成一簇毒泡；若加重成剧毒，泡更暗更密；若目标挣脱口边，毒滴只在原处落空。
  * 色相家族：毒绿（0x9BE86B）与深绿（0x5FBF3A），近白青（0xD4F58A）只做高光；剧毒用同一族的更暗绿，不引入第二色相。
- * 拍子：起 charge（挂毒）→ 扑 pounce → 咬 bite（命中峰值）／ miss → 灌 venom（渗毒，剧毒更暗）。
- * 范围：bite 绑命中点、venom 绑伤口，画出的就是咬中的位置与毒渗出的伤口。
- * 运动：速度线沿扑出方向掠过；venom 的毒泡从伤口向上冒并慢慢破开；drip 的毒珠沿扑出轨迹下落。
+ * 拍子：起 charge（挂毒）→ 咬 bite（命中峰值）／ miss → 灌 venom（渗毒，剧毒更暗）／ drip（挣脱落空）。
+ * 范围：bite 绑命中点、venom 与 drip 绑伤口或原咬点，画出的就是咬中的位置与毒的去向。
+ * 运动：venom 的毒泡从伤口向上冒并慢慢破开；drip 的毒珠在原咬点向下滴落。
  * 数：`data.drops`（特攻派生）决定渗出毒泡的数量；`data.intensity`（威力 / 54）抬高密度与亮度；
  * `data.scale`（獠牙判定 / 0.40）放大牙影与判定环；`data.toxic`（1 为剧毒）把毒泡换成更暗更密的一层。
  */
@@ -32,29 +32,6 @@ const PoisonfangDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1], gravity: 0.05,
                     lifetime: [6, 12], size: [0.08, 0.02],
                     color: 0x5FBF3A, alpha: [0.9, 0], light: "world", maxParticles: 32
-                }
-            ]
-        },
-        pounce: {
-            duration: 28,
-            exit: { stop: 20, drain: 12 },
-            emitters: [
-                {
-                    name: "venom_trail", bind: "source", offset: [0, 0.12, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/drip",
-                    rate: 26, trail: { minDistance: 0.28 },
-                    shape: { kind: "point" },
-                    direction: "outward", speed: [0.01, 0.07], gravity: 0.06,
-                    lifetime: [7, 13], size: [0.07, 0.02],
-                    color: 0x5FBF3A, alpha: [0.7, 0], light: "world", maxParticles: 150
-                },
-                {
-                    name: "bite_lines", bind: "source", offset: [0, 0.5, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 20, shape: { kind: "box", size: [0.3, 0.28, 0.3] },
-                    direction: "outward", speed: [0.05, 0.16],
-                    lifetime: [3, 7], size: [0.14, 0.04],
-                    color: 0xB6E89A, alpha: [0.4, 0], light: "full", maxParticles: 100
                 }
             ]
         },
@@ -122,6 +99,30 @@ const PoisonfangDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.07], spread: 12,
                     lifetime: [10, 16], size: [0.1, 0.03],
                     color: 0x5FBF3A, alpha: [0.8, 0], light: "world", bloom: 0.2, maxParticles: 24
+                }
+            ]
+        },
+        drip: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "fall", bind: "point", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/drip",
+                    burst: { count: { data: "drops", fallback: 8 } },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "up", speed: [0.01, 0.05], gravity: 0.14, drag: 0.98,
+                    lifetime: [10, 18], size: [0.09, 0.03], sizeMode: "index",
+                    color: 0x5FBF3A, alpha: [0.9, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "waste", bind: "point", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
+                    burst: { count: { data: "drops", fallback: 8 } },
+                    shape: { kind: "ring", radius: 0.24, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.02, 0.1], gravity: 0.08,
+                    lifetime: [8, 14], size: [0.08, 0.02],
+                    color: 0x9BE86B, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         },

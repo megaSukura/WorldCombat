@@ -10,9 +10,10 @@ Smoke.scenario("aquatail", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "gyarados", level: 45, moves: ["aquatail"], at: [-1.5, 0, 0] });
-    // 皮糙肉厚的陪练，让这一浪拍中后目标还站着，湿身状态能被读到。
+    // 皮糙肉厚的陪练，让这一浪拍中后目标还站着，湿身状态能被读到；冻在原地确保留在弧面里。
     var foe = stage.pokemon({ species: "hariyama", level: 60, moves: ["splash"], at: [2, 0, 0] });
     stage.hostile(caster, foe);
+    stage.noai(foe);
     stage.until(1400, function () {
         return stage.casts("aquatail", caster) > 0 && stage.damageTo(foe) > 0;
     }, function () {

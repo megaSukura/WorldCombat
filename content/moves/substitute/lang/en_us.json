@@ -30,5 +30,7 @@
   "world_combat.move.substitute.text.weak": "Too little HP; the substitute failed",
   "world_combat.move.substitute.text.break": "Substitute shattered",
   "world_combat.move.substitute.text.expire": "Substitute dissolved",
+  "world_combat.move.substitute.text.link_on": "Link to the substitute restored",
+  "world_combat.move.substitute.text.link_off": "Link to the substitute broken",
   "worldcombat.skill.substitute.description.2": "Cannot be used while a double exists. HP after payment must exceed %1$s of maximum HP, following the reserve-health preference. If placement fails, the HP paid is refunded."
 }

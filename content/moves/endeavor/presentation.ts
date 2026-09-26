@@ -7,7 +7,8 @@
  * 拍子：起（brace 站定收气）→ 示（measure 量尺）→ 击（dash 扑身、equalize 拉平 / flat 空响）→ 收（settle 扬尘）。
  * 范围：量尺画在两个参与者之间，长度就是这一记要拉平的生命差所在；equalize/flat 绑命中点。
  * 运动：量尺两端钉在两人身上随移动紧跟；扑身速度线沿施法者实际方向铺开；拉平时血光从命中点向外爆。
- * 数：equalize 的 burst.count 与尺寸由服务端按「生命差 / 对手最大生命」算好传入（data.count / data.intensity）。
+ * 数：equalize 的 burst.count 由服务端按「实际扣血 / 对手最大生命」算好传入（data.count）；
+ * 被免疫或护盾完全挡下时服务端改播 blocked（冷灰护壁环，无血光），与真正拉平的赤金爆点分开。
  */
 const EndeavorDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -121,6 +122,28 @@ const EndeavorDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.03, 0.12],
                     lifetime: [8, 14], size: [0.05, 0.015],
                     color: 0xB9AFA0, alpha: [0.5, 0], gravity: 0.02, light: "world", maxParticles: 48
+                }
+            ]
+        },
+        blocked: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "ward_ring", bind: "target", offset: [0, 0.35, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 16 },
+                    shape: { kind: "ring", radius: 0.55 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [7, 12], size: [0.26, 0.08],
+                    color: 0x8FA0B8, alpha: [0.6, 0], light: "world", maxParticles: 36
+                },
+                {
+                    name: "ward_spark", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/hit_yellow",
+                    burst: { count: 3, at: 1 },
+                    shape: { kind: "point" }, lifetime: [5, 9], size: [0.3, 0.07],
+                    color: 0xC8D2DE, alpha: [0.8, 0], light: "full", maxParticles: 6
                 }
             ]
         },

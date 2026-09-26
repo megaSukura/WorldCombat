@@ -4,11 +4,13 @@
  * 核心念头：蜷成一团火轮、卷着向前滚——不停在第一个身上，碾过路上每一个挡住它的对手，火沿轮缘一路蹭过去。
  * 滚完一圈展开身体时，自己身上的冰也被这团火化掉了。它是本族里唯一没有反伤、靠滚动走路的一招。
  *
+ * 选取 `kind: "aim"`：自由方向或世界点都能滚，也能空滚来解冻自己；提交后不要求存在敌人，实体阻挡沿用原生。
+ *
  * 两幕：
  *   蜷（windup，提交前）：身体缩成一团、火包住轮缘，只播预告。
  *   滚（roll → wake → impact）：提交后逐刻沿瞄准方向滚动，身周火轮旋转、身后留一条余焰；trace 每次撞到
  *       活体即按 wheel 结算接触伤害、按 burnChance 蹭上灼伤（共享状态）、把目标挤开 shove 格，然后**继续滚**，
- *       后续目标按 through 打折；最多碾过 pierceCount 个人，滚到底、撞墙或推不动就展开身体（fizzle 若无命中）。
+ *       命中只花掉本步剩余的位移预算，撞墙或被挡下立刻停；后续目标按 through 打折，最多碾过 pierceCount 个人。
  *
  * 与同族分开：闪焰冲锋是一条拖长的火线并自伤、电光是贴身短促的一点电、伏特攻击是蓄电爆冲并放电波及旁人；
  * 火焰轮独有的是一路碾过去的滚动与滚完化掉自己身上的冰。配置 fierce（烈焰轮）由 resolve 改时序、由公式
@@ -25,9 +27,9 @@ namespace PokemonSkills {
         id: "flamewheel",
         cooldownParameter: "recharge",
         name: "Flame Wheel",
-        description: "向前滚动，攻击沿途敌人并有机会使其灼伤，同时解除自身冰冻。",
+        description: "朝瞄准方向蜷成火轮滚过去，碾过沿途每个敌人并有机会使其灼伤；滚动起步时解除自身冰冻，没有敌人也能空滚。",
         uses: ["滚过挤在一起的一排对手", "用火轮追着贴脸的对手碾过去", "在自己身上的冰需要化掉时借这团火"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.6,
         maxRange: 6.5,
         prepare: 7,
@@ -72,8 +74,13 @@ namespace PokemonSkills {
             const shove = p("flamewheel", "shove", action);
             const flames = Math.round(p("flamewheel", "flames", action));
             const pierceCount = Math.max(1, Math.round(p("flamewheel", "pierceCount", action)));
-            const fierce = !!(config && config.fierce);
-            const direction = aim(action);
+            // 贴地滚动：把瞄准方向压成水平，避免垂直分量让火轮扫到地面而被挡停。
+            const aimed = aim(action);
+            const level = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const flat = level.length() > 0.001 ? level : WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            const direction = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
+            // 方向已冻结：目标离场或死亡不再中断这一滚，空滚照常解冻。
+            action.releaseTarget();
             const scale = radius / 0.5;
             const intensity = Math.max(0.6, Math.min(2.4, power / 62));
             const start = action.origin();
@@ -82,8 +89,7 @@ namespace PokemonSkills {
             let travelled = 0, hits = 0, settled = false;
 
             sound(action, "cobblemon:move.flamewheel.actor");
-            // 火轮滚起来时顺带把施法者身上的冰化掉（原生 defrost）。
-            const wasFrozen = CombatStatus.has(world, actor, "frozen");
+            // 火轮滚起来时顺带把施法者身上的冰化掉（原生 defrost）；只有真的解冻了才播化冰一幕。
             if (CombatStatus.cure(world, actor, "frozen")) {
                 const self = world.observe(actor);
                 if (self !== null) {
@@ -93,7 +99,7 @@ namespace PokemonSkills {
             }
             movementScenes.show(action, "roll", start, { moment: "roll", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    flames: flames, scale: scale, intensity: intensity, fierce: fierce ? 1 : 0, thawed: wasFrozen ? 1 : 0 });
+                    flames: flames, scale: scale, intensity: intensity });
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -125,22 +131,24 @@ namespace PokemonSkills {
                                 status: already ? "" : "burn", chance: already ? 0 : chance, statusTicks: burnTicks });
                         WorldFeedback.emit(scope, flamewheelScene, 1, point,
                             { moment: "impact", target: String(target.ref()), flames: flames, scale: scale,
-                                intensity: Math.max(0.6, Math.min(2.4, amount / 60)), order: hits + 1 }, 28);
+                                intensity: Math.max(0.6, Math.min(2.4, amount / 60)) }, 28);
                         sound(current, "cobblemon:move.flamewheel.target");
                         sound(current, "cobblemon:impact.fire");
-                        if (landed && scope.valid(target)) {
-                            scope.displace(target, direction.scale(shove));
-                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)),
-                                flamewheelHitText, [hits + 1], 26);
+                        // 伤害被拒时不占「碾过」预算、不顶开、不声称命中；接触本身仍按一次踩过标记，避免逐刻重复。
+                        if (landed) {
+                            if (scope.valid(target)) {
+                                scope.hitDisplace(target, direction.scale(shove));
+                                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)),
+                                    flamewheelHitText, [hits + 1], 26);
+                            }
+                            hits++;
                         }
-                        hits++;
                     }
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { finish(current); return; }
-                movementScenes.show(current, "wake", origin, { moment: "wake", flames: flames, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
+                movementScenes.show(current, "wake", origin, { moment: "wake", flames: flames, scale: scale });
                 current.after(1, advance);
             }
 

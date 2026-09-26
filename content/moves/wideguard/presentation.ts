@@ -6,9 +6,10 @@
  *
  * 色相家族：石黄灰（0xC9C3AE）为主体，近白（0xEDEAE0）做高光与碎光，深石（0x6E685C）做尘与余韵；没有第二个色相。
  * 层次：聚板（起）／宽墙环与板面（击）／贴身屏幕（持续）／卸力碎光（事件）／落板（收）。
- * 起击收：brace（起）→ raise（击）→ hold（持续）→ block（事件）→ fall（收）。
- * 范围：地环与板面绑落点、fit none，半径按 `data.scale`（实际遮蔽半径 / 3.6）推出，画出来的圈就是墙真罩到的范围。
- * 运动：起手光板向内聚；立墙时环向外推远、板面自地面升起；卸力时碎光沿来袭方向弹开；落板时向下沉散。
+ * 起击收：brace（起）→ cover（范围）→ raise（击，逐人）→ hold（持续）→ block（事件）→ fall（收）。
+ * 范围：地面环绑落点、fit none，半径按 `data.scale`（实际遮蔽半径 / 3.6）推出，只画一次，圈就是墙真罩到的范围。
+ * 逐人：raise 与 hold 都只绑到实际受益者，每个被罩住的人身上各亮一次、持续一层；没罩到的伙伴不出现。
+ * 运动：起手光板向内聚；立墙时板面自各人身侧升起；卸力时碎光在被挡者受击点向外裂开；落板时向下沉散。
  * 数：光板数绑 `data.plates`（防御派生），光点量绑 `data.motes`（防御派生），尺寸与范围绑 `data.scale`（体型与配置派生）。
  * 持续状态：持续层贴地、低密度，让出目标本体视线。
  */
@@ -29,12 +30,12 @@ const WideGuardDefinition: ParticleDefinition = {
                 }
             ]
         },
-        raise: {
-            duration: 34,
-            exit: { stop: 12, drain: 20 },
+        cover: {
+            duration: 30,
+            exit: { stop: 10, drain: 20 },
             emitters: [
                 {
-                    name: "raise_ring", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "cover_ring", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 30 },
                     shape: { kind: "ring", radius: 3.6 },
@@ -43,7 +44,22 @@ const WideGuardDefinition: ParticleDefinition = {
                     color: 0xC9C3AE, alpha: [0.6, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "raise_screen", bind: "source", fit: "body", height: 0.5,
+                    name: "cover_rock", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
+                    burst: { count: 16 },
+                    shape: { kind: "ring", radius: 3.0 },
+                    direction: "up", speed: [0.04, 0.14], gravity: 0.02, drag: 0.92,
+                    lifetime: [12, 20], size: [0.3, 0.08],
+                    color: 0xC9C3AE, alpha: [0.6, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        raise: {
+            duration: 34,
+            exit: { stop: 12, drain: 20 },
+            emitters: [
+                {
+                    name: "raise_screen", bind: "target", fit: "body", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/screen",
                     burst: { count: { data: "plates", fallback: 10 } },
                     shape: { kind: "ring", radius: 0.9 },
@@ -52,13 +68,13 @@ const WideGuardDefinition: ParticleDefinition = {
                     color: 0xEDEAE0, alpha: [0.75, 0], light: "full", maxParticles: 50
                 },
                 {
-                    name: "raise_rock", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
-                    burst: { count: 16 },
-                    shape: { kind: "ring", radius: 3.0 },
-                    direction: "up", speed: [0.04, 0.14], gravity: 0.02, drag: 0.92,
-                    lifetime: [12, 20], size: [0.3, 0.08],
-                    color: 0xC9C3AE, alpha: [0.6, 0], light: "world", maxParticles: 40
+                    name: "raise_mark", bind: "target", fit: "body", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: { data: "motes", fallback: 16 } },
+                    shape: { kind: "sphere_surface", radius: 0.55 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    lifetime: [12, 20], size: [0.14, 0.03],
+                    color: 0xC9C3AE, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 40
                 }
             ]
         },
@@ -88,15 +104,15 @@ const WideGuardDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 18 },
             emitters: [
                 {
-                    name: "block_shatter", bind: "target", fit: "body", height: 0.5,
+                    name: "block_shatter", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
                     burst: { count: { data: "motes", fallback: 20 } }, shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "away", speed: [0.08, 0.26], drag: 0.88, spin: 18,
+                    direction: "outward", speed: [0.08, 0.26], drag: 0.88, spin: 18,
                     lifetime: [8, 16], size: [0.24, 0.05],
                     color: 0xEDEAE0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
-                    name: "block_glint", bind: "target", fit: "body", height: 0.4,
+                    name: "block_glint", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: 12 }, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.04, 0.16],

@@ -2,7 +2,8 @@
  * 仆刀 / kowtowcleave 的 AI 用途。
  *
  * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
- * `ai.openFirst`（默认开）：目标还满血、又没带空门身份时抬高 priority——深拜骗防在健康目标身上最值；
+ * 它只追赶得上的敌人：正在高速远离的目标权重下调，不硬追（追近预算有限，追不上就挥空）。
+ * `ai.openFirst`（默认开）：目标还满血、又没带空门身份时抬高 priority——跪拜骗防在健康目标身上最值；
  * 目标已经带空门（别人开过或自己刚开过）时把 priority 降下来，先用别的招兑现，不浪费一次跪拜。
  */
 namespace PokemonSkills {
@@ -20,7 +21,15 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            var base = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 18 : 0;
+            var self = CompanionBehavior.source(context).point;
+            var base = CompanionBehavior.distance(self, target.point) <= capability.data.range ? 18 : 0;
+            // 目标正在高速远离时降权：追近预算有限，赶不上就是一刀空。
+            var velocity = CompanionBehavior.velocity(context, target);
+            if (velocity) {
+                var dx = target.point[0] - self[0], dz = target.point[2] - self[2];
+                var span = Math.sqrt(dx * dx + dz * dz) || 1;
+                if ((velocity[0] * dx + velocity[2] * dz) / span > 0.08) base = Math.max(0, base - 14);
+            }
             if (!CompanionBehavior.ai<boolean>(capability, "openFirst", true)) return base;
             if (CompanionBehavior.status(context, target, "dropguard")) return Math.max(0, base - 8);
             return base + 14;

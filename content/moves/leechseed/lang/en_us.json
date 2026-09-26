@@ -1,14 +1,14 @@
 {
-  "worldcombat.skill.leechseed.summary": "Throw a seed at one foe: on impact a root burrows in and sips a share of its maximum health every few seconds, feeding the caster. The seed withers when it expires, is cured, the target falls, or the caster leaves; grass types and already-seeded targets cannot take it.",
+  "worldcombat.skill.leechseed.summary": "Throw a seed along your aim: on impact a root burrows into a foe and sips a share of its maximum health every few seconds, feeding the caster. The seed withers when it expires, is cured, the target falls, or the caster leaves; grass types and already-seeded targets cannot take it, walls stop the seed, and an empty throw just falls.",
   "worldcombat.skill.leechseed.use.0": "Turn a hard fight into a war of attrition and grow your health back",
   "worldcombat.skill.leechseed.use.1": "Keep a lasting siphon running on a foe",
   "worldcombat.skill.leechseed.use.2": "Open the gap and let the root bleed the foe for you",
-  "worldcombat.skill.leechseed.description.0": "Reach %1$s blocks with a clear line of sight; once rooted the seed lasts %2$s. Grass types cannot be seeded, nor can a target that already carries a seed.",
+  "worldcombat.skill.leechseed.description.0": "Reach %1$s blocks; the seed flies along your aim and walls stop it. Once rooted the seed lasts %2$s. Grass types cannot be seeded, nor can a target that already carries a seed.",
   "worldcombat.skill.leechseed.description.1": "The root sips every %1$s, taking %2$s of the target's maximum health (at least 1) and healing the caster by the actual amount. It withers when the target falls, the seed expires, it is cured, or the caster leaves.",
   "worldcombat.skill.leechseed.description.2": "Seed speed: %1$s. Hit radius: %2$s blocks.",
   "worldcombat.skill.leechseed.gluttony.on": "Gluttony: each sip x1.35 and the interval x0.75 to work faster; the seed lasts x0.7.",
   "worldcombat.skill.leechseed.gluttony.off": "Slow sip: the seed lasts x1.25 and the interval x1.15, drawing longer and steadier; the sip itself is unchanged.",
-  "worldcombat.skill.leechseed.timing": "Cast on a single enemy: after %2$s of preparation it spends %4$s PP to seed; the recovery is %3$s, the cooldown %5$s from commit, and the current range %1$s blocks.",
+  "worldcombat.skill.leechseed.timing": "Seed along your aim: after %2$s of preparation it spends %4$s PP; the recovery is %3$s, the cooldown %5$s, and the current range %1$s blocks.",
   "worldcombat.skill.leechseed.growth.0": "At level %1$s the reach grows to %2$s blocks and the seed lasts %3$s.",
   "worldcombat.skill.leechseed.growth.1": "At level %1$s the reach grows to %2$s blocks and the seed lasts %3$s.",
   "worldcombat.skill.leechseed.value.reach": "Seed reach",
@@ -32,5 +32,6 @@
   "world_combat.move.leechseed.text.root": "Rooted %1$s s",
   "world_combat.move.leechseed.text.drain": "Sipped %1$s",
   "world_combat.move.leechseed.text.immune": "Cannot be seeded",
+  "world_combat.move.leechseed.text.seeded": "Already seeded",
   "effect.world_combat.leech_seed": "Leech Seed"
 }

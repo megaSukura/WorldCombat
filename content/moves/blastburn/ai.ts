@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：目标点附近挤着至少 `ai.minTargets` 个可见敌人才值得消耗这一记大爆炸；
  * 自身生命高于 `ai.minHealth`（或这一爆能直接清场）才出手，因为爆发后有过热力竭。
- * 对谁出手：焦点目标优先，其余是可接近、活着、非友方的目标；聚得越密越值得。
+ * 对谁出手：焦点目标优先，其余是可接近、活着、非友方的目标；聚得越密越值得，但评分连续变化，不因数字大就锁死最高分。
  * 怎么够到：共享接近把身位收到射程以内（`kind: point`，以目标位置为落点）。
  * 出手前后：放完交回共享交战计划；力竭期间招式自动不可用。
  */
@@ -38,7 +38,11 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             const cluster = blastburnCluster(context, capability, target);
-            return cluster >= 3 ? 46 : cluster >= 2 ? 24 : 6;
+            // 连续评分：每多罩住一个近敌加一档，但不再跨过阈值就固定同一个最高分。
+            let score = 6 + Math.min(4, cluster) * 10;
+            if (CompanionBehavior.ratio(target) <= 0.3) score += 6;
+            if (CompanionBehavior.ratio(CompanionBehavior.source(context)) < 0.5) score -= 8;
+            return Math.max(0, score);
         }
     });
 

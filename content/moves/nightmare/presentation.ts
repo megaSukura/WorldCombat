@@ -1,14 +1,15 @@
 /**
  * 恶梦 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者掌心聚起一团黑紫的影 → 一道影烟沿通视直线压到熟睡目标的身上、在那里烙下一圈梦印 →
- *   此后每隔一段，它身下涌起一层层黑影、抽走一缕发暗的生命，人却醒不过来 → 梦散时黑影向上炸开、退去。
+ * 一句话：施法者掌心聚起一团黑紫的影 → 一条影线把施术者与熟睡目标连起来、在睡者身上烙下一圈梦印 →
+ *   此后每隔一段，它身下涌起一层层黑影、抽走一缕发暗的生命；这一抽把睡者弄醒，黑影随即被切断 →
+ *   若恶梦在睡者仍睡着时走完，黑影只自行消散退去。
  *
  * 色相家族：暗紫（0x4B2A6B）为主体与梦印，近黑紫（0x241535）只压核心与涌起的影，灰紫（0xC9B8E8）只给抽离的命缕高光；单一色相。
- * 拍子：起 windup（掌心聚影）→ 印 seal（影烟过线）→ 咒 curse（梦印烙下）→ 跳 pulse（层层黑影＋抽命）→ 醒 wake（影散）。
- * 范围：seal 沿 `data.path`（自身与目标两个真实顶点）连线；curse 的梦印半径由 `data.scale` 随 sealRadius 放大。
- * 运动：pulse 的黑影自目标脚下向上涌起再收束，抽离的命缕向上飘散；wake 的黑影向外炸开。
- * 数：`data.shades`（特攻换算）决定黑影层数与密度，`data.left`（剩余跳数）与 `data.loss`（本跳实际扣血）决定单跳的强度与亮度。
+ * 拍子：起 windup（掌心聚影）→ 印 seal（影线相连）→ 咒 curse（梦印烙下）→ 跳 pulse（层层黑影＋抽命）→ 醒 wake（醒来断影）／散 fade（睡中到期）。
+ * 范围：seal 沿 `data.path`（自身与目标两个真实顶点）画一条连接影线，表示诅咒落点，不做沿线飞行；curse 的梦印半径由 `data.scale` 随 sealRadius 放大。
+ * 运动：pulse 的黑影自目标脚下向上涌起再收束，抽离的命缕向上飘散；wake 的黑影向外炸开（醒来切断），fade 的黑影缓缓升散（睡中到期）。
+ * 数：`data.shades`（特攻换算）决定黑影层数、连接影线密度与梦印涌出的数量；`data.intensity`（本跳实际扣血占最大生命的比例换算）决定 pulse 各发射器的密度与亮度。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const NightmareDefinition: ParticleDefinition = {
@@ -43,7 +44,7 @@ const NightmareDefinition: ParticleDefinition = {
                 {
                     name: "thread", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    shape: { kind: "polyline" }, rate: 16,
+                    shape: { kind: "polyline" }, rate: { data: "shades", fallback: 16 },
                     direction: "shape", speed: [0.02, 0.08], spread: 14, spin: 12,
                     lifetime: [10, 16], size: [0.24, 0.4],
                     color: 0x241535, alpha: [0.4, 0], light: "world", maxParticles: 70
@@ -129,6 +130,29 @@ const NightmareDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [12, 20], size: [0.18, 0.05],
                     color: 0xC9B8E8, alpha: [0.6, 0], light: "full", maxParticles: 24
+                }
+            ]
+        },
+        // 睡者仍睡着、恶梦自己走完：黑影只是缓缓升散，不播「醒来」的 Z。
+        fade: {
+            duration: 22,
+            exit: { stop: 9, drain: 16 },
+            emitters: [
+                {
+                    name: "dissolve", bind: "target", height: 0.8,
+                    particle: "world_combat_core:cobblemon/generic/orb/largesmokeorb",
+                    burst: { count: 18 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.1], drag: 0.92,
+                    lifetime: [12, 20], size: [0.24, 0.38],
+                    color: 0x241535, alpha: [0.3, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "motes", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.26 },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0xC9B8E8, alpha: [0.35, 0], light: "full", maxParticles: 18
                 }
             ]
         },

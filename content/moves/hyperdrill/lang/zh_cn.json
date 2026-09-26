@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.hyperdrill.summary": "把身体最尖的一点高速旋成钻头，沿着瞄准方向一路凿穿：先把挡在前面的守护整层凿开，再按这一记的重力砸进去并把目标顶开。贯穿式会一路钻过多个目标。",
+  "worldcombat.skill.hyperdrill.summary": "把身体最尖的一点高速旋成钻头，沿着当前瞄准方向一路凿穿：先把挡在前面的守护整层凿开，再按这一记的重力砸进去并把目标顶开。贯穿式会一路钻过多个目标；撞墙、钻满冲距或目标纹丝不动（Boss／硬碰撞）时都在真实接触处收势，不破坏方块、也不穿模。",
   "worldcombat.skill.hyperdrill.use.0": "凿穿着了守护的目标强行打进去",
   "worldcombat.skill.hyperdrill.use.1": "沿一条线一次穿过排在一起的几个敌人",
   "worldcombat.skill.hyperdrill.use.2": "用高额的接触伤害收掉一个挡在前面的人",

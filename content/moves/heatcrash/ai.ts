@@ -27,6 +27,8 @@ namespace PokemonSkills {
             if (!target) return true;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
+            // 贴地滑行需要一小段清楚的路径：中间隔墙就不扑；不动的 Boss 直接压也在这条线上。
+            if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
             const targetMass = Math.max(1, heatcrashMassOf(context, target));
             const ratio = heatcrashMassOf(context, self) / targetMass;
             return ratio >= CompanionBehavior.ai<number>(capability, "minRatio", 0);
@@ -43,6 +45,7 @@ namespace PokemonSkills {
             let score = 20;
             if (ratio >= 3) score += 28;
             else if (ratio >= 2) score += 16;
+            if (target.grounded === false) score -= 12;
             const burning = CompanionBehavior.status(context, target, "burn");
             if (!burning) score += 22;
             else if (!CompanionBehavior.ai<boolean>(capability, "opening", true)) score += 4;
@@ -51,8 +54,8 @@ namespace PokemonSkills {
     });
 
     addPreferences("heatcrash", {}, [
-        field(pathOf("scorch"), "焦土式", "boolean", {
-            help: "开启：焦土更大、点燃概率更高、灼烧更久，但单发威力略低、收招与冷却更久。关闭：更重更快的一记火焰冲撞，只留一小片焦痕。"
+        field(pathOf("scorch"), "炙压式", "boolean", {
+            help: "开启：滑得更远、火痕更宽更久、点燃概率更高、灼烧更久，但单发威力略低、出手与冷却更慢。关闭（疾扑式）：更短更重的一记低扑，滑行短、火痕小、出手更快。"
         }),
         field(pathOf("ai.maxChase"), "起跳距离", "number", {
             min: 2, max: 16, step: 1,

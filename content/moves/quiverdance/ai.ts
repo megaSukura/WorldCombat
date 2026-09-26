@@ -2,10 +2,10 @@
  * 蝶舞 / quiverdance 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：有威胁、且在 ai.maxChase 内时，先扬一层鳞幕再打。
- * 什么时候最想出手：差距还在 ai.minGap 之外时 priority 100 越过共享交战次序；特攻不低于物攻时抬到 108——
- *   以特殊攻击为主的个体最能吃满这支舞，优先替它铺好鳞幕。
- * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：特攻、特防、速度各 +1、身上挂着鳞幕；幕还在时不再重复起舞，交回共享交战计划。
+ * 什么时候最想出手：差距还在 ai.minGap 之外时 priority 100 越过共享交战次序；以特殊攻击为主、或正被压得
+ *   只剩七成血以下时抬到 108——前者吃满特攻，后者正需要特防和速度撑住。不追敌，只在空隙里短舞。
+ * 对谁出手：自己；不需要接近，由共用任务直接施放。会给动作一个指向威胁的明确瞄向，方便身体朝向战局侧步。
+ * 放完之后：特攻、特防、速度各 +1、身上挂着鳞幕；幕还在且已到上限时不再重复起舞，交回共享交战计划。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("quiverdance", {
@@ -14,7 +14,10 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
-            if (CompanionBehavior.status(context, self, "quiverdance")) return false;
+            if (CompanionBehavior.status(context, self, "quiverdance")
+                && CompanionBehavior.stage(context, self, "spa") >= 6
+                && CompanionBehavior.stage(context, self, "spd") >= 6
+                && CompanionBehavior.stage(context, self, "spe") >= 6) return false;
             if (!threat) return false;
             const gap = CompanionBehavior.distance(self.point, threat.point);
             if (gap > CompanionBehavior.ai<number>(capability, "maxChase", 16)) return false;
@@ -23,13 +26,18 @@ namespace PokemonSkills {
         accepts: function (context, capability, target) {
             return target.ref === CompanionBehavior.source(context).ref;
         },
+        // 自施放只借这个对象定出朝向，宿主仍以自身为动作实体。
+        target: function (context) {
+            return context.senses["world_combat:threat"];
+        },
         priority: function (context, capability, target) {
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return 0;
             const focused = (context.facts.specialAttack || 0) >= (context.facts.attack || 0);
-            return focused ? 108 : 100;
+            const pressured = CompanionBehavior.ratio(self) < 0.7;
+            return focused || pressured ? 108 : 100;
         }
     });
 

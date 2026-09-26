@@ -1,13 +1,16 @@
 /**
  * 铁滚轮 / steelroller 的客户端表现。
  *
- * 一句话：施法者把脚下场地的颜色收进轮缘、卷成一只钢轮 → 场地被从根上压碎（土块与光点向上崩开），
- * 钢轮贴着地面碾出去、沿路甩出钢屑与尘线，撞上目标炸开钢铁冲击与贴地环，地面留下一道钢辙。
- * 色相家族：钢灰（0xB8BEC8）与近白（0xF0F4F8），场地色只出现在起手收拢的一小圈。
- * 拍子：起 spin（收色成轮，提交前）／空转 falter → 碎 tear（压碎场地）→ 滚 roll（贴地碾行）→ 击 impact／滑 skid（碾空）。
+ * 一句话：施法者把脚下场地的颜色收进轮缘（被压碎那一刻才染上场地主色）、卷成一只钢轮 → 场地被从根上压碎
+ * （土块与场地色光点向上崩开），钢轮贴着地面沿真实路径碾出去、滚过的地面才甩出短命钢屑，撞上目标炸开钢铁
+ * 冲击与贴地环；撞墙即停。
+ * 色相家族：钢灰（0xB8BEC8）与近白（0xF0F4F8）；场地色只出现在被吃掉场地的收卷、轮身、场纹崩开与地面钢屑上。
+ * 拍子：起 spin（收色成轮，提交前）／空转 falter → 碎 tear（压碎场地）→ 滚 roll（贴地碾行）→
+ *       屑 chips（真实滚过的每一段地面）→ 击 impact／停 skid。
  * 范围：impact 的贴地环与 tear 的崩开半径用 `data.scale`（判定半径 / 0.5）给出，玩家看出这一滚能咬住多大的圈。
- * 运动：tear 的土块向上崩、roll 的钢屑沿地面向后甩、impact 的碎片由内向外炸。
- * 数：`data.scraper`（物攻派生的钢屑数量）驱动滚动与撞击的细节层，`data.fields`（被压碎的场地数）决定 tear 的强度。
+ * 运动：tear 的土块向上崩、roll 的钢屑贴地向外甩、chips 的碎屑在原地落下、impact 的碎片由内向外炸。
+ * 数：`data.scraper`（物攻派生的钢屑数量）驱动滚动与地面钢屑，`data.fields`（被压碎的场地数）决定 tear 的强度，
+ *   `data.fieldColor`（被吃掉场地的主色）染色轮身与钢屑。
  */
 const SteelrollerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -22,7 +25,7 @@ const SteelrollerDefinition: ParticleDefinition = {
                     rate: 12, shape: { kind: "cylinder", radius: 0.4, length: 0.7 },
                     direction: "inward", speed: [0.03, 0.14], spread: 20,
                     lifetime: [7, 13], size: [0.14, 0.03], sizeMode: "sin",
-                    color: 0xB8BEC8, alpha: [0.75, 0], light: "full", maxParticles: 80
+                    color: { data: "fieldColor", fallback: 0xB8BEC8 }, alpha: [0.75, 0], light: "full", maxParticles: 80
                 },
                 {
                     name: "grit", bind: "source", offset: [0, 0.06, 0], height: 0,
@@ -70,7 +73,7 @@ const SteelrollerDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.6 },
                     direction: "up", speed: [0.1, 0.3],
                     lifetime: [10, 18], size: [0.16, 0.03],
-                    color: 0xD8E8D0, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
+                    color: { data: "fieldColor", fallback: 0xD8E8D0 }, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
                 }
             ]
         },
@@ -93,6 +96,39 @@ const SteelrollerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.18], spread: 14,
                     lifetime: [6, 11], size: [0.08, 0.01],
                     color: 0x9AA0A8, alpha: [0.55, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 140
+                },
+                {
+                    name: "aura", bind: "source", offset: [0, 0.28, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
+                    rate: 7, shape: { kind: "cylinder", radius: 0.42, length: 0.5 },
+                    direction: "outward", speed: [0.01, 0.05], spread: 24,
+                    lifetime: [7, 12], size: [0.16, 0.03], sizeMode: "sin",
+                    color: { data: "fieldColor", fallback: 0xB8BEC8 }, alpha: [0.55, 0], light: "full", maxParticles: 50
+                }
+            ]
+        },
+        chips: {
+            duration: 22,
+            exit: { stop: 8, drain: 10 },
+            emitters: [
+                {
+                    name: "shard", bind: "point", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "scraper", fallback: 4 } },
+                    shape: { kind: "circle", radius: 0.28 },
+                    direction: "outward", speed: [0.02, 0.12], spread: 34,
+                    gravity: 0.04, drag: 0.9,
+                    lifetime: [6, 11], size: [0.08, 0.01],
+                    color: 0x9AA0A8, alpha: [0.6, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "tint", bind: "point", offset: [0, 0.08, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 1 },
+                    shape: { kind: "circle", radius: 0.24 },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [5, 9], size: [0.1, 0.02],
+                    color: { data: "fieldColor", fallback: 0xB8BEC8 }, alpha: [0.5, 0], light: "full", maxParticles: 12
                 }
             ]
         },

@@ -30,8 +30,10 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !biteWants(context, capability, target)) return 0;
             var close = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range;
+            var deep = !!(capability.data.config && capability.data.config.deep === true);
             if (CompanionBehavior.ai<boolean>(capability, "reelIn", true) && CompanionBehavior.fleeing(context, target)) return 46;
-            if (close && !CompanionBehavior.status(context, target, "flinch")) return 40;
+            // 死咬式要的是短距控制：贴身且目标还没中招时最值得咬。
+            if (close && !CompanionBehavior.status(context, target, "flinch")) return deep ? 44 : 40;
             if (CompanionBehavior.status(context, target, "flinch")) return 16;
             return 24;
         }

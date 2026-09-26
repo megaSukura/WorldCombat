@@ -4,7 +4,7 @@
   "worldcombat.skill.leafage.use.1": "Cover a target that keeps walking with a fan of leaves",
   "worldcombat.skill.leafage.use.2": "Finish a weakened target at close range",
   "worldcombat.skill.leafage.description.0": "A fan of %2$s leaves is thrown, but only one hit counts: the first leaf to strike an enemy deals about %1$s physical damage; the target's defence, type matchup and crits are settled on impact.",
-  "worldcombat.skill.leafage.description.1": "Range %1$s blocks, a %2$s degree fan, with leaves flying a short arc at %3$s blocks/tick.",
+  "worldcombat.skill.leafage.description.1": "Range %1$s blocks, a %2$s degree fan, with leaves flying a short arc at %3$s blocks/tick; they can be tossed freely at a direction or nearby ground, do not home, and scatter where they hit a block.",
   "worldcombat.skill.leafage.description.2": "Each leaf has a %1$s block cross-section for hits.",
   "worldcombat.skill.leafage.description.3": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s; the PP 40 feel, very quick to reuse.",
   "worldcombat.skill.leafage.heavy.on": "Heavy form: power x1.3, single-leaf cross-section x1.35, range x1.12, but leaf count x0.55, a narrower fan, wind-up +1 tick and cooldown +5 ticks - fewer, heavier leaves thrown farther and tighter.",

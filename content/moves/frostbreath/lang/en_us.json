@@ -6,6 +6,7 @@
   "worldcombat.skill.frostbreath.description.0": "Every enemy the cloud covers takes about %1$s Ice special damage across a %2$s-degree fan, and the hit always lands as a critical.",
   "worldcombat.skill.frostbreath.description.1": "The cloud reaches %1$s blocks, drifting out at %2$s blocks/tick; it settles only when it arrives, so stepping out of it dodges the attack.",
   "worldcombat.skill.frostbreath.description.2": "Enemies covered by the mist are chilled for %1$s, reducing movement speed by 28%. Up to %2$s empty spaces above ground that supports snow receive a thin layer for %3$s.",
+  "worldcombat.skill.frostbreath.targeting": "Exhale in any direction, or pick a foe; the cloud only covers targets with no solid wall between, so stepping out of the fan or hiding behind cover dodges it. An empty exhale leaves a thin layer of snow wherever it can actually settle.",
   "worldcombat.skill.frostbreath.wide.on": "Wide breath: a broader fan, a thicker cloud, more frost and a longer chill, at the cost of reach, cloud speed, some power, and longer wind-up and cooldown.",
   "worldcombat.skill.frostbreath.wide.off": "Narrow breath: a narrow, long, fast, heavy stream of cold, at the cost of coverage.",
   "worldcombat.skill.frostbreath.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -31,6 +32,8 @@
   "worldcombat.skill.frostbreath.preference.ai.cluster.help": "On: an enemy with more enemies packed around it ranks higher, because one fan covers several. Off: ordinary ranged ordering.",
   "worldcombat.skill.frostbreath.preference.ai.finish": "Finish the weak",
   "worldcombat.skill.frostbreath.preference.ai.finish.help": "On: lower-health targets rank higher. Off: ordinary ranged ordering.",
+  "worldcombat.skill.frostbreath.preference.ai.advantage": "Favour slow and armoured",
+  "worldcombat.skill.frostbreath.preference.ai.advantage.help": "On: slow or heavily armoured enemies rank higher (guaranteed-critical cold bites through armour best), while fast movers that can step out of the cloud before it arrives are ranked lower. Off: ordinary ranged ordering, ignoring movement and defence.",
   "world_combat.move.frostbreath.text.chill": "Chilled",
   "world_combat.move.frostbreath.text.miss": "The mist thinned out",
   "effect.world_combat.frostbreath_chill": "Chilled"

@@ -4,7 +4,7 @@
   "worldcombat.skill.mirrorcoat.use.1": "Punish a ranged special attacker",
   "worldcombat.skill.mirrorcoat.use.2": "Turn damage taken into damage dealt from safety",
   "worldcombat.skill.mirrorcoat.description.0": "Fires the most recent special damage it took back at double strength, about %1$s points; only damage taken within the last %2$s counts, and the debt clears when the move is used.",
-  "worldcombat.skill.mirrorcoat.description.1": "Beam range %1$s blocks, %2$s blocks per tick, collision radius %3$s blocks. The blow settles as fixed damage that type immunity blocks outright; the refund never exceeds %4$s of the user's maximum health.",
+  "worldcombat.skill.mirrorcoat.description.1": "Beam range %1$s blocks, %2$s blocks per tick, collision radius %3$s blocks; it can lock onto an enemy or fire straight at an empty point in range (with no entity locked it no longer homes). The blow settles as fixed damage that type immunity or a wall blocks outright; the refund never exceeds %4$s of the user's maximum health.",
   "worldcombat.skill.mirrorcoat.polish.on": "Polished mirror on: the ledger window is 1.2 s longer and the refund cap gains 8%, but prepare takes 3 ticks and cooldown 8 ticks more.",
   "worldcombat.skill.mirrorcoat.polish.off": "Polished mirror off: the mirror folds away faster and only the freshest debt counts.",
   "worldcombat.skill.mirrorcoat.timing": "Castable on enemies within %1$s blocks; commits after %2$s s and costs %4$s PP; recovers for %3$s s and starts a %5$s s cooldown.",

@@ -1,11 +1,12 @@
 /**
  * 圆瞳 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没有被看软（任何来源的 charmed 身份）、视线畅通。
- * 什么时候最想出手：priority 58 常常抢在普通攻击之前；自己血量低于一半时抬到 74（先压低对方出手保命），
- *   对手正打自己／主人时抬到 66。ai.opening=迎击时只在对方正出手或自己刚受伤时睁眼。
- * 对谁出手：当前威胁；已带 charmed 身份的目标跳过，省下一次。
- * 够不到怎么办：reach 就是这次凝视的距离（按配置与体型估算），超出的先走近；视线被挡时交回共享接近逻辑。
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没有本招真正留下的心软载体、视线畅通。
+ * 什么时候最想出手：对近身物攻威胁与低血自保最积极——自己血量低于一半时 priority 74、对手正打自己／主人时 66，
+ *   平时按目标物攻倾向从 52 起抬（明显物系 +12、偏物系 +6）；ai.opening=迎击时只在对方正出手或自己刚受伤时睁眼。
+ * 对谁出手：当前威胁；身上已有 world_combat:babydoll_eyes 的目标跳过，省下一次；别的来源的魅惑不算本招的标记。
+ * 够不到怎么办：reach 直接用本次能力解析出的真实射程（item.data.range，随体型与凝视配置变化），超出的先走近；
+ *   视线被挡时交回共享接近逻辑。
  * 放完之后：目标掉攻击，伙伴交回共享顺序，再决定追击还是趁对方下不去手拉开。
  * 配置：ai.maxChase 限制考虑距离；ai.opening 选择出手时机；ai.leaveStation 决定驻守时是否离位。
  */
@@ -16,12 +17,14 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 
-    /** 与参数公式同源的凝视距离估算；实际施放仍走招式自己的 gazeRange。 */
-    function babydolleyesReach(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const self = source(context);
-        const height = self.height === undefined ? 1.4 : self.height;
-        const stare = !!(item.data.config && item.data.config.stare);
-        return Math.max(3, Math.min(7, (3.5 + height * 0.8) * (stare ? 1.25 : 1)));
+    /** 物攻倾向：目标物攻相对特攻越高，越值得先把它看软；2 明显物系、1 偏物系、0 法系或未知。 */
+    function babydolleyesPhysical(context: WorldBehavior.Context, target: Entity): number {
+        const facts = combatStats(context, target), stats = facts && facts.stats;
+        if (!stats) return 0;
+        const attack = Number(stats.atk), special = Number(stats.spa);
+        if (!isFinite(attack) || attack <= 0) return 0;
+        if (isFinite(special) && special > 0) return attack >= special * 1.15 ? 2 : attack > special ? 1 : 0;
+        return 1;
     }
 
     function babydolleyesWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
@@ -30,7 +33,8 @@ namespace CompanionBehavior {
         if (context.facts.mounted) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 6)) return false;
-        if (status(context, threat, "charmed")) return false;
+        // 只跳过本招真正留下的心软载体（那个 MobEffect）；别的来源的魅惑不阻止这次睁眼，避免误判。
+        if (marker(context, threat, PokemonSkills.babydolleyesEffect)) return false;
         if (!world(context).clear(point(self.point), point(threat.point))) return false;
         if (ai<string>(item, "opening", "anytime") !== "counter") return true;
         const owner = context.facts.owner;
@@ -39,15 +43,16 @@ namespace CompanionBehavior {
 
     registerUse("babydolleyes", {
         protocols: ["world_combat:control"],
-        reach: function (context, item) { return babydolleyesReach(context, item); },
+        reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) { return !target || babydolleyesWants(context, item, target); },
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !babydolleyesWants(context, item, target)) return 0;
             const self = source(context), owner = context.facts.owner;
-            if (self.health <= self.maximum * 0.5) return 74;
-            if (target.attacking === self.ref || !!owner && target.attacking === owner.ref) return 66;
-            return 58;
+            const physical = babydolleyesPhysical(context, target);
+            if (self.health <= self.maximum * 0.5) return 74 + physical * 2;
+            if (target.attacking === self.ref || !!owner && target.attacking === owner.ref) return 66 + physical * 2;
+            return 52 + physical * 6;
         }
     });
 }

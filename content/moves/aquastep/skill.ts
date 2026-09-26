@@ -6,8 +6,11 @@
  *
  * 两幕（多拍 + 收势）：
  *   起（bow，提交前）：屈膝行礼，水花绕脚打转。
- *   舞（step × N → spin → boost）：提交后按拍位移到目标四周的落点，每拍激起一圈水花；
- *       最后一拍拧身扫出半径 reach 的一整圈，选定目标吃满、圈内其他人吃外围占比；命中提速。
+ *   舞（step × N → spin → boost）：提交后按拍位移到目标四周的落点，每拍在身体真实走到的位置激起水花
+ *       （位移回执决定水花大小，受阻的一拍只在原地打个小水花、不虚报绕身）；最后一拍拧身以当前身体位置为心
+ *       扫出半径 reach 的一整圈，选定目标吃满、圈内其他人吃外围占比；命中选定目标（空放时则第一个实际命中的人）提速。
+ *
+ * 选取：kind 为 aim，可点选实体绕身，也可只选一个空点围着它跳；真实步伐仍受方块与碰撞限制。
  *
  * 与同族分开：起草是草绿的一跃、蓄能焰袭是直线火焰冲锋，流水旋舞是**多拍碎步绕着对手**，
  * 配置 `twirl` 决定收势落在正面还是绕到背后。
@@ -32,9 +35,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "aquastep",
         name: "流水旋舞",
-        description: "绕对手跳一支水舞：几拍碎步点踏，最后旋身扫出一圈水刃，选定目标吃满、圈内其他目标按比例受伤并被推开；命中选定目标后自身提速。",
+        description: "绕对手跳一支水舞：几拍碎步点踏，最后旋身扫出一圈水刃，选定目标吃满、圈内其他目标按比例受伤并被推开；命中选定目标后自身提速；也可以只选一个空点围着它跳完步伐。",
         uses: ["绕着对手点踏几拍再旋身收势", "在圈子正中把周围的人都扫一下", "命中后提速，趁步子还在时拉开或追击"],
-        kind: "enemy",
+        kind: "aim",
         range: 4,
         maxRange: 6,
         prepare: 7,
@@ -78,7 +81,10 @@ namespace PokemonSkills {
             const twirl = !!(config && config.twirl);
             const scale = reach / 2.2;
             const intensity = Math.max(0.6, Math.min(2.4, spin / 90));
-            const centre = action.target() !== null && world.valid(action.target()!) ? world.observe(action.target()!)!.position() : action.targetPosition();
+            const chosen = action.target() !== null && world.valid(action.target()!) ? action.target() : null;
+            const chosenBody = chosen !== null ? world.observe(chosen) : null;
+            // 有选定实体就绕它跳，自由瞄准空点时围着那个点跳。
+            const centre = chosenBody !== null ? chosenBody.position() : action.targetPosition();
             const start = self === null ? action.origin() : self.position();
             const flat = WorldCombat.point(start.x() - centre.x(), 0, start.z() - centre.z());
             const near = flat.length() < 1e-6 ? 0 : Math.atan2(flat.x(), flat.z());
@@ -96,31 +102,40 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const body = scope.observe(actor);
                 if (body === null) { finish(current); return; }
+                // 旋身以当前身体位置为心，读的是这一刻真实站到的地方。
                 const from = body.position();
-                const victim = action.target() !== null && scope.valid(action.target()!) ? action.target() : null;
+                const victim = chosen !== null && scope.valid(chosen) ? chosen : null;
                 current.face(centre, 24, 24);
-                let hits = 0, primary = false;
+                let landed = 0, primary = false;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(from, 0, reach, { below: 2, above: 3 }), function (other: CombatActor) {
                     const isPrimary = victim !== null && String(other.ref()) === String(victim.ref());
                     const amount = isPrimary ? spin : spin * spread;
-                    const landed = hurt(current, other, "aquastep", amount, { damage: damageSpec("aquastep", "spin"), contact: true });
-                    if (landed) {
+                    const dealt = hurt(current, other, "aquastep", amount, { damage: damageSpec("aquastep", "spin"), contact: true });
+                    if (dealt) {
+                        landed++;
                         if (isPrimary) primary = true;
+                        if (victim === null && landed === 1) primary = true;   // 空放：第一个实际命中的人算选定
                         const otherBody = scope.observe(other);
                         if (otherBody !== null) scope.displace(other, otherBody.position().minus(from).unit().scale(push));
                     }
-                    hits++;
                 });
                 WorldFeedback.emit(scope, aquastepScene, 1, from,
-                    { moment: "spin", radius: reach, scale: scale, splash: splash, intensity: intensity, targets: hits, twirl: twirl }, 30);
+                    { moment: "spin", radius: reach, scale: scale, splash: splash, intensity: intensity, targets: landed, twirl: twirl }, 26);
                 sound(current, "cobblemon:move.waterpulse.target");
-                if (hits > 0) {
-                    WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.2, 0)), aquastepSpinText, [hits], 28);
+                if (landed > 0) {
+                    WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.2, 0)), aquastepSpinText, [landed], 28);
                     if (primary) aquastepHasteNow(current, haste);
                 } else {
                     WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.2, 0)), aquastepMissText, [], 24);
                 }
                 finish(current);
+            }
+
+            function beatScene(current: CombatAction, at: CombatPoint, label: number, moved: number, want: number, splashNow: number): void {
+                const ratio = want > 0.001 ? Math.max(0, Math.min(1, moved / want)) : 0;
+                WorldFeedback.emit(current.world(), aquastepScene, 1, at,
+                    { moment: "step", radius: reach, scale: scale, splash: splashNow, index: label, steps: steps, twirl: twirl,
+                        travel: ratio, ring: ratio >= 0.35 ? 1 : 0 }, 22);
             }
 
             function stepNow(current: CombatAction): void {
@@ -129,11 +144,11 @@ namespace PokemonSkills {
                 if (body === null) { finish(current); return; }
                 const bearing = stepBearing(index);
                 const delta = pointAt(bearing, stride).minus(body.position());
-                if (delta.length() > 0.05) scope.displace(actor, delta);
+                const moved = delta.length() > 0.05 ? scope.displace(actor, delta) : 0;
                 current.face(centre, 24, 24);
                 const here = scope.observe(actor)!.position();
-                WorldFeedback.emit(scope, aquastepScene, 1, here,
-                    { moment: "step", radius: reach, scale: scale, splash: splash, index: index + 1, steps: steps, twirl: twirl }, 22);
+                // 水花只按真实位移铺开：被方块挡住的一拍不会在远处画出整圈脚印。
+                beatScene(current, here, index + 1, moved, delta.length(), Math.max(4, Math.round(splash * (0.25 + 0.75 * Math.min(1, moved / Math.max(0.001, delta.length()))))));
                 sound(current, index === 0 ? "cobblemon:move.waterpulse.actor" : "minecraft:item.trident.riptide_1");
                 index++;
                 if (index >= steps) { stepBehind(current); return; }
@@ -146,7 +161,9 @@ namespace PokemonSkills {
                 const body = scope.observe(actor);
                 if (body !== null) {
                     const delta = pointAt(finalBearing(), stride).minus(body.position());
-                    if (delta.length() > 0.05) scope.displace(actor, delta);
+                    const moved = delta.length() > 0.05 ? scope.displace(actor, delta) : 0;
+                    beatScene(current, scope.observe(actor)!.position(), steps + 1, moved, delta.length(),
+                        Math.max(4, Math.round(splash * (0.25 + 0.75 * Math.min(1, moved / Math.max(0.001, delta.length()))))));
                 }
                 current.after(2, spinNow);
             }

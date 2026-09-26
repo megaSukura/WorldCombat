@@ -4,6 +4,7 @@
   "worldcombat.skill.highhorsepower.description.1": "Charge %1$s blocks at %2$s blocks per tick: a flat, straight rush whose front sweeps with a %3$s-block hit radius; it stops on the first non-ally it meets and strikes only that one, and also pulls up early against a block or once the charge is spent.",
   "worldcombat.skill.highhorsepower.press.on": "Body-press form: higher power and a heavy down-pressed dust ring that keeps the target close; at the cost of a shorter shove, a shorter charge and a longer cooldown.",
   "worldcombat.skill.highhorsepower.press.off": "Head-on form: a longer shove, a longer charge and a shorter cooldown; at slightly lower power.",
+  "worldcombat.skill.highhorsepower.description.aim": "You may charge toward any direction or point without first picking an enemy; with no entity chosen it runs along the chosen direction/point, stops at a block or once the charge is spent, and a whiffed run never damages anything through empty air.",
   "worldcombat.skill.highhorsepower.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.highhorsepower.growth.0": "From level %1$s the charge rises to %2$s and the run to %3$s blocks.",
   "worldcombat.skill.highhorsepower.growth.1": "From level %1$s the charge rises to %2$s and the shove to %3$s blocks.",

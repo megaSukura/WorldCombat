@@ -7,7 +7,7 @@
   "worldcombat.skill.lastresort.description.1": "It charges up to %1$s blocks at %2$s blocks per tick with a %3$s block radius, and knocks the target back %4$s blocks; if it hits nothing or terrain stops it early it whiffs and deals no damage.",
   "worldcombat.skill.lastresort.desperation.on": "Desperation form: power x1.12 and a longer charge, but a 3-tick slower wind-up, longer recovery and cooldown.",
   "worldcombat.skill.lastresort.desperation.off": "Steady form: base power and a slightly shorter charge, with a clean landing and a shorter cooldown.",
-  "worldcombat.skill.lastresort.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit. Unlocked only after every other implemented move the user knows has been used; spending it empties the ledger and it must be built up again, and about 30 s without using a move lets it lapse.",
+  "worldcombat.skill.lastresort.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit. Unlocked only after every other implemented move the user knows has been used; trying it while locked lists the moves still missing. Spending it empties the ledger and it must be built up again, and about 30 s without using a move lets it lapse. A lone move (no other implemented moves) already satisfies the condition.",
   "worldcombat.skill.lastresort.growth.0": "From level %1$s the trump power rises to %2$s.",
   "worldcombat.skill.lastresort.growth.1": "From level %1$s the trump power rises to %2$s and the charge to %3$s blocks.",
   "worldcombat.skill.lastresort.value.trump": "Trump power",
@@ -26,5 +26,6 @@
   "worldcombat.skill.lastresort.preference.ai.maxChase.help": "Only draw the trump card at a foe within this distance. The charge is medium, so larger values commit earlier; smaller values keep it to point-blank finishes.",
   "world_combat.move.lastresort.text.hit": "Last Resort %1$s",
   "world_combat.move.lastresort.text.wound": "Last Resort - Cornered %1$s",
-  "world_combat.move.lastresort.text.miss": "Whiffed"
+  "world_combat.move.lastresort.text.miss": "Whiffed",
+  "world_combat.move.lastresort.text.missing": "Still needs %1$s to unlock Last Resort"
 }

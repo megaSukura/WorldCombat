@@ -33,5 +33,5 @@
   "world_combat.move.powertrip.text.hit": "Power Trip (%1$s)",
   "world_combat.move.powertrip.text.through": "Ploughed through (target %1$s)",
   "world_combat.move.powertrip.text.miss": "The charge found nothing",
-  "worldcombat.skill.powertrip.world": "Positive stages in the user’s five combat stats and potion/beacon buffs count; level I counts once."
+  "worldcombat.skill.powertrip.world": "Positive stages in the user’s seven stats (five combat stats plus accuracy and evasion) and real potion/beacon buffs count; level I counts once and identity-only carriers do not."
 }

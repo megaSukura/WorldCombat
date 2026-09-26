@@ -1,12 +1,13 @@
 /**
  * 变身的可执行设计说明。
  *
- * 场面：只会变身的百变怪对 4 格外、只会定身法的凯西；旁边站着一只不动也不变的僵尸。
- *   僵尸（原版 Monster）让百变怪把附近读成有威胁，变身因此被排进出手计划；威胁本身不是宝可梦，
- *   变身就近挑可复制的那一个——凯西，把它的招式整套借过来。
- *   （用本组四招之一作为被借的招，是因为这一趟私有装配里只装载本组的四招。）
- * 必然事实：变身被提交过；施法者身上出现过共享身份 world_combat:status/transformed 的形态。
- * 随机结果：形态时长、借来的六维、借来的手是否真被用出来，写进 note 供读轨迹判断。
+ * 场面：只会变身的百变怪对一只不动也不还手的僵尸（原版 Monster）。僵尸天然被野生大脑读成威胁，
+ *   变身因此被排进出手计划；附近唯一可复制的身体就是它，于是走普通主体分支——把僵尸的原生攻击、
+ *   移动与防护属性借过来。
+ * 必然事实：变身被提交过；施法者身上出现过共享身份 world_combat:status/transformed 的形态；
+ *   僵尸的原生攻击力确实落到了施法者身上（普通分支可观察的复制结果）。
+ * 随机结果：形态时长、借来的属性是否被用出来，写进 note 供读轨迹判断。宝可梦分支（招式/六维/类型/特性）
+ *   走同一枚 mark 与 NativeModifiers.copy 合同，由单元检查与用户试玩覆盖。
  */
 Smoke.scenario("transform", function (stage) {
     stage.time("night");
@@ -18,26 +19,29 @@ Smoke.scenario("transform", function (stage) {
         stage.fill([-6, ring, -6], [-6, ring, 6], "minecraft:stone");
         stage.fill([6, ring, -6], [6, ring, 6], "minecraft:stone");
     }
-    var foe = stage.pokemon({ species: "Kadabra", level: 34, moves: ["disable"], at: [2, 0, 0] });
     var caster = stage.pokemon({ species: "ditto", level: 32, moves: ["transform"], at: [-2, 0, 0] });
-    // 不动也不出手的威胁源：原版 Monster 天然被读成威胁，又不还手，变身才有稳定的可复制对象。
-    var menace = stage.mob({ type: "minecraft:zombie", at: [-2, 0, 4] });
+    // 不动也不出手的复制来源：原版 Monster 天然被读成威胁，又不还手，变身才有稳定的可复制对象。
+    var source = stage.mob({ type: "minecraft:zombie", at: [2, 0, 0] });
     stage.command("data merge entity @e[type=minecraft:zombie,sort=nearest,limit=1] {NoAI:1b}");
-    stage.note("stationary menace: " + menace.name);
-    // 野生大脑会清掉原生目标；用有界的高频定时重申敌意，让凯西也把百变怪读成威胁，借来的手才有对象。
+    var sourceAttack = stage.attribute(source, "minecraft:generic.attack_damage");
+    stage.note("staged: ditto(32) transform against a still zombie; source native attack " + sourceAttack);
+    // 野生大脑会清掉原生目标；用有界的高频定时重申敌意，让百变怪持续把僵尸读成威胁。
     for (var step = 1; step <= 300; step++) {
-        stage.after(step * 4, function () { stage.hostile(caster, foe); });
+        stage.after(step * 4, function () { stage.hostile(caster, source); });
     }
-    stage.note("staged: ditto(32) transform vs kadabra(34) disable with a still zombie nearby; the borrowed disable proves the move set moved over");
     stage.until(1200, function () {
         return stage.casts("transform", caster) > 0;
     }, function () {
-        // 形态身份的登记跨一个 tick；再给借来的手一点出手时间，note 里的观察才有内容。
+        // 形态身份的登记跨一个 tick；再给借来的属性一点作用时间，note 里的观察才有内容。
         stage.after(160, function () {
             stage.expect(stage.casts("transform", caster) > 0, "transform was committed");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/transformed"), "the caster carried the shared transformed identity");
-            stage.note("变身把目标的六维、类型、特性与全部招式写进施法者的临时层，到期或被清除时按旁挂的层 id 精确收回。外观模型不随战斗形态一起换（共享层暂无「临时改写渲染形态」接口，见报告）。形态时长与射程随等级、特防、特攻、体型与配置变化；借来的手是否紧接着被用出来取决于野生大脑对局面的判断，记录在这里。", {
-                transformCasts: stage.casts("transform", caster), borrowedDisables: stage.casts("disable", caster),
+            stage.expect(Math.abs(stage.attribute(caster, "minecraft:generic.attack_damage") - sourceAttack) < 0.75,
+                "the borrowed native attack reached the caster");
+            stage.note("普通分支把来源的原生攻击、移动与防护属性写进施法者的临时层，生命、库存与外形不动；宝可梦分支则走 NativeModifiers.copy 写招式/六维/类型/特性。每次变身一枚自己的 transformMark 记下复制层与载体，刷新时旧层只清自己那层，不会抹掉新形态。形态时长与射程随等级、特防、特攻、体型与配置变化，记录在这里。", {
+                transformCasts: stage.casts("transform", caster), sourceAttack: Math.round(sourceAttack * 10) / 10,
+                casterAttack: Math.round(stage.attribute(caster, "minecraft:generic.attack_damage") * 10) / 10,
+                casterHealth: caster.health(), damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
                 damageByCaster: Math.round(stage.damageBy(caster) * 10) / 10, tick: stage.tick()
             });
             stage.done();

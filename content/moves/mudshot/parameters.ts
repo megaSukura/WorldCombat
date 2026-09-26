@@ -4,7 +4,9 @@
  * 原生事实：Ground、特殊、威力 55、命中 95、PP 15、target normal，命中后必定降低 1 级速度（Cobblemon 1.8 / Showdown，237 位学习者）。
  *
  * 翻译：把「向对手投掷泥块」落成一道**贴地平飞、又快又阔的泥浆**——泥块沿低弧甩出，命中时在目标脚下炸开，
- * 溅开的泥浆糊上附近所有敌人的腿脚，谁被糊住谁掉速度；落点地上留下一片湿泥（`terrain` 租借，到期原方块回来）。
+ * 主目标只在真正吃下伤害后才被糊腿掉速，溅开的泥浆让附近所有敌人各自按通视与真实掉速回执被糊腿；
+ * 落点只留一道短泥污印（纯画面，不放方块、也不构成持续减速场）。
+ * 选取为 aim：可锁定实体，也可朝方向或世界点空投。
  * 与同族分开：掷泥（mudslap）是低弧软泥团糊脸、必定削**命中**；泥巴炸弹（mudbomb）是直线硬弹炸开、有概率削命中；
  * 泥巴射击是**贴地阔泼**，掉的是**速度**，糊的范围是腿脚而不是脸。
  *
@@ -17,9 +19,9 @@
  *   slowStages 掉速等级：特攻每满 120 多压一级；阔泼再多一级（夹 1..3）。
  *   slowTicks  糊腿时长：等级与**体重**——越重的个体泥挂得越久，也是 mired 身份与腿脚画面的时长。
  *   coat       泥点数量：特攻与等级驱动，表现按它发射。
- *   slickTicks 泥洼时长：等级决定地上那片湿泥留多久。
+ *   slickTicks 污痕时长：等级决定落点那道泥污印留多久（纯画面）。
  *   tempo      起手：速度决定抓泥、甩泥的快慢。
- * 配置 wide（阔泼）双向取舍：开＝泼溅更宽、掉速更深、地上泥洼更久，但单发更轻、更近、冷却更久；
+ * 配置 wide（阔泼）双向取舍：开＝泼溅更宽、掉速更深、地上污痕更久，但单发更轻、更近、冷却更久；
  * 关＝一道更重更远更快的泥浆，代价是只糊得住脚下这一小圈。两向各有局面（点掉一个 / 罩住一片）。
  *
  * 伤害段 `spray` 与参数同名；属性与分类沿用原生 Ground／特殊，对手防御、相性与暴击在命中时统一结算。
@@ -99,10 +101,10 @@ namespace PokemonSkills {
                 unit: "点",
                 description: "命中处溅出的泥点数量，也驱动表现的密度；特攻与等级越高越密。"
             }),
-        /** 泥洼时长：80 + 等级 × 1.0；夹 60..170。 */
+        /** 污痕时长：30 + 等级 × 0.4；夹 24..60。纯画面痕迹，不改变方块。 */
         slickTicks: seconds(
-            F.base(80).plus(F.level().times(1.0)).clamp(60, 170).round(0),
-            "泥洼时长", "落点地上那片湿泥停留多久；到期原方块回来。"),
+            F.base(30).plus(F.level().times(0.4)).clamp(24, 60).round(0),
+            "污痕时长", "落点地上那道泥污印停留多久；只是画面上的痕迹，不改变方块，也不产生减速区域。"),
         /** 起手：10 − 速度偏移[−1,4]；夹 6..14。 */
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(50).times(0.04).clamp(-1, 4)).clamp(6, 14).round(0),
@@ -119,7 +121,7 @@ namespace PokemonSkills {
     describe("mudshot", [
         { key: "description.0", values: ["spray","splash","slowStages"] },
         { key: "description.1", values: ["velocity", "reach", "legRadius"] },
-        { key: "description.2", values: ["slowTicks","slickTicks"] },
+        { key: "description.2", values: ["slowTicks"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

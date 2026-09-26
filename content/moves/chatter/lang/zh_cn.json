@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.chatter.summary": "对着身前一道扇面连叫几串尖锐的颤音：每一声都结算一次声音伤害，被叫到的人立刻陷入混乱——之后每次想出手都可能被打散，打中别人还会被自己的力气反噬。声波不被掩体阻挡，代价是射程短、每一声都轻。",
+  "worldcombat.skill.chatter.summary": "对着身前一道扇面连叫几串尖锐的颤音：每一声都结算一次声音伤害，被叫到的人立刻陷入混乱——之后每次想出手都可能被打散，打中别人还会被自己这一下造成的伤害反噬。声波不被掩体阻挡，代价是射程短、每一声都轻；不选敌人也能朝任意方向空喊。",
   "worldcombat.skill.chatter.use.0": "贴上去用一串尖叫连打几下",
   "worldcombat.skill.chatter.use.1": "隔着掩体把对手叫懵",
   "worldcombat.skill.chatter.use.2": "给危险的目标挂上失手与被反噬的窗口",
   "worldcombat.skill.chatter.description.0": "每一声在扇面内的每个敌人身上各造成 %1$s 点特殊伤害（声音），一共叫 %2$s 声、每隔 %3$s。",
   "worldcombat.skill.chatter.description.1": "扇面张角 %1$s 度、声程 %2$s 格；声音不被掩体阻挡。",
-  "worldcombat.skill.chatter.description.2": "被叫到的人陷入混乱 %1$s（每个目标在这一串里只被叫乱一次）；期间每次想出手有 %2$s 的概率被打散，打中非友方时还会被自身攻击反噬，损失约自身最大生命的 2%~12.5%。",
+  "worldcombat.skill.chatter.description.2": "被叫到的人陷入混乱 %1$s（每个目标在这一串里只被叫乱一次）；期间每次想出手有 %2$s 的概率被打散，打中非友方时还会按这一下造成的伤害被反噬，损失约该次伤害的 2%~12.5%（随自身攻击倍率浮动）。",
   "worldcombat.skill.chatter.description.3": "当前尖啸形态：%1$s。",
   "worldcombat.skill.chatter.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.chatter.growth.0": "达到 %1$s 级，单声威力升至 %2$s。",

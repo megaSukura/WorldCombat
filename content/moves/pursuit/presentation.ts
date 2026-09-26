@@ -1,9 +1,9 @@
 /**
  * 追打的表现：
- * 「施法者贴地扑向正在撤离的目标，身后拖出暗紫尾迹与尘土；命中处按是否追击炸开暗色碎片。」
+ * 「施法者贴地扑出，身后拖出短痕与尘土；命中普通一扑炸开暗色碎片，若目标正背身逃离，才在背后留下向后抓住的双痕。」
  *
- * 色相家族：暗紫到近黑，白核作强调。起手沉降 → 扑击拉尾 → 命中两档（strike / catch）。
- * 范围：lunge 沿身体运动拉线，strike/catch 的点爆半径由环形发射器读出。
+ * 色相家族：暗紫到近黑，白核作强调。起手沉降 → 扑击拉尾 → 命中两档（strike / catch，catch 才有双痕）→ 空扑 miss。
+ * 范围：lunge 沿身体运动拉线；catch 的双痕沿 data.path 的四个顶点画成 U，方向朝向施法者（抓住后背）。
  * 数：命中碎片数量由服务端按最终威力算出的 data.count 决定，翻倍时更多。
  */
 const PursuitDefinition: ParticleDefinition = {
@@ -38,6 +38,22 @@ const PursuitDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 空扑：扑到尽头没碰到任何人，尘与短痕原地散掉。
+        miss: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "whiff_dust", bind: "point", offset: [0, 0.05, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 },
+                    shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.03, 0.12], gravity: 0.03, drag: 0.92,
+                    lifetime: [10, 18], size: [0.07, 0.02],
+                    color: 0x555555, alpha: [0.45, 0], light: "world", maxParticles: 32
+                }
+            ]
+        },
         // 命中：普通一扑。
         strike: {
             duration: 22,
@@ -63,7 +79,7 @@ const PursuitDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 命中（追击）：目标背身，碎片更密、更亮。
+        // 命中（追击）：目标背身，碎片更密、更亮，并在背后补上向后抓住的双痕。
         catch: {
             duration: 26,
             exit: { stop: 14, drain: 20 },
@@ -88,13 +104,13 @@ const PursuitDefinition: ParticleDefinition = {
                     color: 0xD8A0FF, alpha: [0.95, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "catch_ring", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: 1.1 },
-                    direction: "inward", speed: [0.06, 0.1],
-                    lifetime: [10, 16], size: [0.5, 0.2],
-                    color: 0x8A3AD0, alpha: [0.7, 0], light: "full"
+                    name: "catch_marks", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    burst: { count: { data: "count", fallback: 24 } },
+                    shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 16], size: [0.34, 0.1], sizeMode: "index",
+                    color: 0xC11BFF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 80
                 }
             ]
         }

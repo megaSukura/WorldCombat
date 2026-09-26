@@ -4,9 +4,10 @@
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自身为顶点、朝威胁那条线推出去的锥里
  *   至少罩得住 ai.cluster 个敌人（默认 2；调 1 表示看得见就喝）。目标已经带着 snarled 身份时，
  *   ai.skipScolded（默认开）跳过，把这一轮留给还没被骂软的人。
- * 对谁出手：当前威胁；锥里罩住的人越多越优先，焦点目标另加一档。
+ * 对谁出手：当前威胁；锥里罩住的人越多越优先，锥里以特攻为主的法系威胁再加一档，焦点目标另加一档。
  * 够不到怎么办：reach 就是声压锥长，由共享任务把身体带进射程；这招靠近本身就是它的准备。
  * 放完之后：被第一声喝住的人特攻下降、带上被斥身份，伙伴交回共享顺序，再决定追击还是趁对方错拍拉开。
+ * 方向：整段施放锁定第一声的朝向，连续声期间不会追着对象旋转；要改朝向就等这一段走完再出下一声。
  */
 namespace CompanionBehavior {
     /** 朝威胁那条线的锥内、在射程里的非友方数量；声音不看视线。与参数公式的 zhang 角同源（约 55° 半张）。 */
@@ -25,6 +26,27 @@ namespace CompanionBehavior {
             if (diff <= half) count++;
         }
         return count;
+    }
+
+    /** 锥里是否有人以特攻为主输出；这一吼降特攻，对法系威胁最划算。用共享只读探针读对手六维。 */
+    function snarlCasts(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
+        const self = source(context);
+        const heading = Math.atan2(target.point[2] - self.point[2], target.point[0] - self.point[0]);
+        const half = 55 * Math.PI / 180, reach = item.data.range;
+        const nearby = context.facts.nearby as Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || !other.visible) continue;
+            if (distance(other.point, self.point) > reach) continue;
+            let diff = Math.abs(Math.atan2(other.point[2] - self.point[2], other.point[0] - self.point[0]) - heading);
+            if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            if (diff > half) continue;
+            const stats = combatStats(context, other), values = stats && stats.stats;
+            if (!values) continue;
+            const atk = Number(values.atk || 0), spa = Number(values.spa || 0);
+            if (isFinite(atk) && isFinite(spa) && spa > atk * 1.15) return true;
+        }
+        return false;
     }
 
     /** 射程内是否还有一个还没被骂软的非友方；有的话才把这一轮留给它。 */
@@ -61,6 +83,7 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !snarlWants(context, item, target)) return 0;
             let base = 20 + Math.min(3, snarlCaught(context, item, target)) * 6;
+            if (snarlCasts(context, item, target)) base += 10;
             if (context.facts.focus === target.ref) base += 16;
             return base;
         }

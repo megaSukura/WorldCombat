@@ -7,9 +7,12 @@
  *
  * 三幕：
  *   起（windup，提交前）：压身、拳收到腰下、脚下蹬劲，只播预告。
- *   挑（rise）：提交后沿身前 `arc` 度的竖直弧挑出 `uppercut` 接触伤害，弧内的非友方各吃一记；
- *       被挑中的目标沿弧线被 `displace` 送出一小段水平、并得到 `lift` 的向上初速——整个人离地。
- *   收（hang／whiff）：离地的目标头顶浮起一圈停留标记；一个人都没挑中只留一道空弧。
+ *   挑（rise）：提交后沿身前 `arc` 度的竖直弧由低到高采样两段相邻区域，弧内的非友方各吃一记 `uppercut`；
+ *       每个目标整招只结算一次（低段或高段先罩到就锁定），总威力不变。被挑中的目标得到 `lift` 的向上初速——
+ *       整个人离地；只有真的被推动/顶起的才播起跳轨迹，免疫击飞者保留伤害、不加升空。
+ *   收（hang／whiff）：离地命中另起更亮的空中强调（不表示悬停）；一个人都没挑中只留一道空弧。
+ *
+ * 选取 `kind: "aim"`：自由朝向、可空拳；方向或任意阵营实体都行。头顶有墙就把可见拳路截断到天花板。
  *
  * 与同族分开：百万吨重拳是沿地面的直拳推离、臂锤是过顶下砸、地球上投/借力摔是抓取摔出；
  * 冲天拳是唯一「垂直向上、把人顶到空中」的一记。
@@ -42,7 +45,7 @@ namespace PokemonSkills {
         name: "Sky Uppercut",
         description: "蹲身把拳压到最低，再沿身前一条竖直的弧线一口气挑上去：被命中的对手整个被顶离地面，随后落回；对命中时已经离地的目标这一挑更狠。它是全族唯一把对手送上天的一记。",
         uses: ["一记上勾把贴脸的对手顶到空中", "追击空中或跳起的对手、把它打得更狠", "把敌人挑离阵地，给下一拍创造机会"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.3,
         maxRange: 3.2,
         prepare: 8,
@@ -89,34 +92,51 @@ namespace PokemonSkills {
 
             const self = world.observe(actor);
             const origin = self === null ? action.origin() : self.position();
-            const path = skyuppercutArc(origin, heading, reach, airReach);
+
+            // 头顶有墙就把可见拳路截断到天花板；判定与表现共用截断后的弧线。
+            let top = airReach;
+            const ceiling = world.clipBlocks(origin.plus(WorldCombat.point(0, 0.4, 0)),
+                origin.plus(WorldCombat.point(0, airReach + 0.6, 0)));
+            const ceilingBlock = ceiling !== null && ceiling.blocked() ? ceiling.blockPosition() : null;
+            if (ceilingBlock !== null) top = Math.max(1.2, Math.min(airReach, ceilingBlock.y() - origin.y()));
+            const path = skyuppercutArc(origin, heading, reach, top);
 
             sound(action, "minecraft:entity.player.attack.strong");
             WorldFeedback.emit(world, skyuppercutScene, 1, origin,
-                { moment: "rise", path: path, reach: reach, arc: arc, airReach: airReach,
+                { moment: "rise", path: path, reach: reach, arc: arc, airReach: top,
                     sparks: sparks, scale: scale, intensity: intensity,
                     direction: [heading.x(), heading.y(), heading.z()] }, 18);
 
+            // 竖向范围拆成低、高两段相邻采样，按低到高推进：每段各自结算，已锁定的目标不再重复吃伤，总威力不变。
+            const struck: { [ref: string]: boolean } = Object.create(null);
+            const middle = Math.max(1.4, Math.min(top - 0.2, top * 0.55));
+            const bands = [{ below: 0.8, above: middle }, { below: -middle, above: top }];
             let launched = 0, airborne = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, heading, reach, arc, { below: 0.8, above: airReach }),
-                function (victim: CombatActor, facts: CombatObservation) {
-                    const offGround = !facts.grounded();
-                    const per = power * (offGround ? airBonus : 1);
-                    if (!hurt(action, victim, "skyuppercut", per,
-                        { damage: damageSpec("skyuppercut", "uppercut"), contact: true, punch: true })) return;
-                    launched++;
-                    if (offGround) airborne++;
-                    WorldFeedback.emit(world, skyuppercutScene, 1, facts.position(),
-                        { moment: "launch", target: String(victim.ref()), lift: lift, push: push, offGround: offGround ? 1 : 0,
-                            sparks: sparks, scale: scale, intensity: intensity }, 20);
-                    if (offGround)
-                        WorldFeedback.emit(world, skyuppercutScene, 1, facts.position(),
-                            { moment: "hang", target: String(victim.ref()), scale: scale, intensity: intensity }, 24);
-                    if (world.valid(victim)) {
-                        world.displace(victim, heading.scale(push));
-                        world.motion(victim, WorldCombat.point(0, lift, 0), true);
-                    }
-                });
+            for (let band = 0; band < bands.length; band++) {
+                WorldGeometry.selectEnemies(world, WorldGeometry.sector(origin, heading, reach, arc, bands[band]),
+                    function (victim: CombatActor, facts: CombatObservation) {
+                        const ref = String(victim.ref());
+                        if (struck[ref]) return;
+                        if (!world.clear(origin, facts.position())) return;
+                        const offGround = !facts.grounded();
+                        const per = power * (offGround ? airBonus : 1);
+                        if (!hurt(action, victim, "skyuppercut", per,
+                            { damage: damageSpec("skyuppercut", "uppercut"), contact: true, punch: true })) return;
+                        struck[ref] = true;
+                        launched++;
+                        if (offGround) airborne++;
+                        // 只有真的被顶起或推出去的目标才播起跳轨迹：免疫击飞者位移为 0、加不上速度，保留伤害。
+                        const moved = world.hitDisplace(victim, heading.scale(push));
+                        const lifted = world.hitImpulse(victim, WorldCombat.point(0, lift, 0));
+                        if (moved > 0.001 || lifted)
+                            WorldFeedback.emit(world, skyuppercutScene, 1, facts.position(),
+                                { moment: "launch", target: ref, lift: lift, push: push, offGround: offGround ? 1 : 0,
+                                    sparks: sparks, scale: scale, intensity: intensity }, 20);
+                        if (offGround)
+                            WorldFeedback.emit(world, skyuppercutScene, 1, facts.position(),
+                                { moment: "hang", target: ref, scale: scale, intensity: intensity }, 20);
+                    });
+            }
 
             const above = origin.plus(WorldCombat.point(0, 1.2, 0));
             if (launched === 0) {

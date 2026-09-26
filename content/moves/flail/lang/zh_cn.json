@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.flail.summary": "朝身前一个扇面失控地乱打，血量越少甩出的下数越多、每下也越重；扇面里的敌人都会被扫到并被挤开。拼命式更狠，但每一下都要自损。",
+  "worldcombat.skill.flail.summary": "以当前瞄准为中线左右交替乱打，血量越少甩出的下数越多、每下也越重；扇面里的敌人都会被扫到并被挤开。可以选择方向或空挥，原目标死了也会继续乱甩。拼命式更狠，但每一下都要自损。",
   "worldcombat.skill.flail.use.0": "残血时一口气甩出一整串乱打",
   "worldcombat.skill.flail.use.1": "被贴身时把身前扇面里的人一起扫开",
   "worldcombat.skill.flail.use.2": "把追击者从脸上挤出去",
   "worldcombat.skill.flail.use.3": "在血线低到危险的局面里做最后一搏",
   "worldcombat.skill.flail.description.0": "朝身前扇形乱打：每下造成约 %1$s 点伤害，血量越低挥出的下数越多（当前约 %2$s 下）。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.flail.description.1": "扇面覆盖身前 %1$s 格、张开 %2$s 度，相邻两下间隔约 %3$s 秒。",
+  "worldcombat.skill.flail.description.1": "每记乱拳覆盖身前 %1$s 格、张开 %2$s 度，相邻两下间隔约 %3$s 秒；第一记偏瞄准左侧 35°、第二记偏右 35°，如此交替，不追着原目标转向。",
   "worldcombat.skill.flail.reckless.on": "当前拼命式：每下伤害 ×1.25、下数 ×1.35，但每一下（即使没命中）也要自损最大生命约 %1$s。",
   "worldcombat.skill.flail.reckless.off": "当前稳住式：不自损，下数与单发威力都较低。",
   "worldcombat.skill.flail.timing": "可对 %1$s 格内的目标施放；发动需准备 %2$s 秒并消耗 %4$s PP，随后收招 %3$s 秒，冷却 %5$s 秒（发动即开始计时）。",

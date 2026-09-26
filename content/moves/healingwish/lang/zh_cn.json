@@ -21,6 +21,8 @@
   "worldcombat.skill.healingwish.preference.broadcast.help": "开启广愿：半径 ×1.4、等待 ×0.85，但回复只有 ×0.7；关闭（专愿）：半径 ×0.85、等待 ×1.2，回复满额。两个方向各有局面。",
   "worldcombat.skill.healingwish.preference.ai.sacrificeBelow": "献身阈值",
   "worldcombat.skill.healingwish.preference.ai.sacrificeBelow.help": "自己生命低于该比例且附近有需要救助的伙伴时，伙计才愿意把命交出去；调低更倾向硬撑，调高则一残血就许愿。",
+  "worldcombat.skill.healingwish.preference.ai.allyBelow": "救助尺度",
+  "worldcombat.skill.healingwish.preference.ai.allyBelow.help": "伙伴生命低于该比例（或带着有害状态）时才算值得许愿的重要伤员；调低只为重伤伙伴献身，调高也愿为轻伤的伙伴留下愿望。",
   "worldcombat.skill.healingwish.preference.ai.reach": "许愿尺度",
   "worldcombat.skill.healingwish.preference.ai.reach.help": "伙伴离自己这个距离以内才值得为他许愿；调小只在贴身时献身，调大愿意为稍远的伙伴留下愿望。",
   "world_combat.move.healingwish.text.offer": "治愈之愿（等待约 %1$s 秒）",

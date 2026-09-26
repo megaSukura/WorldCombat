@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.horndrill.summary": "Crouch, spin the horn into a drill and bore out along a straight line: the first living thing in the path is run through and finished in one blow. It is the only member that moves: step off the line, or stand behind a wall, and the drill can only bury itself in the ground.",
-  "worldcombat.skill.horndrill.description.0": "Bore %1$s blocks along a straight line with a %2$s block drill radius; the first foe the drill touches is finished in one blow and the drill stops right there, passing straight through allies. The target's defence, armour and toughness do not apply - only type immunity stops it, and the drill also halts on an immune target.",
+  "worldcombat.skill.horndrill.description.0": "Drill %1$s blocks with a %2$s-block contact radius. Stop at the first enemy actually touched and attempt one execution hit. Native immunity and damage rules still apply.",
   "worldcombat.skill.horndrill.description.1": "There are %1$s s of spin-up between locking the path and the charge; every level the user has over the target shortens it and being out-levelled lengthens it, and the target must leave the line in that time.",
   "worldcombat.skill.horndrill.description.2": "Charge speed %1$s blocks/tick; a wall, the end of the run or a target contact stops the charge.",
   "worldcombat.skill.horndrill.wide.on": "Wide form: drill radius x1.35, but a shorter charge, slower spin-up and longer recovery - slower and easier to dodge, yet clipping the edge still catches.",
@@ -27,5 +27,6 @@
   "worldcombat.skill.horndrill.preference.ai.executionAbove": "Execution health floor",
   "worldcombat.skill.horndrill.preference.ai.executionAbove.help": "Below this health ratio the companion stops spending an instant kill on the target; higher keeps it for healthy foes only.",
   "world_combat.move.horndrill.text.kill": "Bored through",
-  "world_combat.move.horndrill.text.miss": "The drill bites air"
+  "world_combat.move.horndrill.text.miss": "The drill bites air",
+  "world_combat.move.horndrill.text.resisted": "The target withstood it"
 }

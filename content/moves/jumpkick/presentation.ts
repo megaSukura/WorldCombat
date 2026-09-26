@@ -5,11 +5,12 @@
  * 格斗系冲击、沿踢向把它踹出一圈尘；踢偏则是脚踝磕地、在落点砸出一圈土。
  * 色相家族：草木米白（0xF2F5E8）与嫩绿（0xA9CF7A）为家族色，命中冲击偏近白，落尘用中性 tinydust。
  * 拍子：起 windup（缩身）→ 跃 leap（浅弧爬升）→ 俯 dive（沿弧线压下）→ 击 impact ／ 失 crash。
- * 范围：dive 的 `bind:"path"` 沿锁定的落点铺出下降走廊，画的就是这一踢覆盖到的地方；impact 的地环按
- *   `data.hitRadius`（命中半径）铺开，站在圈里会被扫到。
- * 运动：leap 是自下而上的速度线，dive 是沿 `data.direction` 斜切而下的弧线，impact 是向外崩开的冲击环。
+ * 范围：leap 的 `bind:"path"` 沿提交时锁定的浅弧顶点画一条低平的黄色轨迹，和飞膝的高柱明显分开；dive 的
+ *   `bind:"path"` 沿锁定的落点铺出下降走廊，画的就是这一踢覆盖到的地方。
+ * 运动：leap 是沿 `data.direction` 的低平速度线，dive 是沿 `data.direction` 斜切而下的弧线，
+ *   impact 是横在腿部高度、向外扫开的水平环（不再有落地地环，地环只属于 crash）。
  * 数：`data.count`（踢劲派生）决定命中迸发量，`data.dust`（体重与物攻派生）决定扬尘密度，
- *   `data.intensity`（踢劲 / 100）抬高亮度，`data.scale`（命中半径 / 0.65）放大尘环。
+ *   `data.intensity`（踢劲 / 100）抬高亮度，`data.scale`（命中半径 / 0.65）放大尺寸。
  */
 const JumpkickDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -41,12 +42,20 @@ const JumpkickDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 12 },
             emitters: [
                 {
-                    name: "lift", bind: "source", height: 0.1, orient: "velocity",
+                    name: "lift", bind: "source", height: 0.35, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 30, shape: { kind: "box", size: [0.34, 0.3, 0.34] },
+                    rate: 30, shape: { kind: "box", size: [0.34, 0.2, 0.34] },
                     direction: "shape", speed: [0.03, 0.12], trail: { minDistance: 0.26 },
                     lifetime: [5, 9], size: [0.18, 0.05],
                     color: 0xF2F5E8, alpha: [0.7, 0], light: "full", maxParticles: 120
+                },
+                {
+                    name: "arc", bind: "path", offset: [0, 0.08, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    shape: { kind: "polyline" },
+                    rate: 26, speed: [0.02, 0.08], spread: 8,
+                    lifetime: [6, 11], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0xF2F5E8, alpha: [0.55, 0], light: "full", maxParticles: 80
                 },
                 {
                     name: "kickup", bind: "source", height: 0.0,
@@ -85,22 +94,22 @@ const JumpkickDefinition: ParticleDefinition = {
             exit: { stop: 13, drain: 18 },
             emitters: [
                 {
-                    name: "burst", bind: "target", height: 0.5,
+                    name: "sweep", bind: "target", height: 0.42,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
                     burst: { count: { data: "count", fallback: 20 }, at: 1 },
-                    shape: { kind: "sphere", radius: 0.32 },
-                    direction: "shape", speed: [0.07, 0.26], spread: 16,
+                    shape: { kind: "ring", radius: 0.34 },
+                    direction: "outward", speed: [0.08, 0.26], spread: 14,
                     lifetime: [7, 13], size: [0.34, 0.05], sizeMode: "index",
                     color: 0xF6F8EE, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 80
                 },
                 {
-                    name: "ground", bind: "target", offset: [0, 0.06, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 22 },
-                    shape: { kind: "ring", radius: { data: "hitRadius", fallback: 0.65 } },
-                    direction: "outward", speed: [0.07, 0.2], spread: 10,
-                    lifetime: [10, 16], size: [0.28, 0.07],
-                    color: 0xCDE0AC, alpha: [0.6, 0], light: "world"
+                    name: "streak", bind: "target", height: 0.42, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: { data: "count", fallback: 14 }, at: 1 },
+                    shape: { kind: "ring", radius: 0.3 },
+                    direction: "outward", speed: [0.1, 0.3], spread: 6,
+                    lifetime: [6, 10], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xA9CF7A, alpha: [0.7, 0], light: "full", maxParticles: 60
                 }
             ]
         },

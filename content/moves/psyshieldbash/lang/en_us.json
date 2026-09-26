@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.psyshieldbash.summary": "Weave a shell of psychic energy around your whole body and ram along your aim: the shell hardens your Defence the moment it forms (even on a miss), and a landed slam deals contact damage and knocks the target back; your aim can stray.",
+  "worldcombat.skill.psyshieldbash.summary": "Weave a shell of psychic energy around your whole body and ram in a chosen direction: the shell hardens your Defence the moment it forms (even on a miss or cast into empty space), and a landed slam deals contact damage and knocks the target back; your aim can stray.",
   "worldcombat.skill.psyshieldbash.use.0": "Ram with a shield and harden yourself at once",
-  "worldcombat.skill.psyshieldbash.use.1": "Raise your Defence before you take a hit",
+  "worldcombat.skill.psyshieldbash.use.1": "Raise your Defence before you take a hit (even into empty space)",
   "worldcombat.skill.psyshieldbash.use.2": "Shove a target back with a thick shell",
   "worldcombat.skill.psyshieldbash.description.0": "The slam deals about %1$s contact damage and shoves the target up to %2$s blocks along the charge; the shield has a %3$s block radius, and the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.psyshieldbash.description.1": "Charge up to %1$s blocks along your aim at %2$s blocks per tick, with up to %3$s degrees of stray; running into terrain or getting blocked stops the charge early.",

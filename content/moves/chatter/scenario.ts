@@ -12,6 +12,8 @@ Smoke.scenario("chatter", function (stage) {
     var caster = stage.pokemon({ species: "chatot", level: 40, moves: ["chatter"], at: [-2.5, 0, 0] });
     var foe = stage.mob({ type: "minecraft:zombie", at: [2.5, 0, 0] });
     stage.hostile(caster, foe);
+    // 僵尸冻在原地，确保连叫的每一声都落在同一片扇面里。
+    stage.noai(foe);
     stage.until(1400, function () {
         return stage.casts("chatter", caster) > 0 && stage.damageTo(foe) > 0;
     }, function () {

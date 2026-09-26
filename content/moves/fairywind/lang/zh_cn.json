@@ -3,7 +3,7 @@
   "worldcombat.skill.fairywind.use.0": "一条直线扫过并排站着的几个对手",
   "worldcombat.skill.fairywind.use.1": "把冲上来的目标甩离自己的正面",
   "worldcombat.skill.fairywind.use.2": "远距离先手，用风把对手推离掩体",
-  "worldcombat.skill.fairywind.description.0": "香风沿瞄准方向直飞，沿途每个被扫到的对手受到约 %1$s 点特殊伤害（对手防御、相性与暴击在命中时另算）；风最多再穿过 %2$s 个对手而不停下。",
+  "worldcombat.skill.fairywind.description.0": "香风沿选定方向或世界点直飞（可空放），沿途每个被扫到的对手受到约 %1$s 点特殊伤害（对手防御、相性与暴击在命中时另算）；风最多再穿过 %2$s 个对手而不停下。",
   "worldcombat.skill.fairywind.description.1": "射程 %1$s 格，风以 %2$s 格/刻走直线，风团半径 %3$s 格。",
   "worldcombat.skill.fairywind.description.2": "被扫到的对手会被甩向风的侧面 %1$s 格。",
   "worldcombat.skill.fairywind.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒。",

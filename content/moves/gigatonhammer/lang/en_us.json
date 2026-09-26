@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.gigatonhammer.summary": "Spin the whole body to wind up, then bring the huge hammer down on the ground ahead; the impact drives a shockwave forward along the ground and shoves everything in its path. Recovery is long and the hammer cannot be raised again for a while, though using another move lets it recover early. Sweep style carries the hammer around in a full circle at some cost to power and tempo.",
+  "worldcombat.skill.gigatonhammer.summary": "Spin the whole body to wind up, then bring the huge hammer down on the ground ahead; the slam hits the near ring once, then drives a ground shockwave forward in three ordered steps that shove everything in its path, each target taking only one of the slam or the wave. Recovery is long and the hammer cannot be raised again for a while, though using another move lets it recover early. Sweep style carries the hammer around in a full circle at some cost to power and tempo.",
   "worldcombat.skill.gigatonhammer.use.0": "Spin up and bring the huge hammer down",
   "worldcombat.skill.gigatonhammer.use.1": "Drive a ground shockwave to shove everything in its path",
   "worldcombat.skill.gigatonhammer.use.2": "Sweep a full circle when surrounded",
-  "worldcombat.skill.gigatonhammer.description.0": "The hammer lands %3$s blocks ahead, dealing about %1$s physical damage to the primary target; the impact drives a ground shockwave about %4$s blocks long, and every other foe it catches takes about %2$s physical damage. Both use Attack.",
+  "worldcombat.skill.gigatonhammer.description.0": "The hammer lands %3$s blocks ahead, dealing about %1$s physical damage to the near ring; the impact drives a ground shockwave about %4$s blocks long in three ordered steps, and every other foe it catches takes about %2$s physical damage. Both use Attack, and each target takes only one of the two.",
   "worldcombat.skill.gigatonhammer.description.1": "The shockwave has a %1$s-block half-width and pushes targets back %2$s blocks. Charge time: %3$s.",
+  "worldcombat.skill.gigatonhammer.description.wave": "The shockwave advances %1$s blocks per tick; the three ground ripples on screen move forward at that same pace.",
   "worldcombat.skill.gigatonhammer.description.2": "After the slam it cannot be used again for %1$s; using any other move lets the hammer recover early.",
   "worldcombat.skill.gigatonhammer.sweep.on": "Sweep style now: the body carries the hammer around a full circle, everything around it takes the hammer and the shockwave is longer; power is x0.75 with +6 tick recovery and +8 tick cooldown.",
   "worldcombat.skill.gigatonhammer.sweep.off": "Overhead style now: the hammer lands on a point ahead and the shockwave drives forward, full power on the primary target.",
@@ -16,6 +17,7 @@
   "worldcombat.skill.gigatonhammer.value.reach": "Slam point distance",
   "worldcombat.skill.gigatonhammer.value.shockLength": "Shockwave length",
   "worldcombat.skill.gigatonhammer.value.shockHalfWidth": "Shockwave half-width",
+  "worldcombat.skill.gigatonhammer.value.shockSpeed": "Shockwave advance speed",
   "worldcombat.skill.gigatonhammer.value.push": "Shove distance",
   "worldcombat.skill.gigatonhammer.value.dust": "Dust and shards",
   "worldcombat.skill.gigatonhammer.value.spin": "Spin-up",
@@ -31,5 +33,5 @@
   "worldcombat.skill.gigatonhammer.preference.ai.crowd": "Aim at clusters",
   "worldcombat.skill.gigatonhammer.preference.ai.crowd.help": "On (with sweep style): it swings more readily when other enemies stand near the target, since the circle catches them all; off ranks by the single-target payoff only.",
   "world_combat.move.gigatonhammer.text.slam": "Takes %1$s hammer damage, %2$s caught by the wave",
-  "world_combat.move.gigatonhammer.text.tired": "Hammer not yet raised"
+  "world_combat.move.gigatonhammer.text.tired": "Hammer not yet raised, %1$s s more or switch moves to recover"
 }

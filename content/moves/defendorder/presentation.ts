@@ -1,16 +1,16 @@
 /**
  * 防御指令 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者振翅，一队土黄色手下从身侧聚拢、贴住身体叠成一层会动的甲壳；甲壳维持着微微搏动，
- *   被清掉一只时那处炸开一小撮虫尘、甲壳随之薄一分，散场时虫群四散飞没。
+ * 一句话：施法者振翅，一队土黄色手下从身侧聚拢、贴住身体叠成一层会动的甲壳；每个真实手下在自己的绕身位置发一小点甲光，
+ *   甲壳维持着微微搏动，被打掉那一只的点当刻碎开、甲壳随之薄一分，散场时虫群四散飞没。
  *
  * 色相家族：蜜蜡琥珀（0xF2C14E 主体、0xB07A2E 暗部）＋暖白（0xFFF3C4）只出现在聚拢与崩落；与攻击指令、回复指令同一族——同一个虫群。
  * 层次：聚拢（起）／贴身的甲壳与光膜（击）／甲壳搏动（收）／散落与四散（末）。
  * 起击收：call（召唤）→ cling（贴身）→ shed（被清）／spent（散去）→ disperse（甲壳散尽）。
- * 范围：贴身的甲壳由一只只实体手下撑起，玩家数得清还剩几只；光膜半径按 `data.scale`（实际环列半径 / 1.1）推出。
- * 运动：手下由外向内聚拢贴住；维持时甲壳轻微搏动；被清掉时虫尘向下崩落；散场时向外四散。
- * 数：召唤的爆发数绑 `data.burst`（手下面数 × 10）、甲壳微粒量绑 `data.motes`（两防派生），甲壳薄厚由 `data.guards`（活着的手下数）决定。
- * 持续状态：维持期只留一层半透明光膜与稀疏虫尘，玩家仍看得清目标与自己。
+ * 范围：贴身的甲壳由一只只实体手下撑起，玩家数得清还剩几只；每个手下点的大小按 `data.size`（实际环列半径派生）。
+ * 运动：手下由外向内聚拢贴住；维持时每只手下各自轻微搏动；被清掉时虫尘向下崩落；散场时向外四散。
+ * 数：召唤的爆发数绑 `data.burst`（手下面数 × 10）、甲壳微粒量绑 `data.motes`（两防派生），每只手下的光点由这只自己发出。
+ * 持续状态：维持期只留稀疏虫尘与每只手下的小点甲光，玩家仍看得清目标与自己。
  */
 const DefendOrderDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -46,23 +46,23 @@ const DefendOrderDefinition: ParticleDefinition = {
             ]
         },
         cling: {
-            exit: { drain: 18 },
+            exit: { drain: 16 },
             emitters: [
                 {
-                    name: "cling_shell", bind: "source", fit: "none", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
-                    rate: 3, shape: { kind: "sphere", radius: 0.6 },
-                    direction: "inward", speed: [0.006, 0.02], spin: 8,
-                    lifetime: [12, 22], size: { data: "size", fallback: 0.16 },
-                    color: 0xF2C14E, alpha: [0.26, 0], light: "world", maxParticles: 14
+                    name: "cling_glint", bind: "source", fit: "none", height: 0.12,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: 3, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "outward", speed: [0.004, 0.016], spin: 6,
+                    lifetime: [10, 18], size: { data: "size", fallback: 0.12 },
+                    color: 0xFFF3C4, alpha: [0.5, 0], alphaMode: "sin", light: "world", maxParticles: 8
                 },
                 {
-                    name: "cling_mote", bind: "source", fit: "none", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 4, shape: { kind: "sphere", radius: 0.5 },
-                    direction: "outward", speed: [0.005, 0.02],
-                    lifetime: [12, 20], size: [0.05, 0.01],
-                    color: 0xFFF3C4, alpha: [0.3, 0], alphaMode: "sin", light: "world", maxParticles: 16
+                    name: "cling_shell", bind: "source", fit: "none", height: 0.08,
+                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
+                    rate: 3, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "inward", speed: [0.004, 0.012], spin: 6,
+                    lifetime: [10, 16], size: { data: "size", fallback: 0.14 },
+                    color: 0xF2C14E, alpha: [0.24, 0], light: "world", maxParticles: 6
                 }
             ]
         },

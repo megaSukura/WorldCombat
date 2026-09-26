@@ -8,10 +8,12 @@
  *   起（windup，提交前）：把夹齿撑开、对准落点的预告。
  *   埋（toss → armed）：提交后夹子飞向落点，落地撑开待命 `waitTicks`；布设延迟 `armTicks` 之后才咬人。
  *   咬（snap → chew）：第一个踏进触发半径的非友方被合上（`bite` 伤害 + 缠住 `holdTicks`），随后夹齿
- *       每 `interval` 磨一次（`chew`）；被带离 `escape` 格、目标倒下或时长走完就分开。
+ *       每 `interval` 磨一次（`chew`）；被带离 `escape` 格、被墙隔开、目标倒下或时长走完就分开。
  *
- * 夹子是持久效果（`world_combat:snaptrap_armed`），咬合是另一个持久效果（`world_combat:snaptrap_jaw`）；
- * 咬住的身份是共享的 `world_combat:status/partiallytrapped`（本单元的 `world_combat:snared_jaw`）。
+ * 判定与后续磨伤都以真实回执为准：先结算 `bite`，`hurt` 失败（免伤）就不建立后续磨伤；只有共享身份
+ * `partiallytrapped` 真正挂上（`CombatStatus.apply` 成功）才创建夹齿效果，原生拒束缚（守护、免控 Boss 等）
+ * 只保留许可的接触咬。夹子按落地本体实际距离保持或滑脱，咬合结束即收掉缠身。
+ *
  * 反制：绕开埋点、把被夹的目标推开、或提前把夹子引掉；施法者离得太远夹子也会失效。
  *
  * 配置 `wide`（广域式）由 resolve 改时序、由公式改触发与咬合：开启＝更容易踩到但更轻更短；关闭＝埋得更久更狠。
@@ -22,6 +24,7 @@ namespace PokemonSkills {
     const snaptrapJaw = "world_combat:snaptrap_jaw";
     const snaptrapSnared = "world_combat:snared_jaw";
     const snaptrapSnapText = "world_combat.move.snaptrap.text.snap";
+    const snaptrapBiteText = "world_combat.move.snaptrap.text.bite";
     const snaptrapFadeText = "world_combat.move.snaptrap.text.fade";
     const snaptrapSlipText = "world_combat.move.snaptrap.text.slip";
 
@@ -42,23 +45,38 @@ namespace PokemonSkills {
         ["interval", "chew", "escape", "jaws"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid snap trap jaw state");
         });
+        if (!MobEffects.validAnchor(value.carrier)) throw new Error("Invalid snap trap jaw anchor");
         return JSON.stringify(value);
     }
 
-    /** 合上：先咬一口，再把目标缠住并挂上夹齿的持续效果。直击与踩中走同一条路，返回是否咬实。 */
+    /** 合上：先咬一口，咬实且束缚真正落下才挂上夹齿的持续效果。直击与踩中走同一条路，返回是否咬实。 */
     function snaptrapApply(world: CombatWorld, victim: CombatActor, at: CombatPoint, data: any): boolean {
         const body = world.observe(victim);
         if (body === null) return false;
-        hurt(world, victim, "snaptrap", data.bite, { damage: damageSpec("snaptrap", "bite"), contact: true });
+        // 首次咬伤失败（免伤/挡下）就不建立后续磨伤。
+        if (!hurt(world, victim, "snaptrap", data.bite, { damage: damageSpec("snaptrap", "bite"), contact: true })) return false;
         if (!world.valid(victim)) return false;
+        const hold = Math.max(20, Math.round(data.hold));
+        // 束缚被原生拒绝（守护、免控 Boss 等）时只保留许可的接触咬，不假装夹住。
+        if (!CombatStatus.apply(world, victim, "partiallytrapped", snaptrapSnared, hold, 0)) {
+            WorldFeedback.emit(world, snaptrapScene, 1, body.position(),
+                { moment: "snap", target: String(victim.ref()), jaws: 0, intensity: Math.max(0.6, Math.min(2, data.bite / 30)) }, 26);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), snaptrapBiteText, [], 26);
+            world.sound("minecraft:block.iron_trapdoor.close", body.position(), 16, "{}");
+            return true;
+        }
+        const carrier = MobEffects.anchor(MobEffects.read(world, victim, snaptrapSnared)!);
         world.effects(victim, snaptrapJaw).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
         const id = world.effect(snaptrapJaw, victim, JSON.stringify({ point: [at.x(), at.y(), at.z()], interval: data.interval,
-            chew: data.chew, escape: data.escape, jaws: data.jaws, slipped: false, carrierLease: 0 }), Math.max(20, Math.round(data.hold)));
-        if (!world.effects(victim, snaptrapJaw).some(function (view) { return view.id() === id; })) return false;
+            chew: data.chew, escape: data.escape, jaws: data.jaws, slipped: false, carrier: carrier }), hold);
+        if (!world.effects(victim, snaptrapJaw).some(function (view) { return view.id() === id; })) {
+            MobEffects.consume(world, victim, snaptrapSnared);
+            return false;
+        }
         WorldFeedback.emit(world, snaptrapScene, 1, body.position(),
             { moment: "snap", target: String(victim.ref()), jaws: data.jaws, intensity: Math.max(0.6, Math.min(2, data.bite / 30)) }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), snaptrapSnapText,
-            [Math.round(data.hold / 20 * 10) / 10], 30);
+            [Math.round(hold / 20 * 10) / 10], 30);
         world.sound("minecraft:block.iron_trapdoor.close", body.position(), 16, "{}");
         return true;
     }
@@ -103,10 +121,7 @@ namespace PokemonSkills {
     WorldCombat.effect(snaptrapJaw, 1, 400, "actor", snaptrapJawData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(snaptrapJaw, "start", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
-        const status = MobEffects.apply(world, victim, snaptrapSnared, effect.remaining(), 0);
-        data.carrierLease = MobEffects.bind(world, victim, snaptrapSnared, status);
-        if (!data.carrierLease) { effect.end(); return; }
-        effect.state(JSON.stringify(data));
+        if (!MobEffects.matches(world, victim, data.carrier)) { effect.end(); return; }
         effect.schedule("chew", "chew", 1, "{}");
     });
     WorldCombat.effectHandler(snaptrapJaw, "operation:world_combat:dispel", effect => effect.end());
@@ -115,12 +130,14 @@ namespace PokemonSkills {
         if (!world.valid(victim)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
-        if (!MobEffects.present(world, data.carrierLease)) { effect.end(); return; }
+        // 束缚被清除或替换就不再磨；夹子按落地本体实际距离与通视保持或滑脱。
+        if (!MobEffects.matches(world, victim, data.carrier)) { effect.end(); return; }
+        const at = snaptrapPoint(data.point);
         const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
-        if (feet.minus(snaptrapPoint(data.point)).length() > data.escape) {
+        if (feet.minus(at).length() > data.escape || !world.clear(at, body.position())) {
             data.slipped = true; effect.state(JSON.stringify(data)); effect.end(); return;
         }
-        hurt(world, victim, "snaptrap", data.chew, { damage: damageSpec("snaptrap", "chew"), contact: true });
+        if (!hurt(world, victim, "snaptrap", data.chew, { damage: damageSpec("snaptrap", "chew"), contact: true })) { effect.end(); return; }
         if (!world.valid(victim)) { effect.end(); return; }
         WorldFeedback.emit(world, snaptrapScene, 1, body.position(),
             { moment: "chew", target: String(victim.ref()), jaws: data.jaws, chew: data.chew }, 20);
@@ -129,6 +146,10 @@ namespace PokemonSkills {
     });
     WorldCombat.effectHandler(snaptrapJaw, "end", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        if (world.valid(victim) && MobEffects.matches(world, victim, data.carrier)) {
+            // 滑脱/走完/被打断都收掉缠身，别让它拖到自然到期。
+            MobEffects.consume(world, victim, snaptrapSnared);
+        }
         if (world.valid(victim)) {
             const body = world.observe(victim);
             if (body !== null) {
@@ -171,7 +192,7 @@ namespace PokemonSkills {
     define({
         id: "snaptrap",
         name: "Snap Trap",
-        description: "把一只撑开的铁夹抛到选定的点上埋好，然后走开：哪个敌人先踩进来就被一口咬住钉在原地，夹齿持续磨到时长走完或被扯开。广域式更容易踩到但更轻更短；精准式埋得更久更狠。",
+        description: "把一只撑开的铁夹抛到选定的点上埋好，然后走开：哪个敌人先踩进来就被一口咬住钉在原地，夹齿持续磨到时长走完、被扯开、被墙隔开或被清除。先咬伤失败或束缚被拒时只保留接触咬，不持续磨伤。广域式更容易踩到但更轻更短；精准式埋得更久更狠。",
         uses: ["提前在敌人必经之路上埋夹", "封住一条通道的一角", "把冲过来的目标钉住等队友来收", "在打不过时先手限制对手"],
         kind: "point",
         range: 9,

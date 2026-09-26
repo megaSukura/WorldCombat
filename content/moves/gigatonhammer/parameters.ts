@@ -16,6 +16,7 @@
  *   reach     落锤点距离：身高（臂展）＋物攻；也是本招实际射程来源。
  *   shockLength 冲击波长度/横扫半径：体重＋物攻；横扫式更长。
  *   shockHalfWidth 冲击波走廊半宽：碰撞箱宽度。
+ *   shockSpeed 冲击波推进速度：速度；决定三段地纹按真实时刻前移的节奏。
  *   push      顶开距离：物攻＋体重。
  *   dust      碎屑数量：物攻，直接驱动粒子发射量。
  *   spin      旋身蓄力：速度（转得快）与体重（越重越难转起来）；横扫式更久。
@@ -81,6 +82,13 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "过顶式冲击波走廊的一侧宽度；身架越宽掀得越开。画面里的走廊宽度与它一致。"
             }),
+        /** 冲击波推进速度：基础 0.7 格/刻，速度每比 60 快 1 加 0.006（夹 -0.15..0.3）；夹 0.4..1.2。三段按它分时。 */
+        shockSpeed: formula(
+            F.base(0.7).plus(F.stat("speed").minus(60).times(0.006).clamp(-0.15, 0.3)).clamp(0.4, 1.2).round(2),
+            "冲击波推进速度", {
+                unit: "格/刻",
+                description: "冲击波每刻沿地面推进多远；身法越快冲得越急，三段地纹之间的间隔也越短。画面里那道前移的地纹与结算按同一速度走。"
+            }),
         /** 顶开距离：基础 0.9 格，物攻每比 75 多 1 加 0.008（夹 -0.2..0.5），体重每比 80 重 1 加 0.004（夹 -0.2..0.5）；夹 0.4..2.4。 */
         push: formula(
             F.base(0.9)
@@ -131,6 +139,7 @@ namespace PokemonSkills {
     describe(gigatonhammerId, [
         { key: "description.0", values: ["hammer","wave","reach","shockLength"] },
         { key: "description.1", values: ["shockHalfWidth", "push", "spin"] },
+        { key: "description.wave", values: ["shockSpeed"] },
         { key: "description.2", values: ["spent"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.flail.summary": "Flails wildly across a fan in front: the lower the user's HP, the more swings and the heavier each one, and everything caught in the fan is swept and shoved. Reckless style hits harder but wounds the user on every swing.",
+  "worldcombat.skill.flail.summary": "Flails left and right in turn around the current aim: the lower the user's HP, the more swings and the heavier each one, and everything caught in the fan is swept and shoved. It can be aimed at a direction or swung at nothing, and keeps swinging even after the original target dies. Reckless style hits harder but wounds the user on every swing.",
   "worldcombat.skill.flail.use.0": "Unload a whole flurry when badly hurt",
   "worldcombat.skill.flail.use.1": "Sweep everyone pressed into the fan in front",
   "worldcombat.skill.flail.use.2": "Shove a pursuer off your face",
   "worldcombat.skill.flail.use.3": "Make a last stand when the health bar is nearly gone",
   "worldcombat.skill.flail.description.0": "Flails across the fan in front: each swing deals about %1$s damage, and lower HP means more swings (about %2$s now). The target's Defence, type and crit are settled on the hit.",
-  "worldcombat.skill.flail.description.1": "The fan reaches %1$s blocks and opens %2$s degrees, with about %3$s s between swings.",
+  "worldcombat.skill.flail.description.1": "Each swing reaches %1$s blocks and opens %2$s degrees, with about %3$s s between swings; the first is offset 35° left of the aim, the second 35° right, alternating, and it never turns to follow the original target.",
   "worldcombat.skill.flail.reckless.on": "Reckless style on: each swing deals ×1.25 and you swing ×1.35 as often, but every swing - even a miss - costs about %1$s of your maximum health.",
   "worldcombat.skill.flail.reckless.off": "Steady style: no self-damage, but fewer swings at lower power.",
   "worldcombat.skill.flail.timing": "Cast on a target within %1$s blocks; casting takes %2$s s of wind-up and %4$s PP, then recovers for %3$s s with a %5$s s cooldown that starts on cast.",

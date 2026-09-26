@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.sweetscent.summary": "朝选定地点吐出一片会停留的甜云；云里的人被香气浸透，之后任何来源打在它身上的伤害都被放大——躲不掉也藏不住。",
+  "worldcombat.skill.sweetscent.summary": "铺一片甜云，沾香的敌人暂时降低闪避并显出轮廓；离云后移动会留下短暂香点，便于沿真实路线追踪。",
   "worldcombat.skill.sweetscent.use.0": "把一片区域变成易伤区",
   "worldcombat.skill.sweetscent.use.1": "配合队友集火一个被香气罩住的目标",
   "worldcombat.skill.sweetscent.use.2": "封住门口或通道",
-  "worldcombat.skill.sweetscent.description.0": "被浸透的目标获得 %1$s 级浸透，离开甜云后留香还挂 %2$s；每级让所有打在它身上的伤害放大 6%。",
+  "worldcombat.skill.sweetscent.description.0": "香气提供最多 %1$s 级临时闪避下降，离云后留香维持 %2$s。目标的能力政策和免疫仍参与，伤害数值保持原规则。",
   "worldcombat.skill.sweetscent.description.1": "甜云半径 %1$s，停留 %2$s，每次扫描最多让 %3$s 人留香。",
   "worldcombat.skill.sweetscent.description.2": "喷香距离 %1$s 格，起手 %2$s，冷却 %3$s。",
   "worldcombat.skill.sweetscent.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -26,5 +26,5 @@
   "world_combat.move.sweetscent.text.cloud": "香甜弥漫",
   "world_combat.move.sweetscent.text.scented": "被香气浸透（%1$s 级）",
   "effect.world_combat.sweet_scent": "香气浸透",
-  "worldcombat.skill.sweetscent.description.additional": "甜云只浸透视线可达的敌方目标，自身不造成伤害；被罩住的敌人会被反复续上留香，友方不受影响。"
+  "worldcombat.skill.sweetscent.description.additional": "甜云只浸透视线可达的敌人；留香期间留下短时位置香点。自身施加的发光随窗口清理，外部已有或后加的发光继续由原来源管理。"
 }

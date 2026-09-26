@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.powdersnow.summary": "Blow a wide, short fan of powdery snow at whatever is in front of you: every enemy in the fan takes a light Ice hit, is pushed back half a step, and may be frozen. It winds up fast and recharges quickly, so it can be blown again and again to stack freeze rolls.",
+  "worldcombat.skill.powdersnow.summary": "Blow a wide, short fan of powdery snow in the aim direction: every enemy in the fan not blocked by cover takes a light Ice hit, is pushed back half a step, and may be frozen. It winds up fast and recharges quickly, so it can be blown again and again to stack freeze rolls, and can be blown into open air.",
   "worldcombat.skill.powdersnow.use.0": "Catch several enemies packed in front of you",
   "worldcombat.skill.powdersnow.use.1": "Blow it again and again to keep rolling for freezes",
   "worldcombat.skill.powdersnow.use.2": "Push a body that has closed in back half a step",
-  "worldcombat.skill.powdersnow.description.0": "Takes the nearest enemies in the fan first, up to %2$s, each taking about %1$s special damage.",
+  "worldcombat.skill.powdersnow.description.0": "Takes the nearest enemies in the fan first, skipping those behind blocks, up to %2$s, each taking about %1$s special damage.",
   "worldcombat.skill.powdersnow.description.1": "Blow distance %1$s blocks, fan half angle %2$s degrees, and a struck target is pushed %3$s blocks away from the user.",
   "worldcombat.skill.powdersnow.description.2": "Each target caught in the fan has a %1$s chance to be frozen; while frozen it can neither use moves nor move, lasting about 8 s, and Fire-type damage thaws it early.",
   "worldcombat.skill.powdersnow.description.3": "Windup %1$s, recovery %2$s, cooldown %3$s.",

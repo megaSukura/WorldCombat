@@ -6,12 +6,15 @@
  *
  * 三幕：
  *   起（windup，提交前）：收拢翅膀、屈腿压低，只播预告。
- *   腾（execute 前半）：提交后垂直弹起到 altitude 高度；头顶被压住时自然只弹得起来多少算多少。
- *   冲（execute 后半 → impact / land）：从最高点沿一条穿过目标的斜线俯冲，逐刻推进并 trace；
- *       线上遇到的敌人依次结算 dive 接触伤害、各按 recoil 反伤自己、沿俯冲方向被带开 push 格；
+ *   腾（execute 前半）：提交后垂直弹起到 altitude 高度；头顶被压住时用原生空域探针沿实际能升到的高度起跳。
+ *   冲（execute 后半 → impact / land）：从最高点沿一条穿过所选落点的斜线俯冲，逐刻推进并 trace；
+ *       线上遇到的非友方依次结算 dive 接触伤害、各按 recoil 反伤自己、沿俯冲方向被带开 push 格；
  *       最多穿 pierceCount 个人（共享结算按每次命中分别反震）。落地或走完 swoop 即收势。
  *
- * 与同族分开：舍身冲撞是正面猛撞、撞完双方被弹开；波动冲裹水撞人；木槌用坚硬躯体砸地。
+ * 选取：kind 为 aim，可点选落点或只给方向空掠；落点只预告可达路线，实际受原生碰撞限制，不穿顶/墙。
+ * 终点反馈取落地一刻的真实身体位置，而不是最初的瞄准点。
+ *
+ * 与同族分开：舍身冲撞是正面猛撞、撞完贴住压身；波动冲裹水撞人；木槌用坚硬躯体垂直砸下。
  * 勇鸟猛攻是唯一从空中沿一条线穿过目标、并且能串起一串敌人的。
  * 配置 high（高掠式）由 resolve 改时序、由公式改高度/威力/反伤/路程，提交后才触碰世界。
  */
@@ -26,9 +29,9 @@ namespace PokemonSkills {
         id: "bravebird",
         cooldownParameter: "recharge",
         name: "Brave Bird",
-        description: "收翅弹起到低空，沿一条斜线俯冲穿过目标、落在它身后；线上遇到的敌人依次受击，每穿中一人各按比例反震自己。高掠式更重更远，低掠式更快更安全。",
+        description: "收翅弹起到低空，沿一条斜线俯冲穿过所选落点、落在它后方；线上遇到的敌人依次受击，每穿中一人各按比例反震自己。高掠式更重更远，低掠式更快更安全。",
         uses: ["从空中俯冲穿过一个目标", "沿一条线串起挤在一起的敌人", "越过前排直接打到后排"],
-        kind: "enemy",
+        kind: "aim",
         range: 5.4,
         maxRange: 9.6,
         prepare: 10,
@@ -66,7 +69,6 @@ namespace PokemonSkills {
             const pace = p("bravebird", "pace", action);
             const swoop = p("bravebird", "swoop", action);
             const radius = p("bravebird", "collisionRadius", action);
-            const traceAhead = p("bravebird", "traceAhead", action);
             const minimumMove = p("bravebird", "minimumMove", action);
             const power = p("bravebird", "dive", action);
             const recoil = p("bravebird", "recoil", action);
@@ -78,10 +80,10 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.4, power / 115));
             const stuck: { [ref: string]: boolean } = {};
             const target: CombatActor | null = action.target();
-            let struck = 0, settled = false, travelled = 0;
+            let struck = 0, settled = false, travelled = 0, climbedTo = 0;
             let direction = action.direction();
 
-            movementScenes.show(action, "climb", action.origin(), { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0 });
+            movementScenes.show(action, "climb", action.origin(), { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0, height: 0 });
             sound(action, "cobblemon:move.aerialace.actor_1");
             sound(action, "cobblemon:animation.plumage.wing_flap.medium");
 
@@ -91,7 +93,7 @@ namespace PokemonSkills {
                 const scope = current.world(), body = scope.observe(current.actor());
                 if (body !== null) {
                     WorldFeedback.emit(scope, bravebirdScene, 1, body.position(),
-                        { moment: "land", feathers: feathers, scale: scale, intensity: intensity, hits: struck }, 26);
+                        { moment: "land", feathers: feathers, scale: scale, intensity: intensity, hits: struck, height: climbedTo }, 26);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)),
                         struck > 0 ? bravebirdLandText : bravebirdWhiffText, struck > 0 ? [struck] : [], 26);
                 }
@@ -117,7 +119,7 @@ namespace PokemonSkills {
                                 intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 28);
                         sound(current, "cobblemon:move.aerialace.target");
                         if (landed && scope.valid(victim)) {
-                            scope.displace(victim, direction.scale(push));
+                            scope.hitDisplace(victim, direction.scale(push));
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), bravebirdHitText, [], 26);
                         }
                         struck++;
@@ -127,6 +129,7 @@ namespace PokemonSkills {
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= swoop) { finish(current); return; }
                 movementScenes.show(current, "dive", origin, { moment: "dive", feathers: feathers, scale: scale, intensity: intensity,
+                        direction: [direction.x(), direction.y(), direction.z()], height: climbedTo,
                         ratio: Math.min(1, travelled / Math.max(0.001, swoop)) });
                 current.after(1, function (next) { dive(next); });
             }
@@ -146,10 +149,18 @@ namespace PokemonSkills {
             function climb(current: CombatAction, climbed: number): void {
                 const scope = current.world(), self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
+                climbedTo = climbed;
                 if (climbed >= altitude - 0.05) { beginDive(current); return; }
                 const rise = Math.min(pace, altitude - climbed);
+                const from = self.position();
+                // 头顶被压住时用原生空域探针沿实际高度起跳，不做虚假升高。
+                if (LivingActions.hasFreeSpace(scope) && !LivingActions.freeSpace(scope,
+                    from.plus(WorldCombat.point(0, rise + 0.35, 0)), Math.max(0.5, self.width() * 0.8), Math.max(0.8, self.height() * 0.8))) {
+                    beginDive(current); return;
+                }
                 const moved = scope.displace(actor, WorldCombat.point(0, rise, 0));
                 if (moved < rise * 0.5) { beginDive(current); return; }   // 头顶被压住：弹不起来就从这里俯冲
+                movementScenes.show(current, "climb", from, { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0, height: climbed + moved });
                 current.after(1, function (next) { climb(next, climbed + moved); });
             }
 

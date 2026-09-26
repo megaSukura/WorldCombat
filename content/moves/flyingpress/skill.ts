@@ -2,16 +2,18 @@
  * 飞身重压 / flyingpress 的出手方式。
  *
  * 核心念头：先跃到目标头顶，再用整个身体的重量从上方压下来。它是「垂直轴」里唯一按自身体重结算、
- * 又能**打空中目标**的近身招：命中离地的对手时把它连同自己一起按到地面上，走地的对手挨一记重压并被撞开。
+ * 又能**打空中目标**的近身招：命中离地的对手时用原生受击冲量把它按向地面，走地的对手挨一记重压并被撞开。
  * 这招同时算格斗与飞行两种属性（双属性的乘积由 parameters.ts 的两个自定义事实接进共享结算）。
  *
  * 三幕（提交后由本招自己驱动）：
  *   起（windup，提交前）：蹲身蓄力、只观察与预告，可免费打断。
- *   跃（leap → rise）：提交后直上到目标上方，边升边把落点钉在目标的实时位置上。
- *   压（dive → press / glance）：沿一条斜线俯冲下压；途中撞到活体或落到目标附近就结算接触重压，
- *       离地的目标被一并按到地面、被撞开；施法者随后落回地面。
+ *   跃（leap → rise）：提交后直上到目标上方；跃起高度从自身当前中心算，受顶板真实截断，边升边把落点钉在目标的实时位置。
+ *   压（dive → press / glance）：到顶后只允许**一次**重新定向，随即锁死俯冲终点；沿一条斜线压下去。
+ *       只有身体真实撞到敌方活体才结算接触重压（首碰的那一个）；撞墙只擦落尘、压到落点只扬尘，都不会回头补打原目标。
  *
- * 对宝可梦、原版生物、其他模组生物和玩家，伤害（impact／hurt → PokemonDamage）与位移（world.displace）
+ * 自由瞄准：`kind: "aim"`——可点实体，也可点空中/地面落点；提交不要求存在敌人。空中一次校向后可被侧移躲开。
+ *
+ * 对宝可梦、原版生物、其他模组生物和玩家，伤害（impact → PokemonDamage）与位移（hitDisplace／hitImpulse）
  * 都走同一条路；只有属性相性/本系是宝可梦层。
  */
 namespace PokemonSkills {
@@ -32,13 +34,26 @@ namespace PokemonSkills {
         return feet;
     }
 
+    /** 头顶到最近顶板之间的真实净空（按方块判定，忽略自身碰撞箱）；顶板/方块把它截短，返回真实可升程。 */
+    function flyingpressRise(world: CombatWorld, body: CombatObservation, desired: number): number {
+        const centre = body.position(), head = centre.y() + body.height() * 0.5;
+        let clearance = desired + 1;
+        for (let step = 0; step <= Math.ceil((desired + 1) / 0.5); step++) {
+            const block = world.block(WorldCombat.point(centre.x(), head + step * 0.5, centre.z()));
+            if (block === null) { clearance = step * 0.5; break; }
+            const id = String(block.id());
+            if (id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air" && id !== "minecraft:water") { clearance = step * 0.5; break; }
+        }
+        return Math.max(1.0, Math.min(desired, clearance - 0.2));
+    }
+
     define({
         freeMovement: true,
         id: "flyingpress",
         name: "Flying Press",
-        description: "跃到目标头顶再用整个身体压下来：这招同时算格斗与飞行两种属性、按自身体重结算；命中离地的对手时把它连同自己一起按到地面，走地的对手挨一记重压并被撞开。",
+        description: "跃到目标头顶再用整个身体压下来：这招同时算格斗与飞行两种属性、按自身体重结算；命中离地的对手时用原生受击冲量把它按向地面，走地的对手挨一记重压并被撞开。可点实体，也可点空中/地面的落点。",
         uses: ["从上方砸向一个空中目标", "用体重压制一个近身的硬目标", "跳过一小段人群压到后排"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 8,
@@ -76,6 +91,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             if (body === null) { movementScenes.finish(action, done); return; }
             const target = action.target();
+            const aimPoint = action.targetPosition();
             const leapHeight = Math.max(1.5, p("flyingpress", "leapHeight", action));
             const leapSpeed = Math.max(0.2, p("flyingpress", "leapSpeed", action));
             const diveSpeed = Math.max(0.3, p("flyingpress", "diveSpeed", action));
@@ -83,32 +99,48 @@ namespace PokemonSkills {
             const power = p("flyingpress", "press", action);
             const push = Math.max(0, p("flyingpress", "push", action));
             const crush = Math.max(0, p("flyingpress", "crush", action));
-            const traceAhead = Math.max(1, p("flyingpress", "traceAhead", action));
-            const surface = flyingpressSurface(world, body);
-            const apexY = surface + leapHeight;
+            const reach = Math.max(1, p("flyingpress", "reach", action));
             const start = body.position();
-            const locked = target !== null && world.observe(target) !== null ? world.observe(target)!.position() : action.targetPosition();
-            const ascendTicks = Math.max(1, Math.ceil(leapHeight / leapSpeed));
+            const rise = flyingpressRise(world, body, leapHeight);
+            const apexY = start.y() + rise;
+            const ascendTicks = Math.max(1, Math.ceil(rise / leapSpeed));
             const scale = radius / 0.9;
-            let finished = false;
+            let finished = false, diveEnd: CombatPoint | null = null;
 
             function finish(current: CombatAction): void { if (!finished) { finished = true; movementScenes.finish(current, done); } }
-            function aimAt(live: CombatWorld): CombatPoint {
-                if (target !== null) { const live2 = live.observe(target); if (live2 !== null && live2.health() > 0) return live2.position(); }
-                return locked;
+            /** 结算是发生在真实受击者身上，并只加限幅的原生受击运动。 */
+            function knockdown(live: CombatWorld, victim: CombatActor, at: CombatPoint): void {
+                const facts = live.observe(victim);
+                if (facts === null) return;
+                const away = facts.position().minus(at);
+                if (away.length() > 0.2 && push > 0)
+                    live.hitDisplace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                if (crush > 0) live.hitImpulse(victim, WorldCombat.point(0, -crush, 0));
             }
-            /** 把目标按到地面并撞开；离地时连本带利压到地面上。 */
-            function knockdown(live: CombatWorld, at: CombatPoint): void {
-                if (target === null || !live.valid(target)) return;
-                const victim = live.observe(target);
-                if (victim === null) return;
-                const ground = flyingpressSurface(live, victim);
-                const landed = WorldCombat.point(victim.position().x(), ground + victim.height() * 0.5, victim.position().z());
-                let delta = WorldCombat.point(0, -crush, 0);
-                if (!victim.grounded()) delta = victim.position().minus(landed);
-                const away = victim.position().minus(at);
-                if (away.length() > 0.2) delta = delta.plus(WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
-                live.displace(target, delta);
+            /** 落地收束：压到实体才结算主伤与压制；撞墙只擦尘；压到落点只扬尘。都不回头补打原目标。 */
+            function landed(current: CombatAction, at: CombatPoint, hit: CombatImpact | null, victim: CombatActor | null, mode: string): void {
+                movementScenes.stop(current);
+                const live = current.world();
+                let applied = false;
+                if (mode === "press" && hit !== null && victim !== null && live.valid(victim) && !live.friendly(victim))
+                    applied = impact(current, hit, "flyingpress", power, { damage: damageSpec("flyingpress", "press"), contact: true });
+                if (applied && victim !== null && live.valid(victim)) {
+                    knockdown(live, victim, at);
+                    WorldFeedback.emit(live, flyingpressScene, 1, at,
+                        { moment: "press", target: String(victim.ref()), scale: scale,
+                            intensity: Math.max(0.6, Math.min(2.2, power / 100)), count: Math.round(18 + power * 0.35) }, 30);
+                    sound(current, "cobblemon:impact.fighting");
+                    sound(current, "minecraft:entity.player.attack.strong");
+                    WorldFeedback.text(live, at.plus(WorldCombat.point(0, 1.0, 0)), flyingpressHitText, [], 26);
+                } else if (mode === "glance") {
+                    WorldFeedback.emit(live, flyingpressScene, 1, at, { moment: "glance", scale: scale, face: hit !== null ? hit.blockFace() : "" }, 18);
+                    WorldFeedback.text(live, at.plus(WorldCombat.point(0, 1.0, 0)), flyingpressMissText, [], 22);
+                } else {
+                    WorldFeedback.emit(live, flyingpressScene, 1, at,
+                        { moment: "whiff", scale: scale, intensity: Math.max(0.5, Math.min(1.6, power / 120)) }, 18);
+                    WorldFeedback.text(live, at.plus(WorldCombat.point(0, 1.0, 0)), flyingpressMissText, [], 22);
+                }
+                ground(current, 0, function () { finish(current); });
             }
             function ground(current: CombatAction, guard: number, complete: () => void): void {
                 const live = current.world(), self = live.observe(actor);
@@ -122,55 +154,49 @@ namespace PokemonSkills {
                 WorldFeedback.emit(live, flyingpressScene, 1, self.position(), { moment: "land" }, 16);
                 complete();
             }
-            function press(current: CombatAction, at: CombatPoint, hit: CombatImpact | null): void {
-                movementScenes.stop(current);
+            /** 到顶后仅此一次重新定向：取当前目标位置或锁定瞄点，按 reach 预算截断后锁死。 */
+            function beginDive(current: CombatAction): void {
                 const live = current.world();
-                let landed = false;
-                if (target !== null && live.valid(target)) landed = hit !== null && hit.target() !== null
-                    ? impact(current, hit, "flyingpress", power, { damage: damageSpec("flyingpress", "press"), contact: true })
-                    : hurt(current, target, "flyingpress", power, { damage: damageSpec("flyingpress", "press"), contact: true });
-                if (target !== null && live.valid(target)) {
-                    knockdown(live, at);
-                    WorldFeedback.emit(live, flyingpressScene, 1, at,
-                        { moment: landed ? "press" : "glance", target: String(target.ref()), scale: scale,
-                            intensity: Math.max(0.6, Math.min(2.2, power / 100)), count: Math.round(18 + power * 0.35) }, 30);
-                    sound(current, "cobblemon:impact.fighting");
-                    sound(current, "minecraft:entity.player.attack.strong");
-                    WorldFeedback.text(live, at.plus(WorldCombat.point(0, 1.0, 0)), landed ? flyingpressHitText : flyingpressMissText, [], 26);
-                } else {
-                    WorldFeedback.emit(live, flyingpressScene, 1, at, { moment: "glance" }, 18);
-                    WorldFeedback.text(live, at.plus(WorldCombat.point(0, 1.0, 0)), flyingpressMissText, [], 22);
-                }
-                ground(current, 0, function () { finish(current); });
+                const t = target !== null ? live.observe(target) : null;
+                const at = t !== null && t.health() > 0 ? t.position() : aimPoint;
+                const flat = WorldCombat.point(at.x() - start.x(), 0, at.z() - start.z());
+                const distance = flat.length();
+                diveEnd = distance > reach
+                    ? WorldCombat.point(start.x() + flat.unit().scale(reach).x(), at.y(), start.z() + flat.unit().scale(reach).z())
+                    : at;
+                movementScenes.show(current, "mark", diveEnd,
+                    { moment: "mark", scale: scale, intensity: Math.max(0.5, Math.min(1.6, power / 100)) });
+                dive(current);
             }
             function dive(current: CombatAction): void {
                 movementScenes.stop(current, "leap");
                 const live = current.world(), self = live.observe(actor);
-                if (self === null) { finish(current); return; }
-                const at = aimAt(live), from = self.position(), toward = at.minus(from), remaining = toward.length();
-                if (remaining <= Math.max(0.4, radius)) { press(current, at, null); return; }
-                const direction = toward.unit(), step = Math.min(diveSpeed, remaining), delta = direction.scale(step);
+                if (self === null || diveEnd === null) { finish(current); return; }
+                const toward = diveEnd.minus(self.position()), remaining = toward.length();
+                if (remaining <= Math.max(0.4, radius)) { landed(current, diveEnd, null, null, "press"); return; }
+                const step = Math.min(diveSpeed, remaining), delta = toward.unit().scale(step);
                 const swept = sweepStep(current, delta, Math.max(0.35, radius * 0.7)), trace = swept.hit;
                 const victim = trace.target();
-                if (trace.hitEntity() && victim !== null && !current.sense().friendly(victim)) { press(current, trace.position(), trace); return; }
-                if (trace.blocked()) { press(current, current.origin(), null); return; }
+                if (trace.hitEntity() && victim !== null && !current.sense().friendly(victim)) { landed(current, trace.position(), trace, victim, "press"); return; }
+                if (trace.blocked()) { landed(current, trace.blockPosition() || current.origin(), trace, null, "glance"); return; }
                 const moved = swept.moved + (trace.hitEntity() && swept.remaining.length() > 0.001 ? live.displace(actor, swept.remaining) : 0);
-                if (moved < Math.min(0.05, step * 0.4)) { press(current, current.origin(), null); return; }
+                if (moved < Math.min(0.05, step * 0.4)) { landed(current, current.origin(), null, null, "whiff"); return; }
                 current.after(1, function (next: CombatAction) { dive(next); });
             }
-            function rise(current: CombatAction, step: number): void {
+            function ascend(current: CombatAction, step: number): void {
                 const live = current.world(), self = live.observe(actor);
                 if (self === null) { finish(current); return; }
-                if (step >= ascendTicks || self.position().y() >= apexY - 0.05) { dive(current); return; }
+                if (step >= ascendTicks || self.position().y() >= apexY - 0.05) { beginDive(current); return; }
                 const up = Math.min(leapSpeed, apexY - self.position().y());
                 const moved = live.displace(actor, WorldCombat.point(0, up, 0));
-                if (moved < up * 0.5) { dive(current); return; }
-                current.after(1, function (next: CombatAction) { rise(next, step + 1); });
+                if (moved < up * 0.5) { beginDive(current); return; }
+                current.after(1, function (next: CombatAction) { ascend(next, step + 1); });
             }
 
             sound(action, "cobblemon:move.aerialace.actor_1");
-            movementScenes.show(action, "leap", start, { moment: "leap", height: leapHeight, scale: scale, intensity: Math.max(0.7, Math.min(2, power / 100)) });
-            rise(action, 0);
+            movementScenes.show(action, "leap", start,
+                { moment: "leap", height: rise, scale: scale, intensity: Math.max(0.7, Math.min(2, power / 100)) });
+            ascend(action, 0);
         }
     });
 }

@@ -1,13 +1,14 @@
 /**
  * 妖精之风 / fairywind 的客户端表现。
  *
- * 一句话：施法者身侧卷起一柱粉色的香风，风打着旋沿瞄准方向扑出去、穿过一个又一个对手，每扫到一个人就在他身上
- *   炸开一圈粉色光尘并把他撩向一侧，风走到尽头散成一圈落地的香粉。
+ * 一句话：施法者身侧卷起一柱粉色的香风，风打着旋沿选定的方向或世界点扑出去、穿过一个又一个对手，每扫到一个人
+ *   就在他身上炸开一圈粉色光尘并沿实际侧甩方向拖出一条风羽，风走到尽头散成一圈落地的香粉。
  * 色相家族：玫粉与淡紫（风与香粉），细节层用近白高光；没有第二个色相。
  * 拍子：起 gather（香风打旋聚起 0–12t）→ 发 launch（风柱迸出 0–8t）→ 飞 flight（螺旋光尘随弹体，随弹体存续）
- *   → 击 hit（粉色冲击与光尘 0–22t）→ 散 dissipate（落地香尘环 0–22t）／空 miss。
+ *   → 击 hit（粉色冲击、光尘与侧向风羽 0–22t）→ 散 dissipate（落地香尘环 0–22t）／空 miss。
  * 范围：`data.scale`（风团判定 / 0.3）缩放风团与散开的香尘环，玩家一眼知道风有多宽。
- * 运动：风绑弹体沿直线走，命中后不停、继续穿；每个命中点由服务端触发一圈向外翻的粉色光尘。
+ * 运动：风绑弹体沿直线走，命中后不停、继续穿；每个命中点由服务端触发一圈向外翻的粉色光尘，风羽按 `data.direction`
+ *   指向实际推开的侧向。空放时沿提交方向直飞，风尽处只留一圈空尘。
  * 数：`data.motes`（特攻换算的香粉量）绑定飞行与散开的光尘数量，`data.hits` 叠加强调，`data.intensity`（威力 / 38）放大整幕。
  */
 const FairywindDefinition: ParticleDefinition = {
@@ -101,6 +102,17 @@ const FairywindDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.07, 0.3], spread: 34, spin: 12, drag: 0.9,
                     lifetime: [7, 14], size: [0.16, 0.05], sizeMode: "linear",
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 48
+                },
+                {
+                    // 侧向风羽：沿服务端实际结算的侧甩方向拖出一条风线；推不动时 fling 为 0，风羽也随之收短。
+                    name: "gustwake", bind: "point", fit: "world", offset: [0, 0.6, 0],
+                    orient: "direction", direction: "shape",
+                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "line", length: 0.6 },
+                    speed: [0.02, 0.06], spin: 12,
+                    lifetime: [6, 11], size: [0.2, 0.07], sizeMode: "linear",
+                    color: 0xF0A8D0, alpha: [0.7, 0], light: "full", maxParticles: 20
                 }
             ]
         },

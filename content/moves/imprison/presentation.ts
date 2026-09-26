@@ -81,7 +81,7 @@ const ImprisonDefinition: ParticleDefinition = {
             exit: { drain: 40 },
             emitters: [
                 {
-                    name: "hold_ring", bind: "point", fit: "none", height: 0.02,
+                    name: "hold_ring", bind: "source", fit: "none", height: 0.02,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     rate: 4, shape: { kind: "ring", radius: { data: "radius", fallback: 6 } },
                     direction: "inward", speed: [0.01, 0.04],
@@ -89,7 +89,7 @@ const ImprisonDefinition: ParticleDefinition = {
                     color: 0x6C7BFF, alpha: [0.3, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "hold_runes", bind: "point", fit: "none", height: 1.2,
+                    name: "hold_runes", bind: "source", fit: "none", height: 1.2,
                     particle: "world_combat_core:cobblemon/generic/sparkle/sparkle",
                     rate: { data: "shared", fallback: 4 }, shape: { kind: "ring", radius: 0.5 },
                     direction: "down", speed: [0.01, 0.05],
@@ -127,7 +127,7 @@ const ImprisonDefinition: ParticleDefinition = {
                 {
                     name: "reject_burst", bind: "target", height: 0.75,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_psychic",
-                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.35 },
+                    burst: { count: { data: "count", fallback: 3 } }, shape: { kind: "sphere", radius: 0.35 },
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [6, 11], size: [0.24, 0.03], sizeMode: "index",
                     color: 0x9AA6FF, alpha: [0.9, 0], light: "full", maxParticles: 30

@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.burningjealousy.summary": "Breathes fire in a forward fan. Stat boosts and potion/beacon buffs increase the hit and cause a burn.",
+  "worldcombat.skill.burningjealousy.summary": "Breathes fire in a fan in a chosen direction. An empowered target burns heavier and catches fire, while an ordinary target only takes the base fire. It can be spat at open ground, and blocks are never set alight.",
   "worldcombat.skill.burningjealousy.use.0": "Punish an opponent that just powered up",
   "worldcombat.skill.burningjealousy.use.1": "Sweep a line of enemies standing in front of the user",
   "worldcombat.skill.burningjealousy.use.2": "Suppress a set-up sweeper with burn",
+  "worldcombat.skill.burningjealousy.use.3": "Spit at the ground to herd movement or set up an ally",
   "worldcombat.skill.burningjealousy.description.0": "The fire fan has a %2$s-block radius and %3$s-degree spread, hitting up to %4$s enemies once each for about %1$s special damage.",
   "worldcombat.skill.burningjealousy.description.1": "Each empowerment level adds %1$s times the base power, capped at an extra %2$s. Positive stages in the five combat stats and potion/beacon buffs count; level I counts once.",
   "worldcombat.skill.burningjealousy.description.2": "An empowered target is burned for %1$s plus %2$s per level. Burn weakens physical attacks and removes about 1/16 of maximum health, at least one health point, every five seconds.",

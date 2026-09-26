@@ -17,8 +17,8 @@
  *   fissureRadius   波及半径 4.6 格 + 碰撞箱宽度偏移 + 等级偏移（个子宽、等级高掀得更开）。
  *   launch          上抛初速 0.42 格/刻 + 物攻偏移 + 体重偏移（力量大、身体沉的人把人掀得更高）。
  *   shove           向外推开 0.35 格 + 物攻偏移。
- *   rentTicks       裂缝停留 160 刻 + 等级。
- *   rentCells       裂缝块数 24 + 物攻 ×0.3（同时驱动画面密度）。
+ *   rentTicks       裂缝停留 160 刻 + 等级（只驱动画面，不改变地面方块）。
+ *   rentCells       裂纹密度 24 + 物攻 ×0.3（同时驱动画面密度）。
  *   aftershockDelay 余震延迟 9 刻 − 速度偏移（脚步快的人补震得急）。
  *
  * 配置 `aftershock`（余震式）：开启＝主震 ×0.86、起手 +4 刻、冷却 +10 刻，但主震后约 `aftershockDelay`
@@ -69,16 +69,16 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "被掀中的人沿离中心的方向被推开的水平距离；力量越大推得越远。"
             }),
-        /** 裂缝停留：160 + 等级 ×1.2；夹 100..300。 */
+        /** 裂缝停留：160 + 等级 ×1.2；夹 100..300。只驱动画面。 */
         rentTicks: seconds(
             F.base(160).plus(F.level().times(1.2)).clamp(100, 300).round(0),
-            "裂缝停留", "地面被掀开后留在地上的深缝停留多久；到期原方块回来。"),
-        /** 裂缝块数：24 + 物攻 ×0.3；夹 20..72。同时驱动画面密度。 */
+            "裂缝停留", "地面被掀开后扬起的放射状裂纹停留多久；只驱动画面，不改变地面方块。"),
+        /** 裂纹密度：24 + 物攻 ×0.3；夹 20..72。同时驱动画面密度。 */
         rentCells: formula(
             F.base(24).plus(F.stat("attack").times(0.3)).clamp(20, 72).round(0),
-            "裂缝块数", {
+            "裂纹密度", {
                 unit: "块",
-                description: "地面被掀开的裂缝块数；随物攻增长，也决定画面的密度。"
+                description: "沿掀起范围显示的放射状裂纹与碎屑密度；随物攻增长，也决定画面的密集程度。"
             }),
         /** 余震延迟：9 − 速度偏移[−2,3]；夹 5..14。 */
         aftershockDelay: seconds(
@@ -96,7 +96,7 @@ namespace PokemonSkills {
     describe("earthquake", [
         { key: "description.0", values: ["tremor","maxTargets"] },
         { key: "description.1", values: ["fissureRadius", "launch", "shove"] },
-        { key: "description.2", values: ["rentTicks","rentCells"] },
+        { key: "description.2", values: [] },
         { key: "aftershock.on", values: ["aftershockDelay"], when: function (context) { return read(context.detail.values, ["aftershock"]) === true; } },
         { key: "aftershock.off", values: [], when: function (context) { return read(context.detail.values, ["aftershock"]) !== true; } },
         { key: "timing", values: ["prepare","recover","pp","cooldown"] },

@@ -3,17 +3,18 @@
  *
  * 原生事实：Fire／特殊／威力 90／命中 100／PP 15／10% 灼伤（Cobblemon 1.8 / Showdown），198 位学习者。
  *
- * 翻译：把「向对手发射烈焰」落成一道**持续向前喷出的火舌**——从身前喷出，火舌逐刻向远处伸长，
- * 沿一条走廊燎过；站在里面的人各挨一记并被点燃，火舌扫完才收。它和同族最不同的地方是「持续」：
- * 火花是一粒点，大字爆炎是一幅字，神圣之火是一次俯冲；喷射火焰是一道会自己变长的墙。
+ * 翻译：把「向对手发射烈焰」落成一道**按住喷口持续横扫的火舌**——从身前喷出，火舌按 `front` 逐刻向前
+ * 伸长、到 `reach` 后保持；喷窗约 1 秒（20 刻），被分成 4 次接触脉冲，每 5 刻在真实火锥里才吃一份。
+ * 站在火里多久就烧多久：快速穿过只吃一两份，持续压住才吃满四份。松手或被打断当刻收火，墙挡住火线。
  *
  * 数据分散（每项读不同的精灵数据）：
- *   jet        火舌威力：特攻定火多旺，等级给成长；扇面式摊薄。
+ *   jet        整窗总威力：特攻定火多旺、等级给成长；扇面式摊薄；整次每目标最多四份，每份为总威力的 1/4。
  *   front      火舌推进速度：速度决定火舌铺得多急。
  *   reach      火舌长度：特攻与体型高度决定能喷多远；扇面式收短。
+ *   spray      喷窗时长：速度决定窗口多长（约 20 刻），4 次脉冲均分。
  *   halfWidth  集束式火舌宽度：体型高度决定。
  *   angle      扇面式张角：特攻决定扇面开多大。
- *   burnChance 点燃概率：原生 10% 起，特攻与扇面式提高。
+ *   burnChance 整窗灼伤概率：原生 10% 起，特攻与扇面式提高；折算到每份，四份全中才等于这个值。
  *   density    火量：特攻与等级派生，表现按它发射。
  *   tempo/aftercast/recharge：速度决定蓄气与冷却。
  *
@@ -24,22 +25,22 @@
  */
 namespace PokemonSkills {
     actionParameters.define("flamethrower", {
-        /** 火舌威力：78 + 特攻偏移[−14,40] + 等级(≥30)偏移[0,12]；扇面 ×0.82；夹 52..170。 */
+        /** 整窗总威力：78 + 特攻偏移[−14,40] + 等级(≥30)偏移[0,12]；扇面 ×0.82；夹 52..170。 */
         jet: formula(
             F.base(78).plus(F.stat("specialAttack").minus(50).times(0.35).clamp(-14, 40))
                 .plus(F.level().minus(30).times(0.4).clamp(0, 12))
                 .times(F.when(F.pref("wide", text("worldcombat.skill.flamethrower.preference.wide")), F.const(0.82), F.const(1)))
                 .clamp(52, 170).round(1),
-            "火舌威力", {
+            "整窗总威力", {
                 unit: "威力",
-                description: "火舌燎到每个目标时各结算一次的威力；特攻越高烧得越狠、等级越高越经烧，扇面式把力摊薄。对手特防、相性与暴击在命中时另算。"
+                description: "整段喷窗在同一个目标身上最多能烧出的总威力，均分成 4 份接触脉冲；在火里待满四份才等于这个数，快速穿过只吃一两份。特攻越高烧得越狠、等级越高越经烧，扇面式把力摊薄。对手特防、相性与暴击在命中时另算。"
             }),
         /** 推进速度：0.55 + 速度偏移[−0.1,0.35]；夹 0.4..1.1。 */
         front: formula(
             F.base(0.55).plus(F.stat("speed").minus(55).times(0.006).clamp(-0.1, 0.35)).clamp(0.4, 1.1).round(2),
             "推进速度", {
                 unit: "格/刻",
-                description: "火舌每刻向远处推进多少；速度快的个体铺得更急，目标更难在火到之前走开。"
+                description: "火舌每刻向远处推进多少；速度快的个体铺得更急，目标更难在火到之前走开。喷到全长后保持喷口。"
             }),
         /** 火舌长度：10 + 特攻偏移[−1.5,2.5] + 高度偏移[−0.5,1.2]；扇面 ×0.78；夹 6..15。 */
         reach: formula(
@@ -51,6 +52,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "火舌最长能喷到多远；特攻高、体型大的个体喷得更远，扇面式收得短一些。它也是本招的实际射程。"
             }),
+        /** 喷窗时长：20 − 速度偏移[−2,4]；夹 16..24。 */
+        spray: seconds(
+            F.base(20).minus(F.stat("speed").minus(55).times(0.02).clamp(-1, 2)).clamp(16, 24).round(0),
+            "喷窗", "一次喷火从起喷到收口的总时长，约 1 秒（20 刻）；里面均分 4 次接触脉冲，按住可续喷、松手即收。速度快的个体收得更早。"),
         /** 集束宽度：0.7 + 高度偏移[−0.1,0.4]；夹 0.55..1.1。 */
         halfWidth: formula(
             F.base(0.7).plus(F.body("height").minus(1.4).times(0.15).clamp(-0.1, 0.4)).clamp(0.55, 1.1).round(2),
@@ -65,12 +70,12 @@ namespace PokemonSkills {
                 unit: "度",
                 description: "扇面式火焰在身前张开的整角；特攻越高扇面越开。集束式不用它。"
             }),
-        /** 点燃概率：0.10 + 特攻偏移[−0.03,0.09] + 扇面 0.05；夹 0.06..0.28。 */
+        /** 整窗灼伤概率：0.10 + 特攻偏移[−0.03,0.09] + 扇面 0.05；夹 0.06..0.28。 */
         burnChance: percent(
             F.base(0.10).plus(F.stat("specialAttack").minus(50).times(0.0015).clamp(-0.03, 0.09))
                 .plus(F.when(F.pref("wide", text("worldcombat.skill.flamethrower.preference.wide")), F.const(0.05), F.const(0)))
                 .clamp(0.06, 0.28).round(3),
-            "点燃概率", "被火舌燎到的目标陷入灼伤的概率；特攻越高、扇面式越容易点着。"),
+            "整窗灼伤概率", "整段喷窗内被火舌点燃的概率；四份接触脉冲每份按等价折算掷一次，全中时的合计就是这个值，不会四倍。特攻越高、扇面式越容易点着。"),
         /** 火量：60 + 特攻偏移[−12,60] + 等级(≥30)偏移[0,30]；夹 40..150。 */
         density: formula(
             F.base(60).plus(F.stat("specialAttack").minus(50).times(0.6).clamp(-12, 60))
@@ -107,6 +112,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["jet","reach","front"] },
         { key: "description.1", values: ["burnChance"] },
         { key: "description.limit", values: ["maxTargets"] },
+        { key: "description.sustain", values: ["spray"] },
         { key: "description.stand", values: [] },
         { key: "wide.on", values: ["angle"], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: ["halfWidth"], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },

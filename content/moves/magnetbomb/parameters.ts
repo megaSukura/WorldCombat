@@ -94,6 +94,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["blast","bombs"] },
         { key: "description.1", values: ["fuse","radius"] },
         { key: "description.2", values: ["pull","reach","bombSpeed"] },
+        { key: "description.aim", values: [] },
         { key: "cluster.on", values: [], when: function (context) { return read(context.detail.values, ["cluster"]) === true; } },
         { key: "cluster.off", values: [], when: function (context) { return read(context.detail.values, ["cluster"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

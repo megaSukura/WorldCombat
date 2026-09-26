@@ -5,11 +5,13 @@
  * 离地的目标在撞击处再被向下砸进地面。
  * 色相家族：草绿与暖黄绿（leaf／smallleaf／impact_grass／glowingsparkle_yellow 原色）＋中性尘（tinydust）。
  * 拍子：起（windup 聚叶）→ 击（release 落点、fall 下坠、impact 砸实）→ 收（slam 砸回地面 / miss 落地）。
- * 范围：`mark` 用目标脚下的 `ring` 画出苹果实际判定的那一小圈（半径＝`data.radius`），再用 `line` 画出
- *   `data.height` 格高的下坠竖井；玩家一眼看出苹果会落在哪、从多高落下。
+ * 范围：`mark` / `mark_target` 用 `ring` 画出这记苹果的落点圈（半径＝`data.radius`），`line` 画出
+ *   `data.height` 格高的下坠竖井；实体目标用 `mark_target` 把圈与竖井绑在目标身上，跟它的真实投影一起移动；
+ *   点选落点用 `mark` 钉在地面投影上。顶棚低时 `height` 变短，竖井也随之缩短。
  * 运动：聚叶向内收，苹果沿竖井垂直加速下坠，命中向四周炸开、落叶带重力飘散，砸回地面时尘环贴地外扩。
- * 数：`data.crush`（实际降防级数）绑定撞击与砸地的草叶数，`data.height`（释放高度）绑定竖井长度与落点脉动，
- *   `data.intensity`（威力 / 78）放大整幕；`data.airborne` 让撞击在离地时更亮。
+ * 数：`data.crush`（实际降防级数）绑定撞击与砸地的草叶数，`data.height`（实际释放高度）绑定竖井长度与落点脉动，
+ *   `data.speed`（下坠初速 / 0.42）绑定下坠尘叶的发射量，`data.intensity`（威力 / 78）放大整幕；
+ *   `data.airborne` 让撞击在离地时更亮。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const GravappleDefinition: ParticleDefinition = {
@@ -68,7 +70,31 @@ const GravappleDefinition: ParticleDefinition = {
                 {
                     name: "drop_shaft", bind: "point", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 14, shape: { kind: "line", length: { data: "height", fallback: 8 } },
+                    rate: { data: "speed", fallback: 14 }, shape: { kind: "line", length: { data: "height", fallback: 8 } },
+                    direction: "down", speed: [0.08, 0.18],
+                    gravity: 0.03, drag: 0.98,
+                    lifetime: [10, 18], size: [0.07, 0.02],
+                    color: 0xA8C878, alpha: [0.35, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        mark_target: {
+            duration: 0,
+            exit: { stop: 0, drain: 16 },
+            emitters: [
+                {
+                    name: "drop_ring", bind: "target", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1, at: 0, repeats: 4, interval: 10 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 0.45 } },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [12, 18], size: [0.35, 0.1], sizeMode: "sin",
+                    color: 0x9AB55A, alpha: [0.4, 0], light: "world", maxParticles: 4
+                },
+                {
+                    name: "drop_shaft", bind: "target", offset: [0, 0, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    rate: { data: "speed", fallback: 14 }, shape: { kind: "line", length: { data: "height", fallback: 8 } },
                     direction: "down", speed: [0.08, 0.18],
                     gravity: 0.03, drag: 0.98,
                     lifetime: [10, 18], size: [0.07, 0.02],
@@ -83,16 +109,18 @@ const GravappleDefinition: ParticleDefinition = {
                 {
                     name: "fall_glow", bind: "projectile", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 30, shape: { kind: "sphere", radius: 0.18 },
+                    rate: { data: "speed", fallback: 30 }, shape: { kind: "sphere", radius: 0.18 },
                     direction: "outward", speed: [0.01, 0.05],
+                    gravity: 0.03, drag: 0.99,
                     lifetime: [6, 11], size: [0.09, 0.02],
                     color: 0xE8E8B0, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 40
                 },
                 {
                     name: "fall_leaf", bind: "projectile", offset: [0, 0, 0], trail: { minDistance: 0.3 },
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 26, shape: { kind: "sphere", radius: 0.16 },
+                    rate: { data: "speed", fallback: 26 }, shape: { kind: "sphere", radius: 0.16 },
                     direction: "outward", speed: [0.02, 0.08],
+                    gravity: 0.04, drag: 0.98,
                     lifetime: [8, 14], size: [0.08, 0.02],
                     color: 0x8FB55A, alpha: [0.6, 0], light: "world", maxParticles: 60
                 }

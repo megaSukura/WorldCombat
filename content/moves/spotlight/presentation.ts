@@ -1,12 +1,14 @@
 /**
  * 聚光灯 / Spotlight 的客户端表现。
  *
- * 一句话：掌心聚起一束光（windup）→ 光柱从施法者直射对手、在他身上炸开成一圈刺目光晕（beam）→
- *   被照亮的对手持续亮着、光点绕身上升（lit）→ 每次有人打中他，光晕猛地一闪（flare）→ 照明走完，光点升散（fade）。
- * 色相家族：暖白金 0xFFF0A8 作主体，亮白 0xFFFDF0 作高光，只在 beam 强调层留一点青白 0xCFF4FF。
- * 范围：beam 用 `data.path`（施法者 ↔ 目标）画 polyline，光从谁照到谁一眼可见；扫过范围随 `data.scale`。
- * 运动：光沿两人连线直射、命中时向外炸、持续光点绕身慢升。
- * 数：光点数 `data.motes`、曝光规模 `data.burst`、暴露比例 `data.bonus` 来自本招算出的机制值。
+ * 一句话：掌心聚起一束光（windup）→ 光柱从施法者直射目标、在它身上炸开成一圈刺目光晕（beam）→
+ *   被照亮者头顶悬着一盏可辨的聚光灯、光点绕身上升（lit）→ 真被转向的生物向它牵出一条短连线（link）→
+ *   每次有人打中它，光晕在真实受击点猛地一闪（flare）→ 照明走完，光点升散（fade）。
+ * 色相家族：暖白金 0xFFF0A8 作主体，亮白 0xFFFDF0 作高光，青白 0xCFF4FF 只画「谁被转向了」的短连线。
+ * 范围：beam 与 link 都用 `data.path` 画 polyline，光从谁照到谁、谁转向了谁一眼可见；扫过范围随 `data.scale`。
+ * 运动：光沿两人连线直射、命中时向外炸、持续光点绕身慢升、link 沿线轻轻流向被照者。
+ * 数：光点数 `data.motes`、被转向者数 `data.lured`、曝光规模 `data.burst`、暴露比例 `data.bonus`
+ *   都来自本招算出的机制值；flare 落在服务端给的真实受击点 `data.point`。
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  */
 const SpotlightDefinition: ParticleDefinition = {
@@ -68,20 +70,49 @@ const SpotlightDefinition: ParticleDefinition = {
                     rate: 6, shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.004, 0.02],
                     lifetime: [14, 24], size: [0.4, 0.72], sizeMode: "sin",
-                    color: 0xFFFDF0, alpha: [0.35, 0], light: "full", maxParticles: 14 }
+                    color: 0xFFFDF0, alpha: [0.35, 0], light: "full", maxParticles: 14 },
+                { name: "beacon", bind: "target", offset: [0, 1.15, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 8, shape: { kind: "ring", radius: 0.3 },
+                    direction: "outward", speed: [0.006, 0.024], spin: 10,
+                    lifetime: [16, 26], size: [0.22, 0.44], sizeMode: "sin",
+                    color: 0xFFFDF0, alpha: [0.5, 0], light: "full", maxParticles: 18 },
+                { name: "descend", bind: "target", offset: [0, 1.05, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: 10, shape: { kind: "point" },
+                    direction: "down", speed: [0.02, 0.06],
+                    lifetime: [10, 18], size: [0.09, 0.02],
+                    color: 0xFFF0A8, alpha: [0.7, 0], light: "full", maxParticles: 24 }
+            ]
+        },
+        link: {
+            exit: { drain: 20 },
+            emitters: [
+                { name: "tie", bind: "path", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/lightbeam",
+                    shape: { kind: "polyline" },
+                    rate: { data: "lured", fallback: 1 }, direction: "shape", speed: [0.01, 0.04],
+                    lifetime: [6, 11], size: [0.07, 0.02],
+                    color: 0xCFF4FF, alpha: [0.55, 0], light: "full", maxParticles: 40 },
+                { name: "tie_mote", bind: "path", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    shape: { kind: "polyline" },
+                    rate: 8, direction: "shape", speed: [0.01, 0.05],
+                    lifetime: [5, 9], size: [0.05, 0.015],
+                    color: 0xCFF4FF, alpha: [0.45, 0], light: "full", maxParticles: 30 }
             ]
         },
         flare: {
             duration: 18,
             exit: { stop: 8, drain: 12 },
             emitters: [
-                { name: "pop", bind: "target", height: 0.5,
+                { name: "pop", bind: "point", height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
                     burst: { count: { data: "burst", fallback: 24 } }, shape: { kind: "sphere_surface", radius: 0.5 },
                     direction: "outward", speed: [0.08, 0.24], drag: 0.9,
                     lifetime: [8, 15], size: [0.18, 0.04],
                     color: 0xFFFDF0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 50 },
-                { name: "pop_ring", bind: "target", offset: [0, 0.1, 0], height: 0,
+                { name: "pop_ring", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 2 }, shape: { kind: "ring", radius: 0.4 },
                     direction: "outward", speed: [0.04, 0.1],

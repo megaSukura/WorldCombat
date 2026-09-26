@@ -1,34 +1,34 @@
 /**
  * 舍身冲撞 / doubleedge 的出手方式。
  *
- * 核心念头：一次最朴素的全身正面猛冲——压低身体沿瞄准方向直线撞出去，撞实的一刻两个人的惯性都还没散：
- * 目标被顶飞、自己也顺着反震滑开。它是这一族里最直白的一招，也是唯一“撞完双方都被弹开”的；
- * 反震中等，不追求极端自损。定桩式让自己站住、把目标顶得更远，代价是反伤更重、节奏更慢。
+ * 核心念头：一次最朴素的全身正面猛冲——压低身体沿瞄准方向直线撞出去，撞实的一刻把惯性整个压进目标：
+ * 目标被顶飞，自己不再被反震弹开，而是贴着它短促压身、再原地沉重收势，把破绽留在原地。
+ * 它是这一族里最直白的一招，也是唯一“顶飞后原地贴住露破绽”的；反震中等，不追求极端自损。
  *
  * 两幕：
  *   起（windup，提交前）：压低身体、踏地蓄势，只播预告。
- *   撞（charge → impact / skid）：提交后逐刻沿瞄准方向推进；trace 撞上活体即结算 tackle 接触伤害，
- *       按 recoil 比例反伤自己（共享结算），把目标沿冲撞方向顶飞 shove 格，自己向反方向滑开 rebound 格；
- *       冲到底、撞墙或推不动就只是收势（skid）——这一招撞空不自伤，那是双刃头锤的代价。
+ *   撞（charge → press → settle）：提交后逐刻沿瞄准方向推进；trace 撞上活体即结算 tackle 接触伤害一次，
+ *       按 recoil 比例反伤自己（共享结算），把目标沿冲撞方向顶飞 shove 格，随后原地压身 press 刻、不能自由转向追打，
+ *       再脚底两步收势；冲到底、撞墙或推不动就只是收势（settle）——这一招撞空不自伤，那是双刃头锤的代价。
  *
- * 与同族分开：勇鸟猛攻从空中俯冲打穿一条线；波动冲裹水撞击、把人浇透；木槌用坚硬躯体砸出地面裂纹。
- * 舍身冲撞的辨识点是撞完之后两个人各自滑开的那一下。
- * 配置 brace（定桩式）由 resolve 改时序、由公式改威力/反伤/顶飞/自身反弹，提交后才触碰世界。
+ * 与同族分开：勇鸟猛攻从空中俯冲打穿一条线；波动冲裹水撞击、把人浇透；木槌用坚硬躯体垂直砸下。
+ * 舍身冲撞的辨识点是撞完之后不弹回、贴住压身再原地收势的那一下。
+ * 配置 brace（定桩式）由 resolve 改时序、由公式改威力/反伤/顶飞/压身，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const doubleedgeScene = "world_combat:move_doubleedge";
     const doubleedgeHitText = "world_combat.move.doubleedge.text.hit";
-    const doubleedgeReboundText = "world_combat.move.doubleedge.text.rebound";
     const doubleedgeSkidText = "world_combat.move.doubleedge.text.skid";
+    const doubleedgeSettleText = "world_combat.move.doubleedge.text.settle";
 
     define({
         freeMovement: true,
         id: "doubleedge",
         cooldownParameter: "recharge",
         name: "Double-Edge",
-        description: "最朴素的全身正面猛冲：压低身体直线撞出去，撞实后目标被顶飞、自己也被反震弹开，并承担中等反伤。撞空只是收势，不自伤。",
+        description: "最朴素的全身正面猛冲：压低身体直线撞出去，撞实后把目标顶飞，自己贴住压身再原地沉重收势，并承担中等反伤。撞空只是收势，不自伤。",
         uses: ["正面撞开一个挡路的对手", "把目标顶离队友或顶下高台", "在生存无虞时换一记扎实的接触重击"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.0,
         maxRange: 7.2,
         prepare: 8,
@@ -63,15 +63,14 @@ namespace PokemonSkills {
             const length = p("doubleedge", "rush", action);
             const speed = p("doubleedge", "speed", action);
             const radius = p("doubleedge", "collisionRadius", action);
-            const traceAhead = p("doubleedge", "traceAhead", action);
             const minimumMove = p("doubleedge", "minimumMove", action);
             const power = p("doubleedge", "tackle", action);
             const recoil = p("doubleedge", "recoil", action);
             const shove = p("doubleedge", "shove", action);
-            const rebound = p("doubleedge", "rebound", action);
+            const press = Math.max(1, Math.round(p("doubleedge", "press", action)));
             const dust = Math.round(p("doubleedge", "dust", action));
-            const brace = !!(config && config.brace);
-            const direction = aim(action);
+            // 地面冲锋用水平方向：站立的身体若带向下分量会被地板判成初始接触而原地受阻。
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
             const scale = radius / 0.55;
             const intensity = Math.max(0.6, Math.min(2.4, power / 115));
             let travelled = 0, settled = false;
@@ -82,52 +81,55 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
-            /** 冲空：没有额外自伤，只是收势；留下一道尘土与文字。 */
-            function skid(current: CombatAction): void {
+            /** 收势：脚底两步稳住，没有第二击粒子，也不额外自伤。 */
+            function settle(current: CombatAction, whiff: boolean): void {
                 const scope = current.world(), body = scope.observe(current.actor());
                 if (body !== null) {
                     WorldFeedback.emit(scope, doubleedgeScene, 1, body.position(),
-                        { moment: "skid", dust: dust, scale: scale, intensity: intensity * 0.7 }, 24);
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), doubleedgeSkidText, [], 24);
+                        { moment: "settle", dust: dust, scale: scale, intensity: intensity * 0.7 }, 24);
+                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)),
+                        whiff ? doubleedgeSkidText : doubleedgeSettleText, [], 24);
                 }
                 sound(current, "minecraft:block.gravel.break");
                 finish(current);
             }
 
+            /** 贴住保持压身：每刻停下脚步，压满 press 刻再收势。 */
+            function hold(current: CombatAction, remaining: number): void {
+                current.stopMovement();
+                if (remaining <= 0) { settle(current, false); return; }
+                current.after(1, function (next: CombatAction) { hold(next, remaining - 1); });
+            }
+
+            /** 撞实：伤害只结算一次，然后顶飞、贴压、再原地收势；自己不再被弹回。 */
+            function collide(current: CombatAction, hit: CombatImpact): void {
+                const scope = current.world(), target = hit.target(), point = hit.position();
+                const landed = impact(current, hit, "doubleedge", power,
+                    { damage: damageSpec("doubleedge", "tackle"), contact: true, recoil: recoil });
+                WorldFeedback.emit(scope, doubleedgeScene, 1, point,
+                    { moment: "impact", target: target ? String(target.ref()) : "", dust: dust, scale: scale,
+                        intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 30);
+                sound(current, "cobblemon:move.bodyslam.target");
+                if (landed && target !== null && scope.valid(target)) {
+                    scope.hitDisplace(target, direction.scale(shove));
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), doubleedgeHitText, [], 28);
+                }
+                movementScenes.stop(current, "charge");
+                hold(current, press);
+            }
+
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const step = Math.min(speed, Math.max(0, length - travelled));
-                if (step <= 0.001) { skid(current); return; }
+                if (step <= 0.001) { movementScenes.stop(current, "charge"); settle(current, true); return; }
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.hitEntity()) {
-                    const target = hit.target(), point = hit.position();
-                    const landed = impact(current, hit, "doubleedge", power,
-                        { damage: damageSpec("doubleedge", "tackle"), contact: true, recoil: recoil });
-                    WorldFeedback.emit(scope, doubleedgeScene, 1, point,
-                        { moment: "impact", target: target ? String(target.ref()) : "", dust: dust, scale: scale,
-                            intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 30);
-                    sound(current, "cobblemon:move.bodyslam.target");
-                    if (landed && target !== null && scope.valid(target)) {
-                        scope.displace(target, direction.scale(shove));
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), doubleedgeHitText, [], 28);
-                    }
-                    // 双方各自被惯性弹开：目标向前、自己向后（定桩式站住不动）。
-                    if (rebound > 0.01) {
-                        const self = scope.observe(current.actor());
-                        if (self !== null) {
-                            scope.displace(current.actor(), direction.scale(-rebound));
-                            WorldFeedback.emit(scope, doubleedgeScene, 1, self.position(),
-                                { moment: "rebound", dust: dust, scale: scale, brace: brace ? 1 : 0 }, 24);
-                            WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.3, 0)), doubleedgeReboundText, [], 24);
-                        }
-                    }
-                    finish(current);
-                    return;
-                }
+                if (hit.hitEntity()) { collide(current, hit); return; }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= length) { skid(current); return; }
+                if (hit.blocked() || moved < minimumMove || travelled >= length) {
+                    movementScenes.stop(current, "charge"); settle(current, true); return;
+                }
                 movementScenes.show(current, "charge", origin, { moment: "charge", dust: dust, scale: scale, intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }

@@ -1,12 +1,13 @@
 /**
  * 魔法火焰 / mysticalfire —— 客户端表现。
  *
- * 一句话：喉间收拢一枚火团 → 火团脱手、拐着弯追上目标 → 命中炸开 → 火焰绕着目标盘成一圈、一截截收紧，
- * 最后猛地收束抽走特攻，或者目标跑远时散开。
+ * 一句话：喉间收拢一枚火团 → 火团脱手、拐着弯追上目标 → 命中炸开 → 火焰绕着目标盘成一圈、随缠身进度一截截收紧，
+ * 最后猛地收束抽走特攻，或者目标跑远／状态被清除时散开。
  * 色相家族：魔法紫粉（0xE060C0）与焰心暖橙（0xFFB35A），中性白只给命中强调。
- * 拍子：起 windup（聚火）→ 追 launch（脱手）→ 击 hit（命中炸开）→ 缠 wrap（绕身盘住）→ 咬 coil（每跳）→ 收 siphon / 散 slip。
- * 范围：火团的追踪半径绑定 `data.scale`（射程 / 9），玩家看得出它能追多远；这也是它唯一的作用范围。
- * 运动：火团沿 `data.target` 追踪（客户端按服务端同步的投射物锚点）；缠焰绕目标做环状公转。
+ * 拍子：起 windup（聚火）→ 追 cast（真弹体拖尾）→ 击 hit（命中炸开）→ 缠 wrap（绕身盘住、按进度收圈）→ 咬 coil（每跳）
+ *   → 收 siphon / 散 slip；打在方块或没有敌人时走 fizzle。
+ * 范围：火团拖尾绑定真弹体（data.projectile）；缠火绑定实际目标（data.target）。
+ * 运动：火团沿同步的投射物锚点飞；缠焰绕目标做环状公转，`data.ring` 随进度收拢。
  * 数：火粒数绑定 `data.wisps`（特攻与等级换算），强弱绑定 `data.intensity`（火团威力 / 70）。
  */
 const MysticalFireDefinition: ParticleDefinition = {
@@ -34,18 +35,25 @@ const MysticalFireDefinition: ParticleDefinition = {
                 }
             ]
         },
-        launch: {
-            duration: 18,
-            exit: { stop: 6, drain: 12 },
+        cast: {
+            duration: 60,
+            exit: { stop: 20, drain: 14 },
             emitters: [
                 {
-                    name: "launch_trail", bind: "source", fit: "none", offset: [0, 0.3, 0], orient: "toward",
+                    name: "cast_seed", bind: "projectile", offset: [0, 0.25, 0], trail: { minDistance: 0.22 },
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    burst: { count: { data: "wisps", fallback: 12 }, interval: 2, repeats: 2 },
-                    shape: { kind: "cone_volume", radius: 0.5, length: 1.6, angleDegrees: 40 },
-                    direction: "shape", speed: [0.2, 0.5], spread: 14,
+                    rate: { data: "wisps", fallback: 12 }, shape: { kind: "sphere", radius: 0.16 },
+                    direction: "velocity", speed: [0.02, 0.12], spread: 14,
                     lifetime: [8, 16], size: [0.14, 0.03],
-                    color: 0xE060C0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 60
+                    color: 0xE060C0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 90
+                },
+                {
+                    name: "cast_sparks", bind: "projectile", offset: [0, 0.25, 0], trail: { minDistance: 0.3 },
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: 2, interval: 2, repeats: 12 }, shape: { kind: "point" },
+                    direction: "outward", speed: [0.02, 0.1], spread: 24,
+                    lifetime: [6, 12], size: [0.08, 0.02],
+                    color: 0xFFB35A, alpha: [0.8, 0], light: "full", maxParticles: 60
                 }
             ]
         },
@@ -87,9 +95,9 @@ const MysticalFireDefinition: ParticleDefinition = {
                     color: 0xE060C0, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 80
                 },
                 {
-                    name: "wrap_sheen", bind: "target", offset: [0, 0.35, 0], height: 0.6,
+                    name: "wrap_ring", bind: "target", offset: [0, 0.35, 0], height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 2, shape: { kind: "ring", radius: 0.5 },
+                    rate: 3, shape: { kind: "ring", radius: { data: "ring", fallback: 0.6 } },
                     direction: "outward", speed: [0.0, 0.03], spin: 6,
                     lifetime: [12, 22], size: [0.24, 0.34], sizeMode: "sin",
                     color: 0xFFB35A, alpha: [0.35, 0.05], light: "full", maxParticles: 10
@@ -147,6 +155,21 @@ const MysticalFireDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16], gravity: -0.01,
                     lifetime: [12, 22], size: [0.12, 0.03],
                     color: 0x9A6A9A, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        fizzle: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "fizzle_puff", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 6 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.04, 0.14], gravity: -0.01,
+                    lifetime: [8, 14], size: [0.1, 0.02],
+                    color: 0x9A6A9A, alpha: [0.5, 0], light: "world", maxParticles: 12
                 }
             ]
         }

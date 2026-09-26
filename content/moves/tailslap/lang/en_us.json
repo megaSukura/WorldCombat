@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.tailslap.summary": "Spin in place and sweep the hard tail around the body lap after lap: everyone in the ring takes a hit each lap and is shoved outward. The spin form is a full 360 degrees that covers every side; the smash form narrows to the front arc, hits each lap harder and lifts the target.",
+  "worldcombat.skill.tailslap.summary": "Spin in place and sweep the hard tail around the body lap after lap: the full circle turns through four segments, everyone in the ring takes a hit each lap and is shoved outward. You can point at an enemy, give a direction, or just spin on the spot. The spin form is a full 360 degrees that covers every side; the smash form narrows to the front arc, hits each lap harder and lifts the target.",
   "worldcombat.skill.tailslap.use.0": "Spin in place and sweep the tail around everyone nearby",
   "worldcombat.skill.tailslap.use.1": "Cover a whole ring when surrounded",
   "worldcombat.skill.tailslap.use.2": "Smash form sweeps only the front and lifts what it hits",
+  "worldcombat.skill.tailslap.use.3": "Spin a full circle on the spot with no target selected",
   "worldcombat.skill.tailslap.description.0": "Spin in place for up to %2$s laps, striking every enemy in range once each lap for about %1$s contact damage (from Attack and weight); each lap is rolled separately at %3$s accuracy, and a missed lap deals no damage but the spin continues.",
   "worldcombat.skill.tailslap.description.1": "Each lap sweeps every non-friendly body within %1$s blocks and a %2$s-degree arc; those hit are shoved %3$s blocks away from the caster and lifted %4$s blocks.",
   "worldcombat.skill.tailslap.description.2": "The sweeps are %1$s apart.",

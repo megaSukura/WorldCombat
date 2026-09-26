@@ -1,14 +1,8 @@
-/**
- * 大地波动 / terrainpulse —— 客户端表现。
- *
- * 一句话：脚下地纹先亮 → 一脚顿地激起一圈贴地尘环 → 一道贴地的波沿地面奔向目标、身后拖一条尘线 →
- * 目标脚下炸起同色的地环与碎屑；共鸣时再补一圈稍小的地环。
- * 色相家族：脚下场地的元素色（data.tint，无场地为中性灰 0x9AA0A8）为主，尘屑留中性。
- * 数量由机制值驱动：命中粒子 = data.bursts，地环直径 = data.ring（也是共鸣第二波半径），
- * 场地是否加持由 data.charged 改变亮度与密度。拍子：预告（windup）→ 顿（stomp）→ 推（travel）→ 击（impact）/共鸣（secondary）。
- */
+/** Actual floor samples carry each wave and its current width and terrain colour. */
 const TerrainPulseDefinition: ParticleDefinition = {
     moments: {
+        surface: { emitters: [{ name: "actual_path", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/tinydust",
+            rate: 32, shape: { kind: "polyline" }, speed: [0,.006], lifetime: [4,8], size: [.22,.12], color:  { data: "tint", fallback: 0x9AA0A8 }, alpha: [.7,.15], light: "world", maxParticles: 42 }] },
         windup: {
             duration: 22,
             exit: { stop: 14, drain: 12 },

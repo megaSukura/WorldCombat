@@ -2,10 +2,10 @@
  * 假跪真撞 / falsesurrender 的参数与伤害段。
  *
  * 原生事实：Dark、物理、威力 80、命中必定（accuracy true）、PP 10、接触，无次要效果（Cobblemon 1.8）。
- * 翻译：把「装作低头认错，用凌乱的头发突刺，攻击必定命中」翻成一次**以认输为饵的伏低突刺**——施法者先伏低
- * （真的把自己暴露出去：起手不能动、时间也长），骗过对手的注意；就在这一低头之间，凌乱的头发从低处窜出去扎进
- * 护架下方。因为出刺点在自己最低、对手最松懈的一刻，所以躲不掉。对手的注意越不在施法者身上，这一下越狠。
- * 数据分散：物攻定突刺威力、速度定头发窜出的快慢与伏低的时长、体型高度定发梢够到多远、等级定射程与压制时长、
+ * 翻译：把「装作低头认错，用凌乱的头发突刺，攻击必定命中」翻成一次**以认输为饵的伏低发刺**——施法者先伏低
+ * （真的把自己暴露出去：起手不能动、时间也长），骗过对手的注意；随后凌乱的黑发从低处逐刻伸刺出去，发梢先
+ * 触到身体才结算，中途撞墙就停在墙面。对手的注意越不在施法者身上，这一下越狠。
+ * 数据分散：物攻定突刺威力、速度定头发窜出的快慢与伏低的时长、体型高度定发梢够到多远、等级定射程，
  * 对手是否在盯着施法者决定伏低加成是否生效。
  * 配置 grovel（伏低）在「低得更深、够得更远、加成更狠」与「起手更快、暴露更短」之间取舍。
  *
@@ -55,10 +55,6 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("grovel"), F.const(4), F.const(0)))
                 .clamp(6, 18).round(0),
             "伏低时长", "伏低装作认错的时长；这段时间施法者不能动，是被反击的窗口。"),
-        /** 压制时长：基础 20 刻，等级每比 30 高 1 加 0.3，夹在 12..40。 */
-        staggerTicks: seconds(
-            F.base(20).plus(F.level().minus(30).times(0.3)).clamp(12, 40).round(0),
-            "压制时长", "撞中后把目标钉在原地一小段的时长；等级高的个体压得更久。"),
         /** 顶退：基础 0.4 格，物攻每比 60 多 1 加 0.003，夹在 0.25..0.9。 */
         push: formula(
             F.base(0.4).plus(F.stat("attack").minus(60).times(0.003)).clamp(0.25, 0.9).round(2),
@@ -78,7 +74,7 @@ namespace PokemonSkills {
     describe("falsesurrender", [
         { key: "description.0", values: ["lash", "ambush"] },
         { key: "description.1", values: ["hairReach", "lashSpeed", "whipRadius"] },
-        { key: "description.2", values: ["bowTicks","staggerTicks","push"] },
+        { key: "description.2", values: ["bowTicks","push"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.lash", "tier.0.hairReach"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.lash", "tier.1.ambush"] }

@@ -14,7 +14,7 @@ Smoke.scenario("frostbreath", function (stage) {
             stage.expect(stage.damageTo(geodude) > 0, "冷雾罩到了目标身上");
             stage.expect(stage.hadMobEffect(geodude, "world_combat:status/chill"), "被罩住的人冻僵了");
             var changed = stage.changedBlocks();
-            stage.note("这一击必定命中要害（共享暴击倍率在命中时结算）；冷雾漫到才结算，走出雾外会落空。落点会租出 minecraft:snow（到期原方块回来）。",
+            stage.note("这一击必定命中要害（共享暴击倍率在命中时结算）；冷雾漫到才结算，走出扇面或被实墙挡住都会落空（判定与表现读同一组扇形顶点）。落点会租出 minecraft:snow（到期原方块回来）；方向与空呼由输入侧决定，本场景只跑 AI 互攻这条路径。",
                 { casts: stage.casts("frostbreath", seel), damage: Math.round(stage.damageTo(geodude) * 10) / 10, changed: changed.length });
             stage.done();
         });

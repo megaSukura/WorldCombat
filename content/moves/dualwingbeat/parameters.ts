@@ -3,12 +3,12 @@
  *
  * 原生事实（Cobblemon 1.8）：**Flying**／物理／威力 40／命中 90／PP 10／接触（`contact: 1`）／单体／连续 2 次（`multihit: 2`）。
  *
- * 翻译：把「将翅膀撞向对手进行攻击，连续 2 次给予伤害」落成一记**俯冲双拍**——先振翅俯冲、用一侧翼拍下去
- *   （第一拍把人拍开、给自己让出落点），再借势振翅上掀、另一侧翼从下方反拍（第二拍顺着第一拍掀出的空当补上，
- *   第一拍命中则这一下更重）。招名里的"两下"来自两只翅膀各一次，不是一次伤害结算两次，而是施法者自己在
- *   下潜与上扬之间移动的两拍。
+ * 翻译：把「将翅膀撞向对手进行攻击，连续 2 次给予伤害」落成一记**俯冲双拍**——先振翅俯冲、一侧翼朝身前下方
+ *   拍下去（第一拍把人拍开、给自己让出落点），再借势振翅上掀、另一侧翼以真实新身位向身后上方反拍。招名里的
+ *   "两下"来自两只翅膀各一次，不是一次伤害结算两次，而是施法者自己在下潜与上扬之间移动的两拍；两拍方向相反、
+ *   各自判定，第二拍不因第一拍命中而额外加威力。
  *   与同族分开：双针是两根细针沿线先后射出、毒击是站定近身重刺；双翼是**掠飞式、施法者自身在俯冲与拉升之间
- *   移动**的两拍，画面里明显有升力与风。
+ *   移动、两翼前后反向**的两拍，画面里明显有升力与风。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   wing          每拍威力：物攻（翅膀有多硬）；俯冲式贴脸更重、悬停式隔空较轻。
@@ -18,7 +18,6 @@
  *   gap           两拍间隔：速度（收翅再拍越快）；俯冲式更短。
  *   swoop         俯冲距离：体重（越重冲势越足）＋速度。
  *   rise          拉升距离：速度。
- *   wake          第二拍加成：等级（越会借势）；俯冲式 ×1.4。
  *   push          拍飞距离：体重（越重扇起的气流越强）＋物攻。
  *   maxTargets    最多扫到几个：碰撞箱宽度（翼展越宽罩得越宽）。
  *   feathers      羽片/风屑数量：物攻，直接驱动发射量。
@@ -26,15 +25,14 @@
  *
  * 配置 `dive`（俯冲形态，默认关）双向取舍：开启＝俯冲贴脸，两拍都是接触、每拍威力 ×1.15、间隔更短；
  *   代价是施法者把身位交出去（射程降到约 3.2 格、俯冲落点固定）且起手多一次下潜。关闭（悬停式）＝隔空
- *   拍出风压，射程约 5.6 格、更安全，但每拍 ×0.9、间隔更长、第二拍加成不变。两向各有适用局面：
- *   想留距离就用悬停，想打满伤害就用俯冲。
+ *   拍出风压，射程约 5.6 格、更安全，但每拍 ×0.9、间隔更长。两向各有适用局面：想留距离就用悬停，想打满
+ *   伤害就用俯冲。
  *
  * 伤害段 wing：每一拍各自结算一次接触伤害，规格空（共享结算乘入物攻、对手物防、相性与暴击）。
  */
 namespace PokemonSkills {
     export const dualwingbeatId = "dualwingbeat";
     export const dualwingbeatScene = "world_combat:move_dualwingbeat";
-    export const dualwingbeatWakeText = "world_combat.move.dualwingbeat.text.wake";
 
     actionParameters.define(dualwingbeatId, {
         /** 每拍威力：基础 40，物攻每比 55 多 1 加 0.16（夹 -6..18）；俯冲 ×1.15 / 悬停 ×0.9；夹在 20..68。 */
@@ -89,18 +87,13 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "第二拍上掀时施法者退回多远；速度越快收得越快。"
             }),
-        /** 第二拍加成：基础 0.12，等级每比 20 高 1 加 0.004（夹 0..0.14）；俯冲 ×1.4；夹在 0..0.36。 */
-        wake: percent(
-            F.base(0.12).plus(F.level().minus(20).times(0.004).clamp(0, 0.14))
-                .times(F.when(F.pref("dive"), F.const(1.4), F.const(1))).clamp(0, 0.36),
-            "第二拍加成", "第一拍命中后，第二拍顺着掀出的空当拍进去，威力最多再抬这么多；等级越高越会借势，俯冲式加成更大。第一拍没中就加不上。"),
         /** 拍飞距离：基础 0.55 格，体重每比 60 重 1 加 0.004（夹 -0.2..0.5），物攻每比 55 多 1 加 0.002（夹 -0.1..0.3）；夹在 0.25..1.4。 */
         push: formula(
             F.base(0.55).plus(F.body("weight").minus(60).times(0.004).clamp(-0.2, 0.5))
                 .plus(F.stat("attack").minus(55).times(0.002).clamp(-0.1, 0.3)).clamp(0.25, 1.4).round(2),
             "拍飞距离", {
                 unit: "格",
-                description: "第一拍把目标拍开多远（第二拍把它往回收一点）；体重与物攻越大扇起的气流越强。"
+                description: "每一拍把命中目标沿该拍翼势推开多远（第二拍沿反拍方向推得轻一些）；体重与物攻越大扇起的气流越强。"
             }),
         /** 最多扫到几个：基础 1，身宽每比 1.2 宽 1 格加 1.5（夹 -0.4..1.4）；夹在 1..3 并向下取整。 */
         maxTargets: formula(
@@ -135,19 +128,19 @@ namespace PokemonSkills {
 
     stages(dualwingbeatId, [
         { level: 30, values: { wing: 46 } },
-        { level: 45, values: { wing: 52, wake: 0.18 } },
+        { level: 45, values: { wing: 52 } },
         { level: 60, values: { wing: 58 } }
     ]);
 
     describe(dualwingbeatId, [
         { key: "description.0", values: ["wing","reach","span"] },
-        { key: "description.1", values: ["gap","wake","push","swoop"] },
+        { key: "description.1", values: ["gap","push","swoop"] },
         { key: "description.2", values: ["rise","maxTargets"] },
         { key: "dive.on", values: [], when: function (context) { return read(context.detail.values, ["dive"]) === true; } },
         { key: "dive.off", values: [], when: function (context) { return read(context.detail.values, ["dive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.wing"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.wing", "tier.1.wake"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.wing"] },
         { key: "growth.2", values: ["tier.2.level", "tier.2.wing"] }
     ]);
 }

@@ -1,13 +1,12 @@
 /**
  * 沙暴 / sandstorm 的出手方式。
  *
- * 念头的形状：施法者把脚边的沙石卷起来（windup：脚下一圈回旋的沙预告）→ 沙幕在落点炸开、贴地横扫
- * （burst）→ 幕里的活体被一趟趟磨掉血、被风推着走，岩石之躯嵌进沙砾、特防提高（field / scour / harden）
- * → 沙幕渐稀，地表留下一层被磨落的沙（settle / 积沙到期）。
- * 三幕：起风 → 扬沙 → 磨蚀与积沙。
+ * 念头的形状：施法者把脚边的沙石卷起来（windup：脚下一圈回旋的沙预告）→ 沙幕在落点炸开、顺风横推
+ * （burst）→ 一条条顺风窄带扫过沙幕，带内、且上风侧没有掩体的人被磨掉血、被顺风推走，岩石之躯嵌进沙砾、
+ * 特防提高（field / gust / scour / harden / lee）。
  *
- * 提交前只播预告；沙幕（WorldEffects.field）与地表的沙（world.terrain）都在提交后写。
- * 沙幕是租借效果，到期自己结束；它随施法者走远 48 格自动收场。地表的沙用 linger 活过沙幕本身。
+ * 提交前只播预告；沙幕（WorldEffects.field）在提交后写，风向是这一刻施法者到落点的水平方向，写进 data.wind。
+ * 沙幕是租借效果，到期自己结束；它随施法者走远 48 格自动收场。地表不再生成方块，沙痕只是表面表现。
  */
 namespace PokemonSkills {
     define({
@@ -42,7 +41,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_sandstorm:windup", sandstormScene, 1, action.targetPosition(),
-                JSON.stringify({ moment: "windup", radius: p("sandstorm", "stormRadius", action), abrasive: config && config.abrasive ? 1 : 0 }));
+                JSON.stringify({ moment: "windup", rate: Math.round(p("sandstorm", "grainDensity", action)) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -54,15 +53,21 @@ namespace PokemonSkills {
             const scour = Math.max(0.01, Math.min(0.2, p("sandstorm", "scour", action)));
             const drift = Math.max(0.02, p("sandstorm", "drift", action));
             const interval = Math.max(30, Math.round(p("sandstorm", "grainInterval", action)));
-            const cells = Math.max(8, Math.min(48, Math.round(radius * 2.5)));
-            const sandTicks = Math.max(80, Math.round(ticks * 0.6));
+            const gustWidth = Math.max(0.8, Math.round(p("sandstorm", "gustWidth", action) * 100) / 100);
+            const gustStep = Math.max(1, Math.round(p("sandstorm", "gustStep", action) * 100) / 100);
+            const body = world.observe(actor);
+            const origin = body !== null ? body.position() : action.origin();
+            // 提交时定格风向：施法者到落点的水平方向；落点与脚下重叠时退回面朝方向。
+            const wind = WorldGeometry.flatUnit(point.minus(origin), action.direction());
             WorldEnvironment.replaceOwnWeather(world, actor);
             WorldEffects.field(world, sandstormField, point, radius,
-                { swept: swept, density: density, scour: scour, drift: drift, interval: interval, cells: cells,
-                    sandTicks: sandTicks, seeded: false, next: 0 }, ticks);
+                { swept: swept, density: density, scour: scour, drift: drift, interval: interval,
+                    wind: [wind.x(), 0, wind.z()], gustWidth: gustWidth, gustStep: gustStep, band: -radius,
+                    next: 0 }, ticks);
             world.sound("minecraft:entity.wind_charge.wind_burst", point, 32, "{}");
             WorldFeedback.emit(world, sandstormScene, 1, point,
-                { moment: "burst", radius: radius, scale: radius / 9, density: density, cards: cells, ticks: ticks }, 48);
+                { moment: "burst", radius: radius, scale: radius / 9, density: density,
+                    direction: [wind.x(), 0, wind.z()], width: gustWidth }, 48);
             done(action);
         }
     });

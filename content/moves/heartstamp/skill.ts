@@ -7,9 +7,12 @@
  * 两幕：
  *   起（windup，提交前）：抬眼、摆出可爱姿势的预告。
  *   骗（feint）：提交后朝目标放出一颗爱心，给对方挂上共享身份 `world_combat:status/offguard`（疏忽）——
- *       本单元发明的新状态，物品栏可见，别人以后也能消费。
- *   击（dash → seize/hit/miss）：隔 `feint` 刻后朝目标扑过去（逐刻 trace）；撞上时若目标仍带着疏忽，
- *       就消耗掉它，这一击乘上乘机倍率、畏缩几率也乘上乘机倍率；窗口过了就打一记平击。扑空则收势。
+ *       本单元发明的新状态，物品栏可见，别人以后也能消费。只有目标当前可见、挡在施法者正面近距内且路线无遮挡时才骗得到；
+ *       没选到有效敌人就跳过假动作、照常扑击。
+ *   击（dash → seize/hit/miss）：隔 `feint` 刻后朝目标扑过去（逐刻 trace）；撞上时若目标仍带着疏忽且
+ *       消费成功，这一击乘上乘机倍率、畏缩几率也乘上乘机倍率；窗口过了或消费失败就打一记平击。扑空则收势。
+ *
+ * 选取：`kind: "aim"`——方向、世界点或敌人辅助瞄准都行；墙既挡住假动作（骗不到），也挡住身体冲刺（扑空）。
  *
  * 与同族的区分：麻麻刺刺是一路带着电撞上去；爱心印章是先骗再打，胜负手在补击是否落在破绽窗口里。
  *
@@ -39,7 +42,7 @@ namespace PokemonSkills {
         name: "Heart Stamp",
         description: "先卖一次萌，让对方进入短暂的疏忽窗口，再扑上去补一记重击；补击若落在窗口里就乘机打得更重、更容易把人拍懵。窗口很短，离得远等冲过去就过期了。",
         uses: ["近身骗一下再补重击", "把对手拍懵，抢一次先手", "对已经放松警惕的目标乘机加深一击"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.6,
         maxRange: 8,
         prepare: 8,
@@ -60,7 +63,8 @@ namespace PokemonSkills {
                 recover: Math.round(p("heartstamp", "settle", context)),
                 cooldown: Math.round(p("heartstamp", "recharge", context)),
                 active: 0,
-                range: p("heartstamp", "lunge", context) + 1.2
+                // 出手距离要落在「扑击距离 + 接触判定」之内，靠上去后这一扑才够得着。
+                range: p("heartstamp", "lunge", context) + p("heartstamp", "radius", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -102,20 +106,20 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const victim = hit.target();
                 if (victim === null || !scope.valid(victim)) { finish(current); return; }
-                const offguard = CombatStatus.has(scope, victim, "offguard");
-                if (offguard) MobEffects.consumeTagged(scope, victim, "world_combat:status/offguard");
-                const power = stamp * (offguard ? seize : 1);
-                const roll = chance * (offguard ? startle : 1);
+                // 消费成功才算乘机：没消费到就照常平击，不凭空给倍率。
+                const seized = MobEffects.consumeTagged(scope, victim, "world_combat:status/offguard").length > 0;
+                const power = stamp * (seized ? seize : 1);
+                const roll = chance * (seized ? startle : 1);
                 const landed = hurt(current, victim, "heartstamp", power,
                     { damage: damageSpec("heartstamp", "stamp"), contact: true });
                 WorldFeedback.emit(scope, heartstampScene, 1, hit.position(),
-                    { moment: offguard ? "seize" : "hit", target: String(victim.ref()), scale: scale,
-                        intensity: Math.max(0.5, Math.min(2, power / 60)), offguard: offguard ? 1 : 0 }, 28);
+                    { moment: seized ? "seize" : "hit", target: String(victim.ref()), scale: scale,
+                        intensity: Math.max(0.5, Math.min(2, power / 60)), seized: seized ? 1 : 0 }, 28);
                 sound(current, "cobblemon:impact.psychic");
                 if (landed) {
-                    if (scope.valid(victim)) scope.displace(victim, direction.scale(0.6));
+                    if (scope.valid(victim)) scope.hitDisplace(victim, direction.scale(0.6));
                     WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.3, 0)),
-                        offguard ? heartstampSeizeText : heartstampHitText, [], 26);
+                        seized ? heartstampSeizeText : heartstampHitText, [], 26);
                     if (scope.random() < roll && heartstampFlinch(scope, victim, flinchTicks)) {
                         WorldFeedback.emit(scope, heartstampScene, 1, hit.position(), { moment: "flinch", target: String(victim.ref()) }, 24);
                         WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), heartstampFlinchText, [], 24);
@@ -151,15 +155,29 @@ namespace PokemonSkills {
 
             function feintNow(current: CombatAction): void {
                 const scope = current.world();
+                const actor = current.actor();
                 const victim = current.target();
+                const body = scope.observe(actor);
+                const here = body === null ? current.origin() : body.position();
                 const at = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                if (victim === null || at === null) { finish(current); return; }
-                CombatStatus.apply(scope, victim, "offguard", heartstampOffguardEffect, charmTicks);
-                WorldFeedback.emit(scope, heartstampScene, 1, at.position(),
-                    { moment: "feint", target: String(victim.ref()), scale: scale, charm: charmTicks / 20,
-                        hearts: Math.max(6, Math.round(6 + charmTicks / 20 * 2)) }, 26);
-                WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), heartstampFeintText, [], 26);
-                sound(current, "minecraft:block.note_block.chime");
+                if (victim !== null && at !== null) {
+                    const delta = at.position().minus(here), distance = delta.length();
+                    const heading = WorldGeometry.flatUnit(current.direction());
+                    // 正面近距：目标得在朝向前方约 120° 的近身范围内，且当前可见、路线无遮挡，才骗得到。
+                    const frontal = distance <= 0.05 || WorldGeometry.dot(delta, heading) / distance >= Math.cos(60 * Math.PI / 180);
+                    if (frontal && distance <= current.range() + 0.2 && scope.visible(victim) && scope.clear(here, at.position())
+                        && CombatStatus.apply(scope, victim, "offguard", heartstampOffguardEffect, charmTicks)) {
+                        const applied = MobEffects.read(scope, victim, heartstampOffguardEffect);
+                        const windowTicks = applied !== null ? Math.max(1, applied.duration()) : charmTicks;
+                        // 表现窗口用实际挂上的 MobEffect 时长，缩小节奏与真实破绽一致。
+                        WorldFeedback.emit(scope, heartstampScene, 1, at.position(),
+                            { moment: "feint", target: String(victim.ref()), scale: scale, charm: windowTicks / 20,
+                                charmTicks: windowTicks, hearts: Math.max(6, Math.round(6 + windowTicks / 20 * 2)) },
+                            Math.max(28, windowTicks + 12));
+                        WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), heartstampFeintText, [], 26);
+                        sound(current, "minecraft:block.note_block.chime");
+                    }
+                }
                 current.after(feint, function (next) { advance(next); });
             }
 

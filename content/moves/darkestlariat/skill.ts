@@ -80,7 +80,7 @@ namespace PokemonSkills {
                     hits++;
                     const away = facts.position().minus(centre);
                     if (world.valid(enemy) && away.length() > 0.2)
-                        world.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                        world.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                     WorldFeedback.emit(world, darkestlariatScene, 1, facts.position(),
                         { moment: "hit", target: String(enemy.ref()), gales: gales, spin: spin, scale: scale, intensity: intensity }, 20);
                 });

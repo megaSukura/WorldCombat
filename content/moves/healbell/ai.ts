@@ -4,8 +4,9 @@
  * 什么局面有意义：自己或半径内的伙伴身上带着有害状态效果之一。它把「异常的个数」当作出手的理由——
  *   ai.cleanseCount 决定至少几个伙伴被缠住才值得响铃（默认 1，也就是一有人中招就响）。
  * 对谁出手：只有自己（kind self），reach 0；铃声以自身为心，队友必须站在 ai.chimeReach 以内。
- * 什么时候最急：自己也被挂上异常、或同时有 ≥2 个伙伴中招时 priority 100，抢在共享交战次序前先响铃；
- *   否则 45，等手里的动作告一段落再顺手净一次。
+ * 什么时候最急：越多人被缠住越想响——自己中招额外加权，≥3 人一起中招时 priority 100，抢在共享交战次序前先响；
+ *   一两个人时按人数落到 55–75，等手里的动作告一段落再顺手净一次。
+ * 不重复抢放：刚响过铃的一小段时间里不再把它排到前面；已经被洗干净的伙伴不再计入，也就不会再为它抢放。
  * 够不到怎么办：AI 不自伤、不追人；队友在 ai.chimeReach 之外就先不响（响也洗不到）。
  * 配置：resonant（长鸣／短鸣）在参数层改变半径、声数与冷却；ai.cleanseCount 与 ai.chimeReach 是这套出手计划自己的选项。
  */
@@ -47,7 +48,12 @@ namespace CompanionBehavior {
             const own = fact<boolean>(context, "world_combat:move_healbell/harmful", self) === true;
             const afflicted = healbellAfflicted(context, ai<number>(capability, "chimeReach", 6));
             if (!afflicted) return 0;
-            return own || afflicted >= 2 ? 100 : 45;
+            // 刚响过铃就不再抢下一次：给队友一点时间，等新异常再来。
+            if (recent(context, "move", "healbell", 30)) return 0;
+            let score = 40 + afflicted * 16;
+            if (own) score += 24;
+            if (afflicted >= 3 || own && afflicted >= 2) score = 100;
+            return Math.min(100, score);
         }
     });
 }

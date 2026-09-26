@@ -2,12 +2,13 @@
  * 鳞片噪音 / clangingscales 的客户端表现。
  *
  * 一句话：施法者绷紧身体、鳞片竖成一口钟、边缘泛起紫色共鸣光 → 一圈声波从身体炸开、贴着地面向外推去 →
- *   被震中的目标身上炸开龙色共鸣裂痕与碎鳞 → 响完鳞片松开、身上浮起松脱的灰紫鳞屑；回响式再荡一圈更淡的声波。
+ *   被震中的目标身上炸开龙色共鸣裂痕与碎鳞 → 响完鳞片松开、身上浮起松脱的灰紫鳞屑；回响式先在身上亮一圈
+ *   短促预告，隔一小段再从当时身体的新位置荡出第二圈。
  * 色相家族：龙紫（impact_dragon / warblingring / glowingsparkle）为主体，纯白声波（sonicboom / ripple）作高频细节，
  *   灰紫鳞屑（spike / tinydust）作余韵。
- * 拍子：起 windup（绷紧、嗡鸣）→ 响 burst（声波炸开）→ 中 hit（共鸣裂痕）→ 回响 echo（第二圈）→ 收 loose（松鳞）。
- * 范围：burst 绑自身、fit none，地面环半径按 `data.scale`（实际半径 / 4.6）铺开，画出的就是被震到的那一圈；
- *   声波环向外推的终点与机制半径一致。
+ * 拍子：起 windup（绷紧、嗡鸣）→ 响 burst（声波炸开）→ 中 hit（共鸣裂痕）→ 预告 ahead（附着身体）→ 回响 echo（第二圈）→ 收 loose（松鳞）。
+ * 范围：burst／echo 绑 point、fit world，地面声环半径直接读 `data.radius`（实际波及半径），画出的就是被震到的那一圈；
+ *   ahead 绑 source、fit world，预告圈附在施法者身上并随其移动，第二响在 echo 的真实新位置出环。
  * 运动：主震是贴地向外扩张的声环加向上崩起的裂痕；回响是第二圈更淡的声环；松鳞的碎屑向下落。
  * 数：`data.flow`（半径派生）决定声环密度、`data.rings`（威力派生）决定圈数、`data.marks`（威力派生）决定命中裂痕量，
  *   `data.intensity`（威力 / 110）放大整幕。
@@ -38,33 +39,47 @@ const ClangingScalesDefinition: ParticleDefinition = {
                 }
             ]
         },
+        ahead: {
+            duration: 0,
+            exit: { stop: 2, drain: 8 },
+            emitters: [
+                {
+                    name: "warn", bind: "source", fit: "world", offset: [0, -0.55, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 8, shape: { kind: "ring", radius: { data: "radius", fallback: 3.7 }, thickness: 0.05 },
+                    direction: "inward", speed: [0.01, 0.04],
+                    lifetime: [6, 12], size: [0.5, 0.08],
+                    color: 0xE0D8FF, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 18
+                }
+            ]
+        },
         burst: {
             duration: 30,
             exit: { stop: 14, drain: 18 },
             emitters: [
                 {
-                    name: "shock", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "shock", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: { data: "flow", fallback: 60 }, at: 1 },
-                    shape: { kind: "ring", radius: 1.0 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4.6 } },
                     direction: "outward", speed: [0.2, 0.5],
                     lifetime: [8, 14], size: [0.7, 0.12], sizeMode: "index",
                     color: 0xE6E0FF, alpha: [0.9, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "wave", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    name: "wave", bind: "point", fit: "world", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
                     burst: { count: { data: "rings", fallback: 8 }, at: 1 },
-                    shape: { kind: "ring", radius: 0.6 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4.6 }, thickness: 0.06 },
                     direction: "outward", speed: [0.16, 0.4],
                     lifetime: [10, 16], size: [0.9, 0.14], sizeMode: "index",
                     color: 0x9B7BE8, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 70
                 },
                 {
-                    name: "hiss", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "hiss", bind: "point", fit: "world", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     burst: { count: { data: "rings", fallback: 8 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 1.1 },
+                    shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 4.6 } },
                     direction: "outward", speed: [0.1, 0.34],
                     lifetime: [7, 13], size: [0.4, 0.06], sizeMode: "index",
                     color: 0xE8E4FF, alpha: [0.8, 0], light: "full", maxParticles: 60
@@ -100,10 +115,10 @@ const ClangingScalesDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "again", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "again", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: { data: "flow", fallback: 40 }, at: 1 },
-                    shape: { kind: "ring", radius: 0.8 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.7 } },
                     direction: "outward", speed: [0.18, 0.42],
                     lifetime: [10, 16], size: [0.6, 0.1], sizeMode: "index",
                     color: 0xCDB6FF, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 60

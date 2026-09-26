@@ -26,7 +26,7 @@ function harness() {
     GuardEffects: { register: (id, policy) => guards.set(id, policy) },
     PokemonSkills: { define: value => recipes.set(value.id, value), flag: () => ({}), field: () => ({}), pathOf: key => [key], p: (_id, key) => parameters[key] ?? 12 },
     WorldBodies: { define() {} }, WorldEnvironment: { weatherTag: name => 'checks:weather/' + name },
-    WorldFeedback: { emit() {}, keep() {}, text() {} }, WorldEffects: { fieldRule: (id, rule) => fields.set(id, rule), field() {}, categories: { weather: 'checks:weather' } }, WorldCombat: {
+    WorldFeedback: { emit() {}, keep() {}, text() {}, onEffect(world, id) { const effect = effects.get(id); return !!effect && live(effect) && effect.source === world.source(); } }, WorldEffects: { fieldRule: (id, rule) => fields.set(id, rule), field() {}, categories: { weather: 'checks:weather' } }, WorldCombat: {
     point: (x, y, z) => point(x, y, z),
     event() {}, phase() {},
     effect(id, _schema, maximum, lifetime, normalize) {
@@ -48,7 +48,7 @@ function harness() {
   context.WorldCombat.effect('checks:owner', 1, 1000, 'actor', json => json);
   context.WorldCombat.effectHandler('checks:owner', 'start', () => {});
   function actor(id, x = 0, native = false) {
-    const value = { id, x, native, nativeId: -actors.size - 1, state: context.NativeEffects.empty(), live: true,
+    const value = { id, x, native, nativeId: ++nextEffect, state: context.NativeEffects.empty(), live: true,
       markers: new Map(), claims: new Map(), key: () => id, ref: () => id,
       domain: () => native ? 'cobblemon' : 'minecraft' };
     actors.set(id, value); return value;
@@ -131,10 +131,14 @@ function harness() {
     return { source: () => source, tick: () => now, valid: actor => actor.live, random: () => source.random ?? 0.5,
       actor: ref => actors.get(String(ref))?.live ? actors.get(String(ref)) : null,
       observe: actor => actor.live ? { position: () => point(actor.x), height: () => 1.6, maxHealth: () => 100 } : null,
-      effects: (target, definition) => target.native && definition === 'cobblemon_world_combat:individual'
-        ? [{ id: () => target.nativeId, data: () => JSON.stringify(target.state) }]
-        : [...effects.values()].filter(effect => effect.target === target &&
-        (!definition || effect.definition === definition) && live(effect)).map(view),
+      effects: (target, definition) => {
+        if (target.native && definition === 'cobblemon_world_combat:individual') {
+          const snapshot = JSON.stringify(target.state);
+          return [{ id: () => target.nativeId, data: () => snapshot, source: () => target, target: () => target, remaining: () => 1200000 }];
+        }
+        return [...effects.values()].filter(effect => effect.target === target &&
+          (!definition || effect.definition === definition) && live(effect)).map(view);
+      },
       effectsOfType: definition => [...effects.values()].filter(effect => effect.definition === definition && live(effect)).map(view),
       effect(definitionId, target, json, ticks) {
         assert(source.live && target.live, 'Effects require valid actors');
@@ -145,15 +149,42 @@ function harness() {
         effects.set(effect.id, effect); invoke(effect, 'start'); return effect.id;
       },
       operation(id, operation, json) {
-        if (id < 0) {
-          const actor = [...actors.values()].find(value => value.nativeId === id);
-          assert(actor?.native && operation === 'cobblemon_world_combat:update');
+        const actor = [...actors.values()].find(value => value.native && value.nativeId === id);
+        if (actor) {
+          assert(operation === 'cobblemon_world_combat:update');
           actor.state = JSON.parse(json); delete actor.state.layers; return true;
         }
         const effect = effects.get(id); if (!effect) return false;
         assert(source.live && live(effect), 'Operations require a live caller and effect');
         assert(Math.abs(source.x - effect.target.x) <= 64, 'Operations require a nearby target');
         invoke(effect, `operation:${operation}`, json, source); return true;
+      },
+      compareEffectStates(json) {
+        const updates = JSON.parse(json).updates;
+        assert(Array.isArray(updates)); assert.equal(new Set(updates.map(value => value.id)).size, updates.length, 'A CAS contains each participant once');
+        const pending = [];
+        for (const value of updates) {
+          assert(Number.isInteger(value.id) && value.id > 0);
+          const actor = [...actors.values()].find(actor => actor.native && actor.nativeId === value.id), effect = effects.get(value.id);
+          if (actor ? !actor.live : !effect || !live(effect)) return false;
+          const target = actor || effect.target;
+          assert(source.live && Math.abs(source.x - target.x) <= 64, 'CAS retains ordinary mutation permissions and range');
+          const before = actor ? JSON.stringify(actor.state) : effect.data;
+          if (before !== value.expected) return false;
+          const definition = actor ? 'cobblemon_world_combat:individual' : effect.definition;
+          pending.push({ actor, effect, data: definitions.get(definition).normalize(value.data), expected: before });
+        }
+        if (pending.some(value => (value.actor ? JSON.stringify(value.actor.state) : value.effect.data) !== value.expected)) return false;
+        // Normalize and compare every participant before any replacement, as the host contract requires.
+        for (const value of pending) { if (value.actor) value.actor.state = JSON.parse(value.data); else value.effect.data = value.data; }
+        return true;
+      },
+      replaceMobEffect(target, id, expected, ticks, amplifier) {
+        const previous = nativeView(target, id);
+        if (!source.live || !target.live || (previous ? previous.key() : '') !== expected || target.rejectMarkers || target.rejectRemoval) return false;
+        if (previous) nativeEvents.push({ target, id, topic: 'world_combat:mob_effect_removed' });
+        target.markers.set(id, { expires: now + ticks, amplifier, revision: ++nextNative });
+        nativeEvents.push({ target, id, topic: 'world_combat:mob_effect_added' }); return true;
       },
       marker, mobEffect: nativeView, mobEffects: target => [...target.markers.keys()].map(id => nativeView(target, id)).filter(Boolean), sound() {}, motion() {}, displace() { return 0; },
       removeMobEffect(target, id, key) { return nativeView(target, id)?.key() === key && clear(target, id); },

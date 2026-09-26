@@ -7,7 +7,8 @@
  *   相隔 4 格——在悬停式射程内，AI 可以直接扑翼；地面铺平、白天晴天。
  *
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一拍的伤害（`stage.damageTo`）。
- *   两拍各自的命中与暴击、第一拍命中后第二拍的加成、俯冲还是悬停，都是随机或配置结果，写进 note 供读轨迹判断。
+ *   两拍方向相反、各自判定：第一拍朝身前下方，第二拍以真实新身位向身后上方反拍，第二拍不再依赖第一拍命中来加成；
+ *   两拍各自的命中与暴击、俯冲还是悬停，都是结果，写进 note 供读轨迹判断。
  */
 Smoke.scenario("dualwingbeat", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -22,7 +23,7 @@ Smoke.scenario("dualwingbeat", function (stage) {
         stage.after(80, function () {
             stage.expect(stage.casts("dualwingbeat", caster) >= 1, "the caster committed dualwingbeat");
             stage.expect(stage.damageTo(foe) > 0, "dualwingbeat dealt damage to the foe");
-            stage.note("each wingbeat rolls separately; the second gains a wake bonus only if the first landed; crit and dive/hover are variable", {
+            stage.note("the two wingbeats sweep opposite directions and roll separately; the second gains no bonus from the first; crit and dive/hover are variable", {
                 casts: stage.casts("dualwingbeat", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

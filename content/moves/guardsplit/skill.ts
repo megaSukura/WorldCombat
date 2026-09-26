@@ -32,7 +32,16 @@ namespace PokemonSkills {
         if (typeof value.pair !== "string") throw new Error("Invalid guard split partner");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(guardsplitMark, "start", function () { });
+    // 持续表现在 created managed mark 上：随它自然到期或被 revert 提前 dispel 一起清理，不再另开定时器。
+    WorldCombat.effectHandler(guardsplitMark, "start", function (effect) {
+        const world = effect.world(), actor = effect.target();
+        const body = world.valid(actor) ? world.observe(actor) : null;
+        if (body === null) return;
+        const mark: GuardsplitMark = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_guardsplit/hum", guardsplitScene, 1, body.position(),
+            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair),
+                path: [String(actor.ref()), String(mark.pair)], motes: 6, remaining: effect.remaining() });
+    });
     WorldCombat.effectHandler(guardsplitMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读含装备的有效护甲并剔除能力等级。 */
@@ -62,9 +71,9 @@ namespace PokemonSkills {
         id: "guardsplit",
         cooldownParameter: "recharge",
         name: "防守平分",
-        description: "暂时平衡双方的防御：较高的一方降低，较低的一方提高。宝可梦平分防御与特防，普通生物按包含装备的护甲参与。",
-        uses: ["把自己的薄防抬到对手的厚度", "把对手的厚壁削到自己的水平", "在对手防御远高于自己时抹平差距"],
-        kind: "enemy",
+        description: "暂时平衡双方的防御：较高的一方降低，较低的一方提高。宝可梦平分防御与特防，普通生物按包含装备的护甲参与。敌人和伙伴都可选。",
+        uses: ["把自己的薄防抬到对手的厚度", "把对手的厚壁削到自己的水平", "把自己的厚防分给需要护甲的伙伴"],
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 10,
@@ -73,7 +82,7 @@ namespace PokemonSkills {
         cooldown: 95,
         style: "split",
         stationary: true,
-        defaults: { ai: { maxChase: 12, edge: 1.15, leaveStation: false } },
+        defaults: { ai: { maxChase: 12, edge: 1.15, leaveStation: false, share: false } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["guardsplit"], detail: { values: config } };
@@ -92,7 +101,7 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (CombatStatus.has(world, actor, "guardsplit") || CombatStatus.has(world, target, "guardsplit")) return "already-split";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
@@ -111,7 +120,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) {
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) {
                 WorldFeedback.emit(world, guardsplitScene, 1, body.position(), { moment: "fizzle" }, 16);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), guardsplitMissText, [], 22);
                 done(action);
@@ -122,6 +131,7 @@ namespace PokemonSkills {
             const window = Math.max(100, Math.round(p("guardsplit", "span", action)));
             const motes = Math.max(1, Math.round(p("guardsplit", "motes", action)));
             const scale = (body.width() + body.height()) / 2.3;
+            // 双方各读一次快照，之后只写一次平均值；窗口内其他来源的变化各自独立保留。
             const mineDef = guardsplitRawStat(world, actor, "def"), mineSpd = guardsplitRawStat(world, actor, "spd");
             const theirDef = guardsplitRawStat(world, target, "def"), theirSpd = guardsplitRawStat(world, target, "spd");
             const avgDef = Math.max(1, Math.round((mineDef + theirDef) / 2));
@@ -130,6 +140,19 @@ namespace PokemonSkills {
             const reference = Math.max(1, Math.max(mineDef + mineSpd, theirDef + theirSpd));
             const gauge = Math.max(0, Math.min(1, gap / reference));
             const flow = Math.max(4, Math.min(96, Math.round(motes * (0.4 + gauge * 1.6))));
+            const mineTotal = mineDef + mineSpd, theirTotal = theirDef + theirSpd;
+            const selfShare = mineTotal / Math.max(1, mineTotal + theirTotal);
+            const foeShare = 1 - selfShare;
+            const selfFlow = Math.max(2, Math.round(flow * selfShare * 1.5));
+            const foeFlow = Math.max(2, Math.round(flow * foeShare * 1.5));
+            const selfSize = Math.round((0.1 + 0.24 * selfShare) * 100) / 100;
+            const foeSize = Math.round((0.1 + 0.24 * foeShare) * 100) / 100;
+            const leg = foe.position().minus(body.position());
+            const reach = Math.max(0.001, leg.length());
+            const toward = [leg.x() / reach, leg.y() / reach, leg.z() / reach];
+            const back = [-toward[0], -toward[1], -toward[2]];
+            const approach = Math.max(0.12, Math.min(0.8, reach / 16));
+            const mid = body.position().plus(foe.position()).scale(0.5);
             const changed = mineDef !== avgDef || mineSpd !== avgSpd || theirDef !== avgDef || theirSpd !== avgSpd;
             if (changed) {
                 const layerSelf = guardsplitSettle(world, actor, avgDef, avgSpd, window + 40);
@@ -141,7 +164,10 @@ namespace PokemonSkills {
             }
             WorldFeedback.emit(world, guardsplitScene, 1, body.position(),
                 { moment: "merge", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                    motes: motes, flow: flow, gauge: gauge, average: avgDef, scale: scale,
+                    point: [mid.x(), mid.y(), mid.z()],
+                    motes: motes, flow: flow, selfFlow: selfFlow, foeFlow: foeFlow,
+                    selfSize: selfSize, foeSize: foeSize, toward: toward, back: back, approach: approach,
+                    gauge: gauge, average: avgDef, scale: scale,
                     intensity: Math.max(0.7, Math.min(2.2, gauge * 1.6 + 0.6)), even: changed ? 0 : 1 }, 36);
             if (changed) {
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardsplitLevelText,
@@ -155,22 +181,6 @@ namespace PokemonSkills {
             world.sound("minecraft:block.beacon.activate", body.position(), 14, "{}");
             done(action);
         }
-    });
-
-    // 平分存续期：每 20 刻续一次中央的平分护罩，让玩家读出现在还平着、还剩多久。
-    WorldCombat.on("world_combat:move_guardsplit/hum", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== guardsplitWindow) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const marks = world.effects(actor, guardsplitMark);
-        if (!marks.length) return;
-        const mark = JSON.parse(String(marks[0].data()));
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_guardsplit/hum/" + String(actor.ref()), guardsplitScene, 1, body.position(),
-            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair), flow: 4,
-                path: [String(actor.ref()), String(mark.pair)], remaining: marks[0].remaining() }, 40);
     });
 
     // 窗口走完或被清除：按记号撤掉那层改动，数值回到原来的底子；其余修饰不受影响。

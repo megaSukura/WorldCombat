@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.partingshot.summary": "Hurl a barbed parting word at the foe: when it lands, the foe's Attack and Sp. Atk drop several stages and it wears the humiliation mark, while you step away. A whiffed word keeps you planted.",
+  "worldcombat.skill.partingshot.summary": "Hurl a barbed parting word at your aim, first contact wins: when it sticks in a foe, its Attack and Sp. Atk drop several stages and it wears the humiliation mark; then a legal reserve switches in, or you back off step by step. A word that gets blocked neither drops stages nor moves you.",
   "worldcombat.skill.partingshot.use.0": "Cut the foe's output, then disengage",
   "worldcombat.skill.partingshot.use.1": "Disarm a pursuer on your way out",
   "worldcombat.skill.partingshot.use.2": "Fire a barb, then open the distance",
   "worldcombat.skill.partingshot.description.0": "On a hit, the foe loses %1$s Attack and Sp. Atk stages and carries the humiliation mark for %2$s. The stat drop lasts until the fight ends or a stage reset removes it; while marked, companions will not hurl the barb at it again, and effects that clear harmful statuses can dispel the mark.",
   "worldcombat.skill.partingshot.description.1": "Word range %1$s blocks and flight speed %2$s blocks/tick; on a hit you step up to %3$s blocks away from the foe, while a whiffed word neither drops stages nor moves you.",
+  "worldcombat.skill.partingshot.description.2": "After a hit: with a legal reserve waiting, it switches in at the same spot; without one, you back off up to %1$s blocks step by step and stop at a wall.",
   "worldcombat.skill.partingshot.venom.on": "Venom: always drops 2 stages, humiliation ×1.3 — at the cost of range ×0.85, flight ×0.8 (slower, easier to dodge), cooldown +14.",
   "worldcombat.skill.partingshot.venom.off": "Quick tongue: range ×1.1, flight ×1.1, cooldown −6; the bite follows Sp. Atk alone.",
   "worldcombat.skill.partingshot.timing": "Range %1$s blocks; wind-up %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
@@ -29,5 +30,6 @@
   "worldcombat.skill.partingshot.preference.ai.leaveStation.help": "When on, the user leaves its post under a hold order to hurl the barb.",
   "world_combat.move.partingshot.text.barb": "Humiliated · Atk/SpA −%1$s",
   "world_combat.move.partingshot.text.whiff": "Barb missed",
+  "world_combat.move.partingshot.text.switch": "Hand-off",
   "effect.world_combat.parting_shot": "Parting Shot"
 }

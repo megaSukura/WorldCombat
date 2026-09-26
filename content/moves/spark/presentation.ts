@@ -30,6 +30,15 @@ const SparkDefinition: ParticleDefinition = {
                     rate: 10, shape: { kind: "sphere_surface", radius: 0.5 }, direction: "inward", speed: [0.04, 0.16],
                     lifetime: [5, 10], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0xEAF6FF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 36
+                },
+                {
+                    // overcharge=1（蓄电式）时多聚一圈外张电弧，读出来的起手比点射式更饱。
+                    name: "overcharge", bind: "source", offset: [0, 0.5, 0], height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: { data: "overcharge", fallback: 0 }, repeats: 6, interval: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.58 }, direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [6, 11], size: [0.15, 0.03],
+                    color: 0x5AC8F0, alpha: [0.8, 0], light: "full", bloom: 0.45, maxParticles: 30
                 }
             ]
         },
@@ -51,7 +60,7 @@ const SparkDefinition: ParticleDefinition = {
                     rate: 30, shape: { kind: "box", size: [0.3, 0.28, 0.3] }, direction: "shape",
                     speed: [0.04, 0.14], trail: { minDistance: 0.2 },
                     lifetime: [5, 9], size: [0.16, 0.04],
-                    color: 0xFFE96A, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 150
+                    color: 0xFFE96A, alpha: [0.85, 0], light: "full", bloom: { data: "intensity", fallback: 0.4 }, maxParticles: 150
                 },
                 {
                     name: "rush", bind: "source", offset: [0, 0.4, 0], height: 0.4,
@@ -70,7 +79,7 @@ const SparkDefinition: ParticleDefinition = {
                 {
                     name: "static", bind: "source", offset: [0, 0.12, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    rate: 8, shape: { kind: "ring", radius: 0.3 }, direction: "outward", speed: [0.03, 0.1],
+                    rate: { data: "arcs", fallback: 8 }, shape: { kind: "ring", radius: 0.3 }, direction: "outward", speed: [0.03, 0.1],
                     lifetime: [6, 10], size: [0.07, 0.02],
                     color: 0xFFE96A, alpha: [0.5, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 26
                 }
@@ -87,7 +96,7 @@ const SparkDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
                     direction: "shape", speed: [0.08, 0.3], spread: 16,
                     lifetime: [7, 13], size: [0.36, 0.05], sizeMode: "index",
-                    color: 0xFFE96A, alpha: [1, 0], light: "full", bloom: 0.6
+                    color: 0xFFE96A, alpha: [1, 0], light: "full", bloom: { data: "intensity", fallback: 0.6 }
                 },
                 {
                     name: "cling", bind: "target", offset: [0, 0.4, 0], height: 0,
@@ -117,7 +126,7 @@ const SparkDefinition: ParticleDefinition = {
                     shape: { kind: "hemisphere", radius: 0.42, rotation: [180, 0, 0] },
                     direction: "up", speed: [0.06, 0.22], spread: 16,
                     lifetime: [7, 12], size: [0.28, 0.05], sizeMode: "index",
-                    color: 0xFFE96A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 60
+                    color: 0xFFE96A, alpha: [0.9, 0], light: "full", bloom: { data: "intensity", fallback: 0.35 }, maxParticles: 60
                 },
                 {
                     name: "ring", bind: "source", offset: [0, 0.05, 0], height: 0,

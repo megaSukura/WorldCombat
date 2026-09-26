@@ -7,9 +7,10 @@
  * 三幕：
  *   起（charge，提交前）：在喉头聚起声线、音符绕身打转，只播预告。
  *   传（join）：提交后先把这句歌的余韵落在传唱半径内的同伴身上（共享身份 world_combat:status/round），
- *       每个接到的同伴身上浮起一串音符，并挂上一段余韵。
+ *       每个接到的同伴身上浮起一串音符、并有一条音符从领唱者移到该同伴，随后挂上一段余韵。
  *   唱（verse → impact / miss）：歌句沿瞄准方向掠到目标身上；目标在歌程内就结算一次声音伤害并炸开一个音符环，
- *       不在就唱空。带着余韵起唱（carried）时，这一句是翻倍的那一句。
+ *       不在就唱空。带着余韵起唱（carried）时，这一句是翻倍的那一句，同时消费掉自己这一份余韵——歌交出去，
+ *       施法者不能给自己续余韵，接唱因此必须真的接到伙伴那一句。
  *
  * 与同族分开：虫鸣是一道锥形声波扫一片人；轮唱只点名一个目标，却把力量分给同伴——它是合唱的引子。
  */
@@ -62,7 +63,10 @@ namespace PokemonSkills {
             const splash = p(roundId, "splash", action);
             const notes = Math.max(4, Math.round(p(roundId, "notes", action)));
             const speed = p(roundId, "noteSpeed", action);
+            // 威力在消费余韵之前读出，接唱的那一句才是翻倍的那一句。
             const carried = CombatStatus.has(world, actor, "round");
+            // 接唱：带着同伴的余韵起唱时，先消费掉自己这一份载体，再把新的一句交给别的同伴。
+            const answered = carried && MobEffects.consumeTagged(world, actor, StatusVocabulary.tag("round")).length > 0;
             const target = action.target();
             const targetPos = action.targetPosition();
             const direction = aim(action);
@@ -70,7 +74,7 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:block.note_block.chime");
 
-            // 传：把余韵落在传唱半径内的同伴身上；谁接上谁就能立刻唱出翻倍的一句。
+            // 传：把余韵落在传唱半径内的同伴身上；谁接上谁就能立刻唱出翻倍的一句。实际交接的伙伴之间移动一个音符。
             let chorus = 0;
             const near = world.query(centre, radius, false);
             for (let index = 0; index < near.length; index++) {
@@ -80,16 +84,22 @@ namespace PokemonSkills {
                 chorus++;
                 const at = world.observe(other);
                 if (at === null) continue;
-                WorldFeedback.emit(world, roundScene, 1, at.position(),
-                    { moment: "join", target: String(other.ref()), notes: Math.max(2, Math.round(notes / 2)), scale: scale }, 24);
-                WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.2, 0)), roundJoinText, [], 26);
-                world.sound("minecraft:block.note_block.harp", at.position(), 12, "{}");
+                const atPoint = at.position();
+                // 交接的一枚音符：从领唱者身体中心出发、朝同伴身体中心直飞，距离与飞行时长同步，飞到时正好收掉。
+                const flight = 8;
+                const gap = atPoint.minus(centre).length();
+                WorldFeedback.emit(world, roundScene, 1, atPoint,
+                    { moment: "join", target: String(other.ref()), notes: Math.max(2, Math.round(notes / 2)), scale: scale,
+                        point: [centre.x(), centre.y(), centre.z()], flight: flight, flightSpeed: Math.max(0.25, gap / flight) }, 24);
+                WorldFeedback.text(world, atPoint.plus(WorldCombat.point(0, 1.2, 0)), roundJoinText, [], 26);
+                world.sound("minecraft:block.note_block.harp", atPoint, 12, "{}");
             }
 
             WorldFeedback.emit(world, roundScene, 1, centre,
                 { moment: "verse", path: [[centre.x(), centre.y() + 0.7, centre.z()], [targetPos.x(), targetPos.y() + 0.7, targetPos.z()]],
                     direction: [direction.x(), direction.y(), direction.z()], notes: notes, speed: speed,
-                    splash: splash, scale: scale, carried: carried ? 1 : 0, chorus: chorus }, 28);
+                    splash: splash, scale: scale, answered: answered ? 1 : 0, chorus: chorus,
+                    chorusAlpha: chorus > 0 ? Math.min(1, 0.25 + chorus * 0.12) : 0 }, 28);
 
             // 唱：点名一个目标；声音不被掩体阻挡，只要求它在歌程之内。
             let landed = false;
@@ -105,7 +115,7 @@ namespace PokemonSkills {
                             { moment: "impact", target: String(target.ref()), notes: notes, splash: splash, scale: scale,
                                 intensity: Math.max(0.6, Math.min(2, power / 70)) }, 26);
                         world.sound("minecraft:block.bell.resonate", hitPoint, 14, "{}");
-                        if (carried) WorldFeedback.text(world, hitPoint.plus(WorldCombat.point(0, 1.25, 0)), roundVerseText, [Math.round(power)], 30);
+                        if (answered) WorldFeedback.text(world, hitPoint.plus(WorldCombat.point(0, 1.25, 0)), roundVerseText, [Math.round(power)], 30);
                     }
                 }
             }

@@ -53,9 +53,9 @@ namespace PokemonSkills {
         id: "sketch",
         cooldownParameter: "recharge",
         name: "Sketch",
-        description: "把对手最近一招永久写进写生所在的招式格；普通生物的已知攻击会转译为对应招式。",
-        uses: ["永久学会对手的一手", "复制稀有的强化或回复", "把强攻收进自己的招式表"],
-        kind: "enemy",
+        description: "把眼前示范者（敌我皆可）最近一招永久写进写生所在的招式格；普通生物的已知攻击会转译为对应招式。",
+        uses: ["永久学会目标或同伴的一手", "复制稀有的强化或回复", "把强攻收进自己的招式表"],
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 12,
@@ -80,7 +80,9 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            // aim 允许任意关系实体或世界点：空点交给 execute 说明没有可学内容，不在这里强求存在敌人。
+            if (target === null) return "";
+            if (!world.valid(target)) return "target-left";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("sketch", "reach", action)) return "out-of-range";
@@ -93,7 +95,8 @@ namespace PokemonSkills {
             const target = action.target();
             action.present("world_combat:sketch:" + action.id(), sketchScene, 1, action.origin(), JSON.stringify({
                 moment: "draw", target: target === null ? "" : String(target.ref()),
-                path: [String(action.actor().ref()), target === null ? String(action.actor().ref()) : String(target.ref())],
+                // 墨线从实际示范者流向自己，落进写生所在的槽位。
+                path: [target === null ? String(action.actor().ref()) : String(target.ref()), String(action.actor().ref())],
                 strokes: p("sketch", "strokes", action)
             }));
             return prepare;

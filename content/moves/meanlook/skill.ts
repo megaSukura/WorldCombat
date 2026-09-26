@@ -50,8 +50,20 @@ namespace PokemonSkills {
         if (!world.valid(victim)) { effect.end(); return; }
         const data = JSON.parse(effect.state());
         const gaze = MobEffects.apply(world, victim, meanlookGaze, 600, 0);
-        data.carrierLease = MobEffects.bind(world, victim, meanlookGaze, gaze);
-        if (!data.carrierLease) { effect.end(); return; }
+        data.carrierLease = gaze === null ? 0 : MobEffects.bind(world, victim, meanlookGaze, gaze);
+        if (!data.carrierLease) {
+            // 目标控制被原生拒绝（例如免疫控制的 Boss）：明确播「锁未成」，收回可能已落下的载体，
+            // 结束这一次凝视，不重复写入冻结/位置，也不把它转成隐藏伤害。
+            data.refused = true;
+            if (gaze !== null) world.removeMobEffect(victim, meanlookGaze, gaze.key());
+            const blockedBody = world.observe(victim);
+            if (blockedBody !== null) {
+                WorldFeedback.emit(world, meanlookScene, 1, blockedBody.position(), { moment: "blocked", target: String(victim.ref()) }, 18);
+                WorldFeedback.text(world, blockedBody.position().plus(WorldCombat.point(0, 1.2, 0)), meanlookBlockedText, [], 24);
+            }
+            effect.state(JSON.stringify(data));
+            effect.end(); return;
+        }
         effect.state(JSON.stringify(data));
         meanlookHeld(world, effect.source(), victim, data, 20);
     });
@@ -71,7 +83,8 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(meanlookLock, "end", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) return;
-        if (JSON.parse(effect.state()).snapped) return;
+        const state = JSON.parse(effect.state());
+        if (state.snapped || state.refused) return;
         const body = world.observe(victim);
         if (body === null) return;
         WorldFeedback.emit(world, meanlookScene, 1, body.position(), { moment: "release", target: String(victim.ref()) }, 22);

@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.shadowbone.summary": "Call up a spirit-wrapped bone from your side and hurl it at a distant foe: the bone guides itself to the target, deals non-contact damage on impact, and may rattle the target into a Defence drop of one stage. The only ranged member of the guard-breakers, reaching furthest but costing the most per throw.",
+  "worldcombat.skill.shadowbone.summary": "Call up a spirit-wrapped bone from your side and hurl it at a distant foe: with a locked target the bone guides itself in, while a bare aim throw flies straight; on impact it deals non-contact damage and may rattle the target into a Defence drop of one stage. A missed bone drops on the ground for anyone to pick up.",
   "worldcombat.skill.shadowbone.description.0": "The thrown bone deals about %1$s non-contact damage.",
-  "worldcombat.skill.shadowbone.description.1": "Range %1$s blocks, launch speed %2$s blocks/tick, %3$s block hit radius; the bone guides itself toward the target.",
+  "worldcombat.skill.shadowbone.description.1": "Range %1$s blocks, launch speed %2$s blocks/tick, %3$s block hit radius; with a locked target the bone tracks, while a bare aim throw flies straight and expires on its own.",
   "worldcombat.skill.shadowbone.description.2": "On a hit a %1$s chance lowers the target's Defence by %2$s stage as a stat stage that does not recover on its own, and leaves a spooked mark for %3$s; the mark itself changes no stats, but a target carrying it loses one more Defence stage to moves that rip open an old gap.",
   "worldcombat.skill.shadowbone.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.shadowbone.growth.0": "From level %1$s the bone rises to %2$s.",
   "worldcombat.skill.shadowbone.growth.1": "From level %1$s the rattle chance rises to %2$s.",
   "worldcombat.skill.shadowbone.use.0": "Hurl a spirit-wrapped bone from afar",
-  "worldcombat.skill.shadowbone.use.1": "Open with the longest reach to soften a guard",
+  "worldcombat.skill.shadowbone.use.1": "Open by softening a distant foe's guard",
   "worldcombat.skill.shadowbone.use.2": "Leave a missed bone lying in the field for anyone",
   "worldcombat.skill.shadowbone.value.bone": "Bone power",
   "worldcombat.skill.shadowbone.value.throwSpeed": "Throw speed",
@@ -22,5 +22,5 @@
   "worldcombat.skill.shadowbone.preference.ai.spookFirst.help": "On: prefer targets that do not carry the guardbroken identity yet, to attach the rattle first. Off: treat it as an ordinary ranged attack.",
   "world_combat.move.shadowbone.text.rattle": "Spooked, Defence −%1$s stage",
   "effect.world_combat.shadowbone_spooked": "Shadow Bone: Spooked",
-  "worldcombat.skill.shadowbone.description.additional": "A bone that strikes the ground without hitting a living target drops there as a bone anyone can pick up."
+  "worldcombat.skill.shadowbone.description.additional": "A bone that strikes the ground without hitting a living target drops there as a bone anyone can pick up; at most one drops per cast, and a bone that hits a living target drops none."
 }

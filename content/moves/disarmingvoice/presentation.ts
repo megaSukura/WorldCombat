@@ -4,9 +4,9 @@
  * 一句话：一声魅惑的鸣叫从身上荡开，音符与心随声波扩到整块声场，罩住的每个目标身上腾起一圈打转的心。
  * 色相家族：樱粉与近白（glowingsparkle_pink、infatuation_heart、note），余韵收在暖白。
  * 拍子：起（charge 聚声）→ 击（wave 声场扩张、hit 命中）→ 收（charmed 心绕着目标慢慢淡去）。
- * 范围：wave 的声场边界环按 `data.scale`（声场半径 / 6）铺到机制半径，向外飞散的音符用速度×寿命走到边缘，
- * 玩家看边界环就知道站在哪会被罩住。
- * 运动：音符与心从身上向四面扩出、命中处的心沿目标头顶环绕上升。
+ * 范围：wave 的声场边界环按 `data.radius`（实际声场半径）一次铺到机制半径，向外飞的音符用速度×寿命在整块声场里散开，
+ * 玩家看边界环就知道站在哪会被罩住；不做慢慢推进的前缘。
+ * 运动：音符与心从身上一次荡出、命中处的心沿目标头顶环绕上升。
  * 数：`data.flow`（半径换算的流量）绑定 wave 的发射率，`data.notes`（威力换算）绑定 hit 的爆发数量，
  * `data.hits`（罩住人数）与 `data.intensity`（威力 / 40）缩放密度与亮度。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -44,33 +44,33 @@ const DisarmingvoiceDefinition: ParticleDefinition = {
                     name: "crest", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/note",
                     rate: { data: "flow", fallback: 90 }, shape: { kind: "point" },
-                    direction: "outward", speed: [0.3, 0.55], spread: 6,
+                    direction: "outward", speed: [0.22, 0.42], spread: 6,
                     gravity: 0.005, drag: 0.96,
-                    lifetime: [10, 18], size: [0.2, 0.05],
+                    lifetime: [8, 14], size: [0.2, 0.05],
                     color: 0xFFE0F0, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 240
                 },
                 {
                     name: "wave_hearts", bind: "point", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/generic/status/infatuation_heart",
                     rate: { data: "flow", fallback: 90 }, shape: { kind: "point" },
-                    direction: "outward", speed: [0.28, 0.5], spread: 10,
+                    direction: "outward", speed: [0.2, 0.38], spread: 10,
                     gravity: 0.004, drag: 0.96,
-                    lifetime: [12, 20], size: [0.18, 0.05],
+                    lifetime: [10, 16], size: [0.18, 0.05],
                     color: 0xF2A0C8, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 200
                 },
                 {
-                    name: "plate", bind: "point", offset: [0, 0.08, 0],
+                    name: "plate", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring", spriteFrom: "random",
-                    rate: 26, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 26, shape: { kind: "ring", radius: { data: "radius", fallback: 6 } },
                     direction: "outward", speed: [0.0, 0.02],
                     lifetime: [14, 24], size: [0.3, 0.12],
                     color: 0xE890C0, alpha: [0.22, 0], light: "world", render: "translucent", maxParticles: 60
                 },
                 {
-                    name: "edge_ring", bind: "point", offset: [0, 0.06, 0],
+                    name: "edge_ring", bind: "point", fit: "world", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 6 } },
                     direction: "outward", speed: [0.02, 0.06],
                     lifetime: [16, 26], size: [0.4, 0.9], sizeMode: "sin",
                     color: 0xF2A0C8, alpha: [0.5, 0], light: "full"

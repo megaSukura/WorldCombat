@@ -26,7 +26,7 @@ namespace PokemonSkills {
                 .as(text("worldcombat.skill.seismictoss.value.levelDamage")),
             "等级伤害", {
                 unit: "点",
-                description: "这一摔打出的固定伤害，等于使用者等级再乘一个体重系数（体重 60 时为等级本身）。对手防御与相性不参与，只有属性免疫会挡住它。"
+                description: "这一摔打出的固定伤害，等于使用者等级再乘一个体重系数（体重 60 时为等级本身）。不走攻防比例；属性免疫与目标的原生伤害裁定仍然生效。"
             }),
         /** 抓取起手：基础 10 刻，速度每比 55 快 1 少 0.04 刻，体重每比 60 重 1 加 0.01 刻；夹在 7..15。 */
         seize: seconds(
@@ -46,7 +46,7 @@ namespace PokemonSkills {
                 .clamp(0.16, 0.7).round(3),
             "水平投速", {
                 unit: "格/刻",
-                description: "把对手甩出去的水平初速；物攻越高、自己越重、对手越轻，飞得越远。砸地式把这一下压短。"
+                description: "对目标追加的水平投速；物攻越高、自己越重、对手越轻，飞得越远。砸地式把这一下压短。"
             }),
         /** 垂直投速：基础 0.44 格/刻，碰撞箱每比 1.4 高 1 格加 0.05；砸地 ×0.85；夹在 0.28..0.62。 */
         hurlUp: formula(
@@ -55,7 +55,7 @@ namespace PokemonSkills {
                 .clamp(0.28, 0.62).round(3),
             "垂直投速", {
                 unit: "格/刻",
-                description: "把对手抛起来的垂直初速；高个子抛得更高，砸地式角度更陡。"
+                description: "对目标追加的向上投速；高个子抛得更高，砸地式角度更陡。"
             }),
         /** 抓取半径：基础 0.5 格，碰撞箱每比 1.4 高 1 格加 0.14；夹在 0.36..0.9。 */
         collisionRadius: formula(
@@ -71,10 +71,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "对手落地那一下扬起的冲击范围；自己越重摔得越响。"
             }),
-        /** 落地延迟：基础 12 刻，速度每比 55 快 1 少 0.05 刻；夹在 8..18。 */
+        /** 落地追踪基时：基础 12 刻，速度每比 55 快 1 少 0.05 刻；夹在 8..18。 */
         slamDelay: seconds(
             F.base(12).minus(F.stat("speed").minus(55).times(0.05).clamp(-2, 4)).clamp(8, 18).round(0),
-            "落地延迟", "从甩手到对手砸地之间的飞行时间；这一段里对手在空中，无法反击。"),
+            "落地追踪基时", "加上抓握与钉地时长作为落地观察期限；实际落地时刻由目标运动和地形决定，到期只收束尾迹。"),
         /** 钉地时长：基础 28 刻，等级每比 30 高 1 加 0.4 刻；夹在 20..60。仅砸地式生效。 */
         pinTicks: seconds(
             F.base(28).plus(F.level().minus(30).times(0.4).clamp(-6, 24)).clamp(20, 60).round(0),
@@ -91,7 +91,7 @@ namespace PokemonSkills {
     describe("seismictoss", [
         { key: "description.0", values: ["damage"] },
         { key: "description.1", values: ["seize","holdTicks","collisionRadius"] },
-        { key: "description.2", values: ["hurlXZ", "hurlUp", "slamDelay"] },
+        { key: "description.2", values: ["hurlXZ", "hurlUp"] },
         { key: "slam.on", values: ["pinTicks"], when: function (context) { return read(context.detail.values, ["slam"]) === true; } },
         { key: "slam.off", values: [], when: function (context) { return read(context.detail.values, ["slam"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

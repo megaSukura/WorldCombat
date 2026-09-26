@@ -6,57 +6,21 @@
  *
  * 三幕：
  *   起势（windup，提交前）：拔刀、压低身形，刀光在脚边聚拢；可被打断，打断不消耗任何东西。
- *   连斩（提交后）：物攻一次抬起（原生 +2），并把这段锋芒挂成可见窗口；随后按 cuts 斩出，每斩沿最近的
- *     敌人前压 step/cuts 格（配置「进逼」时），发一道刃弧，并留下刃光。
- *   定锋（收势）：地面刃环按 arc 半径荡开，浮出结果；窗口走完时锋芒散去，这段舞抬起的物攻等级一并收回。
+ *   连斩（提交后）：用来源独立的 boostWindow 把这次磨出的物攻挂成可见窗口（只抬这一笔，到期只撤这一笔，
+ *     不从当前等级减总数）；随后按 cuts 斩出，每一斩沿提交时锁定的明确瞄向（AI 传威胁方向）前压
+ *     step/cuts 格（配置「进逼」时），位移读真实回执，发一道刃弧并留下刃光。
+ *   定锋（收势）：在身体真实走到的位置按 arc 半径荡开刃环，浮出结果；窗口走完时锋芒散去，等级由共享层收回。
  *
- * 与同族分开：龙之舞螺旋上升、蝶舞原地扬鳞、胜利之舞踏步立冠；剑舞是**前压的连斩**，只抬物攻。
+ * 与同族分开：龙之舞螺旋上升、蝶舞左右点踏、胜利之舞踏步立冠；剑舞是**前压的连斩**，只抬物攻。
  */
 namespace PokemonSkills {
     const swordsdanceScene = "world_combat:move_swordsdance";
     const swordsdanceHone = "world_combat:swordsdance_hone";
     const swordsdanceText = "world_combat.move.swordsdance.text.honed";
     const swordsdanceFadeText = "world_combat.move.swordsdance.text.faded";
+    const swordsdanceContribution = "world_combat:move/swordsdance";
     /** 表现里的参考半径：`data.scale = 实际刃风半径 / 这个数`，让地面刃环与判定同半径。 */
     const swordsdanceArc = 1.4;
-
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function swordsdanceStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function swordsdanceRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = swordsdanceStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, swordsdanceStage(world, actor, stat) - before);
-    }
-    /** 挂上/刷新「磨刃」窗口，amplifier 记录累计抬起的级数，供窗口结束时原样收回。 */
-    function swordsdanceOpen(world: CombatWorld, actor: CombatActor, ticks: number, levels: number): void {
-        if (levels <= 0) return;
-        const existing = MobEffects.read(world, actor, swordsdanceHone);
-        const total = Math.min(6, Math.max(0, existing === null ? 0 : existing.amplifier()) + levels);
-        MobEffects.apply(world, actor, swordsdanceHone, ticks, total);
-    }
-    /** 最近的非友方活体方向（水平单位向量），用于「进逼」；没有就退回自身朝向。 */
-    function swordsdanceTowards(world: CombatWorld, actor: CombatActor, fallback: CombatPoint): CombatPoint | null {
-        const body = world.observe(actor);
-        if (body === null) return null;
-        const from = body.position();
-        const actors = world.query(from, 14, false);
-        let heading: CombatPoint | null = null, best = 15;
-        for (let index = 0; index < actors.length; index++) {
-            const facts = world.observe(actors[index]);
-            if (facts === null || facts.friendly() || facts.health() <= 0) continue;
-            const delta = facts.position().minus(from), horizontal = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-            if (horizontal < 0.05 || horizontal >= best) continue;
-            best = horizontal; heading = WorldCombat.point(delta.x() / horizontal, 0, delta.z() / horizontal);
-        }
-        if (heading !== null) return heading;
-        const flat = WorldCombat.point(fallback.x(), 0, fallback.z());
-        return flat.length() < 0.01 ? null : flat.unit();
-    }
 
     define({
         freeMovement: true,
@@ -104,19 +68,31 @@ namespace PokemonSkills {
             const arc = Math.max(0.8, p("swordsdance", "arc", action));
             const stride = Math.max(0, p("swordsdance", "step", action)) / cuts;
             const sharpen = Math.max(8, Math.round(p("swordsdance", "sharpen", action)));
-            const chips = Math.max(4, Math.round(sharpen / cuts));
             const window = Math.max(80, Math.round(p("swordsdance", "hone", action)));
             const press = !!(config && config.press);
             const scale = arc / swordsdanceArc;
-            const levels = swordsdanceRaise(world, actor, "atk", rise);
-            swordsdanceOpen(world, actor, window, levels);
+            // 提交时锁定的明确瞄向：AI 传威胁方向，手动读玩家瞄准；不再自行扫描无关敌人。
+            const heading = action.direction();
+            // 来源独立窗口：只抬本舞的物攻，结束只撤这一笔，不从当前等级减总数，也不会扣掉后来别的来源。
+            const before = NativeEffects.effectiveStage(world, actor, "atk");
+            const previous = MobEffects.read(world, actor, swordsdanceHone);
+            const carrier = MobEffects.apply(world, actor, swordsdanceHone, window, 0);
+            if (carrier === null) { done(action); return; }
+            const owned = NativeEffects.boostWindow(world, actor, { atk: rise }, carrier.duration(),
+                swordsdanceContribution, carrier, previous);
+            if (!owned) { world.removeMobEffect(actor, carrier.id(), carrier.key()); done(action); return; }
+            const levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "atk") - before);
+            const intensity = Math.max(0.6, Math.min(2.2, levels / 2 + sharpen / 48));
+            // 磨刃的持续锋光绑在这次真正的窗口上：随它自然到期或提前清除一起收，不额外占动作寿命。
+            WorldFeedback.onEffect(world, owned, "world_combat:move_swordsdance/hone", swordsdanceScene, 1, body.position(),
+                { moment: "hone", arc: arc, scale: scale, sharpen: sharpen, levels: levels, intensity: intensity });
+            const chips = Math.max(4, Math.round(sharpen / cuts));
             let index = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
             function settle(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
-                scope.face(here.position().plus(current.direction()), 24, 24);
                 WorldFeedback.emit(scope, swordsdanceScene, 1, here.position(),
                     { moment: "settle", arc: arc, scale: scale, cuts: cuts, sharpen: sharpen, levels: levels,
                         intensity: Math.max(0.6, Math.min(2.2, levels / 2 + sharpen / 48)) }, 30);
@@ -127,16 +103,18 @@ namespace PokemonSkills {
             function cutNow(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
-                if (press) {
-                    const heading = swordsdanceTowards(scope, actor, current.direction());
-                    if (heading !== null && stride > 0) scope.displace(actor, heading.scale(stride));
-                }
+                // 前压读真实位移回执：被墙或目标挡住的一斩不会在远处画出脚尘。
+                const moved = press && stride > 0.001 && heading.length() > 0.01
+                    ? scope.displace(actor, heading.scale(stride)) : 0;
                 const now = scope.observe(actor);
                 const at = now === null ? here.position() : now.position();
-                scope.face(at.plus(current.direction()), 30, 30);
+                if (heading.length() > 0.01) scope.face(at.plus(heading), 30, 30);
+                const ratio = stride > 0.001 ? Math.max(0, Math.min(1, moved / stride)) : 0;
                 WorldFeedback.emit(scope, swordsdanceScene, 1, at,
                     { moment: "cut", arc: arc, scale: scale, cuts: cuts, index: index + 1, chips: chips,
-                        sharpen: sharpen, press: press ? 1 : 0, intensity: Math.max(0.6, Math.min(2.2, sharpen / 32)) }, 22);
+                        sharpen: sharpen, press: press ? 1 : 0, travel: ratio,
+                        dust: moved > 0.03 ? Math.max(4, Math.round(chips * ratio)) : 0,
+                        intensity: Math.max(0.6, Math.min(2.2, sharpen / 32)) }, 22);
                 scope.sound(index === 0 ? "cobblemon:move.swordsdance.actor" : "minecraft:item.trident.hit", at, 14, "{}");
                 index++;
                 if (index >= cuts) { current.after(beat, settle); return; }
@@ -146,15 +124,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 磨刃窗口走完：把这段舞抬起的物攻等级原样收回（只收到当前实际持有的正等级，避免把别处的增益一起抹掉）。
+    // 磨刃窗口的等级贡献由共享 boostWindow 拥有并撤回；这里只负责窗口结束时的收势反馈。
     WorldCombat.on("world_combat:move_swordsdance/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== swordsdanceHone) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        const loss = Math.min(levels, Math.max(0, swordsdanceStage(world, actor, "atk")));
-        if (loss > 0) NativeEffects.boost(world, actor, "atk", -loss);
+        if (MobEffects.read(world, actor, swordsdanceHone) !== null) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, swordsdanceScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 24);

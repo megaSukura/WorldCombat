@@ -2,7 +2,8 @@
  * 电球 / electroball 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在自己 `ai.maxChase`（默认 14）格以内；更远交给共享接近逻辑。
- * 这一招以「快」为燃料，**自己速度越快越倾向用它**；它是射程最长的几招之一，所以伙伴会站在远处先手开火，
+ * 这一招称的是「自己比对手快多少」：**对更慢、又在射程内的敌人优先**，用共享的原生速度事实比较双方，不套用
+ * 宝可梦专属的数值区间；对手比自己还快时降权。它是射程最长的几招之一，所以伙伴会站在远处先手开火，
  * 对手贴上来之前尽量多投几发。
  * 放完之后：对手离得近就交给别的近身招；只要还在投掷距离内就优先继续投，这是它最舒服的用法。
  */
@@ -25,10 +26,17 @@ namespace PokemonSkills {
             const distance = CompanionBehavior.distance(self.point, target.point);
             if (distance > capability.data.range) return 0;
             let score = 21;
-            if (context.facts.speed >= 95) score += 10;
-            if (context.facts.speed >= 130) score += 5;
+            // 这一招称的是「自己比对手快多少」：用共享的原生速度事实比较，不套用宝可梦专属的数值区间。
+            const selfSpeed = CompanionBehavior.speed(context, self);
+            const targetSpeed = CompanionBehavior.speed(context, target);
+            if (selfSpeed !== null && targetSpeed !== null && targetSpeed > 0) {
+                const edge = selfSpeed / targetSpeed;
+                if (edge >= 1.35) score += 16;
+                else if (edge >= 1.1) score += 9;
+                else if (edge < 0.85) score -= 8;
+            }
             if (distance >= 6) score += 4;
-            return score;
+            return Math.max(0, score);
         }
     });
 

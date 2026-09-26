@@ -5,7 +5,6 @@ namespace PokemonSkills {
     const skillswapMark = "world_combat:skillswap_mark";
     const skillswapGainText = "world_combat.move.skillswap.text.gain";
     const skillswapSameText = "world_combat.move.skillswap.text.same";
-    const skillswapAbilityReturnText = "world_combat.move.skillswap.text.returned";
     const skillswapAbilityPattern = /^[a-z0-9]{1,64}$/;
 
     /** 一个战斗者当前生效的特性（含临时层与压制）；非宝可梦返回 ""。 */
@@ -18,48 +17,95 @@ namespace PokemonSkills {
         return !!ability && skillswapAbilityPattern.test(ability) && !NativeAbilities.flag(ability, "failskillswap");
     }
 
-    WorldCombat.effect(skillswapMark, 1, 12600, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.layer !== "number" || !isFinite(value.layer)) throw new Error("Invalid skill swap layer");
-        if (typeof value.paired !== "number" || !isFinite(value.paired)) throw new Error("Invalid skill swap pair layer");
-        if (typeof value.pair !== "string") throw new Error("Invalid skill swap partner");
-        if (typeof value.got !== "string") throw new Error("Invalid skill swap ability");
+    interface SkillSwapPair {
+        token: string; layer: number; paired: number; pair: string; got: string; glyphs: number;
+        carrier: MobEffects.Anchor; partnerCarrier: MobEffects.Anchor;
+    }
+    WorldCombat.effect(skillswapMark, 2, 12600, "actor", json => {
+        const value: SkillSwapPair = JSON.parse(json);
+        if (!value.token || !value.pair || !(value.layer > 0) || !(value.paired > 0)
+            || !MobEffects.validAnchor(value.carrier) || !MobEffects.validAnchor(value.partnerCarrier)) throw new Error("Invalid skill swap pair");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(skillswapMark, "start", effect => effect.schedule("pair", "pair", 2, "{}"));
-    WorldCombat.effectHandler(skillswapMark, "pair", function (effect) {
-        const world = effect.world(), state = JSON.parse(effect.state()), other = world.actor(state.pair);
-        if (!other || !world.valid(other) || MobEffects.read(world, effect.target(), skillswapShift) === null
-            || MobEffects.read(world, other, skillswapShift) === null) {
-            skillswapSettle(world, effect.target());
-            MobEffects.consume(world, effect.target(), skillswapShift);
-            return;
-        }
-        effect.schedule("pair", "pair", 2, "{}");
+    WorldCombat.effectHandler(skillswapMark, "start", effect => {
+        const world = effect.world(), state: SkillSwapPair = JSON.parse(effect.state()), body = world.observe(effect.target());
+        MobEffects.bind(world, effect.target(), state.carrier.id);
+        if (body) world.present("world_combat:skillswap/hum", skillswapScene, 1, body.position(), JSON.stringify({
+            moment: "hum", target: String(effect.target().ref()), glyphs: Math.max(4, state.glyphs / 2), remaining: effect.remaining()
+        }));
+        effect.schedule("pair", "pair", 1, "{}");
     });
-    WorldCombat.effectHandler(skillswapMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    /** 撤掉一次交换：清自己的层与记号，再顺着记号把对方那侧也清掉；返回自己换到的特性。 */
-    function skillswapSettle(world: CombatWorld, actor: CombatActor): string {
-        const views = world.effects(actor, skillswapMark);
-        if (views.length === 0) return "";
-        const mark = JSON.parse(String(views[0].data()));
-        if (typeof mark.layer === "number") world.operation(mark.layer, "world_combat:dispel", "{}");
-        world.operation(views[0].id(), "world_combat:dispel", "{}");
-        const partner = world.actor(String(mark.pair));
-        if (partner !== null && world.valid(partner)) {
-            const others = world.effects(partner, skillswapMark).filter(view => {
-                const other = JSON.parse(String(view.data()));
-                return other.layer === mark.paired && other.paired === mark.layer && other.pair === String(actor.ref());
-            });
-            if (others.length) {
-                const other = JSON.parse(String(others[0].data()));
-                if (typeof other.layer === "number") world.operation(other.layer, "world_combat:dispel", "{}");
-                world.operation(others[0].id(), "world_combat:dispel", "{}");
+    WorldCombat.effectHandler(skillswapMark, "pair", effect => {
+        const world = effect.world(), state: SkillSwapPair = JSON.parse(effect.state()), other = world.actor(state.pair);
+        if (!other || !world.valid(other) || !MobEffects.matches(world, effect.target(), state.carrier)
+            || !MobEffects.matches(world, other, state.partnerCarrier)) { effect.end(); return; }
+        effect.schedule("pair", "pair", 1, "{}");
+    });
+    WorldCombat.effectHandler(skillswapMark, "operation:world_combat:dispel", effect => effect.end());
+    WorldCombat.effectHandler(skillswapMark, "end", effect => {
+        const world = effect.world(), state: SkillSwapPair = JSON.parse(effect.state());
+        world.operation(state.layer, "world_combat:dispel", "{}");
+        const other = world.actor(state.pair);
+        if (other && world.valid(other)) world.effects(other, skillswapMark).forEach(view => {
+            const pair: SkillSwapPair = JSON.parse(view.data());
+            if (pair.token === state.token && pair.layer === state.paired && pair.paired === state.layer)
+                world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+    });
+    function skillswapOccupied(world: CombatWorld, actor: CombatActor): boolean {
+        return world.effects(actor, skillswapMark).length > 0 || MobEffects.read(world, actor, skillswapShift) !== null;
+    }
+    function skillswapCurrent(action: CombatAction): boolean {
+        const world = action.sense(), actor = action.actor(), target = action.target();
+        if (!target || !world.valid(target) || String(actor.ref()) === String(target.ref())
+            || skillswapOccupied(world, actor) || skillswapOccupied(world, target)) return false;
+        const body = world.observe(target);
+        return !!body && world.closestPoint(target, action.origin()).minus(action.origin()).length() <= p("skillswap", "reach", action)
+            && world.clear(action.origin(), body.position());
+    }
+    /** Only this attempt's native keys and managed layer ids are removed if either side refuses. */
+    function skillswapApply(action: CombatAction, window: number, glyphs: number): string[] | null {
+        if (!skillswapCurrent(action)) return null;
+        const world = action.world(), actor = action.actor(), target = action.target()!;
+        const native = String(target.domain()) === "cobblemon", mine = skillswapAbility(world, actor), theirs = skillswapAbility(world, target);
+        if (native && (!skillswapSwappable(mine) || !skillswapSwappable(theirs) || mine === theirs)) return null;
+        const ownValues = CombatCopies.read(world, actor), otherValues = CombatCopies.read(world, target);
+        const common = Object.keys(ownValues).filter(id => otherValues[id] !== undefined);
+        if (!native && !common.some(id => Math.abs(ownValues[id] - otherValues[id]) > .0001)) return null;
+        const a: CombatCopies.Values = {}, b: CombatCopies.Values = {};
+        common.forEach(id => { a[id] = ownValues[id]; b[id] = otherValues[id]; });
+        let ownCarrier: CombatMobEffect | null = null, otherCarrier: CombatMobEffect | null = null;
+        const layers: number[] = [], marks: number[] = [];
+        const token = String(action.id());
+        let completed = false;
+        try {
+            ownCarrier = MobEffects.apply(world, actor, skillswapShift, window, 0);
+            if (!ownCarrier) return null;
+            otherCarrier = MobEffects.apply(world, target, skillswapShift, window, 0);
+            if (!otherCarrier) return null;
+            const anchorA = MobEffects.anchor(ownCarrier), anchorB = MobEffects.anchor(otherCarrier);
+            layers.push(native ? NativeModifiers.apply(world, actor, { ability: theirs, carrier: anchorA }, window)
+                : CombatCopies.apply(world, actor, b, window, "skillswap/" + token, anchorA));
+            layers.push(native ? NativeModifiers.apply(world, target, { ability: mine, carrier: anchorB }, window)
+                : CombatCopies.apply(world, target, a, window, "skillswap/" + token, anchorB));
+            const definition = native ? "cobblemon_world_combat:modifier" : "world_combat:attribute_copy";
+            if (!layers[0] || !layers[1] || !world.effects(actor, definition).some(view => view.id() === layers[0])
+                || !world.effects(target, definition).some(view => view.id() === layers[1])
+                || !MobEffects.matches(world, actor, anchorA) || !MobEffects.matches(world, target, anchorB)) return null;
+            marks.push(world.effect(skillswapMark, actor, JSON.stringify({ token, layer: layers[0], paired: layers[1], pair: String(target.ref()),
+                got: native ? theirs : "native", glyphs, carrier: anchorA, partnerCarrier: anchorB }), window));
+            marks.push(world.effect(skillswapMark, target, JSON.stringify({ token, layer: layers[1], paired: layers[0], pair: String(actor.ref()),
+                got: native ? mine : "native", glyphs, carrier: anchorB, partnerCarrier: anchorA }), window));
+            completed = marks.every(id => id > 0) && world.effects(actor, skillswapMark).some(view => view.id() === marks[0])
+                && world.effects(target, skillswapMark).some(view => view.id() === marks[1]);
+            return completed ? [native ? theirs : "native", native ? mine : "native"] : null;
+        } finally {
+            if (!completed) {
+                marks.concat(layers).forEach(id => { if (id > 0) world.operation(id, "world_combat:dispel", "{}"); });
+                if (ownCarrier) world.removeMobEffect(actor, skillswapShift, ownCarrier.key());
+                if (otherCarrier) world.removeMobEffect(target, skillswapShift, otherCarrier.key());
             }
-            if (others.length && world.effects(partner, skillswapMark).length === 0) MobEffects.consume(world, partner, skillswapShift);
         }
-        return String(mark.got || "");
     }
 
     define({
@@ -68,7 +114,7 @@ namespace PokemonSkills {
         name: "特性互换",
         description: "暂时双向交换特性；与普通生物交手时交换双方的攻击、移动和防护属性。",
         uses: ["把对手的强力特性取过来自己用", "把自己的负面特性甩给对手", "打乱对手依赖特性建立的打法"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 8,
@@ -95,9 +141,9 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (String(actor.domain()) !== "cobblemon") return "no-ability";
-            if (world.effects(actor, skillswapMark).length || world.effects(target, skillswapMark).length) return "already-swapped";
+            if (skillswapOccupied(world, actor) || skillswapOccupied(world, target)) return "already-swapped";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("skillswap", "reach", action)) return "out-of-range";
@@ -121,86 +167,25 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, _move, config, done) {
-            const world = action.world(), actor = action.actor(), target = action.target();
-            const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null || world.friendly(target)
-                || String(actor.domain()) !== "cobblemon") { done(action); return; }
-            if (String(target.domain()) !== "cobblemon") {
-                const window = Math.max(60, Math.round(p("skillswap", "window", action)));
-                const mine = CombatCopies.read(world, actor), theirs = CombatCopies.read(world, target);
-                const ownCarrier = MobEffects.apply(world, actor, skillswapShift, window, 0), otherCarrier = MobEffects.apply(world, target, skillswapShift, window, 0);
-                if (!ownCarrier || !otherCarrier) { if (ownCarrier) MobEffects.consume(world, actor, skillswapShift); if (otherCarrier) MobEffects.consume(world, target, skillswapShift); done(action); return; }
-                const own = CombatCopies.apply(world, actor, theirs, window, "skillswap", MobEffects.anchor(ownCarrier));
-                const other = CombatCopies.apply(world, target, mine, window, "skillswap", MobEffects.anchor(otherCarrier));
-                world.effect(skillswapMark, actor, JSON.stringify({ layer: own, paired: other, pair: String(target.ref()), got: "native", glyphs: 8 }), window + 60);
-                world.effect(skillswapMark, target, JSON.stringify({ layer: other, paired: own, pair: String(actor.ref()), got: "native", glyphs: 8 }), window + 60);
-                WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "trade", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())], glyphs: 8, intensity: 1 }, 36);
-                sound(action, "minecraft:entity.illusioner.cast_spell"); done(action); return;
-            }
-            const mine = skillswapAbility(world, actor), theirs = skillswapAbility(world, target);
-            if (!mine || !theirs || !skillswapSwappable(mine) || !skillswapSwappable(theirs) || mine === theirs) {
-                WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()) }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), skillswapSameText, [], 26);
-                sound(action, "minecraft:block.amethyst_block.break");
-                done(action);
-                return;
-            }
-            const window = Math.max(60, Math.round(p("skillswap", "window", action)));
+            const world = action.world(), actor = action.actor(), target = action.target(), body = world.observe(actor);
+            if (!target || !body) { done(action); return; }
             const glyphs = Math.max(6, Math.round(p("skillswap", "glyphs", action)));
-            const layerMine = NativeModifiers.apply(world, actor, { ability: theirs }, window + 40);
-            const layerTheirs = NativeModifiers.apply(world, target, { ability: mine }, window + 40);
-            const markMine = { layer: layerMine, paired: layerTheirs, pair: String(target.ref()), got: theirs, glyphs: glyphs };
-            const markTheirs = { layer: layerTheirs, paired: layerMine, pair: String(actor.ref()), got: mine, glyphs: glyphs };
-            world.effect(skillswapMark, actor, JSON.stringify(markMine), window + 60);
-            world.effect(skillswapMark, target, JSON.stringify(markTheirs), window + 60);
-            MobEffects.apply(world, actor, skillswapShift, window, 0);
-            MobEffects.apply(world, target, skillswapShift, window, 0);
-            const intensity = Math.max(0.7, Math.min(2, window / 320));
-            const path = [String(actor.ref()), String(target.ref())];
-            WorldFeedback.emit(world, skillswapScene, 1, body.position(),
-                { moment: "trade", target: String(target.ref()), path: path, glyphs: glyphs, intensity: intensity }, 36);
+            const result = skillswapApply(action, Math.max(60, Math.round(p("skillswap", "window", action))), glyphs);
+            if (!result) {
+                WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "fizzle", target: String(actor.ref()) }, 22);
+                WorldFeedback.text(world, body.position(), skillswapSameText, [], 26); done(action); return;
+            }
+            WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "trade", target: String(target.ref()),
+                path: [String(actor.ref()), String(target.ref())], glyphs, intensity: 1 }, 36);
             const targetBody = world.observe(target);
-            if (targetBody !== null)
-                WorldFeedback.emit(world, skillswapScene, 1, targetBody.position(),
-                    { moment: "trade", target: String(actor.ref()), path: path, glyphs: glyphs, intensity: intensity }, 36);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), skillswapGainText,
-                [{ key: "cobblemon.ability." + theirs, fallback: theirs }], 40);
-            if (targetBody !== null) WorldFeedback.text(world, targetBody.position().plus(WorldCombat.point(0, 1.3, 0)), skillswapGainText,
-                [{ key: "cobblemon.ability." + mine, fallback: mine }], 40);
-            sound(action, "minecraft:entity.illusioner.cast_spell");
-            world.sound("minecraft:entity.illusioner.mirror_move", body.position(), 14, "{}");
-            done(action);
+            [body, targetBody].forEach((at, index) => {
+                if (!at) return;
+                const ability = result[index];
+                WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.3, 0)), skillswapGainText,
+                    [{ key: ability === "native" ? "world_combat.move.skillswap.text.attributes" : "cobblemon.ability." + ability }], 36);
+            });
+            sound(action, "minecraft:entity.illusioner.cast_spell"); done(action);
         }
     });
 
-    // 对调存续期：每 20 刻在两人身上续一次低密度符光，让玩家读出现在还换着、还剩多久。
-    WorldCombat.on("world_combat:move_skillswap/hum", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== skillswapShift) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const views = world.effects(actor, skillswapMark);
-        if (!views.length) { MobEffects.consume(world, actor, skillswapShift); return; }
-        const mark = JSON.parse(String(views[0].data()));
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_skillswap/hum/" + String(actor.ref()), skillswapScene, 1, body.position(),
-            { moment: "hum", target: String(actor.ref()), path: [String(actor.ref()), String(mark.pair)],
-                glyphs: Math.max(4, Math.round((Number(mark.glyphs) || 8) / 2)), remaining: views[0].remaining() }, 40);
-    });
-
-    // 窗口走完或被清除：两侧一起换回原本的特性；自然到期额外播一次褪去。
-    WorldCombat.on("world_combat:move_skillswap/revert", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== skillswapShift) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || MobEffects.read(world, actor, skillswapShift) !== null) return;
-        const got = skillswapSettle(world, actor);
-        if (!got) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.emit(world, skillswapScene, 1, body.position(), { moment: "revert", target: String(actor.ref()) }, 26);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), skillswapAbilityReturnText, [], 26);
-        world.sound("minecraft:block.beacon.deactivate", body.position(), 12, "{}");
-    });
 }

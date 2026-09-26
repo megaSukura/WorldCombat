@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.wingattack.summary": "Spreads both wings wide and sweeps the whole fan in front: the nearest non-allies inside the fan each take one contact hit and are shoved out to the sides. The wide choice is broader, hits up to three and shoves harder but hits lighter; the folded choice is heavier and only sweeps one.",
+  "worldcombat.skill.wingattack.summary": "Spreads both wings wide and sweeps the whole fan in front with a left and a right blade: the nearest non-allies inside the fan each take one contact hit and are shoved toward their own side of the centreline, clearing the space ahead. It can be swept into a direction or empty air. The wide choice is broader, hits up to three and shoves harder but hits lighter; the folded choice is heavier and only sweeps one.",
   "worldcombat.skill.wingattack.use.0": "One spread of the wings to sweep a small group in front",
-  "worldcombat.skill.wingattack.use.1": "Shove a close opponent back to open up a landing spot",
+  "worldcombat.skill.wingattack.use.1": "Shove a close opponent to the sides to open up a landing spot",
   "worldcombat.skill.wingattack.use.2": "A cheap, reliable Flying contact you can throw again and again",
   "worldcombat.skill.wingattack.description.0": "Each swept target takes about %1$s physical contact damage; one spread sweeps at most %2$s non-allies.",
-  "worldcombat.skill.wingattack.description.1": "The fan reaches %1$s blocks and opens %2$s°; swept targets are shoved %3$s blocks away from the user.",
+  "worldcombat.skill.wingattack.description.1": "The fan reaches %1$s blocks and opens %2$s°; a swept target is shoved up to %3$s blocks toward its own side of the centreline, or straight ahead if dead centre.",
   "worldcombat.skill.wingattack.description.2": "The fan shape is the hit area.",
   "worldcombat.skill.wingattack.wide.on": "Wide: a broader fan, up to 3 targets at once and a longer shove; costs power x0.8, wind-up +1 tick and recovery +3 ticks.",
   "worldcombat.skill.wingattack.wide.off": "Folded: a heavier single hit (x1.15) that comes out faster; costs sweeping only one target and almost no shove.",

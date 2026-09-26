@@ -6,7 +6,7 @@
  *
  * 出手：向射程内的地面铺开浴场（原生伪天气的即时生效 + 优先度 +1，在这里是快速的起手）。
  * 持场：`world_combat:field` 效果承载位置、半径、持续与密度；每 5 刻扫描一次，给区域内的人补离子膜，
- *       并按本招算出的半径与密度续一次画面。浴场离开施法者 48 格会自动结束。
+ *       并按本招算出的半径与密度续一次画面；边界表现绑在同一个场效果上，随它自然结束或提前驱散一起收走。
  * 命中：离子膜是 `world_combat:ion_film`（共享身份 ionized）；带着膜的施法者出一般属性招式时，
  *       由 rules.ts 的伤害元数据规则把有效属性改成电——之后属性相性与电吸收特性照常参与结算。
  * 反制：走出浴场膜就脱落；浴场固定在地面、不跟随；对双方生效，可能反过来把对手的普通招变成电招。
@@ -38,9 +38,10 @@ namespace PokemonSkills {
             const duration = p("iondeluge", "fieldDuration", action);
             const film = p("iondeluge", "filmTicks", action);
             const density = p("iondeluge", "ionDensity", action);
-            WorldEffects.field(world, ionField, point, radius, { film: film, density: density }, duration);
+            const fieldId = WorldEffects.field(world, ionField, point, radius, { film: film, density: density }, duration);
             sound(action, "minecraft:block.beacon.activate");
-            WorldFeedback.emit(world, ionDelugeScene, 1, point, { moment: "field", density: density, duration: duration, scale: radius / 3.0 }, 46);
+            // 初始边界拿场效果自己的 id 播报，之后的扫描续期与结束都跟随同一个拥有者。
+            if (fieldId > 0) WorldFeedback.onEffect(world, fieldId, "field", ionDelugeScene, 1, point, { moment: "field", density: density, duration: duration, scale: radius / 3.0 });
             done(action);
         }
     });

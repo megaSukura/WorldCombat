@@ -1,13 +1,13 @@
 /**
  * 气场之翼 / esperwing 的客户端表现。
  *
- * 一句话：背后先聚起一圈粉色气场，随后左右两翼各铺成半扇向前扫开，落点炸开粉色碎屑；同一瞬脚下浮起
- * 一圈提速光环，余韵里身后拖着粉色气点。
+ * 一句话：背后先聚起一圈粉色气场，随后左翼先铺左半扇、短间隔后右翼再铺右半扇，分别扫开并炸出粉色碎屑；
+ * 第二翼落定、提速真生效后，脚下浮起一圈提速光环、双翼再展开一次，余韵里身后拖着粉色气点。
  * 色相家族：粉紫（psyswirl／impact_psychic／glowingsparkle_pink 的粉紫偏色）＋近白高光＋中性尘。
- * 拍子：起（windup 气场聚拢）→ 扫（wing 双翼铺开）→ 切（cut 命中爆）→ 托（aura 提速光环、linger 余韵）→ 强调（crit 要害）。
- * 范围：wing 用 `data.path`（与服务端 esperwingArc 同一组顶点）分别画出左右两个半扇面；两个半扇合起来就是判定范围。
- * 运动：windup 光点向背后收拢，wing 由翼根向扇缘扫开，cut 碎屑从目标向外爆，aura 用速度线向上冲、linger 缓缓拖尾。
- * 数：`data.motes`（特攻与速度换算）绑定翼面与命中的光点量；`data.aura` 是余韵时长；`data.gift` 决定提速光环的强度。
+ * 拍子：起（windup 气场聚拢）→ 左扫（wing side=-1 左半扇）→ 右扫（wing side=1 右半扇）→ 切（cut 命中爆）→ 托（aura 提速后双翼展开）→ 余韵（linger）→ 强调（crit 要害）。
+ * 范围：wing 用 `data.path`（与服务端 esperwingArc 同一组顶点）分别画出左右两个半扇面，按 `data.side` 分辨先后；aura 用整片 `data.path` 重展双翼。
+ * 运动：windup 光点向背后收拢，wing 由翼根向扇缘扫开，cut 碎屑从目标向外爆，aura 双翼向外展开并向上冲速度线，linger 缓缓拖尾。
+ * 数：`data.motes`（特攻与速度换算）绑定翼面与命中的光点量；`data.aura` 是余韵时长；`data.gift` 决定提速光环的强度与范围。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const EsperwingDefinition: ParticleDefinition = {
@@ -73,6 +73,21 @@ const EsperwingDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 6, drain: 12 },
             emitters: [
+                {
+                    name: "aura_wings", bind: "path", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    shape: { kind: "polygon" }, rate: { data: "motes", fallback: 24 }, direction: "shape", speed: [0.04, 0.14],
+                    lifetime: [7, 13], size: [0.26, 0.05],
+                    color: 0xE8A8F0, alpha: [0.4, 0], light: "full", maxParticles: 120
+                },
+                {
+                    name: "aura_edge", bind: "path", offset: [0, 0.6, 0],
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    shape: { kind: "polyline" },
+                    rate: 24, direction: "shape", speed: [0.05, 0.16], spread: 6,
+                    lifetime: [5, 10], size: [0.32, 0.06], sizeMode: "index",
+                    color: 0xFFD8F8, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 100
+                },
                 {
                     name: "ring", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",

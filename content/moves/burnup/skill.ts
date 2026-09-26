@@ -1,27 +1,12 @@
-/**
- * 燃尽 / burnup 的出手方式。
- *
- * 核心念头：把身体里的火一次抽干、朝身前一个锥面喷出去；喷完施法者真的燃尽，一段时间内不再是火属性，
- *   也点不着第二发。代价与收益同一个人扛。
- *
- * 三幕：
- *   起（kindle，提交前）：全身的火向内收拢，体表泛白，只播预告。
- *   喷（burst → blast）：提交后白焰以 `speed` 冲出身前 `reach` 格、张开 `cone` 度的锥面；
- *       正对的目标吃满 `outburst`，锥内其他人按 `share` 结算。
- *   尽（spent）：喷完立刻给自己挂上 `world_combat:burnup_spent`（身份 world_combat:status/burned_out），
- *       由 rules.ts 用共享 NativeModifiers 的 types 层摘掉火属性；期间 `ready` 拒绝再次施放。
- *
- * 与同族分开：本组其他三招读的是**对手**的物攻／异常／睡眠；燃尽读的是**自己**的火属性，把它烧掉换一发重击。
- *   和爆炸烈焰分开：那是投向落点的火球＋无法行动，燃尽是自己变成火焰、喷完失去本系。
- */
+/** Spend fire at release, then advance the actual 3D white-flame frontier once through each body. */
 namespace PokemonSkills {
     define({
         id: burnupId,
         cooldownParameter: "recharge",
         name: "Burn Up",
-        description: "把全身的火向内收拢，再朝身前喷出一道白焰锥面：被瞄准的目标吃满，锥内其他敌人各吃侧焰。喷完施法者真的燃尽——一段时间里不再是火属性，也点不着第二发；只有自己带火属性时才能发动。",
+        description: "把全身的火向内收拢，再朝身前喷出一道白焰锥面：真实中心窄芯首触者吃满，侧面的敌人吃侧焰。喷完施法者真的燃尽——一段时间里不再是火属性，也点不着第二发；只有自己带火属性时才能发动。",
         uses: ["一发烧尽面前一条锥面", "用失去本系换一次重击", "把挤在身前的对手一起点燃"],
-        kind: "enemy",
+        kind: "aim",
         range: 6.8,
         maxRange: 12.6,
         prepare: 8,
@@ -53,61 +38,49 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
-            const origin = action.origin();
-            const direction = aim(action);
-            const reach = p(burnupId, "reach", action);
-            const cone = p(burnupId, "cone", action);
-            const outburst = p(burnupId, "outburst", action);
-            const share = p(burnupId, "share", action);
-            const speed = p(burnupId, "speed", action);
-            const hold = Math.max(1, Math.round(p(burnupId, "hold", action)));
-            const ember = Math.max(14, Math.round(p(burnupId, "ember", action)));
-            const target = action.target();
-            const targetRef = target === null ? "" : String(target.ref());
-            const point = action.targetPosition();
-            const distance = point.minus(origin).length();
-            const delay = Math.max(2, Math.round(distance / Math.max(0.5, speed)));
-            const scale = Math.max(0.6, Math.min(2.2, reach / 6.8));
-            const intensity = Math.max(0.6, Math.min(2.6, outburst / 130));
-
-            WorldFeedback.emit(world, burnupScene, 1, origin,
-                { moment: "burst", direction: [direction.x(), direction.y(), direction.z()], reach: reach, cone: cone, half: cone / 2,
-                    speed: speed, scale: scale, intensity: intensity, ember: ember }, delay + 44);
+            const world = action.world(), origin = action.origin(), direction = aim(action);
+            const reach = p(burnupId, "reach", action), cone = p(burnupId, "cone", action), speed = p(burnupId, "speed", action);
+            const power = p(burnupId, "outburst", action), share = p(burnupId, "share", action), hold = Math.round(p(burnupId, "hold", action));
+            const ember = p(burnupId, "ember", action), features = damageFeatures(burnupId, "outburst");
+            // Resolve real launch type first, including execution-wide type changes, before consuming Fire.
+            const released = PokemonDamage.sourceMetadata(world, action.actor(), move, features, action);
+            const sameType = PokemonDamage.sameType(PokemonDamage.combatants.read(world, action.actor()), released.type);
+            if (!burnupSpend(world, action.actor(), hold)) { done(action); return; }
+            const seen: { [ref: string]: boolean } = {};
+            let travelled = 0, coreSpent = false, touched = 0;
+            const tangent = Math.tan(cone * Math.PI / 360), scenes = WorldFeedback.actionScenes(burnupScene);
             sound(action, "cobblemon:move.eruption.actor");
-
-            function blast(current: CombatAction): void {
-                const scope = current.world();
-                const region = WorldGeometry.sector(origin, direction, reach, cone, { below: 1.8, above: 3.0 });
-                let touched = 0;
-                WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                    if (String(enemy.ref()) === String(current.actor().ref())) return;
-                    const main = targetRef !== "" && String(enemy.ref()) === targetRef;
-                    const power = main ? outburst : outburst * share;
-                    if (!hurt(current, enemy, burnupId, power, { damage: damageSpec(burnupId, "outburst"), knockback: false })) return;
+            WorldFeedback.text(world, origin, burnupSpentText, [Math.round(hold / 2) / 10], 32);
+            function advance(current: CombatAction): void {
+                const scope = current.world(), next = Math.min(reach, travelled + speed);
+                const from = origin.plus(direction.scale(travelled)), end = origin.plus(direction.scale(next));
+                const front = WorldGeometry.bodyFrustum(from, end, 0.25 + travelled * tangent, 0.25 + next * tangent);
+                const core = coreSpent ? null : current.trace(from, end, 0.2), central = core && core.hitEntity() ? core.target() : null;
+                if (central) coreSpent = true;
+                WorldGeometry.selectBodies(scope, front, (enemy, body) => {
+                    const ref = String(enemy.ref());
+                    if (seen[ref] || ref === String(current.actor().ref()) || scope.friendly(enemy)) return;
+                    const contact = scope.closestPoint(enemy, end); if (!scope.clear(origin, contact)) return;
+                    seen[ref] = true;
+                    const main = central !== null && ref === String(central.ref());
+                    if (!hurt(current, enemy, burnupId, power * (main ? 1 : share), { damage: damageSpec(burnupId, "outburst"),
+                        sameTypeMultiplier: sameType, sameTypeType: released.type, knockback: false })) return;
                     touched++;
-                    WorldFeedback.emit(scope, burnupScene, 1, facts.position(),
-                        { moment: main ? "scorch" : "splash", target: String(enemy.ref()), scale: scale,
-                            intensity: Math.max(0.5, Math.min(2.4, power / 130)) }, 46);
+                    WorldFeedback.emit(scope, burnupScene, 1, contact, { moment: main ? "scorch" : "splash", target: ref }, 30);
                 });
-                const caster = scope.observe(current.actor());
-                const spot = caster === null ? origin : caster.position();
-                if (touched > 0) {
-                    WorldFeedback.text(scope, spot.plus(WorldCombat.point(0, 1.4, 0)), burnupBlastText, [touched], 28);
-                    sound(current, "cobblemon:move.fireblast.target");
-                } else {
-                    WorldFeedback.text(scope, spot.plus(WorldCombat.point(0, 1.4, 0)), burnupFizzleText, [], 26);
-                    sound(current, "minecraft:block.fire.extinguish");
+                const boundary = front.far.map(point => { const wall = scope.clipBlocks(origin, point), actual = wall ? wall.position() : point;
+                    return [actual.x(), actual.y(), actual.z()]; });
+                boundary.push(boundary[0]);
+                scenes.show(current, "burst", end, { moment: "burst", path: boundary, ember: ember,
+                    direction: [direction.x(), direction.y(), direction.z()] });
+                travelled = next;
+                if (travelled >= reach) {
+                    WorldFeedback.text(scope, current.origin(), touched ? burnupBlastText : burnupFizzleText, touched ? [touched] : [], 28);
+                    scenes.finish(current, done); return;
                 }
-                // 燃尽：本单元效果挂上，rules.ts 摘掉火属性；`ready` 在窗口内拒绝再放。
-                MobEffects.apply(scope, current.actor(), burnupSpentEffect, hold, 0);
-                WorldFeedback.emit(scope, burnupScene, 1, spot,
-                    { moment: "spent", target: String(current.actor().ref()), ember: Math.round(ember * 0.6), scale: scale }, 50);
-                WorldFeedback.text(scope, spot.plus(WorldCombat.point(0, 1.5, 0)), burnupSpentText, [Math.round(hold / 20 * 10) / 10], 32);
-                done(current);
+                current.after(1, advance);
             }
-
-            action.after(delay, blast);
+            advance(action);
         }
     });
 }

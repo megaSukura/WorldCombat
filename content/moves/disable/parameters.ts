@@ -8,6 +8,7 @@ namespace PokemonSkills {
     /** 机读旁挂：记下被点名的招式与画面要用的数。 */
     export const disableMark = "world_combat:disable_mark";
     export const disableLockText = "world_combat.move.disable.text.lock";
+    export const disableBlockText = "world_combat.move.disable.text.block";
     export const disableFadeText = "world_combat.move.disable.text.fade";
     export const disableBreakText = "world_combat.move.disable.text.break";
     export const disableMissText = "world_combat.move.disable.text.miss";

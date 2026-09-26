@@ -1,17 +1,19 @@
 /**
  * 流星光束 / meteorbeam —— 出手方式。
  *
- * 核心念头：把天上的碎星拉下来收进身体（特攻抬一级），再抛出一颗走抛物线的陨石；它越过掩体落下来，
- *           落点炸开一圈、把地面砸出焦黑的坑。它一定走两幕，没有天气捷径。
+ * 核心念头：把天上的碎星拉下来收进身体（特攻抬一级），再朝瞄准的点或实体快照抛出一颗走抛物线的陨石；
+ *           它越过掩体落下，真实首碰处炸开一圈、把落点半径内的敌人溅射并顶开。它一定走两幕，没有天气捷径。
  *
  * 两幕：
  *   起（gather，提交前）：星点从高空落向施法者、在脚边溅开；只播预告，可被打断（打断不花 PP，也不给特攻）。
  *   击（throw → flight → burst / miss）：提交后先结算特攻提升，再用 `LivingActions.ballistic` 抛出陨石；
  *       命中活物或落地即碎裂：正面命中的目标吃 `meteor`，落点 `blast` 半径内的其他敌人吃 `splash` 并被顶开；
- *       落点地面被砸成焦黑（world.terrain 的 linger 租约，`craterTicks` 后原地形放回）。
+ *       落点只留一记短促的碎石与尘，不改变地面方块。
+ *
+ * 掩体：陨石走抛物线，只有真实弧线真的越过掩体才会砸到后面的人；直线视线被挡不再是判据。
  *
  * 与同族分开：日光束是晴天里的即时贯穿、日光刃是贴身横斩、电光束是雨天里的即时电矛；
- *   流星光束是唯一「一定蓄、一定走弧」的那个——特攻提升是它的签名收益，抛物线与落点坑是它的形状。
+ *   流星光束是唯一「一定蓄、一定走弧」的那个——特攻提升是它的签名收益，抛物线与落点碎石是它的形状。
  */
 namespace PokemonSkills {
     const meteorbeamScene = "world_combat:move_meteorbeam";
@@ -19,38 +21,12 @@ namespace PokemonSkills {
     const meteorbeamShatterText = "world_combat.move.meteorbeam.text.shatter";
     const meteorbeamMissText = "world_combat.move.meteorbeam.text.miss";
 
-    /** 把落点一圈的地面砸成焦黑：内圈黑石、外圈玄武岩，石头与方块实体不动，到期原方块回来。 */
-    function meteorbeamCrater(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [], r = Math.ceil(radius);
-        const px = point.x(), py = point.y(), pz = point.z();
-        for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius) continue;
-            const x = Math.floor(px) + dx, z = Math.floor(pz) + dz;
-            for (let dy = 0; dy >= -3; dy--) {
-                const y = Math.floor(py) + dy;
-                const block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const surface = distance <= radius * 0.5 ? "minecraft:blackstone" : "minecraft:basalt";
-                if (id !== surface) cells.push({ x: x, y: y, z: z, block: surface });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
     define({
         id: "meteorbeam",
         name: "流星光束",
-        description: "站定把碎星收进身体、特攻提升，再抛出一颗走抛物线的陨石；它越过掩体落下，正面命中的目标吃重击，落点一圈被溅射并顶开，地面砸出焦黑的坑一段时间。它一定走这两幕。",
+        description: "站定把碎星收进身体、特攻提升，再朝瞄准的点或目标抛出一颗走抛物线的陨石；它越过掩体落下，正面命中的目标吃重击，落点一圈被溅射并顶开，落地只溅起一记短促碎屑。它一定走这两幕。",
         uses: ["越过掩体砸到后面的人", "先给自己抬一级特攻再出手", "把落点一圈一起砸开"],
-        kind: "enemy",
+        kind: "aim",
         range: 14,
         maxRange: 22,
         prepare: 30,
@@ -94,7 +70,6 @@ namespace PokemonSkills {
             const stone = p("meteorbeam", "stone", action);
             const blowback = p("meteorbeam", "blowback", action);
             const stars = Math.max(8, Math.round(p("meteorbeam", "starlight", action)));
-            const crater = Math.max(20, Math.round(p("meteorbeam", "craterTicks", action)));
             const stages = Math.max(1, Math.round(p("meteorbeam", "boost", action)));
             const gravity = 0.05;
             const scale = blast / 1.9;
@@ -127,19 +102,18 @@ namespace PokemonSkills {
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, blast, { below: 2, above: 4 }), function (enemy, facts) {
                     const isDirect = direct !== null && String(enemy.ref()) === String(direct.ref());
                     const blow = isDirect ? power : splash;
-                    const segment = isDirect ? "meteor" : "splash";
-                    if (!hurt(current, enemy, "meteorbeam", blow, { damage: damageSpec("meteorbeam", segment) })) return;
+                    if (!hurt(current, enemy, "meteorbeam", blow, { damage: damageSpec("meteorbeam", isDirect ? "meteor" : "splash") })) return;
                     hits++;
                     const outward = facts.position().minus(at);
-                    if (outward.length() >= 0.05 && scope.valid(enemy)) scope.displace(enemy, outward.unit().scale(blowback));
+                    if (outward.length() >= 0.05 && scope.valid(enemy)) scope.hitDisplace(enemy, outward.unit().scale(blowback));
                     WorldFeedback.emit(scope, meteorbeamScene, 1, facts.position(),
                         { moment: "burst", target: String(enemy.ref()), starlight: stars, scale: scale, direct: isDirect ? 1 : 0,
                             intensity: Math.max(0.6, Math.min(2.6, blow / 120)) }, 26);
                 });
-                const cells = meteorbeamCrater(scope, at, blast, crater);
+                // 落点只留一记短促的碎石与尘；地面方块不被改写。
                 WorldFeedback.emit(scope, meteorbeamScene, 1, at,
-                    { moment: "crater", point: [at.x(), at.y(), at.z()], scale: scale, starlight: stars, blast: blast,
-                        cells: cells, hits: hits, intensity: intensity }, 38);
+                    { moment: "debris", point: [at.x(), at.y(), at.z()], scale: scale, starlight: stars, blast: blast,
+                        hits: hits, debris: Math.max(6, 8 + hits), stones: Math.max(3, 4 + hits), intensity: intensity }, 30);
                 sound(current, "minecraft:entity.generic.explode");
                 sound(current, "cobblemon:impact.rock");
                 if (hits > 0) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), meteorbeamShatterText, [hits], 28);
@@ -150,7 +124,7 @@ namespace PokemonSkills {
             const launch = LivingActions.ballistic(origin, point, speed, gravity) || aim(action);
             const flight = action.projectile(origin, launch.scale(speed), gravity, stone, action.range() + 4, 160,
                 function (current, hit) {
-                    if (landing === null) { landing = hit.position(); victim = hit.target(); }
+                    if (landing === null) { landing = hit.position(); victim = hit.hitEntity() ? hit.target() : null; }
                     finish(current);
                 },
                 function (current) { finish(current); },

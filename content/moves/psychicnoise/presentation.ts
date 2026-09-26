@@ -4,7 +4,7 @@
  * 一句话：施法者耳边聚起一道品红的杂音环，随即化作一道贯穿的音波射出去；命中处炸开一团不和谐的
  *   品红与青色的噪点，目标耳侧从此沉着两圈交错的低鸣环，表示它回不了血。
  * 色相家族：品红 0xE06AD0 作主体、青绿 0x7BE0E8 作不和谐的第二色（噪音的含义）、深紫 0x5A2A6A 作阴影。
- * 拍子：起（windup 聚声／wave 射出）→ 击（hit 命中炸开）→ 余（linger 耳侧低鸣）→ 收（recover 散去／subside 被硬解／fizzle 落空）。
+ * 拍子：起（windup 聚声／wave 射出）→ 击（hit 命中炸开）→ 余（linger 耳侧低鸣；真拦下一次回复时补一记 mute 短断音）→ 收（recover 散去／subside 被硬解／fizzle 落空）。
  * 范围：wave 的束长绑服务端 data.reach（真实射程），玩家看得出这道音波够到哪。
  * 运动：音波沿瞄准方向直飞；命中在目标耳侧炸开并留下持续低鸣。
  * 数：命中与音波的密度随 data.discharge（特攻派生），贯穿时 data.pierce 让画面读出它穿了几个人。
@@ -134,6 +134,28 @@ const PsychicnoiseDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.24], spread: 20,
                     lifetime: [7, 13], size: [0.22, 0.04], sizeMode: "index",
                     color: 0x5A2A6A, alpha: [0.9, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        mute: {
+            duration: 20,
+            exit: { stop: 7, drain: 13 },
+            emitters: [
+                {
+                    name: "mute_gap", bind: "target", offset: [0, 0.2, 0], height: 0.86,
+                    particle: "world_combat_core:cobblemon/generic/ring/warblingring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.28 },
+                    direction: "inward", speed: [0.03, 0.1], spread: 30,
+                    lifetime: [8, 14], size: [0.2, 0.42], sizeMode: "linear",
+                    color: 0x5A2A6A, alpha: [0.7, 0], light: "world", maxParticles: 14
+                },
+                {
+                    name: "mute_hush", bind: "target", offset: [0, 0.18, 0], height: 0.82,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    burst: { count: 8 }, shape: { kind: "circle", radius: 0.26 },
+                    direction: "outward", speed: [0.02, 0.08], drag: 0.94,
+                    lifetime: [10, 18], size: [0.07, 0.01],
+                    color: 0x7BE0E8, alpha: [0.5, 0], light: "world", maxParticles: 16
                 }
             ]
         },

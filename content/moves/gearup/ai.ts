@@ -1,4 +1,7 @@
-/** 伙伴先检查正负电特性、铁傀儡身体或手持金属工具的传动资格，再按身边友方与威胁选择时机。 */
+/**
+ * 辅助齿轮 的伙伴 AI 用途：先检查正负电特性、铁傀儡身体或手持金属工具的传动资格，再按身边友方与威胁选择时机。
+ * 资格只在施放这一刻读一次；AI 找的是**还没接上动力**的合格友方，优先给正要接战的前排。
+ */
 namespace CompanionBehavior {
     const gearupChase = PokemonSkills.number("ai.maxChase", "开打距离", 4, 24, 1);
     gearupChase.help = "威胁与要传动的伙伴进入这个距离内才考虑启动齿轮；越大越早开始、越愿意跑过去。";
@@ -68,7 +71,13 @@ namespace CompanionBehavior {
         priority: function (context, item, _target) {
             const counts = gearupCount(context, item);
             if (counts.friends === 0) return 0;
-            return counts.others > 0 ? 82 : 58;
+            const pick = gearupPick(context, item), self = source(context);
+            const threat = context.senses["world_combat:threat"];
+            // 受益人正顶在威胁面前时更值得现在传动；给身后的伙伴则按普通权重。
+            const frontline = !!pick && !!threat && String(pick.ref) !== String(self.ref)
+                && distance(pick.point, threat.point) <= distance(self.point, threat.point) + 2;
+            if (counts.others > 0) return frontline ? 92 : 82;
+            return frontline ? 70 : 58;
         }
     });
 }

@@ -1,18 +1,4 @@
-/**
- * 流星突击 / meteorassault 的出手方式。
- *
- * 核心念头：抡起那根粗壮的东西，在同一条大弧线上连续几下大力横扫，把扇形里的对手一下一下砸实；
- * 挥得太猛，收招之后自己也被晃得晕头转向——一段最长的力竭窗口，这是这一招的签名代价。
- *
- * 三幕：
- *   起：把茎举过头顶（windup）。
- *   击：提交后按 `interval` 逐段重挥；每段以施法者为顶点、朝当前目标方向扫出一个扇形，
- *       命中扇形内所有敌人各结算一次接触伤害，并播放这一段自己的挥弧（swing）。
- *   收：挥完最后一段，挂上 `world_combat:status/mustrecharge` 晃晕状态（本单元 startup 效果），
- *       播放头顶转圈的晕眩；力竭期间由 mob_effect_tick 维持低密度的晕圈。
- *
- * 「无法行动」由 CombatStatus.actions 门禁实现；「无法移动」由效果自带的速度归零实现。
- */
+/** Commit one narrow extending thrust, then pay the original exhaustion cost. */
 namespace PokemonSkills {
     const meteorassaultScene = "world_combat:move_meteorassault";
     const meteorassaultDazeEffect = "world_combat:meteorassault_daze";
@@ -23,9 +9,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "meteorassault",
         name: "Meteor Assault",
-        description: "在同一条大弧上连续几下大力重挥，命中扇形里的所有对手；挥完之后自己被晃晕一段最长的力竭时间，无法行动也无法移动。",
-        uses: ["近距离连续重挥", "一次扫到挤在面前的几个对手", "用最长的力竭换最高的爆发"],
-        kind: "enemy",
+        description: "站稳前探，把长兵沿锁定直线逐段伸出，一枪贯过同线敌人；每人只结算一次合并主伤，墙挡住兵端，收枪后力竭。",
+        uses: ["锁定方向伸出长兵", "贯过同一直线上的对手", "以力竭换取一次重击"],
+        kind: "aim",
         range: 3.6,
         maxRange: 5,
         prepare: 8,
@@ -82,39 +68,39 @@ namespace PokemonSkills {
                 sound(current, "minecraft:entity.ravager.stunned");
             }
 
-            function swing(current: CombatAction): void {
-                const scope = current.world();
-                const origin = current.origin();
-                const direction = aim(current);
+            const heading = aim(action), tipStart = action.origin(), struck: { [ref: string]: boolean } = {};
+            const width = Math.max(.15, Math.min(.5, arc)), totalPower = smash * swings;
+            let tip = tipStart, budget = 0;
+            const scenes = WorldFeedback.actionScenes(meteorassaultScene);
+            // A short native body lean commits position without tracking the target through the thrust.
+            world.displace(actor, WorldGeometry.flatUnit(heading).scale(.3));
+            function thrust(current: CombatAction): void {
+                const scope = current.world(), next = tipStart.plus(heading.scale(Math.min(reach, budget + reach / swings)));
+                const block = scope.clipBlocks(tip, next), end = block && block.blocked() ? block.position() : next;
+                if (!block) { daze(current); scenes.finish(current, done); return; }
                 let hits = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, direction, reach, arc, { below: 1, above: 3 }), function (enemy: CombatActor) {
-                    if (hurt(current, enemy, "meteorassault", smash, { damage: damageSpec("meteorassault", "smash"), contact: true })) hits++;
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(tip, end, width), function (enemy, facts) {
+                    const ref = String(enemy.ref()); if (scope.friendly(enemy) || struck[ref]) return;
+                    struck[ref] = true;
+                    if (hurt(current, enemy, "meteorassault", totalPower, { damage: damageSpec("meteorassault", "smash"), contact: true })) {
+                        hits++;
+                        WorldFeedback.emit(scope, meteorassaultScene, 1, facts.position(), { moment: "contact", target: ref, intensity: Math.min(2.4,totalPower/120) }, 18);
+                    }
                 });
-                const at = origin.plus(direction.scale(reach * 0.5));
-                WorldFeedback.emit(scope, meteorassaultScene, 1, at, { moment: "swing", scale: scale, swing: index + 1,
-                    count: swings, hits: hits, reach: reach, arc: arc, half: arc / 2,
-                    intensity: Math.max(0.6, Math.min(2.4, smash / 52)),
-                    direction: [direction.x(), direction.y(), direction.z()] }, 24);
-                sound(current, index % 2 === 0 ? "minecraft:entity.player.attack.strong" : "minecraft:entity.player.attack.sweep");
-                if (hits > 0) {
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.8, 0)), meteorassaultSwingText, [index + 1, hits], 24);
-                    sound(current, "cobblemon:move.closecombat.target");
+                tip = end; budget += reach / swings;
+                scenes.show(current, "spear", tipStart, { moment: "thrust", path: [[tipStart.x(),tipStart.y(),tipStart.z()],[tip.x(),tip.y(),tip.z()]], count: swings, width: width });
+                if (block.blocked() || budget >= reach - .001) {
+                    current.after(Math.max(2,Math.round(interval/2)), function (last) { daze(last); scenes.finish(last,done); }); return;
                 }
-                index++;
-                if (index >= swings) {
-                    daze(current);
-                    done(current);
-                    return;
-                }
-                current.after(interval, swing);
+                current.after(interval, thrust);
             }
-
             const target = action.target();
             if (target !== null && world.valid(target)) {
                 const targetBody = world.observe(target);
                 if (targetBody !== null) action.face(targetBody.position(), 20, 20);
             }
-            swing(action);
+            action.releaseTarget();
+            thrust(action);
         }
     });
 

@@ -5,6 +5,7 @@
   "worldcombat.skill.flameburst.description.2": "射程 %1$s 格、弹速 %2$s 格每刻、弹体判定 %3$s 格。",
   "worldcombat.skill.flameburst.spread.on": "当前为扇溅式：火分得更远更重、火滴更多，但主爆威力略低、火球收得更近。",
   "worldcombat.skill.flameburst.spread.off": "当前为直爆式：主爆更重、射得更远，但溅射范围与威力都收小。",
+  "worldcombat.skill.flameburst.description.aim": "可以朝任意方向或一个瞄点抛出火球，不要求先选中敌人；火球撞上方块或任何非活体只会在受击面散出一小簇火，不出现爆圈、也不触发旁溅；只有先打中一个敌对活体，才会把火分给爆点周围的其他对手。",
   "worldcombat.skill.flameburst.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.flameburst.growth.0": "达到 %1$s 级，主爆威力提升至 %2$s，溅射提升至 %3$s。",
   "worldcombat.skill.flameburst.growth.1": "达到 %1$s 级，主爆威力提升至 %2$s，溅射半径延到 %3$s 格。",

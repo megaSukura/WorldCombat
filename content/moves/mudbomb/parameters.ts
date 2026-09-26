@@ -15,8 +15,7 @@
  *   reach       特攻决定能打多远。
  *   blind       特攻每满 120 加一级命中下降。
  *   chance      原生 30% 的致盲概率，作为这一招的性格保留。
- *   shards      特攻与等级决定炸开的泥块碎数，同时驱动表现。
- *   patchTicks  等级与特攻决定地上泥坑留多久。
+ *   shards      特攻与等级决定炸开的泥块碎数，同时驱动表现；主目标泥印与旁人泥粒都由它派生。
  *   tempo       速度决定起手，碎壳多花一点时间。
  * 配置 shell（碎壳）双向取舍：爆开范围更大、泼溅更广、飞得更快，但单体重更轻、起手更慢。
  */
@@ -88,10 +87,6 @@ namespace PokemonSkills {
                 unit: "块",
                 description: "炸开时迸出的泥块碎数，也驱动表现的密度；特攻与等级越高越碎。"
             }),
-        patchTicks: seconds(
-            F.base(90).plus(F.level().times(1.2)).plus(F.stat("specialAttack").minus(50).times(0.3).clamp(-10, 20))
-                .clamp(60, 200).round(),
-            "泥坑时长", "落点地上那片湿泥停留多久，到期原方块回来。"),
         tempo: seconds(
             F.base(14).minus(F.stat("speed").minus(50).times(0.05))
                 .plus(F.when(F.pref("shell"), F.const(2), F.const(0))).clamp(7, 18).round(),
@@ -104,7 +99,7 @@ namespace PokemonSkills {
     describe("mudbomb", [
         { key: "description.0", values: ["boom","chance","blind"] },
         { key: "description.1", values: ["splash","blastRadius"] },
-        { key: "description.2", values: ["velocity","reach","patchTicks","pref.shell"] },
+        { key: "description.2", values: ["velocity","reach","pref.shell"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

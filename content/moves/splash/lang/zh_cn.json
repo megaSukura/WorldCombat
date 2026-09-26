@@ -20,9 +20,9 @@
   "worldcombat.skill.splash.preference.leap.help": "开启：跳跃高度 ×1.35，但跳跃距离 ×0.7、起手 +1 刻——用来跨坎或躲开贴地的一击。关闭：低而远，用来换位与拉距离。",
   "worldcombat.skill.splash.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.splash.preference.ai.maxChase.help": "威胁进入这个距离内才考虑蹦跳；调大更愿意远远地换位。",
-  "worldcombat.skill.splash.preference.ai.retreatBelow": "残血阈值",
-  "worldcombat.skill.splash.preference.ai.retreatBelow.help": "有攻击手段时，生命低于这个比例且被贴住才跳开；调高更早逃，调低只在濒危时跳。",
-  "worldcombat.skill.splash.preference.ai.keepAway": "保持距离",
-  "worldcombat.skill.splash.preference.ai.keepAway.help": "朝威胁落点时想保持的距离；跳过去会停在这个距离外，不会一头撞进对手身上。",
+  "worldcombat.skill.splash.preference.ai.retreatBelow": "危急阈值",
+  "worldcombat.skill.splash.preference.ai.retreatBelow.help": "有攻击手段时，生命低于这个比例且被逼住会把这一跳当作逃离（优先级更高）；调高更早撤，调低只在濒危时跳。",
+  "worldcombat.skill.splash.preference.ai.keepAway": "近身距离",
+  "worldcombat.skill.splash.preference.ai.keepAway.help": "敌人贴到这个距离以内就算被近身逼住；有攻击手段的伙伴此时才会跳开，落点另用 freeSpace 探针挑选。",
   "world_combat.move.splash.text.nothing": "什么都没发生……"
 }

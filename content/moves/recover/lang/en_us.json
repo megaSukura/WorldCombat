@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.recover.summary": "The user regenerates its cells: health is paid back tick by tick over a window for up to about 60% of maximum health, more of it the worse the wounds - and it never locks the user in place, so it can keep moving while it heals. Clearing the regenerating effect cuts the remaining healing.",
+  "worldcombat.skill.recover.summary": "The user regenerates its cells: health is paid back tick by tick over a window for up to about 60% of maximum health, more of it the worse the wounds - and it never locks the user in place, so it can keep moving while it heals. Starting a new action, being interrupted or clearing the regenerating effect cuts the remaining healing, keeping only what was already delivered.",
   "worldcombat.skill.recover.use.0": "Keep healing while repositioning",
   "worldcombat.skill.recover.use.1": "Let the cells work harder when badly hurt",
   "worldcombat.skill.recover.use.2": "Trade an unlocked window for a steady restore",
@@ -21,10 +21,12 @@
   "worldcombat.skill.recover.preference.steady.help": "On (steady): +0.05 healing and a 1.35x regeneration window (slower each tick, larger total), at 1.08x cooldown and a longer exposed window. Off (swift): -0.04 healing, a 0.75x window and 0.95x cooldown.",
   "worldcombat.skill.recover.preference.ai.healBelow": "Regenerate below",
   "worldcombat.skill.recover.preference.ai.healBelow.help": "The companion starts regenerating below this health ratio; lower endures longer, higher regenerates at the first wound.",
+  "worldcombat.skill.recover.preference.ai.safeDistance": "Safe distance",
+  "worldcombat.skill.recover.preference.ai.safeDistance.help": "A visible enemy inside this distance, or attacking the companion, stops it from starting regeneration (health under half the threshold ignores this to survive); larger retreats further, smaller heals amid the fight.",
   "world_combat.move.recover.text.begin": "Cells begin regenerating",
   "world_combat.move.recover.text.full": "Regeneration done, health full",
   "world_combat.move.recover.text.end": "Regeneration settles",
   "world_combat.move.recover.text.broken": "The regeneration is cut",
   "effect.world_combat.regenerating": "Regenerating (tick heal)",
-  "worldcombat.skill.recover.description.1": "While regenerating it restores a small portion every 2 ticks; clearing the regenerating effect (milk or /effect clear) cuts off the remaining healing, and it cannot be used at full health."
+  "worldcombat.skill.recover.description.1": "While regenerating it restores a small portion every 2 ticks; starting a new action, being interrupted or clearing the regenerating effect (milk or /effect clear) cuts off the remaining healing and keeps only what was already delivered, and it cannot be used at full health."
 }

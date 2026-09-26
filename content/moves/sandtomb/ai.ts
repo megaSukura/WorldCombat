@@ -4,8 +4,8 @@
  * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase` 以内；自己不在坐骑上；身上还没有
  * `partiallytrapped`（已经陷着再放是浪费）。`ai.preferGrounded` 开启时只对贴地的目标出手——
  * 流沙吃不到腾空的对手，放出去也是白费；关闭时对任何目标都愿意尝试（腾空的目标会扑空）。
- * 对谁出手：越满血、越难缠的地面目标越值得先陷住；焦点目标另加一档。
- * 够不到怎么办：交给共享接近逻辑把身位收到射程内。
+ * 对谁出手：坑布在目标脚下，所以先看贴地与否——贴地、走得慢的目标最值得先陷住；飞行目标价值最低；
+ * 焦点目标另加一档。够不到怎么办：交给共享接近逻辑把身位收到射程内。
  * 放完之后：交回共享交战计划；目标仍陷在坑里时不再重复。
  */
 namespace PokemonSkills {
@@ -30,18 +30,30 @@ namespace PokemonSkills {
             return !target.friendly && target.health > 0 && target.visible
                 && !CompanionBehavior.status(context, target, "partiallytrapped");
         },
+        target: function (context, _capability, target) {
+            const world = CompanionBehavior.world(context), actor = world.actor(target.ref);
+            const body = actor ? world.observe(actor) : null;
+            if (!body) return null;
+            const choice = JSON.parse(JSON.stringify(target));
+            choice.point = [body.position().x(), body.boundsMin().y() + .05, body.position().z()];
+            return choice;
+        },
         approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target || !sandtombWants(context, capability, target)) return 0;
             let base = 14 + Math.round(CompanionBehavior.ratio(target) * 24);
             if (context.facts.focus === target.ref) base += 16;
-            return base;
+            // 地面慢敌优先：贴地的加一档，走得慢的再加，腾空的显著降权。
+            if (target.grounded === false) base -= 14;
+            const speed = CompanionBehavior.speed(context, target);
+            if (speed !== null && speed > 0) base += Math.round(Math.max(0, Math.min(10, (0.25 - Math.min(speed, 0.25)) * 40)));
+            return Math.max(0, base);
         }
     });
 
     addPreferences("sandtomb", {}, [
         field(pathOf("deep"), "沉陷式", "boolean", {
-            help: "开启：下陷 ×1.4、持续 ×1.15、半径 ×1.2、冷却 +8，但每次磨蚀 ×0.9，用更深的坑把目标埋得久。关闭：收得更紧、磨得更重、更快结束。"
+            help: "开启：持续 ×1.15、半径 ×1.2、收拢 ×1.2、冷却 +8，但每次磨蚀 ×0.9，用更深的坑把目标埋得久。关闭：磨得更重、收得更快。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 2, max: 22, step: 1,

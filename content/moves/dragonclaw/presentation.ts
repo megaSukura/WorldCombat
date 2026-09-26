@@ -1,14 +1,14 @@
 /**
  * 龙爪 / dragonclaw 的客户端表现。
  *
- * 一句话：举爪蓄势时两条臂线上聚起紫晶色的龙气，随后一整片扇形沿臂势铺开、两道巨爪痕交叉划过，
- * 被扫中的目标身上炸开龙系冲击、护甲处再裂开一记撕甲标记。
+ * 一句话：举爪蓄势时两条臂线上聚起紫晶色的龙气，随后身前铺开两条交叉的巨爪带；被带扫中的目标身上炸开龙系冲击，
+ * 只被单带蹭到的边缘目标亮一条爪痕，落在交叉中心的目标再补一记明确的双交叉撕甲痕。
  * 色相家族：紫晶（0x7A5CFF）作主体、淡紫（0xB79CFF）作细节、近白（0xE8E0FF）作强调；深底（0x3A2C7A）作余韵。
- * 拍子：起 raise（聚气）→ 扫 sweep（扇面铺开）与 claw（交叉爪痕）→ 击 strike（命中冲击）／ rend（撕甲）／空 miss。
- * 范围：sweep 的扇面用 `data.path`（与服务端 WorldGeometry.sector 同一组顶点）填成整片扇形，玩家一眼看出站哪会被扫到。
- * 运动：扇面沿 `data.direction` 一次铺开，两道爪痕依各自的 polyline 交叉划过；命中冲击从目标向外爆。
- * 数：扇面与爪痕的量绑 `data.marks`（物攻换算），张角绑 `data.spread`，命中强度绑 `data.intensity`（本击威力 / 78）；
- *     `data.cross` 决定是否再补第二道交叉爪痕，`data.stages` 决定撕甲标记的层数。
+ * 拍子：起 raise（聚气）→ 扫 sweep ×2（两条实际爪带）→ 击 strike → 中心 rend（双交叉）／边缘 claw（单条）／空 miss。
+ * 范围：sweep 用 `data.path`（与服务端两条爪带同一组四个顶点）填出整条爪带，两道 sweep 同刻发出，玩家一眼看出交叉的覆盖区。
+ * 运动：两条爪带依各自的 polyline 方向扫开；strike 从目标向外爆；rend 的交叉线落在目标身上。
+ * 数：爪带与命中量绑 `data.marks`（物攻换算），命中强度绑 `data.intensity`（本击威力 / 78）规模绑 `data.scale`；
+ *     `data.band` 区分左右爪带，`data.centre` 区分中心双爪（1）与边缘单爪（0），`data.stages` 决定撕甲层数。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const DragonclawDefinition: ParticleDefinition = {
@@ -41,10 +41,10 @@ const DragonclawDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "fan", bind: "path", fit: "none",
+                    name: "band", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/slash",
                     shape: { kind: "polygon" }, rate: { data: "marks", fallback: 16 },
-                    direction: "shape", speed: [0.04, 0.14],
+                    direction: "shape", orient: "direction", speed: [0.04, 0.14],
                     lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
                     color: 0x7A5CFF, alpha: [0.35, 0], light: "full", maxParticles: 120
                 },
@@ -55,20 +55,6 @@ const DragonclawDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.06, 0.18], spread: 10,
                     lifetime: [5, 9], size: [0.28, 0.05], sizeMode: "index",
                     color: 0xE8E0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 90
-                }
-            ]
-        },
-        claw: {
-            duration: 16,
-            exit: { stop: 6, drain: 10 },
-            emitters: [
-                {
-                    name: "trail", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/softswipe",
-                    shape: { kind: "polyline" }, rate: 48,
-                    direction: "shape", speed: [0.05, 0.16], spread: 6,
-                    lifetime: [4, 9], size: [0.4, 0.08], sizeMode: "index",
-                    color: 0xB79CFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 90
                 }
             ]
         },
@@ -95,10 +81,40 @@ const DragonclawDefinition: ParticleDefinition = {
                 }
             ]
         },
+        claw: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "trail", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    shape: { kind: "polyline" }, rate: 44,
+                    direction: "shape", orient: "direction", speed: [0.05, 0.16], spread: 6,
+                    lifetime: [4, 9], size: [0.36, 0.08], sizeMode: "index",
+                    color: 0xB79CFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 80
+                },
+                {
+                    name: "nick", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8, at: 0 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [5, 10], size: [0.08, 0.02],
+                    color: 0xE8E0FF, alpha: [0.6, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
         rend: {
             duration: 22,
             exit: { stop: 7, drain: 13 },
             emitters: [
+                {
+                    name: "cross", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    shape: { kind: "polyline" }, rate: 40,
+                    direction: "shape", orient: "direction", speed: [0.05, 0.16], spread: 6,
+                    lifetime: [5, 10], size: [0.34, 0.07], sizeMode: "index",
+                    color: 0xE8E0FF, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 70
+                },
                 {
                     name: "crack", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/spike",

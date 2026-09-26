@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.tripleaxel.summary": "Spin in place and kick three times: each kick sweeps a fan in front of the user and hits every enemy inside it, and each landed kick adds another tier on top of the first kick's power. Every kick rolls its own accuracy and a miss ends the string. In sweep form the arc also catches a second target beside the first.",
+  "worldcombat.skill.tripleaxel.summary": "Slide-spin through three kicks: the first faces the release direction, each landed kick slides the body along a side arc so the next kick faces that arc's real tangent, and every kick sweeps a fan in front that hits every enemy inside it. Each landed kick adds another tier on top of the first kick's power, and every kick rolls its own accuracy so a miss ends the string. In sweep form the arc also catches a second target beside the first.",
   "worldcombat.skill.tripleaxel.description.0": "The first kick deals about %1$s ice contact damage, for %2$s kicks in a row; each landed kick adds %3$s times the first kick's power to the next one.",
-  "worldcombat.skill.tripleaxel.description.1": "Each kick sweeps a %1$s-degree fan reaching %2$s blocks and every enemy inside it takes one hit; each kick hits for %3$s and the kicks are %4$s s apart.",
+  "worldcombat.skill.tripleaxel.description.1": "Each kick sweeps a %1$s-degree fan reaching %2$s blocks; between kicks the body slides %3$s blocks along a side arc and turns %4$s degrees (the next kick faces that arc's real tangent); each kick hits for %5$s and the kicks are %6$s s apart.",
   "worldcombat.skill.tripleaxel.widen.on": "Wide sweep: every kick sweeps a 170-degree fan in front and catches a second target standing beside it; costs 0.88x power per kick, 0.95x kicking reach, -4% hit chance, +1 tick between kicks, +2 ticks recovery and +4 ticks cooldown.",
   "worldcombat.skill.tripleaxel.widen.off": "Focused (native form): every kick sweeps only 70 degrees in front at 1.03x kicking reach for a heavier single hit; +2% hit chance, -1 tick between kicks and a 4-tick shorter cooldown, at the cost of the target beside it.",
   "worldcombat.skill.tripleaxel.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.tripleaxel.growth.0": "From level %1$s the first kick rises to %2$s.",
   "worldcombat.skill.tripleaxel.growth.1": "From level %1$s the first kick rises to %2$s and the kicking reach extends to %3$s blocks.",
-  "worldcombat.skill.tripleaxel.use.0": "Spin in place and kick three times",
+  "worldcombat.skill.tripleaxel.use.0": "Slide-spin through three kicks",
   "worldcombat.skill.tripleaxel.use.1": "Each landed kick makes the next one heavier",
   "worldcombat.skill.tripleaxel.use.2": "A wide sweep catches a target beside the first",
   "worldcombat.skill.tripleaxel.value.kick": "First-kick power",
@@ -15,6 +15,8 @@
   "worldcombat.skill.tripleaxel.value.ramp": "Rise per hit",
   "worldcombat.skill.tripleaxel.value.arc": "Sweep angle",
   "worldcombat.skill.tripleaxel.value.reach": "Kicking reach",
+  "worldcombat.skill.tripleaxel.value.slide": "Slide distance",
+  "worldcombat.skill.tripleaxel.value.spin": "Slide turn",
   "worldcombat.skill.tripleaxel.value.gap": "Kick interval",
   "worldcombat.skill.tripleaxel.value.accuracy": "Hit chance per kick",
   "worldcombat.skill.tripleaxel.value.sparks": "Ice shard count",
@@ -27,5 +29,5 @@
   "worldcombat.skill.tripleaxel.preference.ai.maxChase.help": "Beyond this distance it closes in instead of spinning. This is a close-range move, so a large value often still cannot reach.",
   "world_combat.move.tripleaxel.text.miss": "Kick %1$s whiffed; the spin stops",
   "world_combat.move.tripleaxel.text.rise": "Kick %1$s landed %2$s",
-  "worldcombat.skill.tripleaxel.description.additional": "Every kick rolls its own hit: a whiff, an empty fan, or the originally chosen target fainting or leaving stops the flurry."
+  "worldcombat.skill.tripleaxel.description.additional": "Every kick rolls its own hit: a whiff, or an empty fan, stops the flurry; a wall that blocks the slide ends it after one more kick from the current reachable range. The originally chosen target fainting does not stop enemies already inside the sweep."
 }

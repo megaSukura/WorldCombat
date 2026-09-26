@@ -2,14 +2,16 @@
  * 冰山风 / mountaingale 的客户端表现。
  *
  * 一句话：身前的碎冰拔地汇聚、凝成一块巨大的冰块，抡起来沿一条低弧线飞出去、拖着冰雪尾迹，
- * 落在目标处炸开成一整圈碎冰与霜雾，中心立起一簇冰锥；被砸懵的人头顶晃星。
+ * 落点地面上摆着一圈下落影；落点炸开成一整圈碎冰与霜雾，中心立起一簇冰锥，随后只有实际放下的冰锥位置亮起；
+ * 被砸懵的人头顶晃星。越顶或飞散时巨冰只化成一缕冷雾，不在旧落点补任何东西。
  * 色相家族：冰青（0x9FD8E8）与近白（0xEAFBFF）为主，深青（0x5E9FB8）只在巨冰与冰锥上。
- * 拍子：起 hoist（聚冰）→ 掷 throw（弧线飞行）→ 碎 shatter（落点爆开）＋ hit（正中）／ splash（溅射）→ stagger（砸懵）／ miss。
+ * 拍子：起 hoist（聚冰）→ 掷 throw（弧线飞行＋下落影）→ 碎 shatter（落点爆开）＋ hit（正中）／ splash（溅射）
+ *   → 亮 spike（实际冰锥逐处发亮）→ stagger（砸懵）／ miss（越顶消散）。
  * 范围：shatter 的地面圈按 `data.radius`（碎裂半径）铺开，画出的就是会被碎冰扫到的那圈。
  * 运动：巨冰绑 projectile 沿服务端下发的弧线飞行并拖冰尘，落地后碎冰向四周带重力外抛、贴地铺霜。
  * 数：`data.hits`（主伤派生）决定碎冰量，`data.intensity`（主伤 / 100）抬高密度与亮度，
- * `data.radius`（碎裂半径）与 `data.scale`（碎裂半径 / 2.2）决定地面圈的尺度，
- * `data.rise`（主伤 / 40）决定聚冰阶段立起的冰柱高度。
+ * `data.radius`（碎裂半径）与 `data.scale`（碎裂半径 / 2.2）决定地面圈与下落影的尺度，
+ * `data.rise`（主伤 / 40）决定聚冰阶段立起的冰柱高度，spike 的 `data.point` 是原生真正放下的冰锥格子。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const MountaingaleDefinition: ParticleDefinition = {
@@ -66,6 +68,24 @@ const MountaingaleDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.94,
                     lifetime: [10, 18], size: [0.1, 0.02],
                     color: 0xB8DEEA, alpha: [0.45, 0], light: "world", maxParticles: 120
+                },
+                {
+                    // 落点上摊开的下落影：按实际碎裂半径铺开，随飞行一直提示巨冰要落在哪里。
+                    name: "shadow", bind: "point", fit: "none", offset: [0, 0.04, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 1, interval: 8, repeats: 24 },
+                    shape: { kind: "ring", radius: 2.2 },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [16, 26], size: [0.55, 0.95], sizeMode: "sin",
+                    color: 0x5E9FB8, alpha: [0.3, 0], light: "world", maxParticles: 6
+                },
+                {
+                    name: "shadow_fill", bind: "point", fit: "none", offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    rate: 10, shape: { kind: "circle", radius: 2.0, thickness: 1 },
+                    direction: "down", speed: [0.0, 0.01],
+                    lifetime: [18, 28], size: [0.08, 0.02],
+                    color: 0x6FA8C0, alpha: [0.22, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -76,26 +96,27 @@ const MountaingaleDefinition: ParticleDefinition = {
                 {
                     name: "core", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_ice",
-                    burst: { count: { data: "hits", fallback: 22 }, at: 1 },
-                    shape: { kind: "sphere", radius: 0.5 },
-                    direction: "outward", speed: [0.1, 0.4], spread: 20,
-                    lifetime: [6, 12], size: [0.44, 0.06], sizeMode: "index",
-                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 110
+                    burst: { count: { data: "hits", fallback: 18 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.44 },
+                    direction: "outward", speed: [0.08, 0.32], spread: 20,
+                    lifetime: [6, 12], size: [0.36, 0.05], sizeMode: "index",
+                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 90
                 },
                 {
+                    // 命中点碎成小片：小冰屑带重力四散，不再是整块大石。
                     name: "chunks", bind: "point", fit: "none", offset: [0, 0.4, 0],
-                    particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: { data: "hits", fallback: 22 }, at: 1 },
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: { data: "hits", fallback: 18 }, at: 1 },
                     shape: { kind: "sphere_surface", radius: 0.5 },
                     direction: "outward", speed: [0.14, 0.5], spin: 14,
                     gravity: 0.07, drag: 0.92,
-                    lifetime: [14, 26], size: [0.26, 0.05],
-                    color: 0x9FD8E8, alpha: [0.9, 0], light: "world", maxParticles: 140
+                    lifetime: [12, 22], size: [0.14, 0.03],
+                    color: 0x9FD8E8, alpha: [0.9, 0], light: "world", maxParticles: 150
                 },
                 {
                     name: "frost_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    burst: { count: { data: "hits", fallback: 22 }, at: 1 },
+                    burst: { count: { data: "hits", fallback: 18 }, at: 1 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "outward", speed: [0.08, 0.3], spread: 12,
                     gravity: 0.02, drag: 0.9,
@@ -108,8 +129,8 @@ const MountaingaleDefinition: ParticleDefinition = {
                     burst: { count: 1, at: 1 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "outward", speed: [0.06, 0.2],
-                    lifetime: [12, 20], size: [0.6, 1.4], sizeMode: "sin",
-                    color: 0x8FC8DA, alpha: [0.4, 0], light: "world"
+                    lifetime: [12, 20], size: [0.5, 1.1], sizeMode: "sin",
+                    color: 0x8FC8DA, alpha: [0.3, 0], light: "world"
                 },
                 {
                     name: "mist", bind: "point", fit: "none", offset: [0, 0.25, 0],
@@ -119,6 +140,31 @@ const MountaingaleDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.07],
                     lifetime: [16, 28], size: [0.26, 0.44],
                     color: 0xBFE0EA, alpha: [0.3, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        spike: {
+            duration: 42,
+            exit: { stop: 26, drain: 16 },
+            emitters: [
+                {
+                    // 每个实际放下的冰锥格子各自亮一下：绑 point，读 data.point。
+                    name: "tip", bind: "point", fit: "world", offset: [0, 0.12, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 4, interval: 4, repeats: 2 },
+                    shape: { kind: "sphere", radius: 0.14 },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [14, 24], size: [0.12, 0.02],
+                    color: 0xEAFBFF, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 14
+                },
+                {
+                    name: "frost", bind: "point", fit: "world", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
+                    burst: { count: 3 },
+                    shape: { kind: "sphere", radius: 0.16 },
+                    direction: "up", speed: [0.01, 0.04],
+                    lifetime: [12, 20], size: [0.08, 0.02],
+                    color: 0xCFEEF6, alpha: [0.6, 0], light: "world", maxParticles: 10
                 }
             ]
         },
@@ -184,13 +230,13 @@ const MountaingaleDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "scuff", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
                     burst: { count: 18 },
-                    shape: { kind: "ring", radius: 0.6 },
-                    direction: "outward", speed: [0.05, 0.18],
+                    shape: { kind: "sphere", radius: 0.5 },
+                    direction: "outward", speed: [0.03, 0.14],
                     gravity: 0.03, drag: 0.9,
-                    lifetime: [10, 16], size: [0.07, 0.02],
-                    color: 0xBFE0EA, alpha: [0.5, 0], light: "world", maxParticles: 30
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0xBFE0EA, alpha: [0.45, 0], light: "world", maxParticles: 40
                 }
             ]
         }

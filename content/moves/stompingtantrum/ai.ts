@@ -36,7 +36,7 @@ namespace PokemonSkills {
 
     addPreferences(stompId, {}, [
         field(pathOf("deep"), "深跺", "boolean", {
-            help: "开启：裂缝更宽 ×1.25、上抛 ×1.15、地面裂痕 ×1.3，封住一条路，但威力 ×0.92、裂缝略短 ×0.95、起手多 3 刻、冷却多 8 刻。关闭：窄而快、单次更疼。"
+            help: "开启：裂缝更宽 ×1.25、上抛 ×1.15、浮尘停留更久，封住一条路，但威力 ×0.92、裂缝略短 ×0.95、起手多 3 刻、冷却多 8 刻。关闭：窄而快、单次更疼。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,

@@ -22,7 +22,7 @@ Smoke.scenario("stoneaxe", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("stoneaxe", caster) >= 1, "the caster committed stoneaxe");
             stage.expect(stage.damageTo(foe) > 0, "the axe or the floating shards struck the foe");
-            stage.note("crit and the exact shard cell are random; the sleeping foe stays under the floating rocks so it should keep being struck", {
+            stage.note("crit and the exact rock cell are random; the sleeping foe is under the field when it rises, so its first entry drops one rock on it; the field is finite and a static foe is not pelted repeatedly", {
                 casts: stage.casts("stoneaxe", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

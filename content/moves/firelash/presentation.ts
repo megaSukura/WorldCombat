@@ -1,12 +1,12 @@
 /**
  * 火焰鞭 / firelash 的客户端表现。
  *
- * 一句话：手边点起一簇火苗、鞭身越拉越长越亮 → 一条火鞭沿上扬弧线甩出、沿途拖着火星与余烬 →
- *   命中处爆开火焰撞击、目标身上缠上一小段跳动的火 → 缠卷式的鞭梢把目标往回一带、落点余烬未散。
+ * 一句话：手边点起一簇火苗、鞭身越拉越长越亮 → 一条火鞭沿上扬弧线分四拍从短甩到长再落下、沿途拖着火星与余烬 →
+ *   真实扫中处爆开火焰撞击、目标身上缠上一小段跳动的火 → 缠卷式的火绳从落点收回、被命中的目标沿绳被拉近。
  * 色相家族：火焰橙黄（flame / ember / wisp / impact_fire）为主体，烟灰（smoke）作余韵，无第二色相。
- * 拍子：起 kindle（点火、拉鞭）→ 击 lash（甩鞭飞行）→ 中 hit（火焰撞击）／空 miss → 缠 bind（拖拽的火痕）。
- * 范围：本招是单目标的一条鞭，画面本身就画在那条上扬弧线上（`data.path` 顶点，判定与表现同一条线），弧线末端就是落点。
- * 运动：鞭身沿顶点连线扫出，火苗沿鞭身向末端流动；命中向外崩火；缠卷式火星从落点被拉回施法者一侧。
+ * 拍子：起 kindle（点火、拉鞭）→ 甩 lash（逐拍伸展）→ 中 hit（火焰撞击）／空 miss／墙 wall → 缠 bind（火绳收拢与拖拽）。
+ * 范围：本招是单目标的一条鞭，画面本身就画在那条上扬弧线上（`data.path` 顶点，判定与表现同一条线），逐拍伸展的鞭尖就是当前判定末端。
+ * 运动：鞭身沿顶点连线由短到长扫出，火苗沿鞭身向末端流动；bind 的 rope 顶点读 `path:["source",<目标>]`，随实际拉近而缩短。
  * 数：命中火星量绑 `data.embers`（威力派生）、`data.intensity`（威力 / 80）放大整幕；鞭身长度由顶点本身表达。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -95,6 +95,14 @@ const FirelashDefinition: ParticleDefinition = {
             duration: 22,
             exit: { stop: 10, drain: 14 },
             emitters: [
+                {
+                    name: "rope", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    shape: { kind: "polyline" }, rate: 40,
+                    direction: "outward", speed: [0.02, 0.1], spread: 20,
+                    lifetime: [5, 11], size: [0.12, 0.02],
+                    color: 0xFFB347, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 60
+                },
                 {
                     name: "tug", bind: "target", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",

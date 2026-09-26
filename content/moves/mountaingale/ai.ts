@@ -4,6 +4,9 @@
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 15）格内。它是全家的远程重击，
  * 所以够远时最先被考虑（趁对手还没贴上来先砸一记），贴身后让位给更快的近身招。
  * `ai.opening`（默认「只对未畏缩目标」）跳过已经被别的招顶懵的人——这一记又慢又重，砸在懵住的人身上浪费。
+ *
+ * 本招是 `kind: "point"`：AI 用敌人的当前位置作为落点。落点慢、站定（水平速度低）的敌人更值得砸——冰障更可能
+ * 挡在它前面；快速移动的敌人照样可砸，但优先级低，落点更容易被它走开。畏缩与冰障只是附加，伤害照常结算。
  */
 namespace PokemonSkills {
     function mountaingaleWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -28,7 +31,11 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !mountaingaleWants(context, capability, target)) return 0;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
-            return distance > 6 ? 38 : 24;
+            // 站定／慢速目标更可能被冰障压在原地，优先砸；快目标可用但排后面。
+            const velocity = target.velocity || [0, 0, 0];
+            const speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
+            const settled = speed < 0.03 ? 12 : speed < 0.10 ? 6 : 0;
+            return (distance > 6 ? 38 : 24) + settled;
         }
     });
 

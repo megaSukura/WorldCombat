@@ -1,19 +1,4 @@
-/**
- * 种子炸弹 / seedbomb 的出手方式。
- *
- * 核心念头：**把一荚硬种高抛过顶，让它们从上方落下来砸在目标身上**——不是沿直线打出去，而是从天而降的一小片种雨。
- * 它的形状是一条慢而陡的弧线，落点周围的一小圈地面被种雨盖住，谁站在里面就挨整荚硬种。
- *
- * 三幕：
- *   起（windup，提交前）：低头把硬种收进荚里，脚边种屑向内聚。
- *   抛（toss → rain，提交后）：种荚沿高抛弧线飞过顶（看得见、能躲），落到目标附近的地面或目标身上；
- *       在头顶 `dropHeight` 处散开成 `seeds` 颗硬种，硬种一颗颗从上方落下，盖住 `spread` 半径的一小圈。
- *   砸（burst / miss）：落种砸实，圈里的非友方各挨一次 `volley` 硬种伤害，命中处崩开 `chaff` 片碎壳；打空只有碎壳。
- *
- * 与同族分开：能量球是沿直线飞行的实心球、命中在地面长草；种子炸弹走高抛弧线、从上方落种、没有地面残留。
- *
- * 配置 `heavy`（重荚）由 resolve 改时序、由公式改威力／种数／落点：开启＝少而重、覆盖窄；关闭＝多而轻、覆盖宽。
- */
+/** One high thrown pod uses one real native ground rebound, then cracks once at its actual position. */
 namespace PokemonSkills {
     const seedbombScene = "world_combat:move_seedbomb";
     const seedbombMissText = "world_combat.move.seedbomb.text.miss";
@@ -22,9 +7,9 @@ namespace PokemonSkills {
         id: "seedbomb",
         cooldownParameter: "recharge",
         name: "Seed Bomb",
-        description: "把一荚硬种高抛过顶，让它们从上方落在目标身上：落点周围一小圈内的非友方各挨一次硬种伤害。重荚少而重、覆盖窄；散荚多而轻、覆盖宽。",
+        description: "硬种荚高抛，撞敌体立即开壳；首次落地按真实表面浅弹滚动，重荚三刻、散荚至多六刻后裂爆，第二次撞墙提前开壳。伤害只在实际爆点结算一次，墙能遮挡。",
         uses: ["隔着一小块地形把硬种砸到目标头顶", "罩住一小片落点逼对手走位", "中距离单体点射的一记重击"],
-        kind: "enemy",
+        kind: "aim",
         range: 10,
         maxRange: 15,
         prepare: 11,
@@ -54,57 +39,44 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", heavy: config && config.heavy === true }));
             return prepare;
         },
-        execute: function (action, move, config, done) {
-            const world = action.world();
-            const origin = action.origin();
-            const power = p("seedbomb", "volley", action);
-            const seeds = Math.max(6, Math.round(p("seedbomb", "seeds", action)));
-            const spread = Math.max(1.2, p("seedbomb", "spread", action));
-            const drop = Math.max(3.5, p("seedbomb", "dropHeight", action));
-            const seedRadius = Math.max(0.2, p("seedbomb", "seedRadius", action));
-            const speed = Math.max(0.4, p("seedbomb", "arcSpeed", action));
-            const range = Math.max(4, p("seedbomb", "reach", action));
-            const chaff = Math.max(8, Math.round(p("seedbomb", "chaff", action)));
-            const gravity = 0.05;
-            const scale = spread / 1.5;
-            const intensity = Math.max(0.5, Math.min(2.2, power / 80));
-            let settled = false;
-
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-
-            sound(action, "cobblemon:move.seedbomb.actor");
-
-            /** 落种砸下：盖住落点周围一小圈，圈里的非友方各挨一次整荚伤害，然后崩出碎壳。 */
-            function land(current: CombatAction, point: CombatPoint): void {
-                const scope = current.world();
-                const canopy = point.plus(WorldCombat.point(0, drop, 0));
-                let hits = 0; const first = { ref: "" };
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, spread, { below: 2.0, above: 2.5 }),
-                    function (victim, facts) {
-                        if (!hurt(current, victim, "seedbomb", power, { damage: damageSpec("seedbomb", "volley"), contact: false })) return;
-                        if (hits === 0) first.ref = String(victim.ref());
-                        hits++;
-                    });
-                WorldFeedback.emit(scope, seedbombScene, 1, canopy,
-                    { moment: "rain", seeds: seeds, chaff: chaff, drop: drop, scale: scale, intensity: intensity }, 28);
-                WorldFeedback.emit(scope, seedbombScene, 1, point,
-                    { moment: hits > 0 ? "burst" : "miss", target: first.ref !== "" ? first.ref : undefined,
-                        seeds: seeds, chaff: chaff, hits: hits, scale: scale, intensity: intensity }, 24);
-                scope.sound("cobblemon:impact.grass", point, 16, "{}");
-                if (hits === 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), seedbombMissText, [], 24);
+        execute:function(action,move,config,done){
+            const world=action.world(),origin=action.origin(),point=action.targetPosition(),delta=point.minus(origin),gravity=.05;
+            const power=p("seedbomb","volley",action),spread=p("seedbomb","spread",action),radius=p("seedbomb","seedRadius",action),speed=p("seedbomb","arcSpeed",action),drop=p("seedbomb","dropHeight",action);
+            const seeds=p("seedbomb","seeds",action),chaff=p("seedbomb","chaff",action),heavy=!!(config&&config.heavy),scenes=WorldFeedback.actionScenes(seedbombScene);
+            // A finite high-arc time; reconstruct the native move/0.99 drag/gravity velocity for that endpoint.
+            const duration=Math.ceil(Math.max(Math.sqrt(delta.x()*delta.x()+delta.z()*delta.z())/speed,2*Math.sqrt(2*drop/gravity)));
+            const factor=(1-Math.pow(.99,duration))/.01,fall=gravity/.01*(duration-factor);
+            const velocity=WorldCombat.point(delta.x()/factor,(delta.y()+fall)/factor,delta.z()/factor);
+            let settled=false,bounced=false,burst=false,flight="",last=origin;
+            function finish(current:CombatAction):void{if(settled)return;settled=true;scenes.finish(current,done);}
+            function crack(current:CombatAction,at:CombatPoint):void{
+                if(burst)return;burst=true;const scope=current.world();let hits=0;
+                WorldGeometry.selectBodies(scope,WorldGeometry.bodySphere(at,spread),function(victim,facts){
+                    if(scope.friendly(victim))return;const contact=scope.closestPoint(victim,at);
+                    if(!scope.clear(at,contact))return;
+                    if(hurt(current,victim,"seedbomb",power,{damage:damageSpec("seedbomb","volley")}))hits++;
+                });
+                WorldFeedback.emit(scope,seedbombScene,1,at,{moment:hits?"burst":"miss",seeds:seeds,chaff:chaff,hits:hits,scale:spread/1.5,intensity:power/80},22);
+                scope.sound("cobblemon:impact.grass",at,16,"{}");scope.cancelProjectile(flight);finish(current);
             }
-
-            const targetPoint = action.targetPosition();
-            const direction = LivingActions.ballistic(origin, targetPoint, speed, gravity) || aim(action);
-            const flightRange = Math.max(range, origin.minus(targetPoint).length() + 6);
-            const flight = LivingActions.projectile(action, {
-                speed: speed, direction: direction, range: flightRange, radius: seedRadius, gravity: gravity,
-                lifetime: Math.max(40, Math.round(flightRange / Math.max(0.2, speed) + 40)),
-                appearance: { item: "minecraft:pumpkin_seeds", scale: Math.max(0.7, Math.min(1.6, seedRadius * 2.4)) },
-                impact: function (current: CombatAction, hit: CombatImpact) { land(current, hit.position()); }
-            }, function (current: CombatAction) { finish(current); });
-            WorldFeedback.keep(world, "seedbomb:toss:" + String(action.id()), seedbombScene, 1, origin,
-                { moment: "toss", projectile: flight, seeds: seeds, scale: scale }, 200);
+            function fuse(current:CombatAction,age:number):void{
+                if(burst)return;const scope=current.world(),shots:CombatProjectileFacts[]=JSON.parse(scope.projectiles(current.origin(),32));
+                const shot=shots.filter(value=>value.id===flight)[0];if(!shot){finish(current);return;}
+                last=WorldCombat.point(shot.position[0],shot.position[1],shot.position[2]);
+                scenes.show(current,"shell",last,{moment:"rolling",projectile:flight,crack:age/(heavy?3:6),seeds:seeds,scale:radius*2});
+                if(age >= (heavy?3:6)){crack(current,last);return;}current.after(1,next=>fuse(next,age+1));
+            }
+            action.releaseTarget();sound(action,"cobblemon:move.seedbomb.actor");
+            flight=LivingActions.projectile(action,{speed:velocity.length(),direction:velocity.unit(),range:delta.length()+2*drop+8,radius:radius,gravity:gravity,lifetime:duration+30,
+                appearance:{item:"minecraft:pumpkin_seeds",scale:Math.max(.7,radius*2.4),bounce:1,restitution:heavy?.12:.35},
+                impact:function(current,hit){
+                    last=hit.position();
+                    if(!bounced&&!hit.hitEntity()&&hit.blockFace()==="up"){
+                        bounced=true;scenes.stop(current,"flight");current.after(1,next=>fuse(next,1));return;
+                    }
+                    crack(current,last);
+                }},function(current){if(!burst&&!bounced)WorldFeedback.emit(current.world(),seedbombScene,1,last,{moment:"miss",seeds:seeds,scale:radius},14);finish(current);});
+            scenes.show(action,"flight",origin,{moment:"toss",projectile:flight,seeds:seeds,scale:spread/1.5});
         }
     });
 }

@@ -1,9 +1,9 @@
 {
   "effect.world_combat.powdered_dust": "粉尘（待引爆）",
-  "worldcombat.skill.powder.summary": "朝选定的对手抛出一团细粉：贴上后，它一旦使用火属性招式，粉尘就当场炸开并造成一段按施法者特攻定级的自伤；火招照常放完，粉尘随即消失，草属性直接穿过。",
-  "worldcombat.skill.powder.description.0": "粉团能抛到 %1$s 格内的对手身上，初速 %2$s 格/刻，判定半径 %3$s 格。",
-  "worldcombat.skill.powder.description.1": "粉尘粘附 %1$s 秒；这期间对手不用火招就只是一层粉；草属性直接穿过，不会被撒上。",
-  "worldcombat.skill.powder.description.2": "对手一旦使用火属性招式，粉尘就当场炸开，对它造成其最大生命约 %1$s 的自伤；火招照常放完，粉尘随之消失，一次施放只埋一份。",
+  "worldcombat.skill.powder.summary": "朝瞄准方向抛出一团细粉，第一碰到的对手会被沾上：它一旦自己放出火攻（脚本火招或原生的火伤害），粉尘就当场炸开并造成一段按施法者特攻定级的自伤；火攻照常放完，粉尘随即消失，草属性直接穿过。",
+  "worldcombat.skill.powder.description.0": "粉团沿瞄准方向飞出，最多抛到 %1$s 格远，初速 %2$s 格/刻，判定半径 %3$s 格；它贴上第一碰到的对手，撞墙或落地就散。",
+  "worldcombat.skill.powder.description.1": "粉尘粘附 %1$s 秒；这期间对手不放火就只是一层粉；草属性直接穿过，不会被撒上。",
+  "worldcombat.skill.powder.description.2": "对手一旦自己放出火攻（脚本火招，或烈焰人等原生物种真正造成第一笔对外火伤），粉尘就当场炸开一次，对它造成其最大生命约 %1$s 的自伤；环境火烧与别人打来的火不算，火攻照常放完，一次施放只埋一份。免疫或护盾挡下反噬时不补伤。",
   "worldcombat.skill.powder.volatile.on": "易爆：爆炸伤害 ×1.3，代价是粘附 ×0.85、冷却 ×1.1，适合逼对手立刻收火。",
   "worldcombat.skill.powder.volatile.off": "稳埋：粘得更久（粘附 ×1）、冷却 ×0.95，伤害略低，适合慢慢磨。",
   "worldcombat.skill.powder.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

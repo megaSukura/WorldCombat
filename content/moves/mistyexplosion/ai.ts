@@ -1,11 +1,11 @@
 /**
  * 薄雾炸裂 / mistyexplosion 的伙伴 AI 用途。
  *
- * 什么局面下出手：身周 `ai.maxChase`（默认 6）格内至少 `ai.minFoes`（默认 2）个可见、敌对、存活的目标；
- *   自己生命掉到 `ai.cornered`（默认 0.35）以下时门槛放宽到 1 个。它是「用一条命换一圈致盲」的牌。
- *   站在薄雾里时 priority 抬到 96——薄雾上更重，且本就该在雾里结束。
+ * 什么局面下出手：身周 `ai.maxChase`（默认 6）格内至少 `ai.minFoes`（默认 2）个可见、敌对、存活的目标
+ *   ——不会为一只普通小怪常自杀；自己生命掉到 `ai.cornered`（默认 0.35）以下时门槛才放宽到 1 个，
+ *   这时是「用一条命换一圈致盲」的保命牌。站在薄雾里时 priority 抬到 96——薄雾上更重，且本就该在雾里结束。
  * 对谁出手：候选是当前威胁；`accepts` 只排除友方、已死、看不见的。
- * 放完接什么：没有「之后」——使用者随之倒下；残雾留在原地自行消散并拖慢走进去的敌人。
+ * 放完接什么：没有「之后」——使用者随之倒下；雾只作短视效淡去，不再拖慢走进去的敌人。
  */
 namespace PokemonSkills {
     function mistyexplosionCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {

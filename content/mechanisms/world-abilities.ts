@@ -33,15 +33,16 @@ namespace WorldAbilities {
         const world: CombatWorld = frame.services.world, origin = world.observe(world.source());
         if (!origin || world.readiness(item.data.action) !== "") return 0;
         const kind = item.data.kind;
-        const actual = kind === "self" ? world.source() : kind === "point" || kind === "motion" ? null : world.actor(target.ref);
-        if (kind !== "point" && kind !== "motion" && !actual) return 0;
+        const pointTarget = kind === "point" || kind === "motion" || kind === "aim" && !target.ref;
+        const actual = kind === "self" ? world.source() : pointTarget ? null : world.actor(target.ref);
+        if (!pointTarget && !actual) return 0;
         const observed = actual ? world.observe(actual) : null;
         if (actual && !observed) return 0;
         if (!Array.isArray(target.point) || target.point.length !== 3 || target.point.some(value => typeof value !== "number" || !isFinite(value))) return 0;
         const point = WorldCombat.point(target.point[0], target.point[1], target.point[2]);
         const delta = point.minus(origin.position());
-        const distance = (observed ? observed.position() : point).minus(origin.position()).length();
-        if (distance > item.data.range || actual && kind !== "self" && (kind === "friend") !== world.friendly(actual)) return 0;
+        const distance = (actual ? world.closestPoint(actual, origin.position()) : point).minus(origin.position()).length();
+        if (distance > item.data.range || actual && (kind === "friend" || kind === "enemy") && (kind === "friend") !== world.friendly(actual)) return 0;
         const direction = delta.length() < .01 ? WorldCombat.point(0, 0, 1) : delta.unit();
         return Number(world.cast(item.data.action, actual, point, direction, JSON.stringify(item.data.arguments || {})));
     }

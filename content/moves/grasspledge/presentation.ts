@@ -1,15 +1,16 @@
 /**
  * 草之誓约 / grasspledge 的客户端表现。
  *
- * 一句话：落点先浮出一圈青绿的藤纹符文，随后一丛草叶与藤蔓从地面炸土而出把敌人缠住，柱脚留一圈缓慢盘绕的
- *   草皮与叶片；与火／水共鸣时，整片地铺开翻涌的火海，或塌成一汪冒泡的湿地。
+ * 一句话：落点先浮出一圈青绿的藤纹符文，随后一丛草叶与藤蔓从地面炸土而出把敌人缠住，柱脚只留一圈短寿的
+ *   藤印（共鸣标记，本身不拖慢）；只有与火／水真正共鸣时，同一圈印才就地铺开翻涌的火海，或塌成一汪冒泡的湿地。
  * 色相家族：黄绿到深绿（sprout／leaf／razorleaf／seed／impact_grass）；火海时刻引入橙红（与火之誓约一致），
  *   湿地时刻引入土褐与青蓝（mudsplash／mudbubble／water_ripple），与三誓约的第三色相分开。
- * 拍子：起（mark 地面藤纹）→ 击（erupt 草柱 + hit 命中点）→ 留（scar 盘根，或 seaoffire／wetland 组合场）。
+ * 拍子：起（mark 地面藤纹）→ 击（erupt 草柱 + hit 命中点，仅当这次控制真的挂上时画收拢的根叶）→ 留（scar 短印，或 seaoffire／wetland 组合场）。
  * 范围：mark／scar／seaoffire／wetland 的花环半径 = `data.scale` × 参考 1.8 格（= 实际誓约印半径）；
  *   erupt 的柱体 shape 直接绑定 `data.radius`／`data.height`，画面里的那丛柱就是实际判定柱。
  * 运动：草叶从地面向上、向外炸开，藤蔓缓慢盘旋；余韵草絮上浮；火海向外翻涌；湿地水泡从泥里冒起。
- * 数：`data.count`（由特攻与本次威力派生）决定草叶与组合场的粒子数量，`data.combo` 在共鸣时切到组合场。
+ * 数：`data.count`（由特攻与地面盘根数量派生）决定草叶、贴地盘根与组合场的粒子数量；
+ *   `data.moment` 由服务端按同一印记的实际组合态选择 scar／seaoffire／wetland，`data.scale` 让范围贴合实际半径。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const GrasspledgeDefinition: ParticleDefinition = {
@@ -95,7 +96,7 @@ const GrasspledgeDefinition: ParticleDefinition = {
                 {
                     name: "binding", bind: "target", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    burst: { count: { data: "count", fallback: 10 } },
+                    burst: { count: { data: "binding", fallback: 0 } },
                     shape: { kind: "sphere", radius: 0.4 },
                     direction: "inward", speed: [0.08, 0.35],
                     lifetime: [12, 20], size: [0.14, 0.02],
@@ -110,7 +111,7 @@ const GrasspledgeDefinition: ParticleDefinition = {
                 {
                     name: "tangle", bind: "point", height: 0.04,
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 24, shape: { kind: "circle", radius: 1.8 },
+                    rate: { data: "count", fallback: 14 }, shape: { kind: "circle", radius: 1.8 },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [14, 24], size: [0.1, 0.02],
                     color: 0x6FA83A, alpha: [0.65, 0], light: "world", maxParticles: 90

@@ -1,23 +1,11 @@
-/**
- * 交换场地 / allyswitch —— 执行组织。
- *
- * 核心念头：用念力把我和同伴在同一瞬间对调位置——两处各留一小段错位残影；更关键的是，原本盯着我或盯着同伴的敌人，
- *   会跟着把目标对调：打向我的那一下，换位后落到换上来的同伴身上。瞬发、不留东西、不给等级，是一次位移加误导。
- *
- * 两幕：
- *   折（windup 播「折空」，提交前只观察与预告，打断不花代价）。
- *   换（提交后）：先记下 sweep 内盯着两人的敌人，再用 world.swap 把两人对调，最后把这些敌人的目标对调到另一人身上；
- *     两处原地各留一段残影（表现 keep，不改世界）。
- * 结束：换位与误导在提交后一次完成，随动作结束清理残影。
- * 反制：换位改变的是谁站在哪、谁被谁盯；已经飞在半空的投射物仍按落点结算，可以被走位或无敌帧躲开。
- */
+/** Native two-body swap with success-only target requests and brief endpoint refraction. */
 namespace PokemonSkills {
     define({
         freeMovement: true,
         id: allySwitchId,
         cooldownParameter: "wait",
         name: "交换场地",
-        description: "用念力瞬间与身边的同伴对调位置，并让原本盯着我或盯着同伴的敌人把目标跟着对调；瞬发、不留东西。只能对射程内的同伴使用。",
+        description: "与范围内同伴真实交换位置，接替危险站位或让自己撤出。两端必须容身；成功后才请求追兵对调目标，原生拒绝时保留换位本身。",
         uses: ["被贴住时与同伴对调，把这一下引到别人身上", "把残血的自己换到同伴背后", "把正盯着我的敌人改成盯着同伴"],
         kind: "friend",
         range: 6,
@@ -54,6 +42,8 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             action.present("world_combat:move_allyswitch:fold", allySwitchScene, 1, action.origin(),
                 JSON.stringify({ moment: "fold", tandem: config && config.tandem === true ? 1 : 0 }));
+            const target = action.target(), facts = target && action.sense().observe(target);
+            if (facts) action.present("world_combat:move_allyswitch:partner", allySwitchScene, 1, facts.position(), JSON.stringify({ moment: "partner" }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -62,9 +52,13 @@ namespace PokemonSkills {
             const selfBody = world.observe(self), allyBody = world.observe(ally);
             if (selfBody === null || allyBody === null) { done(action); return; }
             const selfFrom = selfBody.position(), allyFrom = allyBody.position();
+            if (selfFrom.minus(allyFrom).length() > p(allySwitchId, "swapRange", action)) {
+                WorldFeedback.emit(world, allySwitchScene, 1, selfFrom, { moment: "fizzle" }, 10);
+                done(action); return;
+            }
             const motes = Math.max(8, Math.round(p(allySwitchId, "motes", action)));
             const sweep = Math.max(1, p(allySwitchId, "sweep", action));
-            const blink = Math.max(20, Math.round(p(allySwitchId, "blink", action)));
+            const blink = Math.max(4, Math.round(p(allySwitchId, "blink", action)));
             const scale = Math.max(0.6, Math.min(1.8, motes / 24));
             const selfRef = String(self.ref()), allyRef = String(ally.ref());
             const center = selfFrom.plus(allyFrom).scale(0.5);
@@ -85,6 +79,11 @@ namespace PokemonSkills {
             }
 
             const swapped = world.swap(self, ally);
+            if (!swapped) {
+                WorldFeedback.emit(world, allySwitchScene, 1, center, { moment: "fizzle" }, 10);
+                WorldFeedback.text(world, center, allySwitchFizzleText, [], 18);
+                done(action); return;
+            }
             let misled = 0;
             if (swapped) {
                 for (let index = 0; index < chasingSelf.length; index++) {
@@ -101,11 +100,8 @@ namespace PokemonSkills {
                 { moment: "swap", path: [[selfFrom.x(), selfFrom.y(), selfFrom.z()], [allyFrom.x(), allyFrom.y(), allyFrom.z()]],
                     target: allyRef, motes: motes, misled: misled,
                     swapped: swapped ? 1 : 0, scale: scale, intensity: Math.max(0.7, Math.min(1.8, 0.7 + misled / 3)) }, 26);
-            const ghostTicks = Math.min(blink, 200);
-            WorldFeedback.keep(world, "world_combat:move_allyswitch/ghost/self", allySwitchScene, 1, selfFrom,
-                { moment: "ghost", target: selfRef, motes: motes, scale: scale }, ghostTicks);
-            WorldFeedback.keep(world, "world_combat:move_allyswitch/ghost/ally", allySwitchScene, 1, allyFrom,
-                { moment: "ghost", target: allyRef, motes: motes, scale: scale }, ghostTicks);
+            WorldFeedback.emit(world, allySwitchScene, 1, selfFrom, { moment: "arrival", motes: motes }, blink);
+            WorldFeedback.emit(world, allySwitchScene, 1, allyFrom, { moment: "arrival", motes: motes }, blink);
             WorldFeedback.text(world, center.plus(WorldCombat.point(0, 1.25, 0)),
                 swapped ? allySwitchSwapText : allySwitchFizzleText, swapped ? [misled] : [], 28);
             world.sound("minecraft:entity.illusioner.mirror_move", selfFrom, 14, "{}");

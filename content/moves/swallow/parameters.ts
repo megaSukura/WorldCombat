@@ -6,7 +6,7 @@
  *
  * 核心念头：把攒在身体里的那口力咽下去，化成一波回复。它是这组里唯一的**兑现**：蓄力把力一层层压进身体，
  *   吞下把每层都换成血——而且层数不是线性叠加，攒到第三层才一口回满。等满三层再吞，是收益也是风险：
- *   这段时间壳会被打掉。
+ *   每层都受自己的存续时间限制。
  * 翻译：取原生「按层数 25%/50%/100% 回复、消耗蓄力、Normal、目标自己、PP 10」；在即时世界里，
  *   蓄力层数来自共享身份 world_combat:status/stockpile（谁生产的都认，amplifier 就是层数），
  *   吞下时一层不留地消费掉它。放弃回合制里「失败不回复」的判定，改成射程内的 ready 直接拒绝。
@@ -40,6 +40,8 @@ namespace PokemonSkills {
     defineFacts("swallow", function (context) {
         return { read: function (id) {
             if (id !== "state.layers") return undefined;
+            const paid = context.action && context.action.data("world_combat:swallow/layers");
+            if (paid !== null && paid !== undefined) return Number(JSON.parse(paid).layers);
             const world = context.world, actor = context.actor;
             if (!world || !actor || !world.valid(actor)) return undefined;
             return swallowLayers(world, actor);

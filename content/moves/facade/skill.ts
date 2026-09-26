@@ -2,7 +2,8 @@
  * 硬撑 / facade 的出手方式。
  *
  * 念头的形状：带着身上的异常沉身压低（brace）→ 沿瞄准方向逐刻冲出去（drive）→ 撞上活体的一刻走共享 impact 结算接触伤害，
- * 再把目标沿冲撞方向顶开（impact + shove）；正前方有方块或被顶到走不动就提前结束。一幕做透：压身、冲撞、撞实、顶开。
+ * 只有真正打实（impact 返回 true）才把目标沿冲撞方向顶开、并在“变本加厉”下反噬自己；免疫或未打实只收势。
+ * 正前方是方块、空放或被顶到走不动就提前结束。一幕做透：压身、冲撞、撞实、顶开。
  * 身上的异常种类决定冲击的色相（燃烧橙、中毒紫、麻痹黄、冰冻青），异常本身不因这一下消失。
  * 提交前只有 7 刻的压低准备（windup 预告，用 sense 读异常用于上色），提交后才触碰世界。
  */
@@ -33,7 +34,7 @@ namespace PokemonSkills {
         name: "Facade",
         description: "带着身上的异常硬顶过去：处于中毒／剧毒、灼伤、麻痹或冰冻时威力翻倍，越剩不下命也越狠。撞实后把目标顶开；开启“变本加厉”还能打得更重，但会反噬自己。",
         uses: ["带伤硬顶", "残血时反打", "把贴身之敌顶开"],
-        kind: "enemy",
+        kind: "aim",
         range: 4,
         prepare: 7,
         active: 26,
@@ -59,6 +60,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
+            const driveScenes = WorldFeedback.actionScenes(facadeScene);
             const direction = aim(action);
             const length = p("facade", "slam", action);
             const traceAhead = p("facade", "traceAhead", action);
@@ -67,36 +69,38 @@ namespace PokemonSkills {
             const tint = facadeTint(code);
             const intensity = Math.max(0.5, Math.min(2.2, p("facade", "power", action) / 70));
             let travelled = 0;
-            action.present("world_combat:move_facade:drive", facadeScene, 1, action.origin(),
-                JSON.stringify({ moment: "drive", affliction: code, tint: tint, essenceRate: code > 0 ? Math.round(10 * intensity) : 0, scale: radius / 0.55 }));
+            driveScenes.show(action, "drive", action.origin(),
+                { moment: "drive", affliction: code, tint: tint, essenceRate: code > 0 ? Math.round(10 * intensity) : 0, scale: radius / 0.55 });
             function advance(current: CombatAction): void {
                 const body = current.world();
                 const origin = current.origin();
                 const step = Math.min(p("facade", "chargeSpeed", current), Math.max(0, length - travelled));
-                if (step <= 0) { done(current); return; }
+                if (step <= 0) { driveScenes.finish(current, done); return; }
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const power = p("facade", "power", current);
                     const landed = impact(current, hit, "facade", power, { contact: true });
-                    const target = hit.target();
-                    if (target !== null && body.valid(target)) {
-                        body.displace(target, direction.scale(p("facade", "push", current)));
-                        const point = hit.position(), ref = String(target.ref());
-                        const force = Math.max(0.5, Math.min(2.2, power / 70));
-                        WorldFeedback.emit(body, facadeScene, 1, point,
-                            { moment: "impact", target: ref, intensity: force, affliction: code, tint: tint,
-                              flash: Math.round(14 * force), dust: Math.round(30 * force), grit: Math.round(46 * force),
-                              essence: code > 0 ? Math.round(30 * force) : 0 }, 30);
-                        WorldFeedback.emit(body, facadeScene, 1, point, { moment: "shove", target: ref }, 22);
-                        WorldFeedback.text(body, point, facadeGritText, [], 28);
-                        sound(current, "minecraft:entity.player.attack.strong");
+                    if (landed) {
+                        const target = hit.target();
+                        if (target !== null && body.valid(target)) {
+                            body.hitDisplace(target, direction.scale(p("facade", "push", current)));
+                            const point = hit.position(), ref = String(target.ref());
+                            const force = Math.max(0.5, Math.min(2.2, power / 70));
+                            WorldFeedback.emit(body, facadeScene, 1, point,
+                                { moment: "impact", target: ref, intensity: force, affliction: code, tint: tint,
+                                  flash: Math.round(14 * force), dust: Math.round(30 * force), grit: Math.round(46 * force),
+                                  essence: code > 0 ? Math.round(30 * force) : 0 }, 30);
+                            WorldFeedback.emit(body, facadeScene, 1, point, { moment: "shove", target: ref }, 22);
+                            WorldFeedback.text(body, point, facadeGritText, [], 28);
+                            sound(current, "minecraft:entity.player.attack.strong");
+                        }
+                        if (p("facade", "strain", current) > 0) {
+                            const self = body.observe(current.actor());
+                            if (self !== null) body.health(current.actor(), -self.maxHealth() * p("facade", "strain", current), "world_combat:facade_strain");
+                        }
                     }
-                    if (landed && p("facade", "strain", current) > 0) {
-                        const self = body.observe(current.actor());
-                        if (self !== null) body.health(current.actor(), -self.maxHealth() * p("facade", "strain", current), "world_combat:facade_strain");
-                    }
-                    done(current);
+                    driveScenes.finish(current, done);
                     return;
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? body.displace(current.actor(), swept.remaining) : 0);
@@ -105,7 +109,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(body, facadeScene, 1, body.observe(current.actor()) ? body.observe(current.actor())!.position() : origin, { moment: "whiff" }, 18);
                     WorldFeedback.text(body, origin, facadeWhiffText, [], 22);
                     sound(current, "minecraft:entity.player.attack.sweep");
-                    done(current);
+                    driveScenes.finish(current, done);
                     return;
                 }
                 current.after(1, advance);

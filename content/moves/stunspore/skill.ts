@@ -1,16 +1,17 @@
 /**
  * 麻痹粉 / Stun Spore — 出手方式。
  *
- * 核心念头：一团抛出去、落下就不散的麻痹花粉。施法者把粉团抛向目标所在的位置，粉团落地炸开成一片持续存在的云；
- *   谁站在云里谁一直被麻住，走出去之后麻痹按自己的时间慢慢走完。它是三式麻痹里唯一留在世界上的那个：
- *   对手可以走位绕开、等它散去，也可以把敌人赶进去。草属性对粉末免疫、电属性对麻痹免疫。
+ * 核心念头：一团抛出去、落下就不散的麻痹花粉。施法者把粉团抛向选定的落点（空地也能预投），粉团落地炸开成一片
+ *   持续存在的云；谁站在云里谁一直被麻住，走出去之后麻痹按自己的时间慢慢走完。它是三式麻痹里唯一留在世上、
+ *   能提前铺在路线或追兵必经口上的那个。草属性对粉末免疫、电属性对麻痹免疫。
  *
  * 幕：
  *   起（windup，提交前）：掌心拢粉的预告（`action.present`）。
- *   掷（throw）：提交后低弧抛出粉团，`LivingActions.projectile` 负责飞行与碰撞。
+ *   掷（throw）：提交后低弧抛出粉团，`LivingActions.projectile` 负责飞行与真实碰撞，撞墙就地在墙面蓬开。
  *   落（burst → linger）：粉团落地炸开，注册一片共享场地 `world_combat:move_stunspore_cloud`（WorldEffects.field），
  *       云里的非友方被持续刷新共享的 `world_combat:status/paralysis`（宝可梦那一层由共享默认效果同步成原生麻痹）；
- *       云在 `cloudTicks` 后自然散去，走出云外的人按 holdTicks 走完残余的麻痹。
+ *       云的表现用 `WorldFeedback.onEffect` 绑在这片场地效果上，云一散（自然到期或被驱散）画面同步结束；
+ *       走出云外的人按 holdTicks 走完残余的麻痹。
  *
  * 反制：走出云外、绕开落点、等云散去；草属性穿过粉末、电属性穿过麻痹。云以施法者为源，被收回或远离则随之结束。
  */
@@ -44,8 +45,9 @@ namespace PokemonSkills {
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
             const scale = Math.max(0.5, Math.min(2.2, field.radius / 2.3));
-            WorldFeedback.keep(world, "stunspore:cloud:" + effect.id(), stunsporeScene, 1, centre,
-                { moment: "linger", scale: scale, spores: (field.data && field.data.spores) || 16 }, 40);
+            // 绑在这片云自己的效果上：云自然散去或被驱散时，画面跟着它一起消失。
+            WorldFeedback.onEffect(world, effect.id(), "stunspore:cloud", stunsporeScene, 1, centre,
+                { moment: "linger", scale: scale, spores: (field.data && field.data.spores) || 16 });
         }
     });
 
@@ -55,7 +57,7 @@ namespace PokemonSkills {
         name: "Stun Spore",
         description: "把一团麻痹花粉抛向目标所在的位置，粉团落地炸开成一片持续存在的云；谁站在云里谁一直被麻住，走出去之后麻痹按残余时间慢慢走完。它是三式麻痹里唯一留在世界上的那个，对手可以走位绕开或等它散去。草属性穿过粉末、电属性穿过麻痹。",
         uses: ["封住一条通道或门口", "让追兵踩进云里慢下来", "把敌人逼进或逼出某片地"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 13,
         prepare: 9,

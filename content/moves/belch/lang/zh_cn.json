@@ -28,5 +28,9 @@
   "world_combat.move.belch.text.hit": "毒气罩住 %1$s 个",
   "world_combat.move.belch.text.miss": "没吃树果，嗝不出来",
   "world_combat.move.belch.text.poison": "中毒了",
-  "worldcombat.skill.belch.description.targets": "一次喷吐最多罩住 %1$s 个敌人，每个被罩到的人只结算一次。"
+  "worldcombat.skill.belch.description.targets": "一次喷吐最多罩住 %1$s 个敌人，每个被罩到的人只结算一次。",
+  "worldcombat.skill.belch.value.tempo": "起手",
+  "worldcombat.skill.belch.value.aftercast": "收招",
+  "worldcombat.skill.belch.value.recharge": "冷却",
+  "worldcombat.skill.belch.description.residual": "残气只会短暂飘散，不再造成伤害或中毒。"
 }

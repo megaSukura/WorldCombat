@@ -4,17 +4,21 @@
  * 原生事实：Normal／物理／威力 250／命中 100／PP 5／target allAdjacent（自己周围所有宝可梦）／
  *   `selfdestruct: "always"`——无论有没有打中，使用者都用完即陷入濒死；无次要效果。
  *
- * 翻译：把「引发大爆炸」翻成**一次蓄足了才放手的大引爆**：起手先把地面从脚下震裂、光从缝里漏出，
- *   提交后炸成一朵顶天立地的火球，外圈冲击环贴着地面横扫出去，圈里所有人被狠狠掀飞、抛起，
- *   尘埃落定后在地上留下一个焦黑的弹坑（租借，到期原方块回来）。与同族分开：
- *     大爆炸 —— 最大、最慢、掀得最远，炸完留下焦黑弹坑；蓄爆式再抬一档、坑留更久；
- *     自爆   —— 更小更快的一颗紧凑火球，留给对手的反应时间更短；
+ * 翻译：把「引发大爆炸」翻成**带着可见引信把自己压进爆点的一次大引爆**：起手先把地面从脚下震裂、光从缝里漏出，
+ *   提交后朝所选近地点短步推进，三道引信环按剩余时间逐一熄灭；引信归零才在身体真实所在处炸成一朵顶天立地的火球，
+ *   外圈冲击环贴着地面横扫出去，圈里所有人被狠狠掀飞、抛起，尘埃落定后留下一个焦黑弹坑（租借，到期原方块回来）。
+ *   撞墙就停在墙前、引信照烧，爆心以实际停止点为准；引信期间被击倒则这一记作废、不会补爆。与同族分开：
+ *     大爆炸 —— 有可见引信、把自己送进爆点，最大、最慢、掀得最远，炸完留下焦黑弹坑；蓄爆式再抬一档、坑留更久；
+ *     自爆   —— 更小更快、原地一颗紧凑火球，留给对手的反应时间更短；
  *     搏命   —— 只打贴身一个、伤害等于自己当前生命；
  *     临别礼物 —— 不打伤害，把命换成削弱与遗念。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
  *   blast        爆心威力 250 + 物攻偏移 + 体重偏移（身体越重、力量越大炸得越狠）。
  *   blastRadius  爆心半径 5.6 格 + 碰撞箱高度偏移 + 体重偏移（个子高、身体沉炸得越开）。
+ *   deliverRange 推进距离 4 格 + 碰撞箱高度偏移（把自己压进爆点的上限，也是本招的选取射程）。
+ *   fuse         引信 20 刻 − 速度偏移（走完才爆；引信期间身体只会前进、不会攻击）。
+ *   deliverSpeed 推进速度 0.4 格/刻 + 速度偏移（决定引信走完前能压进多远）。
  *   knock        向外掀飞 1.5 格 + 体重偏移 + 物攻偏移（三招爆炸里掀得最远）。
  *   lift         上抛初速 0.55 格/刻 + 体重偏移。
  *   debris       碎屑量 40 + 体重 ×0.25 + 物攻 ×0.25（同时驱动画面密度）。
@@ -50,7 +54,27 @@ namespace PokemonSkills {
                 .clamp(4.0, 8.4).round(2),
             "爆心半径", {
                 unit: "格",
-                description: "大引爆罩住身周多大一圈；个子高、身体沉的个体炸得更开。它也是本招的实际射程与指示圈半径。"
+                description: "大引爆罩住爆点周围多大一圈；个子高、身体沉的个体炸得更开。它也是指示圈半径，圈就是会被炸到的地。"
+            }),
+        /** 推进距离：4.0 + 高度偏移[−0.6,1.0]；夹 3.0..5.5。既是引信期间身体能压进的上限，也是本招的选取射程。 */
+        deliverRange: formula(
+            F.base(4.0).plus(F.body("height").minus(1.4).times(0.3).clamp(-0.6, 1.0)).clamp(3.0, 5.5).round(2),
+            "推进距离", {
+                unit: "格",
+                description: "提交后朝所选近地点推进的上限；也是本招能选多远的地面。个子越高推得越远。"
+            }),
+        /** 引信：20 刻 − 速度偏移[−2,3]；蓄爆 +3；夹 15..26。走完引信才在真实位置引爆。 */
+        fuse: seconds(
+            F.base(20).minus(F.stat("speed").minus(60).times(0.04).clamp(-2, 3))
+                .plus(F.when(F.pref("charged", text("worldcombat.skill.explosion.preference.charged")), F.const(3), F.const(0)))
+                .clamp(15, 26).round(0),
+            "引信", "提交后引信烧多久才引爆；这一段里身体只朝爆点短步前进、不攻击，对手能看着圈熄灭走开。速度越快越短，蓄爆式更长。"),
+        /** 推进速度：0.4 + 速度偏移[−0.16,0.24]；夹 0.2..0.72。 */
+        deliverSpeed: formula(
+            F.base(0.4).plus(F.stat("speed").minus(60).times(0.003).clamp(-0.16, 0.24)).clamp(0.2, 0.72).round(3),
+            "推进速度", {
+                unit: "格/刻",
+                description: "引信期间身体压向爆点的速度；速度越高越快到位，到位后停住等引信烧完。"
             }),
         /** 向外掀飞：1.5 + 体重偏移[−0.15,0.9] + 物攻偏移[−0.15,0.8]；蓄爆 ×1.05；夹 0.7..2.6。 */
         knock: formula(
@@ -118,8 +142,9 @@ namespace PokemonSkills {
     describe("explosion", [
         { key: "description.0", values: ["blast","maxTargets"] },
         { key: "description.1", values: ["blastRadius"] },
-        { key: "description.2", values: ["knock", "lift"] },
-        { key: "description.3", values: ["craterTicks","craterCells"] },
+        { key: "description.2", values: ["deliverRange","fuse","deliverSpeed"] },
+        { key: "description.3", values: ["knock", "lift"] },
+        { key: "description.4", values: ["craterTicks","craterCells"] },
         { key: "charged.on", values: [], when: function (context) { return read(context.detail.values, ["charged"]) === true; } },
         { key: "charged.off", values: [], when: function (context) { return read(context.detail.values, ["charged"]) !== true; } },
         { key: "timing", values: ["range","prepare","pp","cooldown"] },

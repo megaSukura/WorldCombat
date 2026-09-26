@@ -1,11 +1,4 @@
-/**
- * 甜甜香气 的伙伴 AI 用途：这是这招自己的一套出手计划——把一片容易打中的区域铺在敌人脚下。
- *
- * 什么局面有意义：有可见威胁、它在 ai.maxChase 以内、目标还没被浸透、脚下也没有别的甜云。
- * 对谁出手：当前威胁；目标身边挤着至少 ai.cluster 个敌人时最值得——一片甜云能同时让一小簇人变脆。
- * 够不到怎么办：reach 就是喷香距离，超出就先走近；以目标位置为落点，挤在一起的人越多越划算。
- * 放完之后：云里的人被浸透、挨打更疼，伙伴交回共享顺序让队友去收这个窗口。
- */
+/** Prefer fast, evasive or concealing subjects; a stationary exposed target has little tracking value. */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("sweetscent", { ai: { maxChase: 9, cluster: 2, leaveStation: true } }, [
         PokemonSkills.number("ai.maxChase", "喷香距离", 3, 16, 1),
@@ -47,7 +40,8 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !sweetscentWants(context, item, target)) return 0;
             const needed = ai<number>(item, "cluster", 2);
-            return sweetscentCluster(context, target, 2.4) >= needed ? 55 : 30;
+            const elusive = fleeing(context, target) || target.hidden || stage(context, target, "evasion") > 0;
+            return (elusive ? 52 : 10) + (sweetscentCluster(context, target, 2.4) >= needed ? 15 : 0);
         }
     });
 }

@@ -5,9 +5,9 @@
  * （Cobblemon 1.8，正式学习者：铁头壳 / Iron Crown。）
  *
  * 翻译：把「放出连精神都能影响到的奇妙怪光」落成一道**从目标头顶引下的怪光柱**——光柱在半空聚起、
- * 坠落时沿着目标的方向拐弯（追踪 `leash` 以内），砸中时在目标脚下炸开一圈；被砸的人精神受创、
- * 特防狠狠掉两级，圈里被卷进的人各挨一记溅射。它是四式里唯一从天而降、唯一单点重击带小范围溅射的
- * 那个：不是扑向目标的一束，而是「等它落下来」。
+ * 坠落前段沿目标方向更新真实锚点（追踪 `leash` 以内，超出就不再追），最后 `lockTicks` 冻结锚点、
+ * 锚环由虚变实；砸中时在最终锚点炸开一圈。被砸的人精神受创、特防狠狠掉两级，圈里被卷进的人各挨一记溅射。
+ * 它是四式里唯一从天而降、唯一单点重击带小范围溅射的那个：不是扑向目标的一束，而是「等它落下来」。
  *
  * 数据分散（每项依赖不同的精灵数据）：
  *   core          光柱威力：特攻定光压，等级给成长。
@@ -17,6 +17,7 @@
  *   pillarRadius  光柱半径：体型与特攻决定光柱多粗。
  *   burstRadius   炸落半径：体型与特攻决定脚下光圈多大。
  *   fallTicks     坠落时间：速度决定光砸得多快。
+ *   lockTicks     锁点时间：等级决定砸前冻结锚点的窗口。
  *   leash         逃逸距离：特攻决定光柱追得紧不紧。
  *   dazzleTicks   残影时长：等级与特攻决定命中后目标身上怪光残影留多久。
  *   rays          光束数：特攻与等级派生，也驱动表现。
@@ -99,7 +100,14 @@ namespace PokemonSkills {
                 .minus(F.stat("speed").minus(55).times(0.06).clamp(-3, 5))
                 .plus(F.level().minus(30).times(0.1).clamp(0, 4))
                 .clamp(9, 22).round(0),
-            "坠落时间", "怪光柱从引下到砸中的时间；速度越快落得越急，也决定对手能躲多久。"),
+            "坠落时间", "怪光柱从引下到砸中的总时间；前段跟着目标，最后一段冻结锚点。速度快的个体落得急。"),
+        /** 锁点时间：4 + 等级(≥30)偏移[0,3] − 速度偏移[−2,3]；夹 3..8。 */
+        lockTicks: seconds(
+            F.base(4)
+                .plus(F.level().minus(30).times(0.1).clamp(0, 3))
+                .minus(F.stat("speed").minus(55).times(0.04).clamp(-2, 3))
+                .clamp(3, 8).round(0),
+            "锁点时间", "坠落最后冻结锚点、锚环由虚变实的那一小段；这段里光柱不再跟人，给对手留出躲开的窗口。"),
         /** 逃逸距离：5 + 特攻偏移[−1,2] + 高度偏移[−0.2,0.8]；夹 4..8。 */
         leash: formula(
             F.base(5)
@@ -151,7 +159,7 @@ namespace PokemonSkills {
 
     describe("luminacrash", [
         { key: "description.0", values: ["core", "sunderStages"] },
-        { key: "description.1", values: ["fallTicks","leash"] },
+        { key: "description.1", values: ["fallTicks","lockTicks","leash"] },
         { key: "description.2", values: ["burstRadius","splash"] },
         { key: "disperse.on", values: ["core", "burstRadius", "splash"],
             when: function (context) { return read(context.detail.values, ["disperse"]) === true; } },

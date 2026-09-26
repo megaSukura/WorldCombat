@@ -4,7 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这是一记有反震但不算极端的正面猛撞，
  * 所以门槛比木槌、双刃头锤低：自身生命高于 `ai.minHealth`，或对手已经残到值得一收时就排到前面；
  * 残血目标在射程内时最优先（撞飞的那一下往往就是终结）。`ai.minHealth` 越高越珍惜自己、越少抢收残血。
- * 放完之后：目标被顶飞了，继续朝它压上去，把撞开的身位变成下一次出手的距离。
+ * 放完之后：目标被顶飞了，继续朝它压上去，把撞开的身位变成下一次出手的距离；贴住压身的破绽由玩家/对手抓。
  */
 namespace PokemonSkills {
     function doubleedgeValid(target: CompanionBehavior.Entity): boolean {
@@ -48,7 +48,7 @@ namespace PokemonSkills {
 
     addPreferences("doubleedge", {}, [
         field(pathOf("brace"), "定桩式", "boolean", {
-            help: "开启：撞上后自己站住、把目标顶得更远，但反震更重、起手与收招更慢——适合把人推离队友或推下高台。关闭（猛进式）：双方都被弹开、自己借滑开卸掉一部分反震、节奏更快。"
+            help: "开启：把重心全压上去、把目标顶得更远、压身更久，但反震更重、起手与收招更慢——适合把人推离队友或推下高台。关闭（猛进式）：撞完更快收势、反震更轻，顶飞略近。"
         }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 18, step: 1,

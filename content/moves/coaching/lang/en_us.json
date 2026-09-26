@@ -25,7 +25,7 @@
   "worldcombat.skill.coaching.preference.ai.maxChase": "Coach distance",
   "worldcombat.skill.coaching.preference.ai.maxChase.help": "Both the threat and the ally must be within this distance to coach; larger runs farther to teach.",
   "worldcombat.skill.coaching.preference.ai.prefer": "Who to coach",
-  "worldcombat.skill.coaching.preference.ai.prefer.help": "Engaged: coach the ally already fighting the threat first; Injured: only look after allies whose health has dropped.",
+  "worldcombat.skill.coaching.preference.ai.prefer.help": "Engaged: coach the ally already fighting the threat first; Injured: only look after allies whose health has dropped, saving the lesson for the dangerous moment. An ally isolated in the back with no one to pass it on is never picked; when everyone is already taught, no target is chosen and the PP is kept.",
   "worldcombat.skill.coaching.preference.ai.prefer.engaged": "Engaged (acts sooner)",
   "worldcombat.skill.coaching.preference.ai.prefer.injured": "Injured (saved for low health)",
   "worldcombat.skill.coaching.preference.ai.leaveStation": "Leave the station",

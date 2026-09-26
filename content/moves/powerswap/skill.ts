@@ -1,14 +1,4 @@
-/**
- * 力量互换 / powerswap —— 注册与动作。
- *
- * 念头的形状：三幕。
- *   读（windup，提交前）：两道攻势读数在两人之间对齐，只播预告，可被打断且不花代价。
- *   换（cross，提交后）：把两人攻/特攻的能力等级对调——宝可梦走原生阶梯，其他生物走公共阶梯，
- *     同一套刻度；挂共享身份 world_combat:status/powerswap 的交换窗口，并各留一枚记号记下原来的等级与对方是谁。
- *   归（revert）：窗口走完或被外力（牛奶、清除效果）解除时，按记号把等级换回原位，画面静收。
- *
- * 与「力量平分」分开：平分把两人原始攻/特攻拉向同一个平均值、不碰等级；本招交换的是已经攒起来的那几级。
- */
+/** Temporarily exchange current stage advantages through owned layers; later changes remain independent. */
 namespace PokemonSkills {
     export const powerswapScene = "world_combat:move_powerswap";
     export const powerswapWindow = "world_combat:powerswap_window";
@@ -44,26 +34,30 @@ namespace PokemonSkills {
     function powerswapStages(world: CombatWorld, actor: CombatActor): number[] {
         return [powerswapStageOf(world, actor, "atk"), powerswapStageOf(world, actor, "spa")];
     }
-    /** 把 actor 的攻/特攻调到 `to`；`from` 是换之前读到的值，避免读到已经换过的数。 */
-    function powerswapSet(world: CombatWorld, actor: CombatActor, from: number[], to: number[]): void {
-        if (to[0] !== from[0]) NativeEffects.boost(world, actor, "atk", to[0] - from[0]);
-        if (to[1] !== from[1]) NativeEffects.boost(world, actor, "spa", to[1] - from[1]);
-    }
-    /** 按记号把 actor 的攻/特攻放回原来的等级；返回是否确实变了。 */
-    function powerswapRestore(world: CombatWorld, actor: CombatActor, mark: PowerswapMark): boolean {
-        const current = powerswapStages(world, actor);
-        const changed = mark.atk !== current[0] || mark.spa !== current[1];
-        powerswapSet(world, actor, current, [mark.atk, mark.spa]);
-        return changed;
+    /** Each layer owns its contribution; native carrier removal closes it without rewriting the base ladder. */
+    function powerswapLayer(world: CombatWorld, actor: CombatActor, from: number[], to: number[], ticks: number, carrier: CombatMobEffect): void {
+        const left = [to[0] - from[0], to[1] - from[1]], names = ["atk", "spa"];
+        for (let part = 0; part < 2; part++) {
+            const changes: { [stat: string]: number } = {};
+            names.forEach(function (stat, index) {
+                const delta = Math.max(-6, Math.min(6, left[index]));
+                if (delta) changes[stat] = delta;
+                left[index] -= delta;
+            });
+            if (!Object.keys(changes).length) continue;
+            if (String(actor.domain()) === "cobblemon") NativeModifiers.apply(world, actor,
+                { stages: changes, carrier: MobEffects.anchor(carrier), source: "world_combat:move/powerswap" }, ticks);
+            else CombatStages.window(world, actor, changes, ticks, "world_combat:move/powerswap", MobEffects.anchor(carrier));
+        }
     }
 
     define({
         id: "powerswap",
         cooldownParameter: "recharge",
         name: "力量互换",
-        description: "利用超能力把双方攻击与特攻的能力变化对调一段窗口：换完你拿走对方攒起来的攻势，窗口走完或被清除时各自换回原来的等级。",
+        description: "把自己与一名选中战斗者的攻击和特攻能力等级暂时对换。敌人和伙伴都可选；窗口结束只收回这次交换，期间其他来源的变化保留。",
         uses: ["把对手涨起来的攻/特攻夺过来", "在自己被降攻后把负数甩给对手", "在对手强化成型时把气势整个接走"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 9,
@@ -72,7 +66,7 @@ namespace PokemonSkills {
         cooldown: 70,
         style: "swap",
         stationary: true,
-        defaults: { ai: { maxChase: 12, margin: 1, leaveStation: false } },
+        defaults: { ai: { maxChase: 12, margin: 1, leaveStation: false, share: false } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["powerswap"], detail: { values: config } };
@@ -91,7 +85,7 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (CombatStatus.has(world, actor, "powerswap") || CombatStatus.has(world, target, "powerswap")) return "already-swapped";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
@@ -110,7 +104,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) {
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) {
                 WorldFeedback.emit(world, powerswapScene, 1, body.position(), { moment: "fizzle" }, 16);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), powerswapMissText, [], 22);
                 done(action);
@@ -124,14 +118,26 @@ namespace PokemonSkills {
             const mine = powerswapStages(world, actor), theirs = powerswapStages(world, target);
             const gap = Math.abs(theirs[0] - mine[0]) + Math.abs(theirs[1] - mine[1]);
             const spread = Math.max(0.5, Math.min(1.4, 0.55 + gap * 0.12));
-            powerswapSet(world, actor, mine, theirs);
-            powerswapSet(world, target, theirs, mine);
-            const changed = mine[0] !== theirs[0] || mine[1] !== theirs[1];
+            let changed = mine[0] !== theirs[0] || mine[1] !== theirs[1];
             if (changed) {
-                MobEffects.apply(world, actor, powerswapWindow, window, 0);
-                MobEffects.apply(world, target, powerswapWindow, window, 0);
-                world.effect(powerswapMark, actor, JSON.stringify({ atk: mine[0], spa: mine[1], pair: String(target.ref()) }), window + 60);
-                world.effect(powerswapMark, target, JSON.stringify({ atk: theirs[0], spa: theirs[1], pair: String(actor.ref()) }), window + 60);
+                const selfCarrier = MobEffects.apply(world, actor, powerswapWindow, window, 0);
+                const otherCarrier = MobEffects.apply(world, target, powerswapWindow, window, 0);
+                changed = selfCarrier !== null && otherCarrier !== null;
+                if (changed) {
+                    powerswapLayer(world, actor, mine, theirs, window, selfCarrier!);
+                    powerswapLayer(world, target, theirs, mine, window, otherCarrier!);
+                    const selfMark = world.effect(powerswapMark, actor, JSON.stringify({ atk: mine[0], spa: mine[1], pair: String(target.ref()) }), window);
+                    const otherMark = world.effect(powerswapMark, target, JSON.stringify({ atk: theirs[0], spa: theirs[1], pair: String(actor.ref()) }), window);
+                    [{ id: selfMark, actor: actor, pair: target }, { id: otherMark, actor: target, pair: actor }].forEach(function (entry) {
+                        const facts = world.observe(entry.actor);
+                        if (facts) WorldFeedback.onEffect(world, entry.id, "powerswap:hum:" + String(entry.actor.ref()), powerswapScene, 1,
+                            facts.position(), { moment: "hum", target: String(entry.actor.ref()), pair: String(entry.pair.ref()),
+                                path: [String(entry.actor.ref()), String(entry.pair.ref())], streams: 3, remaining: window });
+                    });
+                } else {
+                    if (selfCarrier) MobEffects.consume(world, actor, powerswapWindow);
+                    if (otherCarrier) MobEffects.consume(world, target, powerswapWindow);
+                }
             }
             const intensity = Math.max(0.7, Math.min(2.2, gap / 3 + 0.6));
             WorldFeedback.emit(world, powerswapScene, 1, body.position(),
@@ -154,23 +160,7 @@ namespace PokemonSkills {
         }
     });
 
-    // 交换存续期：每 20 刻续一次两人之间的对流，让玩家读出现在还换着、还剩多久。
-    WorldCombat.on("world_combat:move_powerswap/hum", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== powerswapWindow) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const marks = world.effects(actor, powerswapMark);
-        if (!marks.length) return;
-        const mark = JSON.parse(String(marks[0].data()));
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_powerswap/hum/" + String(actor.ref()), powerswapScene, 1, body.position(),
-            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair), streams: 3,
-                path: [String(actor.ref()), String(mark.pair)], remaining: marks[0].remaining() }, 40);
-    });
-
-    // 窗口走完或被清除：按记号把攻势等级换回原处，画面静收；其余修饰不受影响。
+    // 窗口走完或被清除：只结束本次攻势交换层，画面静收；其余修饰不受影响。
     WorldCombat.on("world_combat:move_powerswap/revert", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== powerswapWindow) return;
@@ -180,7 +170,6 @@ namespace PokemonSkills {
         let pair = "";
         if (marks.length) {
             const mark: PowerswapMark = JSON.parse(String(marks[0].data()));
-            powerswapRestore(world, actor, mark);
             pair = String(mark.pair);
             world.operation(marks[0].id(), "world_combat:dispel", "{}");
         }

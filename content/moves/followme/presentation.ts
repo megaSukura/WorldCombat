@@ -2,12 +2,14 @@
  * 看我嘛 / Follow Me 的粒子语言。
  *
  * 一句话：抬手把掌心的一撮光拢起来（windup）→ 一圈招呼波从脚下向外扩到喊话半径、心形与光点向上迸开（call）→
- *   注意被拉住的这段时间里，身周浮着淡淡心光、随节奏轻轻脉动（held）→ 时间到了，心光慢慢升散（fade）。
- * 色相家族：暖粉 0xFF9ECF 为主体，近白 0xFFF0F6 做高光，暖黄 0xFFE08A 只做强调。
- * 拍子：起 windup 0–12t ／ 呼 call 0–24t（每 interval 一次）／ 持 held ／ 收 fade 0–24t。
- * 范围：call 的招呼波沿 `data.wave`（服务端按喊话半径算出的每刻速度）正好走到喊话半径，站在这圈外就不会被拉住。
- * 运动：招呼波自脚下向外、心形与光点向上、被拉住的注意从四周向身体聚拢。
- * 数：迸出的心形与光点数绑 `data.motes`（特攻派生），被拉住的敌人数由 `data.lured` 提高强度。
+ *   只向真正回应的生物牵出一条短连线（link）→ 站桩招呼的这段时间身周浮着淡淡心光、随节奏轻轻脉动（held）→ 时间到了心光慢慢升散（fade）。
+ * 色相家族：暖粉 0xFF9ECF 为主体，近白 0xFFF0F6 做高光，暖黄 0xFFE08A 只做强调；link 用清亮的青白 0xCFF4FF，跟光晕区分开。
+ * 拍子：起 windup 0–12t ／ 呼 call 0–24t（每 interval 一次）／ 连 link（随每轮响应者续期）／ 持 held ／ 收 fade 0–24t。
+ * 范围：call 的招呼波沿 `data.wave`（服务端按喊话半径算出的每刻速度）走到喊话半径；link 用 `data.path` 画 polyline，
+ *   从施法者连到实际被指向的响应者，实体顶点逐帧跟随移动。
+ * 运动：招呼波自脚下向外、心形与光点向上、身子周的光点慢慢绕；响应者与施法者之间的连线轻轻流向施法者。
+ * 数：迸出的心形与光点数绑 `data.motes`（特攻派生），实际维持住的响应者数由 `data.lured` 提高强度。
+ * 说明：held 只画在施法者身上，表示「我还在招呼」，不表示敌人已被锁死；没有响应者时就没有 link。
  */
 const FollowMeDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -61,6 +63,27 @@ const FollowMeDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.05, 0.14],
                     lifetime: [8, 14], size: [0.08, 0.01],
                     color: 0xFFE08A, alpha: [0.85, 0], light: "full", maxParticles: 50
+                }
+            ]
+        },
+        link: {
+            exit: { drain: 20 },
+            emitters: [
+                {
+                    name: "tie", bind: "path", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/lightbeam",
+                    shape: { kind: "polyline" },
+                    rate: { data: "lured", fallback: 1 }, direction: "shape", speed: [0.01, 0.05],
+                    lifetime: [6, 11], size: [0.07, 0.02],
+                    color: 0xCFF4FF, alpha: [0.5, 0], light: "full", maxParticles: 36
+                },
+                {
+                    name: "tie_mote", bind: "path", offset: [0, 0.7, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    shape: { kind: "polyline" },
+                    rate: 8, direction: "shape", speed: [0.01, 0.05],
+                    lifetime: [5, 9], size: [0.05, 0.015],
+                    color: 0xFFF0F6, alpha: [0.45, 0], light: "full", maxParticles: 26
                 }
             ]
         },

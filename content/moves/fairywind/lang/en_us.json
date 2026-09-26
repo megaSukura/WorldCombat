@@ -3,7 +3,7 @@
   "worldcombat.skill.fairywind.use.0": "Sweep several foes standing in a line",
   "worldcombat.skill.fairywind.use.1": "Fling a charging target off your front",
   "worldcombat.skill.fairywind.use.2": "Open from range and push a target off cover",
-  "worldcombat.skill.fairywind.description.0": "The scented gale flies straight along the aim; every foe it sweeps takes about %1$s special damage (the target's defence, type matchup and crits settle on the hit), and the wind pierces up to %2$s more foes without stopping.",
+  "worldcombat.skill.fairywind.description.0": "The scented gale flies straight along the chosen direction or point (and can be cast into empty space); every foe it sweeps takes about %1$s special damage (the target's defence, type matchup and crits settle on the hit), and the wind pierces up to %2$s more foes without stopping.",
   "worldcombat.skill.fairywind.description.1": "Range %1$s blocks; the wind travels straight at %2$s blocks/tick with a swirl radius of %3$s blocks.",
   "worldcombat.skill.fairywind.description.2": "A swept foe is flung %1$s blocks to the side of the wind.",
   "worldcombat.skill.fairywind.description.3": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s.",

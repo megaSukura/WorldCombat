@@ -1,13 +1,13 @@
 /**
  * 大闹一番 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者踏地抡起双臂，一圈琥珀色的冲势贴地荡开；每一次乱挥都把人朝外掀出去，
+ * 一句话：施法者踏地抡起双臂，一片琥珀色的臂风沿扫过去的扇面贴地荡开；被扫到的人朝外掀出去，
  *   最后一记重跺震起一圈尘土；闹完自己头顶转起眩晕的气流。
  * 色相家族：琥珀 0xC9A227 与近白 0xFFF0C0 为主，低饱和土黄 0x8A7A50 只做尘土与余韵；一个色相。
- * 层次：踏步蓄势（tempo）→ 环形乱挥（flail）→ 命中外掀（knock）→ 重跺（stomp）→ 磕伤（reckless）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
- * 范围：flail 的 `swing_ring` 用 `ring` 贴地画出一整圈，半径读 `data.scale` 对应的机制半径（服务端按判定半径派生），
- *   画出的圈就是会被扫到的范围。
- * 运动：冲势从圆心向外一圈圈推开；命中处再朝外炸一撮土；重跺向上掀起。
+ * 层次：踏步蓄势（tempo）→ 左右扇扫（sweep）→ 命中外掀（knock）→ 重跺（stomp）→ 磕伤（reckless）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
+ * 范围：sweep 的 `sweep_fill` 绑 `path`、用 `polygon` 填出服务端与判定共用的那片 150° 扇面（data.path），
+ *   画出的扇面就是会被扫到的那一侧；`direction` 让臂风指向实际扫的方向。
+ * 运动：臂风沿扇面从一侧扫到另一侧；命中处再朝外炸一撮土；重跺向上掀起。
  * 数：服务端把 `data.dust`（尘土数）、`data.intensity`（威力）与 `data.scale`（乱挥半径）交给发射器，数量和强度按机制走。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -36,19 +36,20 @@ const ThrashDefinition: ParticleDefinition = {
                 }
             ]
         },
-        flail: {
+        sweep: {
             duration: 20,
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "swing_ring", bind: "source", offset: [0, 0.18, 0], height: 0.1, fit: "none", orient: "fixed",
+                    name: "sweep_fill", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 26 }, shape: { kind: "ring", radius: 3.4 }, direction: "outward", speed: [0.06, 0.18], drag: 0.9,
+                    burst: { count: { data: "dust", fallback: 26 } }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.05, 0.16], drag: 0.9,
                     lifetime: [10, 18], size: [0.9, 0.1], sizeMode: "sin",
-                    color: 0xC9A227, alpha: [0.55, 0], light: "world", maxParticles: 60
+                    color: 0xC9A227, alpha: [0.55, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "swing_arc", bind: "source", offset: [0, 0.6, 0], height: 0.4, fit: "body", spin: -20,
+                    name: "arm_wind", bind: "source", offset: [0, 0.6, 0], height: 0.4, fit: "body", spin: -20, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     burst: { count: 8, repeats: 2, interval: 4 },
                     shape: { kind: "sphere_surface", radius: 0.6 },

@@ -75,6 +75,12 @@ function harness() {
       lastAttacker: () => related(record.lastAttacker) ? actor(related(record.lastAttacker)) : null };
   };
   const world = state.world = { source: () => actor(self), observe, tick: () => state.tick, busy: () => state.busy,
+    closestPoint: (handle, from) => {
+      const record = handle.record;
+      if (!record.bounds) return point(record.point);
+      const current = coordinates(from);
+      return point(current.map((value, index) => Math.max(record.bounds[0][index], Math.min(record.bounds[1][index], value))));
+    },
     actions: () => (state.instances || (state.busy ? [1] : [])).map(id => ({ instance: () => id })),
     claimed: () => state.movementBusy === undefined ? state.busy : state.movementBusy,
     readiness: id => world.cooldown(id) ? 'cooldown' : state.busy && !state.compatible ? 'busy' : '',
@@ -158,7 +164,7 @@ function harness() {
     WorldCombat: { clock: () => 0, measured() {}, point: (x, y, z) => point([x, y, z]), effect() {},
       effectHandler: (id, event, handler) => effectHandlers.set(id + '/' + event, handler),
       on: (id, topic, after, handler) => listeners.set(id, { topic, after, handler }) },
-    CobblemonCombat: { tactics() {}, loadout() {}, skill: (_world, slot) => ({ ready: () => nativeReady(slot), cast: (...input) => cast(slot, ...input) > 0, submit: (...input) => cast(slot, ...input) }),
+    CobblemonCombat: { tactics() {}, loadout() {}, registerAction() {}, skill: (_world, slot) => ({ ready: () => nativeReady(slot), cast: (...input) => cast(slot, ...input) > 0, submit: (...input) => cast(slot, ...input) }),
       moveTemplate: id => { assert(state.definitions[id], 'Unknown neutral definition: ' + id); return moveView(state.definitions[id], true); },
       ppCost: (_action, slot, key, amount) => ({ slot, key, amount }),
       pokemon: handle => { const ref = handle.ref(); state.nativeReads[ref] = (state.nativeReads[ref] || 0) + 1;
@@ -180,7 +186,8 @@ function harness() {
   function define(id, protocol, usage = {}, config = {}) {
     const skill = { id, kind: 'enemy', range: 16, config: { ai: {} }, ready: true, pp: 10, maxPp: 10, action: 'test:action/' + id, ...config };
     state.definitions[id] = skill; C.registerUse(id, { protocols: [protocol], ...usage });
-    sandbox.NativeLoadout.map(id, skill.action, () => skill.cost ?? 1);
+    if (skill.geometry) sandbox.NativeLoadout.define(id, skill.action, '1', 100, skill.kind, skill.range, () => {}, () => skill.cost ?? 1);
+    else sandbox.NativeLoadout.map(id, skill.action, () => skill.cost ?? 1);
     sandbox.NativeLoadout.availableWhen(id, () => skill.unavailable || '');
     if (skill.policy) sandbox.NativeLoadout.configure(id, skill.policy);
     return skill;
@@ -199,6 +206,37 @@ function harness() {
 }
 let cases = 0;
 function check(name, test) { test(); cases++; console.log('PASS AI dispatch: ' + name); }
+check('slot and independent actions reach a large body surface without losing explicit aim', () => {
+  for (const native of [false, true]) {
+    const h = harness(); h.threat.point = [8, 10, 0]; h.threat.bounds = [[2, 0, -1], [14, 20, 1]];
+    if (native) h.add('test:surface', 'world_combat:attack', {}, { kind: 'aim', range: 3, geometry: true });
+    else h.C.readFacts('test:surface', frame => h.sandbox.WorldAbilities.grant(frame,
+      { id: 'test:surface', action: 'test:surface', use: 'test:surface', protocols: ['world_combat:attack'], kind: 'aim', range: 3 }));
+    const submit = selection => { const frame = h.frame(); return frame.services.behavior.use(frame.capabilities[0], selection); };
+    assert.equal(submit({ ...h.threat, point: [2, .2, 0] }), 1);
+    assert.equal(h.state.casts[0].target, h.threat.ref); assert.deepEqual(h.state.casts[0].point, [2, .2, 0]);
+    h.threat.point = [36, 10, 0]; h.threat.bounds = [[30, 0, -1], [42, 20, 1]];
+    assert(!submit({ ...h.threat, point: [1, 0, 0] }), 'A forged close point cannot bring a distant body into range');
+  }
+});
+
+check('neutral aiming submits actual points and allies for both slot and independent actions', () => {
+  for (const native of [false, true]) {
+    const h = harness();
+    if (native) h.add('test:aim', 'world_combat:attack', {}, { kind: 'aim', range: 12 });
+    else h.C.readFacts('test:grant', frame => h.sandbox.WorldAbilities.grant(frame,
+      { id: 'test:grant', action: 'test:aim', use: 'test:aim', protocols: ['world_combat:attack'], kind: 'aim', range: 12 }));
+    const friend = subject('actor:friend', { friendly: true, point: [3, 0, 0] }); h.state.subjects.push(friend);
+    const submit = target => {
+      const frame = h.frame(); return frame.services.behavior.use(frame.capabilities[0], target);
+    };
+    assert.equal(submit(subject('', { point: [5, 0, 2] })), 1);
+    assert.equal(h.state.casts[0].target, null); assert.deepEqual(h.state.casts[0].point, [5, 0, 2]);
+    assert.equal(submit(friend), 2); assert.equal(h.state.casts[1].target, friend.ref);
+    assert(!submit(subject('actor:missing', { point: [5, 0, 2] })), 'A vanished entity cannot become an implicit world point');
+    if (!native) assert(!submit(subject('', { point: [20, 0, 2] })), 'Independent aim keeps its range limit');
+  }
+});
 
 check('ordinary use priority outranks shared range, recency and combination preferences', () => {
   const h = harness();
@@ -450,6 +488,28 @@ check('ordinary preference stays within goal order and explicit urgency crosses 
   }
 });
 
+check('support selection asks the current use about full-health needs and explicit self support', () => {
+  for (const protocol of ['bolster', 'travel-help']) {
+    const h = harness();
+    const idle = subject('actor:idle', { friendly: true, point: [1, 0, 0] });
+    const preparing = subject('actor:preparing', { friendly: true, point: [2, 0, 0] });
+    h.state.subjects.push(idle, preparing);
+    if (protocol === 'travel-help') h.state.subjects = [h.self, idle, preparing];
+    let wanted = preparing.ref;
+    const skill = h.add('checks:tempo', 'world_combat:' + protocol,
+      { available: (_context, _item, _purpose, target) => target?.ref === wanted },
+      { kind: 'friend', config: { ai: {}, allowSelf: false } });
+    const partner = () => { const context = h.context(); h.C.registry.read(context); return context.senses['world_combat:partner']; };
+    assert.equal(partner()?.ref, preparing.ref, 'A declared full-health preparation need must reach the use');
+    wanted = '';
+    assert.equal(partner(), null, 'A friendly body without a declared need must not be inserted');
+    wanted = h.self.ref;
+    assert.equal(partner(), null, 'Self support requires the capability opt-in');
+    skill.config.allowSelf = true;
+    assert.equal(partner()?.ref, h.self.ref, 'The explicit self-support candidate reaches the same use predicate');
+  }
+});
+
 check('author-provided methods can offer a capability independently of the default pairing policy', () => {
   const h = harness(); h.threat.point = [12, 0, 0];
   h.add('test:first', 'world_combat:attack'); h.add('test:second', 'world_combat:control', { priority: () => 5 });
@@ -577,6 +637,30 @@ check('execution rechecks availability and host refusal before recording a use',
   assert.equal(report.result.reason, 'cast-refused'); assert.equal(h.agent.memory.events, undefined);
 });
 
+check('explicit known subjects reuse native snapshots and enrichment without broadening capture', () => {
+  const h = harness(), world = h.state.world; h.threat.visible = false;
+  let enrichments = 0, observations = 0;
+  const observe = world.observe;
+  world.observe = actor => { observations++; return observe(actor); };
+  world.survey = (_point, _range, visible) => JSON.stringify(h.state.subjects.filter(value => !visible || value.visible));
+  const adapter = new h.sandbox.WorldBehaviorHost.Adapter((_access, actor, value, facts) => {
+    if (actor?.ref() === h.threat.ref) { enrichments++; value.facts = { calibration: 7 }; }
+  });
+  const frame = adapter.capture(world, { intent: 'follow', anchor: point([0, 0, 0]), owner: null, focused: null, range: 16, focusActive: false });
+  frame.scratch = {}; frame.memory = {}; frame.services.behavior = adapter.operations(world, () => false);
+  assert.equal(frame.facts.nearby.length, 0);
+  const before = observations;
+  assert.equal(h.M.find(frame, h.threat.ref), null); assert.equal(observations, before);
+  const known = h.M.observeKnown(frame, h.threat.ref);
+  assert.equal(known.visible, false); assert.equal(known.ref, h.threat.ref); assert.equal(known.facts.calibration, 7);
+  assert.equal(enrichments, 1); assert.equal(observations, before + 1); assert.deepEqual(plain(known.velocity), h.threat.velocity);
+  assert.equal(frame.facts.nearby.length, 0); assert.equal(h.M.find(frame, h.threat.ref), known);
+  assert.equal(h.M.observeKnown(frame, h.threat.ref), known); assert.equal(observations, before + 1);
+  world.valid = () => false; frame.tick++; frame.scratch = {};
+  assert.equal(h.M.observeKnown(frame, h.threat.ref), null); assert.equal(observations, before + 1);
+  world.valid = () => true; world.actor = () => world.source(); frame.tick++; frame.scratch = {};
+  assert.equal(h.M.observeKnown(frame, h.threat.ref), null, 'Native lookup must retain the requested reference');
+});
 check('survey and lone observations retain grounded, dimensions and published domain facts', () => {
   const h = harness(); h.threat.grounded = false; h.threat.wet = true; h.threat.width = 2; h.threat.tags = 'test:tag';
   h.threat.facts = { species: 'test:native', level: 10, status: '', wild: true, owner: '', aiEnabled: true };

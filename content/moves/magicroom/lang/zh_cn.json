@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.magicroom.summary": "在选定的地面撑开一片静默空间：站在里面的活体，携带道具的效果全部消失。对双方一视同仁，走出去立刻恢复。",
-  "worldcombat.skill.magicroom.use.0": "废掉对手依赖道具的套路",
-  "worldcombat.skill.magicroom.use.1": "在道具交换前先让道具失效",
-  "worldcombat.skill.magicroom.use.2": "让己方不靠道具的战力占便宜",
-  "worldcombat.skill.magicroom.description.0": "在选定地面撑起半径 %2$s 格的空间，持续 %1$s；圈内活体的携带道具效果全部失效（道具本身不会丢失），走出去立刻恢复，空间散去整片复原。",
+  "worldcombat.skill.magicroom.summary": "在选定的地面撑开一片静默空间：站在里面的活体，装备提供的属性增益被暂停、宝可梦的携带物效果被封住。对双方一视同仁，走出去立刻恢复。",
+  "worldcombat.skill.magicroom.use.0": "废掉对手依赖装备的套路",
+  "worldcombat.skill.magicroom.use.1": "在装备交换前先让装备失效",
+  "worldcombat.skill.magicroom.use.2": "让不靠装备的战力占便宜",
+  "worldcombat.skill.magicroom.description.0": "在选定地面撑起半径 %2$s 格的空间，持续 %1$s；圈内活体的装备属性增益被暂停、宝可梦携带物效果被封住（装备与附魔不会丢失），走出去立刻恢复，空间散去整片复原。第三方自定义槽位与其他模组的主动能力不受影响。",
   "worldcombat.skill.magicroom.description.1": "当前射程 %1$s 格，空间对双方生效。",
   "worldcombat.skill.magicroom.description.2": "撑开空间要 %1$s，收势 %2$s，冷却 %3$s。长默／快默的取舍见静默方式说明。",
   "worldcombat.skill.magicroom.hush.0": "长默：时长 ×1.2、半径 ×1.1（默得久、罩得广），代价是起手 +2 刻、冷却 ×1.15。",
@@ -27,6 +27,6 @@
   "worldcombat.skill.magicroom.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.magicroom.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去撑空间。",
   "world_combat.move.magicroom.text.open": "魔法空间展开 %1$s 秒",
-  "world_combat.move.magicroom.text.gag": "携带道具失去效果",
-  "effect.world_combat.magicroom_gag": "道具失效"
+  "world_combat.move.magicroom.text.gag": "装备增益被封",
+  "effect.world_combat.magicroom_gag": "静默"
 }

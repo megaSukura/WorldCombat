@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.icespinner.summary": "Covers its feet in thin ice and spins into the target: the spin sweeps the terrain out of its path, leaves a slippery, short-lived ice trail on the ground, and settles ice contact damage while shoving the target away. The slick choice rides farther and its ice lasts longer; the shard choice spins harder.",
+  "worldcombat.skill.icespinner.summary": "Covers its feet in thin ice and spins out along any direction (or merely across a patch of ground, no enemy needed): the spin sweeps the terrain out of its path, leaves a slippery, short-lived ice trail, and a struck target takes ice contact damage and is shoved away. The slick choice rides farther and its ice lasts longer; the shard choice spins harder.",
   "worldcombat.skill.icespinner.use.0": "Drive into a grounded target and shove it away",
   "worldcombat.skill.icespinner.use.1": "Sweep away the terrain a foe is relying on",
   "worldcombat.skill.icespinner.use.2": "Leave a short-lived ice trail across the ground",

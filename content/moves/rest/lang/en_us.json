@@ -22,8 +22,8 @@
   "worldcombat.skill.rest.preference.ai.safeDistance.help": "The companion treats Rest as a safe window only while no living enemy is within this distance; lower sleeps closer to the fight, higher withdraws farther first.",
   "effect.world_combat.refreshed": "Refreshed",
   "world_combat.move.rest.text.sleep": "Fast asleep",
-  "world_combat.move.rest.text.wake": "Fully rested",
-  "world_combat.move.rest.text.groggy": "Woken early",
+  "world_combat.move.rest.text.wake": "Fully rested: restored %1$s health, cleared %2$s condition(s).",
+  "world_combat.move.rest.text.groggy": "Woken early: restored %1$s health, cleared %2$s condition(s).",
   "world_combat.move.rest.text.refreshed": "Refreshed",
   "worldcombat.skill.rest.description.additional": "It can only be used while wounded or carrying a status; whether you sleep through or are woken early, every harmful status is cured, while healing pays out by the share you slept."
 }

@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.gyroball.summary": "站定把自己旋成一枚沉重的钢陀螺，把「对手比自己快多少」拧进转速，再短促地撞上去：对手越快，这一撞越沉、画面里的陀螺越大。慢的个体才把它用成重锤。",
+  "worldcombat.skill.gyroball.summary": "站定把自己旋成一枚沉重的钢陀螺，把「对手比自己快多少」拧进转速，再短促地撞上去：对手越快，这一撞越沉、画面里的陀螺越大。慢的个体才把它用成重锤。可瞄敌人，也可朝任意方向或落点短冲。",
   "worldcombat.skill.gyroball.use.0": "对手比自己快时的一记重撞",
   "worldcombat.skill.gyroball.use.1": "贴身在原地转满再短促撞出",
   "worldcombat.skill.gyroball.use.2": "用速度差把画面里的陀螺越转越大",
+  "worldcombat.skill.gyroball.use.3": "朝空方向或落点短冲试探",
   "worldcombat.skill.gyroball.description.0": "陀螺球造成约 %1$s 点伤害的一撞；当前速度差载荷 %2$s 倍（目标速度 ÷ 自己速度），载荷越高这一撞越沉。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.gyroball.description.1": "最远垫前 %1$s 格、每刻前进 %2$s 格，轮缘判定半径 %3$s 格，撞实后把目标顶开 %4$s 格。",
+  "worldcombat.skill.gyroball.description.1": "最远垫前 %1$s 格、每刻前进 %2$s 格，轮缘判定半径 %3$s 格，撞实后把目标顶开 %4$s 格。可朝敌人或任意方向/落点短冲；空冲不另找替代目标，滚到尽头或撞墙即收势。",
   "worldcombat.skill.gyroball.brace.on": "定桩式：转得更重（威力 ×1.14、击退 ×1.18），但垫前更近（×0.86）、滚动更慢（×0.92）、起手多 2 刻、冷却多 6 刻，适合已经贴到脸上的慢速个体。",
   "worldcombat.skill.gyroball.brace.off": "轻旋式（原生形态）：垫得更远、转得更快、收得干净，单发略低。",
   "worldcombat.skill.gyroball.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，消耗 %4$s PP，提交起冷却 %5$s 秒。",

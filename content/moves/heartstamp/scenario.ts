@@ -3,27 +3,29 @@
  *
  * 一句话：先卖一次萌让目标进入短暂的疏忽窗口，再扑上去补一记重击；补击若落在窗口里就乘机打得更重。
  *
- * 场面：会爱心印章的跳跳猪站在平地一侧，对面一只只会撞击的小拉达。两边都会靠上去，近身交战自然会给出
- * 「卖萌 → 补击」这两拍。
+ * 场面：会爱心印章的跳跳猪站在平地一侧，对面一只关掉 AI 的铁傀儡。跳跳猪会靠上去，近身交战自然给出
+ * 「卖萌 → 补击」这两拍；靶子不逃不还手，补击是否落空只取决于扑击本身。
  *
- * 断言只取必然事实：这招被放过；目标身上出现过共享身份 world_combat:status/offguard（卖萌必定挂上）；
- * 目标挨到过伤害（补击是逐刻 trace 的接触攻击，双方会互相靠拢）。乘机是否成立、暴击与约 30% 的畏缩掷骰，
- * 以及目标是否在卖萌间隔里走开，都写进 note 供读轨迹判断。
+ * 断言只取必然事实：这招被放过；目标身上出现过共享身份 world_combat:status/offguard（近身正面卖萌时挂上）；
+ * 目标挨到过伤害（补击是逐刻 trace 的接触攻击，靶子停住等它靠拢）。乘机是否成立、暴击与约 30% 的畏缩掷骰，
+ * 都写进 note 供读轨迹判断。
  */
 Smoke.scenario("heartstamp", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "spoink", level: 40, moves: ["heartstamp"], at: [-3, 0, 0] });
-    var foe = stage.pokemon({ species: "rattata", level: 20, moves: ["tackle"], at: [3, 0, 0] });
+    var foe = stage.mob({ type: "minecraft:iron_golem", at: [3, 0, 0] });
     stage.hostile(caster, foe);
+    // 先让铁傀儡落地几刻，再原地冻住等扑击；否则它会在卖萌间隔里走开，扑击追不上。
+    stage.after(8, function () { stage.noai(foe); });
     stage.until(900, function () {
         return stage.casts("heartstamp", caster) >= 1 && stage.damageTo(foe) > 0;
     }, function () {
         stage.expect(stage.casts("heartstamp", caster) >= 1, "spoink committed heartstamp");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/offguard"), "the feint marked the foe as off guard");
         stage.expect(stage.damageTo(foe) > 0, "the follow-up strike dealt damage");
-        stage.note("the crit, the flinch roll (about 30%, multiplied while off guard), whether the follow-up landed inside the window, and the foe's movement are random/positional", {
+        stage.note("the crit, the flinch roll (about 30%, multiplied while off guard), whether the follow-up landed inside the window, and whether the lunge reached the stationary foe are random/positional; the feint only sticks when the foe is visible, in front and close with no wall between", {
             casts: stage.casts("heartstamp", caster),
             damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             foeOffguard: stage.hadMobEffect(foe, "world_combat:status/offguard"),

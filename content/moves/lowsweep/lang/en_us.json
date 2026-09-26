@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.lowsweep.summary": "Crouch and pivot to carve a low ground-hugging arc: up to three foes in the arc take the cut on the shins, and a target that was moving fast cannot recover its balance, losing the most Speed; one cut hard enough also pins its leg for an instant. A spinning sweep opens a wider arc and pins longer, for a lighter cut.",
   "worldcombat.skill.lowsweep.description.0": "A hit on a foe deals %1$s contact damage and drops its Speed by %2$s stage(s) (Pokemon drop Speed stages, other combatants lose movement speed); the faster the target was moving, the deeper the drop.",
-  "worldcombat.skill.lowsweep.description.1": "Attack foes within a %1$s-degree arc up to %2$s blocks away, cutting up to 3 at once.",
+  "worldcombat.skill.lowsweep.description.1": "Sweep a %1$s-degree low fan for %2$s blocks, up to three enemies. Native body boxes must intersect the thin ankle volume: a giant's nearby feet can be hit, while a body wholly above it cannot.",
   "worldcombat.skill.lowsweep.description.2": "A target cut on the shins carries the wound for about %1$s; the Speed stages it lost are a lasting change and do not come back when the wound ends. Only a cut of two or more stages on a target that was hard to steady (moving fast; the spinning sweep loosens that requirement) pins its leg for about %2$s, unable to move (though it can still act).",
   "worldcombat.skill.lowsweep.whirl.on": "Spinning sweep: a wider arc and a longer leg pin, at the cost of a lighter cut and longer recovery and cooldown.",
   "worldcombat.skill.lowsweep.whirl.off": "Point cut: a faster, heavier small-arc sweep that only shaves the space in front.",

@@ -6,24 +6,31 @@
  *
  * 出手：短起手（windup 在喉间聚起低语）后提交；声音本身不飞、不铺地。
  * 命中：目标挂共享的 world_combat:confided_whisper（身份 world_combat:status/confided），
- *       再 NativeEffects.boost 下降特攻；宝可梦损失原生特攻等级，其他生物落到攻击属性。
+ *       再 NativeEffects.boost 下降特攻；宝可梦损失原生特攻等级，其他生物落到共享特攻阶梯（原版生物没有特攻属性，
+ *       这一级只作为世界阶梯读法，不改变近战攻击力）。
  * 传谣：同一句话扩散到目标 rumorRadius 内的其他非友方，各自再浅一些，总数受 maxListeners 限制；
- *       声音同样不需要通视，但必须有人站在目标身边才值得。
+ *       声音同样不需要通视，但必须有人站在目标身边才值得。传谣表现按实际被说中的人逐条从目标分出一条短低语，
+ *       谁在扩散范围内一眼可数。
  * 反制：拉开到 whisperRange 之外就听不见；降幅很小，不足以扭转正面对拼。
  */
 namespace PokemonSkills {
     function confideAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
-    /** 把秘密告诉一个听得见的人：挂身份、扣特攻、播命中表现与浮字。 */
-    function confideWhisper(world: CombatWorld, target: CombatActor, drop: number, focus: number, whispers: number): void {
+    /** 把秘密告诉一个听得见的人：挂身份、扣特攻、播命中表现与浮字。
+     *  传谣的听众带上 branchFrom（源头目标的 ref），低语从那个人身上单独分出一道短线；主目标不带，走施法者到目标的主线。 */
+    function confideWhisper(world: CombatWorld, target: CombatActor, drop: number, focus: number, whispers: number, branchFrom?: string): void {
         MobEffects.apply(world, target, confideEffect, focus, 0);
         NativeEffects.boost(world, target, "spa", -drop);
         const body = world.observe(target);
         if (body === null) return;
+        const at = String(target.ref());
         WorldFeedback.emit(world, confideScene, 1, body.position(),
-            { moment: "leak", target: String(target.ref()), path: ["source", "target"],
-                drop: drop, whispers: whispers }, 30);
-        WorldFeedback.text(world, confideAbove(body.position()), "world_combat.move.confide.text.whisper", [drop], 40);
+            { moment: branchFrom ? "branch" : "leak", target: at,
+                path: branchFrom ? [branchFrom, at] : ["source", at],
+                drop: drop, whispers: branchFrom ? Math.max(4, Math.round(whispers * 0.55)) : whispers },
+            branchFrom ? 22 : 30);
+        if (!branchFrom)
+            WorldFeedback.text(world, confideAbove(body.position()), "world_combat.move.confide.text.whisper", [drop], 40);
     }
 
     define({
@@ -85,15 +92,15 @@ namespace PokemonSkills {
                 const centre = at === null ? action.targetPosition() : at.position();
                 const radius = Math.max(1.2, p(confideId, "rumorRadius", action));
                 const cap = Math.max(1, Math.round(p(confideId, "maxListeners", action)));
+                const sourceRef = String(target.ref());
                 let caught = 1;
+                // 结算与人数不变：还是目标 rumorRadius 内最多 maxListeners 个非友方；
+                // 只是每被说中一个人就从他那里分出一道短低语，画出的正是实际听众。
                 WorldGeometry.select(world, WorldGeometry.ring(centre, 0, radius), function (actor, facts) {
-                    if (caught >= cap || facts.friendly() || String(actor.ref()) === String(target.ref())) return;
-                    confideWhisper(world, actor, drop, focus, whispers);
+                    if (caught >= cap || facts.friendly() || String(actor.ref()) === sourceRef) return;
+                    confideWhisper(world, actor, drop, focus, whispers, sourceRef);
                     caught++;
                 });
-                WorldFeedback.emit(world, confideScene, 1, centre,
-                    { moment: "rumor", radius: radius, caught: caught, drop: drop,
-                        whispers: Math.round(whispers * (1 + (caught - 1) * 0.6)), scale: radius / 2.0 }, 32);
                 if (caught > 1)
                     WorldFeedback.text(world, confideAbove(centre), "world_combat.move.confide.text.rumor", [caught - 1], 40);
             }

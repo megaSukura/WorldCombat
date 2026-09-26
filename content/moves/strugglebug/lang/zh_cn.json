@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.strugglebug.summary": "撑住身形，把一团贴地的虫群从脚下向外推出去：虫群前缘扫到的每个敌人各挨一次特殊伤害、特攻下降，并被虫群缠住、移动变慢。厚势式铺得更开更久，代价是伤害更低、出手更慢。",
+  "worldcombat.skill.strugglebug.summary": "撑住身形，把一团贴地的虫群从脚下向外推出去：虫群前缘沿真实地面爬开，遇墙、遇断崖就停在原处；扫到的每个敌人各挨一次特殊伤害、特攻下降，并被虫群实际缠住、移动变慢。厚势式铺得更开更久，代价是伤害更低、出手更慢。",
   "worldcombat.skill.strugglebug.use.0": "被贴身围住时一次削到身边所有人",
   "worldcombat.skill.strugglebug.use.1": "把围上来的敌人一起拖慢",
   "worldcombat.skill.strugglebug.use.2": "对上多个法系威胁时一并压特攻",
   "worldcombat.skill.strugglebug.description.0": "虫群前缘扫到的每个敌人受到一次约 %1$s 点特殊伤害，同一个敌人不会被重复扫中。",
-  "worldcombat.skill.strugglebug.description.1": "被虫群扫中并受到伤害的目标特攻下降 %1$s 级，这个下降不会随缠身结束而恢复，而会保留到它离开战斗、能力等级被重置为止；目标同时被虫群缠住 %2$s，缠身期间移动速度降低约 30%。",
+  "worldcombat.skill.strugglebug.description.1": "被虫群扫中并受到伤害的目标特攻下降 %1$s 级，这个下降不会随缠身结束而恢复，而会保留到它离开战斗、能力等级被重置为止；只有虫群真的缠上身时目标才被缠住 %2$s，缠身期间移动速度降低约 30%，免疫减速的目标仍会掉血与掉特攻。",
   "worldcombat.skill.strugglebug.description.2": "施放期间你站定原地，虫群从脚下铺到半径 %1$s 格，前缘每刻推进 %2$s 格。",
   "worldcombat.skill.strugglebug.option.on": "当前厚势式：虫群铺得更开、缠身更久，代价是伤害更低、出手更慢。",
   "worldcombat.skill.strugglebug.option.off": "当前疾涌式：伤害更高、扩散更快，代价是半径更小、缠身更短。",
@@ -23,10 +23,10 @@
   "worldcombat.skill.strugglebug.preference.brood": "厚势式",
   "worldcombat.skill.strugglebug.preference.brood.help": "开启：虫群扩散半径 ×1.2、缠身时长 ×1.3，代价是威力 ×0.85、起手 +2 刻、冷却 +4 刻，用来铺一片。关闭（疾涌式）：威力 ×1.12、扩散 ×1.15，节奏更快，但半径收到 ×0.85、缠身更短。",
   "worldcombat.skill.strugglebug.preference.ai.maxChase": "考虑距离",
-  "worldcombat.skill.strugglebug.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑推虫；调小只在贴身时推，调大愿意先追进去。",
+  "worldcombat.skill.strugglebug.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑推虫；调小只在贴身时推，调大愿意先追进去。真正能扫到的人数仍按实际扩散半径、且只算贴地可及的敌人。",
   "worldcombat.skill.strugglebug.preference.ai.minFoes": "涌到人数",
-  "worldcombat.skill.strugglebug.preference.ai.minFoes.help": "身周这么近内至少站着这么多可见、敌对的敌人才推虫；调大只被围住时用，调 1 见一个也涌。",
-  "world_combat.move.strugglebug.text.cling": "虫群缠身（特攻 -%1$s）",
+  "worldcombat.skill.strugglebug.preference.ai.minFoes.help": "身周实际扩散半径内至少站着这么多可见、敌对、且真实站在地面上（墙上与高空不算）的敌人才推虫；调大只被围住时用，调 1 见一个也涌。",
+  "world_combat.move.strugglebug.text.cling": "虫群侵蚀（特攻 −%1$s）",
   "world_combat.move.strugglebug.text.miss": "虫群散尽",
   "effect.world_combat.infested": "虫群缠身"
 }

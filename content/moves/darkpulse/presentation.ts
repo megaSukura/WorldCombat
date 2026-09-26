@@ -1,13 +1,13 @@
 /**
  * 恶之波动 / darkpulse 的客户端表现。
  *
- * 一句话：暗气在胸口被逼成一团 → 一团黑气脱手、沿直线铺出一条碎缕尾迹 → 抵达时炸开成一圈恶意领域、
- * 每个被罩住的人身上卷起黑烟 → 落点残留一小阵不散的暗雾；被恐惧攥住的人头上晃星。
+ * 一句话：暗气在胸口被逼成一团 → 一团黑气脱手、沿直线铺出一条碎缕尾迹 → 抵达实际接触点时炸开成一圈恶意领域、
+ * 每个被罩住的人身上卷起黑烟 → 碎缕迅速淡去，不留下似有持续伤害的完整圈；被恐惧攥住的人头上晃星。
  * 色相家族：暗紫与黑（largesmokeorb / impact_dark / obscuringsmoke / largering）为主体，亮紫只在碎缕与核心强调。
- * 拍子：起 windup（聚恶）→ 行 release/travel（脱手与飞行）→ 爆 burst（炸开）→ 罩 veil（附身）→ 收 linger（余韵）。
- * 范围：burst 的领域半径与 linger 的存活都按 `data.scale`（气场半径 / 3 格）铺开，画面就是机制那块领域。
+ * 拍子：起 windup（聚恶）→ 行 release/travel（脱手与飞行）→ 爆 burst（炸开一次暗纹）→ 罩 veil（附身）。
+ * 范围：burst 的领域半径按 `data.scale`（气场半径 / 3 格）铺开，画面就是机制那块实际接触点上炸开的领域。
  * 运动：travel 绑 projectile 沿直线拖尾；release 的气环朝向 `data.direction`；burst 碎缕带初速外抛。
- * 数：`data.motes`（特攻与等级派生）决定飞行尾迹、炸开碎缕与余韵的密度，`data.count`（威力派生）决定强调帧数，
+ * 数：`data.motes`（特攻与等级派生）决定飞行尾迹、炸开碎缕的密度，`data.count`（威力派生）决定强调帧数，
  *   `data.intensity` 抬高亮度。
  */
 const DarkPulseDefinition: ParticleDefinition = {
@@ -88,7 +88,7 @@ const DarkPulseDefinition: ParticleDefinition = {
                 {
                     name: "impact", bind: "point", fit: "none", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
-                    burst: { count: 4, interval: 2 },
+                    burst: { count: 6 },
                     shape: { kind: "sphere", radius: 0.24 },
                     direction: "outward", speed: [0.0, 0.05],
                     lifetime: 9, size: [0.38, 0.05], sizeMode: "index",
@@ -126,29 +126,6 @@ const DarkPulseDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [10, 20], size: [0.18, 0.04],
                     color: 0x2A1B3D, alpha: [0.55, 0], light: "world", maxParticles: 18
-                }
-            ]
-        },
-        linger: {
-            duration: 140,
-            exit: { stop: 20, drain: 30 },
-            emitters: [
-                {
-                    name: "pool", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    rate: { data: "motes", fallback: 6 },
-                    shape: { kind: "sphere", radius: 0.6 },
-                    direction: "up", speed: [0.0, 0.02],
-                    lifetime: [16, 30], size: [0.26, 0.05],
-                    color: 0x2A1B3D, alpha: [0.35, 0], light: "world", maxParticles: 26
-                },
-                {
-                    name: "embers", bind: "point", fit: "none", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle", spriteFrom: "age",
-                    rate: 3, shape: { kind: "sphere", radius: 0.5 },
-                    direction: "up", speed: [0.005, 0.02],
-                    lifetime: [12, 22], size: [0.05, 0.01],
-                    color: 0x7A5FA0, alpha: [0.5, 0], light: "full", maxParticles: 12
                 }
             ]
         },

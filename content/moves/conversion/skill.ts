@@ -73,13 +73,18 @@ namespace PokemonSkills {
             var type = conversionLead(action);
             if (type) {
                 var hold = p("conversion", "hold", action);
-                NativeModifiers.apply(world, actor, { types: [type] }, hold);
+                var layer = NativeModifiers.apply(world, actor, { types: [type] }, hold);
                 var body = world.observe(actor);
                 if (body) {
+                    var shades = p("conversion", "shades", action);
                     action.present("conversion:settle", "world_combat:move_conversion", 1, body.position(), JSON.stringify({
                         moment: "settle", type: type, color: conversionColor(type),
-                        shades: p("conversion", "shades", action), radius: 0.8 + p("conversion", "shades", action) / 30
+                        shades: shades, radius: 0.8 + shades / 30
                     }));
+                    // The outline lives as long as the type layer and is released with it, not with this action.
+                    WorldFeedback.onEffect(world, layer, "world_combat:move_conversion/aura", "world_combat:move_conversion", 1, body.position(), {
+                        moment: "aura", type: type, color: conversionColor(type), shades: shades
+                    });
                     WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)),
                         "world_combat.move.conversion.text.type",
                         [{ key: "cobblemon.type." + type, fallback: type }], 44);

@@ -125,8 +125,8 @@ namespace PokemonSkills {
                     hits++;
                     const away = facts.position().minus(centre);
                     if (world.valid(enemy)) {
-                        if (away.length() > 0.2) world.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(knock));
-                        if (lift > 0) world.motion(enemy, WorldCombat.point(0, lift, 0), true);
+                        if (away.length() > 0.2) world.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(knock));
+                        if (lift > 0) world.hitImpulse(enemy, WorldCombat.point(0, lift, 0));
                     }
                     WorldFeedback.emit(world, selfdestructScene, 1, facts.position(),
                         { moment: "hit", target: String(enemy.ref()), scale: scale, debris: debris }, 24);

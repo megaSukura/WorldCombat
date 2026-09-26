@@ -1,12 +1,12 @@
 /**
  * 落石 / rockthrow 的客户端表现。
  *
- * 一句话：施法者脚边掀起一小撮碎石与尘，随手抄起一块小石；石头贴着身体高度「嗖」地平直飞出，
+ * 一句话：施法者脚边掀起一小撮碎石与尘，随手抄起**一块**小石；石头贴着身体高度「嗖」地平直飞出，
  *   只在身后留一道极短的尘尾；砸中目标崩出一撮石屑，落到地上只轻轻扬一点灰。
  * 色相家族：现场地表的石灰褐（earth／large_rock／tinydust 原色，按地面材质轻微偏色）＋命中处近白高光。
- * 拍子：起 scoop（掀地抄石）→ 射 release（甩手）→ 飞 flight（一小段尘尾）→ 击 hit（石屑）／落 ground（扬尘）。
+ * 拍子：起 scoop（掀地抄石，只抄一块）→ 射 release（甩手）→ 飞 flight（跟随真实抛物线）→ 击 hit（石屑）／落 ground（扬尘）。
  * 范围：本招是单发直线投掷，画面靠 `flight` 那道短尾迹与命中点标出「这一条细线周围会被打到」，没有地面轮廓。
- * 运动：石头本体由原生实体按 item 外观渲染；粒子只补它离手的一下、尾迹与碎裂。
+ * 运动：石头本体由原生实体渲染，`flight` 全程 `bind:projectile` 跟随它的真实弧线；粒子只补它离手的一下、尾迹与碎裂。
  * 数：`data.shards`（物攻换算的碎屑量）绑定命中崩屑量，`data.scale`（石块判定 / 0.22）统一缩放整幕尺寸，
  *   `data.intensity`（威力 / 40）放大发射量。
  */
@@ -42,11 +42,11 @@ const RockthrowDefinition: ParticleDefinition = {
                 {
                     name: "fling", bind: "source", offset: [0, 0.85, 0.3], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 8, at: 0 },
-                    shape: { kind: "sphere", radius: 0.22 },
-                    direction: "outward", speed: [0.05, 0.2], spread: 26, drag: 0.9,
+                    burst: { count: 4, at: 0 },
+                    shape: { kind: "sphere", radius: 0.18 },
+                    direction: "outward", speed: [0.05, 0.18], spread: 20, drag: 0.9,
                     lifetime: [6, 11], size: [0.06, 0.02],
-                    color: 0xA98C6A, alpha: [0.6, 0], light: "world", maxParticles: 18
+                    color: 0xA98C6A, alpha: [0.6, 0], light: "world", maxParticles: 12
                 }
             ]
         },
@@ -111,7 +111,7 @@ const RockthrowDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "tick", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "tick", bind: "point", fit: "none", offset: [0, 0.08, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "shards", fallback: 5 }, at: 0 },
                     shape: { kind: "circle", radius: 0.42 },
@@ -121,7 +121,7 @@ const RockthrowDefinition: ParticleDefinition = {
                     color: 0xA98C6A, alpha: [0.8, 0], light: "world", maxParticles: 22
                 },
                 {
-                    name: "puff", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "puff", bind: "point", fit: "none", offset: [0, 0.1, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 7, at: 0 },
                     shape: { kind: "circle", radius: 0.42 },

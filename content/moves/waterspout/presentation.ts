@@ -1,14 +1,14 @@
 /**
  * 喷水 / waterspout 的客户端表现。
  *
- * 一句话：水先在脚边兜成一颗越涨越大的水团 → 潮头贴着地一圈圈向外漫出去，浪墙上翻、泡沫四溅，
- *   被扫到的人各自炸开水花、被推着走并被浇透（回卷式则水向内收，把人往中心带）。
+ * 一句话：水先在脚边兜成一颗越涨越大的水团 → 潮头贴着地一圈圈向外漫出去（回卷式则从外圈一圈圈收进来），
+ *   浪墙上翻、泡沫四溅，被扫到的人各自炸开水花、被推着走或被拉近并被浇透。
  * 色相家族：水蓝的一族（0x4FB6E8／0x8FD6F5 为主体，0xE8F8FF 只做浪头高光，水汽用中性灰）。
- * 拍子：起（gather 兜水）→ 涌（surge 潮头一格格外推、hit 拍中、douse 浇熄）→ 退（recede 湿痕）。
- * 范围：surge 的地面环按服务端逐个刷新的 `data.radius`（潮头当前半径）画出，圈到哪就是会扫到哪。
- * 运动：潮头沿地表向外扩，浪墙向上翻；回卷式的 inward 层把水与泡沫向中心收。
+ * 拍子：起（gather 兜水）→ 涌（surge 潮头逐格推进、hit 拍中、douse 浇熄）→ 退（recede 湿痕）。
+ * 范围：surge 的地面环按服务端逐步刷新的 `data.radius`（潮头当前半径）画出，圈到哪就是会扫到哪；
+ *   推涌式的半径递增、回卷式递减，泡沫流向与实际位移方向一致，最外圈不会提前收画。
  * 数：`data.volume`（体重派生的水量）决定浪花密度，`data.scale`（潮头距离派生）决定粒子尺度，
- *   `data.step`／`data.steps`（推进进度）决定潮头的明暗轻重——画面里的数与机制里的数一致。
+ *   `data.flow`（外推浪花）与 `data.inward`（回卷内拉）分别驱动两式的流向——画面里的数与机制里的数一致。
  */
 const WaterspoutDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -36,8 +36,8 @@ const WaterspoutDefinition: ParticleDefinition = {
             ]
         },
         surge: {
-            duration: 18,
-            exit: { stop: 8, drain: 12 },
+            duration: { data: "waveTicks", fallback: 22 },
+            exit: { stop: 200, drain: 12 },
             emitters: [
                 {
                     name: "wall", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,

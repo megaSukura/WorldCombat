@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.flamecharge.summary": "裹着火焰沿直线冲锋：撞中的第一个目标吃一记重击并被带开，随后自身提速；开启贯穿时会继续撞穿，把身后撞到的对手各吃一记较轻的伤害。",
+  "worldcombat.skill.flamecharge.summary": "裹着火焰沿直线冲锋：真正撞伤的第一个目标吃一记重击并被带开，随后自身提速；开启贯穿时会继续撞穿，把身后撞到的对手各吃一记较轻的伤害。",
   "worldcombat.skill.flamecharge.use.0": "直线撞中一个落单的对手",
   "worldcombat.skill.flamecharge.use.1": "沿一条线把挤在一起的对手一起点着",
   "worldcombat.skill.flamecharge.use.2": "命中后提速，趁势追下去",
   "worldcombat.skill.flamecharge.description.0": "冲锋造成约 %1$s 点伤害，一口气冲出 %2$s 格、每刻 %3$s 格；全身湿透时这一下威力 ×0.85。",
-  "worldcombat.skill.flamecharge.description.1": "贯穿式里第一个目标吃满额，之后沿直线撞到的每个对手各吃本次威力的 %1$s；命中后自身速度 +%2$s 级（一次施放至多一次，脱战后消退），并把被撞目标沿冲锋方向带开约 %3$s 格。冲锋途中的横向判定半径约 %4$s 格。",
+  "worldcombat.skill.flamecharge.description.1": "贯穿式里第一个真正造成伤害的目标吃满额，之后沿直线撞到的每个对手各吃本次威力的 %1$s；造成伤害后自身速度 +%2$s 级（一次施放至多一次，脱战后消退），并把被撞目标沿冲锋方向带开约 %3$s 格。被免疫或挡下的接触不带人、不提速。冲锋途中的横向判定半径约 %4$s 格。",
   "worldcombat.skill.flamecharge.pierce.on": "贯穿：撞穿第一个目标，沿直线把后面的人一起点着（后续目标吃贯穿占比）；代价是单体略轻、冷却更长。",
   "worldcombat.skill.flamecharge.pierce.off": "点杀：在第一个目标身上停下，单体更重、出手更利落。",
   "worldcombat.skill.flamecharge.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

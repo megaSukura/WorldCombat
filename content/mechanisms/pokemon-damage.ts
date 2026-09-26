@@ -10,6 +10,10 @@ namespace PokemonDamage {
         armorAddedExcluded?: number; toughnessAddedExcluded?: number;
         ignoreDefenceStages?: boolean;
         knockback?: boolean; bypassCooldown?: boolean;
+        /** Explicit launch-time same-type contribution, paired with its already resolved type. A later type change uses live facts instead. */
+        sameTypeMultiplier?: number; sameTypeType?: string;
+        /** This native hurt invocation leaves at least this much existing HP after Pre modifiers; absorption may leave more. */
+        minimumHealth?: number;
     };
     export type ResolvedMetadata = NativeEffects.Move & Metadata & { move: string; action: number; flags: { [name: string]: boolean } };
     export interface FeatureContext {
@@ -100,6 +104,20 @@ namespace PokemonDamage {
         if (data.category !== "physical" && data.category !== "special") throw new Error("Choose physical or special damage");
     }
     export var multipliers = { sameType: 1.5, critical: 1.5, burn: .5 };
+    export function sameType(facts: CombatantStats.Facts, type: string): number {
+        if (facts.types.indexOf(type) < 0) return 1;
+        const native = <NativeFacts | undefined>facts.data.native;
+        const ability = native ? NativeEffects.ability(native.pokemon, native.state) : "";
+        return NativeAbilities.property(ability, "sameTypeMultiplier", multipliers.sameType);
+    }
+    function sameTypeFor(data: any, facts: CombatantStats.Facts): number {
+        if (data.sameTypeMultiplier !== undefined) {
+            if (typeof data.sameTypeMultiplier !== "number" || !isFinite(data.sameTypeMultiplier) || data.sameTypeMultiplier < 0 || typeof data.sameTypeType !== "string")
+                throw new Error("A same-type snapshot requires a finite nonnegative multiplier and its resolved type");
+            if (data.sameTypeType === data.type) return data.sameTypeMultiplier;
+        }
+        return sameType(facts, data.type);
+    }
     /** Ordered target-side matchup contributions; they run after the base type product, so grounding can rewrite it. */
     export interface EffectivenessContext extends FeatureContext {
         data: any; readonly moveType: string; readonly targetTypes: string[]; effectiveness: number;
@@ -179,6 +197,16 @@ namespace PokemonDamage {
     }
     /** Uses the executing source-side rules without inventing any target facts or rolling a hit. */
     export interface PreviewInput { action?: CombatAction; power?: PowerInput; }
+    /** Pure source-side declaration, using the same dynamic segment/metadata/ability rules as damage without rolling a hit. */
+    export function sourceMetadata(world: CombatWorld, actor: CombatActor, move: CombatPokemonMove, features: Features = {}, action?: CombatAction): any {
+        const target = action ? action.target() : null;
+        const context: FeatureContext = { world: world, actor: actor, sourceFacts: combatants.read(world, actor),
+            target: target, targetFacts: target && world.valid(target) ? combatants.read(world, target) : undefined,
+            move: move, preview: true, action: action };
+        const data = moveData(context, features, {});
+        sourcePower(context, data);
+        return data;
+    }
     export function preview(world: CombatWorld | null, actor: CombatActor | null, facts: CombatantStats.Facts, move: CombatPokemonMove, features: Features, input: PreviewInput = {}): any {
         var native = <NativeFacts | undefined>facts.data.native, pokemon = native && native.pokemon, state = native ? native.state : NativeEffects.empty();
         var ability = pokemon ? NativeEffects.ability(pokemon, state) : "", held = pokemon ? NativeEffects.item(pokemon, state) : "";
@@ -198,7 +226,7 @@ namespace PokemonDamage {
         var contributions = combatants.previewContributions({ world, actor, sourceFacts: facts, move: data });
         var calculated = CombatantStats.calculate(power, stats.attack, 0, data.damage, contributions.values, power > 0 ? data.power / power : 1);
         data.calculation = calculated;
-        var sameType = facts.types.indexOf(data.type) >= 0 ? NativeAbilities.property(ability, "sameTypeMultiplier", multipliers.sameType) : 1;
+        var sameType = sameTypeFor(data, facts);
         var theoretical = calculated.amount * sameType, amount = settledAmount(outgoing(world, actor, facts, data, theoretical));
         return { calculated: calculated, adjustments: stats.adjustments, deferred: contributions.deferred.concat(data.deferred || [], unavailable), typeFactor: sameType, amount: amount,
             category: data.category, type: data.type, metadata: data, authoredPower: power, stage, available: !unavailable.length && !contributions.deferred.length && !(data.deferred || []).length,
@@ -341,6 +369,23 @@ namespace PokemonDamage {
         if (result.amount <= 0) { zeroFeedback(world, target, result); return false; }
         return world.hurt(target, result.amount, result.metadata);
     }
+    /** Authored residual world-HP damage, attributed to the current effect source. Native armor, guards,
+     * immunity and damage events settle the result; callers display its damage_applied receipt. */
+    export function residual(world: CombatWorld, target: CombatActor, move: string, amount: number, payload: any = {}): boolean {
+        if (!isFinite(amount) || amount < 0) throw new Error("Residual damage requires a finite nonnegative amount");
+        if (amount === 0 || !world.valid(target)) return false;
+        if (String(target.domain()) === "cobblemon") {
+            const state = NativeEffects.read(world, target), ability = NativeEffects.ability(CobblemonCombat.pokemon(target), state);
+            if (NativeAbilities.flag(ability, "indirectImmune")) return false;
+        }
+        const data: any = {};
+        Object.keys(payload).forEach(key => data[key] = payload[key]);
+        data.kind = "residual"; data.move = move; data.segment = "residual";
+        data.damageType = "world_combat_core:effect"; data.category = "status"; data.type = "";
+        data.contact = false; data.knockback = false; data.critical = false; data.bypassAccuracy = true;
+        data.indirect = true; data.calculation = { mode: "residual", amount: amount };
+        return world.hurt(target, amount, JSON.stringify(data));
+    }
     /** A caller-authored world-HP amount. No attack/defence/STAB/critical rescaling; native hurt, guards and attribution remain active. */
     export function fixed(world: CombatWorld, target: CombatActor, move: CombatPokemonMove, amount: number,
                           features: Features = {}, typePolicy: "immunity" | "effectiveness" | "none" = "immunity", action?: CombatAction): boolean {
@@ -430,8 +475,7 @@ namespace PokemonDamage {
         var amount = calculation.amount;
         data.calculation = calculation;
         data.calculation.defenceAvailable = targetFacts.stats[defenceStat] !== undefined;
-        var sameType = sourceFacts.types.indexOf(data.type) >= 0;
-        if (sameType) amount *= NativeAbilities.property(ability, "sameTypeMultiplier", multipliers.sameType);
+        amount *= sameTypeFor(data, sourceFacts);
         var targetTypes = targetFacts.types.slice();
         data.effectiveness = 1;
         targetTypes.forEach(function (type) { data.effectiveness *= CobblemonCombat.typeEffectiveness(data.type, type); });
@@ -441,7 +485,8 @@ namespace PokemonDamage {
         effectiveness.apply(effectScope);
         data.effectiveness = effectScope.effectiveness;
         amount *= data.effectiveness;
-        if (data.critical) amount *= critical.multiplier;
+        data.criticalMultiplier = data.critical ? critical.multiplier : 1;
+        if (data.critical) amount *= data.criticalMultiplier;
         amount = outgoing(world, source, sourceFacts, data, amount);
         amount = settledAmount(amount);
         return { amount: amount, metadata: JSON.stringify(data) };

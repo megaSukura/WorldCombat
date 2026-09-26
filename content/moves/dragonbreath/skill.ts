@@ -1,9 +1,12 @@
 /**
  * 龙息 / dragonbreath 的出手方式。
  *
- * 念头的形状：先深吸一口气（windup，提交前只播预告）→ 从身前往外喷出一道扇形吐息（breath），
+ * 念头的形状：先深吸一口气（windup，提交前只播预告）→ 朝固定方向喷出一道扇形吐息（breath），
  * 气流由近及远逐步铺满整片锥形，先被扫到的目标先吃伤（impact），同一目标只吃一次 → 收尾留一缕雾气（linger）。
- * 判定用的 `WorldGeometry.sector` 与表现用的 `polygon` 顶点是同一组扇形，玩家看到的锥面就是会被扫到的地。
+ *
+ * 方向与遮挡：`kind: "aim"` 在提交时锁定一个方向，之后不追着目标转向；可以选择空地空喷。判定用的
+ * `WorldGeometry.sector` 与表现用的 `polygon` 顶点是同一组扇形，玩家看到的锥面就是会被扫到的地；
+ * 每个候选目标还要通过 `world.clear` 的真实通视检查，墙后的敌人不会被扫到，前沿到哪、能不能打到都从画面读得出。
  * 两幕：windup → breath（可带多个 impact）+ linger。提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -28,9 +31,9 @@ namespace PokemonSkills {
     define({
         id: "dragonbreath",
         name: "Dragon Breath",
-        description: "深吸一口气，朝身前喷出一道扇形龙息：锥形由近及远铺满，扫中的敌人每个只吃一次伤害、越远力道越弱，并有机会被麻住——麻痹会拖慢移动，还让出招有概率失败。",
+        description: "深吸一口气，朝锁定方向喷出一道扇形龙息：锥形由近及远铺满，扫中的敌人每个只吃一次伤害、越远力道越弱，并有机会被麻住——麻痹会拖慢移动，还让出招有概率失败。可以对着空地空喷，墙会挡住气息。",
         uses: ["喷出一道扇形吐息扫过身前一片", "一次扫到排成一列的多个敌人", "让被扫到的对手陷入麻痹"],
-        kind: "enemy",
+        kind: "aim",
         range: 5,
         maxRange: 7,
         prepare: 8,
@@ -57,6 +60,7 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const origin = action.origin();
+            // 方向在提交时锁定，空喷也成立；锥面随后由近及远推进。
             const direction = aim(action);
             const reach = p("dragonbreath", "reach", action);
             const arc = Math.max(24, Math.round(p("dragonbreath", "arc", action)));
@@ -85,11 +89,14 @@ namespace PokemonSkills {
                 WorldGeometry.selectEnemies(scope, region, function (target, facts) {
                     const key = String(target.ref());
                     if (hitRefs[key] || hits >= limit) return;
+                    // 块遮挡按真实可见段：墙后的目标这一口扫不到。
+                    if (!scope.clear(here, facts.position())) return;
                     hitRefs[key] = true;
                     const distance = facts.position().minus(here).length();
                     const gain = Math.max(0.55, 1 - (distance / Math.max(1, reach)) * 0.4);
-                    hurt(current, target, "dragonbreath", power * gain,
+                    const landed = hurt(current, target, "dragonbreath", power * gain,
                         { damage: damageSpec("dragonbreath", "breath"), status: "paralysis", chance: chance });
+                    if (!landed) return;
                     hits++;
                     WorldFeedback.emit(scope, dragonbreathScene, 1, facts.position(),
                         { moment: "impact", target: key, intensity: Math.max(0.5, Math.min(1.8, power / 60)) }, 26);

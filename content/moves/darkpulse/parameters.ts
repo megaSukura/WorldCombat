@@ -17,7 +17,6 @@
  *   radius       飞行判定 0.28 格 + 体型高度偏移。
  *   flinchChance 畏缩几率 0.20（原生）+ 特攻偏移；弥漫 ×1.12 / 凝聚 ×0.9。
  *   flinchTicks  畏缩持续 15 刻 + 等级偏移。
- *   lingerTicks  余韵停留 70 刻 + 等级偏移（炸开的恶意领域留多久）。
  *   motes        碎缕数 16 + 特攻偏移 + 等级偏移，驱动表现的密度。
  *   tempo        起手 12 刻 − 速度偏移 + 弥漫 2 刻。
  *
@@ -84,11 +83,6 @@ namespace PokemonSkills {
         flinchTicks: seconds(
             F.base(15).plus(F.level().minus(28).times(0.12).clamp(0, 5)).clamp(12, 22).round(0),
             "畏缩持续", "被恐惧攥住的人在这段时间内无法开始新动作；等级越高愣得越久。"),
-        /** 余韵停留：70 + 等级偏移[0,40] + 弥漫 +20；夹 50..150。 */
-        lingerTicks: seconds(
-            F.base(70).plus(F.level().minus(28).times(1.0).clamp(0, 40))
-                .plus(F.when(F.pref("creep"), F.const(20), F.const(0))).clamp(50, 150).round(0),
-            "余韵停留", "炸开的恶意领域在落点停留多久；等级越高、弥漫形态留得越久。"),
         /** 碎缕数：16 + 特攻偏移[−4,32] + 等级偏移[0,12]；夹 12..54。 */
         motes: formula(
             F.base(16).plus(F.stat("specialAttack").minus(60).times(0.16).clamp(-4, 32))

@@ -1,12 +1,12 @@
 /**
  * 泥巴炸弹 / mudbomb 的客户端表现。
  *
- * 一句话：一颗硬泥弹在身前压实后直线飞出，砸中目标炸开成泥雾，泥块向四周泼溅、地上落下一片湿泥。
+ * 一句话：一颗硬泥弹在身前压实后直线飞出，砸中目标炸开成泥雾，泥块向四周泼溅、主目标与撞击面留下泥印。
  * 色相家族：干泥的深棕（0x5C4A34）与浅褐（0x8E6E4A），碎屑收在灰白。
- * 拍子：起 gather（压实收紧）→ 击 burst（炸开）与 spray（泼溅到旁人）→ 收 face（中招者脸上的泥雾）与地面泥坑。
- * 范围：burst 的 ring 半径由 `data.blast`（机制爆开半径）铺开，玩家一眼看出波及到哪。
+ * 拍子：起 gather（压实收紧）→ 击 burst（炸开，按 data.direction 在真实表面铺泥印）与 spray（泼溅到旁人）→ 收 face（中招者脸上的泥雾）。
+ * 范围：burst 的 ring 半径由 `data.blast`（机制爆开半径）铺开，泥印盘由 `data.mark` 铺开；玩家一眼看出波及到哪。
  * 运动：泥弹沿直线飞行（服务端速度），炸开后泥块受重力向外抛。
- * 数：burst/spray 的泥块数绑定 `data.shards`（特攻与等级换算），强度绑定 `data.intensity`（威力 / 65）。
+ * 数：burst/spray 的泥块数绑定 `data.shards`（特攻与等级换算）与 `data.motes`（旁人较小泥粒），强度绑定 `data.intensity`（威力 / 65）。
  */
 const MudbombDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -59,6 +59,16 @@ const MudbombDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 20 },
             emitters: [
                 {
+                    name: "surface_mark", bind: "point", fit: "none", offset: [0, 0.02, 0],
+                    particle: "world_combat_core:cobblemon/generic/mud/mudsplash", spriteFrom: "random",
+                    burst: { count: { data: "shards", fallback: 14 } },
+                    shape: { kind: "circle", radius: { data: "mark", fallback: 0.8 } },
+                    orient: "direction", direction: "shape", speed: [0.0, 0.05], spread: 16,
+                    gravity: 0.015, drag: 0.88,
+                    lifetime: [10, 20], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0x5C4A34, alpha: [0.9, 0], light: "world", maxParticles: 70
+                },
+                {
                     name: "blast_ring", bind: "point", fit: "none", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1 },
@@ -96,12 +106,12 @@ const MudbombDefinition: ParticleDefinition = {
                 {
                     name: "spray_clods", bind: "target", offset: [0, 0.5, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/mud/mudsplash",
-                    burst: { count: 10 },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.1, 0.28], spread: 26,
+                    burst: { count: { data: "motes", fallback: 6 } },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.08, 0.22], spread: 24,
                     gravity: 0.04, drag: 0.9,
-                    lifetime: [8, 15], size: [0.13, 0.02],
-                    color: 0x5C4A34, alpha: [0.9, 0], light: "world", maxParticles: 50
+                    lifetime: [8, 15], size: [0.1, 0.02],
+                    color: 0x5C4A34, alpha: [0.9, 0], light: "world", maxParticles: 40
                 }
             ]
         },

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.strugglebug.summary": "Brace and push a ground-hugging bug swarm outward from your feet: every enemy the front sweeps takes special damage, loses Sp. Atk, and is left clinging with bugs that slow it down. The thick form spreads wider and clings longer at the cost of damage and speed.",
+  "worldcombat.skill.strugglebug.summary": "Brace and push a ground-hugging bug swarm outward from your feet: the front crawls along real ground and stops at walls and cliffs; every enemy it sweeps takes special damage, loses Sp. Atk, and is left clinging with bugs that slow it down. The thick form spreads wider and clings longer at the cost of damage and speed.",
   "worldcombat.skill.strugglebug.use.0": "Shave everything around you when surrounded",
   "worldcombat.skill.strugglebug.use.1": "Slow a whole ring of attackers at once",
   "worldcombat.skill.strugglebug.use.2": "Sap several special threats together",
   "worldcombat.skill.strugglebug.description.0": "Every enemy the swarm front sweeps takes about %1$s special damage once; the same enemy is never swept twice.",
-  "worldcombat.skill.strugglebug.description.1": "A target the swarm hits and damages loses %1$s stage(s) of Sp. Atk - a stat stage that does not recover when the cling ends, but lasts until the target leaves combat or its stages are reset - and is left clinging for %2$s, during which its movement speed is cut by about 30%.",
+  "worldcombat.skill.strugglebug.description.1": "A target the swarm hits and damages loses %1$s stage(s) of Sp. Atk - a stat stage that does not recover when the cling ends, but lasts until the target leaves combat or its stages are reset - and is left clinging for %2$s only when the swarm actually takes hold, during which its movement speed is cut by about 30%. A target immune to being slowed still takes the damage and the Sp. Atk drop.",
   "worldcombat.skill.strugglebug.description.2": "You stay put while casting: the swarm spreads from your feet out to a %1$s-block radius, its front advancing %2$s blocks per tick.",
   "worldcombat.skill.strugglebug.option.on": "Thick form: the swarm spreads wider and clings longer, at the cost of lower damage and a slower cast.",
   "worldcombat.skill.strugglebug.option.off": "Rushing form: more damage and a faster spread, but a smaller radius and shorter cling.",
@@ -23,10 +23,10 @@
   "worldcombat.skill.strugglebug.preference.brood": "Thick form",
   "worldcombat.skill.strugglebug.preference.brood.help": "On: radius x1.2 and cling x1.3, at the cost of power x0.85, +2 ticks wind-up and +4 ticks cooldown. Off (rushing form): power x1.12 and spread x1.15 with a quicker cast, but radius x0.85 and a shorter cling.",
   "worldcombat.skill.strugglebug.preference.ai.maxChase": "Consider distance",
-  "worldcombat.skill.strugglebug.preference.ai.maxChase.help": "It only considers pushing the swarm when a threat is within this distance; smaller values keep it at point-blank, larger ones let it close in from further out.",
+  "worldcombat.skill.strugglebug.preference.ai.maxChase.help": "It only considers pushing the swarm when a threat is within this distance; smaller values keep it at point-blank, larger ones let it close in from further out. The number it can actually sweep still follows the real spread radius and only counts ground-reachable enemies.",
   "worldcombat.skill.strugglebug.preference.ai.minFoes": "Foes to sweep",
-  "worldcombat.skill.strugglebug.preference.ai.minFoes.help": "It pushes the swarm only when at least this many visible enemies stand that close; raise it to save the move for being surrounded, 1 to use it on any single foe.",
-  "world_combat.move.strugglebug.text.cling": "Bugs cling (Sp. Atk -%1$s)",
+  "worldcombat.skill.strugglebug.preference.ai.minFoes.help": "It pushes the swarm only when at least this many visible, hostile enemies truly stand on the ground inside the real spread radius (airborne and walled-off ones do not count); raise it to save the move for being surrounded, 1 to use it on any single foe.",
+  "world_combat.move.strugglebug.text.cling": "Bug-eaten (Sp. Atk -%1$s)",
   "world_combat.move.strugglebug.text.miss": "The swarm scatters",
   "effect.world_combat.infested": "Infested"
 }

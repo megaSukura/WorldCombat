@@ -27,7 +27,10 @@
   "worldcombat.skill.sharpen.preference.ai.minGap.help": "威胁近于这个距离时不再顶角、直接交战；调大更常在近身时放弃棱角化。",
   "worldcombat.skill.sharpen.preference.ai.retaliate": "诱敌反击",
   "worldcombat.skill.sharpen.preference.ai.retaliate.help": "开启：倾向于等对手贴上来（距离小于 4 格）再顶角，让接触者吃反击；关闭：远一点也不妨先顶角加攻。",
+  "worldcombat.skill.sharpen.preference.ai.ranged": "忌惮远程",
+  "worldcombat.skill.sharpen.preference.ai.ranged.help": "开启：威胁最近一次攻击是射弹/法术、且还在近身之外时，伙计会压后棱角化，不在远程压制下白顶角；关闭：不分辨远程，照常按距离决定。",
   "world_combat.move.sharpen.text.jagged": "棱角化（物攻 +%1$s）",
+  "world_combat.move.sharpen.text.capped": "棱角已到极限（物攻未再抬高）",
   "world_combat.move.sharpen.text.cut": "被棱角划伤",
   "world_combat.move.sharpen.text.dull": "棱角钝去（物攻 −%1$s）",
   "effect.world_combat.sharpened": "棱角"

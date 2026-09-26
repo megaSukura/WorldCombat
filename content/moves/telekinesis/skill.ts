@@ -1,73 +1,48 @@
-/**
- * 意念移物 / telekinesis —— 执行组织与浮空行为。
- *
- * 核心念头：用念力把对手整个人抬离地面，悬在半空；它脚下没有地、身体不能自主，悬着的这几秒里任人摆布。
- *
- * 三幕：
- *   抬手（windup，提交前）：念力在目标脚下聚拢、把它的身体描亮，只播预告，可被打断且不花代价。
- *   离地（hoist，提交后）：给目标挂共享身份 world_combat:status/telekinesis 的真实 MobEffect，并另存一枚机读
- *     记号（环数、压制程度、施术者）；记号存续期间压掉目标一大部分移动速度——它挪不动，也就不容易躲开攻击。
- *   落地（settle／cut）：时间走完是念力自行松开、身体缓缓落回（settle）；被牛奶/清除效果或击落类招式打断是
- *     念力被硬切、身体失托落下（cut）。两条岔路画面不同。
- *
- * 免疫：入场伤害规则里，带 telekinesis 身份者被地面招式与地形危害命中时伤害清零，与电磁飘浮同一套规则；
- *   因此它也是「地面招打不到」这个共享读法的一员，击落（smackdown）会把它从目标身上拔掉。
- * 反制：已被击落（smackdown）或扎根（ingrain）的目标提不起来，`ready` 直接拒绝；地鼠一族等无法离地的物种
- *   同样拒绝，不浪费 PP。
- */
+/** A scoped gravity contribution and permission-aware received displacement hold one real body at a low fixed point. */
 namespace PokemonSkills {
-    const telekinesisScene = "world_combat:move_telekinesis";
-    const telekinesisField = "world_combat:telekinesis_field";
-    const telekinesisMark = "world_combat:telekinesis_mark";
-    const telekinesisStatus = "telekinesis";
-    const telekinesisHoistText = "world_combat.move.telekinesis.text.hoist";
-    const telekinesisSettleText = "world_combat.move.telekinesis.text.settle";
-    const telekinesisCutText = "world_combat.move.telekinesis.text.cut";
-    const telekinesisNegateText = "world_combat.move.telekinesis.text.negate";
-    /** 无法被抬离地面的物种（原生 telekinesis 的固定名单）。 */
-    const telekinesisBurrowers = ["diglett", "dugtrio", "palossand", "sandygast"];
-    function telekinesisHazards(cause: string): boolean {
-        return ["fall", "cactus", "sweetBerryBush", "flyIntoWall"].indexOf(cause) >= 0;
-    }
-
-    WorldCombat.effect(telekinesisMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        ["rings", "hold", "max"].forEach(function (key) {
-            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid telekinesis mark: " + key);
-        });
-        if (typeof value.cast !== "string") throw new Error("Invalid telekinesis mark: cast");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    // 压制落在具体属性上：悬空期间挪不动，随记号效果结束自动收回。
-    WorldCombat.effectHandler(telekinesisMark, "start", function (effect) {
-        const state = JSON.parse(effect.state());
-        const hold = Math.max(0, Math.min(0.95, Number(state.hold) || 0));
-        if (hold > 0) effect.world().attribute(effect.target(), "minecraft:generic.movement_speed", -hold, "add_multiplied_total");
+    const telekinesisScene="world_combat:move_telekinesis",telekinesisField="world_combat:telekinesis_field",telekinesisMark="world_combat:telekinesis_mark",telekinesisRefused="world_combat:telekinesis_refused",telekinesisStatus="telekinesis";
+    const telekinesisBurrowers=["diglett","dugtrio","palossand","sandygast"];
+    WorldCombat.effect(telekinesisRefused,1,160,"actor",json=>json,EffectProtocols.unchanged);
+    WorldCombat.effectHandler(telekinesisRefused,"start",function(){});
+    WorldCombat.effect(telekinesisMark,1,1200,"actor",json=>json,EffectProtocols.unchanged);
+    WorldCombat.effectHandler(telekinesisMark,"start",function(effect){
+        const world=effect.world(),target=effect.target(),data=JSON.parse(effect.state());
+        if(!MobEffects.matches(world,target,data.carrier)||!world.attribute(target,"minecraft:generic.gravity",-1,"add_multiplied_total")){effect.end();return;}
+        MobEffects.bind(world,target,telekinesisField);world.attribute(target,"minecraft:generic.movement_speed",-Math.max(0,Math.min(.95,data.hold)),"add_multiplied_total");
+        const body=world.observe(target);if(body)WorldFeedback.onEffect(world,effect.id(),"lift",telekinesisScene,1,body.position(),{moment:"hover",target:String(target.ref()),rings:data.rings,path:[data.cast,String(target.ref())]});
+        effect.schedule("lift","lift",1,"{}");
     });
-    WorldCombat.effectHandler(telekinesisMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    // 浮空的兑现点：带 telekinesis 的活体被地面招或地形危害命中时伤害清零，与电磁飘浮同一套入场规则。
-    NativeEffects.incomingRules.define({ id: "world_combat:move_telekinesis/float", apply: function (hit) {
-        const data = hit.data;
-        if (!data || !(data.amount > 0) || data.bypassesInvulnerability) return;
-        const world = hit.world, holder = hit.target;
-        if (!world.valid(holder) || !CombatStatus.has(world, holder, telekinesisStatus)) return;
-        const cause = String(data.cause || ""), type = String(data.type || "").toLowerCase();
-        if (!(telekinesisHazards(cause) || type === "ground")) return;
-        const body = world.observe(holder);
-        data.amount = 0;
-        if (body === null) return;
-        WorldFeedback.emit(world, telekinesisScene, 1, body.position(), { moment: "negate", target: String(holder.ref()), source: cause || "ground" }, 30);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), telekinesisNegateText, [], 30);
-    } });
-
+    WorldCombat.effectHandler(telekinesisMark,"lift",function(effect){
+        const world=effect.world(),target=effect.target(),data=JSON.parse(effect.state()),source=world.actor(data.cast),body=world.observe(target);
+        if(!source||!world.valid(source)||!body||!MobEffects.matches(world,target,data.carrier)||CombatStatus.has(world,target,"smackdown")||CombatStatus.has(world,target,"ingrain")){effect.end();return;}
+        const goal=WorldCombat.point(data.anchor[0],data.anchor[1]+body.height()/2,data.anchor[2]),offset=goal.minus(body.position());
+        if(Math.sqrt(offset.x()*offset.x()+offset.z()*offset.z())>1.4||body.velocity().length()>.8){effect.end();return;}
+        if(offset.length()>.02){
+            const step=offset.length()>.18?offset.unit().scale(.18):offset;
+            const moved=data.friendly?world.displace(target,step):world.hitDisplace(target,step);
+            if(moved<.001){effect.end();return;}
+        }
+        data.age++;if(data.age>12&&body.boundsMin().y()-data.floor<.12){effect.end();return;}
+        effect.state(JSON.stringify(data));effect.schedule("lift","lift",1,"{}");
+    });
+    WorldCombat.effectHandler(telekinesisMark,"operation:world_combat:dispel",effect=>effect.end());
+    WorldCombat.effectHandler(telekinesisMark,"end",function(effect){const body=effect.world().observe(effect.target());if(body)WorldFeedback.emit(effect.world(),telekinesisScene,1,body.position(),{moment:"settle",target:String(effect.target().ref())},18);});
+    NativeEffects.appliedRules.define({id:"world_combat:telekinesis/release",apply:function(hit){if(hit.data.actual>0)hit.world.effects(hit.target,telekinesisMark).forEach(view=>hit.world.operation(view.id(),"world_combat:dispel","{}"));}});
+    NativeEffects.incomingRules.define({id:"world_combat:telekinesis/ground",apply:function(hit){
+        if(!(hit.data.amount>0)||hit.data.bypassesInvulnerability||String(hit.data.type||"").toLowerCase()!=="ground")return;
+        const world=hit.world,body=world.observe(hit.target);if(!body||body.grounded())return;
+        const marks=world.effects(hit.target,telekinesisMark);if(!marks.some(view=>MobEffects.matches(world,hit.target,JSON.parse(String(view.data())).carrier)))return;
+        const feet=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()),floor=SurfacePaths.support(world,feet,.05,2);
+        if(!floor||feet.y()-floor.y()<.2)return;
+        hit.data.amount=0;WorldFeedback.emit(world,telekinesisScene,1,body.position(),{moment:"negate",target:String(hit.target.ref()),source:"ground"},16);
+    }});
     define({
         id: "telekinesis",
         cooldownParameter: "recharge",
         name: "意念移物",
-        description: "用念力把一名对手抬离地面悬在半空：悬空期间它的移动被大幅压住，地面招式与地形危害也够不到它。",
+        description: "把一名可抬身体真实托到低空，敌人受原生抗性和控制许可约束，也可托起明确选中的伙伴。顶棚限制实际高度，受伤、解除或失距松开；只有实际离地的持有者才免地面招。",
         uses: ["把要跑的对手吊在半空集火", "让地面招式打不到它（也保护它免受地面招）", "在对手挪不动时集火"],
-        kind: "enemy",
+        kind: "aim",
         range: 7,
         maxRange: 13,
         prepare: 9,
@@ -94,7 +69,7 @@ namespace PokemonSkills {
         },
         ready: function (action, _config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (CombatStatus.has(world, target, telekinesisStatus)) return "already-lifted";
             if (CombatStatus.has(world, target, "smackdown") || CombatStatus.has(world, target, "ingrain")) return "anchored";
             if (String(target.domain()) === "cobblemon") {
@@ -103,8 +78,8 @@ namespace PokemonSkills {
             }
             const body = world.observe(target);
             if (body === null) return "invalid-target";
-            if (body.position().minus(action.origin()).length() > p("telekinesis", "reach", action)) return "out-of-range";
-            if (!world.clear(action.origin(), body.position())) return "no-line";
+            if (world.closestPoint(target,action.origin()).minus(action.origin()).length() > p("telekinesis", "reach", action)) return "out-of-range";
+            if (!world.clear(action.origin(), world.closestPoint(target,action.origin()))) return "no-line";
             return "";
         },
         windup: function (action, _config, prepare) {
@@ -116,59 +91,21 @@ namespace PokemonSkills {
             }));
             return prepare;
         },
-        execute: function (action, _move, config, done) {
-            const world = action.world(), actor = action.actor(), target = action.target();
-            const body = world.observe(actor);
-            if (target === null || !world.valid(target) || body === null || world.friendly(target)
-                || CombatStatus.has(world, target, telekinesisStatus)) { done(action); return; }
-            const window = Math.max(20, Math.round(p("telekinesis", "window", action)));
-            const hold = Math.max(0.2, Math.min(0.95, p("telekinesis", "hold", action)));
-            const rings = Math.max(4, Math.round(p("telekinesis", "rings", action)));
-            MobEffects.apply(world, target, telekinesisField, window, 0);
-            world.effect(telekinesisMark, target, JSON.stringify({ rings: rings, hold: hold, max: window, cast: String(actor.ref()) }), window + 60);
-            const targetBody = world.observe(target);
-            const point = targetBody === null ? body.position() : targetBody.position();
-            WorldFeedback.emit(world, telekinesisScene, 1, point,
-                { moment: "hoist", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                    rings: rings, hold: hold, scale: Math.max(0.6, Math.min(2, rings / 10)),
-                    intensity: Math.max(0.7, Math.min(2, hold + 0.4)) }, 40);
-            WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.2, 0)), telekinesisHoistText, [Math.round(window / 20)], 40);
-            sound(action, "minecraft:entity.shulker.teleport");
-            if (targetBody !== null) world.sound("minecraft:block.beacon.activate", targetBody.position(), 16, "{}");
-            done(action);
+        execute:function(action,_move,config,done){
+            const world=action.world(),target=action.target();if(!target||!world.valid(target)){done(action);return;}
+            const body=world.observe(target);if(!body){done(action);return;}
+            const feet=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z());
+            const support=SurfacePaths.support(world,feet,.1,2);if(!support){done(action);return;}
+            const friendly=world.friendly(target),lift=WorldCombat.point(0,.08,0);
+            const moved=friendly?world.displace(target,lift):world.hitDisplace(target,lift);
+            const window=Math.max(20,Math.round(p("telekinesis","window",action)));
+            if(moved<.001 || !CombatStatus.apply(world,target,"telekinesis",telekinesisField,window,0,{beneficial:friendly})){
+                world.effect(telekinesisRefused,target,"{}",160);WorldFeedback.emit(world,telekinesisScene,1,body.position(),{moment:"cut",target:String(target.ref())},16);done(action);return;
+            }
+            const carrier=world.mobEffect(target,telekinesisField);if(!carrier){done(action);return;}
+            world.effect(telekinesisMark,target,JSON.stringify({carrier:MobEffects.anchor(carrier),cast:String(action.actor().ref()),friendly:friendly,
+                anchor:[body.position().x(),feet.y()+(config&&config.pin?1.2:1.5),body.position().z()],floor:support.y(),height:body.height(),hold:p("telekinesis","hold",action),rings:p("telekinesis","rings",action),age:0}),window);
+            sound(action,"minecraft:block.beacon.activate");done(action);
         }
-    });
-
-    // 悬空存续期：每 20 刻续一次目标身上升起的念力环，让玩家读出现在还悬着、还剩多久。
-    WorldCombat.on("world_combat:move_telekinesis/hover", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== telekinesisField) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const views = world.effects(actor, telekinesisMark);
-        if (!views.length) return;
-        const mark = JSON.parse(String(views[0].data()));
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_telekinesis/hover/" + String(actor.ref()), telekinesisScene, 1, body.position(),
-            { moment: "hover", target: String(actor.ref()), path: [String(mark.cast), String(actor.ref())],
-                rings: Math.max(3, Math.round((Number(mark.rings) || 8) / 2)), remaining: views[0].remaining() }, 40);
-    });
-
-    // 走完自己的时间与被外力切断是两条岔路：到期是念力自行松开、身体缓缓落回；被清除是被硬切、失托落下。
-    WorldCombat.on("world_combat:move_telekinesis/end", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== telekinesisField) return;
-        const world = event.world(), target = event.actor();
-        if (!world.valid(target)) return;
-        const expired = String(data.cause) === "expired";
-        const views = world.effects(target, telekinesisMark);
-        if (views.length) world.operation(views[0].id(), "world_combat:dispel", "{}");
-        const body = world.observe(target);
-        if (body === null) return;
-        WorldFeedback.emit(world, telekinesisScene, 1, body.position(),
-            { moment: expired ? "settle" : "cut", target: String(target.ref()), expired: expired ? 1 : 0 }, 30);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), expired ? telekinesisSettleText : telekinesisCutText, [], 30);
-        world.sound(expired ? "minecraft:block.beacon.deactivate" : "minecraft:block.conduit.deactivate", body.position(), 12, "{}");
     });
 }

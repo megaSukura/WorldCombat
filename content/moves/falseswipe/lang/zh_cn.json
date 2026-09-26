@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.falseswipe.summary": "一记极准的浅切：沿身前一条细缝划过去，命中什么都只会削血，目标至少留下 1 HP。全力收手更沉更慢，轻手更轻更快。",
+  "worldcombat.skill.falseswipe.summary": "一记极准的浅切：朝瞄准方向递出一条细刃，只切中刀路上的第一个非友方，命中什么都只会削血，目标至少留下 1 HP。刀路很窄，墙和挡路的身体会先截住它。全力收手更沉更慢，轻手更轻更快。",
   "worldcombat.skill.falseswipe.use.0": "把目标削到 1 HP 便于捕捉",
   "worldcombat.skill.falseswipe.use.1": "对必须留活的对手保持压制",
   "worldcombat.skill.falseswipe.use.2": "在不杀死目标的前提下磨掉威胁",
   "worldcombat.skill.falseswipe.use.3": "收尾前先精确控制目标的剩余血量",
   "worldcombat.skill.falseswipe.description.0": "这一记浅切约 %1$s 的伤害；若数值足以致命，会被截停在目标至少留下 1 HP。对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.falseswipe.description.1": "细缝长约 %1$s 格、半宽约 %2$s 格、从脚上划到约 %3$s 格高；沿缝的每个非友方各被切中一次。",
+  "worldcombat.skill.falseswipe.description.1": "细刃长约 %1$s 格、半径约 %2$s 格，从脚上约 %3$s 格高处递出；只切中刀路上的第一个非友方，墙或挡路的身体会先把它截住。",
   "worldcombat.skill.falseswipe.option.on": "全力收手：威力约 ×1.18、切距 +0.2 格，代价是起手 +3 刻、冷却 +6 刻——更沉但更慢。",
   "worldcombat.skill.falseswipe.option.off": "点到为止：威力约 ×0.82、出手更快、冷却更短——更轻更利落。",
   "worldcombat.skill.falseswipe.timing": "可划到 %1$s 格内，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",
@@ -13,7 +13,7 @@
   "worldcombat.skill.falseswipe.value.cut": "切入威力",
   "worldcombat.skill.falseswipe.value.reach": "切距",
   "worldcombat.skill.falseswipe.value.edge": "缝宽",
-  "worldcombat.skill.falseswipe.value.depth": "切口高度",
+  "worldcombat.skill.falseswipe.value.depth": "刀口高度",
   "worldcombat.skill.falseswipe.value.hold": "收手标记量",
   "worldcombat.skill.falseswipe.value.tempo": "起手",
   "worldcombat.skill.falseswipe.value.aftercast": "收招",
@@ -25,5 +25,6 @@
   "worldcombat.skill.falseswipe.preference.ai.spareHigh": "优先厚血目标",
   "worldcombat.skill.falseswipe.preference.ai.spareHigh.help": "开启：目标血厚时多一档分，用在削血但不想打死的局面；关闭：只按普通近战排序，目标很残时也会用得少一些。",
   "world_combat.move.falseswipe.text.spare": "留手，至少剩 1 HP",
-  "world_combat.move.falseswipe.text.miss": "划过空气"
+  "world_combat.move.falseswipe.text.miss": "划过空气",
+  "worldcombat.reason.falseswipe-spared": "已点到为止"
 }

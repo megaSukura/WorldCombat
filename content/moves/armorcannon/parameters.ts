@@ -18,7 +18,7 @@
  *   reach       射程：速度给站位、特攻给炮管延伸。
  *   radius      弹体碰撞半径：体型（宽、高）决定炮弹多大。
  *   blast/share 散爆半径与保留：特攻与体重决定炸开多大、外圈留多少。
- *   scorch      灼痕半径与时长：特攻决定烧得多开、留多久。
+ *   scorch      落点热屑半径与余烬时长：特攻决定残屑铺得多开、余烬留多久（纯表现，不改动方块）。
  *   plates      装甲片数：体重派生，驱动画面。
  *   guardLoss   自身防御下降级：原生固定 1 级；poiseLoss 同理。
  *   tempo/aftercast/recharge：速度与特攻定节奏。
@@ -90,19 +90,19 @@ namespace PokemonSkills {
                 F.base(0.5).minus(F.stat("specialAttack").minus(60).times(0.002).clamp(-0.15, 0.2)), F.const(0))
                 .clamp(0, 0.8).round(2),
             "散爆保留", "散爆式炸到的其他目标保留多少威力；特攻越高越均匀。只有散爆式有。"),
-        /** 灼痕半径：基础 1.0 格；特攻每比 60 多 1 加 0.006（夹 0..0.6）；夹 0.8..2.2。 */
+        /** 落点热屑半径：基础 1.0 格；特攻每比 60 多 1 加 0.006（夹 0..0.6）；夹 0.8..2.2。 */
         scorch: formula(
             F.base(1.0).plus(F.stat("specialAttack").minus(60).times(0.006).clamp(0, 0.6)).clamp(0.8, 2.2).round(2),
-            "灼痕半径", {
+            "落点热屑半径", {
                 unit: "格",
-                description: "炮弹落点烧焦的地面有多大；特攻越高烧得越开。画面里那块焦地就是这个半径。"
+                description: "炮弹落点散开的灼热残屑有多大；特攻越高铺得越开。画面里那圈火星与余烟就是这个半径。"
             }),
-        /** 灼痕时长：基础 100 刻；特攻每比 60 多 1 加 1.0（夹 0..100）；夹 80..240。 */
+        /** 余烬时长：基础 60 刻；特攻每比 60 多 1 加 0.4（夹 0..30）；夹 30..90。 */
         scorchTicks: formula(
-            F.base(100).plus(F.stat("specialAttack").minus(60).times(1.0).clamp(0, 100)).clamp(80, 240).round(0),
-            "灼痕时长", {
+            F.base(60).plus(F.stat("specialAttack").minus(60).times(0.4).clamp(0, 30)).clamp(30, 90).round(0),
+            "余烬时长", {
                 unit: "刻",
-                description: "焦地在世界上留多久；特攻越高留得越久。到时原方块回来。"
+                description: "落点灼热残屑烧多久；特攻越高留得越久，到时自然熄灭。它只是表现，不会改变地面方块。"
             }),
         /** 装甲片数：基础 8；体重每 10kg 加 0.35（夹 0..18）；夹 6..26。 */
         plates: formula(
@@ -152,7 +152,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["shell"] },
         { key: "description.1", values: ["reach", "velocity", "radius"] },
         { key: "description.2", values: ["guardLoss","poiseLoss"] },
-        { key: "description.3", values: ["scorch","scorchTicks"] },
+        { key: "description.3", values: [] },
         { key: "burst.on", values: ["blast","share"], when: function (context) { return read(context.detail.values, ["burst"]) === true; } },
         { key: "burst.off", values: [], when: function (context) { return read(context.detail.values, ["burst"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

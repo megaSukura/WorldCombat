@@ -1,6 +1,6 @@
 // 暴风雪的可执行设计说明：一只只会暴风雪的冰系宝可梦把一片风雪召唤到两个挤在一起的敌人头上。
-// 必然事实：本招被提交过；至少一个敌人受到过伤害（风雪驻留扑打，圈里必挨）。
-// 具体覆盖几个、冰冻是否触发（概率）、推离多远、地面留下几格雪都写进 note 供读轨迹判断。
+// 必然事实：本招被提交过；至少一个敌人受到过伤害（风雪驻留扑打，圈里必挨）；风暴不再改变地形。
+// 具体覆盖几个、冰冻是否触发（概率）、推离多远、阵次衰减都写进 note 供读轨迹判断。
 Smoke.scenario("blizzard", function (stage) {
     stage.fill([-10, -1, -8], [10, -1, 8], "minecraft:stone");
     stage.time("day");
@@ -16,8 +16,8 @@ Smoke.scenario("blizzard", function (stage) {
         stage.after(120, function () {
             stage.expect(stage.casts("blizzard", caster) >= 1, "abomasnow committed blizzard");
             stage.expect(stage.damageTo(front) + stage.damageTo(back) > 0, "the storm dealt damage");
-            stage.expect(stage.changedBlocks().length > 0, "the storm left snow on the ground");
-            stage.note("coverage count, the freeze roll, push distance and the snow layer are positional/random", {
+            stage.expect(stage.changedBlocks().length === 0, "the storm leaves no terrain behind");
+            stage.note("coverage count, the freeze roll, push distance and per-rake falloff are positional/random", {
                 casts: stage.casts("blizzard", caster),
                 frontDamage: Math.round(stage.damageTo(front) * 10) / 10,
                 backDamage: Math.round(stage.damageTo(back) * 10) / 10,

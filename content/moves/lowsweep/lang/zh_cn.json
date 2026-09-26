@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.lowsweep.summary": "原地压低重心、拧腰扫出一道贴地的低弧：弧线里最多 3 名敌人的小腿被削到，正在快速移动的目标重心最难收回、掉的速度也最多；被削到重心难收的目标小腿还会被别住一瞬。旋身扫弧线更开、别腿更久，但单点更轻。",
   "worldcombat.skill.lowsweep.description.0": "扫中敌人造成 %1$s 的接触伤害，并使其速度下降 %2$s 级（宝可梦扣速度能力等级，其他战斗者扣移动速度）；目标当时移动得越快，掉得越多。",
-  "worldcombat.skill.lowsweep.description.1": "攻击前方 %1$s 度、%2$s 格弧线内的敌人，一次最多削到 3 名。",
+  "worldcombat.skill.lowsweep.description.1": "低扫前方 %1$s 度、%2$s 格，最多3敌；按真实身体与脚边薄体积交集，巨大身体的近脚可中，完全越过上方的身体不中。",
   "worldcombat.skill.lowsweep.description.2": "被削中小腿的目标带着约 %1$s 的腿伤；被削掉的速度等级是持久变化，不会随腿伤结束而恢复。只有被削到两级以上、且当时重心难收（移动够快，旋身扫会放宽这个条件）的目标，小腿才会被别住约 %2$s 秒无法移动（但仍能出手）。",
   "worldcombat.skill.lowsweep.whirl.on": "旋身扫：弧线更开、别腿更久，单点更轻、收招与冷却更久。",
   "worldcombat.skill.lowsweep.whirl.off": "点切式：一记更快更重的小弧扫踢，只削身前一小片。",

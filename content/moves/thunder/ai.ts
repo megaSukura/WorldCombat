@@ -25,6 +25,10 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 24;
             if (CompanionBehavior.ai<boolean>(capability, "preferWet", true) && target.wet) score += 18;
+            // 雨天加成、头顶被探到遮蔽则降权：屋顶会把这记雷整段挡掉。
+            const env = WorldEnvironment.read(CompanionBehavior.world(context), CompanionBehavior.point(target.point));
+            if (env && typeof env.rain === "number" && env.rain > 0.2) score += 14;
+            if (env && env.loaded === true && env.skyVisible === false) score -= 30;
             return score;
         },
         selectTarget: function (context, capability, proposed) {

@@ -20,6 +20,7 @@ Smoke.scenario("iciclecrash", function (stage) {
     }, function () {
         stage.expect(stage.casts("iciclecrash", caster) >= 1, "cloyster committed iciclecrash");
         stage.expect(stage.damageTo(foe) > 0, "the icicle dealt damage");
+        stage.expect(stage.changedBlocks().length === 0, "iciclecrash leaves no ice on the ground");
         stage.note("crit, the flinch roll and whether the target stepped out of the landing are random/positional", {
             casts: stage.casts("iciclecrash", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,

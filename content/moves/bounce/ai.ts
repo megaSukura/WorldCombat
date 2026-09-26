@@ -1,9 +1,10 @@
 /**
  * 弹跳 / bounce —— 伙伴 AI 用途。
  *
- * 这招的 AI 围绕「头顶要有一片能弹起来的天」：压在天花板下只能低跳，伙伴宁可交给别的招。
- *   - 何时考虑：目标看得见、活着、非友方，在 `ai.maxChase` 内（或它就是焦点）；并且自己头顶有净空。
- *   - 对谁出手：任何合格目标；已被麻痹的目标仍然砸，但优先度让给没被麻住的（落地这一击本身也在输出）。
+ * 这招的 AI 围绕「头顶那片能弹起来的天」：压在天花板下只能低跳，所以遮顶时降权，而不是完全放弃。
+ *   - 何时考虑：目标看得见、活着、非友方，在 `ai.maxChase` 内（或它就是焦点）。
+ *   - 对谁出手：优先站在地面上的敌群；已被麻痹的目标仍然砸，但普通目标的优先度更高。
+ *   - 头顶净空：开阔处正常排序；遮顶时只留很低的分，仍有别的招就交给别的招。
  *   - 出手前：没有视线要求（从上方落，不走地面直线），由共用任务走到 reach。
  *   - 够不到：由共用任务靠近；驻守且没开 leaveStation 时不硬追。
  *   - 放完之后：不追加动作，交回共享交战；落点通常已经贴着目标。
@@ -36,7 +37,6 @@ namespace CompanionBehavior {
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (context.facts.mounted) return false;
-            if (!bounceOpen(context)) return false;
             if (!target) return true;
             if (target.friendly || !target.visible || target.health <= 0) return false;
             if (context.facts.focus !== target.ref && distance(source(context).point, target.point) > ai<number>(item, "maxChase", 9)) return false;
@@ -47,10 +47,16 @@ namespace CompanionBehavior {
                 && (context.facts.focus === target.ref || distance(source(context).point, target.point) <= ai<number>(item, "maxChase", 9));
         },
         priority: function (context, item, target) {
-            if (!target || !bounceOpen(context)) return 0;
+            if (!target) return 0;
             const self = source(context);
             if (ratio(self) < ai<number>(item, "escapeBelow", 0.55) && distance(self.point, target.point) <= item.data.range) return 60;
-            return status(context, target, "paralysis") ? 6 : 14;
+            // 遮顶时仍能低跳，只是明显降权；开阔处再给地面敌群加权。
+            if (!bounceOpen(context)) return 5;
+            let crowd = 0;
+            (context.facts.nearby as Entity[]).forEach(function (other) {
+                if (!other.friendly && other.health > 0 && distance(other.point, target.point) <= 3) crowd++;
+            });
+            return (status(context, target, "paralysis") ? 8 : 16) + (target.grounded ? 2 : 0) + Math.min(6, crowd * 2);
         }
     });
 }

@@ -6,10 +6,30 @@
  * 对谁出手：`ai.followUp`（默认开）打开时，已经麻住的目标优先级明显抬高——这一刺对已麻目标更狠，还能续麻；
  *   没被麻的目标照常作为贴身的补刀候选。
  * 够不到怎么办：射程只交给 `reach`（本族最短），共享任务把身位贴进去之后再扎；靠墙的目标先等共享接近逻辑找到射界。
+ *   出手前先确认到目标之间没有同伴身体挡路——同伴会泄电，这一刺就白扎。
  * 放完之后：命中者或已带上麻痹、或被续长，伙伴交回共享顺序继续交战。
  * 优先级：基础 20（已在射程内）；已麻 +16（追打），未麻 +4。
  */
 namespace PokemonSkills {
+    /** 射线是否会被同伴先挡住：同伴会泄电、目标反而吃不到这一刺，所以先确认通道干净。 */
+    function thundershockAllyInWay(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const from = CompanionBehavior.point(self.point), to = CompanionBehavior.point(target.point);
+        const span = to.minus(from), length = span.length();
+        if (length < 0.05) return false;
+        const mid = from.plus(span.scale(0.5));
+        const nearby = world.query(mid, length * 0.5 + 1, false);
+        for (let i = 0; i < nearby.length; i++) {
+            const actor = nearby[i];
+            if (String(actor.ref()) === String(self.ref) || String(actor.ref()) === String(target.ref)) continue;
+            const body = world.observe(actor);
+            if (body === null || !body.friendly()) continue;
+            const point = body.position();
+            if (WorldGeometry.closestOnSegment(point, from, to).minus(point).length() <= body.width() * 0.5 + 0.2) return true;
+        }
+        return false;
+    }
+
     CompanionBehavior.registerUse(thundershockId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -18,7 +38,8 @@ namespace PokemonSkills {
             if (!target) return true;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
-            return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+            if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
+            return !thundershockAllyInWay(context, self, target);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

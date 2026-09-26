@@ -12,16 +12,19 @@ Smoke.scenario("payback", function (stage) {
     stage.time("night");
     stage.weather("clear");
     const caster = stage.pokemon({ species: "krookodile", level: 48, moves: ["payback"], at: [-2, 0, 0], properties: "nature=adamant" });
-    const target = stage.pokemon({ species: "rattata", level: 25, moves: ["tackle"], at: [2, 0, 0] });
+    const target = stage.pokemon({ species: "rattata", level: 25, moves: ["tackle"], at: [1.5, 0, 0] });
     stage.hostile(caster, target);
+    // 固定靶：让短迎步在确定距离内可达，读数不被逃跑走位干扰。
+    stage.noai(target);
     stage.until(600, function () { return stage.casts("payback", caster) >= 1 && stage.damageTo(target) > 0; }, function () {
         stage.expect(stage.casts("payback", caster) >= 1, "krookodile committed payback");
         stage.expect(stage.damageTo(target) > 0, "the counter blow dealt damage");
-        stage.note("whether the target had already struck the caster inside the window (and so the doubling) is positional and random, read the trace", {
+        stage.note("whether the target had already struck the caster inside the window (and so the doubling) is positional and random; the step-in shows as movedBy while the strike lands on the actually reached foe", {
             casts: stage.casts("payback", caster),
             dealt: Math.round(stage.damageBy(caster) * 10) / 10,
             taken: Math.round(stage.damageTo(caster) * 10) / 10,
             targetDamage: Math.round(stage.damageTo(target) * 10) / 10,
+            movedBy: Math.round(stage.travelled(caster) * 10) / 10,
             tick: stage.tick()
         });
         stage.done();

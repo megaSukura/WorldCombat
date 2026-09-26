@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.bugbuzz.summary": "Vibrate to push out a cone of sound along the ground that passes through walls: every enemy in the cone takes special damage, heavier up close, and may have its Sp. Def lowered by 1 stage.",
+  "worldcombat.skill.bugbuzz.summary": "Vibrate to push out a cone of sound along the aim that passes through walls: every enemy in the cone takes special damage, heavier up close, and may have its Sp. Def lowered by 1 stage; it can also be sounded off at an empty point with no enemy selected.",
   "worldcombat.skill.bugbuzz.use.0": "Sweep everyone in a cone at close-to-mid range",
   "worldcombat.skill.bugbuzz.use.1": "Reach a target even through a wall",
   "worldcombat.skill.bugbuzz.use.2": "Suppress a cluster with full-power sound at point-blank",
-  "worldcombat.skill.bugbuzz.description.0": "The sound wave deals %1$s special damage to each target it sweeps.",
+  "worldcombat.skill.bugbuzz.description.0": "The sound wave deals %1$s special damage to each target it sweeps, once per wave; the multiple visible rings show the sound's volume, not repeated damage.",
   "worldcombat.skill.bugbuzz.description.1": "Each swept target has a %1$s chance to lose %2$s stage(s) of Sp. Def.",
   "worldcombat.skill.bugbuzz.description.2": "The cone opens %1$s degrees and reaches %2$s blocks, fading to %3$s of its power at the edge; walls do not stop sound.",
   "worldcombat.skill.bugbuzz.description.3": "With Deep Resonance on, the sound narrows into a longer, slower-fading beam at slightly lower power and a longer wind-up and cooldown; off, it spreads wider with more power per shout, better for close coverage.",
@@ -22,6 +22,6 @@
   "worldcombat.skill.bugbuzz.preference.ai.maxChase": "Singing distance",
   "worldcombat.skill.bugbuzz.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it sound off from further away.",
   "worldcombat.skill.bugbuzz.preference.ai.crowd": "Aim along a line",
-  "worldcombat.skill.bugbuzz.preference.ai.crowd.help": "On: when other enemies stand within about 45 degrees of the target it prefers to buzz, catching several in one wave. Off: it sorts like an ordinary ranged attack.",
+  "worldcombat.skill.bugbuzz.preference.ai.crowd.help": "On: when other enemies stand inside the real cone in front of the target it prefers to buzz, catching several in one wave. Off: it sorts like an ordinary ranged attack.",
   "world_combat.move.bugbuzz.text.sunder": "Sp. Def -%1$s"
 }

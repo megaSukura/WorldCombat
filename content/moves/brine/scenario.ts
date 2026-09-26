@@ -5,6 +5,7 @@
  *   残血身上，于是残血翻倍那一支必然被走到。
  * 断言只取必然事实：这招被提交过、伤害落到了目标身上、命中即浇上共享身份 world_combat:status/soaked 的
  *   湿透；并且等到第二发（打在残血目标上的那一发）也结算完成。暴击与两发各自的伤害写进 note 供读轨迹判断。
+ * 本招只有一条直射细流，没有落地盐池：命中的唯一结果就是伤害 + 湿透标记。
  */
 Smoke.scenario("brine", function (stage) {
     stage.fill([-14, -1, -14], [14, -1, 14], "minecraft:stone");
@@ -26,7 +27,7 @@ Smoke.scenario("brine", function (stage) {
             stage.expect(stage.casts("brine", caster) >= 2, "pelipper committed brine at least twice, the second time at a wounded target");
             stage.expect(stage.damageTo(prey) > firstHit, "the wounded follow-up landed");
             stage.expect(stage.hadMobEffect(prey, "world_combat:status/soaked"), "the jet soaked the target through the shared identity");
-            stage.note("brine doubles only while the target is at half HP or less. The weak target drops below half on the first hit, so the second cast is the doubled branch (its landed damage is the increase over the first-hit total). Variables: hit chance, crit, whether it survives, and the exact soak duration.", {
+            stage.note("brine doubles only while the target is at half HP or less. The weak target drops below half on the first hit, so the second cast is the doubled branch (its landed damage is the increase over the first-hit total). There is no salt pool; the only results are the hit and the soaked mark. Variables: hit chance, crit, whether it survives, and the exact soak duration.", {
                 casts: stage.casts("brine", caster),
                 firstHit: Math.round(firstHit * 10) / 10,
                 damageToPrey: Math.round(stage.damageTo(prey) * 10) / 10,

@@ -15,8 +15,8 @@
 namespace PokemonSkills {
     function bideAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.4, 0)); }
 
-    /** 还手够不到账主时的备选：忍耐者周围最近的敌人。 */
-    function bideNearest(world: CombatWorld, centre: CombatPoint, reach: number, self: CombatActor): CombatActor | null {
+    /** 还手够不到账主时的备选：忍耐者周围最近、且真正通视的敌人。 */
+    function bideNearest(world: CombatWorld, self: CombatActor, centre: CombatPoint, reach: number): CombatActor | null {
         var found = world.query(centre, reach, false), best: CombatActor | null = null, bestGap = reach + 1;
         for (var i = 0; i < found.length; i++) {
             var other = found[i];
@@ -24,7 +24,7 @@ namespace PokemonSkills {
             var body = world.observe(other);
             if (body === null) continue;
             var gap = centre.minus(body.position()).length();
-            if (gap < bestGap) { bestGap = gap; best = other; }
+            if (gap < bestGap && world.clear(centre, body.position())) { bestGap = gap; best = other; }
         }
         return best;
     }
@@ -88,6 +88,15 @@ namespace PokemonSkills {
                 current.after(10, steady);
             }
 
+            function disperseInPlace(current: CombatAction, at: CombatObservation, charge: number, amount: number, reach: number): void {
+                // 最后攻击者不可达、被墙挡住、还手被拒或没有合法敌人：这一口在自己身上散掉，不假装打中。
+                sound(current, "minecraft:entity.player.attack.sweep");
+                WorldFeedback.emit(current.world(), bideScene, 1, at.position(),
+                    { moment: "whiff", target: String(self.ref()), charge: charge, amount: amount, reach: reach }, 22);
+                WorldFeedback.text(current.world(), bideAbove(at.position()), bideWhiffText, [], 24);
+                done(current);
+            }
+
             function release(current: CombatAction): void {
                 if (released) return;
                 released = true;
@@ -101,34 +110,33 @@ namespace PokemonSkills {
                 MobEffects.consume(scope, self, bideBraceEffect);
                 const at = scope.observe(self);
                 if (at === null) { done(current); return; }
-                if (!(amount > 0)) {
-                    sound(current, "minecraft:entity.player.attack.sweep");
-                    WorldFeedback.emit(scope, bideScene, 1, at.position(), { moment: "whiff", target: String(self.ref()) }, 22);
-                    WorldFeedback.text(scope, bideAbove(at.position()), bideWhiffText, [], 24);
-                    done(current);
-                    return;
-                }
                 const reach = p(bideId, "releaseReach", current);
-                let target: CombatActor | null = lastSource === "" ? null : scope.actor(lastSource);
-                if (target !== null) {
-                    const targetBody = scope.observe(target);
-                    if (!scope.valid(target) || targetBody === null || scope.friendly(target)
-                        || at.position().minus(targetBody.position()).length() > reach) target = null;
+                if (!(amount > 0)) { disperseInPlace(current, at, charge, amount, reach); return; }
+                // 账主必须先通视才算可达；被墙挡住时退回可达的最近敌人。
+                let target: CombatActor | null = null;
+                if (lastSource !== "") {
+                    const candidate = scope.actor(lastSource);
+                    if (candidate !== null && scope.valid(candidate) && String(candidate.key()) !== String(self.key()) && !scope.friendly(candidate)) {
+                        const targetBody = scope.observe(candidate);
+                        if (targetBody !== null && at.position().minus(targetBody.position()).length() <= reach
+                            && scope.clear(at.position(), targetBody.position())) target = candidate;
+                    }
                 }
-                if (target === null) target = bideNearest(scope, at.position(), reach, self);
-                WorldFeedback.emit(scope, bideScene, 1, at.position(),
-                    { moment: "release", target: target === null ? "" : String(target.ref()), charge: charge, amount: amount,
-                        reach: reach, motes: Math.max(20, Math.round(amount * 1.5)),
-                        intensity: Math.max(0.4, Math.min(2.4, amount / Math.max(1, at.maxHealth()))) }, 30);
-                sound(current, "minecraft:entity.generic.explode");
-                if (target === null) {
-                    WorldFeedback.text(scope, bideAbove(at.position()), bideWhiffText, [], 24);
-                    done(current);
-                    return;
-                }
-                bideRawHit(current, target, amount, false);
+                if (target === null) target = bideNearest(scope, self, at.position(), reach);
+                if (target === null) { disperseInPlace(current, at, charge, amount, reach); return; }
+                const targetBody = scope.observe(target);
+                const targetPoint = targetBody === null ? at.position() : targetBody.position();
+                const landed = bideRawHit(current, target, amount, false);
+                if (!landed) { disperseInPlace(current, at, charge, amount, reach); return; }
                 const struck = scope.observe(target);
-                const point = struck === null ? at.position() : struck.position();
+                const point = struck === null ? targetPoint : struck.position();
+                // 命中已经兑现，反馈与数字都基于这次实际回伤；释放路径连到真正的对象。
+                sound(current, "minecraft:entity.generic.explode");
+                WorldFeedback.emit(scope, bideScene, 1, at.position(),
+                    { moment: "release", target: String(target.ref()), charge: charge, amount: amount, reach: reach,
+                        path: [String(self.ref()), String(target.ref())],
+                        motes: Math.max(20, Math.round(amount * 1.5)),
+                        intensity: Math.max(0.4, Math.min(2.4, amount / Math.max(1, at.maxHealth()))) }, 30);
                 WorldFeedback.emit(scope, bideScene, 1, point,
                     { moment: "strike", target: String(target.ref()), amount: amount, motes: Math.max(14, Math.round(amount * 1.5)) }, 26);
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), bideReleaseText, [Math.round(amount)], 28);

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.steelbeam.summary": "Throws a beam of steel straight ahead, damaging and pushing the nearest enemy. After firing, it incurs self-damage based on maximum health whether it hits or misses.",
+  "worldcombat.skill.steelbeam.summary": "Throws a beam of steel in any direction or at a world point, cut short at a real block. It damages and pushes only the nearest enemy. After firing, it incurs self-damage based on maximum health whether it hits or misses.",
   "worldcombat.skill.steelbeam.description.0": "The beam reaches %2$s blocks with a %3$s-block half-width. It attacks only the nearest enemy in clear sight within that lane, dealing about %1$s Steel-type special damage.",
   "worldcombat.skill.steelbeam.description.1": "A hit attempts to shove the target %1$s blocks. Every use incurs self-damage calculated from %2$s of maximum health, even when it misses.",
   "worldcombat.skill.steelbeam.temper.on": "Tempered: self-damage uses 65% of its base fraction; power ×0.9, length ×0.82, width ×0.8, and two extra wind-up ticks. The resulting self-damage fraction is shown above.",

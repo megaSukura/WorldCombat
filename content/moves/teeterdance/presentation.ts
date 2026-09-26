@@ -7,7 +7,8 @@
  * 拍子：起（windup 起势）→ 击（dance 舞圈荡开、daze 逐人晃晕）→ 收（sway 存续期一歪一歪，steady 无人被带进）。
  * 范围：dance 绑 `point`，形状半径读 `data.radius`（真实舞圈半径），玩家看到的圈就是会被晃到的人。
  * 运动：音波环整圈向外荡，音符沿圈起伏；被晃到的人每隔一小段从身侧甩出一小撮音符与飞鸟。
- * 数：音符与光点量按 `data.motes`（特攻派生）派生，舞圈拍数按 `data.beats`（等级派生）派生。
+ * 数：音符与光点量按 `data.motes`（特攻派生）派生，舞圈拍数按 `data.beats`（等级派生）派生；
+ *   sway 的尺寸读 `data.moved`（这一步真正移动了多少格），没移动就不发，玩家看到的就是实际被带偏的幅度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const TeeterdanceDefinition: ParticleDefinition = {
@@ -102,7 +103,7 @@ const TeeterdanceDefinition: ParticleDefinition = {
                     burst: { count: { data: "motes", fallback: 6 }, at: 1 },
                     shape: { kind: "circle", radius: 0.28 },
                     direction: "up", speed: [0.01, 0.05],
-                    lifetime: [12, 20], size: [0.12, 0.03], sizeMode: "sin",
+                    lifetime: [12, 20], size: [{ data: "moved", fallback: 0.12 }, 0.03], sizeMode: "sin",
                     alpha: [0.4, 0], light: "full", maxParticles: 14
                 },
                 {
@@ -111,7 +112,7 @@ const TeeterdanceDefinition: ParticleDefinition = {
                     burst: { count: 1, at: 1 },
                     shape: { kind: "ring", radius: 0.32 },
                     direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [10, 16], size: [0.24, 0.4], sizeMode: "linear",
+                    lifetime: [10, 16], size: [{ data: "moved", fallback: 0.24 }, 0.4], sizeMode: "linear",
                     color: 0x6A2FA0, alpha: [0.35, 0], light: "world", maxParticles: 8
                 }
             ]

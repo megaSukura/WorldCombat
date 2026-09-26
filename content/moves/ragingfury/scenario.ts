@@ -1,6 +1,6 @@
 // 大愤慨的可执行设计说明：一只只会大愤慨的炽焰咆哮虎对一只被点住、不会还手的僵尸（夜里，避免日晒自燃）。
-// 必然事实：本招被提交过；僵尸受到过伤害（火线烧穿）；施法者身上出现过共享身份 confusion——
-//   冲完自己陷入恍惚是这一招固定的结局。冲了几段、是否点着、火场落点写进 note 供读轨迹判断。
+// 必然事实：本招被提交过；僵尸受到过伤害（火舌烧穿）；施法者身上出现过共享身份 confusion——
+//   喷完自己陷入恍惚是这一招固定的结局。喷了几口、是否点着、触地余火写进 note 供读轨迹判断。
 Smoke.scenario("ragingfury", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
     stage.time("night");
@@ -16,7 +16,7 @@ Smoke.scenario("ragingfury", function (stage) {
             stage.expect(stage.casts("ragingfury", caster) > 0, "ragingfury was committed");
             stage.expect(stage.damageTo(foe) > 0, "the flame charge damaged the foe");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/confusion"), "the user ended the rampage confused");
-            stage.note("大愤慨分 2~3 段朝前喷火冲锋，火线里的敌人被烧中、点着并推开，落点留下会持续点燃的火场（world_combat:ragingfury/ember）；冲完自己恍惚（共享身份 confusion）", {
+            stage.note("大愤慨沿当刻瞄准喷 2~3 口火舌：每口从嘴端推进、遇墙截断，火束里的敌人被烧中、点着并推开；只有实际扫过的可支撑地面留下细短余火（world_combat:ragingfury/ember，同源重叠合并）；喷完自己恍惚（共享身份 confusion）", {
                 casts: stage.casts("ragingfury", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 confused: stage.hadMobEffect(caster, "world_combat:status/confusion"),

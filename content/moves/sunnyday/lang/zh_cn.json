@@ -21,7 +21,7 @@
   "worldcombat.skill.sunnyday.preference.ai.maxChase": "叫晴距离",
   "worldcombat.skill.sunnyday.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑大晴天；调小只在贴身时叫晴，调大愿意提前布置。",
   "worldcombat.skill.sunnyday.preference.ai.advance": "把烈日压向对手",
-  "worldcombat.skill.sunnyday.preference.ai.advance.help": "开启后把太阳叫在自己与威胁之间，让交战区落在亮处；关闭则叫在脚下先护住自己。",
+  "worldcombat.skill.sunnyday.preference.ai.advance.help": "开启后把太阳往威胁方向推几步；关闭（默认）则把阳光留在收益最大的一方——先盖住带火招／蓄力招或需要解冻烘干的队友。",
   "worldcombat.skill.sunnyday.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.sunnyday.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去叫晴。",
   "world_combat.move.sunnyday.text.sunlit": "被晒暖",

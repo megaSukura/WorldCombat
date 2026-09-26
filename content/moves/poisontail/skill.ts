@@ -13,6 +13,9 @@
  * 与同族分开：水流尾是向前推进的弧形水墙、把人推走并浇灭火；龙尾是正面大扇形把人抽飞逐退；铁尾锁定一点重砸。
  *   毒尾是绕身半圈的低扫，凭尾梢的毒在扫过的人身上留下持续伤害。
  *
+ * 选取 kind: "aim"：可点敌人，也可只朝一个方向空扫；选中实体吃满，空扫时最贴近瞄准方向的那个吃满，其余吃折扣。
+ *   弧面有高度带（上方 1.6 格），高飞在空中的目标在弧面之上、不受尾扫。
+ *
  * 配置 venom（毒尾式）由 resolve 改时序、由公式改威力/中毒/弧面，提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -25,9 +28,9 @@ namespace PokemonSkills {
         id: "poisontail",
         cooldownParameter: "recharge",
         name: "Poison Tail",
-        description: "低身转身，把尾巴贴地抡过半圈：扫到一个低矮弧面内的所有对手，正对的吃满、旁边的吃折扣，尾梢按（越远越高的）概率抹毒并把被扫到的人扫开一点。毒尾式更毒但扫得更轻；扫尾式更宽更重但毒难抹上。",
+        description: "低身转身，把尾巴贴地抡过半圈：扫到一个低矮弧面内的所有对手，正对的吃满、旁边的吃折扣，尾梢按（越远越高的）概率抹毒并把被扫到的人扫开一点。可以点敌人，也可以朝一个方向空扫；高飞在空中的目标在弧面之上、扫不到。毒尾式更毒但扫得更轻；扫尾式更宽更重但毒难抹上。",
         uses: ["低位横扫一圈、把围上来的敌人一起扫到", "给靠近的多个目标抹毒", "被贴身围攻时把身位扫开一点"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 4.2,
         prepare: 7,
@@ -73,7 +76,6 @@ namespace PokemonSkills {
             const drops = Math.max(6, Math.round(p("poisontail", "drops", action)));
             const scale = Math.max(0.6, Math.min(1.8, reach / 2.6));
             const intensity = Math.max(0.6, Math.min(2.0, power / 55));
-            const primary = action.target() !== null ? String(action.target()!.ref()) : "";
             const groundY = body !== null ? centre.y() - body.height() / 2 : centre.y() - 0.7;
             const half = arc * Math.PI / 360, base = Math.atan2(heading.z(), heading.x()), steps = 11;
             const path: number[][] = [[centre.x(), groundY, centre.z()]];
@@ -81,12 +83,29 @@ namespace PokemonSkills {
                 const angle = base - half + 2 * half * index / steps;
                 path.push([centre.x() + Math.cos(angle) * reach, groundY, centre.z() + Math.sin(angle) * reach]);
             }
+            // 先收集弧面内的敌人：选中实体时它吃满，只朝方向空扫时取最贴近瞄准方向的那个吃满，其余吃折扣。
+            const found: { victim: CombatActor; facts: CombatObservation }[] = [];
+            WorldGeometry.selectEnemies(world, WorldGeometry.sector(centre, heading, reach, arc, { below: 1.2, above: 1.6 }),
+                function (victim: CombatActor, facts: CombatObservation) {
+                    if (String(victim.ref()) !== String(actor.ref())) found.push({ victim: victim, facts: facts });
+                });
+            let primary = action.target() !== null ? String(action.target()!.ref()) : "";
+            if (primary === "" && found.length > 0) {
+                let best = -2, bestRef = "";
+                for (let index = 0; index < found.length; index++) {
+                    const offset = WorldCombat.point(found[index].facts.position().x() - centre.x(), 0, found[index].facts.position().z() - centre.z());
+                    if (offset.length() < 1e-6) { bestRef = String(found[index].victim.ref()); break; }
+                    const toward = offset.unit(), cos = toward.x() * heading.x() + toward.z() * heading.z();
+                    if (cos > best) { best = cos; bestRef = String(found[index].victim.ref()); }
+                }
+                primary = bestRef;
+            }
             let hits = 0;
 
             sound(action, "minecraft:entity.player.attack.sweep");
-            WorldGeometry.selectEnemies(world, WorldGeometry.sector(centre, heading, reach, arc, { below: 1.2, above: 1.6 }), function (victim: CombatActor, facts: CombatObservation) {
-                if (String(victim.ref()) === String(actor.ref())) return;
-                const ref = String(victim.ref()), point = facts.position();
+            for (let index = 0; index < found.length; index++) {
+                const victim = found[index].victim, point = found[index].facts.position();
+                const ref = String(victim.ref());
                 const distance = point.minus(centre).length();
                 const ratio = reach <= 0 ? 0 : Math.min(1, distance / reach);
                 const tipChance = Math.max(0.04, Math.min(0.7, chance * (0.7 + 0.6 * ratio)));
@@ -96,7 +115,7 @@ namespace PokemonSkills {
                     { moment: "sting", target: ref, drops: drops, scale: scale,
                         intensity: Math.max(0.5, Math.min(2.0, power * (ref === primary ? 1 : share) / 55)) }, 20);
                 hits++;
-                if (!landed || !world.valid(victim)) return;
+                if (!landed || !world.valid(victim)) continue;
                 world.sound("cobblemon:impact.poison", point, 14, "{}");
                 if (world.random() < tipChance && CombatStatus.inflict(world, victim, "poison", venomTicks, 0, { secondary: true })) {
                     const now = world.observe(victim);
@@ -108,7 +127,7 @@ namespace PokemonSkills {
                 }
                 const away = WorldCombat.point(point.x() - centre.x(), 0, point.z() - centre.z());
                 if (away.length() >= 0.05) world.displace(victim, away.unit().scale(push));
-            });
+            }
             WorldFeedback.emit(world, poisontailScene, 1, centre,
                 { moment: "sweep", path: path, arc: arc, reach: reach, drops: drops, scale: scale, intensity: intensity, hits: hits }, 22);
             if (hits === 0) {

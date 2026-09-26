@@ -71,8 +71,8 @@ namespace PokemonSkills {
             "力竭", "根须褪去后无法行动、无法移动的时间；铺得越开、身体越重，恢复越久。"),
         /** 留痕时长：基础 60 tick，等级每比 20 高 1 加 1.0 tick；夹在 40..140 tick。 */
         leaves: seconds(
-            F.base(60).plus(F.level().minus(20).times(1.0).clamp(0, 80)).clamp(40, 140).round(),
-            "留痕时长", "根须褪去后，那块地上苔藓与生根土停留多久；到期原方块回来。")
+            F.base(12).plus(F.level().minus(20).times(.3).clamp(0,18)).clamp(12,30).round(),
+            "收根余叶", "收根后轻量余叶的实际表现时长，等级越高稍长。")
     });
 
     stages("frenzyplant", [
@@ -85,7 +85,7 @@ namespace PokemonSkills {
     describe("frenzyplant", [
         { key: "description.0", values: ["bloom"] },
         { key: "description.1", values: ["radius", "reach"] },
-        { key: "description.2", values: ["leaves"] },
+        { key: "description.2", values: [] },
         { key: "description.3", values: ["exhaust","snareTicks"] },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level","tier.0.bloom"] },

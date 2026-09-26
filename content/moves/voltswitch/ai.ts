@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 12 格）以内——本招是远程，站远也能点。
  * 对谁出手：被打崩前放电脱身（`ai.fleeBelow`，默认 0.4 以下排最前，因为它出手即换位）；其次收掉残血目标；
- *   余电式还把成群的敌人排前一点，原地那片电荷能在人群里持续电人。
+ *   余电式还看**自己现在站的原点**周围挤着几个敌人来加权——余电留在原地，价值只看留在那里的敌人，不数远端目标周围。
  * 够不到怎么办：reach 就是本招射程，不够就先走近。
  * 放完之后：身位已经跳到新的落点，交回共享交战计划。
  */
@@ -15,14 +15,16 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
     }
 
-    /** 目标附近还挤着几个非友方；余电式据此提高优先级。 */
-    function voltswitchCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 自己离开的这个原点周围还挤着几个非友方；余电式据此提高优先级（余电留在原地，不在远端目标周围）。 */
+    function voltswitchCluster(context: WorldBehavior.Context): number {
+        const self = CompanionBehavior.source(context);
+        const radius = p("voltswitch", "fieldRadius", CompanionBehavior.world(context));
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         let count = 0;
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 4) count++;
+            if (CompanionBehavior.distance(self.point, other.point) <= radius) count++;
         }
         return count;
     }
@@ -44,7 +46,7 @@ namespace PokemonSkills {
             let score = 16;
             if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "fleeBelow", 0.4)) score += 18;
             if (CompanionBehavior.ratio(target) <= 0.35) score += 10;
-            if (CompanionBehavior.ai<boolean>(capability, "relay", true)) score += Math.min(10, voltswitchCluster(context, target) * 4);
+            if (CompanionBehavior.ai<boolean>(capability, "relay", true)) score += Math.min(10, voltswitchCluster(context) * 4);
             return score;
         }
     });

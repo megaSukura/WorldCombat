@@ -6,8 +6,8 @@
  *
  * 幕：
  *   起（windup，提交前）：蹲身、脸颊噼啪攒电的预告（`action.present`，可被打断、不花 PP）。
- *   扑（lunge）：提交后朝目标扑出最多 `lunge` 格，扑到接触半径内就算够着，画面留一条电尾。
- *   蹭（touch / whiff）：够着时按 `nudge` 结算一次物理伤害，并无条件施加共享麻痹身份；够不着只留一下扑空的电花。
+ *   扑（lunge）：提交后把总 `lunge` 格拆成几刻小步身体扫掠，朝锁定方向一段段贴近；第一次真实身体接触即结束移动。
+ *   蹭（touch / whiff）：接触时按 `nudge` 结算一次物理伤害，伤害成功后才施加共享麻痹身份；够不着或撞墙只留一下扑空的电花。
  *
  * 与同族分开：电磁炮、十万伏特、电击都是发出去的电；只有蹭蹭脸颊是**接触**招——必须把身位送进去，
  *   反制方式因此变成「别让它靠近」，而不是走位躲弹。
@@ -25,7 +25,7 @@ namespace PokemonSkills {
         name: "Nuzzle",
         description: "得先贴到对手身上：蹭一下带电的脸颊，伤害极小，但命中就使对方麻痹——期间移动减半，每次出招还有四分之一概率落空。扑空就什么也不发生。猛扑式能扑得更远，代价是落地更慢、蹭的劲更小。电属性对麻痹免疫。",
         uses: ["贴身把对手必麻", "追上逃开的对手再蹭住", "先手控制一个难缠的目标"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.5,
         maxRange: 3.8,
         prepare: 7,
@@ -59,63 +59,73 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const self = action.actor();
-            const target = action.target();
             const selfStart = world.observe(self);
             const origin0 = selfStart === null ? action.origin() : selfStart.position();
-            const lunge = p(nuzzleId, "lunge", action);
+            const totalLunge = p(nuzzleId, "lunge", action);
             const touch = p(nuzzleId, "touchReach", action);
             const power = p(nuzzleId, "nudge", action);
             const numbTicks = Math.max(20, Math.round(p(nuzzleId, "numbTicks", action)));
             const arcs = Math.max(3, Math.round(p(nuzzleId, "arcs", action)));
             const scale = Math.max(0.6, Math.min(1.8, touch / 0.85));
             const intensity = Math.max(0.6, Math.min(1.8, power / 22));
+            // 总前扑不变，拆成 2..4 刻小步身体扫掠：真实身体接触结束移动，不用球形距离近似。
+            const steps = 3;
+            const heading = WorldGeometry.flatUnit(action.targetPosition().minus(origin0), action.direction());
+            const movementScenes = WorldFeedback.actionScenes(nuzzleScene);
+            let travelled = 0;
+            let finished = false;
 
             sound(action, "cobblemon:move.thundershock.actor");
 
-            // 扑：朝目标贴近到接触距离以内。够不到就停在原地，这一下变成空。
-            if (target !== null && world.valid(target)) {
-                const at = world.observe(target);
-                if (at !== null) {
-                    const delta = at.position().minus(origin0);
-                    const flat = WorldCombat.point(delta.x(), 0, delta.z());
-                    const gap = flat.length();
-                    const step = Math.min(lunge, Math.max(0, gap - touch * 0.4));
-                    if (step > 0.03) world.displace(self, flat.unit().scale(step));
+            function conclude(current: CombatAction, victim: CombatActor | null, contact: CombatPoint): void {
+                if (finished) return;
+                finished = true;
+                const scope = current.world();
+                if (victim !== null) {
+                    // 真实蹭上：伤害成功后才尝试施加必麻；免疫照常反馈。
+                    const dealt = hurt(current, victim, nuzzleId, power, { damage: damageSpec(nuzzleId, "nudge"), contact: true });
+                    const applied = dealt ? CombatStatus.inflict(scope, victim, "paralysis", numbTicks) : false;
+                    WorldFeedback.emit(scope, nuzzleScene, 1, contact,
+                        { moment: "touch", target: String(victim.ref()), sparks: dealt ? Math.round(10 + power * 0.6) : 6,
+                            arcs: arcs, scale: scale, intensity: intensity }, 24);
+                    WorldFeedback.text(scope, contact.plus(WorldCombat.point(0, 1.0, 0)), applied ? nuzzleHitText : nuzzleImmuneText, [], 24);
+                    scope.sound("minecraft:entity.cat.purr", contact, 14, "{}");
+                    if (applied) sound(current, "cobblemon:move.thundershock.target");
+                } else {
+                    const body = scope.observe(self);
+                    const here = body === null ? origin0 : body.position();
+                    WorldFeedback.emit(scope, nuzzleScene, 1, here.plus(WorldCombat.point(0, 0.2, 0)),
+                        { moment: "whiff", arcs: arcs, scale: scale }, 16);
+                    WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 0.9, 0)), nuzzleWhiffText, [], 18);
                 }
+                movementScenes.finish(current, done);
             }
 
-            const selfBody = world.observe(self);
-            const here = selfBody === null ? origin0 : selfBody.position();
-            const halfSelf = selfBody === null ? 0.45 : selfBody.width() * 0.5;
-            WorldFeedback.emit(world, nuzzleScene, 1, here,
-                { moment: "lunge", arcs: arcs, scale: scale, intensity: intensity }, 18);
-
-            let contact = false;
-            let point = action.targetPosition();
-            if (target !== null && world.valid(target)) {
-                const at = world.observe(target);
-                if (at !== null) {
-                    point = at.position();
-                    const gap = point.minus(here).length();
-                    if (gap <= touch + halfSelf + at.width() * 0.5 && world.clear(here, point)) contact = true;
+            function advance(current: CombatAction, index: number): void {
+                if (finished) return;
+                if (index >= steps) { conclude(current, null, origin0); return; }
+                const body = current.world().observe(self);
+                if (body === null) { conclude(current, null, origin0); return; }
+                const step = Math.min(totalLunge / steps, totalLunge - travelled);
+                if (!(step > 0.001)) { conclude(current, null, body.position()); return; }
+                const swept = sweepStep(current, heading.scale(step), touch);
+                travelled += swept.moved;
+                const hit = swept.hit;
+                if (hit.hitEntity()) {
+                    const victim = hit.target();
+                    if (victim !== null && String(victim.key()) !== String(self.key())) {
+                        conclude(current, current.world().friendly(victim) ? null : victim, hit.position());
+                        return;
+                    }
                 }
+                if (hit.blocked() || swept.moved < step - 0.001) { conclude(current, null, body.position()); return; }
+                movementScenes.show(current, "lunge", body.position(),
+                    { moment: "lunge", arcs: arcs, scale: scale, intensity: intensity });
+                current.after(1, function (next: CombatAction) { advance(next, index + 1); });
             }
 
-            if (contact && target !== null) {
-                hurt(action, target, nuzzleId, power, { damage: damageSpec(nuzzleId, "nudge"), contact: true });
-                const applied = CombatStatus.inflict(world, target, "paralysis", numbTicks);
-                WorldFeedback.emit(world, nuzzleScene, 1, point,
-                    { moment: "touch", target: String(target.ref()), sparks: Math.round(12 + power * 0.8),
-                        arcs: arcs, scale: scale, intensity: intensity }, 26);
-                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), applied ? nuzzleHitText : nuzzleImmuneText, [], 26);
-                world.sound("minecraft:entity.cat.purr", point, 14, "{}");
-                if (applied) sound(action, "cobblemon:move.thundershock.target");
-            } else {
-                WorldFeedback.emit(world, nuzzleScene, 1, here.plus(WorldCombat.point(0, 0.2, 0)),
-                    { moment: "whiff", arcs: arcs, scale: scale }, 18);
-                WorldFeedback.text(world, here.plus(WorldCombat.point(0, 0.9, 0)), nuzzleWhiffText, [], 20);
-            }
-            done(action);
+            movementScenes.show(action, "lunge", origin0, { moment: "lunge", arcs: arcs, scale: scale, intensity: intensity });
+            advance(action, 0);
         }
     });
 }

@@ -18,6 +18,15 @@ public final class NativeDamageFacts {
         data.addProperty("sourceActor", sourceActor);
         data.addProperty("sourceEntity", source == null ? "" : source.getStringUUID());
         data.addProperty("directEntity", direct == null ? "" : direct.getStringUUID());
+        data.addProperty("directProjectile", direct instanceof net.minecraft.world.entity.projectile.Projectile);
+        var position = cause.getSourcePosition();
+        var coordinates = new JsonArray();
+        if (position != null) { coordinates.add(position.x); coordinates.add(position.y); coordinates.add(position.z); }
+        data.add("sourcePosition", position == null ? com.google.gson.JsonNull.INSTANCE : coordinates);
+        data.add("projectilePath", direct instanceof CombatProjectile managed ? managed.damagePath()
+            : direct instanceof net.minecraft.world.entity.projectile.Projectile projectile
+            && direct.level() instanceof net.minecraft.server.level.ServerLevel level
+            ? CombatServices.get(level.getServer()).projectileObservations().path(projectile) : new JsonArray());
         data.addProperty("sourceType", type(source)); data.addProperty("directType", type(direct));
         data.addProperty("sourceLiving", source instanceof LivingEntity);
         data.addProperty("direct", source != null && source != victim && direct == source);

@@ -5,8 +5,8 @@
  *   让 AI 的 `ai.minFoes`（默认 2）条件成立。三只对手只会「跃起」、不还手，确保施法者在引爆前不会被提前打空。
  *
  * 断言只取必然事实：这招被提交过；至少一个目标挨到伤害；**使用者倒下**（原生 selfdestruct:"always"）；
- *   被罩住的目标被致盲。命中几个、暴击、残雾范围与「薄雾加成」（需要薄雾场地或既有残雾，单招场景里
- *   无法合法制造）写进 note。
+ *   被罩住的目标被致盲（只有伤害真的落地才会致盲）。命中几个、暴击、残雾视效范围与「薄雾加成」
+ *   （需要薄雾场地，单招场景里无法合法制造）写进 note。
  */
 Smoke.scenario("mistyexplosion", function (stage) {
     stage.fill([-10, -1, -8], [10, -1, 8], "minecraft:stone");
@@ -28,7 +28,7 @@ Smoke.scenario("mistyexplosion", function (stage) {
             stage.expect(!caster.alive(), "the user fainted even though the move was used (selfdestruct: always)");
             stage.expect(stage.hadMobEffect(foeA, "minecraft:blindness") || stage.hadMobEffect(foeB, "minecraft:blindness") || stage.hadMobEffect(foeC, "minecraft:blindness"),
                 "the mist blinded at least one caught target");
-            stage.note("原生 selfdestruct:\"always\"——有没有炸到使用者都倒下；命中几个、暴击、残雾范围与时长随局面变化。薄雾加成需要脚下已有薄雾（薄雾场地或上一次残雾），单招场景里无法合法制造，故不在此断言", {
+            stage.note("原生 selfdestruct:\"always\"——有没有炸到使用者都倒下；命中几个、暴击、残雾视效范围与时长随局面变化，雾不再拖慢目标。薄雾加成需要脚下已有薄雾场地，单招场景里无法合法制造，故不在此断言", {
                 casts: stage.casts("mistyexplosion", caster),
                 foeADamage: Math.round(stage.damageTo(foeA) * 10) / 10,
                 foeBDamage: Math.round(stage.damageTo(foeB) * 10) / 10,

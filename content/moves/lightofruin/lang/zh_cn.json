@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.lightofruin.summary": "借永恒之花的力量，从胸前花心迸出一根粗重的贯穿光柱：打穿正前方整列敌人，反噬按真正造成的伤害结算——穿得越多，自己越危险。",
-  "worldcombat.skill.lightofruin.description.0": "光柱沿正前方贯穿一条走廊，由近到远最多命中 %4$s 个目标，每个受到一次约 %1$s 点妖精属性特殊伤害；光柱最长 %2$s 格、半宽 %3$s 格，被障碍挡住的目标打不到。",
+  "worldcombat.skill.lightofruin.summary": "借永恒之花的力量，朝任意方向或世界点从花心迸出一根粗重的贯穿光柱：打穿沿线整列敌人、撞墙即截束，也能空放。反噬按真正造成的伤害结算——穿得越多，自己越危险。",
+  "worldcombat.skill.lightofruin.description.0": "光柱沿准线贯穿一条走廊，由近到远最多命中 %4$s 个目标，每个受到一次约 %1$s 点妖精属性特殊伤害；光柱最长 %2$s 格、半宽 %3$s 格，遇到真实方块就在该格截束，被障碍挡住的目标打不到。",
   "worldcombat.skill.lightofruin.description.1": "每次命中按实际伤害的 %1$s 倍反噬自己；打空或打在免疫上都不付账。",
   "worldcombat.skill.lightofruin.overdraw.on": "透支式：多借一档，威力 ×1.1、光柱半宽 ×1.15，代价是反噬 ×1.15、起手 +2 刻、冷却 +6 刻。",
   "worldcombat.skill.lightofruin.overdraw.off": "节制式：反噬 ×0.8，代价是威力 ×0.95——还得少，但每一下也轻。",

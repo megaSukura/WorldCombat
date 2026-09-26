@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.feint.summary": "一次假动作把对手撑起的守护掀掉，紧接着的一戳才真正打进去；掀掉的守护层数越多，这一下越重。对没有守护的目标，它仍是一记极快的戳击。",
+  "worldcombat.skill.feint.summary": "一次假动作朝当前瞄准方向短步扑进：只有当真实碰到对手那一刻才把撑起的守护掀掉，紧接着的一戳才真正打进去；掀掉的守护层数越多，这一下越重。对没有守护的目标，它仍是一记极快的戳击；墙会拦住脚步。",
   "worldcombat.skill.feint.use.0": "掀掉对手撑起的守护，为下一记重击开路",
   "worldcombat.skill.feint.use.1": "用极短的起手，抢在守护替对手挡下重击前把它掀掉",
   "worldcombat.skill.feint.use.2": "对没有守护的目标补一记极快的戳击",

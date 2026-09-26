@@ -1,4 +1,13 @@
-/** eeriespell：行为、参数与目标条件以本单元实现为准。 */
+/**
+ * 诡异咒语 / eeriespell —— 行为、参数与目标条件以本单元实现为准。
+ *
+ * 一幕起手（身前聚起翻卷的紫色咒念），一幕飞行（咒念沿 projectile 直飞），一幕命中（结算伤害、
+ * 给目标挂上共享身份「诡异」，并对宝可梦抽走其上一招的 3 点 PP；撞墙/空放则只留一点紫烟）。
+ * 「诡异」期间目标每次尝试出手都会按效果等级掷一次失手，普通攻击同样会因记忆混乱而落空；
+ * 真正因它失手时，在目标身上显示一次短缺口般的「中断」符号（只在失败回执上触发，状态本身不逐刻爆亮）。
+ *
+ * kind 为 aim：可瞄目标，也可只朝一个方向空放；首实体/方块收束。扣 PP 只走原有宝可梦接口。
+ */
 namespace PokemonSkills {
     const EERIESPELL_SCENE = "world_combat:move_eeriespell";
     const EERIESPELL_EFFECT = "world_combat:eerie";
@@ -8,9 +17,25 @@ namespace PokemonSkills {
         if (context.phase !== "commit" && !(context.phase === "damage" && DamageSemantics.read(context.metadata).attack))
             return;
         var effect = CombatStatus.representative(context.world, context.actor, "eerie", false);
-        if (effect)
+        if (effect) {
             context.failures.eerie = Math.max(0.05, Math.min(1, effect.amplifier() / 100));
+            context.detail.eerie = { status: "eerie" };
+        }
     } });
+
+    // 失败回执：只有真正因「诡异」失手时才在目标身上显示一次中断符号。
+    WorldCombat.on("world_combat:move_eeriespell/interrupt", "world_combat:action_rejected", "", function (event) {
+        var data = JSON.parse(String(event.data()));
+        if (String(data.reason) !== "eerie" && String(data.details && data.details.status) !== "eerie")
+            return;
+        var world = event.world(), actor = event.actor();
+        if (!world.valid(actor))
+            return;
+        var body = world.observe(actor);
+        if (body === null)
+            return;
+        WorldFeedback.emit(world, EERIESPELL_SCENE, 1, body.position(), { moment: "interrupt", target: String(actor.ref()), intensity: 1, scale: 1 }, 24);
+    });
 
     /** 从目标最后使用的招式抽走 3 点 PP；非宝可梦、没有最后招式或已空返回 ""。 */
     function eeriespellDrain(world: CombatWorld, target: CombatActor): string {
@@ -60,8 +85,8 @@ namespace PokemonSkills {
     }
 
     define({ id: "eeriespell", name: "诡异咒语",
-        description: "发射咒念伤害目标并扰乱出手。命中宝可梦还会扣除其上一招的PP；普通攻击同样会因记忆混乱而失手。",
-        uses: ["远程压制", "拆招"], kind: "enemy", range: 14, prepare: 10, active: 0, recover: 8, cooldown: 40, style: "eerie",
+        description: "发射咒念伤害目标并扰乱出手。命中宝可梦还会扣除其上一招的PP；普通攻击同样会因记忆混乱而失手。可瞄准目标，也可只朝一个方向空放。",
+        uses: ["远程压制", "拆招"], kind: "aim", range: 14, prepare: 10, active: 0, recover: 8, cooldown: 40, style: "eerie",
         defaults: {}, fields: [],
         indicator: function () { return { radius: 14, geometry: "line", style: "eerie", label: "诡异咒语" }; },
         windup: function (action: CombatAction, config: any, prepare: number): number {

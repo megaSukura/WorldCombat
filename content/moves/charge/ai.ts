@@ -25,9 +25,25 @@ namespace CompanionBehavior {
         for (let i = 0; i < items.length; i++) if (items[i].data.move === "charge") return items[i];
         return null;
     }
+    function chargeUseful(context: WorldBehavior.Context, threat: Entity | null): boolean {
+        if (ready(context, "world_combat:attack").some(item => {
+            const move = item.data && item.data.move ? CobblemonCombat.moveTemplate(String(item.data.move)) : null;
+            return move !== null && String(move.type()).toLowerCase() === "electric";
+        })) return true;
+        if (threat === null || stage(context, source(context), "spd") >= 6) return false;
+        const scope = world(context), opponent = scope.actor(threat.ref);
+        if (opponent === null) return false;
+        if (String(opponent.domain()) === "cobblemon") {
+            const pokemon = CobblemonCombat.pokemon(opponent);
+            return pokemon.stat("spa") > pokemon.stat("atk");
+        }
+        const attack = DamageSemantics.recentAttack(scope, opponent, 120);
+        return attack !== null && attack.category === "special";
+    }
     function chargeWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity | null): boolean {
         const self = source(context);
         if (status(context, self, "charge")) return false;
+        if (!chargeUseful(context, threat)) return false;
         if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
         if (ai<string>(item, "opening", "anytime") !== "incoming") return !!threat;
         const owner = context.facts.owner;
@@ -41,6 +57,7 @@ namespace CompanionBehavior {
         available: function (context, item, _purpose, _target) {
             if (status(context, source(context), "charge")) return false;
             const threat: Entity | null = context.senses["world_combat:threat"];
+            if (!chargeUseful(context, threat)) return false;
             if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
             const chase = ai<number>(item, "maxChase", 12);
             if (!threat || distance(source(context).point, threat.point) > chase) return false;

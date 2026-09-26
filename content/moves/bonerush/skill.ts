@@ -2,15 +2,18 @@
  * 骨棒乱打 / bonerush —— 出手方式。
  *
  * 核心念头：**掷骨夯地**——施法者把手里的硬骨一下下抛出去，夯在目标脚下的地面上；冲击沿地层钻到对手脚底，
- *   所以是地面属性、不接触。每一击都把落点那层地表震裂，留下会自己消失的地痕；最后一下最重。它是本族唯一
- *   把骨头离手、并且在地面留下裂痕的招。
+ *   所以是地面属性、不接触。落点只留会自己散去的尘痕，不动地表；最后一下最重。它是本族唯一把骨头离手、
+ *   并让冲击从落点地面传开的招。
  *
  * 幕：
  *   起（draw，提交前）：拔骨、拧身，手里聚起一圈骨白光；`action.present`，可打断、不花 PP。
  *   掷（throw，提交后）：`strikes` 击。每一击朝目标当前所在处抛一枚骨头（外观是 `minecraft:bone`，按 `boomArc`
- *       走弧线）；骨头落定即为「夯」，结算一段 `quake` 地面伤害——落点 `shock` 半径内的非友方各吃一下、
- *       被向上顶起 `lift`，同时把那层地表震成裂痕 `crack` 刻。最后一击威力 ×`finish`。
+ *       走弧线）；骨头在真实接触点落定即为「夯」，结算一段 `quake` 地面伤害——落点 `shock` 半径内、真正贴地
+ *       的非友方各吃一下、被向上顶起 `lift`；只留一段会散去的尘痕 `crack`。最后一击威力 ×`finish`。
  *   收（settle）：这一串夯完收势，余尘落定。
+ *
+ * 选取 `kind: "aim"`：可以点任意阵营实体，也可以只给一个世界点或方向自由抛骨；骨头撞墙就在真实接触面结束，
+ *   落在哪里震哪里，不会在远处的锁点震地。飞行/悬空的目标不吃地面震动。
  *
  * 与同族分开：乱抓会绕圈换位、乱击是站定定点突刺、扫尾拍打是原地整圈旋尾；只有骨棒乱打隔着距离掷骨、留下地痕，
  *   反制方式是远离落点或站到不平的地面上（骨头弧线会偏），也可在掷出后走开让骨头砸空。
@@ -18,53 +21,13 @@
  * 配置 `fissure`（裂地式）由 resolve 改时序、由公式改威力／震波／击数与骨速；提交后才触碰世界。
  */
 namespace PokemonSkills {
-    /** 把地表方块归到一个「被震裂」的对应材质；不认识的方块不动它。 */
-    function bonerushMaterial(id: string): string {
-        const value = String(id);
-        if (value === "minecraft:grass_block" || value === "minecraft:dirt" || value === "minecraft:coarse_dirt" ||
-            value === "minecraft:podzol" || value === "minecraft:rooted_dirt" || value === "minecraft:moss_block")
-            return "minecraft:coarse_dirt";
-        if (value === "minecraft:sand" || value === "minecraft:red_sand") return "minecraft:sandstone";
-        if (value === "minecraft:deepslate") return "minecraft:cobbled_deepslate";
-        if (value === "minecraft:stone" || value === "minecraft:granite" || value === "minecraft:diorite" ||
-            value === "minecraft:andesite" || value === "minecraft:tuff" || value === "minecraft:gravel")
-            return "minecraft:cobblestone";
-        return "";
-    }
-
-    /** 落点周围一小片地表震成裂痕；每格记住原方块，到期由宿主换回来。返回改动的格子数。 */
-    function bonerushFissure(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        const r = Math.max(1, Math.ceil(radius)), limit = Math.max(8, Math.round(radius * radius * 8)), inner = 0;
-        for (let dx = -r; dx <= r && cells.length < limit; dx++) for (let dz = -r; dz <= r && cells.length < limit; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius || distance < inner) continue;
-            const x = baseX + dx, z = baseZ + dz;
-            for (let dy = 1; dy >= -2; dy--) {
-                const y = baseY + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const key = x + "," + y + "," + z, cracked = bonerushMaterial(id);
-                if (!seen[key] && cracked !== "" && cracked !== id) { seen[key] = true; cells.push({ x: x, y: y, z: z, block: cracked }); }
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
     define({
         id: bonerushId,
         cooldownParameter: "recharge",
         name: "Bone Rush",
-        description: "把手里的硬骨一枚枚按弧线抛出，夯在目标脚下的地面上：冲击沿地层钻到落点周围敌人的脚底（地面伤害、不接触），落点那层地表被震出会自己消失的裂痕，最后一击最重。目标走开或骨头偏了就会砸空；重夯式每击更重、可到 5 击，裂地式震波更大、地痕更久。",
-        uses: ["隔着距离把骨头一下下夯到目标脚下", "落点震波把一小片地面的人一起掀起", "裂地式用持久地痕占住战场"],
-        kind: "enemy",
+        description: "把手里的硬骨一枚枚按弧线抛出，夯在目标脚下的地面上：冲击沿地层钻到落点周围贴地敌人的脚底（地面伤害、不接触），落点只留会自己散去的尘痕，最后一击最重。可以点敌人，也可以只朝一个世界点自由抛骨；骨头撞墙就在接触面结束，砸在哪震哪，飞行或悬空的目标不吃震动。重夯式每击更重、可到 5 击，裂地式震波更大、尘痕更久。",
+        uses: ["隔着距离把骨头一下下夯到目标脚下", "落点震波把一小片地面的人一起掀起", "裂地式用更久的尘痕占住战场", "只给一个世界点自由抛骨"],
+        kind: "aim",
         range: 7,
         maxRange: 13,
         prepare: 8,
@@ -116,9 +79,11 @@ namespace PokemonSkills {
             const accuracy = Math.max(0.05, Math.min(0.99, p(bonerushId, "accuracy", action)));
             const crackTicks = Math.max(60, Math.round(p(bonerushId, "crack", action)));
             const dust = Math.max(8, Math.round(p(bonerushId, "dust", action)));
+            // 骨头飞行是持续过程：每次 execute 建一个 actionScenes，逐枚绑定真实投递，撞到就停、收势随 finish。
+            const scenes = WorldFeedback.actionScenes(bonerushScene);
             let index = 0, landed = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             function settle(current: CombatAction): void {
                 const scope = current.world();
@@ -149,6 +114,7 @@ namespace PokemonSkills {
                 const hitPower = power * (shot >= strikes ? finishMul : 1);
                 const distance = Math.max(1.5, aimPoint.minus(origin).length());
                 const life = Math.max(30, Math.round(distance / Math.max(0.3, speed)) + 30);
+                const key = "throw" + shot;
                 sound(current, "minecraft:entity.arrow.shoot");
                 const flight = LivingActions.projectile(current, {
                     speed: speed, range: distance + 3, radius: boneRadius, direction: direction, gravity: gravity,
@@ -158,32 +124,41 @@ namespace PokemonSkills {
                         const scope2 = inner.world();
                         const at = hit.position();
                         const struck = hit.target();
+                        // 骨头在真实接触点停下：飞行轨迹随之收掉，不再继续拖尾。
+                        scenes.stop(inner, key);
                         WorldFeedback.emit(scope2, bonerushScene, 1, at,
                             { moment: "slam", index: shot, strikes: strikes, shock: shock, dust: dust,
-                                final: shot >= strikes ? 1 : 0, intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 22);
+                                intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 22);
                         scope2.sound("minecraft:block.bone_block.break", at, 14, "{}");
+                        // 只有真正贴地的目标才沿地层吃到震动；飞行/悬空的不算。
                         WorldGeometry.selectEnemies(scope2, WorldGeometry.ring(at, 0, shock, { below: 2.0, above: 2.0 }),
                             function (other, facts) {
+                                // 真实贴地才算：原生 grounded 或脚高贴着脚下地面，任一成立；飞行/悬空的不吃震动。
+                                const feet = facts.position().y() - facts.height() * 0.5;
+                                const ground = WorldGeometry.ground(scope2, facts.position(), 2).y();
+                                if (!facts.grounded() && Math.abs(feet - ground) > 0.7) return;
                                 if (!hurt(inner, other, bonerushId, hitPower, { damage: damageSpec(bonerushId, "quake") })) return;
                                 landed++;
                                 const pos = facts.position();
-                                if (scope2.valid(other) && lift > 0.02) scope2.displace(other, WorldCombat.point(0, lift, 0));
+                                let lifted = false;
+                                if (scope2.valid(other) && lift > 0.02) lifted = scope2.hitDisplace(other, WorldCombat.point(0, lift, 0)) > 0.02;
                                 WorldFeedback.emit(scope2, bonerushScene, 1, pos,
                                     { moment: "hit", target: String(other.ref()), index: shot, strikes: strikes, dust: dust,
-                                        intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 20);
+                                        lifted: lifted ? 1 : 0, intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 20);
                             });
                         if (struck !== null && scope2.valid(struck)) scope2.sound("cobblemon:impact.ground", at, 14, "{}");
-                        const cells = bonerushFissure(scope2, at, Math.max(1.0, shock * 0.9), crackTicks);
+                        // 地痕只是会自己散去的尘，不改动地表；crack 参数改为这段尘痕能留多久。
                         WorldFeedback.emit(scope2, bonerushScene, 1, at,
-                            { moment: "crack", radius: Math.max(1.0, shock * 0.9), cells: cells, dust: dust,
+                            { moment: "crack", radius: Math.max(1.0, shock * 0.9), linger: crackTicks, dust: dust,
                                 index: shot, strikes: strikes, shock: shock }, 26);
                     }
                 }, function (inner: CombatAction) {
+                    scenes.stop(inner, key);
                     inner.after(gap, function (next: CombatAction) { strike(next); });
                 });
-                WorldFeedback.keep(scope, "bonerush:bone:" + current.id() + ":" + shot, bonerushScene, 1, origin,
+                scenes.show(current, key, origin,
                     { moment: "throw", projectile: flight, index: shot, strikes: strikes, shock: shock, dust: dust,
-                        intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, life + 20);
+                        intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) });
                 index = shot;
             }
 

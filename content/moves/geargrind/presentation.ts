@@ -4,9 +4,10 @@
  * 一句话：施法者身上旋起两枚钢齿轮，一左一右交错甩出，各拖一条笔直的钢色尾迹扑向对手；命中处炸开一撮钢屑，
  *   打空的齿轮在落点弹一下、原地转一会儿再散开。
  * 色相家族：冷钢灰（0x9AA4AE、0xC9D4DE）做齿轮与尾迹，白（0xFFFFFF）只给命中那一抹；微微的暖火星只作细节。
- * 拍子：起 load（上弦）→ 一/二 throw（甩出）→ 中 hit（命中）→ 擦 clatter（弹开）→ 留 grounded（落齿轮）→ 散。
- * 范围：throw 的尾迹沿 `data.direction` 从出手点铺开一段，长度与齿轮飞行方向一致；grounded 绕落点转一个盘。
- * 运动：齿轮本体由中间实体外观绘制；尾迹沿出手方向直线飞出，hit 的钢屑向外炸、grounded 的钢屑绕盘慢转。
+ * 拍子：起 load（上弦）→ 一/二 throw（从两侧甩出）→ 中 hit（真实碰点）→ 擦 clatter（按命中面弹开）→ 留 grounded（快速散成钢屑）。
+ * 范围：throw 的尾迹沿 `data.direction` 从该侧出手点铺开；hit 用真实碰点 `data.point`；clatter 沿反弹方向 `data.direction` 画一段弹开轨迹。
+ * 运动：齿轮本体由中间实体外观绘制；两枚从左右侧位分别甩出（`data.side`），hit 的钢屑在真实碰点向外炸。
+ *   grounded 只转一小会儿就散成钢屑，`data.linger` 绑定时长——不是会持续伤人的长齿轮。
  * 数：`data.shards`（物攻派生）绑定发射量，`data.intensity`（每枚威力派生）抬高亮度，`data.cross` 区分交错/直射。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -54,7 +55,7 @@ const GeargrindDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 11 },
             emitters: [
                 {
-                    name: "burst", bind: "target", offset: [0, 0.4, 0], height: 0.45,
+                    name: "burst", bind: "point", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: { data: "shards", fallback: 16 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.28 }, direction: "outward", speed: [0.08, 0.34], spread: 26,
@@ -62,7 +63,7 @@ const GeargrindDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.38, maxParticles: 54
                 },
                 {
-                    name: "spall", bind: "target", offset: [0, 0.35, 0], height: 0.4,
+                    name: "spall", bind: "point", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
                     burst: { count: { data: "shards", fallback: 12 }, at: 1 },
                     shape: { kind: "sphere_surface", radius: 0.3 }, direction: "outward", speed: [0.12, 0.4], spread: 30, gravity: 0.06,
@@ -76,6 +77,14 @@ const GeargrindDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 9 },
             emitters: [
                 {
+                    name: "bounce", bind: "point", offset: [0, 0.12, 0], orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 40, shape: { kind: "line", length: 0.9 },
+                    direction: "shape", speed: [0.1, 0.3], spread: 8, drag: 0.94,
+                    lifetime: [5, 9], size: [0.09, 0.02],
+                    color: 0x9AA4AE, alpha: [0.6, 0], light: "world", maxParticles: 34
+                },
+                {
                     name: "spark", bind: "point", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: { data: "shards", fallback: 10 }, at: 0 },
@@ -86,23 +95,23 @@ const GeargrindDefinition: ParticleDefinition = {
             ]
         },
         grounded: {
-            duration: 46,
-            exit: { stop: 30, drain: 14 },
+            duration: { data: "linger", fallback: 14 },
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
                     name: "disc", bind: "point", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: 6, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.02, 0.08], drag: 0.92,
-                    lifetime: [10, 18], size: [0.14, 0.04],
+                    lifetime: [8, 12], size: [0.14, 0.04],
                     color: 0x9AA4AE, alpha: [0.4, 0], light: "world", maxParticles: 18
                 },
                 {
                     name: "chips", bind: "point", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "shards", fallback: 10 }, interval: 12, repeats: 3 },
+                    burst: { count: { data: "shards", fallback: 10 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.26 }, direction: "outward", speed: [0.03, 0.14], spread: 30, gravity: 0.08, drag: 0.9,
-                    lifetime: [10, 18], size: [0.08, 0.02],
+                    lifetime: [8, 14], size: [0.08, 0.02],
                     color: 0xC9D4DE, alpha: [0.5, 0], light: "full", bloom: 0.16, maxParticles: 30
                 }
             ]

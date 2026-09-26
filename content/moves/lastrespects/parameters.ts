@@ -1,80 +1,12 @@
-/**
- * 扫墓 / lastrespects —— 参数、伤害段与倒下伙伴的记录。
- *
- * 原生事实：Ghost／物理／基础威力 50／命中 100／PP 10／无接触，威力 = 50 + 50 × 我方已倒下数
- *   （`side.totalFainted`）（Cobblemon 1.8，2 位学习者）。
- *
- * 翻译：即时战斗里没有「队伍里倒了几只」，本实现把它翻成**本场累计的倒下伙伴**——同一阵营（同队伍或同主人）
- *   的战斗者倒下的位置与身份被记下，之后施法者每放一次扫墓，就有一位伙伴的悔恨从地里升起、汇进这一击：
- *   **倒下的伙伴越多，随行的鬼影越多、这一扫越重**。它和愤怒之拳分开：愤怒之拳记的是**自己挨了几下**、
- *   打出一串拳；扫墓记的是**伙伴倒了几位**、是一记替他们送行的重扫。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   fallen     倒下伙伴数：本场累计的、与施法者同阵营的倒下记录——本招的核心机制值。
- *   mourn      扫墓威力：基础 48 + 倒下伙伴 ×50（封顶 +250）+ 物攻偏移 + 等级偏移；随行 ×0.85 / 送行 ×1.1；夹 46..320。
- *   ghosts     随行鬼影：基础 2 + 倒下伙伴 ×3；夹 2..20；决定起手与行进里升起几道鬼影。
- *   reach      送葬距离：基础 3.4 格 + 速度偏移 + 等级偏移 + 倒下伙伴偏移；夹 3..6.5；也是实际射程来源。
- *   speed      行进速度：基础 0.7 格/刻 + 速度偏移；夹 0.5..1.3。
- *   width      扫过宽度：基础 0.5 格 + 体型宽度偏移 + 倒下伙伴偏移；随行 ×1.5；夹 0.4..1.3。
- *   push       顶开距离：基础 0.35 格 + 物攻偏移 + 倒下伙伴偏移；夹 0.2..0.9。
- *   tempo／settle／recharge：速度定节奏，倒下伙伴越多起手越沉、冷却越久。
- *
- * 配置 `trail`（随行）双向取舍：开启＝鬼影沿路随行，这一扫变成沿线走廊、打到路上所有人（每人 ×0.85）、
- *   扫过更宽；关闭（送行）＝鬼影聚到一点，只打一个目标、单发 ×1.1、顶得更开。沿路清 vs 单点重，各有局面。
- *
- * 伤害段 `mourn` 与参数同名：这一扫随精灵数据变化的那部分；对手防御、相性与暴击在命中时统一结算。
- * 属性与分类沿用原生 Ghost／物理，无接触标记。
- */
+/** 本场真实友方死亡增重；自由瞄准送出一列独立行进的鬼影。 */
 namespace PokemonSkills {
     export const lastrespectsId = "lastrespects";
     export const lastrespectsScene = "world_combat:move_lastrespects";
     export const lastrespectsStrikeText = "world_combat.move.lastrespects.text.strike";
     export const lastrespectsMarchText = "world_combat.move.lastrespects.text.march";
     export const lastrespectsMissText = "world_combat.move.lastrespects.text.miss";
-    /** 倒下记录的保留上限与记忆窗口；同一阵营的记录按时间从新到旧累计。 */
-    export const lastrespectsLimit = 32;
-    export const lastrespectsMemory = 12000;
-
-    interface LastRespectsFallen { tick: number; team: string; owner: string; species: string; }
-    var lastrespectsFallen: LastRespectsFallen[] = [];
-    // 致命一击结算时目标可能已不再 valid，所以阵营身份在 still-alive 的 incoming 事件里先记下。
-    var lastrespectsIdentity: { [ref: string]: { team: string; owner: string; species: string } } = Object.create(null);
-
-    function lastrespectsTeam(world: CombatWorld, actor: CombatActor): string {
-        const entity = world.nativeEntity(actor);
-        if (entity === null || typeof entity.getTeam !== "function") return "";
-        const team = entity.getTeam();
-        return team === null || team === undefined ? "" : String(team.getName());
-    }
-
-    function lastrespectsOwner(actor: CombatActor): string {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        try { return String(CobblemonCombat.pokemon(actor).owner()); } catch (error) { return ""; }
-    }
-
-    function lastrespectsSpecies(actor: CombatActor): string {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        try { return String(CobblemonCombat.pokemon(actor).species()); } catch (error) { return ""; }
-    }
-
-    /** 本场累计的、与施法者同阵营（同队伍或同主人）的倒下伙伴数；没有阵营身份的战斗者不计。 */
     export function lastrespectsCount(world: CombatWorld, actor: CombatActor): number {
-        const team = lastrespectsTeam(world, actor), owner = lastrespectsOwner(actor);
-        if (team === "" && owner === "") return 0;
-        const now = world.tick();
-        let count = 0;
-        for (let index = 0; index < lastrespectsFallen.length; index++) {
-            const entry = lastrespectsFallen[index];
-            if (now - entry.tick > lastrespectsMemory) continue;
-            if ((team !== "" && entry.team === team) || (owner !== "" && entry.owner === owner)) count++;
-        }
-        return count;
-    }
-
-    function lastrespectsRecord(tick: number, identity: { team: string; owner: string; species: string }): void {
-        if (identity.team === "" && identity.owner === "") return;
-        lastrespectsFallen.push({ tick: tick, team: identity.team, owner: identity.owner, species: identity.species });
-        if (lastrespectsFallen.length > lastrespectsLimit) lastrespectsFallen.shift();
+        return CombatEncounters.fallen(world, actor);
     }
 
     defineFacts(lastrespectsId, function (context: FactContext): Formula.Facts {
@@ -85,30 +17,9 @@ namespace PokemonSkills {
         } };
     });
 
-    // 倒下记录：任何战斗者被打死（after ≤ 0）时记下阵营与身份，供同阵营的施法者送行。
-    WorldCombat.on("world_combat:move_lastrespects/incoming", "world_combat:damage_incoming", "", function (event) {
-        const victim = event.target();
-        if (victim === null) return;
-        const world = event.world();
-        if (!world.valid(victim)) return;
-        const ref = String(victim.ref());
-        lastrespectsIdentity[ref] = { team: lastrespectsTeam(world, victim), owner: lastrespectsOwner(victim), species: lastrespectsSpecies(victim) };
-        if (Object.keys(lastrespectsIdentity).length > 64) lastrespectsIdentity = Object.create(null);
-    });
-    WorldCombat.on("world_combat:move_lastrespects/fallen", "world_combat:damage_applied", "", function (event) {
-        const victim = event.target();
-        if (victim === null) return;
-        const world = event.world(), data = JSON.parse(String(event.data()));
-        if (!(data.actual > 0) || !(data.after <= 0)) return;
-        const ref = String(victim.ref());
-        const cached = lastrespectsIdentity[ref];
-        const identity = cached || { team: world.valid(victim) ? lastrespectsTeam(world, victim) : "", owner: lastrespectsOwner(victim), species: lastrespectsSpecies(victim) };
-        lastrespectsRecord(world.tick(), identity);
-    });
-
     actionParameters.define(lastrespectsId, {
         fallen: formula(F.var("lastrespects.fallen", text("worldcombat.skill.lastrespects.value.fallen")), "倒下伙伴数", {
-            unit: "位", description: "当前仍在记忆窗口内的同阵营倒下记录；没有现场时显示需要现场确认。"
+            unit: "位", description: "本场共同交战中已确认的友方死亡次数；同次死亡只记一次，复活后再倒下可再记。真正脱战后清零。"
         }),
         /** 扫墓威力：48 + 倒下伙伴 ×50（封顶 +250）+ 物攻偏移[−8,24] + 等级偏移[−2,6]；随行 ×0.85 / 送行 ×1.1；夹 46..320。 */
         mourn: formula(
@@ -137,7 +48,7 @@ namespace PokemonSkills {
                 .clamp(3, 6.5).round(2),
             "送葬距离", {
                 unit: "格",
-                description: "这一扫能从多远开始迈步到命中，也是本招的实际射程来源；腿快、等级高、送行的人多，都让它走得远一点。"
+                description: "鬼影队列能行进的距离；施放者送出后即可继续行动。"
             }),
         /** 行进速度：0.7 格/刻 + 速度偏移[−0.15,0.4]；夹 0.5..1.3。 */
         speed: formula(

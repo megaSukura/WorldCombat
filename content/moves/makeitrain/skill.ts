@@ -1,18 +1,19 @@
 /**
  * 淘金潮 / makeitrain —— 注册与动作。
  *
- * 核心念头：把整座金库抖上头顶，金币像暴雨一样从上方一圈圈砸落，扫过身周所有敌人；
- *   金子散尽后自己的特攻被掏空（Sp. Atk −1），地上铺满真能捡的 Relic Coin。它是金币二式里唯一的大招，
- *   也是唯一有明确自我代价的一发：倾得越空，自己越虚。
+ * 核心念头：把整座金库抖上头顶，一束束**真金币**向身周散开、沿真实弧线抛上去再落下来；
+ *   哪一束真的碰到敌人，那一下才结算特殊钢伤害，每名敌人整次最多挨一次；散尽后自己的特攻被掏空，
+ *   少数真硬币留在金币实际落地的终点。屋檐、低顶与方块会真的挡住金雨，站进遮挡下就能躲。
  *
  * 三幕：
  *   起（windup，提交前）：头顶聚起翻涌的金光与币影（`action.present` 预告）。
- *   雨（downpour → hit）：提交后金币从上方分 `waves` 圈砸落，每圈扫过圈内尚未命中的非友方各结算一次
- *     特殊钢伤害；放开的同时立刻支付自损（`NativeEffects.boost(spa, -selfDrop)`）。
- *   留（settle）：雨停后把 `scatter` 枚真币撒在覆盖圈里，谁都能捡。
+ *   雨（toss → beam → hit/clink/drop）：提交后按 `interval` 把 `beams` 束金币从自身向范围内散点抛出，
+ *     每束是一枚有真实碰撞与重力的投掷物，上升与下落都走真实方块路径；碰到敌人按 `coin` 结算一次，
+ *     碰到方块就在接触面叮响（顶面才算落地，屋顶/墙面只响不落钱），飞到尽头自然消失、不凭空掉在准点。
+ *   留（drop）：每束按总掉落预算在**实际终点**散出少量真币，谁都能捡。
  *
- * 与同族分开：聚宝功是单体、快出手的一手钱；淘金潮是自身一圈、高威力、有自我代价的大雨。
- * 配置 `hoard`（倾库式）由公式改威力／范围／数量／自损、由 resolve 改时序。
+ * 与同族分开：聚宝功是单体、快出手的一手钱；淘金潮是自身一圈、高威力、有自我代价的一大场真雨。
+ * 配置 `hoard`（倾库式）由公式改威力／范围／束数／自损、由 resolve 改时序。
  */
 namespace PokemonSkills {
     const makeitrainScene = "world_combat:move_makeitrain";
@@ -20,24 +21,17 @@ namespace PokemonSkills {
     const makeitrainMissText = "world_combat.move.makeitrain.text.miss";
     const makeitrainCostText = "world_combat.move.makeitrain.text.cost";
 
-    /** 雨停后把真币撒在覆盖圈里：优先 Cobblemon 遗迹硬币，缺失时退回金粒；限制枚数避免堆太多实体。 */
-    function makeitrainScatter(current: CombatAction, centre: CombatPoint, radius: number, count: number): void {
-        const scope = current.world();
-        const item = scope.item("cobblemon:relic_coin") !== null ? "cobblemon:relic_coin" : "minecraft:gold_nugget";
-        const limit = Math.max(0, Math.min(12, Math.round(count)));
-        for (let index = 0; index < limit; index++) {
-            const angle = scope.random() * Math.PI * 2, spread = Math.sqrt(scope.random()) * Math.max(0.5, radius * 0.9);
-            const at = centre.plus(WorldCombat.point(Math.cos(angle) * spread, 0.35 + scope.random() * 0.4, Math.sin(angle) * spread));
-            try { scope.dropItem(at, item, 1, JSON.stringify({ pickupDelay: 16 })); } catch (error) { /* 掉落被拒绝时只保留机制与粒子 */ }
-        }
+    function makeitrainItem(world: CombatWorld): string {
+        return world.item("cobblemon:relic_coin") !== null ? "cobblemon:relic_coin" : "minecraft:gold_nugget";
     }
 
     define({
         id: "makeitrain",
         cooldownParameter: "wait",
+        maximumTicks: 400,
         name: "Make It Rain",
-        description: "把整座金库抖上头顶，金币如暴雨般从上方一圈圈砸落，扫过身周所有敌人；金子散尽后自己的特攻下降，地上留下一片能捡的硬币。倾库式更大更重、自损更深、回气更久。",
-        uses: ["被围住时一次倾泻整片大范围", "用最高的一发打在扎堆的敌人身上", "在场上撒下大量可回收的真币"],
+        description: "把整座金库抖上头顶，一束束真金币向身周抛起再沿真实弧线落下；真的落到敌人身上的那一下才结算特殊伤害，每名敌人整次最多挨一次，屋檐与低顶会挡住金雨。散尽后自己的特攻下降，少数真硬币留在金币实际落地的终点。倾库式更多更重、自损更深、回气更久。",
+        uses: ["被围住时一次倾泻整片大范围", "在开阔近距对扎堆的敌人抛一场真雨", "用真实弹道与屋顶判断落点，站进遮挡就能躲"],
         kind: "self",
         range: 5.0,
         maxRange: 8.5,
@@ -74,63 +68,127 @@ namespace PokemonSkills {
             const centre = body === null ? action.origin() : body.position();
             const radius = Math.max(3.5, p("makeitrain", "radius", action));
             const power = p("makeitrain", "coin", action);
-            const wealth = Math.max(30, Math.round(p("makeitrain", "wealth", action)));
-            const waves = Math.max(3, Math.round(p("makeitrain", "waves", action)));
-            const interval = Math.max(3, Math.round(p("makeitrain", "interval", action)));
+            const beams = Math.max(12, Math.min(24, Math.round(p("makeitrain", "beams", action))));
+            const interval = Math.max(2, Math.round(p("makeitrain", "interval", action)));
             const scatter = Math.max(3, Math.round(p("makeitrain", "scatter", action)));
             const selfDrop = Math.max(1, Math.min(2, Math.round(p("makeitrain", "selfDrop", action))));
             const fall = p("makeitrain", "fall", action);
-            const density = Math.max(10, Math.round(8 + wealth * 0.28));
             const scale = Math.max(0.6, Math.min(2.2, radius / 5.0));
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
+            const gravity = Math.max(0.012, fall * 0.05);
+            const apex = Math.max(1.5, radius * (1.0 - fall * 0.5));
+            const coinRadius = 0.34;
+            const coinItem = makeitrainItem(world);
+            const perBeam = scatter / beams;
             const actorRef = String(actor.ref());
             const hitSet: { [ref: string]: boolean } = {};
-            let step = 0, total = 0, settled = false;
+            const scenes = WorldFeedback.actionScenes(makeitrainScene);
+            let fired = 0, active = 0, hitCount = 0, dropped = 0, budget = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-
-            function settle(current: CombatAction): void {
+            function finish(current: CombatAction): void {
+                if (settled || fired < beams || active > 0) return;
+                settled = true;
                 const scope = current.world();
-                makeitrainScatter(current, centre, radius, scatter);
-                WorldFeedback.emit(scope, makeitrainScene, 1, centre,
-                    { moment: "settle", radius: radius, scatter: scatter, density: density, scale: scale }, 28);
-                if (total > 0)
-                    WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.4, 0)), makeitrainHitText, [total], 30);
+                if (hitCount > 0)
+                    WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.4, 0)), makeitrainHitText, [hitCount], 30);
                 else
                     WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.4, 0)), makeitrainMissText, [], 24);
                 sound(current, "cobblemon:block.relic_coin_sack.hit");
-                finish(current);
+                scenes.finish(current, done);
             }
 
-            function advance(current: CombatAction): void {
+            /** 自然结束兜底：弹道被卸载等异常丢失完成回调时，不把整招卡死。 */
+            function forceFinish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scenes.finish(current, done);
+            }
+
+            /** 分束分配固定掉落预算：总预算不随束数增加，只在实际终点按累积份额落币。 */
+            function dropShare(scope: CombatWorld, at: CombatPoint): void {
+                budget += perBeam;
+                const count = Math.floor(budget);
+                if (count <= 0) return;
+                budget -= count;
+                for (let index = 0; index < count; index++)
+                    try { scope.dropItem(at, coinItem, 1, JSON.stringify({ pickupDelay: 16 })); } catch (error) { /* 掉落被拒绝时只保留机制与表现 */ }
+                dropped += count;
+                WorldFeedback.emit(scope, makeitrainScene, 1, at,
+                    { moment: "drop", count: count, total: Math.round(scatter), scale: scale }, 20);
+            }
+
+            function release(current: CombatAction): void { active--; finish(current); }
+
+            /** 抛出一束真金币：散点定水平距离与方向，弧顶与重力来自半径与体重；命中由真实撞击结算。 */
+            function fire(current: CombatAction): void {
+                if (settled) return;
+                if (fired >= beams) { finish(current); return; }
                 const scope = current.world();
-                const outer = radius * (step + 1) / waves;
-                const inner = Math.max(0, radius * step / waves - 0.4);
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, inner, outer, { below: 3, above: 3 }),
-                    function (enemy, facts) {
-                        const ref = String(enemy.ref());
-                        if (ref === actorRef || hitSet[ref]) return;
-                        hitSet[ref] = true;
-                        if (!hurt(current, enemy, "makeitrain", power, { damage: damageSpec("makeitrain", "coin") })) return;
-                        total++;
-                        WorldFeedback.emit(scope, makeitrainScene, 1, facts.position(),
-                            { moment: "hit", target: ref, coin: power, scale: scale, intensity: intensity }, 22);
-                    });
-                WorldFeedback.keep(scope, "makeitrain:rain:" + actorRef, makeitrainScene, 1, centre,
-                    { moment: "downpour", radius: outer, full: radius, step: step, waves: waves,
-                        density: density, fall: fall, scale: scale, intensity: intensity }, Math.max(8, interval + 8));
-                step++;
-                if (step >= waves) { settle(current); return; }
-                current.after(interval, function (next: CombatAction) { advance(next); });
+                const self = scope.observe(actor);
+                if (self === null) { finish(current); return; }
+                const origin = self.position().plus(WorldCombat.point(0, self.height() * 0.25, 0));
+                const index = fired + 1;
+                fired++;
+                const angle = scope.random() * Math.PI * 2;
+                const distance = radius * (0.22 + 0.78 * Math.sqrt(scope.random()));
+                const flightTime = 2 * Math.sqrt(2 * gravity * apex) / gravity;
+                const horizontal = distance / Math.max(6, flightTime);
+                const velocity = WorldCombat.point(Math.cos(angle) * horizontal, Math.sqrt(2 * gravity * apex), Math.sin(angle) * horizontal);
+                const range = distance + apex * 2.5 + 8;
+                const lifetime = Math.max(50, Math.round(flightTime) + 40);
+                const key = "beam:" + index;
+                let dropAt: CombatPoint | null = null;
+                active++;
+                const flight = current.projectile(origin, velocity, gravity, coinRadius, range, lifetime,
+                    function (inner: CombatAction, hit: CombatImpact): void {
+                        const stage = inner.world();
+                        const at = hit.position();
+                        const block = hit.blockPosition();
+                        scenes.stop(inner, key);
+                        if (hit.hitEntity()) {
+                            const victim = hit.target();
+                            if (victim !== null && stage.valid(victim) && !stage.friendly(victim)) {
+                                const ref = String(victim.ref());
+                                if (!hitSet[ref]) {
+                                    hitSet[ref] = true;
+                                    if (impact(inner, hit, "makeitrain", power, { damage: damageSpec("makeitrain", "coin") })) {
+                                        hitCount++;
+                                        WorldFeedback.emit(stage, makeitrainScene, 1, at,
+                                            { moment: "hit", target: ref, coin: power, scale: scale, intensity: intensity }, 22);
+                                    }
+                                } else {
+                                    WorldFeedback.emit(stage, makeitrainScene, 1, at,
+                                        { moment: "clink", target: ref, coin: power, spent: 1 }, 16);
+                                }
+                                dropAt = at;
+                            }
+                        } else if (block !== null) {
+                            if (hit.blockFace() === "up") dropAt = WorldCombat.point(block.x() + 0.5, block.y() + 1.05, block.z() + 0.5);
+                            WorldFeedback.emit(stage, makeitrainScene, 1, at,
+                                { moment: "clink", scale: scale, face: hit.blockFace() }, 14);
+                            sound(inner, "cobblemon:block.relic_coin_sack.step");
+                        } else {
+                            dropAt = at;
+                        }
+                    },
+                    function (inner: CombatAction): void {
+                        if (dropAt !== null) dropShare(inner.world(), dropAt);
+                        release(inner);
+                    },
+                    JSON.stringify({ item: coinItem, glow: true, spin: true, scale: Math.max(0.6, Math.min(1.4, scale)) }));
+                scenes.show(current, key, origin,
+                    { moment: "beam", projectile: flight, index: index, beams: beams, coin: power, scale: scale, intensity: intensity });
+                WorldFeedback.emit(scope, makeitrainScene, 1, origin,
+                    { moment: "toss", index: index, beams: beams, intensity: intensity }, 16);
+                if (fired < beams) current.after(interval, function (next: CombatAction) { fire(next); });
+                else finish(current);
             }
 
             sound(action, "minecraft:block.beacon.activate");
             NativeEffects.boost(world, actor, "spa", -selfDrop);
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.6, 0)), makeitrainCostText, [selfDrop], 32);
-            WorldFeedback.emit(world, makeitrainScene, 1, centre,
-                { moment: "downpour", radius: 0.6, full: radius, step: 0, waves: waves,
-                    density: density, fall: fall, scale: scale, intensity: intensity }, 20);
-            advance(action);
+            fire(action);
+            action.after(Math.round(beams * interval) + 140, function (next: CombatAction) { forceFinish(next); });
         }
     });
 }

@@ -62,6 +62,8 @@ function run(id, { wall = Infinity, contact = 1.5 } = {}) {
       else victim = victim.plus(delta);
       return delta.length();
     },
+    hitDisplace(who, delta) { assert.notEqual(who,actor,'a received shove targets the actual victim');return this.displace(who,delta); },
+    hitImpulse(who, delta) { assert.notEqual(who,actor,'a received impulse targets the actual victim');this.motion(who,delta);return true; },
   };
   const action = {
     actor: () => actor, world: () => world, origin: () => at, targetPosition: () => victim,

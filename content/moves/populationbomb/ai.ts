@@ -2,20 +2,30 @@
  * 鼠数儿 / populationbomb 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 9）格内；更远交给共享接近逻辑。
+ *   伙伴从自己身边直线扑出，所以施术者→目标这条线必须通视；狭窄障碍路（隔墙、拐角）不叫长队，
+ *   直接让位给别的招。
  * 为什么对残血出手：这是一串**不确定长度的小伤害**——`ai.finishLow`（默认开）下，残血目标的 priority
  *   更高，用这一串去收尾；满血目标只当普通中距离连段。
- * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。
+ * 对谁出手：静止或宽身体目标更不容易被一串直线扑击错过，排得更前；`accepts` 只筛阵营、存活与可见。
+ * 群体目标仍只集中选一个（候选排序由共享逻辑逐个打分，不按人数加长）。
  * 放完之后：伙伴一串扑完自己收场，交回共享交战计划；带着冷却时不会重复叫。
  */
 namespace PokemonSkills {
+    /** 施术者到目标之间是否通视：直线扑击被挡就不叫长队。 */
+    function populationbombCorridor(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+    }
+
     CompanionBehavior.registerUse("populationbomb", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 9);
+            const self = CompanionBehavior.source(context);
+            if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return false;
+            return populationbombCorridor(context, self, target);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
@@ -24,7 +34,14 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
+            if (!populationbombCorridor(context, self, target)) return 0;
             let score = 22;
+            const velocity = CompanionBehavior.velocity(context, target);
+            const moving = velocity !== null && velocity.length === 3
+                && (velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.01;
+            // 静止或宽身体目标更容易被一串直线扑击连续命中。
+            if (!moving) score += 6;
+            if ((target.width || 0.9) >= 1.1) score += 4;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", true) && CompanionBehavior.ratio(target) < 0.4) score += 12;
             return score;
         }

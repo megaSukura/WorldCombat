@@ -1,8 +1,9 @@
 /**
  * 晨光 / Morning Sun —— 可执行设计说明。
  *
- * 一句话：白天晴空下把日光拽到身上，接住时回一大口并获得一段加速；AI 在生命低于 ai.healBelow（默认 0.7）、
- *   且 ai.waitForSky（默认开）下日光够强（context.facts.sunlight ≥ 0.8）时才动用。所以场面要白天晴空、并把施术者压到阈值以下。
+ * 一句话：白天晴空（或共享语义烈日）下把日光拽到身上，接住时回一大口并获得一段加速；AI 在生命低于
+ *   ai.healBelow（默认 0.7）、且 ai.waitForSky（默认开）下晨光可及（共用 morningsunDawnAt 真事实）时才动用。
+ *   所以场面要白天晴空、并把施术者压到阈值以下。
  *
  * 场面：晴天白天、开阔平地。只会晨光的太阳伊布（espeon，会学这招；技能表只给这一招）站在一侧；附近没有敌人。
  *   施术者在开局被一次性压到自身最大生命约 55%（单次 /damage，避免持续补刀把回复掩盖掉）。
@@ -35,7 +36,7 @@ Smoke.scenario("morningsun", function (stage) {
         stage.after(20, function () {
             stage.expect(caster.health() > woundedAt + 5, "the morning light was restored as health above the wound floor");
             stage.expect(stage.attribute(caster, "minecraft:generic.movement_speed") > speedBefore, "the clear-day cast granted the morning vigour speed boost");
-            stage.note("晨光可及（白天 × 可见天空 × 无雨）是二值读数：晴天天亮为 1，回复约最大生命的 2/3 并施加 minecraft:speed；夜里与阴雨为 0，只回约 1/4、也没有加速。回复比例随特攻增长（太阳伊布特攻偏高），加速时长随速度增长（60-180 刻）。这里在施放后 20 刻读数，加速仍在窗口内。", {
+            stage.note("晨光可及由执行、AI 与说明共用的 morningsunDawnAt 判定：白天 × 可见天空 × 无雨，或共享语义的烈日，都是 1；夜里与阴雨为 0，只回约 1/4、也没有加速。准备期不站定，可正常移动。回复比例随特攻增长（太阳伊布特攻偏高），加速时长随速度增长（60-180 刻）。这里在施放后 20 刻读数，加速仍在窗口内。", {
                 casterCasts: stage.casts("morningsun", caster),
                 speedBefore: Math.round(speedBefore * 1000) / 1000,
                 speedNow: Math.round(stage.attribute(caster, "minecraft:generic.movement_speed") * 1000) / 1000,

@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.crosschop.summary": "双臂交叉举过头顶，两道劈击从相反斜上方先后落向同一个点：第一劈把对手的架势撞开，第二劈顺着交叉点切下去，破势式下第二劈切得更深；两劈间隔很短，对手在这半步里挪开就只剩第一劈。双劈式两劈等重、出手更快，但没有破势加成。",
+  "worldcombat.skill.crosschop.summary": "双臂交叉举过头顶，两道劈击从相反斜上方先后落向面前同一个锁定交叉点：第一劈沿真实武器段把对手的架势撞开，第二劈顺着交叉点切下去；第二劈只对第一劈已劈中的同一目标切得更深，对手在很短的间隔里侧移半步、或第二刀落到旁人身上，都只剩普通一劈。撞墙停在墙上，不隔墙伤人。双劈式两劈等重、出手更快，但没有破势加成。",
   "worldcombat.skill.crosschop.description.0": "每一劈对命中目标造成 %1$s 的接触伤害，两劈先后结算。",
-  "worldcombat.skill.crosschop.description.1": "第一劈得手后，第二劈在同一目标身上额外增加 %1$s 的伤害；两劈间隔 %2$s 刻，第二劈落下时目标仍在出手距离内才会命中。",
+  "worldcombat.skill.crosschop.description.1": "第一劈得手后，第二劈只对第一劈已劈中的同一目标额外增加 %1$s 的伤害；两劈间隔 %2$s 刻，这段时间里目标侧移离开锁定的交叉点，或第二刀落到旁人身上，就没有这项加成。",
   "worldcombat.skill.crosschop.description.2": "出手距离 %1$s 格。",
   "worldcombat.skill.crosschop.stance.guard": "破势式：第一劈撞开架势，第二劈的破势加成 ×1.35；代价是射程略短、两劈间隔与起手更久、冷却 +6 刻。",
   "worldcombat.skill.crosschop.stance.double": "双劈式：两劈等重、出手距离 ×1.08、起手更快；代价是没有破势加成。",

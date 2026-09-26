@@ -1,17 +1,21 @@
 /**
  * 瞬间移动 / teleport 的客户端表现。
  *
- * 一句话：施法者脚边的空间先裂开一圈冷蓝漩涡 → 原地炸成一把蓝白光点、人消失 → 落点炸开一圈扩散的环与碎点、人出现。
- * 色相家族：空间蓝 0x8AB6FF 画主线，近白 0xE8F3FF 只给「进出」那两下，深蓝 0x2E3E6B 作余韵。
- * 起击收：起 fold 10t ／ 去 depart 22t ／ 来 arrive 24t（起落共用一次动作）。
- * 范围：本招是一条施法者→落点的线；depart 与 arrive 两处都画在地面/身体上，玩家一眼看出「从哪消失、在哪出现」。
- * 运动：depart 的碎点从身体向外炸开、原地收束；arrive 的环贴地外扩、碎点向外落下；两处都不移动身体本身。
- * 数：depart／arrive 的碎点数量直接读本招算出的 `motes`（速度＋特攻派生），arrive 的亮度读 `intensity`
+ * 一句话：施法者脚边的空间先裂开一圈冷蓝漩涡，手动选定的落点上同时亮起一座竖向的「小门」预告（站不住时只亮暗号）
+ *   → 原地炸成一把蓝白光点、人消失 → 落点炸开一圈扩散的环与碎点、人出现。
+ * 色相家族：空间蓝 0x8AB6FF 画主线，近白 0xE8F3FF 只给「进出」那两下，深蓝 0x2E3E6B 作余韵，被拒落点用灰紫 0x6B5E86。
+ * 起击收：起 fold 10t ／ 落点门 gate 随准备 ／ 去 depart 22t ／ 来 arrive 24t ／ 失败 denied 18t（起落共用一次动作）。
+ * 范围：本招是一条施法者→落点的线；gate 画在**手动选定的真实三维落点**上，不画地面上的假水平终点。
+ * 运动：depart 的碎点从身体向外炸开、原地收束；arrive 的环贴地外扩、碎点向外落下；gate 的碎点向门心收拢。
+ * 数：depart／arrive／gate 的碎点数量直接读本招算出的 `motes`（速度＋特攻派生），arrive 的亮度读 `intensity`
  *   （被甩掉目标的敌人数派生），野生逃走的 `wild` 决定是否多一层白闪。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  * fold   起始  psyring1       贴地旋转收拢 0.9-0.2 10-16 0.6→0 ≤40
  * fold   细节  glowingsparkle 向内收       0.07-0.01 8-14 0.7→0 ≤40
+ * gate   落点  psyring1       竖立收拢     0.55-0.5 8-14 0.7→0 ≤24
+ * gate   落点  glowingsparkle 向门心收     0.06-0.01 8-14 0.7→0 ≤30
+ * denied 落点  tinydust       贴点散开     0.10-0.03 8-14 0.5→0 ≤16
  * depart 强调  energyorb      球面向外     0.30-0.05 8-14 1→0   ≤54
  * depart 细节  glowingsparkle 向外散       0.08-0.02 8-14 0.8→0 ≤60
  * arrive 强调  mediumring     贴地外扩     1.6-0.4 18-26 0.7→0 ≤40
@@ -28,7 +32,7 @@ const TeleportDefinition: ParticleDefinition = {
                 {
                     name: "vortex", bind: "source", offset: [0, 0.1, 0], height: 0, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    rate: 6, shape: { kind: "ring", radius: 0.7 },
+                    rate: { data: "pulse", fallback: 12 }, shape: { kind: "ring", radius: 0.7 },
                     direction: "inward", speed: [0.05, 0.16], spin: 12,
                     lifetime: [10, 16], size: [0.9, 0.2], sizeMode: "index",
                     color: 0x8AB6FF, alpha: [0.6, 0], light: "full", maxParticles: 40
@@ -40,6 +44,42 @@ const TeleportDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.05, 0.18],
                     lifetime: [8, 14], size: [0.07, 0.01],
                     color: 0xE8F3FF, alpha: [0.7, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        gate: {
+            duration: 14,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "door", bind: "point", fit: "none", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    rate: 8, shape: { kind: "ring", radius: 0.55, rotation: [90, 0, 0] },
+                    direction: "inward", speed: [0.02, 0.08], spin: 10,
+                    lifetime: [8, 14], size: [0.55, 0.5], sizeMode: "index",
+                    color: 0x8AB6FF, alpha: [0.7, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "call", bind: "point", fit: "none", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 16, shape: { kind: "sphere", radius: 0.35 },
+                    direction: "inward", speed: [0.03, 0.12],
+                    lifetime: [8, 14], size: [0.06, 0.01],
+                    color: 0xE8F3FF, alpha: [0.7, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        denied: {
+            duration: 18,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "refuse", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 10, repeats: 2, interval: 6 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.08], drag: 0.9,
+                    lifetime: [8, 14], size: [0.10, 0.03],
+                    color: 0x6B5E86, alpha: [0.5, 0], light: "world", maxParticles: 16
                 }
             ]
         },
@@ -90,6 +130,14 @@ const TeleportDefinition: ParticleDefinition = {
                     rate: 20, shape: { kind: "sphere", radius: 0.35 }, direction: "up", speed: [0.01, 0.06], drag: 0.9,
                     lifetime: [14, 24], size: [0.10, 0.03],
                     color: 0x2E3E6B, alpha: [0.5, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "wildopen", bind: "point", fit: "none", offset: [0, 0.6, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/energyorb",
+                    burst: { count: { data: "flash", fallback: 0 } },
+                    shape: { kind: "sphere", radius: 0.45 }, direction: "outward", speed: [0.05, 0.25], drag: 0.9,
+                    lifetime: [10, 16], size: [0.34, 0.06], sizeMode: "index",
+                    color: 0xE8F3FF, alpha: [1, 0], light: "full", bloom: 0.7, maxParticles: 24
                 }
             ]
         }

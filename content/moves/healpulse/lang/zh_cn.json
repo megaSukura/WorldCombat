@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.healpulse.summary": "从自己身上推出一圈治愈波动，沿瞄准线赶向选定的友方；抵达时回复其最大生命的一半左右。飞行时间取决于距离与波动速度，距离越远到得越晚，等待期间伙伴被打倒就落空。",
+  "worldcombat.skill.healpulse.summary": "从自己身上推出一圈治愈波动，沿瞄准线赶向选定的友方；抵达时回复其最大生命的一半左右。飞行时间取决于距离与波动速度，距离越远到得越晚；波前会追向伙伴当前的位置，但伙伴被拉出射程或抢在抵达前倒下就落空。",
   "worldcombat.skill.healpulse.use.0": "远远地给伙伴补一口",
   "worldcombat.skill.healpulse.use.1": "在伙伴被打倒之前把生命送到",
   "worldcombat.skill.healpulse.use.2": "用飞行的波动跨过一段距离的救助",
@@ -27,5 +27,5 @@
   "world_combat.move.healpulse.text.wash": "波动抵达，回复 %1$s",
   "world_combat.move.healpulse.text.full": "生命已满",
   "world_combat.move.healpulse.text.fizzle": "波动落空",
-  "worldcombat.skill.healpulse.description.travel": "波动沿直线径直赶向伙伴，途中不会被拦下；抵达时伙伴已倒下、离场或已不是友方，这一口就落空。"
+  "worldcombat.skill.healpulse.description.travel": "波动沿施法者到伙伴的连线径直赶路，途中不会被身体拦下，波前跟着伙伴当前的位置走；抵达时伙伴已倒下、离场、已不是友方，或这段路把它拉出了施放距离，这一口就落空（PP 与冷却照付）。"
 }

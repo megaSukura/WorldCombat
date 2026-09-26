@@ -3,11 +3,11 @@
   "worldcombat.skill.skillswap.use.0": "Take the target's strong Ability for yourself",
   "worldcombat.skill.skillswap.use.1": "Hand your harmful Ability to the opponent",
   "worldcombat.skill.skillswap.use.2": "Break a foe that leans on its Ability",
-  "worldcombat.skill.skillswap.description.0": "Select an opponent within %1$s blocks; the exchange lasts %2$s. Pokémon exchange their current eligible Abilities. Neither participant may already be in an exchange.",
+  "worldcombat.skill.skillswap.description.0": "Choose an ally or enemy within %1$s blocks for a %2$s exchange. Pokémon trade their current swappable Abilities; either member of an existing pair cannot enter another exchange.",
   "worldcombat.skill.skillswap.description.2": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.skillswap.hold.on": "Deep exchange: duration x1.9 and cooldown x1.3, for using one good Ability across a stretch of the fight, but you cannot swap back meanwhile.",
   "worldcombat.skill.skillswap.hold.off": "Quick exchange: duration x0.7 and cooldown x0.9, cheap to cast and quick to undo, for trying out the opponent's Ability first.",
-  "worldcombat.skill.skillswap.timing": "Cast on one opponent; after a %2$s s wind-up it costs %4$s PP, then %3$s s recovery, %5$s s cooldown from commit, current range %1$s blocks.",
+  "worldcombat.skill.skillswap.timing": "Cast on the selected entity. Prepare for %2$s s, spend %4$s PP, recover for %3$s s and start a %5$s s cooldown. Current range: %1$s blocks.",
   "worldcombat.skill.skillswap.growth.0": "At level %1$s the exchange lasts %2$s and the cooldown from commit drops to %3$s.",
   "worldcombat.skill.skillswap.growth.1": "At level %1$s the exchange lasts %2$s and the cooldown drops again to %3$s.",
   "worldcombat.skill.skillswap.value.reach": "Exchange reach",
@@ -28,5 +28,6 @@
   "world_combat.move.skillswap.text.gain": "Ability: %1$s",
   "world_combat.move.skillswap.text.same": "Same Ability, nothing to swap",
   "world_combat.move.skillswap.text.returned": "Exchange ended",
-  "worldcombat.skill.skillswap.world": "Against a non-Pokémon, temporarily exchange both participants’ current native attack damage, movement speed, armour, armour toughness and knockback resistance for %1$s. Cleansing either side restores both. Equipment stays with its owner, and later attribute changes still apply."
+  "worldcombat.skill.skillswap.world": "Against a non-Pokémon, exchange only the attack, movement, armour, toughness and knockback attributes both bodies actually have, for %1$s. When either window ends, remove this pair's contributions. Equipment and later unrelated modifiers remain with their owners.",
+  "world_combat.move.skillswap.text.attributes": "shared attack, movement and defence attributes"
 }

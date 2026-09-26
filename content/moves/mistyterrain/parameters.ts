@@ -4,8 +4,8 @@
  * 原生事实：Fairy／变化／威力 —／命中 必中／PP 10／场上场地 5 回合：地面上的宝可梦不会陷入异常状态
  *   （含混乱）；龙属性招式的伤害减半。
  * 世界化：把「5 回合的场地」翻成一片真的铺在地上的薄雾——施法者把雾压到地面，雾贴着地皮漫开；站在地上的活体
- *   被薄雾裹住：异常状态落不下来，龙属性的来招被雾削掉一半。开启净化时，雾还会把场上已经中的异常洗掉。
- *   对双方一视同仁。
+ *   被薄雾裹住：异常状态落不下来，龙属性的来招被雾削掉一半。开启净化时，雾在活体首次进入本次雾时把已经中的异常
+ *   洗掉一次，之后持续只按正常防异常拒绝新状态，退出再入不再触发。对双方一视同仁。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   gather       起手：基础 14 刻，速度每快 1 点减 0.04 刻，夹 10..22。
@@ -63,6 +63,7 @@ namespace PokemonSkills {
     describe(mistyterrainId, [
         { key: "description.0", values: ["fieldRadius", "fieldTicks"] },
         { key: "description.1", values: ["dragonFactor"] },
+        { key: "description.2", values: ["markTicks"] },
         { key: "description.4", values: ["gather", "settle"] },
         { key: "form.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.purify); } },
         { key: "form.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.purify); } },

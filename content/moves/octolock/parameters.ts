@@ -5,12 +5,13 @@
  *   `volatileStatus: "octolock"`：`onResidual` 每回合对目标降防御与特防各 1 级，`onTrapPokemon` 让目标无法逃走；
  *   术者离场或濒死时锁自动解除。原生介绍「让对手无法逃走。对手被固定后，每回合都会降低防御和特防。」
  *
- * 世界化：把「缠住不放、每回合勒紧一点」落成**一条从术者伸出去的触手**——命中即把目标缠住钉在原地，
- *   此后每过一拍（原生的一回合）都勒紧一次，防御与特防各降一级。缠是**术者维持**的：术者离得太远或倒下，
- *   触手就松开，目标脱困。所以它的用法是「贴上去缠死一个必须解决的目标」，代价是术者也被拴在这片地方。
+ * 世界化：把「缠住不放、每回合勒紧一点」落成**一条从术者伸出去的触手**——命中即把目标牵制住（移动与飞行速度减半），
+ *   此后每过一拍（原生的一回合）都勒紧一次，防御与特防各降一级。缠是**术者维持**的：术者离得太远、视线被挡或倒下，
+ *   触手就松开，目标脱困；目标也能用牛奶等原生手段解掉牵制。所以它的用法是「贴上去缠住一个必须解决的目标」，
+ *   代价是术者也被拴在这片地方。Boss 免疫牵制时，逐拍降防仍是本招的主价值。
  *
- * 与同族分开：紧咬不放是双方互锁、只咬一次；捕兽夹丢在地上施法者走开；蛸固只锁目标、施法者仍能打，
- *   但每拍把目标削得更软，且必须留在维持距离之内。
+ * 与同族分开：紧咬不放是双方互锁、只咬一次；捕兽夹丢在地上施法者走开；蛸固只牵制目标、施法者仍能打，
+ *   但每拍把目标削得更软，且必须留在维持距离与视线之内。
  *
  * 数值来源（每项读不同的个体数据，落到不同参数）：
  *   reach       伸出的距离：特攻决定够得多远；缠紧式收近 1 格。
@@ -30,6 +31,7 @@ namespace PokemonSkills {
     export const octoScene = "world_combat:move_octolock";
     export const octoBound = "world_combat:octolock_bound";
     export const octoBind = "world_combat:octolock_bind";
+    export const octoHoldKey = "octolock:hold";
     export const octoLashText = "world_combat.move.octolock.text.lash";
     export const octoSqueezeText = "world_combat.move.octolock.text.squeeze";
     export const octoReleaseText = "world_combat.move.octolock.text.release";
@@ -42,7 +44,7 @@ namespace PokemonSkills {
                 .clamp(4, 7).round(1),
             "伸出距离", {
                 unit: " 格",
-                description: "触手能伸到多远咬住目标；特攻越高够得越远，缠紧式收近 1 格。它也是本招的实际射程。"
+                description: "触手能伸到多远咬住目标；特攻越高够得越远，缠紧式收近 1 格。它也是本招的实际射程：指定敌人就用它，只给方向就沿短方向抓最近的敌人。"
             }),
         grip: formula(
             F.base(4).plus(F.body("width").times(1.2).as("身宽")).plus(F.body("height").times(0.4).as("身高"))
@@ -54,7 +56,7 @@ namespace PokemonSkills {
             }),
         bindTicks: seconds(
             F.base(220).plus(F.level().times(2).as("经验")).plus(F.stat("defence").times(0.5).as("防御")).clamp(180, 460).round(0),
-            "缠绕时长", "触手最多缠住目标多久；等级与防御越高缠得越久。术者离开维持距离或倒下会提前松开。"),
+            "缠绕时长", "触手最多缠住目标多久；等级与防御越高缠得越久。术者离开维持距离、视线被挡或倒下会提前松开，本次勒紧次数用完也会松。"),
         interval: seconds(
             F.base(60).minus(F.stat("speed").minus(60).times(0.12).as("速度"))
                 .times(F.when(F.pref("coil", text("worldcombat.skill.octolock.preference.coil")), F.const(0.75), F.const(1)))

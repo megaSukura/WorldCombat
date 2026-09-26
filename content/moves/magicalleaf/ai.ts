@@ -1,20 +1,29 @@
 /**
  * 魔法叶 / magicalleaf 的 AI 用途。
  *
- * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
+ * 什么局面下出手：考虑距离内有可见、且中间没有整面墙挡住的敌对目标就列入候选；够不到交给共享接近逻辑。
  * `ai.trackMovers`（默认开）：目标正在移动（追人或逃跑）时抬高 priority——叶会拐弯，移动的对手正合叶路；
  * 目标静止时按普通远程攻击排序。目标在射程远端也略微加权，因为叶会飞过去追。
  * 配置 envelop（合围／直取）改变叶的散开方式与单叶轻重。
  */
 namespace PokemonSkills {
+    /** 目标与自身之间是否有一条可以飞叶的空路；同一决策帧内缓存。 */
+    function magicalleafClear(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
+        return CompanionBehavior.observedFlag(context, "magicalleaf:clear:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+        });
+    }
+
     CompanionBehavior.registerUse("magicalleaf", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 15);
+            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+                > CompanionBehavior.ai<number>(capability, "maxChase", 15)) return false;
+            return magicalleafClear(context, target);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

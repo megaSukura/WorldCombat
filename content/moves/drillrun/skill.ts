@@ -43,8 +43,13 @@ namespace PokemonSkills {
         return false;
     }
 
-    /** 把沿途采样点的自然地表换成粗土，形成一道犁沟；租约到期原方块回来，不掉落、不挖空。 */
-    function drillrunFurrow(world: CombatWorld, samples: CombatPoint[], limit: number, ticks: number): number {
+    /**
+     * 把真实经过的采样点下方的自然地表换成粗土，形成一道犁沟：租约到期原方块回来，不掉落、不挖空。
+     * 只认 `terrainResult` 真正放下的格（被保护／占用的格由原生跳过），返回实际数量与它们的顶点，
+     * 让表现沿真实路径逐点显现，没经过的地板不变。
+     */
+    function drillrunFurrow(world: CombatWorld, samples: CombatPoint[], limit: number, ticks: number):
+        { cells: number; path: number[][] } {
         const cells: any[] = [], seen: { [key: string]: boolean } = Object.create(null);
         let travelled = 0, previous: CombatPoint | null = null;
         for (let index = 0; index < samples.length && travelled <= limit; index++) {
@@ -53,10 +58,16 @@ namespace PokemonSkills {
             previous = samples[index];
             drillrunColumn(world, samples[index], cells, seen);
         }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
+        if (!cells.length) return { cells: 0, path: [] };
+        let receipt: any = null;
+        try { receipt = JSON.parse(String(world.terrainResult(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks))); }
+        catch (error) { return { cells: 0, path: [] }; }
+        const placed: any[] = receipt && receipt.placed ? receipt.placed : [];
+        const path: number[][] = [];
+        for (let index = 0; index < placed.length; index++)
+            if (placed[index] && placed[index].length >= 3)
+                path.push([placed[index][0] + 0.5, placed[index][1] + 1, placed[index][2] + 0.5]);
+        return { cells: path.length, path: path };
     }
 
     define({
@@ -117,15 +128,25 @@ namespace PokemonSkills {
             const samples: CombatPoint[] = [];
             const hitSet: { [ref: string]: boolean } = Object.create(null);
             let travelled = 0, hits = 0, settled = false;
+            let blockedAt: CombatPoint | null = null, blockedFace = "";
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world(), body = scope.observe(actor);
                 const at = body === null ? current.origin() : body.position();
-                const placed = drillrunFurrow(scope, samples, furrow, scarTicks);
+                // 采样起止真实经过点：把最后停下的位置补进路径，犁沟不会超出实际走到的终点。
+                if (samples.length === 0 || samples[samples.length - 1].minus(at).length() > 0.05) samples.push(at);
+                const furrowResult = drillrunFurrow(scope, samples, furrow, scarTicks);
                 WorldFeedback.emit(scope, drillrunScene, 1, at,
-                    { moment: "furrow", cells: placed, furrow: furrow, hits: hits, sparks: sparks, scale: scale }, 34);
+                    { moment: "furrow", cells: furrowResult.cells, path: furrowResult.path,
+                        furrow: furrow, hits: hits, sparks: sparks, scale: scale }, 34);
+                // 钻头在实墙处收束：只在这一刻留一簇火花，不再扩成继续钻墙的动作。
+                if (blockedAt !== null) {
+                    WorldFeedback.emit(scope, drillrunScene, 1, blockedAt,
+                        { moment: "blocked", face: blockedFace, sparks: sparks, scale: scale,
+                            direction: [direction.x(), direction.y(), direction.z()] }, 20);
+                }
                 if (hits === 0) {
                     WorldFeedback.emit(scope, drillrunScene, 1, at, { moment: "miss", scale: scale }, 18);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), drillrunMissText, [], 20);
@@ -142,6 +163,11 @@ namespace PokemonSkills {
                 if (remaining <= 0.001) { finish(current); return; }
                 const delta = direction.scale(Math.min(speed, remaining));
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
+                if (hit.blocked() && hit.hitEntity() === false) {
+                    const block = hit.blockPosition();
+                    blockedAt = block === null ? hit.position() : block;
+                    blockedFace = hit.blockFace();
+                }
                 let drilled = false;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
@@ -157,7 +183,7 @@ namespace PokemonSkills {
                                 { moment: "bore", target: String(victim.ref()), hits: hits, sparks: sparks,
                                     scale: scale, intensity: intensity }, 24);
                             if (landed && scope.valid(victim)) {
-                                scope.displace(victim, direction.scale(push));
+                                scope.hitDisplace(victim, direction.scale(push));
                                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), drillrunHitText, [], 20);
                             }
                             scope.sound("cobblemon:impact.ground", at, 14, "{}");
@@ -168,8 +194,11 @@ namespace PokemonSkills {
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (samples.length === 0 || samples[samples.length - 1].minus(origin).length() >= 0.5) samples.push(origin);
-                movementScenes.show(current, "spin", origin, { moment: "spin", scale: scale, intensity: intensity, sparks: Math.round(sparks * Math.min(1, travelled / Math.max(0.001, length))),
-                        progress: Math.min(1, travelled / Math.max(0.001, length)) });
+                movementScenes.show(current, "spin", origin,
+                    { moment: "spin", scale: scale, intensity: intensity,
+                        sparks: Math.round(sparks * Math.min(1, travelled / Math.max(0.001, length))),
+                        progress: Math.min(1, travelled / Math.max(0.001, length)),
+                        direction: [direction.x(), direction.y(), direction.z()] });
                 // 撞墙或撞到没被顶开的实体就停下；被钻到的目标已被顶开，钻头得以继续前进。
                 if (hit.blocked() || moved < minimum && !drilled) { finish(current); return; }
                 if (travelled >= length) { finish(current); return; }

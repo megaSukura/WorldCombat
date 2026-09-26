@@ -1,13 +1,14 @@
 /**
  * 惩罚 / punishment 的客户端表现。
  *
- * 一句话：施法者抬手称量，目标每涨过一层力量就朝它浮起一枚暗紫坠砣，随后一记压顶沿那条竖线砸下，
- *   落点炸开一圈按目标涨了多少决定的暗色爆。
+ * 一句话：施法者抬手称量，目标每涨过一层强化就朝它浮起一枚暗紫坠砣，随后一记压顶沿那条竖线砸下，
+ *   落点炸开一圈按目标命中那刻涨了多少决定的暗色爆；空挥只是白砸一记，不称重、不爆光。
  * 色相家族：暗紫（0x6E5AA8）作主体、深紫（0x46306E）作余韵、淡紫（0xC9B6FF）作强调；无第二个色相。
  * 拍子：起 weigh（称量浮砣）→ 判 fall（压顶竖线）→ 中 hit（暗色爆）／空 miss（空砸）。
- * 范围：fall 的竖线用 `data.path`（和服务端同一起止点）画成一条落线，目标就在它的下端。
+ * 范围：fall 的竖线用 `data.path`（和服务端同一起止点）画成一条落线，落点就在它的下端。
  * 运动：坠砣在 weigh 阶段朝目标浮起，压顶沿竖线从上向下落，命中从落点向外炸。
- * 数：坠砣量绑 `data.weights`（目标能力等级 + 物攻换算），命中强度绑 `data.intensity`（本击威力 / 56）。
+ * 数：称量刻纹数绑 `data.marks`（目标命中前的真实强化层数，命中时对真正打中的对象再称一次），
+ *   坠砣量与爆散绑 `data.weights`（目标强化 + 物攻换算），命中强度绑 `data.intensity`（本击威力 / 56）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const PunishmentDefinition: ParticleDefinition = {
@@ -20,7 +21,7 @@ const PunishmentDefinition: ParticleDefinition = {
                 {
                     name: "weigh", bind: "target", height: 0.7,
                     particle: "world_combat_core:cobblemon/generic/orb/xsalphaboost",
-                    burst: { count: { data: "weights", fallback: 8 }, interval: 2, repeats: 2 },
+                    burst: { count: { data: "marks", fallback: 0 }, interval: 2, repeats: 2 },
                     shape: { kind: "sphere", radius: 0.5 },
                     direction: "inward", speed: [0.02, 0.09],
                     lifetime: [6, 11], size: [0.11, 0.02], sizeMode: "index",
@@ -80,9 +81,9 @@ const PunishmentDefinition: ParticleDefinition = {
                 {
                     name: "air", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "weights", fallback: 6 } },
+                    burst: { count: 6 },
                     shape: { kind: "cone", radius: 0.35, angleDegrees: 22 },
-                    direction: "outward", speed: [0.05, 0.15],
+                    direction: "outward", orient: "direction", speed: [0.05, 0.15],
                     lifetime: [6, 11], size: [0.06, 0.02],
                     color: 0x6E5AA8, alpha: [0.4, 0], light: "world", maxParticles: 24
                 }

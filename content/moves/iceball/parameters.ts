@@ -4,10 +4,11 @@
  * 原生事实：冰／物理／威力 30／命中 90／PP 20／接触／子弹类（bullet）；锁定 5 回合连续滚动，每命中一次
  * 威力翻倍（30→60→120→240→480）；使用者处于「蜷缩」状态时整招威力再翻倍（Cobblemon 1.8，21 位学习者）。
  *
- * 翻译：把「原地蜷成冰球、一回合滚一次、越滚越重」翻成**一次出手内一颗会自己回头的冰球**——施法者蜷身
- * 定住不动，把冰球抛向目标；命中一趟就在壳上加冻一层，球体随之胀大、下一趟更重；冰球飞空就绕回来再撞，
- * 直到撞满 `passes` 趟或目标消失。最后一下撞碎，在落点留下几块冰面（`world.terrain` 租借，走完自己化掉）。
- * 与滚动分开：滚动是施法者自己跨出手一趟趟滚、靠顶开来逼你重新贴；冰球是**一次出手内**离手的球，会追踪回头。
+ * 翻译：把「原地蜷成冰球、一回合滚一次、越滚越重」翻成**一次出手内越推越大的冰球串**——施法者蜷身定住，
+ * 每一发都沿当刻自由 aim 直飞，命中一个真实目标才在壳上冻厚一层、球体随之胀大、下一发更重；
+ * 空发、撞墙或伤害被拒就当场碎冰结束，不追踪目标、不免费重试。最后一下撞碎，在最后真实碰撞点留下几块冰面
+ * （`world.terrain` 租借，走完自己化掉）。
+ * 与滚动分开：滚动是施法者自己跨出手一趟趟滚、靠自身惯性顶开；冰球是**一次出手内**离手的球，靠逐层加宽的空间取舍。
  *
  * 数值分散（每个参数各吃不同的精灵数据，小差距才在场上看得出来）：
  *   ball      每趟威力：物攻定球有多重；再乘 ramp^已命中趟数。
@@ -16,19 +17,21 @@
  *   cap       威力上限：等级与物攻决定尾段最大能到多重，避免无限翻倍。
  *   speed     球速：速度决定球飞得快不快。
  *   flight    飞行距离：等级与速度决定球能飞多远，也是本招的实际射程来源。
- *   radius    判定半径：碰撞箱宽度决定球体多大一圈。
- *   gap       趟间隔：速度决定球回得多急；厚壳式更慢。
+ *   radius    首层判定半径：碰撞箱宽度决定第一颗球多大一圈。
+ *   girth     每层加粗：体重决定每命中一趟再冻厚多少，是「越冻越大」的斜率。
+ *   girthMax  加粗上限：宽度与等级决定球最多能冻到多粗，避免视觉巨大却穿狭缝。
+ *   gap       趟间隔：速度决定下一发续得多急；厚壳式更慢。
  *   frostCells 冰面块数：物攻决定碎开时冻住几块地；厚壳式更多。
  *   frostTicks 冰面停留：等级决定冰面留多久；厚壳式更久。
  *   shards    冰屑点数：物攻派生，表现按它发射。
  *   tempo／recover／recharge：速度与配置共同决定起手、收招与冷却。
  *
  * 配置 `thick`（厚壳式）双向取舍（默认关）：
- *   开（厚壳）：每中一趟乘 2.3、威力上限 ×1.15、冰面更大更久，代价是球速 ×0.85、趟间隔 +2 刻、收招 +2 刻、
- *     冷却 +6 刻、每趟基础威力 ×0.9——更重更难被躲开，但慢而费。
- *   关（薄壳，原生形态）：乘 2.0、球飞得更快、趟间隔与冷却更短，代价是上限较低、冰面更小更短。
+ *   开（厚壳）：每中一趟乘 2.3、威力上限 ×1.15、每层加粗 ×1.2、加粗上限 ×1.2、冰面更大更久，代价是球速 ×0.85、
+ *     趟间隔 +2 刻、收招 +2 刻、冷却 +6 刻、每趟基础威力 ×0.9——更大更重，但慢而费，也更容易在窄门口先撞框。
+ *   关（薄壳，原生形态）：乘 2.0、球飞得更快、趟间隔与冷却更短，代价是上限较低、长不粗、冰面更小更短。
  *
- * 伤害段 `ball` 走共享换算（对手防御、相性与暴击在命中时另算）；接触标记写在 defineDamage 上。
+ * 伤害段 `ball` 走共享换算（对手防御、相性与暴击在命中时另算）；外球不属于施术者身体，接触标记为 false。
  */
 namespace PokemonSkills {
     export const iceballId = "iceball";
@@ -91,12 +94,32 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "冰球能够到多远；等级越高、出手越快飞得越远。它也是本招的实际射程来源。"
             }),
-        /** 判定半径：0.45 + 碰撞箱宽度偏移[−0.05,0.3]；夹 0.38..0.9。 */
+        /** 首层判定半径：0.45 + 碰撞箱宽度偏移[−0.05,0.3]；夹 0.38..0.9。 */
         radius: formula(
             F.base(0.45).plus(F.body("width").minus(0.9).times(0.3).clamp(-0.05, 0.3)).clamp(0.38, 0.9).round(2),
-            "判定半径", {
+            "首层判定半径", {
                 unit: "格",
-                description: "冰球能撞到多大一圈；身体越宽的个体球体越大，画面里的球径与它一致。"
+                description: "第一颗冰球能撞到多大一圈；身体越宽的个体首球越大，画面里的球径与它一致。"
+            }),
+        /** 每层加粗：0.10 + 体重偏移[−0.03,0.08]，厚壳 ×1.2；夹 0.05..0.22。 */
+        girth: formula(
+            F.base(0.10).plus(F.body("weight").minus(50).times(0.0006).clamp(-0.03, 0.08))
+                .times(F.when(F.pref("thick", { key: "worldcombat.skill.iceball.preference.thick", fallback: "厚壳式" }), F.const(1.2), F.const(1)))
+                .clamp(0.05, 0.22).round(3),
+            "每层加粗", {
+                base: 0.10, unit: "格",
+                description: "每真实命中一趟，下一颗球的半径增加多少；体重越大的个体每层冻得越厚，厚壳式更明显。球越大越容易先撞门框。"
+            }),
+        /** 加粗上限：1.05 + 宽度偏移[−0.1,0.7] + 等级偏移[0,0.3]，厚壳 ×1.2；夹 1.0..1.8。 */
+        girthMax: formula(
+            F.base(1.05)
+                .plus(F.body("width").minus(0.9).times(0.8).clamp(-0.1, 0.7))
+                .plus(F.level().minus(30).times(0.006).clamp(0, 0.3))
+                .times(F.when(F.pref("thick", { key: "worldcombat.skill.iceball.preference.thick", fallback: "厚壳式" }), F.const(1.2), F.const(1)))
+                .clamp(1.0, 1.8).round(2),
+            "加粗上限", {
+                base: 1.05, unit: "格",
+                description: "球最多能冻到多粗；身体越宽、等级越高越大。到顶就不再长，免得视觉巨大却在狭门里穿针。"
             }),
         /** 趟间隔：6 − 速度偏移[−1,1.6]，厚壳 +2 / 薄壳 −1；夹 4..11。 */
         gap: seconds(
@@ -144,7 +167,8 @@ namespace PokemonSkills {
             "冷却", "再滚一颗冰球前的等待；速度越快回得越快，厚壳更费、薄壳更短。PP 20 的代价。")
     });
 
-    defineDamage(iceballId, "ball", {}, { contact: true });
+    // 外球是离手的冰弹，不是施术者的身体，故不标接触。
+    defineDamage(iceballId, "ball", {}, {});
 
     stages(iceballId, [
         { level: 30, values: { ball: 10, flight: 8.6 } },
@@ -153,8 +177,8 @@ namespace PokemonSkills {
 
     describe(iceballId, [
         { key: "description.0", values: ["ball","passes"] },
-        { key: "description.1", values: ["ramp", "cap", "speed", "radius"] },
-        { key: "description.2", values: ["flight","gap","frostCells","frostTicks"] },
+        { key: "description.1", values: ["ramp", "cap", "speed", "radius", "girth", "girthMax"] },
+        { key: "description.2", values: ["flight", "gap", "frostCells", "frostTicks"] },
         { key: "description.stance", values: [] },
         { key: "thick.on", values: [], when: function (context) { return read(context.detail.values, ["thick"]) === true; } },
         { key: "thick.off", values: [], when: function (context) { return read(context.detail.values, ["thick"]) !== true; } },

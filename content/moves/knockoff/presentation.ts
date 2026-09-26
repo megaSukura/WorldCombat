@@ -2,12 +2,12 @@
  * 拍落 / knockoff 的客户端表现。
  *
  * 一句话：施法者把手臂高高抬起、脚下掀起一圈碎屑，随后压上去一记重拍，在接触点炸开一团骨白冲击；
- * 若对方手里有物，那件道具沿拍击方向翻滚飞出、落地扬尘。
+ * 若对方手里有物，那件真实掉落物沿拍击方向翻滚飞出，视线一路跟到它落地闪一下。
  * 色相家族：暗紫（smoke / impact_dark）为体，骨白（impact_normal / tinydust）作重击的强调，没有饱和色。
- * 拍子：起（raise 抬臂）→ 击（smash 重拍）→ 落（knock 道具翻滚落地）／空（miss 收势）。
- * 范围：smash 绑命中点，画出的就是被拍中的位置；knock 的定向尘沿拍击方向铺开，读得出道具往哪飞。
- * 运动：抬臂时碎屑被从地面带起，重拍是短促外爆，道具沿一条低弧翻滚远落。
- * 数：`data.motes`（体重派生的碎屑数）驱动抬臂与命中的粒子量；`data.intensity`（本击伤害占比）放大爆发；`data.scatter` 传入掉落距离供定向尘铺开。
+ * 拍子：起（raise 抬臂）→ 击（smash 重拍）→ 落（knock 跟随真实落物与落地小闪）／空（miss 收势）。
+ * 范围：smash 绑命中点，画出的就是被拍中的位置；knock 的 `path` 直接绑回执里的落物 UUID，跟着那件东西走。
+ * 运动：抬臂时碎屑被从地面带起，重拍是短促外爆，落物自己翻滚远去，落地刻（data.land）闪一记小环。
+ * 数：`data.motes`（体重派生的碎屑数）驱动抬臂、命中与落地粒子量；`data.intensity`（本击伤害占比）放大爆发。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const KnockoffDefinition: ParticleDefinition = {
@@ -77,25 +77,34 @@ const KnockoffDefinition: ParticleDefinition = {
             ]
         },
         knock: {
-            duration: 30,
-            exit: { stop: 12, drain: 20 },
+            duration: 150,
+            exit: { stop: 16, drain: 24 },
             emitters: [
                 {
-                    name: "toss", bind: "target", height: 0.4, orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "motes", fallback: 12 } },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.06, 0.22], gravity: 0.06, drag: 0.94,
-                    lifetime: [8, 16], size: [0.09, 0.02], sizeMode: "index",
-                    color: 0x8C7448, alpha: [0.6, 0], light: "world", maxParticles: 90
+                    name: "wake", bind: "path", fit: "none", offset: [0, 0.14, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
+                    rate: 34, shape: { kind: "polyline" },
+                    direction: "velocity", speed: [0.01, 0.05],
+                    lifetime: [4, 10], size: [0.06, 0.015],
+                    color: 0xEADDC0, alpha: [0.5, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "streak", bind: "target", height: 0.4, orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: 3 }, shape: { kind: "line", length: { data: "scatter", fallback: 1.6 } },
-                    direction: "shape", speed: [0.05, 0.2],
-                    lifetime: [5, 10], size: [0.12, 0.02],
-                    color: 0xEADDC0, alpha: [0.4, 0], light: "full", maxParticles: 20
+                    name: "spill", bind: "path", fit: "none", offset: [0, 0.08, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "motes", fallback: 12 }, at: { data: "land", fallback: 30 } },
+                    shape: { kind: "polyline", randomDirection: 1 },
+                    direction: "outward", speed: [0.05, 0.2], gravity: 0.05, drag: 0.93,
+                    lifetime: [6, 13], size: [0.08, 0.02], sizeMode: "index",
+                    color: 0xC9BBA8, alpha: [0.7, 0], light: "world", maxParticles: 90
+                },
+                {
+                    name: "touchdown", bind: "path", fit: "none", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1, at: { data: "land", fallback: 30 } },
+                    shape: { kind: "polyline" },
+                    direction: "away", speed: [0.0, 0.0],
+                    lifetime: [8, 14], size: [0.3, 0.12],
+                    color: 0xE9DDF4, alpha: [0.55, 0], light: "full", maxParticles: 4
                 }
             ]
         },

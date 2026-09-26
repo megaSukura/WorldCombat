@@ -10,6 +10,8 @@
  *   `data.band` 把半球的高度画出来，离地的东西也在圈里。
  * 运动：碎片从地面斜向崩起再落下，震波环贴地向外扫，符文从圈内向上渗起。
  * 数：`data.shards`（特攻与等级换算）决定崩起的碎片量，`data.runes`（等级换算）决定浮起的符纹量。
+ * 反哺：surge 的五枚小符号各绑 `data.rise.atk/def/spa/spd/spe`（本次真正提高的级数），只有真提升的项才亮；
+ *   持续符文 hum 由服务端 `WorldFeedback.onEffect` 绑在真正的能力窗口上，窗口到期或被清除即收。
  */
 const AncientPowerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -110,18 +112,84 @@ const AncientPowerDefinition: ParticleDefinition = {
                 {
                     name: "surge_column", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/star",
-                    rate: 30, shape: { kind: "cylinder", radius: 0.7, length: 1.8 },
+                    rate: 26, shape: { kind: "cylinder", radius: 0.7, length: 1.8 },
                     direction: "up", speed: [0.05, 0.2], spread: 14,
                     lifetime: [12, 22], size: [0.14, 0.02],
-                    color: 0xE8D08A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 80
+                    color: 0xE8D08A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 72
                 },
                 {
                     name: "surge_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 26, shape: { kind: "ring", radius: 0.8 },
+                    rate: 24, shape: { kind: "ring", radius: 0.8 },
                     direction: "outward", speed: [0.03, 0.1], spread: 8,
                     lifetime: [10, 18], size: [0.3, 0.7],
                     color: 0xC8A24A, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 40
+                },
+                {
+                    name: "surge_atk", bind: "source", offset: [0.5, 0.95, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
+                    burst: { count: { data: "rise.atk", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [10, 18], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0xE8D08A, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 8
+                },
+                {
+                    name: "surge_def", bind: "source", offset: [-0.5, 0.8, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    burst: { count: { data: "rise.def", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [10, 18], size: [0.15, 0.02], sizeMode: "index",
+                    color: 0xC8A24A, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 8
+                },
+                {
+                    name: "surge_spa", bind: "source", offset: [0, 1.35, 0.35], height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "rise.spa", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "up", speed: [0.05, 0.18],
+                    lifetime: [10, 18], size: [0.12, 0.02], sizeMode: "index",
+                    color: 0xE8D08A, alpha: [0.92, 0], light: "full", bloom: 0.4, maxParticles: 8
+                },
+                {
+                    name: "surge_spd", bind: "source", offset: [0, 0.55, 0.55], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: { data: "rise.spd", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [9, 16], size: [0.1, 0.02], sizeMode: "index",
+                    color: 0xD8C07A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 8
+                },
+                {
+                    name: "surge_spe", bind: "source", offset: [0, 0.55, -0.55], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "rise.spe", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [9, 16], size: [0.1, 0.02], sizeMode: "index",
+                    color: 0xE0C878, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 8
+                }
+            ]
+        },
+        hum: {
+            exit: { drain: 22 },
+            emitters: [
+                {
+                    name: "hum_runes", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: 6, shape: { kind: "ring", radius: { data: "ring", fallback: 1.4 } },
+                    direction: "up", speed: [0.004, 0.016], spread: 14,
+                    lifetime: [18, 30], size: [0.07, 0.02], sizeMode: "sin",
+                    color: 0xC8A24A, alpha: [0.34, 0], alphaMode: "sin", light: "world", maxParticles: 26
+                },
+                {
+                    name: "hum_mote", bind: "source", offset: [0, 0.5, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    rate: 4, shape: { kind: "sphere", radius: 0.6 },
+                    direction: "up", speed: [0.004, 0.014],
+                    lifetime: [16, 26], size: [0.08, 0.01], sizeMode: "sin",
+                    color: 0xE8D08A, alpha: [0.28, 0], alphaMode: "sin", light: "full", bloom: 0.2, maxParticles: 20
                 }
             ]
         },

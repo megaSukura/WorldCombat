@@ -1,18 +1,20 @@
 /**
  * 围攻 / beatup 的出手方式。
  *
- * 核心念头：一声招呼，身边的同伴一起扑上去——每只同伴身上浮起一道暗影，一只接一只地围殴目标；
- *   来的人越多，落下的拳头越多，每一位同伴自己的物攻决定自己那一下的轻重。它卖的是「人多的那一阵乱拳」。
+ * 核心念头：一声招呼，身边真实站着的同伴从各自的位置各送来一道暗影，一只接一只地围殴目标。
+ *   来的人越多，飞出的暗影越多；每一位同伴自己的物攻决定自己那道影的轻重。它卖的是「真实站位凑出的乱拳」。
  *
  * 三幕：
  *   起（muster，提交前）：低吼、脚下泛起召集的暗影，只播预告。
- *   集（gather，提交后）：按 `rally` 把在场同伴叫齐，暗影在各自脚边成形。
- *   殴（volley）：按距离顺序，一位接一位地扑上去；每道暗影到位就结算一段 `mob` 暗属伤害，
- *       这一段的分量按该同伴自己的物攻相对领队缩放；间隔由 `gap` 决定，最多 `crowd` 段。
+ *   集（gather，提交后）：按 `rally` 把在场的同伴叫齐，暗影在各自脚边成形。
+ *   殴（volley）：按顺序，每位同伴轮到时复核存活与距离，从当前位置朝锁点发出一道有限直线暗影；
+ *       暗影撞上第一个非友方活体才用 `impact` 结算 `mob` 暗属伤害（按该同伴自己的物攻相对领队缩放），
+ *       撞上方块或一路走空就落空。一位没中不取消其他成员；目标移开或隔墙都会让那一下落空。
  *   散（scatter）：结束后暗影四散。
  *
- * 与同族分开：鼠数儿是施法者召来幻影伙伴、长度随机、每只可能扑空；围攻是**真实在场的同伴**依次出手，
- *   段数由场上队伍决定，每一位的份量由它自己的物攻决定。提交前只观察、只 `present`；暗影与伤害都在提交后写。
+ * 与同族分开：鼠数儿是施法者召来幻影伙伴、长度随机、追踪目标；攻击指令的手下是有生命、会追飞、能被清场的实体；
+ *   围攻是**真实在场的同伴各从自己的位置发一道直线影**——段数由场上队伍决定，掩体与走位都会改变结果。
+ * 提交前只观察、只 `present`；暗影与伤害都在提交后写。
  */
 namespace PokemonSkills {
     const beatupScene = "world_combat:move_beatup";
@@ -43,20 +45,26 @@ namespace PokemonSkills {
         return base * Math.max(0.45, Math.min(1.8, theirs / mine));
     }
 
+    /** 每位参与者的识别色，让命中点的碎屑和出场那一下能看出是谁出的手。 */
+    function beatupMemberColor(index: number): number {
+        const palette = [0x6E5AA8, 0x9F86D6, 0x50427E, 0xB9A6E0, 0x7C63B8, 0x8A6BD0];
+        return palette[index % palette.length];
+    }
+
     define({
         id: "beatup",
         cooldownParameter: "recharge",
         name: "Beat Up",
-        description: "一声招呼，身边在场的同伴一起扑上去围殴：每只同伴浮起一道暗影依次扑击，同伴越多落下的拳头越多，每一位同伴自己的物攻决定那一下的轻重。",
+        description: "一声招呼，身边在场的同伴各自从站位送出一道暗影，依次扑向锁定的位置：暗影撞上第一个非友方活体才结算，隔墙或目标移开都会让那一下落空。同伴越多落下的拳头越多，每一位同伴自己的物攻决定那一下的轻重。",
         uses: ["身边有同伴时一起压上，堆出多段暗属伤害", "在伙伴环伺时处决残血目标", "靠人数对单个厚实目标打出一串小伤害"],
-        kind: "enemy",
+        kind: "aim",
         range: 7,
         maxRange: 11,
         prepare: 8,
         active: 0,
         recover: 8,
         cooldown: 60,
-        maximumTicks: 320,
+        maximumTicks: 420,
         style: "swarm",
         defaults: { widen: true, ai: { maxChase: 10, finishLow: true, minPack: 1, leaveStation: false } },
         fields: [],
@@ -84,9 +92,9 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor();
             const body = world.observe(actor);
-            const target = action.target();
-            if (body === null || target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            if (body === null) { done(action); return; }
+            // 自由瞄准：锁定提交时的实体中心或世界点；之后每道影都飞向这个锁点，目标移开就打空。
+            const locked = action.targetPosition();
             const base = p("beatup", "mob", action);
             const rally = p("beatup", "rally", action);
             const crowd = Math.max(1, Math.min(6, Math.round(p("beatup", "crowd", action))));
@@ -107,50 +115,61 @@ namespace PokemonSkills {
             if (participants.length > 1) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), beatupMusterText, [participants.length], lull + 20);
             sound(action, "minecraft:entity.player.attack.strong");
 
+            /** 一位同伴出手：复核它是否还在场、是否离领队太远，再从它的实际位置发一道有限直线影。 */
             function volley(current: CombatAction): void {
                 const scope = current.world();
-                const victim = scope.actor(targetRef);
-                const vbody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                if (vbody === null) { finish(current); return; }
                 if (index >= participants.length) {
-                    WorldFeedback.emit(scope, beatupScene, 1, vbody.position(),
+                    const at = scope.observe(actor);
+                    WorldFeedback.emit(scope, beatupScene, 1, at !== null ? at.position() : locked,
                         { moment: "scatter", count: hits, total: participants.length, scale: scale, motes: motes }, 24);
                     finish(current); return;
                 }
-                const member = scope.actor(participants[index]);
+                const slot = index++;
+                const member = scope.actor(participants[slot]);
                 const mbody = member !== null && scope.valid(member) ? scope.observe(member) : null;
-                if (member === null || mbody === null) { index++; current.after(1, volley); return; }
+                const leader = scope.observe(actor);
+                if (member === null || mbody === null || mbody.health() <= 0 || leader === null ||
+                    mbody.position().minus(leader.position()).length() > rally + 0.5) {
+                    // 轮到自己前倒下、被移走或掉队：跳过它那一下，不假冲。
+                    current.after(gap, volley); return;
+                }
+                const origin = mbody.position();
+                let heading = locked.minus(origin);
+                if (heading.length() < 0.05) heading = current.direction();
+                const distance = heading.length(), direction = heading.unit();
                 const power = beatupPower(scope, actor, member, base);
                 const intensity = Math.max(0.6, Math.min(2.0, power / Math.max(1, base)));
-                const origin = mbody.position(), heading = vbody.position().minus(origin);
-                const distance = heading.length();
-                const direction = distance < 0.05 ? current.direction() : heading.unit();
+                const color = beatupMemberColor(slot);
                 const arrival = Math.max(2, Math.round(distance / Math.max(0.2, speed)));
+                // 真正出力者身边先亮一下（成员识别色），影随后从它当前位置飞出。
+                WorldFeedback.emit(scope, beatupScene, 1, origin,
+                    { moment: "charge", member: String(member.ref()), color: color, index: slot + 1, total: participants.length,
+                        motes: motes, scale: scale, intensity: intensity }, Math.max(8, Math.min(16, arrival + 4)));
                 const appearance: LivingActions.ProjectileAppearance = {
-                    sprite: "cobblemon:generic/impact/impact_dark", tint: 0x6E5AA8, glow: true, scale: scale
+                    sprite: "cobblemon:generic/impact/impact_dark", tint: color, glow: true, scale: scale
                 };
                 const flight = current.projectile(origin, direction.scale(speed), 0, radius, distance + 2, arrival + 20,
-                    function (): void { }, function (): void { }, JSON.stringify(appearance));
-                WorldFeedback.keep(scope, "beatup:shadow:" + String(action.id()) + ":" + index, beatupScene, 1, origin,
-                    { moment: "rush", projectile: flight, target: targetRef, count: index + 1, total: participants.length, member: String(member.ref()),
+                    function (inner: CombatAction, hit: CombatImpact): void {
+                        const hitWorld = inner.world();
+                        const struck = hit.target();
+                        let landed = false;
+                        if (hit.hitEntity() && struck !== null && hitWorld.valid(struck) && !hitWorld.friendly(struck))
+                            // 每位成员一个独立 strike：原生对「同一行动 + 同一 strike + 同一目标」只结算一次，
+                            // 用槽位区分才能让整队真的各落一下。
+                            landed = impact(inner, hit, "beatup", power, { damage: damageSpec("beatup", "mob") }, "beatup:" + slot);
+                        if (landed) hits++;
+                        WorldFeedback.emit(hitWorld, beatupScene, 1, hit.position(),
+                            { moment: landed ? "hit" : "whiff", member: String(member!.ref()), color: color, index: slot + 1,
+                                total: participants.length, motes: motes, scale: scale, intensity: intensity }, 20);
+                        if (landed) {
+                            WorldFeedback.text(hitWorld, hit.position().plus(WorldCombat.point(0, 0.8, 0)), beatupHitText, [slot + 1], 20);
+                            sound(inner, "cobblemon:impact.dark");
+                        }
+                    },
+                    function (inner: CombatAction): void { inner.after(gap, volley); }, JSON.stringify(appearance));
+                WorldFeedback.keep(scope, "beatup:shadow:" + String(action.id()) + ":" + slot, beatupScene, 1, origin,
+                    { moment: "rush", projectile: flight, member: String(member.ref()), color: color, count: slot + 1, total: participants.length,
                         direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity, motes: motes }, arrival + 30);
-                current.after(arrival, function (inner: CombatAction) {
-                    const innerWorld = inner.world();
-                    const struck = innerWorld.actor(targetRef);
-                    const sbody = struck !== null && innerWorld.valid(struck) ? innerWorld.observe(struck) : null;
-                    if (struck === null || sbody === null) { finish(inner); return; }
-                    const landed = hurt(inner, struck, "beatup", power, { damage: damageSpec("beatup", "mob") });
-                    if (landed) hits++;
-                    WorldFeedback.emit(innerWorld, beatupScene, 1, sbody.position(),
-                        { moment: landed ? "hit" : "whiff", target: targetRef, count: index + 1, total: participants.length,
-                            member: String(member!.ref()), motes: motes, scale: scale, intensity: intensity }, 20);
-                    if (landed) {
-                        WorldFeedback.text(innerWorld, sbody.position().plus(WorldCombat.point(0, 1.1, 0)), beatupHitText, [index + 1], 20);
-                        sound(inner, "cobblemon:impact.dark");
-                    }
-                    index++;
-                    inner.after(gap, volley);
-                });
             }
 
             action.after(lull, volley);

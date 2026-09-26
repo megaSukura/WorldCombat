@@ -1,14 +1,16 @@
 /**
  * 抓狂 / flail 的出手方式。
  *
- * 核心念头：人越虚弱越抓狂——朝身前一个扇面失控地乱甩，血越少甩出的下数越多、每下也越重。
- * 这一招不挑目标、不挑方向，扇面里的人都会被扫到；它卖的是「我还剩多少血，就有多疯」。
+ * 核心念头：人越虚弱越抓狂——血越少甩出的下数越多、每下也越重，但挥向不再钉在一个人身上，
+ * 而是以当前瞄准为中线左右交替乱甩。它不挑目标、不挑方向，扇面里的人都会被扫到；卖的是「我还剩多少血，就有多疯」。
  *
  * 三幕：
  *   起（windup，提交前）：重心下沉、身上腾起一股燥气，扇面预告随下数铺开。
- *   乱（swing → hit）：提交后朝目标所在的扇面连甩 `swings` 下；每下判定一个扇形区域，
- *       扇内的非友方各挨一次 `swipe`（接触）并被往背离方向挤开；扇面顶点与服务端判定是同一组。
- *   收（finish）：打满下数或扇面里没人时收势，浮字报出这一串打中了几下。
+ *   乱（swing → hit）：提交后一次锁定本次最大下数，然后左右交替短挥 `swings` 下；
+ *       第 0 下以当前 aim 为中线偏左 35°，第 1 下偏右 35°，如此交替，每下只按当前这记扇弧判定，
+ *       不追原目标——原目标死了就继续打另一边或空挥。每下按此刻真实 HP 重新求威力，上一记自损之后下一记会更重，
+ *       但下数不再追加。扇内的非友方各挨一次 `swipe` 并被往背离方向挤开；墙会挡住近身挥击。
+ *   收（finish）：打满下数就收势，浮字报出这一串打中了几下。
  *
  * 配置 `reckless`（拼命式）由公式加码、由这里在每下结算时自损：残血时可能把自己打空。
  */
@@ -17,6 +19,8 @@ namespace PokemonSkills {
     const flailHitText = "world_combat.move.flail.text.hit";
     const flailMissText = "world_combat.move.flail.text.miss";
     const flailRecklessText = "world_combat.move.flail.text.reckless";
+    /** 相邻两记乱拳偏离瞄准中线的角度；左一撇、右一甩交替。 */
+    const flailOffside = 35;
 
     /** 扇形轮廓：origin 起，朝 heading 张开 angle 度、半径 reach；判定与表现共用同一组顶点。 */
     function flailFan(origin: CombatPoint, heading: CombatPoint, reach: number, angle: number): number[][] {
@@ -33,12 +37,20 @@ namespace PokemonSkills {
         return points;
     }
 
+    /** 以瞄准方向的水平分量为中线，向 side 一侧偏 offside 度；返回值已归一化到水平面。 */
+    function flailSwung(heading: CombatPoint, offside: number, side: number): CombatPoint {
+        const flat = WorldCombat.point(heading.x(), 0, heading.z());
+        const dir = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
+        const a = Math.atan2(dir.z(), dir.x()) + side * offside * Math.PI / 180;
+        return WorldCombat.point(Math.cos(a), 0, Math.sin(a));
+    }
+
     define({
         id: "flail",
         name: "Flail",
-        description: "朝身前一个扇面失控地乱打，血量越少甩出的下数越多、每下也越重；扇面里的敌人都会被扫到并被挤开。拼命式更狠，但每一下都要自损。",
+        description: "以当前瞄准为中线左右交替乱打，血量越少甩出的下数越多、每下也越重；扇面里的敌人都会被扫到并被挤开。可以选择任意方向或空挥，原目标死了也会继续乱甩。拼命式更狠，但每一下都要自损。",
         uses: ["残血时一口气甩出一整串乱打", "被贴身时把身前扇面里的人一起扫开", "把追击者从脸上挤出去", "在血线低到危险的局面里做最后一搏"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.4,
         maxRange: 3.4,
         prepare: 5,
@@ -75,17 +87,15 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const target = action.target();
             const body = world.observe(actor);
-            if (body === null || target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
-            const power = p("flail", "swipe", action);
+            if (body === null) { done(action); return; }
+            const actorRef = String(actor.ref());
+            // 释放时锁定本次最大下数；之后即使自损让血更低，也不追加。
             const swings = Math.max(2, Math.round(p("flail", "swings", action)));
             const reach = Math.max(1.4, p("flail", "reach", action));
             const angle = Math.max(70, Math.min(150, p("flail", "arc", action)));
             const gap = Math.max(3, Math.round(p("flail", "gap", action)));
             const sparks = Math.max(6, Math.round(p("flail", "sparks", action)));
-            const push = p("flail", "push", action);
             const reckless = !!(config && config.reckless);
             const recoil = reckless ? Math.max(0.01, p("flail", "recoil", action)) : 0;
             const scale = Math.max(0.6, Math.min(2.0, reach / 2.0));
@@ -107,26 +117,31 @@ namespace PokemonSkills {
                 const self = scope.observe(current.actor());
                 if (self === null) { finish(current); return; }
                 if (index >= swings) { finish(current); return; }
-                const victim = scope.actor(targetRef);
-                const victimBody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                 const origin = self.position();
-                const aim = victimBody !== null ? victimBody.position() : current.targetPosition();
-                let heading = aim.minus(origin);
+                // 每下重新读当前瞄准作为中线；不会回追原目标。
+                let heading = aim(current);
                 if (heading.length() < 0.05) heading = current.direction();
-                current.face(aim, 24, 24);
-                const fan = flailFan(origin, heading, reach, angle);
+                const side = index % 2 === 0 ? 1 : -1;
+                const swung = flailSwung(heading, flailOffside, side);
+                current.face(origin.plus(swung.scale(reach)), 30, 30);
+                // 每拍按此刻真实 HP 重算威力与迸溅：自损之后下一记自然更重。
+                const power = p("flail", "swipe", current);
+                const push = p("flail", "push", current);
                 const intensity = Math.max(0.6, Math.min(2.2, power / 22));
                 const rage = Math.round(Math.max(0, 1 - self.health() / Math.max(1, self.maxHealth())) * 46);
+                const fan = flailFan(origin, swung, reach, angle);
                 let hits = 0;
 
-                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, heading, reach, angle, { below: 1.4, above: 2.2 }),
+                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, swung, reach, angle, { below: 1.4, above: 2.2 }),
                     function (enemy, facts) {
-                        if (String(enemy.ref()) === String(current.actor().ref())) return;
+                        if (String(enemy.ref()) === actorRef) return;
+                        // 近身挥击同样被真实墙挡住。
+                        if (!scope.clear(origin, facts.position())) return;
                         if (!hurt(current, enemy, "flail", power, { damage: damageSpec("flail", "swipe"), contact: true })) return;
                         hits++; total++;
                         const away = facts.position().minus(origin);
                         if (scope.valid(enemy) && away.length() > 0.15)
-                            scope.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                            scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                         WorldFeedback.emit(scope, flailScene, 1, facts.position(),
                             { moment: "hit", target: String(enemy.ref()), index: index, swings: swings,
                                 sparks: sparks, rage: rage, scale: scale, intensity: intensity }, 18);
@@ -134,7 +149,7 @@ namespace PokemonSkills {
 
                 WorldFeedback.emit(scope, flailScene, 1, origin,
                     { moment: "swing", path: fan, index: index, swings: swings,
-                        direction: [heading.x(), heading.y(), heading.z()], sparks: sparks, rage: rage, scale: scale,
+                        direction: [swung.x(), swung.y(), swung.z()], sparks: sparks, rage: rage, scale: scale,
                         intensity: intensity, miss: hits === 0 ? 1 : 0 }, 16);
                 sound(current, index === swings - 1 ? "minecraft:entity.player.attack.strong" : "minecraft:entity.player.attack.weak");
 

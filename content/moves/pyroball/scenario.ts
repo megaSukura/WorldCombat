@@ -3,7 +3,8 @@
  *
  * 场面：只会火焰球的闪焰王牌（Cinderace）对六格外只带跃起、不会还手的卡比兽（Snorlax），晴天平地。
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（火球命中炸开）。
- * 引燃是原生 10% 概率（本单元 burnChance 公式）、落点焦土与出膛散布见实现，写进 note 供读轨迹判断。
+ * 小石先滚到踢点、再从脚下踢出；引燃是原生 10% 概率（本单元 burnChance 公式）、落点焦痕时长与
+ * 出膛散布见实现，写进 note 供读轨迹判断。
  */
 Smoke.scenario("pyroball", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -17,7 +18,7 @@ Smoke.scenario("pyroball", function (stage) {
     }, function () {
         stage.expect(stage.casts("pyroball", caster) > 0, "pyroball was committed");
         stage.expect(stage.damageTo(foe) > 0, "the fiery ball struck and burst");
-        stage.note("引燃约 10% 概率（pyroball.burnChance），落点焦土时长与出膛散布见实现；散布替代原生 90 命中", {
+        stage.note("小石滚到踢点后从脚下踢出；引燃约 10% 概率（pyroball.burnChance），落点焦痕时长与出膛散布见实现；散布替代原生 90 命中", {
             casts: stage.casts("pyroball", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             burned: stage.hadMobEffect(foe, "world_combat:status/burn"),

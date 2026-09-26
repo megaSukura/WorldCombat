@@ -158,6 +158,51 @@ public final class NativeEquipment {
     private static Result receipt(ItemStack stack, LivingEntity entity, String drop) {
         return new Result(true, "", serialized(entity, stack), stack.getCount(), drop);
     }
+
+    /** Pick up actual material with the same two-slot transaction used by equipment exchange. */
+    public static Result collectOp(MinecraftCombat combat, ActorHandle source, ActorHandle target, String provider, String slot, int index,
+                                    String expected, String entityId, String expectedDrop, int count) {
+        var collector = target(combat, source); var recipient = target(combat, target);
+        if (!(collector.level() instanceof ServerLevel level) || recipient.level() != level) return Result.failure("wrong-world");
+        var found = level.getEntity(java.util.UUID.fromString(entityId));
+        if (!(found instanceof ItemEntity item) || item.isRemoved()) return Result.failure("item-left");
+        var stock = NativeRegistryFacts.parseStack(level.registryAccess(), expectedDrop);
+        if (stock.isEmpty() || !ItemStack.matches(stock, item.getItem())) return Result.failure("stale-item");
+        if (count < 1 || count > stock.getCount()) return Result.failure("count");
+        var opened = open(recipient, provider, slot, index, expectedStack(recipient, expected));
+        if (!opened.ok()) return Result.failure(opened.reason());
+        if (!opened.slot().stock().isEmpty()) return Result.failure("occupied");
+        var position = item.position();
+        var pickup = new WorldEquipment.Slot() {
+            @Override public ItemStack stock() { return stock.copy(); }
+            @Override public boolean fresh() {
+                return !item.isRemoved() && item.level() == level && item.position().equals(position) && ItemStack.matches(stock, item.getItem())
+                    && collector.distanceToSqr(item) <= 64 * 64 && recipient.distanceToSqr(item) <= 64 * 64
+                    && combat.clear(source, MinecraftCombat.point(collector.getEyePosition()), MinecraftCombat.point(position));
+            }
+            @Override public String preflight(ItemStack incoming, boolean droppable) {
+                if (item.hasPickUpDelay()) return "pickup-delay";
+                var owner = item.getTarget();
+                if (owner != null && !owner.equals(collector.getUUID()) && !owner.equals(CombatServices.domain(collector).owner(collector))) return "pickup-owner";
+                if (collector instanceof net.minecraft.world.entity.player.Player player) {
+                    var event = new net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent.Pre(player, item);
+                    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event);
+                    if (event.canPickup() == net.neoforged.neoforge.common.util.TriState.FALSE) return "pickup-refused";
+                }
+                return null;
+            }
+            @Override public boolean commit(ItemStack value) { item.setItem(value.copy()); return true; }
+            @Override public void settle(ItemStack value) { item.setItem(value.copy()); }
+            @Override public void publish() {
+                try {
+                    if (collector instanceof net.minecraft.world.entity.player.Player player)
+                        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent.Post(player, item, stock.copy()));
+                } finally { if (item.getItem().isEmpty()) item.discard(); }
+            }
+        };
+        var result = WorldEquipment.exchange(pickup, opened.slot(), count);
+        return result.ok() ? receipt(stock.copyWithCount(count), recipient, item.getStringUUID()) : Result.failure(result.reason());
+    }
     private static String serialized(LivingEntity entity, ItemStack stack) {
         if (stack == null || stack.isEmpty()) return "";
         var value = NativeRegistryFacts.serializeStack(entity.registryAccess(), stack);

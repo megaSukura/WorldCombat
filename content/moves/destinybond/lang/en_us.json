@@ -24,6 +24,8 @@
   "worldcombat.skill.destinybond.preference.ai.leaveStation.help": "When on, the partner will also leave its post to tie the bond.",
   "world_combat.move.destinybond.text.bind": "Bond armed %1$s s",
   "world_combat.move.destinybond.text.drag": "Destiny Bond: down together",
+  "world_combat.move.destinybond.text.graze": "Destiny Bond: only part of it is pulled",
+  "world_combat.move.destinybond.text.resist": "Destiny Bond: the killer withstood the pull",
   "world_combat.move.destinybond.text.lift": "The thread loosens",
   "effect.world_combat.destiny_bond": "Destiny Bond",
   "worldcombat.skill.destinybond.description.2": "Casting it again while a bond is already armed fails; the thread loosens when its time runs out or it is cleared, and as long as you have not been brought down no one is dragged with you."

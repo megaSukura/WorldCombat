@@ -13,14 +13,17 @@ public final class ActionContext {
     private double targetRange;
     boolean retargeted;
     private Point lastTargetPosition;
+    private Point targetAnchor;
     private boolean targetReleased;
     private final UUID controller;
     private final Map<String, String> arguments;
     private final Map<String, String> scriptData = new LinkedHashMap<>();
+    final ExecutionOrigin executionOrigin;
     final long born;
     final long epoch;
     String controlJson;
     long controlTick;
+    boolean inputReleased;
     public String control() { valid(); return controlJson; }
     boolean committed;
     boolean committing;
@@ -48,7 +51,9 @@ public final class ActionContext {
         this.input = input; this.controller = controller; this.born = born; this.epoch = epoch;
         targetKind = definition.targetKind(); targetRange = definition.range();
         lastTargetPosition = input.point();
+        targetAnchor = input.entity() == null ? null : runtime.host.bounds(input.entity()).anchor(input.point());
         this.arguments = Map.copyOf(arguments);
+        executionOrigin = new ExecutionOrigin("action:" + id, actor, id);
         controlJson = arguments.getOrDefault(ActionInput.KEY, "{}"); controlTick = born;
     }
 
@@ -73,7 +78,9 @@ public final class ActionContext {
         var candidate = target == null ? ActionTarget.point(point, direction) : ActionTarget.entity(target, point, direction);
         if ("self".equals(kind)) candidate = ActionTarget.entity(actor, runtime.host.position(actor), direction);
         runtime.validateTarget(kind, range, actor, candidate);
+        if (candidate.entity() != null) candidate = ActionTarget.entity(candidate.entity(), runtime.host.closestPoint(candidate.entity(), candidate.point()), direction);
         input = candidate; targetKind = kind; targetRange = range; lastTargetPosition = candidate.point(); targetReleased = false; retargeted = true;
+        targetAnchor = candidate.entity() == null ? null : runtime.host.bounds(candidate.entity()).anchor(candidate.point());
     }
     public void stage(String stage) {
         valid();
@@ -101,7 +108,7 @@ public final class ActionContext {
         if (input.entity() != null) {
             if (targetReleased) return lastTargetPosition;
             if (!runtime.host.valid(input.entity())) throw new ActionInactiveException("Target left");
-            return lastTargetPosition = runtime.host.position(input.entity());
+            return lastTargetPosition = runtime.host.bounds(input.entity()).at(targetAnchor);
         }
         return input.kind().equals("direction") ? origin().plus(input.direction().scale(range())) : input.point();
     }
@@ -112,7 +119,7 @@ public final class ActionContext {
         if (!committed) throw new IllegalStateException("Commit before releasing target dependency");
         if (targetReleased) return;
         if (input.entity() != null && runtime.host.valid(input.entity()) && runtime.host.sameWorld(actor, input.entity()))
-            lastTargetPosition = runtime.host.position(input.entity());
+            lastTargetPosition = runtime.host.bounds(input.entity()).at(targetAnchor);
         targetReleased = true;
     }
     boolean requiresTarget() { return input.entity() != null && !targetReleased; }
@@ -167,6 +174,10 @@ public final class ActionContext {
     /** Sweeps a capsule from `from` to `to`. Radius is capped at one block (wide bodies keep working); a long line is walked in
      *  four-block pieces and stops at the first hit, so the caller never has to split it. */
     public Impact trace(Point from, Point to, double radius) {
+        return trace(from, to, radius, false);
+    }
+    /** Include allied living contacts when the content needs interception or support; damage permission is unchanged. */
+    public Impact trace(Point from, Point to, double radius, boolean hitAllies) {
         valid();
         if (!committed) throw new IllegalStateException("Commit before world effects");
         if (!Double.isFinite(radius) || radius < 0) throw new IllegalArgumentException("Trace radius must be a non-negative number");
@@ -179,7 +190,7 @@ public final class ActionContext {
         for (int i = 0; i < pieces; i++) {
             Point start = i == 0 ? from : from.plus(to.minus(from).scale((double) i / pieces));
             Point end = i == pieces - 1 ? to : from.plus(to.minus(from).scale((double) (i + 1) / pieces));
-            result = runtime.host.trace(actor, controller, start, end, radius);
+            result = runtime.host.trace(actor, controller, start, end, radius, hitAllies);
             if (result.hitEntity() || result.blocked()) break;
         }
         if (result.hitEntity()) {
@@ -237,7 +248,7 @@ public final class ActionContext {
         if (impact.target().equals(input.entity())) lastTargetPosition = runtime.host.position(impact.target());
         if (!impact.projectile().isEmpty()) return runtime.projectiles().hit(id, impact, amount, metadata);
         nearby(runtime.host.position(impact.target()));
-        return runtime.host.damage(actor, impact.target(), controller, amount, dev.worldcombat.core.runtime.effect.EffectData.copy(metadata));
+        return runtime.host.damage(actor, impact.target(), controller, amount, metadata, executionOrigin);
     }
 
     public String approach(double within, double speed) {
@@ -260,7 +271,7 @@ public final class ActionContext {
         if (key != null && key.indexOf(':') < 0) key = definition.id().substring(0, definition.id().indexOf(':') + 1) + key;
         dev.worldcombat.core.runtime.effect.EffectData.key(key);
         dev.worldcombat.core.runtime.effect.EffectData.id(type);
-        if (version < 1 || version > 1000 || data == null)
+        if (version < 1 || data == null)
             throw new IllegalArgumentException("Invalid presentation");
         runtime.host.present(id, actor, key, type, version, point, dev.worldcombat.core.runtime.effect.EffectData.copy(data));
     }

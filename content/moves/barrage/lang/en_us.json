@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.barrage.summary": "Hurl round objects one after another: each ball flies and strikes on its own. Lob mode arcs over cover onto the target but flies slowly and scatters; flat mode is straight and fast with a tight spread, and a round ball ricochets off a wall.",
+  "worldcombat.skill.barrage.summary": "Hurl round objects one after another: each ball flies and strikes on its own. Aim at an entity, a ground point or just a direction, and every ball follows the current aim instead of chasing an old entity. Lob mode arcs over cover onto the target but flies slowly and scatters; flat mode is straight and fast with a tight spread, and a round ball ricochets off a wall.",
   "worldcombat.skill.barrage.use.0": "Throw round objects one after another from range",
   "worldcombat.skill.barrage.use.1": "Lob mode arcs over cover onto the target's head",
   "worldcombat.skill.barrage.use.2": "Flat mode is straight and fast, and a round ball ricochets off walls",
+  "worldcombat.skill.barrage.use.3": "Aim at a wall to try a ricochet, or throw on a bare direction",
   "worldcombat.skill.barrage.description.0": "Each ball deals about %1$s physical damage, and the string throws up to %2$s balls (2-5 natively, set by the user's data).",
   "worldcombat.skill.barrage.description.1": "Balls come every %1$s and reach %2$s blocks; each flies at %3$s blocks/tick with up to ±%4$s spread (a scattered ball misses).",
   "worldcombat.skill.barrage.description.2": "Balls fall at %1$s blocks/tick² with a %2$s block hit radius.",
@@ -29,8 +30,8 @@
   "worldcombat.skill.barrage.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.barrage.preference.ai.maxChase.help": "Beyond this distance the user closes in first. This move has a long range, so the default is large too.",
   "worldcombat.skill.barrage.preference.ai.cover": "Prefer uncovered targets",
-  "worldcombat.skill.barrage.preference.ai.cover.help": "On: targets with no cover between the user and them rank higher because a flat throw is blocked by walls; a target hiding behind a wall ranks lower. Off: all targets score the same.",
+  "worldcombat.skill.barrage.preference.ai.cover.help": "Applies to flat throws only: targets with no cover between the user and them rank higher because a flat throw is blocked by walls; a target hiding behind a wall ranks lower without pretending a ricochet can land. Lob throws ignore this and arc over cover.",
   "world_combat.move.barrage.text.tally": "%1$s of %2$s balls landed",
   "world_combat.move.barrage.text.out": "The target left, so the throws stop (%1$s balls landed)",
-  "worldcombat.skill.barrage.description.out": "A ball that hits no enemy only lands (a flat throw bounces once first) and deals no damage; once the target falls or is no longer present, the rest of the string is not thrown."
+  "worldcombat.skill.barrage.description.out": "A ball that hits no enemy only lands (a flat throw bounces once first) and deals no damage; every ball follows the current aim, so a target leaving does not cancel the rest - a bare-direction throw is legal too."
 }

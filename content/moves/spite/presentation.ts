@@ -1,8 +1,8 @@
 /**
  * 怨恨 / spite 的客户端表现。
  *
- * 一句话：施法者头顶聚起一团暗紫怨念，脱手后自己扭着追向目标；咬中的一刻在目标身上炸出一圈碎念，
- * 抽走的 PP 越多，迸出的碎片越多、越亮。
+ * 一句话：施法者头顶聚起一团暗紫怨念，脱手后自己扭着追向目标；咬中时怀恨在目标身上合拢成一圈，
+ * 真的抽走了 PP 才迸出碎念——抽得越多，碎片越多、越亮；没有 PP 的普通生物只留那一圈怀恨。
  * 色相家族：暗紫与靛蓝为底（fire/wisp 的紫、smoke 的深灰紫），骨白只出现在“咬”的核心与碎片上。
  * 拍子：起（windup 0–12t 凝聚）→ 追（travel 尾迹）→ 咬（bite 0–34t，击 0–12t，收 12–34t）／空（fizzle 0–22t）。
  * 范围：travel 沿投射物画轨迹，咬中的一圈绑在目标身上——画出的就是怨念真正咬到了谁。
@@ -62,18 +62,19 @@ const SpiteDefinition: ParticleDefinition = {
             exit: { stop: 18, drain: 24 },
             emitters: [
                 {
+                    // 真的扣掉了 PP 才有这一口；对没有 PP 的普通生物不播放，避免读成伤害。
                     name: "bite_flash", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_ghost",
-                    burst: { count: { data: "shards", fallback: 10 }, at: 1 },
+                    burst: { count: { data: "taken", fallback: 0 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "shape", speed: { data: "intensity", fallback: 0.25 },
                     lifetime: [8, 14], size: [0.36, 0.06], sizeMode: "index",
-                    color: 0xC9B8F0, alpha: [1, 0], light: "full", bloom: 0.55
+                    color: 0xC9B8F0, alpha: [1, 0], light: "full", bloom: 0.4
                 },
                 {
                     name: "pp_shards", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "shards", fallback: 10 } },
+                    burst: { count: { data: "taken", fallback: 0 } },
                     shape: { kind: "sphere_surface", radius: 0.34 },
                     direction: "outward", speed: { data: "intensity", fallback: 0.25 },
                     lifetime: [12, 22], size: { data: "size", fallback: 0.12 },

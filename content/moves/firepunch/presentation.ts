@@ -2,11 +2,12 @@
  * 火焰拳 / firepunch 的客户端表现。
  *
  * 一句话：拳头缠上一圈火舌、火星顺拳面乱窜，一拳按进目标身上炸开一团火；被点着的人身上腾起持续火苗，
- * 火舌再撑着地面舐向旁边的下一个敌人。
+ * 火舌再撑着一缕火花从燃烧部位朝最近一个真正被传火成功的邻敌飞去，落点才腾起新火苗。
  * 色相家族：火橙（0xFF7A2A）与余烬金（0xFFD08A），烟灰作余韵；饱和橙只出现在火苗与火星的小面积。
- * 拍子：起 charge（缠火）→ 击 hit（按进目标）→ 燃 ignite（目标身上起火）与 spread（火舌蔓延）与 whiff（空拳）。
- * 范围：spread 的蔓延用 `data.path`（命中点 → 邻近目标）画成折线，玩家看出火能舐到哪。
- * 运动：火舌沿拳面朝目标扑出，蔓延的火线沿命中点与邻居之间贴地爬。
+ * 拍子：起 charge（缠火）→ 击 hit（按进目标）→ 燃 ignite（目标身上起火）→
+ *   蔓 spread（火花从燃烧部位沿 `data.direction` 飞过 `data.span` 的距离）与 spread_hit（真正点燃的落点）与 whiff（空拳）。
+ * 范围：spread 的飞行用 `data.direction` + 绑 `data.span` 的线段，粒子沿该方向真的移动，不是画一条静止连线；
+ *   spread_hit 只在传火真的成功、邻敌实际着火时才在它身上播放。
  * 数：火星数绑 `data.embers`（特攻换算），命中强度绑 `data.intensity`。
  */
 const FirepunchDefinition: ParticleDefinition = {
@@ -78,21 +79,36 @@ const FirepunchDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "line", bind: "path", fit: "none",
+                    name: "fly", bind: "target", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    shape: { kind: "polyline" }, burst: { count: { data: "embers", fallback: 6 }, interval: 2 },
-                    direction: "shape", orient: "direction", speed: [0.05, 0.18],
-                    lifetime: [6, 12], size: [0.16, 0.04], sizeMode: "index",
+                    shape: { kind: "line", length: { data: "span", fallback: 1.5 } },
+                    burst: { count: { data: "embers", fallback: 6 }, interval: 1, repeats: 2 },
+                    direction: "shape", orient: "direction", speed: [0.22, 0.42], spread: 8,
+                    lifetime: [4, 8], size: [0.16, 0.04], sizeMode: "index",
                     color: 0xFF7A2A, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 50
-                },
+                }
+            ]
+        },
+        spread_hit: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
                 {
-                    name: "resume", bind: "target", height: 0.55,
+                    name: "catch", bind: "target", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    burst: { count: 8, interval: 3 },
-                    shape: { kind: "sphere", radius: 0.28 },
+                    burst: { count: { data: "embers", fallback: 6 }, interval: 2 },
+                    shape: { kind: "sphere", radius: 0.3 },
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.18, 0.04], sizeMode: "index",
-                    color: 0xFFD08A, alpha: [0.75, 0], light: "full", bloom: 0.3, maxParticles: 30
+                    color: 0xFFD08A, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 34
+                },
+                {
+                    name: "land", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: 8 }, shape: { kind: "ring", radius: 0.35 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [5, 10], size: [0.1, 0.03], sizeMode: "index",
+                    color: 0xFF7A2A, alpha: [0.7, 0], gravity: 0.03, drag: 0.94, light: "world", maxParticles: 24
                 }
             ]
         },

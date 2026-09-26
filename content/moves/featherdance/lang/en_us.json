@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.featherdance.summary": "Toss a drifting mass of down over a foe to harshly lower its Attack; the cloud settles into a patch that covers anyone who walks through it. Dense packs a deeper cut in a smaller patch; Loose spreads wider but shallower.",
+  "worldcombat.skill.featherdance.summary": "Toss a drifting mass of down over a foe to harshly lower its Attack; the cloud settles into a patch that covers anyone who walks through it. You can also throw the down at bare ground to lay the patch along a route in advance. Dense packs a deeper cut in a smaller patch; Loose spreads wider but shallower.",
   "worldcombat.skill.featherdance.use.0": "Blunt a physical attacker's output",
   "worldcombat.skill.featherdance.use.1": "Seal a doorway with a patch of down",
   "worldcombat.skill.featherdance.use.2": "Press a melee threat off an ally",
   "worldcombat.skill.featherdance.description.0": "A downy target loses %1$s Attack stage(s); the downy coat lasts %2$s, and while it clings a companion will not cast Feather Dance on that target again.",
-  "worldcombat.skill.featherdance.description.1": "The cloud spreads into a %1$s-block patch of down that lasts %2$s; a non-friendly body entering it also loses Attack and is coated (each body can be caught only once per patch).",
+  "worldcombat.skill.featherdance.description.1": "The cloud spreads into a %1$s-block patch of down that lasts %2$s; a non-friendly body entering it also loses Attack and is coated (each body can be caught only once per patch). Target a foe, or aim at bare ground to place the patch in advance; it lands where the cloud actually collides or runs out.",
   "worldcombat.skill.featherdance.description.2": "The down flies at %1$s blocks/tick with a %2$s-block hit radius over %3$s blocks (range %4$s); windup %5$s.",
   "worldcombat.skill.featherdance.dense.on": "Dense: the same bundle packs tighter, a smaller patch but a deeper cut.",
   "worldcombat.skill.featherdance.dense.off": "Loose: the same bundle spreads wider, one stage shallower.",

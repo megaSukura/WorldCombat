@@ -1,14 +1,15 @@
 /**
  * 毒击 / poisonjab —— 可执行设计说明。
  *
- * 一句话：站定把带毒的肢体沿直线递出去，扎中直线上的第一个对手，按概率留毒并顶开它。
+ * 一句话：站定把带毒的肢体沿瞄准方向递出去，扎中真实 trace 上的第一个身体，按概率留毒并顶开它。
  *
  * 场面：一只只会毒击的阿利多斯（ariados，L35，原生学习者）对一只昏睡、不动的卡比兽（snorlax，L30），
- *   相隔 6 格——在出臂距离之外，逼 AI 先走完接近再刺；昏睡让目标留在原地，出臂判定不因走位失效；
- *   地面铺平、白天晴天。
+ *   相隔 6 格——在出臂距离之外，逼 AI 先走完接近再刺；昏睡让目标留在原地，首碰判定不因走位失效；
+ *   地面铺平、白天晴天。自由 aim 下 AI 仍会把敌人作为刺击候选。
  *
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过深刺伤害（`stage.damageTo`）。
- * 随机量写进 note：中毒概率、暴击、以及顶开的位移都由掷签决定，供读轨迹判断。
+ * 随机量写进 note：中毒概率、暴击、以及顶开的位移都由掷签决定，供读轨迹判断；
+ *   前排挡下、墙截断与高低目标属于人工试玩范围。
  */
 Smoke.scenario("poisonjab", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -32,5 +33,5 @@ Smoke.scenario("poisonjab", function (stage) {
             });
             stage.done();
         });
-    }, "poison jab stabs a foe within 60 s");
+    }, "poison jab completes approach and thrust");
 });

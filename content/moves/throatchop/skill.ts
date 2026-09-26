@@ -47,7 +47,7 @@ namespace PokemonSkills {
         name: "Throat Chop",
         description: "一记直取咽喉的突刺。命中造成物理伤害，并让目标在一段时间内无法使出任何声音类招式。",
         uses: ["封住对手的吼叫与音波", "惩罚依赖声音类招式的对手", "近身压制远程施法者"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.8,
         maxRange: 3.6,
         prepare: 9,
@@ -74,21 +74,45 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
             const origin = action.origin(), targetPos = action.targetPosition();
+            const selfBody = world.observe(self);
             const delta = targetPos.minus(origin);
             const direction = delta.length() < 0.01 ? action.direction() : delta.unit();
             const reach = Math.max(0.5, Math.min(action.range(), delta.length() || action.range()));
             const radius = p(throatChopId, "radius", action);
             const power = p(throatChopId, "chop", action);
             const ticks = Math.max(40, Math.round(p(throatChopId, "silenceTicks", action)));
+            const target = action.target();
+            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
+            // 手刀尖直取身体较高处：判定线与表现方向共用这组抬高后的端点，接触点即是真实命中点。
+            const rise = selfBody === null ? 0.3 : selfBody.height() * 0.2;
+            const targetRise = targetBody === null ? rise : targetBody.height() * 0.3;
+            const from = origin.plus(WorldCombat.point(0, rise, 0));
+            const to = targetPos.plus(WorldCombat.point(0, targetRise, 0));
             sound(action, "minecraft:entity.player.attack.strong");
-            WorldFeedback.emit(world, throatChopScene, 1, origin,
+            WorldFeedback.emit(world, throatChopScene, 1, from,
                 { moment: "thrust", reach: reach, direction: [direction.x(), direction.y(), direction.z()],
-                    target: action.target() === null ? "" : String(action.target()!.ref()), choke: config && config.choke === true }, 18);
-            const hit = action.trace(origin, targetPos, radius);
+                    target: target === null ? "" : String(target.ref()), choke: config && config.choke === true }, 18);
+            // 短直线首接触；友方也纳入接触，伤害许可仍由命中层独立判定。
+            const hit = action.trace(from, to, radius, true);
             const victim = hit.hitEntity() ? hit.target() : null;
-            if (victim === null || world.friendly(victim) || String(victim.key()) === String(self.key())) {
-                WorldFeedback.emit(world, throatChopScene, 1, targetPos, { moment: "whiff" }, 20);
-                WorldFeedback.text(world, throatChopAbove(targetPos), throatChopWhiffText, [], 24);
+            if (victim === null) {
+                if (hit.blocked()) {
+                    const block = hit.blockPosition();
+                    const at = block === null ? hit.position() : block;
+                    WorldFeedback.emit(world, throatChopScene, 1, at, { moment: "block", face: hit.blockFace() }, 20);
+                    world.sound("minecraft:entity.warden.attack_impact", at, 10, "{}");
+                } else {
+                    WorldFeedback.emit(world, throatChopScene, 1, to, { moment: "whiff" }, 20);
+                    WorldFeedback.text(world, throatChopAbove(to), throatChopWhiffText, [], 24);
+                }
+                sound(action, "minecraft:entity.player.attack.sweep");
+                done(action);
+                return;
+            }
+            if (world.friendly(victim) || String(victim.key()) === String(self.key())) {
+                const ally = world.observe(victim);
+                const at = ally === null ? hit.position() : ally.position();
+                WorldFeedback.emit(world, throatChopScene, 1, at, { moment: "block", face: hit.blockFace() }, 20);
                 sound(action, "minecraft:entity.player.attack.sweep");
                 done(action);
                 return;
@@ -97,14 +121,19 @@ namespace PokemonSkills {
             const at = world.observe(victim);
             const point = at === null ? hit.position() : at.position();
             if (landed) {
-                CombatStatus.apply(world, victim, throatChopStatus, throatChopEffect, ticks, 0, { unique: true });
+                // 真实封锁状态才接通喉环；免状态（政策拒绝）只留伤害闪光与文字。
+                const sealed = CombatStatus.apply(world, victim, throatChopStatus, throatChopEffect, ticks, 0, { unique: true });
                 WorldFeedback.emit(world, throatChopScene, 1, point,
                     { moment: "hit", target: String(victim.ref()), scale: Math.max(0.6, Math.min(1.8, reach / 2.8)),
                         motes: Math.max(16, Math.round(power * 0.3)),
                         intensity: Math.max(0.5, Math.min(2.2, power / 80)) }, 30);
-                WorldFeedback.text(world, throatChopAbove(point), throatChopText, [Math.round(ticks / 20)], 32);
+                if (sealed) {
+                    WorldFeedback.emit(world, throatChopScene, 1, point,
+                        { moment: "seal", target: String(victim.ref()), motes: Math.max(10, Math.round(power * 0.2)) }, 28);
+                    WorldFeedback.text(world, throatChopAbove(point), throatChopText, [Math.round(ticks / 20)], 32);
+                }
                 world.sound("cobblemon:impact.dark", point, 16, "{}");
-                world.sound("minecraft:entity.warden.attack_impact", point, 12, "{}");
+                if (sealed) world.sound("minecraft:entity.warden.attack_impact", point, 12, "{}");
             } else {
                 WorldFeedback.emit(world, throatChopScene, 1, point, { moment: "whiff", target: String(victim.ref()) }, 20);
             }

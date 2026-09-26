@@ -1,13 +1,13 @@
 /**
  * 清除之烟 / clearsmog 的客户端表现。
  *
- * 一句话：施法者把一团浊泥甩向对手，泥团砸中的一刻炸开一片灰绿的浓烟，烟裹住目标、把一层层能力等级从它身上
- *   冲刷下来（白光一现），烟还在它身上黏着、每隔几刻把新冒出的等级再冲散一次。
+ * 一句话：施法者把一团浊泥甩向选定的方向或实体，泥团砸中的一刻在真实接触点炸开一片灰绿的浓烟，烟裹住范围内的
+ *   敌人、把正向的能力提升从它身上冲刷下来（白光一现），烟还在它身上薄薄地黏着、每隔几刻把新冒出的增益再冲散一次。
  * 色相家族：灰绿与土黄（浊泥与烟），冲刷的一瞬用近白；没有第二个色相。
  * 拍子：起 windup（捏泥冒烟 0–11t）→ 掷 flight（泥团弧飞，随弹体）→ 炸 burst（烟团炸开 0–30t）
- *   → 罩 caught／veil（烟沿目标持续）→ 冲 scour（白冲一现）／散 release。
+ *   → 罩 caught／veil（薄烟沿目标持续）→ 冲 scour（白冲一现）／散 release。
  * 范围：`data.scale`（烟团半径 / 2.2）缩放 smoke 炸开的范围与落地烟圈，玩家一眼知道站哪会被冲。
- * 运动：泥团绑弹体走小弧、修向目标；炸开后烟从命中点向外翻卷再贴地铺开，罩住的人身上维持一圈上升的浊气。
+ * 运动：泥团绑弹体走小弧、只对非友方实体修向；无论砸到实体还是方块，烟都从真实接触点向外翻卷再贴地铺开。
  * 数：`data.fumes`（特攻换算的烟量）绑定炸开与罩住时的烟团数量，`data.erased` 让被试目标的那一下按冲掉的级数加亮，
  *   `data.intensity`（威力 / 42）放大整幕。
  */
@@ -121,18 +121,18 @@ const ClearsmogDefinition: ParticleDefinition = {
                 {
                     name: "shroud", bind: "target", fit: "body", offset: [0, 0.6, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: { data: "fumes", fallback: 14 }, shape: { kind: "sphere", radius: 0.45 },
-                    direction: "up", speed: [0.02, 0.08], drag: 0.93,
-                    lifetime: [12, 20], size: [0.4, 0.16], sizeMode: "linear",
-                    color: 0x9AA88A, alpha: [0.35, 0], light: "world", maxParticles: 34
+                    rate: 6, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "up", speed: [0.02, 0.07], drag: 0.93,
+                    lifetime: [12, 20], size: [0.3, 0.14], sizeMode: "linear",
+                    color: 0x9AA88A, alpha: [0.28, 0], light: "world", maxParticles: 16
                 },
                 {
                     name: "mote", bind: "target", fit: "body", offset: [0, 0.8, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 5, shape: { kind: "ring", radius: 0.4 },
-                    direction: "up", speed: [0.02, 0.08],
-                    lifetime: [8, 14], size: [0.08, 0.03],
-                    color: 0xDCE3D0, alpha: [0.4, 0], light: "world", maxParticles: 14
+                    rate: 3, shape: { kind: "ring", radius: 0.4 },
+                    direction: "up", speed: [0.02, 0.07],
+                    lifetime: [8, 14], size: [0.07, 0.03],
+                    color: 0xDCE3D0, alpha: [0.35, 0], light: "world", maxParticles: 8
                 }
             ]
         },

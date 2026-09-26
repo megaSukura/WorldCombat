@@ -1,10 +1,10 @@
 /**
  * 祈愿 / Wish —— 参数与数值来源。
  *
- * 机制：把一颗愿星送上高空，延迟一段时间后落回原处，为施法者回复最大生命的一个比例；开启分享时，圈内
- *   每个友善战斗者也各按同一比例回复（比例被摊薄）。愿望独立于施法动作存在，施法者被收回也仍在原地等待。
+ * 机制：点一块空地做落点，把愿星送上高空，延迟一段时间后落回那块地；兑现时只按落点圈筛选，圈内的友善
+ *   战斗者各回复其最大生命的一个比例。愿望独立于施法动作存在，施法者被收回也仍在原地等待。
  * 数值来源：回复比例随特攻增长（许愿者越强，愿力越足）；祝福半径与悬停高度随体型高度增长（大个子撑起更
- *   大的圈）；落下延迟随速度缩短（快的个体更快兑现）。
+ *   大的圈）；落下延迟随速度缩短（快的个体更快兑现）；落点距离随体型高度增长（大个子把星放得更远）。
  * 与原生：取原生「下一回合回复最大HP的一半」的延迟兑现，放弃回合制；回复按受益者自身最大生命计算，并允许
  *   分享给落在圈里的伙伴。
  */
@@ -20,14 +20,16 @@ namespace PokemonSkills {
         delayTicks: seconds(F.base(70).minus(F.stat("speed").times(0.15)).clamp(40, 80).as("速度修正"), "落下延迟",
             "从放出到愿星落地的时间；可被准备好的一方避开或利用。"),
         hangHeight: formula(F.base(3).plus(F.body("height").times(0.5)).clamp(2.5, 5).as("体型修正"), "悬停高度",
-            { unit: " 格", description: "愿星从多高落下。" })
+            { unit: " 格", description: "愿星从多高落下。" }),
+        reach: formula(F.base(9).plus(F.body("height").times(0.6)).clamp(6, 14).as("体型修正"), "施放距离",
+            { unit: " 格", description: "愿星落点距施法者的最大距离。" })
     });
     stages(wishId, [
         { level: 40, values: { cooldown: 220 } },
         { level: 60, values: { cooldown: 180 } }
     ]);
     describe(wishId, [
-        { key: "description.0", values: ["delayTicks", "wishHeal"] },
+        { key: "description.0", values: ["reach", "delayTicks", "wishHeal"] },
         { key: "description.1", values: ["wishRadius","shareScale"] },
         { key: "description.payout", values: [] },
         { key: "stance.share", values: ["shareScale"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },

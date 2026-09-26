@@ -7,8 +7,9 @@
  * 三幕：
  *   起（windup，提交前）：兽首张大、门牙泛出白光，只播预告表现。
  *   咬（pounce → bite）：提交后沿瞄准方向扑出，trace 咬中即结算 `fang`；命中处炸开骨白牙影与迸溅。
- *   甩（shake → stun）：咬住后沿侧面猛甩 `shove` 格并把目标钉住 `pinTicks`；按 `flinchChance` 掷畏缩，
- *       甩懵则挂共享身份 `world_combat:status/flinch` 并投递 `world_combat:interrupt` 把它此刻那一手按停。
+ *   甩（shake → stun）：咬住后按**配置里明确的左／右偏好**、相对释放方向沿选定侧分 3 刻小步甩到总 `shove` 格，
+ *       受阻即停；按体重把目标钉住 `pinTicks`；每刻只有真实位移才画出甩线（`actual` 距离），免位移目标只留咬痕。
+ *       甩完按 `flinchChance` 掷畏缩，甩懵则挂共享身份 `world_combat:status/flinch` 并投递 `world_combat:interrupt`。
  *
  * 与同族分开：咬住把人拽近、咬碎研磨压塌护甲、愤怒门牙削掉一半生命、贝壳刃横扫削甲；
  * 只有必杀门牙钳住钉住并猛甩，追求单口最重与一次震慑。
@@ -33,7 +34,7 @@ namespace PokemonSkills {
         name: "Hyper Fang",
         description: "扑上去一口咬死，牙齿不松、左右猛甩：这一口是全族最重的直接伤害，甩出的侧向位移把目标从站位里晃开，并按体重把它钉住一小会儿；甩得够狠就把它甩懵，打断它正在做的事。代价是没有持久削弱。",
         uses: ["用全族最重的单口直接伤害咬实", "咬住猛甩，把目标钉住一会儿", "甩懵对手，打断它正在做的事"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.0,
         maxRange: 3.6,
         prepare: 5,
@@ -41,8 +42,8 @@ namespace PokemonSkills {
         recover: 7,
         cooldown: 18,
         style: "bite",
-        defaults: { shake: false, ai: { maxChase: 6, press: true } },
-        fields: [],
+        defaults: { shake: false, side: "right", ai: { maxChase: 6, press: true, clearLine: true } },
+        fields: [choice("side", "甩出方向", ["right", "left"], ["向右", "向左"])],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p("hyperfang", "grip", pokemon) : 0.45) * 1.5, geometry: "line", style: "bite",
                 color: 0xE8DCC8, label: config && config.shake === true ? "摆甩式" : "钳咬式" };
@@ -77,6 +78,12 @@ namespace PokemonSkills {
             const scale = radius / 0.45;
             const intensity = Math.max(0.5, Math.min(2.3, power / 84));
             const morsels = Math.max(10, Math.round(power * 0.22));
+            // 侧甩方向来自配置里明确的左／右偏好（默认右），相对本次释放方向；同一方向连续使用不会再随机换边。
+            const sideSign = config && config.side === "left" ? -1 : 1;
+            const flat = WorldGeometry.flatUnit(direction);
+            const sideDir = WorldCombat.point(-flat.z() * sideSign, 0, flat.x() * sideSign);
+            const whipSteps = 3;
+            const perWhip = shove / whipSteps;
             let travelled = 0, settled = false;
 
             movementScenes.show(action, "pounce", action.origin(), { moment: "pounce", direction: [direction.x(), direction.y(), direction.z()], scale: scale });
@@ -92,6 +99,43 @@ namespace PokemonSkills {
                 finish(current);
             }
 
+            /** 甩完（或受阻停下）：按畏缩许可掷一次甩懵，然后收场。位移在甩步里已按真实 actual 结算。 */
+            function afterWhip(current: CombatAction, victimRef: string, at: CombatPoint): void {
+                const scope = current.world();
+                const victim = scope.actor(victimRef);
+                if (victim === null || !scope.valid(victim)) { finish(current); return; }
+                const body = scope.observe(victim);
+                const here = body === null ? at : body.position();
+                if (scope.random() < chance && hyperfangFlinch(scope, victim, flinchTicks)) {
+                    WorldFeedback.emit(scope, hyperfangScene, 1, here,
+                        { moment: "stun", target: victimRef, stun: flinchTicks, scale: scale }, 26);
+                    WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.45, 0)), hyperfangStunText, [], 26);
+                    sound(current, "cobblemon:impact.normal");
+                }
+                finish(current);
+            }
+
+            /** 分 3 刻把目标沿选定侧小步带到位；每刻只画真实发生的位移，受阻立即停。 */
+            function whipStep(current: CombatAction, victimRef: string, at: CombatPoint, index: number): void {
+                const scope = current.world();
+                const victim = scope.actor(victimRef);
+                if (victim === null || !scope.valid(victim)) { afterWhip(current, victimRef, at); return; }
+                const before = scope.observe(victim);
+                const from = before === null ? at : before.position();
+                const actual = scope.displace(victim, sideDir.scale(perWhip));
+                const after = scope.observe(victim);
+                const to = after === null ? from.plus(sideDir.scale(actual)) : after.position();
+                if (actual > 0.02) {
+                    WorldFeedback.emit(scope, hyperfangScene, 1, from,
+                        { moment: "shake", target: victimRef, pin: pin, sparks: Math.round(10 + perWhip * 36),
+                            reach: Math.round(actual * 100) / 100, step: index + 1,
+                            direction: [sideDir.x(), sideDir.y(), sideDir.z()],
+                            path: [[from.x(), from.y() + 0.25, from.z()], [to.x(), to.y() + 0.25, to.z()]], scale: scale }, 20);
+                }
+                if (actual < perWhip * 0.25 || index + 1 >= whipSteps) { afterWhip(current, victimRef, at); return; }
+                current.after(1, function (next: CombatAction) { whipStep(next, victimRef, at, index + 1); });
+            }
+
             function latch(current: CombatAction, victim: CombatActor, at: CombatPoint, contact: CombatImpact): void {
                 movementScenes.stop(current);
                 const scope = current.world();
@@ -102,23 +146,11 @@ namespace PokemonSkills {
                     { moment: "bite", target: victimRef, morsels: morsels, scale: scale, intensity: intensity }, 24);
                 sound(current, "cobblemon:move.hyperfang.target");
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
-                // 牙齿不松、左右猛甩：把目标沿侧面晃开，并按体重钉住。
-                const side = WorldCombat.point(-direction.z(), 0, direction.x());
-                const sign = scope.random() < 0.5 ? -1 : 1;
-                scope.displace(victim, side.scale(shove * sign));
+                // 牙齿不松：先按体重钉住，再沿选定侧逐步甩出；免位移的 Boss 仍吃这一口重咬。
                 WorldEffects.apply(scope, victim, "rooted", {}, pin);
-                WorldFeedback.emit(scope, hyperfangScene, 1, at,
-                    { moment: "shake", target: victimRef, pin: pin, sparks: Math.round(12 + shove * 40),
-                        direction: [direction.x(), direction.y(), direction.z()], scale: scale }, 24);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), hyperfangLatchText, [], 22);
                 sound(current, "minecraft:entity.iron_golem.attack");
-                if (scope.random() < chance && hyperfangFlinch(scope, victim, flinchTicks)) {
-                    WorldFeedback.emit(scope, hyperfangScene, 1, at,
-                        { moment: "stun", target: victimRef, stun: flinchTicks, scale: scale }, 26);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.45, 0)), hyperfangStunText, [], 26);
-                    sound(current, "cobblemon:impact.normal");
-                }
-                finish(current);
+                whipStep(current, victimRef, at, 0);
             }
 
             function advance(current: CombatAction): void {

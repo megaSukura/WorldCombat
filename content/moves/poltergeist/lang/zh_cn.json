@@ -29,5 +29,5 @@
   "world_combat.move.poltergeist.text.slam": "道具砸回",
   "world_combat.move.poltergeist.text.bind": "被缠住了",
   "world_combat.move.poltergeist.text.fizzle": "空手无物可操",
-  "worldcombat.skill.poltergeist.description.item": "道具只被隔空操纵、不会被夺走，命中后仍留在目标手里；目标空手时无法施放，起手即失败，不消耗 PP、也不进入冷却。"
+  "worldcombat.skill.poltergeist.description.item": "道具只被隔空操纵、不会被夺走，命中后仍留在目标手里。目标空手时无法施放，起手即失败，不消耗 PP、也不进入冷却；若它在蓄力间放下或换掉那件道具，这次操控会落空，也不会凭空出现替代物。"
 }

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.lockon.summary": "把准星咬住一个对手，拖慢它的移动（钉死时连飞行一起钉住）；你用物理或特殊伤害命中它时锁即用掉，锁定期走完也会散去。",
+  "worldcombat.skill.lockon.summary": "咬住一名可见敌人的准星并短暂压速；自己的后续实际命中才用掉自己的锁。钉死式还压住飞行速度，原生拒控会弹开准星。",
   "worldcombat.skill.lockon.use.0": "在对手要逃开前先钉住它",
   "worldcombat.skill.lockon.use.1": "把目标拖住，为近身追击争取时间",
   "worldcombat.skill.lockon.use.2": "把跑得快的目标拖慢下来集火",
   "worldcombat.skill.lockon.description.0": "准星咬住一个对手 %1$s，并把它的移动压低 %2$s（钉死时连飞行一起钉住）；你用物理或特殊伤害命中它，锁即用掉，锁定期走完也会自行散去。",
-  "worldcombat.skill.lockon.description.1": "这层锁只对这个目标算数；命中其他敌人不会兑现。",
+  "worldcombat.skill.lockon.description.1": "只命中所锁目标才消费；同伴的独立锁继续保留。后续攻击仍需实际路径接触，不保证命中。",
   "worldcombat.skill.lockon.description.2": "锁定距离 %1$s 格，起手 %2$s，收招 %3$s。只有单体，需要视线。",
   "worldcombat.skill.lockon.hold.on": "钉死：锁定期 ×1.5、咬住时长 ×1.4，完全钉住目标移动与飞行，但起手延长到 %1$s、冷却拉长到 %2$s。",
   "worldcombat.skill.lockon.hold.off": "松锁：只压低目标移动、窗口与冷却都更短，适合频繁把目标拖在射线上。",

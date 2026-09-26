@@ -23,7 +23,7 @@ Smoke.scenario("darkpulse", function (stage) {
     }, function () {
         stage.expect(stage.casts("darkpulse", caster) >= 1, "absol committed darkpulse");
         stage.expect(stage.damageTo(first) > 0 || stage.damageTo(second) > 0, "the aura burst dealt damage");
-        stage.note("crit, the flinch roll (about 20%) and how many foes stood inside the burst radius are random/positional", {
+        stage.note("crit, the flinch roll (about 20%), how many foes stood inside the burst radius, and whether the aura burst early on the first body it met are random/positional; the burst centre is whatever point the aura actually reached", {
             casts: stage.casts("darkpulse", caster),
             firstDamage: Math.round(stage.damageTo(first) * 10) / 10,
             secondDamage: Math.round(stage.damageTo(second) * 10) / 10,

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.electroshot.summary": "Gather electricity into your body to raise Special Attack, then fire a high-voltage lance that follows the target. In rain the charge comes straight from the weather, so it fires at once: stand and gather in clear weather, or snap it off the moment it rains.",
+  "worldcombat.skill.electroshot.summary": "Gather electricity into your body to raise Special Attack, then fire a high-voltage lance: it steers toward a targeted entity, or flies straight along the aimed direction when only a point is chosen. In rain the charge comes straight from the weather, so it fires at once: stand and gather in clear weather, or snap it off the moment it rains.",
   "worldcombat.skill.electroshot.use.0": "An instant high-voltage shot in the rain",
   "worldcombat.skill.electroshot.use.1": "A lance that a walking target cannot shake",
   "worldcombat.skill.electroshot.use.2": "Bank a Special Attack stage, then spend it",
@@ -33,5 +33,7 @@
   "world_combat.move.electroshot.text.rain": "Fired off the rain!",
   "world_combat.move.electroshot.text.boost": "Sp. Atk +%1$s",
   "world_combat.move.electroshot.text.hit": "Electro Shot hits",
+  "world_combat.move.electroshot.text.resist": "Shrugged off",
+  "world_combat.move.electroshot.text.ward": "Warded off",
   "world_combat.move.electroshot.text.miss": "The lance scatters"
 }

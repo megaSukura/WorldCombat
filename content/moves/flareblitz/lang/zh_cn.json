@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.flareblitz.summary": "向目标冲撞，造成伤害、击退并有机会使其灼伤。命中后自身承受反伤。",
+  "worldcombat.skill.flareblitz.summary": "朝瞄准方向全身着火冲出去，撞到的第一个敌人受到伤害、被顶飞并有机会灼伤；只有真的撞伤目标才按比例反伤自己。",
   "worldcombat.skill.flareblitz.description.0": "全身着火撞实这一下造成约 %1$s 的接触伤害，最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
   "worldcombat.skill.flareblitz.description.1": "命中若目标尚未灼伤，有 %1$s 的概率使其灼伤，并沿冲撞方向把目标顶飞 %3$s 格；同时自身承受实际造成伤害 %2$s 倍的反伤。灼伤持续%4$s，期间物理攻击减半、每 5 秒损失约 1/16 最大生命；火属性等天生免疫者不会被点燃。撞中第一个目标、冲完冲程、撞墙或被挡下时停下；未命中任何目标则只熄灭火焰、不自伤。",
   "worldcombat.skill.flareblitz.afterburn.on": "余焰式：灼伤概率显著提高、反伤更重、起手更慢、冲程更短、击退更轻——把这一撞换成持续压制。",

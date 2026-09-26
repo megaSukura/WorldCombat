@@ -3,7 +3,7 @@
   "worldcombat.skill.suckerpunch.use.0": "惩罚正在抬手的近身对手",
   "worldcombat.skill.suckerpunch.use.1": "抢在对手重击之前先打一下",
   "worldcombat.skill.suckerpunch.use.2": "对一直贴着打的敌人稳定输出",
-  "worldcombat.skill.suckerpunch.description.0": "闪身刺出约 %1$s 点伤害的一记；只有目标正在出手、或在最近 %2$s 内使过攻击招式时才会命中，读空则落空。",
+  "worldcombat.skill.suckerpunch.description.0": "闪身刺出约 %1$s 点伤害的一记；被打中的活体要在最近 %2$s 内出手过（原生近战／投射物或脚本攻击招式）才会命中，否则这一记落空。",
   "worldcombat.skill.suckerpunch.description.1": "闪身距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中后把目标顶开 %4$s 格。",
   "worldcombat.skill.suckerpunch.read.on": "开启读招：读取窗口多 0.6 秒、刺击多一成五，代价是起手慢 2 刻、冷却多 6 刻。",
   "worldcombat.skill.suckerpunch.read.off": "关闭读招：几乎瞬发的纯粹抢手，冷却更短，但只认眼前的出手。",
@@ -26,5 +26,5 @@
   "world_combat.move.suckerpunch.text.read": "读到了",
   "world_combat.move.suckerpunch.text.hit": "突袭！",
   "world_combat.move.suckerpunch.text.whiff": "读空",
-  "worldcombat.skill.suckerpunch.description.path": "闪身途中会刺中判定半径内的任何非友方活体；前移被地形挡住、或始终没有刺中目标，这一记同样落空。"
+  "worldcombat.skill.suckerpunch.description.path": "朝瞄准方向闪身，打中的第一个活体不在出手窗内就只空刺一下；被地形挡住、或一路没碰到人，同样落空。可以朝任意方向硬赌空放，空放也照常消费。"
 }

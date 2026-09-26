@@ -8,7 +8,8 @@
  *   `ai.finish`（默认开）时残血目标多一档分，用一记先手铲收尾。
  * 优先次序：射程内基础 22；脚下有草 +12（瞬发且更远）；目标残血 +8；已在射程内 +4。
  * 够不到怎么办：射程由 `dash` 决定，共享任务先把身位收进滑行距离再滑。
- * 放完之后：目标被铲开、落点长出青草；交回共享交战计划，冷却一好就能再滑。
+ * 放完之后：目标被铲开、落点只扬一撮短草，没有青草场地留下来；交回共享交战计划，冷却一好就能再滑。
+ * 场地选择：AI 会把「站在已有青草场地上」当成加分理由；本招自己不铺场，所以不会为了造场反复出招。
  */
 namespace PokemonSkills {
     function grassyglideWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -42,9 +43,6 @@ namespace PokemonSkills {
     });
 
     addPreferences(grassyglideId, {}, [
-        field(pathOf("seed"), "播种式", "boolean", {
-            help: "开启：落点长出一大片更久的青草，站在上面算「在青草场地上」（草属性招式更猛、下一次滑梯瞬发），代价是滑行距离 ×0.85、收招 +2 刻、冷却 +8 刻。关闭：滑得更远、回得更快，只压出一小片青草。"
-        }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,
             help: "对手离自己这么远以内才主动滑过去；本招射程短，设大愿意更早起手。"

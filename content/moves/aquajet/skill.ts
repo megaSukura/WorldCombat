@@ -6,9 +6,9 @@
  *
  * 两幕：
  *   起（windup，提交前）：水在脚边聚成一圈环、身体裹上一层水膜，只播预告（present gather）。
- *   射（execute）：提交后沿瞄准方向逐刻推进，身后拖一整条水柱；撞上第一个非友方活体就炸开——
- *       先把它浇透（共享身份 soaked），再结算 jet 接触伤害、沿喷射方向顶开；若它带着火或灼伤，这一冲把火浇熄。
- *       激流式（deluge）不停下，继续贯穿整条路径，把碰到的人都浇透打伤；一路没碰到人就收势落空（miss）。
+ *   射（execute）：提交后沿瞄准方向的水平分量逐刻推进，身后拖一整条水柱；撞上第一个非友方活体就炸开——
+ *       结算 jet 接触伤害、沿喷射方向顶开，成功命中才把它浇透（共享身份 soaked）；若它带着火或灼伤，这一冲把火浇熄。
+ *       激流式（deluge）不停下，继续贯穿整条路径，把碰到的人各浇透打伤一次；一路没碰到人就收势落空（miss）。
  *
  * 与同族分开：水流尾是站定抡出推进的弧形浪墙（可拍中多人、推得更远）；水流喷射是一条直线鱼雷，默认只命中第一个。
  *   与电光一闪分开：水柱拖尾、浇透与「水中更强」是它独有的读法。
@@ -21,7 +21,7 @@ namespace PokemonSkills {
         name: "Aqua Jet",
         description: "把自己裹进一枚水柱里贴地射出：比电光一闪更远更久，撞上第一个敌人就把它浇透、顶开，若它带着灼伤就一并浇熄其火。施放者身在水里时水柱更猛。激流式会贯穿整条路径、浇透碰到的每个人，但每一下更轻。",
         uses: ["远处先手扑上去，把对手浇透", "借水柱位移缩短与对手的距离", "从水里冲出来打一记更猛的水柱"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.1,
         maxRange: 5.6,
         prepare: 3,
@@ -54,8 +54,11 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(aquajetScene);
-            const world = action.world();
-            const direction = aim(action);
+            const aimed = aim(action);
+            const level = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const flat = level.length() > 0.001 ? level : WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            const direction = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
+            action.releaseTarget();
             const length = p(aquajetId, "surge", action);
             const step = p(aquajetId, "pace", action);
             const radius = p(aquajetId, "collisionRadius", action);
@@ -75,30 +78,26 @@ namespace PokemonSkills {
             function strike(current: CombatAction, hit: CombatImpact, victim: CombatActor): void {
                 const scope = current.world();
                 const at = hit.position();
-                CombatStatus.apply(scope, victim, "soaked", aquajetSoakedEffect, soak, 0);
                 const landed = impact(current, hit, aquajetId, power,
                     { damage: damageSpec(aquajetId, "jet"), contact: true });
-                if (!landed) {
-                    MobEffects.consume(scope, victim, aquajetSoakedEffect);
-                    return;
-                }
+                if (!landed) return;
                 hits++;
-                if (scope.valid(victim)) {
-                    const away = at.minus(current.origin());
-                    if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
-                }
+                const soaked = CombatStatus.apply(scope, victim, "soaked", aquajetSoakedEffect, soak, 0);
+                if (scope.valid(victim)) scope.hitDisplace(victim, direction.scale(push));
                 const body = scope.observe(victim);
                 const point = body === null ? at : body.position();
                 WorldFeedback.emit(scope, aquajetScene, 1, point,
                     { moment: "burst", target: String(victim.ref()), spray: spray, scale: scale, intensity: intensity }, 24);
                 scope.sound("cobblemon:impact.water", point, 14, "{}");
-                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), aquajetSoakText, [], 22);
+                if (soaked) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), aquajetSoakText, [], 22);
                 if (CombatStatus.has(scope, victim, "burn")) {
-                    CombatStatus.cure(scope, victim, "burn");
-                    if (scope.valid(victim)) scope.ignite(victim, 0);
-                    WorldFeedback.emit(scope, aquajetScene, 1, point, { moment: "douse", target: String(victim.ref()), scale: scale }, 26);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), aquajetDouseText, [], 24);
-                    scope.sound("minecraft:block.fire.extinguish", point, 14, "{}");
+                    const cured = CombatStatus.cure(scope, victim, "burn");
+                    const out = scope.ignite(victim, 0);
+                    if (cured || out) {
+                        WorldFeedback.emit(scope, aquajetScene, 1, point, { moment: "douse", target: String(victim.ref()), scale: scale }, 26);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), aquajetDouseText, [], 24);
+                        scope.sound("minecraft:block.fire.extinguish", point, 14, "{}");
+                    }
                 }
             }
 

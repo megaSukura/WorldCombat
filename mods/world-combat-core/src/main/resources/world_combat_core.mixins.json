@@ -7,8 +7,17 @@
     "MobControlMixin",
     "MobEffectTickMixin",
     "MobEffectLeaseSaveMixin",
+    "NativeEffectAccess",
+    "NativeEffectStackAccess",
     "ProjectileHitRadiusMixin",
+    "ProjectileFlightObservationMixin",
     "PublicAttributeMixin",
+    "GroundSlipperinessMixin",
+    "GroundLiftTravelMixin",
+    "GroundLiftNavigationMixin",
+    "NativePathGoalMixin",
+    "PreciseNavigationMixin",
+    "NativeDamageFloorMixin",
     "T88NetworkWatcherMixin"
   ],
   "injectors": {

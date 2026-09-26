@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.petaldance.summary": "Whirl in place as rings of petals rise into a storm: each ring deals special area damage to everything around and nudges them out; the dance drifts along an arc and leaves petals where it passes. Afterwards the user reels in confusion and its actions may fumble.",
-  "worldcombat.skill.petaldance.use.0": "Shave a ring of approaching enemies from a distance",
+  "worldcombat.skill.petaldance.summary": "Dance in motion inside a hollow ring of petals: the outer edge cuts and nudges whoever it sweeps past, while the open centre stays safe; petals are left where the user passes. Afterwards the user reels in confusion and its actions may fumble.",
+  "worldcombat.skill.petaldance.use.0": "Shave a ring of approaching enemies with the outer petal edge",
   "worldcombat.skill.petaldance.use.1": "Handle a crowd of low Sp. Def targets with special damage",
-  "worldcombat.skill.petaldance.use.2": "Leave petals on the ground to mark where you danced",
-  "worldcombat.skill.petaldance.description.0": "Whirls %2$s rings, each dealing about %1$s special damage to every foe around the user.",
-  "worldcombat.skill.petaldance.description.1": "The storm radius is %1$s blocks and rings are %2$s apart; each ring drifts %3$s blocks along an arc and nudges everyone in it %4$s blocks outward.",
-  "worldcombat.skill.petaldance.description.2": "Each ring leaves up to %1$s petal patches on the ground beneath it, only on soil that can grow grass; they last %2$s before the petals vanish and the blocks revert.",
-  "worldcombat.skill.petaldance.description.3": "Afterwards the user is dazed for %1$s: each attempted action has a %2$s chance to be broken and wasted, and a fumble also cuts the user for a sliver of maximum health and resets the daze.",
+  "worldcombat.skill.petaldance.use.2": "Walk the skirt edge onto enemies while leaving the safe open centre for allies",
+  "worldcombat.skill.petaldance.description.0": "Dances %2$s rings along the current aim, each dealing about %1$s special damage to every foe on the outer petal edge.",
+  "worldcombat.skill.petaldance.description.1": "The skirt's outer radius is %1$s blocks and its open centre is %2$s of that (targets closer than this sit in the safe hollow); rings are %3$s apart; each ring drifts %4$s blocks along an arc and nudges those on the edge %5$s blocks outward.",
+  "worldcombat.skill.petaldance.description.2": "Each ring leaves up to %1$s petal patches on genuinely supporting ground; they last %2$s before the petals vanish and the blocks revert.",
+  "worldcombat.skill.petaldance.description.3": "Afterwards the user is dazed for %1$s: each attempted action has a %2$s chance to be broken and wasted, and a fumble also cuts the user for a sliver of maximum health; the backlash does not extend the daze.",
   "worldcombat.skill.petaldance.drift.on": "Whirling form: drifts further, storms wider, petals last longer and the daze lasts longer, but each ring is slightly weaker (×0.96) and the wind-up and cooldown are longer.",
   "worldcombat.skill.petaldance.drift.off": "Grounded form: spins in place, recovers faster and loses control for less time, but the radius and the trace left behind are narrower.",
   "worldcombat.skill.petaldance.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP; cooldown %5$s s after casting.",
@@ -14,7 +14,8 @@
   "worldcombat.skill.petaldance.growth.1": "From level %1$s each ring rises to %2$s and leaves %3$s petal patches.",
   "worldcombat.skill.petaldance.value.bloom": "Ring power",
   "worldcombat.skill.petaldance.value.strikes": "Rings",
-  "worldcombat.skill.petaldance.value.radius": "Storm radius",
+  "worldcombat.skill.petaldance.value.radius": "Skirt outer radius",
+  "worldcombat.skill.petaldance.value.inner": "Open-centre share",
   "worldcombat.skill.petaldance.value.drift": "Drift step",
   "worldcombat.skill.petaldance.value.push": "Petal push",
   "worldcombat.skill.petaldance.value.petals": "Petal patches",
@@ -39,5 +40,5 @@
   "world_combat.move.petaldance.text.daze": "Reeling after the dance",
   "world_combat.move.petaldance.text.chip": "Cut by petals %1$s",
   "effect.world_combat.petaldance_daze": "Petal Dance (dazed)",
-  "worldcombat.skill.petaldance.description.stance": "From the first spin through recovery the user stays rooted and the dance cannot be interrupted; free movement returns only when it ends."
+  "worldcombat.skill.petaldance.description.stance": "The user keeps free movement through the dance and the skirt travels with its real body; the dance cannot be interrupted and only ends when it finishes."
 }

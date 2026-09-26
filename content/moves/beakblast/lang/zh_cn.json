@@ -36,5 +36,5 @@
   "world_combat.move.beakblast.text.heat": "鸟嘴烧热中，还要 %1$s 秒",
   "world_combat.move.beakblast.text.sear": "被赤热的鸟嘴烫伤！",
   "world_combat.move.beakblast.text.miss": "鸟嘴加农炮打偏了",
-  "worldcombat.skill.beakblast.description.aim": "准线在你开始加热时就锁定了：加热期间目标移开，炮口仍指向原处，这一发会打空；加热中被打断则鸟嘴冷却，这一炮不再射出。"
+  "worldcombat.skill.beakblast.description.aim": "开炮前可以朝任意方向或一个瞄点抬起炮口，不要求先选中敌人，也能直接对空地放；准线在你开始加热时就锁定了，加热期间目标移开，炮口仍指向原处，这一发会打空（方块会挡下喙弹）；加热中被打断则鸟嘴冷却，这一炮不再射出。"
 }

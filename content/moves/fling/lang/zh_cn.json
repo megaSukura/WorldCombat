@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.fling.summary": "把携带的道具整个甩向目标：威力随道具重量、效果随道具种类；道具脱手即从手中消耗，默认留在落点可被捡起。",
+  "worldcombat.skill.fling.summary": "投出一份真实携带道具，作用由物品决定。可把树果投给伙伴食用；友方接触不结算敌对物理伤害。未食用的道具按配置落地或摔碎。",
   "worldcombat.skill.fling.use.0": "远距离道具投掷",
   "worldcombat.skill.fling.use.1": "把火珠、毒针一类道具丢给对手",
   "worldcombat.skill.fling.use.2": "把树果当作给对手的回礼",
   "worldcombat.skill.fling.description.0": "把携带的道具甩向目标，造成 %1$s 的恶属性物理伤害；威力由道具的投掷重量决定。",
-  "worldcombat.skill.fling.description.1": "在 %1$s 格内投掷，蓄力 %2$s 秒；命中时结算道具效果：树果被对方吃掉、回复其约 12.5%% 最大生命，火珠烫伤、毒针中毒、毒珠剧毒、光球麻痹（状态可能被目标免疫），王冠或锐牙打断对方可被中断的动作。",
-  "worldcombat.skill.fling.description.2": "道具脱手即从手中消耗。默认会留下道具，落在命中点，落地 %1$s 秒后可被任何人捡起；关闭后道具当场摔碎、不再留下，威力 ×1.2。",
+  "worldcombat.skill.fling.description.1": "射程 %1$s 格，蓄力 %2$s 秒；树果走该树果的实际回复、解状态或能力效果。火珠、毒针等敌对效果仍须真实命中并通过目标权限。",
+  "worldcombat.skill.fling.description.2": "脱手时从原生物品栈精确消费一份。被吃掉的树果不再落地；其余默认在碰撞处落下，%1$s 秒后可捡。关闭留物则摔碎，敌对威力×1.2。",
   "worldcombat.skill.fling.timing": "起手 %1$s 秒，收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.fling.value.throw": "威力",
   "worldcombat.skill.fling.value.item": "投掷威力",
@@ -22,11 +22,13 @@
   "worldcombat.skill.fling.preference.ai.maxChase.help": "只在这个距离内主动投掷；更远的目标交给共享接近逻辑走过去。",
   "worldcombat.skill.fling.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.fling.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离开原位去投掷；关闭时留在原地。",
-  "world_combat.move.fling.text.berry": "对手吞下了树果",
+  "world_combat.move.fling.text.berry": "吃下了树果",
   "world_combat.move.fling.text.flinch": "一窒",
   "world_combat.move.fling.text.burn": "灼伤",
   "world_combat.move.fling.text.paralysis": "麻痹",
   "world_combat.move.fling.text.poison": "中毒",
   "world_combat.move.fling.text.toxic": "剧毒",
-  "worldcombat.skill.fling.description.projectile": "道具沿弧线飞出，飞行速度 %1$s 格/刻、判定半径 %2$s 格；命中后把目标顶开 %3$s 格。"
+  "worldcombat.skill.fling.description.projectile": "道具沿弧线飞出，飞行速度 %1$s 格/刻、判定半径 %2$s 格；命中后把目标顶开 %3$s 格。",
+  "worldcombat.skill.fling.preference.helpFriends": "给伙伴喂树果",
+  "worldcombat.skill.fling.preference.ai.allowGear": "允许投出普通装备"
 }

@@ -14,6 +14,10 @@
 const FrenzyplantDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        root_hint:{emitters:[{name:"root_entry",bind:"point",fit:"world",particle:"world_combat_core:cobblemon/generic/tinydust",rate:12,
+            shape:{kind:"circle",radius:.3,thickness:.9},direction:"up",speed:[.005,.02],lifetime:[4,8],size:[.07,.02],color:0x806244,alpha:[.45,0]}]},
+        arm: { emitters: [{ name: "actual_path", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+            rate: 32, shape: { kind: "polyline" }, speed: [0,.006], lifetime: [4,8], size: [.22,.12], color: 0x628743, alpha: [.7,.15], light: "world", maxParticles: 42 }] },
         windup: {
             duration: { data: "windup", fallback: 12 },
             exit: { stop: 6, drain: 12 },

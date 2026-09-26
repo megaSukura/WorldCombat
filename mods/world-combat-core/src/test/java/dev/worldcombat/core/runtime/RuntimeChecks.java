@@ -12,13 +12,14 @@ public final class RuntimeChecks {
         final Map<Long, List<Runnable>> leases = new HashMap<>();
         final Thread owner = Thread.currentThread();
         ActorHandle target;
+        boolean actionPermitted = true;
         int damage, errors;
         int commitments, releases;
         double lastDamage, lastHealth, lastHelperHealth;
         int receipts, receiptTicks;
         String receiptData;
         public boolean valid(ActorHandle handle) { return actors.contains(handle); }
-        public boolean mayAct(ActorHandle actor, UUID controller) { return valid(actor); }
+        public boolean mayAct(ActorHandle actor, UUID controller) { return valid(actor) && actionPermitted; }
         public WorldObservation observe(ActorHandle source, ActorHandle target) { return observations.get(target); }
         public ActorHandle[] query(ActorHandle source, Point centre, double radius, boolean visibleOnly) { return observations.keySet().toArray(ActorHandle[]::new); }
         public ActorHandle actorNear(ActorHandle source, UUID entity) { return actors.stream().filter(actor -> actor.entity().equals(entity)).findFirst().orElse(null); }
@@ -33,6 +34,9 @@ public final class RuntimeChecks {
         public double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause) { return lastHealth = delta; }
         public ActorHandle helper(long owner, ActorHandle source, Point point, double health, String data, int ticks) { lastHelperHealth = health; return target; }
         public void particle(ActorHandle actor, Point point) {}
+        public void present(long owner, ActorHandle actor, String key, String type, int version, Point point, String data) {
+            check(owner != 0, "Presentation lost its owner"); receiptData = data;
+        }
         public void presentFor(long owner, ActorHandle actor, String key, String type, int version, Point point, String data, int ticks) {
             check(owner != 0, "Receipt lost its publisher identity"); receipts++; receiptTicks = ticks; receiptData = data;
         }
@@ -86,6 +90,37 @@ public final class RuntimeChecks {
     }
 
     public static void main(String[] arguments) throws Exception {
+        ExecutionOriginChecks.run();
+        TargetGeometryChecks.run();
+        ActionEndedChecks.run();
+        InputReleaseChecks.run();
+        scenario("received movement treats departed recipients as no-op while retaining source authority", () -> {
+            var fixture = new Fixture(ActionContext::finish);
+            var world = new WorldAccess(fixture.runtime, fixture.actor, null, () -> {}, true, 0);
+            var delta = new Point(1, 0, 0);
+            fixture.host.actors.remove(fixture.target);
+            check(!world.hitImpulse(fixture.target, delta) && world.hitDisplace(fixture.target, delta) == 0
+                && !world.knockback(fixture.target, .4, delta), "Departed recipient reached native movement or threw");
+            var readOnly = new WorldAccess(fixture.runtime, fixture.actor, null, () -> {}, false, 0);
+            rejected(() -> readOnly.hitImpulse(fixture.target, delta));
+            rejected(() -> readOnly.hitDisplace(fixture.target, delta));
+            rejected(() -> readOnly.knockback(fixture.target, .4, delta));
+            fixture.host.actionPermitted = false;
+            rejected(() -> world.hitImpulse(fixture.target, delta));
+            rejected(() -> world.hitDisplace(fixture.target, delta));
+            rejected(() -> world.knockback(fixture.target, .4, delta));
+            fixture.host.actionPermitted = true; fixture.host.actors.remove(fixture.actor);
+            rejected(() -> world.hitImpulse(fixture.target, delta));
+            rejected(() -> world.hitDisplace(fixture.target, delta));
+            rejected(() -> world.knockback(fixture.target, .4, delta));
+        });
+        scenario("JSON copies retain explicit unknowns and nullable members", () -> {
+            var copied = com.google.gson.JsonParser.parseString(dev.worldcombat.core.runtime.effect.EffectData.copy(
+                "{\"sourcePosition\":null,\"nested\":{\"target\":null},\"values\":[null,1]}" )).getAsJsonObject();
+            check(copied.has("sourcePosition") && copied.get("sourcePosition").isJsonNull()
+                && copied.getAsJsonObject("nested").has("target") && copied.getAsJsonObject("nested").get("target").isJsonNull()
+                && copied.getAsJsonArray("values").get(0).isJsonNull(), "Copying JSON removed an explicit null member");
+        });
         scenario("rejection reactions run once after rollback with an independent writable scope", () -> {
             var host = new Host(); var actor = handle(UUID.randomUUID(), 1); var target = handle(UUID.randomUUID(), 1);
             host.actors.addAll(List.of(actor, target)); host.target = target;
@@ -508,6 +543,24 @@ public final class RuntimeChecks {
             fixture.runtime.stop(); fixture.empty();
             check(fixture.runtime.stats().cooldowns() == 0, "Server stop retained cooldowns");
         });
+        scenario("aim selections preserve entity or point facts independently of explicit relation filters", () -> {
+            var fixture = new Fixture(ctx -> ctx.finish());
+            var at = new Point(1, 0, 0); var forward = new Point(1, 0, 0);
+            var friendly = ActionTarget.entity(fixture.actor, at, forward);
+            var enemy = ActionTarget.entity(fixture.target, at, forward);
+            fixture.runtime.validateTarget("aim", 8, fixture.actor, friendly);
+            fixture.runtime.validateTarget("aim", 8, fixture.actor, enemy);
+            fixture.runtime.validateTarget("aim", 8, fixture.actor, ActionTarget.point(at, forward));
+            fixture.runtime.validateTarget("aim", 8, fixture.actor, ActionTarget.direction(forward));
+            fixture.runtime.validateTarget("friend", 8, fixture.actor, friendly);
+            fixture.runtime.validateTarget("enemy", 8, fixture.actor, enemy);
+            rejected(() -> fixture.runtime.validateTarget("friend", 8, fixture.actor, enemy));
+            rejected(() -> fixture.runtime.validateTarget("enemy", 8, fixture.actor, friendly));
+            rejected(() -> fixture.runtime.validateTarget("enemy", 8, fixture.actor, ActionTarget.point(at, forward)));
+            rejected(() -> fixture.runtime.validateTarget("aim", 8, fixture.actor, ActionTarget.point(new Point(9, 0, 0), forward)));
+            fixture.host.actors.remove(fixture.target);
+            rejected(() -> fixture.runtime.validateTarget("aim", 8, fixture.actor, enemy));
+        });
         scenario("body sweep bounds, commitment and action-owned contact receipts", () -> {
             var fixture = new Fixture(ctx -> {
                 rejected(() -> ctx.moveSweep(new Point(1, 0, 0), .2));
@@ -755,6 +808,19 @@ public final class RuntimeChecks {
             fixture.runtime.tick(); fixture.runtime.tick();
             check(fixture.runtime.stats().tasks() == 0 && fixture.host.errors == 0, "Scheduled work was capped");
             fixture.runtime.stop(); fixture.empty();
+        });
+        scenario("presentation paths share a strict JSON contract without arbitrary character cutoffs", () -> {
+            String data = "{\"body\":\"" + "x".repeat(20000) + "\"}";
+            var fixture = new Fixture(action -> {
+                action.present("checks:before", "checks:scene", 1001, action.origin(), data);
+                action.commit(0);
+                action.world().present("checks:owned", "checks:scene", 1001, action.origin(), data);
+                action.world().presentFor("checks:receipt", "checks:scene", 1001, action.origin(), data, 20);
+                rejected(() -> action.world().present("checks:invalid", "checks:scene", 1, action.origin(), "[]"));
+                action.finish();
+            });
+            fixture.start(); fixture.empty();
+            check(fixture.host.errors == 0 && fixture.host.receiptData.equals(data), "Large presentation payload was rejected or changed");
         });
         scenario("large scene baselines, quiet deltas and removals", () -> {
             var values = new LinkedHashMap<String, com.google.gson.JsonObject>();

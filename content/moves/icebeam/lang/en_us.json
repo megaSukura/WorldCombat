@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.icebeam.summary": "Compress the cold into a straight beam that instantly pierces the whole aim line: each enemy it passes takes Ice damage with a chance to freeze, and the ground is left with a slippery line of ice. Focus narrows it into a heavier beam; spread widens it and reaches further.",
+  "worldcombat.skill.icebeam.summary": "Compress the cold into a straight beam that lingers a moment: it lights along the aim direction and stops at a wall, and every enemy its path crosses takes Ice damage with a chance to freeze. It cannot turn after firing; step off the line or behind a wall to be safe. Focus narrows it into a heavier beam; spread widens it and reaches further.",
   "worldcombat.skill.icebeam.use.0": "Pierce enemies lined up in a row",
   "worldcombat.skill.icebeam.use.1": "Pick off a distant high-value target",
-  "worldcombat.skill.icebeam.use.2": "Lay a slippery line of ice along a corridor",
-  "worldcombat.skill.icebeam.description.0": "Instantly pierces along the aim line: each enemy hit takes about %1$s damage. The beam lingers %2$s, and while pierce slots remain it sweeps the lane again during that time to catch enemies entering its path.",
-  "worldcombat.skill.icebeam.description.1": "Beam length %1$s blocks and half width %2$s blocks; it pierces up to %3$s enemies from nearest outward, each only once.",
+  "worldcombat.skill.icebeam.use.2": "Catch enemies that walk into a fixed beam path",
+  "worldcombat.skill.icebeam.description.0": "Pierces instantly along the aim direction: each enemy hit takes about %1$s damage. The beam lingers %2$s, and while pierce slots remain it sweeps the same lane again during that time to catch enemies entering its path.",
+  "worldcombat.skill.icebeam.description.1": "Beam length %1$s blocks and half width %2$s blocks; it pierces up to %3$s enemies from nearest outward, each only once, and a wall truncates it so nothing behind the wall is hit.",
   "worldcombat.skill.icebeam.description.2": "Each target hit has a %1$s chance to be frozen; while frozen it cannot start new moves or ordinary attacks and cannot move, Ice types are immune, and Fire damage thaws it.",
   "worldcombat.skill.icebeam.description.3": "Windup %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.icebeam.focus.on": "Focus mode now: a narrower, shorter beam with higher single-target power and freeze chance, but it pierces only two targets and takes longer to wind up and recharge.",
@@ -18,8 +18,6 @@
   "worldcombat.skill.icebeam.value.beamWidth": "Beam half width",
   "worldcombat.skill.icebeam.value.linger": "Beam linger",
   "worldcombat.skill.icebeam.value.freezeChance": "Freeze chance",
-  "worldcombat.skill.icebeam.value.frostTicks": "Ice line linger",
-  "worldcombat.skill.icebeam.value.rimeCells": "Ice line blocks",
   "worldcombat.skill.icebeam.value.tempo": "Windup",
   "worldcombat.skill.icebeam.value.aftermath": "Recovery",
   "worldcombat.skill.icebeam.value.wait": "Cooldown",
@@ -30,6 +28,5 @@
   "worldcombat.skill.icebeam.preference.ai.preferLines": "Prefer lined-up targets",
   "worldcombat.skill.icebeam.preference.ai.preferLines.help": "When on, the companion prefers targets with other foes lined up behind them (the beam pierces through); off ranks only by range and target health.",
   "world_combat.move.icebeam.text.hit": "Ice Beam hit %1$s targets",
-  "world_combat.move.icebeam.text.miss": "Ice Beam missed",
-  "worldcombat.skill.icebeam.description.rime": "The beam also lays a slippery line of ice on the ground along its path, up to %2$s blocks, lasting %1$s; it is slick to walk on, and the original blocks return when it expires."
+  "world_combat.move.icebeam.text.miss": "Ice Beam missed"
 }

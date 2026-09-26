@@ -1,4 +1,17 @@
-/** 花疗：立即治疗选定友方；青草场地加成读取目标状态，撒花与绽放承载反馈。 */
+/**
+ * 花疗 / Floral Healing —— 执行组织。
+ *
+ * 核心念头：撒一把花瓣到伙伴脚下，分两次绽开——第一朵当场补一半，第二朵稍后按受益人**当时的**青草场地状态再开，
+ *   站在青草场地收第二口更足。两朵加起来仍在原总上限之内，是「当场兑现的两拍」，不是一条会赶路的波。
+ *
+ * 出手：共享节奏。windup（提交前）只播预告——手边先拢起一小束花；准备可被打断，不花代价。
+ * 第一朵（提交后）：花瓣沿施法者到伙伴的连线撒过去，落地即补第一半；绽放与文本读实际回复量。
+ * 第二朵（`bloomDelay` 之后）：重新取得受益人——还活着、仍是友方就在它**当前所在位置**开第二朵，
+ *   花簇跟着人走而不是留在地面；此刻带 shared 青草身份就按 `grassBoost` 开大。对象失效则取消剩余（fade）。
+ *
+ * 反制：第二朵的短延迟就是余地——对手可以在这口之间把伙伴带走、或把它推离青草场地，第二口就变小或落空。
+ * 与同族分开：治愈波动是一圈从自己身上出发、要赶一段远路的波；花疗是当场在伙伴脚边分两朵绽开。
+ */
 namespace PokemonSkills {
     const floralhealingScene = "world_combat:move_floralhealing";
     const floralhealingTextBloom = "world_combat.move.floralhealing.text.bloom";
@@ -28,10 +41,10 @@ namespace PokemonSkills {
 
     define({
         id: floralhealingId, name: "花疗",
-        description: "撒一路花瓣到选定友方身上，绽开时回复其最大生命的一半左右；青草场地上提高到约三分之二。只救别人，不救自己。",
-        uses: ["远远地给伙伴补一口", "在青草场地上把回复抬到三分之二"],
+        description: "撒一路花瓣到选定友方身上，在它脚边分两朵绽开：第一朵当场补一半，第二朵稍后按它**当时**的青草场地状态再补一口，两朵合计约回复其最大生命的一半、站在青草场地上更高。只救别人，不救自己；对象中途失效则取消剩余。",
+        uses: ["远远地给伙伴补一口", "在青草场地上把第二朵抬得更足", "用两拍补给缓冲伙伴的掉血节奏"],
         kind: "friend", range: 5, maxRange: 9, prepare: 9, active: 0, recover: 8, cooldown: 130, style: "floral",
-        maximumTicks: 220,
+        maximumTicks: 240,
         defaults: { bouquet: false },
         fields: [flag("bouquet", "繁花")],
         indicator: function (config, pokemon) {
@@ -59,8 +72,7 @@ namespace PokemonSkills {
         },
         windup: function (action, _config, prepare) {
             action.present("floralhealing:windup", floralhealingScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", petals: p(floralhealingId, "petals", action),
-                    target: action.target() === null ? "" : String(action.target()!.ref()) }));
+                JSON.stringify({ moment: "windup", petals: p(floralhealingId, "petals", action) }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -69,36 +81,64 @@ namespace PokemonSkills {
             if (!body || target === null || !world.valid(target) || String(target.ref()) === String(self.ref())) { done(action); return; }
             const mate = world.observe(target);
             if (mate === null) { done(action); return; }
-            const bouquet = !!(config && config.bouquet);
-            const fraction = Math.max(0, Math.min(1, p(floralhealingId, "heal", action)));
+            const total = Math.max(0, Math.min(1, p(floralhealingId, "heal", action)));
+            const grassBoost = Math.max(0, Math.min(1, p(floralhealingId, "grassBoost", action)));
+            const first = total * 0.5, secondBase = total * 0.5;
+            const delay = Math.max(6, Math.round(p(floralhealingId, "bloomDelay", action)));
             const radius = Math.max(0.4, p(floralhealingId, "bloomRadius", action));
             const petals = Math.max(8, Math.round(p(floralhealingId, "petals", action)));
             const budget = Math.max(0, Math.round(p(floralhealingId, "flowers", action)));
-            const grass = CombatStatus.has(world, target, "grassyterrain");
             const scale = Math.max(0.6, Math.min(2.0, radius / 0.8));
             const ref = String(target.ref());
-            const before = mate.health();
+            const origin = body.position();
 
-            floralhealingHeal(world, target, fraction, "floralhealing");
-            const after = world.observe(target);
-            const gained = after ? Math.max(0, after.health() - before) : 0;
-            const share = mate.maxHealth() > 0 ? Math.max(0, Math.min(1, gained / mate.maxHealth())) : 0;
-            const path: (string | number[])[] = [String(self.ref()), ref];
-
-            sound(action, "minecraft:block.flowering_azalea.place");
-            WorldFeedback.emit(world, floralhealingScene, 1, body.position(),
-                { moment: "scatter", target: ref, path: path, petals: petals, scale: scale, grass: grass ? 1 : 0, radius: radius }, 30);
-            WorldFeedback.emit(world, floralhealingScene, 1, mate.position(),
-                { moment: "bloom", target: ref, petals: petals, scale: scale, grass: grass ? 1 : 0, radius: radius,
-                    gold: grass ? Math.max(8, Math.round(petals * 0.5)) : 0, share: share,
-                    healDust: Math.max(10, Math.round(petals * (0.4 + share))), gained: Math.round(gained * 10) / 10 }, 34);
-            if (budget > 0) {
-                WorldFeedback.emit(world, floralhealingScene, 1, mate.position(),
-                    { moment: "residue", target: ref, flowers: budget, scale: scale }, 30);
-                world.sound("minecraft:block.grass.place", mate.position(), 12, "{}");
+            function bloom(access: CombatWorld, actor: CombatActor, dose: number, share: number, grass: boolean): void {
+                const view = access.observe(actor);
+                const at = view === null ? origin : view.position();
+                const dosePetals = dose === 2 ? Math.round(petals * (grass ? 1.5 : 1.2)) : petals;
+                access.sound("minecraft:block.flowering_azalea.place", at, 14, "{}");
+                WorldFeedback.emit(access, floralhealingScene, 1, at,
+                    { moment: "bloom", target: String(actor.ref()), petals: dosePetals,
+                        healDust: Math.max(10, Math.round(dosePetals * (0.4 + share))),
+                        gold: grass ? Math.max(8, Math.round(dosePetals * 0.5)) : 0, radius: radius, scale: scale }, 34);
+                if (dose === 2 && budget > 0)
+                    WorldFeedback.emit(access, floralhealingScene, 1, at,
+                        { moment: "residue", target: String(actor.ref()), flowers: budget, radius: radius }, 30);
             }
-            WorldFeedback.text(world, floralhealingAbove(mate.position()), grass ? floralhealingTextGrass : floralhealingTextBloom, [Math.round(gained * 10) / 10], 30);
-            done(action);
+
+            sound(action, "minecraft:block.flowering_azalea.place");            WorldFeedback.emit(world, floralhealingScene, 1, origin,
+                { moment: "scatter", target: ref, path: [[origin.x(), origin.y() + 0.55, origin.z()], ref], petals: petals }, 30);
+
+            const before1 = mate.health();
+            floralhealingHeal(world, target, first, "floralhealing");
+            const after1 = world.observe(target);
+            const gained1 = after1 ? Math.max(0, after1.health() - before1) : 0;
+            const share1 = mate.maxHealth() > 0 ? gained1 / mate.maxHealth() : 0;
+            bloom(world, target, 1, share1, false);
+            WorldFeedback.text(world, floralhealingAbove(mate.position()), floralhealingTextBloom, [Math.round(gained1 * 10) / 10], 30);
+
+            action.after(delay, function (current: CombatAction) {
+                const access = current.world();
+                const now = access.actor(ref);
+                const live = now === null ? null : access.observe(now);
+                if (now === null || live === null || !access.valid(now) || !access.friendly(now) || String(now.ref()) === String(self.ref())) {
+                    WorldFeedback.emit(access, floralhealingScene, 1, current.origin(),
+                        { moment: "fade", radius: radius, scale: scale }, 22);
+                    done(current);
+                    return;
+                }
+                const grass = CombatStatus.has(access, now, "grassyterrain");
+                const second = secondBase + (grass ? grassBoost : 0);
+                const before2 = live.health();
+                floralhealingHeal(access, now, second, "floralhealing");
+                const after2 = access.observe(now);
+                const gained2 = after2 ? Math.max(0, after2.health() - before2) : 0;
+                const share2 = live.maxHealth() > 0 ? gained2 / live.maxHealth() : 0;
+                bloom(access, now, 2, share2, grass);
+                const shown = after2 === null ? live.position() : after2.position();
+                WorldFeedback.text(access, floralhealingAbove(shown), grass ? floralhealingTextGrass : floralhealingTextBloom, [Math.round(gained2 * 10) / 10], 30);
+                done(current);
+            });
         }
     });
 }

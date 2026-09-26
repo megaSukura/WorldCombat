@@ -20,7 +20,7 @@ Smoke.scenario("harden", function (stage) {
         stage.expect(stage.casts("harden", caster) > 0, "harden was committed");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/harden"), "the crystal shell carried the shared identity");
         stage.after(60, function () {
-            stage.note("the shell softens each incoming hit by the defence-derived fraction and cracks early only when one hit reaches the toughness threshold; a zombie's punch usually stays under it, so the window should hold its full length here.", {
+            stage.note("each incoming hit loses the defence-derived fraction and the crack presentation sits on the real contact side, its shards growing as the hit nears the toughness threshold; a zombie's punch usually stays under the threshold, so the window holds its full length here and the shell only shatters (with no leftover Defence window) once it is reached, expires or is cleansed.", {
                 casts: stage.casts("harden", caster),
                 damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
                 alive: caster.alive()

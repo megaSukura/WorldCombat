@@ -1,36 +1,19 @@
-/**
- * 巨声 / hypervoice —— 可执行设计说明。
- *
- * 一句话：扎住脚把一声咆哮沿正前方的扇形整片压出去，扇面内的敌人被同一堵声墙轰中并被推回去。
- *
- * 场面：白天晴天、石地。只带巨声的爆音怪站在中间，前方两只小敌挨得较近、都开战——它们会一起冲上来，
- *   正好落进同一片前扇形，用来核对「一次扫到多人」与「几乎不分远近」。地面平坦，用来读「不看掩体」的位移。
- *
- * 断言只取必然事实：巨声被放过、至少一个敌人挨到伤害。被推开的距离、边缘衰减与暴击写进 note。
- */
-Smoke.scenario("hypervoice", function (stage) {
-    stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "exploud", level: 45, moves: ["hypervoice"], at: [0, 0, 0] });
-    var near = stage.pokemon({ species: "rattata", level: 18, moves: ["tackle"], at: [3.4, 0, 0] });
-    var side = stage.pokemon({ species: "meowth", level: 18, moves: ["scratch"], at: [4.2, 0, 1.0] });
-    stage.hostile(caster, near);
-    stage.hostile(caster, side);
-    stage.until(1200, function () {
-        return stage.casts("hypervoice", caster) >= 1 && (stage.damageTo(near) > 0 || stage.damageTo(side) > 0);
-    }, function () {
-        stage.after(15, function () {
-            stage.expect(stage.casts("hypervoice", caster) >= 1, "exploud committed hyper voice");
-            stage.expect(stage.damageTo(near) > 0 || stage.damageTo(side) > 0, "the wall of sound hit at least one foe");
-            stage.note("how many foes fall inside the fan, how far each is shoved and the distance falloff are positional/random", {
-                casts: stage.casts("hypervoice", caster),
-                nearDamage: Math.round(stage.damageTo(near) * 10) / 10,
-                sideDamage: Math.round(stage.damageTo(side) * 10) / 10,
-                nearTravelled: Math.round(stage.travelled(near) * 10) / 10,
-                sideTravelled: Math.round(stage.travelled(side) * 10) / 10
-            });
-            stage.done();
+/** An upward cone includes both sides of the 3D cone, including the old flat prefilter's back side. */
+Smoke.scenario("hypervoice",function(stage){
+    stage.fill([-8,-1,-8],[8,-1,8],"minecraft:stone");
+    var caster=stage.pokemon({species:"exploud",level:45,moves:["hypervoice"],at:[0,0,0]});
+    var above=stage.mob({type:"minecraft:cow",at:[0,4,0]});
+    var negative=stage.mob({type:"minecraft:pig",at:[-.8,4,-.8]});
+    var positive=stage.mob({type:"minecraft:sheep",at:[.8,4,.8]});
+    [above,negative,positive].forEach(function(body){stage.command("data merge entity "+body.ref.split("/")[0]+" {NoAI:1b,NoGravity:1b}");});
+    stage.after(3,function(){stage.provoke(caster,above);});
+    stage.until(700,function(){return stage.casts("hypervoice",caster)>0;},function(){
+        stage.setPp(caster,"hypervoice",0);
+        stage.after(2,function(){
+            stage.expect(stage.damageTo(above)>0,"the sound cone was aimed upward at its selected body");
+            stage.expect(stage.damageTo(negative)>0,"the upper cone includes the negative horizontal side");
+            stage.expect(stage.damageTo(positive)>0,"the upper cone includes the positive horizontal side");
+            stage.note("Actual 3D cone membership checked; sound still keeps its existing cover policy.");stage.done();
         });
-    }, "hyper voice sweeps a foe within 60 s");
+    },"the upward sound cone commits");
 });

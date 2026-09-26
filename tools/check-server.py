@@ -9,6 +9,7 @@ from content_resources import install_content_resources
 import subprocess
 import threading
 import time
+from prebuilt_runtime import snapshot_mods
 
 ROOT = Path(__file__).resolve().parents[1]
 PINNED_JAVA_HOME = Path("C:/Program Files/Zulu/zulu-21")
@@ -191,6 +192,7 @@ def main():
     death_fixture_suffix = "-copied" if args.world_copy else "-fixture" if args.p5_player_death else ""
     work = ROOT / "runs" / (phase + "-" + args.environment + "-server" + death_fixture_suffix)
     work.mkdir(parents=True, exist_ok=True)
+    spec = snapshot_mods(ROOT, work, spec)
     if args.with_create:
         (work / "mods").mkdir(exist_ok=True)
         shutil.copy2(args.with_create.resolve(strict=True), work / "mods" / args.with_create.name)
@@ -352,6 +354,11 @@ def main():
     scenario = ('ServerEvents.tick(function (event) { Java.loadClass("' + test_class + '").tick(event.server); });\n') if args.scenario and not args.p4_script else ""
     if args.native_runtime:
         scenario += 'WorldCombat.register("checks:native_projectile", "fixture", 100, function (a) { Java.loadClass("dev.worldcombat.core.checks.NativeProjectileChecks").launch(a); });\n'
+        scenario += 'WorldCombat.on("checks:healing", "world_combat:healing_incoming", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeHealingChecks").onHeal(e); });\n'
+        scenario += 'WorldCombat.on("checks:mob_effect", "world_combat:mob_effect_incoming", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeMobEffectChecks").onIncoming(e); });\n'
+        scenario += 'WorldCombat.on("checks:item_consumed", "world_combat:item_consumed", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeEquipmentPickupChecks").onConsumed(e); });\n'
+        scenario += 'WorldCombat.on("checks:critical", "world_combat:critical_hit", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeCriticalChecks").onCritical(e); });\n'
+        scenario += 'WorldCombat.on("checks:death", "world_combat:actor_died", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeDeathChecks").onDeath(e); });\n'
     if args.p5_equipment: scenario += (ROOT / "mods/cobblemon-world-combat/src/test/resources/worldcombat/equipment-behavior.js").read_text(encoding="utf-8")
     if args.p5_status and args.restart: scenario = scenario.replace('.tick(event.server)', '.restart(event.server)')
     if args.p5_content or args.p5_riding:

@@ -4,6 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这一招的价值在“浇湿”——
  * 开启 `ai.preferDry`（默认开）时，还没被浇湿的目标排得更前：把这一发留给还干着的对手；
  * 已经被浇透的目标只按普通近身候选排。施法者本身湿透时水势更盛，这时排得更前。
+ * 自己没湿、血又低于 `ai.minHealth` 时不为“上湿”盲冲（对手已经湿时除外）。
  * 够不到交给共享接近逻辑。
  */
 namespace PokemonSkills {
@@ -18,8 +19,14 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             if (!target) return true;
             if (!wavecrashValid(target)) return false;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 10);
+            const self = CompanionBehavior.source(context);
+            if (CompanionBehavior.distance(self.point, target.point)
+                > CompanionBehavior.ai<number>(capability, "maxChase", 10)) return false;
+            const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.3);
+            // 未湿且低血时不为“上湿”盲冲；对手已经湿了或自己血够时照常。
+            if (!self.wet && CompanionBehavior.ratio(self) < minHealth
+                && !CompanionBehavior.status(context, target, "soaked")) return false;
+            return true;
         },
         accepts: function (context, capability, target) { return wavecrashValid(target); },
         priority: function (context, capability, target) {
@@ -40,6 +47,10 @@ namespace PokemonSkills {
         field(pathOf("ai.maxChase"), "涌进距离", "number", {
             min: 2, max: 18, step: 1,
             help: "超过这个距离就不主动涌进，先靠近。越大越早发起，也越容易冲空。"
+        }),
+        field(pathOf("ai.minHealth"), "保留生命", "number", {
+            min: 0, max: 0.9, step: 0.05,
+            help: "自己没湿时血低于这个比例就不再为“上湿”盲冲（对手已经湿了除外）。越高越珍惜自己，也越少抢着先手。"
         }),
         field(pathOf("ai.preferDry"), "留给还干着的目标", "boolean", {
             help: "开启：优先对还没被浇湿的目标出手（命中会挂上湿身）；关闭：只按威胁与距离排序。"

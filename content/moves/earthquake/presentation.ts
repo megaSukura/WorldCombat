@@ -2,15 +2,16 @@
  * 地震 / earthquake 的客户端表现。
  *
  * 一句话：施法者沉身在地面按出一个将被掀开的圈，随后整片地面向上崩起、土块与碎石被抛到半空，
- * 外缘一圈震波向外扫过，最后地上留下放射状的深缝。
+ * 外缘一圈震波向外扫过，最后地上扬起放射状裂纹、停留一会儿自然散去。
  * 色相家族：土黄与灰岩（earth / large_rock / tinydust / groundquake / impact_ground）为主体，
  * 近白只做掀地那一下的高光。
  * 拍子：起（stomp 沉身、地面起屑）→ 击（rupture 崩起、hit 逐处掀中、aftershock 余震）→ 收（rent 裂缝扬尘 / miss 落空）。
- * 范围：stomp 与 rupture 的地面圈按服务端传的 `data.radius`（真实波及半径）与 `data.area`（预告圈）画出，
- * 玩家看到的圈就是会被掀到的地。
- * 运动：土块从整片地面向上崩起再落回，震波环贴着地面向外扫，裂屑最后从缝里缓缓上浮。
- * 数：`data.cells`（物攻派生，等于实际裂开的块数）决定崩起与残屑的数量，`data.flow`（半径派生）决定环上密度，
- * `data.marks`（威力派生）决定掀地高光与飞石量，`data.count`（威力派生）决定命中碎屑量。
+ * 范围：stomp 与 rupture 的地面圈按服务端传的 `data.radius`（真实波及半径）与 `data.area`（预告圈）画出；
+ * 余震式还按 `data.aftershockArea` 画出第二圈较小的预报，玩家看到的圈就是会被掀到的地。
+ * 运动：土块从整片地面向上崩起再落回，震波环贴着地面向外扫，裂纹碎屑最后从地面缓缓上浮再散去。
+ * 数：`data.cells`（物攻派生）决定崩起与残屑的数量，`data.flow`（半径与块数派生）决定环上密度，
+ * `data.marks`（威力派生）决定掀地高光与飞石量，`data.count`（威力派生）决定命中碎屑量，
+ * `data.linger`（裂缝停留刻数）决定裂纹余痕挂多久。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const EarthquakeDefinition: ParticleDefinition = {
@@ -45,6 +46,16 @@ const EarthquakeDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.04], spread: 8,
                     lifetime: [10, 18], size: [0.4, 0.62], sizeMode: "linear",
                     color: 0xA08C6E, alpha: [0.45, 0], light: "world", maxParticles: 60
+                },
+                {
+                    // 余震式才亮起的第二圈预报：半径与刻数都取服务端算出的真实第二判定范围与数量，单震式为 0 不发射。
+                    name: "aftershock_edge", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "aftershockMarks", fallback: 0 }, at: 2 },
+                    shape: { kind: "ring", radius: { data: "aftershockArea", fallback: 0.1 }, thickness: 0.5 },
+                    direction: "up", speed: [0.01, 0.05], spread: 10,
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0x8A7A62, alpha: [0.5, 0], light: "world", maxParticles: 40
                 }
             ]
         },
@@ -150,8 +161,8 @@ const EarthquakeDefinition: ParticleDefinition = {
             ]
         },
         rent: {
-            duration: 30,
-            exit: { stop: 12, drain: 24 },
+            duration: { data: "linger", fallback: 40 },
+            exit: { stop: { data: "linger", fallback: 40 }, drain: 24 },
             emitters: [
                 {
                     name: "scar_dust", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",

@@ -1,18 +1,20 @@
 /**
  * 破音 / overdrive 的出手方式。
  *
- * 核心念头：这是一段朝正前方弹出去、带电的声浪乐句。施法者扎住脚，把乐器提到身前连拨三下，每一下都
- *   沿同一条走廊推出一道轰响的电声：走廊里的敌人各挨一次重击并被打退半步；电声可能把人震到麻痹。
- *   开余响时，三下之后还会有一记迟到的「巨大回声」回来，更重、也多一次麻痹机会——那是原生的回声意象。
+ * 核心念头：这是一段朝瞄准方向弹出去、带电的声浪乐句。施法者扎住脚，把乐器提到身前连拨三下，
+ *   每一下都从**当刻的身体位置**朝当刻的自由瞄准方向推出一道窄声路：路里的敌人各挨一次重击并被打退半步；
+ *   电声可能把人震到麻痹。两下之间可以转准心，第一下锁定的目标不会被自动追着走。
+ *   开余响时，第三拨之后动作就收束、可以继续走位，而第三拨那条声路会被托管留起：隔 `echoGap` 刻在**原位置**
+ *   重放一记更重的迟到声浪（原 `echoRatio`），不跟新目标转头——那是原生的回声意象。
  *
  * 三幕（可加一段余响）：
  *   起（windup，提交前）：把乐器提起、指尖聚电的预告；起手可被打断。
- *   拨（pluck × pulses → paralyze）：提交后按 interval 连拨三下，每下沿当前朝向扫过一条走廊，
- *       圈内每个敌人各挨一次 thrum、被沿走廊方向推退，并各掷一次麻痹。
- *   响（echo，仅配置开启）：隔 echoGap 刻回来一记更重的迟到声浪，再扫同一条走廊。
+ *   拨（pluck × 3 → paralyze）：提交后按 interval 连拨三下，每下沿当刻朝向扫过一条走廊，
+ *       路里每个敌人各挨一次 thrum、被沿走廊方向推退，并各掷一次麻痹。
+ *   响（echo，仅配置开启）：第三拨后动作结束；一条托管声路记下它的真实起终点与宽度，echoGap 后原地重放。
  *
  * 与同族分开：虫鸣是锥、刺耳声是只一下的细走廊、闪焰高歌是火锥；破音是**同一条直线走廊上连续数下的
- *   电声乐句**，唯一带电、唯一概率麻痹，且可多出一记迟到回声。
+ *   电声乐句**，唯一带电、唯一概率麻痹，且余响留在旧声路上而不是追着人跑。
  *
  * 配置 `echo`（余响）由 resolve 改时序、由公式改每下威力与冷却：开启＝多一记迟到声浪、多一次麻痹机会。
  */
@@ -21,9 +23,10 @@ namespace PokemonSkills {
     const overdriveHitText = "world_combat.move.overdrive.text.hit";
     const overdriveMissText = "world_combat.move.overdrive.text.miss";
     const overdriveParalyzeText = "world_combat.move.overdrive.text.paralyze";
+    const overdriveEcho = "world_combat:overdrive_echo";
     const overdrivePulses = 3;
 
-    /** 把瞄准方向压到水平面；电声乐句沿地面朝正前方推出去。 */
+    /** 把瞄准方向压到水平面；电声乐句沿地面朝瞄准方向推出去。 */
     function overdriveHeading(direction: CombatPoint): CombatPoint {
         const flat = WorldCombat.point(direction.x(), 0, direction.z());
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
@@ -43,13 +46,78 @@ namespace PokemonSkills {
         ];
     }
 
+    /** 当刻自由瞄准：按住技能键时读控制点（逐拍可转向），AI 或未声明的输入回退到动作选点。 */
+    function overdriveAim(action: CombatAction): CombatPoint {
+        try {
+            const parsed = JSON.parse(action.control());
+            const samples = parsed && parsed.samples;
+            if (samples && samples.length && samples[0].point && samples[0].point.length === 3)
+                return WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]);
+        } catch (error) { }
+        try { return action.targetPosition(); } catch (error) { }
+        return action.origin().plus(WorldCombat.point(0, 0, 1));
+    }
+
+    function overdriveEchoState(json: string): string {
+        const value = JSON.parse(json);
+        const finite = function (n: any): boolean { return typeof n === "number" && isFinite(n); };
+        if (!Array.isArray(value.origin) || value.origin.length !== 3 || !value.origin.every(finite)) throw new Error("Invalid overdrive echo origin");
+        if (!Array.isArray(value.heading) || value.heading.length !== 2 || !value.heading.every(finite)) throw new Error("Invalid overdrive echo heading");
+        ["reach", "width", "power", "push", "chance", "paralyzeTicks", "cap", "arcs", "intensity", "strength", "gap"].forEach(function (key) {
+            if (!finite(value[key])) throw new Error("Invalid overdrive echo state");
+        });
+        return JSON.stringify(value);
+    }
+
+    // 第三拨留下的托管声路：先按效果寿命亮起一条缓暗琴弦，echoGap 后在原位置重放一次，再随效果一起收掉。
+    WorldCombat.effect(overdriveEcho, 1, 160, "actor", overdriveEchoState, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(overdriveEcho, "start", function (effect) {
+        const data = JSON.parse(effect.state()), world = effect.world();
+        const origin = WorldCombat.point(data.origin[0], data.origin[1], data.origin[2]);
+        const heading = WorldCombat.point(data.heading[0], 0, data.heading[1]);
+        WorldFeedback.onEffect(world, effect.id(), "overdrive:string", overdriveScene, 1, origin,
+            { moment: "string", path: overdriveLane(origin, heading, data.reach, data.width),
+                direction: [heading.x(), 0, heading.z()], reach: data.reach, half: data.width,
+                arcs: data.arcs, intensity: data.intensity });
+        effect.schedule("echo", "echo", Math.max(1, Math.round(data.gap)), "{}");
+    });
+    WorldCombat.effectHandler(overdriveEcho, "echo", function (effect) {
+        const data = JSON.parse(effect.state()), world = effect.world();
+        const origin = WorldCombat.point(data.origin[0], data.origin[1], data.origin[2]);
+        const heading = WorldCombat.point(data.heading[0], 0, data.heading[1]);
+        const path = overdriveLane(origin, heading, data.reach, data.width);
+        let struck = 0;
+        WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, data.reach, data.width, { below: 2, above: 3 }), function (other) {
+            if (struck >= data.cap) return;
+            if (!hurt(world, other, "overdrive", data.power, { damage: damageSpec("overdrive", "thrum"), sound: true })) return;
+            struck++;
+            if (!world.valid(other)) return;
+            world.hitDisplace(other, heading.scale(data.push * data.strength));
+            if (data.chance > 0 && world.random() < data.chance && CombatStatus.inflict(world, other, "paralysis", data.paralyzeTicks)) {
+                const at = world.observe(other);
+                if (at !== null) {
+                    WorldFeedback.emit(world, overdriveScene, 1, at.position(), { moment: "paralyze", target: String(other.ref()) }, 24);
+                    WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.3, 0)), overdriveParalyzeText, [], 26);
+                }
+            }
+        });
+        WorldFeedback.emit(world, overdriveScene, 1, origin, {
+            moment: "echo", path: path, direction: [heading.x(), 0, heading.z()],
+            reach: data.reach, half: data.width, index: overdrivePulses, struck: struck,
+            arcs: data.arcs, intensity: data.intensity, strength: data.strength
+        }, 30);
+        world.sound("cobblemon:impact.electric", origin, 16, "{}");
+        effect.end();
+    });
+    WorldCombat.effectHandler(overdriveEcho, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
     define({
         id: "overdrive",
         cooldownParameter: "recharge",
         name: "Overdrive",
-        description: "扎住脚，把乐器提到身前朝正前方连拨三下：每一下都沿同一条走廊推出一道带电的轰响，走廊里的敌人各挨一次重击、被打退，并可能被震到麻痹。开余响时，三下之后还会回来一记更重的迟到声浪。",
-        uses: ["沿一条直线连打三下、压住排成一列的敌人", "用带电声浪赌一次麻痹", "隔着掩体把走廊尽头的对手震退", "开余响啃一个硬目标"],
-        kind: "enemy",
+        description: "扎住脚，把乐器提到身前朝瞄准方向连拨三下：每一下都从当下位置推出一道带电的轰响，两下之间可以转准心，路里的敌人各挨一次重击、被打退，并可能被震到麻痹。开余响时，三下之后动作收束，那一记更重的迟到声浪会在第三下的原位置重放，不追着人跑。",
+        uses: ["沿一条直线连打三下、压住排成一列的敌人", "用带电声浪赌一次麻痹", "隔着掩体把走廊尽头的对手震退", "开余响封住敌人追来的那条通道"],
+        kind: "aim",
         range: 6.5,
         maxRange: 11,
         prepare: 9,
@@ -93,7 +161,7 @@ namespace PokemonSkills {
             const cap = Math.max(1, Math.round(p("overdrive", "maxTargets", action)));
             const arcs = Math.max(10, Math.round(14 + power * 0.3));
             const intensity = Math.max(0.6, Math.min(2.2, power / 32));
-            let index = 0, hits = 0, paralyzed = 0, settled = false;
+            let index = 0, hits = 0, settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -106,20 +174,9 @@ namespace PokemonSkills {
                 done(current);
             }
 
-            /** 拨一下：沿当前朝向扫一条走廊，逐个结算并各掷一次麻痹。返回命中数。 */
-            function lance(current: CombatAction, strength: number, moment: string): number {
+            /** 拨一下：沿当刻朝向扫一条走廊，逐个结算并各掷一次麻痹。返回命中数。 */
+            function strike(current: CombatAction, from: CombatPoint, heading: CombatPoint, strength: number): number {
                 const scope = current.world();
-                const body = scope.observe(action.actor());
-                if (body === null) { finish(current); return 0; }
-                current.stopMovement();
-                const victim = action.target() !== null && scope.valid(action.target()!) ? action.target() : null;
-                const victimBody = victim === null ? null : scope.observe(victim);
-                const aimPoint = victimBody === null ? action.targetPosition() : victimBody.position();
-                const from = body.position();
-                const delta = aimPoint.minus(from);
-                const heading = overdriveHeading(delta.length() < 0.01 ? action.direction() : delta);
-                current.face(aimPoint, 30, 30);
-                const path = overdriveLane(from, heading, reach, width);
                 let struck = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.lane(from, heading, reach, width, { below: 2, above: 3 }), function (other) {
                     if (struck >= cap) return;
@@ -127,39 +184,52 @@ namespace PokemonSkills {
                     if (!landed) return;
                     struck++;
                     if (!scope.valid(other)) return;
-                    scope.displace(other, heading.scale(push * strength));
+                    scope.hitDisplace(other, heading.scale(push * strength));
+                    const at = scope.observe(other);
+                    if (at !== null) WorldFeedback.emit(scope, overdriveScene, 1, at.position(),
+                        { moment: "hit", target: String(other.ref()), arcs: arcs, intensity: intensity }, 20);
                     if (chance > 0 && scope.random() < chance && CombatStatus.inflict(scope, other, "paralysis", paralyzeTicks)) {
-                        paralyzed++;
-                        const at = scope.observe(other);
                         if (at !== null) {
                             WorldFeedback.emit(scope, overdriveScene, 1, at.position(), { moment: "paralyze", target: String(other.ref()) }, 24);
                             WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.3, 0)), overdriveParalyzeText, [], 26);
                         }
                     }
                 });
-                hits += struck;
-                WorldFeedback.emit(scope, overdriveScene, 1, from, {
-                    moment: moment, target: victim === null ? "" : String(victim.ref()),
-                    direction: [heading.x(), heading.y(), heading.z()], path: path, reach: reach, half: width,
-                    index: index + 1, struck: struck, arcs: arcs, intensity: intensity, strength: strength
-                }, moment === "echo" ? 30 : 26);
                 return struck;
-            }
-
-            function echoWave(current: CombatAction): void {
-                if (settled) return;
-                lance(current, echoRatio, "echo");
-                sound(current, "cobblemon:impact.electric");
-                finish(current);
             }
 
             function pluck(current: CombatAction): void {
                 if (settled) return;
-                lance(current, 1, "pluck");
+                const scope = current.world();
+                const body = scope.observe(action.actor());
+                if (body === null) { finish(current); return; }
+                current.stopMovement();
+                // 拨弦从当下身体位置出发、沿当刻自由瞄准锁定；不读取原 selected 目标，因此不会自动追人。
+                const from = body.position();
+                const aimed = overdriveAim(current);
+                const delta = aimed.minus(from);
+                const heading = overdriveHeading(delta.length() < 0.01 ? action.direction() : delta);
+                current.face(from.plus(heading.scale(reach)), 90, 60);
+                const path = overdriveLane(from, heading, reach, width);
+                const struck = strike(current, from, heading, 1);
+                hits += struck;
                 index++;
+                WorldFeedback.emit(scope, overdriveScene, 1, from, {
+                    moment: "pluck", target: "", direction: [heading.x(), heading.y(), heading.z()], path: path,
+                    reach: reach, half: width, index: index, struck: struck, arcs: arcs, intensity: intensity, strength: 1
+                }, 26);
                 if (index >= overdrivePulses) {
-                    if (echo && echoRatio > 0) current.after(echoGap, echoWave);
-                    else { sound(current, "cobblemon:impact.electric"); finish(current); }
+                    // 第三拨的真实起终点与宽度存成一条短托管声路；动作随即收束，echoGap 后原地重放。
+                    if (echo && echoRatio > 0) {
+                        current.effect(overdriveEcho, action.actor(), JSON.stringify({
+                            origin: [from.x(), from.y(), from.z()], heading: [heading.x(), heading.z()],
+                            reach: reach, width: width, power: power * echoRatio, push: push, chance: chance,
+                            paralyzeTicks: paralyzeTicks, cap: cap, arcs: arcs, intensity: intensity,
+                            strength: echoRatio, gap: echoGap
+                        }), echoGap + 40);
+                    }
+                    sound(current, "cobblemon:impact.electric");
+                    finish(current);
                     return;
                 }
                 current.after(interval, pluck);
@@ -169,4 +239,7 @@ namespace PokemonSkills {
             pluck(action);
         }
     });
+
+    // 玩家按住技能键连拨三下、两下之间自由转向；AI 提交仍带一个目标点，读同一条控制输入。
+    WorldCombat.preview("world_combat:overdrive", JSON.stringify({ input: { version: 1, steps: ["point"], sustained: true } }));
 }

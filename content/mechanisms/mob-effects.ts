@@ -68,16 +68,12 @@ namespace MobEffects {
         });
         return changed;
     }
-    /** Move whole native applications within a level budget. The source is removed only after the recipient accepts it. */
+    /** Move an exact native application after both stores accept the transfer; preserve its hidden stack and cures. */
     export function transferOne(world: CombatWorld, from: CombatActor, to: CombatActor, effect: CombatMobEffect): boolean {
         if (!world.valid(from) || !world.valid(to) || String(from.key()) === String(to.key())) return false;
         const observed = read(world, from, effect.id());
         if (!observed || String(observed.key()) !== String(effect.key()) || effect.tagged("world_combat:status/identity_only")) return false;
-        const before = read(world, to, effect.id()), ticks = effect.duration();
-        if (before && (before.amplifier() > effect.amplifier() || before.amplifier() === effect.amplifier()
-            && (before.duration() < 0 || ticks >= 0 && before.duration() >= ticks))) return false;
-        const applied = apply(world, to, effect.id(), ticks, effect.amplifier());
-        return !!applied && applied.amplifier() >= effect.amplifier() && world.removeMobEffect(from, effect.id(), effect.key());
+        return world.transferMobEffect(from, to, effect.id(), effect.key());
     }
     /** Transfer complete native effects in snapshot order until the content's budget is used. */
     export function transfer(world: CombatWorld, from: CombatActor, to: CombatActor, budget: number, category = "beneficial"): number {
@@ -107,8 +103,24 @@ namespace MobEffects {
         return removed.length;
     }
     export interface FixedAttribute { id: string; amount: number; operation: "add_value" | "add_multiplied_base" | "add_multiplied_total"; }
-    /** Project fixed modifiers while the observed carrier exists; amplifier remains available for another payload. */
-    export function fixedAttributes(definition: string, carrier: string, attributes: FixedAttribute[]): void {
+    /** Project modifiers for one native application; factories sample current facts once per application.
+     * The optional start callback shares the modifier's scope, so its presentation/resources end with the carrier. */
+    export function fixedAttributes(definition: string, carrier: string,
+        attributes: FixedAttribute[] | ((world: CombatWorld, actor: CombatActor, carrier: CombatMobEffect) => FixedAttribute[]),
+        started?: (effect: CombatEffect) => void): void {
+        attributeWindow(definition, carrier, attributes, started, 0);
+    }
+    /** Re-evaluate a carrier's native modifiers without including its own earlier values in a baseline read.
+     * The resolver returns the same attribute ids on each call; return amount 0 when that contribution is inactive. */
+    export function dynamicAttributes(definition: string, carrier: string,
+        attributes: (world: CombatWorld, actor: CombatActor, carrier: CombatMobEffect) => FixedAttribute[],
+        interval: number, started?: (effect: CombatEffect) => void): void {
+        if (!isFinite(interval) || interval < 1 || interval % 1) throw new Error("Invalid attribute refresh interval");
+        attributeWindow(definition, carrier, attributes, started, interval);
+    }
+    function attributeWindow(definition: string, carrier: string,
+        attributes: FixedAttribute[] | ((world: CombatWorld, actor: CombatActor, carrier: CombatMobEffect) => FixedAttribute[]),
+        started: ((effect: CombatEffect) => void) | undefined, interval: number): void {
         const maximum = 1200000;
         WorldCombat.effect(definition, 1, maximum, "actor", json => {
             const value = JSON.parse(json);
@@ -124,11 +136,20 @@ namespace MobEffects {
         }
         WorldCombat.effectHandler(definition, "start", effect => {
             if (!alive(effect)) return;
-            attributes.forEach(attribute => effect.world().attribute(effect.target(), attribute.id, attribute.amount, attribute.operation));
+            const world = effect.world(), target = effect.target();
+            const values = typeof attributes === "function" ? attributes(world, target, read(world, target, carrier)!) : attributes;
+            values.forEach(attribute => world.attribute(target, attribute.id, attribute.amount, attribute.operation));
+            if (started) started(effect);
             effect.schedule("watch", "watch", 1, "{}");
         });
         WorldCombat.effectHandler(definition, "watch", effect => {
-            if (alive(effect)) effect.schedule("watch", "watch", 1, "{}");
+            if (!alive(effect)) return;
+            const world = effect.world(), target = effect.target();
+            if (interval > 0 && world.tick() % interval === 0) {
+                const values = typeof attributes === "function" ? attributes(world, target, read(world, target, carrier)!) : attributes;
+                values.forEach(attribute => world.attribute(target, attribute.id, attribute.amount, attribute.operation));
+            }
+            effect.schedule("watch", "watch", 1, "{}");
         });
         WorldCombat.effectHandler(definition, "operation:world_combat:dispel", effect => effect.end());
         function synchronize(event: CombatWorldEvent): void {
@@ -162,11 +183,12 @@ namespace MobEffects {
     export function release(world: CombatWorld, token: number): boolean {
         return typeof token === "number" && token > 0 && world.releaseMobEffectLease(token);
     }
-    /** Replace the native stack with this exact application, including when its amplifier is lower. */
+    /** Conditionally replace the native stack, including lower strength. Refusal preserves the previous application. */
     export function set(world: CombatWorld, actor: CombatActor, id: string, ticks: number, amplifier = 0): CombatMobEffect | null {
         if (!world.valid(actor)) return null;
-        consume(world, actor, id);
-        return apply(world, actor, id, ticks, amplifier);
+        const previous = read(world, actor, id);
+        return world.replaceMobEffect(actor, id, previous === null ? "" : previous.key(), ticks, amplifier)
+            ? read(world, actor, id) : null;
     }
     /** Consumers settle only after successfully removing the observed native instance. */
     export function consume(world: CombatWorld, actor: CombatActor, id: string): CombatMobEffect | null {

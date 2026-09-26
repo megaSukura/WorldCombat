@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.lockon.summary": "Clamp your aim onto one foe and drag its movement down (Clamp pins its flight too); a physical or special hit of yours spends the lock, and it fades once the window runs out.",
+  "worldcombat.skill.lockon.summary": "Lock a visible enemy and briefly restrict movement. Only your own subsequent hit spends your lock. Clamp also restricts flying speed; native control refusal makes the reticle open again.",
   "worldcombat.skill.lockon.use.0": "Pin a foe before it slips away",
   "worldcombat.skill.lockon.use.1": "Drag the target down to buy time for a close follow-up",
   "worldcombat.skill.lockon.use.2": "Drag a fast target down for the focus fire",
   "worldcombat.skill.lockon.description.0": "The reticle holds one foe for %1$s and drags its movement down for %2$s (Clamp pins its flight too); a physical or special hit of yours spends the lock, and it also fades once the window runs out.",
-  "worldcombat.skill.lockon.description.1": "The lock counts only for this target; hits on anyone else do not spend it.",
+  "worldcombat.skill.lockon.description.1": "Only hitting the locked target spends your lock; an ally’s independent lock remains. Follow-up attacks still need real contact and are not guaranteed to hit.",
   "worldcombat.skill.lockon.description.2": "Lock range %1$s blocks, windup %2$s, recovery %3$s. Single target and needs line of sight.",
   "worldcombat.skill.lockon.hold.on": "Clamp: window x1.5 and drag x1.4, the target's movement and flight pinned, but windup lengthens to %1$s and cooldown grows to %2$s.",
   "worldcombat.skill.lockon.hold.off": "Loose lock: only drags the target down, with a shorter window and cooldown, good for holding foes on your line often.",

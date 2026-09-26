@@ -7,8 +7,8 @@
  * 色相家族：抹茶绿（0x8CBF3F／0x5E8A24）与奶沫近白（0xE8F3C0）；橙火（0xE2531B）只在 scald 一幕进入，
  *   因为灼伤是这招与家族其他成员真正区别开的那件事。
  * 拍子：起 windup（搅茶起汽）→ 飞 jet（茶泡尾迹）→ 泼 splash（落点茶沫轮廓 + 命中核心）→ 抽 drain（回血）
- *   ／ scald（橙火与热气）／空 dud（落地只剩一圈茶渍）。
- * 范围：splash 的环按 `data.scale`（溅射半径 / 1.4）铺开，圈多大就是烫到多大；`data.whisk` 让刷泡式的圈明显更开。
+ *   ／ scald（橙火与热气）。飞行被取消时茶泡直接消失，不补泼。
+ * 范围：splash 的环按 `data.burst`（机制溅射半径）铺开，圈多大就是烫到多大；`data.whisk` 让刷泡式的圈明显更开。
  * 运动：jet 的茶泡沿 `data.velocity` 直飞、拖出绿沫尾迹；splash 的泡沫自落点向外摊开、边落边带重力。
  * 数：`data.motes`（茶炮威力与汲取比例换算）决定泡沫与茶点密度，`data.hits`（烫到几个人）让范围命中数从画面读出，
  *   `data.intensity` 随威力抬升亮度。
@@ -84,7 +84,7 @@ const MatchaGotchaDefinition: ParticleDefinition = {
                 {
                     name: "tea_disc", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble_broth",
-                    burst: { count: 22 }, shape: { kind: "ring", radius: 1.4 },
+                    burst: { count: 22 }, shape: { kind: "ring", radius: { data: "burst", fallback: 1.4 } },
                     direction: "outward", speed: [0.06, 0.26], spread: 14,
                     gravity: 0.05, drag: 0.9,
                     lifetime: [9, 16], size: [0.14, 0.03],
@@ -150,20 +150,6 @@ const MatchaGotchaDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.2], spread: 24, gravity: 0.03, drag: 0.94,
                     lifetime: [8, 15], size: [0.09, 0.02],
                     color: 0xE2531B, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 40
-                }
-            ]
-        },
-        dud: {
-            duration: 16,
-            exit: { stop: 6, drain: 10 },
-            emitters: [
-                {
-                    name: "spill", bind: "point", fit: "none", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble_broth",
-                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.22 },
-                    direction: "outward", speed: [0.03, 0.12], spread: 24, gravity: 0.06, drag: 0.9,
-                    lifetime: [9, 16], size: [0.1, 0.02],
-                    color: 0x8CBF3F, alpha: [0.6, 0], light: "world", maxParticles: 24
                 }
             ]
         }

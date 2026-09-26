@@ -5,10 +5,10 @@
  *   critRatio 2（高暴击）／非接触、切斩（slicing）（Cobblemon 1.8，65 位学习者）。
  *   原生描述：「飞出叶片，切斩对手。容易击中要害。」
  *
- * 翻译：把「飞出叶片」落成一列**沿同一条窄带连发的叶刃**——不是一次性的抛掷，而是叶一片接一片地顺着
- *   瞄准方向削出去，每一波扫过窄带里的对手。它连续、贴地、直线，单次轻但会一拍接一拍，站桩的人被反复削。
+ * 翻译：把「飞出叶片」落成一列**沿同一条窄带连发的叶幕**——不是一次性的抛掷，而是每一波叶幕从身前沿
+ *   瞄准方向真实推进，经过谁才削谁；排成一列的对手被一波接一波反复削，横移的人能在后波到来前走出窄带。
  *   原生 allAdjacentFoes 的「同时打两边」在这里表现为「窄带里排着几个人就被同一波一起扫到」。
- *   原生 95% 命中落成「叶飞得快、起手极短」；高暴击沿用 critRatio 2 的共享结算。
+ *   原生 95% 命中落成「叶幕推进快、起手极短」；高暴击沿用 critRatio 2 的共享结算。
  *
  * 与同族分开：空气利刃是瞬发、宽扇面的一整片；叶刃是贴身的一记重斩（接触、最重）；气旋攻击是远程单体涡流弹。
  *   飞叶快刀是唯一**沿窄带连续多波齐发**的一记轻叶刃。
@@ -22,6 +22,7 @@
  *   leafRadius 单片叶判定：碰撞箱高度决定单叶多厚。
  *   leaves     每波叶片量：速度换算，驱动表现密度。
  *   gap        波间隔：速度决定两波之间多快。
+ *   pace       叶幕推进：速度决定每波向前铺得多急，横移的目标能否走出窄带。
  *   tempo／aftercast／recharge：速度定节奏；撒叶式更宽更重、冷却更短。
  *
  * 配置 `broad`（撒叶式）双向取舍：开＝窄带 ×1.8、每波 ×1.15、冷却 −4，但波数 −1；
@@ -93,6 +94,13 @@ namespace PokemonSkills {
         gap: seconds(
             F.base(4).minus(F.stat("speed").minus(55).times(0.02).clamp(-1, 2)).clamp(2, 7).round(0),
             "波间隔", "两波叶刃之间隔多久；速度越快连得越紧，站桩的人被削得越密。"),
+        /** 叶幕推进：基础 0.62 格/刻，速度每比 55 快 1 加 0.006（夹 −0.12..0.22）；夹在 0.42..0.95。 */
+        pace: formula(
+            F.base(0.62).plus(F.stat("speed").minus(55).times(0.006).clamp(-0.12, 0.22)).clamp(0.42, 0.95).round(2),
+            "叶幕推进", {
+                unit: "格/刻",
+                description: "每一波叶幕每刻向前推进多远；速度越快叶幕铺得越急，横移的目标越难在窄带里站住，慢的个体则给对手留出闪避窗口。"
+            }),
         /** 起手：基础 6 刻，速度每比 55 快 1 减 0.02（夹 −1..2）；撒叶 +1；夹在 4..10。 */
         tempo: seconds(
             F.base(6).minus(F.stat("speed").minus(55).times(0.02).clamp(-1, 2))
@@ -118,6 +126,7 @@ namespace PokemonSkills {
     describe(razorleafId, [
         { key: "description.0", values: ["leaf","waves"] },
         { key: "description.1", values: ["reach", "spread", "gap"] },
+        { key: "description.2", values: ["pace"] },
         { key: "broad.on", values: [], when: function (context) { return read(context.detail.values, ["broad"]) === true; } },
         { key: "broad.off", values: [], when: function (context) { return read(context.detail.values, ["broad"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

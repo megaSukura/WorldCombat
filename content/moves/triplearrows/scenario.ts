@@ -21,7 +21,7 @@ Smoke.scenario("triplearrows", function (stage) {
     }, function () {
         stage.expect(stage.casts("triplearrows", caster) >= 1, "caster committed triple arrows");
         stage.expect(stage.damageTo(foe) > 0, "triple arrows dealt damage to the foe");
-        stage.note("the guard break is a 50% roll on the kick; the flinch is a 30% roll on the first arrow to land", {
+        stage.note("the low kick only reaches close range, so a distant cast is arrows only; the guard break is a 50% roll on the kick and only the target it actually struck gets the crit; the flinch is a 30% roll on the first arrow to land", {
             casts: stage.casts("triplearrows", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             guardbroken: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),

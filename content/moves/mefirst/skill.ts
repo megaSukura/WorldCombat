@@ -1,35 +1,9 @@
-/**
- * 抢先一步 / mefirst —— 注册、夺招增幅与动作（自管节奏）。
- *
- * 借对手的下一拍必须在提交之前交接（NativeLoadout.call），所以本招自己驱动动作：
- *   起：脚下压出一圈抢先的光痕（action.present 预告），目光锁住对手。
- *   守：记下目标此刻的最近一次出手，在 vigil 窗口里逐刻等它下一次真正提交；出现可抢的伤害招时，
- *       把夺招增幅写进 action.data，经 NativeLoadout.call 把那一手先打出去。
- *   落：借来的招式提交时，committed 监听把增幅挂到施法者身上、补上浮字与音效；伤害发生在提交之后，来得及生效。
- *   抢空：窗口走完对手仍没出招，就退回不结账（与挥指一致，失败不扣 PP）。
- *
- * 与鹦鹉学舌分开：鹦鹉学舌折的是已经落下的那一手；抢先一步夺的是守候窗口里对手刚要出的下一拍，并加重。
- * 与模仿分开：模仿把那一手永久织进自己的招式格；抢先一步只用这一下，用完就散。
- */
+/** Copy bonuses live on this execution; native replays need their own real contact or flight. */
 namespace PokemonSkills {
-    // 夺招增幅的机读载体：记下被夺的那一手与倍率；伤害元数据按它乘威力。
-    WorldCombat.effect(mefirstSurgeEffect, 1, 200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.move !== "string" || !value.move) throw new Error("Invalid me-first move");
-        if (typeof value.factor !== "number" || !isFinite(value.factor) || value.factor < 1) throw new Error("Invalid me-first factor");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(mefirstSurgeEffect, "start", function () { });
-    WorldCombat.effectHandler(mefirstSurgeEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    PokemonDamage.metadata.define({ id: "world_combat:move_mefirst/surge", apply: function (context) {
-        if (!context.world || !context.actor) return;
-        const views = context.world.effects(context.actor, mefirstSurgeEffect);
-        if (!views.length) return;
-        const data = JSON.parse(String(views[0].data()));
-        if (String(data.move) !== String(context.metadata.move)) return;
-        const factor = Number(data.factor);
-        if (isFinite(factor) && factor > 0) context.metadata.power *= factor;
+    PokemonDamage.metadata.define({ id: "world_combat:move_mefirst/surge", apply: context => {
+        if (!context.world) return;
+        const data = MoveExecutions.read(context.world, "world_combat:mefirst/surge");
+        if (data && data.move === String(context.metadata.move)) context.metadata.power *= data.factor;
     } });
 
     /** 可被抢的出手：已实装、非变化招、不带 failmefirst 旗标。 */
@@ -55,10 +29,10 @@ namespace PokemonSkills {
         if (target === null || !world.valid(target)) return null;
         const body = world.observe(target);
         if (body === null) return null;
-        const point = body.position();
+        const point = action.target() && String(action.target()!.ref()) === String(target.ref()) ? action.targetPosition() : body.position();
         let direction = point.minus(action.origin());
         if (direction.length() < 0.01) direction = action.direction();
-        return { eligibility: "caller", input: { target: skill.kind === "enemy" ? target : null, point: point, direction: direction } };
+        return { eligibility: "caller", input: { target: skill.kind === "enemy" || skill.kind === "aim" ? target : null, point: point, direction: direction } };
     }
 
     define({
@@ -110,7 +84,9 @@ namespace PokemonSkills {
             // 起念的一刻就把“对手上一拍”记下：守候期间它再出手，无论多早都能被夺。
             const opening = action.sense();
             const seen = target !== null && opening.valid(target) ? NativeEffects.lastMove(opening, target) : null;
+            const nativeOpening = target !== null && opening.valid(target) ? DamageSemantics.recentAttack(opening, target, window) : null;
             const openingTick = seen === null ? -1000 : seen.tick;
+            const nativeTick = nativeOpening === null ? -1 : nativeOpening.tick;
             action.after(Math.max(1, Math.round(p(mefirstId, "tempo", action))), function (current) {
                 if (target === null || !current.sense().valid(target)) { miss(current, ""); return; }
                 const start = current.sense().tick();
@@ -120,6 +96,16 @@ namespace PokemonSkills {
                 function step(handle: CombatAction, elapsed: number): void {
                     const scope = handle.sense();
                     if (!scope.valid(target!)) { miss(handle, String(target!.ref())); return; }
+                    if (String(target!.domain()) !== "cobblemon") {
+                        const replay = NativeAttackProjection.recent(scope, target!, snap);
+                        if (replay && (replay.fact.tick > nativeTick || scope.tick() - replay.fact.tick <= snap)) {
+                            NativeAttackProjection.prepare(handle, replay);
+                            handle.commit(p(mefirstId, "recharge", handle));
+                            playNativeCopy(handle, replay, mefirstId, surge, mefirstScene, p(mefirstId, "aftercast", handle),
+                                replay.kind === "contact" ? "world_combat.move.mefirst.text.native_contact" : "world_combat.move.mefirst.text.native_projectile");
+                            return;
+                        }
+                    }
                     const last = NativeEffects.lastMove(scope, target!);
                     // 抢的是「刚落下」或「守候期间新出现」的那一拍：同拍窗口内刚出手的也能追上，不必非等下一拍。
                     const fresh = last !== null && (last.tick > baseline || last.tick >= 0 && scope.tick() - last.tick <= snap);
@@ -156,9 +142,10 @@ namespace PokemonSkills {
         if (body === null) return;
         const id = String(executing.id());
         const raw = action.data("world_combat:mefirst/surge");
+        if (raw === null) return;
         if (raw !== null) {
             const surge = JSON.parse(raw);
-            if (surge.move === id && Number(surge.factor) > 0) world.effect(mefirstSurgeEffect, actor, JSON.stringify(surge), 90);
+            if (surge.move === id && Number(surge.factor) > 0) MoveExecutions.write(world, "world_combat:mefirst/surge", surge);
         }
         WorldFeedback.emit(world, mefirstScene, 1, body.position(),
             { moment: "take", sparks: Math.max(1, Math.round(p(mefirstId, "sparks", action))), surge: p(mefirstId, "surge", action) }, 26);

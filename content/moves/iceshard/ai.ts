@@ -8,7 +8,7 @@
  *   用一记瞬发冰砾点掉；贴到脸上（2 格内）让位给近战，分数压低。
  * 优先次序：基础 21；距离大于 6 格 +8；目标残血 +8；距离小于 2 格 −6。
  * 够不到怎么办：射程由 `reach` 决定，共享任务先把身位收进掷程再掷。
- * 放完之后：目标被冻僵（共享身份 chill）、落点结出薄冰；交回共享交战计划继续打。
+ * 放完之后：目标被冻僵（共享身份 chill）；本招不铺地面，AI 不会为了造场地反复出招；交回共享交战计划继续打。
  */
 namespace PokemonSkills {
     function iceshardWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -43,7 +43,7 @@ namespace PokemonSkills {
 
     addPreferences(iceshardId, {}, [
         field(pathOf("shatter"), "碎冰式", "boolean", {
-            help: "开启：命中崩碎，溅到周围一圈敌人（各按溅射系数吃主伤害）、薄冰更大更久，代价是飞行速度 ×0.85、射程 −2 格、收招 +2 刻、冷却 +8 刻。关闭：单发硬冰砾，飞得快、扔得远、回得快。"
+            help: "开启：首次撞实体时崩碎，溅到周围一圈敌人（各按溅射系数吃主伤害），代价是飞行速度 ×0.85、射程 −2 格、收招 +2 刻、冷却 +8 刻。关闭：单发硬冰砾，飞得快、扔得远、回得快。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 3, max: 22, step: 1,

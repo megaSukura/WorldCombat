@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.electroshot.summary": "站定把电从四周抽进身体、特攻提升，再射出一束会追着目标走的高压电矛。下雨时直接从雨里取电、当场发射。晴天要站定聚电，雨天立刻抬手打出去。",
+  "worldcombat.skill.electroshot.summary": "站定把电从四周抽进身体、特攻提升，再射出一束高压电矛：瞄准实体时有限追踪，只瞄地点就沿该方向直射。下雨时直接从雨里取电、当场发射。晴天要站定聚电，雨天立刻抬手打出去。",
   "worldcombat.skill.electroshot.use.0": "雨天里的即时高压点射",
   "worldcombat.skill.electroshot.use.1": "追着走位也甩不掉的一束",
   "worldcombat.skill.electroshot.use.2": "先攒一级特攻再出手",
@@ -33,5 +33,7 @@
   "world_combat.move.electroshot.text.rain": "借雨即发！",
   "world_combat.move.electroshot.text.boost": "特攻 +%1$s",
   "world_combat.move.electroshot.text.hit": "电矛命中",
+  "world_combat.move.electroshot.text.resist": "被挡下",
+  "world_combat.move.electroshot.text.ward": "护住同伴",
   "world_combat.move.electroshot.text.miss": "电矛散在空处"
 }

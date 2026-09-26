@@ -1,15 +1,17 @@
 /**
  * 充电光束 / chargebeam 的客户端表现。
  *
- * 一句话：电弧从四周收进身前一点、越收越亮，压成一道白亮的细束笔直射向目标；命中处炸开一片电光，
- *   命中的施法者身上回灌一圈升腾的电弧，稍后命中点再迸一下余流。
+ * 一句话：电弧从四周收进身前一点、压成一道白亮的细束，从喷口一路连着当刻的真实碰撞点；命中的敌人身上炸开电光，
+ *   成功回灌时一缕电沿束倒流回施法者、身上升起一圈电弧，收束当刻若还连着同一个目标，束尾再轻闪一下余流。
  * 色相家族：电黄（0xFFE14D）与冷白（0xEAFBFF）为主——与十万伏特同族同色，符合「电与白光是一家」。
- * 拍子：起（charge 收电聚束）→ 射（travel 细束拖尾）→ 击（hit 炸开）→ 灌（surge 回灌升弧）→ 咬（residual 余流）→ 空（fizzle 散电）。
- * 范围：`hit` 的炸开半径用参考值 0.28 格书写，服务端把 `data.scale = 实际判定半径 / 0.28` 传进来，`fit: "none"`
- *   让几何跟着 `scale` 走——画出的圈就是判定尺度。
- * 运动：起手电弧向身前一点内收；细束沿直线飞行、拖尾跟着弹体；命中点向四周炸开，回灌电弧从施法者身上向上升。
- * 数：`data.arcs`（特攻派生）绑定电弧与环的条数，`data.flow`（威力派生）绑定拖尾密度，`data.intensity`（本次威力比例）
- *   缩放发射量，`data.stages`（回灌级数）绑定回灌电弧的量。
+ * 拍子：起（charge 收电聚束）→ 束（beam 喷口连到实际落点）→ 击（hit 炸开）→ 灌（surge 升弧）→ 回（reflux 倒流）
+ *   → 咬（residual 束尾余流）→ 空（fizzle 散电）。
+ * 范围：`beam` 的折线顶点就是服务端当刻判定用的喷口与首碰点，画到哪就判到哪；`hit`／`residual` 的炸开半径用参考值
+ *   0.28 格书写，服务端把 `data.scale = 实际判定半径 / 0.28` 传进来，`fit: "none"` 让几何跟着 `scale` 走。
+ * 运动：细束沿 `data.path` 铺设（`polyline` 在整条边上采样）；回流沿目标→施法者的 `data.path`、粒子朝 `data.direction` 走；
+ *   命中点向四周炸开，回灌电弧从施法者身上向上升。
+ * 数：`data.arcs`（特攻派生）绑定电弧、束尖与回流的粒子数，`data.flow`（威力派生）绑定束鞘密度，
+ *   `data.intensity`（本次威力比例）缩放发射量，`data.stages`（实际回灌级数）绑定回灌电弧的量。
  */
 
 const ChargebeamDefinition: ParticleDefinition = {
@@ -45,33 +47,33 @@ const ChargebeamDefinition: ParticleDefinition = {
                 }
             ]
         },
-        travel: {
-            duration: 90,
-            exit: { stop: 80, drain: 16 },
+        beam: {
+            duration: 0,
             emitters: [
                 {
-                    name: "beam", bind: "projectile", fit: "none",
+                    name: "core", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
-                    rate: 44, shape: { kind: "sphere", radius: 0.14 },
-                    direction: "outward", speed: [0.01, 0.06],
-                    lifetime: [4, 8], size: [0.18, 0.04], sizeMode: "sin",
+                    rate: 46, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.01, 0.05], spread: 6,
+                    lifetime: [4, 8], size: [0.16, 0.03], sizeMode: "sin",
                     color: 0xF2FBFF, alpha: [0.95, 0], light: "full", bloom: 0.6, maxParticles: 90
                 },
                 {
-                    name: "trail", bind: "projectile", fit: "none", trail: { minDistance: 0.1 },
+                    name: "sheath", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    rate: { data: "flow", fallback: 70 }, shape: { kind: "sphere", radius: 0.1 },
-                    direction: "away", speed: [0.02, 0.12],
-                    lifetime: [5, 11], size: [0.09, 0.02],
-                    color: 0xFFE14D, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 160
+                    rate: { data: "flow", fallback: 70 }, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.02, 0.1], spread: 10,
+                    lifetime: [5, 11], size: [0.08, 0.02],
+                    color: 0xFFE14D, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 170
                 },
                 {
-                    name: "spark", bind: "projectile", fit: "none", trail: { minDistance: 0.18 },
+                    name: "head", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
-                    rate: 18, shape: { kind: "sphere", radius: 0.08 },
-                    direction: "outward", speed: [0.04, 0.18],
-                    lifetime: [3, 7], size: [0.1, 0.02],
-                    color: 0xEAFBFF, alpha: [0.8, 0], light: "full", maxParticles: 60
+                    burst: { count: { data: "arcs", fallback: 8 }, interval: 3, repeats: 3 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.04, 0.18], spread: 16,
+                    lifetime: [3, 7], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0xEAFBFF, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 60
                 }
             ]
         },
@@ -131,18 +133,43 @@ const ChargebeamDefinition: ParticleDefinition = {
                 }
             ]
         },
+        reflux: {
+            duration: 20,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "return", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: { data: "arcs", fallback: 6 }, at: 1 },
+                    shape: { kind: "polyline" },
+                    direction: [{ data: "direction.0", fallback: 0 }, { data: "direction.1", fallback: 0 }, { data: "direction.2", fallback: 1 }],
+                    speed: [0.12, 0.3], drag: 0.85,
+                    lifetime: [5, 9], size: [0.12, 0.02], sizeMode: "sin",
+                    color: 0xEAFBFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 40
+                }
+            ]
+        },
         residual: {
             duration: 22,
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "bite", bind: "target", height: 0.5,
+                    name: "bite", bind: "point", offset: [0, 0.45, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     burst: { count: { data: "arcs", fallback: 6 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.28 },
                     direction: "outward", speed: [0.06, 0.24], spread: 14,
                     lifetime: [5, 11], size: [0.14, 0.03],
                     color: 0xEAFBFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 60
+                },
+                {
+                    name: "tail", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    burst: { count: { data: "arcs", fallback: 5 } },
+                    shape: { kind: "ring", radius: 0.3, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [6, 12], size: [0.1, 0.02],
+                    color: 0xFFE14D, alpha: [0.7, 0], light: "full", maxParticles: 40
                 }
             ]
         },

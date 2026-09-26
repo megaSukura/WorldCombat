@@ -3,11 +3,11 @@
  *
  * 一句话：身上竖起一圈针芒，一轮扇形齐射把无数毒针喷出去，扎中目标的一瞬炸开一小团毒绿，最后在目标身上落下一口毒。
  * 色相家族：毒绿与骨白（spike / caltrop / impact_poison），毒团只作小面积强调（poisonbubble / acidsplash）。
- * 拍子：起（aim 0–5t）→ 击（loose 起射、barb 续命中、stick 扎地）→ 收（venom 中毒余韵）。
- * 范围：aim/loose 贴施法者脚下与身前，barb / venom 绑命中点——扇形张角与判定由服务端给出。
- * 运动：针沿扇形各飞各的（投射物自带外观），命中向外炸开，落空的针扎在地面。
+ * 拍子：起（aim 0–5t）→ 击（loose 起射、flight 每针沿投射物直飞、barb 续命中、stick 扎地）→ 收（venom 只在施毒成功时收成一处在针数最多的目标上）。
+ * 范围：aim/loose 贴施法者脚下与身前，flight 绑各根真实投射物（`data.projectile`），barb / venom 绑命中点——扇形张角与判定由服务端给出。
+ * 运动：每根针沿扇形各飞各的，flight 的短尾迹沿投射物同一位置拖行，命中向外炸开，落空的针扎在地面。
  * 数：`data.count`（本轮实际针数）决定起射那一burst 的针数，`data.intensity`（总威力 / 60）抬高每针命中的亮帧，
- * `data.scale`（单针判定 / 0.16）放大起射尘环。
+ * `data.scale`（单针判定 / 0.16）放大起射尘环与飞行尾迹。
  * 参照节：视觉语言第二、三、四、六、九节。
  */
 const BarbbarrageDefinition: ParticleDefinition = {
@@ -65,6 +65,28 @@ const BarbbarrageDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [8, 16], size: [0.07, 0.02],
                     color: 0x7ED957, alpha: [0.6, 0], drag: 0.92, light: "world", maxParticles: 80
+                }
+            ]
+        },
+        flight: {
+            duration: 0,
+            exit: { drain: 8 },
+            emitters: [
+                {
+                    name: "needle", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    trail: { minDistance: 0.35 }, rate: 16,
+                    direction: "velocity", speed: [0.0, 0.03],
+                    lifetime: [3, 7], size: [0.1, 0.03],
+                    color: 0xE8F5D0, alpha: [0.75, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "needle_wake", bind: "projectile", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/caltrop",
+                    trail: { minDistance: 0.5 }, rate: 8,
+                    direction: "velocity", speed: [0.01, 0.05], drag: 0.94,
+                    lifetime: [4, 8], size: [0.06, 0.02],
+                    color: 0x9BE86B, alpha: [0.5, 0], light: "world", maxParticles: 30
                 }
             ]
         },

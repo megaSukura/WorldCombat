@@ -15,6 +15,8 @@ Smoke.scenario("foulplay", function (stage) {
     var user = stage.pokemon({ species: "Sableye", level: 40, moves: ["foulplay"], at: [-2, 0, 0] });
     var foe = stage.pokemon({ species: "Machamp", level: 45, moves: ["tackle"], at: [2, 0, 0] });
     stage.hostile(user, foe);
+    // 目标站定，让暗手沿释放时锁定的方向真实首碰；跑动会走位属于另行观察。
+    stage.noai(foe);
     stage.until(1200, function () {
         return stage.casts("foulplay", user) > 0 && stage.damageBy(user) > 0;
     }, function () {

@@ -10,9 +10,10 @@
  *
  * 数值来源（每项读不同的精灵数据）：
  *   puff     羽绒威力：特攻定雾的密度、等级定绒的成熟度。
+ *   reach    射程：独立的真实攻击距离，由特攻与等级决定；与雾团画面大小无关。
  *   lob      抛球速度：身高定臂力，球飞多快。
  *   fall     下坠：体重定球的坠势（越重抛得越沉）。
- *   cloud    雾团半径：体型宽度与特攻定命中点散开多大，也是画面里的雾团半径。
+ *   cloud    雾团半径：体型宽度与特攻定命中点散开多大，只作画面里的雾团大小。
  *   downChance 缠身概率：特攻与等级定基础，原生 50%，浓雾式再加一成。
  *   downTicks 缠身时长：特攻与等级定雾能在身上糊多久。
  *   dropStages 特攻下降级数：固定 1 级。
@@ -28,6 +29,7 @@ namespace PokemonSkills {
     export const mistballId = "mistball";
     export const mistballScene = "world_combat:move_mistball";
     export const mistballEffect = "world_combat:downcast";
+    export const mistballCling = "world_combat:mistball_cling";
     export const mistballDownText = "world_combat.move.mistball.text.down";
     export const mistballMissText = "world_combat.move.mistball.text.miss";
 
@@ -42,6 +44,16 @@ namespace PokemonSkills {
             "羽绒威力", {
                 unit: "威力",
                 description: "羽绒雾球炸在目标身上那一下的基础威力；特攻越高、等级越高越实。对手特防、相性与暴击在命中时另算。"
+            }),
+        /** 射程：10 + 特攻偏移[−1,3.5] + 等级(≥30)偏移[0,2]；夹 8..17。独立于雾团画面大小。 */
+        reach: formula(
+            F.base(10)
+                .plus(F.stat("specialAttack").minus(60).times(0.035).clamp(-1, 3.5))
+                .plus(F.level().minus(30).times(0.1).clamp(0, 2))
+                .clamp(8, 17).round(1),
+            "射程", {
+                unit: "格",
+                description: "羽绒球沿弧线能落在多远的目标上；特攻越高、等级越高抛得越远。它单独决定打得到多远，雾团半径只影响画面，不改变命中判定。"
             }),
         /** 抛球速度：0.75 + 身高偏移[−0.1,0.5]；浓雾 ×0.9 / 轻羽 ×1.12；夹 0.55..1.3。 */
         lob: formula(
@@ -70,7 +82,7 @@ namespace PokemonSkills {
                 .clamp(0.9, 2.6).round(2),
             "雾团半径", {
                 unit: "格",
-                description: "球在命中点炸开成多大一团羽绒雾；体型宽、特攻强的个体铺得越开，浓雾式更大。它也是画面里雾团的大小。"
+                description: "球在命中点炸开成多大一团羽绒雾；体型宽、特攻强的个体铺得越开，浓雾式更大。它只决定画面里雾团的大小，不扩大实体命中判定。"
             }),
         /** 缠身概率：50% + 特攻偏移[0,14%] + 等级(≥30)偏移[0,5%]；浓雾 +10% / 轻羽 −6%；夹 34%..74%。 */
         downChance: percent(
@@ -132,11 +144,11 @@ namespace PokemonSkills {
     describe(mistballId, [
         { key: "description.0", values: ["puff"] },
         { key: "description.1", values: ["downChance","dropStages","downTicks"] },
-        { key: "description.2", values: ["cloud","lob","fall"] },
+        { key: "description.2", values: ["reach","lob","fall"] },
         { key: "option.on", values: [], when: function (context) { return read(context.detail.values, ["suffuse"]) === true; } },
         { key: "option.off", values: [], when: function (context) { return read(context.detail.values, ["suffuse"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["reach", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.puff"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.cloud", "tier.1.downTicks"] }
+        { key: "growth.1", values: ["tier.1.level","tier.1.downTicks"] }
     ]);
 }

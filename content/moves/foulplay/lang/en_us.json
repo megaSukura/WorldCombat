@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.foulplay.summary": "A shadow arm crawls into the target's shadow and raises a cluster of dark spines from under its own feet. This move ignores the user's Attack and reads the target's Attack instead: the stronger the foe, the harder it hits.",
-  "worldcombat.skill.foulplay.description.0": "This blow deals about %1$s physical damage driven by the target's current Attack: the stronger the foe, the more force is borrowed; the user's own Attack barely matters.",
-  "worldcombat.skill.foulplay.description.1": "The shadow reaches %1$s blocks and crawls along the ground at %2$s blocks per tick, striking only once it reaches the target; the grasp has a %3$s block radius.",
+  "worldcombat.skill.foulplay.summary": "A shadow arm reaches out along the aim and grows tick by tick: the first entity it touches is the one it twists back on. This move settles by the actual grabbed body's current Attack: the stronger the foe, the more force is borrowed; the user still joins through the shared damage formula's base coefficient, no longer as the main source.",
+  "worldcombat.skill.foulplay.description.0": "This blow deals about %1$s physical damage, driven mainly by the actual grabbed body's current Attack: the stronger the foe, the more force is borrowed; the user only joins through the damage formula's base coefficient.",
+  "worldcombat.skill.foulplay.description.1": "The shadow extends up to %1$s blocks, growing %2$s blocks per tick; the first entity it touches is grabbed. The grasp has a %3$s block radius; a wall stops it and reaching full range retracts it.",
   "worldcombat.skill.foulplay.use.0": "Turn its strength against it",
   "worldcombat.skill.foulplay.use.1": "Bite the strongest foe hardest",
   "worldcombat.skill.foulplay.use.2": "Drag a strong foe into melee",
@@ -26,7 +26,7 @@
   "worldcombat.skill.foulplay.growth.0": "From level %1$s: foul power rises to %2$s.",
   "worldcombat.skill.foulplay.growth.1": "From level %1$s: foul power %2$s, shadow reach %3$s.",
   "worldcombat.skill.foulplay.cling.on": "Cling: on a hit the shadow drags the target up to about %1$s blocks toward the user (stopped by obstacles) and leaves it staggering for about %2$s, moving 30%% slower; in exchange this hit is held back and the cooldown is longer.",
-  "worldcombat.skill.foulplay.cling.off": "Foul: the shadow only stabs upward for maximum damage.",
+  "worldcombat.skill.foulplay.cling.off": "Foul: the shadow twists and lets go on the spot, leaving no ongoing drag.",
   "world_combat.move.foulplay.text.seize": "Strength turned back",
   "world_combat.move.foulplay.text.drag": "Dragged in (%1$s blocks)",
   "world_combat.move.foulplay.text.miss": "The shadow misses"

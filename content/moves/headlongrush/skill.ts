@@ -7,13 +7,15 @@
  * 三幕（提交前只播预告）：
  *   起（ready）：低头屈腿、脚边土被往后扫，只播预告（`windup`），此时代价未结清。
  *   冲（guard → rush → impact）：提交后立刻弃守（自身防御 −guardLoss、特防 −poiseLoss 写进公共能力阶梯，中与不中都照付），
- *       随后沿目标当前位置贴地平冲（每刻推进 `rush`，最远 `reach`）；撞上即结算一记 `charge` 接触伤害，
- *       把目标沿冲击方向撞开 `shove` 格，并从起步点到撞击点犁出一条宽 `furrow`、时长 `furrowTicks` 的粗土沟
- *       （terrain 租借，linger，到期原方块回来）。
- *   散（slump）：重心散掉，身上浮起脱力灰气并浮字提示降级；落空只留下扑空的尘。
+ *       随后沿提交时锁定的直线贴地平冲（每刻推进 `rush`，最远 `reach`，点敌只作建议朝向，途中不再转向）；
+ *       撞上沿线非友方即结算一记 `charge` 接触伤害、把人撞开 `shove` 格后继续推进；免疫推开的 Boss 只吃接触伤害并被阻停。
+ *       墙前结束，从起步点到本体真正停下的位置犁出一条宽 `furrow`、时长 `furrowTicks` 的粗土沟（terrain 租借，linger）。
+ *   散（slump）：重心散掉，身上浮起脱力灰气并浮字提示降级；没撞到人只留下扑空的尘。
+ *
+ * 选取 `kind: "aim"`：自由方向或世界点都行，点敌只是建议朝向；方块墙拦停，命中权限由命中层判定。
  *
  * 与同族分开：近身战不助跑的贴脸连打；铠农炮在远处；画龙点睛从天而降；与勇鸟猛攻比：勇鸟从空中沿线穿过目标，
- *   突飞猛扑贴地冲、撞到就停、把目标推走、在身后留下沟。
+ *   突飞猛扑贴地冲、把沿线的人撞开并继续推进、在身后留下沟。
  *
  * 配置 `plow`（犁地式）由 `resolve` 改时序、由公式改威力／冲距／撞飞／沟，由本文件改判定与表现；提交后才触碰世界。
  */
@@ -67,7 +69,7 @@ namespace PokemonSkills {
         name: "Headlong Rush",
         description: "低头灌注全力直线猛冲：助跑后把对手一路撞开，并在地面犁出一道会留一会儿的粗土沟。出招即弃守，自身防御与特防各下降一级。犁地式冲得更远、推得更狠、沟更宽，代价是单发威力更低、出手更慢。",
         uses: ["从远处一路冲过去把对手撞出阵地", "用体重换一记最重的单发", "把犁出的沟留在场上、改变地形"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.6,
         maxRange: 7.0,
         prepare: 12,
@@ -80,7 +82,7 @@ namespace PokemonSkills {
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p(headlongrushId, "reach", pokemon) : 3.6, geometry: "line", style: "rush",
-                color: 0xB4793F, label: config && config.plow === true ? "突飞猛扑·犁地式" : "突飞猛扑·止步式" };
+                color: 0xB4793F, label: config && config.plow === true ? "突飞猛扑·犁地式" : "突飞猛扑·短冲式" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[headlongrushId], detail: { values: config },
@@ -103,8 +105,7 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            const targetRef = target !== null ? String(target.ref()) : "";
             const start = action.origin();
             const charge = p(headlongrushId, "charge", action);
             const shove = p(headlongrushId, "shove", action);
@@ -118,8 +119,12 @@ namespace PokemonSkills {
             const plow = !!(config && config.plow);
             const intensity = Math.max(0.5, Math.min(2.4, charge / 120));
             const scale = Math.max(0.6, Math.min(2.2, furrow / 1.2));
-            const contactGap = 0.9, up = WorldCombat.point(0, 1.45, 0);
-            let travelled = 0, settled = false;
+            // 提交时固定冲向：点敌只是建议朝向，整段冲刺沿这一条直线，途中不再转向。
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
+            const contactRadius = 0.6, minimumMove = 0.05, up = WorldCombat.point(0, 1.45, 0);
+            const scenes = WorldFeedback.actionScenes(headlongrushScene);
+            const struck: { [ref: string]: boolean } = Object.create(null);
+            let travelled = 0, hits = 0, settled = false;
 
             // 弃守是提交那一刻付的。
             NativeEffects.boost(world, actor, "def", -guardLoss);
@@ -129,47 +134,17 @@ namespace PokemonSkills {
                     plow: plow ? 1 : 0, dust: dust, scale: scale, intensity: intensity }, 24);
             sound(action, "cobblemon:move.bulldoze.actor");
 
-            function finish(current: CombatAction): void {
+            function finish(current: CombatAction, at: CombatPoint): void {
                 if (settled) return;
                 settled = true;
-                const scope = current.world(), self = scope.observe(actor);
-                if (self !== null) {
-                    const fatigue = Math.max(12, Math.round(10 + travelled * 5));
-                    WorldFeedback.emit(scope, headlongrushScene, 1, self.position(),
-                        { moment: "slump", guardLoss: guardLoss, poiseLoss: poiseLoss, travelled: Math.round(travelled * 10) / 10,
-                            fatigue: fatigue, dust: dust, scale: scale, intensity: intensity }, 26);
-                    WorldFeedback.text(scope, self.position().plus(up), headlongrushSlumpText, [guardLoss, poiseLoss], 28);
-                }
-                sound(current, "cobblemon:move.bulldoze.target");
-                done(current);
-            }
-
-            /** 撞上就结算：伤害、撞飞、犁沟。 */
-            function strike(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
-                const self = scope.observe(actor);
-                if (self === null) { finish(current); return; }
-                const selfAt = self.position();
-                const heading = WorldCombat.point(at.x() - start.x(), 0, at.z() - start.z());
-                const dir = heading.length() < 0.05 ? current.direction() : heading.unit();
+                scenes.stop(current, "rush");
+                // 犁地痕迹只到本体真正到达的位置，不超前。
                 const cells = headlongFurrow(scope, start, at, furrow, furrowTicks);
-                let landed = false;
-                const victim = scope.actor(targetRef);
-                if (victim !== null && scope.valid(victim)) {
-                    const vbody = scope.observe(victim);
-                    if (vbody !== null && selfAt.minus(vbody.position()).length() <= reach + 1.2) {
-                        landed = hurt(current, victim, headlongrushId, charge, { damage: damageSpec(headlongrushId, "charge"), contact: true });
-                        if (landed && scope.valid(victim)) {
-                            const away = vbody.position().minus(start);
-                            const push = WorldCombat.point(away.x(), 0, away.z());
-                            scope.displace(victim, (push.length() < 0.05 ? dir : push.unit()).scale(shove));
-                        }
-                    }
-                }
                 WorldFeedback.emit(scope, headlongrushScene, 1, at,
-                    { moment: "impact", target: targetRef, landed: landed ? 1 : 0, dust: dust, cells: cells,
+                    { moment: "impact", target: targetRef, landed: hits > 0 ? 1 : 0, hits: hits, dust: dust, cells: cells,
                         scale: scale, intensity: intensity, shove: Math.round(shove * 100) / 100 }, 30);
-                if (landed) {
+                if (hits > 0) {
                     sound(current, "cobblemon:impact.ground");
                     sound(current, "minecraft:item.mace.smash_ground_heavy");
                     WorldFeedback.text(scope, at.plus(up), headlongrushImpactText, [Math.round(travelled * 10) / 10], 26);
@@ -177,35 +152,64 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(up), headlongrushMissText, [], 24);
                     sound(current, "minecraft:entity.player.attack.weak");
                 }
-                finish(current);
+                const self = scope.observe(actor);
+                if (self !== null) {
+                    const fatigue = Math.max(12, Math.round(10 + travelled * 5));
+                    WorldFeedback.emit(scope, headlongrushScene, 1, self.position(),
+                        { moment: "slump", guardLoss: guardLoss, poiseLoss: poiseLoss, travelled: Math.round(travelled * 10) / 10,
+                            hits: hits, fatigue: fatigue, dust: dust, scale: scale, intensity: intensity }, 26);
+                    WorldFeedback.text(scope, self.position().plus(up), headlongrushSlumpText, [guardLoss, poiseLoss], 28);
+                }
+                sound(current, "cobblemon:move.bulldoze.target");
+                scenes.finish(current, done);
             }
 
-            /** 贴地平冲：每刻朝目标当前位置推进 `rush`，贴上或冲到 `reach` 就结算。 */
-            function chargeStep(current: CombatAction): void {
+            /** 贴地平冲：沿固定朝向推进 rush，撞上沿线的人就结算并撞开，继续推进；墙前停。 */
+            function advance(current: CombatAction): void {
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { finish(current); return; }
-                const victim = scope.actor(targetRef);
-                if (victim === null || !scope.valid(victim)) { finish(current); return; }
-                const vbody = scope.observe(victim);
-                if (vbody === null) { finish(current); return; }
-                current.face(vbody.position(), 20, 20);
-                const delta = vbody.position().minus(self.position());
-                const flat = WorldCombat.point(delta.x(), 0, delta.z());
-                const distance = flat.length();
-                if (distance <= contactGap + 0.4 || travelled >= reach) { strike(current, vbody.position()); return; }
-                const heading = flat.length() < 1e-6 ? current.direction() : flat.unit();
-                const room = Math.min(rush, Math.max(0, distance - contactGap), Math.max(0, reach - travelled));
-                if (room <= 0.03) { strike(current, vbody.position()); return; }
-                const moved = scope.displace(actor, heading.scale(room));
+                if (self === null) { finish(current, start.plus(direction.scale(travelled))); return; }
+                const room = Math.max(0, reach - travelled);
+                const step = Math.min(rush, room);
+                if (step <= 0.02) { finish(current, self.position()); return; }
+                const swept = sweepStep(current, direction.scale(step), contactRadius), hit = swept.hit;
+                let stop = false;
+                if (hit.hitEntity()) {
+                    const victim = hit.target();
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        const ref = String(victim.ref());
+                        if (!struck[ref]) {
+                            struck[ref] = true;
+                            const landed = impact(current, hit, headlongrushId, charge,
+                                { damage: damageSpec(headlongrushId, "charge"), contact: true });
+                            if (landed) {
+                                hits++;
+                                // 撞开沿线敌人继续推进；免疫推开的 Boss 只吃接触伤害并被阻停。
+                                const pushed = scope.valid(victim) ? scope.hitDisplace(victim, direction.scale(shove)) : 0;
+                                WorldFeedback.emit(scope, headlongrushScene, 1, hit.position(),
+                                    { moment: "impact", target: ref, landed: 1, hits: hits, dust: dust, cells: 0,
+                                        scale: scale, intensity: intensity, shove: Math.round(shove * 100) / 100 }, 24);
+                                sound(current, "cobblemon:impact.ground");
+                                if (pushed < 0.02) stop = true;
+                            } else {
+                                stop = true;
+                            }
+                        }
+                    } else {
+                        stop = true;
+                    }
+                }
+                if (stop) { finish(current, hit.position()); return; }
+                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                WorldFeedback.keep(scope, "headlongrush:rush:" + current.id(), headlongrushScene, 1, self.position(),
-                    { moment: "rush", direction: [heading.x(), heading.y(), heading.z()], plow: plow ? 1 : 0,
-                        dust: dust, scale: scale, intensity: intensity }, 8);
-                if (moved < room * 0.5) { strike(current, vbody.position()); return; }
-                current.after(1, function (next: CombatAction) { chargeStep(next); });
+                const at = current.origin();
+                scenes.show(current, "rush", at,
+                    { moment: "rush", direction: [direction.x(), direction.y(), direction.z()], plow: plow ? 1 : 0,
+                        dust: dust, scale: scale, intensity: intensity });
+                if (hit.blocked() || moved < minimumMove || travelled >= reach) { finish(current, at); return; }
+                current.after(1, function (next: CombatAction) { advance(next); });
             }
 
-            chargeStep(action);
+            advance(action);
         }
     });
 }

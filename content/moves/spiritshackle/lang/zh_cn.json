@@ -30,5 +30,7 @@
   "world_combat.move.spiritshackle.text.pin": "影子被钉住 %1$s 秒",
   "world_combat.move.spiritshackle.text.release": "影子松脱",
   "world_combat.move.spiritshackle.text.snap": "缝线绷断",
+  "world_combat.move.spiritshackle.text.noanchor": "脚下没有可缝的影子",
+  "world_combat.move.spiritshackle.text.blocked": "影子无法被缝住",
   "effect.world_combat.spiritshackle_pinned": "影子被缝住"
 }

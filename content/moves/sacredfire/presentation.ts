@@ -1,12 +1,14 @@
 /**
  * 神圣之火 / sacredfire 的客户端表现。
  *
- * 一句话：虹彩圣火从脚下升起裹住全身，施法者腾空压向目标、拖一条彩虹火尾撞上去；撞击点炸开一圈金白火与
- * 彩色火星，圣火式还在落点留一片慢慢灭的虹彩余焰。
+ * 一句话：虹彩圣火从脚下升起裹住全身，随后一团虹火从身前飞出、沿瞄准方向逐段推进，撞上实体或方块炸开；
+ * 友方被净火碰到时冰壳化开成彩汽，敌人则吃一记火击；圣火式在落点留一片慢慢灭的虹彩余焰。
  * 色相家族：金白（0xFFE0A0）是核心与主色，彩虹来自 `sparkle/shinesparkle_rainbow` 的原色；烟尘收在深褐（0x3A2E2A）。
- * 拍子：起 risen（升火）→ 降 dive（彩虹尾）→ 击 hit（撞开）／whiff（空爆）→ 焚 flame（余焰）与 flamehit → fade。
- * 范围：flame／flamehit 的地面环按服务端 `data.radius`（机制余焰半径）画出，圈就是会被烫到的地。
- * 运动：彩火从脚下升起、俯冲时沿岸贴在身上、撞击向外炸开、余焰贴地闷烧。
+ * 拍子：起 risen（升火）→ 飞 flight（彩虹尾，身体留原地）→ 击 hit（撞开）／thaw（化冰）／whiff（空爆）
+ *   → 焚 flame（余焰，由场地效果托管）与 flamehit → fade。
+ * 范围：flight 的 `data.path` 是服务端送出的原点与当刻前沿（与判定同一份头尾点）；
+ *   flame／flamehit 的地面环按服务端 `data.radius`（机制余焰半径）画出，圈就是会被烫到的地。
+ * 运动：虹火从身前沿路径飞出、撞击向外炸开、余焰贴地闷烧。
  * 数：火星数绑定 `data.sparks`（物攻与等级换算），强度绑定 `data.intensity`（威力派生），
  *   身量绑定 `data.scale`（判定半径 / 0.7）。
  */
@@ -35,32 +37,38 @@ const SacredfireDefinition: ParticleDefinition = {
                 }
             ]
         },
-        dive: {
+        flight: {
             duration: 0,
             emitters: [
                 {
-                    name: "cloak", bind: "source", height: 0.5,
+                    name: "cloak", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    rate: 40, shape: { kind: "sphere", radius: 0.42 },
-                    direction: "away", speed: [0.04, 0.16], spread: 18,
+                    rate: 44, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.04, 0.16], spread: 18,
                     lifetime: [6, 12], size: [0.28, 0.05],
                     color: 0xFFE0A0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 120
                 },
                 {
-                    name: "trail", bind: "source", height: 0.5,
+                    name: "trail", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
-                    rate: { data: "sparks", fallback: 24 }, shape: { kind: "sphere", radius: 0.44 },
-                    direction: "away", speed: [0.05, 0.2], spread: 22,
-                    drag: 0.9,
+                    rate: { data: "sparks", fallback: 24 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.05, 0.2], spread: 22, drag: 0.9,
                     lifetime: [8, 16], size: [0.13, 0.02],
                     alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 140
                 },
                 {
-                    name: "embers", bind: "source", height: 0.5,
+                    name: "head", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: 34, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "away", speed: [0.06, 0.24], spread: 20,
+                    lifetime: [7, 13], size: [0.3, 0.05],
+                    color: 0xFFF4D0, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 90
+                },
+                {
+                    name: "embers", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     rate: 24, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "away", speed: [0.06, 0.22], spread: 24,
-                    gravity: 0.03, drag: 0.92,
+                    direction: "away", speed: [0.06, 0.22], spread: 24, gravity: 0.03, drag: 0.92,
                     lifetime: [8, 16], size: [0.08, 0.01],
                     color: 0xFFD06A, alpha: [0.85, 0], light: "full", maxParticles: 120
                 }
@@ -88,6 +96,31 @@ const SacredfireDefinition: ParticleDefinition = {
                     gravity: 0.02, drag: 0.9,
                     lifetime: [10, 20], size: [0.14, 0.02], sizeMode: "index",
                     alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 100
+                }
+            ]
+        },
+        thaw: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "melt", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 14, at: 1 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "up", speed: [0.03, 0.12], spread: 14, drag: 0.9,
+                    lifetime: [10, 18], size: [0.26, 0.44],
+                    color: 0xBFE8F5, alpha: [0.45, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "rainbow", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
+                    burst: { count: { data: "sparks", fallback: 18 }, at: 1 },
+                    shape: { kind: "sphere_surface", radius: 0.34 },
+                    direction: "outward", speed: [0.06, 0.26], spread: 24,
+                    gravity: 0.02, drag: 0.9,
+                    lifetime: [8, 16], size: [0.13, 0.02], sizeMode: "index",
+                    alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 70
                 }
             ]
         },

@@ -107,7 +107,7 @@ const BubbleDefinition: ParticleDefinition = {
                 {
                     name: "suds", bind: "target", height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
-                    rate: 7, shape: { kind: "circle", radius: 0.45 },
+                    rate: { data: "density", fallback: 7 }, shape: { kind: "circle", radius: 0.45 },
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [14, 22], size: [0.08, 0.02],
                     color: 0xBFEFFF, alpha: [0.5, 0], light: "full", maxParticles: 22

@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.tackle.summary": "迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开。跑得越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
-  "worldcombat.skill.tackle.use.0": "拉开距离时的一记短助跑冲撞",
+  "worldcombat.skill.tackle.summary": "朝选定方向迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开；可以只选方向朝空处撞。跑得越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
+  "worldcombat.skill.tackle.use.0": "朝任意方向的一记短助跑冲撞",
   "worldcombat.skill.tackle.use.1": "撞开一步把对手顶离掩体",
   "worldcombat.skill.tackle.use.2": "撞后向身侧滑开，调整站位",
   "worldcombat.skill.tackle.description.0": "撞实造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",

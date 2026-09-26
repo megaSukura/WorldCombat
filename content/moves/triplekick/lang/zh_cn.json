@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.triplekick.summary": "正面站定，朝对手身前的窄走廊一脚接一脚地直踢：每一脚独立掷命中，每中一脚下一脚更重（第 n 脚递增）。落空这串就停。抽射式踢得更重、顶得更远，但够得近、连得慢。",
+  "worldcombat.skill.triplekick.summary": "正面站定，朝释放时锁定的方向一脚接一脚地直踢：每一脚独立掷命中、取真正的短距离首碰，第 n 脚威力递增，任一脚落空这串就停。前两脚只是轻点把人留住，最后一脚才把整串的推力一次送出。抽射式踢得更重、顶得更远，但够得近、连得慢。",
   "worldcombat.skill.triplekick.description.0": "第一脚造成约 %1$s 点格斗属性接触伤害，连续 %2$s 脚；每中一脚，下一脚威力就在第一脚基础上再增加 %3$s 倍。",
-  "worldcombat.skill.triplekick.description.1": "每脚沿身前 %1$s 格长、%2$s 格半宽的走廊判定，走廊里的每个敌人各吃一记；每脚命中率 %3$s，两脚间隔 %4$s 秒。",
-  "worldcombat.skill.triplekick.description.2": "每脚命中都会把踢中的敌人沿踢击方向顶开 %1$s 格。",
+  "worldcombat.skill.triplekick.description.1": "每脚沿身前 %1$s 格长、%2$s 格接触半径直线伸出，取真正碰到的第一个敌人结算，同一次踢击不重复打同一目标；每脚命中率 %3$s，两脚间隔 %4$s 秒。",
+  "worldcombat.skill.triplekick.description.2": "三脚命中后沿踢击方向共顶开 %1$s 格；前两脚各只轻推四分之一、把目标留在踢线上，最后一脚一次补足余下的推力。",
   "worldcombat.skill.triplekick.drive.on": "抽射式：每脚威力 ×1.12、击退 ×1.5，代价是踢击距离 ×0.85、命中率 −2%、两脚间隔 +1 刻、收招 +1 刻、冷却 +2 刻。",
   "worldcombat.skill.triplekick.drive.off": "快踢式（原生形态）：踢击距离 ×1.03、两脚间隔 −1 刻、命中率 +2%、冷却 −4 刻，代价是单脚较轻、击退较近。",
   "worldcombat.skill.triplekick.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -15,10 +15,10 @@
   "worldcombat.skill.triplekick.value.kicks": "脚数",
   "worldcombat.skill.triplekick.value.ramp": "每中递增",
   "worldcombat.skill.triplekick.value.reach": "踢击距离",
-  "worldcombat.skill.triplekick.value.halfWidth": "踢击面半宽",
+  "worldcombat.skill.triplekick.value.halfWidth": "踢击接触半径",
   "worldcombat.skill.triplekick.value.gap": "脚间隔",
   "worldcombat.skill.triplekick.value.accuracy": "每脚命中率",
-  "worldcombat.skill.triplekick.value.push": "击退",
+  "worldcombat.skill.triplekick.value.push": "整串总击退",
   "worldcombat.skill.triplekick.value.sparks": "尘点数量",
   "worldcombat.skill.triplekick.value.tempo": "起手",
   "worldcombat.skill.triplekick.value.recover": "收招",
@@ -29,5 +29,5 @@
   "worldcombat.skill.triplekick.preference.ai.maxChase.help": "超过这个距离就不踢，先走近。这是近身直踢，设得很大也常常够不到。",
   "world_combat.move.triplekick.text.miss": "第 %1$s 脚踢空，连踢停下",
   "world_combat.move.triplekick.text.rise": "第 %1$s 脚踢中 %2$s",
-  "worldcombat.skill.triplekick.description.additional": "每脚独立掷命中：一脚落空、走廊里没有敌人、或最初选中的目标倒下或离开，连踢就会停下。"
+  "worldcombat.skill.triplekick.description.additional": "每脚独立掷命中：一脚落空、踢线首碰是墙、前方没有别的敌人，或伤害被拒，连踢就停在真实位置。方向在释放时锁定，目标横移走出踢线就会漏掉后续的脚。"
 }

@@ -5,9 +5,9 @@
  *   命中后 100% 使目标攻击下降 1 级（secondary.boosts.atk -1）。描述「用坚韧的尾巴猛扫对手进行攻击，
  *   从而降低对手的攻击。」（Cobblemon 1.8）。
  *
- * 翻译：把「用坚韧的尾巴猛扫」落成**朝着目标方向甩出的一道宽扇**——身子不动，尾巴沿地面扫过一片扇形，
- *   把扇里所有敌人一起掀开、撞得各降一级攻击，并在身后的地上犁出一道浅浅的沟痕。它是本组唯一一次能同时
- *   压低多人的一记，单体最轻；同族凭「向前重撞 / 原地宽扫 / 隔空怨念 / 带火的踢」分开。
+ * 翻译：把「用坚韧的尾巴猛扫」落成**从一侧扫向另一侧的一道宽弧**——身子不动，尾巴沿地面扫过一片扇形，
+ *   尾巴扫到谁、谁才挨那一下：被掀开、各降一级攻击，不做地形改动。它是本组唯一一次能同时压低多人的一记，
+ *   单体最轻；同族凭「向前重撞 / 原地宽扫 / 隔空怨念 / 低平侧踢」分开。
  *
  * 数据分散（每个参数读不同的精灵数据）：
  *   sweep  扫击威力：**物攻**给扫的狠度，等级定发力；广域式 ×0.85 / 聚扫式 ×1.12。
@@ -15,7 +15,6 @@
  *   radius 扫击半径：**体宽与身高**决定够到多远；广域式 ×1.12。它也是本招的实际射程。
  *   push   撞开距离：物攻派生，沿离心方向掀开。
  *   scales 龙鳞碎屑数：物攻与等级派生，直接驱动画面发射量。
- *   furrow 犁痕停留：等级决定沟痕在地面留多久。
  *   tempo/recover/recharge：速度与等级定时序；广域式更慢更费。
  *
  * 配置 `wide`（广域式，默认关）双向取舍：开＝张角 235°、半径 ×1.12，一次罩住一片人，代价是威力 ×0.85、
@@ -83,10 +82,6 @@ namespace PokemonSkills {
                 unit: "点",
                 description: "尾巴扫过时甩出的龙鳞碎屑数量，随物攻与等级增长；粒子按它发射，画面里的数量和机制一致。"
             }),
-        /** 犁痕停留：基础 120 + 等级偏移[−20,120]；夹 60..280 刻。 */
-        furrow: seconds(
-            F.base(120).plus(F.level().minus(20).times(4).clamp(-20, 120)).clamp(60, 280).round(0),
-            "犁痕停留", "尾巴在地面犁出的沟痕停留多久；等级越高扫得越深、痕迹留得越久。"),
         /** 起手：基础 7 − 速度偏移[−2,3]；广域 +2；夹 3..12。 */
         tempo: seconds(
             F.base(7).minus(F.stat("speed").minus(60).times(0.035).clamp(-2, 3))
@@ -117,7 +112,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["sweep","maxTargets"] },
         { key: "description.1", values: ["radius", "arc"] },
         { key: "description.2", values: ["push","stages"] },
-        { key: "description.3", values: ["furrow"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
         { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },

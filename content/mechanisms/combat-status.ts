@@ -274,6 +274,33 @@ namespace CombatStatus {
     }
     /** Receipt for every resolved secondary status, so feedback can distinguish immunity from a miss once. */
     export var secondary = new WorldContributions.Registry<Secondary>();
+    /** Move one shared default major carrier atomically. Arbitrary identity markers may own extra script state and
+     * require their producer's own transfer contract. Conversion is an explicit fresh native application. */
+    export function transferMajor(world: CombatWorld, from: CombatActor, to: CombatActor, name: string, source: CombatMobEffect,
+        replacement: { name?: string; duration?: number; amplifier?: number } = {}): Result {
+        name = normalize(name);
+        const targetName = normalize(replacement.name || name), origin = majors[name], destination = majors[targetName];
+        if (!origin || !destination || String(source.id()) !== origin.effect || source.tagged(identityOnly))
+            return { applied: false, reason: "unsupported-carrier", effect: null };
+        if (!world.valid(from) || !world.valid(to) || String(from.ref()) === String(to.ref())) return { applied: false, reason: "unavailable", effect: null };
+        const current = world.mobEffect(from, source.id());
+        if (!current || String(current.key()) !== String(source.key())) return { applied: false, reason: "stale", effect: null };
+        if (major(world, to)) return { applied: false, reason: "target-statused", effect: null };
+        const duration = replacement.duration === undefined ? source.duration() : replacement.duration;
+        const amplifier = replacement.amplifier === undefined ? (targetName === name ? source.amplifier() : destination.amplifier) : replacement.amplifier;
+        if (duration !== -1 && (!isFinite(duration) || duration < 1 || duration % 1) || !isFinite(amplifier) || amplifier < 0 || amplifier % 1)
+            return { applied: false, reason: "invalid", effect: null };
+        const gate = allowed(world, to, targetName, duration, amplifier, { effect: destination.effect });
+        if (!gate.allowed) return { applied: false, reason: gate.reason || "immune", effect: null };
+        const same = destination.effect === source.id() && duration === source.duration() && amplifier === source.amplifier();
+        const moved = same ? world.transferMobEffect(from, to, source.id(), source.key())
+            : world.transferMobEffect(from, to, source.id(), source.key(), JSON.stringify({ id: destination.effect, duration, amplifier }));
+        if (!moved) return { applied: false, reason: "transfer-refused", effect: null };
+        const effect = world.mobEffect(to, destination.effect);
+        if (effect) applied.apply({ world, actor: to, name: targetName, effect });
+        if (!has(world, from, name)) cured.apply({ world, actor: from, name });
+        return { applied: true, reason: "applied", effect };
+    }
     /** Remove every effect carrying the identity; returns whether anything was removed. */
     export function cure(world: CombatWorld, actor: CombatActor, name: string): boolean {
         name = normalize(name);

@@ -15,20 +15,21 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            if (target.friendly || target.health <= 0 || !target.visible) return false;
+            // 目标或同伴都可能是示范者；只在真读到缺少且够用的可复制招式时才推荐。
+            if (target.health <= 0 || !target.visible) return false;
             const self = CompanionBehavior.source(context);
             if (context.facts.focus !== target.ref
                 && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
             if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
             const id = CompanionBehavior.fact<string>(context, "world_combat:sketch-last", target);
-            if (!id) return true;
+            if (!id) return false;
             if (CompanionBehavior.fact<boolean>(context, "world_combat:sketch-knows", self, id)) return false;
             const info = CobblemonCombat.moveTemplate(id);
             if (String(info.category()) === "status") return true;
             return info.power() >= CompanionBehavior.ai<number>(capability, "minPower", 50);
         },
         accepts: function (_context, _capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

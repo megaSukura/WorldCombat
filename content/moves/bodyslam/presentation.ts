@@ -4,7 +4,8 @@
  * 一句话：重身先蹲下压出尘圈，腾空时拖出向上的速度线，砸下的一刻地面炸开一圈冲击波并掀起土块，
  * 被压到的目标各自炸出一团钝击尘。
  * 色相家族：土棕（earth / tinydust）为主、灰烟为余韵，唯一亮色是钝击命中的暖白 impact_normal。
- * 拍子：起（windup 蹲身）→ 行（leap 腾空）→ 击（crash 落地）→ 收（dust 余尘与 impact）。
+ * 拍子：标（mark 计划落点 → 受阻时移到实际脚下）→ 起（windup 蹲身）→ 行（leap 腾空）→ 击（crash 落地）→ 收（dust 余尘与 impact）。
+ * mark 的贴地环按 `data.scale`（落点半径 / 2.0）铺满，画出的就是当前会被压到的那块地。
  * 范围：crash 的贴地冲击环按 `data.scale`（落点半径 / 2.0）铺满，画出的就是会被压到的那块地。
  * 运动：debris 沿球面外抛带重力，shock 贴地向外扩，dust 缓慢上浮留下余韵。
  * 数：`data.bursts`（命中人数换算的碎块数）决定落地碎块与尘量，`data.intensity`（本击威力 / 80）抬高命中亮度，
@@ -14,6 +15,28 @@
 const BodyslamDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        mark: {
+            duration: 8,
+            exit: { stop: 0, drain: 6 },
+            emitters: [
+                {
+                    name: "plan_ring", bind: "point", offset: [0, 0.04, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 12, shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.01, 0.04],
+                    lifetime: [8, 14], size: [0.3, 0.12], sizeMode: "sin",
+                    color: 0xE0C88A, alpha: [0.35, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "plan_dust", bind: "point", offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 8, shape: { kind: "circle", radius: { data: "scale", fallback: 1 }, thickness: 0.4, rotation: [90, 0, 0] },
+                    direction: "inward", speed: [0.01, 0.03],
+                    lifetime: [6, 12], size: [0.05, 0.02],
+                    color: 0xC7A97B, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         windup: {
             duration: 10,
             exit: { stop: 5, drain: 12 },

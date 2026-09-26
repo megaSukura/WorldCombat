@@ -30,12 +30,36 @@ const SecretPowerDefinition: ParticleDefinition = {
                     color: 0xDCD8CE, alpha: [0.6, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "draw_core", bind: "source", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
-                    rate: 6, shape: { kind: "sphere", radius: 0.3 },
+                    name: "motes", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 10, shape: { kind: "sphere", radius: 0.6 },
                     direction: "inward", speed: [0.01, 0.04],
-                    lifetime: [8, 14], size: [0.14, 0.02],
-                    color: 0xEDE8DC, alpha: [0.5, 0], light: "full", maxParticles: 16
+                    lifetime: [8, 14], size: [0.06, 0.01],
+                    color: 0xFFFFFF, alpha: [0.8, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "hint_ember", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "hintFire", fallback: 0 }, at: 2 }, shape: { kind: "sphere", radius: 0.7 },
+                    direction: "inward", speed: [0.05, 0.14], gravity: -0.01,
+                    lifetime: [8, 16], size: [0.09, 0.01],
+                    color: 0xFF9A3C, alpha: [0.9, 0], light: "full", maxParticles: 20
+                },
+                {
+                    name: "hint_leaf", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/grass/leaf",
+                    burst: { count: { data: "hintThicket", fallback: 0 }, at: 2 }, shape: { kind: "sphere", radius: 0.7 },
+                    direction: "inward", speed: [0.05, 0.14], spin: 9,
+                    lifetime: [10, 18], size: [0.14, 0.02],
+                    color: 0x8FCF6E, alpha: [0.85, 0], light: "full", maxParticles: 20
+                },
+                {
+                    name: "hint_splash", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    burst: { count: { data: "hintWater", fallback: 0 }, at: 2 }, shape: { kind: "sphere", radius: 0.7 },
+                    direction: "inward", speed: [0.05, 0.14], gravity: 0.01,
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0x7FD7F0, alpha: [0.8, 0], light: "full", maxParticles: 20
                 }
             ]
         },
@@ -88,6 +112,14 @@ const SecretPowerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.14], gravity: 0.02,
                     lifetime: [8, 16], size: [0.06, 0.01],
                     color: 0xC9C6BE, alpha: [0.7, 0], light: "world", maxParticles: 80
+                },
+                {
+                    name: "plain_mark", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "mark", fallback: 0 }, at: 3 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.04, 0.12],
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0xE8E04A, alpha: [0.9, 0], light: "full", maxParticles: 24
                 }
             ]
         },
@@ -118,6 +150,14 @@ const SecretPowerDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [12, 22], size: [0.18, 0.02],
                     color: 0xFFB25A, alpha: [0.8, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "fire_mark", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "mark", fallback: 0 }, at: 3 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.04, 0.12],
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0xFF9A3C, alpha: [0.95, 0], light: "full", maxParticles: 24
                 }
             ]
         },
@@ -148,6 +188,14 @@ const SecretPowerDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.05, 0.10],
                     lifetime: [14, 24], size: [0.24, 0.08],
                     color: 0x86C96A, alpha: [0.9, 0], light: "full", maxParticles: 6
+                },
+                {
+                    name: "thicket_mark", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "mark", fallback: 0 }, at: 3 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.04, 0.12],
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0xB9E890, alpha: [0.95, 0], light: "full", maxParticles: 24
                 }
             ]
         },
@@ -178,6 +226,14 @@ const SecretPowerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.0, 0.0],
                     lifetime: [10, 18], size: [0.42, 0.18],
                     color: 0xAFE8F5, alpha: [0.6, 0], light: "full", maxParticles: 4
+                },
+                {
+                    name: "water_mark", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    burst: { count: { data: "mark", fallback: 0 }, at: 3 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.05, 0.14],
+                    lifetime: [6, 12], size: [0.16, 0.02],
+                    color: 0xE8E04A, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 24
                 }
             ]
         }

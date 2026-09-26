@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.sludgebomb.summary": "把毒泥塞进弹壳掷向目标脚边，炸弹落地插着引信嗞嗞冒烟；引信烧完的一刻爆心一圈的敌人一起挨伤、被推开、可能中毒。对手能在引信烧完前走开。密封形态范围更大更毒，代价是爆心略轻、引信更长。",
+  "worldcombat.skill.sludgebomb.summary": "把毒泥塞进弹壳掷向目标脚边（也可对空地预投），炸弹在真实落点插着引信嗞嗞冒烟；引信烧完的一刻爆心一圈的敌人一起挨伤、被推开、可能中毒。对手能在引信烧完前走开，掷完自己就能行动。密封形态范围更大更毒，代价是爆心略轻、引信更长。",
   "worldcombat.skill.sludgebomb.use.0": "把一枚延时爆弹丢进人堆，逼人散开",
   "worldcombat.skill.sludgebomb.use.1": "在目标走位路线上封住一小片地",
   "worldcombat.skill.sludgebomb.use.2": "一次让爆心一圈的人中毒",
@@ -30,7 +30,7 @@
   "worldcombat.skill.sludgebomb.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.sludgebomb.preference.ai.maxChase.help": "只有在这个距离以内才把对方列为投弹候选，再由共享接近逻辑把身位送进投掷距离；调大就是更早开始追。",
   "worldcombat.skill.sludgebomb.preference.ai.crowd": "成堆时优先",
-  "worldcombat.skill.sludgebomb.preference.ai.crowd.help": "开启后，目标身边 3.5 格内还挤着别的敌人时优先投弹，一次炸一圈；关闭则只按普通攻击排序。",
+  "worldcombat.skill.sludgebomb.preference.ai.crowd.help": "开启后，目标身边这枚弹的真实爆心半径（随密封、体型与特攻变化）内还挤着别的敌人时优先投弹，一次炸一圈；关闭则只按普通攻击排序。",
   "worldcombat.skill.sludgebomb.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.sludgebomb.preference.ai.leaveStation.help": "开启后，驻守命令下也会为投到目标离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.sludgebomb.text.burst": "炸到 %1$s 个",

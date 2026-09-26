@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.grasswhistle.summary": "Puts a leaf to its lips and blows one straight whistle down the line from itself to the target, piercing the first foe and carrying on into the ones behind: everyone in the sound lane is taken by that single note. It needs a wall-free straight line, though allies' bodies do not block sound; one note either rings true or cracks, and whether it rings is a contest of the user's Special Attack and level against the target's Special Defence and level.",
+  "worldcombat.skill.grasswhistle.summary": "Puts a leaf to its lips and blows one straight whistle down the chosen direction, piercing the first foe and carrying on into the ones behind: everyone in the sound lane is taken by that single note. It can be aimed at any direction or world point, and can be blown at nothing; solid walls cut the lane off at the wall, though allies' bodies do not block sound. One note either rings true or cracks, and whether it rings is a contest of the user's Special Attack and level against the target's Special Defence and level.",
   "worldcombat.skill.grasswhistle.use.0": "Drop a whole line of foes at once through an ally in the way",
   "worldcombat.skill.grasswhistle.use.1": "Pin a threat that is backing away from range",
   "worldcombat.skill.grasswhistle.use.2": "Line foes up with an ally's positioning and take them together",
-  "worldcombat.skill.grasswhistle.description.0": "The lane is %1$s long and %2$s half-wide, piercing up to %3$s foes; it needs a straight line not blocked by solid walls, but allies' bodies do not block sound.",
+  "worldcombat.skill.grasswhistle.description.0": "The lane is %1$s long and %2$s half-wide, piercing up to %3$s foes; it can be aimed anywhere or at a world point, solid walls cut the lane off at the wall, but allies' bodies do not block sound.",
   "worldcombat.skill.grasswhistle.description.1": "The note currently rings with %1$s chance (the user's Special Attack and level against the target's Special Defence and level); if it rings the target sleeps for %2$s, if it cracks the whole lane is just a rasp.",
   "worldcombat.skill.grasswhistle.narrow.on": "Narrow pipe: lane half-width ×0.7, pierce +2 foes and sleep ×1.1, at the cost of cooldown ×1.15 and a harder line to line foes up on.",
   "worldcombat.skill.grasswhistle.narrow.off": "Broad tone: lane half-width ×1.4 and easier to catch a loose cluster, at the cost of pierce −1 foe, sleep ×0.85 and cooldown ×0.9.",
@@ -29,5 +29,5 @@
   "world_combat.move.grasswhistle.text.sleep": "Grass Whistle (asleep %1$s s)",
   "world_combat.move.grasswhistle.text.crack": "It cracked (%1$s%% to ring)",
   "world_combat.move.grasswhistle.text.miss": "The note fell flat",
-  "worldcombat.skill.grasswhistle.description.sleep": "Anyone taken by the note falls asleep: while asleep they can neither act nor move, and taking damage wakes them at once. A target immune to sleep is not taken, and a foe already asleep is never picked again."
+  "worldcombat.skill.grasswhistle.description.sleep": "Anyone taken by the note falls asleep: while asleep they can neither act nor move, and taking damage wakes them at once. A target immune to sleep is not taken; a foe already asleep is skipped, but any still-awake foe further down the same lane is still taken."
 }

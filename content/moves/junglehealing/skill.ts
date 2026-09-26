@@ -30,7 +30,7 @@ namespace PokemonSkills {
         uses: ["给身边的一队伙伴回血并一起解状态", "在自然地面上一次净化整组人"],
         kind: "self", range: 2.6, maxRange: 6, prepare: 9, active: 1, recover: 5, cooldown: 140, style: "verdant",
         maximumTicks: 240,
-        defaults: { deeproot: false, helpFriends: true, ai: { healBelow: 0.82, maxChase: 12 } },
+        defaults: { deeproot: false, helpFriends: true, ai: { healBelow: 0.82, maxChase: 12, rescueCount: 2 } },
         fields: [flag("deeproot", "深根")],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills[junglehealingId], detail: { values: config } };
@@ -76,13 +76,20 @@ namespace PokemonSkills {
             const ground = WorldCombat.point(origin.x(), origin.y() - body.height() / 2 + 0.03, origin.z());
             const fraction = Math.max(0, Math.min(1, p(junglehealingId, "heal", action)));
             const radius = Math.max(1.2, p(junglehealingId, "radius", action));
-            const budget = Math.max(0, Math.round(p(junglehealingId, "sprouts", action)));
-            const motes = Math.max(14, Math.round(p(junglehealingId, "motes", action)));
+            const sprouts = Math.max(0, Math.round(p(junglehealingId, "sprouts", action)));
+            const baseMotes = Math.max(14, Math.round(p(junglehealingId, "motes", action)));
             const scale = radius / junglehealingReferenceRadius;
+
+            // 自然地面只在这里采一遍：样本数决定这次长得多旺，也决定藤蔓从哪几个真实地面点抽芽。
+            const samples = junglehealingNaturalSamples(world, ground, radius);
+            const coverage = Math.min(1, samples.length / 6);
+            const budget = Math.max(1, Math.round(sprouts * (0.5 + 0.5 * coverage)));
+            const motes = Math.max(12, Math.round(baseMotes * (0.75 + 0.25 * coverage)));
+            const path = samples.map(function (sample) { return [sample.x(), sample.y(), sample.z()]; });
 
             world.sound("cobblemon:move.leafstorm.actor", ground, 14, "{}");
             WorldFeedback.emit(world, junglehealingScene, 1, ground,
-                { moment: "erupt", radius: radius, motes: motes, scale: scale, vines: budget }, 26);
+                { moment: "erupt", radius: radius, motes: motes, scale: scale, vines: budget, ground: samples.length, path: path }, 26);
 
             const actors = world.query(ground, radius, false);
             for (let i = 0; i < actors.length; i++) {
@@ -95,11 +102,13 @@ namespace PokemonSkills {
                 if (gained <= 0 && cleaned <= 0) continue;
                 const after = world.observe(other);
                 const point = after === null ? before.position() : after.position();
+                // 补血与治病各自按真实结果触发一次短闪：回复量决定绿色光点，实际清除的项数决定金色光点。
                 WorldFeedback.emit(world, junglehealingScene, 1, point,
                     { moment: "embrace", target: ref, gained: Math.round(gained * 10) / 10, cured: cleaned,
-                        motes: Math.max(10, Math.round(motes * 0.6)), scale: scale }, 24);
+                        healSpark: Math.max(0, Math.round(gained * 2)), scale: scale }, 24);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.2, 0)), junglehealingText,
                     [Math.round(gained * 10) / 10, cleaned], 30);
+                if (cleaned > 0) world.sound("minecraft:block.sweet_berry_bush.pick_berries", point, 10, "{}");
             }
 
             if (budget > 0) {

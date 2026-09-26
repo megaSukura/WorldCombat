@@ -3,7 +3,7 @@
   "worldcombat.skill.courtchange.use.0": "把敌人铺下的危险领域一记收过来",
   "worldcombat.skill.courtchange.use.1": "在对方脚下翻转漩涡与禁锢",
   "worldcombat.skill.courtchange.use.2": "用自己的旧领域换掉对方更有用的领域",
-  "worldcombat.skill.courtchange.description.0": "在 %2$s 格内选定落点，扫过半径 %1$s 格内的所有场地效果：敌方的领域收归自己，我方的领域交给最近的敌人。",
+  "worldcombat.skill.courtchange.description.0": "在 %2$s 格内选定落点，尝试交换半径 %1$s 格内明确支持换主的场地：敌方场收归自己，我方场交给最近敌人。位置、剩余时长与资源记录保持；正在发射的隐形岩会等旧岩弹结束再允许换场。",
   "worldcombat.skill.courtchange.swift.on": "速换：起手 %1$s、冷却 %2$s，代价是半径 ×0.85——快而小，适合拉锯里速换。",
   "worldcombat.skill.courtchange.swift.off": "稳换：半径 ×1.2，代价是起手与冷却都更高——一次圈住更大一片。",
   "worldcombat.skill.courtchange.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",

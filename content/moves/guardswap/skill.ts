@@ -1,14 +1,4 @@
-/**
- * 防守互换 / guardswap —— 注册与动作。
- *
- * 念头的形状：三幕。
- *   读（windup，提交前）：两片守势弧在两人身侧对齐，只播预告，可被打断且不花代价。
- *   换（cross，提交后）：把两人防/特防的能力等级对调——宝可梦走原生阶梯，其他生物走公共阶梯，
- *     同一套刻度；挂共享身份 world_combat:status/guardswap 的交换窗口，并各留一枚记号记下原来的等级与对方是谁。
- *   归（revert）：窗口走完或被外力（牛奶、清除效果）解除时，按记号把等级换回原位，画面静收。
- *
- * 与「防守平分」分开：平分把两人原始防/特防拉向同一个平均值、不碰等级；本招交换的是已经架起来的那几级。
- */
+/** Temporarily exchange current defensive stage advantages through owned layers. */
 namespace PokemonSkills {
     export const guardswapScene = "world_combat:move_guardswap";
     export const guardswapWindow = "world_combat:guardswap_window";
@@ -44,24 +34,30 @@ namespace PokemonSkills {
     function guardswapStages(world: CombatWorld, actor: CombatActor): number[] {
         return [guardswapStageOf(world, actor, "def"), guardswapStageOf(world, actor, "spd")];
     }
-    function guardswapSet(world: CombatWorld, actor: CombatActor, from: number[], to: number[]): void {
-        if (to[0] !== from[0]) NativeEffects.boost(world, actor, "def", to[0] - from[0]);
-        if (to[1] !== from[1]) NativeEffects.boost(world, actor, "spd", to[1] - from[1]);
-    }
-    function guardswapRestore(world: CombatWorld, actor: CombatActor, mark: GuardsuwapMark): boolean {
-        const current = guardswapStages(world, actor);
-        const changed = mark.def !== current[0] || mark.spd !== current[1];
-        guardswapSet(world, actor, current, [mark.def, mark.spd]);
-        return changed;
+    /** Each layer owns its contribution; native carrier removal closes it without rewriting the base ladder. */
+    function guardswapLayer(world: CombatWorld, actor: CombatActor, from: number[], to: number[], ticks: number, carrier: CombatMobEffect): void {
+        const left = [to[0] - from[0], to[1] - from[1]], names = ["def", "spd"];
+        for (let part = 0; part < 2; part++) {
+            const changes: { [stat: string]: number } = {};
+            names.forEach(function (stat, index) {
+                const delta = Math.max(-6, Math.min(6, left[index]));
+                if (delta) changes[stat] = delta;
+                left[index] -= delta;
+            });
+            if (!Object.keys(changes).length) continue;
+            if (String(actor.domain()) === "cobblemon") NativeModifiers.apply(world, actor,
+                { stages: changes, carrier: MobEffects.anchor(carrier), source: "world_combat:move/guardswap" }, ticks);
+            else CombatStages.window(world, actor, changes, ticks, "world_combat:move/guardswap", MobEffects.anchor(carrier));
+        }
     }
 
     define({
         id: "guardswap",
         cooldownParameter: "recharge",
         name: "防守互换",
-        description: "利用超能力把双方防御与特防的能力变化对调一段窗口：换完你拿走对方架起来的守势，窗口走完自动换回。只对敌人使用，对宝可梦与其他生物一视同仁。",
+        description: "把自己与一名选中战斗者的防御和特防能力等级暂时对换。敌人和伙伴都可选；窗口结束只收回这次交换，期间其他来源的变化保留。",
         uses: ["把对手涨起来的防/特防夺过来", "在自己防御被破后把漏洞甩给对手", "把对手的铜墙铁壁借来硬扛一轮"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 12,
         prepare: 9,
@@ -70,7 +66,7 @@ namespace PokemonSkills {
         cooldown: 70,
         style: "ward",
         stationary: true,
-        defaults: { ai: { maxChase: 12, margin: 1, leaveStation: false } },
+        defaults: { ai: { maxChase: 12, margin: 1, leaveStation: false, share: false } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills["guardswap"], detail: { values: config } };
@@ -89,7 +85,7 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), actor = action.actor(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) return "invalid-target";
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) return "invalid-target";
             if (CombatStatus.has(world, actor, "guardswap") || CombatStatus.has(world, target, "guardswap")) return "already-swapped";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
@@ -108,7 +104,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
-            if (target === null || !world.valid(target) || world.friendly(target) || String(target.key()) === String(actor.key())) {
+            if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) {
                 WorldFeedback.emit(world, guardswapScene, 1, body.position(), { moment: "fizzle" }, 16);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), guardswapMissText, [], 22);
                 done(action);
@@ -122,14 +118,26 @@ namespace PokemonSkills {
             const mine = guardswapStages(world, actor), theirs = guardswapStages(world, target);
             const gap = Math.abs(theirs[0] - mine[0]) + Math.abs(theirs[1] - mine[1]);
             const spread = Math.max(0.5, Math.min(1.5, 0.6 + gap * 0.14));
-            guardswapSet(world, actor, mine, theirs);
-            guardswapSet(world, target, theirs, mine);
-            const changed = mine[0] !== theirs[0] || mine[1] !== theirs[1];
+            let changed = mine[0] !== theirs[0] || mine[1] !== theirs[1];
             if (changed) {
-                MobEffects.apply(world, actor, guardswapWindow, window, 0);
-                MobEffects.apply(world, target, guardswapWindow, window, 0);
-                world.effect(guardswapMark, actor, JSON.stringify({ def: mine[0], spd: mine[1], pair: String(target.ref()) }), window + 60);
-                world.effect(guardswapMark, target, JSON.stringify({ def: theirs[0], spd: theirs[1], pair: String(actor.ref()) }), window + 60);
+                const selfCarrier = MobEffects.apply(world, actor, guardswapWindow, window, 0);
+                const otherCarrier = MobEffects.apply(world, target, guardswapWindow, window, 0);
+                changed = selfCarrier !== null && otherCarrier !== null;
+                if (changed) {
+                    guardswapLayer(world, actor, mine, theirs, window, selfCarrier!);
+                    guardswapLayer(world, target, theirs, mine, window, otherCarrier!);
+                    const selfMark = world.effect(guardswapMark, actor, JSON.stringify({ def: mine[0], spd: mine[1], pair: String(target.ref()) }), window);
+                    const otherMark = world.effect(guardswapMark, target, JSON.stringify({ def: theirs[0], spd: theirs[1], pair: String(actor.ref()) }), window);
+                    [{ id: selfMark, actor: actor, pair: target }, { id: otherMark, actor: target, pair: actor }].forEach(function (entry) {
+                        const facts = world.observe(entry.actor);
+                        if (facts) WorldFeedback.onEffect(world, entry.id, "guardswap:hum:" + String(entry.actor.ref()), guardswapScene, 1,
+                            facts.position(), { moment: "hum", target: String(entry.actor.ref()), pair: String(entry.pair.ref()),
+                                path: [String(entry.actor.ref()), String(entry.pair.ref())], threads: 3, remaining: window });
+                    });
+                } else {
+                    if (selfCarrier) MobEffects.consume(world, actor, guardswapWindow);
+                    if (otherCarrier) MobEffects.consume(world, target, guardswapWindow);
+                }
             }
             const intensity = Math.max(0.7, Math.min(2.2, gap / 3 + 0.6));
             WorldFeedback.emit(world, guardswapScene, 1, body.position(),
@@ -152,22 +160,6 @@ namespace PokemonSkills {
         }
     });
 
-    // 交换存续期：每 20 刻续一次两人之间的守势弧，让玩家读出现在还换着、还剩多久。
-    WorldCombat.on("world_combat:move_guardswap/hum", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== guardswapWindow) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const marks = world.effects(actor, guardswapMark);
-        if (!marks.length) return;
-        const mark = JSON.parse(String(marks[0].data()));
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_guardswap/hum/" + String(actor.ref()), guardswapScene, 1, body.position(),
-            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair), threads: 3,
-                path: [String(actor.ref()), String(mark.pair)], remaining: marks[0].remaining() }, 40);
-    });
-
     // 窗口走完或被清除：按记号把守势等级换回原处，画面静收；其余修饰不受影响。
     WorldCombat.on("world_combat:move_guardswap/revert", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
@@ -178,7 +170,6 @@ namespace PokemonSkills {
         let pair = "";
         if (marks.length) {
             const mark: GuardsuwapMark = JSON.parse(String(marks[0].data()));
-            guardswapRestore(world, actor, mark);
             pair = String(mark.pair);
             world.operation(marks[0].id(), "world_combat:dispel", "{}");
         }

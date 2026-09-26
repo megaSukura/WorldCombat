@@ -13,6 +13,18 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 7);
     }
 
+    /** 目标近旁（3.0 格内）还聚着几个别的站立敌人；踩踏的震波能一次波及一圈。 */
+    function stompCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible || other.grounded !== true) continue;
+            if (CompanionBehavior.distance(other.point, target.point) <= 3.0) count++;
+        }
+        return count;
+    }
+
     CompanionBehavior.registerUse("stomp", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -27,7 +39,15 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !stompWants(context, capability, target)) return 0;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.35) return 55;
-            return CompanionBehavior.status(context, target, "flinch") ? 30 : 26;
+            var score = CompanionBehavior.status(context, target, "flinch") ? 30 : 26;
+            // 聚堆的地面敌人更值得一脚；脚下很快的敌人容易在起手时溜出脚印，降低权重。
+            if (stompCluster(context, target) >= 2) score += 8;
+            var velocity = CompanionBehavior.velocity(context, target);
+            if (velocity !== null) {
+                var speed = Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
+                if (speed > 0.35) score -= 12;
+            }
+            return score;
         }
     });
 

@@ -5,7 +5,7 @@
   "worldcombat.skill.electroweb.use.2": "把冲进来的目标短时间缠住",
   "worldcombat.skill.electroweb.use.3": "一次电到站位分散的几个敌人",
   "worldcombat.skill.electroweb.description.0": "敌人踏进电网时挨约 %1$s 点特殊伤害；对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.electroweb.description.1": "网面摊开半径约 %1$s 格，通电存续 %2$s；友方可以自由穿过，只有敌人会触电。",
+  "worldcombat.skill.electroweb.description.1": "网面摊开半径约 %1$s 格，通电存续 %2$s；只落在合法地面上，落点没有支撑就散掉，友方可以自由穿过，只有敌人会触电。",
   "worldcombat.skill.electroweb.description.2": "被电到的目标速度下降 %1$s 级，并在入网那一下被定住、无法移动 %2$s。",
   "worldcombat.skill.electroweb.description.3": "留在网里的敌人每隔 %2$s 再挨一次约 %1$s 点特殊伤害；被缠住的敌人移动速度被大幅压低，离网后缠身仍会拖 %3$s 才消退。",
   "worldcombat.skill.electroweb.option.on": "开启过载式：网面约 ×0.72、存续约 ×0.75、初击约 ×1.3、多降一级速度、起手 +2 刻、冷却 +8 刻，用来一发电痛并锁死一个目标。",
@@ -34,5 +34,6 @@
   "worldcombat.skill.electroweb.preference.ai.lead.help": "对移动中的目标提前这么多刻落网；0 表示直接撒在目标当前位置，调大更适合拦冲过来的对手。",
   "world_combat.move.electroweb.text.catch": "触电（速度 -%1$s）",
   "world_combat.move.electroweb.text.spread": "电网张开了",
+  "world_combat.move.electroweb.text.fizzle": "网上没有落点，散了",
   "effect.world_combat.electrowebbed": "被电网缠住"
 }

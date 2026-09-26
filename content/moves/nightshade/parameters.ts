@@ -12,12 +12,21 @@
  * shroud 读等级；splashRadius 读体高。
  */
 namespace PokemonSkills {
-    /** 与蛮干相同的直接结算入口，专属本招命名；见 endeavor/parameters.ts 的说明。 */
-    export function nightshadeRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
+    /**
+     * 与蛮干相同的直接结算入口，专属本招命名；返回目标实际失去的生命（世界单位）。
+     * 见 endeavor/parameters.ts 的说明：返回 0 表示被属性免疫、护盾或原生伤害上限完全挡下。
+     */
+    export function nightshadeRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): number {
         const world = action.world();
-        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return false;
-        return PokemonDamage.fixed(world, target, CobblemonCombat.moveTemplate("nightshade"), amount,
+        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return 0;
+        const before = world.observe(target);
+        if (before === null) return 0;
+        const start = before.health();
+        const landed = PokemonDamage.fixed(world, target, CobblemonCombat.moveTemplate("nightshade"), amount,
             { contact: contact, knockback: false, bypassCooldown: true, ignoreArmor: true }, "immunity", action);
+        const after = world.observe(target);
+        if (after !== null) return Math.max(0, start - after.health());
+        return landed ? start : 0;
     }
 
     actionParameters.define("nightshade", {
@@ -28,7 +37,7 @@ namespace PokemonSkills {
                 .round(1),
             "幻影伤害", {
                 unit: "点",
-                description: "幻影钻心那一下的固定伤害，等于使用者等级再乘一个特攻系数（特攻 60 时为等级本身）；炸影式每一发减到五成五。对手防御不参与，只有属性免疫会挡住它。"
+                description: "幻影钻心那一下的固定伤害，等于使用者等级再乘一个特攻系数（特攻 60 时为等级本身）；炸影式每一发减到五成五。对手防御不参与结算，属性免疫、护盾与原生伤害上限照常裁定。"
             }),
         /** 起手：基础 9 刻，速度每比 55 快 1 少 0.03 刻；夹在 6..13。 */
         haunt: seconds(

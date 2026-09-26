@@ -5,12 +5,12 @@
  *   光柱在它身上维持着，星辉散去时星点一点点飘没。
  *
  * 色相家族：深靛蓝（0x5B4BC4）作主体，星白（0xEAF0FF）与淡青（0x9FE8FF）只出现在星光与星座点上；没有暖色。
- * 层次：落星（起）／星柱、星尘与星座（击）／持续的光柱（收）／星点飘没（末）。
+ * 层次：落星（起）／星柱、星尘与星座（击）／稀疏星座环（收）／星点飘没（末）。
  * 起击收：descend（引星）→ pour（承星）→ column（维持）→ wane（星灭）。
- * 范围：脚边星座与光柱半径按 `data.ring`／`data.columnRadius` 推出，画出来的圈就是星辉罩到的范围。
- * 运动：星尘自上方一列竖直落下；星座点在脚边一圈排开；维持期光柱里星尘缓慢上浮。
+ * 范围：脚边星座与星座环半径按 `data.ring` 推出，画出来的圈就是星辉罩到的范围。
+ * 运动：星尘自上方一列竖直落下；星座点在脚边一圈排开；维持期只留稀疏星点在脚边明灭。
  * 数：星尘量绑 `data.halo`（两防与等级派生），星座点数绑 `data.constellation`（等级派生），柱长绑 `data.shaft`（体型派生）。
- * 持续状态：维持期只留一道半透明光柱与稀疏星尘，视线仍看得到目标。
+ * 持续状态：维持期不立遮挡光柱；夜里实际多出的那一级（`data.night`）点亮半径更大、更密的第二层星座环。
  */
 const CosmicPowerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -62,31 +62,33 @@ const CosmicPowerDefinition: ParticleDefinition = {
             ]
         },
         column: {
-            exit: { drain: 30 },
+            exit: { drain: 24 },
             emitters: [
                 {
-                    name: "column_body", bind: "source", fit: "none", height: 0, offset: [0, { data: "shaftHalf", fallback: 2.5 }, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/glowingsmoke_cyan",
-                    shape: { kind: "cylinder", radius: { data: "columnRadius", fallback: 0.75 }, length: { data: "shaft", fallback: 5 } },
-                    rate: 8, direction: "up", speed: [0.01, 0.03], drag: 0.95,
-                    lifetime: [18, 32], size: [0.35, 0.7],
-                    color: 0x5B4BC4, alpha: [0.16, 0], light: "world", maxParticles: 50
-                },
-                {
-                    name: "column_mote", bind: "source", fit: "none", height: 0, offset: [0, { data: "shaft", fallback: 5 }, 0],
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    rate: 4, shape: { kind: "circle", radius: { data: "ring", fallback: 1.5 } },
-                    direction: "down", speed: [0.04, 0.12],
-                    lifetime: [16, 28], size: [0.1, 0.02],
-                    color: 0xEAF0FF, alpha: [0.4, 0], light: "full", bloom: 0.25, maxParticles: 26
-                },
-                {
-                    name: "column_ground", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "column_constellation", bind: "source", fit: "none", height: 0.06,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 5, shape: { kind: "ring", radius: { data: "ring", fallback: 1.5 } },
-                    direction: "up", speed: [0.005, 0.02],
-                    lifetime: [12, 22], size: [0.08, 0.01],
-                    color: 0x9FE8FF, alpha: [0.3, 0], light: "full", maxParticles: 18
+                    rate: 4, shape: { kind: "ring", radius: { data: "ring", fallback: 1.5 } },
+                    direction: "up", speed: [0.004, 0.02],
+                    lifetime: [14, 24], size: [0.09, 0.02],
+                    color: 0x9FE8FF, alpha: [0.5, 0], alphaMode: "sin", light: "full", bloom: 0.25, maxParticles: 22
+                },
+                {
+                    name: "column_points", bind: "source", fit: "none", height: 0.12,
+                    particle: "world_combat_core:cobblemon/moves/wish_star",
+                    burst: { count: { data: "constellation", fallback: 6 }, interval: 12 },
+                    shape: { kind: "ring", radius: { data: "ring", fallback: 1.5 } },
+                    direction: "up", speed: [0.008, 0.03], spin: 2,
+                    lifetime: [16, 28], size: [0.18, 0.04],
+                    color: 0xEAF0FF, alpha: [0.55, 0], light: "full", bloom: 0.3, maxParticles: 24
+                },
+                {
+                    name: "column_night", bind: "source", fit: "none", height: 0.05,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    rate: { data: "nightRate", fallback: 0 },
+                    shape: { kind: "ring", radius: { data: "nightRadius", fallback: 2.2 }, thickness: 0.35 },
+                    direction: "up", speed: [0.01, 0.04], spin: 4,
+                    lifetime: [16, 28], size: [0.12, 0.03],
+                    color: 0xEAF0FF, alpha: [0.55, 0], alphaMode: "sin", light: "full", bloom: 0.35, maxParticles: 20
                 }
             ]
         },

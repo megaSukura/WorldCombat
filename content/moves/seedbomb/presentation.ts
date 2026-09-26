@@ -14,6 +14,7 @@
 const SeedbombDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        rolling:{emitters:[{name:"shell_cracks",bind:"projectile",fit:"none",particle:"world_combat_core:cobblemon/generic/spike",rate:20,shape:{kind:"sphere_surface",radius:.18},lifetime:[2,4],size:[.08,.02],color:0xAAB84A,alpha:[.8,.1]}]},
         windup: {
             duration: 11,
             exit: { stop: 4, drain: 12 },

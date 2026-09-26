@@ -2,14 +2,14 @@
  * 铁壁 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者脚边涌起一圈铁水，铁环贴着地面推开，铁屑沿着身体往上爬、凝成一层冷铁壳；
- *   持壳期间表面泛着冷光与零星火星，碎开时锈屑簌簌落下。
+ *   持壳期间贴身的金属片与冷光随状态同寿，受击在落点敲出铁火花，碎开时锈屑簌簌落下。
  *
  * 色相家族：铁灰蓝（0x8C9AA6）为主体，冷白（0xDCE6EE）做高光，深铁（0x5E6A74）做余韵；没有第二个色相。
- * 层次：涌动（起）／铁环、铁屑、白烟（击）／贴身的冷光（收）／锈屑（末）。
- * 起击收：pour（浇铸）→ clad（凝壳）→ hold（持壳）→ shed（碎裂）。
- * 范围：铁环绑脚点、fit none，半径按 `data.scale`（实际铁环半径 / 1.2）推出，画出来的圈就是铁壳护到的范围。
- * 运动：铁屑由下往上爬、贴体聚拢；铁环一圈圈贴地推开；白烟随铁水升腾；碎开时锈屑受重力落下。
- * 数：铁屑量绑 `data.filings`（体重派生），铁环层数按 `data.intensity`（等级派生），`data.scale` 同时放大整片半径与粒子尺寸。
+ * 层次：涌动（起）／铁环、铁屑、白烟（击）／贴身的金属片与冷光（收）／敲铁火花（受击）／锈屑（末）。
+ * 起击收：pour（浇铸）→ clad（凝壳）→ hold（持壳）→ struck（受击）→ shed（碎裂）。
+ * 范围：铁环绑脚点、fit none，半径按 `data.scale`（实际铁环半径 / 1.2）推出，只在浇铸那一刻铺开；持壳只画贴身的片，不画额外范围罩。
+ * 运动：铁屑由下往上爬、贴体聚拢；铁环一圈圈贴地推开；白烟随铁水升腾；金属片贴着体表随状态持续泛光；碎开时锈屑受重力落下。
+ * 数：铁屑量绑 `data.filings`（体重派生），贴身金属片数绑 `data.plates`（体重派生），敲铁火花量绑 `data.sparks`（实际伤害占最大生命派生），`data.scale` 放大整片半径与粒子尺寸。
  * 持续状态：持壳期低密度、贴身、放在体表与脚边，玩家仍看得清目标。
  */
 const IronDefenseDefinition: ParticleDefinition = {
@@ -75,6 +75,14 @@ const IronDefenseDefinition: ParticleDefinition = {
             exit: { drain: 26 },
             emitters: [
                 {
+                    name: "hold_plate", bind: "source", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/orb/scalingshaded",
+                    rate: { data: "plates", fallback: 6 }, shape: { kind: "sphere_surface", radius: 0.42 },
+                    direction: "up", speed: [0.004, 0.014], spin: 10,
+                    lifetime: [14, 24], size: [0.1, 0.03],
+                    color: 0x8C9AA6, alpha: [0.5, 0], light: "world", maxParticles: 20
+                },
+                {
                     name: "hold_sheen", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: 2.5, shape: { kind: "sphere", radius: 0.34 },
@@ -112,6 +120,29 @@ const IronDefenseDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.3 },
                     lifetime: [10, 12], size: [0.5, 0.9],
                     color: 0xDCE6EE, alpha: [0.7, 0], light: "full", bloom: 0.5, maxParticles: 4
+                }
+            ]
+        },
+        struck: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "struck_spark", bind: "point", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: { data: "sparks", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.08, 0.28], gravity: 0.05, drag: 0.9, spin: 24,
+                    lifetime: [6, 12], size: [0.1, 0.02],
+                    color: 0xDCE6EE, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 48
+                },
+                {
+                    name: "struck_impact", bind: "point", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
+                    burst: { count: 1 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    lifetime: [8, 12], size: [0.34, 0.66],
+                    color: 0x8C9AA6, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 4
                 }
             ]
         }

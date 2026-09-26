@@ -137,30 +137,31 @@ const ScorchingDefinition: ParticleDefinition = {
         },
         smolder: {
             duration: 0,
+            exit: { stop: 8, drain: 22 },
             emitters: [
                 {
                     name: "embers", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: { data: "embers", fallback: 16 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "up", speed: [0.01, 0.06], gravity: 0.02,
-                    lifetime: [8, 16], size: [0.07, 0.01],
-                    color: 0xC25A2A, alpha: [0.8, 0], light: "full", bloom: 0.25, maxParticles: 80
+                    rate: { data: "heat", fallback: 5 }, shape: { kind: "point" },
+                    direction: "up", speed: [0.0, 0.04], gravity: 0.02,
+                    lifetime: [8, 16], size: [0.06, 0.01],
+                    color: 0xC25A2A, alpha: [0.8, 0], light: "full", bloom: 0.25, maxParticles: 14
                 },
                 {
-                    name: "heat_floor", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "heat_floor", bind: "point", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    rate: 8, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "up", speed: [0.0, 0.04], drag: 0.92,
-                    lifetime: [12, 22], size: [0.2, 0.34],
-                    color: 0xB4542A, alpha: [0.2, 0], light: "world", maxParticles: 50
+                    rate: 3, shape: { kind: "point" },
+                    direction: "up", speed: [0.0, 0.03], drag: 0.92,
+                    lifetime: [12, 22], size: [0.16, 0.28],
+                    color: 0xB4542A, alpha: [0.2, 0], light: "world", maxParticles: 10
                 },
                 {
                     name: "sand_floor", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
-                    direction: "up", speed: [0.0, 0.05], drag: 0.95,
-                    lifetime: [8, 16], size: [0.07, 0.02],
-                    color: 0xD9A85C, alpha: [0.5, 0], light: "world", maxParticles: 60
+                    rate: 5, shape: { kind: "point" },
+                    direction: "up", speed: [0.0, 0.04], drag: 0.95,
+                    lifetime: [8, 16], size: [0.06, 0.02],
+                    color: 0xD9A85C, alpha: [0.5, 0], light: "world", maxParticles: 14
                 }
             ]
         }

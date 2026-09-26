@@ -13,6 +13,9 @@
  *
  * 与同族分开：双尾扫是原地左右横扫、往两侧推；三连踢是同一方向连踢三脚；双光束是两道远程眼束。
  *   只有二连踢是**一脚挑、一脚踹**的两拍近身攻势，反制方式是卡住两脚之间的空当或绕到扇面之外。
+ *
+ * 选取 `kind: "aim"`：可指向身前任意阵营实体、方向或地面点。没有目标时按选定方向/点空踢收势，
+ *   两脚照常走完；攻击许可仍由命中层决定，AI 仍按仇恨推荐敌人。手动空放与 AI 选敌是两条独立的路。
  */
 namespace PokemonSkills {
     /** 身前扇面的竖直判定带：踢击贴地，只够到站立身位。 */
@@ -22,9 +25,9 @@ namespace PokemonSkills {
         id: doublekickId,
         cooldownParameter: "recharge",
         name: "Double Kick",
-        description: "近身两拍：第一脚贴地低扫把对手挑离地面，第二脚顺势前踹把它送出去。交替式一脚挑起一脚踹飞、控制局强；连踢式两脚低平、出手更快更重。",
+        description: "近身两拍：第一脚贴地低扫把对手挑离地面，第二脚顺势前踹把它送出去。可指向敌人或身前空地——空踢时两脚照常收势。交替式一脚挑起一脚踹飞、控制局强；连踢式两脚低平、出手更快更重。",
         uses: ["一脚挑起、一脚踹飞的近身两拍", "把贴身的对手踢出站位", "对付站桩的对手反复打节奏"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.7,
         maxRange: 3.8,
         prepare: 6,
@@ -95,15 +98,16 @@ namespace PokemonSkills {
                         hits++;
                         if (!scope.valid(victim)) return;
                         if (index === 0 && lift > 0) {
-                            scope.displace(victim, WorldCombat.point(direction.x() * 0.15, lift, direction.z() * 0.15));
+                            scope.hitDisplace(victim, WorldCombat.point(direction.x() * 0.15, lift, direction.z() * 0.15));
                         } else if (index === 1) {
-                            scope.displace(victim, direction.scale(push));
+                            scope.hitDisplace(victim, direction.scale(push));
                         }
                         const at = scope.observe(victim);
                         const point = at === null ? facts.position() : at.position();
                         WorldFeedback.emit(scope, doublekickScene, 1, point,
                             { moment: index === 0 ? "hit1" : "hit2", target: String(victim.ref()), index: index + 1,
-                                dust: dust, lift: lift, push: push, intensity: intensity }, 20);
+                                dust: dust, lift: lift, push: push, intensity: intensity,
+                                liftParticles: index === 0 && lift > 0 ? dust : 0 }, 20);
                         scope.sound("cobblemon:impact.fighting", point, 14, "{}");
                         if (index === 0 && lift > 0)
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), doublekickLiftText, [], 18);

@@ -41,50 +41,41 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    /** 盐壳长时间挂在身上时，身上持续落着细小的盐粒。 */
-    WorldCombat.on("world_combat:move_saltcure/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== saltcureEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 8 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "saltcure:" + String(actor.ref()), saltcureScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 22);
-    });
-
     WorldCombat.effect(saltcureBind, 1, 1200, "actor", saltcureBindData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(saltcureBind, "start", function (effect) {
         const data = JSON.parse(effect.state());
+        data.lease = MobEffects.bind(effect.world(), effect.target(), saltcureEffect); effect.state(JSON.stringify(data));
+        effect.schedule("watch", "watch", 1, "{}");
         effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
+    });
+    WorldCombat.effectHandler(saltcureBind, "watch", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target);
+        if (body === null || !MobEffects.present(world, JSON.parse(effect.state()).lease)) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "crust", saltcureScene, 1, body.position(), { moment: "linger", target: String(target.ref()) });
+        effect.schedule("watch", "watch", 1, "{}");
     });
     WorldCombat.effectHandler(saltcureBind, "pulse", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(victim) || MobEffects.read(world, victim, saltcureEffect) === null) { effect.end(); return; }
+        if (!world.valid(victim) || !MobEffects.present(world, data.lease)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
         const brittle = saltcureBrittle(world, victim);
         const amount = Math.max(1, Math.floor(body.maxHealth() * data.share * (brittle ? saltcureBrittleFactor : 1)));
-        world.health(victim, -amount, "world_combat:saltcure");
+        PokemonDamage.residual(world, victim, "saltcure", amount, { brittle: brittle, share: data.share });
         data.left = data.left - 1;
         effect.state(JSON.stringify(data));
-        WorldFeedback.emit(world, saltcureScene, 1, body.position(),
-            { moment: brittle ? "brittle" : "brine", target: String(victim.ref()),
-                intensity: Math.max(0.6, Math.min(2.2, data.share * 12)), share: data.share, brittle: brittle ? 1 : 0 }, 20);
-        world.sound("minecraft:block.calcite.hit", body.position(), 14, "{}");
         if (data.left > 0) effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
         else effect.end();
     });
     WorldCombat.effectHandler(saltcureBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
-    // 盐壳被外力清掉（牛奶、/effect clear、别的招式）时，蛰痛随之停止。
-    WorldCombat.on("world_combat:move_saltcure/release", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== saltcureEffect) return;
-        const world = event.world(), victim = event.actor();
-        if (!world.valid(victim) || MobEffects.read(world, victim, saltcureEffect) !== null) return;
-        const binds = world.effects(victim, saltcureBind);
-        for (let i = 0; i < binds.length; i++) world.operation(binds[i].id(), "world_combat:dispel", "{}");
-    });
+    PokemonDamage.onDamageApplied("world_combat:saltcure/residual", receipt => {
+        const fact = WorldFeedback.receipt(receipt.event);
+        if (fact === null || !(fact.actual > 0)) return;
+        const world = receipt.world, at = fact.point, data = receipt.data;
+        WorldFeedback.emit(world, saltcureScene, 1, at, { moment: data.brittle ? "brittle" : "brine", target: String(receipt.target.ref()),
+            intensity: Math.max(.6, Math.min(2.2, data.share * 12)), share: data.share, brittle: data.brittle ? 1 : 0 }, 20);
+        world.sound("minecraft:block.calcite.hit", at, 14, "{}");
+    }, { move: "saltcure", segment: "residual" });
 
     define({
         id: "saltcure",
@@ -92,7 +83,7 @@ namespace PokemonSkills {
         name: "盐腌",
         description: "把一身粗盐摔在对手身上：命中造成物理伤害，之后盐壳每隔一段按目标最大生命蛰掉一口；钢或水属性（以及湿透、披着金属甲的）身体更痛。",
         uses: ["磨掉高生命的肉盾", "对钢系与水系加倍惩罚", "逼对手分心去清状态"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 10,
@@ -142,7 +133,7 @@ namespace PokemonSkills {
                         return;
                     }
                     const point = hit.position();
-                    impact(current, hit, "saltcure", power, { damage: damageSpec("saltcure", "crust") });
+                    if (!impact(current, hit, "saltcure", power, { damage: damageSpec("saltcure", "crust") })) return;
                     if (MobEffects.apply(scope, struck, saltcureEffect, ticks, 0) === null) return;
                     const existing = scope.effects(struck, saltcureBind);
                     for (let i = 0; i < existing.length; i++) scope.operation(existing[i].id(), "world_combat:dispel", "{}");
@@ -156,7 +147,6 @@ namespace PokemonSkills {
                     sound(current, "cobblemon:move.rockthrow.target");
                 }
             }, function (current) {
-                WorldFeedback.emit(current.world(), saltcureScene, 1, current.targetPosition(), { moment: "fizzle" }, 18);
                 done(current);
             });
             WorldFeedback.emit(world, saltcureScene, 1, action.origin(),

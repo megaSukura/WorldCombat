@@ -6,8 +6,8 @@
  * 翻译：把「从大大的口中掀起冲击波」落成一条**沿瞄准线持续前推的同心波动**——龙息在张大的口前被压成一圈圈
  * 波面，一圈接一圈沿直线推出去；波前扫过排在一条线上的敌人后不停下、继续前进（贯通式）。这是本组唯一
  * 「持续、按特攻缩放、能穿过成排目标」的那一击，与龙息（贴地扇形吐息）、音爆（瞬时裂痕）、龙之怒（固定重击）分开。
- * 配置 `chain`（连锁式）换成另一种波的形态：波在碰到第一个敌人时收束、在它周围炸开一圈（不再前进），
- * 用射程与贯穿换一片覆盖——两份形态各有自己的局面。
+ * 配置 `chain`（连锁式）换成另一种波的形态：波在碰到第一个敌人时收束，再沿同一条线逐级命中后续目标、
+ * 威力递减（不再前进），用贯穿换一条衰减的连锁——两份形态各有自己的局面。
  *
  * 数据分散（每项依赖不同的精灵数据，落到不同参数）：
  *   pulse        波面威力：特攻定龙息压得多紧，等级台阶再抬一档；连锁式把这一发摊薄。
@@ -16,8 +16,8 @@
  *   thickness    波面厚度／判定半径：碰撞箱高度决定波面多厚，也决定贴着线两侧多宽会被扫到。
  *   pierce       贯穿目标：特攻与等级决定一条线上最多额外穿过几个（仅贯通式）。
  *   rings        波面道数：特攻与等级换算出同时推进的圈数，同时驱动表现里的波环数量。
- *   burst        连锁威力：连锁式在命中点周围炸开那一圈对每个目标的威力（仅连锁式）。
- *   burstRadius  连锁半径：身高与特攻决定收束时罩开多大（仅连锁式）。
+ *   burst        连锁后续威力：连锁式收束后沿同一条线命中的后续目标各自的起点威力，逐级递减（仅连锁式）。
+ *   burstRadius  连锁线宽：身高与特攻决定收束后同线目标的容忍半宽（仅连锁式）。
  *   tempo／aftercast／recharge：速度定起手，身高定收势，等级与配置定冷却。
  *
  * 伤害段 `pulse`（主波面）与 `burst`（连锁炸开）与参数同名，走共享换算（原生类别 Special，Dragon 属性，非接触，带 pulse 标记）。
@@ -75,18 +75,18 @@ namespace PokemonSkills {
         /** 连锁威力：基础 54，特攻每比 60 多 1 加 0.26（夹 −10..30）；夹 34..110。 */
         burst: formula(
             F.base(54).plus(F.stat("specialAttack").minus(60).times(0.26).clamp(-10, 30)).clamp(34, 110).round(1),
-            "连锁威力", {
+            "连锁后续威力", {
                 unit: "威力",
-                description: "连锁式收束时，命中点周围每个敌人各挨的一记；特攻越高炸得越重。"
+                description: "连锁式收束后，同线后续目标中第一个挨的一记起点威力，之后逐级递减；特攻越高起点越重。"
             }),
         /** 连锁半径：基础 1.6，身高每比 1.4 高 1 格加 0.35（夹 −0.2..0.9），特攻每比 60 多 1 加 0.006（夹 −0.2..0.6）；夹 1.3..3.0。 */
         burstRadius: formula(
             F.base(1.6).plus(F.body("height").minus(1.4).times(0.35).clamp(-0.2, 0.9))
                 .plus(F.stat("specialAttack").minus(60).times(0.006).clamp(-0.2, 0.6))
                 .clamp(1.3, 3.0).round(2),
-            "连锁半径", {
+            "连锁线宽", {
                 unit: "格",
-                description: "连锁式在命中点周围罩开的范围；身板越大、特攻越高罩得越开。"
+                description: "连锁式收束后，后续目标偏离主线的容忍半宽；身板越大、特攻越高，这条链越宽。"
             }),
         /** 起手：基础 12 刻，速度每比 55 快 1 少 0.06 刻（夹 −3..5）；夹 7..16。 */
         tempo: seconds(
@@ -116,7 +116,7 @@ namespace PokemonSkills {
     describe("dragonpulse", [
         { key: "description.0", values: ["pulse","thickness"] },
         { key: "description.1", values: ["reach", "flight"] },
-        { key: "chain.on", values: ["pulse","burstRadius","burst","maximumTargets"], when: function (context) { return read(context.detail.values, ["chain"]) === true; } },
+        { key: "chain.on", values: ["pulse","burst","burstRadius","maximumTargets"], when: function (context) { return read(context.detail.values, ["chain"]) === true; } },
         { key: "chain.off", values: ["pierce"], when: function (context) { return read(context.detail.values, ["chain"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.pulse", "tier.0.reach"] },

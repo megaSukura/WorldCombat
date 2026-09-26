@@ -5,11 +5,14 @@
  * 让它沉下来、慢下来。命中后施法者留在目标身边，目标挂着 clung 身份。它与起草（贴地草绿窜跃）、踢倒
  * （直线突进踢）不同：虫扑是**高弧落在目标身上**，落点就是目标本身，之后多出一段缠身的持续状态。
  *
+ * 选取：kind 为 aim——可以锁定一个实体、也可以朝一个方向或世界点空跳。快照在提交后锁定，空点同样执行。
+ *
  * 三幕：
  *   起（crouch，提交前）：屈膝压地、看准目标背侧，只播预告。
- *   扑（leap → impact / miss，提交后）：逐刻沿抛物线推进，身体划出弧线、抖落尘点与虫翼；
- *       空中碰到非友方活体即结算 `slam` 接触伤害；命中后目标掉速度等级、挂 clung、腿脚被压住一瞬。
- *   落（miss）：一路扑到底都没碰到人，就在落点扬起尘土。
+ *   扑（launch → leap，提交后）：先画出这一扑会经过的弧线（预告，不是身体本身），随后身体逐刻沿同一条弧的真实
+ *       增量移动；每刻用 `sweepStep` 先真实接触、再结算。空中最先碰到非友方活体时，就地伤害、掉速度等级、挂 clung、
+ *       腿脚被压住一瞬，飞行场景到此停止。途中撞上方块（顶棚、墙）即收束落地。
+ *   落（miss）：一路扑到底都没碰到人，就在身体实际所在处扬起尘土。
  *
  * 掉速走 `NativeEffects.boost` 的共享速度等级，对宝可梦和其他生物同一条路。
  */
@@ -25,7 +28,7 @@ namespace PokemonSkills {
         name: "Pounce",
         description: "从远处高高跃起，沿一条抛物线甩过空中、落在目标身上：体重下坠把它压住，腿脚随即缠住它的动作，让它沉下来、慢下来，并只结算最先碰上的那一个。命中后施法者留在目标身边。缠身式缠得更久、掉速更深，单发更轻。",
         uses: ["从中距离扑上去贴住对手", "先缠住，再用重招收掉", "压住想跑的对手的速度"],
-        kind: "enemy",
+        kind: "aim",
         range: 4.4,
         maxRange: 4.4,
         prepare: 9,
@@ -57,9 +60,11 @@ namespace PokemonSkills {
             const actor = action.actor();
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
-            const start = body.position();
-            const feet = start.minus(WorldCombat.point(0, body.height() / 2, 0));
+            const movementScenes = WorldFeedback.actionScenes(pounceScene);
+            const half = body.height() / 2;
+            const startFeet = body.position().minus(WorldCombat.point(0, half, 0));
             const aimPoint = action.targetPosition();
+            const targetRef = action.target() === null ? "" : String(action.target()!.ref());
             const distance0 = p("pounce", "leap", action);
             const pace = p("pounce", "pace", action);
             const apex = p("pounce", "apex", action);
@@ -72,43 +77,72 @@ namespace PokemonSkills {
             const cling = !!(config && config.cling);
             const scale = (body.width() + body.height()) / 2.3;
             const intensity = Math.max(0.6, Math.min(2.2, power / 50));
-            let dx = aimPoint.x() - start.x(), dz = aimPoint.z() - start.z();
+            let dx = aimPoint.x() - startFeet.x(), dz = aimPoint.z() - startFeet.z();
             const gap = Math.sqrt(dx * dx + dz * dz);
             if (gap < 0.01) { const facing = aim(action); dx = facing.x(); dz = facing.z(); }
             const span = Math.sqrt(dx * dx + dz * dz) || 1;
             const ux = dx / span, uz = dz / span;
             const distance = Math.min(distance0, Math.max(1.5, gap));
             const steps = Math.max(3, Math.round(distance / pace));
-            const landing = WorldCombat.point(feet.x() + ux * distance, feet.y(), feet.z() + uz * distance);
-            const arc = WorldCombat.point(feet.x() + ux * distance * 0.5, feet.y() + apex, feet.z() + uz * distance * 0.5);
+            const landingFeet = WorldCombat.point(startFeet.x() + ux * distance, startFeet.y(), startFeet.z() + uz * distance);
+            // 弧线在脚坐标上定义；身体的实际移动取这条弧的逐刻增量，交给原生 sweep 碰撞。
+            function arcFeet(t: number): CombatPoint {
+                return WorldCombat.point(startFeet.x() + ux * distance * t,
+                    startFeet.y() + apex * 4 * t * (1 - t),
+                    startFeet.z() + uz * distance * t);
+            }
+            const path: number[][] = [];
+            for (let sample = 0; sample <= 6; sample++) {
+                const at = arcFeet(sample / 6);
+                path.push([at.x(), at.y(), at.z()]);
+            }
             let settled = false;
             sound(action, "cobblemon:move.aerialace.actor_1");
-            WorldFeedback.emit(world, pounceScene, 1, feet,
-                { moment: "launch", target: action.target() === null ? "" : String(action.target()!.ref()),
-                    motes: motes, scale: scale, intensity: intensity, cling: cling ? 1 : 0,
-                    path: [[feet.x(), feet.y(), feet.z()], [arc.x(), arc.y(), arc.z()], [landing.x(), landing.y(), landing.z()]] }, 30);
+            // 弧线预告：把这一扑会经过的线画出来给对手读，不等于身体已经飞过。
+            WorldFeedback.emit(world, pounceScene, 1, startFeet,
+                { moment: "launch", target: targetRef, motes: motes, scale: scale, intensity: intensity,
+                    cling: cling ? 1 : 0, apex: apex, path: path,
+                    landing: [landingFeet.x(), landingFeet.y(), landingFeet.z()] }, 30);
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                movementScenes.finish(current, done);
+            }
 
-            function strike(current: CombatAction, target: CombatActor): void {
+            /** 落空/被挡住：从身体实际所在处出反馈，不再拿计划弧点冒充落点。 */
+            function miss(current: CombatAction, reason: string): void {
+                const scope = current.world();
+                const self = scope.observe(actor);
+                const at = self === null ? landingFeet : self.position();
+                movementScenes.stop(current, "leap");
+                WorldFeedback.emit(scope, pounceScene, 1, at,
+                    { moment: "miss", motes: motes, scale: scale, intensity: intensity, reason: reason }, 22);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), pounceMissText, [], 22);
+                sound(current, "minecraft:entity.player.attack.weak");
+                finish(current);
+            }
+
+            /** 第一处身体接触：先真实接触，再按伤害回执结算减速与缠身。 */
+            function strike(current: CombatAction, target: CombatActor, hit: CombatImpact): void {
                 if (settled) return;
                 const scope = current.world();
                 const landed = hurt(current, target, "pounce", power, { damage: damageSpec("pounce", "slam"), contact: true });
                 const at = scope.observe(target);
-                if (at !== null) {
-                    if (landed) {
-                        NativeEffects.boost(scope, target, "spe", -stages);
-                        MobEffects.apply(scope, target, pounceCling, clingTicks, 0);
-                        if (rootTicks > 0) WorldEffects.apply(scope, target, "rooted", {}, rootTicks);
-                        WorldFeedback.keep(scope, "pounce:cling:" + String(target.ref()), pounceScene, 1, at.position(),
-                            { moment: "cling", target: String(target.ref()), stages: stages, motes: motes,
-                                intensity: intensity, tick: clingTicks }, clingTicks);
-                        WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), pounceClingText, [stages], 28);
-                    }
-                    WorldFeedback.emit(scope, pounceScene, 1, at.position(),
-                        { moment: "impact", target: String(target.ref()), motes: motes, intensity: intensity, scale: scale }, 26);
+                if (landed && at !== null && scope.valid(target)) {
+                    NativeEffects.boost(scope, target, "spe", -stages);
+                    MobEffects.apply(scope, target, pounceCling, clingTicks, 0);
+                    if (rootTicks > 0) WorldEffects.apply(scope, target, "rooted", {}, rootTicks);
+                    WorldFeedback.keep(scope, "pounce:cling:" + String(target.ref()), pounceScene, 1, at.position(),
+                        { moment: "cling", target: String(target.ref()), stages: stages, motes: motes,
+                            intensity: intensity, tick: clingTicks }, clingTicks);
+                    WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), pounceClingText, [stages], 28);
                 }
+                const where = at !== null ? at.position() : hit.position();
+                WorldFeedback.emit(scope, pounceScene, 1, where,
+                    { moment: "impact", target: String(target.ref()), motes: motes, intensity: intensity, scale: scale }, 26);
                 sound(current, "cobblemon:impact.bug");
+                movementScenes.stop(current, "leap");
                 finish(current);
             }
 
@@ -116,32 +150,27 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
-                const t = Math.min(1, index / steps);
-                const here = WorldCombat.point(feet.x() + ux * distance * t,
-                    feet.y() + apex * 4 * t * (1 - t), feet.z() + uz * distance * t);
-                const around = scope.query(here.plus(WorldCombat.point(0, self.height() / 2, 0)), girth + 0.6, false);
-                for (let i = 0; i < around.length; i++) {
-                    const other = around[i];
-                    if (String(other.ref()) === String(actor.ref()) || scope.friendly(other)) continue;
-                    strike(current, other);
-                    return;
+                if (index >= steps) { miss(current, "spent"); return; }
+                const t1 = (index + 1) / steps;
+                const feet = self.position().minus(WorldCombat.point(0, self.height() / 2, 0));
+                const delta = arcFeet(t1).minus(feet);
+                if (delta.length() < 1e-6) { current.after(1, function (next: CombatAction) { step(next, index + 1); }); return; }
+                const swept = sweepStep(current, delta, girth), hit = swept.hit;
+                if (hit.hitEntity()) {
+                    const victim = hit.target();
+                    if (victim !== null && !scope.friendly(victim)) { strike(current, victim, hit); return; }
+                    // 友方挡在弧线上不算命中：把没走完的直线补上继续飞。
+                    if (swept.remaining.length() > 0.001) scope.displace(actor, swept.remaining);
                 }
-                if (!scope.teleport(actor, here)) {
-                    const now = scope.observe(actor);
-                    if (now !== null) scope.displace(actor, here.minus(now.position().plus(WorldCombat.point(0, -now.height() / 2, 0))));
-                }
-                WorldFeedback.keep(scope, "pounce:leap:" + String(actor.ref()), pounceScene, 1, here.plus(WorldCombat.point(0, 0.4, 0)),
-                    { moment: "leap", motes: Math.round(motes * (0.5 + t * 0.5)), scale: scale, progress: t, cling: cling ? 1 : 0 }, 8);
-                if (index >= steps) {
-                    WorldFeedback.emit(scope, pounceScene, 1, landing,
-                        { moment: "miss", motes: motes, scale: scale }, 22);
-                    WorldFeedback.text(scope, landing.plus(WorldCombat.point(0, 1.1, 0)), pounceMissText, [], 22);
-                    sound(current, "minecraft:entity.player.attack.weak");
-                    finish(current);
-                    return;
-                }
+                const after = scope.observe(actor);
+                // 只有真实虫身逐刻经过才拖尾：显示位置取当前身体，而不是计划弧点。
+                movementScenes.show(current, "leap", after === null ? hit.position() : after.position(),
+                    { moment: "leap", motes: Math.round(motes * (0.5 + t1 * 0.5)), scale: scale, progress: t1,
+                        intensity: intensity, cling: cling ? 1 : 0 });
+                if (hit.blocked() || swept.moved < 0.02) { miss(current, hit.blocked() ? "blocked" : "stalled"); return; }
                 current.after(1, function (next: CombatAction) { step(next, index + 1); });
             }
+
             step(action, 0);
         }
     });

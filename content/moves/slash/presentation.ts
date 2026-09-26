@@ -1,12 +1,13 @@
 /**
  * 劈开 / slash 的客户端表现。
  *
- * 一句话：刃尖举过头顶聚起一道竖直亮线，随后一条窄走廊从高处压下，落点炸开一圈近白的碎屑；
+ * 一句话：刃尖举过头顶聚起一道竖直亮线，随后一条窄走廊从高处压下，命中处划出一道由高处斜下的长刀痕；
  * 真劈中要害时，落点再闪一记更亮的白星。
  * 色相家族：近白与冷银（swipe／cut／impact_normal／bigsparkle）＋中性尘（tinydust）＋暗红的一点强调（critical_hit）。
- * 拍子：起（windup 举刃）→ 劈（cleave 走廊、fall 落刃、strike 命中）→ 强调（crit 要害）。
- * 范围：cleave 用 `data.path`（与服务端 WorldGeometry.lane 同一组四个顶点）铺成走廊；走廊多长多宽画面就是那块。
- * 运动：走廊粒子从刃根向远端扫过，fall 的直线由高处落向命中点，命中碎屑向外爆。
+ * 拍子：起（windup 举刃）→ 劈（cleave 窄走廊、fall 一条斜下长刀痕、strike 命中）→ 强调（crit 要害，仅真实暴击）。
+ * 范围：cleave 用 `data.path`（与服务端 WorldGeometry.lane 同一组四个顶点）铺成窄走廊；fall 用 `data.path`
+ *   （服务端 slashStroke 的两个顶点）画斜下长刀痕——判定与画面读同一份顶点，普通命中只有这一条、没有交叉双刀。
+ * 运动：走廊粒子从刃根向远端扫过，fall 沿斜线由高处落到命中点，命中碎屑向外爆。
  * 数：`data.notes`（物攻换算的崩屑量）绑定走廊与命中火花的量；`data.scale`／`data.intensity` 让重刃比疾刃更大更亮；
  *   要害标记的尺寸读 `data.scale`（实际伤害换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -43,9 +44,9 @@ const SlashDefinition: ParticleDefinition = {
                     name: "lane_edge", bind: "path", offset: [0, 0.65, 0],
                     particle: "world_combat_core:cobblemon/generic/cut",
                     shape: { kind: "polyline", closed: true },
-                    rate: 28, direction: "shape", speed: [0.05, 0.16], spread: 8,
-                    lifetime: [5, 10], size: [0.3, 0.05], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 100
+                    rate: 22, direction: "shape", speed: [0.05, 0.16], spread: 8,
+                    lifetime: [5, 10], size: [0.24, 0.04], sizeMode: "index",
+                    color: 0xFFFFFF, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 80
                 }
             ]
         },
@@ -57,9 +58,9 @@ const SlashDefinition: ParticleDefinition = {
                     name: "stroke", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     shape: { kind: "polyline" },
-                    rate: 44, direction: "shape", speed: [0.05, 0.18], spread: 6,
-                    lifetime: [4, 9], size: [0.42, 0.08], sizeMode: "index",
-                    color: 0xFAFCFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 110
+                    rate: 52, direction: "shape", speed: [0.05, 0.18], spread: 6,
+                    lifetime: [4, 10], size: [0.5, 0.09], sizeMode: "index",
+                    color: 0xFAFCFF, alpha: [1, 0], light: "full", bloom: 0.6, maxParticles: 130
                 }
             ]
         },

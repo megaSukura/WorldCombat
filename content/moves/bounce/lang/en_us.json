@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.bounce.summary": "The user compresses the ground, springs straight up to a short hang at the top, then drops along the locked landing point: enemies in the landing radius take a contact hit, are pressed down and pushed back, and may be left paralysed by the jolt. The clear sky overhead at take-off decides how high it can go, so an open arena is the heaviest hit and a low roof turns it into a weak short hop.",
+  "worldcombat.skill.bounce.summary": "The user compresses the ground, springs straight up to a short hang at the top, then drops along the locked landing point: enemies in the landing radius take a contact hit, are pressed down and pushed back, and may be left paralysed by the jolt. Target an enemy or a ground point; an aim point is projected onto the floor and kept inside this hop's reach, and an empty cast still springs and drops. The clear sky overhead at take-off decides how high it can go, so an open arena is the heaviest hit and a low roof turns it into a weak short hop.",
   "worldcombat.skill.bounce.use.0": "Leap over the melee fire and drop from above",
   "worldcombat.skill.bounce.use.1": "Land the paralysing jolt to break an opponent's rhythm",
   "worldcombat.skill.bounce.use.2": "Take a high landing spot before cover closes in",
+  "worldcombat.skill.bounce.use.3": "Aim straight at the floor and drop on an empty spot",
   "worldcombat.skill.bounce.description.0": "The drop deals about %1$s contact damage to up to %2$s enemies inside the landing radius; the farther from the landing point, the lighter the hit, down to about six tenths at the rim. Those hit are also pressed down %3$s blocks and pushed back %4$s blocks.",
   "worldcombat.skill.bounce.description.1": "It springs about %1$s blocks up, then drops along the landing point locked at take-off, about %2$s blocks away.",
   "worldcombat.skill.bounce.description.2": "It hangs at the top for %1$s, the landing radius is %2$s blocks, and a hit has a %3$s chance to paralyse the target for %4$s. While paralysed, movement speed is halved and every action attempt has a 25%% chance to fail.",

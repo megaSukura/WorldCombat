@@ -1,9 +1,9 @@
 /**
  * 三连箭 / triplearrows 的 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑。
- * `ai.chipFirst` 开启（默认）时，**还没被踢开护架**（不带 `world_combat:status/guardbroken`）的目标
- * priority 36，已带破防的降到 12，其余 22——先把护架踢开，好让三箭钉在要害上（踢开才必暴击）。
+ * 选取是 aim：玩家可自由点方向或扇射，AI 仍按仇恨为攻击用途推荐敌人。什么局面下出手：对手可见、敌对、还活着，
+ * 且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑。`ai.chipFirst` 开启（默认）时，**还没被踢开护架**
+ * 的目标优先：近身（≤4.5 格）时腿箭组合最值，已带破防标记的降到很后；远一点的局面腿够不到，只当箭雨打。
  * 对谁出手：`accepts` 只筛阵营、存活与可见，不筛距离（距离归 `approach`）。
  */
 namespace PokemonSkills {
@@ -22,9 +22,12 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
-            if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            if (!CompanionBehavior.ai<boolean>(capability, "chipFirst", true)) return 22;
-            return CompanionBehavior.status(context, target, "guardbroken") ? 12 : 36;
+            const distance = CompanionBehavior.distance(self.point, target.point);
+            if (distance > capability.data.range) return 0;
+            const close = distance <= 4.5;
+            if (!CompanionBehavior.ai<boolean>(capability, "chipFirst", true)) return close ? 30 : 22;
+            if (CompanionBehavior.status(context, target, "guardbroken")) return close ? 14 : 10;
+            return close ? 40 : 30;
         }
     });
 
@@ -34,10 +37,10 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,
-            help: "超过这个距离就不出手，先走近。越大越愿意从稍远处先手。"
+            help: "超过这个距离就不出手，先走近。越大越愿意从稍远处先手（远处腿够不到，只会送三箭）。"
         }),
         field(pathOf("ai.chipFirst"), "先踢开护架", "boolean", {
-            help: "开启：优先对还没被踢开护架的目标出手，先把缺口打开好让三箭暴击；关闭：当普通中距离攻击排序。"
+            help: "开启：近身时优先对还没被踢开护架的目标出手，先把缺口打开好让三箭暴击；远距腿够不到，只当箭雨排序。关闭：当普通中距离攻击排序。"
         })
     ]);
 }

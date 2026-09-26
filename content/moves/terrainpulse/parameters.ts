@@ -104,7 +104,7 @@ namespace PokemonSkills {
         // 地环半径：命中处那道贴地环的半径，也用于共鸣第二波的作用半径。
         ring: formula(
             F.base(1.2).plus(F.level().minus(20).max(0).times(0.02)).clamp(1.2, 2.4).round(2),
-            "地环半径", { unit: " 格", description: "命中处贴地环的半径；共鸣时也用作第二波的作用半径。" }),
+            "地环半径", { unit: " 格", description: "实际接触点的表现地环半径；共鸣仍由相邻两道有限地脉结算。" }),
         repeatDelay: hidden(8)
     });
 
@@ -120,7 +120,7 @@ namespace PokemonSkills {
     describe("terrainpulse", [
         { key: "description.0", values: ["pulse"] },
         { key: "description.1", values: ["charge","reach"] },
-        { key: "description.2", values: ["ring"] },
+        { key: "description.2", values: [] },
         { key: "timing", values: ["prepare", "recover", "cooldown"] }
     ]);
 }

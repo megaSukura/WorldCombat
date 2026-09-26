@@ -4,7 +4,7 @@
   "worldcombat.skill.freezedry.use.1": "用冰冻概率让对方一段时间无法行动",
   "worldcombat.skill.freezedry.use.2": "对远处的高威胁目标先手压制",
   "worldcombat.skill.freezedry.description.0": "命中一个目标，造成约 %1$s 点冰属性特殊伤害，并有 %2$s 概率使它冰冻：冰冻期间无法移动、也无法出招，最多持续约 8 秒，受到火属性伤害即解除。",
-  "worldcombat.skill.freezedry.description.1": "射程 %1$s 格，冰晶以 %2$s 格/刻直线飞出、会被掩体挡下，判定半径 %3$s 格。",
+  "worldcombat.skill.freezedry.description.1": "可瞄实体，也可朝一个方向空放。射程 %1$s 格，冰晶以 %2$s 格/刻直线飞出、会被掩体挡下，判定半径 %3$s 格；无人可打时飞到末点自行消散。",
   "worldcombat.skill.freezedry.description.2": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.freezedry.value.shard": "冰晶威力",
   "worldcombat.skill.freezedry.value.freezeChance": "冰冻概率",

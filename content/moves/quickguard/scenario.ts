@@ -22,7 +22,7 @@ Smoke.scenario("quickguard", function (stage) {
         stage.expect(stage.casts("quickguard", caster) > 0, "quick guard was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/quickguard"), "caster carried the shared quickguard identity");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/quickguard"), "the nearby ally carried the shared quickguard identity");
-        stage.note("快速防守以施法者为锚，提交时给半径内友方各挂一份身份与一层只截先制伤害的按量吸收池（priority > 0 的伤害才被磕）。是否在窗口内真挨到先制、被磕掉多少由时机与走位决定，留给完整装配试玩核对。", {
+        stage.note("快速防守以施法者为锚，提交时给半径内友方各挂一份身份与一层只截先制伤害的按量吸收池（priority > 0 的伤害才被磕）；持续画面绑在这层池上，磨穿或被清除即收。AI 只在警戒范围内确有先制压力（本场景 sneasel 配招带 quickattack，且会真的出手）时才架板，不以普通敌人靠近冒充先制。是否在窗口内真挨到先制、被磕掉多少由时机与走位决定，留给完整装配试玩核对。", {
             casts: stage.casts("quickguard", caster), casterHp: caster.health(), allyHp: ally.health(),
             swiftCasts: stage.casts("quickattack", swift), damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10, tick: stage.tick()
         });

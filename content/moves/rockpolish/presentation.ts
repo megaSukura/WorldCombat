@@ -7,7 +7,7 @@
  * 色相家族：暖琥珀（0xE8B87A）为主体，亮黄白（0xFFD98A／0xFFEFC0）只做火花与光面的强调，灰褐（0xB9A489）作石尘。
  * 层次：起磨的刮痕与火花（起）／地面亮环、火花爆与石粉团（击）／身上光面（收）／失亮的灰（末）。
  * 起击收：grind（起磨）→ flash（磨亮）→ shine（光面）→ dull（失亮）。
- * 范围：地面亮环绑脚点、fit none，半径按 `data.scale`（实际磨亮半径 / 1.2）推出，画出来的圈就是磨亮的那块地。
+ * 范围：起磨碎屑绑脚点，半径按身体打磨的表现尺度展开；持续亮痕跟随真实身体移动。
  * 运动：火花向外飞、受重力下落；石粉贴地扩散；光面贴在身上缓缓转。
  * 数：火花量绑 `data.sparks`（物攻派生），石粉量绑 `data.dust`（体重派生），`data.scale` 同时放大整片半径与粒子尺寸。
  */
@@ -81,7 +81,7 @@ const RockPolishDefinition: ParticleDefinition = {
             exit: { drain: 24 },
             emitters: [
                 {
-                    name: "shine_glint", bind: "source", height: 0.5,
+                    name: "shine_glint", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     rate: 3, shape: { kind: "sphere_surface", radius: 0.35 },
                     direction: "outward", speed: [0.01, 0.03],
@@ -89,7 +89,7 @@ const RockPolishDefinition: ParticleDefinition = {
                     color: 0xFFEFC0, alpha: [0.35, 0], light: "full", maxParticles: 14
                 },
                 {
-                    name: "shine_sheen", bind: "source", height: 0.45,
+                    name: "shine_sheen", bind: "target", height: 0.03, trail: { minDistance: 0.2 },
                     particle: "world_combat_core:cobblemon/generic/spinbeam",
                     rate: 4, shape: { kind: "sphere", radius: 0.3 },
                     direction: "shape", speed: [0.01, 0.03], spin: 30,

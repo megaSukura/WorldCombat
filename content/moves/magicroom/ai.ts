@@ -1,11 +1,14 @@
 /**
  * 魔法空间 / magicroom 的伙伴 AI 用途与自己的出手计划。
  *
- * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 13）格内、自己还没站在静默空间里时出手。
- * 候选之间怎么排：自己没带道具时排得更前（自己不受损，+10），带着道具时靠后（−6）；
- *   对手带着道具再 +8——静默正是冲着对手的携带物去的（基准 42，夹 28..66）。
- * 出手前的位置：`ai.advance` 关闭（默认）时按在脚下先默自己这边；开启时前压到交战区中间，让双方一起被默。
- * 放完之后：把伤害交回共用交战计划；还站在空间里时不再重复。配置 hush（长默／快默）改变半径、时长与节奏。
+ * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 13）格内、自己还没站在静默空间里，
+ *   且落点范围内敌人的「可压制装备收益」确实高过自己一侧时才出手。没有任何可压制装备就不自动放。
+ * 收益怎么判：从原生装备快照读——宝可梦的携带物算一件；原版/模组装备槽按 ItemStack 是否声明了
+ *   minecraft:attribute_modifiers 计件。这正是 world.suppressEquipment 会暂停的属性增益与
+ *   suppressItems 会封住的携带物效果，所以 AI 不会对着空手/无可压制装备的目标浪费。
+ * 出手前的位置：`ai.advance` 关闭（默认）时按在脚下先默自己这边；开启时前压到交战区 40% 处，
+ *   让双方一起被默。放完之后：把伤害交回共用交战计划；还站在空间里时不再重复。
+ * 配置 hush（长默／快默）改变半径、时长与节奏。
  */
 namespace CompanionBehavior {
     const magicRoomChase = PokemonSkills.number("ai.maxChase", "静默距离", 2, 24, 1);
@@ -16,9 +19,26 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("magicroom", { ai: { maxChase: 13, advance: false, leaveStation: false } },
         [magicRoomChase, magicRoomAdvance, PokemonSkills.flag("ai.leaveStation", "离开驻守点")]);
 
-    CompanionBehavior.registerFact("world_combat:move_magicroom/held", function (_access: CombatWorld, actor: CombatActor, _argument: any): any {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        return String(CobblemonCombat.pokemon(actor).heldItem()).replace("cobblemon:", "");
+    // 注册事实：该对象当前有多少件真正会被压制的装备（携带物一件，或声明了属性修饰的装备槽）。
+    CompanionBehavior.registerFact("world_combat:move_magicroom/gear", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
+        if (!access.valid(actor)) return 0;
+        const entries = access.equipment(actor);
+        let pieces = 0;
+        for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            if (entry.count() <= 0) continue;
+            if (String(entry.provider()) === "cobblemon" && String(entry.slot()) === "held") { pieces += 1; continue; }
+            const stack = entry.stack();
+            if (stack === null || !stack.hasComponent("minecraft:attribute_modifiers")) continue;
+            let modifiers = 0;
+            try {
+                const component = stack.component("minecraft:attribute_modifiers");
+                const parsed = component === null ? null : JSON.parse(component);
+                modifiers = parsed && parsed.modifiers ? parsed.modifiers.length : 0;
+            } catch (error) { modifiers = 0; }
+            if (modifiers > 0) pieces += 1;
+        }
+        return pieces;
     });
 
     function magicRoomCapability(context: WorldBehavior.Context): WorldBehavior.Capability | null {
@@ -32,20 +52,25 @@ namespace CompanionBehavior {
         for (let i = 0; i < areas.length; i++) if (distance(areas[i].position, self.point) <= areas[i].radius) return true;
         return false;
     }
-    function magicRoomHeld(context: WorldBehavior.Context, target: Entity): string {
-        return CompanionBehavior.fact<string>(context, "world_combat:move_magicroom/held", target) || "";
+    function magicRoomGear(context: WorldBehavior.Context, subject: Entity): number {
+        const value = CompanionBehavior.fact<number>(context, "world_combat:move_magicroom/gear", subject);
+        return typeof value === "number" && isFinite(value) && value > 0 ? value : 0;
     }
     function magicRoomWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity | null): boolean {
         if (!threat || threat.health <= 0 || !threat.visible || threat.friendly) return false;
         if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 13)) return false;
-        return !magicRoomInside(context);
+        if (magicRoomInside(context)) return false;
+        const enemy = magicRoomGear(context, threat);
+        return enemy > 0 && enemy > magicRoomGear(context, source(context));
     }
     function magicRoomPriority(context: WorldBehavior.Context): number {
-        let score = 42 + (magicRoomHeld(context, source(context)) ? -6 : 10);
         const threat: Entity | null = context.senses["world_combat:threat"];
-        if (threat && magicRoomHeld(context, threat)) score += 8;
-        return Math.max(28, Math.min(66, score));
+        if (!threat) return 0;
+        const enemy = magicRoomGear(context, threat);
+        if (enemy <= 0) return 0;
+        const own = magicRoomGear(context, source(context));
+        return Math.max(28, Math.min(74, 44 + (enemy - own) * 4));
     }
 
     registerUse("magicroom", {

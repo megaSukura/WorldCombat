@@ -1,9 +1,10 @@
 {
-  "worldcombat.skill.banefulbunker.summary": "合拢一座毒壁碉堡，按总量挡下敌人打来的伤害，并封住瞄准你的变化招式；量尽或到时塌下。每一次直接接触都会让攻击者中毒，已中毒者改为剧毒。",
+  "worldcombat.skill.banefulbunker.summary": "在落脚点合拢一座毒壁碉堡，按总量挡下敌人打来的伤害，并封住瞄准你的变化招式；离开原位、量尽或到时即塌。每一次直接接触都会让攻击者中毒，已中毒者改为剧毒。",
   "worldcombat.skill.banefulbunker.description.0": "合拢后按总量挡下敌人打来的伤害：最多挡下 %2$s 点，超出剩余量的部分照样落到你身上；毒壁持续 %1$s，量尽或到时即塌下。每一次直接的接触让攻击者中毒 %3$s，已经中毒或带剧毒的攻击者改灌剧毒。",
+  "worldcombat.skill.banefulbunker.description.anchor": "毒壁只守你合拢时站的那一小块地：主动走开或被推离原位，碉堡立即塌下、放弃剩余护池，也不再拦下后续来击。",
   "worldcombat.skill.banefulbunker.description.1": "立起 %1$s 刻后合拢，冷却 %2$s。",
   "worldcombat.skill.banefulbunker.description.2": "短时间反复合拢的失误率 %1$s：首次必定成功，越连越容易整次落空；淬毒与厚壁的取舍见偏好设置。",
-  "worldcombat.skill.banefulbunker.use.0": "引诱近战对手撞上毒壁",
+  "worldcombat.skill.banefulbunker.use.0": "钉在原位引诱近战对手撞上毒壁",
   "worldcombat.skill.banefulbunker.use.1": "用一次接触把对手拖进持续掉血",
   "worldcombat.skill.banefulbunker.use.2": "封住变化招式的同时反灌毒液",
   "worldcombat.skill.banefulbunker.value.raise": "立起时间",

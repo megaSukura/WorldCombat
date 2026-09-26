@@ -28,11 +28,13 @@ vm.runInNewContext(fs.readFileSync(artifact+'/startup.js','utf8'),{StartupEvents
 }}});
 assert.equal(registeredItem,'checks:survey_lens');assert.equal(maximumStack,1);
 
-const callbacks={},actions=[],traits={ability:'checks:curiosity'}, hooks=new Map(), noop=()=>{};
+const callbacks={},actions=[],traits={ability:'checks:curiosity'}, hooks=new Map(), effectDefinitions=new Map(), effectHandlers=new Map(), noop=()=>{};
 const context=vm.createContext({
   WorldCombat:new Proxy({point:(x,y,z)=>point(x,y,z),on(_id,event,_after,callback){
     if(!hooks.has(event))hooks.set(event,[]);hooks.get(event).push(callback);
-  }},{get:(value,key)=>value[key]||noop}),
+  },effect(id,_version,_ticks,_lifetime,normalize){effectDefinitions.set(id,normalize);},
+  effectHandler(id,event,callback){effectHandlers.set(id+'/'+event,callback);}
+  },{get:(value,key)=>value[key]||noop}),
   CobblemonCombat:new Proxy({
     tactics(fn){assert(!callbacks.tactics);callbacks.tactics=fn;}, growth(fn){assert(!callbacks.growth);callbacks.growth=fn;}, capture(fn){assert(!callbacks.capture);callbacks.capture=fn;},
     registerAction(id){actions.push(id);},pokemon(){return pokemon;},data(){return null;},moveTemplate(){throw Error('Skill-free fixture requested a move template');}
@@ -62,10 +64,36 @@ function observation(actor){return {actor:()=>actor,position:()=>point(0,0,0),he
   velocity:()=>point(0,0,0),wet:()=>false,width:()=>.9,height:()=>1.4,tags:()=>'',
   visible:()=>true,friendly:()=>true,hostile:()=>false,player:()=>actor===owner,grounded:()=>true,attacking:()=>null,lastAttacker:()=>null,hurtAgo:()=>100};}
 const coordinates=value=>[value.x(),value.y(),value.z()];
-const world={source:()=>self,tick:()=>now,valid:()=>true,observe:observation,query:()=>[owner],mobEffect:()=>null,mobEffects:()=>[],effects:()=>[],
+const effectRecords=new Map();let nextEffect=0,nextAction=0;
+const world={source:()=>self,tick:()=>now,valid:actor=>actor===self||actor===owner,friendly:actor=>actor===self||actor===owner,
+  observe:observation,query:()=>[owner],mobEffect:()=>null,mobEffects:()=>[],originInstance:()=>'',
+  originData(_key,value){assert.equal(value,undefined,'An unattributed scope cannot write execution state');return null;},
+  effects(actor,definition){return [...effectRecords.values()].filter(record=>record.target===actor&&(!definition||record.definition===definition))
+    .map(record=>({id:()=>record.id,data:()=>record.data,source:()=>record.source,target:()=>record.target}));},
+  effect(definition,target,data,ticks){
+    const normalize=effectDefinitions.get(definition);assert(normalize,'Missing registered effect '+definition);
+    const record={id:++nextEffect,definition,target,source:this.source(),world:this,data:normalize(data),ticks,timers:new Map()};
+    effectRecords.set(record.id,record);effectHandlers.get(definition+'/start')?.(effectContext(record));return record.id;
+  },
+  operation(id,operation,input){const record=effectRecords.get(id),handler=record&&effectHandlers.get(record.definition+'/operation:'+operation);
+    if(!handler)return false;handler(effectContext(record,input,this.source()));return true;},
   survey:(centre,radius,visible)=>JSON.stringify(world.query(centre,radius,visible).map(actor=>{const o=observation(actor);return {ref:actor.ref(),domain:actor.domain(),point:coordinates(o.position()),velocity:coordinates(o.velocity()),health:o.health(),maximum:o.maxHealth(),speed:o.movementSpeed(),visible:o.visible(),friendly:o.friendly(),hostile:o.hostile(),player:o.player(),wet:o.wet(),grounded:o.grounded(),attacking:'',lastAttacker:'',hurtAgo:o.hurtAgo(),width:o.width(),height:o.height(),tags:o.tags(),effects:[],mobEffects:[],facts:{}};})),
-  actor:ref=>ref==='owner/1'?owner:self,environment:()=>'{"day":true,"sky":true,"rain":false,"thunder":false}',
+  actor:ref=>ref===owner.ref()?owner:ref===self.ref()?self:null,environment:()=>'{"day":true,"sky":true,"rain":false,"thunder":false}',
   equipment:()=>lens?[{item:()=> 'checks:survey_lens',provider:()=> 'curios'}]:[],busy:()=>false,claimed:()=>false,readiness:()=>'',actions:()=>[]};
+function effectContext(record,input='{}',caller=record.source){return {
+  id:()=>record.id,world:()=>record.world,source:()=>record.source,target:()=>record.target,caller:()=>caller,input:()=>input,
+  state(value){if(value!==undefined)record.data=effectDefinitions.get(record.definition)(value);return record.data;},
+  remaining(value){if(value!==undefined)record.ticks=value;return record.ticks;},end(){effectRecords.delete(record.id);},
+  schedule(key,handler,ticks,data){record.timers.set(key,{handler,at:now+ticks,data});}
+};}
+function committedEvent(content,target){
+  const id=++nextAction,origin=new Map(),local=new Map(),scope=Object.create(world),token='checks:execution/'+id;
+  function jsonState(store,key,value){if(value!==undefined)store.set(key,JSON.stringify(JSON.parse(value)));return store.get(key)??null;}
+  scope.originInstance=()=>token;scope.originData=(key,value)=>jsonState(origin,key,value);
+  const action={id:()=>id,actor:()=>self,target:()=>target,content:()=>content,argument:()=>null,world:()=>scope,sense:()=>scope,
+    data:(key,value)=>jsonState(local,key,value)};
+  return {actor:()=>self,target:()=>target,world:()=>scope,action:()=>action,data:()=> '{}'};
+}
 assert(context.CompanionBehavior.supports(pokemon),'A matching individual can act without an implemented move');
 assert(!context.CompanionBehavior.supports({...pokemon,species:()=> 'cobblemon:eevee'}));
 function sample(){
@@ -92,8 +120,9 @@ for (const purpose of ['prepare','fortify','reveal','attack']) {
       services:{world,report:noop,behavior:{use(capability,target){
         assert.equal(capability.id,item.id);assert.equal(target.ref,body.ref);
         casts.push(now);capability.data.pp--;capability.data.available=capability.data.pp>0;
-        const event={actor:()=>self,world:()=>world,action:()=>({content:()=> 'world_combat:'+move,argument:()=>null})};
+        const event=committedEvent('world_combat:'+move,self);
         for(const callback of hooks.get('world_combat:committed')||[])callback(event);
+        assert.equal(context.CombatEncounters.first(event.world(),self),false,'The registered commit observer must consume the encounter opening');
         return true;
       }}}};
     const candidates=ai.ready(input,protocol,body);

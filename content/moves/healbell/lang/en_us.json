@@ -7,7 +7,7 @@
   "worldcombat.skill.healbell.description.1": "Another peal follows every %1$s, re-cleansing whoever in range carries a status at that moment; it cannot be used when no one in range has anything to cleanse.",
   "worldcombat.skill.healbell.stance.resonant": "Long peal: x1.25 radius and one extra ring, at the cost of a longer wind-up and cooldown (one thorough cleanse).",
   "worldcombat.skill.healbell.stance.short": "Short peal: faster wind-up and cooldown with the base radius and ring count (a more frequent purge).",
-  "worldcombat.skill.healbell.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast. It cannot move while preparing and can be interrupted.",
+  "worldcombat.skill.healbell.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast. It can move while casting, and each peal rings from wherever the user stands at that moment.",
   "worldcombat.skill.healbell.value.chimeRadius": "Chime radius",
   "worldcombat.skill.healbell.value.peals": "Peals",
   "worldcombat.skill.healbell.value.pealGap": "Peal gap",

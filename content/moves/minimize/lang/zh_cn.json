@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.minimize.summary": "蜷缩身体显得很小：打向你的攻击更容易落空，闪避率大幅提高；代价是明显更大的身体踩下来时挨得更重。它是本组唯一真正改变体型的招，也是唯一带明确弱点的招；大胆缩得更难打中也更容易被踩，谨慎缩得更久更稳。窗口走完时闪避等级收回。",
+  "worldcombat.skill.minimize.summary": "真实缩小身体和碰撞箱，获得临时闪避等级；更大的身体接触命中时更痛。窗口结束先撤增益，空间不足时等待安全恢复体型。",
   "worldcombat.skill.minimize.use.0": "被围住前先缩起来，让来袭的攻击落空",
   "worldcombat.skill.minimize.use.1": "在大型对手脚下求生，提防被一脚踩实",
   "worldcombat.skill.minimize.use.2": "拉锯里用缩小窗口换几秒安全",
-  "worldcombat.skill.minimize.description.0": "变小把闪避提升 %1$s 级，打向你的攻击有 %2$s 的机会落空。",
+  "worldcombat.skill.minimize.description.0": "真实身体缩为 %2$s，闪避临时提升 %1$s 级；使用公共命中规则一次判定。",
   "worldcombat.skill.minimize.bold.on": "大胆缩小：闪避 3 级、更难被打中，但被大体型踩中 ×1.75、缩着的时间更短。",
   "worldcombat.skill.minimize.bold.off": "谨慎缩小：闪避 2 级、踩踏加成更低（×1.5）、缩得更久；更高的回避 vs 更低的破绽，两向各有局面。",
-  "worldcombat.skill.minimize.description.1": "缩小持续约 %1$s；来袭攻击按上面的概率可能整段落空，但体积达到你 1.3 倍以上的攻击不会触发这道闪避，而是直接踩实、伤害 ×%2$s。",
+  "worldcombat.skill.minimize.description.1": "缩小持续 %1$s；比缩小前体积大 1.3 倍以上的身体接触命中时伤害乘 %2$s。远程伤害不受此弱点影响。",
   "worldcombat.skill.minimize.description.3": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.minimize.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
   "worldcombat.skill.minimize.growth.0": "达到 %1$s 级，缩小延长至 %2$s、冷却缩短至 %3$s 秒。",
@@ -14,7 +14,6 @@
   "worldcombat.skill.minimize.value.evade": "闪避等级",
   "worldcombat.skill.minimize.value.window": "缩小窗口",
   "worldcombat.skill.minimize.value.small": "收缩尺度",
-  "worldcombat.skill.minimize.value.dodge": "闪避概率",
   "worldcombat.skill.minimize.value.trample": "踩踏加成",
   "worldcombat.skill.minimize.value.motes": "缩身尘点",
   "worldcombat.skill.minimize.value.pulses": "收缩拍数",
@@ -27,10 +26,11 @@
   "worldcombat.skill.minimize.preference.ai.maxChase.help": "威胁进入这个距离内才考虑缩小；越大越早缩起来。",
   "worldcombat.skill.minimize.preference.ai.minGap": "贴身下限",
   "worldcombat.skill.minimize.preference.ai.minGap.help": "威胁近于这个距离时不再缩小、直接应对；调大更常在近身时放弃缩小。",
-  "world_combat.move.minimize.text.small": "变小（闪避 +%1$s／落空 %2$s%%／%3$s 秒）",
+  "world_combat.move.minimize.text.small": "变小（闪避 +%1$s／体型 %2$s／%3$s 秒）",
   "world_combat.move.minimize.text.dodge": "闪开了",
   "world_combat.move.minimize.text.trample": "被踩实了！",
   "world_combat.move.minimize.text.fade": "变大回来",
   "effect.world_combat.minimize_small": "变小",
-  "worldcombat.skill.minimize.description.2": "缩小窗口走完或被清除时，抬高的闪避等级原样收回。"
+  "worldcombat.skill.minimize.description.2": "窗口结束或被清除即撤闪避增益；若原体型无处容身，会显示待恢复标记，找到安全空间后恢复。",
+  "world_combat.move.minimize.text.waiting": "空间不足，等待恢复体型"
 }

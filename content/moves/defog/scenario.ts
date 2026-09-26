@@ -1,42 +1,52 @@
 /**
  * 清除浓雾 / defog 的可执行设计说明。
  *
- * 场面：晴天白天、开阔平地。只会「清除浓雾」的大比鸟（pidgeotto，技能表只给这一招，AI 走控制路径）站在
- *   一只只会「反射壁」的引梦貘人（drowzee）与一只原版蠹虫之间：蠹虫是真实敌对生物、又打不痛人，让两只
- *   宝可梦都把它当成威胁——引梦貘人因此会给自己张壁，大比鸟因此有理由起风，且不会被打退。
- *   本场景把反射壁单元一起装配，引梦貘人才有可用的反射壁行为。
+ * 场面：晴天白天、开阔平地。只会「清除浓雾」的壶壶（shuckle，速度很低，风圈收在 4 格多，便于验证范围边界）
+ *   站在一片本场景自建的护幕场地旁：场地用共享类别 screen 注册（每 5 刻给范围内活体刷一层 minecraft:glowing，
+ *   作为真实、可观察、会被 defog 整实例掀掉的场贡献），一只被定住的蠹虫站在场地中央当被扫对象，另一只
+ *   被定住的蠹虫站在风圈之外当对照。
  *
- * 必然事实：本招被提交过；引梦貘人身上先出现过共享身份 world_combat:status/reflect，被风扫过后又出现过
- *   world_combat:status/defogged，并且圆内不再带着 reflect。破防/闪避级数、破绽时长与风丝数取决于
- *   精灵数据与配置，写进 note 供读轨迹判断。
- *
- * 依赖：本场景同时装配 content/moves/reflect（提供反射壁行为与效果）。
+ * 必然事实：本招被提交过；圈内的蠹虫身上出现过共享身份 world_combat:status/defogged，圈外的没有；护幕被
+ *   掀掉后不再刷新 minecraft:glowing（余效走完即无残留场贡献）。级数、时长与风丝数取决于精灵数据与配置，
+ *   写进 note 供读轨迹判断。
  */
+namespace PokemonSkills {
+    // 测试夹具：一片声明为共享类别 screen 的护幕，给成员刷一层可观察的真实 MobEffect。
+    WorldEffects.fieldRule("world_combat:defog_fixture", {
+        stay: function (world, actor) { MobEffects.apply(world, actor, "minecraft:glowing", 12, 0); }
+    }, { tags: [WorldEffects.categories.screen] });
+}
+
 Smoke.scenario("defog", function (stage) {
     stage.fill([-12, -1, -12], [12, -1, 12], "minecraft:stone");
     stage.weather("clear");
     stage.time("day");
 
-    var caster = stage.pokemon({ species: "pidgeotto", level: 35, moves: ["defog"], at: [-5, 0, 0] });
-    var screen = stage.pokemon({ species: "drowzee", level: 30, moves: ["reflect"], at: [0, 0, 0] });
-    var bug = stage.mob({ type: "minecraft:silverfish", at: [6, 0, 0] });
-    stage.hostile(caster, screen);
-    stage.hostile(caster, bug);
-    stage.hostile(screen, bug);
+    var caster = stage.pokemon({ species: "shuckle", level: 20, moves: ["defog"], at: [-4, 0, 0] });
+    var near = stage.mob({ type: "minecraft:silverfish", at: [0, 0, 0] });
+    var far = stage.mob({ type: "minecraft:silverfish", at: [5, 0, 0] });
+    stage.noai(near, far);
+    stage.hostile(caster, near);
+    stage.hostile(caster, far);
 
-    stage.until(1800, function () {
-        return stage.casts("defog", caster) > 0
-            && stage.hadMobEffect(screen, "world_combat:status/reflect")
-            && stage.hadMobEffect(screen, "world_combat:status/defogged")
-            && !stage.hasMobEffect(screen, "world_combat:status/reflect");
-    }, function () {
-        stage.expect(stage.casts("defog", caster) > 0, "清除浓雾被放出来了");
-        stage.expect(stage.hadMobEffect(screen, "world_combat:status/reflect"), "引梦貘人身上先有反射壁身份");
-        stage.expect(stage.hadMobEffect(screen, "world_combat:status/defogged"), "风圈把引梦貘人吹得门户大开");
-        stage.expect(!stage.hasMobEffect(screen, "world_combat:status/reflect"), "反射壁被风整片抹掉");
-        stage.note("清扫半径、破防/闪避级数、破绽时长与风丝数由速度、体宽、等级公式决定；引梦貘人会按冷却重张反射壁，这里读到的是至少一次成功的吹扫。",
-            { casts: stage.casts("defog", caster), foeCastsReflect: stage.casts("reflect", screen),
-              screenHealth: Math.round(screen.health() * 10) / 10 });
-        stage.done();
-    }, "清除浓雾抹掉了场上的屏障");
+    // 护幕场地：成员会被刷新 minecraft:glowing，被掀掉后不再刷新。等场地来源稳定后再铺。
+    stage.after(20, function () {
+        stage.field("world_combat:defog_fixture", [0, 0, 0], 1200, 3, {}, near);
+        stage.until(1800, function () {
+            return stage.casts("defog", caster) > 0
+                && stage.hadMobEffect(near, "world_combat:status/defogged")
+                && stage.hadMobEffect(near, "minecraft:glowing")
+                && !stage.hasMobEffect(near, "minecraft:glowing");
+        }, function () {
+            stage.expect(stage.casts("defog", caster) > 0, "清除浓雾被放出来了");
+            stage.expect(stage.hadMobEffect(near, "world_combat:status/defogged"), "风圈把圈内的对手吹得门户大开");
+            stage.expect(stage.hadMobEffect(near, "minecraft:glowing"), "护幕场地先给了圈内一层场贡献");
+            stage.expect(!stage.hasMobEffect(near, "minecraft:glowing"), "护幕被掀掉后不再刷新场贡献");
+            stage.expect(!stage.hadMobEffect(far, "world_combat:status/defogged"), "风圈之外的对手没有被扫到");
+            stage.note("清扫半径、破防/闪避级数、破绽时长与风丝数由速度、体宽、等级公式决定；场地被整实例 dispel 后，余效走完即无残留。",
+                { casts: stage.casts("defog", caster), nearDefogged: stage.hadMobEffect(near, "world_combat:status/defogged"),
+                  farDefogged: stage.hadMobEffect(far, "world_combat:status/defogged") });
+            stage.done();
+        }, "清除浓雾掀掉场贡献并吹开门户");
+    });
 });

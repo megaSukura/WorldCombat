@@ -4,7 +4,7 @@
   "worldcombat.skill.freezedry.use.1": "Leave the target unable to act for a while with a freeze",
   "worldcombat.skill.freezedry.use.2": "Suppress a distant high-value target",
   "worldcombat.skill.freezedry.description.0": "Hits a target for about %1$s special Ice damage and has a %2$s chance to freeze it: while frozen it cannot move or use moves, for up to about 8 seconds, and fire damage breaks the freeze.",
-  "worldcombat.skill.freezedry.description.1": "Range %1$s blocks; the shard flies straight at %2$s blocks per tick and can be blocked by cover, with a %3$s block hit radius.",
+  "worldcombat.skill.freezedry.description.1": "Aim at a body or fire in a direction on empty ground. Range %1$s blocks; the shard flies straight at %2$s blocks per tick and can be blocked by cover, with a %3$s block hit radius; with nothing to hit it dissipates at the end of its flight.",
   "worldcombat.skill.freezedry.description.2": "Windup %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.freezedry.value.shard": "Shard power",
   "worldcombat.skill.freezedry.value.freezeChance": "Freeze chance",

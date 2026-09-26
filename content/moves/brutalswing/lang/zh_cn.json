@@ -3,7 +3,7 @@
   "worldcombat.skill.brutalswing.use.0": "被围住时原地扫开一圈",
   "worldcombat.skill.brutalswing.use.1": "打断贴身围攻、把近身的人甩开",
   "worldcombat.skill.brutalswing.use.2": "不减速的近身覆盖：转一圈就收",
-  "worldcombat.skill.brutalswing.description.0": "原地横转一整圈，扫中身边半径 %2$s 格内、不论方向的每个敌人，每人只结算一次 %1$s 点物理伤害。",
+  "worldcombat.skill.brutalswing.description.0": "原地横转一整圈，扫中身边半径 %2$s 格内、不论方向的每个敌人，每人只结算一次 %1$s 点物理伤害。真墙会挡住刃路；只有刃真正扫到的那一侧会挨打，后来跨进刃路的敌人也算。",
   "worldcombat.skill.brutalswing.description.1": "被扫中的人沿离心方向甩开，最多 %1$s 格（被挡住时更短）；从起转到转完一整圈约 %2$s 秒。",
   "worldcombat.skill.brutalswing.wide.on": "广抡式：横扫半径 ×1.18、扫飞 ×1.3、整圈多转 3 刻；代价是单发威力 ×0.85、起手 +2 刻、收招 +3 刻、冷却 +6 刻。",
   "worldcombat.skill.brutalswing.wide.off": "紧抡式：贴得更近转得更短更快、单发更重；代价是甩不动、够不到稍远的人。",
@@ -22,7 +22,7 @@
   "worldcombat.skill.brutalswing.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.brutalswing.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑横扫；调小只在贴身时转，调大愿意先追进人堆再扫。",
   "worldcombat.skill.brutalswing.preference.ai.minFoes": "扫到人数",
-  "worldcombat.skill.brutalswing.preference.ai.minFoes.help": "半径内至少站着这么多可见、敌对的敌人才转；调大只被围住时用，调 1 见一个也转。",
+  "worldcombat.skill.brutalswing.preference.ai.minFoes.help": "横扫半径内至少站着这么多可见、敌对的敌人才转；调大只被围住时用，调 1 见一个也转。",
   "world_combat.move.brutalswing.text.swept": "横扫：%1$s 人",
   "world_combat.move.brutalswing.text.miss": "横扫落空"
 }

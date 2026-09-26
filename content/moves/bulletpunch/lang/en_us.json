@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.bulletpunch.summary": "A steel punch fired on the spot and driven straight through: zero preparation (it strikes on commit), the user never moves, and the steel fist pierces along a narrow line, skewering whoever is lined up in front of it. The steel round settles on a lower defence coefficient. The armour-piercing form adds one more pierce (up to 3 with Speed) at a lighter hit, shorter reach and a higher cost.",
+  "worldcombat.skill.bulletpunch.summary": "A steel punch fired on the spot and driven straight through: zero preparation (it strikes on commit), the user never moves, and the steel fist pierces along a narrow line, skewering the front and back foes lined up by distance along it; the first block cuts the line short so anyone behind it is not counted. The steel round settles on a lower defence coefficient. The armour-piercing form adds one more pierce (up to 3 with Speed) at a lighter hit, shorter reach and a higher cost.",
   "worldcombat.skill.bulletpunch.use.0": "An instant steel first strike at point-blank range",
   "worldcombat.skill.bulletpunch.use.1": "Punch through a front and back foe lined up together",
   "worldcombat.skill.bulletpunch.use.2": "Poke and shove without moving from the spot",
   "worldcombat.skill.bulletpunch.description.0": "The fist deals about %1$s contact damage with a %2$s block reach and a %3$s block half-width line; the target's Defence, type match-up and criticals settle on impact.",
-  "worldcombat.skill.bulletpunch.description.1": "Pierce up to %1$s foes along your aim, shoving each about %2$s blocks.",
+  "worldcombat.skill.bulletpunch.description.1": "Along your aim it counts only foes close to the centreline, in front, and pierces up to %1$s of them by distance along it, shoving each about %2$s blocks; the first block on the centreline cuts the line short.",
   "worldcombat.skill.bulletpunch.description.2": "The steel round is harder than ordinary physical moves and settles on a lower defence coefficient, so heavy Defence stops it less.",
   "worldcombat.skill.bulletpunch.ap.on": "Armour-piercing: one more pierce (up to 3 with Speed) so a longer line can be punched through, at 0.85 damage, 0.3 blocks less reach, 1 tick more preparation, 2 ticks more recovery and 6 ticks more cooldown.",
   "worldcombat.skill.bulletpunch.ap.off": "Solid round: a single steel punch with longer reach, a faster recovery and a harder hit.",

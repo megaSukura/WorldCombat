@@ -1,4 +1,12 @@
-/** 丛林治疗的藤蔓爆发、治疗缠绕与嫩芽粒子。 */
+/**
+ * 丛林治疗：脚下自然地面抽芽、藤蔓包住获益者、补血与治病各自短闪。
+ *
+ * - erupt：ground_trace 沿 data.path（施放时实际采到的自然地面点）整条边抽芽，vine_ring/sprout_burst/soil 以
+ *   实际半径（fit none + data.scale）从脚点炸开；没有自然地面时 path 为空，只剩基础爆发。
+ * - embrace 只发给真正拿到回血或清除状态的人：heal_flash 按 data.healSpark（实际回复量）闪，cure_gold 按
+ *   data.cured（实际清除项数）闪，二者各自真实。
+ * - 所有数量来自参数的 data.vines / data.motes，圆环半径来自 data.radius 与 data.scale。
+ */
 const JungleHealingDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -28,6 +36,15 @@ const JungleHealingDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 9, drain: 16 },
             emitters: [
+                {
+                    name: "ground_trace", bind: "path", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
+                    burst: { count: { data: "vines", fallback: 0 }, interval: 2 },
+                    shape: { kind: "polyline" },
+                    direction: "up", speed: [0.03, 0.13],
+                    lifetime: [14, 24], size: [0.24, 0.04], sizeMode: "index",
+                    color: 0xBCE87A, alpha: [0.85, 0], light: "full", maxParticles: 80
+                },
                 {
                     name: "vine_ring", bind: "point", offset: [0, 0.10, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
@@ -68,11 +85,11 @@ const JungleHealingDefinition: ParticleDefinition = {
                     color: 0x6FC24E, alpha: [0.85, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "green_light", bind: "target", offset: [0, 0.5, 0], height: 0.3,
+                    name: "heal_flash", bind: "target", offset: [0, 0.5, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "motes", fallback: 12 }, interval: 3, repeats: 2 }, shape: { kind: "sphere", radius: 0.5 },
+                    burst: { count: { data: "healSpark", fallback: 0 } }, shape: { kind: "sphere", radius: 0.5 },
                     direction: "up", speed: [0.03, 0.13], drag: 0.92,
-                    lifetime: [10, 20], size: [0.08, 0.01],
+                    lifetime: [8, 14], size: [0.08, 0.01],
                     color: 0xBCE87A, alpha: [0.95, 0], light: "full", bloom: 0.25, maxParticles: 60
                 },
                 {

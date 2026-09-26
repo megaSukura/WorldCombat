@@ -33,5 +33,5 @@
   "worldcombat.skill.jumpkick.preference.ai.preferWeak.help": "On: prefer Jump Kick against targets below a third health to finish them. Off: compete by the shared order only.",
   "world_combat.move.jumpkick.text.hit": "Jump Kick",
   "world_combat.move.jumpkick.text.crash": "Whiffed",
-  "worldcombat.skill.jumpkick.description.aim": "While rising, the kick keeps its landing point on the target's live position; once the dive begins the landing point locks, so a target that moves aside can slip it. Touching any living body on the way down counts as a hit; at the landing point it still picks the nearest enemy within the hit radius, settling only one target; only when all of that fails (including hitting a wall on the way down) is it a miss, costing the user health."
+  "worldcombat.skill.jumpkick.description.aim": "The direction and landing point lock the moment the skill commits; both the leap and the dive follow that line and never curve back to the original target, so a target that moves aside can slip it. The body hits the first non-allied living thing it touches on the way down, settling that single target and landing there; a wall, or reaching the landing point untouched, is a miss that costs the user health."
 }

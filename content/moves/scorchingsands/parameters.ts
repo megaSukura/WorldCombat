@@ -77,9 +77,9 @@ namespace PokemonSkills {
                 .plus(F.stat("specialAttack").minus(60).times(0.3).clamp(-4, 24))
                 .plus(F.level().minus(28).times(0.2).clamp(0, 10))
                 .clamp(12, 48).round(0),
-            "沙壳格数", {
+            "热沙格数", {
                 unit: "格",
-                description: "落点的地表被烤成多少格沙壳，也驱动表现里的沙量与扬尘；特攻与等级越高铺得越多。"
+                description: "闷烧式下，沿落点天然沙面最多烤热多少格连通沙面；石头或非沙地不占格，也驱动表现里的逐格热沙。特攻与等级越高铺得越多。"
             }),
         /** 沙壳时长：140 + 等级(≥28)偏移[0,44] + 特攻偏移[−18,36]；烈日 ×1.15；雨天 ×0.85；闷烧 ×1.3／赤沙 ×0.9；夹 80..320。 */
         coatTicks: seconds(
@@ -90,7 +90,7 @@ namespace PokemonSkills {
                 .times(F.when(F.world("rain", text("worldcombat.skill.scorchingsands.value.rain")).gt(0.2), F.const(0.85), F.const(1)))
                 .times(F.when(F.pref("hearth"), F.const(1.3), F.const(0.9)))
                 .clamp(80, 320).round(0),
-            "沙壳时长", "落点的沙壳留多久；等级与特攻越高留得越久，烈日烤得更久、雨天冲得更快，闷烧式留得最久。"),
+            "热沙时长", "落点附近的天然沙面被烤热多久；等级与特攻越高留得越久，烈日烤得更久、雨天冲得更快，闷烧式留得最久。"),
         /** 闷烧每跳：10 + 特攻偏移[−3,10]；夹 5..22。 */
         hearthPower: formula(
             F.base(10).plus(F.stat("specialAttack").minus(60).times(0.04).clamp(-3, 10)).clamp(5, 22).round(1),

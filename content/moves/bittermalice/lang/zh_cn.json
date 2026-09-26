@@ -4,7 +4,7 @@
   "worldcombat.skill.bittermalice.use.1": "在残血时把怨念化作最重的一击",
   "worldcombat.skill.bittermalice.use.2": "对带着异常的对手收尾（怨念式顺手解掉它的异常）",
   "worldcombat.skill.bittermalice.description.0": "怨念之手攥住目标造成 %1$s 点特殊伤害。",
-  "worldcombat.skill.bittermalice.description.1": "可向 %1$s 格内放出怨念，它以每刻 %2$s 格循着目标飞过去，判定半径 %3$s 格。",
+  "worldcombat.skill.bittermalice.description.1": "可向 %1$s 格内放出怨念，它以每刻 %2$s 格朝瞄准方向飞出、有目标时循着目标，判定半径 %3$s 格；空放会一直飞到尽头再散去。",
   "worldcombat.skill.bittermalice.description.2": "命中降低目标攻击 %1$s 级。",
   "worldcombat.skill.bittermalice.description.3": "自身生命越少，怨念越深、这一记越重。",
   "worldcombat.skill.bittermalice.grudge.on": "怨念式：这一记无条件抬到威力 ×1.35、命中掉攻 2 级，出手更慢；若目标带着主异常（灼伤／麻痹／中毒／冰冻／睡眠），命中时会先吞掉其中一个、替对手解掉它。",
@@ -30,6 +30,8 @@
   "worldcombat.skill.bittermalice.preference.ai.afflicted.help": "开启：已经带着异常的敌人排得更前（纠缠式当场加倍）；关闭则只按普通交战排序。",
   "worldcombat.skill.bittermalice.preference.ai.wounded": "残血更愿放",
   "worldcombat.skill.bittermalice.preference.ai.wounded.help": "开启：自身生命低于一半时更愿意放这一招（怨念随伤势加深，这一记更重）；关闭则不按自身血量加权。",
+  "worldcombat.skill.bittermalice.preference.ai.devour": "怨念式吞异常",
+  "worldcombat.skill.bittermalice.preference.ai.devour.help": "怨念式专属。开启：优先对带主异常的敌人出手，吞掉那份异常换 ×1.35 与掉攻 2 级；关闭：避开带异常的敌人，把异常留给队友的条件收益（只挑没异常的）。纠缠式不受此项影响。",
   "world_combat.move.bittermalice.text.grasp": "攻击 -%1$s",
   "world_combat.move.bittermalice.text.devour": "吞掉异常·攻击 -%1$s",
   "world_combat.move.bittermalice.text.miss": "怨念散去"

@@ -2,13 +2,13 @@
  * 落英缤纷 / petalblizzard 的客户端表现。
  *
  * 一句话：施法者身周卷起一团落英，第一阵风把花瓣朝身上收拢，随后几阵把花瓣与叶片一起向外甩开，
- * 被卷过的地方翻起粉白的花瓣，最后瓣片飘落在地面。
+ * 被卷过的地方翻起粉白的花瓣，最后瓣片散落一地、随即渐消（不铺方块、不留花场）。
  * 色相家族：粉白与嫩绿（cherry_petal / swirlingwind / grass.leaf / impact_grass / glowingsparkle_pink）为主体，
  * 花瓣用贴图原色，只在风层上做轻微偏色。
- * 拍子：起（gather 卷瓣）→ 旋（draw 向内收）→ 甩（lash 向外甩，可重复、`data.pass` 记第几阵、`cut` 逐处割中）→ 收（settle 落瓣 / miss）。
+ * 拍子：起（gather 卷瓣）→ 旋（draw 向内收）→ 甩（lash 向外甩，可重复、`data.pass` 记第几阵、`cut` 逐处割中）→ 收（settle 落瓣散尽 / miss）。
  * 范围：draw / lash / settle 的地面圈按服务端传的 `data.radius`（真实风暴半径）画出，玩家看到的圈就是会被割到的地。
- * 运动：第一阵花瓣与风贴地向内收束，其后几阵反过来向外炸开，落瓣竖直下落——向内还是向外，一眼可读。
- * 数：`data.petals`（物攻与等级派生）决定卷起的花瓣密度，`data.cells`（实际落地瓣片数）决定地面瓣量，
+ * 运动：第一阵花瓣与风贴地向内收束，其后几阵反过来向外炸开，散落的花瓣竖直下落——向内还是向外，一眼可读。
+ * 数：`data.petals`（物攻与等级派生）决定卷起的花瓣密度，`data.settle`（落瓣余韵）决定 settle 那一幕的时长，
  * `data.flow`（半径派生）决定每一阵的密度，`data.count`（每阵威力派生）决定命中碎叶量。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -135,7 +135,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
             ]
         },
         settle: {
-            duration: 30,
+            duration: { data: "settle", fallback: 44 },
             exit: { stop: 12, drain: 24 },
             emitters: [
                 {

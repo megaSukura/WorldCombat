@@ -5,7 +5,7 @@
  *
  * 场面：一只只会虫之抵抗的溜溜糖球（32 级）站在中间，两只弱小的凯西（18 级）从两侧围上来。只给这一招，
  * AI 就只会用它。断言只取必然事实：招式被提交过、至少一个目标受过伤害、至少一个目标被缠住（虫群必缠）。
- * 扫到几个人、缠多久这类位置/对象结果写进 note。
+ * 前缘现在沿真实地面推进、遇墙与悬空就停，只咬贴地目标；扫到几个人、缠多久这类位置/对象结果写进 note。
  */
 Smoke.scenario("strugglebug", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -24,7 +24,7 @@ Smoke.scenario("strugglebug", function (stage) {
         stage.expect(stage.damageTo(left) + stage.damageTo(right) > 0, "虫群扫到了至少一个目标");
         stage.expect(stage.hadMobEffect(left, "world_combat:status/infested") || stage.hadMobEffect(right, "world_combat:status/infested"),
             "被扫到的目标缠上了 world_combat:status/infested");
-        stage.note("虫群前缘逐刻扩开，扫到几个人、各自掉多少血、缠多久都取决于站位与对象，只作记录；同一目标只被扫到一次。",
+        stage.note("虫群前缘沿真实地面逐刻扩开，扫到几个人、各自掉多少血、缠多久都取决于站位与对象，只作记录；同一目标只被扫到一次，墙后与悬空的目标不会被隔空咬到。",
             { casts: stage.casts("strugglebug", caster),
                 leftDamage: Math.round(stage.damageTo(left) * 10) / 10,
                 rightDamage: Math.round(stage.damageTo(right) * 10) / 10,

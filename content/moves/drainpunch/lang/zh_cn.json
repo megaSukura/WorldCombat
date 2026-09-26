@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.drainpunch.summary": "近身击打目标，将造成的部分伤害转化为自身治疗。",
+  "worldcombat.skill.drainpunch.summary": "近身出拳打向目标或一个方向，命中造成伤害后把其中一部分转回自身；打空或打在墙上不回血。",
   "worldcombat.skill.drainpunch.description.0": "这一拳造成约 %1$s 的接触拳击伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.drainpunch.description.1": "拳距 %1$s 格（也是实际射程），拳面判定半径 %2$s 格。",
   "worldcombat.skill.drainpunch.description.2": "每一记命中的拳都把实际伤害的 %1$s 转回自身生命。",
@@ -26,6 +26,6 @@
   "worldcombat.skill.drainpunch.preference.ai.healBelow": "回血优先阈值",
   "worldcombat.skill.drainpunch.preference.ai.healBelow.help": "自身生命低于这个比例时，把吸取拳当续航手段优先出手；越高越早开始靠它回血。",
   "world_combat.move.drainpunch.text.hit": "拳入",
-  "world_combat.move.drainpunch.text.sap": "力量回流 %1$s%%",
+  "world_combat.move.drainpunch.text.sap": "力量回流 %1$s",
   "world_combat.move.drainpunch.text.miss": "挥空"
 }

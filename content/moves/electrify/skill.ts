@@ -1,20 +1,8 @@
-/**
- * 输电 / Electrify — 执行组织。
- *
- * 核心念头：一把电灌进对手身体，给它下一次出招通电——那一招在结算前变成电属性，落地后电荷爆开消失。
- *
- * 出手：向射程内、视线畅通的单个敌人瞬间输一道电（原生命中必中，优先度 0，在这里是瞬发快节奏）。
- * 持电：目标获得 `world_combat:electrified`（共享身份 electrify）与一份记录导法的 payload；期间身上持续噼啪。
- * 命中：目标出招时，rules.ts 的伤害元数据规则在结算前把有效属性改成电——之后 STAB、属性相性、电吸收特性
- *       与地面免疫照常参与；那一击落地后电荷爆开用掉。
- * 反制：只对单个目标、有射程与视线要求；能被拖过时间自然散去；用一招不合适的招式就等于浪费掉这次通电；
- *       可被牛奶或 `/effect` 清除。它对双方一视同仁，也能用在队友身上。
- * 配置项 allMoves（全导）：任何招式都变电但更短更贵；关闭则只把一般属性招式变电，更久更便宜。
- */
+/** 输电：对任意关系实体通电，下一次符合条件的动作提交时消费，并锁存整次动作改写。 */
 namespace PokemonSkills {
     define({
-        id: "electrify", name: "输电", description: "向单个敌人灌一道电，让它下一次出招变成电属性，落地后电荷爆开用掉。可以把对手的普通招变成电招（吃地面免疫或电吸收），也可能抹掉它的属性与本系加成。",
-        uses: ["预判改属性", "破除普通招", "帮电吸收队友"], kind: "enemy", range: 9, prepare: 4, active: 0, recover: 6, cooldown: 60, style: "electrify",
+        id: "electrify", name: "输电", description: "给一个战斗者通电，让其下一次符合条件的招式整招变成电属性；可用于友方或敌方。",
+        uses: ["预判改属性", "破除普通招", "帮电吸收队友"], kind: "aim", range: 9, prepare: 4, active: 0, recover: 6, cooldown: 60, style: "electrify",
         defaults: { allMoves: false },
         fields: [flag("allMoves", "全导")],
         indicator: function (config, pokemon) {
@@ -45,7 +33,9 @@ namespace PokemonSkills {
             if (from === null || to === null) { done(action); return; }
             const duration = p("electrify", "surgeDuration", action);
             const arcs = p("electrify", "arcCount", action);
-            MobEffects.apply(world, target, electrified, duration, 0);
+            if (!world.clear(from.position(), to.position()) || to.position().minus(from.position()).length() > action.range()) { done(action); return; }
+            if (MobEffects.apply(world, target, electrified, duration, 0) === null) { done(action); return; }
+            world.effects(target, electrifyPayload).forEach(effect => world.operation(effect.id(), "world_combat:dispel", "{}"));
             world.effect(electrifyPayload, target, JSON.stringify({ all: config && config.allMoves ? 1 : 0 }), duration);
             sound(action, "minecraft:entity.lightning_bolt.impact");
             WorldFeedback.emit(world, electrifyScene, 1, from.position(),

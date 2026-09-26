@@ -142,6 +142,7 @@ object NativeOperationsChecks {
                     check(combat.bind(actor) != old)
                     println("P3CHECK native PC transfer, one stored individual, PP/tactics preservation and old-handle invalidation passed")
                 }
+                24 -> NativePartyChecks.run(combat, actor, player)
                 25 -> {
                     val quick = PokeBalls.QUICK_BALL.catchRateModifier
                     check(quick.value(player, target.pokemon) == 5F && quick.modifyCatchRate(10F, player, target.pokemon) == 50F)

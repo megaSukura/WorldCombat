@@ -4,7 +4,8 @@
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没在失神中。悄悄话看到威胁就能说；
  *   传谣要目标 rumorRadius 内至少站着 ai.minListeners 个非友方，人不够就等，不空放。
  *   密语是声音、不需要通视，所以即使视线被挡也照样值得开口——这是它和其它凝视招式不同的地方。
- * 对谁出手：当前威胁；已经失神的目标跳过，避免重复。
+ * 对谁出手：当前威胁，且优先挑已知靠特攻输出的目标——密语降的正是特攻，对物理输出手收益低；
+ *   看不出输出类型的普通目标只作低优先；已经失神的目标跳过，不重复。
  * 出手时机：ai.opening=迎击时只在目标正攻自己或主人、或自己刚被打过时开口；随时则见威胁就说。
  * 够不到怎么办：reach 就是密语距离，超出的先走近；声音不要求通视，接近过程不会被掩体打断。
  * 放完之后：目标大幅掉特攻；传谣时站在旁边的人一起失神，伙伴随即交回共享顺序。
@@ -49,6 +50,13 @@ namespace CompanionBehavior {
         return threat.attacking === self.ref || !!owner && threat.attacking === owner.ref || self.hurtAgo < 40;
     }
 
+    /** 看得出目标以特攻输出（特攻高于物攻）时，密语才打中要害；物攻未知不当作特攻手。 */
+    function confideSpecialOutput(context: WorldBehavior.Context, threat: Entity): boolean {
+        const stats = combatStats(context, threat);
+        if (!stats || !stats.stats || typeof stats.stats.spa !== "number" || typeof stats.stats.atk !== "number") return false;
+        return stats.stats.spa > stats.stats.atk;
+    }
+
     registerUse("confide", {
         protocols: ["world_combat:control"],
         reach: function (_context, item) { return item.data.range; },
@@ -56,9 +64,11 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !confideWants(context, item, target)) return 0;
+            // 已知特殊输出者加分；普通未知攻击只作低优先，把机会先让给更值的目标。
+            let score = confideSpecialOutput(context, target) ? 44 : 20;
             if (item.data.config && item.data.config.rumor)
-                return Math.min(90, 60 + confideListeners(context, target.point, confideRadius(context, item)) * 6);
-            return 50;
+                score = Math.min(92, score + 24 + confideListeners(context, target.point, confideRadius(context, item)) * 6);
+            return score;
         }
     });
 }

@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.venoshock.summary": "Hurl a glob of corrosive venom on a low arc. Against a poisoned or badly poisoned target the damage is doubled and that poison is escalated to badly poisoned with a longer clock; a miss just leaves a splash of venom.",
-  "worldcombat.skill.venoshock.description.0": "A glob of venom arcs toward the target and ends at the first target or block it touches; a target takes about %1$s special damage, doubled against a poisoned (or badly poisoned) target, while a miss only leaves venom on the ground.",
+  "worldcombat.skill.venoshock.summary": "Hurl a glob of corrosive venom on a low arc. Against a poisoned or badly poisoned target the damage is doubled and that poison is escalated to badly poisoned with a longer clock; a miss just splashes harmless slime.",
+  "worldcombat.skill.venoshock.description.0": "A glob of venom arcs toward the aim point and ends at the first target or block it touches; a target takes about %1$s special damage, doubled against a poisoned (or badly poisoned) target, while a miss only splashes plain slime.",
   "worldcombat.skill.venoshock.description.1": "Against a poisoned (or badly poisoned) target the poison is escalated to badly poisoned for at least %1$s; if the existing poison has more time left, it is extended by about 1 more second instead.",
   "worldcombat.skill.venoshock.description.2": "The venom flies at %1$s blocks per tick with %2$s gravity and a %3$s block collision radius; a hit shoves the target %4$s blocks along the spray.",
   "worldcombat.skill.venoshock.use.0": "Ranged attrition",

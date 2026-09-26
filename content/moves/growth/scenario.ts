@@ -5,7 +5,8 @@ Smoke.scenario("growth", function (stage) {
     stage.weather("clear");
     var caster = stage.pokemon({ species: "Oddish", level: 30, moves: ["growth"], at: [0, 0, 0] });
     var foe = stage.mob({ type: "minecraft:zombie", at: [8, 0, 0] });
-    stage.hostile(caster, foe);
+    stage.noai(foe); stage.setPp(caster, "growth", 1); stage.provoke(caster, foe);
+    const originalScale = stage.attribute(caster, "minecraft:generic.scale");
     stage.until(900, function () {
         return stage.casts("growth", caster) > 0 && stage.hadMobEffect(caster, "world_combat:status/grown");
     }, function () {
@@ -17,6 +18,14 @@ Smoke.scenario("growth", function (stage) {
             health: Math.round(caster.health() * 10) / 10,
             hurtBack: Math.round(stage.damageTo(caster) * 10) / 10
         });
-        stage.done();
+        stage.after(18, function () {
+            stage.expect(stage.attribute(caster, "minecraft:generic.scale") > originalScale, "native entity scale actually grows");
+            stage.command("effect clear " + caster.ref.split("/")[0] + " world_combat:grown");
+            stage.after(5, function () {
+                stage.expect(Math.abs(stage.attribute(caster, "minecraft:generic.scale") - originalScale) < 0.0001,
+                    "clearing the carrier restores only the owned native scale contribution");
+                stage.done();
+            });
+        });
     }, "growth is cast");
 });

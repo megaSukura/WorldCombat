@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.sleeppowder.summary": "抛出催眠粉，落地摊成一片久久不散的尘云：站在云里的敌人被一口口喂进睡意，先变慢、够数便睡下；走出去的人睡意还挂着慢慢走完。它可以封住一条路或把敌人赶进去，草属性则直接穿过粉末。",
+  "worldcombat.skill.sleeppowder.summary": "朝任意方向、世界点或敌人抛出催眠粉，粉团在首次撞到实心块或活体的真实落点炸开，空中飞尽也在前方散粉；落地摊成一片久久不散的尘云：站在云里的敌人被一口口喂进睡意，先变慢、够数便睡下；走出去的人睡意退一口后慢慢走完。它可以封住一条路或把敌人赶进去，草属性则直接穿过粉末。",
   "worldcombat.skill.sleeppowder.use.0": "封住一条通道、门口或退路",
   "worldcombat.skill.sleeppowder.use.1": "把追兵赶进云里慢慢倒",
   "worldcombat.skill.sleeppowder.use.2": "为队友的食梦或恶梦制造睡眠区",
-  "worldcombat.skill.sleeppowder.description.0": "把粉团抛到 %1$s 内的落点（速度 %2$s），落地摊成半径 %3$s 的云；它也是指示圈与实际判定半径。",
-  "worldcombat.skill.sleeppowder.description.1": "云停留 %1$s；站在里面的非友方每 %3$s 吸一口，够 %2$s 口才睡下；走出云外只是不再继续吸入，身上已挂的变慢会自行走完。云以施放者为源，施放者退场或离开太远会随之散去。草属性穿过粉末。",
+  "worldcombat.skill.sleeppowder.description.0": "把粉团朝任意方向、世界点或敌人抛到 %1$s 内的落点（速度 %2$s），首次撞块或撞活体都在真实落点炸开，落地摊成半径 %3$s 的云；它也是指示圈与实际判定半径。",
+  "worldcombat.skill.sleeppowder.description.1": "云停留 %1$s；站在里面的非友方每 %3$s 吸一口，够 %2$s 口才睡下；走出云外睡意退一口，不再继续吸入，身上已挂的变慢会自行走完。云以施放者为源，施放者退场或离开太远会随之散去。草属性穿过粉末。",
   "worldcombat.skill.sleeppowder.description.2": "睡下后最多睡 %1$s：期间无法行动、也无法移动，任何伤害都会立刻把它惊醒；睡意会让目标变慢，每口挂 %2$s，吸得越多走得越慢。",
   "worldcombat.skill.sleeppowder.thick.on": "厚云式：云半径 ×0.8、存在时长 ×1.25、睡眠 ×1.25、吸入次数 −1，代价是冷却 ×1.15。",
   "worldcombat.skill.sleeppowder.thick.off": "散云式：云半径 ×1.2，更容易一次罩住走位中的几个人，冷却 ×0.9，代价是云更短、睡得更浅、吸入次数 +1。",

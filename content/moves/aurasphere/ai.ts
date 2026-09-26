@@ -5,6 +5,7 @@
  * 它射程最长、必中，是常规远程主力。
  * 对谁出手：`ai.pursue`（默认开）打开时，正在移动（追人或逃跑）的目标排前——球会拐弯，正合它的路；
  *   `ai.finish`（默认开）打开时，残血目标排前。目标在射程远端也略微加权，因为球会一路追过去。
+ *   中间隔着实墙（`world.clear` 不通）时降权——球会先撞在墙上断掉，避免反复向实墙投必中球。
  * 够不到怎么办：reach 就是本招实际射程，先走近。
  * 放完之后：伤害交回共享交战计划。
  */
@@ -39,6 +40,10 @@ namespace PokemonSkills {
             }
             if (typeof range === "number" && gap > range * 0.7) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 8);
+            // 球会先撞墙断掉：通视不通的目标降权，避免反复对着实墙投必中球。
+            const world = CompanionBehavior.world(context);
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point)))
+                score = Math.max(2, score - 16);
             return score;
         }
     });

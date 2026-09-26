@@ -1,13 +1,15 @@
 /**
  * 线阱的客户端表现。
  *
- * 一句话：一张奶白色的丝网贴地绷起、围住自己，来击被网黏住卸掉，接触者的脚被丝缠死、速度骤降又被钉在原地；
- * 量尽时丝网松开垂落。
+ * 一句话：一张奶白色的丝网贴地绷起、围住自己；远射被网黏住卸掉；第一记接触撞上来时，网沿真实来向向那名敌人收束，
+ * 残丝绕在它脚上、速度骤降，余网随即松开、自己脱网。
  * 色相家族：奶白／米黄为唯一色相（white／powder／tinydust／smallsparkle），灰烟与淡青环作中性衬托。
- * 拍子：起（raise 0–16t，丝线自地面抽出、向四周绷开）→ 击（block 每次黏挡、punish 每次缠足）→ 收（fall 垂落）。
+ * 拍子：起（raise 0–16t，丝线自地面抽出、向四周绷开）→ 持（hold 丝环贴脚）→ 接远伤（block 弧面黏挡）
+ *      → 接触（cinch 网沿 data.path 向该敌收束）→ 缠足（punish 残丝绕脚）→ 收（fall 垂落、自身脱网）。
  * 范围：hold 的丝网环按 `data.scale`（丝网半径／1.6）铺开——画面就是被判定的那一圈。
- * 运动：起手丝线向外绷开；持网时丝面轻颤；缠足时从接触点向攻击者射出一束丝、随后向下缠住脚。
- * 数：`data.threads`（缠足时间 ×1.5）就是 punish 丝线的根数，`data.intensity`（剩余量／初始量）决定亮度，`data.scale` 放大丝网。
+ * 运动：起手丝线向外绷开；持网时丝面轻颤；接触时网线沿施法者→攻击者的真实连线收拢；缠足时残丝绕向脚踝。
+ * 数：`data.threads`（降速级数派生）就是 punish 残丝的根数，`data.intensity`（剩余量／初始量）决定亮度，
+ *      `data.scale` 放大丝网。远射 block 与接触 cinch 分别播放，不会把远伤画成抓人。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const SilkTrapDefinition: ParticleDefinition = {
@@ -68,6 +70,7 @@ const SilkTrapDefinition: ParticleDefinition = {
             ]
         },
         block: {
+            // 远射的伤害被网卸掉：只在接触侧弧面黏挡，不表示抓人。
             duration: 22,
             exit: { stop: 10, drain: 16 },
             emitters: [
@@ -87,26 +90,41 @@ const SilkTrapDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.07, 0.22], spin: 26,
                     lifetime: [10, 20], size: [0.12, 0.02], sizeMode: "index",
                     color: 0xF0E9D2, alpha: [0.85, 0], light: "world", maxParticles: 70
+                }
+            ]
+        },
+        cinch: {
+            // 第一记接触：奶白网线沿施法者→攻击者的真实线段收束过去，说明这记接触抓住了谁。
+            duration: 24,
+            exit: { stop: 10, drain: 16 },
+            emitters: [
+                {
+                    name: "close_in", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    burst: { count: 18 }, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.09, 0.26], spin: 24,
+                    lifetime: [8, 16], size: [0.2, 0.03], sizeMode: "index",
+                    color: 0xF0E9D2, alpha: [0.95, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "ripple", bind: "target", height: 0.5, fit: "none", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 20 },
-                    shape: { kind: "arc", radius: 0.65, arcDegrees: 150 },
-                    direction: "outward", speed: [0.05, 0.15],
-                    lifetime: [8, 14], size: [0.34, 0.1],
-                    color: 0xFBF6E6, alpha: [0.5, 0], light: "world"
+                    name: "draw", bind: "target", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/powder",
+                    burst: { count: 20 }, shape: { kind: "ring", radius: 0.45 },
+                    direction: "inward", speed: [0.08, 0.22], spin: 22,
+                    lifetime: [8, 16], size: [0.12, 0.02],
+                    color: 0xE2D9BE, alpha: [0.9, 0], light: "world", maxParticles: 60
                 }
             ]
         },
         punish: {
+            // 残丝挂在攻击者脚上：根数就是降速级数派生的 threads，不再有钉地的表现。
             duration: 26,
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
                     name: "threads", bind: "target", height: 0.45, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/powder",
-                    burst: { count: { data: "threads", fallback: 10 } },
+                    burst: { count: { data: "threads", fallback: 8 } },
                     shape: { kind: "cone", radius: 0.3, angleDegrees: 24 },
                     direction: "shape", speed: [0.12, 0.32], spin: 24,
                     lifetime: [10, 20], size: [0.16, 0.02], sizeMode: "index",

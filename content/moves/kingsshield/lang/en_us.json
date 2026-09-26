@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.kingsshield.summary": "Take a regal steel stance and block enemy damaging moves with a total pool, sharpening the Attack of contact attackers; status moves still land, and the shield falls when the pool is spent or its time runs out.",
-  "worldcombat.skill.kingsshield.description.0": "The shield lasts %1$s and holds %2$s points: it blocks enemy damaging moves aimed at you, letting any excess beyond the remaining pool through, while status moves are not stopped. A contact attacker that meets the shield has its Attack lowered by %3$s levels, once per attacker per shield. Higher Defence and Speed keep the stance up longer; higher Special Defence and current health make it thicker.",
+  "worldcombat.skill.kingsshield.summary": "Stand and hold a fixed-facing royal shield against frontal attacks; rear attacks still land. Each attacker that truly contacts this shield loses Attack at most once this use.",
+  "worldcombat.skill.kingsshield.description.0": "For %1$s the shield catches up to %2$s damage from its 120-degree front; overflow passes through. True contact lowers that attacker's Attack by %3$s stages once per shield. Status moves still work.",
   "worldcombat.skill.kingsshield.description.1": "Raise %1$s, cooldown %2$s.",
   "worldcombat.skill.kingsshield.description.2": "Repeat-use failure rate %1$s: raising the shield again soon after makes failure more likely, and the count resets after a pause. With Majesty on, the contact Attack drop is +1 level, but pool x0.8, duration x0.85 and recovery 7 ticks; with it off (Bulwark), pool x1.25, duration x1.15, recovery 5 ticks, and no extra drop.",
   "worldcombat.skill.kingsshield.use.0": "Block melee damage and soften the attacker",

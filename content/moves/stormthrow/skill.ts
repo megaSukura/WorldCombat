@@ -1,57 +1,13 @@
-/**
- * 山岚摔 / stormthrow —— 注册、逐退门禁与动作。
- *
- * 核心念头：贴身的摔投。抓住对手、借它的冲势把它整个人掀翻砸在地上；正面站桩打不出这种角度，
- *   摔到无法卸力的姿态才每一下都砸在薄弱处（必定击中要害）。
- *
- * 两幕：
- *   起（windup，提交前）：沉身、双手拢起，只播预告。
- *   摔（grab → slam，提交后）：先贴身半步；抓中后隔 3 刻把对手按 `slam` 结算一次**必定要害**的物理伤害、
- *       沿下砸方向掀翻（`crush`），打上共享身份 stagger（本单元效果，行为见下方门禁：无法开始新动作、
- *       移动被效果自带修饰压低），落点砸出翻起的碎土（租借，linger，到期原方块回来）。目标在抓取前退出
- *       抓取距离就抓空。
- *
- * 与巴投分开：巴投把对手从头顶摔到背后并逐出交战圈；山岚摔把对手就地掀翻、压住一个身位。
- */
+/** Grab the first actual close contact and turn it along the caster's side when native movement accepts. */
 namespace PokemonSkills {
-    /** 在落点砸出一小片翻起的碎土（租借，linger，到期原方块回来）；返回实际砸出的格数。 */
-    function stormthrowScar(world: CombatWorld, point: CombatPoint, cells: number, ticks: number): number {
-        const list: any[] = [];
-        const limit = Math.max(4, Math.round(cells));
-        const baseY = Math.floor(point.y()), centreX = Math.floor(point.x()), centreZ = Math.floor(point.z());
-        for (let dx = -2; dx <= 2 && list.length < limit; dx++) {
-            for (let dz = -2; dz <= 2 && list.length < limit; dz++) {
-                if (dx * dx + dz * dz > 5) continue;
-                const x = centreX + dx, z = centreZ + dz;
-                for (let dy = 1; dy >= -3; dy--) {
-                    const y = baseY + dy;
-                    const block = world.block(WorldCombat.point(x, y, z));
-                    if (block === null) break;
-                    const id = String(block.id());
-                    if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                    const above = world.block(WorldCombat.point(x, y + 1, z));
-                    const over = above === null ? "" : String(above.id());
-                    if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
-                        list.push({ x: x, y: y, z: z, block: "minecraft:coarse_dirt" });
-                    break;
-                }
-            }
-        }
-        if (!list.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: list, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return list.length;
-    }
-
     define({
         freeMovement: true,
         id: stormthrowId,
         cooldownParameter: "recharge",
         name: "Storm Throw",
-        description: "贴身抓住一个对手，借势把它掀翻砸在地上，造成必定击中要害的格斗属性接触伤害，并短暂把它压住（无法开始新动作、移动变慢）；落点砸出翻起的碎土。锁摔压得更久，急摔打得更重。",
-        uses: ["点掉贴身的单个目标", "摔翻扑上来的近身威胁并短暂压制", "在窄口砸出一片翻起的碎土"],
-        kind: "enemy",
+        description: "抓住身前实际首敌，沿自己侧后方分两步投摔，结算一次必暴主伤。拒绝移动或空间不足时原地抓击，成功摔动才短暂压制。",
+        uses: ["点掉贴身的单个目标", "摔翻扑上来的近身威胁并短暂压制", "把贴身敌人转到侧后方留出正面空间"],
+        kind: "aim",
         range: 2.6,
         maxRange: 3.8,
         prepare: 10,
@@ -86,76 +42,44 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const origin = action.origin();
-            const target = action.target();
-            const self = world.observe(actor);
-            if (target === null || self === null || !world.valid(target)) {
-                WorldFeedback.emit(world, stormthrowScene, 1, origin, { moment: "miss", scale: 1 }, 18);
-                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), stormthrowMissText, [], 22);
-                done(action);
-                return;
+            const self = world.observe(actor), reach = Math.max(1.6, p(stormthrowId, "reach", action));
+            if (!self) { done(action); return; }
+            const probe = action.trace(origin, origin.plus(aim(action).scale(reach)), .4);
+            const grabbed = probe.hitEntity() ? probe.target() : null;
+            if (!grabbed || !world.valid(grabbed) || world.friendly(grabbed)) {
+                WorldFeedback.emit(world, stormthrowScene, 1, probe.position(), { moment: "miss", scale: 1 }, 16); done(action); return;
             }
-
-            const grabbed: CombatActor = target;
-            const victim = world.observe(grabbed);
-            if (victim === null) { done(action); return; }
-            const power = p(stormthrowId, "slam", action);
-            const grip = Math.max(1.6, p(stormthrowId, "reach", action));
-            const crush = Math.max(0.2, p(stormthrowId, "crush", action));
-            const staggerTicks = Math.max(12, Math.round(p(stormthrowId, "staggerTicks", action)));
-            const scar = Math.max(4, Math.round(p(stormthrowId, "scar", action)));
-            const scarTicks = Math.max(40, Math.round(p(stormthrowId, "scarTicks", action)));
-            const dust = Math.max(10, Math.round(p(stormthrowId, "dust", action)));
-            const scale = (self.width() + self.height()) / 2.3;
-            const intensity = Math.max(0.6, Math.min(2.2, power / 56));
-            const from = victim.position();
-            const delta = from.minus(origin);
-            const flat = WorldCombat.point(delta.x(), 0, delta.z());
-            const heading = flat.length() < 0.05 ? action.direction() : flat.unit();
-            const gap = flat.length();
-
-            // 抓取前先贴身半步；对手在抓取距离之外就抓空。
-            if (gap > grip) {
-                const step = Math.min(1.3, gap - grip * 0.7);
-                if (step > 0.05) world.displace(actor, heading.scale(step));
+            const victim = world.observe(grabbed); if (!victim) { done(action); return; }
+            const power = p(stormthrowId, "slam", action), crush = Math.max(.2, p(stormthrowId, "crush", action));
+            const staggerTicks = Math.max(12, Math.round(p(stormthrowId, "staggerTicks", action))), dust = Math.max(10, Math.round(p(stormthrowId, "dust", action)));
+            const heading = WorldGeometry.flatUnit(aim(action)), side = WorldCombat.point(-heading.z(), 0, heading.x());
+            const offset = Math.max(.7, (self.width() + victim.width()) / 2 + .15), travel = Math.min(1.5, crush);
+            const waypoints = [origin.plus(side.scale(offset)).plus(heading.scale(.25)), origin.plus(side.scale(offset)).minus(heading.scale(travel))];
+            const strands = Math.round(p(stormthrowId, "scar", action)), linger = Math.round(p(stormthrowId, "scarTicks", action));
+            let moved = 0, index = 0;
+            const path = [[victim.position().x(), victim.position().y(), victim.position().z()]];
+            WorldFeedback.emit(world, stormthrowScene, 1, victim.position(), { moment: "grab", target: String(grabbed.ref()), path: [String(actor.ref()), String(grabbed.ref())], dust, scale: 1 }, 12);
+            function settle(current: CombatAction): void {
+                const scope = current.world(), body = scope.valid(grabbed!) ? scope.observe(grabbed!) : null;
+                if (!body) { done(current); return; }
+                const landed = hurt(current, grabbed!, stormthrowId, power, { damage: damageSpec(stormthrowId, "slam"), critical: true, contact: true });
+                if (landed && moved > .1 && scope.valid(grabbed!)) CombatStatus.apply(scope, grabbed!, "stagger", stormthrowStaggerEffect, staggerTicks, 0, { unique: true });
+                WorldFeedback.emit(scope, stormthrowScene, 1, body.position(), { moment: moved > .1 ? "slam" : "press", target: String(grabbed!.ref()), path, dust, strands, linger, cells: 0, scale: 1, intensity: Math.min(2, power / 56) }, linger);
+                scope.sound("cobblemon:impact.fighting", body.position(), 14, "{}"); done(current);
             }
-            const after = world.observe(grabbed);
-            if (after === null || after.position().minus(world.observe(actor)!.position()).length() > grip + 1.0) {
-                WorldFeedback.emit(world, stormthrowScene, 1, from, { moment: "miss", scale: scale }, 18);
-                WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), stormthrowMissText, [], 22);
-                done(action);
-                return;
+            function turn(current: CombatAction): void {
+                const scope = current.world(), body = scope.valid(grabbed!) ? scope.observe(grabbed!) : null;
+                if (!body || body.position().minus(current.origin()).length() > reach + 1 || !scope.clear(current.origin(), body.position())) { done(current); return; }
+                if (index >= waypoints.length) { settle(current); return; }
+                const aimAt = waypoints[index++], delta = aimAt.minus(body.position()), horizontal = WorldCombat.point(delta.x(), 0, delta.z());
+                const step = horizontal.length() > 1.5 ? horizontal.unit().scale(1.5) : horizontal;
+                const accepted = scope.hitDisplace(grabbed!, step);
+                if (accepted <= .01) { settle(current); return; }
+                moved += accepted;
+                const after = scope.observe(grabbed!); if (after) path.push([after.position().x(), after.position().y(), after.position().z()]);
+                current.after(2, turn);
             }
-
-            action.face(from, 20, 20);
-            sound(action, "minecraft:entity.ravager.step");
-            WorldFeedback.emit(world, stormthrowScene, 1, from,
-                { moment: "grab", target: String(grabbed.ref()), dust: dust, scale: scale, intensity: intensity }, 20);
-
-            let settled = false;
-            action.after(3, function (current) {
-                const scope = current.world();
-                const now = scope.observe(grabbed);
-                if (now === null) { if (!settled) { settled = true; done(current); } return; }
-                const landed = hurt(current, grabbed, stormthrowId, power,
-                    { damage: damageSpec(stormthrowId, "slam"), critical: true, contact: true });
-                const at = now.position();
-                const away = at.minus(origin);
-                const push = WorldCombat.point(away.x(), 0, away.z());
-                const shove = push.length() < 0.05 ? heading : push.unit();
-                if (scope.valid(grabbed)) scope.displace(grabbed, shove.scale(crush * 0.5).plus(WorldCombat.point(0, -crush * 0.4, 0)));
-                if (landed) {
-                    CombatStatus.apply(scope, grabbed, "stagger", stormthrowStaggerEffect, staggerTicks, 0, { unique: true });
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), stormthrowStaggerText, [Math.round(staggerTicks / 2) / 10], 24);
-                }
-                const ground = scope.observe(grabbed);
-                const scarAt = ground === null ? at : ground.position();
-                const cells = stormthrowScar(scope, scarAt, scar, scarTicks);
-                WorldFeedback.emit(scope, stormthrowScene, 1, scarAt,
-                    { moment: "slam", target: String(grabbed.ref()), dust: dust, cells: cells, scale: scale, intensity: intensity }, 26);
-                scope.sound("minecraft:item.mace.smash_ground_heavy", scarAt, 16, "{}");
-                if (landed) scope.sound("cobblemon:impact.fighting", scarAt, 14, "{}");
-                if (!settled) { settled = true; done(current); }
-            });
+            action.after(2, turn);
         }
     });
 

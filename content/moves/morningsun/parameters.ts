@@ -3,8 +3,9 @@
  *
  * 核心念头：把初升的日光一次拽到身上——它读的是「白天且天晴」这件事，白天晴空一次补回三分之二并精神一振，
  *   夜里或阴雨只补一点点，也没有那份劲头。
- * 数值来源：原生「回复最大 HP 的 1/2，晴天 2/3、恶劣天气 1/4」；这里落成二值的 dawn（白天 × 可见天空 × 无雨）
- *   与特攻成长：晴天白天 0.24 + 0.42 ≈ 2/3，夜里／阴雨回落到 0.24。回复后给自己一段速度提升。
+ * 数值来源：原生「回复最大 HP 的 1/2，晴天 2/3、恶劣天气 1/4」；这里落成二值的 dawn（白天 × 可见天空 × 无雨，
+ *   或共享语义「烈日」）与特攻成长：晴天白天 0.24 + 0.42 ≈ 2/3，夜里／阴雨回落到 0.24。回复后给自己一段速度提升。
+ * 共用事实：执行、AI 与对手判断都调用同一个 `morningsunDawnAt`，人工的共享「烈日」天气与原生白天晴空一视同仁。
  * 与原生：放弃回合制天气枚举，改读世界此刻是不是「晨光可及」；白天与夜晚因此是两套完全不同的结果。
  */
 namespace PokemonSkills {
@@ -15,15 +16,21 @@ namespace PokemonSkills {
         var body = context.world.observe(context.actor);
         return body ? body.position() : null;
     }
-    /** 晨光可及：共享语义烈日直接算晨光；别的语义天气挡住；无现场时回到白天晴空的原生判定。0 或 1。 */
+    /**
+     * 晨光可及：共享语义「烈日」直接算晨光；别的语义天气挡住；无现场时回到白天晴空的原生判定。
+     * 执行、AI 与说明共用这一份真事实，所以人工天气与原生天光给出相同结论。
+     */
+    export function morningsunDawnAt(world: CombatWorld, point: CombatPoint): boolean {
+        if (!world || !point) return false;
+        var kind = WorldEnvironment.weather(world, point);
+        if (kind === "sun") return true;
+        if (kind !== null) return false;
+        var env = WorldEnvironment.read(world, point);
+        return !!(env && env.loaded && env.day && env.skyVisible && (env.rain || 0) < 0.05 && (env.thunder || 0) < 0.05);
+    }
     function morningsunDawn(context: FactContext): number {
         var point = morningsunPoint(context);
-        if (!point || !context.world) return 0;
-        var kind = WorldEnvironment.weather(context.world, point);
-        if (kind === "sun") return 1;
-        if (kind !== null) return 0;
-        var env = WorldEnvironment.read(context.world, point);
-        return env && env.loaded && env.day && env.skyVisible && (env.rain || 0) < 0.05 && (env.thunder || 0) < 0.05 ? 1 : 0;
+        return point && context.world && morningsunDawnAt(context.world, point) ? 1 : 0;
     }
     defineFacts(morningsunId, function (context: FactContext): Formula.Facts {
         return {
@@ -45,9 +52,9 @@ namespace PokemonSkills {
             .plus(F.var("dawn", { key: "worldcombat.skill." + morningsunId + ".value.dawn" }).times(0.42))
             .plus(F.stat("specialAttack").minus(60).max(0).times(0.0007).as("日照亲和"))
             .clamp(0.20, 0.70).round(3),
-            "回复比例", "按缺失生命比例回复：白天晴空接近 2/3，夜里或阴雨只回下限；特攻越高晨光越暖。"),
+            "回复比例", "按缺失生命比例回复：白天晴空（或共享烈日）接近 2/3，夜里或阴雨只回下限；特攻越高晨光越暖。"),
         sunriseTicks: seconds(F.base(14).minus(F.stat("speed").minus(40).max(0).times(0.06)).clamp(8, 16).as("速度修正"),
-            "迎候时长", "抬头接住晨光的时间；速度越快越短。"),
+            "迎候时长", "抬头接住晨光的时间；速度越快越短。准备期间仍可正常移动。"),
         vigorTicks: seconds(F.base(80).plus(F.stat("speed").minus(40).max(0).times(0.8)).clamp(60, 180).as("速度修正"),
             "晨间振作", "白天晴空下回复后获得的速度提升时长；夜里或阴雨没有这份劲头。")
     });

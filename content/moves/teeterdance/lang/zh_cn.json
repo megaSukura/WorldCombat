@@ -6,7 +6,7 @@
   "worldcombat.skill.teeterdance.description.0": "以自己为中心，把节奏推到半径 %1$s 格；圈内除自己外的每个活体恍惚 %2$s：每 12 刻被带偏一步，出手也容易散。",
   "worldcombat.skill.teeterdance.careful.on": "顾友：不会把圈内的友方带进节奏，代价是半径 ×0.8、时长 ×0.8、起手 +2 刻、冷却 ×1.1。",
   "worldcombat.skill.teeterdance.careful.off": "尽兴：圈内所有人（除自己）一起摇晃，包括盟友；范围更大、更久、更便宜。",
-  "worldcombat.skill.teeterdance.description.1": "每次带偏约 %1$s 格、约 %1$s×0.9 的概率让一次出手作废。",
+  "worldcombat.skill.teeterdance.description.1": "每 12 刻尝试带偏约 %1$s 格（真正移动多少受碰撞与抵抗限制，没移动就不画拖动轨迹）；每次出手约 %1$s×0.9 的概率作废。",
   "worldcombat.skill.teeterdance.description.2": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒。起势可被打断，打断不消耗任何东西。",
   "worldcombat.skill.teeterdance.timing": "这场舞的施放射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、消耗 %4$s PP、冷却 %5$s 秒。",
   "worldcombat.skill.teeterdance.value.danceRadius": "舞圈半径",

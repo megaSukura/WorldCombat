@@ -29,7 +29,7 @@ namespace PokemonSkills {
 
     addPreferences("toxic", {}, [
         field(pathOf("virulent"), "毒力取向", "boolean", {
-            help: "开启：毒素持续更短（×0.72）但加深更快（间隔 ×0.62）、爆发更重（×1.3），更快咬穿目标；关闭：持续更久（×1.08）、加深更慢，把战斗拖成长期消耗。"
+            help: "开启：毒素持续更短（×0.72）但加深更快（间隔 ×0.62），更早达到毒性上限；关闭：持续更久（×1.08）、加深更慢，把战斗拖成长期消耗。"
         }),
         field(pathOf("ai.maxChase"), "施毒距离", "number", {
             min: 3, max: 24, step: 1,

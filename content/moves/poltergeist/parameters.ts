@@ -13,22 +13,29 @@
  * 伤害段名 whip：这一甩随精灵数据变化的那部分。
  */
 namespace PokemonSkills {
-    export interface PoltergeistHeld { id: string; key: string; stack: string | null; count: number; pokemon: CombatPokemon | null; }
-    /** 一名战斗者当前的“持有物”。宝可梦取原生持有物（可被操纵），其他生物取主手装备（只读）。 */
+    /** 一次观察到的持有物快照：id 用于外观，`expected` 是 CAS 比对的完整栈，用于复核目标是否换了／放下了它。 */
+    export interface PoltergeistHeld { id: string; provider: string; slot: string; index: number; expected: string; }
+    /** 一名战斗者当前的“持有物”。宝可梦取携带物、其他生物取主手，走同一原生装备读取路径，带回可复核的快照。 */
     export function poltergeistHeldOf(world: CombatWorld, actor: CombatActor): PoltergeistHeld | null {
-        if (!world.valid(actor)) return null;
-        if (String(actor.domain()) === "cobblemon") {
-            var pokemon = CobblemonCombat.pokemon(actor), id = String(pokemon.heldItem());
-            if (!id) return null;
-            var stack = pokemon.heldStack();
-            return { id: id, key: String(pokemon.heldKey()), stack: stack.serialized(), count: stack.count(), pokemon: pokemon };
-        }
-        var worn = world.equipment(actor);
-        for (var i = 0; i < worn.length; i++) if (String(worn[i].slot()) === "mainhand") {
-            var held = worn[i].stack();
-            return { id: String(worn[i].item()), key: "", stack: held.serialized(), count: held.count(), pokemon: null };
-        }
-        return null;
+        var held = NativeItems.heldOf(world, actor);
+        return held === null ? null : { id: held.id, provider: held.slot.provider, slot: held.slot.slot,
+            index: held.slot.index, expected: held.expected };
+    }
+    /** 两件观察是否仍指同一个槽里的同一份栈；换物、脱手或槽位变化都为假。 */
+    export function poltergeistSameHeld(first: PoltergeistHeld, second: PoltergeistHeld): boolean {
+        return first.id === second.id && first.provider === second.provider && first.slot === second.slot
+            && first.index === second.index && first.expected === second.expected;
+    }
+    /** 本场对局的临时记忆：某目标在蓄力间脱手／换物让本招落空后，AI 不再反复点名该候选。 */
+    var poltergeistStalled: { [key: string]: number } = Object.create(null);
+    export function poltergeistStallSet(world: CombatWorld, actor: CombatActor, target: CombatActor, ticks: number): void {
+        poltergeistStalled[String(actor.ref()) + "|" + String(target.ref())] = world.tick() + Math.max(20, Math.round(ticks));
+    }
+    export function poltergeistStalledAt(world: CombatWorld, actor: CombatActor, target: CombatActor): boolean {
+        var key = String(actor.ref()) + "|" + String(target.ref()), until = poltergeistStalled[key];
+        if (until === undefined) return false;
+        if (world.tick() >= until) { delete poltergeistStalled[key]; return false; }
+        return true;
     }
 
     actionParameters.define("poltergeist", {

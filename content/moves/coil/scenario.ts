@@ -3,9 +3,8 @@
  *
  * 场面：一只只会「盘蜷」的阿柏蛇与一只弱小的小拉达隔开 11 格、石质场地上开战；技能表里只有这一招，
  *   所以 AI 只能先盘一圈。有威胁且在盘蜷距离内、还没贴身时，它会先盘紧再考虑交战。
- * 必然事实：本招被提交过；施术者身上出现过共享身份 world_combat:status/coil 的盘势窗口。
- *   攻/防/命中各抬了几级、盘势撑多久、窗口结束时按记号收回多少写进 note 供读轨迹判断
- *   （私有装配没有读取原生能力等级的读取原语，因此不断言级数）。
+ * 必然事实：本招被提交过；施术者身上出现过共享身份 world_combat:status/coil 的盘势窗口；
+ *   盘定后公共能力阶梯上攻/防/命中三项各自真的被抬高了至少一级（盘定前不提前写入）。
  */
 Smoke.scenario("coil", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -20,8 +19,11 @@ Smoke.scenario("coil", function (stage) {
     }, function () {
         stage.expect(stage.casts("coil", caster) > 0, "coil was committed");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/coil"), "the brace window carried the shared identity");
+        const stages = stage.stages(caster);
+        stage.expect((stages.atk || 0) >= 1 && (stages.def || 0) >= 1 && (stages.accuracy || 0) >= 1,
+            "the three raises landed on the shared ladder only at settle");
         stage.after(80, function () {
-            stage.note("the rise/guard/focus stages, the brace window length and how much the window takes back are design facts read here; the private assembly has no reader for native stat stages", {
+            stage.note("the brace window length and how much the window takes back are design facts read here; the three ladder gains are asserted above", {
                 casts: stage.casts("coil", caster),
                 damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
                 foeCasts: stage.casts("tackle", foe),

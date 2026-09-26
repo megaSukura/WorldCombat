@@ -3,9 +3,12 @@
  *
  * 什么局面下出手：抓狂只有在**自己血少、对手又贴得近**时才打得动——每下威力与下数都随缺失血量涨，
  * 满血时它只是一串软拳头。所以 `available` 要求有可见、敌对、存活且在 `ai.maxChase` 内的目标；
- * `priority` 随自己血量下降抬高，开了 `ai.finishLow` 时对残血目标再加一档。够不到交给共享接近逻辑。
- * 拼命式（`reckless`）每下自损：`available` 在开启它且自己血量低于 `ai.recklessFloor` 时直接放弃，
- * 避免把自己打空——这是玩家能预见、也看得见的取舍。
+ * `priority` 随自己血量下降抬高，被围得越紧（身前实际能扫到的敌人越多）越值，开了 `ai.finishLow`
+ * 时对残血目标再加一档。
+ *
+ * 拼命式（根配置 `reckless`，不是 `ai.reckless`）每下自损：`available` 按本次真实会甩出的下数
+ * 估算整段自损（`swings × recoil`），扣完后仍低于 `ai.recklessFloor` 就放弃，避免低血自杀性误选。
+ * 这是玩家能预见、也看得见的取舍。
  */
 namespace PokemonSkills {
     function flailWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -15,14 +18,32 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 4);
     }
 
+    /** 身前射程内实际能扫到的非友方数量；乱打是解围招，贴得越密越值。 */
+    function flailPress(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        var self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[],
+            range = capability.data.range, count = 0;
+        for (var i = 0; i < nearby.length; i++) {
+            var other = nearby[i];
+            if (other.ref === self.ref || other.friendly || other.health <= 0) continue;
+            if (CompanionBehavior.distance(other.point, self.point) <= range) count++;
+        }
+        return count;
+    }
+
     CompanionBehavior.registerUse("flail", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
-            if (CompanionBehavior.ai<boolean>(capability, "reckless", false)
-                && CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(capability, "recklessFloor", 0.22))
-                return false;
+            var config = capability.data.config;
+            if (config && config.reckless === true) {
+                // 根配置开了拼命式：按当前血量会甩出的下数估整段自损，扣完仍低于血线就放弃。
+                var world = CompanionBehavior.world(context);
+                var ratio = CompanionBehavior.ratio(CompanionBehavior.source(context));
+                var swings = Math.max(2, Math.round(p("flail", "swings", world)));
+                var recoil = p("flail", "recoil", world);
+                if (ratio - swings * recoil < CompanionBehavior.ai<number>(capability, "recklessFloor", 0.22)) return false;
+            }
             if (!target) return true;
             return flailWants(context, capability, target);
         },
@@ -36,6 +57,8 @@ namespace PokemonSkills {
             let score = 16;
             if (ratio < 0.5) score += 12;
             if (ratio < 0.28) score += 12;
+            const pressed = flailPress(context, capability);
+            if (pressed >= 2) score += Math.min(12, (pressed - 1) * 4);
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", true) && threat < 0.35) score += 8;
             return score;
         }
@@ -54,7 +77,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.recklessFloor"), "拼命血线", "number", {
             min: 0.05, max: 0.6, step: 0.05, display: { scale: 100, suffix: "%" },
-            help: "开启拼命式后，自己血量低于这个比例时不再乱打，免得自损把自己打空。越高越保守。"
+            help: "开启拼命式后，按整段自损扣完自己血量仍低于这个比例时就不再乱打，免得自损把自己打空。越高越保守。"
         })
     ]);
 }

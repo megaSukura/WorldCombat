@@ -15,6 +15,7 @@
  *   veneer   装饰时长：基础 180 刻 + 特攻×1.6，厚涂 ×1.6／轻缀 ×0.7；夹 120..700。特攻越高的装饰者留得越久。
  *   trinkets 装饰物数量：基础 8 + 特攻/12；夹 8..20。粒子数量按它发射。
  *   reach    施放距离：基础 5 格 + 碰撞箱高度×0.3；夹 4..7。大个子够得远一点。
+ *   flight   送达速度：基础 0.55 格/刻 + 速度×0.0035 + 体重/2600；夹 0.3..1.1。跑得快的个体送得更急。
  *   tempo    起手：速度每比 60 快 1 减 0.03 刻，厚涂 +3；夹 6..14。
  *   aftercast 收招：基础 7 + 碰撞箱高度×1.5；夹 7..12。
  *   wait     冷却：基础 70 刻 − 等级×0.4，厚涂 +10；夹 50..80。PP 15 的代价。
@@ -49,6 +50,13 @@ namespace PokemonSkills {
                 unit: " 格",
                 description: "能把装饰送出去的距离；碰撞箱越高够得越远。它同时是本招的射程基准。"
             }),
+        /** 送达速度：个体的速度与身板决定缎带飞多快。 */
+        flight: formula(
+            F.base(0.55).plus(F.stat("speed").times(0.0035)).plus(F.body("weight").div(2600)).clamp(0.3, 1.1).round(2),
+            "送达速度", {
+                unit: " 格/刻",
+                description: "奶油缎带飞向队友的速度；速度值越高、身体越重飞得越快，墙和别的身体会把它挡下。"
+            }),
         /** 起手：速度决定搓装饰多快。 */
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(60).times(0.03))
@@ -69,6 +77,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["gift"] },
         { key: "description.1", values: ["veneer"] },
         { key: "description.2", values: ["reach", "tempo", "aftercast", "wait"] },
+        { key: "description.3", values: ["flight"] },
         { key: "timing", values: [] }
     ]);
 }

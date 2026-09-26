@@ -1,17 +1,18 @@
 /**
  * 冰球 / iceball 的出手方式。
  *
- * 核心念头：蜷身抱成一颗冰球，把它抛出去；每撞中一趟就冻上一层新冰，球更大、下一趟更重，飞空就绕回来再撞，
- * 直到撞满 5 趟——最后一下撞碎，落点冻出一小片冰面。它的身份是「一次出手内越滚越大的冰弹」：
- * 施法者定在原地控制它，代价是这几秒里不能动、不能还手；对手的读法是躲开它的飞行距离或绕到墙后。
+ * 核心念头：蜷身抱成一颗冰球，沿当刻自由 aim 把它直直推出去；每真实命中一个敌人就在壳上冻厚一层，
+ * 球更大、下一发更重，最多推 `passes` 发。空发、撞门框或伤害被拒就当场碎冰结束，不追踪、不重试。
+ * 它的身份是「一次出手内越推越大的冰弹」：卖的是逐层加宽的空间取舍——球越粗越重，越容易先撞上窄门口的框。
+ * 施法者定在原地控制它，代价是整段里不能动、不能还手；对手的读法是躲开这一发、或者退到窄缝后面让大球撞框。
  *
  * 两幕：
  *   起（windup，提交前）：蜷身，脚边冰屑向怀里聚成一颗球。
- *   滚（execute，提交后）：把冰球抛向目标（真实飞行、带追踪），命中即结算一段 `ball` 并把趟数抬一级
- *       （下一趟威力 × ramp）；飞空则绕回来再撞，不涨趟数。撞满 `passes` 趟或目标消失就碎开，
- *       在落点用 `world.terrain` 租借 `frostCells` 块冰（走完 `frostTicks` 自己化掉）。
+ *   滚（execute，提交后）：每发读当刻自由 aim 直飞（真实飞行、无追踪），命中真实目标才结算一段 `ball`
+ *       并把趟数抬一级（下一发威力 × ramp、半径按 girth 长粗）；空发即当场碎冰结束。
+ *       撞满 `passes` 趟后收尾，在最后真实碰撞点用 `world.terrain` 租借 `frostCells` 块冰（走完 `frostTicks` 自己化掉）。
  *
- * 与同族分开：滚动是石球本身跨出手一趟趟滚、把人顶开；冰球是一次出手内离手的冰弹，自己回头、最后留下冰面。
+ * 与同族分开：滚动是施法者自己跨出手一趟趟滚、靠自身惯性顶开人；冰球是一次出手内离手的冰弹，靠逐层加宽的空间取舍。
  */
 namespace PokemonSkills {
     /** 在落点附近找地面，租借几块冰（replace，linger）；找不到地面或格子不可用就跳过。 */
@@ -39,13 +40,26 @@ namespace PokemonSkills {
         return laid;
     }
 
+    /** 当刻自由瞄准：按住技能键时读控制点（逐发可转向），否则用释放时锁定的瞄准方向。 */
+    function iceballDirection(action: CombatAction, locked: CombatPoint): CombatPoint {
+        try {
+            const parsed = JSON.parse(action.control());
+            const samples = parsed && parsed.samples;
+            if (samples && samples.length && samples[0].point && samples[0].point.length === 3) {
+                const delta = WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]).minus(action.origin());
+                if (delta.length() >= 0.05) return delta.unit();
+            }
+        } catch (error) { }
+        return locked;
+    }
+
     define({
         id: iceballId,
         cooldownParameter: "recharge",
         name: "Ice Ball",
-        description: "蜷身抱成一颗冰球抛出去：每撞中一趟就冻厚一层，下一趟更重（最多 5 趟）；飞空它会自己绕回来再撞。施法者在整段里定住不动，最后一下碎开，落点冻出一小片冰面。",
-        uses: ["抛出一颗会自己回头的冰球", "每撞中一趟冻厚一层，下一趟更重", "碎开时在落点留下一小片冰面"],
-        kind: "enemy",
+        description: "蜷身抱成一颗冰球，沿当刻自由瞄准直直推出去：每真实命中一个敌人就在壳上冻厚一层、下一发更大更重（最多 5 发）；空发、撞门框或伤害被拒就当场碎冰结束，不追踪也不重试。球越粗越容易先撞上窄门口的框。",
+        uses: ["沿瞄准方向推出一串越冻越大的冰球", "每真实命中一发冻厚一层，下一发更重", "碎开时在最后碰撞点留下一小片冰面"],
+        kind: "aim",
         range: 8,
         maxRange: 13,
         prepare: 7,
@@ -80,87 +94,131 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const body = world.observe(actor);
-            const target = action.target();
-            if (body === null || target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            if (body === null) { done(action); return; }
             const ball = p(iceballId, "ball", action);
             const ramp = p(iceballId, "ramp", action);
             const cap = p(iceballId, "cap", action);
             const speed = p(iceballId, "speed", action);
             const flightRange = p(iceballId, "flight", action);
             const radius = p(iceballId, "radius", action);
+            const girth = p(iceballId, "girth", action);
+            const girthMax = p(iceballId, "girthMax", action);
             const gap = Math.max(2, Math.round(p(iceballId, "gap", action)));
             const passes = Math.max(1, Math.round(p(iceballId, "passes", action)));
             const shards = Math.max(6, Math.round(p(iceballId, "shards", action)));
             const frostCells = Math.max(1, Math.round(p(iceballId, "frostCells", action)));
             const frostTicks = Math.max(20, Math.round(p(iceballId, "frostTicks", action)));
             const up = WorldCombat.point(0, 1.1, 0);
-            let pass = 0, attempts = 0, settled = false;
-            let lastPoint: any = null;
+            const scenes = WorldFeedback.actionScenes(iceballScene);
+            // 释放时锁定的瞄准方向：AI 或无输入时逐发沿它飞，手动按住技能键时逐发改读控制点。
+            const locked = (function (): CombatPoint {
+                try {
+                    const delta = action.targetPosition().minus(body.position());
+                    if (delta.length() >= 0.05) return delta.unit();
+                } catch (error) { }
+                const direction = action.direction();
+                return direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
+            })();
+            let pass = 0, settled = false;
+            let lastPoint: CombatPoint | null = null;
+            let lastRadius = radius;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
+                const scope = current.world();
                 if (lastPoint !== null) {
-                    iceballFrost(current.world(), lastPoint, frostCells, frostTicks);
-                    WorldFeedback.emit(current.world(), iceballScene, 1, lastPoint, { moment: "shatter", cells: frostCells, passes: pass, ticks: frostTicks }, 24);
+                    iceballFrost(scope, lastPoint, frostCells, frostTicks);
+                    // 撞满整串才播整串的碎开；撞框/空发的当场碎已由 breach 播过，这里只补结霜与声响，避免同点双爆。
+                    if (pass >= passes) {
+                        WorldFeedback.emit(scope, iceballScene, 1, lastPoint,
+                            { moment: "shatter", cells: frostCells, passes: pass, radius: Math.round(lastRadius * 100) / 100, ticks: frostTicks }, 24);
+                        const at = lastPoint;
+                        WorldFeedback.text(scope, at.plus(up), iceballCapText, [pass], 26);
+                    }
                     sound(current, "minecraft:block.glass.break");
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
+            /** 一发：聚壳、沿当刻 aim 直飞；只有真实命中才续下一发，空发/撞框/被拒当场碎冰收束。 */
             function launch(current: CombatAction): void {
                 if (settled) return;
+                if (pass >= passes) { finish(current); return; }
                 const scope = current.world();
-                const victim = scope.actor(targetRef);
-                const victimBody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                const selfBody = scope.observe(current.actor());
-                if (victimBody === null || selfBody === null) { finish(current); return; }
-                if (pass >= passes || attempts >= passes * 2) {
-                    WorldFeedback.text(scope, victimBody.position().plus(up), iceballCapText, [pass], 26);
-                    finish(current);
-                    return;
-                }
-                const origin = selfBody.position().plus(WorldCombat.point(0, 0.6, 0));
-                let heading = victimBody.position().plus(WorldCombat.point(0, 0.2, 0)).minus(origin);
-                if (heading.length() < 0.05) heading = current.direction();
-                heading = heading.unit();
-                const scale = Math.max(0.8, Math.min(2.4, (radius + pass * 0.09) / iceballReference));
-                const intensity = Math.max(0.6, Math.min(2.6, Math.min(cap, ball * Math.pow(ramp, pass)) / 12));
+                const self = scope.observe(actor);
+                if (self === null) { finish(current); return; }
+                const origin = self.position().plus(WorldCombat.point(0, 0.4, 0));
+                const direction = iceballDirection(current, locked);
+                if (direction.length() < 0.05) { finish(current); return; }
+                const heading = direction.unit();
+                // 真实半径随命中趟数增长并与画面同步；限制在 girthMax 以内，大球会先撞门框。
+                const thisRadius = Math.min(girthMax, radius * (1 + pass * girth));
+                const scale = Math.max(0.7, Math.min(2.4, thisRadius / iceballReference));
+                const power = Math.min(cap, ball * Math.pow(ramp, pass));
+                const intensity = Math.max(0.6, Math.min(2.6, power / 12));
+                const appearance: any = { item: "minecraft:ice", spin: true, glow: true, scale: scale };
+                const key = "ball:" + (pass + 1);
+                lastRadius = thisRadius;
                 let resolved = false;
-                const appearance: any = { item: "minecraft:ice", spin: true, glow: true, scale: 0.9 + pass * 0.12,
-                    homing: { target: targetRef, turn: 14, delay: 1, range: flightRange + 2 } };
-                attempts++;
+                // 身前逐层包壳再推出：每发在推出前把新一层壳聚在身前。
+                WorldFeedback.emit(scope, iceballScene, 1, origin,
+                    { moment: "shell", pass: pass + 1, passes: passes, radius: Math.round(thisRadius * 100) / 100,
+                        shards: shards, scale: scale, intensity: intensity }, 12);
                 sound(current, "minecraft:entity.snowball.throw");
-                const flight = current.projectile(origin, heading.scale(speed), 0, radius, flightRange, 60,
+                const flight = current.projectile(origin, heading.scale(speed), 0, thisRadius, flightRange, 60,
                     function (inner: CombatAction, hit: CombatImpact) {
                         if (resolved) return;
-                        const victim2 = hit.target();
-                        if (victim2 === null) return;
                         resolved = true;
-                        const power = Math.min(cap, ball * Math.pow(ramp, pass));
-                        lastPoint = hit.position();
-                        // 每一趟用不同的 strike 身份：动作按 strike/目标 去重，同一身份只会结算一次。
-                        impact(inner, hit, iceballId, power, { damage: damageSpec(iceballId, "ball"), contact: true }, "ball" + (pass + 1));
-                        WorldFeedback.emit(inner.world(), iceballScene, 1, hit.position(),
-                            { moment: "hit", target: targetRef, pass: pass + 1, passes: passes, power: Math.round(power * 10) / 10,
-                                shards: shards, scale: scale, intensity: intensity }, 24);
-                        WorldFeedback.text(inner.world(), hit.position().plus(up), iceballHitText, [Math.round(power)], 24);
-                        sound(inner, "cobblemon:impact.ice");
-                        pass++;
-                        inner.after(gap, launch);
+                        scenes.stop(inner, key);
+                        const stage = inner.world();
+                        const victim = hit.target();
+                        const at = hit.position();
+                        if (victim !== null && stage.valid(victim) && !stage.friendly(victim)) {
+                            lastPoint = at;
+                            const landed = impact(inner, hit, iceballId, power, { damage: damageSpec(iceballId, "ball") }, "ball" + (pass + 1));
+                            if (landed) {
+                                WorldFeedback.emit(stage, iceballScene, 1, at,
+                                    { moment: "hit", target: String(victim.ref()), pass: pass + 1, passes: passes, power: Math.round(power * 10) / 10,
+                                        radius: Math.round(thisRadius * 100) / 100, shards: shards, scale: scale, intensity: intensity }, 22);
+                                WorldFeedback.text(stage, at.plus(up), iceballHitText, [Math.round(power)], 22);
+                                sound(inner, "cobblemon:impact.ice");
+                                pass++;
+                                if (pass >= passes) { finish(inner); return; }
+                                inner.after(gap, launch);
+                                return;
+                            }
+                            // 伤害被拒：如实当碎冰，不再当作命中去续发。
+                            WorldFeedback.emit(stage, iceballScene, 1, at,
+                                { moment: "breach", target: String(victim.ref()), pass: pass + 1, passes: passes,
+                                    radius: Math.round(thisRadius * 100) / 100, shards: shards, scale: scale, intensity: intensity, resisted: 1 }, 20);
+                            finish(inner);
+                            return;
+                        }
+                        // 撞门框：球碎在真实方块面；空飞则 complete 处理。
+                        if (hit.blocked()) lastPoint = at;
+                        WorldFeedback.emit(stage, iceballScene, 1, at,
+                            { moment: "breach", pass: pass + 1, passes: passes, radius: Math.round(thisRadius * 100) / 100,
+                                shards: shards, scale: scale, intensity: intensity, blocked: hit.blocked() ? 1 : 0,
+                                face: hit.blockFace(), direction: [heading.x(), heading.y(), heading.z()] }, 20);
+                        finish(inner);
                     },
                     function (inner: CombatAction) {
                         if (resolved) return;
                         resolved = true;
-                        WorldFeedback.emit(inner.world(), iceballScene, 1, selfBody.position(),
-                            { moment: "return", pass: pass + 1, passes: passes, shards: shards, scale: scale }, 20);
-                        inner.after(gap, launch);
+                        scenes.stop(inner, key);
+                        // 空发：飞满射程没碰到东西，当场碎冰结束，不再绕回。
+                        const away = origin.plus(heading.scale(flightRange));
+                        WorldFeedback.emit(inner.world(), iceballScene, 1, away,
+                            { moment: "breach", pass: pass + 1, passes: passes, radius: Math.round(thisRadius * 100) / 100,
+                                shards: shards, scale: scale, intensity: intensity, blocked: 0,
+                                direction: [heading.x(), heading.y(), heading.z()] }, 20);
+                        finish(inner);
                     },
                     JSON.stringify(appearance));
-                WorldFeedback.keep(scope, "world_combat:move_iceball:ball:" + String(action.id()) + ":" + pass, iceballScene, 1, origin,
-                    { moment: "flight", projectile: flight, target: targetRef, pass: pass + 1, passes: passes,
-                        shards: shards, scale: scale, direction: [heading.x(), heading.y(), heading.z()], intensity: intensity }, 60);
+                scenes.show(current, key, origin,
+                    { moment: "flight", projectile: flight, pass: pass + 1, passes: passes, radius: Math.round(thisRadius * 100) / 100,
+                        shards: shards, scale: scale, direction: [heading.x(), heading.y(), heading.z()], intensity: intensity });
             }
 
             WorldFeedback.emit(world, iceballScene, 1, body.position().plus(WorldCombat.point(0, 0.4, 0)),
@@ -168,4 +226,7 @@ namespace PokemonSkills {
             action.after(2, launch);
         }
     });
+
+    // 玩家按住技能键连推一握冰球、每发之间可转向；AI 提交仍带一个目标点，读同一条控制输入。
+    WorldCombat.preview("world_combat:iceball", JSON.stringify({ input: { version: 1, steps: ["point"], sustained: true } }));
 }

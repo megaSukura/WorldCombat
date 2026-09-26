@@ -2,7 +2,7 @@
   "worldcombat.skill.hurricane.summary": "召起一道会走的大风旋，从施法者出发沿瞄准方向席卷而过，把途径上的敌人卷起抛出，并可能让对方晕头转向。雨天更宽更狠，晴天会左右飘移。",
   "worldcombat.skill.hurricane.description.0": "被这道风旋卷中的非友方目标受到约 %1$s 的特殊伤害；风从施法者出发沿瞄准方向前进，约走出 %2$s 格。",
   "worldcombat.skill.hurricane.description.1": "涡径 %1$s 格、每刻前进 %2$s 格；被卷中的目标被从涡心向外抛出 %3$s 格、抬起 %4$s 格，每个敌人只结算一次。",
-  "worldcombat.skill.hurricane.description.2": "被卷中的目标有 %1$s 概率陷入混乱，持续 %2$s 秒：混乱期间它每次尝试发动动作都有约 32% 概率打偏失败；一旦它打中非友方，会按自身攻击反噬自身最大生命的一部分。",
+  "worldcombat.skill.hurricane.description.2": "被卷中的目标有 %1$s 概率陷入混乱，持续 %2$s 秒：混乱期间它每次尝试发动动作都有约 32% 概率打偏失败；一旦它打中非友方，会按自身攻击反噬，但自伤不会超过它这一击真正造成的伤害。",
   "worldcombat.skill.hurricane.weather": "天气改变这道风：雨天更稳更宽更快、更容易卷晕；晴天（白天且见天）风会左右飘移、半径收小、更难卷中。",
   "worldcombat.skill.hurricane.tight.on": "收束式：涡径更小，但风威更高、走得更快、混乱概率更高，冷却更长。",
   "worldcombat.skill.hurricane.tight.off": "广域式：覆盖更宽、把目标抛得更远，但单点更轻、冷却更短。",

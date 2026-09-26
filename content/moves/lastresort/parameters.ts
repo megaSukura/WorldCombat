@@ -6,9 +6,12 @@
  *
  * 翻译：即时战斗里没有回合，本招把「其他招都用过」翻成一本**出手账**：任何战斗者提交一次招式就记进它名下的账里；
  *   当施法者招式表里其他**已实装**的招都至少出过一次，珍藏才解锁。出手时把整副身板压上去打出全组最慢、最重的一记直撞，
- *   并随自己已损失的生命继续加重（真正的「珍藏」留到最后关头才掏）。打出之后账本清空，要再攒一轮才能再掏。
- *   一条设计取舍：只把**已实装**的招计入条件——否则招式表里只要有一招还没实现，这枚珍藏就永远开不了；
- *   孤招个体（没有其他可用招）视为条件满足，免得它无招可使。脱战 encounterIdle 后账本作废。
+ *   并随自己已损失的生命继续加重（真正的「珍藏」留到最后关头才掏）。打出之后账本清空，要再攒一轮才能再掏，
+ *   并随缺少的招名给出可用反馈。一条设计取舍：只把**已实装**的招计入条件——否则招式表里只要有一招还没实现，
+ *   这枚珍藏就永远开不了；孤招个体（没有其他可用招）视为条件满足，免得它无招可使。脱战 encounterIdle 后账本作废。
+ *
+ * 就绪可视化：其他有效招槽各对应一枚就绪珠（最多呈现 3 枚）；每用掉一招、账本多一笔就点亮一枚，
+ *   全部齐了就浮起珍藏光环；提交珍藏时整体熄灭。就绪珠随账本一起在脱战 encounterIdle 后自然失效。
  *
  * 数据分散（每项依赖不同精灵数据）：
  *   trump       珍藏威力 = 118 + 物攻偏移 + 已损失生命 × 44；背水式 ×1.12；夹 80..205。
@@ -34,42 +37,55 @@ namespace PokemonSkills {
     /** 已实装的招式才算「用过」，否则这枚珍藏永远开不了。 */
     function lastresortCreditable(id: string): boolean { return id !== "" && id !== lastresortId && !!skills[id]; }
 
-    /**
-     * 珍藏是否已解锁：招式表里其他已实装的招都出过一次。孤招个体（没有其他可用招）视为满足。
-     * 账本超过 encounterIdle 没有更新就作废，对应「脱战之后要重新攒」。
-     */
-    export function lastresortUnlocked(world: CombatWorld, actor: CombatActor): boolean {
-        if (!world || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return false;
+    /** 当前有效的出手账；超过 encounterIdle 没更新就作废（脱战之后要重新攒）。 */
+    function lastresortRecord(world: CombatWorld, actor: CombatActor): LastresortUsage | undefined {
+        const record = lastresortUsage[String(actor.ref())];
+        return record && world.tick() - record.tick <= NativeSemantics.encounterIdle ? record : undefined;
+    }
+
+    /** 一次就绪读数：其他有效招槽中已提交几枚、共几枚、还差哪些（保持招槽顺序）。 */
+    export interface LastresortLedger { ready: number; total: number; missing: string[]; unlocked: boolean; }
+    export function lastresortLedger(world: CombatWorld, actor: CombatActor): LastresortLedger {
+        const result: LastresortLedger = { ready: 0, total: 0, missing: [], unlocked: false };
+        if (!world || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return result;
         const pokemon = CobblemonCombat.pokemon(actor);
-        if (pokemon === null) return false;
-        let record: LastresortUsage | undefined = lastresortUsage[String(actor.ref())];
-        if (record && world.tick() - record.tick > NativeSemantics.encounterIdle) record = undefined;
+        if (pokemon === null) return result;
+        const record = lastresortRecord(world, actor);
+        result.unlocked = true;
         for (let i = 0; i < pokemon.moveSlots(); i++) {
             const move = pokemon.move(i);
             if (!move) continue;
             const id = String(move.id());
             if (!lastresortCreditable(id)) continue;
-            if (!record || !record.moves[id]) return false;
+            result.total++;
+            if (record && record.moves[id]) result.ready++;
+            else { result.unlocked = false; result.missing.push(id); }
         }
-        return true;
+        return result;
+    }
+
+    /**
+     * 珍藏是否已解锁：招式表里其他已实装的招都出过一次。孤招个体（没有其他可用招）视为满足。
+     */
+    export function lastresortUnlocked(world: CombatWorld, actor: CombatActor): boolean {
+        return lastresortLedger(world, actor).unlocked;
     }
 
     /** 还差几招才解锁（没有其他可用招时为 0）。 */
     export function lastresortRemaining(world: CombatWorld, actor: CombatActor): number {
-        if (!world || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return 0;
+        return lastresortLedger(world, actor).missing.length;
+    }
+
+    /** 这只个体是否带着珍藏：只有它会用到就绪珠与可用反馈。 */
+    export function lastresortKnown(world: CombatWorld, actor: CombatActor): boolean {
+        if (!world || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return false;
         const pokemon = CobblemonCombat.pokemon(actor);
-        if (pokemon === null) return 0;
-        let record: LastresortUsage | undefined = lastresortUsage[String(actor.ref())];
-        if (record && world.tick() - record.tick > NativeSemantics.encounterIdle) record = undefined;
-        let missing = 0;
+        if (pokemon === null) return false;
         for (let i = 0; i < pokemon.moveSlots(); i++) {
             const move = pokemon.move(i);
-            if (!move) continue;
-            const id = String(move.id());
-            if (!lastresortCreditable(id)) continue;
-            if (!record || !record.moves[id]) missing++;
+            if (move && String(move.id()) === lastresortId) return true;
         }
-        return missing;
+        return false;
     }
 
     actionParameters.define(lastresortId, {

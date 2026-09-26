@@ -7,9 +7,11 @@
  * 近白只做声压球核心的强调。
  * 拍子：起（charge 压气吸尘）→ 爆（burst 声压球炸开、hit 逐处轰中并被吹飞）→ 收（ringing 余响 / miss 落空）。
  * 范围：charge / burst / ringing 的地面圈按服务端传的 `data.radius`（真实波及半径）画出，玩家看到的圈就是会被轰到的地。
- * 运动：起手尘点与气旋向内收束，炸开时声压球向外高速翻卷、被轰中的人身上再向同一方向甩出一蓬。
+ * 运动：起手尘点与气旋向内收束，炸开时声压球向外高速翻卷；目标确实被击飞时才在它身上甩出一蓬外散的轨迹，
+ * 原生抗性拒绝位移时只留下命中的冲击、不画飞出。
  * 数：`data.rings`（特攻与等级派生）决定余响环数，`data.marks`（威力派生）决定炸开的高光量，
- * `data.cells`（半径派生）决定气浪尘量，`data.flow`（半径派生）决定环上密度，`data.count`（本次威力×距离派生）决定命中量。
+ * `data.cells`（半径派生）决定气浪尘量，`data.flow`（半径派生）决定环上密度，`data.count`（本次威力×距离派生）决定命中冲击量，
+ * `data.fling`（本次位移实际结果派生）决定被击飞时甩出的轨迹量，拒绝位移时为 0。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const BoomburstDefinition: ParticleDefinition = {
@@ -109,9 +111,10 @@ const BoomburstDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },
                 {
+                    // 只在目标确实被击飞（原生位移成功）时甩出外散轨迹；抗性/事件拒绝时 count 为 0。
                     name: "shove", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/orb",
-                    burst: { count: { data: "count", fallback: 10 }, at: 1 },
+                    burst: { count: { data: "fling", fallback: 0 }, at: 1 },
                     shape: { kind: "sphere_surface", radius: 0.34 },
                     direction: "outward", speed: [0.25, 0.7], spread: 24,
                     lifetime: [10, 18], size: [0.2, 0.04],

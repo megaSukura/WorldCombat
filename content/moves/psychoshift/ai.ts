@@ -18,15 +18,9 @@ namespace CompanionBehavior {
     /** 只读事实：目标能否接收这个异常身份（类型／特性免疫，与共享的状态策略同源的手工核对）。 */
     CompanionBehavior.registerFact("world_combat:psychoshift-immune", function (access: CombatWorld, actor: CombatActor, argument: any): number {
         const name = String(argument || "");
-        if (!name || String(actor.domain()) !== "cobblemon") return 0;
-        const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(access, actor);
-        const inherent: any = { burn: ["fire"], poison: ["poison", "steel"], toxic: ["poison", "steel"], paralysis: ["electric"], frozen: ["ice"], sleep: [] };
-        const types = NativeEffects.types(pokemon, state), list: string[] = inherent[name] || [];
-        for (let i = 0; i < list.length; i++) if (types.indexOf(list[i]) >= 0) return 1;
-        const ability = NativeEffects.ability(pokemon, state);
-        if (NativeAbilities.flag(ability, "statusImmune")) return 1;
-        if (NativeAbilities.has(ability, "statusImmunities", NativeEffects.nativeName(name))) return 1;
-        return 0;
+        if (!name) return 0;
+        const definition = CombatStatus.defaultCarrier(name); if (!definition) return 1;
+        return CombatStatus.allowed(access, actor, name, 1, definition.amplifier, { effect: definition.effect }).allowed ? 0 : 1;
     });
 
     function psychoshiftMajor(context: WorldBehavior.Context, target: CompanionBehavior.Entity): string {
@@ -39,9 +33,9 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context), name = psychoshiftMajor(context, self);
         if (!name) return false;
-        if (CompanionBehavior.status(context, target, name)) return false;
+        if (psychoshiftMajor(context, target)) return false;
         if (CompanionBehavior.ai<boolean>(item, "requireTransferable", true)
-            && CompanionBehavior.fact<number>(context, "world_combat:psychoshift-immune", target, name) === 1) return false;
+            && CompanionBehavior.fact<number>(context, "world_combat:psychoshift-immune", target, name === "poison" && item.data.config && item.data.config.deep === true ? "toxic" : name) === 1) return false;
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 12)) return false;
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }

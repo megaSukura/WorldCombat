@@ -8,7 +8,9 @@
  *   起（windup，提交前）：抬脚、脚边卷起一圈石屑的预告。
  *   击（slam → wave → hit）：提交后重踏落地，地裂从脚下沿地表一圈圈向外推进；
  *       每一圈扫到的、站在地上的敌人各挨一记，速度下降 `snareStages` 级并被向外震开一点。
- *   痕（crack）：推到最后，脚下与四周的地表留下裂痕，停留一会儿后原方块回来。
+ *   痕（crack）：推到最后，波前沿过的地表扬起一道薄裂缝与碎屑，停留一会儿自然散去。
+ *
+ * 地裂是贴地推进的画面与判定，不留长期改动：裂缝由表现层承载，地面方块不会被换掉。
  *
  * 配置 `deep`（深踏式）由 resolve 改时序、由公式改半径与威力：开启＝窄而重，关闭＝广而轻。
  *
@@ -19,48 +21,11 @@ namespace PokemonSkills {
     const bulldozeHitText = "world_combat.move.bulldoze.text.hit";
     const bulldozeMissText = "world_combat.move.bulldoze.text.miss";
 
-    /** 地表的裂开形态：泥土类踏成粗土，石头类踏裂成圆石，沙地踏成砂岩；其余不动。 */
-    function bulldozeCracked(id: string): string {
-        if (id === "minecraft:grass_block" || id === "minecraft:dirt" || id === "minecraft:coarse_dirt" ||
-            id === "minecraft:podzol" || id === "minecraft:rooted_dirt" || id === "minecraft:moss_block") return "minecraft:coarse_dirt";
-        if (id === "minecraft:stone" || id === "minecraft:granite" || id === "minecraft:diorite" ||
-            id === "minecraft:andesite" || id === "minecraft:tuff" || id === "minecraft:deepslate" ||
-            id === "minecraft:gravel") return "minecraft:cobblestone";
-        if (id === "minecraft:sand" || id === "minecraft:red_sand") return "minecraft:sandstone";
-        return "";
-    }
-
-    /** 把落点周围的表层踏裂；只动地表的可换方块，到期原方块回来。 */
-    function bulldozeScar(world: CombatWorld, point: CombatPoint, radius: number, ticks: number, cap: number): number {
-        var cells: any[] = [], baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        var limit = Math.max(6, Math.round(cap)), r = Math.ceil(radius), inner = Math.max(0.5, radius * 0.16);
-        for (var dx = -r; dx <= r && cells.length < limit; dx++) for (var dz = -r; dz <= r && cells.length < limit; dz++) {
-            var distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius || distance < inner) continue;
-            var x = baseX + dx, z = baseZ + dz;
-            for (var dy = 1; dy >= -2; dy--) {
-                var y = baseY + dy;
-                var block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                var id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                var surface = bulldozeCracked(id);
-                if (surface !== "" && surface !== id) cells.push({ x: x, y: y, z: z, block: surface });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
-    }
-
     define({
         requiresGround: true,
         id: "bulldoze",
         name: "Bulldoze",
-        description: "把重量砸进地面，一圈地裂贴着地表向外推：只命中站在地上的敌人，被扫到的速度下降并被向外震开；推到最后在地表留下裂痕。深踏式窄而重、多降一级速度，广踏式更广更快。",
+        description: "把重量砸进地面，一圈地裂贴着地表向外推：只命中站在地上的敌人，被扫到的速度下降并被向外震开；推过之后波前留下短裂缝。深踏式窄而重、多降一级速度，广踏式更广更快。",
         uses: ["一次性震到贴身的几个敌人", "削掉冲上来的人的速度", "跳过空中的目标，专打站桩的对手", "在被围住时把一圈人推开"],
         kind: "self",
         range: 3.4,
@@ -93,6 +58,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scene = WorldFeedback.actionScenes(bulldozeScene, 1);
             const world = action.world();
             const body = world.observe(action.actor());
             const centre = body !== null ? body.position() : action.origin();
@@ -101,7 +67,7 @@ namespace PokemonSkills {
             const stages = Math.max(1, Math.round(p("bulldoze", "snareStages", action)));
             const push = p("bulldoze", "push", action);
             const steps = Math.max(2, Math.round(p("bulldoze", "waveTicks", action)));
-            const crackTicks = Math.max(40, Math.round(p("bulldoze", "crackTicks", action)));
+            const crackTicks = Math.max(20, Math.round(p("bulldoze", "crackTicks", action)));
             const scars = Math.max(6, Math.round(p("bulldoze", "scars", action)));
             const cap = Math.max(1, Math.round(p("bulldoze", "maxTargets", action)));
             const scale = radius / 3.2;
@@ -111,6 +77,7 @@ namespace PokemonSkills {
 
             /** 被地裂扫实的人：等这一发伤害结算完的下一刻再压速度（与伤害同一刻会互相顶掉）。 */
             function settle(current: CombatAction): void {
+                scene.stop(current, "wave");
                 if (!shaken.length) { finish(current); return; }
                 current.after(1, function (next: CombatAction) {
                     const scope = next.world();
@@ -126,11 +93,13 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const placed = bulldozeScar(scope, centre, radius, crackTicks, scars);
-                WorldFeedback.emit(scope, bulldozeScene, 1, centre, { moment: "crack", radius: radius, cells: placed, flow: Math.round(20 + placed * 1.5) }, 30);
+                WorldFeedback.emit(scope, bulldozeScene, 1, centre,
+                    { moment: "crack", radius: radius, scale: scale, marks: scars, flow: Math.round(18 + scars * 1.4) }, crackTicks);
+                if (strikes === 0)
+                    WorldFeedback.emit(scope, bulldozeScene, 1, centre, { moment: "miss", radius: radius, scale: scale }, 20);
                 WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.1, 0)),
                     strikes > 0 ? bulldozeHitText : bulldozeMissText, strikes > 0 ? [strikes] : [], 26);
-                done(current);
+                scene.finish(current, done);
             }
 
             sound(action, "cobblemon:move.bulldoze.actor");
@@ -151,12 +120,12 @@ namespace PokemonSkills {
                     shaken.push(ref);
                     const away = facts.position().minus(centre);
                     if (scope.valid(enemy) && away.length() > 0.2)
-                        scope.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                        scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                     WorldFeedback.emit(scope, bulldozeScene, 1, facts.position(),
                         { moment: "hit", target: ref, scale: scale, intensity: Math.max(0.5, Math.min(2, power / 55)), count: Math.round(10 + power * 0.25) }, 22);
                 });
-                WorldFeedback.keep(scope, "bulldoze:wave:" + String(current.actor().ref()), bulldozeScene, 1, centre,
-                    { moment: "wave", radius: outer, flow: Math.round(40 + outer * 30), progress: (step + 1) / steps }, 10);
+                scene.show(current, "wave", centre,
+                    { moment: "wave", radius: outer, inner: inner, flow: Math.round(40 + outer * 30), progress: (step + 1) / steps });
                 step++;
                 if (step >= steps) { settle(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });

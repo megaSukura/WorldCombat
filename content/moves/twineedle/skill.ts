@@ -6,12 +6,14 @@
  *
  * 幕：
  *   起（windup，提交前）：端起两根针、针尖挂毒的预告（`action.present`，可被打断、不花 PP）。
- *   一（first）：提交后射出第一根针，拖一条虫绿+毒的细尾。
- *   二（second）：第一根收针 `gap` 之后射出第二根；交叉式下两根从身体两侧夹击，直刺式下同一线连出。
- *   中（sting / done）：每针各自结算 `dart` 物理伤害并各自掷一次毒；第一针命中后，第二针的中毒概率加上 `woundBonus`。
+ *   一（first）：提交后从真实发射口射出第一根针，拖一条虫绿+毒的细尾。
+ *   二（second）：第一针**出手后**隔 `gap` 刻就射出第二根，不等第一根飞到；交叉式下两根从身体左右两侧
+ *       的真实发射口出发、朝释放时选定的点汇合，直刺式下同一线前后错开一点连出。
+ *   中（sting / done）：每针各自结算 `dart` 物理伤害并各自掷一次毒；只有第二针命中**第一针实际打中的同一目标**，
+ *       才加上 `woundBonus`。
  *
  * 与同族分开：毒针是一发一发的便宜细针、毒击是站定出臂的近身重刺、臂贝武器是重炮；只有双针是**一记两根、
- *   第二根吃第一根的伤口**，反制方式是在两针之间走位。
+ *   第二根吃第一根的伤口**，反制方式是在两针之间走位，或用墙/前排分别挡下两针。
  */
 namespace PokemonSkills {
     const twineedleScene = "world_combat:move_twineedle";
@@ -27,9 +29,9 @@ namespace PokemonSkills {
         id: "twineedle",
         cooldownParameter: "recharge",
         name: "Twineedle",
-        description: "端起两根针先后刺出：第一针先扎开伤口，第二针冲着这道伤口去，所以第二针更容易带毒。交叉式让两根针从身体两侧夹击，加成更大，但每针更轻、间隔更长。",
+        description: "端起两根针先后刺出：第一针先扎开伤口，第二针冲着这道伤口去，所以第二针更容易带毒。两针按固定间隔先后出手、不等前一根飞到；交叉式让两根针从身体两侧的真实发射口夹向同一点，加成更大，但每针更轻、间隔更长。",
         uses: ["一记两下的稳定连刺", "用第二针把毒补上", "对单体连续压出血线"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 12,
         prepare: 6,
@@ -64,6 +66,7 @@ namespace PokemonSkills {
             const world = action.world();
             const target = action.target();
             const direction = aim(action);
+            const aimPoint = action.targetPosition();
             const side = twineedleSide(direction);
             const power = p("twineedle", "dart", action);
             const chance = p("twineedle", "poisonChance", action);
@@ -78,49 +81,69 @@ namespace PokemonSkills {
             const scale = Math.max(0.5, Math.min(1.8, radius / 0.16));
             const intensity = Math.max(0.5, Math.min(2, power / 25));
             const ref = target !== null && world.valid(target) ? String(target.ref()) : "";
-            let landedFirst = false, settled = false;
-
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            const scenes = WorldFeedback.actionScenes(twineedleScene);
+            // 两针按出手时间计数：第二针一被排上，收尾就要等满两针。
+            let firstLandedRef = "", expected = 1, resolved = 0, finished = false;
 
             function launch(current: CombatAction, index: number): void {
                 const scope = current.world();
-                const actor = current.actor();
-                const body = scope.observe(actor);
+                const body = scope.observe(current.actor());
                 const base = body === null ? current.origin() : body.position();
                 const offset = cross ? side.scale(index === 0 ? flank : -flank) : WorldCombat.point(0, index * 0.12, 0);
-                const from = base.plus(offset);
+                let from = base.plus(offset);
+                // 发射口到偏移点先检查墙：偏移口落在墙另一侧时退回身体，绝不把针生在墙后。
+                if (!scope.clear(base, from)) from = base;
+                // 交叉式朝释放时选定的点汇合；直刺式沿主方向。
+                let heading = direction;
+                if (cross) {
+                    const delta = aimPoint.minus(from);
+                    if (delta.length() > 0.01) heading = delta.unit();
+                }
                 const appearance: any = { sprite: "cobblemon:particle/generic/spike", tint: 0xB6D84A, glow: true, scale: Math.max(0.8, radius / 0.16) };
                 if (ref) appearance.homing = { target: ref, turn: 18, range: current.range() };
-                sound(current, index === 0 ? "minecraft:entity.arrow.shoot" : "minecraft:entity.arrow.shoot");
-                WorldFeedback.emit(scope, twineedleScene, 1, from,
-                    { moment: index === 0 ? "first" : "second", needles: 2, index: index + 1, motes: motes,
-                        direction: [direction.x(), direction.y(), direction.z()], flank: flank, scale: scale, intensity: intensity }, 20);
-                const flight = LivingActions.projectile(current, {
-                    speed: speed, range: current.range(), radius: radius, direction: direction, appearance: appearance,
-                    impact: function (inner: CombatAction, hit: CombatImpact, age: number) {
+                sound(current, "minecraft:entity.arrow.shoot");
+                const key = "needle:" + index;
+                let projectile = "";
+                projectile = current.projectile(from, heading.scale(speed), 0, radius, current.range(), 200,
+                    function (inner: CombatAction, hit: CombatImpact) {
                         const innerWorld = inner.world();
                         const victim = hit.target();
                         const point = hit.position();
+                        scenes.stop(inner, key);
                         WorldFeedback.emit(innerWorld, twineedleScene, 1, point,
                             { moment: "sting", target: victim === null ? "" : String(victim.ref()), needles: 2, index: index + 1,
-                                motes: motes, projectile: flight, scale: scale, intensity: intensity }, 20);
+                                motes: motes, projectile: projectile, scale: scale, intensity: intensity }, 20);
                         if (victim === null || !innerWorld.valid(victim)) return;
                         const dealt = impact(inner, hit, "twineedle", power, { damage: damageSpec("twineedle", "dart") });
                         if (!dealt) return;
-                        if (index === 0) landedFirst = true;
-                        const bonus = index === 1 && landedFirst ? woundBonus : 0;
+                        if (index === 0) firstLandedRef = String(victim.ref());
+                        // 只有第二针命中第一针实际打中的同一目标，才吃到伤口加成；打不同敌人没有奖励。
+                        const bonus = index === 1 && firstLandedRef !== "" && String(victim.ref()) === firstLandedRef ? woundBonus : 0;
                         if (innerWorld.valid(victim) && innerWorld.random() < Math.min(0.95, chance + bonus)) {
                             CombatStatus.inflict(innerWorld, victim, "poison", venomTicks, 0, { secondary: true });
                             const at = innerWorld.observe(victim);
                             if (at !== null) WorldFeedback.text(innerWorld, at.position().plus(WorldCombat.point(0, 1.0, 0)), twineedleVenomText, [], 20);
                         }
-                    }
-                }, function (inner: CombatAction) {
-                    if (index === 0) { inner.after(gap, function (next: CombatAction) { launch(next, 1); }); return; }
-                    WorldFeedback.emit(inner.world(), twineedleScene, 1, inner.targetPosition(),
-                        { moment: "done", needles: 2, motes: motes, scale: scale }, 16);
-                    finish(inner);
-                });
+                    },
+                    function (inner: CombatAction) {
+                        scenes.stop(inner, key);
+                        resolved++;
+                        if (resolved >= expected && !finished) {
+                            finished = true;
+                            WorldFeedback.emit(inner.world(), twineedleScene, 1, inner.targetPosition(),
+                                { moment: "done", needles: 2, motes: motes, scale: scale }, 16);
+                            scenes.finish(inner, done);
+                        }
+                    },
+                    JSON.stringify(appearance));
+                scenes.show(action, key, from,
+                    { moment: index === 0 ? "first" : "second", projectile: projectile, needles: 2, index: index + 1, motes: motes,
+                        direction: [heading.x(), heading.y(), heading.z()], flank: flank, scale: scale, intensity: intensity });
+                if (index === 0) {
+                    // 按出手时间排第二针，不等第一针飞完。
+                    expected = 2;
+                    current.after(gap, function (next: CombatAction) { launch(next, 1); });
+                }
             }
 
             launch(action, 0);

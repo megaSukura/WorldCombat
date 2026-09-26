@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.wingattack.summary": "大大展开双翼，用一整片翅膀横扫身前的扇面：扇面内最近的非友方各挨一记接触伤害，并被沿身体两侧推开。宽扫式更宽、扫更多人、推得更开但单体更轻；收翼式单发更重、只扫一人。",
+  "worldcombat.skill.wingattack.summary": "大大展开双翼，左右各一片翼锋横扫身前的扇面：扇面内最近的非友方各挨一记接触伤害，并被推向中线左右各自那一侧，把正前方腾出来。可朝方向或空地空挥。宽扫式更宽、扫更多人、推得更开但单体更轻；收翼式单发更重、只扫一人。",
   "worldcombat.skill.wingattack.use.0": "一次展翅扫开身前一小片对手",
-  "worldcombat.skill.wingattack.use.1": "把贴身的人推开、给自己让出落点",
+  "worldcombat.skill.wingattack.use.1": "把贴身的人推向两侧、给自己让出落点",
   "worldcombat.skill.wingattack.use.2": "便宜、稳定、可以反复扇的飞系接触一记",
   "worldcombat.skill.wingattack.description.0": "被扫中的目标各受约 %1$s 点物理接触伤害；这一次展翅最多扫到 %2$s 个非友方。",
-  "worldcombat.skill.wingattack.description.1": "扇面长 %1$s 格、张开 %2$s°，被扫中的目标沿背离方向被推开 %3$s 格。",
+  "worldcombat.skill.wingattack.description.1": "扇面长 %1$s 格、张开 %2$s°；被扫中的目标被推向它相对中线的外侧，最多 %3$s 格；正落在中线上则沿正面轻推。",
   "worldcombat.skill.wingattack.description.2": "扇面的形状就是判定范围。",
   "worldcombat.skill.wingattack.wide.on": "宽扫式：扇面更宽、可同时扫到至多 3 个、推得更远；代价是单体威力 ×0.8、起手 +1 刻、收招 +3 刻。",
   "worldcombat.skill.wingattack.wide.off": "收翼式：单发更重（×1.15）、出手更利落；代价是只扫一人、几乎不把人推开。",

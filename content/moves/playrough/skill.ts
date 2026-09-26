@@ -4,11 +4,15 @@
  * 核心念头：一记**滚翻扑撞的撒欢**。压低身子冲上去、用整个身体把对手撞得人仰马翻，把它顶开一段；
  * 撞翻一个若旁边还站着别人，就顺势再滚过去翻第二个。被撞翻的人攻击下降。
  *
+ * 选取：`kind: "aim"`——首段朝瞄准方向自由滚出，点方向、点世界点或让 AI 推荐敌人都行，允许空扑；
+ *   提交与执行都不要求存在敌人（不引用 action.target()）。
+ *
  * 两幕：
  *   起（windup，提交前）：压低身子、脚下扬尘，只播预告。
- *   滚（run → impact / ricochet → disarm，提交后）：沿瞄准方向逐刻推进，trace 撞上活体即结算 romp
- *       接触伤害、把目标顶开 push 格、按概率把攻击压 1 级；撒欢式若在 bounceRange 内还有另一个敌人，
- *       掉头再滚一段（长度 ×0.85）落一记更轻的 tumble；撞空则一路滚到尽头。
+ *   滚（run → impact / ricochet → disarm，提交后）：沿瞄准方向逐刻推进，sweepStep 撞上活体即结算 romp
+ *       接触伤害、把目标顶开 push 格、按概率把攻击压 1 级；被接触的实体当场记 used，免疫伤害也不会被再选。
+ *       撒欢式首段撞实后，在可见、通视且真实可达的 bounceRange 内选另一个敌人，定下真实转向再滚一段
+ *       （长度按距目标实际需要，最多第一段那么远）落一记更轻的 tumble；转向后遇墙即停，不绕墙补中。
  *
  * 与同族分开：撕裂爪是站定的一记交叉撕抓，迷昏拳是按节拍连打，嬉闹是会移动、会把目标顶开、
  * 还可能翻到第二个目标身上的那一记。配置 `romp`（撒欢）由 resolve 改时序、由公式改距离／顶开／概率。
@@ -17,17 +21,27 @@ namespace PokemonSkills {
     /** 位移小于这个值就认为被挡住，收势。 */
     const playroughMinimumMove = 0.02;
 
-    /** 在 centre 附近找最近的一个「还没被这一记撞过」的非友方，作为翻滚的第二个目标。 */
-    function playroughNearestEnemy(world: CombatWorld, actor: CombatActor, used: { [ref: string]: boolean }, centre: CombatPoint, range: number): CombatActor | null {
+    /**
+     * 翻滚的第二目标：在 centre 的 range 内、从施法者看真实可达（reach 之内）且可见、通视的最近非友方，
+     * 排除自己与已经接触过的实体。没有合适目标返回 null。
+     */
+    function playroughBounceTarget(world: CombatWorld, actor: CombatActor, used: { [ref: string]: boolean },
+        centre: CombatPoint, range: number, reach: number): CombatActor | null {
+        const self = world.observe(actor);
+        if (self === null) return null;
+        const from = self.position();
         const actors = world.query(centre, range, false);
-        let best: CombatActor | null = null, bestDistance = range;
+        let best: CombatActor | null = null, bestDistance = reach;
         for (let index = 0; index < actors.length; index++) {
             const other = actors[index];
-            if (String(other.ref()) === String(actor.ref()) || world.friendly(other) || used[String(other.ref())]) continue;
+            const ref = String(other.ref());
+            if (ref === String(actor.ref()) || world.friendly(other) || used[ref]) continue;
             const body = world.observe(other);
-            if (body === null) continue;
-            const distance = body.position().minus(centre).length();
-            if (distance <= bestDistance) { bestDistance = distance; best = other; }
+            if (body === null || body.health() <= 0 || !world.visible(other)) continue;
+            const at = body.position();
+            const distance = at.minus(from).length();
+            if (distance < 0.05 || distance > bestDistance || !world.clear(from, at)) continue;
+            bestDistance = distance; best = other;
         }
         return best;
     }
@@ -39,7 +53,7 @@ namespace PokemonSkills {
         name: "Play Rough",
         description: "滚翻着扑向目标，用整个身体把它撞得人仰马翻并顶开一段，可能让它的攻击下降 1 级；撒欢式若旁边还有别的敌人，会顺势再翻过去撞第二个。",
         uses: ["冲上去把对手撞翻、顶离原位", "在扎堆的敌人之间来回翻滚", "压制物理攻击手"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.0,
         maxRange: 4.8,
         prepare: 8,
@@ -108,6 +122,8 @@ namespace PokemonSkills {
                 const victim = hit.target();
                 const at = hit.position();
                 const first = !struck;
+                // 接触即登记：无论这一记是否真的造成伤害，都不会再被选作目标。
+                if (victim !== null) used[String(victim.ref())] = true;
                 const power = first ? rompPower : tumblePower;
                 const landed = victim !== null && impact(current, hit, playroughId, power,
                     { damage: damageSpec(playroughId, first ? "romp" : "tumble"), contact: true });
@@ -116,8 +132,7 @@ namespace PokemonSkills {
                     { moment: first ? "impact" : "ricochet", target: victim !== null ? String(victim.ref()) : "",
                         sparkles: sparkles, scale: scale, intensity: intensity }, 26);
                 if (landed && victim !== null && scope.valid(victim)) {
-                    used[String(victim.ref())] = true;
-                    scope.displace(victim, direction.scale(push));
+                    scope.hitDisplace(victim, direction.scale(push));
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), playroughDownText, [], 22);
                     if (scope.random() < chance) {
                         NativeEffects.boost(scope, victim, "atk", -stages);
@@ -125,8 +140,10 @@ namespace PokemonSkills {
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), playroughAtkText, [stages], 24);
                     }
                     sound(current, "cobblemon:impact.fairy");
-                    if (romp && ricochets < 1) {
-                        const next = playroughNearestEnemy(scope, actor, used, at, bounceRange);
+                    // 只有首段成功地撞到有效敌人，且还有可见、通视的第二个目标，才真的转身再滚。
+                    if (first && romp && ricochets < 1) {
+                        const secondLength = lungeTotal * 0.85;
+                        const next = playroughBounceTarget(scope, actor, used, at, bounceRange, Math.min(bounceRange, lungeTotal));
                         const selfBody = scope.observe(actor), nextBody = next === null ? null : scope.observe(next);
                         if (next !== null && selfBody !== null && nextBody !== null) {
                             const delta = nextBody.position().minus(selfBody.position());
@@ -135,9 +152,11 @@ namespace PokemonSkills {
                                 direction = flat.unit();
                                 ricochets++;
                                 travelled = 0;
-                                length = lungeTotal * 0.85;
+                                length = Math.min(lungeTotal, Math.max(secondLength, flat.length() + radius + 0.2));
                                 WorldFeedback.emit(scope, playroughScene, 1, selfBody.position(),
-                                    { moment: "roll", target: String(next.ref()), sparkles: sparkles, scale: scale, intensity: intensity }, 20);
+                                    { moment: "roll", target: String(next.ref()),
+                                        direction: [direction.x(), direction.y(), direction.z()],
+                                        sparkles: sparkles, scale: scale, intensity: intensity }, 22);
                                 current.after(2, advance);
                                 return;
                             }
@@ -155,10 +174,19 @@ namespace PokemonSkills {
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
-                if (hit.hitEntity()) { strike(current, hit); return; }
-                const moved = swept.moved;
-                travelled += moved;
-                if (hit.blocked() || moved < playroughMinimumMove || travelled >= length) { finish(current); return; }
+                let progressed = swept.moved;
+                if (hit.hitEntity()) {
+                    const victim = hit.target();
+                    const ref = victim === null ? "" : String(victim.ref());
+                    if (victim !== null && ref !== "" && !used[ref] && !scope.friendly(victim)) {
+                        strike(current, hit);
+                        return;
+                    }
+                    // 已经接触过的目标不再重复结算，碾过去继续扑向下一个。
+                    if (swept.remaining.length() > 0.001) progressed += scope.displace(current.actor(), swept.remaining);
+                }
+                travelled += progressed;
+                if (hit.blocked() || progressed < playroughMinimumMove || travelled >= length) { finish(current); return; }
                 current.after(1, advance);
             }
 

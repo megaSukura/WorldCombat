@@ -1,12 +1,12 @@
 /**
  * 吐丝 的伙伴 AI 用途：这招自己的一套出手计划——留住跑得快的、封住挤在一处的。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没被丝缠住。
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没被丝缠住、速度也没到 −6 底线。
  *   缠足模式下可以只对正在逃跑的威胁出手（ai.runnersOnly），把它留住；
- *   结网模式下要威胁身边至少挤着 ai.minFoes 个敌人，才值得铺网。
- * 对谁出手：当前威胁；已被缠住的跳过。
+ *   结网模式下要威胁身边至少挤着 ai.minFoes 个敌人，才值得多铺一点。
+ * 对谁出手：当前威胁；已被缠住或速度已到底线的跳过，避免对控制免疫的硬目标连续空放。
  * 够不到怎么办：reach 就是吐丝距离，超出先走近；丝有飞行时间，掩体挡住时交回共享接近逻辑。
- * 放完之后：目标大幅掉速度（缠足还带一段定身），伙伴交回共享顺序继续交战。
+ * 放完之后：目标大幅掉速度（缠足还带一段定身）；没缠住时丝黏在它真实撞上的表面，伙伴交回共享顺序。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("stringshot", { ai: { maxChase: 8, minFoes: 2, runnersOnly: false, leaveStation: false } }, [
@@ -33,6 +33,7 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 8)) return false;
         if (status(context, threat, "silked")) return false;
+        if (stage(context, threat, "spe") <= -6) return false;
         if (item.data.config && item.data.config.silk)
             return stringshotCluster(context, threat, 3) >= ai<number>(item, "minFoes", 2);
         if (ai<boolean>(item, "runnersOnly", false) && !fleeing(context, threat)) return false;

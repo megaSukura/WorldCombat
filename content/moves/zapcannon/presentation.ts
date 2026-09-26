@@ -1,8 +1,9 @@
 /**
  * 电磁炮 / zapcannon 的客户端表现。
  *
- * 一句话：施法者长时间把电灌进炮膛、身周电弧一圈圈收拢变亮，开炮时被后坐推得向后退，一枚沉甸甸的亮芯电弹
- *   慢慢飞出去、拖一条厚尾，命中处炸开一大片电光；打空只留一下落地散电。
+ * 一句话：施法者长时间把电灌进炮膛、身周电弧一圈圈收拢变亮，炮口聚成一颗明显大球；开炮时被后坐推得向后退、
+ *   炮口炸出一圈后坐波，一枚沉甸甸的亮芯电弹朝锁定方向慢慢飞出去、拖一条厚尾，真实撞上时炸开一大片电光；
+ *   打空或撞墙只在该点留一下散电。
  * 色相家族：冷青白（0x8FE8FF / 0xEAFBFF）与电黄（0xFFE14D）为主，浅青绿（0xC8F0A0）只做地面环的细节。
  * 拍子：起（charge 长时间蓄能）→ 轰（fire 炮口后坐）→ 飞（shell 慢速厚尾电弹）→ 击（burst 大爆 / fizzle 散电）。
  * 范围：burst 绑在命中点上，形状半径按参考值 1.0 格书写，服务端把 `data.scale = 实际爆开半径 / 1.0` 传进来，
@@ -60,6 +61,15 @@ const ZapCannonDefinition: ParticleDefinition = {
                     color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: 0.6, maxParticles: 70
                 },
                 {
+                    name: "recoil", bind: "source", offset: [0, 0.35, 0.45], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: { data: "arcs", fallback: 12 }, at: 1, interval: 3, repeats: 2 },
+                    shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
+                    direction: "away", speed: [0.12, 0.34],
+                    lifetime: [7, 14], size: [0.3, 0.12],
+                    color: 0x9BE8FF, alpha: [0.6, 0], light: "full", bloom: 0.4, maxParticles: 40
+                },
+                {
                     name: "kick", bind: "source", offset: [0, 0.1, -0.2], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 14, at: 1 },
@@ -78,7 +88,7 @@ const ZapCannonDefinition: ParticleDefinition = {
                 {
                     name: "core", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
-                    rate: 34, shape: { kind: "sphere", radius: 0.24 },
+                    rate: 34, shape: { kind: "sphere", radius: 0.34 },
                     direction: "outward", speed: [0.01, 0.05],
                     lifetime: [5, 9], size: [0.26, 0.05], sizeMode: "sin",
                     color: 0xEAFBFF, alpha: [0.95, 0], light: "full", bloom: 0.55, maxParticles: 70

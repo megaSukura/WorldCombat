@@ -1,32 +1,54 @@
 /**
  * 假跪真撞 / falsesurrender 的 AI 用途。
  *
- * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
- * `ai.punish`（默认开）：对手的注意不在施法者身上（没有正在攻击施法者）时抬高 priority——伏低的骗术正是打这种目标；
- * 关闭后只要在射程内就按普通中近程突刺排序。施法者伏低时不能动，所以 AI 只在对手进入发梢距离后才起手。
+ * 什么局面下出手：贴身的可见敌对目标；够不到交给共享接近逻辑。`ai.punish`（默认开）时，注意不在自己身上、
+ * 或正背对自己向外移动的目标抬高 priority——伏低的骗术正是打这种目标。它不把「失去关注」当发动门槛：
+ * 没分神的目标照样按普通近身突刺出手，只是没有伏低加成。
+ * 风险：伏低期间自己不能动，正盯着自己且血量吃紧时降低推荐；墙挡在中间则够不到，不列入候选。
  */
 namespace PokemonSkills {
+    /** 施法者与目标之间是否无遮挡；墙挡着就够不到。同一决策帧内缓存。 */
+    function falsesurrenderClear(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
+        return CompanionBehavior.observedFlag(context, "falsesurrender:clear:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+        });
+    }
+
     CompanionBehavior.registerUse("falsesurrender", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
+            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+                > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
+            return falsesurrenderClear(context, target);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            var gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
-            var base = gap <= capability.data.range ? 20 : 3;
+            const self = CompanionBehavior.source(context);
+            const gap = CompanionBehavior.distance(self.point, target.point);
+            let base = gap <= capability.data.range ? 20 : 6;
             if (!CompanionBehavior.ai<boolean>(capability, "punish", true)) return base;
-            var self = CompanionBehavior.source(context);
-            var attention = target.attacking;
-            // 目标盯着的不是自己（或没在出手）→ 伏低的骗术成立，优先出手。
-            if (!attention || attention !== self.ref) return base + 14;
+            const attention = target.attacking;
+            if (!attention || attention !== self.ref) {
+                // 目标盯着别人或没在出手 → 伏低的骗术成立，优先出手。
+                return base + 14;
+            }
+            if (CompanionBehavior.ratio(self) < 0.4) {
+                // 正盯着自己且血量吃紧：伏低的风险没人分担，降一档。
+                return base - 8;
+            }
+            // 侧击：目标正背对自己向外移动，也是骗到注意的时机。
+            const velocity = CompanionBehavior.velocity(context, target);
+            if (velocity) {
+                const away = [target.point[0] - self.point[0], 0, target.point[2] - self.point[2]];
+                if (velocity[0] * away[0] + velocity[2] * away[2] > 0.0002) return base + 8;
+            }
             return base;
         }
     });

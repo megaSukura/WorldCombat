@@ -17,7 +17,7 @@ Smoke.scenario("dizzypunch", function (stage) {
     }, function () {
         stage.expect(stage.casts("dizzypunch", caster) > 0, "dizzypunch was committed");
         stage.expect(stage.damageTo(foe) > 0, "the rhythmic punches dealt damage");
-        stage.note("拳数由速度决定（约 2–5 拳），混乱约 20% 起、命中越多越值；被迷昏者出手会打偏并自伤", {
+        stage.note("拳数由速度决定（约 2–5 拳），混乱约 20% 起、只落在真正被打到的人；被迷昏者出手会打偏，反噬不超过它打出的伤害", {
             casts: stage.casts("dizzypunch", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             confused: stage.hadMobEffect(foe, "world_combat:status/confusion"),

@@ -9,10 +9,12 @@
  *
  * 三幕（+ 可选的断招）：
  *   起（windup，提交前）：沉身、脚边起屑的预告，只播表现。
- *   震（shake → hit）：提交后当场掷震级，圈里每个站在地上的非友方各挨 `quake × 震级系数`，
- *       被上颠 `jolt`、沿离中心方向踉跄 `stagger` 格。
+ *   预（presage → tell）：提交时按原分布掷震级，**先把数字亮出**并让地面按震级预震；
+ *       预震期间离开地面就能躲开接下来的结算（原地、不改方块）。
+ *   震（shake → hit）：预震约 6 刻后，按这一次掷出的震级单次结算，圈里每个站在地上的非友方
+ *       各挨 `quake × 震级系数`，被上颠 `jolt`、沿离中心方向踉跄 `stagger` 格。
  *   断（stagger）：震级 ≥ `fracture` 时，被震到的人正在进行的动作被中断（world_combat:interrupt）。
- *   收（settle / miss）：尘落定；圈里没人站在地上就播空震。
+ *   收（miss）：圈里没人站在地上就只收势扬尘，不扬强尘。
  *
  * 震级掷定（原生 100 面骰的比例，深源式整体 +1）：
  *   4 → 5% / 5 → 10% / 6 → 20% / 7 → 30% / 8 → 20% / 9 → 10% / 10 → 5%；
@@ -23,6 +25,9 @@ namespace PokemonSkills {
     const magnitudeHitText = "world_combat.move.magnitude.text.hit";
     const magnitudeMissText = "world_combat.move.magnitude.text.miss";
     const magnitudeBreakText = "world_combat.move.magnitude.text.break";
+    const magnitudeTellText = "world_combat.move.magnitude.text.tell";
+    /** 掷出震级到实际落震之间的预震时长（刻）：短到可躲，也足够读出强弱。 */
+    const magnitudePresageTicks = 6;
 
     /** 原生 `onModifyMove` 的 100 面骰；深源式整体 +1（下限抬高、期望更高）。 */
     function magnitudeRoll(world: CombatWorld, fault: boolean): number {
@@ -49,7 +54,7 @@ namespace PokemonSkills {
         id: "magnitude",
         cooldownParameter: "recharge",
         name: "Magnitude",
-        description: "沉身压地，地面在原地横颤：圈内站在地上的敌人各挨一记，震级当场掷定（4..10），越大越重；震级够大时正在出手的人会被抖断动作。空中的目标不受影响。深源式震级更高、震幅更广、更容易打断，但更慢。",
+        description: "沉身压地，先把这一次的震级掷出（4..10，数字当场亮出），地面按震级预震约 0.3 秒后原地横颤：圈内站在地上的敌人各挨一记，震级越大越重；预震期间离开地面就能躲开。震级够大时正在出手的人会被抖断动作。深源式震级更高、震幅更广、更容易打断，但更慢。",
         uses: ["一次震到身周一圈站在地上的敌人", "抖断正在蓄招或出手的对手", "跳过空中的目标，专打站桩的对手", "在很短的冷却里反复骚扰"],
         kind: "self",
         range: 3.8,
@@ -81,6 +86,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scene = WorldFeedback.actionScenes(magnitudeScene, 1);
             const world = action.world();
             const body = world.observe(action.actor());
             const centre = body !== null ? body.position() : action.origin();
@@ -96,43 +102,59 @@ namespace PokemonSkills {
             const magnitude = magnitudeRoll(world, fault);
             const power = base * magnitudeFactor(magnitude);
             const scale = radius / 3.8;
-            let hits = 0, broken = 0;
+            const tremble = Math.max(0.015, magnitude * 0.012);
+            const intensity = Math.max(0.4, Math.min(2.4, magnitude / 7));
+            let hits = 0, broken = 0, settled = false;
 
+            /** 掷定之后、落震之前：亮出震级并让地面按 `magnitude` 预震，起跳可以躲开。 */
             sound(action, "cobblemon:impact.ground");
-            WorldFeedback.emit(world, magnitudeScene, 1, centre,
-                { moment: "shake", radius: radius, magnitude: magnitude, crests: crests, dust: dust, scale: scale,
-                    intensity: Math.max(0.4, Math.min(2.4, power / 70)) }, 30);
+            scene.show(action, "presage", centre,
+                { moment: "presage", radius: radius, magnitude: magnitude, tremble: tremble,
+                    crests: crests, dust: dust, scale: scale, intensity: intensity });
+            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.5, 0)), magnitudeTellText, [magnitude], 16);
 
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: 2, above: 1.5 }),
-                function (enemy, facts) {
-                    if (hits >= cap) return;
-                    if (!facts.grounded()) return;
-                    if (!hurt(action, enemy, "magnitude", power, { damage: damageSpec("magnitude", "quake") })) return;
-                    hits++;
-                    const away = facts.position().minus(centre);
-                    if (world.valid(enemy)) {
-                        if (away.length() > 0.2) world.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(stagger));
-                        if (jolt > 0) world.motion(enemy, WorldCombat.point(0, jolt, 0), true);
-                        if (magnitude >= fracture) {
-                            world.deliver(enemy, "world_combat:interrupt");
-                            broken++;
-                            WorldFeedback.emit(world, magnitudeScene, 1, facts.position(),
-                                { moment: "stagger", target: String(enemy.ref()), magnitude: magnitude, scale: scale }, 24);
+            function settle(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scene.stop(current, "presage");
+                const scope = current.world();
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 2, above: 1.5 }),
+                    function (enemy, facts) {
+                        if (hits >= cap) return;
+                        if (!facts.grounded()) return;
+                        if (!hurt(current, enemy, "magnitude", power, { damage: damageSpec("magnitude", "quake") })) return;
+                        hits++;
+                        const away = facts.position().minus(centre);
+                        if (scope.valid(enemy)) {
+                            if (away.length() > 0.2) scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(stagger));
+                            if (jolt > 0) scope.hitImpulse(enemy, WorldCombat.point(0, jolt, 0));
+                            if (magnitude >= fracture) {
+                                scope.deliver(enemy, "world_combat:interrupt");
+                                broken++;
+                                WorldFeedback.emit(scope, magnitudeScene, 1, facts.position(),
+                                    { moment: "stagger", target: String(enemy.ref()), magnitude: magnitude, scale: scale }, 24);
+                            }
                         }
-                    }
-                    WorldFeedback.emit(world, magnitudeScene, 1, facts.position(),
-                        { moment: "hit", target: String(enemy.ref()), magnitude: magnitude, scale: scale,
-                            intensity: Math.max(0.4, Math.min(2.4, power / 70)), dust: dust }, 22);
-                });
+                        WorldFeedback.emit(scope, magnitudeScene, 1, facts.position(),
+                            { moment: "hit", target: String(enemy.ref()), magnitude: magnitude, scale: scale,
+                                intensity: intensity, dust: dust }, 22);
+                    });
 
-            WorldFeedback.emit(world, magnitudeScene, 1, centre,
-                { moment: hits > 0 ? "settle" : "miss", radius: radius, magnitude: magnitude, crests: crests, dust: dust,
-                    scale: scale, hits: hits, broken: broken }, 26);
-            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.2, 0)),
-                hits > 0 ? magnitudeHitText : magnitudeMissText, hits > 0 ? [magnitude, hits] : [magnitude], 26);
-            if (broken > 0)
-                WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.6, 0)), magnitudeBreakText, [broken], 26);
-            done(action);
+                if (hits > 0)
+                    WorldFeedback.emit(scope, magnitudeScene, 1, centre,
+                        { moment: "shake", radius: radius, magnitude: magnitude, crests: crests, dust: dust, scale: scale,
+                            intensity: Math.max(0.4, Math.min(2.4, power / 70)) }, 30);
+                else
+                    WorldFeedback.emit(scope, magnitudeScene, 1, centre,
+                        { moment: "miss", radius: radius, magnitude: magnitude, crests: crests, dust: dust, scale: scale, hits: 0 }, 24);
+                WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.2, 0)),
+                    hits > 0 ? magnitudeHitText : magnitudeMissText, hits > 0 ? [magnitude, hits] : [magnitude], 26);
+                if (broken > 0)
+                    WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.6, 0)), magnitudeBreakText, [broken], 26);
+                scene.finish(current, done);
+            }
+
+            action.after(magnitudePresageTicks, function (next: CombatAction) { settle(next); });
         }
     });
 }

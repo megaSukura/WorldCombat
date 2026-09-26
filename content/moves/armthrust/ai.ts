@@ -21,6 +21,10 @@ namespace CompanionBehavior {
     function armthrustWalled(context: WorldBehavior.Context, target: Entity): boolean {
         try {
             const world = CompanionBehavior.world(context);
+            // 抗击退的目标不会被硬推，撞墙追加对它不会发生；只按普通连掌排序。
+            const actor = world.actor(target.ref);
+            const resistance = actor !== null ? world.attributeValue(actor, "minecraft:generic.knockback_resistance") : null;
+            if (resistance !== null && resistance.value() >= 0.9) return false;
             const from = source(context).point, to = target.point;
             const dx = to[0] - from[0], dz = to[2] - from[2];
             const length = Math.sqrt(dx * dx + dz * dz) || 1;

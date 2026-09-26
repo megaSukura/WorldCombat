@@ -1,9 +1,12 @@
 /**
  * 极光幕 / auroraveil 的出手方式与冰雹门槛。
  *
- * 念头的形状：施法者抬头把天光拉下来（windup：头顶卷起极光预告）→ 落点上方拉开一道虹带、铺成一片极光区
- * （curtain）→ 幕下友方身上罩住流光，物理与特殊伤害被一起滤掉（veil / cover / block）→ 天光收拢（fade）。
+ * 念头的形状：施法者抬头把天光拉下来（windup：头顶卷起极光预告）→ 按落点上方实际能挂多高拉开虹带、铺成一片极光区
+ * （curtain）→ 幕下友方身上牵一条细丝连到幕、物理与特殊伤害被一起滤掉（veil / thread / block）→ 天光收拢（fade）。
  * 三幕：起手 → 拉幕 → 幕下受护。
+ *
+ * 场地高度：提交后从落点向上探一次原生方块，确定极光能挂多高。开阔处挂到天顶；低顶棚就贴着屋顶，改用幕内短垂带。
+ * 同一次探得的高度同时写进极光区数据和拉开/持续/收拢的表现，判定与画面用同一份 `ceiling`。
  *
  * 「只有冰雹时才能使出」翻成世界条件：必须是雨/雷暴的天，且施法者脚下不远是雪或冰——即下着雪的冷天。
  * `ready` 在提交前检查这项，天不对就整次不成立、不花 PP；AI 的 available 用同一判据，不会乱铺。
@@ -31,6 +34,16 @@ namespace PokemonSkills {
             }
         }
         return false;
+    }
+    /** 落点上方到第一处原生方块的空间高度；开阔处取上限。极光带据此裁剪，低顶棚落在 3.2 格以下。 */
+    export function auroraVeilCeiling(action: CombatAction, point: CombatPoint): number {
+        const maxHeight = 6.5, minHeight = 1.6;
+        const impact = action.trace(point.plus(WorldCombat.point(0, 0.05, 0)), point.plus(WorldCombat.point(0, maxHeight, 0)), 0.05, false);
+        const cell = impact.blockPosition();
+        if (cell === null) return maxHeight;
+        const height = cell.y() - point.y();
+        if (height <= 0.5) return maxHeight; // 探针起点贴着地面，说明没打到天花板
+        return Math.max(minHeight, Math.min(maxHeight, height));
     }
 
     const auroraVeilBright = flag("bright", "明幕");
@@ -81,11 +94,16 @@ namespace PokemonSkills {
             const ribbons = Math.max(2, Math.round(p(auroraveilId, "ribbons", action)));
             const cutPhys = Math.max(0.05, Math.min(0.8, p(auroraveilId, "cutPhys", action)));
             const cutSpec = Math.max(0.05, Math.min(0.8, p(auroraveilId, "cutSpec", action)));
+            const ceiling = auroraVeilCeiling(action, point);
+            const low = ceiling < 3.2;
+            const midHeight = Math.max(0.6, Math.round(ceiling * 5) / 10); // 垂带的中心高度 = 高度的一半，取一位小数
             WorldEffects.field(world, auroraveilField, point, radius,
-                { cutPhys: cutPhys, cutSpec: cutSpec, radius: radius, ribbons: ribbons, margin: 60 }, ticks);
+                { cutPhys: cutPhys, cutSpec: cutSpec, radius: radius, ribbons: ribbons, margin: 60,
+                    ceiling: ceiling, midHeight: midHeight, highRibbons: low ? 0 : ribbons, lowRibbons: low ? ribbons : 0 }, ticks);
             world.sound("cobblemon:move.aurorabeam.actor_1", point, 24, "{}");
             WorldFeedback.emit(world, auroraveilScene, 1, point,
-                { moment: "curtain", radius: radius, scale: radius / 4, ribbons: ribbons, ticks: ticks }, 48);
+                { moment: "curtain", radius: radius, scale: radius / 4, ribbons: ribbons,
+                    ceiling: ceiling, midHeight: midHeight, highRibbons: low ? 0 : ribbons, lowRibbons: low ? ribbons : 0, ticks: ticks }, 48);
             WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1, 0)), auroraveilRaiseText,
                 [Math.round(ticks / 20), Math.round(cutPhys * 100), Math.round(cutSpec * 100)], 44);
             done(action);

@@ -11,8 +11,11 @@ public final class WorldEvent implements AutoCloseable {
     private boolean open = true;
     private String data, rejection = "";
     WorldEvent(ActionRuntime runtime, String topic, ActorHandle actor, ActorHandle target, String data, ActionContext action, boolean writable) {
+        this(runtime, topic, actor, target, data, action, writable, null);
+    }
+    WorldEvent(ActionRuntime runtime, String topic, ActorHandle actor, ActorHandle target, String data, ActionContext action, boolean writable, ExecutionOrigin origin) {
         this.topic = topic; this.actor = actor; this.target = target; this.data = EffectData.copy(data); this.action = action;
-        world = new WorldAccess(runtime, actor, action == null ? null : action.controller(), this::check, writable, action == null ? 0 : action.id());
+        world = new WorldAccess(runtime, actor, action == null ? null : action.controller(), this::check, writable, action == null ? 0 : action.id(), origin);
     }
     private void check() { if (!open) throw new ActionInactiveException("Host event callback returned"); }
     public String topic() { check(); return topic; }

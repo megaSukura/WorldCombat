@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.hex.summary": "Send a curse skittering along the ground to the target's feet, draw a ring of sigils, and erupt wave after wave of spectral spikes from within it. Every enemy caught on the sigil is struck; any that carries a status condition (burn, paralysis, poison, frozen, sleep) takes double on that hit.",
+  "worldcombat.skill.hex.summary": "Send a curse to the exact point locked in at cast, draw a fixed ring of sigils there, and erupt wave after wave of spectral spikes from within it. The sigil never chases anyone; every enemy caught on it is struck, and any that carries a status condition (burn, paralysis, poison, frozen, sleep) takes double on that hit.",
   "worldcombat.skill.hex.description.0": "Each wave of spikes deals about %1$s special damage to every enemy standing on the sigil; a target carrying any status condition (burn, paralysis, poison/toxic, frozen or sleep) takes double on that wave.",
-  "worldcombat.skill.hex.description.1": "The curse crawls up to %1$s blocks and, on reaching the target's feet, draws a %2$s block radius sigil at %3$s; then %4$s waves erupt, %5$s apart.",
+  "worldcombat.skill.hex.description.1": "The curse travels up to %1$s blocks to the locked landing point and, on arrival, draws a fixed %2$s block radius sigil at %3$s travel speed; then %4$s waves erupt, %5$s apart.",
   "worldcombat.skill.hex.description.2": "Each wave settles once on every enemy still on the sigil and re-checks that target's status for the doubling; stepping out of the ring stops further hits, while stepping in later still catches one.",
   "worldcombat.skill.hex.use.0": "Lay a curse sigil under the foe",
   "worldcombat.skill.hex.use.1": "Finish a target carrying a status",
@@ -9,7 +9,7 @@
   "worldcombat.skill.hex.value.curse": "Curse power",
   "worldcombat.skill.hex.value.blight": "Blighted by status",
   "worldcombat.skill.hex.value.sigil": "Sigil radius",
-  "worldcombat.skill.hex.value.crawl": "Curse crawl speed",
+  "worldcombat.skill.hex.value.crawl": "Curse travel speed",
   "worldcombat.skill.hex.value.waves": "Spike waves",
   "worldcombat.skill.hex.value.interval": "Wave interval",
   "worldcombat.skill.hex.value.spike": "Spike height",
@@ -31,5 +31,5 @@
   "world_combat.move.hex.text.blight": "Misfortune piles on!",
   "world_combat.move.hex.text.strike": "Struck by the curse",
   "world_combat.move.hex.text.miss": "The curse fizzles",
-  "worldcombat.skill.hex.description.miss": "The curse is tied to the target chosen at cast; if that target falls or is gone before the curse arrives, the sigil fizzles."
+  "worldcombat.skill.hex.description.miss": "The curse lands only on the aim point locked in at cast; if there is no supportable ground there, or the flight is cut off by a wall with nowhere to land, the sigil fizzles. A chosen target running away never drags it along."
 }

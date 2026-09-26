@@ -96,9 +96,14 @@ object NativeParty {
     }
 
     /** Same revive step with a readable reason; both revives return their result explicitly. */
-    fun reviveResult(world: WorldAccess, actor: ActorHandle, slot: Int, ratio: Double): String {
+    fun reviveResult(world: WorldAccess, actor: ActorHandle, slot: Int, ratio: Double): String =
+        reviveResult(world, actor, slot, ratio, null)
+
+    /** Compare the stable individual identity before changing a slot selected during preparation. */
+    fun reviveResult(world: WorldAccess, actor: ActorHandle, slot: Int, ratio: Double, expectedId: String?): String {
         val captured = reviveTarget(world, actor, slot, ratio)
         val target = captured.first ?: return failure(captured.second)
+        if (expectedId != null && target.uuid.toString() != expectedId) return failure("member-changed")
         applyRevive(target, ratio)
         return if (!target.isFainted()) result(true, "", "", true) else failure("still-fainted")
     }

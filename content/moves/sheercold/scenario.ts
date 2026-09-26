@@ -13,7 +13,7 @@ Smoke.scenario("sheercold", function (stage) {
 
     var caster = stage.pokemon({ species: "lapras", level: 40, moves: ["sheercold"], at: [-2.5, 0, 0] });
     var foe = stage.pokemon({ species: "magikarp", level: 12, moves: ["splash"], at: [0, 0, 0] });
-    // 目标脚下放一块会被覆霜的自然地表，好让寒霜的租借替换成为一条必然事实。
+    // 目标脚下留草块；寒霜只作表现，原地表保持。
     stage.block([0, -1, 0], "minecraft:grass_block");
 
     stage.until(360, function () { return caster.alive() && foe.alive(); }, function () {
@@ -23,7 +23,7 @@ Smoke.scenario("sheercold", function (stage) {
         }, function () {
             stage.expect(stage.casts("sheercold", caster) > 0, "绝对零度被放出来了");
             stage.expect(stage.damageTo(foe) > 0, "整圈结霜冻毙了目标，造成了伤害");
-            stage.expect(stage.changedBlocks().length > 0, "地面被覆上一层会恢复的寒霜");
+            stage.expect(stage.changedBlocks().length === 0, "寒霜余光保持原地面");
             stage.note("命中取决于目标是否还站在冻结圈内；冰属性使用者结霜更快，冰属性目标免疫。",
                 { casts: stage.casts("sheercold", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                   foeAlive: foe.alive(), foeHealth: Math.round(foe.health() * 10) / 10,

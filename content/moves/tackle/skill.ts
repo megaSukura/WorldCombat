@@ -1,4 +1,9 @@
-/** 逐刻加速助跑，在原生身体接触后结算伤害，再分四拍向身侧减速滑开。 */
+/**
+ * 逐刻加速助跑，在原生身体接触后结算伤害，再分四拍向身侧减速滑开。
+ *
+ * 选取：kind 为 aim，可点选方向或实体、也可向空处空放；锁的是方向，沿方向助跑，撞空就冲到助跑尽头。
+ * 攻击许可仍由命中层决定，AI 仍按仇恨推荐敌人；手动朝空点出招与 AI 选敌是两条独立的路。
+ */
 namespace PokemonSkills {
     const tackleScene = "world_combat:move_tackle";
     const tackleHitText = "world_combat.move.tackle.text.hit";
@@ -9,9 +14,9 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "tackle",
         name: "Tackle",
-        description: "迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开。跑得越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
-        uses: ["拉开距离时的一记短助跑冲撞", "撞开一步把对手顶离掩体", "撞后向身侧滑开，调整站位"],
-        kind: "enemy",
+        description: "朝选定的方向迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开；可以只选方向朝空处撞。跑得越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
+        uses: ["拉开距离时的一记短助跑冲撞", "朝任意方向撞开，把对手顶离掩体", "撞后向身侧滑开，调整站位"],
+        kind: "aim",
         range: 3,
         maxRange: 6,
         prepare: 4,
@@ -21,6 +26,9 @@ namespace PokemonSkills {
         style: "contact",
         defaults: { runUp: false, ai: { maxChase: 7, finish: true, leaveStation: false } },
         fields: [],
+        indicator: function (config, pokemon) {
+            return { radius: (pokemon ? p("tackle", "charge", pokemon) : 3.2) + 0.8, geometry: "line", style: "contact", color: 0x8C7448, label: "撞击" };
+        },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon: pokemon, skill: skills["tackle"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
             const runUp = !!(config && config.runUp);
@@ -114,7 +122,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, tackleScene, 1, point,
                         { moment: "impact", direction: heading, scale: scale, intensity: intensity }, 10);
                     if (landed && target !== null && scope.valid(target)) {
-                        scope.displace(target, direction.scale(push));
+                        scope.hitDisplace(target, direction.scale(push));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), tackleHitText, [], 22);
                         sound(current, "cobblemon:impact.normal");
                         startSlip(current, carry);

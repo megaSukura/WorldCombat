@@ -1,13 +1,15 @@
 /**
  * 章鱼桶炮 / octazooka 的客户端表现。
  *
- * 一句话：一口墨在口中聚成球，随后连喷数股漆黑的墨弹；打中目标时溅开糊脸，地上落下一小片墨渍。
+ * 一句话：一口墨在口中聚成球，随后按节奏连喷数股漆黑的墨弹；每股各有一个炮口收缩与真实弹体，
+ *       打中目标时溅开，降准成功那一次才在脸上罩墨；首碰方块只留一小块装饰墨。
  * 色相家族：墨黑（0x14141C）与冷灰蓝（0x3A3A5A），高光收在近白（墨面反光）。
- * 拍子：起 gather（口中蓄墨）→ 击 jet（喷口炸开）与 flight（每股墨弹飞出）、splash（命中溅墨）→
- *       收 face（脸上墨迹）与 stain（地面墨渍）与 settle（余墨散尽）。
- * 范围：stain 的地面环与 splash 的溅散半径用 `data.scale`（碰撞箱比）铺开。
+ * 拍子：起 gather（口中蓄墨）→ 每股一次 jet（炮口收缩，`data.shot` 区分第几股）与 flight（弹体飞出）、
+ *       splash（命中溅墨）→ 收 face（降准成功才罩脸）与 stain（首碰方块的装饰墨）与 settle（余墨散尽）。
+ * 范围：stain 的墨印盘与 splash 的溅散半径都按 `data.scale`（碰撞箱比）铺开，不画危险圈。
  * 运动：每股墨弹沿服务端方向直线飞行、拖墨滴；命中处墨点向外抛落。
- * 数：墨滴数绑定 `data.drops`（特攻与等级换算），命中强度绑定 `data.intensity`（每股威力 / 20）。
+ * 数：墨滴数绑定 `data.drops`（特攻与等级换算），炮口收缩粒子数绑定 `data.muzzle`（drops 派生），
+ *     命中强度绑定 `data.intensity`（每股威力 / 20）。
  */
 const OctazookaDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -40,11 +42,11 @@ const OctazookaDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "muzzle", bind: "source", offset: [0, 0.6, 0], height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/goo/chemicalsplash",
-                    burst: { count: { data: "shots", fallback: 3 } },
-                    shape: { kind: "sphere", radius: 0.2 },
-                    direction: "shape", speed: [0.08, 0.24],
-                    lifetime: [6, 12], size: [0.22, 0.05], sizeMode: "index",
+                    particle: "world_combat_core:cobblemon/generic/goo/chemicalball",
+                    burst: { count: { data: "muzzle", fallback: 8 } },
+                    shape: { kind: "sphere_surface", radius: 0.32 },
+                    direction: "inward", speed: [0.1, 0.24],
+                    lifetime: [5, 10], size: [0.24, 0.05], sizeMode: "sin",
                     color: 0x14141C, alpha: [0.95, 0], light: "world", maxParticles: 30
                 }
             ]
@@ -93,15 +95,6 @@ const OctazookaDefinition: ParticleDefinition = {
                     gravity: 0.01, drag: 0.88,
                     lifetime: [12, 22], size: [0.24, 0.06],
                     color: 0x1E1E2C, alpha: [0.4, 0], light: "world", render: "translucent", maxParticles: 60
-                },
-                {
-                    name: "splash_ring", bind: "point", fit: "none", offset: [0, 0.2, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.6 } },
-                    direction: "outward", speed: [0.04, 0.12],
-                    lifetime: [10, 16], size: [0.28, 0.6],
-                    color: 0x3A3A5A, alpha: [0.5, 0], light: "world"
                 }
             ]
         },
@@ -133,12 +126,14 @@ const OctazookaDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 26 },
             emitters: [
                 {
-                    name: "pool", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "mark", bind: "point", fit: "none", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/goo/chemicalsplash", spriteFrom: "random",
-                    rate: 4, shape: { kind: "circle", radius: { data: "scale", fallback: 0.7 } },
-                    direction: "up", speed: [0.0, 0.01],
-                    lifetime: [20, 36], size: [0.2, 0.08],
-                    color: 0x14141C, alpha: [0.7, 0], light: "world", render: "translucent", maxParticles: 40
+                    burst: { count: { data: "drops", fallback: 10 } },
+                    shape: { kind: "circle", radius: 0.4 },
+                    orient: "direction", direction: "shape", speed: [0.0, 0.02], spread: 20,
+                    gravity: 0.02, drag: 0.88,
+                    lifetime: [16, 28], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0x14141C, alpha: [0.7, 0], light: "world", maxParticles: 40
                 }
             ]
         },

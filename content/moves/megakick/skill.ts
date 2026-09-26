@@ -101,7 +101,7 @@ namespace PokemonSkills {
                 if (landed && scope.valid(target)) {
                     const away = WorldCombat.point(direction.x(), 0, direction.z());
                     const heading = away.length() < 0.05 ? direction : away.unit();
-                    if (scope.displace(target, WorldCombat.point(heading.x() * back, up, heading.z() * back)) > 0.1)
+                    if (scope.hitDisplace(target, WorldCombat.point(heading.x() * back, up, heading.z() * back)) > 0.1)
                         WorldFeedback.emit(scope, megakickScene, 1, point,
                             { moment: "launch", target: String(target.ref()), force: back, rise: up, scale: scale }, 28);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), megakickLaunchText, [], 22);

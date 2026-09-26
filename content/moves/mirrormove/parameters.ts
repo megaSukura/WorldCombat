@@ -23,7 +23,6 @@
 namespace PokemonSkills {
     export const mirrormoveId = "mirrormove";
     export const mirrorScene = "world_combat:move_mirrormove";
-    export const mirrorGlossEffect = "world_combat:mirror_gloss";
     export const mirrorReflectText = "world_combat.move.mirrormove.text.reflect";
     export const mirrorDullText = "world_combat.move.mirrormove.text.dull";
 

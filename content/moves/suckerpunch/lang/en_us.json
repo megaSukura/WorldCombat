@@ -3,7 +3,7 @@
   "worldcombat.skill.suckerpunch.use.0": "Punish a hand that is already raised",
   "worldcombat.skill.suckerpunch.use.1": "Get one hit in before the foe's heavy blow",
   "worldcombat.skill.suckerpunch.use.2": "Steady damage on an enemy that keeps closing in",
-  "worldcombat.skill.suckerpunch.description.0": "Flash in for a stab of about %1$s damage; it connects only while the target is attacking, or has used an attack move within the last %2$s, otherwise it whiffs.",
+  "worldcombat.skill.suckerpunch.description.0": "Flash in for a stab of about %1$s damage; the living body it strikes must have attacked within the last %2$s (a real melee/projectile hit or a scripted attack move), or the strike whiffs.",
   "worldcombat.skill.suckerpunch.description.1": "Blink distance %1$s blocks, %2$s blocks/tick, hit radius %3$s blocks; the target is shoved back %4$s blocks.",
   "worldcombat.skill.suckerpunch.read.on": "Read on: the read window is +0.6 s and the stab +15%, but the wind-up is +2 ticks and cooldown +6 ticks.",
   "worldcombat.skill.suckerpunch.read.off": "Read off: an almost instant snatch, shorter cooldown, but only the attack right in front of you counts.",
@@ -26,5 +26,5 @@
   "world_combat.move.suckerpunch.text.read": "Read it",
   "world_combat.move.suckerpunch.text.hit": "Sucker Punch!",
   "world_combat.move.suckerpunch.text.whiff": "Read wrong",
-  "worldcombat.skill.suckerpunch.description.path": "The blink stabs any non-allied living body inside its hit radius on the way; being blocked by terrain, or never connecting, also makes the strike whiff."
+  "worldcombat.skill.suckerpunch.description.path": "It blinks toward the aimed direction; the first body it strikes whiffs unless that body is inside its attack window, and terrain or an empty path whiffs the same way. The direction is free to gamble on, and a whiff still spends."
 }

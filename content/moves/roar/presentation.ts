@@ -14,6 +14,7 @@
 const RoarDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        resist:{duration:14,emitters:[{name:"unmoved",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/tinydust",burst:{count:6},shape:{kind:"sphere_surface",radius:.4},direction:"outward",speed:[.01,.03],lifetime:[4,10],size:[.05,.01],color:0xA89170,alpha:[.4,0]}]},
         windup: {
             duration: 18,
             exit: { stop: 8, drain: 12 },

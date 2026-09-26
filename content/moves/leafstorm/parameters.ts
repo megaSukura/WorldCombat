@@ -5,29 +5,27 @@
  *   self boosts { spa: -2 }，无次要效果；target normal（单体）。已实装学习者 99 位。
  *   描述「用尖尖的叶片向对手卷起风暴。使用之后因为反作用力自己的特攻会大幅降低」。
  *
- * 翻译：把「卷起风暴打一下、代价是特攻大掉」翻成即时战斗里**甩出一股旋转的叶刃风暴**——尖叶绕着一条
- *   前进轴旋卷着冲向目标，在它身上高速旋切后炸散；卷叶式让这股风在落点多盘桓一阵，持续割站在里面的人。
- *   反作用力就是特攻掉 2 级，提交那一刻就付：叶子离手，精神力已经被抽走。
+ * 翻译：把「卷起风暴打一下、代价是特攻大掉」翻成即时战斗里**甩出一股沿准线卷动的叶刃风暴**——尖叶绕着一条
+ *   前进轴旋卷着向前，真正卷过谁就在谁身上高速旋切，到射程尽头一次散开。反作用力就是特攻掉 2 级，
+ *   提交那一刻就付：叶子离手，精神力已经被抽走。
  *
  * 与同族分开：过热是身前一张扇形热浪、流星群是从头顶砸下的陨石群、精神突进是隔空内爆；
- *   飞叶风暴是唯一**绕着一根轴旋转前进、并在落点盘桓成场**的那一记。玩家凭「旋卷的绿叶片 + 原地打转的叶场」认出它。
+ *   飞叶风暴是唯一**绕着一根轴旋转前进、沿实际经过的敌人连续旋切**的那一记。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   storm       威力：特攻给密度、等级拾级抬升；卷叶式分薄。
  *   blades      叶片数：速度决定叶片的数量与转速，也驱动画面里的叶片数。
- *   gust        风速：速度决定风柱前进多快。
+ *   gust        风速：速度决定风柱前进多快；卷叶式卷得慢一些。
  *   girth       风柱半径：体型（高、宽）决定整股风多粗，也是判定半径。
  *   reach       射程：特攻给送出的距离、速度给起步。
- *   whirlRadius 盘桓范围：特攻决定风在落点铺多开（卷叶式才有）。
- *   whirlShare  盘桓保留：特攻决定每次复割保留多少威力（卷叶式才有）。
- *   whirlTicks  盘桓时长：等级与特攻决定叶场停多久（卷叶式才有）。
- *   whirlPulse  盘桓间隔：固定 1 秒一次。
+ *   carry       贯穿数：速度与体型（宽）决定一股风能穿过几个敌人；卷叶式才有。
  *   insightLoss 自身特攻下降级：原生固定 2 级。
  *   tempo/aftercast/recharge：速度定节奏，卷叶式更慢更长。
  *
  * 配置 `maelstrom`（卷叶式，默认关）双向取舍：
- *   开＝命中后风暴在落点盘桓 whirlTicks，按 whirlPulse 反复割 whirlRadius 内的敌人；代价是单体威力 ×0.85、
- *   起手 +3 刻、冷却 +6 刻。关（穿叶式）＝一股集中的叶刃直穿目标，单体更重、出手更快，但不留场。
+ *   开＝风速 ×0.62，风暴继续沿线慢速卷过 carry 个敌人、每个只结算一次，到射程尽头一次散开；代价是单发威力 ×0.85、
+ *   起手 +3 刻、冷却 +6 刻，适合成排的敌人。关（穿叶式）＝一股更快的叶刃撞上第一个敌人即散，单发更重、出手更快，
+ *   但不越过目标，适合单点。两向各有适用局面。
  *
  * 伤害段 `storm` 与参数同名，走共享换算（原始类别 Special）；对手特防、相性与暴击在命中时另算。
  */
@@ -43,7 +41,7 @@ namespace PokemonSkills {
                 .clamp(92, 212).round(1),
             "风暴威力", {
                 unit: "威力",
-                description: "叶刃卷过目标那一下的力；特攻越高叶越密，等级越高越沉。卷叶式把力分给盘桓，单发轻一点。对手特防、相性与暴击在命中时另算。"
+                description: "叶刃卷过目标那一下的力；特攻越高叶越密，等级越高越沉。卷叶式把一部分力分成多段掠过，单发轻一点。对手特防、相性与暴击在命中时另算。"
             }),
         /** 叶片数：基础 18；速度每比 55 快 1 加 0.12（夹 −4..12）；等级每比 20 高 1 加 0.12（夹 0..8）；夹 12..40。 */
         blades: formula(
@@ -55,12 +53,14 @@ namespace PokemonSkills {
                 unit: "片",
                 description: "卷进这股风的尖叶数量；速度快的个体卷得更密，等级越高叶片越厚。画面里的叶片密度按它派生。"
             }),
-        /** 风速：基础 0.95 格/刻；速度每比 55 快 1 加 0.006（夹 −0.2..0.45）；夹 0.7..1.6。 */
+        /** 风速：基础 0.95 格/刻；速度每比 55 快 1 加 0.006（夹 −0.2..0.45）；卷叶 ×0.62；夹 0.45..1.6。 */
         gust: formula(
-            F.base(0.95).plus(F.stat("speed").minus(55).times(0.006).clamp(-0.2, 0.45)).clamp(0.7, 1.6).round(2),
+            F.base(0.95).plus(F.stat("speed").minus(55).times(0.006).clamp(-0.2, 0.45))
+                .times(F.when(F.pref("maelstrom", text("worldcombat.skill.leafstorm.preference.maelstrom")), F.const(0.62), F.const(1.0)))
+                .clamp(0.45, 1.6).round(2),
             "风速", {
                 unit: "格/刻",
-                description: "风柱前进的速度；速度快的个体送得更急，也更难被走位甩掉。"
+                description: "风柱前进的速度；速度快的个体送得更急，也更难被走位甩掉。卷叶式卷得慢一些。"
             }),
         /** 风柱半径：基础 0.42 格；高每比 1.4 高 1 格加 0.1（夹 −0.06..0.3）；宽每比 0.9 宽 1 格加 0.3（夹 −0.06..0.34）；夹 0.3..0.92。 */
         girth: formula(
@@ -82,32 +82,17 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "风柱能卷出多远；特攻高送得远、速度快的起步更早。它也是本招的实际射程与指示线长度。"
             }),
-        /** 盘桓范围：卷叶式 = 2.0 + 特攻偏移[0,1.0] / 穿叶式 = 0；夹 0..3.4。 */
-        whirlRadius: formula(
+        /** 贯穿数：卷叶式 = 2 + 速度偏移[0,2] + 体型宽偏移[0,1] / 穿叶式 = 0；夹 0..5。 */
+        carry: formula(
             F.when(F.pref("maelstrom", text("worldcombat.skill.leafstorm.preference.maelstrom")),
-                F.base(2.0).plus(F.stat("specialAttack").minus(60).times(0.012).clamp(0, 1.0)), F.const(0))
-                .clamp(0, 3.4).round(2),
-            "盘桓范围", {
-                unit: "格",
-                description: "落点叶场铺开多大；特攻越高铺得越开。画面里那圈打转的叶片就是这个范围。只有卷叶式有。"
+                F.base(2)
+                    .plus(F.stat("speed").minus(55).times(0.02).clamp(0, 2))
+                    .plus(F.body("width").minus(0.9).times(1.0).clamp(0, 1))
+                    .clamp(1, 5).round(0), F.const(0)),
+            "贯穿数", {
+                unit: "个",
+                description: "卷叶式的风柱一路穿过几个敌人；速度快的个体卷得更急、体型宽的卷得更开，能多带走一个。画面里移动的叶筒长度与穿过的人数就是这个数。穿叶式固定 0（撞上第一个就散）。"
             }),
-        /** 盘桓保留：卷叶式 = 0.32 − 特攻偏移[−0.08,0.1] / 穿叶式 = 0；夹 0..0.6。 */
-        whirlShare: percent(
-            F.when(F.pref("maelstrom", text("worldcombat.skill.leafstorm.preference.maelstrom")),
-                F.base(0.32).minus(F.stat("specialAttack").minus(60).times(0.0016).clamp(-0.08, 0.1)), F.const(0))
-                .clamp(0, 0.6).round(2),
-            "盘桓保留", "叶场每次复割保留多少威力；特攻越高越均匀。把站在里面的人一点点割干。只有卷叶式有。"),
-        /** 盘桓时长：卷叶式 = 80 + 等级偏移[0,50] + 特攻偏移[−6,10] / 穿叶式 = 0；夹 60..170。 */
-        whirlTicks: seconds(
-            F.when(F.pref("maelstrom", text("worldcombat.skill.leafstorm.preference.maelstrom")),
-                F.base(80).plus(F.level().minus(20).times(0.8).clamp(0, 50))
-                    .plus(F.stat("specialAttack").minus(60).times(0.15).clamp(-6, 10)), F.const(0))
-                .clamp(60, 170).round(0),
-            "盘桓时长", "落点叶场在地上转多久；等级与特攻越高转得越久。到时叶片散尽。只有卷叶式有。"),
-        /** 盘桓间隔：固定 20 刻（1 秒）一次。 */
-        whirlPulse: seconds(
-            F.const(20).clamp(10, 40).round(0),
-            "盘桓间隔", "叶场每隔多久复割一次站在里面的人。"),
         /** 自身特攻下降级：原生固定 2 级；夹 2..6。 */
         insightLoss: formula(
             F.const(2).clamp(2, 6).round(0),
@@ -144,7 +129,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["storm"] },
         { key: "description.1", values: ["reach", "gust", "girth"] },
         { key: "description.2", values: ["insightLoss"] },
-        { key: "maelstrom.on", values: ["whirlRadius","whirlShare","whirlTicks","whirlPulse"], when: function (context) { return read(context.detail.values, ["maelstrom"]) === true; } },
+        { key: "maelstrom.on", values: ["carry"], when: function (context) { return read(context.detail.values, ["maelstrom"]) === true; } },
         { key: "maelstrom.off", values: [], when: function (context) { return read(context.detail.values, ["maelstrom"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.storm"] },

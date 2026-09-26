@@ -23,8 +23,12 @@
   "worldcombat.skill.grudge.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.grudge.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去立怨。",
   "world_combat.move.grudge.text.mark": "怨念立下 %1$s 秒",
-  "world_combat.move.grudge.text.drain": "怨念索偿：致命一手已封住",
+  "world_combat.move.grudge.text.drain": "怨念索偿：封住了 %1$s",
   "world_combat.move.grudge.text.wasted": "怨念空扑一场",
+  "world_combat.move.grudge.kind.melee": "近战",
+  "world_combat.move.grudge.kind.ranged": "远程",
+  "world_combat.move.grudge.kind.magic": "魔法",
+  "world_combat.move.grudge.kind.other": "攻击",
   "world_combat.move.grudge.text.lift": "怨念散去",
   "effect.world_combat.grudge_watch": "怨念",
   "effect.world_combat.grudge_toll": "怨念索偿"

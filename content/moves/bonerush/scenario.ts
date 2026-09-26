@@ -1,16 +1,15 @@
 /**
  * 骨棒乱打 / bonerush —— 可执行设计说明。
  *
- * 一句话：一只只会骨棒乱打的卡拉卡拉隔着几格把骨头一枚枚扔向不动的僵尸，骨头落地在石地上震出裂痕，
- *   僵尸吃到地面伤害。
+ * 一句话：一只只会骨棒乱打的卡拉卡拉隔着几格把骨头一枚枚扔向不动的僵尸，骨头落地只在石地上留下会散去的尘痕，
+ *   僵尸吃到沿地面传来的伤害。
  *
  * 场面：只会骨棒乱打的卡拉卡拉（cubone，L30，原生 29 级学习）站在僵尸左侧 3 格（在掷距内），僵尸被点住、
- *   不会还手也不会走开；站在石地上，石子地面能读出骨头夯出的裂痕（stone 归 cobblestone）。夜间，僵尸不会被日光灼烧。
+ *   不会还手也不会走开、贴在石地上。夜间，僵尸不会被日光灼烧。
  *
- * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一击的地面伤害（`stage.damageTo`）；落点那层石地被
- *   震裂过（`changedBlocks` 读到 cobblestone）。
+ * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一击的地面伤害（`stage.damageTo`）。
  *   击数（2～5，随物攻／等级与裂地式变化）、每击命中率 90、骨头弧线偏角、末击更重、暴击，都是随机或配置结果，
- *   写进 note 供读轨迹判断。
+ *   写进 note 供读轨迹判断；落点不再改动地表，所以地痕只是会散去的尘。
  */
 Smoke.scenario("bonerush", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -24,16 +23,12 @@ Smoke.scenario("bonerush", function (stage) {
         return stage.casts("bonerush", caster) >= 1 && stage.damageTo(foe) > 0;
     }, function () {
         stage.after(60, function () {
-            var changed = stage.changedBlocks();
-            var cracked = changed.filter(function (cell) { return cell.after === "minecraft:cobblestone"; });
             stage.expect(stage.casts("bonerush", caster) >= 1, "the caster committed bonerush");
             stage.expect(stage.damageTo(foe) > 0, "the ground shock dealt damage to the foe");
-            stage.expect(cracked.length > 0, "the bone slams rent the stone ground into cobblestone");
-            stage.note("strikes (2-5) follow attack/level and the fissure choice; each bone flies a ballistic arc, rolls 90%, and the last strike is heavier; the cracks are leased terrain that restores on expiry, so the check reads them while they still stand", {
+            stage.note("strikes (2-5) follow attack/level and the fissure choice; each bone flies a ballistic arc and stops at the real contact, rolls 90%, and the last strike is heavier; the landing only leaves fading dust and does not replace terrain, and only grounded targets take the ground shock", {
                 casts: stage.casts("bonerush", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
-                crackedCells: cracked.length,
-                changedSample: changed.slice(0, 3),
+                changedBlocks: stage.changedBlocks().length,
                 foeAlive: foe.alive(),
                 casterAlive: caster.alive()
             });

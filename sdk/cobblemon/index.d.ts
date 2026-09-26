@@ -156,6 +156,8 @@ declare const CobblemonCombat: {
     revive(world: CombatWorld, actor: CombatActor, slot: number, ratio: number): boolean;
     /** Same revive step with a readable reason as JSON {ok,reason,restored}; both writes report their own result. */
     reviveResult(world: CombatWorld, actor: CombatActor, slot: number, ratio: number): string;
+    /** CAS form: mismatched stable member id returns member-changed without healing the replacement. */
+    reviveResult(world: CombatWorld, actor: CombatActor, slot: number, ratio: number, expectedId: string): string;
     /** Compare-and-write the native PP balance; stale move identities or balances return false. */
     pp(world: CombatWorld, actor: CombatActor, slot: number, moveKey: string, expectedPp: number, value: number): boolean;
     record(world: CombatWorld, actor: CombatActor, id: string, amount: number): void;

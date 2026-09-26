@@ -22,7 +22,7 @@
   "worldcombat.skill.wideguard.preference.brace.1": "Wide",
   "worldcombat.skill.wideguard.preference.brace.0": "Dense",
   "worldcombat.skill.wideguard.preference.ai.trigger": "Reaction distance",
-  "worldcombat.skill.wideguard.preference.ai.trigger.help": "Consider raising the wall when a threat is within this distance; larger predicts earlier but wastes more walls.",
+  "worldcombat.skill.wideguard.preference.ai.trigger.help": "Consider raising the wall when a threat is within this distance and is actually attacking at range or in an area (what the wall can turn aside); larger reacts earlier but wastes more walls.",
   "worldcombat.skill.wideguard.preference.ai.cover": "Wait for an ally",
   "worldcombat.skill.wideguard.preference.ai.cover.help": "When on, the wall is only raised while another ally is inside the alert radius; when off, pressure on the user is enough.",
   "world_combat.move.wideguard.text.raise": "Wide Guard (absorb %1$s / %2$s covered / %3$s s)",

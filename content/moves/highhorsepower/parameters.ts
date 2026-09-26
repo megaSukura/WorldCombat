@@ -135,6 +135,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["charge","rush","hoof"] },
         { key: "press.on", values: [], when: function (context) { return read(context.detail.values, ["press"]) === true; } },
         { key: "press.off", values: [], when: function (context) { return read(context.detail.values, ["press"]) !== true; } },
+        { key: "description.aim", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.drive", "tier.0.charge"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.drive", "tier.1.shove"] }

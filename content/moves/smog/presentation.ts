@@ -1,13 +1,14 @@
 /**
  * 浊雾 / smog 的客户端表现。
  *
- * 一句话：施法者吸一口气、口边聚起黄绿雾团，朝正前方吐出一道低矮的浊雾；雾贴着地面向前滚，
- *   先漫过近处、隔一拍再涌到锥尖，卷过的人和地都被熏成雾色，被熏到的人身上冒起毒紫泡。
+ * 一句话：施法者吸一口气、口边聚起黄绿雾团，朝选定方向吐出一团浊雾；雾团离开口边后缓慢滚远、一路膨大，
+ *   可见前缘持续翻滚、后缘不断消散，滚到尽头就变薄散去；被罩到的人身上冒起毒紫泡。
  * 色相家族：浊黄绿与灰（smoke / obscuringsmoke / big_smoke / ooze）为主体，毒紫（poisonbubble）只出现在中毒的人身上。
- * 拍子：起（inhale 聚雾）→ 喷（puff 口边喷出、wash 雾锥向前滚）→ 涌（crest 远段涌到、hit 命中、poison 中毒）。
- * 范围：wash / crest 的雾锥按服务端传的 `data.reach`（真实射程）与 `data.half`（判定半角）画出，锥面就是会被熏到的地。
- * 运动：雾团沿锥面从施法者向外滚（`direction: "shape"` 从锥尖散开），远段按 `data.wave` 的节拍涌到。
- * 数：`data.puffs`（特攻派生）决定雾的密度，`data.intensity`（威力派生）决定命中的亮度。
+ * 拍子：起（inhale 聚雾）→ 吐（puff 口边爆开）→ 滚（roll 前缘移动、后缘消散）→ 碰墙（wall 堆薄）→ 散（fade）。
+ * 范围：roll 的球半径由服务端传的 `data.scale`（实际半径 / 参考半径）撑开，画出的就是判定罩到的体积；
+ *   前缘中心每刻由服务端更新，画面与判定读同一份位置与半径。
+ * 运动：roll 以球面向外翻滚，后缘发射器沿 `data.back*` 反向漂移，自然落在队尾消散。
+ * 数：`data.puffs`（特攻与体重派生）决定雾的密度，`data.intensity`（威力派生）决定命中的亮度。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const SmogDefinition: ParticleDefinition = {
@@ -38,71 +39,98 @@ const SmogDefinition: ParticleDefinition = {
         },
         puff: {
             duration: 18,
-            exit: { stop: 8, drain: 14 },
+            exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "gust", bind: "source", offset: [0, 0.5, 0.5], height: 0.5,
-                    orient: "direction",
+                    name: "mouth", bind: "point", fit: "none", offset: [0, 0.1, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/vanilla/big_smoke",
-                    burst: { count: { data: "puffs", fallback: 14 }, at: 1 },
-                    shape: { kind: "cone", radius: 1.1, angleDegrees: { data: "half", fallback: 17 } },
-                    direction: "shape", speed: [0.08, 0.3], spread: 16,
-                    lifetime: [10, 20], size: [0.4, 0.08], sizeMode: "index",
-                    color: 0x8FBF4A, alpha: [0.7, 0], light: "world", maxParticles: 60
+                    burst: { count: { data: "puffs", fallback: 14 }, at: 0 },
+                    shape: { kind: "cone", radius: 1.0, angleDegrees: { data: "half", fallback: 17 } },
+                    direction: "shape", speed: [0.08, 0.28], spread: 18,
+                    lifetime: [8, 16], size: [0.32, 0.05],
+                    color: 0x8FBF4A, alpha: [0.7, 0], light: "world", maxParticles: 52
                 }
             ]
         },
-        wash: {
-            duration: 30,
-            exit: { stop: 20, drain: 16 },
+        roll: {
+            exit: { drain: 24 },
             emitters: [
                 {
-                    name: "haze", bind: "point", offset: [0, 0.35, 0], height: 0, fit: "none",
-                    orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    name: "core", bind: "point", fit: "none", offset: [0, 0.22, 0],
+                    particle: "world_combat_core:cobblemon/vanilla/big_smoke",
                     rate: { data: "puffs", fallback: 14 },
-                    shape: { kind: "cone", radius: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 17 } },
-                    direction: "shape", speed: [0.04, 0.16], spread: 20,
-                    drag: 0.9,
-                    lifetime: [16, 30], size: [0.44, 0.06],
-                    color: 0x8FBF4A, alpha: [0.4, 0], light: "world", maxParticles: 130
+                    shape: { kind: "sphere", radius: 1.4, thickness: 0.7 },
+                    direction: "outward", speed: [0.03, 0.13], spread: 22,
+                    lifetime: [14, 26], size: [0.55, 0.1], sizeMode: "index",
+                    color: 0x8FBF4A, alpha: [0.55, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "low", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
-                    orient: "direction",
+                    name: "haze", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     rate: { data: "puffs", fallback: 14 },
-                    shape: { kind: "cone", radius: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 17 } },
-                    direction: "shape", speed: [0.03, 0.12], spread: 22,
+                    shape: { kind: "sphere", radius: 1.5, thickness: 0.35 },
+                    direction: "outward", speed: [0.02, 0.09], spread: 26,
                     drag: 0.92,
-                    lifetime: [18, 34], size: [0.5, 0.08],
-                    color: 0x6E8C3A, alpha: [0.35, 0], light: "world", maxParticles: 110
+                    lifetime: [18, 34], size: [0.6, 0.08],
+                    color: 0x6E8C3A, alpha: [0.32, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "front", bind: "point", offset: [0, 1.1, 0], height: 0, fit: "none",
-                    orient: "direction",
+                    name: "front", bind: "point", fit: "none", offset: [0, 0.95, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: 16, start: { data: "wave", fallback: 5 },
-                    shape: { kind: "cone", radius: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 17 } },
-                    direction: "shape", speed: [0.05, 0.2], spread: 18,
-                    lifetime: [12, 24], size: [0.12, 0.02],
-                    color: 0xA879D0, alpha: [0.5, 0], light: "full", maxParticles: 80
+                    rate: 10, shape: { kind: "hemisphere", radius: 1.45, thickness: 0.2 },
+                    direction: "outward", speed: [0.04, 0.15], spread: 20,
+                    lifetime: [10, 20], size: [0.14, 0.02],
+                    color: 0xA879D0, alpha: [0.5, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "wake", bind: "point", fit: "none",
+                    offset: [{ data: "backX", fallback: 0 }, { data: "backY", fallback: 0 }, { data: "backZ", fallback: 0 }],
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    rate: { data: "puffs", fallback: 14 },
+                    shape: { kind: "sphere", radius: 1.1, thickness: 0.6 },
+                    direction: "outward", speed: [0.02, 0.08], spread: 24,
+                    drag: 0.86,
+                    lifetime: [10, 20], size: [0.4, 0.04],
+                    color: 0x5E7A34, alpha: [0.22, 0], light: "world", maxParticles: 70
                 }
             ]
         },
-        crest: {
-            duration: 20,
-            exit: { stop: 9, drain: 14 },
+        wall: {
+            duration: 24,
+            exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "surge", bind: "point", offset: [0, 0.4, 0], height: 0, fit: "none",
-                    orient: "direction",
-                    particle: "world_combat_core:cobblemon/vanilla/big_smoke",
+                    name: "splat", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: { data: "puffs", fallback: 14 }, at: 1 },
-                    shape: { kind: "cone", radius: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 17 } },
-                    direction: "shape", speed: [0.07, 0.26], spread: 18,
-                    lifetime: [12, 24], size: [0.5, 0.08], sizeMode: "index",
-                    color: 0x8FBF4A, alpha: [0.6, 0], light: "world", maxParticles: 70
+                    shape: { kind: "sphere", radius: 0.55 },
+                    direction: "outward", speed: [0.02, 0.12], spread: 60, drag: 0.88,
+                    lifetime: [10, 22], size: [0.4, 0.05],
+                    color: 0x6E8C3A, alpha: [0.5, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "beads", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
+                    burst: { count: 8, at: 1 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.03, 0.14], spread: 40,
+                    lifetime: [8, 16], size: [0.1, 0.02],
+                    color: 0xA879D0, alpha: [0.5, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        fade: {
+            duration: 26,
+            exit: { stop: 9, drain: 18 },
+            emitters: [
+                {
+                    name: "thin", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/vanilla/big_smoke",
+                    rate: { data: "puffs", fallback: 14 },
+                    shape: { kind: "sphere", radius: 1.4, thickness: 0.5 },
+                    direction: "outward", speed: [0.01, 0.05], spread: 30, drag: 0.9,
+                    lifetime: [14, 26], size: [0.5, 0.03],
+                    color: 0x8FBF4A, alpha: [0.32, 0], light: "world", maxParticles: 80
                 }
             ]
         },

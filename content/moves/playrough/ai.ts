@@ -3,7 +3,8 @@
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 8）格内；够不到交给共享接近逻辑。
  * 它是近身接触招，要先把身位收进去。
- * 对谁出手：`ai.cluster`（默认开）打开时，目标身边 3 格内还挤着别的敌人就优先——撒欢式能顺势翻第二个；
+ * 对谁出手：`ai.cluster`（默认开）打开时，目标身边 3 格内还挤着别的敌人、且那个敌人也落在本招实际可达范围内，
+ *   就优先出手——撒欢式能顺势翻第二个；
  *   `ai.finish`（默认开）打开时，残血目标排前。
  * 够不到怎么办：reach 就是本招实际射程（扑撞距离 + 余量），先走近。
  * 放完之后：被顶开的目标与降攻交回共享交战计划；如果翻到了第二个，它也会带着降攻的可能。
@@ -36,7 +37,9 @@ namespace PokemonSkills {
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref || other.ref === self.ref) continue;
-                    if (CompanionBehavior.distance(other.point, target.point) <= 3) { score += 12; break; }
+                    // 只有第二个目标也在本招实际可达范围内，撒欢式才真的翻得过去，加成才成立。
+                    if (CompanionBehavior.distance(other.point, target.point) <= 3
+                        && CompanionBehavior.distance(other.point, self.point) <= capability.data.range) { score += 12; break; }
                 }
             }
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 8);

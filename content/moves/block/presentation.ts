@@ -1,18 +1,17 @@
 /**
  * 挡路 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：术者沉腰张臂，目标背影一侧的地面迸起一圈尘土，一排青灰栅栏立柱贴着弧线冲天立起；
- *   目标被推得往前一趔趄，随后脚边持续浮着灰尘、墙基贴着一条冷光直到封锁解除。
+ * 一句话：术者沉腰张臂，脚边卷起一圈尘土；一道冷光先沿拟建弧线探出退路的位置，落墙时一排青灰栅栏立柱
+ *   贴着弧线冲天立起，真正被墙压住的敌人在墙根被踹起一撮土；墙基贴着一条冷光，直到封锁解除、栅栏收回。
  *
  * 色相家族：青灰钢蓝（0x8FA1B0／0xC7D3DD）为主，脚下的尘土只用原色 earth／tinydust 作中性底色。
  *   亮蓝白只出现在落栅冲击的小面积高光，不引入第二个色相。
- * 层次：起势（起手，脚边聚尘）→ 立栅＋推挤＋墙基（击）→ 贴地冷光与脚下浮尘（持续）→ 收栅（余韵）。
- * 起击收：windup（沉腰）→ seal（落栅）→ penned（封锁还在）→ fold（收栅）。
- * 范围：seal／penned 的 `wall_base` 沿服务端给的 `data.path`（栅栏基点折线）工作，画的正是判定里那道弧墙；
- *   地面圆环半径按 `data.scale = 实际弧长 / 参考弧长 4.0` 缩放，玩家一眼看出退路被封到哪。
- * 运动：立柱沿墙基折线向上迸发（impact_steel 沿 shape 播一遍），尘土从墙根向外翻起；
- *   目标的推挤由 `data.shove` 放大脚下那一撮被踹起的土。
- * 数：立柱根数由 `data.columns` 绑定发射量，冲击与贴地冷光随 `data.intensity`（根数／高度换算）加重。
+ * 层次：起势（起手，拟建弧＋脚边聚尘）→ 立栅＋墙基（击）→ 贴地冷光（持续）→ 推挤（被墙压住者）→ 收栅（余韵）。
+ * 起击收：windup（拟建弧）→ seal（落栅）→ press（贴墙者被推）→ penned（封锁还在）→ fold（收栅）。
+ * 范围：windup 的 `plan_arc` 沿服务端给的拟建弧 `data.path` 画；seal／penned 的 `wall_base` 沿实际成功列
+ *   的 `data.path` 工作——受阻失败的格不在折线里，画面直接留下缺口，和判定里那道墙同源。
+ * 运动：立柱沿墙基折线向上迸发（impact_steel 沿 shape 播一遍），尘土从墙根向外翻起；拟建弧用贴地冷光缓慢呼吸。
+ * 数：立柱根数由 `data.columns` 绑定发射量，冲击与墙基冷光随 `data.intensity`（根数／高度换算）加重。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const BlockDefinition: ParticleDefinition = {
@@ -22,6 +21,14 @@ const BlockDefinition: ParticleDefinition = {
             duration: 18,
             exit: { stop: 8, drain: 16 },
             emitters: [
+                {
+                    name: "plan_arc", bind: "path", offset: [0, 0.12, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: { data: "columns", fallback: 6 }, shape: { kind: "polyline" },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [10, 18], size: [0.07, 0.01],
+                    color: 0x8FA1B0, alpha: [0.4, 0], alphaMode: "sin", light: "world", maxParticles: 48
+                },
                 {
                     name: "brace_dust", bind: "source", height: 0.06, offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
@@ -67,15 +74,30 @@ const BlockDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [14, 24], size: [0.4, 0.08], sizeMode: "index",
                     color: 0xC7D3DD, alpha: [0.8, 0], light: "world", maxParticles: 30
-                },
+                }
+            ]
+        },
+        press: {
+            duration: 22,
+            exit: { stop: 8, drain: 16 },
+            emitters: [
                 {
-                    name: "seal_shove", bind: "target", height: 0.34,
+                    name: "press_shove", bind: "target", height: 0.34,
                     particle: "world_combat_core:cobblemon/generic/hit",
                     burst: { count: 20, repeats: 2, interval: 2 },
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [8, 14], size: [0.2, 0.05], sizeMode: "index",
                     color: 0x8FA1B0, alpha: [0.9, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "press_dust", bind: "target", height: 0.08,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: { data: "columns", fallback: 6 } },
+                    shape: { kind: "circle", radius: 0.45 },
+                    direction: "outward", speed: [0.04, 0.14], gravity: 0.03, drag: 0.9,
+                    lifetime: [10, 18], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0x8FA1B0, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         },
@@ -90,14 +112,6 @@ const BlockDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [14, 24], size: [0.07, 0.01],
                     color: 0xC7D3DD, alpha: [0.5, 0], alphaMode: "sin", light: "world", maxParticles: 60
-                },
-                {
-                    name: "penned_feet", bind: "target", height: 0.05,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 4, shape: { kind: "circle", radius: 0.4 },
-                    direction: "outward", speed: [0.0, 0.02],
-                    lifetime: [18, 30], size: [0.08, 0.02],
-                    color: 0x8FA1B0, alpha: [0.35, 0], alphaMode: "sin", light: "world", maxParticles: 20
                 }
             ]
         },
@@ -106,7 +120,7 @@ const BlockDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "fold_dust", bind: "target", height: 0.1,
+                    name: "fold_dust", bind: "point", offset: [0, 0.1, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: 16 }, shape: { kind: "circle", radius: 0.6 },
                     direction: "outward", speed: [0.02, 0.08], drag: 0.9,

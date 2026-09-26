@@ -3,7 +3,7 @@
   "worldcombat.skill.strengthsap.summary": "Latch roots onto a foe at close range: restore health scaled by how much stronger its Attack is than yours and drop its Attack by one stage. It saps strength, not life; no damage.",
   "worldcombat.skill.strengthsap.description.0": "The roots reach a foe within %1$s blocks, which is also the real range.",
   "worldcombat.skill.strengthsap.description.1": "The draw deals no damage; it restores about %1$s of your own maximum health, scaled by the target's Attack against your own - a stronger foe gives more, up to the health you are missing.",
-  "worldcombat.skill.strengthsap.description.2": "On hit the target's Attack drops by %1$s stage(s) and it carries the Sapped break mark for %2$s; while a companion is healthy it will not re-apply Strength Sap to a target it already drained. The Attack drop is a stat stage: it does not recover when the mark expires, but lasts until the target leaves combat or its stat stages are reset.",
+  "worldcombat.skill.strengthsap.description.2": "On hit the target's Attack actually drops by %1$s stage(s) under its ability policy: only a real drop carries the Sapped break mark for %2$s. If an ability prevents or reverses it, the real change is shown instead of a false weakening. While a companion is healthy it will not re-apply Strength Sap to a target it already drained. The Attack drop is a stat stage: it does not recover when the mark expires, but lasts until the target leaves combat or its stat stages are reset.",
   "worldcombat.skill.strengthsap.deep.on": "Deep draw: x1.35 healing and x1.2 break duration, at +0.1 s wind-up, a shorter reach (x0.9) and x1.15 cooldown.",
   "worldcombat.skill.strengthsap.deep.off": "Light draw: longer reach, faster wind-up and cooldown, with slightly less healing and a shorter break, for sustained attrition.",
   "worldcombat.skill.strengthsap.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
@@ -26,9 +26,13 @@
   "worldcombat.skill.strengthsap.preference.ai.maxChase.help": "Only reach out when a threat is this close; larger goes further to latch on.",
   "worldcombat.skill.strengthsap.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.strengthsap.preference.ai.healBelow.help": "Below this health ratio the user prefers strength sap as sustain; higher spends it sooner.",
+  "worldcombat.skill.strengthsap.preference.ai.strongAt": "Treat as strong Attack",
+  "worldcombat.skill.strengthsap.preference.ai.strongAt.help": "A target whose current effective Attack reaches this is treated as a strong foe and drained first; lower acts on ordinary foes, higher focuses on true high-Attack targets.",
   "worldcombat.skill.strengthsap.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.strengthsap.preference.ai.leaveStation.help": "On: also leave a hold position to latch on.",
   "world_combat.move.strengthsap.text.latch": "Attack -%1$s, strength pinned",
   "world_combat.move.strengthsap.text.sap": "Drew back %1$s health",
+  "world_combat.move.strengthsap.text.rise": "Attack +%1$s (reversed)",
+  "world_combat.move.strengthsap.text.none": "No strength to draw",
   "world_combat.move.strengthsap.text.miss": "Nothing to latch onto"
 }

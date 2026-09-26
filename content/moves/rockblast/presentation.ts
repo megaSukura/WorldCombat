@@ -1,15 +1,16 @@
 /**
  * 岩石爆击 / rockblast 的客户端表现。
  *
- * 一句话：施法者脚下地面裂开、一撮石块浮起，随后一块接一块「咚、咚」地抛出去，沿一道低弧砸在目标身上，
- *   每次砸落都崩出一圈石屑；没砸中的石头落在地上，留下一撮碎石与尘。
- * 色相家族：石灰褐（large_rock／earth 原色，0xA98C6A 偏色）＋近白碎点（tinydust 原色）＋一点impact 亮边。
- * 拍子：起 charge（掀地聚石）→ 射 volley（一块接一块）→ 击 hit（石屑崩开）／ 地 ground（落地碎石）→ 收。
- * 范围：本招是单体抛物连发，画面靠每块石头的弧线标出「这一条抛物线周围会被砸到」，没有地面轮廓。
- * 运动：每块石头沿服务端算出的低弧（`LivingActions.ballistic`）飞出，画出的石头本体由原生实体渲染，
- *   粒子补它身后的尘与旋转的碎点；落地向外崩石屑。
- * 数：`data.chips`（物攻换算的碎岩量）绑定命中崩屑量，`data.shot` / `data.shots` 让画面读出演到第几块、
- *   还剩几块，`data.intensity`（单石威力 / 25）放大整幕，`data.scale`（石块判定 / 0.28）让大个子的石头更大。
+ * 一句话：施法者脚下地面裂开、一撮石块浮起，随后一块接一块「咚、咚」地抛出去，沿一道低弧砸向瞄准的落区，
+ *   每次真正砸中都在撞点崩出一蓬碎石尘；砸在墙上或耗尽时只在真实位置起尘、不留地表痕迹。
+ * 色相家族：石灰褐（large_rock／earth 原色，0xA98C6A 偏色）＋近白碎点（tinydust 原色）＋一点 impact 亮边。
+ * 拍子：起 charge（掀地聚石）→ 射 volley（一块接一块）→ 击 hit（命中石屑崩开）／ 地 ground（撞块崩尘）／ 淡 fade。
+ * 范围：本招是自由瞄准的抛物连发，画面靠每块石头的真实弧线标出「这一条抛物线周围会被砸到」，没有地面轮廓。
+ * 运动：每块石头沿服务端算出的低弧飞出（`bind:projectile` 跟随真实投递），画出的石头本体由原生实体渲染，
+ *   粒子补它身后的尘与旋转的碎点；命中／撞块在真实接触点崩石屑，撞块用 `data.face` 知道是哪个面。
+ * 数：`data.chips`（物攻换算的碎岩量）绑定崩屑量，`data.settle`（落尘停留）绑定余尘寿命，
+ *   `data.shot` / `data.shots` 让画面读出演到第几块、还剩几块，`data.intensity`（单石威力 / 25）放大整幕，
+ *   `data.scale`（石块判定 / 0.28）让大个子的石头更大。
  */
 const RockblastDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -86,7 +87,7 @@ const RockblastDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.06, 0.26], spread: 26, spin: 8,
                     gravity: 0.08, drag: 0.92,
-                    lifetime: [8, 16], size: [0.22, 0.06],
+                    lifetime: [8, { data: "settle", fallback: 30 }], size: [0.22, 0.06],
                     color: 0xA98C6A, alpha: [0.9, 0], light: "world", maxParticles: 46
                 },
                 {
@@ -111,7 +112,7 @@ const RockblastDefinition: ParticleDefinition = {
                     shape: { kind: "circle", radius: 0.5 },
                     direction: "outward", speed: [0.04, 0.16], spin: 7,
                     gravity: 0.1, drag: 0.88,
-                    lifetime: [9, 17], size: [0.18, 0.05],
+                    lifetime: [9, { data: "settle", fallback: 30 }], size: [0.18, 0.05],
                     color: 0xA98C6A, alpha: [0.8, 0], light: "world", maxParticles: 34
                 },
                 {
@@ -122,6 +123,21 @@ const RockblastDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [8, 14], size: [0.05, 0.02],
                     alpha: [0.4, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        fade: {
+            duration: 14,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "thin", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.01, 0.06], gravity: 0.04, drag: 0.9,
+                    lifetime: [8, 14], size: [0.05, 0.02],
+                    color: 0xA98C6A, alpha: [0.35, 0], light: "world", maxParticles: 14
                 }
             ]
         }

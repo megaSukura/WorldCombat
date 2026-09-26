@@ -23,13 +23,13 @@
   "worldcombat.skill.craftyshield.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.craftyshield.preference.ai.maxChase.help": "The partner only considers weaving the lattice while a threat is this close; smaller keeps it for melee pressure, larger prepares from farther away.",
   "worldcombat.skill.craftyshield.preference.ai.opening": "When to weave",
-  "worldcombat.skill.craftyshield.preference.ai.opening.help": "Under pressure: only while a foe is attacking the partner or its owner, or the partner was just hurt. Anytime: weave on any threat.",
+  "worldcombat.skill.craftyshield.preference.ai.opening.help": "Under pressure: only once a foe has actually used a status move, a nearby ally already carries a key status, or a foe is lunging at one of yours. Anytime: weave on any threat as a standing guard.",
   "worldcombat.skill.craftyshield.preference.ai.opening.incoming": "Under pressure",
   "worldcombat.skill.craftyshield.preference.ai.opening.anytime": "Anytime",
   "worldcombat.skill.craftyshield.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.craftyshield.preference.ai.leaveStation.help": "When on, the partner will also leave its post to weave the lattice.",
   "world_combat.move.craftyshield.text.raise": "Crafty Shield (%1$s deflections / %2$s covered / %3$s s)",
-  "world_combat.move.craftyshield.text.deflect": "The lattice turns the status move aside",
+  "world_combat.move.craftyshield.text.deflect": "The lattice turns the status move aside (%1$s/%2$s left)",
   "world_combat.move.craftyshield.text.fall": "The lattice closes",
   "effect.world_combat.crafty_shield": "Crafty Shield"
 }

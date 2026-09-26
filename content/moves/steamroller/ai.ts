@@ -4,6 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在自己 `ai.maxChase`（默认 7）格以内；更远交给共享接近逻辑。
  * 它一次能碾过一整排，所以 `ai.preferRow`（默认开）在目标身旁还站着别人时把它排到前面——代价是可能为了
  * 碾一排而放过眼前真正的威胁；关闭则只按威胁本身选目标。宽碾式半径更大，更容易一次压到并排的人。
+ * 贴地滚只碾得到贴着地面的人，腾空/飞行的目标会明显降权。
  * 放完之后：滚到哪算哪，接着交给共享顺序决定追打还是换招。
  */
 namespace PokemonSkills {
@@ -24,6 +25,8 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 20;
+            // 贴着地面滚的人最容易被碾到；腾空/飞的威胁降权，不值得为一记空滚挤掉别的招。
+            if (target.grounded === false) score -= 12;
             if (CompanionBehavior.ai<boolean>(capability, "preferRow", true)) {
                 let row = 1;
                 const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
@@ -35,7 +38,7 @@ namespace PokemonSkills {
                 if (row >= 2) score += 18;
             }
             if (CompanionBehavior.status(context, target, "flinch")) score += 2;
-            return score;
+            return Math.max(0, score);
         }
     });
 

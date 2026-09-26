@@ -168,4 +168,54 @@ check('in-range placement respects station permission and a wait plan blocks cas
     const result=tasks.perform(frame,'tool','work',target,{});assert.equal(result.state,wait?'running':'failed');assert.equal(casts,0);
   }
 });
+check('body-aware reach approaches a surface without changing the selected aim or identity', () => {
+  const library = new M.Library(), tasks = new M.Tasks(library), body = { ref: 'checks:self', point: [0, 1, 0] };
+  const target = { ref: 'checks:large', point: [8, 10, 0] }, moves = []; let cast = null;
+  library.register('checks:touch', { protocols: ['checks:work'], reach: () => 3, execute: (_context, _item, selected) => { cast = selected; return 1; } });
+  const frame = { actor: body.ref, tick: 1, facts: { self: body, nearby: [target], busy: false }, scratch: {}, memory: {}, active: null, suspended: [], choice: { key: 'checks:touch' },
+    capabilities: [{ id: 'tool', protocols: ['checks:work'], data: { use: 'checks:touch', range: 3 } }],
+    services: { behavior: { reachPoint: () => [2, 1, 0], stop() {}, move: destination => { moves.push(Array.from(destination)); return 'moving'; } } } };
+  tasks.perform(frame, 'tool', 'work', target, {});
+  assert.equal(cast, target); assert.deepEqual(target.point, [8, 10, 0]); assert.equal(moves.length, 0);
+  frame.services.behavior.reachPoint = () => [5, 1, 0]; cast = null;
+  tasks.perform(frame, 'tool', 'work', target, {});
+  assert.equal(cast, null); assert.deepEqual(moves, [[5, 1, 0]]);
+});
+check('known references require explicit observation and stay outside the nearby discovery list', () => {
+  let reads = 0;
+  const body = { ref: 'factory:reader', point: [0, 0, 0], visible: true };
+  const remote = { ref: 'factory:known-valve', point: [4, 0, 0], visible: false, facts: { pressure: 2 } };
+  const frame = { actor: body.ref, tick: 1, facts: { self: body, nearby: [] }, scratch: {}, memory: {},
+    choice: { goal: { data: { ref: remote.ref } } }, services: { behavior: { subject: ref => { reads++; return ref === remote.ref ? structuredClone(remote) : null; } } } };
+  assert.equal(M.find(frame, remote.ref), null); assert.equal(M.goalSubject(frame), null); assert.equal(reads, 0);
+  const known = M.observeKnown(frame, remote.ref);
+  assert.equal(known.visible, false); assert.deepEqual(JSON.parse(JSON.stringify(known)), remote);
+  assert.equal(M.find(frame, remote.ref), known); assert.equal(M.goalSubject(frame), known);
+  assert.equal(M.observeKnown(frame, remote.ref), known); assert.equal(reads, 1);
+  assert.deepEqual(frame.facts.nearby, []); assert.deepEqual(frame.memory, {});
+  assert.equal(M.find(frame, 'factory:never-observed'), null); assert.equal(reads, 1);
+  const visible = { ...remote, visible: true, point: [3, 0, 0] };
+  frame.facts.nearby.push(visible);
+  assert.equal(M.observeKnown(frame, remote.ref), visible); assert.equal(M.find(frame, remote.ref), visible);
+  assert.equal(M.observeKnown(frame, body.ref), body); assert.equal(reads, 1);
+});
+check('known-reference null snapshots expire with the frame and identity substitutions are refused', () => {
+  let reads = 0, loaded = false;
+  const body = { ref: 'factory:reader', point: [0, 0, 0], visible: true }, ref = 'factory:known-valve';
+  const frame = { actor: body.ref, tick: 1, facts: { self: body, nearby: [] }, scratch: {}, memory: {},
+    services: { behavior: { subject: requested => { reads++; return loaded ? { ref: requested, point: [4, 0, 0], visible: false } : null; } } } };
+  assert.equal(M.observeKnown(frame, ref), null); loaded = true;
+  assert.equal(M.observeKnown(frame, ref), null); assert.equal(reads, 1, 'Null remains this frame\'s observation');
+  frame.tick++;
+  assert.equal(M.find(frame, ref), null, 'Even a reused scratch cannot expose another frame\'s cache');
+  assert.equal(M.observeKnown(frame, ref).visible, false); assert.equal(reads, 2);
+  loaded = false; frame.tick++; frame.scratch = {};
+  assert.equal(M.find(frame, ref), null); assert.equal(M.observeKnown(frame, ref), null); assert.equal(reads, 3);
+  frame.tick++; frame.services.behavior.subject = () => ({ ref: 'factory:substitute', point: [1, 0, 0], visible: true });
+  assert.equal(M.observeKnown(frame, ref), null); assert.equal(M.find(frame, 'factory:substitute'), null);
+  frame.tick++; frame.services.behavior.subject = () => ({ ref, point: [NaN, 0, 0], visible: true });
+  assert.equal(M.observeKnown(frame, ref), null);
+  frame.tick++; delete frame.services.behavior.subject;
+  assert.equal(M.observeKnown(frame, ref), null, 'Older hosts remain usable');
+});
 console.log(`PASS independent world methods: ${checks} checks, no native SDK or final content loaded`);

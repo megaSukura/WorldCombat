@@ -4,9 +4,10 @@
  * 一句话：施法者脚边先卷起一股回旋水花，随后一道水箭贴着水面追向目标，命中处炸开成一片向心回旋的水环；
  * 水环持续把周围的水往涡心收，圈里的人不断被水带走、偶尔整片灌满；水势到点后散成一地水花。
  * 色相家族：深水蓝（0x3A78C2）为主、白沫青（0xBFE8FF）做水面高光、砂褐只在被卷起的地面碎屑上出现。
- * 拍子：起（charge 聚水）→ 掷（cast 水箭）→ 驻（grip 立涡 / churn 回旋 / squeeze 灌水）→ 收（release / slip）。
+ * 拍子：起（charge 聚水）→ 掷（cast 水箭）→ 驻（grip 立涡 / churn 回旋 / squeeze 灌水）→ 收（release / slip）；碰墙走 scatter。
  * 范围：grip 与 churn 都是 `bind: "point"`、`fit: "none"`，用 `data.radius` 画水环，画出来的圈就是回拉生效的那块水面。
- * 运动：水箭沿目标追踪；水面粒子朝涡心收拢、白沫沿圈打转；灌水时向上炸开一束。
+ * 运动：水箭沿目标追踪；水面粒子朝涡心收拢、白沫沿圈打转；`swirl` 用 `data.direction` 把旋纹转向真实切向；
+ *   `tether` 用 `data.path` 在涡心与仍在圈内的受困者之间连一条水线，离开圈随绑定断开；灌水时向上炸开一束。
  * 数：`data.flow`（涡面半径派生）决定水面密度，`data.count`（灌水威力派生）决定灌水那下迸出的水花量，
  *   `data.intensity`（威力 / 24）抬高亮度，`data.scale`（半径 / 1.15）控制粒子尺寸。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -110,6 +111,23 @@ const WhirlpoolDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [12, 20], size: [0.07, 0.02],
                     color: 0xBFE8FF, alpha: [0.5, 0], light: "full", maxParticles: 90
+                },
+                {
+                    name: "swirl", bind: "point", offset: [0, 0.07, 0], height: 0, fit: "none",
+                    orient: "heading", direction: "shape",
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    rate: { data: "flow", fallback: 40 },
+                    shape: { kind: "arc", radius: { data: "radius", fallback: 1.15 }, arcDegrees: 120, thickness: 0.18 },
+                    speed: [0.05, 0.16], spin: 14,
+                    lifetime: [8, 14], size: [0.13, 0.02],
+                    color: 0x9FD8FF, alpha: [0.55, 0], light: "world", maxParticles: 140
+                },
+                {
+                    name: "tether", bind: "path", fit: "none", offset: [0, 0.05, 0], shape: { kind: "polyline" },
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    rate: 12, direction: "away", speed: [0.02, 0.09], spread: 10,
+                    lifetime: [6, 10], size: [0.11, 0.02],
+                    color: 0xBFE8FF, alpha: [0.5, 0], light: "world", maxParticles: 70
                 }
             ]
         },
@@ -190,6 +208,22 @@ const WhirlpoolDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [7, 12], size: [0.06, 0.01],
                     color: 0xBFE8FF, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        scatter: {
+            duration: 18,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "splash", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/water/giantsplash",
+                    burst: { count: 16 },
+                    shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    gravity: 0.06, drag: 0.9,
+                    lifetime: [7, 12], size: [0.13, 0.02],
+                    color: 0xBFE8FF, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         }

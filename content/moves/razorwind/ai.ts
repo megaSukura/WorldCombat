@@ -3,6 +3,7 @@
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格以内、又不近于 `ai.minRange`（默认 4）格——
  *   蓄力期间站定不动，贴脸时先拉开再蓄。自己与目标之间视线要通，否则一扇甩进墙里。
+ *   **近身受压**（任一可见敌人贴到 `ai.minRange` 以内）时压低这一记——安全后排对成片敌人才值得长蓄风。
  * 对谁出手：`ai.cluster`（默认开）打开时，正前方能扫到的敌人越多越优先——它是一记铺开的扇面，
  *   最值的时候是把成排的敌人一起切到；关闭则只按普通远程攻击排序。
  * 优先级：扫到 3 个以上抬价，2 个中等；目标贴到最近起手距离以内时压价，避免站着挨打断。
@@ -37,6 +38,19 @@ namespace PokemonSkills {
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(goal.point));
     }
 
+    /** 近身是否受压：附近有可见、存活、非友方的敌人贴到 `ai.minRange` 以内，就不值得站定长蓄风。 */
+    function razorwindPressed(context: WorldBehavior.Context, capability: WorldBehavior.Capability): boolean {
+        const self = CompanionBehavior.source(context);
+        const pressure = Math.max(2, CompanionBehavior.ai<number>(capability, "minRange", 4));
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || !(other.health > 0) || !other.visible) continue;
+            if (CompanionBehavior.distance(self.point, other.point) < pressure) return true;
+        }
+        return false;
+    }
+
     CompanionBehavior.registerUse(razorwindId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability, purpose) { return capability.data.range; },
@@ -59,6 +73,7 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const distance = CompanionBehavior.distance(self.point, target.point);
             if (distance < CompanionBehavior.ai<number>(capability, "minRange", 4)) return 0;
+            if (razorwindPressed(context, capability)) return 0;
             const cluster = CompanionBehavior.ai<boolean>(capability, "cluster", true) ? razorwindCluster(context, capability, target) : 1;
             return cluster >= 3 ? 44 : cluster >= 2 ? 32 : 22;
         }

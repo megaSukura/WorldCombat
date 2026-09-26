@@ -4,10 +4,10 @@
  * 一句话：一口浓烟从口边扑向落点，落地摊成一片低垂的灰云；云留在那里慢慢翻涌，走进去的人从云里咳出烟。
  *
  * 色相家族：一个灰蓝家族（0x6E6E78 主体／0x8A8A94 细节／0x53535C 云底），近白只在离散的烟丝上。
- * 层次：口边聚烟（起手）→ 烟柱扑出（飞行）→ 云团翻涌＋地面烟脚（停留，范围本身就是云半径）→ 呛咳烟（命中）→ 余烟（持续）。
- * 起击收：gather（攒烟）→ puff（扑出）→ bloom（炸开）→ cloud（停留）→ choked／linger（中招与余味）。
- * 持续状态：云可以密、可以挡视线——遮挡是这招的目的，云层刻意写得比一般持续状态更浓。
- * 数：云团发射率绑定 data.density（体重换算），云半径与地面烟脚由 data.scale（半径 / 2.1）铺开。
+ * 层次：口边聚烟（起手）→ 烟团头部向前飞（飞行，跟着真实 projectile 锚点）→ 抵达一刻膨成云团＋地面烟脚（停留，范围本身就是云半径）→ 呛咳烟（命中）→ 余烟（持续）。
+ * 起击收：gather（攒烟）→ puff（口边一喷）→ travel（烟团飞行）→ bloom（抵达／撞墙时绽开）→ cloud（停留）→ choked／linger（中招与余味）。
+ * 持续状态：云可以密、可以遮出一片烟——烟层刻意写得比一般持续状态更浓，但真正的效果是「呛眼」，不是原生视野遮断。
+ * 数：烟团头部与云团发射率绑定 data.density（体重换算），云半径与地面烟脚由 data.scale（半径 / 2.1）铺开。
  */
 const SmokescreenDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -55,6 +55,30 @@ const SmokescreenDefinition: ParticleDefinition = {
                     spread: 22, speed: [0.25, 0.55], drag: 0.88,
                     lifetime: [16, 28], size: [0.34, 0.6],
                     color: 0x8A8A94, alpha: [0.6, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        travel: {
+            duration: 0,
+            exit: { stop: 4, drain: 16 },
+            emitters: [
+                {
+                    // 烟团头部：跟着真实 projectile 锚点移动，玩家看到它一路飞到落点。
+                    name: "travel_head", bind: "projectile", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/orb/smokeorb",
+                    rate: { data: "density", fallback: 40 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "shape", speed: [0.02, 0.09], drag: 0.94, spin: 5,
+                    lifetime: [10, 20], size: [0.34, 0.5],
+                    color: 0x6E6E78, alpha: [0.7, 0], light: "world", maxParticles: 120
+                },
+                {
+                    name: "travel_trail", bind: "projectile", height: 0.5,
+                    particle: "world_combat_core:cobblemon/vanilla/big_smoke",
+                    rate: { data: "density", fallback: 16 }, trail: { minDistance: 0.3 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "shape", speed: [0.02, 0.08], drag: 0.9,
+                    lifetime: [14, 26], size: [0.3, 0.5],
+                    color: 0x8A8A94, alpha: [0.5, 0], light: "world", maxParticles: 100
                 }
             ]
         },

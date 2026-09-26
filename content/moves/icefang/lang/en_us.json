@@ -31,7 +31,7 @@
   "worldcombat.skill.icefang.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.icefang.preference.ai.maxChase.help": "Beyond this distance the user closes in first. The ice fang reach is short, so a large value often still cannot connect.",
   "worldcombat.skill.icefang.preference.ai.finishFrozen": "Finish frozen targets",
-  "worldcombat.skill.icefang.preference.ai.finishFrozen.help": "On: already frozen targets rank first, since this bite cracks the ice for extra damage, and a frozen, wounded target ranks higher still; off: order by ordinary melee only.",
+  "worldcombat.skill.icefang.preference.ai.finishFrozen.help": "On: already frozen targets rank first, since this bite cracks the ice for extra damage, and a frozen, wounded target ranks higher still; off: order by ordinary melee only and treat it as a delayed-control opener.",
   "world_combat.move.icefang.text.hit": "Bitten",
   "world_combat.move.icefang.text.shatter": "Ice cracked",
   "world_combat.move.icefang.text.freeze": "Frozen",

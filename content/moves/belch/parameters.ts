@@ -23,17 +23,14 @@
  *   tempo/aftercast/recharge  速度决定咬果、收招与冷却。
  *
  * 配置 acrid（呛辣式）双向取舍：开＝中毒概率 +0.18、中毒时长 ×1.4、残气 ×1.4，代价是威力 ×0.88；
- *   关（烈性）＝威力 ×1.15，中毒概率与残留都低。两向各有局面（留一片毒区 vs 打一记重的）。
+ *   关（烈性）＝威力 ×1.15，中毒概率与残留都低。两向在异常与直接伤害间取舍，残气只作短暂表现。
  *
  * 伤害段 gas 与参数同名，走共享换算（原始类别 Special）。
  */
 namespace PokemonSkills {
-    /** 手里那颗树果；不是树果（或无持有物、非宝可梦）时返回 null（没得吃，也就使不出这一招）。 */
-    export function belchBerryOf(pokemon: CombatPokemon | null): { key: string; name: string } | null {
-        if (!pokemon || typeof pokemon.heldTag !== "function") return null;
-        var id = String(pokemon.heldItem());
-        if (!id || !pokemon.heldTag("cobblemon:berries")) return null;
-        return { key: String(pokemon.heldKey()), name: "item." + id.replace(":", ".") };
+    /** Actual held berry and its native slot snapshot, including non-Pokemon holders. */
+    export function belchBerryOf(world: CombatWorld, actor: CombatActor): NativeItems.HeldBerry | null {
+        return NativeItems.heldBerry(world, actor);
     }
 
     actionParameters.define("belch", {
@@ -123,6 +120,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["gas"] },
         { key: "description.1", values: ["reach","arc","poisonChance","poisonTicks"] },
         { key: "description.targets", values: ["maxTargets"] },
+        { key: "description.residual", values: [] },
         { key: "acrid.on", values: [], when: function (context) { return read(context.detail.values, ["acrid"]) === true; } },
         { key: "acrid.off", values: [], when: function (context) { return read(context.detail.values, ["acrid"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

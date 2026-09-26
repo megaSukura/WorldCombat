@@ -9,11 +9,13 @@
  *   起（ready）：身上腾起火星、铠甲在胸前烧红收拢，只播预告（`windup`），此时代价未结清。
  *   射（guard → travel → burst）：提交后立刻弃守（自身防御 −guardLoss、特防 −poiseLoss 写进公共能力阶梯，中与不中都照付），
  *       在身前凝成一副火壳沿准线射出；命中活物结算一记 `shell` 特殊伤害，散爆式还炸开 `blast` 半径的火团、外圈敌人各吃 `share`；
- *       落点烧出 `scorch` 半径、`scorchTicks` 时长的焦地（terrain 租借，linger，到期原方块回来）。
- *   散（slump / fizzle）：后坐卸掉、铠甲缺口露出来，身上浮起余烟并浮字提示降级；撞墙或飞完只留一下散火。
+ *       命中或撞块都在真落点结算这一发，并在落点留下 `scorch` 半径、`scorchTicks` 时长的热壳残屑（纯表现，不改动方块）。
+ *   散（slump / fizzle）：后坐卸掉、铠甲缺口露出来，身上浮起余烟并浮字提示降级；飞完只留一下散火。
+ *
+ * 选取 `kind: "aim"`：自由瞄向发炮，方向或世界点都行；地形会触发这一发，空飞耗尽不再额外生地形。
  *
  * 与同族分开：近身战贴脸连打、突飞猛扑贴地冲、画龙点睛从天而降；与加农光炮比：光炮是钢属性光矛、贯穿一条线、
- *   压低目标特防；铠农炮是火属性单发、命中炸开火团、灼烧地面，代价落在自己身上。
+ *   压低目标特防；铠农炮是火属性单发、命中炸开火团、留下热屑，代价落在自己身上。
  *
  * 配置 `burst`（散爆式）由 `resolve` 改时序、由公式改威力／半径／保留，由本文件改判定与表现；提交后才触碰世界。
  */
@@ -22,39 +24,13 @@ namespace PokemonSkills {
     const armorcannonSlumpText = "world_combat.move.armorcannon.text.slump";
     const armorcannonBurstText = "world_combat.move.armorcannon.text.burst";
 
-    /** 落点烧出的焦地：以 centre 为心铺黑石；租借，`linger` 活过招式，到期原方块回来。 */
-    function armorcannonScorch(world: CombatWorld, centre: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [];
-        const r = Math.ceil(radius);
-        const cx = Math.floor(centre.x()), cz = Math.floor(centre.z()), cy = Math.floor(centre.y());
-        for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius) continue;
-            const x = cx + dx, z = cz + dz;
-            for (let dy = 1; dy >= -4; dy--) {
-                const y = cy + dy;
-                const block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const surface = distance <= radius * 0.5 ? "minecraft:blackstone" : "minecraft:polished_blackstone";
-                if (id !== surface) cells.push({ x: x, y: y, z: z, block: surface });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { return world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-    }
-
     define({
         id: armorcannonId,
         cooldownParameter: "recharge",
         name: "Armor Cannon",
         description: "把熊熊燃烧的铠甲做成一副火壳射出去：远距特殊炮击，命中或落地会在落点烧出焦地。开炮时自身防御与特防各下降一级，命中与否都要付。散爆式命中炸开一团火、波及落点周围的人，代价是单发威力更低。",
         uses: ["远距离用一发烧甲炮弹点掉一个目标", "散爆式炸开落点周围挤在一起的敌人", "在远处打一发再退开、把焦地留在场上"],
-        kind: "enemy",
+        kind: "aim",
         range: 11,
         maxRange: 17,
         prepare: 12,
@@ -116,17 +92,21 @@ namespace PokemonSkills {
                 { moment: "guard", guardLoss: guardLoss, poiseLoss: poiseLoss, burst: burst ? 1 : 0, plates: plates, scale: scale, intensity: intensity }, 24);
             sound(action, "cobblemon:move.fireblast.actor");
 
-            function conclude(current: CombatAction, at: CombatPoint, landed: boolean, extra: number, cells: number, moment: string): void {
+            function conclude(current: CombatAction, at: CombatPoint, landed: boolean, extra: number, moment: string): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
                 WorldFeedback.emit(scope, armorcannonScene, 1, at,
-                    { moment: moment, target: targetRef, landed: landed ? 1 : 0, extra: extra, blast: blast, cells: cells,
+                    { moment: moment, target: targetRef, landed: landed ? 1 : 0, extra: extra, blast: blast, scorch: scorch,
                         plates: plates, scale: scale, intensity: intensity }, moment === "burst" ? 30 : 20);
                 if (moment === "burst") {
                     sound(current, "cobblemon:impact.fire");
                     sound(current, "minecraft:entity.generic.explode");
                     if (extra > 0) WorldFeedback.text(scope, at.plus(up), armorcannonBurstText, [extra], 24);
+                    // 短时热壳残屑：独立余波，按本身寿命清理，不改动地面方块。
+                    WorldFeedback.emit(scope, armorcannonScene, 1, at,
+                        { moment: "residue", scorch: scorch, plates: plates, scale: scale, intensity: intensity * 0.6 },
+                        Math.max(20, Math.round(scorchTicks)));
                 }
                 const self = scope.observe(actor);
                 if (self !== null) {
@@ -152,7 +132,7 @@ namespace PokemonSkills {
                         landed = impact(current, hit, armorcannonId, shell, { damage: damageSpec(armorcannonId, "shell") });
                     }
                     const at = hit.position();
-                    const cells = armorcannonScorch(scope, at, scorch, scorchTicks);
+                    // 命中或撞块都用同一落点结算这一发：散爆式在真落点炸开并波及周围的人。
                     if (burst && blast > 0) {
                         WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, blast, { below: 2.0, above: 3.0 }),
                             function (other, facts) {
@@ -160,10 +140,11 @@ namespace PokemonSkills {
                                 if (hurt(current, other, armorcannonId, shell * share, { damage: damageSpec(armorcannonId, "shell") })) extra++;
                             });
                     }
-                    conclude(current, at, landed, extra, cells, "burst");
+                    conclude(current, at, landed, extra, "burst");
                 }
             }, function (current: CombatAction) {
-                conclude(current, current.targetPosition(), false, 0, 0, "fizzle");
+                // 空飞耗尽：只留一下散火，不生成残屑、不改动地面。
+                conclude(current, current.targetPosition(), false, 0, "fizzle");
             });
 
             WorldFeedback.keep(world, "armorcannon:travel:" + action.id(), armorcannonScene, 1, origin,

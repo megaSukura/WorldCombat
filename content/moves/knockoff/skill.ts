@@ -19,22 +19,50 @@ namespace PokemonSkills {
      * 把被拍掉的道具以真实掉落物抛出：`scatter` 是真正的落点距离——用弹道解出飞向该点的初速，
      * 原生掉落物自己沿这条低弧翻滚落地，过 `pickup` 刻才能被捡起。移除与生成在同一事务里完成；
      * 原生拒绝时返回失败、原物留在原槽。
+     * 回执里的 `drop` 是那件掉落物的实体 UUID，表现用它跟随真实落物；`land` 是按同一初速与
+     * 原版掉落物阻力估算的落地刻，供落地小闪对时。
      */
     function knockoffToss(scope: CombatWorld, target: CombatActor, point: CombatPoint, held: NativeItems.Held,
-        direction: CombatPoint, scatter: number, tossSpeed: number, pickup: number): NativeItems.Receipt {
+        direction: CombatPoint, scatter: number, tossSpeed: number, pickup: number): { receipt: NativeItems.Receipt; land: number } {
         var flat = WorldCombat.point(direction.x(), 0, direction.z());
         if (flat.length() < 0.01) flat = WorldCombat.point(0, 0, 1);
         var destination = point.plus(flat.unit().scale(scatter));
         var arc = LivingActions.ballistic(point.plus(WorldCombat.point(0, 0.4, 0)), destination, tossSpeed, 0.04);
         var velocity = arc ? arc.scale(tossSpeed) : flat.unit().scale(tossSpeed);
-        return NativeItems.dropHeld(scope, target, held, JSON.stringify({ pickupDelay: Math.max(0, Math.round(pickup)),
+        var horizontal = Math.sqrt(velocity.x() * velocity.x() + velocity.z() * velocity.z()), land = 40;
+        if (horizontal > 0.02 && scatter > 0.05) {
+            var remaining = 1 - 0.01 * scatter / horizontal;
+            if (remaining > 0.02 && remaining < 1) land = Math.log(remaining) / Math.log(0.99);
+        }
+        land = Math.max(6, Math.min(110, Math.round(land)));
+        var receipt = NativeItems.dropHeld(scope, target, held, JSON.stringify({ pickupDelay: Math.max(0, Math.round(pickup)),
             velocity: [velocity.x(), velocity.y(), velocity.z()] }));
+        return { receipt: receipt, land: land };
+    }
+
+    /** 本场对局的临时记忆：某件拍不掉的东西在哪个目标身上被拒过，AI 据此不再反复尝试缴械。 */
+    var knockoffResistance: { [key: string]: number } = Object.create(null);
+    export function knockoffResisted(world: CombatWorld, actor: CombatActor, target: CombatActor): boolean {
+        var key = String(actor.ref()) + "|" + String(target.ref()), until = knockoffResistance[key];
+        if (until === undefined) return false;
+        if (world.tick() >= until) { delete knockoffResistance[key]; return false; }
+        return true;
+    }
+    export function knockoffResist(world: CombatWorld, actor: CombatActor, target: CombatActor, ticks: number): void {
+        knockoffResistance[String(actor.ref()) + "|" + String(target.ref())] = world.tick() + Math.max(20, Math.round(ticks));
+    }
+
+    /** 向前压上的水平朝向：取目标／落点的水平分量，贴着地面推进，避免朝目标脚下的斜向撞到地面。 */
+    function knockoffHeading(action: CombatAction): CombatPoint {
+        var delta = action.targetPosition().minus(action.origin());
+        var flat = WorldCombat.point(delta.x(), 0, delta.z());
+        return flat.length() < 0.01 ? aim(action) : flat.unit();
     }
 
     function knockoffStrike(action: CombatAction, done: (current: CombatAction) => void): void {
         const movementScenes = WorldFeedback.actionScenes(knockoffScene);
         var world = action.world(), actor = action.actor();
-        var direction = aim(action), length = p("knockoff", "reach", action), speed = p("knockoff", "step", action);
+        var direction = knockoffHeading(action), length = p("knockoff", "reach", action), speed = p("knockoff", "step", action);
         var radius = p("knockoff", "collisionRadius", action), push = p("knockoff", "push", action);
         var scatter = p("knockoff", "scatter", action), tossSpeed = p("knockoff", "tossSpeed", action);
         var pickup = p("knockoff", "pickup", action), motes = p("knockoff", "motes", action);
@@ -62,20 +90,24 @@ namespace PokemonSkills {
                     armed: held !== null ? 1 : 0 }, 32);
                 sound(current, "cobblemon:impact.dark");
                 var targetBody = scope.valid(target) ? scope.observe(target) : null;
-                var knocked = landed && held !== null && targetBody !== null
-                    && knockoffToss(scope, target, targetBody.position(), held, direction, scatter, tossSpeed, pickup).ok;
-                if (knocked && targetBody !== null) {
-                    WorldFeedback.emit(scope, knockoffScene, 1, targetBody.position(),
-                        { moment: "knock", direction: [direction.x(), direction.y(), direction.z()], scale: scale,
-                            scatter: scatter, motes: Math.round(motes) }, 34);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffKnockText, [], 30);
+                var toss = landed && held !== null && targetBody !== null
+                    ? knockoffToss(scope, target, targetBody.position(), held, direction, scatter, tossSpeed, pickup) : null;
+                var knocked = toss !== null && toss.receipt.ok && toss.receipt.drop !== "";
+                if (knocked && targetBody !== null && toss !== null) {
+                    var itemPoint = targetBody.position();
+                    WorldFeedback.emit(scope, knockoffScene, 1, itemPoint,
+                        { moment: "knock", path: [toss.receipt.drop, toss.receipt.drop], item: held!.id,
+                            direction: [direction.x(), direction.y(), direction.z()], scale: scale, scatter: scatter,
+                            land: toss.land, motes: Math.round(motes) }, Math.max(30, Math.min(150, Math.round(toss.land + 30))));
+                    WorldFeedback.text(scope, itemPoint.plus(WorldCombat.point(0, 0.9, 0)), knockoffKnockText, [], 30);
                     sound(current, "minecraft:item.trident.throw");
                 } else if (landed && held !== null) {
+                    knockoffResist(scope, actor, target, 600);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffRefusedText, [], 28);
                 } else {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffBareText, [], 28);
                 }
-                if (landed && scope.valid(target)) scope.displace(target, direction.scale(push));
+                if (landed && scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
                 movementScenes.finish(current, done);
                 return;
             }
@@ -99,7 +131,7 @@ namespace PokemonSkills {
         name: "拍落",
         description: "举臂重拍，把对手的持有物整个拍飞、落地成谁都能再捡的掉落物；对手携带道具时这一拍更重。拍得越狠，道具飞得越远、落地越久才能捡起。",
         uses: ["拍掉对手的持有物", "对持物目标的一次沉重近身打击", "把强力道具打成地上的东西"],
-        kind: "enemy",
+        kind: "aim",
         range: 3,
         maxRange: 4.5,
         prepare: 6,

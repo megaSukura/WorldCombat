@@ -4,7 +4,8 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内（这招射程很短，通常先交给共享接近逻辑贴上去）。
  * 它是一记反噬不轻、换控制的招，所以伙伴只在自身生命高于 `ai.minHealth` 时才主动用；已经倒地（pinned）的目标
  * 不再优先重复摔。目标越沉越摔不动，这由公式承担，AI 只在块头明显比自己大时降低优先级。
- * 压制式适合配合队友留人，抛摔式留给换血，由玩家配置承担。
+ * 不假设硬控一定成功：块头明显大过自己时，连「已经麻痹/睡眠所以更好抓」的控制收益也不计入——那多半只是原地角力，
+ * 不会被按倒；但这样的目标仍可被选来打满伤害。压制式适合配合队友留人，抛摔式留给换血，由玩家配置承担。
  */
 namespace PokemonSkills {
     function submissionMass(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
@@ -33,9 +34,11 @@ namespace PokemonSkills {
             if (CompanionBehavior.status(context, target, "pinned")) return 0;
             let score = 20;
             const heavy = submissionMass(context, target), mine = submissionMass(context, self);
-            if (mine > 0 && heavy > mine * 1.8) score -= 12;
-            if (CompanionBehavior.status(context, target, "paralysis")
-                || CompanionBehavior.status(context, target, "sleep")) score += 10;
+            const outmatched = mine > 0 && heavy > mine * 1.8;
+            if (outmatched) score -= 12;
+            // 扳得动的目标才吃「已经麻痹/睡眠所以更好抓」的加成；扳不动的只当成一记原地重击。
+            if (!outmatched && (CompanionBehavior.status(context, target, "paralysis")
+                || CompanionBehavior.status(context, target, "sleep"))) score += 10;
             return score;
         }
     });

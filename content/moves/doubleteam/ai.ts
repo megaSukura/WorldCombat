@@ -1,24 +1,26 @@
-/**
- * 影子分身 的伙伴 AI 用途：这是这招自己的一套出手计划，不是共享控制位的随手一放。
- *
- * 什么局面有意义：有可见威胁、威胁已经在 ai.maxChase 以内、而且自己身上还没有残影；
- *   这是一招纯自保的准备，被威胁时才留影，安全时不浪费。
- * 对谁出手：自己；不需要瞄准也不需要贴近，站在原地完成（reach 0，accepts 只收自己）。
- * 够不到怎么办：不需要够——威胁离得太远就先不理会，等它靠近。
- * 放完之后：残影替本体挨打、磨完即碎；交回共享顺序继续战斗。
- * 配置 deploy（群影／疾影）改变残影数量、预算、持续时间与冷却；ai.maxChase 决定威胁多近才留影。
- */
+/** Pick a native-clear lateral point near melee pressure; station commands remain authoritative. */
 namespace PokemonSkills {
     CompanionBehavior.registerUse(doubleteamId, {
         protocols: ["world_combat:fortify"],
-        reach: function () { return 0; },
+        reach: function () { return 5; },
+        target: function(context,item,target){
+            const self=CompanionBehavior.source(context),threat=context.senses["world_combat:threat"];if(!threat)return null;
+            const world=CompanionBehavior.world(context),dx=threat.point[0]-self.point[0],dz=threat.point[2]-self.point[2],length=Math.sqrt(dx*dx+dz*dz)||1;
+            for(let side=-1;side<=1;side+=2){
+                const point=[self.point[0]-dz/length*3*side,self.point[1],self.point[2]+dx/length*3*side];
+                const feet=WorldCombat.point(point[0],point[1]-(self.height||1.4)/2,point[2]);
+                if(world.freeSpace(feet,self.width||.9,self.height||1.4)&&world.clear(CompanionBehavior.point(self.point),CompanionBehavior.point(point))){
+                    const choice=JSON.parse(JSON.stringify(self));choice.ref="";choice.point=point;return choice;
+                }
+            }return null;
+        },
         available: function (context, capability, purpose, target) {
-            if (context.facts.mounted) return false;
+            if (context.facts.mounted || ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(capability,"leaveStation",false))) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "doubleteam")) return false;
             const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"];
             if (!threat || threat.health <= 0 || !threat.visible) return false;
-            return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 18);
+            return CompanionBehavior.distance(self.point, threat.point) <= Math.min(7,CompanionBehavior.ai<number>(capability, "maxChase", 18));
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

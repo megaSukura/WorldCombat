@@ -1,13 +1,4 @@
-/**
- * 炸蛋 / eggbomb 的伙伴 AI 用途。
- *
- * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 13）格之内；更远交给共享接近逻辑。
- *   这是一记沉重、回得慢的抛掷，偏好中距离的一次重击。
- * 对谁出手：`ai.opportunist`（默认开）打开时按局面排序——站着不动、没在跑的对手最值（原生 75 命中，
- *   打移动目标容易抡偏）；已经离地的目标更难砸中，降到最后。关闭时所有目标同价。
- * 够不到怎么办：reach 就是本招射程，不够先走近。抡偏了蛋会在地上摊开一小片滑，逼对手绕开，这也是设计的一部分。
- * 放完之后：蛋摔碎、收势，交回共享交战计划等冷却。
- */
+/** Prefer slow targets; lead moving ground targets and allow for the egg's short roll. */
 namespace PokemonSkills {
     function eggbombWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
@@ -18,6 +9,16 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("eggbomb", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
+        target: function (context, item, target) {
+            const velocity = target.velocity || [0,0,0];
+            if (!target.grounded || Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) < .04) return target;
+            const access = CompanionBehavior.world(context), self = CompanionBehavior.source(context), from = CompanionBehavior.point(self.point);
+            const heading = WorldGeometry.flatUnit(CompanionBehavior.point(target.point).minus(from));
+            const lead = CompanionBehavior.point(target.point).plus(WorldCombat.point(velocity[0] * 5, 0, velocity[2] * 5)).minus(heading.scale(.4));
+            const point = WorldGeometry.ground(access, lead);
+            if (point.minus(from).length() > item.data.range) return target;
+            const choice = JSON.parse(JSON.stringify(target)); choice.ref = ""; choice.point = [point.x(), point.y(), point.z()]; return choice;
+        },
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;

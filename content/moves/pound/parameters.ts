@@ -103,6 +103,7 @@ namespace PokemonSkills {
     describe("pound", [
         { key: "description.0", values: ["swat","arc","reach"] },
         { key: "description.1", values: ["nudge"] },
+        { key: "description.aim", values: [] },
         { key: "heavy.on", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) === true; } },
         { key: "heavy.off", values: [], when: function (context) { return read(context.detail.values, ["heavy"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

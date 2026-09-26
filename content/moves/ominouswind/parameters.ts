@@ -18,6 +18,7 @@
  *   squall       风威：特攻定这一收的力度，等级定风的厚。
  *   travel       奔袭距离：特攻决定风能追多远（本招射程）。
  *   front        奔袭速度：特攻与速度共同决定每刻前进多少，也决定对手能有多久的走位窗口。
+ *   turn         追踪转向：速度与特攻决定每刻最多朝目标转过多少度，决定跑者能否甩掉它。
  *   coilRadius   收拢半径：碰撞箱高度与特攻共同决定炸开多大一圈（也是画面范围）。
  *   pull         内收距离：特攻决定把目标朝中心收多近。
  *   surgeChance  反哺概率：特攻与等级共同决定，基础 10% 取自原生。
@@ -57,6 +58,16 @@ namespace PokemonSkills {
             "奔袭速度", {
                 unit: "格/刻",
                 description: "幽风每刻向前窜多少；特攻与速度越高越急，对手能走位躲开的时间就越短。缠魄式慢慢压过去，漫游式一掠而过。"
+            }),
+        turn: formula(
+            F.base(14)
+                .plus(F.stat("speed").minus(60).times(0.12).clamp(-6, 9))
+                .plus(F.stat("specialAttack").minus(60).times(0.05).clamp(-3, 5))
+                .times(F.when(F.pref("haunt"), F.const(0.85), F.const(1.1)))
+                .clamp(6, 30).round(0),
+            "追踪转向", {
+                unit: "度/刻",
+                description: "幽风每刻朝目标方向最多能转过的角度；速度与特攻越高越灵活，越难被横向走位甩掉。缠魄式转得慢一些，漫游式更灵。"
             }),
         coilRadius: formula(
             F.base(2.0)

@@ -3,8 +3,9 @@
  *
  * 场面：只会增强拳的腕力（Machop，30 级，格斗系真实学习者）贴着一只只会跃起、厚血的卡比兽（Snorlax，30 级），
  * 晴天平地。必然事实：本招被提交过（`stage.casts`）；直拳命中并造成伤害（拳程内贴脸，命中几乎必然）；
- * 命中带来硬化——只要伤害 > 0，「拳已变硬」（`world_combat:status/hardened`）就必定被加上过。
- * 硬化到几级、窗口多久、蓄劲配置的实际差异写进 note 供读轨迹判断。
+ * 命中带来硬化——只要伤害 > 0，「拳已变硬」（`world_combat:status/hardened`）就必定被加上，且这一拳实际抬到的
+ * 物攻等级会写进公共阶梯（`stage.stages`）。
+ * 硬化到几级、窗口多久、蓄劲配置与只收回本招贡献的实际差异写进 note 供读轨迹判断。
  */
 Smoke.scenario("poweruppunch", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -20,10 +21,12 @@ Smoke.scenario("poweruppunch", function (stage) {
         stage.expect(stage.casts("poweruppunch", caster) > 0, "power-up punch was committed");
         stage.expect(stage.damageTo(foe) > 0, "the straight punch dealt damage");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/hardened"), "a landed punch hardened the user's fist");
-        stage.note("每记命中硬化 1 级（蓄劲 2 级），窗口内每次命中续期；物攻等级抬高后下一记直拳经共享结算更重。等级与窗口时长是设计事实，由完整装配的人工试玩核对。", {
+        stage.expect((stage.stages(caster).atk || 0) > 0, "the landed punch raised the user's Attack stage");
+        stage.note("每记命中硬化 1 级（蓄劲 2 级），窗口内每次命中续期；等级由 boostWindow 拥有，窗口到期、被清除或再次刷新都只收回本招自己抬起的级数。等级与窗口时长是设计事实，由完整装配的人工试玩核对。", {
             casts: stage.casts("poweruppunch", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             hardened: stage.hadMobEffect(caster, "world_combat:status/hardened"),
+            stages: stage.stages(caster),
             foeAlive: foe.alive()
         });
         stage.done();

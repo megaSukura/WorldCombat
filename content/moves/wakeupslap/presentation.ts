@@ -1,12 +1,13 @@
 /**
  * 唤醒巴掌 / wakeupslap 的客户端表现。
  *
- * 一句话：施法者后撤抽臂、掌面蓄起暖光，一步压上去把掌拍实；睡着的目标那一下掌风更重，梦泡被打碎、
- *   迸出一圈惊醒的白星。
+ * 一句话：施法者后撤抽臂、掌面蓄起暖光，一步压上去把掌拍实；睡着的人那一下掌风更重，睡眠符号被震裂、
+ *   迸出一圈惊醒的白星；余震式的环波只给实际被波及者一小股掌风。
  * 色相家族：暖琥珀一族（0xD98A3A 主体 / 0xE8B06A 掌风与尘 / 0xFFF0C8 只做惊醒高光；梦泡沿用原生色）。
- * 拍子：起 coil（0–6t 蓄掌）→ 击 slap（掌风与尘）→ 醒 wake（梦泡炸裂、白星）／震 shock（环形余波）→ 收 miss。
- * 范围：shock 用与判定同半径的一圈（`data.scale` 按余震半径放大），掌击与惊醒绑在命中点——玩家一眼看出
- *   这一掌打的是谁、余波震到多远。
+ * 拍子：起 coil（0-6t 蓄掌）→ 击 slap（掌风与尘）／醒 wake（梦泡炸裂、白星）→ 震 shock（环形余波）→
+ *   波及 splash（实际被余震拍中者的小掌风）→ 收 miss。
+ * 范围：shock 用与判定同半径的一圈（`data.radius`、`data.scale`），掌击与惊醒绑在命中点、splash 绑在真实被波及者——
+ *   玩家一眼看出这一掌打的是谁、余波震到多远。
  * 运动：掌风从命中点向前炸开、尘屑落地；余波沿地面向外推一圈；惊醒的白星向上迸起。
  * 数：掌风尘屑绑定 `data.dust`（体重与等级换算），惊醒火花绑定 `data.sparks`（等级换算），
  *   强弱绑定 `data.intensity`（实际伤害换算），尺寸绑定 `data.scale`。
@@ -112,7 +113,7 @@ const WakeupslapDefinition: ParticleDefinition = {
                     name: "shockwave", bind: "point", offset: [0, 0.06, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/dashburst",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "circle", radius: 1.8, thickness: 0.9 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 }, thickness: 0.9 },
                     direction: "outward", speed: [0.12, 0.4],
                     lifetime: [8, 15], size: [0.5, 1.1], sizeMode: "index",
                     color: 0xE8B06A, alpha: [0.6, 0], light: "full", maxParticles: 8
@@ -121,11 +122,35 @@ const WakeupslapDefinition: ParticleDefinition = {
                     name: "shock_dust", bind: "point", offset: [0, 0.05, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dust", fallback: 12 }, at: 0 },
-                    shape: { kind: "ring", radius: 1.6 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 } },
                     direction: "up", speed: [0.04, 0.16], spread: 40,
                     gravity: 0.04, drag: 0.93,
                     lifetime: [10, 20], size: [0.07, 0.02],
                     color: 0xD98A3A, alpha: [0.5, 0], light: "world", maxParticles: 90
+                }
+            ]
+        },
+        splash: {
+            duration: 18,
+            exit: { stop: 7, drain: 14 },
+            emitters: [
+                {
+                    name: "palm_wind", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "dust", fallback: 8 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.06, 0.2], spread: 30,
+                    lifetime: [8, 15], size: [0.06, 0.02],
+                    color: 0xE8B06A, alpha: [0.5, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "splash_jolt", bind: "target", height: 0.42,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "sparks", fallback: 0 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.1, 0.3],
+                    lifetime: [7, 13], size: [0.07, 0.02],
+                    color: 0xFFF0C8, alpha: [0.9, 0], light: "full", maxParticles: 30
                 }
             ]
         },

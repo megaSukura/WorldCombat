@@ -1,12 +1,12 @@
 /**
  * 突袭 / suckerpunch 的 AI 用途。
  *
- * 什么局面下出手：只在**读准了目标正在出手**时才提议（否则这一记会白扣 PP）——目标的当前攻击对象非空，
- * 或它在最近 `window` 刻内提交过攻击招式；同时目标可见、敌对、存活且在 `ai.maxChase`（默认 6）格内。
- * 够不到交给共享接近逻辑。
+ * 什么局面下出手：只在**读准了目标正在出手**时才提议（否则这一记会白扣 PP）——目标最近 `window` 刻内完成过
+ * 一次真实攻击（原生近战／投射物走 `DamageSemantics.recentAttack`），或最近提交过攻击招式（世界事件
+ * `world_combat:committed` 记下）；同时目标可见、敌对、存活且在 `ai.maxChase`（默认 6）格内。够不到交给共享接近逻辑。
  *
- * priority：目标的矛头正对着自己（`attacking` 是本个体）时最高 60——这是正面对拼里抢先的时机；
- * 只是有交手记录时 38。读不准则根本不进入候选。
+ * priority：目标刚完成的这次真实攻击是接触（近身）时最高 62，投射物类 50——这是正面对拼里抢先的时机；
+ * 只有脚本交手记录时 38。读不准则根本不进入候选；普通追着跑但没有真实攻击的敌人不再被当成「正在出招」。
  */
 namespace PokemonSkills {
     function suckerpunchWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -14,9 +14,10 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 6)) return false;
-        if (target.attacking && target.attacking.length > 0) return true;
         const world = CompanionBehavior.world(context);
         const window = p(suckerpunchId, "window", world);
+        const opponent = world.actor(target.ref);
+        if (opponent !== null && DamageSemantics.recentAttack(world, opponent, window) !== null) return true;
         const record = suckerpunchReads[target.ref];
         return record !== undefined && world.tick() - record.tick <= Math.max(1, window);
     }
@@ -34,8 +35,11 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || !suckerpunchWants(context, capability, target)) return 0;
-            const self = CompanionBehavior.source(context);
-            if (target.attacking === self.ref) return 60;
+            const world = CompanionBehavior.world(context);
+            const window = p(suckerpunchId, "window", world);
+            const opponent = world.actor(target.ref);
+            const recent = opponent === null ? null : DamageSemantics.recentAttack(world, opponent, window);
+            if (recent !== null) return recent.contact ? 62 : 50;
             return 38;
         }
     });

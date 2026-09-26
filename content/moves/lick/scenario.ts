@@ -6,6 +6,7 @@
  * 是否把目标麻痹、缠绕式是否拽动目标属于概率与配置结果，写进 note 供读轨迹判断。
  */
 Smoke.scenario("lick", function (stage) {
+    stage.time("night");
     var caster = stage.pokemon({ species: "Lickitung", level: 30, moves: ["lick"], at: [0, 0, 0] });
     var foe = stage.mob({ type: "minecraft:zombie", at: [2, 0, 0] });
     stage.hostile(caster, foe);

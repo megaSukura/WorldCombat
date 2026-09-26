@@ -1,13 +1,16 @@
 /**
  * 碉堡的客户端表现。
  *
- * 一句话：一座毒壁从地面鼓起、合拢成碉堡，壁面渗着毒液；来击在壁上溅开毒浆，接触者被倒钩灌毒、身周浮起紫色泡沫；
- * 变化招式被毒壁封住，量尽时碉堡塌成一滩。
+ * 一句话：一座毒壁从脚边鼓起、合拢、钉在释法的那一小块地；壁面渗着毒液；来击在壁面接触点溅开毒浆，
+ * 接触者被倒钩从实际接触点滴着毒液灌进身体、身周浮起紫色泡沫；变化招式被毒壁封住，离开原位或量尽时碉堡塌成一滩。
  * 色相家族：毒紫为主体（ooze／impact_poison／poisonbubble），暗绿与灰烟为中性陪衬。
  * 拍子：起（raise 0–18t，毒浆自下而上鼓成壁）→ 击（block 每次拦截、punish 每次灌毒）→ 收（fall 塌成一滩）。
  * 范围：hold 的毒环按 `data.scale`（碉堡半径／1.6）铺开——画面就是被判定的那一圈。
- * 运动：起手毒浆上涌并合拢；持壁缓慢起伏；灌毒时从接触点向攻击者涌出一串毒泡。
- * 数：`data.venous`（灌毒时长／40）就是 punish 毒泡的数量，`data.worsen` 决定是否更密更亮，`data.intensity` 决定持壁亮度，`data.scale` 放大毒环。
+ * 钉位：raise／hold／block／fall 全部读 `data.point`（raise 与 hold 是原位锚点，block 是实际来袭接触点，
+ *      fall 是毒壁原本的位置）并用 `bind:"point"`，所以角色走开时画面不会跟着飘。
+ * 运动：起手毒浆上涌并合拢；持壁缓慢起伏；灌毒沿 `data.path`（接触点→攻击者）涌出一条真实毒线，再在攻击者身上炸开。
+ * 数：`data.venous`（灌毒时长／40）就是 punish 毒泡的数量，`data.worsen` 决定是否更密更亮，
+ *      `data.intensity` 决定持壁亮度，`data.scale` 放大毒环。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const BanefulBunkerDefinition: ParticleDefinition = {
@@ -45,10 +48,10 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             ]
         },
         hold: {
-            // 持续状态：低密度毒环与缓慢上浮的毒泡，贴在脚边，让玩家看清目标。
+            // 持续状态：低密度毒环与缓慢上浮的毒泡，钉在锚点（data.point）上，随毒壁托管效果存续。
             emitters: [
                 {
-                    name: "ooze_ring", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
+                    name: "ooze_ring", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
                     rate: 6, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
                     direction: "outward", speed: [0.0, 0.01],
@@ -57,7 +60,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
                     light: "world", maxParticles: 22
                 },
                 {
-                    name: "seep", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    name: "seep", bind: "point", offset: [0, 0.03, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     rate: 5, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
                     direction: "up", speed: [0.0, 0.02],
@@ -72,7 +75,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "splash", bind: "target", height: 0.5, fit: "none", orient: "direction",
+                    name: "splash", bind: "point", height: 0.5, fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_poison",
                     burst: { count: 14, at: 1 }, shape: { kind: "arc", radius: 0.6, arcDegrees: 120 },
                     direction: "outward", speed: [0.06, 0.2],
@@ -80,7 +83,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
                     alpha: [1, 0], light: "full", bloom: 0.3
                 },
                 {
-                    name: "spatter", bind: "target", height: 0.5, fit: "none", orient: "direction",
+                    name: "spatter", bind: "point", height: 0.5, fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/goo/chemicalsplash",
                     burst: { count: 22 },
                     shape: { kind: "arc", radius: 0.65, arcDegrees: 150 },
@@ -89,7 +92,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
                     color: 0x8E5CB0, alpha: [0.85, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "ripple", bind: "target", height: 0.5, fit: "none", orient: "direction",
+                    name: "ripple", bind: "point", height: 0.5, fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 20 },
                     shape: { kind: "arc", radius: 0.65, arcDegrees: 150 },
@@ -103,6 +106,15 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 12, drain: 20 },
             emitters: [
+                {
+                    // 毒线沿 data.path（壁面实际接触点 → 攻击者）滴过去，端点是活体引用，随它移动。
+                    name: "venom_line", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
+                    burst: { count: { data: "venous", fallback: 8 } }, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.08, 0.24], spin: 16,
+                    lifetime: [10, 20], size: [0.15, 0.02], sizeMode: "index",
+                    color: 0xB77BD8, alpha: [0.95, 0], light: "full", bloom: 0.2, maxParticles: 90
+                },
                 {
                     name: "venom", bind: "target", height: 0.45, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
@@ -160,7 +172,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "collapse", bind: "target", offset: [0, 0.4, 0], height: 0.35, fit: "none",
+                    name: "collapse", bind: "point", offset: [0, 0.4, 0], height: 0.35, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
                     burst: { count: 30 },
                     shape: { kind: "hemisphere", radius: 0.55 },
@@ -169,7 +181,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
                     color: 0x5E3F78, alpha: [0.85, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "puddle", bind: "target", offset: [0, 0.02, 0], height: 0, fit: "none",
+                    name: "puddle", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 20 },
                     shape: { kind: "ring", radius: 0.55 },
@@ -178,7 +190,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
                     color: 0x6E4A8C, alpha: [0.4, 0], light: "world"
                 },
                 {
-                    name: "fumes", bind: "target", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    name: "fumes", bind: "point", offset: [0, 0.03, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: 16 },
                     shape: { kind: "ring", radius: 0.5 },

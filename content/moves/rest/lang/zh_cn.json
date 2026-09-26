@@ -22,8 +22,8 @@
   "worldcombat.skill.rest.preference.ai.safeDistance.help": "视野里没有活着的敌人进入这个距离，伙伴才把这招当作安全窗口；调小会贴着战场睡，调大要退得更远。",
   "effect.world_combat.refreshed": "神清气爽",
   "world_combat.move.rest.text.sleep": "沉沉睡去",
-  "world_combat.move.rest.text.wake": "休息完毕",
-  "world_combat.move.rest.text.groggy": "被惊醒",
+  "world_combat.move.rest.text.wake": "休息完毕：回复 %1$s 点生命，清除 %2$s 个异常。",
+  "world_combat.move.rest.text.groggy": "被惊醒：回复 %1$s 点生命，清除 %2$s 个异常。",
   "world_combat.move.rest.text.refreshed": "神清气爽",
   "worldcombat.skill.rest.description.additional": "只有在有伤或身上带异常时才能入睡；无论睡满还是被惊醒，都会清掉身上的全部异常，回复量则按睡到的比例计算。"
 }

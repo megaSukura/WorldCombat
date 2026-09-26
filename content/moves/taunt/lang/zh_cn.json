@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.taunt.summary": "当面挑衅对手，使其怒火上头；在怒火消失前，它只能使出会造成伤害的招式。喊话要有一条通视直线，墙后与射程外都会落空。",
+  "worldcombat.skill.taunt.summary": "当面挑衅对手，使其怒火上头；在怒火消失前，它只能使出会造成伤害的招式，能被转向的普通敌人还会把注意转向你。喊话要有一条通视直线，墙后与射程外都会落空。",
   "worldcombat.skill.taunt.use.0": "逼治疗、增益、换场型的敌人只能打人",
   "worldcombat.skill.taunt.use.1": "让依赖变化招式的敌人只能转为硬拼",
   "worldcombat.skill.taunt.use.2": "给队友创造正面交战窗口",
@@ -22,7 +22,7 @@
   "worldcombat.skill.taunt.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.taunt.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑挑衅；调小只在贴身时喊，调大愿意追出去点着它。",
   "worldcombat.skill.taunt.preference.ai.opening": "出手时机",
-  "worldcombat.skill.taunt.preference.ai.opening.help": "喊正在出手的敌人：只在目标正攻击自己或主人、或自己刚被打过时喊；随时：见威胁就喊，当纯扰动用。",
+  "worldcombat.skill.taunt.preference.ai.opening.help": "喊正在出手的敌人：目标有变化招式要封锁、或正咬着别的队友需要拉走、或自己刚被打过时才喊，纯普攻又已经盯着自己的敌人不会浪费；随时：见威胁就喊，当纯扰动用。",
   "worldcombat.skill.taunt.preference.ai.opening.opening": "喊正在出手的敌人",
   "worldcombat.skill.taunt.preference.ai.opening.anytime": "随时",
   "worldcombat.skill.taunt.preference.ai.leaveStation": "驻守时允许离位",

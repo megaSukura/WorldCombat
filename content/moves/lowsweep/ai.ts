@@ -1,19 +1,19 @@
-/**
- * 下盘踢 的伙伴 AI 用途。
- *
- * 什么局面下出手：对手可见、敌对、还活着，在 `ai.maxChase` 之内。它是一记贴身快扫，价值在于把高速对手的速度削下来。
- * 对谁出手：当前威胁；不可见、友方或已倒下的不接受。`ai.cutRunners` 开启时，正在快速移动的目标优先（掉速更深）。
- * 够不到怎么办：`reach` 就是本招射程，不够就先走近；它不负责远程。
- * 放完之后：目标小腿 hobbled、速度等级下降，交回共享交战计划。
- */
+/** Choose a reachable native ankle-box point; large target centres do not decide low-sweep reach. */
 namespace PokemonSkills {
+    function lowsweepPoint(context:WorldBehavior.Context,target:CompanionBehavior.Entity):number[]{
+        const world=CompanionBehavior.world(context),actor=world.actor(target.ref),body=actor?world.observe(actor):null,self=CompanionBehavior.source(context);
+        if(!body)return target.point;
+        const min=body.boundsMin(),max=body.boundsMax(),y=self.point[1]-(self.height||1.4)/2+.2;
+        return[Math.max(min.x(),Math.min(max.x(),self.point[0])),Math.max(min.y(),Math.min(max.y(),y)),Math.max(min.z(),Math.min(max.z(),self.point[2]))];
+    }
     CompanionBehavior.registerUse("lowsweep", {
         protocols: ["world_combat:attack"],
+        target:function(context,_item,target){const aim=JSON.parse(JSON.stringify(target));aim.point=lowsweepPoint(context,target);return aim;},
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+            return CompanionBehavior.distance(CompanionBehavior.source(context).point, lowsweepPoint(context,target))
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 5);
         },
         accepts: function (context, capability, target) {
@@ -21,7 +21,7 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, lowsweepPoint(context,target)) > capability.data.range) return 0;
             let score = 20;
             if (CompanionBehavior.ai<boolean>(capability, "cutRunners", true)) {
                 const motion = CompanionBehavior.velocity(context, target);

@@ -31,7 +31,7 @@
   "worldcombat.skill.icefang.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.icefang.preference.ai.maxChase.help": "超过这个距离就不主动扑咬，先走近。冰冻牙射程很短，设大也常常够不到。",
   "worldcombat.skill.icefang.preference.ai.finishFrozen": "优先收冻结目标",
-  "worldcombat.skill.icefang.preference.ai.finishFrozen.help": "开启：已经冻住的目标排得最前，这一口能咬碎冰壳多结算一段伤害，又冻又残的目标再抬一档；关闭则只按普通近战排序。",
+  "worldcombat.skill.icefang.preference.ai.finishFrozen.help": "开启：已经冻住的目标排得最前，这一口能咬碎冰壳多结算一段伤害，又冻又残的目标再抬一档；关闭则只按普通近战排序，把它当延迟控制的起手。",
   "world_combat.move.icefang.text.hit": "咬中",
   "world_combat.move.icefang.text.shatter": "冰壳碎了",
   "world_combat.move.icefang.text.freeze": "冻结",

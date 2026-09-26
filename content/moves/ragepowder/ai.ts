@@ -3,20 +3,21 @@
  *
  * 什么局面有意义：场上有看得见的威胁、自己不是骑乘状态、身边 ai.watch 内有至少一个活着的同伴
  *   （原生的 onTry 同样要求这边不止一只），并且自己身上还没有这团粉。
- * 对谁出手：自己（kind self），reach 0；已经有粉时不再重复撒。
- * 什么时候最急：同伴生命低于 ai.allyBelow、而自己还在 ai.healthFloor 以上——能替它黏住追兵就先撒（priority 100）；
- *   否则 40，在共享的「掩护」次序里把火力吸过来。
- * 够不到怎么办：范围就是自己的粉尘半径（由等级与特攻决定），不需要接近谁。
- * 放完之后：云留在自己周围持续吸敌，伙伴交回共享顺序继续交战；粉还在时不重复撒。
- * 配置：thick（浓粉／薄粉）改变半径、节奏与存续；ai.watch、ai.allyBelow、ai.healthFloor 决定出手条件。
+ * 对谁出手：自己施放、落点是自己身前（共享掩护计划把落点朝威胁方向挪一小段），用来保护后排的撤退通道。
+ * 什么时候最急：同伴生命低于 ai.allyBelow、而自己还在 ai.healthFloor 以上——能替它拦住追兵就先撒（priority 100）；
+ *   否则 40，在共享的「掩护」次序里把通道封住。
+ * 够不到怎么办：落点由本招的撒粉距离（随特攻）决定，自己站在通道口即可，不需要贴身。
+ * 放完之后：粉云留在原地，自己可以走开继续交战；粉还在时不重复撒。
+ * 与「看我嘛」分开：这里没有全局的脚本化仇恨偏置——牵引只由真正入云时那一次原生请求触发，位置经营才是这招的重点。
+ * 配置：thick（浓粉／薄粉）改变半径、再次入云冷却与存续；ai.watch、ai.allyBelow、ai.healthFloor 决定出手条件。
  */
 namespace CompanionBehavior {
     const ragePowderWatch = PokemonSkills.number("ai.watch", "照看半径", 2, 16, 1);
-    ragePowderWatch.help = "伙伴只在这么远以内有活着的同伴时才撒粉；调小只在贴身时撒，调大愿意替更远的同伴吸走火力。";
+    ragePowderWatch.help = "伙伴只在这么远以内有活着的同伴时才撒粉；调小只在贴身时撒，调大愿意替更远的同伴挡一挡。";
     const ragePowderAllyBelow = PokemonSkills.number("ai.allyBelow", "同伴告急血量", 0.1, 0.9, 0.05);
     ragePowderAllyBelow.help = "同伴生命低于这个比例时，撒粉算紧急（优先越过普通交战）；调高更爱护人，调低只在同伴快倒下时才撒。";
     const ragePowderHealthFloor = PokemonSkills.number("ai.healthFloor", "自身安全血量", 0.2, 0.9, 0.05);
-    ragePowderHealthFloor.help = "自己生命低于这个比例就不再把火力往身上吸；调低更敢替人挨打，调高更先保自己。";
+    ragePowderHealthFloor.help = "自己生命低于这个比例就不再把敌人往自己这边引；调低更敢替人挨打，调高更先保自己。";
 
     PokemonSkills.addPreferences("ragepowder", { thick: false, ai: { watch: 8, allyBelow: 0.5, healthFloor: 0.35 } },
         [ragePowderWatch, ragePowderAllyBelow, ragePowderHealthFloor]);
@@ -33,7 +34,7 @@ namespace CompanionBehavior {
 
     registerUse("ragepowder", {
         protocols: ["world_combat:cover"],
-        reach: function () { return 0; },
+        reach: function (_context, item) { return item.data.range; },
         ready: function (context) { return !status(context, source(context), "ragepowder"); },
         available: function (context, item) {
             if (context.facts.mounted) return false;
@@ -52,10 +53,5 @@ namespace CompanionBehavior {
             for (let index = 0; index < crowd.length; index++) if (ratio(crowd[index]) < below) return 100;
             return 40;
         }
-    });
-
-    /** 粉尘范围里的敌对会被这条排序牵引，脚本化伙伴/野生 AI 同样吃这一口。 */
-    targetPriority("ragepowder-draw", function (candidate) {
-        if (status(candidate.context, candidate.subject, "ragepowder")) { candidate.qualifies = true; candidate.score -= 50; }
     });
 }

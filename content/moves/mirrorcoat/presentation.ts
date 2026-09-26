@@ -2,12 +2,13 @@
  * 镜面反射 / mirrorcoat 的客户端表现。
  *
  * 一句话：施法者在身前立起一面发亮的镜、把最近吃下的特殊伤害映在镜面上（账越大镜面越满）→
- * 光束脱手追着账主飞 → 命中时把那笔能量加倍炸开；没有账时镜面只闪一下就散。
+ * 光束脱手、有账主就追着飞、只有空点就朝瞄准方向直射 → 命中时按真实回执把那笔能量炸开；
+ * 撞到方块或被免疫则在接触点碎成片（shatter），没有账时镜面只闪一下就散。
  * 色相家族：浅青到近白（screen / psyswirl / impact_psychic / glowingsparkle_cyan），落空时降为灰。
- * 拍子：起 mirror（立镜）→ 发 muzzle、飞 flight → 击 reflect（命中）／镜闪 whiff。
- * 范围：mirror 的镜面半径由 `data.scale`（镜面半径派生）给出；reflect 的爆环同样按判定半径画。
- * 运动：mirror 的镜面正对目标立起；flight 沿光束轨迹拖出青白尾迹；reflect 由内向外炸。
- * 数：`data.panes`（账本伤害派生）决定立镜粒子量，`data.count`（返还伤害派生）决定命中碎片数量。
+ * 拍子：起 mirror（立镜）→ 发 muzzle、飞 flight → 击 reflect（真实回执命中）／碎 shatter（撞墙/被挡）／镜闪 whiff。
+ * 范围：mirror 的镜面半径由 `data.scale`（镜面半径派生）给出；reflect/shatter 的爆环同样按判定半径画。
+ * 运动：mirror 的镜面正对目标立起；flight 沿光束轨迹拖出青白尾迹；reflect 由内向外炸，shatter 沿接触面向外碎。
+ * 数：`data.panes`（账本伤害派生）决定立镜粒子量，`data.count`（这次实际扣血派生）决定命中碎片数量。
  */
 const MirrorcoatDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -95,6 +96,32 @@ const MirrorcoatDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.05, 0.1],
                     lifetime: [10, 15], size: [0.44, 0.18],
                     color: 0x8FC7E8, alpha: [0.6, 0], light: "full"
+                }
+            ]
+        },
+        shatter: {
+            // 命中被免疫、或光束撞到方块时：碎光在接触点散开，明确表达「打碎/被挡下」而不是命中。
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "glass", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
+                    burst: { count: 12 },
+                    shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
+                    direction: "outward", speed: [0.1, 0.3], spread: 40,
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [8, 14], size: [0.14, 0.03],
+                    color: 0xE8FBFF, alpha: [0.9, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "shard", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/minihit",
+                    burst: { count: 6 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [6, 11], size: [0.16, 0.04],
+                    color: 0x9AA6AD, alpha: [0.7, 0], light: "world", maxParticles: 30
                 }
             ]
         },

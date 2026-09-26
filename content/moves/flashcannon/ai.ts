@@ -3,18 +3,20 @@
  *
  * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 16）格内时列入候选；焦点目标不受距离限制。
  * 对谁出手：`ai.lineUp`（默认开）且当前是贯穿形态时，若目标身后同一条线上还有别的敌人，抬高优先级——
- *   一发扫掉一排正是它最值的时候；集束形态不穿透，只按普通远程攻击排序。
+ *   一发扫掉一排正是它最值的时候；只数实际射程内、且从自己看得见的敌人，不把后方超距目标算进收益。
+ *   集束形态不穿透，只按普通远程攻击排序。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再射。
  * 放完接什么：交回共享交战计划；光矛不留场，不改变后续决策。
  */
 namespace PokemonSkills {
-    /** 目标身后同一直线上还有多少敌人（水平垂直距 < 1.2 格且投影在目标之后）。 */
-    function flashcannonLined(context: WorldBehavior.Context, target: WorldMethods.Subject): number {
-        const self = CompanionBehavior.source(context);
+    /** 目标身后同一直线上、在真实射程内且通视的敌人数（水平垂直距 < 1.2 格且投影在目标之后）。 */
+    function flashcannonLined(context: WorldBehavior.Context, capability: any, target: WorldMethods.Subject): number {
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.5) return 0;
         const ux = dx / length, uz = dz / length;
+        const range = Number(capability.data.range) || 0;
         const nearby = (context.facts.nearby || []) as WorldMethods.Subject[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
@@ -24,7 +26,10 @@ namespace PokemonSkills {
             const along = ox * ux + oz * uz;
             if (along <= length + 0.5) continue;
             const perpendicular = Math.abs(ox * uz - oz * ux);
-            if (perpendicular < 1.2) count++;
+            if (perpendicular >= 1.2) continue;
+            if (range > 0 && CompanionBehavior.distance(self.point, other.point) > range) continue;
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -47,7 +52,7 @@ namespace PokemonSkills {
             let score = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 21 : 0;
             const config = capability.data.config || {};
             if (CompanionBehavior.ai<boolean>(capability, "lineUp", true) && config.focus !== true
-                && flashcannonLined(context, target) > 0) score += 14;
+                && flashcannonLined(context, capability, target) > 0) score += 14;
             return score;
         }
     });

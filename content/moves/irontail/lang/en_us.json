@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.irontail.summary": "Raise the steel tail and light up a locked line as a warning, then slam it down onto the point: everyone in the ring takes a heavy hit and is shoved, and a solid slam may dent the armour for a Defence drop of one stage or more. The heaviest and slowest of the guard-breakers, and the one a foe can walk out of.",
   "worldcombat.skill.irontail.description.0": "The slam lands on the locked point; every enemy inside its ring takes %1$s contact damage and is shoved %2$s blocks away from the point.",
-  "worldcombat.skill.irontail.description.1": "The tail reaches %1$s blocks with a %2$s block impact radius; a foe that steps out of the ring during the raise dodges the slam.",
+  "worldcombat.skill.irontail.description.1": "The tail reaches %1$s blocks with a %2$s block impact radius; the landing point can be aimed directly, a point beyond the tail is refused, and a wall stops the slam on its surface without breaking blocks. A foe that steps out of the ring during the raise dodges the slam.",
   "worldcombat.skill.irontail.description.2": "A solid hit has a %1$s chance to lower the target's Defence by %2$s stage and leave a dented mark for %3$s; the mark itself changes no stats, but other guard-breaking moves use it to press Defence down further.",
   "worldcombat.skill.irontail.description.3": "The raise to the drop takes %1$s.",
   "worldcombat.skill.irontail.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -23,6 +23,8 @@
   "worldcombat.skill.irontail.preference.ai.maxChase.help": "Beyond this distance it closes in instead of raising the tail. Larger values start from further out and get walked out of the ring more often.",
   "worldcombat.skill.irontail.preference.ai.heavyFirst": "Save for hard targets",
   "worldcombat.skill.irontail.preference.ai.heavyFirst.help": "On: prefer targets that are not dented yet and are above half health. Off: treat it as an ordinary close attack.",
+  "worldcombat.skill.irontail.preference.ai.pinned": "Slam the pinned",
+  "worldcombat.skill.irontail.preference.ai.pinned.help": "On: prefer targets that are standing still or slowed, and lower moving targets (they can step out before the tail lands). Off: ignore motion.",
   "world_combat.move.irontail.text.dent": "Armour dented %1$s stage",
   "world_combat.move.irontail.text.miss": "Iron Tail slammed the ground",
   "effect.world_combat.irontail_dented": "Iron Tail: Dented"

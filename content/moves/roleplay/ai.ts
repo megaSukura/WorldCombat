@@ -6,7 +6,7 @@ namespace CompanionBehavior {
 
     function roleplayWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
         if (context.facts.mounted) return false;
-        if (target.health <= 0 || target.friendly || !target.visible) return false;
+        if (target.health <= 0 || !target.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (status(context, source(context), "roleplay")) return false;
         const self = source(context);
@@ -28,13 +28,14 @@ namespace CompanionBehavior {
     }
 
     registerUse("roleplay", {
-        protocols: ["world_combat:control"],
+        // control copies from a foe; bolster lets the companion demonstrate an ability worth borrowing.
+        protocols: ["world_combat:control", "world_combat:bolster"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (target === null) return true;
             return roleplayWants(context, item, target);
         },
-        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
+        accepts: function (_context, _item, target) { return target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (target === null) return 0;
             return roleplayWants(context, item, target) ? 60 : 0;

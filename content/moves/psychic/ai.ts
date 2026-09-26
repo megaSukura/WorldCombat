@@ -3,10 +3,11 @@
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 15）格内；够不到交给共享接近逻辑。
  * 它冷却长、代价高，是重手而非普通输出，所以只在值得的局面上用。
- * 对谁出手：`ai.focusThreat`（默认开）打开时，正在攻击自己或主人的目标排前——把它按住、拽离正是
+ * 对谁出手：`ai.focusThreat`（默认开）打开时，正在攻击自己或主人的目标排前——把它按住、带离才是
  *   这招最值的时候；`ai.fresh`（默认开）打开时，已经被定住或睡着的目标排后（再握一次白费）。
  * 够不到怎么办：reach 就是本招实际射程，先走近。
- * 放完之后：目标被定身与拖拽交给共享交战计划；只要握还按着，挤压会自然落下。
+ * 放完之后：没有手动瞄准时，操纵窗口把目标朝施法者（自己这一侧）带；目标被定身与推动交给共享交战计划。
+ *   对搬不动的 Boss，位移被原生抗性拒绝也不影响挤压——窗口结束仍会落一记正常伤害，随后正常战斗。
  */
 namespace PokemonSkills {
     function psychicWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {

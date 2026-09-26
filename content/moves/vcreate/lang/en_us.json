@@ -5,6 +5,7 @@
   "worldcombat.skill.vcreate.description.2": "The price is paid the moment you commit: the user loses %1$s Defense, %2$s Sp. Def and %3$s Speed stages, hit or miss.",
   "worldcombat.skill.vcreate.nova.on": "All-burn form: 115% flame power and a fuller V, but one extra Speed stage lost, +2 recovery, +8 cooldown, 95% dive distance and 94% dive speed - a burst that gambles mobility.",
   "worldcombat.skill.vcreate.nova.off": "Kept-flame form: 110% dive speed, 110% dive distance and -8 cooldown, at 95% flame power.",
+  "worldcombat.skill.vcreate.description.aim": "You may dive toward any direction or point without first picking an enemy; with no entity chosen it runs along the chosen direction/point and pulls up at a block or once the dive is spent, and the three stage drops are paid hit or miss. The first hostile living body reached takes the hit, and the dive ends at once into recovery instead of passing through it.",
   "worldcombat.skill.vcreate.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
   "worldcombat.skill.vcreate.growth.0": "From level %1$s the flame rises to %2$s.",
   "worldcombat.skill.vcreate.growth.1": "From level %1$s the flame rises to %2$s and the dive to %3$s blocks.",

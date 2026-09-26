@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.cometpunch.summary": "Plant your feet and hammer both fists forward in a dense flurry, one punch after another. Focused mode lands every punch on one point and hits harder; scatter mode sprays a small fan and can catch side-by-side enemies.",
+  "worldcombat.skill.cometpunch.summary": "Plant your feet and hammer both fists down a fixed lane in front, one punch after another. The lane locks at the start and later punches come faster, but it never turns to chase. Focused mode lands every punch on one narrow lane and hits harder; scatter mode holds a fixed fan and can catch side-by-side enemies.",
   "worldcombat.skill.cometpunch.use.0": "A heavy anchored string of punches",
   "worldcombat.skill.cometpunch.use.1": "Focused mode piles per-punch weight onto a single thick target",
   "worldcombat.skill.cometpunch.use.2": "Scatter mode can catch a second enemy standing beside the target",
+  "worldcombat.skill.cometpunch.use.3": "Aim at a bare direction and play the whole flurry down the fixed lane",
   "worldcombat.skill.cometpunch.description.0": "Each landed punch deals about %1$s physical damage, and the flurry throws up to %2$s punches (2-5 natively, set by Attack and level).",
-  "worldcombat.skill.cometpunch.description.1": "Punches come every %1$s, reaching a target within %2$s blocks; each punch rolls %3$s to hit, and a whiff ends the flurry. The string also stops when the target falls, and in focused mode when the target is knocked out of reach.",
+  "worldcombat.skill.cometpunch.description.1": "The first two punches are %1$s apart and each later gap tightens by a tick, reaching within %2$s blocks; every punch rolls %3$s inside the same fixed lane, and a whiff ends the flurry. The string stops when the target falls or leaves the lane; an empty aim at a bare direction plays the whole string down the lane.",
   "worldcombat.skill.cometpunch.description.2": "Fan angle %1$s°, up to %2$s targets per punch (0° and single-target in focused mode); each punch knocks the target back about %3$s blocks along the strike.",
   "worldcombat.skill.cometpunch.scatter.on": "Scatter: each punch sprays into a fan in front, and one punch can catch a second enemy side by side; costs per-punch power x0.85, knockback x0.6, a flurry capped at 5 and cooldown +2 ticks.",
   "worldcombat.skill.cometpunch.scatter.off": "Focused: every punch lands on one point, per-punch power x1.2 and knockback x1.4; costs a flurry capped at 4 and a single target only.",
@@ -24,7 +25,7 @@
   "worldcombat.skill.cometpunch.value.settle": "Recovery",
   "worldcombat.skill.cometpunch.value.recharge": "Cooldown",
   "worldcombat.skill.cometpunch.preference.scatter": "Scatter flurry",
-  "worldcombat.skill.cometpunch.preference.scatter.help": "On (scatter): each punch sprays into a fan in front, and one punch can catch a second enemy side by side; costs per-punch power x0.85, knockback x0.6, a flurry capped at 5 and cooldown +2 ticks. Off (focused): every punch lands on one point, per-punch power x1.2 and knockback x1.4; costs a flurry capped at 4 and a single target only.",
+  "worldcombat.skill.cometpunch.preference.scatter.help": "On (scatter): each punch sprays into a fan in front, and one punch can catch a second enemy side by side; costs per-punch power x0.85, knockback x0.6, a flurry capped at 5 and cooldown +2 ticks. Off (focused): every punch lands on the same fixed narrow lane, per-punch power x1.2 and knockback x1.4; costs a flurry capped at 4 and a single target only.",
   "worldcombat.skill.cometpunch.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.cometpunch.preference.ai.maxChase.help": "Beyond this distance the user closes in first.",
   "worldcombat.skill.cometpunch.preference.ai.crowds": "Aim for clusters",
@@ -32,5 +33,6 @@
   "worldcombat.skill.cometpunch.preference.ai.leaveStation": "Leave station when guarding",
   "worldcombat.skill.cometpunch.preference.ai.leaveStation.help": "On: the user will leave its station for Comet Punch; off: it only casts when already in reach.",
   "world_combat.move.cometpunch.text.tally": "%1$s of %2$s punches landed",
-  "world_combat.move.cometpunch.text.miss": "Punch %1$s whiffed"
+  "world_combat.move.cometpunch.text.miss": "Punch %1$s whiffed",
+  "world_combat.move.cometpunch.text.out": "The target left the lane, so the flurry stops (%1$s punches landed)"
 }

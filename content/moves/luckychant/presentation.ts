@@ -1,16 +1,4 @@
-/**
- * 幸运咒语 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：施法者仰头唱咒，一圈星尘从脚下升起、头顶的星光连成一环罩住它和队友；对手以为要打中要害时，
- * 一束星光轻轻把那一下拨开；祝福走到尽头，星光安静地收。
- *
- * 色相家族：祝福金（0xFFD26E）为主体，近白（0xFFF0BF）做高光，暖白（0xE8C980）做余韵。
- * 一个效果一个色相家族。持续层压得很低、放在头顶与脚边，让出目标本体视线。
- * 层次：仰头聚星（起手）／天光柱＋星环（罩住一圈）／头顶星光（持续）／拨开要害（事件）／收。
- * 起击收：windup（聚星）→ chant（星环铺开）→ warded（持续）→ guard（拨开一次暴击）→ fade（收）。
- * 数：铺开的星尘量绑定服务端算出的 data.motes；天光半径绑定 data.field；
- * 拨开要害的爆发量绑定实际被省下的伤害（data.saved 派生的 motes 与 saved）。
- */
+/** A single grant ripple; each recipient carries a quiet star that brightens at a blocked critical. */
 const LuckychantDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -41,7 +29,7 @@ const LuckychantDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 32 },
             emitters: [
                 {
-                    name: "chant_ring", bind: "source", height: 0.05, offset: [0, 0.04, 0],
+                    name: "chant_ring", bind: "point", fit: "world", height: 0.05, offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 36 }, shape: { kind: "ring", radius: { data: "field", fallback: 3.5 } },
                     direction: "outward", speed: [0.05, 0.16],
@@ -65,7 +53,7 @@ const LuckychantDefinition: ParticleDefinition = {
                     color: 0xFFF0BF, alpha: [0.7, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "chant_dust", bind: "source", height: 0.02,
+                    name: "chant_dust", bind: "point", fit: "world", height: 0.02,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 20 }, shape: { kind: "ring", radius: { data: "field", fallback: 3.5 } },
                     direction: "outward", speed: [0.02, 0.1], drag: 0.94,
@@ -74,26 +62,15 @@ const LuckychantDefinition: ParticleDefinition = {
                 }
             ]
         },
+        receive: {
+            duration: 20, emitters: [{ name: "receive", bind: "target", height: 1.05,
+                particle: "world_combat_core:cobblemon/moves/wish_star", burst: { count: 1 },
+                speed: 0, lifetime: 20, size: [0.34, 0.12], color: 0xFFF0BF, alpha: [0.95, 0], light: "full" }]
+        },
         warded: {
-            exit: { drain: 30 },
-            emitters: [
-                {
-                    name: "ward_star", bind: "target", offset: [0, 1.12, 0], height: 0.25,
-                    particle: "world_combat_core:cobblemon/generic/star",
-                    rate: 3, shape: { kind: "circle", radius: 0.4 },
-                    direction: "up", speed: [0.005, 0.025],
-                    lifetime: [20, 32], size: [0.16, 0.04], sizeMode: "sin",
-                    color: 0xFFD26E, alpha: [0.4, 0], alphaMode: "sin", light: "full", maxParticles: 16
-                },
-                {
-                    name: "ward_glow", bind: "target", offset: [0, 0.03, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsunboost",
-                    rate: 2, shape: { kind: "ring", radius: 0.4 },
-                    direction: "up", speed: [0.01, 0.04],
-                    lifetime: [22, 34], size: [0.12, 0.03], sizeMode: "sin",
-                    color: 0xFFF0BF, alpha: [0.24, 0], light: "full", maxParticles: 12
-                }
-            ]
+            exit: { drain: 8 }, emitters: [{ name: "ward_star", bind: "target", height: 1.05,
+                particle: "world_combat_core:cobblemon/generic/star", rate: 5,
+                speed: 0, lifetime: 6, size: [0.18, 0.12], color: 0xFFD26E, alpha: [0.6, 0], light: "full", maxParticles: 2 }]
         },
         guard: {
             duration: 26,
@@ -116,30 +93,7 @@ const LuckychantDefinition: ParticleDefinition = {
                     color: 0xFFD26E, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 26
                 }
             ]
-        },
-        fade: {
-            duration: 34,
-            exit: { stop: 12, drain: 28 },
-            emitters: [
-                {
-                    name: "fade_stars", bind: "target", offset: [0, 1.05, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/star",
-                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.5 },
-                    direction: "up", speed: [0.02, 0.08], drag: 0.94,
-                    lifetime: [20, 32], size: [0.18, 0.02],
-                    color: 0xE8C980, alpha: [0.5, 0], light: "full", maxParticles: 30
-                },
-                {
-                    name: "fade_ring", bind: "target", height: 0.04,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 16 }, shape: { kind: "ring", radius: { data: "field", fallback: 3.5 } },
-                    direction: "outward", speed: [0.02, 0.08], drag: 0.94,
-                    lifetime: [16, 28], size: [0.24, 0.06],
-                    color: 0xE8C980, alpha: [0.3, 0], light: "world", maxParticles: 34
-                }
-            ]
         }
     }
 };
-
 WorldCombatParticles.scene("world_combat:move_luckychant", 1, LuckychantDefinition);

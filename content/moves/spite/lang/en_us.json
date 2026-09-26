@@ -1,11 +1,11 @@
 {
   "effect.world_combat.spite_grudge": "Grudge",
-  "worldcombat.skill.spite.summary": "Send a slow, homing grudge at a target: on hitting a Pokemon it tears 4 PP out of the move that target used last and leaves a grudge that slows its movement and lengthens its cooldowns. The grudge itself deals no damage and fizzles if it cannot keep up, is shaken off or meets an obstacle.",
+  "worldcombat.skill.spite.summary": "Send a slow, homing grudge at a target: on hitting a Pokemon it tears 4 PP out of the move that target used last, while an ordinary creature without PP loses nothing. Either way the grudge clings, slowing its movement and lengthening its cooldowns. The grudge itself deals no damage and fizzles if it cannot keep up, is shaken off or meets an obstacle.",
   "worldcombat.skill.spite.use.0": "Punish a target that just acted",
   "worldcombat.skill.spite.use.1": "Tear PP out of a move a foe relies on",
   "worldcombat.skill.spite.use.2": "Slow down a pursuer",
   "worldcombat.skill.spite.description.0": "The grudge reaches %1$s blocks and flies at %2$s blocks per tick with a %3$s-block hit radius; it deals no damage itself - a hit only bites PP and leaves a grudge.",
-  "worldcombat.skill.spite.description.1": "On hitting a Pokemon it cuts %1$s PP from the move that target used last; only casts within the last %2$s count, and an older move, no usable move or an empty one simply loses nothing - the grudge still clings.",
+  "worldcombat.skill.spite.description.1": "On hitting a Pokemon it cuts %1$s PP from the move that target used last; only casts within the last %2$s count, and an older move, no usable move or an empty one simply loses nothing. An ordinary creature has no PP to cut at all, yet the grudge still slows it.",
   "worldcombat.skill.spite.description.2": "Each tick the bolt turns at most %2$s degrees toward the target; if it cannot keep up, is shaken off or meets an obstacle it fizzles, biting no PP and leaving no grudge. On a hit the grudge lasts %1$s, lowering the target's movement speed by 15%% and its ability haste by 30 (skill cooldowns about 40%% longer), and a fresh hit refreshes the duration.",
   "worldcombat.skill.spite.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.spite.growth.0": "From level %1$s the memory window rises to %2$s s and the grudge lasts %3$s s.",

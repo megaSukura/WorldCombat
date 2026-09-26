@@ -2,13 +2,12 @@
  * 冲岩 / accelerock 的客户端表现。
  *
  * 一句话：碎岩先拢上施法者的身子，随后他贴地整个撞出去，身后拖一道石屑；撞实的地方炸开一片碎石，
- *   落点地面再崩出一圈碎石疤，随后慢慢平复。
+ *   真实落点再扬起一圈很快散去的碎石尘，不留下任何方块。
  * 色相家族：土黄与灰褐（0x9A8A6A / 0x6B5B45），近白尘土（0xD8CCB8）只给撞击核心；没有第二组饱和色。
- * 拍子：起 gather（拢石）→ 冲 charge（石身推进）→ 击 smash（碎石迸溅）→ 收 scar（地面碎石疤）／空 miss（冲空扬尘）。
- * 范围：smash 的迸溅半径与碎石疤半径由 `data.scar` 与 `data.scale` 给出，玩家看出这一记崩开多大一块地面。
- * 运动：charge 绑身体、沿冲刺方向拖尾；smash 的碎石从落点向外炸开、有重力；scar 是贴地的一圈碎石。
- * 数：smash 与 charge 的碎石数量绑定 `data.shards`（速度／体重换算），亮度绑定 `data.intensity`（撞击威力换算），
- *   碎石疤的格数绑定 `data.cells`（落点实际崩出的格子数）。
+ * 拍子：起 gather（拢石）→ 冲 charge（石身推进）→ 击 smash（碎石迸溅）→ 尘 scar（落点石尘短散）／空 miss（冲空扬尘）。
+ * 范围：smash 的迸溅与 scar 的尘圈半径由 `data.scar` 与 `data.scale` 给出，玩家看出这一记砸开多大一片尘。
+ * 运动：charge 绑身体、沿冲刺方向拖尾；smash 的碎石从落点向外炸开、有重力；scar 是贴地短散的一圈石尘。
+ * 数：smash 与 charge 的碎石数量绑定 `data.shards`（速度／体重换算），亮度绑定 `data.intensity`（撞击威力换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const AccelerockDefinition: ParticleDefinition = {
@@ -96,22 +95,22 @@ const AccelerockDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "rubble", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: { data: "cells", fallback: 2 }, at: 0 },
+                    name: "dust", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "shards", fallback: 12 }, at: 0 },
                     shape: { kind: "ring", radius: { data: "scar", fallback: 1.0 } },
-                    direction: "shape", speed: [0.01, 0.05],
-                    lifetime: [12, 20], size: [0.12, 0.03],
-                    color: 0x8A7A5A, alpha: [0.9, 0], light: "world", maxParticles: 30
+                    direction: "outward", speed: [0.02, 0.1],
+                    lifetime: [10, 18], size: [0.2, 0.04], sizeMode: "sin",
+                    color: 0xD8CCB8, alpha: [0.6, 0], light: "world", maxParticles: 50
                 },
                 {
                     name: "settle", bind: "point", fit: "none", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "cells", fallback: 2 }, at: 2 },
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: { data: "shards", fallback: 12 }, at: 2 },
                     shape: { kind: "ring", radius: { data: "scar", fallback: 1.0 } },
-                    direction: "up", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.16, 0.02],
-                    color: 0xD8CCB8, alpha: [0.5, 0], light: "world", maxParticles: 40
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.24, 0.05], sizeMode: "sin",
+                    color: 0x6B5B45, alpha: [0.4, 0], light: "world", maxParticles: 40
                 }
             ]
         },

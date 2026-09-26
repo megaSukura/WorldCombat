@@ -30,6 +30,5 @@
   "worldcombat.skill.dragondarts.preference.ai.crowd": "Aim at clusters",
   "worldcombat.skill.dragondarts.preference.ai.crowd.help": "On: prefer to fire when another foe stands near the target, since Split can chase both. Off: rank like any other ranged attack.",
   "worldcombat.skill.dragondarts.preference.ai.leaveStation": "Leave station",
-  "worldcombat.skill.dragondarts.preference.ai.leaveStation.help": "When on, the companion may leave its post to fire under a Hold order; off only fires at what it can reach from where it stands.",
-  "world_combat.move.dragondarts.text.miss": "No target to chase"
+  "worldcombat.skill.dragondarts.preference.ai.leaveStation.help": "When on, the companion may leave its post to fire under a Hold order; off only fires at what it can reach from where it stands."
 }

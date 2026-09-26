@@ -37,9 +37,9 @@ namespace PokemonSkills {
         id: "bite",
         cooldownParameter: "recharge",
         name: "Bite",
-        description: "短促扑出、一口钩住：冷却最短的近身咬合，咬实后有几率把目标咬懵，并把它朝自己拽近一步——它的价值在抢节奏与留人。",
+        description: "短促扑出、一口钩住：可以朝方向或地点空扑，撞上第一个身体才算咬实；咬实后有几率把目标咬懵，并沿接触瞬间的方向把它朝自己嘴边拽近一步——它的价值在抢节奏与留人。",
         uses: ["用最短冷却的近身咬击抢节奏", "把想拉开距离的对手拽回身前", "为下一次贴身出手留住目标"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.4,
         maxRange: 3.6,
         prepare: 5,
@@ -112,15 +112,18 @@ namespace PokemonSkills {
                         { moment: "bite", target: target ? String(target.ref()) : "", scale: scale, intensity: intensity,
                             drag: Math.round(drag * 100) / 100, morsels: Math.max(10, Math.round(power * 0.2)) }, 26);
                     if (landed && target !== null && scope.valid(target)) {
-                        // 獠牙钩住皮肉：把目标朝施法者拽近，而不是顶开。
+                        // 獠牙钩住皮肉：用接触瞬间目标至嘴边的真实方向拽近，画面与实际位移同向。
                         const pull = current.origin().minus(at);
                         const pullDirection = pull.length() < 0.05 ? direction.scale(-1) : pull.unit();
-                        WorldFeedback.emit(scope, biteScene, 1, at,
-                            { moment: "drag", direction: [pullDirection.x(), pullDirection.y(), pullDirection.z()],
-                                drag: Math.max(4, Math.round(drag * 8)) }, 18);
-                        scope.displace(target, direction.scale(-drag));
+                        const dragged = scope.displace(target, pullDirection.scale(drag));
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), biteHitText, [], 22);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), biteDragText, [Math.round(drag * 10) / 10], 22);
+                        // 免位移目标只显示咬伤，不播放飞退画面。
+                        if (dragged > 0.05) {
+                            WorldFeedback.emit(scope, biteScene, 1, at,
+                                { moment: "drag", direction: [pullDirection.x(), pullDirection.y(), pullDirection.z()],
+                                    drag: Math.max(4, Math.round(drag * 8)) }, 18);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), biteDragText, [Math.round(dragged * 10) / 10], 22);
+                        }
                         sound(current, "cobblemon:impact.dark");
                         if (scope.random() < chance && biteFlinch(scope, target, flinchTicks)) {
                             WorldFeedback.emit(scope, biteScene, 1, at, { moment: "flinch", target: String(target.ref()) }, 24);

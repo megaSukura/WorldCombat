@@ -4,7 +4,7 @@
   "worldcombat.skill.supersonic.use.1": "Push back several targets that crowd the user",
   "worldcombat.skill.supersonic.use.2": "Open a collective miss window in a brawl",
   "worldcombat.skill.supersonic.description.0": "The pulse expands from the user, base radius %1$s blocks (scaled by form and clamped to 4-14 blocks), the front advancing %2$s blocks per tick; any non-ally the front passes over is caught, and walls do not block it.",
-  "worldcombat.skill.supersonic.description.1": "Caught non-allies are left confused for a base %1$s (further scaled by form): each attempt has about a 30%% chance to be wasted (about 40%% in Focus form); when it lands a hit on an enemy it takes backlash for about 5.5%% of its maximum health, multiplied by 0.4-2.5 by its Attack.",
+  "worldcombat.skill.supersonic.description.1": "Caught non-allies are left confused for a base %1$s (further scaled by form): each attempt has about a 30%% chance to be wasted (about 40%% in Focus form); when it lands a hit on an enemy it takes backlash for about 5.5%% of its maximum health, multiplied by 0.4-2.5 by its Attack, but never more than the damage that hit actually dealt.",
   "worldcombat.skill.supersonic.description.2": "Pushing out the pulse takes %1$s, the recovery %2$s and the cooldown %3$s. Wide form: radius x1.3, but confusion duration x0.8 and a 30%% fumble chance; Focus form: radius x0.7 and cooldown x1.1, buying confusion duration x1.3 and a 40%% fumble chance.",
   "worldcombat.skill.supersonic.value.waveReach": "Front radius",
   "worldcombat.skill.supersonic.value.waveSpeed": "Wave speed",

@@ -8,6 +8,8 @@
  * native data does.
  */
 namespace PokemonSkills {
+    /** One borrowable move together with the ally that provides it this cast. */
+    interface AssistCandidate { id: string; provider: string; }
     /** True when any friendly Pokemon within the radius knows an implemented move Assist may borrow. */
     export function assistAvailable(world: CombatWorld, origin: CombatPoint, selfRef: string, radius: number): boolean {
         var found = world.query(origin, Math.min(32, Math.max(1, radius)), false);
@@ -25,22 +27,30 @@ namespace PokemonSkills {
         }
         return false;
     }
-    function assistPool(action: CombatAction, radius: number): string[] {
+    /** Borrowable moves inside the effective call radius, each keeping the ally that actually provides it. Re-read at selection. */
+    export function assistCandidates(action: CombatAction, radius: number): AssistCandidate[] {
         var world = action.sense(), origin = action.origin(), selfRef = String(action.actor().ref());
-        var found = world.query(origin, Math.min(32, Math.max(1, radius)), false), ids: string[] = [];
+        var found = world.query(origin, Math.min(32, Math.max(1, radius)), false);
+        var list: AssistCandidate[] = [], seen: { [id: string]: boolean } = {};
         for (var i = 0; i < found.length; i++) {
             var actor = found[i];
             if (String(actor.ref()) === selfRef || !world.friendly(actor) || !world.valid(actor) || String(actor.domain()) !== "cobblemon") continue;
+            if (!world.observe(actor)) continue;
             var pokemon = CobblemonCombat.pokemon(actor);
             for (var slot = 0; slot < pokemon.moveSlots(); slot++) {
                 var known = pokemon.move(slot);
                 if (!known) continue;
                 var id = String(known.id());
-                if (!skills[id] || ids.indexOf(id) >= 0 || NativeLoadout.facts(known).flags.noassist) continue;
-                ids.push(id);
+                if (!skills[id] || seen[id] || NativeLoadout.facts(known).flags.noassist) continue;
+                seen[id] = true;
+                list.push({ id: id, provider: String(actor.ref()) });
             }
         }
-        return ids;
+        return list;
+    }
+    /** Borrowable move ids only; the provider map is rebuilt at selection so both stay on the same frame. */
+    function assistPool(action: CombatAction, radius: number): string[] {
+        return assistCandidates(action, radius).map(function (candidate) { return candidate.id; });
     }
     function assistEnemy(action: CombatAction, origin: CombatPoint, radius: number): { actor: CombatActor; body: CombatObservation } | null {
         var world = action.sense(), found = world.query(origin, Math.min(32, Math.max(1, radius)), false);
@@ -96,16 +106,31 @@ namespace PokemonSkills {
         },
         run: function (action, move, settings) {
             var bonds = p("assist", "bonds", action);
+            var radius = p("assist", "radius", action);
+            // Show the real call radius and a sparse line to each partner that currently answers.
+            var shown = assistCandidates(action, radius), partners: string[] = [];
+            for (var i = 0; i < shown.length && partners.length < 4; i++) if (partners.indexOf(shown[i].provider) < 0) partners.push(shown[i].provider);
             action.present("assist:call", "world_combat:move_assist", 1, action.origin(), JSON.stringify({
-                moment: "call", bonds: bonds, radius: p("assist", "radius", action)
+                moment: "call", bonds: bonds, radius: radius
+            }));
+            action.present("assist:thread", "world_combat:move_assist_thread", 1, action.origin(), JSON.stringify({
+                phase: "call", radius: radius, candidates: partners, provider: ""
             }));
             action.after(p("assist", "call", action), function (current) {
-                var pool = assistPool(current, p("assist", "radius", current));
-                if (!pool.length) { current.reject("no-ally"); return; }
+                // Re-confirm every partner is still inside the shout before borrowing; nothing moves them.
+                var candidates = assistCandidates(current, p("assist", "radius", current));
+                if (!candidates.length) { current.reject("no-ally"); return; }
+                var pool: string[] = [], providerOf: { [id: string]: string } = {};
+                for (var index = 0; index < candidates.length; index++) { pool.push(candidates[index].id); providerOf[candidates[index].id] = candidates[index].provider; }
                 var selection = NativeLoadout.select(current, pool, function (candidate) { return assistCall(current, candidate); });
                 if (!selection) { current.reject("no-ally"); return; }
+                var provider = providerOf[selection.id] || "", selfRef = String(current.actor().ref());
                 current.present("assist:borrow", "world_combat:move_assist", 1, current.origin(), JSON.stringify({
-                    moment: "borrow", bonds: bonds, pool: pool.length
+                    moment: "borrow", bonds: bonds, pool: pool.length, provider: provider, path: [provider, selfRef]
+                }));
+                // The call lines give way to the single transfer thread, then the borrowed move's own presentation.
+                current.present("assist:thread", "world_combat:move_assist_thread", 1, current.origin(), JSON.stringify({
+                    phase: "handover", radius: 0, candidates: [], provider: ""
                 }));
                 NativeLoadout.call(current, selection.id, { input: selection.options.input, eligibility: "caller", cooldown: p("assist", "recharge", current) });
             });

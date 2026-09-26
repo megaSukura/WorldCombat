@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.transform.summary": "暂时复制对手的战斗形态；宝可梦提供招式、能力值、类型和特性，普通生物提供攻击、移动与防护属性。",
+  "worldcombat.skill.transform.summary": "暂时采用一名可见对象的实际战斗配置；宝可梦提供招式、能力值、类型和特性，普通生物提供攻击、移动与防护属性。敌人和队友都能指，自己的生命与外形不变。",
   "worldcombat.skill.transform.use.0": "借对手的整套招式与六维打这一段",
   "worldcombat.skill.transform.use.1": "把对手的高攻或高防形态搬过来",
   "worldcombat.skill.transform.use.2": "在了解对手后换一种完全不同的打法",
-  "worldcombat.skill.transform.description.0": "以宝可梦为目标时，复制其招式、五项战斗能力值、类型与特性，维持 %1$s；自身生命、等级与外形保留。",
-  "worldcombat.skill.transform.description.1": "作用距离 %1$s 格，无法复制已经变身的目标。",
+  "worldcombat.skill.transform.description.0": "以宝可梦为目标时，复制其招式、五项战斗能力值、类型与特性，维持 %1$s；自身生命、等级、库存与外形保留。可以指向队友。",
+  "worldcombat.skill.transform.description.1": "作用距离 %1$s 格，无法复制已经变身的目标；空选不会改指最近的敌人。",
   "worldcombat.skill.transform.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。变身到期或被清除后恢复自己的战斗能力。",
   "worldcombat.skill.transform.dwell.0": "深扮：形态 ×1.35、冷却 ×1.2——留得久，但换得慢。",
   "worldcombat.skill.transform.dwell.1": "浅扮：形态 ×0.75、冷却 ×0.8——换来换去，但每次都短。",
@@ -26,6 +26,9 @@
   "world_combat.move.transform.text.shift": "变身成 %1$s",
   "world_combat.move.transform.text.revert": "变回自己",
   "world_combat.move.transform.text.fail": "无可描之形",
+  "world_combat.move.transform.text.copy": "复制特性 %1$s、招式 %2$s 手",
+  "world_combat.move.transform.text.marks": "借得 %1$s 项战斗属性",
+  "world_combat.move.transform.text.same": "已与此形态相同",
   "effect.world_combat.transform_shift": "变身形态",
   "worldcombat.skill.transform.world": "以普通生物为目标时，复制它出招时的原生攻击力、移动速度、护甲、护甲韧性与抗击退能力，持续 %1$s；保留自己的生命、招式和外形。到期或变身被清除后恢复，期间装备和其他效果继续生效。"
 }

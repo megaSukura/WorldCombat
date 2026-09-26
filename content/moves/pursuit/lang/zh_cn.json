@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.pursuit.summary": "扑向正在拉开距离的目标；命中时若目标背身远离，威力翻倍。",
   "worldcombat.skill.pursuit.use.0": "追击近战",
-  "worldcombat.skill.pursuit.description.0": "贴地扑向目标：造成 %1$s 点物理伤害；扑击距离 %2$s 格、每刻推进 %3$s 格、碰撞半径 %4$s 格。只对撞上的第一个敌人结算伤害，撞上地形或友方就提前停下。命中时目标正背身远离，则这一扑威力翻倍。",
+  "worldcombat.skill.pursuit.description.0": "朝选定方向贴地扑出：造成 %1$s 点物理伤害；扑击距离 %2$s 格、每刻推进 %3$s 格、碰撞半径 %4$s 格。可自由瞄向方向或落点、也可空扑；只对撞上的第一个敌人结算伤害，撞上地形或友方就提前停下。命中时目标正背身远离，则这一扑威力翻倍。",
   "worldcombat.skill.pursuit.description.1": "PP 消耗 %1$s；冷却 %2$s 秒。",
   "worldcombat.skill.pursuit.timing": "时序",
   "worldcombat.skill.pursuit.value.power": "追打威力",
@@ -10,6 +10,8 @@
   "worldcombat.skill.pursuit.value.traceAhead": "前探",
   "worldcombat.skill.pursuit.value.collisionRadius": "碰撞半径",
   "worldcombat.skill.pursuit.value.minimumMove": "最小位移",
+  "worldcombat.skill.pursuit.preference.ai.maxChase": "追击距离",
+  "worldcombat.skill.pursuit.preference.ai.maxChase.help": "目标离自己这么远以内才主动扑过去；调大愿意从更远处起扑，调小只贴脸追击。",
   "world_combat.move.pursuit.text.catch": "追击！",
   "world_combat.move.pursuit.text.hit": "追打"
 }

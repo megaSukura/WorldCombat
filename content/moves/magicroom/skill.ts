@@ -1,8 +1,8 @@
 /**
  * 魔法空间 / magicroom 的出手方式。
  *
- * 核心念头：在地面撑开一片银灰的静默空间，圈内所有携带物的微光被吸走；道具的轮廓还在，力量传不出来；
- *   空间散去，光回到道具上。
+ * 核心念头：在地面撑开一片银灰的静默空间，圈内装备的属性增益被按下、宝可梦的携带物效果被封住；
+ *   装备的轮廓还在，力量传不出来；离开空间或空间散去，力量回到当前装备上。
  *
  * 出手：起手（windup 播银光内收）→ 提交后租出场地（open）→ 走进来的人被静默（gag）／持续（inside）／
  *   走出去恢复（chip）→ 到期散场。
@@ -13,7 +13,7 @@ namespace PokemonSkills {
         id: magicRoomId,
         cooldownParameter: "recharge",
         name: "魔法空间",
-        description: "在选定的地面撑开一片静默空间：站在里面的活体，携带道具的效果全部消失。对双方一视同仁，走出去立刻恢复。",
+        description: "在选定的地面撑开一片静默空间：站在里面的活体，装备提供的属性增益被暂停，宝可梦的携带物效果被封住。装备本身与附魔不会丢失，对双方一视同仁，走出去立刻恢复；第三方自定义槽位与其他模组的主动能力不受影响。",
         uses: ["废掉对手依赖道具的套路", "在道具交换前先让道具失效", "让己方不靠道具的战力占便宜"],
         kind: "point",
         range: 12,
@@ -52,8 +52,7 @@ namespace PokemonSkills {
             const ticks = Math.max(80, Math.round(p(magicRoomId, "gagTicks", action)));
             const radius = p(magicRoomId, "gagRadius", action);
             const density = Math.round(p(magicRoomId, "density", action));
-            WorldEffects.field(world, magicRoomField, point, radius,
-                { until: world.tick() + ticks, density: density }, ticks);
+            WorldEffects.field(world, magicRoomField, point, radius, { density: density }, ticks);
             world.sound("minecraft:block.conduit.deactivate", point, 24, "{}");
             WorldFeedback.emit(world, magicRoomScene, 1, point,
                 { moment: "open", radius: radius, scale: radius / 3.4, density: density }, 48);

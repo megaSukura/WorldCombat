@@ -27,7 +27,10 @@
   "worldcombat.skill.sharpen.preference.ai.minGap.help": "Stop sharpening and fight when a threat is closer than this; larger gives it up more often up close.",
   "worldcombat.skill.sharpen.preference.ai.retaliate": "Bait the counter",
   "worldcombat.skill.sharpen.preference.ai.retaliate.help": "On: prefer to raise the edges once a foe is within 4 blocks so the contact eats the counter. Off: raise them even at range for the Attack alone.",
+  "worldcombat.skill.sharpen.preference.ai.ranged": "Wary of ranged",
+  "worldcombat.skill.sharpen.preference.ai.ranged.help": "On: when the threat's last attack was a projectile/spell and it is still beyond melee, the companion holds off raising the edges rather than feeding a ranged pin. Off: ignore the attack kind and decide by distance alone.",
   "world_combat.move.sharpen.text.jagged": "Sharpen (Attack +%1$s)",
+  "world_combat.move.sharpen.text.capped": "Edges already at their limit (no Attack gained)",
   "world_combat.move.sharpen.text.cut": "Cut by the edges",
   "world_combat.move.sharpen.text.dull": "Edges dull (Attack -%1$s)",
   "effect.world_combat.sharpened": "Sharpened"

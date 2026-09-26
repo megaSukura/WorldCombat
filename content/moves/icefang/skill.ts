@@ -6,10 +6,10 @@
  *
  * 三幕：
  *   起（windup，提交前）：牙间凝起冷霜、地面结一圈霜，只播预告表现。
- *   咬（pounce → bite）：提交后沿瞄准方向扑出；trace 咬中即结算 fang 接触咬合；若目标已被冻住，追加一段 `shatter`
- *       冷脆伤害。命中点炸开冰色迸溅与獠牙剪影，并按 flinchChance 掷畏缩。
- *   冻（freeze）：咬中后隔 `frostDelay` 刻，冷气在伤口里发作，按 freezeChance 施加共享身份
- *       `world_combat:status/frozen`（宝可梦同步为原生冰冻）。
+ *   咬（pounce → bite）：提交后沿瞄准方向扑出；trace 咬中即结算 fang 接触咬合；若目标在本口咬中前就已被冻住，
+ *       追加一段 `shatter` 冷脆伤害（不因这口的迟发冻结回头再触发）。命中点炸开冰色迸溅与獠牙剪影，并按 flinchChance 掷畏缩。
+ *   冻（freeze / resist）：咬中后隔 `frostDelay` 刻，冷气在伤口里发作，只对这次实际咬中的对象按 freezeChance 施加
+ *       共享身份 `world_combat:status/frozen`（宝可梦同步为原生冰冻）；真冻住才结冰，被免疫不补冻、只散一层霜。
  *
  * 配置 `deep`（深寒式）由 resolve 改时序、由公式改威力／冻期／冷脆，提交后才触碰世界。
  */
@@ -97,7 +97,7 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 冷气渗进伤口：隔一拍才发作，掷出则冻住目标（共享身份 frozen，宝可梦同步为原生冰冻）。 */
+            /** 冷气渗进伤口：隔一拍才发作，只对这次实际咬中的对象、掷出真冻住时才结冰；被免疫不补冻，只散一层霜。 */
             function freeze(current: CombatAction, victimRef: string, at: CombatPoint): void {
                 const scope = current.world();
                 const victim = scope.actor(victimRef);
@@ -106,12 +106,17 @@ namespace PokemonSkills {
                 const here = body === null ? at : body.position();
                 if (scope.random() < freezeChance) {
                     const frozen = CombatStatus.inflict(scope, victim, "frozen", freezeTicks);
-                    WorldFeedback.emit(scope, icefangScene, 1, here,
-                        { moment: "freeze", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 26);
-                    WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), frozen ? icefangFreezeText : icefangImmuneText, [], 24);
                     if (frozen) {
+                        WorldFeedback.emit(scope, icefangScene, 1, here,
+                            { moment: "freeze", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 26);
+                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), icefangFreezeText, [], 24);
                         sound(current, "minecraft:block.glass.break");
                         sound(current, "minecraft:entity.player.hurt_freeze");
+                    } else {
+                        // 状态被免疫/拒绝：不补冻，冷气只在表面结一层霜、随即散掉。
+                        WorldFeedback.emit(scope, icefangScene, 1, here,
+                            { moment: "resist", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 20);
+                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), icefangImmuneText, [], 22);
                     }
                 }
                 finish(current);

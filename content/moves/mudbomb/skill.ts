@@ -2,40 +2,38 @@
  * 泥巴炸弹 / mudbomb 的出手方式。
  *
  * 核心念头：把泥压实成一颗硬球掷出，直线砸到对手身上炸开——伤害重，但只有约三成机会把泥雾糊进它的眼睛；
- * 炸过的地方留一小片湿泥。
+ * 主目标留下泥印，周围的人被碎泥泼溅到。
+ *
+ * 选取：kind 为 aim——可以锁定一个实体、也可以朝一个方向或世界点空投；撞上方块照常碎开，
+ *   落点按原生命中的真实方块格与朝向定位；伤害许可仍由命中层按敌我独立判断。
  *
  * 三幕：
  *   起：泥在身前被压实、边转边收紧（提交前 windup 预告）。
  *   飞：提交后泥弹沿直线高速飞出，带旋转与泥屑尾迹。
- *   爆：命中处炸开泥雾，泼溅到附近其他敌人；地上按撞击点留一片湿泥（到期原方块回来）；
- *       按概率把命中下降挂到主目标身上。
+ *   爆：命中处炸开泥雾，主目标留一片泥印、按概率糊眼；泼溅到附近其他敌人（较小泥粒）。
+ *       不再替换任何方块，只在真实碰撞表面留下短泥印，战场地板不变成泥。
  *
  * 与同族分开：掷泥是低弧线的软泥团、必定糊眼、伤害轻；泥巴炸弹是直线硬弹、爆开泼溅、只有概率致盲。
  */
 namespace PokemonSkills {
     const mudbombScene = "world_combat:move_mudbomb";
 
-    /** 在落点下方找第一块实心方块，替换成一小片泥；到期原方块回来，活物站在格子里时等它走开再合上。 */
-    function mudbombPatch(world: CombatWorld, point: CombatPoint, ticks: number): boolean {
-        const x = Math.floor(point.x()), z = Math.floor(point.z()), base = Math.floor(point.y());
-        for (let dy = 0; dy <= 3; dy++) {
-            const y = base - dy;
-            const block = world.block(WorldCombat.point(x, y, z));
-            if (block === null) continue;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            world.terrain(JSON.stringify({ cells: [{ x: x, y: y, z: z, block: "minecraft:mud" }], replace: true, linger: true }), ticks);
-            return true;
-        }
-        return false;
+    /** 方块表面的外法线，用来把接触侧泥印贴到真实那一面；没有具体方块朝向时朝上。 */
+    function mudbombNormal(face: string): number[] {
+        if (face === "down") return [0, -1, 0];
+        if (face === "north") return [0, 0, -1];
+        if (face === "south") return [0, 0, 1];
+        if (face === "west") return [-1, 0, 0];
+        if (face === "east") return [1, 0, 0];
+        return [0, 1, 0];
     }
 
     define({
         id: "mudbomb",
         name: "Mud Bomb",
-        description: "把泥压实成一颗硬弹直线掷出；命中时炸开泼溅到附近，有时会糊住目标的眼。",
+        description: "把泥压实成一颗硬弹直线掷向瞄准方向或落点；命中时炸开，主目标留泥印、附近敌人被碎泥泼溅，有时会糊住目标的眼。撞上方块照常碎开，但不再把地板变成泥。",
         uses: ["中远距离的直线重击", "用爆开泼溅打到目标身边的敌人", "偶尔糊眼，削掉对手的命中"],
-        kind: "enemy",
+        kind: "aim",
         range: 14,
         maxRange: 22,
         prepare: 14,
@@ -58,7 +56,7 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "gather", shell: config && config.shell ? 1 : 0 }));
             return prepare;
         },
-        indicator: function () { return { radius: 0.7, geometry: "area", style: "mud", color: 0x6E5A40, label: "泥巴炸弹" }; },
+        indicator: function () { return { radius: 0.7, geometry: "point", style: "mud", color: 0x6E5A40, label: "泥巴炸弹" }; },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
@@ -73,9 +71,10 @@ namespace PokemonSkills {
             const blind = Math.max(1, Math.round(p("mudbomb", "blind", action)));
             const chance = p("mudbomb", "chance", action);
             const shards = Math.max(8, Math.round(p("mudbomb", "shards", action)));
-            const patchTicks = Math.max(40, Math.round(p("mudbomb", "patchTicks", action)));
             const scale = body === null ? 1 : (body.width() + body.height()) / 2.3;
             const intensity = Math.max(0.6, Math.min(2.4, power / 65));
+            const mark = Math.max(0.4, Math.min(1.6, blast * 0.4));
+            const motes = Math.max(4, Math.round(shards * 0.45));
             sound(action, "cobblemon:move.mudbomb.actor");
             let settled = false;
             const flight = LivingActions.projectile(action, {
@@ -85,18 +84,22 @@ namespace PokemonSkills {
                     const currentWorld = current.world();
                     const target = hit.target();
                     const point = hit.position();
+                    const cell = hit.blockPosition();
+                    const delta = point.minus(origin);
+                    const away = delta.length() < 0.01 ? WorldCombat.point(0, 1, 0) : delta.unit();
+                    const normal = cell !== null ? mudbombNormal(hit.blockFace()) : [away.x(), away.y(), away.z()];
                     let primary: CombatActor | null = null;
                     if (target !== null && currentWorld.valid(target) && !currentWorld.friendly(target)) {
                         primary = target;
                         impact(current, hit, "mudbomb", power, { damage: damageSpec("mudbomb", "boom") });
                         if (currentWorld.random() < chance) {
-                            NativeEffects.boost(currentWorld, target, "accuracy", -blind);
+                            const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
                             const at = currentWorld.observe(target);
-                            if (at !== null) {
+                            if (dropped !== 0 && at !== null) {
                                 WorldFeedback.keep(currentWorld, "mudbomb:face:" + String(target.ref()), mudbombScene, 1, at.position(),
                                     { moment: "face", target: String(target.ref()), stage: blind, shards: shards, intensity: Math.max(0.4, Math.min(1.6, power / 70)) }, 70);
                                 WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
-                                    "world_combat.move.mudbomb.text.blind", [blind], 30);
+                                    "world_combat.move.mudbomb.text.blind", [Math.abs(dropped)], 30);
                             }
                         }
                     }
@@ -107,13 +110,12 @@ namespace PokemonSkills {
                         hurt(current, other, "mudbomb", splashPower, { damage: damageSpec("mudbomb", "splash") });
                         splashed++;
                         WorldFeedback.emit(currentWorld, mudbombScene, 1, facts.position(),
-                            { moment: "spray", target: String(other.ref()), intensity: Math.max(0.4, Math.min(1.6, splashPower / 30)), scale: scale }, 22);
+                            { moment: "spray", target: String(other.ref()), motes: motes, scale: scale,
+                                intensity: Math.max(0.4, Math.min(1.6, splashPower / 30)) }, 22);
                     });
-                    currentWorld.explode(point, Math.max(0.6, Math.min(2.6, blast * 0.6)), JSON.stringify({ damage: false }));
                     WorldFeedback.emit(currentWorld, mudbombScene, 1, point,
                         { moment: "burst", target: target === null ? "" : String(target.ref()), shards: shards, blast: blast,
-                            splashed: splashed, intensity: intensity, scale: scale }, 30);
-                    mudbombPatch(currentWorld, point, patchTicks);
+                            splashed: splashed, intensity: intensity, scale: scale, mark: mark, direction: normal }, 30);
                     sound(current, "cobblemon:move.mudbomb.target");
                 }
             }, function (current) { if (!settled) { settled = true; done(current); } });

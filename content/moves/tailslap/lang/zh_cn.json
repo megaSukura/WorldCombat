@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.tailslap.summary": "原地旋身，坚硬的尾巴一圈圈扫过身体周围：圈内每个敌人每圈各吃一下，并被沿背离方向推开。旋扫式是整圈 360°、一次照顾四周；砸尾式收成前向一段、单圈更重并把人挑起。",
+  "worldcombat.skill.tailslap.summary": "原地旋身，坚硬的尾巴一圈圈扫过身体周围：整圈分四段依次转过，圈内每个敌人每圈各吃一下，并被沿背离方向推开。可以点敌人，也可以只给一个方向或干脆原地转整圈。旋扫式是整圈 360°、一次照顾四周；砸尾式收成前向一段、单圈更重并把人挑起。",
   "worldcombat.skill.tailslap.use.0": "原地旋转，尾巴一圈圈扫过四周所有人",
   "worldcombat.skill.tailslap.use.1": "被围住时一次照顾一整片",
   "worldcombat.skill.tailslap.use.2": "砸尾式只扫前向一面，把伤害集中并挑起来",
+  "worldcombat.skill.tailslap.use.3": "不点目标也能以自身为心转完整圈",
   "worldcombat.skill.tailslap.description.0": "原地转起，一趟最多扫 %2$s 圈；每圈把范围内的每个敌人各扫中一记，造成约 %1$s 点接触伤害（随物攻与体重提高），每圈独立掷 %3$s 命中；没拍实的圈不伤人，但旋转继续。",
   "worldcombat.skill.tailslap.description.1": "每圈扫过半径 %1$s 格、张角 %2$s 度内的所有非友方；被拍中的人沿背离施法者的方向被推开 %3$s 格、向上挑起 %4$s 格。",
   "worldcombat.skill.tailslap.description.2": "两次横扫间隔 %1$s。",

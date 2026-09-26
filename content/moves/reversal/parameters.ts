@@ -31,7 +31,7 @@ namespace PokemonSkills {
         wound: percent(
             F.const(1).minus(F.actor("healthRatio", text("worldcombat.skill.reversal.value.hpRatio"))).clamp(0, 1).round(3),
             "已损失生命", "自己越接近倒下这个值越大；它同时放大威力与喷发半径，是这招「起死回生」的根。"),
-        /** 喷发半径：基础 0.9 格，已损失生命比例 ×0.7（0..0.7），碰撞箱每比 1.4 高 1 格加 0.2，体重每比 60 重 1 加 0.002；夹在 0.8..2.2。 */
+        /** 扇面 reach：基础 0.9 格，已损失生命比例 ×0.7（0..0.7），碰撞箱每比 1.4 高 1 格加 0.2，体重每比 60 重 1 加 0.002；夹在 0.8..2.2。 */
         burstRadius: formula(
             F.base(0.9)
                 .plus(F.const(1).minus(F.actor("healthRatio", text("worldcombat.skill.reversal.value.hpRatio"))).clamp(0, 1)
@@ -39,9 +39,20 @@ namespace PokemonSkills {
                 .plus(F.body("height").minus(1.4).times(0.2).clamp(-0.15, 0.7).as(text("worldcombat.skill.reversal.value.bulk")))
                 .plus(F.body("weight").minus(60).times(0.002).clamp(-0.08, 0.4))
                 .clamp(0.8, 2.2).round(2),
-            "喷发半径", {
+            "扇面reach", {
                 unit: "格",
-                description: "落点掀开的一圈范围；伤势越重、身板越大喷得越宽，站在这一圈里的敌人都会被掀到。"
+                description: "落地时朝身前掀开的扇面能伸多远；伤势越重、身板越大伸得越远，站在这个扇面里的敌人都会被掀到。"
+            }),
+        /** 扇面张角：基础 110 度，已损失生命比例 ×30（0..30），碰撞箱每比 1.4 高 1 格加 8（夹 −10..+20）；夹在 90..170 度。 */
+        arc: formula(
+            F.base(110)
+                .plus(F.const(1).minus(F.actor("healthRatio", text("worldcombat.skill.reversal.value.hpRatio"))).clamp(0, 1)
+                    .times(30).as(text("worldcombat.skill.reversal.value.wound")))
+                .plus(F.body("height").minus(1.4).times(8).clamp(-10, 20).as(text("worldcombat.skill.reversal.value.bulk")))
+                .clamp(90, 170).round(0),
+            "扇面张角", {
+                unit: "度",
+                description: "身前扇面的总张角；伤势越重、身板越大张得越开，但始终只打在身前，背后的敌人不在范围里。"
             }),
         /** 扑身距离：基础 2.2 格，速度每比 55 多 1 加 0.018（夹 −0.3..+1.1）；夹在 1.6..3.6。 */
         lunge: formula(
@@ -90,7 +101,7 @@ namespace PokemonSkills {
     describe("reversal", [
         { key: "description.0", values: ["power"] },
         { key: "description.1", values: ["plant","lunge","lungeSpeed"] },
-        { key: "description.2", values: ["burstRadius","push","collisionRadius"] },
+        { key: "description.2", values: ["burstRadius","arc","push","collisionRadius"] },
         { key: "reckless.on", values: ["recoil"], when: function (context) { return read(context.detail.values, ["reckless"]) === true; } },
         { key: "reckless.off", values: [], when: function (context) { return read(context.detail.values, ["reckless"]) !== true; } },
         { key: "timing", values: ["range", "plant", "recover", "pp", "cooldown"] }

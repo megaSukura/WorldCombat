@@ -9,7 +9,7 @@
   "worldcombat.skill.throatchop.description.2": "Thrust reach %1$s blocks, collision radius %2$s blocks; prepare %3$s s, recover %4$s s, cooldown %5$s s.",
   "worldcombat.skill.throatchop.choke.on": "Chokehold: the silence lasts x1.25, at the cost of x0.9 power, 2 more ticks of prepare and 6 more ticks of cooldown.",
   "worldcombat.skill.throatchop.choke.off": "Slash: faster and x1.15 power, at the cost of a x0.75 silence.",
-  "worldcombat.skill.throatchop.timing": "Castable on enemies within %1$s blocks; it costs %4$s PP after a %2$s s wind-up, then recovers for %3$s s and goes on a %5$s s cooldown.",
+  "worldcombat.skill.throatchop.timing": "Thrust in a chosen direction or at a target within %1$s blocks; it costs %4$s PP after a %2$s s wind-up, then recovers for %3$s s and goes on a %5$s s cooldown.",
   "worldcombat.skill.throatchop.growth.0": "At level %1$s power rises to %2$s and the silence extends to %3$s.",
   "worldcombat.skill.throatchop.value.chop": "Power",
   "worldcombat.skill.throatchop.value.silenceTicks": "Silence duration",

@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.willowisp.summary": "Launch a homing wisp that burns the target on impact, dealing damage over time and reducing physical attack damage. Its turning is limited, so distance and evasive movement can shake it off.",
-  "worldcombat.skill.willowisp.description.0": "Launch a homing wisp at a target within %1$s blocks, flying at %2$s blocks per tick.",
+  "worldcombat.skill.willowisp.summary": "Send a cold wisp along your aim: with an enemy selected it tracks it to a limited degree, while an empty aim or a point makes it fly straight and a wall snuffs it out. It deals no direct damage, only burns - damage over time that halves physical attack. Its turning is limited, so distance and evasive movement can shake it off.",
+  "worldcombat.skill.willowisp.description.0": "Send a wisp up to %1$s blocks, flying at %2$s blocks per tick; with no entity selected it flies straight along your aim.",
   "worldcombat.skill.willowisp.description.1": "On a catch the target burns for %1$s seconds; the wisp turns at most %2$s degrees per tick, so outrunning or rounding cover shakes it off.",
   "worldcombat.skill.willowisp.description.2": "Collision radius %1$s blocks.",
+  "worldcombat.skill.willowisp.description.3": "While burned, physical attack damage is halved and the target loses about 1/16 of its maximum health every 5 seconds (at least 1 point); Fire-type and otherwise burn-immune targets are not ignited.",
   "worldcombat.skill.willowisp.use.0": "Burn a target from a distance",
   "worldcombat.skill.willowisp.use.1": "Blunt a target that presses in with physical attacks",
   "worldcombat.skill.willowisp.use.2": "Make the target dodge the flame and give up its ground",
@@ -15,10 +16,11 @@
   "worldcombat.skill.willowisp.preference.swift.help": "On: the wisp flies faster and turns tighter (speed x1.35, turn x1.25) but the burn is shorter (x0.7) - it lands sooner and dies sooner. Off: it coils, flying slower but burning longer (x1.15), holding the target down.",
   "worldcombat.skill.willowisp.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.willowisp.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of casting. Larger values chase harder and lose the wisp in the open more often.",
+  "worldcombat.skill.willowisp.preference.ai.preferPhysical": "Prefer physical threats",
+  "worldcombat.skill.willowisp.preference.ai.preferPhysical.help": "On: the wisp is aimed first at targets whose physical attack clearly beats their special attack, or that are pressing in for melee; off: every unburned enemy is treated alike. The wisp deals no direct damage, so this only changes who gets burned.",
   "worldcombat.skill.willowisp.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.willowisp.preference.ai.leaveStation.help": "When on, the user may leave its post to cast; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.willowisp.text.burn": "Will-O-Wisp clings",
   "world_combat.move.willowisp.text.immune": "Unaffected by the wisp",
-  "world_combat.move.willowisp.text.fizzle": "The wisp snuffed out",
-  "worldcombat.skill.willowisp.description.3": "While burned, physical attack damage is halved and the target loses about 1/16 of its maximum health every 5 seconds (at least 1 point); Fire-type and otherwise burn-immune targets are not ignited."
+  "world_combat.move.willowisp.text.fizzle": "The wisp snuffed out"
 }

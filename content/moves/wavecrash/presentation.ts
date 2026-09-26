@@ -5,8 +5,9 @@
  * 冲空则水壳散成一地水花。
  * 色相家族：水蓝与近白泡沫（0x4F9FD4 / 0xEAF6FF）为主，深青只给水壳与命中核心的一点高饱和。
  * 拍子：起 cloak（聚水成壳）→ 涌 surge（水墙前进）→ 击 impact（水墙炸开）＋ drench（浇透）／ spill（散开）。
- * 范围：surge 的水壳与尾迹贴施法者、随它涌过整段路；impact 与 drench 绑命中点，画的就是水墙拍到哪里。
- * 运动：聚水向内收成壳；涌进时水花沿历史拖尾向后溅；命中时整片向外爆开，浇透幕是一圈向内收的水纹。
+ * 范围：surge 的水壳与尾迹贴施法者真实身体、随它涌过整段路；impact 与 drench 绑命中点，画的就是水墙拍到哪里。
+ * 运动：聚水向内收成壳；涌进时水花沿载荷给出的显式后方向（surge 的 `data.direction` 即背向冲势）向后溅；
+ * 命中时水壳沿前方向（impact 的 `data.direction`）在接触面裂成一片向前的水片，浇透幕是一圈向内收的水纹。
  * 数：`data.spray`（速度与物攻派生）决定涌进与命中的总溅水量，`data.intensity`（威力 / 115 ×湿身与厚水壳加成）
  * 抬高密度与亮度，`data.scale`（判定半径 / 0.6）放大水墙与水环，`data.ratio` 让涌进水花随路程变浓。
  */
@@ -42,7 +43,7 @@ const WavecrashDefinition: ParticleDefinition = {
                 {
                     name: "shell", bind: "source", offset: [0, 0.5, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    rate: 42, shape: { kind: "sphere", radius: 0.5 },
+                    rate: 42, shape: { kind: "sphere", radius: { data: "shell", fallback: 0.5 } },
                     direction: "inward", speed: [0.04, 0.16],
                     lifetime: [6, 12], size: [0.24, 0.05], sizeMode: "sin",
                     color: 0x4F9FD4, alpha: [0.62, 0], light: "full", maxParticles: 240
@@ -50,8 +51,9 @@ const WavecrashDefinition: ParticleDefinition = {
                 {
                     name: "jet", bind: "source", offset: [0, 0.45, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
-                    rate: { data: "spray", fallback: 26 }, shape: { kind: "sphere", radius: 0.42 },
-                    direction: "away", speed: [0.08, 0.24], spread: 10, trail: { minDistance: 0.24 },
+                    orient: "direction",
+                    rate: { data: "spray", fallback: 26 }, shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.08, 0.24], spread: 10, trail: { minDistance: 0.24 },
                     lifetime: [5, 10], size: [0.18, 0.04],
                     alpha: [0.85, 0], light: "full", maxParticles: 220
                 },
@@ -82,9 +84,10 @@ const WavecrashDefinition: ParticleDefinition = {
                 {
                     name: "wall", bind: "target", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
+                    orient: "direction",
                     burst: { count: { data: "spray", fallback: 26 } },
-                    shape: { kind: "sphere", radius: 0.46 },
-                    direction: "outward", speed: [0.09, 0.32],
+                    shape: { kind: "cone", radius: 0.5, angleDegrees: 55 },
+                    direction: "shape", speed: [0.09, 0.32],
                     gravity: 0.05, drag: 0.92,
                     lifetime: [10, 18], size: [0.26, 0.05],
                     color: 0xBFE6FF, alpha: [0.8, 0], light: "full", maxParticles: 280

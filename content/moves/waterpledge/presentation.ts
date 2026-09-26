@@ -1,15 +1,16 @@
 /**
  * 水之誓约 / waterpledge 的客户端表现。
  *
- * 一句话：落点先浮出一圈青蓝的水纹符文，随后一根水柱涌地而起，把柱内的人浇透、顶起推开，柱脚浸出一汪
- *   带气泡的水渍；与火／草共鸣时，光点与虹彩从地面升起，或塌成一汪冒泡的湿地。
+ * 一句话：落点先浮出一圈青蓝的水纹符文，随后一根水柱涌地而起，把柱内的人顶起推开，柱脚只浸出一圈短寿的
+ *   水纹印（共鸣标记，本身不拖慢）；只有与火／草真正共鸣时，同一圈印才升起光点与虹彩，或塌成一汪冒泡的湿地。
  * 色相家族：青蓝到近白（waterjet／giantplash／water_ripple／smallbubble／impact_water）；彩虹时刻引入虹彩
  *   （shinesparkle_rainbow／glowingsparkle_pink），湿地时刻引入土褐（mudbubble），与三誓约的另两色相分开。
- * 拍子：起（mark 地面水纹）→ 击（erupt 水柱 + hit 命中点）→ 留（scar 水渍，或 rainbow／wetland 组合场）。
+ * 拍子：起（mark 地面水纹）→ 击（erupt 水柱 + hit 命中点）→ 留（scar 短印，或 rainbow／wetland 组合场）。
  * 范围：mark／scar／rainbow／wetland 的花环半径 = `data.scale` × 参考 1.6 格（= 实际誓约印半径）；
  *   erupt 的柱体 shape 直接绑定 `data.radius`／`data.height`，画面里的那根水柱就是实际判定柱。
  * 运动：水柱向上涌、水花向外炸开并带重力下落、气泡上浮；彩虹的光点上升；湿地的泥泡从水里冒起。
- * 数：`data.count`（由特攻与本次威力派生）决定水花与组合场的粒子数量，`data.combo` 在共鸣时切到组合场。
+ * 数：`data.count`（由特攻与地面水痕数量派生）决定水花、贴地水痕与组合场的粒子数量；
+ *   `data.moment` 由服务端按同一印记的实际组合态选择 scar／rainbow／wetland，`data.scale` 让范围贴合实际半径。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const WaterpledgeDefinition: ParticleDefinition = {
@@ -110,7 +111,7 @@ const WaterpledgeDefinition: ParticleDefinition = {
                 {
                     name: "pool", bind: "point", height: 0.03,
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    rate: 24, shape: { kind: "circle", radius: 1.6 },
+                    rate: { data: "count", fallback: 12 }, shape: { kind: "circle", radius: 1.6 },
                     direction: "shape", speed: [0.01, 0.06],
                     lifetime: [14, 24], size: [0.2, 0.03],
                     color: 0x66CCEE, alpha: [0.55, 0], light: "world", maxParticles: 100

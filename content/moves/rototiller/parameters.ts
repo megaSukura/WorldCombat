@@ -5,10 +5,12 @@
  *   会提高**草属性**宝可梦的**攻击和特攻**各 1 级；浮空（Ground 免疫）的不受影响。
  *
  * 翻译：把回合制的一次全场增益翻成**在世界里真的翻一块地**——施法者把耙齿按进选定的地面，
- *   把表土翻成松软的黑土；只要这块地还在，**站在上面且踩实了地面**的草属性宝可梦就当场抽枝，
- *   物攻与特攻一起抬起来；离地浮空的草属性踩不到土，站到土外或土被复原时就收回。
- *   取原生「草属性、物攻 +1／特攻 +1、PP 10」；放弃「一次结算全场」，改成一块**可站上去、可被绕开、
- *   会自己复原的耕地**——这是这招与同族的分界：它管的是一块地，不是一次光环。
+ *   只对自然土（草方块、土、粗土、灰化土等原生土类及同标签模组土）写下粗土，耕地、土径与作物原样保留；
+ *   建筑表面翻不动，就什么都不改，也不建增益场地。**只有真正翻成功的格子**才构成这块地的实际覆盖，
+ *   没有翻到的洞不冒充肥土。只要这块地还在，**站在成功格上且踩实了地面**的草属性宝可梦就当场抽枝，
+ *   物攻与特攻一起抬起来；离地浮空、站到土外或土被复原时就收回。取原生「草属性、物攻 +1／特攻 +1、PP 10」；
+ *   放弃「一次结算全场」，改成一块**可站上去、可被绕开、会自己复原的耕地**——这是这招与同族的分界：
+ *   它管的是一块地，不是一次光环。
  *
  * 数值来源（每个参数读不同的精灵数据，分散开）：
  *   gift       双攻提升：基础 1 级；特攻高（≥140）或垄作各 +1，夹 1..2。原生 +1 的对位。
@@ -31,7 +33,10 @@ namespace PokemonSkills {
     /** WorldEffects.field 的规则名（本单元实现的场地行为）。 */
     export const rototillerRule = "world_combat:rototiller_soil";
     export const rototillerScene = "world_combat:move_rototiller";
+    /** 逐格地描边场景：只画真正翻成功的格，随场地效果一起收。 */
+    export const rototillerSoilScene = "world_combat:move_rototiller_soil";
     export const rototillerTillText = "world_combat.move.rototiller.text.till";
+    export const rototillerBarrenText = "world_combat.move.rototiller.text.barren";
     export const rototillerFedText = "world_combat.move.rototiller.text.fed";
     export const rototillerFadeText = "world_combat.move.rototiller.text.fade";
     /** 表现里的参考半径：`data.scale = 实际耕地半径 / 这个数`。 */
@@ -55,7 +60,7 @@ namespace PokemonSkills {
                 .clamp(1.6, 4.6).round(2),
             "耕地半径", {
                 unit: " 格",
-                description: "翻出的黑土覆盖多大一圈；身板越高、特攻越高翻得越宽，垄作再 ×1.3。画面里的地环就是这个半径。"
+                description: "翻出的黑土覆盖多大一圈；身板越高、特攻越高翻得越宽，垄作再 ×1.3。真正翻成功的格才算数，画面据此逐格描边。"
             }),
         /** 土壤时长：这块地留多久。 */
         soilTicks: seconds(

@@ -29,5 +29,5 @@
   "world_combat.move.poltergeist.text.slam": "Item hurled back",
   "world_combat.move.poltergeist.text.bind": "Bound by its own item",
   "world_combat.move.poltergeist.text.fizzle": "Nothing in its hands",
-  "worldcombat.skill.poltergeist.description.item": "The item is only manipulated from afar and is never taken, remaining in the target's hands after the hit. An empty-handed target cannot be cast on at all: the move fails at wind-up without spending PP or starting its cooldown."
+  "worldcombat.skill.poltergeist.description.item": "The item is only manipulated from afar and is never taken, remaining in the target's hands after the hit. An empty-handed target cannot be cast on at all: the move fails at wind-up without spending PP or starting its cooldown. If the target drops or swaps that item during the wind-up, the manipulation falls apart and no substitute appears."
 }

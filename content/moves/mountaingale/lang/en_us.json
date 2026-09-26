@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.mountaingale.summary": "Tears a mountain-sized chunk of ice out and hurls it in a low arc: a direct hit takes the heaviest single blow in the family, the shatter catches everyone else in a ring, and the impact leaves ice with a cluster of spikes at its centre. It flies slowly and visibly, easy to dodge sideways - and has the longest wind-up.",
+  "worldcombat.skill.mountaingale.summary": "Tears a mountain-sized chunk of ice out and hurls it in a low arc at the chosen spot: a direct hit takes a heavy blow, the shatter catches everyone else in a ring, and the impact leaves ice with a cluster of spikes at its centre. It flies slowly and visibly, easy to dodge sideways - and has the longest wind-up. If it hits nothing it only dissipates, never detonating at the old landing.",
   "worldcombat.skill.mountaingale.description.0": "A direct hit deals about %1$s damage; the boulder's in-flight collision radius is %2$s blocks. The target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.mountaingale.description.1": "Throws up to %1$s blocks at %2$s blocks per tick with a fall coefficient of %3$s blocks per tick squared; heavier ice flies slower and is easier to dodge, and shatters on striking terrain or an enemy.",
   "worldcombat.skill.mountaingale.description.2": "On landing, other enemies within a radius of %1$s blocks each take about %3$s splash damage; a direct hit also hurls its target %2$s blocks.",
@@ -10,7 +10,7 @@
   "worldcombat.skill.mountaingale.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.mountaingale.growth.0": "From level %1$s the boulder's damage rises to %2$s and the splash to %3$s.",
   "worldcombat.skill.mountaingale.growth.1": "From level %1$s the boulder's damage rises to %2$s, the splash to %3$s, the shatter radius to %4$s blocks and the central spikes to %5$s blocks.",
-  "worldcombat.skill.mountaingale.use.0": "Land the heaviest single hit in the family from long range",
+  "worldcombat.skill.mountaingale.use.0": "Land a heavy single hit from long range",
   "worldcombat.skill.mountaingale.use.1": "Catch a cluster at the landing with the bursting shards",
   "worldcombat.skill.mountaingale.use.2": "Raise a short line of ice spikes at the landing as cover",
   "worldcombat.skill.mountaingale.value.mass": "Boulder damage",

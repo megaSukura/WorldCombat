@@ -8,8 +8,10 @@
  * 一个效果一个色相家族。持续层是贴地的边界环，低密度、低高度，让出目标本体视线。
  * 层次：预张（起手）／边界环＋螺旋（撑开）／贴地边界（持续）／被扭一下（事件）／复原与收。
  * 起击收：windup（聚势）→ open（撑开）→ inside（持续）→ flip（被扭）／unflip（复原）→ 收。
- * 数：撑开与持续的粒子量绑定服务端算出的 data.density；边界半径绑定 data.scale；
- * 被扭时的螺旋强度绑定 data.depth（空间的实际扭转幅度）。
+ * 数：撑开与持续的粒子量绑定服务端算出的 data.density；边界半径与地面流动按 data.scale（实际半径）铺开；
+ * 入圈双箭头按 data.arrowY 指出推快还是拖慢、箭头长度按 data.magnitude（实际倍率偏差）。
+ * 场内：两道贴地的相反流动——向内收（慢的被推快）与向外推（快的被拖慢），让「倒转」在地面直接可读。
+ * 入圈：一对上／下箭头按 data.arrowY 指出这次是被推快还是拖慢，箭头长度按 data.magnitude（实际倍率偏差）。
  */
 const TrickroomDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -77,6 +79,24 @@ const TrickroomDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.005, 0.03],
                     lifetime: [18, 30], size: [0.12, 0.03], sizeMode: "sin",
                     color: 0xC3A8FF, alpha: [0.22, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "flow_inward", bind: "point", height: 0.03, offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    rate: { data: "density", fallback: 24 },
+                    shape: { kind: "ring", radius: 3.6 },
+                    direction: "inward", speed: [0.06, 0.2], drag: 0.93, spin: 0,
+                    lifetime: [14, 24], size: [0.26, 0.06], sizeMode: "index",
+                    color: 0xC3A8FF, alpha: [0.5, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "flow_outward", bind: "point", height: 0.03, offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    rate: { data: "density", fallback: 24 },
+                    shape: { kind: "ring", radius: 3.6 },
+                    direction: "outward", speed: [0.06, 0.2], drag: 0.93, spin: 0,
+                    lifetime: [14, 24], size: [0.26, 0.06], sizeMode: "index",
+                    color: 0x5A3FA8, alpha: [0.45, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -99,6 +119,14 @@ const TrickroomDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [8, 14], size: [0.13, 0.02], sizeMode: "index",
                     color: 0x8A6CFF, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 24
+                },
+                {
+                    name: "flip_arrows", bind: "target", fit: "body", height: 0.42,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 2 }, shape: { kind: "sphere", radius: 0.25 },
+                    direction: [0, { data: "arrowY", fallback: 1 }, 0], speed: [0.06, 0.18],
+                    lifetime: [12, 20], size: [0.24, { data: "magnitude", fallback: 0.3 }],
+                    color: 0xC3A8FF, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 16
                 }
             ]
         },

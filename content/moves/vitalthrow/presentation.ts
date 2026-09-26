@@ -61,8 +61,8 @@ const VitalthrowDefinition: ParticleDefinition = {
             ]
         },
         heave: {
-            duration: 24,
-            exit: { stop: 12, drain: 14 },
+            duration: { data: "duration", fallback: 24 },
+            exit: { stop: { data: "duration", fallback: 24 }, drain: 14 },
             emitters: [
                 {
                     name: "streak", bind: "target", offset: [0, 0.5, 0], height: 0.45,

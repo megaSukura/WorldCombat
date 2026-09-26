@@ -7,5 +7,7 @@
   "worldcombat.attributes.healing_received": "Healing received",
   "worldcombat.attributes.curiosity": "Exploration tendency modifier",
   "worldcombat.attributes.risk": "Risk tendency modifier",
-  "worldcombat.attributes.persistence": "Persistence tendency modifier"
+  "worldcombat.attributes.persistence": "Persistence tendency modifier",
+  "worldcombat.attributes.ground_slipperiness": "Body ground slipperiness",
+  "worldcombat.attributes.ground_support": "Ground support"
 }

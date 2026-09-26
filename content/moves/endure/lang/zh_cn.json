@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.endure.summary": "在短窗口内，来自敌人的致命一击只会把你打到 1 HP；它不减免普通伤害，且连续使用容易直接失败。",
   "worldcombat.skill.endure.description.0": "挺住窗口 %1$s 刻（特防与等级越高越久）、最多保命 %2$s 次：窗口内只有来自敌方的致命一击会被截住，把这一下压到只留 %3$s 点生命；普通伤害照常承受、也不消耗次数，次数用尽或窗口走完即结束。",
-  "worldcombat.skill.endure.description.1": "咬牙 %1$s 刻后窗口打开，整段冷却 %2$s；用掉全部次数后力竭 %3$s 刻。",
+  "worldcombat.skill.endure.description.1": "咬牙 %1$s 刻后窗口打开，整段冷却 %2$s；屹立取向下用掉全部次数才力竭 %3$s 刻（挣扎没有这一步）。",
   "worldcombat.skill.endure.description.2": "连用失误率 %1$s：首次使用必定成功，此后每在 12 秒内再用一次就提高一档（每档约 +25%%），届时按该概率直接失败、不打开窗口；超过 12 秒没用则计数归零。",
   "worldcombat.skill.endure.use.0": "残血时拖住回合、等待救援",
   "worldcombat.skill.endure.use.1": "为队友争取一次打断或撤退",
@@ -13,11 +13,11 @@
   "worldcombat.skill.endure.value.grit": "力竭时长",
   "worldcombat.skill.endure.value.fizzle": "连用失误率",
   "worldcombat.skill.endure.preference.scramble": "挣扎／屹立",
-  "worldcombat.skill.endure.preference.scramble.help": "开启挣扎：窗口 ×0.75，但全程可以移动，收招 12 刻、没有力竭。关闭屹立：窗口 ×1.25，整段定身，用掉次数后力竭 30 刻，收招 6 刻。",
+  "worldcombat.skill.endure.preference.scramble.help": "开启挣扎：窗口 ×0.75，收招 12 刻、没有力竭。关闭屹立：窗口 ×1.25，窗口内不再定身，但用掉次数后力竭 30 刻、收招 6 刻。",
   "worldcombat.skill.endure.preference.ai.threshold": "保命血量",
   "worldcombat.skill.endure.preference.ai.threshold.help": "生命比例低于这个值才咬牙。越大越保守、越早用掉 PP；越小越省，但可能来不及。",
-  "world_combat.move.endure.text.save": "挺住！",
+  "world_combat.move.endure.text.save": "挺住！ 余 %1$s 次",
   "world_combat.move.endure.text.spent": "力竭",
-  "worldcombat.skill.endure.posture": "姿态：开启「挣扎」时窗口 ×0.75、全程可自由移动、没有力竭、收招 12 刻；关闭（「屹立」）时窗口 ×1.25、整段不能移动（仍可出招）、用掉次数后力竭定身、收招 6 刻。",
+  "worldcombat.skill.endure.posture": "姿态：开启「挣扎」时窗口 ×0.75、没有力竭、收招 12 刻；关闭（「屹立」）时窗口 ×1.25、不会在窗口内被定身，但用掉次数后力竭定身、收招 6 刻。",
   "worldcombat.skill.endure.value.minimumHealth": "最低残留生命"
 }

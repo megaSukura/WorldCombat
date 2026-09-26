@@ -81,11 +81,19 @@ const DragonCheerDefinition: ParticleDefinition = {
             exit: { drain: 26 },
             emitters: [
                 {
+                    name: "rally_rune", bind: "target", fit: "body", height: 0.05,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
+                    burst: { count: { data: "runes", fallback: 1 }, interval: 4, repeats: 2 },
+                    shape: { kind: "line", length: 1.0 }, orient: "fixed", direction: "up", speed: [0.01, 0.03],
+                    lifetime: [10, 16], size: [0.16, 0.05],
+                    color: 0x63D6A4, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 16
+                },
+                {
                     name: "rally_column", bind: "target", fit: "body", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
                     shape: { kind: "line", length: 1.6 }, orient: "fixed", rate: 8, direction: "up", speed: 0.02,
                     lifetime: [10, 16], size: [0.2, 0.08],
-                    color: 0xE8FFF2, alpha: [0.35, 0], light: "full", maxParticles: 24
+                    color: 0xE8FFF2, alpha: [0.32, 0], light: "full", maxParticles: 24
                 },
                 {
                     name: "rally_mote", bind: "target", fit: "body", height: 0.5,

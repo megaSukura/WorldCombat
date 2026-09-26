@@ -3,8 +3,8 @@
  *
  * 出手局面：目标可见、敌对、存活，在 `ai.maxChase`（默认 14）格内，且有一条通视直线——怨念要能飞过去。
  *   挂在共享的 control 位上：它是纯削弱手段，不抢攻击的位置，但目标刚出手时会主动插进战斗节奏。
- * 对谁出手：读目标最近一次出手距今多久（决策内缓存）。刚出手（240 刻内）的目标值得立刻记恨，priority 抬高；
- *   更久以前出过手的仍可挂怀恨，但只按普通控制排序，不额外加价。
+ * 对谁出手：分两层评估收益——宝可梦看它最近那一手还有没有 PP 可扣，扣得到时按招式价值与“刚出手”加价；
+ *   普通生物没有 PP，怀恨仍能拖慢移速与冷却，因此只要它在出手或刚挨过打就有明确价值，不被跳过。
  * 够不到怎么办：射程交给 reach，共享任务把身位收进通视射程后再放。
  * 放完接什么：交回共享交战计划；怀恨会自己拖慢目标，不需要继续盯着。
  */
@@ -14,6 +14,30 @@ namespace PokemonSkills {
         if (String(actor.domain()) !== "cobblemon") return -1;
         const last = NativeEffects.lastMove(access, actor);
         return last === null ? -1 : Math.max(0, access.tick() - last.tick);
+    });
+    /** 只读、决策内缓存：目标最近放的那一手（不区分是否能扣 PP）。 */
+    CompanionBehavior.registerFact("world_combat:spite-last", function (access, actor, _argument) {
+        if (String(actor.domain()) !== "cobblemon") return "";
+        const last = NativeEffects.lastMove(access, actor);
+        return last === null ? "" : last.id;
+    });
+    /** 只读、决策内缓存：目标最近那一手还有 PP 可扣（宝可梦专属的收益层）。 */
+    CompanionBehavior.registerFact("world_combat:spite-pp", function (access, actor, _argument) {
+        if (String(actor.domain()) !== "cobblemon") return false;
+        const state = NativeEffects.read(access, actor);
+        if (!state.used || access.tick() - (state.usedTick || -1000) > 240) return false;
+        const last = NativeEffects.lastMove(access, actor);
+        if (last === null) return false;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        for (let index = 0; index < pokemon.moveSlots(); index++) {
+            const move = pokemon.move(index);
+            if (move && String(move.id()) === last.id && move.pp() > 0) return true;
+        }
+        return false;
+    });
+    /** 只读、决策内缓存：目标没有原生 PP，怀恨只提供移速与冷却的减速收益。 */
+    CompanionBehavior.registerFact("world_combat:spite-native", function (access, actor, _argument) {
+        return String(actor.domain()) !== "cobblemon";
     });
 
     function spiteJustActed(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
@@ -37,7 +61,17 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            return spiteJustActed(context, target) ? 48 : 6;
+            // 没有 PP 的普通生物（其他模组/原版）也有减速价值，不因扣不到 PP 被跳过。
+            if (CompanionBehavior.fact<boolean>(context, "world_combat:spite-native", target))
+                return target.attacking || target.hurtAgo < 80 ? 40 : 24;
+            const id = CompanionBehavior.fact<string>(context, "world_combat:spite-last", target);
+            if (!id) return 16;
+            const info = CobblemonCombat.moveTemplate(id);
+            const base = String(info.category()) === "status" ? 34 : info.power() >= 80 ? 58 : info.power() >= 50 ? 46 : 30;
+            if (CompanionBehavior.fact<boolean>(context, "world_combat:spite-pp", target))
+                return base + (spiteJustActed(context, target) ? 6 : 0);
+            // 扣不到 PP 的宝可梦仍会被怀恨拖慢，保留一定优先级。
+            return Math.max(18, base - 16);
         }
     });
 

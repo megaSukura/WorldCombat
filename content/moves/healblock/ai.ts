@@ -13,6 +13,9 @@
 namespace CompanionBehavior {
     function healBlockRatio(target: Entity): number { return target.health / Math.max(1, target.maximum); }
 
+    registerFact("world_combat:healblock/recent", function (access: CombatWorld, actor: CombatActor) {
+        return access.effects(actor, PokemonSkills.healBlockObserved).length > 0;
+    });
     registerUse("healblock", {
         protocols: ["world_combat:control"],
         reach: function (_context, item) { return item.data.range; },
@@ -30,7 +33,7 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || status(context, target, "healblock")) return 0;
             if (!ai<boolean>(item, "sustain", true)) return 46;
-            return healBlockRatio(target) >= 0.5 ? 56 : 20;
+            return fact<boolean>(context, "world_combat:healblock/recent", target) === true ? 76 : 8;
         }
     });
 

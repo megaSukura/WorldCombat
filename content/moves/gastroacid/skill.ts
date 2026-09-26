@@ -7,20 +7,43 @@ namespace PokemonSkills {
     const gastroacidReferenceRadius = 0.3;
 
     /** 把目标的特性压制 hold 刻；目标不可压制时返回 false。 */
-    function gastroacidSeal(world: CombatWorld, target: CombatActor, hold: number): boolean {
+    function gastroacidSeal(world: CombatWorld, target: CombatActor, hold: number, carrier: MobEffects.Anchor): boolean {
         if (String(target.domain()) !== "cobblemon" || !world.valid(target)) return false;
         if (!NativeModifiers.abilitySuppressible(world, target)) return false;
-        NativeModifiers.apply(world, target, { suppressAbility: true }, hold);
+        NativeModifiers.apply(world, target, { suppressAbility: true, carrier: carrier, source: "world_combat:gastroacid" }, hold);
         return true;
     }
 
-    // 普通活体的皮甲与装备会被酸液蚀薄，残酸每两秒造成一次真实酸蚀。
-    MobEffects.react("world_combat:move_gastroacid/corrode", gastroacidEffect, "world_combat:mob_effect_tick",
-        event => event.actor(), (event, actor) => {
-            const world = event.world(), data = JSON.parse(String(event.data()));
-            if (String(data.id) !== gastroacidEffect || String(actor.domain()) === "cobblemon" || world.tick() % 40 !== 0) return;
-            world.health(actor, -1, "world_combat:acid");
-        });
+    const gastroacidBond = "world_combat:gastroacid_bond";
+    WorldCombat.effect(gastroacidBond, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(gastroacidBond, "start", effect => {
+        const world = effect.world(), target = effect.target(), body = world.observe(target), data = JSON.parse(effect.state());
+        if (body === null) { effect.end(); return; }
+        // The suppression layer owns a Pokemon's native carrier; the acid bond owns ordinary bodies' carrier.
+        if (String(target.domain()) !== "cobblemon") data.lease = MobEffects.bind(world, target, gastroacidEffect);
+        effect.state(JSON.stringify(data));
+        WorldFeedback.onEffect(world, effect.id(), "film", gastroacidScene, 1, body.position(), { moment: "coat", target: String(target.ref()) });
+        effect.schedule("watch", "watch", 1, "{}");
+        effect.schedule("pulse", "pulse", 40, "{}");
+    });
+    WorldCombat.effectHandler(gastroacidBond, "watch", effect => {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(target) || !MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
+        effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(gastroacidBond, "pulse", effect => {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(target) || !MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
+        if (String(target.domain()) !== "cobblemon") PokemonDamage.residual(world, target, "gastroacid", 1);
+        effect.schedule("pulse", "pulse", 40, "{}");
+    });
+    WorldCombat.effectHandler(gastroacidBond, "operation:world_combat:dispel", effect => effect.end());
+    PokemonDamage.onDamageApplied("world_combat:gastroacid/residual", receipt => {
+        const fact = WorldFeedback.receipt(receipt.event);
+        if (fact === null || !(fact.actual > 0)) return;
+        WorldFeedback.emit(receipt.world, gastroacidScene, 1, fact.point,
+            { moment: "sting", target: String(receipt.target.ref()) }, 12);
+    }, { move: "gastroacid", segment: "residual" });
 
     define({
         id: "gastroacid",
@@ -28,7 +51,7 @@ namespace PokemonSkills {
         name: "Gastro Acid",
         description: "酸弹命中后留下胃酸，暂时压制宝可梦特性。普通生物和玩家的护甲会被蚀薄，并持续受到少量酸蚀伤害。",
         uses: ["定点拆掉对手的强力特性", "压制威吓、飘浮一类持续生效的特性"],
-        kind: "enemy",
+        kind: "aim",
         range: 9,
         maxRange: 17,
         prepare: 10,
@@ -55,7 +78,8 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            if (target === null) return "";
+            if (!world.valid(target) || world.friendly(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("gastroacid", "reach", action)) return "out-of-range";
@@ -97,8 +121,11 @@ namespace PokemonSkills {
             function corrode(current: CombatAction, impact: CombatImpact): void {
                 const scope = current.world(), target = impact.target(), point = impact.position();
                 if (target !== null && scope.valid(target) && !scope.friendly(target)) {
-                    const sealed = gastroacidSeal(scope, target, hold);
-                    MobEffects.apply(scope, target, gastroacidEffect, hold, thickness ? 1 : 0);
+                    const applied = MobEffects.apply(scope, target, gastroacidEffect, hold, thickness ? 1 : 0);
+                    if (applied === null) { finish(current); return; }
+                    const anchor = MobEffects.anchor(applied), sealed = gastroacidSeal(scope, target, hold, anchor);
+                    scope.effects(target, gastroacidBond).forEach(effect => scope.operation(effect.id(), "world_combat:dispel", "{}"));
+                    scope.effect(gastroacidBond, target, JSON.stringify({ carrier: anchor }), hold);
                     const at = scope.observe(target);
                     if (at !== null) {
                         WorldFeedback.emit(scope, gastroacidScene, 1, at.position(),

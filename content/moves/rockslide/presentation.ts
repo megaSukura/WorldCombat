@@ -1,12 +1,13 @@
 /**
  * 岩崩 / rockslide 的客户端表现。
  *
- * 一句话：施法者脚边卷起石屑，随后一块块岩石沿弧线甩出去、拖着小段土烟，落点各炸开一小圈岩石碎块与尘土，
- * 全部落定后那片地上留下一层碎石灰；被砸懵的人头上晃星。
+ * 一句话：施法者脚边卷起石屑，同时选定地面上亮出这把雨会罩住的圈；随后一块块岩石沿弧线甩出去、
+ * 拖着小段土烟，各自在真实接触点炸开一小圈岩石碎块与尘土，全部落定后报出结果；被砸懵的人头上晃星。
  * 色相家族：岩棕与石灰（earth / large_rock / impact_rock / tinydust）为主体，近白只做每一下撞击的高光。
- * 拍子：起（windup 聚石屑）→ 击（throw 脱手、launch 逐块飞行、hit 逐圈落点）→ 收（miss 落空扬尘）。
- * 范围：每块的 hit 按 `data.scale`（单块判定 / 1.05）画一圈；块数让画面自己铺满整片覆盖区。
- * 运动：launch 绑 projectile，沿抛物线拖尾；hit 碎块带重力四散。
+ * 拍子：起（windup 聚石屑＋地面圈）→ 击（throw 脱手、launch 逐块飞行、hit 落点、strike 砸人）→ 收（miss 落空扬尘）。
+ * 范围：windup 的地面圈按实际 spread（data.scale = spread / 2.6）铺开；每块的 hit 按 `data.scale`
+ * （单块判定 / 1.05）画一圈；块数让画面自己铺满整片覆盖区。
+ * 运动：launch 绑 projectile，由 actionScenes 逐块创建、落地即 stop，已落地不再拖尾迹；hit 碎块带重力四散。
  * 数：`data.count`（本击威力派生）决定落点碎块量，`data.rate`（出手速度派生）决定飞行拖尾密度，
  * `data.intensity` 抬高撞击亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -34,6 +35,14 @@ const RockslideDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.92,
                     lifetime: [10, 18], size: [0.06, 0.01],
                     color: 0x6E5A44, alpha: [0.5, 0], light: "world", maxParticles: 44
+                },
+                {
+                    name: "area", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/warblingring",
+                    rate: 5, shape: { kind: "ring", radius: 2.6 },
+                    direction: "outward", speed: [0.01, 0.05],
+                    lifetime: [12, 20], size: [0.4, 0.8], sizeMode: "sin",
+                    color: 0x8A7A62, alpha: [0.32, 0], light: "world", maxParticles: 40
                 }
             ]
         },
@@ -117,6 +126,31 @@ const RockslideDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.9,
                     lifetime: [10, 20], size: [0.06, 0.01],
                     color: 0x8A7A62, alpha: [0.5, 0], light: "world", maxParticles: 90
+                }
+            ]
+        },
+        strike: {
+            duration: 20,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "chunk", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_rock_white",
+                    burst: { count: 7, at: 1 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.08, 0.28], spread: 18,
+                    lifetime: [6, 11], size: [0.26, 0.04], sizeMode: "index",
+                    color: 0xF0E8D8, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 30
+                },
+                {
+                    name: "spall", bind: "target", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: 5 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.08, 0.3], spread: 26,
+                    gravity: 0.06, drag: 0.94,
+                    lifetime: [10, 18], size: [0.14, 0.03],
+                    color: 0x9A8A72, alpha: [0.85, 0], light: "world", maxParticles: 34
                 }
             ]
         },

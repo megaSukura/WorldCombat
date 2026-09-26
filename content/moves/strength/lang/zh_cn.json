@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.strength.summary": "把全身力气压进一记正面直拳：沿一条直线出拳，命中线内的敌人就把它顶退，没有额外副作用；敌人退无可退时再补一记撞墙冲击。",
-  "worldcombat.skill.strength.description.0": "这一记直拳造成约 %1$s 点接触伤害，拳程 %2$s 格、判定半径 %3$s 格。",
-  "worldcombat.skill.strength.description.1": "命中把目标沿出拳方向顶退 %1$s 格；目标几乎退不动（背后是墙或障碍）时，再补一记约 %2$s 点的撞墙冲击。",
+  "worldcombat.skill.strength.summary": "把全身力气压进一记正面直拳：朝指定方向或目标沿一条直线出拳，命中线内的敌人就把它顶退，没有额外副作用；敌人被顶到背后的实墙上时再补一记撞墙冲击。",
+  "worldcombat.skill.strength.description.0": "这一记直拳造成约 %1$s 点接触伤害，拳程 %2$s 格、判定半径 %3$s 格；可以对方向或世界点空放，空放只扬尘。",
+  "worldcombat.skill.strength.description.1": "命中把目标沿出拳方向顶退 %1$s 格；只有目标身体真的被顶到背后墙上时，才再补一记约 %2$s 点的撞墙冲击（推不动的 Boss 若与墙有缝，只吃普通直拳）。",
   "worldcombat.skill.strength.plant.on": "扎根式：出拳更重（威力更高、顶得更远、撞墙更疼），但起手、收招与冷却都更长。",
   "worldcombat.skill.strength.plant.off": "发力式：出手更快、循环更短，代价是单下更轻、撞墙加成更小。",
   "worldcombat.skill.strength.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

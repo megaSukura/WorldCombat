@@ -1,30 +1,9 @@
-/**
- * 断头钳 / guillotine —— 参数与处决结算。
- *
- * 原生事实：Normal／物理／威力 0／命中 30／PP 5／单体／接触；ohko: true——只要命中就一击濒死；
- *   30% 命中由双方等级差修正（Cobblemon 1.8，15 位已实装学习者）。
- *
- * 翻译：把「用大钳子夹断对手」落成一记**贴身的扇形钳合**——大钳从两侧张开、合拢，罩住身前那一段扇形；
- *   合拢一刻还在钳口里的目标被一次夹断。它是四记一击必杀里最短、最快的一记：起手短、张口快，
- *   但收招最久——夹空一次，自己就要在原地晾上好一会儿。
- *
- * 与同族分开（四记都靠「预告形状」被认出）：
- *   地裂     —— 远程、坑在目标脚下的地面，只有站在地上的人中招；
- *   角钻     —— 施法者沿一条**直线**钻过去，会位移、会撞墙；
- *   断头钳   —— 贴身的**扇形**钳合，最短最快、收招最久，钳口张开的角度就是它的范围；
- *   绝对零度 —— 目标周围一整圈**半径**冻杀，唯一能同时放倒多个。
- *
- * 数值来源（每项读不同的精灵数据，分散到不同参数上）：
- *   span    钳口长度 2.4 + 碰撞箱宽度偏移 + 等级(≥25)偏移；身宽、等级高的人钳口伸得更长，也是实际射程。
- *   arc     钳口张角 130° + 碰撞箱宽度偏移；身板越宽，钳口张开越大。
- *   mark    合拢延迟 14 −（等级差）×0.5；等级压过对手时合得更快，对手抽身的时间更短。
- *   grip    钳齿数量 16 + 物攻偏移；驱动表现密度。
- *   tempo／aftercast／recharge 速度与等级定起手、收招、冷却。
- *
- * 配置 `wide`（阔钳式）双向取舍：开＝钳口张角 ×1.25、钳口长度 ×1.1，代价是合拢延迟 +5、收招 +4
- *   （更好夹中偏开的目标，代价是更慢、夹空更亏）；关（窄钳式）＝合得更快、收招更短，但只夹得住正前方。
- */
+/** guillotine: one native execution attempt; native damage events and immunity determine its result. */
 namespace PokemonSkills {
+    export const guillotineResisted = "world_combat:guillotine_resisted";
+    WorldCombat.effect(guillotineResisted, 1, 400, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(guillotineResisted, "start", function () { });
+
     export const guillotineId = "guillotine";
     export const guillotineScene = "world_combat:move_guillotine";
     export const guillotineKillText = "world_combat.move.guillotine.text.kill";
@@ -34,9 +13,9 @@ namespace PokemonSkills {
 
     /**
      * 处决：钳口合拢，把目标剩下的生命一次夹断。属性免疫（一般系打不到幽灵）返回 "immune"。
-     * 目标防御、护甲与韧性不参与——只有属性关系能挡。
+     * 目标防御、护甲与韧性不参与——原生伤害事件决定本次是否生效。
      */
-    export function guillotineExecute(action: CombatAction, target: CombatActor): "kill" | "immune" | "miss" {
+    export function guillotineExecute(action: CombatAction, target: CombatActor): "kill" | "immune" | "miss" | "resisted" {
         const world = action.world();
         if (!world.valid(target) || world.friendly(target)) return "miss";
         const body = world.observe(target);
@@ -54,10 +33,11 @@ namespace PokemonSkills {
         if (armor !== null) metadata.armorExcluded = armor.value();
         const toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
         if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        world.hurt(target, body.health() + body.maxHealth(), JSON.stringify(metadata));
+        const accepted = world.hurt(target, body.health() + body.maxHealth(), JSON.stringify(metadata));
         const after = world.observe(target);
-        if (after !== null && after.health() > 0) world.health(target, -after.health(), "world_combat:guillotine_execute");
-        return "kill";
+        if (accepted && (after === null || after.health() <= 0)) return "kill";
+        world.effect(guillotineResisted, target, "{}", 400);
+        return "resisted";
     }
 
     actionParameters.define(guillotineId, {

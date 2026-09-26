@@ -1,15 +1,16 @@
 /**
  * 下压踢 / axekick 的客户端表现。
  *
- * 一句话：施法者把腿抬到高处、在头顶拉出一道斧刃般的亮线，随即脚跟沿这条线直劈而下；劈实的一刻在对手
- * 头顶炸开紫白冲击，被劈晕的头顶绕起困惑飞鸟；劈偏则是脚跟砸地扬尘。
+ * 一句话：施法者短垫一步站定，把腿抬到高处、在面前竖起一条斧刃般的窄竖线，随即脚跟沿这条线直劈而下；
+ * 劈实的一刻在对手头顶炸开紫白冲击，被劈晕的头顶绕起困惑飞鸟；竖带空着则脚跟砸地扬尘。
  * 色相家族：紫（0x9B6BE0）与钢白（0xE8E4F5）为主体，扬尘用中性 tinydust。
- * 拍子：起 windup（抬腿）→ 抬 raise（斧线拉起）→ 劈 chop（直落）→ 击 impact ＋ daze（恍惚）／ 失 crash。
- * 范围：chop 的 `bind:"path"` 从当前位置连到锁定落点，画的就是脚跟这一劈覆盖到的直线；impact 的地环按
- *   `data.hitRadius`（脚踵判定）铺开。
- * 运动：raise 是自下而上的斧刃线，chop 是沿 `data.direction` 的竖直下劈，daze 是头顶绕飞的困惑气泡。
+ * 拍子：起 windup（抬腿）→ 抬 raise（腿/脚跟高亮 + 竖带亮起）→ 劈 chop（竖带从上到下）→ 击 impact ＋ daze ／ 失 crash。
+ * 范围：raise 的 `bind:"path"` 就是面前那条窄竖带的真实顶点（地面 → 抬起高度），chop 再把它从上到下劈一遍；
+ *   判定与表现共用同一组顶点。impact 打在对手头顶的实触点，crash 落在竖带脚下的真地面。
+ * 运动：raise 是绕脚跟收束的紫白高亮，chop 是沿 `data.direction`（竖直向下）的下劈速度线。
  * 数：`data.count`（劈劲派生）决定命中迸发量，`data.dust`（体重与物攻派生）决定扬尘密度，
- *   `data.intensity`（劈劲 / 120）抬高亮度，`data.chance`（恍惚概率）决定 daze 层的密度与亮度。
+ *   `data.intensity`（劈劲 / 120）抬高亮度，`data.chance`（恍惚概率）决定 daze 层的密度与亮度，
+ *   `data.scale`（竖带半宽 / 0.42）放大尺寸。
  */
 const AxekickDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -37,46 +38,62 @@ const AxekickDefinition: ParticleDefinition = {
             ]
         },
         raise: {
-            duration: 20,
-            exit: { stop: 8, drain: 12 },
+            duration: { data: "raiseTicks", fallback: 20 },
+            exit: { drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "path", offset: [0, 0.2, 0], fit: "none",
+                    name: "leg", bind: "source", height: 0.42,
                     particle: "world_combat_core:cobblemon/generic/slash",
-                    shape: { kind: "polyline" },
-                    rate: 26, speed: [0.02, 0.08], spread: 14,
-                    lifetime: [6, 11], size: [0.24, 0.05], sizeMode: "index",
-                    color: 0xE8E4F5, alpha: [0.65, 0], light: "full", maxParticles: 80
+                    rate: 18, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [6, 11], size: [0.2, 0.05], sizeMode: "index",
+                    color: 0x9B6BE0, alpha: [0.7, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "lift", bind: "source", height: 0.5, orient: "velocity",
-                    particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 22, shape: { kind: "box", size: [0.28, 0.24, 0.28] },
-                    direction: "shape", speed: [0.02, 0.09],
-                    lifetime: [5, 9], size: [0.16, 0.04],
-                    color: 0x9B6BE0, alpha: [0.6, 0], light: "full", maxParticles: 70
+                    name: "heel", bind: "source", height: 0.82,
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    rate: 16, shape: { kind: "sphere", radius: 0.16 },
+                    direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [6, 10], size: [0.16, 0.04],
+                    color: 0xE8E4F5, alpha: [0.7, 0], light: "full", maxParticles: 46
+                },
+                {
+                    name: "band", bind: "path", offset: [0, 0.1, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    shape: { kind: "polyline" },
+                    rate: 24, speed: [0.02, 0.08], spread: 6,
+                    lifetime: [6, 11], size: [0.22, 0.05], sizeMode: "index",
+                    color: 0xE8E4F5, alpha: [0.6, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "grit", bind: "source", height: 0.0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "dust", fallback: 12 }, shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 16,
+                    lifetime: [8, 15], size: [0.08, 0.02], sizeMode: "index",
+                    color: 0xB0A08A, alpha: [0.45, 0], gravity: 0.04, drag: 0.92, light: "world", maxParticles: 70
                 }
             ]
         },
         chop: {
-            duration: 18,
-            exit: { stop: 6, drain: 12 },
+            duration: { data: "chopTicks", fallback: 18 },
+            exit: { drain: 12 },
             emitters: [
                 {
-                    name: "heel", bind: "path", offset: [0, 0.12, 0], fit: "none",
+                    name: "heel", bind: "path", offset: [0, 0.08, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/slash",
                     shape: { kind: "polyline" },
-                    rate: 30, speed: [0.02, 0.1], spread: 16,
-                    lifetime: [5, 10], size: [0.22, 0.04], sizeMode: "index",
-                    color: 0xE8E4F5, alpha: [0.7, 0], light: "full", maxParticles: 80
+                    rate: 32, speed: [0.02, 0.1], spread: 12,
+                    lifetime: [5, 10], size: [0.24, 0.04], sizeMode: "index",
+                    color: 0xE8E4F5, alpha: [0.75, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "rush", bind: "source", height: 0.4, orient: "direction",
+                    name: "fall", bind: "point", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 30, shape: { kind: "box", size: [0.3, 0.26, 0.3] },
-                    direction: "shape", speed: [0.02, 0.1], trail: { minDistance: 0.2 },
-                    lifetime: [5, 9], size: [0.17, 0.05],
-                    color: 0x9B6BE0, alpha: [0.7, 0], light: "full", maxParticles: 100
+                    rate: 30, shape: { kind: "box", size: [0.24, 0.24, 0.24] },
+                    direction: "shape", speed: [0.04, 0.16], trail: { minDistance: 0.2 },
+                    lifetime: [5, 9], size: [0.16, 0.04],
+                    color: 0x9B6BE0, alpha: [0.7, 0], light: "full", maxParticles: 80
                 }
             ]
         },
@@ -85,7 +102,7 @@ const AxekickDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "burst", bind: "target", height: 0.72,
+                    name: "burst", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
                     burst: { count: { data: "count", fallback: 20 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.3 },
@@ -94,10 +111,10 @@ const AxekickDefinition: ParticleDefinition = {
                     color: 0xF2EEFB, alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 80
                 },
                 {
-                    name: "ground", bind: "target", offset: [0, 0.06, 0], fit: "none",
+                    name: "crown", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 20 },
-                    shape: { kind: "ring", radius: { data: "hitRadius", fallback: 0.6 } },
+                    burst: { count: 18, at: 1 },
+                    shape: { kind: "ring", radius: 0.28 },
                     direction: "outward", speed: [0.07, 0.19], spread: 10,
                     lifetime: [10, 16], size: [0.26, 0.06],
                     color: 0xC9B4EE, alpha: [0.6, 0], light: "world"
@@ -160,7 +177,7 @@ const AxekickDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "thud", bind: "source", height: 0.05, fit: "none",
+                    name: "thud", bind: "point", offset: [0, 0.05, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: { data: "dust", fallback: 12 }, at: 1 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
@@ -169,7 +186,7 @@ const AxekickDefinition: ParticleDefinition = {
                     color: 0xB0A08A, alpha: [0.6, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "grit", bind: "source", height: 0.2, fit: "none",
+                    name: "grit", bind: "point", offset: [0, 0.2, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dust", fallback: 12 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.4 },

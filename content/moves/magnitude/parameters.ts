@@ -7,7 +7,8 @@
  *
  * 翻译：把「晃动地面」翻成**地面在原地颤、震级当场掷**——它不是把整块地掀起来（那是地震），
  *   而是脚下一道接一道的横颤，离地的人不受影响；这一次抖得多大由掷出的震级决定，震级越大尘跳得越高、
- *   圈里被颠得越狠，震级够大时正在出手的人会被抖得**打断动作**。与同族分开：
+ *   圈里被颠得越狠，震级够大时正在出手的人会被抖得**打断动作**。提交时先把震级亮出并让地面预震约 6 刻，
+ *   预震期间离开地面即可躲开随后的落震（原地、不改方块）。与同族分开：
  *     震级   —— 原地横颤、威力当场随机、够大就打断动作、不留痕；
  *     地震   —— 整块地面一次掀起、把人向上抛、留放射状深缝；
  *     重踏   —— 地裂贴地向外推、削速度、留裂痕；
@@ -121,6 +122,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["quake"] },
         { key: "description.1", values: ["shudder","jolt","stagger","maxTargets"] },
         { key: "description.2", values: ["fracture"] },
+        { key: "description.3", values: [] },
         { key: "fault.on", values: [], when: function (context) { return read(context.detail.values, ["fault"]) === true; } },
         { key: "fault.off", values: [], when: function (context) { return read(context.detail.values, ["fault"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

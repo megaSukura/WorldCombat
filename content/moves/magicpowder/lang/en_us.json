@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.magicpowder.summary": "Scatter magic powder over the target and rewrite all of its current types into pure Psychic; Grass-type bodies shake the powder off and are fully immune.",
+  "worldcombat.skill.magicpowder.summary": "Scatter magic powder over the chosen target and rewrite all of its current types into pure Psychic; Grass-type bodies shake the powder off and are fully immune. Aim at a foe or an ally, or scatter it into empty space.",
   "worldcombat.skill.magicpowder.use.0": "rewrite a foe as Psychic and open Bug, Ghost and Dark weaknesses",
   "worldcombat.skill.magicpowder.use.1": "strip a foe of its own STAB and defensive profile",
-  "worldcombat.skill.magicpowder.use.2": "hold the rewrite longer with the sift option",
+  "worldcombat.skill.magicpowder.use.2": "the slow cloud can be dodged: step away before it lands, or let it burst on a wall",
   "worldcombat.skill.magicpowder.description.0": "Rewrite all of the target's current types into pure Psychic for %1$s.",
   "worldcombat.skill.magicpowder.description.1": "Scatter range %1$s blocks, wind-up %2$s, recovery %3$s; size sets the range, speed the wind-up and Special Defence the recovery.",
-  "worldcombat.skill.magicpowder.description.2": "Powder cloud radius about %1$s blocks and flight speed about %2$s blocks/tick; a wider body makes a bigger cloud and more weight makes it faster. The cloud homes lightly, so leaving before it lands lets you avoid it.",
+  "worldcombat.skill.magicpowder.description.2": "Powder cloud radius about %1$s blocks and flight speed about %2$s blocks/tick; a wider body makes a bigger cloud and more weight makes it faster. The cloud homes lightly, so leaving before it lands lets you avoid it; a point or a direction can be scattered empty and the cloud bursts on a wall.",
   "worldcombat.skill.magicpowder.sift.on": "Sift: rewrite lasts %1$s and range shortens to %2$s blocks, with a slower wind-up and longer cooldown.",
   "worldcombat.skill.magicpowder.sift.off": "Single flick: longer range, faster wind-up, %1$s cooldown, but a shorter rewrite.",
   "worldcombat.skill.magicpowder.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -30,6 +30,7 @@
   "world_combat.move.magicpowder.text.immune": "Grass-type shook the powder off; it has no effect",
   "world_combat.move.magicpowder.text.wipe": "The magic powder drifts away; its type returns",
   "world_combat.move.magicpowder.text.fizzle": "Already pure Psychic, nothing to rewrite",
+  "world_combat.move.magicpowder.text.empty": "The cloud scatters into empty space and bursts on the wall",
   "effect.world_combat.magic_powder": "Rewritten by magic powder (Psychic)",
-  "worldcombat.skill.magicpowder.description.additional": "A target that is already pure Psychic cannot be powdered; the powder just fizzles away."
+  "worldcombat.skill.magicpowder.description.additional": "A target that is already pure Psychic cannot be powdered and the powder just fizzles; Grass is immune. When an ally is chosen the cloud is allowed to touch it; an empty scatter catches the first legal foe in its path."
 }

@@ -6,11 +6,15 @@
  *
  * 两幕（提交前只播预告）：
  *   蓄（coil，提交前）：后腿蓄力、甲壳收紧，只播一记预告。
- *   扑（leap → crash → pin，提交后）：朝目标方向逐刻扑进 `reach` 格（每刻 `leap`）；trace 撞上活体即结算
+ *   扑（leap → crash → pin / miss，提交后）：朝瞄准方向逐刻扑进 `reach` 格（每刻 `leap`）；trace 撞上活体即结算
  *       `pounce` 接触伤害、把目标沿扑进方向顶开 `push` 格、让它的攻击下降 `stages` 级；撞空或撞墙/冲满射程
  *       就收势，落空只留一路尘。
  *
- * 与同族分开：广域破坏是原地扫一圈、bittermalice 隔空放怨念、热带踢是带火的挑踢；猛扑是**把自己送出去**的
+ * 选择是自由的：`kind: "aim"` 收任意阵营实体或一个世界点；没有实体目标时用选中的点／方向确定扑击方向，
+ *   照样扑出去、撞到什么算什么（方向扑空就停在落点）。只在伤害实际结算后才顶开目标、降攻。
+ *   攻击权限仍由命中层按原生敌我结算，手动选友方只会止步、不受伤。
+ *
+ * 与同族分开：广域破坏是原地扫一圈、bittermalice 隔空放怨念、热带踢是低平的侧踢；猛扑是**把自己送出去**的
  *   一记向前重撞，赌的是方向和提前量。降攻对所有战斗者同一条路（NativeEffects.boost）。
  *
  * 配置 `heavy` 由公式改威力／顶开／扑进与时序；提交后才触碰世界。
@@ -32,9 +36,9 @@ namespace PokemonSkills {
         id: "lunge",
         cooldownParameter: "recharge",
         name: "Lunge",
-        description: "后腿蓄力、把整个身体朝目标抛出去，用全部体重压在一撞上：撞实后造成接触伤害并把目标顶开，同时让它的攻击下降一级。全力式更重、顶得更开、扑得更远，但更慢。",
+        description: "后腿蓄力、把整个身体朝瞄准方向抛出去，用全部体重压在一撞上：撞实后造成接触伤害并把目标顶开，同时让它的攻击下降一级。全力式更重、顶得更开、扑得更远，但更慢。",
         uses: ["冲上去压低对手的物理输出", "把单个硬目标撞开、撞得它挥不动手", "抢在对手贴身之前先扑进去"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.8,
         maxRange: 5.4,
         prepare: 8,
@@ -65,10 +69,8 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(lungeScene);
-            const world = action.world();
             const actor = action.actor();
-            const target = action.target();
-            if (target === null) { movementScenes.finish(action, done); return; }
+            action.releaseTarget();
             const power = p("lunge", "pounce", action);
             const length = Math.max(1.4, p("lunge", "reach", action));
             const cruise = Math.max(0.4, p("lunge", "leap", action));
@@ -102,7 +104,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, lungeScene, 1, at,
                     { moment: "crash", target: victim !== null ? String(victim.ref()) : "", chitin: chitin, stages: stages, scale: scale, intensity: intensity }, 28);
                 if (landed && victim !== null && scope.valid(victim)) {
-                    scope.displace(victim, direction.scale(push));
+                    scope.hitDisplace(victim, direction.scale(push));
                     if (scope.valid(victim)) NativeEffects.boost(scope, victim, "atk", -stages);
                     if (scope.valid(victim)) {
                         const body = scope.observe(victim);

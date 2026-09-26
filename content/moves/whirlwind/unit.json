@@ -15,11 +15,5 @@
   ],
   "clientSources": [
     "presentation.ts"
-  ],
-  "startupSources": [
-    "startup.ts"
-  ],
-  "mobEffectIcons": {
-    "world_combat:whirlwind_routed": "minecraft:mob_effect/wind_charged"
-  }
+  ]
 }

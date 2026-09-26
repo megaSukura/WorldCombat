@@ -3,7 +3,8 @@
  *
  * 场面：只会泡沫光线的杰尼龟（32 级）对一只被点住、不会还手的铁傀儡（耐打又不会跑掉的靶子）。
  * 必然事实：本招被提交过、目标受过伤害、目标身上出现过共享身份 foamed（泡沫黏上去了）。
- * 掉速是约 10% 起的随机结果（本单元 slowChance）、泡数与黏着时长随特攻／等级／配置变化，写进 note。
+ * 三颗慢泡依次飘出、各自首次碰撞才结算；掉速是约 10% 起的随机结果（本单元 slowChance，且同一串里
+ *   至多判定一次），泡球半径、散列、黏着时长随特攻／等级／体型／配置变化，写进 note。
  */
 Smoke.scenario("bubblebeam", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -18,14 +19,14 @@ Smoke.scenario("bubblebeam", function (stage) {
             && stage.hadMobEffect(foe, "world_combat:status/foamed");
     }, function () {
         stage.expect(stage.casts("bubblebeam", caster) > 0, "bubblebeam was committed");
-        stage.expect(stage.damageTo(foe) > 0, "the foam hit the foe");
+        stage.expect(stage.damageTo(foe) > 0, "a slow bubble reached and struck the foe");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/foamed"), "the foe carried the shared foamed identity");
-        stage.note("the speed drop is a roughly 10% base roll (bubblebeam.slowChance); bubble count, cling duration, stages and radius follow Sp. Atk/level/body and the dense/jet choice", {
+        stage.note("three slow bubbles fire 3 ticks apart and pop on the first entity/wall, splitting the total power; the speed drop is a roughly 10% base roll bounded to one per string, and bubble radius, string spread and cling duration follow Sp. Atk/level/body and the dense/jet choice", {
             casts: stage.casts("bubblebeam", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foamed: stage.hadMobEffect(foe, "world_combat:status/foamed"),
             foeAlive: foe.alive()
         });
         stage.done();
-    }, "bubblebeam lands and leaves the foe foamed within 45 s");
+    }, "bubblebeam lands a slow bubble and leaves the foe foamed within 45 s");
 });

@@ -1,13 +1,15 @@
 /**
  * 吸取力量 / strengthsap 的客户端表现。
  *
- * 一句话：施法者脚边聚起一圈根须，猛地搭上贴身对手；一条绿光把对手与施法者连住，把对手身上的力气
- *   一股股扯回施法者身体，施法者身上亮起被喂饱的绿光，对手身上则散出被抽空的苍白丝。
- * 色相家族：草绿（0x8FC63F／0x3E7A1F）与嫩绿（0xC7E86A）撑起根须与回流，近白（0xF2FBE0）只给被抽走的力气与命中核心。
- * 拍子：起（windup 聚根）→ 缠（latch 根须搭上、连线成形）→ 回（drain 力气回流到施法者）→ 虚（weaken 对手被抽空）。
+ * 一句话：施法者脚边聚起一圈根须，猛地搭上贴身对手；一条根须把对手与施法者连住，把对手身上橙色的力气
+ *   一股股抽回、在施法者一侧化成绿光，对手身上散出被抽空的苍白丝。
+ * 色相家族：草绿（0x8FC63F／0x3E7A1F）与嫩绿（0xC7E86A）撑起根须与回流，暖橙（0xF2A63C）只代表被抽走的攻势，
+ *   近白（0xF2FBE0）只给被抽走的力气与命中核心。
+ * 拍子：起（windup 聚根）→ 缠（latch 根须搭上、橙色攻势显出）→ 回（drain 力气回流并转绿）→ 虚（weaken 对手被抽空）。
  * 范围：latch／weaken 绑在目标身上，按体型适配；连线沿 `data.path` 把目标与施法者连成实线，读到的是这一次抽取的两端。
- * 运动：根须自施法者脚下向目标缠上；回流沿 `data.direction` 从目标流向施法者；被抽走的丝从目标身上向外散后上浮。
- * 数：力量丝数量由 `data.motes`（特攻派生）驱动；回流强度由 `data.healed`（实际回血）体现在施法者一侧的亮度。
+ * 运动：根须自施法者脚下向目标缠上；回流沿 `data.direction` 从目标流向施法者，橙色在外、绿色在内。
+ * 数：力量丝数量由 `data.motes`（特攻派生）驱动；`data.sapped` 只在物攻真的被降下去时才在目标身上留下印记；
+ *   `data.lit` 以实际回血为门槛点亮施法者一侧；`data.weakMotes` 由实际削弱级数派生。敌人不播伤血。
  * 参照节：视觉语言第一、二、三、四、七、九节。
  */
 const StrengthSapDefinition: ParticleDefinition = {
@@ -53,12 +55,12 @@ const StrengthSapDefinition: ParticleDefinition = {
                     shape: { kind: "polyline" }, rate: { data: "motes", fallback: 14 },
                     direction: "shape", speed: [0.0, 0.04], spread: 12,
                     lifetime: [8, 16], size: [0.09, 0.02], sizeMode: "index",
-                    color: 0x8FC63F, alpha: [0.7, 0], light: "full", maxParticles: 70
+                    color: 0xF2A63C, alpha: [0.7, 0], light: "full", maxParticles: 70
                 },
                 {
                     name: "knot", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass",
-                    burst: { count: 2 }, shape: { kind: "sphere_surface", radius: 0.3 },
+                    burst: { count: { data: "sapped", fallback: 0 } }, shape: { kind: "sphere_surface", radius: 0.3 },
                     direction: "outward", speed: [0.05, 0.18], spread: 20,
                     lifetime: 8, size: [0.34, 0.06], sizeMode: "index",
                     color: 0xF2FBE0, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 10
@@ -81,10 +83,10 @@ const StrengthSapDefinition: ParticleDefinition = {
                 {
                     name: "feed", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/mediumfadeorb",
-                    burst: { count: 12 }, shape: { kind: "sphere_surface", radius: 0.35 },
+                    burst: { count: { data: "lit", fallback: 0 } }, shape: { kind: "sphere_surface", radius: 0.35 },
                     direction: "outward", speed: [0.03, 0.12],
                     lifetime: [10, 20], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0xC7E86A, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 26
+                    color: 0xC7E86A, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 30
                 }
             ]
         },
@@ -95,7 +97,7 @@ const StrengthSapDefinition: ParticleDefinition = {
                 {
                     name: "shorn", bind: "target", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: { data: "motes", fallback: 12 } }, shape: { kind: "sphere", radius: 0.36 },
+                    burst: { count: { data: "weakMotes", fallback: 0 } }, shape: { kind: "sphere", radius: 0.36 },
                     direction: "outward", speed: [0.04, 0.16], gravity: -0.01, drag: 0.9,
                     lifetime: [10, 20], size: [0.08, 0.02],
                     color: 0xF2FBE0, alpha: [0.7, 0], light: "full", maxParticles: 60
@@ -103,7 +105,7 @@ const StrengthSapDefinition: ParticleDefinition = {
                 {
                     name: "sag", bind: "target", height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.34 },
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.34 },
                     direction: "down", speed: [0.03, 0.1], gravity: 0.02, drag: 0.9,
                     lifetime: [8, 16], size: [0.05, 0.01],
                     color: 0x8FA84E, alpha: [0.5, 0], light: "world", maxParticles: 40

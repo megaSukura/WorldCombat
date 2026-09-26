@@ -20,7 +20,7 @@ Smoke.scenario("chipaway", function (stage) {
         stage.after(40, function () {
             stage.expect(stage.casts("chipaway", caster) > 0, "chipaway was committed");
             stage.expect(stage.damageTo(foe) > 0, "at least one beat of the combo landed");
-            stage.note("贴脸连击，每一拍落在不同高度；本招无视目标涨起来的防御能力等级，对宝可梦与对原版生物同一路径。铁傀儡没有涨防，实际拍数由速度决定，随机暴击留待人工试玩。", {
+            stage.note("贴脸朝瞄准方向连打几拍，每一拍是一条真实短拳路、落在不同高度；本招无视目标涨起来的防御能力等级，装备护甲仍参与减伤，对宝可梦与对原版生物同一路径。铁傀儡没有涨防，实际拍数由速度决定，随机暴击留待人工试玩。", {
                 casts: stage.casts("chipaway", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 onCaster: Math.round(stage.damageTo(caster) * 10) / 10,

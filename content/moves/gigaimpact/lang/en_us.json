@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.gigaimpact.summary": "The user lowers its body and charges flat-out along a straight line; a clean hit knocks the target away, but whether it connects or whiffs the user is left exhausted for a while afterwards, unable to act or move.",
   "worldcombat.skill.gigaimpact.description.0": "The collision deals about %1$s contact damage.",
-  "worldcombat.skill.gigaimpact.description.1": "On a hit the target is shoved %1$s blocks along the charge; hit or miss, the user is then exhausted for %2$s, unable to start new moves or ordinary attacks and unable to move.",
+  "worldcombat.skill.gigaimpact.description.1": "On a hit the target is shoved %1$s blocks along the charge; hit, wall or whiff, the user is then exhausted for %2$s, unable to start new moves or ordinary attacks and unable to move.",
   "worldcombat.skill.gigaimpact.description.2": "The charge reaches %1$s blocks at %2$s blocks per tick with a %3$s block collision radius; the wind-up is %4$s.",
   "worldcombat.skill.gigaimpact.use.0": "A flat-out straight-line ram",
   "worldcombat.skill.gigaimpact.use.1": "Send the target flying and pay for it with your own exhaustion",

@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.lightofruin.summary": "Borrow the Eternal Flower's power and burst a thick piercing ray from a bloom at the chest: it runs through the whole line ahead, and the recoil follows the damage actually dealt - the more you ruin, the more it ruins you.",
-  "worldcombat.skill.lightofruin.description.0": "A ray pierces a corridor straight ahead, hitting up to %4$s targets from the nearest outward, once each, for about %1$s Fairy special damage; the ray reaches %2$s blocks and is %3$s blocks half-wide, and a target blocked by an obstacle is not hit.",
+  "worldcombat.skill.lightofruin.summary": "Borrow the Eternal Flower's power and burst a thick piercing ray from a bloom in any direction or at a world point: it runs through the whole line, is cut short at a real block, and can be fired at empty space. The recoil follows the damage actually dealt - the more you ruin, the more it ruins you.",
+  "worldcombat.skill.lightofruin.description.0": "A ray pierces a corridor along the aim, hitting up to %4$s targets from the nearest outward, once each, for about %1$s Fairy special damage; the ray reaches %2$s blocks and is %3$s blocks half-wide, stops at the first real block, and a target blocked by an obstacle is not hit.",
   "worldcombat.skill.lightofruin.description.1": "Each hit reflects %1$s× the damage actually dealt back onto the user; a miss or an immune target costs nothing.",
   "worldcombat.skill.lightofruin.overdraw.on": "Overdraw: borrow one step harder for power ×1.1 and a 1.15x wider ray, at the cost of recoil ×1.15, +2 wind-up and +6 cooldown.",
   "worldcombat.skill.lightofruin.overdraw.off": "Restraint: recoil ×0.8 at the cost of power ×0.95 - you pay back less, but each hit lands lighter.",

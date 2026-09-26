@@ -5,16 +5,17 @@
  * 从落点向四周炸开，沿地面把旁边的其他人一起缠上电弧；冲空则电荷在脚下泄放。
  * 色相家族：电黄（0xF2D03A）与冷白（0xEAF6FF），电弧的蓝（0x5AC8F0）只在放电与反噬层。
  * 拍子：蓄 charge（聚电成球）→ 冲 rush（带电爆冲）→ 行 wake（电痕）→ 爆 burst（命中主目标）→ 放 discharge（波及旁人）→ 噬 recoil（回路反噬）／ 泄 vent（冲空）。
- * 范围：rush 的冲刺线沿 `data.path` 两顶点铺成一条电带（横向按 `data.scale` 缩放）；discharge 的爆发线从落点连向每个被波及的人，画出的就是放电波及的范围。
- * 运动：电荷向身体中心收拢、冲锋时向后甩；放电从落点向外扑。
- * 数：`data.sparks`（速度与特攻派生）决定电花与爆发电弧的数量，`data.intensity`（本次伤害派生）决定命中强度，
- * `data.charged`（1 表示主目标还没麻痹）决定命中核心是否多一圈蓄能电弧，`data.discharge`（1 表示泄放式）决定蓄电足不足。
+ * 范围：rush 的冲刺线沿 `data.path` 两顶点铺成一条电带（横向按 `data.scale` 缩放）；discharge 的每道弧线用服务端给的 `data.path` 从真实接触点连向该被波及者，画出的就是这次放电真正走到的人。
+ * 运动：电荷向身体中心收拢、冲锋时向后甩；放电从接触点向外扑。
+ * 数：`data.sparks`（速度与特攻派生）决定蓄电、命中、放电与泄放的电花数量，`data.intensity`（本次伤害派生）决定各幕亮度，
+ * `data.charged`（1 表示主目标还没麻痹）决定命中核心是否多一圈蓄能电弧，`data.discharge`（1 表示泄放式）决定蓄电足不足，
+ * `data.windup`（起手刻数）让蓄电一幕与真实准备期同长。
  */
 const VolttackleDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         charge: {
-            duration: 30,
+            duration: { data: "windup", fallback: 30 },
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
@@ -38,6 +39,15 @@ const VolttackleDefinition: ParticleDefinition = {
                     rate: 6, shape: { kind: "ring", radius: 0.5 }, direction: "outward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.2, 0.05],
                     color: 0x5AC8F0, alpha: [0.5, 0], light: "world", maxParticles: 20
+                },
+                {
+                    // discharge=1（泄放式）时多聚一圈更宽的外张电弧，预告这次要把电摊开。
+                    name: "discharge", bind: "source", offset: [0, 0.6, 0], height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    burst: { count: { data: "discharge", fallback: 0 }, repeats: 8, interval: 1 },
+                    shape: { kind: "sphere_surface", radius: 1.1 }, direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [7, 12], size: [0.18, 0.03],
+                    color: 0x5AC8F0, alpha: [0.8, 0], light: "full", bloom: 0.45, maxParticles: 60
                 }
             ]
         },
@@ -59,7 +69,7 @@ const VolttackleDefinition: ParticleDefinition = {
                     rate: 40, shape: { kind: "box", size: [0.36, 0.34, 0.36] }, direction: "shape",
                     speed: [0.03, 0.14], trail: { minDistance: 0.22 },
                     lifetime: [5, 10], size: [0.19, 0.05],
-                    color: 0xF2D03A, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 220
+                    color: 0xF2D03A, alpha: [0.85, 0], light: "full", bloom: { data: "intensity", fallback: 0.45 }, maxParticles: 220
                 },
                 {
                     name: "rush", bind: "source", offset: [0, 0.42, 0], height: 0.38,
@@ -78,7 +88,7 @@ const VolttackleDefinition: ParticleDefinition = {
                 {
                     name: "static", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    rate: 9, shape: { kind: "ring", radius: 0.32 }, direction: "outward", speed: [0.03, 0.1],
+                    rate: { data: "sparks", fallback: 9 }, shape: { kind: "ring", radius: 0.32 }, direction: "outward", speed: [0.03, 0.1],
                     lifetime: [6, 11], size: [0.08, 0.02],
                     color: 0xF2D03A, alpha: [0.55, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 28
                 }
@@ -95,7 +105,7 @@ const VolttackleDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
                     direction: "shape", speed: [0.1, 0.34], spread: 16,
                     lifetime: [7, 13], size: [0.44, 0.06], sizeMode: "index",
-                    color: 0xF2D03A, alpha: [1, 0], light: "full", bloom: 0.65
+                    color: 0xF2D03A, alpha: [1, 0], light: "full", bloom: { data: "intensity", fallback: 0.65 }
                 },
                 {
                     name: "charged", bind: "target", offset: [0, 0.5, 0], height: 0.4,
@@ -117,7 +127,7 @@ const VolttackleDefinition: ParticleDefinition = {
                     shape: { kind: "polyline" },
                     burst: { count: { data: "sparks", fallback: 26 } },
                     lifetime: [6, 12], size: [0.16, 0.03], sizeMode: "index",
-                    color: 0xF2D03A, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 140
+                    color: 0xF2D03A, alpha: [0.9, 0], light: "full", bloom: { data: "intensity", fallback: 0.5 }, maxParticles: 140
                 },
                 {
                     name: "cling", bind: "target", offset: [0, 0.4, 0], height: 0,
@@ -138,12 +148,12 @@ const VolttackleDefinition: ParticleDefinition = {
                     burst: { count: 12 },
                     shape: { kind: "hemisphere", radius: 0.46, rotation: [180, 0, 0] }, direction: "up",
                     speed: [0.06, 0.24], lifetime: [8, 14], size: [0.16, 0.04],
-                    color: 0x5AC8F0, alpha: [0.7, 0], light: "full", maxParticles: 34
+                    color: 0x5AC8F0, alpha: [0.7, 0], light: "full", bloom: { data: "intensity", fallback: 0.3 }, maxParticles: 34
                 },
                 {
                     name: "leak", bind: "source", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    burst: { count: 18 }, shape: { kind: "ring", radius: 0.42 }, direction: "outward",
+                    burst: { count: { data: "sparks", fallback: 18 } }, shape: { kind: "ring", radius: 0.42 }, direction: "outward",
                     speed: [0.05, 0.2], lifetime: [9, 15], size: [0.08, 0.02],
                     color: 0xF2D03A, alpha: [0.6, 0], gravity: 0.03, drag: 0.9, light: "world", maxParticles: 60
                 }
@@ -159,7 +169,7 @@ const VolttackleDefinition: ParticleDefinition = {
                     burst: { count: { data: "sparks", fallback: 26 } },
                     shape: { kind: "hemisphere", radius: 0.5, rotation: [180, 0, 0] }, direction: "up",
                     speed: [0.08, 0.3], spread: 18, lifetime: [8, 14], size: [0.32, 0.05], sizeMode: "index",
-                    color: 0xF2D03A, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 120
+                    color: 0xF2D03A, alpha: [0.95, 0], light: "full", bloom: { data: "intensity", fallback: 0.4 }, maxParticles: 120
                 },
                 {
                     name: "crackle", bind: "source", offset: [0, 0.05, 0], height: 0,

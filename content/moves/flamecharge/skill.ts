@@ -6,8 +6,11 @@
  *
  * 两幕：
  *   起（flare，提交前）：火焰从四周收拢包住全身，火星向内卷。
- *   冲（rush → hit → boost）：提交后逐刻沿瞄准方向冲锋，身周拖着火与火星；命中结算伤害与击退，
- *       贯穿式会继续撞穿并沿路点到后面的人（后续目标吃贯穿占比），命中即提速；一路无人则火焰收熄。
+ *   冲（rush → hit → boost）：提交后逐刻沿瞄准方向直线冲锋，身周拖着火与火星（火衣只覆盖真正奔跑的这段）；
+ *       撞中且真的造成伤害才把人带开、才有一次火撞反馈与提速；贯穿式继续撞穿并沿路点到后面的人
+ *       （第一个真正命中的吃满额、之后各吃贯穿占比），一路无人则火焰收熄。
+ *
+ * 选取：kind 为 aim，可点选方向或实体、也可向空处空放；冲锋是直线，遇到墙就终止，贯穿不会自动转弯。
  *
  * 与同族分开：起草是草绿的一次窜跃、流水旋舞是多拍水舞，蓄能焰袭是**直线火焰冲锋**，
  * 配置 `pierce` 决定它停在第一个目标身上还是撞穿一条线。
@@ -35,7 +38,7 @@ namespace PokemonSkills {
         name: "蓄能焰袭",
         description: "裹着火焰沿直线冲锋：撞中的第一个目标吃一记重击并被带开，随后自身提速；开启贯穿时会继续撞穿，把身后撞到的对手各吃一记较轻的伤害。",
         uses: ["直线撞中一个落单的对手", "沿一条线把挤在一起的对手一起点着", "命中后提速，趁势追下去"],
-        kind: "enemy",
+        kind: "aim",
         range: 5,
         maxRange: 7,
         prepare: 9,
@@ -79,11 +82,12 @@ namespace PokemonSkills {
             const push = p("flamecharge", "push", action);
             const heat = Math.round(p("flamecharge", "heat", action));
             const pierce = !!(config && config.pierce);
-            const direction = aim(action);
+            // 直线冲锋只取水平朝向；贯穿不再自动转弯。
+            const direction = WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction());
             const intensity = Math.max(0.6, Math.min(2.4, power / 55));
             const scale = radius / 0.6;
             const struck: { [ref: string]: boolean } = {};
-            let travelled = 0, firstHit = false, boosted = false, settled = false;
+            let travelled = 0, landed = 0, boosted = false, settled = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             sound(action, "cobblemon:move.flamecharge.actor");
@@ -95,14 +99,16 @@ namespace PokemonSkills {
                 const ref = String(target.ref());
                 if (struck[ref]) return;
                 struck[ref] = true;
-                const amount = firstHit ? power * through : power;
-                firstHit = true;
-                const landed = impact(current, hit, "flamecharge", amount, { damage: damageSpec("flamecharge", "rush"), contact: true });
+                // 第一个真正命中的目标吃满额，之后沿直线撞到的各吃贯穿占比；被免疫/挡下的不算命中也就不推人。
+                const amount = landed > 0 ? power * through : power;
+                const dealt = impact(current, hit, "flamecharge", amount, { damage: damageSpec("flamecharge", "rush"), contact: true });
+                if (!dealt) return;
+                landed++;
                 WorldFeedback.emit(scope, flamechargeScene, 1, point,
-                    { moment: "hit", heat: heat, scale: scale, intensity: Math.max(0.6, Math.min(2.4, amount / 55)) }, 28);
+                    { moment: "hit", target: ref, heat: heat, scale: scale, intensity: Math.max(0.6, Math.min(2.4, amount / 55)) }, 28);
                 sound(current, "cobblemon:move.flamecharge.target");
-                if (scope.valid(target)) scope.displace(target, direction.scale(push));
-                if (landed && !boosted) { boosted = true; flamechargeHasteNow(current, haste); }
+                if (scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
+                if (!boosted) { boosted = true; flamechargeHasteNow(current, haste); }
             }
 
             function advance(current: CombatAction): void {
@@ -118,14 +124,14 @@ namespace PokemonSkills {
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= sprint) {
-                    if (!firstHit) {
+                    if (landed === 0) {
                         const body = scope.observe(actor);
                         if (body !== null) {
                             WorldFeedback.emit(scope, flamechargeScene, 1, body.position(), { moment: "fizzle", scale: scale }, 20);
                             WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.1, 0)), flamechargeFizzleText, [], 22);
                         }
                     } else {
-                        WorldFeedback.text(scope, here, flamechargeHitText, [Object.keys(struck).length], 24);
+                        WorldFeedback.text(scope, here, flamechargeHitText, [landed], 24);
                     }
                     finish(current);
                     return;

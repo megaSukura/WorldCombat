@@ -6,7 +6,7 @@
   "worldcombat.skill.ragefist.description.0": "每一记鬼拳造成约 %1$s 点接触伤害；身上每攒 1 记拳印就多甩一记拳，当前拳印 %2$s 记。",
   "worldcombat.skill.ragefist.description.1": "这一趟甩出 %1$s 记鬼拳，相邻两记相隔 %2$s 刻，每一记都独立造成一次伤害。",
   "worldcombat.skill.ragefist.description.2": "每记拳够到 %1$s 格、判定半径 %2$s 格，命中后把人顶开 %3$s 格；每挨一记就把拳印的存续续到 %4$s。",
-  "worldcombat.skill.ragefist.description.3": "每次被别的来源打中、实际受到伤害时（变化招式不计）就攒 1 记拳印，一次缠斗最多攒 %1$s 记，到顶后只续时间；甩拳不消耗拳印，停手不再挨打、存续走完才散尽。",
+  "worldcombat.skill.ragefist.description.3": "每次被别的敌人用真实攻击打中、实际受到伤害时就攒 1 记拳印（环境伤害、自身反噬、纯状态 DOT 都不算），一次缠斗最多攒 %1$s 记，到顶后只续时间；甩拳不消耗拳印，停手不再挨打、存续走完才散尽。",
   "worldcombat.skill.ragefist.fury.on": "狂暴式：拳印上限降到 4（最多 5 拳），但拳间隔 −1、起手 −1、冷却 −5——短促的快拳，适合面对脆皮。",
   "worldcombat.skill.ragefist.fury.off": "积怨式：拳印上限 6（最多 7 拳）、节奏按标准——更慢，但一次缠斗里的封顶更高，适合面对血厚的目标。",
   "worldcombat.skill.ragefist.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。",

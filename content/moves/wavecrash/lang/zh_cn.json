@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.wavecrash.summary": "冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳更注重防护，薄水刃提供更远射程。",
+  "worldcombat.skill.wavecrash.summary": "裹起贴身的厚水壳冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳威力更高、反伤更轻，薄水刃提供更远射程。",
   "worldcombat.skill.wavecrash.description.0": "裹着水墙沿直线涌出，最远约 %2$s 格、涌进速度约 %3$s 格每刻、判定半径约 %4$s 格；撞上第一个目标即造成约 %1$s 点接触伤害并停下，一路无人或被地形挡住才会提前散开，最多命中一个目标。",
   "worldcombat.skill.wavecrash.description.1": "命中后自己承受相当于实际伤害 %1$s 倍的反伤；目标沿涌进方向被冲开 %3$s 格，并带上湿透身份 %2$s（已湿透的目标不重新计时），供后续依赖湿透的水、电类效果识别。",
   "worldcombat.skill.wavecrash.thick.on": "厚水壳：威力更高、反伤更轻、浇得更久，但涌进更短、起手与冷却更慢。",
@@ -28,6 +28,8 @@
   "worldcombat.skill.wavecrash.preference.ai.maxChase.help": "超过这个距离就不主动涌进，先靠近。越大越早发起，也越容易冲空。",
   "worldcombat.skill.wavecrash.preference.ai.preferDry": "留给还干着的目标",
   "worldcombat.skill.wavecrash.preference.ai.preferDry.help": "开启：优先对还没被浇湿的目标出手（命中会挂上湿身）；关闭：只按威胁与距离排序。",
+  "worldcombat.skill.wavecrash.preference.ai.minHealth": "保留生命",
+  "worldcombat.skill.wavecrash.preference.ai.minHealth.help": "自己没湿时血低于这个比例就不再为“上湿”盲冲（对手已经湿了除外）。越高越珍惜自己，也越少抢着先手。",
   "effect.world_combat.wavecrash_soaked": "湿身",
   "world_combat.move.wavecrash.text.hit": "波动冲",
   "world_combat.move.wavecrash.text.drench": "湿身",

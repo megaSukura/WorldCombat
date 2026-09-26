@@ -1,10 +1,11 @@
 {
-  "worldcombat.skill.gyroball.summary": "Spin yourself into a heavy steel top and screw the target's speed advantage into its spin, then slam in: the faster the target, the heavier the hit and the bigger the top. A slow body is what turns it into a hammer.",
+  "worldcombat.skill.gyroball.summary": "Spin yourself into a heavy steel top and screw the target's speed advantage into its spin, then slam in: the faster the target, the heavier the hit and the bigger the top. A slow body is what turns it into a hammer. Aim at an enemy, or simply dash toward any direction or point.",
   "worldcombat.skill.gyroball.use.0": "One heavy hit when the target is faster than you",
   "worldcombat.skill.gyroball.use.1": "Spin up in place at contact range, then slam a short way in",
   "worldcombat.skill.gyroball.use.2": "Let the speed gap grow the top on screen",
+  "worldcombat.skill.gyroball.use.3": "Dash a short way toward an empty direction or point to probe",
   "worldcombat.skill.gyroball.description.0": "Gyro Ball deals about %1$s damage in one slam; the current load is %2$s (target speed / your speed), and a higher load makes the slam heavier. The target's Defence, type and crits settle on hit.",
-  "worldcombat.skill.gyroball.description.1": "It lunges up to %1$s blocks at %2$s blocks/tick, with a %3$s-block rim radius, and knocks a struck target back %4$s blocks.",
+  "worldcombat.skill.gyroball.description.1": "It lunges up to %1$s blocks at %2$s blocks/tick, with a %3$s-block rim radius, and knocks a struck target back %4$s blocks. Aim at an enemy or any direction/point; an empty dash finds no substitute target and simply stops at the end or against a wall.",
   "worldcombat.skill.gyroball.brace.on": "Braced form: heavier (power x1.14, knockback x1.18), but a shorter lunge (x0.86), slower roll (x0.92), +2 ticks wind-up and +6 ticks cooldown — for a slow body already in the target's face.",
   "worldcombat.skill.gyroball.brace.off": "Light-spin form (native): lunges farther, rolls faster and recovers cleanly, at slightly lower single-hit power.",
   "worldcombat.skill.gyroball.timing": "Range %1$s blocks; wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s from commit.",

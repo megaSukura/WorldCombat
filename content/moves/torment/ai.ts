@@ -1,5 +1,14 @@
 /** torment：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
+    /** 目标最近是否真的连续出手（recentAttack 只记造成过伤害的原生攻击）；用于优先惩罚正在猛攻的敌人。 */
+    function tormentSwinging(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        try {
+            const actor = world.actor(target.ref);
+            return actor !== null && DamageSemantics.recentAttack(world, actor, 30) !== null;
+        } catch (error) { return false; }
+    }
+
     function tormentWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
@@ -22,7 +31,9 @@ namespace PokemonSkills {
         priority: function (context, item, target) {
             if (target === null || !tormentWants(context, item, target)) return 0;
             const self = CompanionBehavior.source(context);
-            return target.attacking === self.ref ? 52 : 42;
+            // 正在连用攻击的敌人优先，其次才是当前威胁；已有烦躁的不会走到这里，不续刷。
+            const swinging = tormentSwinging(context, target) ? 6 : 0;
+            return (target.attacking === self.ref ? 52 : 42) + swinging;
         }
     });
 

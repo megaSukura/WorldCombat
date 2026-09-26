@@ -5,7 +5,7 @@
   "worldcombat.skill.electroweb.use.2": "Pin a target that charges in",
   "worldcombat.skill.electroweb.use.3": "Shock several foes spread around a spot",
   "worldcombat.skill.electroweb.description.0": "A foe stepping in takes about %1$s special damage; the target's special defence, type and crit are settled on the hit.",
-  "worldcombat.skill.electroweb.description.1": "The net opens to about %1$s blocks and stays live for %2$s; allies pass through freely and only foes are jolted.",
+  "worldcombat.skill.electroweb.description.1": "The net opens to about %1$s blocks and stays live for %2$s; it only lands on legal ground and disperses with no support, allies pass through freely and only foes are jolted.",
   "worldcombat.skill.electroweb.description.2": "A jolted target loses %1$s Speed stage(s) and is pinned where it stands, unable to move, for %2$s as it enters.",
   "worldcombat.skill.electroweb.description.3": "Those still inside take about %1$s special damage every %2$s s; a caught foe's movement speed is heavily reduced, and the hold drags on for %3$s after leaving.",
   "worldcombat.skill.electroweb.option.on": "Overcharge on: the net is about x0.72 wide, lasts about x0.75, the first jolt about x1.3 stronger and one extra Speed stage dropped, with +2 ticks wind-up and +8 ticks cooldown, for a painful lock on one target.",
@@ -34,5 +34,6 @@
   "worldcombat.skill.electroweb.preference.ai.lead.help": "Lead a moving target by this many ticks when placing the net; 0 drops it where the target stands, higher is better against a charging foe.",
   "world_combat.move.electroweb.text.catch": "Jolted (Speed -%1$s)",
   "world_combat.move.electroweb.text.spread": "The net opens",
+  "world_combat.move.electroweb.text.fizzle": "No ground to hold the net; it scattered",
   "effect.world_combat.electrowebbed": "Caught in the net"
 }

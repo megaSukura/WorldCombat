@@ -1,20 +1,47 @@
 /**
  * 尖刺臂 / needlearm 的伙伴 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 7）格内。它只打贴身一个目标，
- *   价值在于**打完在地上留一片荆棘**，所以优先对「会留在这块地上」的目标出手：贴地的目标、挤在一起的敌人。
- * `ai.seed`（默认开）打开时，只为「能扎到人」的局面加分——目标悬空、正在快速离开时降档，把这一挥留到更好的时机。
+ * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 7）格内。
+ * 选择倾向：它是一记大张角的横扫，价值在「一次覆盖一圈」，所以被多敌贴近、或有人贴着你侧向绕行时优先；
+ *   `ai.cluster`（默认开）打开时，还会为贴地的目标加分、为正在跑开的目标降档。
+ * 落点：AI 取敌群扇面的中心（`needlearmFocus`）作为挥击落点，而不是只对着最近那一个，
+ *   这样短扑后的一段弧能把围着的人一起扫到。
  */
 namespace PokemonSkills {
-    function needlearmCount(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
+    function needlearmEnemies(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): CompanionBehavior.Entity[] {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        let count = 1;
+        const found: CompanionBehavior.Entity[] = [target];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) found.push(other);
         }
-        return count;
+        return found;
+    }
+
+    /** 敌群扇面中心：以目标为起点，把附近同圈敌人的位置平均，作为挥击落点。 */
+    function needlearmFocus(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): CompanionBehavior.Entity {
+        const group = needlearmEnemies(context, target, radius);
+        const copy: CompanionBehavior.Entity = JSON.parse(JSON.stringify(target));
+        if (group.length <= 1) return copy;
+        let x = 0, y = 0, z = 0;
+        for (let i = 0; i < group.length; i++) { x += group[i].point[0]; y += group[i].point[1]; z += group[i].point[2]; }
+        copy.point = [x / group.length, y / group.length, z / group.length];
+        return copy;
+    }
+
+    /** 是否有敌人贴着你绕到侧面/身后（两敌方向夹角超过约 120°）。 */
+    function needlearmSurround(context: WorldBehavior.Context, group: CompanionBehavior.Entity[]): boolean {
+        const self = CompanionBehavior.source(context);
+        const around: number[][] = [];
+        for (let i = 0; i < group.length; i++) {
+            const dx = group[i].point[0] - self.point[0], dz = group[i].point[2] - self.point[2];
+            const length = Math.sqrt(dx * dx + dz * dz);
+            if (length > 0.1) around.push([dx / length, dz / length]);
+        }
+        for (let a = 0; a < around.length; a++) for (let b = a + 1; b < around.length; b++)
+            if (around[a][0] * around[b][0] + around[a][1] * around[b][1] < -0.5) return true;
+        return false;
     }
 
     function needlearmWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -35,29 +62,34 @@ namespace PokemonSkills {
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
         },
+        target: function (context, capability, target) {
+            return needlearmFocus(context, target, typeof capability.data.range === "number" ? capability.data.range : 2.6);
+        },
         priority: function (context, capability, target) {
             if (!target || !needlearmWants(context, capability, target)) return 0;
             let base = 22;
-            const count = needlearmCount(context, target, 1.6);
-            if (count >= 2) base += Math.min(16, (count - 1) * 8);
-            if (CompanionBehavior.ai<boolean>(capability, "seed", true)) {
-                if (target.grounded === true) base += 8;
-                if (CompanionBehavior.fleeing(context, target)) base -= 10;
+            const span = typeof capability.data.range === "number" ? capability.data.range : 2.6;
+            const group = needlearmEnemies(context, target, span);
+            if (group.length >= 2) base += Math.min(16, (group.length - 1) * 6);
+            if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
+                if (needlearmSurround(context, group)) base += 8;
+                if (target.grounded === true) base += 4;
+                if (CompanionBehavior.fleeing(context, target)) base -= 8;
             }
             return base;
         }
     });
 
     addPreferences(needlearmId, {}, [
-        field(pathOf("briar"), "荆棘式", "boolean", {
-            help: "开启：荆棘范围更大、留得更久、扎得更疼，但挥击更轻、起手更慢、冷却更长，适合封锁地面、拖住对手。关闭（挥击式，默认）：挥击更重、出手更快、冷却更短，但只留一小片刺。"
+        field(pathOf("broad"), "横扫式", "boolean", {
+            help: "开启：扇面更宽、挥扫更远，但挥击更轻、起手更慢、冷却更长，适合被多敌贴身、有人绕后时一次扫开。关闭（重挥式，默认）：挥击更重、出手更快、冷却更短，但扇面更窄。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,
-            help: "超过这个距离就不主动挥击，先走近。越大越会先挥空留刺，也越容易在接近时被对手走开。"
+            help: "超过这个距离就不主动挥击，先走近。越大越会在稍远处起抡，也越容易在接近时被对手走开。"
         }),
-        field(pathOf("ai.seed"), "只为能扎到人", "boolean", {
-            help: "开启：目标贴地或敌人成堆时才优先挥击，跑动中的目标降档，把这一挥留到荆棘能扎到人时；关闭：当普通近身招处理，不为荆棘加分。"
+        field(pathOf("ai.cluster"), "只为敌群/绕行加分", "boolean", {
+            help: "开启：多敌贴身、有人侧向绕行、目标贴地时优先挥击，跑动中的目标降档；关闭：当普通近身招处理，不为扇面覆盖加分。"
         })
     ]);
 }

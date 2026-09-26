@@ -20,7 +20,7 @@ Smoke.scenario("machpunch", function (stage) {
     }, function () {
         stage.expect(stage.casts("machpunch", caster) > 0, "mach punch was committed");
         stage.expect(stage.damageTo(foe) > 0, "the instant punch dealt damage");
-        stage.note("the user never moves; the strike is one instantaneous trace at point-blank range, so misses only happen when the zombie walks out of the short line.", {
+        stage.note("the move itself never displaces the user; the recorded travel is the shared task walking into arm's reach. The strike is one instantaneous trace, so misses only happen when the zombie walks out of the short line.", {
             casts: stage.casts("machpunch", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             moved: Math.round(stage.travelled(caster) * 10) / 10,

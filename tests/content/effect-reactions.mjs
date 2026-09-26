@@ -8,6 +8,7 @@ const compile = source => ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None },
 }).outputText;
 const reactions = compile(fs.readFileSync('content/mechanisms/effect-reactions.ts', 'utf8'));
+const feedback = compile(fs.readFileSync('content/mechanisms/world-feedback.ts', 'utf8'));
 const damageSemantics = compile(['content/behavior/contributions.ts', 'content/mechanisms/damage-semantics.ts']
   .map(file => fs.readFileSync(file, 'utf8')).join('\n'));
 // Parameter formulas and presentation are outside this regression; retain the production exported identities.
@@ -43,6 +44,9 @@ function harness(loadMoves = false) {
   });
   vm.runInContext(damageSemantics, context, { filename: 'damage-semantics.ts' });
   vm.runInContext(reactions, context, { filename: 'content/mechanisms/effect-reactions.ts' });
+  vm.runInContext(feedback, context, { filename: 'content/mechanisms/world-feedback.ts' });
+  // Keep the production receipt reader; rendering writes are outside the reaction-scope regression.
+  Object.assign(context.WorldFeedback, { emit() {}, text() {}, keep() {} });
   if (loadMoves) vm.runInContext(moves, context, { filename: 'reaction-consumers.ts' });
   function world(source, controller) {
     return { source: () => source, controller, valid: target => actors.get(target.ref()) === target,
@@ -117,14 +121,25 @@ test('reflect counters for a protected ally from the field caster and marks refl
   assert.equal(h.hits.length, 1); assert.equal(reflected.amount, 4);
 });
 
-test('sharpen applied-damage callback reaches the production hurt helper with its mark owner as source', () => {
-  const h = harness(true); h.defender.sharpened = true;
-  h.effect(8, 'world_combat:sharpen_mark', h.defender, h.defender, { gift: 1, edge: 12, spikes: 10, spread: 1, window: 100 });
-  h.hooks.get('world_combat:move_sharpen/cut')({ world: () => h.world(h.attacker, 'checks:attacker-controller'),
-    actor: () => h.attacker, target: () => h.defender, data: () => JSON.stringify({ actual: 10, kind: 'move', contact: true }) });
+test('sharpen native applied-damage reaches the production hurt helper as its mark owner without recursion', () => {
+  const h = harness(true); h.defender.sharpened = true; h.attacker.sharpened = true;
+  const state = { gift: 1, edge: 12, spikes: 10, spread: 1, window: 100 };
+  h.effect(8, 'world_combat:sharpen_mark', h.defender, h.defender, state);
+  h.effect(9, 'world_combat:sharpen_mark', h.attacker, h.attacker, state);
+  const applied = h.hooks.get('world_combat:move_sharpen/cut');
+  const emit = (source, target, data) => applied({ world: () => h.world(source, 'checks:attacker-controller'),
+    actor: () => source, target: () => target, data: () => JSON.stringify(data) });
+  emit(h.attacker, h.defender, { actual: 10, kind: 'move', contact: true });
+  assert.equal(h.hits.length, 0, 'An authored extra hit is not a native melee attack');
+  emit(h.attacker, h.defender, { actual: 10, scripted: false, sourceLiving: true,
+    sourceActor: h.attacker.ref(), direct: true, damageType: 'minecraft:mob_attack', x: 2, y: 1, z: 3 });
   assert.equal(h.hits.length, 1); const hit = h.hits[0];
   assert.equal(hit.source, h.defender); assert.equal(hit.target, h.attacker);
   assert.equal(hit.controller, 'checks:defender-controller'); assert.equal(hit.data.move, 'sharpen'); assert.equal(hit.amount, 12);
+  emit(hit.source, hit.target, { ...hit.data, actual: hit.amount, scripted: true,
+    sourceLiving: true, sourceActor: hit.source.ref(), direct: true, damageType: 'world_combat:action' });
+  assert.equal(h.hits.length, 1, 'The scripted counter cannot trigger the other armed sharpen mark');
+  assert.equal(h.operations.length, 1, 'Only the native melee receipt issued a reaction');
 });
 
 test('native melee is reduced and reflected while arrows have physical reduction without contact recoil', () => {

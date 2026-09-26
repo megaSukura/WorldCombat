@@ -6,11 +6,13 @@
  * 色相家族：超能品紫（psyring / psyswirl / impact_psychic 原色）为底，护盾主体低饱和半透明，
  * 只有撞击核心与回卷碎片用高饱和亮紫；没有第二种色相。
  * 拍子：起（focus 聚念）→ 结（shell 壳成形并持续）→ 行（drive）→ 击（impact 碎壳）→ 收（reform 回卷 / miss）。
- * 范围：shell 与 reform 贴施法者、随它移动，`data.scale`（护盾半径 / 0.48）画出的就是判定用的那层壳；
+ * 范围：shell 贴施法者、随它移动，`data.scale`（护盾半径 / 0.48）画出的就是判定用的那层壳；它由服务端
+ * `WorldFeedback.onEffect` 绑在那次 boostWindow 上，`duration: 0` 一直放到该效果自然到期或提前清除才收。
  * impact 绑命中点，画出的就是壳碎的位置。
  * 运动：聚念向内收，护盾环贴体缓慢自转，行进时壳随人前移，撞击向外炸开，回卷由外向内收拢。
  * 数：`data.scale` 放大壳与炸开范围，`data.shards`（加固级数 × 14）决定回卷碎片的数量，
- * `data.ticks`（护盾时长）直接绑定 shell 幕的画面存活，`data.intensity`（本击威力 / 75）抬高撞击核心亮度。
+ * `data.ticks`（护盾时长）随载荷保留，壳的存活由 boostWindow 生命周期决定而不表现额外容量，
+ * `data.intensity`（本击威力 / 75）抬高撞击核心亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const PsyshieldbashDefinition: ParticleDefinition = {
@@ -39,8 +41,8 @@ const PsyshieldbashDefinition: ParticleDefinition = {
             ]
         },
         shell: {
-            duration: 44,
-            exit: { stop: 34, drain: 16 },
+            duration: 0,
+            exit: { stop: 0, drain: 18 },
             emitters: [
                 {
                     name: "shield_body", bind: "source", offset: [0, 0.5, 0], height: 0.35,

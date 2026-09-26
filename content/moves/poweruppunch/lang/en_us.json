@@ -4,7 +4,7 @@
   "worldcombat.skill.poweruppunch.use.1": "Stand close and keep punching one target, heavier each time",
   "worldcombat.skill.poweruppunch.use.2": "Max the Attack stage early in a fight, then switch to heavier moves",
   "worldcombat.skill.poweruppunch.description.0": "The straight punch deals about %1$s Fighting contact and punch damage, reaching %2$s blocks with a %3$s block fist radius; the target's Defence, type matchup and crits are settled on impact.",
-  "worldcombat.skill.poweruppunch.description.1": "Each landed hit raises the user's Attack by up to %1$s stage (capped at +6) and refreshes the Hardened Fist window for %2$s (every hit within it renews it); the fist shoves the target about %3$s blocks. When the window expires or is cured, that many stages are withdrawn.",
+  "worldcombat.skill.poweruppunch.description.1": "Each landed hit raises the user's Attack by up to %1$s stage (capped at +6) and refreshes the Hardened Fist window for %2$s (every hit within it renews it); the fist shoves the target about %3$s blocks. When the window expires, is cured or is refreshed, only the stages this move raised are withdrawn; Attack from elsewhere is untouched.",
   "worldcombat.skill.poweruppunch.charge.on": "Wound Up: a longer wind-up and a 20 percent lighter jab, but each hit hardens 2 stages, the window lasts 40 percent longer and the cooldown is 20 percent shorter: time traded for a steeper ramp.",
   "worldcombat.skill.poweruppunch.charge.off": "Quick Jabs: faster and 12 percent heavier per punch, but only 1 stage per hit, with a shorter window and a longer cooldown: ramp traded for immediate value.",
   "worldcombat.skill.poweruppunch.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -30,5 +30,5 @@
   "world_combat.move.poweruppunch.text.harden": "Fist hardens +%1$s (now %2$s)",
   "world_combat.move.poweruppunch.text.peak": "Fist hardened to the limit (%1$s)",
   "world_combat.move.poweruppunch.text.miss": "The punch whiffs",
-  "world_combat.move.poweruppunch.text.fade": "The hardened fist cools (-%1$s)"
+  "world_combat.move.poweruppunch.text.fade": "The hardened fist cools"
 }

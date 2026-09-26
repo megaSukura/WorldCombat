@@ -1,6 +1,31 @@
-/** 章鱼桶炮：连续墨弹造成伤害并降低命中；脸部墨迹与落点墨花由粒子承载。 */
+/**
+ * 章鱼桶炮 / octazooka 的出手方式。
+ *
+ * 核心念头：一口墨在口中聚成球，随后按节奏连喷数股墨弹；每股各自飞出、各自结算，靠连续瞄准保持压力。
+ *
+ * 选取：kind 为 aim——可以锁定一个实体、也可以朝一个方向或世界点空喷；提交与执行都不要求存在敌人。
+ *   选中的实体才启用原有的有限转向（每股追着它修正）；没有实体时，每股沿提交的瞄准方向直线喷出。
+ *   伤害许可按敌我独立判断：朝友方或空地喷不会造成伤害，首碰方块只留一小块装饰墨。
+ *
+ * 三幕：
+ *   起：墨在口中聚成球（提交前 windup 预告）。
+ *   喷：提交后按 `shots` 逐股喷出，每股各有一个炮口收缩表现与真实弹体，股间隔 `interval`。
+ *   收：墨流喷尽，余墨散尽；整次施放最多成功削一次命中，成功那一下才在目标脸上罩墨。
+ *
+ * 与同族分开：掷泥/泥巴炸弹是一次抛掷或一次爆炸；章鱼桶炮的数股连喷与股间间隙是它的身份，不加墨池。
+ */
 namespace PokemonSkills {
     const octazookaScene = "world_combat:move_octazooka";
+
+    /** 方块表面的外法线，用来把首碰方块的装饰墨贴在真实那一面。 */
+    function octazookaNormal(face: string): number[] {
+        if (face === "down") return [0, -1, 0];
+        if (face === "north") return [0, 0, -1];
+        if (face === "south") return [0, 0, 1];
+        if (face === "west") return [-1, 0, 0];
+        if (face === "east") return [1, 0, 0];
+        return [0, 1, 0];
+    }
 
     /** 把瞄准方向按散布角随机偏一点：水平面内取随机方位，半径由散布角与随机数决定。 */
     function octazookaJitter(base: CombatPoint, degrees: number, world: CombatWorld): CombatPoint {
@@ -16,9 +41,9 @@ namespace PokemonSkills {
     define({
         id: "octazooka",
         name: "Octazooka",
-        description: "朝对手脸上连喷数股墨汁；每股命中都造成伤害，并有约一半机会糊住它的眼睛、削掉命中。",
-        uses: ["中近距离的连续墨流", "用墨汁糊眼，削掉对手命中"],
-        kind: "enemy",
+        description: "朝瞄准方向或落点连喷数股墨汁；每股命中都造成伤害，并有约一半机会糊住它的眼睛、削掉命中。可以朝空地空喷，首碰方块只留装饰墨。",
+        uses: ["中近距离的连续墨流", "用墨汁糊眼，削掉对手命中", "对着走位方向连喷，逼对手躲开股间间隙"],
+        kind: "aim",
         range: 12,
         maxRange: 17,
         prepare: 11,
@@ -41,11 +66,12 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "gather", thick: config && config.thick ? 1 : 0 }));
             return prepare;
         },
-        indicator: function () { return { radius: 0.6, geometry: "area", style: "ink", color: 0x1B1B24, label: "章鱼桶炮" }; },
+        indicator: function () { return { radius: 0.6, geometry: "point", style: "ink", color: 0x1B1B24, label: "章鱼桶炮" }; },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const targetRef = action.target() === null ? "" : String(action.target()!.ref());
+            const selected = action.target();
+            const targetRef = selected !== null && world.valid(selected) ? String(selected.ref()) : "";
             const body = world.observe(actor);
             const scale = body === null ? 1 : (body.width() + body.height()) / 2.3;
             const velocity = p("octazooka", "velocity", action);
@@ -76,22 +102,25 @@ namespace PokemonSkills {
                     impact(current, hit, "octazooka", power, { damage: damageSpec("octazooka", "jet") });
                     const at = currentWorld.observe(target);
                     if (at !== null) {
-                        let blindedNow = false;
+                        // 整次施放最多成功降一次命中；只有真的降下来才在脸上罩墨。
                         if (!blinded && currentWorld.random() < chance) {
-                            blinded = true;
-                            blindedNow = true;
-                            NativeEffects.boost(currentWorld, target, "accuracy", -blind);
-                            WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
-                                "world_combat.move.octazooka.text.blind", [blind], 30);
+                            const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
+                            if (dropped !== 0) {
+                                blinded = true;
+                                WorldFeedback.keep(currentWorld, "octazooka:face:" + String(target.ref()), octazookaScene, 1, at.position(),
+                                    { moment: "face", target: String(target.ref()), stage: blind, drops: drops, intensity: intensity }, 70);
+                                WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
+                                    "world_combat.move.octazooka.text.blind", [Math.abs(dropped)], 30);
+                            }
                         }
-                        WorldFeedback.keep(currentWorld, "octazooka:face:" + String(target.ref()), octazookaScene, 1, at.position(),
-                            { moment: "face", target: String(target.ref()), stage: blind, blinded: blindedNow ? 1 : 0,
-                                drops: drops, intensity: intensity }, 70);
                     }
                 }
-                if (!stained) {
+                // 首碰方块留一小块装饰墨；它不是持续伤害，也不画危险圈。
+                const cell = hit.blockPosition();
+                if (!stained && cell !== null) {
                     stained = true;
-                    WorldFeedback.emit(currentWorld, octazookaScene, 1, point, { moment: "stain", drops: drops }, stainTicks);
+                    WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
+                        { moment: "stain", drops: drops, direction: octazookaNormal(hit.blockFace()), surface: 1 }, stainTicks);
                 }
                 WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
                     { moment: "splash", target: target === null ? "" : String(target.ref()), drops: drops,
@@ -110,23 +139,30 @@ namespace PokemonSkills {
                 const currentBody = currentWorld.observe(current.actor());
                 const from = currentBody === null ? current.origin()
                     : currentBody.position().plus(WorldCombat.point(0, currentBody.height() * 0.6, 0));
-                const aimPoint = current.targetPosition();
+                // 合法当前输入：有真实目标就朝它并保留原有限转向；否则用提交的瞄准方向。
+                const live = targetRef === "" ? null : currentWorld.actor(targetRef);
+                const liveBody = live !== null && currentWorld.valid(live) ? currentWorld.observe(live) : null;
+                const aimPoint = liveBody !== null ? liveBody.position() : current.targetPosition();
                 const raw = aimPoint.minus(from);
                 const base = raw.length() < 0.01 ? current.direction() : raw.unit();
+                const appearance: LivingActions.ProjectileAppearance = {
+                    sprite: "cobblemon:particle/generic/goo/chemicalball", scale: Math.max(0.7, radius / 0.2), tint: 0x1B1B24 };
+                if (live !== null && currentWorld.valid(live))
+                    appearance.homing = { target: targetRef, turn: steer, delay: 1, range: current.range() };
                 const flight = LivingActions.projectile(current, {
                     speed: velocity, range: current.range(), radius: radius, lifetime: 160,
                     direction: octazookaJitter(base, spread, currentWorld),
-                    appearance: { sprite: "cobblemon:particle/generic/goo/chemicalball", scale: Math.max(0.7, radius / 0.2), tint: 0x1B1B24,
-                        homing: targetRef === "" ? undefined : { target: targetRef, turn: steer, delay: 1, range: current.range() } },
+                    appearance: appearance,
                     impact: onShot
                 }, onComplete);
+                WorldFeedback.emit(currentWorld, octazookaScene, 1, from,
+                    { moment: "jet", projectile: flight, shot: fired, shots: shots, drops: drops,
+                        muzzle: Math.max(6, Math.round(drops * 0.3)), intensity: intensity, scale: scale }, 20);
                 WorldFeedback.emit(currentWorld, octazookaScene, 1, from,
                     { moment: "flight", projectile: flight, drops: drops, intensity: intensity, scale: scale }, 50);
                 if (fired < shots) current.after(interval, fire);
             }
             sound(action, "minecraft:entity.squid.squirt");
-            WorldFeedback.emit(world, octazookaScene, 1, action.origin(),
-                { moment: "jet", shots: shots, drops: drops, scale: scale, intensity: intensity }, 50);
             fire(action);
         }
     });

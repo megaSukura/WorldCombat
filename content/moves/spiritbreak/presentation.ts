@@ -14,6 +14,8 @@
 const SpiritbreakDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        palm:{emitters:[{name:"palm_pressure",bind:"path",fit:"world",particle:"world_combat_core:cobblemon/generic/softswipe",rate:30,shape:{kind:"polyline"},lifetime:[3,5],size:[.22,.06],color:0xF58CB8,alpha:[.6,.1]}]},
+        intercept:{duration:12,emitters:[{name:"broken_projectile",bind:"point",fit:"world",particle:"world_combat_core:cobblemon/generic/sparkle/smallsparkle",burst:{count:{data:"sparks",fallback:12}},shape:{kind:"sphere_surface",radius:.2},direction:"outward",speed:[.05,.15],lifetime:[4,10],size:[.12,.02],color:0xF58CB8,alpha:[.9,0]}]},
         windup: {
             duration: 16,
             exit: { stop: 6, drain: 12 },

@@ -80,6 +80,32 @@ const CrossChopDefinition: ParticleDefinition = {
                 }
             ]
         },
+        wall: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "chip", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/large_rock",
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.08, 0.28], spread: 30, spin: 12,
+                    gravity: 0.08, drag: 0.9,
+                    lifetime: [10, 18], size: [0.16, 0.03],
+                    color: 0x9A8F82, alpha: [0.85, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "dust", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12, at: 0 },
+                    shape: { kind: "ring", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.16], spread: 18,
+                    gravity: 0.04, drag: 0.92,
+                    lifetime: [8, 15], size: [0.07, 0.01],
+                    color: 0x8C2F26, alpha: [0.6, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         cut: {
             duration: 20,
             exit: { stop: 8, drain: 14 },

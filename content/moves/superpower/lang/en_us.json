@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.superpower.summary": "Lowers its shoulder, then drives low into the foe for one heavy physical blow that leaves a short-lived crater; after it lands the user's Attack and Defense both drop. The shock-wave form adds an aftershock ring and a bigger crater at the cost of a lighter single hit, one more Defense stage and a slower cast.",
+  "worldcombat.skill.superpower.summary": "Lowers its shoulder and drives low along the aim to the first real contact: one heavy physical blow that knocks the target back, after which the user's Attack and Defense both drop. Hitting a wall or charging into empty air only raises a puff of dust and costs nothing. The shock-wave form adds an aftershock at the real contact point at the cost of a lighter single hit, one more Defense stage and a slower cast.",
   "worldcombat.skill.superpower.use.0": "Open with the single heaviest hit up close",
-  "worldcombat.skill.superpower.use.1": "Knock a foe out of position and leave a dent in the ground",
-  "worldcombat.skill.superpower.use.2": "Shock-wave form to blast a cluster gathered at the impact point",
-  "worldcombat.skill.superpower.description.0": "Drives into the foe for about %1$s physical damage and knocks it about %2$s blocks along the impact line; heavier targets are pushed less.",
-  "worldcombat.skill.superpower.description.1": "Charge range %1$s blocks; on a hit the user's Attack drops %2$s stage(s) and Defense drops %3$s.",
-  "worldcombat.skill.superpower.description.2": "Takes %1$s s to sink the weight in, then charges flat at %2$s blocks/tick; if the target opens the gap past the charge distance before you connect, you whiff and pay none of the stat costs.",
-  "worldcombat.skill.superpower.aftershock.on": "On a hit, the impact point rings out an aftershock of radius %1$s blocks that blasts foes other than the main target for %2$s of the base power, shoves them about 80% as far, and carves a larger crater; the user's Defense drops one more stage.",
+  "worldcombat.skill.superpower.use.1": "Knock a foe out of position",
+  "worldcombat.skill.superpower.use.2": "Shock-wave form to blast a cluster gathered at the contact point",
+  "worldcombat.skill.superpower.description.0": "Drives low and, on the first real body contact, deals about %1$s physical damage and knocks it about %2$s blocks along the contact line; heavier targets are pushed less.",
+  "worldcombat.skill.superpower.description.1": "Charge range %1$s blocks; on a hit the user's Attack drops %2$s stage(s) and Defense drops %3$s. Hitting a wall or empty air settles nothing and pays no stat cost.",
+  "worldcombat.skill.superpower.description.2": "Takes %1$s s to sink the weight in, then charges along the locked release direction at %2$s blocks/tick; it stops at the first body or wall and never curves around cover to chase the original target.",
+  "worldcombat.skill.superpower.aftershock.on": "On a hit, the real contact point rings out an aftershock of radius %1$s blocks that blasts foes other than the main target that have line of sight to the contact point for %2$s of the base power and shoves them about 80% as far, without hitting the main target twice.",
   "worldcombat.skill.superpower.aftershock.off": "Focused form: all force goes into one target, casts faster and only drops the native one stage of Attack and Defense, but reaches no one else.",
   "worldcombat.skill.superpower.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.superpower.growth.0": "From level %1$s the impact power rises to %2$s and the knock-back to %3$s blocks.",
@@ -14,6 +14,7 @@
   "worldcombat.skill.superpower.value.ram": "Impact power",
   "worldcombat.skill.superpower.value.reach": "Charge range",
   "worldcombat.skill.superpower.value.rush": "Charge speed",
+  "worldcombat.skill.superpower.value.girth": "Collision radius",
   "worldcombat.skill.superpower.value.jolt": "Knock-back",
   "worldcombat.skill.superpower.value.attackLoss": "Own Attack loss",
   "worldcombat.skill.superpower.value.guardLoss": "Own Defense loss",
@@ -23,7 +24,7 @@
   "worldcombat.skill.superpower.value.aftercast": "Recovery",
   "worldcombat.skill.superpower.value.recharge": "Cooldown",
   "worldcombat.skill.superpower.preference.aftershock": "Shock-wave form",
-  "worldcombat.skill.superpower.preference.aftershock.help": "On: the impact point rings out an aftershock, blasting nearby foes and carving a larger crater; costs one more Defense stage, impact power x0.9, wind-up +2 ticks, recovery +4 ticks and cooldown +6 ticks. Off (focused): all force into one target, faster cast, only the native single stage drop.",
+  "worldcombat.skill.superpower.preference.aftershock.help": "On: the real contact point rings out an aftershock, blasting nearby foes with line of sight and leaving the blocks untouched; costs one more Defense stage, impact power x0.9, wind-up +2 ticks, recovery +4 ticks and cooldown +6 ticks. Off (focused): all force into one target, faster cast, only the native single stage drop.",
   "worldcombat.skill.superpower.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.superpower.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger opens the charge from farther, but it is easier to sidestep mid-charge.",
   "worldcombat.skill.superpower.preference.ai.finish": "Prefer low health",
@@ -32,5 +33,5 @@
   "worldcombat.skill.superpower.preference.ai.minHealth.help": "Below this own health ratio the user holds Superpower back (0 = no limit). Higher makes it save the hit for a worthwhile trade.",
   "world_combat.move.superpower.text.slump": "Stance broken: Attack -%1$s, Defense -%2$s",
   "world_combat.move.superpower.text.miss": "Whiff",
-  "worldcombat.skill.superpower.description.ground": "The impact point tears a shallow crater into the ground — cracked stone at its core, turned earth around it — and the original blocks return after about 5 seconds."
+  "worldcombat.skill.superpower.description.ground": "The impact only raises a puff of dust and fist-light at the real body or wall contact, tinted by the material it touches; no block is changed, and a whiff leaves just a puff of dust."
 }

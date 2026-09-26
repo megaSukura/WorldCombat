@@ -4,7 +4,7 @@
   "worldcombat.skill.disable.use.1": "Break a strong move the foe just revealed",
   "worldcombat.skill.disable.use.2": "Force a foe to switch moves and break its combo",
   "worldcombat.skill.disable.description.0": "The pin lasts %1$s and prevents the named move. For ordinary targets, hits using the recorded melee, arrow or other attack type are blocked. Milk or effect removal clears the pin.",
-  "worldcombat.skill.disable.description.1": "Reads back moves used within %1$s (older ones are lost); the nail reaches %2$s blocks.",
+  "worldcombat.skill.disable.description.1": "Reads back attacks used within %1$s (older ones are lost); the nail reaches %2$s blocks. If the target switched attack before the cast, the current one is named and only that attack is sealed.",
   "worldcombat.skill.disable.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s. The target can keep fighting with a move outside the list.",
   "worldcombat.skill.disable.heavy.0": "Heavy nail: duration x1.3, range x0.9, cooldown x1.15 — holds longer but reaches shorter and costs more.",
   "worldcombat.skill.disable.heavy.1": "Light nail: duration x0.8, range x1.1, cooldown x0.85 — reaches farther and is cheaper, but loosens quickly.",
@@ -23,9 +23,13 @@
   "worldcombat.skill.disable.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.disable.preference.ai.leaveStation.help": "When on, the partner will also leave its post to disable.",
   "world_combat.move.disable.text.lock": "%1$s nailed down",
+  "world_combat.move.disable.text.block": "%1$s blocked by the nail",
   "world_combat.move.disable.text.fade": "The nail loosens",
   "world_combat.move.disable.text.break": "The nail is pulled out",
   "world_combat.move.disable.text.miss": "Nothing to nail",
-  "effect.world_combat.disable_lock": "Binding Nail",
-  "worldcombat.skill.disable.native_attack": "normal attack"
+  "world_combat.move.disable.kind.melee": "melee attack",
+  "world_combat.move.disable.kind.ranged": "ranged attack",
+  "world_combat.move.disable.kind.magic": "magic attack",
+  "world_combat.move.disable.kind.other": "normal attack",
+  "effect.world_combat.disable_lock": "Binding Nail"
 }

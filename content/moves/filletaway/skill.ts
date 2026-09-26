@@ -3,8 +3,9 @@
  *
  * 念头的形状（一幕 + 余韵）：
  *  1) 削——提交后立刻按配置扣除最大生命，把攻击、特攻、速度各提高若干级（`NativeEffects.boost`），
- *     并按体重把若干块血肉沿四周甩进世界（`world.dropItem`，依原生掉落规则自然消失）。
- *  2) 余韵——身上短暂的红光与蒸汽渐隐，表示「更轻了」。
+ *     并按体重把若干块血肉沿四周甩进世界（`world.dropItem`，只有原生掉落物的职责，会自然消失，不产生额外
+ *     治疗或伤害）。
+ *  2) 余韵——身上短暂的一层轻快轮廓渐隐，表示「更轻了」。
  *
  * 与同族的魂舞烈音爆分开：这是一刀瞬间、只抬进攻三项、把血肉真的甩进世界；魂舞是分拍仪式、抬五项、有声。
  * 提交前只观察并在 `windup` 预告；提交后才触碰世界。
@@ -73,6 +74,7 @@ namespace PokemonSkills {
             const fling = p("filletaway", "fling", action);
             const scatter = p("filletaway", "scatter", action);
             const centre = body.position();
+            // 甩出的肉块只承担原生掉落物的职责：会落地、能被捡起、按原生规则消失，不产生额外治疗或伤害。
             for (let index = 0; index < chunks; index++) {
                 const angle = world.random() * Math.PI * 2, speed = fling * (0.6 + world.random() * 0.5);
                 const drop = WorldCombat.point(Math.cos(angle) * scatter * 0.16, 0.55 + world.random() * 0.4, Math.sin(angle) * scatter * 0.16);
@@ -84,6 +86,9 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, filletawayScene, 1, centre,
                 { moment: "carve", scale: scatter / 2, intensity: Math.max(0.4, Math.min(2.5, paid / Math.max(1, body.maxHealth() * 0.5))),
                     chunks: chunks, spread: scatter }, 30);
+            // 独立余波：切开之后身体浮起一层轻快轮廓，按它自己的寿命留一小段。
+            WorldFeedback.emit(world, filletawayScene, 1, centre,
+                { moment: "afterglow", scale: scatter / 2, intensity: Math.max(0.4, Math.min(2.5, paid / Math.max(1, body.maxHealth() * 0.5))) }, 34);
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.4, 0)), filletawayText, [Math.round(paid), levels], 28);
             world.sound("minecraft:entity.sheep.shear", centre, 18, "{}");
             done(action);

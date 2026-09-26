@@ -3,24 +3,22 @@
  *
  * 原生事实（Cobblemon 1.8）：Ice／特殊／威力 90／命中 100／PP 10／单体；10%% 概率使目标冰冻。
  *
- * 世界化：把「向对手发射冰冻光束」落成一束**笔直、瞬间贯穿的光**——它不飞、等不了，沿着瞄准线
- *   整条烧过去；被穿过的每个人各挨一次冻伤并可能被冻住，光束尽头的地表留下一道会滑的冰。
- *   它是全家最精准、最像一个「光束」的一招：射程长、判定窄、穿透一条线，站到线外就安全。
+ * 世界化：把「向对手发射冰冻光束」落成一束**笔直、停留片刻的冷光**——它不飞，沿着瞄准方向整条亮起，
+ *   在实际墙面处截断；被光路穿过的每个人各挨一次冻伤并可能被冻住。它是全家最精准、最像一个「光束」
+ *   的一招：射程长、判定窄、穿透一条固定直线，发出后不再转向，站到线外或墙后就安全。
  *
  * 与同族分开：
- *   冰冻光束 —— 瞬发贯穿一条直线的窄光束，并冻出一道冰线。
+ *   冰冻光束 —— 瞬发贯穿一条固定直线、停留片刻的窄光束，期间会补中走进光路的敌人。
  *   冷冻干燥 —— 一颗有飞行时间、可被掩体挡下的冰晶，对水属性翻倍（另一单元）。
  *   细雪     —— 近身一片扇形乱雪、便宜可连放（同组）。
  *
  * 数值来源（每项读不同的精灵数据，分散到不同参数上）：
  *   beam         光束威力 82 + 特攻偏移 + 等级偏移，聚焦式 ×1.12。
  *   pierce       穿透目标数：扩散式 3 + 特攻偏移，聚焦式固定 2。
- *   beamLength   光束长度 13 + 等级偏移 + 特攻偏移，聚焦 ×0.92；驱动实际射程与指示半径。
+ *   beamLength   光束长度 13 + 等级偏移 + 特攻偏移，聚焦 ×0.92；驱动实际射程与指示半径，也是墙面截断前的最大长度。
  *   beamWidth    光束半宽 0.7 + 碰撞箱高度偏移 + 特攻偏移，聚焦 ×0.8（这是判定与画面同一组宽度）。
- *   linger       光束停留 16 刻 − 速度偏移（快个体喷得更急），聚焦 +4；也是画面的存活。
+ *   linger       光束停留 16 刻 − 速度偏移（快个体喷得更急），聚焦 +4；停留期间反复扫过光路补中新人。
  *   freezeChance 冰冻概率 10%% + 特攻偏移 + 等级偏移，聚焦 ×1.25。
- *   frostTicks   冰线停留 100 + 等级 ×0.7；到期原方块回来。
- *   rimeCells    冰线块数 18 + 特攻 ×0.2（同时驱动画面霜层密度）。
  *   tempo/aftermath/wait 速度决定起手、收招与冷却，聚焦式整体更沉。
  *
  * 配置 focus（聚焦式）双向取舍：开启＝更窄更短、单体威力与冰冻概率更高、穿透更少、起手与冷却更久；
@@ -58,7 +56,7 @@ namespace PokemonSkills {
                 .clamp(10, 18).round(2),
             "光束长度", {
                 base: 13, unit: "格",
-                description: "光束能烧到多远；特攻与等级越高够得越远。它也是本招的实际射程与画面里那条光束的长度。"
+                description: "光束能烧到多远；特攻与等级越高够得越远。它也是本招的实际射程，以及遇到方块前光束的最大长度。"
             }),
         /** 光束半宽：0.7 + 碰撞箱高度偏移[−0.1,0.35] + 特攻偏移[−0.1,0.25]，聚焦 ×0.8 / 扩散 ×1.2；夹 0.45..1.3。 */
         beamWidth: formula(
@@ -69,14 +67,14 @@ namespace PokemonSkills {
                 .clamp(0.45, 1.3).round(2),
             "光束半宽", {
                 base: 0.7, unit: "格",
-                description: "光束有多粗，也是判定与画面里同一条线的宽度；个子高、特攻足更粗，聚焦式收细。"
+                description: "光束有多粗，也就是判定宽度；个子高、特攻足更粗，聚焦式收细。"
             }),
         /** 光束停留：16 − 速度偏移[−3,5]，聚焦 +4；夹 8..24。 */
         linger: seconds(
             F.base(16).minus(F.stat("speed").minus(60).times(0.08).clamp(-3, 5))
                 .plus(F.when(F.pref("focus"), F.const(4), F.const(0)))
                 .clamp(8, 24).round(0),
-            "光束停留", "这一束光在场上亮多久；快个体喷得更急，聚焦式多持续几刻。也是画面里光束的存活时间。"),
+            "光束停留", "这一束光在场上亮多久；停留期间会反复扫过同一条光路补中新走进来的敌人。快个体喷得更急，聚焦式多持续几刻。"),
         /** 冰冻概率：10%% + 特攻偏移[0,12%%] + 等级偏移[0,6%%]，聚焦 ×1.25；夹 6%%..34%%。 */
         freezeChance: percent(
             F.base(0.10)
@@ -85,17 +83,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("focus"), F.const(1.25), F.const(1)))
                 .clamp(0.06, 0.34).round(3),
             "冰冻概率", "被光束烧到后有这个概率陷入冰冻；特攻与等级越高越冷，聚焦式更彻底。"),
-        /** 冰线停留：100 + 等级 ×0.7；夹 60..200。 */
-        frostTicks: seconds(
-            F.base(100).plus(F.level().times(0.7)).clamp(60, 200).round(0),
-            "冰线停留", "光束在地面冻出的那条冰线停留多久；到期原方块回来。"),
-        /** 冰线块数：18 + 特攻 ×0.2；夹 14..60。同时驱动画面霜层密度。 */
-        rimeCells: formula(
-            F.base(18).plus(F.stat("specialAttack").times(0.2)).clamp(14, 60).round(0),
-            "冰线块数", {
-                base: 18, unit: "块",
-                description: "光束沿地面冻出多少格冰；随特攻增长，也决定画面里冰线的密度。"
-            }),
         /** 起手：10 − 速度偏移[−3,4]，聚焦 +3；夹 6..15。 */
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(60).times(0.04).clamp(-3, 4))
@@ -125,7 +112,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["beam","linger"] },
         { key: "description.1", values: ["beamLength","beamWidth","pierce"] },
         { key: "description.2", values: ["freezeChance"] },
-        { key: "description.rime", values: ["frostTicks","rimeCells"] },
         { key: "description.3", values: ["tempo", "aftermath", "wait"] },
         { key: "focus.on", values: [], when: function (context) { return read(context.detail.values, ["focus"]) === true; } },
         { key: "focus.off", values: [], when: function (context) { return read(context.detail.values, ["focus"]) !== true; } },

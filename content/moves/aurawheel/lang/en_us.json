@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.aurawheel.summary": "Rolls the energy stored in the user's cheeks along the ground; using it raises Speed, and its type follows the user's form.",
+  "worldcombat.skill.aurawheel.summary": "Pick a point within 12 blocks and roll the energy stored in the user's cheeks along the ground; using it raises Speed, and its type follows the user's form.",
   "worldcombat.skill.aurawheel.use.0": "Rolling charge",
-  "worldcombat.skill.aurawheel.description.0": "The user rolls forward along the ground toward the target and stops at the first creature or obstacle it meets; if that is a foe it takes about %1$s physical damage. It rolls up to %2$s blocks, %3$s blocks per tick, with a collision radius of %4$s blocks. Whether or not it connects, using it raises the user's Speed by %5$s stages; the damage type follows the user's form — Dark in Hangry mode, Electric otherwise.",
+  "worldcombat.skill.aurawheel.description.0": "Pick a point within 12 blocks and roll there along the ground, stopping at the first creature or obstacle it meets; if that is a foe it takes about %1$s physical damage. It rolls up to %2$s blocks, %3$s blocks per tick, with a collision radius of %4$s blocks. It need not aim at a foe and can be used to roll into position; whether or not it connects, using it raises the user's Speed by %5$s stages, and the damage type follows the user's form — Dark in Hangry mode, Electric otherwise.",
   "worldcombat.skill.aurawheel.description.1": "PP cost %1$s; cooldown %2$s s.",
   "worldcombat.skill.aurawheel.timing": "Range %1$s blocks; wind-up %2$s, recovery %3$s.",
   "worldcombat.skill.aurawheel.value.power": "Aura Wheel power",

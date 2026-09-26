@@ -9,8 +9,7 @@
  *
  * 参数为什么依赖这些精灵数据、并分散到不同参数（同一招在不同个体手里读起来不同）：
  *   shell        炮弹威力：特攻决定电压，体重决定炮膛里的分量（重个体打出更沉的弹）。
- *   shellSpeed   弹体速度：等级（炮术越熟越快）− 体重（弹越重越慢）＋ 速度；速装式再乘 1.3。
- *   shellTurn    修正转向：特攻决定有限制导的强度；速装式转得更急。慢弹只靠这个跟上走位。
+ *   shellSpeed   弹体速度：等级（炮术越熟越快）− 体重（弹越重越慢）＋ 速度；速装式再乘 1.3。方向提交时锁死，弹速是它难中的原因。
  *   shockRadius  爆开半径：碰撞箱高度（大个子炮口更大）＋速装式收窄。
  *   numbTicks    麻痹时长：特攻决定穿透力；速装式略短。
  *   recoil       后坐：体型越大越稳、被推得越少；它是施法者开炮后被向后推的距离。
@@ -46,15 +45,6 @@ namespace PokemonSkills {
             "弹体速度", {
                 unit: "格/刻",
                 description: "电弹飞出去的速度——本招比同族的电击慢得多，正是它难中的原因；等级高、体重轻、速度快的个体打得更快，速装式再快三成。"
-            }),
-        /** 修正转向：2.4 + 特攻偏移[0,2]；速装 ×1.35；夹 1.2..5。 */
-        shellTurn: formula(
-            F.base(2.4).plus(F.stat("specialAttack").minus(60).times(0.01).clamp(0, 2))
-                .times(F.when(F.pref("quickload"), F.const(1.35), F.const(1)))
-                .clamp(1.2, 5.0).round(2),
-            "修正转向", {
-                unit: "度/刻",
-                description: "电弹每刻朝目标修正的幅度；慢弹只靠这点制导跟上走位，横向拉开仍能甩掉，速装式转得更急。"
             }),
         /** 爆开半径：1.0 + 高度偏移[−0.2,0.8]；速装 ×0.8；夹 0.7..2.2。 */
         shockRadius: formula(
@@ -120,7 +110,7 @@ namespace PokemonSkills {
     describe(zapcannonId, [
         { key: "description.0", values: ["shell","shellSpeed","reach"] },
         { key: "description.1", values: ["chargeTicks","numbTicks"] },
-        { key: "description.2", values: ["shellTurn", "recoil", "recharge"] },
+        { key: "description.2", values: ["recoil", "recharge"] },
         { key: "quickload.on", values: [], when: function (context) { return read(context.detail.values, ["quickload"]) === true; } },
         { key: "quickload.off", values: [], when: function (context) { return read(context.detail.values, ["quickload"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

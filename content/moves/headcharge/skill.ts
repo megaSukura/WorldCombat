@@ -149,7 +149,7 @@ namespace PokemonSkills {
                             const body = scope.observe(victim);
                             if (body !== null) {
                                 const away = body.position().minus(origin);
-                                scope.displace(victim, (away.length() >= 0.05 ? away.unit() : direction).scale(shove));
+                                scope.hitDisplace(victim, (away.length() >= 0.05 ? away.unit() : direction).scale(shove));
                             }
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.5, 0)), headchargeHitText, [hits], 26);
                         }

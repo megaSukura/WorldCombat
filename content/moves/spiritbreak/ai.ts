@@ -25,7 +25,9 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > item.data.range) return 0;
-            return 22;
+            const shots:CombatProjectileFacts[]=JSON.parse(CompanionBehavior.world(context).projectiles(CompanionBehavior.point(self.point),Math.min(8,item.data.range+2)));
+            const active=shots.some(shot=>shot.hostile&&shot.interceptable&&shot.owner===target.ref);
+            return active?44:22;
         }
     });
 

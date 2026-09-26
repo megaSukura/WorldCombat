@@ -9,7 +9,7 @@
  * 范围：draw 的抽取线长度读 `data.span`（真实抽取距离），方向读 `data.direction`；线到哪，玩家就看得见抽到哪。
  * 运动：dream 从目标头顶向上浮起再被拉走，pull/thread 沿「目标→自身」把梦烟吸回；sap 在施法者身上向上冒起。
  * 数：`data.motes`（特攻与梦深换算）决定梦烟与抽取线的密度，`data.depth`（0..1 梦深）决定梦雾的浓度与尺寸，
- *   `data.sap`（回血比例百分比）决定施法者回血层的量。
+ *   `data.heal`（这一口实际补回的生命）决定施法者回血层的量；没有真实回补就不播 sap。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const DreameaterDefinition: ParticleDefinition = {
@@ -97,7 +97,7 @@ const DreameaterDefinition: ParticleDefinition = {
                 {
                     name: "mend", bind: "source", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "sap", fallback: 12 } }, shape: { kind: "sphere_surface", radius: 0.42 },
+                    burst: { count: { data: "heal", fallback: 12 } }, shape: { kind: "sphere_surface", radius: 0.42 },
                     direction: "up", speed: [0.03, 0.12],
                     lifetime: [12, 20], size: [0.1, 0.01],
                     color: 0xE8D9FF, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 44

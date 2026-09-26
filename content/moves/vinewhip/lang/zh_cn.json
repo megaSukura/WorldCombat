@@ -3,7 +3,7 @@
   "worldcombat.skill.vinewhip.use.0": "一记快而便宜的贴身抽击",
   "worldcombat.skill.vinewhip.use.1": "在对手让位前连着抽两下",
   "worldcombat.skill.vinewhip.use.2": "对正在攻击你的目标还以一记快抽",
-  "worldcombat.skill.vinewhip.description.0": "朝目标抽出一道窄线，对线内非友方各造成约 %1$s 点接触伤害；触及 %2$s 格，判定覆盖线两侧各 %3$s 格，一记最多抽中 2 个敌人、每个敌人每记只挨一次。",
+  "worldcombat.skill.vinewhip.description.0": "朝瞄准方向抽出一道三维窄线（可自由向上或向下瞄准，线没对准就抽空），对线内非友方各造成约 %1$s 点接触伤害；触及 %2$s 格，判定覆盖线两侧各 %3$s 格，末端停在真实墙面或全长处、不穿墙，一记最多抽中 2 个敌人、每个敌人每记只挨一次。",
   "worldcombat.skill.vinewhip.description.1": "一次动作抽 %1$s 记，双抽时两记间隔 %2$s 秒；同一目标可以被两记先后抽中。",
   "worldcombat.skill.vinewhip.double.on": "双抽式：一次动作里快抽两记，总伤略高、更容易补上第二记，但收招与冷却更久、单记更轻。",
   "worldcombat.skill.vinewhip.double.off": "单抽式：一记更快更重、回气更短的干脆抽击。",

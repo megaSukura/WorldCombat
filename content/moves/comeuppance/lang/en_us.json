@@ -4,7 +4,7 @@
   "worldcombat.skill.comeuppance.use.1": "Punish a ranged attacker that struck first",
   "worldcombat.skill.comeuppance.use.2": "Turn damage taken into a delayed heavy blow",
   "worldcombat.skill.comeuppance.description.0": "Records the most recent damage taken from someone else as a grudge, and a newer hit replaces the old debt; on cast the shadow pursues it for 1.5x, currently %1$s points. Only damage taken within the last %2$s still counts, physical or special alike.",
-  "worldcombat.skill.comeuppance.description.1": "Hunt range %1$s blocks; the shadow flies %2$s blocks per tick with a %4$s-block collision radius, released %3$s s after the mark and homing on the target. The refund never exceeds %5$s of the user's maximum health, settles as a fixed value, and is reduced only by the target's armour.",
+  "worldcombat.skill.comeuppance.description.1": "Hunt range %1$s blocks; the shadow flies %2$s blocks per tick with a %4$s-block collision radius, released %3$s s after the mark and homing on the target. The refund never exceeds %5$s of the user's maximum health; it settles as native fixed damage, reduced by the target's armour and other native rules, and type immunity blocks it outright.",
   "worldcombat.skill.comeuppance.grudge.on": "Grudge mode on: the ledger window is 2 s longer and the stalk delay 0.5 s longer, so a much older debt can be pursued, but prepare takes 2 ticks and cooldown 8 ticks more.",
   "worldcombat.skill.comeuppance.grudge.off": "Grudge mode off: hunts sooner and only the freshest debt counts.",
   "worldcombat.skill.comeuppance.timing": "Castable on enemies within %1$s blocks; commits after %2$s s and costs %4$s PP; recovers for %3$s s and starts a %5$s s cooldown.",

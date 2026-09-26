@@ -5,8 +5,9 @@
  *   因为这一记会让自己攻防双降，只有在自身生命比例不低于 `ai.minHealth`（默认 0＝不限制）时才起手，
  *   血薄时留着不换。
  * 对谁出手：`ai.finish`（默认开）打开时，残血目标多一档分——用一记最重的单体打击在身价下跌前收掉。
- * 够不到怎么办：reach 就是本招射程，不够先走近；冲进途中目标消失就收招，不留下任何代价。
- * 放完之后：命中才付攻防双降，交回共享交战计划等冷却。
+ *   自身攻或防已被压到 −2 级以下时降一档分：此时再泄力不划算。
+ * 够不到怎么办：reach 就是本招射程，不够先走近；锁定方向后撞到第一个身体或墙就停，不绕障碍追踪，
+ *   选中远处目标不代表一定打中。命中才付攻防双降，交回共享交战计划等冷却。
  */
 namespace PokemonSkills {
     function superpowerWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -35,6 +36,8 @@ namespace PokemonSkills {
             let score = 18;
             if (distance <= capability.data.range) score += 6;
             if (distance <= 2.4) score += 5;
+            const source = CompanionBehavior.source(context);
+            if (CompanionBehavior.stage(context, source, "atk") <= -2 || CompanionBehavior.stage(context, source, "def") <= -2) score -= 6;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) < 0.45) score += 10;
             return score;
         }

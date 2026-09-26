@@ -1,8 +1,10 @@
 /**
  * 碉堡 / banefulbunker 的 AI 用途。
  *
- * 什么局面下出手：有威胁、进入 `ai.range`、自己身上还没有碉堡时合拢；对手已经中毒时抬到 95——
- * 碉堡会把中毒改灌成剧毒，所以它最想等的是已经把毒铺在对手身上的局面。封变化招式是附带收益。
+ * 什么局面下出手：自己站稳在地面上、有威胁进入 `ai.range`、身上还没有碉堡时合拢。碉堡只守落脚点，
+ * 所以先要求可站稳（离地不用，落定再说）；对手已经中毒时抬到 95——碉堡会把中毒改灌成剧毒，
+ * 它最想等的是已经把毒铺在对手身上的局面。移动快的目标（Boss 位移、冲刺类）会走开锚点，
+ * 命中率与驻守收益都差，明显降权；包围时反而更强，每个接触者各灌一次。
  * 只剩本招时：威胁一进 `ai.range` 就会合拢碉堡等它撞。
  */
 namespace PokemonSkills {
@@ -22,8 +24,14 @@ namespace PokemonSkills {
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
             const distance = CompanionBehavior.distance(self.point, threat.point);
-            if (CompanionBehavior.status(context, threat, "poison") || CompanionBehavior.status(context, threat, "toxic")) return 95;
-            return distance <= 3 ? 90 : 50;
+            const base = CompanionBehavior.status(context, threat, "poison") || CompanionBehavior.status(context, threat, "toxic") ? 95
+                : distance <= 3 ? 90 : 50;
+            // 毒壁钉在原地：没站稳（离地）时守不满一窗，降权但仍可在只剩本招时兜底。
+            if (!self.grounded) return Math.max(20, base - 40);
+            // 快速位移的目标会离开锚点：驻守换不到接触，降权改打其他招。
+            const velocity = CompanionBehavior.velocity(context, threat);
+            if (velocity && (velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.0009) return Math.max(20, base - 30);
+            return base;
         }
     });
 

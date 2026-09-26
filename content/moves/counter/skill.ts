@@ -6,7 +6,8 @@
  * 两幕：
  *   起（windup，提交前）：低身收势，格斗气从受过击的位置聚到拳上；账越大聚得越多（present brace）。
  *   回击（execute）：迎向目标逐刻推进，撞上的一刻按账本直接结算返还伤害，并把目标顶开；
- *       没有账可讨则收势落空（whiff）。
+ *       命中反馈由真实伤害回执给出实际扣血；没有账可讨则收势落空（whiff），撞到方块或被免疫只留钝响。
+ * 受击后由 parameters.ts 在账本载体的巡检里留身上的记账短裂纹，消耗记录时一起收掉。
  *
  * 与同族分开：双倍奉还只认物理、贴身迎击、并把目标顶开；镜面反射只认特殊、隔空把能量射回去。
  */
@@ -53,7 +54,7 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
             const refund = Math.round(p(counterId, "refund", action));
-            counterConsume(self);
+            counterConsume(world, self);
             if (!(refund > 0)) {
                 sound(action, "minecraft:entity.player.attack.sweep");
                 WorldFeedback.emit(world, counterScene, 1, action.targetPosition(), { moment: "whiff" }, 22);
@@ -79,18 +80,16 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        const count = Math.round(14 + refund / 2);
+                        // 命中反馈交给真实伤害回执：浮字与碎片量读实际扣血，撞到方块/被免疫则这里只留一记钝响。
+                        current.data("counter/strike", JSON.stringify({ scale: scale }));
                         const landed = counterRawHit(current, victim, refund, true);
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
+                        } else {
+                            WorldFeedback.emit(scope, counterScene, 1, hit.position(), { moment: "blocked", scale: scale }, 22);
                         }
-                        WorldFeedback.emit(scope, counterScene, 1, hit.position(),
-                            { moment: "strike", target: String(victim.ref()), count: count, scale: scale,
-                                power: Math.round(refund * 10) / 10 }, 30);
                         scope.sound("cobblemon:impact.fighting", hit.position(), 16, "{}");
-                        WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), counterHitText,
-                            [Math.round(refund)], 26);
                     }
                     done(current);
                     return;

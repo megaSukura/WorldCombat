@@ -4,10 +4,10 @@
  * 一句话：施法者原地急旋，脚边卷起一圈橙黄火星；随后扑出半步，回旋腿正中目标炸开一记格斗冲击，
  * 被踢中的人沿踢击方向拖着一串火花抛到半空飞出去。
  * 色相家族：橙黄与暖白（impact_fighting / critical_hit 为主体，0xE8A96A），近白只给踢中的那一闪。
- * 拍子：起（whirl 急旋，火星绕脚边转）→ 扑（drive 扑出）→ 中（kick 命中冲击）→ 飞（launch 目标抛飞）→ 懵（flinch）／空（miss）。
- * 范围：这一招只作用在贴身一个目标身上；whirl 的环按服务端传的 `data.radius`（扑击距离）画出，玩家看得出踢腿能及的范围。
- * 运动：起旋时火星绕脚边环转，扑出时向前拖尾；命中后目标那一串火星沿 `data.direction` 斜向上飞出，画出抛飞的弧线。
- * 数：`data.sparks`（速度与物攻派生）决定起旋与命中的火星量，`data.sparkles`（抛飞距离派生）决定抛飞轨迹的密度。
+ * 拍子：起（whirl 急旋，火星围腿转）→ 扑（drive 跟本体扑出）→ 中（kick 只在接触那一刻）→ 飞（launch 画出实际位移）→ 懵（flinch）／空（miss）。
+ * 范围：这一招只作用在贴身一个目标身上；whirl 的火星围着施法者的腿脚转，作用点随 source 跟住本体。
+ * 运动：起旋时火星绕脚边环转，扑出时跟本体向前拖尾；命中后目标那一串火星沿 `data.direction`（真实踢出方向）铺开，画出抛飞轨迹，只有真的推动了才播。
+ * 数：`data.sparks`（速度与物攻派生）决定起旋、扑出与命中的火星量，`data.sparkles`（实际位移距离派生）决定抛飞轨迹的密度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const RollingkickDefinition: ParticleDefinition = {
@@ -20,7 +20,7 @@ const RollingkickDefinition: ParticleDefinition = {
                 {
                     name: "whirl_ring", bind: "source", offset: [0, 0.05, 0], height: 0, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 26, shape: { kind: "ring", radius: 0.7 }, direction: "shape", speed: [0.03, 0.12], spin: 24,
+                    rate: { data: "sparks", fallback: 20 }, shape: { kind: "ring", radius: 0.7 }, direction: "shape", speed: [0.03, 0.12], spin: 24,
                     lifetime: [8, 15], size: [0.12, 0.02],
                     color: 0xE8A96A, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 60
                 },
@@ -42,7 +42,7 @@ const RollingkickDefinition: ParticleDefinition = {
                     name: "drive_streak", bind: "source", offset: [0, 0.5, 0], height: 0.5, fit: "body",
                     trail: { minDistance: 0.16 },
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 26, shape: { kind: "sphere", radius: 0.18 }, direction: "outward", speed: [0.02, 0.1], spread: 12,
+                    rate: { data: "sparks", fallback: 20 }, shape: { kind: "sphere", radius: 0.18 }, direction: "outward", speed: [0.02, 0.1], spread: 12,
                     lifetime: [7, 13], size: [0.1, 0.02],
                     color: 0xE8A96A, alpha: [0.6, 0], light: "full", maxParticles: 70
                 }
@@ -78,7 +78,7 @@ const RollingkickDefinition: ParticleDefinition = {
                     name: "launch_arc", bind: "target", offset: [0, 0.1, 0], height: 0.5, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: { data: "sparkles", fallback: 12 },
-                    shape: { kind: "point" }, direction: [0, 1, 0], speed: [0.25, 0.7], spread: 16,
+                    orient: "direction", shape: { kind: "line", length: 0.4 }, direction: "shape", speed: [0.25, 0.7], spread: 16,
                     lifetime: [10, 18], size: [0.12, 0.02],
                     color: 0xE8A96A, alpha: [0.8, 0], light: "full", maxParticles: 60
                 },

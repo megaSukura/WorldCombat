@@ -6,8 +6,8 @@
  *
  * 世界化：把「将猛烈的暴风雪刮向对手」落成一片**会在战场上驻留、反复扑打的风雪**——施法者指定一块地方，
  *   风雪在那里成形，按固定间隔一阵一阵地扫过整片范围：范围内每个敌人每阵挨一次冻伤、被风往外推，
- *   并有概率被冻住；风暴停后地面铺上一层雪。它是全家里唯一「范围自己在持续输出」的招，站位读得出来：
- *   风暴圈在哪、圈里就一直在挨打，走出去就安全。
+ *   并有概率被冻住；同一目标待得越久，后续阵次伤害越低，风雪本身也一阵弱过一阵。它是全家里唯一
+ *   「范围自己在持续输出」的招，站位读得出来：风暴圈在哪、圈里就一直在挨打，走出去就安全。
  *
  * 天气是材料（对应原生命中 70、雪天必中）：**下雨或雷暴**时风雪更猛——范围更大、每阵更狠、冰冻概率更高，
  *   本身也更容易罩住人；晴天则收小、变轻，能不能打到由站位决定，而不是掷命中。
@@ -20,13 +20,11 @@
  * 数值来源（每项读不同的精灵数据，分散到不同参数上）：
  *   gust         每阵威力 30 + 特攻偏移 + 等级偏移，呼啸式 ×0.9、下雨 ×1.12。
  *   rakes        扑打阵数 5 + 等级偏移，呼啸式 +2。
- *   rakeInterval 阵间隔 10 − 速度偏移 − 呼啸 2。
+ *   rakeInterval 阵间隔 10 − 速度偏移 − 呼啸 2；也是风雪密度递减的节奏。
  *   radius       风暴半径 4.2 + 特攻偏移 + 碰撞箱高度偏移，呼啸 ×1.2、下雨 ×1.12。
  *   reach        落点距离 12 + 等级偏移 + 特攻偏移（驱动实际射程）。
  *   push         推离 0.9 + 特攻偏移，呼啸 ×1.3。
  *   freezeChance 冰冻概率 10%% + 特攻偏移，下雨 +5%%，呼啸 ×1.2。
- *   snowTicks    积雪停留 120 + 等级 ×0.8。
- *   snowCells    积雪块数 40 + 特攻 ×0.4（同时驱动画面密度）。
  *   tempo/aftercast/recharge 速度决定起手、收招与冷却；这是全家最贵的一招。
  *
  * 配置 howl（呼啸式）双向取舍：开启＝范围更大、阵数更多、推得更远、冰冻概率更高，但每阵更轻、起手与冷却更久；
@@ -73,7 +71,7 @@ namespace PokemonSkills {
                 .clamp(2.8, 7.0).round(2),
             "风暴半径", {
                 base: 4.2, unit: "格",
-                description: "风雪罩住多大一圈，也是判定与画面的范围；大个子、特攻高更宽，下雨天更猛、呼啸式更开。"
+                description: "风雪罩住多大一圈，也就是判定范围；大个子、特攻高更宽，下雨天更猛、呼啸式更开。"
             }),
         /** 落点距离：12 + 等级(≥30)偏移[0,3] + 特攻偏移[−1,2.5]；夹 9..16。 */
         reach: formula(
@@ -101,17 +99,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("howl"), F.const(1.2), F.const(1)))
                 .clamp(0.06, 0.34).round(3),
             "冰冻概率", "每一阵被扑到后陷入冰冻的概率；特攻越高、雨雪越急越容易冻住，呼啸式更彻底。"),
-        /** 积雪停留：120 + 等级 ×0.8；夹 60..240。 */
-        snowTicks: seconds(
-            F.base(120).plus(F.level().times(0.8)).clamp(60, 240).round(0),
-            "积雪停留", "风暴停后地面那层雪停留多久；到期原方块回来。"),
-        /** 积雪块数：40 + 特攻 ×0.4；夹 24..110。同时驱动画面密度。 */
-        snowCells: formula(
-            F.base(40).plus(F.stat("specialAttack").times(0.4)).clamp(24, 110).round(0),
-            "积雪块数", {
-                base: 40, unit: "块",
-                description: "风暴在地面留下多少格雪；随特攻增长，也决定画面里雪层的密度。"
-            }),
         /** 起手：16 − 速度偏移[−4,5]，呼啸 +3；夹 9..24。 */
         tempo: seconds(
             F.base(16).minus(F.stat("speed").minus(60).times(0.05).clamp(-4, 5))
@@ -143,7 +130,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["gust","rakes"] },
         { key: "description.1", values: ["radius","rakeInterval","reach"] },
         { key: "description.2", values: ["push","freezeChance"] },
-        { key: "description.3", values: ["snowTicks","snowCells"] },
         { key: "description.4", values: ["tempo", "aftercast", "recharge"] },
         { key: "weather", values: [] },
         { key: "howl.on", values: [], when: function (context) { return read(context.detail.values, ["howl"]) === true; } },

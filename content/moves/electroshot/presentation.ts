@@ -1,12 +1,12 @@
 /**
  * 电光束 / electroshot 的客户端表现。
  *
- * 一句话：电沿着地面和身体四周爬升、在身前卷成一道矛尖，随后一束高压电矛笔直射出去、命中处炸开电花并落下闪光；
- *         打空只留一下散开的电弧。
+ * 一句话：电沿着地面和身体四周爬升、在身前卷成一道矛尖，随后一束高压电矛按真实投射物飞出去、真命中处炸开电花并落下闪光；
+ *         被挡下只留一记散电，打空沿末方向散掉。
  * 色相家族：电黄（0xFFE84D / 0xFFF6C8）＋近白蓝的芯（0xEAF6FF）；中性尘只作衬托。
- * 拍子：起 gather（爬电成矛）→ shot（矛尖迸发）→ travel（电矛飞行）→ burst（命中炸开）／fizzle（打空）。
- * 范围：单发点射，由 travel 的直线轨迹读出；没有地面范围。
- * 运动：travel 沿服务端电矛的飞行轨迹走（会朝目标修正）；gather 的电弧由外向内、向上收束；burst 向外炸开。
+ * 拍子：起 gather（爬电成矛）→ shot（矛尖迸发）→ travel（电矛飞行）→ burst（真命中）／resist（被免疫）／ward（护住同伴）／fizzle（撞墙或打空）。
+ * 范围：单发点射，由 travel 的真实投射物轨迹读出；没有地面范围。
+ * 运动：travel 绑在服务端电矛的原生实体上（选中实体时朝它修正）；gather 的电弧由外向内、向上收束；burst 向外炸开。
  * 数：`data.arcs`（特攻与雨量换算）决定电弧与电花的密度，`data.intensity`（威力/130）决定亮度，
  *     `data.scale`（威力/130 的尺度）决定整体大小。
  */
@@ -119,6 +119,36 @@ const ElectroShotDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.2], drag: 0.9,
                     lifetime: [8, 16], size: [0.08, 0.02],
                     color: 0xFFE84D, alpha: [0.8, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
+        resist: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "resist_flash", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: { data: "arcs", fallback: 6 } },
+                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 0.3 } },
+                    direction: "outward", speed: [0.04, 0.16], spread: 30,
+                    lifetime: [5, 10], size: [0.08, 0.02],
+                    color: 0xEAF6FF, alpha: [0.8, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        ward: {
+            duration: 20,
+            exit: { stop: 7, drain: 13 },
+            emitters: [
+                {
+                    name: "ward_scatter", bind: "point", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    burst: { count: { data: "arcs", fallback: 6 } },
+                    shape: { kind: "sphere", radius: { data: "scale", fallback: 0.3 } },
+                    direction: "outward", speed: [0.03, 0.14],
+                    lifetime: [5, 10], size: [0.08, 0.02],
+                    color: 0xFFE84D, alpha: [0.6, 0], light: "full", maxParticles: 36
                 }
             ]
         },

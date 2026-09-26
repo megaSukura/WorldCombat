@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.blazekick.summary": "Spin up and swing a flame-wreathed leg in a rising arc: a hit deals contact damage, may leave the target burned (burn halves its physical damage and deals damage over time), and launches it off the ground. Ignite form burns more often and launches higher; Heavy form kicks harder but leaves fire less often.",
-  "worldcombat.skill.blazekick.description.0": "The kick deals %1$s contact damage to the target, with a reach of %2$s blocks.",
-  "worldcombat.skill.blazekick.description.1": "On a hit the target is launched %1$s blocks off the ground.",
+  "worldcombat.skill.blazekick.summary": "Spin up and swing a flame-wreathed leg in a rising arc: pick a foe or just kick a direction up close. The hit lands on the first foe met, dealing contact damage and possibly leaving it burned (burn halves its physical damage and deals damage over time); whether it leaves the ground follows native knockback, so a refused launch keeps the damage and draws no rise. Ignite form burns more often and launches higher; Heavy form kicks harder but leaves fire less often.",
+  "worldcombat.skill.blazekick.description.0": "The kick sweeps up the rising arc and catches the first foe met for %1$s contact damage, with a reach of %2$s blocks.",
+  "worldcombat.skill.blazekick.description.1": "On a hit it tries to launch the target %1$s blocks off the ground; whether it leaves the ground follows native knockback, so knockback resistance or a cancelled launch keeps the damage without the rise.",
   "worldcombat.skill.blazekick.description.2": "On a hit there is a %1$s chance to leave the target burned: while burning its physical damage is halved and it loses about 6.25%% of its maximum health every 5 seconds (at least 1), lasting %2$s; it also catches fire for 1-3 seconds.",
   "worldcombat.skill.blazekick.ignite.on": "Ignite form: burn chance +12%%, burn duration x1.2 and a higher launch, but kick power x0.88, windup +2 ticks and cooldown +4 ticks.",
   "worldcombat.skill.blazekick.ignite.off": "Heavy form: a harder kick on a faster loop; costs fire that is harder to leave and a slightly lower launch.",

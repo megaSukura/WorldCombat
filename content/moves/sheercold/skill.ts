@@ -18,9 +18,9 @@ namespace PokemonSkills {
         id: sheercoldId,
         cooldownParameter: "recharge",
         name: "Sheer Cold",
-        description: "把目标周围的那一小片空气骤然压到绝对零度：一圈寒霜向四周铺开，圈内每个目标被一次冻毙（一击必杀），地上留下一层短期雪壳。它是这一族里唯一能同时放倒多个的一记，也是唯一「谁用」会影响出手快慢的一记——冰属性使用者结霜快得多。",
+        description: "把目标周围的那一小片空气骤然压到绝对零度：一圈寒霜向四周铺开，圈内每个目标被一次冻毙（一击必杀），地上留下一片短暂霜光。它是这一族里唯一能同时放倒多个的一记，也是唯一「谁用」会影响出手快慢的一记——冰属性使用者结霜快得多。",
         uses: ["一次冻毙目标周围一圈里的多个对手", "冰属性使用者用它抢出更短的出手窗口", "在地面留下一片短期寒霜标出冻区"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 5.2,
         prepare: 16,
@@ -47,7 +47,8 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            if (target === null) return "";
+            if (!world.valid(target) || world.friendly(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "target-left";
             if (body.position().minus(action.origin()).length() > action.range() + 0.5) return "out-of-range";
@@ -74,23 +75,26 @@ namespace PokemonSkills {
                 { moment: "mark", target: target === null ? "" : String(target.ref()), radius: radius, hush: hush, scale: scale }, mark + 24);
             sound(action, "minecraft:block.amethyst_block.resonate");
 
+            action.releaseTarget();
             action.after(mark, function (current: CombatAction) {
                 const scope = current.world();
-                let kills = 0, immune = 0;
+                let kills = 0, immune = 0, resisted = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, radius, { below: 2.5, above: 2.5 }), function (enemy, facts) {
                     if (String(enemy.ref()) === String(current.actor().ref())) return;
                     const result = sheercoldExecute(current, enemy);
                     if (result === "kill") kills++;
                     else if (result === "immune") immune++;
+                    else if (result === "resisted") resisted++;
                 });
-                const placed = sheercoldFrost(scope, at, radius, ticks, cells);
+                const placed = 0;
+                WorldFeedback.emit(scope, sheercoldScene, 1, at, { moment: "rime", radius: radius, cells: cells, ticks: ticks }, ticks);
                 WorldFeedback.emit(scope, sheercoldScene, 1, at,
                     { moment: "bloom", radius: radius, hush: hush, cells: placed, kills: kills, scale: scale }, 34);
                 if (kills > 0) {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), sheercoldKillText, [kills], 28);
                     scope.sound("cobblemon:impact.ice", at, 16, "{}");
                 } else {
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), immune > 0 ? sheercoldIceText : sheercoldMissText, [], 24);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), resisted > 0 ? "world_combat.move.sheercold.text.resisted" : immune > 0 ? sheercoldIceText : sheercoldMissText, [], 24);
                     scope.sound("minecraft:block.glass.break", at, 10, "{}");
                 }
                 done(current);

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.growth.summary": "让身体一下子长大，把攻击与特攻一起抬起来；站在阳光下这一下翻倍，绿环与草叶随身体向外展开。",
+  "worldcombat.skill.growth.summary": "提升自身攻击与特攻，阳光会增强提升。身体暂时长大，狭窄空间会限制体型增长，但仍能获得双攻提升。",
   "worldcombat.skill.growth.use.0": "开场先长一轮，把双攻垫起来",
   "worldcombat.skill.growth.use.1": "在阳光下翻倍长一次",
   "worldcombat.skill.growth.description.0": "当前获得物攻 +%1$s 级、特攻 +%2$s 级；阳光会增强这次生长。",
-  "worldcombat.skill.growth.description.2": "长大标记是身体抽长的可见状态，持续约 %1$s；双攻提升是能力等级，在脱战后消退。起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒。",
+  "worldcombat.skill.growth.description.2": "体型恢复或「长大」被清除时，双攻等级仍保留至原有消退时机。起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.growth.timing": "起手可以被打断，打断不消耗任何东西；提交后才结清 PP 与冷却。",
   "worldcombat.skill.growth.value.atkGift": "攻击提升",
   "worldcombat.skill.growth.value.spaGift": "特攻提升",
@@ -19,7 +19,10 @@
   "worldcombat.skill.growth.preference.ai.waitForSun.help": "开启：站在阳光下时长一轮越过分派顺序抢先出手（双攻各多长一级）；关闭：只看距离，不特意等阳光。",
   "worldcombat.skill.growth.preference.ai.shadeGrowth": "阴影里不长",
   "worldcombat.skill.growth.preference.ai.shadeGrowth.help": "开启：不在阳光下就不生长，把这一轮留到有阳光时；关闭：阴影里也照常长（每项少一级）。",
-  "world_combat.move.growth.text.grown": "生长（物攻 +%1$s／特攻 +%2$s）",
-  "world_combat.move.growth.text.sunfed": "沐光而长（物攻 +%1$s／特攻 +%2$s）",
-  "effect.world_combat.grown": "长大"
+  "world_combat.move.growth.text.grown": "生长（物攻 %1$s／特攻 %2$s）",
+  "world_combat.move.growth.text.sunfed": "沐光而长（物攻 %1$s／特攻 %2$s）",
+  "effect.world_combat.grown": "长大",
+  "worldcombat.skill.growth.body": "身体与碰撞体积最多增大 %1$s，持续 %2$s，之后恢复；特攻影响增长幅度，等级影响时长。重复使用刷新体型窗口，不把体型不断叠大。",
+  "worldcombat.skill.growth.value.bodyGain": "体型增长",
+  "world_combat.move.growth.text.crowded": "空间不足，体型增长受限"
 }

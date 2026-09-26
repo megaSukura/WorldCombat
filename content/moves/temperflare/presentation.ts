@@ -2,12 +2,12 @@
  * 豁出去 / temperflare 的客户端表现。
  *
  * 一句话：火从脚下窜起裹住身体 → 施法者拖着一路火尾撞向目标 → 撞上的那一下连人带火炸开，
- *   火星四散燎到身边的人，落点地面留下一圈慢慢熄灭的焦痕。
+ *   火星四散燎到身边的人；真正被点着的目标身上挂一段火尾，免疫火的目标只吃伤害、不挂火。
  * 色相家族：炽橙与赤红（0xFF7A2A / 0xE0562A）为主体，近白（0xFFE6B0）只给爆炸核心，灰烟作余韵；一个暖色家族。
- * 拍子：起 gather（点火）→ 撞 charge（拖火尾冲锋）→ 击 burst（炸开）→ 燎 scorch（溅射）→ 痕 char（焦痕）。
- * 范围：burst 的核心与外扩按 `data.scale`（爆开半径 / 1.5）放大；char 按 `data.radius`（机制爆开半径）铺开。
- * 运动：火苗从脚下向上、冲锋时沿身体轨迹拖在身后、撞击时向外炸开，焦痕贴地留下。
- * 数：burst／scorch 的火星量绑定 `data.embers`（物攻与等级换算），强度绑定命中威力，`data.doubled` 决定火焰是否更亮更大。
+ * 拍子：起 gather（点火）→ 撞 charge（拖火尾冲锋）→ 击 burst（炸开）→ 燎 scorch（溅射）→ 燃 burn（真正点燃的火尾）。
+ * 范围：burst 的核心与外扩按 `data.scale`（爆开半径 / 1.5）放大；没有地面残留。
+ * 运动：火苗从脚下向上、冲锋时沿身体轨迹拖在身后、撞击时向外炸开，火尾跟在被点燃的目标身上。
+ * 数：burst／scorch／burn 的火星量绑定 `data.embers`（物攻与等级换算），强度绑定命中威力 `data.intensity`（失手翻倍时更高）。
  */
 const TemperflareDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -104,25 +104,27 @@ const TemperflareDefinition: ParticleDefinition = {
                 }
             ]
         },
-        char: {
-            duration: 30,
-            exit: { stop: 12, drain: 22 },
+        burn: {
+            duration: { data: "burnTicks", fallback: 40 },
+            exit: { drain: 10 },
             emitters: [
                 {
-                    name: "char_mark", bind: "point", offset: [0, 0.03, 0],
-                    particle: "world_combat_core:cobblemon/generic/scorch/floorscorch",
-                    burst: { count: 8, at: 0 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 } },
-                    lifetime: [26, 44], size: 0.6,
-                    color: 0x6E4A32, alpha: [0.55, 0], light: "world", maxParticles: 12
+                    name: "burn_flame", bind: "target", offset: [0, 0.35, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: { data: "embers", fallback: 12 },
+                    shape: { kind: "box", size: [0.5, 0.7, 0.5] },
+                    direction: "up", speed: [0.02, 0.08], gravity: -0.01, drag: 0.96,
+                    lifetime: [8, 14], size: [0.16, 0.02],
+                    color: 0xFF9A3A, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 48
                 },
                 {
-                    name: "char_ember", bind: "point", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 } },
-                    direction: "up", speed: [0.01, 0.05],
-                    lifetime: [14, 26], size: [0.09, 0.01],
-                    color: 0xFFB257, alpha: [0.7, 0], light: "full", maxParticles: 40
+                    name: "burn_smoke", bind: "target", offset: [0, 0.6, 0], height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    rate: { data: "embers", fallback: 10 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.02, 0.06], gravity: -0.005, drag: 0.96,
+                    lifetime: [12, 22], size: [0.18, 0.3],
+                    color: 0x3A302A, alpha: [0.3, 0], light: "world", maxParticles: 32
                 }
             ]
         }

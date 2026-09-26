@@ -2,8 +2,9 @@
  * 骨棒 / boneclub 的参数与伤害段。
  *
  * 原生事实：Ground／物理／威力 65／命中 85／PP 20／不接触／10% 畏缩（Cobblemon 1.8，仅 3 位学习者，属 Past）。
- * 翻译：把“用手中的骨头殴打对手”落成一记**抡起骨头当棍子的横扫**——骨头比身体够得远，沿瞄准方向扫出一条窄长走廊，
- * 扫中的目标吃一记不接触的重击；命中只有 85，抡偏是常事（用共享的命中偏角把瞄偏画出来）。它是畏缩家族里
+ * 翻译：把“用手中的骨头殴打对手”落成一记**抡起骨头当棍子**的出手——骨头比身体够得远。直刺沿锁定方向一次够人、
+ * 窄而单发更高；横扫则在 6 刻里由左至右划过一道骨棒弧，宽而每人更轻。被扫中的目标各吃一记不接触的重击；
+ * 命中只有 85，抡偏是常事（用共享的命中偏角把瞄偏画出来），真实墙面会截断骨棒、伤害不越墙。它是畏缩家族里
  * 唯一用**武器够到更远**的一式，也是唯一会真的抡空的一式。
  *
  * 与同族分开：暗影之骨把骨头**掷出去**、碎岩/铁尾/撕裂爪是贴身连点；**只有骨棒把骨头握在手里、够得更远**，
@@ -16,7 +17,8 @@
  *   step    挥击前踏近的一小步 0.6 + 速度偏移。
  *   staggerChance 敲懵几率 0.10（原生）+ 物攻偏移；横扫 ×0.9。
  *   staggerTicks  敲懵持续 10 刻；横扫 −2、直刺 +2。
- *   scuffTicks    抡空磕在地上的土痕停留时间。
+ *   sweepTicks    横扫从左侧划到右侧的刻数（固定 6）。
+ *   arcDegrees    横扫扇面的总张角（固定 150°）；直刺不使用。
  *   tempo/aftercast/recharge 速度决定起手、收招与冷却。
  *
  * 配置 `sweep`（横扫式）双向取舍：开启＝走廊更宽、能一次扫到几个人，但每人更轻、收招更慢；
@@ -75,10 +77,10 @@ namespace PokemonSkills {
         staggerTicks: seconds(
             F.base(10).plus(F.when(F.pref("sweep", text("worldcombat.skill.boneclub.preference.sweep")), F.const(-2), F.const(2))).clamp(8, 18).round(0),
             "敲懵持续", "被敲懵的人在这段时间内无法开始新动作；伤害阶段不受影响，仍可被打。"),
-        /** 土痕停留：基础 70 刻，体重每比 50 多 1 加 0.3（上限 +40，下限 −15）；夹在 40..150。 */
-        scuffTicks: seconds(
-            F.base(70).plus(F.body("weight").minus(50).times(0.3).clamp(-15, 40)).clamp(40, 150).round(0),
-            "土痕停留", "抡空磕在地上留下的土痕停留多久后原方块回来；越重磕得越深、留得越久。"),
+        /** 横扫时长：固定 6 刻，由左至右划完整道弧；直刺不使用。 */
+        sweepTicks: hidden(6),
+        /** 横扫扇面：固定 150° 总张角，沿释放方向拉开；直刺不使用。 */
+        arcDegrees: hidden(150),
         /** 起手：基础 8 刻，速度每比 55 快 1 减 0.015（下限 −2）；横扫 +3；夹在 5..14。 */
         tempo: seconds(
             F.base(8).minus(F.stat("speed").minus(55).times(0.015).clamp(-2, 2))
@@ -111,7 +113,7 @@ namespace PokemonSkills {
     describe("boneclub", [
         { key: "description.0", values: ["club","reach","gauge","maxTargets"] },
         { key: "description.1", values: ["step"] },
-        { key: "description.2", values: ["staggerChance","staggerTicks","scuffTicks"] },
+        { key: "description.2", values: ["staggerChance","staggerTicks"] },
         { key: "sweep.on", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) === true; } },
         { key: "sweep.off", values: [], when: function (context) { return read(context.detail.values, ["sweep"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

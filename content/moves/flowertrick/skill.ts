@@ -8,7 +8,10 @@
  *   起（windup，提交前）：把花束在手里理好、扬手蓄势，只播预告。
  *   投（launch → bloom，提交后）：用物品外观掷出花束，按 `turn` 每刻朝目标修正、按 `lockRange` 咬住；
  *       命中活体即结算 `bloom` 草属性物理伤害（必定要害）、炸开一圈花瓣，落点留下一片粉色花瓣（租借，linger，
- *       到期原方块回来）。结环时花瓣向外结成一圈，附近敌人各吃 `splash` 系数的一记；目标消失则空转散去。
+ *       到期原方块回来）。结环时花瓣向外结成一圈，附近敌人各吃 `splash` 系数的一记；目标离场则花束沿原方向飞完。
+ *
+ * 选取 `kind: "aim"`：可点任意阵营实体、也能只给一个方向或世界点空投；不再因为 `target` 为 null 就提前结束，
+ *   没有活体时花束沿提交方向直飞（不再锁定），撞到方块或友方就在接触点散花、不结算伤害。攻击许可仍由命中层判断。
  *
  * 与同族分开：魔法叶、高速星星是散成一群、各追各的；千变万花只有一束，命中即绽、必中且必暴。
  */
@@ -51,7 +54,7 @@ namespace PokemonSkills {
         name: "Flower Trick",
         description: "掷出一束做了手脚的花；花束会自己拐弯追上门（必定命中），一碰就整束绽开、花瓣全扑在薄弱处（必定击中要害）。结环时花瓣向外结成一圈、溅到周围敌人；落点留下一片粉色花瓣。",
         uses: ["点掉一个目标并保证命中与要害", "结环时把绽开分给挤在一起的敌人", "在落点留下一片会到期的花瓣"],
-        kind: "enemy",
+        kind: "aim",
         range: 10,
         maxRange: 15,
         prepare: 9,
@@ -82,6 +85,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
+            const origin = action.origin();
             const power = p(flowertrickId, "bloom", action);
             const speed = Math.max(0.4, p(flowertrickId, "velocity", action));
             const turn = Math.max(4, p(flowertrickId, "turn", action));
@@ -98,55 +102,71 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.2, power / 62));
             const chase = lock + 6;
             const selected = action.target();
+            // 有活体目标才挂追踪；方向/点空投时花束沿提交方向直飞，射程收敛到本招射程、不再锁定。
+            const reference = selected !== null && world.valid(selected) ? String(selected.ref()) : "";
+            const offset = action.targetPosition().minus(origin);
+            const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
+            const flightRange = reference === "" ? reach : chase;
+            const scenes = WorldFeedback.actionScenes(flowertrickScene);
+            let contacted = false, settled = false;
+
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             sound(action, "minecraft:entity.firework_rocket.launch");
 
-            if (selected === null || !world.valid(selected)) {
-                WorldFeedback.emit(world, flowertrickScene, 1, action.origin().plus(action.direction().scale(2)),
-                    { moment: "miss", petals: petals, scale: scale }, 20);
-                WorldFeedback.text(world, action.origin().plus(WorldCombat.point(0, 1.2, 0)), flowertrickMissText, [], 22);
-                done(action);
-                return;
-            }
+            const appearance: any = { item: "minecraft:pink_tulip", scale: Math.max(1, scale * 1.2), glow: true };
+            if (reference !== "") appearance.homing = { target: reference, turn: turn, delay: 1, range: chase };
 
-            const reference = String(selected.ref());
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: chase, radius: radius, lifetime: 200,
-                appearance: {
-                    item: "minecraft:pink_tulip", scale: Math.max(1, scale * 1.2), glow: true,
-                    homing: { target: reference, turn: turn, delay: 1, range: chase }
-                },
+                speed: speed, range: flightRange, radius: radius, lifetime: 200, direction: direction,
+                appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
+                    contacted = true;
+                    // 飞行是这次 execute 的持续过程：真实接触的一刻停掉同行表现，再绽开或散花。
+                    scenes.stop(current, "flight");
                     const scope = current.world(), point = hit.position(), victim = hit.target();
-                    const landed = victim !== null && scope.valid(victim) && !scope.friendly(victim)
-                        ? impact(current, hit, flowertrickId, power, { damage: damageSpec(flowertrickId, "bloom"), critical: true }) : false;
-                    WorldFeedback.emit(scope, flowertrickScene, 1, point,
-                        { moment: "bloom", target: victim === null ? "" : String(victim.ref()), petals: petals,
-                            bloomRadius: bloomRadius, scale: scale, intensity: intensity, landed: landed ? 1 : 0 }, 26);
-                    scope.sound("cobblemon:impact.grass", point, 14, "{}");
-                    scope.sound("minecraft:block.pink_petals.break", point, 12, "{}");
-                    if (landed && wreathe) {
-                        const ref = String(victim!.ref());
-                        WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0.4, bloomRadius, { below: 1.5, above: 2.5 }),
-                            function (other: CombatActor, otherFacts: CombatObservation): void {
-                                if (String(other.ref()) === ref) return;
-                                if (!hurt(current, other, flowertrickId, power * splash,
-                                    { damage: damageSpec(flowertrickId, "bloom"), critical: true })) return;
-                                WorldFeedback.emit(scope, flowertrickScene, 1, otherFacts.position(),
-                                    { moment: "bloom", target: String(other.ref()), petals: Math.round(petals * 0.6),
-                                        bloomRadius: bloomRadius * 0.8, scale: scale, intensity: Math.max(0.4, intensity * 0.75), landed: 1 }, 22);
-                            });
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        const landed = impact(current, hit, flowertrickId, power, { damage: damageSpec(flowertrickId, "bloom"), critical: true });
+                        WorldFeedback.emit(scope, flowertrickScene, 1, point,
+                            { moment: "bloom", target: String(victim.ref()), petals: petals,
+                                bloomRadius: bloomRadius, scale: scale, intensity: intensity, landed: landed ? 1 : 0 }, 26);
+                        scope.sound("cobblemon:impact.grass", point, 14, "{}");
+                        scope.sound("minecraft:block.pink_petals.break", point, 12, "{}");
+                        if (landed && wreathe) {
+                            const ref = String(victim.ref());
+                            WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0.4, bloomRadius, { below: 1.5, above: 2.5 }),
+                                function (other: CombatActor, otherFacts: CombatObservation): void {
+                                    if (String(other.ref()) === ref) return;
+                                    if (!hurt(current, other, flowertrickId, power * splash,
+                                        { damage: damageSpec(flowertrickId, "bloom"), critical: true })) return;
+                                    WorldFeedback.emit(scope, flowertrickScene, 1, otherFacts.position(),
+                                        { moment: "bloom", target: String(other.ref()), petals: Math.round(petals * 0.6),
+                                            bloomRadius: bloomRadius * 0.8, scale: scale, landed: 1 }, 22);
+                                });
+                        }
+                        // 花瓣只在原生真正放下的格上铺；放不下就不画，不假装铺过花。
+                        const cells = flowertrickPetals(scope, point, petalCells, petalTicks);
+                        if (cells > 0)
+                            WorldFeedback.emit(scope, flowertrickScene, 1, point, { moment: "petalbed", cells: cells, scale: scale }, 28);
+                        if (landed) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), flowertrickBloomText, [], 22);
+                    } else {
+                        // 方块或友方挡下：不结算伤害，只在真实接触点散花。
+                        WorldFeedback.emit(scope, flowertrickScene, 1, point,
+                            { moment: "miss", petals: Math.round(petals * 0.6), scale: scale }, 20);
+                        scope.sound("minecraft:block.pink_petals.break", point, 12, "{}");
                     }
-                    const cells = flowertrickPetals(scope, point, petalCells, petalTicks);
-                    if (cells > 0)
-                        WorldFeedback.emit(scope, flowertrickScene, 1, point, { moment: "petalbed", cells: cells, scale: scale }, 28);
-                    if (landed) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), flowertrickBloomText, [], 22);
                 }
             }, function (current: CombatAction) {
-                done(current);
+                if (!contacted) {
+                    const end = origin.plus(direction.scale(flightRange));
+                    WorldFeedback.emit(current.world(), flowertrickScene, 1, end,
+                        { moment: "miss", petals: Math.round(petals * 0.6), scale: scale }, 20);
+                    WorldFeedback.text(current.world(), end.plus(WorldCombat.point(0, 1.2, 0)), flowertrickMissText, [], 22);
+                }
+                finish(current);
             });
-            WorldFeedback.keep(world, "flowertrick:flight:" + action.id(), flowertrickScene, 1, action.origin(),
-                { moment: "flight", projectile: flight, petals: petals, scale: scale, intensity: intensity }, 140);
+            scenes.show(action, "flight", origin,
+                { moment: "flight", projectile: flight, petals: petals, scale: scale, intensity: intensity, direction: [direction.x(), direction.y(), direction.z()] });
         }
     });
 }

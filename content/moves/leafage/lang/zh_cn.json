@@ -4,7 +4,7 @@
   "worldcombat.skill.leafage.use.1": "用一片扇叶兜住来回走位的对手",
   "worldcombat.skill.leafage.use.2": "在近距离补最后一下",
   "worldcombat.skill.leafage.description.0": "一把撒出 %2$s 片叶，整把叶只结算一次伤害：最先扎中敌人的那一片造成约 %1$s 点物理伤害；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.leafage.description.1": "射程 %1$s 格，扇面张角 %2$s 度，叶以 %3$s 格/刻走一条短弧。",
+  "worldcombat.skill.leafage.description.1": "射程 %1$s 格，扇面张角 %2$s 度，叶以 %3$s 格/刻走一条短弧；可朝方向或近处地面自由撒出，叶不追踪，撞方块就在落点碎落。",
   "worldcombat.skill.leafage.description.2": "单片叶的横向判定厚度 %1$s 格。",
   "worldcombat.skill.leafage.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒；PP 40 的手感，回得很快。",
   "worldcombat.skill.leafage.heavy.on": "重叶式：单片威力 ×1.3、单叶判定 ×1.35、射程 ×1.12，但叶数 ×0.55、扇面收窄、起手 +1 刻、冷却 +5 刻——一把少而重的叶，撒得更远、更集中。",

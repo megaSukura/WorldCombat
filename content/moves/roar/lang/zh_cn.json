@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.roar.summary": "吼出一圈声浪，把范围内的敌人震慑得失去目标、掉头离开战斗；有后备的对手会被真正换下，野生或没有后备时只逐退。没有伤害，只把对手逐走。",
-  "worldcombat.skill.roar.use.0": "把贴身的敌人一次逐开",
+  "worldcombat.skill.roar.summary": "一吼震慑近敌；接受溃退的生物沿可走路径逃到安全距离，短窗结束恢复正常选择。抵抗者不被接管，玩家保留移动操作；合法后备仍可真正换上，没有伤害。",
+  "worldcombat.skill.roar.use.0": "让贴身敌人沿退路自行逃开",
   "worldcombat.skill.roar.use.1": "打断围攻、为自己拉开呼吸空间",
   "worldcombat.skill.roar.use.2": "在混战里逼退一圈人",
   "worldcombat.skill.roar.description.0": "以自己为中心吼开一圈 %1$s 格；圆环边界就是会被吼到的边界。",
-  "worldcombat.skill.roar.description.1": "圈里的敌人被打上「溃退」：持续 %1$s 秒，期间只要离你不足 %2$s 格，就每 10 刻被逐开 %3$s 格。",
-  "worldcombat.skill.roar.description.2": "没有伤害；它只是把对手逐出交战圈，逼它们转身走开。宝可梦、原版生物、其他模组生物与玩家走同一条路。",
+  "worldcombat.skill.roar.description.1": "接受溃退后至多逃离 %1$s，达到 %2$s 格安全距离便停步；按原生导航速度的 %3$s 倍行走，墙和地面决定退路。",
+  "worldcombat.skill.roar.description.2": "有合法后备的宝可梦仍可被真正换下；走不到退路时收回自己的导航控制，不周期推人或清仇恨。",
   "worldcombat.skill.roar.unleash.on": "开启狂啸：声浪 ×1.25、溃退 ×1.15，代价是起手 +3 刻、冷却 +20 刻。",
   "worldcombat.skill.roar.unleash.off": "关闭狂啸：出手更快、冷却 −10 刻、声浪较窄，适合频繁逼退。",
   "worldcombat.skill.roar.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -13,7 +13,7 @@
   "worldcombat.skill.roar.growth.1": "达到 %1$s 级，声浪半径提升至 %2$s 格，溃退时长提升至 %3$s 秒。",
   "worldcombat.skill.roar.value.reach": "声浪半径",
   "worldcombat.skill.roar.value.flee": "溃退时长",
-  "worldcombat.skill.roar.value.panic": "驱逐步长",
+  "worldcombat.skill.roar.value.panic": "逃离步频",
   "worldcombat.skill.roar.value.keepOut": "保持距离",
   "worldcombat.skill.roar.value.tempo": "起手",
   "worldcombat.skill.roar.value.recover": "收招",
@@ -28,8 +28,8 @@
   "worldcombat.skill.roar.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.roar.preference.ai.leaveStation.help": "开启后，驻守命令下也会为吼叫离开站位；关闭则只在原地够得到时出手。",
   "effect.world_combat.roar_routed": "溃退",
-  "world_combat.move.roar.text.wave": "吼退了 %1$s 个对手",
+  "world_combat.move.roar.text.wave": "声威影响 %1$s 名对手",
   "world_combat.move.roar.text.miss": "吼声散在空气里",
   "world_combat.move.roar.text.switch": "吼叫 · 强制换下",
-  "worldcombat.skill.roar.description.additional": "命中的瞬间会打断目标当前可被打断的动作、清掉它的交战目标，并朝背离你的方向猛推一把；溃退期间每一拍也会再清一次目标。带可上场后备的对手会被真正换下，后备在它的落点登场；野生或没有后备的只被逐退。"
+  "worldcombat.skill.roar.description.additional": "实际免恐惧者不启动逃离导航；玩家保留自己的移动，只接本招许可的即时打断。"
 }

@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.razorwind.summary": "站定把四周气流拧成一把把风之刃，蓄够后朝正前方甩出一整片扇面：由近及远，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
+  "worldcombat.skill.razorwind.summary": "站定把四周气流拧成一把把风之刃，蓄够后朝瞄准方向甩出一整片扇面：扇面按距离由近及远分三段依次推进，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
   "worldcombat.skill.razorwind.description.0": "每一记风刃对扇面里的一个目标造成约 %1$s 点特殊伤害，且更容易击中要害。",
-  "worldcombat.skill.razorwind.description.1": "扇面向前铺 %1$s 格、向两侧各张 %2$s 度，按距离由近及远最多切到 %3$s 个目标；被方块挡住的目标切不到。",
+  "worldcombat.skill.razorwind.description.1": "扇面向前铺 %1$s 格、向两侧各张 %2$s 度，分三段由近及远推进，最多切到 %3$s 个目标；每个目标只在它所在的那段结算一次，被方块挡住的目标切不到。",
   "worldcombat.skill.razorwind.description.2": "需要站定蓄风 %1$s；蓄风期间可被打断，打断不消耗 PP。",
   "worldcombat.skill.razorwind.stance.spread": "当前为散流式：扇面更宽、风刃更多，但单发威力与射程略收。",
   "worldcombat.skill.razorwind.stance.focus": "当前为集刃式：威力更高、射程更远，但扇面收窄。",
@@ -25,7 +25,7 @@
   "worldcombat.skill.razorwind.preference.ai.maxChase": "蓄力距离",
   "worldcombat.skill.razorwind.preference.ai.maxChase.help": "超过这个距离不主动蓄风，先走近；越大越愿意从更远处先手甩扇。",
   "worldcombat.skill.razorwind.preference.ai.minRange": "最近蓄力距离",
-  "worldcombat.skill.razorwind.preference.ai.minRange.help": "目标进到这个距离以内就压低出手优先级，先拉开再蓄；调到 0 表示贴脸也照蓄。",
+  "worldcombat.skill.razorwind.preference.ai.minRange.help": "目标（或附近任一可见敌人）进到这个距离以内就压低出手优先级，先拉开再蓄——近身受压不长蓄风；调到 0 表示贴脸也照蓄。",
   "worldcombat.skill.razorwind.preference.ai.cluster": "瞄准成排",
   "worldcombat.skill.razorwind.preference.ai.cluster.help": "开启：正前方一条扇面里敌人越多越优先甩出去，一扇能扫到几个；关闭则只按普通远程攻击排序。",
   "world_combat.move.razorwind.text.hit": "旋风刀扫过！切中 %1$s 个",

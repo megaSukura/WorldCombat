@@ -74,7 +74,6 @@ namespace PokemonSkills {
         charge: seconds(
             F.base(7).minus(F.stat("speed").minus(60).times(0.02)).clamp(4, 11).round(),
             "起手", "把身体压低的准备时间；敏捷的个体起手更利落。"),
-        traceAhead: hidden(1.3),
         minimumMove: hidden(0.05)
     });
 

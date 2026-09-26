@@ -1,86 +1,49 @@
-/**
- * 大地波动 / terrainpulse —— 注册与动作。
- *
- * 念头三幕：一幕顿地（提交前 `windup` 预告，脚下的地纹先亮），一幕推出（提交后贴地的波沿地面向目标推进，
- * 颜色是脚下场地的元素，没场地就是灰白），一幕命中（目标脚下炸起同色的地环与碎屑）。
- * 共鸣配置下，第一波落下后再补一波以落点为中心的地环，两波各 ×0.7。
- * 属性与是否翻倍都来自 `parameters.ts` 的同一份场地读取；预览、AI 与命中读同一份。世界不留持久物。
- */
+/** Finite surface waves use actual native collider heights and stop at missing or obstructed ground. */
 namespace PokemonSkills {
-    const terrainpulseScene = "world_combat:move_terrainpulse";
-
-    function terrainpulseFeatures(): HitFeatures {
-        return <HitFeatures>damageFeatures("terrainpulse", "pulse");
-    }
-
-    function terrainpulseHit(current: CombatAction, hit: CombatImpact, power: number, colour: number, bursts: number, ring: number): void {
-        var world = current.world(), target = hit.target(), point = hit.position();
-        if (target === null) {
-            WorldFeedback.emit(world, terrainpulseScene, 1, point, { moment: "fizzle", tint: colour, scale: 1 }, 22);
-            return;
+    const terrainpulseScene="world_combat:move_terrainpulse";
+    function terrainpulseStrike(action:CombatAction,config:any,done:(current:CombatAction)=>void):void{
+        const world=action.world(),body=world.observe(action.actor());if(!body){done(action);return;}
+        const feet=body.boundsMin().plus(WorldCombat.point(body.position().x()-body.boundsMin().x(),0,body.position().z()-body.boundsMin().z()));
+        const start=SurfacePaths.support(world,feet,.1,4);if(!start){done(action);return;}
+        const terrain=body.grounded()?terrainpulseTerrainAt(world,body.position()):null,colour=terrain?terrain.colour:0x9AA0A8,element=terrain?terrain.type:"normal";
+        const power=p("terrainpulse","pulse",action),pace=p("terrainpulse","velocity",action),radius=p("terrainpulse","radius",action),reach=action.range();
+        const bursts=p("terrainpulse","bursts",action),ring=p("terrainpulse","ring",action),heading=WorldGeometry.flatUnit(aim(action)),side=WorldCombat.point(-heading.z(),0,heading.x());
+        const count=config&&config.resonate?2:1,scenes=WorldFeedback.actionScenes(terrainpulseScene);
+        const waves:{point:CombatPoint;distance:number;seen:{[ref:string]:boolean};ended:boolean;width:number}[]=[];
+        for(let i=0;i<count;i++){
+            const at=SurfacePaths.support(world,start.plus(side.scale(count===1?0:(i?1:-1)*radius*.65)),.6,.6);
+            if(at)waves.push({point:at,distance:0,seen:{},ended:false,width:radius*(i?1.35:1)});
         }
-        var body = world.observe(target), before = body ? body.health() : 0, maximum = body ? Math.max(1, body.maxHealth()) : 1;
-        var landed = impact(current, hit, "terrainpulse", power, terrainpulseFeatures());
-        var after = world.valid(target) ? world.observe(target) : null, dealt = before - (after ? after.health() : 0);
-        var intensity = Math.max(1, Math.min(3, 1 + dealt / maximum * 4));
-        world.sound("cobblemon:move.bulldoze.target", point, 16, "{}");
-        WorldFeedback.emit(world, terrainpulseScene, 1, point, { moment: "impact", target: String(target.ref()), tint: colour,
-            intensity: intensity, scale: ring, bursts: Math.round(bursts * (0.7 + intensity * 0.2)) }, 32);
-        if (!landed) return;
+        sound(action,"cobblemon:move.bulldoze.actor");
+        WorldFeedback.emit(world,terrainpulseScene,1,start,{moment:"stomp",tint:colour,scale:1,charged:terrain?1:0},20);
+        action.releaseTarget();
+        function advance(current:CombatAction):void{
+            const scope=current.world();let active=0;
+            waves.forEach(function(wave,index){
+                if(wave.ended)return;
+                const step=SurfacePaths.advance(scope,wave.point,heading,Math.min(pace,reach-wave.distance),{up:1,down:1,spacing:.25,samples:8});
+                for(let i=1;i<step.path.length;i++){
+                    const from=step.path[i-1].plus(WorldCombat.point(0,.16,0)),to=step.path[i].plus(WorldCombat.point(0,.16,0));
+                    WorldGeometry.selectBodies(scope,WorldGeometry.bodySegment(from,to,wave.width),function(enemy,facts){
+                        const ref=String(enemy.ref());if(scope.friendly(enemy)||wave.seen[ref])return;wave.seen[ref]=true;
+                        const landed=hurt(current,enemy,"terrainpulse",power,{damage:damageSpec("terrainpulse","pulse"),resolve:function(){return{type:element};}});
+                        if(landed)WorldFeedback.emit(scope,terrainpulseScene,1,to,{moment:"impact",target:ref,tint:colour,bursts,scale:ring},22);
+                    });
+                }
+                wave.point=step.point;wave.distance+=step.travelled;
+                scenes.show(current,"wave"+index,wave.point,{moment:"surface",tint:colour,path:step.path.map(p=>p.plus(side.scale(-wave.width))).concat(step.path.slice().reverse().map(p=>p.plus(side.scale(wave.width)))).map(p=>[p.x(),p.y()+.04,p.z()]),width:wave.width});
+                wave.ended=step.ended||wave.distance>=reach-.01;if(wave.ended)scenes.stop(current,"wave"+index);else active++;
+            });
+            if(!active){scenes.finish(current,done);return;}current.after(1,advance);
+        }
+        advance(action);
     }
-
-    /** 共鸣的第二波：以第一波落点为心的一圈贴地冲击。 */
-    function terrainpulseSecond(current: CombatAction, x: number, y: number, z: number, power: number, colour: number, ring: number, bursts: number): void {
-        var world = current.world(), centre = WorldCombat.point(x, y, z);
-        WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, ring, { below: 1, above: 3 }), function (enemy: CombatActor) {
-            if (world.valid(enemy)) hurt(world, enemy, "terrainpulse", power, terrainpulseFeatures());
-        });
-        world.sound("cobblemon:move.bulldoze.target", centre, 16, "{}");
-        WorldFeedback.emit(world, terrainpulseScene, 1, centre, { moment: "secondary", tint: colour, scale: ring,
-            bursts: Math.round(bursts * 0.7) }, 30);
-    }
-
-    function terrainpulseStrike(action: CombatAction, config: any, done: (current: CombatAction) => void): void {
-        var world = action.world(), actor = action.actor(), body = world.observe(actor);
-        var origin = body ? body.position() : action.origin();
-        var terrain = body && body.grounded() ? terrainpulseTerrainAt(world, origin) : null;
-        var colour = terrain ? terrain.colour : 0x9AA0A8;
-        var power = p("terrainpulse", "pulse", action), speed = p("terrainpulse", "velocity", action),
-            radius = p("terrainpulse", "radius", action), bursts = p("terrainpulse", "bursts", action),
-            ring = p("terrainpulse", "ring", action);
-        var resonate = !!(config && config.resonate === true);
-        sound(action, "cobblemon:move.bulldoze.actor");
-        WorldFeedback.emit(world, terrainpulseScene, 1, origin, { moment: "stomp", tint: colour, scale: 1,
-            charged: terrain ? 1 : 0 }, 28);
-        var landing: number[] | null = null;
-        var appearance: any = { sprite: "cobblemon:particle/generic/orb/flat", scale: 0.9, tint: colour, glow: true };
-        var flight = LivingActions.projectile(action, {
-            speed: speed, range: action.range(), radius: radius, direction: aim(action), appearance: appearance,
-            impact: function (current: CombatAction, hit: CombatImpact) {
-                var point = hit.position();
-                landing = [point.x(), point.y(), point.z()];
-                terrainpulseHit(current, hit, power, colour, bursts, ring);
-            }
-        }, function (current: CombatAction) {
-            if (resonate && landing !== null) {
-                var site = landing;
-                current.after(Math.max(1, Math.round(p("terrainpulse", "repeatDelay", current))), function (later: CombatAction) {
-                    terrainpulseSecond(later, site[0], site[1], site[2], power, colour, ring, bursts);
-                    done(later);
-                });
-                return;
-            }
-            done(current);
-        });
-        WorldFeedback.emit(world, terrainpulseScene, 1, origin, { moment: "travel", projectile: flight, tint: colour, scale: 1 }, 70);
-    }
-
     define({
         id: "terrainpulse",
         name: "大地波动",
-        description: "一脚顿地，把地脉沿地面推向目标；站在电气、青草、薄雾或精神场地上时，波带上那片场地的元素、威力翻倍。",
+        description: "把脚下地气压成逐段贴地推进的地脉，沿真实台阶起落，断地或高墙会截停。接地场地决定出手元素与加成，共鸣变成相邻的宽窄两道。",
         uses: ["看脚下的场地出手", "在场地里放大威力"],
-        kind: "enemy",
+        kind: "aim",
         range: 12,
         maxRange: 20,
         prepare: 9,

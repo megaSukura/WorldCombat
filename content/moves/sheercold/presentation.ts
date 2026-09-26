@@ -107,6 +107,14 @@ const SheerColdDefinition: ParticleDefinition = {
                 }
             ]
         },
+        rime: {
+            duration: { data: "ticks", fallback: 120 }, exit: { stop: 4, drain: 14 },
+            emitters: [{ name: "frost_trace", bind: "point", height: 0, offset: [0, 0.03, 0],
+                particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
+                rate: { data: "cells", fallback: 18 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                direction: "up", speed: [0.005, 0.025], lifetime: [8, 16], size: [0.06, 0.02],
+                color: 0xA8ECF5, alpha: [0.28, 0], light: "world", maxParticles: 60 }]
+        },
         miss: {
             duration: 22,
             exit: { stop: 8, drain: 16 },

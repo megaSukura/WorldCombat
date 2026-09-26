@@ -3,16 +3,24 @@
  *
  * 什么局面下出手：这一族唯一的物理重炮，挂在共享 attack／ranged 位上。目标可见、敌对、存活、在 `ai.maxChase`
  *   （默认 16）以内就考虑；炮弹带偏角，离得越远越容易打偏，所以中近距离（射程 60% 以内）会明显更愿意开炮。
- * 对谁出手：`ai.preferBig`（默认开）时，体型大的目标更好中、被顶得更远，priority 更高。
+ * 对谁出手：`ai.preferBig`（默认开）时，体型大的目标更好中、被顶得更远，priority 更高；横移快的目标更难被这条直线咬住，
+ *   尤其远处降权，横移慢的更靠前——重装不强行补必中。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位送进炮程。
  * 放完之后：命中则重伤、顶开并按概率带毒，伙伴交回共享顺序；打偏只走冷却，不结算任何伤害。
- * 优先级：中近程 30（大体型 +10）／ 接近射程上限 18 ／ 还需先走近 6。
+ * 优先级：中近程 30（大体型 +10）／ 接近射程上限 18 ／ 还需先走近 6；低横移 +6，远距离高速横移 −6。
  */
 namespace PokemonSkills {
     function gunkshotSize(target: CompanionBehavior.Entity): number {
         var width = typeof target.width === "number" ? target.width : 0.9;
         var height = typeof target.height === "number" ? target.height : 1.4;
         return width * height;
+    }
+
+    /** 目标当前水平横移速度（格/刻）；宿主没有速度事实时按静止处理。 */
+    function gunkshotPace(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        var motion = CompanionBehavior.velocity(context, target);
+        if (motion === null) return 0;
+        return Math.sqrt(motion[0] * motion[0] + motion[2] * motion[2]);
     }
 
     CompanionBehavior.registerUse("gunkshot", {
@@ -35,6 +43,9 @@ namespace PokemonSkills {
             var reach = capability.data.range, base = distance <= reach ? 18 : 6;
             if (distance <= reach * 0.6) base += 12;
             if (CompanionBehavior.ai<boolean>(capability, "preferBig", true) && gunkshotSize(target) >= 1.6) base += 10;
+            var pace = gunkshotPace(context, target);
+            if (pace <= 0.05) base += 6;
+            else if (pace >= 0.15 && distance > reach * 0.6) base -= 6;
             return base;
         }
     });

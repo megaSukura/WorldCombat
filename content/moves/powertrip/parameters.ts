@@ -5,7 +5,8 @@ namespace PokemonSkills {
     export const powertripHitText = "world_combat.move.powertrip.text.hit";
     export const powertripThroughText = "world_combat.move.powertrip.text.through";
     export const powertripMissText = "world_combat.move.powertrip.text.miss";
-    export const powertripStats = ["atk", "def", "spa", "spd", "spe"];
+    /** 计入架势的七项：五项能力加上命中与闪避，与原生 positiveBoosts 同口径。 */
+    export const powertripStats = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
 
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯。 */
     export function powertripStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
@@ -13,7 +14,7 @@ namespace PokemonSkills {
         return NativeEffects.effectiveStages(world, actor);
     }
 
-    /** 五项能力里正面等级的总和；0 表示此刻没有架势。 */
+    /** 七项能力里正面等级的总和，加上真正带行为的原生增益；identity-only 载体不计。 */
     export function powertripBoosts(world: CombatWorld, actor: CombatActor): number {
         const stages = powertripStages(world, actor);
         let total = 0;
@@ -40,7 +41,7 @@ namespace PokemonSkills {
 
     actionParameters.define(powertripId, {
         boost: formula(F.var("powertrip.boost", text("worldcombat.skill.powertrip.value.boost")), "强化层数", {
-            unit: "层", description: "当前五项正面能力等级与药水、信标增益的等级总和。"
+            unit: "层", description: "当前七项正面能力等级与药水、信标增益的等级总和；只借身份、不带行为的载体不计入。"
         }),
         /** 冲撞威力：18 + 架势层数 ×20（封顶 +120）+ 物攻偏移[−8,26] + 等级偏移[−2,6]；收敛 ×1.1 / 猛进 ×0.88；夹 18..190。 */
         swagger: formula(

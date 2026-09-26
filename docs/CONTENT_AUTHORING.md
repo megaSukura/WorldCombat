@@ -200,7 +200,7 @@ WorldFeedback.text(world, target.position(), "effect.your_namespace.your_effect.
 
 一招的输入形状是设计的一部分，和出手方式同等重要。客户端按动作声明的瞄准契约收集输入，服务端在 `action.control()` 里读到经校验的选择：
 
-- 目标种类由 `Skill.kind` 决定：`enemy`／`friend`／`self`／`aim`（方向）／`point`（地点）／`motion`（位移终点）。
+- 目标种类由 `Skill.kind` 决定：`enemy`／`friend`／`self`／`aim`（任意关系实体或点）／`point`（地点）／`motion`（位移终点）。实体输入的范围按施法者中心到目标真实碰撞箱最近点判断；`targetPosition()` 保留选中的身体局部瞄点，并随目标位置和尺寸变化。省略局部选点的中心输入保持中心，伤害仍须经过招式的真实碰撞与权限结算。
 - 复杂选择用 `WorldCombat.preview("world_combat:<招式id>", JSON)` 声明（招式的动作 id 就是 `world_combat:<id>`）：`input.steps` 让玩家逐步确认多个选择（例如三个点连成一条路径、先选一块已有的区域再选一个点），每步是 `point`／`entity`／`field`；`input.sustained` 让玩家按住技能键持续引导，松手即停（`world_combat:input-stop`）；`cells`＋`rotation: "cardinal"` 给出可旋转的放置轮廓并做落点检查；`motion` 预览位移终点；`lineOfSight` 要求视线。字段与校验以 [ActionPreview](../mods/world-combat-core/src/main/java/dev/worldcombat/core/runtime/ActionPreview.java)、[ActionInput](../mods/world-combat-core/src/main/java/dev/worldcombat/core/runtime/ActionInput.java) 为准，客户端流程见 [ComplexInput](../mods/cobblemon-world-combat/src/main/java/dev/worldcombat/cobblemon/client/ComplexInput.java)。
 - `field` 步骤能选中的是内容自己在表现数据里标了 `selectable: true` 与 `effect: <效果id>` 的区域。
 - 接法范例（测试夹具，只演示写法）：[conduction.ts](../tests/content/workshop/conduction.ts) 里的三点路径、按住引导、区域连接。
@@ -227,6 +227,15 @@ AI 说明区分施放条件与选择倾向，分别落实为条件校验与候�
 ## 原生生态、两端与生命周期
 
 投射物使用 `CombatAction.projectile` 或 [LivingActions.projectile](../content/mechanisms/living-actions.ts)，进入原生实体跟踪、碰撞、弹反和 NeoForge 命中事件。数值结算、MC 属性、状态、方块／物品交互、导航、伤害事件和其他生态功能优先使用已有原生接口。
+
+受击运动按单位选择 `world.knockback`（原生击退）、`world.hitImpulse`（叠加速度）或 `world.hitDisplace`（受碰撞限制的位移格数）。这些入口统一保留原生击退事件、抗性、敌我权限与骑乘边界；主动动作继续使用 `motion`／`displace`。具体返回值和事件约定见 [世界 SDK](../sdk/core/world.d.ts)。
+
+一次动作的多段与派生效果，通过 `world.originInstance()`／`originData()`共享宿主来源与临时 JSON 决定。[MoveExecutions](../content/mechanisms/move-executions.ts) 在提交时复用伤害段声明，内容据此消费一次性效果；不要按首个受击对象代替整招。未接入动作运行时的原生攻击，以同一弹体或同一 `DamageSource` 的最早可观察交付为界；来源不推断其他 Mod 内部的施法过程，重载后清理。
+
+能力等级转移调用 `NativeEffects.transferStage`：双方拦截先确定可守恒的有符号数量，再由 `world.compareEffectStates` 比较完整效果快照并一次提交。临时贡献沿用原拥有者和剩余时长；明确交接时先准备零贡献的自拥有载体。共享 CAS 只改状态，生命周期和所有权仍由效果接口管理，提交后的观察回调属于后续变化。见 [NativeEffects](../content/mechanisms/native-effects.ts) 与 [效果 API](../sdk/core/world.d.ts)。
+
+[CombatEncounters](../content/mechanisms/combat-encounters.ts) 记录角色本场首动与有共同敌人证据的友方最终死亡；原生攻击以最早可观察事实为界。[NativeAttackProjection](../content/mechanisms/native-attack-projection.ts) 仅为明确支持的近战和原生弹体提供实际接触／飞行回放。[BodyScale](../content/mechanisms/body-scale.ts) 管理原生缩小及空间不足时有归属的待恢复状态；战斗增益应独立绑定原载体。
+
 
 服务端决定命中、资源、状态、权限和 AI；客户端负责交互呈现、预览和纯表现。普通内容调用现有 SDK，具体通信由后端管理。新增通信只传当前相关且发生变化的数据，复用 RPC／订阅和现有实体同步；入口见[服务端 SDK](../sdk/core/index.d.ts)与[客户端 SDK](../sdk/client/index.d.ts)。技术检查按改动范围执行，操作体验由用户试玩。
 

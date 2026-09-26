@@ -1,18 +1,4 @@
-/**
- * 交换场地 的粒子语言（P5 视觉语言 v2）。
- *
- * 一句话：施法者与同伴脚下同时亮起念力，两人被一条青蓝的力线一拽而瞬间对调；两处原地各留下一小撮偏紫的错位残影，
- *   慢慢淡去。
- *
- * 色相家族：青蓝（0x7FD8FF）为主体，近白（0xDFF4FF）做高光；错位残影用第二个色相淡紫（0xC9A6FF），
- *   因为「被留在原地的那个我」本身是另一个意思。
- * 层次：折空（起手，环向里收）／力线＋对调（起击）／残影（收，留在两处原地）。
- * 起击收：fold（折空）→ swap（对调）→ ghost（残影慢慢散去）。
- * 范围：`swap` 的 `data.path` 是服务端给出的两处旧位置（不是实体引用，因此不会跟着移动），力线连出的两点就是被对调的两个人。
- * 运动：力线沿两点之间拉紧；对调瞬间两点各炸开一圈；残影原地不动、缓慢上浮淡出。
- * 数：残影光点绑 `data.motes`（速度与特攻派生），误导人数 `data.misled` 决定对调爆发的强度 `data.intensity`。
- * 持续状态：残影低密度、贴地，很快就散，不遮挡目标。
- */
+/** Two real endpoints flash briefly; only a successful swap draws their crossing path. */
 const AllySwitchDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -75,28 +61,9 @@ const AllySwitchDefinition: ParticleDefinition = {
                 }
             ]
         },
-        ghost: {
-            exit: { drain: 24 },
-            emitters: [
-                {
-                    name: "ghost_orb", bind: "point", fit: "none", height: 0.45,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
-                    rate: { data: "motes", fallback: 18 }, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "up", speed: [0.008, 0.03], spin: 6,
-                    lifetime: [18, 30], size: [0.1, 0.02],
-                    color: 0xC9A6FF, alpha: [0.35, 0], alphaMode: "sin", light: "full", maxParticles: 36
-                },
-                {
-                    name: "ghost_dust", bind: "point", fit: "none", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 5, shape: { kind: "ring", radius: 0.35 },
-                    direction: "up", speed: [0.005, 0.02],
-                    lifetime: [16, 26], size: [0.05, 0.01],
-                    color: 0xC9A6FF, alpha: [0.28, 0], alphaMode: "sin", light: "world", maxParticles: 20
-                }
-            ]
-        }
+        partner: { duration: 10, emitters: [{ name: "partner_foot", bind: "point", fit: "world", particle: "world_combat_core:cobblemon/generic/psychic/psyring1", burst: { count: 2 }, shape: { kind: "ring", radius: .6 }, lifetime: [4,8], size: [.35,.08], color: 0x7FD8FF, alpha: [.6,0] }] },
+        arrival: { duration: 12, emitters: [{ name: "refraction", bind: "point", fit: "world", particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan", burst: { count: { data: "motes", fallback: 18 } }, shape: { kind: "ring", radius: .6 }, speed: [.02,.07], lifetime: [4,10], size: [.12,.01], color: 0x7FD8FF, alpha: [.6,0] }] },
+        fizzle: { duration: 10, emitters: [{ name: "extinguish", bind: "point", fit: "world", particle: "world_combat_core:cobblemon/generic/tinydust", burst: { count: 6 }, shape: { kind: "ring", radius: .35 }, lifetime: [3,7], size: [.04,.01], color: 0x7FD8FF, alpha: [.3,0] }] }
     }
 };
-
 WorldCombatParticles.scene("world_combat:move_allyswitch", 1, AllySwitchDefinition);

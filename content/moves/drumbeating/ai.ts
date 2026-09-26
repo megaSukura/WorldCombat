@@ -7,12 +7,22 @@
  * 放完之后：末拍目标被 rootbound、速度等级下降、脚下留下根须，交回共享顺序继续战斗。
  */
 namespace PokemonSkills {
+    function drumbeatingConnected(context:WorldBehavior.Context,target:CompanionBehavior.Entity):boolean{
+        return CompanionBehavior.observedFlag(context,"drumbeating:route:"+target.ref,function(){
+            const access=CompanionBehavior.world(context),self=CompanionBehavior.source(context);
+            const from=SurfacePaths.support(access,WorldCombat.point(self.point[0],self.point[1]-(self.height||1.4)/2,self.point[2]),.1,2);
+            if(!from)return false;
+            const delta=CompanionBehavior.point(target.point).minus(from),distance=Math.sqrt(delta.x()*delta.x()+delta.z()*delta.z());
+            return !SurfacePaths.advance(access,from,delta,distance,{up:1,down:1,spacing:.5,samples:Math.ceil(distance/.5)+1}).ended;
+        });
+    }
     CompanionBehavior.registerUse("drumbeating", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
+            if(!drumbeatingConnected(context,target))return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 13);
         },

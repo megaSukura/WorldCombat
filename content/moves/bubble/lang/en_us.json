@@ -3,7 +3,7 @@
   "worldcombat.skill.bubble.use.0": "A very short, PP-cheap poke to spam in a scuffle",
   "worldcombat.skill.bubble.use.1": "Hit several foes inside the arc ahead at once",
   "worldcombat.skill.bubble.use.2": "Make a fast foe slip and drag its Speed down",
-  "worldcombat.skill.bubble.description.0": "Each caught target takes %1$s special damage once per cast; one breath fires %3$s volley(s) of %2$s bubbles each.",
+  "worldcombat.skill.bubble.description.0": "Each caught target takes %1$s special damage at most once per volley; one breath fires %3$s volley(s) of %2$s bubbles each.",
   "worldcombat.skill.bubble.description.1": "The bubbles spread over a %1$s degree arc, reach %2$s blocks, fly at %3$s blocks/tick and have a %4$s block hit radius.",
   "worldcombat.skill.bubble.description.2": "On a hit, a %1$s chance to lower the target's Speed by %2$s stage(s) as a stat stage that does not recover when the foam ends, and the target is left sudsy for %3$s.",
   "worldcombat.skill.bubble.description.3": "Volleys are %1$s apart.",

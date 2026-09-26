@@ -20,7 +20,7 @@ Smoke.scenario("healbell", function (stage) {
         stage.expect(!stage.hasMobEffect(caster, "world_combat:status/burn"), "the bell cleared the caster's burn");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/poison"), "the teammate had carried the poison identity before the bell");
         stage.expect(!stage.hasMobEffect(ally, "world_combat:status/poison"), "the bell reached the teammate and cleared its poison");
-        stage.note("铃声以 chimeRadius 为半径判定：特攻与等级决定半径、速度决定响几声、特防与体型决定铃光数；每一声都洗一次范围内的全部主异常（poison 身份一并带走剧毒，含 sleep 与 frozen），本场景两项异常都在半径内被洗掉。声数、间隔与两端的粒子环留给完整装配的人工试玩。", {
+        stage.note("铃声以 chimeRadius 为半径判定：特攻与等级决定半径、速度决定响几声、特防与体型决定铃光数；每一声都从施术者当前所在处响出，洗一次范围内的全部主异常（poison 身份一并带走剧毒，含 sleep 与 frozen）。本场景两项异常都在半径内被洗掉；只有真正清掉东西的对象会在自己身上亮起净光柱，空响仍然响完但不刷清除光。施放期间可以移动，声数、间隔与两端的粒子环留给完整装配的人工试玩。", {
             casterCasts: stage.casts("healbell", caster),
             casterBurnEver: stage.hadMobEffect(caster, "world_combat:status/burn"),
             casterBurnNow: stage.hasMobEffect(caster, "world_combat:status/burn"),

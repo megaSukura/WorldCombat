@@ -25,7 +25,7 @@
   "worldcombat.skill.coaching.preference.ai.maxChase": "指导距离",
   "worldcombat.skill.coaching.preference.ai.maxChase.help": "威胁与伙伴都要在这个距离以内才考虑指导；越大越愿意跑远一点去教。",
   "worldcombat.skill.coaching.preference.ai.prefer": "照顾对象",
-  "worldcombat.skill.coaching.preference.ai.prefer.help": "交战中：优先教正在打威胁的队友；带伤的：只照顾生命掉下来的队友。",
+  "worldcombat.skill.coaching.preference.ai.prefer.help": "交战中：优先教正在打威胁的队友；带伤的：只照顾生命掉下来的队友，把指导留给更危险的时刻。孤立在后排、身边没人可传的伙伴不会被选；全员都已受教时不挑目标，PP 留着。",
   "worldcombat.skill.coaching.preference.ai.prefer.engaged": "交战中（出手更早）",
   "worldcombat.skill.coaching.preference.ai.prefer.injured": "带伤的（留到残血）",
   "worldcombat.skill.coaching.preference.ai.leaveStation": "驻守时允许离位",

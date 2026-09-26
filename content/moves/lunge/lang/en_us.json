@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.lunge.summary": "Coils its legs, throws its whole body at the target and lands with all its weight: the hit deals contact damage, shoves the target back and lowers its Attack by one stage. Full-force mode is heavier, shoves further and lunges further, but is slower.",
+  "worldcombat.skill.lunge.summary": "Coils its legs, throws its whole body along the aimed direction and lands with all its weight: the hit deals contact damage, shoves the target back and lowers its Attack by one stage. Full-force mode is heavier, shoves further and lunges further, but is slower.",
   "worldcombat.skill.lunge.use.0": "Pounce in and cut a target's physical output",
   "worldcombat.skill.lunge.use.1": "Bowl a single tough target over and leave it swinging weak",
   "worldcombat.skill.lunge.use.2": "Close the gap before the target can",
   "worldcombat.skill.lunge.description.0": "The pounce deals about %1$s contact damage on impact.",
-  "worldcombat.skill.lunge.description.1": "Leaps %1$s blocks toward the target (%2$s blocks per tick) with a %3$s block collision radius; it settles only the first target struck along the path, an ally in the way merely stops it without being hurt, and an obstacle or the end of the distance also ends the leap.",
+  "worldcombat.skill.lunge.description.1": "Leaps %1$s blocks along the aimed direction (%2$s blocks per tick) with a %3$s block collision radius; it settles only the first target struck along the path, an ally in the way merely stops it without being hurt, and an obstacle or the end of the distance also ends the leap; aiming into empty space still carries it that far.",
   "worldcombat.skill.lunge.description.2": "On a hit it shoves the target %1$s blocks along the lunge and lowers its Attack by %2$s stages; the lower its Attack, the weaker the physical damage it deals (down to -6 stages), and the drop does not wear off on its own until the target disengages or its stat stages are reset.",
   "worldcombat.skill.lunge.heavy.on": "Full-force: power x1.18, knockback x1.35 and lunge x1.12 for one heavier, longer blow; costs +3 wind-up, +3 recovery and +8 cooldown ticks.",
   "worldcombat.skill.lunge.heavy.off": "Nimble: power x0.92 with a faster cast and shorter cooldown, good for chasing agile targets.",

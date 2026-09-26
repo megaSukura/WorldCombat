@@ -47,15 +47,15 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "冲锋时每刻前进的距离；这一记要贴上去才撞得实。"
             }),
-        /** 越过距离：基础 0.35 格，速度每比 55 多 1 加 0.008（夹 −0.1..+0.5），体重每比 50 重 1 加 0.0015（夹 −0.05..+0.35），受托 ×1.6；夹在 0.12..1.6。 */
+        /** 余进距离：基础 0.35 格，速度每比 55 多 1 加 0.008（夹 −0.1..+0.5），体重每比 50 重 1 加 0.0015（夹 −0.05..+0.35），受托 ×1.6；夹在 0.12..1.6。 */
         carry: formula(
             F.base(0.35).plus(F.stat("speed").minus(55).times(0.008).clamp(-0.1, 0.5))
                 .plus(F.body("weight").minus(50).times(0.0015).clamp(-0.05, 0.35))
                 .times(F.when(F.pref("devoted", text("worldcombat.skill.return.preference.devoted")), F.const(1.6), F.const(1)))
                 .clamp(0.12, 1.6).round(2),
-            "越过距离", {
+            "余进距离", {
                 unit: "格",
-                description: "撞实后顺势从对手身侧越过的距离；受托式越得远，可以借它换位。"
+                description: "撞实后沿原方向继续直进的距离（受托式才有）；受托式余得更远，可以借它换到对手另一侧。"
             }),
         /** 顶开距离：基础 0.3 格，体重每比 50 重 1 加 0.002（夹 −0.06..+0.6）；夹在 0.1..0.9。 */
         push: formula(

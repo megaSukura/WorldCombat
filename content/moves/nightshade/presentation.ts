@@ -7,7 +7,8 @@
  * 拍子：起（charge 凝影）→ 行（flight 追人）→ 击（haunt 钻心）／散（splash 炸影）→ 收（fizzle 落空）。
  * 范围：splash 的地面暗环画的就是炸影半径（data.scale = 实际半径 / 1.7）；haunt 绑命中点。
  * 运动：flight 的幽光钉在幻影本体上，沿它的飞行轨迹拖尾；命中后阴影从命中点向外爆、再缓缓上浮。
- * 数：haunt 与 splash 的幽影数量由服务端按等级伤害与波及人数算好传入（data.count）。
+ * 数：haunt 与 splash 的幽影数量由服务端按实际伤害与真实波及人数算好传入（data.count）；
+ * 被免疫/上限完全挡下时改播 blocked（暗环折返、无钻心爆点），与命中的幽紫钻心分开。
  */
 const NightShadeDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -122,6 +123,30 @@ const NightShadeDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.14, 0.03],
                     color: 0x3A3448, alpha: [0.5, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        blocked: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "ward_fold", bind: "point", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_ghost",
+                    burst: { count: 10, at: 1 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.04, 0.14],
+                    lifetime: [6, 11], size: [0.26, 0.06],
+                    color: 0x5A5468, alpha: [0.7, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "ward_ring", bind: "point", offset: [0, 0.35, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 10 },
+                    shape: { kind: "ring", radius: 0.45 },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [7, 12], size: [0.2, 0.05],
+                    color: 0x4A3A6E, alpha: [0.55, 0], light: "world", maxParticles: 26
                 }
             ]
         }

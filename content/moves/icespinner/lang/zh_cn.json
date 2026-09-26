@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.icespinner.summary": "脚上结起薄冰，旋转着撞进目标：沿途把场地整片刮掉，冲过的地面留下一圈会滑、会化掉的冰面，命中按接触结算冰系伤害并把目标顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
+  "worldcombat.skill.icespinner.summary": "脚上结起薄冰，朝任意方向旋转着冲出去（也可以只朝地上一处划过场地，不需要敌人）：沿途把场地整片刮掉，冲过的地面留下一圈会滑、会化掉的冰面，撞到目标时按接触结算冰系伤害并把它顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
   "worldcombat.skill.icespinner.use.0": "压进一个贴地的目标并把它顶开",
   "worldcombat.skill.icespinner.use.1": "把对手依赖的场地一次刮掉",
   "worldcombat.skill.icespinner.use.2": "在冲过的地面留下一圈临时冰面",

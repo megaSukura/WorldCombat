@@ -6,12 +6,13 @@
  *
  * 色相家族：妖精粉（0xF7A8C4／0xE87BA8）为主体，近白粉（0xFFE0EC）只做瞳环高光与眼波小点，
  *   灰白（0xCCC6CC）只在被挡住那一刻出现。没有第二个色相。
- * 层次：睁眼（起手，两圈瞳环＋眼波向眼内收）→ 看软（一道眼波线＋目标粉雾＋粉环）→ 余韵（头顶眼波）
- *   → 被挡／落空。
- * 起击收：windup（睁眼）→ gaze（落到人身上）→ linger（心软还在，慢慢离场）。
- * 范围：单体凝视，眼波线与目标粉环画的正是被看软的那个人；凝视距离由 gazeRange 决定，画面沿视线铺开。
- * 运动：眼波从施法者沿视线飞向目标（bind path polyline），目标粉雾向外散、再缓慢上浮。
- * 数：眼波线与粉雾的数量读 data.glints（特攻派生），凝视（data.stare）时整体更厚。
+ * 层次：睁眼（起手，两圈瞳环＋眼波向眼内收）→ 看软（一道眼波线＋目标粉雾＋粉环）→ 真降攻（垂下小攻势符号）
+ *   → 余韵（头顶眼波）→ 被挡／落空。
+ * 起击收：windup（睁眼）→ gaze（落到人身上）→ drop（只有真正掉了等级才垂下攻势符号）→ linger（心软还在，慢慢离场）。
+ * 范围：单体凝视，眼波线与目标粉环画的正是被看软的那个人；凝视距离由 gazeRange 决定。
+ * 运动：一道眼波沿两点连线在整条边上铺开（bind path polyline，direction shape 由形状向外），不是沿线飞行的投射物；
+ *   目标粉雾向外散、再缓慢上浮。
+ * 数：眼波线与粉雾的数量读 data.glints（特攻派生），凝视（data.stare）时整体更厚；drop 读本次真实降下的等级数。
  */
 const BabydolleyesDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -81,6 +82,28 @@ const BabydolleyesDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [10, 18], size: [0.09, 0.01],
                     color: 0xFFE0EC, alpha: [0.9, 0], light: "full", maxParticles: 24
+                }
+            ]
+        },
+        drop: {
+            duration: 24,
+            exit: { stop: 10, drain: 14 },
+            emitters: [
+                {
+                    name: "drop_symbols", bind: "target", height: 1.2,
+                    particle: "world_combat_core:cobblemon/generic/crossedswords",
+                    burst: { count: { data: "drop", fallback: 1 }, interval: 4, repeats: 2 }, shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "down", speed: [0.02, 0.05], spin: 8, gravity: 0.015,
+                    lifetime: [10, 18], size: [0.32, 0.1],
+                    color: 0xE87BA8, alpha: [0.85, 0], light: "full", maxParticles: 8
+                },
+                {
+                    name: "drop_ring", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1, interval: 4, repeats: 2 }, shape: { kind: "ring", radius: 0.35 },
+                    direction: "outward", speed: [0.04, 0.1],
+                    lifetime: [10, 16], size: [0.26, 0.1],
+                    color: 0xFFE0EC, alpha: [0.55, 0], light: "full", maxParticles: 6
                 }
             ]
         },

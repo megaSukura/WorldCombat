@@ -30,6 +30,8 @@ namespace PokemonSkills {
             if (!target || !spiritshackleWants(context, capability, target)) return 0;
             const trapped = CompanionBehavior.status(context, target, "trapped");
             if (trapped) return 0;
+            // 空中目标没有可缝的地表影子：这一箭只按它自身的伤害估值，不为钉住加分。
+            if (target.grounded === false) return 18;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             let value = 24;
             if (CompanionBehavior.ai<boolean>(capability, "catchRunners", true) && CompanionBehavior.fleeing(context, target)) value += 16;

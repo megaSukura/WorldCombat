@@ -9,8 +9,9 @@
  *   起（windup，提交前）：脚下浮起暗红火星，怒气在攒（present windup）。
  *   开火（execute 起）：提交后立刻给自己挂上共享身份 `world_combat:status/rage` 的怒火，然后欺身抡出一记
  *       tantrum；打不打得中都无所谓，火已经点起来了。
- *   添柴（随时，由世界事件驱动）：火在的这段时间里，每挨一记外来伤害就把攻击烧旺 perHit 档（封顶 rageCap），
- *       画面爆出一簇上窜的火星；自己下一次出手时火焰熄灭（mob_effect_removed，emit fade）。
+ *   添柴（随时，由世界事件驱动）：火在的这段时间里，每挨一记**敌对真实攻击**就把攻击烧旺 perHit 档（封顶 rageCap），
+ *       实际涨了几档以 NativeEffects.boost 的返回值为准；自己下一次出手时火焰收进身体（committed，emit consume），
+ *       自然烧尽才散成余烬（mob_effect_removed，emit fade）。友方、自己与中毒／灼烧等 DOT 不养怒。
  *
  * 与同族分开：
  *   珍藏靠「用遍其他招」解锁、是一记重砸；愤怒靠「被击中的次数」变强、是一段自己点起的姿态。
@@ -22,6 +23,9 @@ namespace PokemonSkills {
     const rageStokeText = "world_combat.move.rage.text.stoke";
     const rageMissText = "world_combat.move.rage.text.miss";
 
+    /** 刚刚被自己出手收进身体的火：随后的 mob_effect_removed 不再散余烬。 */
+    var rageConsumed: { [ref: string]: number } = Object.create(null);
+
     define({
         freeMovement: true,
         id: rageId,
@@ -30,7 +34,7 @@ namespace PokemonSkills {
         description: "先抡一记很轻的怒气，同时给自己点起一座红炉：火还烧着的时候，每挨一记外来伤害就把攻击烧旺一档，火越旺攻击越高；自己下一次出手时火焰熄灭，涨起来的攻击留着。适合先开火、再迎着对手对拼。",
         uses: ["先给自己点起怒火、再迎着对手打", "挨打时把攻击一档档烧旺",
                "在近身缠斗里滚出越来越高的物攻"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 4.4,
         prepare: 5,
@@ -77,10 +81,11 @@ namespace PokemonSkills {
             // 开火：先点起怒火，这一记打不打得中都算数。
             if (MobEffects.apply(world, self, rageEffect, ticks, 0) !== null) {
                 rageIgnite(self, perHit, cap, ticks);
+                delete rageConsumed[String(self.ref())];
                 if (body !== null) {
                     WorldFeedback.emit(world, rageScene, 1, body.position(),
                         { moment: "ignite", target: String(self.ref()), cap: cap, perHit: perHit,
-                            plumes: Math.round(14 + cap * 3), bright: 0.6 }, 30);
+                            plumes: 14, bright: 0.5 }, 30);
                     WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), rageIgniteText,
                         [Math.round(ticks / 20)], 26);
                 }
@@ -106,7 +111,7 @@ namespace PokemonSkills {
                             { damage: damageSpec(rageId, "tantrum"), contact: true });
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (scope.valid(victim) && away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                            if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, rageScene, 1, hit.position(),
                             { moment: "strike", target: String(victim.ref()), scale: scale,
@@ -128,15 +133,18 @@ namespace PokemonSkills {
         }
     });
 
-    // 添柴：带着怒火挨了一记外来伤害，就烧旺一档；到顶后火不再续。
+    // 添柴：带着怒火挨了一记**敌对真实攻击**，就烧旺实际涨到的档数；到顶或被拒绝不虚记、不冒火光。
     WorldCombat.on("world_combat:move_rage/stoke", "world_combat:damage_applied", "", function (event) {
         const victim = event.target(), source = event.actor();
         if (victim === null || source === null) return;
         if (String(source.key()) === String(victim.key())) return;
+        const data = JSON.parse(String(event.data()));
+        if (!(data.actual > 0)) return;
+        // 只认 DamageSemantics 判定的攻击：友方、变化招式、中毒／灼烧等 DOT 都不养怒。
+        if (!DamageSemantics.read(data).attack) return;
         const world = event.world();
         if (!world.valid(victim) || !CombatStatus.has(world, victim, "rage")) return;
-        const data = JSON.parse(String(event.data()));
-        if (!(data.actual > 0) || String(data.category) === "Status") return;
+        if (world.allied(source, victim)) return;
         const gain = rageStoke(world, victim);
         if (gain <= 0) return;
         rageRefresh(world, victim);
@@ -145,33 +153,45 @@ namespace PokemonSkills {
         if (body === null) return;
         WorldFeedback.emit(world, rageScene, 1, body.position(),
             { moment: "stoke", target: String(victim.ref()), stages: stages, gain: gain,
-                plumes: Math.round(10 + stages * 5), bright: Math.min(1, 0.35 + stages * 0.1) }, 26);
+                lift: 0.3 + stages * 0.16, plumes: Math.round(10 + stages * 5), bright: Math.min(1, 0.35 + stages * 0.1) }, 26);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), rageStokeText, [gain, stages], 24);
         world.sound("minecraft:entity.hoglin.attack", body.position(), 14, "{}");
     });
 
-    // 出手即熄火：带着怒火提交了任何一手，火焰就灭（涨起来的攻击等级留着）。
+    // 出手即熄火：带着怒火提交了任何一手，火焰收进身体（涨起来的攻击等级留着）。
     WorldCombat.on("world_combat:move_rage/consume", "world_combat:committed", "", function (event) {
         const actor = event.actor();
         if (actor === null) return;
         const world = event.world();
-        if (world.valid(actor) && CombatStatus.has(world, actor, "rage")) CombatStatus.cure(world, actor, "rage");
+        if (!world.valid(actor) || !CombatStatus.has(world, actor, "rage")) return;
+        const stages = rageFedCount(actor);
+        const body = world.observe(actor);
+        if (body !== null) WorldFeedback.emit(world, rageScene, 1, body.position(),
+            { moment: "consume", target: String(actor.ref()), stages: stages,
+                plumes: Math.round(10 + stages * 4), bright: Math.min(1, 0.4 + stages * 0.1) }, 24);
+        rageConsumed[String(actor.ref())] = world.tick();
+        CombatStatus.cure(world, actor, "rage");
     });
 
-    // 火灭（自然到点或被出手清掉）：放一簇余烬，忘掉这一次的火。
+    // 火灭：自然到点才放一簇余烬；被自己出手收进身体的这一次不再散开。忘掉这一次的火。
     WorldCombat.on("world_combat:move_rage/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== rageEffect) return;
         const world = event.world(), actor = event.actor();
-        if (world.valid(actor)) {
+        if (!world.valid(actor)) { rageClear(actor); return; }
+        // 同一刻重燃（下一次开火）时旧效果的移除回执不该清掉新姿态。
+        if (CombatStatus.has(world, actor, "rage")) { delete rageConsumed[String(actor.ref())]; return; }
+        const ref = String(actor.ref()), consumed = rageConsumed[ref];
+        delete rageConsumed[ref];
+        if (!(consumed !== undefined && world.tick() - consumed <= 3)) {
             const body = world.observe(actor);
             if (body !== null) WorldFeedback.emit(world, rageScene, 1, body.position(),
-                { moment: "fade", target: String(actor.ref()), plumes: Math.round(8 + rageFedCount(actor) * 3) }, 22);
+                { moment: "fade", target: ref, plumes: Math.round(8 + rageFedCount(actor) * 3) }, 22);
         }
         rageClear(actor);
     });
 
-    // 还烧着时，每 10 刻冒一次低密度火光，让玩家看出「火还在」。
+    // 还烧着时，每 10 刻冒一次低密度火光，让玩家看出「火还在」；火光高度随实际涨到的档数。
     WorldCombat.on("world_combat:move_rage/aura", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== rageEffect) return;
@@ -179,8 +199,10 @@ namespace PokemonSkills {
         if (!world.valid(actor) || world.tick() % 10 !== 0) return;
         const body = world.observe(actor);
         if (body === null) return;
+        const stages = rageFedCount(actor);
         WorldFeedback.keep(world, "rage:aura:" + String(actor.ref()), rageScene, 1, body.position(),
-            { moment: "aura", target: String(actor.ref()), stages: rageFedCount(actor),
-                plumes: Math.round(6 + rageFedCount(actor) * 3), bright: Math.min(0.9, 0.25 + rageFedCount(actor) * 0.08) }, 12);
+            { moment: "aura", target: String(actor.ref()), stages: stages,
+                lift: 0.25 + stages * 0.16,
+                plumes: Math.round(6 + stages * 3), bright: Math.min(0.9, 0.25 + stages * 0.08) }, 12);
     });
 }

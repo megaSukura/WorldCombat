@@ -79,15 +79,29 @@ public final class ActionInput {
     }
     public static Value validate(String json, Spec spec, double range, ActorHandle actor, CombatHost host, dev.worldcombat.core.runtime.effect.EffectRuntime effects) {
         var value = parse(json, spec);
+        var normalized = new ArrayList<Sample>();
+        boolean changed = false;
         for (var sample : value.samples) {
-            if (sample.point.minus(host.position(actor)).length() > range) throw new ActionRejectedException("out-of-range");
+            Point point = sample.point;
             if (!sample.kind.equals("point")) {
                 var parts = sample.ref.split("/"); var target = host.actorNear(actor, UUID.fromString(parts[0]));
                 if (target == null || !host.sameWorld(actor, target) || target.generation() != Long.parseLong(parts[1])) throw new ActionRejectedException("target-left");
-                if (host.position(target).minus(host.position(actor)).length() > range) throw new ActionRejectedException("out-of-range");
+                if (host.closestPoint(target, host.position(actor)).minus(host.position(actor)).length() > range) throw new ActionRejectedException("out-of-range");
+                if (sample.kind.equals("entity")) point = host.closestPoint(target, point);
                 if (sample.kind.equals("field") && Arrays.stream(effects.query(target, "")).noneMatch(e -> e.id() == sample.effect)) throw new ActionRejectedException("field-left");
             }
+            if (!sample.kind.equals("entity") && point.minus(host.position(actor)).length() > range) throw new ActionRejectedException("out-of-range");
+            changed |= !point.equals(sample.point);
+            normalized.add(new Sample(sample.kind, point, sample.ref, sample.effect));
         }
-        return value;
+        if (!changed) return value;
+        var object = JsonParser.parseString(value.json).getAsJsonObject();
+        for (int i = 0; i < normalized.size(); i++) {
+            if (normalized.get(i).point.equals(value.samples.get(i).point)) continue;
+            var point = normalized.get(i).point; var coordinates = new JsonArray();
+            coordinates.add(point.x()); coordinates.add(point.y()); coordinates.add(point.z());
+            object.getAsJsonArray("samples").get(i).getAsJsonObject().add("point", coordinates);
+        }
+        return new Value(value.token, List.copyOf(normalized), object.toString());
     }
 }

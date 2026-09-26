@@ -2,13 +2,13 @@
  * 铁尾 / irontail 的客户端表现。
  *
  * 一句话：尾巴抡起时钢光沿着将要砸落的线亮起、落点圈在地上打转，随后尾尖砸下，落点炸开一圈钢蓝色冲击与碎石，
- * 砸凹时目标身上再崩一层钢屑。
+ * 砸凹时目标身上再崩一层钢屑。被墙截时整段表现都落在真实接触表面。
  * 色相家族：钢蓝与冷灰（impact_steel／spike 原色、smoke 中性）＋一处近白高光（glowingsparkle）。
  * 拍子：起（charge 抬尾与预告线）→ 击（slam 重砸）→ 收（dent 凹陷；miss 一地碎屑）。
- * 范围：charge 与 slam 都用 path 画出服务端锁定的同一条线，落点圈用同一个 impactRadius 缩放的环；圈多大、
- * 线多长，画面就是那块地。
+ * 范围：charge 与 slam 都用 path 画出服务端锁定并重查过的同一条线，落点圈用圆环形状直接读 `data.radius`（实际落点半径），
+ * 圈多大、线多长，画面就是那块地。
  * 运动：钢光沿预告线向下聚，砸下后碎石朝外飞、环贴地扩散、烟尘慢升。
- * 数：`data.notes`（重砸威力换算）绑定砸击与碎屑数量，`data.scale`（落点半径换算）绑定圆环与烟尘尺度，
+ * 数：`data.notes`（重砸威力换算）绑定砸击与碎屑数量，`data.radius`（实际落点半径）绑定地面圆环，
  * `data.stages`（砸凹等级）绑定凹陷崩屑的数量。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -28,11 +28,11 @@ const IrontailDefinition: ParticleDefinition = {
                     color: 0xBFD4E4, alpha: [0.35, 0], light: "full", maxParticles: 48
                 },
                 {
-                    name: "aim_mark", bind: "point", offset: [0, 0.05, 0],
+                    name: "aim_mark", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 8, shape: { kind: "ring", radius: 0.5 },
+                    rate: 8, shape: { kind: "ring", radius: { data: "radius", fallback: 0.9 } },
                     direction: "outward", speed: [0.01, 0.03],
-                    lifetime: [10, 18], size: [0.3, { data: "scale", fallback: 1 }], sizeMode: "linear",
+                    lifetime: [10, 18], size: [0.3, 0.06], sizeMode: "linear",
                     color: 0x8FA8B8, alpha: [0.4, 0], light: "full", maxParticles: 24
                 },
                 {
@@ -68,12 +68,12 @@ const IrontailDefinition: ParticleDefinition = {
                     color: 0x9FB0C0, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
                 },
                 {
-                    name: "shock", bind: "point", offset: [0, 0.03, 0],
+                    name: "shock", bind: "point", fit: "world", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 3, at: 0, interval: 3 },
-                    shape: { kind: "ring", radius: 0.4 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 0.9 } },
                     direction: "outward", speed: [0.06, 0.2],
-                    lifetime: [12, 20], size: [0.5, { data: "scale", fallback: 1 }], sizeMode: "linear",
+                    lifetime: [12, 20], size: [0.5, 0.1], sizeMode: "linear",
                     color: 0x8FA8B8, alpha: [0.5, 0], light: "full", maxParticles: 30
                 },
                 {
@@ -127,10 +127,10 @@ const IrontailDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "ground_poof", bind: "point", offset: [0, 0.1, 0],
+                    name: "ground_poof", bind: "point", fit: "world", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 18, at: 0 },
-                    shape: { kind: "ring", radius: 0.5 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 0.9 } },
                     direction: "outward", speed: [0.04, 0.14],
                     gravity: 0.05, drag: 0.9,
                     lifetime: [10, 18], size: [0.06, 0.02],

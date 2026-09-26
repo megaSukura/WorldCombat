@@ -9,6 +9,8 @@ import dev.worldcombat.core.world.MinecraftCombat
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.HitResult
 import net.neoforged.neoforge.network.PacketDistributor
 import java.util.IdentityHashMap
 import java.util.UUID
@@ -31,6 +33,8 @@ object CompanionControl {
         var nextApproach = 0L
         var approachGoal: Point? = null
         var lastTargetPoint: Point? = null
+        var pendingTarget: ActorHandle? = null
+        var targetAnchor: Point? = null
         var lastTargetSeen = 0L
         var searchStarted = -1L
         var intent = ""
@@ -232,19 +236,23 @@ object CompanionControl {
                 if (command.partySlot() != s.partySlot || command.actor() != actor.entity() || command.generation() != actor.generation())
                     throw ActionRejectedException("actor-changed")
                 if (!command.direction().length().isFinite() || command.direction().length() < 0.001) throw ActionRejectedException("invalid-target")
-                if (command.operation() == "input-update" || command.operation() == "input-stop") {
+                if (command.operation() == "input-update" || command.operation() == "input-stop" || command.operation() == "input-release") {
                     val token = command.version().toLongOrNull() ?: throw ActionRejectedException("invalid-input")
                     val waiting=s.pending
                     if(waiting!=null && pendingToken(s)==token) {
-                        if(command.operation()=="input-stop") { clearPending(s,combat,"cancelled") }
+                        if(command.operation()!="input-update") { clearPending(s,combat,"cancelled") }
                         else {
                             ActionInput.validate(command.input(),CombatServices.CONTENT.preview(binding(actor,waiting).id).input(),Double.POSITIVE_INFINITY,actor,combat,combat.runtime().effects())
-                            s.pending=ControlCommand(waiting.session(),waiting.sequence(),waiting.epoch(),command.observedTick(),waiting.actor(),waiting.generation(),waiting.partySlot(),"cast",waiting.value(),command.target(),command.point(),command.direction(),waiting.version(),command.input())
+                            val revised=ControlCommand(waiting.session(),waiting.sequence(),waiting.epoch(),command.observedTick(),waiting.actor(),waiting.generation(),waiting.partySlot(),"cast",waiting.value(),command.target(),command.point(),command.direction(),waiting.version(),command.input())
+                            val destination=target(s,revised,combat)
+                            s.body.pendingTarget=destination.entity();s.body.targetAnchor=destination.entity()?.let { combat.bounds(it).anchor(destination.point()) }
+                            s.pending=revised
                         }
                         sync(s,true);return
                     }
-                    combat.runtime().control(actor, player.uuid, token, command.input(), command.operation() == "input-stop")
-                    sync(s, command.operation() == "input-stop"); return
+                    if (command.operation() == "input-release") combat.runtime().releaseInput(actor, player.uuid, token, command.input())
+                    else combat.runtime().control(actor, player.uuid, token, command.input(), command.operation() == "input-stop")
+                    sync(s, command.operation() != "input-update"); return
                 }
                 if (command.operation() != "cast") {
                     clearPending(s,combat,"cancelled")
@@ -265,6 +273,7 @@ object CompanionControl {
                 clearPending(s,combat,"")
                 val now=player.server.tickCount.toLong()
                 s.pending=command
+                s.body.pendingTarget=destination.entity();s.body.targetAnchor=destination.entity()?.let { combat.bounds(it).anchor(destination.point()) }
                 s.body.lastTargetPoint=destination.point();s.body.lastTargetSeen=now
                 s.body.nextApproach=0;s.body.approachGoal=null;s.body.searchStarted=-1
                 advanceApproach(s,command,combat)
@@ -283,9 +292,10 @@ object CompanionControl {
         if(actor.entity()!=command.actor()||actor.generation()!=command.generation())throw ActionRejectedException("actor-changed")
         val binding=binding(actor,command);val definition=binding.definition!!
         val destination=target(s,command,combat)
-        if(destination.entity()!=null && !observed(s,destination.entity(),combat))throw ActionRejectedException("target-not-visible")
+        if(destination.entity()!=null && !observedAt(s,destination.entity(),destination.point(),combat))throw ActionRejectedException("target-not-visible")
         combat.runtime().validateInput(definition.id(),actor,destination,s.player.uuid)
-        if(destination.point().minus(combat.position(actor)).length()>binding.range)throw ActionRejectedException("out-of-range")
+        val rangePoint=destination.entity()?.let { combat.closestPoint(it,combat.position(actor)) }?:destination.point()
+        if(rangePoint.minus(combat.position(actor)).length()>binding.range)throw ActionRejectedException("out-of-range")
         val preview=CombatServices.CONTENT.preview(definition.id())
         if(preview.lineOfSight() && !combat.clear(actor,combat.position(actor),destination.point()))throw ActionRejectedException("path-blocked")
         ActionInput.validate(command.input(),preview.input(),binding.range,actor,combat,combat.runtime().effects())
@@ -310,7 +320,8 @@ object CompanionControl {
                 return
             }
             if(positioning.isEmpty()) {
-                beginManual(s,combat);finish("ready");execute(s,command,combat);return
+                val selected=target(s,command,combat)
+                beginManual(s,combat);finish("ready");execute(s,command,combat,selected);return
             }
             // The rider owns positioning. Preserve the actual range/sight refusal instead of asking
             // native navigation to take over and turning it into an unrelated mounted-control error.
@@ -325,7 +336,8 @@ object CompanionControl {
                 s.body.nextApproach=0;s.body.searchStarted=-1
             }
             val position=combat.position(actor)
-            var goal=target(s,command,combat).point()
+            val destination=target(s,command,combat)
+            var goal=if(positioning=="out-of-range"&&destination.entity()!=null)combat.closestPoint(destination.entity(),position) else destination.point()
             var within=binding.range*.85
             if(positioning=="target-not-visible") {
                 if(now-s.body.lastTargetSeen>60){finish("target-not-visible");return}
@@ -362,6 +374,7 @@ object CompanionControl {
         if(s.body.approaching && actor!=null && !combat.runtime().claimed(actor,"movement"))combat.stopMovement(actor)
         if(s.body.approaching)s.behaviorStage="idle"
         s.pending=null;s.body.approaching=false;s.body.approachGoal=null;s.body.pendingReason=""
+        s.body.pendingTarget=null;s.body.targetAnchor=null
         if(reason.isNotEmpty())s.reason=reason
     }
     private fun beginManual(s:Session,combat:MinecraftCombat) {
@@ -385,7 +398,14 @@ object CompanionControl {
         val entity=combat.resolve(actor)?:return false
         return s.actor==actor || s.actor?.let { combat.visible(it,actor) }==true || s.player.hasLineOfSight(entity)
     }
-    private fun execute(s: Session, command: ControlCommand, combat: MinecraftCombat) {
+    private fun observedAt(s:Session,actor:ActorHandle,point:Point,combat:MinecraftCombat):Boolean {
+        if(observed(s,actor,combat))return true
+        if(combat.resolve(actor)==null)return false
+        val at=combat.closestPoint(actor,point)
+        return s.player.serverLevel().clip(ClipContext(s.player.eyePosition,MinecraftCombat.vec(at),
+            ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,s.player)).type==HitResult.Type.MISS
+    }
+    private fun execute(s: Session, command: ControlCommand, combat: MinecraftCombat, selected: ActionTarget) {
         try {
             val actor = s.actor ?: throw ActionRejectedException("actor-left")
             if (actor.entity() != command.actor() || actor.generation() != command.generation())
@@ -393,7 +413,7 @@ object CompanionControl {
             val binding = binding(actor, command)
             if (command.epoch() != s.epoch)
                 throw ActionRejectedException("content-mismatch")
-            val instance = combat.runtime().start(binding.id, actor, target(s, command, combat), s.player.uuid,
+            val instance = combat.runtime().start(binding.id, actor, selected, s.player.uuid,
                 if (command.input() == "{}") binding.arguments else binding.arguments + (ActionInput.KEY to command.input()))
             s.body.manualActions.add(instance)
             s.body.lastManualAction = instance
@@ -407,8 +427,11 @@ object CompanionControl {
                 ?: throw ActionRejectedException("target-left")
             val handle=combat.bind(entity)
             if(!entity.isAlive)throw ActionRejectedException("target-left")
-            val visible=observed(s,handle,combat);val pending=s.pending===command
-            val point=if(visible)MinecraftCombat.point(entity.boundingBox.center)
+            val pending=s.pending===command
+            if(pending&&s.body.pendingTarget!=handle)throw ActionRejectedException("target-left")
+            val aimed=if(pending&&s.body.targetAnchor!=null)combat.bounds(handle).at(s.body.targetAnchor!!) else combat.closestPoint(handle,command.point())
+            val visible=observedAt(s,handle,aimed,combat)
+            val point=if(visible)aimed
                 else if(pending)s.body.lastTargetPoint?:throw ActionRejectedException("target-not-visible")
                 else throw ActionRejectedException("target-not-visible")
             if(pending&&visible){s.body.lastTargetPoint=point;s.body.lastTargetSeen=s.player.server.tickCount.toLong()}

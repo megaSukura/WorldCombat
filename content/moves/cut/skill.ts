@@ -1,13 +1,16 @@
 /**
  * 居合斩 / cut 的出手方式。
  *
- * 核心念头：压低身子，用一趟最快的贴地横斩把身前一大片扫开——弧里的敌人各挨一记，弧里的草叶一起割掉。
+ * 核心念头：压低身子，用一趟贴地横斩把身前一片扫开——弧里的敌人各挨一记，弧里的低矮植被一起割掉。
  * 它不追单点，形状就是那片扇形；玩家一眼能从弧线读出站哪会被扫到，也能看出自己顺手清出了一条道。
  *
  * 两幕：
  *   起（windup，提交前）：镰刃贴地抬起，弧面方向先亮一线。
  *   斩（sweep，提交后）：朝瞄准方向推出一趟 `sweep` 格、张角 `arc` 度的贴地横斩；弧内的非友方各吃一记
  *       `slash` 接触斩击，同时按 `clearance` 预算割掉弧内的低矮植被（`breakBlock`，植物是消耗品，割掉就没了）。
+ *
+ * 选取：`kind: "aim"` 接受任意阵营实体或世界点，因此可以直接对着一片草地挥刀而不必先锁定敌人；
+ *   刀弧沿实际刀路推进，只有从刃根到该株之间没有硬墙挡住、且 `breakBlock` 真正成功，那株才会被割掉。
  *
  * 与同族分开：连斩在原地越打越快，劈开是一记慢而准的单点重劈，十字剪是两刃合拢的交叉；
  * 居合斩是唯一「一趟覆盖一片、并且真的把世界里的草割掉」的斩击。
@@ -36,24 +39,38 @@ namespace PokemonSkills {
         return points;
     }
 
-    /** 弧内的低矮植被按预算割掉；返回真正割掉的株数。 */
+    /**
+     * 弧内的低矮植被沿几条真实刀路向外逐格采样：刀路上有硬墙挡住、或 `breakBlock` 拒绝破坏的株不落地。
+     * 同一格只处理一次；返回真正割掉的株数。
+     */
     function cutShear(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, sweep: number, arcDegrees: number,
                       feetY: number, budget: number): number {
         if (budget <= 0) return 0;
         const half = Math.max(5, Math.min(180, arcDegrees)) * Math.PI / 360;
         const base = Math.atan2(direction.x(), direction.z());
-        const rings = 3, steps = 7;
+        const baseY = Math.floor(feetY);
+        const from = WorldCombat.point(origin.x(), baseY + 0.15, origin.z());
+        const rays = Math.max(3, Math.min(19, Math.ceil(arcDegrees / 12) + 1));
+        const steps = Math.max(1, Math.ceil(sweep / 0.5));
+        const seen: { [cell: string]: boolean } = Object.create(null);
         let cleared = 0;
-        for (let ring = 1; ring <= rings && cleared < budget; ring++) {
-            const radius = sweep * ring / rings;
-            for (let step = 0; step <= steps && cleared < budget; step++) {
-                const angle = base - half + 2 * half * step / steps;
-                const point = WorldCombat.point(origin.x() + Math.sin(angle) * radius, feetY, origin.z() + Math.cos(angle) * radius);
+        for (let ray = 0; ray <= rays && cleared < budget; ray++) {
+            const angle = base - half + 2 * half * ray / rays;
+            const dx = Math.sin(angle), dz = Math.cos(angle);
+            for (let step = 1; step <= steps && cleared < budget; step++) {
+                const radius = sweep * step / steps;
+                const cellX = Math.floor(origin.x() + dx * radius), cellZ = Math.floor(origin.z() + dz * radius);
+                const key = cellX + "," + baseY + "," + cellZ;
+                if (seen[key]) continue;
+                seen[key] = true;
+                const point = WorldCombat.point(cellX, baseY, cellZ);
                 const block = world.block(point);
                 if (block === null || !cutPlant(block)) continue;
+                const at = WorldCombat.point(cellX + 0.5, baseY + 0.5, cellZ + 0.5);
+                if (!world.clear(from, at)) continue;
                 if (world.breakBlock(point, true) !== "") continue;
                 cleared++;
-                WorldFeedback.emit(world, cutScene, 1, point, { moment: "shear", blades: 6, scale: 1 }, 18);
+                WorldFeedback.emit(world, cutScene, 1, at, { moment: "shear", blades: 6, scale: 1 }, 18);
             }
         }
         return cleared;
@@ -63,9 +80,9 @@ namespace PokemonSkills {
         id: cutId,
         cooldownParameter: "recharge",
         name: "Cut",
-        description: "压低身子推出一趟贴地的宽横斩：身前扇形里的对手各吃一记接触斩击，弧内的矮草、花叶也会被顺手割掉。它是全族最快、最便宜、覆盖面最广的斩击——横扫形态扫得更开、割得更多，狠劈形态收得更窄但每一下更重。",
-        uses: ["贴地横斩，扫倒身前一片", "顺手割掉弧内的草叶", "最便宜最快的一记斩击"],
-        kind: "enemy",
+        description: "压低身子推出一趟贴地的宽横斩：身前扇形里的对手各吃一记接触斩击，弧内的草、蕨、花、作物与树叶也会被顺手割掉。它不追单点——横扫形态扫得更开、割得更多，狠劈形态收得更窄但每一下更重。",
+        uses: ["贴地横斩，扫倒身前一片", "顺手割掉草、蕨、花、作物与树叶", "对着草地也能直接挥刀，不必先锁敌人"],
+        kind: "aim",
         range: 2.4,
         maxRange: 3.0,
         prepare: 4,

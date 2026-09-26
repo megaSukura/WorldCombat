@@ -22,7 +22,7 @@ namespace PokemonSkills {
         name: "Rage Fist",
         description: "把挨过的每一记都记成拳印，出手时一并打回去：每挨一记外来伤害就多一记拳印，每记拳印都变作一记鬼拳。缠斗里拳印一直留着，随时可以甩出这一串——先挨打，再还拳。",
         uses: ["先挨几记攒拳印，再找机会甩出一串鬼拳", "在近身缠斗里越打越多的拳数", "狂暴式用更短的冷却反复抢拳"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.6,
         maxRange: 3.6,
         prepare: 4,
@@ -56,6 +56,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
+            action.releaseTarget();
             const reach = p(ragefistId, "reach", action);
             const gap = Math.max(2, Math.round(p(ragefistId, "gap", action)));
             const power = p(ragefistId, "smash", action);
@@ -66,10 +67,12 @@ namespace PokemonSkills {
             const stored = ragefistStored(world, self);
             const intensity = Math.max(0.6, Math.min(2.6, power / 24));
             const scale = Math.max(0.7, Math.min(1.8, radius / 0.4));
-            const direction = aim(action);
             let thrown = 0, landed = 0, settled = false;
 
-            // 贴上去一小步：目标在射程外时先贴近，避免整串拳全空。
+            // 普通主体第一次真正出手即取得资格：初始化 0 层拳印载体，之后的受击才从这里攒印。
+            ragefistAuthorize(world, self);
+
+            // 先靠步：目标在拳距外时用身体扫掠贴上去，撞到身体或墙即停，不追加超过总距。
             const body = world.observe(self);
             if (body !== null) {
                 const victim = action.target();
@@ -77,21 +80,32 @@ namespace PokemonSkills {
                 if (vb !== null) {
                     const delta = vb.position().minus(body.position());
                     const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-                    const advance = Math.min(reach * 0.6, Math.max(0, flat - radius - 0.3));
-                    if (advance > 0.05) world.displace(self, direction.scale(advance));
+                    const advance = Math.min(reach * 0.6, Math.max(0, flat - reach * 0.9));
+                    if (advance > 0.05 && flat > 0.001)
+                        sweepStep(action, WorldCombat.point(delta.x() / flat, 0, delta.z() / flat).scale(advance), radius);
                 }
             }
 
             sound(action, "cobblemon:move.bulletpunch.target");
 
+            /** 每一拳都重新取准：活着的目标身体优先，其次瞄准点，最后退回动作方向。 */
+            function heading(current: CombatAction, scope: CombatWorld): CombatPoint {
+                const selected = current.target();
+                const target = selected !== null && scope.valid(selected) ? scope.observe(selected) : null;
+                const me = scope.observe(self);
+                const from = me === null ? current.origin() : me.position();
+                const point = target !== null ? target.position() : current.targetPosition();
+                const delta = point.minus(from);
+                return delta.length() < 0.05 ? current.direction() : delta.unit();
+            }
+
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                const here = current.origin();
-                const scope = current.world();
+                const here = current.origin(), scope = current.world();
                 if (landed === 0) {
-                    WorldFeedback.emit(scope, ragefistScene, 1, here.plus(direction.scale(reach * 0.5)),
-                        { moment: "miss", scale: scale }, 18);
+                    WorldFeedback.emit(scope, ragefistScene, 1, here,
+                        { moment: "miss", scale: scale, plumes: plumes, stored: stored }, 18);
                     WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.0, 0)), ragefistMissText, [], 20);
                 } else {
                     WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), ragefistStrikeText, [landed, stored], 24);
@@ -100,26 +114,37 @@ namespace PokemonSkills {
             }
 
             function punch(current: CombatAction, index: number): void {
+                if (settled) return;
                 const scope = current.world();
-                const victim = current.target();
-                // 每一记独立结算：目标还在拳面内（正前方 reach + 半步）就吃一拳，被顶开半步也追得上。
-                if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                    const vb = scope.observe(victim);
-                    if (vb !== null) {
-                        const delta = vb.position().minus(current.origin());
-                        const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-                        if (flat <= reach + 0.6) {
-                            const struck = hurt(current, victim, ragefistId, power,
-                                { damage: damageSpec(ragefistId, "smash"), contact: true, punch: true });
-                            if (struck) {
-                                landed++;
-                                if (scope.valid(victim) && push > 0) scope.displace(victim, direction.scale(push));
-                                WorldFeedback.emit(scope, ragefistScene, 1, vb.position(),
-                                    { moment: "punch", target: String(victim.ref()), index: index + 1, fists: fists,
-                                        stored: stored, plumes: plumes, scale: scale, intensity: intensity }, 16);
-                            }
+                const me = scope.observe(self);
+                if (me === null) { finish(current); return; }
+                const from = me.position(), forward = heading(current, scope);
+                // 3D 短 trace 的首碰点：敌横移、墙后或高度不在拳路，这一拳就空挥，下一拳可重新瞄。
+                const to = from.plus(forward.scale(reach + radius));
+                const contact = current.trace(from, to, radius, true);
+                const victim = contact.hitEntity() ? contact.target() : null;
+                if (victim !== null && scope.valid(victim) && !scope.friendly(victim) && String(victim.ref()) !== String(self.ref())) {
+                    const at = contact.position();
+                    WorldFeedback.emit(scope, ragefistScene, 1, at,
+                        { moment: "punch", target: String(victim.ref()), index: index + 1, fists: fists, stored: stored,
+                            plumes: plumes, scale: scale, intensity: intensity,
+                            direction: [forward.x(), forward.y(), forward.z()],
+                            path: [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]] }, 16);
+                    if (impact(current, contact, ragefistId, power, { damage: damageSpec(ragefistId, "smash"), contact: true, punch: true })) {
+                        landed++;
+                        if (scope.valid(victim)) {
+                            const away = at.minus(from);
+                            if (away.length() > 0.01) scope.hitDisplace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                         }
+                    } else {
+                        WorldFeedback.emit(scope, ragefistScene, 1, at,
+                            { moment: "blocked", target: String(victim.ref()), scale: scale, index: index + 1 }, 14);
                     }
+                } else {
+                    const where = contact.blocked() || contact.hitEntity() ? contact.position() : to;
+                    WorldFeedback.emit(scope, ragefistScene, 1, where,
+                        { moment: "whiff", index: index + 1, fists: fists, plumes: Math.max(4, Math.round(plumes * 0.4)),
+                            scale: scale, blocked: contact.blocked() ? 1 : 0 }, 12);
                 }
                 thrown++;
                 if (thrown >= fists) { finish(current); return; }
@@ -129,24 +154,27 @@ namespace PokemonSkills {
         }
     });
 
-    // 当前有效配招带本招时攒拳；其他域由内容显式授予拳印后启用相同的续积累。
+    // 只有真正拥有/被授权本招的战斗者才攒拳：只认真实攻击（原生攻击或有伤害的 move），
+    // 环境伤害、自身反噬、残伤与纯状态 DOT 都不算；打死这一下不再强建残留拳印。
     WorldCombat.on("world_combat:move_ragefist/mark", "world_combat:damage_applied", "", function (event) {
         const victim = event.target(), source = event.actor();
         if (victim === null || source === null) return;
         if (String(source.key()) === String(victim.key())) return;
         const world = event.world();
-        if (!world.valid(victim)) return;
+        if (!world.valid(victim) || world.allied(source, victim)) return;
         const data = JSON.parse(String(event.data()));
-        if (!(data.actual > 0) || String(data.category) === "Status") return;
+        if (!(data.actual > 0)) return;
+        const facts = DamageSemantics.read(data);
+        if (!facts.attack && String(data.kind) !== "move") return;
+        if (typeof data.after === "number" && data.after <= 0) return;
+        if (!ragefistQualified(world, victim)) return;
         const held = MobEffects.read(world, victim, ragefistCharge);
-        if (String(victim.domain()) === "cobblemon" ? !NativeLoadout.hasEquipped(world, victim, ragefistId) : held === null) return;
         const cap = ragefistCap(ragefistConfig(world, victim));
         const before = held === null ? 0 : held.amplifier();
         const next = Math.min(cap, before + 1);
+        // 到顶也重挂一次，让存续跟着最近一次受击续期；只有真的加了一记才播加印。
         MobEffects.apply(world, victim, ragefistCharge, ragefistStance(world, victim), next);
         if (next <= before) return;
-        // 其他域复用计数；宝可梦沿用本招的拳印表现。
-        if (String(victim.domain()) !== "cobblemon") return;
         const body = world.observe(victim);
         if (body === null) return;
         WorldFeedback.emit(world, ragefistScene, 1, body.position(),
@@ -155,12 +183,12 @@ namespace PokemonSkills {
         world.sound("minecraft:entity.hoglin.angry", body.position(), 12, "{}");
     });
 
-    // 还攒着拳印时，每 12 刻冒一次低密度怒气光，让玩家看出「拳印还在」。
+    // 还攒着拳印时，每 12 刻冒一次低密度怒气光，让玩家看出「拳印还在」；宝可梦与普通授权主体同样可见。
     WorldCombat.on("world_combat:move_ragefist/aura", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== ragefistCharge || event.world().tick() % 12 !== 0) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return;
+        if (!world.valid(actor)) return;
         const effect = MobEffects.read(world, actor, ragefistCharge);
         const body = world.observe(actor);
         if (effect === null || body === null) return;
@@ -174,7 +202,7 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== ragefistCharge) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return;
+        if (!world.valid(actor)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, ragefistScene, 1, body.position(),

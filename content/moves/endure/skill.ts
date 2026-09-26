@@ -1,8 +1,9 @@
 /**
  * 挺住 / endure 的出手方式。
  *
- * 念头的形状：咬紧牙关站住（brace），窗口内任何把你打到倒下的攻击都被截停在 1 HP（save），用光次数或时间走完，
+ * 念头的形状：咬紧牙关（brace），窗口内任何把你打到倒下的攻击都被截停在 1 HP（save），用光次数或时间走完，
  * 坚持纹散去；屹立取向下，用掉次数后还会短暂力竭（spent → 定身）。三幕：咬牙 → 承击 → 力竭／到期。
+ * 窗口不额外定身：普通伤害照常承受，可以边走边挺；只有真正的一记 save 才闪一下，也没有额外的无敌期。
  * 承击复用共享 GuardEffects 的 survive 模式：不减免普通伤害，只在致命一击处截断。
  */
 namespace PokemonSkills {
@@ -36,8 +37,8 @@ namespace PokemonSkills {
             const custom: any = state;
             const lethal = Math.max(0.05, Math.min(1, amount / Math.max(1, body.maxHealth())));
             WorldFeedback.emit(world, endureScene, 1, body.position(), { moment: "save", target: String(target.ref()),
-                lethal: lethal, lethalCount: Math.max(6, Math.round(lethal * 30)), intensity: endureIntensity(state.charges, custom.initial || 1), charges: state.charges }, 28);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), endureSaveText, [], 30);
+                lethalCount: Math.max(6, Math.round(lethal * 30)), intensity: endureIntensity(state.charges, custom.initial || 1), charges: state.charges }, 28);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), endureSaveText, [state.charges], 30);
             world.sound("minecraft:item.totem.use", body.position(), 16, "{}");
             if (state.charges <= 0) {
                 WorldFeedback.emit(world, endureScene, 1, body.position(), { moment: "spent", target: String(target.ref()) }, 24);
@@ -96,7 +97,6 @@ namespace PokemonSkills {
             const guard: any = { rule: EndureRule, mode: "survive", capacity: 0, fraction: 0,
                 minimumHealth: 1, charges: charges, linkRange: 0, initial: charges, scramble: scramble, grit: p("endure", "grit", action) };
             GuardEffects.apply(world, actor, guard, window);
-            if (!scramble) world.effect("world_combat:rooted", actor, "{}", window);
             sound(action, "minecraft:entity.warden.heartbeat");
             action.present("world_combat:move_endure:brace2", endureScene, 1, action.origin(), JSON.stringify({ moment: "brace", intensity: 1 }));
             done(action);

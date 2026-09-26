@@ -17,6 +17,12 @@
 
 状态随所属过程回收时使用 [MobEffects 的显式绑定](../../content/mechanisms/mob-effects.ts)；同一载体的多来源由 [StatusContributions](../../content/mechanisms/status-contributions.ts)管理归属，具体聚合由内容决定。受击后的反应可用 [EffectReactions](../../content/mechanisms/effect-reactions.ts)回到既有托管效果的合法来源。独立机器工作使用 [MachineWork](../../content/mechanisms/machine-work.ts)，能力资格与原生招式位分开。
 
+转移与精确替换使用共享层的条件提交：原生状态走 `MobEffects.transferOne/set`，默认主异常走 `CombatStatus.transferMajor`，能力等级走 `NativeEffects.transferStage`。这些入口保留各自的许可、旧状态比较和归属；具体转换、预算与代价由内容决定。新增多状态操作需要同时提交时，世界 SDK 提供 `compareEffectStates`，提交后的通知属于后续事件。
+
+伤害附带的推退使用世界 SDK 的 `knockback/hitImpulse/hitDisplace`，由原生击退事件、抗性和权限决定实际运动。身体接触、薄扇与体积区域可复用 [WorldGeometry](../../content/mechanisms/world-geometry.ts) 的真实身体相交接口；执行和客户端表现共用当次实际端点、范围或顶点。独立余波由其托管效果持有，使用 [WorldFeedback](../../content/mechanisms/world-feedback.ts) 的效果归属入口清理表现。
+
+AI 对已有交战、指挥或记忆引用的对象，可通过 [WorldMethods.observeKnown](../../content/behavior/world-methods.ts) 显式取得当帧事实，保留真实可见性，并让普通任务按同一引用执行。默认附近感知保持独立；已知对象是否仍值得追踪、弧线是否可达等判断由具体行为决定。
+
 以现场为条件的数值，在没有目标或世界的详情页保留“需要现场”的解释。体重沿 Cobblemon 原生单位（百克）读取；正文中的秒、百分比、距离等由参数的显示单位表达。音效以资源包 `sounds.json` 身份为准，也支持未登记在服务端注册表中的声音。
 
 动作提交传入该招设计的原始冷却；[ActionCooldowns](../../content/mechanisms/action-cooldowns.ts)在最终提交时统一应用急速与已登记的修饰，同一求值供详情使用。自定义公式与独立 `run` 也走这个入口。`cooldownParameter` 可声明专用于冷却的参数名，让原有正文绑定展示最终数值；效果持续时间继续使用自己的参数，最终冷却使用保留绑定 `cooldown`。新的冷却规则向共享贡献表登记，执行与说明同时获得其结果。

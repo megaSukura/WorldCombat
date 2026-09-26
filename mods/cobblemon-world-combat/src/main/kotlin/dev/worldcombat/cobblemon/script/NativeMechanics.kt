@@ -60,9 +60,10 @@ object NativeMechanics {
         val pokemon = pokemon(world, actor); require(count in 1..64)
         val before = pokemon.heldItem()
         if (heldKey(pokemon) != expected || before.isEmpty || before.count < count) return false
-        val remaining = before.copy().also { it.shrink(count) }
-        pokemon.swapHeldItem(remaining, decrement = false)
-        return ItemStack.matches(pokemon.heldItem(), remaining)
+        val held = world.equipment(actor).firstOrNull { it.provider() == "cobblemon" && it.slot() == "held" && it.index() == 0 } ?: return false
+        val snapshot = held.stack().serialized() ?: return false
+        val receipt = world.equipmentConsumeResult(actor, "cobblemon", "held", 0, snapshot, count)
+        return com.google.gson.JsonParser.parseString(receipt).asJsonObject.get("ok").asBoolean
     }
     fun pp(world: WorldAccess, actor: ActorHandle, slot: Int, expectedMove: String, expectedPp: Int, value: Int): Boolean {
         val pokemon = pokemon(world, actor); require(slot in 0..3)

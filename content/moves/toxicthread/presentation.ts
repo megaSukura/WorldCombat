@@ -69,7 +69,7 @@ const ToxicThreadDefinition: ParticleDefinition = {
                 {
                     name: "latch_core", bind: "target", height: 0.65,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_poison",
-                    burst: { count: { data: "threads", fallback: 18 }, interval: 3, repeats: 2 }, shape: { kind: "sphere", radius: 0.24 },
+                    burst: { count: { data: "poisonTufts", fallback: 18 }, interval: 3, repeats: 2 }, shape: { kind: "sphere", radius: 0.24 },
                     direction: "outward", speed: [0.05, 0.18], spread: 24,
                     lifetime: [8, 14], size: [0.26, 0.04], sizeMode: "index",
                     color: 0x8E44AD, alpha: [0.95, 0], light: "full", bloom: 0.2, maxParticles: 60
@@ -77,10 +77,40 @@ const ToxicThreadDefinition: ParticleDefinition = {
                 {
                     name: "latch_beads", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    burst: { count: 14 }, shape: { kind: "ring", radius: 0.32 },
+                    burst: { count: { data: "poisonTufts", fallback: 14 } }, shape: { kind: "ring", radius: 0.32 },
                     direction: "outward", speed: [0.03, 0.1], gravity: 0.05,
                     lifetime: [12, 20], size: [0.08, 0.02],
                     color: 0xE9DDF3, alpha: [0.6, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "latch_pull", bind: "path", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    burst: { count: { data: "drag", fallback: 0 } }, shape: { kind: "polyline" },
+                    speed: [0.0, 0.02], spin: 10,
+                    lifetime: [6, 12], size: [0.07, 0.01],
+                    color: 0x6C3483, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        slack: {
+            duration: 22,
+            exit: { drain: 20 },
+            emitters: [
+                {
+                    name: "slack_line", bind: "path", height: 0.8,
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    rate: 12, shape: { kind: "polyline" },
+                    speed: [0.0, 0.01], spin: 8,
+                    lifetime: [8, 14], size: [0.11, 0.02],
+                    color: 0x6C3483, alpha: [0.5, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "slack_drip", bind: "target", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    rate: 4, shape: { kind: "circle", radius: 0.2 },
+                    direction: "down", speed: [0.01, 0.03], gravity: 0.08,
+                    lifetime: [10, 18], size: [0.05, 0.01],
+                    color: 0x6C3483, alpha: [0.4, 0], light: "world", maxParticles: 14
                 }
             ]
         },

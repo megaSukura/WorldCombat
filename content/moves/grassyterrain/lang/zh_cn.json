@@ -25,11 +25,11 @@
   "worldcombat.skill.grassyterrain.preference.ai.maxChase": "种草距离",
   "worldcombat.skill.grassyterrain.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑青草场地；调小只在贴身时种草，调大愿意提前布置。",
   "worldcombat.skill.grassyterrain.preference.ai.advance": "把草地压向对手",
-  "worldcombat.skill.grassyterrain.preference.ai.advance.help": "开启后把草种在自己与威胁之间，让交战区落在草上；关闭则种在脚下先托住自己。",
+  "worldcombat.skill.grassyterrain.preference.ai.advance.help": "开启后把草往威胁方向压几步；关闭（默认）则种在脚下，先托住自己与身边的伤者。",
   "worldcombat.skill.grassyterrain.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.grassyterrain.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去种草。",
   "world_combat.move.grassyterrain.text.heal": "草根滋养 %1$s",
   "world_combat.move.grassyterrain.text.growth": "幼苗生长",
   "effect.world_combat.grassyterrain_ground": "青草托举",
-  "worldcombat.skill.grassyterrain.description.field": "站在草地上的贴地活体获得青草托举：草属性招式威力 ×1.3，自己使用地震或重踏时威力减半；离地的不算，走上草地才有、离开即失去。"
+  "worldcombat.skill.grassyterrain.description.field": "站在草地上的贴地活体会被草根护住：它自己的草属性招式威力 ×1.3；而它受到的地震或重踏威力减半（减伤看受击者是否站在草上，施法者站在草里朝场外目标放震招不受影响）。离地的不算，走上草地才有、离开即失去。"
 }

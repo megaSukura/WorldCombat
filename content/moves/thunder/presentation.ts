@@ -42,18 +42,18 @@ const ThunderDefinition: ParticleDefinition = {
                 {
                     name: "target_ring", bind: "point", offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    rate: 14, shape: { kind: "ring", radius: 1, rotation: [90, 0, 0] },
+                    rate: 14, shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.02, 0.06],
-                    lifetime: [10, 18], size: [0.32, 0.14], sizeMode: "sin",
+                    lifetime: [10, 18], size: [0.14, 0.06], sizeMode: "sin",
                     color: 0xBEEBFF, alpha: [0.35, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "target_spark", bind: "point", offset: [0, 0.2, 0],
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    rate: 10, shape: { kind: "ring", radius: 1, rotation: [90, 0, 0] },
-                    direction: "up", speed: [0.02, 0.08],
-                    lifetime: [6, 12], size: [0.1, 0.03],
-                    color: 0xE8FBFF, alpha: [0.4, 0], light: "full", maxParticles: 40
+                    name: "target_mark", bind: "point", offset: [0, 2.0, 0],
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    rate: 8, shape: { kind: "box", size: [0.12, 4, 0.12] },
+                    direction: "down", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.12, 0.03],
+                    color: 0xE8FBFF, alpha: [0.4, 0], light: "full", maxParticles: 50
                 }
             ]
         },
@@ -115,7 +115,7 @@ const ThunderDefinition: ParticleDefinition = {
                 {
                     name: "numb", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    burst: { count: 24 },
+                    burst: { count: { data: "sparks", fallback: 0 } },
                     shape: { kind: "sphere", radius: 0.44 },
                     direction: "outward", speed: [0.05, 0.22],
                     lifetime: [8, 15], size: [0.18, 0.05],

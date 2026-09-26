@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.hex.summary": "把诅咒贴地送到对手脚下，画出一圈结界，一波接一波从圈里向上涌出鬼影尖刺。结界内的每个敌人都被刺中；谁身上带着任意异常（灼伤、麻痹、中毒／剧毒、冰冻、睡眠），谁那一下翻倍。",
+  "worldcombat.skill.hex.summary": "把诅咒送到起手锁定的那一点，画出一圈固定结界，一波接一波从圈里向上涌出鬼影尖刺。结界不追人；结界内的每个敌人都被刺中；谁身上带着任意异常（灼伤、麻痹、中毒／剧毒、冰冻、睡眠），谁那一下翻倍。",
   "worldcombat.skill.hex.description.0": "结界里每一波涌刺打在每个站在圈内的敌人身上造成约 %1$s 点特殊伤害；目标带着任意异常（灼伤、麻痹、中毒／剧毒、冰冻、睡眠）时那一波翻倍。",
-  "worldcombat.skill.hex.description.1": "诅咒最多能爬 %1$s 格，追到目标脚下后画出半径 %2$s 格的结界；爬行速度 %3$s，抵达后涌 %4$s 波刺、每波相隔 %5$s。",
+  "worldcombat.skill.hex.description.1": "诅咒最远送到 %1$s 格外锁定的落点，抵达后画出半径 %2$s 格的固定结界；投射速度 %3$s，抵达后涌 %4$s 波刺、每波相隔 %5$s。",
   "worldcombat.skill.hex.description.2": "每一波都对仍站在结界里的每个敌人各结算一次，并按目标当时的异常重新判断翻倍；中途离开圈就不再被刺中，之后走进圈也会挨刺。",
   "worldcombat.skill.hex.use.0": "在对手脚下布一片诅咒结界",
   "worldcombat.skill.hex.use.1": "对带异常者补刀",
@@ -9,7 +9,7 @@
   "worldcombat.skill.hex.value.curse": "咒力",
   "worldcombat.skill.hex.value.blight": "祸不单行",
   "worldcombat.skill.hex.value.sigil": "结界半径",
-  "worldcombat.skill.hex.value.crawl": "诅咒爬行速度",
+  "worldcombat.skill.hex.value.crawl": "诅咒投射速度",
   "worldcombat.skill.hex.value.waves": "涌刺波数",
   "worldcombat.skill.hex.value.interval": "波间隔",
   "worldcombat.skill.hex.value.spike": "涌刺高度",
@@ -31,5 +31,5 @@
   "world_combat.move.hex.text.blight": "祸不单行！",
   "world_combat.move.hex.text.strike": "被鬼影刺中",
   "world_combat.move.hex.text.miss": "诅咒落空",
-  "worldcombat.skill.hex.description.miss": "诅咒只认施放时选中的目标：若它在诅咒抵达前倒下或已不在场，结界落空。"
+  "worldcombat.skill.hex.description.miss": "诅咒只落在施放时锁定的起手瞄点：若那里没有可承载的地面、或投射被墙截断又无处可落，结界就散去；被选目标跑开不会拖着结界追。"
 }

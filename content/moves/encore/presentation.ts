@@ -140,6 +140,36 @@ const EncoreDefinition: ParticleDefinition = {
                 }
             ]
         },
+        reject: {
+            duration: 22,
+            exit: { stop: 9, drain: 18 },
+            emitters: [
+                {
+                    name: "reject_slash", bind: "path", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    shape: { kind: "polyline" },
+                    rate: 70, direction: "shape", speed: [0.02, 0.08], trail: { minDistance: 0.06 },
+                    lifetime: [6, 12], size: [0.14, 0.03],
+                    color: 0xD85A5A, alpha: [0.9, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "reject_notes", bind: "target", offset: [0, 1.0, 0], height: 0.24,
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "down", speed: [0.03, 0.1], gravity: 0.03, drag: 0.92,
+                    lifetime: [12, 22], size: [0.16, 0.02],
+                    color: 0xD85A5A, alpha: [0.7, 0], light: "world", maxParticles: 16
+                },
+                {
+                    name: "reject_puff", bind: "target", offset: [0, 0.9, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.28 },
+                    direction: "up", speed: [0.01, 0.04],
+                    lifetime: [12, 22], size: [0.2, 0.3],
+                    color: 0x6B5426, alpha: [0.28, 0], light: "world", maxParticles: 14
+                }
+            ]
+        },
         miss: {
             duration: 18,
             exit: { stop: 6, drain: 16 },

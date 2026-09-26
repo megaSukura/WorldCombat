@@ -14,6 +14,7 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
+            if ((context.facts.nearby as CompanionBehavior.Entity[]).some(other=>!other.friendly&&other.health>0&&other.visible&&CompanionBehavior.distance(CompanionBehavior.source(context).point,other.point)<2.5))return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 20);
         },
@@ -28,6 +29,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.ai<boolean>(capability, "bulkFirst", true) && CompanionBehavior.ratio(target) > 0.6) score += 10;
             if (distance < CompanionBehavior.ai<number>(capability, "minRange", 6)) score -= 14;
             else if (distance > capability.data.range * 0.6) score += 8;
+            const velocity=CompanionBehavior.velocity(context,target),pace=velocity?Math.sqrt(velocity[0]*velocity[0]+velocity[2]*velocity[2]):0;
+            score += pace<.08 || (target.width||.6)>1.8 ? 10 : -6;
             return score;
         }
     });

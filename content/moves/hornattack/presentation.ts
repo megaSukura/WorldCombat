@@ -1,13 +1,13 @@
 /**
  * 角撞 / hornattack 的客户端表现。
  *
- * 一句话：低头刨地、角尖压低聚起一点土色亮光，随后一条土黄窄带沿正面顶出，命中处炸开一般系冲击；
- * 角不松，目标被贴着地面推走，脚下拖出一条滚滚尘土。
+ * 一句话：低头刨地、角尖压低聚起一点土色亮光，随后一条土黄短带沿正面顶出，命中处炸开一般系冲击；
+ * 角不松，先看目标被贴地推走、本体再跟进，两具身体脚下各拖出一条滚滚尘土，推不动就收角。
  * 色相家族：土黄（0xC9A06A）作主体、暖棕（0x9A7A4E）作细节、近白（0xF6ECD0）作强调；中性尘屑收尾。
- * 拍子：起 brace（低头刨地）→ 顶 gore（窄带顶出）与 impact（扎实）→ 推 push（一路拖尘）／空 miss。
- * 范围：gore 的窄带用 `data.path`（与服务端 lane 同一组顶点）填成一条窄带，玩家一眼看出只有这条线会被顶到。
- * 运动：窄带沿 `data.direction` 一次顶出；push 的尘土从目标脚边向后滚、沿推走方向持续拖出。
- * 数：尘土量绑 `data.dust`（体重换算），命中强度绑 `data.intensity`（本击威力 / 62），窄带体积绑 `data.scale`。
+ * 拍子：起 brace（低头刨地）→ 顶 gore（短带顶出）与 impact（扎实）→ 推 pushFoe／pushBody（两实体真实路径）／空 miss。
+ * 范围：gore 的短带用 `data.path`（与服务端原生扫掠的起止两点一致）画成一条短线，玩家一眼看出身体趟到哪。
+ * 运动：pushFoe 从目标脚边、pushBody 从本体脚下沿真实推走方向拖尘，`data.moved` 是本刻实际位移。
+ * 数：尘土量绑 `data.dust`（体重换算），命中强度绑 `data.intensity`（本击威力 / 62），短带体积绑 `data.scale`。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const HornattackDefinition: ParticleDefinition = {
@@ -42,7 +42,7 @@ const HornattackDefinition: ParticleDefinition = {
                 {
                     name: "lane", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/dashburst",
-                    shape: { kind: "polygon" }, burst: { count: { data: "dust", fallback: 14 } },
+                    shape: { kind: "polyline" }, rate: { data: "dust", fallback: 14 },
                     direction: "shape", orient: "direction", speed: [0.03, 0.12], spread: 12,
                     lifetime: [6, 11], size: [0.38, 0.06], sizeMode: "index",
                     color: 0xF6ECD0, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 80
@@ -81,22 +81,22 @@ const HornattackDefinition: ParticleDefinition = {
             ]
         },
         push: {
-            duration: 12,
+            duration: 14,
             exit: { stop: 5, drain: 9 },
             emitters: [
                 {
-                    name: "drag", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    name: "drag", bind: "point", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 10, at: 0 }, shape: { kind: "line", length: 0.5 },
-                    direction: "away", speed: [0.05, 0.16], gravity: 0.06, drag: 0.92,
+                    rate: { data: "dust", fallback: 12 }, shape: { kind: "line", length: 0.5 },
+                    direction: "outward", speed: [0.05, 0.16], gravity: 0.06, drag: 0.92,
                     lifetime: [8, 15], size: [0.09, 0.02],
                     color: 0xC9A06A, alpha: [0.5, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "trail", bind: "target", offset: [0, 0.4, 0], height: 0.4,
+                    name: "trail", bind: "point", offset: [0, 0.4, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: 6, at: 0 }, shape: { kind: "line", length: 0.4 },
-                    direction: "away", speed: [0.06, 0.18],
+                    rate: 8, shape: { kind: "line", length: 0.4 },
+                    direction: "outward", speed: [{ data: "moved", fallback: 0.06 }, { data: "moved", fallback: 0.18 }],
                     lifetime: [5, 9], size: [0.16, 0.03], sizeMode: "index",
                     color: 0xF6ECD0, alpha: [0.55, 0], light: "world", maxParticles: 24
                 }
@@ -107,7 +107,7 @@ const HornattackDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "air", bind: "source", offset: [0, 0.4, 0.5], height: 0.4,
+                    name: "air", bind: "point", offset: [0, 0.4, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dust", fallback: 10 } },
                     shape: { kind: "cone", radius: 0.34, angleDegrees: 18 },

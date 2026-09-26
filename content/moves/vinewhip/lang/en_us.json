@@ -3,7 +3,7 @@
   "worldcombat.skill.vinewhip.use.0": "A quick, cheap strike at close range",
   "worldcombat.skill.vinewhip.use.1": "Land a second flick before the foe can step aside",
   "worldcombat.skill.vinewhip.use.2": "Answer a foe attacking you with a quick flick",
-  "worldcombat.skill.vinewhip.description.0": "A narrow line is flicked at the target, dealing about %1$s contact damage to each non-ally caught in it; it reaches %2$s blocks and covers %3$s blocks to each side of the line, and one flick hits at most 2 enemies, each only once.",
+  "worldcombat.skill.vinewhip.description.0": "A three-dimensional narrow line is flicked in the aimed direction (aim freely up or down, and a misaligned line hits nothing), dealing about %1$s contact damage to each non-ally caught in it; it reaches %2$s blocks and covers %3$s blocks to each side of the line, stops at a real wall or its full length without piercing, and one flick hits at most 2 enemies, each only once.",
   "worldcombat.skill.vinewhip.description.1": "One action flicks %1$s times, %2$s seconds apart in the double form; the same target can be caught by both flicks.",
   "worldcombat.skill.vinewhip.double.on": "Double form: two quick flicks in one action — slightly more total damage and easier to land the second, but a longer recovery and cooldown and a lighter single hit.",
   "worldcombat.skill.vinewhip.double.off": "Single form: one crisper, heavier flick with a shorter recovery.",

@@ -2,20 +2,22 @@
  * 浊流 / muddywater 的出手方式。
  *
  * 核心念头：**一道贴地向前推的浑浊泥浪**。它不快，但很阔：泥水从脚下整片漫出去，一层层扫过身前，
- *   把扇形里所有敌人的视线一起糊住；推完，扫过的地面淤上一层泥。它区别于同族水招的地方就是这条
+ *   把扇形里所有敌人的视线一起糊住；推完，扫过的地面只留下短泥膜。它区别于同族水招的地方就是这条
  *   「宽而低、单向推进的泥面」——冲浪是整圈水漫、水枪是细线、泡沫光线是黏人的泡沫球。
  *
  * 三幕：
  *   起（windup，提交前）：口边与脚边涌起一圈浑水、泥泡向内收，只播预告（可被打断）。
  *   漫（surge → hit）：提交后泥浪从脚下按 `sweep` 步向 `reach` 推进；每一步扫过一道扇环，环内每个
- *       非友方（最多 `maxTargets` 个）各吃一次 `surge`，有 `murkChance` 概率掉 `murkStages` 级命中并
- *       带上共享身份 `world_combat:status/murky`；泥浪会沿准线越过目标继续铺。
- *   淤（silt / miss）：浪推完，扫过的地面租借成 `minecraft:mud`（`siltTicks` 后原方块回来）；
+ *       非友方（最多 `maxTargets` 个）各吃一次 `surge`，且必须与脚下通视——挡住的片段到不了目标。
+ *       有 `murkChance` 概率掉 `murkStages` 级命中并带上共享身份 `world_combat:status/murky`；
+ *       泥浪会沿准线越过目标继续铺，横移或退远可以躲开后段。
+ *   淤（silt / miss）：浪推完，扫过的地面只留下 `siltTicks` 之内的短泥膜粒子，到期自然散去；
  *       一个人都没扫到时播一个空浪。
  *
  * 与同族分开：唯一一条**贴地、单向、按步推进的宽泥浪**；画面上是低矮的褐色水墙向前抹，不是整圈、不是细线、
- *   不是会浮起的泡。命中下降走共享能力等级（NativeEffects.boost 的 accuracy）落到原生命中等级，
- *   同时挂真实 MobEffect（身份 murky + 伞身份 aim_impaired），对其他战斗者落到攻击变弱。
+ *   不是会浮起的泡。选取是 `kind: "aim"`——方向或世界点都能放，目标为 null 时沿当前朝向照常推浪。
+ *   命中下降走共享能力等级（NativeEffects.boost 的 accuracy）落到原生命中等级，同时挂真实 MobEffect
+ *   （身份 murky + 伞身份 aim_impaired），对其他战斗者落到攻击变弱。
  */
 namespace PokemonSkills {
     /** 把瞄准方向压到水平面；泥浪沿地面推出去。 */
@@ -41,49 +43,51 @@ namespace PokemonSkills {
         return vertices;
     }
 
-    /** 泥可以淤住的表层：软土、沙砾与非空气的硬地面都换成泥；水、岩浆、基岩不碰。 */
-    function muddywaterSoil(id: string): boolean {
-        if (id === "" || id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") return false;
-        if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") return false;
-        return id !== "minecraft:mud";
-    }
+    /**
+     * 泥水糊眼的托管载体：把「目标头顶持续下坠的泥点」绑在真实状态效果的生命周期上，
+     * 自然到期、牛奶／`/effect clear` 提前拿掉都随它一起停，不靠固定时长的 keep。
+     */
+    const muddywaterLingerMark = "world_combat:move_muddywater/linger_mark";
 
-    /** 在扇形扫过的地面上把最上面那层实心方块租借成泥；到期原方块回来，活物站在格子里时等它走开再合上。 */
-    function muddywaterSilt(world: CombatWorld, origin: CombatPoint, heading: CombatPoint, reach: number, degrees: number, ticks: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const base = Math.atan2(heading.z(), heading.x()), half = degrees * Math.PI / 360;
-        const r = Math.ceil(reach), bx = Math.floor(origin.x()), by = Math.floor(origin.y()), bz = Math.floor(origin.z());
-        for (let dx = -r; dx <= r && cells.length < 90; dx++) for (let dz = -r; dz <= r && cells.length < 90; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > reach || distance < 0.6) continue;
-            const angle = Math.atan2(dz, dx), delta = Math.abs(angle - base);
-            if (Math.min(delta, Math.PI * 2 - delta) > half) continue;
-            const key = dx + ":" + dz;
-            if (seen[key]) continue;
-            seen[key] = true;
-            const x = bx + dx, z = bz + dz;
-            for (let dy = 1; dy >= -3; dy--) {
-                const y = by + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (muddywaterSoil(id)) cells.push({ x: x, y: y, z: z, block: "minecraft:mud" });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
+    function muddywaterLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = world.mobEffect(target, muddywaterEffect);
+        if (carrier === null) { effect.end(); return; }
+        const state = JSON.parse(effect.state() || "{}");
+        const density = typeof state.density === "number" && state.density > 0 ? Math.round(state.density) : 6;
+        // 本载体就是本 source 创建的托管效果，presentOn 随它一起清理。
+        WorldFeedback.onEffect(world, effect.id(), "murk", muddywaterScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()), density: density });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
     }
+    WorldCombat.effect(muddywaterLingerMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid muddywater linger mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(muddywaterLingerMark, "start", muddywaterLingerWatch);
+    WorldCombat.effectHandler(muddywaterLingerMark, "watch", muddywaterLingerWatch);
+    WorldCombat.effectHandler(muddywaterLingerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 状态被牛奶／/effect clear 提前拿掉时，立即撤掉托管表现，不等它自己的下一次巡检。
+    WorldCombat.on("world_combat:move_muddywater/linger-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== muddywaterEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, muddywaterLingerMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
 
     define({
         id: muddywaterId,
         cooldownParameter: "recharge",
         name: "Muddy Water",
-        description: "从脚下向前推出一道贴地的浑浊泥浪：泥水一层层漫过身前大片，扇形里的敌人各挨一记，有概率被泥水糊住眼睛、掉命中，还会沿准线越过目标继续铺；推完地面淤上一层泥。淤积式铺得更宽更久更黏，急流式更重更快更远。",
-        uses: ["一次糊住身前扇形里的一排敌人", "削掉对手的命中，为对手的下一轮攻击留出空门", "在泥地上留下痕迹，标记这招扫过的地方"],
-        kind: "enemy",
+        description: "从脚下向前推出一道贴地的浑浊泥浪：泥水一层层漫过身前大片，扇形里的敌人各挨一记，有概率被泥水糊住眼睛、掉命中，还会沿准线越过目标继续铺；掩体挡住的片段到不了目标，横移或退远能躲开后段。推完地面只留下一层短泥膜。淤积式铺得更宽更久更黏，急流式更重更快更远。",
+        uses: ["一次糊住身前扇形里的一排敌人", "削掉对手的命中，为对手的下一轮攻击留出空门", "沿地面推进，隔着障碍打到正对着的那排敌人"],
+        kind: "aim",
         range: 11,
         maxRange: 16,
         prepare: 12,
@@ -129,10 +133,10 @@ namespace PokemonSkills {
             const murk = Math.max(40, Math.round(p(muddywaterId, "murkTicks", action)));
             const cap = Math.max(1, Math.round(p(muddywaterId, "maxTargets", action)));
             const drops = Math.max(10, Math.round(p(muddywaterId, "drops", action)));
-            const siltTicks = Math.max(40, Math.round(p(muddywaterId, "siltTicks", action)));
-            const silted = !!(config && config.silted);
+            const filmTicks = Math.max(12, Math.round(p(muddywaterId, "siltTicks", action)));
             const scale = Math.max(0.5, Math.min(2.2, reach / 11));
             const intensity = Math.max(0.5, Math.min(2.2, power / 90));
+            const scenes = WorldFeedback.actionScenes(muddywaterScene);
             const struck: { [ref: string]: boolean } = {};
             let step = 0, hits = 0, settled = false;
 
@@ -140,13 +144,14 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const placed = muddywaterSilt(scope, origin, heading, reach, span, siltTicks);
+                // 独立余波：短泥膜只按自己的寿命停留，不替换任何方块。
+                const film = Math.max(6, Math.round(drops * 0.5));
                 WorldFeedback.emit(scope, muddywaterScene, 1, origin,
-                    { moment: hits > 0 ? "silt" : "miss", radius: reach, span: span, cells: placed, drops: drops, scale: scale,
-                        path: muddywaterBand(origin, heading, 0, reach, span) }, 30);
+                    { moment: hits > 0 ? "silt" : "miss", film: film, drops: drops, scale: scale,
+                        path: muddywaterBand(origin, heading, 0, reach, span) }, filmTicks);
                 if (hits === 0)
                     WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 0.9, 0)), muddywaterMissText, [], 24);
-                done(current);
+                scenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
@@ -162,6 +167,8 @@ namespace PokemonSkills {
                 WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === String(actor.ref()) || struck[ref] || hits >= cap) return;
+                    // 障碍逐段裁切：被挡住的切片不再往后铺，目标也吃不到这一记。
+                    if (!scope.clear(origin, facts.position())) return;
                     struck[ref] = true;
                     if (!hurt(current, enemy, muddywaterId, power, { damage: damageSpec(muddywaterId, "surge") })) return;
                     hits++;
@@ -170,27 +177,28 @@ namespace PokemonSkills {
                         murked = true;
                         NativeEffects.boost(scope, enemy, "accuracy", -stages);
                         MobEffects.apply(scope, enemy, muddywaterEffect, murk, 0);
+                        if (scope.effects(enemy, muddywaterLingerMark).length === 0)
+                            scope.effect(muddywaterLingerMark, enemy,
+                                JSON.stringify({ density: Math.max(4, Math.min(10, Math.round(drops / 6))) }),
+                                Math.max(1, Math.min(2400, murk)));
                     }
                     WorldFeedback.emit(scope, muddywaterScene, 1, facts.position(),
-                        { moment: "hit", target: ref, stages: stages, murked: murked ? 1 : 0,
-                            drops: drops, intensity: intensity, scale: scale }, 26);
+                        { moment: "hit", target: ref, drops: drops, intensity: intensity }, 26);
                     if (murked)
                         WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), muddywaterMurkText, [stages], 32);
                 });
-                WorldFeedback.keep(scope, "muddywater:front:" + action.id(), muddywaterScene, 1, origin,
-                    { moment: "surge", front: outer, inner: inner, radius: reach, span: span,
-                        path: muddywaterBand(origin, heading, inner, outer, span), drops: drops,
-                        scale: scale, intensity: intensity, silted: silted ? 1 : 0 }, 14);
+                scenes.show(current, "front", origin,
+                    { moment: "surge", path: muddywaterBand(origin, heading, inner, outer, span), drops: drops,
+                        scale: scale, intensity: intensity });
                 step++;
                 if (step >= steps) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 
             sound(action, "cobblemon:move.waterpulse.actor");
-            WorldFeedback.emit(world, muddywaterScene, 1, origin,
-                { moment: "surge", front: 0, inner: 0, radius: reach, span: span,
-                    path: muddywaterBand(origin, heading, 0, 0.6, span), drops: drops, scale: scale,
-                    intensity: intensity, silted: silted ? 1 : 0 }, 20);
+            scenes.show(action, "front", origin,
+                { moment: "surge", path: muddywaterBand(origin, heading, 0, 0.6, span), drops: drops,
+                    scale: scale, intensity: intensity });
             advance(action);
         }
     });
@@ -205,17 +213,5 @@ namespace PokemonSkills {
         if (body === null) return;
         WorldFeedback.emit(world, muddywaterScene, 1, body.position(),
             { moment: "clear", target: String(actor.ref()), cause: String(data.cause || "") }, 18);
-    });
-
-    // 糊眼存续期间，目标头顶维持一圈缓慢下坠的泥点：少而稳，让出本体视线。
-    WorldCombat.on("world_combat:move_muddywater/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== muddywaterEffect || event.world().tick() % 12 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "muddywater:murk:" + String(actor.ref()), muddywaterScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()), drops: 10 }, 40);
     });
 }

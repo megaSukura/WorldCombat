@@ -4,6 +4,8 @@ namespace PokemonSkills {
     const punishmentBoostText = "worldcombat.skill.punishment.value.judged";
     /** 计入处刑的七项：五项能力加上命中与闪避，与原生 positiveBoosts 同口径。 */
     export const punishmentStats = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
+    /** 单次处刑最多计入的强化层数：能力等级与正面状态层数相加后的封顶，避免 Boss 一堆常驻效果无限增威。 */
+    export const punishmentBoostCap = 10;
 
     /** 宝可梦读原生能力等级，其他生物读共享能力等级；同一副 -6..+6 阶梯，另有命中／闪避两级。 */
     export function punishmentStages(world: CombatWorld, actor: CombatActor): { [stat: string]: number } {
@@ -11,12 +13,13 @@ namespace PokemonSkills {
         return NativeEffects.effectiveStages(world, actor);
     }
 
-    /** 目标七项里正面等级的总和；0 表示此刻没有可罚的涨能力。 */
+    /** 目标七项里正面等级的总和，加上正面 MobEffect 的层数；封顶 `punishmentBoostCap`。0 表示此刻没有可罚的涨能力。 */
     export function punishmentBoosts(world: CombatWorld, actor: CombatActor): number {
         const stages = punishmentStages(world, actor);
         let total = 0;
         punishmentStats.forEach(function (stat) { const value = stages[stat] || 0; if (value > 0) total += value; });
-        return total + MobEffects.levels(world, actor, "beneficial");
+        total += MobEffects.levels(world, actor, "beneficial");
+        return Math.min(punishmentBoostCap, total);
     }
 
     /** 公式求值时的目标：动作现场优先，其次当前施放目标；详情页没有现场时返回 null。 */
@@ -46,7 +49,7 @@ namespace PokemonSkills {
                 .clamp(36, 200).round(1),
             "处刑威力", {
                 unit: "威力",
-                description: "这一记压顶的基准威力；**目标身上每有 1 级正向能力就加 18**（封顶 +150，重判式再 ×1.35），物攻给分量、等级给底气。目标的能力越高，罚得越重。对手防御、相性与暴击在命中时另算。"
+                description: "这一记压顶的基准威力；**在命中那一刻**读被打中目标身上每 1 级正向能力就加 18（正面状态层数同样计入，总数封顶 " + punishmentBoostCap + " 级，重判式再 ×1.35），物攻给分量、等级给底气。目标的能力越高，罚得越重。对手防御、相性与暴击在命中时另算。"
             }),
         /** 臂程：2.0 + 身高偏移[−0.25,0.7] ×0.4 + 速度偏移[−0.1,0.25] ×0.003；重判 +0.2；夹 1.7..2.9。 */
         reach: formula(
@@ -72,7 +75,7 @@ namespace PokemonSkills {
                 .clamp(8, 44).round(0),
             "坠砣量", {
                 unit: "枚",
-                description: "随处刑落下的重量标记数量；目标涨得越高掉下的越多，物攻给底数。粒子按它发射，画面里的枚数与机制一致。"
+                description: "随处刑落下的重量标记数量；在命中那一刻按目标实际强化层数（同样封顶）增加，物攻给底数。粒子按它发射，画面里的枚数与机制一致。"
             }),
         /** 起手：7 − 速度偏移[−1.5,2.5] ×0.025 + 重判 +3；夹 4..14。 */
         tempo: seconds(

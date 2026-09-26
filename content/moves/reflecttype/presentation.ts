@@ -1,14 +1,14 @@
 /**
  * 镜面属性 / reflecttype 的客户端表现。
  *
- * 一句话：施法者面前拼起一面镜子、把对手框进镜框 → 镜面沿两人连线滑到对手身上扫过一遍、把它的属性取下来 →
- *         属性贴回施法者，身上炸开一片该属性色的光点与光晕。
- * 色相家族：镜面紫 0xD98CE8 作镜框与扫过层，属性色只在落成的光晕与光点上出现，是唯一的饱和色。
- * 拍子：起 raise 0–14t ／ 读 read（滑到目标）／ 落 settle 44t ／ 空 fizzle 22t。
- * 范围：read 的镜框与 settle 的光环按 `fit: body` 与 `data.scale` 铺开，画出这一照覆盖到整个身形。
- * 运动：镜面从施法者滑向对手、扫过后沿连线回到施法者，落定时光点向外炸开再向上收束。
+ * 一句话：施法者面前拼起一面镜子、把选中的对象框进镜框 → 镜面沿两人连线滑到那一边扫过一遍、把它的属性取下来 →
+ *         照回来的东西贴到施法者身上：宝可梦目标炸开该属性色的光点与光晕，普通生物目标落下一圈金属护甲片。
+ * 色相家族：镜面紫 0xD98CE8 作镜框与扫过层；落成时宝可梦走属性色（唯一饱和色），普通生物走钢灰 0xB7B7CE。
+ * 拍子：起 raise 0–14t ／ 读 read（滑到来源）／ 落 settle 44t（属性）或 armor 40t（护甲）／ 空 fizzle 22t。
+ * 范围：read 的镜框与落成的光环按 `fit: body` 与 `data.scale` 铺开，画出这一照覆盖到整个身形。
+ * 运动：镜面从施法者滑向来源、扫过后沿连线回到施法者，落定时光点向外炸开再向上收束，护甲片向身体内收拢。
  * 数：镜面块数绑 `data.facets`（特防派生），反光点数绑 `data.glints`（特攻派生），
- *   落成强弱绑 `data.intensity`（维持时长派生）。
+ *   落成强弱绑 `data.intensity`（维持时长派生）；属性色仍读 `data.color`（真正复制到的属性）。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const ReflecttypeSceneDefinition: ParticleDefinition = {
@@ -91,6 +91,39 @@ const ReflecttypeSceneDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.04, 0.16],
                     lifetime: [8, 13], size: [0.36, 0.06], sizeMode: "index",
                     color: 0xFFE9F8, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 40
+                }
+            ]
+        },
+        armor: {
+            duration: 40,
+            exit: { stop: 18, drain: 24 },
+            emitters: [
+                {
+                    name: "armor_plates", bind: "source", fit: "body", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/screen_color",
+                    burst: { count: { data: "facets", fallback: 6 }, interval: 3, repeats: 2 },
+                    shape: { kind: "box", size: [0.8, 1.1, 0.8] },
+                    direction: "inward", speed: [0.04, 0.14],
+                    lifetime: [12, 20], size: [0.32, 0.14], sizeMode: "index",
+                    color: 0xB7B7CE, alpha: [0.7, 0], light: "full", maxParticles: 80
+                },
+                {
+                    name: "armor_glints", bind: "source", fit: "body", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
+                    burst: { count: { data: "glints", fallback: 12 }, interval: 3, repeats: 2 },
+                    shape: { kind: "sphere_surface", radius: 0.6 },
+                    direction: "outward", speed: [0.1, 0.3], spread: 14, drag: 0.92,
+                    lifetime: [10, 18], size: [0.12, 0.02], sizeMode: "index",
+                    color: 0xE8F0FF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 160
+                },
+                {
+                    name: "armor_core", bind: "source", fit: "body", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/mediumfadeorb",
+                    burst: { count: 6, at: 2 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "shape", speed: [0.04, 0.14],
+                    lifetime: [8, 13], size: [0.34, 0.06], sizeMode: "index",
+                    color: 0xCFD6E4, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 }
             ]
         },

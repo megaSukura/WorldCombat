@@ -6,49 +6,48 @@
  *   描述「使出全部力量攻击对手。使用之后会因为反作用力，自己的特攻大幅降低」。
  *
  * 翻译：把「把全部力量一次隔空压出去」翻成即时战斗里**一次念力内爆**——几圈念力环从四面收拢，
- *   在目标身上猛地撞合、炸开；施法者的精神力随之一空，自身特攻掉 2 级，提交那一刻就付。
- *   回响式让这次内爆在片刻后于原地再响一次，总伤害更高，但目标有机会在回响前离开。
+ *   在锁定的那一点上猛地撞合、炸开；合拢期间术者要保持通视原点，若视线被遮断，念环就在遮挡前散开、不在远端爆。
+ *   施法者的精神力随之一空，自身特攻掉 2 级，提交那一刻就付。凝聚式把环收得更久、压得更实，单次更重，
+ *   但总预算并不比原来更高，只是把力气集中到唯一一响上。
  *
- * 与同族分开：飞叶风暴是旋转前进并留场的叶刃、过热是身前一张扇形热浪、流星群是从头顶砸下的陨石群；
- *   精神突进是唯一**看不见弹道、念力环隔空收拢后内爆**的那一记，基础威力也最高（140）。
+ * 与同族分开：飞叶风暴是旋转前进并沿路旋切的叶刃、过热是身前一张扇形热浪、流星群是从头顶砸下的陨石群；
+ *   精神突进是唯一**看不见弹道、念力环隔空收拢后一次内爆**的那一记，基础威力也最高（140）。
  *
  * 数据分散（每项读不同的精灵数据）：
- *   focus       威力：特攻给强度、等级拾级；回响式把主爆压低一点。
- *   converge    收拢时间：速度决定念力环合拢多快。
+ *   focus       威力：特攻给强度、等级拾级；凝聚式把单次压得更高。
+ *   converge    收拢时间：速度决定念力环合拢多快；凝聚式收得更久。
  *   burstRadius 内爆半径：体型（高、宽）决定炸开多大。
  *   rings       念力环数：特攻与等级决定合拢几圈，也驱动画面。
  *   reach       射程：特攻给隔空触及的距离。
- *   echoShare   回响保留：特攻决定第二响留多少（回响式才有）。
- *   echoDelay   回响延迟：速度决定第二响多快（回响式才有）。
- *   echoRadius  回响范围：特攻决定第二响波及多开（回响式才有）。
  *   insightLoss 自身特攻下降级：原生固定 2 级。
- *   tempo/aftercast/recharge：速度定节奏，回响式更慢更长。
+ *   tempo/aftercast/recharge：速度定节奏，凝聚式更慢更长。
  *
- * 配置 `echo`（回响式，默认关）双向取舍：
- *   开＝主爆威力 ×0.86，但在 `echoDelay` 后于**原爆点**再内爆一次、对 `echoRadius` 内的敌人补上
- *   `echoShare` 的伤害，起手 +3 刻、冷却 +7 刻；目标若在回响前走出范围就躲掉第二响。
- *   关（瞬爆式）＝一下全力、瞬时结算、单点更重、更快。开是延迟的总量更高，关是即时的稳定爆发。
+ * 配置 `hold`（凝聚式，默认关）双向取舍：
+ *   开＝收拢时间 ×1.5、单次威力 ×1.15，把全部力气压进唯一一响；起手 +3 刻、冷却 +7 刻，给你更长的一整个破绽窗口。
+ *   关（瞬爆式）＝合拢更快、出手更省，单次略低。开是抓准时机的重锤，关是快速稳定的压制，各有适用局面。
  *
  * 伤害段 `focus` 与参数同名，走共享换算（原始类别 Special）；对手特防、相性与暴击在命中时另算。
  */
 namespace PokemonSkills {
     actionParameters.define("psychoboost", {
         /** 威力：基础 138；特攻每比 60 多 1 加 1.0（夹 −30..62）；等级每比 20 高 1 加 0.3（夹 0..20）；
-         *  回响 ×0.86 / 瞬爆 ×1.0；夹 96..232。 */
+         *  凝聚 ×1.15 / 瞬爆 ×1.0；夹 96..252。 */
         focus: formula(
             F.base(138)
                 .plus(F.stat("specialAttack").minus(60).times(1.0).clamp(-30, 62))
                 .plus(F.level().minus(20).times(0.3).clamp(0, 20))
-                .times(F.when(F.pref("echo", text("worldcombat.skill.psychoboost.preference.echo")), F.const(0.86), F.const(1.0)))
-                .clamp(96, 232).round(1),
+                .times(F.when(F.pref("hold", text("worldcombat.skill.psychoboost.preference.hold")), F.const(1.15), F.const(1.0)))
+                .clamp(96, 252).round(1),
             "内爆威力", {
                 unit: "威力",
-                description: "念力环撞合那一下的力；特攻给的系数是全族最高的一档，等级越高越足。回响式把主爆压低一点，把力留一部分给第二响。对手特防、相性与暴击在命中时另算。"
+                description: "念力环撞合那一下的力；特攻给的系数是全族最高的一档，等级越高越足。凝聚式把力气集中到唯一一响上，单次更高，但总预算并不比原来更高。对手特防、相性与暴击在命中时另算。"
             }),
-        /** 收拢时间：基础 8 刻；速度每比 55 快 1 减 0.03（夹 −0.6..2）；夹 4..12。 */
+        /** 收拢时间：基础 8 刻；速度每比 55 快 1 减 0.03（夹 −0.6..2）；凝聚 ×1.5；夹 4..18。 */
         converge: seconds(
-            F.base(8).minus(F.stat("speed").minus(55).times(0.03).clamp(-0.6, 2)).clamp(4, 12).round(0),
-            "收拢时间", "念力环从四面合到目标身上要多久；速度越快合得越急。目标读得出这几刻的预告。"),
+            F.base(8).minus(F.stat("speed").minus(55).times(0.03).clamp(-0.6, 2))
+                .times(F.when(F.pref("hold", text("worldcombat.skill.psychoboost.preference.hold")), F.const(1.5), F.const(1.0)))
+                .clamp(4, 18).round(0),
+            "收拢时间", "念力环从四面合到锁定那一点要多久；速度越快合得越急，凝聚式要多压一阵。目标读得出这几刻的预告，遮断视线就能避开内爆。"),
         /** 内爆半径：基础 0.6 格；高每比 1.4 高 1 格加 0.1（夹 −0.05..0.3）；宽每比 0.9 宽 1 格加 0.3（夹 −0.05..0.3）；夹 0.45..1.2。 */
         burstRadius: formula(
             F.base(0.6)
@@ -76,27 +75,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "念力能隔空触及多远；特攻高够得远。它也是本招的实际射程，但没有弹道，看不见东西飞过去。"
             }),
-        /** 回响保留：回响式 = 0.5 − 特攻偏移[−0.1,0.15] / 瞬爆式 = 0；夹 0..0.8。 */
-        echoShare: percent(
-            F.when(F.pref("echo", text("worldcombat.skill.psychoboost.preference.echo")),
-                F.base(0.5).minus(F.stat("specialAttack").minus(60).times(0.002).clamp(-0.1, 0.15)), F.const(0))
-                .clamp(0, 0.8).round(2),
-            "回响保留", "第二响保留多少威力；特攻越高越均匀。只有回响式有。"),
-        /** 回响延迟：回响式 = 20 − 速度偏移[−3,6] / 瞬爆式 = 0；夹 12..28。 */
-        echoDelay: seconds(
-            F.when(F.pref("echo", text("worldcombat.skill.psychoboost.preference.echo")),
-                F.base(20).minus(F.stat("speed").minus(55).times(0.08).clamp(-3, 6)).clamp(12, 28), F.const(0))
-                .round(0),
-            "回响延迟", "第一响之后隔多久在原爆点再响一次；速度快的个体响得更急。只有回响式有。"),
-        /** 回响范围：回响式 = 2.0 + 特攻偏移[0,0.9] / 瞬爆式 = 0；夹 1.4..3.2。 */
-        echoRadius: formula(
-            F.when(F.pref("echo", text("worldcombat.skill.psychoboost.preference.echo")),
-                F.base(2.0).plus(F.stat("specialAttack").minus(60).times(0.01).clamp(0, 0.9)), F.const(0))
-                .clamp(0, 3.2).round(2),
-            "回响范围", {
-                unit: "格",
-                description: "第二响在原爆点波及多大；特攻越高传得越开。画面里那圈回响环就是这个半径。只有回响式有。"
-            }),
         /** 自身特攻下降级：原生固定 2 级；夹 2..6。 */
         insightLoss: formula(
             F.const(2).clamp(2, 6).round(0),
@@ -104,22 +82,22 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "一次内爆后自身特攻下降的能力等级；原生固定 2 级，提交那一刻就付，中与不中都一样。"
             }),
-        /** 起手：基础 12 刻；速度每比 55 快 1 减 0.04（夹 −1.5..3）；回响 +3；夹 8..18。 */
+        /** 起手：基础 12 刻；速度每比 55 快 1 减 0.04（夹 −1.5..3）；凝聚 +3；夹 8..18。 */
         tempo: seconds(
             F.base(12).minus(F.stat("speed").minus(55).times(0.04).clamp(-1.5, 3))
-                .plus(F.when(F.pref("echo", text("worldcombat.skill.psychoboost.preference.echo")), F.const(3), F.const(0)))
+                .plus(F.when(F.pref("hold", text("worldcombat.skill.psychoboost.preference.hold")), F.const(3), F.const(0)))
                 .clamp(8, 18).round(0),
-            "起手", "把精神力压成一点的时间；速度越快越短，回响式要多留一份力气。"),
+            "起手", "把精神力压成一点的时间；速度越快越短，凝聚式要多压一阵。"),
         /** 收招：基础 10 刻；速度每比 55 快 1 减 0.03（夹 −1..2.5）；夹 7..16。 */
         aftercast: seconds(
             F.base(10).minus(F.stat("speed").minus(55).times(0.03).clamp(-1, 2.5)).clamp(7, 16).round(0),
             "收招", "炸完把散掉的精神收回来、重新站稳的时间；速度越快越短。"),
-        /** 冷却：基础 42 刻；速度每比 55 快 1 减 0.07（夹 −3..6）；回响 +7；夹 28..56。 */
+        /** 冷却：基础 42 刻；速度每比 55 快 1 减 0.07（夹 −3..6）；凝聚 +7；夹 28..56。 */
         recharge: seconds(
             F.base(42).minus(F.stat("speed").minus(55).times(0.07).clamp(-3, 6))
-                .plus(F.when(F.pref("echo", text("worldcombat.skill.psychoboost.preference.echo")), F.const(7), F.const(0)))
+                .plus(F.when(F.pref("hold", text("worldcombat.skill.psychoboost.preference.hold")), F.const(7), F.const(0)))
                 .clamp(28, 56).round(0),
-            "冷却", "两次内爆之间等待多久；快的个体回气更快，回响式缓得更久。")
+            "冷却", "两次内爆之间等待多久；快的个体回气更快，凝聚式缓得更久。")
     });
 
     stages("psychoboost", [
@@ -134,8 +112,8 @@ namespace PokemonSkills {
         { key: "description.1", values: ["converge","burstRadius"] },
         { key: "description.2", values: ["reach"] },
         { key: "description.3", values: ["insightLoss"] },
-        { key: "echo.on", values: ["echoShare","echoDelay","echoRadius"], when: function (context) { return read(context.detail.values, ["echo"]) === true; } },
-        { key: "echo.off", values: [], when: function (context) { return read(context.detail.values, ["echo"]) !== true; } },
+        { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
+        { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.focus"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.focus", "tier.1.reach"] }

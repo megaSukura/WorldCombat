@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.wildcharge.summary": "电流裹身的一次放电冲锋：先把电流收拢到全身，笔直撞上去，把电流灌进对方身体（有概率麻痹）；回路也会伤到自己，全身湿透时漏电更狠。猛撞的带电版。",
+  "worldcombat.skill.wildcharge.summary": "电流裹身的一次放电冲锋：先把电流收拢到全身，笔直撞上去，把电流灌进对方身体——干燥目标看概率、湿透目标必然传导一次；回路也会伤到自己，全身湿透时起冲即见漏电、反噬更重。猛撞的带电版。",
   "worldcombat.skill.wildcharge.description.0": "这一撞对命中的目标造成约 %1$s 点电属性接触伤害；最远冲 %2$s 格、推进速度 %3$s 格每刻、判定半径 %4$s 格。",
-  "worldcombat.skill.wildcharge.description.1": "命中后对尚未麻痹的目标有 %1$s 的机会使其麻痹（约 40 秒）：麻痹期间移动速度减半，且每次行动有 25%% 概率失败。无论是否麻痹，自己都按实际伤害的 %2$s 倍反伤，并把目标沿冲撞方向顶开 %3$s 格。",
+  "worldcombat.skill.wildcharge.description.1": "命中后对尚未麻痹的目标灌电：干燥目标有 %1$s 的机会被麻痹，湿透目标必然被传导一次（除非免疫）。麻痹约 40 秒，期间移动速度减半、每次行动有 25%% 概率失败。无论是否麻痹，自己都按实际伤害的 %2$s 倍反伤，并把目标沿冲撞方向顶开 %3$s 格。",
   "worldcombat.skill.wildcharge.overload.on": "过载：电流全开，威力、麻痹概率、击退、冲程与火花都升，但回路反噬更重、起手与冷却更长。",
   "worldcombat.skill.wildcharge.overload.off": "控流：压低威力与反噬、起手更短，麻痹概率略降，适合速攻与缠斗。",
   "worldcombat.skill.wildcharge.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP、冷却 %5$s 秒。",
@@ -28,10 +28,11 @@
   "worldcombat.skill.wildcharge.preference.ai.maxChase": "冲锋距离",
   "worldcombat.skill.wildcharge.preference.ai.maxChase.help": "对手离自己这么远以内才起冲；调小只贴脸冲，调大愿意从更远处助跑。",
   "worldcombat.skill.wildcharge.preference.ai.spareParalyzed": "不重复麻痹",
-  "worldcombat.skill.wildcharge.preference.ai.spareParalyzed.help": "开启：已经麻痹的目标不再优先放电，把电流留给还没被挂上的人；关闭：只按共享顺序竞价。",
+  "worldcombat.skill.wildcharge.preference.ai.spareParalyzed.help": "开启：已经麻痹的目标明显降低优先，把电流留给还没被挂上的人，但仍可在没有更好目标时补一记伤害；关闭：按普通攻击候选一起竞价。",
   "world_combat.move.wildcharge.text.hit": "疯狂伏特",
   "world_combat.move.wildcharge.text.miss": "电流泄地",
   "world_combat.move.wildcharge.text.recoil": "回路反噬",
   "world_combat.move.wildcharge.text.shock": "灌入麻痹",
-  "worldcombat.skill.wildcharge.description.2": "只结算最先撞上的一个目标。冲到底、撞墙或被挡住而没撞到人时，只就地放电、不自伤。目标湿透时这招的威力与麻痹概率更高；施放者自己湿透时威力打折、反噬更重。"
+  "world_combat.move.wildcharge.text.leak": "湿身漏电",
+  "worldcombat.skill.wildcharge.description.2": "只结算最先撞上的一个目标。冲到底、撞墙或被挡住而没撞到人时，只就地（或墙前）放电、不自伤。目标湿透时这招的威力更高，且那次传导必然灌入麻痹；施放者自己湿透时起冲就在脚下漏电，威力打折、反噬更重。"
 }

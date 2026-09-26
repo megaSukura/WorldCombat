@@ -7,36 +7,15 @@
  * 两幕半（本招自己驱动）：
  *   蹲（提交前）：压低身子蓄力，只播预告；起手极短。
  *   蹦（提交后）：按 hopHeight 给一个向上的初速、按 hopRange 给水平初速（方向由选定的落点决定），
- *     交给原生物理走完这段抛物线；空中每刻沿线续播水花。
- *   落（落地）：溅起 splashMotes 点水花，浮一行「什么都没发生」，收招后结束。
+ *     交给原生物理走完这段抛物线；空中每一刻续播水花，直到身体真的重新落地。
+ *   落（实际落地）：在落地那一格溅起 splashMotes 点水花，浮一行「什么都没发生」，收招后结束。
  *
- * 它不读目标、不改别人的任何东西；射程与落点由玩家选（kind motion），AI 选朝向或背离威胁的点。
+ * crouch/hop/land 绑定真实过程：hop 绑住施法者跟随实际腾空，落尘只在观测到重新着地（或安全上限）时发生，
+ * 不按预先算好的滞空计时提前落地。撞墙由原生物理自然停住，空中许可沿用现有规则。
+ * 它不读目标、不改别人的任何东西；射程与落点由玩家选（kind motion），AI 用侧向 freeSpace 探针挑落点。
  */
 namespace PokemonSkills {
     function splashAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 0.9, 0)); }
-
-    function splashLand(current: CombatAction, motes: number, height: number, leap: boolean, recover: number): void {
-        const world = current.world(), actor = current.actor(), body = world.observe(actor);
-        if (body === null) { current.finish(); return; }
-        const at = body.position();
-        WorldFeedback.emit(world, splashScene, 1, at,
-            { moment: "land", motes: motes, height: height, leap: leap ? 1 : 0,
-                intensity: Math.max(0.6, Math.min(1.8, motes / 20)) }, 22);
-        WorldFeedback.text(world, splashAbove(at), splashNothingText, [], 30);
-        world.sound("minecraft:entity.dolphin.splash", at, 12, "{}");
-        current.after(Math.max(1, recover), function (next: CombatAction) { next.finish(); });
-    }
-
-    function splashSettle(current: CombatAction, remaining: number, motes: number, height: number, leap: boolean,
-                          recover: number, direction: CombatPoint): void {
-        const world = current.world(), actor = current.actor(), body = world.observe(actor);
-        if (body === null) { current.finish(); return; }
-        if (remaining <= 0) { splashLand(current, motes, height, leap, recover); return; }
-        WorldFeedback.keep(world, "world_combat:move_splash:hop/" + String(actor.ref()), splashScene, 1, body.position(),
-            { moment: "hop", target: String(actor.ref()), motes: motes, height: height, leap: leap ? 1 : 0,
-                direction: [direction.x(), direction.y(), direction.z()] }, 6);
-        current.after(1, function (next: CombatAction) { splashSettle(next, remaining - 1, motes, height, leap, recover, direction); });
-    }
 
     define({
         freeMovement: true,
@@ -96,18 +75,47 @@ namespace PokemonSkills {
                 current.commit(cooldown);
                 const world = current.world(), body = world.observe(actor);
                 if (body === null) { current.finish(); return; }
-                current.face(body.position().plus(direction.scale(2)), 15, 15);
+                const scenes = WorldFeedback.actionScenes(splashScene);
+                const start = body.position();
+                current.face(start.plus(direction.scale(2)), 15, 15);
                 // 一次给足初速，之后交给原生物理：竖直初速按目标高度算，水平初速把落点铺到选定的距离。
                 const gravity = 0.08;
                 const vy = Math.sqrt(Math.max(0.02, 2 * gravity * height));
                 const air = Math.max(hang, Math.round(2 * vy / gravity));
                 const speed = Math.min(0.45, distance / air);
                 world.motion(actor, WorldCombat.point(direction.x() * speed, vy, direction.z() * speed), false);
-                WorldFeedback.emit(world, splashScene, 1, body.position(),
+                scenes.show(current, "hop", start,
                     { moment: "hop", target: String(actor.ref()), motes: motes, height: height, leap: leap ? 1 : 0,
-                        distance: distance, direction: [direction.x(), direction.y(), direction.z()] }, 20);
-                world.sound("minecraft:entity.axolotl.splash", body.position(), 12, "{}");
-                splashSettle(current, air, motes, height, leap, recover, direction);
+                        distance: distance, direction: [direction.x(), direction.y(), direction.z()] });
+                world.sound("minecraft:entity.axolotl.splash", start, 12, "{}");
+
+                let airborne = false, age = 0;
+                const safety = air + 40;
+
+                function land(current: CombatAction, at: CombatPoint): void {
+                    scenes.stop(current);
+                    const live = current.world();
+                    WorldFeedback.emit(live, splashScene, 1, at,
+                        { moment: "land", motes: motes, height: height, leap: leap ? 1 : 0,
+                            intensity: Math.max(0.6, Math.min(1.8, motes / 20)) }, 22);
+                    WorldFeedback.text(live, splashAbove(at), splashNothingText, [], 30);
+                    live.sound("minecraft:entity.dolphin.splash", at, 12, "{}");
+                    current.after(Math.max(1, recover), function (next: CombatAction) { next.finish(); });
+                }
+
+                function watch(current: CombatAction): void {
+                    const live = current.world(), self = live.observe(actor);
+                    if (self === null) { scenes.stop(current); current.finish(); return; }
+                    const at = self.position();
+                    if (!airborne && (!self.grounded() || at.y() > start.y() + 0.1)) airborne = true;
+                    if (airborne && self.grounded()) { land(current, at); return; }
+                    if (++age >= safety) { land(current, at); return; }
+                    scenes.show(current, "hop", at,
+                        { moment: "hop", target: String(actor.ref()), motes: motes, height: height, leap: leap ? 1 : 0,
+                            distance: distance, direction: [direction.x(), direction.y(), direction.z()] });
+                    current.after(1, watch);
+                }
+                current.after(1, watch);
             });
         }
     });

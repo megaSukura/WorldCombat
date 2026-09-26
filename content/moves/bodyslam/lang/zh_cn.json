@@ -2,7 +2,7 @@
   "worldcombat.skill.bodyslam.summary": "猛地跳起，用整个身体的重量砸向目标落点：范围内所有敌人受伤并被顶开，越重越可能把它们压麻；震地式摊大范围但单点更轻，压顶式相反。",
   "worldcombat.skill.bodyslam.description.0": "座压命中造成约 %1$s 的接触伤害。",
   "worldcombat.skill.bodyslam.description.1": "落点半径 %1$s 格，范围内的每个敌人都会被压中；每个被压中的目标各有 %2$s%% 概率陷入麻痹。",
-  "worldcombat.skill.bodyslam.description.2": "最多从 %1$s 格外起跳，跃起 %2$s 格高；落点在起跳时锁定，飞行中走出落点的敌人可以躲过这一砸。落地时范围内的每个敌人各沿背离落点方向被顶开 %3$s 格。",
+  "worldcombat.skill.bodyslam.description.2": "可点选 %1$s 格内的落点或空地起跳，跃起 %2$s 格高；点选只作起跳规划，半途撞墙或被天花板挡下时就地落下。只有身体真正砸到的位置才算数——飞行中走出计划点的敌人能躲开。落地时范围内的每个敌人各沿背离落点方向被顶开 %3$s 格。",
   "worldcombat.skill.bodyslam.use.0": "从上方压住一个目标",
   "worldcombat.skill.bodyslam.use.1": "把落点周围挤在一起的敌人一起震开",
   "worldcombat.skill.bodyslam.use.2": "用体重压出更高的麻痹机会",

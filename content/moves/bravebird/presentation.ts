@@ -50,8 +50,9 @@ const BravebirdDefinition: ParticleDefinition = {
                 {
                     name: "plume", bind: "source", offset: [0, 0.5, 0], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 14, shape: { kind: "hemisphere", radius: 0.3, rotation: [180, 0, 0] },
-                    direction: "up", speed: [0.1, 0.28],
+                    orient: "velocity",
+                    rate: 14, shape: { kind: "line", length: { data: "height", fallback: 0.6 } },
+                    direction: "shape", speed: [0.1, 0.28],
                     lifetime: [6, 10], size: [0.16, 0.04],
                     color: 0xFFFFFF, alpha: [0.6, 0], light: "full", maxParticles: 60
                 }
@@ -64,7 +65,8 @@ const BravebirdDefinition: ParticleDefinition = {
                 {
                     name: "streak", bind: "source", offset: [0, 0.4, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 44, shape: { kind: "box", size: [0.36, 0.3, 0.36] },
+                    orient: "direction",
+                    rate: 44, shape: { kind: "line", length: 0.5 },
                     direction: "shape", speed: [0.03, 0.12], trail: { minDistance: 0.2 },
                     lifetime: [5, 9], size: [0.24, 0.06],
                     color: 0xFFFFFF, alpha: [0.8, 0], light: "full", maxParticles: 260

@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.furyattack.summary": "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方这串就断。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
+  "worldcombat.skill.furyattack.summary": "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方这串就断。可以点敌人，也可以只给一个方向起手，准线在起手时锁死、每刺同轴；空放会沿准线刺完整串。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
   "worldcombat.skill.furyattack.use.0": "站定用角喙朝一点连续突刺",
   "worldcombat.skill.furyattack.use.1": "每一刺把对手顶退，一路把它推出射程",
   "worldcombat.skill.furyattack.use.2": "追击式跟住走位，把整串吃满",
+  "worldcombat.skill.furyattack.use.3": "只朝一个方向起手，沿固定准线空刺完整串",
   "worldcombat.skill.furyattack.description.0": "每一刺造成约 %1$s 点接触伤害（走物攻），这一串最多 %2$s 刺，每刺 %3$s 命中；落空一刺或目标被顶出射程，这串就断。",
   "worldcombat.skill.furyattack.description.1": "刺距 %1$s 格，刺面半宽 %2$s 格，每刺把目标顶退 %3$s 格，两刺间隔 %4$s。",
   "worldcombat.skill.furyattack.description.2": "追击式每刺前进 %1$s 格；每一刺最多击中 %2$s 个目标。",

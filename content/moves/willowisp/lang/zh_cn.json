@@ -1,8 +1,9 @@
 {
-  "worldcombat.skill.willowisp.summary": "向目标发射一团追踪鬼火，命中后使其灼伤，持续掉血并降低物理攻击伤害。鬼火转向有限，拉开距离或绕行可以避开。",
-  "worldcombat.skill.willowisp.description.0": "向 %1$s 格内的目标发射追踪鬼火，飞行速度为每刻 %2$s 格。",
+  "worldcombat.skill.willowisp.summary": "朝瞄准方向放出一团冷色鬼火：选中敌人时会有限度地追它，空瞄或对着地点就直线飞行，撞到方块即熄灭。它本身不造成直接伤害，只施加灼伤——持续掉血并降低物理攻击伤害。鬼火转向有限，拉开距离或绕行可以避开。",
+  "worldcombat.skill.willowisp.description.0": "向 %1$s 格内放出一团鬼火，飞行速度为每刻 %2$s 格；未选中实体时沿瞄准方向直飞。",
   "worldcombat.skill.willowisp.description.1": "追上后目标灼伤 %1$s 秒；鬼火每刻最多转向 %2$s 度，跑得够快或绕开就能甩掉它。",
   "worldcombat.skill.willowisp.description.2": "判定半径 %1$s 格。",
+  "worldcombat.skill.willowisp.description.3": "灼伤持续期间物理攻击伤害减半，并每 5 秒损失约最大生命的 1/16（至少 1 点）；火属性等天生免疫灼伤的目标不会被点燃。",
   "worldcombat.skill.willowisp.use.0": "从远处使对手灼伤",
   "worldcombat.skill.willowisp.use.1": "削弱靠物攻压上来的目标",
   "worldcombat.skill.willowisp.use.2": "逼目标躲火而放弃站位",
@@ -15,10 +16,11 @@
   "worldcombat.skill.willowisp.preference.swift.help": "开启：鬼火飞得更快、转得更紧（速度 ×1.35、转向 ×1.25），但灼伤更短（×0.7），更快命中也更早熄灭；关闭：盘绕取向，鬼火更慢但烧得更久（×1.15），更能拖住目标。",
   "worldcombat.skill.willowisp.preference.ai.maxChase": "施放距离",
   "worldcombat.skill.willowisp.preference.ai.maxChase.help": "超过这个距离就不主动放鬼火，先走近。越大越执着追击，也越容易在开阔地被目标甩掉。",
+  "worldcombat.skill.willowisp.preference.ai.preferPhysical": "优先物理威胁",
+  "worldcombat.skill.willowisp.preference.ai.preferPhysical.help": "开启：优先把鬼火丢向物攻明显高于特攻、或正贴上来近战的目标；关闭：对所有还没被点着的敌人一视同仁。鬼火不造成直接伤害，这个选择只改出手对象。",
   "worldcombat.skill.willowisp.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.willowisp.preference.ai.leaveStation.help": "开启后，驻守命令下也会为放鬼火离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.willowisp.text.burn": "鬼火缠身",
   "world_combat.move.willowisp.text.immune": "不受鬼火影响",
-  "world_combat.move.willowisp.text.fizzle": "鬼火熄灭",
-  "worldcombat.skill.willowisp.description.3": "灼伤持续期间物理攻击伤害减半，并每 5 秒损失约最大生命的 1/16（至少 1 点）；火属性等天生免疫灼伤的目标不会被点燃。"
+  "world_combat.move.willowisp.text.fizzle": "鬼火熄灭"
 }

@@ -30,5 +30,9 @@
   "world_combat.move.torment.text.lock": "烦躁 %1$s 秒",
   "world_combat.move.torment.text.turn": "取笑落空",
   "world_combat.move.torment.text.fade": "烦躁散去",
-  "world_combat.move.torment.text.block": "不能连续使用 %1$s"
+  "world_combat.move.torment.text.block": "不能连续使用 %1$s",
+  "world_combat.move.torment.kind.melee": "近战",
+  "world_combat.move.torment.kind.ranged": "远程",
+  "world_combat.move.torment.kind.magic": "魔法",
+  "world_combat.move.torment.kind.other": "这种攻击"
 }

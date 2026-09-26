@@ -2,11 +2,11 @@
  * 雷电牙 / thunderfang 的客户端表现。
  *
  * 一句话：牙间窜起电光、脚边亮起一圈静电 → 沿一条直线飞快扑出、身后拖出电弧 → 咬实的一刻在接触点炸开电色迸溅与獠牙剪影，
- * 电流从伤口沿身体爬成一层噼啪的麻电；若目标本就麻着，一圈更亮的电流把它锁在原地。
- * 色相家族：电黄（0xE8D24A）与近白（0xFFF6B0），白光只出现在咬实与电锁的核心。
- * 拍子：起 charge（聚电）→ 扑 pounce → 咬 bite（命中峰值）／ 麻 jolt ／ 锁 lock → 懵 flinch ／ miss。
- * 范围：bite 绑命中点，lock 绑目标脚边，画出的就是被咬中的位置与被钉住的身体。
- * 运动：速度线沿扑出方向掠过；jolt 的麻电沿目标身体向上爬；lock 的电流贴地收成一圈；flinch 的星子从头顶上飘。
+ * 电流从伤口沿身体爬成一层噼啪的麻电；目标本就麻着时，这一次接触的电花更亮更密，但只作表现、不再加定身。
+ * 色相家族：电黄（0xE8D24A）与近白（0xFFF6B0），白光只出现在咬实与电花的核心。
+ * 拍子：起 charge（聚电）→ 扑 pounce → 咬 bite（命中峰值）／ 麻 jolt → 懵 flinch ／ miss。
+ * 范围：bite 与 jolt 都绑命中点，画出的就是被咬中的位置与被麻到的身体。
+ * 运动：速度线沿扑出方向掠过；jolt 的麻电沿目标身体向上爬；flinch 的星子从头顶上飘。
  * 数：`data.sparks`（速度派生）决定咬中与麻电的弧数；`data.intensity`（威力 / 65）抬高密度与亮度；
  * `data.scale`（獠牙判定 / 0.42）放大牙影与判定环。
  */
@@ -104,30 +104,6 @@ const ThunderfangDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.03, 0.14],
                     lifetime: [6, 12], size: [0.12, 0.03], sizeMode: "index",
                     color: 0xFFF6B0, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 70
-                }
-            ]
-        },
-        lock: {
-            duration: 26,
-            exit: { stop: 10, drain: 18 },
-            emitters: [
-                {
-                    name: "cage", bind: "target", offset: [0, 0.08, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
-                    burst: { count: { data: "sparks", fallback: 7 }, interval: 3, repeats: 2 },
-                    shape: { kind: "ring", radius: 0.44, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.04, 0.16],
-                    lifetime: [5, 11], size: [0.18, 0.04], sizeMode: "index",
-                    color: 0xE8D24A, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 60
-                },
-                {
-                    name: "knot", bind: "target", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    burst: { count: { data: "sparks", fallback: 7 } },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "up", speed: [0.02, 0.1],
-                    lifetime: [6, 12], size: [0.14, 0.03],
-                    color: 0xFFF6B0, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 44
                 }
             ]
         },

@@ -5,7 +5,7 @@
  *   任何「引开注意」类状态罩住。ai.opening=迎击时只在对方正打自己或主人、或自己刚被打过时举匙。
  * 对谁出手：当前威胁；已经带着共享身份 aim_impaired 的目标跳过。
  * 够不到怎么办：reach 就是凝注距离（全族最远），超出先走近；被掩体挡住时交回共享接近逻辑找视线。
- * 放完之后：目标命中下降，伙伴交回共享顺序继续交战。
+ * 放完之后：目标命中下降，伙伴交回共享顺序继续交战。正在攻击自己或主人的目标更值得先掰（重点强敌）。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("kinesis", { ai: { maxChase: 9, opening: "anytime", leaveStation: false } }, [
@@ -34,8 +34,11 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !kinesisWants(context, item, target)) return 0;
             // 这招最擅长在远处点名：距离越远、越贴近射程上限，越优先。
-            const gap = distance(source(context).point, target.point);
-            return Math.min(80, 45 + Math.round(gap * 3));
+            const self = source(context), owner = context.facts.owner;
+            let score = 45 + Math.round(distance(self.point, target.point) * 3);
+            // 正在攻击自己或主人的目标就是这场戏的点名对象。
+            if (target.attacking === self.ref || !!owner && target.attacking === owner.ref) score += 12;
+            return Math.min(92, score);
         }
     });
 }

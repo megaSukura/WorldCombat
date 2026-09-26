@@ -36,6 +36,30 @@ const StompDefinition: ParticleDefinition = {
                 }
             ]
         },
+        mark: {
+            duration: 20,
+            exit: { stop: 9, drain: 12 },
+            emitters: [
+                {
+                    name: "footprint", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 8, at: 1, interval: 4, repeats: 2 },
+                    shape: { kind: "ring", radius: { data: "foot", fallback: 0.5 } },
+                    direction: "inward", speed: [0.01, 0.05],
+                    lifetime: [8, 14], size: [0.16, 0.03],
+                    color: 0xC7B89A, alpha: [0.65, 0], light: "world", maxParticles: 34
+                },
+                {
+                    name: "gather", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 12, shape: { kind: "ring", radius: { data: "foot", fallback: 0.5 } },
+                    direction: "inward", speed: [0.01, 0.05],
+                    gravity: 0.02, drag: 0.9,
+                    lifetime: [8, 14], size: [0.05, 0.01],
+                    color: 0x8A7A62, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         slam: {
             duration: 30,
             exit: { stop: 14, drain: 20 },

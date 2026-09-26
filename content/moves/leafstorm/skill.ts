@@ -1,32 +1,33 @@
 /**
  * 飞叶风暴 / leafstorm 的出手方式。
  *
- * 核心念头：**甩出一股旋转的叶刃风暴**——把尖叶卷成一根绕着前进轴打转的风柱推出去，叶刃在目标身上高速旋切，
- *   随后炸散；卷叶式让这股风在落点多盘桓一阵，持续割站在里面的人。反作用力是最直白的：叶子离手，自身特攻掉 2 级。
+ * 核心念头：**甩出一股沿准线卷动的叶刃风暴**——把尖叶卷成一根绕着前进轴打转的叶筒推出去，叶刃卷过谁就在谁身上
+ *   高速旋切，到射程尽头一次散开。反作用力是最直白的：叶子离手，自身特攻掉 2 级。
  *
  * 两幕（提交前只播预告）：
  *   起（gather）：脚下与身侧散落的尖叶被风拢起、绕身打转，只播预告，此时代价未结清。
- *   卷（fly → shred / burst → whirl）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付），
- *       风柱沿准线卷出；命中非友方结算一次 `storm` 特殊伤害，在落点炸散；卷叶式再在原地铺出 `whirlRadius`
- *       的叶场，按 `whirlPulse` 反复复割场内敌人，到 `whirlTicks` 散尽。落空只留一下散叶。
+ *   卷（fly → shred / burst）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付），
+ *       风柱沿准线真实卷出；真正卷到的非友方各结算一次 `storm`（每个目标由原生贯穿只碰一次、总伤守单发预算），
+ *       到射程尽头一次 burst 散叶。穿叶式撞上第一个敌人即散；卷叶式更慢、能穿过 `carry` 个敌人。
  *
  * 与同族分开：过热是身前一张扇形热浪、流星群是从头顶砸下的陨石群、精神突进是隔空内爆；
- *   飞叶风暴是唯一绕着一根轴旋转前进、并在落点盘桓成场的那一记。玩家凭「旋卷的绿叶片 + 原地打转的叶场」认出它。
+ *   飞叶风暴是唯一绕着一根轴旋转前进、并沿实际经过的敌人连续旋切的那一记。
  *
- * 配置 `maelstrom`（卷叶式）由 `resolve` 改时序、由公式改威力／半径／时长，由本文件改判定与表现；提交后才触碰世界。
+ * 选取：`kind: "aim"`——方向或世界点都能放，执行只读 `aim(action)`，不要求提交时存在敌人；空放照付特攻下降。
+ *
+ * 配置 `maelstrom`（卷叶式）由公式改威力／风速／贯穿数，由本文件改判定与表现；提交后才触碰世界。
  */
 namespace PokemonSkills {
     const leafstormScene = "world_combat:move_leafstorm";
-    const leafstormWhirlText = "world_combat.move.leafstorm.text.whirl";
     const leafstormMissText = "world_combat.move.leafstorm.text.miss";
 
     define({
         id: "leafstorm",
         cooldownParameter: "recharge",
         name: "Leaf Storm",
-        description: "把尖叶卷成一股旋转的风暴沿准线推出，在目标身上高速旋切并炸散；叶子离手后自身特攻大幅下降。卷叶式会在落点留下一片持续复割的叶场，代价是单体威力更低、出手更慢。",
-        uses: ["中距离一记高威力特殊草点杀", "卷叶式在落点铺一片持续复割的叶场", "把目标与身边的敌人一起卷进叶刃里"],
-        kind: "enemy",
+        description: "把尖叶卷成一股沿准线卷动的风暴，真正卷过谁就在谁身上高速旋切，到尽头一次散开；叶子离手后自身特攻大幅下降。卷叶式卷得更慢、能穿过几个敌人，代价是单发威力更低、出手更慢。",
+        uses: ["中距离一记高威力特殊草点杀", "卷叶式把成排的敌人一次卷过", "把目标与它身后的敌人一起卷进叶刃里"],
+        kind: "aim",
         range: 11,
         maxRange: 16,
         prepare: 12,
@@ -35,7 +36,7 @@ namespace PokemonSkills {
         cooldown: 38,
         maximumTicks: 360,
         style: "verdant",
-        defaults: { maelstrom: false, ai: { maxChase: 15, group: true } },
+        defaults: { maelstrom: false, ai: { maxChase: 15, line: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p("leafstorm", "reach", pokemon) : 11, geometry: "line", style: "verdant",
@@ -68,16 +69,17 @@ namespace PokemonSkills {
             const girth = p("leafstorm", "girth", action);
             const reach = p("leafstorm", "reach", action);
             const blades = Math.max(12, Math.round(p("leafstorm", "blades", action)));
-            const whirlRadius = Math.max(0, p("leafstorm", "whirlRadius", action));
-            const whirlShare = Math.max(0, Math.min(0.6, p("leafstorm", "whirlShare", action)));
-            const whirlTicks = Math.max(0, Math.round(p("leafstorm", "whirlTicks", action)));
-            const whirlPulse = Math.max(10, Math.round(p("leafstorm", "whirlPulse", action)));
+            const carry = maelstrom ? Math.max(1, Math.round(p("leafstorm", "carry", action))) : 0;
             const insightLoss = Math.max(0, Math.round(p("leafstorm", "insightLoss", action)));
             const scale = Math.max(0.6, Math.min(2.4, girth / 0.42));
             const intensity = Math.max(0.5, Math.min(2.4, power / 120));
-            let settled = false;
+            const scenes = WorldFeedback.actionScenes(leafstormScene);
+            const direction = aim(action);
+            const spent: { [ref: string]: number } = Object.create(null);
+            let cuts = 0, settled = false;
+            let last = origin.plus(direction.scale(reach));
 
-            // 叶子离手：反作用力在提交那一刻付。
+            // 叶子离手：反作用力在提交那一刻付，中与不中都一样。
             NativeEffects.boost(world, actor, "spa", -insightLoss);
             WorldFeedback.emit(world, leafstormScene, 1, origin,
                 { moment: "gather", maelstrom: maelstrom ? 1 : 0, blades: blades, scale: scale, intensity: intensity }, 20);
@@ -86,61 +88,46 @@ namespace PokemonSkills {
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                done(current);
-            }
-
-            /** 落点叶场：按 whirlPulse 反复复割场内敌人，到 whirlTicks 散尽。 */
-            function whirl(current: CombatAction, at: CombatPoint, index: number): void {
-                const scope = current.world();
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, whirlRadius, { below: 2.5, above: 3.5 }), function (enemy, facts) {
-                    if (!hurt(current, enemy, "leafstorm", power * whirlShare, { damage: damageSpec("leafstorm", "storm") })) return;
-                    WorldFeedback.emit(scope, leafstormScene, 1, facts.position(),
-                        { moment: "shred", target: String(enemy.ref()), blades: blades, scale: scale, intensity: intensity * 0.8 }, 18);
-                });
-                const next = index + 1;
-                if (next * whirlPulse >= whirlTicks) { finish(current); return; }
-                current.after(whirlPulse, function (fresh: CombatAction) { whirl(fresh, at, next); });
+                scenes.finish(current, done);
             }
 
             const flight = LivingActions.projectile(action, {
-                speed: gust, range: reach, radius: girth,
-                direction: aim(action),
-                lifetime: Math.max(30, Math.round(reach / Math.max(0.2, gust) + 30)),
+                speed: gust, range: reach, radius: girth, direction: direction,
+                lifetime: Math.max(30, Math.round(reach / Math.max(0.2, gust) + 40)),
                 appearance: { sprite: "cobblemon:generic/grass/razorleaf", tint: 0x9BD14A, glow: true,
-                    scale: Math.max(0.8, Math.min(2.2, girth * 3.2)) },
+                    scale: Math.max(0.8, Math.min(2.2, girth * 3.2)), pierce: carry },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world();
                     const at = hit.position();
+                    last = at;
                     const victim = hit.target();
-                    let landed = false;
-                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim))
-                        landed = impact(current, hit, "leafstorm", power, { damage: damageSpec("leafstorm", "storm") });
+                    if (victim === null || !scope.valid(victim) || scope.friendly(victim)) return;
+                    const ref = String(victim.ref());
+                    const budget = Math.max(0, power - (spent[ref] || 0));
+                    if (budget <= 0) return;
+                    const landed = impact(current, hit, "leafstorm", budget, { damage: damageSpec("leafstorm", "storm") });
+                    if (!landed) return;
+                    spent[ref] = (spent[ref] || 0) + budget;
+                    cuts++;
                     WorldFeedback.emit(scope, leafstormScene, 1, at,
-                        { moment: landed ? "shred" : "burst", target: victim !== null ? String(victim.ref()) : "",
-                            landed: landed ? 1 : 0, blades: blades, scale: scale, intensity: intensity }, 28);
-                    sound(current, landed ? "cobblemon:move.leafstorm.target" : "cobblemon:impact.grass");
-                    if (maelstrom && whirlRadius > 0) {
-                        // 卷叶式的叶场先续上，再开始复割。
-                        WorldFeedback.keep(scope, "leafstorm:whirl:" + current.id(), leafstormScene, 1, at,
-                            { moment: "whirl", radius: whirlRadius, blades: blades, scale: scale, intensity: intensity, whirlTicks: whirlTicks }, whirlTicks + 12);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), leafstormWhirlText, [Math.round(whirlShare * 100)], 26);
-                        whirl(current, at, 1);
-                        return;
-                    }
-                    finish(current);
+                        { moment: "shred", target: ref, blades: blades, scale: scale, intensity: intensity }, 22);
+                    sound(current, "cobblemon:move.leafstorm.target");
                 }
             }, function (current: CombatAction) {
+                if (settled) return;
                 const scope = current.world();
-                const at = current.targetPosition();
-                WorldFeedback.emit(scope, leafstormScene, 1, at,
-                    { moment: "burst", landed: 0, blades: blades, scale: scale, intensity: intensity }, 22);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), leafstormMissText, [], 22);
-                sound(current, "minecraft:block.grass.break");
+                WorldFeedback.emit(scope, leafstormScene, 1, last,
+                    { moment: "burst", landed: cuts > 0 ? 1 : 0, blades: blades, radius: girth * 1.6,
+                        scale: scale, intensity: intensity }, 24);
+                if (cuts === 0) {
+                    WorldFeedback.text(scope, last.plus(WorldCombat.point(0, 1.2, 0)), leafstormMissText, [], 22);
+                    sound(current, "minecraft:block.grass.break");
+                }
                 finish(current);
             });
 
-            WorldFeedback.keep(world, "leafstorm:fly:" + action.id(), leafstormScene, 1, origin,
-                { moment: "fly", projectile: flight, blades: blades, scale: scale, intensity: intensity }, 90);
+            scenes.show(action, "fly", origin,
+                { moment: "fly", projectile: flight, blades: blades, scale: scale, intensity: intensity });
         }
     });
 }

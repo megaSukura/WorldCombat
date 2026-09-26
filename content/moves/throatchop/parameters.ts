@@ -24,6 +24,40 @@ namespace PokemonSkills {
     export const throatChopFadeText = "world_combat.move.throatchop.text.recovered";
     export const throatChopWhiffText = "world_combat.move.throatchop.text.whiff";
 
+    // 感知：谁身上有声音招式、谁刚刚出过声音招式。用来让 AI 更愿意在对手将唱声时先手封喉，
+    // 而普通纯物理敌人只当正常近伤，不夸大封锁价值。
+    export var throatChopSoundAt: { [ref: string]: number } = Object.create(null);
+
+    /** 一个原生招式 id 是否带 sound 标记；非招式的自定义动作或未知 id 均按 false 处理。 */
+    export function throatChopSoundMove(id: string): boolean {
+        if (!id) return false;
+        try { return !!CobblemonCombat.moveTemplate(id).flag("sound"); } catch (error) { return false; }
+    }
+    /** 目标身上是否带着至少一个声音类招式（只有宝可梦有原生招式表）。 */
+    export function throatChopSoundCapable(world: CombatWorld, actor: CombatActor): boolean {
+        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return false;
+        try {
+            var pokemon = CobblemonCombat.pokemon(actor);
+            for (var slot = 0; slot < pokemon.moveSlots(); slot++) {
+                var move = pokemon.move(slot); if (!move) continue;
+                if (throatChopSoundMove(String(move.id()))) return true;
+            }
+        } catch (error) { }
+        return false;
+    }
+    /** 目标是否在最近一段时间内实际提交过声音类招式。 */
+    export function throatChopRecentSound(world: CombatWorld, actor: CombatActor): boolean {
+        var at = throatChopSoundAt[String(actor.ref())];
+        return at !== undefined && world.tick() - at < 120;
+    }
+
+    WorldCombat.on("world_combat:move_throatchop/sound", "world_combat:committed", "", function (event: CombatWorldEvent) {
+        var actor = event.actor(), action = event.action(), world = event.world();
+        if (actor === null || action === null || !world.valid(actor)) return;
+        var id = String(action.content()).replace(/^world_combat:/, "");
+        if (throatChopSoundMove(id)) throatChopSoundAt[String(actor.ref())] = world.tick();
+    });
+
     // 封声门禁：带着本单元咽喉载体的活体，任何带 sound 标记的招式在提交时被顶回去。
     // 走共享动作策略，原生配招与通用动作共用同一个提交闸门；放在原生 skill-policy 之后，才能读到 flags。
     CombatStatus.actions.define({ id: "world_combat:move/throatchop/silence",

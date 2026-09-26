@@ -5,11 +5,12 @@
  *   识破窗口内一直有细环在它身上慢慢转，直到印记褪去。
  *
  * 色相家族：冷白（0xE8F4FF）做目光主体，淡蓝（0xC9E4FF）做瞳孔环与余韵，灰白（0xC6D0DC）收尘。
- * 层次：凝目（起手，目光在眼内收束）→ 看穿（一条视线＋目标瞳孔环＋轮廓火花）→ 持识（低密度细环）
- *   → 褪去／被挡／落空。
- * 起击收：windup（凝目）→ read（看穿）→ hold（持识，慢慢离场）→ fade（走空）。
- * 范围：单体识破，视线与目标瞳孔环画的正是被看穿的那个人；识破距离由 reach 决定，画面沿视线铺开。
- * 运动：视线从施法者沿视线飞向目标（bind path polyline），瞳孔环由外向内收；持识时细环在目标身上转动。
+ * 层次：凝目（起手，目光在眼内收束）→ 看穿（一条视线＋目标瞳孔环＋轮廓火花）→ 实影闪（一般/格斗接上的一拍）
+ *   → 持识（低密度细环）→ 褪去／被挡／落空。
+ * 起击收：windup（凝目）→ read（看穿）→ solidify（虚体看实）→ hold（持识，随记录层结束）→ fade（走空）。
+ * 范围：单体识破，视线与目标瞳孔环画的正是被看穿的那个人；识破距离由 reach 决定。
+ * 运动：视线是施法者与目标之间一条瞬时直线（bind path + shape polyline，整条边同时采样，不是沿线飞行的前沿）；
+ *   瞳孔环由外向内收；持识时细环在目标身上转动，绑在记录层这条托管效果上，记录层一结束即一起收。
  * 数：视线与瞳孔环的密度读 data.motes（物攻派生），剥掉的闪避级数读 data.taken（决定环的层数与亮度）。
  */
 const ForesightDefinition: ParticleDefinition = {
@@ -64,6 +65,28 @@ const ForesightDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.12, 0.03],
                     color: 0xE8F4FF, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 12
+                }
+            ]
+        },
+        solidify: {
+            duration: 18,
+            exit: { stop: 8, drain: 10 },
+            emitters: [
+                {
+                    name: "real_snap", bind: "target", height: 0.9,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 18 }, shape: { kind: "sphere_surface", radius: 0.4 },
+                    direction: "outward", speed: [0.06, 0.2], spread: 12,
+                    lifetime: [8, 14], size: [0.14, 0.03], sizeMode: "index",
+                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 40
+                },
+                {
+                    name: "solid_outline", bind: "target", height: 0.85,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 2, interval: 3 }, shape: { kind: "ring", radius: 0.42 },
+                    direction: "outward", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.36, 0.1],
+                    color: 0xD9F0FF, alpha: [0.9, 0], light: "full", maxParticles: 12
                 }
             ]
         },

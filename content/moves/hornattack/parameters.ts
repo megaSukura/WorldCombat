@@ -61,7 +61,7 @@ namespace PokemonSkills {
             F.base(0.6).plus(F.stat("speed").minus(60).times(0.006).clamp(-0.1, 0.4)).clamp(0.3, 1.3).round(2),
             "冲身步幅", {
                 unit: "格",
-                description: "出角时整个人趟出的距离；速度快的个体冲得更前。冲到判定边缘就停，不会穿过目标。"
+                description: "出角时身体朝前趟出的短接触距离；速度快的个体趟得更前。原生身体扫掠停在第一个实体或障碍上，不越墙找原目标。"
             }),
         /** 初始顶退：0.5 + 体重偏移[0,0.5] ×0.002；夹 0.2..1.0。 */
         shove: formula(

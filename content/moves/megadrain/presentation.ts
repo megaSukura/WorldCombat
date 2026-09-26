@@ -15,6 +15,9 @@
 const MegaDrainDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        return:{emitters:[{name:"moving_pod",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/orb/xsfadeorblite",rate:12,shape:{kind:"sphere",radius:.12},lifetime:[3,6],size:[.16,.05],color:0xA8EA72,alpha:[.7,.1],light:"full"}]},
+        collected:{duration:16,emitters:[{name:"received_life",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/sparkle/smallsparkle",burst:{count:10},shape:{kind:"sphere_surface",radius:.4},direction:"inward",speed:[.02,.06],lifetime:[5,12],size:[.1,.02],color:0xA8EA72,alpha:[.8,0]}]},
+        pod_pulse:{duration:12,emitters:[{name:"swollen_pod",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/grass/seed",burst:{count:3},shape:{kind:"sphere_surface",radius:.3},lifetime:[4,10],size:[.12,.25],color:0x8CC63F,alpha:[.8,0]}]},
         windup: {
             duration: 16,
             exit: { stop: 8, drain: 12 },

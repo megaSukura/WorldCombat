@@ -1,40 +1,17 @@
-/** 花疗：立即治疗选定友方；青草场地加成读取目标状态，撒花与绽放承载反馈。 个体差异、配置和现场事实由以下公式定义。 */
+/** 花疗：分两朵花送达选定友方；第二朵读取受益人当时的青草场地状态，撒花与绽放承载反馈。 个体差异、配置和现场事实由以下公式定义。 */
 namespace PokemonSkills {
     export const floralhealingId = "floralhealing";
-
-    function floralhealingTarget(context: FactContext): CombatActor | null {
-        if (context.target && context.target.actor) return context.target.actor;
-        if (context.action) { var found = context.action.target(); if (found) return found; }
-        return null;
-    }
-
-    /** 目标身上是否带着青草场地的身份。 */
-    function floralhealingGrass(context: FactContext): number {
-        var target = floralhealingTarget(context);
-        if (!target || !context.world || !context.world.valid(target)) return 0;
-        return CombatStatus.has(context.world, target, "grassyterrain") ? 1 : 0;
-    }
-
-    defineFacts(floralhealingId, function (context: FactContext): Formula.Facts {
-        return {
-            read: function (id: string): Formula.Fact {
-                if (id === "grass") return Formula.fact(floralhealingGrass(context));
-                return undefined;
-            },
-            expand: function (id: string): Formula.Explanation | undefined {
-                if (id !== "grass") return undefined;
-                return { value: floralhealingGrass(context), label: { key: "worldcombat.skill." + floralhealingId + ".value.grass" }, terms: [] };
-            }
-        };
-    });
 
     actionParameters.define(floralhealingId, {
         heal: percent(F.base(0.50)
             .plus(F.individual("friendship").minus(70).times(0.0006).clamp(-0.05, 0.10).as("花意"))
-            .plus(F.var("grass", { key: "worldcombat.skill." + floralhealingId + ".value.grass" }).times(0.167))
             .times(F.when(F.pref("bouquet"), F.const(1.06), F.const(1)))
-            .clamp(0.40, 0.70).round(3),
-            "回复比例", "伙伴回复其最大生命的这个比例；亲密度越高花越滋养，站在青草场地上回复提高到约 2/3。"),
+            .clamp(0.40, 0.58).round(3),
+            "总回复比例", "两朵花加起来回复其最大生命的这个比例（不含青草）；亲密度越高花越滋养，繁花档再多一点。"),
+        grassBoost: percent(F.base(0.08)
+            .plus(F.stat("specialAttack").minus(60).times(0.0008).clamp(0, 0.04))
+            .round(3),
+            "青草加成", "受益人此刻站在青草场地上时，第二朵花额外多补的最大生命比例；特攻越高加成越足。"),
         reach: formula(F.base(5)
             .plus(F.level().minus(20).max(0).times(0.07).clamp(0, 2))
             .times(F.when(F.pref("bouquet"), F.const(0.9), F.const(1)))
@@ -51,11 +28,13 @@ namespace PokemonSkills {
         flowers: formula(F.base(3).plus(F.level().minus(20).max(0).times(0.06))
             .times(F.when(F.pref("bouquet"), F.const(1.5), F.const(1)))
             .clamp(2, 8).round(),
-            "落花数量", { unit: " 朵", description: "治疗后飘落的花朵粒子数量；等级越高、繁花档越多。" }),
+            "落花数量", { unit: " 朵", description: "第二朵花之后飘落的花朵粒子数量；等级越高、繁花档越多。" }),
+        bloomDelay: seconds(F.base(12).minus(F.stat("speed").minus(40).times(0.06).clamp(-2, 4)).clamp(6, 16),
+            "第二朵间隔", "第一朵送达后隔多久开第二朵；速度越快两朵越紧凑。"),
         tempo: seconds(F.base(9).minus(F.stat("speed").minus(40).times(0.05).clamp(-2, 3)).clamp(5, 14),
             "起手", "把花瓣拢起来撒出去之前的准备；速度越快起得越利落。"),
         settle: seconds(F.base(8).plus(F.body("height").minus(1.4).times(0.4).clamp(-1, 2)).clamp(5, 13),
-            "收招", "撒完花瓣之后收势的时间；身板越大收得稍慢。")
+            "收招", "第二朵也结束后收势的时间；身板越大收得稍慢。")
     });
 
     stages(floralhealingId, [
@@ -64,9 +43,10 @@ namespace PokemonSkills {
     ]);
 
     describe(floralhealingId, [
-        { key: "description.0", values: ["heal"] },
+        { key: "description.0", values: ["heal", "grassBoost"] },
         { key: "description.1", values: ["reach"] },
-        { key: "description.2", values: ["tempo", "settle"] },
+        { key: "description.2", values: ["bloomDelay"] },
+        { key: "description.3", values: ["tempo", "settle"] },
         { key: "stance.bouquet", values: [], when: function (context) { return read(context.detail.values, ["bouquet"]) === true; } },
         { key: "stance.plain", values: [], when: function (context) { return read(context.detail.values, ["bouquet"]) !== true; } },
         { key: "timing", values: ["prepare","recover","pp","cooldown"] },

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.absorb.summary": "命中目标并汲取生命，为自己恢复生命。",
+  "worldcombat.skill.absorb.summary": "朝瞄准方向探出一根短藤，点中敌人就汲取生命为自己恢复；可以空放，墙与友方会先挡下藤尖。",
   "worldcombat.skill.absorb.description.0": "藤尖点中造成约 %1$s 的特殊伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.absorb.description.1": "藤长 %1$s 格（也是实际射程），藤尖判定半径 %2$s 格。",
   "worldcombat.skill.absorb.description.2": "造成的伤害有 %1$s 转回自身生命。",

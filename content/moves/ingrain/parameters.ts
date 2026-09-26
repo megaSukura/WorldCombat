@@ -6,7 +6,7 @@
  *
  * 核心念头：从脚底把根须插进土里，就地钉住自己；此后每一拍沿着这些根从地里抽上一点生机，回一口血。
  * 翻译：取原生「每回合回 1/16、Grass、目标自己、PP 20」；把「不能替换宝可梦」翻成即时世界里真正的**钉在原地**
- *   （共享 rooted：移速归零、被推也不走），把「扎根」翻成脚下那块地被根须顶成 rooted_dirt、到期还原。
+ *   （共享 rooted：移速归零、被推也不走）。地块不替换：根须是插进脚下地面的表现与判定，回血不依赖改方块。
  *   与水流环的分别：水流环是一条可以边走边挂的续航线；扎根是把自己钉死在一块地上换来的更耐久的小口回血。
  *
  * 数值来源（每个参数读不同的精灵数据，分散到不同参数上）：
@@ -53,7 +53,7 @@ namespace PokemonSkills {
             F.base(0.8).plus(F.body("width").times(0.6)).clamp(0.7, 1.8).round(2),
             "根域半径", {
                 unit: " 格",
-                description: "脚下被根须盘住的地面半径；碰撞箱越宽盘得越开，也是根环表现与地面改造的范围。"
+                description: "脚下被根须盘住的地面半径；碰撞箱越宽盘得越开，也是根环表现与治疗判定参考的范围。"
             }),
         /** 起手：速度决定扎根多快。 */
         tempo: seconds(
@@ -78,7 +78,7 @@ namespace PokemonSkills {
 
     describe("ingrain", [
         { key: "description.0", values: ["pulse","interval"] },
-        { key: "description.1", values: ["rootTicks","radius"] },
+        { key: "description.1", values: ["rootTicks"] },
         { key: "description.2", values: ["tempo","aftercast","wait"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

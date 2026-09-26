@@ -5,11 +5,14 @@
  *   后面每一声继续削血；每一声之间留出缝，对手可以走进或走出锥外，所以这是一段**能被走位打断的连续过程**，
  *   而不是一次结算。恶属性的声压不看视线，但只罩住身前那一锥。
  *
+ * 选取：`kind: "aim"`——方向、世界点或敌人推荐都行，空吼也照常消耗；提交那一刻把方向压平、锁成整段
+ *   施放的固定朝向，连斥期间不再追着目标旋转，对手靠走出锥外躲开后面几声。墙照声音规则不额外拦截。
+ *
  * 幕：
  *   起（windup，提交前）：吸气、口边聚起暗色音符（`action.present`，可被打断、不花 PP）。
- *   斥（bark，提交后按 `pulses` 次）：每个脉冲以施法者为顶点、朝瞄准方向张开 `arc` 度、推出 `reach` 格，
- *     `WorldGeometry.sector` 选出锥内所有非友方，各结算一声 `bark` 伤害；第一个命中的脉冲给每人挂上
- *     `world_combat:status/snarled`（本单元效果 snarl_scolded）并下降特攻 `spaDrop` 级。
+ *   斥（bark，提交后按 `pulses` 次）：每个脉冲以施法者为顶点、朝第一声锁定的方向张开 `arc` 度、推出 `reach` 格，
+ *     `WorldGeometry.sector` 选出锥内所有非友方，各结算一声 `bark` 伤害；每个目标**第一次**被喝中时挂上
+ *     `world_combat:status/snarled`（本单元效果 snarl_scolded）并下降特攻 `spaDrop` 级，之后只继续削血。
  *   收：最后一声之后收招。一声都没罩到人时补一个 fizzle 表现。
  *
  * 与同族分开：虫鸣是一道连续声波（近强远弱、概率碾防），战吼是纯削弱锥；大声咆哮是**唯一按拍连喝、
@@ -45,7 +48,7 @@ namespace PokemonSkills {
         name: "Snarl",
         description: "朝身前推出一道锥形怒吼，锥内每个敌人各挨一声伤害，被第一声喝住的人特攻下降。连斥式会一声接一声地骂，对手可以走出锥外躲开后面几声；断喝式只有一声但更重。",
         uses: ["把扎堆的敌人一次骂软，压低对面的特攻输出", "用连续几声逼对手走出声压锥、打乱站位", "在远处先手削掉法系威胁"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 6,
@@ -68,7 +71,8 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("snarl:gather:" + action.id(), snarlScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather", rant: config && config.rant === true }));
+                JSON.stringify({ moment: "gather",
+                    notes: Math.max(10, Math.round(p("snarl", "notes", action))) }));
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -90,6 +94,8 @@ namespace PokemonSkills {
             const arc = Math.max(30, p("snarl", "arc", action));
             const scale = Math.max(0.5, Math.min(2.2, reach / 4));
             let index = 0, landed = false, settled = false;
+            // 每个目标在本段施放里只被「喝软」一次；先看这个 map，再看身上是否已带着被斥身份。
+            const scolded: { [ref: string]: boolean } = {};
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
@@ -105,18 +111,27 @@ namespace PokemonSkills {
                     const dealt = hurt(current, enemy, "snarl", power, { damage: damageSpec("snarl", "bark"), sound: true });
                     if (!dealt) return;
                     hits++;
-                    WorldFeedback.emit(scope, snarlScene, 1, facts.position(),
-                        { moment: "hush", target: String(enemy.ref()), notes: notes, drop: drop, pulse: index + 1,
-                            intensity: Math.max(0.6, Math.min(2, power / 30)) }, 24);
-                    if (!landed && scope.valid(enemy)) {
+                    landed = true;
+                    const ref = String(enemy.ref());
+                    const fresh = !scolded[ref] && scope.valid(enemy) && MobEffects.read(scope, enemy, snarlScolded) === null;
+                    if (fresh) {
+                        // 第一次被这一段喝中：挂被斥身份、掉特攻，并在目标身上放 hush。
+                        scolded[ref] = true;
                         MobEffects.apply(scope, enemy, snarlScolded, hush, 0);
                         NativeEffects.boost(scope, enemy, "spa", -drop);
+                        WorldFeedback.emit(scope, snarlScene, 1, facts.position(),
+                            { moment: "hush", target: ref, notes: notes, drop: drop, pulse: index + 1,
+                                intensity: Math.max(0.6, Math.min(2, power / 30)) }, 24);
                         const at = scope.observe(enemy);
                         if (at !== null)
                             WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), snarlHitText, [drop], 26);
+                    } else {
+                        // 已经被骂软的人只继续挨削血，用较轻的 chide，不重复掉特攻。
+                        WorldFeedback.emit(scope, snarlScene, 1, facts.position(),
+                            { moment: "chide", target: ref, notes: notes, pulse: index + 1,
+                                intensity: Math.max(0.6, Math.min(2, power / 30)) }, 20);
                     }
                 });
-                if (hits > 0) landed = true;
                 WorldFeedback.emit(scope, snarlScene, 1, origin,
                     { moment: "bark", path: path, reach: reach, arc: arc, halfArc: arc / 2, notes: notes,
                         pulse: index + 1, hits: hits, scale: scale, direction: [heading.x(), heading.y(), heading.z()] }, 26);

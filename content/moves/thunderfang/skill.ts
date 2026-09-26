@@ -2,22 +2,21 @@
  * 雷电牙 / thunderfang 的出手方式。
  *
  * 核心念头：**一记最快的扑咬，让电流从牙齿穿身**——本族里出手最快、扑得最远的一口；命中按几率把目标麻住。
- * 独有部分在**电锁**：咬的是一具已经麻了的身体时，抽搐的肌肉被电流锁住，目标被短暂定在原地。
+ * 咬中一具已经麻了的身体时，电流会在这一次接触上炸得更亮，但只按主伤结算，不再叠加定身强控。
  *
  * 三幕：
  *   起（windup，提交前）：牙间窜起电光、脚边发亮，只播预告表现。
  *   咬（pounce → bite）：提交后沿瞄准方向快速扑出；trace 咬中即结算 fang 接触咬合，命中点炸开电色迸溅与獠牙剪影；
  *       按 numbChance 施加共享身份 `world_combat:status/paralysis`，并按 flinchChance 掷畏缩。
- *   锁（lock）：若咬中时目标已经完全麻痹，电流锁住它 `lockTicks`，把它定在原地（`world_combat:rooted`）。
+ *       咬中时目标已麻痹则本次电花更明确，但不附额外强控。
  *
- * 配置 `overload`（过载式）由 resolve 改时序、由公式改威力／麻痹／电锁，提交后才触碰世界。
+ * 配置 `overload`（过载式）由 resolve 改时序、由公式改威力／麻痹，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const thunderfangScene = "world_combat:move_thunderfang";
     const thunderfangFlinchEffect = "world_combat:thunderfang_flinch";
     const thunderfangHitText = "world_combat.move.thunderfang.text.hit";
     const thunderfangNumbText = "world_combat.move.thunderfang.text.numb";
-    const thunderfangLockText = "world_combat.move.thunderfang.text.lock";
     const thunderfangFlinchText = "world_combat.move.thunderfang.text.flinch";
     const thunderfangMissText = "world_combat.move.thunderfang.text.miss";
 
@@ -32,9 +31,9 @@ namespace PokemonSkills {
         id: "thunderfang",
         cooldownParameter: "recharge",
         name: "Thunder Fang",
-        description: "咬击目标，有机会使其麻痹或畏缩。咬中已麻痹的目标时会短暂将其定住。",
-        uses: ["用最快的扑咬起手", "按几率把目标麻住", "把已经麻掉的目标电锁在原地"],
-        kind: "enemy",
+        description: "最快的一记扑咬，电流在接触那一刻打断节奏：命中造成咬合伤害，并按几率使目标麻痹；咬中已经麻痹的目标时本次电花更亮，但只按主伤结算，不再叠加定身。咬得够狠还会把对手咬懵。过载式更容易麻住、麻得更久，点穴式咬得更重。",
+        uses: ["用最快的扑咬起手", "按几率把目标麻住", "咬懵对手，打断它正在做的事"],
+        kind: "aim",
         range: 2.5,
         maxRange: 3.8,
         prepare: 4,
@@ -73,7 +72,6 @@ namespace PokemonSkills {
             const power = p("thunderfang", "fang", action);
             const numbChance = Math.max(0.02, Math.min(0.95, p("thunderfang", "numbChance", action)));
             const numbTicks = Math.max(60, Math.round(p("thunderfang", "numbTicks", action)));
-            const lockTicks = Math.max(4, Math.round(p("thunderfang", "lockTicks", action)));
             const chance = Math.max(0.02, Math.min(0.9, p("thunderfang", "flinchChance", action)));
             const flinchTicks = Math.max(6, Math.round(p("thunderfang", "flinchTicks", action)));
             const sparks = Math.max(5, Math.round(p("thunderfang", "sparks", action)));
@@ -101,19 +99,13 @@ namespace PokemonSkills {
                 const wasParalyzed = CombatStatus.has(scope, victim, "paralysis");
                 const landed = impact(current, contact, "thunderfang", power,
                     { damage: damageSpec("thunderfang", "fang"), contact: true, bite: true });
+                // 已麻痹的身体这次电花更明确，但只作表现，不附定身等额外强控。
                 WorldFeedback.emit(scope, thunderfangScene, 1, at,
-                    { moment: "bite", target: victimRef, sparks: sparks, scale: scale, intensity: intensity }, 22);
+                    { moment: "bite", target: victimRef, sparks: wasParalyzed ? Math.round(sparks * 1.5) : sparks,
+                        scale: scale, intensity: intensity }, 22);
                 sound(current, "cobblemon:impact.electric");
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), thunderfangHitText, [], 22);
-                // 电锁：咬中一具已经麻了的身体时，抽搐的肌肉被电流锁住，原地定住一拍。
-                if (wasParalyzed && scope.valid(victim)) {
-                    WorldEffects.apply(scope, victim, "rooted", {}, lockTicks);
-                    WorldFeedback.emit(scope, thunderfangScene, 1, at,
-                        { moment: "lock", target: victimRef, sparks: sparks, scale: scale, intensity: intensity, lock: lockTicks }, 24);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), thunderfangLockText, [], 24);
-                    sound(current, "minecraft:item.trident.thunder");
-                }
                 if (scope.random() < numbChance && scope.valid(victim)) {
                     const numbed = CombatStatus.inflict(scope, victim, "paralysis", numbTicks, 0, { secondary: true });
                     if (numbed) {

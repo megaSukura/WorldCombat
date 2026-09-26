@@ -2,10 +2,26 @@
  * 燕返 / aerialace 的 AI 用途。
  *
  * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
- * `ai.skirmish`（默认开）：目标正在移动（追人或逃跑）时抬高 priority——掠袭是追着人切过去的，
- * 移动中的目标正合刀路；目标静止时按普通近身斩排序。
+ * `ai.skirmish`（默认开）：目标正在移动（追人或逃跑）时抬高 priority——掠袭刀路能拦在它前面。
+ * 落点安全：掠过目标后会落到它的另一侧，那里放不下自己的身体（墙后、窄缝）时降低推荐，不硬撞墙停下。
  */
 namespace PokemonSkills {
+    /** 掠过目标后身体需要落下的那侧是否有容身之处；同一决策帧内缓存。 */
+    function aerialaceLanding(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
+        return CompanionBehavior.observedFlag(context, "aerialace:landing:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+            const length = Math.sqrt(dx * dx + dz * dz);
+            if (!(length > 0.01)) return false;
+            const travel = p("aerialace", "pursuit", world);
+            const beyond = Math.max(0.6, travel - length);
+            const height = self.height === undefined ? 1.4 : self.height;
+            const feet = CompanionBehavior.point([target.point[0] + dx / length * beyond, target.point[1] - height / 2,
+                target.point[2] + dz / length * beyond]);
+            return world.freeSpace(feet, self.width === undefined ? 0.9 : self.width, height);
+        });
+    }
+
     CompanionBehavior.registerUse("aerialace", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -22,6 +38,8 @@ namespace PokemonSkills {
             if (!target) return 0;
             var gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             var base = gap <= capability.data.range ? 20 : 4;
+            // 落点不安全时降低推荐；空放换位不值得撞墙停下。
+            if (!aerialaceLanding(context, target)) base -= 10;
             if (!CompanionBehavior.ai<boolean>(capability, "skirmish", true)) return base;
             // 移动中的目标（velocity 非零）优先——掠袭刀路正拦在它前面。
             var velocity = CompanionBehavior.velocity(context, target);

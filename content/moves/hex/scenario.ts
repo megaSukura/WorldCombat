@@ -16,6 +16,8 @@ Smoke.scenario("hex", function (stage) {
     var caster = stage.pokemon({ species: "Gengar", level: 35, moves: ["hex"], at: [-3, 0, 0] });
     var foe = stage.pokemon({ species: "Machamp", level: 45, moves: ["tackle"], at: [3, 0, 0], status: "burn" });
     stage.hostile(caster, foe);
+    // 目标站定，让诅咒送达起手锁定的落点后，固定结界仍能罩住它；跑出圈属于「走出即安全」的另行观察。
+    stage.noai(foe);
     stage.until(1200, function () {
         return stage.casts("hex", caster) > 0 && stage.damageBy(caster) > 0;
     }, function () {

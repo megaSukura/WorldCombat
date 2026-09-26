@@ -13,6 +13,20 @@
 namespace PokemonSkills {
     function featherdanceAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
+    /** 羽绒耗尽落点的实际着地面：向下探一次，找到支撑面就落在其上方，找不到就保持原高度。 */
+    function featherdanceGround(world: CombatWorld, point: CombatPoint): CombatPoint {
+        const baseY = Math.floor(point.y());
+        for (let probe = baseY + 1; probe >= baseY - 4; probe--) {
+            const block = world.block(WorldCombat.point(point.x(), probe, point.z()));
+            if (block === null) break;
+            const id = String(block.id());
+            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
+            if (id === "minecraft:water" || id === "minecraft:lava") break;
+            return WorldCombat.point(point.x(), probe + 1, point.z());
+        }
+        return point;
+    }
+
     /** 把羽绒覆到一个目标身上：挂身份、扣攻击、播命中表现与浮字。 */
     function featherdanceSmother(world: CombatWorld, target: CombatActor, drop: number, downTicks: number, tufts: number): void {
         MobEffects.apply(world, target, featherdanceEffect, downTicks, 0);
@@ -45,9 +59,9 @@ namespace PokemonSkills {
         id: featherdanceId,
         cooldownParameter: "recharge",
         name: "羽毛舞",
-        description: "撒出一团会飘的羽绒罩住对手，大幅降低它的攻击；落地后那团绒雾还会留一阵，谁走进去谁被覆上一层。厚羽压得更实、覆盖更小；撒羽铺得更开、削得浅一档。",
+        description: "撒出一团会飘的羽绒罩住对手，大幅降低它的攻击；落地后那团绒雾还会留一阵，谁走进去谁被覆上一层。可以直接点敌人，也可以点空地提前把绒雾铺在对手要经过的位置。厚羽压得更实、覆盖更小；撒羽铺得更开、削得浅一档。",
         uses: ["削弱一个靠物攻输出的对手", "用一小片绒雾封住必经的门口", "在队友被追时替它压住近战威胁"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 9,
         prepare: 9,
@@ -90,20 +104,27 @@ namespace PokemonSkills {
             const speed = Math.max(0.5, p(featherdanceId, "flightSpeed", action));
             const strandRadius = Math.max(0.15, p(featherdanceId, "strandRadius", action));
             const tufts = Math.max(10, Math.round(p(featherdanceId, "feathers", action)));
+            // 提交时锁定发射点与方向，与 LivingActions.projectile 用的是同一组数据；羽场只在真实碰撞点或云团实际耗尽处。
+            const launch = action.origin();
+            const offset = action.targetPosition().minus(launch);
+            const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
+            const landing = launch.plus(direction.scale(action.range()));
             sound(action, "minecraft:entity.parrot.fly");
             let settled = false;
             function settle(current: CombatAction, point: CombatPoint, entity: CombatActor | null): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
+                // 绒雾是地面区域：落点统一贴到实际着地面，而不是命中那一刻的身体高度。
+                const ground = featherdanceGround(scope, point);
                 const marked: any = {};
                 if (entity !== null && !scope.friendly(entity)) {
                     marked[String(entity.ref())] = true;
                     featherdanceSmother(scope, entity, drop, down, tufts);
                 }
-                WorldEffects.field(scope, featherdanceField, point, radius,
+                WorldEffects.field(scope, featherdanceField, ground, radius,
                     { drop: drop, ticks: down, tufts: tufts, marked: marked }, fieldTicks);
-                WorldFeedback.emit(scope, featherdanceScene, 1, point,
+                WorldFeedback.emit(scope, featherdanceScene, 1, ground,
                     { moment: "settle", radius: radius, drop: drop, feathers: tufts, scale: radius / 3.0 }, 32);
                 sound(current, "minecraft:block.wool.place");
             }
@@ -115,7 +136,8 @@ namespace PokemonSkills {
                     settle(current, hit.position(), target !== null && !current.world().friendly(target) ? target : null);
                 }
             }, function (current) {
-                settle(current, current.targetPosition(), null);
+                // 云团在 open 处耗尽：落点是它自己飞到的位置，不是旧的目标锁定点；settle 再贴到实际着地面。
+                settle(current, landing, null);
                 done(current);
             });
             WorldFeedback.emit(world, featherdanceScene, 1, origin,

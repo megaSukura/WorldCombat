@@ -12,7 +12,7 @@ namespace PokemonSkills {
     function rockclimbWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
-        if (target.grounded === false) return false;
+
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
     }
@@ -37,7 +37,7 @@ namespace PokemonSkills {
             return rockclimbWants(context, capability, target);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible && target.grounded !== false;
+            return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {
             if (!target || !rockclimbWants(context, capability, target)) return 0;
@@ -45,7 +45,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 24;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 10);
-            if (CompanionBehavior.ai<boolean>(capability, "crowd", false)) score += Math.min(14, rockclimbCrowd(context, target, 1.8) * 7);
+            const high=target.point[1]-self.point[1]>1;
+            if(high){const world=CompanionBehavior.world(context),from=CompanionBehavior.point(self.point),heading=WorldGeometry.flatUnit(CompanionBehavior.point(target.point).minus(from)),wall=world.clipBlocks(from,from.plus(heading.scale(Math.min(3,capability.data.range))));if(!wall||!wall.blocked())return 0;score+=CompanionBehavior.ai<boolean>(capability,"crowd",false)?14:6;}
             if (target.grounded === true) score += 3;
             if (CompanionBehavior.status(context, target, "confusion")) score -= 6;
             return score;
@@ -54,7 +55,7 @@ namespace PokemonSkills {
 
     addPreferences(rockclimbId, { ai: { maxChase: 11, finish: true, crowd: false } }, [
         field(pathOf("vault"), "跃攀", "boolean", {
-            help: "开启：扑得更远更高、落地范围 ×1.35、土痕更大，但起手/收招/冷却更长、命中偏角更大（更容易扑空）。关闭（贴地扑）：低平快的一扑、偏角小更稳，代价是范围与冲程更小。"
+            help: "开启：扑得更远更高、土痕更大，但起手/收招/冷却更长、命中偏角更大（更容易扑空）。关闭（贴地扑）：低平快的一扑、偏角小更稳，代价是范围与冲程更小。"
         }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 18, step: 1,
@@ -63,8 +64,8 @@ namespace PokemonSkills {
         field(pathOf("ai.finish"), "优先收残血", "boolean", {
             help: "开启：残血目标排得更前，用这记重扑收尾；关闭则所有目标同价。"
         }),
-        field(pathOf("ai.crowd"), "优先砸扎堆", "boolean", {
-            help: "开启：目标身边还挤着别的敌人时排前，落地范围能一次撞到多人；关闭则只按普通近战排序。"
+        field(pathOf("ai.crowd"), "优先高台", "boolean", {
+            help: "开启：真实短壁后方的高处目标排前；关闭则按普通近身优先级。"
         })
     ]);
 }

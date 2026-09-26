@@ -30,5 +30,7 @@
   "world_combat.move.substitute.text.weak": "生命不足，替身未能成形",
   "world_combat.move.substitute.text.break": "替身被打碎",
   "world_combat.move.substitute.text.expire": "替身散解",
+  "world_combat.move.substitute.text.link_on": "与替身重新接通",
+  "world_combat.move.substitute.text.link_off": "与替身断开联系",
   "worldcombat.skill.substitute.description.2": "已有替身时无法再次施放；支付后生命必须高于最大生命的 %1$s（随「付完保留的生命」偏好变化）。放置失败时退还已支付生命。"
 }

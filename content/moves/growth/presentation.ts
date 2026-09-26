@@ -2,6 +2,12 @@
 const GrowthDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        grown: {
+            exit: { drain: 10 }, emitters: [{ name: "body_leaves", bind: "target", height: 0.18,
+                particle: "world_combat_core:cobblemon/generic/grass/smallleaf", rate: 3,
+                shape: { kind: "ring", radius: 0.55 }, direction: "up", speed: [0.01, 0.03],
+                lifetime: [8, 14], size: [0.08, 0.02], color: 0x9FE863, alpha: [0.6, 0], light: "world", maxParticles: 6 }]
+        },
         gather: {
             duration: 12,
             exit: { stop: 6, drain: 12 },

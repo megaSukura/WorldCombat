@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.confuseray.summary": "Fires a beam of eerie light at the target; on a hit it is left confused, so each action it attempts may be wasted and its own force turns on it when it lands a hit. The light travels in a straight line, so cover and movement can make it miss.",
+  "worldcombat.skill.confuseray.summary": "Fires a beam of eerie light in a chosen direction or at a world point; on a hit it is left confused, so each action it attempts may be wasted and its own force turns on it when it lands a hit. The light travels in a straight line, so the first wall or body truncates it, and firing into open air is fine.",
   "worldcombat.skill.confuseray.use.0": "Single-target disruption from range, making a heavy hitter swing wide",
   "worldcombat.skill.confuseray.use.1": "Interrupt ranged pressure from a safe distance",
   "worldcombat.skill.confuseray.use.2": "Open a miss window before an ally's focus fire",
-  "worldcombat.skill.confuseray.description.0": "A hit leaves the target confused for %1$s: each action it attempts has about a one-in-three chance to be wasted, and when it lands a hit its own force turns back on it, dealing self-damage scaled by its own Attack.",
-  "worldcombat.skill.confuseray.description.1": "Base range: %1$s blocks, hit radius: %2$s blocks; the current range is %3$s blocks. The beam travels in a straight line, needs a clear line of sight, and only hits the first body in its path.",
+  "worldcombat.skill.confuseray.description.0": "A hit leaves the target confused for %1$s: each action it attempts has about a one-in-three chance to be wasted, and when it lands a hit its own force turns back on it, dealing self-damage scaled by its own Attack - but the backlash never exceeds the damage that hit actually dealt.",
+  "worldcombat.skill.confuseray.description.1": "Fire in a direction or at a point; no target is required. Base range: %1$s blocks, hit radius: %2$s blocks; the current range is %3$s blocks. The beam travels in a straight line, needs a clear line of sight, and the first body or block truncates it; only the first non-ally on the line is affected.",
   "worldcombat.skill.confuseray.description.2": "Preparation %1$s, recovery %2$s, cooldown %3$s. Wide reaches farther. Focus extends confusion duration by ×1.35, at the cost of shorter range, 0.2 seconds more preparation and about 15% longer cooldown. Both use the same hit radius and failure chance.",
   "worldcombat.skill.confuseray.value.beamReach": "Reach",
   "worldcombat.skill.confuseray.value.beamRadius": "Hit radius",

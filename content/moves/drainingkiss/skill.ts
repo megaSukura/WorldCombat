@@ -24,7 +24,7 @@ namespace PokemonSkills {
         name: "Draining Kiss",
         description: "凑到对手脸前送上一吻，把它的HP吸过来；按实际造成的伤害回补自身，是家族里回血最黏的一口。",
         uses: ["贴身把对手的一口气吸回来", "血量偏低时用最短的一吻续航", "在缠斗里顺手把血线拉回来"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.0,
         maxRange: 4.4,
         prepare: 6,
@@ -48,14 +48,6 @@ namespace PokemonSkills {
                 range: p(drainingkissId, "reach", context) + 0.3
             };
         },
-        ready: function (action, config) {
-            const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
-            const body = world.observe(target);
-            if (body === null) return "target-left";
-            if (body.position().minus(action.origin()).length() > action.range() + 0.25) return "out-of-range";
-            return world.clear(action.origin(), body.position()) ? "" : "no-line";
-        },
         windup: function (action, config, prepare) {
             action.present("world_combat:drainingkiss:" + action.id(), drainingkissScene, 1, action.origin(),
                 JSON.stringify({ moment: "lean", target: action.target() === null ? "" : String(action.target()!.ref()),
@@ -63,7 +55,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), target = action.target();
+            const world = action.world();
             const power = p(drainingkissId, "peck", action);
             const share = p(drainingkissId, "sap", action);
             const radius = p(drainingkissId, "radius", action);
@@ -71,19 +63,34 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.42));
             const self = world.observe(action.actor());
             const from = self === null ? action.origin() : self.position();
+            const before = self === null ? 0 : self.health();
+            const direction = aim(action);
+            const end = from.plus(direction.scale(action.range()));
 
-            if (target === null || !world.valid(target) || world.friendly(target)) {
-                WorldFeedback.emit(world, drainingkissScene, 1, action.targetPosition(), { moment: "miss", scale: scale }, 18);
-                WorldFeedback.text(world, action.targetPosition().plus(WorldCombat.point(0, 0.9, 0)), drainingkissMissText, [], 22);
+            /** 亲空：墙先挡、或最前面的实体是友方，都只散开一点心，不回补。 */
+            function whiff(point: CombatPoint): void {
+                WorldFeedback.emit(world, drainingkissScene, 1, point, { moment: "miss", scale: scale }, 18);
+                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.9, 0)), drainingkissMissText, [], 22);
                 sound(action, "minecraft:entity.allay.item_taken");
                 done(action);
+            }
+
+            // 自由近距离瞄准：沿朝向做一段 `radius` 粗的接触 trace；最先碰到的人才是这一吻贴到的人，
+            // 墙与身体首碰都会停下，所以退开、被挡住、或邻人挡路时不会回头去吸原目标。
+            const hit = action.trace(from, end, radius, true);
+            const target = hit.target();
+            if (!hit.hitEntity() || target === null || !world.valid(target) || world.friendly(target)) {
+                whiff(hit.hitEntity() || hit.blocked() ? hit.position() : end);
                 return;
             }
-            const body = world.observe(target);
-            const at = body === null ? action.targetPosition() : body.position();
+            const at = hit.position();
             sound(action, "minecraft:entity.allay.item_given");
-            const landed = hurt(action, target, drainingkissId, power,
+            const landed = impact(action, hit, drainingkissId, power,
                 { damage: damageSpec(drainingkissId, "peck"), contact: true, drain: share });
+
+            // 真实的回补量按共享 drain 结算后的生命差读取；没有实际回补就不播大治疗环。
+            const afterBody = world.observe(action.actor());
+            const healed = landed ? Math.max(0, (afterBody === null ? before : afterBody.health()) - before) : 0;
 
             const flow = from.minus(at), span = flow.length();
             const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
@@ -93,10 +100,9 @@ namespace PokemonSkills {
             sound(action, "cobblemon:impact.fairy");
             if (landed) {
                 WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), drainingkissKissText, [], 22);
-                const heal = Math.round(share * 100);
-                if (self !== null && self.health() < self.maxHealth()) {
-                    WorldFeedback.emit(world, drainingkissScene, 1, from, { moment: "mend", sap: heal, hearts: hearts }, 26);
-                    WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.25, 0)), drainingkissMendText, [heal], 22);
+                if (healed > 0) {
+                    WorldFeedback.emit(world, drainingkissScene, 1, from, { moment: "mend", heal: healed, hearts: hearts }, 26);
+                    WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.25, 0)), drainingkissMendText, [Math.round(healed * 10) / 10], 22);
                 }
             }
             done(action);

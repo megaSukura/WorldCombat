@@ -4,6 +4,7 @@
  * 什么局面有意义：有可见威胁、它在 ai.maxChase 以内、中间有一条通视线，而且它身上还没有根、也不是草属性。
  *   自己越缺血越想撒（ai.healBelow），因为抽回来的是实打实的生命。
  * 对谁出手：当前威胁；身上已经有根（任何来源）的目标不重复下手；草属性目标直接跳过（种不活）。
+ *   自由瞄准让玩家可以空投，但 AI 仍只挑真实可寄生的敌人，并读通用战斗者类型表而不是只看宝可梦数据。
  * 候选之间怎么排：自己生命低于 ai.healBelow 时抬到 58 先给自己续命，否则 46；priority 0 仍可由共享顺序兜底。
  * 够不到怎么办：reach 就是本招射程（由等级与特攻决定）；共享任务先走近，approach 在无通视时侧移找角度。
  * 放完之后：根留在目标身上自己定时抽取，伙伴交回共享顺序，不再追加动作。
@@ -17,10 +18,11 @@ namespace PokemonSkills {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 13)) return false;
-        if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
-        // 草属性身上种不活：读它公布的类型表，避免白撒一次。
-        const facts = CompanionBehavior.pokemonFacts(context, target);
-        if (facts && facts.types.indexOf("grass") >= 0) return false;
+        const world = CompanionBehavior.world(context);
+        if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
+        // 草属性身上种不活：读通用战斗者类型表（宝可梦与原版/其他模组生物同一条路），避免白撒一次。
+        const actor = world.actor(target.ref);
+        if (actor !== null && leechSeedImmune(world, actor)) return false;
         return true;
     }
 

@@ -2,23 +2,35 @@
  * 催眠术 的伙伴 AI 用途：这招自己的一套出手计划。
  *
  * 什么局面有意义：挂在共享的 control 位上。带催眠术的伙伴在没有攻击可用时用它；有攻击时它作为那记攻击
- *   前的控制手段。目标要可见、敌对、还活着，且与施法者之间有一条通视的直线——被墙挡住的先交给共享接近
- *   逻辑，走近、转出视线再放。已经睡着的目标跳过，不重复下手。**距离不在这里拒绝**：超过 ai.maxChase 只是
- *   优先级下降，共享任务仍会先走近再放，这样「只剩本招」时它照样会被放出来。
- * 对谁出手：当前威胁；`ai.opening` 决定时机——随时出手，或只在自己刚挨过打时还手。
+ *   前的控制手段。目标要可见、敌对、还活着、未睡，且与施法者之间有一条通视的直线——被墙挡住的先交给共享
+ *   接近逻辑，走近、转出视线再放。**距离不在这里拒绝**：超过 ai.maxChase 只是优先级下降，共享任务仍会先
+ *   走近再放，这样「只剩本招」时它照样会被放出来。
+ * 对谁出手：当前威胁，且**意志相对较弱者优先**（有效特防越低越容易压过去）；刚被本招控制失败过的目标在
+ *   recent("control") 窗口内跳过，不反复浪费一次注定会散掉的凝视。`ai.opening` 决定时机——随时出手，或只在
+ *   自己刚挨过打时还手。
  * 够不到怎么办：由共享任务走到 reach；accepts 不按距离硬拒。
  * 放完之后：目标睡下、不再行动，直到受伤惊醒；伙伴交回共享顺序，可以转火别人或等下一个睡眠窗口。
- * 优先级：基础 44；正在逃跑的威胁抬到 58（先把它钉住）；超出 ai.maxChase 时降到 12（先靠近，别隔空硬掷）。
+ * 优先级：基础 44；正在逃跑的威胁抬到 58（先把它钉住）；超出 ai.maxChase 时降到 12（先靠近，别隔空硬掷）；
+ *   按目标有效特防再上下浮动（越弱越优先）。
  */
 namespace PokemonSkills {
     function hypnosisWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "sleep")) return false;
+        if (CompanionBehavior.recent(context, "control", target.ref, 160)) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.ai<string>(item, "opening", "anytime") === "bitten" && self.hurtAgo >= 80) return false;
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+    }
+
+    /** 有效特防越低（意志越弱）越容易压过去；读不到就保持中性。 */
+    function hypnosisWillScore(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const facts = CompanionBehavior.combatStats(context, target), stats = facts && facts.stats;
+        const spd = stats && isFinite(Number(stats.spd)) ? Number(stats.spd) : null;
+        if (spd === null) return 0;
+        return Math.max(-12, Math.min(12, (70 - spd) * 0.15));
     }
 
     CompanionBehavior.registerUse(hypnosisId, {
@@ -29,8 +41,10 @@ namespace PokemonSkills {
         priority: function (context, item, target) {
             if (!target || !hypnosisWants(context, item, target)) return 0;
             const self = CompanionBehavior.source(context);
+            const base = CompanionBehavior.fleeing(context, target) ? 58 : 44;
+            const score = base + hypnosisWillScore(context, target);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 11)) return 12;
-            return CompanionBehavior.fleeing(context, target) ? 58 : 44;
+            return Math.max(1, Math.round(score));
         }
     });
 

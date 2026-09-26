@@ -1,14 +1,14 @@
 /**
  * 报恩 / return 的客户端表现。
  *
- * 一句话：脚下一圈金色誓约由暗到亮地结起，随后一道金光贴着地面直冲对手，撞实的一刻炸开一团暖金冲击，
- * 受托式会带着余辉从对手身侧越过去。
+ * 一句话：脚下一圈金色誓约由暗到亮地结起，随后一道金光贴着地面直冲，撞实的一刻炸开一团暖金冲击并印下一条完整亮线，
+ * 受托式带着更淡的余辉沿原方向续进一段。
  * 色相家族：暖金与近白（energyorb、glowingsparkle_yellow、impact_normal、mediumring）为主，扬尘用暖土黄；
  * 没有冷色。
- * 拍子：起（pledge 结誓）→ 行（dash 直冲）→ 击（impact 炸开）→ 收（through 越过 / miss 扑空）。
- * 范围：impact 绑命中点，画出的就是撞中的位置；dash 的金光沿施法者实际走过的直线铺开。
- * 运动：誓约从脚下向上收拢，直冲的金光一路拖出尾迹，撞实是短促外爆，越过是贴地滑出的余辉。
- * 数：`data.trail`（本击威力换算）绑定 dash 的尾迹发射率，`data.sparks`（本击威力换算）绑定 impact 的爆开数量，
+ * 拍子：起（pledge 结誓）→ 行（dash 直冲）→ 击（impact 炸开 + 亮线）→ 收（through 余进线变淡 / miss 冲空 / wall 撞墙收势）。
+ * 范围：impact 绑命中点并沿 `data.path` 画出起点到实际终点的整条亮线；through 用更淡的一版同一条线续到余进落点；wall 在实际方块格上留痕。
+ * 运动：誓约从脚下向上收拢，直冲的金光一路拖出尾迹，撞实是短促外爆，余进是贴地滑出的余辉。
+ * 数：`data.trail`（本击威力换算）绑定 dash 与亮线的发射率，`data.sparks`（本击威力换算）绑定 impact 的爆开数量，
  * `data.bond`（亲密度比例）让起手的金色誓约亮度随羁绊增强，`data.intensity` 再整体抬高亮度与密度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -83,6 +83,15 @@ const ReturnDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
+                    name: "beam", bind: "path", fit: "none", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    shape: { kind: "polyline" },
+                    rate: { data: "trail", fallback: 40 },
+                    direction: "shape", speed: [0.03, 0.12],
+                    lifetime: [5, 11], size: [0.12, 0.03],
+                    color: 0xFFE9A8, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 180
+                },
+                {
                     name: "core", bind: "target", height: 0.44,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: { data: "sparks", fallback: 20 }, at: 1 },
@@ -92,7 +101,7 @@ const ReturnDefinition: ParticleDefinition = {
                     color: 0xFFF6DC, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 80
                 },
                 {
-                    name: "ring", bind: "point", offset: [0, 0.05, 0],
+                    name: "ring", bind: "point", offset: [0, 0.05, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 1, at: 1 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
@@ -101,7 +110,7 @@ const ReturnDefinition: ParticleDefinition = {
                     color: 0xFFD98A, alpha: [0.65, 0], light: "full"
                 },
                 {
-                    name: "scuff", bind: "point", offset: [0, 0.18, 0],
+                    name: "scuff", bind: "point", offset: [0, 0.18, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "sparks", fallback: 20 } },
                     shape: { kind: "sphere", radius: 0.42 },
@@ -116,6 +125,14 @@ const ReturnDefinition: ParticleDefinition = {
             duration: 22,
             exit: { stop: 10, drain: 16 },
             emitters: [
+                {
+                    name: "fade_line", bind: "path", fit: "none", offset: [0, 0.42, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    shape: { kind: "polyline" },
+                    rate: 14, direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.08, 0.02],
+                    color: 0xFFE9A8, alpha: [0.35, 0], light: "world", maxParticles: 80
+                },
                 {
                     name: "wake", bind: "source", offset: [0, 0.4, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
@@ -142,6 +159,14 @@ const ReturnDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
+                    name: "overrun_line", bind: "path", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    shape: { kind: "polyline" },
+                    rate: 14, direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.08, 0.02],
+                    color: 0xFFE9A8, alpha: [0.3, 0], light: "world", maxParticles: 70
+                },
+                {
                     name: "overrun", bind: "source", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 22 },
@@ -150,6 +175,22 @@ const ReturnDefinition: ParticleDefinition = {
                     gravity: 0.04, drag: 0.93,
                     lifetime: [8, 15], size: [0.08, 0.02],
                     color: 0xC9A66B, alpha: [0.5, 0], light: "world", maxParticles: 80
+                }
+            ]
+        },
+        wall: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "wall_dust", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 16 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    gravity: 0.04, drag: 0.92,
+                    lifetime: [7, 13], size: [0.08, 0.02],
+                    color: 0xC9A66B, alpha: [0.55, 0], light: "world", maxParticles: 50
                 }
             ]
         }

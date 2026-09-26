@@ -1,22 +1,4 @@
-/**
- * 防守互换 / guardswap —— 参数与数值来源。
- *
- * 原生事实（Showdown / Cobblemon 1.8）：Psychic／变化／威力 0／命中必中／PP 10／目标 normal；
- *   `onHit` 把双方防御与特防的**能力变化等级**互换。
- *
- * 核心念头：把两个人身上已经架起来的守势对调——对方涨到 +2 的防/特防被你接走，你原来那几级原封不动地落到他身上；
- *   交换在一段窗口里维持，窗口走完或被清除时各自按记号换回原来的等级。
- *
- * 与「防守平分」分开：平分把两人原始防/特防拉向同一个平均值、不碰等级；本招交换的是已经架起来的那几级。
- *
- * 数值来源（每个参数读不同的精灵数据，分散到不同参数上）：
- *   reach     换守距离：特防给出能对上的范围，身高决定臂展，夹 4..12，并作为本招实际射程。
- *   tempo     起手：速度决定读出双方守势多快。
- *   aftercast 收招：速度决定换完多久收回。
- *   recharge  冷却：速度决定多久能再换一次。
- *   span      交换窗口：等级与防御决定这次交换维持多久（守得越厚的人越撑得住）。
- *   threads   对流条数：防御与身高决定画面里两弧之间的光点数量。
- */
+/** Current stat-stage differences form an owned temporary exchange; later independent changes remain. */
 namespace PokemonSkills {
     actionParameters.define("guardswap", {
         reach: formula(

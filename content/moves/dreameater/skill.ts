@@ -17,6 +17,7 @@ namespace PokemonSkills {
     const dreameaterFeastText = "world_combat.move.dreameater.text.feast";
     const dreameaterSapText = "world_combat.move.dreameater.text.sap";
     const dreameaterWakeText = "world_combat.move.dreameater.text.wake";
+    const dreameaterFadeText = "world_combat.move.dreameater.text.fade";
 
     define({
         id: dreameaterId,
@@ -73,21 +74,38 @@ namespace PokemonSkills {
             const motes = Math.max(8, Math.round(p(dreameaterId, "motes", action)));
             const scale = Math.max(0.6, Math.min(1.8, mist / 0.46));
 
-            function fizzle(point: CombatPoint): void {
+            /** 落空：醒着的目标说「没有梦」，移出/遮挡的只说梦够不到，都不画进食成功。 */
+            function fizzle(point: CombatPoint, awake: boolean): void {
                 WorldFeedback.emit(world, dreameaterScene, 1, point, { moment: "fizzle", scale: scale }, 18);
-                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.9, 0)), dreameaterWakeText, [], 22);
+                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.9, 0)),
+                    awake ? dreameaterWakeText : dreameaterFadeText, [], 22);
                 sound(action, "cobblemon:impact.psychic");
                 done(action);
             }
 
-            if (target === null || !world.valid(target) || world.friendly(target) || !CombatStatus.behaves(world, target, "sleep")) {
-                fizzle(action.targetPosition());
+            // 执行当刻重新核对：目标还在、仍是敌人、仍带着睡眠，且仍在射程内、之间没有遮挡。
+            if (target === null || !world.valid(target) || world.friendly(target)) {
+                fizzle(action.targetPosition(), false);
                 return;
             }
             const body = world.observe(target);
-            const at = body === null ? action.targetPosition() : body.position();
+            if (body === null) {
+                fizzle(action.targetPosition(), false);
+                return;
+            }
+            const at = body.position();
+            if (!CombatStatus.behaves(world, target, "sleep")) {
+                fizzle(at, true);
+                return;
+            }
+            if (at.minus(action.origin()).length() > action.range() + 0.3 || !world.clear(action.origin(), at)) {
+                fizzle(at, false);
+                return;
+            }
+
             const self = world.observe(action.actor());
             const from = self === null ? action.origin() : self.position();
+            const before = self === null ? 0 : self.health();
             const dream = CombatStatus.representative(world, target, "sleep");
             const depth = dream === null ? 0 : Math.max(0, Math.min(1, dream.duration() / 160));
             const flow = from.minus(at), span = flow.length();
@@ -101,15 +119,18 @@ namespace PokemonSkills {
             const landed = hurt(action, target, dreameaterId, power,
                 { damage: damageSpec(dreameaterId, "dream"), drain: share });
 
+            // 实际回补量取自共享 drain 结算后的真实生命差；伤害被拒、miss 或满血时都不冒充已回补。
+            const afterBody = world.observe(action.actor());
+            const healed = landed && self !== null && afterBody !== null ? Math.max(0, afterBody.health() - before) : 0;
+
             WorldFeedback.emit(world, dreameaterScene, 1, at,
                 { moment: "feast", target: String(target.ref()), motes: motes, depth: depth, scale: scale }, 24);
             sound(action, "cobblemon:impact.psychic");
             if (landed) {
                 WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), dreameaterFeastText, [], 24);
-                const heal = Math.round(share * 100);
-                if (self !== null && self.health() < self.maxHealth()) {
-                    WorldFeedback.emit(world, dreameaterScene, 1, from, { moment: "sap", sap: heal, motes: motes }, 26);
-                    WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.25, 0)), dreameaterSapText, [heal], 24);
+                if (healed > 0) {
+                    WorldFeedback.emit(world, dreameaterScene, 1, from, { moment: "sap", heal: healed, motes: motes }, 26);
+                    WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.25, 0)), dreameaterSapText, [Math.round(healed * 10) / 10], 24);
                 }
             }
             done(action);

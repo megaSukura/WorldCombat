@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.topsyturvy.summary": "The shard reverses stat stages and swaps paired native effects such as Speed/Slowness and Strength/Weakness. Gains-only form reverses beneficial effects only.",
+  "worldcombat.skill.topsyturvy.summary": "The shard reverses the stat stages of any living target and swaps paired native effects such as Speed/Slowness and Strength/Weakness; aimed at an ally it turns their debuffs back into buffs. Unknown effects are left alone, and the gains-only form reverses beneficial effects only.",
   "worldcombat.skill.topsyturvy.use.0": "Turn a foe's stacked buffs into an equal pile of debuffs",
-  "worldcombat.skill.topsyturvy.use.1": "Yank away the advantage right after a foe maxes its offense",
+  "worldcombat.skill.topsyturvy.use.1": "Flip a badly debuffed ally's disadvantage back into an advantage",
   "worldcombat.skill.topsyturvy.use.2": "Harass a bulky target that keeps buffing itself",
-  "worldcombat.skill.topsyturvy.description.0": "Reaches %1$s blocks at %2$s blocks per tick and reverses nonzero stat stages. Native effects swap Speed↔Slowness, Strength↔Weakness, Haste↔Mining Fatigue and Luck↔Unluck, retaining strength and remaining time.",
+  "worldcombat.skill.topsyturvy.description.0": "Reaches %1$s blocks at %2$s blocks per tick and reverses nonzero stat stages on any living target. Recognised effects swap Speed↔Slowness, Strength↔Weakness, Haste↔Mining Fatigue and Luck↔Unluck, retaining strength and remaining time; unknown effects are left untouched.",
   "worldcombat.skill.topsyturvy.description.1": "The shard’s collision radius is %1$s blocks. The Topsy-Turvy icon remains for about %2$s as a reminder; transformed effects retain their own clocks.",
   "worldcombat.skill.topsyturvy.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.topsyturvy.option.on": "Selective: only raised entries on the target are flipped, debuffs are left alone — it never accidentally helps a foe; the cost is wind-up +4 ticks, cooldown +20 ticks and reach -1 block.",

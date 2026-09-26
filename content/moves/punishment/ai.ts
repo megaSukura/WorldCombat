@@ -1,4 +1,12 @@
-/** punishment：行为、参数与目标条件以本单元实现为准。 */
+/** punishment：行为、参数与目标条件以本单元实现为准。
+ *
+ * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑。
+ * 对谁出手：`ai.punishBoost`（默认开）按目标真实强化层数抬高优先级——能力等级加上药水／信标等正面状态层数
+ *   （总数封顶），层数越多越优先；没有强化时本招只是一记普通近打，优先级很低，让位给其他基础招。
+ *   `ai.finish` 收残血。
+ * 出手位置：近身，由共享接近把身位收进射程；自由方向出手时不强求目标。
+ * 放完之后：交回共享交战计划。
+ */
 namespace PokemonSkills {
     function punishmentValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
@@ -29,9 +37,10 @@ namespace PokemonSkills {
             if (!target) return 0;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             if (distance > capability.data.range) return 0;
-            let score = 12;
+            // 没有强化时只是一记普通近打，让位给其他基础招；有强化才显著抬分，且按封顶后的真实层数计。
+            let score = 6;
             if (CompanionBehavior.ai<boolean>(capability, "punishBoost", true))
-                score += Math.min(38, punishmentBoostNow(context, target) * 6);
+                score += Math.min(punishmentBoostCap, punishmentBoostNow(context, target)) * 6;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) score += 10;
             return score;
         }

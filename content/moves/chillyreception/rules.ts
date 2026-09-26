@@ -3,9 +3,9 @@
  *
  * 雪区是一条区域规则：每 5 刻扫描半径内的活体，给他们补 `world_combat:chillyreception_snow`
  * （共享身份 `world_combat:status/snow`，和雪景共用同一个「正在下雪」的机读键）。雪景的防御加成属于雪景，
- * 冷笑话只借身份、不加防御：它的作用在出手那一下——冷场、打断、退开，雪只是留在原地的那部分。
- * 冷场的身份（`world_combat:status/cold_silence`）由 skill.ts 直接落在敌人身上，行为（打断、定身、松仇恨）
- * 也在那里发生；本文件只维护雪区的身份与持续表现。
+ * 冷笑话只借身份、不加防御：它的作用在出手那一下——冷场、一次短打断、退开，雪只是留在原地的那部分。
+ * 冷场的身份（`world_combat:status/cold_silence`）由 skill.ts 直接落在敌人身上，打断也在那里发生；
+ * 本文件只维护雪区的身份与持续表现，表现绑在雪区效果自己身上，提前散去时一同收。
  */
 namespace PokemonSkills {
     function chillyPoint(field: WorldEffects.Field): CombatPoint {
@@ -31,8 +31,10 @@ namespace PokemonSkills {
             chillyLay(world, actor, field);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.keep(world, "world_combat:move_chillyreception/field/" + effect.id(), chillyScene, 1, chillyPoint(field),
-                { moment: "field", density: field.data.density || 26, scale: field.radius / 8 }, 20);
+            if (field.data.bound) return;
+            field.data.bound = true;
+            WorldFeedback.onEffect(world, effect.id(), "world_combat:move_chillyreception/field", chillyScene, 1, chillyPoint(field),
+                { moment: "field", density: field.data.density || 26, scale: field.radius / 8 });
         }
     }, { identity: WorldEnvironment.weatherTag("snow"), tags: [WorldEffects.categories.weather, WorldEnvironment.weatherTag("snow")] });
 }

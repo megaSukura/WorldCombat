@@ -1,6 +1,6 @@
 {
   "effect.world_combat.happyhour_banner": "欢乐时光（庆典光环）",
-  "worldcombat.skill.happyhour.summary": "当场摆开一场小型庆典，在自己脚下铺出一圈金色时光；这段时光里，任何在圈内倒下的非友方都会当场爆出一捧本来到战后才结算的 Relic Coin。",
+  "worldcombat.skill.happyhour.summary": "在原地铺开庆典圈，圈内非友方真实倒下时落下额外的钱币；同队重叠庆典对同次死亡只结算一份。",
   "worldcombat.skill.happyhour.description.0": "庆典光环持续 %1$s 秒，半径 %2$s 格，画出的那圈就是感应范围。",
   "worldcombat.skill.happyhour.description.1": "光环还在时，圈内每倒下一名非友方，当场落下 %1$s 枚真币（优先 Cobblemon 遗迹硬币，缺失时用金粒）。",
   "worldcombat.skill.happyhour.lavish.on": "铺张：每次进项 ×1.4、范围 ×1.15，代价是光环 ×0.8、冷却 ×1.15，适合把一场硬仗的收成做大。",
@@ -28,5 +28,5 @@
   "worldcombat.skill.happyhour.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去铺庆典。",
   "world_combat.move.happyhour.text.raise": "欢乐时光：%1$s 秒内倒下的对手各留 %2$s 枚真币",
   "world_combat.move.happyhour.text.earn": "战果变现 %1$s 枚",
-  "worldcombat.skill.happyhour.description.stay": "庆典留在铺下的原地，施放者可以走开继续战斗（施放者倒下或离得太远则收场）；光环还在身上时无法再次施放。"
+  "worldcombat.skill.happyhour.description.stay": "庆典留在原地，施放者可以继续行动；清除庆典光环或持有者离场时收束金圈。同次死亡不重复获奖，其他原生掉落照常保留。"
 }

@@ -26,7 +26,7 @@
   "worldcombat.skill.wakeupslap.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.wakeupslap.preference.ai.maxChase.help": "目标离自己这么远以内才压上去；调大愿意主动追上更远的睡眠目标。",
   "worldcombat.skill.wakeupslap.preference.ai.wake": "趁睡眠拍",
-  "worldcombat.skill.wakeupslap.preference.ai.wake.help": "开启：睡眠目标获得额外优先级，抓住威力翻倍的机会；关闭：保持普通低优先级，不按睡眠加权。",
+  "worldcombat.skill.wakeupslap.preference.ai.wake.help": "开启：睡眠目标获得额外优先级，抓住威力翻倍的机会；但这一掌会把它拍醒，可能立刻换来一次还手。关闭：不按睡眠加权，保持普通低优先级。",
   "worldcombat.skill.wakeupslap.timing": "射程 %1$s 格；起手 %2$s、收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.wakeupslap.growth.0": "%1$s 级起：重掌威力提升到 %2$s。",
   "worldcombat.skill.wakeupslap.growth.1": "%1$s 级起：重掌威力 %2$s、扑击距离 %3$s。",

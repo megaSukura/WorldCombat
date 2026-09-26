@@ -2,7 +2,8 @@
  * 空手劈 / karatechop 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 5）格以内——它够得极近，由共享接近把身位收进劈距。
- * 对谁出手：`ai.punish`（默认开）打开时，正被睡眠／冰冻／麻痹压住的目标优先——这是手刀找缝的读法；
+ * 对谁出手：**防御相对自己物攻越硬的目标越优先**——手刀专找护甲的缝、比同族更少吃防御减免，打高防目标价值最高；
+ *   `ai.punish`（默认开）打开时，正被睡眠／冰冻／麻痹压住的目标再抬一档（手刀找缝的读法）；
  *   目标已在劈距内时也加价（已经贴脸就顺手劈）。
  * 优先级：目标残血且 `ai.finishLow` 打开时再抬一档收尾。
  * 放完之后：交回共享顺序；它冷却极短，是贴身连打里的常用一记。
@@ -13,6 +14,13 @@ namespace PokemonSkills {
         return CompanionBehavior.status(context, target, "sleep")
             || CompanionBehavior.status(context, target, "frozen")
             || CompanionBehavior.status(context, target, "paralysis");
+    }
+
+    /** 目标的有效防御是否不低于自己物攻：手刀对硬目标收益最大。 */
+    function karatechopHard(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): boolean {
+        const mine = CompanionBehavior.combatStats(context, self), theirs = CompanionBehavior.combatStats(context, target);
+        const attack = mine && mine.stats ? mine.stats.atk : null, defence = theirs && theirs.stats ? theirs.stats.def : null;
+        return typeof attack === "number" && attack > 0 && typeof defence === "number" && defence >= attack;
     }
 
     CompanionBehavior.registerUse(karatechopId, {
@@ -34,6 +42,7 @@ namespace PokemonSkills {
             if (distance > capability.data.range) return 0;
             let score = 18;
             if (distance <= capability.data.range + 0.4) score += 8;
+            if (karatechopHard(context, self, target)) score += 14;
             if (CompanionBehavior.ai<boolean>(capability, "punish", true) && karatechopOpen(context, target)) score += 16;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", false) && CompanionBehavior.ratio(target) < 0.35) score += 12;
             return score;

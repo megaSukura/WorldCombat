@@ -5,9 +5,10 @@
  * 描述「使用长长的身体或藤蔓等，在 4～5 回合内绑紧对手进行攻击」。
  *
  * 翻译：保留「用长长的身体或藤蔓绑住对手、持续收紧」，翻成即时战斗里**一根绷在两者之间的缚索**：
- * 命中先缠上，此后绳的一头系在施法者身上、另一头拴着目标——目标想跑就被拽回来，绳每勒一下更紧一点；
+ * 命中先缠上，此后绳的一头系在施法者身上、另一头拴着目标——目标想跑就被拽回来，绳绷紧时每勒一下更紧一点；
  * 施法者也被绳的张力拖慢。它不是定身：目标能动、能打，但走不出这根绳；施法者被拉开、目标也一起被拽。
- * 挣脱的方式有两种：**把绳扯断**（任一方被位移到 `snap` 之外），或等绳自己走完 `duration`。
+ * 挣脱的方式有三种：**把绳扯断**（任一方被位移到 `snap` 之外）、**被实墙隔断**（两端之间不再通视），
+ * 或等绳自己走完 `duration`；任一端身上的束缚被清除或任一方倒下也会松开。
  *
  * 与同族分开（束缚对的两招，命中后世界继续变化）：
  *   紧束 —— 藤蔓把目标裹住、钉在原地并压住它的力气，藤不需要施法者维持；
@@ -142,6 +143,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["cinch","reach","grip"] },
         { key: "description.1", values: ["leash","drag","ramp","interval"] },
         { key: "description.2", values: ["duration","snap"] },
+        { key: "description.aim", values: [] },
         { key: "description.slow", values: [] },
         { key: "choke.on", values: [], when: function (context) { return read(context.detail.values, ["choke"]) === true; } },
         { key: "choke.off", values: [], when: function (context) { return read(context.detail.values, ["choke"]) !== true; } },

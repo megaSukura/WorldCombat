@@ -14,5 +14,7 @@
   "worldcombat.skill.metronome.value.span": "Stir reach",
   "worldcombat.skill.metronome.value.recharge": "Wag again",
   "worldcombat.skill.metronome.value.hues": "Candidate sparks",
-  "worldcombat.skill.metronome.description.3": "The borrowed move uses Metronome's own cooldown and does not additionally spend the borrowed move's PP; an attack move can only come up when an enemy is in range, otherwise only self or ally moves can be drawn."
+  "worldcombat.skill.metronome.description.3": "The borrowed move uses Metronome's own cooldown and does not additionally spend the borrowed move's PP; an attack move can only come up when an enemy is in range, otherwise only self or ally moves can be drawn.",
+  "worldcombat.skill.metronome.description.4": "The draw settles on one move only: its name floats up and collapses into a single type symbol, then that move acts immediately; there is no re-roll and no stacking.",
+  "world_combat.move.metronome.text.draw": "Metronome used %1$s"
 }

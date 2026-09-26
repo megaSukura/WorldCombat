@@ -1,16 +1,16 @@
 /**
  * 刺耳声 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者把气提到喉咙、聚起一圈发白的声点 → 一声尖啸沿一条笔直而细的走廊推出去，声墙贴着地面铺满整条
- *   走廊、边缘卷着白亮的声纹 → 走廊里的敌人身上被扎出一记锐利的银蓝爆点，耳中留下嗡响。
+ * 一句话：施法者把气提到喉咙、聚起一圈发白的声点 → 一声尖啸从嘴前推成一道薄薄的声前沿，沿走廊逐格向前扫 →
+ *   被前沿扫到的敌人身上被扎出一记锐利的银蓝爆点，耳中留下嗡响。
  *
  * 色相家族：冷银蓝（0xB8C6D8／0x8FA2BC）为主体，近白（0xEEF4FA）只给细节与边缘；没有第二个色相。
- * 层次：喉间聚声（起手）→ 走廊声墙＋边缘白纹（击）→ 被扎中者的锐利爆点（每个目标）→ 头顶嗡响的细纹（持续）。
- * 起击收：windup（聚声）→ shriek（走廊成型、只播一次）→ stung（逐目标）→ linger（耳鸣还在，慢慢离场）。
- * 范围：shriek 的走廊顶点就是判定用的那条走廊（`data.path`），铺到哪就是会被扎到哪；长度 `data.reach`、
- *   半宽 `data.half` 与机制同源。
- * 运动：声墙沿走廊轴向 `data.direction` 推出，边缘的白纹沿顶点连线流动。
- * 数：走廊的密度绑 `data.rings`（物防下降级数派生），每人的爆点数量绑 `data.shocks`，掉级绑 `data.drop`。
+ * 层次：喉间聚声（起手）→ 逐刻前推的薄声环与白亮边缘（击）→ 被扫中者的锐利爆点（每个目标）→ 头顶嗡响的细纹（持续）。
+ * 起击收：windup（聚声）→ front（前沿逐刻推进、位置与服务端同步）→ stung（逐目标）→ linger（耳鸣还在，慢慢离场）。
+ * 范围：front 的环半径绑 `data.half`（走廊半宽），每刻从服务端收到的最新位置就是前沿真正推进到的距离；
+ *   声环所在平面垂直 `data.direction`，所以它始终是一堵横着推出去的薄墙。
+ * 运动：环随前沿位置的每次更新向前跳一格；粒子寿命很短，尾迹迅速消散。
+ * 数：环上密度绑 `data.rings`（物防下降级数派生），每人的爆点数量绑 `data.shocks`，掉级绑 `data.drop`。
  */
 const ScreechDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -38,42 +38,45 @@ const ScreechDefinition: ParticleDefinition = {
                 }
             ]
         },
-        shriek: {
-            duration: 28,
-            exit: { stop: 12, drain: 18 },
+        front: {
+            duration: 22,
+            exit: { stop: 5, drain: 8 },
             emitters: [
                 {
-                    name: "lane_air", bind: "path", height: 0.55,
+                    name: "front_ring", bind: "point", fit: "none", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    shape: { kind: "ring", radius: { data: "half", fallback: 0.9 } },
+                    orient: "direction", direction: "shape", speed: [0.06, 0.22], spread: 8,
+                    rate: { data: "rings", fallback: 8 },
+                    lifetime: [5, 9], size: [0.3, 0.6],
+                    color: 0xEEF4FA, alpha: [0.85, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "front_wall", bind: "point", fit: "none", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    shape: { kind: "polygon" },
-                    rate: { data: "rings", fallback: 8 }, direction: "shape", speed: [0.1, 0.34], spread: 6, spin: 12,
-                    lifetime: [6, 13], size: [0.2, 0.04],
-                    color: 0x8FA2BC, alpha: [0.4, 0], light: "world", maxParticles: 300
+                    shape: { kind: "circle", thickness: 0.55, radius: { data: "half", fallback: 0.9 } },
+                    orient: "direction", direction: "shape", speed: [0.08, 0.28], spread: 6, spin: 14,
+                    rate: { data: "rings", fallback: 8 },
+                    lifetime: [5, 10], size: [0.2, 0.05],
+                    color: 0x8FA2BC, alpha: [0.45, 0], light: "world", maxParticles: 180
                 },
                 {
-                    name: "lane_edge", bind: "path", height: 0.5,
+                    name: "front_spine", bind: "point", fit: "none", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    shape: { kind: "polyline", closed: true },
-                    rate: 60, direction: "shape", speed: [0.1, 0.3], spread: 8,
-                    lifetime: [6, 12], size: [0.1, 0.02],
-                    color: 0xEEF4FA, alpha: [0.85, 0], light: "full", maxParticles: 240
+                    shape: { kind: "circle", radius: { data: "half", fallback: 0.9 } },
+                    orient: "direction", direction: "shape", speed: [0.06, 0.22], spread: 14,
+                    rate: 24,
+                    lifetime: [5, 9], size: [0.09, 0.02],
+                    color: 0xDCE8F4, alpha: [0.8, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "lane_spine", bind: "source", offset: [0, 0.55, 0], height: 0.1, fit: "none", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/smallbeam",
-                    burst: { count: 6, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 6 } },
-                    direction: "shape", speed: [0.0, 0.12],
-                    lifetime: [8, 12], size: [0.13, 0.02], sizeMode: "index",
-                    color: 0xDCE8F4, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 12
-                },
-                {
-                    name: "lane_dust", bind: "path", height: 0.06,
+                    name: "front_dust", bind: "point", fit: "none", offset: [0, -0.4, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polygon" },
-                    rate: { data: "rings", fallback: 8 }, direction: "outward", speed: [0.03, 0.12], drag: 0.94,
-                    lifetime: [8, 16], size: [0.06, 0.02],
-                    color: 0x7C8AA0, alpha: [0.4, 0], light: "world", maxParticles: 160
+                    shape: { kind: "ring", radius: { data: "half", fallback: 0.9 } },
+                    orient: "direction", direction: "outward", speed: [0.02, 0.1], drag: 0.9,
+                    rate: { data: "rings", fallback: 8 },
+                    lifetime: [6, 11], size: [0.06, 0.02],
+                    color: 0x7C8AA0, alpha: [0.4, 0], light: "world", maxParticles: 110
                 }
             ]
         },

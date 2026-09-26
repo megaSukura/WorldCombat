@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.gigaimpact.summary": "把整个身体压低后沿直线全力撞出去；撞实的一刻把目标顶开，但无论撞中还是撞空，冲完自己都会力竭一段时间，无法行动也无法移动。",
   "worldcombat.skill.gigaimpact.description.0": "撞实造成约 %1$s 点接触伤害。",
-  "worldcombat.skill.gigaimpact.description.1": "命中时把目标沿冲撞方向顶开 %1$s 格；无论撞中还是撞空，收势后自己都会力竭 %2$s，期间无法发动新招或普通攻击、也无法移动。",
+  "worldcombat.skill.gigaimpact.description.1": "命中时把目标沿冲撞方向顶开 %1$s 格；无论撞中、撞墙还是冲空，收势后自己都会力竭 %2$s，期间无法发动新招或普通攻击、也无法移动。",
   "worldcombat.skill.gigaimpact.description.2": "冲程最远 %1$s 格、推进速度 %2$s 格每刻、横向判定 %3$s 格；起手 %4$s。",
   "worldcombat.skill.gigaimpact.use.0": "直线全力冲撞",
   "worldcombat.skill.gigaimpact.use.1": "把目标撞飞，用自己的力竭换这一下",

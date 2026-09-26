@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.megapunch.summary": "收拳沉腰蓄势，沿身前一条笔直的窄道打出一记灌注全身质量的重拳：窄道里的每个目标都吃这一记，并被沿同一条线整块推开。侧身站开就能让这一拳落空。",
-  "worldcombat.skill.megapunch.use.0": "在窄道内打一记定音重拳",
+  "worldcombat.skill.megapunch.summary": "收拳沉腰蓄势，沿瞄准方向打出一记灌注全身质量的重拳：拳路是一条停在实墙前的三维窄道，落在拳路里的每个目标都吃这一记，并被沿同一条线整块推开。侧身站开或走出拳路就能让这一拳落空。",
+  "worldcombat.skill.megapunch.use.0": "在拳路内打一记定音重拳",
   "worldcombat.skill.megapunch.use.1": "把正面的目标整块推离原位",
   "worldcombat.skill.megapunch.use.2": "对站桩的目标打一发最重的单体伤害",
-  "worldcombat.skill.megapunch.description.0": "沿身前 %2$s 格长、%3$s 格半宽的窄道打出约 %1$s 点接触+拳伤害，窄道内的每个敌人各中一次。",
-  "worldcombat.skill.megapunch.description.1": "每个被击中的目标都被沿拳路推开约 %1$s 格；站在窄道之外或侧身就能让这一拳落空。",
+  "worldcombat.skill.megapunch.description.0": "沿瞄准方向打出约 %1$s 点接触+拳伤害，拳路长 %2$s 格、半宽 %3$s 格，并被实墙截停；落在拳路里的每个敌人各中一次。",
+  "worldcombat.skill.megapunch.description.1": "每个被击中的目标按双方实际体型被沿拳路推开（基础约 %1$s 格）；真的推不动时不再重发击飞，但重拳伤害仍然成立。",
   "worldcombat.skill.megapunch.planted.on": "扎根式：拳更沉（威力 ×1.14）、推得更远（×1.25），但蓄势更久、收招更慢、冷却更长。",
   "worldcombat.skill.megapunch.planted.off": "活步式：起收更快、循环更短，但拳轻、推得近，适合持续压制。",
   "worldcombat.skill.megapunch.timing": "射程 %1$s 格；蓄势 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
@@ -26,5 +26,6 @@
   "worldcombat.skill.megapunch.preference.ai.preferWounded": "优先收残血",
   "worldcombat.skill.megapunch.preference.ai.preferWounded.help": "开启：残血目标排得更前，用这一记定音重拳收尾；关闭则所有目标同价。",
   "world_combat.move.megapunch.text.hit": "重拳命中 %1$s",
+  "world_combat.move.megapunch.text.wall": "重拳砸在墙上",
   "world_combat.move.megapunch.text.miss": "一拳破风"
 }

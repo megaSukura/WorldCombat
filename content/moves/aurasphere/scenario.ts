@@ -9,7 +9,7 @@ Smoke.scenario("aurasphere", function (stage) {
     stage.until(900, function () { return stage.casts("aurasphere", lucario) > 0 && stage.damageTo(snorlax) > 0; }, function () {
         stage.expect(stage.casts("aurasphere", lucario) > 0, "波导弹被放出来了");
         stage.expect(stage.damageTo(snorlax) > 0, "波导球打到了目标身上");
-        stage.note("球会一路朝目标修正方向，所以目标在飞行中移动也甩不掉（必中）。变量：伤害浮动、暴击、以及目标恰好在这一刻走出锁定距离的极少数情况。",
+        stage.note("球会一路朝目标修正方向，所以目标在飞行中移动也甩不掉（必中）。当前为 kind:aim：点实体时挂追踪，只给方向或世界点则沿所选方向直飞、撞墙散球；空放与目标离场不再提前结束动作。本场景跑 AI 带目标这条路径。变量：伤害浮动、暴击、以及目标恰好在这一刻走出锁定距离的极少数情况。",
             { casts: stage.casts("aurasphere", lucario), damage: Math.round(stage.damageTo(snorlax) * 10) / 10 });
         stage.done();
     }, "波导球命中目标");

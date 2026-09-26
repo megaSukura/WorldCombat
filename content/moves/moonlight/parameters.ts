@@ -2,9 +2,10 @@
  * 月光 / Moonlight —— 参数与数值来源。
  *
  * 核心念头：把清冷的月色披到身上——它读的是「夜里且天晴」这件事，夜里晴空一次补回三分之二并冷却掉身上的灼伤，
- *   白天或阴雨只补一点点。
+ *   白天或阴雨只补一点点，但任何天色下都会把灼伤熄掉。
  * 数值来源：原生「回复最大 HP 的 1/2，晴天 2/3、恶劣天气 1/4」；这里落成二值的 moon（夜晚 × 可见天空 × 无雨），
  *   并以亲密度作为月光的眷顾项：夜里晴空 0.24 + 0.42 ≈ 2/3，白天／阴雨回落到 0.24。
+ * 共用事实：执行、AI 与说明都调用同一个 `moonlightSkyAt`，AI 不再用「日照偏低」伪推月光，晴夜与洞穴分得清。
  * 与原生：放弃回合制天气枚举，改读世界此刻是不是「月色可及」；夜里与白天因此是两套完全不同的结果。
  */
 namespace PokemonSkills {
@@ -15,13 +16,19 @@ namespace PokemonSkills {
         var body = context.world.observe(context.actor);
         return body ? body.position() : null;
     }
-    /** 月色可及：共享语义天气在场时不算晴夜；无现场时回到夜晚晴空的原生判定。0 或 1。 */
+    /**
+     * 月色可及：共享语义天气在场时不算晴夜；无现场时读原生夜晚晴空。
+     * 执行、AI 与说明共用这一份真事实，所以夜里晴空与白天洞穴不会互相误判。
+     */
+    export function moonlightSkyAt(world: CombatWorld, point: CombatPoint): boolean {
+        if (!world || !point) return false;
+        if (WorldEnvironment.weather(world, point) !== null) return false;
+        var env = WorldEnvironment.read(world, point);
+        return !!(env && env.loaded && !env.day && env.skyVisible && (env.rain || 0) < 0.05 && (env.thunder || 0) < 0.05);
+    }
     function moonlightSky(context: FactContext): number {
         var point = moonlightPoint(context);
-        if (!point || !context.world) return 0;
-        if (WorldEnvironment.weather(context.world, point) !== null) return 0;
-        var env = WorldEnvironment.read(context.world, point);
-        return env && env.loaded && !env.day && env.skyVisible && (env.rain || 0) < 0.05 && (env.thunder || 0) < 0.05 ? 1 : 0;
+        return point && context.world && moonlightSkyAt(context.world, point) ? 1 : 0;
     }
     defineFacts(moonlightId, function (context: FactContext): Formula.Facts {
         return {

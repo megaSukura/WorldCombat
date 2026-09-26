@@ -2,13 +2,13 @@
  * 跺脚 / stompingtantrum 的客户端表现。
  *
  * 一句话：施法者沉身一跺、脚下尘土一跳 → 地面朝目标裂开一条土石迸溅的缝 → 缝上的人被掀飞、土石炸开；
- *   带憋愤时缝的尽头再崩开一圈更大的碎岩，最后地面留下一道慢慢平复的裂痕。
- * 色相家族：干燥的土黄与赭石（0xC9A46A / 0x8A6B45）为主体，热琥珀（0xFFB257）只出现在「尽头补崩」的那一圈；
- *   不引入第二个色相。
- * 拍子：起 stomp（跺脚预告）→ 裂 fissure（裂缝沿 path 掠向目标）→ 击 burst（缝上土石炸开）→ 崩 collapse（尽头补崩，仅翻倍）→ 痕 rent（裂痕停留）。
- * 范围：fissure 与 rent 用与判定同一条 `data.path`（脚下→目标）画裂缝；collapse 的环按 `data.shock`（机制崩塌半径）收束。
- * 运动：土石沿 path 从脚下掠向目标，到点向上迸起；裂痕贴地留下。
- * 数：burst／collapse 的碎块量绑定 `data.flows`（物攻与等级换算），强度绑定命中威力。
+ *   带憋愤时裂缝更深、一拍更响，随后缝上的浮尘慢慢平复。
+ * 色相家族：干燥的土黄与赭石（0xC9A46A / 0x8A6B45）为主体，深缝用更暗的赭褐（0x5A4028）压深；不引入第二个色相。
+ * 拍子：起 stomp（跺脚预告）→ 裂 fissure（裂缝沿 path 掠向目标，增强时多一层深缝）→ 击 burst（缝上土石炸开）→ 痕 rent（浮尘停留）。
+ * 范围：fissure 与 rent 用与判定同一条 `data.path`（脚下→地面支撑尽头）画裂缝。
+ * 运动：土石沿 path 从脚下掠向目标，到点向上迸起；缝痕贴地留下。
+ * 数：fissure 的深缝层绑定 `data.deep`（憋愤增强时为 0），burst 的碎块量绑定 `data.flows`（物攻与等级换算），
+ *   强度绑定命中威力；rent 的点数绑定 `data.cells`（物攻换算）。
  */
 const StompingtantrumDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -39,6 +39,15 @@ const StompingtantrumDefinition: ParticleDefinition = {
                     rate: 22, direction: "shape", speed: [0.4, 1.1], spread: 12,
                     lifetime: [6, 13], size: [0.14, 0.03], sizeMode: "index",
                     color: 0x8A6B45, alpha: [0.85, 0], light: "world", bloom: 0.12, maxParticles: 90
+                },
+                {
+                    name: "fissure_deep", bind: "path", fit: "none", offset: [0, -0.02, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    shape: { kind: "polyline" },
+                    burst: { count: { data: "deep", fallback: 0 }, at: 0 },
+                    direction: "outward", speed: [0.02, 0.1],
+                    lifetime: [10, 20], size: [0.22, 0.03],
+                    color: 0x5A4028, alpha: [0.95, 0], light: "world", bloom: 0.1, maxParticles: 36
                 },
                 {
                     name: "fissure_dust", bind: "path", fit: "none", offset: [0, 0.12, 0],
@@ -84,30 +93,6 @@ const StompingtantrumDefinition: ParticleDefinition = {
                 }
             ]
         },
-        collapse: {
-            duration: 24,
-            exit: { stop: 8, drain: 16 },
-            emitters: [
-                {
-                    name: "collapse_ring", bind: "point", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: { data: "shock", fallback: 1.3 } },
-                    direction: "outward", speed: [0.08, 0.22],
-                    lifetime: [10, 18], size: [0.4, 0.9], sizeMode: "linear",
-                    color: 0xFFB257, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 8
-                },
-                {
-                    name: "collapse_rock", bind: "point", offset: [0, 0.2, 0],
-                    particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: { data: "flows", fallback: 12 }, at: 0 },
-                    shape: { kind: "sphere", radius: { data: "shock", fallback: 1.3 } },
-                    direction: "up", speed: [0.16, 0.5], gravity: 0.06, drag: 0.95,
-                    lifetime: [10, 18], size: [0.18, 0.05],
-                    color: 0xB07C40, alpha: [0.95, 0], light: "world", maxParticles: 44
-                }
-            ]
-        },
         rent: {
             duration: 28,
             exit: { stop: 12, drain: 22 },
@@ -116,7 +101,7 @@ const StompingtantrumDefinition: ParticleDefinition = {
                     name: "rent_seam", bind: "path", fit: "none", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     shape: { kind: "polyline" },
-                    burst: { count: 8, at: 0 },
+                    burst: { count: { data: "cells", fallback: 8 }, at: 0 },
                     rate: 6, direction: "outward", speed: [0.01, 0.04],
                     lifetime: [18, 30], size: [0.12, 0.02],
                     color: 0x8A6B45, alpha: [0.5, 0], light: "world", maxParticles: 40

@@ -5,12 +5,12 @@
  *   self boosts { spa: -2 }，无次要效果；target normal（单体）。已实装学习者 57 位。
  *   描述「从天空中向对手落下陨石。使用之后因为反作用力，自己的特攻会大幅降低」。
  *
- * 翻译：把「从天上落下陨石打一下、代价是特攻大掉」翻成即时战斗里**从高空砸下一群陨石**——落点先亮起，
- *   陨石一颗颗垂直砸下，每颗在自己落点炸开一圈龙属性能量、把地面砸出坑。反作用力就是特攻掉 2 级，
- *   提交那一刻就付：召唤与维系陨石耗的是同一份精神力。流星式把一记分成几颗散布，坠星式只一颗直落。
+ * 翻译：把「从天上落下陨石打一下、代价是特攻大掉」翻成即时战斗里**从高空砸下一群陨石**——落点先逐颗亮起，
+ *   陨石一颗颗垂直砸下，每颗在自己召唤时固定的落点炸开一圈龙属性能量；屋顶会原生截住下落的弹体，就在上层撞点炸开，
+ *   目标走出落点就躲过那一颗。反作用力就是特攻掉 2 级，提交那一刻就付：召唤与维系陨石耗的是同一份精神力。
  *
- * 与同族分开：飞叶风暴是旋转前进并留场的叶刃、过热是身前一张扇形热浪、精神突进是隔空内爆；
- *   流星群是唯一**从正上方垂直砸下、落点散布成一片**的那一记，也是唯一把伤害分给多颗陨石的。
+ * 与同族分开：飞叶风暴是旋转前进并沿路旋切的叶刃、过热是身前一张扇形热浪、精神突进是隔空内爆；
+ *   流星群是唯一**从正上方垂直砸下、落点在召唤时固定并逐颗预告**的那一记，也是唯一把伤害分给多颗陨石的。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   meteor       单颗威力：特攻给重、等级拾级；流星式分薄。
@@ -21,15 +21,13 @@
  *   velocity     下落速度：速度决定砸得多快。
  *   interval     陨石间隔：速度决定一颗接一颗的节奏。
  *   reach        射程：特攻给召唤的距离。
- *   crater       坑半径：特攻决定砸出多大。
- *   craterTicks  坑时长：等级与特攻决定留多久。
  *   shards       碎片数：特攻派生，驱动画面。
  *   insightLoss  自身特攻下降级：原生固定 2 级。
  *   tempo/aftercast/recharge：速度定节奏，流星式更慢更长。
  *
  * 配置 `barrage`（流星式，默认关）双向取舍：
- *   开＝召 count 颗陨石散布在目标周围逐个砸下，每颗单发威力 ×0.8，总伤害更高但摊在多个落点、起手更慢
- *   （+5 刻）、冷却更长（+8 刻）；关（坠星式）＝一颗大陨石直落目标，单点更重、出手更快，但只打一个点。
+ *   开＝召 count 颗陨石散布在目标周围、各自固定落点逐个砸下，每颗单发威力 ×0.8，总伤害更高但摊在多个落点、
+ *   起手更慢（+5 刻）、冷却更长（+8 刻）；关（坠星式）＝一颗大陨石直落点选中心，单点更重、出手更快。
  *   人群里流星式的覆盖更好，单挑时坠星式更稳，各有适用局面。
  *
  * 伤害段 `meteor` 与参数同名，走共享换算（原始类别 Special）；对手特防、相性与暴击在命中时另算。
@@ -100,17 +98,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "能从多远召下陨石；特攻高召得远。它也是本招的实际射程与指示范围。"
             }),
-        /** 坑半径：基础 1.0 格；特攻每比 60 多 1 加 0.005（夹 0..0.6）；夹 0.8..1.8。 */
-        crater: formula(
-            F.base(1.0).plus(F.stat("specialAttack").minus(60).times(0.005).clamp(0, 0.6)).clamp(0.8, 1.8).round(2),
-            "坑半径", {
-                unit: "格",
-                description: "陨石砸出的焦黑坑有多大；特攻越高砸得越开。画面里那块坑地就是这个半径。"
-            }),
-        /** 坑时长：基础 90 刻；等级每比 20 高 1 加 0.8（夹 0..50）；夹 70..180。 */
-        craterTicks: seconds(
-            F.base(90).plus(F.level().minus(20).times(0.8).clamp(0, 50)).clamp(70, 180).round(0),
-            "坑时长", "陨石坑留多久；等级越高留得越久。到时原方块回来。"),
         /** 碎片数：基础 24；特攻每比 60 多 1 加 0.16；夹 16..52。 */
         shards: formula(
             F.base(24).plus(F.stat("specialAttack").minus(60).times(0.16)).clamp(16, 52).round(0),
@@ -154,7 +141,6 @@ namespace PokemonSkills {
         { key: "description.0", values: ["meteor"] },
         { key: "description.1", values: ["reach", "velocity", "impactRadius", "fall"] },
         { key: "description.land", values: [] },
-        { key: "description.2", values: ["crater","craterTicks"] },
         { key: "description.3", values: ["insightLoss"] },
         { key: "barrage.on", values: ["count","spread","interval"], when: function (context) { return read(context.detail.values, ["barrage"]) === true; } },
         { key: "barrage.off", values: [], when: function (context) { return read(context.detail.values, ["barrage"]) !== true; } },

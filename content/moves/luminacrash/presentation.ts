@@ -1,11 +1,13 @@
 /**
  * 琉光冲激 / luminacrash —— 客户端表现。
  *
- * 一句话：施法者头顶聚起怪光 → 目标头顶点起一根怪光柱 → 光柱往下一路压到地面、砸出光圈 → 目标身上残留怪光残影。
+ * 一句话：施法者头顶聚起怪光 → 目标头顶点起一根怪光柱、地面浮出一圈虚的落点环 → 坠落前段光柱跟住目标、落点环跟着移动
+ * → 最后锚环由虚变实、光柱往下一路压到锚点 → 砸出光圈，目标身上残留怪光残影。
  * 色相家族：精神怪光的紫（0xB7A8FF）与冷星青（0x8FE8FF），近白只给砸中的一下。
- * 拍子：起 windup（聚光）→ 引 charge（空中点光）→ 坠 fall（光柱下压）→ 砸 impact（地面炸开）→ 击 hit／残 dazzle。
- * 范围：impact 的炸落圈半径绑定 `data.burst`，光柱粗细绑定 `data.radius`，玩家一眼看出站在落点哪一圈会被卷到。
- * 运动：光柱从 `data.height` 高度竖直下压（服务端同时按 `fallTicks` 计时），砸到地面才结算。
+ * 拍子：起 windup（聚光）→ 落 charge（空中点光，跟随）→ 标 mark（地面虚环跟随）→ 锁 lock（地面实环，锚点冻结）→ 坠 fall（光柱下压）
+ *   → 砸 impact（只在最终锚点炸开）→ 击 hit／残 dazzle／旁 splash_hit。
+ * 范围：impact 的炸落圈半径绑定 `data.burst`，光柱粗细绑定 `data.radius`，mark/lock 的地面环同样绑 `data.burst`。
+ * 运动：charge/fall 使用服务端同步的真实锚点（同一位置与阶段数据）；mark/lock 在锚点地面，lock 表示已锁点。
  * 数：光束数绑定 `data.rays`（特攻与等级换算），强弱绑定 `data.intensity`（光柱威力 / 68）。
  */
 const LuminaCrashDefinition: ParticleDefinition = {
@@ -34,14 +36,13 @@ const LuminaCrashDefinition: ParticleDefinition = {
             ]
         },
         charge: {
-            duration: 22,
-            exit: { stop: 8, drain: 16 },
+            duration: 12,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
                     name: "sky_gather", bind: "point", fit: "none", offset: [0, -0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: { data: "rays", fallback: 10 } },
-                    shape: { kind: "sphere", radius: 0.9 },
+                    rate: { data: "rays", fallback: 10 }, shape: { kind: "sphere", radius: 0.9 },
                     direction: "inward", speed: [0.05, 0.2],
                     lifetime: [8, 16], size: [0.1, 0.02],
                     color: 0x8FE8FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 50
@@ -49,10 +50,47 @@ const LuminaCrashDefinition: ParticleDefinition = {
                 {
                     name: "sky_core", bind: "point", fit: "none", offset: [0, -0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
-                    rate: 16, shape: { kind: "sphere", radius: 0.55 },
+                    rate: 14, shape: { kind: "sphere", radius: 0.55 },
                     direction: "inward", speed: [0.03, 0.1], spin: 24,
                     lifetime: [10, 18], size: [0.24, 0.04],
                     color: 0xB7A8FF, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 30
+                }
+            ]
+        },
+        mark: {
+            duration: 12,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "mark_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 4, shape: { kind: "ring", radius: { data: "burst", fallback: 2.0 } },
+                    direction: "up", speed: [0.0, 0.01], spin: 4,
+                    lifetime: [8, 14], size: [0.3, 0.5], sizeMode: "sin",
+                    color: 0x8FE8FF, alpha: [0.22, 0.02], light: "full", maxParticles: 12
+                }
+            ]
+        },
+        lock: {
+            duration: 16,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "lock_ring", bind: "point", fit: "none", offset: [0, 0.07, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
+                    burst: { count: 1 },
+                    shape: { kind: "ring", radius: { data: "burst", fallback: 2.0 } },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [10, 18], size: [0.34, 0.7],
+                    color: 0xB7A8FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 8
+                },
+                {
+                    name: "lock_seal", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    rate: { data: "rays", fallback: 10 }, shape: { kind: "circle", radius: { data: "burst", fallback: 2.0 } },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.08, 0.01],
+                    color: 0xFFFFFF, alpha: [0.6, 0], light: "full", maxParticles: 40
                 }
             ]
         },

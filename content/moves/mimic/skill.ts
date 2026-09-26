@@ -1,8 +1,9 @@
-/** Temporarily replace Mimic’s move slot with an opponent’s recent move. Known non-Pokémon attacks are translated into corresponding moves. */
+/** Temporarily replace Mimic’s move slot with any demonstrator’s recent move. Known non-Pokémon attacks are translated into corresponding moves. */
 namespace PokemonSkills {
     const mimicScene = "world_combat:move_mimic";
     const mimicCopyText = "world_combat.move.mimic.text.copy";
     const mimicEmptyText = "world_combat.move.mimic.text.empty";
+    const mimicNoProviderText = "world_combat.move.mimic.text.noprovider";
     const mimicSnapText = "world_combat.move.mimic.text.snap";
 
     interface MimicBorrow { id: string; slot: number; key: string; }
@@ -41,9 +42,9 @@ namespace PokemonSkills {
         id: "mimic",
         cooldownParameter: "recharge",
         name: "Mimic",
-        description: "临时把对手最近一招借进模仿所在的招式格；普通生物的已知攻击会转译为对应招式。",
-        uses: ["借来对手的招式", "把对手的强化还回去", "惩罚刚出手的强攻"],
-        kind: "enemy",
+        description: "临时把眼前示范者（敌我皆可）最近一招借进模仿所在的招式格；普通生物的已知攻击会转译为对应招式。时间到自动还回原槽。",
+        uses: ["借来目标或同伴的招式", "把对手的强化还回去", "惩罚刚出手的强攻"],
+        kind: "aim",
         range: 8,
         maxRange: 12,
         prepare: 8,
@@ -69,7 +70,9 @@ namespace PokemonSkills {
         },
         ready: function (action, config) {
             const world = action.sense(), target = action.target();
-            if (target === null || !world.valid(target) || world.friendly(target)) return "invalid-target";
+            // aim 允许任意关系实体或世界点：空点交给 execute 说明缺少示范者，不在这里强求存在敌人。
+            if (target === null) return "";
+            if (!world.valid(target)) return "target-left";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (!world.clear(action.origin(), body.position())) return "no-line";
@@ -94,20 +97,27 @@ namespace PokemonSkills {
                 const targetBody = target === null ? null : world.observe(target);
                 const snapped = target !== null && (targetBody === null || !world.clear(action.origin(), targetBody.position()));
                 WorldFeedback.emit(world, mimicScene, 1, point, { moment: snapped ? "snap" : "fizzle", strands: strands }, snapped ? 22 : 24);
-                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.15, 0)), snapped ? mimicSnapText : mimicEmptyText, [], 30);
+                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.15, 0)),
+                    snapped ? mimicSnapText : target === null ? mimicNoProviderText : mimicEmptyText, [], 30);
                 sound(action, snapped ? "minecraft:entity.item.break" : "minecraft:entity.villager.no");
                 done(action);
                 return;
             }
             const slot = Number(action.argument("native-slot"));
             const hold = Math.max(120, Math.round(p("mimic", "hold", action)));
-            if (slot >= 0 && slot <= 3) NativeModifiers.apply(world, actor, { moves: (function () { const map: { [key: string]: string } = {}; map[String(slot)] = found.id; return map; })() }, hold);
+            // 借来的招式真的写进槽位；持续镜面绑在同一份 managed effect 上，随它自然或提前结束清理。
+            const layer = slot >= 0 && slot <= 3
+                ? NativeModifiers.apply(world, actor, { moves: (function () { const map: { [key: string]: string } = {}; map[String(slot)] = found.id; return map; })() }, hold)
+                : 0;
             if (body !== null) {
+                const mirror = { moment: "borrow", move: found.id, strands: strands, fuse: Math.max(1, hold - 3) };
                 WorldFeedback.emit(world, mimicScene, 1, body.position(), {
                     moment: "copy", move: found.id, strands: strands, scale: 1 + hold / 2400
                 }, 40);
+                if (layer <= 0 || !WorldFeedback.onEffect(world, layer, "world_combat:move_mimic/borrow", mimicScene, 1, body.position(), mirror))
+                    WorldFeedback.emit(world, mimicScene, 1, body.position(), mirror, hold);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), mimicCopyText,
-                    [{ key: "cobblemon.move." + found.id, fallback: found.id }], 40);
+                    [{ key: "cobblemon.move." + found.id, fallback: found.id }, Math.round(hold / 20)], 40);
             }
             sound(action, "minecraft:entity.illusioner.mirror_move");
             done(action);

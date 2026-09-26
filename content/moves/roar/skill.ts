@@ -1,86 +1,95 @@
-/**
- * 吼叫 / roar —— 注册、逐退行为与动作。
- *
- * 核心念头：一声吼，把威势当作武器——声浪以自己为中心贴地铺开一圈，圈里的敌人被打上「溃退」，
- *           失去当前目标并被逐出交战圈；不打伤害，只把对手逐走。
- * 一幕半：
- *   起（windup，提交前）：胸口鼓起暖褐声光，预告这一吼。
- *   吼（execute，提交后）：声浪贴地放开，圈内的每个非友方活体被打上共享身份 world_combat:status/routed
- *        （本单元效果 world_combat:roar_routed），并挂上一条逐退驱动 `world_combat:roar_rout`：
- *        立即被打断当前动作、清掉目标、沿背离施法者的方向弹开；之后每 10 刻，只要还离施法者不足 keepOut，
- *        就再被逐开 panic 格，直到溃退时间走完。宝可梦、原版生物、其他模组生物与玩家走同一条路。
- * 与同族分开：吼叫是本组唯一绕身一圈、唯一无视方向、唯一完全无伤的逐退；龙尾是正面一大片横扫，吹飞是
- *   一条向前推进的长风道，巴投是抓一个摔到背后。
- * 反制：站到声浪半径之外就毫发无伤；溃退只是让人失去目标、被推开，不阻止它转身回来。
- */
+/** Accepted fear gives each receiver a temporary native-navigation intent, without periodic body displacement. */
 namespace PokemonSkills {
-    /** 逐退脉冲间隔（刻）：溃退期间每隔这么久把敌人从施法者身边再逐开一步。 */
-    const roarBeat = 10;
-
-    function roarFlat(point: CombatPoint): CombatPoint {
-        const value = WorldCombat.point(point.x(), 0, point.z());
-        return value.length() < 0.01 ? WorldCombat.point(0, 0, 1) : value;
+    const roarRefused="world_combat:roar_refused";
+    WorldCombat.effect(roarRefused,1,160,"actor",json=>json,EffectProtocols.unchanged);
+    WorldCombat.effectHandler(roarRefused,"start",function(){});
+    StatusContributions.define(roarRouted);
+    interface RoarFear { caster:string; point:number[]; keepOut:number; speed:number; }
+    function roarRoutBody(world:CombatWorld,caster:CombatActor,target:CombatActor,centre:CombatPoint,body:CombatObservation,
+        flee:number,panic:number,keepOut:number,token:string):boolean {
+        const ticks=Math.max(20,Math.round(flee));
+        if(!CombatStatus.apply(world,target,"routed",roarRouted,ticks)){world.effect(roarRefused,target,"{}",160);return false;}
+        const id=StatusContributions.upsert(world,target,roarRouted,token,{caster:String(caster.ref()),point:[centre.x(),centre.y(),centre.z()],keepOut:keepOut,speed:Math.max(.5,Math.min(1.4,panic))},ticks);
+        if(!id)return false;
+        // Players retain their own steering; this move's accepted immediate interruption remains available.
+        world.interrupt(target,"world_combat:interrupt");
+        return true;
     }
-
-    /** 把「溃退」落到一个目标身上：共享身份 + 一条逐退驱动效果（施法者为 source，目标为 target）。 */
-    function roarRoutBody(world: CombatWorld, caster: CombatActor, target: CombatActor, centre: CombatPoint, body: CombatObservation,
-        flee: number, panic: number, keepOut: number): void {
-        const duration = Math.max(20, Math.round(flee));
-        CombatStatus.apply(world, target, "routed", roarRouted, duration);
-        const away = roarFlat(body.position().minus(centre));
-        world.effect(roarRout, target, JSON.stringify({ caster: String(caster.ref()),
-            dir: [away.x(), away.y(), away.z()], keepOut: keepOut, panic: panic, kick: Math.min(2.4, panic * 1.6) }), duration);
+    WorldCombat.effect(roarRout,1,400,"actor",json=>json,EffectProtocols.unchanged);
+    WorldCombat.effectHandler(roarRout,"start",effect=>effect.schedule("flee","flee",1,"{}"));
+    WorldCombat.effectHandler(roarRout,"operation:world_combat:dispel",effect=>effect.end());
+    function roarRelease(effect:CombatEffect,state:any):void {
+        if(!state.active)return;
+        const world=effect.world();if(world.valid(effect.target())){world.stopMovement();world.controlled(false);}
+        state.active=false;
     }
-
-    WorldCombat.effect(roarRout, 1, 400, "actor", function (json: string): string {
-        const state = JSON.parse(json);
-        if (!state || !Array.isArray(state.dir) || state.dir.length !== 3 || !isFinite(state.keepOut) || !isFinite(state.panic))
-            throw new Error("Invalid roar rout state");
-        return JSON.stringify(state);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(roarRout, "start", function (effect: CombatEffect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) { effect.end(); return; }
-        const state = JSON.parse(effect.state()), body = world.observe(victim);
-        world.interrupt(victim, "world_combat:routed");
-        world.target(victim, null);
-        if (body !== null) {
-            const away = roarFlat(WorldCombat.point(state.dir[0], 0, state.dir[2]));
-            world.motion(victim, WorldCombat.point(away.x(), 0.22, away.z()).unit().scale(state.kick), true);
-            WorldFeedback.emit(world, roarScene, 1, body.position(), { moment: "rout", target: String(victim.ref()) }, 22);
+    WorldCombat.effectHandler(roarRout,"end",effect=>roarRelease(effect,JSON.parse(effect.state())));
+    function roarGoal(world:CombatWorld,body:CombatObservation,threat:CombatPoint,distance:number,turn:number):CombatPoint|null {
+        const here=body.position(),delta=WorldGeometry.flatUnit(here.minus(threat)),angles=[0,45,-45,90,-90];
+        for(let offset=0;offset<angles.length;offset++){
+            const angle=angles[(turn+offset)%angles.length]*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+            const direction=WorldCombat.point(delta.x()*c-delta.z()*s,0,delta.x()*s+delta.z()*c),point=here.plus(direction.scale(distance));
+            const feet=WorldCombat.point(point.x(),body.boundsMin().y(),point.z()),floor=SurfacePaths.support(world,feet,1,1.1);
+            const fluid=floor?world.fluid(floor.plus(WorldCombat.point(0,.03,0))):null;
+            if(!floor||!fluid||!fluid.empty()||!world.freeSpace(floor.plus(WorldCombat.point(0,.03,0)),body.width(),body.height()))continue;
+            const candidate=floor.plus(WorldCombat.point(0,body.height()/2,0));
+            if(candidate.minus(threat).length()<=here.minus(threat).length()+.1)continue;
+            const result=world.navigate(candidate,.45,1);
+            if(result==="moving"||result==="arrived")return candidate;
         }
-        effect.schedule("surge", "surge", roarBeat, "{}");
+        return null;
+    }
+    WorldCombat.effectHandler(roarRout,"flee",function(effect){
+        const world=effect.world(),actor=effect.target(),body=world.observe(actor),state=JSON.parse(effect.state()),carrier=world.mobEffect(actor,roarRouted);
+        if(!body||body.player()||String(world.source().key())!==String(actor.key())||!carrier){effect.end();return;}
+        const contributions=StatusContributions.list<RoarFear>(world,actor,roarRouted).filter(item=>world.actor(String(item.source.ref()))!==null);
+        if(!contributions.length){effect.end();return;}
+        const generation=contributions.map(item=>item.id).join(",");
+        if(state.generation!==generation){state.generation=generation;state.blocked=false;state.failed=0;state.goal=null;}
+        if(state.blocked){effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
+        effect.remaining(Math.max(1,Math.min(400,carrier.duration())));
+        let chosen=contributions[0],threat=world.observe(chosen.source)!.position(),gap=chosen.payload.keepOut-body.position().minus(threat).length();
+        contributions.forEach(item=>{const source=world.observe(item.source);if(!source)return;const next=item.payload.keepOut-body.position().minus(source.position()).length();if(next>gap){chosen=item;threat=source.position();gap=next;}});
+        if(gap<=0){
+            if(state.active&&!state.arrived)world.stopMovement();state.arrived=true;state.goal=null;
+        }else{
+            state.arrived=false;
+            const at=body.position();
+            if(state.previous&&at.minus(WorldCombat.point(state.previous[0],state.previous[1],state.previous[2])).length()<.05)state.stale=(state.stale||0)+2;else state.stale=0;
+            state.previous=[at.x(),at.y(),at.z()];
+            if(!state.goal||world.tick()>=(state.replan||0)||state.stale>=10){
+                if(state.stale>=10){state.turn=((state.turn||0)+1)%5;state.failed=(state.failed||0)+1;}
+                if(state.failed>=3){roarRelease(effect,state);state.blocked=true;effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
+                const goal=roarGoal(world,body,threat,Math.min(6,Math.max(2,gap+1)),state.turn||0);
+                if(!goal){
+                    state.failed=(state.failed||0)+1;roarRelease(effect,state);
+                    if(state.failed>=3){state.blocked=true;WorldFeedback.emit(world,roarScene,1,body.position(),{moment:"resist",target:String(actor.ref())},12);}
+                    effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;
+                }
+                if(!state.active){world.interrupt(actor,"world_combat:interrupt");world.controlled(true);state.active=true;effect.state(JSON.stringify(state));}
+                state.goal=[goal.x(),goal.y(),goal.z()];state.replan=world.tick()+10;
+                const moved=world.navigate(goal,.45,chosen.payload.speed);
+                if(moved!=="moving"&&moved!=="arrived"){roarRelease(effect,state);state.blocked=true;effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
+            }
+            if(body.velocity().length()>.03)WorldFeedback.emit(world,roarScene,1,body.position(),{moment:"flee",target:String(actor.ref())},8);
+        }
+        effect.state(JSON.stringify(state));effect.schedule("flee","flee",2,"{}");
     });
-    WorldCombat.effectHandler(roarRout, "surge", function (effect: CombatEffect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) { effect.end(); return; }
-        const state = JSON.parse(effect.state()), body = world.observe(victim);
-        if (body === null) { effect.end(); return; }
-        world.target(victim, null);
-        let away = roarFlat(WorldCombat.point(state.dir[0], 0, state.dir[2]));
-        const caster = state.caster ? world.actor(state.caster) : null;
-        const from = caster !== null ? world.observe(caster) : null;
-        let distance = 999;
-        if (from !== null) {
-            const delta = body.position().minus(from.position());
-            distance = delta.length();
-            if (delta.length() > 0.01) away = roarFlat(delta);
-        }
-        if (distance < state.keepOut) {
-            world.displace(victim, away.unit().scale(state.panic));
-            const after = world.observe(victim);
-            if (after !== null)
-                WorldFeedback.keep(world, "world_combat:move_roar:" + String(victim.ref()), roarScene, 1, after.position(),
-                    { moment: "flee", target: String(victim.ref()) }, 18);
-        }
-        effect.schedule("surge", "surge", roarBeat, "{}");
-    });
-
+    function roarReceiver(event:CombatWorldEvent):void {
+        const data=JSON.parse(event.data());if(data.id&&String(data.id)!==roarRouted)return;
+        const world=event.world(),actor=event.actor(),body=world.observe(actor);if(!body||body.player())return;
+        const carrier=world.mobEffect(actor,roarRouted),current=world.effects(actor,roarRout);
+        if(!carrier){current.forEach(view=>world.operation(view.id(),"world_combat:dispel","{}"));return;}
+        if(current.length||!StatusContributions.list(world,actor,roarRouted).length)return;
+        // This event scope is owned by the receiver, so only its own normal AI/navigation lease is acquired.
+        world.effect(roarRout,actor,JSON.stringify({active:false,arrived:false,goal:null,stale:0,failed:0,turn:0}),Math.max(1,Math.min(400,carrier.duration())));
+    }
+    ["world_combat:mob_effect_added","world_combat:mob_effect_tick","world_combat:mob_effect_removed","world_combat:actor_bound"].forEach(topic=>WorldCombat.on("world_combat:roar/receiver/"+topic.replace(":","_"),topic,"",roarReceiver));
     define({
         id: roarId,
         cooldownParameter: "wait",
         name: "吼叫",
-        description: "吼出一圈声浪，把范围内的敌人震慑得失去目标、掉头离开战斗；有后备的对手会被真正换下，野生或没有后备时只逐退。没有伤害，只把对手逐走。",
+        description: "一吼震慑近敌；接受溃退的生物沿可走路径逃到安全距离，短窗结束恢复正常选择。抵抗者不被接管，玩家保留移动操作；合法后备仍可被真正换上，没有伤害。",
         uses: ["把贴身的敌人一次逐开", "打断围攻、为自己拉开呼吸空间", "在混战里逼退一圈人"],
         kind: "self",
         range: 5,
@@ -117,9 +126,9 @@ namespace PokemonSkills {
             let hits = 0;
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, reach, { below: 3, above: 3.5 }), function (target, facts) {
                 if (String(target.ref()) === String(actor.ref())) return;
-                roarRoutBody(world, actor, target, centre, facts, flee, panic, keepOut);
-                WorldFeedback.emit(world, roarScene, 1, facts.position(),
-                    { moment: "rout", target: String(target.ref()), waves: waves }, 22);
+                if (!roarRoutBody(world, actor, target, centre, facts, flee, panic, keepOut, String(action.id()))) {
+                    WorldFeedback.emit(world,roarScene,1,facts.position(),{moment:"resist",target:String(target.ref())},16);return;
+                }
                 if (partyForceOut(world, target, partyFeet(facts)) !== null)
                     WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.1, 0)), roarSwitchText, [], 24);
                 hits++;

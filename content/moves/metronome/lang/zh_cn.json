@@ -14,5 +14,7 @@
   "worldcombat.skill.metronome.value.span": "搅动距离",
   "worldcombat.skill.metronome.value.recharge": "再次挥指",
   "worldcombat.skill.metronome.value.hues": "候选光点",
-  "worldcombat.skill.metronome.description.3": "借出的招式沿用挥指自己的冷却，不会另外消耗被借招式的 PP；要借出攻击招式时射程内必须有敌人，否则只可能借到自身或友方招式。"
+  "worldcombat.skill.metronome.description.3": "借出的招式沿用挥指自己的冷却，不会另外消耗被借招式的 PP；要借出攻击招式时射程内必须有敌人，否则只可能借到自身或友方招式。",
+  "worldcombat.skill.metronome.description.4": "搅出结果时只结算这一招：先浮出被借招式的名称并收成一枚属性符号，随后立刻由该招出手，不会连续掷骰或叠加强化。",
+  "world_combat.move.metronome.text.draw": "挥指使出了 %1$s"
 }

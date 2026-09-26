@@ -9,12 +9,16 @@
  *   起（windup，提交前）：长身或藤蔓在身侧收束、绷起，只播预告。
  *   缠（lash → grip）：提交后沿瞄准方向甩出一条线；缠住第一个活体即结算一记 cinch 接触伤害、挂上
  *       `world_combat:status/partiallytrapped`（本单元 `world_combat:bind_cinch`），施法者带上 `bind_hold`。
- *   牵（pull → cinch / release / snap）：绑定效果每 2 刻量一次两者距离——超过绳长就把目标朝施法者拉回
- *       `drag`，超过 `snap` 就绷断；每 `interval` 勒一次，`tight` 每增一档威力抬高 `ramp`、绳也收紧一截。
- *       任一方身上的状态被外力清掉（牛奶、/effect clear）或一方倒下时绳松开。
+ *       线撞到实墙、或没缠到任何活体时就只是甩空，不建看不见的绳。
+ *   牵（pull → cinch / release / snap）：绑定效果每 2 刻量一次两者距离——超过绳长且绳绷紧就把目标朝施法者拉回
+ *       `drag`，超过 `snap` 或两端之间被实墙隔断就绷断；绳**绷紧时才**每 `interval` 勒一次，`tight` 每增一档
+ *       威力抬高 `ramp`、绳也收紧一截。任一方身上的状态被外力清掉（牛奶、/effect clear）或一方倒下时绳松开。
  *
  * 与同族分开：紧束把目标裹住钉在原地、藤不需要施法者维持；绑紧把目标拴在施法者身边拖着走，越拉越紧，
  * 代价是施法者也被拖慢。与缠绕（一次性减速＋短定身）、贝壳夹击（双方被钉住）也不同：绑紧是可移动的牵引。
+ *
+ * 选取 `kind: "aim"`：可点任意阵营实体，也可只给方向或世界点；只有实际甩中的首个敌对活体才会被系上，
+ *   空放/打墙都只留下甩空的表现。
  *
  * 配置 `choke`（勒紧式）由 resolve 改时序、由公式改绳长／回拽／加紧／时长，提交后才触碰世界。
  */
@@ -23,7 +27,7 @@ namespace PokemonSkills {
     const bindCinch = "world_combat:bind_cinch";
     const bindHold = "world_combat:bind_hold";
     const bindBond = "world_combat:bind_bond";
-    const bindLeashKey = "bind:leash:";
+    const bindLeashKey = "bind:leash";
     const bindGripText = "world_combat.move.bind.text.grip";
     const bindReleaseText = "world_combat.move.bind.text.release";
     const bindSnapText = "world_combat.move.bind.text.snap";
@@ -61,33 +65,39 @@ namespace PokemonSkills {
         }
         const held = world.observe(victim), holder = world.observe(caster);
         if (held === null || holder === null) { effect.end(); return; }
-        const anchor = holder.position();
-        const distance = anchor.minus(held.position()).length();
-        if (distance > data.snap) { data.reason = "snapped"; effect.state(JSON.stringify(data)); effect.end(); return; }
+        const anchor = holder.position(), at = held.position();
+        const distance = anchor.minus(at).length();
+        // 索须通视：实墙隔在两端之间，绳绕不过去，直接绷断。
+        if (distance > data.snap || !world.clear(anchor, at)) {
+            data.reason = "snapped"; effect.state(JSON.stringify(data)); effect.end(); return;
+        }
         const leash = Math.max(data.leash * 0.5, data.leash * (1 - data.ramp * 0.15 * (data.tight || 0)));
+        // 只有绷紧的绳才勒得动：远于收紧后的绳长才拉回，并遵守原生位移的真实结果；拉不动的目标不会被补写坐标。
+        const taut = distance >= leash - 0.05;
         if (distance > leash && data.drag > 0) {
             const step = Math.min(distance - leash, data.drag);
-            world.displace(victim, anchor.minus(held.position()).unit().scale(step));
+            if (step > 0.01) world.displace(victim, anchor.minus(at).unit().scale(step));
         }
-        if (world.tick() >= data.next) {
+        if (taut && world.tick() >= data.next) {
             data.next = world.tick() + Math.max(6, Math.round(data.interval));
             data.tight = (data.tight || 0) + 1;
             effect.state(JSON.stringify(data));
             const power = data.cinch * (1 + data.ramp * data.tight);
             hurt(world, victim, "bind", power, { damage: damageSpec("bind", "cinch"), contact: true });
             if (!world.valid(victim)) { effect.end(); return; }
-            const at = world.observe(victim);
-            if (at !== null) {
-                WorldFeedback.emit(world, bindScene, 1, at.position(),
+            const body = world.observe(victim);
+            if (body !== null) {
+                WorldFeedback.emit(world, bindScene, 1, body.position(),
                     { moment: "cinch", target: String(victim.ref()), tight: data.tight, notes: data.notes,
                         intensity: Math.max(0.5, Math.min(2.2, power / 18)) }, 18);
-                WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.2, 0)), bindGripText, [data.tight], 18);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), bindGripText, [data.tight], 18);
             }
-            world.sound("minecraft:block.vine.step", at !== null ? at.position() : held.position(), 14, "{}");
+            world.sound("minecraft:block.vine.step", body !== null ? body.position() : at, 14, "{}");
         }
-        WorldFeedback.keep(world, bindLeashKey + String(victim.ref()), bindScene, 1, held.position(),
+        // 绳的表现绑在这次束缚的托管效果上：两端读实际位置、张力读真实距离；效果自然到期或被驱散都一起收回。
+        WorldFeedback.onEffect(world, effect.id(), bindLeashKey, bindScene, 1, at,
             { moment: "leash", target: String(victim.ref()), path: ["source", String(victim.ref())],
-                tension: Math.max(0.2, Math.min(1, distance / data.leash)), notes: data.notes, tight: data.tight || 0 }, 20);
+                tension: Math.max(0.2, Math.min(1, distance / data.leash)), notes: data.notes, tight: data.tight || 0 });
         effect.schedule("pull", "pull", 2, "{}");
     });
     WorldCombat.effectHandler(bindBond, "end", function (effect) {
@@ -113,9 +123,9 @@ namespace PokemonSkills {
         id: "bind",
         cooldownParameter: "recharge",
         name: "Bind",
-        description: "甩出一根绷在两者之间的缚索：长身或藤蔓缠住一个目标，另一头系在自己身上。目标想跑就被拽回来，绳每勒一下更紧一点；被拴住的目标走得更慢，拉绳的自己也一样。目标能动、能打，却走不出这根绳——除非把绳一步扯断、等它走完，或任一方身上的束缚被清除。",
+        description: "甩出一根绷在两者之间的缚索：长身或藤蔓缠住一个目标，另一头系在自己身上。目标想跑就被拽回来，绳每勒一下更紧一点；被拴住的目标走得更慢，拉绳的自己也一样。目标能动、能打，却走不出这根绳——除非把绳一步扯断、被实墙隔断、等它走完，或任一方身上的束缚被清除。可点任意目标，也可只给方向空甩；只有实际甩中的首个敌人才会被系上。",
         uses: ["把一个想跑的目标拴在身边拖着走", "用持续收紧的伤害压住一个难缠目标", "把对手从掩体或水里拖出来"],
-        kind: "enemy",
+        kind: "aim",
         range: 3.5,
         maxRange: 4.8,
         prepare: 7,
@@ -123,7 +133,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 34,
         style: "tether",
-        defaults: { choke: false, ai: { maxChase: 7, preferRunners: true } },
+        defaults: { choke: false, ai: { maxChase: 7, preferRunners: true, minHealth: 0.3 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("bind", "reach", pokemon), geometry: "line", style: "tether", color: 0xB08C5A,

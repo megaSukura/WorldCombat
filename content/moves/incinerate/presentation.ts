@@ -1,14 +1,15 @@
 /**
  * 烧尽 / incinerate 的客户端表现。
  *
- * 一句话：施法者口前拢起火苗、向内卷成扇面，随后一整片扇形火焰朝前铺开；扇内每个被点到的敌人身上炸开
- * 火团与飞散的火星，若它手里有可燃物，火苗顺着那件东西窜高一截、腾起一枚焦黑的小块。
- * 色相家族：火橙（flame / ember / impact_fire）为唯一主色，烟（smoke）作衬，近白（smallsparkle）只在击点。
- * 拍子：起（gather 拢火）→ 扫（sweep 铺扇）→ 击（burn 命中／爆燃）→ 空（fizzle 散火）。
- * 范围：sweep 的火焰贴 `data.path` 的扇面顶点铺满，画出的就是判定覆盖的那块扇形；顶点与判定同源。
- * 运动：拢火时火苗向内聚；扫出时整片火朝上舔起、边缘火星向外飞；命中是短促外爆，烧到可燃物时额外窜高一簇。
- * 数：`data.flames`（特攻派生的火焰数）驱动拢火与扇面的粒子量；`data.flare`（烧到可燃物时的火焰数，否则 0）
- *     单独驱动那簇爆燃；`data.intensity`（本击伤害占比）放大命中爆发。
+ * 一句话：施法者口前拢起一束火苗，随后这束窄火舌从左向右一路舔过去，像一把移动的火镰；被舔到的敌人身上
+ * 炸开火团，若它手里的树果或宝石真的被烧掉，火顺着那件东西窜高一簇、腾起几粒焦灰。
+ * 色相家族：火橙（flame / ember / impact_fire）为唯一主色，烟与焦灰（smoke / tinydust）作衬，近白只在击点。
+ * 拍子：起（gather 拢火）→ 扫（sweep 火舌逐刻横移）→ 击（burn 命中／爆燃）→ 撞墙（wall）→ 被挡（ward）→ 空（fizzle）。
+ * 范围：sweep 的火舌贴 `data.path` 的两个顶点（口部到本刻真实接触点）画一条窄线，再在 `data.point` 的舌尖加一小簇火；
+ *   判定与画面读同一个 trace 接触点，撞墙时画到真实方块格。
+ * 运动：拢火向内聚；扫出时火舌沿当前指向舔过、边缘火星向外飞；命中是短促外爆，烧到可燃物才额外窜高。
+ * 数：`data.flames`（特攻派生的火焰数）驱动拢火与火舌的粒子量；`data.flare`（烧到可燃物并取走时的火焰数，否则 0）
+ *     单独驱动那簇爆燃；`data.ash`（烧毁成功时的焦屑数，否则 0）驱动灰屑；`data.intensity`（本击伤害占比）放大命中爆发。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const IncinerateDefinition: ParticleDefinition = {
@@ -37,32 +38,32 @@ const IncinerateDefinition: ParticleDefinition = {
             ]
         },
         sweep: {
-            duration: 28,
-            exit: { stop: 12, drain: 20 },
+            duration: 16,
+            exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "sheet", bind: "path", fit: "none", height: 0.1,
+                    name: "tongue", bind: "path", fit: "none", height: 0.05,
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    shape: { kind: "polygon" }, rate: { data: "flames", fallback: 14 }, speed: [0.01, 0.05],
-                    direction: "up", spread: 6,
-                    lifetime: [8, 16], size: [0.22, 0.03],
-                    color: 0xF08030, alpha: [0.7, 0], light: "full", maxParticles: 220
+                    shape: { kind: "polyline" }, rate: { data: "flames", fallback: 14 }, speed: [0.02, 0.08],
+                    direction: "outward", spread: 8,
+                    lifetime: [5, 12], size: [0.2, 0.02],
+                    color: 0xF08030, alpha: [0.85, 0], light: "full", maxParticles: 160
                 },
                 {
-                    name: "billow", bind: "path", fit: "none", height: 0.2,
+                    name: "lick", bind: "path", fit: "none", height: 0.05,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    shape: { kind: "polygon" }, rate: { data: "flames", fallback: 14 }, speed: [0.06, 0.2],
-                    direction: "outward", gravity: 0.01,
-                    lifetime: [8, 18], size: [0.07, 0.01],
-                    color: 0xFFD08A, alpha: [0.85, 0], light: "full", maxParticles: 240
+                    shape: { kind: "polyline" }, rate: { data: "flames", fallback: 14 }, speed: [0.05, 0.18],
+                    direction: "up", spread: 10,
+                    lifetime: [6, 13], size: [0.07, 0.01],
+                    color: 0xFFC46A, alpha: [0.85, 0], light: "full", maxParticles: 140
                 },
                 {
-                    name: "wisp", bind: "source", offset: [0, 0.5, 0.6], height: 0.3, orient: "direction",
+                    name: "tip", bind: "point", fit: "none", height: 0,
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: 30, shape: { kind: "box", size: [0.5, 0.3, 0.2] },
-                    direction: "away", speed: [0.12, 0.34],
-                    lifetime: [6, 13], size: [0.14, 0.02],
-                    color: 0xFF9A3C, alpha: [0.7, 0], light: "full", maxParticles: 120
+                    rate: 26, shape: { kind: "sphere", radius: 0.16 },
+                    direction: "outward", speed: [0.06, 0.2],
+                    lifetime: [5, 11], size: [0.14, 0.02],
+                    color: 0xFF9A3C, alpha: [0.8, 0], light: "full", maxParticles: 60
                 }
             ]
         },
@@ -95,12 +96,60 @@ const IncinerateDefinition: ParticleDefinition = {
                     color: 0xE06020, alpha: [0.95, 0], light: "full", maxParticles: 90
                 },
                 {
+                    name: "ash", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "ash", fallback: 0 } }, shape: { kind: "sphere_surface", radius: 0.26 },
+                    direction: "outward", speed: [0.05, 0.18], spread: 26, gravity: 0.03, spin: 18,
+                    lifetime: [12, 24], size: [0.08, 0.01],
+                    color: 0x8A8580, alpha: [0.85, 0], light: "world", maxParticles: 48
+                },
+                {
                     name: "scorch", bind: "target", offset: [0, 0.02, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/scorch/floorscorch",
                     burst: { count: 1 }, shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.0, 0.0],
                     lifetime: [12, 22], size: [0.5, 0.16],
                     color: 0x8A4520, alpha: [0.5, 0], light: "world", maxParticles: 4
+                }
+            ]
+        },
+        wall: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "lick", bind: "point", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    burst: { count: { data: "flames", fallback: 8 } },
+                    shape: { kind: "cone", radius: 0.3, angleDegrees: 60 },
+                    orient: "direction",
+                    direction: [{ data: "direction.0", fallback: 0 }, { data: "direction.1", fallback: 1 }, { data: "direction.2", fallback: 0 }],
+                    speed: [0.06, 0.26], spread: 16,
+                    lifetime: [5, 12], size: [0.18, 0.02],
+                    color: 0xF08030, alpha: [0.85, 0], light: "full", maxParticles: 60
+                },
+                {
+                    name: "spark", bind: "point", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere_surface", radius: 0.22 },
+                    direction: "outward", speed: [0.08, 0.3], spread: 30, gravity: 0.02,
+                    lifetime: [6, 14], size: [0.07, 0.01],
+                    color: 0xFFC46A, alpha: [0.9, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        ward: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "soak", bind: "point", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.04, 0.14], drag: 0.9,
+                    lifetime: [6, 14], size: [0.12, 0.02],
+                    color: 0xE07A30, alpha: [0.6, 0], light: "full", maxParticles: 20
                 }
             ]
         },

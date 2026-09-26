@@ -10,6 +10,8 @@ interface CombatObservation {
     attacking(): CombatActor | null; lastAttacker(): CombatActor | null; hurtAgo(): number; tags(): string;
     /** Bounding box in blocks; a medium combatant is about 0.9 wide and 1.4 tall. Use it to scale reach, area and presentation (data.scale). */
     width(): number; height(): number;
+    /** Actual native collision AABB, including asymmetric or custom entity boxes; detached world-space points. */
+    boundsMin(): CombatPoint; boundsMax(): CombatPoint;
 }
 interface CombatEffectView {
     id(): number; definition(): string; source(): CombatActor; target(): CombatActor; remaining(): number; data(): string;
@@ -50,19 +52,68 @@ interface CombatFluid {
     property(name: string): string | null;
 }
 /** Native provenance on damage_incoming and damage_applied JSON, alongside script-authored metadata. */
+interface CombatProjectilePathSegment {
+    /** Same server clock as world.tick(). Only observed motion/processed contacts are included. */
+    tick: number; ownerEntity: string; from: [number, number, number]; to: [number, number, number];
+}
+interface CombatProjectileFacts {
+    id: string; type: string; ownerEntity: string; owner: string;
+    position: [number, number, number]; velocity: [number, number, number];
+    boundsMin: [number, number, number]; boundsMax: [number, number, number];
+    hostile: boolean;
+    /** A removal adapter exists; runtime permissions/protection events may still refuse interception. */
+    interceptable: boolean;
+    /** Since observation began; retained for this loaded entity's lifetime, with no stationary duplicates or guessed teleport segments. */
+    path: CombatProjectilePathSegment[];
+}
 interface CombatNativeDamageFacts {
     amount: number; cause: string; damageType: string; damageTags: string[];
     /** Nearby, available living source ref, or empty. Event actor falls back to the victim when this is empty. */
     sourceActor: string;
     /** Native causing/direct UUIDs and registry type ids; empty for absent entities. */
     sourceEntity: string; directEntity: string; sourceType: string; directType: string;
+    /** Native direct entity is a Projectile, even when its observed flight is empty/unavailable. */
+    directProjectile: boolean;
+    /** Native DamageSource origin (explicit location or direct entity position), or null when absent. */
+    sourcePosition: [number, number, number] | null;
+    /** Actual direct projectile flight, including this accepted native contact. Empty when no tracked Projectile supplied the damage. */
+    projectilePath: CombatProjectilePathSegment[];
     /** True when the causing entity itself is the direct entity, distinct from the victim. */
     direct: boolean; bypassesInvulnerability: boolean;
     /** Native causing entity is living; scripted is true only inside a WorldCombat damage operation. */
     sourceLiving: boolean; scripted: boolean;
     actual?: number; before?: number; after?: number;
 }
+/** Immutable facts on world_combat:mob_effect_incoming; changing the JSON does not rewrite the native effect. */
+interface CombatNativeMobEffectFacts {
+    id: string; category: "beneficial" | "harmful" | "neutral"; tags: string[];
+    /** Host-issued execution inherited by a scripted marker, or empty/0 for a raw native call. world.originData shares this execution. */
+    originInstance: string; action: number;
+    /** Attempted duration in ticks (-1 means infinite), zero-based amplifier, and native display flags. */
+    duration: number; amplifier: number; ambient: boolean; visible: boolean; showIcon: boolean;
+    /** Native applicability state on entry. Default still runs native immunity rules; apply was requested by another native listener. */
+    nativeResult: "default" | "apply";
+    /** Available living caller within 64 blocks, or empty. The event actor falls back to its target when this is empty. */
+    sourceActor: string;
+    /** Exact caller supplied to native addEffect, including nonliving or distant sources; empty/null when none was supplied. */
+    sourceEntity: string; sourceType: string; sourcePosition: [number, number, number] | null; sourceLiving: boolean;
+}
+/** Immutable final world_combat:actor_died facts, delivered in each live observer's own writable scope.
+ * target() is a dead handle and grants no live mutation capability. Participation in an encounter remains content policy. */
+interface CombatNativeDeathFacts {
+    deathId: string; victim: string; identity: string; entity: string; dimension: string; tick: number;
+    position: [number, number, number]; sourceEntity: string; sourceActor: string;
+    attackingEntity: string; lastAttackerEntity: string; friendly: boolean; self: boolean;
+}
 interface CombatWorld {
+    /** Atomic JSON {updates:[{id,expected,data}]} for active effect instances. expected is the exact data() string;
+     * data is the replacement JSON string, normalized by that active definition/schema. Every same-world/range/
+     * mutation permission and snapshot is checked before any write; stale/ended instances return false, malformed
+     * or unauthorized requests fail. Duplicate ids are rejected. Notifications run only after all replacements;
+     * later observer mutations are separate events. No effect creation, lifetime, source or ownership is changed. */
+    compareEffectStates(updates: string): boolean;
+    /** Closest point inside/on the live target's actual native AABB to a world point. Read-only; does not grant damage permission. */
+    closestPoint(target: CombatActor, point: CombatPoint): CombatPoint;
     /** Registered native MobEffect category before application: beneficial, harmful or neutral; empty for an unknown id. */
     mobEffectCategory(id: string): string;
     /** Detached active equipment facts from native inventories; absent optional integrations contribute no entries. Pokemon carried items appear as provider "cobblemon", slot "held", index 0. */
@@ -92,6 +143,15 @@ interface CombatWorld {
         second: CombatActor, secondProvider: string, secondSlot: string, secondIndex: number, secondExpected: string, count?: number): boolean;
     /** Readable receipt for equipmentTake: JSON {ok,reason,item,count,drop}; item/count are the stack that left the slot. */
     equipmentTakeResult(target: CombatActor, provider: string, slot: string, index: number, expected: string, count?: number): string;
+    /** Explicit consumption of a positive item count. On success item_consumed reports actor=consumer (default holder),
+     * target=holder, exact receipt item/count/slot and operator=world.source. Take/drop/exchange do not emit consumption. */
+    equipmentConsumeResult(holder: CombatActor, provider: string, slot: string, index: number, expected: string, count: number, consumer?: CombatActor): string;
+    /** Move count items from an exact dropped ItemEntity stack into an empty native slot. Both stacks are compared,
+     * native pickup ownership/delay and destination rules apply, and refusals retain both stacks. Receipt has the moved
+     * serialized item/count and the drop UUID. Source/recipient must be in the same dimension within 64 blocks, with a
+     * clear source-to-item path; content supplies its own shorter reach. A drop moved during preflight is stale. */
+    equipmentCollectResult(target: CombatActor, provider: string, slot: string, index: number, expected: string,
+        entity: string, expectedDrop: string, count: number): string;
     /** Readable receipt for equipmentDrop: JSON {ok,reason,item,count,drop}; drop is the item entity UUID. */
     equipmentDropResult(target: CombatActor, provider: string, slot: string, index: number, expected: string, data: string, count?: number): string;
     /** Readable receipt for equipmentGive: JSON {ok,reason,item,count,drop}; item/count are the stack the slot held before the write. */
@@ -108,8 +168,17 @@ interface CombatWorld {
     /** Whether two actors are allies, independent of which one is world.source(). */
     allied(first: CombatActor, second: CombatActor): boolean;
     source(): CombatActor; tick(): number; valid(actor: CombatActor): boolean;
+    /** Opaque host-issued execution token, or empty outside one. Script actions and derived transient effects/projectiles
+     * share a token; independently committed child actions get their own. Native damage observes a direct projectile/body
+     * or one DamageSource delivery, not an inferred Mod-specific cast. Attribution is stamped by the host on damage. */
+    originInstance(): string;
+    /** Namespaced JSON state owned by the current execution. Reads return null when absent. Writes require a writable
+     * attributed scope. Derived effects share it after the action ends; it is transient across reload/save/restore. */
+    originData(key: string): string | null;
+    originData(key: string, json: string): void;
     observe(actor: CombatActor): CombatObservation | null;
-    attributeValue(actor: CombatActor, id: string): CombatAttribute | null;
+    /** excludeOwned recomputes the native value without this scope's modifier, retaining every other source; it does not mutate the entity. */
+    attributeValue(actor: CombatActor, id: string, excludeOwned?: boolean): CombatAttribute | null;
     environment(point: CombatPoint): string;
     block(point: CombatPoint): CombatBlock | null;
     /** Read-only native BlockState.canSurvive probe, including mod overrides and registry tags. Uses the same state syntax as placeBlock. Requires the position and adjacent chunks loaded; invalid state/unavailable position returns false. Actual placement still checks occupancy, expectedState and protection hooks. */
@@ -147,6 +216,14 @@ interface CombatWorld {
     survey(centre: CombatPoint, radius: number, visibleOnly: boolean, limit: number, effects: string, mobEffects: string): string;
     visible(actor: CombatActor): boolean; friendly(actor: CombatActor): boolean; random(): number;
     clear(from: CombatPoint, to: CombatPoint): boolean;
+    /** Native body-box intersections, with no centre-distance filter. Same enclosing-radius/scope allowance as query; never loads entities/chunks. */
+    queryBox(min: CombatPoint, max: CombatPoint, visibleOnly: boolean): readonly CombatActor[];
+    /** Native block-collider ray, ignoring entities/fluids. Null means unavailable/unloaded; otherwise blocked() distinguishes block hit from miss. No damage ticket. */
+    clipBlocks(from: CombatPoint, to: CombatPoint): CombatImpact | null;
+    /** JSON CombatProjectileFacts[] from the loaded native AABB around centre. Same centre/radius scope limits as query; no whole-world scan. */
+    projectiles(centre: CombatPoint, radius: number): string;
+    /** Supported projectiles; hostile-only by default. includeNonHostile explicitly admits own/allied/unowned shots while preserving native invulnerability, player attack protection and cancelable NeoForge impact contact. Unknown mod types return false unless explicitly registered. True means native removal completed; managed completion dispatches at its usual safe boundary. No damage callback is synthesized. */
+    interceptProjectile(id: string, includeNonHostile?: boolean): boolean;
     sound(sound: string, point: CombatPoint, radius: number, data: string): void;
     heard(afterId: number, radius: number): readonly CombatSound[];
     navigate(point: CombatPoint, within: number, speed: number): string; stopMovement(): void; controlled(value: boolean): void;
@@ -157,7 +234,8 @@ interface CombatWorld {
     /** Destination uses feet coordinates. */
     teleport(actor: CombatActor, point: CombatPoint): boolean; swap(first: CombatActor, second: CombatActor): boolean;
     /** Minecraft health units; returns the actual signed change. */
-    health(actor: CombatActor, delta: number, cause: string): number;
+    /** Negative deltas use native hurt. Optional minimumHealth reserves existing HP for this call after Pre modifiers; absorption may leave more. Positive healing remains native. */
+    health(actor: CombatActor, delta: number, cause: string, minimumHealth?: number): number;
     /** Metadata may select a registered damageType id; its native tags govern reductions and invulnerability timing. Without it the host selects its action/projectile type (and bypassCooldown variant). Also applies to action.hit. */
     hurt(actor: CombatActor, amount: number, metadata: string): boolean;
     /** Managed-effect/body-brain scope only. Same native physics/options as action.projectile. hit/complete name handlers on the owning effect; input is copied JSON delivered to each fresh callback. Bare MobEffect/WorldEvent hooks attach an actor/persistent effect first. Flights are transient: effect end, source/target invalidation, unload or reload discard them and cancel queued callbacks, even for persistent effects. */
@@ -211,6 +289,31 @@ interface CombatWorld {
     /** Same placement operation, returning JSON {id,placed:[[x,y,z]],skipped:[{x,y,z,reason}]}. bestEffort skips refused cells;
      * native protection cancellation still rolls back the batch. Duplicate coordinates keep the first request. id=0 means nothing changed. */
     terrainResult(cells: string, ticks: number): string;
+    /** Loaded still-installed cells of a live terrain lease within this scope's observation range. Replaced, broken, expired and pending-restoration cells are excluded. */
+    terrainCells(id: number): CombatPoint[];
+    /** Move one exact observed native effect. Native removal/applicability gates run before atomically changing either store;
+     * stale/refused attempts preserve both. The destination merges native hidden stacks/cures, and stronger/longer destinations refuse.
+     * After commit, notification failures are reported and later callback changes stand; the committed receipt remains true.
+     * This moves only the native MobEffect, not a separate script payload or identity-only mechanic. */
+    transferMobEffect(from: CombatActor, to: CombatActor, id: string, expectedKey: string): boolean;
+    /** Explicitly transform while transferring: JSON {id,duration,amplifier} is a fresh native application with that id's cures.
+     * This replaces the source's whole application (including its hidden stack); existing target state still merges natively.
+     * Content owns the conversion policy; native removal/applicability gates and both-store comparison remain atomic. */
+    transferMobEffect(from: CombatActor, to: CombatActor, id: string, expectedKey: string, replacement: string): boolean;
+    /** Replace this exact native application with a fresh stack, allowing lower strength. An empty key expects no current effect.
+     * Native removal/application refusal or preflight callback state changes prevent this replacement; success retires old hidden stacks and ownership.
+     * After commit, notification failures are reported and later callback changes stand; the committed receipt remains true.
+     * Only the native application is replaced, not arbitrary script sidecars. */
+    replaceMobEffect(target: CombatActor, id: string, expectedKey: string, ticks: number, amplifier: number): boolean;
+    /** Scope-owned low ground lift: target clearance in blocks, response speed in blocks/tick and extra downward support probe.
+     * Native gravity modifiers and terrain navigation are restored with the scope. Native collision limits ascent; losing solid support,
+     * entering liquid, riding or elytra suspends assistance. Body onGround remains a real collision fact. Returns whether the lease was accepted. */
+    groundLift(actor: CombatActor, height: number, speed: number, probe: number): boolean;
+    /** Action/effect-owned suppression of equipped vanilla-slot ItemStack attribute modifiers, including those declared through NeoForge.
+     * Returns the number of slots whose real contributions were removed. Native slots are rechecked after equipment changes;
+     * overlapping scopes compose, and the last release restores only current equipment's still-matching modifiers.
+     * Keeps items, inherent/other modifiers and third-party active abilities unchanged. */
+    suppressEquipment(actor: CombatActor): number;
     /** Temporary body. `data` may declare an appearance rendered on the client: `{"item":"minecraft:iron_sword"}`, `{"block":"minecraft:stone"}` or `{"sprite":"cobblemon:balls/afterspark"}`, plus optional `"scale"`, `"tint"`, `"glow"`, `"spin"`. Absent fields keep the body invisible. */
     helper(point: CombatPoint, health: number, data: string, ticks: number): CombatActor;
     removeHelper(actor: CombatActor): void; helperSource(actor: CombatActor): CombatActor | null; helperData(actor: CombatActor): string;
@@ -236,6 +339,22 @@ interface CombatWorld {
     dismiss(actor: CombatActor): boolean;
     /** Sets or adds velocity (blocks per tick, length <= 4): launches, hovering bodies, scripted projectiles. */
     motion(actor: CombatActor, velocity: CombatPoint, add: boolean): boolean;
+    /** Received hostile knockback; direction points away from the hit. Vanilla owns horizontal damping and grounded lift,
+     * LivingKnockBackEvent and knockback resistance. Strength 0..4; zero horizontal direction does nothing.
+     * Returns whether native velocity changed, not a travelled distance. Dead/departed or mounted recipients and refused harm return false.
+     * The source still requires a live writable scope and permission to act. */
+    knockback(actor: CombatActor, strength: number, direction: CombatPoint): boolean;
+    /** Adds a hostile received impulse (blocks/tick, length <=4). LivingKnockBackEvent strength scales the complete vector;
+     * its ratio edits turn only the horizontal heading, preserving pitch; a pure vertical impulse stays vertical.
+     * Cancellation and knockback resistance apply once to every component. No vanilla damping or automatic lift.
+     * Returns whether velocity changed; dead/departed recipients return false. The source still requires a live writable scope and permission to act.
+     * Physical travel/collision happens on subsequent native ticks. Not for locomotion. */
+    hitImpulse(actor: CombatActor, velocity: CombatPoint): boolean;
+    /** Received displacement in blocks (length <=4), using hitImpulse's native event/resistance policy before native
+     * collision-limited movement. Returns actual distance moved; dead/departed recipients, cancellation and full resistance return 0.
+     * The source still requires a live writable scope and permission to act.
+     * Keeps positional knockback budgets separate from velocity impulses. Hostile targets only; not locomotion. */
+    hitDisplace(actor: CombatActor, delta: CombatPoint): number;
     /** Seats a rider on a vehicle (bodies can carry riders); a null vehicle dismounts. */
     mount(rider: CombatActor, vehicle: CombatActor | null): boolean;
     /**
@@ -284,6 +403,8 @@ interface CombatWorld {
     action(instance: number): CombatActionState | null;
     /** Publish bounded client data, replaced by key and removed with this action/effect. */
     present(key: string, type: string, version: number, point: CombatPoint, data: string): void;
+    /** Publish under an existing managed effect created by world.source(). Updates share that effect/key; expiry, dispel, source departure and reload release it automatically. False for unavailable or another source's effects. */
+    presentOn(effect: number, key: string, type: string, version: number, point: CombatPoint, data: string): boolean;
     /** Bounded receipt (1..200 ticks). Survives owner release; scene envelope lifecycle reports its tick/reason. */
     presentFor(key: string, type: string, version: number, point: CombatPoint, data: string, ticks: number): void;
     cast(action: string, target: CombatActor | null, point: CombatPoint, direction: CombatPoint, argumentsJson: string): number;
@@ -321,6 +442,25 @@ interface CombatBlock {
     /** tags() is a JSON string array of native registry tags, including installed common conventions. */
     property(name: string): string | null; tags(): string; tagged(tag: string): boolean; growable(): boolean;
 }
+/**
+ * healing_incoming: actor/target are the healed entity; data has mutable amount, originalAmount at this bridge,
+ * scripted, cause/healer (empty if native caller unknown). Set amount=0 or reject to prevent native healing.
+ * Direct setHealth is not a healing event.
+ * critical_hit: native player melee critical decision, actor=player/target=victim. Mutable critical:boolean,
+ * multiplier:number and disableSweep:boolean; vanillaCritical/vanillaMultiplier are original facts.
+ * Reject prevents the critical bonus, not the attack; native damage/enchantments run afterwards.
+ * mob_effect_incoming: attempted native MobEffect application, target=recipient and data=CombatNativeMobEffectFacts.
+ * Actor is the available source or the recipient fallback; use sourceActor to distinguish them. The writable scope may
+ * react synchronously. Reject adds a refusal; acceptance retains native immunity/stacking and prior Mod decisions.
+ * Already refused applications skip this hook. Missing caller attribution remains unknown. This is an attempt, not an
+ * applied receipt; mob_effect_added observes accepted additions/upgrades afterwards.
+ * action_ended: once per terminated instance, after its resources/subscriptions are released. Data has instance,
+ * content, reason and committed; action=null and world is read-only. Actor may have left: use the data to remove
+ * script records by instance without requiring a live body. Every linked child has its own ending receipt.
+ * item_consumed: explicit successful inventory consumption. Actor=consumer, target=former holder; immutable receipt
+ * facts include serialized item/count, provider/slot/index, operator and execution origin. Rejection cannot undo a
+ * settled consumption. Equipment removal, drops, exchange and ordinary slot changes do not emit this topic.
+ */
 interface CombatWorldEvent {
     topic(): string; actor(): CombatActor; target(): CombatActor | null; action(): CombatAction | null;
     world(): CombatWorld; data(): string; data(value: string): void; reject(reason: string): void;

@@ -4,9 +4,9 @@
  * 一句话：龙气从脚下卷成赤红的旋流，顺着低头冲撞的方向甩出一条赤红走廊；撞中的一刻在目标身上炸开龙鳞火花；
  *   接连几次之后龙低下头，头顶升起一圈转个不停的眩晕气流。
  * 色相家族：赤红 0xC23B2E 与近白暖橙 0xFFE0C0 为主，低饱和灰红 0x8A5A50 只做余韵与余烬；龙与火光是一家色相。
- * 层次：蓄势内聚（tempo）→ 走廊填充＋冲势条（charge）→ 命中爆发（claw）→ 冲空尘（whiff）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
- * 范围：charge 的 `lane_fill` 绑 `path`、用 `polygon` 填出服务端与判定共用的那条走廊（data.path），画出的面就是会被撞到的范围。
- * 运动：走廊沿朝向每次更新；冲势条沿 `data.direction` 指向；命中火花从目标向外炸开；眩晕气流绕着头顶转。
+ * 层次：蓄势内聚（tempo）→ 真实短冲轨迹＋冲势条（charge）→ 命中爆发（claw）→ 冲空尘（whiff）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
+ * 范围：charge 的 `dash_path` 绑 `path`、用 `polyline` 描出这一撞身体真实走出的短段（data.path），画出的线就是被撞的范围。
+ * 运动：短冲轨迹每撞按身体实际位移更新；冲势条沿 `data.direction` 指向；命中火花从目标向外炸开；眩晕气流绕着头顶转。
  * 数：服务端把 `data.grains`（龙气点数）、`data.intensity`（威力）与 `data.scale`（判定半径）交给发射器，数量和强度按机制走。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -40,9 +40,9 @@ const OutrageDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "lane_fill", bind: "path", fit: "none",
+                    name: "dash_path", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: { data: "grains", fallback: 16 }, shape: { kind: "polygon" },
+                    rate: { data: "grains", fallback: 16 }, shape: { kind: "polyline" },
                     direction: "up", speed: [0.02, 0.07],
                     lifetime: [10, 18], size: [0.14, 0.02],
                     color: 0xC23B2E, alpha: [0.42, 0], light: "world", maxParticles: 90
@@ -122,20 +122,6 @@ const OutrageDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [12, 20], size: [0.08, 0.01],
                     color: 0x8A5A50, alpha: [0.4, 0], light: "world", maxParticles: 26
-                }
-            ]
-        },
-        fury: {
-            duration: 0,
-            exit: { stop: 0, drain: 12 },
-            emitters: [
-                {
-                    name: "rage_aura", bind: "source", offset: [0, 0.85, 0], height: 0.5, fit: "body",
-                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: 12, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "outward", speed: [0.02, 0.1],
-                    lifetime: [8, 14], size: [0.08, 0.01],
-                    color: 0xC23B2E, alpha: [0.5, 0], light: "full", maxParticles: 24
                 }
             ]
         },

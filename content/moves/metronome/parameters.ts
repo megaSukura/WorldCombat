@@ -33,6 +33,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["wag"] },
         { key: "description.1", values: ["span","recharge"] },
         { key: "description.2", values: ["pref.bias"] },
-        { key: "description.3", values: [] }
+        { key: "description.3", values: [] },
+        { key: "description.4", values: [] }
     ]);
 }

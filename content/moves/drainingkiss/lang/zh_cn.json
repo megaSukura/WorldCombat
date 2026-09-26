@@ -26,6 +26,6 @@
   "worldcombat.skill.drainingkiss.preference.ai.healBelow": "回血优先阈值",
   "worldcombat.skill.drainingkiss.preference.ai.healBelow.help": "自身生命低于这个比例时，把吸取之吻当续航手段优先出手；越高越早靠它回血。",
   "world_combat.move.drainingkiss.text.kiss": "被吸走一口气",
-  "world_combat.move.drainingkiss.text.mend": "吻回生命 %1$s%%",
+  "world_combat.move.drainingkiss.text.mend": "吻回生命 %1$s",
   "world_combat.move.drainingkiss.text.miss": "亲了个空"
 }

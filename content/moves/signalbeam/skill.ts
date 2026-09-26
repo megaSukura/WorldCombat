@@ -1,26 +1,24 @@
 /**
  * 信号光束 / signalbeam —— 注册与动作。
  *
- * 核心念头：一条**沿瞄准方向拉开的信号走廊**。施法者额前点亮信号源，把光摊成一条不会拐弯的宽光带，
- * 一次照到走廊里的每个敌人；被照到的人信号错乱，出手会打散，之后还容易被错乱的信号反冲。
+ * 核心念头：从身体**左右两个信号源各射出一条细束**，两束在手动瞄点处交叉。瞄近点，交叉后张开扫向两侧；
+ * 瞄远点，前段还宽。每条束单独被真实墙裁剪，实体命中各按半量结算——交点同时被两束照到的目标才吃满伤害。
  *
  * 两幕：
- *   起（windup，提交前）：额前把信号收成一排亮点，只播预告。
- *   照（execute）：提交后沿瞄准方向拉出 lane 走廊，对走廊内每个非友方各结算一次 beam 伤害，按 confuseChance
- *       掷错乱（本单元自己的共享身份载体 world_combat:status/confusion），最多 maxTargets 人。
+ *   起（windup，提交前）：左右信号源各收一枚亮点，只播预告。
+ *   照（execute）：提交后从左右发射点各拉出一条细束，各自沿“发射点 → 瞄点”的直线延伸到原 reach；
+ *       每条束用原生方块射线裁墙，用三维段筛选落在束里的非友方，各结算一次 half 伤害（全局最多 maxTargets 个目标，
+ *       同一目标两条束最多各半）；交点两束重叠即满额。命中后按 confuseChance 掷本单元自己的共享身份载体
+ *       world_combat:status/confusion。删除旧版“错乱后挨别人打再额外扣最大生命”的尾钩。
  *
- * 错乱行为（本单元自己的变体）：目标每次想出手都可能被打散（失手概率存在载体振幅里）；错乱期间它再挨任何
- * 招式命中，错乱的信号会反冲一下——按自身特攻额外掉一点血。这是信号光束区别于幻象光线（被打散时续时长）的地方。
+ * 与幻象光线（会拐弯追人的单弹）、极光束（会折射的单束）、加农光炮（贯穿单体炮）分开：本招的机制是
+ * **双发射点的焦点几何**——玩家用瞄点距离决定两束在哪里交叉、张开多远。
  */
 namespace PokemonSkills {
-    /** 信号反冲：错乱的目标挨招时额外掉的基础比例，按自身特攻放大。skill.ts 与说明同源。 */
-    const signalbeamStaticBase = 0.008;
-    const signalbeamStaticPerSpecialAttack = 0.0001;
-
-    /** 只有当代表载体就是本单元的 id 时，本单元的门禁才接管。 */
-    function signalbeamCarrier(world: CombatWorld, actor: CombatActor): CombatMobEffect | null {
-        const effect = CombatStatus.representative(world, actor, "confusion");
-        return effect !== null && String(effect.id()) === signalbeamEffect ? effect : null;
+    /** 每束细束的判定半径：细，但按身体宽度微调，保证交点能罩住正常体型的目标。 */
+    function signalbeamRadius(body: CombatObservation | null): number {
+        const width = body === null ? 0.9 : body.width();
+        return Math.max(0.3, Math.min(0.7, width * 0.32));
     }
 
     /** 把错乱挂到目标身上：借共享身份 confusion，振幅存失手概率百分数，独一无二地替换同类载体。 */
@@ -33,28 +31,13 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 走廊的有序顶点（近左、远左、远右、近右）；判定与画面用同一组顶点。 */
-    function signalbeamLane(origin: CombatPoint, direction: CombatPoint, length: number, halfWidth: number): number[][] {
-        const flat = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x()).scale(halfWidth);
-        const far = heading.scale(length);
-        const y = origin.y() + 0.05;
-        return [
-            [origin.x() + side.x(), y, origin.z() + side.z()],
-            [origin.x() + far.x() + side.x(), y, origin.z() + far.z() + side.z()],
-            [origin.x() + far.x() - side.x(), y, origin.z() + far.z() - side.z()],
-            [origin.x() - side.x(), y, origin.z() - side.z()]
-        ];
-    }
-
     define({
         id: signalbeamId,
         cooldownParameter: "recharge",
         name: "Signal Beam",
-        description: "沿瞄准方向拉出一条信号走廊：一次照到走廊里的每个敌人，各造成一次特殊伤害，并可能让它们信号错乱。错乱期间目标出手会失手，再挨打还会被错乱的信号反冲。",
-        uses: ["一次点名排成一线的多个敌人", "用宽走廊封住通道", "用脉冲模式对单个目标打重一点"],
-        kind: "enemy",
+        description: "从身体左右两个信号源各射出一条细束，两束在瞄点交叉：每条束单独被真墙裁剪，命中各按半量结算，交点同时被两束照到的目标才吃满伤害。命中后可能让目标信号错乱，出手会失手。瞄近点交叉后张开扫两侧，瞄远点前段还宽。",
+        uses: ["一次点名排成一线的多个敌人", "用远近焦点控制两束的张开几何", "对单个目标把交点对准身体打满"],
+        kind: "aim",
         range: 12,
         maxRange: 18,
         prepare: 11,
@@ -85,8 +68,9 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
-            const origin = action.origin();
-            const direction = aim(action);
+            const actor = action.actor();
+            const body = world.observe(actor);
+            const origin = body === null ? action.origin() : body.position();
             const reach = action.range();
             const gauge = p(signalbeamId, "gauge", action);
             const power = p(signalbeamId, "beam", action);
@@ -95,60 +79,102 @@ namespace PokemonSkills {
             const fumblePct = Math.round(Math.max(0.05, Math.min(0.9, p(signalbeamId, "fumble", action))) * 100);
             const motes = Math.max(12, Math.round(p(signalbeamId, "motes", action)));
             const maxTargets = Math.max(1, Math.round(p(signalbeamId, "maxTargets", action)));
+            const crowd = !(config && config.ai && config.ai.crowd === false);
+            const height = body === null ? 1.4 : body.height();
+            const beamRadius = signalbeamRadius(body);
             const scale = Math.max(0.6, Math.min(2.2, gauge / 0.6));
             const intensity = Math.max(0.5, Math.min(2.2, power / 62));
-            const path = signalbeamLane(origin, direction, reach, gauge);
-            let hits = 0;
+            const selfRef = String(actor.ref());
+            const centre = origin.plus(WorldCombat.point(0, height * 0.35, 0));
+            const targeted: { [ref: string]: boolean } = {};
+            let targetCount = 0, hits = 0;
+
+            // 焦点：手动瞄点。AI（或开启“优先照扎堆”的配置）在目标身边还挤着别的敌人时，把交点略向身前收，
+            // 让两条束在目标之前交叉、到目标距离时已张开扫向两侧；单体则交点正对身体。
+            let focus = action.targetPosition();
+            const primary = action.target();
+            if (crowd && primary !== null && world.valid(primary)) {
+                const primaryBody = world.observe(primary);
+                if (primaryBody !== null) {
+                    const near = world.query(primaryBody.position(), 2.5, false);
+                    let others = 0;
+                    for (let i = 0; i < near.length; i++) {
+                        const other = near[i];
+                        if (String(other.ref()) === selfRef || String(other.ref()) === String(primary.ref()) || world.friendly(other)) continue;
+                        const observation = world.observe(other);
+                        if (observation !== null && observation.health() > 0) others++;
+                    }
+                    const toFocus = focus.minus(origin), gap = toFocus.length();
+                    if (others > 0 && gap > 0.8) focus = origin.plus(toFocus.unit().scale(gap * 0.7));
+                }
+            }
+
+            const heading = WorldGeometry.flatUnit(focus.minus(origin), action.direction());
+            const side = WorldCombat.point(-heading.z(), 0, heading.x());
+            const emitterHalf = Math.max(0.2, Math.min(2.4, gauge));
+            const froms: CombatPoint[] = [centre.plus(side.scale(emitterHalf)), centre.minus(side.scale(emitterHalf))];
+            const moments: string[] = ["beam_left", "beam_right"];
 
             sound(action, "minecraft:block.beacon.activate");
-            WorldFeedback.emit(world, signalbeamScene, 1, origin,
-                { moment: "beam", path: path, direction: [direction.x(), direction.y(), direction.z()],
-                    gauge: gauge, reach: reach, motes: motes, scale: scale, intensity: intensity }, 28);
 
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, direction, reach, gauge, { below: 1.4, above: 2.8 }),
-                function (victim, facts) {
-                    if (hits >= maxTargets) return;
-                    if (!world.clear(origin, facts.position())) return;
-                    const landed = hurt(action, victim, signalbeamId, power, { damage: damageSpec(signalbeamId, "beam") });
+            /** 一条束的真实终点：沿“发射点 → 焦点”方向拉到原 reach，再用原生方块射线裁墙。 */
+            function cast(from: CombatPoint): { end: CombatPoint; clipped: boolean; cell: CombatPoint | null; face: string } {
+                const toFocus = focus.minus(from), span = toFocus.length();
+                const direction = span < 0.05 ? heading : toFocus.unit();
+                const wanted = from.plus(direction.scale(Math.max(reach, span)));
+                const clip = world.clipBlocks(from, wanted);
+                if (clip !== null && clip.blocked())
+                    return { end: clip.position(), clipped: true, cell: clip.blockPosition(), face: clip.blockFace() };
+                return { end: wanted, clipped: false, cell: null, face: "" };
+            }
+
+            /** 落在这一段细束里的非友方：每束每人一次半伤，全局按目标数封顶 maxTargets。 */
+            function strikes(from: CombatPoint, end: CombatPoint): void {
+                const perBeam: { [ref: string]: boolean } = {};
+                WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(from, end, beamRadius), function (victim, facts) {
+                    const ref = String(victim.ref());
+                    if (ref === selfRef || perBeam[ref] || facts.friendly()) return;
+                    if (!targeted[ref] && targetCount >= maxTargets) return;
+                    if (!world.clear(from, facts.position())) return;
+                    perBeam[ref] = true;
+                    if (!targeted[ref]) { targeted[ref] = true; targetCount++; }
+                    const landed = hurt(action, victim, signalbeamId, power * 0.5, { damage: damageSpec(signalbeamId, "beam") });
+                    if (!landed) return;
                     hits++;
-                    if (landed) {
-                        WorldFeedback.emit(world, signalbeamScene, 1, facts.position(),
-                            { moment: "hit", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 22);
-                        if (world.valid(victim) && world.random() < chance) signalbeamJam(world, victim, facts.position(), daze, fumblePct);
-                    }
+                    WorldFeedback.emit(world, signalbeamScene, 1, facts.position(),
+                        { moment: "hit", target: ref, motes: motes, scale: scale, intensity: intensity }, 22);
+                    if (world.valid(victim) && world.random() < chance) signalbeamJam(world, victim, facts.position(), daze, fumblePct);
                 });
+            }
+
+            let crossed = true;
+            for (let i = 0; i < froms.length; i++) {
+                const from = froms[i], shot = cast(from);
+                WorldFeedback.emit(world, signalbeamScene, 1, focus,
+                    { moment: moments[i], path: [[from.x(), from.y(), from.z()], [shot.end.x(), shot.end.y(), shot.end.z()]],
+                        motes: motes, scale: scale, intensity: intensity }, 24);
+                if (shot.clipped && shot.end.minus(from).length() < focus.minus(from).length() - 0.05) crossed = false;
+                if (shot.clipped) {
+                    const cell = shot.cell === null ? shot.end : shot.cell;
+                    WorldFeedback.emit(world, signalbeamScene, 1, cell,
+                        { moment: "wall", face: shot.face, point: [cell.x(), cell.y(), cell.z()],
+                            motes: Math.max(6, Math.round(motes * 0.4)), scale: scale }, 20);
+                }
+                strikes(from, shot.end);
+            }
+            if (crossed)
+                WorldFeedback.emit(world, signalbeamScene, 1, focus, { moment: "cross", motes: Math.max(8, Math.round(motes * 0.6)), scale: scale }, 20);
 
             if (hits > 0) {
                 sound(action, "cobblemon:impact.bug");
             } else {
-                WorldFeedback.emit(world, signalbeamScene, 1, origin.plus(direction.scale(reach)),
-                    { moment: "miss", gauge: gauge, scale: scale }, 22);
-                WorldFeedback.text(world, origin.plus(direction.scale(reach)).plus(WorldCombat.point(0, 1, 0)), signalbeamMissText, [], 22);
+                WorldFeedback.emit(world, signalbeamScene, 1, focus, { moment: "miss", scale: scale }, 22);
+                WorldFeedback.text(world, focus.plus(WorldCombat.point(0, 1, 0)), signalbeamMissText, [], 22);
             }
             done(action);
         }
     });
 
-
-    // 信号反冲：带错乱的目标挨到任何招式伤害时，错乱的信号反冲一下（按自身特攻）。
-    WorldCombat.on("world_combat:move_signalbeam/static", "world_combat:damage_applied", "", function (event) {
-        const world = event.world(), victim = event.target();
-        if (victim === null || !world.valid(victim)) return;
-        const data = JSON.parse(String(event.data()));
-        if (data.kind !== "move" || !(data.actual > 0)) return;
-        if (String(data.cause || "").indexOf("signalbeam") >= 0) return;
-        if (signalbeamCarrier(world, victim) === null) return;
-        const body = world.observe(victim);
-        if (body === null) return;
-        const facts = PokemonDamage.combatants.read(world, victim);
-        const specialAttack = facts.stats.spa || 0;
-        const fraction = Math.max(0.008, Math.min(0.045, signalbeamStaticBase + specialAttack * signalbeamStaticPerSpecialAttack));
-        const loss = -world.health(victim, -body.maxHealth() * fraction, "world_combat:signalbeam_static");
-        if (loss <= 0) return;
-        WorldFeedback.emit(world, signalbeamScene, 1, body.position(), { moment: "jolt", target: String(victim.ref()) }, 20);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), signalbeamJoltText, [Math.round(loss * 10) / 10], 24);
-        world.sound("cobblemon:impact.bug", body.position(), 12, "{}");
-    });
 
     // 错乱存续期：低密度的飞鸟与电点每 20 刻续期，让出本体视线。
     WorldCombat.on("world_combat:move_signalbeam/linger", "world_combat:mob_effect_tick", "", function (event) {

@@ -42,7 +42,7 @@ namespace PokemonSkills {
 
     addPreferences("woodhammer", {}, [
         field(pathOf("root"), "扎根式", "boolean", {
-            help: "开启：威力、击退与地裂都更大，但反伤更重、起手与收招更慢——适合一锤定音或砸开阵型。关闭（开山式）：更快的挥砸，威力与地裂收一档，适合缠斗。"
+            help: "开启：威力、击退与落点碎屑都更大，但反伤更重、起手与收招更慢——适合一锤定音或砸开阵型。关闭（开山式）：更快的挥砸，威力与落点碎屑收一档，适合缠斗。"
         }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 14, step: 1,

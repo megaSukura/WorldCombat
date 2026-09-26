@@ -9,6 +9,7 @@
  * 运动：salute 金光自脚边聚起；stamp 金环向外扩张；crown 冠冕在头顶张开、星点上浮；lit 缓慢环绕。
  * 数：桂叶数量绑 `data.laurels`（攻防速之和与等级派生），踏步拍数绑 `data.beats`、当前第几拍绑 `data.index`；
  *   rally 的强度绑 `data.intensity`（延续后的剩余比例）。越强的个体画面里的金叶越密。
+ * 归属：lit 持续表现通过 WorldFeedback.onEffect 绑在凯旋载体窗口上，窗口自然到期、刷新或被 /effect 清除时一并收走。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const VictoryDanceDefinition: ParticleDefinition = {
@@ -43,11 +44,20 @@ const VictoryDanceDefinition: ParticleDefinition = {
                 {
                     name: "stamp_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 4, at: 1 },
+                    burst: { count: { data: "beats", fallback: 3 }, at: 1 },
                     shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.06, 0.18],
                     lifetime: [10, 16], size: [0.36, 0.8], sizeMode: "index",
                     color: 0xFFD75A, alpha: [0.65, 0], light: "full", maxParticles: 18
+                },
+                {
+                    name: "stamp_beat", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "index", fallback: 1 } },
+                    shape: { kind: "ring", radius: 0.42 },
+                    direction: "up", speed: [0.03, 0.09],
+                    lifetime: [8, 14], size: [0.07, 0.02], sizeMode: "sin",
+                    color: 0xFFF3C8, alpha: [0.6, 0], light: "full", maxParticles: 12
                 },
                 {
                     name: "stamp_dust", bind: "source", offset: [0, 0.03, 0], height: 0,

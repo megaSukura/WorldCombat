@@ -46,16 +46,18 @@ namespace PokemonSkills {
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number, incoming: GuardEffects.Incoming): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
             if (body === null) return;
-            const custom: any = state;
             const data: any = { moment: "block", target: String(target.ref()), blocked: Math.round(amount * 10) / 10,
-                remaining: Math.round(state.capacity * 10) / 10, plates: custom.plates, scale: custom.scale,
+                remaining: Math.round(state.capacity * 10) / 10, scale: 1,
                 intensity: Math.max(0.6, Math.min(2, amount / Math.max(1, body.maxHealth() * 0.1))) };
             const attacker = incoming.source ? world.observe(incoming.source) : null;
             if (attacker !== null) {
                 const away = body.position().minus(attacker.position());
                 if (away.length() > 0.01) { const direction = away.unit(); data.direction = [direction.x(), direction.y(), direction.z()]; }
             }
-            WorldFeedback.emit(world, wideguardScene, 1, body.position(), data, 22);
+            // 裂光落在被挡者真正挨打的那一点；结算回执带坐标时用它，否则退回身体中心。
+            const hit = incoming.data && typeof incoming.data.x === "number" && typeof incoming.data.y === "number" && typeof incoming.data.z === "number"
+                ? WorldCombat.point(incoming.data.x, incoming.data.y, incoming.data.z) : body.position();
+            WorldFeedback.emit(world, wideguardScene, 1, hit, data, 22);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), wideguardBlockText,
                 [data.blocked, data.remaining], 24);
             world.sound("minecraft:item.shield.block", body.position(), 12, "{}");
@@ -71,27 +73,28 @@ namespace PokemonSkills {
         return Math.max(0.5, Math.min(2.2, (radius || wideguardReferenceRadius) / wideguardReferenceRadius));
     }
 
-    /** 给施法者与半径内友方各挂一份宽墙（身份 + 按量吸收池）；返回这次墙罩住的人数。 */
+    /** 给施法者与半径内友方各挂一份宽墙（身份 + 按量吸收池）；返回这次真正罩住的施法者与伙伴。 */
     function wideguardCover(world: CombatWorld, caster: CombatActor, radius: number, ticks: number,
-        capacity: number, plates: number, motes: number, linkRange: number): number {
+        capacity: number, plates: number, motes: number, linkRange: number): CombatActor[] {
         const body = world.observe(caster);
-        if (body === null) return 0;
+        if (body === null) return [];
         const scale = wideguardScale(radius);
-        function protect(actor: CombatActor): boolean {
-            if (MobEffects.apply(world, actor, wideguardEffect, ticks, 0) === null) return false;
+        const covered: CombatActor[] = [];
+        function protect(actor: CombatActor): void {
+            if (MobEffects.apply(world, actor, wideguardEffect, ticks, 0) === null) return;
             GuardEffects.apply(world, actor, { rule: wideguardRule, mode: "pool", capacity: capacity, fraction: 1,
                 minimumHealth: 0, charges: 0, linkRange: linkRange, initial: capacity, plates: plates, motes: motes, scale: scale } as any, ticks);
-            return true;
+            covered.push(actor);
         }
-        let reached = protect(caster) ? 1 : 0;
+        protect(caster);
         const actors = world.query(body.position(), radius, false);
         for (let i = 0; i < actors.length; i++) {
             const other = actors[i];
             if (String(other.key()) === String(caster.key())) continue;
             if (!world.friendly(other) || world.observe(other) === null) continue;
-            if (protect(other)) reached++;
+            protect(other);
         }
-        return reached;
+        return covered;
     }
 
     define({
@@ -147,14 +150,23 @@ namespace PokemonSkills {
             const plates = Math.max(6, Math.round(p("wideguard", "plates", action)));
             const motes = Math.max(10, Math.round(p("wideguard", "motes", action)));
             const linkRange = Math.min(32, radius * 1.6 + 1);
-            const reached = wideguardCover(world, actor, radius, window, capacity, plates, motes, linkRange);
+            const covered = wideguardCover(world, actor, radius, window, capacity, plates, motes, linkRange);
             const scale = wideguardScale(radius);
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            // 地面环只画一次，标记的是墙真罩到的整块范围。
             WorldFeedback.emit(world, wideguardScene, 1, feet,
-                { moment: "raise", target: String(actor.ref()), plates: plates, motes: motes, radius: radius, scale: scale,
-                    intensity: Math.max(0.8, Math.min(2, plates / 14 + 0.4)) }, 34);
+                { moment: "cover", target: String(actor.ref()), radius: radius, scale: scale,
+                    intensity: Math.max(0.8, Math.min(2, plates / 14 + 0.4)) }, 30, "wideguard:cover:" + String(actor.ref()));
+            // 起墙只连到实际受益者：每个被罩住的人身上各亮一次，没罩到的伙伴不闪。
+            for (let i = 0; i < covered.length; i++) {
+                const person = covered[i], at = world.observe(person);
+                if (at === null) continue;
+                WorldFeedback.emit(world, wideguardScene, 1, at.position(),
+                    { moment: "raise", target: String(person.ref()), plates: plates, motes: motes, scale: scale,
+                        intensity: Math.max(0.7, Math.min(2, plates / 16 + 0.4)) }, 34, "wideguard:raise:" + String(person.ref()));
+            }
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), wideguardRaiseText,
-                [Math.round(capacity), reached, Math.round(window / 20)], 34);
+                [Math.round(capacity), covered.length, Math.round(window / 20)], 34);
             world.sound("minecraft:block.glass.place", body.position(), 16, "{}");
             world.sound("minecraft:item.shield.block", body.position(), 14, "{}");
             done(action);

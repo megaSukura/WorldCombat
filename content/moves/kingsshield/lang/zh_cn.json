@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.kingsshield.summary": "摆出王者钢盾，为自身按总量挡下敌人打来的伤害招式，并削去接触者的攻击；变化招式照常落到身上，护盾耗尽或到时即散。",
-  "worldcombat.skill.kingsshield.description.0": "钢盾持续 %1$s、量 %2$s 点：为自身挡下敌人打来的伤害招式，余量耗尽前超出的部分照常穿透，变化招式也不会被拦下；接触攻击撞上钢盾时会把该攻击者的攻击降低 %3$s 级，同一面盾对每名攻击者只削一次。防御与速度越高架势越久，特防与当前生命越高盾越厚。",
+  "worldcombat.skill.kingsshield.summary": "站定举起朝向固定的王者钢盾，承受正面攻击；背后来击照常命中。本次举盾对每名真正接触盾面的攻击者只削攻一次。",
+  "worldcombat.skill.kingsshield.description.0": "钢盾持续 %1$s、容量 %2$s 点，只承受前方120度内的攻击，超出容量的部分穿透。真正接触的攻击者降低攻击 %3$s 级，每人每盾一次；变化招式照常生效。",
   "worldcombat.skill.kingsshield.description.1": "立起 %1$s，冷却 %2$s。",
   "worldcombat.skill.kingsshield.description.2": "连用失误率 %1$s：短时间内反复立盾会越来越容易失败，停手一会儿后计数归零。开启威仪时接触削攻 +1 级，但钢盾总量 ×0.8、持续 ×0.85、收招 7 刻；关闭（磐固）则总量 ×1.25、持续 ×1.15、收招 5 刻、削攻不额外加。",
   "worldcombat.skill.kingsshield.use.0": "挡住近战的连续伤害并削其攻击",

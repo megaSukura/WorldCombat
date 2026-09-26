@@ -5,9 +5,10 @@
  *   钝击是一圈壳屑与冲击环，喷射是一团扩散的毒云。
  * 色相家族：毒紫（0x8A6BA8）做壳与钝击的色相，毒绿（0x9BE86B）做喷射的毒云，近白只做命中亮点。
  *   两种形态用不同色相与轮廓彼此分开，与同族的细针/双针一眼不同。
- * 拍子：起 charge（聚毒压壳）→ 发 fire（炮口）→ 飞 shell（厚尾）→ 击 ram／spray（两种命中）→ 空 whiff。
- * 范围：shell 沿投射物本部走，ram／spray 绑在命中点上、几何半径由 `data.scale` 对应实际判定，画面就是会打到的那块地。
- * 运动：一发厚实的毒壳沿直线（带有限追踪）飞出去，命中处向四周炸开；钝击偏沉、喷射偏扩散。
+ * 拍子：起 charge（聚毒压壳，开合壳预告形态）→ 钝击 swing（真近身粗短弧）→ ram（砸中）／喷射 fire（炮口）→ shell（厚尾）→ spray（命中）→ 空 whiff。
+ * 范围：钝击 swing 从身体沿真实 trace 方向伸出、长度读 `data.reach`（服务端取首碰止点到身体的距离），ram 绑在命中者身上；
+ *   喷射 shell 沿投射物本部走，spray 绑在命中点、`data.scale` 对应实际判定；两者画面就是会打到的那块地。
+ * 运动：钝击是瞬时伸出的一记短横砸，喷射是一发厚实毒壳沿直线（带有限追踪）飞出去；命中处向四周炸开，一沉一扩散。
  * 数：`data.cloud`（由个体最强一面派生）绑定起手聚毒与命中毒云的粒子量，`data.scale`（由判定半径派生）缩放整体，
  *   `data.intensity`（由威力派生）抬高亮度与速度。画面里的数量和机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -35,6 +36,39 @@ const ShellsidearmDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.1],
                     lifetime: [5, 12], size: [0.09, 0.02],
                     color: 0x9BE86B, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 50
+                }
+            ]
+        },
+        swing: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "arm", bind: "source", fit: "none", orient: "direction", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "line", length: { data: "reach", fallback: 2.4 }, rotation: [0, 0, 0] },
+                    direction: "shape", speed: [0.02, 0.1], gravity: 0.02, drag: 0.94,
+                    lifetime: [5, 11], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0x8A6BA8, alpha: [0.85, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "crush", bind: "source", fit: "none", orient: "direction", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.04, 0.18], spread: 24,
+                    lifetime: [5, 11], size: [0.28, 0.05], sizeMode: "index",
+                    color: 0xE6D8F0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 18
+                },
+                {
+                    name: "backdraft", bind: "source", offset: [0, 0.1, -0.2], height: 0.1,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "away", speed: [0.03, 0.12],
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xB8C88A, alpha: [0.4, 0], light: "world", maxParticles: 20
                 }
             ]
         },

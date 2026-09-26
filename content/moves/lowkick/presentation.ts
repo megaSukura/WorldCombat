@@ -103,6 +103,56 @@ const LowKickDefinition: ParticleDefinition = {
                 }
             ]
         },
+        graze: {
+            duration: 22,
+            exit: { stop: 10, drain: 14 },
+            emitters: [
+                {
+                    name: "brush", bind: "target", height: 0.36,
+                    particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    burst: { count: { data: "coils", fallback: 8 } },
+                    shape: { kind: "line", length: 0.5 }, orient: "direction", direction: "shape",
+                    speed: [0.04, 0.14],
+                    lifetime: [4, 8], size: [0.16, 0.03],
+                    color: 0xEADDC0, alpha: [0.5, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "graze_grit", bind: "target", height: 0.36,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    gravity: 0.02, drag: 0.94,
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xBFA377, alpha: [0.35, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        follow: {
+            duration: 26,
+            exit: { stop: 12, drain: 16 },
+            emitters: [
+                {
+                    name: "leg_arc", bind: "point", fit: "none", offset: [0, 0.14, 0], orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 16, at: 1 },
+                    shape: { kind: "arc", radius: 1.6, arcDegrees: 150, rotation: [90, 0, 0] },
+                    direction: "shape", speed: [0.06, 0.2],
+                    gravity: 0.05, drag: 0.92,
+                    lifetime: [8, 15], size: [0.1, 0.02], sizeMode: "index",
+                    color: 0x8C7448, alpha: [0.6, 0], light: "world", maxParticles: 70
+                },
+                {
+                    name: "follow_core", bind: "target", height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 10, at: 1 },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "shape", speed: [0.08, 0.24],
+                    lifetime: [5, 9], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xFFE0B8, alpha: [1, 0], light: "full", bloom: 0.3, maxParticles: 40
+                }
+            ]
+        },
         trip: {
             duration: 24,
             exit: { stop: 10, drain: 14 },

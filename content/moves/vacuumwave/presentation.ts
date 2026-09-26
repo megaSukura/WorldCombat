@@ -6,10 +6,11 @@
  * 色相家族：青白冷风一族（0xCFE8E0 主体、0xEAF6F2 高光、0x9FB8B0 中性气流），冲击点借格斗的暖白点缀。
  * 拍子：起 charge（收气）→ 推 lane（走廊轮廓）＋ wave（推进环）→ 击 suck（回吸与冲击）→ 收 whiff。
  * 范围：lane 用 `data.path`（与服务端 WorldGeometry.lane 同一组四个顶点）铺出整条走廊，走廊多宽多长画面就是那块。
- * 运动：wave 环带 `orient: "direction"` 迎着推进方向张开，环内粒子向内收拢＝吸；suck 的尘土沿 `data.direction`
- *   （目标→施法者）回卷，把「被抽回来」画出来。
+ * 运动：wave 环带 `orient: "direction"` 迎着推进方向张开，每次更新都落在服务端实际的推进前沿（front）上；
+ *   suck 的尘土沿 `data.direction`（目标→施法者）回卷，数量按 `data.suck`（服务端实际位移换算）发射——
+ *   拉不动时 `suck` 为 0，只留冲击环，不会假装把目标抽了回来。
  * 数：lane 与 wave 的气流量绑定 `data.gust`（特攻与速度换算），尺度绑定 `data.scale`（波面半宽换算），
- *   亮暗绑定 `data.intensity`（波威力换算）；suck 的冲击量同样绑定 `data.gust`。
+ *   亮暗绑定 `data.intensity`（波威力换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const VacuumwaveDefinition: ParticleDefinition = {
@@ -89,7 +90,7 @@ const VacuumwaveDefinition: ParticleDefinition = {
                 {
                     name: "suck_back", bind: "point", fit: "none", offset: [0, 0.45, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    burst: { count: { data: "gust", fallback: 20 }, at: 0 },
+                    burst: { count: { data: "suck", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.35 },
                     direction: [{ data: "direction.0", fallback: -1 }, { data: "direction.1", fallback: 0 }, { data: "direction.2", fallback: 0 }],
                     speed: [0.14, 0.44], spread: 18,

@@ -1,10 +1,11 @@
 /**
  * 冲天拳 / skyuppercut 的可执行设计说明。
  *
- * 场面：只会冲天拳的火焰鸡（Blaziken，格斗上勾）对着被点住、不会走开的铁傀儡（体型高大、耐打），晴天平地，
- * 初始距离约 1 格（拳程内）。默认配置为冲天式。铁傀儡 `NoAI` 定住，保证上勾把目标稳定顶离地面。
+ * 场面：只会冲天拳的火焰鸡（Blaziken，格斗上勾）对着被点住、拔掉击退抗性、不会走开的铁傀儡（体型高大、耐打），
+ * 晴天平地，初始距离约 1 格（拳程内）。默认配置为冲天式。铁傀儡 `NoAI` 定住、`knockback_resistance` 清零，
+ * 既站得稳又真的会被上勾顶离地面，便于读轨迹。
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（上勾命中）。
- * 被顶起多高（体重与配置决定的 `lift`）、是否吃到离地加成，写进 note 供读轨迹判断。
+ * 被顶起多少（体重与配置决定的 `lift`）、是否吃到离地加成，写进 note 供读轨迹判断。
  */
 Smoke.scenario("skyuppercut", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -14,6 +15,7 @@ Smoke.scenario("skyuppercut", function (stage) {
     var foe = stage.mob({ type: "minecraft:iron_golem", at: [0.6, 0, 0] });
     stage.hostile(caster, foe);
     stage.command("data merge entity @e[type=minecraft:iron_golem,distance=..8,limit=1] {NoAI:1b}");
+    stage.command("attribute @e[type=minecraft:iron_golem,distance=..8,limit=1] minecraft:generic.knockback_resistance base set 0");
     stage.until(1000, function () {
         return stage.casts("skyuppercut", caster) > 0 && stage.damageTo(foe) > 0;
     }, function () {

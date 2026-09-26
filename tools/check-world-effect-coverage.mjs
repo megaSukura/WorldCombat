@@ -5,23 +5,28 @@ import ts from 'typescript';
 
 // Neutral runtime fixture: exercise the real shared native facts and shipped conditional policies.
 const listeners = new Map(), handlers = new Map(), skills = new Map(), definitions = new Map();
+const damageObservers = new Map();
 const fluent = new Proxy(() => fluent, { get: () => fluent });
 const noop = () => {};
+const point = (x=0,y=0,z=0) => ({x:()=>x,y:()=>y,z:()=>z,plus:p=>point(x+p.x(),y+p.y(),z+p.z())});
 const context = vm.createContext({ console, F: fluent, actionParameters: { define: noop },
   formula: noop, seconds: noop, percent: noop, hidden: noop, n: noop, stages: noop, describe: noop, defineFacts: noop,
   defineDamage: noop, flag: noop, field: noop, pathOf: noop, text: x => x, damageSpec: noop,
   define: spec => skills.set(spec.id, spec), p: () => 100, skills: {},
-  WorldFeedback: { emit: noop, keep: noop, text: noop },
+  WorldFeedback: { emit: noop, keep: noop, text: noop, onEffect: noop },
   WorldCombat: { on: (id, topic, _after, callback) => listeners.set(id, { topic, callback }),
     effect: (id, _schema, _maximum, _lifetime, normalize) => definitions.set(id, normalize),
-    effectHandler: (id, event, callback) => handlers.set(`${id}/${event}`, callback), event: noop, phase: noop },
+    effectHandler: (id, event, callback) => handlers.set(`${id}/${event}`, callback), event: noop, phase: noop,
+    preview: (_id, json) => JSON.parse(json), point },
   NativeEffects: { effectiveStages: (_w, a) => a.stages, lastMove: (_w, a) => a.lastMove || null,
     read: (_w, a) => ({ used: a.lastMove?.id || '' }), ability: () => '',
-    boost: () => true, resetStages: () => 0, invertStages: () => 0, copyStages: () => ({ changed: 0, total: 0 }) },
+    boost: () => true, consumePositiveStages: () => 0, resetStages: () => 0, invertStages: () => 0, copyStages: () => ({ changed: 0, total: 0 }) },
   NativeModifiers: {}, NativeAbilities: { flag: () => false },
   NativeLoadout: { facts: move => ({ flags: { contact: move.contact } }) },
   CobblemonCombat: { pokemon: a => a.pokemon, moveTemplate: id => ({ category: () => id === 'guard' ? 'status' : 'physical', contact: id === 'punch' }) },
-  PokemonDamage: { metadata: { define: noop } }, GuardEffects: {}, CompanionBehavior: {},
+  PokemonDamage: { metadata: { define: noop }, onDamageApplied(id, listener, filter) {
+    assert(!damageObservers.has(id), 'Duplicate damage observer'); damageObservers.set(id, { listener, filter });
+  } }, GuardEffects: {}, CompanionBehavior: {},
   WorldGeometry: {}, LivingActions: {}, NumberContext: {}, sound: noop
 });
 const units = ['alluringvoice', 'burningjealousy', 'punishment', 'powertrip', 'storedpower', 'lashout',
@@ -54,7 +59,7 @@ function effectView(a, id) {
 }
 const world = { tick: () => now, source: () => source, valid: a => a.valid, random: () => 0.2,
   friendly: () => false, actor: id => actors.find(a => a.id === id) || null,
-  observe: a => ({ attacking: () => a.attacking, health: () => 20, maxHealth: () => 20 }),
+  observe: a => ({ attacking: () => a.attacking, health: () => 20, maxHealth: () => 20, position:()=>point() }),
   effects: (a, definition) => [...a.effects.values()].filter(e => e.definition() === definition && !e.ended),
   mobEffect: effectView, mobEffects: a => [...a.markers.keys()].map(id => effectView(a, id)).filter(Boolean),
   marker(a, id, ticks, amplifier) {
@@ -64,6 +69,17 @@ const world = { tick: () => now, source: () => source, valid: a => a.valid, rand
     a.markers.set(id, { until: ticks === -1 ? -1 : now + ticks, amplifier, revision: ++serial });
   },
   removeMobEffect(a, id, expected) { if (effectView(a, id)?.key() !== expected) return false; a.markers.delete(id); return true; },
+  transferMobEffect(from, to, id, expected) {
+    if (from.removeRefuse || to.refuse || effectView(from, id)?.key() !== expected) return false;
+    const value = from.markers.get(id), before = effectView(to, id), current = effectView(from, id);
+    if (before && (before.amplifier() > current.amplifier() || before.amplifier() === current.amplifier()
+      && (before.duration() < 0 || current.duration() >= 0 && before.duration() >= current.duration()))) return false;
+    from.markers.delete(id); to.markers.set(id, {...value, revision: ++serial}); return true;
+  },
+  replaceMobEffect(actor,id,expected,ticks,amplifier) {
+    if(actor.refuse||actor.removeRefuse||(effectView(actor,id)?.key()||'')!==expected)return false;
+    actor.markers.set(id,{until:ticks===-1?-1:now+ticks,amplifier,revision:++serial});return true;
+  },
   attribute(a, id, amount, operation) { a.modifiers.set(activeOwner, { id, amount, operation }); return true; },
   effect(definition, a, data, ticks) {
     const id = ++serial;
@@ -116,6 +132,18 @@ test('transfer moves one exact effect within budget and rejects stale observatio
   assert.equal(M.transfer(world, ordinary, other, 3), 0); assert.equal(M.transfer(world, ordinary, other, 4), 4);
   assert.equal(effectView(ordinary, 'minecraft:speed'), null); assert.equal(effectView(other, 'minecraft:speed').duration(), 120);
 });
+test('source removal veto cannot create a transferred copy', () => {
+  world.marker(ordinary, 'minecraft:speed', 90, 2); ordinary.removeRefuse = true;
+  assert.equal(M.transferOne(world, ordinary, other, effectView(ordinary, 'minecraft:speed')), false);
+  assert(effectView(ordinary, 'minecraft:speed')); assert.equal(effectView(other, 'minecraft:speed'), null);
+  ordinary.removeRefuse = false;
+});
+test('exact replacement refusal retains the old native application', () => {
+  world.marker(ordinary,'minecraft:speed',90,2);const previous=effectView(ordinary,'minecraft:speed').key();
+  ordinary.refuse=true;assert.equal(M.set(world,ordinary,'minecraft:speed',20,0),null);
+  assert.equal(effectView(ordinary,'minecraft:speed').key(),previous);ordinary.refuse=false;
+  assert.equal(M.set(world,ordinary,'minecraft:speed',20,0).amplifier(),0);
+});
 test('paired reversal preserves simultaneous opposite effects and their clocks', () => {
   world.marker(ordinary, 'minecraft:speed', 90, 2); world.marker(ordinary, 'minecraft:slowness', 45, 0);
   world.marker(ordinary, 'minecraft:regeneration', 120, 1); assert.equal(M.invert(world, ordinary, false), 2);
@@ -154,7 +182,8 @@ test('native potion levels contribute to shipped empowerment and clearing mechan
 });
 test('disable blocks the recorded native method and permits a different method', () => {
   world.marker(ordinary, 'world_combat:disable_lock', 100, 0);
-  world.effect(P.disableMark, ordinary, JSON.stringify({ move: 'minecraft:mob_attack', native: true }), 100);
+  world.effect(P.disableMark, ordinary, JSON.stringify({ move: 'minecraft:mob_attack', native: true,
+    max:100,caster:source.ref(),carrier:effectView(ordinary,'world_combat:disable_lock').key() }), 100);
   assert.equal(policy('', ordinary, attack('minecraft:mob_attack')).blocked.disabled, true);
   assert.equal(policy('', ordinary, attack('minecraft:arrow')).blocked.disabled, undefined);
 });
@@ -197,5 +226,29 @@ test('fixed attribute windows stay at 12 percent across amplifier changes and cl
   world.marker(ordinary, 'fixture:counter', 100, 80); update(); ordinary.valid = false; advance(1); assert.equal(ordinary.modifiers.size, 0);
   ordinary.valid = true; listeners.get('fixture:fixed-slow/bind').callback(event(ordinary, ordinary, {}));
   assert.equal(ordinary.modifiers.size, 1); advance(100); assert.equal(ordinary.modifiers.size, 0);
+});
+test('attribute factories sample each native application and share its resource lifetime', () => {
+  let sampled = 0, started = 0;
+  M.fixedAttributes('fixture:sampled', 'fixture:sampled-carrier', (_world, actor, carrier) => {
+    assert.equal(actor, other); sampled++;
+    return [{ id: 'fixture:physical', amount: carrier.amplifier() / 100, operation: 'add_value' }];
+  }, effect => { assert.equal(effect.target(), other); started++; });
+  const update = () => listeners.get('fixture:sampled/added').callback(event(other, other, { id: 'fixture:sampled-carrier' }));
+  world.marker(other, 'fixture:sampled-carrier', 100, 40); update(); advance(4);
+  assert.equal(sampled, 1); assert.equal(started, 1); assert.equal([...other.modifiers.values()].some(value => value.amount === .4), true);
+  world.marker(other, 'fixture:sampled-carrier', 100, 60); update();
+  assert.equal(sampled, 2); assert.equal(started, 2); assert.equal([...other.modifiers.values()].some(value => value.amount === .4), false);
+  other.markers.clear(); advance(1); assert.equal(other.modifiers.size, 0);
+});
+test('dynamic attribute projection recomputes in its own live carrier scope and stops on removal', () => {
+  let amount = .2;
+  context.MobEffects.dynamicAttributes('checks:live-attributes', 'checks:live-carrier', () =>
+    [{ id: 'minecraft:generic.movement_speed', amount, operation: 'add_multiplied_total' }], 2);
+  world.marker(other, 'checks:live-carrier', 60, 0);
+  listeners.get('checks:live-attributes/added').callback(event(other, other, {id:'checks:live-carrier'}));
+  advance(2); assert([...other.modifiers.values()].some(value => value.amount === .2));
+  amount = .6; advance(2); assert([...other.modifiers.values()].some(value => value.amount === .6));
+  assert(![...other.modifiers.values()].some(value => value.amount === .2));
+  other.markers.clear(); advance(2); assert.equal(other.modifiers.size, 0);
 });
 console.log(`PASS world effect coverage: ${checks} neutral checks`);

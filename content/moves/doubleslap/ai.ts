@@ -4,10 +4,10 @@
  * 什么局面下出手：挂在共享的 attack 位上。带连环巴掌的伙伴把它当**贴身连抽**：目标可见、敌对、存活，
  *   在 `ai.maxChase`（默认 4，本族最短）以内就出手；更远交给共享接近逻辑先走近。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.steady`（默认开）打开时，几乎不移动的
- *   目标排得更前——它不挪步就会被整串抽满；正在跑的目标排后，因为拨动会让它退出臂展、这串提前断。
- * 够不到怎么办：reach 就是本招射程，不够先走近；掌与掌之间目标若倒下或被拨出臂展，这一串自然收住。
+ *   目标排得更前——它不挪步就会被整串抽满；高速绕侧的目标排后，因为拨动加上走位会让它很快脱离掌扇、这串提前断。
+ * 够不到怎么办：reach 就是本招射程，不够先走近；掌与掌之间目标若倒下或被拨出掌扇，这一串自然收住。
  * 放完之后：这一串抽完就收势，交回共享交战计划等冷却。
- * 优先级：基础 15；已在射程内 +6；`ai.steady` 开启且目标几乎不移动 +9。仅剩本招可选时，它仍在普通顺序里被选中。
+ * 优先级：基础 15；已在射程内 +6；`ai.steady` 开启时按目标水平速度加减：几乎站定 +9，高速移动 −6。仅剩本招可选时，它仍在普通顺序里被选中。
  */
 namespace CompanionBehavior {
     function doubleslapWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
@@ -38,7 +38,11 @@ namespace CompanionBehavior {
             const gap = CompanionBehavior.distance(source(context).point, target.point);
             let score = 15;
             if (gap <= item.data.range) score += 6;
-            if (ai<boolean>(item, "steady", true) && doubleslapSpeed(target) < 0.02) score += 9;
+            if (ai<boolean>(item, "steady", true)) {
+                const speed = doubleslapSpeed(target);
+                if (speed < 0.02) score += 9;
+                else if (speed > 0.12) score -= 6;
+            }
             return score;
         }
     });
@@ -52,7 +56,7 @@ namespace CompanionBehavior {
             help: "超过这个距离就不主动起掌，先走近。本招射程很短，默认值也小。"
         }),
         PokemonSkills.field(PokemonSkills.pathOf("ai.steady"), "优先站定的目标", "boolean", {
-            help: "开启：几乎不移动的目标（被逼住、贴墙、原地站定）排得更前，因为整串会被它吃满；正在跑的目标排后。关闭则所有目标同价。"
+            help: "开启：几乎不移动的目标（被逼住、贴墙、原地站定）排得更前，因为整串会被它吃满；高速移动、容易绕到掌扇外的目标排后。关闭则所有目标同价。"
         }),
         PokemonSkills.field(PokemonSkills.pathOf("ai.leaveStation"), "驻守时允许离位", "boolean", {
             help: "开启后，驻守命令下也会为连环巴掌离开站位；关闭则只在原地够得到时出手。"

@@ -1,18 +1,22 @@
 /**
  * 攀瀑 / waterfall 的出手方式。
  *
- * 核心念头：水从身后涌成一道竖直水帘，缩身蓄势后整身扑出，像瀑布从高处砸下——撞实的一刻水帘
- * 拍在目标身上，把它冲退并震懵（畏缩）。比波动冲短、比铁头快，落点是「被水拍懵」而不是「被浇透或砸飞」；
- * 下着雨时水势更盛，威力与震懵都抬一档。
+ * 核心念头：水从脚下直直涌起，把身体沿水柱托高（头顶有方块时被压低），再从低处向前上方顶出一记
+ * 攀瀑撞击——像逆流跃上瀑布。撞实的一刻水帘向上拍散，把目标冲退并震懵（畏缩）；一个都没碰到就把
+ * 水帘落在尽头，随后身体落回实际地面、水帘收束。它比波动冲竖、比铁头野；下着雨时水势更盛。
  *
- * 三幕：
- *   起（windup，提交前）：水从身后涌起、裹住身体，只播预告。
- *   扑（surge → impact / spill）：提交后逐刻沿瞄准方向扑出，一路拖着下降的水帘；trace 撞上活体即结算
- *       crash 接触伤害，按 shove 把目标冲退，并按 flinchChance 把它震懵（本单元的共享身份畏缩载体）。
- *   落（spill）：一个都没撞上时，水帘在尽头拍散、白扑一趟。
+ * 选取：`kind: "aim"`——可点实体、也可点方向或世界点扑空；提交与执行都不要求存在敌人。
+ * 面向高一阶的台阶或低空的敌人时，向前上方的一扑正好够到；平地也能直接抬身顶出。
+ *
+ * 三幕（提交后由本招自己驱动）：
+ *   升（rise）：水从脚下向上涌，把身体沿真实碰撞托起 `climb` 上限的高度；实际升起来的高度就是水柱高度
+ *      （displace 的实际结果），被顶棚挡住时升多少算多少。全程只播预告与升身表现。
+ *   扑（surge → impact / spill）：从升起点沿瞄准方向向前上方 sweepStep 推进，一路拖着水墙；trace 撞上
+ *      活体即结算一次 crash 接触伤害，按 shove 把目标冲退，并按 flinchChance 把它震懵（本单元的共享身份畏缩载体）。
+ *   落（fall → spill）：无论命中与否都落回实际地面，落地后水帘收束；扑空则多播一次拍散与浮字。
  *
  * 畏缩：施加本单元声明的 MobEffect（共享身份 `world_combat:status/flinch`，只借身份、行为自写）并投递
- * `world_combat:interrupt`；下方门禁在窗口内拒绝新动作，伤害阶段不受影响。
+ * `world_combat:interrupt`；下部门禁在窗口内拒绝新动作，伤害阶段不受影响。
  * 配置 `torrent` 由 resolve 改时序、由公式改威力／距离／概率，提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -32,9 +36,9 @@ namespace PokemonSkills {
         id: "waterfall",
         cooldownParameter: "recharge",
         name: "Waterfall",
-        description: "水从身后涌成一道竖直水帘，缩身蓄势后整身扑出：撞实的一刻水帘拍身，把目标冲退并可能震懵；下着雨时水势更盛。",
-        uses: ["贴身冲开或留住一个目标", "把它震懵，给队友制造输出窗口", "在雨里扑出去，水势更盛"],
-        kind: "enemy",
+        description: "水从脚下直涌成柱、把身体托高，再从低处向前上方顶出一记攀瀑撞击：撞实的一刻水帘向上拍散，把目标冲退并可能震懵；头顶有方块时会压低水柱，下着雨时水势更盛。",
+        uses: ["逆流抬身，扑上高一阶或低空的敌人", "贴身把目标冲退并震懵，给队友制造输出窗口", "在雨里扑出去，水势更盛"],
+        kind: "aim",
         range: 3.4,
         maxRange: 6.2,
         prepare: 9,
@@ -42,7 +46,7 @@ namespace PokemonSkills {
         recover: 9,
         cooldown: 38,
         style: "water",
-        defaults: { torrent: false, ai: { maxChase: 9, preferUnflinched: true } },
+        defaults: { torrent: false, ai: { maxChase: 9, preferUnflinched: true, preferHigh: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("waterfall", "collisionRadius", pokemon) * 1.7, geometry: "line", style: "water",
@@ -66,6 +70,10 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(waterfallScene);
             const world = action.world();
+            const actor = action.actor();
+            const self = world.observe(actor);
+            if (self === null) { movementScenes.finish(action, done); return; }
+            const climb = p("waterfall", "climb", action);
             const length = p("waterfall", "pounce", action);
             const pace = p("waterfall", "pace", action);
             const radius = p("waterfall", "collisionRadius", action);
@@ -75,37 +83,50 @@ namespace PokemonSkills {
             const flinchTicks = Math.max(1, Math.round(p("waterfall", "flinchTicks", action)));
             const shove = p("waterfall", "shove", action);
             const spray = Math.max(6, Math.round(p("waterfall", "spray", action)));
-            const curtain = p("waterfall", "curtain", action);
             const torrent = !!(config && config.torrent);
-            const self = world.observe(action.actor());
-            const raining = self !== null && WorldEnvironment.read(world, self.position()).rain > 0.15;
+            const raining = WorldEnvironment.read(world, self.position()).rain > 0.15;
             const direction = aim(action);
             const scale = radius / 0.6;
             const intensity = Math.max(0.6, Math.min(2.6, power / 95 * (raining ? 1.14 : 1) * (torrent ? 1.08 : 1)));
-            let travelled = 0, settled = false;
+            let climbed = 0, travelled = 0, descents = 0, struck = false, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
-            movementScenes.show(action, "surge", action.origin(), { moment: "surge", spray: spray, curtain: curtain, scale: scale, intensity: intensity,
-                    rain: raining ? 1 : 0, torrent: torrent ? 1 : 0 });
+            movementScenes.show(action, "rise", self.position(), { moment: "rise", climb: climb, column: 0, spray: spray,
+                scale: scale, intensity: intensity, rain: raining ? 1 : 0, torrent: torrent ? 1 : 0 });
             sound(action, "cobblemon:move.hydropump.actor");
             sound(action, "minecraft:item.trident.riptide_1");
 
-            function spill(current: CombatAction): void {
-                const scope = current.world(), body = scope.observe(current.actor());
-                if (body !== null) {
+            // 落回实际地面：水帘在贴着真实地面后才收束，不悬停、不落点爆圈。
+            function descend(current: CombatAction): void {
+                movementScenes.stop(current, "surge");
+                const scope = current.world(), body = scope.observe(actor);
+                if (body === null) { finish(current); return; }
+                if (body.grounded() || descents++ > 24) {
                     WorldFeedback.emit(scope, waterfallScene, 1, body.position(),
-                        { moment: "spill", spray: spray, curtain: curtain, scale: scale }, 24);
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), waterfallMissText, [], 22);
+                        { moment: "spill", spray: spray, column: climbed, scale: scale, struck: struck ? 1 : 0 }, 24);
+                    if (!struck) {
+                        WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), waterfallMissText, [], 22);
+                        sound(current, "minecraft:entity.generic.splash");
+                    }
+                    finish(current);
+                    return;
                 }
-                sound(current, "minecraft:entity.generic.splash");
-                finish(current);
+                const drop = scope.displace(actor, WorldCombat.point(0, -Math.max(0.4, Math.min(1.2, pace)), 0));
+                if (drop < 0.05) {
+                    WorldFeedback.emit(scope, waterfallScene, 1, body.position(),
+                        { moment: "spill", spray: spray, column: climbed, scale: scale, struck: struck ? 1 : 0 }, 24);
+                    finish(current);
+                    return;
+                }
+                movementScenes.show(current, "fall", body.position(), { moment: "fall", column: climbed, spray: spray, scale: scale });
+                current.after(1, function (next: CombatAction) { descend(next); });
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), origin = current.origin();
                 const step = Math.min(pace, Math.max(0, length - travelled));
-                if (step <= 0.001) { spill(current); return; }
+                if (step <= 0.001) { descend(current); return; }
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
@@ -115,27 +136,51 @@ namespace PokemonSkills {
                         { damage: damageSpec("waterfall", "crash"), contact: true });
                     WorldFeedback.emit(scope, waterfallScene, 1, point,
                         { moment: "impact", target: target ? String(target.ref()) : "", spray: spray,
-                            curtain: curtain, scale: scale, intensity: intensity }, 30);
+                            column: climbed, scale: scale, intensity: intensity }, 30);
                     sound(current, "cobblemon:impact.water");
+                    // 伤害被拒就不冲退、不震懵，也不当作已命中。
                     if (landed && target !== null && scope.valid(target)) {
-                        scope.displace(target, direction.scale(shove));
+                        struck = true;
+                        scope.hitDisplace(target, direction.scale(shove));
                         if (scope.random() < chance && waterfallFlinch(scope, target, flinchTicks)) {
                             WorldFeedback.emit(scope, waterfallScene, 1, point, { moment: "flinch", target: String(target.ref()) }, 26);
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.35, 0)), waterfallFlinchText, [], 24);
                         }
                     }
-                    finish(current);
+                    descend(current);
                     return;
                 }
                 const moved = swept.moved;
                 travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= length) { spill(current); return; }
-                movementScenes.show(current, "surge", origin, { moment: "surge", spray: spray, curtain: curtain, scale: scale, intensity: intensity,
-                        ratio: Math.min(1, travelled / Math.max(0.001, length)) });
+                if (hit.blocked() || moved < minimumMove || travelled >= length) { descend(current); return; }
+                movementScenes.show(current, "surge", origin, { moment: "surge", column: climbed, spray: spray, scale: scale,
+                        intensity: intensity, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
 
-            advance(action);
+            function rise(current: CombatAction): void {
+                const scope = current.world(), body = scope.observe(actor);
+                if (body === null) { finish(current); return; }
+                const step = Math.min(pace, Math.max(0, climb - climbed));
+                if (step <= 0.001) {
+                    movementScenes.stop(current, "rise");
+                    advance(current);
+                    return;
+                }
+                const moved = scope.displace(actor, WorldCombat.point(0, step, 0));
+                climbed += moved;
+                movementScenes.show(current, "rise", body.position(),
+                    { moment: "rise", climb: climb, column: climbed, spray: spray, scale: scale, intensity: intensity,
+                        rain: raining ? 1 : 0, torrent: torrent ? 1 : 0 });
+                if (moved < step * 0.5 || climbed >= climb - 0.001) {
+                    movementScenes.stop(current, "rise");
+                    advance(current);
+                    return;
+                }
+                current.after(1, rise);
+            }
+
+            rise(action);
         }
     });
 

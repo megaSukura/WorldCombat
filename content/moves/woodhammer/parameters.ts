@@ -3,12 +3,12 @@
  *
  * 原生事实：草、物理、威力 120、命中 100、PP 15、接触、反作用力 1/3（Cobblemon 1.8，16 位学习者）。
  * 翻译：把“用坚硬的躯体撞击对手”落成一次**把身体硬化成木槌、从上方砸下的重击**——
- * 起手把躯体绷硬、抬起，提交后整个人向目标砸下去，落地的一刻把地面也震裂；
+ * 起手把躯体绷硬、抬起，提交后整个人向目标砸下去，落地的一刻沿接触面扬起碎木与短暂的地裂碎屑；
  * 被砸实的人被压得踉跄（速度下降），代价是那一震顺着坚硬的身体回到自己身上。
  *
- * 与同族分开：舍身冲撞是横向猛撞、撞完双方被弹开；勇鸟猛攻是一条长俯冲线穿过目标；
- * 波动冲裹水撞人。木槌是这一族里**最慢、最重、唯一把地面砸裂**的一招，也是唯一按“坚硬躯体”让防御
- * 直接参与威力的：身体越硬砸得越狠、反震却越轻。玩家凭“砸出一圈碎石与地裂”认出它。
+ * 与同族分开：舍身冲撞是横向猛撞、撞完贴住压身；勇鸟猛攻是一条长俯冲线穿过目标；
+ * 波动冲裹水撞人。木槌是这一族里**最慢、最重、唯一垂直砸下**的一招，也是唯一按“坚硬躯体”让防御
+ * 直接参与威力的：身体越硬砸得越狠、反震却越轻。玩家凭“垂直落下的碎木与短暂裂纹”认出它。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   timber          砸击威力：物攻给狠度，防御把“坚硬躯体”压进去；扎根式再抬一档。
@@ -20,10 +20,10 @@
  *   shove           击退：体重与物攻决定把人砸飞多远；扎根式更远。
  *   stagger         踉跄级数：基础 1，等级 55 台阶 2。
  *   splinters       木屑数量：物攻与体重派生，表现按它发射。
- *   cracks/crackTicks  地裂数量与寿命：体重与等级决定砸裂多大一片、留多久。
+ *   cracks/crackTicks  地裂碎屑的数量与寿命：体重与等级决定扬多广、留多久；只做画面，不改动方块。
  *   tempo/aftercast/recharge  速度决定起手/收招/冷却；扎根式更慢。
- * 配置 root（扎根式）双向取舍：开启＝威力、击退与地裂都更大，但反伤更重、起手与收招更慢；
- * 关闭（开山式）＝更快的挥砸，威力与地裂收一档。两个方向各有适用局面（重击+威慑 vs 见效+追击）。
+ * 配置 root（扎根式）双向取舍：开启＝威力、击退与落点碎屑都更大，但反伤更重、起手与收招更慢；
+ * 关闭（开山式）＝更快的挥砸，威力与落点碎屑收一档。两个方向各有适用局面（重击+威慑 vs 见效+追击）。
  *
  * 伤害段 timber：这一砸随精灵数据变化的那部分。
  */
@@ -110,15 +110,15 @@ namespace PokemonSkills {
                 .plus(F.level().minus(40).times(0.08).clamp(-2, 12))
                 .clamp(6, 26).round(0),
             "地裂数量", {
-                unit: "块",
-                description: "落点周围被砸裂的地表方块数量；身体越沉、等级越高砸裂得越广。地裂会停留一会儿再恢复。"
+                unit: "片",
+                description: "落点周围扬起的裂纹碎屑数量；身体越沉、等级越高画面上的裂纹越广。它们只是短暂的视觉碎屑，不会改变方块。"
             }),
         /** 地裂寿命：基础 80 刻，体重每比 60 多 1 加 0.6 刻，扎根 +20 刻；夹在 60..160。 */
         crackTicks: seconds(
             F.base(80).plus(F.body("weight").minus(60).times(0.6).clamp(-10, 30))
                 .plus(F.when(F.pref("root", text("worldcombat.skill.woodhammer.preference.root")), F.const(20), F.const(0)))
                 .clamp(60, 160).round(0),
-            "地裂寿命", "砸裂的地表停留多久；越沉、扎根式留得越久。"),
+            "地裂寿命", "裂纹碎屑在落点停留多久；越沉、扎根式留得越久。"),
         /** 起手：基础 12 刻，速度每比 60 快 1 减 0.02 刻，扎根 +3 刻；夹在 8..18。 */
         tempo: seconds(
             F.base(12).minus(F.stat("speed").minus(60).times(0.02).clamp(-3, 4))
@@ -151,7 +151,7 @@ namespace PokemonSkills {
     describe("woodhammer", [
         { key: "description.0", values: ["timber","reach","rise","collisionRadius"] },
         { key: "description.1", values: ["recoil","shove","stagger"] },
-        { key: "description.crack", values: ["cracks","crackTicks"] },
+        { key: "description.crack", values: [] },
         { key: "root.on", values: [], when: function (context) { return read(context.detail.values, ["root"]) === true; } },
         { key: "root.off", values: [], when: function (context) { return read(context.detail.values, ["root"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

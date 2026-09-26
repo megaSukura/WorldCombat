@@ -4,7 +4,7 @@
   "worldcombat.skill.poweruppunch.use.1": "贴身对同一个目标连打，越打越重",
   "worldcombat.skill.poweruppunch.use.2": "在开战几拍内把攻击拉满再转重手",
   "worldcombat.skill.poweruppunch.description.0": "直拳造成约 %1$s 点格斗属性接触+拳伤害，拳程 %2$s 格、拳面判定半径 %3$s 格；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.poweruppunch.description.1": "每记命中最多把自身物攻抬升 %1$s 级（上限 +6），并刷新「拳已变硬」窗口 %2$s（窗口内每次命中都会续期）；拳头落下时把目标顶开约 %3$s 格。窗口到期或被清除时，按记录收回这段等级。",
+  "worldcombat.skill.poweruppunch.description.1": "每记命中最多把自身物攻抬升 %1$s 级（上限 +6），并刷新「拳已变硬」窗口 %2$s（窗口内每次命中都会续期）；拳头落下时把目标顶开约 %3$s 格。窗口到期、被清除或被下次刷新时，只收回本招自己抬起的这几级，别处的攻击等级不受影响。",
   "worldcombat.skill.poweruppunch.charge.on": "蓄劲拳：起手更久、本拳轻 20%，但一记硬化 2 级、窗口长 40%、冷却短 20%——用时间换更陡的起势。",
   "worldcombat.skill.poweruppunch.charge.off": "速拳：出手更快、本拳重 12%，但一记只硬 1 级、窗口更短、冷却更长——用起势换每一下的即时收益。",
   "worldcombat.skill.poweruppunch.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",
@@ -30,5 +30,5 @@
   "world_combat.move.poweruppunch.text.harden": "拳头变硬 +%1$s（共 %2$s 级）",
   "world_combat.move.poweruppunch.text.peak": "拳已硬到极致（%1$s 级）",
   "world_combat.move.poweruppunch.text.miss": "拳走空了",
-  "world_combat.move.poweruppunch.text.fade": "拳上的硬劲散了（-%1$s 级）"
+  "world_combat.move.poweruppunch.text.fade": "拳上的硬劲散了"
 }

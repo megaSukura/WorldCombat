@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.lashout.summary": "受到削弱时发起更重的冲撞。负面能力等级和有害药水都会激起怒气；命中后先消减负面等级，再减轻有害药水。",
-  "worldcombat.skill.lashout.use.0": "被降能力后立刻重击",
+  "worldcombat.skill.lashout.summary": "受到削弱时原地短踏后朝正前方砸下重击。负面能力等级和有害药水都会激起怒气；命中后先消减负面等级，开启宣泄时再换成一段物攻提升。",
+  "worldcombat.skill.lashout.use.0": "被降能力后立刻近身重砸",
   "worldcombat.skill.lashout.use.1": "把积压的负等级一次泄掉",
   "worldcombat.skill.lashout.use.2": "用怒气换一段攻击提升",
   "worldcombat.skill.lashout.description.0": "造成约 %1$s 点物理伤害；负面能力等级或有害药水带来的威力翻倍已计入此数值。",
-  "worldcombat.skill.lashout.description.1": "欺身距离 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中后把目标推开 %4$s 格。",
+  "worldcombat.skill.lashout.description.1": "原地前踏 %1$s 格，再朝正前方砸出 %2$s 格，判定半径 %3$s 格；命中后把目标推开 %4$s 格。",
   "worldcombat.skill.lashout.description.2": "命中后最多消减 %1$s 层削弱：先处理最低的能力等级，再降低有害药水等级，降到零便解除。宣泄式还提升 %2$s 级物攻，持续 %3$s。",
   "worldcombat.skill.lashout.vent.on": "宣泄：命中后最多消减9层削弱，并将怒气转成物攻提升；起手多3刻、冷却多8刻。",
   "worldcombat.skill.lashout.vent.off": "普通：命中后消减1层削弱，起手和冷却较短。",
@@ -12,8 +12,8 @@
   "worldcombat.skill.lashout.growth.0": "达到 %1$s 级，发泄威力提升至 %2$s。",
   "worldcombat.skill.lashout.growth.1": "达到 %1$s 级，发泄威力提升至 %2$s，怒攻级数提升至 %3$s。",
   "worldcombat.skill.lashout.value.lashout": "发泄威力",
-  "worldcombat.skill.lashout.value.dash": "欺身距离",
-  "worldcombat.skill.lashout.value.speed": "欺身速度",
+  "worldcombat.skill.lashout.value.dash": "前踏距离",
+  "worldcombat.skill.lashout.value.slamReach": "下砸距离",
   "worldcombat.skill.lashout.value.collisionRadius": "判定半径",
   "worldcombat.skill.lashout.value.push": "击退",
   "worldcombat.skill.lashout.value.ventLevels": "宣泄级数",
@@ -32,5 +32,6 @@
   "worldcombat.skill.lashout.preference.ai.enraged.help": "开启后，自身带负等级时优先出手发泄（正是翻倍窗口）；关闭则按普通近战排序。",
   "world_combat.move.lashout.text.hit": "发泄",
   "world_combat.move.lashout.text.vent": "泄愤！",
-  "world_combat.move.lashout.text.rage": "怒气化力 +%1$s 级"
+  "world_combat.move.lashout.text.rage": "怒气化力 +%1$s 级",
+  "world_combat.move.lashout.text.miss": "落空"
 }

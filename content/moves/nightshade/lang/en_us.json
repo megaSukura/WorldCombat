@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.nightshade.summary": "Hurl a frightening phantom condensed from part of your level: it homes on the target and deals fixed damage equal to your level on impact (higher with very high Sp. Atk), and the target is not knocked back. The splash form spreads one strike into a burst that catches several nearby enemies, but each hit is lighter and it recovers and recharges slower.",
-  "worldcombat.skill.nightshade.description.0": "The strike deals %1$s fixed damage: your level times a small special-attack factor. The target's defence does not matter; only type immunity stops it.",
-  "worldcombat.skill.nightshade.description.1": "Prepare %1$s s; the phantom reaches %2$s blocks at %3$s blocks/tick (it homes on the target) with a %4$s block hit radius; it settles only on enemies and fizzles on an ally or when it finds nobody.",
+  "worldcombat.skill.nightshade.summary": "Hurl a frightening phantom condensed from part of your level along a direction or at a point; it homes when an enemy is selected and deals fixed damage equal to your level on impact (higher with very high Sp. Atk), without knocking the target back. The splash form spreads one strike into a burst that catches several nearby enemies, but each hit is lighter and it recovers and recharges slower.",
+  "worldcombat.skill.nightshade.description.0": "The strike deals %1$s fixed damage: your level times a small special-attack factor. The target's defence does not matter; type immunity, shields and native damage caps still apply.",
+  "worldcombat.skill.nightshade.description.1": "Prepare %1$s s; the phantom reaches %2$s blocks at %3$s blocks/tick. Throw it along a direction or at a point: it only homes when an enemy is selected, otherwise it flies straight and stops at a wall. Hit radius %4$s blocks; it settles only on enemies and fizzles on an ally or when it finds nobody.",
   "worldcombat.skill.nightshade.splash.on": "Splash form: on impact it bursts out to a %1$s-block radius to reach up to %2$s other enemies; every hit (including the direct one) drops to 55 percent damage, with +2 ticks recovery and +10 ticks cooldown.",
   "worldcombat.skill.nightshade.splash.off": "Single form: only the target that was hit, at full damage.",
   "worldcombat.skill.nightshade.timing": "Range %1$s blocks; prepare %2$s s, recover %3$s s, cost %4$s PP, cooldown %5$s s.",
@@ -22,9 +22,12 @@
   "worldcombat.skill.nightshade.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of casting; larger lets it strike from further out.",
   "worldcombat.skill.nightshade.preference.ai.crowd": "Crowd threshold",
   "worldcombat.skill.nightshade.preference.ai.crowd.help": "Prefer this cast when at least this many enemies stand around the target (pairs with the splash form); larger means it only casts in dense groups.",
+  "worldcombat.skill.nightshade.preference.ai.bulwark": "Sturdy-target threshold",
+  "worldcombat.skill.nightshade.preference.ai.bulwark.help": "Prefer this cast when the target's Defence or Sp. Def reaches this value: level damage ignores defence, so harder targets make it worth more. Set to 0 to always keep the bonus.",
   "worldcombat.skill.nightshade.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.nightshade.preference.ai.leaveStation.help": "When on, the user may leave its post to find a firing position; when off, it only casts at what it can reach from where it stands.",
   "worldcombat.skill.nightshade.growth.1": "From level %1$s the splash radius widens to %2$s blocks.",
   "world_combat.move.nightshade.text.haunt": "Night Shade %1$s",
-  "world_combat.move.nightshade.text.fizzle": "Phantom faded"
+  "world_combat.move.nightshade.text.fizzle": "Phantom faded",
+  "world_combat.move.nightshade.text.blocked": "Blocked"
 }

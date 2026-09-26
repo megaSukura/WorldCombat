@@ -2,12 +2,13 @@
  * 精神冲击 / psyshock 的客户端表现。
  *
  * 一句话：施法者手前把念波压成一枚半透明的念力棱 → 棱脱手后拖着一道硬边碎光走直线、缓缓下沉 →
- *   撞上目标时炸成一团棱屑与一圈贴地小环。
+ *   撞上目标时炸成一团棱屑与一圈贴地小环；撞到地形只在接触格碎成一撮有方向的棱屑（不炸环）。
  * 色相家族：靛紫（0x7A52E6 主 / 0xB49CF0 亮 / 0xC9B4F5 核心），近白只给撞碎的那一下；无第二个色相。
- * 拍子：起 mold 0–18t ／ 掷 flight 0–60t ／ 撞 impact 0–26t ／ 空 miss。
+ * 拍子：起 mold 0–18t ／ 掷 flight 0–60t ／ 撞 impact 0–26t ／ 碎 wall ／ 空 miss。
  * 范围：impact 的贴地小环半径绑 `data.scale`（判定半径 / 0.3），玩家一眼看出站哪会被棱扫到。
- * 运动：mold 向内收拢压实；flight 绑 projectile 沿飞行方向撒硬边碎光；impact 由内向外炸、棱屑受重力落下。
- * 数：`data.vanes`（特攻与等级派生的棱屑数）驱动 mold 的收拢量与 impact 的碎屑量，`data.intensity` 抬高亮度。
+ * 运动：mold 向内收拢压实；flight 绑 projectile 沿飞行方向撒硬边碎光；impact 由内向外炸、棱屑受重力落下，
+ *   其中 splinter 沿 `data.direction` 碎出锥形碎片流；wall 沿真实入射方向贴面碎开。
+ * 数：`data.vanes`（特攻与等级派生的棱屑数）驱动 mold 的收拢量、impact 与 wall 的碎屑量，`data.intensity` 抬高亮度。
  */
 const PsyshockDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -79,6 +80,16 @@ const PsyshockDefinition: ParticleDefinition = {
                     color: 0xB49CF0, alpha: [0.9, 0], light: "full", maxParticles: 90
                 },
                 {
+                    // 有方向的棱屑：沿这一掷的真实入射方向碎出一条锥形碎片流。
+                    name: "splinter", bind: "target", height: 0.5, orient: "direction", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    burst: { count: { data: "vanes", fallback: 16 }, interval: 1, repeats: 2 },
+                    shape: { kind: "cone", radius: 0.22, angleDegrees: 60 },
+                    direction: "shape", speed: [0.2, 0.52], spread: 18, gravity: 0.04, drag: 0.9,
+                    lifetime: [8, 16], size: [0.14, 0.02], sizeMode: "index",
+                    color: 0xC9B4F5, alpha: [0.9, 0], light: "full", maxParticles: 90
+                },
+                {
                     name: "ring", bind: "target", offset: [0, -0.5, 0], height: 0, orient: "fixed",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 1 },
@@ -86,6 +97,31 @@ const PsyshockDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.12, 0.3],
                     lifetime: [10, 16], size: [0.4, 0.9],
                     color: 0x7A52E6, alpha: [0.6, 0], light: "full", maxParticles: 5
+                }
+            ]
+        },
+        wall: {
+            duration: 24,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    // 撞墙只碎棱：碎片沿真实入射方向贴着墙面溅开，不出现环形爆炸。
+                    name: "shatter", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    burst: { count: { data: "vanes", fallback: 14 }, interval: 1, repeats: 2 },
+                    shape: { kind: "cone", radius: 0.2, angleDegrees: 72 },
+                    direction: "shape", speed: [0.14, 0.4], spread: 22, gravity: 0.045, drag: 0.9,
+                    lifetime: [8, 15], size: [0.13, 0.02], sizeMode: "index",
+                    color: 0xB49CF0, alpha: [0.9, 0], light: "world", maxParticles: 70
+                },
+                {
+                    name: "dust", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    burst: { count: 6 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.16, 0.02],
+                    color: 0x6B58A0, alpha: [0.6, 0], light: "world", maxParticles: 20
                 }
             ]
         },

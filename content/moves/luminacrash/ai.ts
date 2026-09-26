@@ -2,10 +2,10 @@
  * 琉光冲激 / luminacrash —— AI 用途。
  *
  * 出手局面：目标可见、敌对、存活，且落在 `ai.maxChase`（默认 13）格内；这是中远程的一记引光。
- * 对谁出手：`ai.cluster`（默认开）打开时，目标身边还围着别的敌人就抬高 priority——弥散/聚焦的炸落都能
- *   连周围一起砸；关闭则只按普通攻击排序。
+ * 对谁出手：移动较慢但并非完全静止的目标最值（光柱落得准，旁伤也有机会卷到）；疾走者需要预测锁点、命中率低，降档。
+ *   `ai.cluster`（默认开）打开时，目标身边还围着别的敌人再加一档——弥散/聚焦的炸落都能连周围一起砸；关闭则只按普通攻击排序。
  * 够不到怎么办：交给共享接近逻辑走近到 `reach` 内再引光；`approachTarget` 让伙伴朝目标靠近。
- * 放完接什么：交回共享交战计划；光柱有坠落延迟，落点会追着重算一次。
+ * 放完接什么：交回共享交战计划；光柱坠落时会更新锚点，冻结前跑掉的目标会砸空。
  */
 namespace PokemonSkills {
     function luminacrashCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
@@ -35,7 +35,11 @@ namespace PokemonSkills {
         approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            const base = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 24 : 0;
+            let base = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 24 : 0;
+            const velocity = target.velocity;
+            const speed = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : 0;
+            if (speed > 0.12) base -= Math.min(16, speed * 100);
+            else if (speed > 0.02) base += 6;
             if (!CompanionBehavior.ai<boolean>(capability, "cluster", true)) return base;
             return luminacrashCluster(context, capability) >= 2 ? base + 12 : base;
         }

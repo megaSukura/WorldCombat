@@ -7,14 +7,15 @@
  * 三幕（提交前只播预告）：
  *   起（ready）：屈膝沉肩，双拳在身前收拢、脚边尘被吸起，只播预告（`windup`），此时代价未结清。
  *   打（guard → hit）：提交后立刻把自身防御 −guardLoss、特防 −poiseLoss 写进公共能力阶梯并播「弃守」闪光——
- *       弃守是提交那一刻付的，之后无论中与不中都照付。随后逐击朝目标当前位置垫步并打出一记 `blow`（=总威力 / 次数）
- *       接触伤害；横扫式还在每击把正面 arc 度、reach 内的其他敌人以 share 保留一起扫到。每击间隔 gap，
- *       目标走开或在 reach 之外就断。
+ *       弃守是提交那一刻付的，之后无论中与不中都照付。随后逐击朝当前朝向短扫并打出一记 `blow`（=总威力 / 次数）
+ *       接触伤害；横扫式还在每击把正面 arc 度、reach 内的其他敌人以 share 保留一起扫到。每击间隔 gap。
+ *       目标走开就这一拳落空、不追伤，整串照打完后收招；空点/方向也能空打全串。
  *   散（slump）：重心散掉，身上浮起脱力灰气并浮字提示降级；落空只留下扑空的尘。
  *
  * 与同族分开：蛮力是一记最重的单发加撞飞、留坑；突飞猛扑是长程直线犁地；铠农炮在远处；画龙点睛从天而降。
  *   近身战没有助跑、没有地面残留、不撞飞，靠「贴脸三到五下快拳」被认出来。
  *
+ * 选取 `kind: "aim"`：方向或任意阵营实体都行，也可以空点；命中权限仍由命中层按敌我结算。
  * 配置 `wide`（横扫式）由 `resolve` 改时序、由公式改威力／扇角／保留，由本文件改判定与表现；提交后才触碰世界。
  */
 namespace PokemonSkills {
@@ -45,7 +46,7 @@ namespace PokemonSkills {
         name: "Close Combat",
         description: "不设防地抢进对手怀里，一口气打出一串快拳：贴身物理连打，提交那一刻自身防御与特防各下降一级。横扫式同时扫到正面一片扇形，代价是总威力更低。",
         uses: ["贴脸用一串快拳把对手打残", "横扫式一次扫到挤在正面的几个人", "在对手退开之前把一口气打完"],
-        kind: "enemy",
+        kind: "aim",
         range: 1.9,
         maxRange: 2.6,
         prepare: 8,
@@ -82,8 +83,8 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const target = action.target();
-            if (target === null || !world.valid(target)) { done(action); return; }
-            const targetRef = String(target.ref());
+            // aim 接受方向 / 世界点 / 任意阵营实体：没有实体目标时整串空打后收招。
+            const targetRef = target !== null ? String(target.ref()) : "";
             const flurry = p(closecombatId, "flurry", action);
             const hits = Math.max(1, Math.round(p(closecombatId, "hits", action)));
             const blow = flurry / hits;
@@ -99,8 +100,10 @@ namespace PokemonSkills {
             const motes = Math.round(p(closecombatId, "motes", action));
             const scale = Math.max(0.6, Math.min(2.4, reach / 1.9));
             const intensity = Math.max(0.5, Math.min(2.4, blow / 40));
+            // 提交时锁定的朝向：没有活体目标时，每一拳都沿它短扫。
+            const committed = WorldGeometry.flatUnit(aim(action), action.direction());
             const up = WorldCombat.point(0, 1.35, 0);
-            let index = 0, struck = 0, settled = false;
+            let index = 0, struck = 0, whiffed = 0, settled = false;
 
             // 弃守是提交那一刻付的：先写降级，无论中与不中都照付。
             NativeEffects.boost(world, actor, "def", -guardLoss);
@@ -116,7 +119,7 @@ namespace PokemonSkills {
                 settled = true;
                 const scope = current.world(), self = scope.observe(actor);
                 if (self !== null) {
-                    const fatigue = Math.max(10, Math.round(struck * 4 + (guardLoss + poiseLoss) * 6));
+                    const fatigue = Math.max(10, Math.round(struck * 4 + whiffed * 2 + (guardLoss + poiseLoss) * 6));
                     WorldFeedback.emit(scope, closecombatScene, 1, self.position(),
                         { moment: "slump", guardLoss: guardLoss, poiseLoss: poiseLoss, struck: struck, hits: hits,
                             fatigue: fatigue, motes: motes, scale: scale, intensity: intensity }, 26);
@@ -131,30 +134,38 @@ namespace PokemonSkills {
                 if (index >= hits) { finish(current); return; }
                 const scope = current.world();
                 const self = scope.observe(actor);
-                const victim = scope.actor(targetRef);
-                if (self === null || victim === null || !scope.valid(victim)) { finish(current); return; }
-                const victimBody = scope.observe(victim);
-                if (victimBody === null) { finish(current); return; }
+                if (self === null) { finish(current); return; }
                 const origin = self.position();
-                const distance = origin.minus(victimBody.position()).length();
-                current.face(victimBody.position(), 25, 25);
+                const victim = targetRef.length > 0 ? scope.actor(targetRef) : null;
+                const victimBody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                // 每拳重新按当前朝向短扫：有活体目标就朝它当前的身体，否则沿提交时锁定的朝向。
+                let heading = victimBody !== null ? victimBody.position().minus(origin) : committed;
+                if (heading.length() < 0.05) heading = committed;
+                if (victimBody !== null) current.face(victimBody.position(), 25, 25);
+                else current.face(origin.plus(committed), 25, 25);
 
-                if (distance > reach + 1.0) {
-                    WorldFeedback.emit(scope, closecombatScene, 1, origin,
-                        { moment: "whiff", index: index, hits: hits, motes: motes, scale: scale }, 18);
-                    WorldFeedback.text(scope, origin.plus(up), closecombatMissText, [], 24);
-                    finish(current);
-                    return;
+                if (victimBody !== null && origin.minus(victimBody.position()).length() <= reach + 1.0) {
+                    const landed = hurt(current, victim!, closecombatId, blow, { damage: damageSpec(closecombatId, "flurry"), contact: true });
+                    if (landed) {
+                        struck++;
+                        WorldFeedback.emit(scope, closecombatScene, 1, victimBody.position(),
+                            { moment: "hit", target: targetRef, index: index, hits: hits, motes: motes, scale: scale, intensity: intensity }, 20);
+                        sound(current, "cobblemon:move.closecombat.target");
+                    } else {
+                        whiffed++;
+                    }
+                    // 垫前一步跟上对手的小退步；不冲过头，位移受原生碰撞限制。
+                    const forward = Math.min(advance, Math.max(0, origin.minus(victimBody.position()).length() - 0.45));
+                    if (forward > 0.03) scope.displace(actor, heading.unit().scale(forward));
+                    if (landed && scope.valid(victim!) && push > 0.05) scope.hitDisplace(victim!, heading.unit().scale(push));
+                } else {
+                    // 空拳：目标离开拳距就不追伤，只朝当前朝向短扫；整串照打完后收招。
+                    whiffed++;
+                    if (index === 0) WorldFeedback.text(scope, origin.plus(up), closecombatMissText, [], 24);
+                    WorldFeedback.emit(scope, closecombatScene, 1, origin.plus(heading.unit().scale(Math.min(0.6, reach))),
+                        { moment: "whiff", index: index, hits: hits, motes: motes, scale: scale }, 14);
                 }
-                let heading = victimBody.position().minus(origin);
-                if (heading.length() < 0.05) heading = current.direction();
-                const landed = hurt(current, victim, closecombatId, blow, { damage: damageSpec(closecombatId, "flurry"), contact: true });
-                if (landed) {
-                    struck++;
-                    WorldFeedback.emit(scope, closecombatScene, 1, victimBody.position(),
-                        { moment: "hit", target: targetRef, index: index, hits: hits, motes: motes, scale: scale, intensity: intensity }, 20);
-                    sound(current, "cobblemon:move.closecombat.target");
-                }
+                // 横扫式：这一拳同时扫到正面扇形里的其他人，按同一个判定/表现扇形；空拳也照扫。
                 if (wide && arc > 0) {
                     const fan = closecombatFan(origin, heading, reach + 0.5, arc);
                     if (index === 0)
@@ -173,13 +184,9 @@ namespace PokemonSkills {
                     if (index === 0 && swept > 0)
                         WorldFeedback.text(scope, origin.plus(up), closecombatSweepText, [swept], 24);
                 }
-                // 垫前一步跟上对手的小退步；不冲过头。
-                const forward = Math.min(advance, Math.max(0, distance - 0.45));
-                if (forward > 0.03) scope.displace(actor, heading.unit().scale(forward));
-                if (landed && scope.valid(victim) && push > 0.05) scope.displace(victim, heading.unit().scale(push));
                 index++;
-                if (scope.valid(victim)) current.after(gap, function (next: CombatAction) { step(next); });
-                else finish(current);
+                if (index >= hits) finish(current);
+                else current.after(gap, function (next: CombatAction) { step(next); });
             }
 
             step(action);

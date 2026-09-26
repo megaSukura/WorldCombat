@@ -6,14 +6,15 @@
  *
  * 翻译：即时战斗里没有「空隙」这个回合概念，本实现把它落成一个可观察的事实——命中那一刻，**目标正把矛头
  *   对着别人**（`world.observe(target).attacking()` 指向的不是施法者）：它把空门露在这一侧，这一刀因此更重。
- *   形状上是一记站定的暗色突袭：脚下牵出一缕影线，顺着影线在目标身上切出一道暗痕（不走位、不闪身）。
+ *   形状上是一记**身前窄斜切的短距离 trace**：朝本次瞄准方向递出一条窄刀路，刀口从肩侧斜下，落到第一个真实接触
+ *   （实体或方块）就停；不移动本体、不跨障碍指定伤害，刀线只沿这次手动朝向。
  *   原生的「容易击中要害」沿用 critRatio 2 的共享结算。
  *   与既有招分开：出奇一击是闪到背后并放假替身、燕返是掠一整条刀路，暗袭要害**不动**，只在对手露空门时加重；
  *   与 karatechop（找护甲的缝）、assurance（打刚受过的伤）也不是同一件事——它读的是目标的注意力。
  *
  * 数值分散（每个参数读不同的精灵数据；公式即悬浮里展开的那一棵）：
  *   cut     暗袭威力：物攻定刃口，速度定出手；目标正对别人出手时 ×1.4（伏击式 ×1.75）。
- *   reach   出手距离：速度决定影线够出多远，也是本招实际射程。
+ *   reach   出手距离：速度决定窄刀路递出多远，也是本招实际射程。
  *   depth   斩深：身高决定这一刀压到多高。
  *   motes   影屑量：物攻与速度换算，驱动表现密度。
  *   tempo／aftercast／recharge：速度定节奏；伏击式以更长的起手与冷却换更远的出手与更高的空隙加成。
@@ -34,11 +35,13 @@ namespace PokemonSkills {
     /** 表现里斩深的参考值（格）；服务端传 scale = 实际斩深 / 这个值。 */
     export const nightslashReference = 1.1;
 
-    /** 命中目标此刻是否把攻击对着别人（不是施法者）：1 即空门。 */
+    /** 命中目标此刻是否把攻击对着别人（不是施法者）：1 即空门。显式 target 优先于动作的对象。 */
     export function nightslashOpening(context: FactContext): number {
         const world = context.world, actor = context.actor;
         if (!world || !actor || !world.valid(actor)) return 0;
-        const target = context.action ? context.action.target() : context.target ? context.target.actor || null : null;
+        const target = context.target !== undefined
+            ? (context.target ? context.target.actor || null : null)
+            : (context.action ? context.action.target() : null);
         if (!target || !world.valid(target) || world.friendly(target)) return 0;
         const body = world.observe(target);
         if (body === null) return 0;
@@ -68,14 +71,14 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "影线尽头那一刀的接触威力；物攻给出刃口、速度给出出手。目标正把攻击对着别人时更重（空门）。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 出手距离：3.0 + (速度−55)×0.008（夹 −0.4..0.7）；伏击 ×1.2；夹 2.4..4.2 格。它也是实际射程。 */
+        /** 出手距离：2.6 + (速度−55)×0.008（夹 −0.4..0.7）；伏击 ×1.2；夹 2.0..3.6 格。它也是实际射程。 */
         reach: formula(
-            F.base(3.0).plus(F.stat("speed").minus(55).times(0.008).clamp(-0.4, 0.7))
+            F.base(2.6).plus(F.stat("speed").minus(55).times(0.008).clamp(-0.4, 0.7))
                 .times(F.when(F.pref("ambush", text("worldcombat.skill.nightslash.preference.ambush")), F.const(1.2), F.const(1)))
-                .clamp(2.4, 4.2).round(2),
+                .clamp(2.0, 3.6).round(2),
             "出手距离", {
                 unit: "格",
-                description: "脚下影线能够出多远；速度越快够得越前，伏击式更远。它也是本招的实际射程来源。"
+                description: "身前窄刀路能够出多远；速度越快够得越前，伏击式更远。它也是本招的实际射程来源。"
             }),
         /** 斩深：1.1 + (身高−1.4)×0.4（夹 −0.2..0.6）；夹 0.8..1.9 格。 */
         depth: formula(
@@ -114,7 +117,7 @@ namespace PokemonSkills {
 
     stages(nightslashId, [
         { level: 30, values: { cut: 80 } },
-        { level: 48, values: { cut: 88, reach: 3.6 } }
+        { level: 48, values: { cut: 88, reach: 3.2 } }
     ]);
 
     describe(nightslashId, [

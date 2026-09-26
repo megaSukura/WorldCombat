@@ -2,11 +2,13 @@
  * 黑色目光 的伙伴 AI 用途：这招自己的一套出手计划——用术者的不动换目标的不动。
  *
  * 什么局面有意义：有可见威胁、在 ai.maxChase（默认 10）格以内、目标还没被定住、视线通畅。
+ *   只在**没有近身威胁**时用：目标或别的敌人已经贴到身边（默认 3 格内）时不凝视——术者站定不动会被白打。
  *   目标正在逃跑时加分（`ai.catchRunners` 默认开）：它正要离开，一道目光正好把它钉住。
  *   只有目标离得够近（`ai.holdRange` 默认 8）时才值得用——太远目光拉不住，术者反而白站。
  * 对谁出手：当前威胁；已被 trapped（任何来源）的目标跳过。
  * 够不到怎么办：reach 就是凝视距离，超出先走近；视线被掩体挡住时交回共享接近逻辑，找得到角度再瞪。
- * 放完之后：术者在这段时间里站定不动、不能出手，目标被完全钉住；定身是共享的，伙伴交回共享顺序决定解围或撤退。
+ * 放完之后：术者在这段时间里站定不动、不能出手，目标被完全钉住；锁一被破坏（遮断、拽开、被打断、
+ *   目标免疫控制）本次动作立即结束，伙伴随即重新评估。定身是共享的，伙伴交回共享顺序决定解围或撤退。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("meanlook", { ai: { maxChase: 10, holdRange: 8, catchRunners: true, leaveStation: false } }, [
@@ -21,6 +23,14 @@ namespace CompanionBehavior {
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (status(context, threat, "trapped")) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
+        // 无近身威胁：目标或别的敌人贴到身边时不用。
+        if (distance(self.point, threat.point) < 3) return false;
+        const nearby = (context.facts.nearby || []) as Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === threat.ref || !other.visible || other.friendly || other.health <= 0) continue;
+            if (distance(self.point, other.point) < 3) return false;
+        }
         const range = ai<number>(item, "holdRange", 8);
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > Math.min(ai<number>(item, "maxChase", 10), range)) return false;
         return world(context).clear(point(self.point), point(threat.point));

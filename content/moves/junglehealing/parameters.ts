@@ -2,6 +2,39 @@
 namespace PokemonSkills {
     export const junglehealingId = "junglehealing";
 
+    /** 一类自然地面方块：丛林能从这些地上长出来。公式与 AI 共用同一份判断。 */
+    export function junglehealingNaturalBlock(id: string): boolean {
+        return /grass|dirt|podzol|moss|mud|mycelium|root|farmland|nylium|clay/.test(id);
+    }
+
+    /** 从采样点向下找一层自然地面，返回它的顶面高度；找不到返回 null。 */
+    function junglehealingSurface(world: CombatWorld, x: number, referenceY: number, z: number): number | null {
+        const probes = [0.4, -0.1, -0.6, -1.1];
+        for (let i = 0; i < probes.length; i++) {
+            const probeY = referenceY + probes[i];
+            const block = world.block(WorldCombat.point(x, probeY, z));
+            if (block !== null && junglehealingNaturalBlock(String(block.id()))) return Math.floor(probeY) + 1;
+        }
+        return null;
+    }
+
+    /**
+     * 施放时在脚边地面采样一圈：返回实际踩得到自然地面的顶面点（含中心，最多 9 点）。
+     * 本次施放只用这一遍采样确定藤蔓预算与抽芽落点，过程和公式都不重复扫地形。
+     */
+    export function junglehealingNaturalSamples(world: CombatWorld, centre: CombatPoint, radius: number): CombatPoint[] {
+        const offsets = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]];
+        const found: CombatPoint[] = [];
+        for (let i = 0; i < offsets.length; i++) {
+            const dx = offsets[i][0], dz = offsets[i][1];
+            const reach = (dx === 0 && dz === 0) ? 0 : radius * (Math.abs(dx) > 1 || Math.abs(dz) > 1 ? 0.82 : 0.55);
+            const x = centre.x() + dx * reach, z = centre.z() + dz * reach;
+            const surface = junglehealingSurface(world, x, centre.y(), z);
+            if (surface !== null) found.push(WorldCombat.point(x, surface + 0.02, z));
+        }
+        return found;
+    }
+
     /** 脚下是不是自然地面：决定丛林长得多旺。 */
     function junglehealingNature(context: FactContext): number {
         if (!context.world || !context.actor || !context.world.valid(context.actor)) return 0;
@@ -11,7 +44,7 @@ namespace PokemonSkills {
         const feet = WorldCombat.point(position.x(), position.y() - view.height() / 2 - 0.2, position.z());
         const block = context.world.block(feet);
         if (block === null) return 0;
-        return /grass|dirt|podzol|moss|mud|mycelium|root|farmland|nylium|clay/.test(String(block.id())) ? 1 : 0;
+        return junglehealingNaturalBlock(String(block.id())) ? 1 : 0;
     }
 
     defineFacts(junglehealingId, function (context: FactContext): Formula.Facts {

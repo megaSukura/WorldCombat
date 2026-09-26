@@ -7,6 +7,10 @@
  * 到期原方块回来；速度下降是 `NativeEffects.boost(...,"spe",-N)` 对任何战斗者生效的能力等级，并另挂共享身份
  * `world_combat:status/encased`（本单元发明，别的单元可直接消费「行动被封」）。
  *
+ * 选取是 aim：方向点或实体都能放，提交时不要求存在敌人。围栏只由真实地面命中生成（砸中落地目标、或石头真正
+ * 落在可替换地表）；砸墙与空中目标只崩碎石。围栏特意留一道 `cageGap` 宽的可走缺口；地形被原生保护拒绝、放不下
+ * 石柱时，只呈碎石与真实减速，不画假墙。
+ *
  * 「封住行动」需要腿站在地上：只有落地（grounded）的目标才会被围住、才掉速度；离地时这一发只是一块重石头，
  * 这是这招可被读出的反制（与 bulldoze 只扫地面同一读法）。
  *
@@ -16,6 +20,7 @@
  *   throwRange      施放距离：等级与物攻把石头送多远；也是本招的实际射程来源。
  *   collisionRadius 石头判定：体型高度定石头大小。
  *   cageRadius      封锁半径：目标碰撞箱宽度定石柱圈要多大才围得住（大目标围得更宽）。
+ *   cageGap         围栏缺口：目标碰撞箱宽度定留下的可走缺口多宽（大目标留更宽，免得被挤进石柱）。
  *   cageHeight      石柱高度：配置（封场式）决定立多高。
  *   encaseStages    封锁等级：配置决定降一级还是两级速度。
  *   cageTicks       封锁时长：等级定这圈石头与减速留多久。
@@ -72,6 +77,15 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "石柱围栏要立多大一圈；目标碰撞箱越宽，围栏就必须越宽才能围住它的下半身。它也是指示圈与判定环的半径。"
             }),
+        /** 围栏缺口：1.4 + 目标体宽偏移[0,1.6]；夹 1.2..3.0。 */
+        cageGap: formula(
+            F.base(1.4)
+                .plus(F.target("actor.width", text("worldcombat.skill.rocktomb.value.targetWidth")).minus(0.9).times(0.8).clamp(0, 1.6))
+                .clamp(1.2, 3.0).round(2),
+            "围栏缺口", {
+                unit: "格",
+                description: "石栏特意留出的一道可走缺口有多宽；目标碰撞箱越宽，缺口就留得越宽，免得大个子被挤在石柱与石柱之间出不来。"
+            }),
         /** 石柱高度：1 + 封场式 +1；夹 1..2。 */
         cageHeight: formula(
             F.base(1).plus(F.when(F.pref("trap", text("worldcombat.skill.rocktomb.preference.trap")), F.const(1), F.const(0))).clamp(1, 2),
@@ -105,7 +119,7 @@ namespace PokemonSkills {
     describe("rocktomb", [
         { key: "description.0", values: ["boulder", "collisionRadius"] },
         { key: "description.1", values: ["throwRange", "throwSpeed"] },
-        { key: "description.2", values: ["encaseStages","cageRadius","cageHeight","cageTicks"] },
+        { key: "description.2", values: ["encaseStages","cageRadius","cageGap","cageHeight","cageTicks"] },
         { key: "trap.on", values: [], when: function (context) { return read(context.detail.values, ["trap"]) === true; } },
         { key: "trap.off", values: [], when: function (context) { return read(context.detail.values, ["trap"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

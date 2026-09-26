@@ -1,18 +1,4 @@
-/**
- * 攀岩 / rockclimb —— 注册与动作。
- *
- * 核心念头：一次**带高度的蹬地扑跃**。低头蹬地攀上、整个身体越过地面砸向目标；命中又重又可能把人撞得
- * 晕头转向，落点还蹬翻一小片土。它的身份是重量与冲程——单发本族最重，但 85 的命中会真的扑偏。
- *
- * 两幕（扑跃里逐刻推进）：
- *   起（windup，提交前）：低头、收腿蹬地，只播预告。
- *   扑（leap → slam，提交后）：沿被命中偏角修正过的方向划一条抛物线扑过去；落地时对落点一圈内的非友方
- *       各结算一次 ram 接触伤害（最多 maxTargets 人），按 confuseChance 掷混乱（本单元自己的共享身份载体
- *       world_combat:status/confusion），并把落点地表蹬出一小片土痕。
- *
- * 混乱行为（本单元自己的变体）：目标每次想出手都可能被打散；被打散时它踉跄半步——朝随机方向被撞开一点、
- * 并被短暂减速。这是攀岩区别于幻象光线（续时长）、信号光束（挨打反冲）的地方。
- */
+/** Real wall approach, finite upward body movement and a short clear crest; only body contact deals damage. */
 namespace PokemonSkills {
     /** 踉跄：被打散时朝随机方向撞开的最大格数，以及短暂减速时长（刻）。 */
     const rockclimbStumble = 0.7;
@@ -34,44 +20,19 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 在落点周围把最上一层地表蹬成粗土，到期原方块回来；返回实际蹬翻的格数。 */
-    function rockclimbScuff(world: CombatWorld, point: CombatPoint, cells: number, ticks: number): number {
-        const placed: any[] = [];
-        const limit = Math.max(3, Math.round(cells));
-        const baseY = Math.floor(point.y()), centreX = Math.floor(point.x()), centreZ = Math.floor(point.z());
-        for (let dx = -2; dx <= 2 && placed.length < limit; dx++) {
-            for (let dz = -2; dz <= 2 && placed.length < limit; dz++) {
-                if (dx * dx + dz * dz > 5) continue;
-                const x = centreX + dx, z = centreZ + dz;
-                for (let dy = 1; dy >= -3; dy--) {
-                    const y = baseY + dy;
-                    const block = world.block(WorldCombat.point(x, y, z));
-                    if (block === null) break;
-                    const id = String(block.id());
-                    if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                    const above = world.block(WorldCombat.point(x, y + 1, z));
-                    const over = above === null ? "" : String(above.id());
-                    if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
-                        placed.push({ x: x, y: y, z: z, block: "minecraft:coarse_dirt" });
-                    break;
-                }
-            }
-        }
-        if (!placed.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: placed, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return placed.length;
-    }
+    const rockclimbGrip="world_combat:rockclimb_grip";
+    WorldCombat.effect(rockclimbGrip,1,100,"action",json=>json,EffectProtocols.unchanged);
+    WorldCombat.effectHandler(rockclimbGrip,"start",effect=>effect.world().attribute(effect.target(),"minecraft:generic.gravity",-1,"add_multiplied_total"));
+    WorldCombat.effectHandler(rockclimbGrip,"operation:world_combat:dispel",effect=>effect.end());
 
     define({
         freeMovement: true,
         id: rockclimbId,
         cooldownParameter: "recharge",
         name: "Rock Climb",
-        description: "蹬地攀上、整个身体越过地面砸向目标：落地那一下很重，可能把目标撞得混乱；落点一圈内的敌人各挨一记，地表被蹬出一小片土痕。命中只有 85，扑偏是常事。",
+        description: "先短冲到真实壁面，再在冲程和攀升高度内向上攀；脚底越过墙沿且身体通得过才翻顶。顶棚会停攀，平地作一次低扑；只在身体真正接触敌人时重击并可能混乱。",
         uses: ["贴身的一次重扑", "越过一小段距离砸进敌群", "用落地范围一次撞到两三个"],
-        kind: "enemy",
+        kind: "aim",
         range: 6,
         maxRange: 10,
         prepare: 12,
@@ -82,7 +43,7 @@ namespace PokemonSkills {
         defaults: { vault: false, ai: { maxChase: 11, finish: true, crowd: false } },
         fields: [flag("vault", "跃攀")],
         indicator: function (config, pokemon) {
-            return { radius: p(rockclimbId, "reach", pokemon) + p(rockclimbId, "impactRadius", pokemon), geometry: "line", style: "impact", color: 0x9A6B3F,
+            return { radius: p(rockclimbId, "reach", pokemon), geometry: "line", style: "impact", color: 0x9A6B3F,
                 label: config && config.vault === true ? "攀岩·跃攀" : "攀岩·贴地扑" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -92,7 +53,7 @@ namespace PokemonSkills {
                 recover: Math.round(p(rockclimbId, "aftercast", context)),
                 cooldown: Math.round(p(rockclimbId, "recharge", context)),
                 active: 0,
-                range: p(rockclimbId, "reach", context) + p(rockclimbId, "impactRadius", context)
+                range: p(rockclimbId, "reach", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -100,90 +61,51 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "crouch", vault: config && config.vault === true }));
             return prepare;
         },
-        execute: function (action, move, config, done) {
-            const world = action.world();
-            const actor = action.actor();
-            const origin = action.origin();
-            const power = p(rockclimbId, "ram", action);
-            const reach = p(rockclimbId, "reach", action);
-            const arc = p(rockclimbId, "arc", action);
-            const duration = Math.max(1, Math.round(p(rockclimbId, "leapTicks", action)));
-            const radius = p(rockclimbId, "impactRadius", action);
-            const spread = p(rockclimbId, "spread", action);
-            const chance = Math.max(0.02, Math.min(0.9, p(rockclimbId, "confuseChance", action)));
-            const daze = Math.max(40, Math.round(p(rockclimbId, "dazeTicks", action)));
-            const fumblePct = Math.round(Math.max(0.05, Math.min(0.9, p(rockclimbId, "fumble", action))) * 100);
-            const scuffCells = Math.round(p(rockclimbId, "scuffCells", action));
-            const scuffTicks = Math.round(p(rockclimbId, "scuffTicks", action));
-            const motes = Math.max(10, Math.round(p(rockclimbId, "motes", action)));
-            const maxTargets = Math.max(1, Math.round(p(rockclimbId, "maxTargets", action)));
-            const scale = Math.max(0.6, Math.min(2.2, radius / 1.0));
-            const intensity = Math.max(0.6, Math.min(2.4, power / 90));
-            const target = action.target();
-
-            let heading = aim(action);
-            heading = WorldCombat.point(heading.x(), 0, heading.z());
-            if (heading.length() < 1e-3) heading = WorldCombat.point(0, 0, 1);
-            const aimed = NativeSemantics.aim(action, move, heading.unit(), spread);
-            let direction = WorldCombat.point(aimed.x(), 0, aimed.z());
-            direction = direction.length() < 1e-3 ? heading.unit() : direction.unit();
-
-            let tick = 0, previousVertical = 0;
-            sound(action, "minecraft:entity.ravager.roar");
-            WorldFeedback.emit(world, rockclimbScene, 1, origin,
-                { moment: "leap", direction: [direction.x(), direction.y(), direction.z()], reach: reach, arc: arc,
-                    motes: motes, scale: scale, intensity: intensity }, 60);
-
-            function land(current: CombatAction): void {
-                const scope = current.world();
-                const body = scope.observe(actor);
-                const point = body !== null ? body.position() : current.origin();
-                let hits = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, radius, { below: 1.6, above: 2.8 }),
-                    function (victim, facts) {
-                        if (hits >= maxTargets) return;
-                        const landed = hurt(current, victim, rockclimbId, power, { damage: damageSpec(rockclimbId, "ram"), contact: true });
-                        hits++;
-                        if (landed) {
-                            WorldFeedback.emit(scope, rockclimbScene, 1, facts.position(),
-                                { moment: "slam", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 26);
-                            if (scope.valid(victim) && scope.random() < chance) rockclimbDaze(scope, victim, facts.position(), daze, fumblePct);
-                        }
-                    });
-                const scuffed = rockclimbScuff(scope, point, scuffCells, scuffTicks);
-                WorldFeedback.emit(scope, rockclimbScene, 1, point,
-                    { moment: "crater", cells: scuffed, radius: radius, motes: motes, scale: scale }, 30);
-                if (hits > 0) {
-                    sound(current, "minecraft:item.mace.smash_ground");
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), rockclimbHitText, [hits], 26);
-                } else {
-                    WorldFeedback.emit(scope, rockclimbScene, 1, point, { moment: "miss", motes: motes, scale: scale }, 24);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), rockclimbMissText, [], 24);
+        execute:function(action,move,config,done){
+            const world=action.world(),actor=action.actor(),first=world.observe(actor);if(!first){done(action);return;}
+            const reach=p(rockclimbId,"reach",action),arc=p(rockclimbId,"arc",action),duration=Math.max(1,Math.round(p(rockclimbId,"leapTicks",action)));
+            const power=p(rockclimbId,"ram",action),chance=p(rockclimbId,"confuseChance",action),daze=Math.round(p(rockclimbId,"dazeTicks",action)),fumble=Math.round(p(rockclimbId,"fumble",action)*100),motes=p(rockclimbId,"motes",action);
+            const direction=WorldGeometry.flatUnit(NativeSemantics.aim(action,move,WorldGeometry.flatUnit(aim(action)),p(rockclimbId,"spread",action)));
+            const scenes=WorldFeedback.actionScenes(rockclimbScene);let phase="approach",age=0,used=0,crest=0,grip=0,ended=false;
+            const base=first.boundsMin().y(),height=arc,maximumTicks=duration+Math.ceil(height/.3)+4;
+            function finish(current:CombatAction):void{if(ended)return;ended=true;if(grip)current.world().operation(grip,"world_combat:dispel","{}");scenes.finish(current,done);}
+            function contact(current:CombatAction,hit:CombatImpact):void{
+                const scope=current.world(),target=hit.target();if(target&&scope.valid(target)&&!scope.friendly(target)){
+                    const landed=impact(current,hit,rockclimbId,power,{damage:damageSpec(rockclimbId,"ram"),contact:true});
+                    WorldFeedback.emit(scope,rockclimbScene,1,hit.position(),{moment:"slam",target:String(target.ref()),motes:motes,scale:1,intensity:power/90},20);
+                    if(landed&&scope.valid(target)&&scope.random()<chance)rockclimbDaze(scope,target,hit.position(),daze,fumble);
                 }
-                done(current);
+                finish(current);
             }
-
-            function advance(current: CombatAction): void {
-                const scope = current.world();
-                const local = scope.observe(actor);
-                if (local === null) { done(current); return; }
-                tick++;
-                const fraction = tick / duration;
-                const vertical = Math.sin(fraction * Math.PI) * arc;
-                const horizontal = reach / duration;
-                const moved = scope.displace(actor,
-                    WorldCombat.point(direction.x() * horizontal, vertical - previousVertical, direction.z() * horizontal));
-                previousVertical = vertical;
-                if (tick >= duration || moved < 0.02) { land(current); return; }
-                WorldFeedback.keep(scope, "rockclimb:leap:" + String(actor.ref()), rockclimbScene, 1, local.position(),
-                    { moment: "air", direction: [direction.x(), direction.y(), direction.z()], arc: arc, scale: scale, intensity: intensity }, 8);
-                current.after(1, advance);
+            function step(current:CombatAction):void{
+                const scope=current.world(),body=scope.observe(actor);if(!body||++age>maximumTicks||used>=reach){finish(current);return;}
+                const from=current.origin(),feet=WorldCombat.point(from.x(),body.boundsMin().y()+.12,from.z()),probeDistance=body.width()/2+.45;
+                const wall=scope.clipBlocks(feet,feet.plus(direction.scale(probeDistance)));
+                let delta:CombatPoint;
+                if(phase==="climb"){
+                    if(body.boundsMin().y()-base>=height-.02){finish(current);return;}
+                    if(wall&&!wall.blocked()){phase="crest";crest=0;}
+                }
+                if(phase==="climb")delta=WorldCombat.point(0,Math.min(.3,height-(body.boundsMin().y()-base),reach-used),0);
+                else if(phase==="crest")delta=direction.scale(Math.min(.35,reach-used));
+                else delta=direction.scale(Math.min(reach/duration,reach-used)).plus(WorldCombat.point(0,age===1?Math.min(.3,arc):0,0));
+                const swept=sweepStep(current,delta,.01);used+=swept.moved;
+                if(swept.hit.hitEntity()){contact(current,swept.hit);return;}
+                const now=scope.observe(actor);if(!now){finish(current);return;}
+                if(phase==="approach"&&swept.hit.blocked()){
+                    const actual=scope.clipBlocks(now.position(),now.position().plus(direction.scale(probeDistance)));
+                    if(!actual||!actual.blocked()||actual.blockFace()==="up"||actual.blockFace()==="down"){finish(current);return;}
+                    phase="climb";grip=current.effect(rockclimbGrip,actor,"{}",maximumTicks);scope.motion(actor,WorldCombat.point(0,0,0),false);
+                }else if(swept.hit.blocked()||swept.moved<.01){finish(current);return;}
+                if(phase==="climb"&&wall&&wall.blocked()){
+                    WorldFeedback.emit(scope,rockclimbScene,1,wall.position(),{moment:"grip",point:[wall.position().x(),wall.position().y(),wall.position().z()],motes:2},Math.min(20,p(rockclimbId,"scuffTicks",current)));
+                }
+                const after=current.origin();scenes.show(current,"route",after,{moment:"route",path:[[from.x(),from.y(),from.z()],[after.x(),after.y(),after.z()]],motes:motes});
+                if(phase==="crest"&&++crest>=3){finish(current);return;}current.after(1,step);
             }
-
-            advance(action);
+            action.releaseTarget();step(action);
         }
     });
-
 
     // 混乱存续期：低密度的飞鸟与土点每 20 刻续期，让出本体视线。
     WorldCombat.on("world_combat:move_rockclimb/linger", "world_combat:mob_effect_tick", "", function (event) {

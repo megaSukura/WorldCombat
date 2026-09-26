@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.chloroblast.summary": "把全身积蓄的叶绿素一次放尽，朝身前喷成一整片扇形爆震：罩住的敌人各挨一下、越远越轻，自己按放出的力量损失生命。",
+  "worldcombat.skill.chloroblast.summary": "朝任意方向或世界点把全身积蓄的叶绿素喷成一整片扇形爆震：罩住的敌人各挨一下、越近越重，也能空放；自己按放出的力量损失生命。",
   "worldcombat.skill.chloroblast.description.0": "扇形造成约 %1$s 点草属性特殊伤害，半径 %2$s 格、张角 %3$s 度，罩住扇形内视线畅通的所有敌人。",
   "worldcombat.skill.chloroblast.description.1": "扇形边缘相对中心丢掉 %1$s 的力量；出手时按最大生命的 %2$s 倍自损，与是否命中无关。",
   "worldcombat.skill.chloroblast.burst.on": "爆散式：张角 ×1.35、几乎铺满半个身前，能一次罩住更散的一群，代价是半径更短、威力更轻。",

@@ -86,6 +86,15 @@ const FurycutterDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.05, 0.18],
                     lifetime: [8, 16], size: [0.12, 0.02],
                     color: 0xC8E46A, alpha: [0.95, 0], light: "full", bloom: 0.45, maxParticles: 40
+                },
+                {
+                    name: "tally", bind: "source", offset: [0, 0.55, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    burst: { count: { data: "cuts", fallback: 2 }, at: 0 },
+                    shape: { kind: "line", length: 0.34 },
+                    direction: "up", speed: [0, 0], spread: 0,
+                    lifetime: [10, 18], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xEAF6B8, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 24
                 }
             ]
         },

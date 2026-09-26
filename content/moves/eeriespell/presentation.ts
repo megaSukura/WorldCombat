@@ -112,6 +112,28 @@ const EerieSpellDefinition: ParticleDefinition = {
                 }
             ]
         },
+        interrupt: {
+            duration: 24,
+            exit: { stop: 6, drain: 20 },
+            emitters: [
+                {
+                    name: "gap_arc", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: 1 }, shape: { kind: "arc", radius: 0.5, arcDegrees: 200 },
+                    direction: "up", speed: [0.0, 0.03],
+                    lifetime: [8, 16], size: [0.30, 0.08],
+                    color: 0xB79BFF, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 6
+                },
+                {
+                    name: "gap_snap", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.05, 0.14],
+                    lifetime: [5, 10], size: [0.07, 0.01],
+                    color: 0xE0D6FF, alpha: [0.85, 0], light: "full", maxParticles: 16
+                }
+            ]
+        },
         fizzle: {
             duration: 24,
             exit: { stop: 6, drain: 18 },

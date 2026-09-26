@@ -2,16 +2,38 @@
  * 挑衅 的伙伴 AI 用途：这是这招自己的一套出手计划，不是共享控制位的随手一放。
  *
  * 什么局面有意义：有可见威胁、目标还没被挑衅、它在 ai.maxChase 以内，而且要有一条通视直线——
- *   这句话喊不进墙后。ai.opening=正在出手时（默认）只在目标正攻击自己或主人、或自己刚被打过时喊；
- *   =随时时见威胁就喊，当纯扰动手段。
+ *   这句话喊不进墙后。出手时机（ai.opening=正在出手时，默认）先看两点实际收益：
+ *   目标招式表里有变化招式值得封锁，或它正咬着别的队友、可以把注意拉过来；纯普攻又已经盯着自己的
+ *   敌人不浪费这一手（自己刚被打过时仍会以骚扰收尾）。=随时时见威胁就喊，当纯扰动手段。
  * 对谁出手：当前威胁；带着共享身份 taunt 的目标会被跳过，不重复喊。
- * 候选之间怎么排：正在蓄势（没在攻击你）的目标优先——挑衅本来就是压住它的准备动作；
- *   已经在挥拳的目标排在后面。priority 仍为 0 时可由共享顺序兜底选中。
+ * 候选之间怎么排：有变化招式可封锁的目标优先（68），其次是被它咬住的队友要救（60），其余 45/52。
  * 够不到怎么办：reach 就是本招射程（由特攻与体型决定），accepts 不按距离硬拒；伙伴先走近到能通视的射程再喊。
- * 放完之后：目标只能伤害招，after 让小身板后退开一步，别停在被点着的敌人刀口上。
+ * 放完之后：命中会附加一次 world.target 仇恨请求，能转向的敌人把注意交给施法者；after 让小身板后退开一步。
  * 配置 manner（讥讽／怒斥）改变射程与怒火时长；ai.maxChase、ai.opening 决定追多远、什么时候喊。
  */
 namespace PokemonSkills {
+    /** 只读事实：目标招式表里的变化招式数量；非宝可梦读不到招式返回 -1（未知，不臆造封锁价值）。 */
+    CompanionBehavior.registerFact("world_combat:move_taunt/status", function (access, actor, _argument) {
+        if (String(actor.domain()) !== "cobblemon") return -1;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        if (pokemon === null) return -1;
+        let count = 0;
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const move = pokemon.move(slot);
+            if (move !== null && String(move.category()) === "status") count++;
+        }
+        return count;
+    });
+    function tauntStatusMoves(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const value = CompanionBehavior.fact<number>(context, "world_combat:move_taunt/status", target);
+        return value === null || value === undefined ? -1 : Number(value);
+    }
+    /** 目标正咬着施法者以外的人（队友或主人）：这是把注意拉走的真实机会。 */
+    function tauntRedirects(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context);
+        return !!target.attacking && target.attacking !== self.ref;
+    }
+
     function tauntWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
@@ -23,8 +45,7 @@ namespace PokemonSkills {
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > ceiling) return false;
         if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
         if (CompanionBehavior.ai<string>(item, "opening", "opening") !== "opening") return true;
-        const owner = context.facts.owner;
-        return target.attacking === self.ref || !!owner && target.attacking === owner.ref || self.hurtAgo < 40;
+        return tauntStatusMoves(context, target) > 0 || tauntRedirects(context, target) || self.hurtAgo < 40;
     }
     function tauntApproach(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number[] | null {
         const access = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
@@ -63,8 +84,10 @@ namespace PokemonSkills {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (target === null || !tauntWants(context, item, target)) return 0;
+            if (tauntStatusMoves(context, target) > 0) return 68;
+            if (tauntRedirects(context, target)) return 60;
             const self = CompanionBehavior.source(context);
-            return target.attacking === self.ref ? 45 : 62;
+            return target.attacking === self.ref ? 45 : 52;
         },
         approach: function (context, _item, target) { return tauntApproach(context, target); },
         after: function (context, _item, _target, progress) { return tauntAfter(context, progress); }

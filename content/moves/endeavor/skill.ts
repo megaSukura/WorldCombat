@@ -6,18 +6,18 @@
  * 自己更健康时量尺为零，扑上去也只擦出一记空响（flat）——这招只有在「你落后」时才有形状。
  * 越身式撞实后从对手身侧穿过去换位，代价是几乎不顶开。
  *
+ * 选取：`kind: "aim"`——方向、世界点或敌人辅助瞄准都行，允许空扑；提交时不要求存在敌人。
+ * 命中后显示的是原生受伤入口实际扣掉的生命，被免疫、护盾或伤害上限挡下时显示「被挡」，没有虚假平血。
+ * 碰撞半径只由身体/技能半径决定；推进的只剩「几乎没动」这种真卡住才停（minimumMove）。
+ *
  * 三幕：windup（brace + measure）→ dash → equalize / flat。提交后才触碰世界。
  */
 namespace PokemonSkills {
     const endeavorScene = "world_combat:move_endeavor";
     const endeavorHitText = "world_combat.move.endeavor.text.hit";
     const endeavorFlatText = "world_combat.move.endeavor.text.flat";
+    const endeavorBlockText = "world_combat.move.endeavor.text.blocked";
     const endeavorMissText = "world_combat.move.endeavor.text.miss";
-
-    function endeavorAim(action: CombatAction): CombatPoint {
-        const wanted = action.targetPosition().minus(action.origin());
-        return wanted.length() < 0.01 ? action.direction() : wanted.unit();
-    }
 
     function endeavorVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
 
@@ -27,7 +27,7 @@ namespace PokemonSkills {
         name: "Endeavor",
         description: "扑身拉平：把对手当前生命拽下来到你这条血线上，伤害正好是「对手生命 − 自己生命」。自己越残、对手越健康，这一下越重；自己更健康时它一分伤害也没有。越身式扑得更远、撞后穿过对手换位，代价是几乎不顶开。",
         uses: ["把高血的对手拉低到自己这条血线", "残血时反打一记大的", "越身换位躲开正面"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.5,
         maxRange: 4.6,
         prepare: 8,
@@ -54,11 +54,9 @@ namespace PokemonSkills {
             action.present("world_combat:move_endeavor:brace", endeavorScene, 1, action.origin(), JSON.stringify({ moment: "brace" }));
             const target = action.target();
             if (target !== null) {
-                const body = action.sense().observe(target);
                 action.present("world_combat:move_endeavor:measure", endeavorScene, 1, action.origin(), JSON.stringify({
                     moment: "measure", target: String(target.ref()),
-                    path: [String(action.actor().ref()), String(target.ref())],
-                    gap: body === null ? 0 : Math.max(0, body.health() - action.sense().observe(action.actor())!.health())
+                    path: [String(action.actor().ref()), String(target.ref())]
                 }));
             }
             return prepare;
@@ -71,8 +69,7 @@ namespace PokemonSkills {
             const speed = p("endeavor", "lungeSpeed", action);
             const radius = p("endeavor", "collisionRadius", action);
             const shove = p("endeavor", "shove", action);
-            const stride = p("endeavor", "maximumStride", action);
-            const direction = endeavorAim(action);
+            const direction = aim(action);
             const start = world.observe(self);
             if (start === null) { movementScenes.finish(action, done); return; }
             let travelled = 0, settled = false;
@@ -98,31 +95,33 @@ namespace PokemonSkills {
                 const scope = current.world();
                 if (remaining <= 0.02 || left <= 0) { settle(current, false, current.origin()); return; }
                 const moved = scope.displace(current.actor(), direction.scale(Math.min(remaining, speed * 0.7)));
-                if (moved < p("endeavor", "maximumStride", current)) { settle(current, false, current.origin()); return; }
+                if (moved < p("endeavor", "minimumMove", current)) { settle(current, false, current.origin()); return; }
                 current.after(1, function (next: CombatAction) { slide(next, remaining - moved, left - 1); });
             }
 
             function strike(current: CombatAction, target: CombatActor, at: CombatPoint): void {
                 const scope = current.world();
                 const damage = p("endeavor", "damage", current);
-                const body = scope.observe(target);
-                const gap = body === null ? 0 : Math.max(0, body.health() - scope.observe(current.actor())!.health());
-                const intensity = body === null ? 0 : Math.min(2.6, 0.4 + gap / Math.max(1, body.maxHealth()) * 3.2);
-                const landed = endeavorRawHit(current, target, damage, true);
-                if (landed) {
+                const actual = endeavorRawHit(current, target, damage, true);
+                if (actual > 0) {
+                    const body = scope.observe(target);
+                    const maximum = body === null ? 0 : body.maxHealth();
+                    const intensity = maximum <= 0 ? 0.6 : Math.min(2.6, 0.4 + actual / maximum * 3.2);
                     WorldFeedback.emit(scope, endeavorScene, 1, at,
-                        { moment: "equalize", target: String(target.ref()), gap: gap, intensity: intensity,
+                        { moment: "equalize", target: String(target.ref()),
                             count: Math.round(14 + intensity * 26), scale: radius / 0.45 }, 28);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), endeavorHitText, [Math.round(gap)], 26);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), endeavorHitText, [Math.round(actual)], 26);
                     sound(current, "cobblemon:impact.fighting");
                     if (vault) { slide(current, length * 0.6, 8); return; }
                     if (scope.valid(target)) scope.displace(target, direction.scale(shove));
                     settle(current, false, at);
                     return;
                 }
+                // 伤害为零：要么是彼此血量已持平（flat），要么是属性免疫/护盾/伤害上限把这一记挡下（blocked）。
+                const blocked = damage > 0.01;
                 WorldFeedback.emit(scope, endeavorScene, 1, at,
-                    { moment: "flat", target: String(target.ref()), gap: gap, scale: radius / 0.45 }, 22);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), endeavorFlatText, [], 22);
+                    { moment: blocked ? "blocked" : "flat", target: String(target.ref()), scale: radius / 0.45 }, 22);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), blocked ? endeavorBlockText : endeavorFlatText, [], 22);
                 settle(current, false, at);
             }
 
@@ -132,14 +131,14 @@ namespace PokemonSkills {
                 const step = Math.min(speed, Math.max(0, length - travelled));
                 if (step <= 0.001) { settle(current, true, origin); return; }
                 const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius + stride), hit = swept.hit;
+                const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target)) { strike(current, target, hit.position()); return; }
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < p("endeavor", "maximumStride", current) || travelled >= length) {
+                if (hit.blocked() || moved < p("endeavor", "minimumMove", current) || travelled >= length) {
                     settle(current, true, origin);
                     return;
                 }

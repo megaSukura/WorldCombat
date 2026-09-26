@@ -1,15 +1,15 @@
 /**
  * 水炮 / hydropump 的客户端表现。
  *
- * 一句话：身前后翻涌起一大团水（越收越满），随后整柱轰出去、拖着一堵宽水墙，命中处炸开巨大的水花，
- *   水花沿着落点漫开一圈、把落地点周围浇得湿亮；被浇透的人身上持续滴水。
- * 色相家族：深水蓝（0x2C86C8）与泡沫白（0xEAF9FF）；大面积低饱和的水墙 + 小面积高亮的水花核心。
- * 拍子：起 charge（翻涌蓄水）→ 轰 torrent（整柱 + 宽尾）→ 击 burst（大爆炸水花）→ 漫 douse／flood（漫开一圈）
- *   ／ 空 dud（打到硬面只剩水响）。
- * 范围：flood 的地面环用作者参考半径 2.4 格、按 `data.scale`（回溅半径 / 2.4）缩放，与服务端判定同一圈；
- *   玩家看水花铺到哪，就知道站哪会被浇到。
- * 运动：水柱沿准线慢而重地推进，水花向外炸开后受重力回落，地面一圈向外漫。
- * 数：`data.volume`（特攻＋等级换算的水量点）绑定蓄水与命中各层的发射量，`data.scale` 放大整幕，
+ * 一句话：身前后翻涌起一大团水（越收越满），随后从喷口到实际受阻点始终连着一道高压水柱、持续 6 刻，
+ *   撞上墙或身体就在那一点炸开一大蓬水花；被浇透的人身上滴水。
+ * 色相家族：深水蓝（0x2C86C8）与泡沫白（0xEAF9FF）；大面积低饱和的水柱 + 小面积高亮的水花核心。
+ * 拍子：起 charge（翻涌蓄水）→ 轰 column（喷口连到端点的整柱）→ 击 burst（命中大开）→
+ *   漫 douse（漫灌溅开一圈）／ 空 dud（撞硬面同点溅水）。
+ * 范围：column 直接读服务端每刻传的 `data.path`——两个顶点就是喷口与真实受阻点，画到哪里判定就到哪里；
+ *   打到墙与打到身体分别由 burst／dud 呈现，玩家看水柱断在哪就知道谁挡住了它。
+ * 运动：水柱粒子沿 `data.path` 由喷口指向端点，速度读 `data.flow`（水柱流速，由速度数据换算）。
+ * 数：`data.volume`（特攻＋等级换算的水量点）绑定各层发射量，`data.scale` 放大整幕（服务端按回溅半径换算），
  *   `data.intensity`（洪流威力 / 110）决定亮度与水花大小——两只精灵放同一招，画面不同。
  */
 const HydropumpDefinition: ParticleDefinition = {
@@ -37,35 +37,35 @@ const HydropumpDefinition: ParticleDefinition = {
                 }
             ]
         },
-        torrent: {
+        column: {
             duration: 0,
             exit: { drain: 16 },
             emitters: [
                 {
-                    name: "head", bind: "projectile", fit: "none",
+                    name: "head", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/water/waterjet_head",
-                    trail: { minDistance: 0.28 }, rate: 40,
-                    direction: "velocity", speed: [0.0, 0.03],
-                    lifetime: [6, 11], size: [0.5, 0.3],
-                    color: 0x2C86C8, alpha: [0.95, 0], light: "full", maxParticles: 44
+                    rate: { data: "volume", fallback: 70 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: { data: "flow", fallback: 0.4 }, spread: 6,
+                    lifetime: [6, 11], size: [0.56, 0.34],
+                    color: 0x2C86C8, alpha: [0.95, 0], light: "full", maxParticles: 160
                 },
                 {
-                    name: "wall", bind: "projectile", fit: "none",
+                    name: "wall", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
-                    trail: { minDistance: 0.25 }, rate: 34,
-                    direction: "velocity", speed: [0.0, 0.05], spread: 22,
+                    rate: { data: "volume", fallback: 54 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.02, 0.09], spread: 20,
                     drag: 0.93,
-                    lifetime: [7, 13], size: [0.34, 0.06],
-                    color: 0xDCF2FF, alpha: [0.75, 0], light: "world", maxParticles: 120
+                    lifetime: [7, 13], size: [0.4, 0.06],
+                    color: 0xDCF2FF, alpha: [0.8, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "droplets", bind: "projectile", fit: "none",
+                    name: "droplets", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    trail: { minDistance: 0.35 }, rate: 20,
-                    direction: "velocity", speed: [0.01, 0.08], spread: 30,
+                    rate: 26, shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.03, 0.14], spread: 34,
                     gravity: 0.05, drag: 0.94,
-                    lifetime: [7, 13], size: [0.06, 0.02],
-                    color: 0xEAF9FF, alpha: [0.7, 0], light: "full", maxParticles: 80
+                    lifetime: [7, 13], size: [0.08, 0.02],
+                    color: 0xEAF9FF, alpha: [0.75, 0], light: "full", maxParticles: 140
                 }
             ]
         },
@@ -128,43 +128,19 @@ const HydropumpDefinition: ParticleDefinition = {
                 }
             ]
         },
-        flood: {
-            duration: 30,
-            exit: { stop: 16, drain: 20 },
-            emitters: [
-                {
-                    name: "pool", bind: "point", fit: "none", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    shape: { kind: "ring", radius: 2.4 },
-                    burst: { count: { data: "volume", fallback: 60 }, at: 0 },
-                    direction: "outward", speed: [0.03, 0.16], spread: 8,
-                    lifetime: [10, 18], size: [0.24, 0.05], sizeMode: "index",
-                    color: 0x2C86C8, alpha: [0.7, 0], light: "world", maxParticles: 150
-                },
-                {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.18, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    shape: { kind: "ring", radius: 2.4 },
-                    burst: { count: 22, at: 0 },
-                    direction: "outward", speed: [0.04, 0.2], spread: 6,
-                    lifetime: [8, 14], size: [0.34, 0.08],
-                    color: 0xEAF9FF, alpha: [0.55, 0], light: "full", maxParticles: 60
-                }
-            ]
-        },
         dud: {
             duration: 16,
             exit: { stop: 7, drain: 11 },
             emitters: [
                 {
-                    name: "spent", bind: "point", fit: "none", offset: [0, 0.16, 0],
+                    name: "spent", bind: "point", fit: "none", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    burst: { count: 16, at: 0 },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.05, 0.2], spread: 26,
+                    burst: { count: { data: "volume", fallback: 24 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.05, 0.22], spread: 42,
                     gravity: 0.06, drag: 0.9,
                     lifetime: [9, 15], size: [0.14, 0.03],
-                    color: 0x2C86C8, alpha: [0.7, 0], light: "world", maxParticles: 36
+                    color: 0x2C86C8, alpha: [0.7, 0], light: "world", maxParticles: 60
                 }
             ]
         }

@@ -37,6 +37,7 @@ namespace PokemonSkills {
     export const airslashHitText = "world_combat.move.airslash.text.hit";
     export const airslashMissText = "world_combat.move.airslash.text.miss";
     export const airslashFlinchText = "world_combat.move.airslash.text.flinch";
+    export const airslashWallText = "world_combat.move.airslash.text.wall";
     /** 表现里刃身判定的参考半径（格）；服务端传 scale = 实际半径 / 这个值。 */
     export const airslashReference = 0.36;
 

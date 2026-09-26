@@ -6,9 +6,9 @@
  *
  * 幕：
  *   起（windup，提交前）：可选的极短攒电预告（准备为 0 时不播，直接出手）。
- *   击（snap → jab / blocked / whiff）：提交后瞬发。`action.trace` 沿直线做权威判定；线上的第一个非友方
- *       被扎中，按 `jab` 结算，对已麻目标更狠并把麻痹补到 `linger`；未麻则按 `numbChance` 掷一次。
- *       友方替它把电流引走，只有墙时打在墙面散掉、什么也不发生。
+ *   击（snap → jab / blocked / whiff）：提交后瞬发。`action.trace(..., true)` 沿直线做权威判定；线端取真实碰撞点，
+ *       第一个实体（含同伴）决定结果：敌人被扎中，按实际命中者结算 `jab`（对已麻目标更狠并把麻痹补到 `linger`，
+ *       未麻则按 `numbChance` 掷一次），同伴把电流引走，只有墙时打在墙面散掉、什么也不发生。
  *
  * 反制：拉开到射程之外（本族最短），或切断视线；电属性对麻痹免疫（共享默认规则）。
  */
@@ -45,7 +45,7 @@ namespace PokemonSkills {
         name: "Thunder Shock",
         description: "一道贴身短促的电刺，瞬间扎上去。射程很近、几乎不占节拍；对已经麻痹的目标更狠，并把麻痹续长一截。电属性对麻痹免疫。",
         uses: ["近身压制的一记快刺", "对已被麻住的目标追打", "在近身缠斗里随时补一下"],
-        kind: "enemy",
+        kind: "aim",
         range: 4,
         maxRange: 6,
         prepare: 3,
@@ -82,50 +82,54 @@ namespace PokemonSkills {
             const self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
-            const target = action.target();
-            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
-            const aim = targetBody !== null ? targetBody.position() : action.targetPosition();
+            const aimPoint = action.targetPosition();
             const radius = p(thundershockId, "radius", action);
-            const power = p(thundershockId, "jab", action);
             const chance = p(thundershockId, "numbChance", action);
             const numbTicks = Math.max(20, Math.round(p(thundershockId, "numbTicks", action)));
             const linger = Math.max(20, Math.round(p(thundershockId, "linger", action)));
             const arcs = Math.max(3, Math.round(p(thundershockId, "arcs", action)));
-            const already = target !== null && world.valid(target) && CombatStatus.has(world, target, "paralysis");
-            const intensity = Math.max(0.6, Math.min(1.8, power / 34));
             const scale = Math.max(0.6, Math.min(1.6, radius / 0.3));
             const bend = Math.max(0.05, Math.min(0.28, radius * 0.7));
 
+            // 权威判定先行：线的第一个实体（含同伴阻挡）决定结果，末端取真实碰撞点。
+            const hit = action.trace(origin, aimPoint, radius, true);
+            const endpoint = hit.position();
+            const lander = hit.hitEntity() ? hit.target() : null;
+            const victim = lander !== null && !world.friendly(lander) && String(lander.key()) !== String(self.key()) ? lander : null;
+            const already = victim !== null && world.valid(victim) && CombatStatus.has(world, victim, "paralysis");
+            // 伤害目标上下文与 already 一样读实际被扎中者：已麻加成、首次麻痹都按它结算。
+            const scope = victim !== null ? withTarget(factContext(action), victim) : factContext(action);
+            const power = p(thundershockId, "jab", scope);
+            const intensity = Math.max(0.6, Math.min(1.8, power / 34));
+
             sound(action, "cobblemon:move.thundershock.actor");
             WorldFeedback.emit(world, thundershockScene, 1, origin,
-                { moment: "snap", path: thundershockArc(origin, aim, 5, bend), arcs: arcs, intensity: intensity, scale: scale }, 20);
+                { moment: "snap", path: thundershockArc(origin, endpoint, 5, bend), arcs: arcs, intensity: intensity, scale: scale }, 20);
 
-            const hit = action.trace(origin, aim, radius);
-            const landed = hit.hitEntity() ? hit.target() : null;
-            if (landed !== null && !world.friendly(landed) && String(landed.key()) !== String(self.key())) {
-                const at = world.observe(landed);
-                const point = at === null ? aim : at.position();
-                const dealt = hurt(action, landed, thundershockId, power, { damage: damageSpec(thundershockId, "jab") });
-                let marked = false;
+            if (victim !== null) {
+                const at = world.observe(victim);
+                const point = at === null ? endpoint : at.position();
+                const dealt = hurt(action, victim, thundershockId, power, { damage: damageSpec(thundershockId, "jab") });
+                let marked = false, topped = false;
                 if (dealt) {
-                    if (already) CombatStatus.inflict(world, landed, "paralysis", linger);
-                    else if (world.random() < chance) marked = CombatStatus.inflict(world, landed, "paralysis", numbTicks);
+                    if (already) topped = CombatStatus.inflict(world, victim, "paralysis", linger);
+                    else if (world.random() < chance) marked = CombatStatus.inflict(world, victim, "paralysis", numbTicks);
                 }
                 WorldFeedback.emit(world, thundershockScene, 1, point,
-                    { moment: "jab", target: String(landed.ref()), sparks: Math.round((10 + power * 0.7) * (already ? 1.6 : 1)),
+                    { moment: "jab", target: String(victim.ref()), sparks: Math.round((10 + power * 0.7) * (already ? 1.6 : 1)),
                         arcs: arcs, scale: scale, intensity: already ? Math.min(2.2, intensity * 1.4) : intensity }, 24);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)),
                     already ? thundershockStimText : marked ? thundershockNumbText : thundershockHitText, [], 24);
-                if (marked || already) world.sound("cobblemon:status.nonvolatile.paralysis.actor", point, 14, "{}");
-            } else if (landed !== null) {
-                const at = world.observe(landed);
-                const point = at === null ? aim : at.position();
+                if (marked || topped) world.sound("cobblemon:status.nonvolatile.paralysis.actor", point, 14, "{}");
+            } else if (lander !== null) {
+                const at = world.observe(lander);
+                const point = at === null ? endpoint : at.position();
                 WorldFeedback.emit(world, thundershockScene, 1, point, { moment: "blocked", scale: scale }, 18);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.8, 0)), thundershockBlockedText, [], 20);
                 world.sound("minecraft:block.amethyst_block.resonate", point, 12, "{}");
             } else {
-                WorldFeedback.emit(world, thundershockScene, 1, hit.position(), { moment: "whiff", arcs: arcs, scale: scale }, 18);
-                WorldFeedback.text(world, hit.position().plus(WorldCombat.point(0, 0.6, 0)), thundershockWhiffText, [], 20);
+                WorldFeedback.emit(world, thundershockScene, 1, endpoint, { moment: "whiff", arcs: arcs, scale: scale }, 18);
+                WorldFeedback.text(world, endpoint.plus(WorldCombat.point(0, 0.6, 0)), thundershockWhiffText, [], 20);
             }
             done(action);
         }

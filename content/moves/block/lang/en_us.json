@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.block.summary": "Spreads its arms and raises an arc of iron barricade on the far side of the target, sealing its retreat: the wall shoves the target toward the user and pins it briefly, then keeps it penned between the wall and the user. The wall is short, can be jumped over or mined, and folds away when its time runs out.",
+  "worldcombat.skill.block.summary": "Spreads its arms and raises a short arc of barricade at a chosen enemy or patch of ground, sealing that retreat: the wall appears only in the cells it can really take, and obstructed cells leave gaps; only enemies actually touching the wall when it lands are shoved toward the user, pinned briefly and slowed. The wall is short, can be jumped over or mined, and folds away when its time runs out.",
   "worldcombat.skill.block.use.0": "Cut off a fleeing target for allies to finish",
   "worldcombat.skill.block.use.1": "Bar a doorway or a lane",
   "worldcombat.skill.block.use.2": "Press a charging thick target back into melee",
-  "worldcombat.skill.block.description.0": "Raises a barricade about %1$s blocks wide and %2$s blocks tall on the target's far side, about %3$s blocks away.",
-  "worldcombat.skill.block.description.1": "The barricade and the press last about %1$s; the slam roots the target in place for %2$s (it cannot move but can still act) and shoves it %3$s blocks toward the user.",
+  "worldcombat.skill.block.description.0": "Raises a barricade about %1$s blocks wide and %2$s blocks tall on the target's far side or at the chosen ground point; aimed at an enemy the wall stands about %3$s blocks away, aimed at the ground the arc's middle passes through the landing point.",
+  "worldcombat.skill.block.description.1": "The barricade and the press last about %1$s; the slam roots enemies touching the wall in place for %2$s (they cannot move but can still act) and shoves them %3$s blocks toward the user; targets not touching the wall are unaffected.",
   "worldcombat.skill.block.description.2": "The wall is built from about %1$s columns across %2$s degrees.",
   "worldcombat.skill.block.description.3": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.block.option.on": "Braced: wall height +1 block and press duration about x1.35, at the cost of a narrower arc (about x0.75), wind-up +3 ticks and cooldown +12 ticks - taller and longer, but slower and narrower.",
@@ -33,5 +33,5 @@
   "worldcombat.skill.block.preference.ai.leaveStation.help": "When on, the companion may leave its post to wall off a threat even under a hold order.",
   "world_combat.move.block.text.seal": "Retreat sealed for %1$s s",
   "effect.world_combat.block_penned": "Penned behind the barricade",
-  "worldcombat.skill.block.description.press": "While pressed, the target moves about 45%% slower; getting past the iron bars means going around, over them or mining through, and the barricade folds away when the press ends."
+  "worldcombat.skill.block.description.press": "The wall appears only in the cells it can really take: columns blocked by a body, by a non-air block or by protection fail and leave gaps. Enemies not touching the wall are neither shoved nor pressed. The barricade folds away when the press ends."
 }

@@ -29,7 +29,7 @@
   "worldcombat.skill.victorydance.preference.ai.maxChase.help": "威胁进入这个距离内才考虑开仪典；越大越早开始立冠。",
   "worldcombat.skill.victorydance.preference.ai.minGap": "贴身下限",
   "worldcombat.skill.victorydance.preference.ai.minGap.help": "威胁近于这个距离时不再起舞、直接攻击；调大更常在近身时放弃强化。",
-  "world_combat.move.victorydance.text.crowned": "凯旋 · 攻防速 +%1$s",
+  "world_combat.move.victorydance.text.crowned": "凯旋 · 攻 +%1$s / 防 +%2$s / 速 +%3$s",
   "world_combat.move.victorydance.text.rallied": "胜利延续 · 剩余 %1$s 秒",
   "world_combat.move.victorydance.text.faded": "凯旋落幕",
   "effect.world_combat.victorydance_crown": "凯旋"

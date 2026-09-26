@@ -13,6 +13,7 @@ import os from 'node:os';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
 import ts from 'typescript';
+import { loadContentManifest, resolvePackages } from './content-manifest.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const inputs = process.argv.slice(2).filter(value => !value.startsWith('--'));
@@ -25,7 +26,7 @@ const sides = [['sources', 'server'], ['clientSources', 'client'], ['startupSour
 const reservedTiming = ['prepare', 'recover', 'cooldown'];
 const reservedParameters = ['range', 'prepare', 'recover', 'cooldown'];
 
-// Shared packages only: other units may be mid-edit by their own authors and are never needed here.
+// Resolve only this author's declared graph. Dependencies provide context; diagnostics remain scoped to this unit.
 const sharedPackages = read(path.join(root, 'content/packs.json')).packages || {};
 const shared = sharedPackages;
 const config = ts.readConfigFile(path.join(root, 'tsconfig.json'), ts.sys.readFile);
@@ -40,20 +41,14 @@ const soundIds = new Set(fs.readFileSync(path.join(root, 'tools/data/sound-ids.t
 const soundFamilies = [...new Set([...soundIds].map(id => { const dot = id.indexOf('.'); return dot < 0 ? id : id.slice(0, dot); }))];
 const soundPattern = new RegExp('"((?:' + soundFamilies.map(escapeRegExp).join('|') + ')\\.[a-z0-9_.]+)"', 'g');
 function escapeRegExp(text) { return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-function closureOf(unit, errors) {
-  const chosen = [], visiting = new Set();
-  function include(id) {
-    if (chosen.includes(id)) return;
-    if (visiting.has(id)) { errors.push('dependency cycle at ' + id); return; }
-    const pkg = shared[id];
-    if (!pkg) { errors.push(`requires ${id}, which is not a shared package in content/packs.json (units depend on shared packages)`); return; }
-    if (unit.requires[id] && pkg.version !== unit.requires[id] && chosen.length === 0) errors.push(`requires ${id}@${unit.requires[id]} but the shared package is ${pkg.version}`);
-    visiting.add(id);
-    for (const dependency of Object.keys(pkg.requires || {})) include(dependency);
-    visiting.delete(id); chosen.push(id);
+function closureOf(unit, directory, errors) {
+  try {
+    const selected = loadContentManifest('content/packs.json', root, null, { units: [relative(directory)] });
+    Object.assign(sharedPackages, selected.packages);
+    return resolvePackages(selected, [unit.id]).filter(id => id !== unit.id);
+  } catch (error) {
+    errors.push(error.message); return [];
   }
-  for (const id of Object.keys(unit.requires || {})) include(id);
-  return chosen;
 }
 
 function typeCheck(unit, directory, closure, scenarioFile, errors) {
@@ -547,7 +542,7 @@ for (const input of inputs) {
     if (!file.startsWith(directory) || !local.endsWith('.ts') || !fs.existsSync(file)) errors.push(`${field}: ${local} is not a .ts file inside the unit`);
   }
   if (!errors.length) {
-    const closure = closureOf(unit, errors);
+    const closure = closureOf(unit, directory, errors);
     const scenarioFile = fs.existsSync(path.join(directory, 'scenario.ts')) ? path.join(directory, 'scenario.ts') : null;
     const serverFiles = (unit.sources || []).map(local => path.resolve(directory, local));
     const scenarios = { serverFiles, scenarioFile };

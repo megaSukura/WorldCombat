@@ -15,6 +15,10 @@
 const MinimizeDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        waiting: { exit: { stop: 0, drain: 8 }, emitters: [{ name: "space_wait", bind: "target", height: 1.1,
+            particle: "world_combat_core:cobblemon/generic/ring/smallring", rate: 2,
+            shape: { kind: "point" }, direction: "up", speed: 0.01, lifetime: 16,
+            size: [0.18, 0.22], color: 0xE0BA70, alpha: [0.5, 0], light: "world", maxParticles: 3 }] },
         curl: {
             duration: 12,
             exit: { stop: 4, drain: 10 },

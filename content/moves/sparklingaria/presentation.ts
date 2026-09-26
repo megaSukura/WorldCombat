@@ -2,15 +2,15 @@
  * 泡影的咏叹调 / sparklingaria 的客户端表现。
  *
  * 一句话：施法者在身前收拢一簇细气泡，随后歌声一起，一圈巨大的水泡从脚边整圈涨开、边涨边碎成细沫；
- * 被圈到的每个敌人身上再炸开一小簇气泡与一片水花；身上有灼伤的人在泡沫里亮起一圈向上的洗涤光泽，
- * 冰蓝的音符在身周缓缓上浮。
+ * 被圈到的每个敌人身上再炸开一小簇气泡与一片水花；身上有灼伤、被真实洗掉的人在泡沫里亮起一圈向上的
+ * 洗涤光泽、火星被泡包着熄灭，只有真的回复了血才再亮起恢复点，冰蓝的音符在身周缓缓上浮。
  * 色相家族：水青与近白（bigbubble / bubble / water_ripple / glowingsparkle_cyan）为主体，音符用低饱和的
  *   青白 note 贴图，不引入第二个色相。
- * 拍子：起（inhale 收泡）→ 爆（burst 整圈涨开、hit 逐人水花、wash 洗净光泽）→ 余（note 音符上浮）。
+ * 拍子：起（inhale 收泡）→ 爆（burst 整圈涨开、hit 逐人水花、wash 洗净/灭火、heal 真实回复）→ 余（note 音符上浮）。
  * 范围：burst 的水泡圈按 `data.scale`（波及半径 / 4.5）涨到机制半径，玩家一眼看出站在哪会被唱到。
- * 运动：水泡由中心向外整圈涨开；hit 的细沫向外炸开；wash 的光泽向上抽；note 的音符缓慢上浮。
+ * 运动：水泡由中心向外整圈涨开；hit 的细沫向外炸开；wash 的泡向内包住目标；heal 的光泽向上抽；note 的音符缓慢上浮。
  * 数：`data.bubbles`（气泡数量参数）决定整圈气泡的发射量，`data.count`（本击威力派生）决定每个受击者的细沫量，
- *   `data.intensity` 抬高亮度。
+ *   `data.intensity` 抬高亮度；heal 只在 `restored` 为真时由服务端发出，不谎报回血。
  */
 const SparklingariaDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -94,6 +94,28 @@ const SparklingariaDefinition: ParticleDefinition = {
             ]
         },
         wash: {
+            duration: 24,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "wrap", bind: "target", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/bubble/bubble",
+                    rate: 26, shape: { kind: "sphere", radius: 0.55 },
+                    direction: "inward", speed: [0.05, 0.18], spread: 14,
+                    lifetime: [10, 18], size: [0.12, 0.03],
+                    color: 0xBFEFFA, alpha: [0.75, 0], light: "world", maxParticles: 50
+                },
+                {
+                    name: "quench", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    rate: 14, shape: { kind: "sphere", radius: 0.45 },
+                    direction: "up", speed: [0.03, 0.12], spread: 12,
+                    lifetime: [7, 12], size: [0.1, 0.01],
+                    color: 0x8A6A50, alpha: [0.6, 0], light: "world", maxParticles: 34
+                }
+            ]
+        },
+        heal: {
             duration: 26,
             exit: { stop: 10, drain: 16 },
             emitters: [

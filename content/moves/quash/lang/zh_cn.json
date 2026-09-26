@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.quash.summary": "把一道压制之力砸向目标：打断它正在准备的动作，并在它身上留下压制。压制期间它接下来的数次出手会被压回去（不花资源，只是晚一拍），移动也被压慢，被压的次数越多越接近钉住。",
+  "worldcombat.skill.quash.summary": "尝试打断目标可中断的准备，并让它接下来的有限次出手晚一拍；压制期间移动变慢。",
   "worldcombat.skill.quash.description.0": "朝瞄准点打出一道压制之力，最远 %1$s 格、判定半径 %2$s 格；只对命中的第一个非友方目标生效，被地形或友方挡下就落空。",
-  "worldcombat.skill.quash.description.1": "命中打断目标当前的动作，并留下压制 %1$s：期间它接下来的 %2$s 次出手会被压回去（不消耗资源，只是晚一拍）；次数用完后即使压制未消也能正常出手，压制到期或被清除即结束。",
+  "worldcombat.skill.quash.description.1": "命中后尝试打断可中断的动作，并留下压制 %1$s；接下来的 %2$s 次出手被压回去。同一次原生弹体或伤害交付只扣一次；次数用完即可正常出手，剩余减速到期或被清除后结束。",
   "worldcombat.skill.quash.use.0": "打断对手正在蓄的大招",
   "worldcombat.skill.quash.use.1": "抢先一拍保住自己的位置",
   "worldcombat.skill.quash.use.2": "把冲上来的目标压慢",

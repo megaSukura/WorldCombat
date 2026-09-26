@@ -24,6 +24,8 @@
   "worldcombat.skill.selfdestruct.value.maxTargets": "目标上限",
   "worldcombat.skill.selfdestruct.preference.focus": "聚爆式",
   "worldcombat.skill.selfdestruct.preference.focus.help": "开启（聚爆式）：威力约 ×1.28、爆心收窄到 0.74 倍、起手 −2 刻，但冷却 +6——贴着一个重点目标狠炸。关闭（扩散式）：威力约 ×0.88、爆心 ×1.18 更广、起手 +2 刻、冷却 −6——一次罩住一圈人。无论哪个方向，使用者都会倒下。",
+  "worldcombat.skill.selfdestruct.preference.ai.sacrifice": "主动牺牲",
+  "worldcombat.skill.selfdestruct.preference.ai.sacrifice.help": "开启（主动牺牲）：只要爆圈里有足够目标，伙伴在满血时也愿意自爆；关闭（默认）：只有生命低于残血阈值才考虑。无论哪种设置，使用者都会倒下。",
   "worldcombat.skill.selfdestruct.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.selfdestruct.preference.ai.maxChase.help": "超过这个距离就不主动凑上去自爆，先走近；它是贴身的牌。",
   "worldcombat.skill.selfdestruct.preference.ai.minFoes": "自爆人数",

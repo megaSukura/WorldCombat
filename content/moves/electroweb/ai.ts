@@ -1,10 +1,11 @@
 /**
  * 电网 / electroweb 的伙伴 AI 用途。
  *
- * 什么局面下出手：一张抛出去留在场上的网。`available` 要求目标可见、敌对、存活、在 `ai.maxChase`
- * （默认 11）以内，且身上还没有 `netted` 身份（再布一张是浪费）。`ai.minFoes` 让威胁身边至少挤着
- * 这么多敌人才值得布网；`ai.lead` 给移动中的目标一点提前量，把网撒在它要经过的位置。
- * 对谁出手：当前威胁；成群、还在移动的优先。
+ * 什么局面下出手：一张抛出去留在场上的网。`available` 要求目标可见、敌对、存活、贴地（飞高的敌人不推荐，
+ * 网铺在地面咬不到）、在 `ai.maxChase`（默认 11）以内，且身上还没有 `netted` 身份（再布一张是浪费）。
+ * `ai.minFoes` 让威胁身边至少挤着这么多敌人才值得布网；`ai.lead` 给移动中的目标一点提前量，把网撒在它
+ * 要经过的位置。
+ * 对谁出手：当前威胁；成群、还在移动的优先，慢而厚重、会赖在网里的 Boss 脚下也值得先铺。
  * 够不到怎么办：交给共享接近逻辑；kind 为 point，AI 会把网抛向目标（或提前量）所在的位置。
  * 放完之后：网留在原地继续通电，伙伴交回共享顺序继续交战。
  */
@@ -12,6 +13,7 @@ namespace PokemonSkills {
     function electrowebWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
+        if (target.grounded === false) return false;
         if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             > CompanionBehavior.ai<number>(item, "maxChase", 11)) return false;
         return !CompanionBehavior.status(context, target, "netted");
@@ -55,6 +57,8 @@ namespace PokemonSkills {
             if (electrowebCluster(context, target) >= CompanionBehavior.ai<number>(capability, "minFoes", 2)) base += 24;
             const speed = target.velocity ? Math.sqrt(target.velocity[0] * target.velocity[0] + target.velocity[2] * target.velocity[2]) : 0;
             if (speed > 0.08) base += 10;
+            const mass = CompanionBehavior.mass(context, target);
+            if (mass !== null && mass >= 2000) base += 8;
             return base;
         }
     });

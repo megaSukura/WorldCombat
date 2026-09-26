@@ -4,38 +4,37 @@
  * 原生事实（Cobblemon 1.8，取自带 Showdown 数据）：Grass／特殊／威力 80／命中 100／PP 10／优先度 0／
  *   非接触；与火之誓约、水之誓约组合时威力升到 150，并按组合把场地变成火海／湿地。
  *
- * 翻译：一根藤蔓与草叶从选定点炸土而出的**草柱**：柱体对范围内每个敌人结算一次特殊伤害、缠住他们并拖慢；
- *   柱脚留一圈盘绕的誓约印（本单元场地规则 `world_combat:field/pledge_grass`），站在上面的敌人持续被拖慢。
- *   落点附近已有火或水的誓约印时共鸣：这一击威力 ×`comboPower`，并把周围变成**火海**（草＋火）或
- *   **湿地**（草＋水）——组合产物按另一元素的身份决定，与原生一致。
+ * 翻译：一根藤蔓与草叶从选定点炸土而出的**草柱**：柱体对范围内每个敌人结算一次特殊伤害，并做一次短控尝试
+ *   （缠住并拖慢被卷到的敌人）。柱脚留一圈短寿的誓约印（本单元场地规则 `world_combat:field/pledge_grass`），
+ *   它只是共鸣标记，**本身不拖慢**。落点附近已有火或水的誓约印时共鸣：这一击威力 ×`comboPower`，
+ *   同一圈印就地扩成**火海**（草＋火，持续点燃）或**湿地**（草＋水，持续陷住／拖慢）——
+ *   组合产物按另一元素的身份决定，与原生一致。湿地控制走可被原生拒绝的尝试，拒绝过的对象不再重复挂 rooted。
  *
  * 数值来源（每项读不同的个体数据）：
  *   pillar       草柱威力：特攻 + 等级；配置 entangle 再调 0.94／1.06。
  *   pillarRadius 草柱半径：体型高度 + 体重（藤蔓越铺越开）。
  *   pillarHeight 草柱高度：**亲密度**——越亲近的队伍伙伴，草柱长得越高。
- *   rootTicks    缠住时长：等级；配置 entangle ×1.5。
+ *   rootTicks    缠住时长：等级；配置 entangle ×1.5。同时是共鸣湿地陷住／拖慢的时长。
  *   slowTicks    拖慢时长：特攻。
  *   markRadius   誓约印半径：体重。
- *   markTicks    誓约印停留：亲密度（伙伴羁绊让它缠得更久）；配置 entangle ×0.8／×1.2。
+ *   markTicks    誓约印停留：亲密度（伙伴羁绊让它留得更久）；配置 entangle ×0.8／×1.2。它只标记共鸣机会。
  *   reach        施放距离：特攻。
  *   comboDetect  共鸣判定半径：特攻。
  *   comboScale   组合场半径倍率：特攻；配置 entangle 再调。
  *   comboPower   组合威力倍率：特攻。
- *   burst        草叶数量：特攻（同时驱动粒子数）。scarCells 地面盘根块数：特攻。
+ *   burst        草叶数量：特攻（同时驱动粒子数）。scarCells 地面盘根数量：特攻（驱动贴地盘根粒子）。
  *   tempo 起手：速度。recharge 冷却：等级；配置 entangle +10／−4。
  *
  * 配置 `entangle`（缠誓）：开启＝缠住 ×1.5、威力 ×0.94、誓约印 ×0.8、冷却 +10；关闭（茂誓）＝威力 ×1.06、
- *   誓约印 ×1.2、冷却更短。两向各有适用局面：缠誓锁人，茂誓铺得久、打得重。
+ *   誓约印 ×1.2、冷却更短。两向各有适用局面：缠誓锁人，茂誓留更长的共鸣窗口、打得重。
  *
  * 伤害段 `pillar` 与参数同名，走共享换算（原生类别 Special、Grass 属性）。
  */
 namespace PokemonSkills {
     export const grasspledgeId = "grasspledge";
     export const grasspledgeScene = "world_combat:move_grasspledge";
+    /** 本单元的草之誓约印（只由本单元注册；共鸣后仍是这一条规则）。 */
     export const grasspledgeScar = "world_combat:field/pledge_grass";
-    /** 草＋火 → 火海；草＋水 → 湿地。 */
-    export const grasspledgeSea = "world_combat:field/grasspledge_seaoffire";
-    export const grasspledgeWetland = "world_combat:field/grasspledge_wetland";
     export const grasspledgeHitText = "world_combat.move.grasspledge.text.hit";
     export const grasspledgeComboText = "world_combat.move.grasspledge.text.combo";
     export const grasspledgeMissText = "world_combat.move.grasspledge.text.miss";
@@ -74,7 +73,7 @@ namespace PokemonSkills {
             F.base(24).plus(F.level().minus(20).times(0.2).clamp(0, 20))
                 .times(F.when(F.pref("entangle"), F.const(1.5), F.const(1)))
                 .clamp(20, 48).round(),
-            "缠住时长", "被草柱缠住的敌人多久动不了；等级越高、缠誓越久。"),
+            "缠住时长", "被草柱缠住的敌人多久动不了，也是共鸣湿地每次陷住非友方的时长；等级越高、缠誓越久。"),
         /** 拖慢时长：60 + 特攻偏移[0,40]；夹 50..130 tick。 */
         slowTicks: seconds(
             F.base(60).plus(F.stat("specialAttack").minus(60).times(0.4).clamp(0, 40)).clamp(50, 130).round(),
@@ -86,12 +85,12 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "柱脚下那圈盘绕的誓约印覆盖多大；身体越沉印越宽，也决定地面盘根的范围。"
             }),
-        /** 誓约印停留：200 + 亲密度偏移[−30,90]；缠誓 ×0.8 / 茂誓 ×1.2；夹 110..360 tick。 */
+        /** 誓约印停留：120 + 亲密度偏移[−20,70]；缠誓 ×0.8 / 茂誓 ×1.2；夹 90..260 tick。它只是共鸣窗口。 */
         markTicks: seconds(
-            F.base(200).plus(F.individual("friendship").minus(70).times(1.2).clamp(-30, 90))
+            F.base(120).plus(F.individual("friendship").minus(70).times(0.9).clamp(-20, 70))
                 .times(F.when(F.pref("entangle"), F.const(0.8), F.const(1.2)))
-                .clamp(110, 360).round(),
-            "誓约印停留", "这圈盘绕的印留多久；站在上面的敌人会持续被拖慢。亲密度越高留得越久。"),
+                .clamp(90, 260).round(),
+            "誓约印停留", "柱脚这圈草之誓约印留多久；它是「这里立过草誓」的标记，本身不拖慢，只在与火／水誓印共鸣时把同一圈印当场扩成组合场并延长。亲密度越高留得越久。"),
         /** 施放距离：9 + 特攻偏移[−1.5,5]；夹 7..15。 */
         reach: formula(
             F.base(9).plus(F.stat("specialAttack").minus(60).times(0.03).clamp(-1.5, 5)).clamp(7, 15).round(1),
@@ -129,12 +128,12 @@ namespace PokemonSkills {
                 unit: "片",
                 description: "草柱炸开时喷出的草叶数量；特攻越高越密，粒子直接按它发射。"
             }),
-        /** 地面盘根块数：10 + 特攻 ×0.06；夹 8..20。 */
+        /** 地面盘根数量：10 + 特攻 ×0.06；夹 8..20。驱动贴地盘根粒子的密度，不再替换地表方块。 */
         scarCells: formula(
             F.base(10).plus(F.stat("specialAttack").times(0.06)).clamp(8, 20).round(0),
-            "地面盘根块数", {
-                unit: "块",
-                description: "柱脚把地表盘成草皮的块数；随特攻增长，也决定盘根的密度。"
+            "地面盘根数量", {
+                unit: "处",
+                description: "柱脚留在地面上的盘根数量；随特攻增长，直接决定贴地盘根粒子的密度（只作视觉痕迹，不改动方块）。"
             }),
         /** 起手：10 − 速度偏移[−3,3]；夹 6..16 tick。 */
         tempo: seconds(

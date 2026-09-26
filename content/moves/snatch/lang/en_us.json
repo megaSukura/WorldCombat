@@ -21,7 +21,7 @@
   "worldcombat.skill.snatch.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.snatch.preference.ai.maxChase.help": "The partner only reaches out while a threat is this close; smaller keeps it for melee, larger chases out to wait for the grab.",
   "worldcombat.skill.snatch.preference.ai.opening": "When to grab",
-  "worldcombat.skill.snatch.preference.ai.opening.help": "Wait for setup: only reach out when the foe's last move was stealable, or it is not attacking right now. Anytime: reach out at any threat as a pure gamble.",
+  "worldcombat.skill.snatch.preference.ai.opening.help": "Wait for setup: watch a known stealable move or a recent real beneficial effect. Anytime: wait speculatively as configured.",
   "worldcombat.skill.snatch.preference.ai.opening.setup": "Wait for setup",
   "worldcombat.skill.snatch.preference.ai.opening.anytime": "Anytime",
   "worldcombat.skill.snatch.preference.ai.leaveStation": "Leave post",

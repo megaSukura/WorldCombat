@@ -2,22 +2,15 @@
  * 冰冷视线 / freezingglare 的伙伴 AI 用途。
  *
  * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase` 之内；这一招需要通视，够不到先走近。
- * 对谁出手：默认（ai.preferImmune 开）优先挑冰属性目标——这一记能穿透冰冻免疫，正是对付它们的手段；
- *   默认（ai.preferChains 开）也优先挑身边挨着别人的目标，好让念力线跳过去。
+ * 对谁出手：默认（ai.preferChains 开）优先挑身边挨着别人的目标，好让念力线跳过去；关闭则只看单个目标。
+ *   免冻的冰属性/特性目标照常吃精神主伤，不再专门优先去冻它们。
  * 放完之后：瞬发结算，伙伴交回共享顺序继续交战。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("freezingglare", {}, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 4, 22, 1),
-        PokemonSkills.flag("ai.preferChains", "优先可连跳目标"),
-        PokemonSkills.flag("ai.preferImmune", "优先冰冻免疫目标")
+        PokemonSkills.flag("ai.preferChains", "优先可连跳目标")
     ]);
-
-    /** 目标是不是冰属性（本来免疫冰冻，正是这一招要点掉的对象）。 */
-    function freezingglareIceType(context: WorldBehavior.Context, target: Entity): boolean {
-        const facts = pokemonFacts(context, target);
-        return !!facts && facts.types.indexOf("ice") >= 0;
-    }
 
     /** 目标身边（4 格内）还有几个其他敌人，就是念力线大概能连跳几个。 */
     function freezingglareNeighbours(context: WorldBehavior.Context, target: Entity): number {
@@ -48,7 +41,6 @@ namespace CompanionBehavior {
             const self = source(context);
             const inRange = distance(self.point, target.point) <= capability.data.range;
             let score = inRange ? 22 : 0;
-            if (ai<boolean>(capability, "preferImmune", true) && freezingglareIceType(context, target)) score += 16;
             if (ai<boolean>(capability, "preferChains", true)) score += Math.min(16, freezingglareNeighbours(context, target) * 8);
             return score + Math.round(ratio(target) * 5);
         }

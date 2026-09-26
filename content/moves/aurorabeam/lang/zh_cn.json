@@ -1,9 +1,10 @@
 {
-  "worldcombat.skill.aurorabeam.summary": "射出一条会跑的虹色光束：命中最前面的敌人造成特殊伤害、可能让它的攻击下降 1 级，并在落点地面结出一小片霜。广谱更远更宽更易降攻，聚谱更快更强。",
+  "worldcombat.skill.aurorabeam.summary": "射出一条会跑的虹色光束：命中最前面的敌人造成特殊伤害、可能让它的攻击下降 1 级，并在落点地面结出一小片霜。首次撞到已有的雪或冰表面时会按入射角镜面折射一次、继续走完剩余射程，石墙不会折射。广谱更远更宽更易降攻，聚谱更快更强。",
   "worldcombat.skill.aurorabeam.use.0": "中远距离的直线点名",
   "worldcombat.skill.aurorabeam.use.1": "压制物理攻击手",
-  "worldcombat.skill.aurorabeam.use.2": "在通道上留下一小片难走的霜",
-  "worldcombat.skill.aurorabeam.description.0": "虹光沿瞄准方向直线飞出，只命中最前面的一个敌人，造成 %1$s 点特殊伤害。",
+  "worldcombat.skill.aurorabeam.use.2": "瞄冰墙斜角，折射后打到掩体后的敌人",
+  "worldcombat.skill.aurorabeam.use.3": "在通道上留下一小片难走的霜",
+  "worldcombat.skill.aurorabeam.description.0": "虹光沿瞄准方向飞出，只命中最前面的一个敌人，造成 %1$s 点特殊伤害；若途中撞到已有的雪或冰表面，会在真实接触面按入射角镜面折射一次后继续，剩余射程不变，且只在最终落点结霜。",
   "worldcombat.skill.aurorabeam.description.1": "命中后有 %1$s 概率让目标攻击下降 %2$s 级。",
   "worldcombat.skill.aurorabeam.description.2": "光束射程 %1$s 格、光速 %2$s 格/刻、判定半径 %3$s 格；落点结出最多 %4$s 格霜、停留 %5$s。",
   "worldcombat.skill.aurorabeam.spectrum.on": "当前为广谱：射程更远、判定更粗、霜斑更大更久、降攻更易触发，但威力略减、光速更慢、起手与冷却更久。",

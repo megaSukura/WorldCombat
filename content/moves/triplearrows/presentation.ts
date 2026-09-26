@@ -1,14 +1,14 @@
 /**
  * 三连箭 / triplearrows 的客户端表现。
  *
- * 一句话：压低身子后一记低扫腿扫过，紧接着三支箭同时离弦、拖出细亮弧线，命中处炸开钝白冲击（踢开护架时叠一层暴击星）。
+ * 一句话：压低身子后一记低扫腿只扫过脚前短区，紧接着三支箭同时离弦、各拖细亮弧线，命中处炸开钝白冲击（只被这一脚踢开护架的目标叠一层暴击星）。
  * 色相家族：箭羽的黄绿与近白（spike／glowingsparkle_yellow／impact_normal 原色）＋一处格斗暖橙（impact_fighting／foot）。
  * 拍子：起（windup 拉弦）→ 击（kick 低扫、volley 三箭齐发、hit 命中）→ 收（guard 护架缺口 / flinch 被压住）。
- * 范围：`volley` 的箭本体用物品外观（minecraft:arrow）飞行，`hit` 的炸开尺度随 `data.intensity`；玩家能数出画面里
- *   同时有几条箭线（`data.arrows`）以及散得多开（`data.spread`）。
- * 运动：低扫沿脚边横扫，三箭同时沿各自方向直线离弦、笔直飞行，命中向四周炸开，暴击在命中点留下星闪。
+ * 范围：`volley` 的箭本体用物品外观（minecraft:arrow）飞行，`hit` 的炸开尺度随 `data.intensity`；`kick` 的腿弧用
+ *   `data.path`（出脚真实起点→接触点/脚尖尽头）画成 polyline，长度就是这一脚真正够到的短区；玩家能数出画面里同时有几条箭线（`data.arrows`）以及散得多开（`data.spread`）。
+ * 运动：低扫沿真实腿线短促扫过，三箭同时沿各自方向直线离弦、笔直飞行，命中向四周炸开，暴击在命中点留下星闪。
  * 数：`data.arrows`（箭数）绑定齐射的箭线条数，`data.stages`（踢开级数）绑定护架缺口崩出的火花量，
- *   `data.crit`（踢开护架后必中要害）点亮命中处的暴击层，`data.intensity`（单支箭威力 / 32）放大整幕。
+ *   `data.crit`（只有被这一脚踢中的目标才为 1）点亮命中处的暴击层，`data.intensity`（单支箭威力 / 32）放大整幕。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const TriplearrowsDefinition: ParticleDefinition = {
@@ -41,11 +41,10 @@ const TriplearrowsDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 13 },
             emitters: [
                 {
-                    name: "sweep", bind: "point", offset: [0, 0.3, 0],
+                    name: "sweep", bind: "path", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/foot",
-                    burst: { count: 4, at: 0 },
-                    shape: { kind: "line", length: 0.9 },
-                    direction: "outward", speed: [0.04, 0.16], spread: 18,
+                    rate: 40, shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.03, 0.12], spread: 16,
                     lifetime: [7, 13], size: [0.3, 0.07], sizeMode: "index",
                     color: 0xE8C8A0, alpha: [0.85, 0], light: "full", maxParticles: 24
                 },

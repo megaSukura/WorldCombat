@@ -34,7 +34,7 @@ public final class EffectContext {
     public WorldAccess world() {
         check();
         if (runtime.actions == null) throw new IllegalStateException("No world host attached");
-        if (world == null) world = new WorldAccess(runtime.actions, instance.source, instance.controller, this::check, true, -instance.id);
+        if (world == null) world = new WorldAccess(runtime.actions, instance.source, instance.controller, this::check, true, -instance.id, instance.origin);
         return world;
     }
     public void state(String json) {
@@ -42,7 +42,7 @@ public final class EffectContext {
         if (!next.equals(instance.data)) { instance.data = next; runtime.changed(instance); }
     }
     public long copyTo(ActorHandle source, ActorHandle target, String json, int ticks) {
-        check(); return runtime.create(instance.definition.id(), source, target, instance.controller, instance.action, json, ticks);
+        check(); return runtime.create(instance.definition.id(), source, target, instance.controller, instance.action, json, ticks, instance.origin);
     }
     public int remaining() { check(); return instance.remaining; }
     public void remaining(int ticks) { check(); EffectRuntime.duration(instance.definition, ticks); if (instance.remaining != ticks) { instance.remaining = ticks; runtime.changed(instance); } }

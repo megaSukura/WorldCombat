@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.taunt.summary": "Provokes the target face to face until its rage takes over; until the rage fades it can only use moves that deal damage. The taunt needs a clear line to land — a wall or extra distance makes it miss.",
+  "worldcombat.skill.taunt.summary": "Provokes the target face to face until its rage takes over; until the rage fades it can only use moves that deal damage, and a redirectable foe turns its attention to you. The taunt needs a clear line to land — a wall or extra distance makes it miss.",
   "worldcombat.skill.taunt.use.0": "Force healing, boosting or repositioning foes to swing at you instead",
   "worldcombat.skill.taunt.use.1": "Force setup-reliant foes to trade blows instead",
   "worldcombat.skill.taunt.use.2": "Open a window for allies to trade blows",
@@ -22,7 +22,7 @@
   "worldcombat.skill.taunt.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.taunt.preference.ai.maxChase.help": "The partner only considers taunting while a threat is this close; smaller keeps it for melee, larger chases out to provoke.",
   "worldcombat.skill.taunt.preference.ai.opening": "When to taunt",
-  "worldcombat.skill.taunt.preference.ai.opening.help": "Provoke attacking foes: only when the target is attacking the partner or its owner, or the partner was just hurt. Anytime: provoke any threat as pure disruption.",
+  "worldcombat.skill.taunt.preference.ai.opening.help": "Provoke attacking foes: only when the target has status moves worth locking, is biting someone other than the partner and can be pulled off, or the partner was just hurt; a plain attacker already on the partner is not worth it. Anytime: provoke any threat as pure disruption.",
   "worldcombat.skill.taunt.preference.ai.opening.opening": "Provoke attacking foes",
   "worldcombat.skill.taunt.preference.ai.opening.anytime": "Anytime",
   "worldcombat.skill.taunt.preference.ai.leaveStation": "Leave post",

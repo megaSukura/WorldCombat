@@ -4,21 +4,36 @@
  * 一句话：施法者的身影暗下去、脚下暗影一收，接着只在对手正面留下一小团暗影替身，
  * 下一瞬已经出现在对手背后，贴着背炸开一记靛色暗拳。
  * 色相家族：靛紫（0x7A5FD0）与近黑（0x241A3A），近白（0xE8E0FF）只给命中核心。
- * 拍子：起（vanish 隐影）→ 击（decoy 替身、strike 背刺）→ 收（miss 扑空）。
+ * 拍子：起（gather 隐影）→ 击（vanish 真正闪灭、decoy 替身、strike 背刺）→ 收（miss 收拳）。
  * 范围：strike 的暗环半径由 `data.scale`（背后落点换算）给出，玩家看出这一拳贴住多大一圈。
- * 运动：vanish 的暗屑由外向内收；strike 沿 `data.path`（闪现身位到目标）拉出一条暗线，命中处向外炸开暗拳。
+ * 运动：gather 的暗屑由外向内轻轻收；vanish 只在真正移动时在旧位置闪灭；strike 沿 `data.path`
+ *   （实际落脚点到拳击接触）拉出一条暗线，命中处向外炸开暗拳。
  * 数：`data.power`（拳力）抬高命中亮度与碎屑量，`data.decoy` 决定替身是否出现。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FeintattackDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        vanish: {
+        gather: {
             duration: { data: "windup", fallback: 7 },
             exit: { stop: 4, drain: 8 },
             emitters: [
                 {
-                    name: "sink", bind: "source", offset: [0, 0.5, 0], height: 0.45,
+                    name: "shade", bind: "source", offset: [0, 0.45, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    rate: 6, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [6, 10], size: [0.16, 0.04],
+                    color: 0x241A3A, alpha: [0.35, 0], light: "world", maxParticles: 16
+                }
+            ]
+        },
+        vanish: {
+            duration: 18,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "sink", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     rate: 10, shape: { kind: "sphere", radius: 0.36 },
                     direction: "inward", speed: [0.03, 0.1],
@@ -26,7 +41,7 @@ const FeintattackDefinition: ParticleDefinition = {
                     color: 0x241A3A, alpha: [0.45, 0], light: "world", maxParticles: 26
                 },
                 {
-                    name: "gleam", bind: "source", offset: [0, 0.7, 0], height: 0.35,
+                    name: "gleam", bind: "point", offset: [0, 0.7, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
                     rate: 8, shape: { kind: "sphere", radius: 0.22 },
                     direction: "inward", speed: [0.03, 0.1],

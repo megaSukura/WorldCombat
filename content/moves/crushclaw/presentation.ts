@@ -5,7 +5,8 @@
  * 再崩起一层与降防级数同量的碎屑。
  * 色相家族：冷白与血锈红（slash／cut／scratch 原色、tinydust 中性）＋一处近白高光（glowingsparkle）。
  * 拍子：起（windup 抬爪）→ 击（slash 走廊与 cross 爪痕）→ 收（tear 撕口）。
- * 范围：slash 用 path 画出服务端 WorldGeometry.lane 的同一组四个顶点；走廊有多宽、多长，画面就是那块地。
+ * 范围：slash 用 path 画出服务端 WorldGeometry.polygon 的同一组四个顶点，顶点在踏前位移、被墙截断之后重算；
+ * 走廊有多宽、多长，画面就是那块地。两道 X 爪痕画在真实命中的走廊端点。
  * 运动：爪风沿走廊由近及远扫过，两道 X 爪痕在命中点交叉划过，被撕开时碎屑外翻。
  * 数：`data.notes`（撕抓威力换算）绑定走廊与命中火花量，`data.stages`（实际降防级数）绑定撕口崩屑数，
  * `data.hits`／`data.torn` 让命中与撕开各有一次强调。
@@ -121,7 +122,7 @@ const CrushclawDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "whiff", bind: "source", offset: [0, 0.55, 0], height: 0.4,
+                    name: "whiff", bind: "point", offset: [0, 0.55, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 12, at: 0 },
                     shape: { kind: "sphere", radius: 0.3 },

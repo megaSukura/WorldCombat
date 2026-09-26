@@ -13,10 +13,17 @@ namespace PokemonSkills {
         return CompanionBehavior.status(context, target, "burn");
     }
 
+    /** 本招真实的波及半径；同伴救援要这圈真罩得住，敌人在考虑距离内即可（走位交给共享接近）。 */
+    function sparklingariaRadius(item: WorldBehavior.Capability): number {
+        return typeof item.data.range === "number" ? item.data.range : 4.5;
+    }
+
     function sparklingariaValid(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || !target.visible) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= CompanionBehavior.ai<number>(item, "maxChase", 9);
+        const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+        if (target.friendly) return distance <= sparklingariaRadius(item);
+        return distance <= CompanionBehavior.ai<number>(item, "maxChase", 9);
     }
 
     /** 自身波及半径内还站着几个可见、敌对的敌人。 */
@@ -62,7 +69,10 @@ namespace PokemonSkills {
             }
             if (!sparklingariaValid(context, capability, target)) return 0;
             const count = sparklingariaCluster(context, capability);
-            return 18 + Math.min(26, Math.max(0, count - 1) * 8);
+            let base = 18 + Math.min(26, Math.max(0, count - 1) * 8);
+            // 敌方身上的灼伤会被这支歌一并洗掉，纯攻击收益要打折；多敌同圈时仍值得起唱。
+            if (sparklingariaBurned(context, target)) base -= 12;
+            return Math.max(6, base);
         }
     });
 

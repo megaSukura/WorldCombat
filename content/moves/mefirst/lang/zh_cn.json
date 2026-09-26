@@ -25,5 +25,7 @@
   "worldcombat.skill.mefirst.preference.ai.leaveStation.help": "开启后，驻守命令下也会为抢先一步离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.mefirst.text.take": "抢下 %1$s",
   "world_combat.move.mefirst.text.miss": "没等到下一拍",
-  "worldcombat.skill.mefirst.description.steal": "只能夺到伤害招（变化招与少数不可抢占的招式除外），夺来的攻击招会打向同一对手；守候动作本身不会被打断。守候窗口内对手始终没有再出招就落空，落空不消耗 PP 或冷却。"
+  "worldcombat.skill.mefirst.description.steal": "只能夺到伤害招（变化招与少数不可抢占的招式除外），夺来的攻击招会打向同一对手；守候动作本身不会被打断。守候窗口内对手始终没有再出招就落空，落空不消耗 PP 或冷却。",
+  "world_combat.move.mefirst.text.native_contact": "夺来近身影击",
+  "world_combat.move.mefirst.text.native_projectile": "夺来投射影弹"
 }

@@ -1,33 +1,55 @@
-/**
- * 超级吸取 / megadrain 的出手方式。
- *
- * 核心念头：把一颗孢荚弹出去，撞在对手身上绽成一张吸盘根网，勾住它，再一股股把养分拉回来——
- * 本族里唯一**把东西送出去**的吸招：先看见孢荚飞过去，才看见养分回来。
- *
- * 两幕：
- *   起（windup，提交前）：身前养起一颗青绿孢荚，只播预告。
- *   飞（fly，提交后）：孢荚沿瞄准方向抛出，命中活体后在落点绽开（`burst`），结算第一口 `pod` 伤害，
- *       随后按 `pulses` 追抽若干拍，每拍沿「目标→自身」抽出一束汁流；打空则在尽头散掉。
- *   缠（sap）：每拍都在目标身上画一次根网与回流，拍数由 `data.waves` 读出。
- *
- * 与同族分开：吸取是藤不脱手的一啄、终极吸取从地里拱出大根三拍连抽、木角用身体撞；
- * 只有超级吸取先抛出一颗看得见的孢荚，落点由飞行决定。
- *
- * 命中、防御、相性与暴击走共享 `impact`／`hurt`；回复走共享伤害载荷的 `drain`，对所有战斗者同一条路。
- */
+/** Actual damage becomes a finite owned return pod; only reaching its caster settles healing. */
 namespace PokemonSkills {
-    const megaDrainScene = "world_combat:move_megadrain";
-    const megaDrainHitText = "world_combat.move.megadrain.text.hit";
-    const megaDrainSapText = "world_combat.move.megadrain.text.sap";
-    const megaDrainMissText = "world_combat.move.megadrain.text.miss";
-
+    const megaDrainScene="world_combat:move_megadrain",megaDrainAttached="world_combat:megadrain_attached",megaDrainReturn="world_combat:megadrain_return";
+    WorldBodies.define(megaDrainReturn,{maxTicks:100,start:function(brain){
+        const body=brain.world().observe(brain.target());if(body)WorldFeedback.onEffect(brain.world(),brain.id(),"pod",megaDrainScene,1,body.position(),{moment:"return",target:String(brain.target().ref())});
+    },tick:{every:1,handler:function(brain){
+        const world=brain.world(),data=JSON.parse(brain.state()),owner=world.actor(data.owner),body=world.observe(brain.target());
+        if(!owner||!world.valid(owner)||!body){brain.end();return;}
+        const at=body.position(),goal=world.closestPoint(owner,at),delta=goal.minus(at);data.age=(data.age||0)+1;
+        if(delta.length()<.55 && world.clear(at,goal)){
+            data.consumed=true;brain.state(JSON.stringify(data));
+            const restored=world.health(owner,data.amount,"world_combat:drain");
+            if(restored>0)WorldFeedback.emit(world,megaDrainScene,1,goal,{moment:"collected",target:data.owner,amount:restored},16);
+            brain.end();return;
+        }
+        if(!data.stopped){
+            const movement=data.age<=4?WorldCombat.point(0,.07,0):delta.unit().scale(Math.min(.2,delta.length()));
+            const block=world.clipBlocks(at,at.plus(movement));
+            if(!block){brain.end();return;}
+            const moved=world.displace(brain.target(),movement);
+            if(block.blocked()||moved<movement.length()*.6)data.stopped=true;
+        }
+        brain.state(JSON.stringify(data));
+    }},end:function(brain){const data=JSON.parse(brain.state()),body=brain.world().observe(brain.target());if(body&&!data.consumed)WorldFeedback.emit(brain.world(),megaDrainScene,1,body.position(),{moment:"fizzle",scale:.4,motes:6},12);}});
+    PokemonDamage.onDamageApplied("world_combat:megadrain/return",function(receipt){
+        const share=Number(receipt.data.megadrainReturn);if(!(receipt.actual>0)||!(share>0)||!receipt.world.valid(receipt.actor))return;
+        const world=receipt.world,body=world.observe(receipt.target);
+        if(typeof receipt.x!=="number"&&!body)return;
+        const at=typeof receipt.x==="number"?WorldCombat.point(receipt.x,receipt.y!,receipt.z!):body!.position();
+        let amount=receipt.actual*share;
+        if(String(receipt.actor.domain())==="cobblemon")amount=NativeItems.apply(world,receipt.actor,"drain",{amount:amount},NativeEffects.read(world,receipt.actor)).amount;
+        if(!(amount>0))return;
+        WorldBodies.spawn(world,at,{appearance:{sprite:"cobblemon:generic/grass/seed",tint:0xA8EA72,glow:true,scale:.5},size:[.22,.22],health:1,gravity:false,pushable:false,invulnerable:true,knockbackResistance:1,silent:true,fireImmune:true},megaDrainReturn,{owner:String(receipt.actor.ref()),amount:amount,age:0,consumed:false,stopped:false},100);
+    },{move:"megadrain"});
+    WorldCombat.effect(megaDrainAttached,1,160,"actor",json=>json,EffectProtocols.unchanged);
+    WorldCombat.effectHandler(megaDrainAttached,"start",function(effect){const state=JSON.parse(effect.state());effect.schedule("pulse","pulse",state.interval,"{}");});
+    WorldCombat.effectHandler(megaDrainAttached,"pulse",function(effect){
+        const world=effect.world(),data=JSON.parse(effect.state()),owner=world.actor(data.owner),target=effect.target();
+        if(!owner||!world.valid(owner)||!world.valid(target)){effect.end();return;}
+        const body=world.observe(target);if(!body){effect.end();return;}
+        hurt(world,target,"megadrain",data.power,{damage:damageSpec("megadrain","pod"),drain:0,megadrainReturn:data.share} as any);
+        WorldFeedback.emit(world,megaDrainScene,1,body.position(),{moment:"pod_pulse",target:String(target.ref()),motes:12},12);
+        if(--data.remaining<=0){effect.end();return;}effect.state(JSON.stringify(data));effect.schedule("pulse","pulse",data.interval,"{}");
+    });
+    WorldCombat.effectHandler(megaDrainAttached,"operation:world_combat:dispel",effect=>effect.end());
     define({
         id: "megadrain",
         cooldownParameter: "recharge",
         name: "Mega Drain",
-        description: "从一段距离外抛出发光的孢荚，命中后分若干拍持续汲取目标生命，并按实际造成的伤害回补自身；爆荚式单发更重、只抽一拍，缠钩式分成多拍、总伤害与回血更高。",
+        description: "孢荚命中后按原拍数吸取，每拍把实际伤害的一部分吐成短命绿荚。绿荚缓慢回飞，回到自己身边才治疗；墙会拦住回收路线，可走近取回。爆荚单发较重，缠钩多拍。",
         uses: ["从一段距离外抛荚命中对手", "用连续几拍把伤害和回血一起抽上来", "对拉不开距离的目标持续续航"],
-        kind: "enemy",
+        kind: "aim",
         range: 8.5,
         maxRange: 12.0,
         prepare: 8,
@@ -56,84 +78,24 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", burst: config && config.burst === true }));
             return prepare;
         },
-        execute: function (action, move, config, done) {
-            const world = action.world();
-            const power = p("megadrain", "pod", action);
-            const share = p("megadrain", "sap", action);
-            const speed = p("megadrain", "seed", action);
-            const latch = p("megadrain", "latch", action);
-            const waves = Math.max(1, Math.min(3, Math.round(p("megadrain", "pulses", action))));
-            const interval = Math.max(4, Math.round(p("megadrain", "interval", action)));
-            const motes = Math.max(10, Math.round(power * 0.4 + share * 44));
-            const scale = latch / 0.5;
-            let settled = false, struck = false;
-
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-
-            /** 追抽一拍：`dealt` 是已经结算过的拍数，本次是第 `dealt + 1` 拍。 */
-            function wave(current: CombatAction, ref: string, dealt: number): void {
-                const scope = current.world();
-                const live = ref === "" ? null : scope.actor(ref);
-                if (live === null || !scope.valid(live)) { finish(current); return; }
-                const body = scope.observe(live);
-                const at = body === null ? current.targetPosition() : body.position();
-                const self = scope.observe(current.actor());
-                const from = self === null ? current.origin() : self.position();
-                const landed = hurt(current, live, "megadrain", power,
-                    { damage: damageSpec("megadrain", "pod"), drain: share });
-                const flow = from.minus(at), span = flow.length();
-                const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
-                WorldFeedback.emit(scope, megaDrainScene, 1, at,
-                    { moment: "sap", path: ["target", "source"], target: ref,
-                        direction: [inward.x(), inward.y(), inward.z()], span: span,
-                        motes: motes, wave: dealt + 1, waves: waves }, 26);
-                if (landed) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), megaDrainSapText, [dealt + 1], 20);
-                if (dealt + 1 >= waves) { finish(current); return; }
-                current.after(interval, function (next: CombatAction) { wave(next, ref, dealt + 1); });
-            }
-
-            WorldFeedback.emit(world, megaDrainScene, 1, action.origin(),
-                { moment: "windup", scale: scale, motes: motes, burst: config && config.burst === true ? 1 : 0 }, 16);
-            sound(action, "cobblemon:move.megadrain.actor");
-
-            const flight = LivingActions.projectile(action, {
-                speed: speed,
-                range: action.range(),
-                radius: 0.28,
-                appearance: { sprite: "cobblemon:generic/grass/seed", tint: 0x9BD24B, glow: true, scale: 1.0 },
-                impact: function (current: CombatAction, hit: CombatImpact) {
-                    const scope = current.world();
-                    const target = hit.target();
-                    const at = hit.position();
-                    if (struck) return;
-                    if (target === null || !scope.valid(target) || scope.friendly(target)) {
-                        WorldFeedback.emit(scope, megaDrainScene, 1, at, { moment: "fizzle", scale: scale, motes: motes }, 18);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), megaDrainMissText, [], 20);
-                        finish(current);
-                        return;
-                    }
-                    struck = true;
-                    const landed = impact(current, hit, "megadrain", power,
-                        { damage: damageSpec("megadrain", "pod"), drain: share });
-                    WorldFeedback.emit(scope, megaDrainScene, 1, at,
-                        { moment: "burst", path: ["target", "source"], target: String(target.ref()),
-                            scale: scale, motes: motes, waves: waves, wave: 1 }, 24);
-                    sound(current, "cobblemon:move.megadrain.target");
-                    if (!landed) { finish(current); return; }
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), megaDrainHitText, [], 22);
-                    if (waves > 1) wave(current, String(target.ref()), 1);
-                    else finish(current);
-                }
-            }, function (current: CombatAction) {
-                if (struck) return;
-                WorldFeedback.emit(current.world(), megaDrainScene, 1, current.targetPosition(),
-                    { moment: "miss", scale: scale, motes: motes }, 18);
-                WorldFeedback.text(current.world(), current.targetPosition().plus(WorldCombat.point(0, 0.9, 0)),
-                    megaDrainMissText, [], 20);
-                finish(current);
-            });
-            WorldFeedback.emit(world, megaDrainScene, 1, action.origin(),
-                { moment: "fly", projectile: flight, scale: scale, motes: motes }, 60);
+        execute:function(action,move,config,done){
+            const power=p("megadrain","pod",action),share=p("megadrain","sap",action),speed=p("megadrain","seed",action),latch=p("megadrain","latch",action);
+            const waves=Math.max(1,Math.min(3,Math.round(p("megadrain","pulses",action)))),interval=Math.max(4,Math.round(p("megadrain","interval",action)));
+            const scenes=WorldFeedback.actionScenes(megaDrainScene);let settled=false;
+            function finish(current:CombatAction):void{if(settled)return;settled=true;scenes.finish(current,done);}
+            action.releaseTarget();sound(action,"cobblemon:move.megadrain.actor");
+            const flight=LivingActions.projectile(action,{speed:speed,range:action.range(),radius:.28,
+                appearance:{sprite:"cobblemon:generic/grass/seed",tint:0x9BD24B,glow:true,scale:1},
+                impact:function(current,hit){
+                    const world=current.world(),target=hit.target(),at=hit.position();scenes.stop(current,"flight");
+                    if(!target||!world.valid(target)||world.friendly(target)){WorldFeedback.emit(world,megaDrainScene,1,at,{moment:"fizzle",scale:latch/.5,motes:16},16);finish(current);return;}
+                    const features:any={damage:damageSpec("megadrain","pod"),drain:0,megadrainReturn:share};
+                    const landed=impact(current,hit,"megadrain",power,features);
+                    WorldFeedback.emit(world,megaDrainScene,1,at,{moment:"burst",target:String(target.ref()),scale:latch/.5,motes:16,waves:waves,wave:1},16);
+                    if(landed && waves>1 && world.valid(target))world.effect(megaDrainAttached,target,JSON.stringify({remaining:waves-1,interval:interval,power:power,share:share,owner:String(current.actor().ref())}),interval*(waves-1)+4);
+                    finish(current);
+                }},finish);
+            scenes.show(action,"flight",action.origin(),{moment:"fly",projectile:flight,scale:latch/.5,motes:16});
         }
     });
 }

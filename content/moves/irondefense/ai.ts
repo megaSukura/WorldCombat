@@ -5,7 +5,9 @@
  * 什么时候最想出手：血量掉到 ai.panic 以下（正在挨压）时 priority 110 抢在共享次序前——防招要在被打崩之前站住；
  *   血量还行就退回普通次序，先输出。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：防御等级已写进公共能力阶梯，铁壳还带击退抗性与减速；铁壳还在时不再重复，被磨掉后才重新考虑。
+ * 放完之后：防御等级已写进公共能力窗口，铁壳还带击退抗性与减速；铁壳还在时不再重复，被磨掉后才重新考虑。
+ * 何时不必站桩：威胁正在拉开（共享 movement 感官判为 fleeing）时压到 20——追不上的目标的攻击不会落在身上，
+ *   把这一次铁壳留给真正会贴上来打的那一个。
  */
 namespace PokemonSkills {
     function ironDefenseThreatGap(context: WorldBehavior.Context): number {
@@ -30,6 +32,7 @@ namespace PokemonSkills {
         priority: function (context, capability, _target) {
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
+            if (CompanionBehavior.fleeing(context, threat)) return 20;
             const panic = CompanionBehavior.ai<number>(capability, "panic", 0.55);
             return CompanionBehavior.ratio(CompanionBehavior.source(context)) < panic ? 110 : 45;
         }

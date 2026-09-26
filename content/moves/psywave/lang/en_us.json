@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.psywave.summary": "Push an unstable psychic wave front at the target: it pierces a line of foes, dealing special damage to each it passes, and its intensity is rerolled every cast - the ring count and brightness in the picture show how strong this one is.",
+  "worldcombat.skill.psywave.summary": "Push an unstable psychic wave front along any direction: it pierces a line of foes, dealing special damage to each it passes. Its intensity is rerolled every cast, but locked in and shown during preparation - the rings and brightness before you fire already tell how strong this one is, and it never changes afterwards.",
   "worldcombat.skill.psywave.use.0": "Punch through several targets lined up",
   "worldcombat.skill.psywave.use.1": "Chip with a cheap shot and gamble on a high roll",
   "worldcombat.skill.psywave.use.2": "Play as a steady ranged attack in steady mode",
-  "worldcombat.skill.psywave.description.0": "On impact it deals about %1$s special damage; each cast also rolls an intensity between (1 - %2$s) and (1 + %2$s), so how much this one actually deals changes every time.",
+  "worldcombat.skill.psywave.description.0": "On impact it deals about %1$s special damage; each cast also rolls an intensity between (1 - %2$s) and (1 + %2$s) and locks it in during preparation - the rings and brightness of the preparation and flight show this cast's strength up front and never change afterwards.",
   "worldcombat.skill.psywave.description.1": "The front travels %1$s blocks at %2$s blocks/tick with a %3$s block hit width.",
   "worldcombat.skill.psywave.description.2": "The front pierces up to %1$s targets.",
   "worldcombat.skill.psywave.surge.on": "Surge mode: power x1.2 and swing x1.5 for wilder high and low rolls, with 3 ticks faster recovery, at the cost of unchanged reach and no cooldown discount.",

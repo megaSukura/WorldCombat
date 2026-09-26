@@ -241,4 +241,53 @@ check('ignored defense stages become per-hit additive exclusions for ordinary eq
   context.PokemonDamage.metadata.remove('fixture:ignore-defence');
   world.effects = effectsBefore;
 });
+check('residual damage keeps native settlement and carries an indirect execution receipt', () => {
+  const D = context.PokemonDamage;
+  assert(D.residual(world, ordinary, 'fixture', 7.5, { pulse: 2 }));
+  const value = applied.at(-1); close(value.amount, 7.5);
+  assert.equal(value.data.damageType, 'world_combat_core:effect');
+  assert.equal(value.data.kind, 'residual'); assert.equal(value.data.segment, 'residual');
+  assert.equal(value.data.pulse, 2); assert.equal(value.data.calculation.mode, 'residual');
+  assert.equal(value.data.contact, false); assert.equal(value.data.knockback, false);
+  assert.equal(value.data.bypassAccuracy, true); assert.equal(value.data.bypassCooldown, undefined);
+  assert.equal(value.data.armorExcluded, undefined, 'Native equipment armor remains in settlement');
+  context.NativeAbilities.define('fixture_indirect', { indirectImmune: true }); target.native.ability = 'fixture_indirect';
+  const size = applied.length; assert.equal(D.residual(world, target, 'fixture', 7.5), false);
+  assert.equal(applied.length, size); target.native.ability = '';
+  assert.throws(() => D.residual(world, ordinary, 'fixture', Infinity), /finite/);
+});
+check('positive stage consumption removes real contributions and preserves negative and unrelated fields', () => {
+  const oldEffects=world.effects, oldOperation=world.operation;
+  let persistent={...context.NativeEffects.empty(),stages:{atk:3,def:-2}}, windows=[{id:11,state:{stages:{atk:2,spa:-1},types:['fire']}}];
+  world.effects=(actor,definition)=> actor!==target ? [] : definition==='cobblemon_world_combat:individual'
+    ? [{id:()=>10,data:()=>JSON.stringify(persistent)}] : definition==='cobblemon_world_combat:modifier'
+      ? windows.map(value=>({id:()=>value.id,data:()=>JSON.stringify(value.state)})) : [];
+  world.operation=(id,operation,input)=> {
+    if(id===10){persistent=JSON.parse(input);return true;}
+    const entry=windows.find(value=>value.id===id);if(!entry)return false;
+    context.CombatStages.editWindow({input:()=>input,state(value){if(value!==undefined)entry.state=JSON.parse(value);return JSON.stringify(entry.state);},reject(reason){throw Error(reason);}});return true;
+  };
+  assert.equal(context.NativeEffects.consumePositiveStages(world,target),5);
+  assert.equal(context.NativeEffects.effectiveStages(world,target).atk,undefined);
+  assert.equal(persistent.stages.def,-2); assert.equal(windows[0].state.stages.spa,-1);
+  assert.deepEqual(windows[0].state.types,['fire']);windows=[];
+  assert.equal(context.NativeEffects.effectiveStages(world,target).atk,undefined,'Expiration cannot reveal a compensating negative ladder');
+  persistent.stages.atk=2;windows=[{id:12,state:{stages:{atk:-4}}}];
+  assert.equal(context.NativeEffects.consumePositiveStages(world,target),2);assert.equal(context.NativeEffects.effectiveStages(world,target).atk,-4);
+  context.CombatStages.change.define({id:'fixture:consume-deny',apply:plan=>{if(plan.reason==='consume')plan.allowed=false;}});
+  persistent.stages.spe=2;assert.equal(context.NativeEffects.consumePositiveStages(world,target),0);assert.equal(persistent.stages.spe,2);
+  context.CombatStages.change.remove('fixture:consume-deny');world.effects=oldEffects;world.operation=oldOperation;
+});
+check('same-type release snapshot follows its resolved type and final type filtering remains composable', () => {
+  const D=context.PokemonDamage, original=source.native.types, base=resolve().amount;
+  const snapshot={sameTypeMultiplier:D.sameType(D.combatants.read(world,source),'grass'),sameTypeType:'grass'};
+  source.native.types=[];close(resolve(target,snapshot).amount,base,'A released same-type budget survives later type consumption');
+  close(resolve(target,{...snapshot,type:'electric'}).amount,resolve(target,{type:'electric'}).amount,'A rewritten attack cannot inherit another type snapshot');
+  source.native.types=original;
+  D.combatants.provide('fixture:typed-body',({actor},facts)=>{if(actor===ordinary)facts.types=['fire','water'];});
+  D.combatants.resolved.define({id:'fixture:remove-fire',apply:context=>{context.facts.types=context.facts.types.filter(type=>type!=='fire');}});
+  assert.deepEqual(Array.from(D.combatants.read(world,ordinary).types),['water']);
+  D.combatants.resolved.remove('fixture:remove-fire');D.combatants.remove('fixture:typed-body');
+  assert.throws(()=>resolve(target,{sameTypeMultiplier:Infinity,sameTypeType:'grass'}),/finite/);
+});
 console.log(`PASS combatant damage: ${count} scenarios; independent designs, live source previews, contributions and uncapped execution`);

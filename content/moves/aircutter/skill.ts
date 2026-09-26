@@ -10,6 +10,9 @@
  *       每个非友方各结算一次 `blade` 特殊伤害，最多切 `maxTargets` 个；没人被切到只留一道空风。
  *       这一招没有飞行过程——扇面出现的那一刻就是命中的那一刻。
  *
+ * 选取：`kind: "aim"`——朝方向或世界点都能张扇，提交后可空放；墙后的对象经共享 `world.clear` 排除，
+ *   命中权限仍由命中层判断。`execute` 用 `aim(action)` 读取方向，不要求提交时存在敌人。
+ *
  * 高暴击沿用原生 critRatio 2 的共享结算；暴击命中时由本单元监听器在命中点补一记更亮的白色强调。
  */
 namespace PokemonSkills {
@@ -17,9 +20,9 @@ namespace PokemonSkills {
         id: aircutterId,
         cooldownParameter: "recharge",
         name: "Air Cutter",
-        description: "一次张开一片细风刃，横扫面前的扇区、同时切中多个对手；起手短、冷却低，容易击中要害。聚刃式更窄更重，广扇式更宽更密。",
+        description: "朝方向或世界点一次张开一片细风刃，横扫该扇区、同时切中多个对手，也可以朝空地空放；起手短、冷却低，容易击中要害。聚刃式更窄更重，广扇式更宽更密。",
         uses: ["一次张开扫过面前一整片对手", "同时切伤挤在扇面里的多个目标", "瞬发轻快，起手窗口里逼对手走位"],
-        kind: "enemy",
+        kind: "aim",
         range: 8,
         maxRange: 13,
         prepare: 5,
@@ -77,6 +80,8 @@ namespace PokemonSkills {
                 WorldGeometry.sector(origin, direction, reach, span, { below: 1.6, above: 3.0 }),
                 function (target, facts) {
                     if (hits >= cap) return;
+                    // 墙后的对象不算在扇里：扇面铺开时仍按现有 clear 规则排除被遮挡的对手。
+                    if (!world.clear(origin, facts.position())) return;
                     if (!hurt(action, target, aircutterId, power,
                         { damage: damageSpec(aircutterId, "blade"), slice: true })) return;
                     hits++;

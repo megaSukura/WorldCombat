@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.rockthrow.summary": "从脚边地上抄起一块小石，平直、快速地甩向目标：一块石头一次伤害，砸中崩出石屑。石头不追踪，对手在它离手后挪一步就能让开；高抛式能越过矮墙，但更散更慢。",
+  "worldcombat.skill.rockthrow.summary": "从脚边地上抄起一块小石，平直、快速地甩向瞄准的方向或落点：一块石头一次伤害，砸中崩出石屑。可朝任意方向/落点空投，不要求先锁定对手；石头不追踪，对手在它离手后挪一步就能让开；高抛式能越过矮墙，但更散更慢。",
   "worldcombat.skill.rockthrow.use.0": "便宜的远程消耗，一记接一记地扔",
   "worldcombat.skill.rockthrow.use.1": "对站着不动的目标稳定点射",
   "worldcombat.skill.rockthrow.use.2": "用高抛式越过掩体打后面的目标",

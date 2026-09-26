@@ -6,8 +6,10 @@
  *
  * 出手：短起手（windup 播「起势」）后提交。
  * 命中：提交后舞圈整圈铺开；圈内每个非自己的活体挂上共享身份 world_combat:status/confusion 的
- *       world_combat:teeterdance_spin（物品栏可见、/effect 可用），并被当场带偏一步。
- * 持续：被带进节奏的人每 12 刻朝侧向小位移一次（摇晃走位），并且每次想出手都有约 sway×0.9 的概率作废。
+ *       world_combat:teeterdance_spin（物品栏可见、/effect 可用），并尝试当场带偏一步——只按原生 displace
+ *       真正发生的位移表现；状态被免疫时既不挂效果也不画拖动。
+ * 持续：被带进节奏的人每 12 刻尝试朝侧向小位移一次（摇晃走位），只有真正移动了才画轨迹，行动受限时不重复补写；
+ *       并且每次想出手都有约 sway×0.9 的概率作废。
  * 结束：晃动随载体到期自然停止；牛奶、/effect clear 与清除类效果都能提前把它解掉。
  * 反制：舞圈以施法者为圆心，站到半径之外就什么都不受影响；它也会把盟友卷进来，被围住时反而不好放。
  *
@@ -83,15 +85,24 @@ namespace PokemonSkills {
                 if (careful && facts.friendly()) return;
                 if (!CombatStatus.apply(world, target, teeterdanceStatus, teeterdanceEffect, ticks, amplifier, { unique: true })) return;
                 caught++;
-                // 当场被带偏一步，让「摇」在命中这一刻就看得见。
+                // 只尝试原生 displace，并按真正发生的位移表现；免疫或被挡住时不画拖动。
                 const angle = world.random() * Math.PI * 2;
                 const step = WorldCombat.point(Math.cos(angle) * sway, 0, Math.sin(angle) * sway);
                 const from = facts.position();
-                if (world.clear(from, from.plus(step))) world.displace(target, step);
-                WorldFeedback.emit(world, teeterdanceScene, 1, facts.position(),
+                const moved = world.displace(target, step);
+                const after = world.observe(target);
+                const at = after === null ? from : after.position();
+                WorldFeedback.emit(world, teeterdanceScene, 1, at,
                     { moment: "daze", target: String(target.ref()), motes: Math.max(8, Math.round(motes / 2)),
-                        scale: scale, sway: amplifier, intensity: 1 }, 26);
+                        scale: scale, intensity: 1 }, 26);
+                if (moved > 0.01) WorldFeedback.emit(world, teeterdanceScene, 1, from,
+                    { moment: "sway", target: String(target.ref()), motes: Math.max(6, Math.round(moved * 60)),
+                        scale: scale, moved: Math.round(moved * 100) / 100 }, 16);
             });
+
+            // 一个都没带进节奏时，舞圈只空转一下：steady 就是那圈扑空的光点。
+            if (caught === 0) WorldFeedback.emit(world, teeterdanceScene, 1, centre,
+                { moment: "steady", radius: radius, scale: scale }, 20);
 
             WorldFeedback.text(world, teeterdanceAbove(centre),
                 caught > 0 ? teeterdanceDazeText : teeterdanceSteadyText,
@@ -121,10 +132,14 @@ namespace PokemonSkills {
         const strength = Math.max(0.04, Math.min(0.2, effect.amplifier() / 100));
         const step = side.scale(strength * sign);
         const from = body.position();
-        if (!world.clear(from, from.plus(step))) return;
-        world.displace(actor, step);
-        WorldFeedback.emit(world, teeterdanceScene, 1, from,
-            { moment: "sway", target: String(actor.ref()), motes: Math.max(6, Math.round(strength * 60)), scale: 1 }, 16);
+        // 只尝试原生 displace，按真正发生的位移表现；被挡住或抵抗时这一步不产生任何轨迹。
+        const moved = world.displace(actor, step);
+        if (!(moved > 0.01)) return;
+        const after = world.observe(actor);
+        const at = after === null ? from : after.position();
+        WorldFeedback.emit(world, teeterdanceScene, 1, at,
+            { moment: "sway", target: String(actor.ref()), motes: Math.max(6, Math.round(moved * 60)),
+                scale: 1, moved: Math.round(moved * 100) / 100 }, 16);
     });
 
     // 出手容易散：被带进节奏的人每次试图出手按振幅掷骰；中则本次出手作废。

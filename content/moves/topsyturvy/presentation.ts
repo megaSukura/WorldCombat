@@ -8,7 +8,8 @@
  * 范围：flip 绑命中目标、按 `data.scale`（体型参考）缩放那圈镜屑，玩家看到目标身上炸开多大就知道翻面波及多大；
  *   shatter 绑落点 `point`，半径随 `data.scale`。
  * 运动：shot 的尾迹绑 `data.projectile` 跟着镜片本体的速度走；flip 的镜屑由内向外翻出、银环向外扩。
- * 数：镜屑量按 `data.shards`（特攻换算的镜片数）派生，命中亮度按 `data.flipped`（真正翻过的项数）派生。
+ * 数：镜屑量按 `data.shards`（特攻换算的镜片数）派生，命中亮度按 `data.flipped`（真正翻过的项数）派生；
+ *   flip_up（`data.up`，减益翻成增益）向上亮起、flip_down（`data.down`，增益翻成减益）向下压暗，两者只按真实翻过的符号出现。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const TopsyturvyDefinition: ParticleDefinition = {
@@ -87,21 +88,24 @@ const TopsyturvyDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.2],
                     lifetime: [6, 12], size: [0.09, 0.01],
                     color: 0xEAF4FF, alpha: [0.8, 0], light: "full", bloom: 0.5, maxParticles: 40
-                }
-            ]
-        },
-        guard: {
-            duration: 16,
-            exit: { stop: 6, drain: 12 },
-            emitters: [
+                },
                 {
-                    name: "guard_scatter", bind: "target", height: 0.6,
+                    name: "flip_down", bind: "target", height: 1.0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
+                    burst: { count: { data: "down", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "down", speed: [0.06, 0.22],
+                    lifetime: [8, 14], size: [0.12, 0.01], sizeMode: "index",
+                    color: 0x8FB8E8, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 44
+                },
+                {
+                    name: "flip_up", bind: "target", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: { data: "shards", fallback: 6 }, at: 1 },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.03, 0.12], drag: 0.9,
-                    lifetime: [8, 14], size: [0.08, 0.01],
-                    color: 0x8FB8E8, alpha: [0.5, 0], light: "world", maxParticles: 24
+                    burst: { count: { data: "up", fallback: 0 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "up", speed: [0.06, 0.22],
+                    lifetime: [8, 14], size: [0.1, 0.01], sizeMode: "index",
+                    color: 0xEAF4FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 44
                 }
             ]
         },

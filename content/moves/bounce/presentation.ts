@@ -10,8 +10,9 @@
  * 与斜坠速度线读，不是高空横掠再加竖直俯冲。
  * 拍子：起 crouch（14t）→ 弹 rise（30t）→ 持 mark／hang（悬停，逐刻续期）→ 坠 fall（26t）→ 击 impact／whiff（30–40t）→ 收 rebound。
  *
- * 范围：mark 的地环就是落点与判定范围，impact 的冲击环再按落地半径放大；两者都绑 point，随 data.scale 缩放到真实半径。
- * 运动：rise 的风向上抽，fall 的速度线沿施法者实际坠落方向（orient: velocity），rebound 的风向上收尾。
+ * 范围：mark 的地环就画在起跳锁死的地面落点上（点实体锚它脚下、点世界点投到那片地面），impact 的冲击环再按落地半径放大；
+ * 两者都绑 point，随 data.scale 缩放到真实半径，impact 也只在真实落地点播放。
+ * 运动：rise／hang 跟本体，fall 的速度线沿施法者实际坠落方向（orient: velocity），rebound 的风向上收尾。
  * 机制驱动：`data.climb`（实际弹跳高度）决定 rise 风柱与 mark 视线的长度，`data.scale`（落地半径 / 0.9）
  * 决定准星与冲击环大小，`data.height`（高度系数）压低低跳的亮度，`data.intensity`（命中数 + 麻痹数）抬高冲击密度，
  * `data.sparks`（麻痹命中的电火数）决定麻电火花的数量。

@@ -7,8 +7,8 @@
  * 拍子：起（charge 聚屑成轮）→ 滚（roll 掠地）→ 击（hit 崩钢）／空（whiff 空转收势）。
  * 范围：roll 的 `path` 是与服务端 WorldGeometry 同一组四个顶点的走廊，画面铺出的就是会被扫到的那块地。
  * 运动：charge 的屑向里收成轮缘；roll 的钢球沿 `data.direction` 由近及远滚；hit 的屑向外炸开带重力。
- * 数：roll 的尘量绑定 `data.grains`，hit 的崩屑量绑定 `data.grains`、亮度绑定 `data.intensity`；陀螺体积绑定
- *   `data.scale`（由 `load` 速度差派生）——画面里的数与机制里的数一致。
+ * 数：charge 与 roll 共用同一个 `data.scale`（由 `load` 速度差派生），陀螺体积与粒子大小一致；
+ *   roll 的尘量绑定 `data.grains`，hit 的崩屑量绑定 `data.grains`、亮度绑定 `data.intensity`。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const GyroballDefinition: ParticleDefinition = {
@@ -23,7 +23,7 @@ const GyroballDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
                     rate: 12, shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
                     direction: "inward", speed: [0.03, 0.14], spin: 10,
-                    lifetime: [6, 12], size: [0.16, 0.04],
+                    lifetime: [6, 12], size: { data: "scale", fallback: 0.16 },
                     color: 0xB8C2CC, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 40
                 },
                 {
@@ -31,14 +31,14 @@ const GyroballDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 20, shape: { kind: "cylinder", radius: 0.55, length: 0.12 },
                     direction: "inward", speed: [0.02, 0.1],
-                    lifetime: [5, 11], size: [0.06, 0.02],
+                    lifetime: [5, 11], size: { data: "scale", fallback: 0.06 },
                     color: 0x9AA2AC, alpha: [0.5, 0], light: "world", maxParticles: 48
                 },
                 {
                     name: "rim", bind: "source", offset: [0, 0.16, 0], height: 0.08,
                     particle: "world_combat_core:cobblemon/generic/spinbeam",
                     rate: 14, shape: { kind: "sphere", radius: 0.34 }, direction: "outward", speed: [0.02, 0.09], spin: 18,
-                    lifetime: [5, 10], size: [0.2, 0.05],
+                    lifetime: [5, 10], size: { data: "scale", fallback: 0.2 },
                     color: 0xDCE4EC, alpha: [0.45, 0], light: "full", maxParticles: 36
                 }
             ]

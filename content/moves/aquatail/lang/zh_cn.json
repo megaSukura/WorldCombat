@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.aquatail.summary": "借转身把尾巴抡成一道向前压的弧形水墙：浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；命中带着灼伤的目标时，这道水会解除灼伤、熄灭其身上的火。浪是推进的，走出弧面或退到浪头之外就能躲开。",
+  "worldcombat.skill.aquatail.summary": "借转身把尾巴抡成一道向前压的弧形水墙：浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；命中带着灼伤的目标时，这道水会解除灼伤、熄灭其身上的火。浪是推进的，走出弧面、退到浪头之外，或被墙挡住都能躲开；不选敌人也能朝地面空放。",
   "worldcombat.skill.aquatail.use.0": "用一片向前压的弧形水墙拍开身前的人",
   "worldcombat.skill.aquatail.use.1": "把贴身的敌人连同身位一起推走",
   "worldcombat.skill.aquatail.use.2": "一浪浇熄对手身上的火与灼伤",
   "worldcombat.skill.aquatail.description.0": "浪拍中造成约 %1$s 点接触伤害，并把目标沿背离方向推开 %2$s 格；同一目标整道浪只拍中一次。",
   "worldcombat.skill.aquatail.description.1": "浪张角 %1$s 度、最远推到 %2$s 格；远端威力衰减到近端的 %3$s。",
-  "worldcombat.skill.aquatail.description.2": "浪头分 %1$s 拍从贴身推到最远；拍数越多浪越慢，走出弧面或退到浪头之外就能躲开。",
+  "worldcombat.skill.aquatail.description.2": "浪头分 %1$s 拍从贴身推到最远；拍数越多浪越慢，走出弧面、退到浪头之外，或被墙挡住就能躲开。",
   "worldcombat.skill.aquatail.description.3": "命中使目标湿透 %1$s：湿透期间移动速度降低 10%%，到时自动消退。",
   "worldcombat.skill.aquatail.description.4": "当前沉浪形态：%1$s。",
   "worldcombat.skill.aquatail.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
